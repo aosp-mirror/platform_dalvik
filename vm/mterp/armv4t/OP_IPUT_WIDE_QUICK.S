@@ -15,4 +15,3 @@
     stmia   r2, {r0-r1}                 @ obj.field (64 bits, aligned)<- r0/r1
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     GOTO_OPCODE(ip)                     @ jump to next instruction
-

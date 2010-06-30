@@ -74,7 +74,7 @@ public class LocalsArraySet extends LocalsArray {
         super(primary.getMaxLocals() > 0);
 
         this.primary = primary;
-        this.secondaries = secondaries;        
+        this.secondaries = secondaries;
     }
 
     /**

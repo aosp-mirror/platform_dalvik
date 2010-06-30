@@ -100,4 +100,3 @@
 .L_strInternalError:
     .word   .LstrInternalError
     .endif
-

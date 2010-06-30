@@ -30,20 +30,20 @@ import java.io.PrintWriter;
 /**
  * Class that representats a method of a class.
  */
-public final class EncodedMethod extends EncodedMember 
+public final class EncodedMethod extends EncodedMember
         implements Comparable<EncodedMethod> {
     /** {@code non-null;} constant for the method */
     private final CstMethodRef method;
 
     /**
      * {@code null-ok;} code for the method, if the method is neither
-     * {@code abstract} nor {@code native} 
+     * {@code abstract} nor {@code native}
      */
     private final CodeItem code;
 
     /**
      * Constructs an instance.
-     * 
+     *
      * @param method {@code non-null;} constant for the method
      * @param accessFlags access flags
      * @param code {@code null-ok;} code for the method, if it is neither
@@ -80,7 +80,7 @@ public final class EncodedMethod extends EncodedMember
 
     /**
      * {@inheritDoc}
-     * 
+     *
      * <p><b>Note:</b> This compares the method constants only,
      * ignoring any associated code, because it should never be the
      * case that two different items with the same method constant
@@ -147,7 +147,7 @@ public final class EncodedMethod extends EncodedMember
 
     /**
      * Gets the constant for the method.
-     * 
+     *
      * @return {@code non-null;} the constant
      */
     public final CstMethodRef getRef() {
@@ -156,14 +156,14 @@ public final class EncodedMethod extends EncodedMember
 
     /** {@inheritDoc} */
     @Override
-    public int encode(DexFile file, AnnotatedOutput out, 
+    public int encode(DexFile file, AnnotatedOutput out,
             int lastIndex, int dumpSeq) {
         int methodIdx = file.getMethodIds().indexOf(method);
         int diff = methodIdx - lastIndex;
         int accessFlags = getAccessFlags();
         int codeOff = OffsettedItem.getAbsoluteOffsetOr0(code);
         boolean hasCode = (codeOff != 0);
-        boolean shouldHaveCode = (accessFlags & 
+        boolean shouldHaveCode = (accessFlags &
                 (AccessFlags.ACC_ABSTRACT | AccessFlags.ACC_NATIVE)) == 0;
 
         /*

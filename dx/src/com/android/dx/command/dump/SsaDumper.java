@@ -51,7 +51,7 @@ import java.util.EnumSet;
 public class SsaDumper extends BlockDumper {
     /**
      * Does the dump.
-     * 
+     *
      * @param bytes {@code non-null;} bytes of the original class file
      * @param out {@code non-null;} where to dump to
      * @param filePath the file path for the class, excluding any base
@@ -66,7 +66,7 @@ public class SsaDumper extends BlockDumper {
 
     /**
      * Constructs an instance.
-     * 
+     *
      * @param bytes {@code non-null;} bytes of the original class file
      * @param out {@code non-null;} where to dump to
      * @param filePath the file path for the class, excluding any base
@@ -124,10 +124,10 @@ public class SsaDumper extends BlockDumper {
         sb.append('\n');
 
         ArrayList<SsaBasicBlock> blocks = ssaMeth.getBlocks();
-        ArrayList<SsaBasicBlock> sortedBlocks = 
+        ArrayList<SsaBasicBlock> sortedBlocks =
             (ArrayList<SsaBasicBlock>) blocks.clone();
         Collections.sort(sortedBlocks, SsaBasicBlock.LABEL_COMPARATOR);
-        
+
         for (SsaBasicBlock block : sortedBlocks) {
             sb.append("block ")
                     .append(Hex.u2(block.getRopLabel())).append('\n');
@@ -164,7 +164,7 @@ public class SsaDumper extends BlockDumper {
                     sb.append(Hex.u2(succLabelList.get(i)));
 
                     if (szSuccLabels != 1 && primary == succLabelList.get(i)) {
-                        sb.append(" *");                        
+                        sb.append(" *");
                     }
                     sb.append('\n');
                 }

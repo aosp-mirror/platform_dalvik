@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-public class Blort 
+public class Blort
 {
     /*
      * Note: The use of the casts after the "?" in the following are

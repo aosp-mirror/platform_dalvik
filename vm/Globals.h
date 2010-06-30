@@ -122,6 +122,7 @@ struct DvmGlobals {
     bool        preVerify;
     bool        postVerify;
     bool        generateRegisterMaps;
+    bool        concurrentMarkSweep;
 
     int         assertionCtrlCount;
     AssertionControl*   assertionCtrl;
@@ -180,7 +181,6 @@ struct DvmGlobals {
     /*
      * Quick lookups for popular classes used internally.
      */
-    ClassObject* unlinkedJavaLangClass;
     ClassObject* classJavaLangClass;
     ClassObject* classJavaLangClassArray;
     ClassObject* classJavaLangError;
@@ -236,7 +236,7 @@ struct DvmGlobals {
     int         offJavaLangClass_pd;
 
     /* field offsets - String */
-    volatile int javaLangStringReady;   /* 0=not init, 1=ready, -1=initing */
+    int         javaLangStringReady;    /* 0=not init, 1=ready, -1=initing */
     int         offJavaLangString_value;
     int         offJavaLangString_count;
     int         offJavaLangString_offset;
@@ -277,7 +277,6 @@ struct DvmGlobals {
     int         offJavaLangRefReference_referent;
     int         offJavaLangRefReference_queue;
     int         offJavaLangRefReference_queueNext;
-    int         offJavaLangRefReference_vmData;
 
     /* method pointers - java.lang.ref.Reference */
     Method*     methJavaLangRefReference_enqueueInternal;

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-public class Blort 
+public class Blort
 {
     // Empty switch statement. (Note: This is the same as a default-only
     // switch statement, since under the covers every switch statement
@@ -44,7 +44,7 @@ public class Blort
 
         return 1;
     }
-    
+
     // Single element: Integer.MAX_VALUE.
     public int test4(int x) {
         switch (x) {

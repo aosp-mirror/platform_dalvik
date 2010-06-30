@@ -28,13 +28,13 @@ public final class RawAttribute extends BaseAttribute {
 
     /**
      * {@code null-ok;} constant pool to use for resolution of cpis in {@link
-     * #data} 
+     * #data}
      */
     private final ConstantPool pool;
 
     /**
      * Constructs an instance.
-     * 
+     *
      * @param name {@code non-null;} attribute name
      * @param data {@code non-null;} attribute data
      * @param pool {@code null-ok;} constant pool to use for cpi resolution
@@ -52,7 +52,7 @@ public final class RawAttribute extends BaseAttribute {
 
     /**
      * Constructs an instance from a sub-array of a {@link ByteArray}.
-     * 
+     *
      * @param name {@code non-null;} attribute name
      * @param data {@code non-null;} array containing the attribute data
      * @param offset offset in {@code data} to the attribute data
@@ -66,7 +66,7 @@ public final class RawAttribute extends BaseAttribute {
 
     /**
      * Get the raw data of the attribute.
-     * 
+     *
      * @return {@code non-null;} the data
      */
     public ByteArray getData() {
@@ -82,7 +82,7 @@ public final class RawAttribute extends BaseAttribute {
      * Gets the constant pool to use for cpi resolution, if any. It
      * presumably came from the class file that this attribute came
      * from.
-     * 
+     *
      * @return {@code null-ok;} the constant pool
      */
     public ConstantPool getPool() {

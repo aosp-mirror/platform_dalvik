@@ -52,4 +52,3 @@ d2i_doconv:
     add     sp, sp, #4
     ldmfd   sp!, {r4, r5, pc}
 #endif
-

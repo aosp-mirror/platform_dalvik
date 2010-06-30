@@ -821,7 +821,7 @@ int dvmDbgGetSignatureTag(const char* type)
     if (strcmp(type, "Ljava/lang/String;") == 0)
         return JT_STRING;
     else if (strcmp(type, "Ljava/lang/Class;") == 0)
-        return JT_CLASS_OBJECT; 
+        return JT_CLASS_OBJECT;
     else if (strcmp(type, "Ljava/lang/Thread;") == 0)
         return JT_THREAD;
     else if (strcmp(type, "Ljava/lang/ThreadGroup;") == 0)
@@ -1150,7 +1150,7 @@ ObjectId dvmDbgCreateString(const char* str)
 {
     StringObject* strObj;
 
-    strObj = dvmCreateStringFromCstr(str, ALLOC_DEFAULT);
+    strObj = dvmCreateStringFromCstr(str);
     dvmReleaseTrackedAlloc((Object*) strObj, NULL);
     return objectToObjectId((Object*) strObj);
 }
@@ -1255,7 +1255,7 @@ void dvmDbgOutputAllMethods(RefTypeId refTypeId, bool withGeneric,
     int i;
 
     dexStringCacheInit(&stringCache);
-    
+
     clazz = refTypeIdToClassObject(refTypeId);
     assert(clazz != NULL);
 
@@ -1325,7 +1325,7 @@ typedef struct DebugCallbackContext {
     bool withGeneric;
 } DebugCallbackContext;
 
-static int lineTablePositionsCb(void *cnxt, u4 address, u4 lineNum) 
+static int lineTablePositionsCb(void *cnxt, u4 address, u4 lineNum)
 {
     DebugCallbackContext *pContext = (DebugCallbackContext *)cnxt;
 
@@ -1454,7 +1454,7 @@ void dvmDbgOutputVariableTable(RefTypeId refTypeId, MethodId methodId,
     DebugCallbackContext context;
 
     memset (&context, 0, sizeof(DebugCallbackContext));
-    
+
     method = methodIdToMethod(refTypeId, methodId);
 
     expandBufAdd4BE(pReply, method->insSize);
@@ -1664,7 +1664,7 @@ void dvmDbgSetStaticFieldValue(RefTypeId refTypeId, FieldId fieldId,
     StaticField* sfield = (StaticField*) fieldIdToField(refTypeId, fieldId);
     Object* objVal;
     JValue value;
-    
+
     value.j = rawValue;
 
     switch (sfield->field.signature[0]) {
@@ -1761,7 +1761,7 @@ bool dvmDbgGetThreadStatus(ObjectId threadId, u4* pThreadStatus,
     Object* threadObj;
     Thread* thread;
     bool result = false;
-    
+
     threadObj = objectIdToObject(threadId);
     assert(threadObj != NULL);
 
@@ -1808,7 +1808,7 @@ u4 dvmDbgGetThreadSuspendCount(ObjectId threadId)
     Object* threadObj;
     Thread* thread;
     u4 result = 0;
-    
+
     threadObj = objectIdToObject(threadId);
     assert(threadObj != NULL);
 
@@ -1836,7 +1836,7 @@ bool dvmDbgThreadExists(ObjectId threadId)
     Object* threadObj;
     Thread* thread;
     bool result;
-    
+
     threadObj = objectIdToObject(threadId);
     assert(threadObj != NULL);
 
@@ -1863,7 +1863,7 @@ bool dvmDbgIsSuspended(ObjectId threadId)
     Object* threadObj;
     Thread* thread;
     bool result = false;
-    
+
     threadObj = objectIdToObject(threadId);
     assert(threadObj != NULL);
 
@@ -1893,7 +1893,7 @@ void dvmDbgWaitForSuspend(ObjectId threadId)
 {
     Object* threadObj;
     Thread* thread;
-    
+
     threadObj = objectIdToObject(threadId);
     assert(threadObj != NULL);
 

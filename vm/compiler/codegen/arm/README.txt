@@ -46,4 +46,3 @@ Thumb/Thumb2/VFP/PortableFP:
 
 In this way the dependency between generic and specific code tied to
 particular architectures can be explicitly represented.
-

@@ -24,4 +24,3 @@
 1:
     FETCH_ADVANCE_INST(1)               @ advance before throw
     b      common_errNullObject
-

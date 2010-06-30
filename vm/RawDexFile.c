@@ -41,4 +41,3 @@ void dvmRawDexFileFree(RawDexFile* pRawDexFile)
     free(pRawDexFile->cacheFileName);
     free(pRawDexFile);
 }
-

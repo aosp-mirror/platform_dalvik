@@ -37,4 +37,3 @@ public class FullyNoted {
         return 0;
     }
 }
-

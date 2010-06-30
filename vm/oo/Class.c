@@ -164,6 +164,8 @@ may not be worth the performance hit.
  */
 #define ZYGOTE_CLASS_CUTOFF 2304
 
+#define CLASS_SFIELD_SLOTS 1
+
 static ClassPathEntry* processClassPath(const char* pathStr, bool isBootstrap);
 static void freeCpeArray(ClassPathEntry* cpe);
 
@@ -283,6 +285,21 @@ static void linearAllocTests()
     dvmLinearFree(NULL, str);
 }
 
+static size_t classObjectSize(size_t sfieldCount)
+{
+    size_t size;
+
+    size = offsetof(ClassObject, sfields);
+    size += sizeof(StaticField) * sfieldCount;
+    return size;
+}
+
+size_t dvmClassObjectSize(const ClassObject *clazz)
+{
+    assert(clazz != NULL);
+    return classObjectSize(clazz->sfieldCount);
+}
+
 /*
  * Initialize the bootstrap class loader.
  *
@@ -322,24 +339,10 @@ bool dvmClassStartup(void)
     gDvm.initiatingLoaderList =
         calloc(ZYGOTE_CLASS_CUTOFF, sizeof(InitiatingLoaderList));
 
-    /* This placeholder class is used while a ClassObject is
-     * loading/linking so those not in the know can still say
-     * "obj->clazz->...".
-     */
-    gDvm.unlinkedJavaLangClass =
-        dvmMalloc(sizeof(ClassObject), ALLOC_DONT_TRACK);
-    if (gDvm.unlinkedJavaLangClass == NULL) {
-        LOGE("Unable to allocate gDvm.unlinkedJavaLangClass");
-        dvmAbort();
-    }
-
-    /* Set obj->clazz to NULL so anyone who gets too interested
-     * in the fake class will crash.
-     */
-    DVM_OBJECT_INIT(&gDvm.unlinkedJavaLangClass->obj, NULL);
-    gDvm.unlinkedJavaLangClass->descriptor = "!unlinkedClass";
-    dvmSetClassSerialNumber(gDvm.unlinkedJavaLangClass);
-
+    gDvm.classJavaLangClass = (ClassObject*) dvmMalloc(
+        classObjectSize(CLASS_SFIELD_SLOTS), ALLOC_DEFAULT);
+    DVM_OBJECT_INIT(&gDvm.classJavaLangClass->obj, gDvm.classJavaLangClass);
+    gDvm.classJavaLangClass->descriptor = "Ljava/lang/Class;";
     /*
      * Process the bootstrap class path.  This means opening the specified
      * DEX or Jar files and possibly running them through the optimizer.
@@ -798,7 +801,7 @@ StringObject* dvmGetBootPathResource(const char* name, int idx)
     }
 
     LOGV("+++ using URL='%s'\n", urlBuf);
-    urlObj = dvmCreateStringFromCstr(urlBuf, ALLOC_DEFAULT);
+    urlObj = dvmCreateStringFromCstr(urlBuf);
 
 bail:
     return urlObj;
@@ -821,7 +824,7 @@ typedef struct ClassMatchCriteria {
 
 static InitiatingLoaderList *dvmGetInitiatingLoaderList(ClassObject* clazz)
 {
-    assert(clazz->serialNumber > INITIAL_CLASS_SERIAL_NUMBER);
+    assert(clazz->serialNumber >= INITIAL_CLASS_SERIAL_NUMBER);
     int classIndex = clazz->serialNumber-INITIAL_CLASS_SERIAL_NUMBER;
     if (gDvm.initiatingLoaderList != NULL &&
         classIndex < ZYGOTE_CLASS_CUTOFF) {
@@ -1126,7 +1129,8 @@ void dvmSetClassSerialNumber(ClassObject* clazz)
     do {
         oldValue = gDvm.classSerialNumber;
         newValue = oldValue + 1;
-    } while (!ATOMIC_CMP_SWAP(&gDvm.classSerialNumber, oldValue, newValue));
+    } while (android_atomic_release_cas(oldValue, newValue,
+            &gDvm.classSerialNumber) != 0);
 
     clazz->serialNumber = (u4) oldValue;
 }
@@ -1241,7 +1245,7 @@ static ClassObject* findClassFromLoaderNoInit(const char* descriptor,
         dvmThrowException("Ljava/lang/OutOfMemoryError;", NULL);
         goto bail;
     }
-    nameObj = dvmCreateStringFromCstr(dotName, ALLOC_DEFAULT);
+    nameObj = dvmCreateStringFromCstr(dotName);
     if (nameObj == NULL) {
         assert(dvmCheckException(self));
         goto bail;
@@ -1468,7 +1472,6 @@ static ClassObject* findClassNoInit(const char* descriptor, Object* loader,
 
             /* Let the GC free the class.
              */
-            assert(clazz->obj.clazz == gDvm.unlinkedJavaLangClass);
             dvmReleaseTrackedAlloc((Object*) clazz, NULL);
 
             /* Grab the winning class.
@@ -1485,7 +1488,7 @@ static ClassObject* findClassNoInit(const char* descriptor, Object* loader,
         /*
          * Prepare and resolve.
          */
-        if (!dvmLinkClass(clazz, false)) {
+        if (!dvmLinkClass(clazz)) {
             assert(dvmCheckException(self));
 
             /* Make note of the error and clean up the class.
@@ -1674,27 +1677,30 @@ static ClassObject* loadClassFromDex0(DvmDex* pDvmDex,
      * Note that we assume that java.lang.Class does not override
      * finalize().
      */
-    newClass = (ClassObject*) dvmMalloc(sizeof(*newClass) +
-                 sizeof(StaticField) * pHeader->staticFieldsSize,
-                                        ALLOC_DEFAULT);
+    /* TODO: Can there be fewer special checks in the usual path? */
+    assert(descriptor != NULL);
+    if (classLoader == NULL &&
+        strcmp(descriptor, "Ljava/lang/Class;") == 0) {
+        assert(gDvm.classJavaLangClass != NULL);
+        newClass = gDvm.classJavaLangClass;
+    } else {
+        size_t size = classObjectSize(pHeader->staticFieldsSize);
+        newClass = (ClassObject*) dvmMalloc(size, ALLOC_DEFAULT);
+    }
     if (newClass == NULL)
         return NULL;
 
-    /* Until the class is loaded and linked, use a placeholder
-     * obj->clazz value as a hint to the GC.  We don't want
-     * the GC trying to scan the object while it's full of Idx
-     * values.  Also, the real java.lang.Class may not exist
-     * yet.
-     */
-    DVM_OBJECT_INIT(&newClass->obj, gDvm.unlinkedJavaLangClass);
-
+    DVM_OBJECT_INIT(&newClass->obj, gDvm.classJavaLangClass);
     dvmSetClassSerialNumber(newClass);
     newClass->descriptor = descriptor;
     assert(newClass->descriptorAlloc == NULL);
     newClass->accessFlags = pClassDef->accessFlags;
-    newClass->classLoader = classLoader;
+    dvmSetFieldObject((Object *)newClass,
+                      offsetof(ClassObject, classLoader),
+                      (Object *)classLoader);
     newClass->pDvmDex = pDvmDex;
     newClass->primitiveType = PRIM_NOT;
+    newClass->status = CLASS_IDX;
 
     /*
      * Stuff the superclass index into the object pointer field.  The linker
@@ -1705,7 +1711,7 @@ static ClassObject* loadClassFromDex0(DvmDex* pDvmDex,
      * newClass->super is not traversed or freed by dvmFreeClassInnards, so
      * this is safe.
      */
-    assert(sizeof(u4) == sizeof(ClassObject*));
+    assert(sizeof(u4) == sizeof(ClassObject*)); /* 32-bit check */
     newClass->super = (ClassObject*) pClassDef->superclassIdx;
 
     /*
@@ -1850,7 +1856,6 @@ static ClassObject* loadClassFromDex0(DvmDex* pDvmDex,
     }
 
     newClass->sourceFile = dexGetSourceFile(pDexFile, pClassDef);
-    newClass->status = CLASS_LOADED;
 
     /* caller must call dvmReleaseTrackedAlloc */
     return newClass;
@@ -1919,8 +1924,7 @@ void dvmFreeClassInnards(ClassObject* clazz)
     if (clazz == NULL)
         return;
 
-    assert(clazz->obj.clazz == gDvm.classJavaLangClass ||
-           clazz->obj.clazz == gDvm.unlinkedJavaLangClass);
+    assert(clazz->obj.clazz == gDvm.classJavaLangClass);
 
     /* Guarantee that dvmFreeClassInnards can be called on a given
      * class multiple times by clearing things out as we free them.
@@ -2366,11 +2370,6 @@ static bool precacheReferenceOffsets(ClassObject* clazz)
                 "queueNext", "Ljava/lang/ref/Reference;");
     assert(gDvm.offJavaLangRefReference_queueNext >= 0);
 
-    gDvm.offJavaLangRefReference_vmData =
-        dvmFindFieldOffset(gDvm.classJavaLangRefReference,
-                "vmData", "I");
-    assert(gDvm.offJavaLangRefReference_vmData >= 0);
-
     /* enqueueInternal() is private and thus a direct method. */
     meth = dvmFindDirectMethodByDescriptor(clazz, "enqueueInternal", "()Z");
     assert(meth != NULL);
@@ -2431,86 +2430,155 @@ static void computeRefOffsets(ClassObject* clazz)
  * This converts symbolic references into pointers.  It's independent of
  * the source file format.
  *
- * If "classesResolved" is false, we assume that superclassIdx and
- * interfaces[] are holding class reference indices rather than pointers.
- * The class references will be resolved during link.  (This is done when
- * loading from DEX to avoid having to create additional storage to pass
- * the indices around.)
+ * If clazz->status is CLASS_IDX, then clazz->super and interfaces[] are
+ * holding class reference indices rather than pointers.  The class
+ * references will be resolved during link.  (This is done when
+ * loading from DEX to avoid having to create additional storage to
+ * pass the indices around.)
  *
  * Returns "false" with an exception pending on failure.
  */
-bool dvmLinkClass(ClassObject* clazz, bool classesResolved)
+bool dvmLinkClass(ClassObject* clazz)
 {
     u4 superclassIdx = 0;
+    u4 *interfaceIdxArray = NULL;
     bool okay = false;
-    bool resolve_okay;
-    int numInterfacesResolved = 0;
     int i;
 
+    assert(clazz != NULL);
+    assert(clazz->descriptor != NULL);
+    assert(clazz->status == CLASS_IDX || clazz->status == CLASS_LOADED);
     if (gDvm.verboseClass)
         LOGV("CLASS: linking '%s'...\n", clazz->descriptor);
 
-    /* "Resolve" the class.
-     *
-     * At this point, clazz's reference fields contain Dex
-     * file indices instead of direct object references.
-     * We need to translate those indices into real references,
-     * while making sure that the GC doesn't sweep any of
-     * the referenced objects.
-     *
-     * The GC will avoid scanning this object as long as
-     * clazz->obj.clazz is gDvm.unlinkedJavaLangClass.
-     * Once clazz is ready, we'll replace clazz->obj.clazz
-     * with gDvm.classJavaLangClass to let the GC know
-     * to look at it.
-     */
-    assert(clazz->obj.clazz == gDvm.unlinkedJavaLangClass);
-
-    /* It's important that we take care of java.lang.Class
-     * first.  If we were to do this after looking up the
-     * superclass (below), Class wouldn't be ready when
-     * java.lang.Object needed it.
-     *
-     * Note that we don't set clazz->obj.clazz yet.
-     */
-    if (gDvm.classJavaLangClass == NULL) {
-        if (clazz->classLoader == NULL &&
-            strcmp(clazz->descriptor, "Ljava/lang/Class;") == 0)
-        {
-            gDvm.classJavaLangClass = clazz;
-            if (clazz->ifieldCount > CLASS_FIELD_SLOTS) {
-                LOGE("java.lang.Class has %d slots (expected %d)",
-                     clazz->ifieldCount, CLASS_FIELD_SLOTS);
-                dvmAbort();
-            }
-        } else {
-            gDvm.classJavaLangClass =
-                dvmFindSystemClassNoInit("Ljava/lang/Class;");
-            if (gDvm.classJavaLangClass == NULL) {
-                /* should have thrown one */
-                assert(dvmCheckException(dvmThreadSelf()));
-                goto bail;
-            }
+    assert(gDvm.classJavaLangClass != NULL);
+    assert(clazz->obj.clazz == gDvm.classJavaLangClass);
+    if (clazz->classLoader == NULL &&
+        (strcmp(clazz->descriptor, "Ljava/lang/Class;") == 0))
+    {
+        if (gDvm.classJavaLangClass->ifieldCount > CLASS_FIELD_SLOTS) {
+            LOGE("java.lang.Class has %d instance fields (expected at most %d)",
+                 gDvm.classJavaLangClass->ifieldCount, CLASS_FIELD_SLOTS);
+            dvmAbort();
+        }
+        if (gDvm.classJavaLangClass->sfieldCount != CLASS_SFIELD_SLOTS) {
+            LOGE("java.lang.Class has %d static fields (expected %d)",
+                 gDvm.classJavaLangClass->sfieldCount, CLASS_SFIELD_SLOTS);
+            dvmAbort();
         }
     }
-    assert(gDvm.classJavaLangClass != NULL);
-
-    /*
-     * Resolve all Dex indices so we can hand the ClassObject
-     * over to the GC.  If we fail at any point, we need to remove
-     * any tracked references to avoid leaking memory.
+    /* "Resolve" the class.
+     *
+     * At this point, clazz's reference fields may contain Dex file
+     * indices instead of direct object references.  Proxy objects are
+     * an exception, and may be the only exception.  We need to
+     * translate those indices into real references, and let the GC
+     * look inside this ClassObject.
      */
+    if (clazz->status == CLASS_IDX) {
+        if (clazz->interfaceCount > 0) {
+            /* Copy u4 DEX idx values out of the ClassObject* array
+             * where we stashed them.
+             */
+            assert(sizeof(*interfaceIdxArray) == sizeof(*clazz->interfaces));
+            size_t len = clazz->interfaceCount * sizeof(*interfaceIdxArray);
+            interfaceIdxArray = malloc(len);
+            if (interfaceIdxArray == NULL) {
+                LOGW("Unable to allocate memory to link %s", clazz->descriptor);
+                goto bail;
+            }
+            memcpy(interfaceIdxArray, clazz->interfaces, len);
 
-    /*
-     * All classes have a direct superclass, except for java/lang/Object.
-     */
-    if (!classesResolved) {
-        superclassIdx = (u4) clazz->super;          /* unpack temp store */
+            dvmLinearReadWrite(clazz->classLoader, clazz->interfaces);
+            memset(clazz->interfaces, 0, len);
+            dvmLinearReadOnly(clazz->classLoader, clazz->interfaces);
+        }
+
+        assert(sizeof(superclassIdx) == sizeof(clazz->super));
+        superclassIdx = (u4) clazz->super;
         clazz->super = NULL;
-    }
-    if (strcmp(clazz->descriptor, "Ljava/lang/Object;") == 0) {
-        assert(!classesResolved);
+        /* After this line, clazz will be fair game for the GC. The
+         * superclass and interfaces are all NULL.
+         */
+        clazz->status = CLASS_LOADED;
+
         if (superclassIdx != kDexNoIndex) {
+            ClassObject* super = dvmResolveClass(clazz, superclassIdx, false);
+            if (super == NULL) {
+                assert(dvmCheckException(dvmThreadSelf()));
+                if (gDvm.optimizing) {
+                    /* happens with "external" libs */
+                    LOGV("Unable to resolve superclass of %s (%d)\n",
+                         clazz->descriptor, superclassIdx);
+                } else {
+                    LOGW("Unable to resolve superclass of %s (%d)\n",
+                         clazz->descriptor, superclassIdx);
+                }
+                goto bail;
+            }
+            dvmSetFieldObject((Object *)clazz,
+                              offsetof(ClassObject, super),
+                              (Object *)super);
+        }
+
+        if (clazz->interfaceCount > 0) {
+            /* Resolve the interfaces implemented directly by this class. */
+            assert(interfaceIdxArray != NULL);
+            dvmLinearReadWrite(clazz->classLoader, clazz->interfaces);
+            for (i = 0; i < clazz->interfaceCount; i++) {
+                assert(interfaceIdxArray[i] != kDexNoIndex);
+                clazz->interfaces[i] =
+                    dvmResolveClass(clazz, interfaceIdxArray[i], false);
+                if (clazz->interfaces[i] == NULL) {
+                    const DexFile* pDexFile = clazz->pDvmDex->pDexFile;
+
+                    assert(dvmCheckException(dvmThreadSelf()));
+                    dvmLinearReadOnly(clazz->classLoader, clazz->interfaces);
+
+                    const char* classDescriptor;
+                    classDescriptor =
+                        dexStringByTypeIdx(pDexFile, interfaceIdxArray[i]);
+                    if (gDvm.optimizing) {
+                        /* happens with "external" libs */
+                        LOGV("Failed resolving %s interface %d '%s'\n",
+                             clazz->descriptor, interfaceIdxArray[i],
+                             classDescriptor);
+                    } else {
+                        LOGI("Failed resolving %s interface %d '%s'\n",
+                             clazz->descriptor, interfaceIdxArray[i],
+                             classDescriptor);
+                    }
+                    goto bail;
+                }
+
+                /* are we allowed to implement this interface? */
+                if (!dvmCheckClassAccess(clazz, clazz->interfaces[i])) {
+                    dvmLinearReadOnly(clazz->classLoader, clazz->interfaces);
+                    LOGW("Interface '%s' is not accessible to '%s'\n",
+                         clazz->interfaces[i]->descriptor, clazz->descriptor);
+                    dvmThrowException("Ljava/lang/IllegalAccessError;",
+                                      "interface not accessible");
+                    goto bail;
+                }
+                LOGVV("+++  found interface '%s'\n",
+                      clazz->interfaces[i]->descriptor);
+            }
+            dvmLinearReadOnly(clazz->classLoader, clazz->interfaces);
+        }
+    }
+    /*
+     * There are now Class references visible to the GC in super and
+     * interfaces.
+     */
+
+    /*
+     * All classes have a direct superclass, except for
+     * java/lang/Object and primitive classes. Primitive classes are
+     * are created CLASS_INITIALIZED, so won't get here.
+     */
+    assert(clazz->primitiveType == PRIM_NOT);
+    if (strcmp(clazz->descriptor, "Ljava/lang/Object;") == 0) {
+        if (clazz->super != NULL) {
             /* TODO: is this invariant true for all java/lang/Objects,
              * regardless of the class loader?  For now, assume it is.
              */
@@ -2524,25 +2592,10 @@ bool dvmLinkClass(ClassObject* clazz, bool classesResolved)
          */
         CLEAR_CLASS_FLAG(clazz, CLASS_ISFINALIZABLE);
     } else {
-        if (!classesResolved) {
-            if (superclassIdx == kDexNoIndex) {
-                dvmThrowException("Ljava/lang/LinkageError;",
-                    "no superclass defined");
-                goto bail;
-            }
-            clazz->super = dvmResolveClass(clazz, superclassIdx, false);
-            if (clazz->super == NULL) {
-                assert(dvmCheckException(dvmThreadSelf()));
-                if (gDvm.optimizing) {
-                    /* happens with "external" libs */
-                    LOGV("Unable to resolve superclass of %s (%d)\n",
-                        clazz->descriptor, superclassIdx);
-                } else {
-                    LOGW("Unable to resolve superclass of %s (%d)\n",
-                        clazz->descriptor, superclassIdx);
-                }
-                goto bail;
-            }
+        if (clazz->super == NULL) {
+            dvmThrowException("Ljava/lang/LinkageError;",
+                              "no superclass defined");
+            goto bail;
         }
         /* verify */
         if (dvmIsFinalClass(clazz->super)) {
@@ -2564,11 +2617,6 @@ bool dvmLinkClass(ClassObject* clazz, bool classesResolved)
                 "superclass not accessible");
             goto bail;
         }
-
-        /* Don't let the GC reclaim the superclass.
-         * TODO: shouldn't be needed; remove when things stabilize
-         */
-        dvmAddTrackedAlloc((Object *)clazz->super, NULL);
 
         /* Inherit finalizability from the superclass.  If this
          * class also overrides finalize(), its CLASS_ISFINALIZABLE
@@ -2637,100 +2685,6 @@ bool dvmLinkClass(ClassObject* clazz, bool classesResolved)
         }
     }
 
-    if (!classesResolved && clazz->interfaceCount > 0) {
-        /*
-         * Resolve the interfaces implemented directly by this class.  We
-         * stuffed the class index into the interface pointer slot.
-         */
-        dvmLinearReadWrite(clazz->classLoader, clazz->interfaces);
-        for (i = 0; i < clazz->interfaceCount; i++) {
-            u4 interfaceIdx;
-
-            interfaceIdx = (u4) clazz->interfaces[i];   /* unpack temp store */
-            assert(interfaceIdx != kDexNoIndex);
-
-            clazz->interfaces[i] = dvmResolveClass(clazz, interfaceIdx, false);
-            if (clazz->interfaces[i] == NULL) {
-                const DexFile* pDexFile = clazz->pDvmDex->pDexFile;
-
-                assert(dvmCheckException(dvmThreadSelf()));
-                dvmLinearReadOnly(clazz->classLoader, clazz->interfaces);
-
-                const char* classDescriptor;
-                classDescriptor = dexStringByTypeIdx(pDexFile, interfaceIdx);
-                if (gDvm.optimizing) {
-                    /* happens with "external" libs */
-                    LOGV("Failed resolving %s interface %d '%s'\n",
-                        clazz->descriptor, interfaceIdx, classDescriptor);
-                } else {
-                    LOGI("Failed resolving %s interface %d '%s'\n",
-                        clazz->descriptor, interfaceIdx, classDescriptor);
-                }
-                goto bail_during_resolve;
-            }
-
-            /* are we allowed to implement this interface? */
-            if (!dvmCheckClassAccess(clazz, clazz->interfaces[i])) {
-                dvmLinearReadOnly(clazz->classLoader, clazz->interfaces);
-                LOGW("Interface '%s' is not accessible to '%s'\n",
-                    clazz->interfaces[i]->descriptor, clazz->descriptor);
-                dvmThrowException("Ljava/lang/IllegalAccessError;",
-                    "interface not accessible");
-                goto bail_during_resolve;
-            }
-
-            /* Don't let the GC reclaim the interface class.
-             * TODO: shouldn't be needed; remove when things stabilize
-             */
-            dvmAddTrackedAlloc((Object *)clazz->interfaces[i], NULL);
-            numInterfacesResolved++;
-
-            LOGVV("+++  found interface '%s'\n",
-                clazz->interfaces[i]->descriptor);
-        }
-        dvmLinearReadOnly(clazz->classLoader, clazz->interfaces);
-    }
-
-    /*
-     * The ClassObject is now in a GC-able state.  We let the GC
-     * realize this by punching in the real class type, which is
-     * always java.lang.Class.
-     *
-     * After this line, clazz will be fair game for the GC.
-     * Every field that the GC will look at must now be valid:
-     * - clazz->super
-     * - class->classLoader
-     * - clazz->sfields
-     * - clazz->interfaces
-     */
-    clazz->obj.clazz = gDvm.classJavaLangClass;
-
-    if (false) {
-bail_during_resolve:
-        resolve_okay = false;
-    } else {
-        resolve_okay = true;
-    }
-
-    /*
-     * Now that the GC can scan the ClassObject, we can let
-     * go of the explicit references we were holding onto.
-     *
-     * Either that or we failed, in which case we need to
-     * release the references so we don't leak memory.
-     */
-    if (clazz->super != NULL) {
-        dvmReleaseTrackedAlloc((Object *)clazz->super, NULL);
-    }
-    for (i = 0; i < numInterfacesResolved; i++) {
-        dvmReleaseTrackedAlloc((Object *)clazz->interfaces[i], NULL);
-    }
-
-    if (!resolve_okay) {
-        //LOGW("resolve_okay is false\n");
-        goto bail;
-    }
-
     /*
      * Populate vtable.
      */
@@ -2792,7 +2746,6 @@ bail_during_resolve:
             if (gDvm.offJavaLangClass_pd <= 0) {
                 LOGE("ERROR: unable to find 'pd' field in Class\n");
                 dvmAbort();     /* we're not going to get much farther */
-                //goto bail;
             }
         }
     }
@@ -2836,6 +2789,9 @@ bail:
         if (!dvmCheckException(dvmThreadSelf())) {
             dvmThrowException("Ljava/lang/VirtualMachineError;", NULL);
         }
+    }
+    if (interfaceIdxArray != NULL) {
+        free(interfaceIdxArray);
     }
     return okay;
 }
@@ -3869,7 +3825,7 @@ static void initSFields(ClassObject* clazz)
         bool parsed = dvmEncodedArrayIteratorGetNext(&iterator, &value);
         StaticField* sfield = &clazz->sfields[i];
         const char* descriptor = sfield->field.signature;
-        bool needRelease = false;
+        bool isObj = false;
 
         if (! parsed) {
             /*
@@ -3903,13 +3859,13 @@ static void initSFields(ClassObject* clazz)
                     case kDexAnnotationString: {
                         parsed =
                             (strcmp(descriptor, "Ljava/lang/String;") == 0);
-                        needRelease = true;
+                        isObj = true;
                         break;
                     }
                     case kDexAnnotationType: {
                         parsed =
                             (strcmp(descriptor, "Ljava/lang/Class;") == 0);
-                        needRelease = true;
+                        isObj = true;
                         break;
                     }
                     default: {
@@ -3927,13 +3883,18 @@ static void initSFields(ClassObject* clazz)
 
         if (parsed) {
             /*
-             * All's well, so store the value. Note: This always
-             * stores the full width of a JValue, even though most of
-             * the time only the first word is needed.
+             * All's well, so store the value.
              */
-            sfield->value = value.value;
-            if (needRelease) {
+            if (isObj) {
+                dvmSetStaticFieldObject(sfield, value.value.l);
                 dvmReleaseTrackedAlloc(value.value.l, self);
+            } else {
+                /*
+                 * Note: This always stores the full width of a
+                 * JValue, even though most of the time only the first
+                 * word is needed.
+                 */
+                sfield->value = value.value;
             }
         } else {
             /*
@@ -4319,11 +4280,13 @@ bool dvmInitClass(ClassObject* clazz)
         }
 
         clazz->status = CLASS_VERIFYING;
-        if (!dvmVerifyClass(clazz, VERIFY_DEFAULT)) {
+        if (!dvmVerifyClass(clazz)) {
 verify_failed:
             dvmThrowExceptionWithClassMessage("Ljava/lang/VerifyError;",
                 clazz->descriptor);
-            clazz->verifyErrorClass = dvmGetException(self)->clazz;
+            dvmSetFieldObject((Object *)clazz,
+                              offsetof(ClassObject, verifyErrorClass),
+                              (Object *)dvmGetException(self)->clazz);
             clazz->status = CLASS_ERROR;
             goto bail_unlock;
         }
@@ -4884,9 +4847,6 @@ void dvmGcScanRootClassLoader()
 {
     /* dvmClassStartup() may not have been called before the first GC.
      */
-    if (gDvm.unlinkedJavaLangClass != NULL) {
-        dvmMarkObjectNonNull((Object *)gDvm.unlinkedJavaLangClass);
-    }
     if (gDvm.loadedClasses != NULL) {
         dvmHashTableLock(gDvm.loadedClasses);
         dvmHashForeach(gDvm.loadedClasses, markClassObject, NULL);
@@ -4970,14 +4930,4 @@ int dvmCompareNameDescriptorAndMethod(const char* name,
     }
 
     return dvmCompareDescriptorAndMethodProto(descriptor, method);
-}
-
-size_t dvmClassObjectSize(const ClassObject *clazz)
-{
-    size_t size;
-
-    assert(clazz != NULL);
-    size = offsetof(ClassObject, sfields);
-    size += sizeof(StaticField) * clazz->sfieldCount;
-    return size;
 }

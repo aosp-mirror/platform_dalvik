@@ -231,10 +231,10 @@ hprofDumpHeapObject(hprof_context_t *ctx, const Object *obj)
     hprof_record_t *rec = &ctx->curRec;
     HprofHeapId desiredHeap;
 
-    desiredHeap = 
+    desiredHeap =
             dvmHeapSourceGetPtrFlag(obj, HS_ALLOCATED_IN_ZYGOTE) ?
             HPROF_HEAP_ZYGOTE : HPROF_HEAP_APP;
-    
+
     if (ctx->objectsInSegment >= OBJECTS_PER_SEGMENT ||
         rec->length >= BYTES_PER_SEGMENT)
     {
@@ -281,24 +281,6 @@ hprofDumpHeapObject(hprof_context_t *ctx, const Object *obj)
          * gDvm.unlinkedJavaLangClass or it could be an object just
          * allocated which hasn't been initialized yet.
          */
-    } else if (clazz == gDvm.unlinkedJavaLangClass) {
-        /* obj is a ClassObject that hasn't been linked yet.
-         */
-        hprofAddU1ToRecord(rec, HPROF_CLASS_DUMP);
-
-    //TODO: use hprofLookupClassId() for this:
-        hprofAddIdToRecord(rec, (hprof_class_object_id)obj);
-        hprofAddU4ToRecord(rec, stackTraceSerialNumber(obj));
-        hprofAddIdToRecord(rec, (hprof_class_object_id)0); // no super class
-        hprofAddIdToRecord(rec, (hprof_object_id)0);       // no class loader
-        hprofAddIdToRecord(rec, (hprof_object_id)0);       // no signer
-        hprofAddIdToRecord(rec, (hprof_object_id)0);       // no prot domain
-        hprofAddIdToRecord(rec, (hprof_id)0);              // reserved
-        hprofAddIdToRecord(rec, (hprof_id)0);              // reserved
-        hprofAddU4ToRecord(rec, 0);                        // zero instance size
-        hprofAddU2ToRecord(rec, 0);                        // empty const pool
-        hprofAddU2ToRecord(rec, 0);                        // no statics
-        hprofAddU2ToRecord(rec, 0);                        // no instance fields
     } else {
         hprof_class_object_id clazzId;
 

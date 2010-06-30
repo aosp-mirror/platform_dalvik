@@ -71,7 +71,7 @@ public class Assert {
         assertEquals(null, expected, actual);
     }
     /**
-     * Asserts that two Strings are equal. 
+     * Asserts that two Strings are equal.
      */
     static public void assertEquals(String message, String expected, String actual) {
         if (expected == null && actual == null)
@@ -81,7 +81,7 @@ public class Assert {
         throw new ComparisonFailure(message, expected, actual);
     }
     /**
-     * Asserts that two Strings are equal. 
+     * Asserts that two Strings are equal.
      */
     static public void assertEquals(String expected, String actual) {
         assertEquals(null, expected, actual);

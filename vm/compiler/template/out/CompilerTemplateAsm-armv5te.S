@@ -1280,4 +1280,3 @@ dvmCompiler_TEMPLATE_MONITOR_ENTER_DEBUG:
 dmvCompilerTemplateEnd:
 
 #endif /* WITH_JIT */
-

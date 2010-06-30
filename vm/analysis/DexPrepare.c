@@ -943,7 +943,7 @@ static void verifyAndOptimizeClass(DexFile* pDexFile, ClassObject* clazz,
             LOGD("DexOpt: not verifying '%s': multiple definitions\n",
                 classDescriptor);
         } else {
-            if (dvmVerifyClass(clazz, VERIFY_DEFAULT)) {
+            if (dvmVerifyClass(clazz)) {
                 /*
                  * Set the "is preverified" flag in the DexClassDef.  We
                  * do it here, rather than in the ClassObject structure,
@@ -951,8 +951,7 @@ static void verifyAndOptimizeClass(DexFile* pDexFile, ClassObject* clazz,
                  */
                 assert((clazz->accessFlags & JAVA_FLAGS_MASK) ==
                     pClassDef->accessFlags);
-                ((DexClassDef*)pClassDef)->accessFlags |=
-                    CLASS_ISPREVERIFIED;
+                ((DexClassDef*)pClassDef)->accessFlags |= CLASS_ISPREVERIFIED;
                 verified = true;
             } else {
                 // TODO: log when in verbose mode
@@ -1031,7 +1030,7 @@ static const u1* getSignature(const ClassPathEntry* cpe)
  * If this changes, update DEX_OPT_MAGIC_VERS.
  */
 static const size_t kMinDepSize = 4 * 4;
-static const size_t kMaxDepSize = 4 * 4 + 1024;     // sanity check
+static const size_t kMaxDepSize = 4 * 4 + 2048;     // sanity check
 
 /*
  * Read the "opt" header, verify it, then read the dependencies section
@@ -1441,4 +1440,3 @@ static void updateChecksum(u1* addr, int len, DexHeader* pHeader)
     adler = adler32(adler, addr + nonSum, len - nonSum);
     pHeader->checksum = adler;
 }
-

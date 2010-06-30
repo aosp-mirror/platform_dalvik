@@ -99,7 +99,7 @@ endif  # !dvm_make_debug_vm
 
 LOCAL_SRC_FILES := \
 	AllocTracker.c \
-	Atomic.c \
+	Atomic.c.arm \
 	AtomicCache.c \
 	CheckJni.c \
 	Ddm.c \
@@ -137,6 +137,7 @@ LOCAL_SRC_FILES := \
 	alloc/Heap.c.arm \
 	alloc/DdmHeap.c \
 	alloc/Verify.c \
+	alloc/Visit.c \
 	analysis/CodeVerify.c \
 	analysis/DexPrepare.c \
 	analysis/DexVerify.c \
@@ -194,7 +195,7 @@ LOCAL_SRC_FILES := \
 	reflect/Annotation.c \
 	reflect/Proxy.c \
 	reflect/Reflect.c \
-	test/AtomicSpeed.c \
+	test/AtomicTest.c.arm \
 	test/TestHash.c \
 	test/TestIndirectRefTable.c
 
@@ -215,7 +216,6 @@ WITH_JIT := $(strip $(WITH_JIT))
 ifeq ($(WITH_JIT),true)
   LOCAL_CFLAGS += -DWITH_JIT
   LOCAL_SRC_FILES += \
-	../dexdump/OpCodeNames.c \
 	compiler/Compiler.c \
 	compiler/Frontend.c \
 	compiler/Utility.c \
@@ -247,10 +247,6 @@ ifeq ($(WITH_HPROF),true)
   endif # WITH_HPROF_STACK
 endif   # WITH_HPROF
 
-ifeq ($(strip $(DVM_TRACK_HEAP_MARKING)),true)
-  LOCAL_CFLAGS += -DDVM_TRACK_HEAP_MARKING=1
-endif
-
 LOCAL_C_INCLUDES += \
 	$(JNI_H_INCLUDE) \
 	dalvik \
@@ -276,6 +272,7 @@ MTERP_ARCH_KNOWN := false
 ifeq ($(dvm_arch),arm)
   #dvm_arch_variant := armv7-a
   #LOCAL_CFLAGS += -march=armv7-a -mfloat-abi=softfp -mfpu=vfp
+  LOCAL_CFLAGS += -Werror
   MTERP_ARCH_KNOWN := true
   # Select architecture-specific sources (armv4t, armv5te etc.)
   LOCAL_SRC_FILES += \

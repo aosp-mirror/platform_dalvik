@@ -39,31 +39,31 @@ import static com.android.dx.rop.annotation.AnnotationVisibility.*;
  */
 public final class AnnotationUtils {
     /** {@code non-null;} type for {@code AnnotationDefault} annotations */
-    private static final CstType ANNOTATION_DEFAULT_TYPE = 
+    private static final CstType ANNOTATION_DEFAULT_TYPE =
         CstType.intern(Type.intern("Ldalvik/annotation/AnnotationDefault;"));
 
     /** {@code non-null;} type for {@code EnclosingClass} annotations */
-    private static final CstType ENCLOSING_CLASS_TYPE = 
+    private static final CstType ENCLOSING_CLASS_TYPE =
         CstType.intern(Type.intern("Ldalvik/annotation/EnclosingClass;"));
 
     /** {@code non-null;} type for {@code EnclosingMethod} annotations */
-    private static final CstType ENCLOSING_METHOD_TYPE = 
+    private static final CstType ENCLOSING_METHOD_TYPE =
         CstType.intern(Type.intern("Ldalvik/annotation/EnclosingMethod;"));
 
     /** {@code non-null;} type for {@code InnerClass} annotations */
-    private static final CstType INNER_CLASS_TYPE = 
+    private static final CstType INNER_CLASS_TYPE =
         CstType.intern(Type.intern("Ldalvik/annotation/InnerClass;"));
 
     /** {@code non-null;} type for {@code MemberClasses} annotations */
-    private static final CstType MEMBER_CLASSES_TYPE = 
+    private static final CstType MEMBER_CLASSES_TYPE =
         CstType.intern(Type.intern("Ldalvik/annotation/MemberClasses;"));
 
     /** {@code non-null;} type for {@code Signature} annotations */
-    private static final CstType SIGNATURE_TYPE = 
+    private static final CstType SIGNATURE_TYPE =
         CstType.intern(Type.intern("Ldalvik/annotation/Signature;"));
 
     /** {@code non-null;} type for {@code Throws} annotations */
-    private static final CstType THROWS_TYPE = 
+    private static final CstType THROWS_TYPE =
         CstType.intern(Type.intern("Ldalvik/annotation/Throws;"));
 
     /** {@code non-null;} the UTF-8 constant {@code "accessFlags"} */
@@ -84,7 +84,7 @@ public final class AnnotationUtils {
 
     /**
      * Constructs a standard {@code AnnotationDefault} annotation.
-     * 
+     *
      * @param defaults {@code non-null;} the defaults, itself as an annotation
      * @return {@code non-null;} the constructed annotation
      */
@@ -98,7 +98,7 @@ public final class AnnotationUtils {
 
     /**
      * Constructs a standard {@code EnclosingClass} annotation.
-     * 
+     *
      * @param clazz {@code non-null;} the enclosing class
      * @return {@code non-null;} the annotation
      */
@@ -112,7 +112,7 @@ public final class AnnotationUtils {
 
     /**
      * Constructs a standard {@code EnclosingMethod} annotation.
-     * 
+     *
      * @param method {@code non-null;} the enclosing method
      * @return {@code non-null;} the annotation
      */
@@ -126,7 +126,7 @@ public final class AnnotationUtils {
 
     /**
      * Constructs a standard {@code InnerClass} annotation.
-     * 
+     *
      * @param name {@code null-ok;} the original name of the class, or
      * {@code null} to represent an anonymous class
      * @param accessFlags the original access flags
@@ -146,7 +146,7 @@ public final class AnnotationUtils {
 
     /**
      * Constructs a standard {@code MemberClasses} annotation.
-     * 
+     *
      * @param types {@code non-null;} the list of (the types of) the member classes
      * @return {@code non-null;} the annotation
      */
@@ -160,7 +160,7 @@ public final class AnnotationUtils {
 
     /**
      * Constructs a standard {@code Signature} annotation.
-     * 
+     *
      * @param signature {@code non-null;} the signature string
      * @return {@code non-null;} the annotation
      */
@@ -171,7 +171,7 @@ public final class AnnotationUtils {
          * Split the string into pieces that are likely to be common
          * across many signatures and the rest of the file.
          */
-         
+
         String raw = signature.getString();
         int rawLength = raw.length();
         ArrayList<String> pieces = new ArrayList<String>(20);
@@ -214,7 +214,7 @@ public final class AnnotationUtils {
         }
 
         list.setImmutable();
-        
+
         result.put(new NameValuePair(VALUE_UTF, new CstArray(list)));
         result.setImmutable();
         return result;
@@ -222,7 +222,7 @@ public final class AnnotationUtils {
 
     /**
      * Constructs a standard {@code Throws} annotation.
-     * 
+     *
      * @param types {@code non-null;} the list of thrown types
      * @return {@code non-null;} the annotation
      */
@@ -236,7 +236,7 @@ public final class AnnotationUtils {
 
     /**
      * Converts a {@link TypeList} to a {@link CstArray}.
-     * 
+     *
      * @param types {@code non-null;} the type list
      * @return {@code non-null;} the corresponding array constant
      */

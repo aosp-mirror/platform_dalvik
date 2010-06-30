@@ -340,4 +340,3 @@ s3:
     multianewarray [[[I 2
     return
 .end method
-

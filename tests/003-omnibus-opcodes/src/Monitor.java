@@ -42,4 +42,3 @@ public class Monitor {
         assert(mVal == 2);
     }
 }
-

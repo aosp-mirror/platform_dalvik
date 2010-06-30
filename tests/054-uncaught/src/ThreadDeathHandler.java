@@ -17,4 +17,3 @@ public class ThreadDeathHandler implements Thread.UncaughtExceptionHandler {
         e.printStackTrace();
     }
 }
-

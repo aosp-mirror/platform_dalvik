@@ -25,10 +25,10 @@ public abstract class Instance {
 
     //  Id of the ClassObj of which this object is an instance
     long mClassId;
-    
+
     //  The stack in which this object was allocated
     StackTrace mStack;
-    
+
     //  The heap in which this object was allocated (app, zygote, etc)
     Heap mHeap;
 
@@ -41,7 +41,7 @@ public abstract class Instance {
 
     //  List of all objects that hold a live reference to this object
     private ArrayList<Instance> mParents;
-    
+
     /*
      * After the whole HPROF file is read and parsed this method will be
      * called on all heap objects so that they can resolve their internal
@@ -67,15 +67,15 @@ public abstract class Instance {
 
     public final int getCompositeSize() {
         HashSet<Instance> set = new HashSet<Instance>();
-        
+
         visit(set, null);
-        
+
         int size = 0;
-        
+
         for (Instance instance: set) {
             size += instance.getSize();
         }
-        
+
         return size;
     }
 
@@ -89,21 +89,21 @@ public abstract class Instance {
     public void setHeap(Heap heap) {
         mHeap = heap;
     }
-    
+
     //  Add to the list of objects that have a hard reference to this Instance
     public void addParent(Instance parent) {
         if (mParents == null) {
             mParents = new ArrayList<Instance>();
         }
-        
+
         mParents.add(parent);
     }
-    
+
     public ArrayList<Instance> getParents() {
         if (mParents == null) {
             mParents = new ArrayList<Instance>();
         }
-        
+
         return mParents;
     }
 
@@ -112,6 +112,6 @@ public abstract class Instance {
      * a String describing the reference in detail.
      */
     public String describeReferenceTo(long id) {
-        return "No reference to 0x" + Long.toHexString(id); 
+        return "No reference to 0x" + Long.toHexString(id);
     }
 }

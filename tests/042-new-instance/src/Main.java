@@ -154,4 +154,3 @@ class LocalClass3 {
         }
     }
 }
-

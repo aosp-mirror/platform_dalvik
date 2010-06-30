@@ -2,7 +2,7 @@ package junit.framework;
 
 /**
  * Thrown when an assert equals for Strings failed.
- * 
+ *
  * Inspired by a patch from Alex Chaffee mailto:alex@purpletech.com
  */
 public class ComparisonFailure extends AssertionFailedError {
@@ -20,19 +20,19 @@ public class ComparisonFailure extends AssertionFailedError {
         fExpected= expected;
         fActual= actual;
     }
-    
+
     /**
      * Returns "..." in place of common prefix and "..." in
      * place of common suffix between expected and actual.
-     * 
+     *
      * @see java.lang.Throwable#getMessage()
      */
     public String getMessage() {
         if (fExpected == null || fActual == null)
             return Assert.format(super.getMessage(), fExpected, fActual);
-            
+
         int end= Math.min(fExpected.length(), fActual.length());
-        
+
         int i= 0;
         for(; i < end; i++) {
             if (fExpected.charAt(i) != fActual.charAt(i))
@@ -45,7 +45,7 @@ public class ComparisonFailure extends AssertionFailedError {
                 break;
         }
         String actual, expected;
-        
+
         // equal strings
         if (j < i && k < i) {
             expected= fExpected;
@@ -57,12 +57,12 @@ public class ComparisonFailure extends AssertionFailedError {
                 expected= "..."+expected;
                 actual= "..."+actual;
             }
-            
+
             if (j < fExpected.length()-1)
                 expected= expected+"...";
             if (k < fActual.length()-1)
                 actual= actual+"...";
-        }    
+        }
         return Assert.format(super.getMessage(), expected, actual);
     }
 }

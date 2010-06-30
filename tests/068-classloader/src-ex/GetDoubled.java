@@ -24,4 +24,3 @@ public class GetDoubled implements IGetDoubled {
         return new DoubledExtendOkay();
     }
 }
-

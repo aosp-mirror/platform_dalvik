@@ -100,10 +100,10 @@ public final class ValueEncoder {
 
     /** {@code non-null;} output stream to write to */
     private final AnnotatedOutput out;
-    
+
     /**
      * Construct an instance.
-     * 
+     *
      * @param file {@code non-null;} file being written
      * @param out {@code non-null;} output stream to write to
      */
@@ -122,7 +122,7 @@ public final class ValueEncoder {
 
     /**
      * Writes out the encoded form of the given constant.
-     * 
+     *
      * @param cst {@code non-null;} the constant to write
      */
     public void writeConstant(Constant cst) {
@@ -208,7 +208,7 @@ public final class ValueEncoder {
 
     /**
      * Gets the value type for the given constant.
-     * 
+     *
      * @param cst {@code non-null;} the constant
      * @return the value type; one of the {@code VALUE_*} constants
      * defined by this class
@@ -276,7 +276,7 @@ public final class ValueEncoder {
         if (annotates) {
             out.annotate("  size: " + Hex.u4(size));
         }
-        
+
         out.writeUnsignedLeb128(size);
 
         for (int i = 0; i < size; i++) {
@@ -300,7 +300,7 @@ public final class ValueEncoder {
      * (debugging) annotations and {@code topLevel} is
      * {@code true}, then this method will write (debugging)
      * annotations.
-     * 
+     *
      * @param annotation {@code non-null;} annotation instance to write
      * @param topLevel {@code true} iff the given annotation is the
      * top-level annotation or {@code false} if it is a sub-annotation
@@ -318,7 +318,7 @@ public final class ValueEncoder {
             out.annotate("  type_idx: " + Hex.u4(typeIdx) + " // " +
                     type.toHuman());
         }
-                    
+
         out.writeUnsignedLeb128(typeIds.indexOf(annotation.getType()));
 
         Collection<NameValuePair> pairs = annotation.getNameValuePairs();
@@ -335,7 +335,7 @@ public final class ValueEncoder {
             CstUtf8 name = pair.getName();
             int nameIdx = stringIds.indexOf(name);
             Constant value = pair.getValue();
-            
+
             if (annotates) {
                 out.annotate(0, "  elements[" + at + "]:");
                 at++;
@@ -356,11 +356,11 @@ public final class ValueEncoder {
             out.endAnnotation();
         }
     }
-    
+
     /**
      * Gets the colloquial type name and human form of the type of the
      * given constant, when used as an encoded value.
-     * 
+     *
      * @param cst {@code non-null;} the constant
      * @return {@code non-null;} its type name and human form
      */
@@ -383,7 +383,7 @@ public final class ValueEncoder {
     /**
      * Helper for {@link #writeConstant}, which writes out the value
      * for any signed integral type.
-     * 
+     *
      * @param type the type constant
      * @param value {@code long} bits of the value
      */
@@ -420,7 +420,7 @@ public final class ValueEncoder {
     /**
      * Helper for {@link #writeConstant}, which writes out the value
      * for any unsigned integral type.
-     * 
+     *
      * @param type the type constant
      * @param value {@code long} bits of the value
      */
@@ -430,7 +430,7 @@ public final class ValueEncoder {
         if (requiredBits == 0) {
             requiredBits = 1;
         }
-        
+
         // Round up the requiredBits to a number of bytes.
         int requiredBytes = (requiredBits + 0x07) >> 3;
 
@@ -451,7 +451,7 @@ public final class ValueEncoder {
     /**
      * Helper for {@link #writeConstant}, which writes out a
      * right-zero-extended value.
-     * 
+     *
      * @param type the type constant
      * @param value {@code long} bits of the value
      */
@@ -461,7 +461,7 @@ public final class ValueEncoder {
         if (requiredBits == 0) {
             requiredBits = 1;
         }
-        
+
         // Round up the requiredBits to a number of bytes.
         int requiredBytes = (requiredBits + 0x07) >> 3;
 
@@ -488,7 +488,7 @@ public final class ValueEncoder {
      * contents for a particular {@link Annotation}, calling itself
      * recursively should it encounter a nested annotation.
      *
-     * @param file {@code non-null;} the file to add to 
+     * @param file {@code non-null;} the file to add to
      * @param annotation {@code non-null;} the annotation to add contents for
      */
     public static void addContents(DexFile file, Annotation annotation) {
@@ -496,7 +496,7 @@ public final class ValueEncoder {
         StringIdsSection stringIds = file.getStringIds();
 
         typeIds.intern(annotation.getType());
-        
+
         for (NameValuePair pair : annotation.getNameValuePairs()) {
             stringIds.intern(pair.getName());
             addContents(file, pair.getValue());
@@ -509,8 +509,8 @@ public final class ValueEncoder {
      * should it encounter a {@link CstArray} and calling {@link
      * #addContents(DexFile,Annotation)} recursively should it
      * encounter a {@link CstAnnotation}.
-     * 
-     * @param file {@code non-null;} the file to add to 
+     *
+     * @param file {@code non-null;} the file to add to
      * @param cst {@code non-null;} the constant to add contents for
      */
     public static void addContents(DexFile file, Constant cst) {

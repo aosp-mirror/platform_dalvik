@@ -75,7 +75,7 @@ public final class CodeStatistics {
 
     /**
      * Updates the number of original bytecode bytes processed.
-     * 
+     *
      * @param count {@code >= 0;} the number of bytes to add
      */
     public static void updateOriginalByteCount(int count) {
@@ -84,7 +84,7 @@ public final class CodeStatistics {
 
     /**
      * Updates the dex statistics.
-     * 
+     *
      * @param nonOptCode non-optimized code block
      * @param code optimized code block
      */
@@ -145,7 +145,7 @@ public final class CodeStatistics {
 
     /**
      * Prints out the collected statistics.
-     * 
+     *
      * @param out {@code non-null;} where to output to
      */
     public static void dumpStatistics(PrintStream out) {

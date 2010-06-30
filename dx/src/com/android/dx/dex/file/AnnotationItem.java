@@ -36,19 +36,19 @@ import java.util.Comparator;
 public final class AnnotationItem extends OffsettedItem {
     /** annotation visibility constant: visible at build time only */
     private static final int VISIBILITY_BUILD = 0;
-    
+
     /** annotation visibility constant: visible at runtime */
     private static final int VISIBILITY_RUNTIME = 1;
 
     /** annotation visibility constant: visible at runtime only to system */
     private static final int VISIBILITY_SYSTEM = 2;
-    
+
     /** the required alignment for instances of this class */
     private static final int ALIGNMENT = 1;
 
     /** {@code non-null;} unique instance of {@link #TypeIdSorter} */
     private static final TypeIdSorter TYPE_ID_SORTER = new TypeIdSorter();
-    
+
     /** {@code non-null;} the annotation to represent */
     private final Annotation annotation;
 
@@ -87,7 +87,7 @@ public final class AnnotationItem extends OffsettedItem {
      * Sorts an array of instances, in place, by type id index,
      * ignoring all other aspects of the elements. This is only valid
      * to use after type id indices are known.
-     * 
+     *
      * @param array {@code non-null;} array to sort
      */
     public static void sortByTypeIdIndex(AnnotationItem[] array) {
@@ -96,7 +96,7 @@ public final class AnnotationItem extends OffsettedItem {
 
     /**
      * Constructs an instance.
-     * 
+     *
      * @param annotation {@code non-null;} annotation to represent
      */
     public AnnotationItem(Annotation annotation) {
@@ -166,7 +166,7 @@ public final class AnnotationItem extends OffsettedItem {
      * Write a (listing file) annotation for this instance to the given
      * output, that consumes no bytes of output. This is for annotating
      * a reference to this instance at the point of the reference.
-     * 
+     *
      * @param out {@code non-null;} where to output to
      * @param prefix {@code non-null;} prefix for each line of output
      */
@@ -204,7 +204,7 @@ public final class AnnotationItem extends OffsettedItem {
                 throw new RuntimeException("shouldn't happen");
             }
         }
-        
+
         if (annotates) {
             /*
              * The output is to be annotated, so redo the work previously

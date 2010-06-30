@@ -28,7 +28,7 @@ import java.util.HashSet;
 public final class DalvCode {
     /**
      * how much position info to preserve; one of the static
-     * constants in {@link PositionList} 
+     * constants in {@link PositionList}
      */
     private final int positionInfo;
 
@@ -46,13 +46,13 @@ public final class DalvCode {
 
     /**
      * {@code null-ok;} catch table; set in
-     * {@link #finishProcessingIfNecessary} 
+     * {@link #finishProcessingIfNecessary}
      */
     private CatchTable catches;
 
     /**
      * {@code null-ok;} source positions list; set in
-     * {@link #finishProcessingIfNecessary} 
+     * {@link #finishProcessingIfNecessary}
      */
     private PositionList positions;
 
@@ -119,16 +119,16 @@ public final class DalvCode {
      * Assign indices in all instructions that need them, using the
      * given callback to perform lookups. This must be called before
      * {@link #getInsns}.
-     * 
+     *
      * @param callback {@code non-null;} callback object
      */
     public void assignIndices(AssignIndicesCallback callback) {
         unprocessedInsns.assignIndices(callback);
     }
-    
+
     /**
      * Gets whether this instance has any position data to represent.
-     * 
+     *
      * @return {@code true} iff this instance has any position
      * data to represent
      */
@@ -136,10 +136,10 @@ public final class DalvCode {
         return (positionInfo != PositionList.NONE)
             && unprocessedInsns.hasAnyPositionInfo();
     }
-            
+
     /**
      * Gets whether this instance has any local variable data to represent.
-     * 
+     *
      * @return {@code true} iff this instance has any local variable
      * data to represent
      */
@@ -150,16 +150,16 @@ public final class DalvCode {
     /**
      * Gets whether this instance has any catches at all (either typed
      * or catch-all).
-     * 
+     *
      * @return whether this instance has any catches at all
      */
     public boolean hasAnyCatches() {
         return unprocessedCatches.hasAnyCatches();
     }
-    
+
     /**
      * Gets the set of catch types handled anywhere in the code.
-     * 
+     *
      * @return {@code non-null;} the set of catch types
      */
     public HashSet<Type> getCatchTypes() {
@@ -169,7 +169,7 @@ public final class DalvCode {
     /**
      * Gets the set of all constants referred to by instructions in
      * the code.
-     * 
+     *
      * @return {@code non-null;} the set of constants
      */
     public HashSet<Constant> getInsnConstants() {
@@ -178,7 +178,7 @@ public final class DalvCode {
 
     /**
      * Gets the list of instructions.
-     * 
+     *
      * @return {@code non-null;} the instruction list
      */
     public DalvInsnList getInsns() {
@@ -188,7 +188,7 @@ public final class DalvCode {
 
     /**
      * Gets the catch (exception handler) table.
-     * 
+     *
      * @return {@code non-null;} the catch table
      */
     public CatchTable getCatches() {
@@ -198,7 +198,7 @@ public final class DalvCode {
 
     /**
      * Gets the source positions list.
-     * 
+     *
      * @return {@code non-null;} the source positions list
      */
     public PositionList getPositions() {
@@ -208,7 +208,7 @@ public final class DalvCode {
 
     /**
      * Gets the source positions list.
-     * 
+     *
      * @return {@code non-null;} the source positions list
      */
     public LocalList getLocals() {
@@ -222,7 +222,7 @@ public final class DalvCode {
     public static interface AssignIndicesCallback {
         /**
          * Gets the index for the given constant.
-         * 
+         *
          * @param cst {@code non-null;} the constant
          * @return {@code >= -1;} the index or {@code -1} if the constant
          * shouldn't actually be reified with an index

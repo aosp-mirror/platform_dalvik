@@ -17,4 +17,3 @@
 public interface IfaceSuper {
     public DoubledImplement2 getDoubledInstance2();
 }
-

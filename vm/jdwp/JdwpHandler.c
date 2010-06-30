@@ -2106,15 +2106,14 @@ void dvmJdwpProcessRequest(JdwpState* state, const JdwpReqHeader* pHeader,
     JdwpError result = ERR_NONE;
     int i, respLen;
 
-    /*
-     * Activity from a debugger, not merely ddms.  Mark us as having an
-     * active debugger session, and zero out the last-activity timestamp.
-     */
     if (pHeader->cmdSet != kJDWPDdmCmdSet) {
+        /*
+         * Activity from a debugger, not merely ddms.  Mark us as having an
+         * active debugger session, and zero out the last-activity timestamp
+         * so waitForDebugger() doesn't return if we stall for a bit here.
+         */
         dvmDbgActive();
-
-        state->lastActivitySec = 0;
-        MEM_BARRIER();
+        dvmQuasiAtomicSwap64(0, &state->lastActivityWhen);
     }
 
     /*
@@ -2192,15 +2191,9 @@ void dvmJdwpProcessRequest(JdwpState* state, const JdwpReqHeader* pHeader,
      * the initial setup.  Only update if this is a non-DDMS packet.
      */
     if (pHeader->cmdSet != kJDWPDdmCmdSet) {
-        long lastSec, lastMsec;
-
-        dvmJdwpGetNowMsec(&lastSec, &lastMsec);
-        state->lastActivityMsec = lastMsec;
-        MEM_BARRIER();      // updating a 64-bit value
-        state->lastActivitySec = lastSec;
+        dvmQuasiAtomicSwap64(dvmJdwpGetNowMsec(), &state->lastActivityWhen);
     }
 
     /* tell the VM that GC is okay again */
     dvmDbgThreadWaiting();
 }
-

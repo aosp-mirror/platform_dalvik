@@ -8,7 +8,7 @@ public class Main {
         testThread(1);
         testThread(2);
         testThread(3);
-        
+
         catchTheUncaught(1);
     }
 
@@ -22,7 +22,7 @@ public class Main {
             ex.printStackTrace();
         }
     }
-    
+
     static void catchTheUncaught(int which) {
         ThreadDeathHandler defHandler = new ThreadDeathHandler("DEFAULT");
         ThreadDeathHandler threadHandler = new ThreadDeathHandler("THREAD");
@@ -55,7 +55,7 @@ public class Main {
         public Helper(int which) {
             this.which = which;
         }
-        
+
         public void run() {
             catchTheUncaught(which);
         }

@@ -2910,7 +2910,7 @@ static jstring NewStringUTF(JNIEnv* env, const char* bytes)
         result = NULL;
     } else {
         /* note newStr could come back NULL on OOM */
-        StringObject* newStr = dvmCreateStringFromCstr(bytes, ALLOC_DEFAULT);
+        StringObject* newStr = dvmCreateStringFromCstr(bytes);
         result = addLocalReference(env, (Object*) newStr);
         dvmReleaseTrackedAlloc((Object*)newStr, NULL);
     }
@@ -3093,7 +3093,7 @@ static void SetObjectArrayElement(JNIEnv* env, jobjectArray jarr,
     //LOGV("JNI: set element %d in array %p to %p\n", index, array, value);
 
     Object* obj = dvmDecodeIndirectRef(env, jobj);
-    ((Object**) arrayObj->contents)[index] = obj;
+    dvmSetObjectArrayElement(arrayObj, index, obj);
 
 bail:
     JNI_EXIT();

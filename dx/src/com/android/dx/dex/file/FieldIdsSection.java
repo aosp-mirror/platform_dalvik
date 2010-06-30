@@ -30,13 +30,13 @@ import java.util.TreeMap;
 public final class FieldIdsSection extends MemberIdsSection {
     /**
      * {@code non-null;} map from field constants to {@link
-     * FieldIdItem} instances 
+     * FieldIdItem} instances
      */
     private final TreeMap<CstFieldRef, FieldIdItem> fieldIds;
 
     /**
      * Constructs an instance. The file offset is initially unknown.
-     * 
+     *
      * @param file {@code non-null;} file that this instance is part of
      */
     public FieldIdsSection(DexFile file) {
@@ -71,7 +71,7 @@ public final class FieldIdsSection extends MemberIdsSection {
 
     /**
      * Writes the portion of the file header that refers to this instance.
-     * 
+     *
      * @param out {@code non-null;} where to write
      */
     public void writeHeaderPart(AnnotatedOutput out) {
@@ -91,7 +91,7 @@ public final class FieldIdsSection extends MemberIdsSection {
 
     /**
      * Interns an element into this instance.
-     * 
+     *
      * @param field {@code non-null;} the reference to intern
      * @return {@code non-null;} the interned reference
      */
@@ -115,7 +115,7 @@ public final class FieldIdsSection extends MemberIdsSection {
     /**
      * Gets the index of the given reference, which must have been added
      * to this instance.
-     * 
+     *
      * @param ref {@code non-null;} the reference to look up
      * @return {@code >= 0;} the reference's index
      */

@@ -17,7 +17,7 @@
 #include "Dalvik.h"
 #include "Dataflow.h"
 #include "Loop.h"
-#include "dexdump/OpCodeNames.h"
+#include "libdex/OpCodeNames.h"
 
 /*
  * Main table containing data flow attributes for each bytecode. The first
@@ -710,19 +710,19 @@ int dvmCompilerDataFlowAttributes[kMirOpLast] = {
     // E2 OP_USHR_INT_LIT8 vAA, vBB, #+CC
     DF_DA | DF_UB,
 
-    // E3 OP_UNUSED_E3
+    // E3 OP_IGET_VOLATILE
     DF_NOP,
 
-    // E4 OP_UNUSED_E4
+    // E4 OP_IPUT_VOLATILE
     DF_NOP,
 
-    // E5 OP_UNUSED_E5
+    // E5 OP_SGET_VOLATILE
     DF_NOP,
 
-    // E6 OP_UNUSED_E6
+    // E6 OP_SPUT_VOLATILE
     DF_NOP,
 
-    // E7 OP_UNUSED_E7
+    // E7 OP_IGET_OBJECT_VOLATILE
     DF_NOP,
 
     // E8 OP_IGET_WIDE_VOLATILE
@@ -785,13 +785,13 @@ int dvmCompilerDataFlowAttributes[kMirOpLast] = {
     // FB OP_INVOKE_SUPER_QUICK_RANGE
     DF_FORMAT_3RC,
 
-    // FC OP_UNUSED_FC
+    // FC OP_IPUT_OBJECT_VOLATILE
     DF_NOP,
 
-    // FD OP_UNUSED_FD
+    // FD OP_SGET_OBJECT_VOLATILE
     DF_NOP,
 
-    // FE OP_UNUSED_FE
+    // FE OP_SPUT_OBJECT_VOLATILE
     DF_NOP,
 
     // FF OP_UNUSED_FF
@@ -826,7 +826,7 @@ char *dvmCompilerGetDalvikDisassembly(DecodedInstruction *insn)
     char *ret;
 
     buffer[0] = 0;
-    strcpy(buffer, getOpcodeName(opcode));
+    strcpy(buffer, dexGetOpcodeName(opcode));
 
     if (dfAttributes & DF_FORMAT_35C) {
         unsigned int i;

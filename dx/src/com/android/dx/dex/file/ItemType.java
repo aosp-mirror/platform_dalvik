@@ -44,7 +44,7 @@ public enum ItemType implements ToHuman {
     TYPE_TYPE_ITEM(                 -1,     "type_item"),
     TYPE_EXCEPTION_HANDLER_ITEM(    -1,     "exception_handler_item"),
     TYPE_ANNOTATION_SET_REF_ITEM(   -1,     "annotation_set_ref_item");
-    
+
     /** value when represented in a {@link MapItem} */
     private final int mapValue;
 
@@ -53,10 +53,10 @@ public enum ItemType implements ToHuman {
 
     /** {@code non-null;} the short human name */
     private final String humanName;
-   
+
     /**
      * Constructs an instance.
-     * 
+     *
      * @param mapValue value when represented in a {@link MapItem}
      * @param typeName {@code non-null;} name of the type
      */
@@ -74,16 +74,16 @@ public enum ItemType implements ToHuman {
 
     /**
      * Gets the map value.
-     * 
+     *
      * @return the map value
      */
     public int getMapValue() {
         return mapValue;
     }
-    
+
     /**
      * Gets the type name.
-     * 
+     *
      * @return {@code non-null;} the type name
      */
     public String getTypeName() {

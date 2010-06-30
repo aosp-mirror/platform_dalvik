@@ -18,4 +18,3 @@
     */
 
 %include "x86-atom/unop.S" { "preinstr":"sal $16, %ecx", "instr":"sar $16, %ecx" }
-

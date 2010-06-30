@@ -113,4 +113,3 @@ ${opcode}_nan:
     b       ${opcode}_finish
 
 #endif
-

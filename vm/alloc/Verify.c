@@ -15,14 +15,15 @@
  */
 
 #include "Dalvik.h"
+#include "alloc/HeapBitmap.h"
 #include "alloc/HeapSource.h"
 #include "alloc/Verify.h"
-#include "alloc/HeapBitmap.h"
+#include "alloc/Visit.h"
 
 /*
  * Helper routine for verifyRefernce that masks low-tag bits before
  * applying verification checks.  TODO: eliminate the use of low-tag
- * bits and move this code into verfiyReference.
+ * bits and move this code into verifyReference.
  */
 static void verifyReferenceUnmask(const void *addr, uintptr_t mask)
 {
@@ -51,105 +52,9 @@ static void verifyReference(const void *addr)
     verifyReferenceUnmask(addr, 0);
 }
 
-/*
- * Verifies instance fields.
- */
-static void verifyInstanceFields(const Object *obj)
+static void visitorCallback(void *addr, void *arg)
 {
-    ClassObject *clazz;
-    int i;
-
-    assert(obj != NULL);
-    assert(obj->clazz != NULL);
-    LOGV("Entering verifyInstanceFields(obj=%p)", obj);
-    /* TODO(cshapiro): check reference offsets bitmap for agreement. */
-    for (clazz = obj->clazz; clazz != NULL; clazz = clazz->super) {
-        InstField *field = clazz->ifields;
-        for (i = 0; i < clazz->ifieldRefCount; ++i, ++field) {
-            void *addr = BYTE_OFFSET((Object *)obj, field->byteOffset);
-            verifyReference(&((JValue *)addr)->l);
-        }
-    }
-    LOGV("Exiting verifyInstanceFields(obj=%p)", obj);
-}
-
-/*
- * Verifies the header, static field references, and interface
- * pointers of a class object.
- */
-static void verifyClassObject(const ClassObject *obj)
-{
-    int i;
-
-    LOGV("Entering verifyClassObject(obj=%p)", obj);
-    if (obj == gDvm.unlinkedJavaLangClass) {
-        assert(obj->obj.clazz == NULL);
-        goto exit;
-    }
-    verifyReference(&obj->obj.clazz);
-    assert(!strcmp(obj->obj.clazz->descriptor, "Ljava/lang/Class;"));
-    if (IS_CLASS_FLAG_SET(obj, CLASS_ISARRAY)) {
-        verifyReference(&obj->elementClass);
-    }
-    verifyReference(&obj->super);
-    verifyReference(&obj->classLoader);
-    /* Verify static field references. */
-    for (i = 0; i < obj->sfieldCount; ++i) {
-        char ch = obj->sfields[i].field.signature[0];
-        if (ch == '[' || ch == 'L') {
-            verifyReference(&obj->sfields[i].value.l);
-        }
-    }
-    /* Verify the instance fields. */
-    verifyInstanceFields((const Object *)obj);
-    /* Verify interface references. */
-    for (i = 0; i < obj->interfaceCount; ++i) {
-        verifyReference(&obj->interfaces[i]);
-    }
-exit:
-    LOGV("Exiting verifyClassObject(obj=%p)", obj);
-}
-
-/*
- * Verifies the header of all array objects.  If the array object is
- * specialized to a reference type, verifies the array data as well.
- */
-static void verifyArrayObject(const ArrayObject *array)
-{
-    size_t i;
-
-    LOGV("Entering verifyArrayObject(array=%p)", array);
-    /* Verify the class object reference. */
-    assert(array->obj.clazz != NULL);
-    verifyReference(&array->obj.clazz);
-    if (IS_CLASS_FLAG_SET(array->obj.clazz, CLASS_ISOBJECTARRAY)) {
-        /* Verify the array contents. */
-        Object **contents = (Object **)array->contents;
-        for (i = 0; i < array->length; ++i) {
-            verifyReference(&contents[i]);
-        }
-    }
-    LOGV("Exiting verifyArrayObject(array=%p)", array);
-}
-
-/*
- * Verifies the header and field references of a data object.
- */
-static void verifyDataObject(const DataObject *obj)
-{
-    LOGV("Entering verifyDataObject(obj=%p)", obj);
-    /* Verify the class object. */
-    assert(obj->obj.clazz != NULL);
-    verifyReference(&obj->obj.clazz);
-    /* Verify the instance fields. */
-    verifyInstanceFields((const Object *)obj);
-    if (IS_CLASS_FLAG_SET(obj->obj.clazz, CLASS_ISREFERENCE)) {
-        /* Verify the hidden Reference.referent field. */
-        size_t offset = gDvm.offJavaLangRefReference_referent;
-        void *addr = BYTE_OFFSET((Object *)obj, offset);
-        verifyReference(&((JValue *)addr)->l);
-    }
-    LOGV("Exiting verifyDataObject(obj=%p)", obj);
+    verifyReference(addr);
 }
 
 /*
@@ -158,27 +63,8 @@ static void verifyDataObject(const DataObject *obj)
  */
 void dvmVerifyObject(const Object *obj)
 {
-    ClassObject *clazz;
-
     LOGV("Entering dvmVerifyObject(obj=%p)", obj);
-    assert(obj != NULL);
-    /* Check that the object is aligned. */
-    assert(((uintptr_t)obj & 7) == 0);
-    clazz = obj->clazz;
-    /* Check that the class object is aligned. */
-    assert(((uintptr_t)clazz & 7) == 0);
-    /* Dispatch a type-specific verification routine. */
-    if (clazz == gDvm.classJavaLangClass ||
-        obj == (Object *)gDvm.unlinkedJavaLangClass) {
-        verifyClassObject((ClassObject *)obj);
-    } else {
-        assert(clazz != NULL);
-        if (IS_CLASS_FLAG_SET(clazz, CLASS_ISARRAY)) {
-            verifyArrayObject((ArrayObject *)obj);
-        } else {
-            verifyDataObject((DataObject *)obj);
-        }
-    }
+    dvmVisitObject(visitorCallback, (Object *)obj, NULL);
     LOGV("Exiting dvmVerifyObject(obj=%p)", obj);
 }
 
@@ -250,29 +136,13 @@ static void verifyReferenceTable(const ReferenceTable *table)
 }
 
 /*
- * Applies the verify routine to a heap worker reference operation.
- */
-static void verifyReferenceOperation(const void *arg)
-{
-    assert(arg != NULL);
-    verifyReferenceUnmask(arg, 0x3);
-}
-
-/*
  * Verifies a large heap reference table.  These objects are list
  * heads.  As such, it is valid for table to be NULL.
  */
-static void verifyLargeHeapRefTable(LargeHeapRefTable *table,
-                                    void (*callback)(const void *arg))
+static void verifyLargeHeapRefTable(const LargeHeapRefTable *table)
 {
-    Object **ref;
-
-    assert(callback != NULL);
     for (; table != NULL; table = table->next) {
-        for (ref = table->refs.table; ref < table->refs.nextEntry; ++ref) {
-            assert(ref != NULL);
-            (*callback)(ref);
-        }
+        verifyReferenceTable(&table->refs);
     }
 }
 
@@ -392,11 +262,8 @@ void dvmVerifyRoots(void)
     verifyHashTable(gDvm.internedStrings, verifyStringReference);
     verifyReferenceTable(&gDvm.jniGlobalRefTable);
     verifyReferenceTable(&gDvm.jniPinRefTable);
-    verifyReferenceTable(&gDvm.gcHeap->nonCollectableRefs);
-    verifyLargeHeapRefTable(gDvm.gcHeap->referenceOperations,
-                            verifyReferenceOperation);
-    verifyLargeHeapRefTable(gDvm.gcHeap->pendingFinalizationRefs,
-                            verifyReference);
+    verifyLargeHeapRefTable(gDvm.gcHeap->referenceOperations);
+    verifyLargeHeapRefTable(gDvm.gcHeap->pendingFinalizationRefs);
     verifyThreads();
     /* TODO: verify cached global references. */
 }

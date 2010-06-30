@@ -17,4 +17,3 @@ public @interface AnnoArrayField {
     double[] dd() default {0.987654321};
     String[] str() default {};
 }
-

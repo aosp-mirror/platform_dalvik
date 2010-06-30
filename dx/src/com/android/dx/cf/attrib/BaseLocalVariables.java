@@ -29,7 +29,7 @@ public abstract class BaseLocalVariables extends BaseAttribute {
 
     /**
      * Constructs an instance.
-     * 
+     *
      * @param name {@code non-null;} attribute name
      * @param localVariables {@code non-null;} list of local variable entries
      */
@@ -56,7 +56,7 @@ public abstract class BaseLocalVariables extends BaseAttribute {
 
     /**
      * Gets the list of "local variable" entries associated with this instance.
-     * 
+     *
      * @return {@code non-null;} the list
      */
     public final LocalVariableList getLocalVariables() {

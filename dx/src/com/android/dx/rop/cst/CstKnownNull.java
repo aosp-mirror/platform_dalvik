@@ -88,7 +88,7 @@ public final class CstKnownNull extends CstLiteralBits {
 
     /**
      * {@inheritDoc}
-     * 
+     *
      * As "literal bits," a known-null is always represented as the
      * number zero.
      */
@@ -99,7 +99,7 @@ public final class CstKnownNull extends CstLiteralBits {
 
     /**
      * {@inheritDoc}
-     * 
+     *
      * As "literal bits," a known-null is always represented as the
      * number zero.
      */

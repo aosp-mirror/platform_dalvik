@@ -69,4 +69,3 @@
     .endif
     movzbl      1(rPC), rINST
     jmp         *dvmAsmInstructionJmpTable(, %edx, 4)
-

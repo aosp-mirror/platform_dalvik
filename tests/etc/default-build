@@ -41,4 +41,3 @@ if [ -r src-ex ]; then
     mv classes.dex classes-ex.dex
     mv classes-1.dex classes.dex
 fi
-

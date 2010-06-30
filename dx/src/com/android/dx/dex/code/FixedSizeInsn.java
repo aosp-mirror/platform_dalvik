@@ -29,13 +29,13 @@ public abstract class FixedSizeInsn extends DalvInsn {
     /**
      * Constructs an instance. The output address of this instance is initially
      * unknown ({@code -1}).
-     * 
+     *
      * <p><b>Note:</b> In the unlikely event that an instruction takes
      * absolutely no registers (e.g., a {@code nop} or a
      * no-argument no-result * static method call), then the given
      * register list may be passed as {@link
      * RegisterSpecList#EMPTY}.</p>
-     * 
+     *
      * @param opcode the opcode; one of the constants from {@link Dops}
      * @param position {@code non-null;} source position
      * @param registers {@code non-null;} register list, including a

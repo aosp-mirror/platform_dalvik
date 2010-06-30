@@ -11,15 +11,15 @@ public class Main {
 
     static public void main(String[] args) {
         Thread thread1, thread2;
-        
+
         System.out.println("Deadlock test starting.");
         thread1 = new Thread() { public void run() { new A(); } };
         thread2 = new Thread() { public void run() { new B(); } };
         thread1.start();
         thread2.start();
-        
+
         try { Thread.sleep(6000); } catch (InterruptedException ie) { }
-        
+
         System.out.println("Deadlock test interupting threads.");
         thread1.interrupt();
         thread2.interrupt();
@@ -49,4 +49,3 @@ class B {
         Main.bInitialized = true;
     }
 }
-

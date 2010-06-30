@@ -27,11 +27,6 @@
 struct GcHeap {
     HeapSource      *heapSource;
 
-    /* List of heap objects that the GC should never collect.
-     * These should be included in the root set of objects.
-     */
-    HeapRefTable    nonCollectableRefs;
-
     /* List of heap objects that will require finalization when
      * collected.  I.e., instance objects
      *
@@ -108,15 +103,6 @@ struct GcHeap {
     /* Is the GC running?  Used to avoid recursive calls to GC.
      */
     bool            gcRunning;
-
-#if DVM_TRACK_HEAP_MARKING
-    /* Every time an unmarked object becomes marked, markCount
-     * is incremented and markSize increases by the size of
-     * that object.
-     */
-    size_t          markCount;
-    size_t          markSize;
-#endif
 
     /*
      * Debug control values

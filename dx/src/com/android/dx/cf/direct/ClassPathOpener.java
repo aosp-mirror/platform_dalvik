@@ -207,7 +207,7 @@ public class ClassPathOpener {
         byte[] buf = new byte[20000];
         boolean any = false;
 
-        ArrayList<? extends java.util.zip.ZipEntry> entriesList 
+        ArrayList<? extends java.util.zip.ZipEntry> entriesList
                 = Collections.list(zip.entries());
 
         if (sort) {

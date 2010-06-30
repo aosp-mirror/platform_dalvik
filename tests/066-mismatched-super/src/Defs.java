@@ -9,4 +9,3 @@ public abstract class Defs {
         System.out.println("yo yo");
     }
 }
-

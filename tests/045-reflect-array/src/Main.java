@@ -145,4 +145,3 @@ public class Main {
         System.out.println("ReflectArrayTest.testMulti passed");
     }
 }
-

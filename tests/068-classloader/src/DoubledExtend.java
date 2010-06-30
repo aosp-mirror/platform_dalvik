@@ -18,4 +18,3 @@ public class DoubledExtend extends Base {
         return "DoubledExtend 1";
     }
 }
-

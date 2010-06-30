@@ -30,4 +30,3 @@
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     strd    r2, [r0, #offArrayObject_contents]  @ r2/r3<- vBB[vCC]
     GOTO_OPCODE(ip)                     @ jump to next instruction
-

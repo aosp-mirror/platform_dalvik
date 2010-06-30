@@ -273,7 +273,7 @@ static bool dvmBreakpointSetAdd(BreakpointSet* pSet, Method* method,
                     *addr, method->clazz->descriptor, method->name,
                     instrOffset);
             } else {
-                MEM_BARRIER();
+                ANDROID_MEMBAR_FULL();
                 dvmDexChangeDex1(method->clazz->pDvmDex, (u1*)addr,
                     OP_BREAKPOINT);
             }
@@ -328,7 +328,7 @@ static void dvmBreakpointSetRemove(BreakpointSet* pSet, Method* method,
              */
             dvmDexChangeDex1(method->clazz->pDvmDex, (u1*)addr,
                 pBreak->originalOpCode);
-            MEM_BARRIER();
+            ANDROID_MEMBAR_FULL();
 
             if (idx != pSet->count-1) {
                 /* shift down */
@@ -1377,6 +1377,8 @@ void dvmInterpret(Thread* self, const Method* method, JValue* pResult)
         }
     }
 
+    /* Never on the heap, so no write barrier needed. */
+    assert(!dvmIsValidObjectAddress(pResult));
     *pResult = interpState.retval;
 #if defined(WITH_JIT)
     dvmJitCalleeRestore(interpState.calleeSave);

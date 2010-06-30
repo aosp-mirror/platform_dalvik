@@ -541,4 +541,3 @@ common_abort:
     .asciz  "Ljava/lang/InternalError;"
 .LstrFilledNewArrayNotImpl:
     .asciz  "filled-new-array only implemented for 'int'"
-

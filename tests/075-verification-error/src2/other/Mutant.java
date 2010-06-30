@@ -41,5 +41,3 @@ public class Mutant {
         System.out.println("nay");
     }
 }
-
-

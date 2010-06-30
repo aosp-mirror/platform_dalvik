@@ -36,7 +36,7 @@ public final class CstFloat
     /**
      * Makes an instance for the given value. This may (but does not
      * necessarily) return an already-allocated instance.
-     * 
+     *
      * @param bits the {@code float} value as {@code int} bits
      */
     public static CstFloat make(int bits) {
@@ -49,7 +49,7 @@ public final class CstFloat
 
     /**
      * Constructs an instance. This constructor is private; use {@link #make}.
-     * 
+     *
      * @param bits the {@code float} value as {@code int} bits
      */
     private CstFloat(int bits) {
@@ -82,7 +82,7 @@ public final class CstFloat
 
     /**
      * Gets the {@code float} value.
-     * 
+     *
      * @return the value
      */
     public float getValue() {

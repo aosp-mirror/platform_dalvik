@@ -76,7 +76,7 @@ public final class RegisterSpec
      * Returns an instance for the given register number and type, with
      * no variable info. This method is allowed to return shared
      * instances (but doesn't necessarily do so).
-     * 
+     *
      * @param reg {@code >= 0;} the register number
      * @param type {@code non-null;} the type (or possibly actual value) which
      * is loaded from or stored to the indicated register
@@ -126,7 +126,7 @@ public final class RegisterSpec
 
     /**
      * Gets the string form for the given register number.
-     * 
+     *
      * @param reg {@code >= 0;} the register number
      * @return {@code non-null;} the string form
      */
@@ -137,7 +137,7 @@ public final class RegisterSpec
     /**
      * Constructs an instance. This constructor is private. Use
      * {@link #make}.
-     * 
+     *
      * @param reg {@code >= 0;} the register number
      * @param type {@code non-null;} the type (or possibly actual value) which
      * is loaded from or stored to the indicated register
@@ -177,7 +177,7 @@ public final class RegisterSpec
      * registers. That is, this compares {@code getType()} on the types
      * to ignore whatever arbitrary extra stuff might be carried around
      * by an outer {@link TypeBearer}.
-     * 
+     *
      * @param other {@code null-ok;} spec to compare to
      * @return {@code true} iff {@code this} and {@code other} are equal
      * in the stated way
@@ -194,7 +194,7 @@ public final class RegisterSpec
      * Like {@link #equalsUsingSimpleType} but ignoring the register number.
      * This is useful to determine if two instances refer to the "same"
      * local variable.
-     * 
+     *
      * @param other {@code null-ok;} spec to compare to
      * @return {@code true} iff {@code this} and {@code other} are equal
      * in the stated way
@@ -212,7 +212,7 @@ public final class RegisterSpec
     /**
      * Helper for {@link #equals} and {@link #ForComparison.equals},
      * which actually does the test.
-     * 
+     *
      * @param reg value of the instance variable, for another instance
      * @param type value of the instance variable, for another instance
      * @param local value of the instance variable, for another instance
@@ -229,7 +229,7 @@ public final class RegisterSpec
     /**
      * Compares by (in priority order) register number, unwrapped type
      * (that is types not {@link TypeBearer}s, and local info.
-     * 
+     *
      * @param other {@code non-null;} spec to compare to
      * @return {@code -1..1;} standard result of comparison
      */
@@ -253,7 +253,7 @@ public final class RegisterSpec
         }
 
         return this.local.compareTo(other.local);
-    }    
+    }
 
     /** {@inheritDoc} */
     @Override
@@ -264,7 +264,7 @@ public final class RegisterSpec
     /**
      * Helper for {@link #hashCode} and {@link #ForComparison.hashCode},
      * which actually does the calculation.
-     * 
+     *
      * @param reg value of the instance variable
      * @param type value of the instance variable
      * @param local value of the instance variable
@@ -315,7 +315,7 @@ public final class RegisterSpec
 
     /**
      * Gets the register number.
-     * 
+     *
      * @return {@code >= 0;} the register number
      */
     public int getReg() {
@@ -325,7 +325,7 @@ public final class RegisterSpec
     /**
      * Gets the type (or actual value) which is loaded from or stored
      * to the register associated with this instance.
-     * 
+     *
      * @return {@code non-null;} the type
      */
     public TypeBearer getTypeBearer() {
@@ -348,7 +348,7 @@ public final class RegisterSpec
      * (category) of the type used. Among other things, this may also
      * be used to determine the minimum required register count
      * implied by this instance.
-     * 
+     *
      * @return {@code >= 0;} the required registers size
      */
     public int getNextReg() {
@@ -358,7 +358,7 @@ public final class RegisterSpec
     /**
      * Gets the category of this instance's type. This is just a convenient
      * shorthand for {@code getType().getCategory()}.
-     * 
+     *
      * @see #isCategory1
      * @see #isCategory2
      * @return {@code 1..2;} the category of this instance's type
@@ -370,7 +370,7 @@ public final class RegisterSpec
     /**
      * Gets whether this instance's type is category 1. This is just a
      * convenient shorthand for {@code getType().isCategory1()}.
-     * 
+     *
      * @see #getCategory
      * @see #isCategory2
      * @return whether or not this instance's type is of category 1
@@ -382,7 +382,7 @@ public final class RegisterSpec
     /**
      * Gets whether this instance's type is category 2. This is just a
      * convenient shorthand for {@code getType().isCategory2()}.
-     * 
+     *
      * @see #getCategory
      * @see #isCategory1
      * @return whether or not this instance's type is of category 2
@@ -393,7 +393,7 @@ public final class RegisterSpec
 
     /**
      * Gets the string form for just the register number of this instance.
-     * 
+     *
      * @return {@code non-null;} the register string form
      */
     public String regString() {
@@ -403,7 +403,7 @@ public final class RegisterSpec
     /**
      * Returns an instance that is the intersection between this instance
      * and the given one, if any. The intersection is defined as follows:
-     * 
+     *
      * <ul>
      *   <li>If {@code other} is {@code null}, then the result
      *     is {@code null}.
@@ -420,7 +420,7 @@ public final class RegisterSpec
      *     of the intersection is the local info of this instance. Otherwise,
      *     the local info of the intersection is {@code null}.</li>
      * </ul>
-     * 
+     *
      * @param other {@code null-ok;} instance to intersect with (or {@code null})
      * @param localPrimary whether local variables are primary to the
      * intersection; if {@code true}, then the only non-null
@@ -470,7 +470,7 @@ public final class RegisterSpec
     /**
      * Returns an instance that is identical to this one, except that the
      * register number is replaced by the given one.
-     * 
+     *
      * @param newReg {@code >= 0;} the new register number
      * @return {@code non-null;} an appropriately-constructed instance
      */
@@ -496,7 +496,7 @@ public final class RegisterSpec
     /**
      * Returns an instance that is identical to this one, except that the
      * register number is offset by the given amount.
-     * 
+     *
      * @param delta the amount to offset the register number by
      * @return {@code non-null;} an appropriately-constructed instance
      */
@@ -507,13 +507,13 @@ public final class RegisterSpec
 
         return withReg(reg + delta);
     }
-    
+
     /**
      * Returns an instance that is identical to this one, except that
      * the type bearer is replaced by the actual underlying type
      * (thereby stripping off non-type information) with any
      * initialization information stripped away as well.
-     * 
+     *
      * @return {@code non-null;} an appropriately-constructed instance
      */
     public RegisterSpec withSimpleType() {
@@ -557,7 +557,7 @@ public final class RegisterSpec
 
     /**
      * Helper for {@link #toString} and {@link #toHuman}.
-     * 
+     *
      * @param human whether to be human-oriented
      * @return {@code non-null;} the string form
      */
@@ -594,7 +594,7 @@ public final class RegisterSpec
     private static class ForComparison {
         /** {@code >= 0;} register number */
         private int reg;
-        
+
         /** {@code non-null;} type loaded or stored */
         private TypeBearer type;
 
@@ -606,7 +606,7 @@ public final class RegisterSpec
 
         /**
          * Set all the instance variables.
-         * 
+         *
          * @param reg {@code >= 0;} the register number
          * @param type {@code non-null;} the type (or possibly actual
          * value) which is loaded from or stored to the indicated
@@ -623,7 +623,7 @@ public final class RegisterSpec
         /**
          * Construct a {@code RegisterSpec} of this instance's
          * contents.
-         * 
+         *
          * @return {@code non-null;} an appropriately-constructed instance
          */
         public RegisterSpec toRegisterSpec() {

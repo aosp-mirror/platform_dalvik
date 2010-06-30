@@ -299,4 +299,3 @@ bail:
     /*printf("--- VM is down, process exiting\n");*/
     return result;
 }
-

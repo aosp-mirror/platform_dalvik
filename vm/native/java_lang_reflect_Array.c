@@ -144,4 +144,3 @@ const DalvikNativeMethod dvm_java_lang_reflect_Array[] = {
         Dalvik_java_lang_reflect_Array_createMultiArray },
     { NULL, NULL, NULL },
 };
-

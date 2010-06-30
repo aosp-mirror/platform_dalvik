@@ -94,6 +94,9 @@ GOTO_TARGET(filledNewArray, bool methodCallRange)
                 vdst >>= 4;
             }
         }
+        if (typeCh == 'L' || typeCh == '[') {
+            dvmWriteBarrierArray(newArray, 0, newArray->length);
+        }
 
         retval.l = newArray;
     }
@@ -544,7 +547,7 @@ GOTO_TARGET(returnFromMethod)
             LOGVV("+++ returned into break frame\n");
 #if defined(WITH_JIT)
             /* Let the Jit know the return is terminating normally */
-            CHECK_JIT();
+            CHECK_JIT_VOID();
 #endif
             GOTO_bail();
         }
@@ -919,7 +922,7 @@ GOTO_TARGET(invokeMethod, bool methodCallRange, const Method* _methodToCall,
 
 #if defined(WITH_JIT)
             /* Allow the Jit to end any pending trace building */
-            CHECK_JIT();
+            CHECK_JIT_VOID();
 #endif
 
             /*

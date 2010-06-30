@@ -37,7 +37,7 @@ public final class Dop {
 
     /**
      * Constructs an instance.
-     * 
+     *
      * @param opcode {@code DalvOps.MIN_VALUE..DalvOps.MAX_VALUE;} the opcode
      * value itself
      * @param family {@code DalvOps.MIN_VALUE..DalvOps.MAX_VALUE;} the opcode family
@@ -79,7 +79,7 @@ public final class Dop {
 
     /**
      * Gets the opcode value.
-     * 
+     *
      * @return {@code DalvOps.MIN_VALUE..DalvOps.MAX_VALUE;} the opcode value
      */
     public int getOpcode() {
@@ -89,7 +89,7 @@ public final class Dop {
     /**
      * Gets the opcode family. The opcode family is the unmarked (no
      * "/...") opcode that has equivalent semantics to this one.
-     * 
+     *
      * @return {@code DalvOps.MIN_VALUE..DalvOps.MAX_VALUE;} the opcode family
      */
     public int getFamily() {
@@ -98,7 +98,7 @@ public final class Dop {
 
     /**
      * Gets the instruction format.
-     * 
+     *
      * @return {@code non-null;} the instruction format
      */
     public InsnFormat getFormat() {
@@ -107,7 +107,7 @@ public final class Dop {
 
     /**
      * Returns whether this opcode uses a result register.
-     * 
+     *
      * @return {@code true} iff this opcode uses a result register
      */
     public boolean hasResult() {
@@ -116,7 +116,7 @@ public final class Dop {
 
     /**
      * Gets the opcode name.
-     * 
+     *
      * @return {@code non-null;} the opcode name
      */
     public String getName() {
@@ -126,7 +126,7 @@ public final class Dop {
     /**
      * Gets the opcode for the opposite test of this instance. This is only
      * valid for opcodes which are in fact tests.
-     * 
+     *
      * @return {@code non-null;} the opposite test
      */
     public Dop getOppositeTest() {

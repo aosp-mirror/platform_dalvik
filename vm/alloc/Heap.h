@@ -31,7 +31,7 @@ bool dvmHeapStartup(void);
  * This needs to be called before the first allocation or GC that
  * happens after forking.
  */
-void dvmHeapStartupAfterZygote(void);
+bool dvmHeapStartupAfterZygote(void);
 
 /*
  * Tear down the GC heap.
@@ -40,6 +40,12 @@ void dvmHeapStartupAfterZygote(void);
  * a side-effect.
  */
 void dvmHeapShutdown(void);
+
+/*
+ * Stops any threads internal to the garbage collector.  Called before
+ * the heap itself is shutdown.
+ */
+void dvmHeapThreadShutdown(void);
 
 #if 0       // needs to be in Alloc.h so debug code can find it.
 /*
@@ -62,6 +68,8 @@ typedef enum {
 typedef enum {
     /* Not enough space for an "ordinary" Object to be allocated. */
     GC_FOR_MALLOC,
+    /* Automatic GC triggered by exceeding a heap occupancy threshold. */
+    GC_CONCURRENT,
     /* Explicit GC via Runtime.gc(), VMRuntime.gc(), or SIGUSR1. */
     GC_EXPLICIT,
     /* GC to try to reduce heap footprint to allow more non-GC'ed memory. */
@@ -69,12 +77,6 @@ typedef enum {
     /* GC to dump heap contents to a file, only used under WITH_HPROF */
     GC_HPROF_DUMP_HEAP
 } GcReason;
-
-/*
- * Suspend the VM as for a GC, and assert-fail if any object has any
- * corrupt references.
- */
-void dvmHeapSuspendAndVerify();
 
 /*
  * Run the garbage collector without doing any locking.

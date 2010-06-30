@@ -23,9 +23,8 @@
 
 
 /* fwd */
-static bool verifyMethod(Method* meth, int verifyFlags);
-static bool verifyInstructions(const Method* meth, InsnFlags* insnFlags,
-    int verifyFlags);
+static bool verifyMethod(Method* meth);
+static bool verifyInstructions(VerifierData* vdata);
 
 
 /*
@@ -66,7 +65,7 @@ void dvmVerificationShutdown(void)
  *
  * Returns "true" on success.
  */
-bool dvmVerifyClass(ClassObject* clazz, int verifyFlags)
+bool dvmVerifyClass(ClassObject* clazz)
 {
     int i;
 
@@ -75,16 +74,14 @@ bool dvmVerifyClass(ClassObject* clazz, int verifyFlags)
         return true;
     }
 
-    // TODO - verify class structure in DEX?
-
     for (i = 0; i < clazz->directMethodCount; i++) {
-        if (!verifyMethod(&clazz->directMethods[i], verifyFlags)) {
+        if (!verifyMethod(&clazz->directMethods[i])) {
             LOG_VFY("Verifier rejected class %s\n", clazz->descriptor);
             return false;
         }
     }
     for (i = 0; i < clazz->virtualMethodCount; i++) {
-        if (!verifyMethod(&clazz->virtualMethods[i], verifyFlags)) {
+        if (!verifyMethod(&clazz->virtualMethods[i])) {
             LOG_VFY("Verifier rejected class %s\n", clazz->descriptor);
             return false;
         }
@@ -98,36 +95,53 @@ bool dvmVerifyClass(ClassObject* clazz, int verifyFlags)
  * Perform verification on a single method.
  *
  * We do this in three passes:
- *  (1) Walk through all code units, determining instruction lengths.
- *  (2) Do static checks, including branch target and operand validation.
- *  (3) Do structural checks, including data-flow analysis.
+ *  (1) Walk through all code units, determining instruction locations,
+ *      widths, and other characteristics.
+ *  (2) Walk through all code units, performing static checks on
+ *      operands.
+ *  (3) Iterate through the method, checking type safety and looking
+ *      for code flow problems.
  *
  * Some checks may be bypassed depending on the verification mode.  We can't
  * turn this stuff off completely if we want to do "exact" GC.
  *
- * - operands of getfield, putfield, getstatic, putstatic must be valid
- * - operands of method invocation instructions must be valid
- *
+ * TODO: cite source?
+ * Confirmed here:
  * - code array must not be empty
  * - (N/A) code_length must be less than 65536
+ * Confirmed by dvmComputeCodeWidths():
  * - opcode of first instruction begins at index 0
  * - only documented instructions may appear
  * - each instruction follows the last
- * - (below) last byte of last instruction is at (code_length-1)
+ * - last byte of last instruction is at (code_length-1)
  */
-static bool verifyMethod(Method* meth, int verifyFlags)
+static bool verifyMethod(Method* meth)
 {
     bool result = false;
-    UninitInstanceMap* uninitMap = NULL;
-    InsnFlags* insnFlags = NULL;
     int newInstanceCount;
 
     /*
-     * If there aren't any instructions, make sure that's expected, then
-     * exit successfully. Note: meth->insns gets set to a native function
-     * pointer on first call.
+     * Verifier state blob.  Various values will be cached here so we
+     * can avoid expensive lookups and pass fewer arguments around.
      */
-    if (dvmGetMethodInsnsSize(meth) == 0) {
+    VerifierData vdata;
+#if 1   // ndef NDEBUG
+    memset(&vdata, 0x99, sizeof(vdata));
+#endif
+
+    vdata.method = meth;
+    vdata.insnsSize = dvmGetMethodInsnsSize(meth);
+    vdata.insnRegCount = meth->registersSize;
+    vdata.insnFlags = NULL;
+    vdata.uninitMap = NULL;
+
+    /*
+     * If there aren't any instructions, make sure that's expected, then
+     * exit successfully.  Note: for native methods, meth->insns gets set
+     * to a native function pointer on first call, so don't use that as
+     * an indicator.
+     */
+    if (vdata.insnsSize == 0) {
         if (!dvmIsNativeMethod(meth) && !dvmIsAbstractMethod(meth)) {
             LOG_VFY_METH(meth,
                 "VFY: zero-length code in concrete non-native method\n");
@@ -153,9 +167,9 @@ static bool verifyMethod(Method* meth, int verifyFlags)
      * TODO: Consider keeping a reusable pre-allocated array sitting
      * around for smaller methods.
      */
-    insnFlags = (InsnFlags*)
+    vdata.insnFlags = (InsnFlags*)
         calloc(dvmGetMethodInsnsSize(meth), sizeof(InsnFlags));
-    if (insnFlags == NULL)
+    if (vdata.insnFlags == NULL)
         goto bail;
 
     /*
@@ -163,26 +177,27 @@ static bool verifyMethod(Method* meth, int verifyFlags)
      * Count up the #of occurrences of new-instance instructions while we're
      * at it.
      */
-    if (!dvmComputeCodeWidths(meth, insnFlags, &newInstanceCount))
+    if (!dvmComputeCodeWidths(meth, vdata.insnFlags, &newInstanceCount))
         goto bail;
 
     /*
      * Allocate a map to hold the classes of uninitialized instances.
      */
-    uninitMap = dvmCreateUninitInstanceMap(meth, insnFlags, newInstanceCount);
-    if (uninitMap == NULL)
+    vdata.uninitMap = dvmCreateUninitInstanceMap(meth, vdata.insnFlags,
+        newInstanceCount);
+    if (vdata.uninitMap == NULL)
         goto bail;
 
     /*
      * Set the "in try" flags for all instructions guarded by a "try" block.
      */
-    if (!dvmSetTryFlags(meth, insnFlags))
+    if (!dvmSetTryFlags(meth, vdata.insnFlags))
         goto bail;
 
     /*
      * Perform static instruction verification.
      */
-    if (!verifyInstructions(meth, insnFlags, verifyFlags))
+    if (!verifyInstructions(&vdata))
         goto bail;
 
     /*
@@ -193,7 +208,7 @@ static bool verifyMethod(Method* meth, int verifyFlags)
      * analysis, but we still need to verify that nothing actually tries
      * to use a register.
      */
-    if (!dvmVerifyCodeFlow(meth, insnFlags, uninitMap)) {
+    if (!dvmVerifyCodeFlow(&vdata)) {
         //LOGD("+++ %s failed code flow\n", meth->name);
         goto bail;
     }
@@ -202,8 +217,8 @@ success:
     result = true;
 
 bail:
-    dvmFreeUninitInstanceMap(uninitMap);
-    free(insnFlags);
+    dvmFreeUninitInstanceMap(vdata.uninitMap);
+    free(vdata.insnFlags);
     return result;
 }
 
@@ -254,7 +269,7 @@ static bool checkArrayData(const Method* meth, int curOffset)
         LOG_VFY_METH(meth,
             "VFY: invalid array data end: at %d, data offset %d, end %d, "
             "count %d\n",
-            curOffset, offsetToArrayData, 
+            curOffset, offsetToArrayData,
             curOffset + offsetToArrayData + tableSize,
             insnCount);
         return false;
@@ -473,17 +488,18 @@ static bool checkStringIndex(const Method* meth, int insnIdx)
  * code-flow analysis sometimes has to process the same instruction several
  * times).
  */
-static bool verifyInstructions(const Method* meth, InsnFlags* insnFlags,
-    int verifyFlags)
+static bool verifyInstructions(VerifierData* vdata)
 {
-    const int insnCount = dvmGetMethodInsnsSize(meth);
+    const Method* meth = vdata->method;
+    InsnFlags* insnFlags = vdata->insnFlags;
+    const size_t insnCount = vdata->insnsSize;
     const u2* insns = meth->insns;
     int i;
 
     /* the start of the method is a "branch target" */
     dvmInsnSetBranchTarget(insnFlags, 0, true);
 
-    for (i = 0; i < insnCount; /**/) {
+    for (i = 0; i < (int) insnCount; /**/) {
         /*
          * These types of instructions can be GC points.  To support precise
          * GC, all such instructions must export the PC in the interpreter,
@@ -505,7 +521,7 @@ static bool verifyInstructions(const Method* meth, InsnFlags* insnFlags,
             int offset = -1;
             bool unused;
             if (dvmGetBranchTarget(meth, insnFlags, i, &offset, &unused)) {
-                if (offset < 0) {
+                if (offset <= 0) {
                     dvmInsnSetGcPoint(insnFlags, i, true);
                 }
             } else {
@@ -655,10 +671,8 @@ static bool verifyInstructions(const Method* meth, InsnFlags* insnFlags,
         case OP_INVOKE_VIRTUAL_QUICK_RANGE:
         case OP_INVOKE_SUPER_QUICK:
         case OP_INVOKE_SUPER_QUICK_RANGE:
-            if ((verifyFlags & VERIFY_ALLOW_OPT_INSTRS) == 0) {
-                LOG_VFY("VFY: not expecting optimized instructions\n");
-                return false;
-            }
+            LOG_VFY("VFY: not expecting optimized instructions\n");
+            return false;
             break;
 
         default:
@@ -672,7 +686,7 @@ static bool verifyInstructions(const Method* meth, InsnFlags* insnFlags,
     }
 
     /* make sure the last instruction ends at the end of the insn area */
-    if (i != insnCount) {
+    if (i != (int) insnCount) {
         LOG_VFY_METH(meth,
             "VFY: code did not end when expected (end at %d, count %d)\n",
             i, insnCount);
@@ -681,4 +695,3 @@ static bool verifyInstructions(const Method* meth, InsnFlags* insnFlags,
 
     return true;
 }
-

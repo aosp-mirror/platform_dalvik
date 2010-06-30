@@ -41,7 +41,7 @@ public final class FillArrayDataInsn
 
     /**
      * Constructs an instance.
-     * 
+     *
      * @param opcode {@code non-null;} the opcode
      * @param position {@code non-null;} source position
      * @param sources {@code non-null;} specs for all the sources

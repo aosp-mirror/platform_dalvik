@@ -40,4 +40,3 @@ bail_switch:
         pc - curMethod->insns, fp);
     return true;
 }
-

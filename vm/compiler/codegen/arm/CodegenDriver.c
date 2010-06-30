@@ -1214,6 +1214,8 @@ static void genInterpSingleStep(CompilationUnit *cUnit, MIR *mir)
     opReg(cUnit, kOpBlx, r2);
 }
 
+#if defined(WITH_DEADLOCK_PREDICTION) || defined(WITH_MONITOR_TRACKING) || \
+    defined(_ARMV5TE) || defined(_ARMV5TE_VFP)
 /*
  * To prevent a thread in a monitor wait from blocking the Jit from
  * resetting the code cache, heavyweight monitor lock will not
@@ -1259,6 +1261,7 @@ static void genMonitorPortable(CompilationUnit *cUnit, MIR *mir)
         dvmCompilerClobberCallRegs(cUnit);
     }
 }
+#endif
 
 /*
  * The following are the first-level codegen routines that analyze the format
@@ -1277,8 +1280,7 @@ static bool handleFmt10t_Fmt20t_Fmt30t(CompilationUnit *cUnit, MIR *mir,
 static bool handleFmt10x(CompilationUnit *cUnit, MIR *mir)
 {
     OpCode dalvikOpCode = mir->dalvikInsn.opCode;
-    if (((dalvikOpCode >= OP_UNUSED_3E) && (dalvikOpCode <= OP_UNUSED_43)) ||
-        ((dalvikOpCode >= OP_UNUSED_E3) && (dalvikOpCode <= OP_UNUSED_E7))) {
+    if ((dalvikOpCode >= OP_UNUSED_3E) && (dalvikOpCode <= OP_UNUSED_43)) {
         LOGE("Codegen: got unused opcode 0x%x\n",dalvikOpCode);
         return true;
     }
@@ -1289,6 +1291,8 @@ static bool handleFmt10x(CompilationUnit *cUnit, MIR *mir)
         case OP_UNUSED_73:
         case OP_UNUSED_79:
         case OP_UNUSED_7A:
+        case OP_UNUSED_F1:
+        case OP_UNUSED_FF:
             LOGE("Codegen: got unused opcode 0x%x\n",dalvikOpCode);
             return true;
         case OP_NOP:
@@ -3643,6 +3647,16 @@ void dvmCompilerMIR2LIR(CompilationUnit *cUnit)
         labelList[i].operands[0] = blockList[i]->startOffset;
 
         if (blockList[i]->blockType >= kChainingCellGap) {
+            if (blockList[i]->firstMIRInsn != NULL &&
+                ((blockList[i]->firstMIRInsn->dalvikInsn.opCode ==
+                  OP_MOVE_RESULT) ||
+                 (blockList[i]->firstMIRInsn->dalvikInsn.opCode ==
+                  OP_MOVE_RESULT_WIDE) ||
+                 (blockList[i]->firstMIRInsn->dalvikInsn.opCode ==
+                  OP_MOVE_RESULT_OBJECT))) {
+                /* Align this block first since it is a return chaining cell */
+                newLIR0(cUnit, kArmPseudoPseudoAlign4);
+            }
             /*
              * Append the label pseudo LIR first. Chaining cells will be handled
              * separately afterwards.
@@ -3878,7 +3892,7 @@ void dvmCompilerMIR2LIR(CompilationUnit *cUnit)
             if (notHandled) {
                 LOGE("%#06x: Opcode 0x%x (%s) / Fmt %d not handled\n",
                      mir->offset,
-                     dalvikOpCode, getOpcodeName(dalvikOpCode),
+                     dalvikOpCode, dexGetOpcodeName(dalvikOpCode),
                      dalvikFormat);
                 dvmCompilerAbort(cUnit);
                 break;

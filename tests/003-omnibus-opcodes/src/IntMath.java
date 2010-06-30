@@ -490,4 +490,3 @@ public class IntMath {
         jlmTests(12345, 0x1122334455667788L);
     }
 }
-

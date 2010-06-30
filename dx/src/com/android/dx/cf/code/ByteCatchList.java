@@ -129,7 +129,7 @@ public final class ByteCatchList extends FixedSizeList {
      * is <i>not</i> found for the exception type of the given item in
      * the given array. A match is considered to be either an exact type
      * match or the class {@code Object} which represents a catch-all.
-     * 
+     *
      * @param item {@code non-null;} item with the exception type to look for
      * @param arr {@code non-null;} array to search in
      * @param count {@code non-null;} maximum number of elements in the array to check
@@ -153,7 +153,7 @@ public final class ByteCatchList extends FixedSizeList {
      * is a list of all the exception handler addresses, with the given
      * {@code noException} address appended if appropriate. The
      * result is automatically made immutable.
-     * 
+     *
      * @param noException {@code >= -1;} the no-exception address to append, or
      * {@code -1} not to append anything
      * @return {@code non-null;} list of exception targets, with

@@ -231,6 +231,17 @@ static void Dalvik_java_lang_reflect_Field_setField(const u4* args,
         fieldType->primitiveType == PRIM_DOUBLE)
     {
         fieldPtr->j = value.j;
+    } else if (fieldType->primitiveType == PRIM_NOT) {
+        if (slot < 0) {
+            StaticField *sfield;
+            sfield = (StaticField *)dvmSlotToField(declaringClass, slot);
+            assert(fieldPtr == &sfield->value);
+            dvmSetStaticFieldObject(sfield, value.l);
+        } else {
+            int offset = declaringClass->ifields[slot].byteOffset;
+            assert(fieldPtr == (JValue *)BYTE_OFFSET(obj, offset));
+            dvmSetFieldObject(obj, offset, value.l);
+        }
     } else {
         fieldPtr->i = value.i;
     }
@@ -445,4 +456,3 @@ const DalvikNativeMethod dvm_java_lang_reflect_Field[] = {
         Dalvik_java_lang_reflect_Field_getSignatureAnnotation },
     { NULL, NULL, NULL },
 };
-

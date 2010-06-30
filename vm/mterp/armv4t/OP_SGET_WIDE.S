@@ -17,7 +17,7 @@
     mov     r9, rINST, lsr #8           @ r9<- AA
     add     r0, r0, #offStaticField_value @ r0<- pointer to data
     .if $volatile
-    bl      android_quasiatomic_read_64 @ r0/r1<- contents of field
+    bl      dvmQuasiAtomicRead64        @ r0/r1<- contents of field
     .else
     ldmia   r0, {r0-r1}                 @ r0/r1<- field value (aligned)
     .endif
@@ -42,4 +42,3 @@
     cmp     r0, #0                      @ success?
     bne     .L${opcode}_finish          @ yes, finish
     b       common_exceptionThrown      @ no, handle exception
-

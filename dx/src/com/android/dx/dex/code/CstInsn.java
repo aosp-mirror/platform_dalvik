@@ -30,20 +30,20 @@ public final class CstInsn extends FixedSizeInsn {
 
     /**
      * {@code >= -1;} the constant pool index for {@link #constant}, or
-     * {@code -1} if not yet set 
+     * {@code -1} if not yet set
      */
     private int index;
 
     /**
      * {@code >= -1;} the constant pool index for the class reference in
-     * {@link #constant} if any, or {@code -1} if not yet set 
+     * {@link #constant} if any, or {@code -1} if not yet set
      */
     private int classIndex;
 
     /**
      * Constructs an instance. The output address of this instance is
      * initially unknown ({@code -1}) as is the constant pool index.
-     * 
+     *
      * @param opcode the opcode; one of the constants from {@link Dops}
      * @param position {@code non-null;} source position
      * @param registers {@code non-null;} register list, including a
@@ -67,13 +67,13 @@ public final class CstInsn extends FixedSizeInsn {
     /** {@inheritDoc} */
     @Override
     public DalvInsn withOpcode(Dop opcode) {
-        CstInsn result = 
+        CstInsn result =
             new CstInsn(opcode, getPosition(), getRegisters(), constant);
 
         if (index >= 0) {
             result.setIndex(index);
         }
-        
+
         if (classIndex >= 0) {
             result.setClassIndex(classIndex);
         }
@@ -90,7 +90,7 @@ public final class CstInsn extends FixedSizeInsn {
         if (index >= 0) {
             result.setIndex(index);
         }
-        
+
         if (classIndex >= 0) {
             result.setClassIndex(classIndex);
         }
@@ -100,7 +100,7 @@ public final class CstInsn extends FixedSizeInsn {
 
     /**
      * Gets the constant argument.
-     * 
+     *
      * @return {@code non-null;} the constant argument
      */
     public Constant getConstant() {
@@ -110,7 +110,7 @@ public final class CstInsn extends FixedSizeInsn {
     /**
      * Gets the constant's index. It is only valid to call this after
      * {@link #setIndex} has been called.
-     * 
+     *
      * @return {@code >= 0;} the constant pool index
      */
     public int getIndex() {
@@ -123,9 +123,9 @@ public final class CstInsn extends FixedSizeInsn {
 
     /**
      * Returns whether the constant's index has been set for this instance.
-     * 
+     *
      * @see #setIndex
-     * 
+     *
      * @return {@code true} iff the index has been set
      */
     public boolean hasIndex() {
@@ -135,7 +135,7 @@ public final class CstInsn extends FixedSizeInsn {
     /**
      * Sets the constant's index. It is only valid to call this method once
      * per instance.
-     * 
+     *
      * @param index {@code >= 0;} the constant pool index
      */
     public void setIndex(int index) {
@@ -153,7 +153,7 @@ public final class CstInsn extends FixedSizeInsn {
     /**
      * Gets the constant's class index. It is only valid to call this after
      * {@link #setClassIndex} has been called.
-     * 
+     *
      * @return {@code >= 0;} the constant's class's constant pool index
      */
     public int getClassIndex() {
@@ -167,9 +167,9 @@ public final class CstInsn extends FixedSizeInsn {
     /**
      * Returns whether the constant's class index has been set for this
      * instance.
-     * 
+     *
      * @see #setClassIndex
-     * 
+     *
      * @return {@code true} iff the index has been set
      */
     public boolean hasClassIndex() {
@@ -182,7 +182,7 @@ public final class CstInsn extends FixedSizeInsn {
      * reference constants have a class, so it is only on instances
      * with reference constants that this method should ever be
      * called. It is only valid to call this method once per instance.
-     * 
+     *
      * @param index {@code >= 0;} the constant's class's constant pool index
      */
     public void setClassIndex(int index) {

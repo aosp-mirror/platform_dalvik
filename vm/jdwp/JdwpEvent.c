@@ -745,7 +745,7 @@ bool dvmJdwpPostVMStart(JdwpState* state, bool suspend)
 {
     enum JdwpSuspendPolicy suspendPolicy;
     ObjectId threadId = dvmDbgGetThreadSelfId();
-    
+
     if (suspend)
         suspendPolicy = SP_ALL;
     else
@@ -1290,4 +1290,3 @@ void dvmJdwpDdmSendChunkV(JdwpState* state, int type, const struct iovec* iov,
 
     dvmJdwpSendBufferedRequest(state, wrapiov, iovcnt+1);
 }
-

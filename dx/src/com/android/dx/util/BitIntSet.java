@@ -64,7 +64,7 @@ public class BitIntSet implements IntSet {
 
     /** @inheritDoc */
     public boolean has(int value) {
-        return (value < Bits.getMax(bits)) && Bits.get(bits, value);    
+        return (value < Bits.getMax(bits)) && Bits.get(bits, value);
     }
 
     /** @inheritDoc */
@@ -93,7 +93,7 @@ public class BitIntSet implements IntSet {
 
     /** @inheritDoc */
     public int elements() {
-        return Bits.bitCount(bits);        
+        return Bits.bitCount(bits);
     }
 
     /** @inheritDoc */

@@ -68,7 +68,7 @@ public class LocalItem implements Comparable<LocalItem> {
         return 0 == compareTo(local);
     }
 
-    /** 
+    /**
      * Compares two strings like String.compareTo(), excepts treats a null
      * as the least-possible string value.
      *

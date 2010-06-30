@@ -124,6 +124,6 @@ table.format th:first-child + th + th + th {
     width: 22%;
 }
 
-table.format p { 
+table.format p {
     margin-bottom: 0pt;
 }

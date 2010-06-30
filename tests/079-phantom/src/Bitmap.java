@@ -150,4 +150,3 @@ class BitmapWatcher extends Thread {
         interrupt();
     }
 }
-

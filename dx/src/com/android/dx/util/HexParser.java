@@ -37,7 +37,7 @@ public final class HexParser {
      * comment. If a double quote is encountered, then the ASCII value
      * of the subsequent characters is used, until the next double
      * quote. Quoted strings may not span multiple lines.
-     * 
+     *
      * @param src {@code non-null;} the source string
      * @return {@code non-null;} the parsed form
      */

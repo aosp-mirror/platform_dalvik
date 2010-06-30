@@ -11,4 +11,3 @@
     mov     r1, rINST, lsr #8           @ r1<- AA
     bl      dvmThrowVerificationError   @ always throws
     b       common_exceptionThrown      @ handle exception
-

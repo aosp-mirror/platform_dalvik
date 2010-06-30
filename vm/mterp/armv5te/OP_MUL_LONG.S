@@ -39,4 +39,3 @@
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     stmia   r0, {r9-r10}                @ vAA/vAA+1<- r9/r10
     GOTO_OPCODE(ip)                     @ jump to next instruction
-

@@ -49,7 +49,7 @@ public class InterferenceRegisterMapper extends BasicRegisterMapper {
 
     /**
      * Constructs an instance
-     * 
+     *
      * @param countOldRegisters number of registers in old namespace
      */
     public InterferenceRegisterMapper(InterferenceGraph oldRegInterference,
@@ -113,7 +113,7 @@ public class InterferenceRegisterMapper extends BasicRegisterMapper {
     /**
      * Adds a register's interference set to the interference list,
      * growing it if necessary.
-     * 
+     *
      * @param newReg register in new namespace
      * @param oldReg register in old namespace
      */
@@ -158,7 +158,7 @@ public class InterferenceRegisterMapper extends BasicRegisterMapper {
                 return true;
             }
         }
-        
+
         return false;
     }
 }

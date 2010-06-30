@@ -34,7 +34,7 @@ public final class Writers {
      * Makes a {@code PrintWriter} for the given {@code Writer},
      * returning the given writer if it already happens to be the right
      * class.
-     * 
+     *
      * @param writer {@code non-null;} writer to (possibly) wrap
      * @return {@code non-null;} an appropriate instance
      */

@@ -148,6 +148,7 @@ static void Dalvik_java_lang_System_arraycopy(const u4* args, JValue* pResult)
             (*copyFunc)((u1*)dstArray->contents + dstPos * width,
                     (const u1*)srcArray->contents + srcPos * width,
                     length * width);
+            dvmWriteBarrierArray(dstArray, dstPos, dstPos+length);
         } else {
             /*
              * The arrays are not fundamentally compatible.  However, we may
@@ -194,7 +195,7 @@ static void Dalvik_java_lang_System_arraycopy(const u4* args, JValue* pResult)
             (*copyFunc)((u1*)dstArray->contents + dstPos * width,
                     (const u1*)srcArray->contents + srcPos * width,
                     copyCount * width);
-
+            dvmWriteBarrierArray(dstArray, 0, copyCount);
             if (copyCount != length) {
                 dvmThrowExceptionFmt("Ljava/lang/ArrayStoreException;",
                     "source[%d] of type %s cannot be stored in destination array of type %s",
@@ -275,7 +276,7 @@ static void Dalvik_java_lang_System_mapLibraryName(const u4* args,
     name = dvmCreateCstrFromString(nameObj);
     mappedName = dvmCreateSystemLibraryName(name);
     if (mappedName != NULL) {
-        result = dvmCreateStringFromCstr(mappedName, ALLOC_DEFAULT);
+        result = dvmCreateStringFromCstr(mappedName);
         dvmReleaseTrackedAlloc((Object*) result, NULL);
     }
 
@@ -297,4 +298,3 @@ const DalvikNativeMethod dvm_java_lang_System[] = {
         Dalvik_java_lang_System_mapLibraryName },
     { NULL, NULL, NULL },
 };
-

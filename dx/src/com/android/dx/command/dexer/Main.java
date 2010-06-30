@@ -244,7 +244,7 @@ public class Main {
             }
         });
 
-        return opener.process();     
+        return opener.process();
     }
 
     /**
@@ -294,7 +294,7 @@ public class Main {
         if (! args.coreLibrary) {
             checkClassName(name);
         }
-        
+
         try {
             ClassDefItem clazz =
                 CfTranslator.translate(name, bytes, args.cfOptions);
@@ -317,13 +317,13 @@ public class Main {
      * Check the class name to make sure it's not a "core library"
      * class. If there is a problem, this updates the error count and
      * throws an exception to stop processing.
-     * 
+     *
      * @param name {@code non-null;} the fully-qualified internal-form
      * class name
      */
     private static void checkClassName(String name) {
         boolean bogus = false;
-        
+
         if (name.startsWith("java/")) {
             bogus = true;
         } else if (name.startsWith("javax/")) {
@@ -348,7 +348,7 @@ public class Main {
          */
 
         DxConsole.err.println("\ntrouble processing \"" + name + "\":");
-        DxConsole.err.println("\n" + 
+        DxConsole.err.println("\n" +
                 "Attempt to include a core class (java.* or javax.*) in " +
                 "something other\n" +
                 "than a core library. It is likely that you have " +
@@ -690,7 +690,7 @@ public class Main {
             meth.debugPrint(pw, args.verboseDump);
 
             /*
-             * The (default) source file is an attribute of the class, but 
+             * The (default) source file is an attribute of the class, but
              * it's useful to see it in method dumps.
              */
             CstUtf8 sourceFile = clazz.getSourceFile();
@@ -732,7 +732,7 @@ public class Main {
     private static class StopProcessing extends RuntimeException {
         // This space intentionally left blank.
     }
-    
+
     /**
      * Command-line argument parser and access.
      */

@@ -47,4 +47,3 @@ int dvmClzImpl(unsigned int x)
     return e;
 #endif
 }
-

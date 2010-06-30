@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-public class Blort 
+public class Blort
 {
     public boolean test01(boolean[] x) {
         x[0] = true;

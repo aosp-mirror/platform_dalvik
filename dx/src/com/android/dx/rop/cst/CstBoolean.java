@@ -32,7 +32,7 @@ public final class CstBoolean
     /**
      * Makes an instance for the given value. This will return an
      * already-allocated instance.
-     * 
+     *
      * @param value the {@code boolean} value
      * @return {@code non-null;} the appropriate instance
      */
@@ -43,7 +43,7 @@ public final class CstBoolean
     /**
      * Makes an instance for the given {@code int} value. This
      * will return an already-allocated instance.
-     * 
+     *
      * @param value must be either {@code 0} or {@code 1}
      * @return {@code non-null;} the appropriate instance
      */
@@ -59,7 +59,7 @@ public final class CstBoolean
 
     /**
      * Constructs an instance. This constructor is private; use {@link #make}.
-     * 
+     *
      * @param value the {@code boolean} value
      */
     private CstBoolean(boolean value) {
@@ -90,7 +90,7 @@ public final class CstBoolean
 
     /**
      * Gets the {@code boolean} value.
-     * 
+     *
      * @return the value
      */
     public boolean getValue() {

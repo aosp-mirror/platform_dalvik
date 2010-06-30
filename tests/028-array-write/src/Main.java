@@ -6,7 +6,7 @@
 public class Main {
     /** whether to report times */
     static boolean timing = false;
-    
+
     static final int STORAGE_SIZE = 128*1024;
     static int[] mStorage = new int[STORAGE_SIZE];
 
@@ -60,10 +60,9 @@ public class Main {
         if ((args.length >= 1) && args[0].equals("--timing")) {
             timing = true;
         }
-        
+
         writeTest();
         copyTest();
         System.out.println("Done!");
     }
 }
-

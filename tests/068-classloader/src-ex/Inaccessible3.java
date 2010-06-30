@@ -8,4 +8,3 @@ public class Inaccessible3 implements InaccessibleInterface {
         System.out.println("--- inaccessible3");
     }
 }
-

@@ -71,7 +71,7 @@ void dvmSetClassSerialNumber(ClassObject* clazz);
 /*
  * Find the class with the given descriptor.  Load it if it hasn't already
  * been.
- * 
+ *
  * "loader" is the initiating class loader.
  */
 ClassObject* dvmFindClass(const char* descriptor, Object* loader);
@@ -108,7 +108,7 @@ ClassObject* dvmDefineClass(DvmDex* pDvmDex, const char* descriptor,
  * variations, this is only called explicitly for synthetic class
  * generation (e.g. reflect.Proxy).
  */
-bool dvmLinkClass(ClassObject* clazz, bool classesResolved);
+bool dvmLinkClass(ClassObject* clazz);
 
 /*
  * Determine if a class has been initialized.
@@ -213,7 +213,7 @@ INLINE int dvmCompareMethodProtos(const Method* method1,
         const Method* method2)
 {
     return dexProtoCompare(&method1->prototype, &method2->prototype);
-}    
+}
 
 /*
  * Compare the two method prototypes, considering only the parameters
@@ -224,7 +224,7 @@ INLINE int dvmCompareMethodParameterProtos(const Method* method1,
         const Method* method2)
 {
     return dexProtoCompareParameters(&method1->prototype, &method2->prototype);
-}    
+}
 
 /*
  * Compare the two method names and prototypes, a la strcmp(). The

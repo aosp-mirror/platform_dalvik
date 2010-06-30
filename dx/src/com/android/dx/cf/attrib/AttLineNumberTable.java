@@ -31,7 +31,7 @@ public final class AttLineNumberTable extends BaseAttribute {
 
     /**
      * Constructs an instance.
-     * 
+     *
      * @param lineNumbers {@code non-null;} list of line number entries
      */
     public AttLineNumberTable(LineNumberList lineNumbers) {
@@ -56,7 +56,7 @@ public final class AttLineNumberTable extends BaseAttribute {
 
     /**
      * Gets the list of "line number" entries associated with this instance.
-     * 
+     *
      * @return {@code non-null;} the list
      */
     public LineNumberList getLineNumbers() {

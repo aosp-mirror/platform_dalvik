@@ -73,7 +73,7 @@ public class DebugInfoDecoder {
 
     /** current decoding state: line number */
     private int line = 1;
-    
+
     /** current decoding state: bytecode address */
     private int address = 0;
 
@@ -102,7 +102,7 @@ public class DebugInfoDecoder {
         this.desc = ref.getPrototype();
         this.file = file;
         this.regSize = regSize;
-        
+
         positions = new ArrayList<PositionEntry>();
         locals = new ArrayList<LocalEntry>();
         this.codesize = codesize;
@@ -248,7 +248,7 @@ public class DebugInfoDecoder {
             throw new RuntimeException(
                     "Mismatch between parameters_size and prototype");
         }
-        
+
         if (!isStatic) {
             // Start off with implicit 'this' entry
             LocalEntry thisEntry =
@@ -353,7 +353,7 @@ public class DebugInfoDecoder {
                             throw new RuntimeException("nonsensical "
                                     + "END_LOCAL on dead register v" + reg);
                         }
-                        
+
                         le = new LocalEntry(address, false, reg,
                                 prevle.nameIndex, prevle.typeIndex,
                                 prevle.signatureIndex);
@@ -428,7 +428,7 @@ public class DebugInfoDecoder {
         DalvInsnList insns = code.getInsns();
         int codeSize = insns.codeSize();
         int countRegisters = insns.getRegistersSize();
-        
+
         try {
             validateEncode0(info, codeSize, countRegisters,
                     isStatic, ref, file, pl, ll);
@@ -441,7 +441,7 @@ public class DebugInfoDecoder {
                     "while processing " + ref.toHuman());
         }
     }
-    
+
     private static void validateEncode0(byte[] info, int codeSize,
             int countRegisters, boolean isStatic, CstMethodRef ref,
             DexFile file, PositionList pl, LocalList ll) {
@@ -516,7 +516,7 @@ public class DebugInfoDecoder {
                 }
             }
         }
-        
+
         int origSz = ll.size();
         int decodeAt = 0;
         boolean problem = false;
@@ -556,7 +556,7 @@ public class DebugInfoDecoder {
                 problem = true;
                 break;
             }
-            
+
             if (decodedEntry.isStart != origEntry.isStart()) {
                 System.err.println("local start/end mismatch at orig " + i +
                         " / decoded " + decodeAt);
@@ -569,7 +569,7 @@ public class DebugInfoDecoder {
              * parameter might not be marked as starting at 0 in the
              * original list.
              */
-            if ((decodedAddress != origEntry.getAddress()) 
+            if ((decodedAddress != origEntry.getAddress())
                     && !((decodedAddress == 0)
                             && (decodedEntry.reg >= paramBase))) {
                 System.err.println("local address mismatch at orig " + i +

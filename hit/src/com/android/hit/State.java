@@ -41,13 +41,13 @@ public class State {
 
     public Heap setHeapTo(int id, String name) {
         Heap heap = mHeaps.get(id);
-        
+
         if (heap == null) {
             heap = new Heap(name);
             heap.mState = this;
             mHeaps.put(id, heap);
         }
-        
+
         mCurrentHeap = heap;
 
         return mCurrentHeap;
@@ -56,54 +56,54 @@ public class State {
     public Heap getHeap(int id) {
         return mHeaps.get(id);
     }
-    
+
     public Heap getHeap(String name) {
         for (Heap heap: mHeaps.values()) {
             if (heap.mName.equals(name)) {
                 return heap;
             }
         }
-        
+
         return null;
     }
 
     public final void addStackFrame(StackFrame theFrame) {
         mCurrentHeap.addStackFrame(theFrame);
     }
-    
+
     public final StackFrame getStackFrame(long id) {
         return mCurrentHeap.getStackFrame(id);
     }
-    
+
     public final void addStackTrace(StackTrace theTrace) {
         mCurrentHeap.addStackTrace(theTrace);
     }
-    
+
     public final StackTrace getStackTrace(int traceSerialNumber) {
         return mCurrentHeap.getStackTrace(traceSerialNumber);
     }
-    
-    public final StackTrace getStackTraceAtDepth(int traceSerialNumber, 
+
+    public final StackTrace getStackTraceAtDepth(int traceSerialNumber,
             int depth) {
         return mCurrentHeap.getStackTraceAtDepth(traceSerialNumber, depth);
     }
-    
+
     public final void addRoot(RootObj root) {
         mCurrentHeap.addRoot(root);
     }
-    
+
     public final void addThread(ThreadObj thread, int serialNumber) {
         mCurrentHeap.addThread(thread, serialNumber);
     }
-    
+
     public final ThreadObj getThread(int serialNumber) {
         return mCurrentHeap.getThread(serialNumber);
     }
-    
+
     public final void addInstance(long id, Instance instance) {
         mCurrentHeap.addInstance(id, instance);
     }
-    
+
     public final void addClass(long id, ClassObj theClass) {
         mCurrentHeap.addClass(id, theClass);
     }
@@ -111,40 +111,40 @@ public class State {
     public final Instance findReference(long id) {
         for (Heap heap: mHeaps.values()) {
             Instance instance = heap.getInstance(id);
-            
+
             if (instance != null) {
                 return instance;
             }
         }
-        
+
         //  Couldn't find an instance of a class, look for a class object
         return findClass(id);
     }
-    
+
     public final ClassObj findClass(long id) {
         for (Heap heap: mHeaps.values()) {
             ClassObj theClass = heap.getClass(id);
-            
+
             if (theClass != null) {
                 return theClass;
             }
         }
-        
+
         return null;
     }
-    
+
     public final ClassObj findClass(String name) {
         for (Heap heap: mHeaps.values()) {
             ClassObj theClass = heap.getClass(name);
-            
+
             if (theClass != null) {
                 return theClass;
             }
         }
-        
+
         return null;
     }
-    
+
     public final void dumpInstanceCounts() {
         for (Heap heap: mHeaps.values()) {
             System.out.println(
@@ -152,7 +152,7 @@ public class State {
             heap.dumpInstanceCounts();
         }
     }
-    
+
     public final void dumpSizes() {
         for (Heap heap: mHeaps.values()) {
             System.out.println(
@@ -168,7 +168,7 @@ public class State {
             heap.dumpSubclasses();
         }
     }
-    
+
     public final void resolveReferences() {
         for (Heap heap: mHeaps.values()) {
             heap.resolveInstanceRefs(this);

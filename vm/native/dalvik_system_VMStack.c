@@ -150,18 +150,16 @@ static void Dalvik_dalvik_system_VMStack_getClasses(const u4* args,
     /*
      * Fill in the array.
      */
-    ClassObject** objects = (ClassObject**) classes->contents;
-
-    unsigned int sidx = 0;
-    for (idx = kSkip; (int) idx < methodCount && sidx < size; idx++) {
-        const Method* meth = methods[idx];
-
-        if (dvmIsReflectionMethod(meth))
+    unsigned int objCount = 0;
+    for (idx = kSkip; (int) idx < methodCount; idx++) {
+        if (dvmIsReflectionMethod(methods[idx])) {
             continue;
-
-        *objects++ = meth->clazz;
-        sidx++;
+        }
+        dvmSetObjectArrayElement(classes, objCount,
+                                 (Object *)methods[idx]->clazz);
+        objCount++;
     }
+    assert(objCount == classes->length);
 
 bail:
     free(methods);
@@ -235,4 +233,3 @@ const DalvikNativeMethod dvm_dalvik_system_VMStack[] = {
         Dalvik_dalvik_system_VMStack_getThreadStackTrace },
     { NULL, NULL, NULL },
 };
-

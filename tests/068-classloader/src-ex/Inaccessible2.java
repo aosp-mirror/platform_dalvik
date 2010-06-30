@@ -8,4 +8,3 @@ public class Inaccessible2 extends InaccessibleBase {
         System.out.println("--- inaccessible2");
     }
 }
-

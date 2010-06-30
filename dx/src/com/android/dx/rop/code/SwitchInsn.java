@@ -31,7 +31,7 @@ public final class SwitchInsn
 
     /**
      * Constructs an instance.
-     * 
+     *
      * @param opcode {@code non-null;} the opcode
      * @param position {@code non-null;} source position
      * @param result {@code null-ok;} spec for the result, if any
@@ -110,7 +110,7 @@ public final class SwitchInsn
 
     /**
      * Gets the list of switch cases.
-     * 
+     *
      * @return {@code non-null;} the case list
      */
     public IntList getCases() {

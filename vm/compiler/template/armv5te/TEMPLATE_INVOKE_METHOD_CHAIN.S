@@ -43,5 +43,3 @@
     str     rFP, [r2, #offThread_curFrame]  @ self->curFrame = newFp
 
     bx      lr                              @ return to the callee-chaining cell
-
-

@@ -120,7 +120,7 @@ static void addToHash(ZipArchive* pArchive, const char* str, int strLen,
  */
 static u2 get2LE(unsigned char const* pSrc)
 {
-    return pSrc[0] | (pSrc[1] << 8); 
+    return pSrc[0] | (pSrc[1] << 8);
 }
 
 /*
@@ -745,4 +745,3 @@ int dexZipExtractEntryToFile(const ZipArchive* pArchive,
 bail:
     return result;
 }
-

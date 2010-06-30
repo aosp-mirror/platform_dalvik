@@ -47,7 +47,7 @@ public final class IndentingWriter extends FilterWriter {
 
     /**
      * Constructs an instance.
-     * 
+     *
      * @param out {@code non-null;} writer to send final output to
      * @param width {@code >= 0;} the maximum output width (not including
      * {@code prefix}), or {@code 0} for no maximum
@@ -77,7 +77,7 @@ public final class IndentingWriter extends FilterWriter {
 
     /**
      * Constructs a no-prefix instance.
-     * 
+     *
      * @param out {@code non-null;} writer to send final output to
      * @param width {@code >= 0;} the maximum output width (not including
      * {@code prefix}), or {@code 0} for no maximum

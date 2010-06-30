@@ -242,4 +242,3 @@ u4 const_c1e00000(u4 highword) { return 0xc1e00000; }
 #ifdef __ARM_ARCH_7A__
 # warning "found __ARM_ARCH_7A__"
 #endif
-

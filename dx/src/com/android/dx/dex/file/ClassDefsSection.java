@@ -42,7 +42,7 @@ public final class ClassDefsSection extends UniformItemSection {
 
     /**
      * Constructs an instance. The file offset is initially unknown.
-     * 
+     *
      * @param file {@code non-null;} file that this instance is part of
      */
     public ClassDefsSection(DexFile file) {
@@ -58,7 +58,7 @@ public final class ClassDefsSection extends UniformItemSection {
         if (orderedDefs != null) {
             return orderedDefs;
         }
-        
+
         return classDefs.values();
     }
 
@@ -83,7 +83,7 @@ public final class ClassDefsSection extends UniformItemSection {
 
     /**
      * Writes the portion of the file header that refers to this instance.
-     * 
+     *
      * @param out {@code non-null;} where to write
      */
     public void writeHeaderPart(AnnotatedOutput out) {
@@ -104,7 +104,7 @@ public final class ClassDefsSection extends UniformItemSection {
     /**
      * Adds an element to this instance. It is illegal to attempt to add more
      * than one class with the same name.
-     * 
+     *
      * @param clazz {@code non-null;} the class def to add
      */
     public void add(ClassDefItem clazz) {
@@ -148,7 +148,7 @@ public final class ClassDefsSection extends UniformItemSection {
     /**
      * Helper for {@link #orderItems}, which recursively assigns indices
      * to classes.
-     * 
+     *
      * @param type {@code null-ok;} type ref to assign, if any
      * @param idx {@code >= 0;} the next index to assign
      * @param maxDepth maximum recursion depth; if negative, this will

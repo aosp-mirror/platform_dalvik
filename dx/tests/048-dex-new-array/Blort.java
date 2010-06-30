@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-public class Blort 
+public class Blort
 {
     public static void sink(Object x) {
         // Do nothing.
     }
-    
+
     public static void test() {
         sink(new boolean[0]);
         sink(new byte[1]);

@@ -42,4 +42,3 @@ import c/gotoTargets.c
 
 # finish
 import cstubs/enddefs.c
-

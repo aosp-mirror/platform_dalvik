@@ -9,4 +9,3 @@ class libraries.  All code here:
  - SHOULD be written in C rather than C++ where possible.
 
 Some helper functions are defined in include/nativehelper/JNIHelp.h.
-

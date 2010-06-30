@@ -35,7 +35,7 @@ public final class AttEnclosingMethod extends BaseAttribute {
 
     /**
      * Constructs an instance.
-     * 
+     *
      * @param type {@code non-null;} the innermost enclosing class
      * @param method {@code null-ok;} the name-and-type of the innermost enclosing
      * method, if any
@@ -58,7 +58,7 @@ public final class AttEnclosingMethod extends BaseAttribute {
 
     /**
      * Gets the innermost enclosing class.
-     * 
+     *
      * @return {@code non-null;} the innermost enclosing class
      */
     public CstType getEnclosingClass() {
@@ -68,7 +68,7 @@ public final class AttEnclosingMethod extends BaseAttribute {
     /**
      * Gets the name-and-type of the innermost enclosing method, if
      * any.
-     * 
+     *
      * @return {@code null-ok;} the name-and-type of the innermost enclosing
      * method, if any
      */

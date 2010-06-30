@@ -20,7 +20,7 @@ import com.android.dx.util.Hex;
 
 /**
  * All the register-based opcodes, and related utilities.
- * 
+ *
  * <p><b>Note:</b> Opcode descriptions use a rough pseudocode. {@code r}
  * is the result register, {@code x} is the first argument,
  * {@code y} is the second argument, and {@code z} is the
@@ -93,7 +93,7 @@ public final class RegOps {
 
     /**
      * {@code T: any numeric type; r,x,y: T :: r = x % y}
-     * (Java-style remainder) 
+     * (Java-style remainder)
      */
     public static final int REM = 18;
 
@@ -116,13 +116,13 @@ public final class RegOps {
 
     /**
      * {@code T: any integral type; r,x: T; y: int :: r = x >> y}
-     * (signed right-shift) 
+     * (signed right-shift)
      */
     public static final int SHR = 24;
 
     /**
      * {@code T: any integral type; r,x: T; y: int :: r = x >>> y}
-     * (unsigned right-shift) 
+     * (unsigned right-shift)
      */
     public static final int USHR = 25;
 
@@ -133,38 +133,38 @@ public final class RegOps {
      * {@code T: any numeric type; r: int; x,y: T :: r = (x == y) ? 0
      * : (x > y) ? 1 : -1} (Java-style "cmpl" where a NaN is
      * considered "less than" all other values; also used for integral
-     * comparisons) 
+     * comparisons)
      */
     public static final int CMPL = 27;
 
     /**
      * {@code T: any floating point type; r: int; x,y: T :: r = (x == y) ? 0
      * : (x < y) ? -1 : 1} (Java-style "cmpg" where a NaN is
-     * considered "greater than" all other values) 
+     * considered "greater than" all other values)
      */
     public static final int CMPG = 28;
 
     /**
      * {@code T: any numeric type; U: any numeric type; r: T; x: U ::
      * r = (T) x} (numeric type conversion between the four
-     * "real" numeric types) 
+     * "real" numeric types)
      */
     public static final int CONV = 29;
 
     /**
      * {@code r,x: int :: r = (x << 24) >> 24} (Java-style
-     * convert int to byte) 
+     * convert int to byte)
      */
     public static final int TO_BYTE = 30;
 
     /**
-     * {@code r,x: int :: r = x & 0xffff} (Java-style convert int to char) 
+     * {@code r,x: int :: r = x & 0xffff} (Java-style convert int to char)
      */
     public static final int TO_CHAR = 31;
 
     /**
      * {@code r,x: int :: r = (x << 16) >> 16} (Java-style
-     * convert int to short) 
+     * convert int to short)
      */
     public static final int TO_SHORT = 32;
 
@@ -191,7 +191,7 @@ public final class RegOps {
 
     /**
      * {@code T: any non-array object type :: r =
-     * alloc(T)} (allocate heap space for an object) 
+     * alloc(T)} (allocate heap space for an object)
      */
     public static final int NEW_INSTANCE = 40;
 
@@ -206,7 +206,7 @@ public final class RegOps {
 
     /**
      * {@code T: any object type; x: Object :: (T) x} (can
-     * throw {@code ClassCastException}) 
+     * throw {@code ClassCastException})
      */
     public static final int CHECK_CAST = 43;
 
@@ -223,13 +223,13 @@ public final class RegOps {
 
     /**
      * {@code T: any type; r: T; f: static field spec of type T :: r =
-     * f} 
+     * f}
      */
     public static final int GET_STATIC = 46;
 
     /**
      * {@code T: any type; x: T; y: Object; f: instance field spec of type
-     * T :: y.f = x} 
+     * T :: y.f = x}
      */
     public static final int PUT_FIELD = 47;
 
@@ -241,35 +241,35 @@ public final class RegOps {
     /**
      * {@code Tr, T0, T1...: any types; r: Tr; m: static method spec;
      * y0: T0; y1: T1 ... :: r = m(y0, y1, ...)} (call static
-     * method) 
+     * method)
      */
     public static final int INVOKE_STATIC = 49;
 
     /**
      * {@code Tr, T0, T1...: any types; r: Tr; x: Object; m: instance method
      * spec; y0: T0; y1: T1 ... :: r = x.m(y0, y1, ...)} (call normal
-     * virtual method) 
+     * virtual method)
      */
     public static final int INVOKE_VIRTUAL = 50;
 
     /**
      * {@code Tr, T0, T1...: any types; r: Tr; x: Object; m: instance method
      * spec; y0: T0; y1: T1 ... :: r = x.m(y0, y1, ...)} (call
-     * superclass virtual method) 
+     * superclass virtual method)
      */
     public static final int INVOKE_SUPER = 51;
 
     /**
      * {@code Tr, T0, T1...: any types; r: Tr; x: Object; m: instance method
      * spec; y0: T0; y1: T1 ... :: r = x.m(y0, y1, ...)} (call
-     * direct/special method) 
+     * direct/special method)
      */
     public static final int INVOKE_DIRECT = 52;
 
     /**
      * {@code Tr, T0, T1...: any types; r: Tr; x: Object; m: interface
      * (instance) method spec; y0: T0; y1: T1 ... :: r = x.m(y0, y1,
-     * ...)} (call interface method) 
+     * ...)} (call interface method)
      */
     public static final int INVOKE_INTERFACE = 53;
 
@@ -305,7 +305,7 @@ public final class RegOps {
 
     /**
      * Gets the name of the given opcode.
-     * 
+     *
      * @param opcode {@code >= 0, <= 255;} the opcode
      * @return {@code non-null;} its name
      */

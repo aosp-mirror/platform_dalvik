@@ -76,9 +76,7 @@ bool dvmHeapWorkerStartup(void)
      * so this should not get stuck.
      */
     while (!gDvm.heapWorkerReady) {
-        int cc __attribute__ ((__unused__));
-        cc = pthread_cond_wait(&gDvm.heapWorkerCond, &gDvm.heapWorkerLock);
-        assert(cc == 0);
+        dvmWaitCond(&gDvm.heapWorkerCond, &gDvm.heapWorkerLock);
     }
 
     dvmUnlockMutex(&gDvm.heapWorkerLock);
@@ -193,6 +191,26 @@ void dvmAssertHeapWorkerThreadRunning()
     }
 }
 
+/*
+ * Acquires a mutex, transitioning to the VMWAIT state if the mutex is
+ * held.  This allows the thread to suspend while it waits for another
+ * thread to release the mutex.
+ */
+static void lockMutex(pthread_mutex_t *mu)
+{
+    Thread *self;
+    ThreadStatus oldStatus;
+
+    assert(mu != NULL);
+    if (dvmTryLockMutex(mu) != 0) {
+        self = dvmThreadSelf();
+        assert(self != NULL);
+        oldStatus = dvmChangeStatus(self, THREAD_VMWAIT);
+        dvmLockMutex(mu);
+        dvmChangeStatus(self, oldStatus);
+    }
+}
+
 static void callMethod(Thread *self, Object *obj, Method *method)
 {
     JValue unused;
@@ -225,7 +243,10 @@ static void callMethod(Thread *self, Object *obj, Method *method)
     } else {
         dvmCallMethod(self, method, obj, &unused);
     }
-    dvmLockMutex(&gDvm.heapWorkerLock);
+    /*
+     * Reacquire the heap worker lock in a suspend-friendly way.
+     */
+    lockMutex(&gDvm.heapWorkerLock);
 
     gDvm.gcHeap->heapWorkerCurrentObject = NULL;
     gDvm.gcHeap->heapWorkerCurrentMethod = NULL;
@@ -277,15 +298,14 @@ static void doHeapWork(Thread *self)
             assert(method->clazz != gDvm.classJavaLangObject);
             callMethod(self, obj, method);
         } else {
-            if (op & WORKER_ENQUEUE) {
-                assert(dvmGetFieldObject(
-                           obj, gDvm.offJavaLangRefReference_queue) != NULL);
-                assert(dvmGetFieldObject(
-                           obj, gDvm.offJavaLangRefReference_queueNext) == NULL);
-                numReferencesEnqueued++;
-                callMethod(self, obj,
-                        gDvm.methJavaLangRefReference_enqueueInternal);
-            }
+            assert(op == WORKER_ENQUEUE);
+            assert(dvmGetFieldObject(
+                       obj, gDvm.offJavaLangRefReference_queue) != NULL);
+            assert(dvmGetFieldObject(
+                       obj, gDvm.offJavaLangRefReference_queueNext) == NULL);
+            numReferencesEnqueued++;
+            callMethod(self, obj,
+                       gDvm.methJavaLangRefReference_enqueueInternal);
         }
 
         /* Let the GC collect the object.
@@ -303,7 +323,6 @@ static void doHeapWork(Thread *self)
 static void* heapWorkerThreadStart(void* arg)
 {
     Thread *self = dvmThreadSelf();
-    int cc;
 
     UNUSED_PARAMETER(arg);
 
@@ -312,8 +331,7 @@ static void* heapWorkerThreadStart(void* arg)
     /* tell the main thread that we're ready */
     dvmLockMutex(&gDvm.heapWorkerLock);
     gDvm.heapWorkerReady = true;
-    cc = pthread_cond_signal(&gDvm.heapWorkerCond);
-    assert(cc == 0);
+    dvmSignalCond(&gDvm.heapWorkerCond);
     dvmUnlockMutex(&gDvm.heapWorkerLock);
 
     dvmLockMutex(&gDvm.heapWorkerLock);
@@ -325,8 +343,7 @@ static void* heapWorkerThreadStart(void* arg)
         dvmChangeStatus(NULL, THREAD_VMWAIT);
 
         /* Signal anyone who wants to know when we're done. */
-        cc = pthread_cond_broadcast(&gDvm.heapWorkerIdleCond);
-        assert(cc == 0);
+        dvmBroadcastCond(&gDvm.heapWorkerIdleCond);
 
         /* Trim the heap if we were asked to. */
         trimtime = gDvm.gcHeap->heapWorkerNextTrim;
@@ -343,7 +360,7 @@ static void* heapWorkerThreadStart(void* arg)
 #endif
 
             if (trimtime.tv_sec < now.tv_sec ||
-                (trimtime.tv_sec == now.tv_sec && 
+                (trimtime.tv_sec == now.tv_sec &&
                  trimtime.tv_nsec <= now.tv_nsec))
             {
                 size_t madvisedSizes[HEAP_SOURCE_MAX_HEAP_COUNT];
@@ -374,6 +391,7 @@ static void* heapWorkerThreadStart(void* arg)
 
         /* sleep until signaled */
         if (timedwait) {
+            int cc __attribute__ ((__unused__));
 #ifdef HAVE_TIMEDWAIT_MONOTONIC
             cc = pthread_cond_timedwait_monotonic(&gDvm.heapWorkerCond,
                     &gDvm.heapWorkerLock, &trimtime);
@@ -381,10 +399,9 @@ static void* heapWorkerThreadStart(void* arg)
             cc = pthread_cond_timedwait(&gDvm.heapWorkerCond,
                     &gDvm.heapWorkerLock, &trimtime);
 #endif
-            assert(cc == 0 || cc == ETIMEDOUT || cc == EINTR);
+            assert(cc == 0 || cc == ETIMEDOUT);
         } else {
-            cc = pthread_cond_wait(&gDvm.heapWorkerCond, &gDvm.heapWorkerLock);
-            assert(cc == 0);
+            dvmWaitCond(&gDvm.heapWorkerCond, &gDvm.heapWorkerLock);
         }
 
         /* dvmChangeStatus() may block;  don't hold heapWorkerLock.
@@ -410,14 +427,11 @@ static void* heapWorkerThreadStart(void* arg)
  */
 void dvmSignalHeapWorker(bool shouldLock)
 {
-    int cc;
-
     if (shouldLock) {
         dvmLockMutex(&gDvm.heapWorkerLock);
     }
 
-    cc = pthread_cond_signal(&gDvm.heapWorkerCond);
-    assert(cc == 0);
+    dvmSignalCond(&gDvm.heapWorkerCond);
 
     if (shouldLock) {
         dvmUnlockMutex(&gDvm.heapWorkerLock);
@@ -429,8 +443,6 @@ void dvmSignalHeapWorker(bool shouldLock)
  */
 void dvmWaitForHeapWorkerIdle()
 {
-    int cc;
-
     assert(gDvm.heapWorkerReady);
 
     dvmChangeStatus(NULL, THREAD_VMWAIT);
@@ -443,8 +455,7 @@ void dvmWaitForHeapWorkerIdle()
     //     need to detect when this is called from the HeapWorker
     //     context and just give up.
     dvmSignalHeapWorker(false);
-    cc = pthread_cond_wait(&gDvm.heapWorkerIdleCond, &gDvm.heapWorkerLock);
-    assert(cc == 0);
+    dvmWaitCond(&gDvm.heapWorkerIdleCond, &gDvm.heapWorkerLock);
 
     dvmUnlockMutex(&gDvm.heapWorkerLock);
 

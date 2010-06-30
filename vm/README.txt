@@ -17,4 +17,3 @@ exit cleanly in valgrind.
 work correctly.
 
 - Use of gcc-specific and C99 constructs is allowed.
-

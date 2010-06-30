@@ -288,4 +288,3 @@ bool dvmDexChangeDex2(DvmDex* pDvmDex, u2* addr, u2 newVal)
 
     return true;
 }
-

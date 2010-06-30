@@ -18,5 +18,3 @@
 
 ./opcode-gen ../src/com/android/dx/dex/code/DalvOps.java
 ./opcode-gen ../src/com/android/dx/dex/code/Dops.java
-
-

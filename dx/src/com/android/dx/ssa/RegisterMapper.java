@@ -21,7 +21,7 @@ import com.android.dx.rop.code.RegisterSpecList;
 import com.android.dx.util.ToHuman;
 
 /**
- * Represents a mapping between two register numbering schemes. 
+ * Represents a mapping between two register numbering schemes.
  * Subclasses of this may be mutable, and as such the mapping provided
  * is only valid for the lifetime of the method call in which
  * instances of this class are passed.

@@ -63,4 +63,3 @@ const DalvikNativeMethod dvm_java_lang_Throwable[] = {
         Dalvik_java_lang_Throwable_nativeGetStackTrace },
     { NULL, NULL, NULL },
 };
-

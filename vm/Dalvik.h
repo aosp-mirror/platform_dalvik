@@ -58,6 +58,7 @@
 #include "alloc/HeapDebug.h"
 #include "alloc/HeapWorker.h"
 #include "alloc/GC.h"
+#include "alloc/WriteBarrier.h"
 #include "oo/AccessCheck.h"
 #include "JarFile.h"
 #include "Properties.h"
@@ -83,5 +84,6 @@
 #include "Atomic.h"
 #include "interp/Interp.h"
 #include "InlineNative.h"
+#include "oo/ObjectInlines.h"
 
 #endif /*_DALVIK_DALVIK*/

@@ -102,7 +102,7 @@ hprofDumpStrings(hprof_context_t *ctx)
              * ID:     ID for this string
              * [u1]*:  UTF8 characters for string (NOT NULL terminated)
              *         (the record format encodes the length)
-             * 
+             *
              * We use the address of the string data as its ID.
              */
             err = hprofAddU4ToRecord(rec, (u4)str);

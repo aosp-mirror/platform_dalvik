@@ -56,7 +56,7 @@ static DalvikNativeClass gDvmNativeMethodSet[] = {
     { "Ldalvik/system/VMStack;",          dvm_dalvik_system_VMStack, 0 },
     { "Lorg/apache/harmony/dalvik/ddmc/DdmServer;",
             dvm_org_apache_harmony_dalvik_ddmc_DdmServer, 0 },
-    { "Lorg/apache/harmony/dalvik/ddmc/DdmVmInternal;", 
+    { "Lorg/apache/harmony/dalvik/ddmc/DdmVmInternal;",
             dvm_org_apache_harmony_dalvik_ddmc_DdmVmInternal, 0 },
     { "Lorg/apache/harmony/dalvik/NativeTestTarget;",
             dvm_org_apache_harmony_dalvik_NativeTestTarget, 0 },
@@ -264,7 +264,7 @@ bail:
  * check the access flags at the time of the method call.  This results in
  * "native abstract" methods, which can't exist.  If we see the "abstract"
  * flag set, clear the "native" flag.
- * 
+ *
  * We also move the DECLARED_SYNCHRONIZED flag into the SYNCHRONIZED
  * position, because the callers of this function are trying to convey
  * the "traditional" meaning of the flags to their callers.
@@ -276,11 +276,11 @@ u4 dvmFixMethodFlags(u4 flags)
     }
 
     flags &= ~ACC_SYNCHRONIZED;
-    
+
     if ((flags & ACC_DECLARED_SYNCHRONIZED) != 0) {
         flags |= ACC_SYNCHRONIZED;
     }
-    
+
     return flags & JAVA_FLAGS_MASK;
 }
 
@@ -346,4 +346,3 @@ bool dvmIsPrivilegedMethod(const Method* method)
     }
     return false;
 }
-

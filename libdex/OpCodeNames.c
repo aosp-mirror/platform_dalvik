@@ -13,10 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 /*
  * Table of Dalvik opcode names.
  */
 #include "OpCodeNames.h"
+
+#include <assert.h>
 
 /*
  * The following two lines work, but slashes and dashes both turn into
@@ -287,11 +290,11 @@ static const char* gOpNames[256] = {
     "shl-int/lit8",
     "shr-int/lit8",
     "ushr-int/lit8",
-    "UNUSED",
-    "UNUSED",
-    "UNUSED",
-    "UNUSED",
-    "UNUSED",
+    "+iget-volatile",
+    "+iput-volatile",
+    "+sget-volatile",
+    "+sput-volatile",
+    "+iget-object-volatile",
     "+iget-wide-volatile",
     "+iput-wide-volatile",
     "+sget-wide-volatile",
@@ -314,17 +317,17 @@ static const char* gOpNames[256] = {
     "+invoke-virtual-quick/range",
     "+invoke-super-quick",
     "+invoke-super-quick/range",
-    "UNUSED",
-    "UNUSED",
-    "UNUSED",
+    "+iput-object-volatile",
+    "+sget-object-volatile",
+    "+sput-object-volatile",
     "UNUSED",
 };
 
 /*
  * Return the name of an opcode.
  */
-const char* getOpcodeName(OpCode op)
+const char* dexGetOpcodeName(OpCode op)
 {
+    assert(op >= 0 && op < kNumDalvikInstructions);
     return gOpNames[op];
 }
-

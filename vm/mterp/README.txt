@@ -213,4 +213,3 @@ of Python installed.
 The ultimate goal is to have the build system generate the necessary
 output files without requiring this separate step, but we're not yet
 ready to require Python in the build.
-

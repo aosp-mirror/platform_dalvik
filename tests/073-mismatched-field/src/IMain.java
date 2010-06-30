@@ -17,4 +17,3 @@
 public interface IMain {
     //static int f = 123;
 }
-

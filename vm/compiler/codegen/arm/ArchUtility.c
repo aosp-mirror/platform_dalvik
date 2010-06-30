@@ -15,7 +15,7 @@
  */
 
 #include "../../CompilerInternals.h"
-#include "dexdump/OpCodeNames.h"
+#include "libdex/OpCodeNames.h"
 #include "ArmLIR.h"
 
 /* Decode and print a ARM register name */

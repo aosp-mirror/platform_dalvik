@@ -56,4 +56,3 @@
     jne         common_exceptionThrown  # handle exception
 #endif
     FGETOP_JMP  1, %edx                 # jump to next instruction; getop, jmp
-

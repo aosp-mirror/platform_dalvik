@@ -34,9 +34,9 @@
     cmp     r9, #0                      @ check object for null
     ldr     r3, [r0, #offInstField_byteOffset]  @ r3<- byte offset of field
     beq     common_errNullObject        @ object was null
-    .if $volatile
+    .if     $volatile
     add     r0, r9, r3                  @ r0<- address of field
-    bl      android_quasiatomic_read_64 @ r0/r1<- contents of field
+    bl      dvmQuasiAtomicRead64        @ r0/r1<- contents of field
     .else
     ldrd    r0, [r9, r3]                @ r0/r1<- obj.field (64-bit align ok)
     .endif
@@ -47,4 +47,3 @@
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     stmia   r3, {r0-r1}                 @ fp[A]<- r0/r1
     GOTO_OPCODE(ip)                     @ jump to next instruction
-

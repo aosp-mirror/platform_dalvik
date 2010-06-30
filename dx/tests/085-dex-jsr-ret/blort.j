@@ -67,5 +67,3 @@ catchBlock:
 
 .catch java/lang/Throwable from j2 to j2a using catchBlock
 .end method
-
-

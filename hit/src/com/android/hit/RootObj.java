@@ -37,7 +37,7 @@ public class RootObj extends Instance {
     public RootObj(RootType type, long id) {
         this(type, id, 0, null);
     }
-    
+
     public RootObj(RootType type, long id, int thread, StackTrace stack) {
         mType = type;
         mId = id;
@@ -47,7 +47,7 @@ public class RootObj extends Instance {
 
     public final String getClassName(State state) {
         ClassObj theClass;
-        
+
         if (mType == RootType.SYSTEM_CLASS) {
             theClass = state.findClass(mId);
         } else {
@@ -59,24 +59,24 @@ public class RootObj extends Instance {
         if (theClass == null) {
             return "no class defined!!";
         }
-        
+
         return theClass.mClassName;
     }
 
     @Override
     public final int getSize() {
         Instance instance = null;
-        
+
         if (mType == RootType.SYSTEM_CLASS) {
             instance = mHeap.mState.findClass(mId);
         } else {
             instance = mHeap.mState.findReference(mId);
         }
-        
+
         if (instance == null) {
             return 0;
         }
-        
+
         return instance.getSize();
     }
 
@@ -85,7 +85,7 @@ public class RootObj extends Instance {
         if (resultSet.contains(this)) {
             return;
         }
-        
+
         if (filter != null) {
             if (filter.accept(this)) {
                 resultSet.add(this);

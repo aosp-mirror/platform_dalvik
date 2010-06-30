@@ -28,7 +28,7 @@ import java.util.HashMap;
  */
 public final class Type implements TypeBearer, Comparable<Type> {
     /** {@code non-null;} intern table mapping string descriptors to instances */
-    private static final HashMap<String, Type> internTable = 
+    private static final HashMap<String, Type> internTable =
         new HashMap<String, Type>(500);
 
     /** basic type constant for {@code void} */
@@ -147,63 +147,63 @@ public final class Type implements TypeBearer, Comparable<Type> {
     /**
      * {@code non-null;} instance representing {@code java.lang.Boolean}; the
      * suffix on the name helps disambiguate this from the instance
-     * representing a primitive type 
+     * representing a primitive type
      */
     public static final Type BOOLEAN_CLASS = intern("Ljava/lang/Boolean;");
 
     /**
      * {@code non-null;} instance representing {@code java.lang.Byte}; the
      * suffix on the name helps disambiguate this from the instance
-     * representing a primitive type 
+     * representing a primitive type
      */
     public static final Type BYTE_CLASS = intern("Ljava/lang/Byte;");
 
     /**
      * {@code non-null;} instance representing {@code java.lang.Character}; the
      * suffix on the name helps disambiguate this from the instance
-     * representing a primitive type 
+     * representing a primitive type
      */
     public static final Type CHARACTER_CLASS = intern("Ljava/lang/Character;");
 
     /**
      * {@code non-null;} instance representing {@code java.lang.Double}; the
      * suffix on the name helps disambiguate this from the instance
-     * representing a primitive type 
+     * representing a primitive type
      */
     public static final Type DOUBLE_CLASS = intern("Ljava/lang/Double;");
 
     /**
      * {@code non-null;} instance representing {@code java.lang.Float}; the
      * suffix on the name helps disambiguate this from the instance
-     * representing a primitive type 
+     * representing a primitive type
      */
     public static final Type FLOAT_CLASS = intern("Ljava/lang/Float;");
 
     /**
      * {@code non-null;} instance representing {@code java.lang.Integer}; the
      * suffix on the name helps disambiguate this from the instance
-     * representing a primitive type 
+     * representing a primitive type
      */
     public static final Type INTEGER_CLASS = intern("Ljava/lang/Integer;");
 
     /**
      * {@code non-null;} instance representing {@code java.lang.Long}; the
      * suffix on the name helps disambiguate this from the instance
-     * representing a primitive type 
+     * representing a primitive type
      */
     public static final Type LONG_CLASS = intern("Ljava/lang/Long;");
 
     /**
      * {@code non-null;} instance representing {@code java.lang.Short}; the
      * suffix on the name helps disambiguate this from the instance
-     * representing a primitive type 
+     * representing a primitive type
      */
     public static final Type SHORT_CLASS = intern("Ljava/lang/Short;");
 
     /**
      * {@code non-null;} instance representing {@code java.lang.Void}; the
      * suffix on the name helps disambiguate this from the instance
-     * representing a primitive type 
+     * representing a primitive type
      */
     public static final Type VOID_CLASS = intern("Ljava/lang/Void;");
 
@@ -239,7 +239,7 @@ public final class Type implements TypeBearer, Comparable<Type> {
 
     /**
      * basic type corresponding to this type; one of the
-     * {@code BT_*} constants 
+     * {@code BT_*} constants
      */
     private final int basicType;
 
@@ -247,32 +247,32 @@ public final class Type implements TypeBearer, Comparable<Type> {
      * {@code >= -1;} for an uninitialized type, bytecode index that this
      * instance was allocated at; {@code Integer.MAX_VALUE} if it
      * was an incoming uninitialized instance; {@code -1} if this
-     * is an <i>inititialized</i> instance 
+     * is an <i>inititialized</i> instance
      */
     private final int newAt;
 
     /**
      * {@code null-ok;} the internal-form class name corresponding to this type, if
      * calculated; only valid if {@code this} is a reference type and
-     * additionally not a return address 
+     * additionally not a return address
      */
     private String className;
 
     /**
      * {@code null-ok;} the type corresponding to an array of this type, if
-     * calculated 
+     * calculated
      */
     private Type arrayType;
 
     /**
      * {@code null-ok;} the type corresponding to elements of this type, if
-     * calculated; only valid if {@code this} is an array type 
+     * calculated; only valid if {@code this} is an array type
      */
     private Type componentType;
 
     /**
      * {@code null-ok;} the type corresponding to the initialized version of
-     * this type, if this instance is in fact an uninitialized type 
+     * this type, if this instance is in fact an uninitialized type
      */
     private Type initializedType;
 
@@ -282,7 +282,7 @@ public final class Type implements TypeBearer, Comparable<Type> {
      * field descriptor syntax. This method does <i>not</i> allow
      * {@code "V"} (that is, type {@code void}) as a valid
      * descriptor.
-     * 
+     *
      * @param descriptor {@code non-null;} the descriptor
      * @return {@code non-null;} the corresponding instance
      * @throws IllegalArgumentException thrown if the descriptor has
@@ -339,8 +339,8 @@ public final class Type implements TypeBearer, Comparable<Type> {
             char c = descriptor.charAt(i);
             switch (c) {
                 case '[':
-                case ';': 
-                case '.': 
+                case ';':
+                case '.':
                 case '(':
                 case ')': {
                     throw new IllegalArgumentException("bad descriptor");
@@ -365,7 +365,7 @@ public final class Type implements TypeBearer, Comparable<Type> {
      * given descriptor, allowing {@code "V"} to return the type
      * for {@code void}. Other than that one caveat, this method
      * is identical to {@link #intern}.
-     * 
+     *
      * @param descriptor {@code non-null;} the descriptor
      * @return {@code non-null;} the corresponding instance
      * @throws IllegalArgumentException thrown if the descriptor has
@@ -391,7 +391,7 @@ public final class Type implements TypeBearer, Comparable<Type> {
      * calling {@code intern(name)} if {@code name} begins
      * with {@code "["} and calling {@code intern("L" + name + ";")}
      * in all other cases.
-     * 
+     *
      * @param name {@code non-null;} the name of the class whose type is desired
      * @return {@code non-null;} the corresponding type
      * @throws IllegalArgumentException thrown if the name has
@@ -413,7 +413,7 @@ public final class Type implements TypeBearer, Comparable<Type> {
      * Constructs an instance corresponding to an "uninitialized type."
      * This is a private constructor; use one of the public static
      * methods to get instances.
-     * 
+     *
      * @param descriptor {@code non-null;} the field descriptor for the type
      * @param basicType basic type corresponding to this type; one of the
      * {@code BT_*} constants
@@ -444,7 +444,7 @@ public final class Type implements TypeBearer, Comparable<Type> {
      * Constructs an instance corresponding to an "initialized type."
      * This is a private constructor; use one of the public static
      * methods to get instances.
-     * 
+     *
      * @param descriptor {@code non-null;} the field descriptor for the type
      * @param basicType basic type corresponding to this type; one of the
      * {@code BT_*} constants
@@ -559,7 +559,7 @@ public final class Type implements TypeBearer, Comparable<Type> {
 
     /**
      * Gets the descriptor.
-     * 
+     *
      * @return {@code non-null;} the descriptor
      */
     public String getDescriptor() {
@@ -571,7 +571,7 @@ public final class Type implements TypeBearer, Comparable<Type> {
      * form. This method is only valid if this instance is for a
      * normal reference type (that is, a reference type and
      * additionally not a return address).
-     * 
+     *
      * @return {@code non-null;} the internal-form class name
      */
     public String getClassName() {
@@ -594,7 +594,7 @@ public final class Type implements TypeBearer, Comparable<Type> {
     /**
      * Gets the category. Most instances are category 1. {@code long}
      * and {@code double} are the only category 2 types.
-     * 
+     *
      * @see #isCategory1
      * @see #isCategory2
      * @return the category
@@ -612,7 +612,7 @@ public final class Type implements TypeBearer, Comparable<Type> {
 
     /**
      * Returns whether or not this is a category 1 type.
-     * 
+     *
      * @see #getCategory
      * @see #isCategory2
      * @return whether or not this is a category 1 type
@@ -630,7 +630,7 @@ public final class Type implements TypeBearer, Comparable<Type> {
 
     /**
      * Returns whether or not this is a category 2 type.
-     * 
+     *
      * @see #getCategory
      * @see #isCategory1
      * @return whether or not this is a category 2 type
@@ -650,7 +650,7 @@ public final class Type implements TypeBearer, Comparable<Type> {
      * Gets whether this type is "intlike." An intlike type is one which, when
      * placed on a stack or in a local, is automatically converted to an
      * {@code int}.
-     * 
+     *
      * @return whether this type is "intlike"
      */
     public boolean isIntlike() {
@@ -670,7 +670,7 @@ public final class Type implements TypeBearer, Comparable<Type> {
     /**
      * Gets whether this type is a primitive type. All types are either
      * primitive or reference types.
-     * 
+     *
      * @return whether this type is primitive
      */
     public boolean isPrimitive() {
@@ -696,7 +696,7 @@ public final class Type implements TypeBearer, Comparable<Type> {
      * reference type is a reference type that is not a return
      * address. This method is just convenient shorthand for
      * {@code getBasicType() == Type.BT_OBJECT}.
-     * 
+     *
      * @return whether this type is a normal reference type
      */
     public boolean isReference() {
@@ -707,7 +707,7 @@ public final class Type implements TypeBearer, Comparable<Type> {
      * Gets whether this type is an array type. If this method returns
      * {@code true}, then it is safe to use {@link #getComponentType}
      * to determine the component type.
-     * 
+     *
      * @return whether this type is an array type
      */
     public boolean isArray() {
@@ -717,7 +717,7 @@ public final class Type implements TypeBearer, Comparable<Type> {
     /**
      * Gets whether this type is an array type or is a known-null, and
      * hence is compatible with array types.
-     * 
+     *
      * @return whether this type is an array type
      */
     public boolean isArrayOrKnownNull() {
@@ -729,7 +729,7 @@ public final class Type implements TypeBearer, Comparable<Type> {
      * uninitialized instance is what one gets back from the {@code new}
      * opcode, and remains uninitialized until a valid constructor is
      * invoked on it.
-     * 
+     *
      * @return whether this type is "uninitialized"
      */
     public boolean isUninitialized() {
@@ -742,7 +742,7 @@ public final class Type implements TypeBearer, Comparable<Type> {
      * type is an uninitialized incoming parameter (i.e., the
      * {@code this} of an {@code <init>} method) or
      * {@code -1} if this type is in fact <i>initialized</i>.
-     * 
+     *
      * @return {@code >= -1;} the allocation bytecode index
      */
     public int getNewAt() {
@@ -752,7 +752,7 @@ public final class Type implements TypeBearer, Comparable<Type> {
     /**
      * Gets the initialized type corresponding to this instance, but only
      * if this instance is in fact an uninitialized object type.
-     * 
+     *
      * @return {@code non-null;} the initialized type
      */
     public Type getInitializedType() {
@@ -766,7 +766,7 @@ public final class Type implements TypeBearer, Comparable<Type> {
 
     /**
      * Gets the type corresponding to an array of this type.
-     * 
+     *
      * @return {@code non-null;} the array type
      */
     public Type getArrayType() {
@@ -780,7 +780,7 @@ public final class Type implements TypeBearer, Comparable<Type> {
     /**
      * Gets the component type of this type. This method is only valid on
      * array types.
-     * 
+     *
      * @return {@code non-null;} the component type
      */
     public Type getComponentType() {
@@ -799,7 +799,7 @@ public final class Type implements TypeBearer, Comparable<Type> {
      * Returns a new interned instance which is identical to this one, except
      * it is indicated as uninitialized and allocated at the given bytecode
      * index. This instance must be an initialized object type.
-     * 
+     *
      * @param newAt {@code >= 0;} the allocation bytecode index
      * @return {@code non-null;} an appropriately-constructed instance
      */
@@ -837,7 +837,7 @@ public final class Type implements TypeBearer, Comparable<Type> {
      * Puts the given instance in the intern table if it's not already
      * there. If a conflicting value is already in the table, then leave it.
      * Return the interned value.
-     * 
+     *
      * @param type {@code non-null;} instance to make interned
      * @return {@code non-null;} the actual interned object
      */

@@ -38,4 +38,3 @@ public class SlowInit {
         FIELD3.setValue(444);
     };
 }
-

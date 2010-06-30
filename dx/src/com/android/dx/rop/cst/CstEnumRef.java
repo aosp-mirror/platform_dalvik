@@ -25,7 +25,7 @@ import com.android.dx.rop.type.Type;
 public final class CstEnumRef extends CstMemberRef {
     /** {@code null-ok;} the corresponding field ref, lazily initialized */
     private CstFieldRef fieldRef;
-    
+
     /**
      * Constructs an instance.
      *
@@ -45,8 +45,8 @@ public final class CstEnumRef extends CstMemberRef {
     }
 
     /**
-     * {@inheritDoc} 
-     * 
+     * {@inheritDoc}
+     *
      * <b>Note:</b> This returns the enumerated type.
      */
     public Type getType() {
@@ -55,7 +55,7 @@ public final class CstEnumRef extends CstMemberRef {
 
     /**
      * Get a {@link CstFieldRef} that corresponds with this instance.
-     * 
+     *
      * @return {@code non-null;} the corresponding field reference
      */
     public CstFieldRef getFieldRef() {

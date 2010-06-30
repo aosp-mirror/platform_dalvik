@@ -37,4 +37,3 @@
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     strd    r0, [r9, r3]                @ obj.field (64 bits, aligned)<- r0
     GOTO_OPCODE(ip)                     @ jump to next instruction
-

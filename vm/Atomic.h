@@ -24,42 +24,32 @@
 #include <cutils/atomic-inline.h>   /* and some uncommon ones */
 
 /*
- * Full memory barrier.  Ensures compiler ordering and SMP behavior.
- */
-#define MEM_BARRIER()   ANDROID_MEMBAR_FULL()
-
-/*
- * 32-bit atomic compare-and-swap macro.  Performs a memory barrier
- * before the swap (store-release).
- *
- * If *_addr equals "_old", replace it with "_new" and return nonzero
- * (i.e. returns "false" if the operation fails).
- *
- * Underlying function is currently declared:
- *   int release_cas(int32_t old, int32_t new, volatile int32_t* addr)
- *
- * TODO: rename macro to ATOMIC_RELEASE_CAS
- */
-#define ATOMIC_CMP_SWAP(_addr, _old, _new) \
-            (android_atomic_release_cas((_old), (_new), (_addr)) == 0)
-
-
-/*
  * NOTE: Two "quasiatomic" operations on the exact same memory address
  * are guaranteed to operate atomically with respect to each other,
  * but no guarantees are made about quasiatomic operations mixed with
  * non-quasiatomic operations on the same address, nor about
  * quasiatomic operations that are performed on partially-overlapping
  * memory.
+ *
+ * None of these provide a memory barrier.
  */
 
 /*
- * TODO: rename android_quasiatomic_* to dvmQuasiatomic*.  Don't want to do
- * that yet due to branch merge issues.
+ * Swap the 64-bit value at "addr" with "value".  Returns the previous
+ * value.
  */
-int64_t android_quasiatomic_swap_64(int64_t value, volatile int64_t* addr);
-int64_t android_quasiatomic_read_64(volatile int64_t* addr);
-int android_quasiatomic_cmpxchg_64(int64_t oldvalue, int64_t newvalue,
+int64_t dvmQuasiAtomicSwap64(int64_t value, volatile int64_t* addr);
+
+/*
+ * Read the 64-bit value at "addr".
+ */
+int64_t dvmQuasiAtomicRead64(volatile const int64_t* addr);
+
+/*
+ * If the value at "addr" is equal to "oldvalue", replace it with "newvalue"
+ * and return 0.  Otherwise, don't swap, and return nonzero.
+ */
+int dvmQuasiAtomicCas64(int64_t oldvalue, int64_t newvalue,
         volatile int64_t* addr);
 
 #endif /*_DALVIK_ATOMIC*/

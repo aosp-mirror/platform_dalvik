@@ -68,7 +68,7 @@ public class Main {
         } catch (VerifyError ve) {
             System.out.println("Caught (retry): " + ve);
         }
-        
+
         try {
             UnresTest2.run();
         } catch (VerifyError ve) {

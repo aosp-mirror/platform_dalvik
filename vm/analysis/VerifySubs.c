@@ -32,51 +32,34 @@
  * If "pNewInstanceCount" is not NULL, it will be set to the number of
  * new-instance instructions in the method.
  *
+ * Performs some static checks, notably:
+ * - opcode of first instruction begins at index 0
+ * - only documented instructions may appear
+ * - each instruction follows the last
+ * - last byte of last instruction is at (code_length-1)
+ *
  * Logs an error and returns "false" on failure.
  */
 bool dvmComputeCodeWidths(const Method* meth, InsnFlags* insnFlags,
     int* pNewInstanceCount)
 {
-    const int insnCount = dvmGetMethodInsnsSize(meth);
+    size_t insnCount = dvmGetMethodInsnsSize(meth);
     const u2* insns = meth->insns;
     bool result = false;
     int newInstanceCount = 0;
     int i;
 
 
-    for (i = 0; i < insnCount; /**/) {
-        int width;
-
-        /*
-         * Switch tables and array data tables are identified with
-         * "extended NOP" opcodes.  They contain no executable code,
-         * so we can just skip past them.
-         */
-        if (*insns == kPackedSwitchSignature) {
-            width = 4 + insns[1] * 2;
-        } else if (*insns == kSparseSwitchSignature) {
-            width = 2 + insns[1] * 4;
-        } else if (*insns == kArrayDataSignature) {
-            u4 size = insns[2] | (((u4)insns[3]) << 16);
-            width = 4 + (insns[1] * size + 1) / 2;
-        } else {
-            int instr = *insns & 0xff;
-            width = dexGetInstrWidthAbs(gDvm.instrWidth, instr);
-            if (width == 0) {
-                LOG_VFY_METH(meth,
-                    "VFY: invalid post-opt instruction (0x%x)\n", instr);
-                LOGI("### instr=%d width=%d table=%d\n",
-                    instr, width, dexGetInstrWidthAbs(gDvm.instrWidth, instr));
-                goto bail;
-            }
-            if (width < 0 || width > 5) {
-                LOGE("VFY: bizarre width value %d\n", width);
-                dvmAbort();
-            }
-
-            if (instr == OP_NEW_INSTANCE)
-                newInstanceCount++;
+    for (i = 0; i < (int) insnCount; /**/) {
+        size_t width = dexGetInstrOrTableWidthAbs(gDvm.instrWidth, insns);
+        if (width == 0) {
+            LOG_VFY_METH(meth,
+                "VFY: invalid post-opt instruction (0x%04x)\n", *insns);
+            goto bail;
         }
+
+        if ((*insns & 0xff) == OP_NEW_INSTANCE)
+            newInstanceCount++;
 
         if (width > 65535) {
             LOG_VFY_METH(meth, "VFY: insane width %d\n", width);
@@ -471,4 +454,3 @@ char dvmDetermineCat1Const(s4 value)
     else
         return kRegTypeInteger;
 }
-

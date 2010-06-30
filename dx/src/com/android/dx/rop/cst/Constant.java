@@ -42,7 +42,7 @@ public abstract class Constant
 
     /**
      * {@inheritDoc}
-     * 
+     *
      * This compares in class-major and value-minor order.
      */
     public final int compareTo(Constant other) {
@@ -59,7 +59,7 @@ public abstract class Constant
     /**
      * Compare the values of this and another instance, which are guaranteed
      * to be of the same class. Subclasses must implement this.
-     * 
+     *
      * @param other {@code non-null;} the instance to compare to
      * @return {@code -1}, {@code 0}, or {@code 1}, as usual
      * for a comparison

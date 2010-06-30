@@ -261,4 +261,3 @@ class MyInvocationHandler implements InvocationHandler {
         return result;
     }
 }
-

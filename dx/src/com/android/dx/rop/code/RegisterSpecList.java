@@ -30,7 +30,7 @@ public final class RegisterSpecList
 
     /**
      * Makes a single-element instance.
-     * 
+     *
      * @param spec {@code non-null;} the element
      * @return {@code non-null;} an appropriately-constructed instance
      */
@@ -42,7 +42,7 @@ public final class RegisterSpecList
 
     /**
      * Makes a two-element instance.
-     * 
+     *
      * @param spec0 {@code non-null;} the first element
      * @param spec1 {@code non-null;} the second element
      * @return {@code non-null;} an appropriately-constructed instance
@@ -57,7 +57,7 @@ public final class RegisterSpecList
 
     /**
      * Makes a three-element instance.
-     * 
+     *
      * @param spec0 {@code non-null;} the first element
      * @param spec1 {@code non-null;} the second element
      * @param spec2 {@code non-null;} the third element
@@ -74,7 +74,7 @@ public final class RegisterSpecList
 
     /**
      * Makes a four-element instance.
-     * 
+     *
      * @param spec0 {@code non-null;} the first element
      * @param spec1 {@code non-null;} the second element
      * @param spec2 {@code non-null;} the third element
@@ -94,7 +94,7 @@ public final class RegisterSpecList
 
     /**
      * Constructs an instance. All indices initially contain {@code null}.
-     * 
+     *
      * @param size the size of the list
      */
     public RegisterSpecList(int size) {
@@ -122,12 +122,12 @@ public final class RegisterSpecList
     public TypeList withAddedType(Type type) {
         throw new UnsupportedOperationException("unsupported");
     }
-    
+
     /**
      * Gets the indicated element. It is an error to call this with the
      * index for an element which was never set; if you do that, this
      * will throw {@code NullPointerException}.
-     * 
+     *
      * @param n {@code >= 0, < size();} which element
      * @return {@code non-null;} the indicated element
      */
@@ -174,12 +174,12 @@ public final class RegisterSpecList
             }
         }
 
-        return -1;        
+        return -1;
     }
-    
+
     /**
      * Sets the element at the given index.
-     * 
+     *
      * @param n {@code >= 0, < size();} which element
      * @param spec {@code non-null;} the value to store
      */
@@ -192,7 +192,7 @@ public final class RegisterSpecList
      * instance. This is equal to the highest register number referred
      * to plus the widest width (largest category) of the type used in
      * that register.
-     * 
+     *
      * @return {@code >= 0;} the required registers size
      */
     public int getRegistersSize() {
@@ -216,7 +216,7 @@ public final class RegisterSpecList
      * Returns a new instance, which is the same as this instance,
      * except that it has an additional element prepended to the original.
      * Mutability of the result is inherited from the original.
-     * 
+     *
      * @param spec {@code non-null;} the new first spec (to prepend)
      * @return {@code non-null;} an appropriately-constructed instance
      */
@@ -240,7 +240,7 @@ public final class RegisterSpecList
      * Returns a new instance, which is the same as this instance,
      * except that its first element is removed. Mutability of the
      * result is inherited from the original.
-     * 
+     *
      * @return {@code non-null;} an appropriately-constructed instance
      */
     public RegisterSpecList withoutFirst() {
@@ -267,7 +267,7 @@ public final class RegisterSpecList
      * Returns a new instance, which is the same as this instance,
      * except that its last element is removed. Mutability of the
      * result is inherited from the original.
-     * 
+     *
      * @return {@code non-null;} an appropriately-constructed instance
      */
     public RegisterSpecList withoutLast() {
@@ -294,7 +294,7 @@ public final class RegisterSpecList
      * Returns an instance that is identical to this one, except that
      * all register numbers are offset by the given amount. Mutability
      * of the result is inherited from the original.
-     * 
+     *
      * @param delta the amount to offset the register numbers by
      * @return {@code non-null;} an appropriately-constructed instance
      */
@@ -325,8 +325,8 @@ public final class RegisterSpecList
     /**
      * Returns an instance that is identical to this one, except that
      * all register numbers are renumbered sequentially from the given
-     * base, with the first number duplicated if indicated. 
-     * 
+     * base, with the first number duplicated if indicated.
+     *
      * @param base the base register number
      * @param duplicateFirst whether to duplicate the first number
      * @return {@code non-null;} an appropriately-constructed instance

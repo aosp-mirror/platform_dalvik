@@ -59,7 +59,7 @@ public final class BlockAddresses {
 
     /**
      * Gets the instance for the start of the given block.
-     * 
+     *
      * @param block {@code non-null;} the block in question
      * @return {@code non-null;} the appropriate instance
      */
@@ -69,7 +69,7 @@ public final class BlockAddresses {
 
     /**
      * Gets the instance for the start of the block with the given label.
-     * 
+     *
      * @param label {@code non-null;} the label of the block in question
      * @return {@code non-null;} the appropriate instance
      */
@@ -79,7 +79,7 @@ public final class BlockAddresses {
 
     /**
      * Gets the instance for the final instruction of the given block.
-     * 
+     *
      * @param block {@code non-null;} the block in question
      * @return {@code non-null;} the appropriate instance
      */
@@ -90,7 +90,7 @@ public final class BlockAddresses {
     /**
      * Gets the instance for the final instruction of the block with
      * the given label.
-     * 
+     *
      * @param label {@code non-null;} the label of the block in question
      * @return {@code non-null;} the appropriate instance
      */
@@ -101,7 +101,7 @@ public final class BlockAddresses {
     /**
      * Gets the instance for the end (address after the final instruction)
      * of the given block.
-     * 
+     *
      * @param block {@code non-null;} the block in question
      * @return {@code non-null;} the appropriate instance
      */
@@ -112,7 +112,7 @@ public final class BlockAddresses {
     /**
      * Gets the instance for the end (address after the final instruction)
      * of the block with the given label.
-     * 
+     *
      * @param label {@code non-null;} the label of the block in question
      * @return {@code non-null;} the appropriate instance
      */

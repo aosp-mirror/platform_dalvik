@@ -32,7 +32,7 @@ public abstract class BaseParameterAnnotations extends BaseAttribute {
 
     /**
      * Constructs an instance.
-     * 
+     *
      * @param attributeName {@code non-null;} the name of the attribute
      * @param parameterAnnotations {@code non-null;} the annotations
      * @param byteLength {@code >= 0;} attribute data length in the original
@@ -64,7 +64,7 @@ public abstract class BaseParameterAnnotations extends BaseAttribute {
 
     /**
      * Gets the list of annotation lists associated with this instance.
-     * 
+     *
      * @return {@code non-null;} the list
      */
     public final AnnotationsList getParameterAnnotations() {

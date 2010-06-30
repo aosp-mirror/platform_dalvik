@@ -7,4 +7,3 @@ public class Blah implements Runnable {
         System.out.println("run");
     }
 }
-

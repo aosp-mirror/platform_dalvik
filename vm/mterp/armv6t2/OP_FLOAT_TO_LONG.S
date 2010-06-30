@@ -38,4 +38,3 @@ f2l_doconv:
     mov     r0, r4                      @ recover arg
     bl      __aeabi_f2lz                @ convert float to long
     ldmfd   sp!, {r4, pc}
-

@@ -43,4 +43,3 @@ for file in $files; do
 done
 
 exit $failure
-

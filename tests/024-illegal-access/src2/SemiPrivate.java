@@ -6,4 +6,3 @@
 public class SemiPrivate {
     private static String mPrivvy = "stuff";
 }
-

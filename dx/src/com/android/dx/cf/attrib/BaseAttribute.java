@@ -28,7 +28,7 @@ public abstract class BaseAttribute implements Attribute {
 
     /**
      * Constructs an instance.
-     * 
+     *
      * @param name {@code non-null;} attribute name
      */
     public BaseAttribute(String name) {

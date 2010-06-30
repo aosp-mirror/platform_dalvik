@@ -198,7 +198,7 @@ public final class ByteArray {
      * Copies the contents of this instance into the given raw
      * {@code byte[]} at the given offset. The given array must be
      * large enough.
-     * 
+     *
      * @param out {@code non-null;} array to hold the output
      * @param offset {@code non-null;} index into {@code out} for the first
      * byte of output
@@ -252,7 +252,7 @@ public final class ByteArray {
      * with the cursor starting at the beginning of this instance's data.
      * <b>Note:</b> The returned instance may be cast to {@link #GetCursor}
      * if needed.
-     * 
+     *
      * @return {@code non-null;} an appropriately-constructed
      * {@code DataInputStream} instance
      */
@@ -265,7 +265,7 @@ public final class ByteArray {
      * with the cursor starting at the beginning of this instance's data.
      * <b>Note:</b> The returned instance may be cast to {@link #GetCursor}
      * if needed.
-     * 
+     *
      * @return {@code non-null;} an appropriately-constructed
      * {@code InputStream} instancex
      */
@@ -279,12 +279,12 @@ public final class ByteArray {
     public interface GetCursor {
         /**
          * Gets the current cursor.
-         * 
+         *
          * @return {@code 0..size();} the cursor
          */
         public int getCursor();
     }
-     
+
     /**
      * Helper class for {@link #makeInputStream}, which implements the
      * stream functionality.
@@ -295,7 +295,7 @@ public final class ByteArray {
 
         /** 0..size; the mark */
         private int mark;
-        
+
         public MyInputStream() {
             cursor = 0;
             mark = 0;
@@ -315,7 +315,7 @@ public final class ByteArray {
             if ((offset + length) > arr.length) {
                 length = arr.length - offset;
             }
-            
+
             int maxLength = size - cursor;
             if (length > maxLength) {
                 length = maxLength;
@@ -351,7 +351,7 @@ public final class ByteArray {
     public static class MyDataInputStream extends DataInputStream {
         /** {@code non-null;} the underlying {@link #MyInputStream} */
         private final MyInputStream wrapped;
-        
+
         public MyDataInputStream(MyInputStream wrapped) {
             super(wrapped);
 

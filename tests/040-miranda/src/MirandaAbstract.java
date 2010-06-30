@@ -14,4 +14,3 @@ public abstract class MirandaAbstract implements MirandaInterface, MirandaInterf
         return true;
     }
 }
-

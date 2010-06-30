@@ -9,4 +9,3 @@
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     str     r1, [r0, #offThread_exception]  @ dvmClearException bypass
     GOTO_OPCODE(ip)                     @ jump to next instruction
-

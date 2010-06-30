@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-public class Blort 
+public class Blort
 {
     public static Object test1() {
         return ((Object[]) null)[0];
@@ -50,7 +50,7 @@ public class Blort
 
         return arr[0];
     }
-    
+
     public static void test8(Object[] arr) {
         if (check()) {
             arr = null;

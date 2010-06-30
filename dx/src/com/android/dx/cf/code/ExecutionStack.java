@@ -24,7 +24,7 @@ import com.android.dx.util.MutabilityControl;
 
 /**
  * Representation of a Java method execution stack.
- * 
+ *
  * <p><b>Note:</b> For the most part, the documentation for this class
  * ignores the distinction between {@link Type} and {@link
  * TypeBearer}.</p>
@@ -35,13 +35,13 @@ public final class ExecutionStack extends MutabilityControl {
 
     /**
      * {@code >= 0;} stack pointer (points one past the end) / current stack
-     * size 
+     * size
      */
     private int stackPtr;
 
     /**
-     * Constructs an instance. 
-     * 
+     * Constructs an instance.
+     *
      * @param maxStack {@code >= 0;} the maximum size of the stack for this
      * instance
      */
@@ -53,7 +53,7 @@ public final class ExecutionStack extends MutabilityControl {
 
     /**
      * Makes and returns a mutable copy of this instance.
-     * 
+     *
      * @return {@code non-null;} the copy
      */
     public ExecutionStack copy() {
@@ -68,7 +68,7 @@ public final class ExecutionStack extends MutabilityControl {
     /**
      * Annotates (adds context to) the given exception with information
      * about this instance.
-     * 
+     *
      * @param ex {@code non-null;} the exception to annotate
      */
     public void annotate(ExceptionWithContext ex) {
@@ -85,7 +85,7 @@ public final class ExecutionStack extends MutabilityControl {
     /**
      * Replaces all the occurrences of the given uninitialized type in
      * this stack with its initialized equivalent.
-     * 
+     *
      * @param type {@code non-null;} type to replace
      */
     public void makeInitialized(Type type) {
@@ -107,7 +107,7 @@ public final class ExecutionStack extends MutabilityControl {
 
     /**
      * Gets the maximum stack size for this instance.
-     * 
+     *
      * @return {@code >= 0;} the max stack size
      */
     public int getMaxStack() {
@@ -116,7 +116,7 @@ public final class ExecutionStack extends MutabilityControl {
 
     /**
      * Gets the current stack size.
-     * 
+     *
      * @return {@code >= 0, < getMaxStack();} the current stack size
      */
     public int size() {
@@ -138,7 +138,7 @@ public final class ExecutionStack extends MutabilityControl {
 
     /**
      * Pushes a value of the given type onto the stack.
-     * 
+     *
      * @param type {@code non-null;} type of the value
      * @throws SimException thrown if there is insufficient room on the
      * stack for the value
@@ -175,10 +175,10 @@ public final class ExecutionStack extends MutabilityControl {
      * {@code n == 0} means to peek at the top of the stack. Note that
      * this will return {@code null} if the indicated element is the
      * deeper half of a category-2 value.
-     * 
+     *
      * @param n {@code >= 0;} which element to peek at
      * @return {@code null-ok;} the type of value stored at that element
-     * @throws SimException thrown if {@code n >= size()} 
+     * @throws SimException thrown if {@code n >= size()}
      */
     public TypeBearer peek(int n) {
         if (n < 0) {
@@ -197,7 +197,7 @@ public final class ExecutionStack extends MutabilityControl {
      * stack, returning the type per se, as opposed to the
      * <i>type-bearer</i>.  This method is just a convenient shorthand
      * for {@code peek(n).getType()}.
-     * 
+     *
      * @see #peek
      */
     public Type peekType(int n) {
@@ -206,7 +206,7 @@ public final class ExecutionStack extends MutabilityControl {
 
     /**
      * Pops the top element off of the stack.
-     * 
+     *
      * @return {@code non-null;} the type formerly on the top of the stack
      * @throws SimException thrown if the stack is empty
      */
@@ -226,7 +226,7 @@ public final class ExecutionStack extends MutabilityControl {
      * contexts, particularly when merging two instances. As such, it places
      * the following restriction on its behavior: You may only replace
      * values with other values of the same category.
-     * 
+     *
      * @param n {@code >= 0;} which element to change, where {@code 0} is
      * the top element of the stack
      * @param type {@code non-null;} type of the new value
@@ -281,7 +281,7 @@ public final class ExecutionStack extends MutabilityControl {
      * Gets the string form for a stack element. This is the same as
      * {@code toString()} except that {@code null} is converted
      * to {@code "<invalid>"}.
-     * 
+     *
      * @param type {@code null-ok;} the stack element
      * @return {@code non-null;} the string form
      */
@@ -295,7 +295,7 @@ public final class ExecutionStack extends MutabilityControl {
 
     /**
      * Throws a properly-formatted exception.
-     * 
+     *
      * @param msg {@code non-null;} useful message
      * @return never (keeps compiler happy)
      */

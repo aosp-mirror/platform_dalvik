@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008 The Android Open Source Project
+ * Copyright (C) 2010 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,14 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-/*
- * Dalvik opcode names.
- */ 
-#ifndef _DEXDUMP_OPCODENAMES
-#define _DEXDUMP_OPCODENAMES
 
-#include "libdex/OpCode.h"
+#ifndef _DALVIK_ALLOC_VISIT
+#define _DALVIK_ALLOC_VISIT
 
-const char* getOpcodeName(OpCode op);
+#include "Dalvik.h"
 
-#endif /*_DEXDUMP_OPCODENAMES*/
+typedef void Visitor(void *obj, void *arg);
+
+void dvmVisitObject(Visitor *visitor, Object *obj, void *arg);
+
+#endif /* _DALVIK_ALLOC_VISIT */

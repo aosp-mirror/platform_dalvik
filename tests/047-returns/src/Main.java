@@ -63,4 +63,3 @@ class ClassThree implements Runnable {
 interface CommonInterface {
     int doStuff();
 }
-

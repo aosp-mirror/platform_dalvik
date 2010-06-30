@@ -136,7 +136,7 @@ ClassObject* dvmGenerateProxyClass(StringObject* str, ArrayObject* interfaces,
     ArrayObject* throws = NULL;
     ClassObject* newClass = NULL;
     int i;
-    
+
     nameStr = dvmCreateCstrFromString(str);
     if (nameStr == NULL) {
         dvmThrowException("Ljava/lang/IllegalArgumentException;",
@@ -183,14 +183,18 @@ ClassObject* dvmGenerateProxyClass(StringObject* str, ArrayObject* interfaces,
                                         ALLOC_DEFAULT);
     if (newClass == NULL)
         goto bail;
-    DVM_OBJECT_INIT(&newClass->obj, gDvm.unlinkedJavaLangClass);
+    DVM_OBJECT_INIT(&newClass->obj, gDvm.classJavaLangClass);
     dvmSetClassSerialNumber(newClass);
     newClass->descriptorAlloc = dvmNameToDescriptor(nameStr);
     newClass->descriptor = newClass->descriptorAlloc;
     newClass->accessFlags = ACC_PUBLIC | ACC_FINAL;
-    newClass->super = gDvm.classJavaLangReflectProxy;
+    dvmSetFieldObject((Object *)newClass,
+                      offsetof(ClassObject, super),
+                      (Object *)gDvm.classJavaLangReflectProxy);
     newClass->primitiveType = PRIM_NOT;
-    newClass->classLoader = loader;
+    dvmSetFieldObject((Object *)newClass,
+                      offsetof(ClassObject, classLoader),
+                      (Object *)loader);
 #if WITH_HPROF && WITH_HPROF_STACK
     hprofFillInStackTrace(newClass);
 #endif
@@ -241,10 +245,12 @@ ClassObject* dvmGenerateProxyClass(StringObject* str, ArrayObject* interfaces,
     dvmSetStaticFieldObject(sfield, (Object*)throws);
 
     /*
-     * Everything is ready.  See if the linker will lap it up.
+     * Everything is ready. This class didn't come out of a DEX file
+     * so we didn't tuck any indexes into the class object.  We can
+     * advance to LOADED state immediately.
      */
     newClass->status = CLASS_LOADED;
-    if (!dvmLinkClass(newClass, true)) {
+    if (!dvmLinkClass(newClass)) {
         LOGD("Proxy class link failed\n");
         goto bail;
     }
@@ -795,7 +801,7 @@ static void createConstructor(ClassObject* clazz, Method* meth)
     meth->name = "<init>";
     meth->prototype =
         gDvm.methJavaLangReflectProxy_constructorPrototype->prototype;
-    meth->shorty = 
+    meth->shorty =
         gDvm.methJavaLangReflectProxy_constructorPrototype->shorty;
     // no pDexCode or pDexMethod
 
@@ -860,7 +866,7 @@ static ArrayObject* boxMethodArgs(const Method* method, const u4* args)
      */
 
     int srcIndex = 0;
-    
+
     argCount = 0;
     while (*desc != '\0') {
         char descChar = *(desc++);

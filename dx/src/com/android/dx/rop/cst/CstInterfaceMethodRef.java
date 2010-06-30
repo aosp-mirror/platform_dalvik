@@ -23,13 +23,13 @@ public final class CstInterfaceMethodRef
         extends CstBaseMethodRef {
     /**
      * {@code null-ok;} normal {@link CstMethodRef} that corresponds to this
-     * instance, if calculated 
+     * instance, if calculated
      */
     private CstMethodRef methodRef;
 
     /**
      * Constructs an instance.
-     * 
+     *
      * @param definingClass {@code non-null;} the type of the defining class
      * @param nat {@code non-null;} the name-and-type
      */
@@ -47,7 +47,7 @@ public final class CstInterfaceMethodRef
     /**
      * Gets a normal (non-interface) {@link CstMethodRef} that corresponds to
      * this instance.
-     * 
+     *
      * @return {@code non-null;} an appropriate instance
      */
     public CstMethodRef toMethodRef() {

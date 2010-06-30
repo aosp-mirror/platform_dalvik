@@ -63,13 +63,13 @@ public final class NormalSsaInsn extends SsaInsn implements Cloneable {
         for (int i = 0; i < sz; i++) {
             newSources.set(i, i == index ? newSpec : origSources.get(i));
         }
-        
+
         newSources.setImmutable();
 
         RegisterSpec origSpec = origSources.get(index);
         if (origSpec.getReg() != newSpec.getReg()) {
             /*
-             * If the register remains unchanged, we're only changing 
+             * If the register remains unchanged, we're only changing
              * the type or local var name so don't update use list
              */
             getBlock().getParent().onSourceChanged(this, origSpec, newSpec);
@@ -102,7 +102,7 @@ public final class NormalSsaInsn extends SsaInsn implements Cloneable {
 
     /**
      * Like rop.Insn.getSources().
-     * 
+     *
      * @return {@code null-ok;} sources list
      */
     public RegisterSpecList getSources() {
@@ -137,7 +137,7 @@ public final class NormalSsaInsn extends SsaInsn implements Cloneable {
     /** {@inheritDoc} */
     public RegisterSpec getLocalAssignment() {
         RegisterSpec assignment;
-        
+
         if (insn.getOpcode().getOpcode() == RegOps.MARK_LOCAL) {
             assignment = insn.getSources().get(0);
         } else {

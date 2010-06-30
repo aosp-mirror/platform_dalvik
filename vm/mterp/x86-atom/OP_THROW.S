@@ -34,4 +34,3 @@
     je          common_errNullObject    # handle null object
     movl        rINST, offThread_exception(%ecx) # thread->exception<- object
     jmp         common_exceptionThrown  # handle exception
-

@@ -5,4 +5,3 @@ dumping it.
 The salient bit of parsing tested here is that the class has a single
 method with a minimal but syntactically valid Code attribute, which
 sports a non-empty syntactically valid exception table.
-

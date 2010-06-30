@@ -411,7 +411,8 @@ static bool getThreadStats(pid_t pid, pid_t tid, unsigned long* pUtime,
     int cc;
     cc = read(fd, lineBuf, sizeof(lineBuf)-1);
     if (cc <= 0) {
-        LOGI("Unable to read '%s': got %d (errno=%d)\n", nameBuf, cc, errno);
+        const char* msg = (cc == 0) ? "unexpected EOF" : strerror(errno);
+        LOGI("Unable to read '%s': %s\n", nameBuf, msg);
         close(fd);
         return false;
     }
@@ -458,8 +459,8 @@ static bool getThreadStats(pid_t pid, pid_t tid, unsigned long* pUtime,
  *  (4b) threadId
  *  (1b) thread status
  *  (4b) tid
- *  (4b) utime 
- *  (4b) stime 
+ *  (4b) utime
+ *  (4b) stime
  *  (1b) is daemon?
  *
  * The length fields exist in anticipation of adding additional fields
@@ -595,4 +596,3 @@ ArrayObject* dvmDdmGetRecentAllocations(void)
         memcpy(arrayObj->contents, data, len);
     return arrayObj;
 }
-

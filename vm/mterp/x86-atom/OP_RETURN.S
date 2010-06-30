@@ -18,4 +18,3 @@
     */
 
 %include "x86-atom/OP_RETURN_COMMON.S"
-

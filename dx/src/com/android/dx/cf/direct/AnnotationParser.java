@@ -71,10 +71,10 @@ public final class AnnotationParser {
      * was parsed
      */
     private int parseCursor;
-    
+
     /**
      * Constructs an instance.
-     * 
+     *
      * @param cf {@code non-null;} class file to parse from
      * @param offset {@code >= 0;} offset into the class file data to parse at
      * @param length {@code >= 0;} number of bytes left in the attribute data
@@ -93,15 +93,15 @@ public final class AnnotationParser {
         this.input = bytes.makeDataInputStream();
         this.parseCursor = 0;
     }
-    
+
     /**
      * Parses an annotation value ({@code element_value}) attribute.
-     * 
+     *
      * @return {@code non-null;} the parsed constant value
      */
     public Constant parseValueAttribute() {
         Constant result;
-        
+
         try {
             result = parseValue();
 
@@ -118,14 +118,14 @@ public final class AnnotationParser {
 
     /**
      * Parses a parameter annotation attribute.
-     * 
+     *
      * @param visibility {@code non-null;} visibility of the parsed annotations
      * @return {@code non-null;} the parsed list of lists of annotations
      */
     public AnnotationsList parseParameterAttribute(
             AnnotationVisibility visibility) {
         AnnotationsList result;
-        
+
         try {
             result = parseAnnotationsList(visibility);
 
@@ -139,10 +139,10 @@ public final class AnnotationParser {
 
         return result;
     }
-    
+
     /**
      * Parses an annotation attribute, per se.
-     * 
+     *
      * @param visibility {@code non-null;} visibility of the parsed annotations
      * @return {@code non-null;} the list of annotations read from the attribute
      * data
@@ -150,7 +150,7 @@ public final class AnnotationParser {
     public Annotations parseAnnotationAttribute(
             AnnotationVisibility visibility) {
         Annotations result;
-        
+
         try {
             result = parseAnnotations(visibility);
 
@@ -167,7 +167,7 @@ public final class AnnotationParser {
 
     /**
      * Parses a list of annotation lists.
-     * 
+     *
      * @param visibility {@code non-null;} visibility of the parsed annotations
      * @return {@code non-null;} the list of annotation lists read from the attribute
      * data
@@ -202,7 +202,7 @@ public final class AnnotationParser {
 
     /**
      * Parses an annotation list.
-     * 
+     *
      * @param visibility {@code non-null;} visibility of the parsed annotations
      * @return {@code non-null;} the list of annotations read from the attribute
      * data
@@ -237,7 +237,7 @@ public final class AnnotationParser {
 
     /**
      * Parses a single annotation.
-     * 
+     *
      * @param visibility {@code non-null;} visibility of the parsed annotation
      * @return {@code non-null;} the parsed annotation
      */
@@ -274,18 +274,18 @@ public final class AnnotationParser {
         annotation.setImmutable();
         return annotation;
     }
-    
+
     /**
      * Parses a {@link NameValuePair}.
-     * 
+     *
      * @return {@code non-null;} the parsed element
      */
     private NameValuePair parseElement() throws IOException {
         requireLength(5);
-                
+
         int elementNameIndex = input.readUnsignedShort();
         CstUtf8 elementName = (CstUtf8) pool.get(elementNameIndex);
-                
+
         if (observer != null) {
             parsed(2, "element_name: " + elementName.toHuman());
             parsed(0, "value: ");
@@ -303,7 +303,7 @@ public final class AnnotationParser {
 
     /**
      * Parses an annotation value.
-     * 
+     *
      * @return {@code non-null;} the parsed value
      */
     private Constant parseValue() throws IOException {
@@ -352,7 +352,7 @@ public final class AnnotationParser {
                 int classInfoIndex = input.readUnsignedShort();
                 CstUtf8 value = (CstUtf8) pool.get(classInfoIndex);
                 Type type = Type.internReturnType(value.getString());
-                
+
                 if (observer != null) {
                     parsed(2, "class_info: " + type.toHuman());
                 }
@@ -370,7 +370,7 @@ public final class AnnotationParser {
                 int constNameIndex = input.readUnsignedShort();
                 CstUtf8 typeName = (CstUtf8) pool.get(typeNameIndex);
                 CstUtf8 constName = (CstUtf8) pool.get(constNameIndex);
-                
+
                 if (observer != null) {
                     parsed(2, "type_name: " + typeName.toHuman());
                     parsed(2, "const_name: " + constName.toHuman());
@@ -416,11 +416,11 @@ public final class AnnotationParser {
             }
         }
     }
-    
+
     /**
      * Helper for {@link #parseValue}, which parses a constant reference
      * and returns the referred-to constant value.
-     * 
+     *
      * @return {@code non-null;} the parsed value
      */
     private Constant parseConstant() throws IOException {
@@ -428,8 +428,8 @@ public final class AnnotationParser {
         Constant value = (Constant) pool.get(constValueIndex);
 
         if (observer != null) {
-            String human = (value instanceof CstUtf8) 
-                ? ((CstUtf8) value).toQuoted() 
+            String human = (value instanceof CstUtf8)
+                ? ((CstUtf8) value).toQuoted()
                 : value.toHuman();
             parsed(2, "constant_value: " + human);
         }
@@ -440,7 +440,7 @@ public final class AnnotationParser {
     /**
      * Helper which will throw an exception if the given number of bytes
      * is not available to be read.
-     * 
+     *
      * @param requiredLength the number of required bytes
      */
     private void requireLength(int requiredLength) throws IOException {
@@ -448,12 +448,12 @@ public final class AnnotationParser {
             throw new ParseException("truncated annotation attribute");
         }
     }
-    
+
     /**
      * Helper which indicates that some bytes were just parsed. This should
      * only be used (for efficiency sake) if the parse is known to be
      * observed.
-     * 
+     *
      * @param length {@code >= 0;} number of bytes parsed
      * @param message {@code non-null;} associated message
      */
@@ -465,7 +465,7 @@ public final class AnnotationParser {
     /**
      * Convenience wrapper that simply calls through to
      * {@code observer.changeIndent()}.
-     * 
+     *
      * @param indent the amount to change the indent by
      */
     private void changeIndent(int indent) {

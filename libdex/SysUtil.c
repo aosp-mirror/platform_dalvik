@@ -406,4 +406,3 @@ int sysWriteFully(int fd, const void* buf, size_t count, const char* logMsg)
 
     return 0;
 }
-

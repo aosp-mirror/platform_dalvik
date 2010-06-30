@@ -61,7 +61,7 @@ public final class OutputFinisher {
 
     /**
      * Constructs an instance. It initially contains no instructions.
-     * 
+     *
      * @param regCount {@code >= 0;} register count for the method
      * @param initialCapacity {@code >= 0;} initial capacity of the instructions
      * list
@@ -77,17 +77,17 @@ public final class OutputFinisher {
     /**
      * Returns whether any of the instructions added to this instance
      * come with position info.
-     * 
+     *
      * @return whether any of the instructions added to this instance
      * come with position info
      */
     public boolean hasAnyPositionInfo() {
         return hasAnyPositionInfo;
     }
-    
+
     /**
      * Returns whether this instance has any local variable information.
-     * 
+     *
      * @return whether this instance has any local variable information
      */
     public boolean hasAnyLocalInfo() {
@@ -97,7 +97,7 @@ public final class OutputFinisher {
     /**
      * Helper for {@link #add} which scrutinizes a single
      * instruction for local variable information.
-     * 
+     *
      * @param insn {@code non-null;} instruction to scrutinize
      * @return {@code true} iff the instruction refers to any
      * named locals
@@ -124,7 +124,7 @@ public final class OutputFinisher {
     /**
      * Helper for {@link #hasAnyLocalInfo} which scrutinizes a single
      * register spec.
-     * 
+     *
      * @param spec {@code non-null;} spec to scrutinize
      * @return {@code true} iff the spec refers to any
      * named locals
@@ -137,7 +137,7 @@ public final class OutputFinisher {
     /**
      * Returns the set of all constants referred to by instructions added
      * to this instance.
-     * 
+     *
      * @return {@code non-null;} the set of constants
      */
     public HashSet<Constant> getAllConstants() {
@@ -153,7 +153,7 @@ public final class OutputFinisher {
     /**
      * Helper for {@link #getAllConstants} which adds all the info for
      * a single instruction.
-     * 
+     *
      * @param result {@code non-null;} result set to add to
      * @param insn {@code non-null;} instruction to scrutinize
      */
@@ -186,7 +186,7 @@ public final class OutputFinisher {
         if (spec == null) {
             return;
         }
-        
+
         LocalItem local = spec.getLocalItem();
         CstUtf8 name = local.getName();
         CstUtf8 signature = local.getSignature();
@@ -207,8 +207,8 @@ public final class OutputFinisher {
 
     /**
      * Adds an instruction to the output.
-     * 
-     * @param insn {@code non-null;} the instruction to add 
+     *
+     * @param insn {@code non-null;} the instruction to add
      */
     public void add(DalvInsn insn) {
         insns.add(insn);
@@ -217,7 +217,7 @@ public final class OutputFinisher {
 
     /**
      * Inserts an instruction in the output at the given offset.
-     * 
+     *
      * @param at {@code >= 0;} what index to insert at
      * @param insn {@code non-null;} the instruction to insert
      */
@@ -229,7 +229,7 @@ public final class OutputFinisher {
     /**
      * Helper for {@link #add} and {@link #insert},
      * which updates the position and local info flags.
-     * 
+     *
      * @param insn {@code non-null;} an instruction that was just introduced
      */
     private void updateInfo(DalvInsn insn) {
@@ -251,7 +251,7 @@ public final class OutputFinisher {
      * Reverses a branch which is buried a given number of instructions
      * backward in the output. It is illegal to call this unless the
      * indicated instruction really is a reversible branch.
-     * 
+     *
      * @param which how many instructions back to find the branch;
      * {@code 0} is the most recently added instruction,
      * {@code 1} is the instruction before that, etc.
@@ -283,7 +283,7 @@ public final class OutputFinisher {
      * Assigns indices in all instructions that need them, using the
      * given callback to perform lookups. This should be called before
      * calling {@link #finishProcessingAndGetList}.
-     * 
+     *
      * @param callback {@code non-null;} callback object
      */
     public void assignIndices(DalvCode.AssignIndicesCallback callback) {
@@ -297,7 +297,7 @@ public final class OutputFinisher {
     /**
      * Helper for {@link #assignIndices} which does assignment for one
      * instruction.
-     * 
+     *
      * @param insn {@code non-null;} the instruction
      * @param callback {@code non-null;} the callback
      */
@@ -323,7 +323,7 @@ public final class OutputFinisher {
     /**
      * Does final processing on this instance and gets the output as
      * a {@link DalvInsnList}. Final processing consists of:
-     * 
+     *
      * <ul>
      *   <li>optionally renumbering registers (to make room as needed for
      *   expanded instructions)</li>
@@ -332,7 +332,7 @@ public final class OutputFinisher {
      *   constant pool index, or branch target size issues</li>
      *   <li>assigning final addresses</li>
      * </ul>
-     * 
+     *
      * <p><b>Note:</b> This method may only be called once per instance
      * of this class.</p>
      *
@@ -358,7 +358,7 @@ public final class OutputFinisher {
      * Helper for {@link #finishProcessingAndGetList}, which extracts
      * the format out of each instruction into a separate array, to be
      * further manipulated as things progress.
-     * 
+     *
      * @return {@code non-null;} the array of formats
      */
     private InsnFormat[] makeFormatsArray() {
@@ -378,12 +378,12 @@ public final class OutputFinisher {
      * them. It also updates the given {@code formats} array so
      * as to avoid extra work when constructing the massaged
      * instruction list.
-     * 
+     *
      * @param formats {@code non-null;} array of per-instruction format selections
      */
     private void reserveRegisters(InsnFormat[] formats) {
         int oldReservedCount = (reservedCount < 0) ? 0 : reservedCount;
-        
+
         /*
          * Call calculateReservedCount() and then perform register
          * reservation, repeatedly until no new reservations happen.
@@ -410,7 +410,7 @@ public final class OutputFinisher {
                     /*
                      * No need to call this.set() since the format and
                      * other info are the same.
-                     */ 
+                     */
                     insns.set(i, insn.withRegisterOffset(reservedDifference));
                 }
             }
@@ -427,7 +427,7 @@ public final class OutputFinisher {
      * registers that need to be reserved. It also updates the
      * {@code formats} list to help avoid extra work in future
      * register reservation passes.
-     * 
+     *
      * @param formats {@code non-null;} array of per-instruction format selections
      * @return {@code >= 0;} the count of reserved registers
      */
@@ -450,7 +450,7 @@ public final class OutputFinisher {
             if (originalFormat == newFormat) {
                 continue;
             }
-            
+
             if (newFormat == null) {
                 /*
                  * The instruction will need to be expanded, so reserve
@@ -499,7 +499,7 @@ public final class OutputFinisher {
         for (;;) {
             format = format.nextUp();
             if ((format == null) ||
-                    (format.isCompatible(insn) && 
+                    (format.isCompatible(insn) &&
                      (Dops.getOrNull(family, format) != null))) {
                 break;
             }
@@ -507,14 +507,14 @@ public final class OutputFinisher {
 
         return format;
     }
-    
+
     /**
      * Helper for {@link #finishProcessingAndGetList}, which goes
      * through each instruction in the output, making sure its opcode
      * can accomodate its arguments. In cases where the opcode is
      * unable to do so, this replaces the instruction with a larger
      * instruction with identical semantics that <i>will</i> work.
-     * 
+     *
      * <p>This method may also reserve a number of low-numbered
      * registers, renumbering the instructions' original registers, in
      * order to have register space available in which to move
@@ -522,11 +522,11 @@ public final class OutputFinisher {
      * multi-instruction sequences. This expansion is done when no
      * simple instruction format can be found for a given instruction that
      * is able to accomodate that instruction's registers.</p>
-     * 
+     *
      * <p>This method ignores issues of branch target size, since
      * final addresses aren't known at the point that this method is
      * called.</p>
-     * 
+     *
      * @param formats {@code non-null;} array of per-instruction format selections
      */
     private void massageInstructions(InsnFormat[] formats) {
@@ -565,7 +565,7 @@ public final class OutputFinisher {
      * couldn't be represented simply (due to register representation
      * problems) is expanded into a series of instances that together
      * perform the proper function.
-     * 
+     *
      * @param formats {@code non-null;} array of per-instruction format selections
      * @return {@code non-null;} the replacement list
      */
@@ -602,7 +602,7 @@ public final class OutputFinisher {
             if (prefix != null) {
                 result.add(prefix);
             }
-            
+
             if (currentFormat != originalFormat) {
                 dop = Dops.getOrNull(dop.getFamily(), currentFormat);
                 insn = insn.withOpcode(dop);
@@ -613,7 +613,7 @@ public final class OutputFinisher {
                 result.add(suffix);
             }
         }
-        
+
         return result;
     }
 
@@ -655,7 +655,7 @@ public final class OutputFinisher {
      * case of a conditional branch that doesn't fit, the sense of the
      * test is reversed in order to branch around a {@code goto}
      * to the original target.
-     * 
+     *
      * @return whether any branches had to be fixed
      */
     private boolean fixBranches() {
@@ -696,13 +696,13 @@ public final class OutputFinisher {
                  * It is a conditional: Reverse its sense, and arrange for
                  * it to branch around an absolute goto to the original
                  * branch target.
-                 * 
+                 *
                  * Note: An invariant of the list being processed is
                  * that every TargetInsn is followed by a CodeAddress.
                  * Hence, it is always safe to get the next element
                  * after a TargetInsn and cast it to CodeAddress, as
                  * is happening a few lines down.
-                 * 
+                 *
                  * Also note: Size gets incremented by one here, as we
                  * have -- in the net -- added one additional element
                  * to the list, so we increment i to match. The added

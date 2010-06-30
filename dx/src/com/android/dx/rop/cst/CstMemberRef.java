@@ -28,7 +28,7 @@ public abstract class CstMemberRef extends TypedConstant {
 
     /**
      * Constructs an instance.
-     * 
+     *
      * @param definingClass {@code non-null;} the type of the defining class
      * @param nat {@code non-null;} the name-and-type
      */
@@ -53,7 +53,7 @@ public abstract class CstMemberRef extends TypedConstant {
         }
 
         CstMemberRef otherRef = (CstMemberRef) other;
-        return definingClass.equals(otherRef.definingClass) && 
+        return definingClass.equals(otherRef.definingClass) &&
             nat.equals(otherRef.nat);
     }
 
@@ -104,7 +104,7 @@ public abstract class CstMemberRef extends TypedConstant {
 
     /**
      * Gets the type of the defining class.
-     * 
+     *
      * @return {@code non-null;} the type of defining class
      */
     public final CstType getDefiningClass() {
@@ -113,7 +113,7 @@ public abstract class CstMemberRef extends TypedConstant {
 
     /**
      * Gets the defining name-and-type.
-     * 
+     *
      * @return {@code non-null;} the name-and-type
      */
     public final CstNat getNat() {

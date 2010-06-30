@@ -19,4 +19,3 @@ public class IfaceImpl implements IfaceSub {
         return new DoubledImplement2();
     }
 }
-

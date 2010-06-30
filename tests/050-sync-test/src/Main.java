@@ -42,7 +42,7 @@ public class Main {
 
         try {
             Thread.sleep(100);
-        } 
+        }
         catch (InterruptedException ie) {
             System.out.println("INTERRUPT!");
             ie.printStackTrace();
@@ -153,7 +153,7 @@ class SleepyThread extends Thread {
             }
             catch (InterruptedException ie) {
                 // Expecting this; interrupted should be false.
-                System.out.println(Thread.currentThread().getName() + 
+                System.out.println(Thread.currentThread().getName() +
                         " interrupted, flag=" + Thread.interrupted());
                 intr = true;
             }
@@ -177,4 +177,3 @@ class SleepyThread extends Thread {
         }
     }
 }
-

@@ -22,4 +22,3 @@ public class PartialInit {
     public static final IntHolder FIELD0 = new IntHolder(1);    // succeeds
     public static final IntHolder FIELD1 = new IntHolder(-2);   // throws
 }
-

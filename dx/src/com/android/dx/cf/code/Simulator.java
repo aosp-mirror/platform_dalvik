@@ -48,7 +48,7 @@ public class Simulator {
     private static final String LOCAL_MISMATCH_ERROR =
         "This is symptomatic of .class transformation tools that ignore " +
         "local variable information.";
-    
+
     /** {@code non-null;} machine to use when simulating */
     private final Machine machine;
 
@@ -63,7 +63,7 @@ public class Simulator {
 
     /**
      * Constructs an instance.
-     * 
+     *
      * @param machine {@code non-null;} machine to use when simulating
      * @param method {@code non-null;} method data to use
      */
@@ -85,7 +85,7 @@ public class Simulator {
     /**
      * Simulates the effect of executing the given basic block. This modifies
      * the passed-in frame to represent the end result.
-     * 
+     *
      * @param bb {@code non-null;} the basic block
      * @param frame {@code non-null;} frame to operate on
      */
@@ -109,7 +109,7 @@ public class Simulator {
     /**
      * Simulates the effect of the instruction at the given offset, by
      * making appropriate calls on the given frame.
-     * 
+     *
      * @param offset {@code >= 0;} offset of the instruction to simulate
      * @param frame {@code non-null;} frame to operate on
      * @return the length of the instruction, in bytes
@@ -139,7 +139,7 @@ public class Simulator {
         private final Machine machine;
 
         /**
-         * {@code null-ok;} frame to use; set with each call to 
+         * {@code null-ok;} frame to use; set with each call to
          * {@link Simulator#simulate}
          */
         private Frame frame;
@@ -157,7 +157,7 @@ public class Simulator {
 
         /**
          * Sets the frame to act on.
-         * 
+         *
          * @param frame {@code non-null;} the frame
          */
         public void setFrame(Frame frame) {
@@ -382,7 +382,7 @@ public class Simulator {
                     if (stack.peekType(0).isCategory2()) {
                         throw illegalTos();
                     }
-                    
+
                     if (stack.peekType(1).isCategory2()) {
                         // "form 2" in vmspec-2
                         machine.popArgs(frame, 2);
@@ -474,7 +474,7 @@ public class Simulator {
         /**
          * Checks whether the prototype is compatible with returning the
          * given type, and throws if not.
-         * 
+         *
          * @param encountered {@code non-null;} the encountered return type
          */
         private void checkReturnType(Type encountered) {
@@ -503,7 +503,7 @@ public class Simulator {
              * possible, we replace the type with the one indicated in
              * the local variable table, though we still need to check
              * to make sure it's valid for the opcode.
-             * 
+             *
              * The reason we use (offset + length) for the localOffset
              * for a store is because it is only after the store that
              * the local type becomes valid. On the other hand, the
@@ -599,7 +599,7 @@ public class Simulator {
                      * Get the instance prototype, and use it to direct
                      * the machine.
                      */
-                    Prototype prototype = 
+                    Prototype prototype =
                         ((CstMethodRef) cst).getPrototype(false);
                     machine.popArgs(frame, prototype);
                     break;
@@ -609,7 +609,7 @@ public class Simulator {
                      * Get the static prototype, and use it to direct
                      * the machine.
                      */
-                    Prototype prototype = 
+                    Prototype prototype =
                         ((CstMethodRef) cst).getPrototype(true);
                     machine.popArgs(frame, prototype);
                     break;

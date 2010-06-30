@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-public class Blort 
+public class Blort
 {
     private static int i;
     private static long l;
     private static Object o;
-    
+
     public static void test() {
         int i0 = 0;
         int i1 = 0;

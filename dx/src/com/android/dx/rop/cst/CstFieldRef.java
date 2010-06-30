@@ -28,7 +28,7 @@ public final class CstFieldRef extends CstMemberRef {
      * primitive type. For example, if given {@link Type#INT}, this
      * method returns an instance corresponding to the field
      * {@code java.lang.Integer.TYPE}.
-     * 
+     *
      * @param primitiveType {@code non-null;} the primitive type
      * @return {@code non-null;} the corresponding static field
      */
@@ -39,7 +39,7 @@ public final class CstFieldRef extends CstMemberRef {
 
     /**
      * Constructs an instance.
-     * 
+     *
      * @param definingClass {@code non-null;} the type of the defining class
      * @param nat {@code non-null;} the name-and-type
      */
@@ -55,7 +55,7 @@ public final class CstFieldRef extends CstMemberRef {
 
     /**
      * Returns the type of this field.
-     * 
+     *
      * @return {@code non-null;} the field's type
      */
     public Type getType() {

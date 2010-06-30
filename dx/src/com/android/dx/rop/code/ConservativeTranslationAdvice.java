@@ -32,7 +32,7 @@ public final class ConservativeTranslationAdvice
     private ConservativeTranslationAdvice() {
         // This space intentionally left blank.
     }
-    
+
     /** {@inheritDoc} */
     public boolean hasConstantOperation(Rop opcode,
             RegisterSpec sourceA, RegisterSpec sourceB) {

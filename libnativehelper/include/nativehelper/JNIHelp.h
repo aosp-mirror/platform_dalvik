@@ -81,7 +81,7 @@ const char* jniStrError(int errnum, char* buf, size_t buflen);
  */
 jobject jniCreateFileDescriptor(C_JNIEnv* env, int fd);
 
-/* 
+/*
  * Get an int file descriptor from a java.io.FileDescriptor
  */
 int jniGetFDFromFileDescriptor(C_JNIEnv* env, jobject fileDescriptor);

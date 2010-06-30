@@ -40,4 +40,3 @@
 .L${opcode}_finish:
     SET_VREG(r0, r9)                    @ vAA<- r0
     GOTO_OPCODE(ip)                     @ jump to next instruction
-

@@ -215,7 +215,6 @@ Notes:
 #include "../common/asm-constants.h"
 
 
-
     .global dvmAsmInstructionStart
     .type   dvmAsmInstructionStart, %function
 dvmAsmInstructionStart = .L_OP_NOP
@@ -257,7 +256,6 @@ dvmAsmInstructionStart = .L_OP_NOP
     ADVANCE_PC(2)
     SET_VREG (%ecx,%eax)              # fp[AA]<- ecx]
     GOTO_NEXT
-
 
 /* ------------------------------ */
     .balign 64
@@ -355,7 +353,6 @@ dvmAsmInstructionStart = .L_OP_NOP
     GOTO_NEXT
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_MOVE_OBJECT_16: /* 0x09 */
@@ -438,7 +435,6 @@ dvmAsmInstructionStart = .L_OP_NOP
 /* File: x86/OP_RETURN_VOID.S */
     jmp       common_returnFromMethod
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_RETURN: /* 0x0f */
@@ -505,7 +501,6 @@ dvmAsmInstructionStart = .L_OP_NOP
     sarl    $4,%eax
     SET_VREG(%eax,%ecx)
     GOTO_NEXT
-
 
 /* ------------------------------ */
     .balign 64
@@ -591,7 +586,6 @@ dvmAsmInstructionStart = .L_OP_NOP
     ADVANCE_PC(5)
     GOTO_NEXT
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_CONST_WIDE_HIGH16: /* 0x19 */
@@ -606,7 +600,6 @@ dvmAsmInstructionStart = .L_OP_NOP
     xorl       %eax,%eax
     SET_VREG_WORD(%eax,%ecx,0)            # v[AA+0]<- eax
     GOTO_NEXT
-
 
 /* ------------------------------ */
     .balign 64
@@ -927,6 +920,7 @@ dvmAsmInstructionStart = .L_OP_NOP
      */
     /* throw vAA */
     GET_GLUE(%ecx)
+    EXPORT_PC()
     movzbl   rINST_HI,rINST_FULL       # rINST_FULL<- AA
     GET_VREG(%eax,rINST_FULL)          # eax<- exception object
     movl     offGlue_self(%ecx),%ecx   # ecx<- glue->self
@@ -1422,7 +1416,6 @@ dvmAsmInstructionStart = .L_OP_NOP
     GOTO_NEXT
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_IF_NEZ: /* 0x39 */
@@ -1448,7 +1441,6 @@ dvmAsmInstructionStart = .L_OP_NOP
     FETCH_INST_INDEXED(%eax)
     ADVANCE_PC_INDEXED(%eax)
     GOTO_NEXT
-
 
 
 /* ------------------------------ */
@@ -1478,7 +1470,6 @@ dvmAsmInstructionStart = .L_OP_NOP
     GOTO_NEXT
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_IF_GEZ: /* 0x3b */
@@ -1504,7 +1495,6 @@ dvmAsmInstructionStart = .L_OP_NOP
     FETCH_INST_INDEXED(%eax)
     ADVANCE_PC_INDEXED(%eax)
     GOTO_NEXT
-
 
 
 /* ------------------------------ */
@@ -1534,7 +1524,6 @@ dvmAsmInstructionStart = .L_OP_NOP
     GOTO_NEXT
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_IF_LEZ: /* 0x3d */
@@ -1560,7 +1549,6 @@ dvmAsmInstructionStart = .L_OP_NOP
     FETCH_INST_INDEXED(%eax)
     ADVANCE_PC_INDEXED(%eax)
     GOTO_NEXT
-
 
 
 /* ------------------------------ */
@@ -1637,7 +1625,6 @@ dvmAsmInstructionStart = .L_OP_NOP
     ADVANCE_PC(2)
     GOTO_NEXT
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_AGET_WIDE: /* 0x45 */
@@ -1686,7 +1673,6 @@ dvmAsmInstructionStart = .L_OP_NOP
     GOTO_NEXT
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_AGET_BOOLEAN: /* 0x47 */
@@ -1713,7 +1699,6 @@ dvmAsmInstructionStart = .L_OP_NOP
     SET_VREG(%eax,%ecx)
     ADVANCE_PC(2)
     GOTO_NEXT
-
 
 
 /* ------------------------------ */
@@ -1744,7 +1729,6 @@ dvmAsmInstructionStart = .L_OP_NOP
     GOTO_NEXT
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_AGET_CHAR: /* 0x49 */
@@ -1771,7 +1755,6 @@ dvmAsmInstructionStart = .L_OP_NOP
     SET_VREG(%eax,%ecx)
     ADVANCE_PC(2)
     GOTO_NEXT
-
 
 
 /* ------------------------------ */
@@ -1802,7 +1785,6 @@ dvmAsmInstructionStart = .L_OP_NOP
     GOTO_NEXT
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_APUT: /* 0x4b */
@@ -1828,7 +1810,6 @@ dvmAsmInstructionStart = .L_OP_NOP
     movl     %ecx,(%eax)
     ADVANCE_PC(2)
     GOTO_NEXT
-
 
 /* ------------------------------ */
     .balign 64
@@ -1900,7 +1881,6 @@ dvmAsmInstructionStart = .L_OP_NOP
     GOTO_NEXT
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_APUT_BYTE: /* 0x4f */
@@ -1927,7 +1907,6 @@ dvmAsmInstructionStart = .L_OP_NOP
     movb     %cl,(%eax)
     ADVANCE_PC(2)
     GOTO_NEXT
-
 
 
 /* ------------------------------ */
@@ -1958,7 +1937,6 @@ dvmAsmInstructionStart = .L_OP_NOP
     GOTO_NEXT
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_APUT_SHORT: /* 0x51 */
@@ -1985,7 +1963,6 @@ dvmAsmInstructionStart = .L_OP_NOP
     movw     %cx,(%eax)
     ADVANCE_PC(2)
     GOTO_NEXT
-
 
 
 /* ------------------------------ */
@@ -3621,7 +3598,6 @@ dvmAsmInstructionStart = .L_OP_NOP
     GOTO_NEXT
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_SUB_INT: /* 0x91 */
@@ -3646,7 +3622,6 @@ dvmAsmInstructionStart = .L_OP_NOP
     ADVANCE_PC(2)
     SET_VREG(%eax,%ecx)
     GOTO_NEXT
-
 
 
 /* ------------------------------ */
@@ -3749,7 +3724,6 @@ dvmAsmInstructionStart = .L_OP_NOP
     GOTO_NEXT
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_OR_INT: /* 0x96 */
@@ -3776,7 +3750,6 @@ dvmAsmInstructionStart = .L_OP_NOP
     GOTO_NEXT
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_XOR_INT: /* 0x97 */
@@ -3801,7 +3774,6 @@ dvmAsmInstructionStart = .L_OP_NOP
     ADVANCE_PC(2)
     SET_VREG(%eax,%ecx)
     GOTO_NEXT
-
 
 
 /* ------------------------------ */
@@ -4211,7 +4183,6 @@ dvmAsmInstructionStart = .L_OP_NOP
     GOTO_NEXT
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_SUB_FLOAT: /* 0xa7 */
@@ -4232,7 +4203,6 @@ dvmAsmInstructionStart = .L_OP_NOP
     ADVANCE_PC(2)
     fstps   (rFP,%ecx,4)           # %st to vAA
     GOTO_NEXT
-
 
 
 /* ------------------------------ */
@@ -4257,7 +4227,6 @@ dvmAsmInstructionStart = .L_OP_NOP
     GOTO_NEXT
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_DIV_FLOAT: /* 0xa9 */
@@ -4278,7 +4247,6 @@ dvmAsmInstructionStart = .L_OP_NOP
     ADVANCE_PC(2)
     fstps   (rFP,%ecx,4)           # %st to vAA
     GOTO_NEXT
-
 
 
 /* ------------------------------ */
@@ -4324,7 +4292,6 @@ dvmAsmInstructionStart = .L_OP_NOP
     GOTO_NEXT
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_SUB_DOUBLE: /* 0xac */
@@ -4345,7 +4312,6 @@ dvmAsmInstructionStart = .L_OP_NOP
     ADVANCE_PC(2)
     fstpl   (rFP,%ecx,4)           # %st to vAA
     GOTO_NEXT
-
 
 
 /* ------------------------------ */
@@ -4370,7 +4336,6 @@ dvmAsmInstructionStart = .L_OP_NOP
     GOTO_NEXT
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_DIV_DOUBLE: /* 0xae */
@@ -4391,7 +4356,6 @@ dvmAsmInstructionStart = .L_OP_NOP
     ADVANCE_PC(2)
     fstpl   (rFP,%ecx,4)           # %st to vAA
     GOTO_NEXT
-
 
 
 /* ------------------------------ */
@@ -4660,7 +4624,6 @@ dvmAsmInstructionStart = .L_OP_NOP
     GOTO_NEXT
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_SHR_INT_2ADDR: /* 0xb9 */
@@ -4683,7 +4646,6 @@ dvmAsmInstructionStart = .L_OP_NOP
     GOTO_NEXT
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_USHR_INT_2ADDR: /* 0xba */
@@ -4704,7 +4666,6 @@ dvmAsmInstructionStart = .L_OP_NOP
     FETCH_INST_WORD(1)
     ADVANCE_PC(1)
     GOTO_NEXT
-
 
 
 /* ------------------------------ */
@@ -5407,7 +5368,6 @@ dvmAsmInstructionStart = .L_OP_NOP
     GOTO_NEXT
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_XOR_INT_LIT16: /* 0xd7 */
@@ -5506,7 +5466,6 @@ dvmAsmInstructionStart = .L_OP_NOP
     FETCH_INST_WORD(2)
     ADVANCE_PC(2)
     GOTO_NEXT
-
 
 /* ------------------------------ */
     .balign 64
@@ -5612,7 +5571,6 @@ dvmAsmInstructionStart = .L_OP_NOP
     FETCH_INST_WORD(2)
     ADVANCE_PC(2)
     GOTO_NEXT
-
 
 
 /* ------------------------------ */
@@ -5725,44 +5683,74 @@ dvmAsmInstructionStart = .L_OP_NOP
 
 /* ------------------------------ */
     .balign 64
-.L_OP_UNUSED_E3: /* 0xe3 */
-/* File: x86/OP_UNUSED_E3.S */
-/* File: x86/unused.S */
-    jmp     common_abort
-
-
+.L_OP_IGET_VOLATILE: /* 0xe3 */
+    /* (stub) */
+    GET_GLUE(%ecx)
+    SAVE_PC_TO_GLUE(%ecx)            # only need to export these two
+    SAVE_FP_TO_GLUE(%ecx)            # only need to export these two
+    movl %ecx,OUT_ARG0(%esp)         # glue is first arg to function
+    call      dvmMterp_OP_IGET_VOLATILE     # do the real work
+    GET_GLUE(%ecx)
+    LOAD_PC_FROM_GLUE(%ecx)          # retrieve updated values
+    LOAD_FP_FROM_GLUE(%ecx)          # retrieve updated values
+    FETCH_INST()
+    GOTO_NEXT
 /* ------------------------------ */
     .balign 64
-.L_OP_UNUSED_E4: /* 0xe4 */
-/* File: x86/OP_UNUSED_E4.S */
-/* File: x86/unused.S */
-    jmp     common_abort
-
-
+.L_OP_IPUT_VOLATILE: /* 0xe4 */
+    /* (stub) */
+    GET_GLUE(%ecx)
+    SAVE_PC_TO_GLUE(%ecx)            # only need to export these two
+    SAVE_FP_TO_GLUE(%ecx)            # only need to export these two
+    movl %ecx,OUT_ARG0(%esp)         # glue is first arg to function
+    call      dvmMterp_OP_IPUT_VOLATILE     # do the real work
+    GET_GLUE(%ecx)
+    LOAD_PC_FROM_GLUE(%ecx)          # retrieve updated values
+    LOAD_FP_FROM_GLUE(%ecx)          # retrieve updated values
+    FETCH_INST()
+    GOTO_NEXT
 /* ------------------------------ */
     .balign 64
-.L_OP_UNUSED_E5: /* 0xe5 */
-/* File: x86/OP_UNUSED_E5.S */
-/* File: x86/unused.S */
-    jmp     common_abort
-
-
+.L_OP_SGET_VOLATILE: /* 0xe5 */
+    /* (stub) */
+    GET_GLUE(%ecx)
+    SAVE_PC_TO_GLUE(%ecx)            # only need to export these two
+    SAVE_FP_TO_GLUE(%ecx)            # only need to export these two
+    movl %ecx,OUT_ARG0(%esp)         # glue is first arg to function
+    call      dvmMterp_OP_SGET_VOLATILE     # do the real work
+    GET_GLUE(%ecx)
+    LOAD_PC_FROM_GLUE(%ecx)          # retrieve updated values
+    LOAD_FP_FROM_GLUE(%ecx)          # retrieve updated values
+    FETCH_INST()
+    GOTO_NEXT
 /* ------------------------------ */
     .balign 64
-.L_OP_UNUSED_E6: /* 0xe6 */
-/* File: x86/OP_UNUSED_E6.S */
-/* File: x86/unused.S */
-    jmp     common_abort
-
-
+.L_OP_SPUT_VOLATILE: /* 0xe6 */
+    /* (stub) */
+    GET_GLUE(%ecx)
+    SAVE_PC_TO_GLUE(%ecx)            # only need to export these two
+    SAVE_FP_TO_GLUE(%ecx)            # only need to export these two
+    movl %ecx,OUT_ARG0(%esp)         # glue is first arg to function
+    call      dvmMterp_OP_SPUT_VOLATILE     # do the real work
+    GET_GLUE(%ecx)
+    LOAD_PC_FROM_GLUE(%ecx)          # retrieve updated values
+    LOAD_FP_FROM_GLUE(%ecx)          # retrieve updated values
+    FETCH_INST()
+    GOTO_NEXT
 /* ------------------------------ */
     .balign 64
-.L_OP_UNUSED_E7: /* 0xe7 */
-/* File: x86/OP_UNUSED_E7.S */
-/* File: x86/unused.S */
-    jmp     common_abort
-
-
+.L_OP_IGET_OBJECT_VOLATILE: /* 0xe7 */
+    /* (stub) */
+    GET_GLUE(%ecx)
+    SAVE_PC_TO_GLUE(%ecx)            # only need to export these two
+    SAVE_FP_TO_GLUE(%ecx)            # only need to export these two
+    movl %ecx,OUT_ARG0(%esp)         # glue is first arg to function
+    call      dvmMterp_OP_IGET_OBJECT_VOLATILE     # do the real work
+    GET_GLUE(%ecx)
+    LOAD_PC_FROM_GLUE(%ecx)          # retrieve updated values
+    LOAD_FP_FROM_GLUE(%ecx)          # retrieve updated values
+    FETCH_INST()
+    GOTO_NEXT
 /* ------------------------------ */
     .balign 64
 .L_OP_IGET_WIDE_VOLATILE: /* 0xe8 */
@@ -5849,7 +5837,6 @@ dvmAsmInstructionStart = .L_OP_NOP
     call     dvmThrowVerificationError       # call(method, kind, ref)
     UNSPILL(rPC)
     jmp      common_exceptionThrown          # handle exception
-
 
 /* ------------------------------ */
     .balign 64
@@ -6067,8 +6054,6 @@ dvmAsmInstructionStart = .L_OP_NOP
     movl      (%eax,%ecx,4),%eax        # eax<- vtable[BBBB]
     jmp       common_invokeMethodNoRange
 
-
-
 /* ------------------------------ */
     .balign 64
 .L_OP_INVOKE_VIRTUAL_QUICK_RANGE: /* 0xf9 */
@@ -6094,8 +6079,6 @@ dvmAsmInstructionStart = .L_OP_NOP
     EXPORT_PC()                         # might throw later - get ready
     movl      (%eax,%ecx,4),%eax        # eax<- vtable[BBBB]
     jmp       common_invokeMethodRange
-
-
 
 
 /* ------------------------------ */
@@ -6125,7 +6108,6 @@ dvmAsmInstructionStart = .L_OP_NOP
     EXPORT_PC()
     movl      (%ecx,%eax,4),%eax        # eax<- super->vtable[BBBB]
     jmp       common_invokeMethodNoRange
-
 
 /* ------------------------------ */
     .balign 64
@@ -6157,31 +6139,48 @@ dvmAsmInstructionStart = .L_OP_NOP
     jmp       common_invokeMethodRange
 
 
-
 /* ------------------------------ */
     .balign 64
-.L_OP_UNUSED_FC: /* 0xfc */
-/* File: x86/OP_UNUSED_FC.S */
-/* File: x86/unused.S */
-    jmp     common_abort
-
-
+.L_OP_IPUT_OBJECT_VOLATILE: /* 0xfc */
+    /* (stub) */
+    GET_GLUE(%ecx)
+    SAVE_PC_TO_GLUE(%ecx)            # only need to export these two
+    SAVE_FP_TO_GLUE(%ecx)            # only need to export these two
+    movl %ecx,OUT_ARG0(%esp)         # glue is first arg to function
+    call      dvmMterp_OP_IPUT_OBJECT_VOLATILE     # do the real work
+    GET_GLUE(%ecx)
+    LOAD_PC_FROM_GLUE(%ecx)          # retrieve updated values
+    LOAD_FP_FROM_GLUE(%ecx)          # retrieve updated values
+    FETCH_INST()
+    GOTO_NEXT
 /* ------------------------------ */
     .balign 64
-.L_OP_UNUSED_FD: /* 0xfd */
-/* File: x86/OP_UNUSED_FD.S */
-/* File: x86/unused.S */
-    jmp     common_abort
-
-
+.L_OP_SGET_OBJECT_VOLATILE: /* 0xfd */
+    /* (stub) */
+    GET_GLUE(%ecx)
+    SAVE_PC_TO_GLUE(%ecx)            # only need to export these two
+    SAVE_FP_TO_GLUE(%ecx)            # only need to export these two
+    movl %ecx,OUT_ARG0(%esp)         # glue is first arg to function
+    call      dvmMterp_OP_SGET_OBJECT_VOLATILE     # do the real work
+    GET_GLUE(%ecx)
+    LOAD_PC_FROM_GLUE(%ecx)          # retrieve updated values
+    LOAD_FP_FROM_GLUE(%ecx)          # retrieve updated values
+    FETCH_INST()
+    GOTO_NEXT
 /* ------------------------------ */
     .balign 64
-.L_OP_UNUSED_FE: /* 0xfe */
-/* File: x86/OP_UNUSED_FE.S */
-/* File: x86/unused.S */
-    jmp     common_abort
-
-
+.L_OP_SPUT_OBJECT_VOLATILE: /* 0xfe */
+    /* (stub) */
+    GET_GLUE(%ecx)
+    SAVE_PC_TO_GLUE(%ecx)            # only need to export these two
+    SAVE_FP_TO_GLUE(%ecx)            # only need to export these two
+    movl %ecx,OUT_ARG0(%esp)         # glue is first arg to function
+    call      dvmMterp_OP_SPUT_OBJECT_VOLATILE     # do the real work
+    GET_GLUE(%ecx)
+    LOAD_PC_FROM_GLUE(%ecx)          # retrieve updated values
+    LOAD_FP_FROM_GLUE(%ecx)          # retrieve updated values
+    FETCH_INST()
+    GOTO_NEXT
 /* ------------------------------ */
     .balign 64
 .L_OP_UNUSED_FF: /* 0xff */
@@ -6230,7 +6229,6 @@ dvmAsmSisterStart:
     ADVANCE_PC(2)
     GOTO_NEXT
 
-
 /* continuation for OP_CONST_STRING_JUMBO */
 
 /* This is the less common path, so we'll redo some work
@@ -6253,7 +6251,6 @@ dvmAsmSisterStart:
     FETCH_INST_WORD(3)
     ADVANCE_PC(3)
     GOTO_NEXT
-
 
 /* continuation for OP_CONST_CLASS */
 
@@ -6278,7 +6275,6 @@ dvmAsmSisterStart:
     FETCH_INST_WORD(2)
     ADVANCE_PC(2)
     GOTO_NEXT
-
 
 /* continuation for OP_MONITOR_ENTER */
 
@@ -6436,7 +6432,6 @@ dvmAsmSisterStart:
     movl    offObject_clazz(%eax),%eax  # eax<- obj->clazz
     jmp     .LOP_INSTANCE_OF_resolved
 
-
 /* continuation for OP_NEW_INSTANCE */
 
 .LOP_NEW_INSTANCE_initialized:  # on entry, ecx<- class
@@ -6505,9 +6500,6 @@ dvmAsmSisterStart:
     UNSPILL(rPC)
     jmp     common_exceptionThrown
 
-
-
-
 /* continuation for OP_NEW_ARRAY */
 
     /*
@@ -6553,7 +6545,6 @@ dvmAsmSisterStart:
     SET_VREG(%eax,%ecx)
     ADVANCE_PC(2)
     GOTO_NEXT
-
 
 /* continuation for OP_FILLED_NEW_ARRAY */
 
@@ -6659,7 +6650,6 @@ dvmAsmSisterStart:
     UNSPILL(rPC)
     jmp     common_exceptionThrown
 
-
 /* continuation for OP_FILLED_NEW_ARRAY_RANGE */
 
 .LOP_FILLED_NEW_ARRAY_RANGE_more:
@@ -6764,7 +6754,6 @@ dvmAsmSisterStart:
     UNSPILL(rPC)
     jmp     common_exceptionThrown
 
-
 /* continuation for OP_CMPL_FLOAT */
 
 .LOP_CMPL_FLOAT_isNaN:
@@ -6816,7 +6805,6 @@ dvmAsmSisterStart:
     ADVANCE_PC(2)
     GOTO_NEXT
 
-
 /* continuation for OP_APUT_WIDE */
 
 .LOP_APUT_WIDE_finish:
@@ -6828,7 +6816,6 @@ dvmAsmSisterStart:
     movl      %ecx,(%eax)
     ADVANCE_PC(2)
     GOTO_NEXT
-
 
 /* continuation for OP_APUT_OBJECT */
 
@@ -6858,7 +6845,6 @@ dvmAsmSisterStart:
     FETCH_INST_WORD(2)
     ADVANCE_PC(2)
     GOTO_NEXT
-
 
 /* continuation for OP_IGET */
 
@@ -6896,7 +6882,6 @@ dvmAsmSisterStart:
     SET_VREG(%ecx,%eax)
     ADVANCE_PC(2)
     GOTO_NEXT
-
 
 /* continuation for OP_IGET_WIDE */
 
@@ -6937,7 +6922,6 @@ dvmAsmSisterStart:
     ADVANCE_PC(2)
     GOTO_NEXT
 
-
 /* continuation for OP_IGET_OBJECT */
 
 
@@ -6974,7 +6958,6 @@ dvmAsmSisterStart:
     SET_VREG(%ecx,%eax)
     ADVANCE_PC(2)
     GOTO_NEXT
-
 
 /* continuation for OP_IGET_BOOLEAN */
 
@@ -7013,7 +6996,6 @@ dvmAsmSisterStart:
     ADVANCE_PC(2)
     GOTO_NEXT
 
-
 /* continuation for OP_IGET_BYTE */
 
 
@@ -7050,7 +7032,6 @@ dvmAsmSisterStart:
     SET_VREG(%ecx,%eax)
     ADVANCE_PC(2)
     GOTO_NEXT
-
 
 /* continuation for OP_IGET_CHAR */
 
@@ -7089,7 +7070,6 @@ dvmAsmSisterStart:
     ADVANCE_PC(2)
     GOTO_NEXT
 
-
 /* continuation for OP_IGET_SHORT */
 
 
@@ -7126,7 +7106,6 @@ dvmAsmSisterStart:
     SET_VREG(%ecx,%eax)
     ADVANCE_PC(2)
     GOTO_NEXT
-
 
 /* continuation for OP_IPUT */
 
@@ -7403,7 +7382,6 @@ dvmAsmSisterStart:
     jne      .LOP_SGET_finish                 # success, continue
     jmp      common_exceptionThrown             # no, handle exception
 
-
 /* continuation for OP_SGET_WIDE */
 
     /*
@@ -7423,7 +7401,6 @@ dvmAsmSisterStart:
     testl    %eax,%eax
     jne      .LOP_SGET_WIDE_finish                 # success, continue
     jmp      common_exceptionThrown             # no, handle exception
-
 
 /* continuation for OP_SGET_OBJECT */
 
@@ -7445,7 +7422,6 @@ dvmAsmSisterStart:
     jne      .LOP_SGET_OBJECT_finish                 # success, continue
     jmp      common_exceptionThrown             # no, handle exception
 
-
 /* continuation for OP_SGET_BOOLEAN */
 
     /*
@@ -7465,7 +7441,6 @@ dvmAsmSisterStart:
     testl    %eax,%eax
     jne      .LOP_SGET_BOOLEAN_finish                 # success, continue
     jmp      common_exceptionThrown             # no, handle exception
-
 
 /* continuation for OP_SGET_BYTE */
 
@@ -7487,7 +7462,6 @@ dvmAsmSisterStart:
     jne      .LOP_SGET_BYTE_finish                 # success, continue
     jmp      common_exceptionThrown             # no, handle exception
 
-
 /* continuation for OP_SGET_CHAR */
 
     /*
@@ -7507,7 +7481,6 @@ dvmAsmSisterStart:
     testl    %eax,%eax
     jne      .LOP_SGET_CHAR_finish                 # success, continue
     jmp      common_exceptionThrown             # no, handle exception
-
 
 /* continuation for OP_SGET_SHORT */
 
@@ -7529,7 +7502,6 @@ dvmAsmSisterStart:
     jne      .LOP_SGET_SHORT_finish                 # success, continue
     jmp      common_exceptionThrown             # no, handle exception
 
-
 /* continuation for OP_SPUT */
 
     /*
@@ -7549,7 +7521,6 @@ dvmAsmSisterStart:
     testl    %eax,%eax
     jne      .LOP_SPUT_finish                 # success, continue
     jmp      common_exceptionThrown             # no, handle exception
-
 
 /* continuation for OP_SPUT_WIDE */
 
@@ -7571,7 +7542,6 @@ dvmAsmSisterStart:
     jne      .LOP_SPUT_WIDE_finish                 # success, continue
     jmp      common_exceptionThrown             # no, handle exception
 
-
 /* continuation for OP_SPUT_OBJECT */
 
     /*
@@ -7591,7 +7561,6 @@ dvmAsmSisterStart:
     testl    %eax,%eax
     jne      .LOP_SPUT_OBJECT_finish                 # success, continue
     jmp      common_exceptionThrown             # no, handle exception
-
 
 /* continuation for OP_SPUT_BOOLEAN */
 
@@ -7613,7 +7582,6 @@ dvmAsmSisterStart:
     jne      .LOP_SPUT_BOOLEAN_finish                 # success, continue
     jmp      common_exceptionThrown             # no, handle exception
 
-
 /* continuation for OP_SPUT_BYTE */
 
     /*
@@ -7633,7 +7601,6 @@ dvmAsmSisterStart:
     testl    %eax,%eax
     jne      .LOP_SPUT_BYTE_finish                 # success, continue
     jmp      common_exceptionThrown             # no, handle exception
-
 
 /* continuation for OP_SPUT_CHAR */
 
@@ -7655,7 +7622,6 @@ dvmAsmSisterStart:
     jne      .LOP_SPUT_CHAR_finish                 # success, continue
     jmp      common_exceptionThrown             # no, handle exception
 
-
 /* continuation for OP_SPUT_SHORT */
 
     /*
@@ -7675,7 +7641,6 @@ dvmAsmSisterStart:
     testl    %eax,%eax
     jne      .LOP_SPUT_SHORT_finish                 # success, continue
     jmp      common_exceptionThrown             # no, handle exception
-
 
 /* continuation for OP_INVOKE_VIRTUAL */
 
@@ -7707,7 +7672,6 @@ dvmAsmSisterStart:
     movl      offClassObject_vtable(%ecx),%ecx # ecx<- thisPtr->clazz->vtable
     movl      (%ecx,%eax,4),%eax        # eax<- vtable[methodIndex]
     jmp       common_invokeMethodNoRange
-
 
 /* continuation for OP_INVOKE_SUPER */
 
@@ -7791,7 +7755,6 @@ dvmAsmSisterStart:
     jne       common_invokeMethodNoRange
     jmp       common_exceptionThrown
 
-
 /* continuation for OP_INVOKE_INTERFACE */
 
 .LOP_INVOKE_INTERFACE_continue:
@@ -7800,7 +7763,6 @@ dvmAsmSisterStart:
     testl      %eax,%eax
     je         common_exceptionThrown
     jmp        common_invokeMethodNoRange
-
 
 /* continuation for OP_INVOKE_VIRTUAL_RANGE */
 
@@ -7832,7 +7794,6 @@ dvmAsmSisterStart:
     movl      offClassObject_vtable(%ecx),%ecx # ecx<- thisPtr->clazz->vtable
     movl      (%ecx,%eax,4),%eax        # eax<- vtable[methodIndex]
     jmp       common_invokeMethodRange
-
 
 /* continuation for OP_INVOKE_SUPER_RANGE */
 
@@ -7916,7 +7877,6 @@ dvmAsmSisterStart:
     jne       common_invokeMethodRange
     jmp       common_exceptionThrown
 
-
 /* continuation for OP_INVOKE_INTERFACE_RANGE */
 
 .LOP_INVOKE_INTERFACE_RANGE_continue:
@@ -7925,7 +7885,6 @@ dvmAsmSisterStart:
     testl      %eax,%eax
     je         common_exceptionThrown
     jmp        common_invokeMethodRange
-
 
 /* continuation for OP_FLOAT_TO_INT */
 
@@ -8096,7 +8055,6 @@ dvmAsmSisterStart:
     ADVANCE_PC(2)
     GOTO_NEXT
 
-
 /* continuation for OP_DIV_LONG */
 
 .LOP_DIV_LONG_continue:
@@ -8129,9 +8087,6 @@ dvmAsmSisterStart:
     movl     $0x80000000,%edx
     jmp      .LOP_DIV_LONG_finish
 
-
-
-
 /* continuation for OP_REM_LONG */
 
 .LOP_REM_LONG_continue:
@@ -8163,9 +8118,6 @@ dvmAsmSisterStart:
     xorl     %eax,%eax
     movl     $0,%edx
     jmp      .LOP_REM_LONG_finish
-
-
-
 
 /* continuation for OP_SHL_LONG */
 
@@ -8226,7 +8178,6 @@ dvmAsmSisterStart:
     ADVANCE_PC(1)
     GOTO_NEXT
 
-
 /* continuation for OP_DIV_LONG_2ADDR */
 
 .LOP_DIV_LONG_2ADDR_continue:
@@ -8262,7 +8213,6 @@ dvmAsmSisterStart:
     movl     $0x80000000,%edx
     jmp      .LOP_DIV_LONG_2ADDR_finish
 
-
 /* continuation for OP_REM_LONG_2ADDR */
 
 .LOP_REM_LONG_2ADDR_continue:
@@ -8297,7 +8247,6 @@ dvmAsmSisterStart:
     xorl     %eax,%eax
     movl     $0,%edx
     jmp      .LOP_REM_LONG_2ADDR_finish
-
 
 /* continuation for OP_SHL_LONG_2ADDR */
 
@@ -8411,7 +8360,6 @@ dvmAsmSisterStart:
     sall      $4,%eax      # index *= sizeof(table entry)
     jmp       *gDvmInlineOpsTable(%eax)
     # will return to caller of .LOP_EXECUTE_INLINE_continue
-
 
     .size   dvmAsmSisterStart, .-dvmAsmSisterStart
     .global dvmAsmSisterEnd
@@ -9074,5 +9022,4 @@ common_abort:
     .asciz  "Ljava/lang/InternalError;"
 .LstrFilledNewArrayNotImpl:
     .asciz  "filled-new-array only implemented for 'int'"
-
 

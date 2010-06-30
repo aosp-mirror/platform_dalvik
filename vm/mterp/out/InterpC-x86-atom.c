@@ -422,7 +422,8 @@ static inline bool checkForNullExportPC(Object* obj, u4* fp, const u2* pc)
 #define INTERP_TYPE INTERP_STD
 #define CHECK_DEBUG_AND_PROF() ((void)0)
 # define CHECK_TRACKED_REFS() ((void)0)
-#define CHECK_JIT() (0)
+#define CHECK_JIT_BOOL() (false)
+#define CHECK_JIT_VOID()
 #define ABORT_JIT_TSELECT() ((void)0)
 
 /*
@@ -1200,6 +1201,26 @@ GOTO_TARGET_DECL(exceptionThrown);
     }                                                                       \
     FINISH(2);
 
+/* File: c/OP_IGET_VOLATILE.c */
+HANDLE_IGET_X(OP_IGET_VOLATILE,         "-volatile", IntVolatile, )
+OP_END
+
+/* File: c/OP_IPUT_VOLATILE.c */
+HANDLE_IPUT_X(OP_IPUT_VOLATILE,         "-volatile", IntVolatile, )
+OP_END
+
+/* File: c/OP_SGET_VOLATILE.c */
+HANDLE_SGET_X(OP_SGET_VOLATILE,         "-volatile", IntVolatile, )
+OP_END
+
+/* File: c/OP_SPUT_VOLATILE.c */
+HANDLE_SPUT_X(OP_SPUT_VOLATILE,         "-volatile", IntVolatile, )
+OP_END
+
+/* File: c/OP_IGET_OBJECT_VOLATILE.c */
+HANDLE_IGET_X(OP_IGET_OBJECT_VOLATILE,  "-object-volatile", ObjectVolatile, _AS_OBJECT)
+OP_END
+
 /* File: c/OP_IGET_WIDE_VOLATILE.c */
 HANDLE_IGET_X(OP_IGET_WIDE_VOLATILE,    "-wide-volatile", LongVolatile, _WIDE)
 OP_END
@@ -1290,6 +1311,18 @@ HANDLE_OPCODE(OP_EXECUTE_INLINE_RANGE /*{vCCCC..v(CCCC+AA-1)}, inline@BBBB*/)
 #endif
     }
     FINISH(3);
+OP_END
+
+/* File: c/OP_IPUT_OBJECT_VOLATILE.c */
+HANDLE_IPUT_X(OP_IPUT_OBJECT_VOLATILE,  "-object-volatile", ObjectVolatile, _AS_OBJECT)
+OP_END
+
+/* File: c/OP_SGET_OBJECT_VOLATILE.c */
+HANDLE_SGET_X(OP_SGET_OBJECT_VOLATILE,  "-object-volatile", ObjectVolatile, _AS_OBJECT)
+OP_END
+
+/* File: c/OP_SPUT_OBJECT_VOLATILE.c */
+HANDLE_SPUT_X(OP_SPUT_OBJECT_VOLATILE,  "-object-volatile", ObjectVolatile, _AS_OBJECT)
 OP_END
 
 /* File: c/gotoTargets.c */
@@ -1388,6 +1421,9 @@ GOTO_TARGET(filledNewArray, bool methodCallRange)
                 contents[i] = GET_REGISTER(vdst & 0x0f);
                 vdst >>= 4;
             }
+        }
+        if (typeCh == 'L' || typeCh == '[') {
+            dvmWriteBarrierArray(newArray, 0, newArray->length);
         }
 
         retval.l = newArray;
@@ -1839,7 +1875,7 @@ GOTO_TARGET(returnFromMethod)
             LOGVV("+++ returned into break frame\n");
 #if defined(WITH_JIT)
             /* Let the Jit know the return is terminating normally */
-            CHECK_JIT();
+            CHECK_JIT_VOID();
 #endif
             GOTO_bail();
         }
@@ -2214,7 +2250,7 @@ GOTO_TARGET(invokeMethod, bool methodCallRange, const Method* _methodToCall,
 
 #if defined(WITH_JIT)
             /* Allow the Jit to end any pending trace building */
-            CHECK_JIT();
+            CHECK_JIT_VOID();
 #endif
 
             /*

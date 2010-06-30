@@ -148,4 +148,3 @@ bool dvmCheckFieldAccess(const ClassObject* accessFrom, const Field* field)
     //    field->clazz->descriptor, field->accessFlags);
     return checkAccess(accessFrom, field->clazz, field->accessFlags);
 }
-

@@ -10,4 +10,3 @@ public @interface ExportedProperty {
     boolean resolveId() default false;
     IntToString[] mapping() default { @IntToString(from = -1, to = "-1") };
 }
-

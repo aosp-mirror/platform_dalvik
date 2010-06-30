@@ -60,7 +60,7 @@ public final class Dominators {
 
     /**
      * Constructs an instance.
-     * 
+     *
      * @param meth {@code non-null;} method to process
      * @param domInfos {@code non-null;} the raw dominator info
      * @param postdom true for postdom information, false for normal dom info
@@ -78,7 +78,7 @@ public final class Dominators {
     /**
      * Constructs a fully-initialized instance. (This method exists so as
      * to avoid calling a large amount of code in the constructor.)
-     * 
+     *
      * @param meth {@code non-null;} method to process
      * @param domInfos {@code non-null;} the raw dominator info
      * @param postdom true for postdom information, false for normal dom info
@@ -109,7 +109,7 @@ public final class Dominators {
 
     /**
      * Performs path compress on the DFS info.
-     * 
+     *
      * @param in Basic block whose DFS info we are path compressing.
      */
     private void compress(SsaBasicBlock in) {
@@ -120,7 +120,7 @@ public final class Dominators {
             ArrayList<SsaBasicBlock> worklist = new ArrayList<SsaBasicBlock>();
             HashSet<SsaBasicBlock> visited = new HashSet<SsaBasicBlock>();
             worklist.add(in);
-            
+
             while (!worklist.isEmpty()) {
                 int wsize = worklist.size();
                 SsaBasicBlock v = worklist.get(wsize - 1);
@@ -164,7 +164,7 @@ public final class Dominators {
     /**
      * Performs dominator/post-dominator calculation for the control
      * flow graph.
-     * 
+     *
      * @param meth {@code non-null;} method to analyze
      */
     private void run() {
@@ -175,7 +175,7 @@ public final class Dominators {
             vertex.add(root);
             domInfos[root.getIndex()].idom = root.getIndex();
         }
-        
+
         /*
          * First we perform a DFS numbering of the blocks, by
          * numbering the dfs tree roots.

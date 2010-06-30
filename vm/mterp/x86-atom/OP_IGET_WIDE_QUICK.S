@@ -36,5 +36,3 @@
     movq        (%ecx, %edx), %xmm0     # %xmm0<- object field
     movq        %xmm0, (rFP, rINST, 4)  # fp[A]<- %xmm0
     FGETOP_JMP  2, %eax                 # jump to next instruction; getop, jmp
-
-

@@ -71,9 +71,9 @@ bool dvmReflectStartup(void)
         return false;
     }
 
-    gDvm.classJavaLangClassArray = 
+    gDvm.classJavaLangClassArray =
         dvmFindArrayClass("[Ljava/lang/Class;", NULL);
-    gDvm.classJavaLangObjectArray = 
+    gDvm.classJavaLangObjectArray =
         dvmFindArrayClass("[Ljava/lang/Object;", NULL);
     if (gDvm.classJavaLangClassArray == NULL ||
         gDvm.classJavaLangObjectArray == NULL)
@@ -240,7 +240,6 @@ static ArrayObject* convertSignatureToClassArray(char** pSignature,
     ClassObject* defClass)
 {
     ArrayObject* classArray;
-    ClassObject** classes;
     char* signature = *pSignature;
     char* cp;
     int i, count;
@@ -273,7 +272,6 @@ static ArrayObject* convertSignatureToClassArray(char** pSignature,
         return NULL;
 
     /* fill it in */
-    classes = (ClassObject**) classArray->contents;
     cp = signature;
     for (i = 0; i < count; i++) {
         ClassObject* clazz;
@@ -284,8 +282,7 @@ static ArrayObject* convertSignatureToClassArray(char** pSignature,
             return NULL;
         }
         LOGVV("REFLECT  %d: '%s'\n", i, clazz->descriptor);
-
-        *classes++ = clazz;
+        dvmSetObjectArrayElement(classArray, i, (Object *)clazz);
     }
 
     *pSignature = cp;
@@ -362,7 +359,7 @@ static Object* createFieldObject(Field* field, const ClassObject* clazz)
     if (type == NULL)
         goto bail;
 
-    nameObj = dvmCreateStringFromCstr(field->name, ALLOC_DEFAULT);
+    nameObj = dvmCreateStringFromCstr(field->name);
     if (nameObj == NULL)
         goto bail;
 
@@ -395,7 +392,6 @@ bail:
 ArrayObject* dvmGetDeclaredFields(ClassObject* clazz, bool publicOnly)
 {
     ArrayObject* fieldArray = NULL;
-    Object** fields;
     int i, count;
 
     if (!dvmIsClassInitialized(gDvm.classJavaLangReflectField))
@@ -421,33 +417,37 @@ ArrayObject* dvmGetDeclaredFields(ClassObject* clazz, bool publicOnly)
                     kObjectArrayRefWidth, ALLOC_DEFAULT);
     if (fieldArray == NULL)
         return NULL;
-    fields = (Object**) fieldArray->contents;
 
     /* populate */
+    size_t fieldCount = 0;
     for (i = 0; i < clazz->sfieldCount; i++) {
         if (!publicOnly ||
             (clazz->sfields[i].field.accessFlags & ACC_PUBLIC) != 0)
         {
-            *fields = createFieldObject(&clazz->sfields[i].field, clazz);
-            if (*fields == NULL)
+            Object* field = createFieldObject(&clazz->sfields[i].field, clazz);
+            if (field == NULL) {
                 goto fail;
-            dvmReleaseTrackedAlloc(*fields, NULL);
-            fields++;
-            count--;
+            }
+            dvmSetObjectArrayElement(fieldArray, fieldCount, field);
+            dvmReleaseTrackedAlloc(field, NULL);
+            ++fieldCount;
         }
     }
     for (i = 0; i < clazz->ifieldCount; i++) {
         if (!publicOnly ||
             (clazz->ifields[i].field.accessFlags & ACC_PUBLIC) != 0)
         {
-            *fields = createFieldObject(&clazz->ifields[i].field, clazz);
-            if (*fields == NULL)
+            Object* field = createFieldObject(&clazz->ifields[i].field, clazz);
+            if (field == NULL) {
                 goto fail;
-            dvmReleaseTrackedAlloc(*fields, NULL);
-            fields++;
-            count--;
+            }
+            dvmSetObjectArrayElement(fieldArray, fieldCount, field);
+            dvmReleaseTrackedAlloc(field, NULL);
+            ++fieldCount;
         }
     }
+
+    assert(fieldCount == fieldArray->length);
 
     /* caller must call dvmReleaseTrackedAlloc */
     return fieldArray;
@@ -575,7 +575,6 @@ bail:
 ArrayObject* dvmGetDeclaredConstructors(ClassObject* clazz, bool publicOnly)
 {
     ArrayObject* consArray;
-    Object** consObjPtr;
     Method* meth;
     int i, count;
 
@@ -610,12 +609,11 @@ ArrayObject* dvmGetDeclaredConstructors(ClassObject* clazz, bool publicOnly)
     if (consArray == NULL)
         return NULL;
 
-    consObjPtr = (Object**) consArray->contents;
-
     /*
      * Fill out the array.
      */
     meth = clazz->directMethods;
+    size_t consObjCount = 0;
     for (i = 0; i < clazz->directMethodCount; i++, meth++) {
         if ((!publicOnly || dvmIsPublicMethod(meth)) &&
             dvmIsConstructorMethod(meth) && !dvmIsStaticMethod(meth))
@@ -623,12 +621,13 @@ ArrayObject* dvmGetDeclaredConstructors(ClassObject* clazz, bool publicOnly)
             Object* consObj = createConstructorObject(meth);
             if (consObj == NULL)
                 goto fail;
-            *consObjPtr++ = consObj;
+            dvmSetObjectArrayElement(consArray, consObjCount, consObj);
+            ++consObjCount;
             dvmReleaseTrackedAlloc(consObj, NULL);
         }
     }
 
-    assert(consObjPtr - (Object**) consArray->contents == count);
+    assert(consObjCount == consArray->length);
 
     /* caller must call dvmReleaseTrackedAlloc */
     return consArray;
@@ -700,7 +699,7 @@ Object* dvmCreateReflectMethodObject(const Method* meth)
         goto bail;
 
     /* method name */
-    nameObj = dvmCreateStringFromCstr(meth->name, ALLOC_DEFAULT);
+    nameObj = dvmCreateStringFromCstr(meth->name);
     if (nameObj == NULL)
         goto bail;
 
@@ -740,7 +739,6 @@ bail:
 ArrayObject* dvmGetDeclaredMethods(ClassObject* clazz, bool publicOnly)
 {
     ArrayObject* methodArray;
-    Object** methObjPtr;
     Method* meth;
     int i, count;
 
@@ -778,12 +776,12 @@ ArrayObject* dvmGetDeclaredMethods(ClassObject* clazz, bool publicOnly)
     if (methodArray == NULL)
         return NULL;
 
-    methObjPtr = (Object**) methodArray->contents;
 
     /*
      * Fill out the array.
      */
     meth = clazz->virtualMethods;
+    size_t methObjCount = 0;
     for (i = 0; i < clazz->virtualMethodCount; i++, meth++) {
         if ((!publicOnly || dvmIsPublicMethod(meth)) &&
             !dvmIsMirandaMethod(meth))
@@ -791,7 +789,8 @@ ArrayObject* dvmGetDeclaredMethods(ClassObject* clazz, bool publicOnly)
             Object* methObj = dvmCreateReflectMethodObject(meth);
             if (methObj == NULL)
                 goto fail;
-            *methObjPtr++ = methObj;
+            dvmSetObjectArrayElement(methodArray, methObjCount, methObj);
+            ++methObjCount;
             dvmReleaseTrackedAlloc(methObj, NULL);
         }
     }
@@ -803,12 +802,13 @@ ArrayObject* dvmGetDeclaredMethods(ClassObject* clazz, bool publicOnly)
             Object* methObj = dvmCreateReflectMethodObject(meth);
             if (methObj == NULL)
                 goto fail;
-            *methObjPtr++ = methObj;
+            dvmSetObjectArrayElement(methodArray, methObjCount, methObj);
+            ++methObjCount;
             dvmReleaseTrackedAlloc(methObj, NULL);
         }
     }
 
-    assert(methObjPtr - (Object**) methodArray->contents == count);
+    assert(methObjCount == methodArray->length);
 
     /* caller must call dvmReleaseTrackedAlloc */
     return methodArray;
@@ -841,11 +841,9 @@ ArrayObject* dvmGetInterfaces(ClassObject* clazz)
     /*
      * Fill out the array.
      */
-    Object** interfaceObjPtr = (Object**) interfaceArray->contents;
-    int i;
-    for (i = 0; i < count; i++) {
-        *interfaceObjPtr++ = (Object*) clazz->interfaces[i];
-    }
+    memcpy(interfaceArray->contents, clazz->interfaces,
+           count * sizeof(Object *));
+    dvmWriteBarrierArray(interfaceArray, 0, count);
 
     /* caller must call dvmReleaseTrackedAlloc */
     return interfaceArray;
@@ -1029,7 +1027,7 @@ int dvmConvertArgument(DataObject* arg, ClassObject* type, s4* destPtr)
 DataObject* dvmWrapPrimitive(JValue value, ClassObject* returnType)
 {
     static const char* boxTypes[] = {       // order from enum PrimitiveType
-        "Ljava/lang/Boolean;", 
+        "Ljava/lang/Boolean;",
         "Ljava/lang/Character;",
         "Ljava/lang/Float;",
         "Ljava/lang/Double;",
@@ -1102,6 +1100,8 @@ bool dvmUnwrapPrimitive(Object* value, ClassObject* returnType,
                 value->clazz->descriptor, returnType->descriptor);
             return false;
         }
+        /* Never on the heap, so no write barrier needed. */
+        assert(!dvmIsValidObjectAddress(pResult));
         pResult->l = value;
         return true;
     } else if (typeIndex == PRIM_VOID) {

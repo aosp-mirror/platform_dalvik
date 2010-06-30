@@ -277,7 +277,7 @@ public final class RopToDop {
     /**
      * Returns the dalvik opcode appropriate for the given register-based
      * instruction.
-     * 
+     *
      * @param insn {@code non-null;} the original instruction
      * @return the corresponding dalvik opcode; one of the constants in
      * {@link Dops}
@@ -297,16 +297,16 @@ public final class RopToDop {
         /*
          * There was no easy case for the rop, so look up the opcode, and
          * do something special for each:
-         * 
+         *
          * The move_exception, new_array, filled_new_array, and
          * invoke* opcodes won't be found in MAP, since they'll each
          * have different source and/or result register types / lists.
-         * 
+         *
          * The get* and put* opcodes for (non-long) integral types
          * aren't in the map, since the type signatures aren't
          * sufficient to distinguish between the types (the salient
          * source or result will always be just "int").
-         * 
+         *
          * And const instruction need to distinguish between strings and
          * classes.
          */
@@ -320,7 +320,7 @@ public final class RopToDop {
             case RegOps.INVOKE_INTERFACE: return Dops.INVOKE_INTERFACE;
             case RegOps.NEW_ARRAY:        return Dops.NEW_ARRAY;
             case RegOps.FILLED_NEW_ARRAY: return Dops.FILLED_NEW_ARRAY;
-            case RegOps.FILL_ARRAY_DATA:  return Dops.FILL_ARRAY_DATA; 
+            case RegOps.FILL_ARRAY_DATA:  return Dops.FILL_ARRAY_DATA;
             case RegOps.MOVE_RESULT: {
                 RegisterSpec resultReg = insn.getResult();
 

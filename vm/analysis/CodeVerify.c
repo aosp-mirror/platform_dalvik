@@ -123,9 +123,9 @@ static RegType getInvocationThis(const RegType* insnRegs,\
     VerifyError* pFailure);
 static void verifyRegisterType(const RegType* insnRegs, const int insnRegCount,\
     u4 vsrc, RegType checkType, VerifyError* pFailure);
-static bool doCodeVerification(Method* meth, InsnFlags* insnFlags,\
+static bool doCodeVerification(const Method* meth, InsnFlags* insnFlags,\
     RegisterTable* regTable, UninitInstanceMap* uninitMap);
-static bool verifyInstruction(Method* meth, InsnFlags* insnFlags,\
+static bool verifyInstruction(const Method* meth, InsnFlags* insnFlags,\
     RegisterTable* regTable, RegType* workRegs, int insnIdx,
     UninitInstanceMap* uninitMap, int* pStartGuess);
 static ClassObject* findCommonSuperclass(ClassObject* c1, ClassObject* c2);
@@ -2936,12 +2936,9 @@ static void verifyFilledNewArrayRegs(const Method* meth,
  * The verifier explicitly locks out breakpoint activity, so there should
  * be no clashes with the debugger.
  *
- * IMPORTANT: this may replace meth->insns with a pointer to a new copy of
- * the instructions.
- *
  * Returns "true" on success.
  */
-static bool replaceFailingInstruction(Method* meth, InsnFlags* insnFlags,
+static bool replaceFailingInstruction(const Method* meth, InsnFlags* insnFlags,
     int insnIdx, VerifyError failure)
 {
     VerifyErrorRefType refType;
@@ -3062,7 +3059,7 @@ bail:
  * that the feature isn't disabled when verification is turned off.  At
  * some point we may need to revisit this choice.
  */
-static void replaceVolatileInstruction(Method* meth, InsnFlags* insnFlags,
+static void replaceVolatileInstruction(const Method* meth, InsnFlags* insnFlags,
     int insnIdx)
 {
     u2* oldInsns = (u2*)meth->insns + insnIdx;
@@ -3102,11 +3099,11 @@ static void replaceVolatileInstruction(Method* meth, InsnFlags* insnFlags,
 /*
  * Entry point for the detailed code-flow analysis.
  */
-bool dvmVerifyCodeFlow(Method* meth, InsnFlags* insnFlags,
-    UninitInstanceMap* uninitMap)
+bool dvmVerifyCodeFlow(VerifierData* vdata)
 {
     bool result = false;
-    const int insnsSize = dvmGetMethodInsnsSize(meth);
+    const Method* meth = vdata->method;
+    const int insnsSize = vdata->insnsSize;
     const bool generateRegisterMap = gDvm.generateRegisterMaps;
     RegisterTable regTable;
 
@@ -3150,37 +3147,32 @@ bool dvmVerifyCodeFlow(Method* meth, InsnFlags* insnFlags,
      * also going to create the register map, we need to retain the
      * register lists for a larger set of addresses.
      */
-    if (!initRegisterTable(meth, insnFlags, &regTable,
+    if (!initRegisterTable(meth, vdata->insnFlags, &regTable,
             generateRegisterMap ? kTrackRegsGcPoints : kTrackRegsBranches))
         goto bail;
+
+    vdata->addrRegs = NULL;     /* don't set this until we need it */
 
     /*
      * Initialize the types of the registers that correspond to the
      * method arguments.  We can determine this from the method signature.
      */
-    if (!setTypesFromSignature(meth, regTable.addrRegs[0], uninitMap))
+    if (!setTypesFromSignature(meth, regTable.addrRegs[0], vdata->uninitMap))
         goto bail;
 
     /*
      * Run the verifier.
      */
-    if (!doCodeVerification(meth, insnFlags, &regTable, uninitMap))
+    if (!doCodeVerification(meth, vdata->insnFlags, &regTable, vdata->uninitMap))
         goto bail;
 
     /*
      * Generate a register map.
      */
     if (generateRegisterMap) {
-        RegisterMap* pMap;
-        VerifierData vd;
+        vdata->addrRegs = regTable.addrRegs;
 
-        vd.method = meth;
-        vd.insnsSize = insnsSize;
-        vd.insnRegCount = meth->registersSize;
-        vd.insnFlags = insnFlags;
-        vd.addrRegs = regTable.addrRegs;
-        
-        pMap = dvmGenerateRegisterMapV(&vd);
+        RegisterMap* pMap = dvmGenerateRegisterMapV(vdata);
         if (pMap != NULL) {
             /*
              * Tuck it into the Method struct.  It will either get used
@@ -3253,7 +3245,7 @@ bail:
  * instruction if a register contains an uninitialized instance created
  * by that same instrutcion.
  */
-static bool doCodeVerification(Method* meth, InsnFlags* insnFlags,
+static bool doCodeVerification(const Method* meth, InsnFlags* insnFlags,
     RegisterTable* regTable, UninitInstanceMap* uninitMap)
 {
     const int insnsSize = dvmGetMethodInsnsSize(meth);
@@ -3487,7 +3479,7 @@ bail:
  * This may alter meth->insns if we need to replace an instruction with
  * throw-verification-error.
  */
-static bool verifyInstruction(Method* meth, InsnFlags* insnFlags,
+static bool verifyInstruction(const Method* meth, InsnFlags* insnFlags,
     RegisterTable* regTable, RegType* workRegs, int insnIdx,
     UninitInstanceMap* uninitMap, int* pStartGuess)
 {
@@ -3506,13 +3498,12 @@ static bool verifyInstruction(Method* meth, InsnFlags* insnFlags,
      *     and switch statements.
      * (3) Exception handlers.  Applies to any instruction that can
      *     throw an exception that is handled by an encompassing "try"
-     *     block.  (We simplify this to be any instruction that can
-     *     throw any exception.)
+     *     block.
      *
      * We can also return, in which case there is no successor instruction
      * from this point.
      *
-     * The behavior can be determined from the InstrFlags.
+     * The behavior can be determined from the InstructionFlags.
      */
 
     const DexFile* pDexFile = meth->clazz->pDvmDex->pDexFile;
@@ -4468,6 +4459,7 @@ aput_1nr_common:
         break;
 
     case OP_IGET:
+    case OP_IGET_VOLATILE:
         tmpType = kRegTypeInteger;
         goto iget_1nr_common;
     case OP_IGET_BOOLEAN:
@@ -4557,6 +4549,7 @@ iget_1nr_common:
         }
         break;
     case OP_IGET_OBJECT:
+    case OP_IGET_OBJECT_VOLATILE:
         {
             ClassObject* fieldClass;
             InstField* instField;
@@ -4586,6 +4579,7 @@ iget_1nr_common:
         }
         break;
     case OP_IPUT:
+    case OP_IPUT_VOLATILE:
         tmpType = kRegTypeInteger;
         goto iput_1nr_common;
     case OP_IPUT_BOOLEAN:
@@ -4696,6 +4690,7 @@ iput_1nr_common:
         }
         break;
     case OP_IPUT_OBJECT:
+    case OP_IPUT_OBJECT_VOLATILE:
         {
             ClassObject* fieldClass;
             ClassObject* valueClass;
@@ -4757,6 +4752,7 @@ iput_1nr_common:
         break;
 
     case OP_SGET:
+    case OP_SGET_VOLATILE:
         tmpType = kRegTypeInteger;
         goto sget_1nr_common;
     case OP_SGET_BOOLEAN:
@@ -4840,6 +4836,7 @@ sget_1nr_common:
         }
         break;
     case OP_SGET_OBJECT:
+    case OP_SGET_OBJECT_VOLATILE:
         {
             StaticField* staticField;
             ClassObject* fieldClass;
@@ -4864,6 +4861,7 @@ sget_1nr_common:
         }
         break;
     case OP_SPUT:
+    case OP_SPUT_VOLATILE:
         tmpType = kRegTypeInteger;
         goto sput_1nr_common;
     case OP_SPUT_BOOLEAN:
@@ -4967,6 +4965,7 @@ sput_1nr_common:
         }
         break;
     case OP_SPUT_OBJECT:
+    case OP_SPUT_OBJECT_VOLATILE:
         {
             ClassObject* fieldClass;
             ClassObject* valueClass;
@@ -5506,16 +5505,8 @@ sput_1nr_common:
     case OP_UNUSED_73:
     case OP_UNUSED_79:
     case OP_UNUSED_7A:
-    case OP_UNUSED_E3:
-    case OP_UNUSED_E4:
-    case OP_UNUSED_E5:
-    case OP_UNUSED_E6:
-    case OP_UNUSED_E7:
     case OP_BREAKPOINT:
     case OP_UNUSED_F1:
-    case OP_UNUSED_FC:
-    case OP_UNUSED_FD:
-    case OP_UNUSED_FE:
     case OP_UNUSED_FF:
         failure = VERIFY_ERROR_GENERIC;
         break;
@@ -5832,4 +5823,3 @@ static void dumpRegTypes(const Method* meth, const InsnFlags* insnFlags,
                 NULL, logLocalsCb, &addr);
     }
 }
-

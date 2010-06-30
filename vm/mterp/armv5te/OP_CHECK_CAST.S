@@ -70,4 +70,3 @@
 
 .LstrClassCastExceptionPtr:
     .word   .LstrClassCastException
-

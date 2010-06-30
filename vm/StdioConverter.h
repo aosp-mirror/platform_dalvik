@@ -23,4 +23,3 @@ bool dvmStdioConverterStartup(void);
 void dvmStdioConverterShutdown(void);
 
 #endif /*_DALVIK_STDOUTCONVERTER*/
-

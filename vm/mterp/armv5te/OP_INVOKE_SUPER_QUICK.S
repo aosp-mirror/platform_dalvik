@@ -23,4 +23,3 @@
     ldr     r0, [r2, r1, lsl #2]        @ r0<- super->vtable[BBBB]
     beq     common_errNullObject        @ "this" is null, throw exception
     bl      common_invokeMethod${routine} @ continue on
-

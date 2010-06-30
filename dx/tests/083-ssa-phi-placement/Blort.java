@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-public class Blort 
+public class Blort
 {
 
     public int phiTest() {
@@ -22,7 +22,7 @@ public class Blort
         int j = 1;
         int k = 0;
 
-        while (k < 100) { 
+        while (k < 100) {
             if (j < 20) {
                 j = i;
                 k++;
@@ -64,4 +64,3 @@ public class Blort
         }
     }
 }
-

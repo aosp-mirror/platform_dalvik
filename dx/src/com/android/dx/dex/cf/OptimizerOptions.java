@@ -56,7 +56,7 @@ public class OptimizerOptions {
 
     /**
      * Loads the optimize/don't optimize lists from files.
-     * 
+     *
      * @param optimizeListFile Pathname
      * @param dontOptimizeListFile Pathname
      */
@@ -89,7 +89,7 @@ public class OptimizerOptions {
     /**
      * Loads a list of newline-separated strings into a new HashSet and returns
      * the HashSet.
-     * 
+     *
      * @param filename filename to process
      * @return set of all unique lines in the file
      */

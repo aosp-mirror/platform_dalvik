@@ -201,7 +201,7 @@ public final class Rops {
                 Rop.BRANCH_IF, "if-ne-object");
 
     /** {@code x: int :: goto switchtable[x]} */
-    public static final Rop SWITCH = 
+    public static final Rop SWITCH =
         new Rop(RegOps.SWITCH, Type.VOID, StdTypeList.INT, Rop.BRANCH_SWITCH,
                 "switch");
 
@@ -575,21 +575,21 @@ public final class Rops {
 
     /**
      * {@code r,x: int :: r = (x << 24) >> 24} (Java-style
-     * convert int to byte) 
+     * convert int to byte)
      */
-    public static final Rop TO_BYTE = 
+    public static final Rop TO_BYTE =
         new Rop(RegOps.TO_BYTE, Type.INT, StdTypeList.INT, "to-byte");
 
     /**
      * {@code r,x: int :: r = x & 0xffff} (Java-style
-     * convert int to char) 
+     * convert int to char)
      */
     public static final Rop TO_CHAR =
         new Rop(RegOps.TO_CHAR, Type.INT, StdTypeList.INT, "to-char");
 
     /**
      * {@code r,x: int :: r = (x << 16) >> 16} (Java-style
-     * convert int to short) 
+     * convert int to short)
      */
     public static final Rop TO_SHORT =
         new Rop(RegOps.TO_SHORT, Type.INT, StdTypeList.INT, "to-short");
@@ -646,110 +646,110 @@ public final class Rops {
                 "monitor-exit");
 
     /** {@code r,y: int; x: int[] :: r = x[y]} */
-    public static final Rop AGET_INT = 
+    public static final Rop AGET_INT =
         new Rop(RegOps.AGET, Type.INT, StdTypeList.INTARR_INT,
                 Exceptions.LIST_Error_Null_ArrayIndexOutOfBounds,
                 "aget-int");
 
     /** {@code r: long; x: long[]; y: int :: r = x[y]} */
-    public static final Rop AGET_LONG = 
+    public static final Rop AGET_LONG =
         new Rop(RegOps.AGET, Type.LONG, StdTypeList.LONGARR_INT,
                 Exceptions.LIST_Error_Null_ArrayIndexOutOfBounds,
                 "aget-long");
 
     /** {@code r: float; x: float[]; y: int :: r = x[y]} */
-    public static final Rop AGET_FLOAT = 
+    public static final Rop AGET_FLOAT =
         new Rop(RegOps.AGET, Type.FLOAT, StdTypeList.FLOATARR_INT,
                 Exceptions.LIST_Error_Null_ArrayIndexOutOfBounds,
                 "aget-float");
 
     /** {@code r: double; x: double[]; y: int :: r = x[y]} */
-    public static final Rop AGET_DOUBLE = 
+    public static final Rop AGET_DOUBLE =
         new Rop(RegOps.AGET, Type.DOUBLE, StdTypeList.DOUBLEARR_INT,
                 Exceptions.LIST_Error_Null_ArrayIndexOutOfBounds,
                 "aget-double");
 
     /** {@code r: Object; x: Object[]; y: int :: r = x[y]} */
-    public static final Rop AGET_OBJECT = 
+    public static final Rop AGET_OBJECT =
         new Rop(RegOps.AGET, Type.OBJECT, StdTypeList.OBJECTARR_INT,
                 Exceptions.LIST_Error_Null_ArrayIndexOutOfBounds,
                 "aget-object");
 
     /** {@code r: boolean; x: boolean[]; y: int :: r = x[y]} */
-    public static final Rop AGET_BOOLEAN = 
+    public static final Rop AGET_BOOLEAN =
         new Rop(RegOps.AGET, Type.INT, StdTypeList.BOOLEANARR_INT,
                 Exceptions.LIST_Error_Null_ArrayIndexOutOfBounds,
                 "aget-boolean");
 
     /** {@code r: byte; x: byte[]; y: int :: r = x[y]} */
-    public static final Rop AGET_BYTE = 
+    public static final Rop AGET_BYTE =
         new Rop(RegOps.AGET, Type.INT, StdTypeList.BYTEARR_INT,
                 Exceptions.LIST_Error_Null_ArrayIndexOutOfBounds, "aget-byte");
 
     /** {@code r: char; x: char[]; y: int :: r = x[y]} */
-    public static final Rop AGET_CHAR = 
+    public static final Rop AGET_CHAR =
         new Rop(RegOps.AGET, Type.INT, StdTypeList.CHARARR_INT,
                 Exceptions.LIST_Error_Null_ArrayIndexOutOfBounds, "aget-char");
 
     /** {@code r: short; x: short[]; y: int :: r = x[y]} */
-    public static final Rop AGET_SHORT = 
+    public static final Rop AGET_SHORT =
         new Rop(RegOps.AGET, Type.INT, StdTypeList.SHORTARR_INT,
                 Exceptions.LIST_Error_Null_ArrayIndexOutOfBounds,
                 "aget-short");
 
     /** {@code x,z: int; y: int[] :: y[z] = x} */
-    public static final Rop APUT_INT = 
+    public static final Rop APUT_INT =
         new Rop(RegOps.APUT, Type.VOID, StdTypeList.INT_INTARR_INT,
                 Exceptions.LIST_Error_Null_ArrayIndexOutOfBounds, "aput-int");
 
     /** {@code x: long; y: long[]; z: int :: y[z] = x} */
-    public static final Rop APUT_LONG = 
+    public static final Rop APUT_LONG =
         new Rop(RegOps.APUT, Type.VOID, StdTypeList.LONG_LONGARR_INT,
                 Exceptions.LIST_Error_Null_ArrayIndexOutOfBounds, "aput-long");
 
     /** {@code x: float; y: float[]; z: int :: y[z] = x} */
-    public static final Rop APUT_FLOAT = 
+    public static final Rop APUT_FLOAT =
         new Rop(RegOps.APUT, Type.VOID, StdTypeList.FLOAT_FLOATARR_INT,
                 Exceptions.LIST_Error_Null_ArrayIndexOutOfBounds,
                 "aput-float");
 
     /** {@code x: double; y: double[]; z: int :: y[z] = x} */
-    public static final Rop APUT_DOUBLE = 
+    public static final Rop APUT_DOUBLE =
         new Rop(RegOps.APUT, Type.VOID, StdTypeList.DOUBLE_DOUBLEARR_INT,
                 Exceptions.LIST_Error_Null_ArrayIndexOutOfBounds,
                 "aput-double");
 
     /** {@code x: Object; y: Object[]; z: int :: y[z] = x} */
-    public static final Rop APUT_OBJECT = 
+    public static final Rop APUT_OBJECT =
         new Rop(RegOps.APUT, Type.VOID, StdTypeList.OBJECT_OBJECTARR_INT,
                 Exceptions.LIST_Error_Null_ArrayIndex_ArrayStore,
                 "aput-object");
 
     /** {@code x: boolean; y: boolean[]; z: int :: y[z] = x} */
-    public static final Rop APUT_BOOLEAN = 
+    public static final Rop APUT_BOOLEAN =
         new Rop(RegOps.APUT, Type.VOID, StdTypeList.INT_BOOLEANARR_INT,
                 Exceptions.LIST_Error_Null_ArrayIndex_ArrayStore,
                 "aput-boolean");
 
     /** {@code x: byte; y: byte[]; z: int :: y[z] = x} */
-    public static final Rop APUT_BYTE = 
+    public static final Rop APUT_BYTE =
         new Rop(RegOps.APUT, Type.VOID, StdTypeList.INT_BYTEARR_INT,
                 Exceptions.LIST_Error_Null_ArrayIndex_ArrayStore, "aput-byte");
 
     /** {@code x: char; y: char[]; z: int :: y[z] = x} */
-    public static final Rop APUT_CHAR = 
+    public static final Rop APUT_CHAR =
         new Rop(RegOps.APUT, Type.VOID, StdTypeList.INT_CHARARR_INT,
                 Exceptions.LIST_Error_Null_ArrayIndex_ArrayStore, "aput-char");
 
     /** {@code x: short; y: short[]; z: int :: y[z] = x} */
-    public static final Rop APUT_SHORT = 
+    public static final Rop APUT_SHORT =
         new Rop(RegOps.APUT, Type.VOID, StdTypeList.INT_SHORTARR_INT,
                 Exceptions.LIST_Error_Null_ArrayIndex_ArrayStore,
                 "aput-short");
 
     /**
      * {@code T: any non-array object type :: r =
-     * alloc(T)} (allocate heap space for an object) 
+     * alloc(T)} (allocate heap space for an object)
      */
     public static final Rop NEW_INSTANCE =
         new Rop(RegOps.NEW_INSTANCE, Type.OBJECT, StdTypeList.EMPTY,
@@ -805,9 +805,9 @@ public final class Rops {
 
     /**
      * {@code T: any non-array object type; x: Object :: (T) x} (can
-     * throw {@code ClassCastException}) 
+     * throw {@code ClassCastException})
      */
-    public static final Rop CHECK_CAST = 
+    public static final Rop CHECK_CAST =
         new Rop(RegOps.CHECK_CAST, Type.VOID, StdTypeList.OBJECT,
                 Exceptions.LIST_Error_ClassCastException, "check-cast");
 
@@ -815,7 +815,7 @@ public final class Rops {
      * {@code T: any non-array object type; x: Object :: x instanceof
      * T}. Note: This is listed as throwing {@code Error}
      * explicitly because the op <i>can</i> throw, but there are no
-     * other predefined exceptions for it. 
+     * other predefined exceptions for it.
      */
     public static final Rop INSTANCE_OF =
         new Rop(RegOps.INSTANCE_OF, Type.INT, StdTypeList.OBJECT,
@@ -823,7 +823,7 @@ public final class Rops {
 
     /**
      * {@code r: int; x: Object; f: instance field spec of
-     * type int :: r = x.f} 
+     * type int :: r = x.f}
      */
     public static final Rop GET_FIELD_INT =
         new Rop(RegOps.GET_FIELD, Type.INT, StdTypeList.OBJECT,
@@ -831,7 +831,7 @@ public final class Rops {
 
     /**
      * {@code r: long; x: Object; f: instance field spec of
-     * type long :: r = x.f} 
+     * type long :: r = x.f}
      */
     public static final Rop GET_FIELD_LONG =
         new Rop(RegOps.GET_FIELD, Type.LONG, StdTypeList.OBJECT,
@@ -839,7 +839,7 @@ public final class Rops {
 
     /**
      * {@code r: float; x: Object; f: instance field spec of
-     * type float :: r = x.f} 
+     * type float :: r = x.f}
      */
     public static final Rop GET_FIELD_FLOAT =
         new Rop(RegOps.GET_FIELD, Type.FLOAT, StdTypeList.OBJECT,
@@ -848,7 +848,7 @@ public final class Rops {
 
     /**
      * {@code r: double; x: Object; f: instance field spec of
-     * type double :: r = x.f} 
+     * type double :: r = x.f}
      */
     public static final Rop GET_FIELD_DOUBLE =
         new Rop(RegOps.GET_FIELD, Type.DOUBLE, StdTypeList.OBJECT,
@@ -857,7 +857,7 @@ public final class Rops {
 
     /**
      * {@code r: Object; x: Object; f: instance field spec of
-     * type Object :: r = x.f} 
+     * type Object :: r = x.f}
      */
     public static final Rop GET_FIELD_OBJECT =
         new Rop(RegOps.GET_FIELD, Type.OBJECT, StdTypeList.OBJECT,
@@ -866,7 +866,7 @@ public final class Rops {
 
     /**
      * {@code r: boolean; x: Object; f: instance field spec of
-     * type boolean :: r = x.f} 
+     * type boolean :: r = x.f}
      */
     public static final Rop GET_FIELD_BOOLEAN =
         new Rop(RegOps.GET_FIELD, Type.INT, StdTypeList.OBJECT,
@@ -875,7 +875,7 @@ public final class Rops {
 
     /**
      * {@code r: byte; x: Object; f: instance field spec of
-     * type byte :: r = x.f} 
+     * type byte :: r = x.f}
      */
     public static final Rop GET_FIELD_BYTE =
         new Rop(RegOps.GET_FIELD, Type.INT, StdTypeList.OBJECT,
@@ -884,7 +884,7 @@ public final class Rops {
 
     /**
      * {@code r: char; x: Object; f: instance field spec of
-     * type char :: r = x.f} 
+     * type char :: r = x.f}
      */
     public static final Rop GET_FIELD_CHAR =
         new Rop(RegOps.GET_FIELD, Type.INT, StdTypeList.OBJECT,
@@ -893,7 +893,7 @@ public final class Rops {
 
     /**
      * {@code r: short; x: Object; f: instance field spec of
-     * type short :: r = x.f} 
+     * type short :: r = x.f}
      */
     public static final Rop GET_FIELD_SHORT =
         new Rop(RegOps.GET_FIELD, Type.INT, StdTypeList.OBJECT,
@@ -947,7 +947,7 @@ public final class Rops {
 
     /**
      * {@code x: int; y: Object; f: instance field spec of type
-     * int :: y.f = x} 
+     * int :: y.f = x}
      */
     public static final Rop PUT_FIELD_INT =
         new Rop(RegOps.PUT_FIELD, Type.VOID, StdTypeList.INT_OBJECT,
@@ -955,7 +955,7 @@ public final class Rops {
 
     /**
      * {@code x: long; y: Object; f: instance field spec of type
-     * long :: y.f = x} 
+     * long :: y.f = x}
      */
     public static final Rop PUT_FIELD_LONG =
         new Rop(RegOps.PUT_FIELD, Type.VOID, StdTypeList.LONG_OBJECT,
@@ -963,7 +963,7 @@ public final class Rops {
 
     /**
      * {@code x: float; y: Object; f: instance field spec of type
-     * float :: y.f = x} 
+     * float :: y.f = x}
      */
     public static final Rop PUT_FIELD_FLOAT =
         new Rop(RegOps.PUT_FIELD, Type.VOID, StdTypeList.FLOAT_OBJECT,
@@ -972,7 +972,7 @@ public final class Rops {
 
     /**
      * {@code x: double; y: Object; f: instance field spec of type
-     * double :: y.f = x} 
+     * double :: y.f = x}
      */
     public static final Rop PUT_FIELD_DOUBLE =
         new Rop(RegOps.PUT_FIELD, Type.VOID, StdTypeList.DOUBLE_OBJECT,
@@ -981,7 +981,7 @@ public final class Rops {
 
     /**
      * {@code x: Object; y: Object; f: instance field spec of type
-     * Object :: y.f = x} 
+     * Object :: y.f = x}
      */
     public static final Rop PUT_FIELD_OBJECT =
         new Rop(RegOps.PUT_FIELD, Type.VOID, StdTypeList.OBJECT_OBJECT,
@@ -990,7 +990,7 @@ public final class Rops {
 
     /**
      * {@code x: int; y: Object; f: instance field spec of type
-     * boolean :: y.f = x} 
+     * boolean :: y.f = x}
      */
     public static final Rop PUT_FIELD_BOOLEAN =
         new Rop(RegOps.PUT_FIELD, Type.VOID, StdTypeList.INT_OBJECT,
@@ -999,7 +999,7 @@ public final class Rops {
 
     /**
      * {@code x: int; y: Object; f: instance field spec of type
-     * byte :: y.f = x} 
+     * byte :: y.f = x}
      */
     public static final Rop PUT_FIELD_BYTE =
         new Rop(RegOps.PUT_FIELD, Type.VOID, StdTypeList.INT_OBJECT,
@@ -1008,7 +1008,7 @@ public final class Rops {
 
     /**
      * {@code x: int; y: Object; f: instance field spec of type
-     * char :: y.f = x} 
+     * char :: y.f = x}
      */
     public static final Rop PUT_FIELD_CHAR =
         new Rop(RegOps.PUT_FIELD, Type.VOID, StdTypeList.INT_OBJECT,
@@ -1017,7 +1017,7 @@ public final class Rops {
 
     /**
      * {@code x: int; y: Object; f: instance field spec of type
-     * short :: y.f = x} 
+     * short :: y.f = x}
      */
     public static final Rop PUT_FIELD_SHORT =
         new Rop(RegOps.PUT_FIELD, Type.VOID, StdTypeList.INT_OBJECT,
@@ -1106,12 +1106,12 @@ public final class Rops {
      * Returns the appropriate rop for the given opcode, destination,
      * and sources. The result is typically, but not necessarily, a
      * shared instance.
-     * 
+     *
      * <p><b>Note:</b> This method does not do complete error checking on
      * its arguments, and so it may return an instance which seemed "right
      * enough" even though in actuality the passed arguments don't quite
      * match what is returned. TODO: Revisit this issue.</p>
-     * 
+     *
      * @param opcode the opcode
      * @param dest {@code non-null;} destination (result) type, or
      * {@link Type#VOID} if none
@@ -1239,7 +1239,7 @@ public final class Rops {
     /**
      * Returns the appropriate {@code move} rop for the given type. The
      * result is a shared instance.
-     * 
+     *
      * @param type {@code non-null;} type of value being moved
      * @return {@code non-null;} an appropriate instance
      */
@@ -1259,7 +1259,7 @@ public final class Rops {
     /**
      * Returns the appropriate {@code move-param} rop for the
      * given type. The result is a shared instance.
-     * 
+     *
      * @param type {@code non-null;} type of value being moved
      * @return {@code non-null;} an appropriate instance
      */
@@ -1278,7 +1278,7 @@ public final class Rops {
     /**
      * Returns the appropriate {@code move-exception} rop for the
      * given type. The result may be a shared instance.
-     * 
+     *
      * @param type {@code non-null;} type of the exception
      * @return {@code non-null;} an appropriate instance
      */
@@ -1314,7 +1314,7 @@ public final class Rops {
     /**
      * Returns the appropriate {@code const} rop for the given
      * type. The result is a shared instance.
-     * 
+     *
      * @param type {@code non-null;} type of the constant
      * @return {@code non-null;} an appropriate instance
      */
@@ -1337,7 +1337,7 @@ public final class Rops {
     /**
      * Returns the appropriate {@code if-eq} rop for the given
      * sources. The result is a shared instance.
-     * 
+     *
      * @param types {@code non-null;} source types
      * @return {@code non-null;} an appropriate instance
      */
@@ -1349,7 +1349,7 @@ public final class Rops {
     /**
      * Returns the appropriate {@code if-ne} rop for the given
      * sources. The result is a shared instance.
-     * 
+     *
      * @param types {@code non-null;} source types
      * @return {@code non-null;} an appropriate instance
      */
@@ -1361,7 +1361,7 @@ public final class Rops {
     /**
      * Returns the appropriate {@code if-lt} rop for the given
      * sources. The result is a shared instance.
-     * 
+     *
      * @param types {@code non-null;} source types
      * @return {@code non-null;} an appropriate instance
      */
@@ -1372,7 +1372,7 @@ public final class Rops {
     /**
      * Returns the appropriate {@code if-ge} rop for the given
      * sources. The result is a shared instance.
-     * 
+     *
      * @param types {@code non-null;} source types
      * @return {@code non-null;} an appropriate instance
      */
@@ -1383,7 +1383,7 @@ public final class Rops {
     /**
      * Returns the appropriate {@code if-gt} rop for the given
      * sources. The result is a shared instance.
-     * 
+     *
      * @param types {@code non-null;} source types
      * @return {@code non-null;} an appropriate instance
      */
@@ -1394,7 +1394,7 @@ public final class Rops {
     /**
      * Returns the appropriate {@code if-le} rop for the given
      * sources. The result is a shared instance.
-     * 
+     *
      * @param types {@code non-null;} source types
      * @return {@code non-null;} an appropriate instance
      */
@@ -1406,7 +1406,7 @@ public final class Rops {
      * Helper for all the {@code if*}-related methods, which
      * checks types and picks one of the four variants, throwing if
      * there's a problem.
-     * 
+     *
      * @param types {@code non-null;} the types
      * @param intZ {@code non-null;} the int-to-0 comparison
      * @param objZ {@code null-ok;} the object-to-null comparison
@@ -1454,7 +1454,7 @@ public final class Rops {
     /**
      * Returns the appropriate {@code add} rop for the given
      * types. The result is a shared instance.
-     * 
+     *
      * @param types {@code non-null;} types of the sources
      * @return {@code non-null;} an appropriate instance
      */
@@ -1467,7 +1467,7 @@ public final class Rops {
     /**
      * Returns the appropriate {@code sub} rop for the given
      * types. The result is a shared instance.
-     * 
+     *
      * @param types {@code non-null;} types of the sources
      * @return {@code non-null;} an appropriate instance
      */
@@ -1480,7 +1480,7 @@ public final class Rops {
     /**
      * Returns the appropriate {@code mul} rop for the given
      * types. The result is a shared instance.
-     * 
+     *
      * @param types {@code non-null;} types of the sources
      * @return {@code non-null;} an appropriate instance
      */
@@ -1493,7 +1493,7 @@ public final class Rops {
     /**
      * Returns the appropriate {@code div} rop for the given
      * types. The result is a shared instance.
-     * 
+     *
      * @param types {@code non-null;} types of the sources
      * @return {@code non-null;} an appropriate instance
      */
@@ -1506,7 +1506,7 @@ public final class Rops {
     /**
      * Returns the appropriate {@code rem} rop for the given
      * types. The result is a shared instance.
-     * 
+     *
      * @param types {@code non-null;} types of the sources
      * @return {@code non-null;} an appropriate instance
      */
@@ -1519,7 +1519,7 @@ public final class Rops {
     /**
      * Returns the appropriate {@code and} rop for the given
      * types. The result is a shared instance.
-     * 
+     *
      * @param types {@code non-null;} types of the sources
      * @return {@code non-null;} an appropriate instance
      */
@@ -1531,7 +1531,7 @@ public final class Rops {
     /**
      * Returns the appropriate {@code or} rop for the given
      * types. The result is a shared instance.
-     * 
+     *
      * @param types {@code non-null;} types of the sources
      * @return {@code non-null;} an appropriate instance
      */
@@ -1543,7 +1543,7 @@ public final class Rops {
     /**
      * Returns the appropriate {@code xor} rop for the given
      * types. The result is a shared instance.
-     * 
+     *
      * @param types {@code non-null;} types of the sources
      * @return {@code non-null;} an appropriate instance
      */
@@ -1555,7 +1555,7 @@ public final class Rops {
     /**
      * Returns the appropriate {@code shl} rop for the given
      * types. The result is a shared instance.
-     * 
+     *
      * @param types {@code non-null;} types of the sources
      * @return {@code non-null;} an appropriate instance
      */
@@ -1567,7 +1567,7 @@ public final class Rops {
     /**
      * Returns the appropriate {@code shr} rop for the given
      * types. The result is a shared instance.
-     * 
+     *
      * @param types {@code non-null;} types of the sources
      * @return {@code non-null;} an appropriate instance
      */
@@ -1579,7 +1579,7 @@ public final class Rops {
     /**
      * Returns the appropriate {@code ushr} rop for the given
      * types. The result is a shared instance.
-     * 
+     *
      * @param types {@code non-null;} types of the sources
      * @return {@code non-null;} an appropriate instance
      */
@@ -1591,7 +1591,7 @@ public final class Rops {
     /**
      * Returns the appropriate binary arithmetic rop for the given type
      * and arguments. The result is a shared instance.
-     * 
+     *
      * @param types {@code non-null;} sources of the operation
      * @param int1 {@code non-null;} the int-to-constant rop
      * @param long1 {@code non-null;} the long-to-constant rop
@@ -1640,7 +1640,7 @@ public final class Rops {
     /**
      * Returns the appropriate {@code neg} rop for the given type. The
      * result is a shared instance.
-     * 
+     *
      * @param type {@code non-null;} type of value being operated on
      * @return {@code non-null;} an appropriate instance
      */
@@ -1658,7 +1658,7 @@ public final class Rops {
     /**
      * Returns the appropriate {@code not} rop for the given type. The
      * result is a shared instance.
-     * 
+     *
      * @param type {@code non-null;} type of value being operated on
      * @return {@code non-null;} an appropriate instance
      */
@@ -1674,7 +1674,7 @@ public final class Rops {
     /**
      * Returns the appropriate {@code cmpl} rop for the given type. The
      * result is a shared instance.
-     * 
+     *
      * @param type {@code non-null;} type of value being compared
      * @return {@code non-null;} an appropriate instance
      */
@@ -1691,7 +1691,7 @@ public final class Rops {
     /**
      * Returns the appropriate {@code cmpg} rop for the given type. The
      * result is a shared instance.
-     * 
+     *
      * @param type {@code non-null;} type of value being compared
      * @return {@code non-null;} an appropriate instance
      */
@@ -1707,7 +1707,7 @@ public final class Rops {
     /**
      * Returns the appropriate {@code conv} rop for the given types. The
      * result is a shared instance.
-     * 
+     *
      * @param dest {@code non-null;} target value type
      * @param source {@code non-null;} source value type
      * @return {@code non-null;} an appropriate instance
@@ -1752,7 +1752,7 @@ public final class Rops {
     /**
      * Returns the appropriate {@code return} rop for the given type. The
      * result is a shared instance.
-     * 
+     *
      * @param type {@code non-null;} type of value being returned
      * @return {@code non-null;} an appropriate instance
      */
@@ -1772,7 +1772,7 @@ public final class Rops {
     /**
      * Returns the appropriate {@code aget} rop for the given type. The
      * result is a shared instance.
-     * 
+     *
      * @param type {@code non-null;} element type of array being accessed
      * @return {@code non-null;} an appropriate instance
      */
@@ -1795,7 +1795,7 @@ public final class Rops {
     /**
      * Returns the appropriate {@code aput} rop for the given type. The
      * result is a shared instance.
-     * 
+     *
      * @param type {@code non-null;} element type of array being accessed
      * @return {@code non-null;} an appropriate instance
      */
@@ -1818,7 +1818,7 @@ public final class Rops {
     /**
      * Returns the appropriate {@code new-array} rop for the given
      * type. The result is a shared instance.
-     * 
+     *
      * @param arrayType {@code non-null;} array type of array being created
      * @return {@code non-null;} an appropriate instance
      */
@@ -1848,7 +1848,7 @@ public final class Rops {
     /**
      * Returns the appropriate {@code filled-new-array} rop for the given
      * type. The result may be a shared instance.
-     * 
+     *
      * @param arrayType {@code non-null;} type of array being created
      * @param count {@code >= 0;} number of elements that the array should have
      * @return {@code non-null;} an appropriate instance
@@ -1880,7 +1880,7 @@ public final class Rops {
     /**
      * Returns the appropriate {@code get-field} rop for the given
      * type. The result is a shared instance.
-     * 
+     *
      * @param type {@code non-null;} type of the field in question
      * @return {@code non-null;} an appropriate instance
      */
@@ -1903,7 +1903,7 @@ public final class Rops {
     /**
      * Returns the appropriate {@code put-field} rop for the given
      * type. The result is a shared instance.
-     * 
+     *
      * @param type {@code non-null;} type of the field in question
      * @return {@code non-null;} an appropriate instance
      */
@@ -1926,7 +1926,7 @@ public final class Rops {
     /**
      * Returns the appropriate {@code get-static} rop for the given
      * type. The result is a shared instance.
-     * 
+     *
      * @param type {@code non-null;} type of the field in question
      * @return {@code non-null;} an appropriate instance
      */
@@ -1949,7 +1949,7 @@ public final class Rops {
     /**
      * Returns the appropriate {@code put-static} rop for the given
      * type. The result is a shared instance.
-     * 
+     *
      * @param type {@code non-null;} type of the field in question
      * @return {@code non-null;} an appropriate instance
      */
@@ -1972,7 +1972,7 @@ public final class Rops {
     /**
      * Returns the appropriate {@code invoke-static} rop for the
      * given type. The result is typically a newly-allocated instance.
-     * 
+     *
      * @param meth {@code non-null;} descriptor of the method
      * @return {@code non-null;} an appropriate instance
      */
@@ -1985,7 +1985,7 @@ public final class Rops {
     /**
      * Returns the appropriate {@code invoke-virtual} rop for the
      * given type. The result is typically a newly-allocated instance.
-     * 
+     *
      * @param meth {@code non-null;} descriptor of the method, including the
      * {@code this} parameter
      * @return {@code non-null;} an appropriate instance
@@ -1999,7 +1999,7 @@ public final class Rops {
     /**
      * Returns the appropriate {@code invoke-super} rop for the
      * given type. The result is typically a newly-allocated instance.
-     * 
+     *
      * @param meth {@code non-null;} descriptor of the method, including the
      * {@code this} parameter
      * @return {@code non-null;} an appropriate instance
@@ -2013,7 +2013,7 @@ public final class Rops {
     /**
      * Returns the appropriate {@code invoke-direct} rop for the
      * given type. The result is typically a newly-allocated instance.
-     * 
+     *
      * @param meth {@code non-null;} descriptor of the method, including the
      * {@code this} parameter
      * @return {@code non-null;} an appropriate instance
@@ -2027,7 +2027,7 @@ public final class Rops {
     /**
      * Returns the appropriate {@code invoke-interface} rop for the
      * given type. The result is typically a newly-allocated instance.
-     * 
+     *
      * @param meth {@code non-null;} descriptor of the method, including the
      * {@code this} parameter
      * @return {@code non-null;} an appropriate instance
@@ -2037,7 +2037,7 @@ public final class Rops {
                        meth.getParameterFrameTypes(),
                        StdTypeList.THROWABLE);
     }
-    
+
     /**
      * Returns the appropriate {@code mark-local} rop for the given type.
      * The result is a shared instance.
@@ -2066,7 +2066,7 @@ public final class Rops {
 
     /**
      * Throws the right exception to complain about a bogus type.
-     * 
+     *
      * @param type {@code non-null;} the bad type
      * @return never
      */
@@ -2076,7 +2076,7 @@ public final class Rops {
 
     /**
      * Throws the right exception to complain about a bogus list of types.
-     * 
+     *
      * @param types {@code non-null;} the bad types
      * @return never
      */

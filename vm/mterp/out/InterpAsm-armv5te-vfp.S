@@ -20,6 +20,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 /*
  * ARMv5 definitions and declarations.
  */
@@ -242,6 +243,11 @@ unspecified registers or condition codes.
     ldmfd   sp!, {\regs,pc}
 .endm
 
+/*
+ * Macro for data memory barrier; not meaningful pre-ARMv6K.
+ */
+.macro  SMP_DMB
+.endm
 
 /* File: armv5te/entry.S */
 /*
@@ -396,7 +402,6 @@ strBadEntryPoint:
     .word   .LstrBadEntryPoint
 
 
-
     .global dvmAsmInstructionStart
     .type   dvmAsmInstructionStart, %function
 dvmAsmInstructionStart = .L_OP_NOP
@@ -420,7 +425,6 @@ dalvik_inst:
     .fnend
 #endif
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_MOVE: /* 0x01 */
@@ -436,7 +440,6 @@ dalvik_inst:
     SET_VREG(r2, r0)                    @ fp[A]<- r2
     GOTO_OPCODE(ip)                     @ execute next instruction
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_MOVE_FROM16: /* 0x02 */
@@ -451,7 +454,6 @@ dalvik_inst:
     SET_VREG(r2, r0)                    @ fp[AA]<- r2
     GOTO_OPCODE(ip)                     @ jump to next instruction
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_MOVE_16: /* 0x03 */
@@ -465,7 +467,6 @@ dalvik_inst:
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     SET_VREG(r2, r0)                    @ fp[AAAA]<- r2
     GOTO_OPCODE(ip)                     @ jump to next instruction
-
 
 /* ------------------------------ */
     .balign 64
@@ -484,7 +485,6 @@ dalvik_inst:
     stmia   r2, {r0-r1}                 @ fp[A]<- r0/r1
     GOTO_OPCODE(ip)                     @ jump to next instruction
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_MOVE_WIDE_FROM16: /* 0x05 */
@@ -501,7 +501,6 @@ dalvik_inst:
     stmia   r2, {r0-r1}                 @ fp[AA]<- r0/r1
     GOTO_OPCODE(ip)                     @ jump to next instruction
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_MOVE_WIDE_16: /* 0x06 */
@@ -517,7 +516,6 @@ dalvik_inst:
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     stmia   r2, {r0-r1}                 @ fp[AAAA]<- r0/r1
     GOTO_OPCODE(ip)                     @ jump to next instruction
-
 
 /* ------------------------------ */
     .balign 64
@@ -536,7 +534,6 @@ dalvik_inst:
     GOTO_OPCODE(ip)                     @ execute next instruction
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_MOVE_OBJECT_FROM16: /* 0x08 */
@@ -551,7 +548,6 @@ dalvik_inst:
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     SET_VREG(r2, r0)                    @ fp[AA]<- r2
     GOTO_OPCODE(ip)                     @ jump to next instruction
-
 
 
 /* ------------------------------ */
@@ -570,7 +566,6 @@ dalvik_inst:
     GOTO_OPCODE(ip)                     @ jump to next instruction
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_MOVE_RESULT: /* 0x0a */
@@ -583,7 +578,6 @@ dalvik_inst:
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     SET_VREG(r0, r2)                    @ fp[AA]<- r0
     GOTO_OPCODE(ip)                     @ jump to next instruction
-
 
 /* ------------------------------ */
     .balign 64
@@ -599,7 +593,6 @@ dalvik_inst:
     stmia   r2, {r0-r1}                 @ fp[AA]<- r0/r1
     GOTO_OPCODE(ip)                     @ jump to next instruction
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_MOVE_RESULT_OBJECT: /* 0x0c */
@@ -613,7 +606,6 @@ dalvik_inst:
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     SET_VREG(r0, r2)                    @ fp[AA]<- r0
     GOTO_OPCODE(ip)                     @ jump to next instruction
-
 
 
 /* ------------------------------ */
@@ -631,13 +623,11 @@ dalvik_inst:
     str     r1, [r0, #offThread_exception]  @ dvmClearException bypass
     GOTO_OPCODE(ip)                     @ jump to next instruction
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_RETURN_VOID: /* 0x0e */
 /* File: armv5te/OP_RETURN_VOID.S */
     b       common_returnFromMethod
-
 
 /* ------------------------------ */
     .balign 64
@@ -655,7 +645,6 @@ dalvik_inst:
     str     r0, [rGLUE, #offGlue_retval] @ retval.i <- vAA
     b       common_returnFromMethod
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_RETURN_WIDE: /* 0x10 */
@@ -671,7 +660,6 @@ dalvik_inst:
     ldmia   r2, {r0-r1}                 @ r0/r1 <- vAA/vAA+1
     stmia   r3, {r0-r1}                 @ retval<- r0/r1
     b       common_returnFromMethod
-
 
 /* ------------------------------ */
     .balign 64
@@ -691,7 +679,6 @@ dalvik_inst:
     b       common_returnFromMethod
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_CONST_4: /* 0x12 */
@@ -706,7 +693,6 @@ dalvik_inst:
     SET_VREG(r1, r0)                    @ fp[A]<- r1
     GOTO_OPCODE(ip)                     @ execute next instruction
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_CONST_16: /* 0x13 */
@@ -718,7 +704,6 @@ dalvik_inst:
     SET_VREG(r0, r3)                    @ vAA<- r0
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     GOTO_OPCODE(ip)                     @ jump to next instruction
-
 
 /* ------------------------------ */
     .balign 64
@@ -734,7 +719,6 @@ dalvik_inst:
     SET_VREG(r0, r3)                    @ vAA<- r0
     GOTO_OPCODE(ip)                     @ jump to next instruction
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_CONST_HIGH16: /* 0x15 */
@@ -747,7 +731,6 @@ dalvik_inst:
     SET_VREG(r0, r3)                    @ vAA<- r0
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     GOTO_OPCODE(ip)                     @ jump to next instruction
-
 
 /* ------------------------------ */
     .balign 64
@@ -762,7 +745,6 @@ dalvik_inst:
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     stmia   r3, {r0-r1}                 @ vAA<- r0/r1
     GOTO_OPCODE(ip)                     @ jump to next instruction
-
 
 /* ------------------------------ */
     .balign 64
@@ -779,7 +761,6 @@ dalvik_inst:
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     stmia   r3, {r0-r1}                 @ vAA<- r0/r1
     GOTO_OPCODE(ip)                     @ jump to next instruction
-
 
 /* ------------------------------ */
     .balign 64
@@ -799,7 +780,6 @@ dalvik_inst:
     stmia   r9, {r0-r1}                 @ vAA<- r0/r1
     GOTO_OPCODE(ip)                     @ jump to next instruction
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_CONST_WIDE_HIGH16: /* 0x19 */
@@ -814,7 +794,6 @@ dalvik_inst:
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     stmia   r3, {r0-r1}                 @ vAA<- r0/r1
     GOTO_OPCODE(ip)                     @ jump to next instruction
-
 
 /* ------------------------------ */
     .balign 64
@@ -894,7 +873,6 @@ dalvik_inst:
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     GOTO_OPCODE(ip)                     @ jump to next instruction
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_MONITOR_EXIT: /* 0x1e */
@@ -922,7 +900,6 @@ dalvik_inst:
 1:
     FETCH_ADVANCE_INST(1)               @ advance before throw
     b      common_errNullObject
-
 
 /* ------------------------------ */
     .balign 64
@@ -998,7 +975,6 @@ dalvik_inst:
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     SET_VREG(r3, r2)                    @ vB<- length
     GOTO_OPCODE(ip)                     @ jump to next instruction
-
 
 /* ------------------------------ */
     .balign 64
@@ -1135,12 +1111,12 @@ dalvik_inst:
     mov     r2, rINST, lsr #8           @ r2<- AA
     GET_VREG(r1, r2)                    @ r1<- vAA (exception object)
     ldr     r0, [rGLUE, #offGlue_self]  @ r0<- glue->self
+    EXPORT_PC()                         @ exception handler can throw
     cmp     r1, #0                      @ null object?
     beq     common_errNullObject        @ yes, throw an NPE instead
     @ bypass dvmSetException, just store it
     str     r1, [r0, #offThread_exception]  @ thread->exception<- obj
     b       common_exceptionThrown
-
 
 /* ------------------------------ */
     .balign 64
@@ -1196,7 +1172,6 @@ dalvik_inst:
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     GOTO_OPCODE(ip)                     @ jump to next instruction
 #endif
-
 
 /* ------------------------------ */
     .balign 64
@@ -1270,7 +1245,6 @@ dalvik_inst:
     GOTO_OPCODE(ip)                     @ jump to next instruction
 #endif
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_SPARSE_SWITCH: /* 0x2c */
@@ -1308,7 +1282,6 @@ dalvik_inst:
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     GOTO_OPCODE(ip)                     @ jump to next instruction
 #endif
-
 
 
 /* ------------------------------ */
@@ -1544,7 +1517,6 @@ dalvik_inst:
 #endif
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_IF_NE: /* 0x33 */
@@ -1579,7 +1551,6 @@ dalvik_inst:
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     GOTO_OPCODE(ip)                     @ jump to next instruction
 #endif
-
 
 
 /* ------------------------------ */
@@ -1618,7 +1589,6 @@ dalvik_inst:
 #endif
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_IF_GE: /* 0x35 */
@@ -1653,7 +1623,6 @@ dalvik_inst:
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     GOTO_OPCODE(ip)                     @ jump to next instruction
 #endif
-
 
 
 /* ------------------------------ */
@@ -1692,7 +1661,6 @@ dalvik_inst:
 #endif
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_IF_LE: /* 0x37 */
@@ -1727,7 +1695,6 @@ dalvik_inst:
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     GOTO_OPCODE(ip)                     @ jump to next instruction
 #endif
-
 
 
 /* ------------------------------ */
@@ -1766,7 +1733,6 @@ dalvik_inst:
 #endif
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_IF_NEZ: /* 0x39 */
@@ -1801,7 +1767,6 @@ dalvik_inst:
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     GOTO_OPCODE(ip)                     @ jump to next instruction
 #endif
-
 
 
 /* ------------------------------ */
@@ -1840,7 +1805,6 @@ dalvik_inst:
 #endif
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_IF_GEZ: /* 0x3b */
@@ -1875,7 +1839,6 @@ dalvik_inst:
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     GOTO_OPCODE(ip)                     @ jump to next instruction
 #endif
-
 
 
 /* ------------------------------ */
@@ -1914,7 +1877,6 @@ dalvik_inst:
 #endif
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_IF_LEZ: /* 0x3d */
@@ -1951,14 +1913,12 @@ dalvik_inst:
 #endif
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_UNUSED_3E: /* 0x3e */
 /* File: armv5te/OP_UNUSED_3E.S */
 /* File: armv5te/unused.S */
     bl      common_abort
-
 
 
 /* ------------------------------ */
@@ -1969,14 +1929,12 @@ dalvik_inst:
     bl      common_abort
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_UNUSED_40: /* 0x40 */
 /* File: armv5te/OP_UNUSED_40.S */
 /* File: armv5te/unused.S */
     bl      common_abort
-
 
 
 /* ------------------------------ */
@@ -1987,7 +1945,6 @@ dalvik_inst:
     bl      common_abort
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_UNUSED_42: /* 0x42 */
@@ -1996,14 +1953,12 @@ dalvik_inst:
     bl      common_abort
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_UNUSED_43: /* 0x43 */
 /* File: armv5te/OP_UNUSED_43.S */
 /* File: armv5te/unused.S */
     bl      common_abort
-
 
 
 /* ------------------------------ */
@@ -2035,7 +1990,6 @@ dalvik_inst:
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     SET_VREG(r2, r9)                    @ vAA<- r2
     GOTO_OPCODE(ip)                     @ jump to next instruction
-
 
 /* ------------------------------ */
     .balign 64
@@ -2096,7 +2050,6 @@ dalvik_inst:
     GOTO_OPCODE(ip)                     @ jump to next instruction
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_AGET_BOOLEAN: /* 0x47 */
@@ -2127,7 +2080,6 @@ dalvik_inst:
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     SET_VREG(r2, r9)                    @ vAA<- r2
     GOTO_OPCODE(ip)                     @ jump to next instruction
-
 
 
 /* ------------------------------ */
@@ -2162,7 +2114,6 @@ dalvik_inst:
     GOTO_OPCODE(ip)                     @ jump to next instruction
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_AGET_CHAR: /* 0x49 */
@@ -2193,7 +2144,6 @@ dalvik_inst:
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     SET_VREG(r2, r9)                    @ vAA<- r2
     GOTO_OPCODE(ip)                     @ jump to next instruction
-
 
 
 /* ------------------------------ */
@@ -2228,7 +2178,6 @@ dalvik_inst:
     GOTO_OPCODE(ip)                     @ jump to next instruction
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_APUT: /* 0x4b */
@@ -2258,7 +2207,6 @@ dalvik_inst:
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     str  r2, [r0, #offArrayObject_contents]  @ vBB[vCC]<- r2
     GOTO_OPCODE(ip)                     @ jump to next instruction
-
 
 /* ------------------------------ */
     .balign 64
@@ -2347,7 +2295,6 @@ dalvik_inst:
     GOTO_OPCODE(ip)                     @ jump to next instruction
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_APUT_BYTE: /* 0x4f */
@@ -2378,7 +2325,6 @@ dalvik_inst:
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     strb  r2, [r0, #offArrayObject_contents]  @ vBB[vCC]<- r2
     GOTO_OPCODE(ip)                     @ jump to next instruction
-
 
 
 /* ------------------------------ */
@@ -2413,7 +2359,6 @@ dalvik_inst:
     GOTO_OPCODE(ip)                     @ jump to next instruction
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_APUT_SHORT: /* 0x51 */
@@ -2444,7 +2389,6 @@ dalvik_inst:
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     strh  r2, [r0, #offArrayObject_contents]  @ vBB[vCC]<- r2
     GOTO_OPCODE(ip)                     @ jump to next instruction
-
 
 
 /* ------------------------------ */
@@ -2850,6 +2794,7 @@ dalvik_inst:
     beq     .LOP_SGET_resolve         @ yes, do resolve
 .LOP_SGET_finish: @ field ptr in r0
     ldr     r1, [r0, #offStaticField_value] @ r1<- field value
+    @ no-op                             @ acquiring load
     mov     r2, rINST, lsr #8           @ r2<- AA
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     SET_VREG(r1, r2)                    @ fp[AA]<- r1
@@ -2874,7 +2819,7 @@ dalvik_inst:
     mov     r9, rINST, lsr #8           @ r9<- AA
     .if 0
     add     r0, r0, #offStaticField_value @ r0<- pointer to data
-    bl      android_quasiatomic_read_64 @ r0/r1<- contents of field
+    bl      dvmQuasiAtomicRead64        @ r0/r1<- contents of field
     .else
     ldrd    r0, [r0, #offStaticField_value] @ r0/r1<- field value (aligned)
     .endif
@@ -2903,6 +2848,7 @@ dalvik_inst:
     beq     .LOP_SGET_OBJECT_resolve         @ yes, do resolve
 .LOP_SGET_OBJECT_finish: @ field ptr in r0
     ldr     r1, [r0, #offStaticField_value] @ r1<- field value
+    @ no-op                             @ acquiring load
     mov     r2, rINST, lsr #8           @ r2<- AA
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     SET_VREG(r1, r2)                    @ fp[AA]<- r1
@@ -2929,6 +2875,7 @@ dalvik_inst:
     beq     .LOP_SGET_BOOLEAN_resolve         @ yes, do resolve
 .LOP_SGET_BOOLEAN_finish: @ field ptr in r0
     ldr     r1, [r0, #offStaticField_value] @ r1<- field value
+    @ no-op                             @ acquiring load
     mov     r2, rINST, lsr #8           @ r2<- AA
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     SET_VREG(r1, r2)                    @ fp[AA]<- r1
@@ -2955,6 +2902,7 @@ dalvik_inst:
     beq     .LOP_SGET_BYTE_resolve         @ yes, do resolve
 .LOP_SGET_BYTE_finish: @ field ptr in r0
     ldr     r1, [r0, #offStaticField_value] @ r1<- field value
+    @ no-op                             @ acquiring load
     mov     r2, rINST, lsr #8           @ r2<- AA
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     SET_VREG(r1, r2)                    @ fp[AA]<- r1
@@ -2981,6 +2929,7 @@ dalvik_inst:
     beq     .LOP_SGET_CHAR_resolve         @ yes, do resolve
 .LOP_SGET_CHAR_finish: @ field ptr in r0
     ldr     r1, [r0, #offStaticField_value] @ r1<- field value
+    @ no-op                             @ acquiring load
     mov     r2, rINST, lsr #8           @ r2<- AA
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     SET_VREG(r1, r2)                    @ fp[AA]<- r1
@@ -3007,6 +2956,7 @@ dalvik_inst:
     beq     .LOP_SGET_SHORT_resolve         @ yes, do resolve
 .LOP_SGET_SHORT_finish: @ field ptr in r0
     ldr     r1, [r0, #offStaticField_value] @ r1<- field value
+    @ no-op                             @ acquiring load
     mov     r2, rINST, lsr #8           @ r2<- AA
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     SET_VREG(r1, r2)                    @ fp[AA]<- r1
@@ -3035,6 +2985,7 @@ dalvik_inst:
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     GET_VREG(r1, r2)                    @ r1<- fp[AA]
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    @ no-op                             @ releasing store
     str     r1, [r0, #offStaticField_value] @ field<- vAA
     GOTO_OPCODE(ip)                     @ jump to next instruction
 
@@ -3060,7 +3011,7 @@ dalvik_inst:
     GET_INST_OPCODE(r10)                @ extract opcode from rINST
     .if 0
     add     r2, r2, #offStaticField_value @ r2<- pointer to data
-    bl      android_quasiatomic_swap_64 @ stores r0/r1 into addr r2
+    bl      dvmQuasiAtomicSwap64        @ stores r0/r1 into addr r2
     .else
     strd    r0, [r2, #offStaticField_value] @ field<- vAA/vAA+1
     .endif
@@ -3088,6 +3039,7 @@ dalvik_inst:
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     GET_VREG(r1, r2)                    @ r1<- fp[AA]
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    @ no-op                             @ releasing store
     str     r1, [r0, #offStaticField_value] @ field<- vAA
     GOTO_OPCODE(ip)                     @ jump to next instruction
 
@@ -3114,6 +3066,7 @@ dalvik_inst:
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     GET_VREG(r1, r2)                    @ r1<- fp[AA]
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    @ no-op                             @ releasing store
     str     r1, [r0, #offStaticField_value] @ field<- vAA
     GOTO_OPCODE(ip)                     @ jump to next instruction
 
@@ -3140,6 +3093,7 @@ dalvik_inst:
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     GET_VREG(r1, r2)                    @ r1<- fp[AA]
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    @ no-op                             @ releasing store
     str     r1, [r0, #offStaticField_value] @ field<- vAA
     GOTO_OPCODE(ip)                     @ jump to next instruction
 
@@ -3166,6 +3120,7 @@ dalvik_inst:
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     GET_VREG(r1, r2)                    @ r1<- fp[AA]
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    @ no-op                             @ releasing store
     str     r1, [r0, #offStaticField_value] @ field<- vAA
     GOTO_OPCODE(ip)                     @ jump to next instruction
 
@@ -3192,6 +3147,7 @@ dalvik_inst:
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     GET_VREG(r1, r2)                    @ r1<- fp[AA]
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    @ no-op                             @ releasing store
     str     r1, [r0, #offStaticField_value] @ field<- vAA
     GOTO_OPCODE(ip)                     @ jump to next instruction
 
@@ -3314,7 +3270,6 @@ dalvik_inst:
     bne     common_invokeMethodNoRange @ no, continue
     b       common_exceptionThrown      @ yes, handle exception
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_INVOKE_INTERFACE: /* 0x72 */
@@ -3341,8 +3296,7 @@ dalvik_inst:
     bl      dvmFindInterfaceMethodInCache @ r0<- call(class, ref, method, dex)
     cmp     r0, #0                      @ failed?
     beq     common_exceptionThrown      @ yes, handle exception
-    b       common_invokeMethodNoRange @ jump to common handler 
-
+    b       common_invokeMethodNoRange @ jump to common handler
 
 /* ------------------------------ */
     .balign 64
@@ -3350,7 +3304,6 @@ dalvik_inst:
 /* File: armv5te/OP_UNUSED_73.S */
 /* File: armv5te/unused.S */
     bl      common_abort
-
 
 
 /* ------------------------------ */
@@ -3479,7 +3432,6 @@ dalvik_inst:
     b       common_exceptionThrown      @ yes, handle exception
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_INVOKE_INTERFACE_RANGE: /* 0x78 */
@@ -3507,8 +3459,7 @@ dalvik_inst:
     bl      dvmFindInterfaceMethodInCache @ r0<- call(class, ref, method, dex)
     cmp     r0, #0                      @ failed?
     beq     common_exceptionThrown      @ yes, handle exception
-    b       common_invokeMethodRange @ jump to common handler 
-
+    b       common_invokeMethodRange @ jump to common handler
 
 
 /* ------------------------------ */
@@ -3519,14 +3470,12 @@ dalvik_inst:
     bl      common_abort
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_UNUSED_7A: /* 0x7a */
 /* File: armv5te/OP_UNUSED_7A.S */
 /* File: armv5te/unused.S */
     bl      common_abort
-
 
 
 /* ------------------------------ */
@@ -3611,7 +3560,6 @@ dalvik_inst:
     /* 12-13 instructions */
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_NOT_LONG: /* 0x7e */
@@ -3638,7 +3586,6 @@ dalvik_inst:
     stmia   r9, {r0-r1}                 @ vAA<- r0/r1
     GOTO_OPCODE(ip)                     @ jump to next instruction
     /* 12-13 instructions */
-
 
 
 /* ------------------------------ */
@@ -3694,7 +3641,6 @@ dalvik_inst:
     stmia   r9, {r0-r1}                 @ vAA<- r0/r1
     GOTO_OPCODE(ip)                     @ jump to next instruction
     /* 12-13 instructions */
-
 
 
 /* ------------------------------ */
@@ -3792,7 +3738,6 @@ dalvik_inst:
     GOTO_OPCODE(ip)                     @ execute next instruction
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_LONG_TO_FLOAT: /* 0x85 */
@@ -3849,7 +3794,6 @@ dalvik_inst:
     stmia   r9, {r0-r1}                 @ vAA<- r0/r1
     GOTO_OPCODE(ip)                     @ jump to next instruction
     /* 12-13 instructions */
-
 
 
 /* ------------------------------ */
@@ -3983,7 +3927,6 @@ dalvik_inst:
     stmia   r9, {r0-r1}                 @ vAA<- r0/r1
     GOTO_OPCODE(ip)                     @ jump to next instruction
     /* 12-13 instructions */
-
 
 
 
@@ -4134,7 +4077,6 @@ dalvik_inst:
     /* 11-14 instructions */
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_SUB_INT: /* 0x91 */
@@ -4174,7 +4116,6 @@ dalvik_inst:
     SET_VREG(r0, r9)               @ vAA<- r0
     GOTO_OPCODE(ip)                     @ jump to next instruction
     /* 11-14 instructions */
-
 
 
 /* ------------------------------ */
@@ -4219,7 +4160,6 @@ dalvik_inst:
     /* 11-14 instructions */
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_DIV_INT: /* 0x93 */
@@ -4259,7 +4199,6 @@ dalvik_inst:
     SET_VREG(r0, r9)               @ vAA<- r0
     GOTO_OPCODE(ip)                     @ jump to next instruction
     /* 11-14 instructions */
-
 
 
 /* ------------------------------ */
@@ -4304,7 +4243,6 @@ dalvik_inst:
     /* 11-14 instructions */
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_AND_INT: /* 0x95 */
@@ -4344,7 +4282,6 @@ dalvik_inst:
     SET_VREG(r0, r9)               @ vAA<- r0
     GOTO_OPCODE(ip)                     @ jump to next instruction
     /* 11-14 instructions */
-
 
 
 /* ------------------------------ */
@@ -4388,7 +4325,6 @@ dalvik_inst:
     /* 11-14 instructions */
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_XOR_INT: /* 0x97 */
@@ -4428,7 +4364,6 @@ dalvik_inst:
     SET_VREG(r0, r9)               @ vAA<- r0
     GOTO_OPCODE(ip)                     @ jump to next instruction
     /* 11-14 instructions */
-
 
 
 /* ------------------------------ */
@@ -4472,7 +4407,6 @@ dalvik_inst:
     /* 11-14 instructions */
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_SHR_INT: /* 0x99 */
@@ -4514,7 +4448,6 @@ dalvik_inst:
     /* 11-14 instructions */
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_USHR_INT: /* 0x9a */
@@ -4554,7 +4487,6 @@ dalvik_inst:
     SET_VREG(r0, r9)               @ vAA<- r0
     GOTO_OPCODE(ip)                     @ jump to next instruction
     /* 11-14 instructions */
-
 
 
 /* ------------------------------ */
@@ -4601,7 +4533,6 @@ dalvik_inst:
     /* 14-17 instructions */
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_SUB_LONG: /* 0x9c */
@@ -4644,7 +4575,6 @@ dalvik_inst:
     stmia   r9, {r0,r1}     @ vAA/vAA+1<- r0/r1
     GOTO_OPCODE(ip)                     @ jump to next instruction
     /* 14-17 instructions */
-
 
 
 /* ------------------------------ */
@@ -4730,7 +4660,6 @@ dalvik_inst:
     /* 14-17 instructions */
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_REM_LONG: /* 0x9f */
@@ -4774,7 +4703,6 @@ dalvik_inst:
     stmia   r9, {r2,r3}     @ vAA/vAA+1<- r2/r3
     GOTO_OPCODE(ip)                     @ jump to next instruction
     /* 14-17 instructions */
-
 
 
 /* ------------------------------ */
@@ -4821,7 +4749,6 @@ dalvik_inst:
     /* 14-17 instructions */
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_OR_LONG: /* 0xa1 */
@@ -4866,7 +4793,6 @@ dalvik_inst:
     /* 14-17 instructions */
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_XOR_LONG: /* 0xa2 */
@@ -4909,7 +4835,6 @@ dalvik_inst:
     stmia   r9, {r0,r1}     @ vAA/vAA+1<- r0/r1
     GOTO_OPCODE(ip)                     @ jump to next instruction
     /* 14-17 instructions */
-
 
 
 /* ------------------------------ */
@@ -5161,7 +5086,6 @@ dalvik_inst:
     /* 11-14 instructions */
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_ADD_DOUBLE: /* 0xab */
@@ -5327,7 +5251,6 @@ dalvik_inst:
     /* 14-17 instructions */
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_ADD_INT_2ADDR: /* 0xb0 */
@@ -5367,7 +5290,6 @@ dalvik_inst:
     /* 10-13 instructions */
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_SUB_INT_2ADDR: /* 0xb1 */
@@ -5405,7 +5327,6 @@ dalvik_inst:
     SET_VREG(r0, r9)               @ vAA<- r0
     GOTO_OPCODE(ip)                     @ jump to next instruction
     /* 10-13 instructions */
-
 
 
 /* ------------------------------ */
@@ -5448,7 +5369,6 @@ dalvik_inst:
     /* 10-13 instructions */
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_DIV_INT_2ADDR: /* 0xb3 */
@@ -5486,7 +5406,6 @@ dalvik_inst:
     SET_VREG(r0, r9)               @ vAA<- r0
     GOTO_OPCODE(ip)                     @ jump to next instruction
     /* 10-13 instructions */
-
 
 
 /* ------------------------------ */
@@ -5529,7 +5448,6 @@ dalvik_inst:
     /* 10-13 instructions */
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_AND_INT_2ADDR: /* 0xb5 */
@@ -5567,7 +5485,6 @@ dalvik_inst:
     SET_VREG(r0, r9)               @ vAA<- r0
     GOTO_OPCODE(ip)                     @ jump to next instruction
     /* 10-13 instructions */
-
 
 
 /* ------------------------------ */
@@ -5609,7 +5526,6 @@ dalvik_inst:
     /* 10-13 instructions */
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_XOR_INT_2ADDR: /* 0xb7 */
@@ -5647,7 +5563,6 @@ dalvik_inst:
     SET_VREG(r0, r9)               @ vAA<- r0
     GOTO_OPCODE(ip)                     @ jump to next instruction
     /* 10-13 instructions */
-
 
 
 /* ------------------------------ */
@@ -5689,7 +5604,6 @@ dalvik_inst:
     /* 10-13 instructions */
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_SHR_INT_2ADDR: /* 0xb9 */
@@ -5729,7 +5643,6 @@ dalvik_inst:
     /* 10-13 instructions */
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_USHR_INT_2ADDR: /* 0xba */
@@ -5767,7 +5680,6 @@ dalvik_inst:
     SET_VREG(r0, r9)               @ vAA<- r0
     GOTO_OPCODE(ip)                     @ jump to next instruction
     /* 10-13 instructions */
-
 
 
 /* ------------------------------ */
@@ -5811,7 +5723,6 @@ dalvik_inst:
     /* 12-15 instructions */
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_SUB_LONG_2ADDR: /* 0xbc */
@@ -5853,7 +5764,6 @@ dalvik_inst:
     /* 12-15 instructions */
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_MUL_LONG_2ADDR: /* 0xbd */
@@ -5883,7 +5793,6 @@ dalvik_inst:
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     stmia   r0, {r9-r10}                @ vAA/vAA+1<- r9/r10
     GOTO_OPCODE(ip)                     @ jump to next instruction
-
 
 /* ------------------------------ */
     .balign 64
@@ -5924,7 +5833,6 @@ dalvik_inst:
     stmia   r9, {r0,r1}     @ vAA/vAA+1<- r0/r1
     GOTO_OPCODE(ip)                     @ jump to next instruction
     /* 12-15 instructions */
-
 
 
 /* ------------------------------ */
@@ -5969,7 +5877,6 @@ dalvik_inst:
     /* 12-15 instructions */
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_AND_LONG_2ADDR: /* 0xc0 */
@@ -6009,7 +5916,6 @@ dalvik_inst:
     stmia   r9, {r0,r1}     @ vAA/vAA+1<- r0/r1
     GOTO_OPCODE(ip)                     @ jump to next instruction
     /* 12-15 instructions */
-
 
 
 /* ------------------------------ */
@@ -6053,7 +5959,6 @@ dalvik_inst:
     /* 12-15 instructions */
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_XOR_LONG_2ADDR: /* 0xc2 */
@@ -6093,7 +5998,6 @@ dalvik_inst:
     stmia   r9, {r0,r1}     @ vAA/vAA+1<- r0/r1
     GOTO_OPCODE(ip)                     @ jump to next instruction
     /* 12-15 instructions */
-
 
 
 /* ------------------------------ */
@@ -6326,7 +6230,6 @@ dalvik_inst:
     /* 10-13 instructions */
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_ADD_DOUBLE_2ADDR: /* 0xcb */
@@ -6485,7 +6388,6 @@ dalvik_inst:
     /* 12-15 instructions */
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_ADD_INT_LIT16: /* 0xd0 */
@@ -6520,7 +6422,6 @@ dalvik_inst:
     SET_VREG(r0, r9)               @ vAA<- r0
     GOTO_OPCODE(ip)                     @ jump to next instruction
     /* 10-13 instructions */
-
 
 
 /* ------------------------------ */
@@ -6560,7 +6461,6 @@ dalvik_inst:
     /* 10-13 instructions */
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_MUL_INT_LIT16: /* 0xd2 */
@@ -6598,7 +6498,6 @@ dalvik_inst:
     /* 10-13 instructions */
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_DIV_INT_LIT16: /* 0xd3 */
@@ -6633,7 +6532,6 @@ dalvik_inst:
     SET_VREG(r0, r9)               @ vAA<- r0
     GOTO_OPCODE(ip)                     @ jump to next instruction
     /* 10-13 instructions */
-
 
 
 /* ------------------------------ */
@@ -6673,7 +6571,6 @@ dalvik_inst:
     /* 10-13 instructions */
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_AND_INT_LIT16: /* 0xd5 */
@@ -6708,7 +6605,6 @@ dalvik_inst:
     SET_VREG(r0, r9)               @ vAA<- r0
     GOTO_OPCODE(ip)                     @ jump to next instruction
     /* 10-13 instructions */
-
 
 
 /* ------------------------------ */
@@ -6747,7 +6643,6 @@ dalvik_inst:
     /* 10-13 instructions */
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_XOR_INT_LIT16: /* 0xd7 */
@@ -6782,7 +6677,6 @@ dalvik_inst:
     SET_VREG(r0, r9)               @ vAA<- r0
     GOTO_OPCODE(ip)                     @ jump to next instruction
     /* 10-13 instructions */
-
 
 
 /* ------------------------------ */
@@ -6823,7 +6717,6 @@ dalvik_inst:
     /* 10-12 instructions */
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_RSUB_INT_LIT8: /* 0xd9 */
@@ -6860,7 +6753,6 @@ dalvik_inst:
     SET_VREG(r0, r9)               @ vAA<- r0
     GOTO_OPCODE(ip)                     @ jump to next instruction
     /* 10-12 instructions */
-
 
 
 /* ------------------------------ */
@@ -6902,7 +6794,6 @@ dalvik_inst:
     /* 10-12 instructions */
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_DIV_INT_LIT8: /* 0xdb */
@@ -6939,7 +6830,6 @@ dalvik_inst:
     SET_VREG(r0, r9)               @ vAA<- r0
     GOTO_OPCODE(ip)                     @ jump to next instruction
     /* 10-12 instructions */
-
 
 
 /* ------------------------------ */
@@ -6981,7 +6871,6 @@ dalvik_inst:
     /* 10-12 instructions */
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_AND_INT_LIT8: /* 0xdd */
@@ -7018,7 +6907,6 @@ dalvik_inst:
     SET_VREG(r0, r9)               @ vAA<- r0
     GOTO_OPCODE(ip)                     @ jump to next instruction
     /* 10-12 instructions */
-
 
 
 /* ------------------------------ */
@@ -7059,7 +6947,6 @@ dalvik_inst:
     /* 10-12 instructions */
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_XOR_INT_LIT8: /* 0xdf */
@@ -7096,7 +6983,6 @@ dalvik_inst:
     SET_VREG(r0, r9)               @ vAA<- r0
     GOTO_OPCODE(ip)                     @ jump to next instruction
     /* 10-12 instructions */
-
 
 
 /* ------------------------------ */
@@ -7137,7 +7023,6 @@ dalvik_inst:
     /* 10-12 instructions */
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_SHR_INT_LIT8: /* 0xe1 */
@@ -7174,7 +7059,6 @@ dalvik_inst:
     SET_VREG(r0, r9)               @ vAA<- r0
     GOTO_OPCODE(ip)                     @ jump to next instruction
     /* 10-12 instructions */
-
 
 
 /* ------------------------------ */
@@ -7215,50 +7099,142 @@ dalvik_inst:
     /* 10-12 instructions */
 
 
-
 /* ------------------------------ */
     .balign 64
-.L_OP_UNUSED_E3: /* 0xe3 */
-/* File: armv5te/OP_UNUSED_E3.S */
-/* File: armv5te/unused.S */
-    bl      common_abort
-
-
-
-/* ------------------------------ */
-    .balign 64
-.L_OP_UNUSED_E4: /* 0xe4 */
-/* File: armv5te/OP_UNUSED_E4.S */
-/* File: armv5te/unused.S */
-    bl      common_abort
-
-
-
-/* ------------------------------ */
-    .balign 64
-.L_OP_UNUSED_E5: /* 0xe5 */
-/* File: armv5te/OP_UNUSED_E5.S */
-/* File: armv5te/unused.S */
-    bl      common_abort
-
-
-
-/* ------------------------------ */
-    .balign 64
-.L_OP_UNUSED_E6: /* 0xe6 */
-/* File: armv5te/OP_UNUSED_E6.S */
-/* File: armv5te/unused.S */
-    bl      common_abort
-
+.L_OP_IGET_VOLATILE: /* 0xe3 */
+/* File: armv5te/OP_IGET_VOLATILE.S */
+/* File: armv5te/OP_IGET.S */
+    /*
+     * General 32-bit instance field get.
+     *
+     * for: iget, iget-object, iget-boolean, iget-byte, iget-char, iget-short
+     */
+    /* op vA, vB, field@CCCC */
+    mov     r0, rINST, lsr #12          @ r0<- B
+    ldr     r3, [rGLUE, #offGlue_methodClassDex]    @ r3<- DvmDex
+    FETCH(r1, 1)                        @ r1<- field ref CCCC
+    ldr     r2, [r3, #offDvmDex_pResFields] @ r2<- pDvmDex->pResFields
+    GET_VREG(r9, r0)                    @ r9<- fp[B], the object pointer
+    ldr     r0, [r2, r1, lsl #2]        @ r0<- resolved InstField ptr
+    cmp     r0, #0                      @ is resolved entry null?
+    bne     .LOP_IGET_VOLATILE_finish          @ no, already resolved
+8:  ldr     r2, [rGLUE, #offGlue_method]    @ r2<- current method
+    EXPORT_PC()                         @ resolve() could throw
+    ldr     r0, [r2, #offMethod_clazz]  @ r0<- method->clazz
+    bl      dvmResolveInstField         @ r0<- resolved InstField ptr
+    cmp     r0, #0
+    bne     .LOP_IGET_VOLATILE_finish
+    b       common_exceptionThrown
 
 
 /* ------------------------------ */
     .balign 64
-.L_OP_UNUSED_E7: /* 0xe7 */
-/* File: armv5te/OP_UNUSED_E7.S */
-/* File: armv5te/unused.S */
-    bl      common_abort
+.L_OP_IPUT_VOLATILE: /* 0xe4 */
+/* File: armv5te/OP_IPUT_VOLATILE.S */
+/* File: armv5te/OP_IPUT.S */
+    /*
+     * General 32-bit instance field put.
+     *
+     * for: iput, iput-object, iput-boolean, iput-byte, iput-char, iput-short
+     */
+    /* op vA, vB, field@CCCC */
+    mov     r0, rINST, lsr #12          @ r0<- B
+    ldr     r3, [rGLUE, #offGlue_methodClassDex]    @ r3<- DvmDex
+    FETCH(r1, 1)                        @ r1<- field ref CCCC
+    ldr     r2, [r3, #offDvmDex_pResFields] @ r2<- pDvmDex->pResFields
+    GET_VREG(r9, r0)                    @ r9<- fp[B], the object pointer
+    ldr     r0, [r2, r1, lsl #2]        @ r0<- resolved InstField ptr
+    cmp     r0, #0                      @ is resolved entry null?
+    bne     .LOP_IPUT_VOLATILE_finish          @ no, already resolved
+8:  ldr     r2, [rGLUE, #offGlue_method]    @ r2<- current method
+    EXPORT_PC()                         @ resolve() could throw
+    ldr     r0, [r2, #offMethod_clazz]  @ r0<- method->clazz
+    bl      dvmResolveInstField         @ r0<- resolved InstField ptr
+    cmp     r0, #0                      @ success?
+    bne     .LOP_IPUT_VOLATILE_finish          @ yes, finish up
+    b       common_exceptionThrown
 
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_SGET_VOLATILE: /* 0xe5 */
+/* File: armv5te/OP_SGET_VOLATILE.S */
+/* File: armv5te/OP_SGET.S */
+    /*
+     * General 32-bit SGET handler.
+     *
+     * for: sget, sget-object, sget-boolean, sget-byte, sget-char, sget-short
+     */
+    /* op vAA, field@BBBB */
+    ldr     r2, [rGLUE, #offGlue_methodClassDex]    @ r2<- DvmDex
+    FETCH(r1, 1)                        @ r1<- field ref BBBB
+    ldr     r2, [r2, #offDvmDex_pResFields] @ r2<- dvmDex->pResFields
+    ldr     r0, [r2, r1, lsl #2]        @ r0<- resolved StaticField ptr
+    cmp     r0, #0                      @ is resolved entry null?
+    beq     .LOP_SGET_VOLATILE_resolve         @ yes, do resolve
+.LOP_SGET_VOLATILE_finish: @ field ptr in r0
+    ldr     r1, [r0, #offStaticField_value] @ r1<- field value
+    SMP_DMB                            @ acquiring load
+    mov     r2, rINST, lsr #8           @ r2<- AA
+    FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
+    SET_VREG(r1, r2)                    @ fp[AA]<- r1
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    GOTO_OPCODE(ip)                     @ jump to next instruction
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_SPUT_VOLATILE: /* 0xe6 */
+/* File: armv5te/OP_SPUT_VOLATILE.S */
+/* File: armv5te/OP_SPUT.S */
+    /*
+     * General 32-bit SPUT handler.
+     *
+     * for: sput, sput-object, sput-boolean, sput-byte, sput-char, sput-short
+     */
+    /* op vAA, field@BBBB */
+    ldr     r2, [rGLUE, #offGlue_methodClassDex]    @ r2<- DvmDex
+    FETCH(r1, 1)                        @ r1<- field ref BBBB
+    ldr     r2, [r2, #offDvmDex_pResFields] @ r2<- dvmDex->pResFields
+    ldr     r0, [r2, r1, lsl #2]        @ r0<- resolved StaticField ptr
+    cmp     r0, #0                      @ is resolved entry null?
+    beq     .LOP_SPUT_VOLATILE_resolve         @ yes, do resolve
+.LOP_SPUT_VOLATILE_finish:   @ field ptr in r0
+    mov     r2, rINST, lsr #8           @ r2<- AA
+    FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
+    GET_VREG(r1, r2)                    @ r1<- fp[AA]
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    SMP_DMB                            @ releasing store
+    str     r1, [r0, #offStaticField_value] @ field<- vAA
+    GOTO_OPCODE(ip)                     @ jump to next instruction
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_IGET_OBJECT_VOLATILE: /* 0xe7 */
+/* File: armv5te/OP_IGET_OBJECT_VOLATILE.S */
+/* File: armv5te/OP_IGET.S */
+    /*
+     * General 32-bit instance field get.
+     *
+     * for: iget, iget-object, iget-boolean, iget-byte, iget-char, iget-short
+     */
+    /* op vA, vB, field@CCCC */
+    mov     r0, rINST, lsr #12          @ r0<- B
+    ldr     r3, [rGLUE, #offGlue_methodClassDex]    @ r3<- DvmDex
+    FETCH(r1, 1)                        @ r1<- field ref CCCC
+    ldr     r2, [r3, #offDvmDex_pResFields] @ r2<- pDvmDex->pResFields
+    GET_VREG(r9, r0)                    @ r9<- fp[B], the object pointer
+    ldr     r0, [r2, r1, lsl #2]        @ r0<- resolved InstField ptr
+    cmp     r0, #0                      @ is resolved entry null?
+    bne     .LOP_IGET_OBJECT_VOLATILE_finish          @ no, already resolved
+8:  ldr     r2, [rGLUE, #offGlue_method]    @ r2<- current method
+    EXPORT_PC()                         @ resolve() could throw
+    ldr     r0, [r2, #offMethod_clazz]  @ r0<- method->clazz
+    bl      dvmResolveInstField         @ r0<- resolved InstField ptr
+    cmp     r0, #0
+    bne     .LOP_IGET_OBJECT_VOLATILE_finish
+    b       common_exceptionThrown
 
 
 /* ------------------------------ */
@@ -7329,7 +7305,7 @@ dalvik_inst:
     mov     r9, rINST, lsr #8           @ r9<- AA
     .if 1
     add     r0, r0, #offStaticField_value @ r0<- pointer to data
-    bl      android_quasiatomic_read_64 @ r0/r1<- contents of field
+    bl      dvmQuasiAtomicRead64        @ r0/r1<- contents of field
     .else
     ldrd    r0, [r0, #offStaticField_value] @ r0/r1<- field value (aligned)
     .endif
@@ -7363,7 +7339,7 @@ dalvik_inst:
     GET_INST_OPCODE(r10)                @ extract opcode from rINST
     .if 1
     add     r2, r2, #offStaticField_value @ r2<- pointer to data
-    bl      android_quasiatomic_swap_64 @ stores r0/r1 into addr r2
+    bl      dvmQuasiAtomicSwap64        @ stores r0/r1 into addr r2
     .else
     strd    r0, [r2, #offStaticField_value] @ field<- vAA/vAA+1
     .endif
@@ -7376,7 +7352,6 @@ dalvik_inst:
 /* File: armv5te/OP_BREAKPOINT.S */
 /* File: armv5te/unused.S */
     bl      common_abort
-
 
 
 /* ------------------------------ */
@@ -7395,7 +7370,6 @@ dalvik_inst:
     mov     r1, rINST, lsr #8           @ r1<- AA
     bl      dvmThrowVerificationError   @ always throws
     b       common_exceptionThrown      @ handle exception
-
 
 /* ------------------------------ */
     .balign 64
@@ -7475,7 +7449,6 @@ dalvik_inst:
     bl      common_abort
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_IGET_QUICK: /* 0xf2 */
@@ -7495,7 +7468,6 @@ dalvik_inst:
     SET_VREG(r0, r2)                    @ fp[A]<- r0
     GOTO_OPCODE(ip)                     @ jump to next instruction
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_IGET_WIDE_QUICK: /* 0xf3 */
@@ -7514,7 +7486,6 @@ dalvik_inst:
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     stmia   r3, {r0-r1}                 @ fp[A]<- r0/r1
     GOTO_OPCODE(ip)                     @ jump to next instruction
-
 
 /* ------------------------------ */
     .balign 64
@@ -7537,7 +7508,6 @@ dalvik_inst:
     GOTO_OPCODE(ip)                     @ jump to next instruction
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_IPUT_QUICK: /* 0xf5 */
@@ -7556,7 +7526,6 @@ dalvik_inst:
     str     r0, [r3, r1]                @ obj.field (always 32 bits)<- r0
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     GOTO_OPCODE(ip)                     @ jump to next instruction
-
 
 /* ------------------------------ */
     .balign 64
@@ -7577,7 +7546,6 @@ dalvik_inst:
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     GOTO_OPCODE(ip)                     @ jump to next instruction
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_IPUT_OBJECT_QUICK: /* 0xf7 */
@@ -7597,7 +7565,6 @@ dalvik_inst:
     str     r0, [r3, r1]                @ obj.field (always 32 bits)<- r0
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     GOTO_OPCODE(ip)                     @ jump to next instruction
-
 
 
 /* ------------------------------ */
@@ -7679,7 +7646,6 @@ dalvik_inst:
     beq     common_errNullObject        @ "this" is null, throw exception
     bl      common_invokeMethodNoRange @ continue on
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_INVOKE_SUPER_QUICK_RANGE: /* 0xfb */
@@ -7709,32 +7675,86 @@ dalvik_inst:
     bl      common_invokeMethodRange @ continue on
 
 
+/* ------------------------------ */
+    .balign 64
+.L_OP_IPUT_OBJECT_VOLATILE: /* 0xfc */
+/* File: armv5te/OP_IPUT_OBJECT_VOLATILE.S */
+/* File: armv5te/OP_IPUT.S */
+    /*
+     * General 32-bit instance field put.
+     *
+     * for: iput, iput-object, iput-boolean, iput-byte, iput-char, iput-short
+     */
+    /* op vA, vB, field@CCCC */
+    mov     r0, rINST, lsr #12          @ r0<- B
+    ldr     r3, [rGLUE, #offGlue_methodClassDex]    @ r3<- DvmDex
+    FETCH(r1, 1)                        @ r1<- field ref CCCC
+    ldr     r2, [r3, #offDvmDex_pResFields] @ r2<- pDvmDex->pResFields
+    GET_VREG(r9, r0)                    @ r9<- fp[B], the object pointer
+    ldr     r0, [r2, r1, lsl #2]        @ r0<- resolved InstField ptr
+    cmp     r0, #0                      @ is resolved entry null?
+    bne     .LOP_IPUT_OBJECT_VOLATILE_finish          @ no, already resolved
+8:  ldr     r2, [rGLUE, #offGlue_method]    @ r2<- current method
+    EXPORT_PC()                         @ resolve() could throw
+    ldr     r0, [r2, #offMethod_clazz]  @ r0<- method->clazz
+    bl      dvmResolveInstField         @ r0<- resolved InstField ptr
+    cmp     r0, #0                      @ success?
+    bne     .LOP_IPUT_OBJECT_VOLATILE_finish          @ yes, finish up
+    b       common_exceptionThrown
+
 
 /* ------------------------------ */
     .balign 64
-.L_OP_UNUSED_FC: /* 0xfc */
-/* File: armv5te/OP_UNUSED_FC.S */
-/* File: armv5te/unused.S */
-    bl      common_abort
-
+.L_OP_SGET_OBJECT_VOLATILE: /* 0xfd */
+/* File: armv5te/OP_SGET_OBJECT_VOLATILE.S */
+/* File: armv5te/OP_SGET.S */
+    /*
+     * General 32-bit SGET handler.
+     *
+     * for: sget, sget-object, sget-boolean, sget-byte, sget-char, sget-short
+     */
+    /* op vAA, field@BBBB */
+    ldr     r2, [rGLUE, #offGlue_methodClassDex]    @ r2<- DvmDex
+    FETCH(r1, 1)                        @ r1<- field ref BBBB
+    ldr     r2, [r2, #offDvmDex_pResFields] @ r2<- dvmDex->pResFields
+    ldr     r0, [r2, r1, lsl #2]        @ r0<- resolved StaticField ptr
+    cmp     r0, #0                      @ is resolved entry null?
+    beq     .LOP_SGET_OBJECT_VOLATILE_resolve         @ yes, do resolve
+.LOP_SGET_OBJECT_VOLATILE_finish: @ field ptr in r0
+    ldr     r1, [r0, #offStaticField_value] @ r1<- field value
+    SMP_DMB                            @ acquiring load
+    mov     r2, rINST, lsr #8           @ r2<- AA
+    FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
+    SET_VREG(r1, r2)                    @ fp[AA]<- r1
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    GOTO_OPCODE(ip)                     @ jump to next instruction
 
 
 /* ------------------------------ */
     .balign 64
-.L_OP_UNUSED_FD: /* 0xfd */
-/* File: armv5te/OP_UNUSED_FD.S */
-/* File: armv5te/unused.S */
-    bl      common_abort
-
-
-
-/* ------------------------------ */
-    .balign 64
-.L_OP_UNUSED_FE: /* 0xfe */
-/* File: armv5te/OP_UNUSED_FE.S */
-/* File: armv5te/unused.S */
-    bl      common_abort
-
+.L_OP_SPUT_OBJECT_VOLATILE: /* 0xfe */
+/* File: armv5te/OP_SPUT_OBJECT_VOLATILE.S */
+/* File: armv5te/OP_SPUT.S */
+    /*
+     * General 32-bit SPUT handler.
+     *
+     * for: sput, sput-object, sput-boolean, sput-byte, sput-char, sput-short
+     */
+    /* op vAA, field@BBBB */
+    ldr     r2, [rGLUE, #offGlue_methodClassDex]    @ r2<- DvmDex
+    FETCH(r1, 1)                        @ r1<- field ref BBBB
+    ldr     r2, [r2, #offDvmDex_pResFields] @ r2<- dvmDex->pResFields
+    ldr     r0, [r2, r1, lsl #2]        @ r0<- resolved StaticField ptr
+    cmp     r0, #0                      @ is resolved entry null?
+    beq     .LOP_SPUT_OBJECT_VOLATILE_resolve         @ yes, do resolve
+.LOP_SPUT_OBJECT_VOLATILE_finish:   @ field ptr in r0
+    mov     r2, rINST, lsr #8           @ r2<- AA
+    FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
+    GET_VREG(r1, r2)                    @ r1<- fp[AA]
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    SMP_DMB                            @ releasing store
+    str     r1, [r0, #offStaticField_value] @ field<- vAA
+    GOTO_OPCODE(ip)                     @ jump to next instruction
 
 
 /* ------------------------------ */
@@ -7743,7 +7763,6 @@ dalvik_inst:
 /* File: armv5te/OP_UNUSED_FF.S */
 /* File: armv5te/unused.S */
     bl      common_abort
-
 
 
 
@@ -7782,7 +7801,6 @@ dvmAsmSisterStart:
     SET_VREG(r0, r9)                    @ vAA<- r0
     GOTO_OPCODE(ip)                     @ jump to next instruction
 
-
 /* continuation for OP_CONST_STRING_JUMBO */
 
     /*
@@ -7801,7 +7819,6 @@ dvmAsmSisterStart:
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     SET_VREG(r0, r9)                    @ vAA<- r0
     GOTO_OPCODE(ip)                     @ jump to next instruction
-
 
 /* continuation for OP_CONST_CLASS */
 
@@ -7822,7 +7839,6 @@ dvmAsmSisterStart:
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     SET_VREG(r0, r9)                    @ vAA<- r0
     GOTO_OPCODE(ip)                     @ jump to next instruction
-
 
 /* continuation for OP_CHECK_CAST */
 
@@ -7867,7 +7883,6 @@ dvmAsmSisterStart:
 
 .LstrClassCastExceptionPtr:
     .word   .LstrClassCastException
-
 
 /* continuation for OP_INSTANCE_OF */
 
@@ -7924,7 +7939,6 @@ dvmAsmSisterStart:
     ldr     r0, [r0, #offObject_clazz]  @ r0<- obj->clazz
     b       .LOP_INSTANCE_OF_resolved        @ pick up where we left off
 
-
 /* continuation for OP_NEW_INSTANCE */
 
     .balign 32                          @ minimize cache lines
@@ -7967,7 +7981,6 @@ dvmAsmSisterStart:
 .LstrInstantiationErrorPtr:
     .word   .LstrInstantiationError
 
-
 /* continuation for OP_NEW_ARRAY */
 
 
@@ -8006,7 +8019,6 @@ dvmAsmSisterStart:
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     SET_VREG(r0, r2)                    @ vA<- r0
     GOTO_OPCODE(ip)                     @ jump to next instruction
-
 
 /* continuation for OP_FILLED_NEW_ARRAY */
 
@@ -8086,7 +8098,6 @@ dvmAsmSisterStart:
     .word   .LstrInternalError
     .endif
 
-
 /* continuation for OP_FILLED_NEW_ARRAY_RANGE */
 
     /*
@@ -8165,30 +8176,25 @@ dvmAsmSisterStart:
     .word   .LstrInternalError
     .endif
 
-
 /* continuation for OP_CMPL_FLOAT */
 .LOP_CMPL_FLOAT_finish:
     SET_VREG(r0, r9)                    @ vAA<- r0
     GOTO_OPCODE(ip)                     @ jump to next instruction
-
 
 /* continuation for OP_CMPG_FLOAT */
 .LOP_CMPG_FLOAT_finish:
     SET_VREG(r0, r9)                    @ vAA<- r0
     GOTO_OPCODE(ip)                     @ jump to next instruction
 
-
 /* continuation for OP_CMPL_DOUBLE */
 .LOP_CMPL_DOUBLE_finish:
     SET_VREG(r0, r9)                    @ vAA<- r0
     GOTO_OPCODE(ip)                     @ jump to next instruction
 
-
 /* continuation for OP_CMPG_DOUBLE */
 .LOP_CMPG_DOUBLE_finish:
     SET_VREG(r0, r9)                    @ vAA<- r0
     GOTO_OPCODE(ip)                     @ jump to next instruction
-
 
 /* continuation for OP_CMP_LONG */
 
@@ -8211,7 +8217,6 @@ dvmAsmSisterStart:
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     GOTO_OPCODE(ip)                     @ jump to next instruction
 
-
 /* continuation for OP_AGET_WIDE */
 
 .LOP_AGET_WIDE_finish:
@@ -8222,7 +8227,6 @@ dvmAsmSisterStart:
     stmia   r9, {r2-r3}                 @ vAA/vAA+1<- r2/r3
     GOTO_OPCODE(ip)                     @ jump to next instruction
 
-
 /* continuation for OP_APUT_WIDE */
 
 .LOP_APUT_WIDE_finish:
@@ -8231,7 +8235,6 @@ dvmAsmSisterStart:
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     strd    r2, [r0, #offArrayObject_contents]  @ r2/r3<- vBB[vCC]
     GOTO_OPCODE(ip)                     @ jump to next instruction
-
 
 /* continuation for OP_APUT_OBJECT */
     /*
@@ -8254,7 +8257,6 @@ dvmAsmSisterStart:
     str     r9, [r10, #offArrayObject_contents] @ vBB[vCC]<- vAA
     GOTO_OPCODE(ip)                     @ jump to next instruction
 
-
 /* continuation for OP_IGET */
 
     /*
@@ -8268,13 +8270,13 @@ dvmAsmSisterStart:
     ldr     r3, [r0, #offInstField_byteOffset]  @ r3<- byte offset of field
     beq     common_errNullObject        @ object was null
     ldr   r0, [r9, r3]                @ r0<- obj.field (8/16/32 bits)
+    @ no-op                             @ acquiring load
     mov     r2, rINST, lsr #8           @ r2<- A+
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     and     r2, r2, #15                 @ r2<- A
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     SET_VREG(r0, r2)                    @ fp[A]<- r0
     GOTO_OPCODE(ip)                     @ jump to next instruction
-
 
 /* continuation for OP_IGET_WIDE */
 
@@ -8287,9 +8289,9 @@ dvmAsmSisterStart:
     cmp     r9, #0                      @ check object for null
     ldr     r3, [r0, #offInstField_byteOffset]  @ r3<- byte offset of field
     beq     common_errNullObject        @ object was null
-    .if 0
+    .if     0
     add     r0, r9, r3                  @ r0<- address of field
-    bl      android_quasiatomic_read_64 @ r0/r1<- contents of field
+    bl      dvmQuasiAtomicRead64        @ r0/r1<- contents of field
     .else
     ldrd    r0, [r9, r3]                @ r0/r1<- obj.field (64-bit align ok)
     .endif
@@ -8300,7 +8302,6 @@ dvmAsmSisterStart:
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     stmia   r3, {r0-r1}                 @ fp[A]<- r0/r1
     GOTO_OPCODE(ip)                     @ jump to next instruction
-
 
 /* continuation for OP_IGET_OBJECT */
 
@@ -8315,13 +8316,13 @@ dvmAsmSisterStart:
     ldr     r3, [r0, #offInstField_byteOffset]  @ r3<- byte offset of field
     beq     common_errNullObject        @ object was null
     ldr   r0, [r9, r3]                @ r0<- obj.field (8/16/32 bits)
+    @ no-op                             @ acquiring load
     mov     r2, rINST, lsr #8           @ r2<- A+
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     and     r2, r2, #15                 @ r2<- A
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     SET_VREG(r0, r2)                    @ fp[A]<- r0
     GOTO_OPCODE(ip)                     @ jump to next instruction
-
 
 /* continuation for OP_IGET_BOOLEAN */
 
@@ -8336,13 +8337,13 @@ dvmAsmSisterStart:
     ldr     r3, [r0, #offInstField_byteOffset]  @ r3<- byte offset of field
     beq     common_errNullObject        @ object was null
     ldr   r0, [r9, r3]                @ r0<- obj.field (8/16/32 bits)
+    @ no-op                             @ acquiring load
     mov     r2, rINST, lsr #8           @ r2<- A+
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     and     r2, r2, #15                 @ r2<- A
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     SET_VREG(r0, r2)                    @ fp[A]<- r0
     GOTO_OPCODE(ip)                     @ jump to next instruction
-
 
 /* continuation for OP_IGET_BYTE */
 
@@ -8357,13 +8358,13 @@ dvmAsmSisterStart:
     ldr     r3, [r0, #offInstField_byteOffset]  @ r3<- byte offset of field
     beq     common_errNullObject        @ object was null
     ldr   r0, [r9, r3]                @ r0<- obj.field (8/16/32 bits)
+    @ no-op                             @ acquiring load
     mov     r2, rINST, lsr #8           @ r2<- A+
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     and     r2, r2, #15                 @ r2<- A
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     SET_VREG(r0, r2)                    @ fp[A]<- r0
     GOTO_OPCODE(ip)                     @ jump to next instruction
-
 
 /* continuation for OP_IGET_CHAR */
 
@@ -8378,13 +8379,13 @@ dvmAsmSisterStart:
     ldr     r3, [r0, #offInstField_byteOffset]  @ r3<- byte offset of field
     beq     common_errNullObject        @ object was null
     ldr   r0, [r9, r3]                @ r0<- obj.field (8/16/32 bits)
+    @ no-op                             @ acquiring load
     mov     r2, rINST, lsr #8           @ r2<- A+
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     and     r2, r2, #15                 @ r2<- A
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     SET_VREG(r0, r2)                    @ fp[A]<- r0
     GOTO_OPCODE(ip)                     @ jump to next instruction
-
 
 /* continuation for OP_IGET_SHORT */
 
@@ -8399,13 +8400,13 @@ dvmAsmSisterStart:
     ldr     r3, [r0, #offInstField_byteOffset]  @ r3<- byte offset of field
     beq     common_errNullObject        @ object was null
     ldr   r0, [r9, r3]                @ r0<- obj.field (8/16/32 bits)
+    @ no-op                             @ acquiring load
     mov     r2, rINST, lsr #8           @ r2<- A+
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     and     r2, r2, #15                 @ r2<- A
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     SET_VREG(r0, r2)                    @ fp[A]<- r0
     GOTO_OPCODE(ip)                     @ jump to next instruction
-
 
 /* continuation for OP_IPUT */
 
@@ -8424,9 +8425,9 @@ dvmAsmSisterStart:
     beq     common_errNullObject        @ object was null
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    @ no-op                             @ releasing store
     str  r0, [r9, r3]                @ obj.field (8/16/32 bits)<- r0
     GOTO_OPCODE(ip)                     @ jump to next instruction
-
 
 /* continuation for OP_IPUT_WIDE */
 
@@ -8445,14 +8446,13 @@ dvmAsmSisterStart:
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     ldmia   r2, {r0-r1}                 @ r0/r1<- fp[A]
     GET_INST_OPCODE(r10)                @ extract opcode from rINST
-    .if 0
+    .if     0
     add     r2, r9, r3                  @ r2<- target address
-    bl      android_quasiatomic_swap_64 @ stores r0/r1 into addr r2
+    bl      dvmQuasiAtomicSwap64        @ stores r0/r1 into addr r2
     .else
     strd    r0, [r9, r3]                @ obj.field (64 bits, aligned)<- r0/r1
     .endif
     GOTO_OPCODE(r10)                    @ jump to next instruction
-
 
 /* continuation for OP_IPUT_OBJECT */
 
@@ -8471,9 +8471,9 @@ dvmAsmSisterStart:
     beq     common_errNullObject        @ object was null
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    @ no-op                             @ releasing store
     str  r0, [r9, r3]                @ obj.field (8/16/32 bits)<- r0
     GOTO_OPCODE(ip)                     @ jump to next instruction
-
 
 /* continuation for OP_IPUT_BOOLEAN */
 
@@ -8492,9 +8492,9 @@ dvmAsmSisterStart:
     beq     common_errNullObject        @ object was null
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    @ no-op                             @ releasing store
     str  r0, [r9, r3]                @ obj.field (8/16/32 bits)<- r0
     GOTO_OPCODE(ip)                     @ jump to next instruction
-
 
 /* continuation for OP_IPUT_BYTE */
 
@@ -8513,9 +8513,9 @@ dvmAsmSisterStart:
     beq     common_errNullObject        @ object was null
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    @ no-op                             @ releasing store
     str  r0, [r9, r3]                @ obj.field (8/16/32 bits)<- r0
     GOTO_OPCODE(ip)                     @ jump to next instruction
-
 
 /* continuation for OP_IPUT_CHAR */
 
@@ -8534,9 +8534,9 @@ dvmAsmSisterStart:
     beq     common_errNullObject        @ object was null
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    @ no-op                             @ releasing store
     str  r0, [r9, r3]                @ obj.field (8/16/32 bits)<- r0
     GOTO_OPCODE(ip)                     @ jump to next instruction
-
 
 /* continuation for OP_IPUT_SHORT */
 
@@ -8555,9 +8555,9 @@ dvmAsmSisterStart:
     beq     common_errNullObject        @ object was null
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    @ no-op                             @ releasing store
     str  r0, [r9, r3]                @ obj.field (8/16/32 bits)<- r0
     GOTO_OPCODE(ip)                     @ jump to next instruction
-
 
 /* continuation for OP_SGET */
 
@@ -8573,7 +8573,6 @@ dvmAsmSisterStart:
     cmp     r0, #0                      @ success?
     bne     .LOP_SGET_finish          @ yes, finish
     b       common_exceptionThrown      @ no, handle exception
-
 
 /* continuation for OP_SGET_WIDE */
 
@@ -8592,7 +8591,6 @@ dvmAsmSisterStart:
     bne     .LOP_SGET_WIDE_finish          @ yes, finish
     b       common_exceptionThrown      @ no, handle exception
 
-
 /* continuation for OP_SGET_OBJECT */
 
     /*
@@ -8607,7 +8605,6 @@ dvmAsmSisterStart:
     cmp     r0, #0                      @ success?
     bne     .LOP_SGET_OBJECT_finish          @ yes, finish
     b       common_exceptionThrown      @ no, handle exception
-
 
 /* continuation for OP_SGET_BOOLEAN */
 
@@ -8624,7 +8621,6 @@ dvmAsmSisterStart:
     bne     .LOP_SGET_BOOLEAN_finish          @ yes, finish
     b       common_exceptionThrown      @ no, handle exception
 
-
 /* continuation for OP_SGET_BYTE */
 
     /*
@@ -8639,7 +8635,6 @@ dvmAsmSisterStart:
     cmp     r0, #0                      @ success?
     bne     .LOP_SGET_BYTE_finish          @ yes, finish
     b       common_exceptionThrown      @ no, handle exception
-
 
 /* continuation for OP_SGET_CHAR */
 
@@ -8656,7 +8651,6 @@ dvmAsmSisterStart:
     bne     .LOP_SGET_CHAR_finish          @ yes, finish
     b       common_exceptionThrown      @ no, handle exception
 
-
 /* continuation for OP_SGET_SHORT */
 
     /*
@@ -8672,7 +8666,6 @@ dvmAsmSisterStart:
     bne     .LOP_SGET_SHORT_finish          @ yes, finish
     b       common_exceptionThrown      @ no, handle exception
 
-
 /* continuation for OP_SPUT */
 
     /*
@@ -8687,7 +8680,6 @@ dvmAsmSisterStart:
     cmp     r0, #0                      @ success?
     bne     .LOP_SPUT_finish          @ yes, finish
     b       common_exceptionThrown      @ no, handle exception
-
 
 /* continuation for OP_SPUT_WIDE */
 
@@ -8708,7 +8700,6 @@ dvmAsmSisterStart:
     bne     .LOP_SPUT_WIDE_finish          @ yes, finish
     b       common_exceptionThrown      @ no, handle exception
 
-
 /* continuation for OP_SPUT_OBJECT */
 
     /*
@@ -8723,7 +8714,6 @@ dvmAsmSisterStart:
     cmp     r0, #0                      @ success?
     bne     .LOP_SPUT_OBJECT_finish          @ yes, finish
     b       common_exceptionThrown      @ no, handle exception
-
 
 /* continuation for OP_SPUT_BOOLEAN */
 
@@ -8740,7 +8730,6 @@ dvmAsmSisterStart:
     bne     .LOP_SPUT_BOOLEAN_finish          @ yes, finish
     b       common_exceptionThrown      @ no, handle exception
 
-
 /* continuation for OP_SPUT_BYTE */
 
     /*
@@ -8755,7 +8744,6 @@ dvmAsmSisterStart:
     cmp     r0, #0                      @ success?
     bne     .LOP_SPUT_BYTE_finish          @ yes, finish
     b       common_exceptionThrown      @ no, handle exception
-
 
 /* continuation for OP_SPUT_CHAR */
 
@@ -8772,7 +8760,6 @@ dvmAsmSisterStart:
     bne     .LOP_SPUT_CHAR_finish          @ yes, finish
     b       common_exceptionThrown      @ no, handle exception
 
-
 /* continuation for OP_SPUT_SHORT */
 
     /*
@@ -8787,7 +8774,6 @@ dvmAsmSisterStart:
     cmp     r0, #0                      @ success?
     bne     .LOP_SPUT_SHORT_finish          @ yes, finish
     b       common_exceptionThrown      @ no, handle exception
-
 
 /* continuation for OP_INVOKE_VIRTUAL */
 
@@ -8805,7 +8791,6 @@ dvmAsmSisterStart:
     ldr     r3, [r3, #offClassObject_vtable]    @ r3<- thisPtr->clazz->vtable
     ldr     r0, [r3, r2, lsl #2]        @ r3<- vtable[methodIndex]
     bl      common_invokeMethodNoRange @ continue on
-
 
 /* continuation for OP_INVOKE_SUPER */
 
@@ -8841,7 +8826,6 @@ dvmAsmSisterStart:
     ldr     r1, [r0, #offMethod_name]   @ r1<- method name
     b       common_errNoSuchMethod
 
-
 /* continuation for OP_INVOKE_DIRECT */
 
     /*
@@ -8859,7 +8843,6 @@ dvmAsmSisterStart:
     bne     .LOP_INVOKE_DIRECT_finish          @ no, continue
     b       common_exceptionThrown      @ yes, handle exception
 
-
 /* continuation for OP_INVOKE_VIRTUAL_RANGE */
 
     /*
@@ -8876,7 +8859,6 @@ dvmAsmSisterStart:
     ldr     r3, [r3, #offClassObject_vtable]    @ r3<- thisPtr->clazz->vtable
     ldr     r0, [r3, r2, lsl #2]        @ r3<- vtable[methodIndex]
     bl      common_invokeMethodRange @ continue on
-
 
 /* continuation for OP_INVOKE_SUPER_RANGE */
 
@@ -8912,7 +8894,6 @@ dvmAsmSisterStart:
     ldr     r1, [r0, #offMethod_name]   @ r1<- method name
     b       common_errNoSuchMethod
 
-
 /* continuation for OP_INVOKE_DIRECT_RANGE */
 
     /*
@@ -8929,7 +8910,6 @@ dvmAsmSisterStart:
     GET_VREG(r2, r10)                   @ r2<- "this" ptr (reload)
     bne     .LOP_INVOKE_DIRECT_RANGE_finish          @ no, continue
     b       common_exceptionThrown      @ yes, handle exception
-
 
 /* continuation for OP_FLOAT_TO_LONG */
 /*
@@ -8967,7 +8947,6 @@ f2l_doconv:
     mov     r0, r4                      @ recover arg
     bl      __aeabi_f2lz                @ convert float to long
     ldmfd   sp!, {r4, pc}
-
 
 /* continuation for OP_DOUBLE_TO_LONG */
 /*
@@ -9019,14 +8998,12 @@ d2l_doconv:
     add     sp, sp, #4
     ldmfd   sp!, {r4, r5, pc}
 
-
 /* continuation for OP_MUL_LONG */
 
 .LOP_MUL_LONG_finish:
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     stmia   r0, {r9-r10}                @ vAA/vAA+1<- r9/r10
     GOTO_OPCODE(ip)                     @ jump to next instruction
-
 
 /* continuation for OP_SHL_LONG */
 
@@ -9036,7 +9013,6 @@ d2l_doconv:
     stmia   r9, {r0-r1}                 @ vAA/vAA+1<- r0/r1
     GOTO_OPCODE(ip)                     @ jump to next instruction
 
-
 /* continuation for OP_SHR_LONG */
 
 .LOP_SHR_LONG_finish:
@@ -9044,7 +9020,6 @@ d2l_doconv:
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     stmia   r9, {r0-r1}                 @ vAA/vAA+1<- r0/r1
     GOTO_OPCODE(ip)                     @ jump to next instruction
-
 
 /* continuation for OP_USHR_LONG */
 
@@ -9054,14 +9029,12 @@ d2l_doconv:
     stmia   r9, {r0-r1}                 @ vAA/vAA+1<- r0/r1
     GOTO_OPCODE(ip)                     @ jump to next instruction
 
-
 /* continuation for OP_SHL_LONG_2ADDR */
 
 .LOP_SHL_LONG_2ADDR_finish:
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     stmia   r9, {r0-r1}                 @ vAA/vAA+1<- r0/r1
     GOTO_OPCODE(ip)                     @ jump to next instruction
-
 
 /* continuation for OP_SHR_LONG_2ADDR */
 
@@ -9070,7 +9043,6 @@ d2l_doconv:
     stmia   r9, {r0-r1}                 @ vAA/vAA+1<- r0/r1
     GOTO_OPCODE(ip)                     @ jump to next instruction
 
-
 /* continuation for OP_USHR_LONG_2ADDR */
 
 .LOP_USHR_LONG_2ADDR_finish:
@@ -9078,6 +9050,98 @@ d2l_doconv:
     stmia   r9, {r0-r1}                 @ vAA/vAA+1<- r0/r1
     GOTO_OPCODE(ip)                     @ jump to next instruction
 
+/* continuation for OP_IGET_VOLATILE */
+
+    /*
+     * Currently:
+     *  r0 holds resolved field
+     *  r9 holds object
+     */
+.LOP_IGET_VOLATILE_finish:
+    @bl      common_squeak0
+    cmp     r9, #0                      @ check object for null
+    ldr     r3, [r0, #offInstField_byteOffset]  @ r3<- byte offset of field
+    beq     common_errNullObject        @ object was null
+    ldr   r0, [r9, r3]                @ r0<- obj.field (8/16/32 bits)
+    SMP_DMB                            @ acquiring load
+    mov     r2, rINST, lsr #8           @ r2<- A+
+    FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
+    and     r2, r2, #15                 @ r2<- A
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    SET_VREG(r0, r2)                    @ fp[A]<- r0
+    GOTO_OPCODE(ip)                     @ jump to next instruction
+
+/* continuation for OP_IPUT_VOLATILE */
+
+    /*
+     * Currently:
+     *  r0 holds resolved field
+     *  r9 holds object
+     */
+.LOP_IPUT_VOLATILE_finish:
+    @bl      common_squeak0
+    mov     r1, rINST, lsr #8           @ r1<- A+
+    ldr     r3, [r0, #offInstField_byteOffset]  @ r3<- byte offset of field
+    and     r1, r1, #15                 @ r1<- A
+    cmp     r9, #0                      @ check object for null
+    GET_VREG(r0, r1)                    @ r0<- fp[A]
+    beq     common_errNullObject        @ object was null
+    FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    SMP_DMB                            @ releasing store
+    str  r0, [r9, r3]                @ obj.field (8/16/32 bits)<- r0
+    GOTO_OPCODE(ip)                     @ jump to next instruction
+
+/* continuation for OP_SGET_VOLATILE */
+
+    /*
+     * Continuation if the field has not yet been resolved.
+     *  r1: BBBB field ref
+     */
+.LOP_SGET_VOLATILE_resolve:
+    ldr     r2, [rGLUE, #offGlue_method]    @ r2<- current method
+    EXPORT_PC()                         @ resolve() could throw, so export now
+    ldr     r0, [r2, #offMethod_clazz]  @ r0<- method->clazz
+    bl      dvmResolveStaticField       @ r0<- resolved StaticField ptr
+    cmp     r0, #0                      @ success?
+    bne     .LOP_SGET_VOLATILE_finish          @ yes, finish
+    b       common_exceptionThrown      @ no, handle exception
+
+/* continuation for OP_SPUT_VOLATILE */
+
+    /*
+     * Continuation if the field has not yet been resolved.
+     *  r1: BBBB field ref
+     */
+.LOP_SPUT_VOLATILE_resolve:
+    ldr     r2, [rGLUE, #offGlue_method]    @ r2<- current method
+    EXPORT_PC()                         @ resolve() could throw, so export now
+    ldr     r0, [r2, #offMethod_clazz]  @ r0<- method->clazz
+    bl      dvmResolveStaticField       @ r0<- resolved StaticField ptr
+    cmp     r0, #0                      @ success?
+    bne     .LOP_SPUT_VOLATILE_finish          @ yes, finish
+    b       common_exceptionThrown      @ no, handle exception
+
+/* continuation for OP_IGET_OBJECT_VOLATILE */
+
+    /*
+     * Currently:
+     *  r0 holds resolved field
+     *  r9 holds object
+     */
+.LOP_IGET_OBJECT_VOLATILE_finish:
+    @bl      common_squeak0
+    cmp     r9, #0                      @ check object for null
+    ldr     r3, [r0, #offInstField_byteOffset]  @ r3<- byte offset of field
+    beq     common_errNullObject        @ object was null
+    ldr   r0, [r9, r3]                @ r0<- obj.field (8/16/32 bits)
+    SMP_DMB                            @ acquiring load
+    mov     r2, rINST, lsr #8           @ r2<- A+
+    FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
+    and     r2, r2, #15                 @ r2<- A
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    SET_VREG(r0, r2)                    @ fp[A]<- r0
+    GOTO_OPCODE(ip)                     @ jump to next instruction
 
 /* continuation for OP_IGET_WIDE_VOLATILE */
 
@@ -9090,9 +9154,9 @@ d2l_doconv:
     cmp     r9, #0                      @ check object for null
     ldr     r3, [r0, #offInstField_byteOffset]  @ r3<- byte offset of field
     beq     common_errNullObject        @ object was null
-    .if 1
+    .if     1
     add     r0, r9, r3                  @ r0<- address of field
-    bl      android_quasiatomic_read_64 @ r0/r1<- contents of field
+    bl      dvmQuasiAtomicRead64        @ r0/r1<- contents of field
     .else
     ldrd    r0, [r9, r3]                @ r0/r1<- obj.field (64-bit align ok)
     .endif
@@ -9103,7 +9167,6 @@ d2l_doconv:
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     stmia   r3, {r0-r1}                 @ fp[A]<- r0/r1
     GOTO_OPCODE(ip)                     @ jump to next instruction
-
 
 /* continuation for OP_IPUT_WIDE_VOLATILE */
 
@@ -9122,14 +9185,13 @@ d2l_doconv:
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     ldmia   r2, {r0-r1}                 @ r0/r1<- fp[A]
     GET_INST_OPCODE(r10)                @ extract opcode from rINST
-    .if 1
+    .if     1
     add     r2, r9, r3                  @ r2<- target address
-    bl      android_quasiatomic_swap_64 @ stores r0/r1 into addr r2
+    bl      dvmQuasiAtomicSwap64        @ stores r0/r1 into addr r2
     .else
     strd    r0, [r9, r3]                @ obj.field (64 bits, aligned)<- r0/r1
     .endif
     GOTO_OPCODE(r10)                    @ jump to next instruction
-
 
 /* continuation for OP_SGET_WIDE_VOLATILE */
 
@@ -9147,7 +9209,6 @@ d2l_doconv:
     cmp     r0, #0                      @ success?
     bne     .LOP_SGET_WIDE_VOLATILE_finish          @ yes, finish
     b       common_exceptionThrown      @ no, handle exception
-
 
 /* continuation for OP_SPUT_WIDE_VOLATILE */
 
@@ -9167,7 +9228,6 @@ d2l_doconv:
     mov     r2, r0                      @ copy to r2
     bne     .LOP_SPUT_WIDE_VOLATILE_finish          @ yes, finish
     b       common_exceptionThrown      @ no, handle exception
-
 
 /* continuation for OP_EXECUTE_INLINE */
 
@@ -9204,7 +9264,6 @@ d2l_doconv:
 .LOP_EXECUTE_INLINE_table:
     .word   gDvmInlineOpsTable
 
-
 /* continuation for OP_EXECUTE_INLINE_RANGE */
 
     /*
@@ -9234,6 +9293,56 @@ d2l_doconv:
 .LOP_EXECUTE_INLINE_RANGE_table:
     .word   gDvmInlineOpsTable
 
+/* continuation for OP_IPUT_OBJECT_VOLATILE */
+
+    /*
+     * Currently:
+     *  r0 holds resolved field
+     *  r9 holds object
+     */
+.LOP_IPUT_OBJECT_VOLATILE_finish:
+    @bl      common_squeak0
+    mov     r1, rINST, lsr #8           @ r1<- A+
+    ldr     r3, [r0, #offInstField_byteOffset]  @ r3<- byte offset of field
+    and     r1, r1, #15                 @ r1<- A
+    cmp     r9, #0                      @ check object for null
+    GET_VREG(r0, r1)                    @ r0<- fp[A]
+    beq     common_errNullObject        @ object was null
+    FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    SMP_DMB                            @ releasing store
+    str  r0, [r9, r3]                @ obj.field (8/16/32 bits)<- r0
+    GOTO_OPCODE(ip)                     @ jump to next instruction
+
+/* continuation for OP_SGET_OBJECT_VOLATILE */
+
+    /*
+     * Continuation if the field has not yet been resolved.
+     *  r1: BBBB field ref
+     */
+.LOP_SGET_OBJECT_VOLATILE_resolve:
+    ldr     r2, [rGLUE, #offGlue_method]    @ r2<- current method
+    EXPORT_PC()                         @ resolve() could throw, so export now
+    ldr     r0, [r2, #offMethod_clazz]  @ r0<- method->clazz
+    bl      dvmResolveStaticField       @ r0<- resolved StaticField ptr
+    cmp     r0, #0                      @ success?
+    bne     .LOP_SGET_OBJECT_VOLATILE_finish          @ yes, finish
+    b       common_exceptionThrown      @ no, handle exception
+
+/* continuation for OP_SPUT_OBJECT_VOLATILE */
+
+    /*
+     * Continuation if the field has not yet been resolved.
+     *  r1: BBBB field ref
+     */
+.LOP_SPUT_OBJECT_VOLATILE_resolve:
+    ldr     r2, [rGLUE, #offGlue_method]    @ r2<- current method
+    EXPORT_PC()                         @ resolve() could throw, so export now
+    ldr     r0, [r2, #offMethod_clazz]  @ r0<- method->clazz
+    bl      dvmResolveStaticField       @ r0<- resolved StaticField ptr
+    cmp     r0, #0                      @ success?
+    bne     .LOP_SPUT_OBJECT_VOLATILE_finish          @ yes, finish
+    b       common_exceptionThrown      @ no, handle exception
 
     .size   dvmAsmSisterStart, .-dvmAsmSisterStart
     .global dvmAsmSisterEnd
@@ -10465,5 +10574,4 @@ strPrintLong:
     .asciz  "<0x%x>"
 .LstrPrintLong:
     .asciz  "<%lld>"
-
 

@@ -23,4 +23,3 @@
     mov     r0, #kHeavyweightMonitor
 #endif
     bx      r2
-

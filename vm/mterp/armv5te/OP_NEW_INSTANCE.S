@@ -66,4 +66,3 @@
 
 .LstrInstantiationErrorPtr:
     .word   .LstrInstantiationError
-

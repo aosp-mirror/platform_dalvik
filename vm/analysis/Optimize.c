@@ -156,6 +156,8 @@ fail:
 /*
  * Optimize instructions in a method.
  *
+ * This does a single pass through the code, examining each instruction.
+ *
  * Returns "true" if all went well, "false" if we bailed out early when
  * something failed.
  */
@@ -253,17 +255,7 @@ static bool optimizeMethod(Method* method)
             ;
         }
 
-        if (*insns == kPackedSwitchSignature) {
-            width = 4 + insns[1] * 2;
-        } else if (*insns == kSparseSwitchSignature) {
-            width = 2 + insns[1] * 4;
-        } else if (*insns == kArrayDataSignature) {
-            u2 elemWidth = insns[1];
-            u4 len = insns[2] | (((u4)insns[3]) << 16);
-            width = 4 + (elemWidth * len + 1) / 2;
-        } else {
-            width = dexGetInstrWidthAbs(gDvm.instrWidth, inst);
-        }
+        width = dexGetInstrOrTableWidthAbs(gDvm.instrWidth, insns);
         assert(width > 0);
 
         insns += width;
@@ -976,4 +968,3 @@ static bool rewriteExecuteInlineRange(Method* method, u2* insns,
 
     return false;
 }
-

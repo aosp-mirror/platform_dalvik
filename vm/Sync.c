@@ -170,8 +170,8 @@ Monitor* dvmCreateMonitor(Object* obj)
     /* replace the head of the list with the new monitor */
     do {
         mon->next = gDvm.monitorList;
-    } while (!ATOMIC_CMP_SWAP((int32_t*)(void*)&gDvm.monitorList,
-                              (int32_t)mon->next, (int32_t)mon));
+    } while (android_atomic_release_cas((int32_t)mon->next, (int32_t)mon,
+            (int32_t*)(void*)&gDvm.monitorList) != 0);
 
     return mon;
 }
@@ -894,8 +894,7 @@ static void inflateMonitor(Thread *self, Object *obj)
     thin &= LW_HASH_STATE_MASK << LW_HASH_STATE_SHIFT;
     thin |= (u4)mon | LW_SHAPE_FAT;
     /* Publish the updated lock word. */
-    MEM_BARRIER();
-    obj->lock = thin;
+    android_atomic_release_store(thin, (int32_t *)&obj->lock);
 }
 
 /*
@@ -937,7 +936,8 @@ retry:
              * will have tried this before calling out to the VM.
              */
             newThin = thin | (threadId << LW_LOCK_OWNER_SHIFT);
-            if (!ATOMIC_CMP_SWAP((int32_t *)thinp, thin, newThin)) {
+            if (android_atomic_release_cas(thin, newThin,
+                    (int32_t*)thinp) != 0) {
                 /*
                  * The acquire failed.  Try again.
                  */
@@ -969,8 +969,8 @@ retry:
                          * owner field.
                          */
                         newThin = thin | (threadId << LW_LOCK_OWNER_SHIFT);
-                        if (ATOMIC_CMP_SWAP((int32_t *)thinp,
-                                            thin, newThin)) {
+                        if (android_atomic_release_cas(thin, newThin,
+                                (int32_t *)thinp) == 0) {
                             /*
                              * The acquire succeed.  Break out of the
                              * loop and proceed to inflate the lock.
@@ -1291,7 +1291,6 @@ void dvmThreadInterrupt(Thread* thread)
      * something.
      */
     thread->interrupted = true;
-    MEM_BARRIER();
 
     /*
      * Is the thread waiting?
@@ -1346,7 +1345,6 @@ retry:
          * aligned word following the instance data.
          */
         assert(obj->clazz != gDvm.classJavaLangClass);
-        assert(obj->clazz != gDvm.unlinkedJavaLangClass);
         if (IS_CLASS_FLAG_SET(obj->clazz, CLASS_ISARRAY)) {
             size = dvmArrayObjectSize((ArrayObject *)obj);
             size = (size + 2) & ~2;
@@ -1379,9 +1377,10 @@ retry:
              */
             lock = DVM_LOCK_INITIAL_THIN_VALUE;
             lock |= (LW_HASH_STATE_HASHED << LW_HASH_STATE_SHIFT);
-            if (ATOMIC_CMP_SWAP((int32_t *)lw,
+            if (android_atomic_release_cas(
                                 (int32_t)DVM_LOCK_INITIAL_THIN_VALUE,
-                                (int32_t)lock)) {
+                                (int32_t)lock,
+                                (int32_t *)lw) == 0) {
                 /*
                  * A new lockword has been installed with a hash state
                  * of hashed.  Use the raw object address.

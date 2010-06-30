@@ -24,4 +24,3 @@
     EXPORT_PC()
     movl      (%ecx,%eax,4),%eax        # eax<- super->vtable[BBBB]
     jmp       common_invokeMethod${routine}
-

@@ -50,7 +50,7 @@ public class Main {
         "    Dump classfiles, or transformations thereof, in a " +
         "human-oriented format.\n" +
         "  dx --junit [-wait] <TestClass>\n" +
-        "    Run the indicated unit test.\n" + 
+        "    Run the indicated unit test.\n" +
         "  dx -J<option> ... <arguments, in one of the above " +
         "forms>\n" +
         "    Pass VM-specific options to the virtual machine that " +
@@ -60,7 +60,7 @@ public class Main {
         ").\n" +
         "  dx --help\n" +
         "    Print this message.";
-        
+
     /**
      * This class is uninstantiable.
      */
@@ -117,7 +117,7 @@ public class Main {
         } catch (Throwable ex) {
             System.err.println("\nUNEXPECTED TOP-LEVEL ERROR:");
             ex.printStackTrace();
-            if ((ex instanceof NoClassDefFoundError) 
+            if ((ex instanceof NoClassDefFoundError)
                     || (ex instanceof NoSuchMethodError)) {
                 System.err.println(
                         "Note: You may be using an incompatible " +
@@ -126,7 +126,7 @@ public class Main {
                         "with recent releases of GCJ.)");
             }
             System.exit(3);
-        }            
+        }
 
         if (!gotCmd) {
             System.err.println("error: no command specified");

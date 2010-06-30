@@ -34,19 +34,19 @@ public enum RootType {
     JAVA_LOCAL          (14, "java local"),
     NATIVE_STACK        (15, "native stack"),
     JAVA_STATIC         (16, "java static");
-    
+
     private final int mType;
     private final String mName;
-    
+
     RootType(int type, String name) {
         mType = type;
         mName = name;
     }
-    
+
     public final int getType() {
         return mType;
     }
-    
+
     public final String getName() {
         return mName;
     }

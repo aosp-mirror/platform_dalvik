@@ -102,4 +102,3 @@ void dvmPlatformInvoke(void* pEnv, ClassObject* clazz, int argInfo, int argc,
 
     ffi_call(&cif, FFI_FN(func), pReturn, values);
 }
-

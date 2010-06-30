@@ -83,4 +83,3 @@ if "%params%"=="" goto endArgs
 set javaOpts=%javaOpts% %defaultMx%
 
 call java %javaOpts% -Djava.ext.dirs=%frameworkdir% -jar %jarpath% %args%
-

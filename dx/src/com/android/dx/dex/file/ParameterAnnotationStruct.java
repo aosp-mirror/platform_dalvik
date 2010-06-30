@@ -41,7 +41,7 @@ public final class ParameterAnnotationStruct
 
     /**
      * Constructs an instance.
-     * 
+     *
      * @param method {@code non-null;} the method in question
      * @param annotationsList {@code non-null;} the associated annotations list
      */
@@ -72,7 +72,7 @@ public final class ParameterAnnotationStruct
             AnnotationSetItem item = new AnnotationSetItem(annotations);
             arrayList.add(new AnnotationSetRefItem(item));
         }
-                
+
         this.annotationsItem = new UniformListItem<AnnotationSetRefItem>(
                 ItemType.TYPE_ANNOTATION_SET_REF_LIST, arrayList);
     }
@@ -81,13 +81,13 @@ public final class ParameterAnnotationStruct
     public int hashCode() {
         return method.hashCode();
     }
-    
+
     /** {@inheritDoc} */
     public boolean equals(Object other) {
         if (! (other instanceof ParameterAnnotationStruct)) {
             return false;
         }
-        
+
         return method.equals(((ParameterAnnotationStruct) other).method);
     }
 
@@ -143,7 +143,7 @@ public final class ParameterAnnotationStruct
 
     /**
      * Gets the method this item is for.
-     * 
+     *
      * @return {@code non-null;} the method
      */
     public CstMethodRef getMethod() {
@@ -152,7 +152,7 @@ public final class ParameterAnnotationStruct
 
     /**
      * Gets the associated annotations list.
-     * 
+     *
      * @return {@code non-null;} the annotations list
      */
     public AnnotationsList getAnnotationsList() {

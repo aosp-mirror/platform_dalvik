@@ -36,7 +36,7 @@ public class DebugInfoItem extends OffsettedItem {
 
     /** {@code non-null;} the code this item represents */
     private final DalvCode code;
-    
+
     private byte[] encoded;
 
     private final boolean isStatic;
@@ -80,7 +80,7 @@ public class DebugInfoItem extends OffsettedItem {
                     "...while placing debug info for " + ref.toHuman());
         }
     }
-        
+
     /** {@inheritDoc} */
     @Override
     public String toHuman() {
@@ -99,7 +99,7 @@ public class DebugInfoItem extends OffsettedItem {
      */
     public void annotateTo(DexFile file, AnnotatedOutput out, String prefix) {
         encode(file, prefix, null, out, false);
-    }    
+    }
 
     /**
      * Does a human-friendly dump of this instance.

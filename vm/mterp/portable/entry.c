@@ -97,7 +97,7 @@ bool INTERP_FUNC_NAME(Thread* self, InterpState* interpState)
         /* just fall through to instruction loop or threaded kickstart */
         break;
     case kInterpEntryReturn:
-        CHECK_JIT();
+        CHECK_JIT_VOID();
         goto returnFromMethod;
     case kInterpEntryThrow:
         goto exceptionThrown;

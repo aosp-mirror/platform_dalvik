@@ -209,7 +209,7 @@ void dvmJdwpShutdown(JdwpState* state)
 
 /*
  * Are we talking to a debugger?
- */ 
+ */
 bool dvmJdwpIsActive(JdwpState* state)
 {
     return dvmJdwpIsConnected(state);
@@ -231,7 +231,7 @@ static void* jdwpThreadStart(void* arg)
      */
     state->debugThreadHandle = dvmThreadSelf()->handle;
     state->run = true;
-    MEM_BARRIER();
+    ANDROID_MEMBAR_FULL();
     state->debugThreadStarted = true;       // touch this last
 
     dvmDbgLockMutex(&state->threadStartLock);
@@ -349,59 +349,40 @@ pthread_t dvmJdwpGetDebugThread(JdwpState* state)
     return state->debugThreadHandle;
 }
 
-#if 0
+
 /*
- * Wait until the debugger attaches.  Returns immediately if the debugger
- * is already attached.
+ * Support routines for waitForDebugger().
  *
- * If we return the instant the debugger connects, we run the risk of
- * executing code before the debugger has had a chance to configure
- * breakpoints or issue suspend calls.  It would be nice to just sit in
- * the suspended state, but most debuggers don't expect any threads to be
- * suspended when they attach.
+ * We can't have a trivial "waitForDebugger" function that returns the
+ * instant the debugger connects, because we run the risk of executing code
+ * before the debugger has had a chance to configure breakpoints or issue
+ * suspend calls.  It would be nice to just sit in the suspended state, but
+ * most debuggers don't expect any threads to be suspended when they attach.
  *
- * There's no event we can post to tell the debugger "we've stopped, and
- * we like it that way".  We could send a fake breakpoint, which should
+ * There's no JDWP event we can post to tell the debugger, "we've stopped,
+ * and we like it that way".  We could send a fake breakpoint, which should
  * cause the debugger to immediately send a resume, but the debugger might
  * send the resume immediately or might throw an exception of its own upon
  * receiving a breakpoint event that it didn't ask for.
  *
  * What we really want is a "wait until the debugger is done configuring
- * stuff" event.  We can get close with a "wait until the debugger has
- * been idle for a brief period", and we can do a mild approximation with
- * "just sleep for a second after it connects".
- *
- * We should be in THREAD_VMWAIT here, so we're not allowed to do anything
- * with objects because a GC could be in progress.
- *
- * NOTE: this trips as soon as something connects to the socket.  This
- * is no longer appropriate -- we don't want to return when DDMS connects.
- * We could fix this by polling for the first debugger packet, but we have
- * to watch out for disconnects.  If we're going to do polling, it's
- * probably best to do it at a higher level.
+ * stuff" event.  We can approximate this with a "wait until the debugger
+ * has been idle for a brief period".
  */
-void dvmJdwpWaitForDebugger(JdwpState* state)
-{
-    // no more
-}
-#endif
 
 /*
- * Get a notion of the current time, in milliseconds.  We leave it in
- * two 32-bit pieces.
+ * Get a notion of the current time, in milliseconds.
  */
-void dvmJdwpGetNowMsec(long* pSec, long* pMsec)
+s8 dvmJdwpGetNowMsec(void)
 {
 #ifdef HAVE_POSIX_CLOCKS
     struct timespec now;
     clock_gettime(CLOCK_MONOTONIC, &now);
-    *pSec = now.tv_sec;
-    *pMsec = now.tv_nsec / 1000000;
+    return now.tv_sec * 1000LL + now.tv_nsec / 1000000LL;
 #else
     struct timeval now;
     gettimeofday(&now, NULL);
-    *pSec = now.tv_sec;
-    *pMsec = now.tv_usec / 1000;
+    return now.tv_sec * 1000LL + now.tv_usec / 1000LL;
 #endif
 }
 
@@ -413,30 +394,23 @@ void dvmJdwpGetNowMsec(long* pSec, long* pMsec)
  */
 s8 dvmJdwpLastDebuggerActivity(JdwpState* state)
 {
-    long lastSec, lastMsec;
-    long nowSec, nowMsec;
+    if (!gDvm.debuggerActive) {
+        LOGD("dvmJdwpLastDebuggerActivity: no active debugger\n");
+        return -1;
+    }
 
-    /* these are volatile; lastSec becomes 0 during update */
-    lastSec = state->lastActivitySec;
-    lastMsec = state->lastActivityMsec;
+    s8 last = dvmQuasiAtomicRead64(&state->lastActivityWhen);
 
     /* initializing or in the middle of something? */
-    if (lastSec == 0 || state->lastActivitySec != lastSec) {
-        //LOGI("+++ last=busy\n");
+    if (last == 0) {
+        LOGV("+++ last=busy\n");
         return 0;
     }
 
-    /* get the current time *after* latching the "last" time */
-    dvmJdwpGetNowMsec(&nowSec, &nowMsec);
+    /* now get the current time */
+    s8 now = dvmJdwpGetNowMsec();
+    assert(now > last);
 
-    s8 last = (s8)lastSec * 1000 + lastMsec;
-    s8 now = (s8)nowSec * 1000 + nowMsec;
-
-    //LOGI("last is %ld.%ld --> %lld\n", lastSec, lastMsec, last);
-    //LOGI("now is  %ld.%ld --> %lld\n", nowSec, nowMsec, now);
-
-
-    //LOGI("+++ interval=%lld\n", now - last);
+    LOGV("+++ debugger interval=%lld\n", now - last);
     return now - last;
 }
-

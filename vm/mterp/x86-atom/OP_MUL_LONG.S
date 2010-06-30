@@ -69,4 +69,3 @@
     movl        %ecx, 4(rFP, rINST, 4)  # vAA+1<- results hi
     movl        %eax, (rFP, rINST, 4)   # vAA<- results lo
     FINISH      2                       # jump to next instruction
-

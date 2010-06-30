@@ -9,4 +9,3 @@
     xorl       %eax,%eax
     SET_VREG_WORD(%eax,%ecx,0)            # v[AA+0]<- eax
     GOTO_NEXT
-

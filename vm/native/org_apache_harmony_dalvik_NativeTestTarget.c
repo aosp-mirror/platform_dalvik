@@ -40,4 +40,3 @@ const DalvikNativeMethod dvm_org_apache_harmony_dalvik_NativeTestTarget[] =
         Dalvik_org_apache_harmony_dalvik_NativeTestTarget_emptyInternalMethod },
     { NULL, NULL, NULL },
 };
-

@@ -29,7 +29,7 @@ public final class Exceptions {
 
     /**
      * {@code non-null;} the type
-     * {@code java.lang.ArrayIndexOutOfBoundsException} 
+     * {@code java.lang.ArrayIndexOutOfBoundsException}
      */
     public static final Type TYPE_ArrayIndexOutOfBoundsException =
         Type.intern("Ljava/lang/ArrayIndexOutOfBoundsException;");
@@ -47,7 +47,7 @@ public final class Exceptions {
 
     /**
      * {@code non-null;} the type
-     * {@code java.lang.IllegalMonitorStateException} 
+     * {@code java.lang.IllegalMonitorStateException}
      */
     public static final Type TYPE_IllegalMonitorStateException =
         Type.intern("Ljava/lang/IllegalMonitorStateException;");
@@ -79,7 +79,7 @@ public final class Exceptions {
 
     /**
      * {@code non-null;} the list {@code [java.lang.Error,
-     * java.lang.NegativeArraySizeException]} 
+     * java.lang.NegativeArraySizeException]}
      */
     public static final StdTypeList LIST_Error_NegativeArraySizeException =
         StdTypeList.make(TYPE_Error, TYPE_NegativeArraySizeException);

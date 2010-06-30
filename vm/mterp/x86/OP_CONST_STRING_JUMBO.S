@@ -38,4 +38,3 @@
     FETCH_INST_WORD(3)
     ADVANCE_PC(3)
     GOTO_NEXT
-

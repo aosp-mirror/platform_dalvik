@@ -25,7 +25,7 @@ run. This definition makes it possible for a method to use a monitor cleanup
 catch-all (e.g., finally) block as the monitor cleanup for that block itself,
 as a way to handle the arbitrary exceptions that might get thrown due to the
 historical implementation of Thread.stop(), while still managing to have proper
-monitor hygiene. 
+monitor hygiene.
 </p>
 
 <h2>Details</h2>
@@ -57,7 +57,7 @@ monitor hygiene.
     Register vA must contain a reference to an object.
   </li>
 </ul>
- 
+
 <h2>Behavior</h2>
 
 <ul>
@@ -83,7 +83,7 @@ monitor hygiene.
     an exception handler it cannot be distinguished from the same type of
     exception being thrown immediately after the monitor-exit instruction.
   </li>
-</ul> 
+</ul>
 
 <h2>Exceptions</h2>
 

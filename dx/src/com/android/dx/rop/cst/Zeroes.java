@@ -28,10 +28,10 @@ public final class Zeroes {
     private Zeroes() {
         // This space intentionally left blank.
     }
-     
+
     /**
      * Gets the "zero" (or {@code null}) value for the given type.
-     * 
+     *
      * @param type {@code non-null;} the type in question
      * @return {@code non-null;} its "zero" value
      */

@@ -55,7 +55,7 @@ ClassObject* dvmFindClassByName(StringObject* nameObj, Object* loader,
  * check the access flags at the time of the method call.  This results in
  * "native abstract" methods, which can't exist.  If we see the "abstract"
  * flag set, clear the "native" flag.
- * 
+ *
  * We also move the DECLARED_SYNCHRONIZED flag into the SYNCHRONIZED
  * position, because the callers of this function are trying to convey
  * the "traditional" meaning of the flags to their callers.

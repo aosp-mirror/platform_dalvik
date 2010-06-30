@@ -25,4 +25,3 @@ Supported options are:
 
     "xml" produces a larger output file, readable with an XML browser.  Types
     are shown in a more human-readable form (e.g. "[I" becomes "int[]").
-

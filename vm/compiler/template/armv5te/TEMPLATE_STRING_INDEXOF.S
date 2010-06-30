@@ -110,4 +110,3 @@ match_3:
     sub   r0, r7
     asr   r0, r0, #1
     bx    lr
-

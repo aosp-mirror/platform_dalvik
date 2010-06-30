@@ -23,12 +23,12 @@ import com.android.dx.util.Hex;
  * Constants of type {@code CONSTANT_Utf8_info}.
  */
 public final class CstUtf8 extends Constant {
-    /** 
+    /**
      * {@code non-null;} instance representing {@code ""}, that is, the
-     * empty string 
+     * empty string
      */
     public static final CstUtf8 EMPTY_STRING = new CstUtf8("");
-    
+
     /** {@code non-null;} the UTF-8 value as a string */
     private final String string;
 
@@ -39,7 +39,7 @@ public final class CstUtf8 extends Constant {
      * Converts a string into its Java-style UTF-8 form. Java-style UTF-8
      * differs from normal UTF-8 in the handling of character '\0' and
      * surrogate pairs.
-     * 
+     *
      * @param string {@code non-null;} the string to convert
      * @return {@code non-null;} the UTF-8 bytes for it
      */
@@ -72,7 +72,7 @@ public final class CstUtf8 extends Constant {
 
     /**
      * Converts an array of UTF-8 bytes into a string.
-     * 
+     *
      * @param bytes {@code non-null;} the bytes to convert
      * @return {@code non-null;} the converted string
      */
@@ -161,7 +161,7 @@ public final class CstUtf8 extends Constant {
     /**
      * Helper for {@link #utf8BytesToString}, which throws the right
      * exception for a bogus utf-8 byte.
-     * 
+     *
      * @param value the byte value
      * @param offset the file offset
      * @return never
@@ -174,7 +174,7 @@ public final class CstUtf8 extends Constant {
 
     /**
      * Constructs an instance from a {@code String}.
-     * 
+     *
      * @param string {@code non-null;} the UTF-8 value as a string
      */
     public CstUtf8(String string) {
@@ -188,7 +188,7 @@ public final class CstUtf8 extends Constant {
 
     /**
      * Constructs an instance from some UTF-8 bytes.
-     * 
+     *
      * @param bytes {@code non-null;} array of the UTF-8 bytes
      */
     public CstUtf8(ByteArray bytes) {
@@ -266,7 +266,7 @@ public final class CstUtf8 extends Constant {
                          */
                         char nextChar =
                             (i < (len - 1)) ? string.charAt(i + 1) : 0;
-                        boolean displayZero = 
+                        boolean displayZero =
                             (nextChar >= '0') && (nextChar <= '7');
                         sb.append('\\');
                         for (int shift = 6; shift >= 0; shift -= 3) {
@@ -298,7 +298,7 @@ public final class CstUtf8 extends Constant {
     /**
      * Gets the value as a human-oriented string, surrounded by double
      * quotes.
-     * 
+     *
      * @return {@code non-null;} the quoted string
      */
     public String toQuoted() {
@@ -309,7 +309,7 @@ public final class CstUtf8 extends Constant {
      * Gets the value as a human-oriented string, surrounded by double
      * quotes, but ellipsizes the result if it is longer than the given
      * maximum length
-     * 
+     *
      * @param maxLength {@code >= 5;} the maximum length of the string to return
      * @return {@code non-null;} the quoted string
      */
@@ -331,7 +331,7 @@ public final class CstUtf8 extends Constant {
     /**
      * Gets the UTF-8 value as a string.
      * The returned string is always already interned.
-     * 
+     *
      * @return {@code non-null;} the UTF-8 value as a string
      */
     public String getString() {
@@ -340,7 +340,7 @@ public final class CstUtf8 extends Constant {
 
     /**
      * Gets the UTF-8 value as UTF-8 encoded bytes.
-     * 
+     *
      * @return {@code non-null;} an array of the UTF-8 bytes
      */
     public ByteArray getBytes() {
@@ -350,7 +350,7 @@ public final class CstUtf8 extends Constant {
     /**
      * Gets the size of this instance as UTF-8 code points. That is,
      * get the number of bytes in the UTF-8 encoding of this instance.
-     * 
+     *
      * @return {@code >= 0;} the UTF-8 size
      */
     public int getUtf8Size() {
@@ -362,10 +362,10 @@ public final class CstUtf8 extends Constant {
      * get the number of 16-bit chars in the UTF-16 encoding of this
      * instance. This is the same as the {@code length} of the
      * Java {@code String} representation of this instance.
-     * 
+     *
      * @return {@code >= 0;} the UTF-16 size
      */
     public int getUtf16Size() {
         return string.length();
-    }   
+    }
 }

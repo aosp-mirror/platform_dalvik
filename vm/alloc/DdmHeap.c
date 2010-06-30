@@ -36,12 +36,12 @@ enum HpifWhen {
 
 /*
  * Chunk HPIF (client --> server)
- * 
+ *
  * Heap Info. General information about the heap,
  * suitable for a summary display.
- * 
+ *
  *   [u4]: number of heaps
- * 
+ *
  *   For each heap:
  *     [u4]: heap ID
  *     [u8]: timestamp in ms since Unix epoch
@@ -274,7 +274,7 @@ heap_chunk_callback(const void *chunkptr, size_t chunklen,
         state = HPSG_STATE(SOLIDITY_FREE, 0);
     } else {
         const Object *obj = userptr;
-        /* If we're looking at the native heap, we'll just return 
+        /* If we're looking at the native heap, we'll just return
          * (SOLIDITY_HARD, KIND_NATIVE) for all allocated chunks
          */
         bool native = ctx->type == CHUNK_TYPE("NHSG");
@@ -290,9 +290,7 @@ heap_chunk_callback(const void *chunkptr, size_t chunklen,
                  * but hasn't been initialized yet.
                  */
                 state = HPSG_STATE(SOLIDITY_HARD, KIND_OBJECT);
-            } else if (clazz == gDvm.unlinkedJavaLangClass ||
-                       clazz == gDvm.classJavaLangClass)
-            {
+            } else if (clazz == gDvm.classJavaLangClass) {
                 state = HPSG_STATE(SOLIDITY_HARD, KIND_CLASS_OBJECT);
             } else if (IS_CLASS_FLAG_SET(clazz, CLASS_ISARRAY)) {
                 if (IS_CLASS_FLAG_SET(clazz, CLASS_ISOBJECTARRAY)) {
@@ -365,7 +363,7 @@ static void
 walkHeap(bool merge, bool native)
 {
     HeapChunkContext ctx;
-    
+
     memset(&ctx, 0, sizeof(ctx));
     ctx.bufLen = HPSx_CHUNK_SIZE;
     ctx.buf = (u1 *)malloc(ctx.bufLen);

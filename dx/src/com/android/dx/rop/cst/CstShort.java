@@ -30,7 +30,7 @@ public final class CstShort
     /**
      * Makes an instance for the given value. This may (but does not
      * necessarily) return an already-allocated instance.
-     * 
+     *
      * @param value the {@code short} value
      * @return {@code non-null;} the appropriate instance
      */
@@ -42,7 +42,7 @@ public final class CstShort
      * Makes an instance for the given {@code int} value. This
      * may (but does not necessarily) return an already-allocated
      * instance.
-     * 
+     *
      * @param value the value, which must be in range for a {@code short}
      * @return {@code non-null;} the appropriate instance
      */
@@ -50,7 +50,7 @@ public final class CstShort
         short cast = (short) value;
 
         if (cast != value) {
-            throw new IllegalArgumentException("bogus short value: " + 
+            throw new IllegalArgumentException("bogus short value: " +
                     value);
         }
 
@@ -59,7 +59,7 @@ public final class CstShort
 
     /**
      * Constructs an instance. This constructor is private; use {@link #make}.
-     * 
+     *
      * @param value the {@code short} value
      */
     private CstShort(short value) {
@@ -91,7 +91,7 @@ public final class CstShort
 
     /**
      * Gets the {@code short} value.
-     * 
+     *
      * @return the value
      */
     public short getValue() {

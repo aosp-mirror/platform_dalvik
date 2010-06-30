@@ -32,10 +32,6 @@ LOCAL_PATH:= $(call my-dir)
 # Build for the target (device).
 #
 
-ifeq ($(TARGET_ARCH_VARIANT),armv5te)
-    WITH_JIT := false
-endif
-
 ifeq ($(TARGET_CPU_SMP),true)
     target_smp_flag := -DANDROID_SMP=1
 else

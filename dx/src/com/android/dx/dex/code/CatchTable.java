@@ -105,7 +105,7 @@ public final class CatchTable extends FixedSizeList
         /**
          * Constructs an instance.
          *
-         * @param start {@code >= 0;} start address 
+         * @param start {@code >= 0;} start address
          * @param end {@code > start;} end address (exclusive)
          * @param handlers {@code non-null;} list of catch handlers
          */
@@ -144,7 +144,7 @@ public final class CatchTable extends FixedSizeList
 
             return false;
         }
-        
+
         /** {@inheritDoc} */
         public int compareTo(Entry other) {
             if (start < other.start) {
@@ -152,7 +152,7 @@ public final class CatchTable extends FixedSizeList
             } else if (start > other.start) {
                 return 1;
             }
-            
+
             if (end < other.end) {
                 return -1;
             } else if (end > other.end) {
@@ -161,10 +161,10 @@ public final class CatchTable extends FixedSizeList
 
             return handlers.compareTo(other.handlers);
         }
-        
+
         /**
          * Gets the start address.
-         * 
+         *
          * @return {@code >= 0;} the start address
          */
         public int getStart() {
@@ -173,7 +173,7 @@ public final class CatchTable extends FixedSizeList
 
         /**
          * Gets the end address (exclusive).
-         * 
+         *
          * @return {@code > start;} the end address (exclusive)
          */
         public int getEnd() {
@@ -182,7 +182,7 @@ public final class CatchTable extends FixedSizeList
 
         /**
          * Gets the handlers.
-         * 
+         *
          * @return {@code non-null;} the handlers
          */
         public CatchHandlerList getHandlers() {

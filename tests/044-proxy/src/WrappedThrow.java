@@ -242,4 +242,3 @@ class WTInvocationHandler implements InvocationHandler {
         return result;
     }
 }
-

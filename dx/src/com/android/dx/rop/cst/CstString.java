@@ -28,7 +28,7 @@ public final class CstString
 
     /**
      * Constructs an instance.
-     * 
+     *
      * @param string {@code non-null;} the string value
      */
     public CstString(CstUtf8 string) {
@@ -41,7 +41,7 @@ public final class CstString
 
     /**
      * Constructs an instance.
-     * 
+     *
      * @param string {@code non-null;} the string value
      */
     public CstString(String string) {
@@ -100,7 +100,7 @@ public final class CstString
 
     /**
      * Gets the string value.
-     * 
+     *
      * @return {@code non-null;} the string value
      */
     public CstUtf8 getString() {

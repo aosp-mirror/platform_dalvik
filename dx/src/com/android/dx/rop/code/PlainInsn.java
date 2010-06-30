@@ -30,7 +30,7 @@ public final class PlainInsn
         extends Insn {
     /**
      * Constructs an instance.
-     * 
+     *
      * @param opcode {@code non-null;} the opcode
      * @param position {@code non-null;} source position
      * @param result {@code null-ok;} spec for the result, if any
@@ -50,13 +50,13 @@ public final class PlainInsn
         if (result != null && opcode.getBranchingness() != Rop.BRANCH_NONE) {
             // move-result-pseudo is required here
             throw new IllegalArgumentException
-                    ("can't mix branchingness with result");            
+                    ("can't mix branchingness with result");
         }
     }
 
     /**
      * Constructs a single-source instance.
-     * 
+     *
      * @param opcode {@code non-null;} the opcode
      * @param position {@code non-null;} source position
      * @param result {@code null-ok;} spec for the result, if any

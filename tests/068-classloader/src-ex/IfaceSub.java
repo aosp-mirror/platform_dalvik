@@ -17,4 +17,3 @@
 public interface IfaceSub extends IfaceSuper {
     public DoubledImplement2 getDoubledInstance2();
 }
-

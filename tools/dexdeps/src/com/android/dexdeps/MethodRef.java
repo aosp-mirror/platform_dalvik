@@ -85,4 +85,3 @@ public class MethodRef {
         return builder.toString();
     }
 }
-

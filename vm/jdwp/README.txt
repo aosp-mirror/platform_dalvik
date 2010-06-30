@@ -10,4 +10,3 @@ with Debugger.c acting as a sort of portability layer, so that the code
 might be useful in other projects.  Once you get multiple simultaneous
 events and debugger requests with thread suspension bouncing around,
 though, it's difficult to keep things "generic".
-

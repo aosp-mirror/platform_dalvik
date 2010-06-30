@@ -20,14 +20,14 @@
 
 #include "DexCatch.h"
 
-/* Get the first handler offset for the given DexCode. 
+/* Get the first handler offset for the given DexCode.
  * It's not 0 because the handlers list is prefixed with its size
  * (in entries) as a uleb128. */
 u4 dexGetFirstHandlerOffset(const DexCode* pCode) {
     if (pCode->triesSize == 0) {
         return 0;
     }
-    
+
     const u1* baseData = dexGetCatchHandlerData(pCode);
     const u1* data = baseData;
 

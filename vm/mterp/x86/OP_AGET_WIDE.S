@@ -25,4 +25,3 @@
     FETCH_INST_WORD(2)
     ADVANCE_PC(2)
     GOTO_NEXT
-

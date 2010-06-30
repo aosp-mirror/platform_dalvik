@@ -36,11 +36,9 @@
 #include <limits.h>
 #include <errno.h>
 
-#define kNonCollectableRefDefault   16
-#define kFinalizableRefDefault      128
-
 static const char* GcReasonStr[] = {
     [GC_FOR_MALLOC] = "GC_FOR_MALLOC",
+    [GC_CONCURRENT] = "GC_CONCURRENT",
     [GC_EXPLICIT] = "GC_EXPLICIT",
     [GC_EXTERNAL_ALLOC] = "GC_EXTERNAL_ALLOC",
     [GC_HPROF_DUMP_HEAP] = "GC_HPROF_DUMP_HEAP"
@@ -76,19 +74,7 @@ bool dvmHeapStartup()
     gcHeap->hprofDumpOnGc = false;
     gcHeap->hprofContext = NULL;
 #endif
-
-    /* This needs to be set before we call dvmHeapInitHeapRefTable().
-     */
     gDvm.gcHeap = gcHeap;
-
-    /* Set up the table we'll use for ALLOC_NO_GC.
-     */
-    if (!dvmHeapInitHeapRefTable(&gcHeap->nonCollectableRefs,
-                           kNonCollectableRefDefault))
-    {
-        LOGE_HEAP("Can't allocate GC_NO_ALLOC table\n");
-        goto fail;
-    }
 
     /* Set up the lists and lock we'll use for finalizable
      * and reference objects.
@@ -104,18 +90,15 @@ bool dvmHeapStartup()
     dvmInitializeHeapWorkerState();
 
     return true;
-
-fail:
-    dvmHeapSourceShutdown(&gcHeap);
-    return false;
 }
 
-void dvmHeapStartupAfterZygote()
+bool dvmHeapStartupAfterZygote(void)
 {
     /* Update our idea of the last GC start time so that we
      * don't use the last time that Zygote happened to GC.
      */
     gDvm.gcHeap->gcStartTime = dvmGetRelativeTimeUsec();
+    return dvmHeapSourceStartupAfterZygote();
 }
 
 void dvmHeapShutdown()
@@ -127,8 +110,6 @@ void dvmHeapShutdown()
          * The process may stick around, so we don't
          * want to leak any native memory.
          */
-        dvmHeapFreeHeapRefTable(&gDvm.gcHeap->nonCollectableRefs);
-
         dvmHeapFreeLargeTable(gDvm.gcHeap->finalizableRefs);
         gDvm.gcHeap->finalizableRefs = NULL;
 
@@ -145,6 +126,14 @@ void dvmHeapShutdown()
          */
         dvmHeapSourceShutdown(&gDvm.gcHeap);
     }
+}
+
+/*
+ * Shutdown any threads internal to the heap.
+ */
+void dvmHeapThreadShutdown(void)
+{
+    dvmHeapSourceThreadShutdown();
 }
 
 /*
@@ -211,30 +200,11 @@ Object *dvmGetNextHeapWorkerObject(HeapWorkerOperation *op)
 
     assert(op != NULL);
 
-    obj = NULL;
-
     dvmLockMutex(&gDvm.heapWorkerListLock);
 
-    /* We must handle reference operations before finalizations.
-     * If:
-     *     a) Someone subclasses WeakReference and overrides clear()
-     *     b) A reference of this type is the last reference to
-     *        a finalizable object
-     * then we need to guarantee that the overridden clear() is called
-     * on the reference before finalize() is called on the referent.
-     * Both of these operations will always be scheduled at the same
-     * time, so handling reference operations first will guarantee
-     * the required order.
-     */
     obj = dvmHeapGetNextObjectFromLargeTable(&gcHeap->referenceOperations);
     if (obj != NULL) {
-        uintptr_t workBits;
-
-        workBits = (uintptr_t)obj & WORKER_ENQUEUE;
-        assert(workBits != 0);
-        obj = (Object *)((uintptr_t)obj & ~WORKER_ENQUEUE);
-
-        *op = workBits;
+        *op = WORKER_ENQUEUE;
     } else {
         obj = dvmHeapGetNextObjectFromLargeTable(
                 &gcHeap->pendingFinalizationRefs);
@@ -246,9 +216,6 @@ Object *dvmGetNextHeapWorkerObject(HeapWorkerOperation *op)
     if (obj != NULL) {
         /* Don't let the GC collect the object until the
          * worker thread is done with it.
-         *
-         * This call is safe;  it uses thread-local storage
-         * and doesn't acquire any locks.
          */
         dvmAddTrackedAlloc(obj, NULL);
     }
@@ -436,10 +403,6 @@ static void throwOOME()
  * In rare circumstances (JNI AttachCurrentThread) we can be called
  * from a non-VM thread.
  *
- * We implement ALLOC_NO_GC by maintaining an internal list of objects
- * that should not be collected.  This requires no actual flag storage in
- * the object itself, which is good, but makes flag queries expensive.
- *
  * Use ALLOC_DONT_TRACK when we either don't want to track an allocation
  * (because it's being done for the interpreter "new" operation and will
  * be part of the root set immediately) or we can't (because this allocation
@@ -453,14 +416,6 @@ void* dvmMalloc(size_t size, int flags)
 {
     GcHeap *gcHeap = gDvm.gcHeap;
     void *ptr;
-
-#if 0
-    /* handy for spotting large allocations */
-    if (size >= 100000) {
-        LOGI("dvmMalloc(%d):\n", size);
-        dvmDumpThread(dvmThreadSelf(), false);
-    }
-#endif
 
 #if defined(WITH_ALLOC_LIMITS)
     /*
@@ -512,36 +467,12 @@ void* dvmMalloc(size_t size, int flags)
         if ((flags & ALLOC_FINALIZABLE) != 0) {
             /* This object is an instance of a class that
              * overrides finalize().  Add it to the finalizable list.
-             *
-             * Note that until DVM_OBJECT_INIT() is called on this
-             * object, its clazz will be NULL.  Since the object is
-             * in this table, it will be scanned as part of the root
-             * set.  scanObject() explicitly deals with the NULL clazz.
              */
             if (!dvmHeapAddRefToLargeTable(&gcHeap->finalizableRefs,
                                     (Object *)ptr))
             {
                 LOGE_HEAP("dvmMalloc(): no room for any more "
                         "finalizable objects\n");
-                dvmAbort();
-            }
-        }
-
-        /* The caller may not want us to collect this object.
-         * If not, throw it in the nonCollectableRefs table, which
-         * will be added to the root set when we GC.
-         *
-         * Note that until DVM_OBJECT_INIT() is called on this
-         * object, its clazz will be NULL.  Since the object is
-         * in this table, it will be scanned as part of the root
-         * set.  scanObject() explicitly deals with the NULL clazz.
-         */
-        if ((flags & ALLOC_NO_GC) != 0) {
-            if (!dvmHeapAddToHeapRefTable(&gcHeap->nonCollectableRefs, ptr)) {
-                LOGE_HEAP("dvmMalloc(): no room for any more "
-                        "ALLOC_NO_GC objects: %zd\n",
-                        dvmHeapNumHeapRefTableEntries(
-                                &gcHeap->nonCollectableRefs));
                 dvmAbort();
             }
         }
@@ -578,13 +509,10 @@ void* dvmMalloc(size_t size, int flags)
 
     if (ptr != NULL) {
         /*
-         * If this block is immediately GCable, and they haven't asked us not
-         * to track it, add it to the internal tracking list.
-         *
-         * If there's no "self" yet, we can't track it.  Calls made before
-         * the Thread exists should use ALLOC_NO_GC.
+         * If caller hasn't asked us not to track it, add it to the
+         * internal tracking list.
          */
-        if ((flags & (ALLOC_DONT_TRACK | ALLOC_NO_GC)) == 0) {
+        if ((flags & ALLOC_DONT_TRACK) == 0) {
             dvmAddTrackedAlloc(ptr, NULL);
         }
     } else {
@@ -624,29 +552,17 @@ bool dvmIsValidObject(const Object* obj)
 }
 
 /*
- * Clear flags that were passed into dvmMalloc() et al.
- * e.g., ALLOC_NO_GC, ALLOC_DONT_TRACK.
+ * Returns true iff <obj> points to a word-aligned address within Heap
+ * address space.
  */
-void dvmClearAllocFlags(Object *obj, int mask)
+bool dvmIsValidObjectAddress(const void* ptr)
 {
-    if ((mask & ALLOC_NO_GC) != 0) {
-        dvmLockHeap();
-        if (dvmIsValidObject(obj)) {
-            if (!dvmHeapRemoveFromHeapRefTable(&gDvm.gcHeap->nonCollectableRefs,
-                                               obj))
-            {
-                LOGE_HEAP("dvmMalloc(): failed to remove ALLOC_NO_GC bit from "
-                        "object 0x%08x\n", (uintptr_t)obj);
-                dvmAbort();
-            }
-//TODO: shrink if the table is very empty
-        }
-        dvmUnlockHeap();
+    /* Don't bother if it's not 4-byte aligned.
+     */
+    if (((uintptr_t)ptr & (4-1)) == 0) {
+        return dvmHeapSourceContainsAddress(ptr);
     }
-
-    if ((mask & ALLOC_DONT_TRACK) != 0) {
-        dvmReleaseTrackedAlloc(obj, NULL);
-    }
+    return false;
 }
 
 size_t dvmObjectSizeInHeap(const Object *obj)
@@ -662,26 +578,6 @@ static void verifyHeap()
     // TODO: check the locks.
     HeapBitmap *liveBits = dvmHeapSourceGetLiveBits();
     dvmVerifyBitmap(liveBits);
-}
-
-/*
- * Suspend the VM as for a GC, and assert-fail if any object has any
- * corrupt references.
- */
-void dvmHeapSuspendAndVerify()
-{
-    /* Suspend the VM. */
-    dvmSuspendAllThreads(SUSPEND_FOR_VERIFY);
-    dvmLockMutex(&gDvm.heapWorkerLock);
-    dvmAssertHeapWorkerThreadRunning();
-    dvmLockMutex(&gDvm.heapWorkerListLock);
-
-    verifyHeap();
-
-    /* Resume the VM. */
-    dvmUnlockMutex(&gDvm.heapWorkerListLock);
-    dvmUnlockMutex(&gDvm.heapWorkerLock);
-    dvmResumeAllThreads(SUSPEND_FOR_VERIFY);
 }
 
 /*
@@ -707,17 +603,7 @@ void dvmCollectGarbageInternal(bool clearSoftRefs, GcReason reason)
     int numFreed;
     size_t sizeFreed;
     GcMode gcMode;
-
-#if DVM_TRACK_HEAP_MARKING
-    /* Since weak and soft references are always cleared,
-     * they don't require any marking.
-     * (Soft are lumped into strong when they aren't cleared.)
-     */
-    size_t strongMarkCount = 0;
-    size_t strongMarkSize = 0;
-    size_t finalizeMarkCount = 0;
-    size_t finalizeMarkSize = 0;
-#endif
+    int oldThreadPriority = kInvalidPriority;
 
     /* The heap lock must be held.
      */
@@ -740,32 +626,37 @@ void dvmCollectGarbageInternal(bool clearSoftRefs, GcReason reason)
 
     dvmSuspendAllThreads(SUSPEND_FOR_GC);
 
-    /* Get the priority (the "nice" value) of the current thread.  The
-     * getpriority() call can legitimately return -1, so we have to
-     * explicitly test errno.
+    /*
+     * If we are not marking concurrently raise the priority of the
+     * thread performing the garbage collection.
      */
-    errno = 0;
-    int oldThreadPriority = kInvalidPriority;
-    int priorityResult = getpriority(PRIO_PROCESS, 0);
-    if (errno != 0) {
-        LOGI_HEAP("getpriority(self) failed: %s\n", strerror(errno));
-    } else if (priorityResult > ANDROID_PRIORITY_NORMAL) {
-        /* Current value is numerically greater than "normal", which
-         * in backward UNIX terms means lower priority.
+    if (reason != GC_CONCURRENT) {
+        /* Get the priority (the "nice" value) of the current thread.  The
+         * getpriority() call can legitimately return -1, so we have to
+         * explicitly test errno.
          */
+        errno = 0;
+        int priorityResult = getpriority(PRIO_PROCESS, 0);
+        if (errno != 0) {
+            LOGI_HEAP("getpriority(self) failed: %s\n", strerror(errno));
+        } else if (priorityResult > ANDROID_PRIORITY_NORMAL) {
+            /* Current value is numerically greater than "normal", which
+             * in backward UNIX terms means lower priority.
+             */
 
-        if (priorityResult >= ANDROID_PRIORITY_BACKGROUND) {
-            set_sched_policy(dvmGetSysThreadId(), SP_FOREGROUND);
-        }
+            if (priorityResult >= ANDROID_PRIORITY_BACKGROUND) {
+                set_sched_policy(dvmGetSysThreadId(), SP_FOREGROUND);
+            }
 
-        if (setpriority(PRIO_PROCESS, 0, ANDROID_PRIORITY_NORMAL) != 0) {
-            LOGI_HEAP("Unable to elevate priority from %d to %d\n",
-                priorityResult, ANDROID_PRIORITY_NORMAL);
-        } else {
-            /* priority elevated; save value so we can restore it later */
-            LOGD_HEAP("Elevating priority from %d to %d\n",
-                priorityResult, ANDROID_PRIORITY_NORMAL);
-            oldThreadPriority = priorityResult;
+            if (setpriority(PRIO_PROCESS, 0, ANDROID_PRIORITY_NORMAL) != 0) {
+                LOGI_HEAP("Unable to elevate priority from %d to %d\n",
+                          priorityResult, ANDROID_PRIORITY_NORMAL);
+            } else {
+                /* priority elevated; save value so we can restore it later */
+                LOGD_HEAP("Elevating priority from %d to %d\n",
+                          priorityResult, ANDROID_PRIORITY_NORMAL);
+                oldThreadPriority = priorityResult;
+            }
         }
     }
 
@@ -845,10 +736,6 @@ void dvmCollectGarbageInternal(bool clearSoftRefs, GcReason reason)
         LOGD_HEAP("GC! (%d sec since last GC)\n",
                 (int)(timeSinceLastGc / 1000));
     }
-#if DVM_TRACK_HEAP_MARKING
-    gcHeap->markCount = 0;
-    gcHeap->markSize = 0;
-#endif
 
     /* Set up the marking context.
      */
@@ -869,18 +756,38 @@ void dvmCollectGarbageInternal(bool clearSoftRefs, GcReason reason)
     gcHeap->weakReferences = NULL;
     gcHeap->phantomReferences = NULL;
 
+    if (reason == GC_CONCURRENT) {
+        /*
+         * We are performing a concurrent collection.  Resume all
+         * threads for the duration of the recursive mark.
+         */
+        dvmResumeAllThreads(SUSPEND_FOR_GC);
+    }
+
     /* Recursively mark any objects that marked objects point to strongly.
      * If we're not collecting soft references, soft-reachable
      * objects will also be marked.
      */
     LOGD_HEAP("Recursing...");
     dvmHeapScanMarkedObjects();
-#if DVM_TRACK_HEAP_MARKING
-    strongMarkCount = gcHeap->markCount;
-    strongMarkSize = gcHeap->markSize;
-    gcHeap->markCount = 0;
-    gcHeap->markSize = 0;
-#endif
+
+    if (reason == GC_CONCURRENT) {
+        /*
+         * We are performing a concurrent collection.  Perform the
+         * final thread suspension.
+         */
+        dvmSuspendAllThreads(SUSPEND_FOR_GC);
+        /*
+         * As no barrier intercepts root updates, we conservatively
+         * assume all roots may be gray and re-mark them.
+         */
+        dvmHeapMarkRootSet();
+        /*
+         * Recursively mark gray objects pointed to by the roots or by
+         * heap objects dirtied during the concurrent mark.
+         */
+        dvmMarkDirtyObjects();
+    }
 
     /* All strongly-reachable objects have now been marked.
      */
@@ -898,12 +805,6 @@ void dvmCollectGarbageInternal(bool clearSoftRefs, GcReason reason)
      */
     LOGD_HEAP("Finding finalizations...");
     dvmHeapScheduleFinalizations();
-#if DVM_TRACK_HEAP_MARKING
-    finalizeMarkCount = gcHeap->markCount;
-    finalizeMarkSize = gcHeap->markSize;
-    gcHeap->markCount = 0;
-    gcHeap->markSize = 0;
-#endif
 
     LOGD_HEAP("Handling f-reachable soft references...");
     dvmClearWhiteRefs(&gcHeap->softReferences);
@@ -917,11 +818,6 @@ void dvmCollectGarbageInternal(bool clearSoftRefs, GcReason reason)
      */
     LOGD_HEAP("Handling phantom references...");
     dvmClearWhiteRefs(&gcHeap->phantomReferences);
-
-#if DVM_TRACK_HEAP_MARKING
-    LOGI_HEAP("Marked objects: %dB strong, %dB final\n",
-              strongMarkSize, finalizeMarkSize);
-#endif
 
 #ifdef WITH_DEADLOCK_PREDICTION
     dvmDumpMonitorInfo("before sweep");
@@ -996,16 +892,18 @@ void dvmCollectGarbageInternal(bool clearSoftRefs, GcReason reason)
 #endif
 
     dvmResumeAllThreads(SUSPEND_FOR_GC);
-    if (oldThreadPriority != kInvalidPriority) {
-        if (setpriority(PRIO_PROCESS, 0, oldThreadPriority) != 0) {
-            LOGW_HEAP("Unable to reset priority to %d: %s\n",
-                oldThreadPriority, strerror(errno));
-        } else {
-            LOGD_HEAP("Reset priority to %d\n", oldThreadPriority);
-        }
+    if (reason != GC_CONCURRENT) {
+        if (oldThreadPriority != kInvalidPriority) {
+            if (setpriority(PRIO_PROCESS, 0, oldThreadPriority) != 0) {
+                LOGW_HEAP("Unable to reset priority to %d: %s\n",
+                          oldThreadPriority, strerror(errno));
+            } else {
+                LOGD_HEAP("Reset priority to %d\n", oldThreadPriority);
+            }
 
-        if (oldThreadPriority >= ANDROID_PRIORITY_BACKGROUND) {
-            set_sched_policy(dvmGetSysThreadId(), SP_BACKGROUND);
+            if (oldThreadPriority >= ANDROID_PRIORITY_BACKGROUND) {
+                set_sched_policy(dvmGetSysThreadId(), SP_BACKGROUND);
+            }
         }
     }
     gcElapsedTime = (dvmGetRelativeTimeUsec() - gcHeap->gcStartTime) / 1000;

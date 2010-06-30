@@ -23,7 +23,7 @@
 #include "Jit.h"
 
 
-#include "dexdump/OpCodeNames.h"
+#include "libdex/OpCodeNames.h"
 #include <unistd.h>
 #include <pthread.h>
 #include <sys/time.h>
@@ -235,7 +235,8 @@ static void selfVerificationDumpTrace(const u2* pc, Thread* self)
         offset =  (int)((u2*)addr - stackSave->method->insns);
         decInsn = &(shadowSpace->trace[i].decInsn);
         /* Not properly decoding instruction, some registers may be garbage */
-        LOGD("0x%x: (0x%04x) %s", addr, offset, getOpcodeName(decInsn->opCode));
+        LOGD("0x%x: (0x%04x) %s",
+            addr, offset, dexGetOpcodeName(decInsn->opCode));
     }
 }
 
@@ -267,7 +268,7 @@ static bool selfVerificationDebugInterp(const u2* pc, Thread* self,
 
     //LOGD("### DbgIntp(%d): PC: 0x%x endPC: 0x%x state: %d len: %d %s",
     //    self->threadId, (int)pc, (int)shadowSpace->endPC, state,
-    //    shadowSpace->traceLength, getOpcodeName(decInsn.opCode));
+    //    shadowSpace->traceLength, dexGetOpcodeName(decInsn.opCode));
 
     if (state == kSVSIdle || state == kSVSStart) {
         LOGD("~~~ DbgIntrp: INCORRECT PREVIOUS STATE(%d): %d",
@@ -499,8 +500,8 @@ void setTraceConstruction(JitEntry *slot, bool value)
         oldValue = slot->u;
         newValue = oldValue;
         newValue.info.traceConstruction = value;
-    } while (!ATOMIC_CMP_SWAP( &slot->u.infoWord,
-             oldValue.infoWord, newValue.infoWord));
+    } while (android_atomic_release_cas(oldValue.infoWord, newValue.infoWord,
+            &slot->u.infoWord) != 0);
 }
 
 void resetTracehead(InterpState* interpState, JitEntry *slot)
@@ -546,7 +547,7 @@ static JitEntry *lookupAndAdd(const u2* dPC, bool callerLocked)
          * (the simple, and common case).  Otherwise we're going
          * to have to find a free slot and chain it.
          */
-        MEM_BARRIER(); /* Make sure we reload [].dPC after lock */
+        ANDROID_MEMBAR_FULL(); /* Make sure we reload [].dPC after lock */
         if (gDvmJit.pJitEntryTable[idx].dPC != NULL) {
             u4 prev;
             while (gDvmJit.pJitEntryTable[idx].u.info.chain != chainEndMarker) {
@@ -583,9 +584,9 @@ static JitEntry *lookupAndAdd(const u2* dPC, bool callerLocked)
                     oldValue = gDvmJit.pJitEntryTable[prev].u;
                     newValue = oldValue;
                     newValue.info.chain = idx;
-                } while (!ATOMIC_CMP_SWAP(
-                         &gDvmJit.pJitEntryTable[prev].u.infoWord,
-                         oldValue.infoWord, newValue.infoWord));
+                } while (android_atomic_release_cas(oldValue.infoWord,
+                        newValue.infoWord,
+                        &gDvmJit.pJitEntryTable[prev].u.infoWord) != 0);
             }
         }
         if (gDvmJit.pJitEntryTable[idx].dPC == NULL) {
@@ -603,6 +604,37 @@ static JitEntry *lookupAndAdd(const u2* dPC, bool callerLocked)
             dvmUnlockMutex(&gDvmJit.tableLock);
     }
     return (idx == chainEndMarker) ? NULL : &gDvmJit.pJitEntryTable[idx];
+}
+
+/*
+ * Check if the next instruction following the invoke is a move-result and if
+ * so add it to the trace.
+ *
+ * lastPC, len, offset are all from the preceding invoke instruction
+ */
+static void insertMoveResult(const u2 *lastPC, int len, int offset,
+                             InterpState *interpState)
+{
+    DecodedInstruction nextDecInsn;
+    const u2 *moveResultPC = lastPC + len;
+
+    dexDecodeInstruction(gDvm.instrFormat, moveResultPC, &nextDecInsn);
+    if ((nextDecInsn.opCode != OP_MOVE_RESULT) &&
+        (nextDecInsn.opCode != OP_MOVE_RESULT_WIDE) &&
+        (nextDecInsn.opCode != OP_MOVE_RESULT_OBJECT))
+        return;
+
+    /* We need to start a new trace run */
+    int currTraceRun = ++interpState->currTraceRun;
+    interpState->currRunHead = moveResultPC;
+    interpState->trace[currTraceRun].frag.startOffset = offset + len;
+    interpState->trace[currTraceRun].frag.numInsts = 1;
+    interpState->trace[currTraceRun].frag.runEnd = false;
+    interpState->trace[currTraceRun].frag.hint = kJitHintNone;
+    interpState->totalTraceLen++;
+
+    interpState->currRunLen = dexGetInstrOrTableWidthAbs(gDvm.instrWidth,
+                                                         moveResultPC);
 }
 
 /*
@@ -654,7 +686,7 @@ int dvmCheckJit(const u2* pc, Thread* self, InterpState* interpState)
 
 
 #if defined(SHOW_TRACE)
-            LOGD("TraceGen: adding %s",getOpcodeName(decInsn.opCode));
+            LOGD("TraceGen: adding %s", dexGetOpcodeName(decInsn.opCode));
 #endif
             flags = dexGetInstrFlags(gDvm.instrFlags, decInsn.opCode);
             len = dexGetInstrOrTableWidthAbs(gDvm.instrWidth, lastPC);
@@ -676,8 +708,15 @@ int dvmCheckJit(const u2* pc, Thread* self, InterpState* interpState)
             interpState->totalTraceLen++;
             interpState->currRunLen += len;
 
+            /*
+             * If the last instruction is an invoke, we will try to sneak in
+             * the move-result* (if existent) into a separate trace run.
+             */
+            int needReservedRun = (flags & kInstrInvoke) ? 1 : 0;
+
             /* Will probably never hit this with the current trace buildier */
-            if (interpState->currTraceRun == (MAX_JIT_RUN_LEN - 1)) {
+            if (interpState->currTraceRun ==
+                (MAX_JIT_RUN_LEN - 1 - needReservedRun)) {
                 interpState->jitState = kJitTSelectEnd;
             }
 
@@ -690,9 +729,17 @@ int dvmCheckJit(const u2* pc, Thread* self, InterpState* interpState)
                              kInstrInvoke)) != 0)) {
                     interpState->jitState = kJitTSelectEnd;
 #if defined(SHOW_TRACE)
-            LOGD("TraceGen: ending on %s, basic block end",
-                 getOpcodeName(decInsn.opCode));
+                LOGD("TraceGen: ending on %s, basic block end",
+                     dexGetOpcodeName(decInsn.opCode));
 #endif
+
+                /*
+                 * If the next instruction is a variant of move-result, insert
+                 * it to the trace as well.
+                 */
+                if (flags & kInstrInvoke) {
+                    insertMoveResult(lastPC, len, offset, interpState);
+                }
             }
             /* Break on throw or self-loop */
             if ((decInsn.opCode == OP_THROW) || (lastPC == pc)){
@@ -889,9 +936,9 @@ void dvmJitSetCodeAddr(const u2* dPC, void *nPC, JitInstructionSetType set) {
         oldValue = jitEntry->u;
         newValue = oldValue;
         newValue.info.instructionSet = set;
-    } while (!ATOMIC_CMP_SWAP(
-             &jitEntry->u.infoWord,
-             oldValue.infoWord, newValue.infoWord));
+    } while (android_atomic_release_cas(
+             oldValue.infoWord, newValue.infoWord,
+             &jitEntry->u.infoWord) != 0);
     jitEntry->codeAddress = nPC;
 }
 
@@ -904,8 +951,59 @@ bool dvmJitCheckTraceRequest(Thread* self, InterpState* interpState)
 {
     bool switchInterp = false;         /* Assume success */
     int i;
-    intptr_t filterKey = ((intptr_t) interpState->pc) >>
-                         JIT_TRACE_THRESH_FILTER_GRAN_LOG2;
+    /*
+     * A note on trace "hotness" filtering:
+     *
+     * Our first level trigger is intentionally loose - we need it to
+     * fire easily not just to identify potential traces to compile, but
+     * also to allow re-entry into the code cache.
+     *
+     * The 2nd level filter (done here) exists to be selective about
+     * what we actually compile.  It works by requiring the same
+     * trace head "key" (defined as filterKey below) to appear twice in
+     * a relatively short period of time.   The difficulty is defining the
+     * shape of the filterKey.  Unfortunately, there is no "one size fits
+     * all" approach.
+     *
+     * For spiky execution profiles dominated by a smallish
+     * number of very hot loops, we would want the second-level filter
+     * to be very selective.  A good selective filter is requiring an
+     * exact match of the Dalvik PC.  In other words, defining filterKey as:
+     *     intptr_t filterKey = (intptr_t)interpState->pc
+     *
+     * However, for flat execution profiles we do best when aggressively
+     * translating.  A heuristically decent proxy for this is to use
+     * the value of the method pointer containing the trace as the filterKey.
+     * Intuitively, this is saying that once any trace in a method appears hot,
+     * immediately translate any other trace from that same method that
+     * survives the first-level filter.  Here, filterKey would be defined as:
+     *     intptr_t filterKey = (intptr_t)interpState->method
+     *
+     * The problem is that we can't easily detect whether we're dealing
+     * with a spiky or flat profile.  If we go with the "pc" match approach,
+     * flat profiles perform poorly.  If we go with the loose "method" match,
+     * we end up generating a lot of useless translations.  Probably the
+     * best approach in the future will be to retain profile information
+     * across runs of each application in order to determine it's profile,
+     * and then choose once we have enough history.
+     *
+     * However, for now we've decided to chose a compromise filter scheme that
+     * includes elements of both.  The high order bits of the filter key
+     * are drawn from the enclosing method, and are combined with a slice
+     * of the low-order bits of the Dalvik pc of the trace head.  The
+     * looseness of the filter can be adjusted by changing with width of
+     * the Dalvik pc slice (JIT_TRACE_THRESH_FILTER_PC_BITS).  The wider
+     * the slice, the tighter the filter.
+     *
+     * Note: the fixed shifts in the function below reflect assumed word
+     * alignment for method pointers, and half-word alignment of the Dalvik pc.
+     * for method pointers and half-word alignment for dalvik pc.
+     */
+    u4 methodKey = (u4)interpState->method <<
+                   (JIT_TRACE_THRESH_FILTER_PC_BITS - 2);
+    u4 pcKey = ((u4)interpState->pc >> 1) &
+               ((1 << JIT_TRACE_THRESH_FILTER_PC_BITS) - 1);
+    intptr_t filterKey = (intptr_t)(methodKey | pcKey);
     bool debugOrProfile = dvmDebuggerOrProfilerActive();
 
     /* Check if the JIT request can be handled now */
@@ -916,6 +1014,7 @@ bool dvmJitCheckTraceRequest(Thread* self, InterpState* interpState)
             /* Two-level filtering scheme */
             for (i=0; i< JIT_TRACE_THRESH_FILTER_SIZE; i++) {
                 if (filterKey == interpState->threshFilter[i]) {
+                    interpState->threshFilter[i] = 0; // Reset filter entry
                     break;
                 }
             }

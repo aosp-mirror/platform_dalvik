@@ -6,4 +6,3 @@ class Y extends X {
         return 1;
     }
 }
-

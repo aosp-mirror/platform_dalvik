@@ -31,7 +31,7 @@ public final class AttExceptions extends BaseAttribute {
 
     /**
      * Constructs an instance.
-     * 
+     *
      * @param exceptions {@code non-null;} list of classes, presumed but not
      * verified to be subclasses of {@code Throwable}
      */
@@ -59,7 +59,7 @@ public final class AttExceptions extends BaseAttribute {
      * Gets the list of classes associated with this instance. In
      * general, these classes are not pre-verified to be subclasses of
      * {@code Throwable}.
-     * 
+     *
      * @return {@code non-null;} the list of classes
      */
     public TypeList getExceptions() {

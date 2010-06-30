@@ -33,7 +33,7 @@ public final class ReturnAddress implements TypeBearer {
 
     /**
      * Constructs an instance.
-     * 
+     *
      * @param subroutineAddress {@code >= 0;} the start address of the
      * subroutine being returned from
      */
@@ -99,7 +99,7 @@ public final class ReturnAddress implements TypeBearer {
 
     /**
      * Gets the subroutine address.
-     * 
+     *
      * @return {@code >= 0;} the subroutine address
      */
     public int getSubroutineAddress() {

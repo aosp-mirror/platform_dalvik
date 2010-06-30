@@ -50,6 +50,3 @@
     xorl     %eax,%eax
     movl     $special,%edx
     jmp      .L${opcode}_finish
-
-
-

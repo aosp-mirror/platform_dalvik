@@ -22,4 +22,3 @@ public class MirandaClass extends MirandaAbstract {
         return false;
     }
 }
-

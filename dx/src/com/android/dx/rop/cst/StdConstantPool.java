@@ -31,7 +31,7 @@ public final class StdConstantPool
 
     /**
      * Constructs an instance. All indices initially contain {@code null}.
-     * 
+     *
      * @param size the size of the pool; this corresponds to the
      * class file field {@code constant_pool_count}, and is in fact
      * always at least one more than the actual size of the constant pool,
@@ -89,7 +89,7 @@ public final class StdConstantPool
 
     /**
      * Sets the entry at the given index.
-     * 
+     *
      * @param n {@code >= 1, < size();} which entry
      * @param cst {@code null-ok;} the constant to store
      */
@@ -127,7 +127,7 @@ public final class StdConstantPool
 
     /**
      * Throws the right exception for an invalid cpi.
-     * 
+     *
      * @param idx the bad cpi
      * @return never
      * @throws ExceptionWithContext always thrown

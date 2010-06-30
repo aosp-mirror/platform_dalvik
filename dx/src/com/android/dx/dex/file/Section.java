@@ -45,7 +45,7 @@ public abstract class Section {
 
     /**
      * Validates an alignment.
-     * 
+     *
      * @param alignment the alignment
      * @throws IllegalArgumentException thrown if {@code alignment}
      * isn't a positive power of 2
@@ -89,9 +89,9 @@ public abstract class Section {
         return file;
     }
 
-    /** 
+    /**
      * Gets the alignment for this instance's final output.
-     * 
+     *
      * @return {@code > 0;} the alignment
      */
     public final int getAlignment() {
@@ -144,7 +144,7 @@ public abstract class Section {
      * @param out {@code non-null;} where to write to
      */
     public final void writeTo(AnnotatedOutput out) {
-        throwIfNotPrepared();        
+        throwIfNotPrepared();
         align(out);
 
         int cursor = out.getCursor();
@@ -173,7 +173,7 @@ public abstract class Section {
      * start of this instance's output. This is only valid to call
      * once this instance has been assigned a file offset (via {@link
      * #setFileOffset}).
-     * 
+     *
      * @param relative {@code >= 0;} the relative offset
      * @return {@code >= 0;} the corresponding absolute file offset
      */
@@ -194,10 +194,10 @@ public abstract class Section {
      * be contained in this section. This is only valid to call
      * once this instance has been assigned a file offset (via {@link
      * #setFileOffset}).
-     * 
+     *
      * <p><b>Note:</b> Subclasses must implement this as appropriate for
      * their contents.</p>
-     * 
+     *
      * @param item {@code non-null;} the item in question
      * @return {@code >= 0;} the item's absolute file offset
      */
@@ -257,7 +257,7 @@ public abstract class Section {
 
     /**
      * Aligns the output of the given data to the alignment of this instance.
-     * 
+     *
      * @param out {@code non-null;} the output to align
      */
     protected final void align(AnnotatedOutput out) {
@@ -271,14 +271,14 @@ public abstract class Section {
      * offset matches the actual cursor {@code out} or that the
      * file offset was not previously assigned, in which case it gets
      * assigned to {@code out}'s cursor.
-     * 
+     *
      * @param out {@code non-null;} where to write to
      */
     protected abstract void writeTo0(AnnotatedOutput out);
 
     /**
      * Returns the name of this section, for annotation purposes.
-     * 
+     *
      * @return {@code null-ok;} name of this part, for annotation purposes
      */
     protected final String getName() {

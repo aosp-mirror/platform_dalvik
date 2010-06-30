@@ -57,7 +57,7 @@ public class AttributeFactory {
      * indicated position in the given array. This method figures out
      * the name, and then does all the setup to call on to {@link #parse0},
      * which does the actual construction.
-     * 
+     *
      * @param cf {@code non-null;} class file to parse from
      * @param context context to parse in; one of the {@code CTX_*}
      * constants
@@ -96,7 +96,7 @@ public class AttributeFactory {
             return parse0(cf, context, name.getString(), offset + 6, length,
                           observer);
         } catch (ParseException ex) {
-            ex.addContext("...while parsing " + 
+            ex.addContext("...while parsing " +
                     ((name != null) ? (name.toHuman() + " ") : "") +
                     "attribute at offset " + Hex.u4(offset));
             throw ex;
@@ -107,7 +107,7 @@ public class AttributeFactory {
      * Parses attribute content. The base class implements this by constructing
      * an instance of {@link RawAttribute}. Subclasses are expected to
      * override this to do something better in most cases.
-     * 
+     *
      * @param cf {@code non-null;} class file to parse from
      * @param context context to parse in; one of the {@code CTX_*}
      * constants

@@ -33,7 +33,7 @@ public class BasicRegisterMapper extends RegisterMapper {
 
     /**
      * Creates a new OneToOneRegisterMapper.
-     * 
+     *
      * @param countOldRegisters the number of registers in the old name space
      */
     public BasicRegisterMapper(int countOldRegisters) {

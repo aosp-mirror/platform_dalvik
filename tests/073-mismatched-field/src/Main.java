@@ -29,4 +29,3 @@ public class Main extends SuperMain implements IMain {
         }
     }
 }
-

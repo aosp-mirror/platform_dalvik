@@ -39,4 +39,3 @@ public class IntHolder {
         mValue = val;
     }
 }
-

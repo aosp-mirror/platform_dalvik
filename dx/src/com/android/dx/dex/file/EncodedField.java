@@ -35,7 +35,7 @@ public final class EncodedField extends EncodedMember
 
     /**
      * Constructs an instance.
-     * 
+     *
      * @param field {@code non-null;} constant for the field
      * @param accessFlags access flags
      */
@@ -70,7 +70,7 @@ public final class EncodedField extends EncodedMember
 
     /**
      * {@inheritDoc}
-     * 
+     *
      * <p><b>Note:</b> This compares the method constants only,
      * ignoring any associated code, because it should never be the
      * case that two different items with the same method constant
@@ -121,7 +121,7 @@ public final class EncodedField extends EncodedMember
 
     /**
      * Gets the constant for the field.
-     * 
+     *
      * @return {@code non-null;} the constant
      */
     public CstFieldRef getRef() {
@@ -130,7 +130,7 @@ public final class EncodedField extends EncodedMember
 
     /** {@inheritDoc} */
     @Override
-    public int encode(DexFile file, AnnotatedOutput out, 
+    public int encode(DexFile file, AnnotatedOutput out,
             int lastIndex, int dumpSeq) {
         int fieldIdx = file.getFieldIds().indexOf(field);
         int diff = fieldIdx - lastIndex;

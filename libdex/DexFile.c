@@ -90,7 +90,7 @@ bool dexIsValidMemberNameUtf8_0(const char** pUtf8Ptr) {
      * character (U+00a0, U+2000..U+200f, U+2028..U+202f,
      * U+fff0..U+ffff).
      */
-    
+
     u2 utf16 = dexGetUtf16FromUtf8(pUtf8Ptr);
 
     // Perform follow-up tests based on the high 8 bits.
@@ -139,7 +139,7 @@ bool dexIsValidMemberNameUtf8_0(const char** pUtf8Ptr) {
 /* Return whether the given string is a valid field or method name. */
 bool dexIsValidMemberName(const char* s) {
     bool angleName = false;
-    
+
     switch (*s) {
         case '\0': {
             // The empty string is not a valid name.
@@ -184,9 +184,9 @@ bool dexIsValidTypeDescriptor(const char* s) {
         // Arrays may have no more than 255 dimensions.
         return false;
     }
-    
+
     switch (*(s++)) {
-        case 'B': 
+        case 'B':
         case 'C':
         case 'D':
         case 'F':
@@ -443,7 +443,7 @@ DexClassLookup* dexCreateClassLookup(DexFile* pDexFile)
         pClassDef = dexGetClassDef(pDexFile, i);
         pString = dexStringByTypeIdx(pDexFile, pClassDef->classIdx);
 
-        classLookupAdd(pDexFile, pLookup, 
+        classLookupAdd(pDexFile, pLookup,
             (u1*)pString - pDexFile->baseAddr,
             (u1*)pClassDef - pDexFile->baseAddr, &numProbes);
 
@@ -877,7 +877,7 @@ const DexClassDef* dexFindClass(const DexFile* pDexFile,
 
         if (pLookup->table[idx].classDescriptorHash == hash) {
             const char* str;
-        
+
             str = (const char*) (pDexFile->baseAddr + offset);
             if (strcmp(str, descriptor) == 0) {
                 return (const DexClassDef*)
@@ -1017,7 +1017,7 @@ static int typeLength (const char *type) {
  * Reads a string index as encoded for the debug info format,
  * returning a string pointer or NULL as appropriate.
  */
-static const char* readStringIdx(const DexFile* pDexFile, 
+static const char* readStringIdx(const DexFile* pDexFile,
         const u1** pStream) {
     u4 stringIdx = readUnsignedLeb128(pStream);
 
@@ -1033,7 +1033,7 @@ static const char* readStringIdx(const DexFile* pDexFile,
  * Reads a type index as encoded for the debug info format, returning
  * a string pointer for its descriptor or NULL as appropriate.
  */
-static const char* readTypeIdx(const DexFile* pDexFile, 
+static const char* readTypeIdx(const DexFile* pDexFile,
         const u1** pStream) {
     u4 typeIdx = readUnsignedLeb128(pStream);
 
@@ -1056,14 +1056,14 @@ typedef struct LocalInfo {
     bool live;
 } LocalInfo;
 
-static void emitLocalCbIfLive (void *cnxt, int reg, u4 endAddress, 
+static void emitLocalCbIfLive (void *cnxt, int reg, u4 endAddress,
         LocalInfo *localInReg, DexDebugNewLocalCb localCb)
 {
     if (localCb != NULL && localInReg[reg].live) {
         localCb(cnxt, reg, localInReg[reg].startAddress, endAddress,
-                localInReg[reg].name, 
-                localInReg[reg].descriptor, 
-                localInReg[reg].signature == NULL 
+                localInReg[reg].name,
+                localInReg[reg].descriptor,
+                localInReg[reg].signature == NULL
                 ? "" : localInReg[reg].signature );
     }
 }
@@ -1113,7 +1113,7 @@ void dexDecodeDebugInfo(
     } else {
         assert(pCode->insSize == dexProtoComputeArgsSize(&proto));
     }
-    
+
     DexParameterIterator iterator;
     dexParameterIteratorInit(&iterator, &proto);
 
@@ -1121,7 +1121,7 @@ void dexDecodeDebugInfo(
         const char* descriptor = dexParameterIteratorNextDescriptor(&iterator);
         const char *name;
         int reg;
-        
+
         if ((argReg >= pCode->registersSize) || (descriptor == NULL)) {
             goto invalid_stream;
         }
@@ -1159,7 +1159,7 @@ void dexDecodeDebugInfo(
             case DBG_ADVANCE_PC:
                 address += readUnsignedLeb128(&stream);
                 break;
-                
+
             case DBG_ADVANCE_LINE:
                 line += readSignedLeb128(&stream);
                 break;
@@ -1170,13 +1170,13 @@ void dexDecodeDebugInfo(
                 if (reg > pCode->registersSize) goto invalid_stream;
 
                 // Emit what was previously there, if anything
-                emitLocalCbIfLive (cnxt, reg, address, 
+                emitLocalCbIfLive (cnxt, reg, address,
                     localInReg, localCb);
 
                 localInReg[reg].name = readStringIdx(pDexFile, &stream);
                 localInReg[reg].descriptor = readTypeIdx(pDexFile, &stream);
                 if (opcode == DBG_START_LOCAL_EXTENDED) {
-                    localInReg[reg].signature 
+                    localInReg[reg].signature
                         = readStringIdx(pDexFile, &stream);
                 } else {
                     localInReg[reg].signature = NULL;
@@ -1197,7 +1197,7 @@ void dexDecodeDebugInfo(
                 reg = readUnsignedLeb128(&stream);
                 if (reg > pCode->registersSize) goto invalid_stream;
 
-                if (localInReg[reg].name == NULL 
+                if (localInReg[reg].name == NULL
                         || localInReg[reg].descriptor == NULL) {
                     goto invalid_stream;
                 }
@@ -1224,7 +1224,7 @@ void dexDecodeDebugInfo(
                 line += DBG_LINE_BASE + (adjopcode % DBG_LINE_RANGE);
 
                 if (posCb != NULL) {
-                    int done; 
+                    int done;
                     done = posCb(cnxt, address, line);
 
                     if (done) {
@@ -1254,4 +1254,3 @@ invalid_stream:
         free(methodDescriptor);
     }
 }
-

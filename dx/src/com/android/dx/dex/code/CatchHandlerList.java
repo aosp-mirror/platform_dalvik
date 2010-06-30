@@ -57,7 +57,7 @@ public final class CatchHandlerList extends FixedSizeList
     /**
      * Get the human form of this instance, prefixed on each line
      * with the string.
-     * 
+     *
      * @param prefix {@code non-null;} the prefix for every line
      * @param header {@code non-null;} the header for the first line (after the
      * first prefix)
@@ -85,7 +85,7 @@ public final class CatchHandlerList extends FixedSizeList
             } else {
                 sb.append(entry.getExceptionType().toHuman());
             }
-            
+
             sb.append(" -> ");
             sb.append(Hex.u2or4(entry.getHandler()));
         }
@@ -96,7 +96,7 @@ public final class CatchHandlerList extends FixedSizeList
     /**
      * Returns whether or not this instance ends with a "catch-all"
      * handler.
-     * 
+     *
      * @return {@code true} if this instance ends with a "catch-all"
      * handler or {@code false} if not
      */
@@ -205,7 +205,7 @@ public final class CatchHandlerList extends FixedSizeList
 
             return false;
         }
-        
+
         /** {@inheritDoc} */
         public int compareTo(Entry other) {
             if (handler < other.handler) {
@@ -216,10 +216,10 @@ public final class CatchHandlerList extends FixedSizeList
 
             return exceptionType.compareTo(other.exceptionType);
         }
-        
+
         /**
          * Gets the exception type handled.
-         * 
+         *
          * @return {@code non-null;} the exception type
          */
         public CstType getExceptionType() {
@@ -228,7 +228,7 @@ public final class CatchHandlerList extends FixedSizeList
 
         /**
          * Gets the handler address.
-         * 
+         *
          * @return {@code >= 0;} the handler address
          */
         public int getHandler() {

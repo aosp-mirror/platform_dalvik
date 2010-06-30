@@ -53,5 +53,3 @@
 .L${opcode}_greater:
     movl        $$0x1, (rFP, rINST, 4)  # vAA<- greater than
     FINISH      2                       # jump to next instruction
-
-

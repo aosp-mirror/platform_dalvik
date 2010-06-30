@@ -136,7 +136,7 @@ public class SCCP {
             return false;
         }
     }
-    
+
     /**
      * Simulates a PHI node and set the lattice for the result
      * to the approriate value.
@@ -438,7 +438,7 @@ public class SCCP {
      * steps.
      */
     private void replaceConstants() {
-        for (int reg = 0; reg < regCount; reg++) {            
+        for (int reg = 0; reg < regCount; reg++) {
             if (latticeValues[reg] != CONSTANT) {
                 continue;
             }

@@ -18,8 +18,7 @@
 LOCAL_PATH:= $(call my-dir)
 
 dexdump_src_files := \
-		DexDump.c \
-		OpCodeNames.c
+		DexDump.c
 
 dexdump_c_includes := \
 		dalvik \
@@ -72,4 +71,3 @@ endif
 
 include $(BUILD_HOST_EXECUTABLE)
 endif # !TARGET_SIMULATOR
-

@@ -69,7 +69,7 @@ public final class Form3rc extends InsnFormat {
                      */
                     lastReg = lastReg.withOffset(1);
                 }
-                
+
                 sb.append(regs.get(0).regString());
                 sb.append("..");
                 sb.append(lastReg.regString());
@@ -78,7 +78,7 @@ public final class Form3rc extends InsnFormat {
 
         sb.append("}, ");
         sb.append(cstString(insn));
-        
+
         return sb.toString();
     }
 

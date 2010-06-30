@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-public class Blort 
+public class Blort
 {
     /**
      * just because this should do nothing
@@ -27,7 +27,7 @@ public class Blort
      * a unique predecessor
      */
     void edgeSplitMoveException() {
-        try { 
+        try {
             hashCode();
             hashCode();
         } catch (Throwable tr) {
@@ -42,4 +42,3 @@ public class Blort
         }
     }
 }
-

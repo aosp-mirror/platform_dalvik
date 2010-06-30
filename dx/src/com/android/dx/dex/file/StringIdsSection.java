@@ -33,13 +33,13 @@ public final class StringIdsSection
         extends UniformItemSection {
     /**
      * {@code non-null;} map from string constants to {@link
-     * StringIdItem} instances 
+     * StringIdItem} instances
      */
     private final TreeMap<CstUtf8, StringIdItem> strings;
 
     /**
      * Constructs an instance. The file offset is initially unknown.
-     * 
+     *
      * @param file {@code non-null;} file that this instance is part of
      */
     public StringIdsSection(DexFile file) {
@@ -78,7 +78,7 @@ public final class StringIdsSection
 
     /**
      * Writes the portion of the file header that refers to this instance.
-     * 
+     *
      * @param out {@code non-null;} where to write
      */
     public void writeHeaderPart(AnnotatedOutput out) {
@@ -98,7 +98,7 @@ public final class StringIdsSection
 
     /**
      * Interns an element into this instance.
-     * 
+     *
      * @param string {@code non-null;} the string to intern, as a regular Java
      * {@code String}
      * @return {@code non-null;} the interned string
@@ -110,7 +110,7 @@ public final class StringIdsSection
 
     /**
      * Interns an element into this instance.
-     * 
+     *
      * @param string {@code non-null;} the string to intern, as a {@link CstString}
      * @return {@code non-null;} the interned string
      */
@@ -121,7 +121,7 @@ public final class StringIdsSection
 
     /**
      * Interns an element into this instance.
-     * 
+     *
      * @param string {@code non-null;} the string to intern, as a constant
      * @return {@code non-null;} the interned string
      */
@@ -131,7 +131,7 @@ public final class StringIdsSection
 
     /**
      * Interns an element into this instance.
-     * 
+     *
      * @param string {@code non-null;} the string to intern
      * @return {@code non-null;} the interned string
      */
@@ -155,7 +155,7 @@ public final class StringIdsSection
 
     /**
      * Interns the components of a name-and-type into this instance.
-     * 
+     *
      * @param nat {@code non-null;} the name-and-type
      */
     public void intern(CstNat nat) {
@@ -166,7 +166,7 @@ public final class StringIdsSection
     /**
      * Gets the index of the given string, which must have been added
      * to this instance.
-     * 
+     *
      * @param string {@code non-null;} the string to look up
      * @return {@code >= 0;} the string's index
      */
@@ -189,7 +189,7 @@ public final class StringIdsSection
     /**
      * Gets the index of the given string, which must have been added
      * to this instance.
-     * 
+     *
      * @param string {@code non-null;} the string to look up
      * @return {@code >= 0;} the string's index
      */

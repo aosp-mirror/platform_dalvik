@@ -37,7 +37,7 @@ public class DomFront {
     private final SsaMethod meth;
 
     private final ArrayList<SsaBasicBlock> nodes;
-    
+
     private final DomInfo[] domInfos;
 
     /**
@@ -55,8 +55,8 @@ public class DomFront {
     }
 
     /**
-     * Constructs instance. Call {@link DomFront#run} to process. 
-     * 
+     * Constructs instance. Call {@link DomFront#run} to process.
+     *
      * @param meth {@code non-null;} method to process
      */
     public DomFront(SsaMethod meth) {
@@ -98,7 +98,7 @@ public class DomFront {
         }
 
         buildDomTree();
-        
+
         if (DEBUG) {
             debugPrintDomChildren();
         }
@@ -153,6 +153,9 @@ public class DomFront {
 
         for (int i = 0; i < szNodes; i++) {
             DomInfo info = domInfos[i];
+
+            if (info.idom == -1) continue;
+
             SsaBasicBlock domParent = nodes.get(info.idom);
             domParent.addDomChild(nodes.get(i));
         }
@@ -182,6 +185,8 @@ public class DomFront {
                          * added label to, since we must be at a part
                          * of the dom tree we have seen before.
                          */
+                        if (runnerIndex == -1) break;
+
                         DomInfo runnerInfo = domInfos[runnerIndex];
 
                         if (runnerInfo.dominanceFrontiers.has(b)) {

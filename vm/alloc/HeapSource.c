@@ -43,6 +43,12 @@ static void setIdealFootprint(size_t max);
 #define HEAP_IDEAL_FREE             (2 * 1024 * 1024)
 #define HEAP_MIN_FREE               (HEAP_IDEAL_FREE / 4)
 
+/*
+ * When the number of bytes allocated since the previous GC exceeds
+ * this threshold a concurrent garbage collection is triggered.
+ */
+#define OCCUPANCY_THRESHOLD (256 << 10)
+
 #define HS_BOILERPLATE() \
     do { \
         assert(gDvm.gcHeap != NULL); \
@@ -109,6 +115,12 @@ typedef struct {
      * should only be used as an input for certain heuristics.
      */
     size_t bytesAllocated;
+
+    /*
+     * The number of bytes allocated after the previous garbage
+     * collection.
+     */
+    size_t prevBytesAllocated;
 
     /* Number of objects currently allocated from this mspace.
      */
@@ -192,6 +204,15 @@ struct HeapSource {
      * The mark bitmap.
      */
     HeapBitmap markBits;
+
+    /*
+     * State for the GC daemon.
+     */
+    bool hasGcThread;
+    pthread_t gcThread;
+    bool gcThreadShutdown;
+    pthread_mutex_t gcThreadMutex;
+    pthread_cond_t gcThreadCond;
 };
 
 #define hs2heap(hs_) (&((hs_)->heaps[0]))
@@ -282,8 +303,7 @@ countAllocation(Heap *heap, const void *ptr, bool isObj)
     assert(heap->bytesAllocated < mspace_footprint(heap->msp));
 }
 
-static inline void
-countFree(Heap *heap, const void *ptr, bool isObj)
+static void countFree(Heap *heap, const void *ptr, bool isObj)
 {
     HeapSource *hs;
     size_t delta;
@@ -292,6 +312,7 @@ countFree(Heap *heap, const void *ptr, bool isObj)
     assert(delta > 0);
     if (delta < heap->bytesAllocated) {
         heap->bytesAllocated -= delta;
+        heap->prevBytesAllocated = heap->bytesAllocated;
     } else {
         heap->bytesAllocated = 0;
     }
@@ -332,8 +353,8 @@ createMspace(void *base, size_t startSize, size_t absoluteMaxSize)
         /* There's no guarantee that errno has meaning when the call
          * fails, but it often does.
          */
-        LOGE_HEAP("Can't create VM heap of size (%u,%u) (errno=%d)\n",
-            startSize/2, absoluteMaxSize, errno);
+        LOGE_HEAP("Can't create VM heap of size (%u,%u): %s\n",
+            startSize/2, absoluteMaxSize, strerror(errno));
     }
 
     return msp;
@@ -400,6 +421,47 @@ addNewHeap(HeapSource *hs, mspace msp, size_t mspAbsoluteMaxSize)
 }
 
 /*
+ * The garbage collection daemon.  Initiates a concurrent collection
+ * when signaled.
+ */
+static void *gcDaemonThread(void* arg)
+{
+    dvmChangeStatus(NULL, THREAD_VMWAIT);
+    dvmLockMutex(&gHs->gcThreadMutex);
+    while (gHs->gcThreadShutdown != true) {
+        dvmWaitCond(&gHs->gcThreadCond, &gHs->gcThreadMutex);
+        dvmLockHeap();
+        dvmChangeStatus(NULL, THREAD_RUNNING);
+        dvmCollectGarbageInternal(false, GC_CONCURRENT);
+        dvmChangeStatus(NULL, THREAD_VMWAIT);
+        dvmUnlockHeap();
+    }
+    dvmChangeStatus(NULL, THREAD_RUNNING);
+    return NULL;
+}
+
+static bool gcDaemonStartup(void)
+{
+    dvmInitMutex(&gHs->gcThreadMutex);
+    pthread_cond_init(&gHs->gcThreadCond, NULL);
+    gHs->gcThreadShutdown = false;
+    gHs->hasGcThread = dvmCreateInternalThread(&gHs->gcThread, "GC",
+                                               gcDaemonThread, NULL);
+    return gHs->hasGcThread;
+}
+
+static void gcDaemonShutdown(void)
+{
+    if (gDvm.concurrentMarkSweep) {
+        dvmLockMutex(&gHs->gcThreadMutex);
+        gHs->gcThreadShutdown = true;
+        dvmSignalCond(&gHs->gcThreadCond);
+        dvmUnlockMutex(&gHs->gcThreadMutex);
+        pthread_join(gHs->gcThread, NULL);
+    }
+}
+
+/*
  * Initializes the heap source; must be called before any other
  * dvmHeapSource*() functions.  Returns a GcHeap structure
  * allocated from the heap source.
@@ -427,7 +489,7 @@ dvmHeapSourceStartup(size_t startSize, size_t absoluteMaxSize)
      * among the heaps managed by the garbage collector.
      */
     length = ALIGN_UP_TO_PAGE_SIZE(absoluteMaxSize);
-    fd = ashmem_create_region("the-java-heap", length);
+    fd = ashmem_create_region("dalvik-heap", length);
     if (fd == -1) {
         return NULL;
     }
@@ -472,6 +534,7 @@ dvmHeapSourceStartup(size_t startSize, size_t absoluteMaxSize)
     hs->softLimit = INT_MAX;    // no soft limit at first
     hs->numHeaps = 0;
     hs->sawZygote = gDvm.zygote;
+    hs->hasGcThread = false;
     hs->heapBase = base;
     hs->heapLength = length;
     if (!addNewHeap(hs, msp, absoluteMaxSize)) {
@@ -502,6 +565,11 @@ fail:
     return NULL;
 }
 
+bool dvmHeapSourceStartupAfterZygote(void)
+{
+    return gDvm.concurrentMarkSweep ? gcDaemonStartup() : true;
+}
+
 /*
  * This is called while in zygote mode, right before we fork() for the
  * first time.  We create a heap for all future zygote process allocations,
@@ -527,6 +595,11 @@ dvmHeapSourceStartupBeforeFork()
         return addNewHeap(hs, NULL, 0);
     }
     return true;
+}
+
+void dvmHeapSourceThreadShutdown(void)
+{
+    gcDaemonShutdown();
 }
 
 /*
@@ -650,7 +723,7 @@ void dvmHeapSourceGetObjectBitmaps(HeapBitmap liveBits[], HeapBitmap markBits[],
 /*
  * Get the bitmap representing all live objects.
  */
-HeapBitmap *dvmHeapSourceGetLiveBits()
+HeapBitmap *dvmHeapSourceGetLiveBits(void)
 {
     HS_BOILERPLATE();
 
@@ -721,12 +794,15 @@ dvmHeapSourceAlloc(size_t n)
     heap = hs2heap(hs);
 
     if (heap->bytesAllocated + n <= hs->softLimit) {
-// TODO: allocate large blocks (>64k?) as separate mmap regions so that
-//       they don't increase the high-water mark when they're freed.
-// TODO: zero out large objects using madvise
         ptr = mspace_calloc(heap->msp, 1, n);
         if (ptr != NULL) {
             countAllocation(heap, ptr, true);
+            size_t allocated = heap->bytesAllocated - heap->prevBytesAllocated;
+            if (allocated > OCCUPANCY_THRESHOLD) {
+                if (hs->hasGcThread == true) {
+                    dvmSignalCond(&gHs->gcThreadCond);
+                }
+            }
         }
     } else {
         /* This allocation would push us over the soft limit;
@@ -924,6 +1000,17 @@ dvmHeapSourceFreeList(size_t numPtrs, void **ptrs)
 }
 
 /*
+ * Returns true iff <ptr> is in the heap source.
+ */
+bool
+dvmHeapSourceContainsAddress(const void *ptr)
+{
+    HS_BOILERPLATE();
+
+    return (dvmHeapBitmapCoversAddress(&gHs->liveBits, ptr));
+}
+
+/*
  * Returns true iff <ptr> was allocated from the heap source.
  */
 bool
@@ -931,7 +1018,7 @@ dvmHeapSourceContains(const void *ptr)
 {
     HS_BOILERPLATE();
 
-    if (dvmHeapBitmapCoversAddress(&gHs->liveBits, ptr)) {
+    if (dvmHeapSourceContainsAddress(ptr)) {
         return dvmHeapBitmapIsObjectBitSet(&gHs->liveBits, ptr) != 0;
     }
     return false;
@@ -1166,7 +1253,7 @@ void dvmSetTargetHeapUtilization(float newTarget)
 
     hs->targetUtilization =
             (size_t)(newTarget * (float)HEAP_UTILIZATION_MAX);
-    LOGV("Set heap target utilization to %zd/%d (%f)\n", 
+    LOGV("Set heap target utilization to %zd/%d (%f)\n",
             hs->targetUtilization, HEAP_UTILIZATION_MAX, newTarget);
 }
 
@@ -1373,7 +1460,7 @@ dvmHeapSourceTrim(size_t bytesTrimmed[], size_t arrayLen)
         /* Return any whole free pages to the system.
          */
         bytesTrimmed[i] = 0;
-        mspace_walk_free_pages(heap->msp, releasePagesInRange, 
+        mspace_walk_free_pages(heap->msp, releasePagesInRange,
                                &bytesTrimmed[i]);
         heapBytes += bytesTrimmed[i];
     }
@@ -1474,7 +1561,7 @@ externalAllocPossible(const HeapSource *hs, size_t n)
  * Tries to update the internal count of externally-allocated memory.
  * If there's enough room for that memory, returns true.  If not, returns
  * false and does not update the count.
- * 
+ *
  * The caller must ensure externalAllocPossible(hs, n) == true.
  */
 static bool

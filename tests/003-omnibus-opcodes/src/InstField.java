@@ -106,4 +106,3 @@ public class InstField {
         assert(mVolatileLong2 == -1234605616436508551L);
     }
 }
-

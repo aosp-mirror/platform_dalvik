@@ -199,4 +199,3 @@ const DalvikNativeMethod dvm_java_lang_VMClassLoader[] = {
         Dalvik_java_lang_VMClassLoader_loadClass },
     { NULL, NULL, NULL },
 };
-

@@ -29,7 +29,7 @@ public final class PlainCstInsn
         extends CstInsn {
     /**
      * Constructs an instance.
-     * 
+     *
      * @param opcode {@code non-null;} the opcode
      * @param position {@code non-null;} source position
      * @param result {@code null-ok;} spec for the result, if any

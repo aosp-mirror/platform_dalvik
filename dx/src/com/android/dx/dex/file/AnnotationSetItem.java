@@ -33,7 +33,7 @@ public final class AnnotationSetItem extends OffsettedItem {
 
     /** {@code non-null;} the set of annotations */
     private final Annotations annotations;
-    
+
     /**
      * {@code non-null;} set of annotations as individual items in an array.
      * <b>Note:</b> The contents have to get sorted by type id before
@@ -43,7 +43,7 @@ public final class AnnotationSetItem extends OffsettedItem {
 
     /**
      * Constructs an instance.
-     * 
+     *
      * @param annotations {@code non-null;} set of annotations
      */
     public AnnotationSetItem(Annotations annotations) {
@@ -61,7 +61,7 @@ public final class AnnotationSetItem extends OffsettedItem {
 
     /**
      * Gets the write size for the given set.
-     * 
+     *
      * @param annotations {@code non-null;} the set
      * @return {@code > 0;} the write size
      */
@@ -78,13 +78,13 @@ public final class AnnotationSetItem extends OffsettedItem {
 
     /**
      * Gets the underlying annotations of this instance
-     * 
+     *
      * @return {@code non-null;} the annotations
      */
     public Annotations getAnnotations() {
         return annotations;
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public int hashCode() {
@@ -140,11 +140,11 @@ public final class AnnotationSetItem extends OffsettedItem {
         }
 
         out.writeInt(size);
-        
+
         for (int i = 0; i < size; i++) {
             AnnotationItem item = items[i];
             int offset = item.getAbsoluteOffset();
-            
+
             if (annotates) {
                 out.annotate(4, "  entries[" + Integer.toHexString(i) + "]: " +
                         Hex.u4(offset));

@@ -85,13 +85,13 @@ table td {
     background: #eeeeff;
 }
 
-table p { 
+table p {
     margin-bottom: 0pt;
 }
 
 /* for the bnf syntax sections */
 
-table.bnf { 
+table.bnf {
     background: #eeeeff;
     border-color: #aaaaff;
     border-style: solid;
@@ -104,7 +104,7 @@ table.bnf {
     padding-right: 6pt;
 }
 
-table.bnf td { 
+table.bnf td {
     border: none;
     padding-left: 6pt;
     padding-right: 6pt;
@@ -112,12 +112,12 @@ table.bnf td {
     padding-bottom: 1pt;
 }
 
-table.bnf td:first-child { 
+table.bnf td:first-child {
     padding-right: 0pt;
     width: 8pt;
 }
 
-table.bnf td:first-child td { 
+table.bnf td:first-child td {
     padding-left: 0pt;
 }
 

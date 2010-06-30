@@ -271,4 +271,3 @@ void dvmPointerSetDump(const PointerSet* pSet)
     for (i = 0; i < pSet->count; i++)
         printf(" %p", pSet->list[i]);
 }
-

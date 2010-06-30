@@ -26,7 +26,7 @@ public abstract class CstLiteral32
 
     /**
      * Constructs an instance.
-     * 
+     *
      * @param bits the value as {@code int} bits
      */
     /*package*/ CstLiteral32(int bits) {

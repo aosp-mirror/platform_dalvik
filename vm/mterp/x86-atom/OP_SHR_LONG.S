@@ -51,4 +51,3 @@
 .L${opcode}_final:
     movq        %xmm1, (rFP, rINST, 4)  # vAA<- shifted vBB
     FINISH      2                       # jump to next instruction
-

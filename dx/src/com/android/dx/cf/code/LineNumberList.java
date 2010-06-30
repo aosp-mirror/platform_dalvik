@@ -29,7 +29,7 @@ public final class LineNumberList extends FixedSizeList {
     /**
      * Returns an instance which is the concatenation of the two given
      * instances.
-     * 
+     *
      * @param list1 {@code non-null;} first instance
      * @param list2 {@code non-null;} second instance
      * @return {@code non-null;} combined instance
@@ -58,7 +58,7 @@ public final class LineNumberList extends FixedSizeList {
 
     /**
      * Constructs an instance.
-     * 
+     *
      * @param count the number of elements to be in the list
      */
     public LineNumberList(int count) {
@@ -67,7 +67,7 @@ public final class LineNumberList extends FixedSizeList {
 
     /**
      * Gets the indicated item.
-     * 
+     *
      * @param n {@code >= 0;} which item
      * @return {@code null-ok;} the indicated item
      */
@@ -77,7 +77,7 @@ public final class LineNumberList extends FixedSizeList {
 
     /**
      * Sets the item at the given index.
-     * 
+     *
      * @param n {@code >= 0, < size();} which element
      * @param item {@code non-null;} the item
      */
@@ -91,7 +91,7 @@ public final class LineNumberList extends FixedSizeList {
 
     /**
      * Sets the item at the given index.
-     * 
+     *
      * @param n {@code >= 0, < size();} which element
      * @param startPc {@code >= 0;} start pc of this item
      * @param lineNumber {@code >= 0;} corresponding line number
@@ -102,7 +102,7 @@ public final class LineNumberList extends FixedSizeList {
 
     /**
      * Gets the line number associated with the given address.
-     * 
+     *
      * @param pc {@code >= 0;} the address to look up
      * @return {@code >= -1;} the associated line number, or {@code -1} if
      * none is known
@@ -146,7 +146,7 @@ public final class LineNumberList extends FixedSizeList {
 
         /**
          * Constructs an instance.
-         * 
+         *
          * @param startPc {@code >= 0;} start pc of this item
          * @param lineNumber {@code >= 0;} corresponding line number
          */
@@ -165,7 +165,7 @@ public final class LineNumberList extends FixedSizeList {
 
         /**
          * Gets the start pc of this item.
-         * 
+         *
          * @return the start pc
          */
         public int getStartPc() {
@@ -174,7 +174,7 @@ public final class LineNumberList extends FixedSizeList {
 
         /**
          * Gets the line number of this item.
-         * 
+         *
          * @return the line number
          */
         public int getLineNumber() {

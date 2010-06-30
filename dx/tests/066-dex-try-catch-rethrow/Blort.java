@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-public class Blort 
+public class Blort
 {
     public static Object zorch1(String s) {
         return null;
     }
-    
+
     public static void test1() {
         try {
             zorch1("x");
@@ -43,7 +43,7 @@ public class Blort
     public static int zorch3(String s) {
         return 0;
     }
-    
+
     public static void test3() {
         try {
             zorch3("x");
@@ -55,7 +55,7 @@ public class Blort
     public static Object zorch4(int x) {
         return null;
     }
-    
+
     public static void test4() {
         try {
             zorch4(1);
@@ -67,7 +67,7 @@ public class Blort
     public static Object zorch5(int x) {
         return null;
     }
-    
+
     public static Object test5() {
         try {
             return zorch5(1);

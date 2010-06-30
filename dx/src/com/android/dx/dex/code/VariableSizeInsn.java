@@ -26,7 +26,7 @@ public abstract class VariableSizeInsn extends DalvInsn {
     /**
      * Constructs an instance. The output address of this instance is initially
      * unknown ({@code -1}).
-     * 
+     *
      * @param position {@code non-null;} source position
      * @param registers {@code non-null;} source registers
      */

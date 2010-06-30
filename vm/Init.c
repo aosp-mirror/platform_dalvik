@@ -117,6 +117,7 @@ static void dvmUsage(const char* progName)
     dvmFprintf(stderr, "  -Xgc:[no]overwritefree\n");
     dvmFprintf(stderr, "  -Xgc:[no]preverify\n");
     dvmFprintf(stderr, "  -Xgc:[no]postverify\n");
+    dvmFprintf(stderr, "  -Xgc:[no]concurrent\n");
     dvmFprintf(stderr, "  -Xgenregmap\n");
     dvmFprintf(stderr, "  -Xcheckdexsum\n");
 #if defined(WITH_JIT)
@@ -183,9 +184,6 @@ static void dvmUsage(const char* progName)
 #ifdef PROFILE_FIELD_ACCESS
         " profile_field_access"
 #endif
-#ifdef DVM_TRACK_HEAP_MARKING
-        " track_heap_marking"
-#endif
 #if DVM_RESOLVER_CACHE == DVM_RC_REDUCING
         " resolver_cache_reducing"
 #elif DVM_RESOLVER_CACHE == DVM_RC_EXPANDING
@@ -227,7 +225,7 @@ static void showVersion(void)
 {
     dvmFprintf(stdout, "DalvikVM version %d.%d.%d\n",
         DALVIK_MAJOR_VERSION, DALVIK_MINOR_VERSION, DALVIK_BUG_VERSION);
-    dvmFprintf(stdout, 
+    dvmFprintf(stdout,
         "Copyright (C) 2007 The Android Open Source Project\n\n"
         "This software is built from source code licensed under the "
         "Apache License,\n"
@@ -637,7 +635,7 @@ static void processXjitmethod(const char *opt)
     gDvmJit.methodTable = dvmHashTableCreate(8, NULL);
 
     start = buf;
-    /* 
+    /*
      * Break comma-separated method signatures and enter them into the hash
      * table individually.
      */
@@ -986,6 +984,10 @@ static int dvmProcessOptions(int argc, const char* const argv[],
                 gDvm.postVerify = true;
             else if (strcmp(argv[i] + 5, "nopostverify") == 0)
                 gDvm.postVerify = false;
+            else if (strcmp(argv[i] + 5, "concurrent") == 0)
+                gDvm.concurrentMarkSweep = true;
+            else if (strcmp(argv[i] + 5, "noconcurrent") == 0)
+                gDvm.concurrentMarkSweep = false;
             else {
                 dvmFprintf(stderr, "Bad value for -Xgc");
                 return -1;
@@ -1374,7 +1376,7 @@ bool dvmInitAfterZygote(void)
 {
     u8 startHeap, startQuit, startJdwp;
     u8 endHeap, endQuit, endJdwp;
-    
+
     startHeap = dvmGetRelativeTimeUsec();
 
     /*
@@ -1594,7 +1596,7 @@ void dvmShutdown(void)
     /*
      * Stop our internal threads.
      */
-    dvmHeapWorkerShutdown();
+    dvmGcThreadShutdown();
 
     if (gDvm.jdwpState != NULL)
         dvmJdwpShutdown(gDvm.jdwpState);

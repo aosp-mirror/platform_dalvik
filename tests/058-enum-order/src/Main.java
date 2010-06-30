@@ -21,7 +21,7 @@ public class Main {
     public static enum Muffin {
         CORN, BLUEBERRY, CRANBERRY, BRAN, BLACKBERRY;
     }
-    
+
     public static void main(String args[]) {
         Muffin[] array = Muffin.class.getEnumConstants();
         for (Muffin m : array) {

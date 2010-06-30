@@ -42,5 +42,3 @@
     $instr    # %ecx<- vA op vB
     #FGETOP_JMP  1, %eax                 # jump to next instruction; getop, jmp
     OLD_JMP_4   %eax
-
-

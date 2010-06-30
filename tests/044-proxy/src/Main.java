@@ -27,4 +27,3 @@ public class Main {
         WrappedThrow.main(null);
     }
 }
-

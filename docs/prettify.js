@@ -969,7 +969,7 @@ function _pr_isIE6() {
     var newlineRe = /\r\n?|\n/g;
     var trailingSpaceRe = /[ \r\n]$/;
     var lastWasSpace = true;  // the last text chunk emitted ended with a space.
-    
+
     // A helper function that is responsible for opening sections of decoration
     // and outputing properly escaped chunks of source
     function emitTextUpTo(sourceIdx) {

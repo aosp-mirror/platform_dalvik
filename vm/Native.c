@@ -815,4 +815,3 @@ static void* lookupSharedLibMethod(const Method* method)
     return (void*) dvmHashForeach(gDvm.nativeLibs, findMethodInLib,
         (void*) method);
 }
-

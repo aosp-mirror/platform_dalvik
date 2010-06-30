@@ -53,7 +53,7 @@ public class ClassAttrs {
             meth = MemberClass.class.getMethod("foo", (Class[]) null);
             System.out.println("method signature: "
                     + getSignatureAttribute(meth));
-            
+
             Field field;
             field = MemberClass.class.getField("mWha");
             System.out.println("field signature: "

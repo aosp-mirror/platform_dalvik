@@ -34,7 +34,7 @@ public final class AnnotationSetRefItem extends OffsettedItem {
 
     /**
      * Constructs an instance.
-     * 
+     *
      * @param annotations {@code non-null;} the annotation set to refer to
      */
     public AnnotationSetRefItem(AnnotationSetItem annotations) {

@@ -286,6 +286,7 @@ static void virtualFree(void *addr, size_t length)
     }
 }
 
+#ifndef NDEBUG
 static int isValidAddress(const HeapSource *heapSource, const u1 *addr)
 {
     size_t block;
@@ -294,6 +295,7 @@ static int isValidAddress(const HeapSource *heapSource, const u1 *addr)
     return heapSource->baseBlock <= block &&
            heapSource->limitBlock > block;
 }
+#endif
 
 /*
  * Iterate over the block map looking for a contiguous run of free
@@ -681,6 +683,12 @@ void *allocateGray(size_t size)
     return addr;
 }
 
+bool dvmHeapSourceContainsAddress(const void *ptr)
+{
+    HeapSource *heapSource = gDvm.gcHeap->heapSource;
+    return dvmHeapBitmapCoversAddress(&heapSource->allocBits, ptr);
+}
+
 /*
  * Returns true if the given address is within the heap and points to
  * the header of a live object.
@@ -993,10 +1001,12 @@ static int isWeakReference(const Object *obj)
     return getReferenceFlags(obj) & CLASS_ISWEAKREFERENCE;
 }
 
+#ifndef NDEBUG
 static bool isPhantomReference(const Object *obj)
 {
     return getReferenceFlags(obj) & CLASS_ISPHANTOMREFERENCE;
 }
+#endif
 
 /*
  * Returns true if the reference was registered with a reference queue
@@ -1027,26 +1037,12 @@ static bool isReferenceEnqueuable(const Object *ref)
 /*
  * Schedules a reference to be appended to its reference queue.
  */
-static void enqueueReference(const Object *ref)
+static void enqueueReference(Object *ref)
 {
-    LargeHeapRefTable **table;
-    Object *op;
-
-    assert(((uintptr_t)ref & 3) == 0);
-    assert((WORKER_ENQUEUE & ~3) == 0);
+    assert(ref != NULL);
     assert(dvmGetFieldObject(ref, gDvm.offJavaLangRefReference_queue) != NULL);
     assert(dvmGetFieldObject(ref, gDvm.offJavaLangRefReference_queueNext) == NULL);
-    /*
-     * Set the enqueue bit in the bottom of the pointer.  Assumes that
-     * objects are 8-byte aligned.
-     *
-     * Note that we are adding the *Reference* (which is by definition
-     * already black at this point) to this list; we're not adding the
-     * referent (which has already been cleared).
-     */
-    table = &gDvm.gcHeap->referenceOperations;
-    op = (Object *)((uintptr_t)ref | WORKER_ENQUEUE);
-    if (!dvmHeapAddRefToLargeTable(table, op)) {
+    if (!dvmHeapAddRefToLargeTable(&gDvm.gcHeap->referenceOperations, ref)) {
         LOGE("no room for any more reference operations");
         dvmAbort();
     }
@@ -1065,17 +1061,18 @@ static void clearReference(Object *obj)
  */
 void clearWhiteReferences(Object **list)
 {
-    size_t referentOffset, vmDataOffset;
+    size_t referentOffset, queueNextOffset;
     bool doSignal;
 
-    vmDataOffset = gDvm.offJavaLangRefReference_vmData;
+    queueNextOffset = gDvm.offJavaLangRefReference_queueNext;
     referentOffset = gDvm.offJavaLangRefReference_referent;
     doSignal = false;
     while (*list != NULL) {
         Object *ref = *list;
         JValue *field = dvmFieldPtr(ref, referentOffset);
         Object *referent = field->l;
-        *list = dvmGetFieldObject(ref, vmDataOffset);
+        *list = dvmGetFieldObject(ref, queueNextOffset);
+        dvmSetFieldObject(ref, queueNextOffset, NULL);
         assert(referent != NULL);
         if (isForward(referent->clazz)) {
             field->l = referent = getForward(referent->clazz);
@@ -1108,11 +1105,11 @@ void preserveSoftReferences(Object **list)
 {
     Object *ref;
     Object *prev, *next;
-    size_t referentOffset, vmDataOffset;
+    size_t referentOffset, queueNextOffset;
     unsigned counter;
     bool white;
 
-    vmDataOffset = gDvm.offJavaLangRefReference_vmData;
+    queueNextOffset = gDvm.offJavaLangRefReference_queueNext;
     referentOffset = gDvm.offJavaLangRefReference_referent;
     counter = 0;
     prev = next = NULL;
@@ -1120,7 +1117,7 @@ void preserveSoftReferences(Object **list)
     while (ref != NULL) {
         JValue *field = dvmFieldPtr(ref, referentOffset);
         Object *referent = field->l;
-        next = dvmGetFieldObject(ref, vmDataOffset);
+        next = dvmGetFieldObject(ref, queueNextOffset);
         assert(referent != NULL);
         if (isForward(referent->clazz)) {
             /* Referent is black. */
@@ -1137,8 +1134,8 @@ void preserveSoftReferences(Object **list)
         if (white) {
             /* Referent is black, unlink it. */
             if (prev != NULL) {
-                dvmSetFieldObject(ref, vmDataOffset, NULL);
-                dvmSetFieldObject(prev, vmDataOffset, next);
+                dvmSetFieldObject(ref, queueNextOffset, NULL);
+                dvmSetFieldObject(prev, queueNextOffset, next);
             }
         } else {
             /* Referent is white, skip over it. */
@@ -1169,7 +1166,7 @@ void processFinalizableReferences(void)
     /* Create a table that the new pending refs will
      * be added to.
      */
-    if (!dvmHeapInitHeapRefTable(&newPendingRefs, 128)) {
+    if (!dvmHeapInitHeapRefTable(&newPendingRefs)) {
         //TODO: mark all finalizable refs and hope that
         //      we can schedule them next time.  Watch out,
         //      because we may be expecting to free up space
@@ -1266,7 +1263,7 @@ static void scavengeReferenceObject(Object *obj)
 {
     Object *referent;
     Object **queue;
-    size_t referentOffset, vmDataOffset;
+    size_t referentOffset, queueNextOffset;
 
     assert(obj != NULL);
     LOG_SCAV("scavengeReferenceObject(obj=%p),'%s'", obj, obj->clazz->descriptor);
@@ -1284,8 +1281,8 @@ static void scavengeReferenceObject(Object *obj)
         assert(isPhantomReference(obj));
         queue = &gDvm.gcHeap->phantomReferences;
     }
-    vmDataOffset = gDvm.offJavaLangRefReference_vmData;
-    dvmSetFieldObject(obj, vmDataOffset, *queue);
+    queueNextOffset = gDvm.offJavaLangRefReference_queueNext;
+    dvmSetFieldObject(obj, queueNextOffset, *queue);
     *queue = obj;
     LOG_SCAV("scavengeReferenceObject: enqueueing %p", obj);
 }
@@ -1423,10 +1420,6 @@ static void scavengeReference(Object **obj)
         // LOG_SCAV("scavangeReference %p has a NULL class object", fromObj);
         assert(!"implemented");
         toObj = NULL;
-    } else if (clazz == gDvm.unlinkedJavaLangClass) {
-        // LOG_SCAV("scavangeReference %p is an unlinked class object", fromObj);
-        assert(!"implemented");
-        toObj = NULL;
     } else {
         toObj = transportObject(fromObj);
     }
@@ -1444,7 +1437,6 @@ static void scavengeObject(Object *obj)
     assert(obj != NULL);
     assert(obj->clazz != NULL);
     assert(!((uintptr_t)obj->clazz & 0x1));
-    assert(obj->clazz != gDvm.unlinkedJavaLangClass);
     clazz = obj->clazz;
     if (clazz == gDvm.classJavaLangClass) {
         scavengeClassObject((ClassObject *)obj);
@@ -1460,27 +1452,6 @@ static void scavengeObject(Object *obj)
 /*
  * External root scavenging routines.
  */
-
-static void scavengeHashTable(HashTable *table)
-{
-    HashEntry *entry;
-    void *obj;
-    int i;
-
-    if (table == NULL) {
-        return;
-    }
-    dvmHashTableLock(table);
-    for (i = 0; i < table->tableSize; ++i) {
-        entry = &table->pEntries[i];
-        obj = entry->data;
-        if (obj == NULL || obj == HASH_TOMBSTONE) {
-            continue;
-        }
-        scavengeReference((Object **)(void *)&entry->data);
-    }
-    dvmHashTableUnlock(table);
-}
 
 static void pinHashTableEntries(HashTable *table)
 {
@@ -1597,18 +1568,12 @@ static void pinReferenceTable(const ReferenceTable *table)
     }
 }
 
-static void scavengeLargeHeapRefTable(LargeHeapRefTable *table, bool stripLowBits)
+static void scavengeLargeHeapRefTable(LargeHeapRefTable *table)
 {
     for (; table != NULL; table = table->next) {
         Object **ref = table->refs.table;
         for (; ref < table->refs.nextEntry; ++ref) {
-            if (stripLowBits) {
-                Object *obj = (Object *)((uintptr_t)*ref & ~3);
-                scavengeReference(&obj);
-                *ref = (Object *)((uintptr_t)obj | ((uintptr_t)*ref & 3));
-            } else {
-                scavengeReference(ref);
-            }
+            scavengeReference(ref);
         }
     }
 }
@@ -1759,7 +1724,6 @@ static void scavengeThreadStack(Thread *thread)
                     if (bits == 1) {
                         /* set bit 9 so we can tell when we're empty */
                         bits = *regVector++ | 0x0100;
-                        LOGVV("loaded bits: 0x%02x\n", bits & 0xff);
                     }
 
                     if (rval != 0 && (bits & 0x01) != 0) {
@@ -2017,9 +1981,6 @@ static void scavengeBlock(HeapSource *heapSource, size_t block)
             size = objectSize((Object *)cursor);
             size = alignUp(size, ALLOC_ALIGNMENT);
             cursor += size;
-        } else if (word == 0 && cursor == (u1 *)gDvm.unlinkedJavaLangClass) {
-            size = sizeof(ClassObject);
-            cursor += size;
         } else {
             /* Check for padding. */
             while (*(u4 *)cursor == 0) {
@@ -2038,8 +1999,7 @@ static size_t objectSize(const Object *obj)
 
     assert(obj != NULL);
     assert(obj->clazz != NULL);
-    if (obj->clazz == gDvm.classJavaLangClass ||
-        obj->clazz == gDvm.unlinkedJavaLangClass) {
+    if (obj->clazz == gDvm.classJavaLangClass) {
         size = dvmClassObjectSize((ClassObject *)obj);
     } else if (IS_CLASS_FLAG_SET(obj->clazz, CLASS_ISARRAY)) {
         size = dvmArrayObjectSize((ArrayObject *)obj);
@@ -2077,9 +2037,6 @@ static void verifyBlock(HeapSource *heapSource, size_t block)
             dvmVerifyObject((Object *)cursor);
             size = objectSize((Object *)cursor);
             size = alignUp(size, ALLOC_ALIGNMENT);
-            cursor += size;
-        } else if (word == 0 && cursor == (u1 *)gDvm.unlinkedJavaLangClass) {
-            size = sizeof(ClassObject);
             cursor += size;
         } else {
             /* Check for padding. */
@@ -2252,8 +2209,8 @@ void dvmScavengeRoots(void)  /* Needs a new name badly */
     pinThreadList();
     pinReferenceTable(&gDvm.jniGlobalRefTable);
     pinReferenceTable(&gDvm.jniPinRefTable);
-    pinReferenceTable(&gcHeap->nonCollectableRefs);
     pinHashTableEntries(gDvm.loadedClasses);
+    pinHashTableEntries(gDvm.dbgRegistry);
     pinPrimitiveClasses();
     pinInternedStrings();
 
@@ -2282,18 +2239,15 @@ void dvmScavengeRoots(void)  /* Needs a new name badly */
     scavengeThreadList();
 
     LOG_SCAV("Scavenging gDvm.gcHeap->referenceOperations");
-    scavengeLargeHeapRefTable(gcHeap->referenceOperations, true);
+    scavengeLargeHeapRefTable(gcHeap->referenceOperations);
 
     LOG_SCAV("Scavenging gDvm.gcHeap->pendingFinalizationRefs");
-    scavengeLargeHeapRefTable(gcHeap->pendingFinalizationRefs, false);
+    scavengeLargeHeapRefTable(gcHeap->pendingFinalizationRefs);
 
     LOG_SCAV("Scavenging random global stuff");
     scavengeReference(&gDvm.outOfMemoryObj);
     scavengeReference(&gDvm.internalErrorObj);
     scavengeReference(&gDvm.noClassDefFoundErrorObj);
-
-    LOG_SCAV("Scavenging gDvm.dbgRegistry");
-    scavengeHashTable(gDvm.dbgRegistry);
 
     // LOG_SCAV("Scavenging gDvm.internedString");
     scavengeInternedStrings();
