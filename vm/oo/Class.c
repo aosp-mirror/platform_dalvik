@@ -1955,11 +1955,9 @@ void dvmFreeClassInnards(ClassObject* clazz)
     } while (0)
 
     /* arrays just point at Object's vtable; don't free vtable in this case.
-     * dvmIsArrayClass() checks clazz->descriptor, so we have to do this check
-     * before freeing the name.
      */
     clazz->vtableCount = -1;
-    if (dvmIsArrayClass(clazz)) {
+    if (clazz->vtable == gDvm.classJavaLangObject->vtable) {
         clazz->vtable = NULL;
     } else {
         NULL_AND_LINEAR_FREE(clazz->vtable);
