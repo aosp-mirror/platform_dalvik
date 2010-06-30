@@ -71,7 +71,9 @@ static void Dalvik_java_lang_System_arraycopy(const u4* args, JValue* pResult)
         srcPos > (int) srcArray->length - length ||
         dstPos > (int) dstArray->length - length)
     {
-        dvmThrowException("Ljava/lang/ArrayIndexOutOfBoundsException;", NULL);
+        dvmThrowExceptionFmt("Ljava/lang/ArrayIndexOutOfBoundsException;",
+            "src.length=%d srcPos=%d dst.length=%d dstPos=%d length=%d",
+            srcArray->length, srcPos, dstArray->length, dstPos, length);
         RETURN_VOID();
     }
 
