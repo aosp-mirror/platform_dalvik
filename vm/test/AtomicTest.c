@@ -345,7 +345,7 @@ bool dvmTestAtomicSpeed(void)
     swapTest = 0x11111111;
     android_atomic_and(0xfffdaf96, &andTest);
     android_atomic_or(0xdeaaeb00, &orTest);
-    int oldSwap = android_atomic_swap(0x22222222, &swapTest);
+    int oldSwap = android_atomic_acquire_swap(0x22222222, &swapTest);
     int oldSwap2 = android_atomic_release_swap(0x33333333, &swapTest);
     if (android_atomic_release_cas(failingCasTest+1, failingCasTest-1,
             &failingCasTest) == 0)
