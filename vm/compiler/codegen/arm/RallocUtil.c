@@ -490,6 +490,8 @@ extern void dvmCompilerClobberHandlerRegs(CompilationUnit *cUnit)
     //TUNING: reduce the set of regs used by handlers.  Only a few need lots.
     dvmCompilerClobberCallRegs(cUnit);
     dvmCompilerClobber(cUnit, r4PC);
+    dvmCompilerClobber(cUnit, r7);
+    dvmCompilerClobber(cUnit, r8);
     dvmCompilerClobber(cUnit, r9);
     dvmCompilerClobber(cUnit, r10);
 }
