@@ -43,8 +43,10 @@ host_smp_flag := -DANDROID_SMP=1
 include $(LOCAL_PATH)/ReconfigureDvm.mk
 
 # Overwrite default settings
+ifneq ($(TARGET_ARCH),x86)
 ifeq ($(TARGET_SIMULATOR),false)
     LOCAL_PRELINK_MODULE := true
+endif
 endif
 LOCAL_MODULE_TAGS := user
 LOCAL_MODULE := libdvm
