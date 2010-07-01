@@ -1351,7 +1351,7 @@ static void setThreadName(const char *threadName)
     } else {
         s = threadName + len - 15;
     }
-#if defined(HAVE_PTHREAD_SETNAME_NP)
+#if defined(HAVE_ANDROID_PTHREAD_SETNAME_NP)
     if (pthread_setname_np(pthread_self(), s) != 0)
         LOGW("Unable to set the name of the current thread\n");
 #elif defined(HAVE_PRCTL)
