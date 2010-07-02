@@ -682,15 +682,18 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
     lastBB->id = numBlocks++;
 
     if (cUnit.printMe) {
-        LOGD("TRACEINFO (%d): 0x%08x %s%s 0x%x %d of %d, %d blocks",
+        char* signature = dexProtoCopyMethodDescriptor(&desc->method->prototype);
+        LOGD("TRACEINFO (%d): 0x%08x %s%s.%s 0x%x %d of %d, %d blocks",
             compilationId,
             (intptr_t) desc->method->insns,
             desc->method->clazz->descriptor,
             desc->method->name,
+            signature,
             desc->trace[0].frag.startOffset,
             traceSize,
             dexCode->insnsSize,
             numBlocks);
+        free(signature);
     }
 
     BasicBlock **blockList;
