@@ -407,7 +407,7 @@ static bool checkOnLoadResult(SharedLib* pEntry)
     while (pEntry->onLoadResult == kOnLoadPending) {
         LOGD("threadid=%d: waiting for %s OnLoad status\n",
             self->threadId, pEntry->pathName);
-        int oldStatus = dvmChangeStatus(self, THREAD_VMWAIT);
+        ThreadStatus oldStatus = dvmChangeStatus(self, THREAD_VMWAIT);
         pthread_cond_wait(&pEntry->onLoadCond, &pEntry->onLoadLock);
         dvmChangeStatus(self, oldStatus);
     }
@@ -499,7 +499,7 @@ bool dvmLoadNativeCode(const char* pathName, Object* classLoader)
      * the GC to ignore us.
      */
     Thread* self = dvmThreadSelf();
-    int oldStatus = dvmChangeStatus(self, THREAD_VMWAIT);
+    ThreadStatus oldStatus = dvmChangeStatus(self, THREAD_VMWAIT);
     handle = dlopen(pathName, RTLD_LAZY);
     dvmChangeStatus(self, oldStatus);
 

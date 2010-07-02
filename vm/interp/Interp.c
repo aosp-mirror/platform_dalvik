@@ -127,7 +127,7 @@ static void dvmBreakpointSetLock(BreakpointSet* pSet)
 {
     if (dvmTryLockMutex(&pSet->lock) != 0) {
         Thread* self = dvmThreadSelf();
-        int oldStatus = dvmChangeStatus(self, THREAD_VMWAIT);
+        ThreadStatus oldStatus = dvmChangeStatus(self, THREAD_VMWAIT);
         dvmLockMutex(&pSet->lock);
         dvmChangeStatus(self, oldStatus);
     }

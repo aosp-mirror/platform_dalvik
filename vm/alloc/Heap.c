@@ -166,16 +166,9 @@ bool dvmLockHeap()
         ThreadStatus oldStatus;
 
         self = dvmThreadSelf();
-        if (self != NULL) {
-            oldStatus = dvmChangeStatus(self, THREAD_VMWAIT);
-        } else {
-            LOGI("ODD: waiting on heap lock, no self\n");
-            oldStatus = -1; // shut up gcc
-        }
+        oldStatus = dvmChangeStatus(self, THREAD_VMWAIT);
         dvmLockMutex(&gDvm.gcHeapLock);
-        if (self != NULL) {
-            dvmChangeStatus(self, oldStatus);
-        }
+        dvmChangeStatus(self, oldStatus);
     }
 
     return true;
