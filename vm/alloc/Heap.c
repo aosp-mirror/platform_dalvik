@@ -285,9 +285,25 @@ static void *tryMalloc(size_t size)
         return ptr;
     }
 
-    /* The allocation failed.  Free up some space by doing
-     * a full garbage collection.  This may grow the heap
-     * if the live set is sufficiently large.
+    /*
+     * The allocation failed.  If the GC is running, block until it
+     * completes and retry.
+     */
+    if (gDvm.gcHeap->gcRunning) {
+        /*
+         * The GC is concurrently tracing the heap.  Release the heap
+         * lock, wait for the GC to complete, and retrying allocating.
+         */
+        dvmWaitForConcurrentGcToComplete();
+        ptr = dvmHeapSourceAlloc(size);
+        if (ptr != NULL) {
+            return ptr;
+        }
+    }
+    /*
+     * Another failure.  Our thread was starved or there may be too
+     * many live objects.  Try a foreground GC.  This will have no
+     * effect if the concurrent GC is already running.
      */
     gcForMalloc(false);
     ptr = dvmHeapSourceAlloc(size);
@@ -758,9 +774,10 @@ void dvmCollectGarbageInternal(bool clearSoftRefs, GcReason reason)
 
     if (reason == GC_CONCURRENT) {
         /*
-         * We are performing a concurrent collection.  Resume all
-         * threads for the duration of the recursive mark.
+         * Resume threads while tracing from the roots.  We unlock the
+         * heap to allow mutator threads to allocate from free space.
          */
+        dvmUnlockHeap();
         dvmResumeAllThreads(SUSPEND_FOR_GC);
     }
 
@@ -773,9 +790,10 @@ void dvmCollectGarbageInternal(bool clearSoftRefs, GcReason reason)
 
     if (reason == GC_CONCURRENT) {
         /*
-         * We are performing a concurrent collection.  Perform the
-         * final thread suspension.
+         * Re-acquire the heap lock and perform the final thread
+         * suspension.
          */
+        dvmLockHeap();
         dvmSuspendAllThreads(SUSPEND_FOR_GC);
         /*
          * As no barrier intercepts root updates, we conservatively
@@ -892,6 +910,15 @@ void dvmCollectGarbageInternal(bool clearSoftRefs, GcReason reason)
 #endif
 
     dvmResumeAllThreads(SUSPEND_FOR_GC);
+
+    if (reason == GC_CONCURRENT) {
+        /*
+         * Wake-up any threads that blocked after a failed allocation
+         * request.
+         */
+        dvmBroadcastCond(&gDvm.gcHeapCond);
+    }
+
     if (reason != GC_CONCURRENT) {
         if (oldThreadPriority != kInvalidPriority) {
             if (setpriority(PRIO_PROCESS, 0, oldThreadPriority) != 0) {
@@ -923,6 +950,16 @@ void dvmCollectGarbageInternal(bool clearSoftRefs, GcReason reason)
         LOGD_HEAP("Dumping native heap to DDM\n");
         dvmDdmSendHeapSegments(false, true);
     }
+}
+
+void dvmWaitForConcurrentGcToComplete(void)
+{
+    Thread *self = dvmThreadSelf();
+    ThreadStatus oldStatus;
+    assert(self != NULL);
+    oldStatus = dvmChangeStatus(self, THREAD_VMWAIT);
+    dvmWaitCond(&gDvm.gcHeapCond, &gDvm.gcHeapLock);
+    dvmChangeStatus(self, oldStatus);
 }
 
 #if WITH_HPROF

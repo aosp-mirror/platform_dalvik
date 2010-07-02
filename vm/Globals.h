@@ -444,6 +444,12 @@ struct DvmGlobals {
      */
     pthread_mutex_t gcHeapLock;
 
+    /*
+     * Condition variable to queue threads waiting to retry an
+     * allocation.  Signaled after a concurrent GC is completed.
+     */
+    pthread_cond_t gcHeapCond;
+
     /* Opaque pointer representing the heap. */
     GcHeap*     gcHeap;
 

@@ -285,8 +285,7 @@ ptr2heap(const HeapSource *hs, const void *ptr)
  *
  * These aren't exact, and should not be treated as such.
  */
-static inline void
-countAllocation(Heap *heap, const void *ptr, bool isObj)
+static void countAllocation(Heap *heap, const void *ptr, bool isObj)
 {
     HeapSource *hs;
 
@@ -789,28 +788,41 @@ dvmHeapSourceAlloc(size_t n)
     HeapSource *hs = gHs;
     Heap *heap;
     void *ptr;
+    size_t allocated;
 
     HS_BOILERPLATE();
     heap = hs2heap(hs);
-
-    if (heap->bytesAllocated + n <= hs->softLimit) {
-        ptr = mspace_calloc(heap->msp, 1, n);
-        if (ptr != NULL) {
-            countAllocation(heap, ptr, true);
-            size_t allocated = heap->bytesAllocated - heap->prevBytesAllocated;
-            if (allocated > OCCUPANCY_THRESHOLD) {
-                if (hs->hasGcThread == true) {
-                    dvmSignalCond(&gHs->gcThreadCond);
-                }
-            }
-        }
-    } else {
-        /* This allocation would push us over the soft limit;
-         * act as if the heap is full.
+    if (heap->bytesAllocated + n > hs->softLimit) {
+        /*
+         * This allocation would push us over the soft limit; act as
+         * if the heap is full.
          */
         LOGV_HEAP("softLimit of %zd.%03zdMB hit for %zd-byte allocation\n",
-                FRACTIONAL_MB(hs->softLimit), n);
-        ptr = NULL;
+                  FRACTIONAL_MB(hs->softLimit), n);
+        return NULL;
+    }
+    ptr = mspace_calloc(heap->msp, 1, n);
+    if (ptr == NULL) {
+        return NULL;
+    }
+    countAllocation(heap, ptr, true);
+    /*
+     * Check to see if a concurrent GC should be initiated.
+     */
+    if (gDvm.gcHeap->gcRunning || !hs->hasGcThread) {
+        /*
+         * The garbage collector thread is already running or has yet
+         * to be started.  Do nothing.
+         */
+        return ptr;
+    }
+    allocated = heap->bytesAllocated - heap->prevBytesAllocated;
+    if (allocated > OCCUPANCY_THRESHOLD) {
+        /*
+         * We have exceeded the occupancy threshold.  Wake up the
+         * garbage collector.
+         */
+        dvmSignalCond(&gHs->gcThreadCond);
     }
     return ptr;
 }
@@ -1651,6 +1663,18 @@ dvmTrackExternalAllocation(size_t n)
     if (externalAlloc(hs, n, false)) {
         ret = true;
         goto out;
+    }
+
+    if (gDvm.gcHeap->gcRunning) {
+        /*
+         * The GC is concurrently tracing the heap.  Release the heap
+         * lock, wait for the GC to complete, and try again.
+         */
+        dvmWaitForConcurrentGcToComplete();
+        if (externalAlloc(hs, n, false)) {
+            ret = true;
+            goto out;
+        }
     }
 
     /* The "allocation" failed.  Free up some space by doing
