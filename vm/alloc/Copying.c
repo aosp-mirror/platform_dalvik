@@ -2355,3 +2355,13 @@ void dvmMarkObjectNonNull(const Object *obj)
 {
     assert(!"implemented");
 }
+
+void dvmMarkDirtyObjects(void)
+{
+    assert(!"implemented");
+}
+
+void dvmHeapSourceThreadShutdown(void)
+{
+    /* do nothing */
+}
