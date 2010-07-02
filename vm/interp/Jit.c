@@ -659,6 +659,14 @@ int dvmCheckJit(const u2* pc, Thread* self, InterpState* interpState)
     int switchInterp = false;
     bool debugOrProfile = dvmDebuggerOrProfilerActive();
 
+    /*
+     * Bug 2710533 - dalvik crash when disconnecting debugger
+     *
+     * Reset the entry point to the default value. If needed it will be set to a
+     * specific value in the corresponding case statement (eg kJitSingleStepEnd)
+     */
+    interpState->entryPoint = kInterpEntryInstr;
+
     /* Prepare to handle last PC and stage the current PC */
     const u2 *lastPC = interpState->lastPC;
     interpState->lastPC = pc;
@@ -836,16 +844,8 @@ int dvmCheckJit(const u2* pc, Thread* self, InterpState* interpState)
             }
             break;
 #endif
-        /*
-         * If the debug interpreter was entered for non-JIT reasons, check if
-         * the original reason still holds. If not, we have to force the
-         * interpreter switch here and use dvmDebuggerOrProfilerActive instead
-         * of dvmJitDebuggerOrProfilerActive since the latter will alwasy
-         * return true when the debugger/profiler is already detached and the
-         * JIT profiling table is restored.
-         */
         case kJitNot:
-            switchInterp = !dvmDebuggerOrProfilerActive();
+            switchInterp = !debugOrProfile;
             break;
         default:
             LOGE("Unexpected JIT state: %d entry point: %d",
