@@ -289,11 +289,11 @@ static void genIGet(CompilationUnit *cUnit, MIR *mir, OpSize size,
 {
     int regPtr;
     RegLocation rlResult;
-    DecodedInstruction *dInsn = &mir->dalvikInsn;
+    RegisterClass regClass = dvmCompilerRegClassBySize(size);
     RegLocation rlObj = dvmCompilerGetSrc(cUnit, mir, 0);
     RegLocation rlDest = dvmCompilerGetDest(cUnit, mir, 0);
     rlObj = loadValue(cUnit, rlObj, kCoreReg);
-    rlResult = dvmCompilerEvalLoc(cUnit, rlDest, kAnyReg, true);
+    rlResult = dvmCompilerEvalLoc(cUnit, rlDest, regClass, true);
     genNullCheck(cUnit, rlObj.sRegLow, rlObj.lowReg, mir->offset,
                  NULL);/* null object? */
 
@@ -312,12 +312,11 @@ static void genIGet(CompilationUnit *cUnit, MIR *mir, OpSize size,
 static void genIPut(CompilationUnit *cUnit, MIR *mir, OpSize size,
                     int fieldOffset)
 {
-    DecodedInstruction *dInsn = &mir->dalvikInsn;
+    RegisterClass regClass = dvmCompilerRegClassBySize(size);
     RegLocation rlSrc = dvmCompilerGetSrc(cUnit, mir, 0);
     RegLocation rlObj = dvmCompilerGetSrc(cUnit, mir, 1);
     rlObj = loadValue(cUnit, rlObj, kCoreReg);
-    rlSrc = loadValue(cUnit, rlSrc, kAnyReg);
-    int regPtr;
+    rlSrc = loadValue(cUnit, rlSrc, regClass);
     genNullCheck(cUnit, rlObj.sRegLow, rlObj.lowReg, mir->offset,
                  NULL);/* null object? */
 
@@ -334,6 +333,7 @@ static void genArrayGet(CompilationUnit *cUnit, MIR *mir, OpSize size,
                         RegLocation rlArray, RegLocation rlIndex,
                         RegLocation rlDest, int scale)
 {
+    RegisterClass regClass = dvmCompilerRegClassBySize(size);
     int lenOffset = offsetof(ArrayObject, length);
     int dataOffset = offsetof(ArrayObject, contents);
     RegLocation rlResult;
@@ -373,7 +373,7 @@ static void genArrayGet(CompilationUnit *cUnit, MIR *mir, OpSize size,
         } else {
             opRegReg(cUnit, kOpAdd, regPtr, rlIndex.lowReg);
         }
-        rlResult = dvmCompilerEvalLoc(cUnit, rlDest, kAnyReg, true);
+        rlResult = dvmCompilerEvalLoc(cUnit, rlDest, regClass, true);
 
         HEAP_ACCESS_SHADOW(true);
         loadPair(cUnit, regPtr, rlResult.lowReg, rlResult.highReg);
@@ -382,7 +382,7 @@ static void genArrayGet(CompilationUnit *cUnit, MIR *mir, OpSize size,
         dvmCompilerFreeTemp(cUnit, regPtr);
         storeValueWide(cUnit, rlDest, rlResult);
     } else {
-        rlResult = dvmCompilerEvalLoc(cUnit, rlDest, kAnyReg, true);
+        rlResult = dvmCompilerEvalLoc(cUnit, rlDest, regClass, true);
 
         HEAP_ACCESS_SHADOW(true);
         loadBaseIndexed(cUnit, regPtr, rlIndex.lowReg, rlResult.lowReg,
@@ -402,6 +402,7 @@ static void genArrayPut(CompilationUnit *cUnit, MIR *mir, OpSize size,
                         RegLocation rlArray, RegLocation rlIndex,
                         RegLocation rlSrc, int scale)
 {
+    RegisterClass regClass = dvmCompilerRegClassBySize(size);
     int lenOffset = offsetof(ArrayObject, length);
     int dataOffset = offsetof(ArrayObject, contents);
 
@@ -450,7 +451,7 @@ static void genArrayPut(CompilationUnit *cUnit, MIR *mir, OpSize size,
         } else {
             opRegReg(cUnit, kOpAdd, regPtr, rlIndex.lowReg);
         }
-        rlSrc = loadValueWide(cUnit, rlSrc, kAnyReg);
+        rlSrc = loadValueWide(cUnit, rlSrc, regClass);
 
         HEAP_ACCESS_SHADOW(true);
         storePair(cUnit, regPtr, rlSrc.lowReg, rlSrc.highReg);
@@ -458,7 +459,7 @@ static void genArrayPut(CompilationUnit *cUnit, MIR *mir, OpSize size,
 
         dvmCompilerFreeTemp(cUnit, regPtr);
     } else {
-        rlSrc = loadValue(cUnit, rlSrc, kAnyReg);
+        rlSrc = loadValue(cUnit, rlSrc, regClass);
 
         HEAP_ACCESS_SHADOW(true);
         storeBaseIndexed(cUnit, regPtr, rlIndex.lowReg, rlSrc.lowReg,
