@@ -16,7 +16,7 @@
    /*
     * File: CallABI.S
     *
-    * Code: facitliates call to native code C and C++ routines.
+    * Code: facilitates call to native code C and C++ routines.
     *
     */
 

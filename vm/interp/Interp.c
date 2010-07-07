@@ -706,8 +706,8 @@ void dvmDumpRegs(const Method* method, const u4* framePtr, bool inOnly)
                 break;
             }
             const char* name = "";
-            int j;
 #if 0   // "locals" structure has changed -- need to rewrite this
+            int j;
             DexFile* pDexFile = method->clazz->pDexFile;
             const DexCode* pDexCode = dvmGetMethodCode(method);
             int localsSize = dexGetLocalsSize(pDexFile, pDexCode);

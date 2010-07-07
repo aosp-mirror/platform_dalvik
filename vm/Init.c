@@ -111,6 +111,9 @@ static void dvmUsage(const char* progName)
     dvmFprintf(stderr,
                 "  -Xjnigreflimit:N  (must be multiple of 100, >= 200)\n");
     dvmFprintf(stderr, "  -Xjniopts:{warnonly,forcecopy}\n");
+#if defined(WITH_JNI_TRACE)
+    dvmFprintf(stderr, "  -Xjnitrace:substring (eg NativeClass or nativeMethod)\n");
+#endif
     dvmFprintf(stderr, "  -Xdeadlockpredict:{off,warn,err,abort}\n");
     dvmFprintf(stderr, "  -Xstacktracefile:<filename>\n");
     dvmFprintf(stderr, "  -Xgc:[no]precise\n");
@@ -175,6 +178,9 @@ static void dvmUsage(const char* progName)
 #endif
 #ifdef WITH_JNI_STACK_CHECK
         " jni_stack_check"
+#endif
+#ifdef WITH_JNI_TRACE
+        " jni_trace"
 #endif
 #ifdef EASY_GDB
         " easy_gdb"
@@ -885,6 +891,11 @@ static int dvmProcessOptions(int argc, const char* const argv[],
                 return -1;
             }
             gDvm.jniGrefLimit = lim;
+
+#if defined(WITH_JNI_TRACE)
+        } else if (strncmp(argv[i], "-Xjnitrace:", 11) == 0) {
+            gDvm.jniTrace = strdup(argv[i] + 11);
+#endif
 
         } else if (strcmp(argv[i], "-Xlog-stdio") == 0) {
             gDvm.logStdio = true;
@@ -1609,6 +1620,8 @@ void dvmShutdown(void)
         dvmJdwpShutdown(gDvm.jdwpState);
     free(gDvm.jdwpHost);
     gDvm.jdwpHost = NULL;
+    free(gDvm.jniTrace);
+    gDvm.jniTrace = NULL;
     free(gDvm.stackTraceFile);
     gDvm.stackTraceFile = NULL;
 
