@@ -185,11 +185,11 @@ static void optimizeMethod(Method* method, bool essentialOnly)
     insnsSize = dvmGetMethodInsnsSize(method);
 
     while (insnsSize > 0) {
-        OpCode quickOpc, volatileOpc;
+        OpCode quickOpc, volatileOpc = OP_NOP;
         int width;
+        bool notMatched = false;
 
         inst = *insns & 0xff;
-        bool notMatched = false;
 
         switch (inst) {
         case OP_IGET:
@@ -198,7 +198,8 @@ static void optimizeMethod(Method* method, bool essentialOnly)
         case OP_IGET_CHAR:
         case OP_IGET_SHORT:
             quickOpc = OP_IGET_QUICK;
-            volatileOpc = OP_IGET_VOLATILE;
+            if (ANDROID_SMP != 0)
+                volatileOpc = OP_IGET_VOLATILE;
             goto rewrite_inst_field;
         case OP_IGET_WIDE:
             quickOpc = OP_IGET_WIDE_QUICK;
@@ -206,7 +207,8 @@ static void optimizeMethod(Method* method, bool essentialOnly)
             goto rewrite_inst_field;
         case OP_IGET_OBJECT:
             quickOpc = OP_IGET_OBJECT_QUICK;
-            volatileOpc = OP_IGET_OBJECT_VOLATILE;
+            if (ANDROID_SMP != 0)
+                volatileOpc = OP_IGET_OBJECT_VOLATILE;
             goto rewrite_inst_field;
         case OP_IPUT:
         case OP_IPUT_BOOLEAN:
@@ -214,7 +216,8 @@ static void optimizeMethod(Method* method, bool essentialOnly)
         case OP_IPUT_CHAR:
         case OP_IPUT_SHORT:
             quickOpc = OP_IPUT_QUICK;
-            volatileOpc = OP_IPUT_VOLATILE;
+            if (ANDROID_SMP != 0)
+                volatileOpc = OP_IPUT_VOLATILE;
             goto rewrite_inst_field;
         case OP_IPUT_WIDE:
             quickOpc = OP_IPUT_WIDE_QUICK;
@@ -222,22 +225,22 @@ static void optimizeMethod(Method* method, bool essentialOnly)
             goto rewrite_inst_field;
         case OP_IPUT_OBJECT:
             quickOpc = OP_IPUT_OBJECT_QUICK;
-            volatileOpc = OP_IPUT_OBJECT_VOLATILE;
+            if (ANDROID_SMP != 0)
+                volatileOpc = OP_IPUT_OBJECT_VOLATILE;
 rewrite_inst_field:
             if (essentialOnly)
                 quickOpc = OP_NOP;
-            rewriteInstField(method, insns, quickOpc, volatileOpc);
+            if (quickOpc != OP_NOP || volatileOpc != OP_NOP)
+                rewriteInstField(method, insns, quickOpc, volatileOpc);
             break;
 
+#if ANDROID_SMP != 0
         case OP_SGET:
         case OP_SGET_BOOLEAN:
         case OP_SGET_BYTE:
         case OP_SGET_CHAR:
         case OP_SGET_SHORT:
             volatileOpc = OP_SGET_VOLATILE;
-            goto rewrite_static_field;
-        case OP_SGET_WIDE:
-            volatileOpc = OP_SGET_WIDE_VOLATILE;
             goto rewrite_static_field;
         case OP_SGET_OBJECT:
             volatileOpc = OP_SGET_OBJECT_VOLATILE;
@@ -249,11 +252,15 @@ rewrite_inst_field:
         case OP_SPUT_SHORT:
             volatileOpc = OP_SPUT_VOLATILE;
             goto rewrite_static_field;
-        case OP_SPUT_WIDE:
-            volatileOpc = OP_SPUT_WIDE_VOLATILE;
-            goto rewrite_static_field;
         case OP_SPUT_OBJECT:
             volatileOpc = OP_SPUT_OBJECT_VOLATILE;
+            goto rewrite_static_field;
+#endif
+        case OP_SGET_WIDE:
+            volatileOpc = OP_SGET_WIDE_VOLATILE;
+            goto rewrite_static_field;
+        case OP_SPUT_WIDE:
+            volatileOpc = OP_SPUT_WIDE_VOLATILE;
 rewrite_static_field:
             rewriteStaticField(method, insns, volatileOpc);
             break;
@@ -609,8 +616,9 @@ StaticField* dvmOptResolveStaticField(ClassObject* referrer, u4 sfieldIdx,
  * the byte offset from the start of the object.  For a volatile field,
  * we just want to replace the opcode with "volatileOpc".
  *
- * If "quickOpc" is OP_NOP, and this is a non-volatile field, we don't
- * do anything.
+ * If "volatileOpc" is OP_NOP we don't check to see if it's a volatile
+ * field.  If "quickOpc" is OP_NOP, and this is a non-volatile field,
+ * we don't do anything.
  *
  * "method" is the referring method.
  */
@@ -635,7 +643,7 @@ static bool rewriteInstField(Method* method, u2* insns, OpCode quickOpc,
         return false;
     }
 
-    if (dvmIsVolatileField(&instField->field)) {
+    if (volatileOpc != OP_NOP && dvmIsVolatileField(&instField->field)) {
         updateCode(method, insns, (insns[0] & 0xff00) | (u2) volatileOpc);
         LOGV("DexOpt: rewrote ifield access %s.%s --> volatile\n",
             instField->field.clazz->descriptor, instField->field.name);
@@ -668,6 +676,8 @@ static bool rewriteStaticField(Method* method, u2* insns, OpCode volatileOpc)
     ClassObject* clazz = method->clazz;
     u2 fieldIdx = insns[1];
     StaticField* staticField;
+
+    assert(volatileOpc != OP_NOP);
 
     staticField = dvmOptResolveStaticField(clazz, fieldIdx, NULL);
     if (staticField == NULL) {
