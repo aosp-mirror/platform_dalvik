@@ -27,6 +27,20 @@
 #include "compiler/Dataflow.h"
 #include "compiler/codegen/arm/ArmLIR.h"
 
+/*
+ * Return most flexible allowed register class based on size.
+ * Bug: 2813841
+ * Must use a core register for data types narrower than word (due
+ * to possible unaligned load/store.
+ */
+static inline RegisterClass dvmCompilerRegClassBySize(OpSize size)
+{
+    return (size == kUnsignedHalf ||
+            size == kSignedHalf ||
+            size == kUnsignedByte ||
+            size == kSignedByte ) ? kCoreReg : kAnyReg;
+}
+
 static inline int dvmCompilerS2VReg(CompilationUnit *cUnit, int sReg)
 {
     assert(sReg != INVALID_SREG);

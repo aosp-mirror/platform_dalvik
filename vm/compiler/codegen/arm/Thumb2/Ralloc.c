@@ -22,6 +22,9 @@
  *
  */
 
+/* Stress mode for testing: if defined will reverse corereg/floatreg hint */
+//#define REGCLASS_STRESS_MODE
+
 /*
  * Alloc a pair of core registers, or a double.  Low reg in low byte,
  * high reg in next byte.
@@ -32,6 +35,11 @@ int dvmCompilerAllocTypedTempPair(CompilationUnit *cUnit,
     int highReg;
     int lowReg;
     int res = 0;
+
+#if defined(REGCLASS_STRESS_MODE)
+    fpHint = !fpHint;
+#endif
+
     if (((regClass == kAnyReg) && fpHint) || (regClass == kFPReg)) {
         lowReg = dvmCompilerAllocTempDouble(cUnit);
         highReg = lowReg + 1;
@@ -46,6 +54,9 @@ int dvmCompilerAllocTypedTempPair(CompilationUnit *cUnit,
 int dvmCompilerAllocTypedTemp(CompilationUnit *cUnit, bool fpHint,
                                      int regClass)
 {
+#if defined(REGCLASS_STRESS_MODE)
+    fpHint = !fpHint;
+#endif
     if (((regClass == kAnyReg) && fpHint) || (regClass == kFPReg))
         return dvmCompilerAllocTempFloat(cUnit);
     return dvmCompilerAllocTemp(cUnit);
