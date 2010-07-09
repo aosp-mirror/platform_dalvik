@@ -1292,8 +1292,11 @@ static ClassObject* findClassFromLoaderNoInit(const char* descriptor,
         dvmReleaseTrackedAlloc(excep, self);
         clazz = NULL;
         goto bail;
-    } else {
-        assert(clazz != NULL);
+    } else if (clazz == NULL) {
+        LOGW("ClassLoader returned NULL w/o exception pending\n");
+        dvmThrowException("Ljava/lang/NullPointerException;",
+            "ClassLoader returned null");
+        goto bail;
     }
 
     dvmAddInitiatingLoader(clazz, loader);
