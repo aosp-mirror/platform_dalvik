@@ -21,12 +21,15 @@
 #define _DALVIK_OO_OBJECTINLINES
 
 /*
- * Store a single value in the array, and note in the write barrier.
+ * Store a single value in the array, and if the value isn't null,
+ * note in the write barrier.
  */
 INLINE void dvmSetObjectArrayElement(const ArrayObject* obj, int index,
                                      Object* val) {
     ((Object **)(obj)->contents)[index] = val;
-    dvmWriteBarrierArray(obj, index, index+1);
+    if (val != NULL) {
+        dvmWriteBarrierArray(obj, index, index + 1);
+    }
 }
 
 
@@ -38,6 +41,9 @@ INLINE void dvmSetObjectArrayElement(const ArrayObject* obj, int index,
  *
  * The VM treats all fields as 32 or 64 bits, so the field set functions
  * write 32 bits even if the underlying type is smaller.
+ *
+ * Setting Object types to non-null values includes a call to the
+ * write barrier.
  */
 #define BYTE_OFFSET(_ptr, _offset)  ((void*) (((u1*)(_ptr)) + (_offset)))
 
@@ -114,7 +120,9 @@ INLINE void dvmSetFieldDouble(Object* obj, int offset, double val) {
 INLINE void dvmSetFieldObject(Object* obj, int offset, Object* val) {
     JValue* lhs = BYTE_OFFSET(obj, offset);
     lhs->l = val;
-    dvmWriteBarrierField(obj, &lhs->l);
+    if (val != NULL) {
+        dvmWriteBarrierField(obj, &lhs->l);
+    }
 }
 INLINE void dvmSetFieldIntVolatile(Object* obj, int offset, s4 val) {
     s4* ptr = &((JValue*)BYTE_OFFSET(obj, offset))->i;
@@ -123,7 +131,9 @@ INLINE void dvmSetFieldIntVolatile(Object* obj, int offset, s4 val) {
 INLINE void dvmSetFieldObjectVolatile(Object* obj, int offset, Object* val) {
     void** ptr = &((JValue*)BYTE_OFFSET(obj, offset))->l;
     android_atomic_release_store((int32_t)val, (int32_t*)ptr);
-    dvmWriteBarrierField(obj, ptr);
+    if (val != NULL) {
+        dvmWriteBarrierField(obj, ptr);
+    }
 }
 INLINE void dvmSetFieldLongVolatile(Object* obj, int offset, s8 val) {
     s8* addr = BYTE_OFFSET(obj, offset);
@@ -206,7 +216,9 @@ INLINE void dvmSetStaticFieldDouble(StaticField* sfield, double val) {
 }
 INLINE void dvmSetStaticFieldObject(StaticField* sfield, Object* val) {
     sfield->value.l = val;
-    dvmWriteBarrierField((Object *)sfield->field.clazz, &sfield->value.l);
+    if (val != NULL) {
+        dvmWriteBarrierField((Object *)sfield->field.clazz, &sfield->value.l);
+    }
 }
 INLINE void dvmSetStaticFieldIntVolatile(StaticField* sfield, s4 val) {
     s4* ptr = &(sfield->value.i);
@@ -215,7 +227,9 @@ INLINE void dvmSetStaticFieldIntVolatile(StaticField* sfield, s4 val) {
 INLINE void dvmSetStaticFieldObjectVolatile(StaticField* sfield, Object* val) {
     void** ptr = &(sfield->value.l);
     android_atomic_release_store((int32_t)val, (int32_t*)ptr);
-    dvmWriteBarrierField((Object *)sfield->field.clazz, &sfield->value.l);
+    if (val != NULL) {
+        dvmWriteBarrierField((Object *)sfield->field.clazz, &sfield->value.l);
+    }
 }
 INLINE void dvmSetStaticFieldLongVolatile(StaticField* sfield, s8 val) {
     s8* addr = &sfield->value.j;
