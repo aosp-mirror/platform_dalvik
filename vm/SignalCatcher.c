@@ -221,7 +221,7 @@ static void handleSigUsr1(void)
 {
 #if WITH_HPROF
     LOGI("SIGUSR1 forcing GC and HPROF dump\n");
-    hprofDumpHeap(NULL, false);
+    hprofDumpHeap(NULL, -1, false);
 #else
     LOGI("SIGUSR1 forcing GC (no HPROF)\n");
     dvmCollectGarbage(false);

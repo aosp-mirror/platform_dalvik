@@ -20,8 +20,38 @@
 #include "Dalvik.h"
 #include "native/InternalNativePriv.h"
 
+#include <string.h>
+#include <unistd.h>
 #include <errno.h>
 
+
+/*
+ * Extracts the fd from a FileDescriptor object.
+ *
+ * If an error is encountered, or the extracted descriptor is numerically
+ * invalid, this returns -1 with an exception raised.
+ */
+static int getFileDescriptor(Object* obj)
+{
+    assert(obj != NULL);
+    assert(strcmp(obj->clazz->descriptor, "Ljava/io/FileDescriptor;") == 0);
+
+    InstField* field = dvmFindInstanceField(obj->clazz, "descriptor", "I");
+    if (field == NULL) {
+        dvmThrowException("Ljava/lang/NoSuchFieldException;",
+            "No FileDescriptor.descriptor field");
+        return -1;
+    }
+
+    int fd = dvmGetFieldInt(obj, field->byteOffset);
+    if (fd < 0) {
+        dvmThrowExceptionFmt("Ljava/lang/RuntimeException;",
+            "Invalid file descriptor");
+        return -1;
+    }
+
+    return fd;
+}
 
 /*
  * Convert an array of char* into a String[].
@@ -326,7 +356,7 @@ static void Dalvik_dalvik_system_VMDebug_startMethodTracingNative(const u4* args
 {
 #ifdef WITH_PROFILER
     StringObject* traceFileStr = (StringObject*) args[0];
-    DataObject* traceFd = (DataObject*) args[1];
+    Object* traceFd = (Object*) args[1];
     int bufferSize = args[2];
     int flags = args[3];
 
@@ -346,17 +376,14 @@ static void Dalvik_dalvik_system_VMDebug_startMethodTracingNative(const u4* args
 
     int fd = -1;
     if (traceFd != NULL) {
-        InstField* field =
-            dvmFindInstanceField(traceFd->obj.clazz, "descriptor", "I");
-        if (field == NULL) {
-            dvmThrowException("Ljava/lang/NoSuchFieldException;",
-                "No FileDescriptor.descriptor field");
+        int origFd = getFileDescriptor(traceFd);
+        if (origFd < 0)
             RETURN_VOID();
-        }
-        fd = dup(dvmGetFieldInt(&traceFd->obj, field->byteOffset));
+
+        fd = dup(origFd);
         if (fd < 0) {
             dvmThrowExceptionFmt("Ljava/lang/RuntimeException;",
-                "dup() failed: %s", strerror(errno));
+                "dup(%d) failed: %s", origFd, strerror(errno));
             RETURN_VOID();
         }
     }
@@ -660,7 +687,7 @@ static void Dalvik_dalvik_system_VMDebug_threadCpuTimeNanos(const u4* args,
 }
 
 /*
- * static void dumpHprofData(String fileName)
+ * static void dumpHprofData(String fileName, FileDescriptor fd)
  *
  * Cause "hprof" data to be dumped.  We can throw an IOException if an
  * error occurs during file handling.
@@ -670,22 +697,37 @@ static void Dalvik_dalvik_system_VMDebug_dumpHprofData(const u4* args,
 {
 #ifdef WITH_HPROF
     StringObject* fileNameStr = (StringObject*) args[0];
+    Object* fileDescriptor = (Object*) args[1];
     char* fileName;
     int result;
 
-    if (fileNameStr == NULL) {
+    /*
+     * Only one of these may be NULL.
+     */
+    if (fileNameStr == NULL && fileDescriptor == NULL) {
         dvmThrowException("Ljava/lang/NullPointerException;", NULL);
         RETURN_VOID();
     }
 
-    fileName = dvmCreateCstrFromString(fileNameStr);
-    if (fileName == NULL) {
-        /* unexpected -- malloc failure? */
-        dvmThrowException("Ljava/lang/RuntimeException;", "malloc failure?");
-        RETURN_VOID();
+    if (fileNameStr != NULL) {
+        fileName = dvmCreateCstrFromString(fileNameStr);
+        if (fileName == NULL) {
+            /* unexpected -- malloc failure? */
+            dvmThrowException("Ljava/lang/RuntimeException;", "malloc failure?");
+            RETURN_VOID();
+        }
+    } else {
+        fileName = strdup("[fd]");
     }
 
-    result = hprofDumpHeap(fileName, false);
+    int fd = -1;
+    if (fileDescriptor != NULL) {
+        fd = getFileDescriptor(fileDescriptor);
+        if (fd < 0)
+            RETURN_VOID();
+    }
+
+    result = hprofDumpHeap(fileName, fd, false);
     free(fileName);
 
     if (result != 0) {
@@ -712,7 +754,7 @@ static void Dalvik_dalvik_system_VMDebug_dumpHprofDataDdms(const u4* args,
 #ifdef WITH_HPROF
     int result;
 
-    result = hprofDumpHeap("[DDMS]", true);
+    result = hprofDumpHeap("[DDMS]", -1, true);
 
     if (result != 0) {
         /* ideally we'd throw something more specific based on actual failure */
@@ -938,7 +980,7 @@ const DalvikNativeMethod dvm_dalvik_system_VMDebug[] = {
         Dalvik_dalvik_system_VMDebug_getLoadedClassCount },
     { "threadCpuTimeNanos",         "()J",
         Dalvik_dalvik_system_VMDebug_threadCpuTimeNanos },
-    { "dumpHprofData",              "(Ljava/lang/String;)V",
+    { "dumpHprofData",              "(Ljava/lang/String;Ljava/io/FileDescriptor;)V",
         Dalvik_dalvik_system_VMDebug_dumpHprofData },
     { "dumpHprofDataDdms",          "()V",
         Dalvik_dalvik_system_VMDebug_dumpHprofDataDdms },
