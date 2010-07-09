@@ -720,7 +720,9 @@ void dvmHeapScanMarkedObjects(void)
                 u1 *maxCard = dvmCardFromAddr((void *)maxAddr);
 
                 u1 *card;
-                /* TODO: This double-loop should be made faster.
+                /* TODO: This double-loop should be made faster. In
+                 * particular the inner loop could get in bed with the
+                 * bitmap scanning routines.
                  */
                 for (card = minCard; card <= maxCard; card++) {
                     if (*card == GC_CARD_DIRTY) {

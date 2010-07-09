@@ -29,7 +29,6 @@
  */
 #define GC_CARD_SHIFT 7
 #define GC_CARD_SIZE (1 << GC_CARD_SHIFT)
-#define GC_OBJ_PER_CARD (GC_CARD_SIZE >> 3)
 #define GC_CARD_CLEAN 0
 #define GC_CARD_DIRTY 0x70
 
@@ -48,11 +47,14 @@ bool dvmCardTableStartup(struct GcHeap *gcHeap, void *heapBase);
 void dvmCardTableShutdown(void);
 
 /*
- * Returns The address of the relevent byte in the card table, given
+ * Returns the address of the relevent byte in the card table, given
  * an address on the heap.
  */
 u1 *dvmCardFromAddr(const void *addr);
 
+/*
+ * Returns the first address in the heap which maps to this card.
+ */
 void *dvmAddrFromCard(const u1 *card);
 
 /*
