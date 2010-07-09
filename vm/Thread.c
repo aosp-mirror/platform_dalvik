@@ -1352,12 +1352,19 @@ static void setThreadName(const char *threadName)
         s = threadName + len - 15;
     }
 #if defined(HAVE_ANDROID_PTHREAD_SETNAME_NP)
-    if (pthread_setname_np(pthread_self(), s) != 0)
-        LOGW("Unable to set the name of the current thread\n");
+    /* pthread_setname_np fails rather than truncating long strings */
+    char buf[16];       // MAX_TASK_COMM_LEN=16 is hard-coded into bionic
+    strncpy(buf, s, sizeof(buf)-1);
+    buf[sizeof(buf)-1] = '\0';
+    int err = pthread_setname_np(pthread_self(), buf);
+    if (err != 0) {
+        LOGW("Unable to set the name of current thread to '%s': %s\n",
+            buf, strerror(err));
+    }
 #elif defined(HAVE_PRCTL)
     prctl(PR_SET_NAME, (unsigned long) s, 0, 0, 0);
 #else
-    LOGD("Unable to set current thread's name: %s\n", s);
+    LOGD("No way to set current thread's name (%s)\n", s);
 #endif
 }
 
