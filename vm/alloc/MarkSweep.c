@@ -369,76 +369,114 @@ static void scanArrayObject(const ArrayObject *obj, GcMarkContext *ctx)
 }
 
 /*
+ * Returns class flags relating to Reference subclasses.
+ */
+static int referenceClassFlags(const Object *obj)
+{
+    int flags = CLASS_ISREFERENCE |
+                CLASS_ISWEAKREFERENCE |
+                CLASS_ISPHANTOMREFERENCE;
+    return GET_CLASS_FLAG_GROUP(obj->clazz, flags);
+}
+
+/*
+ * Returns true if the object derives from SoftReference.
+ */
+static bool isSoftReference(const Object *obj)
+{
+    return referenceClassFlags(obj) == CLASS_ISREFERENCE;
+}
+
+/*
+ * Returns true if the object derives from WeakReference.
+ */
+static bool isWeakReference(const Object *obj)
+{
+    return referenceClassFlags(obj) & CLASS_ISWEAKREFERENCE;
+}
+
+/*
+ * Returns true if the object derives from PhantomReference.
+ */
+static bool isPhantomReference(const Object *obj)
+{
+    return referenceClassFlags(obj) & CLASS_ISPHANTOMREFERENCE;
+}
+
+/*
+ * Adds a reference to the tail of a circular queue of references.
+ */
+static void enqueuePendingReference(Object *ref, Object **list)
+{
+    size_t offset;
+
+    assert(ref != NULL);
+    assert(list != NULL);
+    offset = gDvm.offJavaLangRefReference_pendingNext;
+    if (*list == NULL) {
+        dvmSetFieldObject(ref, offset, ref);
+        *list = ref;
+    } else {
+        Object *head = dvmGetFieldObject(*list, offset);
+        dvmSetFieldObject(ref, offset, head);
+        dvmSetFieldObject(*list, offset, ref);
+    }
+}
+
+/*
+ * Removes the reference at the head of circular queue of references.
+ */
+static Object *dequeuePendingReference(Object **list)
+{
+    Object *ref, *head;
+    size_t offset;
+
+    assert(list != NULL);
+    assert(*list != NULL);
+    offset = gDvm.offJavaLangRefReference_pendingNext;
+    head = dvmGetFieldObject(*list, offset);
+    if (*list == head) {
+        ref = *list;
+        *list = NULL;
+    } else {
+        Object *next = dvmGetFieldObject(head, offset);
+        dvmSetFieldObject(*list, offset, next);
+        ref = head;
+    }
+    dvmSetFieldObject(ref, offset, NULL);
+    return ref;
+}
+
+/*
  * Process the "referent" field in a java.lang.ref.Reference.  If the
  * referent has not yet been marked, put it on the appropriate list in
  * the gcHeap for later processing.
  */
 static void delayReferenceReferent(Object *obj, GcMarkContext *ctx)
 {
+    GcHeap *gcHeap = gDvm.gcHeap;
+    Object *pending, *referent;
+    size_t pendingNextOffset, referentOffset;
+
     assert(obj != NULL);
     assert(obj->clazz != NULL);
+    assert(IS_CLASS_FLAG_SET(obj->clazz, CLASS_ISREFERENCE));
     assert(ctx != NULL);
-
-    GcHeap *gcHeap = gDvm.gcHeap;
-    Object *referent;
-
-    /* It's a subclass of java/lang/ref/Reference.
-     * The fields in this class have been arranged
-     * such that scanInstanceFields() did not actually
-     * mark the "referent" field;  we need to handle
-     * it specially.
-     *
-     * If the referent already has a strong mark (isMarked(referent)),
-     * we don't care about its reference status.
-     */
-    referent = dvmGetFieldObject(obj, gDvm.offJavaLangRefReference_referent);
-    if (referent != NULL && !isMarked(referent, ctx))
-    {
-        u4 refFlags;
-
-        /* Find out what kind of reference is pointing
-         * to referent.
-         */
-        refFlags = GET_CLASS_FLAG_GROUP(obj->clazz,
-                                        CLASS_ISREFERENCE |
-                                        CLASS_ISWEAKREFERENCE |
-                                        CLASS_ISPHANTOMREFERENCE);
-
-#define ADD_REF_TO_LIST(list, ref)                                      \
-        do {                                                            \
-            Object *ARTL_ref_ = ref;                                    \
-            assert(dvmGetFieldObject(ARTL_ref_,                         \
-                gDvm.offJavaLangRefReference_queueNext) == NULL);       \
-            dvmSetFieldObject(ARTL_ref_,                                \
-                gDvm.offJavaLangRefReference_queueNext, list);          \
-            list = ARTL_ref_;                                           \
-        } while (false)
-
-        /* At this stage, we just keep track of all of
-         * the live references that we've seen.  Later,
-         * we'll walk through each of these lists and
-         * deal with the referents.
-         */
-        if (refFlags == CLASS_ISREFERENCE) {
-            /* It's a soft reference.  Depending on the state,
-             * we'll attempt to collect all of them, some of
-             * them, or none of them.
-             */
-            ADD_REF_TO_LIST(gcHeap->softReferences, obj);
-        } else {
-            /* It's a weak or phantom reference.
-             * Clearing CLASS_ISREFERENCE will reveal which.
-             */
-            refFlags &= ~CLASS_ISREFERENCE;
-            if (refFlags == CLASS_ISWEAKREFERENCE) {
-                ADD_REF_TO_LIST(gcHeap->weakReferences, obj);
-            } else if (refFlags == CLASS_ISPHANTOMREFERENCE) {
-                ADD_REF_TO_LIST(gcHeap->phantomReferences, obj);
-            } else {
-                assert(!"Unknown reference type");
-            }
+    pendingNextOffset = gDvm.offJavaLangRefReference_pendingNext;
+    referentOffset = gDvm.offJavaLangRefReference_referent;
+    pending = dvmGetFieldObject(obj, pendingNextOffset);
+    referent = dvmGetFieldObject(obj, referentOffset);
+    if (pending == NULL && referent != NULL && !isMarked(referent, ctx)) {
+        Object **list = NULL;
+        if (isSoftReference(obj)) {
+            list = &gcHeap->softReferences;
+        } else if (isWeakReference(obj)) {
+            list = &gcHeap->weakReferences;
+        } else if (isPhantomReference(obj)) {
+            list = &gcHeap->phantomReferences;
         }
-#undef ADD_REF_TO_LIST
+        assert(list != NULL);
+        enqueuePendingReference(obj, list);
     }
 }
 
@@ -773,7 +811,12 @@ static bool dirtyObjectCallback(size_t numPtrs, void **ptrs,
 
     ctx = (GcMarkContext *)arg;
     for (i = 0; i < numPtrs; ++i) {
-        dvmVisitObject(dirtyObjectVisitor, ptrs[i], ctx);
+        Object *obj = ptrs[i];
+        if (IS_CLASS_FLAG_SET(obj->clazz, CLASS_ISREFERENCE)) {
+            scanDataObject((DataObject *)obj, ctx);
+        } else {
+            dvmVisitObject(dirtyObjectVisitor, obj, ctx);
+        }
     }
     return true;
 }
@@ -830,18 +873,7 @@ static bool isEnqueuable(const Object *reference)
             gDvm.offJavaLangRefReference_queue);
     Object *queueNext = dvmGetFieldObject(reference,
             gDvm.offJavaLangRefReference_queueNext);
-    if (queue == NULL || queueNext != NULL) {
-        /* There is no queue, or the reference has already
-         * been enqueued.  The Reference.enqueue() method
-         * will do nothing even if we call it.
-         */
-        return false;
-    }
-
-    /* We need to call enqueue(), but if we called it from
-     * here we'd probably deadlock.  Schedule a call.
-     */
-    return true;
+    return queue != NULL && queueNext == NULL;
 }
 
 /*
@@ -869,40 +901,32 @@ void dvmHandleSoftRefs(Object **list)
 {
     GcMarkContext *markContext;
     Object *ref, *referent;
-    Object *prev, *next;
-    size_t referentOffset, queueNextOffset;
-    unsigned counter;
+    Object *clear;
+    size_t pendingNextOffset, referentOffset;
+    size_t counter;
     bool marked;
 
     markContext = &gDvm.gcHeap->markContext;
-    queueNextOffset = gDvm.offJavaLangRefReference_queueNext;
+    pendingNextOffset = gDvm.offJavaLangRefReference_pendingNext;
     referentOffset = gDvm.offJavaLangRefReference_referent;
+    clear = NULL;
     counter = 0;
-    prev = next = NULL;
-    ref = *list;
-    while (ref != NULL) {
+    while (*list != NULL) {
+        ref = dequeuePendingReference(list);
         referent = dvmGetFieldObject(ref, referentOffset);
-        next = dvmGetFieldObject(ref, queueNextOffset);
         assert(referent != NULL);
         marked = isMarked(referent, markContext);
         if (!marked && ((++counter) & 1)) {
             /* Referent is white and biased toward saving, mark it. */
-            assert(referent != NULL);
             markObject(referent, markContext);
             marked = true;
         }
-        if (marked) {
-            /* Referent is black, unlink it. */
-            if (prev != NULL) {
-                dvmSetFieldObject(ref, queueNextOffset, NULL);
-                dvmSetFieldObject(prev, queueNextOffset, next);
-            }
-        } else {
-            /* Referent is white, skip over it. */
-            prev = ref;
+        if (!marked) {
+            /* Referent is white, queue it for clearing. */
+            enqueuePendingReference(ref, &clear);
         }
-        ref = next;
     }
+    *list = clear;
     /*
      * Restart the mark with the newly black references added to the
      * root set.
@@ -919,18 +943,16 @@ void dvmClearWhiteRefs(Object **list)
 {
     GcMarkContext *markContext;
     Object *ref, *referent;
-    size_t referentOffset, queueNextOffset;
+    size_t pendingNextOffset, referentOffset;
     bool doSignal;
 
     markContext = &gDvm.gcHeap->markContext;
-    queueNextOffset = gDvm.offJavaLangRefReference_queueNext;
+    pendingNextOffset = gDvm.offJavaLangRefReference_pendingNext;
     referentOffset = gDvm.offJavaLangRefReference_referent;
     doSignal = false;
     while (*list != NULL) {
-        ref = *list;
+        ref = dequeuePendingReference(list);
         referent = dvmGetFieldObject(ref, referentOffset);
-        *list = dvmGetFieldObject(ref, queueNextOffset);
-        dvmSetFieldObject(ref, queueNextOffset, NULL);
         assert(referent != NULL);
         if (!isMarked(referent, markContext)) {
             /* Referent is "white", clear it. */
