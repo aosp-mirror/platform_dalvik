@@ -28,10 +28,10 @@
  * non-NULL values to heap addresses should go through an entry in
  * WriteBarrier, and from there to here.
  *
- * The heap is divided into "cards" of 512 bytes, as determined by
- * GC_CARD_SHIFT. The card table contains one byte of data per card,
- * to be used by the GC. The value of the byte will be one of
- * GC_CARD_CLEAN or GC_CARD_DIRTY.
+ * The heap is divided into "cards" of GC_CARD_SIZE bytes, as
+ * determined by GC_CARD_SHIFT. The card table contains one byte of
+ * data per card, to be used by the GC. The value of the byte will be
+ * one of GC_CARD_CLEAN or GC_CARD_DIRTY.
  *
  * After any store of a non-NULL object pointer into a heap object,
  * code is obliged to mark the card dirty. The setters in
@@ -105,25 +105,28 @@ void dvmCardTableShutdown()
 }
 
 /*
- * Returns The address of the relevent byte in the card table, given
+ * Returns the address of the relevent byte in the card table, given
  * an address on the heap.
  */
 u1 *dvmCardFromAddr(const void *addr)
 {
-    u1 *cardAddr = gDvm.gcHeap->biasedCardTableBase +
-        ((uintptr_t)addr >> GC_CARD_SHIFT);
-    assert(cardAddr >= gDvm.gcHeap->cardTableBase);
-    assert(cardAddr <
-           &gDvm.gcHeap->cardTableBase[gDvm.gcHeap->cardTableLength]);
+    GcHeap *h = gDvm.gcHeap;
+    u1 *cardAddr = h->biasedCardTableBase + ((uintptr_t)addr >> GC_CARD_SHIFT);
+    assert(cardAddr >= h->cardTableBase);
+    assert(cardAddr < &h->cardTableBase[h->cardTableLength]);
     return cardAddr;
 }
 
-void *dvmAddrFromCard(const u1 *cardAddr) {
-    assert(cardAddr >= gDvm.gcHeap->cardTableBase);
-    assert(cardAddr <
-           &gDvm.gcHeap->cardTableBase[gDvm.gcHeap->cardTableLength]);
-    void *addr = (void *)((cardAddr - gDvm.gcHeap->biasedCardTableBase) << GC_CARD_SHIFT);
-    return addr;
+/*
+ * Returns the first address in the heap which maps to this card.
+ */
+void *dvmAddrFromCard(const u1 *cardAddr)
+{
+    GcHeap *h = gDvm.gcHeap;
+    assert(cardAddr >= h->cardTableBase);
+    assert(cardAddr < &h->cardTableBase[h->cardTableLength]);
+    uintptr_t offset = cardAddr - h->biasedCardTableBase;
+    return (void *)(offset << GC_CARD_SHIFT);
 }
 
 /*
@@ -158,8 +161,7 @@ static bool objectIsClean(const Object *obj)
  * A Visitor callback in support of checkCleanObjects. "arg" is
  * expected to be the immuneLimit.
  */
-static void
-crossGenCheckVisitor(void *ptr, void *arg)
+static void crossGenCheckVisitor(void *ptr, void *arg)
 {
     Object *ref = *(Object **)ptr;
     Object *immuneLimit = (Object *)arg;
@@ -173,8 +175,7 @@ crossGenCheckVisitor(void *ptr, void *arg)
 /*
  * A HeapBitmap callback in support of checkCleanObjects.
  */
-static bool
-crossGenCheckCallback(size_t numPtrs, void **ptrs,
+static bool crossGenCheckCallback(size_t numPtrs, void **ptrs,
                       const void *finger, void *arg)
 {
     size_t i;
