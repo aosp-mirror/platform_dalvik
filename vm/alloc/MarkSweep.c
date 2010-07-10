@@ -847,20 +847,13 @@ void dvmMarkDirtyObjects(void)
     processMarkStack(ctx);
 }
 
-/** Clear the referent field.
+/*
+ * Clear the referent field.
  */
 static void clearReference(Object *reference)
 {
-    /* This is what the default implementation of Reference.clear()
-     * does.  We're required to clear all references to a given
-     * referent atomically, so we can't pop in and out of interp
-     * code each time.
-     *
-     * We don't ever actaully call overriding implementations of
-     * Reference.clear().
-     */
-    dvmSetFieldObject(reference,
-            gDvm.offJavaLangRefReference_referent, NULL);
+    size_t offset = gDvm.offJavaLangRefReference_referent;
+    dvmSetFieldObject(reference, offset, NULL);
 }
 
 /*
