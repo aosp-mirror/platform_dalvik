@@ -34,6 +34,8 @@
         __FILE__, __LINE__, #x), *(int*)39=39, 0) )
 #endif
 
+#define MIN(x,y) (((x) < (y)) ? (x) : (y))
+#define MAX(x,y) (((x) > (y)) ? (x) : (y))
 
 /*
  * If "very verbose" logging is enabled, make it equivalent to LOGV.

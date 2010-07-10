@@ -143,7 +143,6 @@ void dvmStdioConverterShutdown(void)
  */
 static void* stdioConverterThreadStart(void* arg)
 {
-#define MAX(a,b) ((a) > (b) ? (a) : (b))
     StdPipes* pipeStorage = (StdPipes*) arg;
     BufferedData* stdoutData;
     BufferedData* stderrData;
@@ -217,7 +216,6 @@ static void* stdioConverterThreadStart(void* arg)
     /* change back for shutdown sequence */
     dvmChangeStatus(NULL, THREAD_RUNNING);
     return NULL;
-#undef MAX
 }
 
 /*
