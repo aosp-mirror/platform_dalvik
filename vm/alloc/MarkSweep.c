@@ -424,7 +424,8 @@ static void enqueuePendingReference(Object *ref, Object **list)
 }
 
 /*
- * Removes the reference at the head of circular queue of references.
+ * Removes the reference at the head of a circular queue of
+ * references.
  */
 static Object *dequeuePendingReference(Object **list)
 {
@@ -795,28 +796,16 @@ void dvmHeapScanMarkedObjects(void)
     LOG_SCAN("done with marked objects\n");
 }
 
-static void dirtyObjectVisitor(void *ptr, void *arg)
-{
-    markObject(*(Object **)ptr, (GcMarkContext *)arg);
-}
-
 /*
  * Callback applied to each gray object to blacken it.
  */
 static bool dirtyObjectCallback(size_t numPtrs, void **ptrs,
                                 const void *finger, void *arg)
 {
-    GcMarkContext *ctx;
     size_t i;
 
-    ctx = (GcMarkContext *)arg;
     for (i = 0; i < numPtrs; ++i) {
-        Object *obj = ptrs[i];
-        if (IS_CLASS_FLAG_SET(obj->clazz, CLASS_ISREFERENCE)) {
-            scanDataObject((DataObject *)obj, ctx);
-        } else {
-            dvmVisitObject(dirtyObjectVisitor, obj, ctx);
-        }
+        scanObject(ptrs[i], arg);
     }
     return true;
 }
@@ -895,12 +884,11 @@ void dvmHandleSoftRefs(Object **list)
     GcMarkContext *markContext;
     Object *ref, *referent;
     Object *clear;
-    size_t pendingNextOffset, referentOffset;
+    size_t referentOffset;
     size_t counter;
     bool marked;
 
     markContext = &gDvm.gcHeap->markContext;
-    pendingNextOffset = gDvm.offJavaLangRefReference_pendingNext;
     referentOffset = gDvm.offJavaLangRefReference_referent;
     clear = NULL;
     counter = 0;
@@ -928,19 +916,18 @@ void dvmHandleSoftRefs(Object **list)
 }
 
 /*
- * Walks the reference list and clears references with an unmarked
- * (white) referents.  Cleared references registered to a reference
- * queue are scheduled for appending by the heap worker thread.
+ * Unlink the reference list clearing references objects with white
+ * referents.  Cleared references registered to a reference queue are
+ * scheduled for appending by the heap worker thread.
  */
 void dvmClearWhiteRefs(Object **list)
 {
     GcMarkContext *markContext;
     Object *ref, *referent;
-    size_t pendingNextOffset, referentOffset;
+    size_t referentOffset;
     bool doSignal;
 
     markContext = &gDvm.gcHeap->markContext;
-    pendingNextOffset = gDvm.offJavaLangRefReference_pendingNext;
     referentOffset = gDvm.offJavaLangRefReference_referent;
     doSignal = false;
     while (*list != NULL) {
@@ -948,7 +935,7 @@ void dvmClearWhiteRefs(Object **list)
         referent = dvmGetFieldObject(ref, referentOffset);
         assert(referent != NULL);
         if (!isMarked(referent, markContext)) {
-            /* Referent is "white", clear it. */
+            /* Referent is white, clear it. */
             clearReference(ref);
             if (isEnqueuable(ref)) {
                 enqueueReference(ref);
