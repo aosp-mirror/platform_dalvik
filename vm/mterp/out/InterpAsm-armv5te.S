@@ -2614,7 +2614,7 @@ dalvik_inst:
     /*
      * General 32-bit instance field put.
      *
-     * for: iput, iput-object, iput-boolean, iput-byte, iput-char, iput-short
+     * for: iput, iput-boolean, iput-byte, iput-char, iput-short
      */
     /* op vA, vB, field@CCCC */
     mov     r0, rINST, lsr #12          @ r0<- B
@@ -2658,11 +2658,10 @@ dalvik_inst:
     .balign 64
 .L_OP_IPUT_OBJECT: /* 0x5b */
 /* File: armv5te/OP_IPUT_OBJECT.S */
-/* File: armv5te/OP_IPUT.S */
     /*
-     * General 32-bit instance field put.
+     * 32-bit instance field put.
      *
-     * for: iput, iput-object, iput-boolean, iput-byte, iput-char, iput-short
+     * for: iput-object, iput-object-volatile
      */
     /* op vA, vB, field@CCCC */
     mov     r0, rINST, lsr #12          @ r0<- B
@@ -2681,7 +2680,6 @@ dalvik_inst:
     bne     .LOP_IPUT_OBJECT_finish          @ yes, finish up
     b       common_exceptionThrown
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_IPUT_BOOLEAN: /* 0x5c */
@@ -2691,7 +2689,7 @@ dalvik_inst:
     /*
      * General 32-bit instance field put.
      *
-     * for: iput, iput-object, iput-boolean, iput-byte, iput-char, iput-short
+     * for: iput, iput-boolean, iput-byte, iput-char, iput-short
      */
     /* op vA, vB, field@CCCC */
     mov     r0, rINST, lsr #12          @ r0<- B
@@ -2720,7 +2718,7 @@ dalvik_inst:
     /*
      * General 32-bit instance field put.
      *
-     * for: iput, iput-object, iput-boolean, iput-byte, iput-char, iput-short
+     * for: iput, iput-boolean, iput-byte, iput-char, iput-short
      */
     /* op vA, vB, field@CCCC */
     mov     r0, rINST, lsr #12          @ r0<- B
@@ -2749,7 +2747,7 @@ dalvik_inst:
     /*
      * General 32-bit instance field put.
      *
-     * for: iput, iput-object, iput-boolean, iput-byte, iput-char, iput-short
+     * for: iput, iput-boolean, iput-byte, iput-char, iput-short
      */
     /* op vA, vB, field@CCCC */
     mov     r0, rINST, lsr #12          @ r0<- B
@@ -2778,7 +2776,7 @@ dalvik_inst:
     /*
      * General 32-bit instance field put.
      *
-     * for: iput, iput-object, iput-boolean, iput-byte, iput-char, iput-short
+     * for: iput, iput-boolean, iput-byte, iput-char, iput-short
      */
     /* op vA, vB, field@CCCC */
     mov     r0, rINST, lsr #12          @ r0<- B
@@ -2993,7 +2991,7 @@ dalvik_inst:
     /*
      * General 32-bit SPUT handler.
      *
-     * for: sput, sput-object, sput-boolean, sput-byte, sput-char, sput-short
+     * for: sput, sput-boolean, sput-byte, sput-char, sput-short
      */
     /* op vAA, field@BBBB */
     ldr     r2, [rGLUE, #offGlue_methodClassDex]    @ r2<- DvmDex
@@ -3043,11 +3041,10 @@ dalvik_inst:
     .balign 64
 .L_OP_SPUT_OBJECT: /* 0x69 */
 /* File: armv5te/OP_SPUT_OBJECT.S */
-/* File: armv5te/OP_SPUT.S */
     /*
-     * General 32-bit SPUT handler.
+     * 32-bit SPUT handler for objects
      *
-     * for: sput, sput-object, sput-boolean, sput-byte, sput-char, sput-short
+     * for: sput-object, sput-object-volatile
      */
     /* op vAA, field@BBBB */
     ldr     r2, [rGLUE, #offGlue_methodClassDex]    @ r2<- DvmDex
@@ -3055,15 +3052,14 @@ dalvik_inst:
     ldr     r2, [r2, #offDvmDex_pResFields] @ r2<- dvmDex->pResFields
     ldr     r0, [r2, r1, lsl #2]        @ r0<- resolved StaticField ptr
     cmp     r0, #0                      @ is resolved entry null?
-    beq     .LOP_SPUT_OBJECT_resolve         @ yes, do resolve
-.LOP_SPUT_OBJECT_finish:   @ field ptr in r0
-    mov     r2, rINST, lsr #8           @ r2<- AA
-    FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
-    GET_VREG(r1, r2)                    @ r1<- fp[AA]
-    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
-    @ no-op                             @ releasing store
-    str     r1, [r0, #offStaticField_value] @ field<- vAA
-    GOTO_OPCODE(ip)                     @ jump to next instruction
+    bne     .LOP_SPUT_OBJECT_finish          @ no, continue
+    ldr     r2, [rGLUE, #offGlue_method]    @ r2<- current method
+    EXPORT_PC()                         @ resolve() could throw, so export now
+    ldr     r0, [r2, #offMethod_clazz]  @ r0<- method->clazz
+    bl      dvmResolveStaticField       @ r0<- resolved StaticField ptr
+    cmp     r0, #0                      @ success?
+    bne     .LOP_SPUT_OBJECT_finish          @ yes, finish
+    b       common_exceptionThrown      @ no, handle exception
 
 
 /* ------------------------------ */
@@ -3074,7 +3070,7 @@ dalvik_inst:
     /*
      * General 32-bit SPUT handler.
      *
-     * for: sput, sput-object, sput-boolean, sput-byte, sput-char, sput-short
+     * for: sput, sput-boolean, sput-byte, sput-char, sput-short
      */
     /* op vAA, field@BBBB */
     ldr     r2, [rGLUE, #offGlue_methodClassDex]    @ r2<- DvmDex
@@ -3101,7 +3097,7 @@ dalvik_inst:
     /*
      * General 32-bit SPUT handler.
      *
-     * for: sput, sput-object, sput-boolean, sput-byte, sput-char, sput-short
+     * for: sput, sput-boolean, sput-byte, sput-char, sput-short
      */
     /* op vAA, field@BBBB */
     ldr     r2, [rGLUE, #offGlue_methodClassDex]    @ r2<- DvmDex
@@ -3128,7 +3124,7 @@ dalvik_inst:
     /*
      * General 32-bit SPUT handler.
      *
-     * for: sput, sput-object, sput-boolean, sput-byte, sput-char, sput-short
+     * for: sput, sput-boolean, sput-byte, sput-char, sput-short
      */
     /* op vAA, field@BBBB */
     ldr     r2, [rGLUE, #offGlue_methodClassDex]    @ r2<- DvmDex
@@ -3155,7 +3151,7 @@ dalvik_inst:
     /*
      * General 32-bit SPUT handler.
      *
-     * for: sput, sput-object, sput-boolean, sput-byte, sput-char, sput-short
+     * for: sput, sput-boolean, sput-byte, sput-char, sput-short
      */
     /* op vAA, field@BBBB */
     ldr     r2, [rGLUE, #offGlue_methodClassDex]    @ r2<- DvmDex
@@ -7457,7 +7453,7 @@ d2i_doconv:
     /*
      * General 32-bit instance field put.
      *
-     * for: iput, iput-object, iput-boolean, iput-byte, iput-char, iput-short
+     * for: iput, iput-boolean, iput-byte, iput-char, iput-short
      */
     /* op vA, vB, field@CCCC */
     mov     r0, rINST, lsr #12          @ r0<- B
@@ -7512,7 +7508,7 @@ d2i_doconv:
     /*
      * General 32-bit SPUT handler.
      *
-     * for: sput, sput-object, sput-boolean, sput-byte, sput-char, sput-short
+     * for: sput, sput-boolean, sput-byte, sput-char, sput-short
      */
     /* op vAA, field@BBBB */
     ldr     r2, [rGLUE, #offGlue_methodClassDex]    @ r2<- DvmDex
@@ -7834,7 +7830,7 @@ d2i_doconv:
     .balign 64
 .L_OP_IPUT_QUICK: /* 0xf5 */
 /* File: armv5te/OP_IPUT_QUICK.S */
-    /* For: iput-quick, iput-object-quick */
+    /* For: iput-quick */
     /* op vA, vB, offset@CCCC */
     mov     r2, rINST, lsr #12          @ r2<- B
     GET_VREG(r3, r2)                    @ r3<- fp[B], the object pointer
@@ -7872,8 +7868,7 @@ d2i_doconv:
     .balign 64
 .L_OP_IPUT_OBJECT_QUICK: /* 0xf7 */
 /* File: armv5te/OP_IPUT_OBJECT_QUICK.S */
-/* File: armv5te/OP_IPUT_QUICK.S */
-    /* For: iput-quick, iput-object-quick */
+    /* For: iput-object-quick */
     /* op vA, vB, offset@CCCC */
     mov     r2, rINST, lsr #12          @ r2<- B
     GET_VREG(r3, r2)                    @ r3<- fp[B], the object pointer
@@ -7883,11 +7878,13 @@ d2i_doconv:
     beq     common_errNullObject        @ object was null
     and     r2, r2, #15
     GET_VREG(r0, r2)                    @ r0<- fp[A]
+    ldr     r2, [rGLUE, #offGlue_cardTable]  @ r2<- card table base
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     str     r0, [r3, r1]                @ obj.field (always 32 bits)<- r0
+    cmp     r0, #0
+    strneb  r2, [r2, r3, lsr #GC_CARD_SHIFT] @ mark card on non-null store
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     GOTO_OPCODE(ip)                     @ jump to next instruction
-
 
 /* ------------------------------ */
     .balign 64
@@ -8001,11 +7998,11 @@ d2i_doconv:
     .balign 64
 .L_OP_IPUT_OBJECT_VOLATILE: /* 0xfc */
 /* File: armv5te/OP_IPUT_OBJECT_VOLATILE.S */
-/* File: armv5te/OP_IPUT.S */
+/* File: armv5te/OP_IPUT_OBJECT.S */
     /*
-     * General 32-bit instance field put.
+     * 32-bit instance field put.
      *
-     * for: iput, iput-object, iput-boolean, iput-byte, iput-char, iput-short
+     * for: iput-object, iput-object-volatile
      */
     /* op vA, vB, field@CCCC */
     mov     r0, rINST, lsr #12          @ r0<- B
@@ -8056,11 +8053,11 @@ d2i_doconv:
     .balign 64
 .L_OP_SPUT_OBJECT_VOLATILE: /* 0xfe */
 /* File: armv5te/OP_SPUT_OBJECT_VOLATILE.S */
-/* File: armv5te/OP_SPUT.S */
+/* File: armv5te/OP_SPUT_OBJECT.S */
     /*
-     * General 32-bit SPUT handler.
+     * 32-bit SPUT handler for objects
      *
-     * for: sput, sput-object, sput-boolean, sput-byte, sput-char, sput-short
+     * for: sput-object, sput-object-volatile
      */
     /* op vAA, field@BBBB */
     ldr     r2, [rGLUE, #offGlue_methodClassDex]    @ r2<- DvmDex
@@ -8068,15 +8065,15 @@ d2i_doconv:
     ldr     r2, [r2, #offDvmDex_pResFields] @ r2<- dvmDex->pResFields
     ldr     r0, [r2, r1, lsl #2]        @ r0<- resolved StaticField ptr
     cmp     r0, #0                      @ is resolved entry null?
-    beq     .LOP_SPUT_OBJECT_VOLATILE_resolve         @ yes, do resolve
-.LOP_SPUT_OBJECT_VOLATILE_finish:   @ field ptr in r0
-    mov     r2, rINST, lsr #8           @ r2<- AA
-    FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
-    GET_VREG(r1, r2)                    @ r1<- fp[AA]
-    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
-    SMP_DMB                            @ releasing store
-    str     r1, [r0, #offStaticField_value] @ field<- vAA
-    GOTO_OPCODE(ip)                     @ jump to next instruction
+    bne     .LOP_SPUT_OBJECT_VOLATILE_finish          @ no, continue
+    ldr     r2, [rGLUE, #offGlue_method]    @ r2<- current method
+    EXPORT_PC()                         @ resolve() could throw, so export now
+    ldr     r0, [r2, #offMethod_clazz]  @ r0<- method->clazz
+    bl      dvmResolveStaticField       @ r0<- resolved StaticField ptr
+    cmp     r0, #0                      @ success?
+    bne     .LOP_SPUT_OBJECT_VOLATILE_finish          @ yes, finish
+    b       common_exceptionThrown      @ no, handle exception
+
 
 
 /* ------------------------------ */
@@ -8352,15 +8349,15 @@ dvmAsmSisterStart:
 .LOP_FILLED_NEW_ARRAY_continue:
     ldr     r3, [r0, #offClassObject_descriptor] @ r3<- arrayClass->descriptor
     mov     r2, #ALLOC_DONT_TRACK       @ r2<- alloc flags
-    ldrb    r3, [r3, #1]                @ r3<- descriptor[1]
+    ldrb    rINST, [r3, #1]             @ rINST<- descriptor[1]
     .if     0
     mov     r1, r10                     @ r1<- AA (length)
     .else
     mov     r1, r10, lsr #4             @ r1<- B (length)
     .endif
-    cmp     r3, #'I'                    @ array of ints?
-    cmpne   r3, #'L'                    @ array of objects?
-    cmpne   r3, #'['                    @ array of arrays?
+    cmp     rINST, #'I'                 @ array of ints?
+    cmpne   rINST, #'L'                 @ array of objects?
+    cmpne   rINST, #'['                 @ array of arrays?
     mov     r9, r1                      @ save length in r9
     bne     .LOP_FILLED_NEW_ARRAY_notimpl         @ no, not handled yet
     bl      dvmAllocArrayByClass        @ r0<- call(arClass, length, flags)
@@ -8368,7 +8365,8 @@ dvmAsmSisterStart:
     beq     common_exceptionThrown      @ alloc failed, handle exception
 
     FETCH(r1, 2)                        @ r1<- FEDC or CCCC
-    str     r0, [rGLUE, #offGlue_retval]    @ retval.l <- new array
+    str     r0, [rGLUE, #offGlue_retval]      @ retval.l <- new array
+    str     rINST, [rGLUE, #offGlue_retval+4] @ retval.h <- type
     add     r0, r0, #offArrayObject_contents @ r0<- newArray->contents
     subs    r9, r9, #1                  @ length--, check for neg
     FETCH_ADVANCE_INST(3)               @ advance to next instr, load rINST
@@ -8400,8 +8398,13 @@ dvmAsmSisterStart:
     .endif
 
 2:
-    GET_INST_OPCODE(ip)                 @ ip<- opcode from rINST
-    GOTO_OPCODE(ip)                     @ execute it
+    ldr     r0, [rGLUE, #offGlue_retval]     @ r0<- object
+    ldr     r1, [rGLUE, #offGlue_retval+4]   @ r1<- type
+    ldr     r2, [rGLUE, #offGlue_cardTable]  @ r2<- card table base
+    GET_INST_OPCODE(ip)                      @ ip<- opcode from rINST
+    cmp     r1, #'I'                         @ Is int array?
+    strneb  r2, [r2, r0, lsr #GC_CARD_SHIFT] @ Mark card if not
+    GOTO_OPCODE(ip)                          @ execute it
 
     /*
      * Throw an exception indicating that we have not implemented this
@@ -8430,15 +8433,15 @@ dvmAsmSisterStart:
 .LOP_FILLED_NEW_ARRAY_RANGE_continue:
     ldr     r3, [r0, #offClassObject_descriptor] @ r3<- arrayClass->descriptor
     mov     r2, #ALLOC_DONT_TRACK       @ r2<- alloc flags
-    ldrb    r3, [r3, #1]                @ r3<- descriptor[1]
+    ldrb    rINST, [r3, #1]             @ rINST<- descriptor[1]
     .if     1
     mov     r1, r10                     @ r1<- AA (length)
     .else
     mov     r1, r10, lsr #4             @ r1<- B (length)
     .endif
-    cmp     r3, #'I'                    @ array of ints?
-    cmpne   r3, #'L'                    @ array of objects?
-    cmpne   r3, #'['                    @ array of arrays?
+    cmp     rINST, #'I'                 @ array of ints?
+    cmpne   rINST, #'L'                 @ array of objects?
+    cmpne   rINST, #'['                 @ array of arrays?
     mov     r9, r1                      @ save length in r9
     bne     .LOP_FILLED_NEW_ARRAY_RANGE_notimpl         @ no, not handled yet
     bl      dvmAllocArrayByClass        @ r0<- call(arClass, length, flags)
@@ -8446,7 +8449,8 @@ dvmAsmSisterStart:
     beq     common_exceptionThrown      @ alloc failed, handle exception
 
     FETCH(r1, 2)                        @ r1<- FEDC or CCCC
-    str     r0, [rGLUE, #offGlue_retval]    @ retval.l <- new array
+    str     r0, [rGLUE, #offGlue_retval]      @ retval.l <- new array
+    str     rINST, [rGLUE, #offGlue_retval+4] @ retval.h <- type
     add     r0, r0, #offArrayObject_contents @ r0<- newArray->contents
     subs    r9, r9, #1                  @ length--, check for neg
     FETCH_ADVANCE_INST(3)               @ advance to next instr, load rINST
@@ -8478,8 +8482,13 @@ dvmAsmSisterStart:
     .endif
 
 2:
-    GET_INST_OPCODE(ip)                 @ ip<- opcode from rINST
-    GOTO_OPCODE(ip)                     @ execute it
+    ldr     r0, [rGLUE, #offGlue_retval]     @ r0<- object
+    ldr     r1, [rGLUE, #offGlue_retval+4]   @ r1<- type
+    ldr     r2, [rGLUE, #offGlue_cardTable]  @ r2<- card table base
+    GET_INST_OPCODE(ip)                      @ ip<- opcode from rINST
+    cmp     r1, #'I'                         @ Is int array?
+    strneb  r2, [r2, r0, lsr #GC_CARD_SHIFT] @ Mark card if not
+    GOTO_OPCODE(ip)                          @ execute it
 
     /*
      * Throw an exception indicating that we have not implemented this
@@ -8709,6 +8718,13 @@ OP_CMPG_FLOAT_nan:
     bl      dvmCanPutArrayElement       @ test object type vs. array type
     cmp     r0, #0                      @ okay?
     beq     common_errArrayStore        @ no
+    FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
+    ldr     r2, [rGLUE, #offGlue_cardTable]     @ get biased CT base
+    add     r10, #offArrayObject_contents   @ r0<- pointer to slot
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    str     r9, [r10]                   @ vBB[vCC]<- vAA
+    strb    r2, [r2, r10, lsr #GC_CARD_SHIFT]    @ mark card
+    GOTO_OPCODE(ip)                     @ jump to next instruction
 .LOP_APUT_OBJECT_skip_check:
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
@@ -8926,11 +8942,15 @@ OP_CMPG_FLOAT_nan:
     and     r1, r1, #15                 @ r1<- A
     cmp     r9, #0                      @ check object for null
     GET_VREG(r0, r1)                    @ r0<- fp[A]
+    ldr     r2, [rGLUE, #offGlue_cardTable]  @ r2<- card table base
     beq     common_errNullObject        @ object was null
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
+    add     r9, r3                      @ r9<- direct ptr to target location
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     @ no-op                             @ releasing store
-    str  r0, [r9, r3]                @ obj.field (8/16/32 bits)<- r0
+    str     r0, [r9]                    @ obj.field (8/16/32 bits)<- r0
+    cmp     r0, #0                      @ stored a null reference?
+    strneb  r2, [r2, r9, lsr #GC_CARD_SHIFT]  @ mark card if not
     GOTO_OPCODE(ip)                     @ jump to next instruction
 
 /* continuation for OP_IPUT_BOOLEAN */
@@ -9159,19 +9179,18 @@ OP_CMPG_FLOAT_nan:
     b       common_exceptionThrown      @ no, handle exception
 
 /* continuation for OP_SPUT_OBJECT */
-
-    /*
-     * Continuation if the field has not yet been resolved.
-     *  r1: BBBB field ref
-     */
-.LOP_SPUT_OBJECT_resolve:
-    ldr     r2, [rGLUE, #offGlue_method]    @ r2<- current method
-    EXPORT_PC()                         @ resolve() could throw, so export now
-    ldr     r0, [r2, #offMethod_clazz]  @ r0<- method->clazz
-    bl      dvmResolveStaticField       @ r0<- resolved StaticField ptr
-    cmp     r0, #0                      @ success?
-    bne     .LOP_SPUT_OBJECT_finish          @ yes, finish
-    b       common_exceptionThrown      @ no, handle exception
+.LOP_SPUT_OBJECT_finish:   @ field ptr in r0
+    mov     r2, rINST, lsr #8           @ r2<- AA
+    FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
+    GET_VREG(r1, r2)                    @ r1<- fp[AA]
+    ldr     r2, [rGLUE, #offGlue_cardTable]  @ r2<- card table base
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    add     r0, #offStaticField_value   @ r0<- pointer to store target
+    @ no-op                             @ releasing store
+    str     r1, [r0]                    @ field<- vAA
+    cmp     r1, #0                      @ stored a null object?
+    strneb  r2, [r2, r0, lsr #GC_CARD_SHIFT]  @ mark card if not
+    GOTO_OPCODE(ip)                     @ jump to next instruction
 
 /* continuation for OP_SPUT_BOOLEAN */
 
@@ -9765,11 +9784,15 @@ d2l_doconv:
     and     r1, r1, #15                 @ r1<- A
     cmp     r9, #0                      @ check object for null
     GET_VREG(r0, r1)                    @ r0<- fp[A]
+    ldr     r2, [rGLUE, #offGlue_cardTable]  @ r2<- card table base
     beq     common_errNullObject        @ object was null
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
+    add     r9, r3                      @ r9<- direct ptr to target location
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     SMP_DMB                            @ releasing store
-    str  r0, [r9, r3]                @ obj.field (8/16/32 bits)<- r0
+    str     r0, [r9]                    @ obj.field (8/16/32 bits)<- r0
+    cmp     r0, #0                      @ stored a null reference?
+    strneb  r2, [r2, r9, lsr #GC_CARD_SHIFT]  @ mark card if not
     GOTO_OPCODE(ip)                     @ jump to next instruction
 
 /* continuation for OP_SGET_OBJECT_VOLATILE */
@@ -9788,19 +9811,18 @@ d2l_doconv:
     b       common_exceptionThrown      @ no, handle exception
 
 /* continuation for OP_SPUT_OBJECT_VOLATILE */
-
-    /*
-     * Continuation if the field has not yet been resolved.
-     *  r1: BBBB field ref
-     */
-.LOP_SPUT_OBJECT_VOLATILE_resolve:
-    ldr     r2, [rGLUE, #offGlue_method]    @ r2<- current method
-    EXPORT_PC()                         @ resolve() could throw, so export now
-    ldr     r0, [r2, #offMethod_clazz]  @ r0<- method->clazz
-    bl      dvmResolveStaticField       @ r0<- resolved StaticField ptr
-    cmp     r0, #0                      @ success?
-    bne     .LOP_SPUT_OBJECT_VOLATILE_finish          @ yes, finish
-    b       common_exceptionThrown      @ no, handle exception
+.LOP_SPUT_OBJECT_VOLATILE_finish:   @ field ptr in r0
+    mov     r2, rINST, lsr #8           @ r2<- AA
+    FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
+    GET_VREG(r1, r2)                    @ r1<- fp[AA]
+    ldr     r2, [rGLUE, #offGlue_cardTable]  @ r2<- card table base
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    add     r0, #offStaticField_value   @ r0<- pointer to store target
+    SMP_DMB                            @ releasing store
+    str     r1, [r0]                    @ field<- vAA
+    cmp     r1, #0                      @ stored a null object?
+    strneb  r2, [r2, r0, lsr #GC_CARD_SHIFT]  @ mark card if not
+    GOTO_OPCODE(ip)                     @ jump to next instruction
 
     .size   dvmAsmSisterStart, .-dvmAsmSisterStart
     .global dvmAsmSisterEnd

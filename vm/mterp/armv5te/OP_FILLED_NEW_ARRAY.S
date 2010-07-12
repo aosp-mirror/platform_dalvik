@@ -33,15 +33,15 @@
 .L${opcode}_continue:
     ldr     r3, [r0, #offClassObject_descriptor] @ r3<- arrayClass->descriptor
     mov     r2, #ALLOC_DONT_TRACK       @ r2<- alloc flags
-    ldrb    r3, [r3, #1]                @ r3<- descriptor[1]
+    ldrb    rINST, [r3, #1]             @ rINST<- descriptor[1]
     .if     $isrange
     mov     r1, r10                     @ r1<- AA (length)
     .else
     mov     r1, r10, lsr #4             @ r1<- B (length)
     .endif
-    cmp     r3, #'I'                    @ array of ints?
-    cmpne   r3, #'L'                    @ array of objects?
-    cmpne   r3, #'['                    @ array of arrays?
+    cmp     rINST, #'I'                 @ array of ints?
+    cmpne   rINST, #'L'                 @ array of objects?
+    cmpne   rINST, #'['                 @ array of arrays?
     mov     r9, r1                      @ save length in r9
     bne     .L${opcode}_notimpl         @ no, not handled yet
     bl      dvmAllocArrayByClass        @ r0<- call(arClass, length, flags)
@@ -49,7 +49,8 @@
     beq     common_exceptionThrown      @ alloc failed, handle exception
 
     FETCH(r1, 2)                        @ r1<- FEDC or CCCC
-    str     r0, [rGLUE, #offGlue_retval]    @ retval.l <- new array
+    str     r0, [rGLUE, #offGlue_retval]      @ retval.l <- new array
+    str     rINST, [rGLUE, #offGlue_retval+4] @ retval.h <- type
     add     r0, r0, #offArrayObject_contents @ r0<- newArray->contents
     subs    r9, r9, #1                  @ length--, check for neg
     FETCH_ADVANCE_INST(3)               @ advance to next instr, load rINST
@@ -81,8 +82,13 @@
     .endif
 
 2:
-    GET_INST_OPCODE(ip)                 @ ip<- opcode from rINST
-    GOTO_OPCODE(ip)                     @ execute it
+    ldr     r0, [rGLUE, #offGlue_retval]     @ r0<- object
+    ldr     r1, [rGLUE, #offGlue_retval+4]   @ r1<- type
+    ldr     r2, [rGLUE, #offGlue_cardTable]  @ r2<- card table base
+    GET_INST_OPCODE(ip)                      @ ip<- opcode from rINST
+    cmp     r1, #'I'                         @ Is int array?
+    strneb  r2, [r2, r0, lsr #GC_CARD_SHIFT] @ Mark card if not
+    GOTO_OPCODE(ip)                          @ execute it
 
     /*
      * Throw an exception indicating that we have not implemented this

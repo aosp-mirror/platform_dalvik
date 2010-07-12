@@ -1,2 +1,2 @@
 %verify "executed"
-%include "armv5te/OP_IPUT.S" {"barrier":"SMP_DMB"}
+%include "armv5te/OP_IPUT_OBJECT.S" {"barrier":"SMP_DMB"}

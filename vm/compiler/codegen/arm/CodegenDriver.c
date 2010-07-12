@@ -24,6 +24,25 @@
  * applicable directory below this one.
  */
 
+/*
+ * Mark garbage collection card. Skip if the value we're storing is null.
+ */
+static void markCard(CompilationUnit *cUnit, int valReg, int tgtAddrReg)
+{
+    int regCardBase = dvmCompilerAllocTemp(cUnit);
+    int regCardNo = dvmCompilerAllocTemp(cUnit);
+    opRegImm(cUnit, kOpCmp, valReg, 0); /* storing null? */
+    ArmLIR *branchOver = opCondBranch(cUnit, kArmCondEq);
+    loadWordDisp(cUnit, rGLUE, offsetof(InterpState, cardTable),
+                 regCardBase);
+    opRegRegImm(cUnit, kOpLsr, regCardNo, tgtAddrReg, GC_CARD_SHIFT);
+    storeBaseIndexed(cUnit, regCardBase, regCardNo, regCardBase, 0,
+                     kUnsignedByte);
+    ArmLIR *target = newLIR0(cUnit, kArmPseudoTargetLabel);
+    target->defMask = ENCODE_ALL;
+    branchOver->generic.target = (LIR *)target;
+}
+
 static bool genConversionCall(CompilationUnit *cUnit, MIR *mir, void *funct,
                                      int srcSize, int tgtSize)
 {
@@ -306,7 +325,7 @@ static void genIGet(CompilationUnit *cUnit, MIR *mir, OpSize size,
  *
  */
 static void genIPut(CompilationUnit *cUnit, MIR *mir, OpSize size,
-                    int fieldOffset)
+                    int fieldOffset, bool isObject)
 {
     RegisterClass regClass = dvmCompilerRegClassBySize(size);
     RegLocation rlSrc = dvmCompilerGetSrc(cUnit, mir, 0);
@@ -319,6 +338,10 @@ static void genIPut(CompilationUnit *cUnit, MIR *mir, OpSize size,
     HEAP_ACCESS_SHADOW(true);
     storeBaseDisp(cUnit, rlObj.lowReg, fieldOffset, rlSrc.lowReg, size);
     HEAP_ACCESS_SHADOW(false);
+    if (isObject) {
+        /* NOTE: marking card based on object head */
+        markCard(cUnit, rlSrc.lowReg, rlObj.lowReg);
+    }
 }
 
 
@@ -528,12 +551,14 @@ static void genArrayObjectPut(CompilationUnit *cUnit, MIR *mir,
     dvmCompilerLockTemp(cUnit, regPtr);   // r4PC
     dvmCompilerLockTemp(cUnit, regIndex); // r7
     dvmCompilerLockTemp(cUnit, r0);
+    dvmCompilerLockTemp(cUnit, r1);
 
     /* Bad? - roll back and re-execute if so */
     genRegImmCheck(cUnit, kArmCondEq, r0, 0, mir->offset, pcrLabel);
 
-    /* Resume here - must reload element, regPtr & index preserved */
+    /* Resume here - must reload element & array, regPtr & index preserved */
     loadValueDirectFixed(cUnit, rlSrc, r0);
+    loadValueDirectFixed(cUnit, rlArray, r1);
 
     ArmLIR *target = newLIR0(cUnit, kArmPseudoTargetLabel);
     target->defMask = ENCODE_ALL;
@@ -543,6 +568,9 @@ static void genArrayObjectPut(CompilationUnit *cUnit, MIR *mir,
     storeBaseIndexed(cUnit, regPtr, regIndex, r0,
                      scale, kWord);
     HEAP_ACCESS_SHADOW(false);
+
+    /* NOTE: marking card here based on object head */
+    markCard(cUnit, r0, r1);
 }
 
 static bool genShiftOpLong(CompilationUnit *cUnit, MIR *mir,
@@ -1488,6 +1516,10 @@ static bool handleFmt21c_Fmt31c(CompilationUnit *cUnit, MIR *mir)
             HEAP_ACCESS_SHADOW(true);
             storeWordDisp(cUnit, tReg, 0 ,rlSrc.lowReg);
             HEAP_ACCESS_SHADOW(false);
+            if (mir->dalvikInsn.opCode == OP_SPUT_OBJECT) {
+                /* NOTE: marking card based on field address */
+                markCard(cUnit, rlSrc.lowReg, tReg);
+            }
 
             break;
         }
@@ -2218,16 +2250,18 @@ static bool handleFmt22c(CompilationUnit *cUnit, MIR *mir)
             genIPutWide(cUnit, mir, fieldOffset);
             break;
         case OP_IPUT:
+            genIPut(cUnit, mir, kWord, fieldOffset, false);
+            break;
         case OP_IPUT_OBJECT:
-            genIPut(cUnit, mir, kWord, fieldOffset);
+            genIPut(cUnit, mir, kWord, fieldOffset, true);
             break;
         case OP_IPUT_SHORT:
         case OP_IPUT_CHAR:
-            genIPut(cUnit, mir, kUnsignedHalf, fieldOffset);
+            genIPut(cUnit, mir, kUnsignedHalf, fieldOffset, false);
             break;
         case OP_IPUT_BYTE:
         case OP_IPUT_BOOLEAN:
-            genIPut(cUnit, mir, kUnsignedByte, fieldOffset);
+            genIPut(cUnit, mir, kUnsignedByte, fieldOffset, false);
             break;
         case OP_IGET_WIDE_VOLATILE:
         case OP_IPUT_WIDE_VOLATILE:
@@ -2251,8 +2285,10 @@ static bool handleFmt22cs(CompilationUnit *cUnit, MIR *mir)
             genIGet(cUnit, mir, kWord, fieldOffset);
             break;
         case OP_IPUT_QUICK:
+            genIPut(cUnit, mir, kWord, fieldOffset, false);
+            break;
         case OP_IPUT_OBJECT_QUICK:
-            genIPut(cUnit, mir, kWord, fieldOffset);
+            genIPut(cUnit, mir, kWord, fieldOffset, true);
             break;
         case OP_IGET_WIDE_QUICK:
             genIGetWide(cUnit, mir, fieldOffset);

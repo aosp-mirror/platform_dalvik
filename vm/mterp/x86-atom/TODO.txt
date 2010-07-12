@@ -1,5 +1,6 @@
 Items requiring attention:
 
+(hi) Add gc card marking to aput/iput/sput/new_filled_array
 (hi) Correct stack overflow handling (dvmCleanupStackOverflow takes an
      additional argument now)
 (hi) "debugger active" test in common_periodicChecks must handle

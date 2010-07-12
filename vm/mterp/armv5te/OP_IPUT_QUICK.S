@@ -1,6 +1,6 @@
 %verify "executed"
 %verify "null object"
-    /* For: iput-quick, iput-object-quick */
+    /* For: iput-quick */
     /* op vA, vB, offset@CCCC */
     mov     r2, rINST, lsr #12          @ r2<- B
     GET_VREG(r3, r2)                    @ r3<- fp[B], the object pointer
