@@ -96,7 +96,6 @@ struct GcHeap {
     /* GC's card table */
     u1*             cardTableBase;
     size_t          cardTableLength;
-    u1*             biasedCardTableBase;
 
     /* Set to dvmGetRelativeTimeUsec() whenever a GC begins.
      * The value is preserved between GCs, so it can be used

@@ -455,6 +455,9 @@ struct DvmGlobals {
     /* Opaque pointer representing the heap. */
     GcHeap*     gcHeap;
 
+    /* The card table base, modified as needed for marking cards. */
+    u1*         biasedCardTableBase;
+
     /*
      * Pre-allocated throwables.
      */

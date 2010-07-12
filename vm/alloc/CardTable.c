@@ -91,7 +91,7 @@ bool dvmCardTableStartup(GcHeap *gcHeap, void *heapBase)
         biasedBase += offset + (offset < 0 ? 0x100 : 0);
     }
     assert(((uintptr_t)biasedBase & 0xff) == GC_CARD_DIRTY);
-    gcHeap->biasedCardTableBase = biasedBase;
+    gDvm.biasedCardTableBase = biasedBase;
 
     return true;
 }
@@ -105,15 +105,24 @@ void dvmCardTableShutdown()
 }
 
 /*
+ * Returns true iff the address is within the bounds of the card table.
+ */
+bool dvmIsValidCard(const u1 *cardAddr)
+{
+    GcHeap *h = gDvm.gcHeap;
+    return cardAddr >= h->cardTableBase &&
+        cardAddr < &h->cardTableBase[h->cardTableLength];
+}
+
+/*
  * Returns the address of the relevent byte in the card table, given
  * an address on the heap.
  */
 u1 *dvmCardFromAddr(const void *addr)
 {
-    GcHeap *h = gDvm.gcHeap;
-    u1 *cardAddr = h->biasedCardTableBase + ((uintptr_t)addr >> GC_CARD_SHIFT);
-    assert(cardAddr >= h->cardTableBase);
-    assert(cardAddr < &h->cardTableBase[h->cardTableLength]);
+    u1 *biasedBase = gDvm.biasedCardTableBase;
+    u1 *cardAddr = biasedBase + ((uintptr_t)addr >> GC_CARD_SHIFT);
+    assert(dvmIsValidCard(cardAddr));
     return cardAddr;
 }
 
@@ -122,10 +131,8 @@ u1 *dvmCardFromAddr(const void *addr)
  */
 void *dvmAddrFromCard(const u1 *cardAddr)
 {
-    GcHeap *h = gDvm.gcHeap;
-    assert(cardAddr >= h->cardTableBase);
-    assert(cardAddr < &h->cardTableBase[h->cardTableLength]);
-    uintptr_t offset = cardAddr - h->biasedCardTableBase;
+    assert(dvmIsValidCard(cardAddr));
+    uintptr_t offset = cardAddr - gDvm.biasedCardTableBase;
     return (void *)(offset << GC_CARD_SHIFT);
 }
 
