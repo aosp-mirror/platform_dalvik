@@ -1045,6 +1045,8 @@ static void setCommandLineDefaults()
     gDvm.heapSizeMax = 16 * 1024 * 1024;    // Spec says 75% physical mem
     gDvm.stackSize = kDefaultStackSize;
 
+    gDvm.concurrentMarkSweep = true;
+
     /* gDvm.jdwpSuspend = true; */
 
     /* allowed unless zygote config doesn't allow it */
