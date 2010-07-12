@@ -163,6 +163,7 @@ public class MulticastSocketTest extends SocketTestCase {
 	/**
 	 * @tests java.net.MulticastSocket#getInterface()
 	 */
+        @KnownFailure("Matching getter/setter pairs should be used.")
 	public void test_getInterface() throws Exception {
 		// Test for method java.net.InetAddress
 		// java.net.MulticastSocket.getInterface()
@@ -352,7 +353,6 @@ public class MulticastSocketTest extends SocketTestCase {
 	 * @throws InterruptedException 
 	 * @tests java.net.MulticastSocket#joinGroup(java.net.SocketAddress,java.net.NetworkInterface)
 	 */
-    @KnownFailure("Fails in CTS but passes under run-core-tests")
 	public void test_joinGroupLjava_net_SocketAddressLjava_net_NetworkInterface() throws IOException, InterruptedException {
 		// security manager that allows us to check that we only return the
 		// addresses that we should

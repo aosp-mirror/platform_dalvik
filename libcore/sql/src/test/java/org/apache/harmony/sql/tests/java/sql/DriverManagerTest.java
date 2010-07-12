@@ -372,7 +372,7 @@ public class DriverManagerTest extends TestCase {
         method = "getDrivers",
         args = {}
     )
-    @KnownFailure("We're working out issues with built-in SQL drivers")
+    // We're working out issues with built-in SQL drivers
     public void testGetDrivers() {
         // Load a driver manager
         Enumeration<Driver> driverList = DriverManager.getDrivers();
@@ -761,5 +761,3 @@ public class DriverManagerTest extends TestCase {
     }
 
 } // end class DriverManagerTest
-
-
