@@ -158,11 +158,9 @@ HB_INLINE_PROTO(
     const size_t index = HB_OFFSET_TO_INDEX(offset);
     const unsigned long mask = HB_OFFSET_TO_MASK(offset);
 
-#ifndef NDEBUG
     assert(hb->bits != NULL);
     assert((uintptr_t)obj >= hb->base);
     assert(index < hb->bitsLen / sizeof(*hb->bits));
-#endif
 
     if (setBit) {
         if ((uintptr_t)obj > hb->max) {
