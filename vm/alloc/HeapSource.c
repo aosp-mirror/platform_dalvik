@@ -682,7 +682,7 @@ static void aliasBitmap(HeapBitmap *dst, HeapBitmap *src,
 
     dst->base = base;
     dst->max = max;
-    dst->bitsLen = HB_OFFSET_TO_BYTE_INDEX(max - base);
+    dst->bitsLen = HB_OFFSET_TO_BYTE_INDEX(max - base + 1);
     dst->allocLen = dst->bitsLen;
     offset = base - src->base;
     assert(HB_OFFSET_TO_MASK(offset) == 1 << 31);
