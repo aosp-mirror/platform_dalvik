@@ -19,7 +19,7 @@
 #include <stdint.h>
 
 #define HB_OBJECT_ALIGNMENT 8
-#define HB_BITS_PER_WORD    (sizeof (unsigned long int) * 8)
+#define HB_BITS_PER_WORD    (sizeof (unsigned long) * 8)
 
 /* <offset> is the difference from .base to a pointer address.
  * <index> is the index of .bits that contains the bit representing
@@ -54,7 +54,7 @@ struct HeapBitmap {
     /* The bitmap data, which points to an mmap()ed area of zeroed
      * anonymous memory.
      */
-    unsigned long int *bits;
+    unsigned long *bits;
 
     /* The size of the used memory pointed to by bits, in bytes.  This
      * value changes when the bitmap is shrunk.
@@ -149,14 +149,14 @@ HB_INLINE_PROTO(
  * Internal function; do not call directly.
  */
 HB_INLINE_PROTO(
-    unsigned long int
+    unsigned long
     _heapBitmapModifyObjectBit(HeapBitmap *hb, const void *obj,
             bool setBit, bool returnOld)
 )
 {
     const uintptr_t offset = (uintptr_t)obj - hb->base;
     const size_t index = HB_OFFSET_TO_INDEX(offset);
-    const unsigned long int mask = HB_OFFSET_TO_MASK(offset);
+    const unsigned long mask = HB_OFFSET_TO_MASK(offset);
 
 #ifndef NDEBUG
     assert(hb->bits != NULL);
@@ -169,8 +169,8 @@ HB_INLINE_PROTO(
             hb->max = (uintptr_t)obj;
         }
         if (returnOld) {
-            unsigned long int *p = hb->bits + index;
-            const unsigned long int word = *p;
+            unsigned long *p = hb->bits + index;
+            const unsigned long word = *p;
             *p |= mask;
             return word & mask;
         } else {
@@ -191,7 +191,7 @@ HB_INLINE_PROTO(
  * set bits will be lost.
  */
 HB_INLINE_PROTO(
-    unsigned long int
+    unsigned long
     dvmHeapBitmapSetAndReturnObjectBit(HeapBitmap *hb, const void *obj)
 )
 {
@@ -229,7 +229,7 @@ HB_INLINE_PROTO(
  * set bits will be lost.
  */
 HB_INLINE_PROTO(
-    unsigned long int
+    unsigned long
     dvmHeapBitmapIsObjectBitSet(const HeapBitmap *hb, const void *obj)
 )
 {

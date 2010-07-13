@@ -169,7 +169,7 @@ dvmHeapBitmapXorWalk(const HeapBitmap *hb1, const HeapBitmap *hb2,
     /* First, walk along the section of the bitmaps that may be the same.
      */
     if (hb1->max >= hb1->base && hb2->max >= hb2->base) {
-        unsigned long int *p1, *p2;
+        unsigned long *p1, *p2;
         uintptr_t offset;
 
         offset = ((hb1->max < hb2->max) ? hb1->max : hb2->max) - hb1->base;
@@ -180,7 +180,7 @@ dvmHeapBitmapXorWalk(const HeapBitmap *hb1, const HeapBitmap *hb2,
         p2 = hb2->bits;
         for (i = 0; i <= index; i++) {
 //TODO: unroll this. pile up a few in locals?
-            unsigned long int diff = *p1++ ^ *p2++;
+            unsigned long diff = *p1++ ^ *p2++;
             DECODE_BITS(hb1, diff, false);
 //BUG: if the callback was called, either max could have changed.
         }
@@ -197,7 +197,7 @@ dvmHeapBitmapXorWalk(const HeapBitmap *hb1, const HeapBitmap *hb2,
      * set bits.
      */
 const HeapBitmap *longHb;
-unsigned long int *p;
+unsigned long *p;
 //TODO: may be the same size, in which case this is wasted work
     longHb = (hb1->max > hb2->max) ? hb1 : hb2;
     i = index;
