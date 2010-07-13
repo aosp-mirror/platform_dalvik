@@ -754,7 +754,6 @@ void dvmMarkImmuneObjects(const char *immuneLimit)
     for (i = 1; i < gHs->numHeaps; ++i) {
         if (gHs->heaps[i].base < immuneLimit) {
             assert(gHs->heaps[i].limit <= immuneLimit);
-            LOGV("Copying markBits for immune heap %d", i);
             /* Compute the number of words to copy in the bitmap. */
             index = HB_OFFSET_TO_INDEX(
                 (uintptr_t)gHs->heaps[i].base - gHs->liveBits.base);
