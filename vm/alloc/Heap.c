@@ -729,7 +729,7 @@ void dvmCollectGarbageInternal(bool clearSoftRefs, GcReason reason)
             gcHeap->hprofFileName = nameBuf;
         }
         gcHeap->hprofContext = hprofStartup(gcHeap->hprofFileName,
-                gcHeap->hprofDirectToDdms);
+                gcHeap->hprofFd, gcHeap->hprofDirectToDdms);
         if (gcHeap->hprofContext != NULL) {
             hprofStartHeapDump(gcHeap->hprofContext);
         }
@@ -959,11 +959,18 @@ void dvmWaitForConcurrentGcToComplete(void)
 /*
  * Perform garbage collection, writing heap information to the specified file.
  *
+ * If "fd" is >= 0, the output will be written to that file descriptor.
+ * Otherwise, "fileName" is used to create an output file.
+ *
  * If "fileName" is NULL, a suitable name will be generated automatically.
+ * (TODO: remove this when the SIGUSR1 feature goes away)
+ *
+ * If "directToDdms" is set, the other arguments are ignored, and data is
+ * sent directly to DDMS.
  *
  * Returns 0 on success, or an error code on failure.
  */
-int hprofDumpHeap(const char* fileName, bool directToDdms)
+int hprofDumpHeap(const char* fileName, int fd, bool directToDdms)
 {
     int result;
 
@@ -971,6 +978,7 @@ int hprofDumpHeap(const char* fileName, bool directToDdms)
 
     gDvm.gcHeap->hprofDumpOnGc = true;
     gDvm.gcHeap->hprofFileName = fileName;
+    gDvm.gcHeap->hprofFd = fd;
     gDvm.gcHeap->hprofDirectToDdms = directToDdms;
     dvmCollectGarbageInternal(false, GC_HPROF_DUMP_HEAP);
     result = gDvm.gcHeap->hprofResult;

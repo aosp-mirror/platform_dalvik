@@ -121,6 +121,7 @@ struct GcHeap {
 #if WITH_HPROF
     bool            hprofDumpOnGc;
     const char*     hprofFileName;
+    int             hprofFd;
     hprof_context_t *hprofContext;
     int             hprofResult;
     bool            hprofDirectToDdms;

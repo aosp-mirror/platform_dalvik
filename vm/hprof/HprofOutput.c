@@ -59,32 +59,30 @@
 /*
  * Initialize an hprof context struct.
  *
- * This will take ownership of "fileName" and "fp".
+ * This will take ownership of "fileName".
  */
 void
-hprofContextInit(hprof_context_t *ctx, char *fileName, FILE *fp,
+hprofContextInit(hprof_context_t *ctx, char *fileName, int fd,
     bool writeHeader, bool directToDdms)
 {
     memset(ctx, 0, sizeof (*ctx));
 
-    if (directToDdms) {
-        /*
-         * Have to do this here, because it must happen after we
-         * memset the struct (want to treat fileDataPtr/fileDataSize
-         * as read-only while the file is open).
-         */
-        assert(fp == NULL);
-        fp = open_memstream(&ctx->fileDataPtr, &ctx->fileDataSize);
-        if (fp == NULL) {
-            /* not expected */
-            LOGE("hprof: open_memstream failed: %s\n", strerror(errno));
-            dvmAbort();
-        }
+    /*
+     * Have to do this here, because it must happen after we
+     * memset the struct (want to treat fileDataPtr/fileDataSize
+     * as read-only while the file is open).
+     */
+    FILE* fp = open_memstream(&ctx->fileDataPtr, &ctx->fileDataSize);
+    if (fp == NULL) {
+        /* not expected */
+        LOGE("hprof: open_memstream failed: %s\n", strerror(errno));
+        dvmAbort();
     }
 
     ctx->directToDdms = directToDdms;
     ctx->fileName = fileName;
-    ctx->fp = fp;
+    ctx->memFp = fp;
+    ctx->fd = fd;
 
     ctx->curRec.allocLen = 128;
     ctx->curRec.body = malloc(ctx->curRec.allocLen);
@@ -158,7 +156,7 @@ hprofFlushRecord(hprof_record_t *rec, FILE *fp)
 int
 hprofFlushCurrentRecord(hprof_context_t *ctx)
 {
-    return hprofFlushRecord(&ctx->curRec, ctx->fp);
+    return hprofFlushRecord(&ctx->curRec, ctx->memFp);
 }
 
 int
@@ -167,7 +165,7 @@ hprofStartNewRecord(hprof_context_t *ctx, u1 tag, u4 time)
     hprof_record_t *rec = &ctx->curRec;
     int err;
 
-    err = hprofFlushRecord(rec, ctx->fp);
+    err = hprofFlushRecord(rec, ctx->memFp);
     if (err != 0) {
         return err;
     } else if (rec->dirty) {

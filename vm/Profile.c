@@ -329,7 +329,8 @@ static void dumpMethodList(FILE* fp)
  * trace all threads).
  *
  * This opens the output file (if an already open fd has not been supplied,
- * and we're not going direct to DDMS) and allocates the data buffer.
+ * and we're not going direct to DDMS) and allocates the data buffer.  This
+ * takes ownership of the file descriptor, closing it on completion.
  *
  * On failure, we throw an exception and return.
  */
@@ -377,6 +378,7 @@ void dvmMethodTraceStart(const char* traceFileName, int traceFd, int bufferSize,
             goto fail;
         }
     }
+    traceFd = -1;
     memset(state->buf, (char)FILL_PATTERN, bufferSize);
 
     state->directToDdms = directToDdms;
@@ -425,6 +427,8 @@ fail:
         free(state->buf);
         state->buf = NULL;
     }
+    if (traceFd >= 0)
+        close(traceFd);
     dvmUnlockMutex(&state->startStopLock);
 }
 
