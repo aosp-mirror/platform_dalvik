@@ -64,11 +64,15 @@
  * Initializes the card table; must be called before any other
  * dvmCardTable*() functions.
  */
-bool dvmCardTableStartup(GcHeap *gcHeap, void *heapBase)
+bool dvmCardTableStartup(void)
 {
     size_t length;
     void *allocBase;
     u1 *biasedBase;
+    GcHeap *gcHeap = gDvm.gcHeap;
+    void *heapBase = dvmHeapSourceGetBase();
+    assert(gcHeap != NULL);
+    assert(heapBase != NULL);
 
     /* Set up the card table */
     length = gDvm.heapSizeMax / GC_CARD_SIZE;
@@ -101,6 +105,7 @@ bool dvmCardTableStartup(GcHeap *gcHeap, void *heapBase)
  */
 void dvmCardTableShutdown()
 {
+    gDvm.biasedCardTableBase = NULL;
     munmap(gDvm.gcHeap->cardTableBase, gDvm.gcHeap->cardTableLength);
 }
 

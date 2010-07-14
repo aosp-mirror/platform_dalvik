@@ -32,14 +32,13 @@
 #define GC_CARD_CLEAN 0
 #define GC_CARD_DIRTY 0x70
 
-struct GcHeap;
 struct HeapBitmap;
 
 /*
  * Initializes the card table; must be called before any other
  * dvmCardTable*() functions.
  */
-bool dvmCardTableStartup(struct GcHeap *gcHeap, void *heapBase);
+bool dvmCardTableStartup(void);
 
 /*
  * Tears down the entire CardTable structure.

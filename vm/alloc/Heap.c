@@ -84,6 +84,11 @@ bool dvmHeapStartup()
     gcHeap->pendingFinalizationRefs = NULL;
     gcHeap->referenceOperations = NULL;
 
+    if (!dvmCardTableStartup()) {
+        LOGE_HEAP("card table startup failed.");
+        return false;
+    }
+
     /* Initialize the HeapWorker locks and other state
      * that the GC uses.
      */
@@ -105,10 +110,10 @@ void dvmHeapShutdown()
 {
 //TODO: make sure we're locked
     if (gDvm.gcHeap != NULL) {
-        /* Tables are allocated on the native heap;
-         * they need to be cleaned up explicitly.
-         * The process may stick around, so we don't
-         * want to leak any native memory.
+        dvmCardTableShutdown();
+         /* Tables are allocated on the native heap; they need to be
+         * cleaned up explicitly.  The process may stick around, so we
+         * don't want to leak any native memory.
          */
         dvmHeapFreeLargeTable(gDvm.gcHeap->finalizableRefs);
         gDvm.gcHeap->finalizableRefs = NULL;
@@ -119,10 +124,9 @@ void dvmHeapShutdown()
         dvmHeapFreeLargeTable(gDvm.gcHeap->referenceOperations);
         gDvm.gcHeap->referenceOperations = NULL;
 
-        /* Destroy the heap.  Any outstanding pointers
-         * will point to unmapped memory (unless/until
-         * someone else maps it).  This frees gDvm.gcHeap
-         * as a side-effect.
+        /* Destroy the heap.  Any outstanding pointers will point to
+         * unmapped memory (unless/until someone else maps it).  This
+         * frees gDvm.gcHeap as a side-effect.
          */
         dvmHeapSourceShutdown(&gDvm.gcHeap);
     }

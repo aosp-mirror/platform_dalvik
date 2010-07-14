@@ -547,10 +547,6 @@ dvmHeapSourceStartup(size_t startSize, size_t absoluteMaxSize)
     countAllocation(hs2heap(hs), hs, false);
 
     gHs = hs;
-    if (!dvmCardTableStartup(gcHeap, base)) {
-        LOGE_HEAP("card table allocation failed.");
-        goto fail;
-    }
     return gcHeap;
 
 fail:
@@ -618,6 +614,14 @@ dvmHeapSourceShutdown(GcHeap **gcHeap)
         gHs = NULL;
         *gcHeap = NULL;
     }
+}
+
+/*
+ * Gets the begining of the allocation for the HeapSource.
+ */
+void *dvmHeapSourceGetBase(void)
+{
+    return gHs->heapBase;
 }
 
 /*
