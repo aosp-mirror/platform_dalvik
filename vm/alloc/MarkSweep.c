@@ -23,7 +23,6 @@
 #include "alloc/Visit.h"
 #include <limits.h>     // for ULONG_MAX
 #include <sys/mman.h>   // for madvise(), mmap()
-#include <cutils/ashmem.h>
 #include <errno.h>
 
 #define GC_LOG_TAG      LOG_TAG "-gc"
@@ -57,8 +56,8 @@ static bool
 createMarkStack(GcMarkStack *stack)
 {
     const Object **limit;
+    const char *name;
     size_t size;
-    int fd, err;
 
     /* Create a stack big enough for the worst possible case,
      * where the heap is perfectly full of the smallest object.
@@ -68,27 +67,15 @@ createMarkStack(GcMarkStack *stack)
     size = dvmHeapSourceGetIdealFootprint() * sizeof(Object*) /
             (sizeof(Object) + HEAP_SOURCE_CHUNK_OVERHEAD);
     size = ALIGN_UP_TO_PAGE_SIZE(size);
-    fd = ashmem_create_region("dalvik-heap-markstack", size);
-    if (fd < 0) {
-        LOGE_GC("Could not create %d-byte ashmem mark stack: %s\n",
-            size, strerror(errno));
+    name = "dalvik-mark-stack";
+    limit = dvmAllocRegion(size, PROT_READ | PROT_WRITE, name);
+    if (limit == NULL) {
+        LOGE_GC("Could not mmap %zd-byte ashmem region '%s'", size, name);
         return false;
     }
-    limit = (const Object **)mmap(NULL, size, PROT_READ | PROT_WRITE,
-            MAP_PRIVATE, fd, 0);
-    err = errno;
-    close(fd);
-    if (limit == MAP_FAILED) {
-        LOGE_GC("Could not mmap %d-byte ashmem mark stack: %s\n",
-            size, strerror(err));
-        return false;
-    }
-
-    memset(stack, 0, sizeof(*stack));
     stack->limit = limit;
     stack->base = (const Object **)((uintptr_t)limit + size);
     stack->top = stack->base;
-
     return true;
 }
 
