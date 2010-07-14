@@ -736,9 +736,6 @@ void dvmHeapScanMarkedObjects(void)
             size_t j = numBitmaps-1-i;
             assert(j == 0 || (markBits[j].base < markBits[j-1].base));
             if (markBits[j].base < (uintptr_t)ctx->immuneLimit) {
-                if (gDvm.verifyCardTable) {
-                    dvmVerifyCardTable(&markBits[j], ctx->immuneLimit);
-                }
                 uintptr_t minAddr = markBits[j].base;
                 uintptr_t maxAddr = markBits[j].base +
                     HB_MAX_OFFSET(&markBits[j]);
@@ -764,9 +761,6 @@ void dvmHeapScanMarkedObjects(void)
                             *card = GC_CARD_CLEAN;
                         }
                     }
-                }
-                if (gDvm.verifyCardTable) {
-                    dvmVerifyCardTable(&markBits[j], ctx->immuneLimit);
                 }
             } else {
                 dvmHeapBitmapWalk(&markBits[j], scanBitmapCallback, ctx);

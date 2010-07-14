@@ -32,8 +32,6 @@
 #define GC_CARD_CLEAN 0
 #define GC_CARD_DIRTY 0x70
 
-struct HeapBitmap;
-
 /*
  * Initializes the card table; must be called before any other
  * dvmCardTable*() functions.
@@ -62,10 +60,11 @@ void *dvmAddrFromCard(const u1 *card);
 void dvmMarkCard(const void *addr);
 
 /*
- * dvmAbort if a clean, immune Object in the bitmap contains a pointer
- * to a threatened Object.
+ * dvmAbort if any clean object in the Zygote heap contains a
+ * reference to the application heap, or if the immune limit is not as
+ * expected.
  */
-void dvmVerifyCardTable(struct HeapBitmap *bitmap, const char *immuneLimit);
+void dvmVerifyCardTable(void);
 
 /* TODO: Clearing, querying, and iterating over the card table. */
 

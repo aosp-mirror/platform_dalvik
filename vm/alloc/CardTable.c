@@ -202,11 +202,39 @@ static bool crossGenCheckCallback(size_t numPtrs, void **ptrs,
 }
 
 /*
- * dvmAbort if a clean, immune Object in the bitmap contains a pointer
- * to a threatened Object.
+ * dvmAbort if any clean object in the Zygote heap contains a
+ * reference to the application heap, or if the immune limit is not as
+ * expected.
  */
-void dvmVerifyCardTable(HeapBitmap *bitmap, const char *immuneLimit)
+void dvmVerifyCardTable(void)
 {
-    dvmHeapBitmapWalk(bitmap, crossGenCheckCallback, (void *)immuneLimit);
+    HeapBitmap markBits[HEAP_SOURCE_MAX_HEAP_COUNT];
+    HeapBitmap liveBits[HEAP_SOURCE_MAX_HEAP_COUNT];
+    size_t numBitmaps;
+    void *immuneLimit;
+    numBitmaps = dvmHeapSourceGetNumHeaps();
+    if (numBitmaps < 2) {
+        return;
+    }
+    if (numBitmaps > 2) {
+        LOGE("More heaps than expected.");
+        dvmAbort();
+    }
+    immuneLimit = dvmHeapSourceGetImmuneLimit(GC_PARTIAL);
+    dvmHeapSourceGetObjectBitmaps(liveBits, markBits, numBitmaps);
+    if (markBits[0].base <= markBits[1].base) {
+        LOGE("Heaps are not in the expected order.");
+        dvmAbort();
+    }
+    if (markBits[0].base < (uintptr_t)immuneLimit ||
+        markBits[0].max < (uintptr_t)immuneLimit) {
+        LOGE("Application heap should not be immune.");
+        dvmAbort();
+    }
+    if (markBits[1].base >= (uintptr_t)immuneLimit ||
+        markBits[1].max >= (uintptr_t)immuneLimit) {
+        LOGE("Zygote heap should not be threatened.");
+        dvmAbort();
+    }
+    dvmHeapBitmapWalk(&markBits[1], crossGenCheckCallback, immuneLimit);
 }
-
