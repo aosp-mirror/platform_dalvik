@@ -19,7 +19,6 @@
 #include "clz.h"
 #include <limits.h>     // for ULONG_MAX
 #include <sys/mman.h>   // for madvise(), mmap()
-#include <cutils/ashmem.h>
 
 #define LIKELY(exp)     (__builtin_expect((exp) != 0, true))
 #define UNLIKELY(exp)   (__builtin_expect((exp) != 0, false))
