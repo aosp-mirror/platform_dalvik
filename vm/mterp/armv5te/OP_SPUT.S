@@ -6,7 +6,7 @@
     /*
      * General 32-bit SPUT handler.
      *
-     * for: sput, sput-object, sput-boolean, sput-byte, sput-char, sput-short
+     * for: sput, sput-boolean, sput-byte, sput-char, sput-short
      */
     /* op vAA, field@BBBB */
     ldr     r2, [rGLUE, #offGlue_methodClassDex]    @ r2<- DvmDex
