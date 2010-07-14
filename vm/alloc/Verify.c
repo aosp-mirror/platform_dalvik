@@ -63,9 +63,7 @@ static void visitorCallback(void *addr, void *arg)
  */
 void dvmVerifyObject(const Object *obj)
 {
-    LOGV("Entering dvmVerifyObject(obj=%p)", obj);
     dvmVisitObject(visitorCallback, (Object *)obj, NULL);
-    LOGV("Exiting dvmVerifyObject(obj=%p)", obj);
 }
 
 /*
