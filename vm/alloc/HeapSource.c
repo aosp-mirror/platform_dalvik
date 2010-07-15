@@ -588,7 +588,9 @@ dvmHeapSourceStartupBeforeFork()
 
 void dvmHeapSourceThreadShutdown(void)
 {
-    gcDaemonShutdown();
+    if (gDvm.gcHeap != NULL) {
+        gcDaemonShutdown();
+    }
 }
 
 /*
