@@ -36,7 +36,6 @@ shared_libraries := \
 	libutils \
 	libz \
 	libcrypto  \
-	libicudata \
 	libicuuc   \
 	libicui18n \
 	libsqlite
