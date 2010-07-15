@@ -2221,12 +2221,10 @@ dvmAsmInstructionStart = .L_OP_NOP
     .balign 64
 .L_OP_IPUT_OBJECT: /* 0x5b */
 /* File: x86/OP_IPUT_OBJECT.S */
-/* File: x86/OP_IPUT.S */
-
     /*
-     * General 32-bit instance field put.
+     * Object field put.
      *
-     * for: iput, iput-object, iput-boolean, iput-byte, iput-char, iput-short
+     * for: iput-object
      */
     /* op vA, vB, field@CCCC */
     GET_GLUE(%ecx)
@@ -2245,7 +2243,6 @@ dvmAsmInstructionStart = .L_OP_NOP
     movl    rIBASE,OUT_ARG1(%esp)
     GET_GLUE(rIBASE)
     jmp     .LOP_IPUT_OBJECT_resolve
-
 
 /* ------------------------------ */
     .balign 64
@@ -2560,7 +2557,7 @@ dvmAsmInstructionStart = .L_OP_NOP
     /*
      * General 32-bit SPUT handler.
      *
-     * for: sput, sput-object, sput-boolean, sput-byte, sput-char, sput-short
+     * for: sput, sput-boolean, sput-byte, sput-char, sput-short
      */
     /* op vAA, field@BBBB */
     GET_GLUE(%ecx)
@@ -2609,28 +2606,21 @@ dvmAsmInstructionStart = .L_OP_NOP
     .balign 64
 .L_OP_SPUT_OBJECT: /* 0x69 */
 /* File: x86/OP_SPUT_OBJECT.S */
-/* File: x86/OP_SPUT.S */
     /*
-     * General 32-bit SPUT handler.
-     *
-     * for: sput, sput-object, sput-boolean, sput-byte, sput-char, sput-short
+     * SPUT object handler.
      */
     /* op vAA, field@BBBB */
     GET_GLUE(%ecx)
     movzwl    2(rPC),%eax                        # eax<- field ref BBBB
     movl      offGlue_methodClassDex(%ecx),%ecx  # ecx<- DvmDex
     movl      offDvmDex_pResFields(%ecx),%ecx    # ecx<- dvmDex->pResFields
-    movl      (%ecx,%eax,4),%eax                 # eax<- resolved StaticField ptr
+    movl      (%ecx,%eax,4),%eax                 # eax<- resolved StaticField
     testl     %eax,%eax                          # resolved entry null?
     je        .LOP_SPUT_OBJECT_resolve                # if not, make it so
 .LOP_SPUT_OBJECT_finish:     # field ptr in eax
     movzbl    rINST_HI,%ecx                      # ecx<- AA
     GET_VREG(%ecx,%ecx)
-    FETCH_INST_WORD(2)
-    movl      %ecx,offStaticField_value(%eax)
-    ADVANCE_PC(2)
-    GOTO_NEXT
-
+    jmp       .LOP_SPUT_OBJECT_continue
 
 /* ------------------------------ */
     .balign 64
@@ -2640,7 +2630,7 @@ dvmAsmInstructionStart = .L_OP_NOP
     /*
      * General 32-bit SPUT handler.
      *
-     * for: sput, sput-object, sput-boolean, sput-byte, sput-char, sput-short
+     * for: sput, sput-boolean, sput-byte, sput-char, sput-short
      */
     /* op vAA, field@BBBB */
     GET_GLUE(%ecx)
@@ -2667,7 +2657,7 @@ dvmAsmInstructionStart = .L_OP_NOP
     /*
      * General 32-bit SPUT handler.
      *
-     * for: sput, sput-object, sput-boolean, sput-byte, sput-char, sput-short
+     * for: sput, sput-boolean, sput-byte, sput-char, sput-short
      */
     /* op vAA, field@BBBB */
     GET_GLUE(%ecx)
@@ -2694,7 +2684,7 @@ dvmAsmInstructionStart = .L_OP_NOP
     /*
      * General 32-bit SPUT handler.
      *
-     * for: sput, sput-object, sput-boolean, sput-byte, sput-char, sput-short
+     * for: sput, sput-boolean, sput-byte, sput-char, sput-short
      */
     /* op vAA, field@BBBB */
     GET_GLUE(%ecx)
@@ -2721,7 +2711,7 @@ dvmAsmInstructionStart = .L_OP_NOP
     /*
      * General 32-bit SPUT handler.
      *
-     * for: sput, sput-object, sput-boolean, sput-byte, sput-char, sput-short
+     * for: sput, sput-boolean, sput-byte, sput-char, sput-short
      */
     /* op vAA, field@BBBB */
     GET_GLUE(%ecx)
@@ -5684,73 +5674,145 @@ dvmAsmInstructionStart = .L_OP_NOP
 /* ------------------------------ */
     .balign 64
 .L_OP_IGET_VOLATILE: /* 0xe3 */
-    /* (stub) */
+/* File: x86/OP_IGET_VOLATILE.S */
+/* File: x86/OP_IGET.S */
+    /*
+     * General 32-bit instance field get.
+     *
+     * for: iget, iget-object, iget-boolean, iget-byte, iget-char, iget-short
+     */
+    /* op vA, vB, field@CCCC */
     GET_GLUE(%ecx)
-    SAVE_PC_TO_GLUE(%ecx)            # only need to export these two
-    SAVE_FP_TO_GLUE(%ecx)            # only need to export these two
-    movl %ecx,OUT_ARG0(%esp)         # glue is first arg to function
-    call      dvmMterp_OP_IGET_VOLATILE     # do the real work
-    GET_GLUE(%ecx)
-    LOAD_PC_FROM_GLUE(%ecx)          # retrieve updated values
-    LOAD_FP_FROM_GLUE(%ecx)          # retrieve updated values
-    FETCH_INST()
-    GOTO_NEXT
+    SPILL(rIBASE)                                 # need another reg
+    movzwl  2(rPC),rIBASE                         # rIBASE<- 0000CCCC
+    movl    offGlue_methodClassDex(%ecx),%eax     # eax<- DvmDex
+    movzbl  rINST_HI,%ecx                         # ecx<- BA
+    sarl    $4,%ecx                              # ecx<- B
+    movl    offDvmDex_pResFields(%eax),%eax       # eax<- pDvmDex->pResFields
+    movzbl  rINST_HI,rINST_FULL                   # rINST_FULL<- BA
+    andb    $0xf,rINST_LO                        # rINST_FULL<- A
+    GET_VREG(%ecx,%ecx)                           # ecx<- fp[B], the object ptr
+    movl    (%eax,rIBASE,4),%eax                  # resolved entry
+    testl   %eax,%eax                             # is resolved entry null?
+    jne     .LOP_IGET_VOLATILE_finish                    # no, already resolved
+    movl    rIBASE,OUT_ARG1(%esp)                 # needed by dvmResolveInstField
+    GET_GLUE(rIBASE)
+    jmp     .LOP_IGET_VOLATILE_resolve
+
+
 /* ------------------------------ */
     .balign 64
 .L_OP_IPUT_VOLATILE: /* 0xe4 */
-    /* (stub) */
+/* File: x86/OP_IPUT_VOLATILE.S */
+/* File: x86/OP_IPUT.S */
+
+    /*
+     * General 32-bit instance field put.
+     *
+     * for: iput, iput-object, iput-boolean, iput-byte, iput-char, iput-short
+     */
+    /* op vA, vB, field@CCCC */
     GET_GLUE(%ecx)
-    SAVE_PC_TO_GLUE(%ecx)            # only need to export these two
-    SAVE_FP_TO_GLUE(%ecx)            # only need to export these two
-    movl %ecx,OUT_ARG0(%esp)         # glue is first arg to function
-    call      dvmMterp_OP_IPUT_VOLATILE     # do the real work
-    GET_GLUE(%ecx)
-    LOAD_PC_FROM_GLUE(%ecx)          # retrieve updated values
-    LOAD_FP_FROM_GLUE(%ecx)          # retrieve updated values
-    FETCH_INST()
-    GOTO_NEXT
+    SPILL(rIBASE)                                 # need another reg
+    movzwl  2(rPC),rIBASE                         # rIBASE<- 0000CCCC
+    movl    offGlue_methodClassDex(%ecx),%eax     # eax<- DvmDex
+    movzbl  rINST_HI,%ecx                         # ecx<- BA
+    sarl    $4,%ecx                              # ecx<- B
+    movl    offDvmDex_pResFields(%eax),%eax       # eax<- pDvmDex->pResFields
+    movzbl  rINST_HI,rINST_FULL                   # rINST_FULL<- BA
+    andb    $0xf,rINST_LO                        # rINST_FULL<- A
+    GET_VREG(%ecx,%ecx)                           # ecx<- fp[B], the object ptr
+    movl    (%eax,rIBASE,4),%eax                  # resolved entry
+    testl   %eax,%eax                             # is resolved entry null?
+    jne     .LOP_IPUT_VOLATILE_finish                    # no, already resolved
+    movl    rIBASE,OUT_ARG1(%esp)
+    GET_GLUE(rIBASE)
+    jmp     .LOP_IPUT_VOLATILE_resolve
+
+
 /* ------------------------------ */
     .balign 64
 .L_OP_SGET_VOLATILE: /* 0xe5 */
-    /* (stub) */
+/* File: x86/OP_SGET_VOLATILE.S */
+/* File: x86/OP_SGET.S */
+    /*
+     * General 32-bit SGET handler.
+     *
+     * for: sget, sget-object, sget-boolean, sget-byte, sget-char, sget-short
+     */
+    /* op vAA, field@BBBB */
     GET_GLUE(%ecx)
-    SAVE_PC_TO_GLUE(%ecx)            # only need to export these two
-    SAVE_FP_TO_GLUE(%ecx)            # only need to export these two
-    movl %ecx,OUT_ARG0(%esp)         # glue is first arg to function
-    call      dvmMterp_OP_SGET_VOLATILE     # do the real work
-    GET_GLUE(%ecx)
-    LOAD_PC_FROM_GLUE(%ecx)          # retrieve updated values
-    LOAD_FP_FROM_GLUE(%ecx)          # retrieve updated values
-    FETCH_INST()
+    movzwl    2(rPC),%eax                        # eax<- field ref BBBB
+    movl      offGlue_methodClassDex(%ecx),%ecx  # ecx<- DvmDex
+    movl      offDvmDex_pResFields(%ecx),%ecx    # ecx<- dvmDex->pResFields
+    movl      (%ecx,%eax,4),%eax                 # eax<- resolved StaticField ptr
+    testl     %eax,%eax                          # resolved entry null?
+    je        .LOP_SGET_VOLATILE_resolve                # if not, make it so
+.LOP_SGET_VOLATILE_finish:     # field ptr in eax
+    movl      offStaticField_value(%eax),%eax
+    movzbl    rINST_HI,%ecx                      # ecx<- AA
+    FETCH_INST_WORD(2)
+    ADVANCE_PC(2)
+    SET_VREG(%eax,%ecx)
     GOTO_NEXT
+
+
 /* ------------------------------ */
     .balign 64
 .L_OP_SPUT_VOLATILE: /* 0xe6 */
-    /* (stub) */
+/* File: x86/OP_SPUT_VOLATILE.S */
+/* File: x86/OP_SPUT.S */
+    /*
+     * General 32-bit SPUT handler.
+     *
+     * for: sput, sput-boolean, sput-byte, sput-char, sput-short
+     */
+    /* op vAA, field@BBBB */
     GET_GLUE(%ecx)
-    SAVE_PC_TO_GLUE(%ecx)            # only need to export these two
-    SAVE_FP_TO_GLUE(%ecx)            # only need to export these two
-    movl %ecx,OUT_ARG0(%esp)         # glue is first arg to function
-    call      dvmMterp_OP_SPUT_VOLATILE     # do the real work
-    GET_GLUE(%ecx)
-    LOAD_PC_FROM_GLUE(%ecx)          # retrieve updated values
-    LOAD_FP_FROM_GLUE(%ecx)          # retrieve updated values
-    FETCH_INST()
+    movzwl    2(rPC),%eax                        # eax<- field ref BBBB
+    movl      offGlue_methodClassDex(%ecx),%ecx  # ecx<- DvmDex
+    movl      offDvmDex_pResFields(%ecx),%ecx    # ecx<- dvmDex->pResFields
+    movl      (%ecx,%eax,4),%eax                 # eax<- resolved StaticField ptr
+    testl     %eax,%eax                          # resolved entry null?
+    je        .LOP_SPUT_VOLATILE_resolve                # if not, make it so
+.LOP_SPUT_VOLATILE_finish:     # field ptr in eax
+    movzbl    rINST_HI,%ecx                      # ecx<- AA
+    GET_VREG(%ecx,%ecx)
+    FETCH_INST_WORD(2)
+    movl      %ecx,offStaticField_value(%eax)
+    ADVANCE_PC(2)
     GOTO_NEXT
+
+
 /* ------------------------------ */
     .balign 64
 .L_OP_IGET_OBJECT_VOLATILE: /* 0xe7 */
-    /* (stub) */
+/* File: x86/OP_IGET_OBJECT_VOLATILE.S */
+/* File: x86/OP_IGET.S */
+    /*
+     * General 32-bit instance field get.
+     *
+     * for: iget, iget-object, iget-boolean, iget-byte, iget-char, iget-short
+     */
+    /* op vA, vB, field@CCCC */
     GET_GLUE(%ecx)
-    SAVE_PC_TO_GLUE(%ecx)            # only need to export these two
-    SAVE_FP_TO_GLUE(%ecx)            # only need to export these two
-    movl %ecx,OUT_ARG0(%esp)         # glue is first arg to function
-    call      dvmMterp_OP_IGET_OBJECT_VOLATILE     # do the real work
-    GET_GLUE(%ecx)
-    LOAD_PC_FROM_GLUE(%ecx)          # retrieve updated values
-    LOAD_FP_FROM_GLUE(%ecx)          # retrieve updated values
-    FETCH_INST()
-    GOTO_NEXT
+    SPILL(rIBASE)                                 # need another reg
+    movzwl  2(rPC),rIBASE                         # rIBASE<- 0000CCCC
+    movl    offGlue_methodClassDex(%ecx),%eax     # eax<- DvmDex
+    movzbl  rINST_HI,%ecx                         # ecx<- BA
+    sarl    $4,%ecx                              # ecx<- B
+    movl    offDvmDex_pResFields(%eax),%eax       # eax<- pDvmDex->pResFields
+    movzbl  rINST_HI,rINST_FULL                   # rINST_FULL<- BA
+    andb    $0xf,rINST_LO                        # rINST_FULL<- A
+    GET_VREG(%ecx,%ecx)                           # ecx<- fp[B], the object ptr
+    movl    (%eax,rIBASE,4),%eax                  # resolved entry
+    testl   %eax,%eax                             # is resolved entry null?
+    jne     .LOP_IGET_OBJECT_VOLATILE_finish                    # no, already resolved
+    movl    rIBASE,OUT_ARG1(%esp)                 # needed by dvmResolveInstField
+    GET_GLUE(rIBASE)
+    jmp     .LOP_IGET_OBJECT_VOLATILE_resolve
+
+
 /* ------------------------------ */
     .balign 64
 .L_OP_IGET_WIDE_VOLATILE: /* 0xe8 */
@@ -5968,7 +6030,7 @@ dvmAsmInstructionStart = .L_OP_NOP
     .balign 64
 .L_OP_IPUT_QUICK: /* 0xf5 */
 /* File: x86/OP_IPUT_QUICK.S */
-    /* For: iput-quick, iput-object-quick */
+    /* For: iput-quick */
     /* op vA, vB, offset@CCCC */
     movzbl    rINST_HI,%ecx             # ecx<- BA
     sarl      $4,%ecx                  # ecx<- B
@@ -6011,8 +6073,7 @@ dvmAsmInstructionStart = .L_OP_NOP
     .balign 64
 .L_OP_IPUT_OBJECT_QUICK: /* 0xf7 */
 /* File: x86/OP_IPUT_OBJECT_QUICK.S */
-/* File: x86/OP_IPUT_QUICK.S */
-    /* For: iput-quick, iput-object-quick */
+    /* For: iput-object-quick */
     /* op vA, vB, offset@CCCC */
     movzbl    rINST_HI,%ecx             # ecx<- BA
     sarl      $4,%ecx                  # ecx<- B
@@ -6021,13 +6082,11 @@ dvmAsmInstructionStart = .L_OP_NOP
     andb      $0xf,rINST_LO            # rINST_FULL<- A
     GET_VREG(rINST_FULL,rINST_FULL)     # rINST_FULL<- v[A]
     movzwl    2(rPC),%eax               # eax<- field byte offset
-    testl     %ecx,%ecx                  # is object null?
+    testl     %ecx,%ecx                 # is object null?
     je        common_errNullObject
     movl      rINST_FULL,(%ecx,%eax,1)
-    FETCH_INST_WORD(2)
-    ADVANCE_PC(2)
-    GOTO_NEXT
-
+    GET_GLUE(%eax)
+    jmp       .LOP_IPUT_OBJECT_QUICK_finish
 
 /* ------------------------------ */
     .balign 64
@@ -6142,45 +6201,81 @@ dvmAsmInstructionStart = .L_OP_NOP
 /* ------------------------------ */
     .balign 64
 .L_OP_IPUT_OBJECT_VOLATILE: /* 0xfc */
-    /* (stub) */
+/* File: x86/OP_IPUT_OBJECT_VOLATILE.S */
+/* File: x86/OP_IPUT_OBJECT.S */
+    /*
+     * Object field put.
+     *
+     * for: iput-object
+     */
+    /* op vA, vB, field@CCCC */
     GET_GLUE(%ecx)
-    SAVE_PC_TO_GLUE(%ecx)            # only need to export these two
-    SAVE_FP_TO_GLUE(%ecx)            # only need to export these two
-    movl %ecx,OUT_ARG0(%esp)         # glue is first arg to function
-    call      dvmMterp_OP_IPUT_OBJECT_VOLATILE     # do the real work
-    GET_GLUE(%ecx)
-    LOAD_PC_FROM_GLUE(%ecx)          # retrieve updated values
-    LOAD_FP_FROM_GLUE(%ecx)          # retrieve updated values
-    FETCH_INST()
-    GOTO_NEXT
+    SPILL(rIBASE)                                 # need another reg
+    movzwl  2(rPC),rIBASE                         # rIBASE<- 0000CCCC
+    movl    offGlue_methodClassDex(%ecx),%eax     # eax<- DvmDex
+    movzbl  rINST_HI,%ecx                         # ecx<- BA
+    sarl    $4,%ecx                              # ecx<- B
+    movl    offDvmDex_pResFields(%eax),%eax       # eax<- pDvmDex->pResFields
+    movzbl  rINST_HI,rINST_FULL                   # rINST_FULL<- BA
+    andb    $0xf,rINST_LO                        # rINST_FULL<- A
+    GET_VREG(%ecx,%ecx)                           # ecx<- fp[B], the object ptr
+    movl    (%eax,rIBASE,4),%eax                  # resolved entry
+    testl   %eax,%eax                             # is resolved entry null?
+    jne     .LOP_IPUT_OBJECT_VOLATILE_finish                    # no, already resolved
+    movl    rIBASE,OUT_ARG1(%esp)
+    GET_GLUE(rIBASE)
+    jmp     .LOP_IPUT_OBJECT_VOLATILE_resolve
+
+
 /* ------------------------------ */
     .balign 64
 .L_OP_SGET_OBJECT_VOLATILE: /* 0xfd */
-    /* (stub) */
+/* File: x86/OP_SGET_OBJECT_VOLATILE.S */
+/* File: x86/OP_SGET.S */
+    /*
+     * General 32-bit SGET handler.
+     *
+     * for: sget, sget-object, sget-boolean, sget-byte, sget-char, sget-short
+     */
+    /* op vAA, field@BBBB */
     GET_GLUE(%ecx)
-    SAVE_PC_TO_GLUE(%ecx)            # only need to export these two
-    SAVE_FP_TO_GLUE(%ecx)            # only need to export these two
-    movl %ecx,OUT_ARG0(%esp)         # glue is first arg to function
-    call      dvmMterp_OP_SGET_OBJECT_VOLATILE     # do the real work
-    GET_GLUE(%ecx)
-    LOAD_PC_FROM_GLUE(%ecx)          # retrieve updated values
-    LOAD_FP_FROM_GLUE(%ecx)          # retrieve updated values
-    FETCH_INST()
+    movzwl    2(rPC),%eax                        # eax<- field ref BBBB
+    movl      offGlue_methodClassDex(%ecx),%ecx  # ecx<- DvmDex
+    movl      offDvmDex_pResFields(%ecx),%ecx    # ecx<- dvmDex->pResFields
+    movl      (%ecx,%eax,4),%eax                 # eax<- resolved StaticField ptr
+    testl     %eax,%eax                          # resolved entry null?
+    je        .LOP_SGET_OBJECT_VOLATILE_resolve                # if not, make it so
+.LOP_SGET_OBJECT_VOLATILE_finish:     # field ptr in eax
+    movl      offStaticField_value(%eax),%eax
+    movzbl    rINST_HI,%ecx                      # ecx<- AA
+    FETCH_INST_WORD(2)
+    ADVANCE_PC(2)
+    SET_VREG(%eax,%ecx)
     GOTO_NEXT
+
+
 /* ------------------------------ */
     .balign 64
 .L_OP_SPUT_OBJECT_VOLATILE: /* 0xfe */
-    /* (stub) */
+/* File: x86/OP_SPUT_OBJECT_VOLATILE.S */
+/* File: x86/OP_SPUT_OBJECT.S */
+    /*
+     * SPUT object handler.
+     */
+    /* op vAA, field@BBBB */
     GET_GLUE(%ecx)
-    SAVE_PC_TO_GLUE(%ecx)            # only need to export these two
-    SAVE_FP_TO_GLUE(%ecx)            # only need to export these two
-    movl %ecx,OUT_ARG0(%esp)         # glue is first arg to function
-    call      dvmMterp_OP_SPUT_OBJECT_VOLATILE     # do the real work
-    GET_GLUE(%ecx)
-    LOAD_PC_FROM_GLUE(%ecx)          # retrieve updated values
-    LOAD_FP_FROM_GLUE(%ecx)          # retrieve updated values
-    FETCH_INST()
-    GOTO_NEXT
+    movzwl    2(rPC),%eax                        # eax<- field ref BBBB
+    movl      offGlue_methodClassDex(%ecx),%ecx  # ecx<- DvmDex
+    movl      offDvmDex_pResFields(%ecx),%ecx    # ecx<- dvmDex->pResFields
+    movl      (%ecx,%eax,4),%eax                 # eax<- resolved StaticField
+    testl     %eax,%eax                          # resolved entry null?
+    je        .LOP_SPUT_OBJECT_VOLATILE_resolve                # if not, make it so
+.LOP_SPUT_OBJECT_VOLATILE_finish:     # field ptr in eax
+    movzbl    rINST_HI,%ecx                      # ecx<- AA
+    GET_VREG(%ecx,%ecx)
+    jmp       .LOP_SPUT_OBJECT_VOLATILE_continue
+
+
 /* ------------------------------ */
     .balign 64
 .L_OP_UNUSED_FF: /* 0xff */
@@ -6570,6 +6665,7 @@ dvmAsmSisterStart:
     movl    $ALLOC_DONT_TRACK,OUT_ARG2(%esp)     # arg2<- flags
     movzbl  1(%ecx),%ecx                          # ecx<- descriptor[1]
     movl    %eax,OUT_ARG0(%esp)                   # arg0<- arrayClass
+    GET_GLUE(%eax)
     cmpb    $'I',%cl                             # supported?
     je      1f
     cmpb    $'L',%cl
@@ -6577,6 +6673,7 @@ dvmAsmSisterStart:
     cmpb    $'[',%cl
     jne      .LOP_FILLED_NEW_ARRAY_notimpl                  # no, not handled yet
 1:
+    movl    %ecx,offGlue_retval+4(%eax)           # save type
     .if      (!0)
     SPILL_TMP(rINST_FULL)                         # save copy, need "B" later
     sarl    $4,rINST_FULL
@@ -6610,7 +6707,9 @@ dvmAsmSisterStart:
     FETCH_INST_WORD(3)
     rep
     movsd
+    GET_GLUE(%ecx)
     UNSPILL(rIBASE)
+    movl    offGlue_retval+4(%ecx),%eax      # eax<- type
     UNSPILL(rFP)
     .else
     testl  rINST_FULL,rINST_FULL
@@ -6629,10 +6728,19 @@ dvmAsmSisterStart:
     sub    $1,rINST_FULL
     jne    3b
 4:
+    GET_GLUE(%ecx)
     UNSPILL(rPC)
+    movl    offGlue_retval+4(%ecx),%eax      # eax<- type
     FETCH_INST_WORD(3)
     .endif
 
+    cmpb    $'I',%al                        # Int array?
+    je      5f                               # skip card mark if so
+    movl    offGlue_retval(%ecx),%eax        # eax<- object head
+    movl    offGlue_cardTable(%ecx),%ecx     # card table base
+    shrl    $GC_CARD_SHIFT,%eax             # convert to card num
+    movb    %cl,(%ecx,%eax)                  # mark card
+5:
     ADVANCE_PC(3)
     GOTO_NEXT
 
@@ -6674,6 +6782,7 @@ dvmAsmSisterStart:
     movl    $ALLOC_DONT_TRACK,OUT_ARG2(%esp)     # arg2<- flags
     movzbl  1(%ecx),%ecx                          # ecx<- descriptor[1]
     movl    %eax,OUT_ARG0(%esp)                   # arg0<- arrayClass
+    GET_GLUE(%eax)
     cmpb    $'I',%cl                             # supported?
     je      1f
     cmpb    $'L',%cl
@@ -6681,6 +6790,7 @@ dvmAsmSisterStart:
     cmpb    $'[',%cl
     jne      .LOP_FILLED_NEW_ARRAY_RANGE_notimpl                  # no, not handled yet
 1:
+    movl    %ecx,offGlue_retval+4(%eax)           # save type
     .if      (!1)
     SPILL_TMP(rINST_FULL)                         # save copy, need "B" later
     sarl    $4,rINST_FULL
@@ -6714,7 +6824,9 @@ dvmAsmSisterStart:
     FETCH_INST_WORD(3)
     rep
     movsd
+    GET_GLUE(%ecx)
     UNSPILL(rIBASE)
+    movl    offGlue_retval+4(%ecx),%eax      # eax<- type
     UNSPILL(rFP)
     .else
     testl  rINST_FULL,rINST_FULL
@@ -6733,10 +6845,19 @@ dvmAsmSisterStart:
     sub    $1,rINST_FULL
     jne    3b
 4:
+    GET_GLUE(%ecx)
     UNSPILL(rPC)
+    movl    offGlue_retval+4(%ecx),%eax      # eax<- type
     FETCH_INST_WORD(3)
     .endif
 
+    cmpb    $'I',%al                        # Int array?
+    je      5f                               # skip card mark if so
+    movl    offGlue_retval(%ecx),%eax        # eax<- object head
+    movl    offGlue_cardTable(%ecx),%ecx     # card table base
+    shrl    $GC_CARD_SHIFT,%eax             # convert to card num
+    movb    %cl,(%ecx,%eax)                  # mark card
+5:
     ADVANCE_PC(3)
     GOTO_NEXT
 
@@ -6838,7 +6959,15 @@ dvmAsmSisterStart:
     UNSPILL(rPC)
     UNSPILL_TMP(%ecx)
     testl     %eax,%eax
+    GET_GLUE(%eax)
     je        common_errArrayStore
+    movl      offGlue_cardTable(%eax),%eax   # get card table base
+    movl      rINST_FULL,(%ecx)
+    FETCH_INST_WORD(2)
+    shrl      $GC_CARD_SHIFT,%ecx           # convert addr to card number
+    movb      %al,(%eax,%ecx)                # mark card
+    ADVANCE_PC(2)
+    GOTO_NEXT
 
 .LOP_APUT_OBJECT_skip_check:
     movl      rINST_FULL,(%ecx)
@@ -7213,8 +7342,15 @@ dvmAsmSisterStart:
     UNSPILL(rIBASE)
     testl   %ecx,%ecx                            # object null?
     je      common_errNullObject                 # object was null
-    movl   rINST_FULL,(%ecx,%eax,1)            # obj.field <- v[A](8/16/32 bits)
+    movl    rINST_FULL,(%ecx,%eax)          # obj.field <- v[A](8/16/32 bits)
+    GET_GLUE(%eax)
+    testl   rINST_FULL,rINST_FULL                # stored a NULL?
+    movl    offGlue_cardTable(%eax),%eax         # get card table base
     FETCH_INST_WORD(2)
+    je      1f                                   # skip card mark if null store
+    shrl    $GC_CARD_SHIFT,%ecx                 # object head to card number
+    movb    %al,(%eax,%ecx)                      # mark card
+1:
     ADVANCE_PC(2)
     GOTO_NEXT
 
@@ -7544,9 +7680,20 @@ dvmAsmSisterStart:
 
 /* continuation for OP_SPUT_OBJECT */
 
-    /*
-     * Go resolve the field
-     */
+
+.LOP_SPUT_OBJECT_continue:
+    movl      %ecx,offStaticField_value(%eax)
+    testl     %ecx,%ecx
+    GET_GLUE(%ecx)
+    FETCH_INST_WORD(2)
+    je        1f
+    movl      offGlue_cardTable(%ecx),%ecx       # get card table base
+    shrl      $GC_CARD_SHIFT,%eax               # head to card number
+    movb      %cl,(%ecx,%eax)                    # mark card
+1:
+    ADVANCE_PC(2)
+    GOTO_NEXT
+
 .LOP_SPUT_OBJECT_resolve:
     GET_GLUE(%ecx)
     movzwl   2(rPC),%eax                        # eax<- field ref BBBB
@@ -8319,6 +8466,156 @@ dvmAsmSisterStart:
     ADVANCE_PC(2)
     GOTO_NEXT
 
+/* continuation for OP_IGET_VOLATILE */
+
+
+.LOP_IGET_VOLATILE_resolve:
+    EXPORT_PC()
+    SPILL(rPC)
+    movl    offGlue_method(rIBASE),rPC            # rPC<- current method
+    UNSPILL(rIBASE)
+    movl    offMethod_clazz(rPC),rPC              # rPC<- method->clazz
+    SPILL_TMP(%ecx)                               # save object pointer across call
+    movl    rPC,OUT_ARG0(%esp)                    # pass in method->clazz
+    call    dvmResolveInstField                   #  ... to dvmResolveInstField
+    UNSPILL_TMP(%ecx)
+    UNSPILL(rPC)
+    testl   %eax,%eax                             #  ... which returns InstrField ptr
+    jne     .LOP_IGET_VOLATILE_finish
+    jmp     common_exceptionThrown
+
+.LOP_IGET_VOLATILE_finish:
+    /*
+     * Currently:
+     *   eax holds resolved field
+     *   ecx holds object
+     *   rIBASE is scratch, but needs to be unspilled
+     *   rINST_FULL holds A
+     */
+    movl    offInstField_byteOffset(%eax),%eax   # eax<- byte offset of field
+    UNSPILL(rIBASE)
+    testl   %ecx,%ecx                            # object null?
+    je      common_errNullObject                 # object was null
+    movl   (%ecx,%eax,1),%ecx                   # ecx<- obj.field (8/16/32 bits)
+    movl    rINST_FULL,%eax                      # eax<- A
+    FETCH_INST_WORD(2)
+    SET_VREG(%ecx,%eax)
+    ADVANCE_PC(2)
+    GOTO_NEXT
+
+/* continuation for OP_IPUT_VOLATILE */
+
+
+.LOP_IPUT_VOLATILE_resolve:
+    EXPORT_PC()
+    SPILL(rPC)
+    movl    offGlue_method(rIBASE),rPC            # rPC<- current method
+    UNSPILL(rIBASE)
+    movl    offMethod_clazz(rPC),rPC              # rPC<- method->clazz
+    SPILL_TMP(%ecx)                               # save object pointer across call
+    movl    rPC,OUT_ARG0(%esp)                    # pass in method->clazz
+    call    dvmResolveInstField                   #  ... to dvmResolveInstField
+    UNSPILL_TMP(%ecx)
+    UNSPILL(rPC)
+    testl   %eax,%eax                             #  ... which returns InstrField ptr
+    jne     .LOP_IPUT_VOLATILE_finish
+    jmp     common_exceptionThrown
+
+.LOP_IPUT_VOLATILE_finish:
+    /*
+     * Currently:
+     *   eax holds resolved field
+     *   ecx holds object
+     *   rIBASE is scratch, but needs to be unspilled
+     *   rINST_FULL holds A
+     */
+    GET_VREG(rINST_FULL,rINST_FULL)              # rINST_FULL<- v[A]
+    movl    offInstField_byteOffset(%eax),%eax   # eax<- byte offset of field
+    UNSPILL(rIBASE)
+    testl   %ecx,%ecx                            # object null?
+    je      common_errNullObject                 # object was null
+    movl   rINST_FULL,(%ecx,%eax,1)            # obj.field <- v[A](8/16/32 bits)
+    FETCH_INST_WORD(2)
+    ADVANCE_PC(2)
+    GOTO_NEXT
+
+/* continuation for OP_SGET_VOLATILE */
+
+    /*
+     * Go resolve the field
+     */
+.LOP_SGET_VOLATILE_resolve:
+    GET_GLUE(%ecx)
+    movzwl   2(rPC),%eax                        # eax<- field ref BBBB
+    movl     offGlue_method(%ecx),%ecx          # ecx<- current method
+    EXPORT_PC()                                 # could throw, need to export
+    movl     offMethod_clazz(%ecx),%ecx         # ecx<- method->clazz
+    SPILL(rPC)
+    movl     %eax,OUT_ARG1(%esp)
+    movl     %ecx,OUT_ARG0(%esp)
+    call     dvmResolveStaticField              # eax<- resolved StaticField ptr
+    UNSPILL(rPC)
+    testl    %eax,%eax
+    jne      .LOP_SGET_VOLATILE_finish                 # success, continue
+    jmp      common_exceptionThrown             # no, handle exception
+
+/* continuation for OP_SPUT_VOLATILE */
+
+    /*
+     * Go resolve the field
+     */
+.LOP_SPUT_VOLATILE_resolve:
+    GET_GLUE(%ecx)
+    movzwl   2(rPC),%eax                        # eax<- field ref BBBB
+    movl     offGlue_method(%ecx),%ecx          # ecx<- current method
+    EXPORT_PC()                                 # could throw, need to export
+    movl     offMethod_clazz(%ecx),%ecx         # ecx<- method->clazz
+    SPILL(rPC)
+    movl     %eax,OUT_ARG1(%esp)
+    movl     %ecx,OUT_ARG0(%esp)
+    call     dvmResolveStaticField              # eax<- resolved StaticField ptr
+    UNSPILL(rPC)
+    testl    %eax,%eax
+    jne      .LOP_SPUT_VOLATILE_finish                 # success, continue
+    jmp      common_exceptionThrown             # no, handle exception
+
+/* continuation for OP_IGET_OBJECT_VOLATILE */
+
+
+.LOP_IGET_OBJECT_VOLATILE_resolve:
+    EXPORT_PC()
+    SPILL(rPC)
+    movl    offGlue_method(rIBASE),rPC            # rPC<- current method
+    UNSPILL(rIBASE)
+    movl    offMethod_clazz(rPC),rPC              # rPC<- method->clazz
+    SPILL_TMP(%ecx)                               # save object pointer across call
+    movl    rPC,OUT_ARG0(%esp)                    # pass in method->clazz
+    call    dvmResolveInstField                   #  ... to dvmResolveInstField
+    UNSPILL_TMP(%ecx)
+    UNSPILL(rPC)
+    testl   %eax,%eax                             #  ... which returns InstrField ptr
+    jne     .LOP_IGET_OBJECT_VOLATILE_finish
+    jmp     common_exceptionThrown
+
+.LOP_IGET_OBJECT_VOLATILE_finish:
+    /*
+     * Currently:
+     *   eax holds resolved field
+     *   ecx holds object
+     *   rIBASE is scratch, but needs to be unspilled
+     *   rINST_FULL holds A
+     */
+    movl    offInstField_byteOffset(%eax),%eax   # eax<- byte offset of field
+    UNSPILL(rIBASE)
+    testl   %ecx,%ecx                            # object null?
+    je      common_errNullObject                 # object was null
+    movl   (%ecx,%eax,1),%ecx                   # ecx<- obj.field (8/16/32 bits)
+    movl    rINST_FULL,%eax                      # eax<- A
+    FETCH_INST_WORD(2)
+    SET_VREG(%ecx,%eax)
+    ADVANCE_PC(2)
+    GOTO_NEXT
+
 /* continuation for OP_EXECUTE_INLINE */
 
 .LOP_EXECUTE_INLINE_continue:
@@ -8360,6 +8657,113 @@ dvmAsmSisterStart:
     sall      $4,%eax      # index *= sizeof(table entry)
     jmp       *gDvmInlineOpsTable(%eax)
     # will return to caller of .LOP_EXECUTE_INLINE_continue
+
+/* continuation for OP_IPUT_OBJECT_QUICK */
+
+.LOP_IPUT_OBJECT_QUICK_finish:
+    testl     rINST_FULL,rINST_FULL         # did we store null?
+    FETCH_INST_WORD(2)
+    movl      offGlue_cardTable(%eax),%eax  # get card table base
+    je        1f                            # skip card mark if null store
+    shrl      $GC_CARD_SHIFT,%ecx          # object head to card number
+    movb      %al,(%eax,%ecx)               # mark card
+1:
+    ADVANCE_PC(2)
+    GOTO_NEXT
+
+/* continuation for OP_IPUT_OBJECT_VOLATILE */
+
+
+.LOP_IPUT_OBJECT_VOLATILE_resolve:
+    EXPORT_PC()
+    SPILL(rPC)
+    movl    offGlue_method(rIBASE),rPC            # rPC<- current method
+    UNSPILL(rIBASE)
+    movl    offMethod_clazz(rPC),rPC              # rPC<- method->clazz
+    SPILL_TMP(%ecx)                               # save object pointer across call
+    movl    rPC,OUT_ARG0(%esp)                    # pass in method->clazz
+    call    dvmResolveInstField                   #  ... to dvmResolveInstField
+    UNSPILL_TMP(%ecx)
+    UNSPILL(rPC)
+    testl   %eax,%eax                             #  ... which returns InstrField ptr
+    jne     .LOP_IPUT_OBJECT_VOLATILE_finish
+    jmp     common_exceptionThrown
+
+.LOP_IPUT_OBJECT_VOLATILE_finish:
+    /*
+     * Currently:
+     *   eax holds resolved field
+     *   ecx holds object
+     *   rIBASE is scratch, but needs to be unspilled
+     *   rINST_FULL holds A
+     */
+    GET_VREG(rINST_FULL,rINST_FULL)              # rINST_FULL<- v[A]
+    movl    offInstField_byteOffset(%eax),%eax   # eax<- byte offset of field
+    UNSPILL(rIBASE)
+    testl   %ecx,%ecx                            # object null?
+    je      common_errNullObject                 # object was null
+    movl    rINST_FULL,(%ecx,%eax)          # obj.field <- v[A](8/16/32 bits)
+    GET_GLUE(%eax)
+    testl   rINST_FULL,rINST_FULL                # stored a NULL?
+    movl    offGlue_cardTable(%eax),%eax         # get card table base
+    FETCH_INST_WORD(2)
+    je      1f                                   # skip card mark if null store
+    shrl    $GC_CARD_SHIFT,%ecx                 # object head to card number
+    movb    %al,(%eax,%ecx)                      # mark card
+1:
+    ADVANCE_PC(2)
+    GOTO_NEXT
+
+/* continuation for OP_SGET_OBJECT_VOLATILE */
+
+    /*
+     * Go resolve the field
+     */
+.LOP_SGET_OBJECT_VOLATILE_resolve:
+    GET_GLUE(%ecx)
+    movzwl   2(rPC),%eax                        # eax<- field ref BBBB
+    movl     offGlue_method(%ecx),%ecx          # ecx<- current method
+    EXPORT_PC()                                 # could throw, need to export
+    movl     offMethod_clazz(%ecx),%ecx         # ecx<- method->clazz
+    SPILL(rPC)
+    movl     %eax,OUT_ARG1(%esp)
+    movl     %ecx,OUT_ARG0(%esp)
+    call     dvmResolveStaticField              # eax<- resolved StaticField ptr
+    UNSPILL(rPC)
+    testl    %eax,%eax
+    jne      .LOP_SGET_OBJECT_VOLATILE_finish                 # success, continue
+    jmp      common_exceptionThrown             # no, handle exception
+
+/* continuation for OP_SPUT_OBJECT_VOLATILE */
+
+
+.LOP_SPUT_OBJECT_VOLATILE_continue:
+    movl      %ecx,offStaticField_value(%eax)
+    testl     %ecx,%ecx
+    GET_GLUE(%ecx)
+    FETCH_INST_WORD(2)
+    je        1f
+    movl      offGlue_cardTable(%ecx),%ecx       # get card table base
+    shrl      $GC_CARD_SHIFT,%eax               # head to card number
+    movb      %cl,(%ecx,%eax)                    # mark card
+1:
+    ADVANCE_PC(2)
+    GOTO_NEXT
+
+.LOP_SPUT_OBJECT_VOLATILE_resolve:
+    GET_GLUE(%ecx)
+    movzwl   2(rPC),%eax                        # eax<- field ref BBBB
+    movl     offGlue_method(%ecx),%ecx          # ecx<- current method
+    EXPORT_PC()                                 # could throw, need to export
+    movl     offMethod_clazz(%ecx),%ecx         # ecx<- method->clazz
+    SPILL(rPC)
+    movl     %eax,OUT_ARG1(%esp)
+    movl     %ecx,OUT_ARG0(%esp)
+    call     dvmResolveStaticField              # eax<- resolved StaticField ptr
+    UNSPILL(rPC)
+    testl    %eax,%eax
+    jne      .LOP_SPUT_OBJECT_VOLATILE_finish                 # success, continue
+    jmp      common_exceptionThrown             # no, handle exception
 
     .size   dvmAsmSisterStart, .-dvmAsmSisterStart
     .global dvmAsmSisterEnd
