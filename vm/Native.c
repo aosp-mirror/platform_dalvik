@@ -815,3 +815,114 @@ static void* lookupSharedLibMethod(const Method* method)
     return (void*) dvmHashForeach(gDvm.nativeLibs, findMethodInLib,
         (void*) method);
 }
+
+
+static void appendValue(char type, const JValue value, char* buf, size_t n,
+        bool appendComma)
+{
+    size_t len = strlen(buf);
+    if (len >= n - 32) { // 32 should be longer than anything we could append.
+        buf[len - 1] = '.';
+        buf[len - 2] = '.';
+        buf[len - 3] = '.';
+        return;
+    }
+    char* p = buf + len;
+    switch (type) {
+    case 'B':
+        if (value.b >= 0 && value.b < 10) {
+            sprintf(p, "%d", value.b);
+        } else {
+            sprintf(p, "0x%x (%d)", value.b, value.b);
+        }
+        break;
+    case 'C':
+        if (value.c < 0x7f && value.c >= ' ') {
+            sprintf(p, "U+%x ('%c')", value.c, value.c);
+        } else {
+            sprintf(p, "U+%x", value.c);
+        }
+        break;
+    case 'D':
+        sprintf(p, "%g", value.d);
+        break;
+    case 'F':
+        sprintf(p, "%g", value.f);
+        break;
+    case 'I':
+        sprintf(p, "%d", value.i);
+        break;
+    case 'L':
+        sprintf(p, "0x%x", value.i);
+        break;
+    case 'J':
+        sprintf(p, "%lld", value.j);
+        break;
+    case 'S':
+        sprintf(p, "%d", value.s);
+        break;
+    case 'V':
+        strcpy(p, "void");
+        break;
+    case 'Z':
+        strcpy(p, value.z ? "true" : "false");
+        break;
+    default:
+        sprintf(p, "unknown type '%c'", type);
+        break;
+    }
+
+    if (appendComma) {
+        strcat(p, ", ");
+    }
+}
+
+#define LOGI_NATIVE(...) LOG(LOG_INFO, LOG_TAG "-native", __VA_ARGS__)
+
+void dvmLogNativeMethodEntry(const Method* method, u4* fp)
+{
+    char thisString[32] = { 0 };
+    u4* sp = &fp[method->registersSize - method->insSize];
+    if (!dvmIsStaticMethod(method)) {
+        sprintf(thisString, "this=0x%08x ", *sp++);
+    }
+
+    char argsString[128]= { 0 };
+    const char* desc = &method->shorty[1];
+    while (*desc != '\0') {
+        char argType = *desc++;
+        JValue value;
+        if (argType == 'D' || argType == 'J') {
+            value.j = dvmGetArgLong(sp, 0);
+            sp += 2;
+        } else {
+            value.i = *sp++;
+        }
+        appendValue(argType, value, argsString, sizeof(argsString),
+        *desc != '\0');
+    }
+
+    char* signature = dexProtoCopyMethodDescriptor(&method->prototype);
+    LOGI_NATIVE("-> %s.%s%s %s(%s)", method->clazz->descriptor, method->name,
+            signature, thisString, argsString);
+    free(signature);
+}
+
+void dvmLogNativeMethodExit(const Method* method, Thread* self,
+        const JValue returnValue)
+{
+    char* signature = dexProtoCopyMethodDescriptor(&method->prototype);
+    if (dvmCheckException(self)) {
+        Object* exception = dvmGetException(self);
+        LOGI_NATIVE("<- %s.%s%s threw %s", method->clazz->descriptor,
+                method->name, signature, exception->clazz->descriptor);
+    } else {
+        char returnValueString[128] = { 0 };
+        char returnType = method->shorty[0];
+        appendValue(returnType, returnValue,
+                returnValueString, sizeof(returnValueString), false);
+        LOGI_NATIVE("<- %s.%s%s returned %s", method->clazz->descriptor,
+                method->name, signature, returnValueString);
+    }
+    free(signature);
+}

@@ -104,6 +104,7 @@ struct DvmGlobals {
     void        (*abortHook)(void);
 
     int         jniGrefLimit;       // 0 means no limit
+    char*       jniTrace;
     bool        reduceSignals;
     bool        noQuitHandler;
     bool        verifyDexChecksum;

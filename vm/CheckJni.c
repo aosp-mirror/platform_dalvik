@@ -257,7 +257,8 @@ void dvmCheckCallJNIMethod_staticNoRef(const u4* args, JValue* pResult,
     checkMethodArgsV(_env, _methid, _args, __FUNCTION__)
 
 /*
- * Print trace message when both "checkJNI" and "verbose:jni" are enabled.
+ * Prints trace messages when a native method calls a JNI function such as
+ * NewByteArray. Enabled if both "-Xcheck:jni" and "-verbose:jni" are enabled.
  */
 #define JNI_TRACE(_entry, _hasmeth)                                         \
     do {                                                                    \

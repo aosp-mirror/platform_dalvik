@@ -1804,7 +1804,6 @@ GOTO_TARGET(invokeSuperQuick, bool methodCallRange)
 GOTO_TARGET_END
 
 
-
     /*
      * General handling for return-void, return, and return-wide.  Put the
      * return value in "retval" before jumping here.
@@ -2032,6 +2031,7 @@ GOTO_TARGET(exceptionThrown)
 GOTO_TARGET_END
 
 
+
     /*
      * General handling for invoke-{virtual,super,direct,static,interface},
      * including "quick" variants.
@@ -2214,8 +2214,18 @@ GOTO_TARGET(invokeMethod, bool methodCallRange, const Method* _methodToCall,
             TRACE_METHOD_ENTER(self, methodToCall);
 #endif
 
-            ILOGD("> native <-- %s.%s %s", methodToCall->clazz->descriptor,
-                methodToCall->name, methodToCall->shorty);
+#if defined(WITH_JNI_TRACE)
+            bool trace = gDvm.jniTrace &&
+                    strstr(methodToCall->clazz->descriptor, gDvm.jniTrace);
+            if (trace) {
+                dvmLogNativeMethodEntry(methodToCall, newFp);
+            }
+            else
+#endif
+            {
+                ILOGD("> native <-- %s.%s %s", methodToCall->clazz->descriptor,
+                        methodToCall->name, methodToCall->shorty);
+            }
 
 #if defined(WITH_JIT)
             /* Allow the Jit to end any pending trace building */
@@ -2242,6 +2252,12 @@ GOTO_TARGET(invokeMethod, bool methodCallRange, const Method* _methodToCall,
             /* pop frame off */
             dvmPopJniLocals(self, newSaveArea);
             self->curFrame = fp;
+
+#if defined(WITH_JNI_TRACE)
+            if (trace) {
+                dvmLogNativeMethodExit(methodToCall, self, retval);
+            }
+#endif
 
             /*
              * If the native code threw an exception, or interpreted code
