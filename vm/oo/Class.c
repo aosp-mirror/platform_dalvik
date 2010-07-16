@@ -4527,19 +4527,47 @@ bail_unlock:
 
 /*
  * Replace method->nativeFunc and method->insns with new values.  This is
- * performed on resolution of a native method.
+ * commonly performed after successful resolution of a native method.
+ *
+ * There are three basic states:
+ *  (1) (initial) nativeFunc = dvmResolveNativeMethod, insns = NULL
+ *  (2) (internal native) nativeFunc = <impl>, insns = NULL
+ *  (3) (JNI) nativeFunc = JNI call bridge, insns = <impl>
+ *
+ * nativeFunc must never be NULL for a native method.
+ *
+ * The most common transitions are (1)->(2) and (1)->(3).  The former is
+ * atomic, since only one field is updated; the latter is not, but since
+ * dvmResolveNativeMethod ignores the "insns" field we just need to make
+ * sure the update happens in the correct order.
+ *
+ * A transition from (2)->(1) would work fine, but (3)->(1) will not,
+ * because both fields change.  If we did this while a thread was executing
+ * in the call bridge, we could null out the "insns" field right before
+ * the bridge tried to call through it.  So, once "insns" is set, we do
+ * not allow it to be cleared.  A NULL value for the "insns" argument is
+ * treated as "do not change existing value".
  */
-void dvmSetNativeFunc(const Method* method, DalvikBridgeFunc func,
+void dvmSetNativeFunc(Method* method, DalvikBridgeFunc func,
     const u2* insns)
 {
     ClassObject* clazz = method->clazz;
+
+    assert(func != NULL);
 
     /* just open up both; easier that way */
     dvmLinearReadWrite(clazz->classLoader, clazz->virtualMethods);
     dvmLinearReadWrite(clazz->classLoader, clazz->directMethods);
 
-    ((Method*)method)->nativeFunc = func;
-    ((Method*)method)->insns = insns;
+    if (insns != NULL) {
+        /* update both, ensuring that "insns" is observed first */
+        method->insns = insns;
+        android_atomic_release_store((int32_t) func,
+            (void*) &method->nativeFunc);
+    } else {
+        /* only update nativeFunc */
+        method->nativeFunc = func;
+    }
 
     dvmLinearReadOnly(clazz->classLoader, clazz->virtualMethods);
     dvmLinearReadOnly(clazz->classLoader, clazz->directMethods);

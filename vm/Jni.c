@@ -1296,26 +1296,26 @@ static bool dvmRegisterJNIMethod(ClassObject* clazz, const char* methodName,
     if (method == NULL)
         method = dvmFindVirtualMethodByDescriptor(clazz, methodName, signature);
     if (method == NULL) {
-        LOGW("ERROR: Unable to find decl for native %s.%s %s\n",
+        LOGW("ERROR: Unable to find decl for native %s.%s:%s\n",
             clazz->descriptor, methodName, signature);
         goto bail;
     }
 
     if (!dvmIsNativeMethod(method)) {
-        LOGW("Unable to register: not native: %s.%s %s\n",
+        LOGW("Unable to register: not native: %s.%s:%s\n",
             clazz->descriptor, methodName, signature);
         goto bail;
     }
 
     if (method->nativeFunc != dvmResolveNativeMethod) {
-        LOGW("Warning: %s.%s %s was already registered/resolved?\n",
+        /* this is allowed, but unusual */
+        LOGV("Note: %s.%s:%s was already registered\n",
             clazz->descriptor, methodName, signature);
-        /* keep going, I guess */
     }
 
     dvmUseJNIBridge(method, fnPtr);
 
-    LOGV("JNI-registered %s.%s %s\n", clazz->descriptor, methodName,
+    LOGV("JNI-registered %s.%s:%s\n", clazz->descriptor, methodName,
         signature);
     result = true;
 
@@ -1607,8 +1607,6 @@ void dvmCallJNIMethod_general(const u4* args, JValue* pResult,
     jclass staticMethodClass;
     JNIEnv* env = self->jniEnv;
 
-    assert(method->insns != NULL);
-
     //LOGI("JNI calling %p (%s.%s:%s):\n", method->insns,
     //    method->clazz->descriptor, method->name, method->shorty);
 
@@ -1671,6 +1669,9 @@ void dvmCallJNIMethod_general(const u4* args, JValue* pResult,
 
     oldStatus = dvmChangeStatus(self, THREAD_NATIVE);
 
+    ANDROID_MEMBAR_FULL();      /* guarantee ordering on method->insns */
+    assert(method->insns != NULL);
+
     COMPUTE_STACK_SUM(self);
     dvmPlatformInvoke(env, staticMethodClass,
         method->jniArgInfo, method->insSize, modArgs, method->shorty,
@@ -1730,6 +1731,8 @@ void dvmCallJNIMethod_virtualNoRef(const u4* args, JValue* pResult,
 
     oldStatus = dvmChangeStatus(self, THREAD_NATIVE);
 
+    ANDROID_MEMBAR_FULL();      /* guarantee ordering on method->insns */
+
     COMPUTE_STACK_SUM(self);
     dvmPlatformInvoke(self->jniEnv, NULL,
         method->jniArgInfo, method->insSize, modArgs, method->shorty,
@@ -1763,6 +1766,8 @@ void dvmCallJNIMethod_staticNoRef(const u4* args, JValue* pResult,
 #endif
 
     oldStatus = dvmChangeStatus(self, THREAD_NATIVE);
+
+    ANDROID_MEMBAR_FULL();      /* guarantee ordering on method->insns */
 
     COMPUTE_STACK_SUM(self);
     dvmPlatformInvoke(self->jniEnv, staticMethodClass,
@@ -3236,6 +3241,9 @@ PRIMITIVE_ARRAY_FUNCTIONS(jdouble, Double);
 
 /*
  * Register one or more native functions in one class.
+ *
+ * This can be called multiple times on the same method, allowing the
+ * caller to redefine the method implementation at will.
  */
 static jint RegisterNatives(JNIEnv* env, jclass jclazz,
     const JNINativeMethod* methods, jint nMethods)
@@ -3264,19 +3272,44 @@ static jint RegisterNatives(JNIEnv* env, jclass jclazz,
 }
 
 /*
- * Un-register a native function.
+ * Un-register all native methods associated with the class.
+ *
+ * The JNI docs refer to this as a way to reload/relink native libraries,
+ * and say it "should not be used in normal native code".  In particular,
+ * there is no need to do this during shutdown, and you do not need to do
+ * this before redefining a method implementation with RegisterNatives.
+ *
+ * It's chiefly useful for a native "plugin"-style library that wasn't
+ * loaded with System.loadLibrary() (since there's no way to unload those).
+ * For example, the library could upgrade itself by:
+ *
+ *  1. call UnregisterNatives to unbind the old methods
+ *  2. ensure that no code is still executing inside it (somehow)
+ *  3. dlclose() the library
+ *  4. dlopen() the new library
+ *  5. use RegisterNatives to bind the methods from the new library
+ *
+ * The above can work correctly without the UnregisterNatives call, but
+ * creates a window of opportunity in which somebody might try to call a
+ * method that is pointing at unmapped memory, crashing the VM.  In theory
+ * the same guards that prevent dlclose() from unmapping executing code could
+ * prevent that anyway, but with this we can be more thorough and also deal
+ * with methods that only exist in the old or new form of the library (maybe
+ * the lib wants to try the call and catch the UnsatisfiedLinkError).
  */
 static jint UnregisterNatives(JNIEnv* env, jclass jclazz)
 {
     JNI_ENTER();
-    /*
-     * The JNI docs refer to this as a way to reload/relink native libraries,
-     * and say it "should not be used in normal native code".
-     *
-     * We can implement it if we decide we need it.
-     */
+
+    ClassObject* clazz = (ClassObject*) dvmDecodeIndirectRef(env, jclazz);
+    if (gDvm.verboseJni) {
+        LOGI("[Unregistering JNI native methods for class %s]\n",
+            clazz->descriptor);
+    }
+    dvmUnregisterJNINativeMethods(clazz);
+
     JNI_EXIT();
-    return JNI_ERR;
+    return JNI_OK;
 }
 
 /*

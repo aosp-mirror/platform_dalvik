@@ -57,7 +57,7 @@ void dvmNativeShutdown(void)
  *
  * This is executed as if it were a native bridge or function.  If the
  * resolution succeeds, method->insns is replaced, and we don't go through
- * here again.
+ * here again unless the method is unregistered.
  *
  * Initializes method's class if necessary.
  *
@@ -103,8 +103,7 @@ void dvmResolveNativeMethod(const u4* args, JValue* pResult,
             dvmAbort();     // harsh, but this is VM-internal problem
         }
         DalvikBridgeFunc dfunc = (DalvikBridgeFunc) func;
-        dvmSetNativeFunc(method, dfunc, NULL);
-        assert(method->insns == NULL);
+        dvmSetNativeFunc((Method*) method, dfunc, NULL);
         dfunc(args, pResult, method, self);
         return;
     }
@@ -590,6 +589,71 @@ bool dvmLoadNativeCode(const char* pathName, Object* classLoader)
         dvmUnlockMutex(&pNewEntry->onLoadLock);
         return result;
     }
+}
+
+
+/*
+ * Un-register JNI native methods.
+ *
+ * There are two relevant fields in struct Method, "nativeFunc" and
+ * "insns".  The former holds a function pointer to a "bridge" function
+ * (or, for internal native, the actual implementation).  The latter holds
+ * a pointer to the actual JNI method.
+ *
+ * The obvious approach is to reset both fields to their initial state
+ * (nativeFunc points at dvmResolveNativeMethod, insns holds NULL), but
+ * that creates some unpleasant race conditions.  In particular, if another
+ * thread is executing inside the call bridge for the method in question,
+ * and we reset insns to NULL, the VM will crash.  (See the comments above
+ * dvmSetNativeFunc() for additional commentary.)
+ *
+ * We can't rely on being able to update two 32-bit fields in one atomic
+ * operation (e.g. no 64-bit atomic ops on ARMv5TE), so we want to change
+ * only one field.  It turns out we can simply reset nativeFunc to its
+ * initial state, leaving insns alone, because dvmResolveNativeMethod
+ * ignores "insns" entirely.
+ *
+ * When the method is re-registered, both fields will be updated, but
+ * dvmSetNativeFunc guarantees that "insns" is updated first.  This means
+ * we shouldn't be in a situation where we have a "live" call bridge and
+ * a stale implementation pointer.
+ */
+static void unregisterJNINativeMethods(Method* methods, size_t count)
+{
+    while (count != 0) {
+        count--;
+
+        Method* meth = &methods[count];
+        if (!dvmIsNativeMethod(meth))
+            continue;
+        if (dvmIsAbstractMethod(meth))      /* avoid abstract method stubs */
+            continue;
+
+        /*
+         * Strictly speaking this ought to test the function pointer against
+         * the various JNI bridge functions to ensure that we only undo
+         * methods that were registered through JNI.  In practice, any
+         * native method with a non-NULL "insns" is a registered JNI method.
+         *
+         * If we inadvertently unregister an internal-native, it'll get
+         * re-resolved on the next call; unregistering an unregistered
+         * JNI method is a no-op.  So we don't really need to test for
+         * anything.
+         */
+
+        LOGD("Unregistering JNI method %s.%s:%s\n",
+            meth->clazz->descriptor, meth->name, meth->shorty);
+        dvmSetNativeFunc(meth, dvmResolveNativeMethod, NULL);
+    }
+}
+
+/*
+ * Un-register all JNI native methods from a class.
+ */
+void dvmUnregisterJNINativeMethods(ClassObject* clazz)
+{
+    unregisterJNINativeMethods(clazz->directMethods, clazz->directMethodCount);
+    unregisterJNINativeMethods(clazz->virtualMethods, clazz->virtualMethodCount);
 }
 
 
