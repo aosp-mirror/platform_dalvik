@@ -896,6 +896,30 @@ static JdwpError handleCT_NewInstance(JdwpState* state,
 }
 
 /*
+ * Create a new array object of the requested type and length.
+ */
+static JdwpError handleAT_newInstance(JdwpState* state,
+    const u1* buf, int dataLen, ExpandBuf* pReply)
+{
+    RefTypeId arrayTypeId;
+    u4 length;
+    ObjectId objectId;
+
+    arrayTypeId = dvmReadRefTypeId(&buf);
+    length = read4BE(&buf);
+
+    LOGV("Creating array %s[%u]\n",
+        dvmDbgGetClassDescriptor(arrayTypeId), length);
+    objectId = dvmDbgCreateArrayObject(arrayTypeId, length);
+    if (objectId == 0)
+        return ERR_OUT_OF_MEMORY;
+
+    expandBufAdd1(pReply, JT_ARRAY);
+    expandBufAddObjectId(pReply, objectId);
+    return ERR_NONE;
+}
+
+/*
  * Return line number information for the method, if present.
  */
 static JdwpError handleM_LineTable(JdwpState* state,
@@ -2012,7 +2036,7 @@ static const JdwpHandlerMap gHandlerMap[] = {
     { 3,    4,  handleCT_NewInstance,   "ClassType.NewInstance" },
 
     /* ArrayType command set (4) */
-    //4,    1,  NewInstance
+    { 4,    1,  handleAT_newInstance,   "ArrayType.NewInstance" },
 
     /* InterfaceType command set (5) */
 

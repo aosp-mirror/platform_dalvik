@@ -191,6 +191,7 @@ bool dvmDbgSetArrayElements(ObjectId arrayId, int firstIndex, int count,
 
 ObjectId dvmDbgCreateString(const char* str);
 ObjectId dvmDbgCreateObject(RefTypeId classId);
+ObjectId dvmDbgCreateArrayObject(RefTypeId arrayTypeId, u4 length);
 
 bool dvmDbgMatchType(RefTypeId instClassId, RefTypeId classId);
 
