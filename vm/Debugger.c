@@ -1169,6 +1169,20 @@ ObjectId dvmDbgCreateObject(RefTypeId classId)
 }
 
 /*
+ * Allocate a new array object of the specified type and length.  The
+ * type is the array type, not the element type.
+ *
+ * Add it to the registry to prevent it from being GCed.
+ */
+ObjectId dvmDbgCreateArrayObject(RefTypeId arrayTypeId, u4 length)
+{
+    ClassObject* clazz = refTypeIdToClassObject(arrayTypeId);
+    Object* newObj = (Object*) dvmAllocArrayByClass(clazz, length, ALLOC_DEFAULT);
+    dvmReleaseTrackedAlloc(newObj, NULL);
+    return objectToObjectId(newObj);
+}
+
+/*
  * Determine if "instClassId" is an instance of "classId".
  */
 bool dvmDbgMatchType(RefTypeId instClassId, RefTypeId classId)
