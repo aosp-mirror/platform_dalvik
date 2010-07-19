@@ -1485,6 +1485,31 @@ void dvmReleaseJniMonitors(Thread* self)
     pRefTable->nextEntry = pRefTable->table;
 }
 
+/*
+ * Determine if the specified class can be instantiated from JNI.  This
+ * is used by AllocObject / NewObject, which are documented as throwing
+ * an exception for abstract and interface classes, and not accepting
+ * array classes.  We also want to reject attempts to create new Class
+ * objects, since only DefineClass should do that.
+ */
+static bool canAllocClass(ClassObject* clazz)
+{
+    if (dvmIsAbstractClass(clazz) || dvmIsInterfaceClass(clazz)) {
+        /* JNI spec defines what this throws */
+        dvmThrowExceptionFmt("Ljava/lang/InstantiationException;",
+            "Can't instantiate %s (abstract or interface)", clazz->descriptor);
+        return false;
+    } else if (dvmIsArrayClass(clazz) || clazz == gDvm.classJavaLangClass) {
+        /* spec says "must not" for arrays, ignores Class */
+        dvmThrowExceptionFmt("Ljava/lang/IllegalArgumentException;",
+            "Can't instantiate %s (array or Class) with this JNI function",
+            clazz->descriptor);
+        return false;
+    }
+
+    return true;
+}
+
 #ifdef WITH_JNI_STACK_CHECK
 /*
  * Compute a CRC on the entire interpreted stack.
@@ -2232,7 +2257,9 @@ static jobject AllocObject(JNIEnv* env, jclass jclazz)
     ClassObject* clazz = (ClassObject*) dvmDecodeIndirectRef(env, jclazz);
     jobject result;
 
-    if (!dvmIsClassInitialized(clazz) && !dvmInitClass(clazz)) {
+    if (!canAllocClass(clazz) ||
+        (!dvmIsClassInitialized(clazz) && !dvmInitClass(clazz)))
+    {
         assert(dvmCheckException(_self));
         result = NULL;
     } else {
@@ -2253,7 +2280,9 @@ static jobject NewObject(JNIEnv* env, jclass jclazz, jmethodID methodID, ...)
     ClassObject* clazz = (ClassObject*) dvmDecodeIndirectRef(env, jclazz);
     jobject result;
 
-    if (!dvmIsClassInitialized(clazz) && !dvmInitClass(clazz)) {
+    if (!canAllocClass(clazz) ||
+        (!dvmIsClassInitialized(clazz) && !dvmInitClass(clazz)))
+    {
         assert(dvmCheckException(_self));
         result = NULL;
     } else {
@@ -2279,11 +2308,19 @@ static jobject NewObjectV(JNIEnv* env, jclass jclazz, jmethodID methodID,
     ClassObject* clazz = (ClassObject*) dvmDecodeIndirectRef(env, jclazz);
     jobject result;
 
-    Object* newObj = dvmAllocObject(clazz, ALLOC_DONT_TRACK);
-    result = addLocalReference(env, newObj);
-    if (newObj != NULL) {
-        JValue unused;
-        dvmCallMethodV(_self, (Method*) methodID, newObj, true, &unused, args);
+    if (!canAllocClass(clazz) ||
+        (!dvmIsClassInitialized(clazz) && !dvmInitClass(clazz)))
+    {
+        assert(dvmCheckException(_self));
+        result = NULL;
+    } else {
+        Object* newObj = dvmAllocObject(clazz, ALLOC_DONT_TRACK);
+        result = addLocalReference(env, newObj);
+        if (newObj != NULL) {
+            JValue unused;
+            dvmCallMethodV(_self, (Method*) methodID, newObj, true, &unused,
+                args);
+        }
     }
 
     JNI_EXIT();
@@ -2296,11 +2333,19 @@ static jobject NewObjectA(JNIEnv* env, jclass jclazz, jmethodID methodID,
     ClassObject* clazz = (ClassObject*) dvmDecodeIndirectRef(env, jclazz);
     jobject result;
 
-    Object* newObj = dvmAllocObject(clazz, ALLOC_DONT_TRACK);
-    result = addLocalReference(env, newObj);
-    if (newObj != NULL) {
-        JValue unused;
-        dvmCallMethodA(_self, (Method*) methodID, newObj, true, &unused, args);
+    if (!canAllocClass(clazz) ||
+        (!dvmIsClassInitialized(clazz) && !dvmInitClass(clazz)))
+    {
+        assert(dvmCheckException(_self));
+        result = NULL;
+    } else {
+        Object* newObj = dvmAllocObject(clazz, ALLOC_DONT_TRACK);
+        result = addLocalReference(env, newObj);
+        if (newObj != NULL) {
+            JValue unused;
+            dvmCallMethodA(_self, (Method*) methodID, newObj, true, &unused,
+                args);
+        }
     }
 
     JNI_EXIT();
