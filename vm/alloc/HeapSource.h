@@ -181,9 +181,14 @@ void dvmHeapSourceWalk(void(*callback)(const void *chunkptr, size_t chunklen,
 size_t dvmHeapSourceGetNumHeaps(void);
 
 /*
- * Exchanges the mark and object bitmaps and zeros the mark bitmap.
+ * Exchanges the mark and object bitmaps.
  */
 void dvmHeapSourceSwapBitmaps(void);
+
+/*
+ * Zeroes the mark bitmap.
+ */
+void dvmHeapSourceZeroMarkBitmap(void);
 
 /*
  * Marks all objects inside the immune region of the heap. Addresses

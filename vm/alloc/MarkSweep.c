@@ -950,6 +950,10 @@ void dvmHeapFinishMarkStep()
      */
     dvmHeapSourceSwapBitmaps();
 
+    /* The mark bits are now not needed.
+     */
+    dvmHeapSourceZeroMarkBitmap();
+
     /* Clean up everything else associated with the marking process.
      */
     destroyMarkStack(&markContext->stack);

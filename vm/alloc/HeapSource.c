@@ -740,9 +740,16 @@ HeapBitmap *dvmHeapSourceGetLiveBits(void)
 void dvmHeapSourceSwapBitmaps(void)
 {
     HeapBitmap tmp;
+
     tmp = gHs->liveBits;
     gHs->liveBits = gHs->markBits;
     gHs->markBits = tmp;
+}
+
+void dvmHeapSourceZeroMarkBitmap(void)
+{
+    HS_BOILERPLATE();
+
     dvmHeapBitmapZero(&gHs->markBits);
 }
 
