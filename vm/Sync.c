@@ -2013,26 +2013,6 @@ static void removeCollectedObject(Object* obj)
 
     LOGVV("+++ collecting %p\n", obj);
 
-#if 0
-    /*
-     * We're currently running through the entire set of known monitors.
-     * This can be somewhat slow.  We may want to keep lists of parents
-     * in each child to speed up GC.
-     */
-    mon = gDvm.monitorList;
-    while (mon != NULL) {
-        Object* parent = mon->obj;
-        if (parent != NULL) {       /* value nulled for deleted entries */
-            if (objectInChildList(parent, obj)) {
-                LOGVV("removing child %p from parent %p\n", obj, parent);
-                unlinkParentFromChild(parent, obj);
-                mergeChildren(parent, obj);
-            }
-        }
-        mon = mon->next;
-    }
-#endif
-
     /*
      * For every parent of this object:
      *  - merge all of our children into the parent's child list (creates
