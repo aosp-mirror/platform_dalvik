@@ -22,6 +22,14 @@ import java.lang.reflect.InvocationTargetException;
  * Class loader test.
  */
 public class Main {
+    /**
+     * Thrown when an unexpected Exception is caught internally.
+     */
+    static class TestFailed extends Exception {
+        public TestFailed(Throwable cause) {
+            super(cause);
+        }
+    }
 
     /**
      * A class loader which loads classes from the dex file
@@ -58,56 +66,37 @@ public class Main {
          *
          * If we don't find a match, we throw an exception.
          */
-        private Class<?> findDexClass(String name) throws ClassNotFoundException
+        private Class<?> findDexClass(String name)
+                throws TestFailed, InvocationTargetException
         {
-            Class mDexClass;
-            Object mDexFile;
-
-            /*
-             * Find the DexFile class, and construct a DexFile object
-             * through reflection.
-             */
-
-            mDexClass = ClassLoader.getSystemClassLoader().
-                    loadClass("dalvik/system/DexFile");
-
-            Constructor ctor;
-            try {
-                ctor = mDexClass.getConstructor(new Class[] {String.class});
-            } catch (NoSuchMethodException nsme) {
-                throw new ClassNotFoundException("getConstructor failed",
-                                                 nsme);
-            }
 
             try {
-                mDexFile = ctor.newInstance(DEX_FILE);
-            } catch (InstantiationException ie) {
-                throw new ClassNotFoundException("newInstance failed", ie);
-            } catch (IllegalAccessException iae) {
-                throw new ClassNotFoundException("newInstance failed", iae);
-            } catch (InvocationTargetException ite) {
-                throw new ClassNotFoundException("newInstance failed", ite);
-            }
-
-            /*
-             * Call DexFile.loadClass(String, ClassLoader).
-             */
-            Method meth;
-
-            try {
-                meth = mDexClass.getMethod("loadClass",
-                           new Class[] { String.class, ClassLoader.class });
-            } catch (NoSuchMethodException nsme) {
-                throw new ClassNotFoundException("getMethod failed", nsme);
-            }
-
-            try {
+                /*
+                 * Find the DexFile class, and construct a DexFile object
+                 * through reflection, then call loadCLass on it.
+                 */
+                Class mDexClass = ClassLoader.getSystemClassLoader().
+                        loadClass("dalvik/system/DexFile");
+                Constructor ctor = mDexClass.
+                        getConstructor(new Class[] {String.class});
+                Object mDexFile = ctor.newInstance(DEX_FILE);
+                Method meth = mDexClass.
+                        getMethod("loadClass",
+                            new Class[] { String.class, ClassLoader.class });
+                /*
+                 * Invoking loadClass on CLASS_NAME is expected to
+                 * throw an InvocationTargetException. Anything else
+                 * is an error we can't recover from.
+                 */
                 meth.invoke(mDexFile, name, this);
+            } catch (NoSuchMethodException nsme) {
+                throw new TestFailed(nsme);
+            } catch (InstantiationException ie) {
+                throw new TestFailed(ie);
             } catch (IllegalAccessException iae) {
-                throw new ClassNotFoundException("loadClass failed", iae);
-            } catch (InvocationTargetException ite) {
-                throw new ClassNotFoundException("loadClass failed",
-                                                 ite.getCause());
+                throw new TestFailed(iae);
+            } catch (ClassNotFoundException cnfe) {
+                throw new TestFailed(cnfe);
             }
 
             return null;
@@ -131,9 +120,12 @@ public class Main {
 
         /**
          * Attempt to find the class with the superclass we refuse to
-         * load.
+         * load.  This is expected to throw an
+         * InvocationTargetException, with a NullPointerException as
+         * its cause.
          */
-        public void findBrokenClass() throws ClassNotFoundException
+        public void findBrokenClass()
+                throws TestFailed, InvocationTargetException
         {
             findDexClass(CLASS_NAME);
         }
@@ -142,31 +134,31 @@ public class Main {
     /**
      * Main entry point.
      */
-    public static void main(String[] args) throws ClassNotFoundException {
+    public static void main(String[] args)
+            throws TestFailed, ClassNotFoundException {
         /*
-         * Run tests.
+         * Run test.
          */
-        testAccess();
+        testFailLoadAndGc();
     }
 
     /**
-     * See if we can load a class when the loader returns null for the
-     * superclass.
+     * See if we can GC after a failed load.
      */
-    static void testAccess() {
+    static void testFailLoadAndGc() throws TestFailed {
         try {
             BrokenDexLoader loader;
 
             loader = new BrokenDexLoader(ClassLoader.getSystemClassLoader());
             loader.findBrokenClass();
             System.err.println("ERROR: Inaccessible was accessible");
-        } catch (ClassNotFoundException cnfe) {
-            Throwable cause = cnfe.getCause();
+        } catch (InvocationTargetException ite) {
+            Throwable cause = ite.getCause();
             if (cause instanceof NullPointerException) {
-                System.out.println("Got expected CNFE/NPE");
+                System.err.println("Got expected ITE/NPE");
             } else {
-                System.err.println("Got unexpected CNFE");
-                cnfe.printStackTrace();
+                System.err.println("Got unexpected ITE");
+                ite.printStackTrace();
             }
         }
     }
