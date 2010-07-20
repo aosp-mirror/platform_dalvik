@@ -68,6 +68,7 @@ static void buildInsnString(char *fmt, ArmLIR *lir, char* buf,
     char *bufEnd = &buf[size-1];
     char *fmtEnd = &fmt[strlen(fmt)];
     char tbuf[256];
+    char *name;
     char nc;
     while (fmt < fmtEnd) {
         int operand;
@@ -82,6 +83,32 @@ static void buildInsnString(char *fmt, ArmLIR *lir, char* buf,
                assert((unsigned)(nc-'0') < 4);
                operand = lir->operands[nc-'0'];
                switch(*fmt++) {
+                   case 'B':
+                       switch (operand) {
+                           case kSY:
+                               name = "sy";
+                               break;
+                           case kST:
+                               name = "st";
+                               break;
+                           case kISH:
+                               name = "ish";
+                               break;
+                           case kISHST:
+                               name = "ishst";
+                               break;
+                           case kNSH:
+                               name = "nsh";
+                               break;
+                           case kNSHST:
+                               name = "shst";
+                               break;
+                           default:
+                               name = "DecodeError";
+                               break;
+                       }
+                       strcpy(tbuf, name);
+                       break;
                    case 'b':
                        strcpy(tbuf,"0000");
                        for (i=3; i>= 0; i--) {

@@ -87,3 +87,11 @@ int dvmCompilerTargetOptHint(int key)
     }
     return res;
 }
+
+void dvmCompilerGenMemBarrier(CompilationUnit *cUnit)
+{
+#if ANDROID_SMP != 0
+    ArmLIR *dmb = newLIR1(cUnit, kThumb2Dmb, kSY);  // Full system DMB
+    dmb->defMask = ENCODE_ALL;
+#endif
+}
