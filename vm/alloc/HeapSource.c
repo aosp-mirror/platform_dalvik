@@ -691,8 +691,8 @@ static void aliasBitmap(HeapBitmap *dst, HeapBitmap *src,
     dst->bitsLen = HB_OFFSET_TO_BYTE_INDEX(max - base) + sizeof(dst->bits);
     /* The exclusive limit from bitsLen is greater than the inclusive max. */
     assert(base + HB_MAX_OFFSET(dst) > max);
-    /* The exclusive limit is less than one word of bits beyond max. */
-    assert((base + HB_MAX_OFFSET(dst)) - max <
+    /* The exclusive limit is at most one word of bits beyond max. */
+    assert((base + HB_MAX_OFFSET(dst)) - max <=
            HB_OBJECT_ALIGNMENT * HB_BITS_PER_WORD);
     dst->allocLen = dst->bitsLen;
     offset = base - src->base;
