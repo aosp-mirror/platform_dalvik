@@ -1070,12 +1070,11 @@ sweepBitmapCallback(size_t numPtrs, void **ptrs, const void *finger, void *arg)
     const ClassObject *const classJavaLangClass = gDvm.classJavaLangClass;
     const bool overwriteFree = gDvm.overwriteFree;
     size_t i;
-    void **origPtrs = ptrs;
 
     for (i = 0; i < numPtrs; i++) {
         Object *obj;
 
-        obj = (Object *)*ptrs++;
+        obj = (Object *)ptrs[i];
 
         /* This assumes that java.lang.Class will never go away.
          * If it can, and we were the last reference to it, it
@@ -1103,7 +1102,7 @@ sweepBitmapCallback(size_t numPtrs, void **ptrs, const void *finger, void *arg)
     }
     // TODO: dvmHeapSourceFreeList has a loop, just like the above
     // does. Consider collapsing the two loops to save overhead.
-    dvmHeapSourceFreeList(numPtrs, origPtrs);
+    dvmHeapSourceFreeList(numPtrs, ptrs);
 
     return true;
 }
