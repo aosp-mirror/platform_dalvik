@@ -104,20 +104,25 @@ void dvmHeapBitmapZero(HeapBitmap *hb);
 
 /*
  * Walk through the bitmaps in increasing address order, and find the
- * object pointers that correspond to places where the bitmaps differ.
- * Call <callback> zero or more times with lists of these object pointers.
+ * object pointers that correspond to garbage objects.  Call
+ * <callback> zero or more times with lists of these object pointers.
  *
  * The <finger> argument to the callback indicates the next-highest
  * address that hasn't been visited yet; setting bits for objects whose
  * addresses are less than <finger> are not guaranteed to be seen by
- * the current XorWalk.  <finger> will be set to ULONG_MAX when the
+ * the current walk.
+ *
+ * The callback is permitted to increase the bitmap's max; the walk
+ * will use the updated max as a terminating condition,
+ *
+ * <finger> will be set to some value beyond the bitmap max when the
  * end of the bitmap is reached.
  */
-void dvmHeapBitmapXorWalk(const HeapBitmap *hb1, const HeapBitmap *hb2,
-                          BitmapCallback *callback, void *callbackArg);
+void dvmHeapBitmapSweepWalk(const HeapBitmap *liveHb, const HeapBitmap *markHb,
+                            BitmapCallback *callback, void *callbackArg);
 
 /*
- * Similar to dvmHeapBitmapXorWalk(), but visit the set bits
+ * Similar to dvmHeapBitmapSweepWalk(), but visit the set bits
  * in a single bitmap.
  */
 void dvmHeapBitmapWalk(const HeapBitmap *hb,

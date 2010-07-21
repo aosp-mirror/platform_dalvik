@@ -83,17 +83,22 @@ dvmHeapBitmapZero(HeapBitmap *hb)
 
 /*
  * Walk through the bitmaps in increasing address order, and find the
- * object pointers that correspond to places where the bitmaps differ.
- * Call <callback> zero or more times with lists of these object pointers.
+ * object pointers that correspond to garbage objects.  Call
+ * <callback> zero or more times with lists of these object pointers.
  *
  * The <finger> argument to the callback indicates the next-highest
  * address that hasn't been visited yet; setting bits for objects whose
  * addresses are less than <finger> are not guaranteed to be seen by
- * the current XorWalk.  <finger> will be set to ULONG_MAX when the
+ * the current walk.
+ *
+ * The callback is permitted to increase the bitmap's max; the walk
+ * will use the updated max as a terminating condition,
+ *
+ * <finger> will be set to some value beyond the bitmap max when the
  * end of the bitmap is reached.
  */
-void dvmHeapBitmapXorWalk(const HeapBitmap *hb1, const HeapBitmap *hb2,
-                          BitmapCallback *callback, void *callbackArg)
+void dvmHeapBitmapSweepWalk(const HeapBitmap *liveHb, const HeapBitmap *markHb,
+                            BitmapCallback *callback, void *callbackArg)
 {
     static const size_t kPointerBufSize = 128;
     void *pointerBuf[kPointerBufSize];
@@ -134,24 +139,24 @@ void dvmHeapBitmapXorWalk(const HeapBitmap *hb1, const HeapBitmap *hb2,
         } \
     } while (false)
 
-    assert(hb1 != NULL);
-    assert(hb1->bits != NULL);
-    assert(hb2 != NULL);
-    assert(hb2->bits != NULL);
+    assert(liveHb != NULL);
+    assert(liveHb->bits != NULL);
+    assert(markHb != NULL);
+    assert(markHb->bits != NULL);
     assert(callback != NULL);
 
-    if (hb1->base != hb2->base) {
-        LOGW("dvmHeapBitmapXorWalk: bitmaps cover different heaps "
+    if (liveHb->base != markHb->base) {
+        LOGW("dvmHeapBitmapSweepWalk: bitmaps cover different heaps "
                 "(0x%08x != 0x%08x)\n",
-                (uintptr_t)hb1->base, (uintptr_t)hb2->base);
+                (uintptr_t)liveHb->base, (uintptr_t)markHb->base);
         return;
     }
-    if (hb1->bitsLen != hb2->bitsLen) {
-        LOGW("dvmHeapBitmapXorWalk: size of bitmaps differ (%zd != %zd)\n",
-                hb1->bitsLen, hb2->bitsLen);
+    if (liveHb->bitsLen != markHb->bitsLen) {
+        LOGW("dvmHeapBitmapSweepWalk: size of bitmaps differ (%zd != %zd)\n",
+                liveHb->bitsLen, markHb->bitsLen);
         return;
     }
-    if (hb1->max < hb1->base && hb2->max < hb2->base) {
+    if (liveHb->max < liveHb->base && markHb->max < markHb->base) {
         /* Easy case; both are obviously empty.
          */
         return;
@@ -159,20 +164,20 @@ void dvmHeapBitmapXorWalk(const HeapBitmap *hb1, const HeapBitmap *hb2,
 
     /* First, walk along the section of the bitmaps that may be the same.
      */
-    if (hb1->max >= hb1->base && hb2->max >= hb2->base) {
-        unsigned long *p1, *p2;
+    if (liveHb->max >= liveHb->base && markHb->max >= markHb->base) {
+        unsigned long *live, *mark;
         uintptr_t offset;
 
-        offset = ((hb1->max < hb2->max) ? hb1->max : hb2->max) - hb1->base;
+        offset = ((liveHb->max < markHb->max) ? liveHb->max : markHb->max) - liveHb->base;
 //TODO: keep track of which (and whether) one is longer for later
         index = HB_OFFSET_TO_INDEX(offset);
 
-        p1 = hb1->bits;
-        p2 = hb2->bits;
+        live = liveHb->bits;
+        mark = markHb->bits;
         for (i = 0; i <= index; i++) {
 //TODO: unroll this. pile up a few in locals?
-            unsigned long diff = *p1++ ^ *p2++;
-            DECODE_BITS(hb1, diff, false);
+            unsigned long garbage = live[i] & ~mark[i];
+            DECODE_BITS(liveHb, garbage, false);
 //BUG: if the callback was called, either max could have changed.
         }
         /* The next index to look at.
@@ -190,7 +195,7 @@ void dvmHeapBitmapXorWalk(const HeapBitmap *hb1, const HeapBitmap *hb2,
 const HeapBitmap *longHb;
 unsigned long *p;
 //TODO: may be the same size, in which case this is wasted work
-    longHb = (hb1->max > hb2->max) ? hb1 : hb2;
+    longHb = (liveHb->max > markHb->max) ? liveHb : markHb;
     i = index;
     index = HB_OFFSET_TO_INDEX(longHb->max - longHb->base);
     p = longHb->bits + i;
@@ -214,8 +219,8 @@ unsigned long *p;
 }
 
 /*
- * Similar to dvmHeapBitmapXorWalk(), but visit the set bits
- * in a single bitmap.
+ * dvmHeapBitmapWalk is equivalent to dvmHeapBitmapSweepWalk with
+ * nothing marked.
  */
 void dvmHeapBitmapWalk(const HeapBitmap *hb,
                        BitmapCallback *callback, void *callbackArg)
@@ -226,5 +231,6 @@ void dvmHeapBitmapWalk(const HeapBitmap *hb,
     HeapBitmap emptyHb = *hb;
     emptyHb.max = emptyHb.base - 1; // empty
     emptyHb.bits = (void *)1;       // non-NULL but intentionally bad
-    dvmHeapBitmapXorWalk(hb, &emptyHb, callback, callbackArg);
+
+    dvmHeapBitmapSweepWalk(hb, &emptyHb, callback, callbackArg);
 }
