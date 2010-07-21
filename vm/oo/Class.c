@@ -4478,7 +4478,7 @@ noverify:
          * need to throw an ExceptionInInitializerError, but we want to
          * tuck the original exception into the "cause" field.
          */
-        LOGW("Exception %s thrown during %s.<clinit>\n",
+        LOGW("Exception %s thrown while initializing %s\n",
             (dvmGetException(self)->clazz)->descriptor, clazz->descriptor);
         throwClinitError();
         //LOGW("+++ replaced\n");
