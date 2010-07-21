@@ -1030,8 +1030,8 @@ dvmHeapSweepUnmarkedObjects(GcMode mode, int *numFreed, size_t *sizeFreed)
         numSweepBitmaps = numBitmaps;
     }
     for (i = 0; i < numSweepBitmaps; i++) {
-        dvmHeapBitmapXorWalk(&markBits[i], &liveBits[i],
-                             sweepBitmapCallback, NULL);
+        dvmHeapBitmapSweepWalk(&liveBits[i], &markBits[i],
+                               sweepBitmapCallback, NULL);
     }
 
     *numFreed = origObjectsAllocated -
