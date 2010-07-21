@@ -209,11 +209,13 @@ unsigned long *p;
     }
 
     if (pb > pointerBuf) {
-        /* Set the finger to the end of the heap (rather than longHb->max)
-         * so that the callback doesn't expect to be called again
-         * if it happens to change the current max.
+        /* Set the finger to the end of the heap (rather than
+         * longHb->max) so that the callback doesn't expect to be
+         * called again if it happens to change the current max.
          */
-        FLUSH_POINTERBUF(longHb->base + HB_MAX_OFFSET(longHb));
+        uintptr_t finalFinger = longHb->base + HB_MAX_OFFSET(longHb);
+        FLUSH_POINTERBUF(finalFinger);
+        assert(finalFinger > longHb->max);
     }
 
     return true;

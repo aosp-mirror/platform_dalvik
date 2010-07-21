@@ -688,7 +688,12 @@ static void aliasBitmap(HeapBitmap *dst, HeapBitmap *src,
 
     dst->base = base;
     dst->max = max;
-    dst->bitsLen = HB_OFFSET_TO_BYTE_INDEX(max - base);
+    dst->bitsLen = HB_OFFSET_TO_BYTE_INDEX(max - base) + sizeof(dst->bits);
+    /* The exclusive limit from bitsLen is greater than the inclusive max. */
+    assert(base + HB_MAX_OFFSET(dst) > max);
+    /* The exclusive limit is less than one word of bits beyond max. */
+    assert((base + HB_MAX_OFFSET(dst)) - max <
+           HB_OBJECT_ALIGNMENT * HB_BITS_PER_WORD);
     dst->allocLen = dst->bitsLen;
     offset = base - src->base;
     assert(HB_OFFSET_TO_MASK(offset) == 1 << 31);
@@ -713,7 +718,10 @@ void dvmHeapSourceGetObjectBitmaps(HeapBitmap liveBits[], HeapBitmap markBits[],
     assert(numHeaps == hs->numHeaps);
     for (i = 0; i < hs->numHeaps; ++i) {
         base = (uintptr_t)hs->heaps[i].base;
-        max = (uintptr_t)hs->heaps[i].limit - 1;
+        /* Using liveBits.max will include all the markBits as well. */
+        assert(hs->liveBits.max >= hs->markBits.max);
+        /* -1 because limit is exclusive but max is inclusive. */
+        max = MIN((uintptr_t)hs->heaps[i].limit - 1, hs->liveBits.max);
         aliasBitmap(&liveBits[i], &hs->liveBits, base, max);
         aliasBitmap(&markBits[i], &hs->markBits, base, max);
     }
