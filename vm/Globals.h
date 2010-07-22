@@ -178,7 +178,15 @@ struct DvmGlobals {
     /*
      * Interned strings.
      */
+
+    /* A mutex that guards access to the interned string tables. */
+    pthread_mutex_t internLock;
+
+    /* Hash table of strings interned by the user. */
     HashTable*  internedStrings;
+
+    /* Hash table of strings interned by the class loader. */
+    HashTable*  literalStrings;
 
     /*
      * Quick lookups for popular classes used internally.

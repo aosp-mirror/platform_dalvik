@@ -18,26 +18,20 @@
  */
 #include "Dalvik.h"
 
-#include <stdlib.h>
-
-#define INTERN_STRING_IMMORTAL_BIT (1<<0)
-#define SET_IMMORTAL_BIT(strObj) \
-            ((uintptr_t)(strObj) | INTERN_STRING_IMMORTAL_BIT)
-#define STRIP_IMMORTAL_BIT(strObj) \
-            ((uintptr_t)(strObj) & ~INTERN_STRING_IMMORTAL_BIT)
-#define IS_IMMORTAL(strObj) \
-            ((uintptr_t)(strObj) & INTERN_STRING_IMMORTAL_BIT)
-
+#include <stddef.h>
 
 /*
  * Prep string interning.
  */
 bool dvmStringInternStartup(void)
 {
+    dvmInitMutex(&gDvm.internLock);
     gDvm.internedStrings = dvmHashTableCreate(256, NULL);
     if (gDvm.internedStrings == NULL)
         return false;
-
+    gDvm.literalStrings = dvmHashTableCreate(256, NULL);
+    if (gDvm.literalStrings == NULL)
+        return false;
     return true;
 }
 
@@ -48,70 +42,47 @@ bool dvmStringInternStartup(void)
  */
 void dvmStringInternShutdown(void)
 {
+    if (gDvm.internedStrings != NULL || gDvm.literalStrings != NULL) {
+        dvmDestroyMutex(&gDvm.internLock);
+    }
     dvmHashTableFree(gDvm.internedStrings);
     gDvm.internedStrings = NULL;
+    dvmHashTableFree(gDvm.literalStrings);
+    gDvm.literalStrings = NULL;
 }
 
-
-/*
- * Compare two string objects that may have INTERN_STRING_IMMORTAL_BIT
- * set in their pointer values.
- */
-static int hashcmpImmortalStrings(const void* vstrObj1, const void* vstrObj2)
-{
-    return dvmHashcmpStrings((const void*) STRIP_IMMORTAL_BIT(vstrObj1),
-                             (const void*) STRIP_IMMORTAL_BIT(vstrObj2));
-}
-
-static StringObject* lookupInternedString(StringObject* strObj, bool immortal)
+static StringObject* lookupInternedString(StringObject* strObj, bool isLiteral)
 {
     StringObject* found;
     u4 hash;
 
     assert(strObj != NULL);
     hash = dvmComputeStringHash(strObj);
-
-    if (false) {
-        char* debugStr = dvmCreateCstrFromString(strObj);
-        LOGV("+++ dvmLookupInternedString searching for '%s'\n", debugStr);
-        free(debugStr);
+    dvmLockMutex(&gDvm.internLock);
+    if (isLiteral) {
+        found = dvmHashTableLookup(gDvm.literalStrings, hash, strObj,
+                                   dvmHashcmpStrings, true);
+        if (found == strObj) {
+            dvmHashTableRemove(gDvm.internedStrings, hash, strObj);
+        }
+    } else {
+        found = dvmHashTableLookup(gDvm.literalStrings, hash, strObj,
+                                   dvmHashcmpStrings, false);
+        if (found == NULL) {
+            found = dvmHashTableLookup(gDvm.internedStrings, hash, strObj,
+                                       dvmHashcmpStrings, true);
+        }
     }
-
-    if (immortal) {
-        strObj = (StringObject*) SET_IMMORTAL_BIT(strObj);
-    }
-
-    dvmHashTableLock(gDvm.internedStrings);
-
-    found = (StringObject*) dvmHashTableLookup(gDvm.internedStrings,
-                                hash, strObj, hashcmpImmortalStrings, true);
-    if (immortal && !IS_IMMORTAL(found)) {
-        /* Make this entry immortal.  We have to use the existing object
-         * because, as an interned string, it's not allowed to change.
-         *
-         * There's no way to get a pointer to the actual hash table entry,
-         * so the only way to modify the existing entry is to remove,
-         * modify, and re-add it.
-         */
-        dvmHashTableRemove(gDvm.internedStrings, hash, found);
-        found = (StringObject*) SET_IMMORTAL_BIT(found);
-        found = (StringObject*) dvmHashTableLookup(gDvm.internedStrings,
-                                    hash, found, hashcmpImmortalStrings, true);
-        assert(IS_IMMORTAL(found));
-    }
-
-    dvmHashTableUnlock(gDvm.internedStrings);
-
-    //if (found == strObj)
-    //    LOGVV("+++  added string\n");
-    return (StringObject*) STRIP_IMMORTAL_BIT(found);
+    assert(found != NULL);
+    dvmUnlockMutex(&gDvm.internLock);
+    return found;
 }
 
 /*
- * Find an entry in the interned string list.
+ * Find an entry in the interned string table.
  *
  * If the string doesn't already exist, the StringObject is added to
- * the list.  Otherwise, the existing entry is returned.
+ * the table.  Otherwise, the existing entry is returned.
  */
 StringObject* dvmLookupInternedString(StringObject* strObj)
 {
@@ -120,45 +91,36 @@ StringObject* dvmLookupInternedString(StringObject* strObj)
 
 /*
  * Same as dvmLookupInternedString(), but guarantees that the
- * returned string is immortal.
+ * returned string is a literal.
  */
 StringObject* dvmLookupImmortalInternedString(StringObject* strObj)
 {
     return lookupInternedString(strObj, true);
 }
 
-/*
- * Mark all immortal interned string objects so that they don't
- * get collected by the GC.  Non-immortal strings may or may not
- * get marked by other references.
- */
 static int markStringObject(void* strObj, void* arg)
 {
     UNUSED_PARAMETER(arg);
-
-    if (IS_IMMORTAL(strObj)) {
-        dvmMarkObjectNonNull((Object*) STRIP_IMMORTAL_BIT(strObj));
-    }
+    dvmMarkObjectNonNull(strObj);
     return 0;
 }
 
+/*
+ * Blacken string references from the literal string table.  The
+ * literal table is a root.
+ */
 void dvmGcScanInternedStrings()
 {
     /* It's possible for a GC to happen before dvmStringInternStartup()
      * is called.
      */
-    if (gDvm.internedStrings != NULL) {
-        dvmHashTableLock(gDvm.internedStrings);
-        dvmHashForeach(gDvm.internedStrings, markStringObject, NULL);
-        dvmHashTableUnlock(gDvm.internedStrings);
+    if (gDvm.literalStrings != NULL) {
+        dvmHashForeach(gDvm.literalStrings, markStringObject, NULL);
     }
 }
 
 /*
- * Called by the GC after all reachable objects have been
- * marked.  isUnmarkedObject is a function suitable for passing
- * to dvmHashForeachRemove();  it must strip the low bits from
- * its pointer argument to deal with the immortal bit, though.
+ * Clear white references from the intern table.
  */
 void dvmGcDetachDeadInternedStrings(int (*isUnmarkedObject)(void *))
 {
@@ -166,8 +128,8 @@ void dvmGcDetachDeadInternedStrings(int (*isUnmarkedObject)(void *))
      * is called.
      */
     if (gDvm.internedStrings != NULL) {
-        dvmHashTableLock(gDvm.internedStrings);
+        dvmLockMutex(&gDvm.internLock);
         dvmHashForeachRemove(gDvm.internedStrings, isUnmarkedObject);
-        dvmHashTableUnlock(gDvm.internedStrings);
+        dvmUnlockMutex(&gDvm.internLock);
     }
 }
