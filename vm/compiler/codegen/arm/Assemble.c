@@ -70,6 +70,7 @@
  *     n -> complimented Thumb2 modified immediate
  *     M -> Thumb2 16-bit zero-extended immediate
  *     b -> 4-digit binary
+ *     B -> dmb option string (sy, st, ish, ishst, nsh, hshst)
  *
  *  [!] escape.  To insert "!", use "!!"
  */
@@ -869,6 +870,10 @@ ArmEncodingMap EncodingMap[kArmLast] = {
                  kFmtBitBlt, 11, 8, kFmtShift5, -1, -1, kFmtBitBlt, 4, 0,
                  kFmtUnused, -1, -1, IS_TERTIARY_OP | REG_DEF0,
                  "bfc", "r!0d,#!1d,#!2d", 2),
+    ENCODING_MAP(kThumb2Dmb,         0xf3bf8f50,
+                 kFmtBitBlt, 3, 0, kFmtUnused, -1, -1, kFmtUnused, -1, -1,
+                 kFmtUnused, -1, -1, IS_UNARY_OP,
+                 "dmb","#!0B",2),
 };
 
 /*

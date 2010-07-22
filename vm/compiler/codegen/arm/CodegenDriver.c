@@ -77,7 +77,6 @@ static bool genConversionCall(CompilationUnit *cUnit, MIR *mir, void *funct,
     return false;
 }
 
-
 static bool genArithOpFloatPortable(CompilationUnit *cUnit, MIR *mir,
                                     RegLocation rlDest, RegLocation rlSrc1,
                                     RegLocation rlSrc2)
@@ -301,7 +300,7 @@ static void genIPutWide(CompilationUnit *cUnit, MIR *mir, int fieldOffset)
  *
  */
 static void genIGet(CompilationUnit *cUnit, MIR *mir, OpSize size,
-                    int fieldOffset)
+                    int fieldOffset, bool isVolatile)
 {
     RegLocation rlResult;
     RegisterClass regClass = dvmCompilerRegClassBySize(size);
@@ -316,6 +315,9 @@ static void genIGet(CompilationUnit *cUnit, MIR *mir, OpSize size,
     loadBaseDisp(cUnit, mir, rlObj.lowReg, fieldOffset, rlResult.lowReg,
                  size, rlObj.sRegLow);
     HEAP_ACCESS_SHADOW(false);
+    if (isVolatile) {
+        dvmCompilerGenMemBarrier(cUnit);
+    }
 
     storeValue(cUnit, rlDest, rlResult);
 }
@@ -325,7 +327,7 @@ static void genIGet(CompilationUnit *cUnit, MIR *mir, OpSize size,
  *
  */
 static void genIPut(CompilationUnit *cUnit, MIR *mir, OpSize size,
-                    int fieldOffset, bool isObject)
+                    int fieldOffset, bool isObject, bool isVolatile)
 {
     RegisterClass regClass = dvmCompilerRegClassBySize(size);
     RegLocation rlSrc = dvmCompilerGetSrc(cUnit, mir, 0);
@@ -335,6 +337,9 @@ static void genIPut(CompilationUnit *cUnit, MIR *mir, OpSize size,
     genNullCheck(cUnit, rlObj.sRegLow, rlObj.lowReg, mir->offset,
                  NULL);/* null object? */
 
+    if (isVolatile) {
+        dvmCompilerGenMemBarrier(cUnit);
+    }
     HEAP_ACCESS_SHADOW(true);
     storeBaseDisp(cUnit, rlObj.lowReg, fieldOffset, rlSrc.lowReg, size);
     HEAP_ACCESS_SHADOW(false);
@@ -1444,6 +1449,8 @@ static bool handleFmt21c_Fmt31c(CompilationUnit *cUnit, MIR *mir)
             storeValue(cUnit, rlDest, rlResult);
             break;
         }
+        case OP_SGET_VOLATILE:
+        case OP_SGET_OBJECT_VOLATILE:
         case OP_SGET_OBJECT:
         case OP_SGET_BOOLEAN:
         case OP_SGET_CHAR:
@@ -1452,6 +1459,7 @@ static bool handleFmt21c_Fmt31c(CompilationUnit *cUnit, MIR *mir)
         case OP_SGET: {
             int valOffset = offsetof(StaticField, value);
             int tReg = dvmCompilerAllocTemp(cUnit);
+            bool isVolatile;
             void *fieldPtr = (void*)
               (cUnit->method->clazz->pDvmDex->pResFields[mir->dalvikInsn.vB]);
 
@@ -1460,10 +1468,17 @@ static bool handleFmt21c_Fmt31c(CompilationUnit *cUnit, MIR *mir)
                 dvmAbort();
             }
 
+            isVolatile = (mir->dalvikInsn.opCode == OP_SGET_VOLATILE) ||
+                         (mir->dalvikInsn.opCode == OP_SGET_OBJECT_VOLATILE) ||
+                         dvmIsVolatileField(fieldPtr);
+
             rlDest = dvmCompilerGetDest(cUnit, mir, 0);
             rlResult = dvmCompilerEvalLoc(cUnit, rlDest, kAnyReg, true);
             loadConstant(cUnit, tReg,  (int) fieldPtr + valOffset);
 
+            if (isVolatile) {
+                dvmCompilerGenMemBarrier(cUnit);
+            }
             HEAP_ACCESS_SHADOW(true);
             loadWordDisp(cUnit, tReg, 0, rlResult.lowReg);
             HEAP_ACCESS_SHADOW(false);
@@ -1501,8 +1516,13 @@ static bool handleFmt21c_Fmt31c(CompilationUnit *cUnit, MIR *mir)
         case OP_SPUT: {
             int valOffset = offsetof(StaticField, value);
             int tReg = dvmCompilerAllocTemp(cUnit);
-            void *fieldPtr = (void*)
+            bool isVolatile;
+            Field *fieldPtr =
               (cUnit->method->clazz->pDvmDex->pResFields[mir->dalvikInsn.vB]);
+
+            isVolatile = (mir->dalvikInsn.opCode == OP_SPUT_VOLATILE) ||
+                         (mir->dalvikInsn.opCode == OP_SPUT_OBJECT_VOLATILE) ||
+                         dvmIsVolatileField(fieldPtr);
 
             if (fieldPtr == NULL) {
                 LOGE("Unexpected null static field");
@@ -1516,6 +1536,9 @@ static bool handleFmt21c_Fmt31c(CompilationUnit *cUnit, MIR *mir)
             HEAP_ACCESS_SHADOW(true);
             storeWordDisp(cUnit, tReg, 0 ,rlSrc.lowReg);
             HEAP_ACCESS_SHADOW(false);
+            if (isVolatile) {
+                dvmCompilerGenMemBarrier(cUnit);
+            }
             if (mir->dalvikInsn.opCode == OP_SPUT_OBJECT) {
                 /* NOTE: marking card based on field address */
                 markCard(cUnit, rlSrc.lowReg, tReg);
@@ -2120,17 +2143,18 @@ static bool handleFmt22c(CompilationUnit *cUnit, MIR *mir)
 {
     OpCode dalvikOpCode = mir->dalvikInsn.opCode;
     int fieldOffset;
+    bool isVolatile = false;
 
     if (dalvikOpCode >= OP_IGET && dalvikOpCode <= OP_IPUT_SHORT) {
-        InstField *pInstField = (InstField *)
+        Field *fieldPtr =
             cUnit->method->clazz->pDvmDex->pResFields[mir->dalvikInsn.vC];
 
-        if (pInstField == NULL) {
+        if (fieldPtr == NULL) {
             LOGE("Unexpected null instance field");
             dvmAbort();
         }
-
-        fieldOffset = pInstField->byteOffset;
+        isVolatile = dvmIsVolatileField(fieldPtr);
+        fieldOffset = ((InstField *)fieldPtr)->byteOffset;
     } else {
         /* Deliberately break the code while make the compiler happy */
         fieldOffset = -1;
@@ -2230,38 +2254,47 @@ static bool handleFmt22c(CompilationUnit *cUnit, MIR *mir)
         case OP_IGET_WIDE:
             genIGetWide(cUnit, mir, fieldOffset);
             break;
+        case OP_IGET_VOLATILE:
+        case OP_IGET_OBJECT_VOLATILE:
+            isVolatile = true;
+            // NOTE: intentional fallthrough
         case OP_IGET:
         case OP_IGET_OBJECT:
-            genIGet(cUnit, mir, kWord, fieldOffset);
+            genIGet(cUnit, mir, kWord, fieldOffset, isVolatile);
             break;
         case OP_IGET_BOOLEAN:
-            genIGet(cUnit, mir, kUnsignedByte, fieldOffset);
+            genIGet(cUnit, mir, kUnsignedByte, fieldOffset, isVolatile);
             break;
         case OP_IGET_BYTE:
-            genIGet(cUnit, mir, kSignedByte, fieldOffset);
+            genIGet(cUnit, mir, kSignedByte, fieldOffset, isVolatile);
             break;
         case OP_IGET_CHAR:
-            genIGet(cUnit, mir, kUnsignedHalf, fieldOffset);
+            genIGet(cUnit, mir, kUnsignedHalf, fieldOffset, isVolatile);
             break;
         case OP_IGET_SHORT:
-            genIGet(cUnit, mir, kSignedHalf, fieldOffset);
+            genIGet(cUnit, mir, kSignedHalf, fieldOffset, isVolatile);
             break;
         case OP_IPUT_WIDE:
             genIPutWide(cUnit, mir, fieldOffset);
             break;
         case OP_IPUT:
-            genIPut(cUnit, mir, kWord, fieldOffset, false);
+            genIPut(cUnit, mir, kWord, fieldOffset, false, isVolatile);
             break;
+        case OP_IPUT_OBJECT_VOLATILE:
+            isVolatile = true;
+            // NOTE: intentional fallthrough
         case OP_IPUT_OBJECT:
-            genIPut(cUnit, mir, kWord, fieldOffset, true);
+            genIPut(cUnit, mir, kWord, fieldOffset, true, isVolatile);
             break;
         case OP_IPUT_SHORT:
         case OP_IPUT_CHAR:
-            genIPut(cUnit, mir, kUnsignedHalf, fieldOffset, false);
+            genIPut(cUnit, mir, kUnsignedHalf, fieldOffset, false, isVolatile);
             break;
         case OP_IPUT_BYTE:
+            genIPut(cUnit, mir, kSignedByte, fieldOffset, false, isVolatile);
+            break;
         case OP_IPUT_BOOLEAN:
-            genIPut(cUnit, mir, kUnsignedByte, fieldOffset, false);
+            genIPut(cUnit, mir, kUnsignedByte, fieldOffset, false, isVolatile);
             break;
         case OP_IGET_WIDE_VOLATILE:
         case OP_IPUT_WIDE_VOLATILE:
@@ -2282,13 +2315,13 @@ static bool handleFmt22cs(CompilationUnit *cUnit, MIR *mir)
     switch (dalvikOpCode) {
         case OP_IGET_QUICK:
         case OP_IGET_OBJECT_QUICK:
-            genIGet(cUnit, mir, kWord, fieldOffset);
+            genIGet(cUnit, mir, kWord, fieldOffset, false);
             break;
         case OP_IPUT_QUICK:
-            genIPut(cUnit, mir, kWord, fieldOffset, false);
+            genIPut(cUnit, mir, kWord, fieldOffset, false, false);
             break;
         case OP_IPUT_OBJECT_QUICK:
-            genIPut(cUnit, mir, kWord, fieldOffset, true);
+            genIPut(cUnit, mir, kWord, fieldOffset, true, false);
             break;
         case OP_IGET_WIDE_QUICK:
             genIGetWide(cUnit, mir, fieldOffset);
