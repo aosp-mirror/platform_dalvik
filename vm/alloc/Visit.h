@@ -26,9 +26,13 @@
 typedef void Visitor(void *addr, void *arg);
 
 /*
- * Visits an object and applies the callback specified by the visitor
- * to each reference-containing location.
+ * Visits references in an object.
  */
 void dvmVisitObject(Visitor *visitor, Object *obj, void *arg);
+
+/*
+ * Visits references in the root set.
+ */
+void dvmVisitRoots(Visitor *visitor, void *arg);
 
 #endif /* _DALVIK_ALLOC_VISIT */
