@@ -928,6 +928,14 @@ retry:
              * value of the recursion count field.
              */
             obj->lock += 1 << LW_LOCK_COUNT_SHIFT;
+            if (LW_LOCK_COUNT(obj->lock) == LW_LOCK_COUNT_MASK) {
+                /*
+                 * The reacquisition limit has been reached.  Inflate
+                 * the lock so the next acquire will not overflow the
+                 * recursion count field.
+                 */
+                inflateMonitor(self, obj);
+            }
         } else if (LW_LOCK_OWNER(thin) == 0) {
             /*
              * The lock is unowned.  Install the thread id of the
