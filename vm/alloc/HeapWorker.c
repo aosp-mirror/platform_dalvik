@@ -329,12 +329,12 @@ static void* heapWorkerThreadStart(void* arg)
     LOGV("HeapWorker thread started (threadid=%d)\n", self->threadId);
 
     /* tell the main thread that we're ready */
-    dvmLockMutex(&gDvm.heapWorkerLock);
+    lockMutex(&gDvm.heapWorkerLock);
     gDvm.heapWorkerReady = true;
     dvmSignalCond(&gDvm.heapWorkerCond);
     dvmUnlockMutex(&gDvm.heapWorkerLock);
 
-    dvmLockMutex(&gDvm.heapWorkerLock);
+    lockMutex(&gDvm.heapWorkerLock);
     while (!gDvm.haltHeapWorker) {
         struct timespec trimtime;
         bool timedwait = false;
