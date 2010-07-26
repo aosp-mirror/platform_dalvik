@@ -697,9 +697,6 @@ void dvmCollectGarbageInternal(bool clearSoftRefs, GcReason reason)
         LOGV_HEAP("Verifying heap before GC");
         verifyHeap();
     }
-    if (gDvm.verifyCardTable) {
-        dvmVerifyCardTable();
-    }
 
 #ifdef WITH_PROFILER
     dvmMethodTraceGCBegin();
@@ -889,9 +886,6 @@ void dvmCollectGarbageInternal(bool clearSoftRefs, GcReason reason)
     if (gDvm.postVerify) {
         LOGV_HEAP("Verifying heap after GC");
         verifyHeap();
-    }
-    if (gDvm.verifyCardTable) {
-        dvmVerifyCardTable();
     }
 
     gcHeap->gcRunning = false;
