@@ -610,9 +610,9 @@ static void verifyHeap()
 void dvmCollectGarbageInternal(bool clearSoftRefs, GcReason reason)
 {
     GcHeap *gcHeap = gDvm.gcHeap;
-    u8 now;
-    s8 timeSinceLastGc;
-    s8 gcElapsedTime;
+    u4 suspendStart, totalTime;
+    u4 rootStart, rootEnd, rootTime, rootSuspendTime;
+    u4 dirtyStart, dirtyEnd, dirtyTime, dirtySuspendTime;
     int numFreed;
     size_t sizeFreed;
     GcMode gcMode;
@@ -625,19 +625,13 @@ void dvmCollectGarbageInternal(bool clearSoftRefs, GcReason reason)
         LOGW_HEAP("Attempted recursive GC\n");
         return;
     }
+
     gcMode = (reason == GC_FOR_MALLOC) ? GC_PARTIAL : GC_FULL;
     gcHeap->gcRunning = true;
-    now = dvmGetRelativeTimeUsec();
-    if (gcHeap->gcStartTime != 0) {
-        timeSinceLastGc = (now - gcHeap->gcStartTime) / 1000;
-    } else {
-        timeSinceLastGc = 0;
-    }
-    gcHeap->gcStartTime = now;
 
-    LOGV_HEAP("%s starting -- suspending threads\n", GcReasonStr[reason]);
-
+    suspendStart = dvmGetRelativeTimeMsec();
     dvmSuspendAllThreads(SUSPEND_FOR_GC);
+    rootStart = dvmGetRelativeTimeMsec();
 
     /*
      * If we are not marking concurrently raise the priority of the
@@ -742,14 +736,6 @@ void dvmCollectGarbageInternal(bool clearSoftRefs, GcReason reason)
     }
 #endif
 
-    if (timeSinceLastGc < 10000) {
-        LOGD_HEAP("GC! (%dms since last GC)\n",
-                (int)timeSinceLastGc);
-    } else {
-        LOGD_HEAP("GC! (%d sec since last GC)\n",
-                (int)(timeSinceLastGc / 1000));
-    }
-
     /* Set up the marking context.
      */
     if (!dvmHeapBeginMarkStep(gcMode)) {
@@ -774,8 +760,11 @@ void dvmCollectGarbageInternal(bool clearSoftRefs, GcReason reason)
          * Resume threads while tracing from the roots.  We unlock the
          * heap to allow mutator threads to allocate from free space.
          */
+        rootEnd = dvmGetRelativeTimeMsec();
         dvmUnlockHeap();
         dvmResumeAllThreads(SUSPEND_FOR_GC);
+        rootSuspendTime = rootStart - suspendStart;
+        rootTime = rootEnd - rootStart;
     }
 
     /* Recursively mark any objects that marked objects point to strongly.
@@ -791,7 +780,9 @@ void dvmCollectGarbageInternal(bool clearSoftRefs, GcReason reason)
          * suspension.
          */
         dvmLockHeap();
+        suspendStart = dvmGetRelativeTimeMsec();
         dvmSuspendAllThreads(SUSPEND_FOR_GC);
+        dirtyStart = dvmGetRelativeTimeMsec();
         /*
          * As no barrier intercepts root updates, we conservatively
          * assume all roots may be gray and re-mark them.
@@ -906,6 +897,13 @@ void dvmCollectGarbageInternal(bool clearSoftRefs, GcReason reason)
     dvmCompilerPerformSafePointChecks();
 #endif
 
+    dirtyEnd = dvmGetRelativeTimeMsec();
+
+    if (reason == GC_CONCURRENT) {
+        dirtySuspendTime = dirtyStart - suspendStart;
+        dirtyTime = dirtyEnd - dirtyStart;
+    }
+
     dvmResumeAllThreads(SUSPEND_FOR_GC);
 
     if (reason == GC_CONCURRENT) {
@@ -930,11 +928,22 @@ void dvmCollectGarbageInternal(bool clearSoftRefs, GcReason reason)
             }
         }
     }
-    gcElapsedTime = (dvmGetRelativeTimeUsec() - gcHeap->gcStartTime) / 1000;
-    LOGD("%s freed %d objects / %zd bytes in %dms\n",
-         GcReasonStr[reason], numFreed, sizeFreed, (int)gcElapsedTime);
-    dvmLogGcStats(numFreed, sizeFreed, gcElapsedTime);
 
+    if (reason != GC_CONCURRENT) {
+        u4 suspendTime = rootStart - suspendStart;
+        u4 markSweepTime = dirtyEnd - rootStart;
+        totalTime = suspendTime + markSweepTime;
+        LOGD("%s freed %d objects / %zd bytes in (%ums) %ums",
+             GcReasonStr[reason], numFreed, sizeFreed,
+             suspendTime, markSweepTime);
+    } else {
+        totalTime = rootSuspendTime + rootTime + dirtySuspendTime + dirtyTime;
+        LOGD("%s freed %d objects / %zd bytes in (%ums) %ums (%ums) %ums",
+             GcReasonStr[reason], numFreed, sizeFreed,
+             rootSuspendTime, rootTime,
+             dirtySuspendTime, dirtyTime);
+    }
+    dvmLogGcStats(numFreed, sizeFreed, totalTime);
     if (gcHeap->ddmHpifWhen != 0) {
         LOGD_HEAP("Sending VM heap info to DDM\n");
         dvmDdmSendHeapInfo(gcHeap->ddmHpifWhen, false);
