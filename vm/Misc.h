@@ -231,6 +231,18 @@ INLINE u8 dvmGetRelativeTimeUsec(void) {
 }
 
 /*
+ * Get the current time, in milliseconds.  This is "relative" time,
+ * meaning it could be wall-clock time or a monotonic counter, and is
+ * only suitable for computing time deltas.  The value returned from
+ * this function is a u4 and should only be used for debugging
+ * messages.  TODO: make this value relative to the start-up time of
+ * the VM.
+ */
+INLINE u4 dvmGetRelativeTimeMsec(void) {
+    return (u4)(dvmGetRelativeTimeUsec() / 1000);
+}
+
+/*
  * Get the current per-thread CPU time.  This clock increases monotonically
  * when the thread is running, but not when it's sleeping or blocked on a
  * synchronization object.
