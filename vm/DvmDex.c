@@ -227,10 +227,14 @@ void dvmDexFileFree(DvmDex* pDvmDex)
  * This requires changing the access permissions to read-write, updating
  * the value, and then resetting the permissions.
  *
- * This does not make any synchronization guarantees.  It's important for the
- * caller(s) to work out mutual exclusion, at least on a page granularity,
- * to avoid a race where one threads sets read-write, another thread sets
- * read-only, and then the first thread does a write.
+ * We need to ensure mutual exclusion at a page granularity to avoid a race
+ * where one threads sets read-write, another thread sets read-only, and
+ * then the first thread does a write.  Since we don't do a lot of updates,
+ * and the window is small, we just use a lock across the entire DvmDex.
+ * We're only trying to make the page state change atomic; it's up to the
+ * caller to ensure that multiple threads aren't stomping on the same
+ * location (e.g. breakpoints and verifier/optimizer changes happening
+ * simultaneously).
  *
  * TODO: if we're back to the original state of the page, use
  * madvise(MADV_DONTNEED) to release the private/dirty copy.
@@ -244,6 +248,12 @@ bool dvmDexChangeDex1(DvmDex* pDvmDex, u1* addr, u1 newVal)
         return true;
     }
 
+    /*
+     * We're not holding this for long, so we don't bother with switching
+     * to VMWAIT.
+     */
+    dvmLockMutex(&pDvmDex->modLock);
+
     LOGV("+++ change byte at %p from 0x%02x to 0x%02x\n", addr, *addr, newVal);
     if (sysChangeMapAccess(addr, 1, true, &pDvmDex->memMap) != 0) {
         LOGD("NOTE: DEX page access change (->RW) failed\n");
@@ -256,6 +266,8 @@ bool dvmDexChangeDex1(DvmDex* pDvmDex, u1* addr, u1 newVal)
         LOGD("NOTE: DEX page access change (->RO) failed\n");
         /* expected on files mounted from FAT; keep going */
     }
+
+    dvmUnlockMutex(&pDvmDex->modLock);
 
     return true;
 }
@@ -273,6 +285,12 @@ bool dvmDexChangeDex2(DvmDex* pDvmDex, u2* addr, u2 newVal)
         return true;
     }
 
+    /*
+     * We're not holding this for long, so we don't bother with switching
+     * to VMWAIT.
+     */
+    dvmLockMutex(&pDvmDex->modLock);
+
     LOGV("+++ change 2byte at %p from 0x%04x to 0x%04x\n", addr, *addr, newVal);
     if (sysChangeMapAccess(addr, 2, true, &pDvmDex->memMap) != 0) {
         LOGD("NOTE: DEX page access change (->RW) failed\n");
@@ -285,6 +303,8 @@ bool dvmDexChangeDex2(DvmDex* pDvmDex, u2* addr, u2 newVal)
         LOGD("NOTE: DEX page access change (->RO) failed\n");
         /* expected on files mounted from FAT; keep going */
     }
+
+    dvmUnlockMutex(&pDvmDex->modLock);
 
     return true;
 }

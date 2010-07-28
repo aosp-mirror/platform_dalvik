@@ -128,6 +128,8 @@ typedef struct InterpState {
     const u1*       interpStackEnd;
     /* points at self->suspendCount */
     volatile int*   pSelfSuspendCount;
+    /* Biased base of GC's card table */
+    u1*             cardTable;
 #if defined(WITH_DEBUGGER)
     /* points at gDvm.debuggerActive, or NULL if debugger not enabled */
     volatile u1*    pDebuggerActive;
@@ -151,8 +153,8 @@ typedef struct InterpState {
      */
     unsigned char*     pJitProfTable;
     JitState           jitState;
-    const void*        jitResumeNPC;	// Native PC of compiled code
-    const u2*          jitResumeDPC;	// Dalvik PC corresponding to NPC
+    const void*        jitResumeNPC;    // Native PC of compiled code
+    const u2*          jitResumeDPC;    // Dalvik PC corresponding to NPC
     int                jitThreshold;
     /*
      * ppJitProfTable holds the address of gDvmJit.pJitProfTable, which

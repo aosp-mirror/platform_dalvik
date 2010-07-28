@@ -139,10 +139,10 @@ void dvmAddInitiatingLoader(ClassObject* clazz, Object* loader);
 bool dvmLoaderInInitiatingList(const ClassObject* clazz, const Object* loader);
 
 /*
- * Update method's "nativeFunc" and "insns" after native method resolution.
+ * Update method's "nativeFunc" and "insns".  If "insns" is NULL, the
+ * current method->insns value is not changed.
  */
-void dvmSetNativeFunc(const Method* method, DalvikBridgeFunc func,
-    const u2* insns);
+void dvmSetNativeFunc(Method* method, DalvikBridgeFunc func, const u2* insns);
 
 /*
  * Set the method's "registerMap" field.

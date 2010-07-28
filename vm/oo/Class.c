@@ -23,6 +23,7 @@
 
 #include "Dalvik.h"
 #include "libdex/DexClass.h"
+#include "analysis/Optimize.h"
 
 #include <stdlib.h>
 #include <stddef.h>
@@ -1291,8 +1292,11 @@ static ClassObject* findClassFromLoaderNoInit(const char* descriptor,
         dvmReleaseTrackedAlloc(excep, self);
         clazz = NULL;
         goto bail;
-    } else {
-        assert(clazz != NULL);
+    } else if (clazz == NULL) {
+        LOGW("ClassLoader returned NULL w/o exception pending\n");
+        dvmThrowException("Ljava/lang/NullPointerException;",
+            "ClassLoader returned null");
+        goto bail;
     }
 
     dvmAddInitiatingLoader(clazz, loader);
@@ -1955,11 +1959,9 @@ void dvmFreeClassInnards(ClassObject* clazz)
     } while (0)
 
     /* arrays just point at Object's vtable; don't free vtable in this case.
-     * dvmIsArrayClass() checks clazz->descriptor, so we have to do this check
-     * before freeing the name.
      */
     clazz->vtableCount = -1;
-    if (dvmIsArrayClass(clazz)) {
+    if (clazz->vtable == gDvm.classJavaLangObject->vtable) {
         clazz->vtable = NULL;
     } else {
         NULL_AND_LINEAR_FREE(clazz->vtable);
@@ -2369,6 +2371,11 @@ static bool precacheReferenceOffsets(ClassObject* clazz)
         dvmFindFieldOffset(gDvm.classJavaLangRefReference,
                 "queueNext", "Ljava/lang/ref/Reference;");
     assert(gDvm.offJavaLangRefReference_queueNext >= 0);
+
+    gDvm.offJavaLangRefReference_pendingNext =
+        dvmFindFieldOffset(gDvm.classJavaLangRefReference,
+                "pendingNext", "Ljava/lang/ref/Reference;");
+    assert(gDvm.offJavaLangRefReference_pendingNext >= 0);
 
     /* enqueueInternal() is private and thus a direct method. */
     meth = dvmFindDirectMethodByDescriptor(clazz, "enqueueInternal", "()Z");
@@ -4284,9 +4291,9 @@ bool dvmInitClass(ClassObject* clazz)
 verify_failed:
             dvmThrowExceptionWithClassMessage("Ljava/lang/VerifyError;",
                 clazz->descriptor);
-            dvmSetFieldObject((Object *)clazz,
-                              offsetof(ClassObject, verifyErrorClass),
-                              (Object *)dvmGetException(self)->clazz);
+            dvmSetFieldObject((Object*) clazz,
+                offsetof(ClassObject, verifyErrorClass),
+                (Object*) dvmGetException(self)->clazz);
             clazz->status = CLASS_ERROR;
             goto bail_unlock;
         }
@@ -4295,8 +4302,20 @@ verify_failed:
     }
 noverify:
 
+    /*
+     * We need to ensure that certain instructions, notably accesses to
+     * volatile fields, are replaced before any code is executed.  This
+     * must happen even if DEX optimizations are disabled.
+     */
+    if (!IS_CLASS_FLAG_SET(clazz, CLASS_ISOPTIMIZED)) {
+        LOGV("+++ late optimize on %s (pv=%d)\n",
+            clazz->descriptor, IS_CLASS_FLAG_SET(clazz, CLASS_ISPREVERIFIED));
+        dvmOptimizeClass(clazz, true);
+        SET_CLASS_FLAG(clazz, CLASS_ISOPTIMIZED);
+    }
+
 #ifdef WITH_DEBUGGER
-    /* update instruction stream now that the verifier is done */
+    /* update instruction stream now that verification + optimization is done */
     dvmFlushBreakpoints(clazz);
 #endif
 
@@ -4459,7 +4478,7 @@ noverify:
          * need to throw an ExceptionInInitializerError, but we want to
          * tuck the original exception into the "cause" field.
          */
-        LOGW("Exception %s thrown during %s.<clinit>\n",
+        LOGW("Exception %s thrown while initializing %s\n",
             (dvmGetException(self)->clazz)->descriptor, clazz->descriptor);
         throwClinitError();
         //LOGW("+++ replaced\n");
@@ -4508,19 +4527,47 @@ bail_unlock:
 
 /*
  * Replace method->nativeFunc and method->insns with new values.  This is
- * performed on resolution of a native method.
+ * commonly performed after successful resolution of a native method.
+ *
+ * There are three basic states:
+ *  (1) (initial) nativeFunc = dvmResolveNativeMethod, insns = NULL
+ *  (2) (internal native) nativeFunc = <impl>, insns = NULL
+ *  (3) (JNI) nativeFunc = JNI call bridge, insns = <impl>
+ *
+ * nativeFunc must never be NULL for a native method.
+ *
+ * The most common transitions are (1)->(2) and (1)->(3).  The former is
+ * atomic, since only one field is updated; the latter is not, but since
+ * dvmResolveNativeMethod ignores the "insns" field we just need to make
+ * sure the update happens in the correct order.
+ *
+ * A transition from (2)->(1) would work fine, but (3)->(1) will not,
+ * because both fields change.  If we did this while a thread was executing
+ * in the call bridge, we could null out the "insns" field right before
+ * the bridge tried to call through it.  So, once "insns" is set, we do
+ * not allow it to be cleared.  A NULL value for the "insns" argument is
+ * treated as "do not change existing value".
  */
-void dvmSetNativeFunc(const Method* method, DalvikBridgeFunc func,
+void dvmSetNativeFunc(Method* method, DalvikBridgeFunc func,
     const u2* insns)
 {
     ClassObject* clazz = method->clazz;
+
+    assert(func != NULL);
 
     /* just open up both; easier that way */
     dvmLinearReadWrite(clazz->classLoader, clazz->virtualMethods);
     dvmLinearReadWrite(clazz->classLoader, clazz->directMethods);
 
-    ((Method*)method)->nativeFunc = func;
-    ((Method*)method)->insns = insns;
+    if (insns != NULL) {
+        /* update both, ensuring that "insns" is observed first */
+        method->insns = insns;
+        android_atomic_release_store((int32_t) func,
+            (void*) &method->nativeFunc);
+    } else {
+        /* only update nativeFunc */
+        method->nativeFunc = func;
+    }
 
     dvmLinearReadOnly(clazz->classLoader, clazz->virtualMethods);
     dvmLinearReadOnly(clazz->classLoader, clazz->directMethods);

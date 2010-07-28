@@ -2946,6 +2946,9 @@ static bool replaceFailingInstruction(const Method* meth, InsnFlags* insnFlags,
     u2 oldInsn = *oldInsns;
     bool result = false;
 
+    if (gDvm.optimizing)
+        LOGD("Weird: RFI during dexopt?");
+
     //LOGD("  was 0x%04x\n", oldInsn);
     u2* newInsns = (u2*) meth->insns + insnIdx;
 
@@ -3043,50 +3046,6 @@ static bool replaceFailingInstruction(const Method* meth, InsnFlags* insnFlags,
 
 bail:
     return result;
-}
-
-/*
- * Replace {iget,iput,sget,sput}-wide with the -wide-volatile form.
- *
- * If this is called during dexopt, we can modify the instruction in
- * place.  If this happens during just-in-time verification, we need to
- * use the DEX read/write page feature.
- *
- * NOTE:
- * This shouldn't really be tied to verification.  It ought to be a
- * separate pass that is run before or after the verifier.  However, that
- * requires a bunch of extra code, and the only advantage of doing so is
- * that the feature isn't disabled when verification is turned off.  At
- * some point we may need to revisit this choice.
- */
-static void replaceVolatileInstruction(const Method* meth, InsnFlags* insnFlags,
-    int insnIdx)
-{
-    u2* oldInsns = (u2*)meth->insns + insnIdx;
-    u2 oldInsn = *oldInsns;
-    u2 newVal;
-
-    switch (oldInsn & 0xff) {
-    case OP_IGET_WIDE:  newVal = OP_IGET_WIDE_VOLATILE;     break;
-    case OP_IPUT_WIDE:  newVal = OP_IPUT_WIDE_VOLATILE;     break;
-    case OP_SGET_WIDE:  newVal = OP_SGET_WIDE_VOLATILE;     break;
-    case OP_SPUT_WIDE:  newVal = OP_SPUT_WIDE_VOLATILE;     break;
-    default:
-        LOGE("wide-volatile op mismatch (0x%x)\n", oldInsn);
-        dvmAbort();
-        return;     // in-lieu-of noreturn attribute
-    }
-
-    /* merge new opcode into 16-bit code unit */
-    newVal |= (oldInsn & 0xff00);
-
-    if (gDvm.optimizing) {
-        /* dexopt time, alter the output */
-        *oldInsns = newVal;
-    } else {
-        /* runtime, make the page read/write */
-        dvmDexChangeDex2(meth->clazz->pDvmDex, oldInsns, newVal);
-    }
 }
 
 
@@ -4539,13 +4498,6 @@ iget_1nr_common:
                 setRegisterType(workRegs, insnRegCount, decInsn.vA,
                     dstType, &failure);
             }
-            if (VERIFY_OK(failure)) {
-                if (decInsn.opCode != OP_IGET_WIDE_VOLATILE &&
-                    dvmIsVolatileField(&instField->field))
-                {
-                    replaceVolatileInstruction(meth, insnFlags, insnIdx);
-                }
-            }
         }
         break;
     case OP_IGET_OBJECT:
@@ -4679,13 +4631,6 @@ iput_1nr_common:
                         instField->field.name);
                 failure = VERIFY_ERROR_GENERIC;
                 break;
-            }
-            if (VERIFY_OK(failure)) {
-                if (decInsn.opCode != OP_IPUT_WIDE_VOLATILE &&
-                    dvmIsVolatileField(&instField->field))
-                {
-                    replaceVolatileInstruction(meth, insnFlags, insnIdx);
-                }
             }
         }
         break;
@@ -4826,13 +4771,6 @@ sget_1nr_common:
                 setRegisterType(workRegs, insnRegCount, decInsn.vA,
                     dstType, &failure);
             }
-            if (VERIFY_OK(failure)) {
-                if (decInsn.opCode != OP_SGET_WIDE_VOLATILE &&
-                    dvmIsVolatileField(&staticField->field))
-                {
-                    replaceVolatileInstruction(meth, insnFlags, insnIdx);
-                }
-            }
         }
         break;
     case OP_SGET_OBJECT:
@@ -4954,13 +4892,6 @@ sput_1nr_common:
                         staticField->field.name);
                 failure = VERIFY_ERROR_GENERIC;
                 break;
-            }
-            if (VERIFY_OK(failure)) {
-                if (decInsn.opCode != OP_SPUT_WIDE_VOLATILE &&
-                    dvmIsVolatileField(&staticField->field))
-                {
-                    replaceVolatileInstruction(meth, insnFlags, insnIdx);
-                }
             }
         }
         break;

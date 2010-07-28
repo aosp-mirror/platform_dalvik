@@ -7,7 +7,7 @@
     /*
      * General 32-bit instance field put.
      *
-     * for: iput, iput-object, iput-boolean, iput-byte, iput-char, iput-short
+     * for: iput, iput-boolean, iput-byte, iput-char, iput-short
      */
     /* op vA, vB, field@CCCC */
     mov     r0, rINST, lsr #12          @ r0<- B

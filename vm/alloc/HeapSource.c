@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-#include <cutils/ashmem.h>
 #include <cutils/mspace.h>
 #include <limits.h>     // for INT_MAX
 #include <sys/mman.h>
@@ -285,8 +284,7 @@ ptr2heap(const HeapSource *hs, const void *ptr)
  *
  * These aren't exact, and should not be treated as such.
  */
-static inline void
-countAllocation(Heap *heap, const void *ptr, bool isObj)
+static void countAllocation(Heap *heap, const void *ptr, bool isObj)
 {
     HeapSource *hs;
 
@@ -474,7 +472,6 @@ dvmHeapSourceStartup(size_t startSize, size_t absoluteMaxSize)
     mspace msp;
     size_t length;
     void *base;
-    int fd, ret;
 
     assert(gHs == NULL);
 
@@ -489,17 +486,9 @@ dvmHeapSourceStartup(size_t startSize, size_t absoluteMaxSize)
      * among the heaps managed by the garbage collector.
      */
     length = ALIGN_UP_TO_PAGE_SIZE(absoluteMaxSize);
-    fd = ashmem_create_region("dalvik-heap", length);
-    if (fd == -1) {
+    base = dvmAllocRegion(length, PROT_NONE, "dalvik-heap");
+    if (base == NULL) {
         return NULL;
-    }
-    base = mmap(NULL, length, PROT_NONE, MAP_PRIVATE, fd, 0);
-    if (base == MAP_FAILED) {
-        return NULL;
-    }
-    ret = close(fd);
-    if (ret == -1) {
-        goto fail;
     }
 
     /* Create an unlocked dlmalloc mspace to use as
@@ -599,7 +588,9 @@ dvmHeapSourceStartupBeforeFork()
 
 void dvmHeapSourceThreadShutdown(void)
 {
-    gcDaemonShutdown();
+    if (gDvm.gcHeap != NULL) {
+        gcDaemonShutdown();
+    }
 }
 
 /*
@@ -625,6 +616,14 @@ dvmHeapSourceShutdown(GcHeap **gcHeap)
         gHs = NULL;
         *gcHeap = NULL;
     }
+}
+
+/*
+ * Gets the begining of the allocation for the HeapSource.
+ */
+void *dvmHeapSourceGetBase(void)
+{
+    return gHs->heapBase;
 }
 
 /*
@@ -689,7 +688,12 @@ static void aliasBitmap(HeapBitmap *dst, HeapBitmap *src,
 
     dst->base = base;
     dst->max = max;
-    dst->bitsLen = HB_OFFSET_TO_BYTE_INDEX(max - base);
+    dst->bitsLen = HB_OFFSET_TO_BYTE_INDEX(max - base) + sizeof(dst->bits);
+    /* The exclusive limit from bitsLen is greater than the inclusive max. */
+    assert(base + HB_MAX_OFFSET(dst) > max);
+    /* The exclusive limit is at most one word of bits beyond max. */
+    assert((base + HB_MAX_OFFSET(dst)) - max <=
+           HB_OBJECT_ALIGNMENT * HB_BITS_PER_WORD);
     dst->allocLen = dst->bitsLen;
     offset = base - src->base;
     assert(HB_OFFSET_TO_MASK(offset) == 1 << 31);
@@ -714,7 +718,10 @@ void dvmHeapSourceGetObjectBitmaps(HeapBitmap liveBits[], HeapBitmap markBits[],
     assert(numHeaps == hs->numHeaps);
     for (i = 0; i < hs->numHeaps; ++i) {
         base = (uintptr_t)hs->heaps[i].base;
-        max = (uintptr_t)hs->heaps[i].limit - 1;
+        /* Using liveBits.max will include all the markBits as well. */
+        assert(hs->liveBits.max >= hs->markBits.max);
+        /* -1 because limit is exclusive but max is inclusive. */
+        max = MIN((uintptr_t)hs->heaps[i].limit - 1, hs->liveBits.max);
         aliasBitmap(&liveBits[i], &hs->liveBits, base, max);
         aliasBitmap(&markBits[i], &hs->markBits, base, max);
     }
@@ -760,7 +767,6 @@ void dvmMarkImmuneObjects(const char *immuneLimit)
     for (i = 1; i < gHs->numHeaps; ++i) {
         if (gHs->heaps[i].base < immuneLimit) {
             assert(gHs->heaps[i].limit <= immuneLimit);
-            LOGV("Copying markBits for immune heap %d", i);
             /* Compute the number of words to copy in the bitmap. */
             index = HB_OFFSET_TO_INDEX(
                 (uintptr_t)gHs->heaps[i].base - gHs->liveBits.base);
@@ -789,28 +795,41 @@ dvmHeapSourceAlloc(size_t n)
     HeapSource *hs = gHs;
     Heap *heap;
     void *ptr;
+    size_t allocated;
 
     HS_BOILERPLATE();
     heap = hs2heap(hs);
-
-    if (heap->bytesAllocated + n <= hs->softLimit) {
-        ptr = mspace_calloc(heap->msp, 1, n);
-        if (ptr != NULL) {
-            countAllocation(heap, ptr, true);
-            size_t allocated = heap->bytesAllocated - heap->prevBytesAllocated;
-            if (allocated > OCCUPANCY_THRESHOLD) {
-                if (hs->hasGcThread == true) {
-                    dvmSignalCond(&gHs->gcThreadCond);
-                }
-            }
-        }
-    } else {
-        /* This allocation would push us over the soft limit;
-         * act as if the heap is full.
+    if (heap->bytesAllocated + n > hs->softLimit) {
+        /*
+         * This allocation would push us over the soft limit; act as
+         * if the heap is full.
          */
         LOGV_HEAP("softLimit of %zd.%03zdMB hit for %zd-byte allocation\n",
-                FRACTIONAL_MB(hs->softLimit), n);
-        ptr = NULL;
+                  FRACTIONAL_MB(hs->softLimit), n);
+        return NULL;
+    }
+    ptr = mspace_calloc(heap->msp, 1, n);
+    if (ptr == NULL) {
+        return NULL;
+    }
+    countAllocation(heap, ptr, true);
+    /*
+     * Check to see if a concurrent GC should be initiated.
+     */
+    if (gDvm.gcHeap->gcRunning || !hs->hasGcThread) {
+        /*
+         * The garbage collector thread is already running or has yet
+         * to be started.  Do nothing.
+         */
+        return ptr;
+    }
+    allocated = heap->bytesAllocated - heap->prevBytesAllocated;
+    if (allocated > OCCUPANCY_THRESHOLD) {
+        /*
+         * We have exceeded the occupancy threshold.  Wake up the
+         * garbage collector.
+         */
+        dvmSignalCond(&gHs->gcThreadCond);
     }
     return ptr;
 }
@@ -1651,6 +1670,18 @@ dvmTrackExternalAllocation(size_t n)
     if (externalAlloc(hs, n, false)) {
         ret = true;
         goto out;
+    }
+
+    if (gDvm.gcHeap->gcRunning) {
+        /*
+         * The GC is concurrently tracing the heap.  Release the heap
+         * lock, wait for the GC to complete, and try again.
+         */
+        dvmWaitForConcurrentGcToComplete();
+        if (externalAlloc(hs, n, false)) {
+            ret = true;
+            goto out;
+        }
     }
 
     /* The "allocation" failed.  Free up some space by doing

@@ -320,11 +320,11 @@ static void Dalvik_java_lang_Class_getModifiers(const u4* args, JValue* pResult)
 }
 
 /*
- * public String getName()
+ * private native String getNameNative()
  *
  * Return the class' name.
  */
-static void Dalvik_java_lang_Class_getName(const u4* args, JValue* pResult)
+static void Dalvik_java_lang_Class_getNameNative(const u4* args, JValue* pResult)
 {
     ClassObject* clazz = (ClassObject*) args[0];
     const char* descriptor = clazz->descriptor;
@@ -772,8 +772,8 @@ const DalvikNativeMethod dvm_java_lang_Class[] = {
         Dalvik_java_lang_Class_getInterfaces },
     { "getModifiers",           "(Ljava/lang/Class;Z)I",
         Dalvik_java_lang_Class_getModifiers },
-    { "getName",                "()Ljava/lang/String;",
-        Dalvik_java_lang_Class_getName },
+    { "getNameNative",                "()Ljava/lang/String;",
+        Dalvik_java_lang_Class_getNameNative },
     { "getSuperclass",          "()Ljava/lang/Class;",
         Dalvik_java_lang_Class_getSuperclass },
     { "isAssignableFrom",       "(Ljava/lang/Class;)Z",

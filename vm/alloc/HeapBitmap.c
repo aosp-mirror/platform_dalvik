@@ -19,12 +19,6 @@
 #include "clz.h"
 #include <limits.h>     // for ULONG_MAX
 #include <sys/mman.h>   // for madvise(), mmap()
-#include <cutils/ashmem.h>
-
-#define HB_ASHMEM_NAME "dalvik-heap-bitmap"
-
-#define ALIGN_UP_TO_PAGE_SIZE(p) \
-    (((size_t)(p) + (SYSTEM_PAGE_SIZE - 1)) & ~(SYSTEM_PAGE_SIZE - 1))
 
 #define LIKELY(exp)     (__builtin_expect((exp) != 0, true))
 #define UNLIKELY(exp)   (__builtin_expect((exp) != 0, false))
@@ -40,40 +34,19 @@ dvmHeapBitmapInit(HeapBitmap *hb, const void *base, size_t maxSize,
 {
     void *bits;
     size_t bitsLen;
-    size_t allocLen;
-    int fd;
-    char nameBuf[ASHMEM_NAME_LEN] = HB_ASHMEM_NAME;
 
     assert(hb != NULL);
-
+    assert(name != NULL);
     bitsLen = HB_OFFSET_TO_INDEX(maxSize) * sizeof(*hb->bits);
-    allocLen = ALIGN_UP_TO_PAGE_SIZE(bitsLen);   // required by ashmem
-
-    if (name != NULL) {
-        snprintf(nameBuf, sizeof(nameBuf), HB_ASHMEM_NAME "/%s", name);
-    }
-    fd = ashmem_create_region(nameBuf, allocLen);
-    if (fd < 0) {
-        LOGE("Could not create %zu-byte ashmem region \"%s\" to cover "
-                "%zu-byte heap (%d)\n",
-                allocLen, nameBuf, maxSize, fd);
+    bits = dvmAllocRegion(bitsLen, PROT_READ | PROT_WRITE, name);
+    if (bits == NULL) {
+        LOGE("Could not mmap %zd-byte ashmem region '%s'", bitsLen, name);
         return false;
     }
-
-    bits = mmap(NULL, bitsLen, PROT_READ | PROT_WRITE, MAP_PRIVATE, fd, 0);
-    close(fd);
-    if (bits == MAP_FAILED) {
-        LOGE("Could not mmap %d-byte ashmem region \"%s\"\n",
-                bitsLen, nameBuf);
-        return false;
-    }
-
-    memset(hb, 0, sizeof(*hb));
     hb->bits = bits;
     hb->bitsLen = hb->allocLen = bitsLen;
     hb->base = (uintptr_t)base;
     hb->max = hb->base - 1;
-
     return true;
 }
 
@@ -195,7 +168,7 @@ dvmHeapBitmapXorWalk(const HeapBitmap *hb1, const HeapBitmap *hb2,
     /* First, walk along the section of the bitmaps that may be the same.
      */
     if (hb1->max >= hb1->base && hb2->max >= hb2->base) {
-        unsigned long int *p1, *p2;
+        unsigned long *p1, *p2;
         uintptr_t offset;
 
         offset = ((hb1->max < hb2->max) ? hb1->max : hb2->max) - hb1->base;
@@ -206,7 +179,7 @@ dvmHeapBitmapXorWalk(const HeapBitmap *hb1, const HeapBitmap *hb2,
         p2 = hb2->bits;
         for (i = 0; i <= index; i++) {
 //TODO: unroll this. pile up a few in locals?
-            unsigned long int diff = *p1++ ^ *p2++;
+            unsigned long diff = *p1++ ^ *p2++;
             DECODE_BITS(hb1, diff, false);
 //BUG: if the callback was called, either max could have changed.
         }
@@ -223,7 +196,7 @@ dvmHeapBitmapXorWalk(const HeapBitmap *hb1, const HeapBitmap *hb2,
      * set bits.
      */
 const HeapBitmap *longHb;
-unsigned long int *p;
+unsigned long *p;
 //TODO: may be the same size, in which case this is wasted work
     longHb = (hb1->max > hb2->max) ? hb1 : hb2;
     i = index;
@@ -236,11 +209,13 @@ unsigned long int *p;
     }
 
     if (pb > pointerBuf) {
-        /* Set the finger to the end of the heap (rather than longHb->max)
-         * so that the callback doesn't expect to be called again
-         * if it happens to change the current max.
+        /* Set the finger to the end of the heap (rather than
+         * longHb->max) so that the callback doesn't expect to be
+         * called again if it happens to change the current max.
          */
-        FLUSH_POINTERBUF(longHb->base + HB_MAX_OFFSET(longHb));
+        uintptr_t finalFinger = longHb->base + HB_MAX_OFFSET(longHb);
+        FLUSH_POINTERBUF(finalFinger);
+        assert(finalFinger > longHb->max);
     }
 
     return true;

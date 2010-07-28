@@ -928,6 +928,14 @@ retry:
              * value of the recursion count field.
              */
             obj->lock += 1 << LW_LOCK_COUNT_SHIFT;
+            if (LW_LOCK_COUNT(obj->lock) == LW_LOCK_COUNT_MASK) {
+                /*
+                 * The reacquisition limit has been reached.  Inflate
+                 * the lock so the next acquire will not overflow the
+                 * recursion count field.
+                 */
+                inflateMonitor(self, obj);
+            }
         } else if (LW_LOCK_OWNER(thin) == 0) {
             /*
              * The lock is unowned.  Install the thread id of the
@@ -2012,26 +2020,6 @@ static void removeCollectedObject(Object* obj)
     Monitor* mon;
 
     LOGVV("+++ collecting %p\n", obj);
-
-#if 0
-    /*
-     * We're currently running through the entire set of known monitors.
-     * This can be somewhat slow.  We may want to keep lists of parents
-     * in each child to speed up GC.
-     */
-    mon = gDvm.monitorList;
-    while (mon != NULL) {
-        Object* parent = mon->obj;
-        if (parent != NULL) {       /* value nulled for deleted entries */
-            if (objectInChildList(parent, obj)) {
-                LOGVV("removing child %p from parent %p\n", obj, parent);
-                unlinkParentFromChild(parent, obj);
-                mergeChildren(parent, obj);
-            }
-        }
-        mon = mon->next;
-    }
-#endif
 
     /*
      * For every parent of this object:

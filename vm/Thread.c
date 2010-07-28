@@ -1472,9 +1472,8 @@ bool dvmCreateInterpThread(Object* threadObj, int reqStackSize)
      */
     dvmUnlockThreadList();
 
-    int cc, oldStatus;
-    oldStatus = dvmChangeStatus(self, THREAD_VMWAIT);
-    cc = pthread_create(&threadHandle, &threadAttr, interpThreadStart,
+    ThreadStatus oldStatus = dvmChangeStatus(self, THREAD_VMWAIT);
+    int cc = pthread_create(&threadHandle, &threadAttr, interpThreadStart,
             newThread);
     oldStatus = dvmChangeStatus(self, oldStatus);
 
@@ -1850,7 +1849,7 @@ bool dvmCreateInternalThread(pthread_t* pHandle, const char* name,
      * need to initiate a GC.  We switch to VMWAIT while we pause.
      */
     Thread* self = dvmThreadSelf();
-    int oldStatus = dvmChangeStatus(self, THREAD_VMWAIT);
+    ThreadStatus oldStatus = dvmChangeStatus(self, THREAD_VMWAIT);
     dvmLockThreadList(self);
     while (createStatus == 0)
         pthread_cond_wait(&gDvm.threadStartCond, &gDvm.threadListLock);

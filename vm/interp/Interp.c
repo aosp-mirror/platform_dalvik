@@ -127,7 +127,7 @@ static void dvmBreakpointSetLock(BreakpointSet* pSet)
 {
     if (dvmTryLockMutex(&pSet->lock) != 0) {
         Thread* self = dvmThreadSelf();
-        int oldStatus = dvmChangeStatus(self, THREAD_VMWAIT);
+        ThreadStatus oldStatus = dvmChangeStatus(self, THREAD_VMWAIT);
         dvmLockMutex(&pSet->lock);
         dvmChangeStatus(self, oldStatus);
     }
@@ -706,8 +706,8 @@ void dvmDumpRegs(const Method* method, const u4* framePtr, bool inOnly)
                 break;
             }
             const char* name = "";
-            int j;
 #if 0   // "locals" structure has changed -- need to rewrite this
+            int j;
             DexFile* pDexFile = method->clazz->pDexFile;
             const DexCode* pDexCode = dvmGetMethodCode(method);
             int localsSize = dexGetLocalsSize(pDexFile, pDexCode);

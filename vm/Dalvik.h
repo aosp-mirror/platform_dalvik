@@ -55,6 +55,7 @@
 #include "oo/Array.h"
 #include "Exception.h"
 #include "alloc/Alloc.h"
+#include "alloc/CardTable.h"
 #include "alloc/HeapDebug.h"
 #include "alloc/HeapWorker.h"
 #include "alloc/GC.h"

@@ -1201,26 +1201,6 @@ GOTO_TARGET_DECL(exceptionThrown);
     }                                                                       \
     FINISH(2);
 
-/* File: c/OP_IGET_VOLATILE.c */
-HANDLE_IGET_X(OP_IGET_VOLATILE,         "-volatile", IntVolatile, )
-OP_END
-
-/* File: c/OP_IPUT_VOLATILE.c */
-HANDLE_IPUT_X(OP_IPUT_VOLATILE,         "-volatile", IntVolatile, )
-OP_END
-
-/* File: c/OP_SGET_VOLATILE.c */
-HANDLE_SGET_X(OP_SGET_VOLATILE,         "-volatile", IntVolatile, )
-OP_END
-
-/* File: c/OP_SPUT_VOLATILE.c */
-HANDLE_SPUT_X(OP_SPUT_VOLATILE,         "-volatile", IntVolatile, )
-OP_END
-
-/* File: c/OP_IGET_OBJECT_VOLATILE.c */
-HANDLE_IGET_X(OP_IGET_OBJECT_VOLATILE,  "-object-volatile", ObjectVolatile, _AS_OBJECT)
-OP_END
-
 /* File: c/OP_IGET_WIDE_VOLATILE.c */
 HANDLE_IGET_X(OP_IGET_WIDE_VOLATILE,    "-wide-volatile", LongVolatile, _WIDE)
 OP_END
@@ -1280,18 +1260,6 @@ HANDLE_OPCODE(OP_EXECUTE_INLINE_RANGE /*{vCCCC..v(CCCC+AA-1)}, inline@BBBB*/)
 #endif
     }
     FINISH(3);
-OP_END
-
-/* File: c/OP_IPUT_OBJECT_VOLATILE.c */
-HANDLE_IPUT_X(OP_IPUT_OBJECT_VOLATILE,  "-object-volatile", ObjectVolatile, _AS_OBJECT)
-OP_END
-
-/* File: c/OP_SGET_OBJECT_VOLATILE.c */
-HANDLE_SGET_X(OP_SGET_OBJECT_VOLATILE,  "-object-volatile", ObjectVolatile, _AS_OBJECT)
-OP_END
-
-/* File: c/OP_SPUT_OBJECT_VOLATILE.c */
-HANDLE_SPUT_X(OP_SPUT_OBJECT_VOLATILE,  "-object-volatile", ObjectVolatile, _AS_OBJECT)
 OP_END
 
 /* File: c/gotoTargets.c */
@@ -1804,7 +1772,6 @@ GOTO_TARGET(invokeSuperQuick, bool methodCallRange)
 GOTO_TARGET_END
 
 
-
     /*
      * General handling for return-void, return, and return-wide.  Put the
      * return value in "retval" before jumping here.
@@ -2032,6 +1999,7 @@ GOTO_TARGET(exceptionThrown)
 GOTO_TARGET_END
 
 
+
     /*
      * General handling for invoke-{virtual,super,direct,static,interface},
      * including "quick" variants.
@@ -2214,8 +2182,18 @@ GOTO_TARGET(invokeMethod, bool methodCallRange, const Method* _methodToCall,
             TRACE_METHOD_ENTER(self, methodToCall);
 #endif
 
-            ILOGD("> native <-- %s.%s %s", methodToCall->clazz->descriptor,
-                methodToCall->name, methodToCall->shorty);
+#if defined(WITH_JNI_TRACE)
+            bool trace = gDvm.jniTrace &&
+                    strstr(methodToCall->clazz->descriptor, gDvm.jniTrace);
+            if (trace) {
+                dvmLogNativeMethodEntry(methodToCall, newFp);
+            }
+            else
+#endif
+            {
+                ILOGD("> native <-- %s.%s %s", methodToCall->clazz->descriptor,
+                        methodToCall->name, methodToCall->shorty);
+            }
 
 #if defined(WITH_JIT)
             /* Allow the Jit to end any pending trace building */
@@ -2242,6 +2220,12 @@ GOTO_TARGET(invokeMethod, bool methodCallRange, const Method* _methodToCall,
             /* pop frame off */
             dvmPopJniLocals(self, newSaveArea);
             self->curFrame = fp;
+
+#if defined(WITH_JNI_TRACE)
+            if (trace) {
+                dvmLogNativeMethodExit(methodToCall, self, retval);
+            }
+#endif
 
             /*
              * If the native code threw an exception, or interpreted code

@@ -16,154 +16,193 @@
 
 #include "Dalvik.h"
 #include "alloc/clz.h"
+#include "alloc/HeapInternal.h"
 #include "alloc/Visit.h"
+#include "alloc/VisitInlines.h"
 
 /*
- * Visits the instance fields of a class or data object.
- */
-static void visitInstanceFields(Visitor *visitor, Object *obj, void *arg)
-{
-    assert(visitor != NULL);
-    assert(obj != NULL);
-    assert(obj->clazz != NULL);
-    LOGV("Entering visitInstanceFields(visitor=%p,obj=%p)", visitor, obj);
-    if (obj->clazz->refOffsets != CLASS_WALK_SUPER) {
-        size_t refOffsets = obj->clazz->refOffsets;
-        while (refOffsets != 0) {
-            size_t rshift = CLZ(refOffsets);
-            size_t offset = CLASS_OFFSET_FROM_CLZ(rshift);
-            Object **ref = BYTE_OFFSET(obj, offset);
-            (*visitor)(ref, arg);
-            refOffsets &= ~(CLASS_HIGH_BIT >> rshift);
-        }
-    } else {
-        ClassObject *clazz;
-        for (clazz = obj->clazz; clazz != NULL; clazz = clazz->super) {
-            InstField *field = clazz->ifields;
-            int i;
-            for (i = 0; i < clazz->ifieldRefCount; ++i, ++field) {
-                size_t offset = field->byteOffset;
-                Object **ref = BYTE_OFFSET(obj, offset);
-                (*visitor)(ref, arg);
-            }
-        }
-    }
-    LOGV("Exiting visitInstanceFields(visitor=%p,obj=%p)", visitor, obj);
-}
-
-/*
- * Visits the static fields of a class object.
- */
-static void visitStaticFields(Visitor *visitor, ClassObject *clazz, void *arg)
-{
-    int i;
-
-    assert(visitor != NULL);
-    assert(clazz != NULL);
-    for (i = 0; i < clazz->sfieldCount; ++i) {
-        char ch = clazz->sfields[i].field.signature[0];
-        if (ch == '[' || ch == 'L') {
-            (*visitor)(&clazz->sfields[i].value.l, arg);
-        }
-    }
-}
-
-/*
- * Visit the interfaces of a class object.
- */
-static void visitInterfaces(Visitor *visitor, ClassObject *clazz, void *arg)
-{
-    int i;
-
-    assert(visitor != NULL);
-    assert(clazz != NULL);
-    for (i = 0; i < clazz->interfaceCount; ++i) {
-        (*visitor)(&clazz->interfaces[i], arg);
-    }
-}
-
-/*
- * Visits all the references stored in a class object instance.
- */
-static void visitClassObject(Visitor *visitor, ClassObject *obj, void *arg)
-{
-    assert(visitor != NULL);
-    assert(obj != NULL);
-    LOGV("Entering visitClassObject(visitor=%p,obj=%p)", visitor, obj);
-    assert(!strcmp(obj->obj.clazz->descriptor, "Ljava/lang/Class;"));
-    (*visitor)(&obj->obj.clazz, arg);
-    if (IS_CLASS_FLAG_SET(obj, CLASS_ISARRAY)) {
-        (*visitor)(&obj->elementClass, arg);
-    }
-    if (obj->status > CLASS_IDX) {
-        (*visitor)(&obj->super, arg);
-    }
-    (*visitor)(&obj->classLoader, arg);
-    visitInstanceFields(visitor, (Object *)obj, arg);
-    visitStaticFields(visitor, obj, arg);
-    if (obj->status > CLASS_IDX) {
-        visitInterfaces(visitor, obj, arg);
-    }
-    LOGV("Exiting visitClassObject(visitor=%p,obj=%p)", visitor, obj);
-}
-
-/*
- * Visits the class object and, if the array is typed as an object
- * array, all of the array elements.
- */
-static void visitArrayObject(Visitor *visitor, Object *obj, void *arg)
-{
-    assert(visitor != NULL);
-    assert(obj != NULL);
-    assert(obj->clazz != NULL);
-    LOGV("Entering visitArrayObject(visitor=%p,obj=%p)", visitor, obj);
-    (*visitor)(&obj->clazz, arg);
-    if (IS_CLASS_FLAG_SET(obj->clazz, CLASS_ISOBJECTARRAY)) {
-        ArrayObject *array = (ArrayObject *)obj;
-        Object **contents = (Object **)array->contents;
-        size_t i;
-        for (i = 0; i < array->length; ++i) {
-            (*visitor)(&contents[i], arg);
-        }
-    }
-    LOGV("Exiting visitArrayObject(visitor=%p,obj=%p)", visitor, obj);
-}
-
-/*
- * Visits the class object and reference typed instance fields of a
- * data object.
- */
-static void visitDataObject(Visitor *visitor, Object *obj, void *arg)
-{
-    assert(visitor != NULL);
-    assert(obj != NULL);
-    assert(obj->clazz != NULL);
-    LOGV("Entering visitDataObject(visitor=%p,obj=%p)", visitor, obj);
-    (*visitor)(&obj->clazz, arg);
-    visitInstanceFields(visitor, obj, arg);
-    if (IS_CLASS_FLAG_SET(obj->clazz, CLASS_ISREFERENCE)) {
-        size_t offset = gDvm.offJavaLangRefReference_referent;
-        Object **ref = BYTE_OFFSET(obj, offset);
-        (*visitor)(ref, arg);
-    }
-    LOGV("Exiting visitDataObject(visitor=%p,obj=%p)", visitor, obj);
-}
-
-/*
- * Visits all of the reference stored in an object.
+ * Visits all of the reference locations in an object.
  */
 void dvmVisitObject(Visitor *visitor, Object *obj, void *arg)
 {
     assert(visitor != NULL);
     assert(obj != NULL);
     assert(obj->clazz != NULL);
-    LOGV("Entering dvmVisitObject(visitor=%p,obj=%p)", visitor, obj);
-    if (obj->clazz == gDvm.classJavaLangClass) {
-        visitClassObject(visitor, (ClassObject *)obj, arg);
-    } else if (IS_CLASS_FLAG_SET(obj->clazz, CLASS_ISARRAY)) {
-        visitArrayObject(visitor, obj, arg);
-    } else {
-        visitDataObject(visitor, obj, arg);
+    visitObject(visitor, obj, arg);
+}
+
+/*
+ * Applies a verification function to all present values in the hash table.
+ */
+static void visitHashTable(Visitor *visitor, HashTable *table, void *arg)
+{
+    int i;
+
+    assert(visitor != NULL);
+    assert(table != NULL);
+    dvmHashTableLock(table);
+    for (i = 0; i < table->tableSize; ++i) {
+        HashEntry *entry = &table->pEntries[i];
+        if (entry->data != NULL && entry->data != HASH_TOMBSTONE) {
+            (*visitor)(&entry->data, arg);
+        }
     }
-    LOGV("Exiting dvmVisitObject(visitor=%p,obj=%p)", visitor, obj);
+    dvmHashTableUnlock(table);
+}
+
+/*
+ * Visits all entries in the reference table.
+ */
+static void visitReferenceTable(Visitor *visitor, const ReferenceTable *table,
+                                void *arg)
+{
+    Object **entry;
+
+    assert(visitor != NULL);
+    assert(table != NULL);
+    for (entry = table->table; entry < table->nextEntry; ++entry) {
+        assert(entry != NULL);
+        (*visitor)(entry, arg);
+    }
+}
+
+/*
+ * Visits a large heap reference table.  These objects are list heads.
+ * As such, it is valid for table to be NULL.
+ */
+static void visitLargeHeapRefTable(Visitor *visitor, LargeHeapRefTable *table,
+                                   void *arg)
+{
+    assert(visitor != NULL);
+    for (; table != NULL; table = table->next) {
+        visitReferenceTable(visitor, &table->refs, arg);
+    }
+}
+
+/*
+ * Visits all stack slots. TODO: visit native methods.
+ */
+static void visitThreadStack(Visitor *visitor, Thread *thread, void *arg)
+{
+    const StackSaveArea *saveArea;
+    u4 *framePtr;
+
+    assert(visitor != NULL);
+    assert(thread != NULL);
+    framePtr = (u4 *)thread->curFrame;
+    for (; framePtr != NULL; framePtr = saveArea->prevFrame) {
+        Method *method;
+        saveArea = SAVEAREA_FROM_FP(framePtr);
+        method = (Method *)saveArea->method;
+        if (method != NULL && !dvmIsNativeMethod(method)) {
+            const RegisterMap* pMap = dvmGetExpandedRegisterMap(method);
+            const u1* regVector = NULL;
+            size_t i;
+
+            if (pMap != NULL) {
+                /* found map, get registers for this address */
+                int addr = saveArea->xtra.currentPc - method->insns;
+                regVector = dvmRegisterMapGetLine(pMap, addr);
+            }
+            if (regVector == NULL) {
+                /*
+                 * Either there was no register map or there is no
+                 * info for the current PC.  Perform a conservative
+                 * scan.
+                 */
+                for (i = 0; i < method->registersSize; ++i) {
+                    if (dvmIsValidObject((Object *)framePtr[i])) {
+                        (*visitor)(&framePtr[i], arg);
+                    }
+                }
+            } else {
+                /*
+                 * Precise scan.  v0 is at the lowest address on the
+                 * interpreted stack, and is the first bit in the
+                 * register vector, so we can walk through the
+                 * register map and memory in the same direction.
+                 *
+                 * A '1' bit indicates a live reference.
+                 */
+                u2 bits = 1 << 1;
+                for (i = 0; i < method->registersSize; ++i) {
+                    bits >>= 1;
+                    if (bits == 1) {
+                        /* set bit 9 so we can tell when we're empty */
+                        bits = *regVector++ | 0x0100;
+                    }
+                    if ((bits & 0x1) != 0) {
+                        /*
+                         * Register is marked as live, it's a valid root.
+                         */
+                        (*visitor)(&framePtr[i], arg);
+                    }
+                }
+                dvmReleaseRegisterMapLine(pMap, regVector);
+            }
+        }
+        /*
+         * Don't fall into an infinite loop if things get corrupted.
+         */
+        assert((uintptr_t)saveArea->prevFrame > (uintptr_t)framePtr ||
+               saveArea->prevFrame == NULL);
+    }
+}
+
+/*
+ * Visits all roots associated with a thread.
+ */
+static void visitThread(Visitor *visitor, Thread *thread, void *arg)
+{
+    assert(visitor != NULL);
+    assert(thread != NULL);
+    assert(thread->status != THREAD_RUNNING ||
+           thread->isSuspended ||
+           thread == dvmThreadSelf());
+    (*visitor)(&thread->threadObj, arg);
+    (*visitor)(&thread->exception, arg);
+    visitReferenceTable(visitor, &thread->internalLocalRefTable, arg);
+    visitReferenceTable(visitor, &thread->jniLocalRefTable, arg);
+    if (thread->jniMonitorRefTable.table) {
+        visitReferenceTable(visitor, &thread->jniMonitorRefTable, arg);
+    }
+    visitThreadStack(visitor, thread, arg);
+}
+
+/*
+ * Visits all threads on the thread list.
+ */
+static void visitThreads(Visitor *visitor, void *arg)
+{
+    Thread *thread;
+
+    assert(visitor != NULL);
+    dvmLockThreadList(dvmThreadSelf());
+    thread = gDvm.threadList;
+    while (thread) {
+        visitThread(visitor, thread, arg);
+        thread = thread->next;
+    }
+    dvmUnlockThreadList();
+}
+
+/*
+ * Visits roots.  TODO: visit all roots.
+ */
+void dvmVisitRoots(Visitor *visitor, void *arg)
+{
+    assert(visitor != NULL);
+    visitHashTable(visitor, gDvm.loadedClasses, arg);
+    visitHashTable(visitor, gDvm.dbgRegistry, arg);
+    visitHashTable(visitor, gDvm.internedStrings, arg);
+    visitHashTable(visitor, gDvm.literalStrings, arg);
+    visitReferenceTable(visitor, &gDvm.jniGlobalRefTable, arg);
+    visitReferenceTable(visitor, &gDvm.jniPinRefTable, arg);
+    visitLargeHeapRefTable(visitor, gDvm.gcHeap->referenceOperations, arg);
+    visitLargeHeapRefTable(visitor, gDvm.gcHeap->pendingFinalizationRefs, arg);
+    visitThreads(visitor, arg);
+    (*visitor)(&gDvm.outOfMemoryObj, arg);
+    (*visitor)(&gDvm.internalErrorObj, arg);
+    (*visitor)(&gDvm.noClassDefFoundErrorObj, arg);
+    /* TODO: visit cached global references. */
 }

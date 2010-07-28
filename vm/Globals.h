@@ -104,6 +104,7 @@ struct DvmGlobals {
     void        (*abortHook)(void);
 
     int         jniGrefLimit;       // 0 means no limit
+    char*       jniTrace;
     bool        reduceSignals;
     bool        noQuitHandler;
     bool        verifyDexChecksum;
@@ -123,6 +124,7 @@ struct DvmGlobals {
     bool        postVerify;
     bool        generateRegisterMaps;
     bool        concurrentMarkSweep;
+    bool        verifyCardTable;
 
     int         assertionCtrlCount;
     AssertionControl*   assertionCtrl;
@@ -176,7 +178,15 @@ struct DvmGlobals {
     /*
      * Interned strings.
      */
+
+    /* A mutex that guards access to the interned string tables. */
+    pthread_mutex_t internLock;
+
+    /* Hash table of strings interned by the user. */
     HashTable*  internedStrings;
+
+    /* Hash table of strings interned by the class loader. */
+    HashTable*  literalStrings;
 
     /*
      * Quick lookups for popular classes used internally.
@@ -277,6 +287,7 @@ struct DvmGlobals {
     int         offJavaLangRefReference_referent;
     int         offJavaLangRefReference_queue;
     int         offJavaLangRefReference_queueNext;
+    int         offJavaLangRefReference_pendingNext;
 
     /* method pointers - java.lang.ref.Reference */
     Method*     methJavaLangRefReference_enqueueInternal;
@@ -444,8 +455,17 @@ struct DvmGlobals {
      */
     pthread_mutex_t gcHeapLock;
 
+    /*
+     * Condition variable to queue threads waiting to retry an
+     * allocation.  Signaled after a concurrent GC is completed.
+     */
+    pthread_cond_t gcHeapCond;
+
     /* Opaque pointer representing the heap. */
     GcHeap*     gcHeap;
+
+    /* The card table base, modified as needed for marking cards. */
+    u1*         biasedCardTableBase;
 
     /*
      * Pre-allocated throwables.

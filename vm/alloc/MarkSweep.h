@@ -42,12 +42,14 @@ typedef struct {
     GcMarkStack stack;
     const char *immuneLimit;
     const void *finger;   // only used while scanning/recursing.
+    bool crossGen;        // used when scanning immune objects.
 } GcMarkContext;
 
 bool dvmHeapBeginMarkStep(GcMode mode);
 void dvmHeapMarkRootSet(void);
+void dvmHeapReMarkRootSet(void);
 void dvmHeapScanMarkedObjects(void);
-void dvmMarkDirtyObjects(void);
+void dvmHeapReScanMarkedObjects(void);
 void dvmHandleSoftRefs(Object **list);
 void dvmClearWhiteRefs(Object **list);
 void dvmHeapScheduleFinalizations(void);

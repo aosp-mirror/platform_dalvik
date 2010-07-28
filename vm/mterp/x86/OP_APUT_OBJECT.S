@@ -37,7 +37,15 @@
     UNSPILL(rPC)
     UNSPILL_TMP(%ecx)
     testl     %eax,%eax
+    GET_GLUE(%eax)
     je        common_errArrayStore
+    movl      offGlue_cardTable(%eax),%eax   # get card table base
+    movl      rINST_FULL,(%ecx)
+    FETCH_INST_WORD(2)
+    shrl      $$GC_CARD_SHIFT,%ecx           # convert addr to card number
+    movb      %al,(%eax,%ecx)                # mark card
+    ADVANCE_PC(2)
+    GOTO_NEXT
 
 .L${opcode}_skip_check:
     movl      rINST_FULL,(%ecx)

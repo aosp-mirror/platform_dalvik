@@ -83,4 +83,10 @@ typedef enum {
  */
 void dvmCollectGarbageInternal(bool clearSoftRefs, GcReason reason);
 
+/*
+ * Blocks the until the GC thread signals the completion of a
+ * concurrent GC.
+ */
+void dvmWaitForConcurrentGcToComplete(void);
+
 #endif  // _DALVIK_ALLOC_HEAP

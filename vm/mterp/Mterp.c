@@ -76,6 +76,7 @@ bool dvmMterpStd(Thread* self, InterpState* glue)
 
     glue->interpStackEnd = self->interpStackEnd;
     glue->pSelfSuspendCount = &self->suspendCount;
+    glue->cardTable = gDvm.biasedCardTableBase;
 #if defined(WITH_JIT)
     glue->pJitProfTable = gDvmJit.pProfTable;
     glue->ppJitProfTable = &gDvmJit.pProfTable;

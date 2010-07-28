@@ -26,7 +26,11 @@
 #include <time.h>
 #include <sys/time.h>
 #include <fcntl.h>
+#include <cutils/ashmem.h>
+#include <sys/mman.h>
 
+#define ALIGN_UP_TO_PAGE_SIZE(p) \
+    (((size_t)(p) + (SYSTEM_PAGE_SIZE - 1)) & ~(SYSTEM_PAGE_SIZE - 1))
 
 /*
  * Print a hex dump in this format:
@@ -686,3 +690,28 @@ size_t strlcpy(char *dst, const char *src, size_t size) {
     return srcLength;
 }
 #endif
+
+/*
+ *  Allocates a memory region using ashmem and mmap, initialized to
+ *  zero.  Actual allocation rounded up to page multiple.  Returns
+ *  NULL on failure.
+ */
+void *dvmAllocRegion(size_t size, int prot, const char *name) {
+    void *base;
+    int fd, ret;
+
+    size = ALIGN_UP_TO_PAGE_SIZE(size);
+    fd = ashmem_create_region(name, size);
+    if (fd == -1) {
+        return NULL;
+    }
+    base = mmap(NULL, size, prot, MAP_PRIVATE, fd, 0);
+    ret = close(fd);
+    if (base == MAP_FAILED) {
+        return NULL;
+    }
+    if (ret == -1) {
+        return NULL;
+    }
+    return base;
+}

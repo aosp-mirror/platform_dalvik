@@ -29,7 +29,7 @@ void dvmFreeInlineSubsTable(InlineSub* inlineSubs);
 /*
  * Entry point from DEX preparation.
  */
-void dvmOptimizeClass(ClassObject* clazz);
+void dvmOptimizeClass(ClassObject* clazz, bool essentialOnly);
 
 /*
  * Abbreviated resolution functions, for use by optimization and verification

@@ -744,7 +744,7 @@ void dvmPrintExceptionStackTrace(void)
     }
 
     if (self->exception != NULL) {
-        LOGI("NOTE: exception thrown while printing stack trace: %s\n",
+        LOGW("NOTE: exception thrown while printing stack trace: %s\n",
             self->exception->clazz->descriptor);
     }
 

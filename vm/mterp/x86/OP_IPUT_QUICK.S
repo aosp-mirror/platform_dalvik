@@ -1,6 +1,6 @@
 %verify "executed"
 %verify "null object"
-    /* For: iput-quick, iput-object-quick */
+    /* For: iput-quick */
     /* op vA, vB, offset@CCCC */
     movzbl    rINST_HI,%ecx             # ecx<- BA
     sarl      $$4,%ecx                  # ecx<- B

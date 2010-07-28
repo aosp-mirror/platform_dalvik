@@ -622,9 +622,20 @@ typedef enum ArmOpCode {
                                   rd[11-8] imm2[7-6] [0] msb[4-0] */
     kThumb2Bfc,          /* bfc [11110011011011110] [0] imm3[14-12]
                                   rd[11-8] imm2[7-6] [0] msb[4-0] */
+    kThumb2Dmb,          /* dmb [1111001110111111100011110101] option[3-0] */
 
     kArmLast,
 } ArmOpCode;
+
+/* DMB option encodings */
+typedef enum ArmOpDmbOptions {
+    kSY = 0xf,
+    kST = 0xe,
+    kISH = 0xb,
+    kISHST = 0xa,
+    kNSH = 0x7,
+    kNSHST = 0x6
+} ArmOpDmbOptions;
 
 /* Bit flags describing the behavior of each native opcode */
 typedef enum ArmOpFeatureFlags {

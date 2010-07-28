@@ -19,8 +19,20 @@
 
 #include "Dalvik.h"
 
-typedef void Visitor(void *obj, void *arg);
+/*
+ * Callback invoked with the address of a reference and a user
+ * supplied context argument.
+ */
+typedef void Visitor(void *addr, void *arg);
 
+/*
+ * Visits references in an object.
+ */
 void dvmVisitObject(Visitor *visitor, Object *obj, void *arg);
+
+/*
+ * Visits references in the root set.
+ */
+void dvmVisitRoots(Visitor *visitor, void *arg);
 
 #endif /* _DALVIK_ALLOC_VISIT */

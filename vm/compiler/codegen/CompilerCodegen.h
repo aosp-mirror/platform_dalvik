@@ -61,4 +61,7 @@ bool dvmCompilerArchVariantInit(void);
 /* Implemented in codegen/<target>/<target_variant>/ArchVariant.c */
 int dvmCompilerTargetOptHint(int key);
 
+/* Implemented in codegen/<target>/<target_variant>/ArchVariant.c */
+void dvmCompilerGenMemBarrier(CompilationUnit *cUnit);
+
 #endif /* _DALVIK_VM_COMPILERCODEGEN_H_ */

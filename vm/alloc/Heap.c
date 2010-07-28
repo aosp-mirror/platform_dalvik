@@ -25,6 +25,7 @@
 #include "alloc/DdmHeap.h"
 #include "alloc/HeapSource.h"
 #include "alloc/MarkSweep.h"
+#include "alloc/Visit.h"
 
 #include "utils/threads.h"      // need Android thread priorities
 #define kInvalidPriority        10000
@@ -84,6 +85,11 @@ bool dvmHeapStartup()
     gcHeap->pendingFinalizationRefs = NULL;
     gcHeap->referenceOperations = NULL;
 
+    if (!dvmCardTableStartup()) {
+        LOGE_HEAP("card table startup failed.");
+        return false;
+    }
+
     /* Initialize the HeapWorker locks and other state
      * that the GC uses.
      */
@@ -94,10 +100,6 @@ bool dvmHeapStartup()
 
 bool dvmHeapStartupAfterZygote(void)
 {
-    /* Update our idea of the last GC start time so that we
-     * don't use the last time that Zygote happened to GC.
-     */
-    gDvm.gcHeap->gcStartTime = dvmGetRelativeTimeUsec();
     return dvmHeapSourceStartupAfterZygote();
 }
 
@@ -105,10 +107,10 @@ void dvmHeapShutdown()
 {
 //TODO: make sure we're locked
     if (gDvm.gcHeap != NULL) {
-        /* Tables are allocated on the native heap;
-         * they need to be cleaned up explicitly.
-         * The process may stick around, so we don't
-         * want to leak any native memory.
+        dvmCardTableShutdown();
+         /* Tables are allocated on the native heap; they need to be
+         * cleaned up explicitly.  The process may stick around, so we
+         * don't want to leak any native memory.
          */
         dvmHeapFreeLargeTable(gDvm.gcHeap->finalizableRefs);
         gDvm.gcHeap->finalizableRefs = NULL;
@@ -119,10 +121,9 @@ void dvmHeapShutdown()
         dvmHeapFreeLargeTable(gDvm.gcHeap->referenceOperations);
         gDvm.gcHeap->referenceOperations = NULL;
 
-        /* Destroy the heap.  Any outstanding pointers
-         * will point to unmapped memory (unless/until
-         * someone else maps it).  This frees gDvm.gcHeap
-         * as a side-effect.
+        /* Destroy the heap.  Any outstanding pointers will point to
+         * unmapped memory (unless/until someone else maps it).  This
+         * frees gDvm.gcHeap as a side-effect.
          */
         dvmHeapSourceShutdown(&gDvm.gcHeap);
     }
@@ -166,16 +167,9 @@ bool dvmLockHeap()
         ThreadStatus oldStatus;
 
         self = dvmThreadSelf();
-        if (self != NULL) {
-            oldStatus = dvmChangeStatus(self, THREAD_VMWAIT);
-        } else {
-            LOGI("ODD: waiting on heap lock, no self\n");
-            oldStatus = -1; // shut up gcc
-        }
+        oldStatus = dvmChangeStatus(self, THREAD_VMWAIT);
         dvmLockMutex(&gDvm.gcHeapLock);
-        if (self != NULL) {
-            dvmChangeStatus(self, oldStatus);
-        }
+        dvmChangeStatus(self, oldStatus);
     }
 
     return true;
@@ -285,9 +279,25 @@ static void *tryMalloc(size_t size)
         return ptr;
     }
 
-    /* The allocation failed.  Free up some space by doing
-     * a full garbage collection.  This may grow the heap
-     * if the live set is sufficiently large.
+    /*
+     * The allocation failed.  If the GC is running, block until it
+     * completes and retry.
+     */
+    if (gDvm.gcHeap->gcRunning) {
+        /*
+         * The GC is concurrently tracing the heap.  Release the heap
+         * lock, wait for the GC to complete, and retrying allocating.
+         */
+        dvmWaitForConcurrentGcToComplete();
+        ptr = dvmHeapSourceAlloc(size);
+        if (ptr != NULL) {
+            return ptr;
+        }
+    }
+    /*
+     * Another failure.  Our thread was starved or there may be too
+     * many live objects.  Try a foreground GC.  This will have no
+     * effect if the concurrent GC is already running.
      */
     gcForMalloc(false);
     ptr = dvmHeapSourceAlloc(size);
@@ -573,11 +583,10 @@ size_t dvmObjectSizeInHeap(const Object *obj)
 /*
  * Scan every live object in the heap, holding the locks.
  */
-static void verifyHeap()
+static void verifyHeap(void)
 {
-    // TODO: check the locks.
-    HeapBitmap *liveBits = dvmHeapSourceGetLiveBits();
-    dvmVerifyBitmap(liveBits);
+    dvmVerifyRoots();
+    dvmVerifyBitmap(dvmHeapSourceGetLiveBits());
 }
 
 /*
@@ -597,9 +606,9 @@ static void verifyHeap()
 void dvmCollectGarbageInternal(bool clearSoftRefs, GcReason reason)
 {
     GcHeap *gcHeap = gDvm.gcHeap;
-    u8 now;
-    s8 timeSinceLastGc;
-    s8 gcElapsedTime;
+    u4 suspendStart, totalTime;
+    u4 rootStart, rootEnd, rootTime, rootSuspendTime;
+    u4 dirtyStart, dirtyEnd, dirtyTime, dirtySuspendTime;
     int numFreed;
     size_t sizeFreed;
     GcMode gcMode;
@@ -612,19 +621,13 @@ void dvmCollectGarbageInternal(bool clearSoftRefs, GcReason reason)
         LOGW_HEAP("Attempted recursive GC\n");
         return;
     }
+
     gcMode = (reason == GC_FOR_MALLOC) ? GC_PARTIAL : GC_FULL;
     gcHeap->gcRunning = true;
-    now = dvmGetRelativeTimeUsec();
-    if (gcHeap->gcStartTime != 0) {
-        timeSinceLastGc = (now - gcHeap->gcStartTime) / 1000;
-    } else {
-        timeSinceLastGc = 0;
-    }
-    gcHeap->gcStartTime = now;
 
-    LOGV_HEAP("%s starting -- suspending threads\n", GcReasonStr[reason]);
-
+    suspendStart = dvmGetRelativeTimeMsec();
     dvmSuspendAllThreads(SUSPEND_FOR_GC);
+    rootStart = dvmGetRelativeTimeMsec();
 
     /*
      * If we are not marking concurrently raise the priority of the
@@ -729,14 +732,6 @@ void dvmCollectGarbageInternal(bool clearSoftRefs, GcReason reason)
     }
 #endif
 
-    if (timeSinceLastGc < 10000) {
-        LOGD_HEAP("GC! (%dms since last GC)\n",
-                (int)timeSinceLastGc);
-    } else {
-        LOGD_HEAP("GC! (%d sec since last GC)\n",
-                (int)(timeSinceLastGc / 1000));
-    }
-
     /* Set up the marking context.
      */
     if (!dvmHeapBeginMarkStep(gcMode)) {
@@ -758,10 +753,15 @@ void dvmCollectGarbageInternal(bool clearSoftRefs, GcReason reason)
 
     if (reason == GC_CONCURRENT) {
         /*
-         * We are performing a concurrent collection.  Resume all
-         * threads for the duration of the recursive mark.
+         * Resume threads while tracing from the roots.  We unlock the
+         * heap to allow mutator threads to allocate from free space.
          */
+        rootEnd = dvmGetRelativeTimeMsec();
+        dvmClearCardTable();
+        dvmUnlockHeap();
         dvmResumeAllThreads(SUSPEND_FOR_GC);
+        rootSuspendTime = rootStart - suspendStart;
+        rootTime = rootEnd - rootStart;
     }
 
     /* Recursively mark any objects that marked objects point to strongly.
@@ -773,20 +773,23 @@ void dvmCollectGarbageInternal(bool clearSoftRefs, GcReason reason)
 
     if (reason == GC_CONCURRENT) {
         /*
-         * We are performing a concurrent collection.  Perform the
-         * final thread suspension.
+         * Re-acquire the heap lock and perform the final thread
+         * suspension.
          */
+        dvmLockHeap();
+        suspendStart = dvmGetRelativeTimeMsec();
         dvmSuspendAllThreads(SUSPEND_FOR_GC);
+        dirtyStart = dvmGetRelativeTimeMsec();
         /*
          * As no barrier intercepts root updates, we conservatively
          * assume all roots may be gray and re-mark them.
          */
-        dvmHeapMarkRootSet();
+        dvmHeapReMarkRootSet();
         /*
          * Recursively mark gray objects pointed to by the roots or by
          * heap objects dirtied during the concurrent mark.
          */
-        dvmMarkDirtyObjects();
+        dvmHeapReScanMarkedObjects();
     }
 
     /* All strongly-reachable objects have now been marked.
@@ -891,7 +894,23 @@ void dvmCollectGarbageInternal(bool clearSoftRefs, GcReason reason)
     dvmCompilerPerformSafePointChecks();
 #endif
 
+    dirtyEnd = dvmGetRelativeTimeMsec();
+
+    if (reason == GC_CONCURRENT) {
+        dirtySuspendTime = dirtyStart - suspendStart;
+        dirtyTime = dirtyEnd - dirtyStart;
+    }
+
     dvmResumeAllThreads(SUSPEND_FOR_GC);
+
+    if (reason == GC_CONCURRENT) {
+        /*
+         * Wake-up any threads that blocked after a failed allocation
+         * request.
+         */
+        dvmBroadcastCond(&gDvm.gcHeapCond);
+    }
+
     if (reason != GC_CONCURRENT) {
         if (oldThreadPriority != kInvalidPriority) {
             if (setpriority(PRIO_PROCESS, 0, oldThreadPriority) != 0) {
@@ -906,11 +925,22 @@ void dvmCollectGarbageInternal(bool clearSoftRefs, GcReason reason)
             }
         }
     }
-    gcElapsedTime = (dvmGetRelativeTimeUsec() - gcHeap->gcStartTime) / 1000;
-    LOGD("%s freed %d objects / %zd bytes in %dms\n",
-         GcReasonStr[reason], numFreed, sizeFreed, (int)gcElapsedTime);
-    dvmLogGcStats(numFreed, sizeFreed, gcElapsedTime);
 
+    if (reason != GC_CONCURRENT) {
+        u4 suspendTime = rootStart - suspendStart;
+        u4 markSweepTime = dirtyEnd - rootStart;
+        totalTime = suspendTime + markSweepTime;
+        LOGD("%s freed %d objects / %zd bytes in (%ums) %ums",
+             GcReasonStr[reason], numFreed, sizeFreed,
+             suspendTime, markSweepTime);
+    } else {
+        totalTime = rootSuspendTime + rootTime + dirtySuspendTime + dirtyTime;
+        LOGD("%s freed %d objects / %zd bytes in (%ums) %ums (%ums) %ums",
+             GcReasonStr[reason], numFreed, sizeFreed,
+             rootSuspendTime, rootTime,
+             dirtySuspendTime, dirtyTime);
+    }
+    dvmLogGcStats(numFreed, sizeFreed, totalTime);
     if (gcHeap->ddmHpifWhen != 0) {
         LOGD_HEAP("Sending VM heap info to DDM\n");
         dvmDdmSendHeapInfo(gcHeap->ddmHpifWhen, false);
@@ -923,6 +953,16 @@ void dvmCollectGarbageInternal(bool clearSoftRefs, GcReason reason)
         LOGD_HEAP("Dumping native heap to DDM\n");
         dvmDdmSendHeapSegments(false, true);
     }
+}
+
+void dvmWaitForConcurrentGcToComplete(void)
+{
+    Thread *self = dvmThreadSelf();
+    ThreadStatus oldStatus;
+    assert(self != NULL);
+    oldStatus = dvmChangeStatus(self, THREAD_VMWAIT);
+    dvmWaitCond(&gDvm.gcHeapCond, &gDvm.gcHeapLock);
+    dvmChangeStatus(self, oldStatus);
 }
 
 #if WITH_HPROF

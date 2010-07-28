@@ -74,6 +74,11 @@ void dvmHeapSourceGetObjectBitmaps(HeapBitmap objBits[], HeapBitmap markBits[],
 HeapBitmap *dvmHeapSourceGetLiveBits(void);
 
 /*
+ * Gets the begining of the allocation for the HeapSource.
+ */
+void *dvmHeapSourceGetBase(void);
+
+/*
  * Returns the requested value. If the per-heap stats are requested, fill
  * them as well.
  */

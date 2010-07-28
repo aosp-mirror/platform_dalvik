@@ -16,6 +16,7 @@
     <li><a href="#dp">Deadlock Prediction</a>
     <li><a href="#stackdump">Stack Dumps</a>
     <li><a href="#dexcheck">DEX File Checksums</a>
+    <li><a href="#general">General Flags</a>
 </ul>
 
 <h2><a name="introduction">Introduction (read this first!)</a></h2>
@@ -287,6 +288,22 @@ problems it may be useful to add the property to
 <code>dexdump</code> tool always verifies DEX checksums, and can be used
 to check for corruption in a large set of files.
 
+
+<h2><a name="general">General Flags</a></h2>
+
+<p>In the "Honeycomb" release, a general mechanism for passing flags to
+the VM was introduced:
+
+<pre>adb shell setprop dalvik.vm.extra-opts "flag1 flag2 ... flagN"</pre>
+
+<p>The flags are separated by spaces.  You can specify as many as you want
+so long as they all fit within the system property value length limit
+(currently 92 characters).
+
+<p>The extra-opts flags will be added at the end of the command line,
+which means they will override earlier settings.  This can be used, for
+example, to experiment with different values for <code>-Xmx</code> even
+though the Android framework is setting it explicitly.
 
 <address>Copyright &copy; 2008 The Android Open Source Project</address>
 

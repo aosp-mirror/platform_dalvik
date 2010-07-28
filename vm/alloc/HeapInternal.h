@@ -93,12 +93,9 @@ struct GcHeap {
      */
     GcMarkContext   markContext;
 
-    /* Set to dvmGetRelativeTimeUsec() whenever a GC begins.
-     * The value is preserved between GCs, so it can be used
-     * to determine the time between successive GCs.
-     * Initialized to zero before the first GC.
-     */
-    u8              gcStartTime;
+    /* GC's card table */
+    u1*             cardTableBase;
+    size_t          cardTableLength;
 
     /* Is the GC running?  Used to avoid recursive calls to GC.
      */
