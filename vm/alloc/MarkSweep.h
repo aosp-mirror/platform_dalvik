@@ -47,8 +47,9 @@ typedef struct {
 
 bool dvmHeapBeginMarkStep(GcMode mode);
 void dvmHeapMarkRootSet(void);
+void dvmHeapReMarkRootSet(void);
 void dvmHeapScanMarkedObjects(void);
-void dvmMarkDirtyObjects(void);
+void dvmHeapReScanMarkedObjects(void);
 void dvmHandleSoftRefs(Object **list);
 void dvmClearWhiteRefs(Object **list);
 void dvmHeapScheduleFinalizations(void);

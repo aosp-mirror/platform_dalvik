@@ -25,6 +25,7 @@
 #include "alloc/DdmHeap.h"
 #include "alloc/HeapSource.h"
 #include "alloc/MarkSweep.h"
+#include "alloc/Visit.h"
 
 #include "utils/threads.h"      // need Android thread priorities
 #define kInvalidPriority        10000
@@ -582,11 +583,10 @@ size_t dvmObjectSizeInHeap(const Object *obj)
 /*
  * Scan every live object in the heap, holding the locks.
  */
-static void verifyHeap()
+static void verifyHeap(void)
 {
-    // TODO: check the locks.
-    HeapBitmap *liveBits = dvmHeapSourceGetLiveBits();
-    dvmVerifyBitmap(liveBits);
+    dvmVerifyRoots();
+    dvmVerifyBitmap(dvmHeapSourceGetLiveBits());
 }
 
 /*
@@ -757,6 +757,7 @@ void dvmCollectGarbageInternal(bool clearSoftRefs, GcReason reason)
          * heap to allow mutator threads to allocate from free space.
          */
         rootEnd = dvmGetRelativeTimeMsec();
+        dvmClearCardTable();
         dvmUnlockHeap();
         dvmResumeAllThreads(SUSPEND_FOR_GC);
         rootSuspendTime = rootStart - suspendStart;
@@ -783,12 +784,12 @@ void dvmCollectGarbageInternal(bool clearSoftRefs, GcReason reason)
          * As no barrier intercepts root updates, we conservatively
          * assume all roots may be gray and re-mark them.
          */
-        dvmHeapMarkRootSet();
+        dvmHeapReMarkRootSet();
         /*
          * Recursively mark gray objects pointed to by the roots or by
          * heap objects dirtied during the concurrent mark.
          */
-        dvmMarkDirtyObjects();
+        dvmHeapReScanMarkedObjects();
     }
 
     /* All strongly-reachable objects have now been marked.

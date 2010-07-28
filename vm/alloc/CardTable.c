@@ -38,21 +38,6 @@
  * ObjectInlines.h [such as dvmSetFieldObject] do this for you. The
  * JIT and fast interpreters also contain code to mark cards as dirty.
  *
- * [TODO: Concurrent collection will have to expand on this, as it
- * uses the card table as well.]
- *
- * The card table is used to support partial collection, which at the
- * moment means "treat the zygote's heap as permanent, and only GC
- * objects in the application heap". In order to do this efficiently,
- * the GC need to find quickly references to objects in the
- * application heap from the zygote heap.  When an application creates
- * an object and stores it into an object on the zygote heap, it will
- * mark the corresponding card in the zygote heap as "dirty". When the
- * GC does a partial collection, it can efficiently find all the
- * cross-heap objects, since they are all on dirty cards. The GC also
- * takes the opportunity to mark as "clean" any cards which are dirty,
- * but no longer contain cross-heap pointers.
- *
  * The card table's base [the "biased card table"] gets set to a
  * rather strange value.  In order to keep the JIT from having to
  * fabricate or load GC_DIRTY_CARD to store into the card table,
@@ -109,6 +94,12 @@ void dvmCardTableShutdown()
     munmap(gDvm.gcHeap->cardTableBase, gDvm.gcHeap->cardTableLength);
 }
 
+void dvmClearCardTable(void)
+{
+    assert(gDvm.gcHeap->cardTableBase != NULL);
+    memset(gDvm.gcHeap->cardTableBase, GC_CARD_CLEAN, gDvm.gcHeap->cardTableLength);
+}
+
 /*
  * Returns true iff the address is within the bounds of the card table.
  */
@@ -148,93 +139,4 @@ void dvmMarkCard(const void *addr)
 {
     u1 *cardAddr = dvmCardFromAddr(addr);
     *cardAddr = GC_CARD_DIRTY;
-}
-
-/*
- * Returns true iff all address within the Object are on unmarked cards.
- */
-static bool objectIsClean(const Object *obj)
-{
-    assert(dvmIsValidObject(obj));
-    size_t size = dvmHeapSourceChunkSize(obj);
-    u1 *start = dvmCardFromAddr(obj);
-    u1 *end = dvmCardFromAddr((char *)obj + size-1);
-    u1 *index;
-
-    for (index = start; index <= end; index++) {
-        if (*index != GC_CARD_CLEAN) {
-            return false;
-        }
-    }
-    return true;
-}
-
-/*
- * A Visitor callback in support of checkCleanObjects. "arg" is
- * expected to be the immuneLimit.
- */
-static void crossGenCheckVisitor(void *ptr, void *arg)
-{
-    Object *ref = *(Object **)ptr;
-    Object *immuneLimit = (Object *)arg;
-
-    if (ref >= immuneLimit) {
-        LOGE("Clean obj contains threatened ref %p: %p", ptr, ref);
-        dvmAbort();
-    }
-}
-
-/*
- * A HeapBitmap callback in support of checkCleanObjects.
- */
-static bool crossGenCheckCallback(size_t numPtrs, void **ptrs,
-                      const void *finger, void *arg)
-{
-    size_t i;
-    for (i = 0; i < numPtrs; i++) {
-        Object *obj = ptrs[i];
-        if (objectIsClean(obj)) {
-            dvmVisitObject(crossGenCheckVisitor, obj, arg);
-        }
-    }
-
-    return true;
-}
-
-/*
- * dvmAbort if any clean object in the Zygote heap contains a
- * reference to the application heap, or if the immune limit is not as
- * expected.
- */
-void dvmVerifyCardTable(void)
-{
-    HeapBitmap markBits[HEAP_SOURCE_MAX_HEAP_COUNT];
-    HeapBitmap liveBits[HEAP_SOURCE_MAX_HEAP_COUNT];
-    size_t numBitmaps;
-    void *immuneLimit;
-    numBitmaps = dvmHeapSourceGetNumHeaps();
-    if (numBitmaps < 2) {
-        return;
-    }
-    if (numBitmaps > 2) {
-        LOGE("More heaps than expected.");
-        dvmAbort();
-    }
-    immuneLimit = dvmHeapSourceGetImmuneLimit(GC_PARTIAL);
-    dvmHeapSourceGetObjectBitmaps(liveBits, markBits, numBitmaps);
-    if (markBits[0].base <= markBits[1].base) {
-        LOGE("Heaps are not in the expected order.");
-        dvmAbort();
-    }
-    if (markBits[0].base < (uintptr_t)immuneLimit ||
-        markBits[0].max < (uintptr_t)immuneLimit) {
-        LOGE("Application heap should not be immune.");
-        dvmAbort();
-    }
-    if (markBits[1].base >= (uintptr_t)immuneLimit ||
-        markBits[1].max >= (uintptr_t)immuneLimit) {
-        LOGE("Zygote heap should not be threatened.");
-        dvmAbort();
-    }
-    dvmHeapBitmapWalk(&markBits[1], crossGenCheckCallback, immuneLimit);
 }

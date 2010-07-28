@@ -201,5 +201,8 @@ void dvmVisitRoots(Visitor *visitor, void *arg)
     visitLargeHeapRefTable(visitor, gDvm.gcHeap->referenceOperations, arg);
     visitLargeHeapRefTable(visitor, gDvm.gcHeap->pendingFinalizationRefs, arg);
     visitThreads(visitor, arg);
+    (*visitor)(&gDvm.outOfMemoryObj, arg);
+    (*visitor)(&gDvm.internalErrorObj, arg);
+    (*visitor)(&gDvm.noClassDefFoundErrorObj, arg);
     /* TODO: visit cached global references. */
 }

@@ -44,6 +44,11 @@ bool dvmCardTableStartup(void);
 void dvmCardTableShutdown(void);
 
 /*
+ * Resets all of the bytes in the card table to clean.
+ */
+void dvmClearCardTable(void);
+
+/*
  * Returns the address of the relevent byte in the card table, given
  * an address on the heap.
  */

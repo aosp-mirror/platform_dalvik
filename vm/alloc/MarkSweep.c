@@ -112,8 +112,7 @@ setAndReturnMarkBit(GcMarkContext *ctx, const void *obj)
 }
 
 static void
-markObjectNonNull(const Object *obj, GcMarkContext *ctx,
-        bool checkFinger, bool forceStack)
+markObjectNonNull(const Object *obj, GcMarkContext *ctx, bool checkFinger)
 {
     assert(ctx != NULL);
     assert(obj != NULL);
@@ -126,7 +125,7 @@ markObjectNonNull(const Object *obj, GcMarkContext *ctx,
     if (!setAndReturnMarkBit(ctx, obj)) {
         /* This object was not previously marked.
          */
-        if (forceStack || (checkFinger && (void *)obj < ctx->finger)) {
+        if (checkFinger && (void *)obj < ctx->finger) {
             /* This object will need to go on the mark stack.
              */
             MARK_STACK_PUSH(ctx->stack, obj);
@@ -149,7 +148,7 @@ markObjectNonNull(const Object *obj, GcMarkContext *ctx,
 static void markObject(const Object *obj, GcMarkContext *ctx)
 {
     if (obj != NULL) {
-        markObjectNonNull(obj, ctx, true, false);
+        markObjectNonNull(obj, ctx, true);
     }
 }
 
@@ -166,7 +165,7 @@ void
 dvmMarkObjectNonNull(const Object *obj)
 {
     assert(obj != NULL);
-    markObjectNonNull(obj, &gDvm.gcHeap->markContext, false, false);
+    markObjectNonNull(obj, &gDvm.gcHeap->markContext, false);
 }
 
 /* Mark the set of root objects.
@@ -253,6 +252,32 @@ void dvmHeapMarkRootSet()
 //TODO: scan object references sitting in gDvm;  use pointer begin & end
 
     HPROF_CLEAR_GC_SCAN_STATE();
+}
+
+/*
+ * Callback applied to root references.  If the root location contains
+ * a white reference it is pushed on the mark stack and grayed.
+ */
+static void markObjectVisitor(void *addr, void *arg)
+{
+    Object *obj;
+
+    assert(addr != NULL);
+    assert(arg != NULL);
+    obj = *(Object **)addr;
+    if (obj != NULL) {
+        markObjectNonNull(obj, arg, true);
+    }
+}
+
+/*
+ * Grays all references in the roots.
+ */
+void dvmHeapReMarkRootSet(void)
+{
+    GcMarkContext *ctx = &gDvm.gcHeap->markContext;
+    assert(ctx->finger == (void *)ULONG_MAX);
+    dvmVisitRoots(markObjectVisitor, ctx);
 }
 
 /*
@@ -524,6 +549,107 @@ processMarkStack(GcMarkContext *ctx)
     }
 }
 
+static size_t objectSize(const Object *obj)
+{
+    assert(dvmIsValidObject(obj));
+    assert(dvmIsValidObject((Object *)obj->clazz));
+    if (IS_CLASS_FLAG_SET(obj->clazz, CLASS_ISARRAY)) {
+        return dvmArrayObjectSize((ArrayObject *)obj);
+    } else if (obj->clazz == gDvm.classJavaLangClass) {
+        return dvmClassObjectSize((ClassObject *)obj);
+    } else {
+        return obj->clazz->objectSize;
+    }
+}
+
+/*
+ * Scans backward to the header of a marked object that spans the
+ * given address.  Returns NULL if there is no spanning marked object.
+ */
+static Object *previousGrayObject(u1 *start, GcMarkContext *ctx)
+{
+    u1 *end = (u1 *)ctx->bitmap->base;
+    u1 *ptr;
+
+    assert(start >= end);
+    for (ptr = start; ptr >= end; ptr -= HB_OBJECT_ALIGNMENT) {
+        if (dvmIsValidObject((Object *)ptr))
+            break;
+    }
+    if (ptr < end || !isMarked(ptr, ctx)) {
+         return NULL;
+    } else {
+        Object *obj = (Object *)ptr;
+        size_t size = objectSize(obj);
+        if (ptr + size < start) {
+            return NULL;
+        }
+        return obj;
+    }
+}
+
+/*
+ * Scans forward to the header of the next marked object between start
+ * and limit.  Returns NULL if no marked objects are in that region.
+ */
+static Object *nextGrayObject(u1 *base, u1 *limit, GcMarkContext *ctx)
+{
+    u1 *ptr;
+
+    assert(base < limit);
+    assert(limit - base <= GC_CARD_SIZE);
+    for (ptr = base; ptr < limit; ptr += HB_OBJECT_ALIGNMENT) {
+        if (isMarked(ptr, ctx))
+            return (Object *)ptr;
+    }
+    return NULL;
+}
+
+/*
+ * Scan the card table looking for objects that have been grayed by
+ * the mutator.
+ */
+static void scanGrayObjects(GcMarkContext *ctx)
+{
+    GcHeap *h = gDvm.gcHeap;
+    u1 *card, *baseCard, *limitCard;
+
+    baseCard = &h->cardTableBase[0];
+    limitCard = &h->cardTableBase[h->cardTableLength];
+    for (card = baseCard; card != limitCard; ++card) {
+        if (*card == GC_CARD_DIRTY) {
+            /*
+             * The card is dirty.  Scan all of the objects that
+             * intersect with the card address.
+             */
+            u1 *addr = dvmAddrFromCard(card);
+            /*
+             * If the last object on the previous card terminates on
+             * the current card it is gray and must be scanned.
+             */
+            if (!dvmIsValidObject((Object *)addr)) {
+                Object *prev = previousGrayObject(addr, ctx);
+                if (prev != NULL) {
+                    scanObject(prev, ctx);
+                }
+            }
+            /*
+             * Scan through all black objects that start on the
+             * current card.
+             */
+            u1 *limit = addr + GC_CARD_SIZE;
+            u1 *next = addr;
+            while (next < limit) {
+                Object *obj = nextGrayObject(next, limit, ctx);
+                if (obj == NULL)
+                    break;
+                scanObject(obj, ctx);
+                next = (u1*)obj + HB_OBJECT_ALIGNMENT;
+            }
+        }
+    }
+}
+
 #ifndef NDEBUG
 static uintptr_t gLastFinger = 0;
 #endif
@@ -573,43 +699,16 @@ void dvmHeapScanMarkedObjects(void)
     LOG_SCAN("done with marked objects\n");
 }
 
-/*
- * Callback applied to each gray object to blacken it.
- */
-static bool dirtyObjectCallback(size_t numPtrs, void **ptrs,
-                                const void *finger, void *arg)
+void dvmHeapReScanMarkedObjects(void)
 {
-    size_t i;
+    GcMarkContext *ctx = &gDvm.gcHeap->markContext;
 
-    for (i = 0; i < numPtrs; ++i) {
-        scanObject(ptrs[i], arg);
-    }
-    return true;
-}
-
-/*
- * Re-mark dirtied objects.  Iterates through all blackened objects
- * looking for references to white objects.
- */
-void dvmMarkDirtyObjects(void)
-{
-    HeapBitmap markBits[HEAP_SOURCE_MAX_HEAP_COUNT];
-    HeapBitmap liveBits[HEAP_SOURCE_MAX_HEAP_COUNT];
-    GcMarkContext *ctx;
-    size_t numBitmaps;
-    size_t i;
-
-    ctx = &gDvm.gcHeap->markContext;
     /*
      * The finger must have been set to the maximum value to ensure
      * that gray objects will be pushed onto the mark stack.
      */
     assert(ctx->finger == (void *)ULONG_MAX);
-    numBitmaps = dvmHeapSourceGetNumHeaps();
-    dvmHeapSourceGetObjectBitmaps(liveBits, markBits, numBitmaps);
-    for (i = 0; i < numBitmaps; i++) {
-        dvmHeapBitmapWalk(&markBits[i], dirtyObjectCallback, ctx);
-    }
+    scanGrayObjects(ctx);
     processMarkStack(ctx);
 }
 
