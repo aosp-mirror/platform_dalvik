@@ -99,10 +99,6 @@ bool dvmHeapStartup()
 
 bool dvmHeapStartupAfterZygote(void)
 {
-    /* Update our idea of the last GC start time so that we
-     * don't use the last time that Zygote happened to GC.
-     */
-    gDvm.gcHeap->gcStartTime = dvmGetRelativeTimeUsec();
     return dvmHeapSourceStartupAfterZygote();
 }
 
