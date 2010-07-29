@@ -1662,6 +1662,10 @@ static bool handleFmt21c_Fmt31c(CompilationUnit *cUnit, MIR *mir)
             branch2->generic.target = (LIR *)target;
             break;
         }
+        case OP_SGET_WIDE_VOLATILE:
+        case OP_SPUT_WIDE_VOLATILE:
+            genInterpSingleStep(cUnit, mir);
+            break;
         default:
             return true;
     }
@@ -2142,23 +2146,48 @@ static bool handleFmt22b_Fmt22s(CompilationUnit *cUnit, MIR *mir)
 static bool handleFmt22c(CompilationUnit *cUnit, MIR *mir)
 {
     OpCode dalvikOpCode = mir->dalvikInsn.opCode;
-    int fieldOffset;
+    int fieldOffset = -1;
     bool isVolatile = false;
+    switch (dalvikOpCode) {
+        /*
+         * Wide volatiles currently handled via single step.
+         * Add them here if generating in-line code.
+         *     case OP_IGET_WIDE_VOLATILE:
+         *     case OP_IPUT_WIDE_VOLATILE:
+         */
+        case OP_IGET:
+        case OP_IGET_VOLATILE:
+        case OP_IGET_WIDE:
+        case OP_IGET_OBJECT:
+        case OP_IGET_OBJECT_VOLATILE:
+        case OP_IGET_BOOLEAN:
+        case OP_IGET_BYTE:
+        case OP_IGET_CHAR:
+        case OP_IGET_SHORT:
+        case OP_IPUT:
+        case OP_IPUT_VOLATILE:
+        case OP_IPUT_WIDE:
+        case OP_IPUT_OBJECT:
+        case OP_IPUT_OBJECT_VOLATILE:
+        case OP_IPUT_BOOLEAN:
+        case OP_IPUT_BYTE:
+        case OP_IPUT_CHAR:
+        case OP_IPUT_SHORT: {
+            Field *fieldPtr =
+                cUnit->method->clazz->pDvmDex->pResFields[mir->dalvikInsn.vC];
 
-    if (dalvikOpCode >= OP_IGET && dalvikOpCode <= OP_IPUT_SHORT) {
-        Field *fieldPtr =
-            cUnit->method->clazz->pDvmDex->pResFields[mir->dalvikInsn.vC];
-
-        if (fieldPtr == NULL) {
-            LOGE("Unexpected null instance field");
-            dvmAbort();
+            if (fieldPtr == NULL) {
+                LOGE("Unexpected null instance field");
+                dvmAbort();
+            }
+            isVolatile = dvmIsVolatileField(fieldPtr);
+            fieldOffset = ((InstField *)fieldPtr)->byteOffset;
+            break;
         }
-        isVolatile = dvmIsVolatileField(fieldPtr);
-        fieldOffset = ((InstField *)fieldPtr)->byteOffset;
-    } else {
-        /* Deliberately break the code while make the compiler happy */
-        fieldOffset = -1;
+        default:
+            break;
     }
+
     switch (dalvikOpCode) {
         case OP_NEW_ARRAY: {
             // Generates a call - use explicit registers
@@ -2280,6 +2309,7 @@ static bool handleFmt22c(CompilationUnit *cUnit, MIR *mir)
         case OP_IPUT:
             genIPut(cUnit, mir, kWord, fieldOffset, false, isVolatile);
             break;
+        case OP_IPUT_VOLATILE:
         case OP_IPUT_OBJECT_VOLATILE:
             isVolatile = true;
             // NOTE: intentional fallthrough
@@ -2298,8 +2328,6 @@ static bool handleFmt22c(CompilationUnit *cUnit, MIR *mir)
             break;
         case OP_IGET_WIDE_VOLATILE:
         case OP_IPUT_WIDE_VOLATILE:
-        case OP_SGET_WIDE_VOLATILE:
-        case OP_SPUT_WIDE_VOLATILE:
             genInterpSingleStep(cUnit, mir);
             break;
         default:
