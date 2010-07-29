@@ -997,7 +997,8 @@ static int dvmProcessOptions(int argc, const char* const argv[],
             else if (strcmp(argv[i] + 5, "nopostverify") == 0)
                 gDvm.postVerify = false;
             else if (strcmp(argv[i] + 5, "concurrent") == 0)
-                gDvm.concurrentMarkSweep = true;
+                /* FIXME: temp workaround - disable */
+                gDvm.concurrentMarkSweep = false;
             else if (strcmp(argv[i] + 5, "noconcurrent") == 0)
                 gDvm.concurrentMarkSweep = false;
             else if (strcmp(argv[i] + 5, "verifycardtable") == 0)
@@ -1056,7 +1057,8 @@ static void setCommandLineDefaults()
     gDvm.heapSizeMax = 16 * 1024 * 1024;    // Spec says 75% physical mem
     gDvm.stackSize = kDefaultStackSize;
 
-    gDvm.concurrentMarkSweep = true;
+    /* FIXME: temp workaround - default to false */
+    gDvm.concurrentMarkSweep = false;
 
     /* gDvm.jdwpSuspend = true; */
 

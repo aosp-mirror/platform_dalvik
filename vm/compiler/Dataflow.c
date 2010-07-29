@@ -711,31 +711,31 @@ int dvmCompilerDataFlowAttributes[kMirOpLast] = {
     DF_DA | DF_UB,
 
     // E3 OP_IGET_VOLATILE
-    DF_NOP,
+    DF_DA | DF_UB,
 
     // E4 OP_IPUT_VOLATILE
-    DF_NOP,
+    DF_UA | DF_UB,
 
     // E5 OP_SGET_VOLATILE
-    DF_NOP,
+    DF_DA,
 
     // E6 OP_SPUT_VOLATILE
-    DF_NOP,
+    DF_UA,
 
     // E7 OP_IGET_OBJECT_VOLATILE
-    DF_NOP,
+    DF_DA | DF_UB,
 
     // E8 OP_IGET_WIDE_VOLATILE
-    DF_NOP,
+    DF_DA_WIDE | DF_UB,
 
     // E9 OP_IPUT_WIDE_VOLATILE
-    DF_NOP,
+    DF_UA_WIDE | DF_UB,
 
     // EA OP_SGET_WIDE_VOLATILE
-    DF_NOP,
+    DF_DA_WIDE,
 
     // EB OP_SPUT_WIDE_VOLATILE
-    DF_NOP,
+    DF_UA_WIDE,
 
     // EC OP_BREAKPOINT
     DF_NOP,
@@ -786,13 +786,13 @@ int dvmCompilerDataFlowAttributes[kMirOpLast] = {
     DF_FORMAT_3RC,
 
     // FC OP_IPUT_OBJECT_VOLATILE
-    DF_NOP,
+    DF_UA | DF_UB,
 
     // FD OP_SGET_OBJECT_VOLATILE
-    DF_NOP,
+    DF_DA,
 
     // FE OP_SPUT_OBJECT_VOLATILE
-    DF_NOP,
+    DF_UA,
 
     // FF OP_UNUSED_FF
     DF_NOP,
