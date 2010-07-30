@@ -143,14 +143,13 @@ void dvmHeapBitmapSweepWalk(const HeapBitmap *liveHb, const HeapBitmap *markHb,
     assert(callback != NULL);
 
     if (liveHb->base != markHb->base) {
-        LOGW("dvmHeapBitmapSweepWalk: bitmaps cover different heaps "
-                "(0x%08x != 0x%08x)\n",
-                (uintptr_t)liveHb->base, (uintptr_t)markHb->base);
+        LOGW("dvmHeapBitmapSweepWalk: bitmaps cover different heaps (%p != %p)",
+             liveHb->base, markHb->base);
         return;
     }
     if (liveHb->bitsLen != markHb->bitsLen) {
-        LOGW("dvmHeapBitmapSweepWalk: size of bitmaps differ (%zd != %zd)\n",
-                liveHb->bitsLen, markHb->bitsLen);
+        LOGW("dvmHeapBitmapSweepWalk: size of bitmaps differ (%zd != %zd)",
+             liveHb->bitsLen, markHb->bitsLen);
         return;
     }
     if (liveHb->max < liveHb->base && markHb->max < markHb->base) {
