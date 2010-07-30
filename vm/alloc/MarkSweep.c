@@ -654,10 +654,10 @@ static void scanGrayObjects(GcMarkContext *ctx)
 static uintptr_t gLastFinger = 0;
 #endif
 
-static bool
-scanBitmapCallback(size_t numPtrs, void **ptrs, const void *finger, void *arg)
+static void scanBitmapCallback(size_t numPtrs, void **ptrs,
+                               const void *finger, void *arg)
 {
-    GcMarkContext *ctx = (GcMarkContext *)arg;
+    GcMarkContext *ctx = arg;
     size_t i;
 
 #ifndef NDEBUG
@@ -669,8 +669,6 @@ scanBitmapCallback(size_t numPtrs, void **ptrs, const void *finger, void *arg)
     for (i = 0; i < numPtrs; i++) {
         scanObject(*ptrs++, ctx);
     }
-
-    return true;
 }
 
 /* Given bitmaps with the root set marked, find and mark all
@@ -959,8 +957,8 @@ void dvmHeapFinishMarkStep()
     markContext->finger = NULL;
 }
 
-static bool
-sweepBitmapCallback(size_t numPtrs, void **ptrs, const void *finger, void *arg)
+static void sweepBitmapCallback(size_t numPtrs, void **ptrs,
+                                const void *finger, void *arg)
 {
     const ClassObject *const classJavaLangClass = gDvm.classJavaLangClass;
     const bool overwriteFree = gDvm.overwriteFree;
@@ -998,8 +996,6 @@ sweepBitmapCallback(size_t numPtrs, void **ptrs, const void *finger, void *arg)
     // TODO: dvmHeapSourceFreeList has a loop, just like the above
     // does. Consider collapsing the two loops to save overhead.
     dvmHeapSourceFreeList(numPtrs, ptrs);
-
-    return true;
 }
 
 /* Returns true if the given object is unmarked.  Ignores the low bits
