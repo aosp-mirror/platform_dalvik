@@ -33,8 +33,6 @@ LOCAL_PATH:= $(call my-dir)
 #
 
 ifeq ($(TARGET_CPU_SMP),true)
-    # Temporary workaround
-    WITH_JIT := false
     target_smp_flag := -DANDROID_SMP=1
 else
     target_smp_flag := -DANDROID_SMP=0
