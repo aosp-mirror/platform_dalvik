@@ -943,10 +943,10 @@ static void appendValue(char type, const JValue value, char* buf, size_t n,
 
 #define LOGI_NATIVE(...) LOG(LOG_INFO, LOG_TAG "-native", __VA_ARGS__)
 
-void dvmLogNativeMethodEntry(const Method* method, u4* fp)
+void dvmLogNativeMethodEntry(const Method* method, const u4* args)
 {
     char thisString[32] = { 0 };
-    u4* sp = &fp[method->registersSize - method->insSize];
+    const u4* sp = args; // &args[method->registersSize - method->insSize];
     if (!dvmIsStaticMethod(method)) {
         sprintf(thisString, "this=0x%08x ", *sp++);
     }

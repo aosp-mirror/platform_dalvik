@@ -917,14 +917,6 @@ GOTO_TARGET(invokeMethod, bool methodCallRange, const Method* _methodToCall,
             TRACE_METHOD_ENTER(self, methodToCall);
 #endif
 
-#if defined(WITH_JNI_TRACE)
-            bool trace = gDvm.jniTrace &&
-                    strstr(methodToCall->clazz->descriptor, gDvm.jniTrace);
-            if (trace) {
-                dvmLogNativeMethodEntry(methodToCall, newFp);
-            }
-            else
-#endif
             {
                 ILOGD("> native <-- %s.%s %s", methodToCall->clazz->descriptor,
                         methodToCall->name, methodToCall->shorty);
@@ -955,12 +947,6 @@ GOTO_TARGET(invokeMethod, bool methodCallRange, const Method* _methodToCall,
             /* pop frame off */
             dvmPopJniLocals(self, newSaveArea);
             self->curFrame = fp;
-
-#if defined(WITH_JNI_TRACE)
-            if (trace) {
-                dvmLogNativeMethodExit(methodToCall, self, retval);
-            }
-#endif
 
             /*
              * If the native code threw an exception, or interpreted code
