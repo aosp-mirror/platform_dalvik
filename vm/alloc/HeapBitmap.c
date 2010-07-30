@@ -17,8 +17,7 @@
 #include "Dalvik.h"
 #include "HeapBitmap.h"
 #include "clz.h"
-#include <limits.h>     // for ULONG_MAX
-#include <sys/mman.h>   // for madvise(), mmap()
+#include <sys/mman.h>   /* for PROT_* */
 
 #define LIKELY(exp)     (__builtin_expect((exp) != 0, true))
 #define UNLIKELY(exp)   (__builtin_expect((exp) != 0, false))
