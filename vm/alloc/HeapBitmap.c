@@ -19,9 +19,6 @@
 #include "clz.h"
 #include <sys/mman.h>   /* for PROT_* */
 
-#define LIKELY(exp)     (__builtin_expect((exp) != 0, true))
-#define UNLIKELY(exp)   (__builtin_expect((exp) != 0, false))
-
 /*
  * Initialize a HeapBitmap so that it points to a bitmap large
  * enough to cover a heap at <base> of <maxSize> bytes, where
