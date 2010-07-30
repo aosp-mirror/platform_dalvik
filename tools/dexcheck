@@ -14,9 +14,31 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# This requires read permission on /data/dalvik-cache.  On an eng build this
-# works, on userdebug you will need to "adb root", or "su" followed by
-# "chmod 777 /data/dalvik-cache".
+#
+# This tool checks the integrity of the optimized dex files on a single
+# Android device connected to your computer.
+#
+# Brief HOW-TO:
+#
+# 1. Disconnect all but one device from USB.
+# 2. Set up a standard shell environment (envsetup.sh, lunch, etc.).
+# 3. Run "adb root" if necessary to ensure read permission on
+#    /data/dalvik-cache. If in doubt, run the command. Power users may
+#    also use "su" followed by "chmod 777 /data/dalvik-cache".
+# 4. Run this script, e.g. from the build root, "dalvik/tools/dexcheck".
+#
+# If all of the dex files are okay, you will just see a series of
+# lines written to your shell window naming each of the files. If
+# there is a problem, though, you will see something like this:
+#
+#     system@app@Maps.apk@classes.dex
+#     Failure in system@app@Maps.apk@classes.dex: ERROR: DEX parse failed
+#
+# When this happens, the log ("adb logcat") will generally have at
+# least a little more information about the dex level of the problem.
+# However, any error at all usually indicates some form of lower level
+# filesystem or filesystem cache corruption.
+#
 
 # Get the list of files.  Use "sed" to drop the trailing carriage return.
 files=`adb shell "cd /data/dalvik-cache; echo *" | sed -e s/.$//`
@@ -43,4 +65,3 @@ for file in $files; do
 done
 
 exit $failure
-
