@@ -114,7 +114,7 @@ INLINE s8 dvmGetArgLong(const u4* args, int elem)
  * Used to implement -Xjnitrace.
  */
 struct Thread;
-void dvmLogNativeMethodEntry(const Method* method, u4* newFp);
+void dvmLogNativeMethodEntry(const Method* method, const u4* newFp);
 void dvmLogNativeMethodExit(const Method* method, struct Thread* self,
         const JValue retval);
 
