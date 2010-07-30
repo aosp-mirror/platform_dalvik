@@ -961,7 +961,6 @@ static void sweepBitmapCallback(size_t numPtrs, void **ptrs,
                                 const void *finger, void *arg)
 {
     const ClassObject *const classJavaLangClass = gDvm.classJavaLangClass;
-    const bool overwriteFree = gDvm.overwriteFree;
     size_t i;
 
     for (i = 0; i < numPtrs; i++) {
@@ -980,17 +979,6 @@ static void sweepBitmapCallback(size_t numPtrs, void **ptrs,
              * but it's safe to call on the same ClassObject twice.
              */
             dvmFreeClassInnards((ClassObject *)obj);
-        }
-
-        /* Overwrite the to-be-freed object to make stale references
-         * more obvious.
-         */
-        if (overwriteFree) {
-            int objlen;
-            ClassObject *clazz = obj->clazz;
-            objlen = dvmHeapSourceChunkSize(obj);
-            memset(obj, 0xa5, objlen);
-            obj->clazz = (ClassObject *)((uintptr_t)clazz ^ 0xffffffff);
         }
     }
     // TODO: dvmHeapSourceFreeList has a loop, just like the above
