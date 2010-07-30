@@ -92,11 +92,8 @@ dvmHeapBitmapZero(HeapBitmap *hb)
  * the current XorWalk.  <finger> will be set to ULONG_MAX when the
  * end of the bitmap is reached.
  */
-bool
-dvmHeapBitmapXorWalk(const HeapBitmap *hb1, const HeapBitmap *hb2,
-        bool (*callback)(size_t numPtrs, void **ptrs,
-                         const void *finger, void *arg),
-        void *callbackArg)
+void dvmHeapBitmapXorWalk(const HeapBitmap *hb1, const HeapBitmap *hb2,
+                          BitmapCallback *callback, void *callbackArg)
 {
     static const size_t kPointerBufSize = 128;
     void *pointerBuf[kPointerBufSize];
@@ -106,12 +103,8 @@ dvmHeapBitmapXorWalk(const HeapBitmap *hb1, const HeapBitmap *hb2,
 
 #define FLUSH_POINTERBUF(finger_) \
     do { \
-        if (!callback(pb - pointerBuf, (void **)pointerBuf, \
-                (void *)(finger_), callbackArg)) \
-        { \
-            LOGW("dvmHeapBitmapXorWalk: callback failed\n"); \
-            return false; \
-        } \
+        (*callback)(pb - pointerBuf, (void **)pointerBuf, \
+                    (void *)(finger_), callbackArg); \
         pb = pointerBuf; \
     } while (false)
 
@@ -151,17 +144,17 @@ dvmHeapBitmapXorWalk(const HeapBitmap *hb1, const HeapBitmap *hb2,
         LOGW("dvmHeapBitmapXorWalk: bitmaps cover different heaps "
                 "(0x%08x != 0x%08x)\n",
                 (uintptr_t)hb1->base, (uintptr_t)hb2->base);
-        return false;
+        return;
     }
     if (hb1->bitsLen != hb2->bitsLen) {
         LOGW("dvmHeapBitmapXorWalk: size of bitmaps differ (%zd != %zd)\n",
                 hb1->bitsLen, hb2->bitsLen);
-        return false;
+        return;
     }
     if (hb1->max < hb1->base && hb2->max < hb2->base) {
         /* Easy case; both are obviously empty.
          */
-        return true;
+        return;
     }
 
     /* First, walk along the section of the bitmaps that may be the same.
@@ -216,9 +209,6 @@ unsigned long *p;
         FLUSH_POINTERBUF(finalFinger);
         assert(finalFinger > longHb->max);
     }
-
-    return true;
-
 #undef FLUSH_POINTERBUF
 #undef DECODE_BITS
 }
@@ -227,11 +217,8 @@ unsigned long *p;
  * Similar to dvmHeapBitmapXorWalk(), but visit the set bits
  * in a single bitmap.
  */
-bool
-dvmHeapBitmapWalk(const HeapBitmap *hb,
-        bool (*callback)(size_t numPtrs, void **ptrs,
-                         const void *finger, void *arg),
-        void *callbackArg)
+void dvmHeapBitmapWalk(const HeapBitmap *hb,
+                       BitmapCallback *callback, void *callbackArg)
 {
     /* Create an empty bitmap with the same extent as <hb>.
      * Don't actually allocate any memory.
@@ -239,6 +226,5 @@ dvmHeapBitmapWalk(const HeapBitmap *hb,
     HeapBitmap emptyHb = *hb;
     emptyHb.max = emptyHb.base - 1; // empty
     emptyHb.bits = (void *)1;       // non-NULL but intentionally bad
-
-    return dvmHeapBitmapXorWalk(hb, &emptyHb, callback, callbackArg);
+    dvmHeapBitmapXorWalk(hb, &emptyHb, callback, callbackArg);
 }

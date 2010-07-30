@@ -80,6 +80,8 @@ struct HeapBitmap {
 };
 typedef struct HeapBitmap HeapBitmap;
 
+typedef void BitmapCallback(size_t numPtrs, void **ptrs,
+                            const void *finger, void *arg);
 
 /*
  * Initialize a HeapBitmap so that it points to a bitmap large
@@ -111,19 +113,15 @@ void dvmHeapBitmapZero(HeapBitmap *hb);
  * the current XorWalk.  <finger> will be set to ULONG_MAX when the
  * end of the bitmap is reached.
  */
-bool dvmHeapBitmapXorWalk(const HeapBitmap *hb1, const HeapBitmap *hb2,
-        bool (*callback)(size_t numPtrs, void **ptrs,
-                         const void *finger, void *arg),
-        void *callbackArg);
+void dvmHeapBitmapXorWalk(const HeapBitmap *hb1, const HeapBitmap *hb2,
+                          BitmapCallback *callback, void *callbackArg);
 
 /*
  * Similar to dvmHeapBitmapXorWalk(), but visit the set bits
  * in a single bitmap.
  */
-bool dvmHeapBitmapWalk(const HeapBitmap *hb,
-        bool (*callback)(size_t numPtrs, void **ptrs,
-                         const void *finger, void *arg),
-        void *callbackArg);
+void dvmHeapBitmapWalk(const HeapBitmap *hb,
+                       BitmapCallback *callback, void *callbackArg);
 
 /*
  * Return true iff <obj> is within the range of pointers that this
