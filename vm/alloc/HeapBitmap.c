@@ -143,7 +143,7 @@ void dvmHeapBitmapSweepWalk(const HeapBitmap *liveHb, const HeapBitmap *markHb,
     assert(callback != NULL);
 
     if (liveHb->base != markHb->base) {
-        LOGW("dvmHeapBitmapSweepWalk: bitmaps cover different heaps (%p != %p)",
+        LOGW("dvmHeapBitmapSweepWalk: bitmaps cover different heaps (%zd != %zd)",
              liveHb->base, markHb->base);
         return;
     }
