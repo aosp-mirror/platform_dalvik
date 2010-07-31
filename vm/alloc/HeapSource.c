@@ -1707,7 +1707,6 @@ dvmTrackExternalAllocation(size_t n)
      */
     HSTRACE("EXTERNAL alloc %zd: frag\n", n);
     ret = externalAlloc(hs, n, true);
-    dvmHeapSizeChanged();
     if (ret) {
         goto out;
     }
@@ -1718,7 +1717,6 @@ dvmTrackExternalAllocation(size_t n)
     HSTRACE("EXTERNAL alloc %zd: GC 2\n", n);
     gcForExternalAlloc(true);  // collect SoftReferences
     ret = externalAlloc(hs, n, true);
-    dvmHeapSizeChanged();
     if (!ret) {
         LOGE_HEAP("Out of external memory on a %zu-byte allocation.\n", n);
     }

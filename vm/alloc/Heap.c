@@ -219,13 +219,6 @@ Object *dvmGetNextHeapWorkerObject(HeapWorkerOperation *op)
     return obj;
 }
 
-/* Whenever the effective heap size may have changed,
- * this function must be called.
- */
-void dvmHeapSizeChanged()
-{
-}
-
 /* Do a full garbage collection, which may grow the
  * heap as a side-effect if the live set is large.
  */
@@ -309,7 +302,6 @@ static void *tryMalloc(size_t size)
      * Try harder, growing the heap if necessary.
      */
     ptr = dvmHeapSourceAllocAndGrow(size);
-    dvmHeapSizeChanged();
     if (ptr != NULL) {
         size_t newHeapSize;
 
@@ -335,7 +327,6 @@ collect_soft_refs:
             size);
     gcForMalloc(true);
     ptr = dvmHeapSourceAllocAndGrow(size);
-    dvmHeapSizeChanged();
     if (ptr != NULL) {
         return ptr;
     }
@@ -843,7 +834,6 @@ void dvmCollectGarbageInternal(bool clearSoftRefs, GcReason reason)
      * it just lets the heap grow more when necessary.
      */
     dvmHeapSourceGrowForUtilization();
-    dvmHeapSizeChanged();
 
 #if WITH_HPROF
     if (gcHeap->hprofContext != NULL) {
