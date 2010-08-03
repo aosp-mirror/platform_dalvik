@@ -194,6 +194,11 @@ static void inlineSetter(CompilationUnit *cUnit,
         gDvmJit.invokePolySetterInlined++;
 #endif
     } else {
+        /*
+         * The invoke becomes no-op so it needs an explicit branch to jump to
+         * the chaining cell.
+         */
+        invokeBB->needFallThroughBranch = true;
         invokeMIR->OptimizationFlags |= MIR_INLINED;
 #if defined(WITH_JIT_TUNING)
         gDvmJit.invokeMonoSetterInlined++;
