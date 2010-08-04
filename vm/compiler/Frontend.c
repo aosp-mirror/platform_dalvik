@@ -918,15 +918,17 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
     /* Convert MIR to LIR, etc. */
     dvmCompilerMIR2LIR(&cUnit);
 
-    /* Convert LIR into machine code. */
-    dvmCompilerAssembleLIR(&cUnit, info);
+    /* Convert LIR into machine code. Loop for recoverable retries */
+    do {
+        dvmCompilerAssembleLIR(&cUnit, info);
+        cUnit.assemblerRetries++;
+        if (cUnit.printMe && cUnit.assemblerStatus != kSuccess)
+            LOGD("Assembler abort #%d on %d",cUnit.assemblerRetries,
+                  cUnit.assemblerStatus);
+    } while (cUnit.assemblerStatus == kRetryAll);
 
     if (cUnit.printMe) {
-        if (cUnit.halveInstCount) {
-            LOGD("Assembler aborted");
-        } else {
-            dvmCompilerCodegenDump(&cUnit);
-        }
+        dvmCompilerCodegenDump(&cUnit);
         LOGD("End %s%s, %d Dalvik instructions",
              desc->method->clazz->descriptor, desc->method->name,
              cUnit.numInsts);
@@ -935,18 +937,17 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
     /* Reset the compiler resource pool */
     dvmCompilerArenaReset();
 
-    /* Success */
-    if (!cUnit.halveInstCount) {
-#if defined(WITH_JIT_TUNING)
-        methodStats->nativeSize += cUnit.totalSize;
-#endif
-        return info->codeAddress != NULL;
-
-    /* Halve the instruction count and retry again */
-    } else {
+    if (cUnit.assemblerStatus == kRetryHalve) {
+        /* Halve the instruction count and start from the top */
         return dvmCompileTrace(desc, cUnit.numInsts / 2, info, bailPtr,
                                optHints);
     }
+
+    assert(cUnit.assemblerStatus == kSuccess);
+#if defined(WITH_JIT_TUNING)
+    methodStats->nativeSize += cUnit.totalSize;
+#endif
+    return info->codeAddress != NULL;
 }
 
 /*
@@ -1290,7 +1291,7 @@ bool dvmCompileMethod(CompilationUnit *cUnit, const Method *method,
     /* Convert LIR into machine code. */
     dvmCompilerAssembleLIR(cUnit, info);
 
-    if (cUnit->halveInstCount) {
+    if (cUnit->assemblerStatus != kSuccess) {
         return false;
     }
 

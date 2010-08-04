@@ -4426,6 +4426,12 @@ void *dvmCompilerGetInterpretTemplate()
                       templateEntryOffsets[TEMPLATE_INTERPRET]);
 }
 
+/* Needed by the Assembler */
+void dvmCompilerSetupResourceMasks(ArmLIR *lir)
+{
+    setupResourceMasks(lir);
+}
+
 /* Needed by the ld/st optmizatons */
 ArmLIR* dvmCompilerRegCopyNoInsert(CompilationUnit *cUnit, int rDest, int rSrc)
 {

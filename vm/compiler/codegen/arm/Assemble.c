@@ -20,8 +20,11 @@
 
 #include "../../CompilerInternals.h"
 #include "ArmLIR.h"
+#include "Codegen.h"
 #include <unistd.h>             /* for cacheflush */
 #include <sys/mman.h>           /* for protection change */
+
+#define MAX_ASSEMBLER_RETRIES 10
 
 /*
  * opcode: ArmOpCode enum
@@ -914,8 +917,14 @@ static int jitTraceDescriptionSize(const JitTraceDescription *desc)
     return sizeof(JitTraceDescription) + ((runCount+1) * sizeof(JitTraceRun));
 }
 
-/* Return TRUE if error happens */
-static bool assembleInstructions(CompilationUnit *cUnit, intptr_t startAddr)
+/*
+ * Assemble the LIR into binary instruction format.  Note that we may
+ * discover that pc-relative displacements may not fit the selected
+ * instruction.  In those cases we will try to substitute a new code
+ * sequence or request that the trace be shortened and retried.
+ */
+static AssemblerStatus assembleInstructions(CompilationUnit *cUnit,
+                                            intptr_t startAddr)
 {
     short *bufferAddr = (short *) cUnit->codeBuffer;
     ArmLIR *lir;
@@ -952,9 +961,9 @@ static bool assembleInstructions(CompilationUnit *cUnit, intptr_t startAddr)
                 dvmCompilerAbort(cUnit);
             }
             if ((lir->opCode == kThumb2LdrPcRel12) && (delta > 4091)) {
-                return true;
+                return kRetryHalve;
             } else if (delta > 1020) {
-                return true;
+                return kRetryHalve;
             }
             if (lir->opCode == kThumb2Vldrs) {
                 lir->operands[2] = delta >> 2;
@@ -968,11 +977,23 @@ static bool assembleInstructions(CompilationUnit *cUnit, intptr_t startAddr)
             intptr_t target = targetLIR->generic.offset;
             int delta = target - pc;
             if (delta > 126 || delta < 0) {
-                /*
-                 * TODO: allow multiple kinds of assembler failure to allow
-                 * change of code patterns when things don't fit.
-                 */
-                return true;
+                /* Convert to cmp rx,#0 / b[eq/ne] tgt pair */
+                ArmLIR *newInst = dvmCompilerNew(sizeof(ArmLIR), true);
+                /* Make new branch instruction and insert after */
+                newInst->opCode = kThumbBCond;
+                newInst->operands[0] = 0;
+                newInst->operands[1] = (lir->opCode == kThumb2Cbz) ?
+                                        kArmCondEq : kArmCondNe;
+                newInst->generic.target = lir->generic.target;
+                dvmCompilerSetupResourceMasks(newInst);
+                dvmCompilerInsertLIRAfter((LIR *)lir, (LIR *)newInst);
+                /* Convert the cb[n]z to a cmp rx, #0 ] */
+                lir->opCode = kThumbCmpRI8;
+                lir->operands[0] = lir->operands[1];
+                lir->operands[1] = 0;
+                lir->generic.target = 0;
+                dvmCompilerSetupResourceMasks(lir);
+                return kRetryAll;
             } else {
                 lir->operands[1] = delta >> 1;
             }
@@ -983,7 +1004,7 @@ static bool assembleInstructions(CompilationUnit *cUnit, intptr_t startAddr)
             intptr_t target = targetLIR->generic.offset;
             int delta = target - pc;
             if ((lir->opCode == kThumbBCond) && (delta > 254 || delta < -256)) {
-                return true;
+                return kRetryHalve;
             }
             lir->operands[0] = delta >> 1;
         } else if (lir->opCode == kThumbBUncond) {
@@ -1029,18 +1050,12 @@ static bool assembleInstructions(CompilationUnit *cUnit, intptr_t startAddr)
                     bits |= value;
                     break;
                 case kFmtBrOffset:
-                    /*
-                     * NOTE: branch offsets are not handled here, but
-                     * in the main assembly loop (where label values
-                     * are known).  For reference, here is what the
-                     * encoder handing would be:
-                         value = ((operand  & 0x80000) >> 19) << 26;
-                         value |= ((operand & 0x40000) >> 18) << 11;
-                         value |= ((operand & 0x20000) >> 17) << 13;
-                         value |= ((operand & 0x1f800) >> 11) << 16;
-                         value |= (operand  & 0x007ff);
-                         bits |= value;
-                     */
+                    value = ((operand  & 0x80000) >> 19) << 26;
+                    value |= ((operand & 0x40000) >> 18) << 11;
+                    value |= ((operand & 0x20000) >> 17) << 13;
+                    value |= ((operand & 0x1f800) >> 11) << 16;
+                    value |= (operand  & 0x007ff);
+                    bits |= value;
                     break;
                 case kFmtShift5:
                     value = ((operand & 0x1c) >> 2) << 12;
@@ -1117,7 +1132,7 @@ static bool assembleInstructions(CompilationUnit *cUnit, intptr_t startAddr)
         }
         *bufferAddr++ = bits & 0xffff;
     }
-    return false;
+    return kSuccess;
 }
 
 #if defined(SIGNATURE_BREAKPOINT)
@@ -1277,16 +1292,29 @@ void dvmCompilerAssembleLIR(CompilationUnit *cUnit, JitTranslationInfo *info)
         return;
     }
 
-    bool assemblerFailure = assembleInstructions(
-        cUnit, (intptr_t) gDvmJit.codeCache + gDvmJit.codeCacheByteUsed);
-
     /*
-     * Currently the only reason that can cause the assembler to fail is due to
-     * trace length - cut it in half and retry.
+     * Attempt to assemble the trace.  Note that assembleInstructions
+     * may rewrite the code sequence and request a retry.
      */
-    if (assemblerFailure) {
-        cUnit->halveInstCount = true;
-        return;
+    cUnit->assemblerStatus = assembleInstructions(cUnit,
+          (intptr_t) gDvmJit.codeCache + gDvmJit.codeCacheByteUsed);
+
+    switch(cUnit->assemblerStatus) {
+        case kSuccess:
+            break;
+        case kRetryAll:
+            if (cUnit->assemblerRetries < MAX_ASSEMBLER_RETRIES) {
+                return;
+            }
+            /* Too many retries - reset and try cutting the trace in half */
+            cUnit->assemblerRetries = 0;
+            cUnit->assemblerStatus = kRetryHalve;
+            return;
+        case kRetryHalve:
+            return;
+        default:
+             LOGE("Unexpected assembler status: %d", cUnit->assemblerStatus);
+             dvmAbort();
     }
 
 #if defined(SIGNATURE_BREAKPOINT)
