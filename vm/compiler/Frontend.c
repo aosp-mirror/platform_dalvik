@@ -399,7 +399,8 @@ bool filterMethodByCallGraph(Thread *thread, const char *curMethodName)
  * bytecode into machine code.
  */
 bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
-                     JitTranslationInfo *info, jmp_buf *bailPtr)
+                     JitTranslationInfo *info, jmp_buf *bailPtr,
+                     int optHints)
 {
     const DexCode *dexCode = dvmGetMethodCode(desc->method);
     const JitTraceRun* currRun = &desc->trace[0];
@@ -671,10 +672,12 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
                        kInstrInvoke)) == 0) ||
             (lastInsn->dalvikInsn.opCode == OP_INVOKE_DIRECT_EMPTY);
 
+        /* Only form a loop if JIT_OPT_NO_LOOP is not set */
         if (curBB->taken == NULL &&
             curBB->fallThrough == NULL &&
             flags == (kInstrCanBranch | kInstrCanContinue) &&
-            fallThroughOffset == startBB->startOffset) {
+            fallThroughOffset == startBB->startOffset &&
+            JIT_OPT_NO_LOOP != (optHints & JIT_OPT_NO_LOOP)) {
             BasicBlock *loopBranch = curBB;
             BasicBlock *exitBB;
             BasicBlock *exitChainingCell;
@@ -883,7 +886,21 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
     dvmInitializeSSAConversion(&cUnit);
 
     if (cUnit.hasLoop) {
-        dvmCompilerLoopOpt(&cUnit);
+        /*
+         * Loop is not optimizable (for example lack of a single induction
+         * variable), punt and recompile the trace with loop optimization
+         * disabled.
+         */
+        bool loopOpt = dvmCompilerLoopOpt(&cUnit);
+        if (loopOpt == false) {
+            if (cUnit.printMe) {
+                LOGD("Loop is not optimizable - retry codegen");
+            }
+            /* Reset the compiler resource pool */
+            dvmCompilerArenaReset();
+            return dvmCompileTrace(desc, cUnit.numInsts, info, bailPtr,
+                                   optHints | JIT_OPT_NO_LOOP);
+        }
     }
     else {
         dvmCompilerNonLoopAnalysis(&cUnit);
@@ -927,7 +944,8 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
 
     /* Halve the instruction count and retry again */
     } else {
-        return dvmCompileTrace(desc, cUnit.numInsts / 2, info, bailPtr);
+        return dvmCompileTrace(desc, cUnit.numInsts / 2, info, bailPtr,
+                               optHints);
     }
 }
 
