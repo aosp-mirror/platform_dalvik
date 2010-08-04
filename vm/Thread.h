@@ -319,7 +319,7 @@ void dvmUndoDebuggerSuspensions(void);
 /*
  * Check suspend state.  Grab threadListLock before calling.
  */
-bool dvmIsSuspended(Thread* thread);
+bool dvmIsSuspended(const Thread* thread);
 
 /*
  * Wait until a thread has suspended.  (Used by debugger support.)

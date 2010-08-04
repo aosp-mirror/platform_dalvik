@@ -472,6 +472,11 @@ static inline void unlockThreadSuspendCount(void)
  * the lock.  Nobody can suspend all threads without holding the thread list
  * lock while they do it, so by definition there isn't a GC in progress.
  *
+ * This function deliberately avoids the use of dvmChangeStatus(),
+ * which could grab threadSuspendCountLock.  To avoid deadlock, threads
+ * are required to grab the thread list lock before the thread suspend
+ * count lock.  (See comment in DvmGlobals.)
+ *
  * TODO: consider checking for suspend after acquiring the lock, and
  * backing off if set.  As stated above, it can't happen during normal
  * execution, but it *can* happen during shutdown when daemon threads
@@ -2262,7 +2267,7 @@ void dvmDetachCurrentThread(void)
      * parallel with us from here out.  It's important to do this if
      * profiling is enabled, since we can wait indefinitely.
      */
-    self->status = THREAD_VMWAIT;
+    android_atomic_release_store(THREAD_VMWAIT, &self->status);
 
 #ifdef WITH_PROFILER
     /*
@@ -2974,8 +2979,13 @@ void dvmUndoDebuggerSuspensions(void)
  *
  * As with all operations on foreign threads, the caller should hold
  * the thread list lock before calling.
+ *
+ * If the thread is suspending or waking, these fields could be changing
+ * out from under us (or the thread could change state right after we
+ * examine it), making this generally unreliable.  This is chiefly
+ * intended for use by the debugger.
  */
-bool dvmIsSuspended(Thread* thread)
+bool dvmIsSuspended(const Thread* thread)
 {
     /*
      * The thread could be:
@@ -3052,27 +3062,27 @@ static bool checkSuspendAndChangeStatus(Thread* self, ThreadStatus newStatus)
     lockThreadSuspendCount();   /* grab gDvm.threadSuspendCountLock */
 
     didSuspend = (self->suspendCount != 0);
-    self->isSuspended = true;
-    LOG_THREAD("threadid=%d: self-suspending\n", self->threadId);
-    while (self->suspendCount != 0) {
-        /* wait for wakeup signal; releases lock */
-        int cc;
-        cc = pthread_cond_wait(&gDvm.threadSuspendCountCond,
-                &gDvm.threadSuspendCountLock);
-        assert(cc == 0);
+    if (didSuspend) {
+        self->isSuspended = true;
+        LOG_THREAD("threadid=%d: self-suspending\n", self->threadId);
+        while (self->suspendCount != 0) {
+            /* wait for wakeup signal; releases lock */
+            dvmWaitCond(&gDvm.threadSuspendCountCond,
+                    &gDvm.threadSuspendCountLock);
+        }
+        assert(self->suspendCount == 0 && self->dbgSuspendCount == 0);
+        self->isSuspended = false;
+        LOG_THREAD("threadid=%d: self-reviving, status=%d\n",
+            self->threadId, self->status);
     }
-    assert(self->suspendCount == 0 && self->dbgSuspendCount == 0);
-    self->isSuspended = false;
-    LOG_THREAD("threadid=%d: self-reviving, status=%d\n",
-        self->threadId, self->status);
 
     /*
      * The status change needs to happen while the suspend count lock is
      * held.  Otherwise we could switch to RUNNING after another thread
      * increases our suspend count, which isn't a "bad" state for us
      * (we'll suspend on the next check) but could be a problem for the
-     * other thread (which thinks we're safely in VMWAIT or NATIVE with
-     * a nonzero suspend count, and proceeds to initate GC).
+     * other thread (which thinks we're still safely in VMWAIT or NATIVE
+     * with a nonzero suspend count, and proceeds to initate GC).
      */
     if (newStatus != THREAD_UNDEFINED)
         self->status = newStatus;
@@ -3128,8 +3138,12 @@ ThreadStatus dvmChangeStatus(Thread* self, ThreadStatus newStatus)
     } else {
         /*
          * Not changing to THREAD_RUNNING.  No additional work required.
+         *
+         * We use a releasing store to ensure that, if we were RUNNING,
+         * any updates we previously made to objects on the managed heap
+         * will be observed before the state change.
          */
-        self->status = newStatus;
+        android_atomic_release_store(newStatus, &self->status);
     }
 
     return oldStatus;
@@ -4084,6 +4098,12 @@ static void gcScanThread(Thread *thread)
      * (Newly-created threads shouldn't be able to shift themselves to
      * RUNNING without a suspend-pending check, so this shouldn't cause
      * a false-positive.)
+     *
+     * Since the thread is supposed to be suspended, we should have already
+     * observed all changes to thread state, and don't need to use a memory
+     * barrier here.  It's possible we might miss a wayward unsuspended
+     * thread on SMP, but as this is primarily a sanity check it's not
+     * worth slowing the common case.
      */
     if (thread->status == THREAD_RUNNING && !thread->isSuspended &&
         thread != dvmThreadSelf())
