@@ -25,7 +25,7 @@ public final class CstNat extends Constant {
     /**
      * {@code non-null;} the instance for name {@code TYPE} and descriptor
      * {@code java.lang.Class}, which is useful when dealing with
-     * wrapped primitives 
+     * wrapped primitives
      */
     public static final CstNat PRIMITIVE_TYPE_NAT =
         new CstNat(new CstUtf8("TYPE"),
@@ -39,7 +39,7 @@ public final class CstNat extends Constant {
 
     /**
      * Constructs an instance.
-     * 
+     *
      * @param name {@code non-null;} the name
      * @param descriptor {@code non-null;} the descriptor
      */
@@ -64,7 +64,7 @@ public final class CstNat extends Constant {
         }
 
         CstNat otherNat = (CstNat) other;
-        return name.equals(otherNat.name) && 
+        return name.equals(otherNat.name) &&
             descriptor.equals(otherNat.descriptor);
     }
 
@@ -107,7 +107,7 @@ public final class CstNat extends Constant {
 
     /**
      * Gets the name.
-     * 
+     *
      * @return {@code non-null;} the name
      */
     public CstUtf8 getName() {
@@ -116,7 +116,7 @@ public final class CstNat extends Constant {
 
     /**
      * Gets the descriptor.
-     * 
+     *
      * @return {@code non-null;} the descriptor
      */
     public CstUtf8 getDescriptor() {
@@ -126,7 +126,7 @@ public final class CstNat extends Constant {
     /**
      * Returns an unadorned but human-readable version of the name-and-type
      * value.
-     * 
+     *
      * @return {@code non-null;} the human form
      */
     public String toHuman() {
@@ -137,7 +137,7 @@ public final class CstNat extends Constant {
      * Gets the field type corresponding to this instance's descriptor.
      * This method is only valid to call if the descriptor in fact describes
      * a field (and not a method).
-     * 
+     *
      * @return {@code non-null;} the field type
      */
     public Type getFieldType() {
@@ -148,7 +148,7 @@ public final class CstNat extends Constant {
      * Gets whether this instance has the name of a standard instance
      * initialization method. This is just a convenient shorthand for
      * {@code getName().getString().equals("<init>")}.
-     * 
+     *
      * @return {@code true} iff this is a reference to an
      * instance initialization method
      */
@@ -160,7 +160,7 @@ public final class CstNat extends Constant {
      * Gets whether this instance has the name of a standard class
      * initialization method. This is just a convenient shorthand for
      * {@code getName().getString().equals("<clinit>")}.
-     * 
+     *
      * @return {@code true} iff this is a reference to an
      * instance initialization method
      */

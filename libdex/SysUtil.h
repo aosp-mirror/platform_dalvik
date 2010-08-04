@@ -106,4 +106,11 @@ int sysChangeMapAccess(void* addr, size_t length, int wantReadWrite,
  */
 void sysReleaseShmem(MemMapping* pMap);
 
+/*
+ * Write until all bytes have been written.
+ *
+ * Returns 0 on success, or an errno value on failure.
+ */
+int sysWriteFully(int fd, const void* buf, size_t count, const char* logMsg);
+
 #endif /*_DALVIK_SYSUTIL*/

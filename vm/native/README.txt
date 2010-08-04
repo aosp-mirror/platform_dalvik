@@ -21,4 +21,3 @@ The former represents the API that we're most likely to expose should
 JNI performance be deemed insufficient.  The Bridge version is used as
 an optimization for a few high-volume Object calls, and should generally
 not be used as we may drop support for it at some point.
-

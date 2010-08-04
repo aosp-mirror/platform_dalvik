@@ -19,4 +19,3 @@ package other;
 public class InaccessibleMethod {
     /*package*/ static void test() {}
 }
-

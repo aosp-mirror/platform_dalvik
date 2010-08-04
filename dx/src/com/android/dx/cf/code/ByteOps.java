@@ -272,20 +272,20 @@ public class ByteOps {
     /**
      * "l": {@code op local}; category-1 local; implies
      * {@code max_locals} is at least two more than the given
-     * local number 
+     * local number
      */
     public static final int FMT_LOCAL_1 = 10;
 
     /**
      * "m": {@code op local}; category-2 local; implies
      * {@code max_locals} is at least two more than the given
-     * local number 
+     * local number
      */
     public static final int FMT_LOCAL_2 = 11;
 
     /**
      * "y": {@code op #byte} ({@code bipush} and
-     * {@code newarray}) 
+     * {@code newarray})
      */
     public static final int FMT_LITERAL_BYTE = 12;
 
@@ -342,7 +342,7 @@ public class ByteOps {
 
     /**
      * {@code non-null;} map from opcodes to format or'ed with allowed constant
-     * pool types 
+     * pool types
      */
     private static final int[] OPCODE_INFO = new int[256];
 
@@ -622,7 +622,7 @@ public class ByteOps {
 
     /**
      * Gets the name of the given opcode.
-     * 
+     *
      * @param opcode {@code >= 0, <= 255;} the opcode
      * @return {@code non-null;} its name
      */
@@ -639,7 +639,7 @@ public class ByteOps {
 
     /**
      * Gets the format and allowed cp types of the given opcode.
-     * 
+     *
      * @param opcode {@code >= 0, <= 255;} the opcode
      * @return its format and allowed cp types
      */

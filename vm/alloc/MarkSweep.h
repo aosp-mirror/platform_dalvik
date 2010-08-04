@@ -38,26 +38,22 @@ typedef struct {
 /* This is declared publicly so that it can be included in gDvm.gcHeap.
  */
 typedef struct {
-    HeapBitmap bitmaps[HEAP_SOURCE_MAX_HEAP_COUNT];
-    size_t numBitmaps;
+    HeapBitmap *bitmap;
     GcMarkStack stack;
+    const char *immuneLimit;
     const void *finger;   // only used while scanning/recursing.
 } GcMarkContext;
 
-enum RefType {
-    REF_SOFT,
-    REF_WEAK,
-    REF_PHANTOM,
-    REF_WEAKGLOBAL
-};
-
-bool dvmHeapBeginMarkStep(void);
+bool dvmHeapBeginMarkStep(GcMode mode);
 void dvmHeapMarkRootSet(void);
+void dvmHeapReMarkRootSet(void);
 void dvmHeapScanMarkedObjects(void);
-void dvmHeapHandleReferences(Object *refListHead, enum RefType refType);
+void dvmHeapReScanMarkedObjects(void);
+void dvmHandleSoftRefs(Object **list);
+void dvmClearWhiteRefs(Object **list);
 void dvmHeapScheduleFinalizations(void);
 void dvmHeapFinishMarkStep(void);
 
-void dvmHeapSweepUnmarkedObjects(int *numFreed, size_t *sizeFreed);
+void dvmHeapSweepUnmarkedObjects(GcMode mode, int *numFreed, size_t *sizeFreed);
 
 #endif  // _DALVIK_ALLOC_MARK_SWEEP

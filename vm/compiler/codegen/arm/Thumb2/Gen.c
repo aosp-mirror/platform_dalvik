@@ -87,7 +87,6 @@ static void genLong3Addr(CompilationUnit *cUnit, MIR *mir, OpKind firstOp,
 
 void dvmCompilerInitializeRegAlloc(CompilationUnit *cUnit)
 {
-    int i;
     int numTemps = sizeof(coreTemps)/sizeof(int);
     int numFPTemps = sizeof(fpTemps)/sizeof(int);
     RegisterPool *pool = dvmCompilerNew(sizeof(*pool), true);
@@ -193,7 +192,6 @@ static ArmLIR *genExportPC(CompilationUnit *cUnit, MIR *mir)
 static void genMonitorEnter(CompilationUnit *cUnit, MIR *mir)
 {
     RegLocation rlSrc = dvmCompilerGetSrc(cUnit, mir, 0);
-    bool enter = (mir->dalvikInsn.opCode == OP_MONITOR_ENTER);
     ArmLIR *target;
     ArmLIR *hopTarget;
     ArmLIR *branch;

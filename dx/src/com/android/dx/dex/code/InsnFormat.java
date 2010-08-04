@@ -290,7 +290,7 @@ public abstract class InsnFormat {
         if (! ci.hasIndex()) {
             return "";
         }
-        
+
         StringBuilder sb = new StringBuilder(20);
         int index = ci.getIndex();
 
@@ -302,7 +302,7 @@ public abstract class InsnFormat {
         } else {
             sb.append(Hex.u4(index));
         }
-        
+
         return sb.toString();
     }
 
@@ -484,7 +484,7 @@ public abstract class InsnFormat {
 
     /**
      * Writes one code unit to the given output destination.
-     * 
+     *
      * @param out {@code non-null;} where to write to
      * @param c0 code unit to write
      */
@@ -494,7 +494,7 @@ public abstract class InsnFormat {
 
     /**
      * Writes two code units to the given output destination.
-     * 
+     *
      * @param out {@code non-null;} where to write to
      * @param c0 code unit to write
      * @param c1 code unit to write
@@ -506,7 +506,7 @@ public abstract class InsnFormat {
 
     /**
      * Writes three code units to the given output destination.
-     * 
+     *
      * @param out {@code non-null;} where to write to
      * @param c0 code unit to write
      * @param c1 code unit to write
@@ -521,7 +521,7 @@ public abstract class InsnFormat {
 
     /**
      * Writes four code units to the given output destination.
-     * 
+     *
      * @param out {@code non-null;} where to write to
      * @param c0 code unit to write
      * @param c1 code unit to write
@@ -538,7 +538,7 @@ public abstract class InsnFormat {
 
     /**
      * Writes five code units to the given output destination.
-     * 
+     *
      * @param out {@code non-null;} where to write to
      * @param c0 code unit to write
      * @param c1 code unit to write
@@ -557,7 +557,7 @@ public abstract class InsnFormat {
 
     /**
      * Writes six code units to the given output destination.
-     * 
+     *
      * @param out {@code non-null;} where to write to
      * @param c0 code unit to write
      * @param c1 code unit to write

@@ -424,7 +424,7 @@ static bool initException(Object* exception, const char* msg, Object* cause,
     if (msg == NULL)
         msgStr = NULL;
     else {
-        msgStr = dvmCreateStringFromCstr(msg, ALLOC_DEFAULT);
+        msgStr = dvmCreateStringFromCstr(msg);
         if (msgStr == NULL) {
             LOGW("Could not allocate message string \"%s\" while "
                     "throwing internal exception (%s)\n",
@@ -528,7 +528,7 @@ static bool initException(Object* exception, const char* msg, Object* cause,
             excepClass->descriptor, msg, initKind);
         assert(strcmp(excepClass->descriptor,
                       "Ljava/lang/RuntimeException;") != 0);
-        dvmThrowChainedException("Ljava/lang/RuntimeException;", 
+        dvmThrowChainedException("Ljava/lang/RuntimeException;",
             "re-throw on exception class missing constructor", NULL);
         goto bail;
     }
@@ -744,7 +744,7 @@ void dvmPrintExceptionStackTrace(void)
     }
 
     if (self->exception != NULL) {
-        LOGI("NOTE: exception thrown while printing stack trace: %s\n",
+        LOGW("NOTE: exception thrown while printing stack trace: %s\n",
             self->exception->clazz->descriptor);
     }
 
@@ -781,7 +781,7 @@ static int findCatchInMethod(Thread* self, const Method* method, int relPc,
             if (handler == NULL) {
                 break;
             }
-                
+
             if (handler->typeIdx == kDexNoIndex) {
                 /* catch-all */
                 LOGV("Match on catch-all block at 0x%02x in %s.%s for %s\n",
@@ -1075,7 +1075,7 @@ void* dvmFillInStackTraceInternal(Thread* thread, bool wantObject, int* pCount)
                 *intPtr++ = 0;      /* no saved PC for native methods */
             } else {
                 assert(saveArea->xtra.currentPc >= method->insns &&
-                        saveArea->xtra.currentPc < 
+                        saveArea->xtra.currentPc <
                         method->insns + dvmGetMethodInsnsSize(method));
                 *intPtr++ = (int) (saveArea->xtra.currentPc - method->insns);
             }
@@ -1109,7 +1109,7 @@ ArrayObject* dvmGetStackTrace(const Object* ostackData)
 {
     const ArrayObject* stackData = (const ArrayObject*) ostackData;
     const int* intVals;
-    int i, stackSize;
+    int stackSize;
 
     stackSize = stackData->length / 2;
     intVals = (const int*) stackData->contents;
@@ -1127,7 +1127,6 @@ ArrayObject* dvmGetStackTrace(const Object* ostackData)
 ArrayObject* dvmGetStackTraceRaw(const int* intVals, int stackDepth)
 {
     ArrayObject* steArray = NULL;
-    Object** stePtr;
     int i;
 
     /* init this if we haven't yet */
@@ -1139,7 +1138,6 @@ ArrayObject* dvmGetStackTraceRaw(const int* intVals, int stackDepth)
                     stackDepth, kObjectArrayRefWidth, ALLOC_DEFAULT);
     if (steArray == NULL)
         goto bail;
-    stePtr = (Object**) steArray->contents;
 
     /*
      * Allocate and initialize a StackTraceElement for each stack frame.
@@ -1168,13 +1166,13 @@ ArrayObject* dvmGetStackTraceRaw(const int* intVals, int stackDepth)
             lineNumber = dvmLineNumFromPC(meth, pc);
 
         dotName = dvmDescriptorToDot(meth->clazz->descriptor);
-        className = dvmCreateStringFromCstr(dotName, ALLOC_DEFAULT);
+        className = dvmCreateStringFromCstr(dotName);
         free(dotName);
 
-        methodName = dvmCreateStringFromCstr(meth->name, ALLOC_DEFAULT);
+        methodName = dvmCreateStringFromCstr(meth->name);
         sourceFile = dvmGetMethodSourceFile(meth);
         if (sourceFile != NULL)
-            fileName = dvmCreateStringFromCstr(sourceFile, ALLOC_DEFAULT);
+            fileName = dvmCreateStringFromCstr(sourceFile);
         else
             fileName = NULL;
 
@@ -1196,7 +1194,7 @@ ArrayObject* dvmGetStackTraceRaw(const int* intVals, int stackDepth)
         if (dvmCheckException(dvmThreadSelf()))
             goto bail;
 
-        *stePtr++ = ste;
+        dvmSetObjectArrayElement(steArray, i, ste);
     }
 
 bail:
@@ -1304,4 +1302,3 @@ void dvmLogExceptionStackTrace(void)
         exception = cause;
     }
 }
-

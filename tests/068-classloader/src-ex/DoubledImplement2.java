@@ -30,4 +30,3 @@ public class DoubledImplement2 implements ICommon2 {
         System.out.println("DoubledImplement2 two");
     }
 }
-

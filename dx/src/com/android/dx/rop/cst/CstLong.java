@@ -33,7 +33,7 @@ public final class CstLong
     /**
      * Makes an instance for the given value. This may (but does not
      * necessarily) return an already-allocated instance.
-     * 
+     *
      * @param value the {@code long} value
      */
     public static CstLong make(long value) {
@@ -46,7 +46,7 @@ public final class CstLong
 
     /**
      * Constructs an instance. This constructor is private; use {@link #make}.
-     * 
+     *
      * @param value the {@code long} value
      */
     private CstLong(long value) {
@@ -78,7 +78,7 @@ public final class CstLong
 
     /**
      * Gets the {@code long} value.
-     * 
+     *
      * @return the value
      */
     public long getValue() {

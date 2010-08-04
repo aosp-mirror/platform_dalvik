@@ -30,7 +30,7 @@ public final class AttInnerClasses extends BaseAttribute {
 
     /**
      * Constructs an instance.
-     * 
+     *
      * @param innerClasses {@code non-null;} list of inner class entries
      */
     public AttInnerClasses(InnerClassList innerClasses) {
@@ -55,7 +55,7 @@ public final class AttInnerClasses extends BaseAttribute {
 
     /**
      * Gets the list of "inner class" entries associated with this instance.
-     * 
+     *
      * @return {@code non-null;} the list
      */
     public InnerClassList getInnerClasses() {

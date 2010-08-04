@@ -57,7 +57,7 @@ public final class InsnList
     /**
      * Gets the last instruction. This is just a convenient shorthand for
      * {@code get(size() - 1)}.
-     * 
+     *
      * @return {@code non-null;} the last instruction
      */
     public Insn getLast() {
@@ -91,7 +91,7 @@ public final class InsnList
         int sz = size();
 
         if (sz != b.size()) return false;
-        
+
         for (int i = 0; i < sz; i++) {
             if (!get(i).contentEquals(b.get(i))) {
                 return false;
@@ -106,7 +106,7 @@ public final class InsnList
      * the registers in each instruction are offset by the given
      * amount. Mutability of the result is inherited from the
      * original.
-     * 
+     *
      * @param delta the amount to offset register numbers by
      * @return {@code non-null;} an appropriately-constructed instance
      */

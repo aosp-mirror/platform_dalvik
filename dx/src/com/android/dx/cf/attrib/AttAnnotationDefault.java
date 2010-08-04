@@ -34,7 +34,7 @@ public final class AttAnnotationDefault extends BaseAttribute {
 
     /**
      * Constructs an instance.
-     * 
+     *
      * @param value {@code non-null;} the annotation default value
      * @param byteLength {@code >= 0;} attribute data length in the original
      * classfile (not including the attribute header)
@@ -58,7 +58,7 @@ public final class AttAnnotationDefault extends BaseAttribute {
 
     /**
      * Gets the annotation default value.
-     * 
+     *
      * @return {@code non-null;} the value
      */
     public Constant getValue() {

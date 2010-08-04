@@ -21,6 +21,8 @@
 #ifndef _DALVIK_OO_OBJECT
 #define _DALVIK_OO_OBJECT
 
+#include <Atomic.h>
+
 #include <stddef.h>
 
 /* fwd decl */
@@ -137,15 +139,14 @@ typedef enum ClassStatus {
     CLASS_ERROR         = -1,
 
     CLASS_NOTREADY      = 0,
-    CLASS_LOADED        = 1,
-    CLASS_PREPARED      = 2,    /* part of linking */
+    CLASS_IDX           = 1,    /* loaded, DEX idx in super or ifaces */
+    CLASS_LOADED        = 2,    /* DEX idx values resolved */
     CLASS_RESOLVED      = 3,    /* part of linking */
     CLASS_VERIFYING     = 4,    /* in the process of being verified */
     CLASS_VERIFIED      = 5,    /* logically part of linking; done pre-init */
     CLASS_INITIALIZING  = 6,    /* class init in progress */
     CLASS_INITIALIZED   = 7,    /* ready to go */
 } ClassStatus;
-
 
 /*
  * Primitive type identifiers.  We use these values as indexes into an
@@ -254,8 +255,12 @@ typedef struct Object {
  * Properly initialize an Object.
  * void DVM_OBJECT_INIT(Object *obj, ClassObject *clazz_)
  */
-#define DVM_OBJECT_INIT(obj, clazz_) \
-    do { (obj)->clazz = (clazz_); DVM_LOCK_INIT(&(obj)->lock); } while (0)
+#define DVM_OBJECT_INIT(obj, clazz_)                                    \
+    do {                                                                \
+        dvmSetFieldObject((Object *)obj, offsetof(Object, clazz),       \
+                          (Object *)clazz_);                            \
+        DVM_LOCK_INIT(&(obj)->lock);                                    \
+    } while (0)
 
 /*
  * Data objects have an Object header followed by their instance data.
@@ -317,6 +322,45 @@ struct InitiatingLoaderList {
     Object**  initiatingLoaders;
     /* count of loaders in the above list */
     int       initiatingLoaderCount;
+};
+
+/*
+ * Generic field header.  We pass this around when we want a generic Field
+ * pointer (e.g. for reflection stuff).  Testing the accessFlags for
+ * ACC_STATIC allows a proper up-cast.
+ */
+struct Field {
+    ClassObject*    clazz;          /* class in which the field is declared */
+    const char*     name;
+    const char*     signature;      /* e.g. "I", "[C", "Landroid/os/Debug;" */
+    u4              accessFlags;
+#ifdef PROFILE_FIELD_ACCESS
+    u4              gets;
+    u4              puts;
+#endif
+};
+
+/*
+ * Static field.
+ */
+struct StaticField {
+    Field           field;          /* MUST be first item */
+    JValue          value;          /* initially set from DEX for primitives */
+};
+
+/*
+ * Instance field.
+ */
+struct InstField {
+    Field           field;          /* MUST be first item */
+
+    /*
+     * This field indicates the byte offset from the beginning of the
+     * (Object *) to the actual instance data; e.g., byteOffset==0 is
+     * the same as the object pointer (bug!), and byteOffset==4 is 4
+     * bytes farther.
+     */
+    int             byteOffset;
 };
 
 /*
@@ -443,10 +487,6 @@ struct ClassObject {
     int             ifviPoolCount;
     int*            ifviPool;
 
-    /* static fields */
-    int             sfieldCount;
-    StaticField*    sfields;
-
     /* instance fields
      *
      * These describe the layout of the contents of a DataObject-compatible
@@ -467,6 +507,10 @@ struct ClassObject {
 
     /* source file name, if known */
     const char*     sourceFile;
+
+    /* static fields */
+    int             sfieldCount;
+    StaticField     sfields[]; /* MUST be last item */
 };
 
 /*
@@ -555,45 +599,6 @@ struct Method {
 #endif
 };
 
-/*
- * Generic field header.  We pass this around when we want a generic Field
- * pointer (e.g. for reflection stuff).  Testing the accessFlags for
- * ACC_STATIC allows a proper up-cast.
- */
-struct Field {
-    ClassObject*    clazz;          /* class in which the field is declared */
-    const char*     name;
-    const char*     signature;      /* e.g. "I", "[C", "Landroid/os/Debug;" */
-    u4              accessFlags;
-#ifdef PROFILE_FIELD_ACCESS
-    u4              gets;
-    u4              puts;
-#endif
-};
-
-/*
- * Static field.
- */
-struct StaticField {
-    Field           field;          /* MUST be first item */
-    JValue          value;          /* initially set from DEX for primitives */
-};
-
-/*
- * Instance field.
- */
-struct InstField {
-    Field           field;          /* MUST be first item */
-
-    /*
-     * This field indicates the byte offset from the beginning of the
-     * (Object *) to the actual instance data; e.g., byteOffset==0 is
-     * the same as the object pointer (bug!), and byteOffset==4 is 4
-     * bytes farther.
-     */
-    int             byteOffset;
-};
-
 
 /*
  * Find a method within a class.  The superclass is not searched.
@@ -672,140 +677,6 @@ INLINE int dvmFindFieldOffset(const ClassObject* clazz,
 }
 
 /*
- * Field access functions.  Pass in the word offset from Field->byteOffset.
- *
- * We guarantee that long/double field data is 64-bit aligned, so it's safe
- * to access them with ldrd/strd on ARM.
- *
- * The VM treats all fields as 32 or 64 bits, so the field set functions
- * write 32 bits even if the underlying type is smaller.
- */
-#define BYTE_OFFSET(_ptr, _offset)  ((void*) (((u1*)(_ptr)) + (_offset)))
-
-INLINE JValue* dvmFieldPtr(const Object* obj, int offset) {
-    return ((JValue*)BYTE_OFFSET(obj, offset));
-}
-
-INLINE bool dvmGetFieldBoolean(const Object* obj, int offset) {
-    return ((JValue*)BYTE_OFFSET(obj, offset))->z;
-}
-INLINE s1 dvmGetFieldByte(const Object* obj, int offset) {
-    return ((JValue*)BYTE_OFFSET(obj, offset))->b;
-}
-INLINE s2 dvmGetFieldShort(const Object* obj, int offset) {
-    return ((JValue*)BYTE_OFFSET(obj, offset))->s;
-}
-INLINE u2 dvmGetFieldChar(const Object* obj, int offset) {
-    return ((JValue*)BYTE_OFFSET(obj, offset))->c;
-}
-INLINE s4 dvmGetFieldInt(const Object* obj, int offset) {
-    return ((JValue*)BYTE_OFFSET(obj, offset))->i;
-}
-INLINE s8 dvmGetFieldLong(const Object* obj, int offset) {
-    return ((JValue*)BYTE_OFFSET(obj, offset))->j;
-}
-INLINE float dvmGetFieldFloat(const Object* obj, int offset) {
-    return ((JValue*)BYTE_OFFSET(obj, offset))->f;
-}
-INLINE double dvmGetFieldDouble(const Object* obj, int offset) {
-    return ((JValue*)BYTE_OFFSET(obj, offset))->d;
-}
-INLINE Object* dvmGetFieldObject(const Object* obj, int offset) {
-    return ((JValue*)BYTE_OFFSET(obj, offset))->l;
-}
-
-INLINE void dvmSetFieldBoolean(Object* obj, int offset, bool val) {
-    ((JValue*)BYTE_OFFSET(obj, offset))->i = val;
-}
-INLINE void dvmSetFieldByte(Object* obj, int offset, s1 val) {
-    ((JValue*)BYTE_OFFSET(obj, offset))->i = val;
-}
-INLINE void dvmSetFieldShort(Object* obj, int offset, s2 val) {
-    ((JValue*)BYTE_OFFSET(obj, offset))->i = val;
-}
-INLINE void dvmSetFieldChar(Object* obj, int offset, u2 val) {
-    ((JValue*)BYTE_OFFSET(obj, offset))->i = val;
-}
-INLINE void dvmSetFieldInt(Object* obj, int offset, s4 val) {
-    ((JValue*)BYTE_OFFSET(obj, offset))->i = val;
-}
-INLINE void dvmSetFieldLong(Object* obj, int offset, s8 val) {
-    ((JValue*)BYTE_OFFSET(obj, offset))->j = val;
-}
-INLINE void dvmSetFieldFloat(Object* obj, int offset, float val) {
-    ((JValue*)BYTE_OFFSET(obj, offset))->f = val;
-}
-INLINE void dvmSetFieldDouble(Object* obj, int offset, double val) {
-    ((JValue*)BYTE_OFFSET(obj, offset))->d = val;
-}
-INLINE void dvmSetFieldObject(Object* obj, int offset, Object* val) {
-    ((JValue*)BYTE_OFFSET(obj, offset))->l = val;
-}
-
-/*
- * Static field access functions.
- */
-INLINE JValue* dvmStaticFieldPtr(const StaticField* sfield) {
-    return (JValue*)&sfield->value;
-}
-
-INLINE bool dvmGetStaticFieldBoolean(const StaticField* sfield) {
-    return sfield->value.z;
-}
-INLINE s1 dvmGetStaticFieldByte(const StaticField* sfield) {
-    return sfield->value.b;
-}
-INLINE s2 dvmGetStaticFieldShort(const StaticField* sfield) {
-    return sfield->value.s;
-}
-INLINE u2 dvmGetStaticFieldChar(const StaticField* sfield) {
-    return sfield->value.c;
-}
-INLINE s4 dvmGetStaticFieldInt(const StaticField* sfield) {
-    return sfield->value.i;
-}
-INLINE s8 dvmGetStaticFieldLong(const StaticField* sfield) {
-    return sfield->value.j;
-}
-INLINE float dvmGetStaticFieldFloat(const StaticField* sfield) {
-    return sfield->value.f;
-}
-INLINE double dvmGetStaticFieldDouble(const StaticField* sfield) {
-    return sfield->value.d;
-}
-INLINE Object* dvmGetStaticFieldObject(const StaticField* sfield) {
-    return sfield->value.l;
-}
-
-INLINE void dvmSetStaticFieldBoolean(StaticField* sfield, bool val) {
-    sfield->value.i = val;
-}
-INLINE void dvmSetStaticFieldByte(StaticField* sfield, s1 val) {
-    sfield->value.i = val;
-}
-INLINE void dvmSetStaticFieldShort(StaticField* sfield, s2 val) {
-    sfield->value.i = val;
-}
-INLINE void dvmSetStaticFieldChar(StaticField* sfield, u2 val) {
-    sfield->value.i = val;
-}
-INLINE void dvmSetStaticFieldInt(StaticField* sfield, s4 val) {
-    sfield->value.i = val;
-}
-INLINE void dvmSetStaticFieldLong(StaticField* sfield, s8 val) {
-    sfield->value.j = val;
-}
-INLINE void dvmSetStaticFieldFloat(StaticField* sfield, float val) {
-    sfield->value.f = val;
-}
-INLINE void dvmSetStaticFieldDouble(StaticField* sfield, double val) {
-    sfield->value.d = val;
-}
-INLINE void dvmSetStaticFieldObject(StaticField* sfield, Object* val) {
-    sfield->value.l = val;
-}
-
-/*
  * Helpers.
  */
 INLINE bool dvmIsPublicMethod(const Method* method) {
@@ -859,6 +730,9 @@ INLINE bool dvmIsStaticField(const Field* field) {
 INLINE bool dvmIsFinalField(const Field* field) {
     return (field->accessFlags & ACC_FINAL) != 0;
 }
+INLINE bool dvmIsVolatileField(const Field* field) {
+    return (field->accessFlags & ACC_VOLATILE) != 0;
+}
 
 INLINE bool dvmIsInterfaceClass(const ClassObject* clazz) {
     return (clazz->accessFlags & ACC_INTERFACE) != 0;
@@ -872,8 +746,8 @@ INLINE bool dvmIsFinalClass(const ClassObject* clazz) {
 INLINE bool dvmIsAbstractClass(const ClassObject* clazz) {
     return (clazz->accessFlags & ACC_ABSTRACT) != 0;
 }
-INLINE bool dvmIsAnnotationClass(const ClassObject* clazz) { 
-    return (clazz->accessFlags & ACC_ANNOTATION) != 0; 
+INLINE bool dvmIsAnnotationClass(const ClassObject* clazz) {
+    return (clazz->accessFlags & ACC_ANNOTATION) != 0;
 }
 INLINE bool dvmIsPrimitiveClass(const ClassObject* clazz) {
     return clazz->primitiveType != PRIM_NOT;

@@ -30,4 +30,3 @@ public class AbstractGet extends AbstractBase {
 abstract class AbstractBase extends BaseOkay {
     public abstract DoubledExtendOkay getExtended();
 }
-

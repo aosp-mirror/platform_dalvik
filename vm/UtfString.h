@@ -58,26 +58,22 @@ u4 dvmComputeStringHash(StringObject* strObj);
 /*
  * Create a java/lang/String from a C string.
  *
- * The caller must call dvmReleaseTrackedAlloc() on the return value or
- * use a non-default value for "allocFlags".  It is never appropriate
- * to use ALLOC_DONT_TRACK with this function.
+ * The caller must call dvmReleaseTrackedAlloc() on the return value.
  *
  * Returns NULL and throws an exception on failure.
  */
-StringObject* dvmCreateStringFromCstr(const char* utf8Str, int allocFlags);
+StringObject* dvmCreateStringFromCstr(const char* utf8Str);
 
 /*
  * Create a java/lang/String from a C string, given its UTF-16 length
  * (number of UTF-16 code points).
  *
- * The caller must call dvmReleaseTrackedAlloc() on the return value or
- * use a non-default value for "allocFlags".  It is never appropriate
- * to use ALLOC_DONT_TRACK with this function.
+ * The caller must call dvmReleaseTrackedAlloc() on the return value.
  *
  * Returns NULL and throws an exception on failure.
  */
 StringObject* dvmCreateStringFromCstrAndLength(const char* utf8Str,
-    u4 utf16Length, int allocFlags);
+    u4 utf16Length);
 
 /*
  * Compute the number of characters in a "modified UTF-8" string.  This will

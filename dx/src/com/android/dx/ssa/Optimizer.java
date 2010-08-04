@@ -18,12 +18,10 @@ package com.android.dx.ssa;
 
 import com.android.dx.rop.code.RopMethod;
 import com.android.dx.rop.code.TranslationAdvice;
-import com.android.dx.ssa.back.SsaToRop;
 import com.android.dx.ssa.back.LivenessAnalyzer;
+import com.android.dx.ssa.back.SsaToRop;
 
 import java.util.EnumSet;
-import java.util.BitSet;
-import java.util.ArrayList;
 
 /**
  * Runs a method through the SSA form conversion, any optimization algorithms,
@@ -36,7 +34,8 @@ public class Optimizer {
 
     /** optional optimizer steps */
     public enum OptionalStep {
-        MOVE_PARAM_COMBINER,SCCP,LITERAL_UPGRADE,CONST_COLLECTOR
+        MOVE_PARAM_COMBINER, SCCP, LITERAL_UPGRADE, CONST_COLLECTOR,
+            ESCAPE_ANALYSIS
     }
 
     /**
@@ -71,14 +70,14 @@ public class Optimizer {
             boolean isStatic, boolean inPreserveLocals,
             TranslationAdvice inAdvice) {
 
-        return optimize(rmeth, paramWidth, isStatic, inPreserveLocals, inAdvice, 
+        return optimize(rmeth, paramWidth, isStatic, inPreserveLocals, inAdvice,
                 EnumSet.allOf(OptionalStep.class));
     }
 
     /**
      * Runs optimization algorthims over this method, and returns a new
      * instance of RopMethod with the changes.
-     * 
+     *
      * @param rmeth method to process
      * @param paramWidth the total width, in register-units, of this method's
      * parameters
@@ -167,6 +166,16 @@ public class Optimizer {
             needsDeadCodeRemover = false;
         }
 
+        /*
+         * ESCAPE_ANALYSIS impacts debuggability, so left off by default
+         */
+        steps.remove(OptionalStep.ESCAPE_ANALYSIS);
+        if (steps.contains(OptionalStep.ESCAPE_ANALYSIS)) {
+            EscapeAnalysis.process(ssaMeth);
+            DeadCodeRemover.process(ssaMeth);
+            needsDeadCodeRemover = false;
+        }
+
         if (steps.contains(OptionalStep.CONST_COLLECTOR)) {
             ConstCollector.process(ssaMeth);
             DeadCodeRemover.process(ssaMeth);
@@ -241,6 +250,6 @@ public class Optimizer {
 
         LivenessAnalyzer.constructInterferenceGraph(ssaMeth);
 
-        return ssaMeth;        
+        return ssaMeth;
     }
 }

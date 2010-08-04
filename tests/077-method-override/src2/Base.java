@@ -80,4 +80,3 @@ public class Base {
         System.out.println("overrideStaticWithVirtual: Base");
     }
 }
-

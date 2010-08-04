@@ -51,7 +51,7 @@ public final class CstInteger
     /**
      * Makes an instance for the given value. This may (but does not
      * necessarily) return an already-allocated instance.
-     * 
+     *
      * @param value the {@code int} value
      * @return {@code non-null;} the appropriate instance
      */
@@ -75,7 +75,7 @@ public final class CstInteger
 
     /**
      * Constructs an instance. This constructor is private; use {@link #make}.
-     * 
+     *
      * @param value the {@code int} value
      */
     private CstInteger(int value) {
@@ -107,7 +107,7 @@ public final class CstInteger
 
     /**
      * Gets the {@code int} value.
-     * 
+     *
      * @return the value
      */
     public int getValue() {

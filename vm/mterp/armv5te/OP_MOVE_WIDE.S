@@ -11,4 +11,3 @@
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     stmia   r2, {r0-r1}                 @ fp[A]<- r0/r1
     GOTO_OPCODE(ip)                     @ jump to next instruction
-

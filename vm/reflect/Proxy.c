@@ -47,6 +47,7 @@ static bool mustWrapException(const Method* method, const Object* throwable);
 
 /* private static fields in the Proxy class */
 #define kThrowsField    0
+#define kProxySFieldCount 1
 
 
 /*
@@ -135,7 +136,7 @@ ClassObject* dvmGenerateProxyClass(StringObject* str, ArrayObject* interfaces,
     ArrayObject* throws = NULL;
     ClassObject* newClass = NULL;
     int i;
-    
+
     nameStr = dvmCreateCstrFromString(str);
     if (nameStr == NULL) {
         dvmThrowException("Ljava/lang/IllegalArgumentException;",
@@ -177,17 +178,23 @@ ClassObject* dvmGenerateProxyClass(StringObject* str, ArrayObject* interfaces,
     /*
      * Allocate storage for the class object and set some basic fields.
      */
-    newClass = (ClassObject*) dvmMalloc(sizeof(*newClass), ALLOC_DEFAULT);
+    newClass = (ClassObject*) dvmMalloc(sizeof(*newClass) +
+                                        kProxySFieldCount * sizeof(StaticField),
+                                        ALLOC_DEFAULT);
     if (newClass == NULL)
         goto bail;
-    DVM_OBJECT_INIT(&newClass->obj, gDvm.unlinkedJavaLangClass);
+    DVM_OBJECT_INIT(&newClass->obj, gDvm.classJavaLangClass);
     dvmSetClassSerialNumber(newClass);
     newClass->descriptorAlloc = dvmNameToDescriptor(nameStr);
     newClass->descriptor = newClass->descriptorAlloc;
     newClass->accessFlags = ACC_PUBLIC | ACC_FINAL;
-    newClass->super = gDvm.classJavaLangReflectProxy;
+    dvmSetFieldObject((Object *)newClass,
+                      offsetof(ClassObject, super),
+                      (Object *)gDvm.classJavaLangReflectProxy);
     newClass->primitiveType = PRIM_NOT;
-    newClass->classLoader = loader;
+    dvmSetFieldObject((Object *)newClass,
+                      offsetof(ClassObject, classLoader),
+                      (Object *)loader);
 #if WITH_HPROF && WITH_HPROF_STACK
     hprofFillInStackTrace(newClass);
 #endif
@@ -228,8 +235,8 @@ ClassObject* dvmGenerateProxyClass(StringObject* str, ArrayObject* interfaces,
      * Static field list.  We have one private field, for our list of
      * exceptions declared for each method.
      */
-    newClass->sfieldCount = 1;
-    newClass->sfields = (StaticField*) calloc(1, sizeof(StaticField));
+    assert(kProxySFieldCount == 1);
+    newClass->sfieldCount = kProxySFieldCount;
     StaticField* sfield = &newClass->sfields[kThrowsField];
     sfield->field.clazz = newClass;
     sfield->field.name = "throws";
@@ -238,10 +245,12 @@ ClassObject* dvmGenerateProxyClass(StringObject* str, ArrayObject* interfaces,
     dvmSetStaticFieldObject(sfield, (Object*)throws);
 
     /*
-     * Everything is ready.  See if the linker will lap it up.
+     * Everything is ready. This class didn't come out of a DEX file
+     * so we didn't tuck any indexes into the class object.  We can
+     * advance to LOADED state immediately.
      */
     newClass->status = CLASS_LOADED;
-    if (!dvmLinkClass(newClass, true)) {
+    if (!dvmLinkClass(newClass)) {
         LOGD("Proxy class link failed\n");
         goto bail;
     }
@@ -425,7 +434,6 @@ bail:
 static int copyWithoutDuplicates(Method** allMethods, int allCount,
     Method** outMethods, ArrayObject* throwLists)
 {
-    Method* best;
     int outCount = 0;
     int i, j;
 
@@ -793,7 +801,7 @@ static void createConstructor(ClassObject* clazz, Method* meth)
     meth->name = "<init>";
     meth->prototype =
         gDvm.methJavaLangReflectProxy_constructorPrototype->prototype;
-    meth->shorty = 
+    meth->shorty =
         gDvm.methJavaLangReflectProxy_constructorPrototype->shorty;
     // no pDexCode or pDexMethod
 
@@ -858,7 +866,7 @@ static ArrayObject* boxMethodArgs(const Method* method, const u4* args)
      */
 
     int srcIndex = 0;
-    
+
     argCount = 0;
     while (*desc != '\0') {
         char descChar = *(desc++);
@@ -936,7 +944,6 @@ static void proxyInvoker(const u4* args, JValue* pResult,
     Object* handler;
     Method* invoke;
     ClassObject* returnType;
-    int hOffset;
     JValue invokeResult;
 
     /*
@@ -1094,4 +1101,3 @@ static bool mustWrapException(const Method* method, const Object* throwable)
     /* no match in declared throws */
     return true;
 }
-

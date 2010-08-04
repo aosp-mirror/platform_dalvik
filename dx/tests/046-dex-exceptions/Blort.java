@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-public class Blort 
+public class Blort
 {
     public static int maybeThrow(int x) {
         if (x < 10) {
@@ -23,7 +23,7 @@ public class Blort
 
         return x;
     }
-    
+
     public static int exTest1(int x) {
         try {
             maybeThrow(x);

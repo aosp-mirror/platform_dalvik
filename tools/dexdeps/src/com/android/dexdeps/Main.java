@@ -200,4 +200,3 @@ public class Main {
         System.err.println("  --format={xml,brief}");
     }
 }
-

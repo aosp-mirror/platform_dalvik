@@ -24,7 +24,7 @@ import com.android.dx.rop.annotation.Annotation;
 public final class CstAnnotation extends Constant {
     /** {@code non-null;} the actual annotation */
     private final Annotation annotation;
-    
+
     /**
      * Constructs an instance.
      *
@@ -87,7 +87,7 @@ public final class CstAnnotation extends Constant {
 
     /**
      * Get the underlying annotation.
-     * 
+     *
      * @return {@code non-null;} the annotation
      */
     public Annotation getAnnotation() {

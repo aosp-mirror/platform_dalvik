@@ -45,7 +45,7 @@ static void post_run_func (int pid) {
     int err;
 
     g_pid = pid;
-    
+
     my_pgid = getpgid(0);
     if (my_pgid < 0) {
         perror ("error with getpgid()");
@@ -62,8 +62,8 @@ static void post_run_func (int pid) {
         // The zygote was unable to move this process into our pgid
         // We have to forward signals
 
-        int forward_signals[] 
-            = {SIGHUP, SIGINT, SIGTERM, SIGWINCH, 
+        int forward_signals[]
+            = {SIGHUP, SIGINT, SIGTERM, SIGWINCH,
             SIGTSTP, SIGTTIN, SIGTTOU, SIGCONT};
 
         struct sigaction sa;

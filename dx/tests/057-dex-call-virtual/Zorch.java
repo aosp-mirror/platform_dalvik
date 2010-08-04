@@ -16,7 +16,7 @@
 
 public class Zorch
 {
-    public void zorch1() { 
+    public void zorch1() {
         // This space intentionally left blank.
     }
 

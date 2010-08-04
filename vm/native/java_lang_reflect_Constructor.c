@@ -162,4 +162,3 @@ const DalvikNativeMethod dvm_java_lang_reflect_Constructor[] = {
         Dalvik_java_lang_reflect_Constructor_getSignatureAnnotation },
     { NULL, NULL, NULL },
 };
-

@@ -41,10 +41,10 @@ public final class Prototype implements Comparable<Prototype> {
     private StdTypeList parameterFrameTypes;
 
     /**
-     * Returns the unique instance corresponding to the 
+     * Returns the unique instance corresponding to the
      * given method descriptor. See vmspec-2 sec4.3.3 for details on the
      * field descriptor syntax.
-     * 
+     *
      * @param descriptor {@code non-null;} the descriptor
      * @return {@code non-null;} the corresponding instance
      * @throws IllegalArgumentException thrown if the descriptor has
@@ -110,7 +110,7 @@ public final class Prototype implements Comparable<Prototype> {
      * populate with parsed parameter types, and which also ensures
      * that there is a '(' at the start of the descriptor and a
      * single ')' somewhere before the end.
-     * 
+     *
      * @param descriptor {@code non-null;} the descriptor string
      * @return {@code non-null;} array large enough to hold all parsed parameter
      * types, but which is likely actually larger than needed
@@ -155,7 +155,7 @@ public final class Prototype implements Comparable<Prototype> {
      * on the given definer, name, and flags. For example, an init
      * method has an uninitialized object of type {@code definer}
      * as its first argument.
-     * 
+     *
      * @param descriptor {@code non-null;} the descriptor string
      * @param definer {@code non-null;} class the method is defined on
      * @param isStatic whether this is a static method
@@ -180,7 +180,7 @@ public final class Prototype implements Comparable<Prototype> {
     /**
      * Interns an instance which consists of the given number of
      * {@code int}s along with the given return type
-     * 
+     *
      * @param returnType {@code non-null;} the return type
      * @param count {@code > 0;} the number of elements in the prototype
      * @return {@code non-null;} the interned instance
@@ -206,7 +206,7 @@ public final class Prototype implements Comparable<Prototype> {
     /**
      * Constructs an instance. This is a private constructor; use one
      * of the public static methods to get instances.
-     * 
+     *
      * @param descriptor {@code non-null;} the descriptor string
      */
     private Prototype(String descriptor, Type returnType,
@@ -258,7 +258,7 @@ public final class Prototype implements Comparable<Prototype> {
         if (this == other) {
             return 0;
         }
-        
+
         /*
          * The return type is the major order, and then args in order,
          * and then the shorter list comes first (similar to string
@@ -303,7 +303,7 @@ public final class Prototype implements Comparable<Prototype> {
 
     /**
      * Gets the descriptor string.
-     * 
+     *
      * @return {@code non-null;} the descriptor
      */
     public String getDescriptor() {
@@ -312,7 +312,7 @@ public final class Prototype implements Comparable<Prototype> {
 
     /**
      * Gets the return type.
-     * 
+     *
      * @return {@code non-null;} the return type
      */
     public Type getReturnType() {
@@ -321,7 +321,7 @@ public final class Prototype implements Comparable<Prototype> {
 
     /**
      * Gets the list of parameter types.
-     * 
+     *
      * @return {@code non-null;} the list of parameter types
      */
     public StdTypeList getParameterTypes() {
@@ -333,7 +333,7 @@ public final class Prototype implements Comparable<Prototype> {
      * types. The difference between the two lists (if any) is that all
      * "intlike" types (see {@link Type#isIntlike}) are replaced by
      * {@link Type#INT}.
-     * 
+     *
      * @return {@code non-null;} the list of parameter frame types
      */
     public StdTypeList getParameterFrameTypes() {
@@ -359,7 +359,7 @@ public final class Prototype implements Comparable<Prototype> {
      * Returns a new interned instance, which is the same as this instance,
      * except that it has an additional parameter prepended to the original's
      * argument list.
-     * 
+     *
      * @param param {@code non-null;} the new first parameter
      * @return {@code non-null;} an appropriately-constructed instance
      */
@@ -379,7 +379,7 @@ public final class Prototype implements Comparable<Prototype> {
      * Puts the given instance in the intern table if it's not already
      * there. If a conflicting value is already in the table, then leave it.
      * Return the interned value.
-     * 
+     *
      * @param desc {@code non-null;} instance to make interned
      * @return {@code non-null;} the actual interned object
      */

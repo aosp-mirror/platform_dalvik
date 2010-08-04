@@ -19,7 +19,7 @@
 #ifndef _DALVIK_ALLOC_ALLOC
 #define _DALVIK_ALLOC_ALLOC
 
-#include <stdlib.h>
+#include <stddef.h>
 
 /*
  * Initialization.
@@ -28,6 +28,7 @@ bool dvmGcStartup(void);
 bool dvmCreateStockExceptions(void);
 bool dvmGcStartupAfterZygote(void);
 void dvmGcShutdown(void);
+void dvmGcThreadShutdown(void);
 
 /*
  * Do any last-minute preparation before we call fork() for the first time.
@@ -38,7 +39,7 @@ bool dvmGcPreZygoteFork(void);
  * Basic allocation function.
  *
  * The new object will be added to the "tracked alloc" table unless
- * flags is ALLOC_DONT_TRACK or ALLOC_NO_GC.
+ * flags is ALLOC_DONT_TRACK.
  *
  * Returns NULL and throws an exception on failure.
  */
@@ -48,25 +49,17 @@ void* dvmMalloc(size_t size, int flags);
  * Allocate a new object.
  *
  * The new object will be added to the "tracked alloc" table unless
- * flags is ALLOC_DONT_TRACK or ALLOC_NO_GC.
+ * flags is ALLOC_DONT_TRACK.
  *
  * Returns NULL and throws an exception on failure.
  */
 Object* dvmAllocObject(ClassObject* clazz, int flags);
 
-/*
- * Clear flags set by dvmMalloc.  Pass in a bit mask of the flags that
- * should be cleared.
- */
-void dvmClearAllocFlags(Object* obj, int mask);
-
 /* flags for dvmMalloc */
 enum {
     ALLOC_DEFAULT       = 0x00,
-    ALLOC_NO_GC         = 0x01,     /* do not garbage collect this object */
-    ALLOC_DONT_TRACK    = 0x02,     /* don't add to internal tracking list */
-    ALLOC_FINALIZABLE   = 0x04,     /* call finalize() before freeing */
-    // ALLOC_NO_MOVE?
+    ALLOC_DONT_TRACK    = 0x01,     /* don't add to internal tracking list */
+    ALLOC_FINALIZABLE   = 0x02,     /* call finalize() before freeing */
 };
 
 /*
@@ -94,19 +87,14 @@ void dvmAddTrackedAlloc(Object* obj, Thread* self);
 void dvmReleaseTrackedAlloc(Object* obj, Thread* self);
 
 /*
- * Like dvmReleaseTrackedAlloc, but only does the release if "allocFlags"
- * indicates that it's necessary to do so.
- */
-INLINE void dvmReleaseTrackedAllocIFN(Object* obj, Thread* self, int allocFlags)
-{
-    if ((allocFlags & (ALLOC_NO_GC|ALLOC_DONT_TRACK)) == 0)
-        dvmReleaseTrackedAlloc(obj, self);
-}
-
-/*
  * Returns true iff <obj> points to a valid allocated object.
  */
 bool dvmIsValidObject(const Object* obj);
+
+/*
+ * Returns true iff <ptr> points within allocation-managed address space.
+ */
+bool dvmIsValidObjectAddress(const void *ptr);
 
 /*
  * Create a copy of an object.

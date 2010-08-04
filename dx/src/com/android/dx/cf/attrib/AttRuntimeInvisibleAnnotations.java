@@ -28,7 +28,7 @@ public final class AttRuntimeInvisibleAnnotations extends BaseAnnotations {
 
     /**
      * Constructs an instance.
-     * 
+     *
      * @param annotations {@code non-null;} the list of annotations
      * @param byteLength {@code >= 0;} attribute data length in the original
      * classfile (not including the attribute header)

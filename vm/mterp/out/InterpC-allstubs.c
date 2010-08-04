@@ -422,10 +422,9 @@ static inline bool checkForNullExportPC(Object* obj, u4* fp, const u2* pc)
 #define INTERP_TYPE INTERP_STD
 #define CHECK_DEBUG_AND_PROF() ((void)0)
 # define CHECK_TRACKED_REFS() ((void)0)
-#if defined(WITH_JIT)
-#define CHECK_JIT() (0)
+#define CHECK_JIT_BOOL() (false)
+#define CHECK_JIT_VOID()
 #define ABORT_JIT_TSELECT() ((void)0)
-#endif
 
 /*
  * In the C mterp stubs, "goto" is a function call followed immediately
@@ -1149,6 +1148,11 @@ GOTO_TARGET_DECL(exceptionThrown);
     }                                                                       \
     FINISH(2);
 
+/*
+ * The JIT needs dvmDexGetResolvedField() to return non-null.
+ * Since we use the portable interpreter to build the trace, the extra
+ * checks in HANDLE_SGET_X and HANDLE_SPUT_X are not needed for mterp.
+ */
 #define HANDLE_SGET_X(_opcode, _opname, _ftype, _regsize)                   \
     HANDLE_OPCODE(_opcode /*vAA, field@BBBB*/)                              \
     {                                                                       \
@@ -1162,6 +1166,9 @@ GOTO_TARGET_DECL(exceptionThrown);
             sfield = dvmResolveStaticField(curMethod->clazz, ref);          \
             if (sfield == NULL)                                             \
                 GOTO_exceptionThrown();                                     \
+            if (dvmDexGetResolvedField(methodClassDex, ref) == NULL) {      \
+                ABORT_JIT_TSELECT();                                        \
+            }                                                               \
         }                                                                   \
         SET_REGISTER##_regsize(vdst, dvmGetStaticField##_ftype(sfield));    \
         ILOGV("+ SGET '%s'=0x%08llx",                                       \
@@ -1183,6 +1190,9 @@ GOTO_TARGET_DECL(exceptionThrown);
             sfield = dvmResolveStaticField(curMethod->clazz, ref);          \
             if (sfield == NULL)                                             \
                 GOTO_exceptionThrown();                                     \
+            if (dvmDexGetResolvedField(methodClassDex, ref) == NULL) {      \
+                ABORT_JIT_TSELECT();                                        \
+            }                                                               \
         }                                                                   \
         dvmSetStaticField##_ftype(sfield, GET_REGISTER##_regsize(vdst));    \
         ILOGV("+ SPUT '%s'=0x%08llx",                                       \
@@ -1190,7 +1200,6 @@ GOTO_TARGET_DECL(exceptionThrown);
         UPDATE_FIELD_PUT(&sfield->field);                                   \
     }                                                                       \
     FINISH(2);
-
 
 /* File: c/OP_NOP.c */
 HANDLE_OPCODE(OP_NOP)
@@ -1692,6 +1701,16 @@ HANDLE_OPCODE(OP_NEW_INSTANCE /*vAA, class@BBBB*/)
             GOTO_exceptionThrown();
 
         /*
+         * The JIT needs dvmDexGetResolvedClass() to return non-null.
+         * Since we use the portable interpreter to build the trace, this extra
+         * check is not needed for mterp.
+         */
+        if (!dvmDexGetResolvedClass(methodClassDex, ref)) {
+            /* Class initialization is still ongoing - abandon the trace */
+            ABORT_JIT_TSELECT();
+        }
+
+        /*
          * Verifier now tests for interface/abstract class.
          */
         //if (dvmIsInterfaceClass(clazz) || dvmIsAbstractClass(clazz)) {
@@ -1744,7 +1763,6 @@ HANDLE_OPCODE(OP_NEW_ARRAY /*vA, vB, class@CCCC*/)
     FINISH(2);
 OP_END
 
-
 /* File: c/OP_FILLED_NEW_ARRAY.c */
 HANDLE_OPCODE(OP_FILLED_NEW_ARRAY /*vB, {vD, vE, vF, vG, vA}, class@CCCC*/)
     GOTO_invoke(filledNewArray, false);
@@ -1772,7 +1790,7 @@ HANDLE_OPCODE(OP_FILL_ARRAY_DATA)   /*vAA, +BBBBBBBB*/
             arrayData >= curMethod->insns + dvmGetMethodInsnsSize(curMethod))
         {
             /* should have been caught in verifier */
-            dvmThrowException("Ljava/lang/InternalError;", 
+            dvmThrowException("Ljava/lang/InternalError;",
                               "bad fill array data");
             GOTO_exceptionThrown();
         }
@@ -1790,10 +1808,17 @@ HANDLE_OPCODE(OP_THROW /*vAA*/)
     {
         Object* obj;
 
+        /*
+         * We don't create an exception here, but the process of searching
+         * for a catch block can do class lookups and throw exceptions.
+         * We need to update the saved PC.
+         */
+        EXPORT_PC();
+
         vsrc1 = INST_AA(inst);
         ILOGV("|throw v%d  (%p)", vsrc1, (void*)GET_REGISTER(vsrc1));
         obj = (Object*) GET_REGISTER(vsrc1);
-        if (!checkForNullExportPC(obj, fp, pc)) {
+        if (!checkForNull(obj)) {
             /* will throw a null pointer exception */
             LOGVV("Bad exception\n");
         } else {
@@ -2075,8 +2100,9 @@ HANDLE_OPCODE(OP_APUT_OBJECT /*vAA, vBB, vCC*/)
             }
         }
         ILOGV("+ APUT[%d]=0x%08x", GET_REGISTER(vsrc2), GET_REGISTER(vdst));
-        ((u4*) arrayObj->contents)[GET_REGISTER(vsrc2)] =
-            GET_REGISTER(vdst);
+        dvmSetObjectArrayElement(arrayObj,
+                                 GET_REGISTER(vsrc2),
+                                 (Object *)GET_REGISTER(vdst));
     }
     FINISH(2);
 OP_END
@@ -2754,40 +2780,40 @@ OP_END
 HANDLE_OP_SHX_INT_LIT8(OP_USHR_INT_LIT8,  "ushr", (u4), >>)
 OP_END
 
-/* File: c/OP_UNUSED_E3.c */
-HANDLE_OPCODE(OP_UNUSED_E3)
+/* File: c/OP_IGET_VOLATILE.c */
+HANDLE_IGET_X(OP_IGET_VOLATILE,         "-volatile", IntVolatile, )
 OP_END
 
-/* File: c/OP_UNUSED_E4.c */
-HANDLE_OPCODE(OP_UNUSED_E4)
+/* File: c/OP_IPUT_VOLATILE.c */
+HANDLE_IPUT_X(OP_IPUT_VOLATILE,         "-volatile", IntVolatile, )
 OP_END
 
-/* File: c/OP_UNUSED_E5.c */
-HANDLE_OPCODE(OP_UNUSED_E5)
+/* File: c/OP_SGET_VOLATILE.c */
+HANDLE_SGET_X(OP_SGET_VOLATILE,         "-volatile", IntVolatile, )
 OP_END
 
-/* File: c/OP_UNUSED_E6.c */
-HANDLE_OPCODE(OP_UNUSED_E6)
+/* File: c/OP_SPUT_VOLATILE.c */
+HANDLE_SPUT_X(OP_SPUT_VOLATILE,         "-volatile", IntVolatile, )
 OP_END
 
-/* File: c/OP_UNUSED_E7.c */
-HANDLE_OPCODE(OP_UNUSED_E7)
+/* File: c/OP_IGET_OBJECT_VOLATILE.c */
+HANDLE_IGET_X(OP_IGET_OBJECT_VOLATILE,  "-object-volatile", ObjectVolatile, _AS_OBJECT)
 OP_END
 
-/* File: c/OP_UNUSED_E8.c */
-HANDLE_OPCODE(OP_UNUSED_E8)
+/* File: c/OP_IGET_WIDE_VOLATILE.c */
+HANDLE_IGET_X(OP_IGET_WIDE_VOLATILE,    "-wide-volatile", LongVolatile, _WIDE)
 OP_END
 
-/* File: c/OP_UNUSED_E9.c */
-HANDLE_OPCODE(OP_UNUSED_E9)
+/* File: c/OP_IPUT_WIDE_VOLATILE.c */
+HANDLE_IPUT_X(OP_IPUT_WIDE_VOLATILE,    "-wide-volatile", LongVolatile, _WIDE)
 OP_END
 
-/* File: c/OP_UNUSED_EA.c */
-HANDLE_OPCODE(OP_UNUSED_EA)
+/* File: c/OP_SGET_WIDE_VOLATILE.c */
+HANDLE_SGET_X(OP_SGET_WIDE_VOLATILE,    "-wide-volatile", LongVolatile, _WIDE)
 OP_END
 
-/* File: c/OP_UNUSED_EB.c */
-HANDLE_OPCODE(OP_UNUSED_EB)
+/* File: c/OP_SPUT_WIDE_VOLATILE.c */
+HANDLE_SPUT_X(OP_SPUT_WIDE_VOLATILE,    "-wide-volatile", LongVolatile, _WIDE)
 OP_END
 
 /* File: c/OP_BREAKPOINT.c */
@@ -3001,16 +3027,16 @@ HANDLE_OPCODE(OP_INVOKE_SUPER_QUICK_RANGE /*{vCCCC..v(CCCC+AA-1)}, meth@BBBB*/)
     GOTO_invoke(invokeSuperQuick, true);
 OP_END
 
-/* File: c/OP_UNUSED_FC.c */
-HANDLE_OPCODE(OP_UNUSED_FC)
+/* File: c/OP_IPUT_OBJECT_VOLATILE.c */
+HANDLE_IPUT_X(OP_IPUT_OBJECT_VOLATILE,  "-object-volatile", ObjectVolatile, _AS_OBJECT)
 OP_END
 
-/* File: c/OP_UNUSED_FD.c */
-HANDLE_OPCODE(OP_UNUSED_FD)
+/* File: c/OP_SGET_OBJECT_VOLATILE.c */
+HANDLE_SGET_X(OP_SGET_OBJECT_VOLATILE,  "-object-volatile", ObjectVolatile, _AS_OBJECT)
 OP_END
 
-/* File: c/OP_UNUSED_FE.c */
-HANDLE_OPCODE(OP_UNUSED_FE)
+/* File: c/OP_SPUT_OBJECT_VOLATILE.c */
+HANDLE_SPUT_X(OP_SPUT_OBJECT_VOLATILE,  "-object-volatile", ObjectVolatile, _AS_OBJECT)
 OP_END
 
 /* File: c/OP_UNUSED_FF.c */
@@ -3104,7 +3130,6 @@ void dvmMterpStdBail(MterpGlue* glue, bool changeInterp)
     jmp_buf* pJmpBuf = glue->bailPtr;
     longjmp(*pJmpBuf, ((int)changeInterp)+1);
 }
-
 
 /* File: c/gotoTargets.c */
 /*
@@ -3203,6 +3228,9 @@ GOTO_TARGET(filledNewArray, bool methodCallRange)
                 vdst >>= 4;
             }
         }
+        if (typeCh == 'L' || typeCh == '[') {
+            dvmWriteBarrierArray(newArray, 0, newArray->length);
+        }
 
         retval.l = newArray;
     }
@@ -3259,6 +3287,10 @@ GOTO_TARGET(invokeVirtual, bool methodCallRange)
          */
         assert(baseMethod->methodIndex < thisPtr->clazz->vtableCount);
         methodToCall = thisPtr->clazz->vtable[baseMethod->methodIndex];
+
+#if defined(WITH_JIT) && (INTERP_TYPE == INTERP_DBG)
+        callsiteClass = thisPtr->clazz;
+#endif
 
 #if 0
         if (dvmIsAbstractMethod(methodToCall)) {
@@ -3411,6 +3443,10 @@ GOTO_TARGET(invokeInterface, bool methodCallRange)
 
         thisClass = thisPtr->clazz;
 
+#if defined(WITH_JIT) && (INTERP_TYPE == INTERP_DBG)
+        callsiteClass = thisClass;
+#endif
+
         /*
          * Given a class and a method index, find the Method* with the
          * actual code we want to execute.
@@ -3482,6 +3518,16 @@ GOTO_TARGET(invokeStatic, bool methodCallRange)
             ILOGV("+ unknown method\n");
             GOTO_exceptionThrown();
         }
+
+        /*
+         * The JIT needs dvmDexGetResolvedMethod() to return non-null.
+         * Since we use the portable interpreter to build the trace, this extra
+         * check is not needed for mterp.
+         */
+        if (dvmDexGetResolvedMethod(methodClassDex, ref) == NULL) {
+            /* Class initialization is still ongoing */
+            ABORT_JIT_TSELECT();
+        }
     }
     GOTO_invokeMethod(methodCallRange, methodToCall, vsrc1, vdst);
 GOTO_TARGET_END
@@ -3514,6 +3560,10 @@ GOTO_TARGET(invokeVirtualQuick, bool methodCallRange)
 
         if (!checkForNull(thisPtr))
             GOTO_exceptionThrown();
+
+#if defined(WITH_JIT) && (INTERP_TYPE == INTERP_DBG)
+        callsiteClass = thisPtr->clazz;
+#endif
 
         /*
          * Combine the object we found with the vtable offset in the
@@ -3603,7 +3653,6 @@ GOTO_TARGET(invokeSuperQuick, bool methodCallRange)
 GOTO_TARGET_END
 
 
-
     /*
      * General handling for return-void, return, and return-wide.  Put the
      * return value in "retval" before jumping here.
@@ -3643,7 +3692,7 @@ GOTO_TARGET(returnFromMethod)
             LOGVV("+++ returned into break frame\n");
 #if defined(WITH_JIT)
             /* Let the Jit know the return is terminating normally */
-            CHECK_JIT();
+            CHECK_JIT_VOID();
 #endif
             GOTO_bail();
         }
@@ -3831,6 +3880,7 @@ GOTO_TARGET(exceptionThrown)
 GOTO_TARGET_END
 
 
+
     /*
      * General handling for invoke-{virtual,super,direct,static,interface},
      * including "quick" variants.
@@ -4013,12 +4063,14 @@ GOTO_TARGET(invokeMethod, bool methodCallRange, const Method* _methodToCall,
             TRACE_METHOD_ENTER(self, methodToCall);
 #endif
 
-            ILOGD("> native <-- %s.%s %s", methodToCall->clazz->descriptor,
-                methodToCall->name, methodToCall->shorty);
+            {
+                ILOGD("> native <-- %s.%s %s", methodToCall->clazz->descriptor,
+                        methodToCall->name, methodToCall->shorty);
+            }
 
 #if defined(WITH_JIT)
             /* Allow the Jit to end any pending trace building */
-            CHECK_JIT();
+            CHECK_JIT_VOID();
 #endif
 
             /*

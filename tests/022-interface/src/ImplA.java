@@ -12,4 +12,3 @@ public class ImplA implements Iface1, Iface2 {
         return ii+2;
     }
 }
-

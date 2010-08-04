@@ -29,6 +29,7 @@
  */
 #include "Dalvik.h"
 #include "analysis/CodeVerify.h"
+#include "analysis/Optimize.h"
 #include "analysis/RegisterMap.h"
 #include "libdex/DexCatch.h"
 #include "libdex/InstrUtils.h"
@@ -113,16 +114,18 @@ typedef struct RegisterTable {
 
 
 /* fwd */
+#ifndef NDEBUG
 static void checkMergeTab(void);
+#endif
 static bool isInitMethod(const Method* meth);
 static RegType getInvocationThis(const RegType* insnRegs,\
     const int insnRegCount, const DecodedInstruction* pDecInsn,
     VerifyError* pFailure);
 static void verifyRegisterType(const RegType* insnRegs, const int insnRegCount,\
     u4 vsrc, RegType checkType, VerifyError* pFailure);
-static bool doCodeVerification(Method* meth, InsnFlags* insnFlags,\
+static bool doCodeVerification(const Method* meth, InsnFlags* insnFlags,\
     RegisterTable* regTable, UninitInstanceMap* uninitMap);
-static bool verifyInstruction(Method* meth, InsnFlags* insnFlags,\
+static bool verifyInstruction(const Method* meth, InsnFlags* insnFlags,\
     RegisterTable* regTable, RegType* workRegs, int insnIdx,
     UninitInstanceMap* uninitMap, int* pStartGuess);
 static ClassObject* findCommonSuperclass(ClassObject* c1, ClassObject* c2);
@@ -539,10 +542,12 @@ static bool isInitMethod(const Method* meth)
 /*
  * Is this method a class initializer?
  */
+#if 0
 static bool isClassInitMethod(const Method* meth)
 {
     return (*meth->name == '<' && strcmp(meth->name+1, "clinit>") == 0);
 }
+#endif
 
 /*
  * Look up a class reference given as a simple string descriptor.
@@ -1337,8 +1342,6 @@ static ClassObject* getFieldClass(const Method* meth, const Field* field)
 static inline RegType getRegisterType(const RegType* insnRegs,
     const int insnRegCount, u4 vsrc, VerifyError* pFailure)
 {
-    RegType type;
-
     if (vsrc >= (u4) insnRegCount) {
         *pFailure = VERIFY_ERROR_GENERIC;
         return kRegTypeUnknown;
@@ -2921,6 +2924,10 @@ static void verifyFilledNewArrayRegs(const Method* meth,
  * Replace an instruction with "throw-verification-error".  This allows us to
  * defer error reporting until the code path is first used.
  *
+ * This is expected to be called during "just in time" verification, not
+ * from within dexopt.  (Verification failures in dexopt will result in
+ * postponement of verification to first use of the class.)
+ *
  * The throw-verification-error instruction requires two code units.  Some
  * of the replaced instructions require three; the third code unit will
  * receive a "nop".  The instruction's length will be left unchanged
@@ -2929,12 +2936,9 @@ static void verifyFilledNewArrayRegs(const Method* meth,
  * The verifier explicitly locks out breakpoint activity, so there should
  * be no clashes with the debugger.
  *
- * IMPORTANT: this may replace meth->insns with a pointer to a new copy of
- * the instructions.
- *
  * Returns "true" on success.
  */
-static bool replaceFailingInstruction(Method* meth, InsnFlags* insnFlags,
+static bool replaceFailingInstruction(const Method* meth, InsnFlags* insnFlags,
     int insnIdx, VerifyError failure)
 {
     VerifyErrorRefType refType;
@@ -2942,7 +2946,8 @@ static bool replaceFailingInstruction(Method* meth, InsnFlags* insnFlags,
     u2 oldInsn = *oldInsns;
     bool result = false;
 
-    //dvmMakeCodeReadWrite(meth);
+    if (gDvm.optimizing)
+        LOGD("Weird: RFI during dexopt?");
 
     //LOGD("  was 0x%04x\n", oldInsn);
     u2* newInsns = (u2*) meth->insns + insnIdx;
@@ -3040,7 +3045,6 @@ static bool replaceFailingInstruction(Method* meth, InsnFlags* insnFlags,
     result = true;
 
 bail:
-    //dvmMakeCodeReadOnly(meth);
     return result;
 }
 
@@ -3054,15 +3058,12 @@ bail:
 /*
  * Entry point for the detailed code-flow analysis.
  */
-bool dvmVerifyCodeFlow(Method* meth, InsnFlags* insnFlags,
-    UninitInstanceMap* uninitMap)
+bool dvmVerifyCodeFlow(VerifierData* vdata)
 {
     bool result = false;
-    const int insnsSize = dvmGetMethodInsnsSize(meth);
-    const u2* insns = meth->insns;
+    const Method* meth = vdata->method;
+    const int insnsSize = vdata->insnsSize;
     const bool generateRegisterMap = gDvm.generateRegisterMaps;
-    int i, offset;
-    bool isConditional;
     RegisterTable regTable;
 
     memset(&regTable, 0, sizeof(regTable));
@@ -3105,37 +3106,32 @@ bool dvmVerifyCodeFlow(Method* meth, InsnFlags* insnFlags,
      * also going to create the register map, we need to retain the
      * register lists for a larger set of addresses.
      */
-    if (!initRegisterTable(meth, insnFlags, &regTable,
+    if (!initRegisterTable(meth, vdata->insnFlags, &regTable,
             generateRegisterMap ? kTrackRegsGcPoints : kTrackRegsBranches))
         goto bail;
+
+    vdata->addrRegs = NULL;     /* don't set this until we need it */
 
     /*
      * Initialize the types of the registers that correspond to the
      * method arguments.  We can determine this from the method signature.
      */
-    if (!setTypesFromSignature(meth, regTable.addrRegs[0], uninitMap))
+    if (!setTypesFromSignature(meth, regTable.addrRegs[0], vdata->uninitMap))
         goto bail;
 
     /*
      * Run the verifier.
      */
-    if (!doCodeVerification(meth, insnFlags, &regTable, uninitMap))
+    if (!doCodeVerification(meth, vdata->insnFlags, &regTable, vdata->uninitMap))
         goto bail;
 
     /*
      * Generate a register map.
      */
     if (generateRegisterMap) {
-        RegisterMap* pMap;
-        VerifierData vd;
+        vdata->addrRegs = regTable.addrRegs;
 
-        vd.method = meth;
-        vd.insnsSize = insnsSize;
-        vd.insnRegCount = meth->registersSize;
-        vd.insnFlags = insnFlags;
-        vd.addrRegs = regTable.addrRegs;
-        
-        pMap = dvmGenerateRegisterMapV(&vd);
+        RegisterMap* pMap = dvmGenerateRegisterMapV(vdata);
         if (pMap != NULL) {
             /*
              * Tuck it into the Method struct.  It will either get used
@@ -3208,15 +3204,14 @@ bail:
  * instruction if a register contains an uninitialized instance created
  * by that same instrutcion.
  */
-static bool doCodeVerification(Method* meth, InsnFlags* insnFlags,
+static bool doCodeVerification(const Method* meth, InsnFlags* insnFlags,
     RegisterTable* regTable, UninitInstanceMap* uninitMap)
 {
     const int insnsSize = dvmGetMethodInsnsSize(meth);
-    const u2* insns = meth->insns;
     RegType workRegs[meth->registersSize + kExtraRegs];
     bool result = false;
     bool debugVerbose = false;
-    int insnIdx, startGuess, prevAddr;
+    int insnIdx, startGuess;
 
     /*
      * Begin by marking the first instruction as "changed".
@@ -3443,7 +3438,7 @@ bail:
  * This may alter meth->insns if we need to replace an instruction with
  * throw-verification-error.
  */
-static bool verifyInstruction(Method* meth, InsnFlags* insnFlags,
+static bool verifyInstruction(const Method* meth, InsnFlags* insnFlags,
     RegisterTable* regTable, RegType* workRegs, int insnIdx,
     UninitInstanceMap* uninitMap, int* pStartGuess)
 {
@@ -3462,19 +3457,17 @@ static bool verifyInstruction(Method* meth, InsnFlags* insnFlags,
      *     and switch statements.
      * (3) Exception handlers.  Applies to any instruction that can
      *     throw an exception that is handled by an encompassing "try"
-     *     block.  (We simplify this to be any instruction that can
-     *     throw any exception.)
+     *     block.
      *
      * We can also return, in which case there is no successor instruction
      * from this point.
      *
-     * The behavior can be determined from the InstrFlags.
+     * The behavior can be determined from the InstructionFlags.
      */
 
     const DexFile* pDexFile = meth->clazz->pDvmDex->pDexFile;
     RegType entryRegs[meth->registersSize + kExtraRegs];
     ClassObject* resClass;
-    const char* className;
     int branchTarget = 0;
     const int insnRegCount = meth->registersSize;
     RegType tmpType;
@@ -4016,7 +4009,6 @@ static bool verifyInstruction(Method* meth, InsnFlags* insnFlags,
     case OP_IF_NE:
         {
             RegType type1, type2;
-            bool tmpResult;
 
             type1 = getRegisterType(workRegs, insnRegCount, decInsn.vA,
                         &failure);
@@ -4426,6 +4418,7 @@ aput_1nr_common:
         break;
 
     case OP_IGET:
+    case OP_IGET_VOLATILE:
         tmpType = kRegTypeInteger;
         goto iget_1nr_common;
     case OP_IGET_BOOLEAN:
@@ -4442,7 +4435,6 @@ aput_1nr_common:
         goto iget_1nr_common;
 iget_1nr_common:
         {
-            ClassObject* fieldClass;
             InstField* instField;
             RegType objType, fieldType;
 
@@ -4472,9 +4464,9 @@ iget_1nr_common:
         }
         break;
     case OP_IGET_WIDE:
+    case OP_IGET_WIDE_VOLATILE:
         {
             RegType dstType;
-            ClassObject* fieldClass;
             InstField* instField;
             RegType objType;
 
@@ -4509,6 +4501,7 @@ iget_1nr_common:
         }
         break;
     case OP_IGET_OBJECT:
+    case OP_IGET_OBJECT_VOLATILE:
         {
             ClassObject* fieldClass;
             InstField* instField;
@@ -4538,6 +4531,7 @@ iget_1nr_common:
         }
         break;
     case OP_IPUT:
+    case OP_IPUT_VOLATILE:
         tmpType = kRegTypeInteger;
         goto iput_1nr_common;
     case OP_IPUT_BOOLEAN:
@@ -4555,7 +4549,6 @@ iget_1nr_common:
 iput_1nr_common:
         {
             RegType srcType, fieldType, objType;
-            ClassObject* fieldClass;
             InstField* instField;
 
             srcType = getRegisterType(workRegs, insnRegCount, decInsn.vA,
@@ -4602,6 +4595,7 @@ iput_1nr_common:
         }
         break;
     case OP_IPUT_WIDE:
+    case OP_IPUT_WIDE_VOLATILE:
         tmpType = getRegisterType(workRegs, insnRegCount, decInsn.vA, &failure);
         if (VERIFY_OK(failure)) {
             RegType typeHi =
@@ -4610,7 +4604,6 @@ iput_1nr_common:
             checkWidePair(tmpType, typeHi, &failure);
         }
         if (VERIFY_OK(failure)) {
-            ClassObject* fieldClass;
             InstField* instField;
             RegType objType;
 
@@ -4642,6 +4635,7 @@ iput_1nr_common:
         }
         break;
     case OP_IPUT_OBJECT:
+    case OP_IPUT_OBJECT_VOLATILE:
         {
             ClassObject* fieldClass;
             ClassObject* valueClass;
@@ -4703,6 +4697,7 @@ iput_1nr_common:
         break;
 
     case OP_SGET:
+    case OP_SGET_VOLATILE:
         tmpType = kRegTypeInteger;
         goto sget_1nr_common;
     case OP_SGET_BOOLEAN:
@@ -4748,6 +4743,7 @@ sget_1nr_common:
         }
         break;
     case OP_SGET_WIDE:
+    case OP_SGET_WIDE_VOLATILE:
         {
             StaticField* staticField;
             RegType dstType;
@@ -4778,6 +4774,7 @@ sget_1nr_common:
         }
         break;
     case OP_SGET_OBJECT:
+    case OP_SGET_OBJECT_VOLATILE:
         {
             StaticField* staticField;
             ClassObject* fieldClass;
@@ -4802,6 +4799,7 @@ sget_1nr_common:
         }
         break;
     case OP_SPUT:
+    case OP_SPUT_VOLATILE:
         tmpType = kRegTypeInteger;
         goto sput_1nr_common;
     case OP_SPUT_BOOLEAN:
@@ -4864,6 +4862,7 @@ sput_1nr_common:
         }
         break;
     case OP_SPUT_WIDE:
+    case OP_SPUT_WIDE_VOLATILE:
         tmpType = getRegisterType(workRegs, insnRegCount, decInsn.vA, &failure);
         if (VERIFY_OK(failure)) {
             RegType typeHi =
@@ -4897,6 +4896,7 @@ sput_1nr_common:
         }
         break;
     case OP_SPUT_OBJECT:
+    case OP_SPUT_OBJECT_VOLATILE:
         {
             ClassObject* fieldClass;
             ClassObject* valueClass;
@@ -5047,7 +5047,6 @@ sput_1nr_common:
                  * do this for all registers that have the same object
                  * instance in them, not just the "this" register.
                  */
-                int uidx = regTypeToUninitIndex(thisType);
                 markRefsAsInitialized(workRegs, insnRegCount, uninitMap,
                     thisType, &failure);
                 if (!VERIFY_OK(failure))
@@ -5437,20 +5436,8 @@ sput_1nr_common:
     case OP_UNUSED_73:
     case OP_UNUSED_79:
     case OP_UNUSED_7A:
-    case OP_UNUSED_E3:
-    case OP_UNUSED_E4:
-    case OP_UNUSED_E5:
-    case OP_UNUSED_E6:
-    case OP_UNUSED_E7:
-    case OP_UNUSED_E8:
-    case OP_UNUSED_E9:
-    case OP_UNUSED_EA:
-    case OP_UNUSED_EB:
     case OP_BREAKPOINT:
     case OP_UNUSED_F1:
-    case OP_UNUSED_FC:
-    case OP_UNUSED_FD:
-    case OP_UNUSED_FE:
     case OP_UNUSED_FF:
         failure = VERIFY_ERROR_GENERIC;
         break;
@@ -5488,7 +5475,8 @@ sput_1nr_common:
     /*
      * If we didn't just set the result register, clear it out.  This
      * ensures that you can only use "move-result" immediately after the
-     * result is set.
+     * result is set.  (We could check this statically, but it's not
+     * expensive and it makes our debugging output cleaner.)
      */
     if (!justSetResult) {
         int reg = RESULT_REGISTER(insnRegCount);
@@ -5608,7 +5596,6 @@ sput_1nr_common:
      */
     if ((nextFlags & kInstrCanThrow) != 0 && dvmInsnIsInTry(insnFlags, insnIdx))
     {
-        DexFile* pDexFile = meth->clazz->pDvmDex->pDexFile;
         const DexCode* pCode = dvmGetMethodCode(meth);
         DexCatchIterator iterator;
 
@@ -5767,4 +5754,3 @@ static void dumpRegTypes(const Method* meth, const InsnFlags* insnFlags,
                 NULL, logLocalsCb, &addr);
     }
 }
-

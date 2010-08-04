@@ -49,4 +49,3 @@ public class FieldRef {
         return mFieldName;
     }
 }
-

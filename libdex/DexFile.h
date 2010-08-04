@@ -70,7 +70,7 @@ enum {
 
 /*
  * access flags and masks; the "standard" ones are all <= 0x4000
- * 
+ *
  * Note: There are related declarations in vm/oo/Object.h in the ClassFlags
  * enum.
  */
@@ -96,7 +96,7 @@ enum {
     ACC_CONSTRUCTOR  = 0x00010000,       // method (Dalvik only)
     ACC_DECLARED_SYNCHRONIZED =
                        0x00020000,       // method (Dalvik only)
-    ACC_CLASS_MASK = 
+    ACC_CLASS_MASK =
         (ACC_PUBLIC | ACC_FINAL | ACC_INTERFACE | ACC_ABSTRACT
                 | ACC_SYNTHETIC | ACC_ANNOTATION | ACC_ENUM),
     ACC_INNER_CLASS_MASK =
@@ -554,12 +554,23 @@ enum {
 };
 
 /*
- * Correct the byte ordering in a memory-mapped DEX file.  This is only
- * required for code that opens "raw" DEX files, such as the DEX optimizer.
+ * Fix the byte ordering of all fields in the DEX file, and do
+ * structural verification. This is only required for code that opens
+ * "raw" DEX files, such as the DEX optimizer.
  *
  * Return 0 on success.
  */
-int dexFixByteOrdering(u1* addr, int len);
+int dexSwapAndVerify(u1* addr, int len);
+
+/*
+ * Detect the file type of the given memory buffer via magic number.
+ * Call dexSwapAndVerify() on an unoptimized DEX file, do nothing
+ * but return successfully on an optimized DEX file, and report an
+ * error for all other cases.
+ *
+ * Return 0 on success.
+ */
+int dexSwapAndVerifyIfNecessary(u1* addr, int len);
 
 /*
  * Compute DEX checksum.
@@ -747,7 +758,7 @@ DEX_INLINE const DexTry* dexGetTries(const DexCode* pCode) {
     if ((((u4) insnsEnd) & 3) != 0) {
         insnsEnd++;
     }
-    
+
     return (const DexTry*) insnsEnd;
 }
 
@@ -784,7 +795,7 @@ typedef void (*DexDebugNewLocalCb)(void *cnxt, u2 reg, u4 startAddress,
 
 /*
  * Decode debug info for method.
- * 
+ *
  * posCb is called in ascending address order.
  * localCb is called in order of ascending end address.
  */

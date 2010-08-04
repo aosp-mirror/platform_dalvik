@@ -51,7 +51,7 @@ public final class AccessFlags {
 
     /**
      * class with new-style {@code invokespecial} for superclass
-     * method access 
+     * method access
      */
     public static final int ACC_SUPER = 0x0020;
 
@@ -78,7 +78,7 @@ public final class AccessFlags {
 
     /**
      * method with strict floating point ({@code strictfp})
-     * behavior 
+     * behavior
      */
     public static final int ACC_STRICT = 0x0800;
 
@@ -90,7 +90,7 @@ public final class AccessFlags {
 
     /**
      * class is an enumerated type; field is an element of an enumerated
-     * type 
+     * type
      */
     public static final int ACC_ENUM = 0x4000;
 
@@ -145,7 +145,7 @@ public final class AccessFlags {
     /**
      * Returns a human-oriented string representing the given access flags,
      * as defined on classes (not fields or methods).
-     * 
+     *
      * @param flags the flags
      * @return {@code non-null;} human-oriented string
      */
@@ -156,7 +156,7 @@ public final class AccessFlags {
     /**
      * Returns a human-oriented string representing the given access flags,
      * as defined on inner classes.
-     * 
+     *
      * @param flags the flags
      * @return {@code non-null;} human-oriented string
      */
@@ -167,7 +167,7 @@ public final class AccessFlags {
     /**
      * Returns a human-oriented string representing the given access flags,
      * as defined on fields (not classes or methods).
-     * 
+     *
      * @param flags the flags
      * @return {@code non-null;} human-oriented string
      */
@@ -178,7 +178,7 @@ public final class AccessFlags {
     /**
      * Returns a human-oriented string representing the given access flags,
      * as defined on methods (not classes or fields).
-     * 
+     *
      * @param flags the flags
      * @return {@code non-null;} human-oriented string
      */
@@ -189,7 +189,7 @@ public final class AccessFlags {
     /**
      * Returns whether the flag {@code ACC_PUBLIC} is on in the given
      * flags.
-     * 
+     *
      * @param flags the flags to check
      * @return the value of the {@code ACC_PUBLIC} flag
      */
@@ -200,7 +200,7 @@ public final class AccessFlags {
     /**
      * Returns whether the flag {@code ACC_PROTECTED} is on in the given
      * flags.
-     * 
+     *
      * @param flags the flags to check
      * @return the value of the {@code ACC_PROTECTED} flag
      */
@@ -211,7 +211,7 @@ public final class AccessFlags {
     /**
      * Returns whether the flag {@code ACC_PRIVATE} is on in the given
      * flags.
-     * 
+     *
      * @param flags the flags to check
      * @return the value of the {@code ACC_PRIVATE} flag
      */
@@ -222,18 +222,18 @@ public final class AccessFlags {
     /**
      * Returns whether the flag {@code ACC_STATIC} is on in the given
      * flags.
-     * 
+     *
      * @param flags the flags to check
      * @return the value of the {@code ACC_STATIC} flag
      */
     public static boolean isStatic(int flags) {
         return (flags & ACC_STATIC) != 0;
     }
-    
+
     /**
      * Returns whether the flag {@code ACC_SYNCHRONIZED} is on in
      * the given flags.
-     * 
+     *
      * @param flags the flags to check
      * @return the value of the {@code ACC_SYNCHRONIZED} flag
      */
@@ -244,7 +244,7 @@ public final class AccessFlags {
     /**
      * Returns whether the flag {@code ACC_ABSTRACT} is on in the given
      * flags.
-     * 
+     *
      * @param flags the flags to check
      * @return the value of the {@code ACC_ABSTRACT} flag
      */
@@ -255,7 +255,7 @@ public final class AccessFlags {
     /**
      * Returns whether the flag {@code ACC_NATIVE} is on in the given
      * flags.
-     * 
+     *
      * @param flags the flags to check
      * @return the value of the {@code ACC_NATIVE} flag
      */
@@ -266,7 +266,7 @@ public final class AccessFlags {
     /**
      * Returns whether the flag {@code ACC_ANNOTATION} is on in the given
      * flags.
-     * 
+     *
      * @param flags the flags to check
      * @return the value of the {@code ACC_ANNOTATION} flag
      */
@@ -277,7 +277,7 @@ public final class AccessFlags {
     /**
      * Returns whether the flag {@code ACC_DECLARED_SYNCHRONIZED} is
      * on in the given flags.
-     * 
+     *
      * @param flags the flags to check
      * @return the value of the {@code ACC_DECLARED_SYNCHRONIZED} flag
      */
@@ -288,7 +288,7 @@ public final class AccessFlags {
     /**
      * Helper to return a human-oriented string representing the given
      * access flags.
-     * 
+     *
      * @param flags the defined flags
      * @param mask mask for the "defined" bits
      * @param what what the flags represent (one of {@code CONV_*})

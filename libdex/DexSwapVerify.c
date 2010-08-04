@@ -1809,6 +1809,25 @@ static void* swapCodeItem(const CheckState* state, void* ptr) {
     SWAP_OFFSET4(item->debugInfoOff);
     SWAP_FIELD4(item->insnsSize);
 
+    if (item->insSize > item->registersSize) {
+        LOGE("insSize (%u) > registersSize (%u)\n", item->insSize,
+                item->registersSize);
+        return NULL;
+    }
+
+    if ((item->outsSize > 5) && (item->outsSize > item->registersSize)) {
+        /*
+         * It's okay for outsSize to be up to five, even if registersSize
+         * is smaller, since the short forms of method invocation allow
+         * repetition of a register multiple times within a single parameter
+         * list. Longer parameter lists, though, need to be represented
+         * in-order in the register file.
+         */
+        LOGE("outsSize (%u) > registersSize (%u)\n", item->outsSize,
+                item->registersSize);
+        return NULL;
+    }
+
     count = item->insnsSize;
     insns = item->insns;
     CHECK_LIST_SIZE(insns, count, sizeof(u2));
@@ -2761,15 +2780,13 @@ static bool crossVerifyEverything(CheckState* state, DexMapList* pMap)
 }
 
 /*
- * Fix the byte ordering of all fields in the DEX file, and do structural
- * verification.
- *
- * While we're at it, make sure that the file offsets all refer to locations
- * within the file.
+ * Fix the byte ordering of all fields in the DEX file, and do
+ * structural verification. This is only required for code that opens
+ * "raw" DEX files, such as the DEX optimizer.
  *
  * Returns 0 on success, nonzero on failure.
  */
-int dexFixByteOrdering(u1* addr, int len)
+int dexSwapAndVerify(u1* addr, int len)
 {
     DexHeader* pHeader;
     CheckState state;
@@ -2898,4 +2915,30 @@ int dexFixByteOrdering(u1* addr, int len)
     }
 
     return !okay;       // 0 == success
+}
+
+/*
+ * Detect the file type of the given memory buffer via magic number.
+ * Call dexSwapAndVerify() on an unoptimized DEX file, do nothing
+ * but return successfully on an optimized DEX file, and report an
+ * error for all other cases.
+ *
+ * Returns 0 on success, nonzero on failure.
+ */
+int dexSwapAndVerifyIfNecessary(u1* addr, int len)
+{
+    if (memcmp(addr, DEX_OPT_MAGIC, 4) == 0) {
+        // It is an optimized dex file.
+        return 0;
+    }
+
+    if (memcmp(addr, DEX_MAGIC, 4) == 0) {
+        // It is an unoptimized dex file.
+        return dexSwapAndVerify(addr, len);
+    }
+
+    LOGE("ERROR: Bad magic number (0x%02x %02x %02x %02x)\n",
+             addr[0], addr[1], addr[2], addr[3]);
+
+    return 1;
 }

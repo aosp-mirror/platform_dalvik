@@ -5,4 +5,3 @@ public interface Defs {
 
     // func2 not defined
 }
-

@@ -19,8 +19,7 @@
     ldr     r2, .LdvmJitToInterpNoChain
     str     r0, [rGLUE, #offGlue_pJitProfTable]
     @ Bail to interpreter - no chain [note - r4 still contains rPC]
-#if defined(JIT_STATS)
+#if defined(WITH_JIT_TUNING)
     mov     r0, #kHeavyweightMonitor
 #endif
     bx      r2
-

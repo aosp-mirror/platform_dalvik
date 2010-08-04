@@ -6,4 +6,3 @@
 public interface ICommon {
     public DoubledImplement getDoubledInstance();
 }
-

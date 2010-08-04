@@ -10,4 +10,3 @@ public @interface IntToString {
     int from();
     String to();
 }
-

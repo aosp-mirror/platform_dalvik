@@ -34,7 +34,7 @@ import java.util.TreeMap;
  * A section of a {@code .dex} file which consists of a sequence of
  * {@link OffsettedItem} objects, which may each be of a different concrete
  * class and/or size.
- * 
+ *
  * <b>Note:</b> It is invalid for an item in an instance of this class to
  * have a larger alignment requirement than the alignment of this instance.
  */
@@ -59,7 +59,7 @@ public final class MixedItemSection extends Section {
             return type1.compareTo(type2);
         }
     };
-    
+
     /** {@code non-null;} the items in this part */
     private final ArrayList<OffsettedItem> items;
 
@@ -77,7 +77,7 @@ public final class MixedItemSection extends Section {
 
     /**
      * Constructs an instance. The file offset is initially unknown.
-     * 
+     *
      * @param name {@code null-ok;} the name of this instance, for annotation
      * purposes
      * @param file {@code non-null;} file that this instance is part of
@@ -117,7 +117,7 @@ public final class MixedItemSection extends Section {
 
     /**
      * Gets the size of this instance, in items.
-     * 
+     *
      * @return {@code >= 0;} the size
      */
     public int size() {
@@ -133,7 +133,7 @@ public final class MixedItemSection extends Section {
         throwIfNotPrepared();
 
         if (writeSize == -1) {
-            throw new RuntimeException("write size not yet set");            
+            throw new RuntimeException("write size not yet set");
         }
 
         int sz = writeSize;
@@ -163,7 +163,7 @@ public final class MixedItemSection extends Section {
      * that it has been added to this instance. It is invalid to add the
      * same item to more than one instance, nor to add the same items
      * multiple times to a single instance.
-     * 
+     *
      * @param item {@code non-null;} the item to add
      */
     public void add(OffsettedItem item) {
@@ -186,7 +186,7 @@ public final class MixedItemSection extends Section {
      * Interns an item in this instance, returning the interned instance
      * (which may not be the one passed in). This will add the item if no
      * equal item has been added.
-     * 
+     *
      * @param item {@code non-null;} the item to intern
      * @return {@code non-null;} the equivalent interned instance
      */
@@ -194,7 +194,7 @@ public final class MixedItemSection extends Section {
         throwIfPrepared();
 
         OffsettedItem result = interns.get(item);
-        
+
         if (result != null) {
             return (T) result;
         }
@@ -206,7 +206,7 @@ public final class MixedItemSection extends Section {
 
     /**
      * Gets an item which was previously interned.
-     * 
+     *
      * @param item {@code non-null;} the item to look for
      * @return {@code non-null;} the equivalent already-interned instance
      */
@@ -214,7 +214,7 @@ public final class MixedItemSection extends Section {
         throwIfNotPrepared();
 
         OffsettedItem result = interns.get(item);
-        
+
         if (result != null) {
             return (T) result;
         }
@@ -226,7 +226,7 @@ public final class MixedItemSection extends Section {
      * Writes an index of contents of the items in this instance of the
      * given type. If there are none, this writes nothing. If there are any,
      * then the index is preceded by the given intro string.
-     * 
+     *
      * @param out {@code non-null;} where to write to
      * @param itemType {@code non-null;} the item type of interest
      * @param intro {@code non-null;} the introductory string for non-empty indices
@@ -250,7 +250,7 @@ public final class MixedItemSection extends Section {
         }
 
         out.annotate(0, intro);
-        
+
         for (Map.Entry<String, OffsettedItem> entry : index.entrySet()) {
             String label = entry.getKey();
             OffsettedItem item = entry.getValue();

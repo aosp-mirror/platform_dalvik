@@ -74,7 +74,7 @@ getPrettyClassNameId(const char *descriptor)
 {
     hprof_string_id classNameId;
     char *dotName = dvmDescriptorToDot(descriptor);
-    
+
     /* Hprof suggests that array class names be converted from, e.g.,
      * "[[[I" to "int[][][]" and "[Lorg.blort.Spaz;" to
      * "org.blort.Spaz[]".
@@ -205,7 +205,7 @@ hprofDumpClasses(hprof_context_t *ctx)
              * ID:     class object ID
              * u4:     stack trace serial number
              * ID:     class name string ID
-             * 
+             *
              * We use the address of the class object structure as its ID.
              */
             hprofAddU4ToRecord(rec, clazz->serialNumber);

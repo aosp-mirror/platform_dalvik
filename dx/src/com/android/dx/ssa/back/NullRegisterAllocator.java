@@ -54,5 +54,5 @@ public class NullRegisterAllocator extends RegisterAllocator {
         }
 
         return mapper;
-    }    
+    }
 }

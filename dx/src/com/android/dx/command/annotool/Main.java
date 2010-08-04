@@ -39,7 +39,7 @@ public class Main {
         InvalidArgumentException() {
             super();
         }
-        
+
         InvalidArgumentException(String s) {
             super(s);
         }
@@ -49,7 +49,7 @@ public class Main {
         CLASS,
         INNERCLASS,
         METHOD,
-        PACKAGE        
+        PACKAGE
     }
 
 

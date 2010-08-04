@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-public class Blort 
+public class Blort
 {
     public static int test(int x) {
         if (x == 0) { // line 6

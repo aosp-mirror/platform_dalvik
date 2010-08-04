@@ -43,7 +43,7 @@ import java.util.HashMap;
 public final class ClassDataItem extends OffsettedItem {
     /** {@code non-null;} what class this data is for, just for listing generation */
     private final CstType thisClass;
-    
+
     /** {@code non-null;} list of static fields */
     private final ArrayList<EncodedField> staticFields;
 
@@ -71,7 +71,7 @@ public final class ClassDataItem extends OffsettedItem {
     /**
      * Constructs an instance. Its sets of members are initially
      * empty.
-     * 
+     *
      * @param thisClass {@code non-null;} what class this data is for, just
      * for listing generation
      */
@@ -105,7 +105,7 @@ public final class ClassDataItem extends OffsettedItem {
 
     /**
      * Returns whether this instance is empty.
-     * 
+     *
      * @return {@code true} if this instance is empty or
      * {@code false} if at least one element has been added to it
      */
@@ -116,7 +116,7 @@ public final class ClassDataItem extends OffsettedItem {
 
     /**
      * Adds a static field.
-     * 
+     *
      * @param field {@code non-null;} the field to add
      * @param value {@code null-ok;} initial value for the field, if any
      */
@@ -136,7 +136,7 @@ public final class ClassDataItem extends OffsettedItem {
 
     /**
      * Adds an instance field.
-     * 
+     *
      * @param field {@code non-null;} the field to add
      */
     public void addInstanceField(EncodedField field) {
@@ -149,7 +149,7 @@ public final class ClassDataItem extends OffsettedItem {
 
     /**
      * Adds a direct ({@code static} and/or {@code private}) method.
-     * 
+     *
      * @param method {@code non-null;} the method to add
      */
     public void addDirectMethod(EncodedMethod method) {
@@ -162,7 +162,7 @@ public final class ClassDataItem extends OffsettedItem {
 
     /**
      * Adds a virtual method.
-     * 
+     *
      * @param method {@code non-null;} the method to add
      */
     public void addVirtualMethod(EncodedMethod method) {
@@ -177,7 +177,7 @@ public final class ClassDataItem extends OffsettedItem {
      * Gets all the methods in this class. The returned list is not linked
      * in any way to the underlying lists contained in this instance, but
      * the objects contained in the list are shared.
-     * 
+     *
      * @return {@code non-null;} list of all methods
      */
     public ArrayList<EncodedMethod> getMethods() {
@@ -194,7 +194,7 @@ public final class ClassDataItem extends OffsettedItem {
     /**
      * Prints out the contents of this instance, in a debugging-friendly
      * way.
-     * 
+     *
      * @param out {@code non-null;} where to output to
      * @param verbose whether to be verbose with the output
      */
@@ -259,7 +259,7 @@ public final class ClassDataItem extends OffsettedItem {
     /**
      * Gets a {@link CstArray} corresponding to {@link #staticValues} if
      * it contains any non-zero non-{@code null} values.
-     * 
+     *
      * @return {@code null-ok;} the corresponding constant or {@code null} if
      * there are no values to encode
      */
@@ -274,14 +274,14 @@ public final class ClassDataItem extends OffsettedItem {
     /**
      * Gets a {@link CstArray} corresponding to {@link #staticValues} if
      * it contains any non-zero non-{@code null} values.
-     * 
+     *
      * @return {@code null-ok;} the corresponding constant or {@code null} if
      * there are no values to encode
      */
     private CstArray makeStaticValuesConstant() {
         // First sort the statics into their final order.
         Collections.sort(staticFields);
-        
+
         /*
          * Get the size of staticValues minus any trailing zeros/nulls (both
          * nulls per se as well as instances of CstKnownNull).
@@ -305,9 +305,9 @@ public final class ClassDataItem extends OffsettedItem {
         if (size == 0) {
             return null;
         }
-        
+
         // There is something worth encoding, so build up a result.
-        
+
         CstArray.List list = new CstArray.List(size);
         for (int i = 0; i < size; i++) {
             EncodedField field = staticFields.get(i);
@@ -336,7 +336,7 @@ public final class ClassDataItem extends OffsettedItem {
 
     /**
      * Writes out the encoded form of this instance.
-     * 
+     *
      * @param file {@code non-null;} file this instance is part of
      * @param out {@code non-null;} where to write to
      */
@@ -362,11 +362,11 @@ public final class ClassDataItem extends OffsettedItem {
             out.endAnnotation();
         }
     }
-    
+
     /**
      * Helper for {@link #encodeOutput}, which writes out the given
      * size value, annotating it as well (if annotations are enabled).
-     * 
+     *
      * @param file {@code non-null;} file this instance is part of
      * @param out {@code non-null;} where to write to
      * @param label {@code non-null;} the label for the purposes of annotation
@@ -386,7 +386,7 @@ public final class ClassDataItem extends OffsettedItem {
      * Helper for {@link #encodeOutput}, which writes out the given
      * list. It also annotates the items (if any and if annotations
      * are enabled).
-     * 
+     *
      * @param file {@code non-null;} file this instance is part of
      * @param out {@code non-null;} where to write to
      * @param label {@code non-null;} the label for the purposes of annotation
@@ -400,7 +400,7 @@ public final class ClassDataItem extends OffsettedItem {
         if (size == 0) {
             return;
         }
-        
+
         if (out.annotates()) {
             out.annotate(0, "  " + label + ":");
         }

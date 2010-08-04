@@ -51,7 +51,7 @@ public final class RopTranslator {
 
     /**
      * how much position info to preserve; one of the static
-     * constants in {@link PositionList} 
+     * constants in {@link PositionList}
      */
     private final int positionInfo;
 
@@ -85,7 +85,7 @@ public final class RopTranslator {
     /**
      * Translates a {@link RopMethod}. This may modify the given
      * input.
-     * 
+     *
      * @param method {@code non-null;} the original method
      * @param positionInfo how much position info to preserve; one of the
      * static constants in {@link PositionList}
@@ -104,7 +104,7 @@ public final class RopTranslator {
 
     /**
      * Constructs an instance. This method is private. Use {@link #translate}.
-     * 
+     *
      * @param method {@code non-null;} the original method
      * @param positionInfo how much position info to preserve; one of the
      * static constants in {@link PositionList}
@@ -166,7 +166,7 @@ public final class RopTranslator {
      * stack frame that matches dalvik's calling conventions. This will
      * alway result in "true" for methods that have run through the
      * SSA optimizer.
-     * 
+     *
      * @param paramSize size, in register units, of all the parameters
      * to this method
      */
@@ -198,7 +198,7 @@ public final class RopTranslator {
 
     /**
      * Does the translation and returns the result.
-     * 
+     *
      * @return {@code non-null;} the result
      */
     private DalvCode translateAndGetResult() {
@@ -231,7 +231,7 @@ public final class RopTranslator {
     /**
      * Helper for {@link #outputInstructions}, which does the processing
      * and output of one block.
-     * 
+     *
      * @param block {@code non-null;} the block to process and output
      * @param nextLabel {@code >= -1;} the next block that will be processed, or
      * {@code -1} if there is no next block
@@ -258,7 +258,7 @@ public final class RopTranslator {
         // Insert the block end code address.
         output.add(addresses.getEnd(block));
 
-        // Set up for end-of-block activities. 
+        // Set up for end-of-block activities.
 
         int succ = block.getPrimarySuccessor();
         Insn lastInsn = block.getLastInsn();
@@ -391,7 +391,7 @@ public final class RopTranslator {
                 if (preferredBlock == null) {
                     break;
                 }
-                
+
                 int preferred = preferredBlock.getLabel();
                 int primary = one.getPrimarySuccessor();
 
@@ -424,7 +424,7 @@ public final class RopTranslator {
                     }
                 }
             }
-        }        
+        }
 
         if (at != sz) {
             // There was a duplicate block label.
@@ -494,13 +494,13 @@ public final class RopTranslator {
 
         /**
          * {@code null-ok;} code address for the salient last instruction of the
-         * block (used before switches and throwing instructions) 
+         * block (used before switches and throwing instructions)
          */
         private CodeAddress lastAddress;
 
         /**
          * Constructs an instance.
-         * 
+         *
          * @param output {@code non-null;} destination for instruction output
          */
         public TranslationVisitor(OutputCollector output) {
@@ -509,7 +509,7 @@ public final class RopTranslator {
 
         /**
          * Sets the block currently being worked on.
-         * 
+         *
          * @param block {@code non-null;} the block
          * @param lastAddress {@code non-null;} code address for the salient
          * last instruction of the block
@@ -672,7 +672,7 @@ public final class RopTranslator {
                 return null;
             } else {
                 return insn.getResult();
-            }            
+            }
         }
 
         /** {@inheritDoc} */
@@ -707,7 +707,7 @@ public final class RopTranslator {
                             "Insn with result/move-result-pseudo mismatch " +
                             insn);
                 }
-                
+
                 if ((rop.getOpcode() == RegOps.NEW_ARRAY) &&
                     (opcode.getOpcode() != DalvOps.NEW_ARRAY)) {
                     /*
@@ -745,7 +745,7 @@ public final class RopTranslator {
                 throw new RuntimeException(
                         "Insn with result/move-result-pseudo mismatch" + insn);
             }
-            
+
             addOutput(lastAddress);
 
             DalvInsn di = new SimpleInsn(opcode, pos,
@@ -767,7 +767,7 @@ public final class RopTranslator {
             CodeAddress dataAddress = new CodeAddress(pos);
             ArrayData dataInsn =
                 new ArrayData(pos, lastAddress, values, cst);
-            
+
             TargetInsn fillArrayDataInsn =
                 new TargetInsn(Dops.FILL_ARRAY_DATA, pos, getRegs(insn),
                         dataAddress);
@@ -779,10 +779,10 @@ public final class RopTranslator {
             addOutputSuffix(dataAddress);
             addOutputSuffix(dataInsn);
         }
-        
+
         /**
          * Adds to the output.
-         * 
+         *
          * @param insn {@code non-null;} instruction to add
          */
         protected void addOutput(DalvInsn insn) {
@@ -791,7 +791,7 @@ public final class RopTranslator {
 
         /**
          * Adds to the output suffix.
-         * 
+         *
          * @param insn {@code non-null;} instruction to add
          */
         protected void addOutputSuffix(DalvInsn insn) {
@@ -810,7 +810,7 @@ public final class RopTranslator {
 
         /**
          * Constructs an instance.
-         * 
+         *
          * @param output {@code non-null;} destination for instruction output
          * @param locals {@code non-null;} the local variable info
          */
@@ -858,7 +858,7 @@ public final class RopTranslator {
         /**
          * Adds a {@link LocalStart} to the output if the given
          * instruction in fact introduces a local variable.
-         * 
+         *
          * @param insn {@code non-null;} instruction in question
          */
         public void addIntroductionIfNecessary(Insn insn) {
@@ -868,5 +868,5 @@ public final class RopTranslator {
                 addOutput(new LocalStart(insn.getPosition(), spec));
             }
         }
-    }    
+    }
 }

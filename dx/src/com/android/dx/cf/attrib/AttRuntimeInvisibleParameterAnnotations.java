@@ -30,7 +30,7 @@ public final class AttRuntimeInvisibleParameterAnnotations
 
     /**
      * Constructs an instance.
-     * 
+     *
      * @param parameterAnnotations {@code non-null;} the parameter annotations
      * @param byteLength {@code >= 0;} attribute data length in the original
      * classfile (not including the attribute header)

@@ -47,7 +47,7 @@ public final class EncodedArrayItem extends OffsettedItem {
 
     /**
      * Constructs an instance.
-     * 
+     *
      * @param array {@code non-null;} array to represent
      */
     public EncodedArrayItem(CstArray array) {

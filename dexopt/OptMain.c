@@ -41,7 +41,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <assert.h>
 
 static const char* kClassesDex = "classes.dex";
 
@@ -486,4 +485,3 @@ int main(int argc, char* const argv[])
     fprintf(stderr, "Usage: don't use this\n");
     return 1;
 }
-

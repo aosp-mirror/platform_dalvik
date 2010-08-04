@@ -13,7 +13,7 @@ public class Main {
         boolean timing = (args.length >= 1) && args[0].equals("--timing");
         doit(timing);
     }
-    
+
     public static void doit(boolean timing) {
         Object sleepy = new Object();
         long start, end;
@@ -47,10 +47,10 @@ public class Main {
                     if (epsilon > 50) {
                         epsilon = 50;
                     }
-                    
+
                     long min = delay - epsilon;
                     long max = delay + epsilon;
-                    
+
                     if (elapsed < min) {
                         System.out.println("  Elapsed time was too short");
                         showTime = true;
@@ -60,7 +60,7 @@ public class Main {
                         showTime = true;
                     }
                 }
-                    
+
                 if (showTime) {
                     System.out.println("  Wall clock elapsed "
                             + elapsed + "ms");
@@ -69,4 +69,3 @@ public class Main {
         }
     }
 }
-

@@ -49,7 +49,7 @@ public class SsaConverter {
 
         LocalVariableInfo localInfo = LocalVariableExtractor.extract(result);
 
-        placePhiFunctions(result, localInfo);
+        placePhiFunctions(result, localInfo, 0);
         new SsaRenamer(result).run();
 
         /*
@@ -59,6 +59,19 @@ public class SsaConverter {
         result.makeExitBlock();
 
         return result;
+    }
+
+    /**
+     * Updates an SSA representation, placing phi functions and renaming all
+     * registers above a certain threshold number.
+     *
+     * @param ssaMeth input
+     * @param threshold registers below this number are unchanged
+     */
+    public static void updateSsaMethod(SsaMethod ssaMeth, int threshold) {
+        LocalVariableInfo localInfo = LocalVariableExtractor.extract(ssaMeth);
+        placePhiFunctions(ssaMeth, localInfo, threshold);
+        new SsaRenamer(ssaMeth, threshold).run();
     }
 
     /**
@@ -100,7 +113,7 @@ public class SsaConverter {
 
         LocalVariableInfo localInfo = LocalVariableExtractor.extract(result);
 
-        placePhiFunctions(result, localInfo);
+        placePhiFunctions(result, localInfo, 0);
         return result;
     }
 
@@ -269,16 +282,17 @@ public class SsaConverter {
      * Modifications are made in-place.
      * @param localInfo {@code non-null;} local variable info, used
      * when placing phis
+     * @param threshold registers below this number are ignored
      */
     private static void placePhiFunctions (SsaMethod ssaMeth,
-            LocalVariableInfo localInfo) {
+            LocalVariableInfo localInfo, int threshold) {
         ArrayList<SsaBasicBlock> ssaBlocks;
         int regCount;
         int blockCount;
 
         ssaBlocks = ssaMeth.getBlocks();
         blockCount = ssaBlocks.size();
-        regCount = ssaMeth.getRegCount();
+        regCount = ssaMeth.getRegCount() - threshold;
 
         DomFront df = new DomFront(ssaMeth);
         DomFront.DomInfo[] domInfos = df.run();
@@ -304,8 +318,8 @@ public class SsaConverter {
             for (SsaInsn insn : b.getInsns()) {
                 RegisterSpec rs = insn.getResult();
 
-                if (rs != null) {
-                    defsites[rs.getReg()].set(bi);
+                if (rs != null && rs.getReg() - threshold >= 0) {
+                    defsites[rs.getReg() - threshold].set(bi);
                 }
             }
         }
@@ -327,7 +341,7 @@ public class SsaConverter {
          * For each register, compute all locations for phi placement
          * based on dominance-frontier algorithm.
          */
-        for (int reg = 0, s = ssaMeth.getRegCount() ; reg < s ; reg++ ) {
+        for (int reg = 0, s = regCount; reg < s; reg++) {
             int workBlockIndex;
 
             /* Worklist set starts out with each node where reg is assigned. */
@@ -345,11 +359,12 @@ public class SsaConverter {
                     if (!phisites[reg].get(dfBlockIndex)) {
                         phisites[reg].set(dfBlockIndex);
 
+                        int tReg = reg + threshold;
                         RegisterSpec rs
-                                = localInfo.getStarts(dfBlockIndex).get(reg);
+                            = localInfo.getStarts(dfBlockIndex).get(tReg);
 
                         if (rs == null) {
-                            ssaBlocks.get(dfBlockIndex).addPhiInsnForReg(reg);
+                            ssaBlocks.get(dfBlockIndex).addPhiInsnForReg(tReg);
                         } else {
                             ssaBlocks.get(dfBlockIndex).addPhiInsnForReg(rs);
                         }

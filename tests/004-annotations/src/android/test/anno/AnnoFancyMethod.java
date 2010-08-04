@@ -12,4 +12,3 @@ public @interface AnnoFancyMethod {
     AnnoFancyMethodEnum enumerated() default AnnoFancyMethodEnum.FOO;
     Class someClass() default SomeClass.class;
 }
-

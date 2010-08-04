@@ -31,7 +31,7 @@ int computeLiveRange(LiveRange *list, BasicBlock *bb, int seqNum)
     int i;
 
     if (bb->blockType != kDalvikByteCode &&
-        bb->blockType != kEntryBlock)
+        bb->blockType != kTraceEntryBlock)
         return seqNum;
 
     for (mir = bb->firstMIRInsn; mir; mir = mir->next) {
@@ -64,7 +64,7 @@ static void inferTypes(CompilationUnit *cUnit, BasicBlock *bb)
 {
     MIR *mir;
     if (bb->blockType != kDalvikByteCode &&
-        bb->blockType != kEntryBlock)
+        bb->blockType != kTraceEntryBlock)
         return;
 
     for (mir = bb->firstMIRInsn; mir; mir = mir->next) {
@@ -124,7 +124,6 @@ void dvmCompilerRegAlloc(CompilationUnit *cUnit)
     int seqNum = 0;
     LiveRange *ranges;
     RegLocation *loc;
-    int *ssaToDalvikMap = (int *) cUnit->ssaToDalvikMap->elemList;
 
     /* Allocate the location map */
     loc = (RegLocation*)dvmCompilerNew(cUnit->numSSARegs * sizeof(*loc), true);

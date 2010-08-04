@@ -29,7 +29,7 @@ import com.android.dx.util.Hex;
 public class ValueAwareMachine extends BaseMachine {
     /**
      * Constructs an instance.
-     * 
+     *
      * @param prototype {@code non-null;} the prototype for the associated
      * method
      */
@@ -96,7 +96,7 @@ public class ValueAwareMachine extends BaseMachine {
             case ByteOps.IUSHR:
             case ByteOps.IAND:
             case ByteOps.IOR:
-            case ByteOps.IXOR: 
+            case ByteOps.IXOR:
             case ByteOps.IINC:
             case ByteOps.I2L:
             case ByteOps.I2F:
@@ -161,7 +161,7 @@ public class ValueAwareMachine extends BaseMachine {
                 }
                 Type type = ((TypeBearer) getAuxCst()).getType();
                 if (type == Type.VOID) {
-                    clearResult();                    
+                    clearResult();
                 } else {
                     setResult(type);
                 }

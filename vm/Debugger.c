@@ -137,17 +137,17 @@ void dvmDbgInitCond(pthread_cond_t* pCond)
 }
 void dvmDbgCondWait(pthread_cond_t* pCond, pthread_mutex_t* pMutex)
 {
-    int cc = pthread_cond_wait(pCond, pMutex);
+    int cc __attribute__ ((__unused__)) = pthread_cond_wait(pCond, pMutex);
     assert(cc == 0);
 }
 void dvmDbgCondSignal(pthread_cond_t* pCond)
 {
-    int cc = pthread_cond_signal(pCond);
+    int cc __attribute__ ((__unused__)) = pthread_cond_signal(pCond);
     assert(cc == 0);
 }
 void dvmDbgCondBroadcast(pthread_cond_t* pCond)
 {
-    int cc = pthread_cond_broadcast(pCond);
+    int cc __attribute__ ((__unused__)) = pthread_cond_broadcast(pCond);
     assert(cc == 0);
 }
 
@@ -183,6 +183,7 @@ static int registryCompare(const void* obj1, const void* obj2)
  *
  * Lock the registry before calling here.
  */
+#ifndef NDEBUG
 static bool lookupId(ObjectId id)
 {
     void* found;
@@ -194,6 +195,7 @@ static bool lookupId(ObjectId id)
     assert(found == (void*)(u4) id);
     return true;
 }
+#endif
 
 /*
  * Register an object, if it hasn't already been.
@@ -271,6 +273,7 @@ void dvmGcMarkDebuggerRefs()
  *
  * Note this actually takes both ObjectId and RefTypeId.
  */
+#ifndef NDEBUG
 static bool objectIsRegistered(ObjectId id, RegistryType type)
 {
     UNUSED_PARAMETER(type);
@@ -283,6 +286,7 @@ static bool objectIsRegistered(ObjectId id, RegistryType type)
     dvmHashTableUnlock(gDvm.dbgRegistry);
     return result;
 }
+#endif
 
 /*
  * Convert to/from a RefTypeId.
@@ -293,10 +297,12 @@ static RefTypeId classObjectToRefTypeId(ClassObject* clazz)
 {
     return (RefTypeId) registerObject((Object*) clazz, kRefTypeId, true);
 }
+#if 0
 static RefTypeId classObjectToRefTypeIdNoReg(ClassObject* clazz)
 {
     return (RefTypeId) registerObject((Object*) clazz, kRefTypeId, false);
 }
+#endif
 static ClassObject* refTypeIdToClassObject(RefTypeId id)
 {
     assert(objectIsRegistered(id, kRefTypeId) || !gDvm.debuggerConnected);
@@ -815,7 +821,7 @@ int dvmDbgGetSignatureTag(const char* type)
     if (strcmp(type, "Ljava/lang/String;") == 0)
         return JT_STRING;
     else if (strcmp(type, "Ljava/lang/Class;") == 0)
-        return JT_CLASS_OBJECT; 
+        return JT_CLASS_OBJECT;
     else if (strcmp(type, "Ljava/lang/Thread;") == 0)
         return JT_THREAD;
     else if (strcmp(type, "Ljava/lang/ThreadGroup;") == 0)
@@ -1144,7 +1150,7 @@ ObjectId dvmDbgCreateString(const char* str)
 {
     StringObject* strObj;
 
-    strObj = dvmCreateStringFromCstr(str, ALLOC_DEFAULT);
+    strObj = dvmCreateStringFromCstr(str);
     dvmReleaseTrackedAlloc((Object*) strObj, NULL);
     return objectToObjectId((Object*) strObj);
 }
@@ -1158,6 +1164,20 @@ ObjectId dvmDbgCreateObject(RefTypeId classId)
 {
     ClassObject* clazz = refTypeIdToClassObject(classId);
     Object* newObj = dvmAllocObject(clazz, ALLOC_DEFAULT);
+    dvmReleaseTrackedAlloc(newObj, NULL);
+    return objectToObjectId(newObj);
+}
+
+/*
+ * Allocate a new array object of the specified type and length.  The
+ * type is the array type, not the element type.
+ *
+ * Add it to the registry to prevent it from being GCed.
+ */
+ObjectId dvmDbgCreateArrayObject(RefTypeId arrayTypeId, u4 length)
+{
+    ClassObject* clazz = refTypeIdToClassObject(arrayTypeId);
+    Object* newObj = (Object*) dvmAllocArrayByClass(clazz, length, ALLOC_DEFAULT);
     dvmReleaseTrackedAlloc(newObj, NULL);
     return objectToObjectId(newObj);
 }
@@ -1249,7 +1269,7 @@ void dvmDbgOutputAllMethods(RefTypeId refTypeId, bool withGeneric,
     int i;
 
     dexStringCacheInit(&stringCache);
-    
+
     clazz = refTypeIdToClassObject(refTypeId);
     assert(clazz != NULL);
 
@@ -1319,7 +1339,7 @@ typedef struct DebugCallbackContext {
     bool withGeneric;
 } DebugCallbackContext;
 
-static int lineTablePositionsCb(void *cnxt, u4 address, u4 lineNum) 
+static int lineTablePositionsCb(void *cnxt, u4 address, u4 lineNum)
 {
     DebugCallbackContext *pContext = (DebugCallbackContext *)cnxt;
 
@@ -1340,7 +1360,6 @@ void dvmDbgOutputLineTable(RefTypeId refTypeId, MethodId methodId,
 {
     Method* method;
     u8 start, end;
-    int i;
     DebugCallbackContext context;
 
     memset (&context, 0, sizeof(DebugCallbackContext));
@@ -1449,7 +1468,7 @@ void dvmDbgOutputVariableTable(RefTypeId refTypeId, MethodId methodId,
     DebugCallbackContext context;
 
     memset (&context, 0, sizeof(DebugCallbackContext));
-    
+
     method = methodIdToMethod(refTypeId, methodId);
 
     expandBufAdd4BE(pReply, method->insSize);
@@ -1659,7 +1678,7 @@ void dvmDbgSetStaticFieldValue(RefTypeId refTypeId, FieldId fieldId,
     StaticField* sfield = (StaticField*) fieldIdToField(refTypeId, fieldId);
     Object* objVal;
     JValue value;
-    
+
     value.j = rawValue;
 
     switch (sfield->field.signature[0]) {
@@ -1756,7 +1775,7 @@ bool dvmDbgGetThreadStatus(ObjectId threadId, u4* pThreadStatus,
     Object* threadObj;
     Thread* thread;
     bool result = false;
-    
+
     threadObj = objectIdToObject(threadId);
     assert(threadObj != NULL);
 
@@ -1803,7 +1822,7 @@ u4 dvmDbgGetThreadSuspendCount(ObjectId threadId)
     Object* threadObj;
     Thread* thread;
     u4 result = 0;
-    
+
     threadObj = objectIdToObject(threadId);
     assert(threadObj != NULL);
 
@@ -1831,7 +1850,7 @@ bool dvmDbgThreadExists(ObjectId threadId)
     Object* threadObj;
     Thread* thread;
     bool result;
-    
+
     threadObj = objectIdToObject(threadId);
     assert(threadObj != NULL);
 
@@ -1858,7 +1877,7 @@ bool dvmDbgIsSuspended(ObjectId threadId)
     Object* threadObj;
     Thread* thread;
     bool result = false;
-    
+
     threadObj = objectIdToObject(threadId);
     assert(threadObj != NULL);
 
@@ -1888,7 +1907,7 @@ void dvmDbgWaitForSuspend(ObjectId threadId)
 {
     Object* threadObj;
     Thread* thread;
-    
+
     threadObj = objectIdToObject(threadId);
     assert(threadObj != NULL);
 

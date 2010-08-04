@@ -211,21 +211,12 @@ static void handleSigQuit(void)
 }
 
 /*
- * Respond to a SIGUSR1 by forcing a GC.  If we were built with HPROF
- * support, generate an HPROF dump file.
- *
- * (The HPROF dump generation is not all that useful now that we have
- * better ways to generate it.  Consider removing this in a future release.)
+ * Respond to a SIGUSR1 by forcing a GC.
  */
 static void handleSigUsr1(void)
 {
-#if WITH_HPROF
-    LOGI("SIGUSR1 forcing GC and HPROF dump\n");
-    hprofDumpHeap(NULL, false);
-#else
     LOGI("SIGUSR1 forcing GC (no HPROF)\n");
     dvmCollectGarbage(false);
-#endif
 }
 
 #if defined(WITH_JIT) && defined(WITH_JIT_TUNING)

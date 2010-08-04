@@ -47,7 +47,7 @@ public class CodeObserver implements BytecodeArray.Visitor {
 
     /**
      * Constructs an instance.
-     * 
+     *
      * @param bytes {@code non-null;} actual array of bytecode
      * @param observer {@code non-null;} observer to inform of parsing
      */
@@ -198,7 +198,7 @@ public class CodeObserver implements BytecodeArray.Visitor {
 
     /**
      * Helper to produce the first bit of output for each instruction.
-     * 
+     *
      * @param offset the offset to the start of the instruction
      */
     private String header(int offset) {
@@ -220,7 +220,7 @@ public class CodeObserver implements BytecodeArray.Visitor {
     /**
      * Helper for {@link #visitConstant} where the constant is an
      * {@code int}.
-     * 
+     *
      * @param opcode the opcode
      * @param offset offset to the instruction
      * @param length instruction length
@@ -247,7 +247,7 @@ public class CodeObserver implements BytecodeArray.Visitor {
     /**
      * Helper for {@link #visitConstant} where the constant is a
      * {@code long}.
-     * 
+     *
      * @param opcode the opcode
      * @param offset offset to the instruction
      * @param length instruction length
@@ -271,7 +271,7 @@ public class CodeObserver implements BytecodeArray.Visitor {
     /**
      * Helper for {@link #visitConstant} where the constant is a
      * {@code float}.
-     * 
+     *
      * @param opcode the opcode
      * @param offset offset to the instruction
      * @param length instruction length
@@ -289,7 +289,7 @@ public class CodeObserver implements BytecodeArray.Visitor {
     /**
      * Helper for {@link #visitConstant} where the constant is a
      * {@code double}.
-     * 
+     *
      * @param opcode the opcode
      * @param offset offset to the instruction
      * @param length instruction length

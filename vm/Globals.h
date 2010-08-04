@@ -37,6 +37,7 @@
 /* private structures */
 typedef struct GcHeap GcHeap;
 typedef struct BreakpointSet BreakpointSet;
+typedef struct InlineSub InlineSub;
 
 /*
  * One of these for each -ea/-da/-esa/-dsa on the command line.
@@ -103,6 +104,7 @@ struct DvmGlobals {
     void        (*abortHook)(void);
 
     int         jniGrefLimit;       // 0 means no limit
+    char*       jniTrace;
     bool        reduceSignals;
     bool        noQuitHandler;
     bool        verifyDexChecksum;
@@ -112,8 +114,17 @@ struct DvmGlobals {
 
     DexOptimizerMode    dexOptMode;
     DexClassVerifyMode  classVerifyMode;
+
+    /*
+     * GC option flags.
+     */
     bool        preciseGc;
+    bool        overwriteFree;
+    bool        preVerify;
+    bool        postVerify;
     bool        generateRegisterMaps;
+    bool        concurrentMarkSweep;
+    bool        verifyCardTable;
 
     int         assertionCtrlCount;
     AssertionControl*   assertionCtrl;
@@ -167,12 +178,19 @@ struct DvmGlobals {
     /*
      * Interned strings.
      */
+
+    /* A mutex that guards access to the interned string tables. */
+    pthread_mutex_t internLock;
+
+    /* Hash table of strings interned by the user. */
     HashTable*  internedStrings;
+
+    /* Hash table of strings interned by the class loader. */
+    HashTable*  literalStrings;
 
     /*
      * Quick lookups for popular classes used internally.
      */
-    ClassObject* unlinkedJavaLangClass;    // see unlinkedJavaLangClassObject
     ClassObject* classJavaLangClass;
     ClassObject* classJavaLangClassArray;
     ClassObject* classJavaLangError;
@@ -228,7 +246,7 @@ struct DvmGlobals {
     int         offJavaLangClass_pd;
 
     /* field offsets - String */
-    volatile int javaLangStringReady;   /* 0=not init, 1=ready, -1=initing */
+    int         javaLangStringReady;    /* 0=not init, 1=ready, -1=initing */
     int         offJavaLangString_value;
     int         offJavaLangString_count;
     int         offJavaLangString_offset;
@@ -269,7 +287,7 @@ struct DvmGlobals {
     int         offJavaLangRefReference_referent;
     int         offJavaLangRefReference_queue;
     int         offJavaLangRefReference_queueNext;
-    int         offJavaLangRefReference_vmData;
+    int         offJavaLangRefReference_pendingNext;
 
     /* method pointers - java.lang.ref.Reference */
     Method*     methJavaLangRefReference_enqueueInternal;
@@ -317,12 +335,6 @@ struct DvmGlobals {
      * VM-synthesized primitive classes, for arrays.
      */
     ClassObject* volatile primitiveClass[PRIM_MAX];
-
-    /*
-     * A placeholder ClassObject used during ClassObject
-     * construction.
-     */
-    ClassObject  unlinkedJavaLangClassObject;
 
     /*
      * Thread list.  This always has at least one element in it (main),
@@ -432,9 +444,6 @@ struct DvmGlobals {
     ReferenceTable  jniPinRefTable;
     pthread_mutex_t jniPinRefLock;
 
-    /* special ReferenceQueue for JNI weak globals */
-    Object*     jniWeakGlobalRefQueue;
-
     /*
      * Native shared library table.
      */
@@ -446,8 +455,17 @@ struct DvmGlobals {
      */
     pthread_mutex_t gcHeapLock;
 
+    /*
+     * Condition variable to queue threads waiting to retry an
+     * allocation.  Signaled after a concurrent GC is completed.
+     */
+    pthread_cond_t gcHeapCond;
+
     /* Opaque pointer representing the heap. */
     GcHeap*     gcHeap;
+
+    /* The card table base, modified as needed for marking cards. */
+    u1*         biasedCardTableBase;
 
     /*
      * Pre-allocated throwables.
@@ -487,6 +505,9 @@ struct DvmGlobals {
     InstructionFlags*   instrFlags;
     /* instruction format table, used for verification */
     InstructionFormat*  instrFormat;
+
+    /* inline substitution table, used during optimization */
+    InlineSub*          inlineSubs;
 
     /*
      * Bootstrap class loader linear allocator.
@@ -730,20 +751,7 @@ struct DvmJitGlobals {
 
     /* JIT internal stats */
     int                compilerMaxQueued;
-    int                addrLookupsFound;
-    int                addrLookupsNotFound;
-    int                noChainExit[kNoChainExitLast];
-    int                normalExit;
-    int                puntExit;
     int                translationChains;
-    int                invokeMonomorphic;
-    int                invokePolymorphic;
-    int                invokeNative;
-    int                returnOp;
-    int                icPatchFast;
-    int                icPatchQueued;
-    int                icPatchDropped;
-    u8                 jitTime;
 
     /* Compiled code cache */
     void* codeCache;
@@ -759,6 +767,12 @@ struct DvmJitGlobals {
 
     /* Flag to indicate that the code cache is full */
     bool codeCacheFull;
+
+    /* Page size  - 1 */
+    unsigned int pageSizeMask;
+
+    /* Lock to change the protection type of the code cache */
+    pthread_mutex_t    codeCacheProtectionLock;
 
     /* Number of times that the code cache has been reset */
     int numCodeCacheReset;
@@ -786,9 +800,6 @@ struct DvmJitGlobals {
 
     /* Vector to disable selected optimizations */
     int disableOpt;
-
-    /* Code address of special interpret-only pseudo-translation */
-    void *interpretTemplate;
 
     /* Table to track the overall and trace statistics of hot methods */
     HashTable*  methodStatsTable;
@@ -819,6 +830,30 @@ struct DvmJitGlobals {
     u4 *signatureBreakpoint;            // Signature content
 #endif
 
+#if defined(WITH_JIT_TUNING)
+    /* Performance tuning counters */
+    int                addrLookupsFound;
+    int                addrLookupsNotFound;
+    int                noChainExit[kNoChainExitLast];
+    int                normalExit;
+    int                puntExit;
+    int                invokeMonomorphic;
+    int                invokePolymorphic;
+    int                invokeNative;
+    int                invokeMonoGetterInlined;
+    int                invokeMonoSetterInlined;
+    int                invokePolyGetterInlined;
+    int                invokePolySetterInlined;
+    int                returnOp;
+    int                icPatchInit;
+    int                icPatchLockFree;
+    int                icPatchQueued;
+    int                icPatchRejected;
+    int                icPatchDropped;
+    u8                 jitTime;
+    int                codeCachePatches;
+#endif
+
     /* Place arrays at the end to ease the display in gdb sessions */
 
     /* Work order queue for compilations */
@@ -829,6 +864,10 @@ struct DvmJitGlobals {
 };
 
 extern struct DvmJitGlobals gDvmJit;
+
+#if defined(WITH_JIT_TUNING)
+extern int gDvmICHitCount;
+#endif
 
 #endif
 

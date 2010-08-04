@@ -34,4 +34,3 @@
     cvtsi2ss    (rFP,%eax,4), %xmm0     # %xmm0<- vB
     movss       %xmm0, (rFP, rINST, 4)  # vA<- %xmm0
     FINISH      1                       # jump to next instruction
-

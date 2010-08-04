@@ -16,11 +16,12 @@
 
 #include "Dalvik.h"
 #include "libdex/OpCode.h"
-#include "dexdump/OpCodeNames.h"
+#include "libdex/OpCodeNames.h"
 
 #include "../../CompilerInternals.h"
 #include "ArmLIR.h"
 #include <unistd.h>             /* for cacheflush */
+#include <sys/mman.h>           /* for protection change */
 
 /*
  * opcode: ArmOpCode enum
@@ -69,6 +70,7 @@
  *     n -> complimented Thumb2 modified immediate
  *     M -> Thumb2 16-bit zero-extended immediate
  *     b -> 4-digit binary
+ *     B -> dmb option string (sy, st, ish, ishst, nsh, hshst)
  *
  *  [!] escape.  To insert "!", use "!!"
  */
@@ -486,19 +488,19 @@ ArmEncodingMap EncodingMap[kArmLast] = {
     ENCODING_MAP(kThumb2StrRRI12,       0xf8c00000,
                  kFmtBitBlt, 15, 12, kFmtBitBlt, 19, 16, kFmtBitBlt, 11, 0,
                  kFmtUnused, -1, -1, IS_TERTIARY_OP | REG_USE01 | IS_STORE,
-                 "str", "r!0d,[r!1d, #!2d", 2),
+                 "str", "r!0d, [r!1d, #!2d]", 2),
     ENCODING_MAP(kThumb2LdrRRI12,       0xf8d00000,
                  kFmtBitBlt, 15, 12, kFmtBitBlt, 19, 16, kFmtBitBlt, 11, 0,
                  kFmtUnused, -1, -1, IS_TERTIARY_OP | REG_DEF0_USE1 | IS_LOAD,
-                 "ldr", "r!0d,[r!1d, #!2d", 2),
+                 "ldr", "r!0d, [r!1d, #!2d]", 2),
     ENCODING_MAP(kThumb2StrRRI8Predec,       0xf8400c00,
                  kFmtBitBlt, 15, 12, kFmtBitBlt, 19, 16, kFmtBitBlt, 8, 0,
                  kFmtUnused, -1, -1, IS_TERTIARY_OP | REG_USE01 | IS_STORE,
-                 "str", "r!0d,[r!1d, #-!2d]", 2),
+                 "str", "r!0d, [r!1d, #-!2d]", 2),
     ENCODING_MAP(kThumb2LdrRRI8Predec,       0xf8500c00,
                  kFmtBitBlt, 15, 12, kFmtBitBlt, 19, 16, kFmtBitBlt, 8, 0,
                  kFmtUnused, -1, -1, IS_TERTIARY_OP | REG_DEF0_USE1 | IS_LOAD,
-                 "ldr", "r!0d,[r!1d, #-!2d]", 2),
+                 "ldr", "r!0d, [r!1d, #-!2d]", 2),
     ENCODING_MAP(kThumb2Cbnz,       0xb900, /* Note: does not affect flags */
                  kFmtBitBlt, 2, 0, kFmtImm6, -1, -1, kFmtUnused, -1, -1,
                  kFmtUnused, -1, -1, IS_BINARY_OP | REG_USE0 | IS_BRANCH,
@@ -579,59 +581,59 @@ ArmEncodingMap EncodingMap[kArmLast] = {
     ENCODING_MAP(kThumb2LdrRRR,    0xf8500000,
                  kFmtBitBlt, 15, 12, kFmtBitBlt, 19, 16, kFmtBitBlt, 3, 0,
                  kFmtBitBlt, 5, 4, IS_QUAD_OP | REG_DEF0_USE12 | IS_LOAD,
-                 "ldr", "r!0d,[r!1d, r!2d, LSL #!3d]", 2),
+                 "ldr", "r!0d, [r!1d, r!2d, LSL #!3d]", 2),
     ENCODING_MAP(kThumb2LdrhRRR,    0xf8300000,
                  kFmtBitBlt, 15, 12, kFmtBitBlt, 19, 16, kFmtBitBlt, 3, 0,
                  kFmtBitBlt, 5, 4, IS_QUAD_OP | REG_DEF0_USE12 | IS_LOAD,
-                 "ldrh", "r!0d,[r!1d, r!2d, LSL #!3d]", 2),
+                 "ldrh", "r!0d, [r!1d, r!2d, LSL #!3d]", 2),
     ENCODING_MAP(kThumb2LdrshRRR,    0xf9300000,
                  kFmtBitBlt, 15, 12, kFmtBitBlt, 19, 16, kFmtBitBlt, 3, 0,
                  kFmtBitBlt, 5, 4, IS_QUAD_OP | REG_DEF0_USE12 | IS_LOAD,
-                 "ldrsh", "r!0d,[r!1d, r!2d, LSL #!3d]", 2),
+                 "ldrsh", "r!0d, [r!1d, r!2d, LSL #!3d]", 2),
     ENCODING_MAP(kThumb2LdrbRRR,    0xf8100000,
                  kFmtBitBlt, 15, 12, kFmtBitBlt, 19, 16, kFmtBitBlt, 3, 0,
                  kFmtBitBlt, 5, 4, IS_QUAD_OP | REG_DEF0_USE12 | IS_LOAD,
-                 "ldrb", "r!0d,[r!1d, r!2d, LSL #!3d]", 2),
+                 "ldrb", "r!0d, [r!1d, r!2d, LSL #!3d]", 2),
     ENCODING_MAP(kThumb2LdrsbRRR,    0xf9100000,
                  kFmtBitBlt, 15, 12, kFmtBitBlt, 19, 16, kFmtBitBlt, 3, 0,
                  kFmtBitBlt, 5, 4, IS_QUAD_OP | REG_DEF0_USE12 | IS_LOAD,
-                 "ldrsb", "r!0d,[r!1d, r!2d, LSL #!3d]", 2),
+                 "ldrsb", "r!0d, [r!1d, r!2d, LSL #!3d]", 2),
     ENCODING_MAP(kThumb2StrRRR,    0xf8400000,
                  kFmtBitBlt, 15, 12, kFmtBitBlt, 19, 16, kFmtBitBlt, 3, 0,
                  kFmtBitBlt, 5, 4, IS_QUAD_OP | REG_USE012 | IS_STORE,
-                 "str", "r!0d,[r!1d, r!2d, LSL #!3d]", 2),
+                 "str", "r!0d, [r!1d, r!2d, LSL #!3d]", 2),
     ENCODING_MAP(kThumb2StrhRRR,    0xf8200000,
                  kFmtBitBlt, 15, 12, kFmtBitBlt, 19, 16, kFmtBitBlt, 3, 0,
                  kFmtBitBlt, 5, 4, IS_QUAD_OP | REG_USE012 | IS_STORE,
-                 "strh", "r!0d,[r!1d, r!2d, LSL #!3d]", 2),
+                 "strh", "r!0d, [r!1d, r!2d, LSL #!3d]", 2),
     ENCODING_MAP(kThumb2StrbRRR,    0xf8000000,
                  kFmtBitBlt, 15, 12, kFmtBitBlt, 19, 16, kFmtBitBlt, 3, 0,
                  kFmtBitBlt, 5, 4, IS_QUAD_OP | REG_USE012 | IS_STORE,
-                 "strb", "r!0d,[r!1d, r!2d, LSL #!3d]", 2),
+                 "strb", "r!0d, [r!1d, r!2d, LSL #!3d]", 2),
     ENCODING_MAP(kThumb2LdrhRRI12,       0xf8b00000,
                  kFmtBitBlt, 15, 12, kFmtBitBlt, 19, 16, kFmtBitBlt, 11, 0,
                  kFmtUnused, -1, -1, IS_TERTIARY_OP | REG_DEF0_USE1 | IS_LOAD,
-                 "ldrh", "r!0d,[r!1d, #!2d]", 2),
+                 "ldrh", "r!0d, [r!1d, #!2d]", 2),
     ENCODING_MAP(kThumb2LdrshRRI12,       0xf9b00000,
                  kFmtBitBlt, 15, 12, kFmtBitBlt, 19, 16, kFmtBitBlt, 11, 0,
                  kFmtUnused, -1, -1, IS_TERTIARY_OP | REG_DEF0_USE1 | IS_LOAD,
-                 "ldrsh", "r!0d,[r!1d, #!2d]", 2),
+                 "ldrsh", "r!0d, [r!1d, #!2d]", 2),
     ENCODING_MAP(kThumb2LdrbRRI12,       0xf8900000,
                  kFmtBitBlt, 15, 12, kFmtBitBlt, 19, 16, kFmtBitBlt, 11, 0,
                  kFmtUnused, -1, -1, IS_TERTIARY_OP | REG_DEF0_USE1 | IS_LOAD,
-                 "ldrb", "r!0d,[r!1d, #!2d]", 2),
+                 "ldrb", "r!0d, [r!1d, #!2d]", 2),
     ENCODING_MAP(kThumb2LdrsbRRI12,       0xf9900000,
                  kFmtBitBlt, 15, 12, kFmtBitBlt, 19, 16, kFmtBitBlt, 11, 0,
                  kFmtUnused, -1, -1, IS_TERTIARY_OP | REG_DEF0_USE1 | IS_LOAD,
-                 "ldrsb", "r!0d,[r!1d, #!2d]", 2),
+                 "ldrsb", "r!0d, [r!1d, #!2d]", 2),
     ENCODING_MAP(kThumb2StrhRRI12,       0xf8a00000,
                  kFmtBitBlt, 15, 12, kFmtBitBlt, 19, 16, kFmtBitBlt, 11, 0,
                  kFmtUnused, -1, -1, IS_TERTIARY_OP | REG_USE01 | IS_STORE,
-                 "strh", "r!0d,[r!1d, #!2d]", 2),
+                 "strh", "r!0d, [r!1d, #!2d]", 2),
     ENCODING_MAP(kThumb2StrbRRI12,       0xf8800000,
                  kFmtBitBlt, 15, 12, kFmtBitBlt, 19, 16, kFmtBitBlt, 11, 0,
                  kFmtUnused, -1, -1, IS_TERTIARY_OP | REG_USE01 | IS_STORE,
-                 "strb", "r!0d,[r!1d, #!2d]", 2),
+                 "strb", "r!0d, [r!1d, #!2d]", 2),
     ENCODING_MAP(kThumb2Pop,           0xe8bd0000,
                  kFmtBitBlt, 15, 0, kFmtUnused, -1, -1, kFmtUnused, -1, -1,
                  kFmtUnused, -1, -1,
@@ -651,7 +653,7 @@ ArmEncodingMap EncodingMap[kArmLast] = {
                  kFmtBitBlt, 11, 8, kFmtBitBlt, 19, 16, kFmtBitBlt, 3, 0,
                  kFmtShift, -1, -1,
                  IS_QUAD_OP | REG_DEF0_USE12 | SETS_CCODES,
-                 "acds", "r!0d, r!1d, r!2d, shift !3d", 2),
+                 "adcs", "r!0d, r!1d, r!2d, shift !3d", 2),
     ENCODING_MAP(kThumb2AndRRR,  0xea000000,
                  kFmtBitBlt, 11, 8, kFmtBitBlt, 19, 16, kFmtBitBlt, 3, 0,
                  kFmtShift, -1, -1, IS_QUAD_OP | REG_DEF0_USE12,
@@ -784,7 +786,7 @@ ArmEncodingMap EncodingMap[kArmLast] = {
                  kFmtBitBlt, 15, 12, kFmtBitBlt, 11, 0, kFmtUnused, -1, -1,
                  kFmtUnused, -1, -1,
                  IS_TERTIARY_OP | REG_DEF0 | REG_USE_PC | IS_LOAD,
-                 "ldr", "r!0d,[rpc, #!1d]", 2),
+                 "ldr", "r!0d, [rpc, #!1d]", 2),
     ENCODING_MAP(kThumb2BCond,        0xf0008000,
                  kFmtBrOffset, -1, -1, kFmtBitBlt, 25, 22, kFmtUnused, -1, -1,
                  kFmtUnused, -1, -1,
@@ -851,7 +853,7 @@ ArmEncodingMap EncodingMap[kArmLast] = {
     ENCODING_MAP(kThumb2Ldrex,       0xe8500f00,
                  kFmtBitBlt, 15, 12, kFmtBitBlt, 19, 16, kFmtBitBlt, 7, 0,
                  kFmtUnused, -1, -1, IS_TERTIARY_OP | REG_DEF0_USE1 | IS_LOAD,
-                 "ldrex", "r!0d,[r!1d, #!2E]", 2),
+                 "ldrex", "r!0d, [r!1d, #!2E]", 2),
     ENCODING_MAP(kThumb2Strex,       0xe8400000,
                  kFmtBitBlt, 11, 8, kFmtBitBlt, 15, 12, kFmtBitBlt, 19, 16,
                  kFmtBitBlt, 7, 0, IS_QUAD_OP | REG_DEF0_USE12 | IS_STORE,
@@ -868,6 +870,10 @@ ArmEncodingMap EncodingMap[kArmLast] = {
                  kFmtBitBlt, 11, 8, kFmtShift5, -1, -1, kFmtBitBlt, 4, 0,
                  kFmtUnused, -1, -1, IS_TERTIARY_OP | REG_DEF0,
                  "bfc", "r!0d,#!1d,#!2d", 2),
+    ENCODING_MAP(kThumb2Dmb,         0xf3bf8f50,
+                 kFmtBitBlt, 3, 0, kFmtUnused, -1, -1, kFmtUnused, -1, -1,
+                 kFmtUnused, -1, -1, IS_UNARY_OP,
+                 "dmb","#!0B",2),
 };
 
 /*
@@ -876,6 +882,13 @@ ArmEncodingMap EncodingMap[kArmLast] = {
  * generate unnecessary stall cycles.
  */
 #define PADDING_MOV_R5_R5               0x1C2D
+
+/* Track the number of times that the code cache is patched */
+#if defined(WITH_JIT_TUNING)
+#define UPDATE_CODE_CACHE_PATCHES()    (gDvmJit.codeCachePatches++)
+#else
+#define UPDATE_CODE_CACHE_PATCHES()
+#endif
 
 /* Write the numbers in the literal pool to the codegen stream */
 static void installDataContent(CompilationUnit *cUnit)
@@ -892,11 +905,13 @@ static void installDataContent(CompilationUnit *cUnit)
 static int jitTraceDescriptionSize(const JitTraceDescription *desc)
 {
     int runCount;
+    /* Trace end is always of non-meta type (ie isCode == true) */
     for (runCount = 0; ; runCount++) {
-        if (desc->trace[runCount].frag.runEnd)
+        if (desc->trace[runCount].frag.isCode &&
+            desc->trace[runCount].frag.runEnd)
            break;
     }
-    return sizeof(JitCodeDesc) + ((runCount+1) * sizeof(JitTraceRun));
+    return sizeof(JitTraceDescription) + ((runCount+1) * sizeof(JitTraceRun));
 }
 
 /* Return TRUE if error happens */
@@ -1152,7 +1167,7 @@ static void matchSignatureBreakpoint(const CompilationUnit *cUnit,
  *   |  .                            .
  *   |  |                            |
  *   |  +----------------------------+
- *   |  | Chaining Cells             |  -> 8 bytes each, must be 4 byte aligned
+ *   |  | Chaining Cells             |  -> 12/16 bytes each, must be 4 byte aligned
  *   |  .                            .
  *   |  .                            .
  *   |  |                            |
@@ -1182,7 +1197,8 @@ void dvmCompilerAssembleLIR(CompilationUnit *cUnit, JitTranslationInfo *info)
     int offset = 0;
     int i;
     ChainCellCounts chainCellCounts;
-    int descSize = jitTraceDescriptionSize(cUnit->traceDesc);
+    int descSize =
+        cUnit->wholeMethod ? 0 : jitTraceDescriptionSize(cUnit->traceDesc);
     int chainingCellGap;
 
     info->instructionSet = cUnit->instructionSet;
@@ -1286,6 +1302,8 @@ void dvmCompilerAssembleLIR(CompilationUnit *cUnit, JitTranslationInfo *info)
     cUnit->baseAddr = (char *) gDvmJit.codeCache + gDvmJit.codeCacheByteUsed;
     gDvmJit.codeCacheByteUsed += offset;
 
+    UNPROTECT_CODE_CACHE(cUnit->baseAddr, offset);
+
     /* Install the code block */
     memcpy((char*)cUnit->baseAddr, cUnit->codeBuffer, chainCellOffset);
     gDvmJit.numCompilations++;
@@ -1311,6 +1329,9 @@ void dvmCompilerAssembleLIR(CompilationUnit *cUnit, JitTranslationInfo *info)
     /* Flush dcache and invalidate the icache to maintain coherence */
     cacheflush((long)cUnit->baseAddr,
                (long)((char *) cUnit->baseAddr + offset), 0);
+    UPDATE_CODE_CACHE_PATCHES();
+
+    PROTECT_CODE_CACHE(cUnit->baseAddr, offset);
 
     /* Record code entry point and instruction set */
     info->codeAddress = (char*)cUnit->baseAddr + cUnit->headerSize;
@@ -1387,27 +1408,40 @@ void* dvmJitChain(void* tgtAddr, u4* branchAddr)
          * mix Arm & Thumb[2] translations, the following code should be
          * generalized.
          */
-        thumbTarget = (tgtAddr != gDvmJit.interpretTemplate);
+        thumbTarget = (tgtAddr != dvmCompilerGetInterpretTemplate());
 
         newInst = assembleChainingBranch(branchOffset, thumbTarget);
 
+        /*
+         * The second half-word instruction of the chaining cell must
+         * either be a nop (which represents initial state), or is the
+         * same exact branch halfword that we are trying to install.
+         */
+        assert( ((*branchAddr >> 16) == getSkeleton(kThumbOrr)) ||
+                ((*branchAddr >> 16) == (newInst >> 16)));
+
+        UNPROTECT_CODE_CACHE(branchAddr, sizeof(*branchAddr));
+
         *branchAddr = newInst;
         cacheflush((long)branchAddr, (long)branchAddr + 4, 0);
+        UPDATE_CODE_CACHE_PATCHES();
+
+        PROTECT_CODE_CACHE(branchAddr, sizeof(*branchAddr));
+
         gDvmJit.hasNewChain = true;
     }
 
     return tgtAddr;
 }
 
+#if !defined(WITH_SELF_VERIFICATION)
 /*
  * Attempt to enqueue a work order to patch an inline cache for a predicted
  * chaining cell for virtual/interface calls.
  */
-static bool inlineCachePatchEnqueue(PredictedChainingCell *cellAddr,
+static void inlineCachePatchEnqueue(PredictedChainingCell *cellAddr,
                                     PredictedChainingCell *newContent)
 {
-    bool result = true;
-
     /*
      * Make sure only one thread gets here since updating the cell (ie fast
      * path and queueing the request (ie the queued path) have to be done
@@ -1418,44 +1452,75 @@ static bool inlineCachePatchEnqueue(PredictedChainingCell *cellAddr,
     /* Fast path for uninitialized chaining cell */
     if (cellAddr->clazz == NULL &&
         cellAddr->branch == PREDICTED_CHAIN_BX_PAIR_INIT) {
+
+        UNPROTECT_CODE_CACHE(cellAddr, sizeof(*cellAddr));
+
         cellAddr->method = newContent->method;
         cellAddr->branch = newContent->branch;
-        cellAddr->counter = newContent->counter;
         /*
          * The update order matters - make sure clazz is updated last since it
          * will bring the uninitialized chaining cell to life.
          */
-        MEM_BARRIER();
+        ANDROID_MEMBAR_FULL();
         cellAddr->clazz = newContent->clazz;
         cacheflush((intptr_t) cellAddr, (intptr_t) (cellAddr+1), 0);
+        UPDATE_CODE_CACHE_PATCHES();
+
+        PROTECT_CODE_CACHE(cellAddr, sizeof(*cellAddr));
+
 #if defined(WITH_JIT_TUNING)
-        gDvmJit.icPatchFast++;
+        gDvmJit.icPatchInit++;
 #endif
-    }
+    /* Check if this is a frequently missed clazz */
+    } else if (cellAddr->stagedClazz != newContent->clazz) {
+        /* Not proven to be frequent yet - build up the filter cache */
+        UNPROTECT_CODE_CACHE(cellAddr, sizeof(*cellAddr));
+
+        cellAddr->stagedClazz = newContent->clazz;
+
+        UPDATE_CODE_CACHE_PATCHES();
+        PROTECT_CODE_CACHE(cellAddr, sizeof(*cellAddr));
+
+#if defined(WITH_JIT_TUNING)
+        gDvmJit.icPatchRejected++;
+#endif
     /*
-     * Otherwise the patch request will be queued and handled in the next
-     * GC cycle. At that time all other mutator threads are suspended so
-     * there will be no partial update in the inline cache state.
+     * Different classes but same method implementation - it is safe to just
+     * patch the class value without the need to stop the world.
      */
-    else if (gDvmJit.compilerICPatchIndex < COMPILER_IC_PATCH_QUEUE_SIZE)  {
+    } else if (cellAddr->method == newContent->method) {
+        UNPROTECT_CODE_CACHE(cellAddr, sizeof(*cellAddr));
+
+        cellAddr->clazz = newContent->clazz;
+        /* No need to flush the cache here since the branch is not patched */
+        UPDATE_CODE_CACHE_PATCHES();
+
+        PROTECT_CODE_CACHE(cellAddr, sizeof(*cellAddr));
+
+#if defined(WITH_JIT_TUNING)
+        gDvmJit.icPatchLockFree++;
+#endif
+    /*
+     * Cannot patch the chaining cell inline - queue it until the next safe
+     * point.
+     */
+    } else if (gDvmJit.compilerICPatchIndex < COMPILER_IC_PATCH_QUEUE_SIZE) {
         int index = gDvmJit.compilerICPatchIndex++;
         gDvmJit.compilerICPatchQueue[index].cellAddr = cellAddr;
         gDvmJit.compilerICPatchQueue[index].cellContent = *newContent;
 #if defined(WITH_JIT_TUNING)
         gDvmJit.icPatchQueued++;
 #endif
-    }
+    } else {
     /* Queue is full - just drop this patch request */
-    else {
-        result = false;
 #if defined(WITH_JIT_TUNING)
         gDvmJit.icPatchDropped++;
 #endif
     }
 
     dvmUnlockMutex(&gDvmJit.compilerICPatchLock);
-    return result;
 }
+#endif
 
 /*
  * This method is called from the invoke templates for virtual and interface
@@ -1476,23 +1541,27 @@ static bool inlineCachePatchEnqueue(PredictedChainingCell *cellAddr,
  *      but wrong chain to invoke a different method.
  */
 const Method *dvmJitToPatchPredictedChain(const Method *method,
-                                          void *unused,
+                                          InterpState *interpState,
                                           PredictedChainingCell *cell,
                                           const ClassObject *clazz)
 {
+    int newRechainCount = PREDICTED_CHAIN_COUNTER_RECHAIN;
 #if defined(WITH_SELF_VERIFICATION)
-    /* Disable chaining and prevent this from triggering again for a while */
-    cell->counter = PREDICTED_CHAIN_COUNTER_AVOID;
-    cacheflush((long) cell, (long) (cell+1), 0);
+    newRechainCount = PREDICTED_CHAIN_COUNTER_AVOID;
     goto done;
 #else
-    /* Don't come back here for a long time if the method is native */
     if (dvmIsNativeMethod(method)) {
-        cell->counter = PREDICTED_CHAIN_COUNTER_AVOID;
-        cacheflush((long) cell, (long) (cell+1), 0);
-        COMPILER_TRACE_CHAINING(
-            LOGD("Jit Runtime: predicted chain %p to native method %s ignored",
-                 cell, method->name));
+        UNPROTECT_CODE_CACHE(cell, sizeof(*cell));
+
+        /*
+         * Put a non-zero/bogus value in the clazz field so that it won't
+         * trigger immediate patching and will continue to fail to match with
+         * a real clazz pointer.
+         */
+        cell->clazz = (void *) PREDICTED_CHAIN_FAKE_CLAZZ;
+
+        UPDATE_CODE_CACHE_PATCHES();
+        PROTECT_CODE_CACHE(cell, sizeof(*cell));
         goto done;
     }
     int tgtAddr = (int) dvmJitGetCodeAddr(method->insns);
@@ -1501,13 +1570,8 @@ const Method *dvmJitToPatchPredictedChain(const Method *method,
      * Compilation not made yet for the callee. Reset the counter to a small
      * value and come back to check soon.
      */
-    if ((tgtAddr == 0) || ((void*)tgtAddr == gDvmJit.interpretTemplate)) {
-        /*
-         * Wait for a few invocations (currently set to be 16) before trying
-         * to setup the chain again.
-         */
-        cell->counter = PREDICTED_CHAIN_COUNTER_DELAY;
-        cacheflush((long) cell, (long) (cell+1), 0);
+    if ((tgtAddr == 0) ||
+        ((void*)tgtAddr == dvmCompilerGetInterpretTemplate())) {
         COMPILER_TRACE_CHAINING(
             LOGD("Jit Runtime: predicted chain %p to method %s%s delayed",
                  cell, method->clazz->descriptor, method->name));
@@ -1516,8 +1580,9 @@ const Method *dvmJitToPatchPredictedChain(const Method *method,
 
     PredictedChainingCell newCell;
 
-    /* Avoid back-to-back orders to the same cell */
-    cell->counter = PREDICTED_CHAIN_COUNTER_AVOID;
+    if (cell->clazz == NULL) {
+        newRechainCount = interpState->icRechainCount;
+    }
 
     int baseAddr = (int) cell + 4;   // PC is cur_addr + 4
     int branchOffset = tgtAddr - baseAddr;
@@ -1525,7 +1590,6 @@ const Method *dvmJitToPatchPredictedChain(const Method *method,
     newCell.branch = assembleChainingBranch(branchOffset, true);
     newCell.clazz = clazz;
     newCell.method = method;
-    newCell.counter = PREDICTED_CHAIN_COUNTER_RECHAIN;
 
     /*
      * Enter the work order to the queue and the chaining cell will be patched
@@ -1534,11 +1598,10 @@ const Method *dvmJitToPatchPredictedChain(const Method *method,
      * If the enqueuing fails reset the rechain count to a normal value so that
      * it won't get indefinitely delayed.
      */
-    if (!inlineCachePatchEnqueue(cell, &newCell)) {
-        cell->counter = PREDICTED_CHAIN_COUNTER_RECHAIN;
-    }
+    inlineCachePatchEnqueue(cell, &newCell);
 #endif
 done:
+    interpState->icRechainCount = newRechainCount;
     return method;
 }
 
@@ -1561,6 +1624,8 @@ void dvmCompilerPatchInlineCache(void)
      */
     dvmLockMutex(&gDvmJit.compilerICPatchLock);
 
+    UNPROTECT_CODE_CACHE(gDvmJit.codeCache, gDvmJit.codeCacheByteUsed);
+
     //LOGD("Number of IC patch work orders: %d", gDvmJit.compilerICPatchIndex);
 
     /* Initialize the min/max address range */
@@ -1574,21 +1639,13 @@ void dvmCompilerPatchInlineCache(void)
         PredictedChainingCell *cellContent =
             &gDvmJit.compilerICPatchQueue[i].cellContent;
 
-        if (cellAddr->clazz == NULL) {
-            COMPILER_TRACE_CHAINING(
-                LOGD("Jit Runtime: predicted chain %p to %s (%s) initialized",
-                     cellAddr,
-                     cellContent->clazz->descriptor,
-                     cellContent->method->name));
-        } else {
-            COMPILER_TRACE_CHAINING(
-                LOGD("Jit Runtime: predicted chain %p from %s to %s (%s) "
-                     "patched",
-                     cellAddr,
-                     cellAddr->clazz->descriptor,
-                     cellContent->clazz->descriptor,
-                     cellContent->method->name));
-        }
+        COMPILER_TRACE_CHAINING(
+            LOGD("Jit Runtime: predicted chain %p from %s to %s (%s) "
+                 "patched",
+                 cellAddr,
+                 cellAddr->clazz->descriptor,
+                 cellContent->clazz->descriptor,
+                 cellContent->method->name));
 
         /* Patch the chaining cell */
         *cellAddr = *cellContent;
@@ -1598,6 +1655,9 @@ void dvmCompilerPatchInlineCache(void)
 
     /* Then synchronize the I/D cache */
     cacheflush((long) minAddr, (long) (maxAddr+1), 0);
+    UPDATE_CODE_CACHE_PATCHES();
+
+    PROTECT_CODE_CACHE(gDvmJit.codeCache, gDvmJit.codeCacheByteUsed);
 
     gDvmJit.compilerICPatchIndex = 0;
     dvmUnlockMutex(&gDvmJit.compilerICPatchLock);
@@ -1619,8 +1679,6 @@ u4* dvmJitUnchain(void* codeAddr)
     int cellSize;
     u4* pChainCells;
     u4* pStart;
-    u4 thumb1;
-    u4 thumb2;
     u4 newInst;
     int i,j;
     PredictedChainingCell *predChainCell;
@@ -1628,9 +1686,10 @@ u4* dvmJitUnchain(void* codeAddr)
     /* Get total count of chain cells */
     for (i = 0, cellSize = 0; i < kChainingCellGap; i++) {
         if (i != kChainingCellInvokePredicted) {
-            cellSize += pChainCellCounts->u.count[i] * 2;
+            cellSize += pChainCellCounts->u.count[i] * (CHAIN_CELL_NORMAL_SIZE >> 2);
         } else {
-            cellSize += pChainCellCounts->u.count[i] * 4;
+            cellSize += pChainCellCounts->u.count[i] *
+                (CHAIN_CELL_PREDICTED_SIZE >> 2);
         }
     }
 
@@ -1643,25 +1702,30 @@ u4* dvmJitUnchain(void* codeAddr)
 
     /* The cells are sorted in order - walk through them and reset */
     for (i = 0; i < kChainingCellGap; i++) {
-        int elemSize = 2; /* Most chaining cell has two words */
+        int elemSize = CHAIN_CELL_NORMAL_SIZE >> 2;  /* In 32-bit words */
         if (i == kChainingCellInvokePredicted) {
-            elemSize = 4;
+            elemSize = CHAIN_CELL_PREDICTED_SIZE >> 2;
         }
 
         for (j = 0; j < pChainCellCounts->u.count[i]; j++) {
-            int targetOffset;
             switch(i) {
                 case kChainingCellNormal:
-                    targetOffset = offsetof(InterpState,
-                          jitToInterpEntries.dvmJitToInterpNormal);
-                    break;
                 case kChainingCellHot:
                 case kChainingCellInvokeSingleton:
-                    targetOffset = offsetof(InterpState,
-                          jitToInterpEntries.dvmJitToInterpTraceSelect);
+                case kChainingCellBackwardBranch:
+                    /*
+                     * Replace the 1st half-word of the cell with an
+                     * unconditional branch, leaving the 2nd half-word
+                     * untouched.  This avoids problems with a thread
+                     * that is suspended between the two halves when
+                     * this unchaining takes place.
+                     */
+                    newInst = *pChainCells;
+                    newInst &= 0xFFFF0000;
+                    newInst |= getSkeleton(kThumbBUncond); /* b offset is 0 */
+                    *pChainCells = newInst;
                     break;
                 case kChainingCellInvokePredicted:
-                    targetOffset = 0;
                     predChainCell = (PredictedChainingCell *) pChainCells;
                     /*
                      * There could be a race on another mutator thread to use
@@ -1672,37 +1736,12 @@ u4* dvmJitUnchain(void* codeAddr)
                      */
                     predChainCell->clazz = PREDICTED_CHAIN_CLAZZ_INIT;
                     break;
-#if defined(WITH_SELF_VERIFICATION)
-                case kChainingCellBackwardBranch:
-                    targetOffset = offsetof(InterpState,
-                          jitToInterpEntries.dvmJitToInterpBackwardBranch);
-                    break;
-#elif defined(WITH_JIT_TUNING)
-                case kChainingCellBackwardBranch:
-                    targetOffset = offsetof(InterpState,
-                          jitToInterpEntries.dvmJitToInterpNormal);
-                    break;
-#endif
                 default:
-                    targetOffset = 0; // make gcc happy
                     LOGE("Unexpected chaining type: %d", i);
                     dvmAbort();  // dvmAbort OK here - can't safely recover
             }
             COMPILER_TRACE_CHAINING(
                 LOGD("Jit Runtime: unchaining 0x%x", (int)pChainCells));
-            /*
-             * Thumb code sequence for a chaining cell is:
-             *     ldr  r0, rGLUE, #<word offset>
-             *     blx  r0
-             */
-            if (i != kChainingCellInvokePredicted) {
-                targetOffset = targetOffset >> 2;  /* convert to word offset */
-                thumb1 = 0x6800 | (targetOffset << 6) |
-                         (rGLUE << 3) | (r0 << 0);
-                thumb2 = 0x4780 | (r0 << 3);
-                newInst = thumb2<<16 | thumb1;
-                *pChainCells = newInst;
-            }
             pChainCells += elemSize;  /* Advance by a fixed number of words */
         }
     }
@@ -1718,11 +1757,14 @@ void dvmJitUnchainAll()
     if (gDvmJit.pJitEntryTable != NULL) {
         COMPILER_TRACE_CHAINING(LOGD("Jit Runtime: unchaining all"));
         dvmLockMutex(&gDvmJit.tableLock);
+
+        UNPROTECT_CODE_CACHE(gDvmJit.codeCache, gDvmJit.codeCacheByteUsed);
+
         for (i = 0; i < gDvmJit.jitTableSize; i++) {
             if (gDvmJit.pJitEntryTable[i].dPC &&
                    gDvmJit.pJitEntryTable[i].codeAddress &&
                    (gDvmJit.pJitEntryTable[i].codeAddress !=
-                    gDvmJit.interpretTemplate)) {
+                    dvmCompilerGetInterpretTemplate())) {
                 u4* lastAddress;
                 lastAddress =
                       dvmJitUnchain(gDvmJit.pJitEntryTable[i].codeAddress);
@@ -1734,6 +1776,10 @@ void dvmJitUnchainAll()
             }
         }
         cacheflush((long)lowAddress, (long)highAddress, 0);
+        UPDATE_CODE_CACHE_PATCHES();
+
+        PROTECT_CODE_CACHE(gDvmJit.codeCache, gDvmJit.codeCacheByteUsed);
+
         dvmUnlockMutex(&gDvmJit.tableLock);
         gDvmJit.translationChains = 0;
     }
@@ -1758,7 +1804,7 @@ static int addrToLineCb (void *cnxt, u4 bytecodeOffset, u4 lineNum)
     return 0;
 }
 
-char *getTraceBase(const JitEntry *p)
+static char *getTraceBase(const JitEntry *p)
 {
     return (char*)p->codeAddress -
         (6 + (p->u.info.instructionSet == DALVIK_JIT_ARM ? 0 : 1));
@@ -1783,7 +1829,7 @@ static int dumpTraceProfile(JitEntry *p, bool silent, bool reset,
             LOGD("TRACEPROFILE 0x%08x 0 NULL 0 0", (int)traceBase);
         return 0;
     }
-    if (p->codeAddress == gDvmJit.interpretTemplate) {
+    if (p->codeAddress == dvmCompilerGetInterpretTemplate()) {
         if (!silent)
             LOGD("TRACEPROFILE 0x%08x 0 INTERPRET_ONLY  0 0", (int)traceBase);
         return 0;
@@ -1860,8 +1906,10 @@ JitTraceDescription *dvmCopyTraceDescriptor(const u2 *pc,
 /* Handy function to retrieve the profile count */
 static inline int getProfileCount(const JitEntry *entry)
 {
-    if (entry->dPC == 0 || entry->codeAddress == 0)
+    if (entry->dPC == 0 || entry->codeAddress == 0 ||
+        entry->codeAddress == dvmCompilerGetInterpretTemplate())
         return 0;
+
     u4 *pExecutionCount = (u4 *) getTraceBase(entry);
 
     return *pExecutionCount;
@@ -1928,6 +1976,10 @@ void dvmCompilerSortAndPrintTraceProfiles()
     }
 
     for (i=0; i < gDvmJit.jitTableSize && i < 10; i++) {
+        /* Stip interpreter stubs */
+        if (sortedEntries[i].codeAddress == dvmCompilerGetInterpretTemplate()) {
+            continue;
+        }
         JitTraceDescription* desc =
             dvmCopyTraceDescriptor(NULL, &sortedEntries[i]);
         dvmCompilerWorkEnqueue(sortedEntries[i].dPC,
@@ -2242,7 +2294,6 @@ void dvmSelfVerificationMemOpDecode(int lr, int* sp)
         //LOGD("*** THUMB2 - Addr: 0x%x Insn: 0x%x", lr, insn);
 
         int opcode12 = (insn >> 20) & 0xFFF;
-        int opcode6 = (insn >> 6) & 0x3F;
         int opcode4 = (insn >> 8) & 0xF;
         int imm2 = (insn >> 4) & 0x3;
         int imm8 = insn & 0xFF;

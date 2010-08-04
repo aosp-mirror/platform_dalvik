@@ -80,7 +80,7 @@ typedef enum HprofHeapTag {
     HPROF_ROOT_REFERENCE_CLEANUP        = 0x8c,
     HPROF_ROOT_VM_INTERNAL              = 0x8d,
     HPROF_ROOT_JNI_MONITOR              = 0x8e,
-    HPROF_UNREACHABLE                   = 0x90,
+    HPROF_UNREACHABLE                   = 0x90,  /* deprecated */
     HPROF_PRIMITIVE_ARRAY_NODATA_DUMP   = 0xc3,
 } HprofHeapTag;
 
@@ -716,4 +716,3 @@ int main(int argc, char** argv)
         fclose(out);
     return (cc != 0);
 }
-

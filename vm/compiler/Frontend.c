@@ -18,6 +18,7 @@
 #include "libdex/OpCode.h"
 #include "interp/Jit.h"
 #include "CompilerInternals.h"
+#include "Dataflow.h"
 
 /*
  * Parse an instruction, return the length of the instruction
@@ -41,7 +42,7 @@ static inline int parseInsn(const u2 *codePtr, DecodedInstruction *decInsn,
 
     dexDecodeInstruction(gDvm.instrFormat, codePtr, decInsn);
     if (printMe) {
-        char *decodedString = dvmCompilerGetDalvikDisassembly(decInsn);
+        char *decodedString = dvmCompilerGetDalvikDisassembly(decInsn, NULL);
         LOGD("%p: %#06x %s\n", codePtr, opcode, decodedString);
     }
     return insnWidth;
@@ -191,13 +192,70 @@ static int compareMethod(const CompilerMethodStats *m1,
     return (int) m1->method - (int) m2->method;
 }
 
-#if defined(WITH_JIT_TUNING)
+/*
+ * Analyze the body of the method to collect high-level information regarding
+ * inlining:
+ * - is empty method?
+ * - is getter/setter?
+ * - can throw exception?
+ *
+ * Currently the inliner only handles getters and setters. When its capability
+ * becomes more sophisticated more information will be retrieved here.
+ */
+static int analyzeInlineTarget(DecodedInstruction *dalvikInsn, int attributes,
+                               int offset)
+{
+    int flags = dexGetInstrFlags(gDvm.instrFlags, dalvikInsn->opCode);
+
+    if ((flags & kInstrInvoke) &&
+        (dalvikInsn->opCode != OP_INVOKE_DIRECT_EMPTY)) {
+        attributes &= ~METHOD_IS_LEAF;
+    }
+
+    if (!(flags & kInstrCanReturn)) {
+        if (!(dvmCompilerDataFlowAttributes[dalvikInsn->opCode] &
+              DF_IS_GETTER)) {
+            attributes &= ~METHOD_IS_GETTER;
+        }
+        if (!(dvmCompilerDataFlowAttributes[dalvikInsn->opCode] &
+              DF_IS_SETTER)) {
+            attributes &= ~METHOD_IS_SETTER;
+        }
+    }
+
+    /*
+     * The expected instruction sequence is setter will never return value and
+     * getter will also do. Clear the bits if the behavior is discovered
+     * otherwise.
+     */
+    if (flags & kInstrCanReturn) {
+        if (dalvikInsn->opCode == OP_RETURN_VOID) {
+            attributes &= ~METHOD_IS_GETTER;
+        }
+        else {
+            attributes &= ~METHOD_IS_SETTER;
+        }
+    }
+
+    if (flags & kInstrCanThrow) {
+        attributes &= ~METHOD_IS_THROW_FREE;
+    }
+
+    if (offset == 0 && dalvikInsn->opCode == OP_RETURN_VOID) {
+        attributes |= METHOD_IS_EMPTY;
+    }
+
+    return attributes;
+}
+
 /*
  * Analyze each method whose traces are ever compiled. Collect a variety of
  * statistics like the ratio of exercised vs overall code and code bloat
- * ratios.
+ * ratios. If isCallee is true, also analyze each instruction in more details
+ * to see if it is suitable for inlining.
  */
-static CompilerMethodStats *analyzeMethodBody(const Method *method)
+CompilerMethodStats *dvmCompilerAnalyzeMethodBody(const Method *method,
+                                                  bool isCallee)
 {
     const DexCode *dexCode = dvmGetMethodCode(method);
     const u2 *codePtr = dexCode->insns;
@@ -215,22 +273,40 @@ static CompilerMethodStats *analyzeMethodBody(const Method *method)
                                          (HashCompareFunc) compareMethod,
                                          false);
 
-    /* Part of this method has been compiled before - just return the entry */
-    if (realMethodEntry != NULL) {
-        return realMethodEntry;
+    /* This method has never been analyzed before - create an entry */
+    if (realMethodEntry == NULL) {
+        realMethodEntry =
+            (CompilerMethodStats *) calloc(1, sizeof(CompilerMethodStats));
+        realMethodEntry->method = method;
+
+        dvmHashTableLookup(gDvmJit.methodStatsTable, hashValue,
+                           realMethodEntry,
+                           (HashCompareFunc) compareMethod,
+                           true);
     }
 
-    /*
-     * First time to compile this method - set up a new entry in the hash table
-     */
-    realMethodEntry =
-        (CompilerMethodStats *) calloc(1, sizeof(CompilerMethodStats));
-    realMethodEntry->method = method;
+    /* This method is invoked as a callee and has been analyzed - just return */
+    if ((isCallee == true) && (realMethodEntry->attributes & METHOD_IS_CALLEE))
+        return realMethodEntry;
 
-    dvmHashTableLookup(gDvmJit.methodStatsTable, hashValue,
-                       realMethodEntry,
-                       (HashCompareFunc) compareMethod,
-                       true);
+    /*
+     * Similarly, return if this method has been compiled before as a hot
+     * method already.
+     */
+    if ((isCallee == false) &&
+        (realMethodEntry->attributes & METHOD_IS_HOT))
+        return realMethodEntry;
+
+    int attributes;
+
+    /* Method hasn't been analyzed for the desired purpose yet */
+    if (isCallee) {
+        /* Aggressively set the attributes until proven otherwise */
+        attributes = METHOD_IS_LEAF | METHOD_IS_THROW_FREE | METHOD_IS_CALLEE |
+                     METHOD_IS_GETTER | METHOD_IS_SETTER;
+    } else {
+        attributes = METHOD_IS_HOT;
+    }
 
     /* Count the number of instructions */
     while (codePtr < codeEnd) {
@@ -241,14 +317,51 @@ static CompilerMethodStats *analyzeMethodBody(const Method *method)
         if (width == 0)
             break;
 
+        if (isCallee) {
+            attributes = analyzeInlineTarget(&dalvikInsn, attributes, insnSize);
+        }
+
         insnSize += width;
         codePtr += width;
     }
 
+    /*
+     * Only handle simple getters/setters with one instruction followed by
+     * return
+     */
+    if ((attributes & (METHOD_IS_GETTER | METHOD_IS_SETTER)) &&
+        (insnSize != 3)) {
+        attributes &= ~(METHOD_IS_GETTER | METHOD_IS_SETTER);
+    }
+
     realMethodEntry->dalvikSize = insnSize * 2;
+    realMethodEntry->attributes |= attributes;
+
+#if 0
+    /* Uncomment the following to explore various callee patterns */
+    if (attributes & METHOD_IS_THROW_FREE) {
+        LOGE("%s%s is inlinable%s", method->clazz->descriptor, method->name,
+             (attributes & METHOD_IS_EMPTY) ? " empty" : "");
+    }
+
+    if (attributes & METHOD_IS_LEAF) {
+        LOGE("%s%s is leaf %d%s", method->clazz->descriptor, method->name,
+             insnSize, insnSize < 5 ? " (small)" : "");
+    }
+
+    if (attributes & (METHOD_IS_GETTER | METHOD_IS_SETTER)) {
+        LOGE("%s%s is %s", method->clazz->descriptor, method->name,
+             attributes & METHOD_IS_GETTER ? "getter": "setter");
+    }
+    if (attributes ==
+        (METHOD_IS_LEAF | METHOD_IS_THROW_FREE | METHOD_IS_CALLEE)) {
+        LOGE("%s%s is inlinable non setter/getter", method->clazz->descriptor,
+             method->name);
+    }
+#endif
+
     return realMethodEntry;
 }
-#endif
 
 /*
  * Crawl the stack of the thread that requesed compilation to see if any of the
@@ -305,6 +418,11 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
 
     /* If we've already compiled this trace, just return success */
     if (dvmJitGetCodeAddr(startCodePtr) && !info->discardResult) {
+        /*
+         * Make sure the codeAddress is NULL so that it won't clobber the
+         * existing entry.
+         */
+        info->codeAddress = NULL;
         return true;
     }
 
@@ -313,7 +431,7 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
 
 #if defined(WITH_JIT_TUNING)
     /* Locate the entry to store compilation statistics for this method */
-    methodStats = analyzeMethodBody(desc->method);
+    methodStats = dvmCompilerAnalyzeMethodBody(desc->method, false);
 #endif
 
     /* Set the recover buffer pointer */
@@ -324,6 +442,12 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
 
     /* Initialize the profile flag */
     cUnit.executionCount = gDvmJit.profile;
+
+    /* Setup the method */
+    cUnit.method = desc->method;
+
+    /* Initialize the PC reconstruction list */
+    dvmInitGrowableList(&cUnit.pcReconstructionList, 8);
 
     /* Identify traces that we don't want to compile */
     if (gDvmJit.methodTable) {
@@ -399,7 +523,7 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
     }
 
     /* Allocate the entry block */
-    lastBB = startBB = curBB = dvmCompilerNewBB(kEntryBlock);
+    lastBB = startBB = curBB = dvmCompilerNewBB(kTraceEntryBlock);
     curBB->startOffset = curOffset;
     curBB->id = numBlocks++;
 
@@ -434,6 +558,19 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
         traceSize += width;
         dvmCompilerAppendMIR(curBB, insn);
         cUnit.numInsts++;
+
+        int flags = dexGetInstrFlags(gDvm.instrFlags, insn->dalvikInsn.opCode);
+
+        if ((flags & kInstrInvoke) &&
+            (insn->dalvikInsn.opCode != OP_INVOKE_DIRECT_EMPTY)) {
+            assert(numInsts == 1);
+            CallsiteInfo *callsiteInfo =
+                dvmCompilerNew(sizeof(CallsiteInfo), true);
+            callsiteInfo->clazz = currRun[1].meta;
+            callsiteInfo->method = currRun[2].meta;
+            insn->meta.callsiteInfo = callsiteInfo;
+        }
+
         /* Instruction limit reached - terminate the trace here */
         if (cUnit.numInsts >= numMaxInsts) {
             break;
@@ -442,11 +579,20 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
             if (currRun->frag.runEnd) {
                 break;
             } else {
+                /* Advance to the next trace description (ie non-meta info) */
+                do {
+                    currRun++;
+                } while (!currRun->frag.isCode);
+
+                /* Dummy end-of-run marker seen */
+                if (currRun->frag.numInsts == 0) {
+                    break;
+                }
+
                 curBB = dvmCompilerNewBB(kDalvikByteCode);
                 lastBB->next = curBB;
                 lastBB = curBB;
                 curBB->id = numBlocks++;
-                currRun++;
                 curOffset = currRun->frag.startOffset;
                 numInsts = currRun->frag.numInsts;
                 curBB->startOffset = curOffset;
@@ -486,6 +632,13 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
         /* Link the taken and fallthrough blocks */
         BasicBlock *searchBB;
 
+        int flags = dexGetInstrFlags(gDvm.instrFlags,
+                                     lastInsn->dalvikInsn.opCode);
+
+        if (flags & kInstrInvoke) {
+            cUnit.hasInvoke = true;
+        }
+
         /* No backward branch in the trace - start searching the next BB */
         for (searchBB = curBB->next; searchBB; searchBB = searchBB->next) {
             if (targetOffset == searchBB->startOffset) {
@@ -493,11 +646,17 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
             }
             if (fallThroughOffset == searchBB->startOffset) {
                 curBB->fallThrough = searchBB;
+
+                /*
+                 * Fallthrough block of an invoke instruction needs to be
+                 * aligned to 4-byte boundary (alignment instruction to be
+                 * inserted later.
+                 */
+                if (flags & kInstrInvoke) {
+                    searchBB->isFallThroughFromInvoke = true;
+                }
             }
         }
-
-        int flags = dexGetInstrFlags(gDvm.instrFlags,
-                                     lastInsn->dalvikInsn.opCode);
 
         /*
          * Some blocks are ended by non-control-flow-change instructions,
@@ -523,7 +682,7 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
             if (cUnit.printMe) {
                 LOGD("Natural loop detected!");
             }
-            exitBB = dvmCompilerNewBB(kExitBlock);
+            exitBB = dvmCompilerNewBB(kTraceExitBlock);
             lastBB->next = exitBB;
             lastBB = exitBB;
 
@@ -682,23 +841,24 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
     lastBB->id = numBlocks++;
 
     if (cUnit.printMe) {
-        LOGD("TRACEINFO (%d): 0x%08x %s%s 0x%x %d of %d, %d blocks",
+        char* signature = dexProtoCopyMethodDescriptor(&desc->method->prototype);
+        LOGD("TRACEINFO (%d): 0x%08x %s%s.%s 0x%x %d of %d, %d blocks",
             compilationId,
             (intptr_t) desc->method->insns,
             desc->method->clazz->descriptor,
             desc->method->name,
+            signature,
             desc->trace[0].frag.startOffset,
             traceSize,
             dexCode->insnsSize,
             numBlocks);
+        free(signature);
     }
 
     BasicBlock **blockList;
 
-    cUnit.method = desc->method;
     cUnit.traceDesc = desc;
     cUnit.numBlocks = numBlocks;
-    dvmInitGrowableList(&cUnit.pcReconstructionList, 8);
     blockList = cUnit.blockList =
         dvmCompilerNew(sizeof(BasicBlock *) * numBlocks, true);
 
@@ -711,9 +871,16 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
     /* Make sure all blocks are added to the cUnit */
     assert(curBB == NULL);
 
+    /* Set the instruction set to use (NOTE: later components may change it) */
+    cUnit.instructionSet = dvmCompilerInstructionSet();
+
+    /* Inline transformation @ the MIR level */
+    if (cUnit.hasInvoke && !(gDvmJit.disableOpt & (1 << kMethodInlining))) {
+        dvmCompilerInlineMIR(&cUnit);
+    }
+
     /* Preparation for SSA conversion */
     dvmInitializeSSAConversion(&cUnit);
-
 
     if (cUnit.hasLoop) {
         dvmCompilerLoopOpt(&cUnit);
@@ -727,9 +894,6 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
     if (cUnit.printMe) {
         dvmCompilerDumpCompilationUnit(&cUnit);
     }
-
-    /* Set the instruction set to use (NOTE: later components may change it) */
-    cUnit.instructionSet = dvmCompilerInstructionSet();
 
     /* Allocate Registers */
     dvmCompilerRegAlloc(&cUnit);
@@ -768,19 +932,126 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
 }
 
 /*
+ * Since we are including instructions from possibly a cold method into the
+ * current trace, we need to make sure that all the associated information
+ * with the callee is properly initialized. If not, we punt on this inline
+ * target.
+ *
+ * TODO: volatile instructions will handled later.
+ */
+bool dvmCompilerCanIncludeThisInstruction(const Method *method,
+                                          const DecodedInstruction *insn)
+{
+    switch (insn->opCode) {
+        case OP_NEW_INSTANCE:
+        case OP_CHECK_CAST: {
+            ClassObject *classPtr = (void*)
+              (method->clazz->pDvmDex->pResClasses[insn->vB]);
+
+            /* Class hasn't been initialized yet */
+            if (classPtr == NULL) {
+                return false;
+            }
+            return true;
+        }
+        case OP_SGET_OBJECT:
+        case OP_SGET_BOOLEAN:
+        case OP_SGET_CHAR:
+        case OP_SGET_BYTE:
+        case OP_SGET_SHORT:
+        case OP_SGET:
+        case OP_SGET_WIDE:
+        case OP_SPUT_OBJECT:
+        case OP_SPUT_BOOLEAN:
+        case OP_SPUT_CHAR:
+        case OP_SPUT_BYTE:
+        case OP_SPUT_SHORT:
+        case OP_SPUT:
+        case OP_SPUT_WIDE: {
+            void *fieldPtr = (void*)
+              (method->clazz->pDvmDex->pResFields[insn->vB]);
+
+            if (fieldPtr == NULL) {
+                return false;
+            }
+            return true;
+        }
+        case OP_INVOKE_SUPER:
+        case OP_INVOKE_SUPER_RANGE: {
+            int mIndex = method->clazz->pDvmDex->
+                pResMethods[insn->vB]->methodIndex;
+            const Method *calleeMethod = method->clazz->super->vtable[mIndex];
+            if (calleeMethod == NULL) {
+                return false;
+            }
+            return true;
+        }
+        case OP_INVOKE_SUPER_QUICK:
+        case OP_INVOKE_SUPER_QUICK_RANGE: {
+            const Method *calleeMethod = method->clazz->super->vtable[insn->vB];
+            if (calleeMethod == NULL) {
+                return false;
+            }
+            return true;
+        }
+        case OP_INVOKE_STATIC:
+        case OP_INVOKE_STATIC_RANGE:
+        case OP_INVOKE_DIRECT:
+        case OP_INVOKE_DIRECT_RANGE: {
+            const Method *calleeMethod =
+                method->clazz->pDvmDex->pResMethods[insn->vB];
+            if (calleeMethod == NULL) {
+                return false;
+            }
+            return true;
+        }
+        case OP_CONST_CLASS: {
+            void *classPtr = (void*)
+                (method->clazz->pDvmDex->pResClasses[insn->vB]);
+
+            if (classPtr == NULL) {
+                return false;
+            }
+            return true;
+        }
+        case OP_CONST_STRING_JUMBO:
+        case OP_CONST_STRING: {
+            void *strPtr = (void*)
+                (method->clazz->pDvmDex->pResStrings[insn->vB]);
+
+            if (strPtr == NULL) {
+                return false;
+            }
+            return true;
+        }
+        default:
+            return true;
+    }
+}
+
+/*
  * Similar to dvmCompileTrace, but the entity processed here is the whole
  * method.
  *
  * TODO: implementation will be revisited when the trace builder can provide
  * whole-method traces.
  */
-bool dvmCompileMethod(const Method *method, JitTranslationInfo *info)
+bool dvmCompileMethod(CompilationUnit *cUnit, const Method *method,
+                      JitTranslationInfo *info)
 {
     const DexCode *dexCode = dvmGetMethodCode(method);
     const u2 *codePtr = dexCode->insns;
     const u2 *codeEnd = dexCode->insns + dexCode->insnsSize;
     int blockID = 0;
     unsigned int curOffset = 0;
+
+    /* If we've already compiled this trace, just return success */
+    if (dvmJitGetCodeAddr(codePtr) && !info->discardResult) {
+        return true;
+    }
+
+    /* Doing method-based compilation */
+    cUnit->wholeMethod = true;
 
     BasicBlock *firstBlock = dvmCompilerNewBB(kDalvikByteCode);
     firstBlock->id = blockID++;
@@ -789,6 +1060,8 @@ bool dvmCompileMethod(const Method *method, JitTranslationInfo *info)
     BitVector *bbStartAddr = dvmCompilerAllocBitVector(dexCode->insnsSize+1,
                                                        false);
     dvmCompilerSetBit(bbStartAddr, 0);
+
+    int numInvokeTargets = 0;
 
     /*
      * Sequentially go through every instruction first and put them in a single
@@ -805,6 +1078,12 @@ bool dvmCompileMethod(const Method *method, JitTranslationInfo *info)
         /* Terminate when the data section is seen */
         if (width == 0)
             break;
+
+        if (!dvmCompilerCanIncludeThisInstruction(cUnit->method,
+						  &insn->dalvikInsn)) {
+            return false;
+        }
+
         dvmCompilerAppendMIR(firstBlock, insn);
         /*
          * Check whether this is a block ending instruction and whether it
@@ -820,7 +1099,12 @@ bool dvmCompileMethod(const Method *method, JitTranslationInfo *info)
         if (findBlockBoundary(method, insn, curOffset, &target, &isInvoke,
                               &callee)) {
             dvmCompilerSetBit(bbStartAddr, curOffset + width);
-            if (target != curOffset) {
+            /* Each invoke needs a chaining cell block */
+            if (isInvoke) {
+                numInvokeTargets++;
+            }
+            /* A branch will end the current block */
+            else if (target != curOffset && target != UNKNOWN_TARGET) {
                 dvmCompilerSetBit(bbStartAddr, target);
             }
         }
@@ -834,26 +1118,26 @@ bool dvmCompileMethod(const Method *method, JitTranslationInfo *info)
      * The number of blocks will be equal to the number of bits set to 1 in the
      * bit vector minus 1, because the bit representing the location after the
      * last instruction is set to one.
+     *
+     * We also add additional blocks for invoke chaining and the number is
+     * denoted by numInvokeTargets.
      */
     int numBlocks = dvmCountSetBits(bbStartAddr);
     if (dvmIsBitSet(bbStartAddr, dexCode->insnsSize)) {
         numBlocks--;
     }
 
-    CompilationUnit cUnit;
     BasicBlock **blockList;
-
-    memset(&cUnit, 0, sizeof(CompilationUnit));
-    cUnit.method = method;
-    blockList = cUnit.blockList =
-        dvmCompilerNew(sizeof(BasicBlock *) * numBlocks, true);
+    blockList = cUnit->blockList =
+        dvmCompilerNew(sizeof(BasicBlock *) * (numBlocks + numInvokeTargets),
+                       true);
 
     /*
-     * Register the first block onto the list and start split it into block
-     * boundaries from there.
+     * Register the first block onto the list and start splitting it into
+     * sub-blocks.
      */
     blockList[0] = firstBlock;
-    cUnit.numBlocks = 1;
+    cUnit->numBlocks = 1;
 
     int i;
     for (i = 0; i < numBlocks; i++) {
@@ -865,13 +1149,13 @@ bool dvmCompileMethod(const Method *method, JitTranslationInfo *info)
             /* Found the beginning of a new block, see if it is created yet */
             if (dvmIsBitSet(bbStartAddr, insn->offset)) {
                 int j;
-                for (j = 0; j < cUnit.numBlocks; j++) {
+                for (j = 0; j < cUnit->numBlocks; j++) {
                     if (blockList[j]->firstMIRInsn->offset == insn->offset)
                         break;
                 }
 
                 /* Block not split yet - do it now */
-                if (j == cUnit.numBlocks) {
+                if (j == cUnit->numBlocks) {
                     BasicBlock *newBB = dvmCompilerNewBB(kDalvikByteCode);
                     newBB->id = blockID++;
                     newBB->firstMIRInsn = insn;
@@ -889,17 +1173,28 @@ bool dvmCompileMethod(const Method *method, JitTranslationInfo *info)
                         curBB->fallThrough = newBB;
                     }
 
+                    /*
+                     * Fallthrough block of an invoke instruction needs to be
+                     * aligned to 4-byte boundary (alignment instruction to be
+                     * inserted later.
+                     */
+                    if (dexGetInstrFlags(gDvm.instrFlags,
+                           curBB->lastMIRInsn->dalvikInsn.opCode) &
+                        kInstrInvoke) {
+                        newBB->isFallThroughFromInvoke = true;
+                    }
+
                     /* enqueue the new block */
-                    blockList[cUnit.numBlocks++] = newBB;
+                    blockList[cUnit->numBlocks++] = newBB;
                     break;
                 }
             }
         }
     }
 
-    if (numBlocks != cUnit.numBlocks) {
-        LOGE("Expect %d vs %d basic blocks\n", numBlocks, cUnit.numBlocks);
-        dvmCompilerAbort(&cUnit);
+    if (numBlocks != cUnit->numBlocks) {
+        LOGE("Expect %d vs %d basic blocks\n", numBlocks, cUnit->numBlocks);
+        dvmCompilerAbort(cUnit);
     }
 
     /* Connect the basic blocks through the taken links */
@@ -907,13 +1202,13 @@ bool dvmCompileMethod(const Method *method, JitTranslationInfo *info)
         BasicBlock *curBB = blockList[i];
         MIR *insn = curBB->lastMIRInsn;
         unsigned int target = insn->offset;
-        bool isInvoke;
-        const Method *callee;
+        bool isInvoke = false;
+        const Method *callee = NULL;
 
         findBlockBoundary(method, insn, target, &target, &isInvoke, &callee);
 
-        /* Found a block ended on a branch */
-        if (target != insn->offset) {
+        /* Found a block ended on a branch (not invoke) */
+        if (isInvoke == false && target != insn->offset) {
             int j;
             /* Forward branch */
             if (target > insn->offset) {
@@ -928,24 +1223,60 @@ bool dvmCompileMethod(const Method *method, JitTranslationInfo *info)
                     break;
                 }
             }
+        }
 
-            /* Don't create dummy block for the callee yet */
-            if (j == numBlocks && !isInvoke) {
-                LOGE("Target not found for insn %x: expect target %x\n",
-                     curBB->lastMIRInsn->offset, target);
-                dvmCompilerAbort(&cUnit);
+        if (isInvoke) {
+            BasicBlock *newBB;
+            /* Monomorphic callee */
+            if (callee) {
+                newBB = dvmCompilerNewBB(kChainingCellInvokeSingleton);
+                newBB->startOffset = 0;
+                newBB->containingMethod = callee;
+            /* Will resolve at runtime */
+            } else {
+                newBB = dvmCompilerNewBB(kChainingCellInvokePredicted);
+                newBB->startOffset = 0;
             }
+            newBB->id = blockID++;
+            curBB->taken = newBB;
+            /* enqueue the new block */
+            blockList[cUnit->numBlocks++] = newBB;
         }
     }
 
+    if (cUnit->numBlocks != numBlocks + numInvokeTargets) {
+        LOGE("Expect %d vs %d total blocks\n", numBlocks + numInvokeTargets,
+             cUnit->numBlocks);
+        dvmCompilerDumpCompilationUnit(cUnit);
+        dvmCompilerAbort(cUnit);
+    }
+
     /* Set the instruction set to use (NOTE: later components may change it) */
-    cUnit.instructionSet = dvmCompilerInstructionSet();
+    cUnit->instructionSet = dvmCompilerInstructionSet();
 
-    dvmCompilerMIR2LIR(&cUnit);
+    /* Preparation for SSA conversion */
+    dvmInitializeSSAConversion(cUnit);
 
-    dvmCompilerAssembleLIR(&cUnit, info);
+    /* SSA analysis */
+    dvmCompilerNonLoopAnalysis(cUnit);
 
-    dvmCompilerDumpCompilationUnit(&cUnit);
+    /* Needs to happen after SSA naming */
+    dvmCompilerInitializeRegAlloc(cUnit);
+
+    /* Allocate Registers */
+    dvmCompilerRegAlloc(cUnit);
+
+    /* Convert MIR to LIR, etc. */
+    dvmCompilerMIR2LIR(cUnit);
+
+    /* Convert LIR into machine code. */
+    dvmCompilerAssembleLIR(cUnit, info);
+
+    if (cUnit->halveInstCount) {
+        return false;
+    }
+
+    dvmCompilerDumpCompilationUnit(cUnit);
 
     dvmCompilerArenaReset();
 

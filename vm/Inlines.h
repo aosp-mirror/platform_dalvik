@@ -30,4 +30,3 @@
 #else
 # define INLINE
 #endif
-

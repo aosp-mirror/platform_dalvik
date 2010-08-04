@@ -222,4 +222,3 @@ public class Array {
         checkNegAlloc(-1);
     }
 }
-

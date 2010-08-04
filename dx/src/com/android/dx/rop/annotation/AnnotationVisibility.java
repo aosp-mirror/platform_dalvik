@@ -32,7 +32,7 @@ public enum AnnotationVisibility implements ToHuman {
 
     /**
      * Constructs an instance.
-     * 
+     *
      * @param human {@code non-null;} the human-oriented string representation
      */
     private AnnotationVisibility(String human) {

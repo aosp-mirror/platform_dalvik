@@ -173,4 +173,3 @@ void expandBufAddUtf8String(ExpandBuf* pBuf, const u1* str)
     setUtf8String(pBuf->storage + pBuf->curLen, str);
     pBuf->curLen += sizeof(u4) + strLen;
 }
-

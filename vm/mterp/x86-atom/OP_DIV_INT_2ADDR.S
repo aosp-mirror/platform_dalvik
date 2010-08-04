@@ -18,4 +18,3 @@
     */
 
 %include "x86-atom/binopD2addr.S"
-

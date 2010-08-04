@@ -14,7 +14,7 @@ public class TestAnnotations {
     static private void printAnnotationArray(String prefix, Annotation[] arr) {
         TreeMap<String, Annotation> sorted =
             new TreeMap<String, Annotation>();
-        
+
         for (Annotation a : arr) {
             sorted.put(a.annotationType().getName(), a);
         }
@@ -24,7 +24,7 @@ public class TestAnnotations {
             System.out.println(prefix + "    " + a.annotationType());
         }
     }
-    
+
     static void printAnnotations(Class clazz) {
         Annotation[] annos;
         Annotation[][] parAnnos;
@@ -120,7 +120,7 @@ public class TestAnnotations {
         Method meth;
         ExportedProperty property;
         final IntToString[] mapping;
-        
+
         try {
             meth = TestAnnotations.class.getMethod("getFocusType",
                     (Class[])null);
@@ -132,6 +132,13 @@ public class TestAnnotations {
 
         System.out.println("mapping is " + mapping.getClass() +
             "\n  0='" + mapping[0] + "'\n  1='" + mapping[1] + "'");
+
+        /* while we're here, check isAnnotationPresent on Method */
+        System.out.println("present(getFocusType, ExportedProperty): " +
+            meth.isAnnotationPresent(ExportedProperty.class));
+        System.out.println("present(getFocusType, AnnoSimpleType): " +
+            meth.isAnnotationPresent(AnnoSimpleType.class));
+
         System.out.println("");
     }
 
@@ -168,4 +175,3 @@ public class TestAnnotations {
         System.out.println("SubNoted.get(AnnoSimpleType) = " + anno);
     }
 }
-

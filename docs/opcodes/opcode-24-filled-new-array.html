@@ -21,7 +21,7 @@ stored as a "result" in the same way that the method invocation instructions
 store their results, so the constructed instance must be moved to a register
 with a subsequent move-result-object instruction (if it is to be used).
 </p>
- 
+
 <h2>Details</h2>
 
 <table class="instruc">
@@ -80,9 +80,9 @@ with a subsequent move-result-object instruction (if it is to be used).
   <li>
     If the element type is a reference type, then all actual arguments
     (vD .. vA, depending on B) must be references, too.
-  </li> 
+  </li>
 </ul>
-    
+
 <h2>Behavior</h2>
 
 <ul>
@@ -115,7 +115,7 @@ with a subsequent move-result-object instruction (if it is to be used).
         If B > 3 then R[3] = vG
       </li>
       <li>
-        If B > 4 then R[4] = vA 
+        If B > 4 then R[4] = vA
       </li>
     </ul>
   </li>
@@ -123,7 +123,7 @@ with a subsequent move-result-object instruction (if it is to be used).
     No reference to R is stored in any register. Instead, R can be accessed by a
     move-result-object instruction immediately following this filled-new-array
     instruction.
-  </li> 
+  </li>
 </ul>
 
 <h2>Exceptions</h2>
@@ -137,7 +137,7 @@ with a subsequent move-result-object instruction (if it is to be used).
   </li>
   <li>
     All exceptions that are possible during instantiation can occur.
-  </li> 
+  </li>
 </ul>
 
 </body>

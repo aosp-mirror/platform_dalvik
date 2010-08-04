@@ -25,6 +25,7 @@ dex_src_files := \
 	DexSwapVerify.c \
 	InstrUtils.c \
 	Leb128.c \
+	OpCodeNames.c \
 	OptInvocation.c \
 	sha1.c \
 	SysUtil.c \

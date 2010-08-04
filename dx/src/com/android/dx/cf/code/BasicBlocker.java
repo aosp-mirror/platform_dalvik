@@ -54,13 +54,13 @@ public final class BasicBlocker implements BytecodeArray.Visitor {
 
     /**
      * {@code non-null, sparse;} for each instruction offset to a branch of
-     * some sort, the list of targets for that instruction 
+     * some sort, the list of targets for that instruction
      */
     private final IntList[] targetLists;
 
     /**
      * {@code non-null, sparse;} for each instruction offset to a throwing
-     * instruction, the list of exception handlers for that instruction 
+     * instruction, the list of exception handlers for that instruction
      */
     private final ByteCatchList[] catchLists;
 
@@ -71,7 +71,7 @@ public final class BasicBlocker implements BytecodeArray.Visitor {
      * Identifies and enumerates the basic blocks in the given method,
      * returning a list of them. The returned list notably omits any
      * definitely-dead code that is identified in the process.
-     * 
+     *
      * @param method {@code non-null;} method to convert
      * @return {@code non-null;} list of basic blocks
      */
@@ -85,7 +85,7 @@ public final class BasicBlocker implements BytecodeArray.Visitor {
     /**
      * Constructs an instance. This class is not publicly instantiable; use
      * {@link #identifyBlocks}.
-     * 
+     *
      * @param method {@code non-null;} method to convert
      */
     private BasicBlocker(ConcreteMethod method) {
@@ -174,7 +174,7 @@ public final class BasicBlocker implements BytecodeArray.Visitor {
                 if ((type == Type.INT) || (type == Type.LONG)) {
                     visitThrowing(offset, length, true);
                 }
-                break;                
+                break;
             }
             default: {
                 visitCommon(offset, length, true);
@@ -265,7 +265,7 @@ public final class BasicBlocker implements BytecodeArray.Visitor {
 
     /**
      * Extracts the list of basic blocks from the bit sets.
-     * 
+     *
      * @return {@code non-null;} the list of basic blocks
      */
     private ByteBlockList getBlockList() {
@@ -367,7 +367,7 @@ public final class BasicBlocker implements BytecodeArray.Visitor {
     /**
      * Sets a bit in the work set, but only if the instruction in question
      * isn't yet known to be possibly-live.
-     * 
+     *
      * @param offset offset to the instruction in question
      * @param blockStart {@code true} iff this instruction starts a
      * basic block
@@ -384,7 +384,7 @@ public final class BasicBlocker implements BytecodeArray.Visitor {
 
     /**
      * Helper method used by all the visitor methods.
-     * 
+     *
      * @param offset offset to the instruction
      * @param length length of the instruction, in bytes
      * @param nextIsLive {@code true} iff the instruction after
@@ -417,7 +417,7 @@ public final class BasicBlocker implements BytecodeArray.Visitor {
      * Helper method used by all the visitor methods that deal with
      * opcodes that possibly throw. This method should be called after calling
      * {@link #visitCommon}.
-     * 
+     *
      * @param offset offset to the instruction
      * @param length length of the instruction, in bytes
      * @param nextIsLive {@code true} iff the instruction after

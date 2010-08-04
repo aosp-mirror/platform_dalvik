@@ -53,7 +53,7 @@ public class DeadCodeRemover {
 
     /**
      * Process a method with the dead-code remver
-     * 
+     *
      * @param ssaMethod method to process
      */
     public static void process(SsaMethod ssaMethod) {
@@ -63,7 +63,7 @@ public class DeadCodeRemover {
 
     /**
      * Constructs an instance.
-     * 
+     *
      * @param ssaMethod method to process
      */
     private DeadCodeRemover(SsaMethod ssaMethod) {
@@ -127,7 +127,7 @@ public class DeadCodeRemover {
     /**
      * Returns true if the only uses of this register form a circle of
      * operations with no side effects.
-     * 
+     *
      * @param regV register to examine
      * @param set a set of registers that we've already determined
      * are only used as sources in operations with no side effect or null
@@ -179,7 +179,7 @@ public class DeadCodeRemover {
             return true;
         }
 
-        return insn.hasSideEffect();        
+        return insn.hasSideEffect();
     }
 
     /**

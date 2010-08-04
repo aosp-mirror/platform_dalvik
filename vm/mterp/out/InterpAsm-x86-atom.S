@@ -528,7 +528,6 @@ dalvik_inst:
     MTERP_ENTRY
 #endif
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_MOVE: /* 0x01 */
@@ -731,7 +730,6 @@ dalvik_inst:
     movq        (rFP, %edx, 4), %xmm0   # %xmm0<- vB
     movq        %xmm0, (rFP, rINST, 4)  # vA<- vB
     FGETOP_JMP  2, %eax                 # jump to next instruction; getop, jmp
-
 
 /* ------------------------------ */
     .balign 64
@@ -1153,7 +1151,6 @@ dalvik_inst:
     SET_VREG    %edx, rINST             # vAA<- glue->self->exception
     FGETOP_JMP  1, %eax                 # jump to next instruction; getop, jmp
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_RETURN_VOID: /* 0x0e */
@@ -1178,7 +1175,6 @@ dalvik_inst:
     */
 
     jmp         common_returnFromMethod
-
 
 /* ------------------------------ */
     .balign 64
@@ -1238,8 +1234,6 @@ dalvik_inst:
     GET_VREG    rINST                   # rINST<- vAA
     movl        rINST, offGlue_retval(%edx) # glue->retval<- vAA
     jmp         common_returnFromMethod # jump to common return code
-
-
 
 
 /* ------------------------------ */
@@ -1339,7 +1333,6 @@ dalvik_inst:
     GET_VREG    rINST                   # rINST<- vAA
     movl        rINST, offGlue_retval(%edx) # glue->retval<- vAA
     jmp         common_returnFromMethod # jump to common return code
-
 
 
 /* ------------------------------ */
@@ -1875,7 +1868,6 @@ dalvik_inst:
 #endif
     FGETOP_JMP  1, %edx                 # jump to next instruction; getop, jmp
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_MONITOR_EXIT: /* 0x1e */
@@ -1926,7 +1918,6 @@ dalvik_inst:
     lea         8(%esp), %esp
     je          common_exceptionThrown  # handle exception
     FINISH_JMP  %edx                    # jump to next instruction
-
 
 /* ------------------------------ */
     .balign 64
@@ -2419,7 +2410,6 @@ dalvik_inst:
     movl        rINST, offThread_exception(%ecx) # thread->exception<- object
     jmp         common_exceptionThrown  # handle exception
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_GOTO: /* 0x28 */
@@ -2460,7 +2450,6 @@ LOP_GOTO.S:
     shl         $1, %edx               # %edx is shifted for byte offset
     js          common_periodicChecks2  # do check on backwards branch
     FINISH_RB   %edx, %ecx              # jump to next instruction
-
 
 /* ------------------------------ */
     .balign 64
@@ -2542,7 +2531,6 @@ LOP_GOTO.S:
     shl         $1, %edx               # %edx is doubled to get the byte offset
     jc          common_periodicChecks2  # do check on backwards branch
     FINISH_RB   %edx, %ecx              # jump to next instruction
-
 
 /* ------------------------------ */
     .balign 64
@@ -3975,7 +3963,6 @@ OP_IF_LEZ_2f:
     call        common_abort
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_UNUSED_3F: /* 0x3f */
@@ -4030,7 +4017,6 @@ OP_IF_LEZ_2f:
     */
 
     call        common_abort
-
 
 
 /* ------------------------------ */
@@ -4089,7 +4075,6 @@ OP_IF_LEZ_2f:
     call        common_abort
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_UNUSED_41: /* 0x41 */
@@ -4144,7 +4129,6 @@ OP_IF_LEZ_2f:
     */
 
     call        common_abort
-
 
 
 /* ------------------------------ */
@@ -4203,7 +4187,6 @@ OP_IF_LEZ_2f:
     call        common_abort
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_UNUSED_43: /* 0x43 */
@@ -4258,7 +4241,6 @@ OP_IF_LEZ_2f:
     */
 
     call        common_abort
-
 
 
 /* ------------------------------ */
@@ -5876,8 +5858,6 @@ OP_IF_LEZ_2f:
     jmp         .LOP_IPUT_OBJECT_finish
 
 
-
-
 /* ------------------------------ */
     .balign 64
 .L_OP_IPUT_BOOLEAN: /* 0x5c */
@@ -6328,8 +6308,6 @@ OP_IF_LEZ_2f:
     jmp         .LOP_SGET_OBJECT_finish
 
 
-
-
 /* ------------------------------ */
     .balign 64
 .L_OP_SGET_BOOLEAN: /* 0x63 */
@@ -6393,7 +6371,6 @@ OP_IF_LEZ_2f:
     movl        (%ecx, %eax, 4), %ecx   # %ecx<- resolved StaticField ptr
     je          .LOP_SGET_BOOLEAN_resolve
     jmp         .LOP_SGET_BOOLEAN_finish
-
 
 
 /* ------------------------------ */
@@ -7377,7 +7354,6 @@ OP_IF_LEZ_2f:
     call        common_abort
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_INVOKE_VIRTUAL_RANGE: /* 0x74 */
@@ -7851,7 +7827,6 @@ OP_IF_LEZ_2f:
     call        common_abort
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_UNUSED_7A: /* 0x7a */
@@ -7906,7 +7881,6 @@ OP_IF_LEZ_2f:
     */
 
     call        common_abort
-
 
 
 /* ------------------------------ */
@@ -8111,9 +8085,6 @@ OP_IF_LEZ_2f:
     FGETOP_JMP  1, %eax                 # jump to next instruction; getop, jmp
 
 
-
-
-
 /* ------------------------------ */
     .balign 64
 .L_OP_NOT_LONG: /* 0x7e */
@@ -8180,8 +8151,6 @@ OP_IF_LEZ_2f:
     pandn  0xFFFFFFFF, %xmm0                              # do operation part 2
     movq        %xmm0, (rFP, %ecx, 4) # vA<- result
     FGETOP_JMP  1, %eax                 # jump to next instruction; getop, jmp
-
-
 
 
 /* ------------------------------ */
@@ -8319,9 +8288,6 @@ OP_IF_LEZ_2f:
     FGETOP_JMP  1, %eax                 # jump to next instruction; getop, jmp
 
 
-
-
-
 /* ------------------------------ */
     .balign 64
 .L_OP_INT_TO_LONG: /* 0x81 */
@@ -8407,7 +8373,6 @@ OP_IF_LEZ_2f:
     cvtsi2ss    (rFP,%eax,4), %xmm0     # %xmm0<- vB
     movss       %xmm0, (rFP, rINST, 4)  # vA<- %xmm0
     FINISH      1                       # jump to next instruction
-
 
 /* ------------------------------ */
     .balign 64
@@ -8597,7 +8562,6 @@ OP_IF_LEZ_2f:
     fildll      (rFP, rINST, 4)         # FPU<- vB
     fstpl       (rFP, %ecx, 4)          # vA<- FPU; (double) vB
     FGETOP_JMP  1, %eax                 # jump to next instruction; getop, jmp
-
 
 /* ------------------------------ */
     .balign 64
@@ -9066,7 +9030,6 @@ OP_IF_LEZ_2f:
     SET_VREG    %ecx, rINST             # vA<- result
     FGETOP_JMP  1, %eax                 # jump to next instruction; getop, jmp
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_ADD_INT: /* 0x90 */
@@ -9135,8 +9098,6 @@ OP_IF_LEZ_2f:
     OLD_JMP_4   %eax
 
 
-
-
 /* ------------------------------ */
     .balign 64
 .L_OP_SUB_INT: /* 0x91 */
@@ -9203,9 +9164,6 @@ OP_IF_LEZ_2f:
     subl     (rFP, %edx, 4), %ecx                              # %ecx<- vBB op vCC
     SET_VREG    %ecx, rINST             # vAA<- %ecx; result
     OLD_JMP_4   %eax
-
-
-
 
 
 /* ------------------------------ */
@@ -9328,7 +9286,6 @@ OP_IF_LEZ_2f:
     SET_VREG %edx rINST  # vAA<- %edx (remainder)
     FGETOP_JMP  2 %eax
     .endif
-
 
 
 /* ------------------------------ */
@@ -9480,9 +9437,6 @@ OP_IF_LEZ_2f:
     OLD_JMP_4   %eax
 
 
-
-
-
 /* ------------------------------ */
     .balign 64
 .L_OP_OR_INT: /* 0x96 */
@@ -9551,8 +9505,6 @@ OP_IF_LEZ_2f:
     OLD_JMP_4   %eax
 
 
-
-
 /* ------------------------------ */
     .balign 64
 .L_OP_XOR_INT: /* 0x97 */
@@ -9619,8 +9571,6 @@ OP_IF_LEZ_2f:
     xor     (rFP, %edx, 4), %ecx                              # %ecx<- vBB op vCC
     SET_VREG    %ecx, rINST             # vAA<- %ecx; result
     OLD_JMP_4   %eax
-
-
 
 
 /* ------------------------------ */
@@ -10468,7 +10418,6 @@ OP_IF_LEZ_2f:
     movsd       %xmm1, (rFP, rINST, 4)  # vAA<- shifted vBB
     FINISH      2                       # jump to next instruction
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_ADD_FLOAT: /* 0xa6 */
@@ -10751,7 +10700,6 @@ OP_IF_LEZ_2f:
     fstps       (rFP, rINST, 4)         # vAA<- remainder; return of fmod
     FINISH      2                       # jump to next instruction
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_ADD_DOUBLE: /* 0xab */
@@ -10989,7 +10937,6 @@ OP_IF_LEZ_2f:
     FFETCH_ADV  2, %eax                 # %eax<- next instruction hi; fetch, advance
     FGETOP_JMP  2, %eax                 # jump to next instruction; getop, jmp
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_REM_DOUBLE: /* 0xaf */
@@ -11108,8 +11055,6 @@ OP_IF_LEZ_2f:
     OLD_JMP_4   %eax
 
 
-
-
 /* ------------------------------ */
     .balign 64
 .L_OP_SUB_INT_2ADDR: /* 0xb1 */
@@ -11178,8 +11123,6 @@ OP_IF_LEZ_2f:
     subl     %edx, (rFP, rINST, 4)    # %ecx<- vA op vB
     #FGETOP_JMP  1, %eax                 # jump to next instruction; getop, jmp
     OLD_JMP_4   %eax
-
-
 
 
 /* ------------------------------ */
@@ -11300,7 +11243,6 @@ OP_IF_LEZ_2f:
 
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_REM_INT_2ADDR: /* 0xb4 */
@@ -11385,7 +11327,6 @@ OP_IF_LEZ_2f:
 
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_AND_INT_2ADDR: /* 0xb5 */
@@ -11454,8 +11395,6 @@ OP_IF_LEZ_2f:
     andl     %edx, (rFP, rINST, 4)    # %ecx<- vA op vB
     #FGETOP_JMP  1, %eax                 # jump to next instruction; getop, jmp
     OLD_JMP_4   %eax
-
-
 
 
 /* ------------------------------ */
@@ -11528,8 +11467,6 @@ OP_IF_LEZ_2f:
     OLD_JMP_4   %eax
 
 
-
-
 /* ------------------------------ */
     .balign 64
 .L_OP_XOR_INT_2ADDR: /* 0xb7 */
@@ -11598,8 +11535,6 @@ OP_IF_LEZ_2f:
     xor     %edx, (rFP, rINST, 4)    # %ecx<- vA op vB
     #FGETOP_JMP  1, %eax                 # jump to next instruction; getop, jmp
     OLD_JMP_4   %eax
-
-
 
 
 /* ------------------------------ */
@@ -12385,7 +12320,6 @@ OP_IF_LEZ_2f:
     movq        %xmm1, (rFP, rINST, 4)  # vA<- shifted vA
     FINISH      1                       # jump to next instruction
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_SHR_LONG_2ADDR: /* 0xc4 */
@@ -12478,7 +12412,6 @@ OP_IF_LEZ_2f:
     psrlq       %xmm0, %xmm1            # %xmm1<- shifted vA
     movq        %xmm1, (rFP, rINST, 4)  # vA<- shifted vA
     FINISH      1                       # jump to next instruction
-
 
 /* ------------------------------ */
     .balign 64
@@ -12769,9 +12702,6 @@ OP_IF_LEZ_2f:
     fstps       (rFP, rINST, 4)
     FINISH      1                       # jump to next instruction
 
-
-
-
 /* ------------------------------ */
     .balign 64
 .L_OP_ADD_DOUBLE_2ADDR: /* 0xcb */
@@ -13017,7 +12947,6 @@ OP_IF_LEZ_2f:
     fdivl       (rFP, rINST, 4)         # divide double; vA/vB
     fstpl       (rFP, %edx, 4)          # vAA<- result
     FINISH      1                       # jump to next instruction
-
 
 /* ------------------------------ */
     .balign 64
@@ -13729,7 +13658,6 @@ OP_IF_LEZ_2f:
     SET_VREG    %edx, rINST             # vAA<- %edx; result
     FINISH      2                       # jump to next instruction
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_MUL_INT_LIT8: /* 0xda */
@@ -14353,8 +14281,7 @@ OP_IF_LEZ_2f:
 
 /* ------------------------------ */
     .balign 64
-.L_OP_UNUSED_E3: /* 0xe3 */
-/* File: x86-atom/OP_UNUSED_E3.S */
+.L_OP_IGET_VOLATILE: /* 0xe3 */
    /* Copyright (C) 2008 The Android Open Source Project
     *
     * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14371,47 +14298,18 @@ OP_IF_LEZ_2f:
     */
 
    /*
-    * File: OP_UNUSED_E3.S
+    * File: stub.S
     */
 
-/* File: x86-atom/unused.S */
-   /* Copyright (C) 2008 The Android Open Source Project
-    *
-    * Licensed under the Apache License, Version 2.0 (the "License");
-    * you may not use this file except in compliance with the License.
-    * You may obtain a copy of the License at
-    *
-    * http://www.apache.org/licenses/LICENSE-2.0
-    *
-    * Unless required by applicable law or agreed to in writing, software
-    * distributed under the License is distributed on an "AS IS" BASIS,
-    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-    * See the License for the specific language governing permissions and
-    * limitations under the License.
-    */
-
-   /*
-    * File: unused.S
-    *
-    * Code: Common code for unused bytecodes. Uses no subtitutions.
-    *
-    * For: all unused bytecodes
-    *
-    * Description: aborts if executed.
-    *
-    * Format: ØØ|op (10x)
-    *
-    * Syntax: op
-    */
-
-    call        common_abort
-
-
-
+    SAVE_PC_FP_TO_GLUE %edx             # save program counter and frame pointer
+    pushl       rGLUE                   # push parameter glue
+    call        dvmMterp_OP_IGET_VOLATILE      # call c-based implementation
+    lea         4(%esp), %esp
+    LOAD_PC_FP_FROM_GLUE                # restore program counter and frame pointer
+    FINISH_A                            # jump to next instruction
 /* ------------------------------ */
     .balign 64
-.L_OP_UNUSED_E4: /* 0xe4 */
-/* File: x86-atom/OP_UNUSED_E4.S */
+.L_OP_IPUT_VOLATILE: /* 0xe4 */
    /* Copyright (C) 2008 The Android Open Source Project
     *
     * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14428,47 +14326,18 @@ OP_IF_LEZ_2f:
     */
 
    /*
-    * File: OP_UNUSED_E4.S
+    * File: stub.S
     */
 
-/* File: x86-atom/unused.S */
-   /* Copyright (C) 2008 The Android Open Source Project
-    *
-    * Licensed under the Apache License, Version 2.0 (the "License");
-    * you may not use this file except in compliance with the License.
-    * You may obtain a copy of the License at
-    *
-    * http://www.apache.org/licenses/LICENSE-2.0
-    *
-    * Unless required by applicable law or agreed to in writing, software
-    * distributed under the License is distributed on an "AS IS" BASIS,
-    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-    * See the License for the specific language governing permissions and
-    * limitations under the License.
-    */
-
-   /*
-    * File: unused.S
-    *
-    * Code: Common code for unused bytecodes. Uses no subtitutions.
-    *
-    * For: all unused bytecodes
-    *
-    * Description: aborts if executed.
-    *
-    * Format: ØØ|op (10x)
-    *
-    * Syntax: op
-    */
-
-    call        common_abort
-
-
-
+    SAVE_PC_FP_TO_GLUE %edx             # save program counter and frame pointer
+    pushl       rGLUE                   # push parameter glue
+    call        dvmMterp_OP_IPUT_VOLATILE      # call c-based implementation
+    lea         4(%esp), %esp
+    LOAD_PC_FP_FROM_GLUE                # restore program counter and frame pointer
+    FINISH_A                            # jump to next instruction
 /* ------------------------------ */
     .balign 64
-.L_OP_UNUSED_E5: /* 0xe5 */
-/* File: x86-atom/OP_UNUSED_E5.S */
+.L_OP_SGET_VOLATILE: /* 0xe5 */
    /* Copyright (C) 2008 The Android Open Source Project
     *
     * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14485,47 +14354,18 @@ OP_IF_LEZ_2f:
     */
 
    /*
-    * File: OP_UNUSED_E5.S
+    * File: stub.S
     */
 
-/* File: x86-atom/unused.S */
-   /* Copyright (C) 2008 The Android Open Source Project
-    *
-    * Licensed under the Apache License, Version 2.0 (the "License");
-    * you may not use this file except in compliance with the License.
-    * You may obtain a copy of the License at
-    *
-    * http://www.apache.org/licenses/LICENSE-2.0
-    *
-    * Unless required by applicable law or agreed to in writing, software
-    * distributed under the License is distributed on an "AS IS" BASIS,
-    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-    * See the License for the specific language governing permissions and
-    * limitations under the License.
-    */
-
-   /*
-    * File: unused.S
-    *
-    * Code: Common code for unused bytecodes. Uses no subtitutions.
-    *
-    * For: all unused bytecodes
-    *
-    * Description: aborts if executed.
-    *
-    * Format: ØØ|op (10x)
-    *
-    * Syntax: op
-    */
-
-    call        common_abort
-
-
-
+    SAVE_PC_FP_TO_GLUE %edx             # save program counter and frame pointer
+    pushl       rGLUE                   # push parameter glue
+    call        dvmMterp_OP_SGET_VOLATILE      # call c-based implementation
+    lea         4(%esp), %esp
+    LOAD_PC_FP_FROM_GLUE                # restore program counter and frame pointer
+    FINISH_A                            # jump to next instruction
 /* ------------------------------ */
     .balign 64
-.L_OP_UNUSED_E6: /* 0xe6 */
-/* File: x86-atom/OP_UNUSED_E6.S */
+.L_OP_SPUT_VOLATILE: /* 0xe6 */
    /* Copyright (C) 2008 The Android Open Source Project
     *
     * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14542,47 +14382,18 @@ OP_IF_LEZ_2f:
     */
 
    /*
-    * File: OP_UNUSED_E6.S
+    * File: stub.S
     */
 
-/* File: x86-atom/unused.S */
-   /* Copyright (C) 2008 The Android Open Source Project
-    *
-    * Licensed under the Apache License, Version 2.0 (the "License");
-    * you may not use this file except in compliance with the License.
-    * You may obtain a copy of the License at
-    *
-    * http://www.apache.org/licenses/LICENSE-2.0
-    *
-    * Unless required by applicable law or agreed to in writing, software
-    * distributed under the License is distributed on an "AS IS" BASIS,
-    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-    * See the License for the specific language governing permissions and
-    * limitations under the License.
-    */
-
-   /*
-    * File: unused.S
-    *
-    * Code: Common code for unused bytecodes. Uses no subtitutions.
-    *
-    * For: all unused bytecodes
-    *
-    * Description: aborts if executed.
-    *
-    * Format: ØØ|op (10x)
-    *
-    * Syntax: op
-    */
-
-    call        common_abort
-
-
-
+    SAVE_PC_FP_TO_GLUE %edx             # save program counter and frame pointer
+    pushl       rGLUE                   # push parameter glue
+    call        dvmMterp_OP_SPUT_VOLATILE      # call c-based implementation
+    lea         4(%esp), %esp
+    LOAD_PC_FP_FROM_GLUE                # restore program counter and frame pointer
+    FINISH_A                            # jump to next instruction
 /* ------------------------------ */
     .balign 64
-.L_OP_UNUSED_E7: /* 0xe7 */
-/* File: x86-atom/OP_UNUSED_E7.S */
+.L_OP_IGET_OBJECT_VOLATILE: /* 0xe7 */
    /* Copyright (C) 2008 The Android Open Source Project
     *
     * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14599,47 +14410,18 @@ OP_IF_LEZ_2f:
     */
 
    /*
-    * File: OP_UNUSED_E7.S
+    * File: stub.S
     */
 
-/* File: x86-atom/unused.S */
-   /* Copyright (C) 2008 The Android Open Source Project
-    *
-    * Licensed under the Apache License, Version 2.0 (the "License");
-    * you may not use this file except in compliance with the License.
-    * You may obtain a copy of the License at
-    *
-    * http://www.apache.org/licenses/LICENSE-2.0
-    *
-    * Unless required by applicable law or agreed to in writing, software
-    * distributed under the License is distributed on an "AS IS" BASIS,
-    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-    * See the License for the specific language governing permissions and
-    * limitations under the License.
-    */
-
-   /*
-    * File: unused.S
-    *
-    * Code: Common code for unused bytecodes. Uses no subtitutions.
-    *
-    * For: all unused bytecodes
-    *
-    * Description: aborts if executed.
-    *
-    * Format: ØØ|op (10x)
-    *
-    * Syntax: op
-    */
-
-    call        common_abort
-
-
-
+    SAVE_PC_FP_TO_GLUE %edx             # save program counter and frame pointer
+    pushl       rGLUE                   # push parameter glue
+    call        dvmMterp_OP_IGET_OBJECT_VOLATILE      # call c-based implementation
+    lea         4(%esp), %esp
+    LOAD_PC_FP_FROM_GLUE                # restore program counter and frame pointer
+    FINISH_A                            # jump to next instruction
 /* ------------------------------ */
     .balign 64
-.L_OP_UNUSED_E8: /* 0xe8 */
-/* File: x86-atom/OP_UNUSED_E8.S */
+.L_OP_IGET_WIDE_VOLATILE: /* 0xe8 */
    /* Copyright (C) 2008 The Android Open Source Project
     *
     * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14656,47 +14438,18 @@ OP_IF_LEZ_2f:
     */
 
    /*
-    * File: OP_UNUSED_E8.S
+    * File: stub.S
     */
 
-/* File: x86-atom/unused.S */
-   /* Copyright (C) 2008 The Android Open Source Project
-    *
-    * Licensed under the Apache License, Version 2.0 (the "License");
-    * you may not use this file except in compliance with the License.
-    * You may obtain a copy of the License at
-    *
-    * http://www.apache.org/licenses/LICENSE-2.0
-    *
-    * Unless required by applicable law or agreed to in writing, software
-    * distributed under the License is distributed on an "AS IS" BASIS,
-    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-    * See the License for the specific language governing permissions and
-    * limitations under the License.
-    */
-
-   /*
-    * File: unused.S
-    *
-    * Code: Common code for unused bytecodes. Uses no subtitutions.
-    *
-    * For: all unused bytecodes
-    *
-    * Description: aborts if executed.
-    *
-    * Format: ØØ|op (10x)
-    *
-    * Syntax: op
-    */
-
-    call        common_abort
-
-
-
+    SAVE_PC_FP_TO_GLUE %edx             # save program counter and frame pointer
+    pushl       rGLUE                   # push parameter glue
+    call        dvmMterp_OP_IGET_WIDE_VOLATILE      # call c-based implementation
+    lea         4(%esp), %esp
+    LOAD_PC_FP_FROM_GLUE                # restore program counter and frame pointer
+    FINISH_A                            # jump to next instruction
 /* ------------------------------ */
     .balign 64
-.L_OP_UNUSED_E9: /* 0xe9 */
-/* File: x86-atom/OP_UNUSED_E9.S */
+.L_OP_IPUT_WIDE_VOLATILE: /* 0xe9 */
    /* Copyright (C) 2008 The Android Open Source Project
     *
     * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14713,47 +14466,18 @@ OP_IF_LEZ_2f:
     */
 
    /*
-    * File: OP_UNUSED_E9.S
+    * File: stub.S
     */
 
-/* File: x86-atom/unused.S */
-   /* Copyright (C) 2008 The Android Open Source Project
-    *
-    * Licensed under the Apache License, Version 2.0 (the "License");
-    * you may not use this file except in compliance with the License.
-    * You may obtain a copy of the License at
-    *
-    * http://www.apache.org/licenses/LICENSE-2.0
-    *
-    * Unless required by applicable law or agreed to in writing, software
-    * distributed under the License is distributed on an "AS IS" BASIS,
-    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-    * See the License for the specific language governing permissions and
-    * limitations under the License.
-    */
-
-   /*
-    * File: unused.S
-    *
-    * Code: Common code for unused bytecodes. Uses no subtitutions.
-    *
-    * For: all unused bytecodes
-    *
-    * Description: aborts if executed.
-    *
-    * Format: ØØ|op (10x)
-    *
-    * Syntax: op
-    */
-
-    call        common_abort
-
-
-
+    SAVE_PC_FP_TO_GLUE %edx             # save program counter and frame pointer
+    pushl       rGLUE                   # push parameter glue
+    call        dvmMterp_OP_IPUT_WIDE_VOLATILE      # call c-based implementation
+    lea         4(%esp), %esp
+    LOAD_PC_FP_FROM_GLUE                # restore program counter and frame pointer
+    FINISH_A                            # jump to next instruction
 /* ------------------------------ */
     .balign 64
-.L_OP_UNUSED_EA: /* 0xea */
-/* File: x86-atom/OP_UNUSED_EA.S */
+.L_OP_SGET_WIDE_VOLATILE: /* 0xea */
    /* Copyright (C) 2008 The Android Open Source Project
     *
     * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14770,47 +14494,18 @@ OP_IF_LEZ_2f:
     */
 
    /*
-    * File: OP_UNUSED_EA.S
+    * File: stub.S
     */
 
-/* File: x86-atom/unused.S */
-   /* Copyright (C) 2008 The Android Open Source Project
-    *
-    * Licensed under the Apache License, Version 2.0 (the "License");
-    * you may not use this file except in compliance with the License.
-    * You may obtain a copy of the License at
-    *
-    * http://www.apache.org/licenses/LICENSE-2.0
-    *
-    * Unless required by applicable law or agreed to in writing, software
-    * distributed under the License is distributed on an "AS IS" BASIS,
-    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-    * See the License for the specific language governing permissions and
-    * limitations under the License.
-    */
-
-   /*
-    * File: unused.S
-    *
-    * Code: Common code for unused bytecodes. Uses no subtitutions.
-    *
-    * For: all unused bytecodes
-    *
-    * Description: aborts if executed.
-    *
-    * Format: ØØ|op (10x)
-    *
-    * Syntax: op
-    */
-
-    call        common_abort
-
-
-
+    SAVE_PC_FP_TO_GLUE %edx             # save program counter and frame pointer
+    pushl       rGLUE                   # push parameter glue
+    call        dvmMterp_OP_SGET_WIDE_VOLATILE      # call c-based implementation
+    lea         4(%esp), %esp
+    LOAD_PC_FP_FROM_GLUE                # restore program counter and frame pointer
+    FINISH_A                            # jump to next instruction
 /* ------------------------------ */
     .balign 64
-.L_OP_UNUSED_EB: /* 0xeb */
-/* File: x86-atom/OP_UNUSED_EB.S */
+.L_OP_SPUT_WIDE_VOLATILE: /* 0xeb */
    /* Copyright (C) 2008 The Android Open Source Project
     *
     * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14827,43 +14522,15 @@ OP_IF_LEZ_2f:
     */
 
    /*
-    * File: OP_UNUSED_EB.S
+    * File: stub.S
     */
 
-/* File: x86-atom/unused.S */
-   /* Copyright (C) 2008 The Android Open Source Project
-    *
-    * Licensed under the Apache License, Version 2.0 (the "License");
-    * you may not use this file except in compliance with the License.
-    * You may obtain a copy of the License at
-    *
-    * http://www.apache.org/licenses/LICENSE-2.0
-    *
-    * Unless required by applicable law or agreed to in writing, software
-    * distributed under the License is distributed on an "AS IS" BASIS,
-    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-    * See the License for the specific language governing permissions and
-    * limitations under the License.
-    */
-
-   /*
-    * File: unused.S
-    *
-    * Code: Common code for unused bytecodes. Uses no subtitutions.
-    *
-    * For: all unused bytecodes
-    *
-    * Description: aborts if executed.
-    *
-    * Format: ØØ|op (10x)
-    *
-    * Syntax: op
-    */
-
-    call        common_abort
-
-
-
+    SAVE_PC_FP_TO_GLUE %edx             # save program counter and frame pointer
+    pushl       rGLUE                   # push parameter glue
+    call        dvmMterp_OP_SPUT_WIDE_VOLATILE      # call c-based implementation
+    lea         4(%esp), %esp
+    LOAD_PC_FP_FROM_GLUE                # restore program counter and frame pointer
+    FINISH_A                            # jump to next instruction
 /* ------------------------------ */
     .balign 64
 .L_OP_BREAKPOINT: /* 0xec */
@@ -14914,7 +14581,7 @@ OP_IF_LEZ_2f:
    /*
     * File: OP_THROW_VERIFICATION_ERROR.S
     *
-    * Code: 
+    * Code:
     *
     * For: throw-verification-error
     *
@@ -14926,16 +14593,16 @@ OP_IF_LEZ_2f:
     * Syntax: op vAA, ref@BBBB
     */
 
-    movl        rGLUE, %edx            		# %edx<- pMterpGlue
-    movl        offGlue_method(%edx), %ecx 	# %ecx<- glue->method
-    EXPORT_PC                          	  	# in case an exception is thrown
-    FETCH       1, %eax                 	# %eax<- BBBB
-    movl        %eax, -4(%esp)          	# push parameter BBBB; ref
-    movl        rINST, -8(%esp)          	# push parameter AA
-    movl        %ecx, -12(%esp)          	# push parameter glue->method
+    movl        rGLUE, %edx                 # %edx<- pMterpGlue
+    movl        offGlue_method(%edx), %ecx  # %ecx<- glue->method
+    EXPORT_PC                               # in case an exception is thrown
+    FETCH       1, %eax                     # %eax<- BBBB
+    movl        %eax, -4(%esp)              # push parameter BBBB; ref
+    movl        rINST, -8(%esp)             # push parameter AA
+    movl        %ecx, -12(%esp)             # push parameter glue->method
     lea         -12(%esp), %esp
-    call        dvmThrowVerificationError	# call: (const Method* method, int kind, int ref)
-    jmp 	common_exceptionThrown  	# failed; handle exception
+    call        dvmThrowVerificationError   # call: (const Method* method, int kind, int ref)
+    jmp     common_exceptionThrown      # failed; handle exception
 
 /* ------------------------------ */
     .balign 64
@@ -15094,7 +14761,6 @@ OP_IF_LEZ_2f:
     call        common_abort
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_IGET_QUICK: /* 0xf2 */
@@ -15180,8 +14846,6 @@ OP_IF_LEZ_2f:
     movq        (%ecx, %edx), %xmm0     # %xmm0<- object field
     movq        %xmm0, (rFP, rINST, 4)  # fp[A]<- %xmm0
     FGETOP_JMP  2, %eax                 # jump to next instruction; getop, jmp
-
-
 
 /* ------------------------------ */
     .balign 64
@@ -15289,8 +14953,6 @@ OP_IF_LEZ_2f:
     movl        rINST, (%eax, %ecx)     # object field<- vA
     FGETOP_JMP  2, %edx                 # jump to next instruction; getop, jmp
 
-
-
 /* ------------------------------ */
     .balign 64
 .L_OP_IPUT_WIDE_QUICK: /* 0xf6 */
@@ -15333,7 +14995,6 @@ OP_IF_LEZ_2f:
     movq        (rFP, rINST, 4), %xmm0  # %xmm0<- fp[A]
     movq        %xmm0, (%edx, %ecx)     # object field<- %xmm0; fp[A]
     FGETOP_JMP  2, %eax                 # jump to next instruction; getop, jmp
-
 
 /* ------------------------------ */
     .balign 64
@@ -15398,8 +15059,6 @@ OP_IF_LEZ_2f:
     FGETOP_JMP  2, %edx                 # jump to next instruction; getop, jmp
 
 
-
-
 /* ------------------------------ */
     .balign 64
 .L_OP_INVOKE_VIRTUAL_QUICK: /* 0xf8 */
@@ -15441,8 +15100,6 @@ OP_IF_LEZ_2f:
     movl        offClassObject_vtable(%edx), %edx # %edx<- thisPtr->clazz->vtable
     movl        (%edx, %ecx, 4), %ecx   # %ecx<- vtable[methodIndex]
     jmp         common_invokeMethodNoRange # invoke method common code
-
-
 
 /* ------------------------------ */
     .balign 64
@@ -15507,8 +15164,6 @@ OP_IF_LEZ_2f:
     jmp         common_invokeMethodRange # invoke method common code
 
 
-
-
 /* ------------------------------ */
     .balign 64
 .L_OP_INVOKE_SUPER_QUICK: /* 0xfa */
@@ -15552,9 +15207,6 @@ OP_IF_LEZ_2f:
     movl        (%eax, %ecx, 4), %ecx   # %ecx<- vtable[methodIndex]
     je          common_errNullObject    # handle null object
     jmp         common_invokeMethodNoRange # invoke method common code
-
-
-
 
 /* ------------------------------ */
     .balign 64
@@ -15621,13 +15273,9 @@ OP_IF_LEZ_2f:
     jmp         common_invokeMethodRange # invoke method common code
 
 
-
-
-
 /* ------------------------------ */
     .balign 64
-.L_OP_UNUSED_FC: /* 0xfc */
-/* File: x86-atom/OP_UNUSED_FC.S */
+.L_OP_IPUT_OBJECT_VOLATILE: /* 0xfc */
    /* Copyright (C) 2008 The Android Open Source Project
     *
     * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15644,47 +15292,18 @@ OP_IF_LEZ_2f:
     */
 
    /*
-    * File: OP_UNUSED_FC.S
+    * File: stub.S
     */
 
-/* File: x86-atom/unused.S */
-   /* Copyright (C) 2008 The Android Open Source Project
-    *
-    * Licensed under the Apache License, Version 2.0 (the "License");
-    * you may not use this file except in compliance with the License.
-    * You may obtain a copy of the License at
-    *
-    * http://www.apache.org/licenses/LICENSE-2.0
-    *
-    * Unless required by applicable law or agreed to in writing, software
-    * distributed under the License is distributed on an "AS IS" BASIS,
-    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-    * See the License for the specific language governing permissions and
-    * limitations under the License.
-    */
-
-   /*
-    * File: unused.S
-    *
-    * Code: Common code for unused bytecodes. Uses no subtitutions.
-    *
-    * For: all unused bytecodes
-    *
-    * Description: aborts if executed.
-    *
-    * Format: ØØ|op (10x)
-    *
-    * Syntax: op
-    */
-
-    call        common_abort
-
-
-
+    SAVE_PC_FP_TO_GLUE %edx             # save program counter and frame pointer
+    pushl       rGLUE                   # push parameter glue
+    call        dvmMterp_OP_IPUT_OBJECT_VOLATILE      # call c-based implementation
+    lea         4(%esp), %esp
+    LOAD_PC_FP_FROM_GLUE                # restore program counter and frame pointer
+    FINISH_A                            # jump to next instruction
 /* ------------------------------ */
     .balign 64
-.L_OP_UNUSED_FD: /* 0xfd */
-/* File: x86-atom/OP_UNUSED_FD.S */
+.L_OP_SGET_OBJECT_VOLATILE: /* 0xfd */
    /* Copyright (C) 2008 The Android Open Source Project
     *
     * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15701,47 +15320,18 @@ OP_IF_LEZ_2f:
     */
 
    /*
-    * File: OP_UNUSED_FD.S
+    * File: stub.S
     */
 
-/* File: x86-atom/unused.S */
-   /* Copyright (C) 2008 The Android Open Source Project
-    *
-    * Licensed under the Apache License, Version 2.0 (the "License");
-    * you may not use this file except in compliance with the License.
-    * You may obtain a copy of the License at
-    *
-    * http://www.apache.org/licenses/LICENSE-2.0
-    *
-    * Unless required by applicable law or agreed to in writing, software
-    * distributed under the License is distributed on an "AS IS" BASIS,
-    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-    * See the License for the specific language governing permissions and
-    * limitations under the License.
-    */
-
-   /*
-    * File: unused.S
-    *
-    * Code: Common code for unused bytecodes. Uses no subtitutions.
-    *
-    * For: all unused bytecodes
-    *
-    * Description: aborts if executed.
-    *
-    * Format: ØØ|op (10x)
-    *
-    * Syntax: op
-    */
-
-    call        common_abort
-
-
-
+    SAVE_PC_FP_TO_GLUE %edx             # save program counter and frame pointer
+    pushl       rGLUE                   # push parameter glue
+    call        dvmMterp_OP_SGET_OBJECT_VOLATILE      # call c-based implementation
+    lea         4(%esp), %esp
+    LOAD_PC_FP_FROM_GLUE                # restore program counter and frame pointer
+    FINISH_A                            # jump to next instruction
 /* ------------------------------ */
     .balign 64
-.L_OP_UNUSED_FE: /* 0xfe */
-/* File: x86-atom/OP_UNUSED_FE.S */
+.L_OP_SPUT_OBJECT_VOLATILE: /* 0xfe */
    /* Copyright (C) 2008 The Android Open Source Project
     *
     * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15758,43 +15348,15 @@ OP_IF_LEZ_2f:
     */
 
    /*
-    * File: OP_UNUSED_FE.S
+    * File: stub.S
     */
 
-/* File: x86-atom/unused.S */
-   /* Copyright (C) 2008 The Android Open Source Project
-    *
-    * Licensed under the Apache License, Version 2.0 (the "License");
-    * you may not use this file except in compliance with the License.
-    * You may obtain a copy of the License at
-    *
-    * http://www.apache.org/licenses/LICENSE-2.0
-    *
-    * Unless required by applicable law or agreed to in writing, software
-    * distributed under the License is distributed on an "AS IS" BASIS,
-    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-    * See the License for the specific language governing permissions and
-    * limitations under the License.
-    */
-
-   /*
-    * File: unused.S
-    *
-    * Code: Common code for unused bytecodes. Uses no subtitutions.
-    *
-    * For: all unused bytecodes
-    *
-    * Description: aborts if executed.
-    *
-    * Format: ØØ|op (10x)
-    *
-    * Syntax: op
-    */
-
-    call        common_abort
-
-
-
+    SAVE_PC_FP_TO_GLUE %edx             # save program counter and frame pointer
+    pushl       rGLUE                   # push parameter glue
+    call        dvmMterp_OP_SPUT_OBJECT_VOLATILE      # call c-based implementation
+    lea         4(%esp), %esp
+    LOAD_PC_FP_FROM_GLUE                # restore program counter and frame pointer
+    FINISH_A                            # jump to next instruction
 /* ------------------------------ */
     .balign 64
 .L_OP_UNUSED_FF: /* 0xff */
@@ -15849,7 +15411,6 @@ OP_IF_LEZ_2f:
     */
 
     call        common_abort
-
 
 
 
@@ -16228,7 +15789,6 @@ dvmAsmSisterStart:
     SET_VREG    %eax, rINST             # vA<- pArray
     FINISH      2                       # jump to next instruction
 
-
 /* continuation for OP_FILLED_NEW_ARRAY */
 
 .LOP_FILLED_NEW_ARRAY_break:
@@ -16441,11 +16001,9 @@ dvmAsmSisterStart:
 .LOP_PACKED_SWITCH_finish:
     FINISH_RB   %edx, %ecx              # jump to next instruction
 
-
 /* continuation for OP_SPARSE_SWITCH */
 .LOP_SPARSE_SWITCH_finish:
     FINISH_RB   %edx, %ecx              # jump to next instruction
-
 
 /* continuation for OP_CMPL_FLOAT */
 .LOP_CMPL_FLOAT_greater:
@@ -16512,8 +16070,6 @@ dvmAsmSisterStart:
 .LOP_CMP_LONG_greater:
     movl        $0x1, (rFP, rINST, 4)  # vAA<- greater than
     FINISH      2                       # jump to next instruction
-
-
 
 /* continuation for OP_APUT_OBJECT */
 
@@ -16593,8 +16149,6 @@ dvmAsmSisterStart:
     movq        (%ecx, %edx), %xmm0     # %xmm0<- object field
     movq        %xmm0, (rFP, rINST, 4)  # vA<- %xmm0; object field
     FGETOP_JMP  2, %eax                 # jump to next instruction; getop, jmp
-
-
 
 /* continuation for OP_IGET_OBJECT */
 
@@ -16760,7 +16314,6 @@ dvmAsmSisterStart:
     movl     rINST, (%edx, %ecx)     # object field<- vA
     FGETOP_JMP  2, %eax                 # jump to next instruction; getop, jmp
 
-
 /* continuation for OP_IPUT_WIDE */
 
 .LOP_IPUT_WIDE_finish2:
@@ -16791,8 +16344,6 @@ dvmAsmSisterStart:
     movq        %xmm0, (%ecx, %edx)     # object field<- %xmm0; vA
     FGETOP_JMP  2, %eax                 # jump to next instruction; getop, jmp
 
-
-
 /* continuation for OP_IPUT_OBJECT */
 
 .LOP_IPUT_OBJECT_finish:
@@ -16821,7 +16372,6 @@ dvmAsmSisterStart:
     GET_VREG    rINST                   # rINST<- vA
     movl     rINST, (%edx, %ecx)     # object field<- vA
     FGETOP_JMP  2, %eax                 # jump to next instruction; getop, jmp
-
 
 /* continuation for OP_IPUT_BOOLEAN */
 
@@ -16852,7 +16402,6 @@ dvmAsmSisterStart:
     movl     rINST, (%edx, %ecx)     # object field<- vA
     FGETOP_JMP  2, %eax                 # jump to next instruction; getop, jmp
 
-
 /* continuation for OP_IPUT_BYTE */
 
 .LOP_IPUT_BYTE_finish:
@@ -16881,7 +16430,6 @@ dvmAsmSisterStart:
     GET_VREG    rINST                   # rINST<- vA
     movl     rINST, (%edx, %ecx)     # object field<- vA
     FGETOP_JMP  2, %eax                 # jump to next instruction; getop, jmp
-
 
 /* continuation for OP_IPUT_CHAR */
 
@@ -16912,7 +16460,6 @@ dvmAsmSisterStart:
     movl     rINST, (%edx, %ecx)     # object field<- vA
     FGETOP_JMP  2, %eax                 # jump to next instruction; getop, jmp
 
-
 /* continuation for OP_IPUT_SHORT */
 
 .LOP_IPUT_SHORT_finish:
@@ -16941,7 +16488,6 @@ dvmAsmSisterStart:
     GET_VREG    rINST                   # rINST<- vA
     movl     rINST, (%edx, %ecx)     # object field<- vA
     FGETOP_JMP  2, %eax                 # jump to next instruction; getop, jmp
-
 
 /* continuation for OP_SGET */
 
@@ -17287,7 +16833,6 @@ dvmAsmSisterStart:
     movl        (%edx, %eax, 4), %ecx   # %ecx<- vtable[methodIndex]
     jmp         common_invokeMethodNoRange # invoke method common code
 
-
 /* continuation for OP_INVOKE_SUPER */
 
 .LOP_INVOKE_SUPER_continue2:
@@ -17338,7 +16883,6 @@ dvmAsmSisterStart:
     movl        offMethod_name(%ecx), %edx # %edx<- method name
     jmp         common_errNoSuchMethod
 
-
 /* continuation for OP_INVOKE_DIRECT */
 
    /*
@@ -17383,8 +16927,6 @@ dvmAsmSisterStart:
     je          common_exceptionThrown
     movl        %eax, %ecx              # %ecx<- method
     jmp         common_invokeMethodNoRange # invoke method common code
-
-
 
 /* continuation for OP_INVOKE_INTERFACE */
 .LOP_INVOKE_INTERFACE_break:
@@ -17439,7 +16981,6 @@ dvmAsmSisterStart:
     movl        (%edx, %eax, 4), %ecx   # %ecx<- vtable[methodIndex]
     jmp         common_invokeMethodRange # invoke method common code
 
-
 /* continuation for OP_INVOKE_SUPER_RANGE */
 
 .LOP_INVOKE_SUPER_RANGE_continue2:
@@ -17490,7 +17031,6 @@ dvmAsmSisterStart:
     movl        offMethod_name(%ecx), %edx # %edx<- method name
     jmp         common_errNoSuchMethod
 
-
 /* continuation for OP_INVOKE_DIRECT_RANGE */
 
    /*
@@ -17535,8 +17075,6 @@ dvmAsmSisterStart:
     je          common_exceptionThrown
     movl        %eax, %ecx              # %ecx<- method
     jmp         common_invokeMethodRange # invoke method common code
-
-
 
 /* continuation for OP_INVOKE_INTERFACE_RANGE */
 .LOP_INVOKE_INTERFACE_RANGE_break:
@@ -17614,8 +17152,6 @@ dvmAsmSisterStart:
     movq        %xmm0, (rFP, %edx, 4)   # vA<- %xmm0; negInf
     FINISH      1                       # jump to next instruction
 
-
-
 /* continuation for OP_DOUBLE_TO_INT */
 
 .LOP_DOUBLE_TO_INT_break:
@@ -17643,7 +17179,6 @@ dvmAsmSisterStart:
     fstps       (rFP, %edx, 4)
     movl        $0x80000000,  (rFP, %edx, 4) # vA<- negInf
     FINISH      1                       # jump to next instruction
-
 
 /* continuation for OP_DOUBLE_TO_LONG */
 
@@ -17675,7 +17210,6 @@ dvmAsmSisterStart:
     fstpl       (rFP, %edx, 4)          # move converted int
     movq        %xmm0, (rFP, %edx, 4)   # vA<- %xmm0; negInf
     FINISH      1                       # jump to next instruction
-
 
 /* continuation for OP_DIV_INT */
 .LOP_DIV_INT_break:
@@ -17718,7 +17252,6 @@ dvmAsmSisterStart:
     movl        %eax, (rFP, rINST, 4)   # vAA<- results lo
     FINISH      2                       # jump to next instruction
 
-
 /* continuation for OP_DIV_LONG */
 .LOP_DIV_LONG_finish:
     movq        %xmm0, -16(%esp)        # push arg vBB,vBB+1
@@ -17752,7 +17285,6 @@ dvmAsmSisterStart:
     movq        %xmm1, (rFP, rINST, 4)  # vAA<- shifted vBB
     FINISH      2                       # jump to next instruction
 
-
 /* continuation for OP_REM_DOUBLE */
 
 .LOP_REM_DOUBLE_break:
@@ -17761,7 +17293,6 @@ dvmAsmSisterStart:
     lea         16(%esp), %esp
     fstpl       (rFP, rINST, 4)         # vAA<- remainder; return of fmod
     FINISH      2                       # jump to next instruction
-
 
 /* continuation for OP_DIV_INT_2ADDR */
 .LOP_DIV_INT_2ADDR_break:
@@ -17773,7 +17304,6 @@ dvmAsmSisterStart:
     .endif
     FGETOP_JMP  1, %edx                 # jump to next instruction; getop, jmp
 
-
 /* continuation for OP_REM_INT_2ADDR */
 .LOP_REM_INT_2ADDR_break:
     FFETCH_ADV  1, %edx                 # %ecx<- next instruction hi; fetch, advance
@@ -17783,7 +17313,6 @@ dvmAsmSisterStart:
     movl        $0, (rFP, rINST, 4)    # vAA<- 0
     .endif
     FGETOP_JMP  1, %edx                 # jump to next instruction; getop, jmp
-
 
 /* continuation for OP_MUL_LONG_2ADDR */
 
@@ -17807,7 +17336,6 @@ dvmAsmSisterStart:
     movl        %ecx, 4(rFP, %edx, 4)   # vA+1<- results hi
     movl        %eax, (rFP, %edx, 4)    # vA<- results lo
     FINISH      1                       # jump to next instruction
-
 
 /* continuation for OP_DIV_LONG_2ADDR */
 .LOP_DIV_LONG_2ADDR_break:
@@ -17842,8 +17370,6 @@ dvmAsmSisterStart:
     movq        %xmm1, (rFP, rINST, 4)  # vAA<- shifted vBB
     FINISH      1                       # jump to next instruction
 
-
-
 /* continuation for OP_REM_DOUBLE_2ADDR */
 
 .LOP_REM_DOUBLE_2ADDR_break:
@@ -17852,14 +17378,6 @@ dvmAsmSisterStart:
     lea         20(%esp), %esp
     fstpl       (rFP, rINST, 4)         # vAA<- remainder; return of fmod
     FINISH      1                       # jump to next instruction
-
-
-
-
-
-
-
-
 
 /* continuation for OP_DIV_INT_LIT16 */
 .LOP_DIV_INT_LIT16_break:
@@ -17872,7 +17390,6 @@ dvmAsmSisterStart:
     movzbl      1(rPC), rINST
     jmp         *dvmAsmInstructionJmpTable(, %edx, 4)
 
-
 /* continuation for OP_REM_INT_LIT16 */
 .LOP_REM_INT_LIT16_break:
     movzbl      (rPC), %edx
@@ -17883,7 +17400,6 @@ dvmAsmSisterStart:
     .endif
     movzbl      1(rPC), rINST
     jmp         *dvmAsmInstructionJmpTable(, %edx, 4)
-
 
 /* continuation for OP_DIV_INT_LIT8 */
 .LOP_DIV_INT_LIT8_break:
@@ -18327,14 +17843,14 @@ dvmAsmInstructionJmpTable = .LdvmAsmInstructionJmpTable
 .long .L_OP_UNUSED_E5
 .long .L_OP_UNUSED_E6
 .long .L_OP_UNUSED_E7
-.long .L_OP_UNUSED_E8
-.long .L_OP_UNUSED_E9
-.long .L_OP_UNUSED_EA
-.long .L_OP_UNUSED_EB
-.long .L_OP_UNUSED_EC
+.long .L_OP_IGET_WIDE_VOLATILE
+.long .L_OP_IPUT_WIDE_VOLATILE
+.long .L_OP_SGET_WIDE_VOLATILE
+.long .L_OP_SPUT_WIDE_VOLATILE
+.long .L_OP_BREAKPOINT
 .long .L_OP_THROW_VERIFICATION_ERROR
 .long .L_OP_EXECUTE_INLINE
-.long .L_OP_UNUSED_EF
+.long .L_OP_EXECUTE_INLINE_RANGE
 .long .L_OP_INVOKE_DIRECT_EMPTY
 .long .L_OP_UNUSED_F1
 .long .L_OP_IGET_QUICK

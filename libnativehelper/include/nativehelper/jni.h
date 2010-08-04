@@ -124,10 +124,10 @@ typedef enum jobjectRefType {
     JNIWeakGlobalRefType = 3
 } jobjectRefType;
 
-typedef struct { 
-    const char* name; 
-    const char* signature; 
-    void*       fnPtr; 
+typedef struct {
+    const char* name;
+    const char* signature;
+    void*       fnPtr;
 } JNINativeMethod;
 
 struct _JNIEnv;
@@ -1037,7 +1037,7 @@ struct JNIInvokeInterface {
     void*       reserved0;
     void*       reserved1;
     void*       reserved2;
- 
+
     jint        (*DestroyJavaVM)(JavaVM*);
     jint        (*AttachCurrentThread)(JavaVM*, JNIEnv**, void*);
     jint        (*DetachCurrentThread)(JavaVM*);

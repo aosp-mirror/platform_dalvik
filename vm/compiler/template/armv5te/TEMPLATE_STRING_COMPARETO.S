@@ -131,4 +131,3 @@ do_memcmp16:
 
 .Lmemcmp16:
     .word __memcmp16
-

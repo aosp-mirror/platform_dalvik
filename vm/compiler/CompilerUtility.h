@@ -26,6 +26,7 @@
 bool dvmCompilerHeapInit(void);
 
 typedef struct ArenaMemBlock {
+    size_t blockSize;
     size_t bytesAllocated;
     struct ArenaMemBlock *next;
     char ptr[0];
@@ -42,8 +43,6 @@ typedef struct GrowableList {
 } GrowableList;
 
 #define GET_ELEM_N(LIST, TYPE, N) (((TYPE*) LIST->elemList)[N])
-#define MIN(x,y) (((x) < (y)) ? (x) : (y))
-#define MAX(x,y) (((x) > (y)) ? (x) : (y))
 
 struct LIR;
 

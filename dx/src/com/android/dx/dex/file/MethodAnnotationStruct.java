@@ -35,7 +35,7 @@ public final class MethodAnnotationStruct
 
     /**
      * Constructs an instance.
-     * 
+     *
      * @param method {@code non-null;} the method in question
      * @param annotations {@code non-null;} the associated annotations
      */
@@ -57,13 +57,13 @@ public final class MethodAnnotationStruct
     public int hashCode() {
         return method.hashCode();
     }
-    
+
     /** {@inheritDoc} */
     public boolean equals(Object other) {
         if (! (other instanceof MethodAnnotationStruct)) {
             return false;
         }
-        
+
         return method.equals(((MethodAnnotationStruct) other).method);
     }
 
@@ -104,7 +104,7 @@ public final class MethodAnnotationStruct
 
     /**
      * Gets the method this item is for.
-     * 
+     *
      * @return {@code non-null;} the method
      */
     public CstMethodRef getMethod() {
@@ -113,7 +113,7 @@ public final class MethodAnnotationStruct
 
     /**
      * Gets the associated annotations.
-     * 
+     *
      * @return {@code non-null;} the annotations
      */
     public Annotations getAnnotations() {

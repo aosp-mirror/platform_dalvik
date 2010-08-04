@@ -19,4 +19,3 @@
     stmia   r9, {r0-r1}                 @ vAA<- r0/r1
     GOTO_OPCODE(ip)                     @ jump to next instruction
     /* 10-11 instructions */
-

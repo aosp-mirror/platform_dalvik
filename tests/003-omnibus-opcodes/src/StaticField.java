@@ -15,6 +15,16 @@
  */
 
 public class StaticField {
+    public static boolean mBoolean1, mBoolean2;
+    public static byte mByte1, mByte2;
+    public static char mChar1, mChar2;
+    public static short mShort1, mShort2;
+    public static int mInt1, mInt2;
+    public static float mFloat1, mFloat2;
+    public static long mLong1, mLong2;
+    public static double mDouble1, mDouble2;
+    public static volatile long mVolatileLong1, mVolatileLong2;
+
     public static void run() {
         assignFields();
         checkFields();
@@ -38,6 +48,8 @@ public class StaticField {
         mLong2 = -1234605616436508552L;
         mDouble1 = 3.1415926535;
         mDouble2 = 1.0 / 0.0;               // +inf
+        mVolatileLong1 = mLong1 - 1;
+        mVolatileLong2 = mLong2 + 1;
     }
 
     public static void checkFields() {
@@ -58,15 +70,7 @@ public class StaticField {
         assert(mLong2 == -1234605616436508552L);
         assert(mDouble1 > 3.141592653 && mDouble1 < 3.141592654);
         assert(mDouble2 > mDouble1);
+        assert(mVolatileLong1 == 1234605616436508551L);
+        assert(mVolatileLong2 == -1234605616436508551L);
     }
-
-    public static boolean mBoolean1, mBoolean2;
-    public static byte mByte1, mByte2;
-    public static char mChar1, mChar2;
-    public static short mShort1, mShort2;
-    public static int mInt1, mInt2;
-    public static float mFloat1, mFloat2;
-    public static long mLong1, mLong2;
-    public static double mDouble1, mDouble2;
 }
-

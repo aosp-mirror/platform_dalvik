@@ -21,4 +21,3 @@
     $store     $reg,(%eax)
     ADVANCE_PC(2)
     GOTO_NEXT
-

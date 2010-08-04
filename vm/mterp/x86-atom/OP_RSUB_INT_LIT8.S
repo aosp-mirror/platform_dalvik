@@ -34,4 +34,3 @@
     sub         %ecx, %edx              # %edx<- +CC sub vBB
     SET_VREG    %edx, rINST             # vAA<- %edx; result
     FINISH      2                       # jump to next instruction
-

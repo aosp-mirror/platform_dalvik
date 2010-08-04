@@ -5,7 +5,7 @@
     /*
      * General 32-bit SPUT handler.
      *
-     * for: sput, sput-object, sput-boolean, sput-byte, sput-char, sput-short
+     * for: sput, sput-boolean, sput-byte, sput-char, sput-short
      */
     /* op vAA, field@BBBB */
     GET_GLUE(%ecx)
@@ -41,4 +41,3 @@
     testl    %eax,%eax
     jne      .L${opcode}_finish                 # success, continue
     jmp      common_exceptionThrown             # no, handle exception
-

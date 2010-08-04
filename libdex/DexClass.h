@@ -65,11 +65,11 @@ bool dexReadAndVerifyClassDataHeader(const u1** pData, const u1* pLimit,
 /* Read and verify an encoded_field. This updates the
  * given data pointer to point past the end of the read data and
  * returns an "okay" flag (that is, false == failure).
- * 
+ *
  * The lastIndex value should be set to 0 before the first field in
  * a list is read. It is updated as fields are read and used in the
  * decode process.
- *  
+ *
  * The verification done by this function is of the raw data format
  * only; it does not verify that access flags or indices
  * are valid. */
@@ -79,7 +79,7 @@ bool dexReadAndVerifyClassDataField(const u1** pData, const u1* pLimit,
 /* Read and verify an encoded_method. This updates the
  * given data pointer to point past the end of the read data and
  * returns an "okay" flag (that is, false == failure).
- * 
+ *
  * The lastIndex value should be set to 0 before the first method in
  * a list is read. It is updated as fields are read and used in the
  * decode process.
@@ -96,7 +96,7 @@ bool dexReadAndVerifyClassDataMethod(const u1** pData, const u1* pLimit,
  * must subsequently be free()d. This function returns NULL if there
  * was trouble parsing the data. If this function is passed NULL, it
  * returns an initialized empty DexClassData structure.
- * 
+ *
  * The verification done by this function is of the raw data format
  * only; it does not verify that access flags, indices, or offsets
  * are valid. */
@@ -127,8 +127,8 @@ DEX_INLINE void dexReadClassDataHeader(const u1** pData,
 }
 
 /* Read an encoded_field without verification. This updates the
- * given data pointer to point past the end of the read data. 
- * 
+ * given data pointer to point past the end of the read data.
+ *
  * The lastIndex value should be set to 0 before the first field in
  * a list is read. It is updated as fields are read and used in the
  * decode process.
@@ -143,8 +143,8 @@ DEX_INLINE void dexReadClassDataField(const u1** pData, DexField* pField,
 }
 
 /* Read an encoded_method without verification. This updates the
- * given data pointer to point past the end of the read data. 
- * 
+ * given data pointer to point past the end of the read data.
+ *
  * The lastIndex value should be set to 0 before the first method in
  * a list is read. It is updated as fields are read and used in the
  * decode process.

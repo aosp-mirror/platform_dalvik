@@ -25,4 +25,3 @@
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     $store  r2, [r0, #offArrayObject_contents]  @ vBB[vCC]<- r2
     GOTO_OPCODE(ip)                     @ jump to next instruction
-

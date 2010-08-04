@@ -215,7 +215,6 @@ Notes:
 #include "../common/asm-constants.h"
 
 
-
     .global dvmAsmInstructionStart
     .type   dvmAsmInstructionStart, %function
 dvmAsmInstructionStart = .L_OP_NOP
@@ -257,7 +256,6 @@ dvmAsmInstructionStart = .L_OP_NOP
     ADVANCE_PC(2)
     SET_VREG (%ecx,%eax)              # fp[AA]<- ecx]
     GOTO_NEXT
-
 
 /* ------------------------------ */
     .balign 64
@@ -355,7 +353,6 @@ dvmAsmInstructionStart = .L_OP_NOP
     GOTO_NEXT
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_MOVE_OBJECT_16: /* 0x09 */
@@ -438,7 +435,6 @@ dvmAsmInstructionStart = .L_OP_NOP
 /* File: x86/OP_RETURN_VOID.S */
     jmp       common_returnFromMethod
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_RETURN: /* 0x0f */
@@ -505,7 +501,6 @@ dvmAsmInstructionStart = .L_OP_NOP
     sarl    $4,%eax
     SET_VREG(%eax,%ecx)
     GOTO_NEXT
-
 
 /* ------------------------------ */
     .balign 64
@@ -591,7 +586,6 @@ dvmAsmInstructionStart = .L_OP_NOP
     ADVANCE_PC(5)
     GOTO_NEXT
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_CONST_WIDE_HIGH16: /* 0x19 */
@@ -606,7 +600,6 @@ dvmAsmInstructionStart = .L_OP_NOP
     xorl       %eax,%eax
     SET_VREG_WORD(%eax,%ecx,0)            # v[AA+0]<- eax
     GOTO_NEXT
-
 
 /* ------------------------------ */
     .balign 64
@@ -927,6 +920,7 @@ dvmAsmInstructionStart = .L_OP_NOP
      */
     /* throw vAA */
     GET_GLUE(%ecx)
+    EXPORT_PC()
     movzbl   rINST_HI,rINST_FULL       # rINST_FULL<- AA
     GET_VREG(%eax,rINST_FULL)          # eax<- exception object
     movl     offGlue_self(%ecx),%ecx   # ecx<- glue->self
@@ -1422,7 +1416,6 @@ dvmAsmInstructionStart = .L_OP_NOP
     GOTO_NEXT
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_IF_NEZ: /* 0x39 */
@@ -1448,7 +1441,6 @@ dvmAsmInstructionStart = .L_OP_NOP
     FETCH_INST_INDEXED(%eax)
     ADVANCE_PC_INDEXED(%eax)
     GOTO_NEXT
-
 
 
 /* ------------------------------ */
@@ -1478,7 +1470,6 @@ dvmAsmInstructionStart = .L_OP_NOP
     GOTO_NEXT
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_IF_GEZ: /* 0x3b */
@@ -1504,7 +1495,6 @@ dvmAsmInstructionStart = .L_OP_NOP
     FETCH_INST_INDEXED(%eax)
     ADVANCE_PC_INDEXED(%eax)
     GOTO_NEXT
-
 
 
 /* ------------------------------ */
@@ -1534,7 +1524,6 @@ dvmAsmInstructionStart = .L_OP_NOP
     GOTO_NEXT
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_IF_LEZ: /* 0x3d */
@@ -1560,7 +1549,6 @@ dvmAsmInstructionStart = .L_OP_NOP
     FETCH_INST_INDEXED(%eax)
     ADVANCE_PC_INDEXED(%eax)
     GOTO_NEXT
-
 
 
 /* ------------------------------ */
@@ -1637,7 +1625,6 @@ dvmAsmInstructionStart = .L_OP_NOP
     ADVANCE_PC(2)
     GOTO_NEXT
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_AGET_WIDE: /* 0x45 */
@@ -1686,7 +1673,6 @@ dvmAsmInstructionStart = .L_OP_NOP
     GOTO_NEXT
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_AGET_BOOLEAN: /* 0x47 */
@@ -1713,7 +1699,6 @@ dvmAsmInstructionStart = .L_OP_NOP
     SET_VREG(%eax,%ecx)
     ADVANCE_PC(2)
     GOTO_NEXT
-
 
 
 /* ------------------------------ */
@@ -1744,7 +1729,6 @@ dvmAsmInstructionStart = .L_OP_NOP
     GOTO_NEXT
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_AGET_CHAR: /* 0x49 */
@@ -1771,7 +1755,6 @@ dvmAsmInstructionStart = .L_OP_NOP
     SET_VREG(%eax,%ecx)
     ADVANCE_PC(2)
     GOTO_NEXT
-
 
 
 /* ------------------------------ */
@@ -1802,7 +1785,6 @@ dvmAsmInstructionStart = .L_OP_NOP
     GOTO_NEXT
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_APUT: /* 0x4b */
@@ -1828,7 +1810,6 @@ dvmAsmInstructionStart = .L_OP_NOP
     movl     %ecx,(%eax)
     ADVANCE_PC(2)
     GOTO_NEXT
-
 
 /* ------------------------------ */
     .balign 64
@@ -1900,7 +1881,6 @@ dvmAsmInstructionStart = .L_OP_NOP
     GOTO_NEXT
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_APUT_BYTE: /* 0x4f */
@@ -1927,7 +1907,6 @@ dvmAsmInstructionStart = .L_OP_NOP
     movb     %cl,(%eax)
     ADVANCE_PC(2)
     GOTO_NEXT
-
 
 
 /* ------------------------------ */
@@ -1958,7 +1937,6 @@ dvmAsmInstructionStart = .L_OP_NOP
     GOTO_NEXT
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_APUT_SHORT: /* 0x51 */
@@ -1985,7 +1963,6 @@ dvmAsmInstructionStart = .L_OP_NOP
     movw     %cx,(%eax)
     ADVANCE_PC(2)
     GOTO_NEXT
-
 
 
 /* ------------------------------ */
@@ -2244,12 +2221,10 @@ dvmAsmInstructionStart = .L_OP_NOP
     .balign 64
 .L_OP_IPUT_OBJECT: /* 0x5b */
 /* File: x86/OP_IPUT_OBJECT.S */
-/* File: x86/OP_IPUT.S */
-
     /*
-     * General 32-bit instance field put.
+     * Object field put.
      *
-     * for: iput, iput-object, iput-boolean, iput-byte, iput-char, iput-short
+     * for: iput-object
      */
     /* op vA, vB, field@CCCC */
     GET_GLUE(%ecx)
@@ -2268,7 +2243,6 @@ dvmAsmInstructionStart = .L_OP_NOP
     movl    rIBASE,OUT_ARG1(%esp)
     GET_GLUE(rIBASE)
     jmp     .LOP_IPUT_OBJECT_resolve
-
 
 /* ------------------------------ */
     .balign 64
@@ -2583,7 +2557,7 @@ dvmAsmInstructionStart = .L_OP_NOP
     /*
      * General 32-bit SPUT handler.
      *
-     * for: sput, sput-object, sput-boolean, sput-byte, sput-char, sput-short
+     * for: sput, sput-boolean, sput-byte, sput-char, sput-short
      */
     /* op vAA, field@BBBB */
     GET_GLUE(%ecx)
@@ -2632,28 +2606,21 @@ dvmAsmInstructionStart = .L_OP_NOP
     .balign 64
 .L_OP_SPUT_OBJECT: /* 0x69 */
 /* File: x86/OP_SPUT_OBJECT.S */
-/* File: x86/OP_SPUT.S */
     /*
-     * General 32-bit SPUT handler.
-     *
-     * for: sput, sput-object, sput-boolean, sput-byte, sput-char, sput-short
+     * SPUT object handler.
      */
     /* op vAA, field@BBBB */
     GET_GLUE(%ecx)
     movzwl    2(rPC),%eax                        # eax<- field ref BBBB
     movl      offGlue_methodClassDex(%ecx),%ecx  # ecx<- DvmDex
     movl      offDvmDex_pResFields(%ecx),%ecx    # ecx<- dvmDex->pResFields
-    movl      (%ecx,%eax,4),%eax                 # eax<- resolved StaticField ptr
+    movl      (%ecx,%eax,4),%eax                 # eax<- resolved StaticField
     testl     %eax,%eax                          # resolved entry null?
     je        .LOP_SPUT_OBJECT_resolve                # if not, make it so
 .LOP_SPUT_OBJECT_finish:     # field ptr in eax
     movzbl    rINST_HI,%ecx                      # ecx<- AA
     GET_VREG(%ecx,%ecx)
-    FETCH_INST_WORD(2)
-    movl      %ecx,offStaticField_value(%eax)
-    ADVANCE_PC(2)
-    GOTO_NEXT
-
+    jmp       .LOP_SPUT_OBJECT_continue
 
 /* ------------------------------ */
     .balign 64
@@ -2663,7 +2630,7 @@ dvmAsmInstructionStart = .L_OP_NOP
     /*
      * General 32-bit SPUT handler.
      *
-     * for: sput, sput-object, sput-boolean, sput-byte, sput-char, sput-short
+     * for: sput, sput-boolean, sput-byte, sput-char, sput-short
      */
     /* op vAA, field@BBBB */
     GET_GLUE(%ecx)
@@ -2690,7 +2657,7 @@ dvmAsmInstructionStart = .L_OP_NOP
     /*
      * General 32-bit SPUT handler.
      *
-     * for: sput, sput-object, sput-boolean, sput-byte, sput-char, sput-short
+     * for: sput, sput-boolean, sput-byte, sput-char, sput-short
      */
     /* op vAA, field@BBBB */
     GET_GLUE(%ecx)
@@ -2717,7 +2684,7 @@ dvmAsmInstructionStart = .L_OP_NOP
     /*
      * General 32-bit SPUT handler.
      *
-     * for: sput, sput-object, sput-boolean, sput-byte, sput-char, sput-short
+     * for: sput, sput-boolean, sput-byte, sput-char, sput-short
      */
     /* op vAA, field@BBBB */
     GET_GLUE(%ecx)
@@ -2744,7 +2711,7 @@ dvmAsmInstructionStart = .L_OP_NOP
     /*
      * General 32-bit SPUT handler.
      *
-     * for: sput, sput-object, sput-boolean, sput-byte, sput-char, sput-short
+     * for: sput, sput-boolean, sput-byte, sput-char, sput-short
      */
     /* op vAA, field@BBBB */
     GET_GLUE(%ecx)
@@ -3621,7 +3588,6 @@ dvmAsmInstructionStart = .L_OP_NOP
     GOTO_NEXT
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_SUB_INT: /* 0x91 */
@@ -3646,7 +3612,6 @@ dvmAsmInstructionStart = .L_OP_NOP
     ADVANCE_PC(2)
     SET_VREG(%eax,%ecx)
     GOTO_NEXT
-
 
 
 /* ------------------------------ */
@@ -3749,7 +3714,6 @@ dvmAsmInstructionStart = .L_OP_NOP
     GOTO_NEXT
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_OR_INT: /* 0x96 */
@@ -3776,7 +3740,6 @@ dvmAsmInstructionStart = .L_OP_NOP
     GOTO_NEXT
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_XOR_INT: /* 0x97 */
@@ -3801,7 +3764,6 @@ dvmAsmInstructionStart = .L_OP_NOP
     ADVANCE_PC(2)
     SET_VREG(%eax,%ecx)
     GOTO_NEXT
-
 
 
 /* ------------------------------ */
@@ -4211,7 +4173,6 @@ dvmAsmInstructionStart = .L_OP_NOP
     GOTO_NEXT
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_SUB_FLOAT: /* 0xa7 */
@@ -4232,7 +4193,6 @@ dvmAsmInstructionStart = .L_OP_NOP
     ADVANCE_PC(2)
     fstps   (rFP,%ecx,4)           # %st to vAA
     GOTO_NEXT
-
 
 
 /* ------------------------------ */
@@ -4257,7 +4217,6 @@ dvmAsmInstructionStart = .L_OP_NOP
     GOTO_NEXT
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_DIV_FLOAT: /* 0xa9 */
@@ -4278,7 +4237,6 @@ dvmAsmInstructionStart = .L_OP_NOP
     ADVANCE_PC(2)
     fstps   (rFP,%ecx,4)           # %st to vAA
     GOTO_NEXT
-
 
 
 /* ------------------------------ */
@@ -4324,7 +4282,6 @@ dvmAsmInstructionStart = .L_OP_NOP
     GOTO_NEXT
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_SUB_DOUBLE: /* 0xac */
@@ -4345,7 +4302,6 @@ dvmAsmInstructionStart = .L_OP_NOP
     ADVANCE_PC(2)
     fstpl   (rFP,%ecx,4)           # %st to vAA
     GOTO_NEXT
-
 
 
 /* ------------------------------ */
@@ -4370,7 +4326,6 @@ dvmAsmInstructionStart = .L_OP_NOP
     GOTO_NEXT
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_DIV_DOUBLE: /* 0xae */
@@ -4391,7 +4346,6 @@ dvmAsmInstructionStart = .L_OP_NOP
     ADVANCE_PC(2)
     fstpl   (rFP,%ecx,4)           # %st to vAA
     GOTO_NEXT
-
 
 
 /* ------------------------------ */
@@ -4660,7 +4614,6 @@ dvmAsmInstructionStart = .L_OP_NOP
     GOTO_NEXT
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_SHR_INT_2ADDR: /* 0xb9 */
@@ -4683,7 +4636,6 @@ dvmAsmInstructionStart = .L_OP_NOP
     GOTO_NEXT
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_USHR_INT_2ADDR: /* 0xba */
@@ -4704,7 +4656,6 @@ dvmAsmInstructionStart = .L_OP_NOP
     FETCH_INST_WORD(1)
     ADVANCE_PC(1)
     GOTO_NEXT
-
 
 
 /* ------------------------------ */
@@ -5407,7 +5358,6 @@ dvmAsmInstructionStart = .L_OP_NOP
     GOTO_NEXT
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_XOR_INT_LIT16: /* 0xd7 */
@@ -5506,7 +5456,6 @@ dvmAsmInstructionStart = .L_OP_NOP
     FETCH_INST_WORD(2)
     ADVANCE_PC(2)
     GOTO_NEXT
-
 
 /* ------------------------------ */
     .balign 64
@@ -5612,7 +5561,6 @@ dvmAsmInstructionStart = .L_OP_NOP
     FETCH_INST_WORD(2)
     ADVANCE_PC(2)
     GOTO_NEXT
-
 
 
 /* ------------------------------ */
@@ -5725,76 +5673,202 @@ dvmAsmInstructionStart = .L_OP_NOP
 
 /* ------------------------------ */
     .balign 64
-.L_OP_UNUSED_E3: /* 0xe3 */
-/* File: x86/OP_UNUSED_E3.S */
-/* File: x86/unused.S */
-    jmp     common_abort
+.L_OP_IGET_VOLATILE: /* 0xe3 */
+/* File: x86/OP_IGET_VOLATILE.S */
+/* File: x86/OP_IGET.S */
+    /*
+     * General 32-bit instance field get.
+     *
+     * for: iget, iget-object, iget-boolean, iget-byte, iget-char, iget-short
+     */
+    /* op vA, vB, field@CCCC */
+    GET_GLUE(%ecx)
+    SPILL(rIBASE)                                 # need another reg
+    movzwl  2(rPC),rIBASE                         # rIBASE<- 0000CCCC
+    movl    offGlue_methodClassDex(%ecx),%eax     # eax<- DvmDex
+    movzbl  rINST_HI,%ecx                         # ecx<- BA
+    sarl    $4,%ecx                              # ecx<- B
+    movl    offDvmDex_pResFields(%eax),%eax       # eax<- pDvmDex->pResFields
+    movzbl  rINST_HI,rINST_FULL                   # rINST_FULL<- BA
+    andb    $0xf,rINST_LO                        # rINST_FULL<- A
+    GET_VREG(%ecx,%ecx)                           # ecx<- fp[B], the object ptr
+    movl    (%eax,rIBASE,4),%eax                  # resolved entry
+    testl   %eax,%eax                             # is resolved entry null?
+    jne     .LOP_IGET_VOLATILE_finish                    # no, already resolved
+    movl    rIBASE,OUT_ARG1(%esp)                 # needed by dvmResolveInstField
+    GET_GLUE(rIBASE)
+    jmp     .LOP_IGET_VOLATILE_resolve
 
 
 /* ------------------------------ */
     .balign 64
-.L_OP_UNUSED_E4: /* 0xe4 */
-/* File: x86/OP_UNUSED_E4.S */
-/* File: x86/unused.S */
-    jmp     common_abort
+.L_OP_IPUT_VOLATILE: /* 0xe4 */
+/* File: x86/OP_IPUT_VOLATILE.S */
+/* File: x86/OP_IPUT.S */
+
+    /*
+     * General 32-bit instance field put.
+     *
+     * for: iput, iput-object, iput-boolean, iput-byte, iput-char, iput-short
+     */
+    /* op vA, vB, field@CCCC */
+    GET_GLUE(%ecx)
+    SPILL(rIBASE)                                 # need another reg
+    movzwl  2(rPC),rIBASE                         # rIBASE<- 0000CCCC
+    movl    offGlue_methodClassDex(%ecx),%eax     # eax<- DvmDex
+    movzbl  rINST_HI,%ecx                         # ecx<- BA
+    sarl    $4,%ecx                              # ecx<- B
+    movl    offDvmDex_pResFields(%eax),%eax       # eax<- pDvmDex->pResFields
+    movzbl  rINST_HI,rINST_FULL                   # rINST_FULL<- BA
+    andb    $0xf,rINST_LO                        # rINST_FULL<- A
+    GET_VREG(%ecx,%ecx)                           # ecx<- fp[B], the object ptr
+    movl    (%eax,rIBASE,4),%eax                  # resolved entry
+    testl   %eax,%eax                             # is resolved entry null?
+    jne     .LOP_IPUT_VOLATILE_finish                    # no, already resolved
+    movl    rIBASE,OUT_ARG1(%esp)
+    GET_GLUE(rIBASE)
+    jmp     .LOP_IPUT_VOLATILE_resolve
 
 
 /* ------------------------------ */
     .balign 64
-.L_OP_UNUSED_E5: /* 0xe5 */
-/* File: x86/OP_UNUSED_E5.S */
-/* File: x86/unused.S */
-    jmp     common_abort
+.L_OP_SGET_VOLATILE: /* 0xe5 */
+/* File: x86/OP_SGET_VOLATILE.S */
+/* File: x86/OP_SGET.S */
+    /*
+     * General 32-bit SGET handler.
+     *
+     * for: sget, sget-object, sget-boolean, sget-byte, sget-char, sget-short
+     */
+    /* op vAA, field@BBBB */
+    GET_GLUE(%ecx)
+    movzwl    2(rPC),%eax                        # eax<- field ref BBBB
+    movl      offGlue_methodClassDex(%ecx),%ecx  # ecx<- DvmDex
+    movl      offDvmDex_pResFields(%ecx),%ecx    # ecx<- dvmDex->pResFields
+    movl      (%ecx,%eax,4),%eax                 # eax<- resolved StaticField ptr
+    testl     %eax,%eax                          # resolved entry null?
+    je        .LOP_SGET_VOLATILE_resolve                # if not, make it so
+.LOP_SGET_VOLATILE_finish:     # field ptr in eax
+    movl      offStaticField_value(%eax),%eax
+    movzbl    rINST_HI,%ecx                      # ecx<- AA
+    FETCH_INST_WORD(2)
+    ADVANCE_PC(2)
+    SET_VREG(%eax,%ecx)
+    GOTO_NEXT
 
 
 /* ------------------------------ */
     .balign 64
-.L_OP_UNUSED_E6: /* 0xe6 */
-/* File: x86/OP_UNUSED_E6.S */
-/* File: x86/unused.S */
-    jmp     common_abort
+.L_OP_SPUT_VOLATILE: /* 0xe6 */
+/* File: x86/OP_SPUT_VOLATILE.S */
+/* File: x86/OP_SPUT.S */
+    /*
+     * General 32-bit SPUT handler.
+     *
+     * for: sput, sput-boolean, sput-byte, sput-char, sput-short
+     */
+    /* op vAA, field@BBBB */
+    GET_GLUE(%ecx)
+    movzwl    2(rPC),%eax                        # eax<- field ref BBBB
+    movl      offGlue_methodClassDex(%ecx),%ecx  # ecx<- DvmDex
+    movl      offDvmDex_pResFields(%ecx),%ecx    # ecx<- dvmDex->pResFields
+    movl      (%ecx,%eax,4),%eax                 # eax<- resolved StaticField ptr
+    testl     %eax,%eax                          # resolved entry null?
+    je        .LOP_SPUT_VOLATILE_resolve                # if not, make it so
+.LOP_SPUT_VOLATILE_finish:     # field ptr in eax
+    movzbl    rINST_HI,%ecx                      # ecx<- AA
+    GET_VREG(%ecx,%ecx)
+    FETCH_INST_WORD(2)
+    movl      %ecx,offStaticField_value(%eax)
+    ADVANCE_PC(2)
+    GOTO_NEXT
 
 
 /* ------------------------------ */
     .balign 64
-.L_OP_UNUSED_E7: /* 0xe7 */
-/* File: x86/OP_UNUSED_E7.S */
-/* File: x86/unused.S */
-    jmp     common_abort
+.L_OP_IGET_OBJECT_VOLATILE: /* 0xe7 */
+/* File: x86/OP_IGET_OBJECT_VOLATILE.S */
+/* File: x86/OP_IGET.S */
+    /*
+     * General 32-bit instance field get.
+     *
+     * for: iget, iget-object, iget-boolean, iget-byte, iget-char, iget-short
+     */
+    /* op vA, vB, field@CCCC */
+    GET_GLUE(%ecx)
+    SPILL(rIBASE)                                 # need another reg
+    movzwl  2(rPC),rIBASE                         # rIBASE<- 0000CCCC
+    movl    offGlue_methodClassDex(%ecx),%eax     # eax<- DvmDex
+    movzbl  rINST_HI,%ecx                         # ecx<- BA
+    sarl    $4,%ecx                              # ecx<- B
+    movl    offDvmDex_pResFields(%eax),%eax       # eax<- pDvmDex->pResFields
+    movzbl  rINST_HI,rINST_FULL                   # rINST_FULL<- BA
+    andb    $0xf,rINST_LO                        # rINST_FULL<- A
+    GET_VREG(%ecx,%ecx)                           # ecx<- fp[B], the object ptr
+    movl    (%eax,rIBASE,4),%eax                  # resolved entry
+    testl   %eax,%eax                             # is resolved entry null?
+    jne     .LOP_IGET_OBJECT_VOLATILE_finish                    # no, already resolved
+    movl    rIBASE,OUT_ARG1(%esp)                 # needed by dvmResolveInstField
+    GET_GLUE(rIBASE)
+    jmp     .LOP_IGET_OBJECT_VOLATILE_resolve
 
 
 /* ------------------------------ */
     .balign 64
-.L_OP_UNUSED_E8: /* 0xe8 */
-/* File: x86/OP_UNUSED_E8.S */
-/* File: x86/unused.S */
-    jmp     common_abort
-
-
+.L_OP_IGET_WIDE_VOLATILE: /* 0xe8 */
+    /* (stub) */
+    GET_GLUE(%ecx)
+    SAVE_PC_TO_GLUE(%ecx)            # only need to export these two
+    SAVE_FP_TO_GLUE(%ecx)            # only need to export these two
+    movl %ecx,OUT_ARG0(%esp)         # glue is first arg to function
+    call      dvmMterp_OP_IGET_WIDE_VOLATILE     # do the real work
+    GET_GLUE(%ecx)
+    LOAD_PC_FROM_GLUE(%ecx)          # retrieve updated values
+    LOAD_FP_FROM_GLUE(%ecx)          # retrieve updated values
+    FETCH_INST()
+    GOTO_NEXT
 /* ------------------------------ */
     .balign 64
-.L_OP_UNUSED_E9: /* 0xe9 */
-/* File: x86/OP_UNUSED_E9.S */
-/* File: x86/unused.S */
-    jmp     common_abort
-
-
+.L_OP_IPUT_WIDE_VOLATILE: /* 0xe9 */
+    /* (stub) */
+    GET_GLUE(%ecx)
+    SAVE_PC_TO_GLUE(%ecx)            # only need to export these two
+    SAVE_FP_TO_GLUE(%ecx)            # only need to export these two
+    movl %ecx,OUT_ARG0(%esp)         # glue is first arg to function
+    call      dvmMterp_OP_IPUT_WIDE_VOLATILE     # do the real work
+    GET_GLUE(%ecx)
+    LOAD_PC_FROM_GLUE(%ecx)          # retrieve updated values
+    LOAD_FP_FROM_GLUE(%ecx)          # retrieve updated values
+    FETCH_INST()
+    GOTO_NEXT
 /* ------------------------------ */
     .balign 64
-.L_OP_UNUSED_EA: /* 0xea */
-/* File: x86/OP_UNUSED_EA.S */
-/* File: x86/unused.S */
-    jmp     common_abort
-
-
+.L_OP_SGET_WIDE_VOLATILE: /* 0xea */
+    /* (stub) */
+    GET_GLUE(%ecx)
+    SAVE_PC_TO_GLUE(%ecx)            # only need to export these two
+    SAVE_FP_TO_GLUE(%ecx)            # only need to export these two
+    movl %ecx,OUT_ARG0(%esp)         # glue is first arg to function
+    call      dvmMterp_OP_SGET_WIDE_VOLATILE     # do the real work
+    GET_GLUE(%ecx)
+    LOAD_PC_FROM_GLUE(%ecx)          # retrieve updated values
+    LOAD_FP_FROM_GLUE(%ecx)          # retrieve updated values
+    FETCH_INST()
+    GOTO_NEXT
 /* ------------------------------ */
     .balign 64
-.L_OP_UNUSED_EB: /* 0xeb */
-/* File: x86/OP_UNUSED_EB.S */
-/* File: x86/unused.S */
-    jmp     common_abort
-
-
+.L_OP_SPUT_WIDE_VOLATILE: /* 0xeb */
+    /* (stub) */
+    GET_GLUE(%ecx)
+    SAVE_PC_TO_GLUE(%ecx)            # only need to export these two
+    SAVE_FP_TO_GLUE(%ecx)            # only need to export these two
+    movl %ecx,OUT_ARG0(%esp)         # glue is first arg to function
+    call      dvmMterp_OP_SPUT_WIDE_VOLATILE     # do the real work
+    GET_GLUE(%ecx)
+    LOAD_PC_FROM_GLUE(%ecx)          # retrieve updated values
+    LOAD_FP_FROM_GLUE(%ecx)          # retrieve updated values
+    FETCH_INST()
+    GOTO_NEXT
 /* ------------------------------ */
     .balign 64
 .L_OP_BREAKPOINT: /* 0xec */
@@ -5825,7 +5899,6 @@ dvmAsmInstructionStart = .L_OP_NOP
     call     dvmThrowVerificationError       # call(method, kind, ref)
     UNSPILL(rPC)
     jmp      common_exceptionThrown          # handle exception
-
 
 /* ------------------------------ */
     .balign 64
@@ -5957,7 +6030,7 @@ dvmAsmInstructionStart = .L_OP_NOP
     .balign 64
 .L_OP_IPUT_QUICK: /* 0xf5 */
 /* File: x86/OP_IPUT_QUICK.S */
-    /* For: iput-quick, iput-object-quick */
+    /* For: iput-quick */
     /* op vA, vB, offset@CCCC */
     movzbl    rINST_HI,%ecx             # ecx<- BA
     sarl      $4,%ecx                  # ecx<- B
@@ -6000,8 +6073,7 @@ dvmAsmInstructionStart = .L_OP_NOP
     .balign 64
 .L_OP_IPUT_OBJECT_QUICK: /* 0xf7 */
 /* File: x86/OP_IPUT_OBJECT_QUICK.S */
-/* File: x86/OP_IPUT_QUICK.S */
-    /* For: iput-quick, iput-object-quick */
+    /* For: iput-object-quick */
     /* op vA, vB, offset@CCCC */
     movzbl    rINST_HI,%ecx             # ecx<- BA
     sarl      $4,%ecx                  # ecx<- B
@@ -6010,13 +6082,11 @@ dvmAsmInstructionStart = .L_OP_NOP
     andb      $0xf,rINST_LO            # rINST_FULL<- A
     GET_VREG(rINST_FULL,rINST_FULL)     # rINST_FULL<- v[A]
     movzwl    2(rPC),%eax               # eax<- field byte offset
-    testl     %ecx,%ecx                  # is object null?
+    testl     %ecx,%ecx                 # is object null?
     je        common_errNullObject
     movl      rINST_FULL,(%ecx,%eax,1)
-    FETCH_INST_WORD(2)
-    ADVANCE_PC(2)
-    GOTO_NEXT
-
+    GET_GLUE(%eax)
+    jmp       .LOP_IPUT_OBJECT_QUICK_finish
 
 /* ------------------------------ */
     .balign 64
@@ -6043,8 +6113,6 @@ dvmAsmInstructionStart = .L_OP_NOP
     movl      (%eax,%ecx,4),%eax        # eax<- vtable[BBBB]
     jmp       common_invokeMethodNoRange
 
-
-
 /* ------------------------------ */
     .balign 64
 .L_OP_INVOKE_VIRTUAL_QUICK_RANGE: /* 0xf9 */
@@ -6070,8 +6138,6 @@ dvmAsmInstructionStart = .L_OP_NOP
     EXPORT_PC()                         # might throw later - get ready
     movl      (%eax,%ecx,4),%eax        # eax<- vtable[BBBB]
     jmp       common_invokeMethodRange
-
-
 
 
 /* ------------------------------ */
@@ -6101,7 +6167,6 @@ dvmAsmInstructionStart = .L_OP_NOP
     EXPORT_PC()
     movl      (%ecx,%eax,4),%eax        # eax<- super->vtable[BBBB]
     jmp       common_invokeMethodNoRange
-
 
 /* ------------------------------ */
     .balign 64
@@ -6133,29 +6198,82 @@ dvmAsmInstructionStart = .L_OP_NOP
     jmp       common_invokeMethodRange
 
 
+/* ------------------------------ */
+    .balign 64
+.L_OP_IPUT_OBJECT_VOLATILE: /* 0xfc */
+/* File: x86/OP_IPUT_OBJECT_VOLATILE.S */
+/* File: x86/OP_IPUT_OBJECT.S */
+    /*
+     * Object field put.
+     *
+     * for: iput-object
+     */
+    /* op vA, vB, field@CCCC */
+    GET_GLUE(%ecx)
+    SPILL(rIBASE)                                 # need another reg
+    movzwl  2(rPC),rIBASE                         # rIBASE<- 0000CCCC
+    movl    offGlue_methodClassDex(%ecx),%eax     # eax<- DvmDex
+    movzbl  rINST_HI,%ecx                         # ecx<- BA
+    sarl    $4,%ecx                              # ecx<- B
+    movl    offDvmDex_pResFields(%eax),%eax       # eax<- pDvmDex->pResFields
+    movzbl  rINST_HI,rINST_FULL                   # rINST_FULL<- BA
+    andb    $0xf,rINST_LO                        # rINST_FULL<- A
+    GET_VREG(%ecx,%ecx)                           # ecx<- fp[B], the object ptr
+    movl    (%eax,rIBASE,4),%eax                  # resolved entry
+    testl   %eax,%eax                             # is resolved entry null?
+    jne     .LOP_IPUT_OBJECT_VOLATILE_finish                    # no, already resolved
+    movl    rIBASE,OUT_ARG1(%esp)
+    GET_GLUE(rIBASE)
+    jmp     .LOP_IPUT_OBJECT_VOLATILE_resolve
+
 
 /* ------------------------------ */
     .balign 64
-.L_OP_UNUSED_FC: /* 0xfc */
-/* File: x86/OP_UNUSED_FC.S */
-/* File: x86/unused.S */
-    jmp     common_abort
+.L_OP_SGET_OBJECT_VOLATILE: /* 0xfd */
+/* File: x86/OP_SGET_OBJECT_VOLATILE.S */
+/* File: x86/OP_SGET.S */
+    /*
+     * General 32-bit SGET handler.
+     *
+     * for: sget, sget-object, sget-boolean, sget-byte, sget-char, sget-short
+     */
+    /* op vAA, field@BBBB */
+    GET_GLUE(%ecx)
+    movzwl    2(rPC),%eax                        # eax<- field ref BBBB
+    movl      offGlue_methodClassDex(%ecx),%ecx  # ecx<- DvmDex
+    movl      offDvmDex_pResFields(%ecx),%ecx    # ecx<- dvmDex->pResFields
+    movl      (%ecx,%eax,4),%eax                 # eax<- resolved StaticField ptr
+    testl     %eax,%eax                          # resolved entry null?
+    je        .LOP_SGET_OBJECT_VOLATILE_resolve                # if not, make it so
+.LOP_SGET_OBJECT_VOLATILE_finish:     # field ptr in eax
+    movl      offStaticField_value(%eax),%eax
+    movzbl    rINST_HI,%ecx                      # ecx<- AA
+    FETCH_INST_WORD(2)
+    ADVANCE_PC(2)
+    SET_VREG(%eax,%ecx)
+    GOTO_NEXT
 
 
 /* ------------------------------ */
     .balign 64
-.L_OP_UNUSED_FD: /* 0xfd */
-/* File: x86/OP_UNUSED_FD.S */
-/* File: x86/unused.S */
-    jmp     common_abort
-
-
-/* ------------------------------ */
-    .balign 64
-.L_OP_UNUSED_FE: /* 0xfe */
-/* File: x86/OP_UNUSED_FE.S */
-/* File: x86/unused.S */
-    jmp     common_abort
+.L_OP_SPUT_OBJECT_VOLATILE: /* 0xfe */
+/* File: x86/OP_SPUT_OBJECT_VOLATILE.S */
+/* File: x86/OP_SPUT_OBJECT.S */
+    /*
+     * SPUT object handler.
+     */
+    /* op vAA, field@BBBB */
+    GET_GLUE(%ecx)
+    movzwl    2(rPC),%eax                        # eax<- field ref BBBB
+    movl      offGlue_methodClassDex(%ecx),%ecx  # ecx<- DvmDex
+    movl      offDvmDex_pResFields(%ecx),%ecx    # ecx<- dvmDex->pResFields
+    movl      (%ecx,%eax,4),%eax                 # eax<- resolved StaticField
+    testl     %eax,%eax                          # resolved entry null?
+    je        .LOP_SPUT_OBJECT_VOLATILE_resolve                # if not, make it so
+.LOP_SPUT_OBJECT_VOLATILE_finish:     # field ptr in eax
+    movzbl    rINST_HI,%ecx                      # ecx<- AA
+    GET_VREG(%ecx,%ecx)
+    jmp       .LOP_SPUT_OBJECT_VOLATILE_continue
 
 
 /* ------------------------------ */
@@ -6206,7 +6324,6 @@ dvmAsmSisterStart:
     ADVANCE_PC(2)
     GOTO_NEXT
 
-
 /* continuation for OP_CONST_STRING_JUMBO */
 
 /* This is the less common path, so we'll redo some work
@@ -6229,7 +6346,6 @@ dvmAsmSisterStart:
     FETCH_INST_WORD(3)
     ADVANCE_PC(3)
     GOTO_NEXT
-
 
 /* continuation for OP_CONST_CLASS */
 
@@ -6254,7 +6370,6 @@ dvmAsmSisterStart:
     FETCH_INST_WORD(2)
     ADVANCE_PC(2)
     GOTO_NEXT
-
 
 /* continuation for OP_MONITOR_ENTER */
 
@@ -6412,7 +6527,6 @@ dvmAsmSisterStart:
     movl    offObject_clazz(%eax),%eax  # eax<- obj->clazz
     jmp     .LOP_INSTANCE_OF_resolved
 
-
 /* continuation for OP_NEW_INSTANCE */
 
 .LOP_NEW_INSTANCE_initialized:  # on entry, ecx<- class
@@ -6481,9 +6595,6 @@ dvmAsmSisterStart:
     UNSPILL(rPC)
     jmp     common_exceptionThrown
 
-
-
-
 /* continuation for OP_NEW_ARRAY */
 
     /*
@@ -6530,7 +6641,6 @@ dvmAsmSisterStart:
     ADVANCE_PC(2)
     GOTO_NEXT
 
-
 /* continuation for OP_FILLED_NEW_ARRAY */
 
 .LOP_FILLED_NEW_ARRAY_more:
@@ -6555,6 +6665,7 @@ dvmAsmSisterStart:
     movl    $ALLOC_DONT_TRACK,OUT_ARG2(%esp)     # arg2<- flags
     movzbl  1(%ecx),%ecx                          # ecx<- descriptor[1]
     movl    %eax,OUT_ARG0(%esp)                   # arg0<- arrayClass
+    GET_GLUE(%eax)
     cmpb    $'I',%cl                             # supported?
     je      1f
     cmpb    $'L',%cl
@@ -6562,6 +6673,7 @@ dvmAsmSisterStart:
     cmpb    $'[',%cl
     jne      .LOP_FILLED_NEW_ARRAY_notimpl                  # no, not handled yet
 1:
+    movl    %ecx,offGlue_retval+4(%eax)           # save type
     .if      (!0)
     SPILL_TMP(rINST_FULL)                         # save copy, need "B" later
     sarl    $4,rINST_FULL
@@ -6595,7 +6707,9 @@ dvmAsmSisterStart:
     FETCH_INST_WORD(3)
     rep
     movsd
+    GET_GLUE(%ecx)
     UNSPILL(rIBASE)
+    movl    offGlue_retval+4(%ecx),%eax      # eax<- type
     UNSPILL(rFP)
     .else
     testl  rINST_FULL,rINST_FULL
@@ -6614,10 +6728,19 @@ dvmAsmSisterStart:
     sub    $1,rINST_FULL
     jne    3b
 4:
+    GET_GLUE(%ecx)
     UNSPILL(rPC)
+    movl    offGlue_retval+4(%ecx),%eax      # eax<- type
     FETCH_INST_WORD(3)
     .endif
 
+    cmpb    $'I',%al                        # Int array?
+    je      5f                               # skip card mark if so
+    movl    offGlue_retval(%ecx),%eax        # eax<- object head
+    movl    offGlue_cardTable(%ecx),%ecx     # card table base
+    shrl    $GC_CARD_SHIFT,%eax             # convert to card num
+    movb    %cl,(%ecx,%eax)                  # mark card
+5:
     ADVANCE_PC(3)
     GOTO_NEXT
 
@@ -6634,7 +6757,6 @@ dvmAsmSisterStart:
     call    dvmThrowException
     UNSPILL(rPC)
     jmp     common_exceptionThrown
-
 
 /* continuation for OP_FILLED_NEW_ARRAY_RANGE */
 
@@ -6660,6 +6782,7 @@ dvmAsmSisterStart:
     movl    $ALLOC_DONT_TRACK,OUT_ARG2(%esp)     # arg2<- flags
     movzbl  1(%ecx),%ecx                          # ecx<- descriptor[1]
     movl    %eax,OUT_ARG0(%esp)                   # arg0<- arrayClass
+    GET_GLUE(%eax)
     cmpb    $'I',%cl                             # supported?
     je      1f
     cmpb    $'L',%cl
@@ -6667,6 +6790,7 @@ dvmAsmSisterStart:
     cmpb    $'[',%cl
     jne      .LOP_FILLED_NEW_ARRAY_RANGE_notimpl                  # no, not handled yet
 1:
+    movl    %ecx,offGlue_retval+4(%eax)           # save type
     .if      (!1)
     SPILL_TMP(rINST_FULL)                         # save copy, need "B" later
     sarl    $4,rINST_FULL
@@ -6700,7 +6824,9 @@ dvmAsmSisterStart:
     FETCH_INST_WORD(3)
     rep
     movsd
+    GET_GLUE(%ecx)
     UNSPILL(rIBASE)
+    movl    offGlue_retval+4(%ecx),%eax      # eax<- type
     UNSPILL(rFP)
     .else
     testl  rINST_FULL,rINST_FULL
@@ -6719,10 +6845,19 @@ dvmAsmSisterStart:
     sub    $1,rINST_FULL
     jne    3b
 4:
+    GET_GLUE(%ecx)
     UNSPILL(rPC)
+    movl    offGlue_retval+4(%ecx),%eax      # eax<- type
     FETCH_INST_WORD(3)
     .endif
 
+    cmpb    $'I',%al                        # Int array?
+    je      5f                               # skip card mark if so
+    movl    offGlue_retval(%ecx),%eax        # eax<- object head
+    movl    offGlue_cardTable(%ecx),%ecx     # card table base
+    shrl    $GC_CARD_SHIFT,%eax             # convert to card num
+    movb    %cl,(%ecx,%eax)                  # mark card
+5:
     ADVANCE_PC(3)
     GOTO_NEXT
 
@@ -6739,7 +6874,6 @@ dvmAsmSisterStart:
     call    dvmThrowException
     UNSPILL(rPC)
     jmp     common_exceptionThrown
-
 
 /* continuation for OP_CMPL_FLOAT */
 
@@ -6792,7 +6926,6 @@ dvmAsmSisterStart:
     ADVANCE_PC(2)
     GOTO_NEXT
 
-
 /* continuation for OP_APUT_WIDE */
 
 .LOP_APUT_WIDE_finish:
@@ -6804,7 +6937,6 @@ dvmAsmSisterStart:
     movl      %ecx,(%eax)
     ADVANCE_PC(2)
     GOTO_NEXT
-
 
 /* continuation for OP_APUT_OBJECT */
 
@@ -6827,14 +6959,21 @@ dvmAsmSisterStart:
     UNSPILL(rPC)
     UNSPILL_TMP(%ecx)
     testl     %eax,%eax
+    GET_GLUE(%eax)
     je        common_errArrayStore
+    movl      offGlue_cardTable(%eax),%eax   # get card table base
+    movl      rINST_FULL,(%ecx)
+    FETCH_INST_WORD(2)
+    shrl      $GC_CARD_SHIFT,%ecx           # convert addr to card number
+    movb      %al,(%eax,%ecx)                # mark card
+    ADVANCE_PC(2)
+    GOTO_NEXT
 
 .LOP_APUT_OBJECT_skip_check:
     movl      rINST_FULL,(%ecx)
     FETCH_INST_WORD(2)
     ADVANCE_PC(2)
     GOTO_NEXT
-
 
 /* continuation for OP_IGET */
 
@@ -6872,7 +7011,6 @@ dvmAsmSisterStart:
     SET_VREG(%ecx,%eax)
     ADVANCE_PC(2)
     GOTO_NEXT
-
 
 /* continuation for OP_IGET_WIDE */
 
@@ -6913,7 +7051,6 @@ dvmAsmSisterStart:
     ADVANCE_PC(2)
     GOTO_NEXT
 
-
 /* continuation for OP_IGET_OBJECT */
 
 
@@ -6950,7 +7087,6 @@ dvmAsmSisterStart:
     SET_VREG(%ecx,%eax)
     ADVANCE_PC(2)
     GOTO_NEXT
-
 
 /* continuation for OP_IGET_BOOLEAN */
 
@@ -6989,7 +7125,6 @@ dvmAsmSisterStart:
     ADVANCE_PC(2)
     GOTO_NEXT
 
-
 /* continuation for OP_IGET_BYTE */
 
 
@@ -7026,7 +7161,6 @@ dvmAsmSisterStart:
     SET_VREG(%ecx,%eax)
     ADVANCE_PC(2)
     GOTO_NEXT
-
 
 /* continuation for OP_IGET_CHAR */
 
@@ -7065,7 +7199,6 @@ dvmAsmSisterStart:
     ADVANCE_PC(2)
     GOTO_NEXT
 
-
 /* continuation for OP_IGET_SHORT */
 
 
@@ -7102,7 +7235,6 @@ dvmAsmSisterStart:
     SET_VREG(%ecx,%eax)
     ADVANCE_PC(2)
     GOTO_NEXT
-
 
 /* continuation for OP_IPUT */
 
@@ -7210,8 +7342,15 @@ dvmAsmSisterStart:
     UNSPILL(rIBASE)
     testl   %ecx,%ecx                            # object null?
     je      common_errNullObject                 # object was null
-    movl   rINST_FULL,(%ecx,%eax,1)            # obj.field <- v[A](8/16/32 bits)
+    movl    rINST_FULL,(%ecx,%eax)          # obj.field <- v[A](8/16/32 bits)
+    GET_GLUE(%eax)
+    testl   rINST_FULL,rINST_FULL                # stored a NULL?
+    movl    offGlue_cardTable(%eax),%eax         # get card table base
     FETCH_INST_WORD(2)
+    je      1f                                   # skip card mark if null store
+    shrl    $GC_CARD_SHIFT,%ecx                 # object head to card number
+    movb    %al,(%eax,%ecx)                      # mark card
+1:
     ADVANCE_PC(2)
     GOTO_NEXT
 
@@ -7379,7 +7518,6 @@ dvmAsmSisterStart:
     jne      .LOP_SGET_finish                 # success, continue
     jmp      common_exceptionThrown             # no, handle exception
 
-
 /* continuation for OP_SGET_WIDE */
 
     /*
@@ -7399,7 +7537,6 @@ dvmAsmSisterStart:
     testl    %eax,%eax
     jne      .LOP_SGET_WIDE_finish                 # success, continue
     jmp      common_exceptionThrown             # no, handle exception
-
 
 /* continuation for OP_SGET_OBJECT */
 
@@ -7421,7 +7558,6 @@ dvmAsmSisterStart:
     jne      .LOP_SGET_OBJECT_finish                 # success, continue
     jmp      common_exceptionThrown             # no, handle exception
 
-
 /* continuation for OP_SGET_BOOLEAN */
 
     /*
@@ -7441,7 +7577,6 @@ dvmAsmSisterStart:
     testl    %eax,%eax
     jne      .LOP_SGET_BOOLEAN_finish                 # success, continue
     jmp      common_exceptionThrown             # no, handle exception
-
 
 /* continuation for OP_SGET_BYTE */
 
@@ -7463,7 +7598,6 @@ dvmAsmSisterStart:
     jne      .LOP_SGET_BYTE_finish                 # success, continue
     jmp      common_exceptionThrown             # no, handle exception
 
-
 /* continuation for OP_SGET_CHAR */
 
     /*
@@ -7483,7 +7617,6 @@ dvmAsmSisterStart:
     testl    %eax,%eax
     jne      .LOP_SGET_CHAR_finish                 # success, continue
     jmp      common_exceptionThrown             # no, handle exception
-
 
 /* continuation for OP_SGET_SHORT */
 
@@ -7505,7 +7638,6 @@ dvmAsmSisterStart:
     jne      .LOP_SGET_SHORT_finish                 # success, continue
     jmp      common_exceptionThrown             # no, handle exception
 
-
 /* continuation for OP_SPUT */
 
     /*
@@ -7525,7 +7657,6 @@ dvmAsmSisterStart:
     testl    %eax,%eax
     jne      .LOP_SPUT_finish                 # success, continue
     jmp      common_exceptionThrown             # no, handle exception
-
 
 /* continuation for OP_SPUT_WIDE */
 
@@ -7547,12 +7678,22 @@ dvmAsmSisterStart:
     jne      .LOP_SPUT_WIDE_finish                 # success, continue
     jmp      common_exceptionThrown             # no, handle exception
 
-
 /* continuation for OP_SPUT_OBJECT */
 
-    /*
-     * Go resolve the field
-     */
+
+.LOP_SPUT_OBJECT_continue:
+    movl      %ecx,offStaticField_value(%eax)
+    testl     %ecx,%ecx
+    GET_GLUE(%ecx)
+    FETCH_INST_WORD(2)
+    je        1f
+    movl      offGlue_cardTable(%ecx),%ecx       # get card table base
+    shrl      $GC_CARD_SHIFT,%eax               # head to card number
+    movb      %cl,(%ecx,%eax)                    # mark card
+1:
+    ADVANCE_PC(2)
+    GOTO_NEXT
+
 .LOP_SPUT_OBJECT_resolve:
     GET_GLUE(%ecx)
     movzwl   2(rPC),%eax                        # eax<- field ref BBBB
@@ -7567,7 +7708,6 @@ dvmAsmSisterStart:
     testl    %eax,%eax
     jne      .LOP_SPUT_OBJECT_finish                 # success, continue
     jmp      common_exceptionThrown             # no, handle exception
-
 
 /* continuation for OP_SPUT_BOOLEAN */
 
@@ -7589,7 +7729,6 @@ dvmAsmSisterStart:
     jne      .LOP_SPUT_BOOLEAN_finish                 # success, continue
     jmp      common_exceptionThrown             # no, handle exception
 
-
 /* continuation for OP_SPUT_BYTE */
 
     /*
@@ -7609,7 +7748,6 @@ dvmAsmSisterStart:
     testl    %eax,%eax
     jne      .LOP_SPUT_BYTE_finish                 # success, continue
     jmp      common_exceptionThrown             # no, handle exception
-
 
 /* continuation for OP_SPUT_CHAR */
 
@@ -7631,7 +7769,6 @@ dvmAsmSisterStart:
     jne      .LOP_SPUT_CHAR_finish                 # success, continue
     jmp      common_exceptionThrown             # no, handle exception
 
-
 /* continuation for OP_SPUT_SHORT */
 
     /*
@@ -7651,7 +7788,6 @@ dvmAsmSisterStart:
     testl    %eax,%eax
     jne      .LOP_SPUT_SHORT_finish                 # success, continue
     jmp      common_exceptionThrown             # no, handle exception
-
 
 /* continuation for OP_INVOKE_VIRTUAL */
 
@@ -7683,7 +7819,6 @@ dvmAsmSisterStart:
     movl      offClassObject_vtable(%ecx),%ecx # ecx<- thisPtr->clazz->vtable
     movl      (%ecx,%eax,4),%eax        # eax<- vtable[methodIndex]
     jmp       common_invokeMethodNoRange
-
 
 /* continuation for OP_INVOKE_SUPER */
 
@@ -7767,7 +7902,6 @@ dvmAsmSisterStart:
     jne       common_invokeMethodNoRange
     jmp       common_exceptionThrown
 
-
 /* continuation for OP_INVOKE_INTERFACE */
 
 .LOP_INVOKE_INTERFACE_continue:
@@ -7776,7 +7910,6 @@ dvmAsmSisterStart:
     testl      %eax,%eax
     je         common_exceptionThrown
     jmp        common_invokeMethodNoRange
-
 
 /* continuation for OP_INVOKE_VIRTUAL_RANGE */
 
@@ -7808,7 +7941,6 @@ dvmAsmSisterStart:
     movl      offClassObject_vtable(%ecx),%ecx # ecx<- thisPtr->clazz->vtable
     movl      (%ecx,%eax,4),%eax        # eax<- vtable[methodIndex]
     jmp       common_invokeMethodRange
-
 
 /* continuation for OP_INVOKE_SUPER_RANGE */
 
@@ -7892,7 +8024,6 @@ dvmAsmSisterStart:
     jne       common_invokeMethodRange
     jmp       common_exceptionThrown
 
-
 /* continuation for OP_INVOKE_INTERFACE_RANGE */
 
 .LOP_INVOKE_INTERFACE_RANGE_continue:
@@ -7901,7 +8032,6 @@ dvmAsmSisterStart:
     testl      %eax,%eax
     je         common_exceptionThrown
     jmp        common_invokeMethodRange
-
 
 /* continuation for OP_FLOAT_TO_INT */
 
@@ -8072,7 +8202,6 @@ dvmAsmSisterStart:
     ADVANCE_PC(2)
     GOTO_NEXT
 
-
 /* continuation for OP_DIV_LONG */
 
 .LOP_DIV_LONG_continue:
@@ -8105,9 +8234,6 @@ dvmAsmSisterStart:
     movl     $0x80000000,%edx
     jmp      .LOP_DIV_LONG_finish
 
-
-
-
 /* continuation for OP_REM_LONG */
 
 .LOP_REM_LONG_continue:
@@ -8139,9 +8265,6 @@ dvmAsmSisterStart:
     xorl     %eax,%eax
     movl     $0,%edx
     jmp      .LOP_REM_LONG_finish
-
-
-
 
 /* continuation for OP_SHL_LONG */
 
@@ -8202,7 +8325,6 @@ dvmAsmSisterStart:
     ADVANCE_PC(1)
     GOTO_NEXT
 
-
 /* continuation for OP_DIV_LONG_2ADDR */
 
 .LOP_DIV_LONG_2ADDR_continue:
@@ -8238,7 +8360,6 @@ dvmAsmSisterStart:
     movl     $0x80000000,%edx
     jmp      .LOP_DIV_LONG_2ADDR_finish
 
-
 /* continuation for OP_REM_LONG_2ADDR */
 
 .LOP_REM_LONG_2ADDR_continue:
@@ -8273,7 +8394,6 @@ dvmAsmSisterStart:
     xorl     %eax,%eax
     movl     $0,%edx
     jmp      .LOP_REM_LONG_2ADDR_finish
-
 
 /* continuation for OP_SHL_LONG_2ADDR */
 
@@ -8346,6 +8466,156 @@ dvmAsmSisterStart:
     ADVANCE_PC(2)
     GOTO_NEXT
 
+/* continuation for OP_IGET_VOLATILE */
+
+
+.LOP_IGET_VOLATILE_resolve:
+    EXPORT_PC()
+    SPILL(rPC)
+    movl    offGlue_method(rIBASE),rPC            # rPC<- current method
+    UNSPILL(rIBASE)
+    movl    offMethod_clazz(rPC),rPC              # rPC<- method->clazz
+    SPILL_TMP(%ecx)                               # save object pointer across call
+    movl    rPC,OUT_ARG0(%esp)                    # pass in method->clazz
+    call    dvmResolveInstField                   #  ... to dvmResolveInstField
+    UNSPILL_TMP(%ecx)
+    UNSPILL(rPC)
+    testl   %eax,%eax                             #  ... which returns InstrField ptr
+    jne     .LOP_IGET_VOLATILE_finish
+    jmp     common_exceptionThrown
+
+.LOP_IGET_VOLATILE_finish:
+    /*
+     * Currently:
+     *   eax holds resolved field
+     *   ecx holds object
+     *   rIBASE is scratch, but needs to be unspilled
+     *   rINST_FULL holds A
+     */
+    movl    offInstField_byteOffset(%eax),%eax   # eax<- byte offset of field
+    UNSPILL(rIBASE)
+    testl   %ecx,%ecx                            # object null?
+    je      common_errNullObject                 # object was null
+    movl   (%ecx,%eax,1),%ecx                   # ecx<- obj.field (8/16/32 bits)
+    movl    rINST_FULL,%eax                      # eax<- A
+    FETCH_INST_WORD(2)
+    SET_VREG(%ecx,%eax)
+    ADVANCE_PC(2)
+    GOTO_NEXT
+
+/* continuation for OP_IPUT_VOLATILE */
+
+
+.LOP_IPUT_VOLATILE_resolve:
+    EXPORT_PC()
+    SPILL(rPC)
+    movl    offGlue_method(rIBASE),rPC            # rPC<- current method
+    UNSPILL(rIBASE)
+    movl    offMethod_clazz(rPC),rPC              # rPC<- method->clazz
+    SPILL_TMP(%ecx)                               # save object pointer across call
+    movl    rPC,OUT_ARG0(%esp)                    # pass in method->clazz
+    call    dvmResolveInstField                   #  ... to dvmResolveInstField
+    UNSPILL_TMP(%ecx)
+    UNSPILL(rPC)
+    testl   %eax,%eax                             #  ... which returns InstrField ptr
+    jne     .LOP_IPUT_VOLATILE_finish
+    jmp     common_exceptionThrown
+
+.LOP_IPUT_VOLATILE_finish:
+    /*
+     * Currently:
+     *   eax holds resolved field
+     *   ecx holds object
+     *   rIBASE is scratch, but needs to be unspilled
+     *   rINST_FULL holds A
+     */
+    GET_VREG(rINST_FULL,rINST_FULL)              # rINST_FULL<- v[A]
+    movl    offInstField_byteOffset(%eax),%eax   # eax<- byte offset of field
+    UNSPILL(rIBASE)
+    testl   %ecx,%ecx                            # object null?
+    je      common_errNullObject                 # object was null
+    movl   rINST_FULL,(%ecx,%eax,1)            # obj.field <- v[A](8/16/32 bits)
+    FETCH_INST_WORD(2)
+    ADVANCE_PC(2)
+    GOTO_NEXT
+
+/* continuation for OP_SGET_VOLATILE */
+
+    /*
+     * Go resolve the field
+     */
+.LOP_SGET_VOLATILE_resolve:
+    GET_GLUE(%ecx)
+    movzwl   2(rPC),%eax                        # eax<- field ref BBBB
+    movl     offGlue_method(%ecx),%ecx          # ecx<- current method
+    EXPORT_PC()                                 # could throw, need to export
+    movl     offMethod_clazz(%ecx),%ecx         # ecx<- method->clazz
+    SPILL(rPC)
+    movl     %eax,OUT_ARG1(%esp)
+    movl     %ecx,OUT_ARG0(%esp)
+    call     dvmResolveStaticField              # eax<- resolved StaticField ptr
+    UNSPILL(rPC)
+    testl    %eax,%eax
+    jne      .LOP_SGET_VOLATILE_finish                 # success, continue
+    jmp      common_exceptionThrown             # no, handle exception
+
+/* continuation for OP_SPUT_VOLATILE */
+
+    /*
+     * Go resolve the field
+     */
+.LOP_SPUT_VOLATILE_resolve:
+    GET_GLUE(%ecx)
+    movzwl   2(rPC),%eax                        # eax<- field ref BBBB
+    movl     offGlue_method(%ecx),%ecx          # ecx<- current method
+    EXPORT_PC()                                 # could throw, need to export
+    movl     offMethod_clazz(%ecx),%ecx         # ecx<- method->clazz
+    SPILL(rPC)
+    movl     %eax,OUT_ARG1(%esp)
+    movl     %ecx,OUT_ARG0(%esp)
+    call     dvmResolveStaticField              # eax<- resolved StaticField ptr
+    UNSPILL(rPC)
+    testl    %eax,%eax
+    jne      .LOP_SPUT_VOLATILE_finish                 # success, continue
+    jmp      common_exceptionThrown             # no, handle exception
+
+/* continuation for OP_IGET_OBJECT_VOLATILE */
+
+
+.LOP_IGET_OBJECT_VOLATILE_resolve:
+    EXPORT_PC()
+    SPILL(rPC)
+    movl    offGlue_method(rIBASE),rPC            # rPC<- current method
+    UNSPILL(rIBASE)
+    movl    offMethod_clazz(rPC),rPC              # rPC<- method->clazz
+    SPILL_TMP(%ecx)                               # save object pointer across call
+    movl    rPC,OUT_ARG0(%esp)                    # pass in method->clazz
+    call    dvmResolveInstField                   #  ... to dvmResolveInstField
+    UNSPILL_TMP(%ecx)
+    UNSPILL(rPC)
+    testl   %eax,%eax                             #  ... which returns InstrField ptr
+    jne     .LOP_IGET_OBJECT_VOLATILE_finish
+    jmp     common_exceptionThrown
+
+.LOP_IGET_OBJECT_VOLATILE_finish:
+    /*
+     * Currently:
+     *   eax holds resolved field
+     *   ecx holds object
+     *   rIBASE is scratch, but needs to be unspilled
+     *   rINST_FULL holds A
+     */
+    movl    offInstField_byteOffset(%eax),%eax   # eax<- byte offset of field
+    UNSPILL(rIBASE)
+    testl   %ecx,%ecx                            # object null?
+    je      common_errNullObject                 # object was null
+    movl   (%ecx,%eax,1),%ecx                   # ecx<- obj.field (8/16/32 bits)
+    movl    rINST_FULL,%eax                      # eax<- A
+    FETCH_INST_WORD(2)
+    SET_VREG(%ecx,%eax)
+    ADVANCE_PC(2)
+    GOTO_NEXT
+
 /* continuation for OP_EXECUTE_INLINE */
 
 .LOP_EXECUTE_INLINE_continue:
@@ -8388,6 +8658,112 @@ dvmAsmSisterStart:
     jmp       *gDvmInlineOpsTable(%eax)
     # will return to caller of .LOP_EXECUTE_INLINE_continue
 
+/* continuation for OP_IPUT_OBJECT_QUICK */
+
+.LOP_IPUT_OBJECT_QUICK_finish:
+    testl     rINST_FULL,rINST_FULL         # did we store null?
+    FETCH_INST_WORD(2)
+    movl      offGlue_cardTable(%eax),%eax  # get card table base
+    je        1f                            # skip card mark if null store
+    shrl      $GC_CARD_SHIFT,%ecx          # object head to card number
+    movb      %al,(%eax,%ecx)               # mark card
+1:
+    ADVANCE_PC(2)
+    GOTO_NEXT
+
+/* continuation for OP_IPUT_OBJECT_VOLATILE */
+
+
+.LOP_IPUT_OBJECT_VOLATILE_resolve:
+    EXPORT_PC()
+    SPILL(rPC)
+    movl    offGlue_method(rIBASE),rPC            # rPC<- current method
+    UNSPILL(rIBASE)
+    movl    offMethod_clazz(rPC),rPC              # rPC<- method->clazz
+    SPILL_TMP(%ecx)                               # save object pointer across call
+    movl    rPC,OUT_ARG0(%esp)                    # pass in method->clazz
+    call    dvmResolveInstField                   #  ... to dvmResolveInstField
+    UNSPILL_TMP(%ecx)
+    UNSPILL(rPC)
+    testl   %eax,%eax                             #  ... which returns InstrField ptr
+    jne     .LOP_IPUT_OBJECT_VOLATILE_finish
+    jmp     common_exceptionThrown
+
+.LOP_IPUT_OBJECT_VOLATILE_finish:
+    /*
+     * Currently:
+     *   eax holds resolved field
+     *   ecx holds object
+     *   rIBASE is scratch, but needs to be unspilled
+     *   rINST_FULL holds A
+     */
+    GET_VREG(rINST_FULL,rINST_FULL)              # rINST_FULL<- v[A]
+    movl    offInstField_byteOffset(%eax),%eax   # eax<- byte offset of field
+    UNSPILL(rIBASE)
+    testl   %ecx,%ecx                            # object null?
+    je      common_errNullObject                 # object was null
+    movl    rINST_FULL,(%ecx,%eax)          # obj.field <- v[A](8/16/32 bits)
+    GET_GLUE(%eax)
+    testl   rINST_FULL,rINST_FULL                # stored a NULL?
+    movl    offGlue_cardTable(%eax),%eax         # get card table base
+    FETCH_INST_WORD(2)
+    je      1f                                   # skip card mark if null store
+    shrl    $GC_CARD_SHIFT,%ecx                 # object head to card number
+    movb    %al,(%eax,%ecx)                      # mark card
+1:
+    ADVANCE_PC(2)
+    GOTO_NEXT
+
+/* continuation for OP_SGET_OBJECT_VOLATILE */
+
+    /*
+     * Go resolve the field
+     */
+.LOP_SGET_OBJECT_VOLATILE_resolve:
+    GET_GLUE(%ecx)
+    movzwl   2(rPC),%eax                        # eax<- field ref BBBB
+    movl     offGlue_method(%ecx),%ecx          # ecx<- current method
+    EXPORT_PC()                                 # could throw, need to export
+    movl     offMethod_clazz(%ecx),%ecx         # ecx<- method->clazz
+    SPILL(rPC)
+    movl     %eax,OUT_ARG1(%esp)
+    movl     %ecx,OUT_ARG0(%esp)
+    call     dvmResolveStaticField              # eax<- resolved StaticField ptr
+    UNSPILL(rPC)
+    testl    %eax,%eax
+    jne      .LOP_SGET_OBJECT_VOLATILE_finish                 # success, continue
+    jmp      common_exceptionThrown             # no, handle exception
+
+/* continuation for OP_SPUT_OBJECT_VOLATILE */
+
+
+.LOP_SPUT_OBJECT_VOLATILE_continue:
+    movl      %ecx,offStaticField_value(%eax)
+    testl     %ecx,%ecx
+    GET_GLUE(%ecx)
+    FETCH_INST_WORD(2)
+    je        1f
+    movl      offGlue_cardTable(%ecx),%ecx       # get card table base
+    shrl      $GC_CARD_SHIFT,%eax               # head to card number
+    movb      %cl,(%ecx,%eax)                    # mark card
+1:
+    ADVANCE_PC(2)
+    GOTO_NEXT
+
+.LOP_SPUT_OBJECT_VOLATILE_resolve:
+    GET_GLUE(%ecx)
+    movzwl   2(rPC),%eax                        # eax<- field ref BBBB
+    movl     offGlue_method(%ecx),%ecx          # ecx<- current method
+    EXPORT_PC()                                 # could throw, need to export
+    movl     offMethod_clazz(%ecx),%ecx         # ecx<- method->clazz
+    SPILL(rPC)
+    movl     %eax,OUT_ARG1(%esp)
+    movl     %ecx,OUT_ARG0(%esp)
+    call     dvmResolveStaticField              # eax<- resolved StaticField ptr
+    UNSPILL(rPC)
+    testl    %eax,%eax
+    jne      .LOP_SPUT_OBJECT_VOLATILE_finish                 # success, continue
+    jmp      common_exceptionThrown             # no, handle exception
 
     .size   dvmAsmSisterStart, .-dvmAsmSisterStart
     .global dvmAsmSisterEnd
@@ -8785,6 +9161,9 @@ common_invokeOld:
  * TUNING: Might be worthwhile to inline this.
  * TODO: Basic-block style Jit will need a hook here as well.  Fold it into
  *       the suspendCount check so we can get both in 1 shot.
+ * TODO: to match the other intepreters, this should handle suspension
+ *       and then check for debugger/profiling after dvmCheckSuspendPending
+ *       returns.
  */
 common_periodicChecks:
     movl    offGlue_pSelfSuspendCount(%ecx),%eax    # eax <- &suspendCount
@@ -8799,9 +9178,11 @@ common_periodicChecks:
     movl   offGlue_pActiveProfilers(%ecx),%ecx     # ecx <- &ActiveProfilers
 #endif
 #if defined(WITH_DEBUGGER) && defined(WITH_PROFILER)
+    # TODO: check for NULL before load
     movzbl (%eax),%eax             # eax <- debuggerActive (boolean)
     orl    (%ecx),%eax             # eax <- debuggerActive || activeProfilers
 #elif defined(WITH_DEBUGGER)
+    # TODO: check for NULL before load
     movzbl (%eax),%eax             # eax <- debuggerActive (boolean)
 #elif defined(WITH_PROFILER)
     movl   (%ecx),%eax             # eax <= activeProfilers
@@ -9045,5 +9426,4 @@ common_abort:
     .asciz  "Ljava/lang/InternalError;"
 .LstrFilledNewArrayNotImpl:
     .asciz  "filled-new-array only implemented for 'int'"
-
 

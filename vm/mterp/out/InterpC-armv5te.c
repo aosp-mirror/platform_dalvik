@@ -422,10 +422,9 @@ static inline bool checkForNullExportPC(Object* obj, u4* fp, const u2* pc)
 #define INTERP_TYPE INTERP_STD
 #define CHECK_DEBUG_AND_PROF() ((void)0)
 # define CHECK_TRACKED_REFS() ((void)0)
-#if defined(WITH_JIT)
-#define CHECK_JIT() (0)
+#define CHECK_JIT_BOOL() (false)
+#define CHECK_JIT_VOID()
 #define ABORT_JIT_TSELECT() ((void)0)
-#endif
 
 /*
  * In the C mterp stubs, "goto" is a function call followed immediately
@@ -1149,6 +1148,11 @@ GOTO_TARGET_DECL(exceptionThrown);
     }                                                                       \
     FINISH(2);
 
+/*
+ * The JIT needs dvmDexGetResolvedField() to return non-null.
+ * Since we use the portable interpreter to build the trace, the extra
+ * checks in HANDLE_SGET_X and HANDLE_SPUT_X are not needed for mterp.
+ */
 #define HANDLE_SGET_X(_opcode, _opname, _ftype, _regsize)                   \
     HANDLE_OPCODE(_opcode /*vAA, field@BBBB*/)                              \
     {                                                                       \
@@ -1162,6 +1166,9 @@ GOTO_TARGET_DECL(exceptionThrown);
             sfield = dvmResolveStaticField(curMethod->clazz, ref);          \
             if (sfield == NULL)                                             \
                 GOTO_exceptionThrown();                                     \
+            if (dvmDexGetResolvedField(methodClassDex, ref) == NULL) {      \
+                ABORT_JIT_TSELECT();                                        \
+            }                                                               \
         }                                                                   \
         SET_REGISTER##_regsize(vdst, dvmGetStaticField##_ftype(sfield));    \
         ILOGV("+ SGET '%s'=0x%08llx",                                       \
@@ -1183,6 +1190,9 @@ GOTO_TARGET_DECL(exceptionThrown);
             sfield = dvmResolveStaticField(curMethod->clazz, ref);          \
             if (sfield == NULL)                                             \
                 GOTO_exceptionThrown();                                     \
+            if (dvmDexGetResolvedField(methodClassDex, ref) == NULL) {      \
+                ABORT_JIT_TSELECT();                                        \
+            }                                                               \
         }                                                                   \
         dvmSetStaticField##_ftype(sfield, GET_REGISTER##_regsize(vdst));    \
         ILOGV("+ SPUT '%s'=0x%08llx",                                       \
@@ -1190,7 +1200,6 @@ GOTO_TARGET_DECL(exceptionThrown);
         UPDATE_FIELD_PUT(&sfield->field);                                   \
     }                                                                       \
     FINISH(2);
-
 
 /* File: cstubs/enddefs.c */
 
@@ -1224,15 +1233,15 @@ void dvmMterpDumpArmRegs(uint32_t r0, uint32_t r1, uint32_t r2, uint32_t r3)
     register uint32_t r9        asm("r9");
     register uint32_t r10       asm("r10");
 
-    extern char dvmAsmInstructionStart[];
+    //extern char dvmAsmInstructionStart[];
 
     printf("REGS: r0=%08x r1=%08x r2=%08x r3=%08x\n", r0, r1, r2, r3);
     printf("    : rPC=%08x rFP=%08x rGLUE=%08x rINST=%08x\n",
         rPC, rFP, rGLUE, rINST);
     printf("    : rIBASE=%08x r9=%08x r10=%08x\n", rIBASE, r9, r10);
 
-    MterpGlue* glue = (MterpGlue*) rGLUE;
-    const Method* method = glue->method;
+    //MterpGlue* glue = (MterpGlue*) rGLUE;
+    //const Method* method = glue->method;
     printf("    + self is %p\n", dvmThreadSelf());
     //printf("    + currently in %s.%s %s\n",
     //    method->clazz->descriptor, method->name, method->shorty);

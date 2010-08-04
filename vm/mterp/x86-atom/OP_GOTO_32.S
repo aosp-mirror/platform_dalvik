@@ -35,4 +35,3 @@
     shl         $$1, %edx               # %edx is doubled to get the byte offset
     jc          common_periodicChecks2  # do check on backwards branch
     FINISH_RB   %edx, %ecx              # jump to next instruction
-

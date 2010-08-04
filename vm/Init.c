@@ -36,8 +36,6 @@
 
 /*
  * Register VM-agnostic native methods for system classes.
- *
- * Currently defined in ../include/nativehelper/AndroidSystemNatives.h
  */
 extern int jniRegisterSystemMethods(JNIEnv* env);
 
@@ -53,6 +51,15 @@ struct DvmGlobals gDvm;
 /* JIT-specific global state */
 #if defined(WITH_JIT)
 struct DvmJitGlobals gDvmJit;
+
+#if defined(WITH_JIT_TUNING)
+/*
+ * Track the number of hits in the inline cache for predicted chaining.
+ * Use an ugly global variable here since it is accessed in assembly code.
+ */
+int gDvmICHitCount;
+#endif
+
 #endif
 
 /*
@@ -104,9 +111,15 @@ static void dvmUsage(const char* progName)
     dvmFprintf(stderr,
                 "  -Xjnigreflimit:N  (must be multiple of 100, >= 200)\n");
     dvmFprintf(stderr, "  -Xjniopts:{warnonly,forcecopy}\n");
+    dvmFprintf(stderr, "  -Xjnitrace:substring (eg NativeClass or nativeMethod)\n");
     dvmFprintf(stderr, "  -Xdeadlockpredict:{off,warn,err,abort}\n");
     dvmFprintf(stderr, "  -Xstacktracefile:<filename>\n");
     dvmFprintf(stderr, "  -Xgc:[no]precise\n");
+    dvmFprintf(stderr, "  -Xgc:[no]overwritefree\n");
+    dvmFprintf(stderr, "  -Xgc:[no]preverify\n");
+    dvmFprintf(stderr, "  -Xgc:[no]postverify\n");
+    dvmFprintf(stderr, "  -Xgc:[no]concurrent\n");
+    dvmFprintf(stderr, "  -Xgc:[no]verifycardtable\n");
     dvmFprintf(stderr, "  -Xgenregmap\n");
     dvmFprintf(stderr, "  -Xcheckdexsum\n");
 #if defined(WITH_JIT)
@@ -143,9 +156,6 @@ static void dvmUsage(const char* progName)
 #ifdef WITH_HPROF_STACK
         " hprof_stack"
 #endif
-#ifdef WITH_HPROF_STACK_UNREACHABLE
-        " hprof_stack_unreachable"
-#endif
 #ifdef WITH_ALLOC_LIMITS
         " alloc_limits"
 #endif
@@ -175,9 +185,6 @@ static void dvmUsage(const char* progName)
 #endif
 #ifdef PROFILE_FIELD_ACCESS
         " profile_field_access"
-#endif
-#ifdef DVM_TRACK_HEAP_MARKING
-        " track_heap_marking"
 #endif
 #if DVM_RESOLVER_CACHE == DVM_RC_REDUCING
         " resolver_cache_reducing"
@@ -220,7 +227,7 @@ static void showVersion(void)
 {
     dvmFprintf(stdout, "DalvikVM version %d.%d.%d\n",
         DALVIK_MAJOR_VERSION, DALVIK_MINOR_VERSION, DALVIK_BUG_VERSION);
-    dvmFprintf(stdout, 
+    dvmFprintf(stdout,
         "Copyright (C) 2007 The Android Open Source Project\n\n"
         "This software is built from source code licensed under the "
         "Apache License,\n"
@@ -630,7 +637,7 @@ static void processXjitmethod(const char *opt)
     gDvmJit.methodTable = dvmHashTableCreate(8, NULL);
 
     start = buf;
-    /* 
+    /*
      * Break comma-separated method signatures and enter them into the hash
      * table individually.
      */
@@ -828,7 +835,6 @@ static int dvmProcessOptions(int argc, const char* const argv[],
             strncmp(argv[i], "-agentlib:jdwp=", 15) == 0)
         {
             const char* tail;
-            bool result = false;
 
             if (argv[i][1] == 'X')
                 tail = argv[i] + 10;
@@ -880,7 +886,8 @@ static int dvmProcessOptions(int argc, const char* const argv[],
                 return -1;
             }
             gDvm.jniGrefLimit = lim;
-
+        } else if (strncmp(argv[i], "-Xjnitrace:", 11) == 0) {
+            gDvm.jniTrace = strdup(argv[i] + 11);
         } else if (strcmp(argv[i], "-Xlog-stdio") == 0) {
             gDvm.logStdio = true;
 
@@ -900,7 +907,8 @@ static int dvmProcessOptions(int argc, const char* const argv[],
                     /* keep going */
                 }
             } else {
-                /* disable JIT -- nothing to do here for now */
+                /* disable JIT if it was enabled by default */
+                gDvm.executionMode = kExecutionModeInterpFast;
             }
 
         } else if (strncmp(argv[i], "-Xlockprofthreshold:", 20) == 0) {
@@ -967,6 +975,26 @@ static int dvmProcessOptions(int argc, const char* const argv[],
                 gDvm.preciseGc = true;
             else if (strcmp(argv[i] + 5, "noprecise") == 0)
                 gDvm.preciseGc = false;
+            else if (strcmp(argv[i] + 5, "overwritefree") == 0)
+                gDvm.overwriteFree = true;
+            else if (strcmp(argv[i] + 5, "nooverwritefree") == 0)
+                gDvm.overwriteFree = false;
+            else if (strcmp(argv[i] + 5, "preverify") == 0)
+                gDvm.preVerify = true;
+            else if (strcmp(argv[i] + 5, "nopreverify") == 0)
+                gDvm.preVerify = false;
+            else if (strcmp(argv[i] + 5, "postverify") == 0)
+                gDvm.postVerify = true;
+            else if (strcmp(argv[i] + 5, "nopostverify") == 0)
+                gDvm.postVerify = false;
+            else if (strcmp(argv[i] + 5, "concurrent") == 0)
+                gDvm.concurrentMarkSweep = true;
+            else if (strcmp(argv[i] + 5, "noconcurrent") == 0)
+                gDvm.concurrentMarkSweep = false;
+            else if (strcmp(argv[i] + 5, "verifycardtable") == 0)
+                gDvm.verifyCardTable = true;
+            else if (strcmp(argv[i] + 5, "noverifycardtable") == 0)
+                gDvm.verifyCardTable = false;
             else {
                 dvmFprintf(stderr, "Bad value for -Xgc");
                 return -1;
@@ -1018,6 +1046,8 @@ static void setCommandLineDefaults()
     gDvm.heapSizeStart = 2 * 1024 * 1024;   // Spec says 16MB; too big for us.
     gDvm.heapSizeMax = 16 * 1024 * 1024;    // Spec says 75% physical mem
     gDvm.stackSize = kDefaultStackSize;
+
+    gDvm.concurrentMarkSweep = true;
 
     /* gDvm.jdwpSuspend = true; */
 
@@ -1355,7 +1385,7 @@ bool dvmInitAfterZygote(void)
 {
     u8 startHeap, startQuit, startJdwp;
     u8 endHeap, endQuit, endJdwp;
-    
+
     startHeap = dvmGetRelativeTimeUsec();
 
     /*
@@ -1575,12 +1605,14 @@ void dvmShutdown(void)
     /*
      * Stop our internal threads.
      */
-    dvmHeapWorkerShutdown();
+    dvmGcThreadShutdown();
 
     if (gDvm.jdwpState != NULL)
         dvmJdwpShutdown(gDvm.jdwpState);
     free(gDvm.jdwpHost);
     gDvm.jdwpHost = NULL;
+    free(gDvm.jniTrace);
+    gDvm.jniTrace = NULL;
     free(gDvm.stackTraceFile);
     gDvm.stackTraceFile = NULL;
 

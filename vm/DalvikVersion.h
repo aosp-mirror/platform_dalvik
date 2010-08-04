@@ -24,7 +24,7 @@
  * The version we show to tourists.
  */
 #define DALVIK_MAJOR_VERSION    1
-#define DALVIK_MINOR_VERSION    3
+#define DALVIK_MINOR_VERSION    4
 #define DALVIK_BUG_VERSION      0
 
 /*
@@ -32,6 +32,6 @@
  * way classes load changes, e.g. field ordering or vtable layout.  Changing
  * this guarantees that the optimized form of the DEX file is regenerated.
  */
-#define DALVIK_VM_BUILD         19
+#define DALVIK_VM_BUILD         23
 
 #endif /*_DALVIK_VERSION*/

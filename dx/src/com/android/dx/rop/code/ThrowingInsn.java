@@ -33,7 +33,7 @@ public final class ThrowingInsn
     /**
      * Gets the string form of a register spec list to be used as a catches
      * list.
-     * 
+     *
      * @param catches {@code non-null;} the catches list
      * @return {@code non-null;} the string form
      */
@@ -53,7 +53,7 @@ public final class ThrowingInsn
 
     /**
      * Constructs an instance.
-     * 
+     *
      * @param opcode {@code non-null;} the opcode
      * @param position {@code non-null;} source position
      * @param sources {@code non-null;} specs for all the sources

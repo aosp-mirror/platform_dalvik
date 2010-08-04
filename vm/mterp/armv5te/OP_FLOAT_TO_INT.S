@@ -38,4 +38,3 @@ f2i_doconv:
     bl      __aeabi_f2iz                @ convert float to int
     ldmfd   sp!, {r4, pc}
 #endif
-

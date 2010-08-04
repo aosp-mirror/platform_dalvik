@@ -246,4 +246,3 @@ int dvmInstanceofNonTrivial(const ClassObject* instance,
                 INSTANCEOF_CACHE_SIZE, instance, clazz);
 #undef ATOMIC_CACHE_CALC
 }
-

@@ -256,6 +256,7 @@ static ArmLIR *newLIR3(CompilationUnit *cUnit, ArmOpCode opCode,
     return insn;
 }
 
+#if defined(_ARMV7_A) || defined(_ARMV7_A_NEON)
 static ArmLIR *newLIR4(CompilationUnit *cUnit, ArmOpCode opCode,
                            int dest, int src1, int src2, int info)
 {
@@ -271,6 +272,7 @@ static ArmLIR *newLIR4(CompilationUnit *cUnit, ArmOpCode opCode,
     dvmCompilerAppendLIR(cUnit, (LIR *) insn);
     return insn;
 }
+#endif
 
 /*
  * If the next instruction is a move-result or move-result-long,

@@ -80,4 +80,3 @@ class MethodCallBase {
         return 7;
     }
 }
-

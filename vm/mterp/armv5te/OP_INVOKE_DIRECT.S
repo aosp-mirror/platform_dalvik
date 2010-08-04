@@ -45,4 +45,3 @@
     GET_VREG(r2, r10)                   @ r2<- "this" ptr (reload)
     bne     .L${opcode}_finish          @ no, continue
     b       common_exceptionThrown      @ yes, handle exception
-

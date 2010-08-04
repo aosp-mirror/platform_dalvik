@@ -55,10 +55,10 @@ public interface TypeBearer
      * is the same as calling {@code getFrameType()} unless this
      * instance is an int-like type, in which case this method returns
      * {@code BT_INT}.
-     * 
+     *
      * @see #getBasicType
      * @see #getFrameType
-     * 
+     *
      * @return the basic frame type; one of the {@code BT_*} constants
      * defined by {@link Type}
      */
@@ -66,7 +66,7 @@ public interface TypeBearer
 
     /**
      * Returns whether this instance represents a constant value.
-     * 
+     *
      * @return {@code true} if this instance represents a constant value
      * and {@code false} if not
      */

@@ -33,7 +33,7 @@ public final class LocalVariableList extends FixedSizeList {
     /**
      * Returns an instance which is the concatenation of the two given
      * instances. The result is immutable.
-     * 
+     *
      * @param list1 {@code non-null;} first instance
      * @param list2 {@code non-null;} second instance
      * @return {@code non-null;} combined instance
@@ -69,7 +69,7 @@ public final class LocalVariableList extends FixedSizeList {
      * any element whose {name, index, start, length} matches an
      * element in the signature list gets augmented with the
      * corresponding signature. The result is immutable.
-     * 
+     *
      * @param descriptorList {@code non-null;} list with descriptors
      * @param signatureList {@code non-null;} list with signatures
      * @return {@code non-null;} the merged result
@@ -88,7 +88,7 @@ public final class LocalVariableList extends FixedSizeList {
                 item = item.withSignature(signature);
             }
             result.set(i, item);
-        }        
+        }
 
         result.setImmutable();
         return result;
@@ -96,7 +96,7 @@ public final class LocalVariableList extends FixedSizeList {
 
     /**
      * Constructs an instance.
-     * 
+     *
      * @param count the number of elements to be in the list
      */
     public LocalVariableList(int count) {
@@ -105,7 +105,7 @@ public final class LocalVariableList extends FixedSizeList {
 
     /**
      * Gets the indicated item.
-     * 
+     *
      * @param n {@code >= 0;} which item
      * @return {@code null-ok;} the indicated item
      */
@@ -115,7 +115,7 @@ public final class LocalVariableList extends FixedSizeList {
 
     /**
      * Sets the item at the given index.
-     * 
+     *
      * @param n {@code >= 0, < size();} which element
      * @param item {@code non-null;} the item
      */
@@ -129,10 +129,10 @@ public final class LocalVariableList extends FixedSizeList {
 
     /**
      * Sets the item at the given index.
-     * 
+     *
      * <p><b>Note:</b> At least one of {@code descriptor} or
      * {@code signature} must be passed as non-null.</p>
-     * 
+     *
      * @param n {@code >= 0, < size();} which element
      * @param startPc {@code >= 0;} the start pc of this variable's scope
      * @param length {@code >= 0;} the length (in bytecodes) of this variable's
@@ -151,7 +151,7 @@ public final class LocalVariableList extends FixedSizeList {
      * Gets the local variable information in this instance which matches
      * the given {@link com.android.dx.cf.code.LocalVariableList.Item}
      * in all respects but the type descriptor and signature, if any.
-     * 
+     *
      * @param item {@code non-null;} local variable information to match
      * @return {@code null-ok;} the corresponding local variable information stored
      * in this instance, or {@code null} if there is no matching
@@ -176,7 +176,7 @@ public final class LocalVariableList extends FixedSizeList {
      * and local index, if any. <b>Note:</b> In standard classfiles, a
      * variable's start point is listed as the address of the instruction
      * <i>just past</i> the one that sets the variable.
-     * 
+     *
      * @param pc {@code >= 0;} the address to look up
      * @param index {@code >= 0;} the local variable index
      * @return {@code null-ok;} the associated local variable information, or
@@ -220,10 +220,10 @@ public final class LocalVariableList extends FixedSizeList {
 
         /**
          * Constructs an instance.
-         * 
+         *
          * <p><b>Note:</b> At least one of {@code descriptor} or
          * {@code signature} must be passed as non-null.</p>
-         * 
+         *
          * @param startPc {@code >= 0;} the start pc of this variable's scope
          * @param length {@code >= 0;} the length (in bytecodes) of this variable's
          * scope
@@ -265,7 +265,7 @@ public final class LocalVariableList extends FixedSizeList {
 
         /**
          * Gets the start pc of this variable's scope.
-         * 
+         *
          * @return {@code >= 0;} the start pc of this variable's scope
          */
         public int getStartPc() {
@@ -274,7 +274,7 @@ public final class LocalVariableList extends FixedSizeList {
 
         /**
          * Gets the length (in bytecodes) of this variable's scope.
-         * 
+         *
          * @return {@code >= 0;} the length (in bytecodes) of this variable's scope
          */
         public int getLength() {
@@ -311,7 +311,7 @@ public final class LocalVariableList extends FixedSizeList {
 
         /**
          * Gets the variable's local index.
-         * 
+         *
          * @return {@code >= 0;} the variable's local index
          */
         public int getIndex() {
@@ -321,7 +321,7 @@ public final class LocalVariableList extends FixedSizeList {
         /**
          * Gets the variable's type descriptor. This is a convenient shorthand
          * for {@code Type.intern(getDescriptor().getString())}.
-         * 
+         *
          * @return {@code non-null;} the variable's type
          */
         public Type getType() {
@@ -331,7 +331,7 @@ public final class LocalVariableList extends FixedSizeList {
         /**
          * Constructs and returns an instance which is identical to this
          * one, except that the signature is changed to the given value.
-         * 
+         *
          * @param newSignature {@code non-null;} the new signature
          * @return {@code non-null;} an appropriately-constructed instance
          */
@@ -343,7 +343,7 @@ public final class LocalVariableList extends FixedSizeList {
         /**
          * Gets whether this instance matches (describes) the given
          * address and index.
-         * 
+         *
          * @param pc {@code >= 0;} the address in question
          * @param index {@code >= 0;} the local variable index in question
          * @return {@code true} iff this instance matches {@code pc}
@@ -359,7 +359,7 @@ public final class LocalVariableList extends FixedSizeList {
          * Gets whether this instance matches (describes) the given
          * other instance exactly in all fields except type descriptor and
          * type signature.
-         * 
+         *
          * @param other {@code non-null;} the instance to compare to
          * @return {@code true} iff this instance matches
          */

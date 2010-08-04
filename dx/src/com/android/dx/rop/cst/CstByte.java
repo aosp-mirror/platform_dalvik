@@ -26,11 +26,11 @@ public final class CstByte
         extends CstLiteral32 {
     /** {@code non-null;} the value {@code 0} as an instance of this class */
     public static final CstByte VALUE_0 = make((byte) 0);
-    
+
     /**
      * Makes an instance for the given value. This may (but does not
      * necessarily) return an already-allocated instance.
-     * 
+     *
      * @param value the {@code byte} value
      */
     public static CstByte make(byte value) {
@@ -41,7 +41,7 @@ public final class CstByte
      * Makes an instance for the given {@code int} value. This
      * may (but does not necessarily) return an already-allocated
      * instance.
-     * 
+     *
      * @param value the value, which must be in range for a {@code byte}
      * @return {@code non-null;} the appropriate instance
      */
@@ -49,7 +49,7 @@ public final class CstByte
         byte cast = (byte) value;
 
         if (cast != value) {
-            throw new IllegalArgumentException("bogus byte value: " + 
+            throw new IllegalArgumentException("bogus byte value: " +
                     value);
         }
 
@@ -58,7 +58,7 @@ public final class CstByte
 
     /**
      * Constructs an instance. This constructor is private; use {@link #make}.
-     * 
+     *
      * @param value the {@code byte} value
      */
     private CstByte(byte value) {
@@ -90,7 +90,7 @@ public final class CstByte
 
     /**
      * Gets the {@code byte} value.
-     * 
+     *
      * @return the value
      */
     public byte getValue() {

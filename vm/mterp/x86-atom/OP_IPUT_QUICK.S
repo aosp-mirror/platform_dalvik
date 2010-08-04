@@ -35,5 +35,3 @@
     GET_VREG    rINST                   # rINST<- vA
     movl        rINST, (%eax, %ecx)     # object field<- vA
     FGETOP_JMP  2, %edx                 # jump to next instruction; getop, jmp
-
-

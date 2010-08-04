@@ -206,7 +206,6 @@ JdwpError dvmJdwpRegisterEvent(JdwpState* state, JdwpEvent* pEvent)
     state->eventList = pEvent;
     state->numEvents++;
 
-bail:
     unlockEventMutex(state);
 
     return err;
@@ -425,8 +424,6 @@ static bool patternMatch(const char* pattern, const char* target)
             return false;
         return strcmp(pattern+1, target + (targetLen-patLen)) == 0;
     } else if (pattern[patLen-1] == '*') {
-        int i;
-
         return strncmp(pattern, target, patLen-1) == 0;
     } else {
         return strcmp(pattern, target) == 0;
@@ -748,7 +745,7 @@ bool dvmJdwpPostVMStart(JdwpState* state, bool suspend)
 {
     enum JdwpSuspendPolicy suspendPolicy;
     ObjectId threadId = dvmDbgGetThreadSelfId();
-    
+
     if (suspend)
         suspendPolicy = SP_ALL;
     else
@@ -1293,4 +1290,3 @@ void dvmJdwpDdmSendChunkV(JdwpState* state, int type, const struct iovec* iov,
 
     dvmJdwpSendBufferedRequest(state, wrapiov, iovcnt+1);
 }
-

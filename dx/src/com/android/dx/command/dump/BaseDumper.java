@@ -48,7 +48,7 @@ public abstract class BaseDumper
 
     /**
      * {@code non-null;} the file path for the class, excluding any base
-     * directory specification 
+     * directory specification
      */
     private final String filePath;
 
@@ -72,7 +72,7 @@ public abstract class BaseDumper
 
     /**
      * Constructs an instance.
-     * 
+     *
      * @param bytes {@code non-null;} bytes of the (alleged) class file
      * on the left)
      * @param out {@code non-null;} where to dump to
@@ -157,7 +157,7 @@ public abstract class BaseDumper
     /**
      * Gets the current dump cursor (that is, the offset of the expected
      * next byte to dump).
-     * 
+     *
      * @return {@code >= 0;} the dump cursor
      */
     protected final int getAt() {
@@ -166,7 +166,7 @@ public abstract class BaseDumper
 
     /**
      * Sets the dump cursor to the indicated offset in the given array.
-     * 
+     *
      * @param arr {@code non-null;} array in question
      * @param offset {@code >= 0;} offset into the array
      */
@@ -176,7 +176,7 @@ public abstract class BaseDumper
 
     /**
      * Gets the array of {@code byte}s to process.
-     * 
+     *
      * @return {@code non-null;} the bytes
      */
     protected final byte[] getBytes() {
@@ -185,7 +185,7 @@ public abstract class BaseDumper
 
     /**
      * Gets the filesystem/jar path of the file being dumped.
-     * 
+     *
      * @return {@code non-null;} the path
      */
     protected final String getFilePath() {
@@ -194,7 +194,7 @@ public abstract class BaseDumper
 
     /**
      * Gets whether to be strict about parsing.
-     * 
+     *
      * @return whether to be strict about parsing
      */
     protected final boolean getStrictParse() {
@@ -203,7 +203,7 @@ public abstract class BaseDumper
 
     /**
      * Prints the given string to this instance's output stream.
-     * 
+     *
      * @param s {@code null-ok;} string to print
      */
     protected final void print(String s) {
@@ -213,7 +213,7 @@ public abstract class BaseDumper
     /**
      * Prints the given string to this instance's output stream, followed
      * by a newline.
-     * 
+     *
      * @param s {@code null-ok;} string to print
      */
     protected final void println(String s) {
@@ -222,7 +222,7 @@ public abstract class BaseDumper
 
     /**
      * Gets whether this dump is to include raw bytes.
-     * 
+     *
      * @return the raw bytes flag
      */
     protected final boolean getRawBytes() {
@@ -232,7 +232,7 @@ public abstract class BaseDumper
     /**
      * Gets the width of the first column of output. This is {@code 0}
      * unless raw bytes are being included in the output.
-     * 
+     *
      * @return {@code >= 0;} the width of the first column
      */
     protected final int getWidth1() {
@@ -245,7 +245,7 @@ public abstract class BaseDumper
 
     /**
      * Gets the width of the second column of output.
-     * 
+     *
      * @return {@code >= 0;} the width of the second column
      */
     protected final int getWidth2() {
@@ -255,7 +255,7 @@ public abstract class BaseDumper
 
     /**
      * Constructs a hex data dump of the given portion of {@link #bytes}.
-     * 
+     *
      * @param offset offset to start dumping at
      * @param len length to dump
      * @return {@code non-null;} the dump
@@ -267,7 +267,7 @@ public abstract class BaseDumper
     /**
      * Combines a pair of strings as two columns, or if this is one-column
      * output, format the otherwise-second column.
-     * 
+     *
      * @param s1 {@code non-null;} the first column's string
      * @param s2 {@code non-null;} the second column's string
      * @return {@code non-null;} the combined output

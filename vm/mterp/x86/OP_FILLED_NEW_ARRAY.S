@@ -48,6 +48,7 @@
     movl    $$ALLOC_DONT_TRACK,OUT_ARG2(%esp)     # arg2<- flags
     movzbl  1(%ecx),%ecx                          # ecx<- descriptor[1]
     movl    %eax,OUT_ARG0(%esp)                   # arg0<- arrayClass
+    GET_GLUE(%eax)
     cmpb    $$'I',%cl                             # supported?
     je      1f
     cmpb    $$'L',%cl
@@ -55,6 +56,7 @@
     cmpb    $$'[',%cl
     jne      .L${opcode}_notimpl                  # no, not handled yet
 1:
+    movl    %ecx,offGlue_retval+4(%eax)           # save type
     .if      (!$isrange)
     SPILL_TMP(rINST_FULL)                         # save copy, need "B" later
     sarl    $$4,rINST_FULL
@@ -88,7 +90,9 @@
     FETCH_INST_WORD(3)
     rep
     movsd
+    GET_GLUE(%ecx)
     UNSPILL(rIBASE)
+    movl    offGlue_retval+4(%ecx),%eax      # eax<- type
     UNSPILL(rFP)
     .else
     testl  rINST_FULL,rINST_FULL
@@ -107,10 +111,19 @@
     sub    $$1,rINST_FULL
     jne    3b
 4:
+    GET_GLUE(%ecx)
     UNSPILL(rPC)
+    movl    offGlue_retval+4(%ecx),%eax      # eax<- type
     FETCH_INST_WORD(3)
     .endif
 
+    cmpb    $$'I',%al                        # Int array?
+    je      5f                               # skip card mark if so
+    movl    offGlue_retval(%ecx),%eax        # eax<- object head
+    movl    offGlue_cardTable(%ecx),%ecx     # card table base
+    shrl    $$GC_CARD_SHIFT,%eax             # convert to card num
+    movb    %cl,(%ecx,%eax)                  # mark card
+5:
     ADVANCE_PC(3)
     GOTO_NEXT
 
@@ -127,4 +140,3 @@
     call    dvmThrowException
     UNSPILL(rPC)
     jmp     common_exceptionThrown
-

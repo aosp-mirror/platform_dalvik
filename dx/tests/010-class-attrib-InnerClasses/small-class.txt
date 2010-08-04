@@ -35,4 +35,3 @@ cafe babe  # magic
 0003 0000 0001 0002  # Small / null / "Small" / private
 0003 0007 0000 0004  # Small / Zorch / null / protected
 0007 0003 0006 ffff  # Zorch / Small / "Zorch" / all-bits
-

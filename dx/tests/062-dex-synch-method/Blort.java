@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-public class Blort 
+public class Blort
 {
     public synchronized void testInstance1() {
         // This space intentionally left blank.

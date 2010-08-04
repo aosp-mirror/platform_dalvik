@@ -9,4 +9,3 @@ public @interface AnnoFancyType {
     public int num();
     public String name() default "unknown";
 }
-

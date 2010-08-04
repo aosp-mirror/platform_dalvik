@@ -26,6 +26,7 @@
 #
 LOCAL_CFLAGS += -fstrict-aliasing -Wstrict-aliasing=2 -fno-align-jumps
 #LOCAL_CFLAGS += -DUSE_INDIRECT_REF
+LOCAL_CFLAGS += -Wall -Wextra -Wno-unused-parameter
 
 #
 # Optional features.  These may impact the size or performance of the VM.
@@ -98,7 +99,7 @@ endif  # !dvm_make_debug_vm
 
 LOCAL_SRC_FILES := \
 	AllocTracker.c \
-	Atomic.c \
+	Atomic.c.arm \
 	AtomicCache.c \
 	CheckJni.c \
 	Ddm.c \
@@ -129,17 +130,19 @@ LOCAL_SRC_FILES := \
 	UtfString.c \
 	alloc/clz.c.arm \
 	alloc/Alloc.c \
+	alloc/CardTable.c \
 	alloc/HeapBitmap.c.arm \
 	alloc/HeapDebug.c \
-	alloc/HeapSource.c \
 	alloc/HeapTable.c \
 	alloc/HeapWorker.c \
 	alloc/Heap.c.arm \
-	alloc/MarkSweep.c.arm \
 	alloc/DdmHeap.c \
+	alloc/Verify.c \
+	alloc/Visit.c \
 	analysis/CodeVerify.c \
-	analysis/DexOptimize.c \
+	analysis/DexPrepare.c \
 	analysis/DexVerify.c \
+	analysis/Optimize.c \
 	analysis/ReduceConstants.c \
 	analysis/RegisterMap.c \
 	analysis/VerifySubs.c \
@@ -193,19 +196,31 @@ LOCAL_SRC_FILES := \
 	reflect/Annotation.c \
 	reflect/Proxy.c \
 	reflect/Reflect.c \
-	test/AtomicSpeed.c \
+	test/AtomicTest.c.arm \
 	test/TestHash.c \
 	test/TestIndirectRefTable.c
+
+WITH_COPYING_GC := $(strip $(WITH_COPYING_GC))
+
+ifeq ($(WITH_COPYING_GC),true)
+  LOCAL_CFLAGS += -DWITH_COPYING_GC
+  LOCAL_SRC_FILES += \
+	alloc/Copying.c.arm
+else
+  LOCAL_SRC_FILES += \
+	alloc/HeapSource.c \
+	alloc/MarkSweep.c.arm
+endif
 
 WITH_JIT := $(strip $(WITH_JIT))
 
 ifeq ($(WITH_JIT),true)
   LOCAL_CFLAGS += -DWITH_JIT
   LOCAL_SRC_FILES += \
-	../dexdump/OpCodeNames.c \
 	compiler/Compiler.c \
 	compiler/Frontend.c \
 	compiler/Utility.c \
+	compiler/InlineTransformation.c \
 	compiler/IntermediateRep.c \
 	compiler/Dataflow.c \
 	compiler/Loop.c \
@@ -226,10 +241,6 @@ ifeq ($(WITH_HPROF),true)
 	hprof/HprofString.c
   LOCAL_CFLAGS += -DWITH_HPROF=1
 
-  ifeq ($(strip $(WITH_HPROF_UNREACHABLE)),true)
-    LOCAL_CFLAGS += -DWITH_HPROF_UNREACHABLE=1
-  endif
-
   ifeq ($(strip $(WITH_HPROF_STACK)),true)
     LOCAL_SRC_FILES += \
 	hprof/HprofStack.c \
@@ -237,10 +248,6 @@ ifeq ($(WITH_HPROF),true)
     LOCAL_CFLAGS += -DWITH_HPROF_STACK=1
   endif # WITH_HPROF_STACK
 endif   # WITH_HPROF
-
-ifeq ($(strip $(DVM_TRACK_HEAP_MARKING)),true)
-  LOCAL_CFLAGS += -DDVM_TRACK_HEAP_MARKING=1
-endif
 
 LOCAL_C_INCLUDES += \
 	$(JNI_H_INCLUDE) \
@@ -267,6 +274,7 @@ MTERP_ARCH_KNOWN := false
 ifeq ($(dvm_arch),arm)
   #dvm_arch_variant := armv7-a
   #LOCAL_CFLAGS += -march=armv7-a -mfloat-abi=softfp -mfpu=vfp
+  LOCAL_CFLAGS += -Werror
   MTERP_ARCH_KNOWN := true
   # Select architecture-specific sources (armv4t, armv5te etc.)
   LOCAL_SRC_FILES += \

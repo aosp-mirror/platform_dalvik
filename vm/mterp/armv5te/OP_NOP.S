@@ -12,4 +12,3 @@ dalvik_inst:
     MTERP_ENTRY2
     .fnend
 #endif
-

@@ -35,7 +35,7 @@ public final class CstDouble
     /**
      * Makes an instance for the given value. This may (but does not
      * necessarily) return an already-allocated instance.
-     * 
+     *
      * @param bits the {@code double} value as {@code long} bits
      */
     public static CstDouble make(long bits) {
@@ -48,7 +48,7 @@ public final class CstDouble
 
     /**
      * Constructs an instance. This constructor is private; use {@link #make}.
-     * 
+     *
      * @param bits the {@code double} value as {@code long} bits
      */
     private CstDouble(long bits) {
@@ -81,7 +81,7 @@ public final class CstDouble
 
     /**
      * Gets the {@code double} value.
-     * 
+     *
      * @return the value
      */
     public double getValue() {

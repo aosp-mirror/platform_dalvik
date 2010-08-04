@@ -20,4 +20,3 @@
     FETCH_INST_INDEXED(%eax)
     ADVANCE_PC_INDEXED(%eax)
     GOTO_NEXT
-

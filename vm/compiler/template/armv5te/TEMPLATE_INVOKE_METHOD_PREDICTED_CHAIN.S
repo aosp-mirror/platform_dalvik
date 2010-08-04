@@ -25,12 +25,20 @@
     ldr     r3, [r0, #offObject_clazz]  @ r3 <- this->class
     ldr     r8, [r2, #4]    @ r8 <- predictedChainCell->clazz
     ldr     r0, [r2, #8]    @ r0 <- predictedChainCell->method
-    ldr     r9, [r2, #12]   @ r9 <- predictedChainCell->counter
+    ldr     r9, [rGLUE, #offGlue_icRechainCount]   @ r1 <- shared rechainCount
     cmp     r3, r8          @ predicted class == actual class?
+#if defined(WITH_JIT_TUNING)
+    ldr     r7, .LdvmICHitCount
+    ldreq   r10, [r7, #0]
+    add     r10, r10, #1
+    streq   r10, [r7, #0]
+#endif
     beq     .LinvokeChain   @ predicted chain is valid
     ldr     r7, [r3, #offClassObject_vtable] @ r7 <- this->class->vtable
-    sub     r1, r9, #1      @ count--
-    str     r1, [r2, #12]   @ write back to PredictedChainingCell->counter
+    cmp     r8, #0          @ initialized class or not
+    moveq   r1, #0
+    subne   r1, r9, #1      @ count--
+    strne   r1, [rGLUE, #offGlue_icRechainCount]   @ write back to InterpState
     add     lr, lr, #4      @ return to fully-resolve landing pad
     /*
      * r1 <- count

@@ -40,7 +40,7 @@ static CompilerWorkOrder workDequeue(void)
     }
     gDvmJit.compilerQueueLength--;
     if (gDvmJit.compilerQueueLength == 0) {
-        int cc = pthread_cond_signal(&gDvmJit.compilerQueueEmpty);
+        dvmSignalCond(&gDvmJit.compilerQueueEmpty);
     }
 
     /* Remember the high water mark of the queue length */
@@ -95,6 +95,7 @@ bool dvmCompilerWorkEnqueue(const u2 *pc, WorkOrderKind kind, void* info)
     newOrder->pc = pc;
     newOrder->kind = kind;
     newOrder->info = info;
+    newOrder->result.methodCompilationAborted = NULL;
     newOrder->result.codeAddress = NULL;
     newOrder->result.discardResult =
         (kind == kWorkOrderTraceDebug) ? true : false;
@@ -153,6 +154,8 @@ bool dvmCompilerSetupCodeCache(void)
         return false;
     }
 
+    gDvmJit.pageSizeMask = getpagesize() - 1;
+
     /* This can be found through "dalvik-jit-code-cache" in /proc/<pid>/maps */
     // LOGD("Code cache starts at %p", gDvmJit.codeCache);
 
@@ -177,6 +180,15 @@ bool dvmCompilerSetupCodeCache(void)
     /* Only flush the part in the code cache that is being used now */
     cacheflush((intptr_t) gDvmJit.codeCache,
                (intptr_t) gDvmJit.codeCache + templateSize, 0);
+
+    int result = mprotect(gDvmJit.codeCache, gDvmJit.codeCacheSize,
+                          PROTECT_CODE_CACHE_ATTRS);
+
+    if (result == -1) {
+        LOGE("Failed to remove the write permission for the code cache");
+        dvmAbort();
+    }
+
     return true;
 }
 
@@ -261,6 +273,7 @@ static void resetCodeCache(void)
     /* Reset the JitEntry table contents to the initial unpopulated state */
     dvmJitResetTable();
 
+    UNPROTECT_CODE_CACHE(gDvmJit.codeCache, gDvmJit.codeCacheByteUsed);
     /*
      * Wipe out the code cache content to force immediate crashes if
      * stale JIT'ed code is invoked.
@@ -270,6 +283,8 @@ static void resetCodeCache(void)
            gDvmJit.codeCacheByteUsed - gDvmJit.templateSize);
     cacheflush((intptr_t) gDvmJit.codeCache,
                (intptr_t) gDvmJit.codeCache + gDvmJit.codeCacheByteUsed, 0);
+
+    PROTECT_CODE_CACHE(gDvmJit.codeCache, gDvmJit.codeCacheByteUsed);
 
     /* Reset the current mark of used bytes to the end of template code */
     gDvmJit.codeCacheByteUsed = gDvmJit.templateSize;
@@ -337,9 +352,10 @@ bool compilerThreadStartup(void)
 
     dvmLockMutex(&gDvmJit.compilerLock);
 
-#if defined(WITH_JIT_TUNING)
     /* Track method-level compilation statistics */
     gDvmJit.methodStatsTable =  dvmHashTableCreate(32, NULL);
+
+#if defined(WITH_JIT_TUNING)
     gDvm.verboseShutdown = true;
 #endif
 
@@ -506,9 +522,6 @@ fail:
 
 static void *compilerThreadStart(void *arg)
 {
-    int ret;
-    struct timespec ts;
-
     dvmChangeStatus(NULL, THREAD_VMWAIT);
 
     /*
@@ -577,7 +590,7 @@ static void *compilerThreadStart(void *arg)
             do {
                 CompilerWorkOrder work = workDequeue();
                 dvmUnlockMutex(&gDvmJit.compilerLock);
-#if defined(JIT_STATS)
+#if defined(WITH_JIT_TUNING)
                 u8 startTime = dvmGetRelativeTimeUsec();
 #endif
                 /*
@@ -591,7 +604,7 @@ static void *compilerThreadStart(void *arg)
                  * of the vm but this should be acceptable.
                  */
                 if (!gDvmJit.blockingMode)
-                    dvmCheckSuspendPending(NULL);
+                    dvmCheckSuspendPending(dvmThreadSelf());
                 /* Is JitTable filling up? */
                 if (gDvmJit.jitTableEntriesUsed >
                     (gDvmJit.jitTableSize - gDvmJit.jitTableSize/4)) {
@@ -615,14 +628,16 @@ static void *compilerThreadStart(void *arg)
                     }
                     if (aborted || !compileOK) {
                         dvmCompilerArenaReset();
-                        work.result.codeAddress = gDvmJit.interpretTemplate;
-                    } else if (!work.result.discardResult) {
+                    } else if (!work.result.discardResult &&
+                               work.result.codeAddress) {
+                        /* Make sure that proper code addr is installed */
+                        assert(work.result.codeAddress != NULL);
                         dvmJitSetCodeAddr(work.pc, work.result.codeAddress,
                                           work.result.instructionSet);
                     }
                 }
                 free(work.info);
-#if defined(JIT_STATS)
+#if defined(WITH_JIT_TUNING)
                 gDvmJit.jitTime += dvmGetRelativeTimeUsec() - startTime;
 #endif
                 dvmLockMutex(&gDvmJit.compilerLock);
@@ -649,6 +664,7 @@ bool dvmCompilerStartup(void)
 
     dvmInitMutex(&gDvmJit.compilerLock);
     dvmInitMutex(&gDvmJit.compilerICPatchLock);
+    dvmInitMutex(&gDvmJit.codeCacheProtectionLock);
     dvmLockMutex(&gDvmJit.compilerLock);
     pthread_cond_init(&gDvmJit.compilerQueueActivity, NULL);
     pthread_cond_init(&gDvmJit.compilerQueueEmpty, NULL);
@@ -725,7 +741,16 @@ void dvmCompilerStateRefresh()
 
     dvmLockMutex(&gDvmJit.tableLock);
     jitActive = gDvmJit.pProfTable != NULL;
+
+#if defined(WITH_DEBUGGER) && defined(WITH_PROFILER)
     jitActivate = !(gDvm.debuggerActive || (gDvm.activeProfilers > 0));
+#elif defined(WITH_DEBUGGER)
+    jitActivate = !gDvm.debuggerActive;
+#elif defined(WITH_PROFILER)
+    jitActivate = !(gDvm.activeProfilers > 0);
+#else
+    jitActivate = true;
+#endif
 
     if (jitActivate && !jitActive) {
         gDvmJit.pProfTable = gDvmJit.pProfTableCopy;

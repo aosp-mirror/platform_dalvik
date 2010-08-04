@@ -1,10 +1,10 @@
 
 class Blort {
-    
+
     static void methodThatNeedsInvokeRange
         (int a, int b, int c, int d, int e, int f) {
     }
-    
+
     void testNoLocals() {
         methodThatNeedsInvokeRange(5, 0, 5, 0, 5, 0);
     }
@@ -50,7 +50,7 @@ class Blort {
         methodThatNeedsInvokeRange(src, 0, dest, 1, 5, 0);
         methodThatNeedsInvokeRange(dest, 0, src, 1, 5, 0);
     }
-    
+
     // ensure that an attempt to combine registers for a local
     // with a differing category doesn't mess us up.
     long testMixedCategory(boolean foo) {
@@ -67,4 +67,3 @@ class Blort {
         }
     }
 }
-

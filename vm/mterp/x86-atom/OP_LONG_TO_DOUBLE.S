@@ -35,4 +35,3 @@
     fildll      (rFP, rINST, 4)         # FPU<- vB
     fstpl       (rFP, %ecx, 4)          # vA<- FPU; (double) vB
     FGETOP_JMP  1, %eax                 # jump to next instruction; getop, jmp
-

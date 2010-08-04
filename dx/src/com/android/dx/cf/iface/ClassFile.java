@@ -81,7 +81,7 @@ public interface ClassFile {
     public ConstantPool getConstantPool();
 
     /**
-     * Gets the field {@code interfaces} (along with 
+     * Gets the field {@code interfaces} (along with
      * {@code interfaces_count}).
      *
      * @return {@code non-null;} the list of interfaces

@@ -24,7 +24,7 @@ import com.android.dx.rop.cst.CstBaseMethodRef;
 public final class MethodIdItem extends MemberIdItem {
     /**
      * Constructs an instance.
-     * 
+     *
      * @param method {@code non-null;} the constant for the method
      */
     public MethodIdItem(CstBaseMethodRef method) {
@@ -48,7 +48,7 @@ public final class MethodIdItem extends MemberIdItem {
 
     /**
      * Gets the method constant.
-     * 
+     *
      * @return {@code non-null;} the constant
      */
     public CstBaseMethodRef getMethodRef() {
@@ -61,10 +61,10 @@ public final class MethodIdItem extends MemberIdItem {
         ProtoIdsSection protoIds = file.getProtoIds();
         return protoIds.indexOf(getMethodRef().getPrototype());
     }
-        
+
     /** {@inheritDoc} */
     @Override
     protected String getTypoidName() {
         return "proto_idx";
-    }    
+    }
 }

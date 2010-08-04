@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-public class Blort 
+public class Blort
 {
     private static RuntimeException theException = new RuntimeException();
 

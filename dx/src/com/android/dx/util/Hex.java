@@ -29,7 +29,7 @@ public final class Hex {
 
     /**
      * Formats a {@code long} as an 8-byte unsigned hex value.
-     * 
+     *
      * @param v value to format
      * @return {@code non-null;} formatted form
      */
@@ -45,7 +45,7 @@ public final class Hex {
 
     /**
      * Formats an {@code int} as a 4-byte unsigned hex value.
-     * 
+     *
      * @param v value to format
      * @return {@code non-null;} formatted form
      */
@@ -61,7 +61,7 @@ public final class Hex {
 
     /**
      * Formats an {@code int} as a 3-byte unsigned hex value.
-     * 
+     *
      * @param v value to format
      * @return {@code non-null;} formatted form
      */
@@ -77,7 +77,7 @@ public final class Hex {
 
     /**
      * Formats an {@code int} as a 2-byte unsigned hex value.
-     * 
+     *
      * @param v value to format
      * @return {@code non-null;} formatted form
      */
@@ -95,7 +95,7 @@ public final class Hex {
      * Formats an {@code int} as either a 2-byte unsigned hex value
      * (if the value is small enough) or a 4-byte unsigned hex value (if
      * not).
-     * 
+     *
      * @param v value to format
      * @return {@code non-null;} formatted form
      */
@@ -109,7 +109,7 @@ public final class Hex {
 
     /**
      * Formats an {@code int} as a 1-byte unsigned hex value.
-     * 
+     *
      * @param v value to format
      * @return {@code non-null;} formatted form
      */
@@ -125,7 +125,7 @@ public final class Hex {
 
     /**
      * Formats an {@code int} as a 4-bit unsigned hex nibble.
-     * 
+     *
      * @param v value to format
      * @return {@code non-null;} formatted form
      */
@@ -138,7 +138,7 @@ public final class Hex {
 
     /**
      * Formats a {@code long} as an 8-byte signed hex value.
-     * 
+     *
      * @param v value to format
      * @return {@code non-null;} formatted form
      */
@@ -162,7 +162,7 @@ public final class Hex {
 
     /**
      * Formats an {@code int} as a 4-byte signed hex value.
-     * 
+     *
      * @param v value to format
      * @return {@code non-null;} formatted form
      */
@@ -186,7 +186,7 @@ public final class Hex {
 
     /**
      * Formats an {@code int} as a 2-byte signed hex value.
-     * 
+     *
      * @param v value to format
      * @return {@code non-null;} formatted form
      */
@@ -210,7 +210,7 @@ public final class Hex {
 
     /**
      * Formats an {@code int} as a 1-byte signed hex value.
-     * 
+     *
      * @param v value to format
      * @return {@code non-null;} formatted form
      */
@@ -236,7 +236,7 @@ public final class Hex {
      * Formats a hex dump of a portion of a {@code byte[]}. The result
      * is always newline-terminated, unless the passed-in length was zero,
      * in which case the result is always the empty string ({@code ""}).
-     * 
+     *
      * @param arr {@code non-null;} array to format
      * @param offset {@code >= 0;} offset to the part to dump
      * @param length {@code >= 0;} number of bytes to dump
@@ -253,7 +253,7 @@ public final class Hex {
         // twos-complement math trick: ((x < 0) || (y < 0)) <=> ((x|y) < 0)
         if (((offset | length | end) < 0) || (end > arr.length)) {
             throw new IndexOutOfBoundsException("arr.length " +
-                                                arr.length + "; " + 
+                                                arr.length + "; " +
                                                 offset + "..!" + end);
         }
 
@@ -298,6 +298,6 @@ public final class Hex {
             sb.append('\n');
         }
 
-        return sb.toString();        
+        return sb.toString();
     }
 }

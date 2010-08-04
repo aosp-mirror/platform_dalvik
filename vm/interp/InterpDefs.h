@@ -91,8 +91,8 @@ struct JitToInterpEntries {
 
 /* Number of entries in the 2nd level JIT profiler filter cache */
 #define JIT_TRACE_THRESH_FILTER_SIZE 32
-/* Granularity of coverage (power of 2) by each cached entry */
-#define JIT_TRACE_THRESH_FILTER_GRAN_LOG2 6
+/* Number of low dalvik pc address bits to include in 2nd level filter key */
+#define JIT_TRACE_THRESH_FILTER_PC_BITS 4
 #endif
 
 /*
@@ -124,12 +124,18 @@ typedef struct InterpState {
      * These are available globally, from gDvm, or from another glue field
      * (self/method).  They're copied in here for speed.
      */
+    /* copy of self->interpStackEnd */
     const u1*       interpStackEnd;
+    /* points at self->suspendCount */
     volatile int*   pSelfSuspendCount;
+    /* Biased base of GC's card table */
+    u1*             cardTable;
 #if defined(WITH_DEBUGGER)
+    /* points at gDvm.debuggerActive, or NULL if debugger not enabled */
     volatile u1*    pDebuggerActive;
 #endif
 #if defined(WITH_PROFILER)
+    /* points at gDvm.activeProfilers */
     volatile int*   pActiveProfilers;
 #endif
     /* ----------------------------------------------------------------------
@@ -147,8 +153,8 @@ typedef struct InterpState {
      */
     unsigned char*     pJitProfTable;
     JitState           jitState;
-    const void*        jitResumeNPC;	// Native PC of compiled code
-    const u2*          jitResumeDPC;	// Dalvik PC corresponding to NPC
+    const void*        jitResumeNPC;    // Native PC of compiled code
+    const u2*          jitResumeDPC;    // Dalvik PC corresponding to NPC
     int                jitThreshold;
     /*
      * ppJitProfTable holds the address of gDvmJit.pJitProfTable, which
@@ -158,6 +164,7 @@ typedef struct InterpState {
      * ppJitProfTable is used for that purpose.
      */
     unsigned char**    ppJitProfTable; // Used to refresh pJitProfTable
+    int                icRechainCount; // Count down to next rechain request
 #endif
 
 #if defined(WITH_PROFILER) || defined(WITH_DEBUGGER)

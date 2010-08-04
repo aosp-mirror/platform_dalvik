@@ -29,7 +29,7 @@ public final class Bits {
 
     /**
      * Constructs a bit set to contain bits up to the given index (exclusive).
-     * 
+     *
      * @param max {@code >= 0;} the maximum bit index (exclusive)
      * @return {@code non-null;} an appropriately-constructed instance
      */
@@ -40,7 +40,7 @@ public final class Bits {
 
     /**
      * Gets the maximum index (exclusive) for the given bit set.
-     * 
+     *
      * @param bits {@code non-null;} bit set in question
      * @return {@code >= 0;} the maximum index (exclusive) that may be set
      */
@@ -50,7 +50,7 @@ public final class Bits {
 
     /**
      * Gets the value of the bit at the given index.
-     * 
+     *
      * @param bits {@code non-null;} bit set to operate on
      * @param idx {@code >= 0, < getMax(set);} which bit
      * @return the value of the indicated bit
@@ -63,7 +63,7 @@ public final class Bits {
 
     /**
      * Sets the given bit to the given value.
-     * 
+     *
      * @param bits {@code non-null;} bit set to operate on
      * @param idx {@code >= 0, < getMax(set);} which bit
      * @param value the new value for the bit
@@ -81,7 +81,7 @@ public final class Bits {
 
     /**
      * Sets the given bit to {@code true}.
-     * 
+     *
      * @param bits {@code non-null;} bit set to operate on
      * @param idx {@code >= 0, < getMax(set);} which bit
      */
@@ -93,7 +93,7 @@ public final class Bits {
 
     /**
      * Sets the given bit to {@code false}.
-     * 
+     *
      * @param bits {@code non-null;} bit set to operate on
      * @param idx {@code >= 0, < getMax(set);} which bit
      */
@@ -106,7 +106,7 @@ public final class Bits {
     /**
      * Returns whether or not the given bit set is empty, that is, whether
      * no bit is set to {@code true}.
-     * 
+     *
      * @param bits {@code non-null;} bit set to operate on
      * @return {@code true} iff all bits are {@code false}
      */
@@ -124,7 +124,7 @@ public final class Bits {
 
     /**
      * Gets the number of bits set to {@code true} in the given bit set.
-     * 
+     *
      * @param bits {@code non-null;} bit set to operate on
      * @return {@code >= 0;} the bit count (aka population count) of the set
      */
@@ -142,7 +142,7 @@ public final class Bits {
     /**
      * Returns whether any bits are set to {@code true} in the
      * specified range.
-     * 
+     *
      * @param bits {@code non-null;} bit set to operate on
      * @param start {@code >= 0;} index of the first bit in the range (inclusive)
      * @param end {@code >= 0;} index of the last bit in the range (exclusive)
@@ -157,7 +157,7 @@ public final class Bits {
     /**
      * Finds the lowest-order bit set at or after the given index in the
      * given bit set.
-     * 
+     *
      * @param bits {@code non-null;} bit set to operate on
      * @param idx {@code >= 0;} minimum index to return
      * @return {@code >= -1;} lowest-order bit set at or after {@code idx},
@@ -184,7 +184,7 @@ public final class Bits {
     /**
      * Finds the lowest-order bit set at or after the given index in the
      * given {@code int}.
-     * 
+     *
      * @param value the value in question
      * @param idx 0..31 the minimum bit index to return
      * @return {@code >= -1;} lowest-order bit set at or after {@code idx},

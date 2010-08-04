@@ -10,4 +10,3 @@ public interface MirandaInterface2 {
     public int inInterface2();
 
 }
-

@@ -24,25 +24,8 @@
 #include "HeapTable.h"
 #include "MarkSweep.h"
 
-#define SCHEDULED_REFERENCE_MAGIC   ((Object*)0x87654321)
-
-#define ptr2chunk(p)    (((DvmHeapChunk *)(p)) - 1)
-#define chunk2ptr(p)    ((void *)(((DvmHeapChunk *)(p)) + 1))
-
-typedef struct DvmHeapChunk {
-#if WITH_HPROF && WITH_HPROF_STACK
-    u4 stackTraceSerialNumber;
-#endif
-    u8 data[0];
-} DvmHeapChunk;
-
 struct GcHeap {
     HeapSource      *heapSource;
-
-    /* List of heap objects that the GC should never collect.
-     * These should be included in the root set of objects.
-     */
-    HeapRefTable    nonCollectableRefs;
 
     /* List of heap objects that will require finalization when
      * collected.  I.e., instance objects
@@ -110,50 +93,13 @@ struct GcHeap {
      */
     GcMarkContext   markContext;
 
-    /* Set to dvmGetRelativeTimeUsec() whenever a GC begins.
-     * The value is preserved between GCs, so it can be used
-     * to determine the time between successive GCs.
-     * Initialized to zero before the first GC.
-     */
-    u8              gcStartTime;
+    /* GC's card table */
+    u1*             cardTableBase;
+    size_t          cardTableLength;
 
     /* Is the GC running?  Used to avoid recursive calls to GC.
      */
     bool            gcRunning;
-
-    /* Set at the end of a GC to indicate the collection policy
-     * for SoftReferences during the following GC.
-     */
-    enum { SR_COLLECT_NONE, SR_COLLECT_SOME, SR_COLLECT_ALL }
-                    softReferenceCollectionState;
-
-    /* The size of the heap is compared against this value
-     * to determine when to start collecting SoftReferences.
-     */
-    size_t          softReferenceHeapSizeThreshold;
-
-    /* A value that will increment every time we see a SoftReference
-     * whose referent isn't marked (during SR_COLLECT_SOME).
-     * The absolute value is meaningless, and does not need to
-     * be reset or initialized at any point.
-     */
-    int             softReferenceColor;
-
-    /* Indicates whether or not the object scanner should bother
-     * keeping track of any references.  If markAllReferents is
-     * true, referents will be hard-marked.  If false, normal
-     * reference following is used.
-     */
-    bool            markAllReferents;
-
-#if DVM_TRACK_HEAP_MARKING
-    /* Every time an unmarked object becomes marked, markCount
-     * is incremented and markSize increases by the size of
-     * that object.
-     */
-    size_t          markCount;
-    size_t          markSize;
-#endif
 
     /*
      * Debug control values
@@ -168,6 +114,7 @@ struct GcHeap {
 #if WITH_HPROF
     bool            hprofDumpOnGc;
     const char*     hprofFileName;
+    int             hprofFd;
     hprof_context_t *hprofContext;
     int             hprofResult;
     bool            hprofDirectToDdms;
@@ -178,7 +125,6 @@ bool dvmLockHeap(void);
 void dvmUnlockHeap(void);
 void dvmLogGcStats(size_t numFreed, size_t sizeFreed, size_t gcTimeMs);
 void dvmLogMadviseStats(size_t madvisedSizes[], size_t arrayLen);
-void dvmHeapSizeChanged(void);
 
 /*
  * Logging helpers

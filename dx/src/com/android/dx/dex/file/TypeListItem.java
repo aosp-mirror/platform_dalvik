@@ -41,7 +41,7 @@ public final class TypeListItem extends OffsettedItem {
 
     /**
      * Constructs an instance.
-     * 
+     *
      * @param list {@code non-null;} the actual list
      */
     public TypeListItem(TypeList list) {
@@ -80,7 +80,7 @@ public final class TypeListItem extends OffsettedItem {
 
     /**
      * Gets the underlying list.
-     * 
+     *
      * @return {@code non-null;} the list
      */
     public TypeList getList() {
@@ -109,7 +109,7 @@ public final class TypeListItem extends OffsettedItem {
         for (int i = 0; i < sz; i++) {
             out.writeShort(typeIds.indexOf(list.getType(i)));
         }
-    }    
+    }
 
     /** {@inheritDoc} */
     @Override

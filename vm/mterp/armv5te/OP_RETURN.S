@@ -10,4 +10,3 @@
     GET_VREG(r0, r2)                    @ r0<- vAA
     str     r0, [rGLUE, #offGlue_retval] @ retval.i <- vAA
     b       common_returnFromMethod
-

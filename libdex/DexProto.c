@@ -112,7 +112,7 @@ char* dexStringCacheAbandon(DexStringCache* pCache, const char* value) {
  * ===========================================================================
  *      Method Prototypes
  * ===========================================================================
- */        
+ */
 
 /*
  * Return the DexProtoId from the given DexProto. The DexProto must
@@ -150,7 +150,7 @@ const char* dexProtoGetMethodDescriptor(const DexProto* pProto,
     }
 
     length += strlen(dexStringByTypeIdx(dexFile, protoId->returnTypeIdx));
-    
+
     dexStringCacheAlloc(pCache, length);
 
     char *at = (char*) pCache->value;
@@ -201,7 +201,7 @@ const char* dexProtoGetParameterDescriptors(const DexProto* pProto,
 
         length += strlen(descriptor);
     }
-    
+
     dexParameterIteratorInit(&iterator, pProto);
 
     dexStringCacheAlloc(pCache, length);
@@ -299,7 +299,7 @@ static int protoCompare(const DexProto* pProto1, const DexProto* pProto2,
         // Compare return types.
 
         if (compareReturnType) {
-            int result = 
+            int result =
                 strcmp(dexStringByTypeIdx(dexFile1, protoId1->returnTypeIdx),
                         dexStringByTypeIdx(dexFile2, protoId2->returnTypeIdx));
 
@@ -309,14 +309,14 @@ static int protoCompare(const DexProto* pProto1, const DexProto* pProto2,
         }
 
         // Compare parameters.
-        
+
         int minParam = (paramCount1 > paramCount2) ? paramCount2 : paramCount1;
         int i;
 
         for (i = 0; i < minParam; i++) {
             u4 idx1 = dexTypeListGetIdx(typeList1, i);
             u4 idx2 = dexTypeListGetIdx(typeList2, i);
-            int result = 
+            int result =
                 strcmp(dexStringByTypeIdx(dexFile1, idx1),
                         dexStringByTypeIdx(dexFile2, idx2));
 
@@ -368,7 +368,7 @@ static const char* methodDescriptorReturnType(const char* descriptor) {
     if (result == NULL) {
         return NULL;
     }
-    
+
     // The return type is the character just past the ')'.
     return result + 1;
 }
@@ -385,7 +385,7 @@ static const char* methodDescriptorNextType(const char* descriptor) {
     while (*descriptor == '[') {
         descriptor++;
     }
-    
+
     switch (*descriptor) {
         case 'B': case 'C': case 'D': case 'F':
         case 'I': case 'J': case 'S': case 'Z': {
@@ -412,7 +412,7 @@ int dexProtoCompareToDescriptor(const DexProto* proto,
         const char* descriptor) {
     // First compare the return types.
 
-    int result = strcmp(dexProtoGetReturnType(proto), 
+    int result = strcmp(dexProtoGetReturnType(proto),
             methodDescriptorReturnType(descriptor));
 
     if (result != 0) {
@@ -427,7 +427,7 @@ int dexProtoCompareToDescriptor(const DexProto* proto,
     // Skip the '('.
     assert (*descriptor == '(');
     descriptor++;
-    
+
     for (;;) {
         const char* protoDesc = dexParameterIteratorNextDescriptor(&iterator);
 
@@ -451,7 +451,7 @@ int dexProtoCompareToDescriptor(const DexProto* proto,
         }
 
         // Both prototype and descriptor have arguments. Compare them.
-        
+
         const char* nextDesc = methodDescriptorNextType(descriptor);
 
         for (;;) {
@@ -469,7 +469,7 @@ int dexProtoCompareToDescriptor(const DexProto* proto,
                 break;
             }
         }
-            
+
         /*
          * If we made it here, the two arguments matched, and
          * descriptor == nextDesc.
@@ -482,7 +482,7 @@ int dexProtoCompareToDescriptor(const DexProto* proto,
  * ===========================================================================
  *      Parameter Iterators
  * ===========================================================================
- */        
+ */
 
 /*
  * Initialize the given DexParameterIterator to be at the start of the
@@ -531,4 +531,3 @@ const char* dexParameterIteratorNextDescriptor(
 
     return dexStringByTypeIdx(pIterator->proto->dexFile, idx);
 }
-

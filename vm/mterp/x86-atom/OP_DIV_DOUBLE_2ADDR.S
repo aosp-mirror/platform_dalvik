@@ -35,4 +35,3 @@
     fdivl       (rFP, rINST, 4)         # divide double; vA/vB
     fstpl       (rFP, %edx, 4)          # vAA<- result
     FINISH      1                       # jump to next instruction
-

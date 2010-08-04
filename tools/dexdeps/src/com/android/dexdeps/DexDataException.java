@@ -21,4 +21,3 @@ package com.android.dexdeps;
  */
 public class DexDataException extends RuntimeException {
 }
-

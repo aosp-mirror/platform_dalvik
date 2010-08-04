@@ -27,12 +27,21 @@ dvmJitToInterpSingleStep:
     mov    r2,#kSVSSingleStep           @ r2<- interpreter entry point
     b      jitSVShadowRunEnd            @ doesn't return
 
+    .global dvmJitToInterpNoChainNoProfile
+dvmJitToInterpNoChainNoProfile:
+    ldr    r10, [rGLUE, #offGlue_self]  @ callee saved r10 <- glue->self
+    mov    r0,rPC                       @ pass our target PC
+    mov    r2,#kSVSNoProfile            @ r2<- interpreter entry point
+    mov    r3, #0                       @ 0 means !inJitCodeCache
+    str    r3, [r10, #offThread_inJitCodeCache] @ back to the interp land
+    b      jitSVShadowRunEnd            @ doesn't return
+
     .global dvmJitToInterpTraceSelectNoChain
 dvmJitToInterpTraceSelectNoChain:
     ldr    r10, [rGLUE, #offGlue_self]  @ callee saved r10 <- glue->self
     mov    r0,rPC                       @ pass our target PC
-    mov    r2,#kSVSTraceSelectNoChain   @ r2<- interpreter entry point
-    mov    r3, #0
+    mov    r2,#kSVSTraceSelect          @ r2<- interpreter entry point
+    mov    r3, #0                       @ 0 means !inJitCodeCache
     str    r3, [r10, #offThread_inJitCodeCache] @ Back to the interp land
     b      jitSVShadowRunEnd            @ doesn't return
 
@@ -41,7 +50,7 @@ dvmJitToInterpTraceSelect:
     ldr    r10, [rGLUE, #offGlue_self]  @ callee saved r10 <- glue->self
     ldr    r0,[lr, #-1]                 @ pass our target PC
     mov    r2,#kSVSTraceSelect          @ r2<- interpreter entry point
-    mov    r3, #0
+    mov    r3, #0                       @ 0 means !inJitCodeCache
     str    r3, [r10, #offThread_inJitCodeCache] @ Back to the interp land
     b      jitSVShadowRunEnd            @ doesn't return
 
@@ -50,7 +59,7 @@ dvmJitToInterpBackwardBranch:
     ldr    r10, [rGLUE, #offGlue_self]  @ callee saved r10 <- glue->self
     ldr    r0,[lr, #-1]                 @ pass our target PC
     mov    r2,#kSVSBackwardBranch       @ r2<- interpreter entry point
-    mov    r3, #0
+    mov    r3, #0                       @ 0 means !inJitCodeCache
     str    r3, [r10, #offThread_inJitCodeCache] @ Back to the interp land
     b      jitSVShadowRunEnd            @ doesn't return
 
@@ -59,7 +68,7 @@ dvmJitToInterpNormal:
     ldr    r10, [rGLUE, #offGlue_self]  @ callee saved r10 <- glue->self
     ldr    r0,[lr, #-1]                 @ pass our target PC
     mov    r2,#kSVSNormal               @ r2<- interpreter entry point
-    mov    r3, #0
+    mov    r3, #0                       @ 0 means !inJitCodeCache
     str    r3, [r10, #offThread_inJitCodeCache] @ Back to the interp land
     b      jitSVShadowRunEnd            @ doesn't return
 
@@ -68,7 +77,7 @@ dvmJitToInterpNoChain:
     ldr    r10, [rGLUE, #offGlue_self]  @ callee saved r10 <- glue->self
     mov    r0,rPC                       @ pass our target PC
     mov    r2,#kSVSNoChain              @ r2<- interpreter entry point
-    mov    r3, #0
+    mov    r3, #0                       @ 0 means !inJitCodeCache
     str    r3, [r10, #offThread_inJitCodeCache] @ Back to the interp land
     b      jitSVShadowRunEnd            @ doesn't return
 #else
@@ -83,7 +92,7 @@ dvmJitToInterpNoChain:
 dvmJitToInterpPunt:
     ldr    r10, [rGLUE, #offGlue_self]  @ callee saved r10 <- glue->self
     mov    rPC, r0
-#ifdef JIT_STATS
+#if defined(WITH_JIT_TUNING)
     mov    r0,lr
     bl     dvmBumpPunt;
 #endif
@@ -124,7 +133,7 @@ dvmJitToInterpSingleStep:
  */
     .global dvmJitToInterpTraceSelectNoChain
 dvmJitToInterpTraceSelectNoChain:
-#ifdef JIT_STATS
+#if defined(WITH_JIT_TUNING)
     bl     dvmBumpNoChain
 #endif
     ldr    r10, [rGLUE, #offGlue_self]  @ callee saved r10 <- glue->self
@@ -133,9 +142,9 @@ dvmJitToInterpTraceSelectNoChain:
     str    r0, [r10, #offThread_inJitCodeCache] @ set the inJitCodeCache flag
     mov    r1, rPC                  @ arg1 of translation may need this
     mov    lr, #0                   @  in case target is HANDLER_INTERPRET
-    cmp    r0,#0
+    cmp    r0,#0                    @ !0 means translation exists
     bxne   r0                       @ continue native execution if so
-    b      2f
+    b      2f                       @ branch over to use the interpreter
 
 /*
  * Return from the translation cache and immediately request
@@ -147,6 +156,7 @@ dvmJitToInterpTraceSelect:
     ldr    rPC,[lr, #-1]           @ get our target PC
     ldr    r10, [rGLUE, #offGlue_self]  @ callee saved r10 <- glue->self
     add    rINST,lr,#-5            @ save start of chain branch
+    add    rINST, #-4              @  .. which is 9 bytes back
     mov    r0,rPC
     bl     dvmJitGetCodeAddr       @ Is there a translation?
     str    r0, [r10, #offThread_inJitCodeCache] @ set the inJitCodeCache flag
@@ -190,7 +200,8 @@ dvmJitToInterpNormal:
     ldr    rPC,[lr, #-1]           @ get our target PC
     ldr    r10, [rGLUE, #offGlue_self]  @ callee saved r10 <- glue->self
     add    rINST,lr,#-5            @ save start of chain branch
-#ifdef JIT_STATS
+    add    rINST,#-4               @ .. which is 9 bytes back
+#if defined(WITH_JIT_TUNING)
     bl     dvmBumpNormal
 #endif
     mov    r0,rPC
@@ -210,9 +221,32 @@ dvmJitToInterpNormal:
  * Return from the translation cache to the interpreter to do method invocation.
  * Check if translation exists for the callee, but don't chain to it.
  */
+    .global dvmJitToInterpNoChainNoProfile
+dvmJitToInterpNoChainNoProfile:
+#if defined(WITH_JIT_TUNING)
+    bl     dvmBumpNoChain
+#endif
+    ldr    r10, [rGLUE, #offGlue_self]  @ callee saved r10 <- glue->self
+    mov    r0,rPC
+    bl     dvmJitGetCodeAddr        @ Is there a translation?
+    str    r0, [r10, #offThread_inJitCodeCache] @ set the inJitCodeCache flag
+    mov    r1, rPC                  @ arg1 of translation may need this
+    mov    lr, #0                   @  in case target is HANDLER_INTERPRET
+    cmp    r0,#0
+    bxne   r0                       @ continue native execution if so
+    EXPORT_PC()
+    adrl   rIBASE, dvmAsmInstructionStart
+    FETCH_INST()
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    GOTO_OPCODE(ip)                     @ jump to next instruction
+
+/*
+ * Return from the translation cache to the interpreter to do method invocation.
+ * Check if translation exists for the callee, but don't chain to it.
+ */
     .global dvmJitToInterpNoChain
 dvmJitToInterpNoChain:
-#ifdef JIT_STATS
+#if defined(WITH_JIT_TUNING)
     bl     dvmBumpNoChain
 #endif
     ldr    r10, [rGLUE, #offGlue_self]  @ callee saved r10 <- glue->self
@@ -237,6 +271,7 @@ toInterpreter:
     FETCH_INST()
     GET_JIT_PROF_TABLE(r0)
     @ NOTE: intended fallthrough
+
 /*
  * Common code to update potential trace start counter, and initiate
  * a trace-build if appropriate.  On entry, rPC should point to the
@@ -357,6 +392,11 @@ jitSVShadowRunEnd:
 /*
  * Common code when a backward branch is taken.
  *
+ * TODO: we could avoid a branch by just setting r0 and falling through
+ * into the common_periodicChecks code, and having a test on r0 at the
+ * end determine if we should return to the caller or update & branch to
+ * the next instr.
+ *
  * On entry:
  *  r9 is PC adjustment *in bytes*
  */
@@ -379,22 +419,24 @@ common_backwardBranch:
 
 /*
  * Need to see if the thread needs to be suspended or debugger/profiler
- * activity has begun.
+ * activity has begun.  If so, we suspend the thread or side-exit to
+ * the debug interpreter as appropriate.
  *
- * TODO: if JDWP isn't running, zero out pDebuggerActive pointer so we don't
- * have to do the second ldr.
+ * The common case is no activity on any of these, so we want to figure
+ * that out quickly.  If something is up, we can then sort out what.
+ *
+ * We want to be fast if the VM was built without debugger or profiler
+ * support, but we also need to recognize that the system is usually
+ * shipped with both of these enabled.
  *
  * TODO: reduce this so we're just checking a single location.
  *
  * On entry:
- *  r0 is reentry type, e.g. kInterpEntryInstr
+ *  r0 is reentry type, e.g. kInterpEntryInstr (for debugger/profiling)
  *  r9 is trampoline PC adjustment *in bytes*
  */
 common_periodicChecks:
     ldr     r3, [rGLUE, #offGlue_pSelfSuspendCount] @ r3<- &suspendCount
-
-    @ speculatively store r0 before it is clobbered by dvmCheckSuspendPending
-    str     r0, [rGLUE, #offGlue_entryPoint]
 
 #if defined(WITH_DEBUGGER)
     ldr     r1, [rGLUE, #offGlue_pDebuggerActive]   @ r1<- &debuggerActive
@@ -403,33 +445,42 @@ common_periodicChecks:
     ldr     r2, [rGLUE, #offGlue_pActiveProfilers]  @ r2<- &activeProfilers
 #endif
 
-    ldr     r3, [r3]                    @ r3<- suspendCount (int)
+    ldr     ip, [r3]                    @ ip<- suspendCount (int)
 
-#if defined(WITH_DEBUGGER)
-    ldrb    r1, [r1]                    @ r1<- debuggerActive (boolean)
-#endif
-#if defined (WITH_PROFILER)
+#if defined(WITH_DEBUGGER) && defined(WITH_PROFILER)
+    cmp     r1, #0                      @ debugger enabled?
+    ldrneb  r1, [r1]                    @ yes, r1<- debuggerActive (boolean)
     ldr     r2, [r2]                    @ r2<- activeProfilers (int)
+    orrne   ip, ip, r1                  @ ip<- suspendCount | debuggerActive
+    orrs    ip, ip, r2                  @ ip<- suspend|debugger|profiler; set Z
+#elif defined(WITH_DEBUGGER)
+    cmp     r1, #0                      @ debugger enabled?
+    ldrneb  r1, [r1]                    @ yes, r1<- debuggerActive (boolean)
+    orrsne  ip, ip, r1                  @ yes, ip<- suspend | debugger; set Z
+    @ (if not enabled, Z was set by test for r1==0, which is what we want)
+#elif defined (WITH_PROFILER)
+    ldr     r2, [r2]                    @ r2<- activeProfilers (int)
+    orrs    ip, ip, r2                  @ ip<- suspendCount | activeProfilers
+#else
+    cmp     ip, #0                      @ not ORing anything in; set Z
 #endif
 
-    cmp     r3, #0                      @ suspend pending?
-    bne     2f                          @ yes, do full suspension check
+    bxeq    lr                          @ all zero, return
 
+    /*
+     * One or more interesting events have happened.  Figure out what.
+     *
+     * If debugging or profiling are compiled in, we need to disambiguate.
+     *
+     * r0 still holds the reentry type.
+     */
 #if defined(WITH_DEBUGGER) || defined(WITH_PROFILER)
-# if defined(WITH_DEBUGGER) && defined(WITH_PROFILER)
-    orrs    r1, r1, r2                  @ r1<- r1 | r2
-    cmp     r1, #0                      @ debugger attached or profiler started?
-# elif defined(WITH_DEBUGGER)
-    cmp     r1, #0                      @ debugger attached?
-# elif defined(WITH_PROFILER)
-    cmp     r2, #0                      @ profiler started?
-# endif
-    bne     3f                          @ debugger/profiler, switch interp
+    ldr     ip, [r3]                    @ ip<- suspendCount (int)
+    cmp     ip, #0                      @ want suspend?
+    beq     1f                          @ no, must be debugger/profiler
 #endif
 
-    bx      lr                          @ nothing to do, return
-
-2:  @ check suspend
+    stmfd   sp!, {r0, lr}               @ preserve r0 and lr
 #if defined(WITH_JIT)
     /*
      * Refresh the Jit's cached copy of profile table pointer.  This pointer
@@ -444,12 +495,45 @@ common_periodicChecks:
     ldr     r0, [rGLUE, #offGlue_self]  @ r0<- glue->self
     EXPORT_PC()                         @ need for precise GC
 #endif
-    b       dvmCheckSuspendPending      @ suspend if necessary, then return
+    bl      dvmCheckSuspendPending      @ do full check, suspend if necessary
+    ldmfd   sp!, {r0, lr}               @ restore r0 and lr
 
-3:  @ debugger/profiler enabled, bail out
+#if defined(WITH_DEBUGGER) || defined(WITH_PROFILER)
+
+    /*
+     * Reload the debugger/profiler enable flags.  We're checking to see
+     * if either of these got set while we were suspended.
+     *
+     * We can't really avoid the #ifdefs here, because the fields don't
+     * exist when the feature is disabled.
+     */
+#if defined(WITH_DEBUGGER)
+    ldr     r1, [rGLUE, #offGlue_pDebuggerActive]   @ r1<- &debuggerActive
+    cmp     r1, #0                      @ debugger enabled?
+    ldrneb  r1, [r1]                    @ yes, r1<- debuggerActive (boolean)
+#else
+    mov     r1, #0
+#endif
+#if defined(WITH_PROFILER)
+    ldr     r2, [rGLUE, #offGlue_pActiveProfilers]  @ r2<- &activeProfilers
+    ldr     r2, [r2]                    @ r2<- activeProfilers (int)
+#else
+    mov     r2, #0
+#endif
+
+    orrs    r1, r1, r2
+    beq     2f
+
+1:  @ debugger/profiler enabled, bail out; glue->entryPoint was set above
+    str     r0, [rGLUE, #offGlue_entryPoint]    @ store r0, need for debug/prof
     add     rPC, rPC, r9                @ update rPC
     mov     r1, #1                      @ "want switch" = true
-    b       common_gotoBail
+    b       common_gotoBail             @ side exit
+
+#endif /*WITH_DEBUGGER || WITH_PROFILER*/
+
+2:
+    bx      lr                          @ nothing to do, return
 
 
 /*
@@ -553,7 +637,7 @@ common_invokeMethodNoRange:
     sub     r3, r10, r3, lsl #2         @ r3<- bottom (newsave - outsSize)
     cmp     r3, r9                      @ bottom < interpStackEnd?
     ldr     r3, [r0, #offMethod_accessFlags] @ r3<- methodToCall->accessFlags
-    blt     .LstackOverflow             @ yes, this frame will overflow stack
+    blo     .LstackOverflow             @ yes, this frame will overflow stack
 
     @ set up newSaveArea
 #ifdef EASY_GDB
@@ -728,15 +812,12 @@ common_returnFromMethod:
     str     rFP, [r3, #offThread_curFrame]  @ self->curFrame = fp
 #if defined(WITH_JIT)
     ldr     r10, [r0, #offStackSaveArea_returnAddr] @ r10 = saveArea->returnAddr
-    GET_JIT_PROF_TABLE(r0)
     mov     rPC, r9                     @ publish new rPC
     str     r1, [rGLUE, #offGlue_methodClassDex]
     str     r10, [r3, #offThread_inJitCodeCache]  @ may return to JIT'ed land
     cmp     r10, #0                      @ caller is compiled code
     blxne   r10
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
-    cmp     r0,#0
-    bne     common_updateProfile
     GOTO_OPCODE(ip)                     @ jump to next instruction
 #else
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
@@ -1172,4 +1253,3 @@ strPrintLong:
     .asciz  "<0x%x>"
 .LstrPrintLong:
     .asciz  "<%lld>"
-

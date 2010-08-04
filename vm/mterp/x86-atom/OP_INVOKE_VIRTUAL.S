@@ -91,4 +91,3 @@
     movl        offClassObject_vtable(%edx), %edx # %edx<- thisPtr->clazz->vtable
     movl        (%edx, %eax, 4), %ecx   # %ecx<- vtable[methodIndex]
     jmp         common_invokeMethod${routine} # invoke method common code
-

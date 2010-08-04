@@ -50,6 +50,10 @@ op-start armv5te
     op OP_IPUT_WIDE_QUICK armv4t
     op OP_SGET_WIDE armv4t
     op OP_SPUT_WIDE armv4t
+    op OP_IGET_WIDE_VOLATILE armv4t
+    op OP_IPUT_WIDE_VOLATILE armv4t
+    op OP_SGET_WIDE_VOLATILE armv4t
+    op OP_SPUT_WIDE_VOLATILE armv4t
 op-end
 
 # "helper" code for C; include if you use any of the C stubs (this generates
@@ -62,4 +66,3 @@ import cstubs/enddefs.c
 # common subroutines for asm
 import armv5te/footer.S
 import armv5te/debug.c
-

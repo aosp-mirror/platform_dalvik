@@ -69,5 +69,3 @@
     fstpl       (rFP, %edx, 4)          # move converted int
     movq        %xmm0, (rFP, %edx, 4)   # vA<- %xmm0; negInf
     FINISH      1                       # jump to next instruction
-
-

@@ -16,14 +16,19 @@
 
 package com.android.dx.ssa;
 
-import com.android.dx.rop.code.*;
+import com.android.dx.rop.code.LocalItem;
+import com.android.dx.rop.code.PlainInsn;
+import com.android.dx.rop.code.RegisterSpec;
+import com.android.dx.rop.code.RegisterSpecList;
+import com.android.dx.rop.code.Rops;
+import com.android.dx.rop.code.SourcePosition;
 import com.android.dx.rop.type.Type;
 import com.android.dx.util.IntList;
 
 import java.util.ArrayList;
 import java.util.BitSet;
-import java.util.HashSet;
 import java.util.HashMap;
+import java.util.HashSet;
 
 /**
  * Complete transformation to SSA form by renaming all registers accessed.<p>
@@ -67,6 +72,9 @@ public class SsaRenamer implements Runnable {
     /** the number of original rop registers */
     private final int ropRegCount;
 
+    /** work only on registers above this value */
+    private int threshold;
+
     /**
      * indexed by block index; register version state for each block start.
      * This list is updated by each dom parent for its children. The only
@@ -100,6 +108,7 @@ public class SsaRenamer implements Runnable {
          * "version 0" registers.
          */
         nextSsaReg = ropRegCount;
+        threshold = 0;
         startsForBlocks = new RegisterSpec[ssaMeth.getBlocks().size()][];
 
         ssaRegToLocalItems = new ArrayList<LocalItem>();
@@ -133,6 +142,18 @@ public class SsaRenamer implements Runnable {
         // Initial state for entry block
         startsForBlocks[ssaMeth.getEntryBlockIndex()] = initialRegMapping;
     }
+
+    /**
+    * Constructs an instance of the renamer with threshold set
+    *
+    * @param ssaMeth {@code non-null;} un-renamed SSA method that will
+    * be renamed.
+    * @param thresh registers below this number are unchanged
+    */
+   public SsaRenamer(SsaMethod ssaMeth, int thresh) {
+       this(ssaMeth);
+       threshold = thresh;
+   }
 
     /**
      * Performs renaming transformation, modifying the method's instructions
@@ -212,6 +233,18 @@ public class SsaRenamer implements Runnable {
         }
 
         ssaRegToLocalItems.set(reg, local);
+    }
+
+    /**
+     * Returns true if this SSA register is below the specified threshold.
+     * Used when most code is already in SSA form, and renaming is needed only
+     * for registers above a certain threshold.
+     *
+     * @param ssaReg the SSA register in question
+     * @return {@code true} if its register number is below the threshold
+     */
+    private boolean isBelowThresholdRegister(int ssaReg) {
+        return ssaReg < threshold;
     }
 
     /**
@@ -504,7 +537,8 @@ public class SsaRenamer implements Runnable {
                         ssaSourceReg, ropResult.getType(), newLocal);
 
             if (!Optimizer.getPreserveLocals() || (onlyOneAssociatedLocal
-                    && equalsHandlesNulls(newLocal, sourceLocal))) {
+                    && equalsHandlesNulls(newLocal, sourceLocal)) &&
+                    threshold == 0) {
                 /*
                  * We don't have to keep this move to preserve local
                  * information. Either the name is the same, or the result
@@ -512,7 +546,8 @@ public class SsaRenamer implements Runnable {
                  */
 
                 addMapping(ropResultReg, ssaReg);
-            } else if (onlyOneAssociatedLocal && sourceLocal == null) {
+            } else if (onlyOneAssociatedLocal && sourceLocal == null &&
+                    threshold == 0) {
                 /*
                  * The register was previously unnamed. This means that a
                  * local starts after it's first assignment in SSA form
@@ -572,6 +607,9 @@ public class SsaRenamer implements Runnable {
             }
 
             int ropReg = ropResult.getReg();
+            if (isBelowThresholdRegister(ropReg)) {
+                return;
+            }
 
             insn.changeResultReg(nextSsaReg);
             addMapping(ropReg, insn.getResult());
@@ -593,6 +631,9 @@ public class SsaRenamer implements Runnable {
                     int ropReg;
 
                     ropReg = insn.getRopResultReg();
+                    if (isBelowThresholdRegister(ropReg)) {
+                        return;
+                    }
 
                     /*
                      * Never add a version 0 register as a phi

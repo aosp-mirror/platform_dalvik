@@ -167,4 +167,3 @@ const DalvikNativeMethod dvm_org_apache_harmony_dalvik_ddmc_DdmVmInternal[] = {
       Dalvik_org_apache_harmony_dalvik_ddmc_DdmVmInternal_getRecentAllocations },
     { NULL, NULL, NULL },
 };
-

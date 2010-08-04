@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-public class Blort 
+public class Blort
 {
     public int switchTest1(int x) {
         switch (x) {

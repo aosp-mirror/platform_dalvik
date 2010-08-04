@@ -34,4 +34,3 @@ LOP_GOTO.S:
     shl         $$1, %edx               # %edx is shifted for byte offset
     js          common_periodicChecks2  # do check on backwards branch
     FINISH_RB   %edx, %ecx              # jump to next instruction
-

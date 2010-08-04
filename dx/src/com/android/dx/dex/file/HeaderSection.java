@@ -28,10 +28,10 @@ import java.util.List;
 public final class HeaderSection extends UniformItemSection {
     /** {@code non-null;} the list of the one item in the section */
     private final List<HeaderItem> list;
-    
+
     /**
      * Constructs an instance. The file offset is initially unknown.
-     * 
+     *
      * @param file {@code non-null;} file that this instance is part of
      */
     public HeaderSection(DexFile file) {

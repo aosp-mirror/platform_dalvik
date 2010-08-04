@@ -28,4 +28,3 @@
     */
 
     call        common_abort
-

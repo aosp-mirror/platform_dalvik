@@ -41,5 +41,3 @@
     $instr                              # do operation part 2
     movq        $result, (rFP, %ecx, 4) # vA<- result
     FGETOP_JMP  1, %eax                 # jump to next instruction; getop, jmp
-
-

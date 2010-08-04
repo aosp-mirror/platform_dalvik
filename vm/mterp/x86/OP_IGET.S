@@ -62,4 +62,3 @@
     SET_VREG(%ecx,%eax)
     ADVANCE_PC(2)
     GOTO_NEXT
-

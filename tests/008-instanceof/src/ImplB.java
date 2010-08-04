@@ -14,4 +14,3 @@ public class ImplB implements Iface1, Iface2 {
 
     public static String mWhoami = new String("ImplB!");
 }
-

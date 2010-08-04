@@ -17,4 +17,3 @@
 public class Holder {
     //public static Object mObject = new Object();
 }
-

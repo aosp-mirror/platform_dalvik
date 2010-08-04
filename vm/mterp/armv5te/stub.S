@@ -6,4 +6,3 @@
     FETCH_INST()                    @ load next instruction from rPC
     GET_INST_OPCODE(ip)             @ ...trim down to just the opcode
     GOTO_OPCODE(ip)                 @ ...and jump to the handler
-

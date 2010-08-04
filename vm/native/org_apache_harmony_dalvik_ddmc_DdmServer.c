@@ -46,4 +46,3 @@ const DalvikNativeMethod dvm_org_apache_harmony_dalvik_ddmc_DdmServer[] = {
         Dalvik_org_apache_harmony_dalvik_ddmc_DdmServer_nativeSendChunk },
     { NULL, NULL, NULL },
 };
-

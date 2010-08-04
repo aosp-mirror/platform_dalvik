@@ -30,13 +30,13 @@ public final class Leb128Utils {
     /**
      * Gets the number of bytes in the unsigned LEB128 encoding of the
      * given value.
-     * 
+     *
      * @param value the value in question
      * @return its write size, in bytes
      */
     public static int unsignedLeb128Size(int value) {
         // TODO: This could be much cleverer.
-        
+
         int remaining = value >> 7;
         int count = 0;
 
@@ -51,7 +51,7 @@ public final class Leb128Utils {
     /**
      * Gets the number of bytes in the signed LEB128 encoding of the
      * given value.
-     * 
+     *
      * @param value the value in question
      * @return its write size, in bytes
      */

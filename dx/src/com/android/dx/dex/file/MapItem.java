@@ -74,7 +74,7 @@ public final class MapItem extends OffsettedItem {
             throw new IllegalArgumentException(
                     "mapSection.items().size() != 0");
         }
-        
+
         ArrayList<MapItem> items = new ArrayList<MapItem>(50);
 
         for (Section section : sections) {
@@ -111,10 +111,10 @@ public final class MapItem extends OffsettedItem {
         mapSection.add(
                 new UniformListItem<MapItem>(ItemType.TYPE_MAP_LIST, items));
     }
-   
+
     /**
      * Constructs an instance.
-     * 
+     *
      * @param type {@code non-null;} item type this instance covers
      * @param section {@code non-null;} section this instance covers
      * @param firstItem {@code non-null;} first item covered
@@ -155,7 +155,7 @@ public final class MapItem extends OffsettedItem {
     /**
      * Constructs a self-referential instance. This instance is meant to
      * represent the section containing the {@code map_list}.
-     * 
+     *
      * @param section {@code non-null;} section this instance covers
      */
     private MapItem(Section section) {
@@ -231,5 +231,5 @@ public final class MapItem extends OffsettedItem {
         out.writeShort(0); // unused
         out.writeInt(itemCount);
         out.writeInt(offset);
-    }    
+    }
 }

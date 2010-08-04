@@ -54,7 +54,7 @@ public final class Rop {
 
     /**
      * {@code non-null;} result type of this operation; {@link Type#VOID} for
-     * no-result operations 
+     * no-result operations
      */
     private final Type result;
 
@@ -66,7 +66,7 @@ public final class Rop {
 
     /**
      * the branchingness of this op; one of the {@code BRANCH_*}
-     * constants in this class 
+     * constants in this class
      */
     private final int branchingness;
 
@@ -79,7 +79,7 @@ public final class Rop {
     /**
      * Constructs an instance. This method is private. Use one of the
      * public constructors.
-     * 
+     *
      * @param opcode the opcode; one of the constants in {@link RegOps}
      * @param result {@code non-null;} result type of this operation; {@link
      * Type#VOID} for no-result operations
@@ -125,9 +125,9 @@ public final class Rop {
     }
 
     /**
-     * Constructs an instance. The constructed instance is never a 
+     * Constructs an instance. The constructed instance is never a
      * call-like op (see {@link #isCallLike}).
-     * 
+     *
      * @param opcode the opcode; one of the constants in {@link RegOps}
      * @param result {@code non-null;} result type of this operation; {@link
      * Type#VOID} for no-result operations
@@ -145,9 +145,9 @@ public final class Rop {
     }
 
     /**
-     * Constructs a no-exception instance. The constructed instance is never a 
+     * Constructs a no-exception instance. The constructed instance is never a
      * call-like op (see {@link #isCallLike}).
-     * 
+     *
      * @param opcode the opcode; one of the constants in {@link RegOps}
      * @param result {@code non-null;} result type of this operation; {@link
      * Type#VOID} for no-result operations
@@ -166,7 +166,7 @@ public final class Rop {
      * Constructs a non-branching no-exception instance. The
      * {@code branchingness} is always {@code BRANCH_NONE},
      * and it is never a call-like op (see {@link #isCallLike}).
-     * 
+     *
      * @param opcode the opcode; one of the constants in {@link RegOps}
      * @param result {@code non-null;} result type of this operation; {@link
      * Type#VOID} for no-result operations
@@ -182,7 +182,7 @@ public final class Rop {
      * Constructs a non-empty exceptions instance. Its
      * {@code branchingness} is always {@code BRANCH_THROW},
      * but it is never a call-like op (see {@link #isCallLike}).
-     * 
+     *
      * @param opcode the opcode; one of the constants in {@link RegOps}
      * @param result {@code non-null;} result type of this operation; {@link
      * Type#VOID} for no-result operations
@@ -201,7 +201,7 @@ public final class Rop {
      * Constructs a non-nicknamed instance with non-empty exceptions, which
      * is always a call-like op (see {@link #isCallLike}). Its
      * {@code branchingness} is always {@code BRANCH_THROW}.
-     * 
+     *
      * @param opcode the opcode; one of the constants in {@link RegOps}
      * @param sources {@code non-null;} types of all the sources of this operation
      * @param exceptions {@code non-null;} list of possible types thrown by this
@@ -306,7 +306,7 @@ public final class Rop {
 
     /**
      * Gets the opcode.
-     * 
+     *
      * @return the opcode
      */
     public int getOpcode() {
@@ -316,7 +316,7 @@ public final class Rop {
     /**
      * Gets the result type. A return value of {@link Type#VOID}
      * means this operation returns nothing.
-     * 
+     *
      * @return {@code null-ok;} the result spec
      */
     public Type getResult() {
@@ -325,7 +325,7 @@ public final class Rop {
 
     /**
      * Gets the source types.
-     * 
+     *
      * @return {@code non-null;} the source types
      */
     public TypeList getSources() {
@@ -334,7 +334,7 @@ public final class Rop {
 
     /**
      * Gets the list of exception types that might be thrown.
-     * 
+     *
      * @return {@code non-null;} the list of exception types
      */
     public TypeList getExceptions() {
@@ -343,7 +343,7 @@ public final class Rop {
 
     /**
      * Gets the branchingness of this instance.
-     * 
+     *
      * @return the branchingness
      */
     public int getBranchingness() {
@@ -352,7 +352,7 @@ public final class Rop {
 
     /**
      * Gets whether this opcode is a function/method call or similar.
-     * 
+     *
      * @return {@code true} iff this opcode is call-like
      */
     public boolean isCallLike() {
@@ -383,7 +383,7 @@ public final class Rop {
     /**
      * Gets the nickname. If this instance has no nickname, this returns
      * the result of calling {@link #toString}.
-     * 
+     *
      * @return {@code non-null;} the nickname
      */
     public String getNickname() {
@@ -398,7 +398,7 @@ public final class Rop {
      * Gets whether this operation can possibly throw an exception. This
      * is just a convenient wrapper for
      * {@code getExceptions().size() != 0}.
-     * 
+     *
      * @return {@code true} iff this operation can possibly throw
      */
     public final boolean canThrow() {

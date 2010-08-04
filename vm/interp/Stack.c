@@ -429,8 +429,6 @@ static ClassObject* callPrep(Thread* self, const Method* method, Object* obj,
 void dvmCallMethod(Thread* self, const Method* method, Object* obj,
     JValue* pResult, ...)
 {
-    JValue result;
-
     va_list args;
     va_start(args, pResult);
     dvmCallMethodV(self, method, obj, false, pResult, args);
@@ -535,7 +533,9 @@ void dvmCallMethodV(Thread* self, const Method* method, Object* obj,
         dvmInterpret(self, method, pResult);
     }
 
+#ifndef NDEBUG
 bail:
+#endif
     dvmPopFrame(self);
 }
 
@@ -790,7 +790,7 @@ static int lineNumForPcCb(void *cnxt, u4 address, u4 lineNum)
 {
     LineNumFromPcContext *pContext = (LineNumFromPcContext *)cnxt;
 
-    // We know that this callback will be called in 
+    // We know that this callback will be called in
     // ascending address order, so keep going until we find
     // a match or we've just gone past it.
 
@@ -834,7 +834,7 @@ int dvmLineNumFromPC(const Method* method, u4 relPc)
             method->prototype.protoIdx,
             method->accessFlags,
             lineNumForPcCb, NULL, &context);
-    
+
     return context.lineNum;
 }
 
@@ -867,9 +867,9 @@ int dvmComputeExactFrameDepth(const void* fp)
 int dvmComputeVagueFrameDepth(Thread* thread, const void* fp)
 {
     const u1* interpStackStart = thread->interpStackStart;
-    const u1* interpStackBottom = interpStackStart - thread->interpStackSize;
 
-    assert((u1*) fp >= interpStackBottom && (u1*) fp < interpStackStart);
+    assert((u1*) fp >= interpStackStart - thread->interpStackSize);
+    assert((u1*) fp < interpStackStart);
     return interpStackStart - (u1*) fp;
 }
 
@@ -966,7 +966,7 @@ ClassObject* dvmGetCaller3Class(const void* curFrame)
         if (caller == NULL)
             return NULL;
     }
-    
+
     return SAVEAREA_FROM_FP(caller)->method->clazz;
 }
 
@@ -1380,4 +1380,3 @@ void dvmDumpRunningThreadStack(const DebugOutputTarget* target, Thread* thread)
     dumpFrames(target, stackCopy + fpOffset, thread);
     free(stackCopy);
 }
-

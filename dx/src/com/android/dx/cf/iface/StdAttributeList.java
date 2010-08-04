@@ -26,7 +26,7 @@ public final class StdAttributeList extends FixedSizeList
         implements AttributeList {
     /**
      * Constructs an instance. All indices initially contain {@code null}.
-     * 
+     *
      * @param size the size of the list
      */
     public StdAttributeList(int size) {
@@ -94,7 +94,7 @@ public final class StdAttributeList extends FixedSizeList
 
     /**
      * Sets the attribute at the given index.
-     * 
+     *
      * @param n {@code >= 0, < size();} which attribute
      * @param attribute {@code null-ok;} the attribute object
      */

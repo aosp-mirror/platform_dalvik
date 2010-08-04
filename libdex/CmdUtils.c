@@ -89,11 +89,16 @@ bail:
 /*
  * Map the specified DEX file read-only (possibly after expanding it into a
  * temp file from a Jar).  Pass in a MemMapping struct to hold the info.
+ * If the file is an unoptimized DEX file, then byte-swapping and structural
+ * verification are performed on it before the memory is made read-only.
  *
  * The temp file is deleted after the map succeeds.
  *
  * This is intended for use by tools (e.g. dexdump) that need to get a
  * read-only copy of a DEX file that could be in a number of different states.
+ *
+ * If "tempFileName" is NULL, a default value is used.  The temp file is
+ * deleted after the map succeeds.
  *
  * If "quiet" is set, don't report common errors.
  *
@@ -110,7 +115,7 @@ UnzipToFileResult dexOpenAndMap(const char* fileName, const char* tempFileName,
 
     if (len < 5) {
         if (!quiet) {
-            fprintf(stderr, 
+            fprintf(stderr,
                 "ERROR: filename must end in .dex, .zip, .jar, or .apk\n");
         }
         result = kUTFRBadArgs;
@@ -133,7 +138,7 @@ UnzipToFileResult dexOpenAndMap(const char* fileName, const char* tempFileName,
         }
 
         result = dexUnzipToFile(fileName, tempFileName, quiet);
-        
+
         if (result == kUTFRSuccess) {
             //printf("+++ Good unzip to '%s'\n", tempFileName);
             fileName = tempFileName;
@@ -150,6 +155,8 @@ UnzipToFileResult dexOpenAndMap(const char* fileName, const char* tempFileName,
         }
     }
 
+    result = kUTFRGenericFailure;
+
     /*
      * Pop open the (presumed) DEX file.
      */
@@ -162,11 +169,32 @@ UnzipToFileResult dexOpenAndMap(const char* fileName, const char* tempFileName,
         goto bail;
     }
 
-    if (sysMapFileInShmemReadOnly(fd, pMap) != 0) {
-        fprintf(stderr, "ERROR: Unable to map %s\n", fileName);
-        close(fd);
+    if (sysMapFileInShmemWritableReadOnly(fd, pMap) != 0) {
+        fprintf(stderr, "ERROR: Unable to map '%s'\n", fileName);
         goto bail;
     }
+
+    /*
+     * This call will fail if the file exists on a filesystem that
+     * doesn't support mprotect(). If that's the case, then the file
+     * will have already been mapped private-writable by the previous
+     * call, so we don't need to do anything special if this call
+     * returns non-zero.
+     */
+    sysChangeMapAccess(pMap->addr, pMap->length, true, pMap);
+
+    if (dexSwapAndVerifyIfNecessary(pMap->addr, pMap->length)) {
+        fprintf(stderr, "ERROR: Failed structural verification of '%s'\n",
+            fileName);
+        goto bail;
+    }
+
+    /*
+     * Similar to above, this call will fail if the file wasn't ever
+     * read-only to begin with. This is innocuous, though it is
+     * undesirable from a memory hygiene perspective.
+     */
+    sysChangeMapAccess(pMap->addr, pMap->length, false, pMap);
 
     /*
      * Success!  Close the file and return with the start/length in pMap.
@@ -178,7 +206,7 @@ bail:
         close(fd);
     if (removeTemp) {
         if (unlink(tempFileName) != 0) {
-            fprintf(stderr, "Warning: unable to remove temp '%s'\n",
+            fprintf(stderr, "WARNING: unable to remove temp '%s'\n",
                 tempFileName);
         }
     }

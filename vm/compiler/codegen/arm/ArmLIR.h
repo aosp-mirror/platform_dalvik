@@ -622,9 +622,20 @@ typedef enum ArmOpCode {
                                   rd[11-8] imm2[7-6] [0] msb[4-0] */
     kThumb2Bfc,          /* bfc [11110011011011110] [0] imm3[14-12]
                                   rd[11-8] imm2[7-6] [0] msb[4-0] */
+    kThumb2Dmb,          /* dmb [1111001110111111100011110101] option[3-0] */
 
     kArmLast,
 } ArmOpCode;
+
+/* DMB option encodings */
+typedef enum ArmOpDmbOptions {
+    kSY = 0xf,
+    kST = 0xe,
+    kISH = 0xb,
+    kISHST = 0xa,
+    kNSH = 0x7,
+    kNSHST = 0x6
+} ArmOpDmbOptions;
 
 /* Bit flags describing the behavior of each native opcode */
 typedef enum ArmOpFeatureFlags {
@@ -762,18 +773,6 @@ typedef struct ArmLIR {
 /* Init values when a predicted chain is initially assembled */
 /* E7FE is branch to self */
 #define PREDICTED_CHAIN_BX_PAIR_INIT     0xe7fe
-#define PREDICTED_CHAIN_CLAZZ_INIT       0
-#define PREDICTED_CHAIN_METHOD_INIT      0
-#define PREDICTED_CHAIN_COUNTER_INIT     0
-
-/* Used when the callee is not compiled yet */
-#define PREDICTED_CHAIN_COUNTER_DELAY    512
-
-/* Rechain after this many mis-predictions have happened */
-#define PREDICTED_CHAIN_COUNTER_RECHAIN  1024
-
-/* Used if the resolved callee is a native method */
-#define PREDICTED_CHAIN_COUNTER_AVOID    0x7fffffff
 
 /* Utility macros to traverse the LIR/ArmLIR list */
 #define NEXT_LIR(lir) ((ArmLIR *) lir->generic.next)
@@ -783,5 +782,8 @@ typedef struct ArmLIR {
 #define PREV_LIR_LVALUE(lir) (lir)->generic.prev
 
 #define CHAIN_CELL_OFFSET_TAG   0xcdab
+
+#define CHAIN_CELL_NORMAL_SIZE 12
+#define CHAIN_CELL_PREDICTED_SIZE 16
 
 #endif /* _DALVIK_VM_COMPILER_CODEGEN_ARM_ARMLIR_H */

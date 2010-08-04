@@ -78,4 +78,3 @@ void dvmMterpStdBail(MterpGlue* glue, bool changeInterp)
     jmp_buf* pJmpBuf = glue->bailPtr;
     longjmp(*pJmpBuf, ((int)changeInterp)+1);
 }
-

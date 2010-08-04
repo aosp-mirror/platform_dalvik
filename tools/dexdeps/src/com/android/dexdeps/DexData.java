@@ -591,4 +591,3 @@ public class DexData {
         public int classIdx;            // index into type_ids
     }
 }
-

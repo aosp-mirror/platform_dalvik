@@ -45,7 +45,7 @@ public final class ProtoIdItem extends IndexedItem {
 
     /**
      * Constructs an instance.
-     * 
+     *
      * @param prototype {@code non-null;} the constant for the prototype
      */
     public ProtoIdItem(Prototype prototype) {
@@ -57,13 +57,13 @@ public final class ProtoIdItem extends IndexedItem {
         this.shortForm = makeShortForm(prototype);
 
         StdTypeList parameters = prototype.getParameterTypes();
-        this.parameterTypes = (parameters.size() == 0) ? null 
+        this.parameterTypes = (parameters.size() == 0) ? null
             : new TypeListItem(parameters);
     }
 
     /**
      * Creates the short-form of the given prototype.
-     * 
+     *
      * @param prototype {@code non-null;} the prototype
      * @return {@code non-null;} the short form
      */
@@ -83,7 +83,7 @@ public final class ProtoIdItem extends IndexedItem {
 
     /**
      * Gets the short-form character for the given type.
-     * 
+     *
      * @param type {@code non-null;} the type
      * @return the corresponding short-form character
      */
@@ -130,7 +130,7 @@ public final class ProtoIdItem extends IndexedItem {
         int shortyIdx = file.getStringIds().indexOf(shortForm);
         int returnIdx = file.getTypeIds().indexOf(prototype.getReturnType());
         int paramsOff = OffsettedItem.getAbsoluteOffsetOr0(parameterTypes);
-            
+
         if (out.annotates()) {
             StringBuilder sb = new StringBuilder();
             sb.append(prototype.getReturnType().toHuman());
@@ -145,7 +145,7 @@ public final class ProtoIdItem extends IndexedItem {
                 }
                 sb.append(params.getType(i).toHuman());
             }
-            
+
             sb.append(")");
             out.annotate(0, indexString() + ' ' + sb.toString());
             out.annotate(4, "  shorty_idx:      " + Hex.u4(shortyIdx) +

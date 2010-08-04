@@ -463,14 +463,6 @@ extern void dvmCompilerLockTemp(CompilationUnit *cUnit, int reg)
     dvmCompilerAbort(cUnit);
 }
 
-static void lockArgRegs(CompilationUnit *cUnit)
-{
-    dvmCompilerLockTemp(cUnit, r0);
-    dvmCompilerLockTemp(cUnit, r1);
-    dvmCompilerLockTemp(cUnit, r2);
-    dvmCompilerLockTemp(cUnit, r3);
-}
-
 /* Clobber all regs that might be used by an external C call */
 extern void dvmCompilerClobberCallRegs(CompilationUnit *cUnit)
 {
@@ -700,12 +692,6 @@ extern void dvmCompilerMarkPair(CompilationUnit *cUnit, int lowReg, int highReg)
     infoHi->partner = lowReg;
 }
 
-static void markRegSingle(CompilationUnit *cUnit, int reg)
-{
-    RegisterInfo *info = getRegInfo(cUnit, reg);
-    info->pair = false;
-}
-
 extern void dvmCompilerMarkClean(CompilationUnit *cUnit, int reg)
 {
     RegisterInfo *info = getRegInfo(cUnit, reg);
@@ -722,13 +708,6 @@ extern void dvmCompilerMarkInUse(CompilationUnit *cUnit, int reg)
 {
       RegisterInfo *info = getRegInfo(cUnit, reg);
           info->inUse = true;
-}
-
-/* Return true if live & dirty */
-static bool isDirty(CompilationUnit *cUnit, int reg)
-{
-    RegisterInfo *info = getRegInfo(cUnit, reg);
-    return (info && info->live && info->dirty);
 }
 
 void copyRegInfo(CompilationUnit *cUnit, int newReg, int oldReg)
@@ -872,7 +851,6 @@ static RegLocation evalLocWide(CompilationUnit *cUnit, RegLocation loc,
 extern RegLocation dvmCompilerEvalLoc(CompilationUnit *cUnit, RegLocation loc,
                                       int regClass, bool update)
 {
-    RegisterInfo *infoLo = NULL;
     int newReg;
     if (loc.wide)
         return evalLocWide(cUnit, loc, regClass, update);

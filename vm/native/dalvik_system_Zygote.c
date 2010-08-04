@@ -88,14 +88,14 @@ static void sigchldHandler(int s)
 #endif /* ifdef WCOREDUMP */
         }
 
-        /* 
+        /*
          * If the just-crashed process is the system_server, bring down zygote
          * so that it is restarted by init and system server will be restarted
          * from there.
          */
         if (pid == gDvm.systemServerPid) {
             LOG(LOG_INFO, ZYGOTE_LOG_TAG,
-                "Exit zygote because system server (%d) has terminated\n", 
+                "Exit zygote because system server (%d) has terminated\n",
                 (int) pid);
             kill(getpid(), SIGKILL);
         }
@@ -103,7 +103,7 @@ static void sigchldHandler(int s)
 
     if (pid < 0) {
         LOG(LOG_WARN, ZYGOTE_LOG_TAG,
-            "Zygote SIGCHLD error (%d) in waitpid\n",errno);
+            "Zygote SIGCHLD error in waitpid: %s\n",strerror(errno));
     }
 }
 
@@ -116,7 +116,7 @@ static void sigchldHandler(int s)
  * This ends up being called repeatedly before each fork(), but there's
  * no real harm in that.
  */
-static void setSignalHandler() 
+static void setSignalHandler()
 {
     int err;
     struct sigaction sa;
@@ -126,9 +126,9 @@ static void setSignalHandler()
     sa.sa_handler = sigchldHandler;
 
     err = sigaction (SIGCHLD, &sa, NULL);
-    
+
     if (err < 0) {
-        LOGW("Error setting SIGCHLD handler errno: %d", errno);
+        LOGW("Error setting SIGCHLD handler: %s", strerror(errno));
     }
 }
 
@@ -145,13 +145,13 @@ static void unsetSignalHandler()
     sa.sa_handler = SIG_DFL;
 
     err = sigaction (SIGCHLD, &sa, NULL);
-    
+
     if (err < 0) {
-        LOGW("Error unsetting SIGCHLD handler errno: %d", errno);
+        LOGW("Error unsetting SIGCHLD handler: %s", strerror(errno));
     }
 }
 
-/* 
+/*
  * Calls POSIX setgroups() using the int[] object as an argument.
  * A NULL argument is tolerated.
  */
@@ -217,7 +217,7 @@ static int setrlimitsFromArray(ArrayObject* rlimits)
             return -1;
         }
     }
-    
+
     return 0;
 }
 
@@ -225,7 +225,6 @@ static int setrlimitsFromArray(ArrayObject* rlimits)
 static void Dalvik_dalvik_system_Zygote_fork(const u4* args, JValue* pResult)
 {
     pid_t pid;
-    int err;
 
     if (!gDvm.zygote) {
         dvmThrowException("Ljava/lang/IllegalStateException;",
@@ -239,7 +238,7 @@ static void Dalvik_dalvik_system_Zygote_fork(const u4* args, JValue* pResult)
         dvmAbort();
     }
 
-    setSignalHandler();      
+    setSignalHandler();
 
     dvmDumpLoaderStats("zygote");
     pid = fork();
@@ -309,22 +308,22 @@ static void enableDebugFeatures(u4 debugFlags)
          * to disable that
          */
         if (prctl(PR_SET_DUMPABLE, 1, 0, 0, 0) < 0) {
-            LOGE("could not set dumpable bit flag for pid %d, errno=%d",
-                 getpid(), errno);
+            LOGE("could not set dumpable bit flag for pid %d: %s",
+                 getpid(), strerror(errno));
         } else {
             struct rlimit rl;
             rl.rlim_cur = 0;
             rl.rlim_max = RLIM_INFINITY;
             if (setrlimit(RLIMIT_CORE, &rl) < 0) {
-                LOGE("could not disable core file generation "
-                     "for pid %d, errno=%d", getpid(), errno);
+                LOGE("could not disable core file generation for pid %d: %s",
+                    getpid(), strerror(errno));
             }
         }
     }
 #endif
 }
 
-/* 
+/*
  * Utility routine to fork zygote and specialize the child process.
  */
 static pid_t forkAndSpecializeCommon(const u4* args)
@@ -349,7 +348,7 @@ static pid_t forkAndSpecializeCommon(const u4* args)
         dvmAbort();
     }
 
-    setSignalHandler();      
+    setSignalHandler();
 
     dvmDumpLoaderStats("zygote");
     pid = fork();
@@ -367,7 +366,7 @@ static pid_t forkAndSpecializeCommon(const u4* args)
             err = prctl(PR_SET_KEEPCAPS, 1, 0, 0, 0);
 
             if (err < 0) {
-                LOGW("cannot PR_SET_KEEPCAPS errno: %d", errno);
+                LOGW("cannot PR_SET_KEEPCAPS: %s", strerror(errno));
             }
         }
 
@@ -376,23 +375,23 @@ static pid_t forkAndSpecializeCommon(const u4* args)
         err = setgroupsIntarray(gids);
 
         if (err < 0) {
-            LOGW("cannot setgroups() errno: %d", errno);
+            LOGW("cannot setgroups(): %s", strerror(errno));
         }
 
         err = setrlimitsFromArray(rlimits);
 
         if (err < 0) {
-            LOGW("cannot setrlimit() errno: %d", errno);
+            LOGW("cannot setrlimit(): %s", strerror(errno));
         }
 
         err = setgid(gid);
         if (err < 0) {
-            LOGW("cannot setgid(%d) errno: %d", gid, errno);
+            LOGW("cannot setgid(%d): %s", gid, strerror(errno));
         }
 
         err = setuid(uid);
         if (err < 0) {
-            LOGW("cannot setuid(%d) errno: %d", uid, errno);
+            LOGW("cannot setuid(%d): %s", uid, strerror(errno));
         }
 
         /*
@@ -404,7 +403,7 @@ static pid_t forkAndSpecializeCommon(const u4* args)
         /* configure additional debug options */
         enableDebugFeatures(debugFlags);
 
-        unsetSignalHandler();      
+        unsetSignalHandler();
         gDvm.zygote = false;
         if (!dvmInitAfterZygote()) {
             LOGE("error in post-zygote initialization\n");
@@ -417,8 +416,8 @@ static pid_t forkAndSpecializeCommon(const u4* args)
     return pid;
 }
 
-/* native public static int forkAndSpecialize(int uid, int gid, 
- *     int[] gids, int debugFlags); 
+/* native public static int forkAndSpecialize(int uid, int gid,
+ *     int[] gids, int debugFlags);
  */
 static void Dalvik_dalvik_system_Zygote_forkAndSpecialize(const u4* args,
     JValue* pResult)
@@ -430,8 +429,8 @@ static void Dalvik_dalvik_system_Zygote_forkAndSpecialize(const u4* args,
     RETURN_INT(pid);
 }
 
-/* native public static int forkSystemServer(int uid, int gid, 
- *     int[] gids, int debugFlags); 
+/* native public static int forkSystemServer(int uid, int gid,
+ *     int[] gids, int debugFlags);
  */
 static void Dalvik_dalvik_system_Zygote_forkSystemServer(
         const u4* args, JValue* pResult)

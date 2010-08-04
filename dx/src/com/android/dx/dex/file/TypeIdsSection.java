@@ -36,7 +36,7 @@ public final class TypeIdsSection extends UniformItemSection {
 
     /**
      * Constructs an instance. The file offset is initially unknown.
-     * 
+     *
      * @param file {@code non-null;} file that this instance is part of
      */
     public TypeIdsSection(DexFile file) {
@@ -72,7 +72,7 @@ public final class TypeIdsSection extends UniformItemSection {
 
     /**
      * Writes the portion of the file header that refers to this instance.
-     * 
+     *
      * @param out {@code non-null;} where to write
      */
     public void writeHeaderPart(AnnotatedOutput out) {
@@ -96,7 +96,7 @@ public final class TypeIdsSection extends UniformItemSection {
 
     /**
      * Interns an element into this instance.
-     * 
+     *
      * @param type {@code non-null;} the type to intern
      * @return {@code non-null;} the interned reference
      */
@@ -119,7 +119,7 @@ public final class TypeIdsSection extends UniformItemSection {
 
     /**
      * Interns an element into this instance.
-     * 
+     *
      * @param type {@code non-null;} the type to intern
      * @return {@code non-null;} the interned reference
      */
@@ -144,7 +144,7 @@ public final class TypeIdsSection extends UniformItemSection {
     /**
      * Gets the index of the given type, which must have
      * been added to this instance.
-     * 
+     *
      * @param type {@code non-null;} the type to look up
      * @return {@code >= 0;} the reference's index
      */
@@ -167,7 +167,7 @@ public final class TypeIdsSection extends UniformItemSection {
     /**
      * Gets the index of the given type, which must have
      * been added to this instance.
-     * 
+     *
      * @param type {@code non-null;} the type to look up
      * @return {@code >= 0;} the reference's index
      */

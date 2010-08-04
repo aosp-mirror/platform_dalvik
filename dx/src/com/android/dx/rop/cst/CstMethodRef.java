@@ -23,7 +23,7 @@ public final class CstMethodRef
         extends CstBaseMethodRef {
     /**
      * Constructs an instance.
-     * 
+     *
      * @param definingClass {@code non-null;} the type of the defining class
      * @param nat {@code non-null;} the name-and-type
      */

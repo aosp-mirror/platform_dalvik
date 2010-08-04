@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 /*
  * Resolve classes, methods, fields, and strings.
  *
@@ -256,10 +257,21 @@ Method* dvmResolveMethod(const ClassObject* referrer, u4 methodIdx,
     }
 
     /*
-     * The class is initialized, the method has been found.  Add a pointer
-     * to our data structure so we don't have to jump through the hoops again.
+     * If the class has been initialized, add a pointer to our data structure
+     * so we don't have to jump through the hoops again.  If this is a
+     * static method and the defining class is still initializing (i.e. this
+     * thread is executing <clinit>), don't do the store, otherwise other
+     * threads could call the method without waiting for class init to finish.
      */
-    dvmDexSetResolvedMethod(pDvmDex, methodIdx, resMethod);
+    if (methodType == METHOD_STATIC && !dvmIsClassInitialized(resMethod->clazz))
+    {
+        LOGVV("--- not caching resolved method %s.%s (class init=%d/%d)\n",
+            resMethod->clazz->descriptor, resMethod->name,
+            dvmIsClassInitializing(resMethod->clazz),
+            dvmIsClassInitialized(resMethod->clazz));
+    } else {
+        dvmDexSetResolvedMethod(pDvmDex, methodIdx, resMethod);
+    }
 
     return resMethod;
 }
@@ -366,8 +378,11 @@ Method* dvmResolveInterfaceMethod(const ClassObject* referrer, u4 methodIdx)
     //assert(dvmIsClassInitialized(resMethod->clazz));
 
     /*
-     * The class is initialized, the method has been found.  Add a pointer
-     * to our data structure so we don't have to jump through the hoops again.
+     * Add a pointer to our data structure so we don't have to jump
+     * through the hoops again.
+     *
+     * As noted above, no need to worry about whether the interface that
+     * defines the method has been or is currently executing <clinit>.
      */
     dvmDexSetResolvedMethod(pDvmDex, methodIdx, resMethod);
 
@@ -419,8 +434,14 @@ InstField* dvmResolveInstField(const ClassObject* referrer, u4 ifieldIdx)
            dvmIsClassInitializing(resField->field.clazz));
 
     /*
-     * The class is initialized, the method has been found.  Add a pointer
-     * to our data structure so we don't have to jump through the hoops again.
+     * The class is initialized (or initializing), the field has been
+     * found.  Add a pointer to our data structure so we don't have to
+     * jump through the hoops again.
+     *
+     * Anything that uses the resolved table entry must have an instance
+     * of the class, so any class init activity has already happened (or
+     * been deliberately bypassed when <clinit> created an instance).
+     * So it's always okay to update the table.
      */
     dvmDexSetResolvedField(pDvmDex, ifieldIdx, (Field*)resField);
     LOGVV("    field %u is %s.%s\n",
@@ -476,10 +497,20 @@ StaticField* dvmResolveStaticField(const ClassObject* referrer, u4 sfieldIdx)
     }
 
     /*
-     * The class is initialized, the method has been found.  Add a pointer
-     * to our data structure so we don't have to jump through the hoops again.
+     * If the class has been initialized, add a pointer to our data structure
+     * so we don't have to jump through the hoops again.  If it's still
+     * initializing (i.e. this thread is executing <clinit>), don't do
+     * the store, otherwise other threads could use the field without waiting
+     * for class init to finish.
      */
-    dvmDexSetResolvedField(pDvmDex, sfieldIdx, (Field*) resField);
+    if (dvmIsClassInitialized(resField->field.clazz)) {
+        dvmDexSetResolvedField(pDvmDex, sfieldIdx, (Field*) resField);
+    } else {
+        LOGVV("--- not caching resolved field %s.%s (class init=%d/%d)\n",
+            resField->field.clazz->descriptor, resField->field.name,
+            dvmIsClassInitializing(resField->field.clazz),
+            dvmIsClassInitialized(resField->field.clazz));
+    }
 
     return resField;
 }
@@ -507,8 +538,7 @@ StringObject* dvmResolveString(const ClassObject* referrer, u4 stringIdx)
      * already interned.
      */
     utf8 = dexStringAndSizeById(pDvmDex->pDexFile, stringIdx, &utf16Size);
-    strObj = dvmCreateStringFromCstrAndLength(utf8, utf16Size,
-                ALLOC_DEFAULT);
+    strObj = dvmCreateStringFromCstrAndLength(utf8, utf16Size);
     if (strObj == NULL) {
         /* ran out of space in GC heap? */
         assert(dvmCheckException(dvmThreadSelf()));

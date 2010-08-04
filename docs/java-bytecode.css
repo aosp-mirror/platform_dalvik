@@ -10,7 +10,7 @@
     }
 }
 
-h1 { 
+h1 {
     text-align: center;
 }
 
@@ -26,16 +26,16 @@ td {
     border-width: 0;
 }
 
-td.outer { 
+td.outer {
     width: 25%;
     padding: 0;
 }
 
-td.outer table { 
+td.outer table {
     width: 100%;
 }
 
-td.outer td { 
+td.outer td {
     border-width: 0;
     background: #f8f8f8;
     padding: 1pt;
@@ -43,11 +43,11 @@ td.outer td {
     padding-right: 2pt;
 }
 
-tr.d td { 
+tr.d td {
     background: #dddddd;
 }
 
-td.outer td + td + td { 
+td.outer td + td + td {
     font-family: monospace;
     font-weight: bold;
     padding-right: 5pt;

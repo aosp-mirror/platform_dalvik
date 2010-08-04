@@ -66,7 +66,7 @@ hprofStartup_StackFrame()
         descriptor = dexProtoGetMethodDescriptor(&method->prototype, &cache);
         hprofLookupStringId(descriptor);
         dexStringCacheRelease(&cache);
-        
+
         const char* sourceFile = dvmGetMethodSourceFile(method);
         if (sourceFile) {
             hprofLookupStringId(sourceFile);
@@ -76,7 +76,7 @@ hprofStartup_StackFrame()
             hprofLookupClassId(method->clazz);
         }
     }
-    
+
     return 0;
 }
 
@@ -114,7 +114,7 @@ computeStackFrameHash(const StackFrameEntry *stackFrameEntry)
     u4 hash = 0;
     const char *cp = (char *) &stackFrameEntry->frame;
     int i;
-    
+
     for (i = 0; i < (int) sizeof(StackFrame); i++) {
         hash = 31 * hash + cp[i];
     }
@@ -192,12 +192,12 @@ hprofDumpStackFrames(hprof_context_t *ctx)
         const char *sourceFile;
         ClassObject *clazz;
         int lineNum;
-        
+
         hprofStartNewRecord(ctx, HPROF_TAG_STACK_FRAME, HPROF_TIME);
-        
+
         stackFrameEntry = (const StackFrameEntry *) dvmHashIterData(&iter);
         assert(stackFrameEntry != NULL);
-        
+
         method = stackFrameEntry->frame.method;
         pc = stackFrameEntry->frame.pc;
         sourceFile = dvmGetMethodSourceFile(method);

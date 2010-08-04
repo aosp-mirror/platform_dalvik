@@ -270,6 +270,7 @@ static bool isConnected(JdwpState* state)
 /*
  * Returns "true" if the fd is ready, "false" if not.
  */
+#if 0
 static bool isFdReadable(int sock)
 {
     fd_set readfds;
@@ -291,6 +292,7 @@ static bool isFdReadable(int sock)
     LOGE("WEIRD: odd behavior in select (count=%d)\n", count);
     return false;
 }
+#endif
 
 #if 0
 /*
@@ -390,8 +392,7 @@ static bool establishConnection(JdwpState* state)
         struct sockaddr     addrPlain;
     } addr;
     struct hostent* pEntry;
-    char auxBuf[128];
-    int cc, h_errno;
+    int h_errno;
 
     assert(state != NULL && state->netState != NULL);
     assert(!state->params.server);
@@ -405,7 +406,8 @@ static bool establishConnection(JdwpState* state)
 //#warning "forcing non-R"
 #ifdef HAVE_GETHOSTBYNAME_R
     struct hostent he;
-    cc = gethostbyname_r(state->params.host, &he, auxBuf, sizeof(auxBuf),
+    char auxBuf[128];
+    int cc = gethostbyname_r(state->params.host, &he, auxBuf, sizeof(auxBuf),
             &pEntry, &h_errno);
     if (cc != 0) {
         LOGW("gethostbyname_r('%s') failed: %s\n",
@@ -536,6 +538,7 @@ static void consumeBytes(JdwpNetState* netState, int count)
 /*
  * Dump the contents of a packet to stdout.
  */
+#if 0
 static void dumpPacket(const unsigned char* packetBuf)
 {
     const unsigned char* buf = packetBuf;
@@ -567,6 +570,7 @@ static void dumpPacket(const unsigned char* packetBuf)
     if (dataLen > 0)
         dvmPrintHexDumpDbg(buf, dataLen, LOG_TAG);
 }
+#endif
 
 /*
  * Handle a packet.  Returns "false" if we encounter a connection-fatal error.
@@ -918,4 +922,3 @@ const JdwpTransport* dvmJdwpSocketTransport(void)
 {
     return &socketTransport;
 }
-

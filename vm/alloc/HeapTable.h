@@ -27,12 +27,12 @@ struct LargeHeapRefTable {
     HeapRefTable refs;
 };
 
-bool dvmHeapInitHeapRefTable(HeapRefTable *refs, size_t nelems);
+bool dvmHeapInitHeapRefTable(HeapRefTable *refs);
 void dvmHeapFreeHeapRefTable(HeapRefTable *refs);
 void dvmHeapFreeLargeTable(LargeHeapRefTable *table);
 void dvmHeapHeapTableFree(void *ptr);
 bool dvmHeapAddRefToLargeTable(LargeHeapRefTable **tableP, Object *ref);
-void dvmHeapMarkLargeTableRefs(LargeHeapRefTable *table, bool stripLowBits);
+void dvmHeapMarkLargeTableRefs(LargeHeapRefTable *table);
 bool dvmHeapAddTableToLargeTable(LargeHeapRefTable **tableP,
         HeapRefTable *refs);
 Object *dvmHeapGetNextObjectFromLargeTable(LargeHeapRefTable **pTable);
@@ -41,10 +41,7 @@ Object *dvmHeapGetNextObjectFromLargeTable(LargeHeapRefTable **pTable);
             dvmAddToReferenceTable((refs), (ptr))
 
 #define dvmHeapNumHeapRefTableEntries(refs) \
-    ({ \
-        const HeapRefTable *NHRTE_refs = (refs); \
-        dvmReferenceTableEntries(refs); \
-    })
+            dvmReferenceTableEntries(refs)
 
 #define dvmHeapRemoveFromHeapRefTable(refs, ptr) \
             dvmRemoveFromReferenceTable((refs), (refs)->table, (ptr))

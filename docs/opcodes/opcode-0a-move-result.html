@@ -17,7 +17,7 @@
 Move the single-word non-object result of the most recent invoke-kind into the
 indicated register. This must be done as the instruction immediately after an
 invoke-kind whose (single-word, non-object) result is not to be ignored;
-anywhere else is invalid. 
+anywhere else is invalid.
 </p>
 
 <h2>Details</h2>
@@ -57,7 +57,7 @@ anywhere else is invalid.
   <li>
     The result delivered by the invoke-kind instruction must not be a reference
     value or require a register pair.
-  </li> 
+  </li>
 </ul>
 
 <h2>Behavior</h2>
@@ -76,7 +76,7 @@ anywhere else is invalid.
     becomes undefined.
   </li>
 </ul>
- 
+
 <h2>Exceptions</h2>
 
 <p>
@@ -89,7 +89,7 @@ None.
 This instruction can also be thought of as reading the contents of a special
 "result" register that is made valid and defined by executing a non-void return
 instruction or a filled-new-array instruction. The execution of any other
-instruction (including this one) renders this special register invalid. 
+instruction (including this one) renders this special register invalid.
 </p>
 
 </body>

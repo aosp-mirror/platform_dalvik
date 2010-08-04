@@ -16,7 +16,7 @@
    /*
     * File: CallABI.S
     *
-    * Code: facitliates call to native code C and C++ routines.
+    * Code: facilitates call to native code C and C++ routines.
     *
     */
 
@@ -149,8 +149,42 @@ CallABI_ENTER:
     movl        32(%ebp), %ecx          # %ecx<- return pointer
     je          2f                      # handle double return
     jl          1f                      # handle float return
+
+   /*
+    *  If a native function returns a result smaller than 8-bytes
+    *  then higher bytes may contain garbage.
+    *  This code does type-checking based on size of return result.
+    *  We zero higher bytes instead of allowing the garbage to go through.
+    */
+
+    cmpl        $3,%ebx
+    je  S8
+    cmpl        $4,%ebx
+    je          S4
+    cmpl        $7,%ebx
+    je          S1
+    cmpl        $6,%ebx
+    jne S2
+U2:
+    movzwl      %ax, %eax
     movl        %eax, (%ecx)            # save 32-bit return
+    jmp         CallABI_EXIT            # exit call
+
+S1:
+    movsbl      %al, %eax
+    movl        %eax, (%ecx)            # save 32-bit return
+    jmp         CallABI_EXIT            # exit call
+S2:
+    movswl      %ax, %eax
+    movl        %eax, (%ecx)            # save 32-bit return
+    jmp         CallABI_EXIT            # exit call
+S4:
+    cltd
+    movl        %eax, (%ecx)            # save 32-bit return
+    jmp         CallABI_EXIT            # exit call
+S8:
     movl        %edx, 4(%ecx)           # save 64-bit return
+    movl        %eax, (%ecx)            # save 32-bit return
     jmp         CallABI_EXIT            # exit call
 
 2:

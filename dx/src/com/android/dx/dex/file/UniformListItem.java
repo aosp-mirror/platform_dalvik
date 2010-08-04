@@ -26,12 +26,12 @@ import java.util.List;
  * Class that represents a contiguous list of uniform items. Each
  * item in the list, in particular, must have the same write size and
  * alignment.
- * 
+ *
  * <p>This class inherits its alignment from its items, bumped up to
  * {@code 4} if the items have a looser alignment requirement. If
  * it is more than {@code 4}, then there will be a gap after the
  * output list size (which is four bytes) and before the first item.</p>
- * 
+ *
  * @param <T> type of element contained in an instance
  */
 public final class UniformListItem<T extends OffsettedItem>
@@ -41,14 +41,14 @@ public final class UniformListItem<T extends OffsettedItem>
 
     /** {@code non-null;} the item type */
     private final ItemType itemType;
-    
+
     /** {@code non-null;} the contents */
     private final List<T> items;
 
     /**
      * Constructs an instance. It is illegal to modify the given list once
      * it is used to construct an instance of this class.
-     * 
+     *
      * @param itemType {@code non-null;} the type of the item
      * @param items {@code non-null and non-empty;} list of items to represent
      */
@@ -67,7 +67,7 @@ public final class UniformListItem<T extends OffsettedItem>
      * Helper for {@link #UniformListItem}, which returns the alignment
      * requirement implied by the given list. See the header comment for
      * more details.
-     * 
+     *
      * @param items {@code non-null;} list of items being represented
      * @return {@code >= 4;} the alignment requirement
      */
@@ -81,12 +81,12 @@ public final class UniformListItem<T extends OffsettedItem>
         } catch (NullPointerException ex) {
             // Translate the exception.
             throw new NullPointerException("items == null");
-        }            
+        }
     }
 
     /**
      * Calculates the write size for the given list.
-     * 
+     *
      * @param items {@code non-null;} the list in question
      * @return {@code >= 0;} the write size
      */
@@ -147,7 +147,7 @@ public final class UniformListItem<T extends OffsettedItem>
 
     /**
      * Gets the underlying list of items.
-     * 
+     *
      * @return {@code non-null;} the list
      */
     public final List<T> getItems() {
@@ -179,7 +179,7 @@ public final class UniformListItem<T extends OffsettedItem>
                             "item alignment mismatch");
                 }
             }
-            
+
             offset = i.place(addedTo, offset) + size;
         }
     }
@@ -203,7 +203,7 @@ public final class UniformListItem<T extends OffsettedItem>
 
     /**
      * Get the size of the header of this list.
-     * 
+     *
      * @return {@code >= 0;} the header size
      */
     private int headerSize() {

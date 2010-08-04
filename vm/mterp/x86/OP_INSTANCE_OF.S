@@ -100,4 +100,3 @@
     GET_VREG(%eax,%eax)                 # eax<- vB (obj)
     movl    offObject_clazz(%eax),%eax  # eax<- obj->clazz
     jmp     .L${opcode}_resolved
-

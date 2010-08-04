@@ -39,4 +39,3 @@ function writeFile(name, start, end) {
 $JAVAC -d . *.java
 dx --debug --dex --no-optimize --positions=none --no-locals \
     --dump-method=Blort.test *.class
-

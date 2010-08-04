@@ -52,4 +52,3 @@ import cstubs/enddefs.c
 # common subroutines for asm
 import armv5te/footer.S
 import armv5te/debug.c
-

@@ -89,10 +89,9 @@ public class Main {
         int1.clear ();
         int1.put (data);
         int1.position (0);
-            
+
         int1.clear ();
         int1.put (data);
         int1.position (0);
     }
 }
-

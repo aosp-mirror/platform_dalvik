@@ -36,4 +36,3 @@
     movl        $$0, offThread_exception(%ecx) # clear exception
     SET_VREG    %edx, rINST             # vAA<- glue->self->exception
     FGETOP_JMP  1, %eax                 # jump to next instruction; getop, jmp
-

@@ -27,4 +27,3 @@
     SET_VREG($result, r9)               @ vAA<- $result
     GOTO_OPCODE(ip)                     @ jump to next instruction
     /* 10-13 instructions */
-

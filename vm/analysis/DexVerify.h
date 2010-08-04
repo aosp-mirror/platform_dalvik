@@ -32,30 +32,19 @@ typedef enum {
     VERIFY_MODE_ALL
 } DexClassVerifyMode;
 
-/*
- * Bit values for dvmVerifyClass() "verifyFlags" arg.
- *
- * (Verification is currently a prerequisite for optimization, not an
- * after-effect, so we don't currently use VERIFY_ALLOW_OPT_INSTRS.)
- */
-enum {
-    VERIFY_DEFAULT              = 0,
-    VERIFY_ALLOW_OPT_INSTRS     = 1,    // allow instrs emitted by optimizer
-};
-
 bool dvmVerificationStartup(void);
 void dvmVerificationShutdown(void);
 
 /*
- * Perform verification on all classes loaded from this DEX file.  This
- * should be done before optimization.
+ * Perform verification on all classes loaded from this DEX file.  If
+ * enabled, it must happen before optimization.
  */
 bool dvmVerifyAllClasses(DexFile* pDexFile);
 
 /*
  * Verify a single class.
  */
-bool dvmVerifyClass(ClassObject* clazz, int verifyFlags);
+bool dvmVerifyClass(ClassObject* clazz);
 
 /*
  * Release the storage associated with a RegisterMap.

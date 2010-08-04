@@ -237,4 +237,3 @@ const char* dvmJdwpThreadStatusStr(enum JdwpThreadStatus status)
     default:                    return "?UNKNOWN?";
     }
 };
-

@@ -32,11 +32,11 @@ import com.android.dx.util.AnnotatedOutput;
 public final class HighRegisterPrefix extends VariableSizeInsn {
     /** {@code null-ok;} cached instructions, if constructed */
     private SimpleInsn[] insns;
-    
+
     /**
      * Constructs an instance. The output address of this instance is initially
      * unknown ({@code -1}).
-     * 
+     *
      * @param position {@code non-null;} source position
      * @param registers {@code non-null;} source registers
      */
@@ -83,12 +83,12 @@ public final class HighRegisterPrefix extends VariableSizeInsn {
         if (insns != null) {
             return;
         }
-        
+
         RegisterSpecList registers = getRegisters();
         int sz = registers.size();
 
         insns = new SimpleInsn[sz];
-        
+
         for (int i = 0, outAt = 0; i < sz; i++) {
             RegisterSpec src = registers.get(i);
             insns[i] = moveInsnFor(src, outAt);
@@ -122,7 +122,7 @@ public final class HighRegisterPrefix extends VariableSizeInsn {
             if (i != 0) {
                 sb.append('\n');
             }
-            
+
             sb.append(insn.listingString0(noteIndices));
 
             outAt += src.getCategory();

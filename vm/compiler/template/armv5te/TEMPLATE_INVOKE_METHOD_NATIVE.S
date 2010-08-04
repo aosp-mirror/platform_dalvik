@@ -8,7 +8,7 @@
     SAVEAREA_FROM_FP(r10, r1)           @ r10<- stack save area
     ldr     r8, [r8]                    @ r3<- suspendCount (int)
     cmp     r10, r9                     @ bottom < interpStackEnd?
-    bxlt    lr                          @ return to raise stack overflow excep.
+    bxlo    lr                          @ return to raise stack overflow excep.
     @ r1 = newFP, r0 = methodToCall, r3 = returnCell, rPC = dalvikCallsite
     str     rPC, [rFP, #(offStackSaveArea_currentPc - sizeofStackSaveArea)]
     str     rPC, [r1, #(offStackSaveArea_savedPc - sizeofStackSaveArea)]
@@ -64,10 +64,7 @@
     @ continue executing the next instruction through the interpreter
     ldr     r1, .LdvmJitToInterpTraceSelectNoChain @ defined in footer.S
     add     rPC, r0, #6                 @ reconstruct new rPC (advance 6 bytes)
-#if defined(JIT_STATS)
+#if defined(WITH_JIT_TUNING)
     mov     r0, #kCallsiteInterpreted
 #endif
     mov     pc, r1
-
-
-

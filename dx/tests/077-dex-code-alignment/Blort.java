@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-public class Blort 
+public class Blort
 {
     public static void justReturn1() {
         // This space intentionally left blank.

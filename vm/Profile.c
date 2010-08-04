@@ -227,7 +227,8 @@ static void updateActiveProfilers(int count)
             LOGE("Can't have %d active profilers\n", newValue);
             dvmAbort();
         }
-    } while (!ATOMIC_CMP_SWAP(&gDvm.activeProfilers, oldValue, newValue));
+    } while (android_atomic_release_cas(oldValue, newValue,
+            &gDvm.activeProfilers) != 0);
 
     LOGD("+++ active profiler count now %d\n", newValue);
 #if defined(WITH_JIT)
@@ -278,7 +279,7 @@ static int dumpMarkedMethods(void* vclazz, void* vfp)
     FILE* fp = (FILE*) vfp;
     Method* meth;
     char* name;
-    int i, lineNum;
+    int i;
 
     dexStringCacheInit(&stringCache);
 
@@ -328,7 +329,8 @@ static void dumpMethodList(FILE* fp)
  * trace all threads).
  *
  * This opens the output file (if an already open fd has not been supplied,
- * and we're not going direct to DDMS) and allocates the data buffer.
+ * and we're not going direct to DDMS) and allocates the data buffer.  This
+ * takes ownership of the file descriptor, closing it on completion.
  *
  * On failure, we throw an exception and return.
  */
@@ -376,6 +378,7 @@ void dvmMethodTraceStart(const char* traceFileName, int traceFd, int bufferSize,
             goto fail;
         }
     }
+    traceFd = -1;
     memset(state->buf, (char)FILL_PATTERN, bufferSize);
 
     state->directToDdms = directToDdms;
@@ -404,7 +407,7 @@ void dvmMethodTraceStart(const char* traceFileName, int traceFd, int bufferSize,
     storeLongLE(state->buf + 8, state->startWhen);
     state->curOffset = TRACE_HEADER_LEN;
 
-    MEM_BARRIER();
+    ANDROID_MEMBAR_FULL();
 
     /*
      * Set the "enabled" flag.  Once we do this, threads will wait to be
@@ -424,6 +427,8 @@ fail:
         free(state->buf);
         state->buf = NULL;
     }
+    if (traceFd >= 0)
+        close(traceFd);
     dvmUnlockMutex(&state->startStopLock);
 }
 
@@ -519,7 +524,7 @@ void dvmMethodTraceStop(void)
      * after that completes.
      */
     state->traceEnabled = false;
-    MEM_BARRIER();
+    ANDROID_MEMBAR_FULL();
     sched_yield();
     usleep(250 * 1000);
 
@@ -641,7 +646,8 @@ void dvmMethodTraceStop(void)
         /* append the profiling data */
         if (fwrite(state->buf, finalCurOffset, 1, state->traceFile) != 1) {
             int err = errno;
-            LOGE("trace fwrite(%d) failed, errno=%d\n", finalCurOffset, err);
+            LOGE("trace fwrite(%d) failed: %s\n",
+                finalCurOffset, strerror(err));
             dvmThrowExceptionFmt("Ljava/lang/RuntimeException;",
                 "Trace data write failed: %s", strerror(err));
         }
@@ -654,8 +660,7 @@ void dvmMethodTraceStop(void)
     state->traceFile = NULL;
 
     /* wake any threads that were waiting for profiling to complete */
-    int cc = pthread_cond_broadcast(&state->threadExitCond);
-    assert(cc == 0);
+    dvmBroadcastCond(&state->threadExitCond);
     dvmUnlockMutex(&state->startStopLock);
 }
 
@@ -696,7 +701,8 @@ void dvmMethodTraceAdd(Thread* self, const Method* method, int action)
             state->overflow = true;
             return;
         }
-    } while (!ATOMIC_CMP_SWAP(&state->curOffset, oldOffset, newOffset));
+    } while (android_atomic_release_cas(oldOffset, newOffset,
+            &state->curOffset) != 0);
 
     //assert(METHOD_ACTION((u4) method) == 0);
 

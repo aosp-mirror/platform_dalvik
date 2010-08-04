@@ -609,7 +609,7 @@ void dvmDumpTrackedAllocations(bool enable)
      */
     int idx = headIndex();
     int count = gDvm.allocRecordCount;
-    
+
     LOGI("Tracked allocations, (head=%d count=%d)\n",
         gDvm.allocRecordHead, count);
     while (count--) {
@@ -651,4 +651,3 @@ bail:
             free(data);
     }
 }
-

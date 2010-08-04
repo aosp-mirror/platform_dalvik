@@ -91,6 +91,3 @@
     call    dvmThrowExceptionWithClassMessage
     UNSPILL(rPC)
     jmp     common_exceptionThrown
-
-
-

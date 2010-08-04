@@ -43,7 +43,8 @@ typedef struct ShadowSpace {
     const u2* startPC;          /* starting pc of jitted region */
     const void* fp;             /* starting fp of jitted region */
     void* glue;                 /* starting glue of jitted region */
-    SelfVerificationState selfVerificationState;  /* self verification state */
+    SelfVerificationState jitExitState;  /* exit point for JIT'ed code */
+    SelfVerificationState selfVerificationState;  /* current SV running state */
     const u2* endPC;            /* ending pc of jitted region */
     void* shadowFP;       /* pointer to fp in shadow space */
     InterpState interpState;    /* copy of interpState */
@@ -108,7 +109,8 @@ typedef struct JitEntry {
     void*               codeAddress;    /* Code address of native translation */
 } JitEntry;
 
-int dvmCheckJit(const u2* pc, Thread* self, InterpState* interpState);
+int dvmCheckJit(const u2* pc, Thread* self, InterpState* interpState,
+                const ClassObject *callsiteClass, const Method* curMethod);
 void* dvmJitGetCodeAddr(const u2* dPC);
 bool dvmJitCheckTraceRequest(Thread* self, InterpState* interpState);
 void dvmJitStopTranslationRequests(void);

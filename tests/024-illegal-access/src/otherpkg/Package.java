@@ -21,4 +21,3 @@ package otherpkg;
  */
 public class Package {
 }
-

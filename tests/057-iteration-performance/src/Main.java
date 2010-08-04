@@ -19,7 +19,7 @@ import java.util.ArrayList;
 /**
  * The matrix of tests includes the A-E axis for loop body contents and
  * the 0-5 axis for iterator style.
- * 
+ *
  * <ul>
  * <li>A: empty body</li>
  * <li>B: array element access and update</li>
@@ -30,7 +30,7 @@ import java.util.ArrayList;
  * <li>G: one small object allocation (empty constructor)</li>
  * <li>H: copy 8k of bytes from one array to another</li>
  * </ul>
- * 
+ *
  * <ul>
  * <li>0: for() loop backward to 0</li>
  * <li>1: for() loop forward to local variable</li>
@@ -44,7 +44,7 @@ import java.util.ArrayList;
 public class Main {
     static public final int BODIES = 8;
     static public final int LOOPS = 7;
-    
+
     static public void main(String[] args) throws Exception {
         boolean timing = (args.length >= 1) && args[0].equals("--timing");
 
@@ -70,14 +70,14 @@ public class Main {
         if (timing) {
             System.out.println("iters = " + iters);
         }
-        
+
         run(timing, iters);
     }
 
     static private enum Normalization {
         NONE, PER_COLUMN, TOP_LEFT;
     }
-    
+
     static public void printTimings(double[][] timings, Normalization norm) {
         System.out.println();
         System.out.printf("%-7s   A        B        C        D        E" +
@@ -124,7 +124,7 @@ public class Main {
             } else {
                 combineTimings(timings, newTimings, i);
             }
-            
+
             if (checkTimes(timings, timing)) {
                 break;
             }
@@ -137,7 +137,7 @@ public class Main {
         if (! goodTimes) {
             timing = true;
         }
-        
+
         if (timing) {
             printTimings(timings, Normalization.NONE);
             printTimings(timings, Normalization.TOP_LEFT);
@@ -151,13 +151,13 @@ public class Main {
             int oldWeight) {
         for (int i = 0; i < target.length; i++) {
             for (int j = 0; j < target[i].length; j++) {
-                target[i][j] = 
+                target[i][j] =
                     ((target[i][j] * oldWeight) + newTimes[i][j])
                     / (oldWeight + 1);
             }
         }
     }
-    
+
     static public boolean checkTimes(double[][] timings, boolean print) {
         // expected increase over A1
         double[][] expected = {
@@ -167,11 +167,11 @@ public class Main {
             {  1.6,  2.8,  2.9,  3.6,  6.8, 12.6, 63.5,  97.0 },
             {  1.7,  3.0,  2.9,  3.7,  6.9, 12.8, 64.0,  98.0 },
             {  6.0,  6.0,  6.0,  7.0, 10.0, 15.0, 64.5, 105.0 },
-            { 31.0, 31.2, 31.5, 34.0, 41.0, 43.0, 91.0, 135.0 }, 
+            { 31.0, 31.2, 31.5, 34.0, 41.0, 43.0, 91.0, 135.0 },
         };
 
         boolean good = true;
-        
+
         for (int x = 0; x < BODIES; x++) {
             for (int y = 0; y < LOOPS; y++) {
                 double ratio = timings[x][y] / timings[0][0];
@@ -187,7 +187,7 @@ public class Main {
 
         return good;
     }
-    
+
     static public double[][] runAllTests(int iters, boolean print) {
         // diters is used to get usec, not nanosec; hence the extra 1000.
         double diters = (double) iters * INNER_COUNT * 1000;
@@ -200,7 +200,7 @@ public class Main {
         if (print) {
             System.out.println("Running A...");
         }
-        
+
         t0 = System.nanoTime();
         testA0(iters);
         t1 = System.nanoTime();
@@ -226,11 +226,11 @@ public class Main {
         timings[0][6] = (t7 - t6) / diters;
 
         // Column B
-        
+
         if (print) {
             System.out.println("Running B...");
         }
-        
+
         t0 = System.nanoTime();
         testB0(iters);
         t1 = System.nanoTime();
@@ -256,11 +256,11 @@ public class Main {
         timings[1][6] = (t7 - t6) / diters;
 
         // Column C
-        
+
         if (print) {
             System.out.println("Running C...");
         }
-        
+
         t0 = System.nanoTime();
         testC0(iters);
         t1 = System.nanoTime();
@@ -284,9 +284,9 @@ public class Main {
         timings[2][4] = (t5 - t4) / diters;
         timings[2][5] = (t6 - t5) / diters;
         timings[2][6] = (t7 - t6) / diters;
-        
+
         // Column D
-        
+
         if (print) {
             System.out.println("Running D...");
         }
@@ -314,9 +314,9 @@ public class Main {
         timings[3][4] = (t5 - t4) / diters;
         timings[3][5] = (t6 - t5) / diters;
         timings[3][6] = (t7 - t6) / diters;
-        
+
         // Column E
-        
+
         if (print) {
             System.out.println("Running E...");
         }
@@ -344,9 +344,9 @@ public class Main {
         timings[4][4] = (t5 - t4) / diters;
         timings[4][5] = (t6 - t5) / diters;
         timings[4][6] = (t7 - t6) / diters;
-        
+
         // Column F
-        
+
         if (print) {
             System.out.println("Running F...");
         }
@@ -379,9 +379,9 @@ public class Main {
 
         iters /= 5;
         diters /= 5;
-        
+
         // Column G
-        
+
         if (print) {
             System.out.println("Running G...");
         }
@@ -409,9 +409,9 @@ public class Main {
         timings[6][4] = (t5 - t4) / diters;
         timings[6][5] = (t6 - t5) / diters;
         timings[6][6] = (t7 - t6) / diters;
-        
+
         // Column H
-        
+
         if (print) {
             System.out.println("Running H...");
         }
@@ -472,9 +472,9 @@ public class Main {
             return size;
         }
     }
-    
+
     // The tests themselves
-    
+
     static public void testA0(int iters) {
         for (int outer = iters; outer > 0; outer--) {
             for (int i = INNER_COUNT; i > 0; i--) {
@@ -495,7 +495,7 @@ public class Main {
 
     static public void testA2(int iters) {
         int[] array = INNER_ARRAY;
-        
+
         for (int outer = iters; outer > 0; outer--) {
             for (int i = 0; i < array.length; i++) {
                 // empty
@@ -505,7 +505,7 @@ public class Main {
 
     static public void testA3(int iters) {
         int[] array = INNER_ARRAY;
-        
+
         for (int outer = iters; outer > 0; outer--) {
             for (int i : array) {
                 // empty
@@ -515,7 +515,7 @@ public class Main {
 
     static public void testA4(int iters) {
         Target target = TARGET;
-        
+
         for (int outer = iters; outer > 0; outer--) {
             for (int i = 0; i < target.size; i++) {
                 // empty
@@ -525,7 +525,7 @@ public class Main {
 
     static public void testA5(int iters) {
         Target target = TARGET;
-        
+
         for (int outer = iters; outer > 0; outer--) {
             for (int i = 0; i < target.size(); i++) {
                 // empty
@@ -535,7 +535,7 @@ public class Main {
 
     static public void testA6(int iters) {
         ArrayList<Object> list = INNER_LIST;
-        
+
         for (int outer = iters; outer > 0; outer--) {
             for (Object o : list) {
                 // empty
@@ -545,7 +545,7 @@ public class Main {
 
     static public void testB0(int iters) {
         Target target = TARGET;
-        
+
         for (int outer = iters; outer > 0; outer--) {
             for (int i = INNER_COUNT; i > 0; i--) {
                 target.value++;
@@ -567,7 +567,7 @@ public class Main {
     static public void testB2(int iters) {
         Target target = TARGET;
         int[] array = INNER_ARRAY;
-        
+
         for (int outer = iters; outer > 0; outer--) {
             for (int i = 0; i < array.length; i++) {
                 target.value++;
@@ -578,7 +578,7 @@ public class Main {
     static public void testB3(int iters) {
         Target target = TARGET;
         int[] array = INNER_ARRAY;
-        
+
         for (int outer = iters; outer > 0; outer--) {
             for (int i : array) {
                 target.value++;
@@ -588,7 +588,7 @@ public class Main {
 
     static public void testB4(int iters) {
         Target target = TARGET;
-        
+
         for (int outer = iters; outer > 0; outer--) {
             for (int i = 0; i < target.size; i++) {
                 target.value++;
@@ -598,7 +598,7 @@ public class Main {
 
     static public void testB5(int iters) {
         Target target = TARGET;
-        
+
         for (int outer = iters; outer > 0; outer--) {
             for (int i = 0; i < target.size(); i++) {
                 target.value++;
@@ -609,7 +609,7 @@ public class Main {
     static public void testB6(int iters) {
         Target target = TARGET;
         ArrayList<Object> list = INNER_LIST;
-        
+
         for (int outer = iters; outer > 0; outer--) {
             for (Object o : list) {
                 target.value++;
@@ -640,7 +640,7 @@ public class Main {
 
     static public void testC2(int iters) {
         int[] array = INNER_ARRAY;
-        
+
         for (int outer = iters; outer > 0; outer--) {
             for (int i = 0; i < array.length; i++) {
                 array[i]++;
@@ -650,7 +650,7 @@ public class Main {
 
     static public void testC3(int iters) {
         int[] array = INNER_ARRAY;
-        
+
         for (int outer = iters; outer > 0; outer--) {
             for (int i : array) {
                 array[0] = i + 1;
@@ -661,7 +661,7 @@ public class Main {
     static public void testC4(int iters) {
         Target target = TARGET;
         int[] array = INNER_ARRAY;
-        
+
         for (int outer = iters; outer > 0; outer--) {
             for (int i = 0; i < target.size; i++) {
                 array[i]++;
@@ -672,7 +672,7 @@ public class Main {
     static public void testC5(int iters) {
         int[] array = INNER_ARRAY;
         Target target = TARGET;
-        
+
         for (int outer = iters; outer > 0; outer--) {
             for (int i = 0; i < target.size(); i++) {
                 array[i]++;
@@ -683,7 +683,7 @@ public class Main {
     static public void testC6(int iters) {
         int[] array = INNER_ARRAY;
         ArrayList<Object> list = INNER_LIST;
-        
+
         for (int outer = iters; outer > 0; outer--) {
             for (Object o : list) {
                 array[0]++;
@@ -715,7 +715,7 @@ public class Main {
     static public void testD2(int iters) {
         Target target = TARGET;
         int[] array = INNER_ARRAY;
-        
+
         for (int outer = iters; outer > 0; outer--) {
             for (int i = 0; i < array.length; i++) {
                 target.simple();
@@ -726,7 +726,7 @@ public class Main {
     static public void testD3(int iters) {
         Target target = TARGET;
         int[] array = INNER_ARRAY;
-        
+
         for (int outer = iters; outer > 0; outer--) {
             for (int i : array) {
                 target.simple();
@@ -736,7 +736,7 @@ public class Main {
 
     static public void testD4(int iters) {
         Target target = TARGET;
-        
+
         for (int outer = iters; outer > 0; outer--) {
             for (int i = 0; i < target.size; i++) {
                 target.simple();
@@ -746,7 +746,7 @@ public class Main {
 
     static public void testD5(int iters) {
         Target target = TARGET;
-        
+
         for (int outer = iters; outer > 0; outer--) {
             for (int i = 0; i < target.size(); i++) {
                 target.simple();
@@ -757,13 +757,13 @@ public class Main {
     static public void testD6(int iters) {
         Target target = TARGET;
         ArrayList<Object> list = INNER_LIST;
-        
+
         for (int outer = iters; outer > 0; outer--) {
             for (Object o : list) {
                 target.simple();
             }
         }
-    }    
+    }
 
     static public void testE0(int iters) {
         Target target = TARGET;
@@ -793,7 +793,7 @@ public class Main {
     static public void testE2(int iters) {
         Target target = TARGET;
         int[] array = INNER_ARRAY;
-        
+
         for (int outer = iters; outer > 0; outer--) {
             for (int i = 0; i < array.length; i++) {
                 synchronized (target) {
@@ -806,7 +806,7 @@ public class Main {
     static public void testE3(int iters) {
         Target target = TARGET;
         int[] array = INNER_ARRAY;
-        
+
         for (int outer = iters; outer > 0; outer--) {
             for (int i : array) {
                 synchronized (target) {
@@ -818,7 +818,7 @@ public class Main {
 
     static public void testE4(int iters) {
         Target target = TARGET;
-        
+
         for (int outer = iters; outer > 0; outer--) {
             for (int i = 0; i < target.size; i++) {
                 synchronized (target) {
@@ -830,7 +830,7 @@ public class Main {
 
     static public void testE5(int iters) {
         Target target = TARGET;
-        
+
         for (int outer = iters; outer > 0; outer--) {
             for (int i = 0; i < target.size(); i++) {
                 synchronized (target) {
@@ -843,7 +843,7 @@ public class Main {
     static public void testE6(int iters) {
         Target target = TARGET;
         ArrayList<Object> list = INNER_LIST;
-        
+
         for (int outer = iters; outer > 0; outer--) {
             for (Object o : list) {
                 synchronized (target) {
@@ -851,7 +851,7 @@ public class Main {
                 }
             }
         }
-    }    
+    }
 
     static public void testF0(int iters) {
         Target target = TARGET;
@@ -885,7 +885,7 @@ public class Main {
     static public void testF2(int iters) {
         Target target = TARGET;
         int[] array = INNER_ARRAY;
-        
+
         for (int outer = iters; outer > 0; outer--) {
             for (int i = 0; i < array.length; i++) {
                 target.simple();
@@ -900,7 +900,7 @@ public class Main {
     static public void testF3(int iters) {
         Target target = TARGET;
         int[] array = INNER_ARRAY;
-        
+
         for (int outer = iters; outer > 0; outer--) {
             for (int i : array) {
                 target.simple();
@@ -914,7 +914,7 @@ public class Main {
 
     static public void testF4(int iters) {
         Target target = TARGET;
-        
+
         for (int outer = iters; outer > 0; outer--) {
             for (int i = 0; i < target.size; i++) {
                 target.simple();
@@ -928,7 +928,7 @@ public class Main {
 
     static public void testF5(int iters) {
         Target target = TARGET;
-        
+
         for (int outer = iters; outer > 0; outer--) {
             for (int i = 0; i < target.size(); i++) {
                 target.simple();
@@ -943,7 +943,7 @@ public class Main {
     static public void testF6(int iters) {
         Target target = TARGET;
         ArrayList<Object> list = INNER_LIST;
-        
+
         for (int outer = iters; outer > 0; outer--) {
             for (Object o : list) {
                 target.simple();
@@ -975,7 +975,7 @@ public class Main {
 
     static public void testG2(int iters) {
         int[] array = INNER_ARRAY;
-        
+
         for (int outer = iters; outer > 0; outer--) {
             for (int i = 0; i < array.length; i++) {
                 new Target();
@@ -985,7 +985,7 @@ public class Main {
 
     static public void testG3(int iters) {
         int[] array = INNER_ARRAY;
-        
+
         for (int outer = iters; outer > 0; outer--) {
             for (int i : array) {
                 new Target();
@@ -995,7 +995,7 @@ public class Main {
 
     static public void testG4(int iters) {
         Target target = TARGET;
-        
+
         for (int outer = iters; outer > 0; outer--) {
             for (int i = 0; i < target.size; i++) {
                 new Target();
@@ -1005,7 +1005,7 @@ public class Main {
 
     static public void testG5(int iters) {
         Target target = TARGET;
-        
+
         for (int outer = iters; outer > 0; outer--) {
             for (int i = 0; i < target.size(); i++) {
                 new Target();
@@ -1015,7 +1015,7 @@ public class Main {
 
     static public void testG6(int iters) {
         ArrayList<Object> list = INNER_LIST;
-        
+
         for (int outer = iters; outer > 0; outer--) {
             for (Object o : list) {
                 new Target();
@@ -1026,7 +1026,7 @@ public class Main {
     static public void testH0(int iters) {
         byte[] b1 = BYTES_1;
         byte[] b2 = BYTES_2;
-        
+
         for (int outer = iters; outer > 0; outer--) {
             for (int i = INNER_COUNT; i > 0; i--) {
                 System.arraycopy(b1, 0, b2, 0, ARRAY_BYTES);
@@ -1050,7 +1050,7 @@ public class Main {
         byte[] b1 = BYTES_1;
         byte[] b2 = BYTES_2;
         int[] array = INNER_ARRAY;
-        
+
         for (int outer = iters; outer > 0; outer--) {
             for (int i = 0; i < array.length; i++) {
                 System.arraycopy(b1, 0, b2, 0, ARRAY_BYTES);
@@ -1062,7 +1062,7 @@ public class Main {
         byte[] b1 = BYTES_1;
         byte[] b2 = BYTES_2;
         int[] array = INNER_ARRAY;
-        
+
         for (int outer = iters; outer > 0; outer--) {
             for (int i : array) {
                 System.arraycopy(b1, 0, b2, 0, ARRAY_BYTES);
@@ -1074,7 +1074,7 @@ public class Main {
         Target target = TARGET;
         byte[] b1 = BYTES_1;
         byte[] b2 = BYTES_2;
-        
+
         for (int outer = iters; outer > 0; outer--) {
             for (int i = 0; i < target.size; i++) {
                 System.arraycopy(b1, 0, b2, 0, ARRAY_BYTES);
@@ -1086,7 +1086,7 @@ public class Main {
         Target target = TARGET;
         byte[] b1 = BYTES_1;
         byte[] b2 = BYTES_2;
-        
+
         for (int outer = iters; outer > 0; outer--) {
             for (int i = 0; i < target.size(); i++) {
                 System.arraycopy(b1, 0, b2, 0, ARRAY_BYTES);
@@ -1098,7 +1098,7 @@ public class Main {
         byte[] b1 = BYTES_1;
         byte[] b2 = BYTES_2;
         ArrayList<Object> list = INNER_LIST;
-        
+
         for (int outer = iters; outer > 0; outer--) {
             for (Object o : list) {
                 System.arraycopy(b1, 0, b2, 0, ARRAY_BYTES);

@@ -28,16 +28,16 @@ public class Main
         FileInputStream fis;
         BufferedInputStream bis;
         DataInputStream dis;
-        
+
         try {
             fis = new FileInputStream(argv[0]);
             bis = new BufferedInputStream(fis);
             dis = new DataInputStream(bis);
-            
+
             State state = (new HprofParser(dis)).parse();
 
             dis.close();
-            
+
             testClassesQuery(state);
             testAllClassesQuery(state);
             testFindInstancesOf(state);
@@ -53,28 +53,28 @@ public class Main
             "javax.",
             "org.xml.sax"
         };
-        
+
         Map<String, Set<ClassObj>> someClasses = Queries.classes(state, x);
-        
+
         for (String thePackage: someClasses.keySet()) {
             System.out.println("------------------- " + thePackage);
-            
+
             Set<ClassObj> classes = someClasses.get(thePackage);
-            
+
             for (ClassObj theClass: classes) {
                 System.out.println("     " + theClass.mClassName);
             }
         }
     }
-    
+
     private static void testAllClassesQuery(State state) {
         Map<String, Set<ClassObj>> allClasses = Queries.allClasses(state);
-        
+
         for (String thePackage: allClasses.keySet()) {
             System.out.println("------------------- " + thePackage);
-            
+
             Set<ClassObj> classes = allClasses.get(thePackage);
-            
+
             for (ClassObj theClass: classes) {
                 System.out.println("     " + theClass.mClassName);
             }
@@ -83,14 +83,14 @@ public class Main
 
     private static void testFindInstancesOf(State state) {
         Instance[] instances = Queries.instancesOf(state, "java.lang.String");
-        
+
         System.out.println("There are " + instances.length + " Strings.");
     }
 
     private static void testFindAllInstancesOf(State state) {
-        Instance[] instances = Queries.allInstancesOf(state, 
+        Instance[] instances = Queries.allInstancesOf(state,
             "android.graphics.drawable.Drawable");
-        
+
         System.out.println("There are " + instances.length
             + " instances of Drawables and its subclasses.");
     }

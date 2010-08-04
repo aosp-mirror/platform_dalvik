@@ -32,7 +32,7 @@ typedef struct DexCatchHandler {
     u4          address;    /* handler address */
 } DexCatchHandler;
 
-/* Get the first handler offset for the given DexCode. 
+/* Get the first handler offset for the given DexCode.
  * It's not 0 because the handlers list is prefixed with its size
  * (in entries) as a uleb128. */
 u4 dexGetFirstHandlerOffset(const DexCode* pCode);
@@ -84,7 +84,7 @@ DEX_INLINE void dexCatchIteratorInit(DexCatchIterator* pIterator,
 {
     dexCatchIteratorInitToPointer(pIterator,
             dexGetCatchHandlerData(pCode) + offset);
-}    
+}
 
 /* Get the next item from a DexCatchIterator. Returns NULL if at end. */
 DEX_INLINE DexCatchHandler* dexCatchIteratorNext(DexCatchIterator* pIterator) {
@@ -119,7 +119,7 @@ int dexFindCatchHandlerOffset0(u2 triesSize, const DexTry* pTries,
  * found. Returns false if there is no applicable handler. */
 DEX_INLINE bool dexFindCatchHandler(DexCatchIterator *pIterator,
         const DexCode* pCode, u4 address) {
-    u2 triesSize = pCode->triesSize; 
+    u2 triesSize = pCode->triesSize;
     int offset = -1;
 
     // Short-circuit the overwhelmingly common cases.
@@ -134,13 +134,13 @@ DEX_INLINE bool dexFindCatchHandler(DexCatchIterator *pIterator,
             if (address < start) {
                 break;
             }
-        
+
             u4 end = start + tries[0].insnCount;
 
             if (address >= end) {
                 break;
             }
-        
+
             offset = tries[0].handlerOff;
             break;
         }
@@ -157,6 +157,6 @@ DEX_INLINE bool dexFindCatchHandler(DexCatchIterator *pIterator,
         dexCatchIteratorInit(pIterator, pCode, offset);
         return true;
     }
-}    
+}
 
 #endif

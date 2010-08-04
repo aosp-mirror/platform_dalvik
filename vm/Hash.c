@@ -282,8 +282,8 @@ bool dvmHashTableRemove(HashTable* pHashTable, u4 itemHash, void* item)
 
 /*
  * Scan every entry in the hash table and evaluate it with the specified
- * indirect function call. If the function returns 1, remove the entry from 
- * the table. 
+ * indirect function call. If the function returns 1, remove the entry from
+ * the table.
  *
  * Does NOT invoke the "free" function on the item.
  *
@@ -400,7 +400,7 @@ void dvmHashTableProbeCount(HashTable* pHashTable, HashCalcFunc calcFunc,
     {
         const void* data = (const void*)dvmHashIterData(&iter);
         int count;
-            
+
         count = countProbes(pHashTable, (*calcFunc)(data), data, cmpFunc);
 
         numEntries++;

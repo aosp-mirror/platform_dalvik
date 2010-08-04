@@ -448,7 +448,7 @@
     no arrays of <code>long</code> or <code>double</code>, but reference
     types are acceptable). The constructed
     instance is stored as a "result" in the same way that the method invocation
-    instructions store their results, so the constructed instance must 
+    instructions store their results, so the constructed instance must
     be moved to a register with an immediately subsequent
     <code>move-result-object</code> instruction (if it is to be used).</td>
 </tr>
@@ -1453,7 +1453,7 @@ round-to-nearest and gradual underflow, except where stated otherwise.</p>
     float result = a % b;
   </td>
   <td>Floating point remainder after division. This function is different
-    than IEEE 754 remainder and is defined as 
+    than IEEE 754 remainder and is defined as
     <code>result == a - roundTowardZero(a / b) * b</code>.
   </td>
 </tr>
@@ -1491,7 +1491,7 @@ round-to-nearest and gradual underflow, except where stated otherwise.</p>
     double result = a % b;
   </td>
   <td>Floating point remainder after division. This function is different
-    than IEEE 754 remainder and is defined as 
+    than IEEE 754 remainder and is defined as
     <code>result == a - roundTowardZero(a / b) * b</code>.
   </td>
 </tr>

@@ -30,7 +30,7 @@
 Function prototype:
 
 void dvmPlatformInvoke(void* pEnv, ClassObject* clazz, int argInfo, int argc,
-    const u4* argv, const char* signature, void* func, JValue* pReturn) 
+    const u4* argv, const char* signature, void* func, JValue* pReturn)
 
 The method we are calling has the form:
 

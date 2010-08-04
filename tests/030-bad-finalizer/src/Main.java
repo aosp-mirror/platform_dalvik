@@ -18,9 +18,8 @@ public class Main {
             System.out.println("Requesting another GC.");
             System.gc();
         }
-        
+
         System.out.println("Done waiting.");
         System.exit(0);
     }
 }
-

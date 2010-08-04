@@ -23,7 +23,7 @@
 #else
     blxeq   lr                          @ punt to interpreter and compare state
 #endif
-    ldr     r1, .LdvmJitToInterpNoChain @ defined in footer.S
+    ldr     r1, .LdvmJitToInterpNoChainNoProfile @ defined in footer.S
     mov     rFP, r10                    @ publish new FP
     ldrne   r10, [r2, #offMethod_clazz] @ r10<- method->clazz
     ldr     r8, [r8]                    @ r8<- suspendCount
@@ -38,7 +38,7 @@
     str     r9, [r3, #offThread_inJitCodeCache] @ in code cache or not
     cmp     r9, #0                      @ chaining cell exists?
     blxne   r9                          @ jump to the chaining cell
-#if defined(JIT_STATS)
+#if defined(WITH_JIT_TUNING)
     mov     r0, #kCallsiteInterpreted
 #endif
     mov     pc, r1                      @ callsite is interpreted

@@ -35,6 +35,9 @@
  *
  * (To save space in the binary we could generate a static table with a
  * command-line utility.)
+ *
+ * TODO: it doesn't look like we're using the negative values anymore.
+ * Consider switching to only positive values.
  */
 InstructionWidth* dexCreateInstrWidthTable(void)
 {
@@ -294,6 +297,18 @@ InstructionWidth* dexCreateInstrWidthTable(void)
         case OP_IPUT_QUICK:
         case OP_IPUT_WIDE_QUICK:
         case OP_IPUT_OBJECT_QUICK:
+        case OP_IGET_VOLATILE:
+        case OP_IPUT_VOLATILE:
+        case OP_SGET_VOLATILE:
+        case OP_SPUT_VOLATILE:
+        case OP_IGET_OBJECT_VOLATILE:
+        case OP_IPUT_OBJECT_VOLATILE:
+        case OP_SGET_OBJECT_VOLATILE:
+        case OP_SPUT_OBJECT_VOLATILE:
+        case OP_IGET_WIDE_VOLATILE:
+        case OP_IPUT_WIDE_VOLATILE:
+        case OP_SGET_WIDE_VOLATILE:
+        case OP_SPUT_WIDE_VOLATILE:
         case OP_THROW_VERIFICATION_ERROR:
             width = -2;
             break;
@@ -317,20 +332,8 @@ InstructionWidth* dexCreateInstrWidthTable(void)
         case OP_UNUSED_73:
         case OP_UNUSED_79:
         case OP_UNUSED_7A:
-        case OP_UNUSED_E3:
-        case OP_UNUSED_E4:
-        case OP_UNUSED_E5:
-        case OP_UNUSED_E6:
-        case OP_UNUSED_E7:
-        case OP_UNUSED_E8:
-        case OP_UNUSED_E9:
-        case OP_UNUSED_EA:
-        case OP_UNUSED_EB:
         case OP_BREAKPOINT:
         case OP_UNUSED_F1:
-        case OP_UNUSED_FC:
-        case OP_UNUSED_FD:
-        case OP_UNUSED_FE:
         case OP_UNUSED_FF:
             assert(width == 0);
             break;
@@ -625,6 +628,18 @@ InstructionFlags* dexCreateInstrFlagsTable(void)
         case OP_IPUT_QUICK:
         case OP_IPUT_WIDE_QUICK:
         case OP_IPUT_OBJECT_QUICK:
+        case OP_IGET_VOLATILE:
+        case OP_IPUT_VOLATILE:
+        case OP_SGET_VOLATILE:
+        case OP_SPUT_VOLATILE:
+        case OP_IGET_OBJECT_VOLATILE:
+        case OP_IPUT_OBJECT_VOLATILE:
+        case OP_SGET_OBJECT_VOLATILE:
+        case OP_SPUT_OBJECT_VOLATILE:
+        case OP_IGET_WIDE_VOLATILE:
+        case OP_IPUT_WIDE_VOLATILE:
+        case OP_SGET_WIDE_VOLATILE:
+        case OP_SPUT_WIDE_VOLATILE:
             flags = kInstrCanContinue | kInstrCanThrow;
             break;
 
@@ -646,20 +661,8 @@ InstructionFlags* dexCreateInstrFlagsTable(void)
         case OP_UNUSED_73:
         case OP_UNUSED_79:
         case OP_UNUSED_7A:
-        case OP_UNUSED_E3:
-        case OP_UNUSED_E4:
-        case OP_UNUSED_E5:
-        case OP_UNUSED_E6:
-        case OP_UNUSED_E7:
-        case OP_UNUSED_E8:
-        case OP_UNUSED_E9:
-        case OP_UNUSED_EA:
-        case OP_UNUSED_EB:
         case OP_BREAKPOINT:
         case OP_UNUSED_F1:
-        case OP_UNUSED_FC:
-        case OP_UNUSED_FD:
-        case OP_UNUSED_FE:
         case OP_UNUSED_FF:
             break;
 
@@ -966,6 +969,20 @@ InstructionFormat* dexCreateInstrFormatTable(void)
         case OP_THROW_VERIFICATION_ERROR:
             fmt = kFmt20bc;
             break;
+        case OP_IGET_WIDE_VOLATILE:
+        case OP_IPUT_WIDE_VOLATILE:
+        case OP_SGET_WIDE_VOLATILE:
+        case OP_SPUT_WIDE_VOLATILE:
+        case OP_IGET_VOLATILE:
+        case OP_IPUT_VOLATILE:
+        case OP_SGET_VOLATILE:
+        case OP_SPUT_VOLATILE:
+        case OP_IGET_OBJECT_VOLATILE:
+        case OP_IPUT_OBJECT_VOLATILE:
+        case OP_SGET_OBJECT_VOLATILE:
+        case OP_SPUT_OBJECT_VOLATILE:
+            fmt = kFmt22c;
+            break;
         case OP_IGET_QUICK:
         case OP_IGET_WIDE_QUICK:
         case OP_IGET_OBJECT_QUICK:
@@ -1002,20 +1019,8 @@ InstructionFormat* dexCreateInstrFormatTable(void)
         case OP_UNUSED_73:
         case OP_UNUSED_79:
         case OP_UNUSED_7A:
-        case OP_UNUSED_E3:
-        case OP_UNUSED_E4:
-        case OP_UNUSED_E5:
-        case OP_UNUSED_E6:
-        case OP_UNUSED_E7:
-        case OP_UNUSED_E8:
-        case OP_UNUSED_E9:
-        case OP_UNUSED_EA:
-        case OP_UNUSED_EB:
         case OP_BREAKPOINT:
         case OP_UNUSED_F1:
-        case OP_UNUSED_FC:
-        case OP_UNUSED_FD:
-        case OP_UNUSED_FE:
         case OP_UNUSED_FF:
             fmt = kFmtUnknown;
             break;
@@ -1064,7 +1069,7 @@ void dexDecodeInstruction(const InstructionFormat* fmts, const u2* insns,
         pDec->vB = INST_B(inst);
         break;
     case kFmt11n:       // op vA, #+B
-        pDec->vA = INST_A(inst); 
+        pDec->vA = INST_A(inst);
         pDec->vB = (s4) (INST_B(inst) << 28) >> 28; // sign extend 4-bit value
         break;
     case kFmt11x:       // op vAA
@@ -1234,9 +1239,10 @@ bail:
  * works for special OP_NOP entries, including switch statement data tables
  * and array data.
  */
-int dexGetInstrOrTableWidthAbs(const InstructionWidth* widths, const u2* insns)
+size_t dexGetInstrOrTableWidthAbs(const InstructionWidth* widths,
+    const u2* insns)
 {
-    int width;
+    size_t width;
 
     if (*insns == kPackedSwitchSignature) {
         width = 4 + insns[1] * 2;

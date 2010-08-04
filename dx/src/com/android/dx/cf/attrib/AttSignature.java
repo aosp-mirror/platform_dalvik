@@ -30,7 +30,7 @@ public final class AttSignature extends BaseAttribute {
 
     /**
      * Constructs an instance.
-     * 
+     *
      * @param signature {@code non-null;} the signature string
      */
     public AttSignature(CstUtf8 signature) {
@@ -50,7 +50,7 @@ public final class AttSignature extends BaseAttribute {
 
     /**
      * Gets the signature string.
-     * 
+     *
      * @return {@code non-null;} the signature string
      */
     public CstUtf8 getSignature() {

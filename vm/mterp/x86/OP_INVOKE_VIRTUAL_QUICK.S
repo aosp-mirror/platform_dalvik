@@ -21,5 +21,3 @@
     EXPORT_PC()                         # might throw later - get ready
     movl      (%eax,%ecx,4),%eax        # eax<- vtable[BBBB]
     jmp       common_invokeMethod${routine}
-
-

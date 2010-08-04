@@ -41,6 +41,12 @@ bool dvmHeapStartupAfterZygote(void);
  */
 void dvmHeapShutdown(void);
 
+/*
+ * Stops any threads internal to the garbage collector.  Called before
+ * the heap itself is shutdown.
+ */
+void dvmHeapThreadShutdown(void);
+
 #if 0       // needs to be in Alloc.h so debug code can find it.
 /*
  * Returns a number of bytes greater than or
@@ -52,21 +58,35 @@ void dvmHeapShutdown(void);
 size_t dvmObjectSizeInHeap(const Object *obj);
 #endif
 
-enum GcReason {
+typedef enum {
+    /* GC all heaps. */
+    GC_FULL,
+    /* GC just the first heap. */
+    GC_PARTIAL
+} GcMode;
+
+typedef enum {
     /* Not enough space for an "ordinary" Object to be allocated. */
     GC_FOR_MALLOC,
+    /* Automatic GC triggered by exceeding a heap occupancy threshold. */
+    GC_CONCURRENT,
     /* Explicit GC via Runtime.gc(), VMRuntime.gc(), or SIGUSR1. */
     GC_EXPLICIT,
     /* GC to try to reduce heap footprint to allow more non-GC'ed memory. */
     GC_EXTERNAL_ALLOC,
     /* GC to dump heap contents to a file, only used under WITH_HPROF */
     GC_HPROF_DUMP_HEAP
-};
+} GcReason;
 
 /*
  * Run the garbage collector without doing any locking.
  */
-void dvmCollectGarbageInternal(bool collectSoftReferences,
-                               enum GcReason reason);
+void dvmCollectGarbageInternal(bool clearSoftRefs, GcReason reason);
+
+/*
+ * Blocks the until the GC thread signals the completion of a
+ * concurrent GC.
+ */
+void dvmWaitForConcurrentGcToComplete(void);
 
 #endif  // _DALVIK_ALLOC_HEAP

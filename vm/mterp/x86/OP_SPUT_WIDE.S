@@ -43,4 +43,3 @@
     testl    %eax,%eax
     jne      .L${opcode}_finish                 # success, continue
     jmp      common_exceptionThrown             # no, handle exception
-

@@ -39,7 +39,7 @@ public class _ListIntSet extends TestCase {
         assertTrue(set.has(31));
 
         assertEquals(3, set.elements());
-        
+
         assertFalse(set.has(2));
         assertFalse(set.has(7));
         assertFalse(set.has(30));
@@ -79,7 +79,7 @@ public class _ListIntSet extends TestCase {
 
         IntIterator iter = set.iterator();
 
-        assertFalse(iter.hasNext());        
+        assertFalse(iter.hasNext());
     }
 
     public void test_remove() {

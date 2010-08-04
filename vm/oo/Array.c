@@ -222,7 +222,7 @@ ArrayObject* dvmAllocPrimitiveArray(char type, size_t length, int allocFlags)
  * The dimension we're creating is in dimensions[0], so when we recurse
  * we advance the pointer.
  */
-ArrayObject* dvmAllocMultiArray(ClassObject* arrayClass, int curDim, 
+ArrayObject* dvmAllocMultiArray(ClassObject* arrayClass, int curDim,
     const int* dimensions)
 {
     ArrayObject* newArray;
@@ -246,7 +246,6 @@ ArrayObject* dvmAllocMultiArray(ClassObject* arrayClass, int curDim,
         }
     } else {
         ClassObject* subArrayClass;
-        Object** contents;
         int i;
 
         /* if we have X[][], find X[] */
@@ -269,19 +268,16 @@ ArrayObject* dvmAllocMultiArray(ClassObject* arrayClass, int curDim,
         /*
          * Create a new sub-array in every element of the array.
          */
-        contents = (Object**) newArray->contents;
         for (i = 0; i < *dimensions; i++) {
-            ArrayObject* newSubArray;
-
-            newSubArray = dvmAllocMultiArray(subArrayClass, curDim-1,
-                            dimensions+1);
+          ArrayObject* newSubArray;
+          newSubArray = dvmAllocMultiArray(subArrayClass, curDim-1,
+                          dimensions+1);
             if (newSubArray == NULL) {
                 dvmReleaseTrackedAlloc((Object*) newArray, NULL);
                 assert(dvmCheckException(dvmThreadSelf()));
                 return NULL;
             }
-
-            *contents++ = (Object*) newSubArray;
+            dvmSetObjectArrayElement(newArray, i, (Object *)newSubArray);
             dvmReleaseTrackedAlloc((Object*) newSubArray, NULL);
         }
     }
@@ -423,16 +419,22 @@ static ClassObject* createArrayClass(const char* descriptor, Object* loader)
     newClass = (ClassObject*) dvmMalloc(sizeof(*newClass), ALLOC_DEFAULT);
     if (newClass == NULL)
         return NULL;
-    DVM_OBJECT_INIT(&newClass->obj, gDvm.unlinkedJavaLangClass);
+    DVM_OBJECT_INIT(&newClass->obj, gDvm.classJavaLangClass);
     dvmSetClassSerialNumber(newClass);
     newClass->descriptorAlloc = strdup(descriptor);
     newClass->descriptor = newClass->descriptorAlloc;
-    newClass->super = gDvm.classJavaLangObject;
+    dvmSetFieldObject((Object *)newClass,
+                      offsetof(ClassObject, super),
+                      (Object *)gDvm.classJavaLangObject);
     newClass->vtableCount = gDvm.classJavaLangObject->vtableCount;
     newClass->vtable = gDvm.classJavaLangObject->vtable;
     newClass->primitiveType = PRIM_NOT;
-    newClass->elementClass = elementClass;
-    newClass->classLoader = elementClass->classLoader;
+    dvmSetFieldObject((Object *)newClass,
+                      offsetof(ClassObject, elementClass),
+                      (Object *)elementClass);
+    dvmSetFieldObject((Object *)newClass,
+                      offsetof(ClassObject, classLoader),
+                      (Object *)elementClass->classLoader);
     newClass->arrayDim = arrayDim;
     newClass->status = CLASS_INITIALIZED;
 #if WITH_HPROF && WITH_HPROF_STACK
@@ -518,7 +520,6 @@ static ClassObject* createArrayClass(const char* descriptor, Object* loader)
         /* Clean up the class before letting the
          * GC get its hands on it.
          */
-        assert(newClass->obj.clazz == gDvm.unlinkedJavaLangClass);
         dvmFreeClassInnards(newClass);
 
         /* Let the GC free the class.
@@ -531,9 +532,6 @@ static ClassObject* createArrayClass(const char* descriptor, Object* loader)
         assert(newClass != NULL);
         return newClass;
     }
-
-    /* make it available to the GC */
-    newClass->obj.clazz = gDvm.classJavaLangClass;
     dvmReleaseTrackedAlloc((Object*) newClass, NULL);
 
     LOGV("Created array class '%s' %p (access=0x%04x.%04x)\n",
@@ -599,8 +597,8 @@ ClassObject* dvmFindPrimitiveClass(char type)
         ClassObject* primClass = createPrimitiveClass(idx);
         dvmReleaseTrackedAlloc((Object*) primClass, NULL);
 
-        if (!ATOMIC_CMP_SWAP((int*) &gDvm.primitiveClass[idx],
-            0, (int) primClass))
+        if (android_atomic_release_cas(0, (int) primClass,
+                (int*) &gDvm.primitiveClass[idx]) != 0)
         {
             /*
              * Looks like somebody beat us to it.  Free up the one we
@@ -615,9 +613,6 @@ ClassObject* dvmFindPrimitiveClass(char type)
 
 /*
  * Synthesize a primitive class.
- *
- * The spec for java.lang.Class.isPrimitive describes the names to
- * be used for these classes.
  *
  * Just creates the class and returns it (does not add it to the class list).
  */
@@ -668,21 +663,21 @@ bool dvmCopyObjectArray(ArrayObject* dstArray, const ArrayObject* srcArray,
     ClassObject* dstElemClass)
 {
     Object** src = (Object**)srcArray->contents;
-    Object** dst = (Object**)dstArray->contents;
-    u4 count = dstArray->length;
+    u4 length, count;
 
     assert(srcArray->length == dstArray->length);
     assert(dstArray->obj.clazz->elementClass == dstElemClass ||
         (dstArray->obj.clazz->elementClass == dstElemClass->elementClass &&
          dstArray->obj.clazz->arrayDim == dstElemClass->arrayDim+1));
 
-    while (count--) {
-        if (!dvmInstanceof((*src)->clazz, dstElemClass)) {
+    length = dstArray->length;
+    for (count = 0; count < length; count++) {
+        if (!dvmInstanceof(src[count]->clazz, dstElemClass)) {
             LOGW("dvmCopyObjectArray: can't store %s in %s\n",
-                (*src)->clazz->descriptor, dstElemClass->descriptor);
+                src[count]->clazz->descriptor, dstElemClass->descriptor);
             return false;
         }
-        *dst++ = *src++;
+        dvmSetObjectArrayElement(dstArray, count, src[count]);
     }
 
     return true;
@@ -762,6 +757,41 @@ bool dvmUnboxObjectArray(ArrayObject* dstArray, const ArrayObject* srcArray,
     }
 
     return true;
+}
+
+static size_t arrayElementWidth(const ArrayObject *array)
+{
+    const char *descriptor;
+
+    if (dvmIsObjectArray(array)) {
+        return sizeof(Object *);
+    } else {
+        descriptor = array->obj.clazz->descriptor;
+        switch (descriptor[1]) {
+        case 'B': return 1;  /* byte */
+        case 'C': return 2;  /* char */
+        case 'D': return 8;  /* double */
+        case 'F': return 4;  /* float */
+        case 'I': return 4;  /* int */
+        case 'J': return 8;  /* long */
+        case 'S': return 2;  /* short */
+        case 'Z': return 1;  /* boolean */
+        }
+    }
+    LOGE("object %p has an unhandled descriptor '%s'", array, descriptor);
+    dvmDumpThread(dvmThreadSelf(), false);
+    dvmAbort();
+    return 0;  /* Quiet the compiler. */
+}
+
+size_t dvmArrayObjectSize(const ArrayObject *array)
+{
+    size_t size;
+
+    assert(array != NULL);
+    size = offsetof(ArrayObject, contents);
+    size += array->length * arrayElementWidth(array);
+    return size;
 }
 
 /*

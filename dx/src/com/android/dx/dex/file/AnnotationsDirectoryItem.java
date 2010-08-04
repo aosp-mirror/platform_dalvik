@@ -42,7 +42,7 @@ public final class AnnotationsDirectoryItem extends OffsettedItem {
 
     /** {@code null-ok;} the class-level annotations, if any */
     private AnnotationSetItem classAnnotations;
-    
+
     /** {@code null-ok;} the annotated fields, if any */
     private ArrayList<FieldAnnotationStruct> fieldAnnotations;
 
@@ -63,7 +63,7 @@ public final class AnnotationsDirectoryItem extends OffsettedItem {
         methodAnnotations = null;
         parameterAnnotations = null;
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public ItemType itemType() {
@@ -72,7 +72,7 @@ public final class AnnotationsDirectoryItem extends OffsettedItem {
 
     /**
      * Returns whether this item is empty (has no contents).
-     * 
+     *
      * @return {@code true} if this item is empty, or {@code false}
      * if not
      */
@@ -104,16 +104,16 @@ public final class AnnotationsDirectoryItem extends OffsettedItem {
         if (classAnnotations == null) {
             return 0;
         }
-        
+
         return classAnnotations.hashCode();
     }
-    
+
     /**
      * {@inheritDoc}
-     * 
+     *
      * <p><b>Note:</b>: This throws an exception if this item is not
      * internable.</p>
-     * 
+     *
      * @see #isInternable
      */
     @Override
@@ -131,14 +131,14 @@ public final class AnnotationsDirectoryItem extends OffsettedItem {
      * Sets the direct annotations on this instance. These are annotations
      * made on the class, per se, as opposed to on one of its members.
      * It is only valid to call this method at most once per instance.
-     * 
+     *
      * @param annotations {@code non-null;} annotations to set for this class
      */
     public void setClassAnnotations(Annotations annotations) {
         if (annotations == null) {
             throw new NullPointerException("annotations == null");
         }
-        
+
         if (classAnnotations != null) {
             throw new UnsupportedOperationException(
                     "class annotations already set");
@@ -149,7 +149,7 @@ public final class AnnotationsDirectoryItem extends OffsettedItem {
 
     /**
      * Adds a field annotations item to this instance.
-     * 
+     *
      * @param field {@code non-null;} field in question
      * @param annotations {@code non-null;} associated annotations to add
      */
@@ -158,14 +158,14 @@ public final class AnnotationsDirectoryItem extends OffsettedItem {
         if (fieldAnnotations == null) {
             fieldAnnotations = new ArrayList<FieldAnnotationStruct>();
         }
-        
+
         fieldAnnotations.add(new FieldAnnotationStruct(field,
                         new AnnotationSetItem(annotations)));
     }
 
     /**
      * Adds a method annotations item to this instance.
-     * 
+     *
      * @param method {@code non-null;} method in question
      * @param annotations {@code non-null;} associated annotations to add
      */
@@ -181,7 +181,7 @@ public final class AnnotationsDirectoryItem extends OffsettedItem {
 
     /**
      * Adds a parameter annotations item to this instance.
-     * 
+     *
      * @param method {@code non-null;} method in question
      * @param list {@code non-null;} associated list of annotation sets to add
      */
@@ -197,7 +197,7 @@ public final class AnnotationsDirectoryItem extends OffsettedItem {
     /**
      * Gets the method annotations for a given method, if any. This is
      * meant for use by debugging / dumping code.
-     * 
+     *
      * @param method {@code non-null;} the method
      * @return {@code null-ok;} the method annotations, if any
      */
@@ -205,7 +205,7 @@ public final class AnnotationsDirectoryItem extends OffsettedItem {
         if (methodAnnotations == null) {
             return null;
         }
-        
+
         for (MethodAnnotationStruct item : methodAnnotations) {
             if (item.getMethod().equals(method)) {
                 return item.getAnnotations();
@@ -218,7 +218,7 @@ public final class AnnotationsDirectoryItem extends OffsettedItem {
     /**
      * Gets the parameter annotations for a given method, if any. This is
      * meant for use by debugging / dumping code.
-     * 
+     *
      * @param method {@code non-null;} the method
      * @return {@code null-ok;} the parameter annotations, if any
      */
@@ -235,7 +235,7 @@ public final class AnnotationsDirectoryItem extends OffsettedItem {
 
         return null;
     }
-    
+
     /** {@inheritDoc} */
     public void addContents(DexFile file) {
         MixedItemSection wordData = file.getWordData();
@@ -255,7 +255,7 @@ public final class AnnotationsDirectoryItem extends OffsettedItem {
                 item.addContents(file);
             }
         }
-        
+
         if (parameterAnnotations != null) {
             for (ParameterAnnotationStruct item : parameterAnnotations) {
                 item.addContents(file);
@@ -338,7 +338,7 @@ public final class AnnotationsDirectoryItem extends OffsettedItem {
     /**
      * Gets the list size of the given list, or {@code 0} if given
      * {@code null}.
-     * 
+     *
      * @param list {@code null-ok;} the list in question
      * @return {@code >= 0;} its size
      */
@@ -353,7 +353,7 @@ public final class AnnotationsDirectoryItem extends OffsettedItem {
     /**
      * Prints out the contents of this instance, in a debugging-friendly
      * way. This is meant to be called from {@link ClassDefItem#debugPrint}.
-     * 
+     *
      * @param out {@code non-null;} where to output to
      */
     /*package*/ void debugPrint(PrintWriter out) {
@@ -374,12 +374,12 @@ public final class AnnotationsDirectoryItem extends OffsettedItem {
                 out.println("    " + item.toHuman());
             }
         }
-        
+
         if (parameterAnnotations != null) {
             out.println("  parameter annotations:");
             for (ParameterAnnotationStruct item : parameterAnnotations) {
                 out.println("    " + item.toHuman());
             }
         }
-    }    
+    }
 }

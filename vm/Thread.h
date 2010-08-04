@@ -22,6 +22,7 @@
 
 #include "jni.h"
 
+#include <errno.h>
 #include <cutils/sched_policy.h>
 
 
@@ -43,6 +44,8 @@ struct LockedObjectData;
  * Note that "suspended" is orthogonal to these values (so says JDWP).
  */
 typedef enum ThreadStatus {
+    THREAD_UNDEFINED    = -1,       /* threads are never in this state */
+
     /* these match up with JDWP values */
     THREAD_ZOMBIE       = 0,        /* TERMINATED */
     THREAD_RUNNING      = 1,        /* RUNNABLE or running now */
@@ -168,6 +171,10 @@ typedef struct Thread {
      *             matter)
      */
     void*       inJitCodeCache;
+#if defined(WITH_SELF_VERIFICATION)
+    /* Buffer for register state during self verification */
+    struct ShadowSpace* shadowSpace;
+#endif
 #endif
 
     /* JNI local reference tracking */
@@ -245,11 +252,6 @@ typedef struct Thread {
     const u2*   currentPc2;
 #endif
 
-#if defined(WITH_SELF_VERIFICATION)
-    /* Buffer for register state during self verification */
-    struct ShadowSpace* shadowSpace;
-#endif
-
     /* system thread state */
     SystemThread* systemThread;
 } Thread;
@@ -299,6 +301,7 @@ typedef enum SuspendCause {
     SUSPEND_FOR_DEBUG_EVENT,
     SUSPEND_FOR_STACK_DUMP,
     SUSPEND_FOR_DEX_OPT,
+    SUSPEND_FOR_VERIFY,
 #if defined(WITH_JIT)
     SUSPEND_FOR_TBL_RESIZE,  // jit-table resize
     SUSPEND_FOR_IC_PATCH,    // polymorphic callsite inline-cache patch
@@ -326,8 +329,6 @@ void dvmWaitForSuspend(Thread* thread);
 /*
  * Check to see if we should be suspended now.  If so, suspend ourselves
  * by sleeping on a condition variable.
- *
- * If "self" is NULL, this will use dvmThreadSelf().
  */
 bool dvmCheckSuspendPending(Thread* self);
 
@@ -377,7 +378,7 @@ INLINE void dvmInitMutex(pthread_mutex_t* pMutex)
  */
 INLINE void dvmLockMutex(pthread_mutex_t* pMutex)
 {
-    int cc = pthread_mutex_lock(pMutex);
+    int cc __attribute__ ((__unused__)) = pthread_mutex_lock(pMutex);
     assert(cc == 0);
 }
 
@@ -386,7 +387,9 @@ INLINE void dvmLockMutex(pthread_mutex_t* pMutex)
  */
 INLINE int dvmTryLockMutex(pthread_mutex_t* pMutex)
 {
-    return pthread_mutex_trylock(pMutex);
+    int cc = pthread_mutex_trylock(pMutex);
+    assert(cc == 0 || cc == EBUSY);
+    return cc;
 }
 
 /*
@@ -394,7 +397,7 @@ INLINE int dvmTryLockMutex(pthread_mutex_t* pMutex)
  */
 INLINE void dvmUnlockMutex(pthread_mutex_t* pMutex)
 {
-    int cc = pthread_mutex_unlock(pMutex);
+    int cc __attribute__ ((__unused__)) = pthread_mutex_unlock(pMutex);
     assert(cc == 0);
 }
 
@@ -403,7 +406,25 @@ INLINE void dvmUnlockMutex(pthread_mutex_t* pMutex)
  */
 INLINE void dvmDestroyMutex(pthread_mutex_t* pMutex)
 {
-    int cc = pthread_mutex_destroy(pMutex);
+    int cc __attribute__ ((__unused__)) = pthread_mutex_destroy(pMutex);
+    assert(cc == 0);
+}
+
+INLINE void dvmBroadcastCond(pthread_cond_t* pCond)
+{
+    int cc __attribute__ ((__unused__)) = pthread_cond_broadcast(pCond);
+    assert(cc == 0);
+}
+
+INLINE void dvmSignalCond(pthread_cond_t* pCond)
+{
+    int cc __attribute__ ((__unused__)) = pthread_cond_signal(pCond);
+    assert(cc == 0);
+}
+
+INLINE void dvmWaitCond(pthread_cond_t* pCond, pthread_mutex_t* pMutex)
+{
+    int cc __attribute__ ((__unused__)) = pthread_cond_wait(pCond, pMutex);
     assert(cc == 0);
 }
 

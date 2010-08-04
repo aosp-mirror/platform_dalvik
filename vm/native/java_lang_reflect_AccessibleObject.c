@@ -42,4 +42,3 @@ const DalvikNativeMethod dvm_java_lang_reflect_AccessibleObject[] = {
       Dalvik_java_lang_reflect_AccessibleObject_getClassSignatureAnnotation },
     { NULL, NULL, NULL },
 };
-

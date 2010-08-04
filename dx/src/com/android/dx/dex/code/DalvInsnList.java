@@ -45,7 +45,7 @@ public final class DalvInsnList extends FixedSizeList {
     /**
      * Constructs and returns an immutable instance whose elements are
      * identical to the ones in the given list, in the same order.
-     * 
+     *
      * @param list {@code non-null;} the list to use for elements
      * @param regCount count, in register-units, of the number of registers
      * this code block requires.
@@ -64,10 +64,10 @@ public final class DalvInsnList extends FixedSizeList {
         result.setImmutable();
         return result;
     }
-    
+
     /**
      * Constructs an instance. All indices initially contain {@code null}.
-     * 
+     *
      * @param size the size of the list
      */
     public DalvInsnList(int size, int regCount) {
@@ -79,7 +79,7 @@ public final class DalvInsnList extends FixedSizeList {
      * Gets the element at the given index. It is an error to call
      * this with the index for an element which was never set; if you
      * do that, this will throw {@code NullPointerException}.
-     * 
+     *
      * @param n {@code >= 0, < size();} which index
      * @return {@code non-null;} element at that index
      */
@@ -89,7 +89,7 @@ public final class DalvInsnList extends FixedSizeList {
 
     /**
      * Sets the instruction at the given index.
-     * 
+     *
      * @param n {@code >= 0, < size();} which index
      * @param insn {@code non-null;} the instruction to set at {@code n}
      */
@@ -101,7 +101,7 @@ public final class DalvInsnList extends FixedSizeList {
      * Gets the size of this instance, in 16-bit code units. This will only
      * return a meaningful result if the instructions in this instance all
      * have valid addresses.
-     * 
+     *
      * @return {@code >= 0;} the size
      */
     public int codeSize() {
@@ -118,7 +118,7 @@ public final class DalvInsnList extends FixedSizeList {
     /**
      * Writes all the instructions in this instance to the given output
      * destination.
-     * 
+     *
      * @param out {@code non-null;} where to write to
      */
     public void writeTo(AnnotatedOutput out) {
@@ -127,7 +127,7 @@ public final class DalvInsnList extends FixedSizeList {
 
         if (out.annotates()) {
             boolean verbose = out.isVerbose();
-            
+
             for (int i = 0; i < sz; i++) {
                 DalvInsn insn = (DalvInsn) get0(i);
                 int codeBytes = insn.codeSize() * 2;
@@ -180,7 +180,7 @@ public final class DalvInsnList extends FixedSizeList {
      * Gets the size of the outgoing arguments area required by this
      * method. This is equal to the largest argument word count of any
      * method referred to by this instance.
-     * 
+     *
      * @return {@code >= 0;} the required outgoing arguments size
      */
     public int getOutsSize() {
@@ -215,7 +215,7 @@ public final class DalvInsnList extends FixedSizeList {
 
     /**
      * Does a human-friendly dump of this instance.
-     * 
+     *
      * @param out {@code non-null;} where to dump
      * @param prefix {@code non-null;} prefix to attach to each line of output
      * @param verbose whether to be verbose; verbose output includes
@@ -249,7 +249,7 @@ public final class DalvInsnList extends FixedSizeList {
 
     /**
      * Does a human-friendly dump of this instance.
-     * 
+     *
      * @param out {@code non-null;} where to dump
      * @param prefix {@code non-null;} prefix to attach to each line of output
      * @param verbose whether to be verbose; verbose output includes

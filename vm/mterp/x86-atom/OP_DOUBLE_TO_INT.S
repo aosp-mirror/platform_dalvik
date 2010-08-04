@@ -66,4 +66,3 @@
     fstps       (rFP, %edx, 4)
     movl        $$0x80000000,  (rFP, %edx, 4) # vA<- negInf
     FINISH      1                       # jump to next instruction
-

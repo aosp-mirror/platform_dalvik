@@ -2,16 +2,16 @@
 **
 ** Copyright 2006, The Android Open Source Project
 **
-** Licensed under the Apache License, Version 2.0 (the "License"); 
-** you may not use this file except in compliance with the License. 
-** You may obtain a copy of the License at 
+** Licensed under the Apache License, Version 2.0 (the "License");
+** you may not use this file except in compliance with the License.
+** You may obtain a copy of the License at
 **
-**     http://www.apache.org/licenses/LICENSE-2.0 
+**     http://www.apache.org/licenses/LICENSE-2.0
 **
-** Unless required by applicable law or agreed to in writing, software 
-** distributed under the License is distributed on an "AS IS" BASIS, 
-** WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
-** See the License for the specific language governing permissions and 
+** Unless required by applicable law or agreed to in writing, software
+** distributed under the License is distributed on an "AS IS" BASIS,
+** WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+** See the License for the specific language governing permissions and
 ** limitations under the License.
 */
 
@@ -59,7 +59,7 @@ int versionNumber;
 
 #define DEFAULT_ACTIVE_THREADS 8
 
-char *htmlHeader = 
+char *htmlHeader =
 "<html>\n<head>\n<script type=\"text/javascript\" src=\"%ssortable.js\"></script>\n"
 "<script langugage=\"javascript\">\n"
 "function toggle(item) {\n"
@@ -100,10 +100,10 @@ char *htmlHeader =
 "</head><body>\n\n";
 
 char *htmlFooter = "\n</body>\n</html>\n";
-char *profileSeparator = 
+char *profileSeparator =
     "======================================================================";
-    
-const char* tableHeader = 
+
+const char* tableHeader =
     "<table class='sortable' id='%s'><tr>\n"
     "<th>Method</th>\n"
     "<th>Run 1 (us)</th>\n"
@@ -112,18 +112,18 @@ const char* tableHeader =
     "<th>Diff (%%)</th>\n"
     "<th>1: # calls</th>\n"
     "<th>2: # calls</th>\n"
-    "</tr>\n";  
-    
-const char* tableHeaderMissing = 
+    "</tr>\n";
+
+const char* tableHeaderMissing =
     "<table class='sortable' id='%s'>\n"
     "<th>Method</th>\n"
     "<th>Exclusive</th>\n"
     "<th>Inclusive</th>\n"
     "<th># calls</th>\n";
-    
-#define GRAPH_LABEL_VISITED 0x0001 
+
+#define GRAPH_LABEL_VISITED 0x0001
 #define GRAPH_NODE_VISITED  0x0002
-    
+
 /*
  * Values from the header of the data file.
  */
@@ -1227,7 +1227,7 @@ int readDataRecord(FILE *dataFp, int *threadId, unsigned int *methodVal,
     if (id == EOF)
         return 1;
     *threadId = id;
-    
+
     *methodVal = read4LE(dataFp);
     *elapsedTime = read4LE(dataFp);
     if (feof(dataFp)) {
@@ -1465,7 +1465,7 @@ TimedMethod *sortTimedMethodList(TimedMethod *list, int *num)
     for (ii = 0; ii < num_entries - 1; ++ii)
         sorted[ii].next = &sorted[ii + 1];
     sorted[num_entries - 1].next = NULL;
-    
+
     return sorted;
 }
 
@@ -1488,7 +1488,7 @@ void printInclusiveMethod(MethodEntry *method, TimedMethod *list, int numCalls,
     char *className, *methodName, *signature;
     char classBuf[HTML_BUFSIZE], methodBuf[HTML_BUFSIZE];
     char signatureBuf[HTML_BUFSIZE];
-    
+
     anchor_close = "";
     if (gOptions.outputHtml)
         anchor_close = "</a>";
@@ -1690,7 +1690,7 @@ void printExclusiveProfile(MethodEntry **pMethods, int numMethods,
 }
 
 /* check to make sure that the child method meets the threshold of the parent */
-int checkThreshold(MethodEntry* parent, MethodEntry* child) 
+int checkThreshold(MethodEntry* parent, MethodEntry* child)
 {
     double parentTime = parent->elapsedInclusive;
     double childTime = child->elapsedInclusive;
@@ -1700,18 +1700,18 @@ int checkThreshold(MethodEntry* parent, MethodEntry* child)
 
 void createLabels(FILE* file, MethodEntry* method)
 {
-    fprintf(file, "node%d[label = \"[%d] %s.%s (%llu, %llu, %d)\"]\n", 
-             method->index, method->index, method->className, method->methodName, 
+    fprintf(file, "node%d[label = \"[%d] %s.%s (%llu, %llu, %d)\"]\n",
+             method->index, method->index, method->className, method->methodName,
              method->elapsedInclusive / 1000,
              method->elapsedExclusive / 1000,
              method->numCalls[0]);
 
-    method->graphState = GRAPH_LABEL_VISITED;  
+    method->graphState = GRAPH_LABEL_VISITED;
 
     TimedMethod* child;
     for (child = method->children[0] ; child ; child = child->next) {
         MethodEntry* childMethod = child->method;
-        
+
         if ((childMethod->graphState & GRAPH_LABEL_VISITED) == 0 && checkThreshold(method, childMethod)) {
             createLabels(file, child->method);
         }
@@ -1721,7 +1721,7 @@ void createLabels(FILE* file, MethodEntry* method)
 void createLinks(FILE* file, MethodEntry* method)
 {
     method->graphState |= GRAPH_NODE_VISITED;
-    
+
     TimedMethod* child;
     for (child = method->children[0] ; child ; child = child->next) {
         MethodEntry* childMethod = child->method;
@@ -1746,19 +1746,19 @@ void createInclusiveProfileGraphNew(DataKeys* dataKeys)
     }
 
     FILE* file = fopen(path, "w+");
-    
+
     fprintf(file, "digraph g {\nnode [shape = record,height=.1];\n");
-     
+
     createLabels(file, dataKeys->methods);
     createLinks(file, dataKeys->methods);
-     
+
     fprintf(file, "}");
     fclose(file);
-     
+
     // now that we have the dot file generate the image
     char command[1024];
     snprintf(command, 1024, "dot -Tpng -o '%s' '%s'", gOptions.graphFileName, path);
-     
+
     system(command);
 
     if (! gOptions.keepDotFile) {
@@ -2931,7 +2931,7 @@ bail:
  */
 DataKeys* parseDataKeys(TraceData* traceData, const char* traceFileName,
 			uint64_t* threadTime, Filter** filters)
-{ 
+{
     DataKeys* dataKeys = NULL;
     MethodEntry **pMethods = NULL;
     MethodEntry* method;
@@ -2940,7 +2940,7 @@ DataKeys* parseDataKeys(TraceData* traceData, const char* traceFileName,
     int ii, jj, numThreads;
     uint64_t currentTime;
     MethodEntry* caller;
-   
+
     dataFp = fopen(traceFileName, "r");
     if (dataFp == NULL)
         goto bail;
@@ -3178,7 +3178,7 @@ DataKeys* parseDataKeys(TraceData* traceData, const char* traceFileName,
     }
     caller = &dataKeys->methods[TOPLEVEL_INDEX];
     caller->elapsedInclusive = sumThreadTime;
-    
+
 #if 0
     fclose(dumpStream);
 #endif
@@ -3190,7 +3190,7 @@ DataKeys* parseDataKeys(TraceData* traceData, const char* traceFileName,
 bail:
     if (dataFp != NULL)
         fclose(dataFp);
-        
+
     return dataKeys;
 }
 
@@ -3207,7 +3207,7 @@ MethodEntry** parseMethodEntries(DataKeys* dataKeys)
         MethodEntry* entry = &dataKeys->methods[ii];
         pMethods[ii] = entry;
     }
-    
+
     return pMethods;
 }
 
@@ -3253,7 +3253,7 @@ int compareMethodNamesForDiff(const void *a, const void *b)
     if (result == 0) {
         result = strcmp(methodA->signature, methodB->signature);
         if (result == 0) {
-           return strcmp(methodA->className, methodB->className); 
+           return strcmp(methodA->className, methodB->className);
         }
     }
     return result;
@@ -3262,21 +3262,21 @@ int compareMethodNamesForDiff(const void *a, const void *b)
 int findMatch(MethodEntry** methods, int size, MethodEntry* matchThis)
 {
     int i;
-    
+
     for (i = 0 ; i < size ; i++) {
         MethodEntry* method = methods[i];
-        
+
         if (method != NULL && !compareMethodNamesForDiff(&method, &matchThis)) {
-//            printf("%s.%s == %s.%s<br>\n", matchThis->className, matchThis->methodName, 
+//            printf("%s.%s == %s.%s<br>\n", matchThis->className, matchThis->methodName,
   //              method->className, method->methodName);
-                
+
             return i;
 /*            if (!compareMethodNames(&method, &matchThis)) {
                 return i;
             }
 */        }
     }
-    
+
     return -1;
 }
 
@@ -3286,13 +3286,13 @@ int compareDiffEntriesExculsive(const void *a, const void *b)
 
     const DiffEntry* entryA = (const DiffEntry*)a;
     const DiffEntry* entryB = (const DiffEntry*)b;
-    
+
     if (entryA->differenceExclusive < entryB->differenceExclusive) {
         return 1;
     } else if (entryA->differenceExclusive > entryB->differenceExclusive) {
         return -1;
     }
-    
+
     return 0;
 }
 
@@ -3302,37 +3302,37 @@ int compareDiffEntriesInculsive(const void *a, const void *b)
 
     const DiffEntry* entryA = (const DiffEntry*)a;
     const DiffEntry* entryB = (const DiffEntry*)b;
-    
+
     if (entryA->differenceInclusive < entryB->differenceInclusive) {
         return 1;
     } else if (entryA->differenceInclusive > entryB->differenceInclusive) {
         return -1;
     }
-    
+
     return 0;
 }
 
-void printMissingMethod(MethodEntry* method) 
+void printMissingMethod(MethodEntry* method)
 {
     char classBuf[HTML_BUFSIZE];
     char methodBuf[HTML_BUFSIZE];
     char* className;
     char* methodName;
-    
+
     className = htmlEscape(method->className, classBuf, HTML_BUFSIZE);
     methodName = htmlEscape(method->methodName, methodBuf, HTML_BUFSIZE);
-    
-    if (gOptions.outputHtml) printf("<tr><td>\n");    
-    
+
+    if (gOptions.outputHtml) printf("<tr><td>\n");
+
     printf("%s.%s ", className, methodName);
     if (gOptions.outputHtml) printf("</td><td>");
-    
+
     printf("%lld ", method->elapsedExclusive);
     if (gOptions.outputHtml) printf("</td><td>");
-    
+
     printf("%lld ", method->elapsedInclusive);
     if (gOptions.outputHtml) printf("</td><td>");
-    
+
     printf("%d\n", method->numCalls[0]);
     if (gOptions.outputHtml) printf("</td><td>\n");
 }
@@ -3342,8 +3342,8 @@ void createDiff(DataKeys* d1, uint64_t sum1, DataKeys* d2, uint64_t sum2)
 {
     MethodEntry** methods1 = parseMethodEntries(d1);
     MethodEntry** methods2 = parseMethodEntries(d2);
-    
-    // sort and assign the indicies 
+
+    // sort and assign the indicies
     int i;
     qsort(methods1, d1->numMethods, sizeof(MethodEntry*), compareElapsedInclusive);
     for (i = 0; i < d1->numMethods; ++i) {
@@ -3354,17 +3354,17 @@ void createDiff(DataKeys* d1, uint64_t sum1, DataKeys* d2, uint64_t sum2)
     for (i = 0; i < d2->numMethods; ++i) {
         methods2[i]->index = i;
     }
-    
+
     int max = (d1->numMethods < d2->numMethods) ? d2->numMethods : d1->numMethods;
     max++;
     DiffEntry* diffs = (DiffEntry*)malloc(max * sizeof(DiffEntry));
     memset(diffs, 0, max * sizeof(DiffEntry));
     DiffEntry* ptr = diffs;
-    
+
 //    printf("<br>d1->numMethods: %d d1->numMethods: %d<br>\n", d1->numMethods, d2->numMethods);
-  
+
     int matches = 0;
-    
+
     for (i = 0 ; i < d1->numMethods ; i++) {
         int match = findMatch(methods2, d2->numMethods, methods1[i]);
         if (match >= 0) {
@@ -3384,13 +3384,13 @@ void createDiff(DataKeys* d1, uint64_t sum1, DataKeys* d2, uint64_t sum2)
                 ptr->differenceInclusive = i2 - i1;
                 ptr->differenceInclusivePercentage = ((double)i2 / (double)i1) * 100.0;
             }
-            
+
             // clear these out so we don't find them again and we know which ones
             // we have left over
             methods1[i] = NULL;
             methods2[match] = NULL;
             ptr++;
-            
+
             matches++;
         }
     }
@@ -3399,7 +3399,7 @@ void createDiff(DataKeys* d1, uint64_t sum1, DataKeys* d2, uint64_t sum2)
 
     qsort(diffs, matches, sizeof(DiffEntry), compareDiffEntriesExculsive);
     ptr = diffs;
-    
+
     if (gOptions.outputHtml) {
         printf(htmlHeader, gOptions.sortableUrl);
         printf("<h3>Table of Contents</h3>\n");
@@ -3412,12 +3412,12 @@ void createDiff(DataKeys* d1, uint64_t sum1, DataKeys* d2, uint64_t sum2)
         printf("<a name=\"exclusive\"></a><h3 id=\"exclusive\">Exclusive</h3>\n");
         printf(tableHeader, "exclusive_table");
     }
-    
+
     char classBuf[HTML_BUFSIZE];
     char methodBuf[HTML_BUFSIZE];
     char* className;
     char* methodName;
-    
+
     while (ptr->method1 != NULL && ptr->method2 != NULL) {
         if (gOptions.outputHtml) printf("<tr><td>\n");
 
@@ -3426,16 +3426,16 @@ void createDiff(DataKeys* d1, uint64_t sum1, DataKeys* d2, uint64_t sum2)
 
         printf("%s.%s ", className, methodName);
         if (gOptions.outputHtml) printf("</td><td>");
-        
+
         printf("%lld ", ptr->method1->elapsedExclusive);
         if (gOptions.outputHtml) printf("</td><td>");
-        
+
         printf("%llu ", ptr->method2->elapsedExclusive);
         if (gOptions.outputHtml) printf("</td><td>");
-        
+
         printf("%lld ", ptr->differenceExclusive);
         if (gOptions.outputHtml) printf("</td><td>");
-        
+
         printf("%.2f\n", ptr->differenceExclusivePercentage);
         if (gOptions.outputHtml) printf("</td><td>\n");
 
@@ -3444,12 +3444,12 @@ void createDiff(DataKeys* d1, uint64_t sum1, DataKeys* d2, uint64_t sum2)
 
         printf("%d\n", ptr->method2->numCalls[0]);
         if (gOptions.outputHtml) printf("</td></tr>\n");
-        
+
         ptr++;
     }
-    
+
     if (gOptions.outputHtml) printf("</table>\n");
-    
+
     if (gOptions.outputHtml) {
         printf(htmlHeader, gOptions.sortableUrl);
         printf("Run 1: %s<br>\n", gOptions.diffFileName);
@@ -3457,10 +3457,10 @@ void createDiff(DataKeys* d1, uint64_t sum1, DataKeys* d2, uint64_t sum2)
         printf("<a name=\"inclusive\"></a><h3 id=\"inculisve\">Inclusive</h3>\n");
         printf(tableHeader, "inclusive_table");
     }
-    
+
     qsort(diffs, matches, sizeof(DiffEntry), compareDiffEntriesInculsive);
     ptr = diffs;
-    
+
     while (ptr->method1 != NULL && ptr->method2 != NULL) {
         if (gOptions.outputHtml) printf("<tr><td>\n");
 
@@ -3496,25 +3496,25 @@ void createDiff(DataKeys* d1, uint64_t sum1, DataKeys* d2, uint64_t sum2)
         printf("<h3>Run 1 methods not found in Run 2</h3>");
         printf(tableHeaderMissing);
     }
-   
+
     for (i = 0; i < d1->numMethods; ++i) {
         if (methods1[i] != NULL) {
            printMissingMethod(methods1[i]);
         }
     }
-    
+
     if (gOptions.outputHtml) {
         printf("</table>\n");
         printf("<h3>Run 2 methods not found in Run 1</h3>");
         printf(tableHeaderMissing);
     }
-    
+
     for (i = 0; i < d2->numMethods; ++i) {
         if (methods2[i] != NULL) {
             printMissingMethod(methods2[i]);
         }
     }
-    
+
     if (gOptions.outputHtml) printf("</body></html\n");
 }
 
@@ -3613,9 +3613,9 @@ int main(int argc, char** argv)
         uint64_t sum2;
         TraceData data2;
         DataKeys* d2 = parseDataKeys(&data2, gOptions.diffFileName, &sum2, filters);
-        
+
         createDiff(d2, sum2, dataKeys, sumThreadTime);
-        
+
         freeDataKeys(d2);
     } else {
         MethodEntry** methods = parseMethodEntries(dataKeys);
@@ -3626,7 +3626,7 @@ int main(int argc, char** argv)
         }
         free(methods);
     }
-        
+
     freeDataKeys(dataKeys);
 
     return 0;

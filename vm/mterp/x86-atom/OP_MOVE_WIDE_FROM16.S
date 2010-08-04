@@ -32,4 +32,3 @@
     movq        (rFP, %edx, 4), %xmm0   # %xmm0<- vB
     movq        %xmm0, (rFP, rINST, 4)  # vA<- vB
     FGETOP_JMP  2, %eax                 # jump to next instruction; getop, jmp
-

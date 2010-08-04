@@ -40,4 +40,3 @@ const DalvikNativeMethod dvm_java_lang_String[] = {
         Dalvik_java_lang_String_intern },
     { NULL, NULL, NULL },
 };
-

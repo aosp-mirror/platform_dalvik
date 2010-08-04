@@ -98,7 +98,7 @@ public class LivenessAnalyzer {
 
         return interference;
     }
-    
+
     /**
      * Makes liveness analyzer instance for specific register.
      *

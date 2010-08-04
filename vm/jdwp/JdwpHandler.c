@@ -240,7 +240,6 @@ static JdwpError handleVM_ClassesBySignature(JdwpState* state,
     u4 numClasses;
     size_t strLen;
     RefTypeId refTypeId;
-    int i;
 
     classDescriptor = readNewUtf8String(&buf, &strLen);
     LOGV("  Req for class by signature '%s'\n", classDescriptor);
@@ -430,8 +429,6 @@ static JdwpError handleVM_CreateString(JdwpState* state,
 static JdwpError handleVM_Capabilities(JdwpState* state,
     const u1* buf, int dataLen, ExpandBuf* pReply)
 {
-    int i;
-
     expandBufAdd1(pReply, false);   /* canWatchFieldModification */
     expandBufAdd1(pReply, false);   /* canWatchFieldAccess */
     expandBufAdd1(pReply, false);   /* canGetBytecodes */
@@ -745,7 +742,6 @@ static JdwpError handleRT_ClassLoader(JdwpState* state,
     const u1* buf, int dataLen, ExpandBuf* pReply)
 {
     RefTypeId refTypeId;
-    ObjectId classLoaderId;
 
     refTypeId = dvmReadRefTypeId(&buf);
 
@@ -762,7 +758,6 @@ static JdwpError handleRT_FieldsWithGeneric(JdwpState* state,
     const u1* buf, int dataLen, ExpandBuf* pReply)
 {
     RefTypeId refTypeId;
-    int i, numFields;
 
     refTypeId = dvmReadRefTypeId(&buf);
     LOGV("  Req for fields in refTypeId=0x%llx\n", refTypeId);
@@ -785,7 +780,6 @@ static JdwpError handleRT_MethodsWithGeneric(JdwpState* state,
     const u1* buf, int dataLen, ExpandBuf* pReply)
 {
     RefTypeId refTypeId;
-    int i;
 
     refTypeId = dvmReadRefTypeId(&buf);
 
@@ -887,7 +881,6 @@ static JdwpError handleCT_NewInstance(JdwpState* state,
     ObjectId threadId;
     MethodId methodId;
     ObjectId objectId;
-    u4 numArgs;
 
     classId = dvmReadRefTypeId(&buf);
     threadId = dvmReadObjectId(&buf);
@@ -900,6 +893,30 @@ static JdwpError handleCT_NewInstance(JdwpState* state,
 
     return finishInvoke(state, buf, dataLen, pReply,
             threadId, objectId, classId, methodId, true);
+}
+
+/*
+ * Create a new array object of the requested type and length.
+ */
+static JdwpError handleAT_newInstance(JdwpState* state,
+    const u1* buf, int dataLen, ExpandBuf* pReply)
+{
+    RefTypeId arrayTypeId;
+    u4 length;
+    ObjectId objectId;
+
+    arrayTypeId = dvmReadRefTypeId(&buf);
+    length = read4BE(&buf);
+
+    LOGV("Creating array %s[%u]\n",
+        dvmDbgGetClassDescriptor(arrayTypeId), length);
+    objectId = dvmDbgCreateArrayObject(arrayTypeId, length);
+    if (objectId == 0)
+        return ERR_OUT_OF_MEMORY;
+
+    expandBufAdd1(pReply, JT_ARRAY);
+    expandBufAddObjectId(pReply, objectId);
+    return ERR_NONE;
 }
 
 /*
@@ -997,7 +1014,6 @@ static JdwpError handleOR_GetValues(JdwpState* state,
         u1 fieldTag;
         int width;
         u1* ptr;
-        const char* fieldName;
 
         fieldId = dvmReadFieldId(&buf);
 
@@ -1420,7 +1436,6 @@ static JdwpError handleTGR_Children(JdwpState* state,
 {
     ObjectId threadGroupId;
     u4 threadCount;
-    ObjectId threadId;
     ObjectId* pThreadIds;
     ObjectId* walker;
     int i;
@@ -1510,8 +1525,6 @@ static JdwpError handleAR_SetValues(JdwpState* state,
     ObjectId arrayId;
     u4 firstIndex;
     u4 values;
-    u1 tag;
-    int i;
 
     arrayId = dvmReadObjectId(&buf);
     firstIndex = read4BE(&buf);
@@ -2023,7 +2036,7 @@ static const JdwpHandlerMap gHandlerMap[] = {
     { 3,    4,  handleCT_NewInstance,   "ClassType.NewInstance" },
 
     /* ArrayType command set (4) */
-    //4,    1,  NewInstance
+    { 4,    1,  handleAT_newInstance,   "ArrayType.NewInstance" },
 
     /* InterfaceType command set (5) */
 
@@ -2117,15 +2130,14 @@ void dvmJdwpProcessRequest(JdwpState* state, const JdwpReqHeader* pHeader,
     JdwpError result = ERR_NONE;
     int i, respLen;
 
-    /*
-     * Activity from a debugger, not merely ddms.  Mark us as having an
-     * active debugger session, and zero out the last-activity timestamp.
-     */
     if (pHeader->cmdSet != kJDWPDdmCmdSet) {
+        /*
+         * Activity from a debugger, not merely ddms.  Mark us as having an
+         * active debugger session, and zero out the last-activity timestamp
+         * so waitForDebugger() doesn't return if we stall for a bit here.
+         */
         dvmDbgActive();
-
-        state->lastActivitySec = 0;
-        MEM_BARRIER();
+        dvmQuasiAtomicSwap64(0, &state->lastActivityWhen);
     }
 
     /*
@@ -2203,15 +2215,9 @@ void dvmJdwpProcessRequest(JdwpState* state, const JdwpReqHeader* pHeader,
      * the initial setup.  Only update if this is a non-DDMS packet.
      */
     if (pHeader->cmdSet != kJDWPDdmCmdSet) {
-        long lastSec, lastMsec;
-
-        dvmJdwpGetNowMsec(&lastSec, &lastMsec);
-        state->lastActivityMsec = lastMsec;
-        MEM_BARRIER();      // updating a 64-bit value
-        state->lastActivitySec = lastSec;
+        dvmQuasiAtomicSwap64(dvmJdwpGetNowMsec(), &state->lastActivityWhen);
     }
 
     /* tell the VM that GC is okay again */
     dvmDbgThreadWaiting();
 }
-

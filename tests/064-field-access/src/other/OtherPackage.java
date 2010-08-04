@@ -13,4 +13,3 @@ public class OtherPackage {
 
     double pkgDoubleField = 3.141592654;
 }
-

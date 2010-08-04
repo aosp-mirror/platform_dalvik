@@ -34,4 +34,3 @@
     bxcc    r11
     $naninst                            @ r1<- 1 or -1 for NaN
     bx      r11
-

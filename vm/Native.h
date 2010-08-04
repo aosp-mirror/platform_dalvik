@@ -78,6 +78,11 @@ bool dvmLoadNativeCode(const char* fileName, Object* classLoader);
 void dvmResolveNativeMethod(const u4* args, JValue* pResult,
     const Method* method, struct Thread* self);
 
+/*
+ * Unregister all JNI native methods associated with a class.
+ */
+void dvmUnregisterJNINativeMethods(ClassObject* clazz);
+
 //#define GET_ARG_LONG(_args, _elem)          (*(s8*)(&(_args)[_elem]))
 #define GET_ARG_LONG(_args, _elem)          dvmGetArgLong(_args, _elem)
 
@@ -104,5 +109,13 @@ INLINE s8 dvmGetArgLong(const u4* args, int elem)
     return val;
 #endif
 }
+
+/*
+ * Used to implement -Xjnitrace.
+ */
+struct Thread;
+void dvmLogNativeMethodEntry(const Method* method, const u4* newFp);
+void dvmLogNativeMethodExit(const Method* method, struct Thread* self,
+        const JValue retval);
 
 #endif /*_DALVIK_NATIVE*/

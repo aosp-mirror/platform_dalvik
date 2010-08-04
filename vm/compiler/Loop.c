@@ -86,6 +86,8 @@ static void fillPhiNodeContents(CompilationUnit *cUnit)
 
 }
 
+#if 0
+/* Debugging routines */
 static void dumpConstants(CompilationUnit *cUnit)
 {
     int i;
@@ -125,6 +127,31 @@ static void dumpIVList(CompilationUnit *cUnit)
         }
     }
 }
+
+static void dumpHoistedChecks(CompilationUnit *cUnit)
+{
+    LoopAnalysis *loopAnalysis = cUnit->loopAnalysis;
+    unsigned int i;
+
+    for (i = 0; i < loopAnalysis->arrayAccessInfo->numUsed; i++) {
+        ArrayAccessInfo *arrayAccessInfo =
+            GET_ELEM_N(loopAnalysis->arrayAccessInfo,
+                       ArrayAccessInfo*, i);
+        int arrayReg = DECODE_REG(
+            dvmConvertSSARegToDalvik(cUnit, arrayAccessInfo->arrayReg));
+        int idxReg = DECODE_REG(
+            dvmConvertSSARegToDalvik(cUnit, arrayAccessInfo->ivReg));
+        LOGE("Array access %d", i);
+        LOGE("  arrayReg %d", arrayReg);
+        LOGE("  idxReg %d", idxReg);
+        LOGE("  endReg %d", loopAnalysis->endConditionReg);
+        LOGE("  maxC %d", arrayAccessInfo->maxC);
+        LOGE("  minC %d", arrayAccessInfo->minC);
+        LOGE("  opcode %d", loopAnalysis->loopBranchOpcode);
+    }
+}
+
+#endif
 
 /*
  * A loop is considered optimizable if:
@@ -263,11 +290,9 @@ static void updateRangeCheckInfo(CompilationUnit *cUnit, int arrayReg,
 /* Returns true if the loop body cannot throw any exceptions */
 static bool doLoopBodyCodeMotion(CompilationUnit *cUnit)
 {
-    BasicBlock *entry = cUnit->blockList[0];
     BasicBlock *loopBody = cUnit->blockList[1];
     MIR *mir;
     bool loopBodyCanThrow = false;
-    int numDalvikRegs = cUnit->method->registersSize;
 
     for (mir = loopBody->firstMIRInsn; mir; mir = mir->next) {
         DecodedInstruction *dInsn = &mir->dalvikInsn;
@@ -321,7 +346,6 @@ static bool doLoopBodyCodeMotion(CompilationUnit *cUnit)
             int useIdx = refIdx + 1;
             int subNRegArray =
                 dvmConvertSSARegToDalvik(cUnit, mir->ssaRep->uses[refIdx]);
-            int arrayReg = DECODE_REG(subNRegArray);
             int arraySub = DECODE_SUB(subNRegArray);
 
             /*
@@ -350,36 +374,11 @@ static bool doLoopBodyCodeMotion(CompilationUnit *cUnit)
     return !loopBodyCanThrow;
 }
 
-static void dumpHoistedChecks(CompilationUnit *cUnit)
-{
-    ArrayAccessInfo *arrayAccessInfo;
-    LoopAnalysis *loopAnalysis = cUnit->loopAnalysis;
-    unsigned int i;
-
-    for (i = 0; i < loopAnalysis->arrayAccessInfo->numUsed; i++) {
-        ArrayAccessInfo *arrayAccessInfo =
-            GET_ELEM_N(loopAnalysis->arrayAccessInfo,
-                       ArrayAccessInfo*, i);
-        int arrayReg = DECODE_REG(
-            dvmConvertSSARegToDalvik(cUnit, arrayAccessInfo->arrayReg));
-        int idxReg = DECODE_REG(
-            dvmConvertSSARegToDalvik(cUnit, arrayAccessInfo->ivReg));
-        LOGE("Array access %d", i);
-        LOGE("  arrayReg %d", arrayReg);
-        LOGE("  idxReg %d", idxReg);
-        LOGE("  endReg %d", loopAnalysis->endConditionReg);
-        LOGE("  maxC %d", arrayAccessInfo->maxC);
-        LOGE("  minC %d", arrayAccessInfo->minC);
-        LOGE("  opcode %d", loopAnalysis->loopBranchOpcode);
-    }
-}
-
 static void genHoistedChecks(CompilationUnit *cUnit)
 {
     unsigned int i;
     BasicBlock *entry = cUnit->blockList[0];
     LoopAnalysis *loopAnalysis = cUnit->loopAnalysis;
-    ArrayAccessInfo *arrayAccessInfo;
     int globalMaxC = 0;
     int globalMinC = 0;
     /* Should be loop invariant */
@@ -461,12 +460,11 @@ static void genHoistedChecks(CompilationUnit *cUnit)
 /* Main entry point to do loop optimization */
 void dvmCompilerLoopOpt(CompilationUnit *cUnit)
 {
-    int numDalvikReg = cUnit->method->registersSize;
     LoopAnalysis *loopAnalysis = dvmCompilerNew(sizeof(LoopAnalysis), true);
 
-    assert(cUnit->blockList[0]->blockType == kEntryBlock);
+    assert(cUnit->blockList[0]->blockType == kTraceEntryBlock);
     assert(cUnit->blockList[2]->blockType == kDalvikByteCode);
-    assert(cUnit->blockList[3]->blockType == kExitBlock);
+    assert(cUnit->blockList[3]->blockType == kTraceExitBlock);
 
     cUnit->loopAnalysis = loopAnalysis;
     /*

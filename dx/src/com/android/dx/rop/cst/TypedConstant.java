@@ -25,7 +25,7 @@ public abstract class TypedConstant
         extends Constant implements TypeBearer {
     /**
      * {@inheritDoc}
-     * 
+     *
      * This implentation always returns {@code this}.
      */
     public final TypeBearer getFrameType() {

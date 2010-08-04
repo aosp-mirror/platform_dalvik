@@ -33,7 +33,7 @@ final /*package*/ class MethodListParser extends MemberListParser {
 
     /**
      * Constructs an instance.
-     * 
+     *
      * @param cf {@code non-null;} the class file to parse from
      * @param definer {@code non-null;} class being defined
      * @param offset offset in {@code bytes} to the start of the list
@@ -47,7 +47,7 @@ final /*package*/ class MethodListParser extends MemberListParser {
 
     /**
      * Gets the parsed list.
-     * 
+     *
      * @return {@code non-null;} the parsed list
      */
     public StdMethodList getList() {

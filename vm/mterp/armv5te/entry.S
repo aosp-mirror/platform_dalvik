@@ -68,14 +68,27 @@ dvmMterpStdRun:
 
 #if defined(WITH_JIT)
 .LentryInstr:
-    ldr    r10, [rGLUE, #offGlue_self]  @ callee saved r10 <- glue->self
+    ldr     r10, [rGLUE, #offGlue_self] @ callee saved r10 <- glue->self
     /* Entry is always a possible trace start */
     GET_JIT_PROF_TABLE(r0)
     FETCH_INST()
-    mov    r1, #0                       @ prepare the value for the new state
-    str    r1, [r10, #offThread_inJitCodeCache] @ back to the interp land
-    cmp    r0,#0
-    bne    common_updateProfile
+    mov     r1, #0                      @ prepare the value for the new state
+    str     r1, [r10, #offThread_inJitCodeCache] @ back to the interp land
+    cmp     r0,#0                       @ is profiling disabled?
+#if !defined(WITH_SELF_VERIFICATION)
+    bne     common_updateProfile        @ profiling is enabled
+#else
+    ldr     r2, [r10, #offThread_shadowSpace]   @ to find out the jit exit state
+    beq     1f                          @ profiling is disabled
+    ldr     r3, [r2, #offShadowSpace_jitExitState]  @ jit exit state
+    cmp     r3, #kSVSTraceSelect        @ hot trace following?
+    moveq   r2,#kJitTSelectRequestHot   @ ask for trace selection
+    beq     common_selectTrace          @ go build the trace
+    cmp     r3, #kSVSNoProfile          @ don't profile the next instruction?
+    beq     1f                          @ intrepret the next instruction
+    b       common_updateProfile        @ collect profiles
+#endif
+1:
     GET_INST_OPCODE(ip)
     GOTO_OPCODE(ip)
 #else
@@ -148,4 +161,3 @@ dvmMterpStdBail:
  */
 strBadEntryPoint:
     .word   .LstrBadEntryPoint
-

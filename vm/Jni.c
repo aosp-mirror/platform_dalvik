@@ -859,7 +859,6 @@ static jobject addGlobalReference(Object* obj)
     }
 #endif
 
-bail:
     dvmUnlockMutex(&gDvm.jniGlobalRefLock);
     return jobj;
 }
@@ -918,53 +917,6 @@ bail:
     dvmUnlockMutex(&gDvm.jniGlobalRefLock);
 }
 
-
-/*
- * Get the "magic" JNI weak global ReferenceQueue.  It's allocated on
- * first use.
- *
- * Returns NULL with an exception raised if allocation fails.
- */
-static Object* getWeakGlobalRefQueue(void)
-{
-    /* use an indirect variable to avoid "type-punned pointer" complaints */
-    Object** pGlobalQ = &gDvm.jniWeakGlobalRefQueue;
-
-    if (*pGlobalQ != NULL)
-        return *pGlobalQ;
-
-    ClassObject* clazz = dvmFindSystemClass("Ljava/lang/ref/ReferenceQueue;");
-    if (clazz == NULL) {
-        LOGE("Unable to find java.lang.ref.ReferenceQueue");
-        dvmAbort();
-    }
-
-    /*
-     * Create an instance of ReferenceQueue.  The object is never actually
-     * used for anything, so we don't need to call a constructor.  (We could
-     * get away with using an instance of Object, but this is cleaner.)
-     */
-    Object* queue = dvmAllocObject(clazz, ALLOC_DEFAULT);
-    if (queue == NULL) {
-        LOGW("Failed allocating weak global ref queue\n");
-        assert(dvmCheckException(dvmThreadSelf()));
-        return NULL;
-    }
-    dvmReleaseTrackedAlloc(queue, NULL);
-
-    /*
-     * Save it, using atomic ops to ensure we don't double-up.  The gDvm
-     * field is known to the GC.
-     */
-    if (!ATOMIC_CMP_SWAP((int*) pGlobalQ, 0, (int) queue)) {
-        LOGD("WOW: lost race to create weak global ref queue\n");
-        queue = *pGlobalQ;
-    }
-
-    return queue;
-}
-
-
 /*
  * We create a PhantomReference that references the object, add a
  * global reference to it, and then flip some bits before returning it.
@@ -980,7 +932,6 @@ static jweak createWeakGlobalRef(JNIEnv* env, jobject jobj)
 
     Thread* self = ((JNIEnvExt*)env)->self;
     Object* obj = dvmDecodeIndirectRef(env, jobj);
-    Object* weakGlobalQueue = getWeakGlobalRefQueue();
     Object* phantomObj;
     jobject phantomRef;
 
@@ -1004,7 +955,7 @@ static jweak createWeakGlobalRef(JNIEnv* env, jobject jobj)
 
     JValue unused;
     dvmCallMethod(self, gDvm.methJavaLangRefPhantomReference_init, phantomObj,
-        &unused, jobj, weakGlobalQueue);
+        &unused, obj, NULL);
     dvmReleaseTrackedAlloc(phantomObj, self);
 
     if (dvmCheckException(self)) {
@@ -1296,8 +1247,6 @@ jobjectRefType dvmGetJNIRefType(JNIEnv* env, jobject jobj)
 #else
     ReferenceTable* pRefTable = getLocalRefTable(env);
     Thread* self = dvmThreadSelf();
-    //Object** top;
-    Object** ptr;
 
     if (dvmIsWeakGlobalRef(jobj)) {
         return JNIWeakGlobalRefType;
@@ -1347,26 +1296,26 @@ static bool dvmRegisterJNIMethod(ClassObject* clazz, const char* methodName,
     if (method == NULL)
         method = dvmFindVirtualMethodByDescriptor(clazz, methodName, signature);
     if (method == NULL) {
-        LOGW("ERROR: Unable to find decl for native %s.%s %s\n",
+        LOGW("ERROR: Unable to find decl for native %s.%s:%s\n",
             clazz->descriptor, methodName, signature);
         goto bail;
     }
 
     if (!dvmIsNativeMethod(method)) {
-        LOGW("Unable to register: not native: %s.%s %s\n",
+        LOGW("Unable to register: not native: %s.%s:%s\n",
             clazz->descriptor, methodName, signature);
         goto bail;
     }
 
     if (method->nativeFunc != dvmResolveNativeMethod) {
-        LOGW("Warning: %s.%s %s was already registered/resolved?\n",
+        /* this is allowed, but unusual */
+        LOGV("Note: %s.%s:%s was already registered\n",
             clazz->descriptor, methodName, signature);
-        /* keep going, I guess */
     }
 
     dvmUseJNIBridge(method, fnPtr);
 
-    LOGV("JNI-registered %s.%s %s\n", clazz->descriptor, methodName,
+    LOGV("JNI-registered %s.%s:%s\n", clazz->descriptor, methodName,
         signature);
     result = true;
 
@@ -1384,10 +1333,10 @@ static bool dvmIsCheckJNIEnabled(void)
 }
 
 /*
- * Point "method->nativeFunc" at the JNI bridge, and overload "method->insns"
- * to point at the actual function.
+ * Returns the appropriate JNI bridge for 'method', also taking into account
+ * the -Xcheck:jni setting.
  */
-void dvmUseJNIBridge(Method* method, void* func)
+static DalvikBridgeFunc dvmSelectJNIBridge(const Method* method)
 {
     enum {
         kJNIGeneral = 0,
@@ -1439,11 +1388,39 @@ void dvmUseJNIBridge(Method* method, void* func)
         }
     }
 
-    if (dvmIsCheckJNIEnabled()) {
-        dvmSetNativeFunc(method, checkFunc[kind], func);
-    } else {
-        dvmSetNativeFunc(method, stdFunc[kind], func);
-    }
+    return dvmIsCheckJNIEnabled() ? checkFunc[kind] : stdFunc[kind];
+}
+
+/*
+ * Trace a call into native code.
+ */
+static void dvmTraceCallJNIMethod(const u4* args, JValue* pResult,
+    const Method* method, Thread* self)
+{
+    dvmLogNativeMethodEntry(method, args);
+    DalvikBridgeFunc bridge = dvmSelectJNIBridge(method);
+    (*bridge)(args, pResult, method, self);
+    dvmLogNativeMethodExit(method, self, *pResult);
+}
+
+/**
+ * Returns true if the -Xjnitrace setting implies we should trace 'method'.
+ */
+static bool shouldTrace(Method* method)
+{
+    return gDvm.jniTrace && strstr(method->clazz->descriptor, gDvm.jniTrace);
+}
+
+/*
+ * Point "method->nativeFunc" at the JNI bridge, and overload "method->insns"
+ * to point at the actual function.
+ */
+void dvmUseJNIBridge(Method* method, void* func)
+{
+    DalvikBridgeFunc bridge = shouldTrace(method)
+        ? dvmTraceCallJNIMethod
+        : dvmSelectJNIBridge(method);
+    dvmSetNativeFunc(method, bridge, func);
 }
 
 /*
@@ -1534,6 +1511,31 @@ void dvmReleaseJniMonitors(Thread* self)
 
     /* zap it */
     pRefTable->nextEntry = pRefTable->table;
+}
+
+/*
+ * Determine if the specified class can be instantiated from JNI.  This
+ * is used by AllocObject / NewObject, which are documented as throwing
+ * an exception for abstract and interface classes, and not accepting
+ * array classes.  We also want to reject attempts to create new Class
+ * objects, since only DefineClass should do that.
+ */
+static bool canAllocClass(ClassObject* clazz)
+{
+    if (dvmIsAbstractClass(clazz) || dvmIsInterfaceClass(clazz)) {
+        /* JNI spec defines what this throws */
+        dvmThrowExceptionFmt("Ljava/lang/InstantiationException;",
+            "Can't instantiate %s (abstract or interface)", clazz->descriptor);
+        return false;
+    } else if (dvmIsArrayClass(clazz) || clazz == gDvm.classJavaLangClass) {
+        /* spec says "must not" for arrays, ignores Class */
+        dvmThrowExceptionFmt("Ljava/lang/IllegalArgumentException;",
+            "Can't instantiate %s (array or Class) with this JNI function",
+            clazz->descriptor);
+        return false;
+    }
+
+    return true;
 }
 
 #ifdef WITH_JNI_STACK_CHECK
@@ -1658,8 +1660,6 @@ void dvmCallJNIMethod_general(const u4* args, JValue* pResult,
     jclass staticMethodClass;
     JNIEnv* env = self->jniEnv;
 
-    assert(method->insns != NULL);
-
     //LOGI("JNI calling %p (%s.%s:%s):\n", method->insns,
     //    method->clazz->descriptor, method->name, method->shorty);
 
@@ -1722,6 +1722,9 @@ void dvmCallJNIMethod_general(const u4* args, JValue* pResult,
 
     oldStatus = dvmChangeStatus(self, THREAD_NATIVE);
 
+    ANDROID_MEMBAR_FULL();      /* guarantee ordering on method->insns */
+    assert(method->insns != NULL);
+
     COMPUTE_STACK_SUM(self);
     dvmPlatformInvoke(env, staticMethodClass,
         method->jniArgInfo, method->insSize, modArgs, method->shorty,
@@ -1781,6 +1784,8 @@ void dvmCallJNIMethod_virtualNoRef(const u4* args, JValue* pResult,
 
     oldStatus = dvmChangeStatus(self, THREAD_NATIVE);
 
+    ANDROID_MEMBAR_FULL();      /* guarantee ordering on method->insns */
+
     COMPUTE_STACK_SUM(self);
     dvmPlatformInvoke(self->jniEnv, NULL,
         method->jniArgInfo, method->insSize, modArgs, method->shorty,
@@ -1814,6 +1819,8 @@ void dvmCallJNIMethod_staticNoRef(const u4* args, JValue* pResult,
 #endif
 
     oldStatus = dvmChangeStatus(self, THREAD_NATIVE);
+
+    ANDROID_MEMBAR_FULL();      /* guarantee ordering on method->insns */
 
     COMPUTE_STACK_SUM(self);
     dvmPlatformInvoke(self->jniEnv, staticMethodClass,
@@ -2023,7 +2030,7 @@ static jobject ToReflectedField(JNIEnv* env, jclass jcls, jfieldID fieldID,
 {
     JNI_ENTER();
     ClassObject* clazz = (ClassObject*) dvmDecodeIndirectRef(env, jcls);
-    Object* obj = dvmCreateReflectObjForField(jcls, (Field*) fieldID);
+    Object* obj = dvmCreateReflectObjForField(clazz, (Field*) fieldID);
     dvmReleaseTrackedAlloc(obj, NULL);
     jobject jobj = addLocalReference(env, obj);
     JNI_EXIT();
@@ -2278,7 +2285,9 @@ static jobject AllocObject(JNIEnv* env, jclass jclazz)
     ClassObject* clazz = (ClassObject*) dvmDecodeIndirectRef(env, jclazz);
     jobject result;
 
-    if (!dvmIsClassInitialized(clazz) && !dvmInitClass(clazz)) {
+    if (!canAllocClass(clazz) ||
+        (!dvmIsClassInitialized(clazz) && !dvmInitClass(clazz)))
+    {
         assert(dvmCheckException(_self));
         result = NULL;
     } else {
@@ -2299,7 +2308,9 @@ static jobject NewObject(JNIEnv* env, jclass jclazz, jmethodID methodID, ...)
     ClassObject* clazz = (ClassObject*) dvmDecodeIndirectRef(env, jclazz);
     jobject result;
 
-    if (!dvmIsClassInitialized(clazz) && !dvmInitClass(clazz)) {
+    if (!canAllocClass(clazz) ||
+        (!dvmIsClassInitialized(clazz) && !dvmInitClass(clazz)))
+    {
         assert(dvmCheckException(_self));
         result = NULL;
     } else {
@@ -2325,11 +2336,19 @@ static jobject NewObjectV(JNIEnv* env, jclass jclazz, jmethodID methodID,
     ClassObject* clazz = (ClassObject*) dvmDecodeIndirectRef(env, jclazz);
     jobject result;
 
-    Object* newObj = dvmAllocObject(clazz, ALLOC_DONT_TRACK);
-    result = addLocalReference(env, newObj);
-    if (newObj != NULL) {
-        JValue unused;
-        dvmCallMethodV(_self, (Method*) methodID, newObj, true, &unused, args);
+    if (!canAllocClass(clazz) ||
+        (!dvmIsClassInitialized(clazz) && !dvmInitClass(clazz)))
+    {
+        assert(dvmCheckException(_self));
+        result = NULL;
+    } else {
+        Object* newObj = dvmAllocObject(clazz, ALLOC_DONT_TRACK);
+        result = addLocalReference(env, newObj);
+        if (newObj != NULL) {
+            JValue unused;
+            dvmCallMethodV(_self, (Method*) methodID, newObj, true, &unused,
+                args);
+        }
     }
 
     JNI_EXIT();
@@ -2342,11 +2361,19 @@ static jobject NewObjectA(JNIEnv* env, jclass jclazz, jmethodID methodID,
     ClassObject* clazz = (ClassObject*) dvmDecodeIndirectRef(env, jclazz);
     jobject result;
 
-    Object* newObj = dvmAllocObject(clazz, ALLOC_DONT_TRACK);
-    result = addLocalReference(env, newObj);
-    if (newObj != NULL) {
-        JValue unused;
-        dvmCallMethodA(_self, (Method*) methodID, newObj, true, &unused, args);
+    if (!canAllocClass(clazz) ||
+        (!dvmIsClassInitialized(clazz) && !dvmInitClass(clazz)))
+    {
+        assert(dvmCheckException(_self));
+        result = NULL;
+    } else {
+        Object* newObj = dvmAllocObject(clazz, ALLOC_DONT_TRACK);
+        result = addLocalReference(env, newObj);
+        if (newObj != NULL) {
+            JValue unused;
+            dvmCallMethodA(_self, (Method*) methodID, newObj, true, &unused,
+                args);
+        }
     }
 
     JNI_EXIT();
@@ -2961,7 +2988,7 @@ static jstring NewStringUTF(JNIEnv* env, const char* bytes)
         result = NULL;
     } else {
         /* note newStr could come back NULL on OOM */
-        StringObject* newStr = dvmCreateStringFromCstr(bytes, ALLOC_DEFAULT);
+        StringObject* newStr = dvmCreateStringFromCstr(bytes);
         result = addLocalReference(env, (Object*) newStr);
         dvmReleaseTrackedAlloc((Object*)newStr, NULL);
     }
@@ -3144,7 +3171,7 @@ static void SetObjectArrayElement(JNIEnv* env, jobjectArray jarr,
     //LOGV("JNI: set element %d in array %p to %p\n", index, array, value);
 
     Object* obj = dvmDecodeIndirectRef(env, jobj);
-    ((Object**) arrayObj->contents)[index] = obj;
+    dvmSetObjectArrayElement(arrayObj, index, obj);
 
 bail:
     JNI_EXIT();
@@ -3287,6 +3314,9 @@ PRIMITIVE_ARRAY_FUNCTIONS(jdouble, Double);
 
 /*
  * Register one or more native functions in one class.
+ *
+ * This can be called multiple times on the same method, allowing the
+ * caller to redefine the method implementation at will.
  */
 static jint RegisterNatives(JNIEnv* env, jclass jclazz,
     const JNINativeMethod* methods, jint nMethods)
@@ -3315,19 +3345,44 @@ static jint RegisterNatives(JNIEnv* env, jclass jclazz,
 }
 
 /*
- * Un-register a native function.
+ * Un-register all native methods associated with the class.
+ *
+ * The JNI docs refer to this as a way to reload/relink native libraries,
+ * and say it "should not be used in normal native code".  In particular,
+ * there is no need to do this during shutdown, and you do not need to do
+ * this before redefining a method implementation with RegisterNatives.
+ *
+ * It's chiefly useful for a native "plugin"-style library that wasn't
+ * loaded with System.loadLibrary() (since there's no way to unload those).
+ * For example, the library could upgrade itself by:
+ *
+ *  1. call UnregisterNatives to unbind the old methods
+ *  2. ensure that no code is still executing inside it (somehow)
+ *  3. dlclose() the library
+ *  4. dlopen() the new library
+ *  5. use RegisterNatives to bind the methods from the new library
+ *
+ * The above can work correctly without the UnregisterNatives call, but
+ * creates a window of opportunity in which somebody might try to call a
+ * method that is pointing at unmapped memory, crashing the VM.  In theory
+ * the same guards that prevent dlclose() from unmapping executing code could
+ * prevent that anyway, but with this we can be more thorough and also deal
+ * with methods that only exist in the old or new form of the library (maybe
+ * the lib wants to try the call and catch the UnsatisfiedLinkError).
  */
 static jint UnregisterNatives(JNIEnv* env, jclass jclazz)
 {
     JNI_ENTER();
-    /*
-     * The JNI docs refer to this as a way to reload/relink native libraries,
-     * and say it "should not be used in normal native code".
-     *
-     * We can implement it if we decide we need it.
-     */
+
+    ClassObject* clazz = (ClassObject*) dvmDecodeIndirectRef(env, jclazz);
+    if (gDvm.verboseJni) {
+        LOGI("[Unregistering JNI native methods for class %s]\n",
+            clazz->descriptor);
+    }
+    dvmUnregisterJNINativeMethods(clazz);
+
     JNI_EXIT();
-    return JNI_ERR;
+    return JNI_OK;
 }
 
 /*

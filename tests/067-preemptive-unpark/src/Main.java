@@ -7,11 +7,11 @@ public class Main {
 
     public static void main(String[] args) throws Exception {
         setUp();
-        
+
         ParkTester test = new ParkTester();
 
         System.out.println("Test starting");
-        
+
         test.start();
         UNSAFE.unpark(test);
         clearStack(10);
@@ -81,7 +81,7 @@ public class Main {
     private static class ParkTester extends Thread {
         public volatile boolean parkNow = false;
         public volatile boolean success = false;
-        
+
         public void run() {
             while (!parkNow) {
                 try {

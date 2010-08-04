@@ -60,7 +60,7 @@ static void updateDebugger(const Method* method, const u2* pc, const u4* fp,
      */
     const StepControl* pCtrl = &gDvm.stepControl;
     if (pCtrl->active && pCtrl->thread == self) {
-        int line, frameDepth;
+        int frameDepth;
         bool doStop = false;
         const char* msg = NULL;
 
@@ -101,7 +101,7 @@ static void updateDebugger(const Method* method, const u2* pc, const u4* fp,
                 if (pCtrl->size == SS_MIN) {
                     doStop = true;
                     msg = "new instruction";
-                } else if (!dvmAddressSetGet(pCtrl->pAddressSet, 
+                } else if (!dvmAddressSetGet(pCtrl->pAddressSet,
                             pc - method->insns)) {
                     doStop = true;
                     msg = "new line";
@@ -250,4 +250,3 @@ static void checkDebugAndProf(const u2* pc, const u4* fp, Thread* self,
     }
 #endif
 }
-

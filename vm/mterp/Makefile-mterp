@@ -49,4 +49,3 @@ target: $(GEN_SOURCES)
 $(GEN_SOURCES): $(SOURCE_DEPS)
 	@mkdir -p out
 	./gen-mterp.py $(TARGET_ARCH_EXT) $(OUTPUT_DIR)
-

@@ -1,6 +1,6 @@
 %verify "executed"
 %verify "null object"
-    /* For: iput-quick, iput-object-quick */
+    /* For: iput-quick */
     /* op vA, vB, offset@CCCC */
     mov     r2, rINST, lsr #12          @ r2<- B
     GET_VREG(r3, r2)                    @ r3<- fp[B], the object pointer
@@ -14,4 +14,3 @@
     str     r0, [r3, r1]                @ obj.field (always 32 bits)<- r0
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     GOTO_OPCODE(ip)                     @ jump to next instruction
-

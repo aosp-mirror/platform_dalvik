@@ -42,6 +42,3 @@
     lea         8(%esp), %esp
     fstps       (rFP, rINST, 4)
     FINISH      1                       # jump to next instruction
-
-
-

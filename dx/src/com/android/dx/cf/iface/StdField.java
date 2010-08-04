@@ -28,7 +28,7 @@ import com.android.dx.rop.cst.TypedConstant;
 public final class StdField extends StdMember implements Field {
     /**
      * Constructs an instance.
-     * 
+     *
      * @param definingClass {@code non-null;} the defining class
      * @param accessFlags access flags
      * @param nat {@code non-null;} member name and type (descriptor)

@@ -25,6 +25,7 @@
 
 #include <string.h>
 #include <unistd.h>
+#include <fcntl.h>
 #include <errno.h>
 #include <sys/time.h>
 #include <time.h>
@@ -33,35 +34,8 @@
 #define kHeadSuffix "-hptemp"
 
 hprof_context_t *
-hprofStartup(const char *outputFileName, bool directToDdms)
+hprofStartup(const char *outputFileName, int fd, bool directToDdms)
 {
-    FILE* fp = NULL;
-
-    if (!directToDdms) {
-        int len = strlen(outputFileName);
-        char fileName[len + sizeof(kHeadSuffix)];
-
-        /* Construct the temp file name.  This wasn't handed to us by the
-         * application, so we need to be careful about stomping on it.
-         */
-        sprintf(fileName, "%s" kHeadSuffix, outputFileName);
-        if (access(fileName, F_OK) == 0) {
-            LOGE("hprof: temp file %s exists, bailing\n", fileName);
-            return NULL;
-        }
-
-        fp = fopen(fileName, "w+");
-        if (fp == NULL) {
-            LOGE("hprof: can't open %s: %s.\n", fileName, strerror(errno));
-            return NULL;
-        }
-        if (unlink(fileName) != 0) {
-            LOGW("hprof: WARNING: unable to remove temp file %s\n", fileName);
-            /* keep going */
-        }
-        LOGI("hprof: dumping VM heap to \"%s\".\n", fileName);
-    }
-
     hprofStartup_String();
     hprofStartup_Class();
 #if WITH_HPROF_STACK
@@ -72,47 +46,15 @@ hprofStartup(const char *outputFileName, bool directToDdms)
     hprof_context_t *ctx = malloc(sizeof(*ctx));
     if (ctx == NULL) {
         LOGE("hprof: can't allocate context.\n");
-        if (fp != NULL)
-            fclose(fp);
         return NULL;
     }
 
-    /* pass in "fp" for the temp file, and the name of the output file */
-    hprofContextInit(ctx, strdup(outputFileName), fp, false, directToDdms);
+    /* pass in name or descriptor of the output file */
+    hprofContextInit(ctx, strdup(outputFileName), fd, false, directToDdms);
 
-    assert(ctx->fp != NULL);
+    assert(ctx->memFp != NULL);
 
     return ctx;
-}
-
-/*
- * Copy the entire contents of "srcFp" to "dstFp".
- *
- * Returns "true" on success.
- */
-static bool
-copyFileToFile(FILE *dstFp, FILE *srcFp)
-{
-    char buf[65536];
-    size_t dataRead, dataWritten;
-
-    while (true) {
-        dataRead = fread(buf, 1, sizeof(buf), srcFp);
-        if (dataRead > 0) {
-            dataWritten = fwrite(buf, 1, dataRead, dstFp);
-            if (dataWritten != dataRead) {
-                LOGE("hprof: failed writing data (%d of %d): %s\n",
-                    dataWritten, dataRead, strerror(errno));
-                return false;
-            }
-        } else {
-            if (feof(srcFp))
-                return true;
-            LOGE("hprof: failed reading data (res=%d): %s\n",
-                dataRead, strerror(errno));
-            return false;
-        }
-    }
 }
 
 /*
@@ -121,20 +63,8 @@ copyFileToFile(FILE *dstFp, FILE *srcFp)
 bool
 hprofShutdown(hprof_context_t *tailCtx)
 {
-    FILE *fp = NULL;
-
-    /* flush output to the temp file, then prepare the output file */
+    /* flush the "tail" portion of the output */
     hprofFlushCurrentRecord(tailCtx);
-
-    LOGI("hprof: dumping heap strings to \"%s\".\n", tailCtx->fileName);
-    if (!tailCtx->directToDdms) {
-        fp = fopen(tailCtx->fileName, "w");
-        if (fp == NULL) {
-            LOGE("can't open %s: %s\n", tailCtx->fileName, strerror(errno));
-            hprofFreeContext(tailCtx);
-            return false;
-        }
-    }
 
     /*
      * Create a new context struct for the start of the file.  We
@@ -143,14 +73,13 @@ hprofShutdown(hprof_context_t *tailCtx)
     hprof_context_t *headCtx = malloc(sizeof(*headCtx));
     if (headCtx == NULL) {
         LOGE("hprof: can't allocate context.\n");
-        if (fp != NULL)
-            fclose(fp);
         hprofFreeContext(tailCtx);
-        return NULL;
+        return false;
     }
-    hprofContextInit(headCtx, strdup(tailCtx->fileName), fp, true,
+    hprofContextInit(headCtx, strdup(tailCtx->fileName), tailCtx->fd, true,
         tailCtx->directToDdms);
 
+    LOGI("hprof: dumping heap strings to \"%s\".\n", tailCtx->fileName);
     hprofDumpStrings(headCtx);
     hprofDumpClasses(headCtx);
 
@@ -176,11 +105,11 @@ hprofShutdown(hprof_context_t *tailCtx)
     hprofShutdown_StackFrame();
 #endif
 
-    if (tailCtx->directToDdms) {
-        /* flush to ensure memstream pointer and size are updated */
-        fflush(headCtx->fp);
-        fflush(tailCtx->fp);
+    /* flush to ensure memstream pointer and size are updated */
+    fflush(headCtx->memFp);
+    fflush(tailCtx->memFp);
 
+    if (tailCtx->directToDdms) {
         /* send the data off to DDMS */
         struct iovec iov[2];
         iov[0].iov_base = headCtx->fileDataPtr;
@@ -190,22 +119,50 @@ hprofShutdown(hprof_context_t *tailCtx)
         dvmDbgDdmSendChunkV(CHUNK_TYPE("HPDS"), iov, 2);
     } else {
         /*
-         * Append the contents of the temp file to the output file.  The temp
-         * file was removed immediately after being opened, so it will vanish
-         * when we close it.
+         * Open the output file, and copy the head and tail to it.
          */
-        rewind(tailCtx->fp);
-        if (!copyFileToFile(headCtx->fp, tailCtx->fp)) {
-            LOGW("hprof: file copy failed, hprof data may be incomplete\n");
-            /* finish up anyway */
+        assert(headCtx->fd == tailCtx->fd);
+
+        int outFd;
+        if (headCtx->fd >= 0) {
+            outFd = dup(headCtx->fd);
+            if (outFd < 0) {
+                LOGE("dup(%d) failed: %s\n", headCtx->fd, strerror(errno));
+                /* continue to fail-handler below */
+            }
+        } else {
+            outFd = open(tailCtx->fileName, O_WRONLY|O_CREAT, 0644);
+            if (outFd < 0) {
+                LOGE("can't open %s: %s\n", headCtx->fileName, strerror(errno));
+                /* continue to fail-handler below */
+            }
+        }
+        if (outFd < 0) {
+            hprofFreeContext(headCtx);
+            hprofFreeContext(tailCtx);
+            return false;
+        }
+
+        int result;
+        result = sysWriteFully(outFd, headCtx->fileDataPtr,
+            headCtx->fileDataSize, "hprof-head");
+        result |= sysWriteFully(outFd, tailCtx->fileDataPtr,
+            tailCtx->fileDataSize, "hprof-tail");
+        close(outFd);
+        if (result != 0) {
+            hprofFreeContext(headCtx);
+            hprofFreeContext(tailCtx);
+            return false;
         }
     }
+
+    /* throw out a log message for the benefit of "runhat" */
+    LOGI("hprof: heap dump completed (%dKB)\n",
+        (headCtx->fileDataSize + tailCtx->fileDataSize + 1023) / 1024);
 
     hprofFreeContext(headCtx);
     hprofFreeContext(tailCtx);
 
-    /* throw out a log message for the benefit of "runhat" */
-    LOGI("hprof: heap dump completed, temp file removed\n");
     return true;
 }
 
@@ -217,11 +174,12 @@ hprofFreeContext(hprof_context_t *ctx)
 {
     assert(ctx != NULL);
 
-    if (ctx->fp != NULL)
-        fclose(ctx->fp);
+    /* we don't own ctx->fd, do not close */
+
+    if (ctx->memFp != NULL)
+        fclose(ctx->memFp);
     free(ctx->curRec.body);
     free(ctx->fileName);
     free(ctx->fileDataPtr);
     free(ctx);
 }
-

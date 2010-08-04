@@ -35,7 +35,7 @@ public final class FieldAnnotationStruct
 
     /**
      * Constructs an instance.
-     * 
+     *
      * @param field {@code non-null;} the field in question
      * @param annotations {@code non-null;} the associated annotations
      */
@@ -57,13 +57,13 @@ public final class FieldAnnotationStruct
     public int hashCode() {
         return field.hashCode();
     }
-    
+
     /** {@inheritDoc} */
     public boolean equals(Object other) {
         if (! (other instanceof FieldAnnotationStruct)) {
             return false;
         }
-        
+
         return field.equals(((FieldAnnotationStruct) other).field);
     }
 
@@ -104,7 +104,7 @@ public final class FieldAnnotationStruct
 
     /**
      * Gets the field this item is for.
-     * 
+     *
      * @return {@code non-null;} the field
      */
     public CstFieldRef getField() {
@@ -113,7 +113,7 @@ public final class FieldAnnotationStruct
 
     /**
      * Gets the associated annotations.
-     * 
+     *
      * @return {@code non-null;} the annotations
      */
     public Annotations getAnnotations() {

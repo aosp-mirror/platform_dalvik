@@ -83,4 +83,3 @@ public class Main {
         mBitmap3 = mBitmap4 = new Bitmap("three/four", 20, 20, dataB);
     }
 }
-

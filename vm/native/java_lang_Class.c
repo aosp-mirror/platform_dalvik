@@ -191,12 +191,13 @@ static void Dalvik_java_lang_Class_getDeclaredClasses(const u4* args,
                         0, ALLOC_DEFAULT);
         }
     } else if (publicOnly) {
-        int i, newIdx, publicCount = 0;
+        u4 count, newIdx, publicCount = 0;
         ClassObject** pSource = (ClassObject**) classes->contents;
+        u4 length = classes->length;
 
         /* count up public classes */
-        for (i = 0; i < (int)classes->length; i++) {
-            if (dvmIsPublicClass(pSource[i]))
+        for (count = 0; count < length; count++) {
+            if (dvmIsPublicClass(pSource[count]))
                 publicCount++;
         }
 
@@ -206,12 +207,13 @@ static void Dalvik_java_lang_Class_getDeclaredClasses(const u4* args,
                         publicCount, ALLOC_DEFAULT);
 
         /* copy them over */
-        ClassObject** pDest = (ClassObject**) newClasses->contents;
-        for (i = newIdx = 0; i < (int)classes->length; i++) {
-            if (dvmIsPublicClass(pSource[i]))
-                pDest[newIdx++] = pSource[i];
+        for (count = newIdx = 0; count < length; count++) {
+            if (dvmIsPublicClass(pSource[count])) {
+                dvmSetObjectArrayElement(newClasses, newIdx,
+                                         (Object *)pSource[count]);
+                newIdx++;
+            }
         }
-
         assert(newIdx == publicCount);
         dvmReleaseTrackedAlloc((Object*) classes, NULL);
         classes = newClasses;
@@ -318,11 +320,11 @@ static void Dalvik_java_lang_Class_getModifiers(const u4* args, JValue* pResult)
 }
 
 /*
- * public String getName()
+ * private native String getNameNative()
  *
  * Return the class' name.
  */
-static void Dalvik_java_lang_Class_getName(const u4* args, JValue* pResult)
+static void Dalvik_java_lang_Class_getNameNative(const u4* args, JValue* pResult)
 {
     ClassObject* clazz = (ClassObject*) args[0];
     const char* descriptor = clazz->descriptor;
@@ -351,7 +353,7 @@ static void Dalvik_java_lang_Class_getName(const u4* args, JValue* pResult)
             }
         }
 
-        nameObj = dvmCreateStringFromCstr(name, ALLOC_DEFAULT);
+        nameObj = dvmCreateStringFromCstr(name);
     } else {
         /*
          * Convert the UTF-8 name to a java.lang.String. The
@@ -363,7 +365,7 @@ static void Dalvik_java_lang_Class_getName(const u4* args, JValue* pResult)
          * say, 128 bytes).
          */
         char* dotName = dvmDescriptorToDot(clazz->descriptor);
-        nameObj = dvmCreateStringFromCstr(dotName, ALLOC_DEFAULT);
+        nameObj = dvmCreateStringFromCstr(dotName);
         free(dotName);
     }
 
@@ -385,7 +387,7 @@ static void Dalvik_java_lang_Class_getName(const u4* args, JValue* pResult)
         const DexFile* pDexFile = clazz->pDexFile;
         const DexClassDef* pClassDef;
         const DexClassId* pClassId;
-        
+
         pDexFile = clazz->pDexFile;
         pClassDef = dvmDexFindClass(pDexFile, clazz->descriptor);
         pClassId = dvmDexGetClassId(pDexFile, pClassDef->classIdx);
@@ -717,7 +719,7 @@ static void Dalvik_java_lang_Class_getDeclaredAnnotations(const u4* args,
 /*
  * public String getInnerClassName()
  *
- * Returns the simple name of a member class or local class, or null otherwise. 
+ * Returns the simple name of a member class or local class, or null otherwise.
  */
 static void Dalvik_java_lang_Class_getInnerClassName(const u4* args,
     JValue* pResult)
@@ -725,7 +727,7 @@ static void Dalvik_java_lang_Class_getInnerClassName(const u4* args,
     ClassObject* clazz = (ClassObject*) args[0];
     StringObject* nameObj;
     int flags;
-    
+
     if (dvmGetInnerClass(clazz, &nameObj, &flags)) {
         dvmReleaseTrackedAlloc((Object*) nameObj, NULL);
         RETURN_PTR(nameObj);
@@ -770,8 +772,8 @@ const DalvikNativeMethod dvm_java_lang_Class[] = {
         Dalvik_java_lang_Class_getInterfaces },
     { "getModifiers",           "(Ljava/lang/Class;Z)I",
         Dalvik_java_lang_Class_getModifiers },
-    { "getName",                "()Ljava/lang/String;",
-        Dalvik_java_lang_Class_getName },
+    { "getNameNative",                "()Ljava/lang/String;",
+        Dalvik_java_lang_Class_getNameNative },
     { "getSuperclass",          "()Ljava/lang/Class;",
         Dalvik_java_lang_Class_getSuperclass },
     { "isAssignableFrom",       "(Ljava/lang/Class;)Z",
@@ -810,4 +812,3 @@ const DalvikNativeMethod dvm_java_lang_Class[] = {
         Dalvik_java_lang_Class_setAccessibleNoCheck },
     { NULL, NULL, NULL },
 };
-

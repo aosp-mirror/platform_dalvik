@@ -13,4 +13,3 @@
     ADVANCE_PC(2)
     $store   (rFP,%ecx,4)           # %st to vAA
     GOTO_NEXT
-

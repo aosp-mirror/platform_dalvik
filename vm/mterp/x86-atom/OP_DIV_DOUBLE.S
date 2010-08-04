@@ -35,4 +35,3 @@
     fstpl       (rFP, rINST, 4)         # vAA<- result
     FFETCH_ADV  2, %eax                 # %eax<- next instruction hi; fetch, advance
     FGETOP_JMP  2, %eax                 # jump to next instruction; getop, jmp
-

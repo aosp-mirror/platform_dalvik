@@ -45,7 +45,7 @@ public abstract class CstLiteralBits
      * Gets the value as {@code long} bits. If this instance contains
      * fewer bits than fit in a {@code long}, then the result of this
      * method is the sign extension of the value.
-     * 
+     *
      * @return the bits
      */
     public abstract long getLongBits();
@@ -60,7 +60,7 @@ public abstract class CstLiteralBits
         if (! fitsInInt()) {
             return false;
         }
-        
+
         int bits = getIntBits();
         return (short) bits == bits;
     }

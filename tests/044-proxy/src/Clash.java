@@ -68,4 +68,3 @@ class ClashInvocationHandler implements InvocationHandler {
         return null;
     }
 }
-

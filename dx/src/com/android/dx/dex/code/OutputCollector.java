@@ -41,7 +41,7 @@ public final class OutputCollector {
 
     /**
      * Constructs an instance.
-     * 
+     *
      * @param initialCapacity {@code >= 0;} initial capacity of the output list
      * @param suffixInitialCapacity {@code >= 0;} initial capacity of the output
      * suffix
@@ -55,8 +55,8 @@ public final class OutputCollector {
 
     /**
      * Adds an instruction to the output.
-     * 
-     * @param insn {@code non-null;} the instruction to add 
+     *
+     * @param insn {@code non-null;} the instruction to add
      */
     public void add(DalvInsn insn) {
         finisher.add(insn);
@@ -66,7 +66,7 @@ public final class OutputCollector {
      * Reverses a branch which is buried a given number of instructions
      * backward in the output. It is illegal to call this unless the
      * indicated instruction really is a reversible branch.
-     * 
+     *
      * @param which how many instructions back to find the branch;
      * {@code 0} is the most recently added instruction,
      * {@code 1} is the instruction before that, etc.
@@ -78,8 +78,8 @@ public final class OutputCollector {
 
     /**
      * Adds an instruction to the output suffix.
-     * 
-     * @param insn {@code non-null;} the instruction to add 
+     *
+     * @param insn {@code non-null;} the instruction to add
      */
     public void addSuffix(DalvInsn insn) {
         suffix.add(insn);
@@ -97,7 +97,7 @@ public final class OutputCollector {
         if (suffix == null) {
             throw new UnsupportedOperationException("already processed");
         }
-        
+
         appendSuffixToOutput();
         return finisher;
     }

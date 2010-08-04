@@ -19,6 +19,16 @@ HANDLE_OPCODE(OP_NEW_INSTANCE /*vAA, class@BBBB*/)
             GOTO_exceptionThrown();
 
         /*
+         * The JIT needs dvmDexGetResolvedClass() to return non-null.
+         * Since we use the portable interpreter to build the trace, this extra
+         * check is not needed for mterp.
+         */
+        if (!dvmDexGetResolvedClass(methodClassDex, ref)) {
+            /* Class initialization is still ongoing - abandon the trace */
+            ABORT_JIT_TSELECT();
+        }
+
+        /*
          * Verifier now tests for interface/abstract class.
          */
         //if (dvmIsInterfaceClass(clazz) || dvmIsAbstractClass(clazz)) {

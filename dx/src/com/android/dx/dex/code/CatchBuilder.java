@@ -26,7 +26,7 @@ import java.util.HashSet;
 public interface CatchBuilder {
     /**
      * Builds and returns the catch table for this instance.
-     * 
+     *
      * @return {@code non-null;} the constructed table
      */
     public CatchTable build();
@@ -34,14 +34,14 @@ public interface CatchBuilder {
     /**
      * Gets whether this instance has any catches at all (either typed
      * or catch-all).
-     * 
+     *
      * @return whether this instance has any catches at all
      */
     public boolean hasAnyCatches();
-    
+
     /**
      * Gets the set of catch types associated with this instance.
-     * 
+     *
      * @return {@code non-null;} the set of catch types
      */
     public HashSet<Type> getCatchTypes();

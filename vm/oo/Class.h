@@ -71,7 +71,7 @@ void dvmSetClassSerialNumber(ClassObject* clazz);
 /*
  * Find the class with the given descriptor.  Load it if it hasn't already
  * been.
- * 
+ *
  * "loader" is the initiating class loader.
  */
 ClassObject* dvmFindClass(const char* descriptor, Object* loader);
@@ -108,7 +108,7 @@ ClassObject* dvmDefineClass(DvmDex* pDvmDex, const char* descriptor,
  * variations, this is only called explicitly for synthetic class
  * generation (e.g. reflect.Proxy).
  */
-bool dvmLinkClass(ClassObject* clazz, bool classesResolved);
+bool dvmLinkClass(ClassObject* clazz);
 
 /*
  * Determine if a class has been initialized.
@@ -139,10 +139,10 @@ void dvmAddInitiatingLoader(ClassObject* clazz, Object* loader);
 bool dvmLoaderInInitiatingList(const ClassObject* clazz, const Object* loader);
 
 /*
- * Update method's "nativeFunc" and "insns" after native method resolution.
+ * Update method's "nativeFunc" and "insns".  If "insns" is NULL, the
+ * current method->insns value is not changed.
  */
-void dvmSetNativeFunc(const Method* method, DalvikBridgeFunc func,
-    const u2* insns);
+void dvmSetNativeFunc(Method* method, DalvikBridgeFunc func, const u2* insns);
 
 /*
  * Set the method's "registerMap" field.
@@ -213,7 +213,7 @@ INLINE int dvmCompareMethodProtos(const Method* method1,
         const Method* method2)
 {
     return dexProtoCompare(&method1->prototype, &method2->prototype);
-}    
+}
 
 /*
  * Compare the two method prototypes, considering only the parameters
@@ -224,7 +224,7 @@ INLINE int dvmCompareMethodParameterProtos(const Method* method1,
         const Method* method2)
 {
     return dexProtoCompareParameters(&method1->prototype, &method2->prototype);
-}    
+}
 
 /*
  * Compare the two method names and prototypes, a la strcmp(). The
@@ -272,5 +272,10 @@ int dvmCompareNameProtoAndMethod(const char* name,
  */
 int dvmCompareNameDescriptorAndMethod(const char* name,
     const char* descriptor, const Method* method);
+
+/*
+ * Returns the size of the given class object in bytes.
+ */
+size_t dvmClassObjectSize(const ClassObject *clazz);
 
 #endif /*_DALVIK_OO_CLASS*/

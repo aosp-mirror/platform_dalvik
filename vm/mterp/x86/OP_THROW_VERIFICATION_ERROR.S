@@ -17,4 +17,3 @@
     call     dvmThrowVerificationError       # call(method, kind, ref)
     UNSPILL(rPC)
     jmp      common_exceptionThrown          # handle exception
-

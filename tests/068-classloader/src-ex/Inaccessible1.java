@@ -9,4 +9,3 @@ class Inaccessible1 extends SimpleBase {
         System.out.println("--- inaccessible1");
     }
 }
-

@@ -36,4 +36,3 @@ public class BaseOkay implements IDoubledExtendOkay {
 interface IDoubledExtendOkay {
     public DoubledExtendOkay getExtended();
 }
-

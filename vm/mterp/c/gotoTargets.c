@@ -94,6 +94,9 @@ GOTO_TARGET(filledNewArray, bool methodCallRange)
                 vdst >>= 4;
             }
         }
+        if (typeCh == 'L' || typeCh == '[') {
+            dvmWriteBarrierArray(newArray, 0, newArray->length);
+        }
 
         retval.l = newArray;
     }
@@ -150,6 +153,10 @@ GOTO_TARGET(invokeVirtual, bool methodCallRange)
          */
         assert(baseMethod->methodIndex < thisPtr->clazz->vtableCount);
         methodToCall = thisPtr->clazz->vtable[baseMethod->methodIndex];
+
+#if defined(WITH_JIT) && (INTERP_TYPE == INTERP_DBG)
+        callsiteClass = thisPtr->clazz;
+#endif
 
 #if 0
         if (dvmIsAbstractMethod(methodToCall)) {
@@ -302,6 +309,10 @@ GOTO_TARGET(invokeInterface, bool methodCallRange)
 
         thisClass = thisPtr->clazz;
 
+#if defined(WITH_JIT) && (INTERP_TYPE == INTERP_DBG)
+        callsiteClass = thisClass;
+#endif
+
         /*
          * Given a class and a method index, find the Method* with the
          * actual code we want to execute.
@@ -373,6 +384,16 @@ GOTO_TARGET(invokeStatic, bool methodCallRange)
             ILOGV("+ unknown method\n");
             GOTO_exceptionThrown();
         }
+
+        /*
+         * The JIT needs dvmDexGetResolvedMethod() to return non-null.
+         * Since we use the portable interpreter to build the trace, this extra
+         * check is not needed for mterp.
+         */
+        if (dvmDexGetResolvedMethod(methodClassDex, ref) == NULL) {
+            /* Class initialization is still ongoing */
+            ABORT_JIT_TSELECT();
+        }
     }
     GOTO_invokeMethod(methodCallRange, methodToCall, vsrc1, vdst);
 GOTO_TARGET_END
@@ -405,6 +426,10 @@ GOTO_TARGET(invokeVirtualQuick, bool methodCallRange)
 
         if (!checkForNull(thisPtr))
             GOTO_exceptionThrown();
+
+#if defined(WITH_JIT) && (INTERP_TYPE == INTERP_DBG)
+        callsiteClass = thisPtr->clazz;
+#endif
 
         /*
          * Combine the object we found with the vtable offset in the
@@ -494,7 +519,6 @@ GOTO_TARGET(invokeSuperQuick, bool methodCallRange)
 GOTO_TARGET_END
 
 
-
     /*
      * General handling for return-void, return, and return-wide.  Put the
      * return value in "retval" before jumping here.
@@ -534,7 +558,7 @@ GOTO_TARGET(returnFromMethod)
             LOGVV("+++ returned into break frame\n");
 #if defined(WITH_JIT)
             /* Let the Jit know the return is terminating normally */
-            CHECK_JIT();
+            CHECK_JIT_VOID();
 #endif
             GOTO_bail();
         }
@@ -722,6 +746,7 @@ GOTO_TARGET(exceptionThrown)
 GOTO_TARGET_END
 
 
+
     /*
      * General handling for invoke-{virtual,super,direct,static,interface},
      * including "quick" variants.
@@ -904,12 +929,14 @@ GOTO_TARGET(invokeMethod, bool methodCallRange, const Method* _methodToCall,
             TRACE_METHOD_ENTER(self, methodToCall);
 #endif
 
-            ILOGD("> native <-- %s.%s %s", methodToCall->clazz->descriptor,
-                methodToCall->name, methodToCall->shorty);
+            {
+                ILOGD("> native <-- %s.%s %s", methodToCall->clazz->descriptor,
+                        methodToCall->name, methodToCall->shorty);
+            }
 
 #if defined(WITH_JIT)
             /* Allow the Jit to end any pending trace building */
-            CHECK_JIT();
+            CHECK_JIT_VOID();
 #endif
 
             /*

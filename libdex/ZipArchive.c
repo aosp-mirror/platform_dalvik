@@ -120,7 +120,7 @@ static void addToHash(ZipArchive* pArchive, const char* str, int strLen,
  */
 static u2 get2LE(unsigned char const* pSrc)
 {
-    return pSrc[0] | (pSrc[1] << 8); 
+    return pSrc[0] | (pSrc[1] << 8);
 }
 
 /*
@@ -648,17 +648,8 @@ static int inflateToFile(int inFd, int outFd, size_t uncompLen, size_t compLen)
             (zerr == Z_STREAM_END && zstream.avail_out != kBufSize))
         {
             size_t writeSize = zstream.next_out - writeBuf;
-            ssize_t actual =
-                TEMP_FAILURE_RETRY(write(outFd, writeBuf, writeSize));
-            if (actual != (ssize_t) writeSize) {
-                if (actual < 0) {
-                    LOGW("Zip: write failed in inflate: %s\n", strerror(errno));
-                } else {
-                    LOGW("Zip: partial write in inflate (%d vs %zd)\n",
-                        (int) actual, writeSize);
-                }
+            if (sysWriteFully(outFd, writeBuf, writeSize, "Zip inflate") != 0)
                 goto z_bail;
-            }
 
             zstream.next_out = writeBuf;
             zstream.avail_out = kBufSize;
@@ -702,13 +693,8 @@ static int copyFileToFile(int inFd, int outFd, size_t uncompLen)
             return -1;
         }
 
-        actual = TEMP_FAILURE_RETRY(write(outFd, buf, getSize));
-        if (actual != (ssize_t) getSize) {
-            /* could be disk out of space, so show errno in message */
-            LOGW("Zip: copy write failed (%d vs %zd): %s\n",
-                (int) actual, getSize, strerror(errno));
+        if (sysWriteFully(outFd, buf, getSize, "Zip copy") != 0)
             return -1;
-        }
 
         uncompLen -= getSize;
     }
@@ -759,4 +745,3 @@ int dexZipExtractEntryToFile(const ZipArchive* pArchive,
 bail:
     return result;
 }
-

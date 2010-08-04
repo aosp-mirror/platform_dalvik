@@ -65,14 +65,14 @@ public abstract class EncodedMember implements ToHuman {
 
     /**
      * Populates a {@link DexFile} with items from within this instance.
-     * 
+     *
      * @param file {@code non-null;} the file to populate
      */
     public abstract void addContents(DexFile file);
 
     /**
      * Encodes this instance to the given output.
-     * 
+     *
      * @param file {@code non-null;} file this instance is part of
      * @param out {@code non-null;} where to write to
      * @param lastIndex {@code >= 0;} the previous member index value encoded, or
@@ -81,6 +81,6 @@ public abstract class EncodedMember implements ToHuman {
      * annotation purposes
      * @return {@code >= 0;} the member index value that was encoded
      */
-    public abstract int encode(DexFile file, AnnotatedOutput out, 
+    public abstract int encode(DexFile file, AnnotatedOutput out,
             int lastIndex, int dumpSeq);
 }

@@ -189,7 +189,7 @@ Further implementation thoughts:
 */
 /*
 Output Formats
- 
+
 There are two possible output formats, from which we choose based on how
 we plan to take advantage of the remapped constants.  At most one of these
 will appear in the DEX.
@@ -644,6 +644,7 @@ static void markUsedConstants(DexFile* pDexFile, const char* classDescriptor,
  *
  * Run through the instructions in this method, altering the constants used.
  */
+#if DVM_RESOLVER_CACHE == DVM_RC_EXPANDING
 static void updateUsedConstants(DexFile* pDexFile, const char* classDescriptor,
     DexMethod* pDexMethod, void* arg)
 {
@@ -666,6 +667,7 @@ static void updateUsedConstants(DexFile* pDexFile, const char* classDescriptor,
         //printf(" (no code)\n");
     }
 }
+#endif
 
 /*
  * Count up the bits and show a count.
@@ -682,9 +684,9 @@ static void showBitCount(const char* label, int setCount, int maxCount)
 static void summarizeResults(DvmDex* pDvmDex, ScanResults* pResults)
 {
     DexFile* pDexFile = pDvmDex->pDexFile;
+#if 0
     int i;
 
-#if 0
     for (i = 0; i < (int) pDvmDex->pDexFile->pHeader->typeIdsSize; i++) {
         const DexTypeId* pDexTypeId;
         const char* classDescr;
@@ -890,6 +892,7 @@ static bool constructReducingDataChunk(IndexMapSet* pIndexMapSet)
  * Construct an "expanding" chunk, with maps that convert instructions
  * with reduced constants back to their full original values.
  */
+#if DVM_RESOLVER_CACHE == DVM_RC_EXPANDING
 static bool constructExpandingDataChunk(IndexMapSet* pIndexMapSet)
 {
     int chunkLen = 0;
@@ -939,6 +942,7 @@ static bool constructExpandingDataChunk(IndexMapSet* pIndexMapSet)
 
     return true;
 }
+#endif
 
 /*
  * Construct the "chunk" of data that will be appended to the optimized DEX
@@ -963,7 +967,6 @@ static IndexMapSet* createIndexMapSet(const DexFile* pDexFile,
     ScanResults* pResults)
 {
     IndexMapSet* pIndexMapSet;
-    int setCount;
     bool okay = true;
 
     pIndexMapSet = calloc(1, sizeof(*pIndexMapSet));
@@ -1054,4 +1057,3 @@ IndexMapSet* dvmRewriteConstants(DvmDex* pDvmDex)
 
     return pIndexMapSet;
 }
-

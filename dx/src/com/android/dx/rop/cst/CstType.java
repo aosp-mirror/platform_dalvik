@@ -96,7 +96,7 @@ public final class CstType extends TypedConstant {
      * class corresponding to a given primitive type. For example, if
      * given {@link Type#INT}, this method returns the class reference
      * {@code java.lang.Integer}.
-     * 
+     *
      * @param primitiveType {@code non-null;} the primitive type
      * @return {@code non-null;} the corresponding wrapper class
      */
@@ -118,7 +118,7 @@ public final class CstType extends TypedConstant {
 
     /**
      * Returns an interned instance of this class for the given type.
-     * 
+     *
      * @param type {@code non-null;} the underlying type
      * @return {@code non-null;} an appropriately-constructed instance
      */
@@ -135,7 +135,7 @@ public final class CstType extends TypedConstant {
 
     /**
      * Constructs an instance.
-     * 
+     *
      * @param type {@code non-null;} the underlying type
      */
     public CstType(Type type) {
@@ -208,7 +208,7 @@ public final class CstType extends TypedConstant {
      * Gets the underlying type (as opposed to the type corresponding
      * to this instance as a constant, which is always
      * {@code Class}).
-     * 
+     *
      * @return {@code non-null;} the type corresponding to the name
      */
     public Type getClassType() {
@@ -217,14 +217,14 @@ public final class CstType extends TypedConstant {
 
     /**
      * Gets the type descriptor for this instance.
-     * 
+     *
      * @return {@code non-null;} the descriptor
      */
     public CstUtf8 getDescriptor() {
         if (descriptor == null) {
             descriptor = new CstUtf8(type.getDescriptor());
         }
-        
+
         return descriptor;
     }
 }

@@ -51,7 +51,7 @@ public class ClassObj extends Instance implements Comparable<ClassObj> {
         DataInputStream dis = new DataInputStream(bais);
         int[] types = mStaticFieldTypes;
         final int N = types.length;
-        
+
         /*
          * Spin through the list of static fields, find all object references,
          * and list ourselves as a reference holder.  Also add them to
@@ -61,18 +61,18 @@ public class ClassObj extends Instance implements Comparable<ClassObj> {
             for (int i = 0; i < N; i++) {
                 int type = types[i];
                 int size = Types.getTypeSize(type);
-                
+
                 if (type == Types.OBJECT) {
                     long id;
-                    
+
                     if (size == 4) {
                         id = dis.readInt();
                     } else {
                         id = dis.readLong();
                     }
-                    
+
                     RootObj root = new RootObj(RootType.JAVA_STATIC, id);
-                    
+
                     if (id == 0) {
                         root.mComment = String.format(
                             "Static field %s:%s null",
@@ -80,9 +80,9 @@ public class ClassObj extends Instance implements Comparable<ClassObj> {
                                 mStaticFieldNames[i]);
                     } else {
                         Instance instance = state.findReference(id);
-                        
+
                         instance.addParent(this);
-                        
+
                         root.mComment = String.format(
                             "Static field %s:%s %s [%s] 0x%08x",
                                 mClassName,
@@ -105,7 +105,7 @@ public class ClassObj extends Instance implements Comparable<ClassObj> {
         //  Lastly, add ourself as a subclass of our superclass
         if (mSuperclassId != 0) {
             ClassObj superclass = state.findClass(mSuperclassId);
-            
+
             superclass.addSubclass(this);
         }
     }
@@ -135,7 +135,7 @@ public class ClassObj extends Instance implements Comparable<ClassObj> {
     public final void setFieldNames(String[] names) {
         mFieldNames = names;
     }
-    
+
     public final void setFieldTypes(int[] types) {
         mFieldTypes = types;
     }
@@ -143,11 +143,11 @@ public class ClassObj extends Instance implements Comparable<ClassObj> {
     public final void setStaticFieldNames(String[] names) {
         mStaticFieldNames = names;
     }
-    
+
     public final void setStaticFieldTypes(int[] types) {
         mStaticFieldTypes = types;
     }
-    
+
     public final void setStaticFieldValues(byte[] values) {
         mStaticFieldValues = values;
     }
@@ -156,14 +156,14 @@ public class ClassObj extends Instance implements Comparable<ClassObj> {
         System.out.println("+----------  ClassObj dump for: " + mClassName);
 
         System.out.println("+-----  Static fields");
-        
+
         for (int i = 0; i < mStaticFieldNames.length; i++) {
-            System.out.println(mStaticFieldNames[i] + ": " 
+            System.out.println(mStaticFieldNames[i] + ": "
                 + mStaticFieldTypes[i]);
         }
 
         System.out.println("+-----  Instance fields");
-        
+
         for (int i = 0; i < mFieldNames.length; i++) {
             System.out.println(mFieldNames[i] + ": " + mFieldTypes[i]);
         }
@@ -179,7 +179,7 @@ public class ClassObj extends Instance implements Comparable<ClassObj> {
         if (resultSet.contains(this)) {
             return;
         }
-        
+
         if (filter != null) {
             if (filter.accept(this)) {
                 resultSet.add(this);
@@ -187,14 +187,14 @@ public class ClassObj extends Instance implements Comparable<ClassObj> {
         } else {
             resultSet.add(this);
         }
-        
+
         ByteArrayInputStream bais =
             new ByteArrayInputStream(mStaticFieldValues);
         DataInputStream dis = new DataInputStream(bais);
         int[] types = mStaticFieldTypes;
         final int N = types.length;
         State state = mHeap.mState;
-        
+
         /*
          * Spin through the list of static fields, find all object references,
          * and visit them.
@@ -203,18 +203,18 @@ public class ClassObj extends Instance implements Comparable<ClassObj> {
             for (int i = 0; i < N; i++) {
                 int type = types[i];
                 int size = Types.getTypeSize(type);
-                
+
                 if (type == Types.OBJECT) {
                     long id;
-                    
+
                     if (size == 4) {
                         id = dis.readInt();
                     } else {
                         id = dis.readLong();
                     }
-                    
+
                     Instance instance = state.findReference(id);
-                    
+
                     if (instance != null) {
                         instance.visit(resultSet, filter);
                     }
@@ -235,7 +235,7 @@ public class ClassObj extends Instance implements Comparable<ClassObj> {
         if (! (o instanceof ClassObj)) {
             return false;
         }
-        
+
         return 0 == compareTo((ClassObj) o);
     }
 }

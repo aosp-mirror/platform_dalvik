@@ -20,4 +20,3 @@
 #
 set -e
 for arch in armv5te armv5te-vfp armv7-a armv7-a-neon; do TARGET_ARCH_EXT=$arch make -f Makefile-template; done
-

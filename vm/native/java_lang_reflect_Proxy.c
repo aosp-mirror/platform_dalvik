@@ -45,4 +45,3 @@ const DalvikNativeMethod dvm_java_lang_reflect_Proxy[] = {
         Dalvik_java_lang_reflect_Proxy_generateProxy },
     { NULL, NULL, NULL },
 };
-

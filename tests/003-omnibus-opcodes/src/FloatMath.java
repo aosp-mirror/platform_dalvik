@@ -335,4 +335,3 @@ public class FloatMath {
         jlmTests(3.14159f, 123456.78987654321);
     }
 }
-

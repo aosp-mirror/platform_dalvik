@@ -35,19 +35,20 @@
 /* verbose logging */
 #define REGISTER_MAP_VERBOSE    false
 
+//#define REGISTER_MAP_STATS
 
 // fwd
 static void outputTypeVector(const RegType* regs, int insnRegCount, u1* data);
 static bool verifyMap(VerifierData* vdata, const RegisterMap* pMap);
 static int compareMaps(const RegisterMap* pMap1, const RegisterMap* pMap2);
 
+#ifdef REGISTER_MAP_STATS
 static void computeMapStats(RegisterMap* pMap, const Method* method);
+#endif
 static RegisterMap* compressMapDifferential(const RegisterMap* pMap,\
     const Method* meth);
 static RegisterMap* uncompressMapDifferential(const RegisterMap* pMap);
 
-
-//#define REGISTER_MAP_STATS
 #ifdef REGISTER_MAP_STATS
 /*
  * Generate some statistics on the register maps we create and use.
@@ -223,7 +224,7 @@ RegisterMap* dvmGenerateRegisterMapV(VerifierData* vdata)
      * since we don't count method entry as a GC point.
      */
     gcPointCount = 0;
-    for (i = 0; i < vdata->insnsSize; i++) {
+    for (i = 0; i < (int) vdata->insnsSize; i++) {
         if (dvmInsnIsGcPoint(vdata->insnFlags, i))
             gcPointCount++;
     }
@@ -253,7 +254,7 @@ RegisterMap* dvmGenerateRegisterMapV(VerifierData* vdata)
      * Populate it.
      */
     mapData = pMap->data;
-    for (i = 0; i < vdata->insnsSize; i++) {
+    for (i = 0; i < (int) vdata->insnsSize; i++) {
         if (dvmInsnIsGcPoint(vdata->insnFlags, i)) {
             assert(vdata->addrRegs[i] != NULL);
             if (format == kRegMapFormatCompact8) {
@@ -471,7 +472,6 @@ static bool verifyMap(VerifierData* vdata, const RegisterMap* pMap)
     if (false) {
         const char* cd = "Landroid/net/http/Request;";
         const char* mn = "readResponse";
-        const char* sg = "(Landroid/net/http/AndroidHttpClientConnection;)V";
         if (strcmp(vdata->method->clazz->descriptor, cd) == 0 &&
             strcmp(vdata->method->name, mn) == 0)
         {
@@ -508,7 +508,6 @@ static bool verifyMap(VerifierData* vdata, const RegisterMap* pMap)
             dvmAbort();
         }
 
-        const u1* dataStart = rawMap;
         const RegType* regs = vdata->addrRegs[addr];
         if (regs == NULL) {
             LOGE("GLITCH: addr %d has no data\n", addr);
@@ -1010,7 +1009,7 @@ const RegisterMap* dvmGetExpandedRegisterMap0(Method* method)
     /* sanity check to ensure this isn't called w/o external locking */
     /* (if we use this at a time other than during GC, fix/remove this test) */
     if (true) {
-        if (!gDvm.zygote && pthread_mutex_trylock(&gDvm.gcHeapLock) == 0) {
+        if (!gDvm.zygote && dvmTryLockMutex(&gDvm.gcHeapLock) == 0) {
             LOGE("GLITCH: dvmGetExpandedRegisterMap not called at GC time\n");
             dvmAbort();
         }
@@ -1243,9 +1242,9 @@ Compact8 encoding method.
 /*
  * Compute some stats on an uncompressed register map.
  */
+#ifdef REGISTER_MAP_STATS
 static void computeMapStats(RegisterMap* pMap, const Method* method)
 {
-#ifdef REGISTER_MAP_STATS
     MapStats* pStats = (MapStats*) gDvm.registerMapStats;
     const u1 format = dvmRegisterMapGetFormat(pMap);
     const u2 numEntries = dvmRegisterMapGetNumEntries(pMap);
@@ -1361,9 +1360,8 @@ static void computeMapStats(RegisterMap* pMap, const Method* method)
         prevAddr = addr;
         prevData = dataStart;
     }
-#endif
 }
-
+#endif
 
 /*
  * Compute the difference between two bit vectors.
@@ -3008,6 +3006,10 @@ sget_1nr_common:
     case OP_IPUT_QUICK:
     case OP_IPUT_WIDE_QUICK:
     case OP_IPUT_OBJECT_QUICK:
+    case OP_IGET_WIDE_VOLATILE:
+    case OP_IPUT_WIDE_VOLATILE:
+    case OP_SGET_WIDE_VOLATILE:
+    case OP_SPUT_WIDE_VOLATILE:
     case OP_INVOKE_VIRTUAL_QUICK:
     case OP_INVOKE_VIRTUAL_QUICK_RANGE:
     case OP_INVOKE_SUPER_QUICK:
@@ -3031,10 +3033,6 @@ sget_1nr_common:
     case OP_UNUSED_E5:
     case OP_UNUSED_E6:
     case OP_UNUSED_E7:
-    case OP_UNUSED_E8:
-    case OP_UNUSED_E9:
-    case OP_UNUSED_EA:
-    case OP_UNUSED_EB:
     case OP_BREAKPOINT:
     case OP_UNUSED_ED:
     case OP_UNUSED_F1:
@@ -3272,4 +3270,3 @@ static void updateRegisters(WorkState* pState, int nextInsn,
 }
 
 #endif /*#if 0*/
-

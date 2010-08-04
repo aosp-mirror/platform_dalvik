@@ -25,6 +25,7 @@
 #include "compiler/CompilerIR.h"
 #include "CalloutHelper.h"
 
+#if defined(_CODEGEN_C)
 /*
  * loadConstant() sometimes needs to add a small imm to a pre-existing constant
  */
@@ -44,9 +45,15 @@ static bool genArithOpDoublePortable(CompilationUnit *cUnit, MIR *mir,
 
 static bool genConversionPortable(CompilationUnit *cUnit, MIR *mir);
 
+#if defined(WITH_DEADLOCK_PREDICTION) || defined(WITH_MONITOR_TRACKING) || \
+    defined(__ARM_ARCH_5__)
 static void genMonitorPortable(CompilationUnit *cUnit, MIR *mir);
+#endif
 
 static void genInterpSingleStep(CompilationUnit *cUnit, MIR *mir);
+
+#endif
+
 
 #if defined(WITH_SELF_VERIFICATION)
 /* Self Verification memory instruction decoder */

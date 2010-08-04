@@ -93,4 +93,3 @@ unspecified registers or condition codes.
  * to expand the macros into assembler assignment statements.
  */
 #include "../../../mterp/common/asm-constants.h"
-

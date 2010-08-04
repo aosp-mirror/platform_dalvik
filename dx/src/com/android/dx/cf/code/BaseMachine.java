@@ -27,7 +27,7 @@ import java.util.ArrayList;
 
 /**
  * Base implementation of {@link Machine}.
- * 
+ *
  * <p><b>Note:</b> For the most part, the documentation for this class
  * ignores the distinction between {@link Type} and {@link
  * TypeBearer}.</p>
@@ -35,7 +35,7 @@ import java.util.ArrayList;
 public abstract class BaseMachine implements Machine {
     /* {@code non-null;} the prototype for the associated method */
     private final Prototype prototype;
-    
+
     /** {@code non-null;} primary arguments */
     private TypeBearer[] args;
 
@@ -77,7 +77,7 @@ public abstract class BaseMachine implements Machine {
 
     /**
      * Constructs an instance.
-     * 
+     *
      * @param prototype {@code non-null;} the prototype for the associated method
      */
     public BaseMachine(Prototype prototype) {
@@ -132,7 +132,7 @@ public abstract class BaseMachine implements Machine {
     public void popArgs(Frame frame, Prototype prototype) {
         StdTypeList types = prototype.getParameterTypes();
         int size = types.size();
-        
+
         // Use the above method to do the actual popping...
         popArgs(frame, size);
 
@@ -253,7 +253,7 @@ public abstract class BaseMachine implements Machine {
 
     /**
      * Gets the number of primary arguments.
-     * 
+     *
      * @return {@code >= 0;} the number of primary arguments
      */
     protected final int argCount() {
@@ -263,7 +263,7 @@ public abstract class BaseMachine implements Machine {
     /**
      * Gets the width of the arguments (where a category-2 value counts as
      * two).
-     * 
+     *
      * @return {@code >= 0;} the argument width
      */
     protected final int argWidth() {
@@ -278,7 +278,7 @@ public abstract class BaseMachine implements Machine {
 
     /**
      * Gets the {@code n}th primary argument.
-     * 
+     *
      * @param n {@code >= 0, < argCount();} which argument
      * @return {@code non-null;} the indicated argument
      */
@@ -297,7 +297,7 @@ public abstract class BaseMachine implements Machine {
 
     /**
      * Gets the type auxiliary argument.
-     * 
+     *
      * @return {@code null-ok;} the salient type
      */
     protected final Type getAuxType() {
@@ -306,7 +306,7 @@ public abstract class BaseMachine implements Machine {
 
     /**
      * Gets the {@code int} auxiliary argument.
-     * 
+     *
      * @return the argument value
      */
     protected final int getAuxInt() {
@@ -315,7 +315,7 @@ public abstract class BaseMachine implements Machine {
 
     /**
      * Gets the constant auxiliary argument.
-     * 
+     *
      * @return {@code null-ok;} the argument value
      */
     protected final Constant getAuxCst() {
@@ -324,7 +324,7 @@ public abstract class BaseMachine implements Machine {
 
     /**
      * Gets the branch target auxiliary argument.
-     * 
+     *
      * @return the argument value
      */
     protected final int getAuxTarget() {
@@ -333,7 +333,7 @@ public abstract class BaseMachine implements Machine {
 
     /**
      * Gets the switch cases auxiliary argument.
-     * 
+     *
      * @return {@code null-ok;} the argument value
      */
     protected final SwitchList getAuxCases() {
@@ -350,7 +350,7 @@ public abstract class BaseMachine implements Machine {
     }
     /**
      * Gets the last local index accessed.
-     * 
+     *
      * @return {@code >= -1;} the salient local index or {@code -1} if none
      * was set since the last time {@link #clearArgs} was called
      */
@@ -364,7 +364,7 @@ public abstract class BaseMachine implements Machine {
      * by a previous call to {@link #localTarget} with the type of what
      * should be the sole result set by a call to {@link #setResult} (or
      * the combination {@link #clearResult} then {@link #addResult}.
-     * 
+     *
      * @return {@code null-ok;} the salient register spec or {@code null} if no
      * local target was set since the last time {@link #clearArgs} was
      * called
@@ -375,7 +375,7 @@ public abstract class BaseMachine implements Machine {
         }
 
         if (resultCount != 1) {
-            throw new SimException("local target with " + 
+            throw new SimException("local target with " +
                     ((resultCount == 0) ? "no" : "multiple") + " results");
         }
 
@@ -413,10 +413,10 @@ public abstract class BaseMachine implements Machine {
 
     /**
      * Sets the results list to be the given single value.
-     * 
+     *
      * <p><b>Note:</b> If there is more than one result value, the
      * others may be added by using {@link #addResult}.</p>
-     * 
+     *
      * @param result {@code non-null;} result value
      */
     protected final void setResult(TypeBearer result) {
@@ -430,9 +430,9 @@ public abstract class BaseMachine implements Machine {
 
     /**
      * Adds an additional element to the list of results.
-     * 
+     *
      * @see #setResult
-     * 
+     *
      * @param result {@code non-null;} result value
      */
     protected final void addResult(TypeBearer result) {
@@ -447,7 +447,7 @@ public abstract class BaseMachine implements Machine {
     /**
      * Gets the count of results. This throws an exception if results were
      * never set. (Explicitly clearing the results counts as setting them.)
-     * 
+     *
      * @return {@code >= 0;} the count
      */
     protected final int resultCount() {
@@ -461,7 +461,7 @@ public abstract class BaseMachine implements Machine {
     /**
      * Gets the width of the results (where a category-2 value counts as
      * two).
-     * 
+     *
      * @return {@code >= 0;} the result width
      */
     protected final int resultWidth() {
@@ -476,7 +476,7 @@ public abstract class BaseMachine implements Machine {
 
     /**
      * Gets the {@code n}th result value.
-     * 
+     *
      * @param n {@code >= 0, < resultCount();} which result
      * @return {@code non-null;} the indicated result value
      */
@@ -498,7 +498,7 @@ public abstract class BaseMachine implements Machine {
      * there is a local target (see {@link #localTarget}), then the sole
      * result is stored to that target; otherwise any results are pushed
      * onto the stack.
-     * 
+     *
      * @param frame {@code non-null;} frame to operate on
      */
     protected final void storeResults(Frame frame) {
@@ -528,7 +528,7 @@ public abstract class BaseMachine implements Machine {
     /**
      * Throws an exception that indicates a mismatch in local variable
      * types.
-     * 
+     *
      * @param found {@code non-null;} the encountered type
      * @param local {@code non-null;} the local variable's claimed type
      */
@@ -536,8 +536,8 @@ public abstract class BaseMachine implements Machine {
             TypeBearer local) {
         throw new SimException("local variable type mismatch: " +
                 "attempt to set or access a value of type " +
-                found.toHuman() + 
-                " using a local variable of type " + 
+                found.toHuman() +
+                " using a local variable of type " +
                 local.toHuman() +
                 ". This is symptomatic of .class transformation tools " +
                 "that ignore local variable information.");

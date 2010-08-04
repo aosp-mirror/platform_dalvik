@@ -92,7 +92,7 @@ typedef enum hprof_heap_tag_t {
     HPROF_ROOT_REFERENCE_CLEANUP = 0x8c,
     HPROF_ROOT_VM_INTERNAL = 0x8d,
     HPROF_ROOT_JNI_MONITOR = 0x8e,
-    HPROF_UNREACHABLE = 0x90,
+    HPROF_UNREACHABLE = 0x90,  /* deprecated */
     HPROF_PRIMITIVE_ARRAY_NODATA_DUMP = 0xc3,
 } hprof_heap_tag_t;
 
@@ -133,15 +133,16 @@ typedef struct hprof_context_t {
     size_t objectsInSegment;
 
     /*
-     * If "directToDdms" is not set, "fileName" is valid, and "fileDataPtr"
-     * and "fileDataSize" are not used.  If "directToDdms" is not set,
-     * it's the other way around.
+     * If directToDdms is set, "fileName" and "fd" will be ignored.
+     * Otherwise, "fileName" must be valid, though if "fd" >= 0 it will
+     * only be used for debug messages.
      */
     bool directToDdms;
     char *fileName;
     char *fileDataPtr;          // for open_memstream
     size_t fileDataSize;        // for open_memstream
-    FILE *fp;
+    FILE *memFp;
+    int fd;
 } hprof_context_t;
 
 
@@ -187,7 +188,7 @@ int hprofDumpHeapObject(hprof_context_t *ctx, const Object *obj);
  * HprofOutput.c functions
  */
 
-void hprofContextInit(hprof_context_t *ctx, char *fileName, FILE *fp,
+void hprofContextInit(hprof_context_t *ctx, char *fileName, int fd,
                       bool writeHeader, bool directToDdms);
 
 int hprofFlushRecord(hprof_record_t *rec, FILE *fp);
@@ -244,7 +245,8 @@ int hprofShutdown_StackFrame(void);
  * Hprof.c functions
  */
 
-hprof_context_t* hprofStartup(const char *outputFileName, bool directToDdms);
+hprof_context_t* hprofStartup(const char *outputFileName, int fd,
+    bool directToDdms);
 bool hprofShutdown(hprof_context_t *ctx);
 void hprofFreeContext(hprof_context_t *ctx);
 
@@ -255,7 +257,7 @@ void hprofFreeContext(hprof_context_t *ctx);
  * the heap implementation; these functions require heap knowledge,
  * so they are implemented in Heap.c.
  */
-int hprofDumpHeap(const char* fileName, bool directToDdms);
+int hprofDumpHeap(const char* fileName, int fd, bool directToDdms);
 void dvmHeapSetHprofGcScanState(hprof_heap_tag_t state, u4 threadSerialNumber);
 
 #endif  // _DALVIK_HPROF_HPROF

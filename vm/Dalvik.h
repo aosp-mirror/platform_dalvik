@@ -55,9 +55,11 @@
 #include "oo/Array.h"
 #include "Exception.h"
 #include "alloc/Alloc.h"
+#include "alloc/CardTable.h"
 #include "alloc/HeapDebug.h"
 #include "alloc/HeapWorker.h"
 #include "alloc/GC.h"
+#include "alloc/WriteBarrier.h"
 #include "oo/AccessCheck.h"
 #include "JarFile.h"
 #include "Properties.h"
@@ -67,7 +69,7 @@
 #include "JniInternal.h"
 #include "LinearAlloc.h"
 #include "analysis/DexVerify.h"
-#include "analysis/DexOptimize.h"
+#include "analysis/DexPrepare.h"
 #include "analysis/RegisterMap.h"
 #include "Init.h"
 #include "libdex/OpCode.h"
@@ -83,5 +85,6 @@
 #include "Atomic.h"
 #include "interp/Interp.h"
 #include "InlineNative.h"
+#include "oo/ObjectInlines.h"
 
 #endif /*_DALVIK_DALVIK*/

@@ -48,7 +48,7 @@ public final class HeaderItem extends IndexedItem {
     public ItemType itemType() {
         return ItemType.TYPE_HEADER_ITEM;
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public int writeSize() {
@@ -70,7 +70,7 @@ public final class HeaderItem extends IndexedItem {
         int dataOff = firstDataSection.getFileOffset();
         int dataSize = lastDataSection.getFileOffset() +
             lastDataSection.writeSize() - dataOff;
-        
+
         if (out.annotates()) {
             out.annotate(8, "magic: " + new CstUtf8(MAGIC).toQuoted());
             out.annotate(4, "checksum");
@@ -103,7 +103,7 @@ public final class HeaderItem extends IndexedItem {
         out.writeZeroes(8);
 
         out.writeInt(mapOff);
-        
+
         // Write out each section's respective header part.
         file.getStringIds().writeHeaderPart(out);
         file.getTypeIds().writeHeaderPart(out);

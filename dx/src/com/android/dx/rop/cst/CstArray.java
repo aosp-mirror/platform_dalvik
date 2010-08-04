@@ -26,7 +26,7 @@ import com.android.dx.util.FixedSizeList;
 public final class CstArray extends Constant {
     /** {@code non-null;} the actual list of contents */
     private final List list;
-    
+
     /**
      * Constructs an instance.
      *
@@ -89,7 +89,7 @@ public final class CstArray extends Constant {
 
     /**
      * Get the underlying list.
-     * 
+     *
      * @return {@code non-null;} the list
      */
     public List getList() {
@@ -104,7 +104,7 @@ public final class CstArray extends Constant {
         /**
          * Constructs an instance. All indices initially contain
          * {@code null}.
-         * 
+         *
          * @param size the size of the list
          */
         public List(int size) {
@@ -139,7 +139,7 @@ public final class CstArray extends Constant {
          * Gets the element at the given index. It is an error to call
          * this with the index for an element which was never set; if you
          * do that, this will throw {@code NullPointerException}.
-         * 
+         *
          * @param n {@code >= 0, < size();} which index
          * @return {@code non-null;} element at that index
          */
@@ -149,7 +149,7 @@ public final class CstArray extends Constant {
 
         /**
          * Sets the element at the given index.
-         * 
+         *
          * @param n {@code >= 0, < size();} which index
          * @param a {@code null-ok;} the element to set at {@code n}
          */

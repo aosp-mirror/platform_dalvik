@@ -9,7 +9,10 @@ bool INTERP_FUNC_NAME(Thread* self, InterpState* interpState)
     StackSaveArea* debugSaveArea = SAVEAREA_FROM_FP(self->curFrame);
 #endif
 #if INTERP_TYPE == INTERP_DBG
-    bool debugIsMethodEntry = interpState->debugIsMethodEntry;
+    bool debugIsMethodEntry = false;
+# if defined(WITH_DEBUGGER) || defined(WITH_PROFILER) // implied by INTERP_DBG??
+    debugIsMethodEntry = interpState->debugIsMethodEntry;
+# endif
 #endif
 #if defined(WITH_TRACKREF_CHECKS)
     int debugTrackedRefStart = interpState->debugTrackedRefStart;
@@ -43,6 +46,14 @@ bool INTERP_FUNC_NAME(Thread* self, InterpState* interpState)
          interpState->method->name);
 #endif
 #if INTERP_TYPE == INTERP_DBG
+    const ClassObject* callsiteClass = NULL;
+
+#if defined(WITH_SELF_VERIFICATION)
+    if (interpState->jitState != kJitSelfVerification) {
+        interpState->self->shadowSpace->jitExitState = kSVSIdle;
+    }
+#endif
+
     /* Check to see if we've got a trace selection request. */
     if (
          /*
@@ -94,7 +105,7 @@ bool INTERP_FUNC_NAME(Thread* self, InterpState* interpState)
         /* just fall through to instruction loop or threaded kickstart */
         break;
     case kInterpEntryReturn:
-        CHECK_JIT();
+        CHECK_JIT_VOID();
         goto returnFromMethod;
     case kInterpEntryThrow:
         goto exceptionThrown;

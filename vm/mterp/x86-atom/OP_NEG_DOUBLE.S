@@ -18,4 +18,3 @@
     */
 
 %include "x86-atom/unopWide.S" { "preinstr":"movq .LdoubNeg, %xmm1", "instr":"pxor %xmm1, %xmm0" }
-

@@ -51,4 +51,3 @@ d2l_doconv:
 1:
     add     sp, sp, #4
     ldmfd   sp!, {r4, r5, pc}
-

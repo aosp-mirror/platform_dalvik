@@ -22,8 +22,6 @@
 #include "Dalvik.h"
 #include "ffi.h"
 
-#include <assert.h>
-
 /*
  * Convert a signature type character to an FFI type.
  */
@@ -104,4 +102,3 @@ void dvmPlatformInvoke(void* pEnv, ClassObject* clazz, int argInfo, int argc,
 
     ffi_call(&cif, FFI_FN(func), pReturn, values);
 }
-

@@ -165,19 +165,19 @@ void dumpClass(DexFile* pDexFile, int idx)
         fprintf(stderr, "Trouble reading class data\n");
         return;
     }
-    
+
     if (pClassDef->sourceFileIdx == 0xffffffff) {
         fileName = NULL;
     } else {
         fileName = dexStringById(pDexFile, pClassDef->sourceFileIdx);
     }
-    
-    /* 
+
+    /*
      * TODO: Each class def points at a sourceFile, so maybe that
      * should be printed out. However, this needs to be coordinated
      * with the tools that parse this output.
      */
-       
+
     for (i = 0; i < (int) pClassData->header.directMethodsSize; i++) {
         dumpMethod(pDexFile, fileName, &pClassData->directMethods[i], i);
     }
@@ -291,4 +291,3 @@ int main(int argc, char* const argv[])
     free(gParms.argCopy);
     return result;
 }
-

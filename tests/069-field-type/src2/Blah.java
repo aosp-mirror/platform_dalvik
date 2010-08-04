@@ -8,4 +8,3 @@ public class Blah implements Comparable {
         return 0;
     }
 }
-

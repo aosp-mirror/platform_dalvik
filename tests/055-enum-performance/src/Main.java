@@ -3,7 +3,7 @@ import otherpackage.OtherPackagePublicEnum;
 public class Main {
     /** used by {@link #basisCall} */
     static private int basisTestValue = 12;
-    
+
     static public void main(String[] args) throws Exception {
         boolean timing = (args.length >= 1) && args[0].equals("--timing");
         run(timing);
@@ -11,7 +11,7 @@ public class Main {
 
     static public void run(boolean timing) {
         preTest();
-        
+
         long time0 = System.nanoTime();
         int count1 = test1(500);
         long time1 = System.nanoTime();
@@ -105,7 +105,7 @@ public class Main {
 
     static public int basisCall(int i, String name) {
         int compare = name.compareTo("fuzzbot");
-        
+
         if (i < (basisTestValue * compare)) {
             return basisTestValue;
         } else {

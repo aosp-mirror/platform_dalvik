@@ -33,6 +33,7 @@ static void Dalvik_java_lang_VMThread_create(const u4* args, JValue* pResult)
     Object* threadObj = (Object*) args[0];
     s8 stackSize = GET_ARG_LONG(args, 1);
 
+    /* copying collector will pin threadObj for us since it was an argument */
     dvmCreateInterpThread(threadObj, (int) stackSize);
     RETURN_VOID();
 }
@@ -67,7 +68,7 @@ static void Dalvik_java_lang_VMThread_getStatus(const u4* args, JValue* pResult)
     else
         result = THREAD_ZOMBIE;     // assume it used to exist and is now gone
     dvmUnlockThreadList();
-    
+
     RETURN_INT(result);
 }
 
@@ -197,7 +198,7 @@ static void Dalvik_java_lang_VMThread_setPriority(const u4* args,
     Object* thisPtr = (Object*) args[0];
     int newPriority = args[1];
     Thread* thread;
-    
+
     dvmLockThreadList(NULL);
     thread = dvmGetThreadFromThreadObject(thisPtr);
     if (thread != NULL)
@@ -213,7 +214,6 @@ static void Dalvik_java_lang_VMThread_setPriority(const u4* args,
  */
 static void Dalvik_java_lang_VMThread_sleep(const u4* args, JValue* pResult)
 {
-    Thread* self = dvmThreadSelf();
     dvmThreadSleep(GET_ARG_LONG(args,0), args[2]);
     RETURN_VOID();
 }
@@ -260,4 +260,3 @@ const DalvikNativeMethod dvm_java_lang_VMThread[] = {
         Dalvik_java_lang_VMThread_yield },
     { NULL, NULL, NULL },
 };
-

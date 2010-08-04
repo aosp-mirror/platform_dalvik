@@ -9,4 +9,3 @@
     GET_INST_OPCODE(ip)                 @ ip<- opcode from rINST
     SET_VREG(r2, r0)                    @ fp[A]<- r2
     GOTO_OPCODE(ip)                     @ execute next instruction
-

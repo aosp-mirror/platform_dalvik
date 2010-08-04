@@ -121,7 +121,7 @@ public class PhiTypeResolver {
      * Resolves the result of a phi insn based on its operands. The "void"
      * type, which is a nonsensical type for a register, is used for
      * registers defined by as-of-yet-unresolved phi operations.
-     * 
+     *
      * @return true if the result type changed, false if no change
      */
     boolean resolveResultType(PhiInsn insn) {
@@ -185,7 +185,7 @@ public class PhiTypeResolver {
         }
 
         LocalItem newLocal = sameLocals ? firstLocal : null;
-        
+
         RegisterSpec result = insn.getResult();
 
         if ((result.getTypeBearer() == newResultType)

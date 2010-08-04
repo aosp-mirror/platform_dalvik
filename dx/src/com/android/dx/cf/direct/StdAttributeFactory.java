@@ -366,7 +366,7 @@ public class StdAttributeFactory
 
         if (observer != null) {
             observer.parsed(bytes, offset, 2, "class: " + type);
-            observer.parsed(bytes, offset + 2, 2, "method: " + 
+            observer.parsed(bytes, offset + 2, 2, "method: " +
                             DirectClassFile.stringOrNone(method));
         }
 
@@ -439,13 +439,13 @@ public class StdAttributeFactory
             list.set(i, innerClass, outerClass, name, accessFlags);
             if (observer != null) {
                 observer.parsed(bytes, offset, 2,
-                                "inner_class: " + 
+                                "inner_class: " +
                                 DirectClassFile.stringOrNone(innerClass));
                 observer.parsed(bytes, offset + 2, 2,
-                                "  outer_class: " + 
+                                "  outer_class: " +
                                 DirectClassFile.stringOrNone(outerClass));
                 observer.parsed(bytes, offset + 4, 2,
-                                "  name: " + 
+                                "  name: " +
                                 DirectClassFile.stringOrNone(name));
                 observer.parsed(bytes, offset + 6, 2,
                                 "  access_flags: " +
@@ -548,7 +548,7 @@ public class StdAttributeFactory
     /**
      * Parse the table part of either a {@code LocalVariableTable}
      * or a {@code LocalVariableTypeTable}.
-     * 
+     *
      * @param bytes {@code non-null;} bytes to parse, which should <i>only</i>
      * contain the table data (no header)
      * @param pool {@code non-null;} constant pool to use
@@ -578,13 +578,13 @@ public class StdAttributeFactory
                 CstUtf8 type = (CstUtf8) pool.get(typeIdx);
                 CstUtf8 descriptor = null;
                 CstUtf8 signature = null;
-                
+
                 if (typeTable) {
                     signature = type;
                 } else {
                     descriptor = type;
                 }
-                
+
                 list.set(i, startPc, length, name,
                         descriptor, signature, index);
 
@@ -614,7 +614,7 @@ public class StdAttributeFactory
 
         AnnotationParser ap =
             new AnnotationParser(cf, offset, length, observer);
-        Annotations annotations = 
+        Annotations annotations =
             ap.parseAnnotationAttribute(AnnotationVisibility.BUILD);
 
         return new AttRuntimeInvisibleAnnotations(annotations, length);
@@ -631,7 +631,7 @@ public class StdAttributeFactory
 
         AnnotationParser ap =
             new AnnotationParser(cf, offset, length, observer);
-        Annotations annotations = 
+        Annotations annotations =
             ap.parseAnnotationAttribute(AnnotationVisibility.RUNTIME);
 
         return new AttRuntimeVisibleAnnotations(annotations, length);
@@ -730,7 +730,7 @@ public class StdAttributeFactory
     /**
      * Throws the right exception when a known attribute has a way too short
      * length.
-     * 
+     *
      * @return never
      * @throws ParseException always thrown
      */
@@ -741,7 +741,7 @@ public class StdAttributeFactory
     /**
      * Throws the right exception when a known attribute has a too short
      * length.
-     * 
+     *
      * @return never
      * @throws ParseException always thrown
      */
@@ -752,7 +752,7 @@ public class StdAttributeFactory
     /**
      * Throws the right exception when an attribute has an unexpected length
      * (given its contents).
-     * 
+     *
      * @param expected expected length
      * @return never
      * @throws ParseException always thrown

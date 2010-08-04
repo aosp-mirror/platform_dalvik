@@ -43,4 +43,3 @@
     ldr     r3, [r3, #offClassObject_vtable]    @ r3<- thisPtr->clazz->vtable
     ldr     r0, [r3, r2, lsl #2]        @ r3<- vtable[methodIndex]
     bl      common_invokeMethod${routine} @ continue on
-

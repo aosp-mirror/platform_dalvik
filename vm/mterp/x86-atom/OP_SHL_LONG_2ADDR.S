@@ -39,4 +39,3 @@
     psllq       %xmm0, %xmm1            # %xmm1<- shifted vA
     movq        %xmm1, (rFP, rINST, 4)  # vA<- shifted vA
     FINISH      1                       # jump to next instruction
-

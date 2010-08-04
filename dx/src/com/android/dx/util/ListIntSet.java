@@ -54,7 +54,7 @@ public class ListIntSet implements IntSet {
 
     /** @inheritDoc */
     public boolean has(int value) {
-        return ints.indexOf(value) >= 0;    
+        return ints.indexOf(value) >= 0;
     }
 
     /** @inheritDoc */
@@ -70,7 +70,7 @@ public class ListIntSet implements IntSet {
             while (j < szOther && i < szThis) {
                 while (j < szOther && o.ints.get(j) < ints.get(i)) {
                     add(o.ints.get(j++));
-                }                
+                }
                 if (j == szOther) {
                     break;
                 }

@@ -38,13 +38,13 @@ import java.util.TreeMap;
 public final class CatchStructs {
     /**
      * the size of a {@code try_item}: a {@code uint}
-     * and two {@code ushort}s 
+     * and two {@code ushort}s
      */
     private static final int TRY_ITEM_WRITE_SIZE = 4 + (2 * 2);
 
     /** {@code non-null;} code that contains the catches */
     private final DalvCode code;
-    
+
     /**
      * {@code null-ok;} the underlying table; set in
      * {@link #finishProcessingIfNecessary}
@@ -71,7 +71,7 @@ public final class CatchStructs {
 
     /**
      * Constructs an instance.
-     * 
+     *
      * @param code {@code non-null;} code that contains the catches
      */
     public CatchStructs(DalvCode code) {
@@ -93,7 +93,7 @@ public final class CatchStructs {
 
     /**
      * Gets the size of the tries list, in entries.
-     * 
+     *
      * @return {@code >= 0;} the tries list size
      */
     public int triesSize() {
@@ -103,7 +103,7 @@ public final class CatchStructs {
 
     /**
      * Does a human-friendly dump of this instance.
-     * 
+     *
      * @param out {@code non-null;} where to dump
      * @param prefix {@code non-null;} prefix to attach to each line of output
      */
@@ -113,7 +113,7 @@ public final class CatchStructs {
 
     /**
      * Encodes the handler lists.
-     * 
+     *
      * @param file {@code non-null;} file this instance is part of
      */
     public void encode(DexFile file) {
@@ -136,13 +136,13 @@ public final class CatchStructs {
             throw new UnsupportedOperationException(
                     "too many catch handlers");
         }
-        
+
         ByteArrayAnnotatedOutput out = new ByteArrayAnnotatedOutput();
 
         // Write out the handlers "header" consisting of its size in entries.
         encodedHandlerHeaderSize =
             out.writeUnsignedLeb128(handlerOffsets.size());
-        
+
         // Now write the lists out in order, noting the offset of each.
         for (Map.Entry<CatchHandlerList, Integer> mapping :
                  handlerOffsets.entrySet()) {
@@ -178,17 +178,17 @@ public final class CatchStructs {
 
     /**
      * Gets the write size of this instance, in bytes.
-     * 
+     *
      * @return {@code >= 0;} the write size
      */
     public int writeSize() {
         return (triesSize() * TRY_ITEM_WRITE_SIZE) +
                 + encodedHandlers.length;
     }
-    
+
     /**
      * Writes this instance to the given stream.
-     * 
+     *
      * @param file {@code non-null;} file this instance is part of
      * @param out {@code non-null;} where to write to
      */
@@ -216,7 +216,7 @@ public final class CatchStructs {
             out.writeShort(insnCount);
             out.writeShort(handlerOffsets.get(one.getHandlers()));
         }
-        
+
         out.write(encodedHandlers);
     }
 
@@ -224,7 +224,7 @@ public final class CatchStructs {
      * Helper method to annotate or simply print the exception handlers.
      * Only one of {@code printTo} or {@code annotateTo} should
      * be non-null.
-     * 
+     *
      * @param prefix {@code non-null;} prefix for each line
      * @param printTo {@code null-ok;} where to print to
      * @param annotateTo {@code null-ok;} where to consume bytes and annotate to
@@ -272,7 +272,7 @@ public final class CatchStructs {
 
         int lastOffset = 0;
         CatchHandlerList lastList = null;
-        
+
         for (Map.Entry<CatchHandlerList, Integer> mapping :
                  handlerOffsets.entrySet()) {
             CatchHandlerList list = mapping.getKey();
@@ -295,7 +295,7 @@ public final class CatchStructs {
     /**
      * Helper for {@link #annotateEntries} to annotate a catch handler list
      * while consuming it.
-     * 
+     *
      * @param handlers {@code non-null;} handlers to annotate
      * @param offset {@code >= 0;} the offset of this handler
      * @param size {@code >= 1;} the number of bytes the handlers consume

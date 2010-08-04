@@ -76,11 +76,7 @@ void dvmAssertHeapWorkerThreadRunning();
  */
 typedef enum HeapWorkerOperation {
     WORKER_FINALIZE = 0,
-
-    /* Required: WORKER_ENQUEUE <= (4-1)
-     * This value will be stuffed in the low bits of a pointer.
-     */
-    WORKER_ENQUEUE = (1<<0),
+    WORKER_ENQUEUE = 1,
 } HeapWorkerOperation;
 
 /*

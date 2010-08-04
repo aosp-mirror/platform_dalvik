@@ -48,7 +48,7 @@ public final class PhiInsn extends SsaInsn {
 
     /**
      * Constructs a new phi insn with no operands.
-     * 
+     *
      * @param resultReg the result reg for this phi insn
      * @param block block containing this insn.
      */
@@ -59,7 +59,7 @@ public final class PhiInsn extends SsaInsn {
 
     /**
      * Makes a phi insn with a void result type.
-     * 
+     *
      * @param resultReg the result register for this phi insn.
      * @param block block containing this insn.
      */
@@ -88,7 +88,7 @@ public final class PhiInsn extends SsaInsn {
      */
     public void updateSourcesToDefinitions(SsaMethod ssaMeth) {
         for (Operand o : operands) {
-            RegisterSpec def 
+            RegisterSpec def
                 = ssaMeth.getDefinitionForRegister(
                     o.regSpec.getReg()).getResult();
 
@@ -111,7 +111,7 @@ public final class PhiInsn extends SsaInsn {
 
     /**
      * Gets the original rop-form result reg. This is useful during renaming.
-     * 
+     *
      * @return the original rop-form result reg
      */
     public int getRopResultReg() {
@@ -120,7 +120,7 @@ public final class PhiInsn extends SsaInsn {
 
     /**
      * Adds an operand to this phi instruction.
-     * 
+     *
      * @param registerSpec register spec, including type and reg of operand
      * @param predBlock predecessor block to be associated with this operand
      */
@@ -128,7 +128,7 @@ public final class PhiInsn extends SsaInsn {
             SsaBasicBlock predBlock) {
         operands.add(new Operand(registerSpec, predBlock.getIndex(),
                 predBlock.getRopLabel()));
-        
+
         // Un-cache sources, in case someone has already called getSources().
         sources = null;
     }
@@ -136,7 +136,7 @@ public final class PhiInsn extends SsaInsn {
     /**
      * Gets the index of the pred block associated with the RegisterSpec
      * at the particular getSources() index.
-     * 
+     *
      * @param sourcesIndex index of source in getSources()
      * @return block index
      */
@@ -177,7 +177,7 @@ public final class PhiInsn extends SsaInsn {
     /**
      * Gets sources. Constructed lazily from phi operand data structures and
      * then cached.
-     * 
+     *
      * @return {@code non-null;} sources list
      */
     public RegisterSpecList getSources() {
@@ -255,7 +255,7 @@ public final class PhiInsn extends SsaInsn {
     /**
      * Always throws an exeption, since a phi insn may not be
      * converted back to rop form.
-     * 
+     *
      * @return always throws exception
      */
     @Override
@@ -287,7 +287,7 @@ public final class PhiInsn extends SsaInsn {
     /** {@inheritDoc} */
     @Override
     public boolean isPhiOrMove() {
-        return true;    
+        return true;
     }
 
     /** {@inheritDoc} */
@@ -310,7 +310,7 @@ public final class PhiInsn extends SsaInsn {
     /**
      * Returns human-readable string for listing dumps. This method
      * allows sub-classes to specify extra text.
-     * 
+     *
      * @param extra {@code null-ok;} the argument to print after the opcode
      * @return human-readable string for listing dumps
      */
@@ -318,7 +318,7 @@ public final class PhiInsn extends SsaInsn {
         StringBuffer sb = new StringBuffer(80);
 
         sb.append(SourcePosition.NO_INFO);
-        sb.append(": phi");       
+        sb.append(": phi");
 
         if (extra != null) {
             sb.append("(");
@@ -327,7 +327,7 @@ public final class PhiInsn extends SsaInsn {
         }
 
         RegisterSpec result = getResult();
-        
+
         if (result == null) {
             sb.append(" .");
         } else {

@@ -36,9 +36,15 @@
     bl      dvmCanPutArrayElement       @ test object type vs. array type
     cmp     r0, #0                      @ okay?
     beq     common_errArrayStore        @ no
+    FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
+    ldr     r2, [rGLUE, #offGlue_cardTable]     @ get biased CT base
+    add     r10, #offArrayObject_contents   @ r0<- pointer to slot
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    str     r9, [r10]                   @ vBB[vCC]<- vAA
+    strb    r2, [r2, r10, lsr #GC_CARD_SHIFT]    @ mark card
+    GOTO_OPCODE(ip)                     @ jump to next instruction
 .L${opcode}_skip_check:
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     str     r9, [r10, #offArrayObject_contents] @ vBB[vCC]<- vAA
     GOTO_OPCODE(ip)                     @ jump to next instruction
-

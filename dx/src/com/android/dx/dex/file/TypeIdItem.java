@@ -30,7 +30,7 @@ public final class TypeIdItem extends IdItem {
 
     /**
      * Constructs an instance.
-     * 
+     *
      * @param type {@code non-null;} the constant for the type
      */
     public TypeIdItem(CstType type) {

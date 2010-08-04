@@ -1,5 +1,7 @@
 // Copyright 2008 The Android Open Source Project
 
+import java.util.Timer;
+import java.util.TimerTask;
 
 /*
  * Throw an exception from a finalizer and make sure it's harmless.  Under
@@ -18,6 +20,13 @@ public class Main {
 
         System.gc();
         System.runFinalization();
+
+        new Timer(true).schedule(new TimerTask() {
+                public void run() {
+                    System.out.println("Timed out, exiting");
+                    System.exit(1);
+                }
+            }, 30000);
 
         while (!didFinal) {
             try {
@@ -45,4 +54,3 @@ public class Main {
         throw new InterruptedException("whee");
     }
 }
-

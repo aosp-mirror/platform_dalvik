@@ -39,7 +39,7 @@ public final class LocalEnd extends ZeroSizeInsn {
     /**
      * Constructs an instance. The output address of this instance is initially
      * unknown ({@code -1}).
-     * 
+     *
      * @param position {@code non-null;} source position
      * @param local {@code non-null;} register spec representing the local
      * variable introduced by this instance
@@ -69,7 +69,7 @@ public final class LocalEnd extends ZeroSizeInsn {
     /**
      * Gets the register spec representing the local variable ended
      * by this instance.
-     * 
+     *
      * @return {@code non-null;} the register spec
      */
     public RegisterSpec getLocal() {
