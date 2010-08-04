@@ -41,6 +41,8 @@ static void markCard(CompilationUnit *cUnit, int valReg, int tgtAddrReg)
     ArmLIR *target = newLIR0(cUnit, kArmPseudoTargetLabel);
     target->defMask = ENCODE_ALL;
     branchOver->generic.target = (LIR *)target;
+    dvmCompilerFreeTemp(cUnit, regCardBase);
+    dvmCompilerFreeTemp(cUnit, regCardNo);
 }
 
 static bool genConversionCall(CompilationUnit *cUnit, MIR *mir, void *funct,
@@ -573,6 +575,9 @@ static void genArrayObjectPut(CompilationUnit *cUnit, MIR *mir,
     storeBaseIndexed(cUnit, regPtr, regIndex, r0,
                      scale, kWord);
     HEAP_ACCESS_SHADOW(false);
+
+    dvmCompilerFreeTemp(cUnit, regPtr);
+    dvmCompilerFreeTemp(cUnit, regIndex);
 
     /* NOTE: marking card here based on object head */
     markCard(cUnit, r0, r1);
@@ -1543,6 +1548,7 @@ static bool handleFmt21c_Fmt31c(CompilationUnit *cUnit, MIR *mir)
                 /* NOTE: marking card based on field address */
                 markCard(cUnit, rlSrc.lowReg, tReg);
             }
+            dvmCompilerFreeTemp(cUnit, tReg);
 
             break;
         }
