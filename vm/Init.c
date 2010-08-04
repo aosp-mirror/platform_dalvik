@@ -171,7 +171,7 @@ static void dvmUsage(const char* progName)
 #ifdef WITH_EXTRA_GC_CHECKS
         " extra_gc_checks"
 #endif
-#ifdef WITH_DALVIK_ASSERT
+#if !defined(NDEBUG) && defined(WITH_DALVIK_ASSERT)
         " dalvik_assert"
 #endif
 #ifdef WITH_JNI_STACK_CHECK

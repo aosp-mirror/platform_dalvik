@@ -1444,7 +1444,10 @@ static ClassObject* findClassNoInit(const char* descriptor, Object* loader,
         clazz = loadClassFromDex(pDvmDex, pClassDef, loader);
         if (dvmCheckException(self)) {
             /* class was found but had issues */
-            dvmReleaseTrackedAlloc((Object*) clazz, NULL);
+            if (clazz != NULL) {
+                dvmFreeClassInnards(clazz);
+                dvmReleaseTrackedAlloc((Object*) clazz, NULL);
+            }
             goto bail;
         }
 
@@ -1476,6 +1479,7 @@ static ClassObject* findClassNoInit(const char* descriptor, Object* loader,
 
             /* Let the GC free the class.
              */
+            dvmFreeClassInnards(clazz);
             dvmReleaseTrackedAlloc((Object*) clazz, NULL);
 
             /* Grab the winning class.
