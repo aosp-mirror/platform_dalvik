@@ -14,6 +14,10 @@
  * limitations under the License.
  */
 
+/*
+ * JNI helper functions.
+ */
+
 #include "jni.h"
 
 extern int registerCoreLibrariesJni(JNIEnv* env);
