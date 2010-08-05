@@ -268,45 +268,44 @@ common_invokeOld:
  * On entry:
  *   ebx  -> PC adjustment in 16-bit words (must be preserved)
  *   ecx  -> GLUE pointer
+ *   reentry type, e.g. kInterpEntryInstr stored in rGLUE->entryPoint
  *
  * Note: A call will normally kill %eax, rPC/%edx and %ecx.  To
  *       streamline the normal case, this routine will preserve rPC and
  *       %ecx in addition to the normal caller save regs.  The save/restore
  *       is a bit ugly, but will happen in the relatively uncommon path.
- * TUNING: Might be worthwhile to inline this.
  * TODO: Basic-block style Jit will need a hook here as well.  Fold it into
  *       the suspendCount check so we can get both in 1 shot.
- * TODO: to match the other intepreters, this should handle suspension
- *       and then check for debugger/profiling after dvmCheckSuspendPending
- *       returns.
  */
 common_periodicChecks:
     movl    offGlue_pSelfSuspendCount(%ecx),%eax    # eax <- &suspendCount
     cmpl    $$0,(%eax)
     jne     1f
 
-#if defined(WITH_DEBUGGER) || defined(WITH_PROFILER)
-#if defined(WITH_DEBUGGER)
-    movl   offGlue_pDebuggerActive(%ecx),%eax      # eax <- &DebuggerActive
-#endif
-#if defined(WITH_PROFILER)
-    movl   offGlue_pActiveProfilers(%ecx),%ecx     # ecx <- &ActiveProfilers
-#endif
+6:
 #if defined(WITH_DEBUGGER) && defined(WITH_PROFILER)
-    # TODO: check for NULL before load
-    movzbl (%eax),%eax             # eax <- debuggerActive (boolean)
-    orl    (%ecx),%eax             # eax <- debuggerActive || activeProfilers
-#elif defined(WITH_DEBUGGER)
-    # TODO: check for NULL before load
-    movzbl (%eax),%eax             # eax <- debuggerActive (boolean)
-#elif defined(WITH_PROFILER)
-    movl   (%ecx),%eax             # eax <= activeProfilers
-#endif
+    movl   offGlue_pDebuggerActive(%ecx),%eax      # eax <- &DebuggerActive
+    movl   offGlue_pActiveProfilers(%ecx),%ecx     # ecx <- &ActiveProfilers
+    testl  %eax,%eax               # debugger enabled?
+    je     2f
+    movzbl (%eax),%eax             # get active count
+2:
+    orl    (%ecx),%eax             # eax <- debuggerActive | activeProfilers
     GET_GLUE(%ecx)                 # restore rGLUE
-    testl  %eax,%eax
     jne    3f                      # one or both active - switch interp
+#elif defined(WITH_DEBUGGER)
+    movl   offGlue_pDebuggerActive(%ecx),%eax      # eax <- &DebuggerActive
+    testl  %eax,%eax
+    je     5f
+    cmpl   $$0,(%eax)              # debugger active?
+    jne    3f                      # switch interp if so
+#elif defined(WITH_PROFILER)
+    movl   offGlue_pActiveProfilers(%ecx),%eax     # eax <- &ActiveProfilers
+    cmpl   $$0,(%eax)              # profiler active?
+    jne    3f                      # switch interp if so
 #endif
 
+5:
     ret
 
     /* Check for suspend */
@@ -330,7 +329,16 @@ common_periodicChecks:
     pop     %ebp
     UNSPILL(rPC)
     GET_GLUE(%ecx)
+
+    /*
+     * Need to check to see if debugger or profiler flags got set
+     * while we were suspended.
+     */
+#if defined(WITH_DEBUGGER) || defined(WITH_PROFILER)
+     jmp    6b
+#elif
     ret
+#endif
 
     /* Switch interpreters */
     /* Note: %ebx contains the 16-bit word offset to be applied to rPC to

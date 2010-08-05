@@ -86,9 +86,7 @@ bool dvmMterpStd(Thread* self, InterpState* glue)
     if (gDvm.jdwpConfigured) {
         glue->pDebuggerActive = &gDvm.debuggerActive;
     } else {
-        /* TODO: fix x86 impl before enabling this */
-        //glue->pDebuggerActive = NULL;
-        glue->pDebuggerActive = &gDvm.debuggerActive;
+        glue->pDebuggerActive = NULL;
     }
 #endif
 #if defined(WITH_PROFILER)
