@@ -450,6 +450,14 @@ void dvmClearBreakAddr(Method* method, unsigned int instrOffset)
 #ifdef WITH_DEBUGGER
 /*
  * Get the original opcode from under a breakpoint.
+ *
+ * On SMP hardware it's possible one core might try to execute a breakpoint
+ * after another core has cleared it.  We need to handle the case where
+ * there's no entry in the breakpoint set.  (The memory barriers in the
+ * locks and in the breakpoint update code should ensure that, once we've
+ * observed the absence of a breakpoint entry, we will also now observe
+ * the restoration of the original opcode.  The fact that we're holding
+ * the lock prevents other threads from confusing things further.)
  */
 u1 dvmGetOriginalOpCode(const u2* addr)
 {

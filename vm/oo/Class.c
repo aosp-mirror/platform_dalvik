@@ -1123,17 +1123,8 @@ static void removeClassFromHash(ClassObject* clazz)
  */
 void dvmSetClassSerialNumber(ClassObject* clazz)
 {
-    u4 oldValue, newValue;
-
     assert(clazz->serialNumber == 0);
-
-    do {
-        oldValue = gDvm.classSerialNumber;
-        newValue = oldValue + 1;
-    } while (android_atomic_release_cas(oldValue, newValue,
-            &gDvm.classSerialNumber) != 0);
-
-    clazz->serialNumber = (u4) oldValue;
+    clazz->serialNumber = android_atomic_inc(&gDvm.classSerialNumber);
 }
 
 

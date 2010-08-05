@@ -296,7 +296,7 @@ struct DvmGlobals {
     //int         offJavaNioDirectByteBufferImpl_pointer;
 
     /* method pointers - java.security.AccessController */
-    volatile bool javaSecurityAccessControllerReady;
+    volatile int javaSecurityAccessControllerReady;
     Method*     methJavaSecurityAccessController_doPrivileged[4];
 
     /* constructor method pointers; no vtable involved, so use Method* */

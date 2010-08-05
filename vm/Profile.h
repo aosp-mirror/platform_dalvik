@@ -53,7 +53,7 @@ typedef struct MethodTraceState {
     int     bufferSize;
     int     flags;
 
-    bool    traceEnabled;
+    int     traceEnabled;
     u1*     buf;
     volatile int curOffset;
     u8      startWhen;
