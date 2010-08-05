@@ -1305,6 +1305,8 @@ void dvmCompilerAssembleLIR(CompilationUnit *cUnit, JitTranslationInfo *info)
             break;
         case kRetryAll:
             if (cUnit->assemblerRetries < MAX_ASSEMBLER_RETRIES) {
+                /* Restore pristine chain cell marker on retry */
+                chainCellOffsetLIR->operands[0] = CHAIN_CELL_OFFSET_TAG;
                 return;
             }
             /* Too many retries - reset and try cutting the trace in half */
