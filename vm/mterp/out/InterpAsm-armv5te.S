@@ -320,14 +320,27 @@ dvmMterpStdRun:
 
 #if defined(WITH_JIT)
 .LentryInstr:
-    ldr    r10, [rGLUE, #offGlue_self]  @ callee saved r10 <- glue->self
+    ldr     r10, [rGLUE, #offGlue_self] @ callee saved r10 <- glue->self
     /* Entry is always a possible trace start */
     GET_JIT_PROF_TABLE(r0)
     FETCH_INST()
-    mov    r1, #0                       @ prepare the value for the new state
-    str    r1, [r10, #offThread_inJitCodeCache] @ back to the interp land
-    cmp    r0,#0
-    bne    common_updateProfile
+    mov     r1, #0                      @ prepare the value for the new state
+    str     r1, [r10, #offThread_inJitCodeCache] @ back to the interp land
+    cmp     r0,#0                       @ is profiling disabled?
+#if !defined(WITH_SELF_VERIFICATION)
+    bne     common_updateProfile        @ profiling is enabled
+#else
+    ldr     r2, [r10, #offThread_shadowSpace]   @ to find out the jit exit state
+    beq     1f                          @ profiling is disabled
+    ldr     r3, [r2, #offShadowSpace_jitExitState]  @ jit exit state
+    cmp     r3, #kSVSTraceSelect        @ hot trace following?
+    moveq   r2,#kJitTSelectRequestHot   @ ask for trace selection
+    beq     common_selectTrace          @ go build the trace
+    cmp     r3, #kSVSNoProfile          @ don't profile the next instruction?
+    beq     1f                          @ intrepret the next instruction
+    b       common_updateProfile        @ collect profiles
+#endif
+1:
     GET_INST_OPCODE(ip)
     GOTO_OPCODE(ip)
 #else
@@ -9858,12 +9871,21 @@ dvmJitToInterpSingleStep:
     mov    r2,#kSVSSingleStep           @ r2<- interpreter entry point
     b      jitSVShadowRunEnd            @ doesn't return
 
+    .global dvmJitToInterpNoChainNoProfile
+dvmJitToInterpNoChainNoProfile:
+    ldr    r10, [rGLUE, #offGlue_self]  @ callee saved r10 <- glue->self
+    mov    r0,rPC                       @ pass our target PC
+    mov    r2,#kSVSNoProfile            @ r2<- interpreter entry point
+    mov    r3, #0                       @ 0 means !inJitCodeCache
+    str    r3, [r10, #offThread_inJitCodeCache] @ back to the interp land
+    b      jitSVShadowRunEnd            @ doesn't return
+
     .global dvmJitToInterpTraceSelectNoChain
 dvmJitToInterpTraceSelectNoChain:
     ldr    r10, [rGLUE, #offGlue_self]  @ callee saved r10 <- glue->self
     mov    r0,rPC                       @ pass our target PC
-    mov    r2,#kSVSTraceSelectNoChain   @ r2<- interpreter entry point
-    mov    r3, #0
+    mov    r2,#kSVSTraceSelect          @ r2<- interpreter entry point
+    mov    r3, #0                       @ 0 means !inJitCodeCache
     str    r3, [r10, #offThread_inJitCodeCache] @ Back to the interp land
     b      jitSVShadowRunEnd            @ doesn't return
 
@@ -9872,7 +9894,7 @@ dvmJitToInterpTraceSelect:
     ldr    r10, [rGLUE, #offGlue_self]  @ callee saved r10 <- glue->self
     ldr    r0,[lr, #-1]                 @ pass our target PC
     mov    r2,#kSVSTraceSelect          @ r2<- interpreter entry point
-    mov    r3, #0
+    mov    r3, #0                       @ 0 means !inJitCodeCache
     str    r3, [r10, #offThread_inJitCodeCache] @ Back to the interp land
     b      jitSVShadowRunEnd            @ doesn't return
 
@@ -9881,7 +9903,7 @@ dvmJitToInterpBackwardBranch:
     ldr    r10, [rGLUE, #offGlue_self]  @ callee saved r10 <- glue->self
     ldr    r0,[lr, #-1]                 @ pass our target PC
     mov    r2,#kSVSBackwardBranch       @ r2<- interpreter entry point
-    mov    r3, #0
+    mov    r3, #0                       @ 0 means !inJitCodeCache
     str    r3, [r10, #offThread_inJitCodeCache] @ Back to the interp land
     b      jitSVShadowRunEnd            @ doesn't return
 
@@ -9890,7 +9912,7 @@ dvmJitToInterpNormal:
     ldr    r10, [rGLUE, #offGlue_self]  @ callee saved r10 <- glue->self
     ldr    r0,[lr, #-1]                 @ pass our target PC
     mov    r2,#kSVSNormal               @ r2<- interpreter entry point
-    mov    r3, #0
+    mov    r3, #0                       @ 0 means !inJitCodeCache
     str    r3, [r10, #offThread_inJitCodeCache] @ Back to the interp land
     b      jitSVShadowRunEnd            @ doesn't return
 
@@ -9899,7 +9921,7 @@ dvmJitToInterpNoChain:
     ldr    r10, [rGLUE, #offGlue_self]  @ callee saved r10 <- glue->self
     mov    r0,rPC                       @ pass our target PC
     mov    r2,#kSVSNoChain              @ r2<- interpreter entry point
-    mov    r3, #0
+    mov    r3, #0                       @ 0 means !inJitCodeCache
     str    r3, [r10, #offThread_inJitCodeCache] @ Back to the interp land
     b      jitSVShadowRunEnd            @ doesn't return
 #else
@@ -9964,9 +9986,9 @@ dvmJitToInterpTraceSelectNoChain:
     str    r0, [r10, #offThread_inJitCodeCache] @ set the inJitCodeCache flag
     mov    r1, rPC                  @ arg1 of translation may need this
     mov    lr, #0                   @  in case target is HANDLER_INTERPRET
-    cmp    r0,#0
+    cmp    r0,#0                    @ !0 means translation exists
     bxne   r0                       @ continue native execution if so
-    b      2f
+    b      2f                       @ branch over to use the interpreter
 
 /*
  * Return from the translation cache and immediately request
@@ -10043,6 +10065,29 @@ dvmJitToInterpNormal:
  * Return from the translation cache to the interpreter to do method invocation.
  * Check if translation exists for the callee, but don't chain to it.
  */
+    .global dvmJitToInterpNoChainNoProfile
+dvmJitToInterpNoChainNoProfile:
+#if defined(WITH_JIT_TUNING)
+    bl     dvmBumpNoChain
+#endif
+    ldr    r10, [rGLUE, #offGlue_self]  @ callee saved r10 <- glue->self
+    mov    r0,rPC
+    bl     dvmJitGetCodeAddr        @ Is there a translation?
+    str    r0, [r10, #offThread_inJitCodeCache] @ set the inJitCodeCache flag
+    mov    r1, rPC                  @ arg1 of translation may need this
+    mov    lr, #0                   @  in case target is HANDLER_INTERPRET
+    cmp    r0,#0
+    bxne   r0                       @ continue native execution if so
+    EXPORT_PC()
+    adrl   rIBASE, dvmAsmInstructionStart
+    FETCH_INST()
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    GOTO_OPCODE(ip)                     @ jump to next instruction
+
+/*
+ * Return from the translation cache to the interpreter to do method invocation.
+ * Check if translation exists for the callee, but don't chain to it.
+ */
     .global dvmJitToInterpNoChain
 dvmJitToInterpNoChain:
 #if defined(WITH_JIT_TUNING)
@@ -10070,6 +10115,7 @@ toInterpreter:
     FETCH_INST()
     GET_JIT_PROF_TABLE(r0)
     @ NOTE: intended fallthrough
+
 /*
  * Common code to update potential trace start counter, and initiate
  * a trace-build if appropriate.  On entry, rPC should point to the
@@ -10610,15 +10656,12 @@ common_returnFromMethod:
     str     rFP, [r3, #offThread_curFrame]  @ self->curFrame = fp
 #if defined(WITH_JIT)
     ldr     r10, [r0, #offStackSaveArea_returnAddr] @ r10 = saveArea->returnAddr
-    GET_JIT_PROF_TABLE(r0)
     mov     rPC, r9                     @ publish new rPC
     str     r1, [rGLUE, #offGlue_methodClassDex]
     str     r10, [r3, #offThread_inJitCodeCache]  @ may return to JIT'ed land
     cmp     r10, #0                      @ caller is compiled code
     blxne   r10
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
-    cmp     r0,#0
-    bne     common_updateProfile
     GOTO_OPCODE(ip)                     @ jump to next instruction
 #else
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST

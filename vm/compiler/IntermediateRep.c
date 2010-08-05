@@ -55,6 +55,22 @@ void dvmCompilerPrependMIR(BasicBlock *bb, MIR *mir)
     }
 }
 
+/* Insert an MIR instruction after the specified MIR */
+void dvmCompilerInsertMIRAfter(BasicBlock *bb, MIR *currentMIR, MIR *newMIR)
+{
+    newMIR->prev = currentMIR;
+    newMIR->next = currentMIR->next;
+    currentMIR->next = newMIR;
+
+    if (newMIR->next) {
+        /* Is not the last MIR in the block */
+        newMIR->next->prev = newMIR;
+    } else {
+        /* Is the last MIR in the block */
+        bb->lastMIRInsn = newMIR;
+    }
+}
+
 /*
  * Append an LIR instruction to the LIR list maintained by a compilation
  * unit

@@ -1232,6 +1232,14 @@ bool INTERP_FUNC_NAME(Thread* self, InterpState* interpState)
          interpState->method->name);
 #endif
 #if INTERP_TYPE == INTERP_DBG
+    const ClassObject* callsiteClass = NULL;
+
+#if defined(WITH_SELF_VERIFICATION)
+    if (interpState->jitState != kJitSelfVerification) {
+        interpState->self->shadowSpace->jitExitState = kSVSIdle;
+    }
+#endif
+
     /* Check to see if we've got a trace selection request. */
     if (
          /*
@@ -3311,6 +3319,10 @@ GOTO_TARGET(invokeVirtual, bool methodCallRange)
         assert(baseMethod->methodIndex < thisPtr->clazz->vtableCount);
         methodToCall = thisPtr->clazz->vtable[baseMethod->methodIndex];
 
+#if defined(WITH_JIT) && (INTERP_TYPE == INTERP_DBG)
+        callsiteClass = thisPtr->clazz;
+#endif
+
 #if 0
         if (dvmIsAbstractMethod(methodToCall)) {
             /*
@@ -3462,6 +3474,10 @@ GOTO_TARGET(invokeInterface, bool methodCallRange)
 
         thisClass = thisPtr->clazz;
 
+#if defined(WITH_JIT) && (INTERP_TYPE == INTERP_DBG)
+        callsiteClass = thisClass;
+#endif
+
         /*
          * Given a class and a method index, find the Method* with the
          * actual code we want to execute.
@@ -3575,6 +3591,10 @@ GOTO_TARGET(invokeVirtualQuick, bool methodCallRange)
 
         if (!checkForNull(thisPtr))
             GOTO_exceptionThrown();
+
+#if defined(WITH_JIT) && (INTERP_TYPE == INTERP_DBG)
+        callsiteClass = thisPtr->clazz;
+#endif
 
         /*
          * Combine the object we found with the vtable offset in the
@@ -4074,14 +4094,6 @@ GOTO_TARGET(invokeMethod, bool methodCallRange, const Method* _methodToCall,
             TRACE_METHOD_ENTER(self, methodToCall);
 #endif
 
-#if defined(WITH_JNI_TRACE)
-            bool trace = gDvm.jniTrace &&
-                    strstr(methodToCall->clazz->descriptor, gDvm.jniTrace);
-            if (trace) {
-                dvmLogNativeMethodEntry(methodToCall, newFp);
-            }
-            else
-#endif
             {
                 ILOGD("> native <-- %s.%s %s", methodToCall->clazz->descriptor,
                         methodToCall->name, methodToCall->shorty);
@@ -4112,12 +4124,6 @@ GOTO_TARGET(invokeMethod, bool methodCallRange, const Method* _methodToCall,
             /* pop frame off */
             dvmPopJniLocals(self, newSaveArea);
             self->curFrame = fp;
-
-#if defined(WITH_JNI_TRACE)
-            if (trace) {
-                dvmLogNativeMethodExit(methodToCall, self, retval);
-            }
-#endif
 
             /*
              * If the native code threw an exception, or interpreted code

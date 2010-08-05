@@ -46,6 +46,14 @@ bool INTERP_FUNC_NAME(Thread* self, InterpState* interpState)
          interpState->method->name);
 #endif
 #if INTERP_TYPE == INTERP_DBG
+    const ClassObject* callsiteClass = NULL;
+
+#if defined(WITH_SELF_VERIFICATION)
+    if (interpState->jitState != kJitSelfVerification) {
+        interpState->self->shadowSpace->jitExitState = kSVSIdle;
+    }
+#endif
+
     /* Check to see if we've got a trace selection request. */
     if (
          /*

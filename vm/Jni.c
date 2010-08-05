@@ -1333,10 +1333,10 @@ static bool dvmIsCheckJNIEnabled(void)
 }
 
 /*
- * Point "method->nativeFunc" at the JNI bridge, and overload "method->insns"
- * to point at the actual function.
+ * Returns the appropriate JNI bridge for 'method', also taking into account
+ * the -Xcheck:jni setting.
  */
-void dvmUseJNIBridge(Method* method, void* func)
+static DalvikBridgeFunc dvmSelectJNIBridge(const Method* method)
 {
     enum {
         kJNIGeneral = 0,
@@ -1388,11 +1388,39 @@ void dvmUseJNIBridge(Method* method, void* func)
         }
     }
 
-    if (dvmIsCheckJNIEnabled()) {
-        dvmSetNativeFunc(method, checkFunc[kind], func);
-    } else {
-        dvmSetNativeFunc(method, stdFunc[kind], func);
-    }
+    return dvmIsCheckJNIEnabled() ? checkFunc[kind] : stdFunc[kind];
+}
+
+/*
+ * Trace a call into native code.
+ */
+static void dvmTraceCallJNIMethod(const u4* args, JValue* pResult,
+    const Method* method, Thread* self)
+{
+    dvmLogNativeMethodEntry(method, args);
+    DalvikBridgeFunc bridge = dvmSelectJNIBridge(method);
+    (*bridge)(args, pResult, method, self);
+    dvmLogNativeMethodExit(method, self, *pResult);
+}
+
+/**
+ * Returns true if the -Xjnitrace setting implies we should trace 'method'.
+ */
+static bool shouldTrace(Method* method)
+{
+    return gDvm.jniTrace && strstr(method->clazz->descriptor, gDvm.jniTrace);
+}
+
+/*
+ * Point "method->nativeFunc" at the JNI bridge, and overload "method->insns"
+ * to point at the actual function.
+ */
+void dvmUseJNIBridge(Method* method, void* func)
+{
+    DalvikBridgeFunc bridge = shouldTrace(method)
+        ? dvmTraceCallJNIMethod
+        : dvmSelectJNIBridge(method);
+    dvmSetNativeFunc(method, bridge, func);
 }
 
 /*

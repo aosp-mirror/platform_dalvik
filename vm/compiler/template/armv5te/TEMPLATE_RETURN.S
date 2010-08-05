@@ -23,7 +23,7 @@
 #else
     blxeq   lr                          @ punt to interpreter and compare state
 #endif
-    ldr     r1, .LdvmJitToInterpNoChain @ defined in footer.S
+    ldr     r1, .LdvmJitToInterpNoChainNoProfile @ defined in footer.S
     mov     rFP, r10                    @ publish new FP
     ldrne   r10, [r2, #offMethod_clazz] @ r10<- method->clazz
     ldr     r8, [r8]                    @ r8<- suspendCount

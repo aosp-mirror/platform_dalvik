@@ -41,6 +41,8 @@ typedef enum DataFlowAttributePos {
     kFPA,
     kFPB,
     kFPC,
+    kGetter,
+    kSetter,
 } DataFlowAttributes;
 
 #define DF_NOP                  0
@@ -64,6 +66,8 @@ typedef enum DataFlowAttributePos {
 #define DF_FP_A                 (1 << kFPA)
 #define DF_FP_B                 (1 << kFPB)
 #define DF_FP_C                 (1 << kFPC)
+#define DF_IS_GETTER            (1 << kGetter)
+#define DF_IS_SETTER            (1 << kSetter)
 
 #define DF_HAS_USES             (DF_UA | DF_UB | DF_UC | DF_UA_WIDE | \
                                  DF_UB_WIDE | DF_UC_WIDE)
@@ -77,6 +81,7 @@ typedef enum DataFlowAttributePos {
 #define DF_A_IS_REG             (DF_UA | DF_UA_WIDE | DF_DA | DF_DA_WIDE)
 #define DF_B_IS_REG             (DF_UB | DF_UB_WIDE)
 #define DF_C_IS_REG             (DF_UC | DF_UC_WIDE)
+#define DF_IS_GETTER_OR_SETTER  (DF_IS_GETTER | DF_IS_SETTER)
 
 extern int dvmCompilerDataFlowAttributes[kMirOpLast];
 

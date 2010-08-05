@@ -28,6 +28,7 @@ typedef enum optControlVector {
     kLoadHoisting,
     kTrackLiveTemps,
     kSuppressLoads,
+    kMethodInlining,
 } optControlVector;
 
 /* Forward declarations */

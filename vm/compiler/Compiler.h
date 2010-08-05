@@ -87,6 +87,7 @@ typedef struct JitTranslationInfo {
     void *codeAddress;
     JitInstructionSetType instructionSet;
     bool discardResult;         // Used for debugging divergence and IC patching
+    bool methodCompilationAborted;  // Cannot compile the whole method
     Thread *requestingThread;   // For debugging purpose
 } JitTranslationInfo;
 
@@ -141,8 +142,8 @@ typedef enum SelfVerificationState {
     kSVSStart = 1,          // Shadow space set up, running compiled code
     kSVSPunt = 2,           // Exiting compiled code by punting
     kSVSSingleStep = 3,     // Exiting compiled code by single stepping
-    kSVSTraceSelectNoChain = 4,// Exiting compiled code by trace select no chain
-    kSVSTraceSelect = 5,    // Exiting compiled code by trace select
+    kSVSNoProfile = 4,      // Exiting compiled code and don't collect profiles
+    kSVSTraceSelect = 5,    // Exiting compiled code and compile the next pc
     kSVSNormal = 6,         // Exiting compiled code normally
     kSVSNoChain = 7,        // Exiting compiled code by no chain
     kSVSBackwardBranch = 8, // Exiting compiled code with backward branch trace
@@ -158,21 +159,41 @@ typedef enum JitHint {
 } jitHint;
 
 /*
- * Element of a Jit trace description.  Describes a contiguous
- * sequence of Dalvik byte codes, the last of which can be
- * associated with a hint.
- * Dalvik byte code
+ * Element of a Jit trace description. If the isCode bit is set, it describes
+ * a contiguous sequence of Dalvik byte codes.
  */
 typedef struct {
-    u2    startOffset;       // Starting offset for trace run
+    unsigned isCode:1;       // If set denotes code fragments
     unsigned numInsts:8;     // Number of Byte codes in run
     unsigned runEnd:1;       // Run ends with last byte code
-    jitHint  hint:7;         // Hint to apply to final code of run
+    jitHint  hint:6;         // Hint to apply to final code of run
+    u2    startOffset;       // Starting offset for trace run
 } JitCodeDesc;
 
+/*
+ * A complete list of trace runs passed to the compiler looks like the
+ * following:
+ *   frag1
+ *   frag2
+ *   frag3
+ *   meta1
+ *   meta2
+ *   frag4
+ *
+ * frags 1-4 have the "isCode" field set, and metas 1-2 are plain pointers or
+ * pointers to auxiliary data structures as long as the LSB is null.
+ * The meaning of the meta content is loosely defined. It is usually the code
+ * fragment right before the first meta field (frag3 in this case) to
+ * understand and parse them. Frag4 could be a dummy one with 0 "numInsts" but
+ * the "runEnd" field set.
+ *
+ * For example, if a trace run contains a method inlining target, the class
+ * type of "this" and the currently resolved method pointer are two instances
+ * of meta information stored there.
+ */
 typedef union {
     JitCodeDesc frag;
-    void*       hint;
+    void*       meta;
 } JitTraceRun;
 
 /*
@@ -183,15 +204,41 @@ typedef union {
  */
 typedef struct {
     const Method* method;
-    JitTraceRun trace[];
+    JitTraceRun trace[0];       // Variable-length trace descriptors
 } JitTraceDescription;
+
+typedef enum JitMethodAttributes {
+    kIsCallee = 0,      /* Code is part of a callee (invoked by a hot trace) */
+    kIsHot,             /* Code is part of a hot trace */
+    kIsLeaf,            /* Method is leaf */
+    kIsEmpty,           /* Method is empty */
+    kIsThrowFree,       /* Method doesn't throw */
+    kIsGetter,          /* Method fits the getter pattern */
+    kIsSetter,          /* Method fits the setter pattern */
+} JitMethodAttributes;
+
+#define METHOD_IS_CALLEE        (1 << kIsCallee)
+#define METHOD_IS_HOT           (1 << kIsHot)
+#define METHOD_IS_LEAF          (1 << kIsLeaf)
+#define METHOD_IS_EMPTY         (1 << kIsEmpty)
+#define METHOD_IS_THROW_FREE    (1 << kIsThrowFree)
+#define METHOD_IS_GETTER        (1 << kIsGetter)
+#define METHOD_IS_SETTER        (1 << kIsSetter)
 
 typedef struct CompilerMethodStats {
     const Method *method;       // Used as hash entry signature
     int dalvikSize;             // # of bytes for dalvik bytecodes
     int compiledDalvikSize;     // # of compiled dalvik bytecodes
     int nativeSize;             // # of bytes for produced native code
+    int attributes;             // attribute vector
 } CompilerMethodStats;
+
+struct CompilationUnit;
+struct BasicBlock;
+struct SSARepresentation;
+struct GrowableList;
+struct JitEntry;
+struct MIR;
 
 bool dvmCompilerSetupCodeCache(void);
 bool dvmCompilerArchInit(void);
@@ -200,7 +247,12 @@ bool dvmCompilerStartup(void);
 void dvmCompilerShutdown(void);
 bool dvmCompilerWorkEnqueue(const u2* pc, WorkOrderKind kind, void* info);
 void *dvmCheckCodeCache(void *method);
-bool dvmCompileMethod(const Method *method, JitTranslationInfo *info);
+CompilerMethodStats *dvmCompilerAnalyzeMethodBody(const Method *method,
+                                                  bool isCallee);
+bool dvmCompilerCanIncludeThisInstruction(const Method *method,
+                                          const DecodedInstruction *insn);
+bool dvmCompileMethod(struct CompilationUnit *cUnit, const Method *method,
+                      JitTranslationInfo *info);
 bool dvmCompileTrace(JitTraceDescription *trace, int numMaxInsts,
                      JitTranslationInfo *info, jmp_buf *bailPtr);
 void dvmCompilerDumpStats(void);
@@ -208,13 +260,7 @@ void dvmCompilerDrainQueue(void);
 void dvmJitUnchainAll(void);
 void dvmCompilerSortAndPrintTraceProfiles(void);
 void dvmCompilerPerformSafePointChecks(void);
-
-struct CompilationUnit;
-struct BasicBlock;
-struct SSARepresentation;
-struct GrowableList;
-struct JitEntry;
-
+void dvmCompilerInlineMIR(struct CompilationUnit *cUnit);
 void dvmInitializeSSAConversion(struct CompilationUnit *cUnit);
 int dvmConvertSSARegToDalvik(struct CompilationUnit *cUnit, int ssaReg);
 void dvmCompilerLoopOpt(struct CompilationUnit *cUnit);
@@ -227,7 +273,7 @@ void dvmCompilerDoConstantPropagation(struct CompilationUnit *cUnit,
                                       struct BasicBlock *bb);
 void dvmCompilerFindInductionVariables(struct CompilationUnit *cUnit,
                                        struct BasicBlock *bb);
-char *dvmCompilerGetDalvikDisassembly(DecodedInstruction *insn);
+char *dvmCompilerGetDalvikDisassembly(DecodedInstruction *insn, char *note);
 char *dvmCompilerGetSSAString(struct CompilationUnit *cUnit,
                               struct SSARepresentation *ssaRep);
 void dvmCompilerDataFlowAnalysisDispatcher(struct CompilationUnit *cUnit,

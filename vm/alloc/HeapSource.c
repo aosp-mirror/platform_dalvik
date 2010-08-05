@@ -450,7 +450,7 @@ static bool gcDaemonStartup(void)
 
 static void gcDaemonShutdown(void)
 {
-    if (gDvm.concurrentMarkSweep) {
+    if (gHs->hasGcThread) {
         dvmLockMutex(&gHs->gcThreadMutex);
         gHs->gcThreadShutdown = true;
         dvmSignalCond(&gHs->gcThreadCond);
@@ -588,7 +588,7 @@ dvmHeapSourceStartupBeforeFork()
 
 void dvmHeapSourceThreadShutdown(void)
 {
-    if (gDvm.gcHeap != NULL) {
+    if (gDvm.gcHeap != NULL && gDvm.concurrentMarkSweep) {
         gcDaemonShutdown();
     }
 }
@@ -740,9 +740,16 @@ HeapBitmap *dvmHeapSourceGetLiveBits(void)
 void dvmHeapSourceSwapBitmaps(void)
 {
     HeapBitmap tmp;
+
     tmp = gHs->liveBits;
     gHs->liveBits = gHs->markBits;
     gHs->markBits = tmp;
+}
+
+void dvmHeapSourceZeroMarkBitmap(void)
+{
+    HS_BOILERPLATE();
+
     dvmHeapBitmapZero(&gHs->markBits);
 }
 

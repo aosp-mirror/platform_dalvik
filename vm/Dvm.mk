@@ -32,7 +32,6 @@ LOCAL_CFLAGS += -Wall -Wextra -Wno-unused-parameter
 # Optional features.  These may impact the size or performance of the VM.
 #
 LOCAL_CFLAGS += -DWITH_PROFILER -DWITH_DEBUGGER
-#LOCAL_CFLAGS += -DWITH_JNI_TRACE
 
 # 0=full cache, 1/2=reduced, 3=no cache
 LOCAL_CFLAGS += -DDVM_RESOLVER_CACHE=0
@@ -221,6 +220,7 @@ ifeq ($(WITH_JIT),true)
 	compiler/Compiler.c \
 	compiler/Frontend.c \
 	compiler/Utility.c \
+	compiler/InlineTransformation.c \
 	compiler/IntermediateRep.c \
 	compiler/Dataflow.c \
 	compiler/Loop.c \

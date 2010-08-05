@@ -840,6 +840,10 @@ struct DvmJitGlobals {
     int                invokeMonomorphic;
     int                invokePolymorphic;
     int                invokeNative;
+    int                invokeMonoGetterInlined;
+    int                invokeMonoSetterInlined;
+    int                invokePolyGetterInlined;
+    int                invokePolySetterInlined;
     int                returnOp;
     int                icPatchInit;
     int                icPatchLockFree;

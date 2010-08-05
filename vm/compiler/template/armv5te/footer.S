@@ -76,6 +76,8 @@
     .align  2
 .LdvmAsmInstructionStart:
     .word   dvmAsmInstructionStart
+.LdvmJitToInterpNoChainNoProfile:
+    .word   dvmJitToInterpNoChainNoProfile
 .LdvmJitToInterpTraceSelectNoChain:
     .word   dvmJitToInterpTraceSelectNoChain
 .LdvmJitToInterpNoChain:
