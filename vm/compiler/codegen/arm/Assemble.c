@@ -74,6 +74,7 @@
  *     M -> Thumb2 16-bit zero-extended immediate
  *     b -> 4-digit binary
  *     B -> dmb option string (sy, st, ish, ishst, nsh, hshst)
+ *     H -> operand shift
  *
  *  [!] escape.  To insert "!", use "!!"
  */
@@ -543,17 +544,17 @@ ArmEncodingMap EncodingMap[kArmLast] = {
                  kFmtBitBlt, 11, 8, kFmtBitBlt, 19, 16, kFmtBitBlt, 3, 0,
                  kFmtShift, -1, -1,
                  IS_QUAD_OP | REG_DEF0_USE12 | SETS_CCODES,
-                 "adds", "r!0d, r!1d, r!2d", 2),
+                 "adds", "r!0d, r!1d, r!2d!3H", 2),
     ENCODING_MAP(kThumb2SubRRR,       0xebb00000, /* setflags enconding */
                  kFmtBitBlt, 11, 8, kFmtBitBlt, 19, 16, kFmtBitBlt, 3, 0,
                  kFmtShift, -1, -1,
                  IS_QUAD_OP | REG_DEF0_USE12 | SETS_CCODES,
-                 "subs", "r!0d, r!1d, r!2d", 2),
+                 "subs", "r!0d, r!1d, r!2d!3H", 2),
     ENCODING_MAP(kThumb2SbcRRR,       0xeb700000, /* setflags encoding */
                  kFmtBitBlt, 11, 8, kFmtBitBlt, 19, 16, kFmtBitBlt, 3, 0,
                  kFmtShift, -1, -1,
                  IS_QUAD_OP | REG_DEF0_USE12 | USES_CCODES | SETS_CCODES,
-                 "sbcs", "r!0d, r!1d, r!2d", 2),
+                 "sbcs", "r!0d, r!1d, r!2d!3H", 2),
     ENCODING_MAP(kThumb2CmpRR,       0xebb00f00,
                  kFmtBitBlt, 19, 16, kFmtBitBlt, 3, 0, kFmtShift, -1, -1,
                  kFmtUnused, -1, -1,
@@ -656,15 +657,15 @@ ArmEncodingMap EncodingMap[kArmLast] = {
                  kFmtBitBlt, 11, 8, kFmtBitBlt, 19, 16, kFmtBitBlt, 3, 0,
                  kFmtShift, -1, -1,
                  IS_QUAD_OP | REG_DEF0_USE12 | SETS_CCODES,
-                 "adcs", "r!0d, r!1d, r!2d, shift !3d", 2),
+                 "adcs", "r!0d, r!1d, r!2d!3H", 2),
     ENCODING_MAP(kThumb2AndRRR,  0xea000000,
                  kFmtBitBlt, 11, 8, kFmtBitBlt, 19, 16, kFmtBitBlt, 3, 0,
                  kFmtShift, -1, -1, IS_QUAD_OP | REG_DEF0_USE12,
-                 "and", "r!0d, r!1d, r!2d, shift !3d", 2),
+                 "and", "r!0d, r!1d, r!2d!3H", 2),
     ENCODING_MAP(kThumb2BicRRR,  0xea200000,
                  kFmtBitBlt, 11, 8, kFmtBitBlt, 19, 16, kFmtBitBlt, 3, 0,
                  kFmtShift, -1, -1, IS_QUAD_OP | REG_DEF0_USE12,
-                 "bic", "r!0d, r!1d, r!2d, shift !3d", 2),
+                 "bic", "r!0d, r!1d, r!2d!3H", 2),
     ENCODING_MAP(kThumb2CmnRR,  0xeb000000,
                  kFmtBitBlt, 19, 16, kFmtBitBlt, 3, 0, kFmtShift, -1, -1,
                  kFmtUnused, -1, -1,
@@ -673,7 +674,7 @@ ArmEncodingMap EncodingMap[kArmLast] = {
     ENCODING_MAP(kThumb2EorRRR,  0xea800000,
                  kFmtBitBlt, 11, 8, kFmtBitBlt, 19, 16, kFmtBitBlt, 3, 0,
                  kFmtShift, -1, -1, IS_QUAD_OP | REG_DEF0_USE12,
-                 "eor", "r!0d, r!1d, r!2d, shift !3d", 2),
+                 "eor", "r!0d, r!1d, r!2d!3H", 2),
     ENCODING_MAP(kThumb2MulRRR,  0xfb00f000,
                  kFmtBitBlt, 11, 8, kFmtBitBlt, 19, 16, kFmtBitBlt, 3, 0,
                  kFmtUnused, -1, -1, IS_TERTIARY_OP | REG_DEF0_USE12,
@@ -695,7 +696,7 @@ ArmEncodingMap EncodingMap[kArmLast] = {
     ENCODING_MAP(kThumb2OrrRRR,  0xea400000,
                  kFmtBitBlt, 11, 8, kFmtBitBlt, 19, 16, kFmtBitBlt, 3, 0,
                  kFmtShift, -1, -1, IS_QUAD_OP | REG_DEF0_USE12,
-                 "orr", "r!0d, r!1d, r!2d, shift !3d", 2),
+                 "orr", "r!0d, r!1d, r!2d!3H", 2),
     ENCODING_MAP(kThumb2TstRR,       0xea100f00,
                  kFmtBitBlt, 19, 16, kFmtBitBlt, 3, 0, kFmtShift, -1, -1,
                  kFmtUnused, -1, -1,
