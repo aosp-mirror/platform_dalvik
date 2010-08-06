@@ -950,12 +950,7 @@ static AssemblerStatus assembleInstructions(CompilationUnit *cUnit,
             ((lir->opCode == kThumb2Vldrs) && (lir->operands[1] == rpc))) {
             ArmLIR *lirTarget = (ArmLIR *) lir->generic.target;
             intptr_t pc = (lir->generic.offset + 4) & ~3;
-            /*
-             * Allow an offset (stored in operands[2] to be added to the
-             * PC-relative target. Useful to get to a fixed field inside a
-             * chaining cell.
-             */
-            intptr_t target = lirTarget->generic.offset + lir->operands[2];
+            intptr_t target = lirTarget->generic.offset;
             int delta = target - pc;
             if (delta & 0x3) {
                 LOGE("PC-rel distance is not multiples of 4: %d\n", delta);
