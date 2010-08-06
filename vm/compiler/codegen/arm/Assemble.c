@@ -1847,6 +1847,7 @@ static int dumpTraceProfile(JitEntry *p, bool silent, bool reset,
     u2* pCellOffset;
     JitTraceDescription *desc;
     const Method* method;
+    int idx;
 
     traceBase = getTraceBase(p);
 
@@ -1899,6 +1900,24 @@ static int dumpTraceProfile(JitEntry *p, bool silent, bool reset,
          addrToLine.lineNum,
          method->clazz->descriptor, method->name, methodDesc);
     free(methodDesc);
+
+    /* Find the last fragment (ie runEnd is set) */
+    for (idx = 0;
+         desc->trace[idx].frag.isCode && !desc->trace[idx].frag.runEnd;
+         idx++) {
+    }
+
+    /*
+     * runEnd must comes with a JitCodeDesc frag. If isCode is false it must
+     * be a meta info field (only used by callsite info for now).
+     */
+    if (!desc->trace[idx].frag.isCode) {
+        const Method *method = desc->trace[idx+1].meta;
+        char *methodDesc = dexProtoCopyMethodDescriptor(&method->prototype);
+        /* Print the callee info in the trace */
+        LOGD("    -> %s%s;%s", method->clazz->descriptor, method->name,
+             methodDesc);
+    }
 
     return executionCount;
 }
