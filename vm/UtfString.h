@@ -53,7 +53,7 @@ u4 dvmComputeUtf8Hash(const char* str);
 /*
  * Hash function for string objects.
  */
-u4 dvmComputeStringHash(StringObject* strObj);
+u4 dvmComputeStringHash(const StringObject* strObj);
 
 /*
  * Create a java/lang/String from a C string.
