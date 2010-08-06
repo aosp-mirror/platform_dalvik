@@ -119,7 +119,6 @@ struct DvmGlobals {
      * GC option flags.
      */
     bool        preciseGc;
-    bool        overwriteFree;
     bool        preVerify;
     bool        postVerify;
     bool        generateRegisterMaps;

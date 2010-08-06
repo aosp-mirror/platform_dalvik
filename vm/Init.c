@@ -115,7 +115,6 @@ static void dvmUsage(const char* progName)
     dvmFprintf(stderr, "  -Xdeadlockpredict:{off,warn,err,abort}\n");
     dvmFprintf(stderr, "  -Xstacktracefile:<filename>\n");
     dvmFprintf(stderr, "  -Xgc:[no]precise\n");
-    dvmFprintf(stderr, "  -Xgc:[no]overwritefree\n");
     dvmFprintf(stderr, "  -Xgc:[no]preverify\n");
     dvmFprintf(stderr, "  -Xgc:[no]postverify\n");
     dvmFprintf(stderr, "  -Xgc:[no]concurrent\n");
@@ -975,10 +974,6 @@ static int dvmProcessOptions(int argc, const char* const argv[],
                 gDvm.preciseGc = true;
             else if (strcmp(argv[i] + 5, "noprecise") == 0)
                 gDvm.preciseGc = false;
-            else if (strcmp(argv[i] + 5, "overwritefree") == 0)
-                gDvm.overwriteFree = true;
-            else if (strcmp(argv[i] + 5, "nooverwritefree") == 0)
-                gDvm.overwriteFree = false;
             else if (strcmp(argv[i] + 5, "preverify") == 0)
                 gDvm.preVerify = true;
             else if (strcmp(argv[i] + 5, "nopreverify") == 0)
