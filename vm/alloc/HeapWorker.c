@@ -365,14 +365,23 @@ static void* heapWorkerThreadStart(void* arg)
             {
                 size_t madvisedSizes[HEAP_SOURCE_MAX_HEAP_COUNT];
 
-                /* The heap must be locked before the HeapWorker;
-                 * unroll and re-order the locks.  dvmLockHeap()
-                 * will put us in VMWAIT if necessary.  Once it
-                 * returns, there shouldn't be any contention on
-                 * heapWorkerLock.
+                /*
+                 * Acquire the gcHeapLock.  The requires releasing the
+                 * heapWorkerLock before the gcHeapLock is acquired.
+                 * It is possible that the gcHeapLock may be acquired
+                 * during a concurrent GC in which case heapWorkerLock
+                 * is held by the GC and we are unable to make forward
+                 * progress.  We avoid deadlock by releasing the
+                 * gcHeapLock and then waiting to be signaled when the
+                 * GC completes.  There is no guarantee that the next
+                 * time we are run will coincide with GC inactivity so
+                 * the check and wait must be performed within a loop.
                  */
                 dvmUnlockMutex(&gDvm.heapWorkerLock);
                 dvmLockHeap();
+                while (gDvm.gcHeap->gcRunning) {
+                    dvmWaitForConcurrentGcToComplete();
+                }
                 dvmLockMutex(&gDvm.heapWorkerLock);
 
                 memset(madvisedSizes, 0, sizeof(madvisedSizes));
@@ -404,11 +413,23 @@ static void* heapWorkerThreadStart(void* arg)
             dvmWaitCond(&gDvm.heapWorkerCond, &gDvm.heapWorkerLock);
         }
 
-        /* dvmChangeStatus() may block;  don't hold heapWorkerLock.
+        /*
+         * Return to the running state before doing heap work.  This
+         * will block if the GC has initiated a suspend.  We release
+         * the heapWorkerLock beforehand for the GC to make progress
+         * and wait to be signaled after the GC completes.  There is
+         * no guarantee that the next time we are run will coincide
+         * with GC inactivity so the check and wait must be performed
+         * within a loop.
          */
         dvmUnlockMutex(&gDvm.heapWorkerLock);
         dvmChangeStatus(NULL, THREAD_RUNNING);
+        dvmLockHeap();
+        while (gDvm.gcHeap->gcRunning) {
+            dvmWaitForConcurrentGcToComplete();
+        }
         dvmLockMutex(&gDvm.heapWorkerLock);
+        dvmUnlockHeap();
         LOGV("HeapWorker is awake\n");
 
         /* Process any events in the queue.
