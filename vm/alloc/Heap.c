@@ -571,10 +571,7 @@ size_t dvmObjectSizeInHeap(const Object *obj)
     return dvmHeapSourceChunkSize(obj);
 }
 
-/*
- * Scan every live object in the heap, holding the locks.
- */
-static void verifyHeap(void)
+static void verifyRootsAndHeap(void)
 {
     dvmVerifyRoots();
     dvmVerifyBitmap(dvmHeapSourceGetLiveBits());
@@ -675,8 +672,8 @@ void dvmCollectGarbageInternal(bool clearSoftRefs, GcReason reason)
     dvmLockMutex(&gDvm.heapWorkerListLock);
 
     if (gDvm.preVerify) {
-        LOGV_HEAP("Verifying heap before GC");
-        verifyHeap();
+        LOGV_HEAP("Verifying roots and heap before GC");
+        verifyRootsAndHeap();
     }
 
 #ifdef WITH_PROFILER
@@ -862,8 +859,8 @@ void dvmCollectGarbageInternal(bool clearSoftRefs, GcReason reason)
     LOGV_HEAP("GC finished");
 
     if (gDvm.postVerify) {
-        LOGV_HEAP("Verifying heap after GC");
-        verifyHeap();
+        LOGV_HEAP("Verifying roots and heap after GC");
+        verifyRootsAndHeap();
     }
 
     gcHeap->gcRunning = false;
