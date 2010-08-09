@@ -774,6 +774,13 @@ void dvmCollectGarbageInternal(bool clearSoftRefs, GcReason reason)
          */
         dvmHeapReMarkRootSet();
         /*
+         * With the exception of reference objects and weak interned
+         * strings, all gray objects should now be on dirty cards.
+         */
+        if (gDvm.verifyCardTable) {
+            dvmVerifyCardTable();
+        }
+        /*
          * Recursively mark gray objects pointed to by the roots or by
          * heap objects dirtied during the concurrent mark.
          */

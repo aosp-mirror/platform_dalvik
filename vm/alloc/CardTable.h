@@ -61,9 +61,7 @@ void *dvmAddrFromCard(const u1 *card);
 void dvmMarkCard(const void *addr);
 
 /*
- * dvmAbort if any clean object in the Zygote heap contains a
- * reference to the application heap, or if the immune limit is not as
- * expected.
+ * Verifies that all gray objects are on a dirty card.
  */
 void dvmVerifyCardTable(void);
 
