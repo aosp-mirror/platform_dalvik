@@ -943,13 +943,6 @@ void dvmHeapFinishMarkStep()
 
     markContext = &gDvm.gcHeap->markContext;
 
-    /* The sweep step freed every object that appeared in the
-     * HeapSource bitmaps that didn't appear in the mark bitmaps.
-     * The new state of the HeapSource is exactly the final
-     * mark bitmaps, so swap them in.
-     */
-    dvmHeapSourceSwapBitmaps();
-
     /* The mark bits are now not needed.
      */
     dvmHeapSourceZeroMarkBitmap();
@@ -961,6 +954,12 @@ void dvmHeapFinishMarkStep()
     markContext->finger = NULL;
 }
 
+typedef struct {
+    size_t numObjects;
+    size_t numBytes;
+    bool isConcurrent;
+} SweepContext;
+
 static void sweepBitmapCallback(size_t numPtrs, void **ptrs,
                                 const void *finger, void *arg)
 {
@@ -970,6 +969,7 @@ static void sweepBitmapCallback(size_t numPtrs, void **ptrs,
      * discarded.
      */
     const ClassObject *const classJavaLangClass = gDvm.classJavaLangClass;
+    SweepContext *ctx = arg;
     size_t i;
 
     for (i = 0; i < numPtrs; i++) {
@@ -1002,11 +1002,19 @@ static void sweepBitmapCallback(size_t numPtrs, void **ptrs,
 
     // TODO: dvmHeapSourceFreeList has a loop, just like the above
     // does. Consider collapsing the two loops to save overhead.
-    dvmHeapSourceFreeList(numPtrs, ptrs);
+    if (ctx->isConcurrent) {
+        dvmLockHeap();
+    }
+    ctx->numBytes += dvmHeapSourceFreeList(numPtrs, ptrs);
+    ctx->numObjects += numPtrs;
+    if (ctx->isConcurrent) {
+        dvmUnlockHeap();
+    }
 }
 
-/* Returns true if the given object is unmarked.  Ignores the low bits
- * of the pointer because the intern table may set them.
+/*
+ * Returns true if the given object is unmarked.  This assumes that
+ * the bitmaps have not yet been swapped.
  */
 static int isUnmarkedObject(void *object)
 {
@@ -1014,54 +1022,49 @@ static int isUnmarkedObject(void *object)
             &gDvm.gcHeap->markContext);
 }
 
-/* Walk through the list of objects that haven't been
- * marked and free them.
+/*
+ * Process all the internal system structures that behave like
+ * weakly-held objects.
  */
-void
-dvmHeapSweepUnmarkedObjects(GcMode mode, int *numFreed, size_t *sizeFreed)
+void dvmHeapSweepSystemWeaks(void)
+{
+    dvmGcDetachDeadInternedStrings(isUnmarkedObject);
+    dvmSweepMonitorList(&gDvm.monitorList, isUnmarkedObject);
+}
+
+/*
+ * Walk through the list of objects that haven't been marked and free
+ * them.  Assumes the bitmaps have been swapped.
+ */
+void dvmHeapSweepUnmarkedObjects(GcMode mode, bool isConcurrent,
+                                 size_t *numObjects, size_t *numBytes)
 {
     HeapBitmap markBits[HEAP_SOURCE_MAX_HEAP_COUNT];
     HeapBitmap liveBits[HEAP_SOURCE_MAX_HEAP_COUNT];
-    size_t origObjectsAllocated;
-    size_t origBytesAllocated;
+    SweepContext ctx;
     size_t numBitmaps, numSweepBitmaps;
     size_t i;
 
-    /* All reachable objects have been marked.
-     * Detach any unreachable interned strings before
-     * we sweep.
-     */
-    dvmGcDetachDeadInternedStrings(isUnmarkedObject);
-
-    /* Free any known objects that are not marked.
-     */
-    origObjectsAllocated = dvmHeapSourceGetValue(HS_OBJECTS_ALLOCATED, NULL, 0);
-    origBytesAllocated = dvmHeapSourceGetValue(HS_BYTES_ALLOCATED, NULL, 0);
-
-    dvmSweepMonitorList(&gDvm.monitorList, isUnmarkedObject);
-
     numBitmaps = dvmHeapSourceGetNumHeaps();
-    dvmHeapSourceGetObjectBitmaps(liveBits, markBits, numBitmaps);
+    dvmHeapSourceGetObjectBitmaps(markBits, liveBits, numBitmaps);
     if (mode == GC_PARTIAL) {
         numSweepBitmaps = 1;
         assert((uintptr_t)gDvm.gcHeap->markContext.immuneLimit == liveBits[0].base);
     } else {
         numSweepBitmaps = numBitmaps;
     }
+    ctx.numObjects = ctx.numBytes = 0;
+    ctx.isConcurrent = isConcurrent;
     for (i = 0; i < numSweepBitmaps; i++) {
         dvmHeapBitmapSweepWalk(&liveBits[i], &markBits[i],
-                               sweepBitmapCallback, NULL);
+                               sweepBitmapCallback, &ctx);
     }
-
-    *numFreed = origObjectsAllocated -
-            dvmHeapSourceGetValue(HS_OBJECTS_ALLOCATED, NULL, 0);
-    *sizeFreed = origBytesAllocated -
-            dvmHeapSourceGetValue(HS_BYTES_ALLOCATED, NULL, 0);
-
+    *numObjects = ctx.numObjects;
+    *numBytes = ctx.numBytes;
 #ifdef WITH_PROFILER
     if (gDvm.allocProf.enabled) {
-        gDvm.allocProf.freeCount += *numFreed;
-        gDvm.allocProf.freeSize += *sizeFreed;
+        gDvm.allocProf.freeCount += ctx.numObjects;
+        gDvm.allocProf.freeSize += ctx.numBytes;
     }
 #endif
 }

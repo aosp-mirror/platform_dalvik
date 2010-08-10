@@ -594,11 +594,10 @@ static void verifyRootsAndHeap(void)
 void dvmCollectGarbageInternal(bool clearSoftRefs, GcReason reason)
 {
     GcHeap *gcHeap = gDvm.gcHeap;
-    u4 suspendStart, totalTime;
-    u4 rootStart, rootEnd, rootTime, rootSuspendTime;
-    u4 dirtyStart, dirtyEnd, dirtyTime, dirtySuspendTime;
-    int numFreed;
-    size_t sizeFreed;
+    u4 rootSuspend, rootSuspendTime, rootStart, rootEnd;
+    u4 dirtySuspend, dirtyStart, dirtyEnd;
+    u4 totalTime;
+    size_t numObjects, numBytes;
     GcMode gcMode;
     int oldThreadPriority = kInvalidPriority;
 
@@ -613,9 +612,10 @@ void dvmCollectGarbageInternal(bool clearSoftRefs, GcReason reason)
     gcMode = (reason == GC_FOR_MALLOC) ? GC_PARTIAL : GC_FULL;
     gcHeap->gcRunning = true;
 
-    suspendStart = dvmGetRelativeTimeMsec();
+    rootSuspend = dvmGetRelativeTimeMsec();
     dvmSuspendAllThreads(SUSPEND_FOR_GC);
     rootStart = dvmGetRelativeTimeMsec();
+    rootSuspendTime = rootStart - rootSuspend;
 
     /*
      * If we are not marking concurrently raise the priority of the
@@ -748,8 +748,6 @@ void dvmCollectGarbageInternal(bool clearSoftRefs, GcReason reason)
         dvmClearCardTable();
         dvmUnlockHeap();
         dvmResumeAllThreads(SUSPEND_FOR_GC);
-        rootSuspendTime = rootStart - suspendStart;
-        rootTime = rootEnd - rootStart;
     }
 
     /* Recursively mark any objects that marked objects point to strongly.
@@ -765,7 +763,7 @@ void dvmCollectGarbageInternal(bool clearSoftRefs, GcReason reason)
          * suspension.
          */
         dvmLockHeap();
-        suspendStart = dvmGetRelativeTimeMsec();
+        dirtySuspend = dvmGetRelativeTimeMsec();
         dvmSuspendAllThreads(SUSPEND_FOR_GC);
         dirtyStart = dvmGetRelativeTimeMsec();
         /*
@@ -817,17 +815,46 @@ void dvmCollectGarbageInternal(bool clearSoftRefs, GcReason reason)
     LOGD_HEAP("Handling phantom references...");
     dvmClearWhiteRefs(&gcHeap->phantomReferences);
 
-#ifdef WITH_DEADLOCK_PREDICTION
-    dvmDumpMonitorInfo("before sweep");
-#endif
-    LOGD_HEAP("Sweeping...");
-    dvmHeapSweepUnmarkedObjects(gcMode, &numFreed, &sizeFreed);
-#ifdef WITH_DEADLOCK_PREDICTION
-    dvmDumpMonitorInfo("after sweep");
+#if defined(WITH_JIT)
+    /*
+     * Patching a chaining cell is very cheap as it only updates 4 words. It's
+     * the overhead of stopping all threads and synchronizing the I/D cache
+     * that makes it expensive.
+     *
+     * Therefore we batch those work orders in a queue and go through them
+     * when threads are suspended for GC.
+     */
+    dvmCompilerPerformSafePointChecks();
 #endif
 
+    LOGD_HEAP("Sweeping...");
+
+    dvmHeapSweepSystemWeaks();
+
+    /*
+     * Live objects have a bit set in the mark bitmap, swap the mark
+     * and live bitmaps.  The sweep can proceed concurrently viewing
+     * the new live bitmap as the old mark bitmap, and vice versa.
+     */
+    dvmHeapSourceSwapBitmaps();
+
+    if (gDvm.postVerify) {
+        LOGV_HEAP("Verifying roots and heap after GC");
+        verifyRootsAndHeap();
+    }
+
+    if (reason == GC_CONCURRENT) {
+        dirtyEnd = dvmGetRelativeTimeMsec();
+        dvmUnlockHeap();
+        dvmResumeAllThreads(SUSPEND_FOR_GC);
+    }
+    dvmHeapSweepUnmarkedObjects(gcMode, reason == GC_CONCURRENT,
+                                &numObjects, &numBytes);
     LOGD_HEAP("Cleaning up...");
     dvmHeapFinishMarkStep();
+    if (reason == GC_CONCURRENT) {
+        dvmLockHeap();
+    }
 
     LOGD_HEAP("Done.");
 
@@ -865,37 +892,11 @@ void dvmCollectGarbageInternal(bool clearSoftRefs, GcReason reason)
 #endif
     LOGV_HEAP("GC finished");
 
-    if (gDvm.postVerify) {
-        LOGV_HEAP("Verifying roots and heap after GC");
-        verifyRootsAndHeap();
-    }
-
     gcHeap->gcRunning = false;
 
     LOGV_HEAP("Resuming threads");
     dvmUnlockMutex(&gDvm.heapWorkerListLock);
     dvmUnlockMutex(&gDvm.heapWorkerLock);
-
-#if defined(WITH_JIT)
-    /*
-     * Patching a chaining cell is very cheap as it only updates 4 words. It's
-     * the overhead of stopping all threads and synchronizing the I/D cache
-     * that makes it expensive.
-     *
-     * Therefore we batch those work orders in a queue and go through them
-     * when threads are suspended for GC.
-     */
-    dvmCompilerPerformSafePointChecks();
-#endif
-
-    dirtyEnd = dvmGetRelativeTimeMsec();
-
-    if (reason == GC_CONCURRENT) {
-        dirtySuspendTime = dirtyStart - suspendStart;
-        dirtyTime = dirtyEnd - dirtyStart;
-    }
-
-    dvmResumeAllThreads(SUSPEND_FOR_GC);
 
     if (reason == GC_CONCURRENT) {
         /*
@@ -906,6 +907,8 @@ void dvmCollectGarbageInternal(bool clearSoftRefs, GcReason reason)
     }
 
     if (reason != GC_CONCURRENT) {
+        dirtyEnd = dvmGetRelativeTimeMsec();
+        dvmResumeAllThreads(SUSPEND_FOR_GC);
         if (oldThreadPriority != kInvalidPriority) {
             if (setpriority(PRIO_PROCESS, 0, oldThreadPriority) != 0) {
                 LOGW_HEAP("Unable to reset priority to %d: %s\n",
@@ -921,20 +924,22 @@ void dvmCollectGarbageInternal(bool clearSoftRefs, GcReason reason)
     }
 
     if (reason != GC_CONCURRENT) {
-        u4 suspendTime = rootStart - suspendStart;
         u4 markSweepTime = dirtyEnd - rootStart;
-        totalTime = suspendTime + markSweepTime;
+        totalTime = rootSuspendTime + markSweepTime;
         LOGD("%s freed %d objects / %zd bytes in (%ums) %ums",
-             GcReasonStr[reason], numFreed, sizeFreed,
-             suspendTime, markSweepTime);
+             GcReasonStr[reason], numObjects, numBytes,
+             rootSuspendTime, markSweepTime);
     } else {
+        u4 rootTime = rootEnd - rootStart;
+        u4 dirtySuspendTime = dirtyStart - dirtySuspend;
+        u4 dirtyTime = dirtyEnd - dirtyStart;
         totalTime = rootSuspendTime + rootTime + dirtySuspendTime + dirtyTime;
         LOGD("%s freed %d objects / %zd bytes in (%ums) %ums (%ums) %ums",
-             GcReasonStr[reason], numFreed, sizeFreed,
+             GcReasonStr[reason], numObjects, numBytes,
              rootSuspendTime, rootTime,
              dirtySuspendTime, dirtyTime);
     }
-    dvmLogGcStats(numFreed, sizeFreed, totalTime);
+    dvmLogGcStats(numObjects, numBytes, totalTime);
     if (gcHeap->ddmHpifWhen != 0) {
         LOGD_HEAP("Sending VM heap info to DDM\n");
         dvmDdmSendHeapInfo(gcHeap->ddmHpifWhen, false);

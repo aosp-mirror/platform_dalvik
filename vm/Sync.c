@@ -333,6 +333,9 @@ void dvmSweepMonitorList(Monitor** mon, int (*isUnmarkedObject)(void*))
 
     assert(mon != NULL);
     assert(isUnmarkedObject != NULL);
+#ifdef WITH_DEADLOCK_PREDICTION
+    dvmDumpMonitorInfo("before monitor sweep");
+#endif
     prev = &handle;
     prev->next = curr = *mon;
     while (curr != NULL) {
@@ -346,6 +349,9 @@ void dvmSweepMonitorList(Monitor** mon, int (*isUnmarkedObject)(void*))
         }
     }
     *mon = handle.next;
+#ifdef WITH_DEADLOCK_PREDICTION
+    dvmDumpMonitorInfo("after monitor sweep");
+#endif
 }
 
 static char *logWriteInt(char *dst, int value)
