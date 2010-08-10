@@ -985,7 +985,7 @@ static AssemblerStatus assembleInstructions(CompilationUnit *cUnit,
                 dvmCompilerInsertLIRAfter((LIR *)lir, (LIR *)newInst);
                 /* Convert the cb[n]z to a cmp rx, #0 ] */
                 lir->opCode = kThumbCmpRI8;
-                lir->operands[0] = lir->operands[1];
+                /* operand[0] is src1 in both cb[n]z & CmpRI8 */
                 lir->operands[1] = 0;
                 lir->generic.target = 0;
                 dvmCompilerSetupResourceMasks(lir);
