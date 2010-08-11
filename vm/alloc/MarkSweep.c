@@ -963,13 +963,13 @@ typedef struct {
 static void sweepBitmapCallback(size_t numPtrs, void **ptrs,
                                 const void *finger, void *arg)
 {
+    SweepContext *ctx = arg;
 #ifndef NDEBUG
     /*
      * Verify that any classes we're freeing have had their innards
      * discarded.
      */
     const ClassObject *const classJavaLangClass = gDvm.classJavaLangClass;
-    SweepContext *ctx = arg;
     size_t i;
 
     for (i = 0; i < numPtrs; i++) {
