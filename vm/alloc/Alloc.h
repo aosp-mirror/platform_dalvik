@@ -92,11 +92,6 @@ void dvmReleaseTrackedAlloc(Object* obj, Thread* self);
 bool dvmIsValidObject(const Object* obj);
 
 /*
- * Returns true iff <ptr> points within allocation-managed address space.
- */
-bool dvmIsValidObjectAddress(const void *ptr);
-
-/*
  * Create a copy of an object.
  *
  * The new object will be added to the "tracked alloc" table.
