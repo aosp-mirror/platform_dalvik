@@ -964,44 +964,7 @@ static void sweepBitmapCallback(size_t numPtrs, void **ptrs,
                                 const void *finger, void *arg)
 {
     SweepContext *ctx = arg;
-#ifndef NDEBUG
-    /*
-     * Verify that any classes we're freeing have had their innards
-     * discarded.
-     */
-    const ClassObject *const classJavaLangClass = gDvm.classJavaLangClass;
-    size_t i;
 
-    for (i = 0; i < numPtrs; i++) {
-        Object *obj;
-
-        obj = (Object *)ptrs[i];
-
-        /* This assumes that java.lang.Class will never go away.
-         * If it can, and we were the last reference to it, it
-         * could have already been swept.  However, even in that case,
-         * gDvm.classJavaLangClass should still have a useful
-         * value.
-         */
-        if (obj->clazz == classJavaLangClass) {
-            const char* descr = ((ClassObject*)obj)->descriptor;
-            if (descr != NULL) {
-                LOGW("WARNING: unfreed innards in class '%s'\n", descr);
-                /* not that important; keep going */
-            } else {
-                LOGV("found freed innards on object %p\n", obj);
-            }
-
-            /* dvmFreeClassInnards() may have already been called,
-             * but it's safe to call on the same ClassObject twice.
-             */
-            //dvmFreeClassInnards((ClassObject *)obj);
-        }
-    }
-#endif
-
-    // TODO: dvmHeapSourceFreeList has a loop, just like the above
-    // does. Consider collapsing the two loops to save overhead.
     if (ctx->isConcurrent) {
         dvmLockHeap();
     }
