@@ -2741,8 +2741,9 @@ static void waitForThreadSuspend(Thread* self, Thread* thread)
  * lock and suspend lock here (and we're not using recursive threads), and
  * we might have to self-suspend if somebody else beats us here.
  *
- * The current thread may not be attached to the VM.  This can happen if
- * we happen to GC as the result of an allocation of a Thread object.
+ * We know the current thread is in the thread list, because we attach the
+ * thread before doing anything that could cause VM suspension (like object
+ * allocation).
  */
 void dvmSuspendAllThreads(SuspendCause why)
 {
