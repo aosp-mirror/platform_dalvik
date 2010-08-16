@@ -65,7 +65,7 @@ static void inlineGetter(CompilationUnit *cUnit,
     int dfFlags = dvmCompilerDataFlowAttributes[getterInsn.opCode];
 
     /* Expecting vA to be the destination register */
-    if (dfFlags & DF_UA) {
+    if (dfFlags & (DF_UA | DF_UA_WIDE)) {
         LOGE("opcode %d has DF_UA set (not expected)", getterInsn.opCode);
         dvmAbort();
     }
@@ -144,7 +144,7 @@ static void inlineSetter(CompilationUnit *cUnit,
 
     int dfFlags = dvmCompilerDataFlowAttributes[setterInsn.opCode];
 
-    if (dfFlags & DF_UA) {
+    if (dfFlags & (DF_UA | DF_UA_WIDE)) {
         setterInsn.vA = convertRegId(&invokeMIR->dalvikInsn, calleeMethod,
                                      setterInsn.vA, isRange);
 
