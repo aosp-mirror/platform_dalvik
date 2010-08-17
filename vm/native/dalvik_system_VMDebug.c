@@ -935,6 +935,18 @@ static void Dalvik_dalvik_system_VMDebug_infopoint(const u4* args,
     RETURN_VOID();
 }
 
+static void Dalvik_dalvik_system_VMDebug_countInstancesOfClass(const u4* args,
+    JValue* pResult)
+{
+    ClassObject* clazz = (ClassObject*)args[0];
+    if (clazz == NULL) {
+        RETURN_LONG(0);
+    } else {
+        size_t count = dvmHeapCountInstancesOfClass(clazz);
+        RETURN_LONG((long long)count);
+    }
+}
+
 const DalvikNativeMethod dvm_dalvik_system_VMDebug[] = {
     { "getVmFeatureList",           "()[Ljava/lang/String;",
         Dalvik_dalvik_system_VMDebug_getVmFeatureList },
@@ -992,5 +1004,7 @@ const DalvikNativeMethod dvm_dalvik_system_VMDebug[] = {
         Dalvik_dalvik_system_VMDebug_crash },
     { "infopoint",                 "(I)V",
         Dalvik_dalvik_system_VMDebug_infopoint },
+    { "countInstancesOfClass",     "(Ljava/lang/Class;)J",
+        Dalvik_dalvik_system_VMDebug_countInstancesOfClass },
     { NULL, NULL, NULL },
 };
