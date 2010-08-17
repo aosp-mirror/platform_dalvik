@@ -19,6 +19,7 @@
 #include "Dalvik.h"
 #include "alloc/Heap.h"
 #include "alloc/HeapInternal.h"
+#include "alloc/HeapSource.h"
 
 #if WITH_HPROF && WITH_HPROF_STACK
 #include "hprof/Hprof.h"
@@ -298,4 +299,34 @@ void dvmCollectGarbage(bool collectSoftReferences)
     dvmCollectGarbageInternal(collectSoftReferences, GC_EXPLICIT);
 
     dvmUnlockHeap();
+}
+
+typedef struct {
+    const ClassObject *clazz;
+    size_t count;
+} CountInstancesOfClassContext;
+
+static void countInstancesOfClassCallback(size_t numPtrs, void **ptrs,
+                                          const void *finger, void *arg)
+{
+    CountInstancesOfClassContext *ctx = arg;
+    size_t i;
+
+    assert(ctx != NULL);
+    for (i = 0; i < numPtrs; ++i) {
+        const Object *obj = ptrs[i];
+        if (obj->clazz == ctx->clazz) {
+            ctx->count += 1;
+        }
+    }
+}
+
+size_t dvmCountInstancesOfClass(const ClassObject *clazz)
+{
+    CountInstancesOfClassContext ctx = { clazz, 0 };
+    HeapBitmap *bitmap = dvmHeapSourceGetLiveBits();
+    dvmLockHeap();
+    dvmHeapBitmapWalk(bitmap, countInstancesOfClassCallback, &ctx);
+    dvmUnlockHeap();
+    return ctx.count;
 }

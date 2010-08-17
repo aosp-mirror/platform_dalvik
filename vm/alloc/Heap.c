@@ -950,36 +950,6 @@ void dvmWaitForConcurrentGcToComplete(void)
     dvmChangeStatus(self, oldStatus);
 }
 
-typedef struct {
-    const ClassObject *clazz;
-    size_t count;
-} CountInstancesOfClassContext;
-
-static void countInstancesOfClassCallback(size_t numPtrs, void **ptrs,
-                                          const void *finger, void *arg)
-{
-    CountInstancesOfClassContext *ctx = arg;
-    size_t i;
-
-    assert(ctx != NULL);
-    for (i = 0; i < numPtrs; ++i) {
-        const Object *obj = ptrs[i];
-        if (obj->clazz == ctx->clazz) {
-            ctx->count += 1;
-        }
-    }
-}
-
-size_t dvmHeapCountInstancesOfClass(const ClassObject *clazz)
-{
-    CountInstancesOfClassContext ctx = { clazz, 0 };
-    HeapBitmap *bitmap = dvmHeapSourceGetLiveBits();
-    dvmLockHeap();
-    dvmHeapBitmapWalk(bitmap, countInstancesOfClassCallback, &ctx);
-    dvmUnlockHeap();
-    return ctx.count;
-}
-
 #if WITH_HPROF
 /*
  * Perform garbage collection, writing heap information to the specified file.

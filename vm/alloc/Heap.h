@@ -89,9 +89,4 @@ void dvmCollectGarbageInternal(bool clearSoftRefs, GcReason reason);
  */
 void dvmWaitForConcurrentGcToComplete(void);
 
-/*
- * Returns a count of the extant instances of a class.
- */
-size_t dvmHeapCountInstancesOfClass(const ClassObject *clazz);
-
 #endif  // _DALVIK_ALLOC_HEAP

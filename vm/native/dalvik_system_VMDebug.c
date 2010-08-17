@@ -942,7 +942,7 @@ static void Dalvik_dalvik_system_VMDebug_countInstancesOfClass(const u4* args,
     if (clazz == NULL) {
         RETURN_LONG(0);
     } else {
-        size_t count = dvmHeapCountInstancesOfClass(clazz);
+        size_t count = dvmCountInstancesOfClass(clazz);
         RETURN_LONG((long long)count);
     }
 }
