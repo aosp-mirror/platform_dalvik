@@ -606,36 +606,87 @@ static bool parseIndexMap(DexFile* pDexFile, const u1* data, u4 size,
 }
 
 /*
+ * Check to see if a given data pointer is a valid double-word-aligned
+ * pointer into the given memory range (from start inclusive to end
+ * exclusive). Returns true if valid.
+ */
+static bool isValidPointer(const void* ptr, const void* start, const void* end)
+{
+    return (ptr >= start) && (ptr < end) && (((u4) ptr & 7) == 0);
+}
+
+/*
  * Parse some auxillary data tables.
  *
  * v1.0 wrote a zero in the first 32 bits, followed by the DexClassLookup
  * table.  Subsequent versions switched to the "chunk" format.
  */
-static bool parseAuxData(const u1* data, DexFile* pDexFile)
+static bool parseAuxData(const u1* data, size_t length, DexFile* pDexFile)
 {
-    const u4* pAux = (const u4*) (data + pDexFile->pOptHeader->auxOffset);
+    const void* pAuxStart = data + pDexFile->pOptHeader->auxOffset;
+    const void* pAuxEnd = data + length;
+    const u4* pAux = pAuxStart;
+    u4 auxLength = (const u1*) pAuxEnd - (const u1*) pAuxStart;
     u4 indexMapType = 0;
 
-    /* v1.0 format? */
-    if (*pAux == 0) {
-        LOGV("+++ found OLD dex format\n");
-        pDexFile->pClassLookup = (const DexClassLookup*) (pAux+1);
-        return true;
+    /*
+     * Make sure the aux data start is in range and aligned. This may
+     * seem like a superfluous check, but (a) if the file got
+     * truncated, it might turn out that pAux >= pAuxEnd; and (b)
+     * if the aux data header got corrupted, pAux might not be
+     * properly aligned. This test will catch both of these cases.
+     */
+    if (!isValidPointer(pAux, pAuxStart, pAuxEnd)) {
+        LOGE("Bogus aux data start pointer\n");
+        return false;
     }
-    LOGV("+++ found NEW dex format\n");
 
-    /* process chunks until we see the end marker */
+    /* Make sure that the aux data length is a whole number of words. */
+    if ((auxLength & 3) != 0) {
+        LOGE("Unaligned aux data area end\n");
+        return false;
+    }
+
+    /*
+     * Make sure that the aux data area is large enough to have at least
+     * one chunk header.
+     */
+    if (auxLength < 8) {
+        LOGE("Undersized aux data area (%u)\n", auxLength);
+        return false;
+    }
+
+    /* Process chunks until we see the end marker. */
     while (*pAux != kDexChunkEnd) {
-        u4 size = *(pAux+1);
-        u1* data = (u1*) (pAux + 2);
+        if (!isValidPointer(pAux + 2, pAuxStart, pAuxEnd)) {
+            LOGE("Bogus aux data content pointer at offset %u\n",
+                    ((const u1*) pAux) - data);
+            return false;
+        }
+
+        u4 size = *(pAux + 1);
+        const u1* pAuxData = (const u1*) (pAux + 2);
+
+        /*
+         * The rounded size is 64-bit aligned and includes +8 for the
+         * type/size header (which was extracted immediately above).
+         */
+        u4 roundedSize = (size + 8 + 7) & ~7;
+        const u4* pNextAux = pAux + (roundedSize / sizeof(u4));
+
+        if (!isValidPointer(pNextAux, pAuxStart, pAuxEnd)) {
+            LOGE("Aux data area problem for chunk of size %u at offset %u\n",
+                    size, ((const u1*) pAux) - data);
+            return false;
+        }
 
         switch (*pAux) {
         case kDexChunkClassLookup:
-            pDexFile->pClassLookup = (const DexClassLookup*) data;
+            pDexFile->pClassLookup = (const DexClassLookup*) pAuxData;
             break;
         case kDexChunkReducingIndexMap:
             LOGI("+++ found reducing index map, size=%u\n", size);
-            if (!parseIndexMap(pDexFile, data, size, false)) {
+            if (!parseIndexMap(pDexFile, pAuxData, size, false)) {
                 LOGE("Failed parsing reducing index map\n");
                 return false;
             }
@@ -643,7 +694,7 @@ static bool parseAuxData(const u1* data, DexFile* pDexFile)
             break;
         case kDexChunkExpandingIndexMap:
             LOGI("+++ found expanding index map, size=%u\n", size);
-            if (!parseIndexMap(pDexFile, data, size, true)) {
+            if (!parseIndexMap(pDexFile, pAuxData, size, true)) {
                 LOGE("Failed parsing expanding index map\n");
                 return false;
             }
@@ -651,7 +702,7 @@ static bool parseAuxData(const u1* data, DexFile* pDexFile)
             break;
         case kDexChunkRegisterMaps:
             LOGV("+++ found register maps, size=%u\n", size);
-            pDexFile->pRegisterMapPool = data;
+            pDexFile->pRegisterMapPool = pAuxData;
             break;
         default:
             LOGI("Unknown chunk 0x%08x (%c%c%c%c), size=%d in aux data area\n",
@@ -662,12 +713,7 @@ static bool parseAuxData(const u1* data, DexFile* pDexFile)
             break;
         }
 
-        /*
-         * Advance pointer, padding to 64-bit boundary.  The extra "+8" is
-         * for the type/size header.
-         */
-        size = (size + 8 + 7) & ~7;
-        pAux += size / sizeof(u4);
+        pAux = pNextAux;
     }
 
 #if 0   // TODO: propagate expected map type from the VM through the API
@@ -726,7 +772,7 @@ DexFile* dexFileParse(const u1* data, size_t length, int flags)
             pDexFile->pOptHeader->dexOffset, pDexFile->pOptHeader->flags);
 
         /* locate some auxillary data tables */
-        if (!parseAuxData(data, pDexFile))
+        if (!parseAuxData(data, length, pDexFile))
             goto bail;
 
         /* ignore the opt header and appended data from here on out */
