@@ -667,6 +667,8 @@ bool dvmContinueOptimization(int fd, off_t dexOffset, long dexLength,
     optHdr.flags = headerFlags;
     optHdr.checksum = optChecksum;
 
+    fsync(fd);      /* ensure previous writes go before header is written */
+
     lseek(fd, 0, SEEK_SET);
     if (sysWriteFully(fd, &optHdr, sizeof(optHdr), "DexOpt opt header") != 0)
         goto bail;
