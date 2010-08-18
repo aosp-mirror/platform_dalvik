@@ -23,7 +23,7 @@ dvm_simulator := $(TARGET_SIMULATOR)
 include $(LOCAL_PATH)/Dvm.mk
 
 LOCAL_SHARED_LIBRARIES += \
-        liblog libcutils libnativehelper libz
+        liblog libcutils libdl libnativehelper libz
 
 LOCAL_STATIC_LIBRARIES += libdex
 
