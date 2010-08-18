@@ -228,7 +228,8 @@ retry:
              * changes doing anything" purposes its best if we just make
              * everything crash when a DEX they're using gets updated.
              */
-            LOGD("Stale deps in cache file; removing and retrying\n");
+            LOGD("ODEX file is stale or bad; removing and retrying (%s)\n",
+                cacheFileName);
             if (ftruncate(fd, 0) != 0) {
                 LOGW("Warning: unable to truncate cache file '%s': %s\n",
                     cacheFileName, strerror(errno));
@@ -1069,13 +1070,22 @@ bool dvmCheckOptHeaderAndDependencies(int fd, bool sourceAvail, u4 modWhen,
      * Read and do trivial verification on the opt header.  The header is
      * always in host byte order.
      */
-    if (read(fd, &optHdr, sizeof(optHdr)) != sizeof(optHdr)) {
+    actual = read(fd, &optHdr, sizeof(optHdr));
+    if (actual < 0) {
         LOGE("DexOpt: failed reading opt header: %s\n", strerror(errno));
+        goto bail;
+    } else if (actual != sizeof(optHdr)) {
+        LOGE("DexOpt: failed reading opt header (got %d of %zd)\n",
+            (int) actual, sizeof(optHdr));
         goto bail;
     }
 
     magic = optHdr.magic;
-    if (memcmp(magic, DEX_OPT_MAGIC, 4) != 0) {
+    if (memcmp(magic, DEX_MAGIC, 4) == 0) {
+        /* somebody probably pointed us at the wrong file */
+        LOGD("DexOpt: expected optimized DEX, found unoptimized\n");
+        goto bail;
+    } else if (memcmp(magic, DEX_OPT_MAGIC, 4) != 0) {
         /* not a DEX file, or previous attempt was interrupted */
         LOGD("DexOpt: incorrect opt magic number (0x%02x %02x %02x %02x)\n",
             magic[0], magic[1], magic[2], magic[3]);
@@ -1139,9 +1149,12 @@ bool dvmCheckOptHeaderAndDependencies(int fd, bool sourceAvail, u4 modWhen,
         goto bail;
     }
     actual = read(fd, depData, optHdr.depsLength);
-    if (actual != (ssize_t) optHdr.depsLength) {
-        LOGW("DexOpt: failed reading deps: %d of %d (err=%s)\n",
-            (int) actual, optHdr.depsLength, strerror(errno));
+    if (actual < 0) {
+        LOGW("DexOpt: failed reading deps: %s\n", strerror(errno));
+        goto bail;
+    } else if (actual != (ssize_t) optHdr.depsLength) {
+        LOGW("DexOpt: failed reading deps: got %d of %d\n",
+            (int) actual, optHdr.depsLength);
         goto bail;
     }
 
