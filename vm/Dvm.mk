@@ -159,7 +159,6 @@ LOCAL_SRC_FILES := \
 	mterp/out/InterpC-portdbg.c.arm \
 	native/InternalNative.c \
 	native/dalvik_system_DexFile.c \
-	native/dalvik_system_SamplingProfiler.c \
 	native/dalvik_system_VMDebug.c \
 	native/dalvik_system_VMRuntime.c \
 	native/dalvik_system_VMStack.c \
