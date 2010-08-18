@@ -19,8 +19,6 @@
  */
 #include "Dalvik.h"
 
-#ifdef WITH_PROFILER        // -- include rest of file
-
 #include <stdlib.h>
 #include <stddef.h>
 #include <string.h>
@@ -890,5 +888,3 @@ void dvmStopAllocCounting(void)
 {
     gDvm.allocProf.enabled = false;
 }
-
-#endif /*WITH_PROFILER*/

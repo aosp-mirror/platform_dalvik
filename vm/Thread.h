@@ -234,14 +234,12 @@ typedef struct Thread {
     int         allocLimit;
 #endif
 
-#ifdef WITH_PROFILER
-    /* base time for per-thread CPU timing */
+    /* base time for per-thread CPU timing (used by method profiling) */
     bool        cpuClockBaseSet;
     u8          cpuClockBase;
 
     /* memory allocation profiling state */
     AllocProfState allocProf;
-#endif
 
 #ifdef WITH_JNI_STACK_CHECK
     u4          stackCrc;

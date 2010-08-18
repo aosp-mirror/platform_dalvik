@@ -594,9 +594,8 @@ struct Method {
      */
     const RegisterMap* registerMap;
 
-#ifdef WITH_PROFILER
+    /* set if method was called during method profiling */
     bool            inProfile;
-#endif
 };
 
 

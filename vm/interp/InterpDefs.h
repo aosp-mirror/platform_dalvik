@@ -130,14 +130,10 @@ typedef struct InterpState {
     volatile int*   pSelfSuspendCount;
     /* Biased base of GC's card table */
     u1*             cardTable;
-#if defined(WITH_DEBUGGER)
     /* points at gDvm.debuggerActive, or NULL if debugger not enabled */
     volatile u1*    pDebuggerActive;
-#endif
-#if defined(WITH_PROFILER)
     /* points at gDvm.activeProfilers */
     volatile int*   pActiveProfilers;
-#endif
     /* ----------------------------------------------------------------------
      */
 
@@ -167,9 +163,7 @@ typedef struct InterpState {
     int                icRechainCount; // Count down to next rechain request
 #endif
 
-#if defined(WITH_PROFILER) || defined(WITH_DEBUGGER)
     bool        debugIsMethodEntry;     // used for method entry event triggers
-#endif
 #if defined(WITH_TRACKREF_CHECKS)
     int         debugTrackedRefStart;   // tracked refs from prior invocations
 #endif
@@ -239,11 +233,7 @@ Method* dvmInterpFindInterfaceMethod(ClassObject* thisClass, u4 methodIdx,
  */
 static inline bool dvmDebuggerOrProfilerActive(void)
 {
-    return gDvm.debuggerActive
-#if defined(WITH_PROFILER)
-        || gDvm.activeProfilers != 0
-#endif
-        ;
+    return gDvm.debuggerActive || gDvm.activeProfilers != 0;
 }
 
 #if defined(WITH_JIT)
@@ -254,10 +244,8 @@ static inline bool dvmDebuggerOrProfilerActive(void)
 static inline bool dvmJitDebuggerOrProfilerActive()
 {
     return gDvmJit.pProfTable != NULL
-#if defined(WITH_PROFILER)
         || gDvm.activeProfilers != 0
-#endif
-        ||gDvm.debuggerActive;
+        || gDvm.debuggerActive;
 }
 #endif
 

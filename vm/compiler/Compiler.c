@@ -741,16 +741,7 @@ void dvmCompilerStateRefresh()
 
     dvmLockMutex(&gDvmJit.tableLock);
     jitActive = gDvmJit.pProfTable != NULL;
-
-#if defined(WITH_DEBUGGER) && defined(WITH_PROFILER)
     jitActivate = !(gDvm.debuggerActive || (gDvm.activeProfilers > 0));
-#elif defined(WITH_DEBUGGER)
-    jitActivate = !gDvm.debuggerActive;
-#elif defined(WITH_PROFILER)
-    jitActivate = !(gDvm.activeProfilers > 0);
-#else
-    jitActivate = true;
-#endif
 
     if (jitActivate && !jitActive) {
         gDvmJit.pProfTable = gDvmJit.pProfTableCopy;

@@ -1027,10 +1027,8 @@ void dvmHeapSweepUnmarkedObjects(GcMode mode, bool isConcurrent,
     }
     *numObjects = ctx.numObjects;
     *numBytes = ctx.numBytes;
-#ifdef WITH_PROFILER
     if (gDvm.allocProf.enabled) {
         gDvm.allocProf.freeCount += ctx.numObjects;
         gDvm.allocProf.freeSize += ctx.numBytes;
     }
-#endif
 }

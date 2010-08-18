@@ -33,8 +33,6 @@
  * portable interpreter(s) and C stubs.
  *
  * Some defines are controlled by the Makefile, e.g.:
- *   WITH_PROFILER
- *   WITH_DEBUGGER
  *   WITH_INSTR_CHECKS
  *   WITH_TRACKREF_CHECKS
  *   EASY_GDB
@@ -339,7 +337,6 @@ static inline void putDoubleToArray(u4* ptr, int idx, double dval)
  *
  * If we're building without debug and profiling support, we never switch.
  */
-#if defined(WITH_PROFILER) || defined(WITH_DEBUGGER)
 #if defined(WITH_JIT)
 # define NEED_INTERP_SWITCH(_current) (                                     \
     (_current == INTERP_STD) ?                                              \
@@ -348,9 +345,6 @@ static inline void putDoubleToArray(u4* ptr, int idx, double dval)
 # define NEED_INTERP_SWITCH(_current) (                                     \
     (_current == INTERP_STD) ?                                              \
         dvmDebuggerOrProfilerActive() : !dvmDebuggerOrProfilerActive() )
-#endif
-#else
-# define NEED_INTERP_SWITCH(_current) (false)
 #endif
 
 /*
@@ -1196,9 +1190,7 @@ bool INTERP_FUNC_NAME(Thread* self, InterpState* interpState)
 #endif
 #if INTERP_TYPE == INTERP_DBG
     bool debugIsMethodEntry = false;
-# if defined(WITH_DEBUGGER) || defined(WITH_PROFILER) // implied by INTERP_DBG??
     debugIsMethodEntry = interpState->debugIsMethodEntry;
-# endif
 #endif
 #if defined(WITH_TRACKREF_CHECKS)
     int debugTrackedRefStart = interpState->debugTrackedRefStart;
@@ -2931,7 +2923,7 @@ OP_END
 
 /* File: c/OP_BREAKPOINT.c */
 HANDLE_OPCODE(OP_BREAKPOINT)
-#if (INTERP_TYPE == INTERP_DBG) && defined(WITH_DEBUGGER)
+#if (INTERP_TYPE == INTERP_DBG)
     {
         /*
          * Restart this instruction with the original opcode.  We do
@@ -3711,7 +3703,7 @@ GOTO_TARGET(returnFromMethod)
 #ifdef EASY_GDB
         debugSaveArea = saveArea;
 #endif
-#if (INTERP_TYPE == INTERP_DBG) && defined(WITH_PROFILER)
+#if (INTERP_TYPE == INTERP_DBG)
         TRACE_METHOD_EXIT(self, curMethod);
 #endif
 
@@ -3788,7 +3780,7 @@ GOTO_TARGET(exceptionThrown)
             exception->clazz->descriptor, curMethod->name,
             dvmLineNumFromPC(curMethod, pc - curMethod->insns));
 
-#if (INTERP_TYPE == INTERP_DBG) && defined(WITH_DEBUGGER)
+#if (INTERP_TYPE == INTERP_DBG)
         /*
          * Tell the debugger about it.
          *
@@ -4084,13 +4076,13 @@ GOTO_TARGET(invokeMethod, bool methodCallRange, const Method* _methodToCall,
 
             DUMP_REGS(methodToCall, newFp, true);   // show input args
 
-#if (INTERP_TYPE == INTERP_DBG) && defined(WITH_DEBUGGER)
+#if (INTERP_TYPE == INTERP_DBG)
             if (gDvm.debuggerActive) {
                 dvmDbgPostLocationEvent(methodToCall, -1,
                     dvmGetThisPtr(curMethod, fp), DBG_METHOD_ENTRY);
             }
 #endif
-#if (INTERP_TYPE == INTERP_DBG) && defined(WITH_PROFILER)
+#if (INTERP_TYPE == INTERP_DBG)
             TRACE_METHOD_ENTER(self, methodToCall);
 #endif
 
@@ -4111,13 +4103,13 @@ GOTO_TARGET(invokeMethod, bool methodCallRange, const Method* _methodToCall,
              */
             (*methodToCall->nativeFunc)(newFp, &retval, methodToCall, self);
 
-#if (INTERP_TYPE == INTERP_DBG) && defined(WITH_DEBUGGER)
+#if (INTERP_TYPE == INTERP_DBG)
             if (gDvm.debuggerActive) {
                 dvmDbgPostLocationEvent(methodToCall, -1,
                     dvmGetThisPtr(curMethod, fp), DBG_METHOD_EXIT);
             }
 #endif
-#if (INTERP_TYPE == INTERP_DBG) && defined(WITH_PROFILER)
+#if (INTERP_TYPE == INTERP_DBG)
             TRACE_METHOD_EXIT(self, methodToCall);
 #endif
 
@@ -4178,12 +4170,10 @@ bail_switch:
      *
      * TODO: figure out if preserving this makes any sense.
      */
-#if defined(WITH_PROFILER) || defined(WITH_DEBUGGER)
-# if INTERP_TYPE == INTERP_DBG
+#if INTERP_TYPE == INTERP_DBG
     interpState->debugIsMethodEntry = debugIsMethodEntry;
-# else
+#else
     interpState->debugIsMethodEntry = false;
-# endif
 #endif
 
     /* export state changes */

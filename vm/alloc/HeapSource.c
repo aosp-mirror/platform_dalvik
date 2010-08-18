@@ -1581,7 +1581,7 @@ externalAlloc(HeapSource *hs, size_t n, bool grow)
      */
     if (hs->externalBytesAllocated + n <= hs->externalLimit) {
         hs->externalBytesAllocated += n;
-#if defined(WITH_PROFILER) && PROFILE_EXTERNAL_ALLOCATIONS
+#if PROFILE_EXTERNAL_ALLOCATIONS
         if (gDvm.allocProf.enabled) {
             Thread* self = dvmThreadSelf();
             gDvm.allocProf.externalAllocCount++;
@@ -1609,7 +1609,6 @@ externalAlloc(HeapSource *hs, size_t n, bool grow)
 static void
 gcForExternalAlloc(bool collectSoftReferences)
 {
-#ifdef WITH_PROFILER  // even if !PROFILE_EXTERNAL_ALLOCATIONS
     if (gDvm.allocProf.enabled) {
         Thread* self = dvmThreadSelf();
         gDvm.allocProf.gcCount++;
@@ -1617,7 +1616,6 @@ gcForExternalAlloc(bool collectSoftReferences)
             self->allocProf.gcCount++;
         }
     }
-#endif
     dvmCollectGarbageInternal(collectSoftReferences, GC_EXTERNAL_ALLOC);
 }
 
@@ -1699,7 +1697,7 @@ dvmTrackExternalAllocation(size_t n)
         LOGE_HEAP("Out of external memory on a %zu-byte allocation.\n", n);
     }
 
-#if defined(WITH_PROFILER) && PROFILE_EXTERNAL_ALLOCATIONS
+#if PROFILE_EXTERNAL_ALLOCATIONS
     if (gDvm.allocProf.enabled) {
         Thread* self = dvmThreadSelf();
         gDvm.allocProf.failedExternalAllocCount++;
@@ -1746,7 +1744,7 @@ dvmTrackExternalFree(size_t n)
         hs->externalBytesAllocated = 0;
     }
 
-#if defined(WITH_PROFILER) && PROFILE_EXTERNAL_ALLOCATIONS
+#if PROFILE_EXTERNAL_ALLOCATIONS
     if (gDvm.allocProf.enabled) {
         Thread* self = dvmThreadSelf();
         gDvm.allocProf.externalFreeCount++;

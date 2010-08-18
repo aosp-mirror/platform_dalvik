@@ -31,7 +31,6 @@ LOCAL_CFLAGS += -Wall -Wextra -Wno-unused-parameter
 #
 # Optional features.  These may impact the size or performance of the VM.
 #
-LOCAL_CFLAGS += -DWITH_PROFILER -DWITH_DEBUGGER
 
 # 0=full cache, 1/2=reduced, 3=no cache
 LOCAL_CFLAGS += -DDVM_RESOLVER_CACHE=0

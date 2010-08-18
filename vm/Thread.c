@@ -2269,7 +2269,6 @@ void dvmDetachCurrentThread(void)
      */
     android_atomic_release_store(THREAD_VMWAIT, &self->status);
 
-#ifdef WITH_PROFILER
     /*
      * If we're doing method trace profiling, we don't want threads to exit,
      * because if they do we'll end up reusing thread IDs.  This complicates
@@ -2294,7 +2293,6 @@ void dvmDetachCurrentThread(void)
         }
     }
     dvmUnlockMutex(&traceState->startStopLock);
-#endif
 
     dvmLockThreadList(self);
 

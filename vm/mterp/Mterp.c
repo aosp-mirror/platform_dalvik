@@ -82,16 +82,12 @@ bool dvmMterpStd(Thread* self, InterpState* glue)
     glue->ppJitProfTable = &gDvmJit.pProfTable;
     glue->jitThreshold = gDvmJit.threshold;
 #endif
-#if defined(WITH_DEBUGGER)
     if (gDvm.jdwpConfigured) {
         glue->pDebuggerActive = &gDvm.debuggerActive;
     } else {
         glue->pDebuggerActive = NULL;
     }
-#endif
-#if defined(WITH_PROFILER)
     glue->pActiveProfilers = &gDvm.activeProfilers;
-#endif
 
     IF_LOGVV() {
         char* desc = dexProtoCopyMethodDescriptor(&glue->method->prototype);

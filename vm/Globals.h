@@ -598,7 +598,6 @@ struct DvmGlobals {
     enum { kDPOff=0, kDPWarn, kDPErr, kDPAbort } deadlockPredictMode;
 #endif
 
-#ifdef WITH_PROFILER
     /*
      * When a profiler is enabled, this is incremented.  Distinct profilers
      * include "dmtrace" method tracing, emulator method tracing, and
@@ -628,7 +627,8 @@ struct DvmGlobals {
     /*
      * Pointers to the original methods for things that have been inlined.
      * This makes it easy for us to output method entry/exit records for
-     * the method calls we're not actually making.
+     * the method calls we're not actually making.  (Used by method
+     * profiling.)
      */
     Method**    inlinedMethods;
 
@@ -637,7 +637,6 @@ struct DvmGlobals {
      */
     int*        executedInstrCounts;
     bool        instructionCountEnableCount;
-#endif
 
     /*
      * Signal catcher thread (for SIGQUIT).

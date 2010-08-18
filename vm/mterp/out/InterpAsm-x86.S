@@ -9168,7 +9168,6 @@ common_periodicChecks:
     jne     1f
 
 6:
-#if defined(WITH_DEBUGGER) && defined(WITH_PROFILER)
     movl   offGlue_pDebuggerActive(%ecx),%eax      # eax <- &DebuggerActive
     movl   offGlue_pActiveProfilers(%ecx),%ecx     # ecx <- &ActiveProfilers
     testl  %eax,%eax               # debugger enabled?
@@ -9178,17 +9177,6 @@ common_periodicChecks:
     orl    (%ecx),%eax             # eax <- debuggerActive | activeProfilers
     GET_GLUE(%ecx)                 # restore rGLUE
     jne    3f                      # one or both active - switch interp
-#elif defined(WITH_DEBUGGER)
-    movl   offGlue_pDebuggerActive(%ecx),%eax      # eax <- &DebuggerActive
-    testl  %eax,%eax
-    je     5f
-    cmpl   $0,(%eax)              # debugger active?
-    jne    3f                      # switch interp if so
-#elif defined(WITH_PROFILER)
-    movl   offGlue_pActiveProfilers(%ecx),%eax     # eax <- &ActiveProfilers
-    cmpl   $0,(%eax)              # profiler active?
-    jne    3f                      # switch interp if so
-#endif
 
 5:
     ret
@@ -9219,11 +9207,7 @@ common_periodicChecks:
      * Need to check to see if debugger or profiler flags got set
      * while we were suspended.
      */
-#if defined(WITH_DEBUGGER) || defined(WITH_PROFILER)
-     jmp    6b
-#elif
-    ret
-#endif
+    jmp    6b
 
     /* Switch interpreters */
     /* Note: %ebx contains the 16-bit word offset to be applied to rPC to

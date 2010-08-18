@@ -224,7 +224,6 @@ Object *dvmGetNextHeapWorkerObject(HeapWorkerOperation *op)
  */
 static void gcForMalloc(bool collectSoftReferences)
 {
-#ifdef WITH_PROFILER
     if (gDvm.allocProf.enabled) {
         Thread* self = dvmThreadSelf();
         gDvm.allocProf.gcCount++;
@@ -232,7 +231,6 @@ static void gcForMalloc(bool collectSoftReferences)
             self->allocProf.gcCount++;
         }
     }
-#endif
     /* This may adjust the soft limit as a side-effect.
      */
     LOGD_HEAP("dvmMalloc initiating GC%s\n",
@@ -478,7 +476,6 @@ void* dvmMalloc(size_t size, int flags)
             }
         }
 
-#ifdef WITH_PROFILER
         if (gDvm.allocProf.enabled) {
             Thread* self = dvmThreadSelf();
             gDvm.allocProf.allocCount++;
@@ -488,12 +485,10 @@ void* dvmMalloc(size_t size, int flags)
                 self->allocProf.allocSize += size;
             }
         }
-#endif
     } else {
         /* The allocation failed.
          */
 
-#ifdef WITH_PROFILER
         if (gDvm.allocProf.enabled) {
             Thread* self = dvmThreadSelf();
             gDvm.allocProf.failedAllocCount++;
@@ -503,7 +498,6 @@ void* dvmMalloc(size_t size, int flags)
                 self->allocProf.failedAllocSize += size;
             }
         }
-#endif
     }
 
     dvmUnlockHeap();
@@ -662,9 +656,7 @@ void dvmCollectGarbageInternal(bool clearSoftRefs, GcReason reason)
         verifyRootsAndHeap();
     }
 
-#ifdef WITH_PROFILER
     dvmMethodTraceGCBegin();
-#endif
 
 #if WITH_HPROF
 
@@ -873,9 +865,7 @@ void dvmCollectGarbageInternal(bool clearSoftRefs, GcReason reason)
      */
     dvmScheduleHeapSourceTrim(5);  // in seconds
 
-#ifdef WITH_PROFILER
     dvmMethodTraceGCEnd();
-#endif
     LOGV_HEAP("GC finished");
 
     gcHeap->gcRunning = false;

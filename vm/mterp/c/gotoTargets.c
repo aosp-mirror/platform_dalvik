@@ -546,7 +546,7 @@ GOTO_TARGET(returnFromMethod)
 #ifdef EASY_GDB
         debugSaveArea = saveArea;
 #endif
-#if (INTERP_TYPE == INTERP_DBG) && defined(WITH_PROFILER)
+#if (INTERP_TYPE == INTERP_DBG)
         TRACE_METHOD_EXIT(self, curMethod);
 #endif
 
@@ -623,7 +623,7 @@ GOTO_TARGET(exceptionThrown)
             exception->clazz->descriptor, curMethod->name,
             dvmLineNumFromPC(curMethod, pc - curMethod->insns));
 
-#if (INTERP_TYPE == INTERP_DBG) && defined(WITH_DEBUGGER)
+#if (INTERP_TYPE == INTERP_DBG)
         /*
          * Tell the debugger about it.
          *
@@ -919,13 +919,13 @@ GOTO_TARGET(invokeMethod, bool methodCallRange, const Method* _methodToCall,
 
             DUMP_REGS(methodToCall, newFp, true);   // show input args
 
-#if (INTERP_TYPE == INTERP_DBG) && defined(WITH_DEBUGGER)
+#if (INTERP_TYPE == INTERP_DBG)
             if (gDvm.debuggerActive) {
                 dvmDbgPostLocationEvent(methodToCall, -1,
                     dvmGetThisPtr(curMethod, fp), DBG_METHOD_ENTRY);
             }
 #endif
-#if (INTERP_TYPE == INTERP_DBG) && defined(WITH_PROFILER)
+#if (INTERP_TYPE == INTERP_DBG)
             TRACE_METHOD_ENTER(self, methodToCall);
 #endif
 
@@ -946,13 +946,13 @@ GOTO_TARGET(invokeMethod, bool methodCallRange, const Method* _methodToCall,
              */
             (*methodToCall->nativeFunc)(newFp, &retval, methodToCall, self);
 
-#if (INTERP_TYPE == INTERP_DBG) && defined(WITH_DEBUGGER)
+#if (INTERP_TYPE == INTERP_DBG)
             if (gDvm.debuggerActive) {
                 dvmDbgPostLocationEvent(methodToCall, -1,
                     dvmGetThisPtr(curMethod, fp), DBG_METHOD_EXIT);
             }
 #endif
-#if (INTERP_TYPE == INTERP_DBG) && defined(WITH_PROFILER)
+#if (INTERP_TYPE == INTERP_DBG)
             TRACE_METHOD_EXIT(self, methodToCall);
 #endif
 

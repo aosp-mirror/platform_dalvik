@@ -127,8 +127,7 @@ enum {
 /*
  * Call these when a method enters or exits.
  */
-#ifdef WITH_PROFILER
-# define TRACE_METHOD_ENTER(_self, _method)                                 \
+#define TRACE_METHOD_ENTER(_self, _method)                                 \
     do {                                                                    \
         if (gDvm.activeProfilers != 0) {                                    \
             if (gDvm.methodTrace.traceEnabled)                              \
@@ -137,7 +136,7 @@ enum {
                 dvmEmitEmulatorTrace(_method, METHOD_TRACE_ENTER);          \
         }                                                                   \
     } while(0);
-# define TRACE_METHOD_EXIT(_self, _method)                                  \
+#define TRACE_METHOD_EXIT(_self, _method)                                  \
     do {                                                                    \
         if (gDvm.activeProfilers != 0) {                                    \
             if (gDvm.methodTrace.traceEnabled)                              \
@@ -146,7 +145,7 @@ enum {
                 dvmEmitEmulatorTrace(_method, METHOD_TRACE_EXIT);           \
         }                                                                   \
     } while(0);
-# define TRACE_METHOD_UNROLL(_self, _method)                                \
+#define TRACE_METHOD_UNROLL(_self, _method)                                \
     do {                                                                    \
         if (gDvm.activeProfilers != 0) {                                    \
             if (gDvm.methodTrace.traceEnabled)                              \
@@ -155,11 +154,6 @@ enum {
                 dvmEmitEmulatorTrace(_method, METHOD_TRACE_UNROLL);         \
         }                                                                   \
     } while(0);
-#else
-# define TRACE_METHOD_ENTER(_self, _method)     ((void) 0)
-# define TRACE_METHOD_EXIT(_self, _method)      ((void) 0)
-# define TRACE_METHOD_UNROLL(_self, _method)    ((void) 0)
-#endif
 
 void dvmMethodTraceAdd(struct Thread* self, const Method* method, int action);
 void dvmEmitEmulatorTrace(const Method* method, int action);
