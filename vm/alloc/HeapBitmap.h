@@ -50,8 +50,7 @@
     static inline p __attribute__((always_inline)); \
     static inline p
 
-
-struct HeapBitmap {
+typedef struct {
     /* The bitmap data, which points to an mmap()ed area of zeroed
      * anonymous memory.
      */
@@ -78,8 +77,7 @@ struct HeapBitmap {
      * to a set bit.  If there are no bits set, (max < base).
      */
     uintptr_t max;
-};
-typedef struct HeapBitmap HeapBitmap;
+} HeapBitmap;
 
 typedef void BitmapCallback(size_t numPtrs, void **ptrs,
                             const void *finger, void *arg);
