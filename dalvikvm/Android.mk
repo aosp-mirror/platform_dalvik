@@ -53,12 +53,8 @@ include $(BUILD_EXECUTABLE)
 ifeq ($(WITH_HOST_DALVIK),true)
 
     include $(CLEAR_VARS)
-
     LOCAL_SRC_FILES := $(dalvikvm_src_files)
     LOCAL_C_INCLUDES := $(dalvikvm_c_includes)
-
-    LOCAL_STATIC_LIBRARIES := \
-        libdvm-host
 
     ifeq ($(HOST_OS)-$(HOST_ARCH),darwin-x86)
         # OS X comes with all these libraries, so there is no need
@@ -66,15 +62,12 @@ ifeq ($(WITH_HOST_DALVIK),true)
         # and libcrypto.
         LOCAL_LDLIBS := -lffi -lssl -lcrypto -lz -lsqlite3
     else
-        # In this case, include libssl and libz, but libffi isn't listed:
-        # The recommendation is that host builds should always either
-        # have sufficient custom code so that libffi isn't needed at all,
-        # or they should use the platform's provided libffi (as is done
-        # for darwin-x86 above).
-        LOCAL_STATIC_LIBRARIES += libssl libz
+        LOCAL_LDLIBS += -ldl -lpthread
+        LOCAL_SHARED_LIBRARIES += libdvm libcrypto libicuuc libicui18n libssl
+#        LOCAL_STATIC_LIBRARIES += libcutils liblog libdex libexpat libnativehelper libutils libz
     endif
 
-    LOCAL_MODULE := dalvikvm-host
+    LOCAL_MODULE := dalvikvm
 
     include $(BUILD_HOST_EXECUTABLE)
 
