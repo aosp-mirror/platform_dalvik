@@ -362,9 +362,6 @@ bool dvmJniStartup(void)
     }
     gDvm.classJavaNioReadWriteDirectByteBuffer = readWriteBufferClass;
     gDvm.classOrgApacheHarmonyNioInternalDirectBuffer = directBufferClass;
-    /* need a global reference for extended CheckJNI tests */
-    gDvm.jclassOrgApacheHarmonyNioInternalDirectBuffer =
-        addGlobalReference((Object*) directBufferClass);
 
     /*
      * We need a Method* here rather than a vtable offset, because
@@ -379,15 +376,6 @@ bool dvmJniStartup(void)
         return false;
     }
     gDvm.methOrgApacheHarmonyNioInternalDirectBuffer_getEffectiveAddress = meth;
-
-    meth = dvmFindVirtualMethodByDescriptor(platformAddressClass,
-                "toLong", "()J");
-    if (meth == NULL) {
-        LOGE("Unable to find PlatformAddress.toLong\n");
-        return false;
-    }
-    gDvm.voffOrgApacheHarmonyLuniPlatformPlatformAddress_toLong =
-        meth->methodIndex;
 
     meth = dvmFindDirectMethodByDescriptor(platformAddressFactoryClass,
                 "on",
@@ -3745,7 +3733,7 @@ static void* GetDirectBufferAddress(JNIEnv* env, jobject jbuf)
 
     /*
      * Extract the address from the PlatformAddress object.  Instead of
-     * calling the toLong() method, just grab the field directly.  This
+     * calling the toInt() method, just grab the field directly.  This
      * is faster but more fragile.
      */
     result = (void*) dvmGetFieldInt(platformAddr,
