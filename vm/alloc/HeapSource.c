@@ -717,7 +717,6 @@ void dvmHeapSourceGetObjectBitmaps(HeapBitmap liveBits[], HeapBitmap markBits[],
     assert(numHeaps == hs->numHeaps);
     for (i = 0; i < hs->numHeaps; ++i) {
         base = (uintptr_t)hs->heaps[i].base;
-        assert(hs->markBits.max >= hs->liveBits.max);
         /* -1 because limit is exclusive but max is inclusive. */
         max = MIN((uintptr_t)hs->heaps[i].limit - 1, hs->markBits.max);
         aliasBitmap(&liveBits[i], &hs->liveBits, base, max);
