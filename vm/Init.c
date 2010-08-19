@@ -115,7 +115,6 @@ static void dvmUsage(const char* progName)
     dvmFprintf(stderr, "  -Xdeadlockpredict:{off,warn,err,abort}\n");
     dvmFprintf(stderr, "  -Xstacktracefile:<filename>\n");
     dvmFprintf(stderr, "  -Xgc:[no]precise\n");
-    dvmFprintf(stderr, "  -Xgc:[no]overwritefree\n");
     dvmFprintf(stderr, "  -Xgc:[no]preverify\n");
     dvmFprintf(stderr, "  -Xgc:[no]postverify\n");
     dvmFprintf(stderr, "  -Xgc:[no]concurrent\n");
@@ -138,12 +137,8 @@ static void dvmUsage(const char* progName)
 #endif
     dvmFprintf(stderr, "\n");
     dvmFprintf(stderr, "Configured with:"
-#ifdef WITH_DEBUGGER
         " debugger"
-#endif
-#ifdef WITH_PROFILER
         " profiler"
-#endif
 #ifdef WITH_MONITOR_TRACKING
         " monitor_tracking"
 #endif
@@ -171,7 +166,7 @@ static void dvmUsage(const char* progName)
 #ifdef WITH_EXTRA_GC_CHECKS
         " extra_gc_checks"
 #endif
-#ifdef WITH_DALVIK_ASSERT
+#if !defined(NDEBUG) && defined(WITH_DALVIK_ASSERT)
         " dalvik_assert"
 #endif
 #ifdef WITH_JNI_STACK_CHECK
@@ -975,10 +970,6 @@ static int dvmProcessOptions(int argc, const char* const argv[],
                 gDvm.preciseGc = true;
             else if (strcmp(argv[i] + 5, "noprecise") == 0)
                 gDvm.preciseGc = false;
-            else if (strcmp(argv[i] + 5, "overwritefree") == 0)
-                gDvm.overwriteFree = true;
-            else if (strcmp(argv[i] + 5, "nooverwritefree") == 0)
-                gDvm.overwriteFree = false;
             else if (strcmp(argv[i] + 5, "preverify") == 0)
                 gDvm.preVerify = true;
             else if (strcmp(argv[i] + 5, "nopreverify") == 0)
@@ -1223,10 +1214,8 @@ int dvmStartup(int argc, const char* const argv[], bool ignoreUnrecognized,
         goto fail;
     if (!dvmReflectStartup())
         goto fail;
-#ifdef WITH_PROFILER
     if (!dvmProfilingStartup())
         goto fail;
-#endif
 
     /* make sure we got these [can this go away?] */
     assert(gDvm.classJavaLangClass != NULL);
@@ -1461,11 +1450,6 @@ static bool dvmInitJDWP(void)
 {
     assert(!gDvm.zygote);
 
-#ifndef WITH_DEBUGGER
-    LOGI("Debugger support not compiled into VM\n");
-    return false;
-#endif
-
     /*
      * Init JDWP if the debugger is enabled.  This may connect out to a
      * debugger, passively listen for a debugger, or block waiting for a
@@ -1641,9 +1625,7 @@ void dvmShutdown(void)
 
     dvmDebuggerShutdown();
     dvmReflectShutdown();
-#ifdef WITH_PROFILER
     dvmProfilingShutdown();
-#endif
     dvmJniShutdown();
     dvmStringInternShutdown();
     dvmExceptionShutdown();

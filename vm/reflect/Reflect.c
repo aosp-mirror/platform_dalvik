@@ -1100,8 +1100,6 @@ bool dvmUnwrapPrimitive(Object* value, ClassObject* returnType,
                 value->clazz->descriptor, returnType->descriptor);
             return false;
         }
-        /* Never on the heap, so no write barrier needed. */
-        assert(!dvmIsValidObjectAddress(pResult));
         pResult->l = value;
         return true;
     } else if (typeIndex == PRIM_VOID) {

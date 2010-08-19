@@ -21,9 +21,7 @@
  * facilitates switching between them.  The standard interpreter may
  * use the "fast" or "portable" implementation.
  *
- * Some debugger support functions are included here.  Ideally their
- * entire existence would be "#ifdef WITH_DEBUGGER", but we're not that
- * aggressive in other parts of the code yet.
+ * Some debugger support functions are included here.
  */
 #include "Dalvik.h"
 #include "interp/InterpDefs.h"
@@ -44,12 +42,8 @@ static void dvmBreakpointSetFree(BreakpointSet* pSet);
  */
 bool dvmBreakpointStartup(void)
 {
-#ifdef WITH_DEBUGGER
     gDvm.breakpointSet = dvmBreakpointSetAlloc();
     return (gDvm.breakpointSet != NULL);
-#else
-    return true;
-#endif
 }
 
 /*
@@ -57,13 +51,10 @@ bool dvmBreakpointStartup(void)
  */
 void dvmBreakpointShutdown(void)
 {
-#ifdef WITH_DEBUGGER
     dvmBreakpointSetFree(gDvm.breakpointSet);
-#endif
 }
 
 
-#ifdef WITH_DEBUGGER
 /*
  * This represents a breakpoint inserted in the instruction stream.
  *
@@ -376,7 +367,6 @@ static void dvmBreakpointSetFlush(BreakpointSet* pSet, ClassObject* clazz)
         }
     }
 }
-#endif /*WITH_DEBUGGER*/
 
 
 /*
@@ -384,7 +374,6 @@ static void dvmBreakpointSetFlush(BreakpointSet* pSet, ClassObject* clazz)
  */
 void dvmInitBreakpoints(void)
 {
-#ifdef WITH_DEBUGGER
     /* quick sanity check */
     BreakpointSet* pSet = gDvm.breakpointSet;
     dvmBreakpointSetLock(pSet);
@@ -393,9 +382,6 @@ void dvmInitBreakpoints(void)
         /* generally not good, but we can keep going */
     }
     dvmBreakpointSetUnlock(pSet);
-#else
-    assert(false);
-#endif
 }
 
 /*
@@ -414,14 +400,10 @@ void dvmInitBreakpoints(void)
  */
 void dvmAddBreakAddr(Method* method, unsigned int instrOffset)
 {
-#ifdef WITH_DEBUGGER
     BreakpointSet* pSet = gDvm.breakpointSet;
     dvmBreakpointSetLock(pSet);
     dvmBreakpointSetAdd(pSet, method, instrOffset);
     dvmBreakpointSetUnlock(pSet);
-#else
-    assert(false);
-#endif
 }
 
 /*
@@ -436,20 +418,22 @@ void dvmAddBreakAddr(Method* method, unsigned int instrOffset)
  */
 void dvmClearBreakAddr(Method* method, unsigned int instrOffset)
 {
-#ifdef WITH_DEBUGGER
     BreakpointSet* pSet = gDvm.breakpointSet;
     dvmBreakpointSetLock(pSet);
     dvmBreakpointSetRemove(pSet, method, instrOffset);
     dvmBreakpointSetUnlock(pSet);
-
-#else
-    assert(false);
-#endif
 }
 
-#ifdef WITH_DEBUGGER
 /*
  * Get the original opcode from under a breakpoint.
+ *
+ * On SMP hardware it's possible one core might try to execute a breakpoint
+ * after another core has cleared it.  We need to handle the case where
+ * there's no entry in the breakpoint set.  (The memory barriers in the
+ * locks and in the breakpoint update code should ensure that, once we've
+ * observed the absence of a breakpoint entry, we will also now observe
+ * the restoration of the original opcode.  The fact that we're holding
+ * the lock prevents other threads from confusing things further.)
  */
 u1 dvmGetOriginalOpCode(const u2* addr)
 {
@@ -488,7 +472,6 @@ void dvmFlushBreakpoints(ClassObject* clazz)
     dvmBreakpointSetFlush(pSet, clazz);
     dvmBreakpointSetUnlock(pSet);
 }
-#endif
 
 /*
  * Add a single step event.  Currently this is a global item.
@@ -501,7 +484,6 @@ void dvmFlushBreakpoints(ClassObject* clazz)
  */
 bool dvmAddSingleStep(Thread* thread, int size, int depth)
 {
-#ifdef WITH_DEBUGGER
     StepControl* pCtrl = &gDvm.stepControl;
 
     if (pCtrl->active && thread != pCtrl->thread) {
@@ -597,10 +579,6 @@ bool dvmAddSingleStep(Thread* thread, int size, int depth)
         dvmJdwpStepSizeStr(pCtrl->size));
 
     return true;
-#else
-    assert(false);
-    return false;
-#endif
 }
 
 /*
@@ -608,13 +586,9 @@ bool dvmAddSingleStep(Thread* thread, int size, int depth)
  */
 void dvmClearSingleStep(Thread* thread)
 {
-#ifdef WITH_DEBUGGER
     UNUSED_PARAMETER(thread);
 
     gDvm.stepControl.active = false;
-#else
-    assert(false);
-#endif
 }
 
 
@@ -1299,9 +1273,7 @@ void dvmInterpret(Thread* self, const Method* method, JValue* pResult)
     interpState.debugTrackedRefStart =
         dvmReferenceTableEntries(&self->internalLocalRefTable);
 #endif
-#if defined(WITH_PROFILER) || defined(WITH_DEBUGGER)
     interpState.debugIsMethodEntry = true;
-#endif
 #if defined(WITH_JIT)
     dvmJitCalleeSave(interpState.calleeSave);
     /* Initialize the state to kJitNot */
@@ -1372,19 +1344,15 @@ void dvmInterpret(Thread* self, const Method* method, JValue* pResult)
             LOGVV("threadid=%d: interp STD\n", self->threadId);
             change = (*stdInterp)(self, &interpState);
             break;
-#if defined(WITH_PROFILER) || defined(WITH_DEBUGGER) || defined(WITH_JIT)
         case INTERP_DBG:
             LOGVV("threadid=%d: interp DBG\n", self->threadId);
             change = dvmInterpretDbg(self, &interpState);
             break;
-#endif
         default:
             dvmAbort();
         }
     }
 
-    /* Never on the heap, so no write barrier needed. */
-    assert(!dvmIsValidObjectAddress(pResult));
     *pResult = interpState.retval;
 #if defined(WITH_JIT)
     dvmJitCalleeRestore(interpState.calleeSave);

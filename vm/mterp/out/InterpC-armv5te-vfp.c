@@ -33,8 +33,6 @@
  * portable interpreter(s) and C stubs.
  *
  * Some defines are controlled by the Makefile, e.g.:
- *   WITH_PROFILER
- *   WITH_DEBUGGER
  *   WITH_INSTR_CHECKS
  *   WITH_TRACKREF_CHECKS
  *   EASY_GDB
@@ -339,7 +337,6 @@ static inline void putDoubleToArray(u4* ptr, int idx, double dval)
  *
  * If we're building without debug and profiling support, we never switch.
  */
-#if defined(WITH_PROFILER) || defined(WITH_DEBUGGER)
 #if defined(WITH_JIT)
 # define NEED_INTERP_SWITCH(_current) (                                     \
     (_current == INTERP_STD) ?                                              \
@@ -348,9 +345,6 @@ static inline void putDoubleToArray(u4* ptr, int idx, double dval)
 # define NEED_INTERP_SWITCH(_current) (                                     \
     (_current == INTERP_STD) ?                                              \
         dvmDebuggerOrProfilerActive() : !dvmDebuggerOrProfilerActive() )
-#endif
-#else
-# define NEED_INTERP_SWITCH(_current) (false)
 #endif
 
 /*

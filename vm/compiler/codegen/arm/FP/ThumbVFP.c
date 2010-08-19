@@ -23,9 +23,13 @@ extern void dvmCompilerFlushRegWideForV5TEVFP(CompilationUnit *cUnit,
                                               int reg1, int reg2);
 extern void dvmCompilerFlushRegForV5TEVFP(CompilationUnit *cUnit, int reg);
 
-/* First, flush any registers associated with this value */
-static void loadValueAddress(CompilationUnit *cUnit, RegLocation rlSrc,
-                             int rDest)
+/*
+ * Take the address of a Dalvik register and store it into rDest.
+ * Clobber any live values associated either with the Dalvik value
+ * or the target register and lock the target fixed register.
+ */
+static void loadValueAddressDirect(CompilationUnit *cUnit, RegLocation rlSrc,
+                                   int rDest)
 {
      rlSrc = rlSrc.wide ? dvmCompilerUpdateLocWide(cUnit, rlSrc) :
                           dvmCompilerUpdateLoc(cUnit, rlSrc);
@@ -37,6 +41,8 @@ static void loadValueAddress(CompilationUnit *cUnit, RegLocation rlSrc,
              dvmCompilerFlushRegForV5TEVFP(cUnit, rlSrc.lowReg);
          }
      }
+     dvmCompilerClobber(cUnit, rDest);
+     dvmCompilerLockTemp(cUnit, rDest);
      opRegRegImm(cUnit, kOpAdd, rDest, rFP,
                  dvmCompilerS2VReg(cUnit, rlSrc.sRegLow) << 2);
 }
@@ -46,7 +52,7 @@ static bool genInlineSqrt(CompilationUnit *cUnit, MIR *mir)
     RegLocation rlSrc = dvmCompilerGetSrcWide(cUnit, mir, 0, 1);
     RegLocation rlResult = LOC_C_RETURN_WIDE;
     RegLocation rlDest = LOC_DALVIK_RETURN_VAL_WIDE;
-    loadValueAddress(cUnit, rlSrc, r2);
+    loadValueAddressDirect(cUnit, rlSrc, r2);
     genDispatchToHandler(cUnit, TEMPLATE_SQRT_DOUBLE_VFP);
     storeValueWide(cUnit, rlDest, rlResult);
     return false;
@@ -95,11 +101,9 @@ static bool genArithOpFloat(CompilationUnit *cUnit, MIR *mir,
         default:
             return true;
     }
-    loadValueAddress(cUnit, rlDest, r0);
-    dvmCompilerClobber(cUnit, r0);
-    loadValueAddress(cUnit, rlSrc1, r1);
-    dvmCompilerClobber(cUnit, r1);
-    loadValueAddress(cUnit, rlSrc2, r2);
+    loadValueAddressDirect(cUnit, rlDest, r0);
+    loadValueAddressDirect(cUnit, rlSrc1, r1);
+    loadValueAddressDirect(cUnit, rlSrc2, r2);
     genDispatchToHandler(cUnit, opCode);
     rlDest = dvmCompilerUpdateLoc(cUnit, rlDest);
     if (rlDest.location == kLocPhysReg) {
@@ -140,11 +144,9 @@ static bool genArithOpDouble(CompilationUnit *cUnit, MIR *mir,
         default:
             return true;
     }
-    loadValueAddress(cUnit, rlDest, r0);
-    dvmCompilerClobber(cUnit, r0);
-    loadValueAddress(cUnit, rlSrc1, r1);
-    dvmCompilerClobber(cUnit, r1);
-    loadValueAddress(cUnit, rlSrc2, r2);
+    loadValueAddressDirect(cUnit, rlDest, r0);
+    loadValueAddressDirect(cUnit, rlSrc1, r1);
+    loadValueAddressDirect(cUnit, rlSrc2, r2);
     genDispatchToHandler(cUnit, opCode);
     rlDest = dvmCompilerUpdateLocWide(cUnit, rlDest);
     if (rlDest.location == kLocPhysReg) {
@@ -213,9 +215,8 @@ static bool genConversion(CompilationUnit *cUnit, MIR *mir)
     } else {
         rlDest = dvmCompilerGetDest(cUnit, mir, 0);
     }
-    loadValueAddress(cUnit, rlDest, r0);
-    dvmCompilerClobber(cUnit, r0);
-    loadValueAddress(cUnit, rlSrc, r1);
+    loadValueAddressDirect(cUnit, rlDest, r0);
+    loadValueAddressDirect(cUnit, rlSrc, r1);
     genDispatchToHandler(cUnit, template);
     if (rlDest.wide) {
         rlDest = dvmCompilerUpdateLocWide(cUnit, rlDest);
@@ -252,9 +253,8 @@ static bool genCmpFP(CompilationUnit *cUnit, MIR *mir, RegLocation rlDest,
         default:
             return true;
     }
-    loadValueAddress(cUnit, rlSrc1, r0);
-    dvmCompilerClobber(cUnit, r0);
-    loadValueAddress(cUnit, rlSrc2, r1);
+    loadValueAddressDirect(cUnit, rlSrc1, r0);
+    loadValueAddressDirect(cUnit, rlSrc2, r1);
     genDispatchToHandler(cUnit, template);
     storeValue(cUnit, rlDest, rlResult);
     return false;

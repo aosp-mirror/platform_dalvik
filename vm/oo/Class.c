@@ -1123,17 +1123,8 @@ static void removeClassFromHash(ClassObject* clazz)
  */
 void dvmSetClassSerialNumber(ClassObject* clazz)
 {
-    u4 oldValue, newValue;
-
     assert(clazz->serialNumber == 0);
-
-    do {
-        oldValue = gDvm.classSerialNumber;
-        newValue = oldValue + 1;
-    } while (android_atomic_release_cas(oldValue, newValue,
-            &gDvm.classSerialNumber) != 0);
-
-    clazz->serialNumber = (u4) oldValue;
+    clazz->serialNumber = android_atomic_inc(&gDvm.classSerialNumber);
 }
 
 
@@ -1260,9 +1251,7 @@ static ClassObject* findClassFromLoaderNoInit(const char* descriptor,
         goto bail;
     }
 
-#ifdef WITH_PROFILER
     dvmMethodTraceClassPrepBegin();
-#endif
 
     /*
      * Invoke loadClass().  This will probably result in a couple of
@@ -1275,9 +1264,7 @@ static ClassObject* findClassFromLoaderNoInit(const char* descriptor,
     dvmCallMethod(self, loadClass, loader, &result, nameObj);
     clazz = (ClassObject*) result.l;
 
-#ifdef WITH_PROFILER
     dvmMethodTraceClassPrepEnd();
-#endif
 
     excep = dvmGetException(self);
     if (excep != NULL) {
@@ -1380,9 +1367,7 @@ static ClassObject* findClassNoInit(const char* descriptor, Object* loader,
 {
     Thread* self = dvmThreadSelf();
     ClassObject* clazz;
-#ifdef WITH_PROFILER
     bool profilerNotified = false;
-#endif
 
     if (loader != NULL) {
         LOGVV("#### findClassNoInit(%s,%p,%p)\n", descriptor, loader,
@@ -1412,10 +1397,8 @@ static ClassObject* findClassNoInit(const char* descriptor, Object* loader,
     if (clazz == NULL) {
         const DexClassDef* pClassDef;
 
-#ifdef WITH_PROFILER
         dvmMethodTraceClassPrepBegin();
         profilerNotified = true;
-#endif
 
 #if LOG_CLASS_LOADING
         u8 startTime = dvmGetThreadCpuTimeNsec();
@@ -1444,7 +1427,10 @@ static ClassObject* findClassNoInit(const char* descriptor, Object* loader,
         clazz = loadClassFromDex(pDvmDex, pClassDef, loader);
         if (dvmCheckException(self)) {
             /* class was found but had issues */
-            dvmReleaseTrackedAlloc((Object*) clazz, NULL);
+            if (clazz != NULL) {
+                dvmFreeClassInnards(clazz);
+                dvmReleaseTrackedAlloc((Object*) clazz, NULL);
+            }
             goto bail;
         }
 
@@ -1476,6 +1462,7 @@ static ClassObject* findClassNoInit(const char* descriptor, Object* loader,
 
             /* Let the GC free the class.
              */
+            dvmFreeClassInnards(clazz);
             dvmReleaseTrackedAlloc((Object*) clazz, NULL);
 
             /* Grab the winning class.
@@ -1639,10 +1626,8 @@ got_class:
     }
 
 bail:
-#ifdef WITH_PROFILER
     if (profilerNotified)
         dvmMethodTraceClassPrepEnd();
-#endif
     assert(clazz != NULL || dvmCheckException(self));
     return clazz;
 }
@@ -4314,10 +4299,8 @@ noverify:
         SET_CLASS_FLAG(clazz, CLASS_ISOPTIMIZED);
     }
 
-#ifdef WITH_DEBUGGER
     /* update instruction stream now that verification + optimization is done */
     dvmFlushBreakpoints(clazz);
-#endif
 
     if (clazz->status == CLASS_INITIALIZED)
         goto bail_unlock;
@@ -4392,12 +4375,10 @@ noverify:
         return false;
     }
 
-#ifdef WITH_PROFILER
     u8 startWhen = 0;
     if (gDvm.allocProf.enabled) {
         startWhen = dvmGetRelativeTimeNsec();
     }
-#endif
 
     /*
      * We're ready to go, and have exclusive access to the class.
@@ -4491,7 +4472,6 @@ noverify:
         clazz->status = CLASS_INITIALIZED;
         LOGVV("Initialized class: %s\n", clazz->descriptor);
 
-#ifdef WITH_PROFILER
         /*
          * Update alloc counters.  TODO: guard with mutex.
          */
@@ -4502,7 +4482,6 @@ noverify:
             gDvm.allocProf.classInitCount++;
             self->allocProf.classInitCount++;
         }
-#endif
     }
 
 bail_notify:

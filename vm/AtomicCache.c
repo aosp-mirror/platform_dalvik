@@ -135,24 +135,25 @@ void dvmUpdateAtomicCache(u4 key1, u4 key2, u4 value, AtomicCacheEntry* pEntry,
      * while we work.  We use memory barriers to ensure that the state
      * is always consistent when the version number is even.
      */
-    pEntry->version++;
-    ANDROID_MEMBAR_FULL();
+    u4 newVersion = (firstVersion | ATOMIC_LOCK_FLAG) + 1;
+    assert((newVersion & 0x01) == 1);
 
-    pEntry->key1 = key1;
+    pEntry->version = newVersion;
+
+    android_atomic_release_store(key1, (int32_t*) &pEntry->key1);
     pEntry->key2 = key2;
     pEntry->value = value;
 
-    ANDROID_MEMBAR_FULL();
-    pEntry->version++;
+    newVersion++;
+    android_atomic_release_store(newVersion, (int32_t*) &pEntry->version);
 
     /*
      * Clear the lock flag.  Nobody else should have been able to modify
      * pEntry->version, so if this fails the world is broken.
      */
-    firstVersion += 2;
-    assert((firstVersion & 0x01) == 0);
+    assert(newVersion == ((firstVersion + 2) | ATOMIC_LOCK_FLAG));
     if (android_atomic_release_cas(
-            firstVersion | ATOMIC_LOCK_FLAG, firstVersion,
+            newVersion, newVersion & ~ATOMIC_LOCK_FLAG,
             (volatile s4*) &pEntry->version) != 0)
     {
         //LOGE("unable to reset the instanceof cache ownership\n");

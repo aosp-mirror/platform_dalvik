@@ -6,6 +6,8 @@ Items requiring attention:
 (hi) "debugger active" test in common_periodicChecks must handle
      the case where glue->pDebuggerActive is a NULL pointer (used to
      skip a memory load when debugger support is completely disabled)
+(hi) WITH_DEBUGGER and WITH_PROFILER are no longer defined (but are
+     assumed to be enabled)
 
 (md) Correct OP_MONITOR_EXIT (need to adjust PC before throw)
 (md) OP_THROW needs to export the PC

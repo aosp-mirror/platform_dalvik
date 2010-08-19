@@ -19,12 +19,10 @@ bail_switch:
      *
      * TODO: figure out if preserving this makes any sense.
      */
-#if defined(WITH_PROFILER) || defined(WITH_DEBUGGER)
-# if INTERP_TYPE == INTERP_DBG
+#if INTERP_TYPE == INTERP_DBG
     interpState->debugIsMethodEntry = debugIsMethodEntry;
-# else
+#else
     interpState->debugIsMethodEntry = false;
-# endif
 #endif
 
     /* export state changes */

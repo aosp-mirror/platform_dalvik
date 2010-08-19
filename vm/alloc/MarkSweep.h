@@ -53,7 +53,8 @@ void dvmHandleSoftRefs(Object **list);
 void dvmClearWhiteRefs(Object **list);
 void dvmHeapScheduleFinalizations(void);
 void dvmHeapFinishMarkStep(void);
-
-void dvmHeapSweepUnmarkedObjects(GcMode mode, int *numFreed, size_t *sizeFreed);
+void dvmHeapSweepSystemWeaks(void);
+void dvmHeapSweepUnmarkedObjects(GcMode mode, bool isConcurrent,
+                                 size_t *numObjects, size_t *numBytes);
 
 #endif  // _DALVIK_ALLOC_MARK_SWEEP

@@ -159,6 +159,8 @@ static void dumpHoistedChecks(CompilationUnit *cUnit)
  * 2) The loop back branch compares the BIV with a constant
  * 3) If it is a count-up loop, the condition is GE/GT, or LE/LT/LEZ/LTZ for
  *    a count-down loop.
+ *
+ * Return false if the loop is not optimizable.
  */
 static bool isLoopOptimizable(CompilationUnit *cUnit)
 {
@@ -173,6 +175,10 @@ static bool isLoopOptimizable(CompilationUnit *cUnit)
         ivInfo = GET_ELEM_N(loopAnalysis->ivList, InductionVariableInfo*, i);
         /* Count up or down loop? */
         if (ivInfo->ssaReg == ivInfo->basicSSAReg) {
+            /* Infinite loop */
+            if (ivInfo->inc == 0) {
+                return false;
+            }
             loopAnalysis->isCountUpLoop = ivInfo->inc > 0;
             break;
         }
@@ -207,11 +213,14 @@ static bool isLoopOptimizable(CompilationUnit *cUnit)
         }
         /*
          * If the comparison is not between the BIV and a loop invariant,
-         * return false.
+         * return false. endReg is loop invariant if one of the following is
+         * true:
+         * - It is not defined in the loop (ie DECODE_SUB returns 0)
+         * - It is reloaded with a constant
          */
         int endReg = dvmConvertSSARegToDalvik(cUnit, branch->ssaRep->uses[1]);
-
-        if (DECODE_SUB(endReg) != 0) {
+        if (DECODE_SUB(endReg) != 0 &&
+            !dvmIsBitSet(cUnit->isConstantV, branch->ssaRep->uses[1])) {
             return false;
         }
         loopAnalysis->endConditionReg = DECODE_REG(endReg);
@@ -457,8 +466,11 @@ static void genHoistedChecks(CompilationUnit *cUnit)
     }
 }
 
-/* Main entry point to do loop optimization */
-void dvmCompilerLoopOpt(CompilationUnit *cUnit)
+/*
+ * Main entry point to do loop optimization.
+ * Return false if sanity checks for loop formation/optimization failed.
+ */
+bool dvmCompilerLoopOpt(CompilationUnit *cUnit)
 {
     LoopAnalysis *loopAnalysis = dvmCompilerNew(sizeof(LoopAnalysis), true);
 
@@ -497,7 +509,7 @@ void dvmCompilerLoopOpt(CompilationUnit *cUnit)
 
     /* If the loop turns out to be non-optimizable, return early */
     if (!isLoopOptimizable(cUnit))
-        return;
+        return false;
 
     loopAnalysis->arrayAccessInfo = dvmCompilerNew(sizeof(GrowableList), true);
     dvmInitGrowableList(loopAnalysis->arrayAccessInfo, 4);
@@ -509,4 +521,5 @@ void dvmCompilerLoopOpt(CompilationUnit *cUnit)
      * header.
      */
     genHoistedChecks(cUnit);
+    return true;
 }

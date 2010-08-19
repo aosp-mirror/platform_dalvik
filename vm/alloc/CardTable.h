@@ -23,10 +23,6 @@
 #ifndef _DALVIK_ALLOC_CARDTABLE
 #define _DALVIK_ALLOC_CARDTABLE
 
-/*
- * TODO: Better documentation of these values pending integration of
- * concurrent collections and the card table.
- */
 #define GC_CARD_SHIFT 7
 #define GC_CARD_SIZE (1 << GC_CARD_SHIFT)
 #define GC_CARD_CLEAN 0
@@ -65,12 +61,8 @@ void *dvmAddrFromCard(const u1 *card);
 void dvmMarkCard(const void *addr);
 
 /*
- * dvmAbort if any clean object in the Zygote heap contains a
- * reference to the application heap, or if the immune limit is not as
- * expected.
+ * Verifies that all gray objects are on a dirty card.
  */
 void dvmVerifyCardTable(void);
-
-/* TODO: Clearing, querying, and iterating over the card table. */
 
 #endif /*_DALVIK_ALLOC_CARDTABLE*/

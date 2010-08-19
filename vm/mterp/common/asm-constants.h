@@ -83,9 +83,7 @@
 
 /* globals (sanity check for LDR vs LDRB) */
 MTERP_SIZEOF(sizeofGlobal_debuggerActive, gDvm.debuggerActive, 1)
-#if defined(WITH_PROFILER)
 MTERP_SIZEOF(sizeofGlobal_activeProfilers, gDvm.activeProfilers, 4)
-#endif
 
 /* MterpGlue fields */
 MTERP_OFFSET(offGlue_pc,                MterpGlue, pc, 0)
@@ -98,7 +96,6 @@ MTERP_OFFSET(offGlue_bailPtr,           MterpGlue, bailPtr, 28)
 MTERP_OFFSET(offGlue_interpStackEnd,    MterpGlue, interpStackEnd, 32)
 MTERP_OFFSET(offGlue_pSelfSuspendCount, MterpGlue, pSelfSuspendCount, 36)
 MTERP_OFFSET(offGlue_cardTable,         MterpGlue, cardTable, 40)
-#if defined(WITH_DEBUGGER) && defined(WITH_PROFILER)
 MTERP_OFFSET(offGlue_pDebuggerActive,   MterpGlue, pDebuggerActive, 44)
 MTERP_OFFSET(offGlue_pActiveProfilers,  MterpGlue, pActiveProfilers, 48)
 MTERP_OFFSET(offGlue_entryPoint,        MterpGlue, entryPoint, 52)
@@ -110,42 +107,6 @@ MTERP_OFFSET(offGlue_jitResumeDPC,      MterpGlue, jitResumeDPC, 72)
 MTERP_OFFSET(offGlue_jitThreshold,      MterpGlue, jitThreshold, 76)
 MTERP_OFFSET(offGlue_ppJitProfTable,    MterpGlue, ppJitProfTable, 80)
 MTERP_OFFSET(offGlue_icRechainCount,    MterpGlue, icRechainCount, 84)
-#endif
-#elif defined(WITH_DEBUGGER)
-MTERP_OFFSET(offGlue_pDebuggerActive,   MterpGlue, pDebuggerActive, 44)
-MTERP_OFFSET(offGlue_entryPoint,        MterpGlue, entryPoint, 48)
-#if defined(WITH_JIT)
-MTERP_OFFSET(offGlue_pJitProfTable,     MterpGlue, pJitProfTable, 56)
-MTERP_OFFSET(offGlue_jitState,          MterpGlue, jitState, 60)
-MTERP_OFFSET(offGlue_jitResumeNPC,      MterpGlue, jitResumeNPC, 64)
-MTERP_OFFSET(offGlue_jitResumeDPC,      MterpGlue, jitResumeDPC, 68)
-MTERP_OFFSET(offGlue_jitThreshold,      MterpGlue, jitThreshold, 72)
-MTERP_OFFSET(offGlue_ppJitProfTable,    MterpGlue, ppJitProfTable, 76)
-MTERP_OFFSET(offGlue_icRechainCount,    MterpGlue, icRechainCount, 80)
-#endif
-#elif defined(WITH_PROFILER)
-MTERP_OFFSET(offGlue_pActiveProfilers,  MterpGlue, pActiveProfilers, 44)
-MTERP_OFFSET(offGlue_entryPoint,        MterpGlue, entryPoint, 48)
-#if defined(WITH_JIT)
-MTERP_OFFSET(offGlue_pJitProfTable,     MterpGlue, pJitProfTable, 56)
-MTERP_OFFSET(offGlue_jitState,          MterpGlue, jitState, 60)
-MTERP_OFFSET(offGlue_jitResumeNPC,      MterpGlue, jitResumeNPC, 64)
-MTERP_OFFSET(offGlue_jitResumeDPC,      MterpGlue, jitResumeDPC, 68)
-MTERP_OFFSET(offGlue_jitThreshold,      MterpGlue, jitThreshold, 72)
-MTERP_OFFSET(offGlue_ppJitProfTable,    MterpGlue, ppJitProfTable, 76)
-MTERP_OFFSET(offGlue_icRechainCount,    MterpGlue, icRechainCount, 80)
-#endif
-#else
-MTERP_OFFSET(offGlue_entryPoint,        MterpGlue, entryPoint, 44)
-#if defined(WITH_JIT)
-MTERP_OFFSET(offGlue_pJitProfTable,     MterpGlue, pJitProfTable, 52)
-MTERP_OFFSET(offGlue_jitState,          MterpGlue, jitState, 56)
-MTERP_OFFSET(offGlue_jitResumeNPC,      MterpGlue, jitResumeNPC, 60)
-MTERP_OFFSET(offGlue_jitResumeDPC,      MterpGlue, jitResumeDPC, 64)
-MTERP_OFFSET(offGlue_jitThreshold,      MterpGlue, jitThreshold, 68)
-MTERP_OFFSET(offGlue_ppJitProfTable,    MterpGlue, ppJitProfTable, 72)
-MTERP_OFFSET(offGlue_icRechainCount,    MterpGlue, icRechainCount, 76)
-#endif
 #endif
 /* make sure all JValue union members are stored at the same offset */
 MTERP_OFFSET(offGlue_retval_z,          MterpGlue, retval.z, 8)

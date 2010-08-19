@@ -47,12 +47,10 @@ static void updateDebugger(const Method* method, const u2* pc, const u4* fp,
      * Depending on the "mods" associated with event(s) on this address,
      * we may or may not actually send a message to the debugger.
      */
-#ifdef WITH_DEBUGGER
     if (INST_INST(*pc) == OP_BREAKPOINT) {
         LOGV("+++ breakpoint hit at %p\n", pc);
         eventFlags |= DBG_BREAKPOINT;
     }
-#endif
 
     /*
      * If the debugger is single-stepping one of our threads, check to
@@ -219,8 +217,6 @@ static void checkDebugAndProf(const u2* pc, const u4* fp, Thread* self,
      * This code is executed for every instruction we interpret, so for
      * performance we use a couple of #ifdef blocks instead of runtime tests.
      */
-#ifdef WITH_PROFILER
-    /* profiler and probably debugger */
     bool isEntry = *pIsMethodEntry;
     if (isEntry) {
         *pIsMethodEntry = false;
@@ -240,13 +236,4 @@ static void checkDebugAndProf(const u2* pc, const u4* fp, Thread* self,
         int inst = *pc & 0xff;
         gDvm.executedInstrCounts[inst]++;
     }
-#else
-    /* debugger only */
-    if (gDvm.debuggerActive) {
-        bool isEntry = *pIsMethodEntry;
-        updateDebugger(method, pc, fp, isEntry, self);
-        if (isEntry)
-            *pIsMethodEntry = false;
-    }
-#endif
 }

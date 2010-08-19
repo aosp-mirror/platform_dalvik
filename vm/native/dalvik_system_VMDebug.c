@@ -118,11 +118,9 @@ static void Dalvik_dalvik_system_VMDebug_getVmFeatureList(const u4* args,
     char* features[MAX_FEATURE_COUNT];
     int idx = 0;
 
-#ifdef WITH_PROFILER
     /* VM responds to DDMS method profiling requests */
     features[idx++] = "method-trace-profiling";
     features[idx++] = "method-trace-profiling-streaming";
-#endif
 #ifdef WITH_HPROF
     /* VM responds to DDMS heap dump requests */
     features[idx++] = "hprof-heap-dump";
@@ -137,7 +135,6 @@ static void Dalvik_dalvik_system_VMDebug_getVmFeatureList(const u4* args,
 }
 
 
-#ifdef WITH_PROFILER
 /* These must match the values in dalvik.system.VMDebug.
  */
 enum {
@@ -228,7 +225,6 @@ static void clearAllocProfStateFields(AllocProfState *allocProf,
     }
 #endif // PROFILE_EXTERNAL_ALLOCATIONS
 }
-#endif
 
 /*
  * static void startAllocCounting()
@@ -244,11 +240,9 @@ static void Dalvik_dalvik_system_VMDebug_startAllocCounting(const u4* args,
 {
     UNUSED_PARAMETER(args);
 
-#ifdef WITH_PROFILER
     clearAllocProfStateFields(&gDvm.allocProf, KIND_ALL_COUNTS);
     clearAllocProfStateFields(&dvmThreadSelf()->allocProf, KIND_ALL_COUNTS);
     dvmStartAllocCounting();
-#endif
     RETURN_VOID();
 }
 
@@ -260,9 +254,7 @@ static void Dalvik_dalvik_system_VMDebug_stopAllocCounting(const u4* args,
 {
     UNUSED_PARAMETER(args);
 
-#ifdef WITH_PROFILER
     dvmStopAllocCounting();
-#endif
     RETURN_VOID();
 }
 
@@ -272,7 +264,6 @@ static void Dalvik_dalvik_system_VMDebug_stopAllocCounting(const u4* args,
 static void Dalvik_dalvik_system_VMDebug_getAllocCount(const u4* args,
     JValue* pResult)
 {
-#ifdef WITH_PROFILER
     AllocProfState *allocProf;
     unsigned int kind = args[0];
     if (kind < (1<<16)) {
@@ -322,9 +313,6 @@ static void Dalvik_dalvik_system_VMDebug_getAllocCount(const u4* args,
         assert(false);
         pResult->i = -1;
     }
-#else
-    RETURN_INT(-1);
-#endif
 }
 
 /*
@@ -333,11 +321,9 @@ static void Dalvik_dalvik_system_VMDebug_getAllocCount(const u4* args,
 static void Dalvik_dalvik_system_VMDebug_resetAllocCount(const u4* args,
     JValue* pResult)
 {
-#ifdef WITH_PROFILER
     unsigned int kinds = args[0];
     clearAllocProfStateFields(&gDvm.allocProf, kinds & 0xffff);
     clearAllocProfStateFields(&dvmThreadSelf()->allocProf, kinds >> 16);
-#endif
     RETURN_VOID();
 }
 
@@ -354,7 +340,6 @@ static void Dalvik_dalvik_system_VMDebug_resetAllocCount(const u4* args,
 static void Dalvik_dalvik_system_VMDebug_startMethodTracingNative(const u4* args,
     JValue* pResult)
 {
-#ifdef WITH_PROFILER
     StringObject* traceFileStr = (StringObject*) args[0];
     Object* traceFd = (Object*) args[1];
     int bufferSize = args[2];
@@ -391,9 +376,6 @@ static void Dalvik_dalvik_system_VMDebug_startMethodTracingNative(const u4* args
     dvmMethodTraceStart(traceFileName != NULL ? traceFileName : "[DDMS]",
         fd, bufferSize, flags, (traceFileName == NULL && fd == -1));
     free(traceFileName);
-#else
-    // throw exception?
-#endif
     RETURN_VOID();
 }
 
@@ -407,11 +389,7 @@ static void Dalvik_dalvik_system_VMDebug_isMethodTracingActive(const u4* args,
 {
     UNUSED_PARAMETER(args);
 
-#ifdef WITH_PROFILER
     RETURN_BOOLEAN(dvmIsMethodTraceActive());
-#else
-    RETURN_BOOLEAN(false);
-#endif
 }
 
 /*
@@ -424,11 +402,7 @@ static void Dalvik_dalvik_system_VMDebug_stopMethodTracing(const u4* args,
 {
     UNUSED_PARAMETER(args);
 
-#ifdef WITH_PROFILER
     dvmMethodTraceStop();
-#else
-    // throw exception?
-#endif
     RETURN_VOID();
 }
 
@@ -442,11 +416,7 @@ static void Dalvik_dalvik_system_VMDebug_startEmulatorTracing(const u4* args,
 {
     UNUSED_PARAMETER(args);
 
-#ifdef WITH_PROFILER
     dvmEmulatorTraceStart();
-#else
-    // throw exception?
-#endif
     RETURN_VOID();
 }
 
@@ -460,11 +430,7 @@ static void Dalvik_dalvik_system_VMDebug_stopEmulatorTracing(const u4* args,
 {
     UNUSED_PARAMETER(args);
 
-#ifdef WITH_PROFILER
     dvmEmulatorTraceStop();
-#else
-    // throw exception?
-#endif
     RETURN_VOID();
 }
 
@@ -569,11 +535,7 @@ static void Dalvik_dalvik_system_VMDebug_lastDebuggerActivity(const u4* args,
 static void Dalvik_dalvik_system_VMDebug_startInstructionCounting(const u4* args,
     JValue* pResult)
 {
-#if defined(WITH_PROFILER)
     dvmStartInstructionCounting();
-#else
-    dvmThrowException("Ljava/lang/UnsupportedOperationException;", NULL);
-#endif
     RETURN_VOID();
 }
 
@@ -583,11 +545,7 @@ static void Dalvik_dalvik_system_VMDebug_startInstructionCounting(const u4* args
 static void Dalvik_dalvik_system_VMDebug_stopInstructionCounting(const u4* args,
     JValue* pResult)
 {
-#if defined(WITH_PROFILER)
     dvmStopInstructionCounting();
-#else
-    dvmThrowException("Ljava/lang/UnsupportedOperationException;", NULL);
-#endif
     RETURN_VOID();
 }
 
@@ -603,7 +561,6 @@ static void Dalvik_dalvik_system_VMDebug_stopInstructionCounting(const u4* args,
 static void Dalvik_dalvik_system_VMDebug_getInstructionCount(const u4* args,
     JValue* pResult)
 {
-#if defined(WITH_PROFILER)
     ArrayObject* countArray = (ArrayObject*) args[0];
     int* storage;
 
@@ -611,9 +568,6 @@ static void Dalvik_dalvik_system_VMDebug_getInstructionCount(const u4* args,
     sched_yield();
     memcpy(storage, gDvm.executedInstrCounts,
         kNumDalvikInstructions * sizeof(int));
-#else
-    dvmThrowException("Ljava/lang/UnsupportedOperationException;", NULL);
-#endif
     RETURN_VOID();
 }
 
@@ -625,12 +579,8 @@ static void Dalvik_dalvik_system_VMDebug_getInstructionCount(const u4* args,
 static void Dalvik_dalvik_system_VMDebug_resetInstructionCount(const u4* args,
     JValue* pResult)
 {
-#if defined(WITH_PROFILER)
     sched_yield();
     memset(gDvm.executedInstrCounts, 0, kNumDalvikInstructions * sizeof(int));
-#else
-    dvmThrowException("Ljava/lang/UnsupportedOperationException;", NULL);
-#endif
     RETURN_VOID();
 }
 
@@ -935,6 +885,18 @@ static void Dalvik_dalvik_system_VMDebug_infopoint(const u4* args,
     RETURN_VOID();
 }
 
+static void Dalvik_dalvik_system_VMDebug_countInstancesOfClass(const u4* args,
+    JValue* pResult)
+{
+    ClassObject* clazz = (ClassObject*)args[0];
+    if (clazz == NULL) {
+        RETURN_LONG(0);
+    } else {
+        size_t count = dvmCountInstancesOfClass(clazz);
+        RETURN_LONG((long long)count);
+    }
+}
+
 const DalvikNativeMethod dvm_dalvik_system_VMDebug[] = {
     { "getVmFeatureList",           "()[Ljava/lang/String;",
         Dalvik_dalvik_system_VMDebug_getVmFeatureList },
@@ -992,5 +954,7 @@ const DalvikNativeMethod dvm_dalvik_system_VMDebug[] = {
         Dalvik_dalvik_system_VMDebug_crash },
     { "infopoint",                 "(I)V",
         Dalvik_dalvik_system_VMDebug_infopoint },
+    { "countInstancesOfClass",     "(Ljava/lang/Class;)J",
+        Dalvik_dalvik_system_VMDebug_countInstancesOfClass },
     { NULL, NULL, NULL },
 };

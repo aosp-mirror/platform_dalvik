@@ -49,7 +49,6 @@ void dvmClearBreakAddr(Method* method, unsigned int instrOffset);
 bool dvmAddSingleStep(Thread* thread, int size, int depth);
 void dvmClearSingleStep(Thread* thread);
 
-#ifdef WITH_DEBUGGER
 /*
  * Recover the opcode that was replaced by a breakpoint.
  */
@@ -59,6 +58,5 @@ u1 dvmGetOriginalOpCode(const u2* addr);
  * Flush any breakpoints associated with methods in "clazz".
  */
 void dvmFlushBreakpoints(ClassObject* clazz);
-#endif
 
 #endif /*_DALVIK_INTERP_INTERP*/
