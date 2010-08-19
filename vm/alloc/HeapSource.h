@@ -65,7 +65,7 @@ void dvmHeapSourceShutdown(GcHeap **gcHeap);
  * Initializes a vector of object and mark bits to the object and mark
  * bits of each heap.
  */
-void dvmHeapSourceGetObjectBitmaps(HeapBitmap objBits[], HeapBitmap markBits[],
+void dvmHeapSourceGetObjectBitmaps(HeapBitmap liveBits[], HeapBitmap markBits[],
                                    size_t numHeaps);
 
 /*
