@@ -95,13 +95,13 @@ destroyMarkStack(GcMarkStack *stack)
 bool
 dvmHeapBeginMarkStep(GcMode mode)
 {
-    GcMarkContext *mc = &gDvm.gcHeap->markContext;
+    GcMarkContext *ctx = &gDvm.gcHeap->markContext;
 
-    if (!createMarkStack(&mc->stack)) {
+    if (!createMarkStack(&ctx->stack)) {
         return false;
     }
-    mc->finger = NULL;
-    mc->immuneLimit = dvmHeapSourceGetImmuneLimit(mode);
+    ctx->finger = NULL;
+    ctx->immuneLimit = dvmHeapSourceGetImmuneLimit(mode);
     return true;
 }
 
@@ -758,14 +758,14 @@ static void enqueueReference(Object *ref)
  */
 void dvmHandleSoftRefs(Object **list)
 {
-    GcMarkContext *markContext;
+    GcMarkContext *ctx;
     Object *ref, *referent;
     Object *clear;
     size_t referentOffset;
     size_t counter;
     bool marked;
 
-    markContext = &gDvm.gcHeap->markContext;
+    ctx = &gDvm.gcHeap->markContext;
     referentOffset = gDvm.offJavaLangRefReference_referent;
     clear = NULL;
     counter = 0;
@@ -773,10 +773,10 @@ void dvmHandleSoftRefs(Object **list)
         ref = dequeuePendingReference(list);
         referent = dvmGetFieldObject(ref, referentOffset);
         assert(referent != NULL);
-        marked = isMarked(referent, markContext);
+        marked = isMarked(referent, ctx);
         if (!marked && ((++counter) & 1)) {
             /* Referent is white and biased toward saving, mark it. */
-            markObject(referent, markContext);
+            markObject(referent, ctx);
             marked = true;
         }
         if (!marked) {
@@ -789,7 +789,7 @@ void dvmHandleSoftRefs(Object **list)
      * Restart the mark with the newly black references added to the
      * root set.
      */
-    processMarkStack(markContext);
+    processMarkStack(ctx);
 }
 
 /*
@@ -799,19 +799,19 @@ void dvmHandleSoftRefs(Object **list)
  */
 void dvmClearWhiteRefs(Object **list)
 {
-    GcMarkContext *markContext;
+    GcMarkContext *ctx;
     Object *ref, *referent;
     size_t referentOffset;
     bool doSignal;
 
-    markContext = &gDvm.gcHeap->markContext;
+    ctx = &gDvm.gcHeap->markContext;
     referentOffset = gDvm.offJavaLangRefReference_referent;
     doSignal = false;
     while (*list != NULL) {
         ref = dequeuePendingReference(list);
         referent = dvmGetFieldObject(ref, referentOffset);
         assert(referent != NULL);
-        if (!isMarked(referent, markContext)) {
+        if (!isMarked(referent, ctx)) {
             /* Referent is white, clear it. */
             clearReference(ref);
             if (isEnqueuable(ref)) {
@@ -840,7 +840,7 @@ void dvmHeapScheduleFinalizations()
     Object **ref;
     Object **lastRef;
     size_t totalPendCount;
-    GcMarkContext *markContext = &gDvm.gcHeap->markContext;
+    GcMarkContext *ctx = &gDvm.gcHeap->markContext;
 
     /*
      * All reachable objects have been marked.
@@ -871,7 +871,7 @@ void dvmHeapScheduleFinalizations()
         gapRef = ref = finRefs->refs.table;
         lastRef = finRefs->refs.nextEntry;
         while (ref < lastRef) {
-            if (!isMarked(*ref, markContext)) {
+            if (!isMarked(*ref, ctx)) {
                 if (!dvmHeapAddToHeapRefTable(&newPendingRefs, *ref)) {
                     //TODO: add the current table and allocate
                     //      a new, smaller one.
@@ -932,19 +932,19 @@ void dvmHeapScheduleFinalizations()
     HPROF_SET_GC_SCAN_STATE(HPROF_ROOT_FINALIZING, 0);
     while (ref < lastRef) {
         assert(*ref != NULL);
-        markObject(*ref, markContext);
+        markObject(*ref, ctx);
         ref++;
     }
     HPROF_CLEAR_GC_SCAN_STATE();
-    processMarkStack(markContext);
+    processMarkStack(ctx);
     dvmSignalHeapWorker(false);
 }
 
 void dvmHeapFinishMarkStep()
 {
-    GcMarkContext *markContext;
+    GcMarkContext *ctx;
 
-    markContext = &gDvm.gcHeap->markContext;
+    ctx = &gDvm.gcHeap->markContext;
 
     /* The mark bits are now not needed.
      */
@@ -952,9 +952,9 @@ void dvmHeapFinishMarkStep()
 
     /* Clean up everything else associated with the marking process.
      */
-    destroyMarkStack(&markContext->stack);
+    destroyMarkStack(&ctx->stack);
 
-    markContext->finger = NULL;
+    ctx->finger = NULL;
 }
 
 typedef struct {
