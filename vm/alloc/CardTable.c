@@ -72,8 +72,7 @@ bool dvmCardTableStartup(void)
     biasedBase = (u1 *)((uintptr_t)allocBase -
                         ((uintptr_t)heapBase >> GC_CARD_SHIFT));
     if (((uintptr_t)biasedBase & 0xff) != GC_CARD_DIRTY) {
-        int offset;
-        offset = GC_CARD_DIRTY - ((uintptr_t)biasedBase & 0xff);
+        int offset = GC_CARD_DIRTY - ((uintptr_t)biasedBase & 0xff);
         biasedBase += offset + (offset < 0 ? 0x100 : 0);
     }
     assert(((uintptr_t)biasedBase & 0xff) == GC_CARD_DIRTY);
