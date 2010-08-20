@@ -95,28 +95,26 @@ typedef struct AtomicCache {
 #define ATOMIC_CACHE_LOOKUP(_cache, _cacheSize, _key1, _key2) ({            \
     AtomicCacheEntry* pEntry;                                               \
     int hash;                                                               \
-    u4 firstVersion;                                                        \
+    u4 firstVersion, secondVersion;                                         \
     u4 value;                                                               \
                                                                             \
     /* simple hash function */                                              \
     hash = (((u4)(_key1) >> 2) ^ (u4)(_key2)) & ((_cacheSize)-1);           \
     pEntry = (_cache)->entries + hash;                                      \
                                                                             \
-    firstVersion = pEntry->version;                                         \
-    ANDROID_MEMBAR_FULL();                                                  \
+    firstVersion = android_atomic_acquire_load((int32_t*)&pEntry->version); \
                                                                             \
     if (pEntry->key1 == (u4)(_key1) && pEntry->key2 == (u4)(_key2)) {       \
         /*                                                                  \
          * The fields match.  Get the value, then read the version a        \
          * second time to verify that we didn't catch a partial update.     \
          * We're also hosed if "firstVersion" was odd, indicating that      \
-         * an update was in progress before we got here.                    \
+         * an update was in progress before we got here (unlikely).         \
          */                                                                 \
-        value = pEntry->value;                                              \
-        ANDROID_MEMBAR_FULL();                                              \
+        value = android_atomic_acquire_load((int32_t*) &pEntry->value);     \
+        secondVersion = pEntry->version;                                    \
                                                                             \
-        if ((firstVersion & 0x01) != 0 || firstVersion != pEntry->version)  \
-        {                                                                   \
+        if ((firstVersion & 0x01) != 0 || firstVersion != secondVersion) {  \
             /*                                                              \
              * We clashed with another thread.  Instead of sitting and      \
              * spinning, which might not complete if we're a high priority  \

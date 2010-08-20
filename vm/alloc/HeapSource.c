@@ -301,7 +301,7 @@ static void countAllocation(Heap *heap, const void *ptr, bool isObj)
     assert(heap->bytesAllocated < mspace_footprint(heap->msp));
 }
 
-static void countFree(Heap *heap, const void *ptr, bool isObj)
+static void countFree(Heap *heap, const void *ptr, size_t *numBytes)
 {
     HeapSource *hs;
     size_t delta;
@@ -314,13 +314,12 @@ static void countFree(Heap *heap, const void *ptr, bool isObj)
     } else {
         heap->bytesAllocated = 0;
     }
-    if (isObj) {
-        hs = gDvm.gcHeap->heapSource;
-        dvmHeapBitmapClearObjectBit(&hs->liveBits, ptr);
-        if (heap->objectsAllocated > 0) {
-            heap->objectsAllocated--;
-        }
+    hs = gDvm.gcHeap->heapSource;
+    dvmHeapBitmapClearObjectBit(&hs->liveBits, ptr);
+    if (heap->objectsAllocated > 0) {
+        heap->objectsAllocated--;
     }
+    *numBytes += delta;
 }
 
 static HeapSource *gHs = NULL;
@@ -718,10 +717,8 @@ void dvmHeapSourceGetObjectBitmaps(HeapBitmap liveBits[], HeapBitmap markBits[],
     assert(numHeaps == hs->numHeaps);
     for (i = 0; i < hs->numHeaps; ++i) {
         base = (uintptr_t)hs->heaps[i].base;
-        /* Using liveBits.max will include all the markBits as well. */
-        assert(hs->liveBits.max >= hs->markBits.max);
         /* -1 because limit is exclusive but max is inclusive. */
-        max = MIN((uintptr_t)hs->heaps[i].limit - 1, hs->liveBits.max);
+        max = MIN((uintptr_t)hs->heaps[i].limit - 1, hs->markBits.max);
         aliasBitmap(&liveBits[i], &hs->liveBits, base, max);
         aliasBitmap(&markBits[i], &hs->markBits, base, max);
     }
@@ -928,47 +925,26 @@ dvmHeapSourceAllocAndGrow(size_t n)
 }
 
 /*
- * Frees the memory pointed to by <ptr>, which may be NULL.
+ * Frees the first numPtrs objects in the ptrs list and returns the
+ * amount of reclaimed storage. The list must contain addresses all in
+ * the same mspace, and must be in increasing order. This implies that
+ * there are no duplicates, and no entries are NULL.
  */
-void
-dvmHeapSourceFree(void *ptr)
+size_t dvmHeapSourceFreeList(size_t numPtrs, void **ptrs)
 {
     Heap *heap;
-
-    HS_BOILERPLATE();
-
-    heap = ptr2heap(gHs, ptr);
-    if (heap != NULL) {
-        countFree(heap, ptr, true);
-        /* Only free objects that are in the active heap.
-         * Touching old heaps would pull pages into this process.
-         */
-        if (heap == gHs->heaps) {
-            mspace_free(heap->msp, ptr);
-        }
-    }
-}
-
-/*
- * Frees the first numPtrs objects in the ptrs list. The list must
- * contain addresses all in the same mspace, and must be in increasing
- * order. This implies that there are no duplicates, and no entries
- * are NULL.
- */
-void
-dvmHeapSourceFreeList(size_t numPtrs, void **ptrs)
-{
-    Heap *heap;
+    size_t numBytes;
 
     HS_BOILERPLATE();
 
     if (numPtrs == 0) {
-        return;
+        return 0;
     }
 
     assert(ptrs != NULL);
     assert(*ptrs != NULL);
     heap = ptr2heap(gHs, *ptrs);
+    numBytes = 0;
     if (heap != NULL) {
         mspace *msp = heap->msp;
         // Calling mspace_free on shared heaps disrupts sharing too
@@ -992,7 +968,7 @@ dvmHeapSourceFreeList(size_t numPtrs, void **ptrs)
             // countFree ptrs[0] and initializing merged.
             assert(ptrs[0] != NULL);
             assert(ptr2heap(gHs, ptrs[0]) == heap);
-            countFree(heap, ptrs[0], true);
+            countFree(heap, ptrs[0], &numBytes);
             void *merged = ptrs[0];
 
             size_t i;
@@ -1001,7 +977,7 @@ dvmHeapSourceFreeList(size_t numPtrs, void **ptrs)
                 assert(ptrs[i] != NULL);
                 assert((intptr_t)merged < (intptr_t)ptrs[i]);
                 assert(ptr2heap(gHs, ptrs[i]) == heap);
-                countFree(heap, ptrs[i], true);
+                countFree(heap, ptrs[i], &numBytes);
                 // Try to merge. If it works, merged now includes the
                 // memory of ptrs[i]. If it doesn't, free merged, and
                 // see if ptrs[i] starts a new run of adjacent
@@ -1019,10 +995,11 @@ dvmHeapSourceFreeList(size_t numPtrs, void **ptrs)
             for (i = 0; i < numPtrs; i++) {
                 assert(ptrs[i] != NULL);
                 assert(ptr2heap(gHs, ptrs[i]) == heap);
-                countFree(heap, ptrs[i], true);
+                countFree(heap, ptrs[i], &numBytes);
             }
         }
     }
+    return numBytes;
 }
 
 /*
@@ -1603,7 +1580,7 @@ externalAlloc(HeapSource *hs, size_t n, bool grow)
      */
     if (hs->externalBytesAllocated + n <= hs->externalLimit) {
         hs->externalBytesAllocated += n;
-#if defined(WITH_PROFILER) && PROFILE_EXTERNAL_ALLOCATIONS
+#if PROFILE_EXTERNAL_ALLOCATIONS
         if (gDvm.allocProf.enabled) {
             Thread* self = dvmThreadSelf();
             gDvm.allocProf.externalAllocCount++;
@@ -1631,7 +1608,6 @@ externalAlloc(HeapSource *hs, size_t n, bool grow)
 static void
 gcForExternalAlloc(bool collectSoftReferences)
 {
-#ifdef WITH_PROFILER  // even if !PROFILE_EXTERNAL_ALLOCATIONS
     if (gDvm.allocProf.enabled) {
         Thread* self = dvmThreadSelf();
         gDvm.allocProf.gcCount++;
@@ -1639,7 +1615,6 @@ gcForExternalAlloc(bool collectSoftReferences)
             self->allocProf.gcCount++;
         }
     }
-#endif
     dvmCollectGarbageInternal(collectSoftReferences, GC_EXTERNAL_ALLOC);
 }
 
@@ -1721,7 +1696,7 @@ dvmTrackExternalAllocation(size_t n)
         LOGE_HEAP("Out of external memory on a %zu-byte allocation.\n", n);
     }
 
-#if defined(WITH_PROFILER) && PROFILE_EXTERNAL_ALLOCATIONS
+#if PROFILE_EXTERNAL_ALLOCATIONS
     if (gDvm.allocProf.enabled) {
         Thread* self = dvmThreadSelf();
         gDvm.allocProf.failedExternalAllocCount++;
@@ -1768,7 +1743,7 @@ dvmTrackExternalFree(size_t n)
         hs->externalBytesAllocated = 0;
     }
 
-#if defined(WITH_PROFILER) && PROFILE_EXTERNAL_ALLOCATIONS
+#if PROFILE_EXTERNAL_ALLOCATIONS
     if (gDvm.allocProf.enabled) {
         Thread* self = dvmThreadSelf();
         gDvm.allocProf.externalFreeCount++;

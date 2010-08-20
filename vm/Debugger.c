@@ -509,13 +509,11 @@ void dvmDbgExit(int status)
 {
     // TODO? invoke System.exit() to perform exit processing; ends up
     // in System.exitInternal(), which can call JNI exit hook
-#ifdef WITH_PROFILER
     LOGI("GC lifetime allocation: %d bytes\n", gDvm.allocProf.allocCount);
     if (CALC_CACHE_STATS) {
         dvmDumpAtomicCacheStats(gDvm.instanceofCache);
         dvmDumpBootClassPath();
     }
-#endif
 #ifdef PROFILE_FIELD_ACCESS
     dvmDumpFieldAccessCounts();
 #endif

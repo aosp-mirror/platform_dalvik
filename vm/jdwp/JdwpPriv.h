@@ -79,7 +79,7 @@ struct JdwpState {
     pthread_mutex_t threadStartLock;
     pthread_cond_t  threadStartCond;
 
-    bool            debugThreadStarted;
+    int             debugThreadStarted;
     pthread_t       debugThreadHandle;
     ObjectId        debugThreadId;
     bool            run;

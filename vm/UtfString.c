@@ -243,7 +243,7 @@ static inline u4 dvmComputeUtf16Hash(const u2* utf16Str, int len)
 
     return hash;
 }
-u4 dvmComputeStringHash(StringObject* strObj) {
+u4 dvmComputeStringHash(const StringObject* strObj) {
     ArrayObject* chars = (ArrayObject*) dvmGetFieldObject((Object*) strObj,
                                 STRING_FIELDOFF_VALUE);
     int offset, len;

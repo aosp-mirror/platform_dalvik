@@ -3271,7 +3271,7 @@ NEW_PRIMITIVE_ARRAY(jdoubleArray, Double, 'D');
     }
 
 /*
- * Copy a section of a primitive array to a buffer.
+ * Copy a section of a primitive array from a buffer.
  */
 #define SET_PRIMITIVE_ARRAY_REGION(_ctype, _jname)                          \
     static void Set##_jname##ArrayRegion(JNIEnv* env,                       \

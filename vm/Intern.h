@@ -21,8 +21,8 @@
 
 bool dvmStringInternStartup(void);
 void dvmStringInternShutdown(void);
-
 StringObject* dvmLookupInternedString(StringObject* strObj);
 StringObject* dvmLookupImmortalInternedString(StringObject* strObj);
+bool dvmIsWeakInternedString(const StringObject* strObj);
 
 #endif /*_DALVIK_INTERN*/

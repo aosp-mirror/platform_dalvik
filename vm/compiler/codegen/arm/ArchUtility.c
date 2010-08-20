@@ -18,6 +18,12 @@
 #include "libdex/OpCodeNames.h"
 #include "ArmLIR.h"
 
+static char *shiftNames[4] = {
+    "lsl",
+    "lsr",
+    "asr",
+    "ror"};
+
 /* Decode and print a ARM register name */
 static char * decodeRegList(int vector, char *buf)
 {
@@ -83,6 +89,14 @@ static void buildInsnString(char *fmt, ArmLIR *lir, char* buf,
                assert((unsigned)(nc-'0') < 4);
                operand = lir->operands[nc-'0'];
                switch(*fmt++) {
+                   case 'H':
+                       if (operand != 0) {
+                           sprintf(tbuf, ", %s %d",shiftNames[operand & 0x3],
+                                   operand >> 2);
+                       } else {
+                           strcpy(tbuf,"");
+                       }
+                       break;
                    case 'B':
                        switch (operand) {
                            case kSY:

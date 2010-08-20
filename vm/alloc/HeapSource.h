@@ -105,17 +105,12 @@ void *dvmHeapSourceAlloc(size_t n);
 void *dvmHeapSourceAllocAndGrow(size_t n);
 
 /*
- * Frees the memory pointed to by <ptr>, which may be NULL.
+ * Frees the first numPtrs objects in the ptrs list and returns the
+ * amount of reclaimed storage.  The list must contain addresses all
+ * in the same mspace, and must be in increasing order. This implies
+ * that there are no duplicates, and no entries are NULL.
  */
-void dvmHeapSourceFree(void *ptr);
-
-/*
- * Frees the first numPtrs objects in the ptrs list. The list must
- * contain addresses all in the same mspace, and must be in increasing
- * order. This implies that there are no duplicates, and no entries
- * are NULL.
- */
-void dvmHeapSourceFreeList(size_t numPtrs, void **ptrs);
+size_t dvmHeapSourceFreeList(size_t numPtrs, void **ptrs);
 
 /*
  * Returns true iff <ptr> was allocated from the heap source.

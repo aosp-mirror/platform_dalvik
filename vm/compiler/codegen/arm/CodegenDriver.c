@@ -41,6 +41,8 @@ static void markCard(CompilationUnit *cUnit, int valReg, int tgtAddrReg)
     ArmLIR *target = newLIR0(cUnit, kArmPseudoTargetLabel);
     target->defMask = ENCODE_ALL;
     branchOver->generic.target = (LIR *)target;
+    dvmCompilerFreeTemp(cUnit, regCardBase);
+    dvmCompilerFreeTemp(cUnit, regCardNo);
 }
 
 static bool genConversionCall(CompilationUnit *cUnit, MIR *mir, void *funct,
@@ -573,6 +575,9 @@ static void genArrayObjectPut(CompilationUnit *cUnit, MIR *mir,
     storeBaseIndexed(cUnit, regPtr, regIndex, r0,
                      scale, kWord);
     HEAP_ACCESS_SHADOW(false);
+
+    dvmCompilerFreeTemp(cUnit, regPtr);
+    dvmCompilerFreeTemp(cUnit, regIndex);
 
     /* NOTE: marking card here based on object head */
     markCard(cUnit, r0, r1);
@@ -1549,6 +1554,7 @@ static bool handleFmt21c_Fmt31c(CompilationUnit *cUnit, MIR *mir)
                 /* NOTE: marking card based on field address */
                 markCard(cUnit, rlSrc.lowReg, tReg);
             }
+            dvmCompilerFreeTemp(cUnit, tReg);
 
             break;
         }
@@ -4333,14 +4339,14 @@ bool dvmCompilerDoWork(CompilerWorkOrder *work)
         case kWorkOrderTrace:
             /* Start compilation with maximally allowed trace length */
             res = dvmCompileTrace(work->info, JIT_MAX_TRACE_LEN, &work->result,
-                                  work->bailPtr);
+                                  work->bailPtr, 0 /* no hints */);
             break;
         case kWorkOrderTraceDebug: {
             bool oldPrintMe = gDvmJit.printMe;
             gDvmJit.printMe = true;
             /* Start compilation with maximally allowed trace length */
             res = dvmCompileTrace(work->info, JIT_MAX_TRACE_LEN, &work->result,
-                                  work->bailPtr);
+                                  work->bailPtr, 0 /* no hints */);
             gDvmJit.printMe = oldPrintMe;
             break;
         }
@@ -4418,6 +4424,12 @@ void *dvmCompilerGetInterpretTemplate()
 {
       return (void*) ((int)gDvmJit.codeCache +
                       templateEntryOffsets[TEMPLATE_INTERPRET]);
+}
+
+/* Needed by the Assembler */
+void dvmCompilerSetupResourceMasks(ArmLIR *lir)
+{
+    setupResourceMasks(lir);
 }
 
 /* Needed by the ld/st optmizatons */

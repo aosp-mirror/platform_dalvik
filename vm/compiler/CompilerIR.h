@@ -152,6 +152,12 @@ typedef struct BasicBlock {
 struct LoopAnalysis;
 struct RegisterPool;
 
+typedef enum AssemblerStatus {
+    kSuccess,
+    kRetryAll,
+    kRetryHalve
+} AssemblerStatus;
+
 typedef struct CompilationUnit {
     int numInsts;
     int numBlocks;
@@ -166,11 +172,12 @@ typedef struct CompilationUnit {
     int headerSize;                     // bytes before the first code ptr
     int dataOffset;                     // starting offset of literal pool
     int totalSize;                      // header + code size
+    AssemblerStatus assemblerStatus;    // Success or fix and retry
+    int assemblerRetries;               // How many times tried to fix assembly
     unsigned char *codeBuffer;
     void *baseAddr;
     bool printMe;
     bool allSingleStep;
-    bool halveInstCount;
     bool executionCount;                // Add code to count trace executions
     bool hasLoop;                       // Contains a loop
     bool hasInvoke;                     // Contains an invoke instruction

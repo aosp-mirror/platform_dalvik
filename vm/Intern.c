@@ -98,6 +98,27 @@ StringObject* dvmLookupImmortalInternedString(StringObject* strObj)
     return lookupInternedString(strObj, true);
 }
 
+/*
+ * Returns true if the object is a weak interned string.  Any string
+ * interned by the user is weak.
+ */
+bool dvmIsWeakInternedString(const StringObject* strObj)
+{
+    StringObject* found;
+    u4 hash;
+
+    assert(strObj != NULL);
+    if (gDvm.internedStrings == NULL) {
+        return false;
+    }
+    dvmLockMutex(&gDvm.internLock);
+    hash = dvmComputeStringHash(strObj);
+    found = dvmHashTableLookup(gDvm.internedStrings, hash, (void*)strObj,
+                               dvmHashcmpStrings, false);
+    dvmUnlockMutex(&gDvm.internLock);
+    return found == strObj;
+}
+
 static int markStringObject(void* strObj, void* arg)
 {
     UNUSED_PARAMETER(arg);

@@ -14,10 +14,7 @@
  * limitations under the License.
  */
 
-/*
- * Needed for PROT_* definitions.
- */
-#include <sys/mman.h>
+#include <sys/mman.h>  /* for PROT_* */
 
 #include "Dalvik.h"
 #include "alloc/HeapSource.h"
@@ -139,4 +136,144 @@ void dvmMarkCard(const void *addr)
 {
     u1 *cardAddr = dvmCardFromAddr(addr);
     *cardAddr = GC_CARD_DIRTY;
+}
+
+/*
+ * Handles the complexity of object arrays for isObjectDirty.  Array
+ * objects are exactly marked so all spanned cards are examined.
+ */
+static bool isObjectArrayDirty(const Object *obj)
+{
+    u1 *ptr, *limit;
+    size_t size;
+
+    assert(obj != NULL);
+    assert(dvmIsValidObject(obj));
+    assert(IS_CLASS_FLAG_SET(obj->clazz, CLASS_ISOBJECTARRAY));
+    size = dvmArrayObjectSize((const ArrayObject *)obj);
+    ptr = dvmCardFromAddr(obj);
+    limit = dvmCardFromAddr((u1 *)obj + size - 1) + 1;
+    assert(ptr != limit);
+    for (; ptr != limit; ++ptr) {
+        if (*ptr == GC_CARD_DIRTY) {
+            return true;
+        }
+    }
+    return false;
+}
+
+/*
+ * Returns true if the object is on a dirty card.
+ */
+static bool isObjectDirty(const Object *obj)
+{
+    assert(obj != NULL);
+    assert(dvmIsValidObject(obj));
+    if (IS_CLASS_FLAG_SET(obj->clazz, CLASS_ISOBJECTARRAY)) {
+        return isObjectArrayDirty(obj);
+   } else {
+        u1 *card = dvmCardFromAddr(obj);
+        return *card == GC_CARD_DIRTY;
+    }
+}
+
+/*
+ * Context structure for verifying the card table.
+ */
+typedef struct {
+    HeapBitmap *markBits;
+    size_t whiteRefs;
+} WhiteReferenceCounter;
+
+/*
+ * Visitor that counts white referents.
+ */
+static void countWhiteReferenceVisitor(void *addr, void *arg)
+{
+    WhiteReferenceCounter *ctx;
+    Object *obj;
+
+    assert(addr != NULL);
+    assert(arg != NULL);
+    obj = *(Object **)addr;
+    assert(dvmIsValidObject(obj));
+    ctx = arg;
+    if (obj == NULL || dvmHeapBitmapIsObjectBitSet(ctx->markBits, obj)) {
+        return;
+    }
+    ctx->whiteRefs += 1;
+}
+
+/*
+ * Returns true if the given object is a reference object and the
+ * just the referent is unmarked.
+ */
+static bool isReferentUnmarked(const Object *obj,
+                               const WhiteReferenceCounter* ctx)
+{
+    assert(obj != NULL);
+    assert(obj->clazz != NULL);
+    assert(ctx != NULL);
+    if (ctx->whiteRefs != 1) {
+        return false;
+    } else if (IS_CLASS_FLAG_SET(obj->clazz, CLASS_ISREFERENCE)) {
+        size_t offset = gDvm.offJavaLangRefReference_referent;
+        const Object *referent = dvmGetFieldObject(obj, offset);
+        return !dvmHeapBitmapIsObjectBitSet(ctx->markBits, referent);
+    } else {
+        return false;
+    }
+}
+
+/*
+ * Returns true if the given object is a string and has been interned
+ * by the user.
+ */
+static bool isWeakInternedString(const Object *obj)
+{
+    assert(obj != NULL);
+    if (obj->clazz == gDvm.classJavaLangString) {
+        return dvmIsWeakInternedString((StringObject *)obj);
+    } else {
+        return false;
+    }
+}
+
+/*
+ * Callback applied to marked objects.  If the object is found to be
+ * gray a message is written to the log.  By virtue of where the card
+ * table verification occurs weak references have yet to be blackened
+ * and so their containing objects are permitted to be gray.
+ */
+static void verifyCardTableCallback(size_t numPtrs, void **ptrs,
+                                    const void *finger, void *arg)
+{
+    size_t i;
+
+    for (i = 0; i < numPtrs; ++i) {
+        Object *obj = ptrs[i];
+        WhiteReferenceCounter ctx = { arg, 0 };
+        dvmVisitObject(countWhiteReferenceVisitor, obj, &ctx);
+        if (ctx.whiteRefs == 0) {
+            continue;
+        } else if (isObjectDirty(obj)) {
+            continue;
+        } else if (isReferentUnmarked(obj, &ctx)) {
+            continue;
+        } else if (isWeakInternedString(obj)) {
+            continue;
+        }
+        LOGE("Verify failed, object %p is gray", obj);
+        dvmDumpObject(obj);
+        dvmAbort();
+    }
+}
+
+/*
+ * Verifies that gray objects are on a dirty card.
+ */
+void dvmVerifyCardTable(void)
+{
+    HeapBitmap *markBits = gDvm.gcHeap->markContext.bitmap;
+    dvmHeapBitmapWalk(markBits, verifyCardTableCallback, markBits);
 }

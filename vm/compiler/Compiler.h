@@ -225,6 +225,13 @@ typedef enum JitMethodAttributes {
 #define METHOD_IS_GETTER        (1 << kIsGetter)
 #define METHOD_IS_SETTER        (1 << kIsSetter)
 
+/* Vectors to provide optimization hints */
+typedef enum JitOptimizationHints {
+    kJitOptNoLoop = 0,          // Disable loop formation/optimization
+} JitOptimizationHints;
+
+#define JIT_OPT_NO_LOOP         (1 << kJitOptNoLoop)
+
 typedef struct CompilerMethodStats {
     const Method *method;       // Used as hash entry signature
     int dalvikSize;             // # of bytes for dalvik bytecodes
@@ -254,7 +261,7 @@ bool dvmCompilerCanIncludeThisInstruction(const Method *method,
 bool dvmCompileMethod(struct CompilationUnit *cUnit, const Method *method,
                       JitTranslationInfo *info);
 bool dvmCompileTrace(JitTraceDescription *trace, int numMaxInsts,
-                     JitTranslationInfo *info, jmp_buf *bailPtr);
+                     JitTranslationInfo *info, jmp_buf *bailPtr, int optHints);
 void dvmCompilerDumpStats(void);
 void dvmCompilerDrainQueue(void);
 void dvmJitUnchainAll(void);
@@ -263,7 +270,7 @@ void dvmCompilerPerformSafePointChecks(void);
 void dvmCompilerInlineMIR(struct CompilationUnit *cUnit);
 void dvmInitializeSSAConversion(struct CompilationUnit *cUnit);
 int dvmConvertSSARegToDalvik(struct CompilationUnit *cUnit, int ssaReg);
-void dvmCompilerLoopOpt(struct CompilationUnit *cUnit);
+bool dvmCompilerLoopOpt(struct CompilationUnit *cUnit);
 void dvmCompilerNonLoopAnalysis(struct CompilationUnit *cUnit);
 void dvmCompilerFindLiveIn(struct CompilationUnit *cUnit,
                            struct BasicBlock *bb);

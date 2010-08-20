@@ -20,8 +20,11 @@
 
 #include "../../CompilerInternals.h"
 #include "ArmLIR.h"
+#include "Codegen.h"
 #include <unistd.h>             /* for cacheflush */
 #include <sys/mman.h>           /* for protection change */
+
+#define MAX_ASSEMBLER_RETRIES 10
 
 /*
  * opcode: ArmOpCode enum
@@ -71,6 +74,7 @@
  *     M -> Thumb2 16-bit zero-extended immediate
  *     b -> 4-digit binary
  *     B -> dmb option string (sy, st, ish, ishst, nsh, hshst)
+ *     H -> operand shift
  *
  *  [!] escape.  To insert "!", use "!!"
  */
@@ -540,17 +544,17 @@ ArmEncodingMap EncodingMap[kArmLast] = {
                  kFmtBitBlt, 11, 8, kFmtBitBlt, 19, 16, kFmtBitBlt, 3, 0,
                  kFmtShift, -1, -1,
                  IS_QUAD_OP | REG_DEF0_USE12 | SETS_CCODES,
-                 "adds", "r!0d, r!1d, r!2d", 2),
+                 "adds", "r!0d, r!1d, r!2d!3H", 2),
     ENCODING_MAP(kThumb2SubRRR,       0xebb00000, /* setflags enconding */
                  kFmtBitBlt, 11, 8, kFmtBitBlt, 19, 16, kFmtBitBlt, 3, 0,
                  kFmtShift, -1, -1,
                  IS_QUAD_OP | REG_DEF0_USE12 | SETS_CCODES,
-                 "subs", "r!0d, r!1d, r!2d", 2),
+                 "subs", "r!0d, r!1d, r!2d!3H", 2),
     ENCODING_MAP(kThumb2SbcRRR,       0xeb700000, /* setflags encoding */
                  kFmtBitBlt, 11, 8, kFmtBitBlt, 19, 16, kFmtBitBlt, 3, 0,
                  kFmtShift, -1, -1,
                  IS_QUAD_OP | REG_DEF0_USE12 | USES_CCODES | SETS_CCODES,
-                 "sbcs", "r!0d, r!1d, r!2d", 2),
+                 "sbcs", "r!0d, r!1d, r!2d!3H", 2),
     ENCODING_MAP(kThumb2CmpRR,       0xebb00f00,
                  kFmtBitBlt, 19, 16, kFmtBitBlt, 3, 0, kFmtShift, -1, -1,
                  kFmtUnused, -1, -1,
@@ -653,15 +657,15 @@ ArmEncodingMap EncodingMap[kArmLast] = {
                  kFmtBitBlt, 11, 8, kFmtBitBlt, 19, 16, kFmtBitBlt, 3, 0,
                  kFmtShift, -1, -1,
                  IS_QUAD_OP | REG_DEF0_USE12 | SETS_CCODES,
-                 "adcs", "r!0d, r!1d, r!2d, shift !3d", 2),
+                 "adcs", "r!0d, r!1d, r!2d!3H", 2),
     ENCODING_MAP(kThumb2AndRRR,  0xea000000,
                  kFmtBitBlt, 11, 8, kFmtBitBlt, 19, 16, kFmtBitBlt, 3, 0,
                  kFmtShift, -1, -1, IS_QUAD_OP | REG_DEF0_USE12,
-                 "and", "r!0d, r!1d, r!2d, shift !3d", 2),
+                 "and", "r!0d, r!1d, r!2d!3H", 2),
     ENCODING_MAP(kThumb2BicRRR,  0xea200000,
                  kFmtBitBlt, 11, 8, kFmtBitBlt, 19, 16, kFmtBitBlt, 3, 0,
                  kFmtShift, -1, -1, IS_QUAD_OP | REG_DEF0_USE12,
-                 "bic", "r!0d, r!1d, r!2d, shift !3d", 2),
+                 "bic", "r!0d, r!1d, r!2d!3H", 2),
     ENCODING_MAP(kThumb2CmnRR,  0xeb000000,
                  kFmtBitBlt, 19, 16, kFmtBitBlt, 3, 0, kFmtShift, -1, -1,
                  kFmtUnused, -1, -1,
@@ -670,7 +674,7 @@ ArmEncodingMap EncodingMap[kArmLast] = {
     ENCODING_MAP(kThumb2EorRRR,  0xea800000,
                  kFmtBitBlt, 11, 8, kFmtBitBlt, 19, 16, kFmtBitBlt, 3, 0,
                  kFmtShift, -1, -1, IS_QUAD_OP | REG_DEF0_USE12,
-                 "eor", "r!0d, r!1d, r!2d, shift !3d", 2),
+                 "eor", "r!0d, r!1d, r!2d!3H", 2),
     ENCODING_MAP(kThumb2MulRRR,  0xfb00f000,
                  kFmtBitBlt, 11, 8, kFmtBitBlt, 19, 16, kFmtBitBlt, 3, 0,
                  kFmtUnused, -1, -1, IS_TERTIARY_OP | REG_DEF0_USE12,
@@ -692,7 +696,7 @@ ArmEncodingMap EncodingMap[kArmLast] = {
     ENCODING_MAP(kThumb2OrrRRR,  0xea400000,
                  kFmtBitBlt, 11, 8, kFmtBitBlt, 19, 16, kFmtBitBlt, 3, 0,
                  kFmtShift, -1, -1, IS_QUAD_OP | REG_DEF0_USE12,
-                 "orr", "r!0d, r!1d, r!2d, shift !3d", 2),
+                 "orr", "r!0d, r!1d, r!2d!3H", 2),
     ENCODING_MAP(kThumb2TstRR,       0xea100f00,
                  kFmtBitBlt, 19, 16, kFmtBitBlt, 3, 0, kFmtShift, -1, -1,
                  kFmtUnused, -1, -1,
@@ -914,8 +918,14 @@ static int jitTraceDescriptionSize(const JitTraceDescription *desc)
     return sizeof(JitTraceDescription) + ((runCount+1) * sizeof(JitTraceRun));
 }
 
-/* Return TRUE if error happens */
-static bool assembleInstructions(CompilationUnit *cUnit, intptr_t startAddr)
+/*
+ * Assemble the LIR into binary instruction format.  Note that we may
+ * discover that pc-relative displacements may not fit the selected
+ * instruction.  In those cases we will try to substitute a new code
+ * sequence or request that the trace be shortened and retried.
+ */
+static AssemblerStatus assembleInstructions(CompilationUnit *cUnit,
+                                            intptr_t startAddr)
 {
     short *bufferAddr = (short *) cUnit->codeBuffer;
     ArmLIR *lir;
@@ -940,21 +950,16 @@ static bool assembleInstructions(CompilationUnit *cUnit, intptr_t startAddr)
             ((lir->opCode == kThumb2Vldrs) && (lir->operands[1] == rpc))) {
             ArmLIR *lirTarget = (ArmLIR *) lir->generic.target;
             intptr_t pc = (lir->generic.offset + 4) & ~3;
-            /*
-             * Allow an offset (stored in operands[2] to be added to the
-             * PC-relative target. Useful to get to a fixed field inside a
-             * chaining cell.
-             */
-            intptr_t target = lirTarget->generic.offset + lir->operands[2];
+            intptr_t target = lirTarget->generic.offset;
             int delta = target - pc;
             if (delta & 0x3) {
                 LOGE("PC-rel distance is not multiples of 4: %d\n", delta);
                 dvmCompilerAbort(cUnit);
             }
             if ((lir->opCode == kThumb2LdrPcRel12) && (delta > 4091)) {
-                return true;
+                return kRetryHalve;
             } else if (delta > 1020) {
-                return true;
+                return kRetryHalve;
             }
             if (lir->opCode == kThumb2Vldrs) {
                 lir->operands[2] = delta >> 2;
@@ -968,11 +973,23 @@ static bool assembleInstructions(CompilationUnit *cUnit, intptr_t startAddr)
             intptr_t target = targetLIR->generic.offset;
             int delta = target - pc;
             if (delta > 126 || delta < 0) {
-                /*
-                 * TODO: allow multiple kinds of assembler failure to allow
-                 * change of code patterns when things don't fit.
-                 */
-                return true;
+                /* Convert to cmp rx,#0 / b[eq/ne] tgt pair */
+                ArmLIR *newInst = dvmCompilerNew(sizeof(ArmLIR), true);
+                /* Make new branch instruction and insert after */
+                newInst->opCode = kThumbBCond;
+                newInst->operands[0] = 0;
+                newInst->operands[1] = (lir->opCode == kThumb2Cbz) ?
+                                        kArmCondEq : kArmCondNe;
+                newInst->generic.target = lir->generic.target;
+                dvmCompilerSetupResourceMasks(newInst);
+                dvmCompilerInsertLIRAfter((LIR *)lir, (LIR *)newInst);
+                /* Convert the cb[n]z to a cmp rx, #0 ] */
+                lir->opCode = kThumbCmpRI8;
+                /* operand[0] is src1 in both cb[n]z & CmpRI8 */
+                lir->operands[1] = 0;
+                lir->generic.target = 0;
+                dvmCompilerSetupResourceMasks(lir);
+                return kRetryAll;
             } else {
                 lir->operands[1] = delta >> 1;
             }
@@ -983,7 +1000,7 @@ static bool assembleInstructions(CompilationUnit *cUnit, intptr_t startAddr)
             intptr_t target = targetLIR->generic.offset;
             int delta = target - pc;
             if ((lir->opCode == kThumbBCond) && (delta > 254 || delta < -256)) {
-                return true;
+                return kRetryHalve;
             }
             lir->operands[0] = delta >> 1;
         } else if (lir->opCode == kThumbBUncond) {
@@ -1029,18 +1046,12 @@ static bool assembleInstructions(CompilationUnit *cUnit, intptr_t startAddr)
                     bits |= value;
                     break;
                 case kFmtBrOffset:
-                    /*
-                     * NOTE: branch offsets are not handled here, but
-                     * in the main assembly loop (where label values
-                     * are known).  For reference, here is what the
-                     * encoder handing would be:
-                         value = ((operand  & 0x80000) >> 19) << 26;
-                         value |= ((operand & 0x40000) >> 18) << 11;
-                         value |= ((operand & 0x20000) >> 17) << 13;
-                         value |= ((operand & 0x1f800) >> 11) << 16;
-                         value |= (operand  & 0x007ff);
-                         bits |= value;
-                     */
+                    value = ((operand  & 0x80000) >> 19) << 26;
+                    value |= ((operand & 0x40000) >> 18) << 11;
+                    value |= ((operand & 0x20000) >> 17) << 13;
+                    value |= ((operand & 0x1f800) >> 11) << 16;
+                    value |= (operand  & 0x007ff);
+                    bits |= value;
                     break;
                 case kFmtShift5:
                     value = ((operand & 0x1c) >> 2) << 12;
@@ -1117,7 +1128,7 @@ static bool assembleInstructions(CompilationUnit *cUnit, intptr_t startAddr)
         }
         *bufferAddr++ = bits & 0xffff;
     }
-    return false;
+    return kSuccess;
 }
 
 #if defined(SIGNATURE_BREAKPOINT)
@@ -1277,16 +1288,31 @@ void dvmCompilerAssembleLIR(CompilationUnit *cUnit, JitTranslationInfo *info)
         return;
     }
 
-    bool assemblerFailure = assembleInstructions(
-        cUnit, (intptr_t) gDvmJit.codeCache + gDvmJit.codeCacheByteUsed);
-
     /*
-     * Currently the only reason that can cause the assembler to fail is due to
-     * trace length - cut it in half and retry.
+     * Attempt to assemble the trace.  Note that assembleInstructions
+     * may rewrite the code sequence and request a retry.
      */
-    if (assemblerFailure) {
-        cUnit->halveInstCount = true;
-        return;
+    cUnit->assemblerStatus = assembleInstructions(cUnit,
+          (intptr_t) gDvmJit.codeCache + gDvmJit.codeCacheByteUsed);
+
+    switch(cUnit->assemblerStatus) {
+        case kSuccess:
+            break;
+        case kRetryAll:
+            if (cUnit->assemblerRetries < MAX_ASSEMBLER_RETRIES) {
+                /* Restore pristine chain cell marker on retry */
+                chainCellOffsetLIR->operands[0] = CHAIN_CELL_OFFSET_TAG;
+                return;
+            }
+            /* Too many retries - reset and try cutting the trace in half */
+            cUnit->assemblerRetries = 0;
+            cUnit->assemblerStatus = kRetryHalve;
+            return;
+        case kRetryHalve:
+            return;
+        default:
+             LOGE("Unexpected assembler status: %d", cUnit->assemblerStatus);
+             dvmAbort();
     }
 
 #if defined(SIGNATURE_BREAKPOINT)
@@ -1461,8 +1487,8 @@ static void inlineCachePatchEnqueue(PredictedChainingCell *cellAddr,
          * The update order matters - make sure clazz is updated last since it
          * will bring the uninitialized chaining cell to life.
          */
-        ANDROID_MEMBAR_FULL();
-        cellAddr->clazz = newContent->clazz;
+        android_atomic_release_store((int32_t)newContent->clazz,
+            (void*) &cellAddr->clazz);
         cacheflush((intptr_t) cellAddr, (intptr_t) (cellAddr+1), 0);
         UPDATE_CODE_CACHE_PATCHES();
 
@@ -1821,6 +1847,7 @@ static int dumpTraceProfile(JitEntry *p, bool silent, bool reset,
     u2* pCellOffset;
     JitTraceDescription *desc;
     const Method* method;
+    int idx;
 
     traceBase = getTraceBase(p);
 
@@ -1873,6 +1900,24 @@ static int dumpTraceProfile(JitEntry *p, bool silent, bool reset,
          addrToLine.lineNum,
          method->clazz->descriptor, method->name, methodDesc);
     free(methodDesc);
+
+    /* Find the last fragment (ie runEnd is set) */
+    for (idx = 0;
+         desc->trace[idx].frag.isCode && !desc->trace[idx].frag.runEnd;
+         idx++) {
+    }
+
+    /*
+     * runEnd must comes with a JitCodeDesc frag. If isCode is false it must
+     * be a meta info field (only used by callsite info for now).
+     */
+    if (!desc->trace[idx].frag.isCode) {
+        const Method *method = desc->trace[idx+1].meta;
+        char *methodDesc = dexProtoCopyMethodDescriptor(&method->prototype);
+        /* Print the callee info in the trace */
+        LOGD("    -> %s%s;%s", method->clazz->descriptor, method->name,
+             methodDesc);
+    }
 
     return executionCount;
 }

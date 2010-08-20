@@ -335,7 +335,8 @@ bool dvmIsPrivilegedMethod(const Method* method)
         }
 
         /* all good, raise volatile readiness flag */
-        gDvm.javaSecurityAccessControllerReady = true;
+        android_atomic_release_store(true,
+            &gDvm.javaSecurityAccessControllerReady);
     }
 
     for (i = 0; i < NUM_DOPRIV_FUNCS; i++) {
