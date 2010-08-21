@@ -105,15 +105,18 @@ ifeq ($(WITH_HOST_DALVIK),true)
 
     include $(LOCAL_PATH)/Dvm.mk
 
-    # We need to include all of these libraries. The end result of this
-    # section is a static library, but LOCAL_STATIC_LIBRARIES doesn't
-    # actually cause any code from the specified libraries to be included,
-    # whereas LOCAL_WHOLE_STATIC_LIBRARIES does. No, I (danfuzz) am not
-    # entirely sure what LOCAL_STATIC_LIBRARIES is even supposed to mean
-    # in this context, but it is in (apparently) meaningfully used in
-    # other parts of the build.
-    LOCAL_WHOLE_STATIC_LIBRARIES += \
-	libnativehelper-host libdex liblog libcutils
+    LOCAL_SHARED_LIBRARIES += libcrypto libssl libicuuc libicui18n
+
+    LOCAL_LDLIBS := -lpthread -ldl
+    ifeq ($(HOST_OS),linux)
+      # need this for clock_gettime() in profiling
+      LOCAL_LDLIBS += -lrt
+    endif
+
+    # Build as a WHOLE static library so dependencies are available at link
+    # time. When building this target as a regular static library, certain
+    # dependencies like expat are not found by the linker.
+    LOCAL_WHOLE_STATIC_LIBRARIES += libexpat libcutils libdex liblog libnativehelper libutils libz
 
     # The libffi from the source tree should never be used by host builds.
     # The recommendation is that host builds should always either
@@ -126,8 +129,8 @@ ifeq ($(WITH_HOST_DALVIK),true)
     endif
 
     LOCAL_CFLAGS += $(host_smp_flag)
-    LOCAL_MODULE := libdvm-host
+    LOCAL_MODULE := libdvm
 
-    include $(BUILD_HOST_STATIC_LIBRARY)
+    include $(BUILD_HOST_SHARED_LIBRARY)
 
 endif
