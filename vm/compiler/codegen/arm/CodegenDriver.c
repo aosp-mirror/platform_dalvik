@@ -3309,7 +3309,7 @@ static bool genInlinedAbsInt(CompilationUnit *cUnit, MIR *mir)
 {
     RegLocation rlSrc = dvmCompilerGetSrc(cUnit, mir, 0);
     rlSrc = loadValue(cUnit, rlSrc, kCoreReg);
-    RegLocation rlDest = inlinedTarget(cUnit, mir, false);;
+    RegLocation rlDest = inlinedTarget(cUnit, mir, false);
     RegLocation rlResult = dvmCompilerEvalLoc(cUnit, rlDest, kCoreReg, true);
     int signReg = dvmCompilerAllocTemp(cUnit);
     /*
@@ -3343,6 +3343,24 @@ static bool genInlinedAbsLong(CompilationUnit *cUnit, MIR *mir)
     opRegReg(cUnit, kOpXor, rlResult.lowReg, signReg);
     opRegReg(cUnit, kOpXor, rlResult.highReg, signReg);
     storeValueWide(cUnit, rlDest, rlResult);
+    return false;
+}
+
+static bool genInlinedIntFloatConversion(CompilationUnit *cUnit, MIR *mir)
+{
+    // Just move from source to destination...
+    RegLocation rlSrc = dvmCompilerGetSrc(cUnit, mir, 0);
+    RegLocation rlDest = inlinedTarget(cUnit, mir, false);
+    storeValue(cUnit, rlDest, rlSrc);
+    return false;
+}
+
+static bool genInlinedLongDoubleConversion(CompilationUnit *cUnit, MIR *mir)
+{
+    // Just move from source to destination...
+    RegLocation rlSrc = dvmCompilerGetSrcWide(cUnit, mir, 0, 1);
+    RegLocation rlDest = inlinedTargetWide(cUnit, mir, false);
+    storeValueWide(cUnit, rlDest, rlSrc);
     return false;
 }
 
@@ -3402,9 +3420,17 @@ static bool handleExecuteInline(CompilationUnit *cUnit, MIR *mir)
                         return false;
                     else
                         break;
+                case INLINE_FLOAT_TO_RAW_INT_BITS:
+                case INLINE_INT_BITS_TO_FLOAT:
+                    return genInlinedIntFloatConversion(cUnit, mir);
+                case INLINE_DOUBLE_TO_RAW_LONG_BITS:
+                case INLINE_LONG_BITS_TO_DOUBLE:
+                    return genInlinedLongDoubleConversion(cUnit, mir);
                 case INLINE_STRING_EQUALS:
                 case INLINE_MATH_COS:
                 case INLINE_MATH_SIN:
+                case INLINE_FLOAT_TO_INT_BITS:
+                case INLINE_DOUBLE_TO_LONG_BITS:
                     break;   /* Handle with C routine */
                 default:
                     dvmCompilerAbort(cUnit);
