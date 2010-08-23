@@ -1794,6 +1794,7 @@ bool dvmDbgGetThreadStatus(ObjectId threadId, u4* pThreadStatus,
     case THREAD_STARTING:       *pThreadStatus = TS_ZOMBIE;     break;
     case THREAD_NATIVE:         *pThreadStatus = TS_RUNNING;    break;
     case THREAD_VMWAIT:         *pThreadStatus = TS_WAIT;       break;
+    case THREAD_SUSPENDED:      *pThreadStatus = TS_RUNNING;    break;
     default:
         assert(false);
         *pThreadStatus = THREAD_ZOMBIE;
