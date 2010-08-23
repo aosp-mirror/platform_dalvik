@@ -262,10 +262,6 @@ ifeq ($(dvm_simulator),true)
     # need this for clock_gettime() in profiling
     LOCAL_LDLIBS += -lrt
   endif
-else
-  ifeq ($(dvm_os),linux)
-    LOCAL_SHARED_LIBRARIES += libdl
-  endif
 endif
 
 MTERP_ARCH_KNOWN := false
