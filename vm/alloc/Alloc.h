@@ -92,11 +92,6 @@ void dvmReleaseTrackedAlloc(Object* obj, Thread* self);
 bool dvmIsValidObject(const Object* obj);
 
 /*
- * Returns true iff <ptr> points within allocation-managed address space.
- */
-bool dvmIsValidObjectAddress(const void *ptr);
-
-/*
  * Create a copy of an object.
  *
  * The new object will be added to the "tracked alloc" table.
@@ -183,5 +178,10 @@ void dvmTrackExternalFree(size_t n);
  * dvmTrackExternalAllocation/Free().
  */
 size_t dvmGetExternalBytesAllocated(void);
+
+/*
+ * Returns a count of the extant instances of a class.
+ */
+size_t dvmCountInstancesOfClass(const ClassObject *clazz);
 
 #endif /*_DALVIK_ALLOC_ALLOC*/

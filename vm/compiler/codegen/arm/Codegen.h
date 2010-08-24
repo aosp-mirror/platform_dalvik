@@ -78,6 +78,8 @@ extern ArmLIR* dvmCompilerRegCopy(CompilationUnit *cUnit, int rDest, int rSrc);
 extern void dvmCompilerRegCopyWide(CompilationUnit *cUnit, int destLo,
                                    int destHi, int srcLo, int srcHi);
 
+extern void dvmCompilerSetupResourceMasks(ArmLIR *lir);
+
 extern void dvmCompilerFlushRegImpl(CompilationUnit *cUnit, int rBase,
                                     int displacement, int rSrc, OpSize size);
 

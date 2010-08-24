@@ -438,32 +438,16 @@ common_backwardBranch:
 common_periodicChecks:
     ldr     r3, [rGLUE, #offGlue_pSelfSuspendCount] @ r3<- &suspendCount
 
-#if defined(WITH_DEBUGGER)
     ldr     r1, [rGLUE, #offGlue_pDebuggerActive]   @ r1<- &debuggerActive
-#endif
-#if defined(WITH_PROFILER)
     ldr     r2, [rGLUE, #offGlue_pActiveProfilers]  @ r2<- &activeProfilers
-#endif
 
     ldr     ip, [r3]                    @ ip<- suspendCount (int)
 
-#if defined(WITH_DEBUGGER) && defined(WITH_PROFILER)
     cmp     r1, #0                      @ debugger enabled?
     ldrneb  r1, [r1]                    @ yes, r1<- debuggerActive (boolean)
     ldr     r2, [r2]                    @ r2<- activeProfilers (int)
     orrne   ip, ip, r1                  @ ip<- suspendCount | debuggerActive
     orrs    ip, ip, r2                  @ ip<- suspend|debugger|profiler; set Z
-#elif defined(WITH_DEBUGGER)
-    cmp     r1, #0                      @ debugger enabled?
-    ldrneb  r1, [r1]                    @ yes, r1<- debuggerActive (boolean)
-    orrsne  ip, ip, r1                  @ yes, ip<- suspend | debugger; set Z
-    @ (if not enabled, Z was set by test for r1==0, which is what we want)
-#elif defined (WITH_PROFILER)
-    ldr     r2, [r2]                    @ r2<- activeProfilers (int)
-    orrs    ip, ip, r2                  @ ip<- suspendCount | activeProfilers
-#else
-    cmp     ip, #0                      @ not ORing anything in; set Z
-#endif
 
     bxeq    lr                          @ all zero, return
 
@@ -474,11 +458,9 @@ common_periodicChecks:
      *
      * r0 still holds the reentry type.
      */
-#if defined(WITH_DEBUGGER) || defined(WITH_PROFILER)
     ldr     ip, [r3]                    @ ip<- suspendCount (int)
     cmp     ip, #0                      @ want suspend?
     beq     1f                          @ no, must be debugger/profiler
-#endif
 
     stmfd   sp!, {r0, lr}               @ preserve r0 and lr
 #if defined(WITH_JIT)
@@ -498,8 +480,6 @@ common_periodicChecks:
     bl      dvmCheckSuspendPending      @ do full check, suspend if necessary
     ldmfd   sp!, {r0, lr}               @ restore r0 and lr
 
-#if defined(WITH_DEBUGGER) || defined(WITH_PROFILER)
-
     /*
      * Reload the debugger/profiler enable flags.  We're checking to see
      * if either of these got set while we were suspended.
@@ -507,19 +487,11 @@ common_periodicChecks:
      * We can't really avoid the #ifdefs here, because the fields don't
      * exist when the feature is disabled.
      */
-#if defined(WITH_DEBUGGER)
     ldr     r1, [rGLUE, #offGlue_pDebuggerActive]   @ r1<- &debuggerActive
     cmp     r1, #0                      @ debugger enabled?
     ldrneb  r1, [r1]                    @ yes, r1<- debuggerActive (boolean)
-#else
-    mov     r1, #0
-#endif
-#if defined(WITH_PROFILER)
     ldr     r2, [rGLUE, #offGlue_pActiveProfilers]  @ r2<- &activeProfilers
     ldr     r2, [r2]                    @ r2<- activeProfilers (int)
-#else
-    mov     r2, #0
-#endif
 
     orrs    r1, r1, r2
     beq     2f
@@ -529,8 +501,6 @@ common_periodicChecks:
     add     rPC, rPC, r9                @ update rPC
     mov     r1, #1                      @ "want switch" = true
     b       common_gotoBail             @ side exit
-
-#endif /*WITH_DEBUGGER || WITH_PROFILER*/
 
 2:
     bx      lr                          @ nothing to do, return

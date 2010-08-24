@@ -692,12 +692,10 @@ const InlineOperation gDvmInlineOpsTable[] = {
  */
 bool dvmInlineNativeStartup(void)
 {
-#ifdef WITH_PROFILER
     gDvm.inlinedMethods =
         (Method**) calloc(NELEM(gDvmInlineOpsTable), sizeof(Method*));
     if (gDvm.inlinedMethods == NULL)
         return false;
-#endif
 
     return true;
 }
@@ -707,9 +705,7 @@ bool dvmInlineNativeStartup(void)
  */
 void dvmInlineNativeShutdown(void)
 {
-#ifdef WITH_PROFILER
     free(gDvm.inlinedMethods);
-#endif
 }
 
 
@@ -741,7 +737,6 @@ bool dvmPerformInlineOp4Dbg(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
 
     assert(opIndex >= 0 && opIndex < NELEM(gDvmInlineOpsTable));
 
-#ifdef WITH_PROFILER
     /*
      * Populate the methods table on first use.  It's possible the class
      * hasn't been resolved yet, so we need to do the full "calling the
@@ -792,6 +787,5 @@ bool dvmPerformInlineOp4Dbg(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
     return result;
 
 skip_prof:
-#endif
     return (*gDvmInlineOpsTable[opIndex].func)(arg0, arg1, arg2, arg3, pResult);
 }

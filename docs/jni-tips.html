@@ -35,6 +35,15 @@
 </li>
 
 <li> <a href="#Unsupported">Unsupported Features</a>
+</li>
+
+<li> <a href="#FAQUnsatisfied">FAQ: UnsatisfiedLinkError</a>
+</li>
+<li> <a href="#FAQFindClass">FAQ: FindClass didn't find my class</a>
+</li>
+<li> <a href="#FAQSharing">FAQ: Sharing raw data with native code</a>
+</li>
+
 </ul>
 <p>
 <noautolink>
@@ -72,7 +81,8 @@ On some VMs, the JNIEnv is used for thread-local storage.  For this reason, <str
 If a piece of code has no other way to get its JNIEnv, you should share
 the JavaVM, and use JavaVM-&gt;GetEnv to discover the thread's JNIEnv.
 </p><p>
-The C and C++ declarations of JNIEnv and JavaVM are different.  "jni.h" provides different typedefs
+The C declarations of JNIEnv and JavaVM are different from the C++
+declarations.  "jni.h" provides different typedefs
 depending on whether it's included into ".c" or ".cpp".  For this reason it's a bad idea to
 include JNIEnv arguments in header files included by both languages.  (Put another way: if your
 header file requires "#ifdef __cplusplus", you may have to do some extra work if anything in
@@ -284,7 +294,7 @@ whether it returned a pointer to the actual data or a copy of it:
 </p><p>
 One reason for checking the <code>isCopy</code> flag is to know if
 you need to call <code>Release</code> with <code>JNI_COMMIT</code>
-after making changes to an array -- if you're alternating between making
+after making changes to an array &mdash; if you're alternating between making
 changes and executing code that uses the contents of the array, you may be
 able to
 skip the no-op commit.  Another possible reason for checking the flag is for
@@ -331,11 +341,11 @@ We can accomplish the same thing with this:
     env->GetByteArrayRegion(array, 0, len, buffer);
 </pre>
 </p><p>
-This accomplishes the same thing, with several advantages:
+This has several advantages:
 <ul>
     <li>Requires one JNI call instead of 2, reducing overhead.
     <li>Doesn't require pinning or extra data copies.
-    <li>Reduces the risk of programmer error -- no risk of forgetting
+    <li>Reduces the risk of programmer error &mdash; no risk of forgetting
     to call <code>Release</code> after something fails.
 </ul>
 </p><p>
@@ -372,6 +382,13 @@ pending are:
     <li>ReleaseStringUTFChars
 </ul></font>
 </p><p>
+Many JNI calls can throw an exception, but often provide a simpler way
+of checking for failure.  For example, if <code>NewString</code> returns
+a non-NULL value, you don't need to check for an exception.  However, if
+you call a method (using a function like <code>CallObjectMethod</code>),
+you must always check for an exception, because the return value is not
+going to be valid if an exception was thrown.
+</p><p>
 Note that exceptions thrown by interpreted code do not "leap over" native code,
 and C++ exceptions thrown by native code are not handled by Dalvik.
 The JNI <code>Throw</code> and <code>ThrowNew</code> instructions just
@@ -400,12 +417,14 @@ on an Object field will succeed, even if the field is marked
 goal is to minimize the overhead on the assumption that, if you've written it in native code,
 you probably did it for performance reasons.
 </p><p>
-Some VMs support extended checking with the "<code>-Xcheck:jni</code>" flag.  If the flag is set, the VM
-puts a different table of functions into the JavaVM and JNIEnv pointers.  These functions do
-an extended series of checks before calling the standard implementation.
+In Dalvik, you can enable additional checks by setting the
+"<code>-Xcheck:jni</code>" flag.  If the flag is set, the VM directs
+the JavaVM and JNIEnv pointers to a different table of functions.
+These functions perform an extended series of checks before calling the
+standard implementation.
 
 </p><p>
-Some things that may be checked:
+The additional tests include:
 </p><p>
 </p>
 <ul>
@@ -415,6 +434,9 @@ Some things that may be checked:
 jfieldID points to field data, jstring is a java.lang.String).
 </li>
 <li> Field type correctness, e.g. don't store a HashMap in a String field.
+</li>
+<li> Ensure jmethodID is appropriate when making a static or virtual
+method call.
 </li>
 <li> Check to see if an exception is pending on calls where pending exceptions are not legal.
 </li>
@@ -431,8 +453,7 @@ jfieldID points to field data, jstring is a java.lang.String).
 <p>Accessibility of methods and fields (i.e. public vs. private) is not
 checked.
 <p>
-The Dalvik VM supports the <code>-Xcheck:jni</code> flag.  For a
-description of how to enable it for Android apps, see
+For a description of how to enable CheckJNI for Android apps, see
 <a href="embedded-vm-control.html">Controlling the Embedded VM</a>.
 It's currently enabled by default in the Android emulator and on
 "engineering" device builds.
@@ -483,13 +504,13 @@ written in C:
 </p><blockquote><pre>jint JNI_OnLoad(JavaVM* vm, void* reserved)
 {
     JNIEnv* env;
-    if ((*vm)->GetEnv(vm, (void**) &env, JNI_VERSION_1_4) != JNI_OK)
+    if ((*vm)->GetEnv(vm, (void**) &env, JNI_VERSION_1_6) != JNI_OK)
         return -1;
 
     /* get class with (*env)->FindClass */
     /* register methods with (*env)->RegisterNatives */
 
-    return JNI_VERSION_1_4;
+    return JNI_VERSION_1_6;
 }
 </pre></blockquote>
 </p><p>
@@ -513,7 +534,9 @@ calls you make from there will happen in the context of the class loader
 that was used to load the shared library.  Normally <code>FindClass</code>
 uses the loader associated with the method at the top of the interpreted
 stack, or if there isn't one (because the thread was just attached to
-the VM) it uses the "system" class loader.
+the VM) it uses the "system" class loader.  This makes
+<code>JNI_OnLoad</code> a convenient place to look up and cache class
+object references.
 </p><p>
 
 
@@ -543,10 +566,169 @@ that use 64-bit pointers, <strong>you need to stash your native pointers in a
     programmers to create hard references to weak globals before doing
     anything with them, so this should not be at all limiting.)</li>
     <li><code>GetObjectRefType</code> (new in 1.6) is implemented but not fully
-    functional -- it can't always tell the difference between "local" and
+    functional &mdash; it can't always tell the difference between "local" and
     "global" references.</li>
 </ul>
 
+<p>For backward compatibility, you may need to be aware of:
+<ul>
+    <li>Until 2.0 ("Eclair"), the '$' character was not properly
+    converted to "_00024" during searches for method names.  Working
+    around this requires using explicit registration or moving the
+    native methods out of inner classes.
+    <li>"Weak global" references were not implemented until 2.2 ("Froyo").
+    Older VMs will vigorously reject attempts to use them.  You can use
+    the Android platform version constants to test for support.
+</ul>
+
+
+</p><h2><a name="FAQUnsatisfied"> FAQ: UnsatisfiedLinkError </a></h2>
+<p>
+When working on native code it's not uncommon to see a failure like this:
+<pre>java.lang.UnsatisfiedLinkError: Library foo not found</pre>
+<p>
+In some cases it means what it says &mdash; the library wasn't found.  In
+other cases the library exists but couldn't be opened by dlopen(), and
+the details of the failure can be found in logcat.  For example:
+<pre>D/dalvikvm(  870): Trying to load lib /sdcard/libfoo.so 0x4001ff48
+I/dalvikvm(  870): Unable to dlopen(/sdcard/libfoo.so): Cannot load library: /sdcard/libfoo.so is not a valid ELF object
+</pre>
+<p>
+Common reasons why you might encounter "library not found" exceptions:
+<ul>
+    <li>The library doesn't exist or isn't accessible to the app.  Use
+    <code>adb shell ls -l &lt;path&gt;</code> to check its presence
+    and permissions.
+    <li>The library wasn't built with the NDK.  This can result in
+    dependencies on functions or libraries that don't exist on the device.
+</ul>
+</p><p>
+Another class of <code>UnsatisfiedLinkError</code> failures looks like:
+<pre>java.lang.UnsatisfiedLinkError: myfunc
+        at Foo.myfunc(Native Method)
+        at Foo.main(Foo.java:10)</pre>
+<p>
+In logcat, you'll see:
+<pre>W/dalvikvm(  880): No implementation found for native LFoo;.myfunc ()V</pre>
+<p>
+This means that the VM tried to find a matching method but was unsuccessful.
+Some common reasons for this are:
+<ul>
+    <li>The library isn't getting loaded.  Check the logcat output for
+    messages about library loading.
+    <li>The method isn't being found due to a name or signature mismatch.  This
+    is commonly caused by:
+    <ul>
+        <li>For lazy method lookup, failing to declare C++ functions
+        with <code>extern C</code>.  You can use <code>arm-eabi-nm</code>
+        to see the symbols as they appear in the library; if they look
+        mangled (e.g. <code>_Z15Java_Foo_myfuncP7_JNIEnvP7_jclass</code>
+        rather than <code>Java_Foo_myfunc</code>) then you need to
+        adjust the declaration.
+        <li>For explicit registration, minor errors when entering the
+        method signature.  Make sure that what you're passing to the
+        registration call matches the signature in the log file.
+        Remember that 'B' is <code>byte</code> and 'Z' is <code>boolean</code>.
+        Class name components in signatures start with 'L', end with ';',
+        use '/' to separate package/class names, and use '$' to separate
+        inner-class names
+        (e.g. <code>Ljava/util/Map$Entry;</code>).
+    </ul>
+</ul>
+<p>
+Using <code>javah</code> to automatically generate JNI headers may help
+avoid some problems.
+
+
+</p><h2><a name="FAQFindClass"> FAQ: FindClass didn't find my class </a></h2>
+<p>
+Make sure that the class name string has the correct format.  JNI class
+names start with the package name and are separated with slashes,
+e.g. <code>java/lang/String</code>.  If you're looking up an array class,
+you need to start with the appropriate number of square brackets and
+must also wrap the class with 'L' and ';', so a one-dimensional array of
+<code>String</code> would be <code>[Ljava/lang/String;</code>.
+</p><p>
+If the class name looks right, you could be running into a class loader
+issue.  <code>FindClass</code> wants to start the class search in the
+class loader associated with your code.  It examines the VM call stack,
+which will look something like:
+<pre>    Foo.myfunc(Native Method)
+    Foo.main(Foo.java:10)
+    dalvik.system.NativeStart.main(Native Method)</pre>
+<p>
+The topmost method is <code>Foo.myfunc</code>.  <code>FindClass</code>
+finds the <code>ClassLoader</code> object associated with the <code>Foo</code>
+class and uses that.
+</p><p>
+This usually does what you want.  You can get into trouble if you
+create a thread outside the VM (perhaps by calling <code>pthread_create</code>
+and then attaching it to the VM with <code>AttachCurrentThread</code>).
+Now the stack trace looks like this:
+<pre>    dalvik.system.NativeStart.run(Native Method)</pre>
+<p>
+The topmost method is <code>NativeStart.run</code>, which isn't part of
+your application.  If you call <code>FindClass</code> from this thread, the
+VM will start in the "system" class loader instead of the one associated
+with your application, so attempts to find app-specific classes will fail.
+</p><p>
+There are a few ways to work around this:
+<ul>
+    <li>Do your <code>FindClass</code> lookups once, in
+    <code>JNI_OnLoad</code>, and cache the class references for later
+    use.  Any <code>FindClass</code> calls made as part of executing
+    <code>JNI_OnLoad</code> will use the class loader associated with
+    the function that called <code>System.loadLibrary</code> (this is a
+    special rule, provided to make library initialization more convenient).
+    If your app code is loading the library, <code>FindClass</code>
+    will use the correct class loader.
+    <li>Pass an instance of the class into the functions that need
+    it, e.g. declare your native method to take a Class argument and
+    then pass <code>Foo.class</code> in.
+    <li>Cache a reference to the <code>ClassLoader</code> object somewhere
+    handy, and issue <code>loadClass</code> calls directly.  This requires
+    some effort.
+</ul>
+
+</p><p>
+
+
+</p><h2><a name="FAQSharing"> FAQ: Sharing raw data with native code </a></h2>
+<p>
+You may find yourself in a situation where you need to access a large
+buffer of raw data from code written in Java and C/C++.  Common examples
+include manipulation of bitmaps or sound samples.  There are two
+basic approaches.
+</p><p>
+You can store the data in a <code>byte[]</code>.  This allows very fast
+access from code written in Java.  On the native side, however, you're
+not guaranteed to be able to access the data without having to copy it.  In
+some implementations, <code>GetByteArrayElements</code> and
+<code>GetPrimitiveArrayCritical</code> will return actual pointers to the
+raw data in the managed heap, but in others it will allocate a buffer
+on the native heap and copy the data over.
+</p><p>
+The alternative is to store the data in a direct byte buffer.  These
+can be created with <code>java.nio.ByteBuffer.allocateDirect</code>, or
+the JNI <code>NewDirectByteBuffer</code> function.  Unlike regular
+byte buffers, the storage is not allocated on the managed heap, and can
+always be accessed directly from native code (get the address
+with <code>GetDirectBufferAddress</code>).  Depending on how direct
+byte buffer access is implemented in the VM, accessing the data from code
+written in Java can be very slow.
+</p><p>
+The choice of which to use depends on two factors:
+<ol>
+    <li>Will most of the data accesses happen from code written in Java
+    or in C/C++?
+    <li>If the data is eventually being passed to a system API, what form
+    must it be in?  (For example, if the data is eventually passed to a
+    function that takes a byte[], doing processing in a direct
+    <code>ByteBuffer</code> might be unwise.)
+</ol>
+If there's no clear winner, use a direct byte buffer.  Support for them
+is built directly into JNI, and access to them from code written in
+Java can be made faster with VM improvements.
 </p>
 
 <address>Copyright &copy; 2008 The Android Open Source Project</address>

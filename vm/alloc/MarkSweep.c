@@ -613,9 +613,12 @@ static void scanGrayObjects(GcMarkContext *ctx)
 {
     GcHeap *h = gDvm.gcHeap;
     u1 *card, *baseCard, *limitCard;
+    size_t footprint;
 
+    footprint = dvmHeapSourceGetValue(HS_FOOTPRINT, NULL, 0);
     baseCard = &h->cardTableBase[0];
-    limitCard = &h->cardTableBase[h->cardTableLength];
+    limitCard = dvmCardFromAddr((u1 *)dvmHeapSourceGetBase() + footprint);
+    assert(limitCard <= &h->cardTableBase[h->cardTableLength]);
     for (card = baseCard; card != limitCard; ++card) {
         if (*card == GC_CARD_DIRTY) {
             /*
@@ -963,30 +966,8 @@ typedef struct {
 static void sweepBitmapCallback(size_t numPtrs, void **ptrs,
                                 const void *finger, void *arg)
 {
-    const ClassObject *const classJavaLangClass = gDvm.classJavaLangClass;
     SweepContext *ctx = arg;
-    size_t i;
 
-    for (i = 0; i < numPtrs; i++) {
-        Object *obj;
-
-        obj = (Object *)ptrs[i];
-
-        /* This assumes that java.lang.Class will never go away.
-         * If it can, and we were the last reference to it, it
-         * could have already been swept.  However, even in that case,
-         * gDvm.classJavaLangClass should still have a useful
-         * value.
-         */
-        if (obj->clazz == classJavaLangClass) {
-            /* dvmFreeClassInnards() may have already been called,
-             * but it's safe to call on the same ClassObject twice.
-             */
-            dvmFreeClassInnards((ClassObject *)obj);
-        }
-    }
-    // TODO: dvmHeapSourceFreeList has a loop, just like the above
-    // does. Consider collapsing the two loops to save overhead.
     if (ctx->isConcurrent) {
         dvmLockHeap();
     }
@@ -1046,10 +1027,8 @@ void dvmHeapSweepUnmarkedObjects(GcMode mode, bool isConcurrent,
     }
     *numObjects = ctx.numObjects;
     *numBytes = ctx.numBytes;
-#ifdef WITH_PROFILER
     if (gDvm.allocProf.enabled) {
         gDvm.allocProf.freeCount += ctx.numObjects;
         gDvm.allocProf.freeSize += ctx.numBytes;
     }
-#endif
 }

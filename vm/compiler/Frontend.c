@@ -399,7 +399,8 @@ bool filterMethodByCallGraph(Thread *thread, const char *curMethodName)
  * bytecode into machine code.
  */
 bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
-                     JitTranslationInfo *info, jmp_buf *bailPtr)
+                     JitTranslationInfo *info, jmp_buf *bailPtr,
+                     int optHints)
 {
     const DexCode *dexCode = dvmGetMethodCode(desc->method);
     const JitTraceRun* currRun = &desc->trace[0];
@@ -671,10 +672,12 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
                        kInstrInvoke)) == 0) ||
             (lastInsn->dalvikInsn.opCode == OP_INVOKE_DIRECT_EMPTY);
 
+        /* Only form a loop if JIT_OPT_NO_LOOP is not set */
         if (curBB->taken == NULL &&
             curBB->fallThrough == NULL &&
             flags == (kInstrCanBranch | kInstrCanContinue) &&
-            fallThroughOffset == startBB->startOffset) {
+            fallThroughOffset == startBB->startOffset &&
+            JIT_OPT_NO_LOOP != (optHints & JIT_OPT_NO_LOOP)) {
             BasicBlock *loopBranch = curBB;
             BasicBlock *exitBB;
             BasicBlock *exitChainingCell;
@@ -874,16 +877,33 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
     /* Set the instruction set to use (NOTE: later components may change it) */
     cUnit.instructionSet = dvmCompilerInstructionSet();
 
+// FIXME: temporarily disable inline [Issue 2936748]
+#if 0
     /* Inline transformation @ the MIR level */
     if (cUnit.hasInvoke && !(gDvmJit.disableOpt & (1 << kMethodInlining))) {
         dvmCompilerInlineMIR(&cUnit);
     }
+#endif
 
     /* Preparation for SSA conversion */
     dvmInitializeSSAConversion(&cUnit);
 
     if (cUnit.hasLoop) {
-        dvmCompilerLoopOpt(&cUnit);
+        /*
+         * Loop is not optimizable (for example lack of a single induction
+         * variable), punt and recompile the trace with loop optimization
+         * disabled.
+         */
+        bool loopOpt = dvmCompilerLoopOpt(&cUnit);
+        if (loopOpt == false) {
+            if (cUnit.printMe) {
+                LOGD("Loop is not optimizable - retry codegen");
+            }
+            /* Reset the compiler resource pool */
+            dvmCompilerArenaReset();
+            return dvmCompileTrace(desc, cUnit.numInsts, info, bailPtr,
+                                   optHints | JIT_OPT_NO_LOOP);
+        }
     }
     else {
         dvmCompilerNonLoopAnalysis(&cUnit);
@@ -901,15 +921,17 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
     /* Convert MIR to LIR, etc. */
     dvmCompilerMIR2LIR(&cUnit);
 
-    /* Convert LIR into machine code. */
-    dvmCompilerAssembleLIR(&cUnit, info);
+    /* Convert LIR into machine code. Loop for recoverable retries */
+    do {
+        dvmCompilerAssembleLIR(&cUnit, info);
+        cUnit.assemblerRetries++;
+        if (cUnit.printMe && cUnit.assemblerStatus != kSuccess)
+            LOGD("Assembler abort #%d on %d",cUnit.assemblerRetries,
+                  cUnit.assemblerStatus);
+    } while (cUnit.assemblerStatus == kRetryAll);
 
     if (cUnit.printMe) {
-        if (cUnit.halveInstCount) {
-            LOGD("Assembler aborted");
-        } else {
-            dvmCompilerCodegenDump(&cUnit);
-        }
+        dvmCompilerCodegenDump(&cUnit);
         LOGD("End %s%s, %d Dalvik instructions",
              desc->method->clazz->descriptor, desc->method->name,
              cUnit.numInsts);
@@ -918,17 +940,17 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
     /* Reset the compiler resource pool */
     dvmCompilerArenaReset();
 
-    /* Success */
-    if (!cUnit.halveInstCount) {
-#if defined(WITH_JIT_TUNING)
-        methodStats->nativeSize += cUnit.totalSize;
-#endif
-        return info->codeAddress != NULL;
-
-    /* Halve the instruction count and retry again */
-    } else {
-        return dvmCompileTrace(desc, cUnit.numInsts / 2, info, bailPtr);
+    if (cUnit.assemblerStatus == kRetryHalve) {
+        /* Halve the instruction count and start from the top */
+        return dvmCompileTrace(desc, cUnit.numInsts / 2, info, bailPtr,
+                               optHints);
     }
+
+    assert(cUnit.assemblerStatus == kSuccess);
+#if defined(WITH_JIT_TUNING)
+    methodStats->nativeSize += cUnit.totalSize;
+#endif
+    return info->codeAddress != NULL;
 }
 
 /*
@@ -1272,7 +1294,7 @@ bool dvmCompileMethod(CompilationUnit *cUnit, const Method *method,
     /* Convert LIR into machine code. */
     dvmCompilerAssembleLIR(cUnit, info);
 
-    if (cUnit->halveInstCount) {
+    if (cUnit->assemblerStatus != kSuccess) {
         return false;
     }
 

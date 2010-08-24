@@ -19,8 +19,6 @@
  */
 #include "Dalvik.h"
 
-#ifdef WITH_PROFILER        // -- include rest of file
-
 #include <stdlib.h>
 #include <stddef.h>
 #include <string.h>
@@ -407,13 +405,11 @@ void dvmMethodTraceStart(const char* traceFileName, int traceFd, int bufferSize,
     storeLongLE(state->buf + 8, state->startWhen);
     state->curOffset = TRACE_HEADER_LEN;
 
-    ANDROID_MEMBAR_FULL();
-
     /*
      * Set the "enabled" flag.  Once we do this, threads will wait to be
      * signaled before exiting, so we have to make sure we wake them up.
      */
-    state->traceEnabled = true;
+    android_atomic_release_store(true, &state->traceEnabled);
     dvmUnlockMutex(&state->startStopLock);
     return;
 
@@ -892,5 +888,3 @@ void dvmStopAllocCounting(void)
 {
     gDvm.allocProf.enabled = false;
 }
-
-#endif /*WITH_PROFILER*/

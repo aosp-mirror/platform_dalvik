@@ -4339,14 +4339,14 @@ bool dvmCompilerDoWork(CompilerWorkOrder *work)
         case kWorkOrderTrace:
             /* Start compilation with maximally allowed trace length */
             res = dvmCompileTrace(work->info, JIT_MAX_TRACE_LEN, &work->result,
-                                  work->bailPtr);
+                                  work->bailPtr, 0 /* no hints */);
             break;
         case kWorkOrderTraceDebug: {
             bool oldPrintMe = gDvmJit.printMe;
             gDvmJit.printMe = true;
             /* Start compilation with maximally allowed trace length */
             res = dvmCompileTrace(work->info, JIT_MAX_TRACE_LEN, &work->result,
-                                  work->bailPtr);
+                                  work->bailPtr, 0 /* no hints */);
             gDvmJit.printMe = oldPrintMe;
             break;
         }
@@ -4424,6 +4424,12 @@ void *dvmCompilerGetInterpretTemplate()
 {
       return (void*) ((int)gDvmJit.codeCache +
                       templateEntryOffsets[TEMPLATE_INTERPRET]);
+}
+
+/* Needed by the Assembler */
+void dvmCompilerSetupResourceMasks(ArmLIR *lir)
+{
+    setupResourceMasks(lir);
 }
 
 /* Needed by the ld/st optmizatons */

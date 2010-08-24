@@ -171,7 +171,7 @@ static ArmLIR *loadConstantNoClobber(CompilationUnit *cUnit, int rDest,
         dataTarget = addWordData(cUnit, value, false);
     }
     ArmLIR *loadPcRel = dvmCompilerNew(sizeof(ArmLIR), true);
-    loadPcRel->opCode = LOWREG(rDest) ? kThumbLdrPcRel : kThumb2LdrPcRel12;
+    loadPcRel->opCode = kThumb2LdrPcRel12;
     loadPcRel->generic.target = (LIR *) dataTarget;
     loadPcRel->operands[0] = rDest;
     setupResourceMasks(loadPcRel);
@@ -227,7 +227,7 @@ static ArmLIR *opNone(CompilationUnit *cUnit, OpKind op)
 
 static ArmLIR *opCondBranch(CompilationUnit *cUnit, ArmConditionCode cc)
 {
-    return newLIR2(cUnit, kThumbBCond, 0 /* offset to be patched */, cc);
+    return newLIR2(cUnit, kThumb2BCond, 0 /* offset to be patched */, cc);
 }
 
 static ArmLIR *opImm(CompilationUnit *cUnit, OpKind op, int value)
@@ -1100,15 +1100,7 @@ static ArmLIR *genRegImmCheck(CompilationUnit *cUnit,
 {
     ArmLIR *branch;
     int modImm;
-    /*
-     * TODO: re-enable usage of kThumb2Cbz & kThumb2Cbnz once assembler is
-     * enhanced to allow us to replace code patterns when instructions don't
-     * reach.  Currently, CB[N]Z is causing too many assembler aborts.
-     * What we want to do is emit the short forms, and then replace them with
-     * longer versions when needed.
-     */
-
-    if (0 && (LOWREG(reg)) && (checkValue == 0) &&
+    if ((LOWREG(reg)) && (checkValue == 0) &&
        ((cond == kArmCondEq) || (cond == kArmCondNe))) {
         branch = newLIR2(cUnit,
                          (cond == kArmCondEq) ? kThumb2Cbz : kThumb2Cbnz,

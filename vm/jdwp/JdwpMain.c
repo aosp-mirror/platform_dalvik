@@ -231,8 +231,7 @@ static void* jdwpThreadStart(void* arg)
      */
     state->debugThreadHandle = dvmThreadSelf()->handle;
     state->run = true;
-    ANDROID_MEMBAR_FULL();
-    state->debugThreadStarted = true;       // touch this last
+    android_atomic_release_store(true, &state->debugThreadStarted);
 
     dvmDbgLockMutex(&state->threadStartLock);
     dvmDbgCondBroadcast(&state->threadStartCond);
