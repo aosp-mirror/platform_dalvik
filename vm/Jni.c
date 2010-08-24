@@ -2580,11 +2580,20 @@ static jfieldID GetStaticFieldID(JNIEnv* env, jclass jclazz,
         JNI_ENTER();                                                        \
         StaticField* sfield = (StaticField*) fieldID;                       \
         _ctype value;                                                       \
-        if (_isref) {   /* only when _ctype==jobject */                     \
-            Object* obj = dvmGetStaticFieldObject(sfield);                  \
-            value = (_ctype)(u4)addLocalReference(env, obj);                \
+        if (dvmIsVolatileField(&sfield->field)) {                           \
+            if (_isref) {   /* only when _ctype==jobject */                 \
+                Object* obj = dvmGetStaticFieldObjectVolatile(sfield);      \
+                value = (_ctype)(u4)addLocalReference(env, obj);            \
+            } else {                                                        \
+                value = dvmGetStaticField##_jname##Volatile(sfield);        \
+            }                                                               \
         } else {                                                            \
-            value = dvmGetStaticField##_jname(sfield);                      \
+            if (_isref) {                                                   \
+                Object* obj = dvmGetStaticFieldObject(sfield);              \
+                value = (_ctype)(u4)addLocalReference(env, obj);            \
+            } else {                                                        \
+                value = dvmGetStaticField##_jname(sfield);                  \
+            }                                                               \
         }                                                                   \
         JNI_EXIT();                                                         \
         return value;                                                       \
@@ -2609,11 +2618,22 @@ GET_STATIC_TYPE_FIELD(jdouble, Double, false);
         UNUSED_PARAMETER(jclazz);                                           \
         JNI_ENTER();                                                        \
         StaticField* sfield = (StaticField*) fieldID;                       \
-        if (_isref) {   /* only when _ctype==jobject */                     \
-            Object* valObj = dvmDecodeIndirectRef(env, (jobject)(u4)value); \
-            dvmSetStaticFieldObject(sfield, valObj);                        \
+        if (dvmIsVolatileField(&sfield->field)) {                           \
+            if (_isref) {   /* only when _ctype==jobject */                 \
+                Object* valObj =                                            \
+                    dvmDecodeIndirectRef(env, (jobject)(u4)value);          \
+                dvmSetStaticFieldObjectVolatile(sfield, valObj);            \
+            } else {                                                        \
+                dvmSetStaticField##_jname##Volatile(sfield, value);         \
+            }                                                               \
         } else {                                                            \
-            dvmSetStaticField##_jname(sfield, value);                       \
+            if (_isref) {                                                   \
+                Object* valObj =                                            \
+                    dvmDecodeIndirectRef(env, (jobject)(u4)value);          \
+                dvmSetStaticFieldObject(sfield, valObj);                    \
+            } else {                                                        \
+                dvmSetStaticField##_jname(sfield, value);                   \
+            }                                                               \
         }                                                                   \
         JNI_EXIT();                                                         \
     }
@@ -2640,11 +2660,22 @@ SET_STATIC_TYPE_FIELD(jdouble, Double, false);
         Object* obj = dvmDecodeIndirectRef(env, jobj);                      \
         InstField* field = (InstField*) fieldID;                            \
         _ctype value;                                                       \
-        if (_isref) {   /* only when _ctype==jobject */                     \
-            Object* valObj = dvmGetFieldObject(obj, field->byteOffset);     \
-            value = (_ctype)(u4)addLocalReference(env, valObj);             \
+        if (dvmIsVolatileField(&field->field)) {                            \
+            if (_isref) {   /* only when _ctype==jobject */                 \
+                Object* valObj =                                            \
+                    dvmGetFieldObjectVolatile(obj, field->byteOffset);      \
+                value = (_ctype)(u4)addLocalReference(env, valObj);         \
+            } else {                                                        \
+                value =                                                     \
+                    dvmGetField##_jname##Volatile(obj, field->byteOffset);  \
+            }                                                               \
         } else {                                                            \
-            value = dvmGetField##_jname(obj, field->byteOffset);            \
+            if (_isref) {                                                   \
+                Object* valObj = dvmGetFieldObject(obj, field->byteOffset); \
+                value = (_ctype)(u4)addLocalReference(env, valObj);         \
+            } else {                                                        \
+                value = dvmGetField##_jname(obj, field->byteOffset);        \
+            }                                                               \
         }                                                                   \
         JNI_EXIT();                                                         \
         return value;                                                       \
@@ -2669,11 +2700,23 @@ GET_TYPE_FIELD(jdouble, Double, false);
         JNI_ENTER();                                                        \
         Object* obj = dvmDecodeIndirectRef(env, jobj);                      \
         InstField* field = (InstField*) fieldID;                            \
-        if (_isref) {   /* only when _ctype==jobject */                     \
-            Object* valObj = dvmDecodeIndirectRef(env, (jobject)(u4)value); \
-            dvmSetFieldObject(obj, field->byteOffset, valObj);              \
+        if (dvmIsVolatileField(&field->field)) {                            \
+            if (_isref) {   /* only when _ctype==jobject */                 \
+                Object* valObj =                                            \
+                    dvmDecodeIndirectRef(env, (jobject)(u4)value);          \
+                dvmSetFieldObjectVolatile(obj, field->byteOffset, valObj);  \
+            } else {                                                        \
+                dvmSetField##_jname##Volatile(obj,                          \
+                    field->byteOffset, value);                              \
+            }                                                               \
         } else {                                                            \
-            dvmSetField##_jname(obj, field->byteOffset, value);             \
+            if (_isref) {                                                   \
+                Object* valObj =                                            \
+                    dvmDecodeIndirectRef(env, (jobject)(u4)value);          \
+                dvmSetFieldObject(obj, field->byteOffset, valObj);          \
+            } else {                                                        \
+                dvmSetField##_jname(obj, field->byteOffset, value);         \
+            }                                                               \
         }                                                                   \
         JNI_EXIT();                                                         \
     }

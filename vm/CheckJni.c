@@ -535,17 +535,18 @@ static void checkClass(JNIEnv* env, jclass jclazz, const char* func)
     JNI_ENTER();
     bool printWarn = false;
 
-    ClassObject* clazz = (ClassObject*) dvmDecodeIndirectRef(env, jclazz);
+    Object* obj = dvmDecodeIndirectRef(env, jclazz);
 
-    if (clazz == NULL) {
+    if (obj == NULL) {
         LOGW("JNI WARNING: received null jclass\n");
         printWarn = true;
-    } else if (!dvmIsValidObject((Object*) clazz)) {
-        LOGW("JNI WARNING: jclass points to invalid object %p\n", clazz);
+    } else if (!dvmIsValidObject(obj)) {
+        LOGW("JNI WARNING: jclass points to invalid object %p\n", obj);
         printWarn = true;
-    } else if (clazz->obj.clazz != gDvm.classJavaLangClass) {
-        LOGW("JNI WARNING: jclass does not point to class object (%p - %s)\n",
-            jclazz, clazz->descriptor);
+    } else if (obj->clazz != gDvm.classJavaLangClass) {
+        LOGW("JNI WARNING: jclass arg is not a Class reference "
+             "(%p is instance of %s)\n",
+            jclazz, obj->clazz->descriptor);
         printWarn = true;
     }
     JNI_EXIT();
