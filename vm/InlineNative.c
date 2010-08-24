@@ -487,6 +487,17 @@ static bool javaLangString_fastIndexOf_II(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
  * ===========================================================================
  */
 
+typedef union {
+    u4 arg;
+    float ff;
+} Convert32;
+
+typedef union {
+    u4 arg[2];
+    s8 ll;
+    double dd;
+} Convert64;
+
 /*
  * public static int abs(int)
  */
@@ -504,11 +515,7 @@ static bool javaLangMath_abs_int(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
 static bool javaLangMath_abs_long(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
     JValue* pResult)
 {
-    union {
-        u4 arg[2];
-        s8 ll;
-    } convert;
-
+    Convert64 convert;
     convert.arg[0] = arg0;
     convert.arg[1] = arg1;
     s8 val = convert.ll;
@@ -522,11 +529,7 @@ static bool javaLangMath_abs_long(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
 static bool javaLangMath_abs_float(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
     JValue* pResult)
 {
-    union {
-        u4 arg;
-        float ff;
-    } convert;
-
+    Convert32 convert;
     /* clear the sign bit; assumes a fairly common fp representation */
     convert.arg = arg0 & 0x7fffffff;
     pResult->f = convert.ff;
@@ -539,15 +542,10 @@ static bool javaLangMath_abs_float(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
 static bool javaLangMath_abs_double(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
     JValue* pResult)
 {
-    union {
-        u4 arg[2];
-        s8 ll;
-        double dd;
-    } convert;
-
-    /* clear the sign bit in the (endian-dependent) high word */
+    Convert64 convert;
     convert.arg[0] = arg0;
     convert.arg[1] = arg1;
+    /* clear the sign bit in the (endian-dependent) high word */
     convert.ll &= 0x7fffffffffffffffULL;
     pResult->d = convert.dd;
     return true;
@@ -583,11 +581,7 @@ static bool javaLangMath_max_int(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
 static bool javaLangMath_sqrt(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
     JValue* pResult)
 {
-    union {
-        u4 arg[2];
-        double dd;
-    } convert;
-
+    Convert64 convert;
     convert.arg[0] = arg0;
     convert.arg[1] = arg1;
     pResult->d = sqrt(convert.dd);
@@ -600,11 +594,7 @@ static bool javaLangMath_sqrt(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
 static bool javaLangMath_cos(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
     JValue* pResult)
 {
-    union {
-        u4 arg[2];
-        double dd;
-    } convert;
-
+    Convert64 convert;
     convert.arg[0] = arg0;
     convert.arg[1] = arg1;
     pResult->d = cos(convert.dd);
@@ -617,17 +607,79 @@ static bool javaLangMath_cos(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
 static bool javaLangMath_sin(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
     JValue* pResult)
 {
-    union {
-        u4 arg[2];
-        double dd;
-    } convert;
-
+    Convert64 convert;
     convert.arg[0] = arg0;
     convert.arg[1] = arg1;
     pResult->d = sin(convert.dd);
     return true;
 }
 
+/*
+ * ===========================================================================
+ *      java.lang.Float
+ * ===========================================================================
+ */
+
+static bool javaLangFloat_floatToIntBits(u4 arg0, u4 arg1, u4 arg2, u4 arg,
+    JValue* pResult)
+{
+    Convert32 convert;
+    convert.arg = arg0;
+    pResult->i = isnanf(convert.ff) ? 0x7fc00000 : arg0;
+    return true;
+}
+
+static bool javaLangFloat_floatToRawIntBits(u4 arg0, u4 arg1, u4 arg2, u4 arg,
+    JValue* pResult)
+{
+    pResult->i = arg0;
+    return true;
+}
+
+static bool javaLangFloat_intBitsToFloat(u4 arg0, u4 arg1, u4 arg2, u4 arg,
+    JValue* pResult)
+{
+    Convert32 convert;
+    convert.arg = arg0;
+    pResult->f = convert.ff;
+    return true;
+}
+
+/*
+ * ===========================================================================
+ *      java.lang.Double
+ * ===========================================================================
+ */
+
+static bool javaLangDouble_doubleToLongBits(u4 arg0, u4 arg1, u4 arg2, u4 arg,
+    JValue* pResult)
+{
+    Convert64 convert;
+    convert.arg[0] = arg0;
+    convert.arg[1] = arg1;
+    pResult->j = isnan(convert.dd) ? 0x7ff8000000000000LL : convert.ll;
+    return true;
+}
+
+static bool javaLangDouble_doubleToRawLongBits(u4 arg0, u4 arg1, u4 arg2,
+    u4 arg, JValue* pResult)
+{
+    Convert64 convert;
+    convert.arg[0] = arg0;
+    convert.arg[1] = arg1;
+    pResult->j = convert.ll;
+    return true;
+}
+
+static bool javaLangDouble_longBitsToDouble(u4 arg0, u4 arg1, u4 arg2, u4 arg,
+    JValue* pResult)
+{
+    Convert64 convert;
+    convert.arg[0] = arg0;
+    convert.arg[1] = arg1;
+    pResult->d = convert.dd;
+    return true;
+}
 
 /*
  * ===========================================================================
@@ -685,6 +737,20 @@ const InlineOperation gDvmInlineOpsTable[] = {
         "Ljava/lang/Math;", "cos", "(D)D" },
     { javaLangMath_sin,
         "Ljava/lang/Math;", "sin", "(D)D" },
+
+    { javaLangFloat_floatToIntBits,
+        "Ljava/lang/Float;", "floatToIntBits", "(F)I" },
+    { javaLangFloat_floatToRawIntBits,
+        "Ljava/lang/Float;", "floatToRawIntBits", "(F)I" },
+    { javaLangFloat_intBitsToFloat,
+        "Ljava/lang/Float;", "intBitsToFloat", "(I)F" },
+
+    { javaLangDouble_doubleToLongBits,
+        "Ljava/lang/Double;", "doubleToLongBits", "(D)J" },
+    { javaLangDouble_doubleToRawLongBits,
+        "Ljava/lang/Double;", "doubleToRawLongBits", "(D)J" },
+    { javaLangDouble_longBitsToDouble,
+        "Ljava/lang/Double;", "longBitsToDouble", "(J)D" },
 };
 
 /*
