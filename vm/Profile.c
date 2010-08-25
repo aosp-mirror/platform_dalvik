@@ -86,22 +86,24 @@ static inline u8 getTimeInUsec()
 static inline u8 getClock()
 {
 #if defined(HAVE_POSIX_CLOCKS)
-    struct timespec tm;
+    if (!gDvm.profilerWallClock) {
+        struct timespec tm;
 
-    clock_gettime(CLOCK_THREAD_CPUTIME_ID, &tm);
-    //assert(tm.tv_nsec >= 0 && tm.tv_nsec < 1*1000*1000*1000);
-    if (!(tm.tv_nsec >= 0 && tm.tv_nsec < 1*1000*1000*1000)) {
-        LOGE("bad nsec: %ld\n", tm.tv_nsec);
-        dvmAbort();
-    }
+        clock_gettime(CLOCK_THREAD_CPUTIME_ID, &tm);
+        if (!(tm.tv_nsec >= 0 && tm.tv_nsec < 1*1000*1000*1000)) {
+            LOGE("bad nsec: %ld\n", tm.tv_nsec);
+            dvmAbort();
+        }
 
-    return tm.tv_sec * 1000000LL + tm.tv_nsec / 1000;
-#else
-    struct timeval tv;
-
-    gettimeofday(&tv, NULL);
-    return tv.tv_sec * 1000000LL + tv.tv_usec;
+        return tm.tv_sec * 1000000LL + tm.tv_nsec / 1000;
+    } else
 #endif
+    {
+        struct timeval tv;
+
+        gettimeofday(&tv, NULL);
+        return tv.tv_sec * 1000000LL + tv.tv_usec;
+    }
 }
 
 /*
@@ -602,10 +604,13 @@ void dvmMethodTraceStop(void)
     fprintf(state->traceFile, "data-file-overflow=%s\n",
         state->overflow ? "true" : "false");
 #if defined(HAVE_POSIX_CLOCKS)
-    fprintf(state->traceFile, "clock=thread-cpu\n");
-#else
-    fprintf(state->traceFile, "clock=global\n");
+    if (!gDvm.profilerWallClock) {
+        fprintf(state->traceFile, "clock=thread-cpu\n");
+    } else
 #endif
+    {
+        fprintf(state->traceFile, "clock=wall\n");
+    }
     fprintf(state->traceFile, "elapsed-time-usec=%llu\n", elapsed);
     fprintf(state->traceFile, "num-method-calls=%d\n",
         (finalCurOffset - TRACE_HEADER_LEN) / TRACE_REC_SIZE);
