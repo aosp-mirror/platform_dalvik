@@ -44,7 +44,7 @@ struct LockedObjectData;
  * Note that "suspended" is orthogonal to these values (so says JDWP).
  */
 typedef enum ThreadStatus {
-    THREAD_UNDEFINED    = -1,       /* threads are never in this state */
+    THREAD_UNDEFINED    = -1,       /* makes enum compatible with int32_t */
 
     /* these match up with JDWP values */
     THREAD_ZOMBIE       = 0,        /* TERMINATED */
@@ -57,6 +57,7 @@ typedef enum ThreadStatus {
     THREAD_STARTING     = 6,        /* started, not yet on thread list */
     THREAD_NATIVE       = 7,        /* off in a JNI native method */
     THREAD_VMWAIT       = 8,        /* waiting on a VM resource */
+    THREAD_SUSPENDED    = 9,        /* suspended, usually by GC or debugger */
 } ThreadStatus;
 
 /* thread priorities, from java.lang.Thread */
@@ -125,12 +126,6 @@ typedef struct Thread {
      */
     int         suspendCount;
     int         dbgSuspendCount;
-
-    /*
-     * Set to true when the thread suspends itself, false when it wakes up.
-     * This is only expected to be set when status==THREAD_RUNNING.
-     */
-    bool        isSuspended;
 
     /* thread handle, as reported by pthread_self() */
     pthread_t   handle;
