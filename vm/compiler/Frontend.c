@@ -877,13 +877,10 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
     /* Set the instruction set to use (NOTE: later components may change it) */
     cUnit.instructionSet = dvmCompilerInstructionSet();
 
-// FIXME: temporarily disable inline [Issue 2936748]
-#if 0
     /* Inline transformation @ the MIR level */
     if (cUnit.hasInvoke && !(gDvmJit.disableOpt & (1 << kMethodInlining))) {
         dvmCompilerInlineMIR(&cUnit);
     }
-#endif
 
     /* Preparation for SSA conversion */
     dvmInitializeSSAConversion(&cUnit);
