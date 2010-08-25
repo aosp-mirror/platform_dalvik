@@ -156,9 +156,6 @@ static void visitThread(Visitor *visitor, Thread *thread, void *arg)
 {
     assert(visitor != NULL);
     assert(thread != NULL);
-    assert(thread->status != THREAD_RUNNING ||
-           thread->isSuspended ||
-           thread == dvmThreadSelf());
     (*visitor)(&thread->threadObj, arg);
     (*visitor)(&thread->exception, arg);
     visitReferenceTable(visitor, &thread->internalLocalRefTable, arg);
