@@ -1780,10 +1780,6 @@ static void scavengeThreadStack(Thread *thread)
 
 static void scavengeThread(Thread *thread)
 {
-    assert(thread->status != THREAD_RUNNING ||
-           thread->isSuspended ||
-           thread == dvmThreadSelf());
-
     // LOG_SCAV("scavengeThread(thread=%p)", thread);
 
     // LOG_SCAV("Scavenging threadObj=%p", thread->threadObj);
@@ -1913,9 +1909,6 @@ static void pinThreadStack(const Thread *thread)
 static void pinThread(const Thread *thread)
 {
     assert(thread != NULL);
-    assert(thread->status != THREAD_RUNNING ||
-           thread->isSuspended ||
-           thread == dvmThreadSelf());
     LOG_PIN("pinThread(thread=%p)", thread);
 
     LOG_PIN("Pin native method arguments");

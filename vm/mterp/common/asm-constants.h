@@ -182,29 +182,20 @@ MTERP_OFFSET(offMethod_nativeFunc,      Method, nativeFunc, 40)
 MTERP_OFFSET(offInlineOperation_func,   InlineOperation, func, 0)
 
 /* Thread fields */
-MTERP_OFFSET(offThread_stackOverflowed, Thread, stackOverflowed, 40)
-MTERP_OFFSET(offThread_curFrame,        Thread, curFrame, 44)
-MTERP_OFFSET(offThread_exception,       Thread, exception, 48)
+MTERP_OFFSET(offThread_stackOverflowed, Thread, stackOverflowed, 36)
+MTERP_OFFSET(offThread_curFrame,        Thread, curFrame, 40)
+MTERP_OFFSET(offThread_exception,       Thread, exception, 44)
 
 #if defined(WITH_JIT)
-MTERP_OFFSET(offThread_inJitCodeCache,  Thread, inJitCodeCache, 76)
+MTERP_OFFSET(offThread_inJitCodeCache,  Thread, inJitCodeCache, 72)
 #if defined(WITH_SELF_VERIFICATION)
-MTERP_OFFSET(offThread_shadowSpace,     Thread, shadowSpace, 80)
-#ifdef USE_INDIRECT_REF
-MTERP_OFFSET(offThread_jniLocal_topCookie, \
-                                Thread, jniLocalRefTable.segmentState.all, 84)
-#else
-MTERP_OFFSET(offThread_jniLocal_topCookie, \
-                                Thread, jniLocalRefTable.nextEntry, 84)
-#endif
-#else
+MTERP_OFFSET(offThread_shadowSpace,     Thread, shadowSpace, 76)
 #ifdef USE_INDIRECT_REF
 MTERP_OFFSET(offThread_jniLocal_topCookie, \
                                 Thread, jniLocalRefTable.segmentState.all, 80)
 #else
 MTERP_OFFSET(offThread_jniLocal_topCookie, \
                                 Thread, jniLocalRefTable.nextEntry, 80)
-#endif
 #endif
 #else
 #ifdef USE_INDIRECT_REF
@@ -213,6 +204,15 @@ MTERP_OFFSET(offThread_jniLocal_topCookie, \
 #else
 MTERP_OFFSET(offThread_jniLocal_topCookie, \
                                 Thread, jniLocalRefTable.nextEntry, 76)
+#endif
+#endif
+#else
+#ifdef USE_INDIRECT_REF
+MTERP_OFFSET(offThread_jniLocal_topCookie, \
+                                Thread, jniLocalRefTable.segmentState.all, 72)
+#else
+MTERP_OFFSET(offThread_jniLocal_topCookie, \
+                                Thread, jniLocalRefTable.nextEntry, 72)
 #endif
 #endif
 

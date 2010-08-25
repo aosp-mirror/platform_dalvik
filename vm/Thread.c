@@ -705,7 +705,7 @@ void dvmSlayDaemons(void)
                     continue;
                 }
 
-                if (target->status == THREAD_RUNNING && !target->isSuspended) {
+                if (target->status == THREAD_RUNNING) {
                     if (!complained)
                         LOGD("threadid=%d not ready yet\n", target->threadId);
                     allSuspended = false;
@@ -2410,7 +2410,7 @@ void dvmSuspendSelf(bool jdwpActivity)
 {
     Thread* self = dvmThreadSelf();
 
-    /* debugger thread may not suspend itself due to debugger activity! */
+    /* debugger thread must not suspend itself due to debugger activity! */
     assert(gDvm.jdwpState != NULL);
     if (self->handle == dvmJdwpGetDebugThread(gDvm.jdwpState)) {
         assert(false);
@@ -2430,7 +2430,7 @@ void dvmSuspendSelf(bool jdwpActivity)
      * Suspend ourselves.
      */
     assert(self->suspendCount > 0);
-    self->isSuspended = true;
+    self->status = THREAD_SUSPENDED;
     LOG_THREAD("threadid=%d: self-suspending (dbg)\n", self->threadId);
 
     /*
@@ -2456,13 +2456,12 @@ void dvmSuspendSelf(bool jdwpActivity)
              * dump event is pending (assuming SignalCatcher was resumed for
              * just long enough to try to grab the thread-suspend lock).
              */
-            LOGD("threadid=%d: still suspended after undo (sc=%d dc=%d s=%c)\n",
-                self->threadId, self->suspendCount, self->dbgSuspendCount,
-                self->isSuspended ? 'Y' : 'N');
+            LOGD("threadid=%d: still suspended after undo (sc=%d dc=%d)\n",
+                self->threadId, self->suspendCount, self->dbgSuspendCount);
         }
     }
     assert(self->suspendCount == 0 && self->dbgSuspendCount == 0);
-    self->isSuspended = false;
+    self->status = THREAD_RUNNING;
     LOG_THREAD("threadid=%d: self-reviving (dbg), status=%d\n",
         self->threadId, self->status);
 
@@ -2641,7 +2640,7 @@ static void waitForThreadSuspend(Thread* self, Thread* thread)
     u8 startWhen = 0;       // init req'd to placate gcc
     u8 firstStartWhen = 0;
 
-    while (thread->status == THREAD_RUNNING && !thread->isSuspended) {
+    while (thread->status == THREAD_RUNNING) {
         if (sleepIter == 0) {           // get current time on first iteration
             startWhen = dvmGetRelativeTimeUsec();
             if (firstStartWhen == 0)    // first iteration of first attempt
@@ -2816,10 +2815,10 @@ void dvmSuspendAllThreads(SuspendCause why)
         /* wait for the other thread to see the pending suspend */
         waitForThreadSuspend(self, thread);
 
-        LOG_THREAD("threadid=%d:   threadid=%d status=%d c=%d dc=%d isSusp=%d\n",
+        LOG_THREAD("threadid=%d:   threadid=%d status=%d sc=%d dc=%d\n",
             self->threadId,
             thread->threadId, thread->status, thread->suspendCount,
-            thread->dbgSuspendCount, thread->isSuspended);
+            thread->dbgSuspendCount);
     }
 
     dvmUnlockThreadList();
@@ -2988,21 +2987,18 @@ bool dvmIsSuspended(const Thread* thread)
 {
     /*
      * The thread could be:
-     *  (1) Running happily.  status is RUNNING, isSuspended is false,
-     *      suspendCount is zero.  Return "false".
-     *  (2) Pending suspend.  status is RUNNING, isSuspended is false,
-     *      suspendCount is nonzero.  Return "false".
-     *  (3) Suspended.  suspendCount is nonzero, and either (status is
-     *      RUNNING and isSuspended is true) OR (status is !RUNNING).
+     *  (1) Running happily.  status is RUNNING, suspendCount is zero.
+     *      Return "false".
+     *  (2) Pending suspend.  status is RUNNING, suspendCount is nonzero.
+     *      Return "false".
+     *  (3) Suspended.  suspendCount is nonzero, and status is !RUNNING.
      *      Return "true".
-     *  (4) Waking up.  suspendCount is zero, status is RUNNING and
-     *      isSuspended is true.  Return "false" (since it could change
-     *      out from under us, unless we hold suspendCountLock).
+     *  (4) Waking up.  suspendCount is zero, status is SUSPENDED
+     *      Return "false" (since it could change out from under us, unless
+     *      we hold suspendCountLock).
      */
 
-    return (thread->suspendCount != 0 &&
-            ((thread->status == THREAD_RUNNING && thread->isSuspended) ||
-             (thread->status != THREAD_RUNNING)));
+    return (thread->suspendCount != 0 && thread->status != THREAD_RUNNING);
 }
 
 /*
@@ -3041,62 +3037,57 @@ void dvmWaitForSuspend(Thread* thread)
  * Check to see if we need to suspend ourselves.  If so, go to sleep on
  * a condition variable.
  *
- * If "newStatus" is not THREAD_UNDEFINED, we change to that state before
- * we release the thread suspend count lock.
- *
  * Returns "true" if we suspended ourselves.
  */
-static bool checkSuspendAndChangeStatus(Thread* self, ThreadStatus newStatus)
+static bool fullSuspendCheck(Thread* self)
 {
-    bool didSuspend;
-
     assert(self != NULL);
     assert(self->suspendCount >= 0);
 
-    /* fast path: if count is zero and no state change, bail immediately */
-    if (self->suspendCount == 0 && newStatus == THREAD_UNDEFINED) {
-        return false;
-    }
-
+    /*
+     * Grab gDvm.threadSuspendCountLock.  This gives us exclusive write
+     * access to self->suspendCount.
+     */
     lockThreadSuspendCount();   /* grab gDvm.threadSuspendCountLock */
 
-    didSuspend = (self->suspendCount != 0);
-    if (didSuspend) {
-        self->isSuspended = true;
+    bool needSuspend = (self->suspendCount != 0);
+    if (needSuspend) {
         LOG_THREAD("threadid=%d: self-suspending\n", self->threadId);
+        ThreadStatus oldStatus = self->status;      /* should be RUNNING */
+        self->status = THREAD_SUSPENDED;
+
         while (self->suspendCount != 0) {
-            /* wait for wakeup signal; releases lock */
+            /*
+             * Wait for wakeup signal, releasing lock.  The act of releasing
+             * and re-acquiring the lock provides the memory barriers we
+             * need for correct behavior on SMP.
+             */
             dvmWaitCond(&gDvm.threadSuspendCountCond,
                     &gDvm.threadSuspendCountLock);
         }
         assert(self->suspendCount == 0 && self->dbgSuspendCount == 0);
-        self->isSuspended = false;
+        self->status = oldStatus;
         LOG_THREAD("threadid=%d: self-reviving, status=%d\n",
             self->threadId, self->status);
     }
 
-    /*
-     * The status change needs to happen while the suspend count lock is
-     * held.  Otherwise we could switch to RUNNING after another thread
-     * increases our suspend count, which isn't a "bad" state for us
-     * (we'll suspend on the next check) but could be a problem for the
-     * other thread (which thinks we're still safely in VMWAIT or NATIVE
-     * with a nonzero suspend count, and proceeds to initate GC).
-     */
-    if (newStatus != THREAD_UNDEFINED)
-        self->status = newStatus;
-
     unlockThreadSuspendCount();
 
-    return didSuspend;
+    return needSuspend;
 }
 
 /*
- * One-argument wrapper for checkSuspendAndChangeStatus().
+ * Check to see if a suspend is pending.  If so, suspend the current
+ * thread, and return "true" after we have been resumed.
  */
 bool dvmCheckSuspendPending(Thread* self)
 {
-    return checkSuspendAndChangeStatus(self, THREAD_UNDEFINED);
+    assert(self != NULL);
+    if (self->suspendCount == 0) {
+        return false;
+    } else {
+        return fullSuspendCheck(self);
+    }
 }
 
 /*
@@ -3125,15 +3116,55 @@ ThreadStatus dvmChangeStatus(Thread* self, ThreadStatus newStatus)
          * us to be "asleep" in all other states, and another thread could
          * be performing a GC now.
          *
-         * The check for suspension requires holding the thread suspend
-         * count lock, which the suspend-all code also grabs.  We want to
-         * check our suspension status and change to RUNNING atomically
-         * to avoid a situation where suspend-all thinks we're safe
-         * (e.g. VMWAIT or NATIVE with suspendCount=1) but we've actually
-         * switched to RUNNING and are executing code.
+         * The order of operations is very significant here.  One way to
+         * do this wrong is:
+         *
+         *   GCing thread                   Our thread (in NATIVE)
+         *   ------------                   ----------------------
+         *                                  check suspend count (== 0)
+         *   dvmSuspendAllThreads()
+         *   grab suspend-count lock
+         *   increment all suspend counts
+         *   release suspend-count lock
+         *   check thread state (== NATIVE)
+         *   all are suspended, begin GC
+         *                                  set state to RUNNING
+         *                                  (continue executing)
+         *
+         * We can correct this by grabbing the suspend-count lock and
+         * performing both of our operations (check suspend count, set
+         * state) while holding it, now we need to grab a mutex on every
+         * transition to RUNNING.
+         *
+         * What we do instead is change the order of operations so that
+         * the transition to RUNNING happens first.  If we then detect
+         * that the suspend count is nonzero, we switch to SUSPENDED.
+         *
+         * Appropriate compiler and memory barriers are required to ensure
+         * that the operations are observed in the expected order.
+         *
+         * This does create a small window of opportunity where a GC in
+         * progress could observe what appears to be a running thread (if
+         * it happens to look between when we set to RUNNING and when we
+         * switch to SUSPENDED).  At worst this only affects assertions
+         * and thread logging.  (We could work around it with some sort
+         * of intermediate "pre-running" state that is generally treated
+         * as equivalent to running, but that doesn't seem worthwhile.)
+         *
+         * We can also solve this by combining the "status" and "suspend
+         * count" fields into a single 32-bit value.  This trades the
+         * store/load barrier on transition to RUNNING for an atomic RMW
+         * op on all transitions and all suspend count updates (also, all
+         * accesses to status or the thread count require bit-fiddling).
+         * It also eliminates the brief transition through RUNNING when
+         * the thread is supposed to be suspended.  This is possibly faster
+         * on SMP and slightly more correct, but less convenient.
          */
-        assert(self->status != THREAD_RUNNING);
-        checkSuspendAndChangeStatus(self, newStatus);
+        assert(oldStatus != THREAD_RUNNING);
+        android_atomic_acquire_store(newStatus, &self->status);
+        if (self->suspendCount != 0) {
+            fullSuspendCheck(self);
+        }
     } else {
         /*
          * Not changing to THREAD_RUNNING.  No additional work required.
@@ -3142,6 +3173,7 @@ ThreadStatus dvmChangeStatus(Thread* self, ThreadStatus newStatus)
          * any updates we previously made to objects on the managed heap
          * will be observed before the state change.
          */
+        assert(newStatus != THREAD_SUSPENDED);
         android_atomic_release_store(newStatus, &self->status);
     }
 
@@ -3450,6 +3482,7 @@ const char* dvmGetThreadStatusStr(ThreadStatus status)
     case THREAD_STARTING:       return "STARTING";
     case THREAD_NATIVE:         return "NATIVE";
     case THREAD_VMWAIT:         return "VMWAIT";
+    case THREAD_SUSPENDED:      return "SUSPENDED";
     default:                    return "UNKNOWN";
     }
 }
@@ -3542,9 +3575,9 @@ void dvmDumpThreadEx(const DebugOutputTarget* target, Thread* thread,
 #endif
         );
     dvmPrintDebugMessage(target,
-        "  | group=\"%s\" sCount=%d dsCount=%d s=%c obj=%p self=%p\n",
+        "  | group=\"%s\" sCount=%d dsCount=%d obj=%p self=%p\n",
         groupName, thread->suspendCount, thread->dbgSuspendCount,
-        thread->isSuspended ? 'Y' : 'N', thread->threadObj, thread);
+        thread->threadObj, thread);
     dvmPrintDebugMessage(target,
         "  | sysTid=%d nice=%d sched=%d/%d cgrp=%s handle=%d\n",
         thread->systemTid, getpriority(PRIO_PROCESS, thread->systemTid),
@@ -4094,28 +4127,21 @@ static void gcScanThread(Thread *thread)
      * any harm (e.g. in Object.wait()).  The only exception is the current
      * thread, which will still be active and in the "running" state.
      *
-     * (Newly-created threads shouldn't be able to shift themselves to
-     * RUNNING without a suspend-pending check, so this shouldn't cause
-     * a false-positive.)
-     *
-     * Since the thread is supposed to be suspended, we should have already
-     * observed all changes to thread state, and don't need to use a memory
-     * barrier here.  It's possible we might miss a wayward unsuspended
-     * thread on SMP, but as this is primarily a sanity check it's not
-     * worth slowing the common case.
+     * It's possible to encounter a false-positive here because a thread
+     * transitioning to running from (say) vmwait or native will briefly
+     * set their status to running before switching to suspended.  This
+     * is highly unlikely, but does mean that we don't want to abort if
+     * the situation arises.
      */
-    if (thread->status == THREAD_RUNNING && !thread->isSuspended &&
-        thread != dvmThreadSelf())
-    {
+    if (thread->status == THREAD_RUNNING && thread != dvmThreadSelf()) {
         Thread* self = dvmThreadSelf();
-        LOGW("threadid=%d: BUG: GC scanning a running thread (%d)\n",
+        LOGW("threadid=%d: Warning: GC scanning a running thread (%d)\n",
             self->threadId, thread->threadId);
         dvmDumpThread(thread, true);
         LOGW("Found by:\n");
         dvmDumpThread(self, false);
 
-        /* continue anyway? */
-        dvmAbort();
+        /* continue anyway */
     }
 
     HPROF_SET_GC_SCAN_STATE(HPROF_ROOT_THREAD_OBJECT, thread->threadId);
