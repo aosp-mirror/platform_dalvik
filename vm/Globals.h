@@ -91,6 +91,9 @@ struct DvmGlobals {
     int         jdwpPort;
     bool        jdwpSuspend;
 
+    /* use wall clock as method profiler clock source? */
+    bool        profilerWallClock;
+
     /*
      * Lock profiling threshold value in milliseconds.  Acquires that
      * exceed threshold are logged.  Acquires within the threshold are
