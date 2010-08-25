@@ -995,6 +995,9 @@ static int dvmProcessOptions(int argc, const char* const argv[],
         } else if (strcmp(argv[i], "-Xcheckdexsum") == 0) {
             gDvm.verifyDexChecksum = true;
 
+        } else if (strcmp(argv[i], "-Xprofile:wallclock") == 0) {
+            gDvm.profilerWallClock = true;
+
         } else {
             if (!ignoreUnrecognized) {
                 dvmFprintf(stderr, "Unrecognized option '%s'\n", argv[i]);
