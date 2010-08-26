@@ -73,6 +73,10 @@
         dvmUnlockMutex(&gDvmJit.codeCacheProtectionLock);                      \
     }
 
+#define SINGLE_STEP_OP(opcode)                                                 \
+    (gDvmJit.includeSelectedOp !=                                              \
+     ((gDvmJit.opList[opcode >> 3] & (1 << (opcode & 0x7))) != 0))
+
 typedef enum JitInstructionSetType {
     DALVIK_JIT_NONE = 0,
     DALVIK_JIT_ARM,

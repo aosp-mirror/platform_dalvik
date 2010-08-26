@@ -206,18 +206,19 @@ static int analyzeInlineTarget(DecodedInstruction *dalvikInsn, int attributes,
                                int offset)
 {
     int flags = dexGetInstrFlags(gDvm.instrFlags, dalvikInsn->opCode);
+    int dalvikOpCode = dalvikInsn->opCode;
 
     if ((flags & kInstrInvoke) &&
-        (dalvikInsn->opCode != OP_INVOKE_DIRECT_EMPTY)) {
+        (dalvikOpCode != OP_INVOKE_DIRECT_EMPTY)) {
         attributes &= ~METHOD_IS_LEAF;
     }
 
     if (!(flags & kInstrCanReturn)) {
-        if (!(dvmCompilerDataFlowAttributes[dalvikInsn->opCode] &
+        if (!(dvmCompilerDataFlowAttributes[dalvikOpCode] &
               DF_IS_GETTER)) {
             attributes &= ~METHOD_IS_GETTER;
         }
-        if (!(dvmCompilerDataFlowAttributes[dalvikInsn->opCode] &
+        if (!(dvmCompilerDataFlowAttributes[dalvikOpCode] &
               DF_IS_SETTER)) {
             attributes &= ~METHOD_IS_SETTER;
         }
@@ -229,7 +230,7 @@ static int analyzeInlineTarget(DecodedInstruction *dalvikInsn, int attributes,
      * otherwise.
      */
     if (flags & kInstrCanReturn) {
-        if (dalvikInsn->opCode == OP_RETURN_VOID) {
+        if (dalvikOpCode == OP_RETURN_VOID) {
             attributes &= ~METHOD_IS_GETTER;
         }
         else {
@@ -241,8 +242,17 @@ static int analyzeInlineTarget(DecodedInstruction *dalvikInsn, int attributes,
         attributes &= ~METHOD_IS_THROW_FREE;
     }
 
-    if (offset == 0 && dalvikInsn->opCode == OP_RETURN_VOID) {
+    if (offset == 0 && dalvikOpCode == OP_RETURN_VOID) {
         attributes |= METHOD_IS_EMPTY;
+    }
+
+    /*
+     * Check if this opcode is selected for single stepping.
+     * If so, don't inline the callee as there is no stack frame for the
+     * interpreter to single-step through the instruction.
+     */
+    if (SINGLE_STEP_OP(dalvikOpCode)) {
+        attributes &= ~(METHOD_IS_GETTER | METHOD_IS_SETTER);
     }
 
     return attributes;
@@ -956,7 +966,7 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
  * with the callee is properly initialized. If not, we punt on this inline
  * target.
  *
- * TODO: volatile instructions will handled later.
+ * TODO: volatile instructions will be handled later.
  */
 bool dvmCompilerCanIncludeThisInstruction(const Method *method,
                                           const DecodedInstruction *insn)
