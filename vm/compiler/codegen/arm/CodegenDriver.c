@@ -4137,11 +4137,7 @@ void dvmCompilerMIR2LIR(CompilationUnit *cUnit)
              * Debugging: screen the opcode first to see if it is in the
              * do[-not]-compile list
              */
-            bool singleStepMe =
-                gDvmJit.includeSelectedOp !=
-                ((gDvmJit.opList[dalvikOpCode >> 3] &
-                  (1 << (dalvikOpCode & 0x7))) !=
-                 0);
+            bool singleStepMe = SINGLE_STEP_OP(dalvikOpCode);
 #if defined(WITH_SELF_VERIFICATION)
           if (singleStepMe == false) {
               singleStepMe = selfVerificationPuntOps(mir);
