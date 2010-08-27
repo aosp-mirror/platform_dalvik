@@ -56,14 +56,9 @@ void dvmVerifyObject(const Object *obj)
 /*
  * Helper function to call dvmVerifyObject from a bitmap walker.
  */
-static void verifyBitmapCallback(size_t numPtrs, void **ptrs,
-                                 const void *finger, void *arg)
+static void verifyBitmapCallback(void *ptrs, void *arg)
 {
-    size_t i;
-
-    for (i = 0; i < numPtrs; i++) {
-        dvmVerifyObject(ptrs[i]);
-    }
+    dvmVerifyObject(ptrs);
 }
 
 /*

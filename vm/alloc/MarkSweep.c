@@ -41,8 +41,8 @@
 
 #define LOG_SCAN(...)   LOGV_GC("SCAN: " __VA_ARGS__)
 
-#define ALIGN_UP_TO_PAGE_SIZE(p) \
-    (((size_t)(p) + (SYSTEM_PAGE_SIZE - 1)) & ~(SYSTEM_PAGE_SIZE - 1))
+#define ALIGN_UP(x, n) (((size_t)(x) + (n) - 1) & ~((n) - 1))
+#define ALIGN_UP_TO_PAGE_SIZE(p) ALIGN_UP(p, SYSTEM_PAGE_SIZE)
 
 /* Do not cast the result of this to a boolean; the only set bit
  * may be > 1<<8.
@@ -653,25 +653,18 @@ static void scanGrayObjects(GcMarkContext *ctx)
     }
 }
 
-#ifndef NDEBUG
-static uintptr_t gLastFinger = 0;
-#endif
-
-static void scanBitmapCallback(size_t numPtrs, void **ptrs,
-                               const void *finger, void *arg)
+/*
+ * Callback for scanning each object in the bitmap.  The finger is set
+ * to the address corresponding to the lowest address in the next word
+ * of bits in the bitmap.
+ */
+static void scanBitmapCallback(void *addr, void *arg)
 {
     GcMarkContext *ctx = arg;
-    size_t i;
-
-#ifndef NDEBUG
-    assert((uintptr_t)finger >= gLastFinger);
-    gLastFinger = (uintptr_t)finger;
-#endif
-
-    ctx->finger = finger;
-    for (i = 0; i < numPtrs; i++) {
-        scanObject(*ptrs++, ctx);
-    }
+    void *nextAddr = (void *)((size_t)addr + 1);
+    size_t finger = ALIGN_UP(nextAddr, HB_BITS_PER_WORD * HB_OBJECT_ALIGNMENT);
+    ctx->finger = (void *)finger;
+    scanObject(addr, ctx);
 }
 
 /* Given bitmaps with the root set marked, find and mark all
@@ -687,9 +680,6 @@ void dvmHeapScanMarkedObjects(void)
     /* The bitmaps currently have bits set for the root set.
      * Walk across the bitmaps and scan each object.
      */
-#ifndef NDEBUG
-    gLastFinger = 0;
-#endif
     dvmHeapBitmapWalk(ctx->bitmap, scanBitmapCallback, ctx);
 
     /* We've walked the mark bitmaps.  Scan anything that's
@@ -963,8 +953,7 @@ typedef struct {
     bool isConcurrent;
 } SweepContext;
 
-static void sweepBitmapCallback(size_t numPtrs, void **ptrs,
-                                const void *finger, void *arg)
+static void sweepBitmapCallback(size_t numPtrs, void **ptrs, void *arg)
 {
     SweepContext *ctx = arg;
 
