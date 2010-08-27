@@ -266,7 +266,7 @@ static void markObjectVisitor(void *addr, void *arg)
     assert(arg != NULL);
     obj = *(Object **)addr;
     if (obj != NULL) {
-        markObjectNonNull(obj, arg, true);
+        markObjectNonNull(obj, arg, false);
     }
 }
 
