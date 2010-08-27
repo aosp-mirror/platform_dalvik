@@ -173,6 +173,28 @@ void* dvmSelfVerificationRestoreState(const u2* pc, const void* fp,
     // Special case when punting after a single instruction
     if (exitState == kSVSPunt && pc == shadowSpace->startPC) {
         shadowSpace->selfVerificationState = kSVSIdle;
+    } else if (exitState == kSVSBackwardBranch && pc != shadowSpace->startPC) {
+        /*
+         * Consider a loop which contains the following instructions:
+         *   1: ..
+         *   2: ..
+         *   3: ..(single-stepped)
+         *   4: ..
+         *   5: Goto 1
+         *
+         * The state comparisons are conducted in two batches: 1,2 as the
+         * first batch and 4,5 as the second batch. If the execution in the
+         * JIT'ed code is resumed from 4, the start PC for self-verification
+         * will be set to 4. The exit point for 5 is a backward branch and
+         * will suggest the end PC to be 1, and will do the state comparison
+         * when 1 is hit for the second time in the interpreter. It is incorrect
+         * in this case as the work for 1,2 from the current iteration have been
+         * committed and the state comparison has been conducted.
+         *
+         * So we alter the state from BackwardBranch to Normal and state
+         * comparison will be issued immediate following the goto.
+         */
+        shadowSpace->selfVerificationState = kSVSNormal;
     } else {
         shadowSpace->selfVerificationState = exitState;
     }
