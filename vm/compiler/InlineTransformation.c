@@ -301,6 +301,13 @@ void dvmCompilerInlineMIR(CompilationUnit *cUnit)
         if (opCode == OP_INVOKE_DIRECT_EMPTY)
             continue;
 
+        /*
+         * If the invoke itself is selected for single stepping, don't bother
+         * to inline it.
+         */
+        if (SINGLE_STEP_OP(opCode))
+            continue;
+
         const Method *calleeMethod;
 
         switch (opCode) {
