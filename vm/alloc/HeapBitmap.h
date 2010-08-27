@@ -18,6 +18,7 @@
 
 #include <limits.h>
 #include <stdint.h>
+#include "clz.h"
 
 #define HB_OBJECT_ALIGNMENT 8
 #define HB_BITS_PER_WORD (sizeof(unsigned long) * CHAR_BIT)
@@ -79,8 +80,8 @@ typedef struct {
     uintptr_t max;
 } HeapBitmap;
 
-typedef void BitmapCallback(size_t numPtrs, void **ptrs,
-                            const void *finger, void *arg);
+typedef void BitmapCallback(void *addr, void *arg);
+typedef void BitmapSweepCallback(size_t numPtrs, void **ptrs, void *arg);
 
 /*
  * Initialize a HeapBitmap so that it points to a bitmap large
@@ -118,14 +119,38 @@ void dvmHeapBitmapZero(HeapBitmap *hb);
  * end of the bitmap is reached.
  */
 void dvmHeapBitmapSweepWalk(const HeapBitmap *liveHb, const HeapBitmap *markHb,
-                            BitmapCallback *callback, void *callbackArg);
+                            BitmapSweepCallback *callback, void *callbackArg);
 
 /*
  * Similar to dvmHeapBitmapSweepWalk(), but visit the set bits
  * in a single bitmap.
  */
-void dvmHeapBitmapWalk(const HeapBitmap *hb,
-                       BitmapCallback *callback, void *callbackArg);
+HB_INLINE_PROTO(
+    void
+    dvmHeapBitmapWalk(const HeapBitmap *bitmap,
+                      BitmapCallback *callback, void *arg)
+)
+{
+    assert(bitmap != NULL);
+    assert(bitmap->bits != NULL);
+    assert(callback != NULL);
+    uintptr_t end = HB_OFFSET_TO_INDEX(bitmap->max - bitmap->base);
+    uintptr_t i;
+    for (i = 0; i <= end; ++i) {
+        unsigned long word = bitmap->bits[i];
+        if (UNLIKELY(word != 0)) {
+            unsigned long highBit = 1 << (HB_BITS_PER_WORD - 1);
+            uintptr_t ptrBase = HB_INDEX_TO_OFFSET(i) + bitmap->base;
+            while (word != 0) {
+                const int shift = CLZ(word);
+                word &= ~(highBit >> shift);
+                void *addr = (void *)(ptrBase + shift * HB_OBJECT_ALIGNMENT);
+                (*callback)(addr, arg);
+                end = HB_OFFSET_TO_INDEX(bitmap->max - bitmap->base);
+            }
+        }
+    }
+}
 
 /*
  * Return true iff <obj> is within the range of pointers that this
