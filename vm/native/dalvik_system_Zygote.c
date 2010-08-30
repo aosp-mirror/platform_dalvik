@@ -366,7 +366,8 @@ static pid_t forkAndSpecializeCommon(const u4* args)
             err = prctl(PR_SET_KEEPCAPS, 1, 0, 0, 0);
 
             if (err < 0) {
-                LOGW("cannot PR_SET_KEEPCAPS: %s", strerror(errno));
+                LOGE("cannot PR_SET_KEEPCAPS: %s", strerror(errno));
+                dvmAbort();
             }
         }
 
@@ -375,23 +376,27 @@ static pid_t forkAndSpecializeCommon(const u4* args)
         err = setgroupsIntarray(gids);
 
         if (err < 0) {
-            LOGW("cannot setgroups(): %s", strerror(errno));
+            LOGE("cannot setgroups(): %s", strerror(errno));
+            dvmAbort();
         }
 
         err = setrlimitsFromArray(rlimits);
 
         if (err < 0) {
-            LOGW("cannot setrlimit(): %s", strerror(errno));
+            LOGE("cannot setrlimit(): %s", strerror(errno));
+            dvmAbort();
         }
 
         err = setgid(gid);
         if (err < 0) {
-            LOGW("cannot setgid(%d): %s", gid, strerror(errno));
+            LOGE("cannot setgid(%d): %s", gid, strerror(errno));
+            dvmAbort();
         }
 
         err = setuid(uid);
         if (err < 0) {
-            LOGW("cannot setuid(%d): %s", uid, strerror(errno));
+            LOGE("cannot setuid(%d): %s", uid, strerror(errno));
+            dvmAbort();
         }
 
         /*
