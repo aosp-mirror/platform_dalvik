@@ -859,21 +859,18 @@ static void genRegCopyWide(CompilationUnit *cUnit, int destLo, int destHi,
     }
 }
 
-static inline ArmLIR *genRegImmCheck(CompilationUnit *cUnit,
+static ArmLIR *genCmpImmBranch(CompilationUnit *cUnit,
                                      ArmConditionCode cond, int reg,
-                                     int checkValue, int dOffset,
-                                     ArmLIR *pcrLabel)
+                                     int checkValue)
 {
-    int tReg;
-    ArmLIR *res;
     if ((checkValue & 0xff) != checkValue) {
-        tReg = dvmCompilerAllocTemp(cUnit);
+        int tReg = dvmCompilerAllocTemp(cUnit);
         loadConstant(cUnit, tReg, checkValue);
-        res = genRegRegCheck(cUnit, cond, reg, tReg, dOffset, pcrLabel);
+        newLIR2(cUnit, kThumbCmpRR, reg, tReg);
         dvmCompilerFreeTemp(cUnit, tReg);
-        return res;
+    } else {
+        newLIR2(cUnit, kThumbCmpRI8, reg, checkValue);
     }
-    newLIR2(cUnit, kThumbCmpRI8, reg, checkValue);
     ArmLIR *branch = newLIR2(cUnit, kThumbBCond, 0, cond);
-    return genCheckCommon(cUnit, dOffset, branch, pcrLabel);
+    return branch;
 }

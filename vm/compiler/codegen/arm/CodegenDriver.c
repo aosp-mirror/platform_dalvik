@@ -31,8 +31,7 @@ static void markCard(CompilationUnit *cUnit, int valReg, int tgtAddrReg)
 {
     int regCardBase = dvmCompilerAllocTemp(cUnit);
     int regCardNo = dvmCompilerAllocTemp(cUnit);
-    opRegImm(cUnit, kOpCmp, valReg, 0); /* storing null? */
-    ArmLIR *branchOver = opCondBranch(cUnit, kArmCondEq);
+    ArmLIR *branchOver = genCmpImmBranch(cUnit, kArmCondEq, valReg, 0);
     loadWordDisp(cUnit, rGLUE, offsetof(InterpState, cardTable),
                  regCardBase);
     opRegRegImm(cUnit, kOpLsr, regCardNo, tgtAddrReg, GC_CARD_SHIFT);
@@ -541,8 +540,7 @@ static void genArrayObjectPut(CompilationUnit *cUnit, MIR *mir,
     LOAD_FUNC_ADDR(cUnit, r2, (int)dvmCanPutArrayElement);
 
     /* Are we storing null?  If so, avoid check */
-    opRegImm(cUnit, kOpCmp, r0, 0);
-    ArmLIR *branchOver = opCondBranch(cUnit, kArmCondEq);
+    ArmLIR *branchOver = genCmpImmBranch(cUnit, kArmCondEq, r0, 0);
 
     /* Make sure the types are compatible */
     loadWordDisp(cUnit, regArray, offsetof(Object, clazz), r1);
@@ -1175,9 +1173,7 @@ static void genInvokeVirtualCommon(CompilationUnit *cUnit, MIR *mir,
     loadWordDisp(cUnit, r7, methodIndex * 4, r0);
 
     /* Check if rechain limit is reached */
-    opRegImm(cUnit, kOpCmp, r1, 0);
-
-    ArmLIR *bypassRechaining = opCondBranch(cUnit, kArmCondGt);
+    ArmLIR *bypassRechaining = genCmpImmBranch(cUnit, kArmCondGt, r1, 0);
 
     loadWordDisp(cUnit, rGLUE, offsetof(InterpState,
                  jitToInterpEntries.dvmJitToPatchPredictedChain), r7);
@@ -1291,8 +1287,8 @@ static void genMonitorPortable(CompilationUnit *cUnit, MIR *mir)
         LOAD_FUNC_ADDR(cUnit, r2, (int)dvmUnlockObject);
         /* Do the call */
         opReg(cUnit, kOpBlx, r2);
-        opRegImm(cUnit, kOpCmp, r0, 0); /* Did we throw? */
-        ArmLIR *branchOver = opCondBranch(cUnit, kArmCondNe);
+        /* Did we throw? */
+        ArmLIR *branchOver = genCmpImmBranch(cUnit, kArmCondNe, r0, 0);
         loadConstant(cUnit, r0,
                      (int) (cUnit->method->insns + mir->offset +
                      dexGetInstrWidthAbs(gDvm.instrWidth, OP_MONITOR_EXIT)));
@@ -1606,8 +1602,7 @@ static bool handleFmt21c_Fmt31c(CompilationUnit *cUnit, MIR *mir)
             opReg(cUnit, kOpBlx, r2);
             dvmCompilerClobberCallRegs(cUnit);
             /* generate a branch over if allocation is successful */
-            opRegImm(cUnit, kOpCmp, r0, 0); /* NULL? */
-            ArmLIR *branchOver = opCondBranch(cUnit, kArmCondNe);
+            ArmLIR *branchOver = genCmpImmBranch(cUnit, kArmCondNe, r0, 0);
             /*
              * OOM exception needs to be thrown here and cannot re-execute
              */
@@ -1648,8 +1643,9 @@ static bool handleFmt21c_Fmt31c(CompilationUnit *cUnit, MIR *mir)
             loadConstant(cUnit, r1, (int) classPtr );
             rlSrc = dvmCompilerGetSrc(cUnit, mir, 0);
             rlSrc = loadValue(cUnit, rlSrc, kCoreReg);
-            opRegImm(cUnit, kOpCmp, rlSrc.lowReg, 0);   /* Null? */
-            ArmLIR *branch1 = opCondBranch(cUnit, kArmCondEq);
+            /* Null? */
+            ArmLIR *branch1 = genCmpImmBranch(cUnit, kArmCondEq,
+                                              rlSrc.lowReg, 0);
             /*
              *  rlSrc.lowReg now contains object->clazz.  Note that
              *  it could have been allocated r0, but we're okay so long
@@ -2253,8 +2249,7 @@ static bool handleFmt22c(CompilationUnit *cUnit, MIR *mir)
             opReg(cUnit, kOpBlx, r3);
             dvmCompilerClobberCallRegs(cUnit);
             /* generate a branch over if allocation is successful */
-            opRegImm(cUnit, kOpCmp, r0, 0); /* NULL? */
-            ArmLIR *branchOver = opCondBranch(cUnit, kArmCondNe);
+            ArmLIR *branchOver = genCmpImmBranch(cUnit, kArmCondNe, r0, 0);
             /*
              * OOM exception needs to be thrown here and cannot re-execute
              */
@@ -2293,10 +2288,8 @@ static bool handleFmt22c(CompilationUnit *cUnit, MIR *mir)
             dvmCompilerFlushAllRegs(cUnit);   /* Everything to home location */
             loadValueDirectFixed(cUnit, rlSrc, r0);  /* Ref */
             loadConstant(cUnit, r2, (int) classPtr );
-//TUNING: compare to 0 primative to allow use of CB[N]Z
-            opRegImm(cUnit, kOpCmp, r0, 0); /* NULL? */
             /* When taken r0 has NULL which can be used for store directly */
-            ArmLIR *branch1 = opCondBranch(cUnit, kArmCondEq);
+            ArmLIR *branch1 = genCmpImmBranch(cUnit, kArmCondEq, r0, 0);
             /* r1 now contains object->clazz */
             loadWordDisp(cUnit, r0, offsetof(Object, clazz), r1);
             /* r1 now contains object->clazz */
@@ -2708,8 +2701,7 @@ static bool handleFmt31t(CompilationUnit *cUnit, MIR *mir)
             opReg(cUnit, kOpBlx, r2);
             dvmCompilerClobberCallRegs(cUnit);
             /* generate a branch over if successful */
-            opRegImm(cUnit, kOpCmp, r0, 0); /* NULL? */
-            ArmLIR *branchOver = opCondBranch(cUnit, kArmCondNe);
+            ArmLIR *branchOver = genCmpImmBranch(cUnit, kArmCondNe, r0, 0);
             loadConstant(cUnit, r0,
                          (int) (cUnit->method->insns + mir->offset));
             genDispatchToHandler(cUnit, TEMPLATE_THROW_EXCEPTION_COMMON);
@@ -3055,8 +3047,7 @@ static bool handleFmt35c_3rc(CompilationUnit *cUnit, MIR *mir, BasicBlock *bb,
 
             dvmCompilerClobberCallRegs(cUnit);
             /* generate a branch over if the interface method is resolved */
-            opRegImm(cUnit, kOpCmp, r0, 0); /* NULL? */
-            ArmLIR *branchOver = opCondBranch(cUnit, kArmCondNe);
+            ArmLIR *branchOver = genCmpImmBranch(cUnit, kArmCondNe, r0, 0);
             /*
              * calleeMethod == NULL -> throw
              */
@@ -3072,9 +3063,8 @@ static bool handleFmt35c_3rc(CompilationUnit *cUnit, MIR *mir, BasicBlock *bb,
             genRegCopy(cUnit, r1, r8);
 
             /* Check if rechain limit is reached */
-            opRegImm(cUnit, kOpCmp, r1, 0);
-
-            ArmLIR *bypassRechaining = opCondBranch(cUnit, kArmCondGt);
+            ArmLIR *bypassRechaining = genCmpImmBranch(cUnit, kArmCondGt,
+                                                       r1, 0);
 
             loadWordDisp(cUnit, rGLUE, offsetof(InterpState,
                          jitToInterpEntries.dvmJitToPatchPredictedChain), r7);
@@ -3448,8 +3438,8 @@ static bool handleExecuteInline(CompilationUnit *cUnit, MIR *mir)
             }
             opReg(cUnit, kOpBlx, r4PC);
             opRegImm(cUnit, kOpAdd, r13, 8);
-            opRegImm(cUnit, kOpCmp, r0, 0); /* NULL? */
-            ArmLIR *branchOver = opCondBranch(cUnit, kArmCondNe);
+            /* NULL? */
+            ArmLIR *branchOver = genCmpImmBranch(cUnit, kArmCondNe, r0, 0);
             loadConstant(cUnit, r0,
                          (int) (cUnit->method->insns + mir->offset));
             genDispatchToHandler(cUnit, TEMPLATE_THROW_EXCEPTION_COMMON);

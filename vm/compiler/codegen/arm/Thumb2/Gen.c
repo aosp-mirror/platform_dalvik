@@ -220,11 +220,6 @@ static void genMonitorEnter(CompilationUnit *cUnit, MIR *mir)
     hopTarget->defMask = ENCODE_ALL;
     hopBranch->generic.target = (LIR *)hopTarget;
 
-    // Clear the lock
-    ArmLIR *inst = newLIR0(cUnit, kThumb2Clrex);
-    // ...and make it a scheduling barrier
-    inst->defMask = ENCODE_ALL;
-
     // Export PC (part 1)
     loadConstant(cUnit, r3, (int) (cUnit->method->insns + mir->offset));
 
@@ -290,8 +285,8 @@ static void genMonitorExit(CompilationUnit *cUnit, MIR *mir)
             sizeof(StackSaveArea) -
             offsetof(StackSaveArea, xtra.currentPc));
     opReg(cUnit, kOpBlx, r7);
-    opRegImm(cUnit, kOpCmp, r0, 0); /* Did we throw? */
-    ArmLIR *branchOver = opCondBranch(cUnit, kArmCondNe);
+    /* Did we throw? */
+    ArmLIR *branchOver = genCmpImmBranch(cUnit, kArmCondNe, r0, 0);
     loadConstant(cUnit, r0,
                  (int) (cUnit->method->insns + mir->offset +
                  dexGetInstrWidthAbs(gDvm.instrWidth, OP_MONITOR_EXIT)));
