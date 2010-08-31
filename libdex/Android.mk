@@ -21,6 +21,7 @@ dex_src_files := \
 	DexDataMap.c \
 	DexFile.c \
 	DexInlines.c \
+	DexOptData.c \
 	DexProto.c \
 	DexSwapVerify.c \
 	InstrUtils.c \
