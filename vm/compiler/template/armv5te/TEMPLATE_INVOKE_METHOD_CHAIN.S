@@ -41,5 +41,12 @@
     str     r3, [rGLUE, #offGlue_methodClassDex] @ glue->methodClassDex = ...
     mov     rFP, r1                         @ fp = newFp
     str     rFP, [r2, #offThread_curFrame]  @ self->curFrame = newFp
+#if defined(WITH_INLINE_PROFILING)
+    stmfd   sp!, {r0-r2,lr}             @ preserve clobbered live registers
+    mov     r1, r6
+    @ r0=methodToCall, r1=rGlue
+    LDR_PC_LR ".LdvmFastMethodTraceEnter"
+    ldmfd   sp!, {r0-r2,lr}             @ restore registers
+#endif
 
     bx      lr                              @ return to the callee-chaining cell
