@@ -15,7 +15,7 @@
  */
 
 #include <cutils/mspace.h>
-#include <limits.h>     // for INT_MAX
+#include <limits.h>     // for SIZE_T_MAX
 #include <sys/mman.h>
 #include <errno.h>
 
@@ -42,11 +42,15 @@ static void setIdealFootprint(size_t max);
 #define HEAP_IDEAL_FREE             (2 * 1024 * 1024)
 #define HEAP_MIN_FREE               (HEAP_IDEAL_FREE / 4)
 
-/*
- * When the number of bytes allocated since the previous GC exceeds
- * this threshold a concurrent garbage collection is triggered.
+/* Start a concurrent collection when free memory falls under this
+ * many bytes.
  */
-#define OCCUPANCY_THRESHOLD (256 << 10)
+#define CONCURRENT_START (128 << 10)
+
+/* The next GC will not be concurrent when free memory after a GC is
+ * under this many bytes.
+ */
+#define CONCURRENT_MIN_FREE (CONCURRENT_START + (128 << 10))
 
 #define HS_BOILERPLATE() \
     do { \
@@ -115,11 +119,10 @@ typedef struct {
      */
     size_t bytesAllocated;
 
-    /*
-     * The number of bytes allocated after the previous garbage
-     * collection.
+    /* Number of bytes allocated from this mspace at which a
+     * concurrent garbage collection will be started.
      */
-    size_t prevBytesAllocated;
+    size_t concurrentStartBytes;
 
     /* Number of objects currently allocated from this mspace.
      */
@@ -222,13 +225,27 @@ struct HeapSource {
 static inline bool
 softLimited(const HeapSource *hs)
 {
-    /* softLimit will be either INT_MAX or the limit for the
+    /* softLimit will be either SIZE_T_MAX or the limit for the
      * active mspace.  idealSize can be greater than softLimit
      * if there is more than one heap.  If there is only one
-     * heap, a non-INT_MAX softLimit should always be the same
+     * heap, a non-SIZE_T_MAX softLimit should always be the same
      * as idealSize.
      */
     return hs->softLimit <= hs->idealSize;
+}
+
+/*
+ * Returns approximately the maximum number of bytes allowed to be
+ * allocated from the active heap before a GC is forced.
+ */
+static size_t
+getAllocLimit(const HeapSource *hs)
+{
+    if (softLimited(hs)) {
+        return hs->softLimit;
+    } else {
+        return mspace_max_allowed_footprint(hs2heap(hs)->msp);
+    }
 }
 
 /*
@@ -310,7 +327,6 @@ static void countFree(Heap *heap, const void *ptr, size_t *numBytes)
     assert(delta > 0);
     if (delta < heap->bytesAllocated) {
         heap->bytesAllocated -= delta;
-        heap->prevBytesAllocated = heap->bytesAllocated;
     } else {
         heap->bytesAllocated = 0;
     }
@@ -375,6 +391,7 @@ addNewHeap(HeapSource *hs, mspace msp, size_t mspAbsoluteMaxSize)
     if (msp != NULL) {
         heap.msp = msp;
         heap.absoluteMaxSize = mspAbsoluteMaxSize;
+        heap.concurrentStartBytes = SIZE_T_MAX;
         heap.base = hs->heapBase;
         heap.limit = hs->heapBase + heap.absoluteMaxSize;
     } else {
@@ -393,6 +410,7 @@ addNewHeap(HeapSource *hs, mspace msp, size_t mspAbsoluteMaxSize)
         hs->heaps[0].limit = base;
         base = (void *)ALIGN_UP_TO_PAGE_SIZE(base);
         heap.msp = createMspace(base, HEAP_MIN_FREE, heap.absoluteMaxSize);
+        heap.concurrentStartBytes = HEAP_MIN_FREE - CONCURRENT_START;
         heap.base = base;
         heap.limit = heap.base + heap.absoluteMaxSize;
         if (heap.msp == NULL) {
@@ -519,7 +537,7 @@ dvmHeapSourceStartup(size_t startSize, size_t absoluteMaxSize)
     hs->startSize = startSize;
     hs->absoluteMaxSize = absoluteMaxSize;
     hs->idealSize = startSize;
-    hs->softLimit = INT_MAX;    // no soft limit at first
+    hs->softLimit = SIZE_T_MAX;    // no soft limit at first
     hs->numHeaps = 0;
     hs->sawZygote = gDvm.zygote;
     hs->hasGcThread = false;
@@ -799,7 +817,6 @@ dvmHeapSourceAlloc(size_t n)
     HeapSource *hs = gHs;
     Heap *heap;
     void *ptr;
-    size_t allocated;
 
     HS_BOILERPLATE();
     heap = hs2heap(hs);
@@ -827,10 +844,9 @@ dvmHeapSourceAlloc(size_t n)
          */
         return ptr;
     }
-    allocated = heap->bytesAllocated - heap->prevBytesAllocated;
-    if (allocated > OCCUPANCY_THRESHOLD) {
+    if (heap->bytesAllocated > heap->concurrentStartBytes) {
         /*
-         * We have exceeded the occupancy threshold.  Wake up the
+         * We have exceeded the allocation threshold.  Wake up the
          * garbage collector.
          */
         dvmSignalCond(&gHs->gcThreadCond);
@@ -894,7 +910,7 @@ dvmHeapSourceAllocAndGrow(size_t n)
         /* We're soft-limited.  Try removing the soft limit to
          * see if we can allocate without actually growing.
          */
-        hs->softLimit = INT_MAX;
+        hs->softLimit = SIZE_T_MAX;
         ptr = dvmHeapSourceAlloc(n);
         if (ptr != NULL) {
             /* Removing the soft limit worked;  fix things up to
@@ -903,7 +919,7 @@ dvmHeapSourceAllocAndGrow(size_t n)
             snapIdealFootprint();
             return ptr;
         }
-        // softLimit intentionally left at INT_MAX.
+        // softLimit intentionally left at SIZE_T_MAX.
     }
 
     /* We're not soft-limited.  Grow the heap to satisfy the request.
@@ -1156,7 +1172,7 @@ setSoftLimit(HeapSource *hs, size_t softLimit)
          * soft limit, if set.
          */
         mspace_set_max_allowed_footprint(msp, softLimit);
-        hs->softLimit = INT_MAX;
+        hs->softLimit = SIZE_T_MAX;
     }
 }
 
@@ -1349,6 +1365,7 @@ void dvmHeapSourceGrowForUtilization()
     size_t oldIdealSize;
     size_t newHeapMax;
     size_t overhead;
+    size_t freeBytes;
 
     HS_BOILERPLATE();
     heap = hs2heap(hs);
@@ -1393,6 +1410,13 @@ void dvmHeapSourceGrowForUtilization()
     oldIdealSize = hs->idealSize;
     setIdealFootprint(targetHeapSize + overhead);
 
+    freeBytes = getAllocLimit(hs);
+    if (freeBytes < CONCURRENT_MIN_FREE) {
+        /* Not enough free memory to allow a concurrent GC. */
+        heap->concurrentStartBytes = SIZE_T_MAX;
+    } else {
+        heap->concurrentStartBytes = freeBytes - CONCURRENT_START;
+    }
     newHeapMax = mspace_max_allowed_footprint(heap->msp);
     if (softLimited(hs)) {
         LOGD_HEAP("GC old usage %zd.%zd%%; now "
