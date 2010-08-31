@@ -658,11 +658,9 @@ static void scanGrayObjects(GcMarkContext *ctx)
  * to the address corresponding to the lowest address in the next word
  * of bits in the bitmap.
  */
-static void scanBitmapCallback(void *addr, void *arg)
+static void scanBitmapCallback(void *addr, void *finger, void *arg)
 {
     GcMarkContext *ctx = arg;
-    void *nextAddr = (void *)((size_t)addr + 1);
-    size_t finger = ALIGN_UP(nextAddr, HB_BITS_PER_WORD * HB_OBJECT_ALIGNMENT);
     ctx->finger = (void *)finger;
     scanObject(addr, ctx);
 }
@@ -680,7 +678,7 @@ void dvmHeapScanMarkedObjects(void)
     /* The bitmaps currently have bits set for the root set.
      * Walk across the bitmaps and scan each object.
      */
-    dvmHeapBitmapWalk(ctx->bitmap, scanBitmapCallback, ctx);
+    dvmHeapBitmapScanWalk(ctx->bitmap, scanBitmapCallback, ctx);
 
     /* We've walked the mark bitmaps.  Scan anything that's
      * left on the mark stack.
