@@ -51,7 +51,7 @@ static void verifyAndOptimizeClass(DexFile* pDexFile, ClassObject* clazz,
     const DexClassDef* pClassDef, bool doVerify, bool doOpt);
 static void updateChecksum(u1* addr, int len, DexHeader* pHeader);
 static int writeDependencies(int fd, u4 modWhen, u4 crc);
-static bool writeAuxData(int fd, const DexClassLookup* pClassLookup,\
+static bool writeOptData(int fd, const DexClassLookup* pClassLookup,\
     const IndexMapSet* pIndexMapSet, const RegisterMapBuilder* pRegMapBuilder);
 static bool computeFileChecksum(int fd, off_t start, size_t length, u4* pSum);
 
@@ -595,8 +595,8 @@ bool dvmContinueOptimization(int fd, off_t dexOffset, long dexLength,
     }
 
     /* get start offset, and adjust deps start for 64-bit alignment */
-    off_t depsOffset, auxOffset, endOffset, adjOffset;
-    int depsLength, auxLength;
+    off_t depsOffset, optOffset, endOffset, adjOffset;
+    int depsLength, optLength;
     u4 optChecksum;
 
     depsOffset = lseek(fd, 0, SEEK_END);
@@ -620,32 +620,32 @@ bool dvmContinueOptimization(int fd, off_t dexOffset, long dexLength,
         goto bail;
     }
 
-    /* compute deps length, then adjust aux start for 64-bit alignment */
-    auxOffset = lseek(fd, 0, SEEK_END);
-    depsLength = auxOffset - depsOffset;
+    /* compute deps length, then adjust opt start for 64-bit alignment */
+    optOffset = lseek(fd, 0, SEEK_END);
+    depsLength = optOffset - depsOffset;
 
-    adjOffset = (auxOffset + 7) & ~(0x07);
-    if (adjOffset != auxOffset) {
-        LOGV("Adjusting aux start from %d to %d\n",
-            (int) auxOffset, (int) adjOffset);
-        auxOffset = adjOffset;
-        lseek(fd, auxOffset, SEEK_SET);
+    adjOffset = (optOffset + 7) & ~(0x07);
+    if (adjOffset != optOffset) {
+        LOGV("Adjusting opt start from %d to %d\n",
+            (int) optOffset, (int) adjOffset);
+        optOffset = adjOffset;
+        lseek(fd, optOffset, SEEK_SET);
     }
 
     /*
-     * Append any auxillary pre-computed data structures.
+     * Append any optimized pre-computed data structures.
      */
-    if (!writeAuxData(fd, pClassLookup, pIndexMapSet, pRegMapBuilder)) {
-        LOGW("Failed writing aux data\n");
+    if (!writeOptData(fd, pClassLookup, pIndexMapSet, pRegMapBuilder)) {
+        LOGW("Failed writing opt data\n");
         goto bail;
     }
 
     endOffset = lseek(fd, 0, SEEK_END);
-    auxLength = endOffset - auxOffset;
+    optLength = endOffset - optOffset;
 
-    /* compute checksum from start of deps to end of aux area */
+    /* compute checksum from start of deps to end of opt area */
     if (!computeFileChecksum(fd, depsOffset,
-            (auxOffset+auxLength) - depsOffset, &optChecksum))
+            (optOffset+optLength) - depsOffset, &optChecksum))
     {
         goto bail;
     }
@@ -662,8 +662,8 @@ bool dvmContinueOptimization(int fd, off_t dexOffset, long dexLength,
     optHdr.dexLength = (u4) dexLength;
     optHdr.depsOffset = (u4) depsOffset;
     optHdr.depsLength = (u4) depsLength;
-    optHdr.auxOffset = (u4) auxOffset;
-    optHdr.auxLength = (u4) auxLength;
+    optHdr.optOffset = (u4) optOffset;
+    optHdr.optLength = (u4) optLength;
 
     optHdr.flags = headerFlags;
     optHdr.checksum = optChecksum;
@@ -1334,13 +1334,13 @@ static bool writeChunk(int fd, u4 type, const void* data, size_t size)
     header.ts.type = type;
     header.ts.size = (u4) size;
     if (sysWriteFully(fd, &header, sizeof(header),
-            "DexOpt aux chunk header write") != 0)
+            "DexOpt opt chunk header write") != 0)
     {
         return false;
     }
 
     if (size > 0) {
-        if (sysWriteFully(fd, data, size, "DexOpt aux chunk write") != 0)
+        if (sysWriteFully(fd, data, size, "DexOpt opt chunk write") != 0)
             return false;
     }
 
@@ -1357,14 +1357,14 @@ static bool writeChunk(int fd, u4 type, const void* data, size_t size)
 }
 
 /*
- * Write aux data.
+ * Write opt data.
  *
  * We have different pieces, some of which may be optional.  To make the
  * most effective use of space, we use a "chunk" format, with a 4-byte
  * type and a 4-byte length.  We guarantee 64-bit alignment for the data,
  * so it can be used directly when the file is mapped for reading.
  */
-static bool writeAuxData(int fd, const DexClassLookup* pClassLookup,
+static bool writeOptData(int fd, const DexClassLookup* pClassLookup,
     const IndexMapSet* pIndexMapSet, const RegisterMapBuilder* pRegMapBuilder)
 {
     /* pre-computed class lookup hash table */
@@ -1442,7 +1442,7 @@ static bool computeFileChecksum(int fd, off_t start, size_t length, u4* pSum)
 /*
  * Update the Adler-32 checksum stored in the DEX file.  This covers the
  * swapped and optimized DEX data, but does not include the opt header
- * or auxillary data.
+ * or optimized data.
  */
 static void updateChecksum(u1* addr, int len, DexHeader* pHeader)
 {
