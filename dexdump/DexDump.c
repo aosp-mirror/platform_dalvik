@@ -406,9 +406,9 @@ void dumpFileHeader(const DexFile* pDexFile)
         printf("deps_offset         : %d (0x%06x)\n",
             pOptHeader->depsOffset, pOptHeader->depsOffset);
         printf("deps_length         : %d\n", pOptHeader->depsLength);
-        printf("aux_offset          : %d (0x%06x)\n",
-            pOptHeader->auxOffset, pOptHeader->auxOffset);
-        printf("aux_length          : %d\n", pOptHeader->auxLength);
+        printf("opt_offset          : %d (0x%06x)\n",
+            pOptHeader->optOffset, pOptHeader->optOffset);
+        printf("opt_length          : %d\n", pOptHeader->optLength);
         printf("flags               : %08x\n", pOptHeader->flags);
         printf("checksum            : %08x\n", pOptHeader->checksum);
         printf("\n");
@@ -449,33 +449,33 @@ void dumpFileHeader(const DexFile* pDexFile)
 }
 
 /*
- * Dump the "table of contents" for the aux area.
+ * Dump the "table of contents" for the opt area.
  */
-void dumpAuxDirectory(const DexFile* pDexFile)
+void dumpOptDirectory(const DexFile* pDexFile)
 {
     const DexOptHeader* pOptHeader = pDexFile->pOptHeader;
     if (pOptHeader == NULL)
         return;
 
-    printf("AUX section contents:\n");
+    printf("OPT section contents:\n");
 
-    const u4* pAux = (const u4*) ((u1*) pOptHeader + pOptHeader->auxOffset);
+    const u4* pOpt = (const u4*) ((u1*) pOptHeader + pOptHeader->optOffset);
 
-    if (*pAux == 0) {
+    if (*pOpt == 0) {
         printf("(1.0 format, only class lookup table is present)\n\n");
         return;
     }
 
     /*
-     * The "aux" section is in "chunk" format: a 32-bit identifier, a 32-bit
+     * The "opt" section is in "chunk" format: a 32-bit identifier, a 32-bit
      * length, then the data.  Chunks start on 64-bit boundaries.
      */
-    while (*pAux != kDexChunkEnd) {
+    while (*pOpt != kDexChunkEnd) {
         const char* verboseStr;
 
-        u4 size = *(pAux+1);
+        u4 size = *(pOpt+1);
 
-        switch (*pAux) {
+        switch (*pOpt) {
         case kDexChunkClassLookup:
             verboseStr = "class lookup hash table";
             break;
@@ -493,12 +493,12 @@ void dumpAuxDirectory(const DexFile* pDexFile)
             break;
         }
 
-        printf("Chunk %08x (%c%c%c%c) - %s (%d bytes)\n", *pAux,
-            *pAux >> 24, (char)(*pAux >> 16), (char)(*pAux >> 8), (char)*pAux,
+        printf("Chunk %08x (%c%c%c%c) - %s (%d bytes)\n", *pOpt,
+            *pOpt >> 24, (char)(*pOpt >> 16), (char)(*pOpt >> 8), (char)*pOpt,
             verboseStr, size);
 
         size = (size + 8 + 7) & ~7;
-        pAux += size / sizeof(u4);
+        pOpt += size / sizeof(u4);
     }
     printf("\n");
 }
@@ -1721,7 +1721,7 @@ void processDexFile(const char* fileName, DexFile* pDexFile)
 
     if (gOptions.showFileHeaders) {
         dumpFileHeader(pDexFile);
-        dumpAuxDirectory(pDexFile);
+        dumpOptDirectory(pDexFile);
     }
 
     if (gOptions.outputFormat == OUTPUT_XML)
