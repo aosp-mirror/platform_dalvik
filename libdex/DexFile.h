@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 /*
  * Access .dex (Dalvik Executable Format) files.  The code here assumes that
  * the DEX file has been rewritten (byte-swapped, word-aligned) and that
@@ -28,6 +29,7 @@
  *
  * All memory-mapped structures are 32-bit aligned unless otherwise noted.
  */
+
 #ifndef _LIBDEX_DEXFILE
 #define _LIBDEX_DEXFILE
 
@@ -480,11 +482,11 @@ typedef struct DexOptHeader {
     u4  dexLength;
     u4  depsOffset;         /* offset of optimized DEX dependency table */
     u4  depsLength;
-    u4  auxOffset;          /* file offset of pre-calc auxillary data */
-    u4  auxLength;
+    u4  optOffset;          /* file offset of optimized data tables */
+    u4  optLength;
 
     u4  flags;              /* some info flags */
-    u4  checksum;           /* adler32 checksum covering deps/aux */
+    u4  checksum;           /* adler32 checksum covering deps/opt */
 
     /* pad for 64-bit alignment if necessary */
 } DexOptHeader;
