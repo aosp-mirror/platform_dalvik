@@ -18,7 +18,6 @@
  * Thread support.
  */
 #include "Dalvik.h"
-#include "native/SystemThread.h"
 
 #include "utils/threads.h"      // need Android thread priorities
 
@@ -2332,8 +2331,6 @@ void dvmDetachCurrentThread(void)
     dvmUnlockThreadList();
 
     setThreadSelf(NULL);
-
-    dvmDetachSystemThread(self);
 
     freeThread(self);
 }
