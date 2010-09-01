@@ -184,7 +184,6 @@ LOCAL_SRC_FILES := \
 	native/org_apache_harmony_dalvik_ddmc_DdmServer.c \
 	native/org_apache_harmony_dalvik_ddmc_DdmVmInternal.c \
 	native/sun_misc_Unsafe.c \
-	native/SystemThread.c \
 	oo/AccessCheck.c \
 	oo/Array.c \
 	oo/Class.c \
