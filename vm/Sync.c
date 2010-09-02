@@ -111,6 +111,8 @@ static void expandObjClear(ExpandingObjectList* pList);
  * Only one thread can own the monitor at any time.  There may be several
  * threads waiting on it (the wait call unlocks it).  One or more waiting
  * threads may be getting interrupted or notified at any given time.
+ *
+ * TODO: the various members of monitor are not SMP-safe.
  */
 struct Monitor {
     Thread*     owner;          /* which thread currently owns the lock? */
@@ -122,6 +124,13 @@ struct Monitor {
     pthread_mutex_t lock;
 
     Monitor*    next;
+
+    /*
+     * Who last acquired this monitor, when lock sampling is enabled.
+     * Even when enabled, ownerFileName may be NULL.
+     */
+    char*       ownerFileName;
+    u4          ownerLineNumber;
 
 #ifdef WITH_DEADLOCK_PREDICTION
     /*
@@ -373,12 +382,13 @@ static char *logWriteString(char *dst, const char *value, size_t len)
 
 #define EVENT_LOG_TAG_dvm_lock_sample 20003
 
-static void logContentionEvent(Thread *self, u4 waitMs, u4 samplePercent)
+static void logContentionEvent(Thread *self, u4 waitMs, u4 samplePercent,
+                               const char *ownerFileName, u4 ownerLineNumber)
 {
     const StackSaveArea *saveArea;
     const Method *meth;
     u4 relativePc;
-    char eventBuffer[132];
+    char eventBuffer[174];
     const char *fileName;
     char procName[33], *selfName;
     char *cp;
@@ -390,7 +400,7 @@ static void logContentionEvent(Thread *self, u4 waitMs, u4 samplePercent)
     cp = eventBuffer;
 
     /* Emit the event list length, 1 byte. */
-    *cp++ = 7;
+    *cp++ = 9;
 
     /* Emit the process name, <= 37 bytes. */
     fd = open("/proc/self/cmdline", O_RDONLY);
@@ -421,6 +431,18 @@ static void logContentionEvent(Thread *self, u4 waitMs, u4 samplePercent)
     relativePc = saveArea->xtra.currentPc - saveArea->method->insns;
     cp = logWriteInt(cp, dvmLineNumFromPC(meth, relativePc));
 
+    /* Emit the lock owner source code file name, <= 37 bytes. */
+    if (ownerFileName == NULL) {
+      ownerFileName = "";
+    } else if (strcmp(fileName, ownerFileName) == 0) {
+      /* Common case, so save on log space. */
+      ownerFileName = "-";
+    }
+    cp = logWriteString(cp, ownerFileName, strlen(ownerFileName));
+
+    /* Emit the source code line number, 5 bytes. */
+    cp = logWriteInt(cp, ownerLineNumber);
+
     /* Emit the sample percentage, 5 bytes. */
     cp = logWriteInt(cp, samplePercent);
 
@@ -450,6 +472,9 @@ static void lockMonitor(Thread* self, Monitor* mon)
         if (waitThreshold) {
             waitStart = dvmGetRelativeTimeUsec();
         }
+        const char* currentOwnerFileName = mon->ownerFileName;
+        u4 currentOwnerLineNumber = mon->ownerLineNumber;
+
         dvmLockMutex(&mon->lock);
         if (waitThreshold) {
             waitEnd = dvmGetRelativeTimeUsec();
@@ -463,12 +488,36 @@ static void lockMonitor(Thread* self, Monitor* mon)
                 samplePercent = 100 * waitMs / waitThreshold;
             }
             if (samplePercent != 0 && ((u4)rand() % 100 < samplePercent)) {
-                logContentionEvent(self, waitMs, samplePercent);
+                logContentionEvent(self, waitMs, samplePercent,
+                                   currentOwnerFileName, currentOwnerLineNumber);
             }
         }
     }
     mon->owner = self;
     assert(mon->lockCount == 0);
+
+    // When debugging, save the current monitor holder for future
+    // acquisition failures to use in sampled logging.
+    if (gDvm.lockProfThreshold > 0) {
+        const StackSaveArea *saveArea;
+        const Method *meth;
+        mon->ownerLineNumber = 0;
+        if (self->curFrame == NULL) {
+            mon->ownerFileName = "no_frame";
+        } else if ((saveArea = SAVEAREA_FROM_FP(self->curFrame)) == NULL) {
+            mon->ownerFileName = "no_save_area";
+        } else if ((meth = saveArea->method) == NULL) {
+            mon->ownerFileName = "no_method";
+        } else {
+            u4 relativePc = saveArea->xtra.currentPc - saveArea->method->insns;
+            mon->ownerFileName = (char*) dvmGetMethodSourceFile(meth);
+            if (mon->ownerFileName == NULL) {
+                mon->ownerFileName = "no_method_file";
+            } else {
+                mon->ownerLineNumber = dvmLineNumFromPC(meth, relativePc);
+            }
+        }
+    }
 }
 
 /*
@@ -510,6 +559,8 @@ static bool unlockMonitor(Thread* self, Monitor* mon)
          */
         if (mon->lockCount == 0) {
             mon->owner = NULL;
+            mon->ownerFileName = "unlocked";
+            mon->ownerLineNumber = 0;
             dvmUnlockMutex(&mon->lock);
         } else {
             mon->lockCount--;
@@ -683,6 +734,8 @@ static void waitMonitor(Thread* self, Monitor* mon, s8 msec, s4 nsec,
     bool wasInterrupted = false;
     bool timed;
     int ret;
+    char *savedFileName;
+    u4 savedLineNumber;
 
     assert(self != NULL);
     assert(mon != NULL);
@@ -727,6 +780,10 @@ static void waitMonitor(Thread* self, Monitor* mon, s8 msec, s4 nsec,
     int prevLockCount = mon->lockCount;
     mon->lockCount = 0;
     mon->owner = NULL;
+    savedFileName = mon->ownerFileName;
+    mon->ownerFileName = NULL;
+    savedLineNumber = mon->ownerLineNumber;
+    mon->ownerLineNumber = 0;
 
     /*
      * Update thread status.  If the GC wakes up, it'll ignore us, knowing
@@ -797,6 +854,8 @@ done:
      */
     mon->owner = self;
     mon->lockCount = prevLockCount;
+    mon->ownerFileName = savedFileName;
+    mon->ownerLineNumber = savedLineNumber;
     waitSetRemove(mon, self);
 
     /* set self->status back to THREAD_RUNNING, and self-suspend if needed */
