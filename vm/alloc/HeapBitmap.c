@@ -83,19 +83,11 @@ dvmHeapBitmapZero(HeapBitmap *hb)
  * object pointers that correspond to garbage objects.  Call
  * <callback> zero or more times with lists of these object pointers.
  *
- * The <finger> argument to the callback indicates the next-highest
- * address that hasn't been visited yet; setting bits for objects whose
- * addresses are less than <finger> are not guaranteed to be seen by
- * the current walk.
- *
  * The callback is permitted to increase the bitmap's max; the walk
  * will use the updated max as a terminating condition,
- *
- * <finger> will be set to some value beyond the bitmap max when the
- * end of the bitmap is reached.
  */
 void dvmHeapBitmapSweepWalk(const HeapBitmap *liveHb, const HeapBitmap *markHb,
-                            BitmapCallback *callback, void *callbackArg)
+                            BitmapSweepCallback *callback, void *callbackArg)
 {
     static const size_t kPointerBufSize = 128;
     void *pointerBuf[kPointerBufSize];
@@ -103,10 +95,10 @@ void dvmHeapBitmapSweepWalk(const HeapBitmap *liveHb, const HeapBitmap *markHb,
     size_t index;
     size_t i;
 
-#define FLUSH_POINTERBUF(finger_) \
+#define FLUSH_POINTERBUF() \
     do { \
         (*callback)(pb - pointerBuf, (void **)pointerBuf, \
-                    (void *)(finger_), callbackArg); \
+                    callbackArg); \
         pb = pointerBuf; \
     } while (false)
 
@@ -126,8 +118,7 @@ void dvmHeapBitmapSweepWalk(const HeapBitmap *liveHb, const HeapBitmap *markHb,
             /* Make sure that there are always enough slots available */ \
             /* for an entire word of 1s. */ \
             if (kPointerBufSize - (pb - pointerBuf) < HB_BITS_PER_WORD) { \
-                FLUSH_POINTERBUF(ptrBase + \
-                        HB_BITS_PER_WORD * HB_OBJECT_ALIGNMENT); \
+                FLUSH_POINTERBUF(); \
                 if (update_index_) { \
                     /* The callback may have caused hb_->max to grow. */ \
                     index = HB_OFFSET_TO_INDEX(hb_->max - hb_->base); \
@@ -202,31 +193,8 @@ unsigned long *p;
     }
 
     if (pb > pointerBuf) {
-        /* Set the finger to the end of the heap (rather than
-         * longHb->max) so that the callback doesn't expect to be
-         * called again if it happens to change the current max.
-         */
-        uintptr_t finalFinger = longHb->base + HB_MAX_OFFSET(longHb);
-        FLUSH_POINTERBUF(finalFinger);
-        assert(finalFinger > longHb->max);
+        FLUSH_POINTERBUF();
     }
 #undef FLUSH_POINTERBUF
 #undef DECODE_BITS
-}
-
-/*
- * dvmHeapBitmapWalk is equivalent to dvmHeapBitmapSweepWalk with
- * nothing marked.
- */
-void dvmHeapBitmapWalk(const HeapBitmap *hb,
-                       BitmapCallback *callback, void *callbackArg)
-{
-    /* Create an empty bitmap with the same extent as <hb>.
-     * Don't actually allocate any memory.
-     */
-    HeapBitmap emptyHb = *hb;
-    emptyHb.max = emptyHb.base - 1; // empty
-    emptyHb.bits = (void *)1;       // non-NULL but intentionally bad
-
-    dvmHeapBitmapSweepWalk(hb, &emptyHb, callback, callbackArg);
 }

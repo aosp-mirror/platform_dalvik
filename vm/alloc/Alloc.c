@@ -306,18 +306,14 @@ typedef struct {
     size_t count;
 } CountInstancesOfClassContext;
 
-static void countInstancesOfClassCallback(size_t numPtrs, void **ptrs,
-                                          const void *finger, void *arg)
+static void countInstancesOfClassCallback(void *ptr, void *arg)
 {
     CountInstancesOfClassContext *ctx = arg;
-    size_t i;
+    const Object *obj = ptr;
 
     assert(ctx != NULL);
-    for (i = 0; i < numPtrs; ++i) {
-        const Object *obj = ptrs[i];
-        if (obj->clazz == ctx->clazz) {
-            ctx->count += 1;
-        }
+    if (obj->clazz == ctx->clazz) {
+        ctx->count += 1;
     }
 }
 

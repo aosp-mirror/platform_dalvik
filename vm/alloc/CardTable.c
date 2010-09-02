@@ -244,24 +244,21 @@ static bool isWeakInternedString(const Object *obj)
  * table verification occurs weak references have yet to be blackened
  * and so their containing objects are permitted to be gray.
  */
-static void verifyCardTableCallback(size_t numPtrs, void **ptrs,
-                                    const void *finger, void *arg)
+static void verifyCardTableCallback(void *ptr, void *arg)
 {
-    size_t i;
+    Object *obj = ptr;
+    WhiteReferenceCounter ctx = { arg, 0 };
 
-    for (i = 0; i < numPtrs; ++i) {
-        Object *obj = ptrs[i];
-        WhiteReferenceCounter ctx = { arg, 0 };
-        dvmVisitObject(countWhiteReferenceVisitor, obj, &ctx);
-        if (ctx.whiteRefs == 0) {
-            continue;
-        } else if (isObjectDirty(obj)) {
-            continue;
-        } else if (isReferentUnmarked(obj, &ctx)) {
-            continue;
-        } else if (isWeakInternedString(obj)) {
-            continue;
-        }
+    dvmVisitObject(countWhiteReferenceVisitor, obj, &ctx);
+    if (ctx.whiteRefs == 0) {
+        return;
+    } else if (isObjectDirty(obj)) {
+        return;
+    } else if (isReferentUnmarked(obj, &ctx)) {
+        return;
+    } else if (isWeakInternedString(obj)) {
+        return;
+    } else {
         LOGE("Verify failed, object %p is gray", obj);
         dvmDumpObject(obj);
         dvmAbort();
