@@ -146,8 +146,8 @@ HB_INLINE_PROTO(
                 word &= ~(highBit >> shift);
                 void *addr = (void *)(ptrBase + shift * HB_OBJECT_ALIGNMENT);
                 (*callback)(addr, arg);
-                end = HB_OFFSET_TO_INDEX(bitmap->max - bitmap->base);
             }
+            end = HB_OFFSET_TO_INDEX(bitmap->max - bitmap->base);
         }
     }
 }
