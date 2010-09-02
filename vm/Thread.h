@@ -85,11 +85,6 @@ void dvmSlayDaemons(void);
 #define kMaxStackSize       (256*1024 + STACK_OVERFLOW_RESERVE)
 
 /*
- * System thread state. See native/SystemThread.h.
- */
-typedef struct SystemThread SystemThread;
-
-/*
  * Our per-thread data.
  *
  * These are allocated on the system heap.
@@ -244,9 +239,6 @@ typedef struct Thread {
     /* PC, saved on every instruction; redundant with StackSaveArea */
     const u2*   currentPc2;
 #endif
-
-    /* system thread state */
-    SystemThread* systemThread;
 } Thread;
 
 /* start point for an internal thread; mimics pthread args */
