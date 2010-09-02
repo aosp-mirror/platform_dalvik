@@ -370,9 +370,9 @@ bool dvmJniStartup(void)
     meth = dvmFindVirtualMethodByDescriptor(
                 gDvm.classOrgApacheHarmonyNioInternalDirectBuffer,
                 "getEffectiveAddress",
-                "()Lorg/apache/harmony/luni/platform/PlatformAddress;");
+                "()I");
     if (meth == NULL) {
-        LOGE("Unable to find PlatformAddress.getEffectiveAddress\n");
+        LOGE("Unable to find DirectBuffer.getEffectiveAddress\n");
         return false;
     }
     gDvm.methOrgApacheHarmonyNioInternalDirectBuffer_getEffectiveAddress = meth;
@@ -394,13 +394,6 @@ bool dvmJniStartup(void)
         return false;
     }
     gDvm.methJavaNioReadWriteDirectByteBuffer_init = meth;
-
-    gDvm.offOrgApacheHarmonyLuniPlatformPlatformAddress_osaddr =
-        dvmFindFieldOffset(platformAddressClass, "osaddr", "I");
-    if (gDvm.offOrgApacheHarmonyLuniPlatformPlatformAddress_osaddr < 0) {
-        LOGE("Unable to find PlatformAddress.osaddr\n");
-        return false;
-    }
 
     gDvm.offJavaNioBuffer_capacity =
         dvmFindFieldOffset(bufferClass, "capacity", "I");
@@ -3711,10 +3704,9 @@ static void* GetDirectBufferAddress(JNIEnv* env, jobject jbuf)
     }
 
     /*
-     * Get a PlatformAddress object with the effective address.
+     * Get the effective address by calling getEffectiveAddress.
      *
-     * If this isn't a direct buffer, the result will be NULL and/or an
-     * exception will have been thrown.
+     * If this isn't a direct buffer, an exception will have been thrown.
      */
     JValue callResult;
     const Method* meth = dvmGetVirtualizedMethod(bufObj->clazz,
@@ -3722,22 +3714,13 @@ static void* GetDirectBufferAddress(JNIEnv* env, jobject jbuf)
     dvmCallMethodA(self, meth, bufObj, false, &callResult, NULL);
     if (dvmGetException(self) != NULL) {
         dvmClearException(self);
-        callResult.l = NULL;
+        callResult.i = 0;
     }
 
-    Object* platformAddr = callResult.l;
-    if (platformAddr == NULL) {
+    result = (void*)(uintptr_t) callResult.i;
+    if (result == NULL) {
         LOGV("Got request for address of non-direct buffer\n");
-        goto bail;
     }
-
-    /*
-     * Extract the address from the PlatformAddress object.  Instead of
-     * calling the toInt() method, just grab the field directly.  This
-     * is faster but more fragile.
-     */
-    result = (void*) dvmGetFieldInt(platformAddr,
-                gDvm.offOrgApacheHarmonyLuniPlatformPlatformAddress_osaddr);
 
     //LOGI("slow path for %p --> %p\n", buf, result);
 

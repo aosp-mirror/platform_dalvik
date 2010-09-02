@@ -329,7 +329,6 @@ struct DvmGlobals {
     Method*     methOrgApacheHarmonyNioInternalDirectBuffer_getEffectiveAddress;
     int         offJavaNioBuffer_capacity;
     int         offJavaNioBuffer_effectiveDirectAddress;
-    int         offOrgApacheHarmonyLuniPlatformPlatformAddress_osaddr;
 
     /*
      * VM-synthesized primitive classes, for arrays.
