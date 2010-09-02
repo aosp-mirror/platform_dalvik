@@ -22,7 +22,6 @@
 #ifndef _LIBDEX_DEXOPTDATA
 #define _LIBDEX_DEXOPTDATA
 
-#include <stdbool.h>
 #include "libdex/DexFile.h"
 
 /*
