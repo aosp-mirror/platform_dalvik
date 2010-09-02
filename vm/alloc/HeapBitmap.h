@@ -16,10 +16,11 @@
 #ifndef _DALVIK_HEAP_BITMAP
 #define _DALVIK_HEAP_BITMAP
 
+#include <limits.h>
 #include <stdint.h>
 
 #define HB_OBJECT_ALIGNMENT 8
-#define HB_BITS_PER_WORD    (sizeof (unsigned long) * 8)
+#define HB_BITS_PER_WORD (sizeof(unsigned long) * CHAR_BIT)
 
 /* <offset> is the difference from .base to a pointer address.
  * <index> is the index of .bits that contains the bit representing
