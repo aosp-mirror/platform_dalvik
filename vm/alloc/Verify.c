@@ -16,33 +16,78 @@
 
 #include "Dalvik.h"
 #include "alloc/HeapBitmap.h"
+#include "alloc/HeapSource.h"
 #include "alloc/Verify.h"
 #include "alloc/Visit.h"
+
+static void dumpReferencesVisitor(void *pObj, void *arg)
+{
+    Object *obj = *(Object **)pObj;
+    Object *lookingFor = *(Object **)arg;
+    if (lookingFor != NULL && lookingFor == obj) {
+        *(Object **)arg = NULL;
+    }
+}
+
+static void dumpReferencesCallback(void *ptr, void *arg)
+{
+    Object *obj = arg;
+    if (ptr == obj) {
+        LOGD("skipping %p == %p", ptr, obj);
+        return;
+    }
+    dvmVisitObject(dumpReferencesVisitor, ptr, &obj);
+    if (obj == NULL) {
+        LOGD("Found %p in the heap @ %p", arg, ptr);
+        dvmDumpObject(ptr);
+    }
+}
+
+static void dumpReferencesRootVisitor(void *ptr, void *arg)
+{
+    Object *obj = *(Object **)ptr;
+    Object *lookingFor = *(Object **)arg;
+    if (obj == lookingFor) {
+        LOGD("Found %p in a root @ %p", arg, ptr);
+    }
+}
+
+/*
+ * Searches the roots and heap for object references.
+ */
+static void dumpReferences(const Object *obj)
+{
+    HeapBitmap *bitmap = dvmHeapSourceGetLiveBits();
+    void *arg = (void *)obj;
+    dvmVisitRoots(dumpReferencesRootVisitor, arg);
+    dvmHeapBitmapWalk(bitmap, dumpReferencesCallback, arg);
+}
 
 /*
  * Checks that the given reference points to a valid object.
  */
 static void verifyReference(void *addr, void *arg)
 {
-    const Object *obj;
+    Object *obj;
     bool isValid;
 
     assert(addr != NULL);
-    obj = *(const Object **)addr;
+    obj = *(Object **)addr;
     if (obj == NULL) {
         isValid = true;
     } else {
         isValid = dvmIsValidObject(obj);
     }
     if (!isValid) {
-        LOGE("Verify of object %p @ %p failed", obj, addr);
-        dvmAbort();
+        Object **parent = arg;
+        if (*parent != NULL) {
+            LOGE("Verify of object %p failed", *parent);
+            dvmDumpObject(*parent);
+            *parent = NULL;
+        }
+        LOGE("Verify of reference %p @ %p failed", obj, addr);
+        dvmDumpObject(obj);
     }
-}
-
-static void visitorCallback(void *addr, void *arg)
-{
-    verifyReference(addr, arg);
 }
 
 /*
@@ -50,15 +95,20 @@ static void visitorCallback(void *addr, void *arg)
  */
 void dvmVerifyObject(const Object *obj)
 {
-    dvmVisitObject(visitorCallback, (Object *)obj, NULL);
+    Object *arg = (Object *)obj;
+    dvmVisitObject(verifyReference, (Object *)obj, &arg);
+    if (arg == NULL) {
+        dumpReferences(obj);
+        dvmAbort();
+    }
 }
 
 /*
  * Helper function to call dvmVerifyObject from a bitmap walker.
  */
-static void verifyBitmapCallback(void *ptrs, void *arg)
+static void verifyBitmapCallback(void *ptr, void *arg)
 {
-    dvmVerifyObject(ptrs);
+    dvmVerifyObject(ptr);
 }
 
 /*
@@ -67,7 +117,6 @@ static void verifyBitmapCallback(void *ptrs, void *arg)
  */
 void dvmVerifyBitmap(const HeapBitmap *bitmap)
 {
-    /* TODO: check that locks are held and the VM is suspended. */
     dvmHeapBitmapWalk(bitmap, verifyBitmapCallback, NULL);
 }
 
