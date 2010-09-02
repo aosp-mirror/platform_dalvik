@@ -81,6 +81,7 @@ typedef struct {
 } HeapBitmap;
 
 typedef void BitmapCallback(void *addr, void *arg);
+typedef void BitmapScanCallback(void *addr, void *finger, void *arg);
 typedef void BitmapSweepCallback(size_t numPtrs, void **ptrs, void *arg);
 
 /*
@@ -103,27 +104,8 @@ void dvmHeapBitmapDelete(HeapBitmap *hb);
 void dvmHeapBitmapZero(HeapBitmap *hb);
 
 /*
- * Walk through the bitmaps in increasing address order, and find the
- * object pointers that correspond to garbage objects.  Call
- * <callback> zero or more times with lists of these object pointers.
- *
- * The <finger> argument to the callback indicates the next-highest
- * address that hasn't been visited yet; setting bits for objects whose
- * addresses are less than <finger> are not guaranteed to be seen by
- * the current walk.
- *
- * The callback is permitted to increase the bitmap's max; the walk
- * will use the updated max as a terminating condition,
- *
- * <finger> will be set to some value beyond the bitmap max when the
- * end of the bitmap is reached.
- */
-void dvmHeapBitmapSweepWalk(const HeapBitmap *liveHb, const HeapBitmap *markHb,
-                            BitmapSweepCallback *callback, void *callbackArg);
-
-/*
- * Similar to dvmHeapBitmapSweepWalk(), but visit the set bits
- * in a single bitmap.
+ * Visits set bits in address order.  The callback is not permitted to
+ * change the bitmap bits or max during the traversal.
  */
 HB_INLINE_PROTO(
     void
@@ -143,14 +125,64 @@ HB_INLINE_PROTO(
             uintptr_t ptrBase = HB_INDEX_TO_OFFSET(i) + bitmap->base;
             while (word != 0) {
                 const int shift = CLZ(word);
-                word &= ~(highBit >> shift);
                 void *addr = (void *)(ptrBase + shift * HB_OBJECT_ALIGNMENT);
                 (*callback)(addr, arg);
+                word &= ~(highBit >> shift);
+            }
+        }
+    }
+}
+
+/*
+ * Similar to dvmHeapBitmapWalk but the callback routine is permitted
+ * to change the bitmap bits and max during traversal.  Used by the
+ * the root marking scan exclusively.
+ *
+ * The callback is invoked with a finger argument.  The finger is a
+ * pointer to an address not yet visited by the traversal.  If the
+ * callback sets a bit for an address at or above the finger, this
+ * address will be visited by the traversal.  If the callback sets a
+ * bit for an address below the finger, this address will not be
+ * visited.
+ */
+HB_INLINE_PROTO(
+    void
+    dvmHeapBitmapScanWalk(HeapBitmap *bitmap,
+                          BitmapScanCallback *callback, void *arg)
+)
+{
+    assert(bitmap != NULL);
+    assert(bitmap->bits != NULL);
+    assert(callback != NULL);
+    uintptr_t end = HB_OFFSET_TO_INDEX(bitmap->max - bitmap->base);
+    uintptr_t i;
+    for (i = 0; i <= end; ++i) {
+        unsigned long word = bitmap->bits[i];
+        if (UNLIKELY(word != 0)) {
+            unsigned long highBit = 1 << (HB_BITS_PER_WORD - 1);
+            uintptr_t ptrBase = HB_INDEX_TO_OFFSET(i) + bitmap->base;
+            void *finger = (void *)(HB_INDEX_TO_OFFSET(i + 1) + bitmap->base);
+            while (word != 0) {
+                const int shift = CLZ(word);
+                void *addr = (void *)(ptrBase + shift * HB_OBJECT_ALIGNMENT);
+                (*callback)(addr, finger, arg);
+                word &= ~(highBit >> shift);
             }
             end = HB_OFFSET_TO_INDEX(bitmap->max - bitmap->base);
         }
     }
 }
+
+/*
+ * Walk through the bitmaps in increasing address order, and find the
+ * object pointers that correspond to garbage objects.  Call
+ * <callback> zero or more times with lists of these object pointers.
+ *
+ * The callback is permitted to increase the bitmap's max; the walk
+ * will use the updated max as a terminating condition.
+ */
+void dvmHeapBitmapSweepWalk(const HeapBitmap *liveHb, const HeapBitmap *markHb,
+                            BitmapSweepCallback *callback, void *callbackArg);
 
 /*
  * Return true iff <obj> is within the range of pointers that this
