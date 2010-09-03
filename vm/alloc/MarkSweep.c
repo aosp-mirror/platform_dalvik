@@ -52,8 +52,7 @@ static inline long isMarked(const void *obj, const GcMarkContext *ctx)
     return dvmHeapBitmapIsObjectBitSet(ctx->bitmap, obj);
 }
 
-static bool
-createMarkStack(GcMarkStack *stack)
+static bool createMarkStack(GcMarkStack *stack)
 {
     const Object **limit;
     const char *name;
@@ -79,8 +78,7 @@ createMarkStack(GcMarkStack *stack)
     return true;
 }
 
-static void
-destroyMarkStack(GcMarkStack *stack)
+static void destroyMarkStack(GcMarkStack *stack)
 {
     munmap((char *)stack->limit,
             (uintptr_t)stack->base - (uintptr_t)stack->limit);
@@ -92,8 +90,7 @@ destroyMarkStack(GcMarkStack *stack)
         *--(stack).top = (obj); \
     } while (false)
 
-bool
-dvmHeapBeginMarkStep(GcMode mode)
+bool dvmHeapBeginMarkStep(GcMode mode)
 {
     GcMarkContext *ctx = &gDvm.gcHeap->markContext;
 
@@ -105,14 +102,13 @@ dvmHeapBeginMarkStep(GcMode mode)
     return true;
 }
 
-static long
-setAndReturnMarkBit(GcMarkContext *ctx, const void *obj)
+static long setAndReturnMarkBit(GcMarkContext *ctx, const void *obj)
 {
     return dvmHeapBitmapSetAndReturnObjectBit(ctx->bitmap, obj);
 }
 
-static void
-markObjectNonNull(const Object *obj, GcMarkContext *ctx, bool checkFinger)
+static void markObjectNonNull(const Object *obj, GcMarkContext *ctx,
+                              bool checkFinger)
 {
     assert(ctx != NULL);
     assert(obj != NULL);
@@ -161,8 +157,7 @@ static void markObject(const Object *obj, GcMarkContext *ctx)
  * This function may only be called when marking the root
  * set.  When recursing, use the internal markObject().
  */
-void
-dvmMarkObjectNonNull(const Object *obj)
+void dvmMarkObjectNonNull(const Object *obj)
 {
     assert(obj != NULL);
     markObjectNonNull(obj, &gDvm.gcHeap->markContext, false);
