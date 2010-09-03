@@ -971,17 +971,19 @@ InstructionFormat* dexCreateInstrFormatTable(void)
             break;
         case OP_IGET_WIDE_VOLATILE:
         case OP_IPUT_WIDE_VOLATILE:
-        case OP_SGET_WIDE_VOLATILE:
-        case OP_SPUT_WIDE_VOLATILE:
         case OP_IGET_VOLATILE:
         case OP_IPUT_VOLATILE:
-        case OP_SGET_VOLATILE:
-        case OP_SPUT_VOLATILE:
         case OP_IGET_OBJECT_VOLATILE:
         case OP_IPUT_OBJECT_VOLATILE:
+            fmt = kFmt22c;
+            break;
         case OP_SGET_OBJECT_VOLATILE:
         case OP_SPUT_OBJECT_VOLATILE:
-            fmt = kFmt22c;
+        case OP_SGET_VOLATILE:
+        case OP_SPUT_VOLATILE:
+        case OP_SGET_WIDE_VOLATILE:
+        case OP_SPUT_WIDE_VOLATILE:
+            fmt = kFmt21c;
             break;
         case OP_IGET_QUICK:
         case OP_IGET_WIDE_QUICK:
