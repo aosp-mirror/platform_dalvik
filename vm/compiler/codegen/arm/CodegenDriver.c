@@ -1518,6 +1518,8 @@ static bool handleFmt21c_Fmt31c(CompilationUnit *cUnit, MIR *mir)
             break;
         }
         case OP_SPUT_OBJECT:
+        case OP_SPUT_OBJECT_VOLATILE:
+        case OP_SPUT_VOLATILE:
         case OP_SPUT_BOOLEAN:
         case OP_SPUT_CHAR:
         case OP_SPUT_BYTE:
