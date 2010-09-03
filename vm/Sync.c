@@ -1009,7 +1009,7 @@ retry:
              * will have tried this before calling out to the VM.
              */
             newThin = thin | (threadId << LW_LOCK_OWNER_SHIFT);
-            if (android_atomic_release_cas(thin, newThin,
+            if (android_atomic_acquire_cas(thin, newThin,
                     (int32_t*)thinp) != 0) {
                 /*
                  * The acquire failed.  Try again.
@@ -1042,7 +1042,7 @@ retry:
                          * owner field.
                          */
                         newThin = thin | (threadId << LW_LOCK_OWNER_SHIFT);
-                        if (android_atomic_release_cas(thin, newThin,
+                        if (android_atomic_acquire_cas(thin, newThin,
                                 (int32_t *)thinp) == 0) {
                             /*
                              * The acquire succeed.  Break out of the
@@ -1450,7 +1450,7 @@ retry:
              */
             lock = DVM_LOCK_INITIAL_THIN_VALUE;
             lock |= (LW_HASH_STATE_HASHED << LW_HASH_STATE_SHIFT);
-            if (android_atomic_release_cas(
+            if (android_atomic_acquire_cas(
                                 (int32_t)DVM_LOCK_INITIAL_THIN_VALUE,
                                 (int32_t)lock,
                                 (int32_t *)lw) == 0) {
