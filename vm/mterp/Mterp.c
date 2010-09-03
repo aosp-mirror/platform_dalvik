@@ -82,6 +82,17 @@ bool dvmMterpStd(Thread* self, InterpState* glue)
     glue->ppJitProfTable = &gDvmJit.pProfTable;
     glue->jitThreshold = gDvmJit.threshold;
 #endif
+#if defined(WITH_INLINE_PROFILING)
+    /*
+     * If WITH_INLINE_PROFILING is defined, we won't switch to the debug
+     * interpreter when a new method is entered. So we need to register the
+     * METHOD_ENTER action here.
+     */
+    if (glue->debugIsMethodEntry) {
+        glue->debugIsMethodEntry = false;
+        TRACE_METHOD_ENTER(self, glue->method);
+    }
+#endif
     if (gDvm.jdwpConfigured) {
         glue->pDebuggerActive = &gDvm.debuggerActive;
     } else {

@@ -41,9 +41,24 @@
     mov     r2, r0                      @ r2<- methodToCall
     mov     r0, r1                      @ r0<- newFP
     add     r1, rGLUE, #offGlue_retval  @ r1<- &retval
+#if defined(WITH_INLINE_PROFILING)
+    @ r2=methodToCall, r6=rGLUE
+    stmfd   sp!, {r2,r6}                @ to be consumed after JNI return
+    stmfd   sp!, {r0-r3}                @ preserve r0-r3
+    mov     r0, r2
+    mov     r1, r6
+    @ r0=JNIMethod, r1=rGlue
+    LDR_PC_LR ".LdvmFastMethodTraceEnter"
+    ldmfd   sp!, {r0-r3}                @ restore r0-r3
+#endif
 
     blx     r8                          @ off to the native code
 
+#if defined(WITH_INLINE_PROFILING)
+    ldmfd   sp!, {r0-r1}                @ restore r2 and r6
+    @ r0=JNIMethod, r1=rGlue
+    LDR_PC_LR ".LdvmFastNativeMethodTraceExit"
+#endif
     @ native return; r9=self, r10=newSaveArea
     @ equivalent to dvmPopJniLocals
     ldr     r2, [r10, #offStackSaveArea_returnAddr] @ r2 = chaining cell ret

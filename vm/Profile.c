@@ -665,7 +665,6 @@ void dvmMethodTraceStop(void)
     dvmUnlockMutex(&state->startStopLock);
 }
 
-
 /*
  * We just did something with a method.  Emit a record.
  *
@@ -726,6 +725,48 @@ void dvmMethodTraceAdd(Thread* self, const Method* method, int action)
     *ptr++ = (u1) (clockDiff >> 16);
     *ptr++ = (u1) (clockDiff >> 24);
 }
+
+#if defined(WITH_INLINE_PROFILING)
+#include <interp/InterpDefs.h>
+
+/*
+ * Register the METHOD_TRACE_ENTER action for the fast interpreter and
+ * JIT'ed code.
+ */
+void dvmFastMethodTraceEnter(const Method* method,
+                             const struct InterpState* interpState)
+{
+    if (gDvm.activeProfilers) {
+        dvmMethodTraceAdd(interpState->self, method, METHOD_TRACE_ENTER);
+    }
+}
+
+/*
+ * Register the METHOD_TRACE_EXIT action for the fast interpreter and
+ * JIT'ed code for Java methods. The about-to-return callee method can be
+ * retrieved from interpState->method.
+ */
+void dvmFastJavaMethodTraceExit(const struct InterpState* interpState)
+{
+    if (gDvm.activeProfilers) {
+        dvmMethodTraceAdd(interpState->self, interpState->method,
+                          METHOD_TRACE_EXIT);
+    }
+}
+
+/*
+ * Register the METHOD_TRACE_EXIT action for the fast interpreter and
+ * JIT'ed code for JNI methods. The about-to-return JNI callee method is passed
+ * in explicitly.
+ */
+void dvmFastNativeMethodTraceExit(const Method* method,
+                                  const struct InterpState* interpState)
+{
+    if (gDvm.activeProfilers) {
+        dvmMethodTraceAdd(interpState->self, method, METHOD_TRACE_EXIT);
+    }
+}
+#endif
 
 /*
  * We just did something with a method.  Emit a record by setting a value
@@ -858,6 +899,9 @@ void dvmEmulatorTraceStop(void)
  */
 void dvmStartInstructionCounting()
 {
+#if defined(WITH_INLINE_PROFILING)
+    LOGW("Instruction counting not supported with inline profiling");
+#endif
     updateActiveProfilers(1);
     /* in theory we should make this an atomic inc; in practice not important */
     gDvm.instructionCountEnableCount++;

@@ -163,6 +163,15 @@ void dvmMethodTraceGCEnd(void);
 void dvmMethodTraceClassPrepBegin(void);
 void dvmMethodTraceClassPrepEnd(void);
 
+#if defined(WITH_INLINE_PROFILING)
+struct InterpState;     // extern
+void dvmFastMethodTraceEnter(const Method* method,
+                             const struct InterpState* interpState);
+void dvmFastJavaMethodTraceExit(const struct InterpState* interpState);
+void dvmFastNativeMethodTraceExit(const Method*method,
+                                  const struct InterpState* interpState);
+#endif
+
 /*
  * Start/stop alloc counting.
  */
