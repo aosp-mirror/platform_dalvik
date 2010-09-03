@@ -561,17 +561,19 @@ static size_t objectSize(const Object *obj)
  * Scans backward to the header of a marked object that spans the
  * given address.  Returns NULL if there is no spanning marked object.
  */
-static Object *previousGrayObject(u1 *start, GcMarkContext *ctx)
+static Object *previousGrayObject(u1 *start, HeapBitmap *markBits,
+                                  HeapBitmap *liveBits)
 {
-    u1 *end = (u1 *)ctx->bitmap->base;
+    u1 *end = (u1 *)markBits->base;
     u1 *ptr;
 
     assert(start >= end);
     for (ptr = start; ptr >= end; ptr -= HB_OBJECT_ALIGNMENT) {
-        if (dvmIsValidObject((Object *)ptr))
+        if (dvmHeapBitmapIsObjectBitSet(liveBits, ptr)) {
             break;
+        }
     }
-    if (ptr < end || !isMarked(ptr, ctx)) {
+    if (ptr < end || !dvmHeapBitmapIsObjectBitSet(markBits, ptr)) {
          return NULL;
     } else {
         Object *obj = (Object *)ptr;
@@ -587,14 +589,14 @@ static Object *previousGrayObject(u1 *start, GcMarkContext *ctx)
  * Scans forward to the header of the next marked object between start
  * and limit.  Returns NULL if no marked objects are in that region.
  */
-static Object *nextGrayObject(u1 *base, u1 *limit, GcMarkContext *ctx)
+static Object *nextGrayObject(u1 *base, u1 *limit, HeapBitmap *markBits)
 {
     u1 *ptr;
 
     assert(base < limit);
     assert(limit - base <= GC_CARD_SIZE);
     for (ptr = base; ptr < limit; ptr += HB_OBJECT_ALIGNMENT) {
-        if (isMarked(ptr, ctx))
+        if (dvmHeapBitmapIsObjectBitSet(markBits, ptr))
             return (Object *)ptr;
     }
     return NULL;
@@ -607,9 +609,12 @@ static Object *nextGrayObject(u1 *base, u1 *limit, GcMarkContext *ctx)
 static void scanGrayObjects(GcMarkContext *ctx)
 {
     GcHeap *h = gDvm.gcHeap;
+    HeapBitmap *markBits, *liveBits;
     u1 *card, *baseCard, *limitCard;
     size_t footprint;
 
+    markBits = ctx->bitmap;
+    liveBits = dvmHeapSourceGetLiveBits();
     footprint = dvmHeapSourceGetValue(HS_FOOTPRINT, NULL, 0);
     baseCard = &h->cardTableBase[0];
     limitCard = dvmCardFromAddr((u1 *)dvmHeapSourceGetBase() + footprint);
@@ -625,8 +630,8 @@ static void scanGrayObjects(GcMarkContext *ctx)
              * If the last object on the previous card terminates on
              * the current card it is gray and must be scanned.
              */
-            if (!dvmIsValidObject((Object *)addr)) {
-                Object *prev = previousGrayObject(addr, ctx);
+            if (!dvmHeapBitmapIsObjectBitSet(liveBits, addr)) {
+                Object *prev = previousGrayObject(addr, markBits, liveBits);
                 if (prev != NULL) {
                     scanObject(prev, ctx);
                 }
@@ -638,7 +643,7 @@ static void scanGrayObjects(GcMarkContext *ctx)
             u1 *limit = addr + GC_CARD_SIZE;
             u1 *next = addr;
             while (next < limit) {
-                Object *obj = nextGrayObject(next, limit, ctx);
+                Object *obj = nextGrayObject(next, limit, markBits);
                 if (obj == NULL)
                     break;
                 scanObject(obj, ctx);
