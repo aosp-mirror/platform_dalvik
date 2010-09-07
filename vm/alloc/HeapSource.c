@@ -15,7 +15,7 @@
  */
 
 #include <cutils/mspace.h>
-#include <limits.h>     // for UINT_MAX
+#include <stdint.h>     // for SIZE_MAX
 #include <sys/mman.h>
 #include <errno.h>
 
@@ -225,10 +225,10 @@ struct HeapSource {
 static inline bool
 softLimited(const HeapSource *hs)
 {
-    /* softLimit will be either UINT_MAX or the limit for the
+    /* softLimit will be either SIZE_MAX or the limit for the
      * active mspace.  idealSize can be greater than softLimit
      * if there is more than one heap.  If there is only one
-     * heap, a non-UINT_MAX softLimit should always be the same
+     * heap, a non-SIZE_MAX softLimit should always be the same
      * as idealSize.
      */
     return hs->softLimit <= hs->idealSize;
@@ -391,7 +391,7 @@ addNewHeap(HeapSource *hs, mspace msp, size_t mspAbsoluteMaxSize)
     if (msp != NULL) {
         heap.msp = msp;
         heap.absoluteMaxSize = mspAbsoluteMaxSize;
-        heap.concurrentStartBytes = UINT_MAX;
+        heap.concurrentStartBytes = SIZE_MAX;
         heap.base = hs->heapBase;
         heap.limit = hs->heapBase + heap.absoluteMaxSize;
     } else {
@@ -537,7 +537,7 @@ dvmHeapSourceStartup(size_t startSize, size_t absoluteMaxSize)
     hs->startSize = startSize;
     hs->absoluteMaxSize = absoluteMaxSize;
     hs->idealSize = startSize;
-    hs->softLimit = UINT_MAX;    // no soft limit at first
+    hs->softLimit = SIZE_MAX;    // no soft limit at first
     hs->numHeaps = 0;
     hs->sawZygote = gDvm.zygote;
     hs->hasGcThread = false;
@@ -910,7 +910,7 @@ dvmHeapSourceAllocAndGrow(size_t n)
         /* We're soft-limited.  Try removing the soft limit to
          * see if we can allocate without actually growing.
          */
-        hs->softLimit = UINT_MAX;
+        hs->softLimit = SIZE_MAX;
         ptr = dvmHeapSourceAlloc(n);
         if (ptr != NULL) {
             /* Removing the soft limit worked;  fix things up to
@@ -919,7 +919,7 @@ dvmHeapSourceAllocAndGrow(size_t n)
             snapIdealFootprint();
             return ptr;
         }
-        // softLimit intentionally left at UINT_MAX.
+        // softLimit intentionally left at SIZE_MAX.
     }
 
     /* We're not soft-limited.  Grow the heap to satisfy the request.
@@ -1172,7 +1172,7 @@ setSoftLimit(HeapSource *hs, size_t softLimit)
          * soft limit, if set.
          */
         mspace_set_max_allowed_footprint(msp, softLimit);
-        hs->softLimit = UINT_MAX;
+        hs->softLimit = SIZE_MAX;
     }
 }
 
@@ -1413,7 +1413,7 @@ void dvmHeapSourceGrowForUtilization()
     freeBytes = getAllocLimit(hs);
     if (freeBytes < CONCURRENT_MIN_FREE) {
         /* Not enough free memory to allow a concurrent GC. */
-        heap->concurrentStartBytes = UINT_MAX;
+        heap->concurrentStartBytes = SIZE_MAX;
     } else {
         heap->concurrentStartBytes = freeBytes - CONCURRENT_START;
     }
