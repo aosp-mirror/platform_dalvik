@@ -2154,7 +2154,6 @@ static void scavengeGlobals(void)
     scavengeReference((Object **)(void *)&gDvm.classOrgApacheHarmonyLangAnnotationAnnotationFactory);
     scavengeReference((Object **)(void *)&gDvm.classOrgApacheHarmonyLangAnnotationAnnotationMember);
     scavengeReference((Object **)(void *)&gDvm.classOrgApacheHarmonyLangAnnotationAnnotationMemberArray);
-    scavengeReference((Object **)(void *)&gDvm.classOrgApacheHarmonyNioInternalDirectBuffer);
     scavengeReference((Object **)(void *)&gDvm.classArrayBoolean);
     scavengeReference((Object **)(void *)&gDvm.classArrayChar);
     scavengeReference((Object **)(void *)&gDvm.classArrayFloat);

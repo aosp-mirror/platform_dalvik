@@ -225,7 +225,6 @@ struct DvmGlobals {
     ClassObject* classOrgApacheHarmonyLangAnnotationAnnotationFactory;
     ClassObject* classOrgApacheHarmonyLangAnnotationAnnotationMember;
     ClassObject* classOrgApacheHarmonyLangAnnotationAnnotationMemberArray;
-    ClassObject* classOrgApacheHarmonyNioInternalDirectBuffer;
 
     /* synthetic classes for arrays of primitives */
     ClassObject* classArrayBoolean;
@@ -325,7 +324,6 @@ struct DvmGlobals {
 
     /* assorted direct buffer helpers */
     Method*     methJavaNioReadWriteDirectByteBuffer_init;
-    Method*     methOrgApacheHarmonyNioInternalDirectBuffer_getEffectiveAddress;
     int         offJavaNioBuffer_capacity;
     int         offJavaNioBuffer_effectiveDirectAddress;
 

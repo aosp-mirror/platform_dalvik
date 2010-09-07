@@ -342,35 +342,16 @@ bool dvmJniStartup(void)
      * Look up and cache pointers to some direct buffer classes, fields,
      * and methods.
      */
-    ClassObject* directBufferClass =
-        dvmFindSystemClassNoInit("Ljava/nio/DirectBuffer;");
     ClassObject* readWriteBufferClass =
         dvmFindSystemClassNoInit("Ljava/nio/ReadWriteDirectByteBuffer;");
     ClassObject* bufferClass =
         dvmFindSystemClassNoInit("Ljava/nio/Buffer;");
 
-    if (directBufferClass == NULL || readWriteBufferClass == NULL ||
-        bufferClass == NULL)
-    {
+    if (readWriteBufferClass == NULL || bufferClass == NULL) {
         LOGE("Unable to find internal direct buffer classes\n");
         return false;
     }
     gDvm.classJavaNioReadWriteDirectByteBuffer = readWriteBufferClass;
-    gDvm.classOrgApacheHarmonyNioInternalDirectBuffer = directBufferClass;
-
-    /*
-     * We need a Method* here rather than a vtable offset, because
-     * DirectBuffer is an interface class.
-     */
-    meth = dvmFindVirtualMethodByDescriptor(
-                gDvm.classOrgApacheHarmonyNioInternalDirectBuffer,
-                "getEffectiveAddress",
-                "()I");
-    if (meth == NULL) {
-        LOGE("Unable to find DirectBuffer.getEffectiveAddress\n");
-        return false;
-    }
-    gDvm.methOrgApacheHarmonyNioInternalDirectBuffer_getEffectiveAddress = meth;
 
     meth = dvmFindDirectMethodByDescriptor(readWriteBufferClass,
                 "<init>",
@@ -3642,55 +3623,13 @@ static void* GetDirectBufferAddress(JNIEnv* env, jobject jbuf)
     JNI_ENTER();
 
     Object* bufObj = dvmDecodeIndirectRef(env, jbuf);
-    Thread* self = _self /*dvmThreadSelf()*/;
-    void* result;
 
     /*
-     * All Buffer objects have an effectiveDirectAddress field.  If it's
-     * nonzero, we can just return that value.  If not, we have to call
-     * through DirectBuffer.getEffectiveAddress(), which as a side-effect
-     * will set the effectiveDirectAddress field for direct buffers (and
-     * things that wrap direct buffers).
+     * All Buffer objects have an effectiveDirectAddress field.
      */
-    result = (void*) dvmGetFieldInt(bufObj,
+    void* result = (void*) dvmGetFieldInt(bufObj,
             gDvm.offJavaNioBuffer_effectiveDirectAddress);
-    if (result != NULL) {
-        //LOGI("fast path for %p\n", buf);
-        goto bail;
-    }
 
-    /*
-     * Start by determining if the object supports the DirectBuffer
-     * interfaces.  Note this does not guarantee that it's a direct buffer.
-     */
-    if (!dvmInstanceof(bufObj->clazz,
-            gDvm.classOrgApacheHarmonyNioInternalDirectBuffer))
-    {
-        goto bail;
-    }
-
-    /*
-     * Get the effective address by calling getEffectiveAddress.
-     *
-     * If this isn't a direct buffer, an exception will have been thrown.
-     */
-    JValue callResult;
-    const Method* meth = dvmGetVirtualizedMethod(bufObj->clazz,
-        gDvm.methOrgApacheHarmonyNioInternalDirectBuffer_getEffectiveAddress);
-    dvmCallMethodA(self, meth, bufObj, false, &callResult, NULL);
-    if (dvmGetException(self) != NULL) {
-        dvmClearException(self);
-        callResult.i = 0;
-    }
-
-    result = (void*)(uintptr_t) callResult.i;
-    if (result == NULL) {
-        LOGV("Got request for address of non-direct buffer\n");
-    }
-
-    //LOGI("slow path for %p --> %p\n", buf, result);
-
-bail:
     JNI_EXIT();
     return result;
 }
