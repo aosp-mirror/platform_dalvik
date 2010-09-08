@@ -45,130 +45,6 @@ u4 dexComputeOptChecksum(const DexOptHeader* pOptHeader)
     return (u4) adler32(adler, start, end - start);
 }
 
-/*
- * Parse out an index map entry, advancing "*pData" and reducing "*pSize".
- */
-static bool parseIndexMapEntry(const u1** pData, u4* pSize, bool expanding,
-    u4* pFullCount, u4* pReducedCount, const u2** pMap)
-{
-    const u4* wordPtr = (const u4*) *pData;
-    u4 size = *pSize;
-    u4 mapCount;
-
-    if (expanding) {
-        if (size < 4)
-            return false;
-        mapCount = *pReducedCount = *wordPtr++;
-        *pFullCount = (u4) -1;
-        size -= sizeof(u4);
-    } else {
-        if (size < 8)
-            return false;
-        mapCount = *pFullCount = *wordPtr++;
-        *pReducedCount = *wordPtr++;
-        size -= sizeof(u4) * 2;
-    }
-
-    u4 mapSize = mapCount * sizeof(u2);
-
-    if (size < mapSize)
-        return false;
-    *pMap = (const u2*) wordPtr;
-    size -= mapSize;
-
-    /* advance the pointer */
-    const u1* ptr = (const u1*) wordPtr;
-    ptr += (mapSize + 3) & ~0x3;
-
-    /* update pass-by-reference values */
-    *pData = (const u1*) ptr;
-    *pSize = size;
-
-    return true;
-}
-
-/*
- * Set up some pointers into the mapped data.
- *
- * See analysis/ReduceConstants.c for the data layout description.
- */
-static bool parseIndexMap(DexFile* pDexFile, const u1* data, u4 size,
-    bool expanding)
-{
-    if (!parseIndexMapEntry(&data, &size, expanding,
-            &pDexFile->indexMap.classFullCount,
-            &pDexFile->indexMap.classReducedCount,
-            &pDexFile->indexMap.classMap))
-    {
-        return false;
-    }
-
-    if (!parseIndexMapEntry(&data, &size, expanding,
-            &pDexFile->indexMap.methodFullCount,
-            &pDexFile->indexMap.methodReducedCount,
-            &pDexFile->indexMap.methodMap))
-    {
-        return false;
-    }
-
-    if (!parseIndexMapEntry(&data, &size, expanding,
-            &pDexFile->indexMap.fieldFullCount,
-            &pDexFile->indexMap.fieldReducedCount,
-            &pDexFile->indexMap.fieldMap))
-    {
-        return false;
-    }
-
-    if (!parseIndexMapEntry(&data, &size, expanding,
-            &pDexFile->indexMap.stringFullCount,
-            &pDexFile->indexMap.stringReducedCount,
-            &pDexFile->indexMap.stringMap))
-    {
-        return false;
-    }
-
-    if (expanding) {
-        /*
-         * The map includes the "reduced" counts; pull the original counts
-         * out of the DexFile so that code has a consistent source.
-         */
-        assert(pDexFile->indexMap.classFullCount == (u4) -1);
-        assert(pDexFile->indexMap.methodFullCount == (u4) -1);
-        assert(pDexFile->indexMap.fieldFullCount == (u4) -1);
-        assert(pDexFile->indexMap.stringFullCount == (u4) -1);
-
-#if 0   // TODO: not available yet -- do later or just skip this
-        pDexFile->indexMap.classFullCount =
-            pDexFile->pHeader->typeIdsSize;
-        pDexFile->indexMap.methodFullCount =
-            pDexFile->pHeader->methodIdsSize;
-        pDexFile->indexMap.fieldFullCount =
-            pDexFile->pHeader->fieldIdsSize;
-        pDexFile->indexMap.stringFullCount =
-            pDexFile->pHeader->stringIdsSize;
-#endif
-    }
-
-    LOGI("Class : %u %u %u\n",
-        pDexFile->indexMap.classFullCount,
-        pDexFile->indexMap.classReducedCount,
-        pDexFile->indexMap.classMap[0]);
-    LOGI("Method: %u %u %u\n",
-        pDexFile->indexMap.methodFullCount,
-        pDexFile->indexMap.methodReducedCount,
-        pDexFile->indexMap.methodMap[0]);
-    LOGI("Field : %u %u %u\n",
-        pDexFile->indexMap.fieldFullCount,
-        pDexFile->indexMap.fieldReducedCount,
-        pDexFile->indexMap.fieldMap[0]);
-    LOGI("String: %u %u %u\n",
-        pDexFile->indexMap.stringFullCount,
-        pDexFile->indexMap.stringReducedCount,
-        pDexFile->indexMap.stringMap[0]);
-
-    return true;
-}
-
 /* (documented in header file) */
 bool dexParseOptData(const u1* data, size_t length, DexFile* pDexFile)
 {
@@ -176,7 +52,6 @@ bool dexParseOptData(const u1* data, size_t length, DexFile* pDexFile)
     const void* pOptEnd = data + length;
     const u4* pOpt = pOptStart;
     u4 optLength = (const u1*) pOptEnd - (const u1*) pOptStart;
-    u4 indexMapType = 0;
 
     /*
      * Make sure the opt data start is in range and aligned. This may
@@ -233,22 +108,6 @@ bool dexParseOptData(const u1* data, size_t length, DexFile* pDexFile)
         case kDexChunkClassLookup:
             pDexFile->pClassLookup = (const DexClassLookup*) pOptData;
             break;
-        case kDexChunkReducingIndexMap:
-            LOGI("+++ found reducing index map, size=%u\n", size);
-            if (!parseIndexMap(pDexFile, pOptData, size, false)) {
-                LOGE("Failed parsing reducing index map\n");
-                return false;
-            }
-            indexMapType = *pOpt;
-            break;
-        case kDexChunkExpandingIndexMap:
-            LOGI("+++ found expanding index map, size=%u\n", size);
-            if (!parseIndexMap(pDexFile, pOptData, size, true)) {
-                LOGE("Failed parsing expanding index map\n");
-                return false;
-            }
-            indexMapType = *pOpt;
-            break;
         case kDexChunkRegisterMaps:
             LOGV("+++ found register maps, size=%u\n", size);
             pDexFile->pRegisterMapPool = pOptData;
@@ -264,20 +123,6 @@ bool dexParseOptData(const u1* data, size_t length, DexFile* pDexFile)
 
         pOpt = pNextOpt;
     }
-
-#if 0   // TODO: propagate expected map type from the VM through the API
-    /*
-     * If we're configured to expect an index map, and we don't find one,
-     * reject this DEX so we'll regenerate it.  Also, if we found an
-     * "expanding" map but we're not configured to use it, we have to fail
-     * because the constants aren't usable without translation.
-     */
-    if (indexMapType != expectedIndexMapType) {
-        LOGW("Incompatible index map configuration: found 0x%04x, need %d\n",
-            indexMapType, DVM_REDUCE_CONSTANTS);
-        return false;
-    }
-#endif
 
     return true;
 }
