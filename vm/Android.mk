@@ -110,6 +110,7 @@ ifeq ($(WITH_HOST_DALVIK),true)
     dvm_arch_variant := $(HOST_ARCH)
     dvm_simulator := false
 
+    WITH_JIT := false
     include $(LOCAL_PATH)/Dvm.mk
 
     LOCAL_SHARED_LIBRARIES += libcrypto libssl libicuuc libicui18n
