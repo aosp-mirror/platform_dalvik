@@ -2328,24 +2328,20 @@ static bool handleFmt22c(CompilationUnit *cUnit, MIR *mir)
             // NOTE: intentional fallthrough
         case OP_IGET:
         case OP_IGET_OBJECT:
-            genIGet(cUnit, mir, kWord, fieldOffset, isVolatile);
-            break;
         case OP_IGET_BOOLEAN:
-            genIGet(cUnit, mir, kUnsignedByte, fieldOffset, isVolatile);
-            break;
         case OP_IGET_BYTE:
-            genIGet(cUnit, mir, kSignedByte, fieldOffset, isVolatile);
-            break;
         case OP_IGET_CHAR:
-            genIGet(cUnit, mir, kUnsignedHalf, fieldOffset, isVolatile);
-            break;
         case OP_IGET_SHORT:
-            genIGet(cUnit, mir, kSignedHalf, fieldOffset, isVolatile);
+            genIGet(cUnit, mir, kWord, fieldOffset, isVolatile);
             break;
         case OP_IPUT_WIDE:
             genIPutWide(cUnit, mir, fieldOffset);
             break;
         case OP_IPUT:
+        case OP_IPUT_SHORT:
+        case OP_IPUT_CHAR:
+        case OP_IPUT_BYTE:
+        case OP_IPUT_BOOLEAN:
             genIPut(cUnit, mir, kWord, fieldOffset, false, isVolatile);
             break;
         case OP_IPUT_VOLATILE:
@@ -2354,16 +2350,6 @@ static bool handleFmt22c(CompilationUnit *cUnit, MIR *mir)
             // NOTE: intentional fallthrough
         case OP_IPUT_OBJECT:
             genIPut(cUnit, mir, kWord, fieldOffset, true, isVolatile);
-            break;
-        case OP_IPUT_SHORT:
-        case OP_IPUT_CHAR:
-            genIPut(cUnit, mir, kUnsignedHalf, fieldOffset, false, isVolatile);
-            break;
-        case OP_IPUT_BYTE:
-            genIPut(cUnit, mir, kSignedByte, fieldOffset, false, isVolatile);
-            break;
-        case OP_IPUT_BOOLEAN:
-            genIPut(cUnit, mir, kUnsignedByte, fieldOffset, false, isVolatile);
             break;
         case OP_IGET_WIDE_VOLATILE:
         case OP_IPUT_WIDE_VOLATILE:
