@@ -32,9 +32,6 @@ LOCAL_CFLAGS += -Wall -Wextra -Wno-unused-parameter
 # Optional features.  These may impact the size or performance of the VM.
 #
 
-# 0=full cache, 1/2=reduced, 3=no cache
-LOCAL_CFLAGS += -DDVM_RESOLVER_CACHE=0
-
 ifeq ($(WITH_DEADLOCK_PREDICTION),true)
   LOCAL_CFLAGS += -DWITH_DEADLOCK_PREDICTION
   WITH_MONITOR_TRACKING := true
@@ -142,7 +139,6 @@ LOCAL_SRC_FILES := \
 	analysis/DexPrepare.c \
 	analysis/DexVerify.c \
 	analysis/Optimize.c \
-	analysis/ReduceConstants.c \
 	analysis/RegisterMap.c \
 	analysis/VerifySubs.c \
 	interp/Interp.c.arm \

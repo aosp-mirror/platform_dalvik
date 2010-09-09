@@ -57,20 +57,6 @@ static DvmDex* allocateAuxStructures(DexFile* pDexFile)
     methodCount = pHeader->methodIdsSize;
     fieldCount = pHeader->fieldIdsSize;
 
-#if (DVM_RESOLVER_CACHE == DVM_RC_REDUCING) || \
-    (DVM_RESOLVER_CACHE == DVM_RC_EXPANDING)
-    if (pDexFile->indexMap.stringReducedCount > 0)
-        stringCount = pDexFile->indexMap.stringReducedCount;
-    if (pDexFile->indexMap.classReducedCount > 0)
-        classCount = pDexFile->indexMap.classReducedCount;
-    if (pDexFile->indexMap.methodReducedCount > 0)
-        methodCount = pDexFile->indexMap.methodReducedCount;
-    if (pDexFile->indexMap.fieldReducedCount > 0)
-        fieldCount = pDexFile->indexMap.fieldReducedCount;
-#elif (DVM_RESOLVER_CACHE == DVM_RC_NO_CACHE)
-    stringCount = classCount = methodCount = fieldCount = 0;
-#endif
-
     pDvmDex->pResStrings = (struct StringObject**)
         calloc(stringCount, sizeof(struct StringObject*));
 
