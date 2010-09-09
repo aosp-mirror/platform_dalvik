@@ -482,12 +482,6 @@ void dumpOptDirectory(const DexFile* pDexFile)
         case kDexChunkRegisterMaps:
             verboseStr = "register maps";
             break;
-        case kDexChunkReducingIndexMap:
-            verboseStr = "'reducing' index map";
-            break;
-        case kDexChunkExpandingIndexMap:
-            verboseStr = "'expanding' index map";
-            break;
         default:
             verboseStr = "(unknown chunk type)";
             break;
