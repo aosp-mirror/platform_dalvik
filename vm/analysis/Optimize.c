@@ -191,6 +191,7 @@ static void optimizeMethod(Method* method, bool essentialOnly)
 
         inst = *insns & 0xff;
 
+        /* "essential" substitutions, always checked */
         switch (inst) {
         case OP_IGET:
         case OP_IGET_BOOLEAN:
@@ -198,7 +199,7 @@ static void optimizeMethod(Method* method, bool essentialOnly)
         case OP_IGET_CHAR:
         case OP_IGET_SHORT:
             quickOpc = OP_IGET_QUICK;
-            if (ANDROID_SMP != 0)
+            if (gDvm.dexOptForSmp)
                 volatileOpc = OP_IGET_VOLATILE;
             goto rewrite_inst_field;
         case OP_IGET_WIDE:
@@ -207,7 +208,7 @@ static void optimizeMethod(Method* method, bool essentialOnly)
             goto rewrite_inst_field;
         case OP_IGET_OBJECT:
             quickOpc = OP_IGET_OBJECT_QUICK;
-            if (ANDROID_SMP != 0)
+            if (gDvm.dexOptForSmp)
                 volatileOpc = OP_IGET_OBJECT_VOLATILE;
             goto rewrite_inst_field;
         case OP_IPUT:
@@ -216,7 +217,7 @@ static void optimizeMethod(Method* method, bool essentialOnly)
         case OP_IPUT_CHAR:
         case OP_IPUT_SHORT:
             quickOpc = OP_IPUT_QUICK;
-            if (ANDROID_SMP != 0)
+            if (gDvm.dexOptForSmp)
                 volatileOpc = OP_IPUT_VOLATILE;
             goto rewrite_inst_field;
         case OP_IPUT_WIDE:
@@ -225,7 +226,7 @@ static void optimizeMethod(Method* method, bool essentialOnly)
             goto rewrite_inst_field;
         case OP_IPUT_OBJECT:
             quickOpc = OP_IPUT_OBJECT_QUICK;
-            if (ANDROID_SMP != 0)
+            if (gDvm.dexOptForSmp)
                 volatileOpc = OP_IPUT_OBJECT_VOLATILE;
 rewrite_inst_field:
             if (essentialOnly)
@@ -234,28 +235,6 @@ rewrite_inst_field:
                 rewriteInstField(method, insns, quickOpc, volatileOpc);
             break;
 
-#if ANDROID_SMP != 0
-        case OP_SGET:
-        case OP_SGET_BOOLEAN:
-        case OP_SGET_BYTE:
-        case OP_SGET_CHAR:
-        case OP_SGET_SHORT:
-            volatileOpc = OP_SGET_VOLATILE;
-            goto rewrite_static_field;
-        case OP_SGET_OBJECT:
-            volatileOpc = OP_SGET_OBJECT_VOLATILE;
-            goto rewrite_static_field;
-        case OP_SPUT:
-        case OP_SPUT_BOOLEAN:
-        case OP_SPUT_BYTE:
-        case OP_SPUT_CHAR:
-        case OP_SPUT_SHORT:
-            volatileOpc = OP_SPUT_VOLATILE;
-            goto rewrite_static_field;
-        case OP_SPUT_OBJECT:
-            volatileOpc = OP_SPUT_OBJECT_VOLATILE;
-            goto rewrite_static_field;
-#endif
         case OP_SGET_WIDE:
             volatileOpc = OP_SGET_WIDE_VOLATILE;
             goto rewrite_static_field;
@@ -264,12 +243,44 @@ rewrite_inst_field:
 rewrite_static_field:
             rewriteStaticField(method, insns, volatileOpc);
             break;
-
         default:
-            /* not one of the "essential" replacements; check for more */
             notMatched = true;
+            break;
         }
 
+        if (notMatched && gDvm.dexOptForSmp) {
+            /* additional "essential" substitutions for an SMP device */
+            switch (inst) {
+            case OP_SGET:
+            case OP_SGET_BOOLEAN:
+            case OP_SGET_BYTE:
+            case OP_SGET_CHAR:
+            case OP_SGET_SHORT:
+                volatileOpc = OP_SGET_VOLATILE;
+                goto rewrite_static_field2;
+            case OP_SGET_OBJECT:
+                volatileOpc = OP_SGET_OBJECT_VOLATILE;
+                goto rewrite_static_field2;
+            case OP_SPUT:
+            case OP_SPUT_BOOLEAN:
+            case OP_SPUT_BYTE:
+            case OP_SPUT_CHAR:
+            case OP_SPUT_SHORT:
+                volatileOpc = OP_SPUT_VOLATILE;
+                goto rewrite_static_field2;
+            case OP_SPUT_OBJECT:
+                volatileOpc = OP_SPUT_OBJECT_VOLATILE;
+rewrite_static_field2:
+                rewriteStaticField(method, insns, volatileOpc);
+                notMatched = false;
+                break;
+            default:
+                assert(notMatched);
+                break;
+            }
+        }
+
+        /* non-essential substitutions */
         if (notMatched && !essentialOnly) {
             switch (inst) {
             case OP_INVOKE_VIRTUAL:
