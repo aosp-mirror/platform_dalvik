@@ -1057,6 +1057,12 @@ static void setCommandLineDefaults()
 #else
     gDvm.executionMode = kExecutionModeInterpFast;
 #endif
+
+    /*
+     * SMP support is a compile-time define, but we may want to have
+     * dexopt target a differently-configured device.
+     */
+    gDvm.dexOptForSmp = (ANDROID_SMP != 0);
 }
 
 
