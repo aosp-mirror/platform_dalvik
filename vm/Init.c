@@ -181,13 +181,6 @@ static void dvmUsage(const char* progName)
 #ifdef PROFILE_FIELD_ACCESS
         " profile_field_access"
 #endif
-#if DVM_RESOLVER_CACHE == DVM_RC_REDUCING
-        " resolver_cache_reducing"
-#elif DVM_RESOLVER_CACHE == DVM_RC_EXPANDING
-        " resolver_cache_expanding"
-#elif DVM_RESOLVER_CACHE == DVM_RC_NO_CACHE
-        " resolver_cache_disabled"
-#endif
 #if defined(WITH_JIT)
         " jit"
 #endif

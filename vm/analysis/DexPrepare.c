@@ -52,7 +52,7 @@ static void verifyAndOptimizeClass(DexFile* pDexFile, ClassObject* clazz,
 static void updateChecksum(u1* addr, int len, DexHeader* pHeader);
 static int writeDependencies(int fd, u4 modWhen, u4 crc);
 static bool writeOptData(int fd, const DexClassLookup* pClassLookup,\
-    const IndexMapSet* pIndexMapSet, const RegisterMapBuilder* pRegMapBuilder);
+    const RegisterMapBuilder* pRegMapBuilder);
 static bool computeFileChecksum(int fd, off_t start, size_t length, u4* pSum);
 
 
@@ -475,7 +475,6 @@ bool dvmContinueOptimization(int fd, off_t dexOffset, long dexLength,
     const char* fileName, u4 modWhen, u4 crc, bool isBootstrap)
 {
     DexClassLookup* pClassLookup = NULL;
-    IndexMapSet* pIndexMapSet = NULL;
     RegisterMapBuilder* pRegMapBuilder = NULL;
     u4 headerFlags = 0;
 
@@ -543,15 +542,6 @@ bool dvmContinueOptimization(int fd, off_t dexOffset, long dexLength,
                 LOGE("Unable to create DexFile\n");
                 success = false;
             } else {
-                /*
-                 * If configured to do so, scan the instructions, looking
-                 * for ways to reduce the size of the resolved-constant table.
-                 * This is done post-optimization, across the instructions
-                 * in all methods in all classes (even the ones that failed
-                 * to load).
-                 */
-                pIndexMapSet = dvmRewriteConstants(pDvmDex);
-
                 /*
                  * If configured to do so, generate register map output
                  * for all verified classes.  The register maps were
@@ -635,7 +625,7 @@ bool dvmContinueOptimization(int fd, off_t dexOffset, long dexLength,
     /*
      * Append any optimized pre-computed data structures.
      */
-    if (!writeOptData(fd, pClassLookup, pIndexMapSet, pRegMapBuilder)) {
+    if (!writeOptData(fd, pClassLookup, pRegMapBuilder)) {
         LOGW("Failed writing opt data\n");
         goto bail;
     }
@@ -680,7 +670,6 @@ bool dvmContinueOptimization(int fd, off_t dexOffset, long dexLength,
     //dvmRegisterMapDumpStats();
 
 bail:
-    dvmFreeIndexMapSet(pIndexMapSet);
     dvmFreeRegisterMapBuilder(pRegMapBuilder);
     free(pClassLookup);
     return result;
@@ -1365,22 +1354,13 @@ static bool writeChunk(int fd, u4 type, const void* data, size_t size)
  * so it can be used directly when the file is mapped for reading.
  */
 static bool writeOptData(int fd, const DexClassLookup* pClassLookup,
-    const IndexMapSet* pIndexMapSet, const RegisterMapBuilder* pRegMapBuilder)
+    const RegisterMapBuilder* pRegMapBuilder)
 {
     /* pre-computed class lookup hash table */
     if (!writeChunk(fd, (u4) kDexChunkClassLookup,
             pClassLookup, pClassLookup->size))
     {
         return false;
-    }
-
-    /* remapped constants (optional) */
-    if (pIndexMapSet != NULL) {
-        if (!writeChunk(fd, pIndexMapSet->chunkType,
-                pIndexMapSet->chunkData, pIndexMapSet->chunkDataLen))
-        {
-            return false;
-        }
     }
 
     /* register maps (optional) */

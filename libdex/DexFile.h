@@ -167,9 +167,6 @@ enum {
     kDexChunkClassLookup            = 0x434c4b50,   /* CLKP */
     kDexChunkRegisterMaps           = 0x524d4150,   /* RMAP */
 
-    kDexChunkReducingIndexMap       = 0x5249584d,   /* RIXM */
-    kDexChunkExpandingIndexMap      = 0x4549584d,   /* EIXM */
-
     kDexChunkEnd                    = 0x41454e44,   /* AEND */
 };
 
@@ -444,30 +441,6 @@ typedef struct DexClassLookup {
 } DexClassLookup;
 
 /*
- * Map constant pool indices from one form to another.  Some or all of these
- * may be NULL.
- *
- * The map values are 16-bit unsigned values.  If the values we map to
- * require a larger range, we omit the mapping for that category (which
- * requires that the lookup code recognize that the data will not be
- * there for all DEX files in all categories.)
- */
-typedef struct DexIndexMap {
-    const u2* classMap;         /* map, either expanding or reducing */
-    u4  classFullCount;         /* same as typeIdsSize */
-    u4  classReducedCount;      /* post-reduction count */
-    const u2* methodMap;
-    u4  methodFullCount;
-    u4  methodReducedCount;
-    const u2* fieldMap;
-    u4  fieldFullCount;
-    u4  fieldReducedCount;
-    const u2* stringMap;
-    u4  stringFullCount;
-    u4  stringReducedCount;
-} DexIndexMap;
-
-/*
  * Header added by DEX optimization pass.  Values are always written in
  * local byte and structure padding.  The first field (magic + version)
  * is guaranteed to be present and directly readable for all expected
@@ -523,7 +496,6 @@ typedef struct DexFile {
      * included in the file.
      */
     const DexClassLookup* pClassLookup;
-    DexIndexMap         indexMap;
     const void*         pRegisterMapPool;       // RegisterMapClassPool
 
     /* points to start of DEX file data */
