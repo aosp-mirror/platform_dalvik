@@ -226,25 +226,39 @@ static void Dalvik_java_lang_reflect_Field_setField(const u4* args,
     if (fieldPtr == NULL)
         RETURN_VOID();
 
+    /* get the field pointer in case we need to do additional checks */
+    Field* field = dvmSlotToField(declaringClass, slot);
+    assert(field != NULL);
+
     /* store 4 or 8 bytes */
     if (fieldType->primitiveType == PRIM_LONG ||
         fieldType->primitiveType == PRIM_DOUBLE)
     {
         fieldPtr->j = value.j;
     } else if (fieldType->primitiveType == PRIM_NOT) {
-        if (slot < 0) {
-            StaticField *sfield;
-            sfield = (StaticField *)dvmSlotToField(declaringClass, slot);
+        /* need to use the field-set calls to update GC data structures */
+        if (dvmIsStaticField(field)) {
+            StaticField* sfield = (StaticField*) field;
             assert(fieldPtr == &sfield->value);
             dvmSetStaticFieldObject(sfield, value.l);
         } else {
-            int offset = declaringClass->ifields[slot].byteOffset;
-            assert(fieldPtr == (JValue *)BYTE_OFFSET(obj, offset));
-            dvmSetFieldObject(obj, offset, value.l);
+            InstField* ifield = (InstField*) field;
+            assert(fieldPtr == (JValue *)BYTE_OFFSET(obj, ifield->byteOffset));
+            dvmSetFieldObject(obj, ifield->byteOffset, value.l);
         }
     } else {
         fieldPtr->i = value.i;
     }
+
+#if ANDROID_SMP != 0
+    /*
+     * Special handling for final fields on SMP systems.  We need a
+     * store/store barrier here (JMM requirement).
+     */
+    if (dvmIsFinalField(field)) {
+        ANDROID_MEMBAR_FULL();  /* TODO: replace full bar with store/store */
+    }
+#endif
 
     RETURN_VOID();
 }
@@ -365,6 +379,18 @@ static void Dalvik_java_lang_reflect_Field_setPrimitiveField(const u4* args,
     } else {
         fieldPtr->i = value.i;
     }
+
+#if ANDROID_SMP != 0
+    /*
+     * Special handling for final fields on SMP systems.  We need a
+     * store/store barrier here (JMM requirement).
+     */
+    Field* field = dvmSlotToField(declaringClass, slot);
+    assert(field != NULL);
+    if (dvmIsFinalField(field)) {
+        ANDROID_MEMBAR_FULL();  /* TODO: replace full bar with store/store */
+    }
+#endif
 
     RETURN_VOID();
 }
