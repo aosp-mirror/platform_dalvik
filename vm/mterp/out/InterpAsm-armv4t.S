@@ -7772,11 +7772,10 @@ d2i_doconv:
 
 /* ------------------------------ */
     .balign 64
-.L_OP_UNUSED_F1: /* 0xf1 */
-/* File: armv5te/OP_UNUSED_F1.S */
-/* File: armv5te/unused.S */
-    bl      common_abort
-
+.L_OP_RETURN_VOID_BARRIER: /* 0xf1 */
+/* File: armv5te/OP_RETURN_VOID_BARRIER.S */
+    SMP_DMB                             @ TODO: want "DMB ST"
+    b       common_returnFromMethod
 
 /* ------------------------------ */
     .balign 64

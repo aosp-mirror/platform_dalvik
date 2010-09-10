@@ -1324,12 +1324,12 @@ static bool handleFmt10x(CompilationUnit *cUnit, MIR *mir)
     }
     switch (dalvikOpCode) {
         case OP_RETURN_VOID:
+        case OP_RETURN_VOID_BARRIER:
             genReturnCommon(cUnit,mir);
             break;
         case OP_UNUSED_73:
         case OP_UNUSED_79:
         case OP_UNUSED_7A:
-        case OP_UNUSED_F1:
         case OP_UNUSED_FF:
             LOGE("Codegen: got unused opcode 0x%x\n",dalvikOpCode);
             return true;

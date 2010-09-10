@@ -291,6 +291,9 @@ InstructionWidth* dexCreateInstrWidthTable(void)
          * Optimized instructions.  We return negative size values for these
          * to distinguish them.
          */
+        case OP_RETURN_VOID_BARRIER:
+            width = -1;
+            break;
         case OP_IGET_QUICK:
         case OP_IGET_WIDE_QUICK:
         case OP_IGET_OBJECT_QUICK:
@@ -333,7 +336,6 @@ InstructionWidth* dexCreateInstrWidthTable(void)
         case OP_UNUSED_79:
         case OP_UNUSED_7A:
         case OP_BREAKPOINT:
-        case OP_UNUSED_F1:
         case OP_UNUSED_FF:
             assert(width == 0);
             break;
@@ -642,13 +644,15 @@ InstructionFlags* dexCreateInstrFlagsTable(void)
         case OP_SPUT_WIDE_VOLATILE:
             flags = kInstrCanContinue | kInstrCanThrow;
             break;
-
         case OP_INVOKE_VIRTUAL_QUICK:
         case OP_INVOKE_VIRTUAL_QUICK_RANGE:
         case OP_INVOKE_SUPER_QUICK:
         case OP_INVOKE_SUPER_QUICK_RANGE:
         case OP_INVOKE_DIRECT_EMPTY:
             flags = kInstrCanContinue | kInstrCanThrow | kInstrInvoke;
+            break;
+        case OP_RETURN_VOID_BARRIER:
+            flags = kInstrCanReturn;
             break;
 
         /* these should never appear when scanning code */
@@ -662,7 +666,6 @@ InstructionFlags* dexCreateInstrFlagsTable(void)
         case OP_UNUSED_79:
         case OP_UNUSED_7A:
         case OP_BREAKPOINT:
-        case OP_UNUSED_F1:
         case OP_UNUSED_FF:
             break;
 
@@ -1010,6 +1013,9 @@ InstructionFormat* dexCreateInstrFormatTable(void)
         case OP_INVOKE_DIRECT_EMPTY:
             fmt = kFmt35c;
             break;
+        case OP_RETURN_VOID_BARRIER:
+            fmt = kFmt10x;
+            break;
 
         /* these should never appear when scanning code */
         case OP_UNUSED_3E:
@@ -1022,7 +1028,6 @@ InstructionFormat* dexCreateInstrFormatTable(void)
         case OP_UNUSED_79:
         case OP_UNUSED_7A:
         case OP_BREAKPOINT:
-        case OP_UNUSED_F1:
         case OP_UNUSED_FF:
             fmt = kFmtUnknown;
             break;

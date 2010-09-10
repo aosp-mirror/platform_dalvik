@@ -1231,6 +1231,16 @@ OP_END
 HANDLE_SPUT_X(OP_SPUT_WIDE_VOLATILE,    "-wide-volatile", LongVolatile, _WIDE)
 OP_END
 
+/* File: c/OP_RETURN_VOID_BARRIER.c */
+HANDLE_OPCODE(OP_RETURN_VOID_BARRIER /**/)
+    ILOGV("|return-void");
+#ifndef NDEBUG
+    retval.j = 0xababababULL;   /* placate valgrind */
+#endif
+    ANDROID_MEMBAR_FULL();      /* TODO: use a store/store barrier */
+    GOTO_returnFromMethod();
+OP_END
+
 /* File: c/OP_IPUT_OBJECT_VOLATILE.c */
 HANDLE_IPUT_X(OP_IPUT_OBJECT_VOLATILE,  "-object-volatile", ObjectVolatile, _AS_OBJECT)
 OP_END

@@ -5955,12 +5955,18 @@ dvmAsmInstructionStart = .L_OP_NOP
 
 /* ------------------------------ */
     .balign 64
-.L_OP_UNUSED_F1: /* 0xf1 */
-/* File: x86/OP_UNUSED_F1.S */
-/* File: x86/unused.S */
-    jmp     common_abort
-
-
+.L_OP_RETURN_VOID_BARRIER: /* 0xf1 */
+    /* (stub) */
+    GET_GLUE(%ecx)
+    SAVE_PC_TO_GLUE(%ecx)            # only need to export these two
+    SAVE_FP_TO_GLUE(%ecx)            # only need to export these two
+    movl %ecx,OUT_ARG0(%esp)         # glue is first arg to function
+    call      dvmMterp_OP_RETURN_VOID_BARRIER     # do the real work
+    GET_GLUE(%ecx)
+    LOAD_PC_FROM_GLUE(%ecx)          # retrieve updated values
+    LOAD_FP_FROM_GLUE(%ecx)          # retrieve updated values
+    FETCH_INST()
+    GOTO_NEXT
 /* ------------------------------ */
     .balign 64
 .L_OP_IGET_QUICK: /* 0xf2 */

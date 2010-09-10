@@ -1256,6 +1256,16 @@ HANDLE_OPCODE(OP_EXECUTE_INLINE_RANGE /*{vCCCC..v(CCCC+AA-1)}, inline@BBBB*/)
     FINISH(3);
 OP_END
 
+/* File: c/OP_RETURN_VOID_BARRIER.c */
+HANDLE_OPCODE(OP_RETURN_VOID_BARRIER /**/)
+    ILOGV("|return-void");
+#ifndef NDEBUG
+    retval.j = 0xababababULL;   /* placate valgrind */
+#endif
+    ANDROID_MEMBAR_FULL();      /* TODO: use a store/store barrier */
+    GOTO_returnFromMethod();
+OP_END
+
 /* File: c/gotoTargets.c */
 /*
  * C footer.  This has some common code shared by the various targets.
