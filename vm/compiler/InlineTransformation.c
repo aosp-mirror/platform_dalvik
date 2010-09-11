@@ -224,6 +224,11 @@ static void tryInlineSingletonCallsite(CompilationUnit *cUnit,
     if (methodStats->attributes & METHOD_IS_EMPTY) {
         /* The original invoke instruction is effectively turned into NOP */
         invokeMIR->OptimizationFlags |= MIR_INLINED;
+        /*
+         * Need to insert an explicit branch to catch the falling knife (into
+         * the PC reconstruction or chaining cell).
+         */
+        invokeBB->needFallThroughBranch = true;
         return;
     }
 
