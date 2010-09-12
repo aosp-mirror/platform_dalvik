@@ -7,20 +7,20 @@
  * to play some games.
  */
     /* float/double to int/long vA, vB */
-    movzbl    rINST_HI,%ecx           # ecx<- A+
-    sarl      $$12,rINST_FULL         # rINST_FULL<- B
+    movzbl    rINSTbl,%ecx       # ecx<- A+
+    sarl      $$4,rINST         # rINST<- B
     .if $srcdouble
-    fldl     (rFP,rINST_FULL,4)       # %st0<- vB
+    fldl     (rFP,rINST,4)       # %st0<- vB
     .else
-    flds     (rFP,rINST_FULL,4)       # %st0<- vB
+    flds     (rFP,rINST,4)       # %st0<- vB
     .endif
     ftst
     fnstcw   LOCAL0_OFFSET(%ebp)      # remember original rounding mode
     movzwl   LOCAL0_OFFSET(%ebp),%eax
     movb     $$0xc,%ah
     movw     %ax,LOCAL0_OFFSET+2(%ebp)
-    fldcw    LOCAL0_OFFSET+2(%ebp)      # set "to zero" rounding mode
-    FETCH_INST_WORD(1)
+    fldcw    LOCAL0_OFFSET+2(%ebp)    # set "to zero" rounding mode
+    FETCH_INST_OPCODE 1 %edx
     andb     $$0xf,%cl                # ecx<- A
     .if $tgtlong
     fistpll  (rFP,%ecx,4)             # convert and store
@@ -43,8 +43,8 @@
     je       .L${opcode}_special_case # fix up result
 
 .L${opcode}_finish:
-    ADVANCE_PC(1)
-    GOTO_NEXT
+    ADVANCE_PC 1
+    GOTO_NEXT_R %edx
 
 .L${opcode}_special_case:
     fnstsw   %ax

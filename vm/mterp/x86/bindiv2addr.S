@@ -4,13 +4,11 @@
      * op1=-1.
      */
     /* div/rem/2addr vA, vB */
-    movzx    rINST_HI,%ecx          # eax<- BA
-    sarl     $$4,%ecx               # ecx<- B
-    GET_VREG(%ecx,%ecx)             # eax<- vBB
-    movzbl   rINST_HI,rINST_FULL    # rINST_FULL<- BA
-    andb     $$0xf,rINST_LO         # rINST_FULL<- A
-    GET_VREG(%eax,rINST_FULL)       # eax<- vBB
-    SPILL(rPC)
+    movzx    rINSTbl,%ecx          # eax<- BA
+    sarl     $$4,%ecx              # ecx<- B
+    GET_VREG_R %ecx %ecx           # eax<- vBB
+    andb     $$0xf,rINSTbl         # rINST<- A
+    GET_VREG_R %eax rINST          # eax<- vBB
     cmpl     $$0,%ecx
     je       common_errDivideByZero
     cmpl     $$-1,%ecx
@@ -25,8 +23,7 @@
     cltd
     idivl   %ecx
 .L${opcode}_finish_div2addr:
-    SET_VREG($result,rINST_FULL)
-    UNSPILL(rPC)
-    FETCH_INST_WORD(1)
-    ADVANCE_PC(1)
-    GOTO_NEXT
+    SET_VREG $result rINST
+    FETCH_INST_OPCODE 1 %edx
+    ADVANCE_PC 1
+    GOTO_NEXT_R %edx

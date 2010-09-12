@@ -9,10 +9,10 @@
      * our "backward branch" test must be "<=0" instead of "<0".
      */
     /* goto/32 AAAAAAAA */
-    movl    2(rPC),rINST_FULL           # rINST_FULL<- AAAAAAAA
-    cmpl    $$0,rINST_FULL              # test for <= 0
+    movl    2(rPC),rINST           # rINST<- AAAAAAAA
+    cmpl    $$0,rINST              # test for <= 0
     jle     common_backwardBranch
-    movl    rINST_FULL,%eax
-    FETCH_INST_INDEXED(%eax)
-    ADVANCE_PC_INDEXED(%eax)
+    movl    rINST,%eax
+    FETCH_INST_INDEXED %eax
+    ADVANCE_PC_INDEXED %eax
     GOTO_NEXT

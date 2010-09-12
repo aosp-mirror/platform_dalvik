@@ -3,39 +3,37 @@
      * Signed 64-bit integer multiply, 2-addr version
      *
      * We could definately use more free registers for
-     * this code.  We must spill rPC (edx) because it
+     * this code.  We must spill %edx (edx) because it
      * is used by imul.  We'll also spill rINST (ebx),
      * giving us eax, ebc, ecx and edx as computational
-     * temps.  On top of that, we'll spill rIBASE (edi)
+     * temps.  On top of that, we'll spill %esi (edi)
      * for use as the vA pointer and rFP (esi) for use
      * as the vB pointer.  Yuck.
      */
     /* mul-long/2addr vA, vB */
-    movzbl    rINST_HI,%eax            # eax<- BA
+    movzbl    rINSTbl,%eax             # eax<- BA
     andb      $$0xf,%al                # eax<- A
-    sarl      $$12,rINST_FULL          # rINST_FULL<- B
-    SPILL(rPC)
-    SPILL(rIBASE)
+    sarl      $$4,rINST                # rINST<- B
+    SPILL_TMP2(%esi)
     SPILL(rFP)
-    leal      (rFP,%eax,4),rIBASE      # rIBASE<- &v[A]
-    leal      (rFP,rINST_FULL,4),rFP   # rFP<- &v[B]
-    movl      4(rIBASE),%ecx      # ecx<- Amsw
-    imull     (rFP),%ecx          # ecx<- (Amsw*Blsw)
-    movl      4(rFP),%eax         # eax<- Bmsw
-    imull     (rIBASE),%eax       # eax<- (Bmsw*Alsw)
-    addl      %eax,%ecx           # ecx<- (Amsw*Blsw)+(Bmsw*Alsw)
-    movl      (rFP),%eax          # eax<- Blsw
-    mull      (rIBASE)            # eax<- (Blsw*Alsw)
+    leal      (rFP,%eax,4),%esi        # %esi<- &v[A]
+    leal      (rFP,rINST,4),rFP        # rFP<- &v[B]
+    movl      4(%esi),%ecx             # ecx<- Amsw
+    imull     (rFP),%ecx               # ecx<- (Amsw*Blsw)
+    movl      4(rFP),%eax              # eax<- Bmsw
+    imull     (%esi),%eax              # eax<- (Bmsw*Alsw)
+    addl      %eax,%ecx                # ecx<- (Amsw*Blsw)+(Bmsw*Alsw)
+    movl      (rFP),%eax               # eax<- Blsw
+    mull      (%esi)                   # eax<- (Blsw*Alsw)
     jmp       .L${opcode}_continue
 %break
 
 .L${opcode}_continue:
-    leal      (%ecx,%edx),%edx    # full result now in %edx:%eax
-    movl      %edx,4(rIBASE)      # v[A+1]<- %edx
-    UNSPILL(rPC)                  # restore rPC/%edx
-    FETCH_INST_WORD(1)
-    movl      %eax,(rIBASE)       # v[A]<- %eax
+    leal      (%ecx,%edx),%edx         # full result now in %edx:%eax
+    movl      %edx,4(%esi)             # v[A+1]<- %edx
+    movl      %eax,(%esi)              # v[A]<- %eax
+    UNSPILL_TMP2(%esi)
+    FETCH_INST_OPCODE 1 %ecx
     UNSPILL(rFP)
-    UNSPILL(rIBASE)
-    ADVANCE_PC(1)
-    GOTO_NEXT
+    ADVANCE_PC 1
+    GOTO_NEXT_R %ecx

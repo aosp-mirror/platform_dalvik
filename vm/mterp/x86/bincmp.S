@@ -8,19 +8,18 @@
      * For: if-eq, if-ne, if-lt, if-ge, if-gt, if-le
      */
     /* if-cmp vA, vB, +CCCC */
-    movzx    rINST_HI,%ecx              # ecx <- A+
-    andb     $$0xf,%cl                  # ecx <- A
-    GET_VREG(%eax,%ecx)                 # eax <- vA
-    sarl     $$12,rINST_FULL            # rINST_FULL<- B
-    cmpl     (rFP,rINST_FULL,4),%eax    # compare (vA, vB)
-    movswl   2(rPC),rINST_FULL          # Get signed branch offset
-    movl     $$2,%eax                   # assume not taken
+    movzx    rINSTbl,%ecx          # ecx <- A+
+    andb     $$0xf,%cl             # ecx <- A
+    GET_VREG_R %eax %ecx           # eax <- vA
+    sarl     $$4,rINST            # rINST<- B
+    cmpl     (rFP,rINST,4),%eax    # compare (vA, vB)
+    movswl   2(rPC),rINST          # Get signed branch offset
+    movl     $$2,%eax              # assume not taken
     j${revcmp}   1f
-    testl    rINST_FULL,rINST_FULL
+    testl    rINST,rINST
     js       common_backwardBranch
-    movl     rINST_FULL,%eax
+    movl     rINST,%eax
 1:
-    FETCH_INST_INDEXED(%eax)
-    ADVANCE_PC_INDEXED(%eax)
-    GOTO_NEXT
+    FETCH_INST_INDEXED %eax
+    ADVANCE_PC_INDEXED %eax
     GOTO_NEXT

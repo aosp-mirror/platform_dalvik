@@ -12,10 +12,9 @@
     /* binop/lit8 vAA, vBB, #+CC */
     movzbl    2(rPC),%eax              # eax<- BB
     movsbl    3(rPC),%ecx              # ecx<- ssssssCC
-    movzx     rINST_HI,rINST_FULL      # rINST_FULL<- AA
-    GET_VREG  (%eax,%eax)              # eax<- rBB
+    GET_VREG_R   %eax %eax             # eax<- rBB
     $instr                             # ex: addl %ecx,%eax
-    SET_VREG  ($result,rINST_FULL)
-    FETCH_INST_WORD(2)
-    ADVANCE_PC(2)
-    GOTO_NEXT
+    FETCH_INST_OPCODE 2 %edx
+    SET_VREG   $result rINST
+    ADVANCE_PC 2
+    GOTO_NEXT_R %edx

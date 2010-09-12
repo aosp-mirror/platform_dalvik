@@ -9,14 +9,13 @@
      *      and-int/lit16, or-int/lit16, xor-int/lit16
      */
     /* binop/lit16 vA, vB, #+CCCC */
-    movzbl   rINST_HI,%eax              # eax<- 000000BA
+    movzbl   rINSTbl,%eax               # eax<- 000000BA
     sarl     $$4,%eax                   # eax<- B
-    GET_VREG(%eax,%eax)                 # eax<- vB
+    GET_VREG_R %eax %eax                # eax<- vB
     movswl   2(rPC),%ecx                # ecx<- ssssCCCC
-    movzbl   rINST_HI,rINST_FULL        # rINST_FULL<- BA
-    andb     $$0xf,rINST_LO             # rINST_FULL<- A
+    andb     $$0xf,rINSTbl              # rINST<- A
     $instr                              # for example: addl %ecx, %eax
-    SET_VREG($result,rINST_FULL)
-    FETCH_INST_WORD(2)
-    ADVANCE_PC(2)
-    GOTO_NEXT
+    SET_VREG $result rINST
+    FETCH_INST_OPCODE 2 %edx
+    ADVANCE_PC 2
+    GOTO_NEXT_R %edx

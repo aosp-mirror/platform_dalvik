@@ -59,46 +59,45 @@ will also have an associated spill location (mostly used useful for those assign
 to callee save registers).
 
   nick     reg   purpose
-  rPC      edx   interpreted program counter, used for fetching instructions
+  rPC      edi   interpreted program counter, used for fetching instructions
   rFP      esi   interpreted frame pointer, used for accessing locals and args
-  rIBASE   edi   Base pointer for instruction dispatch computed goto
-  rINST    bx    first 16-bit code of current instruction
-  rOPCODE  bl    opcode portion of instruction word
-  rINST_HI bh    high byte of instruction word, usually contains src/tgt reg names
+  rINSTw   bx    first 16-bit code of current instruction
+  rINSTbl  bl    opcode portion of instruction word
+  rINSTbh  bh    high byte of inst word, usually contains src/tgt reg names
 
 Notes:
    o High order 16 bits of ebx must be zero on entry to handler
-   o rPC, rFP, rIBASE, rINST/rOPCODE valid on handler entry and exit
-   o eax and ecx are scratch, rINST/ebx sometimes scratch
+   o rPC, rFP, rINSTw/rINSTbl valid on handler entry and exit
+   o eax, edx and ecx are scratch, rINSTw/ebx sometimes scratch
    o rPC is in the caller save set, and will be killed across external calls. Don't
      forget to SPILL/UNSPILL it around call points
 
 */
 
-#define rPC      %edx
-#define rFP      %esi
-#define rIBASE   %edi
-#define rINST_FULL %ebx
-#define rINST    %bx
-#define rINST_HI %bh
-#define rINST_LO %bl
-#define rOPCODE  %bl
+#define rGLUE    (%ebp)
+#define rPC      %esi
+#define rFP      %edi
+#define rINST    %ebx
+#define rINSTw   %bx
+#define rINSTbh  %bh
+#define rINSTbl  %bl
 
 
 /* Frame diagram while executing dvmMterpStdRun, high to low addresses */
-#define IN_ARG0        (  8)
-#define CALLER_RP      (  4)
-#define PREV_FP        (  0) /* <- dvmMterpStdRun ebp */
+#define IN_ARG0        ( 12)
+#define CALLER_RP      (  8)
+#define PREV_FP        (  4)
+#define rGLUE_SPILL    (  0) /* <- dvmMterpStdRun ebp */
 /* Spill offsets relative to %ebp */
 #define EDI_SPILL      ( -4)
 #define ESI_SPILL      ( -8)
-#define EDX_SPILL      (-12) /* <- esp following dmMterpStdRun header */
+#define EBX_SPILL      (-12) /* <- esp following dmMterpStdRun header */
 #define rPC_SPILL      (-16)
 #define rFP_SPILL      (-20)
-#define rGLUE_SPILL    (-24)
-#define rIBASE_SPILL   (-28)
-#define rINST_FULL_SPILL    (-32)
-#define TMP_SPILL      (-36)
+#define rINST_SPILL    (-24)
+#define TMP_SPILL1     (-28)
+#define TMP_SPILL2     (-32)
+#define TMP_SPILL3     (-36)
 #define LOCAL0_OFFSET  (-40)
 #define LOCAL1_OFFSET  (-44)
 #define LOCAL2_OFFSET  (-48)
@@ -109,20 +108,29 @@ Notes:
 #define OUT_ARG2       (  8)
 #define OUT_ARG1       (  4)
 #define OUT_ARG0       (  0)  /* <- dvmMterpStdRun esp */
+#define FRAME_SIZE     80
 
 #define SPILL(reg) movl reg##,reg##_SPILL(%ebp)
 #define UNSPILL(reg) movl reg##_SPILL(%ebp),reg
-#define SPILL_TMP(reg) movl reg,TMP_SPILL(%ebp)
-#define UNSPILL_TMP(reg) movl TMP_SPILL(%ebp),reg
-
+#define SPILL_TMP1(reg) movl reg,TMP_SPILL1(%ebp)
+#define UNSPILL_TMP1(reg) movl TMP_SPILL1(%ebp),reg
+#define SPILL_TMP2(reg) movl reg,TMP_SPILL2(%ebp)
+#define UNSPILL_TMP2(reg) movl TMP_SPILL2(%ebp),reg
+#define SPILL_TMP3(reg) movl reg,TMP_SPILL3(%ebp)
+#define UNSPILL_TMP3(reg) movl TMP_SPILL3(%ebp),reg
 
 /* save/restore the PC and/or FP from the glue struct */
-#define LOAD_PC_FROM_GLUE(_glu)     movl    offGlue_pc(_glu),rPC
-#define SAVE_PC_TO_GLUE(_glu)       movl    rPC,offGlue_pc(_glu)
-#define LOAD_FP_FROM_GLUE(_glu)     movl    offGlue_fp(_glu),rFP
-#define SAVE_FP_TO_GLUE(_glu)       movl    rFP,offGlue_fp(_glu)
+.macro SAVE_PC_FP_TO_GLUE _reg
+    movl     rGLUE,\_reg
+    movl     rPC,offGlue_pc(\_reg)
+    movl     rFP,offGlue_fp(\_reg)
+.endm
 
-#define GET_GLUE(_reg)     movl   rGLUE_SPILL(%ebp),_reg
+.macro LOAD_PC_FP_FROM_GLUE
+    movl    rGLUE,rFP
+    movl    offGlue_pc(rFP),rPC
+    movl    offGlue_fp(rFP),rFP
+.endm
 
 /* The interpreter assumes a properly aligned stack on entry, and
  * will preserve 16-byte alignment.
@@ -137,76 +145,447 @@ Notes:
  *
  * It's okay to do this more than once.
  */
-#define EXPORT_PC() \
+.macro EXPORT_PC
     movl     rPC, (-sizeofStackSaveArea + offStackSaveArea_currentPc)(rFP)
+.endm
 
 /*
  * Given a frame pointer, find the stack save area.
  *
  * In C this is "((StackSaveArea*)(_fp) -1)".
  */
-#define SAVEAREA_FROM_FP(_reg, _fpreg) \
-    leal    -sizeofStackSaveArea(_fpreg),_reg
+.macro SAVEAREA_FROM_FP _reg
+    leal    -sizeofStackSaveArea(rFP), \_reg
+.endm
 
 /*
- * Fetch the next instruction from rPC into rINST.  Does not advance rPC.
+ * Fetch the next instruction from rPC into rINSTw.  Does not advance rPC.
  */
-#define FETCH_INST()            movzwl    (rPC),rINST_FULL
+.macro FETCH_INST
+    movzwl    (rPC),rINST
+.endm
 
 /*
- * Fetch the nth instruction word from rPC into rINST.  Does not advance
+ * Fetch the opcode byte and zero-extend it into _reg.  Must be used
+ * in conjunction with GOTO_NEXT_R
+ */
+.macro FETCH_INST_R _reg
+    movzbl    (rPC),\_reg
+.endm
+
+/*
+ * Fetch the opcode byte at _count words offset from rPC and zero-extend
+ * it into _reg.  Must be used in conjunction with GOTO_NEXT_R
+ */
+.macro FETCH_INST_OPCODE _count _reg
+    movzbl  \_count*2(rPC),\_reg
+.endm
+
+/*
+ * Fetch the nth instruction word from rPC into rINSTw.  Does not advance
  * rPC, and _count is in words
  */
-#define FETCH_INST_WORD(_count)  movzwl  _count*2(rPC),rINST_FULL
+.macro FETCH_INST_WORD _count
+    movzwl  \_count*2(rPC),rINST
+.endm
 
 /*
  * Fetch instruction word indexed (used for branching).
  * Index is in instruction word units.
  */
-#define FETCH_INST_INDEXED(_reg) movzwl  (rPC,_reg,2),rINST_FULL
-
-/*
- * Extract the opcode of the instruction in rINST
- */
-#define EXTRACT_OPCODE(_reg)   movzx rOPCODE,_reg
+.macro FETCH_INST_INDEXED _reg
+    movzwl  (rPC,\_reg,2),rINST
+.endm
 
 /*
  * Advance rPC by instruction count
  */
-#define ADVANCE_PC(_count)    leal  2*_count(rPC),rPC
+.macro ADVANCE_PC _count
+    leal  2*\_count(rPC),rPC
+.endm
 
 /*
  * Advance rPC by branch offset in register
  */
-#define ADVANCE_PC_INDEXED(_reg) leal (rPC,_reg,2),rPC
+.macro ADVANCE_PC_INDEXED _reg
+    leal (rPC,\_reg,2),rPC
+.endm
 
-/*
- * Note: assumes opcode previously fetched and in rINST, and
- *       %eax is killable at this point.
- */
-#if 1
 .macro GOTO_NEXT
-    /* For computed next version */
-     movzx    rOPCODE,%eax
-     sall     $6,%eax
-     addl     rIBASE,%eax
-     jmp      *%eax
+     movzx   rINSTbl,%eax
+     movzbl  rINSTbh,rINST
+     jmp     *dvmAsmInstructionJmpTable(,%eax,4)
 .endm
-#else
-   /* For jump table version */
-.macro GOTO_NEXT
-     movzx   rOPCODE,%eax
-     jmp     *(rIBASE,%eax,4)
+
+   /*
+    * Version of GOTO_NEXT that assumes _reg preloaded with opcode.
+    * Should be paired with FETCH_INST_R
+    */
+.macro GOTO_NEXT_R _reg
+     movzbl  1(rPC),rINST
+     jmp     *dvmAsmInstructionJmpTable(,\_reg,4)
 .endm
-#endif
 
 /*
  * Get/set the 32-bit value from a Dalvik register.
  */
-#define GET_VREG(_reg, _vreg)   movl     (rFP,_vreg,4),_reg
-#define SET_VREG(_reg, _vreg)   movl     _reg,(rFP,_vreg,4)
-#define GET_VREG_WORD(_reg, _vreg, _offset)   movl     4*(_offset)(rFP,_vreg,4),_reg
-#define SET_VREG_WORD(_reg, _vreg, _offset)   movl     _reg,4*(_offset)(rFP,_vreg,4)
+.macro GET_VREG_R _reg _vreg
+    movl     (rFP,\_vreg,4),\_reg
+.endm
+
+.macro SET_VREG _reg _vreg
+    movl     \_reg,(rFP,\_vreg,4)
+.endm
+
+.macro GET_VREG_WORD _reg _vreg _offset
+    movl     4*(\_offset)(rFP,\_vreg,4),\_reg
+.endm
+
+.macro SET_VREG_WORD _reg _vreg _offset
+    movl     \_reg,4*(\_offset)(rFP,\_vreg,4)
+.endm
+
+#if 1
+
+#define rFinish %edx
+
+/* Macros for x86-atom handlers */
+    /*
+    * Get the 32-bit value from a dalvik register.
+    */
+
+    .macro      GET_VREG _vreg
+    movl        (rFP,\_vreg, 4), \_vreg
+    .endm
+
+   /*
+    * Fetch the next instruction from the specified offset. Advances rPC
+    * to point to the next instruction. "_count" is in 16-bit code units.
+    *
+    * This must come AFTER anything that can throw an exception, or the
+    * exception catch may miss. (This also implies that it must come after
+    * EXPORT_PC())
+    */
+
+    .macro      FETCH_ADVANCE_INST _count
+    add         $(\_count*2), rPC
+    movzwl      (rPC), rINST
+    .endm
+
+   /*
+    * Fetch the next instruction from an offset specified by _reg. Updates
+    * rPC to point to the next instruction. "_reg" must specify the distance
+    * in bytes, *not* 16-bit code units, and may be a signed value.
+    */
+
+    .macro      FETCH_ADVANCE_INST_RB _reg
+    addl        \_reg, rPC
+    movzwl      (rPC), rINST
+    .endm
+
+   /*
+    * Fetch a half-word code unit from an offset past the current PC. The
+    * "_count" value is in 16-bit code units. Does not advance rPC.
+    * For example, given instruction of format: AA|op BBBB, it
+    * fetches BBBB.
+    */
+
+    .macro      FETCH _count _reg
+    movzwl      (\_count*2)(rPC), \_reg
+    .endm
+
+   /*
+    * Fetch a half-word code unit from an offset past the current PC. The
+    * "_count" value is in 16-bit code units. Does not advance rPC.
+    * This variant treats the value as signed.
+    */
+
+    .macro      FETCHs _count _reg
+    movswl      (\_count*2)(rPC), \_reg
+    .endm
+
+   /*
+    * Fetch the first byte from an offset past the current PC. The
+    * "_count" value is in 16-bit code units. Does not advance rPC.
+    * For example, given instruction of format: AA|op CC|BB, it
+    * fetches BB.
+    */
+
+    .macro      FETCH_BB _count _reg
+    movzbl      (\_count*2)(rPC), \_reg
+    .endm
+
+    /*
+    * Fetch the second byte from an offset past the current PC. The
+    * "_count" value is in 16-bit code units. Does not advance rPC.
+    * For example, given instruction of format: AA|op CC|BB, it
+    * fetches CC.
+    */
+
+    .macro      FETCH_CC _count _reg
+    movzbl      (\_count*2 + 1)(rPC), \_reg
+    .endm
+
+   /*
+    * Fetch the second byte from an offset past the current PC. The
+    * "_count" value is in 16-bit code units. Does not advance rPC.
+    * This variant treats the value as signed.
+    */
+
+    .macro      FETCH_CCs _count _reg
+    movsbl      (\_count*2 + 1)(rPC), \_reg
+    .endm
+
+
+   /*
+    * Fetch one byte from an offset past the current PC.  Pass in the same
+    * "_count" as you would for FETCH, and an additional 0/1 indicating which
+    * byte of the halfword you want (lo/hi).
+    */
+
+    .macro      FETCH_B _reg  _count  _byte
+    movzbl      (\_count*2+\_byte)(rPC), \_reg
+    .endm
+
+   /*
+    * Put the instruction's opcode field into the specified register.
+    */
+
+    .macro      GET_INST_OPCODE _reg
+    movzbl      rINSTbl, \_reg
+    .endm
+
+   /*
+    * Begin executing the opcode in _reg.
+    */
+
+    .macro      GOTO_OPCODE _reg
+    shl         $6, \_reg
+    addl        $dvmAsmInstructionStart,\_reg
+    jmp         *\_reg
+    .endm
+
+
+
+   /*
+    * Macros pair attempts to speed up FETCH_INST, GET_INST_OPCODE and GOTO_OPCODE
+    * by using a jump table. _rFinish should must be the same register for
+    * both macros.
+    */
+
+    .macro      FFETCH _rFinish
+    movzbl      (rPC), \_rFinish
+    .endm
+
+    .macro      FGETOP_JMPa _rFinish
+    movzbl      1(rPC), rINST
+    jmp         *dvmAsmInstructionJmpTable(,\_rFinish, 4)
+    .endm
+
+   /*
+    * Macro pair attempts to speed up FETCH_INST, GET_INST_OPCODE and GOTO_OPCODE
+    * by using a jump table. _rFinish and _count should must be the same register for
+    * both macros.
+    */
+
+    .macro      FFETCH_ADV _count _rFinish
+    movzbl      (\_count*2)(rPC), \_rFinish
+    .endm
+
+    .macro      FGETOP_JMP _count _rFinish
+    movzbl      (\_count*2 + 1)(rPC), rINST
+    addl        $(\_count*2), rPC
+    jmp         *dvmAsmInstructionJmpTable(,\_rFinish, 4)
+    .endm
+
+    .macro      FGETOP_JMP2 _rFinish
+    movzbl      1(rPC), rINST
+    jmp         *dvmAsmInstructionJmpTable(,\_rFinish, 4)
+    .endm
+
+    .macro      OLD_JMP_1 _count _rFinish
+    movzbl      (\_count*2)(rPC), \_rFinish
+    shl         $6, \_rFinish
+    .endm
+
+    .macro      OLD_JMP_2 _rFinish
+    addl        $dvmAsmInstructionStart,\_rFinish
+    .endm
+
+    .macro      OLD_JMP_3 _count
+    addl        $(\_count*2), rPC
+    .endm
+
+    .macro      OLD_JMP_4 _rFinish
+    movzbl      1(rPC), rINST
+    jmp         *\_rFinish
+    .endm
+
+    .macro      OLD_JMP_A_1 _reg _rFinish
+    movzbl      (rPC, \_reg), \_rFinish
+    shl         $6, \_rFinish
+    .endm
+
+    .macro      OLD_JMP_A_2 _rFinish
+    addl        $dvmAsmInstructionStart,\_rFinish
+    .endm
+
+    .macro      OLD_JMP_A_3 _reg _rFinish
+    addl        \_reg, rPC
+    movzbl      1(rPC, \_reg), rINST
+    jmp         *\_rFinish
+    .endm
+
+   /*
+    * Macro pair attempts to speed up FETCH_INST, GET_INST_OPCODE and GOTO_OPCODE
+    * by using a jump table. _rFinish and _reg should must be the same register for
+    * both macros.
+    */
+
+    .macro      FFETCH_ADV_RB _reg _rFinish
+    movzbl      (\_reg, rPC), \_rFinish
+    .endm
+
+    .macro      FGETOP_RB_JMP _reg _rFinish
+    movzbl      1(\_reg, rPC), rINST
+    addl        \_reg, rPC
+    jmp         *dvmAsmInstructionJmpTable(,\_rFinish, 4)
+    .endm
+
+   /*
+    * Attempts to speed up FETCH_INST, GET_INST_OPCODE using
+    * a jump table. This macro should be called before FINISH_JMP where
+    * rFinish should be the same register containing the opcode value.
+    * This is an attempt to split up FINISH in order to reduce or remove
+    * potential stalls due to the wait for rFINISH.
+    */
+
+    .macro      FINISH_FETCH _rFinish
+    movzbl      (rPC), \_rFinish
+    movzbl      1(rPC), rINST
+    .endm
+
+
+   /*
+    * Attempts to speed up FETCH_ADVANCE_INST, GET_INST_OPCODE using
+    * a jump table. This macro should be called before FINISH_JMP where
+    * rFinish should be the same register containing the opcode value.
+    * This is an attempt to split up FINISH in order to reduce or remove
+    * potential stalls due to the wait for rFINISH.
+    */
+
+    .macro      FINISH_FETCH_ADVANCE _count _rFinish
+    movzbl      (\_count*2)(rPC), \_rFinish
+    movzbl      (\_count*2 + 1)(rPC), rINST
+    addl        $(\_count*2), rPC
+    .endm
+
+   /*
+    * Attempts to speed up FETCH_ADVANCE_INST_RB, GET_INST_OPCODE using
+    * a jump table. This macro should be called before FINISH_JMP where
+    * rFinish should be the same register containing the opcode value.
+    * This is an attempt to split up FINISH in order to reduce or remove
+    * potential stalls due to the wait for rFINISH.
+    */
+
+    .macro      FINISH_FETCH_ADVANCE_RB _reg _rFinish
+    movzbl      (\_reg, rPC), \_rFinish
+    movzbl      1(\_reg, rPC), rINST
+    addl        \_reg, rPC
+    .endm
+
+   /*
+    * Attempts to speed up GOTO_OPCODE using a jump table. This macro should
+    * be called after a FINISH_FETCH* instruction where rFinish should be the
+    * same register containing the opcode value. This is an attempt to split up
+    * FINISH in order to reduce or remove potential stalls due to the wait for rFINISH.
+    */
+
+    .macro      FINISH_JMP _rFinish
+    jmp         *dvmAsmInstructionJmpTable(,\_rFinish, 4)
+    .endm
+
+   /*
+    * Attempts to speed up FETCH_INST, GET_INST_OPCODE, GOTO_OPCODE by using
+    * a jump table. Uses a single macro - but it should be faster if we
+    * split up the fetch for rFinish and the jump using rFinish.
+    */
+
+    .macro      FINISH_A
+    movzbl      (rPC), rFinish
+    movzbl      1(rPC), rINST
+    jmp         *dvmAsmInstructionJmpTable(,rFinish, 4)
+    .endm
+
+   /*
+    * Attempts to speed up FETCH_ADVANCE_INST, GET_INST_OPCODE,
+    * GOTO_OPCODE by using a jump table. Uses a single macro -
+    * but it should be faster if we split up the fetch for rFinish
+    * and the jump using rFinish.
+    */
+
+    .macro      FINISH _count
+    movzbl      (\_count*2)(rPC), rFinish
+    movzbl      (\_count*2 + 1)(rPC), rINST
+    addl        $(\_count*2), rPC
+    jmp         *dvmAsmInstructionJmpTable(,rFinish, 4)
+    .endm
+
+   /*
+    * Attempts to speed up FETCH_ADVANCE_INST_RB, GET_INST_OPCODE,
+    * GOTO_OPCODE by using a jump table. Uses a single macro -
+    * but it should be faster if we split up the fetch for rFinish
+    * and the jump using rFinish.
+    */
+
+    .macro      FINISH_RB _reg _rFinish
+    movzbl      (\_reg, rPC), \_rFinish
+    movzbl      1(\_reg, rPC), rINST
+    addl        \_reg, rPC
+    jmp         *dvmAsmInstructionJmpTable(,\_rFinish, 4)
+    .endm
+
+#define sReg0 LOCAL0_OFFSET(%ebp)
+#define sReg1 LOCAL1_OFFSET(%ebp)
+#define sReg2 LOCAL2_OFFSET(%ebp)
+#define sReg3 LOCAL3_OFFSET(%ebp)
+
+   /*
+    * Hard coded helper values.
+    */
+
+.balign 16
+
+.LdoubNeg:
+    .quad       0x8000000000000000
+
+.L64bits:
+    .quad       0xFFFFFFFFFFFFFFFF
+
+.LshiftMask2:
+    .quad       0x0000000000000000
+.LshiftMask:
+    .quad       0x000000000000003F
+
+.Lvalue64:
+    .quad       0x0000000000000040
+
+.LvaluePosInfLong:
+    .quad       0x7FFFFFFFFFFFFFFF
+
+.LvalueNegInfLong:
+    .quad       0x8000000000000000
+
+.LvalueNanLong:
+    .quad       0x0000000000000000
+
+.LintMin:
+.long   0x80000000
+
+.LintMax:
+.long   0x7FFFFFFF
+#endif
+
 
 /*
  * This is a #include, not a %include, because we want the C pre-processor
@@ -224,9 +603,9 @@ dvmAsmInstructionStart = .L_OP_NOP
     .balign 64
 .L_OP_NOP: /* 0x00 */
 /* File: x86/OP_NOP.S */
-    FETCH_INST_WORD(1)
-    ADVANCE_PC(1)
-    GOTO_NEXT
+    FETCH_INST_OPCODE 1 %edx
+    ADVANCE_PC 1
+    GOTO_NEXT_R %edx
 
 /* ------------------------------ */
     .balign 64
@@ -234,14 +613,14 @@ dvmAsmInstructionStart = .L_OP_NOP
 /* File: x86/OP_MOVE.S */
     /* for move, move-object, long-to-int */
     /* op vA, vB */
-    movzbl rINST_HI,%eax         # eax<- BA
+    movzbl rINSTbl,%eax          # eax<- BA
     andb   $0xf,%al             # eax<- A
-    shrl   $12,rINST_FULL       # rINST_FULL<- B
-    GET_VREG(%ecx,rINST_FULL)
-    FETCH_INST_WORD(1)
-    ADVANCE_PC(1)
-    SET_VREG(%ecx,%eax)          # fp[A]<-fp[B]
-    GOTO_NEXT
+    shrl   $4,rINST            # rINST<- B
+    GET_VREG_R %ecx rINST
+    FETCH_INST_OPCODE 1 %edx
+    ADVANCE_PC 1
+    SET_VREG %ecx %eax           # fp[A]<-fp[B]
+    GOTO_NEXT_R %edx
 
 /* ------------------------------ */
     .balign 64
@@ -249,13 +628,13 @@ dvmAsmInstructionStart = .L_OP_NOP
 /* File: x86/OP_MOVE_FROM16.S */
     /* for: move/from16, move-object/from16 */
     /* op vAA, vBBBB */
-    movzx    rINST_HI,%eax            # eax <= AA
-    movw     2(rPC),rINST             # rINST <= BBBB
-    GET_VREG (%ecx,rINST_FULL)        # ecx<- fp[BBBB]
-    FETCH_INST_WORD(2)
-    ADVANCE_PC(2)
-    SET_VREG (%ecx,%eax)              # fp[AA]<- ecx]
-    GOTO_NEXT
+    movzx    rINSTbl,%eax              # eax <= AA
+    movw     2(rPC),rINSTw             # rINSTw <= BBBB
+    GET_VREG_R %ecx rINST              # ecx<- fp[BBBB]
+    FETCH_INST_OPCODE 2 %edx
+    ADVANCE_PC 2
+    SET_VREG %ecx %eax                # fp[AA]<- ecx]
+    GOTO_NEXT_R %edx
 
 /* ------------------------------ */
     .balign 64
@@ -265,11 +644,11 @@ dvmAsmInstructionStart = .L_OP_NOP
     /* op vAAAA, vBBBB */
     movzwl    4(rPC),%ecx              # ecx<- BBBB
     movzwl    2(rPC),%eax              # eax<- AAAA
-    GET_VREG(%ecx,%ecx)
-    FETCH_INST_WORD(3)
-    ADVANCE_PC(3)
-    SET_VREG(%ecx,%eax)
-    GOTO_NEXT
+    GET_VREG_R  %ecx %ecx
+    FETCH_INST_OPCODE 3 %edx
+    ADVANCE_PC 3
+    SET_VREG  %ecx %eax
+    GOTO_NEXT_R %edx
 
 /* ------------------------------ */
     .balign 64
@@ -277,16 +656,16 @@ dvmAsmInstructionStart = .L_OP_NOP
 /* File: x86/OP_MOVE_WIDE.S */
     /* move-wide vA, vB */
     /* NOTE: regs can overlap, e.g. "move v6,v7" or "move v7,v6" */
-    movzbl    rINST_HI,%ecx                # ecx <- BA
-    sarl      $12,rINST_FULL              # rinst_FULL<- B
-    GET_VREG_WORD(%eax,rINST_FULL,0)       # eax<- v[B+0]
-    GET_VREG_WORD(rINST_FULL,rINST_FULL,1) # rINST_FULL<- v[B+1]
-    andb      $0xf,%cl                    # ecx <- A
-    SET_VREG_WORD(rINST_FULL,%ecx,1)       # v[A+1]<- rINST_FULL
-    FETCH_INST_WORD(1)
-    ADVANCE_PC(1)
-    SET_VREG_WORD(%eax,%ecx,0)             # v[A+0]<- eax
-    GOTO_NEXT
+    movzbl    rINSTbl,%ecx                # ecx <- BA
+    sarl      $4,rINST                   # rINST<- B
+    GET_VREG_WORD %eax rINST 0            # eax<- v[B+0]
+    GET_VREG_WORD rINST rINST 1           # rINST<- v[B+1]
+    andb      $0xf,%cl                   # ecx <- A
+    FETCH_INST_OPCODE 1 %edx
+    SET_VREG_WORD rINST %ecx 1            # v[A+1]<- rINST
+    ADVANCE_PC 1
+    SET_VREG_WORD %eax %ecx 0             # v[A+0]<- eax
+    GOTO_NEXT_R %edx
 
 /* ------------------------------ */
     .balign 64
@@ -295,14 +674,14 @@ dvmAsmInstructionStart = .L_OP_NOP
     /* move-wide/from16 vAA, vBBBB */
     /* NOTE: regs can overlap, e.g. "move v6,v7" or "move v7,v6" */
     movzwl    2(rPC),%ecx              # ecx<- BBBB
-    movzbl    rINST_HI,%eax            # eax<- AAAA
-    GET_VREG_WORD(rINST_FULL,%ecx,0)   # rINST_FULL<- v[BBBB+0]
-    GET_VREG_WORD(%ecx,%ecx,1)         # ecx<- v[BBBB+1]
-    SET_VREG_WORD(rINST_FULL,%eax,0)   # v[AAAA+0]<- rINST_FULL
-    FETCH_INST_WORD(2)
-    ADVANCE_PC(2)
-    SET_VREG_WORD(%ecx,%eax,1)         # v[AAAA+1]<- eax
-    GOTO_NEXT
+    movzbl    rINSTbl,%eax             # eax<- AAAA
+    GET_VREG_WORD rINST %ecx 0         # rINST<- v[BBBB+0]
+    GET_VREG_WORD %ecx %ecx 1          # ecx<- v[BBBB+1]
+    FETCH_INST_OPCODE 2 %edx
+    ADVANCE_PC 2
+    SET_VREG_WORD rINST %eax 0         # v[AAAA+0]<- rINST
+    SET_VREG_WORD %ecx %eax 1          # v[AAAA+1]<- eax
+    GOTO_NEXT_R %edx
 
 /* ------------------------------ */
     .balign 64
@@ -312,13 +691,13 @@ dvmAsmInstructionStart = .L_OP_NOP
     /* NOTE: regs can overlap, e.g. "move v6,v7" or "move v7,v6" */
     movzwl    4(rPC),%ecx            # ecx<- BBBB
     movzwl    2(rPC),%eax            # eax<- AAAA
-    GET_VREG_WORD(rINST_FULL,%ecx,0) # rINST_WORD<- v[BBBB+0]
-    GET_VREG_WORD(%ecx,%ecx,1)       # ecx<- v[BBBB+1]
-    SET_VREG_WORD(rINST_FULL,%eax,0) # v[AAAA+0]<- rINST_FULL
-    FETCH_INST_WORD(3)
-    ADVANCE_PC(3)
-    SET_VREG_WORD(%ecx,%eax,1)       # v[AAAA+1]<- ecx
-    GOTO_NEXT
+    GET_VREG_WORD rINST %ecx 0       # rINSTw_WORD<- v[BBBB+0]
+    GET_VREG_WORD %ecx %ecx 1        # ecx<- v[BBBB+1]
+    FETCH_INST_OPCODE 3 %edx
+    SET_VREG_WORD rINST %eax 0       # v[AAAA+0]<- rINST
+    ADVANCE_PC 3
+    SET_VREG_WORD %ecx %eax 1        # v[AAAA+1]<- ecx
+    GOTO_NEXT_R %edx
 
 /* ------------------------------ */
     .balign 64
@@ -327,14 +706,14 @@ dvmAsmInstructionStart = .L_OP_NOP
 /* File: x86/OP_MOVE.S */
     /* for move, move-object, long-to-int */
     /* op vA, vB */
-    movzbl rINST_HI,%eax         # eax<- BA
+    movzbl rINSTbl,%eax          # eax<- BA
     andb   $0xf,%al             # eax<- A
-    shrl   $12,rINST_FULL       # rINST_FULL<- B
-    GET_VREG(%ecx,rINST_FULL)
-    FETCH_INST_WORD(1)
-    ADVANCE_PC(1)
-    SET_VREG(%ecx,%eax)          # fp[A]<-fp[B]
-    GOTO_NEXT
+    shrl   $4,rINST            # rINST<- B
+    GET_VREG_R %ecx rINST
+    FETCH_INST_OPCODE 1 %edx
+    ADVANCE_PC 1
+    SET_VREG %ecx %eax           # fp[A]<-fp[B]
+    GOTO_NEXT_R %edx
 
 
 /* ------------------------------ */
@@ -344,13 +723,13 @@ dvmAsmInstructionStart = .L_OP_NOP
 /* File: x86/OP_MOVE_FROM16.S */
     /* for: move/from16, move-object/from16 */
     /* op vAA, vBBBB */
-    movzx    rINST_HI,%eax            # eax <= AA
-    movw     2(rPC),rINST             # rINST <= BBBB
-    GET_VREG (%ecx,rINST_FULL)        # ecx<- fp[BBBB]
-    FETCH_INST_WORD(2)
-    ADVANCE_PC(2)
-    SET_VREG (%ecx,%eax)              # fp[AA]<- ecx]
-    GOTO_NEXT
+    movzx    rINSTbl,%eax              # eax <= AA
+    movw     2(rPC),rINSTw             # rINSTw <= BBBB
+    GET_VREG_R %ecx rINST              # ecx<- fp[BBBB]
+    FETCH_INST_OPCODE 2 %edx
+    ADVANCE_PC 2
+    SET_VREG %ecx %eax                # fp[AA]<- ecx]
+    GOTO_NEXT_R %edx
 
 
 /* ------------------------------ */
@@ -362,11 +741,11 @@ dvmAsmInstructionStart = .L_OP_NOP
     /* op vAAAA, vBBBB */
     movzwl    4(rPC),%ecx              # ecx<- BBBB
     movzwl    2(rPC),%eax              # eax<- AAAA
-    GET_VREG(%ecx,%ecx)
-    FETCH_INST_WORD(3)
-    ADVANCE_PC(3)
-    SET_VREG(%ecx,%eax)
-    GOTO_NEXT
+    GET_VREG_R  %ecx %ecx
+    FETCH_INST_OPCODE 3 %edx
+    ADVANCE_PC 3
+    SET_VREG  %ecx %eax
+    GOTO_NEXT_R %edx
 
 
 /* ------------------------------ */
@@ -375,28 +754,27 @@ dvmAsmInstructionStart = .L_OP_NOP
 /* File: x86/OP_MOVE_RESULT.S */
     /* for: move-result, move-result-object */
     /* op vAA */
-    GET_GLUE(%eax)                         # eax<- rGLUE
-    movzx    rINST_HI,%ecx                 # ecx<- AA
+    movl     rGLUE,%eax                    # eax<- rGLUE
+    movzx    rINSTbl,%ecx                  # ecx<- AA
     movl     offGlue_retval(%eax),%eax     # eax<- glue->retval.l
-    FETCH_INST_WORD(1)
-    ADVANCE_PC(1)
-    SET_VREG (%eax,%ecx)                   # fp[AA]<- retval.l
-    GOTO_NEXT
+    FETCH_INST_OPCODE 1 %edx
+    ADVANCE_PC 1
+    SET_VREG  %eax %ecx                    # fp[AA]<- retval.l
+    GOTO_NEXT_R %edx
 
 /* ------------------------------ */
     .balign 64
 .L_OP_MOVE_RESULT_WIDE: /* 0x0b */
 /* File: x86/OP_MOVE_RESULT_WIDE.S */
     /* move-result-wide vAA */
-    GET_GLUE(%ecx)
-    movzbl  rINST_HI,rINST_FULL         # rINST_FULL<- AA
+    movl    rGLUE,%ecx
     movl    offGlue_retval(%ecx),%eax
     movl    4+offGlue_retval(%ecx),%ecx
-    SET_VREG_WORD(%eax,rINST_FULL,0)    # v[AA+0] <- eax
-    SET_VREG_WORD(%ecx,rINST_FULL,1)    # v[AA+1] <- ecx
-    FETCH_INST_WORD(1)
-    ADVANCE_PC(1)
-    GOTO_NEXT
+    FETCH_INST_OPCODE 1 %edx
+    SET_VREG_WORD %eax rINST 0     # v[AA+0] <- eax
+    SET_VREG_WORD %ecx rINST 1     # v[AA+1] <- ecx
+    ADVANCE_PC 1
+    GOTO_NEXT_R %edx
 
 /* ------------------------------ */
     .balign 64
@@ -405,13 +783,13 @@ dvmAsmInstructionStart = .L_OP_NOP
 /* File: x86/OP_MOVE_RESULT.S */
     /* for: move-result, move-result-object */
     /* op vAA */
-    GET_GLUE(%eax)                         # eax<- rGLUE
-    movzx    rINST_HI,%ecx                 # ecx<- AA
+    movl     rGLUE,%eax                    # eax<- rGLUE
+    movzx    rINSTbl,%ecx                  # ecx<- AA
     movl     offGlue_retval(%eax),%eax     # eax<- glue->retval.l
-    FETCH_INST_WORD(1)
-    ADVANCE_PC(1)
-    SET_VREG (%eax,%ecx)                   # fp[AA]<- retval.l
-    GOTO_NEXT
+    FETCH_INST_OPCODE 1 %edx
+    ADVANCE_PC 1
+    SET_VREG  %eax %ecx                    # fp[AA]<- retval.l
+    GOTO_NEXT_R %edx
 
 
 /* ------------------------------ */
@@ -419,15 +797,14 @@ dvmAsmInstructionStart = .L_OP_NOP
 .L_OP_MOVE_EXCEPTION: /* 0x0d */
 /* File: x86/OP_MOVE_EXCEPTION.S */
     /* move-exception vAA */
-    GET_GLUE(%ecx)
-    movzbl  rINST_HI,rINST_FULL        # rINST_FULL<- AA
+    movl    rGLUE,%ecx
     movl    offGlue_self(%ecx),%ecx    # ecx<- glue->self
     movl    offThread_exception(%ecx),%eax # eax<- dvmGetException bypass
-    SET_VREG(%eax,rINST_FULL)          # fp[AA]<- exception object
-    FETCH_INST_WORD(1)
-    ADVANCE_PC(1)
+    SET_VREG %eax rINST                # fp[AA]<- exception object
+    FETCH_INST_OPCODE 1 %edx
+    ADVANCE_PC 1
     movl    $0,offThread_exception(%ecx) # dvmClearException bypass
-    GOTO_NEXT
+    GOTO_NEXT_R %edx
 
 /* ------------------------------ */
     .balign 64
@@ -446,9 +823,8 @@ dvmAsmInstructionStart = .L_OP_NOP
      * for: return, return-object
      */
     /* op vAA */
-    GET_GLUE(%ecx)
-    movzbl  rINST_HI,rINST_FULL         # rINST_FULL<- AA
-    GET_VREG(%eax,rINST_FULL)           # eax<- vAA
+    movl    rGLUE,%ecx
+    GET_VREG_R %eax rINST               # eax<- vAA
     movl    %eax,offGlue_retval(%ecx)   # retval.i <- AA
     jmp     common_returnFromMethod
 
@@ -461,12 +837,11 @@ dvmAsmInstructionStart = .L_OP_NOP
      * structure, then jumps to the return handler.
      */
     /* return-wide vAA */
-    GET_GLUE(%ecx)
-    movzbl  rINST_HI,rINST_FULL            # rINST_FULL<- AA
-    GET_VREG_WORD(%eax,rINST_FULL,0)       # eax<- v[AA+0]
-    GET_VREG_WORD(rINST_FULL,rINST_FULL,1) # rINST_FULL<- v[AA+1]
+    movl    rGLUE,%ecx
+    GET_VREG_WORD %eax rINST 0       # eax<- v[AA+0]
+    GET_VREG_WORD rINST rINST 1      # rINST<- v[AA+1]
     movl    %eax,offGlue_retval(%ecx)
-    movl    rINST_FULL,4+offGlue_retval(%ecx)
+    movl    rINST,4+offGlue_retval(%ecx)
     jmp     common_returnFromMethod
 
 /* ------------------------------ */
@@ -481,9 +856,8 @@ dvmAsmInstructionStart = .L_OP_NOP
      * for: return, return-object
      */
     /* op vAA */
-    GET_GLUE(%ecx)
-    movzbl  rINST_HI,rINST_FULL         # rINST_FULL<- AA
-    GET_VREG(%eax,rINST_FULL)           # eax<- vAA
+    movl    rGLUE,%ecx
+    GET_VREG_R %eax rINST               # eax<- vAA
     movl    %eax,offGlue_retval(%ecx)   # retval.i <- AA
     jmp     common_returnFromMethod
 
@@ -493,14 +867,14 @@ dvmAsmInstructionStart = .L_OP_NOP
 .L_OP_CONST_4: /* 0x12 */
 /* File: x86/OP_CONST_4.S */
     /* const/4 vA, #+B */
-    movsx   rINST_HI,%eax              # eax<-ssssssBx
+    movsx   rINSTbl,%eax              # eax<-ssssssBx
     movl    $0xf,%ecx
-    andl    %eax,%ecx                  # ecx<- A
-    FETCH_INST_WORD(1)
-    ADVANCE_PC(1)
+    andl    %eax,%ecx                 # ecx<- A
+    FETCH_INST_OPCODE 1 %edx
+    ADVANCE_PC 1
     sarl    $4,%eax
-    SET_VREG(%eax,%ecx)
-    GOTO_NEXT
+    SET_VREG %eax %ecx
+    GOTO_NEXT_R %edx
 
 /* ------------------------------ */
     .balign 64
@@ -508,23 +882,23 @@ dvmAsmInstructionStart = .L_OP_NOP
 /* File: x86/OP_CONST_16.S */
     /* const/16 vAA, #+BBBB */
     movswl  2(rPC),%ecx                # ecx<- ssssBBBB
-    movzx   rINST_HI,%eax              # eax<- AA
-    FETCH_INST_WORD(2)
-    ADVANCE_PC(2)
-    SET_VREG(%ecx,%eax)                # vAA<- ssssBBBB
-    GOTO_NEXT
+    movl    rINST,%eax                 # eax<- AA
+    FETCH_INST_OPCODE 2 %edx
+    ADVANCE_PC 2
+    SET_VREG %ecx %eax                 # vAA<- ssssBBBB
+    GOTO_NEXT_R %edx
 
 /* ------------------------------ */
     .balign 64
 .L_OP_CONST: /* 0x14 */
 /* File: x86/OP_CONST.S */
     /* const vAA, #+BBBBbbbb */
-    movzbl    rINST_HI,%ecx           # ecx<- AA
-    movl      2(rPC),%eax               # grab all 32 bits at once
-    FETCH_INST_WORD(3)
-    ADVANCE_PC(3)
-    SET_VREG(%eax,%ecx)                 # vAA<- eax
-    GOTO_NEXT
+    movl      2(rPC),%eax             # grab all 32 bits at once
+    movl      rINST,%ecx              # ecx<- AA
+    FETCH_INST_OPCODE 3 %edx
+    ADVANCE_PC 3
+    SET_VREG %eax %ecx                # vAA<- eax
+    GOTO_NEXT_R %edx
 
 /* ------------------------------ */
     .balign 64
@@ -532,12 +906,12 @@ dvmAsmInstructionStart = .L_OP_NOP
 /* File: x86/OP_CONST_HIGH16.S */
     /* const/high16 vAA, #+BBBB0000 */
     movzwl     2(rPC),%eax                # eax<- 0000BBBB
-    movzbl     rINST_HI,%ecx              # ecx<- AA
-    FETCH_INST_WORD(2)
-    ADVANCE_PC(2)
+    movl       rINST,%ecx                 # ecx<- AA
+    FETCH_INST_OPCODE 2 %edx
+    ADVANCE_PC 2
     sall       $16,%eax                  # eax<- BBBB0000
-    SET_VREG(%eax,%ecx)                   # vAA<- eax
-    GOTO_NEXT
+    SET_VREG %eax %ecx                    # vAA<- eax
+    GOTO_NEXT_R %edx
 
 /* ------------------------------ */
     .balign 64
@@ -545,31 +919,25 @@ dvmAsmInstructionStart = .L_OP_NOP
 /* File: x86/OP_CONST_WIDE_16.S */
     /* const-wide/16 vAA, #+BBBB */
     movswl    2(rPC),%eax               # eax<- ssssBBBB
-    SPILL(rPC)
-    movzbl    rINST_HI,%ecx             # ecx<- AA
-    FETCH_INST_WORD(2)
     cltd                                # rPC:eax<- ssssssssssssBBBB
-    SET_VREG_WORD(rPC,%ecx,1)           # store msw
-    UNSPILL(rPC)
-    SET_VREG_WORD(%eax,%ecx,0)          # store lsw
-    ADVANCE_PC(2)
-    GOTO_NEXT
+    SET_VREG_WORD %edx rINST 1          # store msw
+    FETCH_INST_OPCODE 2 %edx
+    SET_VREG_WORD %eax rINST 0          # store lsw
+    ADVANCE_PC 2
+    GOTO_NEXT_R %edx
 
 /* ------------------------------ */
     .balign 64
 .L_OP_CONST_WIDE_32: /* 0x17 */
 /* File: x86/OP_CONST_WIDE_32.S */
     /* const-wide/32 vAA, #+BBBBbbbb */
-    movl     2(rPC),%eax               # eax<- BBBBbbbb
-    SPILL(rPC)
-    movzbl    rINST_HI,%ecx             # ecx<- AA
-    FETCH_INST_WORD(3)
+    movl     2(rPC),%eax                # eax<- BBBBbbbb
     cltd                                # rPC:eax<- ssssssssssssBBBB
-    SET_VREG_WORD(rPC,%ecx,1)           # store msw
-    UNSPILL(rPC)
-    SET_VREG_WORD(%eax,%ecx,0)          # store lsw
-    ADVANCE_PC(3)
-    GOTO_NEXT
+    SET_VREG_WORD %edx rINST,1          # store msw
+    FETCH_INST_OPCODE 3 %edx
+    SET_VREG_WORD %eax rINST 0          # store lsw
+    ADVANCE_PC 3
+    GOTO_NEXT_R %edx
 
 /* ------------------------------ */
     .balign 64
@@ -577,14 +945,14 @@ dvmAsmInstructionStart = .L_OP_NOP
 /* File: x86/OP_CONST_WIDE.S */
     /* const-wide vAA, #+HHHHhhhhBBBBbbbb */
     movl      2(rPC),%eax         # eax<- lsw
-    movzbl    rINST_HI,%ecx       # ecx <- AA
-    movl      6(rPC),rINST_FULL   # rINST_FULL<- msw
+    movzbl    rINSTbl,%ecx        # ecx<- AA
+    movl      6(rPC),rINST        # rINST<- msw
     leal      (rFP,%ecx,4),%ecx   # dst addr
-    movl      rINST_FULL,4(%ecx)
-    FETCH_INST_WORD(5)
+    movl      rINST,4(%ecx)
+    FETCH_INST_OPCODE 5 %edx
     movl      %eax,(%ecx)
-    ADVANCE_PC(5)
-    GOTO_NEXT
+    ADVANCE_PC 5
+    GOTO_NEXT_R %edx
 
 /* ------------------------------ */
     .balign 64
@@ -592,14 +960,13 @@ dvmAsmInstructionStart = .L_OP_NOP
 /* File: x86/OP_CONST_WIDE_HIGH16.S */
     /* const-wide/high16 vAA, #+BBBB000000000000 */
     movzwl     2(rPC),%eax                # eax<- 0000BBBB
-    movzbl     rINST_HI,%ecx              # ecx<- AA
-    FETCH_INST_WORD(2)
-    ADVANCE_PC(2)
+    FETCH_INST_OPCODE 2 %edx
+    ADVANCE_PC 2
     sall       $16,%eax                  # eax<- BBBB0000
-    SET_VREG_WORD(%eax,%ecx,1)            # v[AA+1]<- eax
+    SET_VREG_WORD %eax rINST 1            # v[AA+1]<- eax
     xorl       %eax,%eax
-    SET_VREG_WORD(%eax,%ecx,0)            # v[AA+0]<- eax
-    GOTO_NEXT
+    SET_VREG_WORD %eax rINST 0            # v[AA+0]<- eax
+    GOTO_NEXT_R %edx
 
 /* ------------------------------ */
     .balign 64
@@ -607,19 +974,18 @@ dvmAsmInstructionStart = .L_OP_NOP
 /* File: x86/OP_CONST_STRING.S */
 
     /* const/string vAA, String@BBBB */
-    GET_GLUE(%ecx)
+    movl      rGLUE,%ecx
     movzwl    2(rPC),%eax              # eax<- BBBB
     movl      offGlue_methodClassDex(%ecx),%ecx# ecx<- glue->methodClassDex
-    movzbl    rINST_HI,rINST_FULL      # rINST_FULL<- AA
     movl      offDvmDex_pResStrings(%ecx),%ecx # ecx<- dvmDex->pResStrings
     movl      (%ecx,%eax,4),%eax       # eax<- rResString[BBBB]
-    movl      rINST_FULL,%ecx
-    FETCH_INST_WORD(2)
+    movl      rINST,%ecx
+    FETCH_INST_OPCODE 2 %edx
     testl     %eax,%eax                # resolved yet?
     je        .LOP_CONST_STRING_resolve
-    SET_VREG(%eax,%ecx)                # vAA<- rResString[BBBB]
-    ADVANCE_PC(2)
-    GOTO_NEXT
+    SET_VREG  %eax %ecx                # vAA<- rResString[BBBB]
+    ADVANCE_PC 2
+    GOTO_NEXT_R %edx
 
 /* ------------------------------ */
     .balign 64
@@ -627,19 +993,18 @@ dvmAsmInstructionStart = .L_OP_NOP
 /* File: x86/OP_CONST_STRING_JUMBO.S */
 
     /* const/string vAA, String@BBBBBBBB */
-    GET_GLUE(%ecx)
+    movl      rGLUE,%ecx
     movl      2(rPC),%eax              # eax<- BBBBBBBB
     movl      offGlue_methodClassDex(%ecx),%ecx# ecx<- glue->methodClassDex
-    movzbl    rINST_HI,rINST_FULL      # rINST_FULL<- AA
     movl      offDvmDex_pResStrings(%ecx),%ecx # ecx<- dvmDex->pResStrings
     movl      (%ecx,%eax,4),%eax       # eax<- rResString[BBBB]
-    movl      rINST_FULL,%ecx
-    FETCH_INST_WORD(3)
+    movl      rINST,%ecx
+    FETCH_INST_OPCODE 3 %edx
     testl     %eax,%eax                # resolved yet?
     je        .LOP_CONST_STRING_JUMBO_resolve
-    SET_VREG(%eax,%ecx)                # vAA<- rResString[BBBB]
-    ADVANCE_PC(3)
-    GOTO_NEXT
+    SET_VREG  %eax %ecx                # vAA<- rResString[BBBB]
+    ADVANCE_PC 3
+    GOTO_NEXT_R %edx
 
 /* ------------------------------ */
     .balign 64
@@ -647,19 +1012,18 @@ dvmAsmInstructionStart = .L_OP_NOP
 /* File: x86/OP_CONST_CLASS.S */
 
     /* const/class vAA, Class@BBBB */
-    GET_GLUE(%ecx)
+    movl      rGLUE,%ecx
     movzwl    2(rPC),%eax              # eax<- BBBB
     movl      offGlue_methodClassDex(%ecx),%ecx# ecx<- glue->methodClassDex
-    movzbl    rINST_HI,rINST_FULL      # rINST_FULL<- AA
     movl      offDvmDex_pResClasses(%ecx),%ecx # ecx<- dvmDex->pResClasses
     movl      (%ecx,%eax,4),%eax       # eax<- rResClasses[BBBB]
-    movl      rINST_FULL,%ecx
-    FETCH_INST_WORD(2)
+    movl      rINST,%ecx
+    FETCH_INST_OPCODE 2 %edx
     testl     %eax,%eax                # resolved yet?
     je        .LOP_CONST_CLASS_resolve
-    SET_VREG(%eax,%ecx)                # vAA<- rResClasses[BBBB]
-    ADVANCE_PC(2)
-    GOTO_NEXT
+    SET_VREG  %eax %ecx                # vAA<- rResClasses[BBBB]
+    ADVANCE_PC 2
+    GOTO_NEXT_R %edx
 
 /* ------------------------------ */
     .balign 64
@@ -669,13 +1033,12 @@ dvmAsmInstructionStart = .L_OP_NOP
      * Synchronize on an object.
      */
     /* monitor-enter vAA */
-    GET_GLUE(%ecx)
-    movzbl  rINST_HI,rINST_FULL         # rINST_FULL<- AA
-    GET_VREG(%eax,rINST_FULL)           # eax<- vAA
+    movl    rGLUE,%ecx
+    GET_VREG_R %eax rINST               # eax<- vAA
     movl    offGlue_self(%ecx),%ecx     # ecx<- glue->self
-    FETCH_INST_WORD(1)
+    FETCH_INST_WORD 1
     testl   %eax,%eax                   # null object?
-    EXPORT_PC()                         # need for precise GC, MONITOR_TRACKING
+    EXPORT_PC                           # need for precise GC, MONITOR_TRACKING
     jne     .LOP_MONITOR_ENTER_continue
     jmp     common_errNullObject
 
@@ -691,15 +1054,13 @@ dvmAsmInstructionStart = .L_OP_NOP
      * instruction spec.
      */
     /* monitor-exit vAA */
-    movzbl  rINST_HI,rINST_FULL         # rINST_FULL<- AA
-    GET_VREG(%eax,rINST_FULL)
-    GET_GLUE(%ecx)
-    EXPORT_PC()
+    GET_VREG_R %eax rINST
+    movl    rGLUE,%ecx
+    EXPORT_PC
     testl   %eax,%eax                   # null object?
     je      .LOP_MONITOR_EXIT_errNullObject   # go if so
     movl    offGlue_self(%ecx),%ecx     # ecx<- glue->self
     movl    %eax,OUT_ARG1(%esp)
-    SPILL(rPC)
     movl    %ecx,OUT_ARG0(%esp)
     jmp     .LOP_MONITOR_EXIT_continue
 
@@ -711,25 +1072,24 @@ dvmAsmInstructionStart = .L_OP_NOP
      * Check to see if a cast from one class to another is allowed.
      */
     /* check-cast vAA, class@BBBB */
-    GET_GLUE(%ecx)
-    movzbl    rINST_HI,rINST_FULL       # rINST_FULL<- AA
-    GET_VREG(rINST_FULL,rINST_FULL)     # rINST_FULL<- vAA (object)
+    movl      rGLUE,%ecx
+    GET_VREG_R  rINST,rINST             # rINST<- vAA (object)
     movzwl    2(rPC),%eax               # eax<- BBBB
     movl      offGlue_methodClassDex(%ecx),%ecx # ecx<- pDvmDex
-    testl     rINST_FULL,rINST_FULL     # is oject null?
+    testl     rINST,rINST               # is oject null?
     movl      offDvmDex_pResClasses(%ecx),%ecx # ecx<- pDvmDex->pResClasses
     je        .LOP_CHECK_CAST_okay          # null obj, cast always succeeds
     movl      (%ecx,%eax,4),%eax        # eax<- resolved class
-    movl      offObject_clazz(rINST_FULL),%ecx # ecx<- obj->clazz
+    movl      offObject_clazz(rINST),%ecx # ecx<- obj->clazz
     testl     %eax,%eax                 # have we resolved this before?
     je        .LOP_CHECK_CAST_resolve       # no, go do it now
 .LOP_CHECK_CAST_resolved:
     cmpl      %eax,%ecx                 # same class (trivial success)?
     jne       .LOP_CHECK_CAST_fullcheck     # no, do full check
 .LOP_CHECK_CAST_okay:
-    FETCH_INST_WORD(2)
-    ADVANCE_PC(2)
-    GOTO_NEXT
+    FETCH_INST_OPCODE 2 %edx
+    ADVANCE_PC 2
+    GOTO_NEXT_R %edx
 
 /* ------------------------------ */
     .balign 64
@@ -742,17 +1102,16 @@ dvmAsmInstructionStart = .L_OP_NOP
      * an already-resolved class.
      */
     /* instance-of vA, vB, class@CCCC */
-    movzbl  rINST_HI,%eax               # eax<- BA
+    movl    rINST,%eax                # eax<- BA
     sarl    $4,%eax                    # eax<- B
-    GET_VREG(%eax,%eax)                 # eax<- vB (obj)
-    GET_GLUE(%ecx)
+    GET_VREG_R %eax %eax                # eax<- vB (obj)
+    movl    rGLUE,%ecx
     testl   %eax,%eax                   # object null?
     movl    offGlue_methodClassDex(%ecx),%ecx  # ecx<- pDvmDex
-    SPILL(rPC)
     je      .LOP_INSTANCE_OF_store           # null obj, not instance, store it
-    movzwl  2(rPC),rPC                  # rPC<- CCCC
+    movzwl  2(rPC),%edx                 # edx<- CCCC
     movl    offDvmDex_pResClasses(%ecx),%ecx # ecx<- pDvmDex->pResClasses
-    movl    (%ecx,rPC,4),%ecx           # ecx<- resolved class
+    movl    (%ecx,%edx,4),%ecx          # ecx<- resolved class
     movl    offObject_clazz(%eax),%eax  # eax<- obj->clazz
     testl   %ecx,%ecx                   # have we resolved this before?
     je      .LOP_INSTANCE_OF_resolve         # not resolved, do it now
@@ -768,17 +1127,17 @@ dvmAsmInstructionStart = .L_OP_NOP
     /*
      * Return the length of an array.
      */
-   movzbl   rINST_HI,%eax              # eax<- BA
-   sarl     $12,rINST_FULL            # rINST_FULL<- B
-   GET_VREG(%ecx,rINST_FULL)           # ecx<- vB (object ref)
-   andb     $0xf,%al                  # eax<- A
-   testl    %ecx,%ecx                  # is null?
+   mov      rINST,%eax                # eax<- BA
+   sarl     $4,rINST                 # rINST<- B
+   GET_VREG_R %ecx rINST              # ecx<- vB (object ref)
+   andb     $0xf,%al                 # eax<- A
+   testl    %ecx,%ecx                 # is null?
    je       common_errNullObject
-   FETCH_INST_WORD(1)
+   FETCH_INST_OPCODE 1 %edx
    movl     offArrayObject_length(%ecx),%ecx
-   ADVANCE_PC(1)
-   SET_VREG(%ecx,%eax)
-   GOTO_NEXT
+   ADVANCE_PC 1
+   SET_VREG %ecx %eax
+   GOTO_NEXT_R %edx
 
 /* ------------------------------ */
     .balign 64
@@ -788,14 +1147,12 @@ dvmAsmInstructionStart = .L_OP_NOP
      * Create a new instance of a class.
      */
     /* new-instance vAA, class@BBBB */
-    GET_GLUE(%ecx)
+    movl      rGLUE,%ecx
     movzwl    2(rPC),%eax               # eax<- BBBB
     movl      offGlue_methodClassDex(%ecx),%ecx  # ecx<- pDvmDex
-    movzbl    rINST_HI,rINST_FULL       # rINST_FULL<- AA
     movl      offDvmDex_pResClasses(%ecx),%ecx # ecx<- pDvmDex->pResClasses
-    EXPORT_PC()
+    EXPORT_PC
     movl      (%ecx,%eax,4),%ecx        # ecx<- resolved class
-    SPILL(rPC)
     testl     %ecx,%ecx                 # resolved?
     je        .LOP_NEW_INSTANCE_resolve       # no, go do it
 .LOP_NEW_INSTANCE_resolved:  # on entry, ecx<- class
@@ -815,17 +1172,16 @@ dvmAsmInstructionStart = .L_OP_NOP
      * check for it here.
      */
     /* new-array vA, vB, class@CCCC */
-    GET_GLUE(%ecx)
-    EXPORT_PC()
+    movl    rGLUE,%ecx
+    EXPORT_PC
     movl    offGlue_methodClassDex(%ecx),%ecx # ecx<- pDvmDex
     movzwl  2(rPC),%eax                       # eax<- CCCC
     movl    offDvmDex_pResClasses(%ecx),%ecx  # ecx<- pDvmDex->pResClasses
     movl    (%ecx,%eax,4),%ecx                # ecx<- resolved class
-    movzbl  rINST_HI,%eax
+    movzbl  rINSTbl,%eax
     sarl    $4,%eax                          # eax<- B
-    GET_VREG(%eax,%eax)                       # eax<- vB (array length)
-    movzbl  rINST_HI,rINST_FULL
-    andb    $0xf,rINST_LO                    # rINST_FULL<- A
+    GET_VREG_R %eax %eax                      # eax<- vB (array length)
+    andb    $0xf,rINSTbl                     # rINST<- A
     testl   %eax,%eax
     js      common_errNegativeArraySize       # bail
     testl   %ecx,%ecx                         # already resolved?
@@ -843,18 +1199,16 @@ dvmAsmInstructionStart = .L_OP_NOP
      */
     /* op vB, {vD, vE, vF, vG, vA}, class@CCCC */
     /* op {vCCCC..v(CCCC+AA-1)}, type@BBBB */
-    GET_GLUE(%eax)
-    movzbl  rINST_HI,rINST_FULL               # rINST_FULL<- AA or BA
+    movl    rGLUE,%eax
     movl    offGlue_methodClassDex(%eax),%eax # eax<- pDvmDex
     movzwl  2(rPC),%ecx                       # ecx<- BBBB
     movl    offDvmDex_pResClasses(%eax),%eax  # eax<- pDvmDex->pResClasses
-    SPILL(rPC)
     movl    (%eax,%ecx,4),%eax                # eax<- resolved class
-    EXPORT_PC()
+    EXPORT_PC
     testl   %eax,%eax                         # already resolved?
     jne     .LOP_FILLED_NEW_ARRAY_continue              # yes, continue
     # less frequent path, so we'll redo some work
-    GET_GLUE(%eax)
+    movl    rGLUE,%eax
     movl    $0,OUT_ARG2(%esp)                # arg2<- false
     movl    %ecx,OUT_ARG1(%esp)               # arg1<- BBBB
     movl    offGlue_method(%eax),%eax         # eax<- glue->method
@@ -872,18 +1226,16 @@ dvmAsmInstructionStart = .L_OP_NOP
      */
     /* op vB, {vD, vE, vF, vG, vA}, class@CCCC */
     /* op {vCCCC..v(CCCC+AA-1)}, type@BBBB */
-    GET_GLUE(%eax)
-    movzbl  rINST_HI,rINST_FULL               # rINST_FULL<- AA or BA
+    movl    rGLUE,%eax
     movl    offGlue_methodClassDex(%eax),%eax # eax<- pDvmDex
     movzwl  2(rPC),%ecx                       # ecx<- BBBB
     movl    offDvmDex_pResClasses(%eax),%eax  # eax<- pDvmDex->pResClasses
-    SPILL(rPC)
     movl    (%eax,%ecx,4),%eax                # eax<- resolved class
-    EXPORT_PC()
+    EXPORT_PC
     testl   %eax,%eax                         # already resolved?
     jne     .LOP_FILLED_NEW_ARRAY_RANGE_continue              # yes, continue
     # less frequent path, so we'll redo some work
-    GET_GLUE(%eax)
+    movl    rGLUE,%eax
     movl    $0,OUT_ARG2(%esp)                # arg2<- false
     movl    %ecx,OUT_ARG1(%esp)               # arg1<- BBBB
     movl    offGlue_method(%eax),%eax         # eax<- glue->method
@@ -896,20 +1248,17 @@ dvmAsmInstructionStart = .L_OP_NOP
 /* File: x86/OP_FILL_ARRAY_DATA.S */
     /* fill-array-data vAA, +BBBBBBBB */
     movl    2(rPC),%ecx                # ecx<- BBBBbbbb
-    movzbl  rINST_HI,rINST_FULL        # rINST_FULL<- AA
     leal    (rPC,%ecx,2),%ecx          # ecx<- PC + BBBBbbbb*2
-    GET_VREG(%eax,rINST_FULL)
-    SPILL(rPC)
-    EXPORT_PC()
+    GET_VREG_R %eax rINST
+    EXPORT_PC
     movl    %eax,OUT_ARG0(%esp)
     movl    %ecx,OUT_ARG1(%esp)
     call    dvmInterpHandleFillArrayData
-    UNSPILL(rPC)
-    FETCH_INST_WORD(3)
+    FETCH_INST_OPCODE 3 %edx
     testl   %eax,%eax                   # exception thrown?
     je      common_exceptionThrown
-    ADVANCE_PC(3)
-    GOTO_NEXT
+    ADVANCE_PC 3
+    GOTO_NEXT_R %edx
 
 /* ------------------------------ */
     .balign 64
@@ -919,10 +1268,9 @@ dvmAsmInstructionStart = .L_OP_NOP
      * Throw an exception object in the current thread.
      */
     /* throw vAA */
-    GET_GLUE(%ecx)
-    EXPORT_PC()
-    movzbl   rINST_HI,rINST_FULL       # rINST_FULL<- AA
-    GET_VREG(%eax,rINST_FULL)          # eax<- exception object
+    movl     rGLUE,%ecx
+    EXPORT_PC
+    GET_VREG_R %eax rINST              # eax<- exception object
     movl     offGlue_self(%ecx),%ecx   # ecx<- glue->self
     testl    %eax,%eax                 # null object?
     je       common_errNullObject
@@ -940,12 +1288,12 @@ dvmAsmInstructionStart = .L_OP_NOP
      * double to get a byte offset.
      */
     /* goto +AA */
-    movsbl  rINST_HI,rINST_FULL         # ebx<- ssssssAA
-    testl   rINST_FULL,rINST_FULL       # test for <0
+    movsbl  rINSTbl,rINST         # ebx<- ssssssAA
+    testl   rINST,rINST           # test for <0
     js      common_backwardBranch
-    movl    rINST_FULL,%eax
-    FETCH_INST_INDEXED(%eax)
-    ADVANCE_PC_INDEXED(%eax)
+    movl    rINST,%eax
+    FETCH_INST_INDEXED %eax
+    ADVANCE_PC_INDEXED %eax
     GOTO_NEXT
 
 /* ------------------------------ */
@@ -958,12 +1306,12 @@ dvmAsmInstructionStart = .L_OP_NOP
      * The branch distance is a signed code-unit offset
      */
     /* goto/16 +AAAA */
-    movswl  2(rPC),rINST_FULL           # rINST_FULL<- ssssAAAA
-    testl   rINST_FULL,rINST_FULL       # test for <0
+    movswl  2(rPC),rINST           # rINST<- ssssAAAA
+    testl   rINST,rINST            # test for <0
     js      common_backwardBranch
-    movl    rINST_FULL,%eax
-    FETCH_INST_INDEXED(%eax)
-    ADVANCE_PC_INDEXED(%eax)
+    movl    rINST,%eax
+    FETCH_INST_INDEXED %eax
+    ADVANCE_PC_INDEXED %eax
     GOTO_NEXT
 
 /* ------------------------------ */
@@ -979,12 +1327,12 @@ dvmAsmInstructionStart = .L_OP_NOP
      * our "backward branch" test must be "<=0" instead of "<0".
      */
     /* goto/32 AAAAAAAA */
-    movl    2(rPC),rINST_FULL           # rINST_FULL<- AAAAAAAA
-    cmpl    $0,rINST_FULL              # test for <= 0
+    movl    2(rPC),rINST           # rINST<- AAAAAAAA
+    cmpl    $0,rINST              # test for <= 0
     jle     common_backwardBranch
-    movl    rINST_FULL,%eax
-    FETCH_INST_INDEXED(%eax)
-    ADVANCE_PC_INDEXED(%eax)
+    movl    rINST,%eax
+    FETCH_INST_INDEXED %eax
+    ADVANCE_PC_INDEXED %eax
     GOTO_NEXT
 
 /* ------------------------------ */
@@ -1001,20 +1349,17 @@ dvmAsmInstructionStart = .L_OP_NOP
      * for: packed-switch, sparse-switch
      */
     /* op vAA, +BBBB */
-    movzbl  rINST_HI,rINST_FULL         # rINST_FULL<- AA
-    movl    2(rPC),%ecx                 # ecx<- BBBBbbbb
-    GET_VREG(%eax,rINST_FULL)           # eax<- vAA
-    leal    (rPC,%ecx,2),%ecx           # ecx<- PC + BBBBbbbb*2
-    movl    %eax,OUT_ARG1(%esp)         # ARG1<- vAA
-    movl    %ecx,OUT_ARG0(%esp)         # ARG0<- switchData
-    SPILL(rPC)
+    movl    2(rPC),%ecx           # ecx<- BBBBbbbb
+    GET_VREG_R %eax rINST         # eax<- vAA
+    leal    (rPC,%ecx,2),%ecx     # ecx<- PC + BBBBbbbb*2
+    movl    %eax,OUT_ARG1(%esp)   # ARG1<- vAA
+    movl    %ecx,OUT_ARG0(%esp)   # ARG0<- switchData
     call    dvmInterpHandlePackedSwitch
-    UNSPILL(rPC)
     testl   %eax,%eax
-    movl    %eax,rINST_FULL             # set up word offset
-    jle     common_backwardBranch       # check on special actions
-    ADVANCE_PC_INDEXED(rINST_FULL)
-    FETCH_INST()
+    movl    %eax,rINST            # set up word offset
+    jle     common_backwardBranch # check on special actions
+    ADVANCE_PC_INDEXED rINST
+    FETCH_INST
     GOTO_NEXT
 
 /* ------------------------------ */
@@ -1032,20 +1377,17 @@ dvmAsmInstructionStart = .L_OP_NOP
      * for: packed-switch, sparse-switch
      */
     /* op vAA, +BBBB */
-    movzbl  rINST_HI,rINST_FULL         # rINST_FULL<- AA
-    movl    2(rPC),%ecx                 # ecx<- BBBBbbbb
-    GET_VREG(%eax,rINST_FULL)           # eax<- vAA
-    leal    (rPC,%ecx,2),%ecx           # ecx<- PC + BBBBbbbb*2
-    movl    %eax,OUT_ARG1(%esp)         # ARG1<- vAA
-    movl    %ecx,OUT_ARG0(%esp)         # ARG0<- switchData
-    SPILL(rPC)
+    movl    2(rPC),%ecx           # ecx<- BBBBbbbb
+    GET_VREG_R %eax rINST         # eax<- vAA
+    leal    (rPC,%ecx,2),%ecx     # ecx<- PC + BBBBbbbb*2
+    movl    %eax,OUT_ARG1(%esp)   # ARG1<- vAA
+    movl    %ecx,OUT_ARG0(%esp)   # ARG0<- switchData
     call    dvmInterpHandleSparseSwitch
-    UNSPILL(rPC)
     testl   %eax,%eax
-    movl    %eax,rINST_FULL             # set up word offset
-    jle     common_backwardBranch       # check on special actions
-    ADVANCE_PC_INDEXED(rINST_FULL)
-    FETCH_INST()
+    movl    %eax,rINST            # set up word offset
+    jle     common_backwardBranch # check on special actions
+    ADVANCE_PC_INDEXED rINST
+    FETCH_INST
     GOTO_NEXT
 
 
@@ -1064,22 +1406,21 @@ dvmAsmInstructionStart = .L_OP_NOP
     flds     (rFP,%eax,4)
     flds     (rFP,%ecx,4)
     .endif
-    movzbl   rINST_HI,rINST_FULL
     xorl     %ecx,%ecx
     fucompp     # z if equal, p set if NaN, c set if st0 < st1
     fnstsw   %ax
     sahf
-    movl      rINST_FULL,%eax
-    FETCH_INST_WORD(2)
+    movl      rINST,%eax
+    FETCH_INST_OPCODE 2 %edx
     jp       .LOP_CMPL_FLOAT_isNaN
     je       .LOP_CMPL_FLOAT_finish
     sbbl     %ecx,%ecx
     jb       .LOP_CMPL_FLOAT_finish
     incl     %ecx
 .LOP_CMPL_FLOAT_finish:
-    SET_VREG(%ecx,%eax)
-    ADVANCE_PC(2)
-    GOTO_NEXT
+    SET_VREG %ecx %eax
+    ADVANCE_PC 2
+    GOTO_NEXT_R %edx
 
 
 /* ------------------------------ */
@@ -1097,22 +1438,21 @@ dvmAsmInstructionStart = .L_OP_NOP
     flds     (rFP,%eax,4)
     flds     (rFP,%ecx,4)
     .endif
-    movzbl   rINST_HI,rINST_FULL
     xorl     %ecx,%ecx
     fucompp     # z if equal, p set if NaN, c set if st0 < st1
     fnstsw   %ax
     sahf
-    movl      rINST_FULL,%eax
-    FETCH_INST_WORD(2)
+    movl      rINST,%eax
+    FETCH_INST_OPCODE 2 %edx
     jp       .LOP_CMPG_FLOAT_isNaN
     je       .LOP_CMPG_FLOAT_finish
     sbbl     %ecx,%ecx
     jb       .LOP_CMPG_FLOAT_finish
     incl     %ecx
 .LOP_CMPG_FLOAT_finish:
-    SET_VREG(%ecx,%eax)
-    ADVANCE_PC(2)
-    GOTO_NEXT
+    SET_VREG %ecx %eax
+    ADVANCE_PC 2
+    GOTO_NEXT_R %edx
 
 
 /* ------------------------------ */
@@ -1130,22 +1470,21 @@ dvmAsmInstructionStart = .L_OP_NOP
     flds     (rFP,%eax,4)
     flds     (rFP,%ecx,4)
     .endif
-    movzbl   rINST_HI,rINST_FULL
     xorl     %ecx,%ecx
     fucompp     # z if equal, p set if NaN, c set if st0 < st1
     fnstsw   %ax
     sahf
-    movl      rINST_FULL,%eax
-    FETCH_INST_WORD(2)
+    movl      rINST,%eax
+    FETCH_INST_OPCODE 2 %edx
     jp       .LOP_CMPL_DOUBLE_isNaN
     je       .LOP_CMPL_DOUBLE_finish
     sbbl     %ecx,%ecx
     jb       .LOP_CMPL_DOUBLE_finish
     incl     %ecx
 .LOP_CMPL_DOUBLE_finish:
-    SET_VREG(%ecx,%eax)
-    ADVANCE_PC(2)
-    GOTO_NEXT
+    SET_VREG %ecx %eax
+    ADVANCE_PC 2
+    GOTO_NEXT_R %edx
 
 
 /* ------------------------------ */
@@ -1162,22 +1501,21 @@ dvmAsmInstructionStart = .L_OP_NOP
     flds     (rFP,%eax,4)
     flds     (rFP,%ecx,4)
     .endif
-    movzbl   rINST_HI,rINST_FULL
     xorl     %ecx,%ecx
     fucompp     # z if equal, p set if NaN, c set if st0 < st1
     fnstsw   %ax
     sahf
-    movl      rINST_FULL,%eax
-    FETCH_INST_WORD(2)
+    movl      rINST,%eax
+    FETCH_INST_OPCODE 2 %edx
     jp       .LOP_CMPG_DOUBLE_isNaN
     je       .LOP_CMPG_DOUBLE_finish
     sbbl     %ecx,%ecx
     jb       .LOP_CMPG_DOUBLE_finish
     incl     %ecx
 .LOP_CMPG_DOUBLE_finish:
-    SET_VREG(%ecx,%eax)
-    ADVANCE_PC(2)
-    GOTO_NEXT
+    SET_VREG %ecx %eax
+    ADVANCE_PC 2
+    GOTO_NEXT_R %edx
 
 /* ------------------------------ */
     .balign 64
@@ -1189,18 +1527,15 @@ dvmAsmInstructionStart = .L_OP_NOP
      */
     /* cmp-long vAA, vBB, vCC */
     movzbl    2(rPC),%ecx              # ecx<- BB
-    SPILL(rPC)
-    movzbl    3(rPC),rPC               # rPC<- CC
-    GET_VREG_WORD(%eax,%ecx,1)         # eax<- v[BB+1]
-    GET_VREG_WORD(%ecx,%ecx,0)         # ecx<- v[BB+0]
-    movzbl    rINST_HI,rINST_FULL      # rINST_FULL<- AA
-    cmpl      4(rFP,rPC,4),%eax
+    movzbl    3(rPC),%edx              # edx<- CC
+    GET_VREG_WORD %eax %ecx,1          # eax<- v[BB+1]
+    GET_VREG_WORD %ecx %ecx 0          # ecx<- v[BB+0]
+    cmpl      4(rFP,%edx,4),%eax
     jl        .LOP_CMP_LONG_smaller
     jg        .LOP_CMP_LONG_bigger
-    sub       (rFP,rPC,4),%ecx
+    sub       (rFP,%edx,4),%ecx
     ja        .LOP_CMP_LONG_bigger
     jb        .LOP_CMP_LONG_smaller
-    UNSPILL(rPC)
     jmp       .LOP_CMP_LONG_finish
 
 /* ------------------------------ */
@@ -1216,21 +1551,20 @@ dvmAsmInstructionStart = .L_OP_NOP
      * For: if-eq, if-ne, if-lt, if-ge, if-gt, if-le
      */
     /* if-cmp vA, vB, +CCCC */
-    movzx    rINST_HI,%ecx              # ecx <- A+
-    andb     $0xf,%cl                  # ecx <- A
-    GET_VREG(%eax,%ecx)                 # eax <- vA
-    sarl     $12,rINST_FULL            # rINST_FULL<- B
-    cmpl     (rFP,rINST_FULL,4),%eax    # compare (vA, vB)
-    movswl   2(rPC),rINST_FULL          # Get signed branch offset
-    movl     $2,%eax                   # assume not taken
+    movzx    rINSTbl,%ecx          # ecx <- A+
+    andb     $0xf,%cl             # ecx <- A
+    GET_VREG_R %eax %ecx           # eax <- vA
+    sarl     $4,rINST            # rINST<- B
+    cmpl     (rFP,rINST,4),%eax    # compare (vA, vB)
+    movswl   2(rPC),rINST          # Get signed branch offset
+    movl     $2,%eax              # assume not taken
     jne   1f
-    testl    rINST_FULL,rINST_FULL
+    testl    rINST,rINST
     js       common_backwardBranch
-    movl     rINST_FULL,%eax
+    movl     rINST,%eax
 1:
-    FETCH_INST_INDEXED(%eax)
-    ADVANCE_PC_INDEXED(%eax)
-    GOTO_NEXT
+    FETCH_INST_INDEXED %eax
+    ADVANCE_PC_INDEXED %eax
     GOTO_NEXT
 
 
@@ -1247,21 +1581,20 @@ dvmAsmInstructionStart = .L_OP_NOP
      * For: if-eq, if-ne, if-lt, if-ge, if-gt, if-le
      */
     /* if-cmp vA, vB, +CCCC */
-    movzx    rINST_HI,%ecx              # ecx <- A+
-    andb     $0xf,%cl                  # ecx <- A
-    GET_VREG(%eax,%ecx)                 # eax <- vA
-    sarl     $12,rINST_FULL            # rINST_FULL<- B
-    cmpl     (rFP,rINST_FULL,4),%eax    # compare (vA, vB)
-    movswl   2(rPC),rINST_FULL          # Get signed branch offset
-    movl     $2,%eax                   # assume not taken
+    movzx    rINSTbl,%ecx          # ecx <- A+
+    andb     $0xf,%cl             # ecx <- A
+    GET_VREG_R %eax %ecx           # eax <- vA
+    sarl     $4,rINST            # rINST<- B
+    cmpl     (rFP,rINST,4),%eax    # compare (vA, vB)
+    movswl   2(rPC),rINST          # Get signed branch offset
+    movl     $2,%eax              # assume not taken
     je   1f
-    testl    rINST_FULL,rINST_FULL
+    testl    rINST,rINST
     js       common_backwardBranch
-    movl     rINST_FULL,%eax
+    movl     rINST,%eax
 1:
-    FETCH_INST_INDEXED(%eax)
-    ADVANCE_PC_INDEXED(%eax)
-    GOTO_NEXT
+    FETCH_INST_INDEXED %eax
+    ADVANCE_PC_INDEXED %eax
     GOTO_NEXT
 
 
@@ -1278,21 +1611,20 @@ dvmAsmInstructionStart = .L_OP_NOP
      * For: if-eq, if-ne, if-lt, if-ge, if-gt, if-le
      */
     /* if-cmp vA, vB, +CCCC */
-    movzx    rINST_HI,%ecx              # ecx <- A+
-    andb     $0xf,%cl                  # ecx <- A
-    GET_VREG(%eax,%ecx)                 # eax <- vA
-    sarl     $12,rINST_FULL            # rINST_FULL<- B
-    cmpl     (rFP,rINST_FULL,4),%eax    # compare (vA, vB)
-    movswl   2(rPC),rINST_FULL          # Get signed branch offset
-    movl     $2,%eax                   # assume not taken
+    movzx    rINSTbl,%ecx          # ecx <- A+
+    andb     $0xf,%cl             # ecx <- A
+    GET_VREG_R %eax %ecx           # eax <- vA
+    sarl     $4,rINST            # rINST<- B
+    cmpl     (rFP,rINST,4),%eax    # compare (vA, vB)
+    movswl   2(rPC),rINST          # Get signed branch offset
+    movl     $2,%eax              # assume not taken
     jge   1f
-    testl    rINST_FULL,rINST_FULL
+    testl    rINST,rINST
     js       common_backwardBranch
-    movl     rINST_FULL,%eax
+    movl     rINST,%eax
 1:
-    FETCH_INST_INDEXED(%eax)
-    ADVANCE_PC_INDEXED(%eax)
-    GOTO_NEXT
+    FETCH_INST_INDEXED %eax
+    ADVANCE_PC_INDEXED %eax
     GOTO_NEXT
 
 
@@ -1309,21 +1641,20 @@ dvmAsmInstructionStart = .L_OP_NOP
      * For: if-eq, if-ne, if-lt, if-ge, if-gt, if-le
      */
     /* if-cmp vA, vB, +CCCC */
-    movzx    rINST_HI,%ecx              # ecx <- A+
-    andb     $0xf,%cl                  # ecx <- A
-    GET_VREG(%eax,%ecx)                 # eax <- vA
-    sarl     $12,rINST_FULL            # rINST_FULL<- B
-    cmpl     (rFP,rINST_FULL,4),%eax    # compare (vA, vB)
-    movswl   2(rPC),rINST_FULL          # Get signed branch offset
-    movl     $2,%eax                   # assume not taken
+    movzx    rINSTbl,%ecx          # ecx <- A+
+    andb     $0xf,%cl             # ecx <- A
+    GET_VREG_R %eax %ecx           # eax <- vA
+    sarl     $4,rINST            # rINST<- B
+    cmpl     (rFP,rINST,4),%eax    # compare (vA, vB)
+    movswl   2(rPC),rINST          # Get signed branch offset
+    movl     $2,%eax              # assume not taken
     jl   1f
-    testl    rINST_FULL,rINST_FULL
+    testl    rINST,rINST
     js       common_backwardBranch
-    movl     rINST_FULL,%eax
+    movl     rINST,%eax
 1:
-    FETCH_INST_INDEXED(%eax)
-    ADVANCE_PC_INDEXED(%eax)
-    GOTO_NEXT
+    FETCH_INST_INDEXED %eax
+    ADVANCE_PC_INDEXED %eax
     GOTO_NEXT
 
 
@@ -1340,21 +1671,20 @@ dvmAsmInstructionStart = .L_OP_NOP
      * For: if-eq, if-ne, if-lt, if-ge, if-gt, if-le
      */
     /* if-cmp vA, vB, +CCCC */
-    movzx    rINST_HI,%ecx              # ecx <- A+
-    andb     $0xf,%cl                  # ecx <- A
-    GET_VREG(%eax,%ecx)                 # eax <- vA
-    sarl     $12,rINST_FULL            # rINST_FULL<- B
-    cmpl     (rFP,rINST_FULL,4),%eax    # compare (vA, vB)
-    movswl   2(rPC),rINST_FULL          # Get signed branch offset
-    movl     $2,%eax                   # assume not taken
+    movzx    rINSTbl,%ecx          # ecx <- A+
+    andb     $0xf,%cl             # ecx <- A
+    GET_VREG_R %eax %ecx           # eax <- vA
+    sarl     $4,rINST            # rINST<- B
+    cmpl     (rFP,rINST,4),%eax    # compare (vA, vB)
+    movswl   2(rPC),rINST          # Get signed branch offset
+    movl     $2,%eax              # assume not taken
     jle   1f
-    testl    rINST_FULL,rINST_FULL
+    testl    rINST,rINST
     js       common_backwardBranch
-    movl     rINST_FULL,%eax
+    movl     rINST,%eax
 1:
-    FETCH_INST_INDEXED(%eax)
-    ADVANCE_PC_INDEXED(%eax)
-    GOTO_NEXT
+    FETCH_INST_INDEXED %eax
+    ADVANCE_PC_INDEXED %eax
     GOTO_NEXT
 
 
@@ -1371,21 +1701,20 @@ dvmAsmInstructionStart = .L_OP_NOP
      * For: if-eq, if-ne, if-lt, if-ge, if-gt, if-le
      */
     /* if-cmp vA, vB, +CCCC */
-    movzx    rINST_HI,%ecx              # ecx <- A+
-    andb     $0xf,%cl                  # ecx <- A
-    GET_VREG(%eax,%ecx)                 # eax <- vA
-    sarl     $12,rINST_FULL            # rINST_FULL<- B
-    cmpl     (rFP,rINST_FULL,4),%eax    # compare (vA, vB)
-    movswl   2(rPC),rINST_FULL          # Get signed branch offset
-    movl     $2,%eax                   # assume not taken
+    movzx    rINSTbl,%ecx          # ecx <- A+
+    andb     $0xf,%cl             # ecx <- A
+    GET_VREG_R %eax %ecx           # eax <- vA
+    sarl     $4,rINST            # rINST<- B
+    cmpl     (rFP,rINST,4),%eax    # compare (vA, vB)
+    movswl   2(rPC),rINST          # Get signed branch offset
+    movl     $2,%eax              # assume not taken
     jg   1f
-    testl    rINST_FULL,rINST_FULL
+    testl    rINST,rINST
     js       common_backwardBranch
-    movl     rINST_FULL,%eax
+    movl     rINST,%eax
 1:
-    FETCH_INST_INDEXED(%eax)
-    ADVANCE_PC_INDEXED(%eax)
-    GOTO_NEXT
+    FETCH_INST_INDEXED %eax
+    ADVANCE_PC_INDEXED %eax
     GOTO_NEXT
 
 
@@ -1402,17 +1731,16 @@ dvmAsmInstructionStart = .L_OP_NOP
      * for: if-eqz, if-nez, if-ltz, if-gez, if-gtz, if-lez
      */
     /* if-cmp vAA, +BBBB */
-    movzx    rINST_HI,%ecx             # ecx <- AA
-    cmpl     $0,(rFP,%ecx,4)          # compare (vA, 0)
-    movswl   2(rPC),rINST_FULL         # fetch signed displacement
-    movl     $2,%eax                  # assume branch not taken
+    cmpl     $0,(rFP,rINST,4)     # compare (vA, 0)
+    movswl   2(rPC),rINST         # fetch signed displacement
+    movl     $2,%eax             # assume branch not taken
     jne   1f
-    testl    rINST_FULL,rINST_FULL
+    testl    rINST,rINST
     js       common_backwardBranch
-    movl     rINST_FULL,%eax
+    movl     rINST,%eax
 1:
-    FETCH_INST_INDEXED(%eax)
-    ADVANCE_PC_INDEXED(%eax)
+    FETCH_INST_INDEXED %eax
+    ADVANCE_PC_INDEXED %eax
     GOTO_NEXT
 
 
@@ -1429,17 +1757,16 @@ dvmAsmInstructionStart = .L_OP_NOP
      * for: if-eqz, if-nez, if-ltz, if-gez, if-gtz, if-lez
      */
     /* if-cmp vAA, +BBBB */
-    movzx    rINST_HI,%ecx             # ecx <- AA
-    cmpl     $0,(rFP,%ecx,4)          # compare (vA, 0)
-    movswl   2(rPC),rINST_FULL         # fetch signed displacement
-    movl     $2,%eax                  # assume branch not taken
+    cmpl     $0,(rFP,rINST,4)     # compare (vA, 0)
+    movswl   2(rPC),rINST         # fetch signed displacement
+    movl     $2,%eax             # assume branch not taken
     je   1f
-    testl    rINST_FULL,rINST_FULL
+    testl    rINST,rINST
     js       common_backwardBranch
-    movl     rINST_FULL,%eax
+    movl     rINST,%eax
 1:
-    FETCH_INST_INDEXED(%eax)
-    ADVANCE_PC_INDEXED(%eax)
+    FETCH_INST_INDEXED %eax
+    ADVANCE_PC_INDEXED %eax
     GOTO_NEXT
 
 
@@ -1456,17 +1783,16 @@ dvmAsmInstructionStart = .L_OP_NOP
      * for: if-eqz, if-nez, if-ltz, if-gez, if-gtz, if-lez
      */
     /* if-cmp vAA, +BBBB */
-    movzx    rINST_HI,%ecx             # ecx <- AA
-    cmpl     $0,(rFP,%ecx,4)          # compare (vA, 0)
-    movswl   2(rPC),rINST_FULL         # fetch signed displacement
-    movl     $2,%eax                  # assume branch not taken
+    cmpl     $0,(rFP,rINST,4)     # compare (vA, 0)
+    movswl   2(rPC),rINST         # fetch signed displacement
+    movl     $2,%eax             # assume branch not taken
     jge   1f
-    testl    rINST_FULL,rINST_FULL
+    testl    rINST,rINST
     js       common_backwardBranch
-    movl     rINST_FULL,%eax
+    movl     rINST,%eax
 1:
-    FETCH_INST_INDEXED(%eax)
-    ADVANCE_PC_INDEXED(%eax)
+    FETCH_INST_INDEXED %eax
+    ADVANCE_PC_INDEXED %eax
     GOTO_NEXT
 
 
@@ -1483,17 +1809,16 @@ dvmAsmInstructionStart = .L_OP_NOP
      * for: if-eqz, if-nez, if-ltz, if-gez, if-gtz, if-lez
      */
     /* if-cmp vAA, +BBBB */
-    movzx    rINST_HI,%ecx             # ecx <- AA
-    cmpl     $0,(rFP,%ecx,4)          # compare (vA, 0)
-    movswl   2(rPC),rINST_FULL         # fetch signed displacement
-    movl     $2,%eax                  # assume branch not taken
+    cmpl     $0,(rFP,rINST,4)     # compare (vA, 0)
+    movswl   2(rPC),rINST         # fetch signed displacement
+    movl     $2,%eax             # assume branch not taken
     jl   1f
-    testl    rINST_FULL,rINST_FULL
+    testl    rINST,rINST
     js       common_backwardBranch
-    movl     rINST_FULL,%eax
+    movl     rINST,%eax
 1:
-    FETCH_INST_INDEXED(%eax)
-    ADVANCE_PC_INDEXED(%eax)
+    FETCH_INST_INDEXED %eax
+    ADVANCE_PC_INDEXED %eax
     GOTO_NEXT
 
 
@@ -1510,17 +1835,16 @@ dvmAsmInstructionStart = .L_OP_NOP
      * for: if-eqz, if-nez, if-ltz, if-gez, if-gtz, if-lez
      */
     /* if-cmp vAA, +BBBB */
-    movzx    rINST_HI,%ecx             # ecx <- AA
-    cmpl     $0,(rFP,%ecx,4)          # compare (vA, 0)
-    movswl   2(rPC),rINST_FULL         # fetch signed displacement
-    movl     $2,%eax                  # assume branch not taken
+    cmpl     $0,(rFP,rINST,4)     # compare (vA, 0)
+    movswl   2(rPC),rINST         # fetch signed displacement
+    movl     $2,%eax             # assume branch not taken
     jle   1f
-    testl    rINST_FULL,rINST_FULL
+    testl    rINST,rINST
     js       common_backwardBranch
-    movl     rINST_FULL,%eax
+    movl     rINST,%eax
 1:
-    FETCH_INST_INDEXED(%eax)
-    ADVANCE_PC_INDEXED(%eax)
+    FETCH_INST_INDEXED %eax
+    ADVANCE_PC_INDEXED %eax
     GOTO_NEXT
 
 
@@ -1537,17 +1861,16 @@ dvmAsmInstructionStart = .L_OP_NOP
      * for: if-eqz, if-nez, if-ltz, if-gez, if-gtz, if-lez
      */
     /* if-cmp vAA, +BBBB */
-    movzx    rINST_HI,%ecx             # ecx <- AA
-    cmpl     $0,(rFP,%ecx,4)          # compare (vA, 0)
-    movswl   2(rPC),rINST_FULL         # fetch signed displacement
-    movl     $2,%eax                  # assume branch not taken
+    cmpl     $0,(rFP,rINST,4)     # compare (vA, 0)
+    movswl   2(rPC),rINST         # fetch signed displacement
+    movl     $2,%eax             # assume branch not taken
     jg   1f
-    testl    rINST_FULL,rINST_FULL
+    testl    rINST,rINST
     js       common_backwardBranch
-    movl     rINST_FULL,%eax
+    movl     rINST,%eax
 1:
-    FETCH_INST_INDEXED(%eax)
-    ADVANCE_PC_INDEXED(%eax)
+    FETCH_INST_INDEXED %eax
+    ADVANCE_PC_INDEXED %eax
     GOTO_NEXT
 
 
@@ -1611,19 +1934,18 @@ dvmAsmInstructionStart = .L_OP_NOP
     /* op vAA, vBB, vCC */
     movzbl    2(rPC),%eax               # eax<- BB
     movzbl    3(rPC),%ecx               # ecx<- CC
-    movzbl    rINST_HI,rINST_FULL       # rINST_FULL<- AA
-    GET_VREG(%eax,%eax)                 # eax<- vBB (array object)
-    GET_VREG(%ecx,%ecx)                 # ecs<- vCC (requested index)
+    GET_VREG_R  %eax %eax               # eax<- vBB (array object)
+    GET_VREG_R  %ecx %ecx               # ecs<- vCC (requested index)
     testl     %eax,%eax                 # null array object?
     je        common_errNullObject      # bail if so
     cmpl      offArrayObject_length(%eax),%ecx
     jae       common_errArrayIndex      # index >= length, bail
     movl     offArrayObject_contents(%eax,%ecx,4),%eax
-    movl      rINST_FULL,%ecx
-    FETCH_INST_WORD(2)
-    SET_VREG(%eax,%ecx)
-    ADVANCE_PC(2)
-    GOTO_NEXT
+.LOP_AGET_finish:
+    FETCH_INST_OPCODE 2 %edx
+    SET_VREG  %eax rINST
+    ADVANCE_PC 2
+    GOTO_NEXT_R %edx
 
 /* ------------------------------ */
     .balign 64
@@ -1636,9 +1958,8 @@ dvmAsmInstructionStart = .L_OP_NOP
     /* op vAA, vBB, vCC */
     movzbl    2(rPC),%eax               # eax<- BB
     movzbl    3(rPC),%ecx               # ecx<- CC
-    movzbl    rINST_HI,rINST_FULL       # rINST_FULL<- AA
-    GET_VREG(%eax,%eax)                 # eax<- vBB (array object)
-    GET_VREG(%ecx,%ecx)                 # ecs<- vCC (requested index)
+    GET_VREG_R  %eax %eax               # eax<- vBB (array object)
+    GET_VREG_R  %ecx %ecx               # ecs<- vCC (requested index)
     testl     %eax,%eax                 # null array object?
     je        common_errNullObject      # bail if so
     cmpl      offArrayObject_length(%eax),%ecx
@@ -1658,19 +1979,18 @@ dvmAsmInstructionStart = .L_OP_NOP
     /* op vAA, vBB, vCC */
     movzbl    2(rPC),%eax               # eax<- BB
     movzbl    3(rPC),%ecx               # ecx<- CC
-    movzbl    rINST_HI,rINST_FULL       # rINST_FULL<- AA
-    GET_VREG(%eax,%eax)                 # eax<- vBB (array object)
-    GET_VREG(%ecx,%ecx)                 # ecs<- vCC (requested index)
+    GET_VREG_R  %eax %eax               # eax<- vBB (array object)
+    GET_VREG_R  %ecx %ecx               # ecs<- vCC (requested index)
     testl     %eax,%eax                 # null array object?
     je        common_errNullObject      # bail if so
     cmpl      offArrayObject_length(%eax),%ecx
     jae       common_errArrayIndex      # index >= length, bail
     movl     offArrayObject_contents(%eax,%ecx,4),%eax
-    movl      rINST_FULL,%ecx
-    FETCH_INST_WORD(2)
-    SET_VREG(%eax,%ecx)
-    ADVANCE_PC(2)
-    GOTO_NEXT
+.LOP_AGET_OBJECT_finish:
+    FETCH_INST_OPCODE 2 %edx
+    SET_VREG  %eax rINST
+    ADVANCE_PC 2
+    GOTO_NEXT_R %edx
 
 
 /* ------------------------------ */
@@ -1686,19 +2006,18 @@ dvmAsmInstructionStart = .L_OP_NOP
     /* op vAA, vBB, vCC */
     movzbl    2(rPC),%eax               # eax<- BB
     movzbl    3(rPC),%ecx               # ecx<- CC
-    movzbl    rINST_HI,rINST_FULL       # rINST_FULL<- AA
-    GET_VREG(%eax,%eax)                 # eax<- vBB (array object)
-    GET_VREG(%ecx,%ecx)                 # ecs<- vCC (requested index)
+    GET_VREG_R  %eax %eax               # eax<- vBB (array object)
+    GET_VREG_R  %ecx %ecx               # ecs<- vCC (requested index)
     testl     %eax,%eax                 # null array object?
     je        common_errNullObject      # bail if so
     cmpl      offArrayObject_length(%eax),%ecx
     jae       common_errArrayIndex      # index >= length, bail
     movzbl     offArrayObject_contents(%eax,%ecx,1),%eax
-    movl      rINST_FULL,%ecx
-    FETCH_INST_WORD(2)
-    SET_VREG(%eax,%ecx)
-    ADVANCE_PC(2)
-    GOTO_NEXT
+.LOP_AGET_BOOLEAN_finish:
+    FETCH_INST_OPCODE 2 %edx
+    SET_VREG  %eax rINST
+    ADVANCE_PC 2
+    GOTO_NEXT_R %edx
 
 
 /* ------------------------------ */
@@ -1714,19 +2033,18 @@ dvmAsmInstructionStart = .L_OP_NOP
     /* op vAA, vBB, vCC */
     movzbl    2(rPC),%eax               # eax<- BB
     movzbl    3(rPC),%ecx               # ecx<- CC
-    movzbl    rINST_HI,rINST_FULL       # rINST_FULL<- AA
-    GET_VREG(%eax,%eax)                 # eax<- vBB (array object)
-    GET_VREG(%ecx,%ecx)                 # ecs<- vCC (requested index)
+    GET_VREG_R  %eax %eax               # eax<- vBB (array object)
+    GET_VREG_R  %ecx %ecx               # ecs<- vCC (requested index)
     testl     %eax,%eax                 # null array object?
     je        common_errNullObject      # bail if so
     cmpl      offArrayObject_length(%eax),%ecx
     jae       common_errArrayIndex      # index >= length, bail
     movsbl     offArrayObject_contents(%eax,%ecx,1),%eax
-    movl      rINST_FULL,%ecx
-    FETCH_INST_WORD(2)
-    SET_VREG(%eax,%ecx)
-    ADVANCE_PC(2)
-    GOTO_NEXT
+.LOP_AGET_BYTE_finish:
+    FETCH_INST_OPCODE 2 %edx
+    SET_VREG  %eax rINST
+    ADVANCE_PC 2
+    GOTO_NEXT_R %edx
 
 
 /* ------------------------------ */
@@ -1742,19 +2060,18 @@ dvmAsmInstructionStart = .L_OP_NOP
     /* op vAA, vBB, vCC */
     movzbl    2(rPC),%eax               # eax<- BB
     movzbl    3(rPC),%ecx               # ecx<- CC
-    movzbl    rINST_HI,rINST_FULL       # rINST_FULL<- AA
-    GET_VREG(%eax,%eax)                 # eax<- vBB (array object)
-    GET_VREG(%ecx,%ecx)                 # ecs<- vCC (requested index)
+    GET_VREG_R  %eax %eax               # eax<- vBB (array object)
+    GET_VREG_R  %ecx %ecx               # ecs<- vCC (requested index)
     testl     %eax,%eax                 # null array object?
     je        common_errNullObject      # bail if so
     cmpl      offArrayObject_length(%eax),%ecx
     jae       common_errArrayIndex      # index >= length, bail
     movzwl     offArrayObject_contents(%eax,%ecx,2),%eax
-    movl      rINST_FULL,%ecx
-    FETCH_INST_WORD(2)
-    SET_VREG(%eax,%ecx)
-    ADVANCE_PC(2)
-    GOTO_NEXT
+.LOP_AGET_CHAR_finish:
+    FETCH_INST_OPCODE 2 %edx
+    SET_VREG  %eax rINST
+    ADVANCE_PC 2
+    GOTO_NEXT_R %edx
 
 
 /* ------------------------------ */
@@ -1770,19 +2087,18 @@ dvmAsmInstructionStart = .L_OP_NOP
     /* op vAA, vBB, vCC */
     movzbl    2(rPC),%eax               # eax<- BB
     movzbl    3(rPC),%ecx               # ecx<- CC
-    movzbl    rINST_HI,rINST_FULL       # rINST_FULL<- AA
-    GET_VREG(%eax,%eax)                 # eax<- vBB (array object)
-    GET_VREG(%ecx,%ecx)                 # ecs<- vCC (requested index)
+    GET_VREG_R  %eax %eax               # eax<- vBB (array object)
+    GET_VREG_R  %ecx %ecx               # ecs<- vCC (requested index)
     testl     %eax,%eax                 # null array object?
     je        common_errNullObject      # bail if so
     cmpl      offArrayObject_length(%eax),%ecx
     jae       common_errArrayIndex      # index >= length, bail
     movswl     offArrayObject_contents(%eax,%ecx,2),%eax
-    movl      rINST_FULL,%ecx
-    FETCH_INST_WORD(2)
-    SET_VREG(%eax,%ecx)
-    ADVANCE_PC(2)
-    GOTO_NEXT
+.LOP_AGET_SHORT_finish:
+    FETCH_INST_OPCODE 2 %edx
+    SET_VREG  %eax rINST
+    ADVANCE_PC 2
+    GOTO_NEXT_R %edx
 
 
 /* ------------------------------ */
@@ -1797,19 +2113,19 @@ dvmAsmInstructionStart = .L_OP_NOP
     /* op vAA, vBB, vCC */
     movzbl    2(rPC),%eax               # eax<- BB
     movzbl    3(rPC),%ecx               # ecx<- CC
-    movzbl    rINST_HI,rINST_FULL       # rINST_FULL<- AA
-    GET_VREG(%eax,%eax)                 # eax<- vBB (array object)
-    GET_VREG(%ecx,%ecx)                 # ecs<- vCC (requested index)
+    GET_VREG_R  %eax %eax               # eax<- vBB (array object)
+    GET_VREG_R  %ecx %ecx               # ecs<- vCC (requested index)
     testl     %eax,%eax                 # null array object?
     je        common_errNullObject      # bail if so
     cmpl      offArrayObject_length(%eax),%ecx
     jae       common_errArrayIndex      # index >= length, bail
     leal      offArrayObject_contents(%eax,%ecx,4),%eax
-    GET_VREG(%ecx,rINST_FULL)
-    FETCH_INST_WORD(2)
+.LOP_APUT_finish:
+    GET_VREG_R  %ecx rINST
+    FETCH_INST_OPCODE 2 %edx
     movl     %ecx,(%eax)
-    ADVANCE_PC(2)
-    GOTO_NEXT
+    ADVANCE_PC 2
+    GOTO_NEXT_R %edx
 
 /* ------------------------------ */
     .balign 64
@@ -1822,9 +2138,8 @@ dvmAsmInstructionStart = .L_OP_NOP
     /* op vAA, vBB, vCC */
     movzbl    2(rPC),%eax               # eax<- BB
     movzbl    3(rPC),%ecx               # ecx<- CC
-    movzbl    rINST_HI,rINST_FULL       # rINST_FULL<- AA
-    GET_VREG(%eax,%eax)                 # eax<- vBB (array object)
-    GET_VREG(%ecx,%ecx)                 # ecs<- vCC (requested index)
+    GET_VREG_R  %eax %eax               # eax<- vBB (array object)
+    GET_VREG_R  %ecx %ecx               # ecs<- vCC (requested index)
     testl     %eax,%eax                 # null array object?
     je        common_errNullObject      # bail if so
     cmpl      offArrayObject_length(%eax),%ecx
@@ -1843,10 +2158,9 @@ dvmAsmInstructionStart = .L_OP_NOP
     /* op vAA, vBB, vCC */
     movzbl    2(rPC),%eax               # eax<- BB
     movzbl    3(rPC),%ecx               # ecx<- CC
-    movzbl    rINST_HI,rINST_FULL       # rINST_FULL<- AA
-    GET_VREG(%eax,%eax)                 # eax<- vBB (array object)
-    GET_VREG(%ecx,%ecx)                 # ecs<- vCC (requested index)
-    GET_VREG(rINST_FULL,rINST_FULL)     # rINST_FULL<- vAA
+    GET_VREG_R  %eax %eax               # eax<- vBB (array object)
+    GET_VREG_R  %ecx %ecx               # ecs<- vCC (requested index)
+    GET_VREG_R  rINST rINST             # rINST<- vAA
     testl     %eax,%eax                 # null array object?
     je        common_errNullObject      # bail if so
     cmpl      offArrayObject_length(%eax),%ecx
@@ -1866,19 +2180,19 @@ dvmAsmInstructionStart = .L_OP_NOP
     /* op vAA, vBB, vCC */
     movzbl    2(rPC),%eax               # eax<- BB
     movzbl    3(rPC),%ecx               # ecx<- CC
-    movzbl    rINST_HI,rINST_FULL       # rINST_FULL<- AA
-    GET_VREG(%eax,%eax)                 # eax<- vBB (array object)
-    GET_VREG(%ecx,%ecx)                 # ecs<- vCC (requested index)
+    GET_VREG_R  %eax %eax               # eax<- vBB (array object)
+    GET_VREG_R  %ecx %ecx               # ecs<- vCC (requested index)
     testl     %eax,%eax                 # null array object?
     je        common_errNullObject      # bail if so
     cmpl      offArrayObject_length(%eax),%ecx
     jae       common_errArrayIndex      # index >= length, bail
     leal      offArrayObject_contents(%eax,%ecx,1),%eax
-    GET_VREG(%ecx,rINST_FULL)
-    FETCH_INST_WORD(2)
+.LOP_APUT_BOOLEAN_finish:
+    GET_VREG_R  %ecx rINST
+    FETCH_INST_OPCODE 2 %edx
     movb     %cl,(%eax)
-    ADVANCE_PC(2)
-    GOTO_NEXT
+    ADVANCE_PC 2
+    GOTO_NEXT_R %edx
 
 
 /* ------------------------------ */
@@ -1894,19 +2208,19 @@ dvmAsmInstructionStart = .L_OP_NOP
     /* op vAA, vBB, vCC */
     movzbl    2(rPC),%eax               # eax<- BB
     movzbl    3(rPC),%ecx               # ecx<- CC
-    movzbl    rINST_HI,rINST_FULL       # rINST_FULL<- AA
-    GET_VREG(%eax,%eax)                 # eax<- vBB (array object)
-    GET_VREG(%ecx,%ecx)                 # ecs<- vCC (requested index)
+    GET_VREG_R  %eax %eax               # eax<- vBB (array object)
+    GET_VREG_R  %ecx %ecx               # ecs<- vCC (requested index)
     testl     %eax,%eax                 # null array object?
     je        common_errNullObject      # bail if so
     cmpl      offArrayObject_length(%eax),%ecx
     jae       common_errArrayIndex      # index >= length, bail
     leal      offArrayObject_contents(%eax,%ecx,1),%eax
-    GET_VREG(%ecx,rINST_FULL)
-    FETCH_INST_WORD(2)
+.LOP_APUT_BYTE_finish:
+    GET_VREG_R  %ecx rINST
+    FETCH_INST_OPCODE 2 %edx
     movb     %cl,(%eax)
-    ADVANCE_PC(2)
-    GOTO_NEXT
+    ADVANCE_PC 2
+    GOTO_NEXT_R %edx
 
 
 /* ------------------------------ */
@@ -1922,19 +2236,19 @@ dvmAsmInstructionStart = .L_OP_NOP
     /* op vAA, vBB, vCC */
     movzbl    2(rPC),%eax               # eax<- BB
     movzbl    3(rPC),%ecx               # ecx<- CC
-    movzbl    rINST_HI,rINST_FULL       # rINST_FULL<- AA
-    GET_VREG(%eax,%eax)                 # eax<- vBB (array object)
-    GET_VREG(%ecx,%ecx)                 # ecs<- vCC (requested index)
+    GET_VREG_R  %eax %eax               # eax<- vBB (array object)
+    GET_VREG_R  %ecx %ecx               # ecs<- vCC (requested index)
     testl     %eax,%eax                 # null array object?
     je        common_errNullObject      # bail if so
     cmpl      offArrayObject_length(%eax),%ecx
     jae       common_errArrayIndex      # index >= length, bail
     leal      offArrayObject_contents(%eax,%ecx,2),%eax
-    GET_VREG(%ecx,rINST_FULL)
-    FETCH_INST_WORD(2)
+.LOP_APUT_CHAR_finish:
+    GET_VREG_R  %ecx rINST
+    FETCH_INST_OPCODE 2 %edx
     movw     %cx,(%eax)
-    ADVANCE_PC(2)
-    GOTO_NEXT
+    ADVANCE_PC 2
+    GOTO_NEXT_R %edx
 
 
 /* ------------------------------ */
@@ -1950,19 +2264,19 @@ dvmAsmInstructionStart = .L_OP_NOP
     /* op vAA, vBB, vCC */
     movzbl    2(rPC),%eax               # eax<- BB
     movzbl    3(rPC),%ecx               # ecx<- CC
-    movzbl    rINST_HI,rINST_FULL       # rINST_FULL<- AA
-    GET_VREG(%eax,%eax)                 # eax<- vBB (array object)
-    GET_VREG(%ecx,%ecx)                 # ecs<- vCC (requested index)
+    GET_VREG_R  %eax %eax               # eax<- vBB (array object)
+    GET_VREG_R  %ecx %ecx               # ecs<- vCC (requested index)
     testl     %eax,%eax                 # null array object?
     je        common_errNullObject      # bail if so
     cmpl      offArrayObject_length(%eax),%ecx
     jae       common_errArrayIndex      # index >= length, bail
     leal      offArrayObject_contents(%eax,%ecx,2),%eax
-    GET_VREG(%ecx,rINST_FULL)
-    FETCH_INST_WORD(2)
+.LOP_APUT_SHORT_finish:
+    GET_VREG_R  %ecx rINST
+    FETCH_INST_OPCODE 2 %edx
     movw     %cx,(%eax)
-    ADVANCE_PC(2)
-    GOTO_NEXT
+    ADVANCE_PC 2
+    GOTO_NEXT_R %edx
 
 
 /* ------------------------------ */
@@ -1975,21 +2289,19 @@ dvmAsmInstructionStart = .L_OP_NOP
      * for: iget, iget-object, iget-boolean, iget-byte, iget-char, iget-short
      */
     /* op vA, vB, field@CCCC */
-    GET_GLUE(%ecx)
-    SPILL(rIBASE)                                 # need another reg
-    movzwl  2(rPC),rIBASE                         # rIBASE<- 0000CCCC
-    movl    offGlue_methodClassDex(%ecx),%eax     # eax<- DvmDex
-    movzbl  rINST_HI,%ecx                         # ecx<- BA
-    sarl    $4,%ecx                              # ecx<- B
-    movl    offDvmDex_pResFields(%eax),%eax       # eax<- pDvmDex->pResFields
-    movzbl  rINST_HI,rINST_FULL                   # rINST_FULL<- BA
-    andb    $0xf,rINST_LO                        # rINST_FULL<- A
-    GET_VREG(%ecx,%ecx)                           # ecx<- fp[B], the object ptr
-    movl    (%eax,rIBASE,4),%eax                  # resolved entry
-    testl   %eax,%eax                             # is resolved entry null?
-    jne     .LOP_IGET_finish                    # no, already resolved
-    movl    rIBASE,OUT_ARG1(%esp)                 # needed by dvmResolveInstField
-    GET_GLUE(rIBASE)
+    movl    rGLUE,%ecx
+    movzwl  2(rPC),%edx                         # edx<- 0000CCCC
+    movl    offGlue_methodClassDex(%ecx),%eax   # eax<- DvmDex
+    movzbl  rINSTbl,%ecx                        # ecx<- BA
+    sarl    $4,%ecx                            # ecx<- B
+    movl    offDvmDex_pResFields(%eax),%eax     # eax<- pDvmDex->pResFields
+    andb    $0xf,rINSTbl                       # rINST<- A
+    GET_VREG_R %ecx %ecx                        # ecx<- fp[B], the object ptr
+    movl    (%eax,%edx,4),%eax                  # resolved entry
+    testl   %eax,%eax                           # is resolved entry null?
+    jne     .LOP_IGET_finish                  # no, already resolved
+    movl    %edx,OUT_ARG1(%esp)                 # needed by dvmResolveInstField
+    movl    rGLUE,%edx
     jmp     .LOP_IGET_resolve
 
 /* ------------------------------ */
@@ -2001,21 +2313,19 @@ dvmAsmInstructionStart = .L_OP_NOP
      *
      */
     /* op vA, vB, field@CCCC */
-    GET_GLUE(%ecx)
-    SPILL(rIBASE)                                 # need another reg
-    movzwl  2(rPC),rIBASE                         # rIBASE<- 0000CCCC
-    movl    offGlue_methodClassDex(%ecx),%eax     # eax<- DvmDex
-    movzbl  rINST_HI,%ecx                         # ecx<- BA
-    sarl    $4,%ecx                              # ecx<- B
-    movl    offDvmDex_pResFields(%eax),%eax       # eax<- pDvmDex->pResFields
-    movzbl  rINST_HI,rINST_FULL                   # rINST_FULL<- BA
-    andb    $0xf,rINST_LO                        # rINST_FULL<- A
-    GET_VREG(%ecx,%ecx)                           # ecx<- fp[B], the object ptr
-    movl    (%eax,rIBASE,4),%eax                  # resolved entry
-    testl   %eax,%eax                             # is resolved entry null?
-    jne     .LOP_IGET_WIDE_finish                    # no, already resolved
-    movl    rIBASE,OUT_ARG1(%esp)                 # needed by dvmResolveInstField
-    GET_GLUE(rIBASE)
+    movl    rGLUE,%ecx
+    movzwl  2(rPC),%edx                         # edx<- 0000CCCC
+    movl    offGlue_methodClassDex(%ecx),%eax   # eax<- DvmDex
+    movzbl  rINSTbl,%ecx                        # ecx<- BA
+    sarl    $4,%ecx                            # ecx<- B
+    movl    offDvmDex_pResFields(%eax),%eax     # eax<- pDvmDex->pResFields
+    andb    $0xf,rINSTbl                       # rINST<- A
+    GET_VREG_R %ecx %ecx                        # ecx<- fp[B], the object ptr
+    movl    (%eax,%edx,4),%eax                  # resolved entry
+    testl   %eax,%eax                           # is resolved entry null?
+    jne     .LOP_IGET_WIDE_finish                  # no, already resolved
+    movl    %edx,OUT_ARG1(%esp)                 # for dvmResolveInstField
+    movl    rGLUE,%edx
     jmp     .LOP_IGET_WIDE_resolve
 
 /* ------------------------------ */
@@ -2029,21 +2339,19 @@ dvmAsmInstructionStart = .L_OP_NOP
      * for: iget, iget-object, iget-boolean, iget-byte, iget-char, iget-short
      */
     /* op vA, vB, field@CCCC */
-    GET_GLUE(%ecx)
-    SPILL(rIBASE)                                 # need another reg
-    movzwl  2(rPC),rIBASE                         # rIBASE<- 0000CCCC
-    movl    offGlue_methodClassDex(%ecx),%eax     # eax<- DvmDex
-    movzbl  rINST_HI,%ecx                         # ecx<- BA
-    sarl    $4,%ecx                              # ecx<- B
-    movl    offDvmDex_pResFields(%eax),%eax       # eax<- pDvmDex->pResFields
-    movzbl  rINST_HI,rINST_FULL                   # rINST_FULL<- BA
-    andb    $0xf,rINST_LO                        # rINST_FULL<- A
-    GET_VREG(%ecx,%ecx)                           # ecx<- fp[B], the object ptr
-    movl    (%eax,rIBASE,4),%eax                  # resolved entry
-    testl   %eax,%eax                             # is resolved entry null?
-    jne     .LOP_IGET_OBJECT_finish                    # no, already resolved
-    movl    rIBASE,OUT_ARG1(%esp)                 # needed by dvmResolveInstField
-    GET_GLUE(rIBASE)
+    movl    rGLUE,%ecx
+    movzwl  2(rPC),%edx                         # edx<- 0000CCCC
+    movl    offGlue_methodClassDex(%ecx),%eax   # eax<- DvmDex
+    movzbl  rINSTbl,%ecx                        # ecx<- BA
+    sarl    $4,%ecx                            # ecx<- B
+    movl    offDvmDex_pResFields(%eax),%eax     # eax<- pDvmDex->pResFields
+    andb    $0xf,rINSTbl                       # rINST<- A
+    GET_VREG_R %ecx %ecx                        # ecx<- fp[B], the object ptr
+    movl    (%eax,%edx,4),%eax                  # resolved entry
+    testl   %eax,%eax                           # is resolved entry null?
+    jne     .LOP_IGET_OBJECT_finish                  # no, already resolved
+    movl    %edx,OUT_ARG1(%esp)                 # needed by dvmResolveInstField
+    movl    rGLUE,%edx
     jmp     .LOP_IGET_OBJECT_resolve
 
 
@@ -2058,21 +2366,19 @@ dvmAsmInstructionStart = .L_OP_NOP
      * for: iget, iget-object, iget-boolean, iget-byte, iget-char, iget-short
      */
     /* op vA, vB, field@CCCC */
-    GET_GLUE(%ecx)
-    SPILL(rIBASE)                                 # need another reg
-    movzwl  2(rPC),rIBASE                         # rIBASE<- 0000CCCC
-    movl    offGlue_methodClassDex(%ecx),%eax     # eax<- DvmDex
-    movzbl  rINST_HI,%ecx                         # ecx<- BA
-    sarl    $4,%ecx                              # ecx<- B
-    movl    offDvmDex_pResFields(%eax),%eax       # eax<- pDvmDex->pResFields
-    movzbl  rINST_HI,rINST_FULL                   # rINST_FULL<- BA
-    andb    $0xf,rINST_LO                        # rINST_FULL<- A
-    GET_VREG(%ecx,%ecx)                           # ecx<- fp[B], the object ptr
-    movl    (%eax,rIBASE,4),%eax                  # resolved entry
-    testl   %eax,%eax                             # is resolved entry null?
-    jne     .LOP_IGET_BOOLEAN_finish                    # no, already resolved
-    movl    rIBASE,OUT_ARG1(%esp)                 # needed by dvmResolveInstField
-    GET_GLUE(rIBASE)
+    movl    rGLUE,%ecx
+    movzwl  2(rPC),%edx                         # edx<- 0000CCCC
+    movl    offGlue_methodClassDex(%ecx),%eax   # eax<- DvmDex
+    movzbl  rINSTbl,%ecx                        # ecx<- BA
+    sarl    $4,%ecx                            # ecx<- B
+    movl    offDvmDex_pResFields(%eax),%eax     # eax<- pDvmDex->pResFields
+    andb    $0xf,rINSTbl                       # rINST<- A
+    GET_VREG_R %ecx %ecx                        # ecx<- fp[B], the object ptr
+    movl    (%eax,%edx,4),%eax                  # resolved entry
+    testl   %eax,%eax                           # is resolved entry null?
+    jne     .LOP_IGET_BOOLEAN_finish                  # no, already resolved
+    movl    %edx,OUT_ARG1(%esp)                 # needed by dvmResolveInstField
+    movl    rGLUE,%edx
     jmp     .LOP_IGET_BOOLEAN_resolve
 
 
@@ -2087,21 +2393,19 @@ dvmAsmInstructionStart = .L_OP_NOP
      * for: iget, iget-object, iget-boolean, iget-byte, iget-char, iget-short
      */
     /* op vA, vB, field@CCCC */
-    GET_GLUE(%ecx)
-    SPILL(rIBASE)                                 # need another reg
-    movzwl  2(rPC),rIBASE                         # rIBASE<- 0000CCCC
-    movl    offGlue_methodClassDex(%ecx),%eax     # eax<- DvmDex
-    movzbl  rINST_HI,%ecx                         # ecx<- BA
-    sarl    $4,%ecx                              # ecx<- B
-    movl    offDvmDex_pResFields(%eax),%eax       # eax<- pDvmDex->pResFields
-    movzbl  rINST_HI,rINST_FULL                   # rINST_FULL<- BA
-    andb    $0xf,rINST_LO                        # rINST_FULL<- A
-    GET_VREG(%ecx,%ecx)                           # ecx<- fp[B], the object ptr
-    movl    (%eax,rIBASE,4),%eax                  # resolved entry
-    testl   %eax,%eax                             # is resolved entry null?
-    jne     .LOP_IGET_BYTE_finish                    # no, already resolved
-    movl    rIBASE,OUT_ARG1(%esp)                 # needed by dvmResolveInstField
-    GET_GLUE(rIBASE)
+    movl    rGLUE,%ecx
+    movzwl  2(rPC),%edx                         # edx<- 0000CCCC
+    movl    offGlue_methodClassDex(%ecx),%eax   # eax<- DvmDex
+    movzbl  rINSTbl,%ecx                        # ecx<- BA
+    sarl    $4,%ecx                            # ecx<- B
+    movl    offDvmDex_pResFields(%eax),%eax     # eax<- pDvmDex->pResFields
+    andb    $0xf,rINSTbl                       # rINST<- A
+    GET_VREG_R %ecx %ecx                        # ecx<- fp[B], the object ptr
+    movl    (%eax,%edx,4),%eax                  # resolved entry
+    testl   %eax,%eax                           # is resolved entry null?
+    jne     .LOP_IGET_BYTE_finish                  # no, already resolved
+    movl    %edx,OUT_ARG1(%esp)                 # needed by dvmResolveInstField
+    movl    rGLUE,%edx
     jmp     .LOP_IGET_BYTE_resolve
 
 
@@ -2116,21 +2420,19 @@ dvmAsmInstructionStart = .L_OP_NOP
      * for: iget, iget-object, iget-boolean, iget-byte, iget-char, iget-short
      */
     /* op vA, vB, field@CCCC */
-    GET_GLUE(%ecx)
-    SPILL(rIBASE)                                 # need another reg
-    movzwl  2(rPC),rIBASE                         # rIBASE<- 0000CCCC
-    movl    offGlue_methodClassDex(%ecx),%eax     # eax<- DvmDex
-    movzbl  rINST_HI,%ecx                         # ecx<- BA
-    sarl    $4,%ecx                              # ecx<- B
-    movl    offDvmDex_pResFields(%eax),%eax       # eax<- pDvmDex->pResFields
-    movzbl  rINST_HI,rINST_FULL                   # rINST_FULL<- BA
-    andb    $0xf,rINST_LO                        # rINST_FULL<- A
-    GET_VREG(%ecx,%ecx)                           # ecx<- fp[B], the object ptr
-    movl    (%eax,rIBASE,4),%eax                  # resolved entry
-    testl   %eax,%eax                             # is resolved entry null?
-    jne     .LOP_IGET_CHAR_finish                    # no, already resolved
-    movl    rIBASE,OUT_ARG1(%esp)                 # needed by dvmResolveInstField
-    GET_GLUE(rIBASE)
+    movl    rGLUE,%ecx
+    movzwl  2(rPC),%edx                         # edx<- 0000CCCC
+    movl    offGlue_methodClassDex(%ecx),%eax   # eax<- DvmDex
+    movzbl  rINSTbl,%ecx                        # ecx<- BA
+    sarl    $4,%ecx                            # ecx<- B
+    movl    offDvmDex_pResFields(%eax),%eax     # eax<- pDvmDex->pResFields
+    andb    $0xf,rINSTbl                       # rINST<- A
+    GET_VREG_R %ecx %ecx                        # ecx<- fp[B], the object ptr
+    movl    (%eax,%edx,4),%eax                  # resolved entry
+    testl   %eax,%eax                           # is resolved entry null?
+    jne     .LOP_IGET_CHAR_finish                  # no, already resolved
+    movl    %edx,OUT_ARG1(%esp)                 # needed by dvmResolveInstField
+    movl    rGLUE,%edx
     jmp     .LOP_IGET_CHAR_resolve
 
 
@@ -2145,21 +2447,19 @@ dvmAsmInstructionStart = .L_OP_NOP
      * for: iget, iget-object, iget-boolean, iget-byte, iget-char, iget-short
      */
     /* op vA, vB, field@CCCC */
-    GET_GLUE(%ecx)
-    SPILL(rIBASE)                                 # need another reg
-    movzwl  2(rPC),rIBASE                         # rIBASE<- 0000CCCC
-    movl    offGlue_methodClassDex(%ecx),%eax     # eax<- DvmDex
-    movzbl  rINST_HI,%ecx                         # ecx<- BA
-    sarl    $4,%ecx                              # ecx<- B
-    movl    offDvmDex_pResFields(%eax),%eax       # eax<- pDvmDex->pResFields
-    movzbl  rINST_HI,rINST_FULL                   # rINST_FULL<- BA
-    andb    $0xf,rINST_LO                        # rINST_FULL<- A
-    GET_VREG(%ecx,%ecx)                           # ecx<- fp[B], the object ptr
-    movl    (%eax,rIBASE,4),%eax                  # resolved entry
-    testl   %eax,%eax                             # is resolved entry null?
-    jne     .LOP_IGET_SHORT_finish                    # no, already resolved
-    movl    rIBASE,OUT_ARG1(%esp)                 # needed by dvmResolveInstField
-    GET_GLUE(rIBASE)
+    movl    rGLUE,%ecx
+    movzwl  2(rPC),%edx                         # edx<- 0000CCCC
+    movl    offGlue_methodClassDex(%ecx),%eax   # eax<- DvmDex
+    movzbl  rINSTbl,%ecx                        # ecx<- BA
+    sarl    $4,%ecx                            # ecx<- B
+    movl    offDvmDex_pResFields(%eax),%eax     # eax<- pDvmDex->pResFields
+    andb    $0xf,rINSTbl                       # rINST<- A
+    GET_VREG_R %ecx %ecx                        # ecx<- fp[B], the object ptr
+    movl    (%eax,%edx,4),%eax                  # resolved entry
+    testl   %eax,%eax                           # is resolved entry null?
+    jne     .LOP_IGET_SHORT_finish                  # no, already resolved
+    movl    %edx,OUT_ARG1(%esp)                 # needed by dvmResolveInstField
+    movl    rGLUE,%edx
     jmp     .LOP_IGET_SHORT_resolve
 
 
@@ -2174,21 +2474,19 @@ dvmAsmInstructionStart = .L_OP_NOP
      * for: iput, iput-object, iput-boolean, iput-byte, iput-char, iput-short
      */
     /* op vA, vB, field@CCCC */
-    GET_GLUE(%ecx)
-    SPILL(rIBASE)                                 # need another reg
-    movzwl  2(rPC),rIBASE                         # rIBASE<- 0000CCCC
-    movl    offGlue_methodClassDex(%ecx),%eax     # eax<- DvmDex
-    movzbl  rINST_HI,%ecx                         # ecx<- BA
-    sarl    $4,%ecx                              # ecx<- B
-    movl    offDvmDex_pResFields(%eax),%eax       # eax<- pDvmDex->pResFields
-    movzbl  rINST_HI,rINST_FULL                   # rINST_FULL<- BA
-    andb    $0xf,rINST_LO                        # rINST_FULL<- A
-    GET_VREG(%ecx,%ecx)                           # ecx<- fp[B], the object ptr
-    movl    (%eax,rIBASE,4),%eax                  # resolved entry
-    testl   %eax,%eax                             # is resolved entry null?
-    jne     .LOP_IPUT_finish                    # no, already resolved
-    movl    rIBASE,OUT_ARG1(%esp)
-    GET_GLUE(rIBASE)
+    movl    rGLUE,%ecx
+    movzwl  2(rPC),%edx                         # %edx<- 0000CCCC
+    movl    offGlue_methodClassDex(%ecx),%eax   # eax<- DvmDex
+    movzbl  rINSTbl,%ecx                        # ecx<- BA
+    sarl    $4,%ecx                            # ecx<- B
+    movl    offDvmDex_pResFields(%eax),%eax     # eax<- pDvmDex->pResFields
+    andb    $0xf,rINSTbl                       # rINST<- A
+    GET_VREG_R %ecx %ecx                        # ecx<- fp[B], the object ptr
+    movl    (%eax,%edx,4),%eax                  # resolved entry
+    testl   %eax,%eax                           # is resolved entry null?
+    jne     .LOP_IPUT_finish                  # no, already resolved
+    movl    %edx,OUT_ARG1(%esp)
+    movl    rGLUE,%edx
     jmp     .LOP_IPUT_resolve
 
 /* ------------------------------ */
@@ -2200,21 +2498,19 @@ dvmAsmInstructionStart = .L_OP_NOP
      *
      */
     /* op vA, vB, field@CCCC */
-    GET_GLUE(%ecx)
-    SPILL(rIBASE)                                 # need another reg
-    movzwl  2(rPC),rIBASE                         # rIBASE<- 0000CCCC
-    movl    offGlue_methodClassDex(%ecx),%eax     # eax<- DvmDex
-    movzbl  rINST_HI,%ecx                         # ecx<- BA
-    sarl    $4,%ecx                              # ecx<- B
-    movl    offDvmDex_pResFields(%eax),%eax       # eax<- pDvmDex->pResFields
-    movzbl  rINST_HI,rINST_FULL                   # rINST_FULL<- BA
-    andb    $0xf,rINST_LO                        # rINST_FULL<- A
-    GET_VREG(%ecx,%ecx)                           # ecx<- fp[B], the object ptr
-    movl    (%eax,rIBASE,4),%eax                  # resolved entry
-    testl   %eax,%eax                             # is resolved entry null?
-    jne     .LOP_IPUT_WIDE_finish                    # no, already resolved
-    movl    rIBASE,OUT_ARG1(%esp)
-    GET_GLUE(rIBASE)
+    movl    rGLUE,%ecx
+    movzwl  2(rPC),%edx                         # edx<- 0000CCCC
+    movl    offGlue_methodClassDex(%ecx),%eax   # eax<- DvmDex
+    movzbl  rINSTbl,%ecx                        # ecx<- BA
+    sarl    $4,%ecx                            # ecx<- B
+    movl    offDvmDex_pResFields(%eax),%eax     # eax<- pDvmDex->pResFields
+    andb    $0xf,rINSTbl                       # rINST<- A
+    GET_VREG_R %ecx %ecx                        # ecx<- fp[B], the object ptr
+    movl    (%eax,%edx,4),%eax                  # resolved entry
+    testl   %eax,%eax                           # is resolved entry null?
+    jne     .LOP_IPUT_WIDE_finish                  # no, already resolved
+    movl    %edx,OUT_ARG1(%esp)
+    movl    rGLUE,%edx
     jmp     .LOP_IPUT_WIDE_resolve
 
 /* ------------------------------ */
@@ -2227,21 +2523,19 @@ dvmAsmInstructionStart = .L_OP_NOP
      * for: iput-object
      */
     /* op vA, vB, field@CCCC */
-    GET_GLUE(%ecx)
-    SPILL(rIBASE)                                 # need another reg
-    movzwl  2(rPC),rIBASE                         # rIBASE<- 0000CCCC
-    movl    offGlue_methodClassDex(%ecx),%eax     # eax<- DvmDex
-    movzbl  rINST_HI,%ecx                         # ecx<- BA
-    sarl    $4,%ecx                              # ecx<- B
-    movl    offDvmDex_pResFields(%eax),%eax       # eax<- pDvmDex->pResFields
-    movzbl  rINST_HI,rINST_FULL                   # rINST_FULL<- BA
-    andb    $0xf,rINST_LO                        # rINST_FULL<- A
-    GET_VREG(%ecx,%ecx)                           # ecx<- fp[B], the object ptr
-    movl    (%eax,rIBASE,4),%eax                  # resolved entry
-    testl   %eax,%eax                             # is resolved entry null?
-    jne     .LOP_IPUT_OBJECT_finish                    # no, already resolved
-    movl    rIBASE,OUT_ARG1(%esp)
-    GET_GLUE(rIBASE)
+    movl    rGLUE,%ecx
+    movzwl  2(rPC),%edx                         # edx<- 0000CCCC
+    movl    offGlue_methodClassDex(%ecx),%eax   # eax<- DvmDex
+    movzbl  rINSTbl,%ecx                        # ecx<- BA
+    sarl    $4,%ecx                            # ecx<- B
+    movl    offDvmDex_pResFields(%eax),%eax     # eax<- pDvmDex->pResFields
+    andb    $0xf,rINSTbl                       # rINST<- A
+    GET_VREG_R %ecx %ecx                        # ecx<- fp[B], the object ptr
+    movl    (%eax,%edx,4),%eax                  # resolved entry
+    testl   %eax,%eax                           # is resolved entry null?
+    jne     .LOP_IPUT_OBJECT_finish                  # no, already resolved
+    movl    %edx,OUT_ARG1(%esp)
+    movl    rGLUE,%edx
     jmp     .LOP_IPUT_OBJECT_resolve
 
 /* ------------------------------ */
@@ -2256,21 +2550,19 @@ dvmAsmInstructionStart = .L_OP_NOP
      * for: iput, iput-object, iput-boolean, iput-byte, iput-char, iput-short
      */
     /* op vA, vB, field@CCCC */
-    GET_GLUE(%ecx)
-    SPILL(rIBASE)                                 # need another reg
-    movzwl  2(rPC),rIBASE                         # rIBASE<- 0000CCCC
-    movl    offGlue_methodClassDex(%ecx),%eax     # eax<- DvmDex
-    movzbl  rINST_HI,%ecx                         # ecx<- BA
-    sarl    $4,%ecx                              # ecx<- B
-    movl    offDvmDex_pResFields(%eax),%eax       # eax<- pDvmDex->pResFields
-    movzbl  rINST_HI,rINST_FULL                   # rINST_FULL<- BA
-    andb    $0xf,rINST_LO                        # rINST_FULL<- A
-    GET_VREG(%ecx,%ecx)                           # ecx<- fp[B], the object ptr
-    movl    (%eax,rIBASE,4),%eax                  # resolved entry
-    testl   %eax,%eax                             # is resolved entry null?
-    jne     .LOP_IPUT_BOOLEAN_finish                    # no, already resolved
-    movl    rIBASE,OUT_ARG1(%esp)
-    GET_GLUE(rIBASE)
+    movl    rGLUE,%ecx
+    movzwl  2(rPC),%edx                         # %edx<- 0000CCCC
+    movl    offGlue_methodClassDex(%ecx),%eax   # eax<- DvmDex
+    movzbl  rINSTbl,%ecx                        # ecx<- BA
+    sarl    $4,%ecx                            # ecx<- B
+    movl    offDvmDex_pResFields(%eax),%eax     # eax<- pDvmDex->pResFields
+    andb    $0xf,rINSTbl                       # rINST<- A
+    GET_VREG_R %ecx %ecx                        # ecx<- fp[B], the object ptr
+    movl    (%eax,%edx,4),%eax                  # resolved entry
+    testl   %eax,%eax                           # is resolved entry null?
+    jne     .LOP_IPUT_BOOLEAN_finish                  # no, already resolved
+    movl    %edx,OUT_ARG1(%esp)
+    movl    rGLUE,%edx
     jmp     .LOP_IPUT_BOOLEAN_resolve
 
 
@@ -2286,21 +2578,19 @@ dvmAsmInstructionStart = .L_OP_NOP
      * for: iput, iput-object, iput-boolean, iput-byte, iput-char, iput-short
      */
     /* op vA, vB, field@CCCC */
-    GET_GLUE(%ecx)
-    SPILL(rIBASE)                                 # need another reg
-    movzwl  2(rPC),rIBASE                         # rIBASE<- 0000CCCC
-    movl    offGlue_methodClassDex(%ecx),%eax     # eax<- DvmDex
-    movzbl  rINST_HI,%ecx                         # ecx<- BA
-    sarl    $4,%ecx                              # ecx<- B
-    movl    offDvmDex_pResFields(%eax),%eax       # eax<- pDvmDex->pResFields
-    movzbl  rINST_HI,rINST_FULL                   # rINST_FULL<- BA
-    andb    $0xf,rINST_LO                        # rINST_FULL<- A
-    GET_VREG(%ecx,%ecx)                           # ecx<- fp[B], the object ptr
-    movl    (%eax,rIBASE,4),%eax                  # resolved entry
-    testl   %eax,%eax                             # is resolved entry null?
-    jne     .LOP_IPUT_BYTE_finish                    # no, already resolved
-    movl    rIBASE,OUT_ARG1(%esp)
-    GET_GLUE(rIBASE)
+    movl    rGLUE,%ecx
+    movzwl  2(rPC),%edx                         # %edx<- 0000CCCC
+    movl    offGlue_methodClassDex(%ecx),%eax   # eax<- DvmDex
+    movzbl  rINSTbl,%ecx                        # ecx<- BA
+    sarl    $4,%ecx                            # ecx<- B
+    movl    offDvmDex_pResFields(%eax),%eax     # eax<- pDvmDex->pResFields
+    andb    $0xf,rINSTbl                       # rINST<- A
+    GET_VREG_R %ecx %ecx                        # ecx<- fp[B], the object ptr
+    movl    (%eax,%edx,4),%eax                  # resolved entry
+    testl   %eax,%eax                           # is resolved entry null?
+    jne     .LOP_IPUT_BYTE_finish                  # no, already resolved
+    movl    %edx,OUT_ARG1(%esp)
+    movl    rGLUE,%edx
     jmp     .LOP_IPUT_BYTE_resolve
 
 
@@ -2316,21 +2606,19 @@ dvmAsmInstructionStart = .L_OP_NOP
      * for: iput, iput-object, iput-boolean, iput-byte, iput-char, iput-short
      */
     /* op vA, vB, field@CCCC */
-    GET_GLUE(%ecx)
-    SPILL(rIBASE)                                 # need another reg
-    movzwl  2(rPC),rIBASE                         # rIBASE<- 0000CCCC
-    movl    offGlue_methodClassDex(%ecx),%eax     # eax<- DvmDex
-    movzbl  rINST_HI,%ecx                         # ecx<- BA
-    sarl    $4,%ecx                              # ecx<- B
-    movl    offDvmDex_pResFields(%eax),%eax       # eax<- pDvmDex->pResFields
-    movzbl  rINST_HI,rINST_FULL                   # rINST_FULL<- BA
-    andb    $0xf,rINST_LO                        # rINST_FULL<- A
-    GET_VREG(%ecx,%ecx)                           # ecx<- fp[B], the object ptr
-    movl    (%eax,rIBASE,4),%eax                  # resolved entry
-    testl   %eax,%eax                             # is resolved entry null?
-    jne     .LOP_IPUT_CHAR_finish                    # no, already resolved
-    movl    rIBASE,OUT_ARG1(%esp)
-    GET_GLUE(rIBASE)
+    movl    rGLUE,%ecx
+    movzwl  2(rPC),%edx                         # %edx<- 0000CCCC
+    movl    offGlue_methodClassDex(%ecx),%eax   # eax<- DvmDex
+    movzbl  rINSTbl,%ecx                        # ecx<- BA
+    sarl    $4,%ecx                            # ecx<- B
+    movl    offDvmDex_pResFields(%eax),%eax     # eax<- pDvmDex->pResFields
+    andb    $0xf,rINSTbl                       # rINST<- A
+    GET_VREG_R %ecx %ecx                        # ecx<- fp[B], the object ptr
+    movl    (%eax,%edx,4),%eax                  # resolved entry
+    testl   %eax,%eax                           # is resolved entry null?
+    jne     .LOP_IPUT_CHAR_finish                  # no, already resolved
+    movl    %edx,OUT_ARG1(%esp)
+    movl    rGLUE,%edx
     jmp     .LOP_IPUT_CHAR_resolve
 
 
@@ -2346,21 +2634,19 @@ dvmAsmInstructionStart = .L_OP_NOP
      * for: iput, iput-object, iput-boolean, iput-byte, iput-char, iput-short
      */
     /* op vA, vB, field@CCCC */
-    GET_GLUE(%ecx)
-    SPILL(rIBASE)                                 # need another reg
-    movzwl  2(rPC),rIBASE                         # rIBASE<- 0000CCCC
-    movl    offGlue_methodClassDex(%ecx),%eax     # eax<- DvmDex
-    movzbl  rINST_HI,%ecx                         # ecx<- BA
-    sarl    $4,%ecx                              # ecx<- B
-    movl    offDvmDex_pResFields(%eax),%eax       # eax<- pDvmDex->pResFields
-    movzbl  rINST_HI,rINST_FULL                   # rINST_FULL<- BA
-    andb    $0xf,rINST_LO                        # rINST_FULL<- A
-    GET_VREG(%ecx,%ecx)                           # ecx<- fp[B], the object ptr
-    movl    (%eax,rIBASE,4),%eax                  # resolved entry
-    testl   %eax,%eax                             # is resolved entry null?
-    jne     .LOP_IPUT_SHORT_finish                    # no, already resolved
-    movl    rIBASE,OUT_ARG1(%esp)
-    GET_GLUE(rIBASE)
+    movl    rGLUE,%ecx
+    movzwl  2(rPC),%edx                         # %edx<- 0000CCCC
+    movl    offGlue_methodClassDex(%ecx),%eax   # eax<- DvmDex
+    movzbl  rINSTbl,%ecx                        # ecx<- BA
+    sarl    $4,%ecx                            # ecx<- B
+    movl    offDvmDex_pResFields(%eax),%eax     # eax<- pDvmDex->pResFields
+    andb    $0xf,rINSTbl                       # rINST<- A
+    GET_VREG_R %ecx %ecx                        # ecx<- fp[B], the object ptr
+    movl    (%eax,%edx,4),%eax                  # resolved entry
+    testl   %eax,%eax                           # is resolved entry null?
+    jne     .LOP_IPUT_SHORT_finish                  # no, already resolved
+    movl    %edx,OUT_ARG1(%esp)
+    movl    rGLUE,%edx
     jmp     .LOP_IPUT_SHORT_resolve
 
 
@@ -2374,7 +2660,7 @@ dvmAsmInstructionStart = .L_OP_NOP
      * for: sget, sget-object, sget-boolean, sget-byte, sget-char, sget-short
      */
     /* op vAA, field@BBBB */
-    GET_GLUE(%ecx)
+    movl      rGLUE,%ecx
     movzwl    2(rPC),%eax                        # eax<- field ref BBBB
     movl      offGlue_methodClassDex(%ecx),%ecx  # ecx<- DvmDex
     movl      offDvmDex_pResFields(%ecx),%ecx    # ecx<- dvmDex->pResFields
@@ -2383,11 +2669,10 @@ dvmAsmInstructionStart = .L_OP_NOP
     je        .LOP_SGET_resolve                # if not, make it so
 .LOP_SGET_finish:     # field ptr in eax
     movl      offStaticField_value(%eax),%eax
-    movzbl    rINST_HI,%ecx                      # ecx<- AA
-    FETCH_INST_WORD(2)
-    ADVANCE_PC(2)
-    SET_VREG(%eax,%ecx)
-    GOTO_NEXT
+    FETCH_INST_OPCODE 2 %edx
+    ADVANCE_PC 2
+    SET_VREG %eax rINST
+    GOTO_NEXT_R %edx
 
 /* ------------------------------ */
     .balign 64
@@ -2398,7 +2683,7 @@ dvmAsmInstructionStart = .L_OP_NOP
      *
      */
     /* sget-wide vAA, field@BBBB */
-    GET_GLUE(%ecx)
+    movl      rGLUE,%ecx
     movzwl    2(rPC),%eax                        # eax<- field ref BBBB
     movl      offGlue_methodClassDex(%ecx),%ecx  # ecx<- DvmDex
     movl      offDvmDex_pResFields(%ecx),%ecx    # ecx<- dvmDex->pResFields
@@ -2408,12 +2693,11 @@ dvmAsmInstructionStart = .L_OP_NOP
 .LOP_SGET_WIDE_finish:     # field ptr in eax
     movl      offStaticField_value(%eax),%ecx    # ecx<- lsw
     movl      4+offStaticField_value(%eax),%eax  # eax<- msw
-    movzbl    rINST_HI,rINST_FULL                # rINST_FULL<- AA
-    SET_VREG_WORD(%ecx,rINST_FULL,0)
-    SET_VREG_WORD(%eax,rINST_FULL,1)
-    FETCH_INST_WORD(2)
-    ADVANCE_PC(2)
-    GOTO_NEXT
+    FETCH_INST_OPCODE 2 %edx
+    ADVANCE_PC 2
+    SET_VREG_WORD %ecx rINST 0
+    SET_VREG_WORD %eax rINST 1
+    GOTO_NEXT_R %edx
 
 /* ------------------------------ */
     .balign 64
@@ -2426,7 +2710,7 @@ dvmAsmInstructionStart = .L_OP_NOP
      * for: sget, sget-object, sget-boolean, sget-byte, sget-char, sget-short
      */
     /* op vAA, field@BBBB */
-    GET_GLUE(%ecx)
+    movl      rGLUE,%ecx
     movzwl    2(rPC),%eax                        # eax<- field ref BBBB
     movl      offGlue_methodClassDex(%ecx),%ecx  # ecx<- DvmDex
     movl      offDvmDex_pResFields(%ecx),%ecx    # ecx<- dvmDex->pResFields
@@ -2435,11 +2719,10 @@ dvmAsmInstructionStart = .L_OP_NOP
     je        .LOP_SGET_OBJECT_resolve                # if not, make it so
 .LOP_SGET_OBJECT_finish:     # field ptr in eax
     movl      offStaticField_value(%eax),%eax
-    movzbl    rINST_HI,%ecx                      # ecx<- AA
-    FETCH_INST_WORD(2)
-    ADVANCE_PC(2)
-    SET_VREG(%eax,%ecx)
-    GOTO_NEXT
+    FETCH_INST_OPCODE 2 %edx
+    ADVANCE_PC 2
+    SET_VREG %eax rINST
+    GOTO_NEXT_R %edx
 
 
 /* ------------------------------ */
@@ -2453,7 +2736,7 @@ dvmAsmInstructionStart = .L_OP_NOP
      * for: sget, sget-object, sget-boolean, sget-byte, sget-char, sget-short
      */
     /* op vAA, field@BBBB */
-    GET_GLUE(%ecx)
+    movl      rGLUE,%ecx
     movzwl    2(rPC),%eax                        # eax<- field ref BBBB
     movl      offGlue_methodClassDex(%ecx),%ecx  # ecx<- DvmDex
     movl      offDvmDex_pResFields(%ecx),%ecx    # ecx<- dvmDex->pResFields
@@ -2462,11 +2745,10 @@ dvmAsmInstructionStart = .L_OP_NOP
     je        .LOP_SGET_BOOLEAN_resolve                # if not, make it so
 .LOP_SGET_BOOLEAN_finish:     # field ptr in eax
     movl      offStaticField_value(%eax),%eax
-    movzbl    rINST_HI,%ecx                      # ecx<- AA
-    FETCH_INST_WORD(2)
-    ADVANCE_PC(2)
-    SET_VREG(%eax,%ecx)
-    GOTO_NEXT
+    FETCH_INST_OPCODE 2 %edx
+    ADVANCE_PC 2
+    SET_VREG %eax rINST
+    GOTO_NEXT_R %edx
 
 
 /* ------------------------------ */
@@ -2480,7 +2762,7 @@ dvmAsmInstructionStart = .L_OP_NOP
      * for: sget, sget-object, sget-boolean, sget-byte, sget-char, sget-short
      */
     /* op vAA, field@BBBB */
-    GET_GLUE(%ecx)
+    movl      rGLUE,%ecx
     movzwl    2(rPC),%eax                        # eax<- field ref BBBB
     movl      offGlue_methodClassDex(%ecx),%ecx  # ecx<- DvmDex
     movl      offDvmDex_pResFields(%ecx),%ecx    # ecx<- dvmDex->pResFields
@@ -2489,11 +2771,10 @@ dvmAsmInstructionStart = .L_OP_NOP
     je        .LOP_SGET_BYTE_resolve                # if not, make it so
 .LOP_SGET_BYTE_finish:     # field ptr in eax
     movl      offStaticField_value(%eax),%eax
-    movzbl    rINST_HI,%ecx                      # ecx<- AA
-    FETCH_INST_WORD(2)
-    ADVANCE_PC(2)
-    SET_VREG(%eax,%ecx)
-    GOTO_NEXT
+    FETCH_INST_OPCODE 2 %edx
+    ADVANCE_PC 2
+    SET_VREG %eax rINST
+    GOTO_NEXT_R %edx
 
 
 /* ------------------------------ */
@@ -2507,7 +2788,7 @@ dvmAsmInstructionStart = .L_OP_NOP
      * for: sget, sget-object, sget-boolean, sget-byte, sget-char, sget-short
      */
     /* op vAA, field@BBBB */
-    GET_GLUE(%ecx)
+    movl      rGLUE,%ecx
     movzwl    2(rPC),%eax                        # eax<- field ref BBBB
     movl      offGlue_methodClassDex(%ecx),%ecx  # ecx<- DvmDex
     movl      offDvmDex_pResFields(%ecx),%ecx    # ecx<- dvmDex->pResFields
@@ -2516,11 +2797,10 @@ dvmAsmInstructionStart = .L_OP_NOP
     je        .LOP_SGET_CHAR_resolve                # if not, make it so
 .LOP_SGET_CHAR_finish:     # field ptr in eax
     movl      offStaticField_value(%eax),%eax
-    movzbl    rINST_HI,%ecx                      # ecx<- AA
-    FETCH_INST_WORD(2)
-    ADVANCE_PC(2)
-    SET_VREG(%eax,%ecx)
-    GOTO_NEXT
+    FETCH_INST_OPCODE 2 %edx
+    ADVANCE_PC 2
+    SET_VREG %eax rINST
+    GOTO_NEXT_R %edx
 
 
 /* ------------------------------ */
@@ -2534,7 +2814,7 @@ dvmAsmInstructionStart = .L_OP_NOP
      * for: sget, sget-object, sget-boolean, sget-byte, sget-char, sget-short
      */
     /* op vAA, field@BBBB */
-    GET_GLUE(%ecx)
+    movl      rGLUE,%ecx
     movzwl    2(rPC),%eax                        # eax<- field ref BBBB
     movl      offGlue_methodClassDex(%ecx),%ecx  # ecx<- DvmDex
     movl      offDvmDex_pResFields(%ecx),%ecx    # ecx<- dvmDex->pResFields
@@ -2543,11 +2823,10 @@ dvmAsmInstructionStart = .L_OP_NOP
     je        .LOP_SGET_SHORT_resolve                # if not, make it so
 .LOP_SGET_SHORT_finish:     # field ptr in eax
     movl      offStaticField_value(%eax),%eax
-    movzbl    rINST_HI,%ecx                      # ecx<- AA
-    FETCH_INST_WORD(2)
-    ADVANCE_PC(2)
-    SET_VREG(%eax,%ecx)
-    GOTO_NEXT
+    FETCH_INST_OPCODE 2 %edx
+    ADVANCE_PC 2
+    SET_VREG %eax rINST
+    GOTO_NEXT_R %edx
 
 
 /* ------------------------------ */
@@ -2560,7 +2839,7 @@ dvmAsmInstructionStart = .L_OP_NOP
      * for: sput, sput-boolean, sput-byte, sput-char, sput-short
      */
     /* op vAA, field@BBBB */
-    GET_GLUE(%ecx)
+    movl      rGLUE,%ecx
     movzwl    2(rPC),%eax                        # eax<- field ref BBBB
     movl      offGlue_methodClassDex(%ecx),%ecx  # ecx<- DvmDex
     movl      offDvmDex_pResFields(%ecx),%ecx    # ecx<- dvmDex->pResFields
@@ -2568,12 +2847,11 @@ dvmAsmInstructionStart = .L_OP_NOP
     testl     %eax,%eax                          # resolved entry null?
     je        .LOP_SPUT_resolve                # if not, make it so
 .LOP_SPUT_finish:     # field ptr in eax
-    movzbl    rINST_HI,%ecx                      # ecx<- AA
-    GET_VREG(%ecx,%ecx)
-    FETCH_INST_WORD(2)
+    GET_VREG_R  %ecx rINST
+    FETCH_INST_OPCODE 2 %edx
+    ADVANCE_PC 2
     movl      %ecx,offStaticField_value(%eax)
-    ADVANCE_PC(2)
-    GOTO_NEXT
+    GOTO_NEXT_R %edx
 
 /* ------------------------------ */
     .balign 64
@@ -2585,7 +2863,7 @@ dvmAsmInstructionStart = .L_OP_NOP
      * for: sput, sput-object, sput-boolean, sput-byte, sput-char, sput-short
      */
     /* op vAA, field@BBBB */
-    GET_GLUE(%ecx)
+    movl      rGLUE,%ecx
     movzwl    2(rPC),%eax                        # eax<- field ref BBBB
     movl      offGlue_methodClassDex(%ecx),%ecx  # ecx<- DvmDex
     movl      offDvmDex_pResFields(%ecx),%ecx    # ecx<- dvmDex->pResFields
@@ -2593,14 +2871,13 @@ dvmAsmInstructionStart = .L_OP_NOP
     testl     %eax,%eax                          # resolved entry null?
     je        .LOP_SPUT_WIDE_resolve                # if not, make it so
 .LOP_SPUT_WIDE_finish:     # field ptr in eax
-    movzbl    rINST_HI,%ecx                      # ecx<- AA
-    GET_VREG_WORD(rINST_FULL,%ecx,0)             # rINST_FULL<- lsw
-    GET_VREG_WORD(%ecx,%ecx,1)                   # ecx<- msw
-    movl      rINST_FULL,offStaticField_value(%eax)
-    FETCH_INST_WORD(2)
-    ADVANCE_PC(2)
-    movl      %ecx,4+offStaticField_value(%eax)
-    GOTO_NEXT
+    GET_VREG_WORD %ecx rINST 0                  # rINST<- lsw
+    GET_VREG_WORD rINST rINST 1                 # ecx<- msw
+    FETCH_INST_OPCODE 2 %edx
+    ADVANCE_PC 2
+    movl      %ecx,offStaticField_value(%eax)
+    movl      rINST,4+offStaticField_value(%eax)
+    GOTO_NEXT_R %edx
 
 /* ------------------------------ */
     .balign 64
@@ -2610,7 +2887,7 @@ dvmAsmInstructionStart = .L_OP_NOP
      * SPUT object handler.
      */
     /* op vAA, field@BBBB */
-    GET_GLUE(%ecx)
+    movl      rGLUE,%ecx
     movzwl    2(rPC),%eax                        # eax<- field ref BBBB
     movl      offGlue_methodClassDex(%ecx),%ecx  # ecx<- DvmDex
     movl      offDvmDex_pResFields(%ecx),%ecx    # ecx<- dvmDex->pResFields
@@ -2618,8 +2895,8 @@ dvmAsmInstructionStart = .L_OP_NOP
     testl     %eax,%eax                          # resolved entry null?
     je        .LOP_SPUT_OBJECT_resolve                # if not, make it so
 .LOP_SPUT_OBJECT_finish:     # field ptr in eax
-    movzbl    rINST_HI,%ecx                      # ecx<- AA
-    GET_VREG(%ecx,%ecx)
+    movzbl    rINSTbl,%ecx                       # ecx<- AA
+    GET_VREG_R  %ecx %ecx
     jmp       .LOP_SPUT_OBJECT_continue
 
 /* ------------------------------ */
@@ -2633,7 +2910,7 @@ dvmAsmInstructionStart = .L_OP_NOP
      * for: sput, sput-boolean, sput-byte, sput-char, sput-short
      */
     /* op vAA, field@BBBB */
-    GET_GLUE(%ecx)
+    movl      rGLUE,%ecx
     movzwl    2(rPC),%eax                        # eax<- field ref BBBB
     movl      offGlue_methodClassDex(%ecx),%ecx  # ecx<- DvmDex
     movl      offDvmDex_pResFields(%ecx),%ecx    # ecx<- dvmDex->pResFields
@@ -2641,12 +2918,11 @@ dvmAsmInstructionStart = .L_OP_NOP
     testl     %eax,%eax                          # resolved entry null?
     je        .LOP_SPUT_BOOLEAN_resolve                # if not, make it so
 .LOP_SPUT_BOOLEAN_finish:     # field ptr in eax
-    movzbl    rINST_HI,%ecx                      # ecx<- AA
-    GET_VREG(%ecx,%ecx)
-    FETCH_INST_WORD(2)
+    GET_VREG_R  %ecx rINST
+    FETCH_INST_OPCODE 2 %edx
+    ADVANCE_PC 2
     movl      %ecx,offStaticField_value(%eax)
-    ADVANCE_PC(2)
-    GOTO_NEXT
+    GOTO_NEXT_R %edx
 
 
 /* ------------------------------ */
@@ -2660,7 +2936,7 @@ dvmAsmInstructionStart = .L_OP_NOP
      * for: sput, sput-boolean, sput-byte, sput-char, sput-short
      */
     /* op vAA, field@BBBB */
-    GET_GLUE(%ecx)
+    movl      rGLUE,%ecx
     movzwl    2(rPC),%eax                        # eax<- field ref BBBB
     movl      offGlue_methodClassDex(%ecx),%ecx  # ecx<- DvmDex
     movl      offDvmDex_pResFields(%ecx),%ecx    # ecx<- dvmDex->pResFields
@@ -2668,12 +2944,11 @@ dvmAsmInstructionStart = .L_OP_NOP
     testl     %eax,%eax                          # resolved entry null?
     je        .LOP_SPUT_BYTE_resolve                # if not, make it so
 .LOP_SPUT_BYTE_finish:     # field ptr in eax
-    movzbl    rINST_HI,%ecx                      # ecx<- AA
-    GET_VREG(%ecx,%ecx)
-    FETCH_INST_WORD(2)
+    GET_VREG_R  %ecx rINST
+    FETCH_INST_OPCODE 2 %edx
+    ADVANCE_PC 2
     movl      %ecx,offStaticField_value(%eax)
-    ADVANCE_PC(2)
-    GOTO_NEXT
+    GOTO_NEXT_R %edx
 
 
 /* ------------------------------ */
@@ -2687,7 +2962,7 @@ dvmAsmInstructionStart = .L_OP_NOP
      * for: sput, sput-boolean, sput-byte, sput-char, sput-short
      */
     /* op vAA, field@BBBB */
-    GET_GLUE(%ecx)
+    movl      rGLUE,%ecx
     movzwl    2(rPC),%eax                        # eax<- field ref BBBB
     movl      offGlue_methodClassDex(%ecx),%ecx  # ecx<- DvmDex
     movl      offDvmDex_pResFields(%ecx),%ecx    # ecx<- dvmDex->pResFields
@@ -2695,12 +2970,11 @@ dvmAsmInstructionStart = .L_OP_NOP
     testl     %eax,%eax                          # resolved entry null?
     je        .LOP_SPUT_CHAR_resolve                # if not, make it so
 .LOP_SPUT_CHAR_finish:     # field ptr in eax
-    movzbl    rINST_HI,%ecx                      # ecx<- AA
-    GET_VREG(%ecx,%ecx)
-    FETCH_INST_WORD(2)
+    GET_VREG_R  %ecx rINST
+    FETCH_INST_OPCODE 2 %edx
+    ADVANCE_PC 2
     movl      %ecx,offStaticField_value(%eax)
-    ADVANCE_PC(2)
-    GOTO_NEXT
+    GOTO_NEXT_R %edx
 
 
 /* ------------------------------ */
@@ -2714,7 +2988,7 @@ dvmAsmInstructionStart = .L_OP_NOP
      * for: sput, sput-boolean, sput-byte, sput-char, sput-short
      */
     /* op vAA, field@BBBB */
-    GET_GLUE(%ecx)
+    movl      rGLUE,%ecx
     movzwl    2(rPC),%eax                        # eax<- field ref BBBB
     movl      offGlue_methodClassDex(%ecx),%ecx  # ecx<- DvmDex
     movl      offDvmDex_pResFields(%ecx),%ecx    # ecx<- dvmDex->pResFields
@@ -2722,12 +2996,11 @@ dvmAsmInstructionStart = .L_OP_NOP
     testl     %eax,%eax                          # resolved entry null?
     je        .LOP_SPUT_SHORT_resolve                # if not, make it so
 .LOP_SPUT_SHORT_finish:     # field ptr in eax
-    movzbl    rINST_HI,%ecx                      # ecx<- AA
-    GET_VREG(%ecx,%ecx)
-    FETCH_INST_WORD(2)
+    GET_VREG_R  %ecx rINST
+    FETCH_INST_OPCODE 2 %edx
+    ADVANCE_PC 2
     movl      %ecx,offStaticField_value(%eax)
-    ADVANCE_PC(2)
-    GOTO_NEXT
+    GOTO_NEXT_R %edx
 
 
 /* ------------------------------ */
@@ -2742,18 +3015,17 @@ dvmAsmInstructionStart = .L_OP_NOP
      */
     /* op vB, {vD, vE, vF, vG, vA}, class@CCCC */
     /* op vAA, {vCCCC..v(CCCC+AA-1)}, meth@BBBB */
-    GET_GLUE(%eax)
+    movl      rGLUE,%eax
     movzwl    2(rPC),%ecx                 # ecx<- BBBB
     movl      offGlue_methodClassDex(%eax),%eax  # eax<- pDvmDex
-    EXPORT_PC()
+    EXPORT_PC
     movl      offDvmDex_pResMethods(%eax),%eax   # eax<- pDvmDex->pResMethods
     movl      (%eax,%ecx,4),%eax          # eax<- resolved baseMethod
     testl     %eax,%eax                   # already resolved?
     jne       .LOP_INVOKE_VIRTUAL_continue        # yes, continue
-    GET_GLUE(%eax)
+    movl      rGLUE,%eax
     movl      %ecx,OUT_ARG1(%esp)         # arg1<- ref
     movl      offGlue_method(%eax),%eax   # eax<- glue->method
-    SPILL(rPC)
     jmp       .LOP_INVOKE_VIRTUAL_more
 
 /* ------------------------------ */
@@ -2767,19 +3039,19 @@ dvmAsmInstructionStart = .L_OP_NOP
      */
     /* op vB, {vD, vE, vF, vG, vA}, class@CCCC */
     /* op vAA, {vCCCC..v(CCCC+AA-1)}, meth@BBBB */
-    GET_GLUE(rINST_FULL)
+    movl      rGLUE,rINST
     movzwl    2(rPC),%eax               # eax<- BBBB
-    movl      offGlue_methodClassDex(rINST_FULL),%ecx # ecx<- pDvmDex
-    EXPORT_PC()
+    movl      offGlue_methodClassDex(rINST),%ecx # ecx<- pDvmDex
+    EXPORT_PC
     movl      offDvmDex_pResMethods(%ecx),%ecx # ecx<- pDvmDex->pResMethods
     movl      (%ecx,%eax,4),%ecx        # ecx<- resolved baseMethod
-    movl      offGlue_method(rINST_FULL),%eax # eax<- method
-    movzwl    4(rPC),rINST_FULL         # rINST_FULL<- GFED or CCCC
+    movl      offGlue_method(rINST),%eax # eax<- method
+    movzwl    4(rPC),rINST              # rINST<- GFED or CCCC
     .if       (!0)
-    andl      $0xf,rINST_FULL          # rINST_FULL<- D (or stays CCCC)
+    andl      $0xf,rINST               # rINST<- D (or stays CCCC)
     .endif
-    GET_VREG(rINST_FULL,rINST_FULL)     # rINST_FULL<- "this" ptr
-    testl     rINST_FULL,rINST_FULL     # null "this"?
+    GET_VREG_R  rINST rINST             # rINST<- "this" ptr
+    testl     rINST,rINST               # null "this"?
     je        common_errNullObject      # yes, throw
     movl      offMethod_clazz(%eax),%eax # eax<- method->clazz
     testl     %ecx,%ecx                 # already resolved?
@@ -2802,22 +3074,20 @@ dvmAsmInstructionStart = .L_OP_NOP
      */
     /* op vB, {vD, vE, vF, vG, vA}, class@CCCC */
     /* op {vCCCC..v(CCCC+AA-1)}, meth@BBBB */
-    GET_GLUE(%ecx)
+    movl      rGLUE,%ecx
     movzwl    2(rPC),%eax              # eax<- BBBB
     movl      offGlue_methodClassDex(%ecx),%ecx # ecx<- pDvmDex
-    EXPORT_PC()
-    SPILL(rPC)
+    EXPORT_PC
     movl      offDvmDex_pResMethods(%ecx),%ecx  # ecx<- pDvmDex->pResMethods
-    movzwl    4(rPC),rPC               # rPC<- GFED or CCCC
+    movzwl    4(rPC),%edx              # edx<- GFED or CCCC
     movl      (%ecx,%eax,4),%eax       # eax<- resolved methodToCall
     .if       (!0)
-    andl      $0xf,rPC                # rPC<- D (or stays CCCC)
+    andl      $0xf,%edx               # edx<- D (or stays CCCC)
     .endif
     testl     %eax,%eax                # already resolved?
-    GET_VREG(%ecx,rPC)                 # ecx<- "this" ptr
+    GET_VREG_R  %ecx %edx              # ecx<- "this" ptr
     je        .LOP_INVOKE_DIRECT_resolve      # not resolved, do it now
 .LOP_INVOKE_DIRECT_finish:
-    UNSPILL(rPC)
     testl     %ecx,%ecx                # null "this"?
     jne       common_invokeMethodNoRange  # no, continue on
     jmp       common_errNullObject
@@ -2833,15 +3103,15 @@ dvmAsmInstructionStart = .L_OP_NOP
      */
     /* op vB, {vD, vE, vF, vG, vA}, class@CCCC */
     /* op {vCCCC..v(CCCC+AA-1)}, meth@BBBB */
-    GET_GLUE(%ecx)
+    movl      rGLUE,%ecx
     movzwl    2(rPC),%eax               # eax<- BBBB
     movl      offGlue_methodClassDex(%ecx),%ecx # ecx<- pDvmDex
-    EXPORT_PC()
+    EXPORT_PC
     movl      offDvmDex_pResMethods(%ecx),%ecx  # ecx<- pDvmDex->pResMethods
     movl      (%ecx,%eax,4),%eax        # eax<- resolved methodToCall
     testl     %eax,%eax
     jne       common_invokeMethodNoRange
-    GET_GLUE(%ecx)
+    movl      rGLUE,%ecx
     movl      offGlue_method(%ecx),%ecx # ecx<- glue->method
     movzwl    2(rPC),%eax
     movl      offMethod_clazz(%ecx),%ecx# ecx<- method->clazz
@@ -2861,12 +3131,12 @@ dvmAsmInstructionStart = .L_OP_NOP
     /* op vB, {vD, vE, vF, vG, vA}, class@CCCC */
     /* op {vCCCC..v(CCCC+AA-1)}, meth@BBBB */
     movzwl     4(rPC),%eax              # eax<- FEDC or CCCC
-    GET_GLUE(%ecx)
+    movl       rGLUE,%ecx
     .if        (!0)
     andl       $0xf,%eax               # eax<- C (or stays CCCC)
     .endif
-    GET_VREG(%eax,%eax)                 # eax<- "this"
-    EXPORT_PC()
+    GET_VREG_R   %eax %eax              # eax<- "this"
+    EXPORT_PC
     testl      %eax,%eax                # null this?
     je         common_errNullObject     # yes, fail
     movl       offObject_clazz(%eax),%eax# eax<- thisPtr->clazz
@@ -2877,7 +3147,6 @@ dvmAsmInstructionStart = .L_OP_NOP
     movzwl     2(rPC),%eax                         # eax<- BBBB
     movl       %ecx,OUT_ARG2(%esp)                 # arg2<- method
     movl       %eax,OUT_ARG1(%esp)                 # arg1<- BBBB
-    SPILL(rPC)
     jmp        .LOP_INVOKE_INTERFACE_continue
 
 /* ------------------------------ */
@@ -2901,18 +3170,17 @@ dvmAsmInstructionStart = .L_OP_NOP
      */
     /* op vB, {vD, vE, vF, vG, vA}, class@CCCC */
     /* op vAA, {vCCCC..v(CCCC+AA-1)}, meth@BBBB */
-    GET_GLUE(%eax)
+    movl      rGLUE,%eax
     movzwl    2(rPC),%ecx                 # ecx<- BBBB
     movl      offGlue_methodClassDex(%eax),%eax  # eax<- pDvmDex
-    EXPORT_PC()
+    EXPORT_PC
     movl      offDvmDex_pResMethods(%eax),%eax   # eax<- pDvmDex->pResMethods
     movl      (%eax,%ecx,4),%eax          # eax<- resolved baseMethod
     testl     %eax,%eax                   # already resolved?
     jne       .LOP_INVOKE_VIRTUAL_RANGE_continue        # yes, continue
-    GET_GLUE(%eax)
+    movl      rGLUE,%eax
     movl      %ecx,OUT_ARG1(%esp)         # arg1<- ref
     movl      offGlue_method(%eax),%eax   # eax<- glue->method
-    SPILL(rPC)
     jmp       .LOP_INVOKE_VIRTUAL_RANGE_more
 
 
@@ -2928,19 +3196,19 @@ dvmAsmInstructionStart = .L_OP_NOP
      */
     /* op vB, {vD, vE, vF, vG, vA}, class@CCCC */
     /* op vAA, {vCCCC..v(CCCC+AA-1)}, meth@BBBB */
-    GET_GLUE(rINST_FULL)
+    movl      rGLUE,rINST
     movzwl    2(rPC),%eax               # eax<- BBBB
-    movl      offGlue_methodClassDex(rINST_FULL),%ecx # ecx<- pDvmDex
-    EXPORT_PC()
+    movl      offGlue_methodClassDex(rINST),%ecx # ecx<- pDvmDex
+    EXPORT_PC
     movl      offDvmDex_pResMethods(%ecx),%ecx # ecx<- pDvmDex->pResMethods
     movl      (%ecx,%eax,4),%ecx        # ecx<- resolved baseMethod
-    movl      offGlue_method(rINST_FULL),%eax # eax<- method
-    movzwl    4(rPC),rINST_FULL         # rINST_FULL<- GFED or CCCC
+    movl      offGlue_method(rINST),%eax # eax<- method
+    movzwl    4(rPC),rINST              # rINST<- GFED or CCCC
     .if       (!1)
-    andl      $0xf,rINST_FULL          # rINST_FULL<- D (or stays CCCC)
+    andl      $0xf,rINST               # rINST<- D (or stays CCCC)
     .endif
-    GET_VREG(rINST_FULL,rINST_FULL)     # rINST_FULL<- "this" ptr
-    testl     rINST_FULL,rINST_FULL     # null "this"?
+    GET_VREG_R  rINST rINST             # rINST<- "this" ptr
+    testl     rINST,rINST               # null "this"?
     je        common_errNullObject      # yes, throw
     movl      offMethod_clazz(%eax),%eax # eax<- method->clazz
     testl     %ecx,%ecx                 # already resolved?
@@ -2965,22 +3233,20 @@ dvmAsmInstructionStart = .L_OP_NOP
      */
     /* op vB, {vD, vE, vF, vG, vA}, class@CCCC */
     /* op {vCCCC..v(CCCC+AA-1)}, meth@BBBB */
-    GET_GLUE(%ecx)
+    movl      rGLUE,%ecx
     movzwl    2(rPC),%eax              # eax<- BBBB
     movl      offGlue_methodClassDex(%ecx),%ecx # ecx<- pDvmDex
-    EXPORT_PC()
-    SPILL(rPC)
+    EXPORT_PC
     movl      offDvmDex_pResMethods(%ecx),%ecx  # ecx<- pDvmDex->pResMethods
-    movzwl    4(rPC),rPC               # rPC<- GFED or CCCC
+    movzwl    4(rPC),%edx              # edx<- GFED or CCCC
     movl      (%ecx,%eax,4),%eax       # eax<- resolved methodToCall
     .if       (!1)
-    andl      $0xf,rPC                # rPC<- D (or stays CCCC)
+    andl      $0xf,%edx               # edx<- D (or stays CCCC)
     .endif
     testl     %eax,%eax                # already resolved?
-    GET_VREG(%ecx,rPC)                 # ecx<- "this" ptr
+    GET_VREG_R  %ecx %edx              # ecx<- "this" ptr
     je        .LOP_INVOKE_DIRECT_RANGE_resolve      # not resolved, do it now
 .LOP_INVOKE_DIRECT_RANGE_finish:
-    UNSPILL(rPC)
     testl     %ecx,%ecx                # null "this"?
     jne       common_invokeMethodRange  # no, continue on
     jmp       common_errNullObject
@@ -2998,15 +3264,15 @@ dvmAsmInstructionStart = .L_OP_NOP
      */
     /* op vB, {vD, vE, vF, vG, vA}, class@CCCC */
     /* op {vCCCC..v(CCCC+AA-1)}, meth@BBBB */
-    GET_GLUE(%ecx)
+    movl      rGLUE,%ecx
     movzwl    2(rPC),%eax               # eax<- BBBB
     movl      offGlue_methodClassDex(%ecx),%ecx # ecx<- pDvmDex
-    EXPORT_PC()
+    EXPORT_PC
     movl      offDvmDex_pResMethods(%ecx),%ecx  # ecx<- pDvmDex->pResMethods
     movl      (%ecx,%eax,4),%eax        # eax<- resolved methodToCall
     testl     %eax,%eax
     jne       common_invokeMethodRange
-    GET_GLUE(%ecx)
+    movl      rGLUE,%ecx
     movl      offGlue_method(%ecx),%ecx # ecx<- glue->method
     movzwl    2(rPC),%eax
     movl      offMethod_clazz(%ecx),%ecx# ecx<- method->clazz
@@ -3028,12 +3294,12 @@ dvmAsmInstructionStart = .L_OP_NOP
     /* op vB, {vD, vE, vF, vG, vA}, class@CCCC */
     /* op {vCCCC..v(CCCC+AA-1)}, meth@BBBB */
     movzwl     4(rPC),%eax              # eax<- FEDC or CCCC
-    GET_GLUE(%ecx)
+    movl       rGLUE,%ecx
     .if        (!1)
     andl       $0xf,%eax               # eax<- C (or stays CCCC)
     .endif
-    GET_VREG(%eax,%eax)                 # eax<- "this"
-    EXPORT_PC()
+    GET_VREG_R   %eax %eax              # eax<- "this"
+    EXPORT_PC
     testl      %eax,%eax                # null this?
     je         common_errNullObject     # yes, fail
     movl       offObject_clazz(%eax),%eax# eax<- thisPtr->clazz
@@ -3044,7 +3310,6 @@ dvmAsmInstructionStart = .L_OP_NOP
     movzwl     2(rPC),%eax                         # eax<- BBBB
     movl       %ecx,OUT_ARG2(%esp)                 # arg2<- method
     movl       %eax,OUT_ARG1(%esp)                 # arg1<- BBBB
-    SPILL(rPC)
     jmp        .LOP_INVOKE_INTERFACE_RANGE_continue
 
 
@@ -3074,17 +3339,17 @@ dvmAsmInstructionStart = .L_OP_NOP
      * specifies an instruction that performs "result = op eax".
      */
     /* unop vA, vB */
-    movzbl   rINST_HI,%ecx           # ecx<- A+
-    sarl     $12,rINST_FULL         # rINST_FULL<- B
-    GET_VREG(%eax,rINST_FULL)        # eax<- vB
-    andb     $0xf,%cl               # ecx<- A
-    FETCH_INST_WORD(1)
-    ADVANCE_PC(1)
+    movzbl   rINSTbl,%ecx           # ecx<- A+
+    sarl     $4,rINST             # rINST<- B
+    GET_VREG_R %eax rINST           # eax<- vB
+    andb     $0xf,%cl              # ecx<- A
+    FETCH_INST_OPCODE 1 %edx
+    ADVANCE_PC 1
     
     
     negl %eax
-    SET_VREG(%eax,%ecx)
-    GOTO_NEXT
+    SET_VREG %eax %ecx
+    GOTO_NEXT_R %edx
 
 
 /* ------------------------------ */
@@ -3097,17 +3362,17 @@ dvmAsmInstructionStart = .L_OP_NOP
      * specifies an instruction that performs "result = op eax".
      */
     /* unop vA, vB */
-    movzbl   rINST_HI,%ecx           # ecx<- A+
-    sarl     $12,rINST_FULL         # rINST_FULL<- B
-    GET_VREG(%eax,rINST_FULL)        # eax<- vB
-    andb     $0xf,%cl               # ecx<- A
-    FETCH_INST_WORD(1)
-    ADVANCE_PC(1)
+    movzbl   rINSTbl,%ecx           # ecx<- A+
+    sarl     $4,rINST             # rINST<- B
+    GET_VREG_R %eax rINST           # eax<- vB
+    andb     $0xf,%cl              # ecx<- A
+    FETCH_INST_OPCODE 1 %edx
+    ADVANCE_PC 1
     
     
     notl %eax
-    SET_VREG(%eax,%ecx)
-    GOTO_NEXT
+    SET_VREG %eax %ecx
+    GOTO_NEXT_R %edx
 
 
 /* ------------------------------ */
@@ -3115,39 +3380,37 @@ dvmAsmInstructionStart = .L_OP_NOP
 .L_OP_NEG_LONG: /* 0x7d */
 /* File: x86/OP_NEG_LONG.S */
     /* unop vA, vB */
-    movzbl    rINST_HI,%ecx            # ecx<- BA
-    sarl      $4,%ecx                 # ecx<- B
-    movzbl    rINST_HI,rINST_FULL      # ecx<- BA
-    andb      $0xf,rINST_LO           # rINST_FULL<- A
-    GET_VREG_WORD(%eax,%ecx,0)         # eax<- v[B+0]
-    GET_VREG_WORD(%ecx,%ecx,1)         # ecx<- v[B+1]
+    movzbl    rINSTbl,%ecx        # ecx<- BA
+    sarl      $4,%ecx            # ecx<- B
+    andb      $0xf,rINSTbl       # rINST<- A
+    GET_VREG_WORD %eax %ecx 0     # eax<- v[B+0]
+    GET_VREG_WORD %ecx %ecx 1     # ecx<- v[B+1]
     negl      %eax
     adcl      $0,%ecx
     negl      %ecx
-    SET_VREG_WORD(%eax,rINST_FULL,0)   # v[A+0]<- eax
-    SET_VREG_WORD(%ecx,rINST_FULL,1)   # v[A+1]<- ecx
-    FETCH_INST_WORD(1)
-    ADVANCE_PC(1)
-    GOTO_NEXT
+    FETCH_INST_OPCODE 1 %edx
+    SET_VREG_WORD %eax rINST 0    # v[A+0]<- eax
+    SET_VREG_WORD %ecx rINST 1    # v[A+1]<- ecx
+    ADVANCE_PC 1
+    GOTO_NEXT_R %edx
 
 /* ------------------------------ */
     .balign 64
 .L_OP_NOT_LONG: /* 0x7e */
 /* File: x86/OP_NOT_LONG.S */
     /* unop vA, vB */
-    movzbl    rINST_HI,%ecx            # ecx<- BA
-    sarl      $4,%ecx                 # ecx<- B
-    movzbl    rINST_HI,rINST_FULL      # ecx<- BA
-    andb      $0xf,rINST_LO           # rINST_FULL<- A
-    GET_VREG_WORD(%eax,%ecx,0)         # eax<- v[B+0]
-    GET_VREG_WORD(%ecx,%ecx,1)         # ecx<- v[B+1]
+    movzbl    rINSTbl,%ecx       # ecx<- BA
+    sarl      $4,%ecx           # ecx<- B
+    andb      $0xf,rINSTbl      # rINST<- A
+    GET_VREG_WORD %eax %ecx 0    # eax<- v[B+0]
+    GET_VREG_WORD %ecx %ecx 1    # ecx<- v[B+1]
+    FETCH_INST_OPCODE 1 %edx
     notl      %eax
     notl      %ecx
-    SET_VREG_WORD(%eax,rINST_FULL,0)   # v[A+0]<- eax
-    SET_VREG_WORD(%ecx,rINST_FULL,1)   # v[A+1]<- ecx
-    FETCH_INST_WORD(1)
-    ADVANCE_PC(1)
-    GOTO_NEXT
+    SET_VREG_WORD %eax rINST 0   # v[A+0]<- eax
+    SET_VREG_WORD %ecx rINST 1   # v[A+1]<- ecx
+    ADVANCE_PC 1
+    GOTO_NEXT_R %edx
 
 /* ------------------------------ */
     .balign 64
@@ -3158,15 +3421,15 @@ dvmAsmInstructionStart = .L_OP_NOP
      * Generic 32-bit FP conversion operation.
      */
     /* unop vA, vB */
-    movzbl   rINST_HI,%ecx           # ecx<- A+
-    sarl     $12,rINST_FULL         # rINST_FULL<- B
-    flds    (rFP,rINST_FULL,4)      # %st0<- vB
-    andb     $0xf,%cl               # ecx<- A
-    FETCH_INST_WORD(1)
-    ADVANCE_PC(1)
+    movzbl   rINSTbl,%ecx       # ecx<- A+
+    sarl     $4,rINST         # rINST<- B
+    flds    (rFP,rINST,4)      # %st0<- vB
+    andb     $0xf,%cl          # ecx<- A
+    FETCH_INST_OPCODE 1 %edx
+    ADVANCE_PC 1
     fchs
-    fstps  (rFP,%ecx,4)             # vA<- %st0
-    GOTO_NEXT
+    fstps  (rFP,%ecx,4)        # vA<- %st0
+    GOTO_NEXT_R %edx
 
 
 /* ------------------------------ */
@@ -3178,15 +3441,15 @@ dvmAsmInstructionStart = .L_OP_NOP
      * Generic 32-bit FP conversion operation.
      */
     /* unop vA, vB */
-    movzbl   rINST_HI,%ecx           # ecx<- A+
-    sarl     $12,rINST_FULL         # rINST_FULL<- B
-    fldl    (rFP,rINST_FULL,4)      # %st0<- vB
-    andb     $0xf,%cl               # ecx<- A
-    FETCH_INST_WORD(1)
-    ADVANCE_PC(1)
+    movzbl   rINSTbl,%ecx       # ecx<- A+
+    sarl     $4,rINST         # rINST<- B
+    fldl    (rFP,rINST,4)      # %st0<- vB
+    andb     $0xf,%cl          # ecx<- A
+    FETCH_INST_OPCODE 1 %edx
+    ADVANCE_PC 1
     fchs
-    fstpl  (rFP,%ecx,4)             # vA<- %st0
-    GOTO_NEXT
+    fstpl  (rFP,%ecx,4)        # vA<- %st0
+    GOTO_NEXT_R %edx
 
 
 /* ------------------------------ */
@@ -3194,18 +3457,16 @@ dvmAsmInstructionStart = .L_OP_NOP
 .L_OP_INT_TO_LONG: /* 0x81 */
 /* File: x86/OP_INT_TO_LONG.S */
     /* int to long vA, vB */
-    movzbl  rINST_HI,%ecx               # ecx<- +A
-    sarl    $12,rINST_FULL             # rINST_FULL<- B
-    GET_VREG(%eax,rINST_FULL)           # eax<- vB
-    SPILL(rPC)                          # will step on edx later
-    andb    $0xf,%cl                   # ecx<- A
+    movzbl  rINSTbl,%eax                # eax<- +A
+    sarl    $4,%eax                    # eax<- B
+    GET_VREG_R %eax %eax                # eax<- vB
+    andb    $0xf,rINSTbl               # rINST<- A
     cltd                                # edx:eax<- sssssssBBBBBBBB
-    SET_VREG_WORD(%edx,%ecx,1)          # v[A+1]<- edx/rPC
-    UNSPILL(rPC)
-    SET_VREG_WORD(%eax,%ecx,0)          # v[A+0]<- %eax
-    FETCH_INST_WORD(1)
-    ADVANCE_PC(1)
-    GOTO_NEXT
+    SET_VREG_WORD %edx rINST 1          # v[A+1]<- edx/rPC
+    FETCH_INST_OPCODE 1 %edx
+    SET_VREG_WORD %eax rINST 0          # v[A+0]<- %eax
+    ADVANCE_PC 1
+    GOTO_NEXT_R %edx
 
 /* ------------------------------ */
     .balign 64
@@ -3216,15 +3477,15 @@ dvmAsmInstructionStart = .L_OP_NOP
      * Generic 32-bit FP conversion operation.
      */
     /* unop vA, vB */
-    movzbl   rINST_HI,%ecx           # ecx<- A+
-    sarl     $12,rINST_FULL         # rINST_FULL<- B
-    fildl    (rFP,rINST_FULL,4)      # %st0<- vB
-    andb     $0xf,%cl               # ecx<- A
-    FETCH_INST_WORD(1)
-    ADVANCE_PC(1)
+    movzbl   rINSTbl,%ecx       # ecx<- A+
+    sarl     $4,rINST         # rINST<- B
+    fildl    (rFP,rINST,4)      # %st0<- vB
+    andb     $0xf,%cl          # ecx<- A
+    FETCH_INST_OPCODE 1 %edx
+    ADVANCE_PC 1
     
-    fstps  (rFP,%ecx,4)             # vA<- %st0
-    GOTO_NEXT
+    fstps  (rFP,%ecx,4)        # vA<- %st0
+    GOTO_NEXT_R %edx
 
 
 /* ------------------------------ */
@@ -3236,15 +3497,15 @@ dvmAsmInstructionStart = .L_OP_NOP
      * Generic 32-bit FP conversion operation.
      */
     /* unop vA, vB */
-    movzbl   rINST_HI,%ecx           # ecx<- A+
-    sarl     $12,rINST_FULL         # rINST_FULL<- B
-    fildl    (rFP,rINST_FULL,4)      # %st0<- vB
-    andb     $0xf,%cl               # ecx<- A
-    FETCH_INST_WORD(1)
-    ADVANCE_PC(1)
+    movzbl   rINSTbl,%ecx       # ecx<- A+
+    sarl     $4,rINST         # rINST<- B
+    fildl    (rFP,rINST,4)      # %st0<- vB
+    andb     $0xf,%cl          # ecx<- A
+    FETCH_INST_OPCODE 1 %edx
+    ADVANCE_PC 1
     
-    fstpl  (rFP,%ecx,4)             # vA<- %st0
-    GOTO_NEXT
+    fstpl  (rFP,%ecx,4)        # vA<- %st0
+    GOTO_NEXT_R %edx
 
 
 /* ------------------------------ */
@@ -3255,14 +3516,14 @@ dvmAsmInstructionStart = .L_OP_NOP
 /* File: x86/OP_MOVE.S */
     /* for move, move-object, long-to-int */
     /* op vA, vB */
-    movzbl rINST_HI,%eax         # eax<- BA
+    movzbl rINSTbl,%eax          # eax<- BA
     andb   $0xf,%al             # eax<- A
-    shrl   $12,rINST_FULL       # rINST_FULL<- B
-    GET_VREG(%ecx,rINST_FULL)
-    FETCH_INST_WORD(1)
-    ADVANCE_PC(1)
-    SET_VREG(%ecx,%eax)          # fp[A]<-fp[B]
-    GOTO_NEXT
+    shrl   $4,rINST            # rINST<- B
+    GET_VREG_R %ecx rINST
+    FETCH_INST_OPCODE 1 %edx
+    ADVANCE_PC 1
+    SET_VREG %ecx %eax           # fp[A]<-fp[B]
+    GOTO_NEXT_R %edx
 
 
 /* ------------------------------ */
@@ -3274,15 +3535,15 @@ dvmAsmInstructionStart = .L_OP_NOP
      * Generic 32-bit FP conversion operation.
      */
     /* unop vA, vB */
-    movzbl   rINST_HI,%ecx           # ecx<- A+
-    sarl     $12,rINST_FULL         # rINST_FULL<- B
-    fildll    (rFP,rINST_FULL,4)      # %st0<- vB
-    andb     $0xf,%cl               # ecx<- A
-    FETCH_INST_WORD(1)
-    ADVANCE_PC(1)
+    movzbl   rINSTbl,%ecx       # ecx<- A+
+    sarl     $4,rINST         # rINST<- B
+    fildll    (rFP,rINST,4)      # %st0<- vB
+    andb     $0xf,%cl          # ecx<- A
+    FETCH_INST_OPCODE 1 %edx
+    ADVANCE_PC 1
     
-    fstps  (rFP,%ecx,4)             # vA<- %st0
-    GOTO_NEXT
+    fstps  (rFP,%ecx,4)        # vA<- %st0
+    GOTO_NEXT_R %edx
 
 
 /* ------------------------------ */
@@ -3294,15 +3555,15 @@ dvmAsmInstructionStart = .L_OP_NOP
      * Generic 32-bit FP conversion operation.
      */
     /* unop vA, vB */
-    movzbl   rINST_HI,%ecx           # ecx<- A+
-    sarl     $12,rINST_FULL         # rINST_FULL<- B
-    fildll    (rFP,rINST_FULL,4)      # %st0<- vB
-    andb     $0xf,%cl               # ecx<- A
-    FETCH_INST_WORD(1)
-    ADVANCE_PC(1)
+    movzbl   rINSTbl,%ecx       # ecx<- A+
+    sarl     $4,rINST         # rINST<- B
+    fildll    (rFP,rINST,4)      # %st0<- vB
+    andb     $0xf,%cl          # ecx<- A
+    FETCH_INST_OPCODE 1 %edx
+    ADVANCE_PC 1
     
-    fstpl  (rFP,%ecx,4)             # vA<- %st0
-    GOTO_NEXT
+    fstpl  (rFP,%ecx,4)        # vA<- %st0
+    GOTO_NEXT_R %edx
 
 
 /* ------------------------------ */
@@ -3318,20 +3579,20 @@ dvmAsmInstructionStart = .L_OP_NOP
  * to play some games.
  */
     /* float/double to int/long vA, vB */
-    movzbl    rINST_HI,%ecx           # ecx<- A+
-    sarl      $12,rINST_FULL         # rINST_FULL<- B
+    movzbl    rINSTbl,%ecx       # ecx<- A+
+    sarl      $4,rINST         # rINST<- B
     .if 0
-    fldl     (rFP,rINST_FULL,4)       # %st0<- vB
+    fldl     (rFP,rINST,4)       # %st0<- vB
     .else
-    flds     (rFP,rINST_FULL,4)       # %st0<- vB
+    flds     (rFP,rINST,4)       # %st0<- vB
     .endif
     ftst
     fnstcw   LOCAL0_OFFSET(%ebp)      # remember original rounding mode
     movzwl   LOCAL0_OFFSET(%ebp),%eax
     movb     $0xc,%ah
     movw     %ax,LOCAL0_OFFSET+2(%ebp)
-    fldcw    LOCAL0_OFFSET+2(%ebp)      # set "to zero" rounding mode
-    FETCH_INST_WORD(1)
+    fldcw    LOCAL0_OFFSET+2(%ebp)    # set "to zero" rounding mode
+    FETCH_INST_OPCODE 1 %edx
     andb     $0xf,%cl                # ecx<- A
     .if 0
     fistpll  (rFP,%ecx,4)             # convert and store
@@ -3355,20 +3616,20 @@ dvmAsmInstructionStart = .L_OP_NOP
  * to play some games.
  */
     /* float/double to int/long vA, vB */
-    movzbl    rINST_HI,%ecx           # ecx<- A+
-    sarl      $12,rINST_FULL         # rINST_FULL<- B
+    movzbl    rINSTbl,%ecx       # ecx<- A+
+    sarl      $4,rINST         # rINST<- B
     .if 0
-    fldl     (rFP,rINST_FULL,4)       # %st0<- vB
+    fldl     (rFP,rINST,4)       # %st0<- vB
     .else
-    flds     (rFP,rINST_FULL,4)       # %st0<- vB
+    flds     (rFP,rINST,4)       # %st0<- vB
     .endif
     ftst
     fnstcw   LOCAL0_OFFSET(%ebp)      # remember original rounding mode
     movzwl   LOCAL0_OFFSET(%ebp),%eax
     movb     $0xc,%ah
     movw     %ax,LOCAL0_OFFSET+2(%ebp)
-    fldcw    LOCAL0_OFFSET+2(%ebp)      # set "to zero" rounding mode
-    FETCH_INST_WORD(1)
+    fldcw    LOCAL0_OFFSET+2(%ebp)    # set "to zero" rounding mode
+    FETCH_INST_OPCODE 1 %edx
     andb     $0xf,%cl                # ecx<- A
     .if 1
     fistpll  (rFP,%ecx,4)             # convert and store
@@ -3388,15 +3649,15 @@ dvmAsmInstructionStart = .L_OP_NOP
      * Generic 32-bit FP conversion operation.
      */
     /* unop vA, vB */
-    movzbl   rINST_HI,%ecx           # ecx<- A+
-    sarl     $12,rINST_FULL         # rINST_FULL<- B
-    flds    (rFP,rINST_FULL,4)      # %st0<- vB
-    andb     $0xf,%cl               # ecx<- A
-    FETCH_INST_WORD(1)
-    ADVANCE_PC(1)
+    movzbl   rINSTbl,%ecx       # ecx<- A+
+    sarl     $4,rINST         # rINST<- B
+    flds    (rFP,rINST,4)      # %st0<- vB
+    andb     $0xf,%cl          # ecx<- A
+    FETCH_INST_OPCODE 1 %edx
+    ADVANCE_PC 1
     
-    fstpl  (rFP,%ecx,4)             # vA<- %st0
-    GOTO_NEXT
+    fstpl  (rFP,%ecx,4)        # vA<- %st0
+    GOTO_NEXT_R %edx
 
 
 /* ------------------------------ */
@@ -3412,20 +3673,20 @@ dvmAsmInstructionStart = .L_OP_NOP
  * to play some games.
  */
     /* float/double to int/long vA, vB */
-    movzbl    rINST_HI,%ecx           # ecx<- A+
-    sarl      $12,rINST_FULL         # rINST_FULL<- B
+    movzbl    rINSTbl,%ecx       # ecx<- A+
+    sarl      $4,rINST         # rINST<- B
     .if 1
-    fldl     (rFP,rINST_FULL,4)       # %st0<- vB
+    fldl     (rFP,rINST,4)       # %st0<- vB
     .else
-    flds     (rFP,rINST_FULL,4)       # %st0<- vB
+    flds     (rFP,rINST,4)       # %st0<- vB
     .endif
     ftst
     fnstcw   LOCAL0_OFFSET(%ebp)      # remember original rounding mode
     movzwl   LOCAL0_OFFSET(%ebp),%eax
     movb     $0xc,%ah
     movw     %ax,LOCAL0_OFFSET+2(%ebp)
-    fldcw    LOCAL0_OFFSET+2(%ebp)      # set "to zero" rounding mode
-    FETCH_INST_WORD(1)
+    fldcw    LOCAL0_OFFSET+2(%ebp)    # set "to zero" rounding mode
+    FETCH_INST_OPCODE 1 %edx
     andb     $0xf,%cl                # ecx<- A
     .if 0
     fistpll  (rFP,%ecx,4)             # convert and store
@@ -3449,20 +3710,20 @@ dvmAsmInstructionStart = .L_OP_NOP
  * to play some games.
  */
     /* float/double to int/long vA, vB */
-    movzbl    rINST_HI,%ecx           # ecx<- A+
-    sarl      $12,rINST_FULL         # rINST_FULL<- B
+    movzbl    rINSTbl,%ecx       # ecx<- A+
+    sarl      $4,rINST         # rINST<- B
     .if 1
-    fldl     (rFP,rINST_FULL,4)       # %st0<- vB
+    fldl     (rFP,rINST,4)       # %st0<- vB
     .else
-    flds     (rFP,rINST_FULL,4)       # %st0<- vB
+    flds     (rFP,rINST,4)       # %st0<- vB
     .endif
     ftst
     fnstcw   LOCAL0_OFFSET(%ebp)      # remember original rounding mode
     movzwl   LOCAL0_OFFSET(%ebp),%eax
     movb     $0xc,%ah
     movw     %ax,LOCAL0_OFFSET+2(%ebp)
-    fldcw    LOCAL0_OFFSET+2(%ebp)      # set "to zero" rounding mode
-    FETCH_INST_WORD(1)
+    fldcw    LOCAL0_OFFSET+2(%ebp)    # set "to zero" rounding mode
+    FETCH_INST_OPCODE 1 %edx
     andb     $0xf,%cl                # ecx<- A
     .if 1
     fistpll  (rFP,%ecx,4)             # convert and store
@@ -3482,15 +3743,15 @@ dvmAsmInstructionStart = .L_OP_NOP
      * Generic 32-bit FP conversion operation.
      */
     /* unop vA, vB */
-    movzbl   rINST_HI,%ecx           # ecx<- A+
-    sarl     $12,rINST_FULL         # rINST_FULL<- B
-    fldl    (rFP,rINST_FULL,4)      # %st0<- vB
-    andb     $0xf,%cl               # ecx<- A
-    FETCH_INST_WORD(1)
-    ADVANCE_PC(1)
+    movzbl   rINSTbl,%ecx       # ecx<- A+
+    sarl     $4,rINST         # rINST<- B
+    fldl    (rFP,rINST,4)      # %st0<- vB
+    andb     $0xf,%cl          # ecx<- A
+    FETCH_INST_OPCODE 1 %edx
+    ADVANCE_PC 1
     
-    fstps  (rFP,%ecx,4)             # vA<- %st0
-    GOTO_NEXT
+    fstps  (rFP,%ecx,4)        # vA<- %st0
+    GOTO_NEXT_R %edx
 
 
 /* ------------------------------ */
@@ -3503,17 +3764,17 @@ dvmAsmInstructionStart = .L_OP_NOP
      * specifies an instruction that performs "result = op eax".
      */
     /* unop vA, vB */
-    movzbl   rINST_HI,%ecx           # ecx<- A+
-    sarl     $12,rINST_FULL         # rINST_FULL<- B
-    GET_VREG(%eax,rINST_FULL)        # eax<- vB
-    andb     $0xf,%cl               # ecx<- A
-    FETCH_INST_WORD(1)
-    ADVANCE_PC(1)
+    movzbl   rINSTbl,%ecx           # ecx<- A+
+    sarl     $4,rINST             # rINST<- B
+    GET_VREG_R %eax rINST           # eax<- vB
+    andb     $0xf,%cl              # ecx<- A
+    FETCH_INST_OPCODE 1 %edx
+    ADVANCE_PC 1
     
     
     movsbl %al,%eax
-    SET_VREG(%eax,%ecx)
-    GOTO_NEXT
+    SET_VREG %eax %ecx
+    GOTO_NEXT_R %edx
 
 
 /* ------------------------------ */
@@ -3526,17 +3787,17 @@ dvmAsmInstructionStart = .L_OP_NOP
      * specifies an instruction that performs "result = op eax".
      */
     /* unop vA, vB */
-    movzbl   rINST_HI,%ecx           # ecx<- A+
-    sarl     $12,rINST_FULL         # rINST_FULL<- B
-    GET_VREG(%eax,rINST_FULL)        # eax<- vB
-    andb     $0xf,%cl               # ecx<- A
-    FETCH_INST_WORD(1)
-    ADVANCE_PC(1)
+    movzbl   rINSTbl,%ecx           # ecx<- A+
+    sarl     $4,rINST             # rINST<- B
+    GET_VREG_R %eax rINST           # eax<- vB
+    andb     $0xf,%cl              # ecx<- A
+    FETCH_INST_OPCODE 1 %edx
+    ADVANCE_PC 1
     
     
     movzwl %ax,%eax
-    SET_VREG(%eax,%ecx)
-    GOTO_NEXT
+    SET_VREG %eax %ecx
+    GOTO_NEXT_R %edx
 
 
 /* ------------------------------ */
@@ -3549,17 +3810,17 @@ dvmAsmInstructionStart = .L_OP_NOP
      * specifies an instruction that performs "result = op eax".
      */
     /* unop vA, vB */
-    movzbl   rINST_HI,%ecx           # ecx<- A+
-    sarl     $12,rINST_FULL         # rINST_FULL<- B
-    GET_VREG(%eax,rINST_FULL)        # eax<- vB
-    andb     $0xf,%cl               # ecx<- A
-    FETCH_INST_WORD(1)
-    ADVANCE_PC(1)
+    movzbl   rINSTbl,%ecx           # ecx<- A+
+    sarl     $4,rINST             # rINST<- B
+    GET_VREG_R %eax rINST           # eax<- vB
+    andb     $0xf,%cl              # ecx<- A
+    FETCH_INST_OPCODE 1 %edx
+    ADVANCE_PC 1
     
     
     movswl %ax,%eax
-    SET_VREG(%eax,%ecx)
-    GOTO_NEXT
+    SET_VREG %eax %ecx
+    GOTO_NEXT_R %edx
 
 
 /* ------------------------------ */
@@ -3577,15 +3838,14 @@ dvmAsmInstructionStart = .L_OP_NOP
      *      xor-int, shl-int, shr-int, ushr-int
      */
     /* binop vAA, vBB, vCC */
-    movzbl   2(rPC),%eax            # eax<- BB
-    movzbl   3(rPC),%ecx            # ecx<- CC
-    GET_VREG(%eax,%eax)             # eax<- vBB
-    addl (rFP,%ecx,4),%eax              # ex: addl    (rFP,%ecx,4),%eax
-    movzbl   rINST_HI,%ecx         # ecx<- AA
-    FETCH_INST_WORD(2)
-    ADVANCE_PC(2)
-    SET_VREG(%eax,%ecx)
-    GOTO_NEXT
+    movzbl   2(rPC),%eax   # eax<- BB
+    movzbl   3(rPC),%ecx   # ecx<- CC
+    GET_VREG_R %eax %eax   # eax<- vBB
+    addl (rFP,%ecx,4),%eax                 # ex: addl    (rFP,%ecx,4),%eax
+    FETCH_INST_OPCODE 2 %edx
+    ADVANCE_PC 2
+    SET_VREG %eax rINST
+    GOTO_NEXT_R %edx
 
 
 /* ------------------------------ */
@@ -3603,15 +3863,14 @@ dvmAsmInstructionStart = .L_OP_NOP
      *      xor-int, shl-int, shr-int, ushr-int
      */
     /* binop vAA, vBB, vCC */
-    movzbl   2(rPC),%eax            # eax<- BB
-    movzbl   3(rPC),%ecx            # ecx<- CC
-    GET_VREG(%eax,%eax)             # eax<- vBB
-    subl   (rFP,%ecx,4),%eax              # ex: addl    (rFP,%ecx,4),%eax
-    movzbl   rINST_HI,%ecx         # ecx<- AA
-    FETCH_INST_WORD(2)
-    ADVANCE_PC(2)
-    SET_VREG(%eax,%ecx)
-    GOTO_NEXT
+    movzbl   2(rPC),%eax   # eax<- BB
+    movzbl   3(rPC),%ecx   # ecx<- CC
+    GET_VREG_R %eax %eax   # eax<- vBB
+    subl   (rFP,%ecx,4),%eax                 # ex: addl    (rFP,%ecx,4),%eax
+    FETCH_INST_OPCODE 2 %edx
+    ADVANCE_PC 2
+    SET_VREG %eax rINST
+    GOTO_NEXT_R %edx
 
 
 /* ------------------------------ */
@@ -3624,15 +3883,12 @@ dvmAsmInstructionStart = .L_OP_NOP
     /* mul vAA, vBB, vCC */
     movzbl   2(rPC),%eax            # eax<- BB
     movzbl   3(rPC),%ecx            # ecx<- CC
-    SPILL(rPC)
-    GET_VREG(%eax,%eax)             # eax<- vBB
-    imull    (rFP,%ecx,4),%eax      # trashes rPC/edx
-    UNSPILL(rPC)
-    movzbl   rINST_HI,%ecx          # ecx<- AA
-    FETCH_INST_WORD(2)
-    ADVANCE_PC(2)
-    SET_VREG(%eax,%ecx)
-    GOTO_NEXT
+    GET_VREG_R %eax %eax            # eax<- vBB
+    imull    (rFP,%ecx,4),%eax      # trashes edx
+    FETCH_INST_OPCODE 2 %edx
+    ADVANCE_PC 2
+    SET_VREG %eax rINST
+    GOTO_NEXT_R %edx
 
 /* ------------------------------ */
     .balign 64
@@ -3647,9 +3903,8 @@ dvmAsmInstructionStart = .L_OP_NOP
     /* binop vAA, vBB, vCC */
     movzbl   2(rPC),%eax            # eax<- BB
     movzbl   3(rPC),%ecx            # ecx<- CC
-    GET_VREG(%eax,%eax)             # eax<- vBB
-    GET_VREG(%ecx,%ecx)             # eax<- vBB
-    SPILL(rPC)
+    GET_VREG_R %eax %eax            # eax<- vBB
+    GET_VREG_R %ecx %ecx            # eax<- vBB
     cmpl     $0,%ecx
     je       common_errDivideByZero
     cmpl     $-1,%ecx
@@ -3674,9 +3929,8 @@ dvmAsmInstructionStart = .L_OP_NOP
     /* binop vAA, vBB, vCC */
     movzbl   2(rPC),%eax            # eax<- BB
     movzbl   3(rPC),%ecx            # ecx<- CC
-    GET_VREG(%eax,%eax)             # eax<- vBB
-    GET_VREG(%ecx,%ecx)             # eax<- vBB
-    SPILL(rPC)
+    GET_VREG_R %eax %eax            # eax<- vBB
+    GET_VREG_R %ecx %ecx            # eax<- vBB
     cmpl     $0,%ecx
     je       common_errDivideByZero
     cmpl     $-1,%ecx
@@ -3703,15 +3957,14 @@ dvmAsmInstructionStart = .L_OP_NOP
      *      xor-int, shl-int, shr-int, ushr-int
      */
     /* binop vAA, vBB, vCC */
-    movzbl   2(rPC),%eax            # eax<- BB
-    movzbl   3(rPC),%ecx            # ecx<- CC
-    GET_VREG(%eax,%eax)             # eax<- vBB
-    andl   (rFP,%ecx,4),%eax              # ex: addl    (rFP,%ecx,4),%eax
-    movzbl   rINST_HI,%ecx         # ecx<- AA
-    FETCH_INST_WORD(2)
-    ADVANCE_PC(2)
-    SET_VREG(%eax,%ecx)
-    GOTO_NEXT
+    movzbl   2(rPC),%eax   # eax<- BB
+    movzbl   3(rPC),%ecx   # ecx<- CC
+    GET_VREG_R %eax %eax   # eax<- vBB
+    andl   (rFP,%ecx,4),%eax                 # ex: addl    (rFP,%ecx,4),%eax
+    FETCH_INST_OPCODE 2 %edx
+    ADVANCE_PC 2
+    SET_VREG %eax rINST
+    GOTO_NEXT_R %edx
 
 
 /* ------------------------------ */
@@ -3729,15 +3982,14 @@ dvmAsmInstructionStart = .L_OP_NOP
      *      xor-int, shl-int, shr-int, ushr-int
      */
     /* binop vAA, vBB, vCC */
-    movzbl   2(rPC),%eax            # eax<- BB
-    movzbl   3(rPC),%ecx            # ecx<- CC
-    GET_VREG(%eax,%eax)             # eax<- vBB
-    orl   (rFP,%ecx,4),%eax              # ex: addl    (rFP,%ecx,4),%eax
-    movzbl   rINST_HI,%ecx         # ecx<- AA
-    FETCH_INST_WORD(2)
-    ADVANCE_PC(2)
-    SET_VREG(%eax,%ecx)
-    GOTO_NEXT
+    movzbl   2(rPC),%eax   # eax<- BB
+    movzbl   3(rPC),%ecx   # ecx<- CC
+    GET_VREG_R %eax %eax   # eax<- vBB
+    orl   (rFP,%ecx,4),%eax                 # ex: addl    (rFP,%ecx,4),%eax
+    FETCH_INST_OPCODE 2 %edx
+    ADVANCE_PC 2
+    SET_VREG %eax rINST
+    GOTO_NEXT_R %edx
 
 
 /* ------------------------------ */
@@ -3755,15 +4007,14 @@ dvmAsmInstructionStart = .L_OP_NOP
      *      xor-int, shl-int, shr-int, ushr-int
      */
     /* binop vAA, vBB, vCC */
-    movzbl   2(rPC),%eax            # eax<- BB
-    movzbl   3(rPC),%ecx            # ecx<- CC
-    GET_VREG(%eax,%eax)             # eax<- vBB
-    xorl   (rFP,%ecx,4),%eax              # ex: addl    (rFP,%ecx,4),%eax
-    movzbl   rINST_HI,%ecx         # ecx<- AA
-    FETCH_INST_WORD(2)
-    ADVANCE_PC(2)
-    SET_VREG(%eax,%ecx)
-    GOTO_NEXT
+    movzbl   2(rPC),%eax   # eax<- BB
+    movzbl   3(rPC),%ecx   # ecx<- CC
+    GET_VREG_R %eax %eax   # eax<- vBB
+    xorl   (rFP,%ecx,4),%eax                 # ex: addl    (rFP,%ecx,4),%eax
+    FETCH_INST_OPCODE 2 %edx
+    ADVANCE_PC 2
+    SET_VREG %eax rINST
+    GOTO_NEXT_R %edx
 
 
 /* ------------------------------ */
@@ -3778,14 +4029,13 @@ dvmAsmInstructionStart = .L_OP_NOP
     /* binop vAA, vBB, vCC */
     movzbl   2(rPC),%eax            # eax<- BB
     movzbl   3(rPC),%ecx            # ecx<- CC
-    GET_VREG(%eax,%eax)             # eax<- vBB
-    GET_VREG(%ecx,%ecx)             # eax<- vBB
+    GET_VREG_R %eax %eax            # eax<- vBB
+    GET_VREG_R %ecx %ecx            # eax<- vBB
     sall    %cl,%eax                          # ex: addl    %ecx,%eax
-    movzbl   rINST_HI,%ecx          # tmp<- AA
-    FETCH_INST_WORD(2)
-    ADVANCE_PC(2)
-    SET_VREG(%eax,%ecx)
-    GOTO_NEXT
+    FETCH_INST_OPCODE 2 %edx
+    ADVANCE_PC 2
+    SET_VREG %eax rINST
+    GOTO_NEXT_R %edx
 
 
 /* ------------------------------ */
@@ -3800,14 +4050,13 @@ dvmAsmInstructionStart = .L_OP_NOP
     /* binop vAA, vBB, vCC */
     movzbl   2(rPC),%eax            # eax<- BB
     movzbl   3(rPC),%ecx            # ecx<- CC
-    GET_VREG(%eax,%eax)             # eax<- vBB
-    GET_VREG(%ecx,%ecx)             # eax<- vBB
+    GET_VREG_R %eax %eax            # eax<- vBB
+    GET_VREG_R %ecx %ecx            # eax<- vBB
     sarl    %cl,%eax                          # ex: addl    %ecx,%eax
-    movzbl   rINST_HI,%ecx          # tmp<- AA
-    FETCH_INST_WORD(2)
-    ADVANCE_PC(2)
-    SET_VREG(%eax,%ecx)
-    GOTO_NEXT
+    FETCH_INST_OPCODE 2 %edx
+    ADVANCE_PC 2
+    SET_VREG %eax rINST
+    GOTO_NEXT_R %edx
 
 
 /* ------------------------------ */
@@ -3822,14 +4071,13 @@ dvmAsmInstructionStart = .L_OP_NOP
     /* binop vAA, vBB, vCC */
     movzbl   2(rPC),%eax            # eax<- BB
     movzbl   3(rPC),%ecx            # ecx<- CC
-    GET_VREG(%eax,%eax)             # eax<- vBB
-    GET_VREG(%ecx,%ecx)             # eax<- vBB
+    GET_VREG_R %eax %eax            # eax<- vBB
+    GET_VREG_R %ecx %ecx            # eax<- vBB
     shrl    %cl,%eax                          # ex: addl    %ecx,%eax
-    movzbl   rINST_HI,%ecx          # tmp<- AA
-    FETCH_INST_WORD(2)
-    ADVANCE_PC(2)
-    SET_VREG(%eax,%ecx)
-    GOTO_NEXT
+    FETCH_INST_OPCODE 2 %edx
+    ADVANCE_PC 2
+    SET_VREG %eax rINST
+    GOTO_NEXT_R %edx
 
 
 /* ------------------------------ */
@@ -3844,18 +4092,15 @@ dvmAsmInstructionStart = .L_OP_NOP
 
     movzbl    2(rPC),%eax               # eax<- BB
     movzbl    3(rPC),%ecx               # ecx<- CC
-    SPILL(rPC)
-    GET_VREG_WORD(rPC,%eax,0)           # rPC<- v[BB+0]
-    GET_VREG_WORD(%eax,%eax,1)          # eax<- v[BB+1]
-    addl (rFP,%ecx,4),rPC         # ex: addl   (rFP,%ecx,4),rPC
+    GET_VREG_WORD %edx %eax 0           # edx<- v[BB+0]
+    GET_VREG_WORD %eax %eax 1           # eax<- v[BB+1]
+    addl (rFP,%ecx,4),%edx         # ex: addl   (rFP,%ecx,4),%edx
     adcl 4(rFP,%ecx,4),%eax         # ex: adcl   4(rFP,%ecx,4),%eax
-    movzbl    rINST_HI,rINST_FULL       # rINST_FULL<- AA
-    SET_VREG_WORD(rPC,rINST_FULL,0)     # v[AA+0] <- rPC
-    UNSPILL(rPC)
-    SET_VREG_WORD(%eax,rINST_FULL,1)    # v[AA+1] <- eax
-    FETCH_INST_WORD(2)
-    ADVANCE_PC(2)
-    GOTO_NEXT
+    SET_VREG_WORD %edx rINST 0          # v[AA+0] <- edx
+    FETCH_INST_OPCODE 2 %edx
+    SET_VREG_WORD %eax rINST 1          # v[AA+1] <- eax
+    ADVANCE_PC 2
+    GOTO_NEXT_R %edx
 
 
 /* ------------------------------ */
@@ -3870,18 +4115,15 @@ dvmAsmInstructionStart = .L_OP_NOP
 
     movzbl    2(rPC),%eax               # eax<- BB
     movzbl    3(rPC),%ecx               # ecx<- CC
-    SPILL(rPC)
-    GET_VREG_WORD(rPC,%eax,0)           # rPC<- v[BB+0]
-    GET_VREG_WORD(%eax,%eax,1)          # eax<- v[BB+1]
-    subl (rFP,%ecx,4),rPC         # ex: addl   (rFP,%ecx,4),rPC
+    GET_VREG_WORD %edx %eax 0           # edx<- v[BB+0]
+    GET_VREG_WORD %eax %eax 1           # eax<- v[BB+1]
+    subl (rFP,%ecx,4),%edx         # ex: addl   (rFP,%ecx,4),%edx
     sbbl 4(rFP,%ecx,4),%eax         # ex: adcl   4(rFP,%ecx,4),%eax
-    movzbl    rINST_HI,rINST_FULL       # rINST_FULL<- AA
-    SET_VREG_WORD(rPC,rINST_FULL,0)     # v[AA+0] <- rPC
-    UNSPILL(rPC)
-    SET_VREG_WORD(%eax,rINST_FULL,1)    # v[AA+1] <- eax
-    FETCH_INST_WORD(2)
-    ADVANCE_PC(2)
-    GOTO_NEXT
+    SET_VREG_WORD %edx rINST 0          # v[AA+0] <- edx
+    FETCH_INST_OPCODE 2 %edx
+    SET_VREG_WORD %eax rINST 1          # v[AA+1] <- eax
+    ADVANCE_PC 2
+    GOTO_NEXT_R %edx
 
 
 /* ------------------------------ */
@@ -3892,30 +4134,28 @@ dvmAsmInstructionStart = .L_OP_NOP
      * Signed 64-bit integer multiply.
      *
      * We could definately use more free registers for
-     * this code.  We must spill rPC (edx) because it
-     * is used by imul.  We'll also spill rINST (ebx),
+     * this code.   We spill rINSTw (ebx),
      * giving us eax, ebc, ecx and edx as computational
-     * temps.  On top of that, we'll spill rIBASE (edi)
-     * for use as the vB pointer and rFP (esi) for use
+     * temps.  On top of that, we'll spill edi (rFP)
+     * for use as the vB pointer and esi for use
      * as the vC pointer.  Yuck.
      */
     /* mul-long vAA, vBB, vCC */
     movzbl    2(rPC),%eax              # eax<- B
     movzbl    3(rPC),%ecx              # ecx<- C
-    SPILL(rPC)
-    SPILL(rIBASE)
+    SPILL_TMP2(%esi)
     SPILL(rFP)
-    SPILL(rINST_FULL)
-    leal      (rFP,%eax,4),rIBASE      # rIBASE<- &v[B]
+    SPILL(rINST)
+    leal      (rFP,%eax,4),%esi        # esi<- &v[B]
     leal      (rFP,%ecx,4),rFP         # rFP<- &v[C]
-    movl      4(rIBASE),%ecx      # ecx<- Bmsw
-    imull     (rFP),%ecx          # ecx<- (Bmsw*Clsw)
-    movl      4(rFP),%eax         # eax<- Cmsw
-    imull     (rIBASE),%eax       # eax<- (Cmsw*Blsw)
-    addl      %eax,%ecx           # ecx<- (Bmsw*Clsw)+(Cmsw*Blsw)
-    movl      (rFP),%eax          # eax<- Clsw
-    mull      (rIBASE)            # eax<- (Clsw*Alsw)
-    UNSPILL(rINST_FULL)
+    movl      4(%esi),%ecx             # ecx<- Bmsw
+    imull     (rFP),%ecx               # ecx<- (Bmsw*Clsw)
+    movl      4(rFP),%eax              # eax<- Cmsw
+    imull     (%esi),%eax              # eax<- (Cmsw*Blsw)
+    addl      %eax,%ecx                # ecx<- (Bmsw*Clsw)+(Cmsw*Blsw)
+    movl      (rFP),%eax               # eax<- Clsw
+    mull      (%esi)                   # eax<- (Clsw*Alsw)
+    UNSPILL(rINST)
     UNSPILL(rFP)
     jmp       .LOP_MUL_LONG_continue
 
@@ -3926,20 +4166,19 @@ dvmAsmInstructionStart = .L_OP_NOP
     /* div vAA, vBB, vCC */
     movzbl    3(rPC),%eax              # eax<- CC
     movzbl    2(rPC),%ecx              # ecx<- BB
-    SPILL(rPC)
-    GET_VREG_WORD(rPC,%eax,0)
-    GET_VREG_WORD(%eax,%eax,1)
-    movl     rPC,OUT_ARG2(%esp)
+    GET_VREG_WORD %edx %eax 0
+    GET_VREG_WORD %eax %eax 1
+    movl     %edx,OUT_ARG2(%esp)
     testl    %eax,%eax
     je       .LOP_DIV_LONG_check_zero
     cmpl     $-1,%eax
     je       .LOP_DIV_LONG_check_neg1
 .LOP_DIV_LONG_notSpecial:
-    GET_VREG_WORD(rPC,%ecx,0)
-    GET_VREG_WORD(%ecx,%ecx,1)
+    GET_VREG_WORD %edx %ecx 0
+    GET_VREG_WORD %ecx %ecx 1
 .LOP_DIV_LONG_notSpecial1:
     movl     %eax,OUT_ARG3(%esp)
-    movl     rPC,OUT_ARG0(%esp)
+    movl     %edx,OUT_ARG0(%esp)
     movl     %ecx,OUT_ARG1(%esp)
     jmp      .LOP_DIV_LONG_continue
 
@@ -3951,20 +4190,19 @@ dvmAsmInstructionStart = .L_OP_NOP
     /* div vAA, vBB, vCC */
     movzbl    3(rPC),%eax              # eax<- CC
     movzbl    2(rPC),%ecx              # ecx<- BB
-    SPILL(rPC)
-    GET_VREG_WORD(rPC,%eax,0)
-    GET_VREG_WORD(%eax,%eax,1)
-    movl     rPC,OUT_ARG2(%esp)
+    GET_VREG_WORD %edx %eax 0
+    GET_VREG_WORD %eax %eax 1
+    movl     %edx,OUT_ARG2(%esp)
     testl    %eax,%eax
     je       .LOP_REM_LONG_check_zero
     cmpl     $-1,%eax
     je       .LOP_REM_LONG_check_neg1
 .LOP_REM_LONG_notSpecial:
-    GET_VREG_WORD(rPC,%ecx,0)
-    GET_VREG_WORD(%ecx,%ecx,1)
+    GET_VREG_WORD %edx %ecx 0
+    GET_VREG_WORD %ecx %ecx 1
 .LOP_REM_LONG_notSpecial1:
     movl     %eax,OUT_ARG3(%esp)
-    movl     rPC,OUT_ARG0(%esp)
+    movl     %edx,OUT_ARG0(%esp)
     movl     %ecx,OUT_ARG1(%esp)
     jmp      .LOP_REM_LONG_continue
 
@@ -3981,18 +4219,15 @@ dvmAsmInstructionStart = .L_OP_NOP
 
     movzbl    2(rPC),%eax               # eax<- BB
     movzbl    3(rPC),%ecx               # ecx<- CC
-    SPILL(rPC)
-    GET_VREG_WORD(rPC,%eax,0)           # rPC<- v[BB+0]
-    GET_VREG_WORD(%eax,%eax,1)          # eax<- v[BB+1]
-    andl (rFP,%ecx,4),rPC         # ex: addl   (rFP,%ecx,4),rPC
+    GET_VREG_WORD %edx %eax 0           # edx<- v[BB+0]
+    GET_VREG_WORD %eax %eax 1           # eax<- v[BB+1]
+    andl (rFP,%ecx,4),%edx         # ex: addl   (rFP,%ecx,4),%edx
     andl 4(rFP,%ecx,4),%eax         # ex: adcl   4(rFP,%ecx,4),%eax
-    movzbl    rINST_HI,rINST_FULL       # rINST_FULL<- AA
-    SET_VREG_WORD(rPC,rINST_FULL,0)     # v[AA+0] <- rPC
-    UNSPILL(rPC)
-    SET_VREG_WORD(%eax,rINST_FULL,1)    # v[AA+1] <- eax
-    FETCH_INST_WORD(2)
-    ADVANCE_PC(2)
-    GOTO_NEXT
+    SET_VREG_WORD %edx rINST 0          # v[AA+0] <- edx
+    FETCH_INST_OPCODE 2 %edx
+    SET_VREG_WORD %eax rINST 1          # v[AA+1] <- eax
+    ADVANCE_PC 2
+    GOTO_NEXT_R %edx
 
 
 /* ------------------------------ */
@@ -4007,18 +4242,15 @@ dvmAsmInstructionStart = .L_OP_NOP
 
     movzbl    2(rPC),%eax               # eax<- BB
     movzbl    3(rPC),%ecx               # ecx<- CC
-    SPILL(rPC)
-    GET_VREG_WORD(rPC,%eax,0)           # rPC<- v[BB+0]
-    GET_VREG_WORD(%eax,%eax,1)          # eax<- v[BB+1]
-    orl (rFP,%ecx,4),rPC         # ex: addl   (rFP,%ecx,4),rPC
+    GET_VREG_WORD %edx %eax 0           # edx<- v[BB+0]
+    GET_VREG_WORD %eax %eax 1           # eax<- v[BB+1]
+    orl (rFP,%ecx,4),%edx         # ex: addl   (rFP,%ecx,4),%edx
     orl 4(rFP,%ecx,4),%eax         # ex: adcl   4(rFP,%ecx,4),%eax
-    movzbl    rINST_HI,rINST_FULL       # rINST_FULL<- AA
-    SET_VREG_WORD(rPC,rINST_FULL,0)     # v[AA+0] <- rPC
-    UNSPILL(rPC)
-    SET_VREG_WORD(%eax,rINST_FULL,1)    # v[AA+1] <- eax
-    FETCH_INST_WORD(2)
-    ADVANCE_PC(2)
-    GOTO_NEXT
+    SET_VREG_WORD %edx rINST 0          # v[AA+0] <- edx
+    FETCH_INST_OPCODE 2 %edx
+    SET_VREG_WORD %eax rINST 1          # v[AA+1] <- eax
+    ADVANCE_PC 2
+    GOTO_NEXT_R %edx
 
 
 /* ------------------------------ */
@@ -4033,18 +4265,15 @@ dvmAsmInstructionStart = .L_OP_NOP
 
     movzbl    2(rPC),%eax               # eax<- BB
     movzbl    3(rPC),%ecx               # ecx<- CC
-    SPILL(rPC)
-    GET_VREG_WORD(rPC,%eax,0)           # rPC<- v[BB+0]
-    GET_VREG_WORD(%eax,%eax,1)          # eax<- v[BB+1]
-    xorl (rFP,%ecx,4),rPC         # ex: addl   (rFP,%ecx,4),rPC
+    GET_VREG_WORD %edx %eax 0           # edx<- v[BB+0]
+    GET_VREG_WORD %eax %eax 1           # eax<- v[BB+1]
+    xorl (rFP,%ecx,4),%edx         # ex: addl   (rFP,%ecx,4),%edx
     xorl 4(rFP,%ecx,4),%eax         # ex: adcl   4(rFP,%ecx,4),%eax
-    movzbl    rINST_HI,rINST_FULL       # rINST_FULL<- AA
-    SET_VREG_WORD(rPC,rINST_FULL,0)     # v[AA+0] <- rPC
-    UNSPILL(rPC)
-    SET_VREG_WORD(%eax,rINST_FULL,1)    # v[AA+1] <- eax
-    FETCH_INST_WORD(2)
-    ADVANCE_PC(2)
-    GOTO_NEXT
+    SET_VREG_WORD %edx rINST 0          # v[AA+0] <- edx
+    FETCH_INST_OPCODE 2 %edx
+    SET_VREG_WORD %eax rINST 1          # v[AA+1] <- eax
+    ADVANCE_PC 2
+    GOTO_NEXT_R %edx
 
 
 /* ------------------------------ */
@@ -4062,13 +4291,12 @@ dvmAsmInstructionStart = .L_OP_NOP
     /* shl-long vAA, vBB, vCC */
     /* ecx gets shift count */
     /* Need to spill edx */
-    /* rINST gets AA */
+    /* rINSTw gets AA */
     movzbl    2(rPC),%eax               # eax<- BB
     movzbl    3(rPC),%ecx               # ecx<- CC
-    SPILL(rPC)                          # spill edx
-    GET_VREG_WORD(%edx,%eax,1)          # ecx<- v[BB+1]
-    GET_VREG  (%ecx,%ecx)               # ecx<- vCC
-    GET_VREG_WORD(%eax,%eax,0)          # eax<- v[BB+0]
+    GET_VREG_WORD %edx %eax 1           # ecx<- v[BB+1]
+    GET_VREG_R   %ecx %ecx              # ecx<- vCC
+    GET_VREG_WORD %eax %eax 0           # eax<- v[BB+0]
     shldl     %eax,%edx
     sall      %cl,%eax
     testb     $32,%cl
@@ -4076,10 +4304,8 @@ dvmAsmInstructionStart = .L_OP_NOP
     movl      %eax,%edx
     xorl      %eax,%eax
 2:
-    movzbl    rINST_HI,%ecx
-    SET_VREG_WORD(%edx,%ecx,1)         # v[AA+1]<- %edx
-    UNSPILL(rPC)
-    FETCH_INST_WORD(2)
+    SET_VREG_WORD %edx rINST 1          # v[AA+1]<- %edx
+    FETCH_INST_OPCODE 2 %edx
     jmp       .LOP_SHL_LONG_finish
 
 /* ------------------------------ */
@@ -4097,13 +4323,12 @@ dvmAsmInstructionStart = .L_OP_NOP
     /* shr-long vAA, vBB, vCC */
     /* ecx gets shift count */
     /* Need to spill edx */
-    /* rINST gets AA */
+    /* rINSTw gets AA */
     movzbl    2(rPC),%eax               # eax<- BB
     movzbl    3(rPC),%ecx               # ecx<- CC
-    SPILL(rPC)                          # spill edx
-    GET_VREG_WORD(%edx,%eax,1)          # edx<- v[BB+1]
-    GET_VREG  (%ecx,%ecx)               # ecx<- vCC
-    GET_VREG_WORD(%eax,%eax,0)          # eax<- v[BB+0]
+    GET_VREG_WORD %edx %eax 1           # edx<- v[BB+1]
+    GET_VREG_R   %ecx %ecx              # ecx<- vCC
+    GET_VREG_WORD %eax %eax 0           # eax<- v[BB+0]
     shrdl     %edx,%eax
     sarl      %cl,%edx
     testb     $32,%cl
@@ -4111,10 +4336,8 @@ dvmAsmInstructionStart = .L_OP_NOP
     movl      %edx,%eax
     sarl      $31,%edx
 2:
-    movzbl    rINST_HI,%ecx
-    SET_VREG_WORD(%edx,%ecx,1)         # v[AA+1]<- edx
-    UNSPILL(rPC)
-    FETCH_INST_WORD(2)
+    SET_VREG_WORD %edx rINST 1          # v[AA+1]<- edx
+    FETCH_INST_OPCODE 2 %edx
     jmp       .LOP_SHR_LONG_finish
 
 /* ------------------------------ */
@@ -4132,13 +4355,12 @@ dvmAsmInstructionStart = .L_OP_NOP
     /* shr-long vAA, vBB, vCC */
     /* ecx gets shift count */
     /* Need to spill edx */
-    /* rINST gets AA */
+    /* rINSTw gets AA */
     movzbl    2(rPC),%eax               # eax<- BB
     movzbl    3(rPC),%ecx               # ecx<- CC
-    SPILL(rPC)                          # spill edx
-    GET_VREG_WORD(%edx,%eax,1)          # edx<- v[BB+1]
-    GET_VREG  (%ecx,%ecx)               # ecx<- vCC
-    GET_VREG_WORD(%eax,%eax,0)          # eax<- v[BB+0]
+    GET_VREG_WORD %edx %eax 1           # edx<- v[BB+1]
+    GET_VREG_R  %ecx %ecx               # ecx<- vCC
+    GET_VREG_WORD %eax %eax 0           # eax<- v[BB+0]
     shrdl     %edx,%eax
     shrl      %cl,%edx
     testb     $32,%cl
@@ -4146,9 +4368,8 @@ dvmAsmInstructionStart = .L_OP_NOP
     movl      %edx,%eax
     xorl      %edx,%edx
 2:
-    movzbl    rINST_HI,%ecx
-    SET_VREG_WORD(%edx,%ecx,1)         # v[BB+1]<- edx
-    UNSPILL(rPC)
+    FETCH_INST_OPCODE 2 %edx
+    SET_VREG_WORD %edx rINST 1          # v[BB+1]<- edx
     jmp       .LOP_USHR_LONG_finish
 
 /* ------------------------------ */
@@ -4162,15 +4383,14 @@ dvmAsmInstructionStart = .L_OP_NOP
      * For: add-fp, sub-fp, mul-fp, div-fp
      */
     /* binop vAA, vBB, vCC */
-    movzbl   2(rPC),%eax            # eax<- CC
-    movzbl   3(rPC),%ecx            # ecx<- BB
-    flds    (rFP,%eax,4)           # vCC to fp stack
-    fadds   (rFP,%ecx,4)           # ex: faddp
-    movzbl   rINST_HI,%ecx         # ecx<- AA
-    FETCH_INST_WORD(2)
-    ADVANCE_PC(2)
-    fstps   (rFP,%ecx,4)           # %st to vAA
-    GOTO_NEXT
+    movzbl   2(rPC),%eax          # eax<- CC
+    movzbl   3(rPC),%ecx          # ecx<- BB
+    flds    (rFP,%eax,4)         # vCC to fp stack
+    fadds   (rFP,%ecx,4)         # ex: faddp
+    FETCH_INST_OPCODE 2 %edx
+    ADVANCE_PC 2
+    fstps   (rFP,rINST,4)         # %st to vAA
+    GOTO_NEXT_R %edx
 
 
 /* ------------------------------ */
@@ -4184,15 +4404,14 @@ dvmAsmInstructionStart = .L_OP_NOP
      * For: add-fp, sub-fp, mul-fp, div-fp
      */
     /* binop vAA, vBB, vCC */
-    movzbl   2(rPC),%eax            # eax<- CC
-    movzbl   3(rPC),%ecx            # ecx<- BB
-    flds    (rFP,%eax,4)           # vCC to fp stack
-    fsubs   (rFP,%ecx,4)           # ex: faddp
-    movzbl   rINST_HI,%ecx         # ecx<- AA
-    FETCH_INST_WORD(2)
-    ADVANCE_PC(2)
-    fstps   (rFP,%ecx,4)           # %st to vAA
-    GOTO_NEXT
+    movzbl   2(rPC),%eax          # eax<- CC
+    movzbl   3(rPC),%ecx          # ecx<- BB
+    flds    (rFP,%eax,4)         # vCC to fp stack
+    fsubs   (rFP,%ecx,4)         # ex: faddp
+    FETCH_INST_OPCODE 2 %edx
+    ADVANCE_PC 2
+    fstps   (rFP,rINST,4)         # %st to vAA
+    GOTO_NEXT_R %edx
 
 
 /* ------------------------------ */
@@ -4206,15 +4425,14 @@ dvmAsmInstructionStart = .L_OP_NOP
      * For: add-fp, sub-fp, mul-fp, div-fp
      */
     /* binop vAA, vBB, vCC */
-    movzbl   2(rPC),%eax            # eax<- CC
-    movzbl   3(rPC),%ecx            # ecx<- BB
-    flds    (rFP,%eax,4)           # vCC to fp stack
-    fmuls   (rFP,%ecx,4)           # ex: faddp
-    movzbl   rINST_HI,%ecx         # ecx<- AA
-    FETCH_INST_WORD(2)
-    ADVANCE_PC(2)
-    fstps   (rFP,%ecx,4)           # %st to vAA
-    GOTO_NEXT
+    movzbl   2(rPC),%eax          # eax<- CC
+    movzbl   3(rPC),%ecx          # ecx<- BB
+    flds    (rFP,%eax,4)         # vCC to fp stack
+    fmuls   (rFP,%ecx,4)         # ex: faddp
+    FETCH_INST_OPCODE 2 %edx
+    ADVANCE_PC 2
+    fstps   (rFP,rINST,4)         # %st to vAA
+    GOTO_NEXT_R %edx
 
 
 /* ------------------------------ */
@@ -4228,15 +4446,14 @@ dvmAsmInstructionStart = .L_OP_NOP
      * For: add-fp, sub-fp, mul-fp, div-fp
      */
     /* binop vAA, vBB, vCC */
-    movzbl   2(rPC),%eax            # eax<- CC
-    movzbl   3(rPC),%ecx            # ecx<- BB
-    flds    (rFP,%eax,4)           # vCC to fp stack
-    fdivs   (rFP,%ecx,4)           # ex: faddp
-    movzbl   rINST_HI,%ecx         # ecx<- AA
-    FETCH_INST_WORD(2)
-    ADVANCE_PC(2)
-    fstps   (rFP,%ecx,4)           # %st to vAA
-    GOTO_NEXT
+    movzbl   2(rPC),%eax          # eax<- CC
+    movzbl   3(rPC),%ecx          # ecx<- BB
+    flds    (rFP,%eax,4)         # vCC to fp stack
+    fdivs   (rFP,%ecx,4)         # ex: faddp
+    FETCH_INST_OPCODE 2 %edx
+    ADVANCE_PC 2
+    fstps   (rFP,rINST,4)         # %st to vAA
+    GOTO_NEXT_R %edx
 
 
 /* ------------------------------ */
@@ -4248,17 +4465,17 @@ dvmAsmInstructionStart = .L_OP_NOP
     movzbl   2(rPC),%eax            # eax<- CC
     flds     (rFP,%ecx,4)           # vCC to fp stack
     flds     (rFP,%eax,4)           # vCC to fp stack
-    movzbl   rINST_HI,%ecx         # ecx<- AA
-    FETCH_INST_WORD(2)
+    movzbl   rINSTbl,%ecx           # ecx<- AA
+    FETCH_INST_OPCODE 2 %edx
 1:
     fprem
     fstsw     %ax
     sahf
     jp        1b
     fstp      %st(1)
-    ADVANCE_PC(2)
+    ADVANCE_PC 2
     fstps    (rFP,%ecx,4)           # %st to vAA
-    GOTO_NEXT
+    GOTO_NEXT_R %edx
 
 /* ------------------------------ */
     .balign 64
@@ -4271,15 +4488,14 @@ dvmAsmInstructionStart = .L_OP_NOP
      * For: add-fp, sub-fp, mul-fp, div-fp
      */
     /* binop vAA, vBB, vCC */
-    movzbl   2(rPC),%eax            # eax<- CC
-    movzbl   3(rPC),%ecx            # ecx<- BB
-    fldl    (rFP,%eax,4)           # vCC to fp stack
-    faddl   (rFP,%ecx,4)           # ex: faddp
-    movzbl   rINST_HI,%ecx         # ecx<- AA
-    FETCH_INST_WORD(2)
-    ADVANCE_PC(2)
-    fstpl   (rFP,%ecx,4)           # %st to vAA
-    GOTO_NEXT
+    movzbl   2(rPC),%eax          # eax<- CC
+    movzbl   3(rPC),%ecx          # ecx<- BB
+    fldl    (rFP,%eax,4)         # vCC to fp stack
+    faddl   (rFP,%ecx,4)         # ex: faddp
+    FETCH_INST_OPCODE 2 %edx
+    ADVANCE_PC 2
+    fstpl   (rFP,rINST,4)         # %st to vAA
+    GOTO_NEXT_R %edx
 
 
 /* ------------------------------ */
@@ -4293,15 +4509,14 @@ dvmAsmInstructionStart = .L_OP_NOP
      * For: add-fp, sub-fp, mul-fp, div-fp
      */
     /* binop vAA, vBB, vCC */
-    movzbl   2(rPC),%eax            # eax<- CC
-    movzbl   3(rPC),%ecx            # ecx<- BB
-    fldl    (rFP,%eax,4)           # vCC to fp stack
-    fsubl   (rFP,%ecx,4)           # ex: faddp
-    movzbl   rINST_HI,%ecx         # ecx<- AA
-    FETCH_INST_WORD(2)
-    ADVANCE_PC(2)
-    fstpl   (rFP,%ecx,4)           # %st to vAA
-    GOTO_NEXT
+    movzbl   2(rPC),%eax          # eax<- CC
+    movzbl   3(rPC),%ecx          # ecx<- BB
+    fldl    (rFP,%eax,4)         # vCC to fp stack
+    fsubl   (rFP,%ecx,4)         # ex: faddp
+    FETCH_INST_OPCODE 2 %edx
+    ADVANCE_PC 2
+    fstpl   (rFP,rINST,4)         # %st to vAA
+    GOTO_NEXT_R %edx
 
 
 /* ------------------------------ */
@@ -4315,15 +4530,14 @@ dvmAsmInstructionStart = .L_OP_NOP
      * For: add-fp, sub-fp, mul-fp, div-fp
      */
     /* binop vAA, vBB, vCC */
-    movzbl   2(rPC),%eax            # eax<- CC
-    movzbl   3(rPC),%ecx            # ecx<- BB
-    fldl    (rFP,%eax,4)           # vCC to fp stack
-    fmull   (rFP,%ecx,4)           # ex: faddp
-    movzbl   rINST_HI,%ecx         # ecx<- AA
-    FETCH_INST_WORD(2)
-    ADVANCE_PC(2)
-    fstpl   (rFP,%ecx,4)           # %st to vAA
-    GOTO_NEXT
+    movzbl   2(rPC),%eax          # eax<- CC
+    movzbl   3(rPC),%ecx          # ecx<- BB
+    fldl    (rFP,%eax,4)         # vCC to fp stack
+    fmull   (rFP,%ecx,4)         # ex: faddp
+    FETCH_INST_OPCODE 2 %edx
+    ADVANCE_PC 2
+    fstpl   (rFP,rINST,4)         # %st to vAA
+    GOTO_NEXT_R %edx
 
 
 /* ------------------------------ */
@@ -4337,15 +4551,14 @@ dvmAsmInstructionStart = .L_OP_NOP
      * For: add-fp, sub-fp, mul-fp, div-fp
      */
     /* binop vAA, vBB, vCC */
-    movzbl   2(rPC),%eax            # eax<- CC
-    movzbl   3(rPC),%ecx            # ecx<- BB
-    fldl    (rFP,%eax,4)           # vCC to fp stack
-    fdivl   (rFP,%ecx,4)           # ex: faddp
-    movzbl   rINST_HI,%ecx         # ecx<- AA
-    FETCH_INST_WORD(2)
-    ADVANCE_PC(2)
-    fstpl   (rFP,%ecx,4)           # %st to vAA
-    GOTO_NEXT
+    movzbl   2(rPC),%eax          # eax<- CC
+    movzbl   3(rPC),%ecx          # ecx<- BB
+    fldl    (rFP,%eax,4)         # vCC to fp stack
+    fdivl   (rFP,%ecx,4)         # ex: faddp
+    FETCH_INST_OPCODE 2 %edx
+    ADVANCE_PC 2
+    fstpl   (rFP,rINST,4)         # %st to vAA
+    GOTO_NEXT_R %edx
 
 
 /* ------------------------------ */
@@ -4357,17 +4570,17 @@ dvmAsmInstructionStart = .L_OP_NOP
     movzbl   2(rPC),%eax            # eax<- CC
     fldl     (rFP,%ecx,4)           # vCC to fp stack
     fldl     (rFP,%eax,4)           # vCC to fp stack
-    movzbl   rINST_HI,%ecx          # ecx<- AA
-    FETCH_INST_WORD(2)
+    movzbl   rINSTbl,%ecx           # ecx<- AA
+    FETCH_INST_OPCODE 2 %edx
 1:
     fprem
     fstsw     %ax
     sahf
     jp        1b
     fstp      %st(1)
-    ADVANCE_PC(2)
+    ADVANCE_PC 2
     fstpl    (rFP,%ecx,4)           # %st to vAA
-    GOTO_NEXT
+    GOTO_NEXT_R %edx
 
 /* ------------------------------ */
     .balign 64
@@ -4389,14 +4602,14 @@ dvmAsmInstructionStart = .L_OP_NOP
      *      sub-float/2addr, mul-float/2addr, div-float/2addr, rem-float/2addr
      */
     /* binop/2addr vA, vB */
-    movzx   rINST_HI,%ecx               # ecx<- A+
-    sarl    $12,rINST_FULL             # rINST_FULL<- B
-    GET_VREG(%eax,rINST_FULL)           # eax<- vB
-    FETCH_INST_WORD(1)
-    andb    $0xf,%cl                   # ecx<- A
-    addl     %eax,(rFP,%ecx,4)                              # for ex: addl   %eax,(rFP,%ecx,4)
-    ADVANCE_PC(1)
-    GOTO_NEXT
+    movzx   rINSTbl,%ecx               # ecx<- A+
+    sarl    $4,rINST                 # rINST<- B
+    GET_VREG_R %eax rINST              # eax<- vB
+    FETCH_INST_OPCODE 1 %edx
+    andb    $0xf,%cl                  # ecx<- A
+    addl     %eax,(rFP,%ecx,4)                             # for ex: addl   %eax,(rFP,%ecx,4)
+    ADVANCE_PC 1
+    GOTO_NEXT_R %edx
 
 
 /* ------------------------------ */
@@ -4419,14 +4632,14 @@ dvmAsmInstructionStart = .L_OP_NOP
      *      sub-float/2addr, mul-float/2addr, div-float/2addr, rem-float/2addr
      */
     /* binop/2addr vA, vB */
-    movzx   rINST_HI,%ecx               # ecx<- A+
-    sarl    $12,rINST_FULL             # rINST_FULL<- B
-    GET_VREG(%eax,rINST_FULL)           # eax<- vB
-    FETCH_INST_WORD(1)
-    andb    $0xf,%cl                   # ecx<- A
-    subl     %eax,(rFP,%ecx,4)                              # for ex: addl   %eax,(rFP,%ecx,4)
-    ADVANCE_PC(1)
-    GOTO_NEXT
+    movzx   rINSTbl,%ecx               # ecx<- A+
+    sarl    $4,rINST                 # rINST<- B
+    GET_VREG_R %eax rINST              # eax<- vB
+    FETCH_INST_OPCODE 1 %edx
+    andb    $0xf,%cl                  # ecx<- A
+    subl     %eax,(rFP,%ecx,4)                             # for ex: addl   %eax,(rFP,%ecx,4)
+    ADVANCE_PC 1
+    GOTO_NEXT_R %edx
 
 
 /* ------------------------------ */
@@ -4434,17 +4647,15 @@ dvmAsmInstructionStart = .L_OP_NOP
 .L_OP_MUL_INT_2ADDR: /* 0xb2 */
 /* File: x86/OP_MUL_INT_2ADDR.S */
     /* mul vA, vB */
-    movzx   rINST_HI,%ecx               # ecx<- A+
-    sarl    $12,rINST_FULL             # rINST_FULL<- B
-    GET_VREG(%eax,rINST_FULL)           # eax<- vB
-    andb    $0xf,%cl                   # ecx<- A
-    SPILL(rPC)
+    movzx   rINSTbl,%ecx               # ecx<- A+
+    sarl    $4,rINST                 # rINST<- B
+    GET_VREG_R %eax rINST              # eax<- vB
+    andb    $0xf,%cl                  # ecx<- A
     imull   (rFP,%ecx,4),%eax
-    UNSPILL(rPC)
-    SET_VREG(%eax,%ecx)
-    FETCH_INST_WORD(1)
-    ADVANCE_PC(1)
-    GOTO_NEXT
+    FETCH_INST_OPCODE 1 %edx
+    SET_VREG %eax %ecx
+    ADVANCE_PC 1
+    GOTO_NEXT_R %edx
 
 /* ------------------------------ */
     .balign 64
@@ -4456,13 +4667,11 @@ dvmAsmInstructionStart = .L_OP_NOP
      * op1=-1.
      */
     /* div/rem/2addr vA, vB */
-    movzx    rINST_HI,%ecx          # eax<- BA
-    sarl     $4,%ecx               # ecx<- B
-    GET_VREG(%ecx,%ecx)             # eax<- vBB
-    movzbl   rINST_HI,rINST_FULL    # rINST_FULL<- BA
-    andb     $0xf,rINST_LO         # rINST_FULL<- A
-    GET_VREG(%eax,rINST_FULL)       # eax<- vBB
-    SPILL(rPC)
+    movzx    rINSTbl,%ecx          # eax<- BA
+    sarl     $4,%ecx              # ecx<- B
+    GET_VREG_R %ecx %ecx           # eax<- vBB
+    andb     $0xf,rINSTbl         # rINST<- A
+    GET_VREG_R %eax rINST          # eax<- vBB
     cmpl     $0,%ecx
     je       common_errDivideByZero
     cmpl     $-1,%ecx
@@ -4484,13 +4693,11 @@ dvmAsmInstructionStart = .L_OP_NOP
      * op1=-1.
      */
     /* div/rem/2addr vA, vB */
-    movzx    rINST_HI,%ecx          # eax<- BA
-    sarl     $4,%ecx               # ecx<- B
-    GET_VREG(%ecx,%ecx)             # eax<- vBB
-    movzbl   rINST_HI,rINST_FULL    # rINST_FULL<- BA
-    andb     $0xf,rINST_LO         # rINST_FULL<- A
-    GET_VREG(%eax,rINST_FULL)       # eax<- vBB
-    SPILL(rPC)
+    movzx    rINSTbl,%ecx          # eax<- BA
+    sarl     $4,%ecx              # ecx<- B
+    GET_VREG_R %ecx %ecx           # eax<- vBB
+    andb     $0xf,rINSTbl         # rINST<- A
+    GET_VREG_R %eax rINST          # eax<- vBB
     cmpl     $0,%ecx
     je       common_errDivideByZero
     cmpl     $-1,%ecx
@@ -4522,14 +4729,14 @@ dvmAsmInstructionStart = .L_OP_NOP
      *      sub-float/2addr, mul-float/2addr, div-float/2addr, rem-float/2addr
      */
     /* binop/2addr vA, vB */
-    movzx   rINST_HI,%ecx               # ecx<- A+
-    sarl    $12,rINST_FULL             # rINST_FULL<- B
-    GET_VREG(%eax,rINST_FULL)           # eax<- vB
-    FETCH_INST_WORD(1)
-    andb    $0xf,%cl                   # ecx<- A
-    andl     %eax,(rFP,%ecx,4)                              # for ex: addl   %eax,(rFP,%ecx,4)
-    ADVANCE_PC(1)
-    GOTO_NEXT
+    movzx   rINSTbl,%ecx               # ecx<- A+
+    sarl    $4,rINST                 # rINST<- B
+    GET_VREG_R %eax rINST              # eax<- vB
+    FETCH_INST_OPCODE 1 %edx
+    andb    $0xf,%cl                  # ecx<- A
+    andl     %eax,(rFP,%ecx,4)                             # for ex: addl   %eax,(rFP,%ecx,4)
+    ADVANCE_PC 1
+    GOTO_NEXT_R %edx
 
 
 /* ------------------------------ */
@@ -4552,14 +4759,14 @@ dvmAsmInstructionStart = .L_OP_NOP
      *      sub-float/2addr, mul-float/2addr, div-float/2addr, rem-float/2addr
      */
     /* binop/2addr vA, vB */
-    movzx   rINST_HI,%ecx               # ecx<- A+
-    sarl    $12,rINST_FULL             # rINST_FULL<- B
-    GET_VREG(%eax,rINST_FULL)           # eax<- vB
-    FETCH_INST_WORD(1)
-    andb    $0xf,%cl                   # ecx<- A
-    orl     %eax,(rFP,%ecx,4)                              # for ex: addl   %eax,(rFP,%ecx,4)
-    ADVANCE_PC(1)
-    GOTO_NEXT
+    movzx   rINSTbl,%ecx               # ecx<- A+
+    sarl    $4,rINST                 # rINST<- B
+    GET_VREG_R %eax rINST              # eax<- vB
+    FETCH_INST_OPCODE 1 %edx
+    andb    $0xf,%cl                  # ecx<- A
+    orl     %eax,(rFP,%ecx,4)                             # for ex: addl   %eax,(rFP,%ecx,4)
+    ADVANCE_PC 1
+    GOTO_NEXT_R %edx
 
 
 /* ------------------------------ */
@@ -4582,14 +4789,14 @@ dvmAsmInstructionStart = .L_OP_NOP
      *      sub-float/2addr, mul-float/2addr, div-float/2addr, rem-float/2addr
      */
     /* binop/2addr vA, vB */
-    movzx   rINST_HI,%ecx               # ecx<- A+
-    sarl    $12,rINST_FULL             # rINST_FULL<- B
-    GET_VREG(%eax,rINST_FULL)           # eax<- vB
-    FETCH_INST_WORD(1)
-    andb    $0xf,%cl                   # ecx<- A
-    xorl     %eax,(rFP,%ecx,4)                              # for ex: addl   %eax,(rFP,%ecx,4)
-    ADVANCE_PC(1)
-    GOTO_NEXT
+    movzx   rINSTbl,%ecx               # ecx<- A+
+    sarl    $4,rINST                 # rINST<- B
+    GET_VREG_R %eax rINST              # eax<- vB
+    FETCH_INST_OPCODE 1 %edx
+    andb    $0xf,%cl                  # ecx<- A
+    xorl     %eax,(rFP,%ecx,4)                             # for ex: addl   %eax,(rFP,%ecx,4)
+    ADVANCE_PC 1
+    GOTO_NEXT_R %edx
 
 
 /* ------------------------------ */
@@ -4601,17 +4808,16 @@ dvmAsmInstructionStart = .L_OP_NOP
      * Generic 32-bit "shift/2addr" operation.
      */
     /* shift/2addr vA, vB */
-    movzx    rINST_HI,%ecx          # eax<- BA
+    movzx    rINSTbl,%ecx           # eax<- BA
     sarl     $4,%ecx               # ecx<- B
-    GET_VREG(%ecx,%ecx)             # eax<- vBB
-    movzbl   rINST_HI,rINST_FULL    # rINST_FULL<- BA
-    andb     $0xf,rINST_LO         # rINST_FULL<- A
-    GET_VREG(%eax,rINST_FULL)       # eax<- vAA
+    GET_VREG_R %ecx %ecx            # eax<- vBB
+    andb     $0xf,rINSTbl          # rINST<- A
+    GET_VREG_R %eax rINST           # eax<- vAA
     sall    %cl,%eax                          # ex: sarl %cl,%eax
-    SET_VREG(%eax,rINST_FULL)
-    FETCH_INST_WORD(1)
-    ADVANCE_PC(1)
-    GOTO_NEXT
+    FETCH_INST_OPCODE 1 %edx
+    SET_VREG %eax rINST
+    ADVANCE_PC 1
+    GOTO_NEXT_R %edx
 
 
 /* ------------------------------ */
@@ -4623,17 +4829,16 @@ dvmAsmInstructionStart = .L_OP_NOP
      * Generic 32-bit "shift/2addr" operation.
      */
     /* shift/2addr vA, vB */
-    movzx    rINST_HI,%ecx          # eax<- BA
+    movzx    rINSTbl,%ecx           # eax<- BA
     sarl     $4,%ecx               # ecx<- B
-    GET_VREG(%ecx,%ecx)             # eax<- vBB
-    movzbl   rINST_HI,rINST_FULL    # rINST_FULL<- BA
-    andb     $0xf,rINST_LO         # rINST_FULL<- A
-    GET_VREG(%eax,rINST_FULL)       # eax<- vAA
+    GET_VREG_R %ecx %ecx            # eax<- vBB
+    andb     $0xf,rINSTbl          # rINST<- A
+    GET_VREG_R %eax rINST           # eax<- vAA
     sarl    %cl,%eax                          # ex: sarl %cl,%eax
-    SET_VREG(%eax,rINST_FULL)
-    FETCH_INST_WORD(1)
-    ADVANCE_PC(1)
-    GOTO_NEXT
+    FETCH_INST_OPCODE 1 %edx
+    SET_VREG %eax rINST
+    ADVANCE_PC 1
+    GOTO_NEXT_R %edx
 
 
 /* ------------------------------ */
@@ -4645,17 +4850,16 @@ dvmAsmInstructionStart = .L_OP_NOP
      * Generic 32-bit "shift/2addr" operation.
      */
     /* shift/2addr vA, vB */
-    movzx    rINST_HI,%ecx          # eax<- BA
+    movzx    rINSTbl,%ecx           # eax<- BA
     sarl     $4,%ecx               # ecx<- B
-    GET_VREG(%ecx,%ecx)             # eax<- vBB
-    movzbl   rINST_HI,rINST_FULL    # rINST_FULL<- BA
-    andb     $0xf,rINST_LO         # rINST_FULL<- A
-    GET_VREG(%eax,rINST_FULL)       # eax<- vAA
+    GET_VREG_R %ecx %ecx            # eax<- vBB
+    andb     $0xf,rINSTbl          # rINST<- A
+    GET_VREG_R %eax rINST           # eax<- vAA
     shrl    %cl,%eax                          # ex: sarl %cl,%eax
-    SET_VREG(%eax,rINST_FULL)
-    FETCH_INST_WORD(1)
-    ADVANCE_PC(1)
-    GOTO_NEXT
+    FETCH_INST_OPCODE 1 %edx
+    SET_VREG %eax rINST
+    ADVANCE_PC 1
+    GOTO_NEXT_R %edx
 
 
 /* ------------------------------ */
@@ -4667,17 +4871,16 @@ dvmAsmInstructionStart = .L_OP_NOP
      * Generic 64-bit binary operation.
      */
     /* binop/2addr vA, vB */
-    movzbl    rINST_HI,%ecx             # ecx<- BA
+    movzbl    rINSTbl,%ecx              # ecx<- BA
     sarl      $4,%ecx                  # ecx<- B
-    GET_VREG_WORD(%eax,%ecx,0)          # eax<- v[B+0]
-    GET_VREG_WORD(%ecx,%ecx,1)          # eax<- v[B+1]
-    movzbl    rINST_HI,rINST_FULL       # rINST_FULL<- BA
-    andb      $0xF,rINST_LO            # rINST_FULL<- A
-    addl %eax,(rFP,rINST_FULL,4)         # example: addl   %eax,(rFP,rINST_FULL,4)
-    adcl %ecx,4(rFP,rINST_FULL,4)         # example: adcl   %ecx,4(rFP,rINST_FULL,4)
-    FETCH_INST_WORD(1)
-    ADVANCE_PC(1)
-    GOTO_NEXT
+    GET_VREG_WORD %eax %ecx 0           # eax<- v[B+0]
+    GET_VREG_WORD %ecx %ecx 1           # eax<- v[B+1]
+    andb      $0xF,rINSTbl             # rINST<- A
+    addl %eax,(rFP,rINST,4)         # example: addl   %eax,(rFP,rINST,4)
+    adcl %ecx,4(rFP,rINST,4)         # example: adcl   %ecx,4(rFP,rINST,4)
+    FETCH_INST_OPCODE 1 %edx
+    ADVANCE_PC 1
+    GOTO_NEXT_R %edx
 
 
 /* ------------------------------ */
@@ -4689,17 +4892,16 @@ dvmAsmInstructionStart = .L_OP_NOP
      * Generic 64-bit binary operation.
      */
     /* binop/2addr vA, vB */
-    movzbl    rINST_HI,%ecx             # ecx<- BA
+    movzbl    rINSTbl,%ecx              # ecx<- BA
     sarl      $4,%ecx                  # ecx<- B
-    GET_VREG_WORD(%eax,%ecx,0)          # eax<- v[B+0]
-    GET_VREG_WORD(%ecx,%ecx,1)          # eax<- v[B+1]
-    movzbl    rINST_HI,rINST_FULL       # rINST_FULL<- BA
-    andb      $0xF,rINST_LO            # rINST_FULL<- A
-    subl %eax,(rFP,rINST_FULL,4)         # example: addl   %eax,(rFP,rINST_FULL,4)
-    sbbl %ecx,4(rFP,rINST_FULL,4)         # example: adcl   %ecx,4(rFP,rINST_FULL,4)
-    FETCH_INST_WORD(1)
-    ADVANCE_PC(1)
-    GOTO_NEXT
+    GET_VREG_WORD %eax %ecx 0           # eax<- v[B+0]
+    GET_VREG_WORD %ecx %ecx 1           # eax<- v[B+1]
+    andb      $0xF,rINSTbl             # rINST<- A
+    subl %eax,(rFP,rINST,4)         # example: addl   %eax,(rFP,rINST,4)
+    sbbl %ecx,4(rFP,rINST,4)         # example: adcl   %ecx,4(rFP,rINST,4)
+    FETCH_INST_OPCODE 1 %edx
+    ADVANCE_PC 1
+    GOTO_NEXT_R %edx
 
 
 /* ------------------------------ */
@@ -4710,29 +4912,28 @@ dvmAsmInstructionStart = .L_OP_NOP
      * Signed 64-bit integer multiply, 2-addr version
      *
      * We could definately use more free registers for
-     * this code.  We must spill rPC (edx) because it
+     * this code.  We must spill %edx (edx) because it
      * is used by imul.  We'll also spill rINST (ebx),
      * giving us eax, ebc, ecx and edx as computational
-     * temps.  On top of that, we'll spill rIBASE (edi)
+     * temps.  On top of that, we'll spill %esi (edi)
      * for use as the vA pointer and rFP (esi) for use
      * as the vB pointer.  Yuck.
      */
     /* mul-long/2addr vA, vB */
-    movzbl    rINST_HI,%eax            # eax<- BA
+    movzbl    rINSTbl,%eax             # eax<- BA
     andb      $0xf,%al                # eax<- A
-    sarl      $12,rINST_FULL          # rINST_FULL<- B
-    SPILL(rPC)
-    SPILL(rIBASE)
+    sarl      $4,rINST                # rINST<- B
+    SPILL_TMP2(%esi)
     SPILL(rFP)
-    leal      (rFP,%eax,4),rIBASE      # rIBASE<- &v[A]
-    leal      (rFP,rINST_FULL,4),rFP   # rFP<- &v[B]
-    movl      4(rIBASE),%ecx      # ecx<- Amsw
-    imull     (rFP),%ecx          # ecx<- (Amsw*Blsw)
-    movl      4(rFP),%eax         # eax<- Bmsw
-    imull     (rIBASE),%eax       # eax<- (Bmsw*Alsw)
-    addl      %eax,%ecx           # ecx<- (Amsw*Blsw)+(Bmsw*Alsw)
-    movl      (rFP),%eax          # eax<- Blsw
-    mull      (rIBASE)            # eax<- (Blsw*Alsw)
+    leal      (rFP,%eax,4),%esi        # %esi<- &v[A]
+    leal      (rFP,rINST,4),rFP        # rFP<- &v[B]
+    movl      4(%esi),%ecx             # ecx<- Amsw
+    imull     (rFP),%ecx               # ecx<- (Amsw*Blsw)
+    movl      4(rFP),%eax              # eax<- Bmsw
+    imull     (%esi),%eax              # eax<- (Bmsw*Alsw)
+    addl      %eax,%ecx                # ecx<- (Amsw*Blsw)+(Bmsw*Alsw)
+    movl      (rFP),%eax               # eax<- Blsw
+    mull      (%esi)                   # eax<- (Blsw*Alsw)
     jmp       .LOP_MUL_LONG_2ADDR_continue
 
 /* ------------------------------ */
@@ -4740,21 +4941,19 @@ dvmAsmInstructionStart = .L_OP_NOP
 .L_OP_DIV_LONG_2ADDR: /* 0xbe */
 /* File: x86/OP_DIV_LONG_2ADDR.S */
     /* div/2addr vA, vB */
-    movzbl    rINST_HI,%eax
+    movzbl    rINSTbl,%eax
     shrl      $4,%eax                  # eax<- B
-    movzbl    rINST_HI,rINST_FULL
-    andb      $0xf,rINST_LO            # rINST_FULL<- A
-    SPILL(rPC)
-    GET_VREG_WORD(rPC,%eax,0)
-    GET_VREG_WORD(%eax,%eax,1)
-    movl     rPC,OUT_ARG2(%esp)
+    andb      $0xf,rINSTbl             # rINST<- A
+    GET_VREG_WORD %edx %eax 0
+    GET_VREG_WORD %eax %eax 1
+    movl     %edx,OUT_ARG2(%esp)
     testl    %eax,%eax
     je       .LOP_DIV_LONG_2ADDR_check_zero
     cmpl     $-1,%eax
     je       .LOP_DIV_LONG_2ADDR_check_neg1
 .LOP_DIV_LONG_2ADDR_notSpecial:
-    GET_VREG_WORD(rPC,rINST_FULL,0)
-    GET_VREG_WORD(%ecx,rINST_FULL,1)
+    GET_VREG_WORD %edx rINST 0
+    GET_VREG_WORD %ecx rINST 1
 .LOP_DIV_LONG_2ADDR_notSpecial1:
     jmp      .LOP_DIV_LONG_2ADDR_continue
 
@@ -4764,21 +4963,19 @@ dvmAsmInstructionStart = .L_OP_NOP
 /* File: x86/OP_REM_LONG_2ADDR.S */
 /* File: x86/OP_DIV_LONG_2ADDR.S */
     /* div/2addr vA, vB */
-    movzbl    rINST_HI,%eax
+    movzbl    rINSTbl,%eax
     shrl      $4,%eax                  # eax<- B
-    movzbl    rINST_HI,rINST_FULL
-    andb      $0xf,rINST_LO            # rINST_FULL<- A
-    SPILL(rPC)
-    GET_VREG_WORD(rPC,%eax,0)
-    GET_VREG_WORD(%eax,%eax,1)
-    movl     rPC,OUT_ARG2(%esp)
+    andb      $0xf,rINSTbl             # rINST<- A
+    GET_VREG_WORD %edx %eax 0
+    GET_VREG_WORD %eax %eax 1
+    movl     %edx,OUT_ARG2(%esp)
     testl    %eax,%eax
     je       .LOP_REM_LONG_2ADDR_check_zero
     cmpl     $-1,%eax
     je       .LOP_REM_LONG_2ADDR_check_neg1
 .LOP_REM_LONG_2ADDR_notSpecial:
-    GET_VREG_WORD(rPC,rINST_FULL,0)
-    GET_VREG_WORD(%ecx,rINST_FULL,1)
+    GET_VREG_WORD %edx rINST 0
+    GET_VREG_WORD %ecx rINST 1
 .LOP_REM_LONG_2ADDR_notSpecial1:
     jmp      .LOP_REM_LONG_2ADDR_continue
 
@@ -4792,17 +4989,16 @@ dvmAsmInstructionStart = .L_OP_NOP
      * Generic 64-bit binary operation.
      */
     /* binop/2addr vA, vB */
-    movzbl    rINST_HI,%ecx             # ecx<- BA
+    movzbl    rINSTbl,%ecx              # ecx<- BA
     sarl      $4,%ecx                  # ecx<- B
-    GET_VREG_WORD(%eax,%ecx,0)          # eax<- v[B+0]
-    GET_VREG_WORD(%ecx,%ecx,1)          # eax<- v[B+1]
-    movzbl    rINST_HI,rINST_FULL       # rINST_FULL<- BA
-    andb      $0xF,rINST_LO            # rINST_FULL<- A
-    andl %eax,(rFP,rINST_FULL,4)         # example: addl   %eax,(rFP,rINST_FULL,4)
-    andl %ecx,4(rFP,rINST_FULL,4)         # example: adcl   %ecx,4(rFP,rINST_FULL,4)
-    FETCH_INST_WORD(1)
-    ADVANCE_PC(1)
-    GOTO_NEXT
+    GET_VREG_WORD %eax %ecx 0           # eax<- v[B+0]
+    GET_VREG_WORD %ecx %ecx 1           # eax<- v[B+1]
+    andb      $0xF,rINSTbl             # rINST<- A
+    andl %eax,(rFP,rINST,4)         # example: addl   %eax,(rFP,rINST,4)
+    andl %ecx,4(rFP,rINST,4)         # example: adcl   %ecx,4(rFP,rINST,4)
+    FETCH_INST_OPCODE 1 %edx
+    ADVANCE_PC 1
+    GOTO_NEXT_R %edx
 
 
 /* ------------------------------ */
@@ -4814,17 +5010,16 @@ dvmAsmInstructionStart = .L_OP_NOP
      * Generic 64-bit binary operation.
      */
     /* binop/2addr vA, vB */
-    movzbl    rINST_HI,%ecx             # ecx<- BA
+    movzbl    rINSTbl,%ecx              # ecx<- BA
     sarl      $4,%ecx                  # ecx<- B
-    GET_VREG_WORD(%eax,%ecx,0)          # eax<- v[B+0]
-    GET_VREG_WORD(%ecx,%ecx,1)          # eax<- v[B+1]
-    movzbl    rINST_HI,rINST_FULL       # rINST_FULL<- BA
-    andb      $0xF,rINST_LO            # rINST_FULL<- A
-    orl %eax,(rFP,rINST_FULL,4)         # example: addl   %eax,(rFP,rINST_FULL,4)
-    orl %ecx,4(rFP,rINST_FULL,4)         # example: adcl   %ecx,4(rFP,rINST_FULL,4)
-    FETCH_INST_WORD(1)
-    ADVANCE_PC(1)
-    GOTO_NEXT
+    GET_VREG_WORD %eax %ecx 0           # eax<- v[B+0]
+    GET_VREG_WORD %ecx %ecx 1           # eax<- v[B+1]
+    andb      $0xF,rINSTbl             # rINST<- A
+    orl %eax,(rFP,rINST,4)         # example: addl   %eax,(rFP,rINST,4)
+    orl %ecx,4(rFP,rINST,4)         # example: adcl   %ecx,4(rFP,rINST,4)
+    FETCH_INST_OPCODE 1 %edx
+    ADVANCE_PC 1
+    GOTO_NEXT_R %edx
 
 
 /* ------------------------------ */
@@ -4836,17 +5031,16 @@ dvmAsmInstructionStart = .L_OP_NOP
      * Generic 64-bit binary operation.
      */
     /* binop/2addr vA, vB */
-    movzbl    rINST_HI,%ecx             # ecx<- BA
+    movzbl    rINSTbl,%ecx              # ecx<- BA
     sarl      $4,%ecx                  # ecx<- B
-    GET_VREG_WORD(%eax,%ecx,0)          # eax<- v[B+0]
-    GET_VREG_WORD(%ecx,%ecx,1)          # eax<- v[B+1]
-    movzbl    rINST_HI,rINST_FULL       # rINST_FULL<- BA
-    andb      $0xF,rINST_LO            # rINST_FULL<- A
-    xorl %eax,(rFP,rINST_FULL,4)         # example: addl   %eax,(rFP,rINST_FULL,4)
-    xorl %ecx,4(rFP,rINST_FULL,4)         # example: adcl   %ecx,4(rFP,rINST_FULL,4)
-    FETCH_INST_WORD(1)
-    ADVANCE_PC(1)
-    GOTO_NEXT
+    GET_VREG_WORD %eax %ecx 0           # eax<- v[B+0]
+    GET_VREG_WORD %ecx %ecx 1           # eax<- v[B+1]
+    andb      $0xF,rINSTbl             # rINST<- A
+    xorl %eax,(rFP,rINST,4)         # example: addl   %eax,(rFP,rINST,4)
+    xorl %ecx,4(rFP,rINST,4)         # example: adcl   %ecx,4(rFP,rINST,4)
+    FETCH_INST_OPCODE 1 %edx
+    ADVANCE_PC 1
+    GOTO_NEXT_R %edx
 
 
 /* ------------------------------ */
@@ -4860,15 +5054,13 @@ dvmAsmInstructionStart = .L_OP_NOP
     /* shl-long/2addr vA, vB */
     /* ecx gets shift count */
     /* Need to spill edx */
-    /* rINST gets AA */
-    movzbl    rINST_HI,%ecx             # ecx<- BA
-    movzbl    rINST_HI,rINST_FULL       # rINST_HI<- BA
-    andb      $0xf,rINST_LO            # rINST_FULL<- A
-    GET_VREG_WORD(%eax,rINST_FULL,0)    # eax<- v[AA+0]
-    sarl      $4,%ecx                  # ecx<- B
-    SPILL(rPC)
-    GET_VREG_WORD(%edx,rINST_FULL,1)    # edx<- v[AA+1]
-    GET_VREG(%ecx,%ecx)                 # ecx<- vBB
+    /* rINSTw gets AA */
+    movzbl    rINSTbl,%ecx             # ecx<- BA
+    andb      $0xf,rINSTbl            # rINST<- A
+    GET_VREG_WORD %eax rINST 0         # eax<- v[AA+0]
+    sarl      $4,%ecx                 # ecx<- B
+    GET_VREG_WORD %edx rINST 1         # edx<- v[AA+1]
+    GET_VREG_R  %ecx %ecx              # ecx<- vBB
     shldl     %eax,%edx
     sall      %cl,%eax
     testb     $32,%cl
@@ -4876,8 +5068,7 @@ dvmAsmInstructionStart = .L_OP_NOP
     movl      %eax,%edx
     xorl      %eax,%eax
 2:
-    SET_VREG_WORD(%edx,rINST_FULL,1)   # v[AA+1]<- edx
-    UNSPILL(rPC)
+    SET_VREG_WORD %edx rINST 1         # v[AA+1]<- edx
     jmp       .LOP_SHL_LONG_2ADDR_finish
 
 /* ------------------------------ */
@@ -4891,15 +5082,13 @@ dvmAsmInstructionStart = .L_OP_NOP
     /* shl-long/2addr vA, vB */
     /* ecx gets shift count */
     /* Need to spill edx */
-    /* rINST gets AA */
-    movzbl    rINST_HI,%ecx             # ecx<- BA
-    movzbl    rINST_HI,rINST_FULL       # rINST_HI<- BA
-    andb      $0xf,rINST_LO            # rINST_FULL<- A
-    GET_VREG_WORD(%eax,rINST_FULL,0)    # eax<- v[AA+0]
-    sarl      $4,%ecx                  # ecx<- B
-    SPILL(rPC)
-    GET_VREG_WORD(%edx,rINST_FULL,1)    # edx<- v[AA+1]
-    GET_VREG(%ecx,%ecx)                 # ecx<- vBB
+    /* rINSTw gets AA */
+    movzbl    rINSTbl,%ecx         # ecx<- BA
+    andb      $0xf,rINSTbl        # rINST<- A
+    GET_VREG_WORD %eax rINST 0     # eax<- v[AA+0]
+    sarl      $4,%ecx             # ecx<- B
+    GET_VREG_WORD %edx rINST 1     # edx<- v[AA+1]
+    GET_VREG_R %ecx %ecx           # ecx<- vBB
     shrdl     %edx,%eax
     sarl      %cl,%edx
     testb     $32,%cl
@@ -4907,8 +5096,7 @@ dvmAsmInstructionStart = .L_OP_NOP
     movl      %edx,%eax
     sarl      $31,%edx
 2:
-    SET_VREG_WORD(%edx,rINST_FULL,1)   # v[AA+1]<- edx
-    UNSPILL(rPC)
+    SET_VREG_WORD %edx rINST 1     # v[AA+1]<- edx
     jmp       .LOP_SHR_LONG_2ADDR_finish
 
 /* ------------------------------ */
@@ -4922,15 +5110,13 @@ dvmAsmInstructionStart = .L_OP_NOP
     /* shl-long/2addr vA, vB */
     /* ecx gets shift count */
     /* Need to spill edx */
-    /* rINST gets AA */
-    movzbl    rINST_HI,%ecx             # ecx<- BA
-    movzbl    rINST_HI,rINST_FULL       # rINST_HI<- BA
-    andb      $0xf,rINST_LO            # rINST_FULL<- A
-    GET_VREG_WORD(%eax,rINST_FULL,0)    # eax<- v[AA+0]
-    sarl      $4,%ecx                  # ecx<- B
-    SPILL(rPC)
-    GET_VREG_WORD(%edx,rINST_FULL,1)    # edx<- v[AA+1]
-    GET_VREG(%ecx,%ecx)                 # ecx<- vBB
+    /* rINSTw gets AA */
+    movzbl    rINSTbl,%ecx             # ecx<- BA
+    andb      $0xf,rINSTbl            # rINST<- A
+    GET_VREG_WORD %eax rINST 0         # eax<- v[AA+0]
+    sarl      $4,%ecx                 # ecx<- B
+    GET_VREG_WORD %edx rINST 1         # edx<- v[AA+1]
+    GET_VREG_R %ecx %ecx               # ecx<- vBB
     shrdl     %edx,%eax
     shrl      %cl,%edx
     testb     $32,%cl
@@ -4938,8 +5124,7 @@ dvmAsmInstructionStart = .L_OP_NOP
     movl      %edx,%eax
     xorl      %edx,%edx
 2:
-    SET_VREG_WORD(%edx,rINST_FULL,1)   # v[AA+1]<- edx
-    UNSPILL(rPC)
+    SET_VREG_WORD %edx rINST 1         # v[AA+1]<- edx
     jmp       .LOP_USHR_LONG_2ADDR_finish
 
 /* ------------------------------ */
@@ -4954,15 +5139,15 @@ dvmAsmInstructionStart = .L_OP_NOP
      */
 
     /* binop/2addr vA, vB */
-    movzx   rINST_HI,%ecx               # ecx<- A+
-    andb    $0xf,%cl                   # ecx<- A
-    flds    (rFP,%ecx,4)               # vAA to fp stack
-    sarl    $12,rINST_FULL             # rINST_FULL<- B
-    fadds   (rFP,rINST_FULL,4)           # ex: faddp
-    FETCH_INST_WORD(1)
-    ADVANCE_PC(1)
-    fstps    (rFP,%ecx,4)              # %st to vA
-    GOTO_NEXT
+    movzx   rINSTbl,%ecx           # ecx<- A+
+    andb    $0xf,%cl              # ecx<- A
+    flds    (rFP,%ecx,4)          # vAA to fp stack
+    sarl    $4,rINST             # rINST<- B
+    fadds   (rFP,rINST,4)         # ex: faddp
+    FETCH_INST_OPCODE 1 %edx
+    ADVANCE_PC 1
+    fstps    (rFP,%ecx,4)         # %st to vA
+    GOTO_NEXT_R %edx
 
 
 /* ------------------------------ */
@@ -4977,15 +5162,15 @@ dvmAsmInstructionStart = .L_OP_NOP
      */
 
     /* binop/2addr vA, vB */
-    movzx   rINST_HI,%ecx               # ecx<- A+
-    andb    $0xf,%cl                   # ecx<- A
-    flds    (rFP,%ecx,4)               # vAA to fp stack
-    sarl    $12,rINST_FULL             # rINST_FULL<- B
-    fsubs   (rFP,rINST_FULL,4)           # ex: faddp
-    FETCH_INST_WORD(1)
-    ADVANCE_PC(1)
-    fstps    (rFP,%ecx,4)              # %st to vA
-    GOTO_NEXT
+    movzx   rINSTbl,%ecx           # ecx<- A+
+    andb    $0xf,%cl              # ecx<- A
+    flds    (rFP,%ecx,4)          # vAA to fp stack
+    sarl    $4,rINST             # rINST<- B
+    fsubs   (rFP,rINST,4)         # ex: faddp
+    FETCH_INST_OPCODE 1 %edx
+    ADVANCE_PC 1
+    fstps    (rFP,%ecx,4)         # %st to vA
+    GOTO_NEXT_R %edx
 
 
 /* ------------------------------ */
@@ -5000,15 +5185,15 @@ dvmAsmInstructionStart = .L_OP_NOP
      */
 
     /* binop/2addr vA, vB */
-    movzx   rINST_HI,%ecx               # ecx<- A+
-    andb    $0xf,%cl                   # ecx<- A
-    flds    (rFP,%ecx,4)               # vAA to fp stack
-    sarl    $12,rINST_FULL             # rINST_FULL<- B
-    fmuls   (rFP,rINST_FULL,4)           # ex: faddp
-    FETCH_INST_WORD(1)
-    ADVANCE_PC(1)
-    fstps    (rFP,%ecx,4)              # %st to vA
-    GOTO_NEXT
+    movzx   rINSTbl,%ecx           # ecx<- A+
+    andb    $0xf,%cl              # ecx<- A
+    flds    (rFP,%ecx,4)          # vAA to fp stack
+    sarl    $4,rINST             # rINST<- B
+    fmuls   (rFP,rINST,4)         # ex: faddp
+    FETCH_INST_OPCODE 1 %edx
+    ADVANCE_PC 1
+    fstps    (rFP,%ecx,4)         # %st to vA
+    GOTO_NEXT_R %edx
 
 
 /* ------------------------------ */
@@ -5023,15 +5208,15 @@ dvmAsmInstructionStart = .L_OP_NOP
      */
 
     /* binop/2addr vA, vB */
-    movzx   rINST_HI,%ecx               # ecx<- A+
-    andb    $0xf,%cl                   # ecx<- A
-    flds    (rFP,%ecx,4)               # vAA to fp stack
-    sarl    $12,rINST_FULL             # rINST_FULL<- B
-    fdivs   (rFP,rINST_FULL,4)           # ex: faddp
-    FETCH_INST_WORD(1)
-    ADVANCE_PC(1)
-    fstps    (rFP,%ecx,4)              # %st to vA
-    GOTO_NEXT
+    movzx   rINSTbl,%ecx           # ecx<- A+
+    andb    $0xf,%cl              # ecx<- A
+    flds    (rFP,%ecx,4)          # vAA to fp stack
+    sarl    $4,rINST             # rINST<- B
+    fdivs   (rFP,rINST,4)         # ex: faddp
+    FETCH_INST_OPCODE 1 %edx
+    ADVANCE_PC 1
+    fstps    (rFP,%ecx,4)         # %st to vA
+    GOTO_NEXT_R %edx
 
 
 /* ------------------------------ */
@@ -5039,21 +5224,21 @@ dvmAsmInstructionStart = .L_OP_NOP
 .L_OP_REM_FLOAT_2ADDR: /* 0xca */
 /* File: x86/OP_REM_FLOAT_2ADDR.S */
     /* rem_float/2addr vA, vB */
-    movzx   rINST_HI,%ecx               # ecx<- A+
-    sarl    $12,rINST_FULL             # rINST_FULL<- B
-    flds     (rFP,rINST_FULL,4)         # vBB to fp stack
+    movzx   rINSTbl,%ecx                # ecx<- A+
+    sarl    $4,rINST                  # rINST<- B
+    flds     (rFP,rINST,4)              # vBB to fp stack
     andb    $0xf,%cl                   # ecx<- A
     flds     (rFP,%ecx,4)               # vAA to fp stack
-    FETCH_INST_WORD(1)
+    FETCH_INST_OPCODE 1 %edx
 1:
     fprem
     fstsw     %ax
     sahf
     jp        1b
     fstp      %st(1)
-    ADVANCE_PC(1)
+    ADVANCE_PC 1
     fstps    (rFP,%ecx,4)               # %st to vA
-    GOTO_NEXT
+    GOTO_NEXT_R %edx
 
 /* ------------------------------ */
     .balign 64
@@ -5067,15 +5252,15 @@ dvmAsmInstructionStart = .L_OP_NOP
      */
 
     /* binop/2addr vA, vB */
-    movzx   rINST_HI,%ecx               # ecx<- A+
-    andb    $0xf,%cl                   # ecx<- A
-    fldl    (rFP,%ecx,4)               # vAA to fp stack
-    sarl    $12,rINST_FULL             # rINST_FULL<- B
-    faddl   (rFP,rINST_FULL,4)           # ex: faddp
-    FETCH_INST_WORD(1)
-    ADVANCE_PC(1)
-    fstpl    (rFP,%ecx,4)              # %st to vA
-    GOTO_NEXT
+    movzx   rINSTbl,%ecx           # ecx<- A+
+    andb    $0xf,%cl              # ecx<- A
+    fldl    (rFP,%ecx,4)          # vAA to fp stack
+    sarl    $4,rINST             # rINST<- B
+    faddl   (rFP,rINST,4)         # ex: faddp
+    FETCH_INST_OPCODE 1 %edx
+    ADVANCE_PC 1
+    fstpl    (rFP,%ecx,4)         # %st to vA
+    GOTO_NEXT_R %edx
 
 
 /* ------------------------------ */
@@ -5090,15 +5275,15 @@ dvmAsmInstructionStart = .L_OP_NOP
      */
 
     /* binop/2addr vA, vB */
-    movzx   rINST_HI,%ecx               # ecx<- A+
-    andb    $0xf,%cl                   # ecx<- A
-    fldl    (rFP,%ecx,4)               # vAA to fp stack
-    sarl    $12,rINST_FULL             # rINST_FULL<- B
-    fsubl   (rFP,rINST_FULL,4)           # ex: faddp
-    FETCH_INST_WORD(1)
-    ADVANCE_PC(1)
-    fstpl    (rFP,%ecx,4)              # %st to vA
-    GOTO_NEXT
+    movzx   rINSTbl,%ecx           # ecx<- A+
+    andb    $0xf,%cl              # ecx<- A
+    fldl    (rFP,%ecx,4)          # vAA to fp stack
+    sarl    $4,rINST             # rINST<- B
+    fsubl   (rFP,rINST,4)         # ex: faddp
+    FETCH_INST_OPCODE 1 %edx
+    ADVANCE_PC 1
+    fstpl    (rFP,%ecx,4)         # %st to vA
+    GOTO_NEXT_R %edx
 
 
 /* ------------------------------ */
@@ -5113,15 +5298,15 @@ dvmAsmInstructionStart = .L_OP_NOP
      */
 
     /* binop/2addr vA, vB */
-    movzx   rINST_HI,%ecx               # ecx<- A+
-    andb    $0xf,%cl                   # ecx<- A
-    fldl    (rFP,%ecx,4)               # vAA to fp stack
-    sarl    $12,rINST_FULL             # rINST_FULL<- B
-    fmull   (rFP,rINST_FULL,4)           # ex: faddp
-    FETCH_INST_WORD(1)
-    ADVANCE_PC(1)
-    fstpl    (rFP,%ecx,4)              # %st to vA
-    GOTO_NEXT
+    movzx   rINSTbl,%ecx           # ecx<- A+
+    andb    $0xf,%cl              # ecx<- A
+    fldl    (rFP,%ecx,4)          # vAA to fp stack
+    sarl    $4,rINST             # rINST<- B
+    fmull   (rFP,rINST,4)         # ex: faddp
+    FETCH_INST_OPCODE 1 %edx
+    ADVANCE_PC 1
+    fstpl    (rFP,%ecx,4)         # %st to vA
+    GOTO_NEXT_R %edx
 
 
 /* ------------------------------ */
@@ -5136,15 +5321,15 @@ dvmAsmInstructionStart = .L_OP_NOP
      */
 
     /* binop/2addr vA, vB */
-    movzx   rINST_HI,%ecx               # ecx<- A+
-    andb    $0xf,%cl                   # ecx<- A
-    fldl    (rFP,%ecx,4)               # vAA to fp stack
-    sarl    $12,rINST_FULL             # rINST_FULL<- B
-    fdivl   (rFP,rINST_FULL,4)           # ex: faddp
-    FETCH_INST_WORD(1)
-    ADVANCE_PC(1)
-    fstpl    (rFP,%ecx,4)              # %st to vA
-    GOTO_NEXT
+    movzx   rINSTbl,%ecx           # ecx<- A+
+    andb    $0xf,%cl              # ecx<- A
+    fldl    (rFP,%ecx,4)          # vAA to fp stack
+    sarl    $4,rINST             # rINST<- B
+    fdivl   (rFP,rINST,4)         # ex: faddp
+    FETCH_INST_OPCODE 1 %edx
+    ADVANCE_PC 1
+    fstpl    (rFP,%ecx,4)         # %st to vA
+    GOTO_NEXT_R %edx
 
 
 /* ------------------------------ */
@@ -5152,21 +5337,21 @@ dvmAsmInstructionStart = .L_OP_NOP
 .L_OP_REM_DOUBLE_2ADDR: /* 0xcf */
 /* File: x86/OP_REM_DOUBLE_2ADDR.S */
     /* rem_float/2addr vA, vB */
-    movzx   rINST_HI,%ecx               # ecx<- A+
-    sarl    $12,rINST_FULL             # rINST_FULL<- B
-    fldl     (rFP,rINST_FULL,4)         # vBB to fp stack
+    movzx   rINSTbl,%ecx                # ecx<- A+
+    sarl    $4,rINST                  # rINST<- B
+    fldl     (rFP,rINST,4)              # vBB to fp stack
     andb    $0xf,%cl                   # ecx<- A
     fldl     (rFP,%ecx,4)               # vAA to fp stack
-    FETCH_INST_WORD(1)
+    FETCH_INST_OPCODE 1 %edx
 1:
     fprem
     fstsw     %ax
     sahf
     jp        1b
     fstp      %st(1)
-    ADVANCE_PC(1)
+    ADVANCE_PC 1
     fstpl    (rFP,%ecx,4)               # %st to vA
-    GOTO_NEXT
+    GOTO_NEXT_R %edx
 
 /* ------------------------------ */
     .balign 64
@@ -5183,17 +5368,16 @@ dvmAsmInstructionStart = .L_OP_NOP
      *      and-int/lit16, or-int/lit16, xor-int/lit16
      */
     /* binop/lit16 vA, vB, #+CCCC */
-    movzbl   rINST_HI,%eax              # eax<- 000000BA
+    movzbl   rINSTbl,%eax               # eax<- 000000BA
     sarl     $4,%eax                   # eax<- B
-    GET_VREG(%eax,%eax)                 # eax<- vB
+    GET_VREG_R %eax %eax                # eax<- vB
     movswl   2(rPC),%ecx                # ecx<- ssssCCCC
-    movzbl   rINST_HI,rINST_FULL        # rINST_FULL<- BA
-    andb     $0xf,rINST_LO             # rINST_FULL<- A
+    andb     $0xf,rINSTbl              # rINST<- A
     addl %ecx,%eax                              # for example: addl %ecx, %eax
-    SET_VREG(%eax,rINST_FULL)
-    FETCH_INST_WORD(2)
-    ADVANCE_PC(2)
-    GOTO_NEXT
+    SET_VREG %eax rINST
+    FETCH_INST_OPCODE 2 %edx
+    ADVANCE_PC 2
+    GOTO_NEXT_R %edx
 
 
 /* ------------------------------ */
@@ -5211,17 +5395,16 @@ dvmAsmInstructionStart = .L_OP_NOP
      *      and-int/lit16, or-int/lit16, xor-int/lit16
      */
     /* binop/lit16 vA, vB, #+CCCC */
-    movzbl   rINST_HI,%eax              # eax<- 000000BA
+    movzbl   rINSTbl,%eax               # eax<- 000000BA
     sarl     $4,%eax                   # eax<- B
-    GET_VREG(%eax,%eax)                 # eax<- vB
+    GET_VREG_R %eax %eax                # eax<- vB
     movswl   2(rPC),%ecx                # ecx<- ssssCCCC
-    movzbl   rINST_HI,rINST_FULL        # rINST_FULL<- BA
-    andb     $0xf,rINST_LO             # rINST_FULL<- A
+    andb     $0xf,rINSTbl              # rINST<- A
     subl %eax,%ecx                              # for example: addl %ecx, %eax
-    SET_VREG(%ecx,rINST_FULL)
-    FETCH_INST_WORD(2)
-    ADVANCE_PC(2)
-    GOTO_NEXT
+    SET_VREG %ecx rINST
+    FETCH_INST_OPCODE 2 %edx
+    ADVANCE_PC 2
+    GOTO_NEXT_R %edx
 
 
 /* ------------------------------ */
@@ -5229,20 +5412,17 @@ dvmAsmInstructionStart = .L_OP_NOP
 .L_OP_MUL_INT_LIT16: /* 0xd2 */
 /* File: x86/OP_MUL_INT_LIT16.S */
     /* mul/lit16 vA, vB, #+CCCC */
-    /* Need A in rINST_FULL, ssssCCCC in ecx, vB in eax */
-    movzbl   rINST_HI,%eax              # eax<- 000000BA
+    /* Need A in rINST, ssssCCCC in ecx, vB in eax */
+    movzbl   rINSTbl,%eax               # eax<- 000000BA
     sarl     $4,%eax                   # eax<- B
-    GET_VREG(%eax,%eax)                 # eax<- vB
+    GET_VREG_R %eax %eax                # eax<- vB
     movswl   2(rPC),%ecx                # ecx<- ssssCCCC
-    SPILL(rPC)
-    movzbl   rINST_HI,rINST_FULL        # rINST_FULL<- BA
-    andb     $0xf,rINST_LO             # rINST_FULL<- A
-    imull     %ecx,%eax                 # trashes rPC
-    UNSPILL(rPC)
-    SET_VREG(%eax,rINST_FULL)
-    FETCH_INST_WORD(2)
-    ADVANCE_PC(2)
-    GOTO_NEXT
+    andb     $0xf,rINSTbl              # rINST<- A
+    imull     %ecx,%eax                 # trashes edx
+    FETCH_INST_OPCODE 2 %edx
+    ADVANCE_PC 2
+    SET_VREG %eax rINST
+    GOTO_NEXT_R %edx
 
 /* ------------------------------ */
     .balign 64
@@ -5254,14 +5434,12 @@ dvmAsmInstructionStart = .L_OP_NOP
      * op1=-1.
      */
     /* div/rem/lit16 vA, vB, #+CCCC */
-    /* Need A in rINST_FULL, ssssCCCC in ecx, vB in eax */
-    movzbl   rINST_HI,%eax              # eax<- 000000BA
-    sarl     $4,%eax                   # eax<- B
-    GET_VREG(%eax,%eax)                 # eax<- vB
-    movswl   2(rPC),%ecx                # ecx<- ssssCCCC
-    movzbl   rINST_HI,rINST_FULL        # rINST_FULL<- BA
-    andb     $0xf,rINST_LO             # rINST_FULL<- A
-    SPILL(rPC)
+    /* Need A in rINST, ssssCCCC in ecx, vB in eax */
+    movzbl   rINSTbl,%eax         # eax<- 000000BA
+    sarl     $4,%eax             # eax<- B
+    GET_VREG_R %eax %eax          # eax<- vB
+    movswl   2(rPC),%ecx          # ecx<- ssssCCCC
+    andb     $0xf,rINSTbl        # rINST<- A
     cmpl     $0,%ecx
     je       common_errDivideByZero
     cmpl     $-1,%ecx
@@ -5283,14 +5461,12 @@ dvmAsmInstructionStart = .L_OP_NOP
      * op1=-1.
      */
     /* div/rem/lit16 vA, vB, #+CCCC */
-    /* Need A in rINST_FULL, ssssCCCC in ecx, vB in eax */
-    movzbl   rINST_HI,%eax              # eax<- 000000BA
-    sarl     $4,%eax                   # eax<- B
-    GET_VREG(%eax,%eax)                 # eax<- vB
-    movswl   2(rPC),%ecx                # ecx<- ssssCCCC
-    movzbl   rINST_HI,rINST_FULL        # rINST_FULL<- BA
-    andb     $0xf,rINST_LO             # rINST_FULL<- A
-    SPILL(rPC)
+    /* Need A in rINST, ssssCCCC in ecx, vB in eax */
+    movzbl   rINSTbl,%eax         # eax<- 000000BA
+    sarl     $4,%eax             # eax<- B
+    GET_VREG_R %eax %eax          # eax<- vB
+    movswl   2(rPC),%ecx          # ecx<- ssssCCCC
+    andb     $0xf,rINSTbl        # rINST<- A
     cmpl     $0,%ecx
     je       common_errDivideByZero
     cmpl     $-1,%ecx
@@ -5317,17 +5493,16 @@ dvmAsmInstructionStart = .L_OP_NOP
      *      and-int/lit16, or-int/lit16, xor-int/lit16
      */
     /* binop/lit16 vA, vB, #+CCCC */
-    movzbl   rINST_HI,%eax              # eax<- 000000BA
+    movzbl   rINSTbl,%eax               # eax<- 000000BA
     sarl     $4,%eax                   # eax<- B
-    GET_VREG(%eax,%eax)                 # eax<- vB
+    GET_VREG_R %eax %eax                # eax<- vB
     movswl   2(rPC),%ecx                # ecx<- ssssCCCC
-    movzbl   rINST_HI,rINST_FULL        # rINST_FULL<- BA
-    andb     $0xf,rINST_LO             # rINST_FULL<- A
+    andb     $0xf,rINSTbl              # rINST<- A
     andl %ecx,%eax                              # for example: addl %ecx, %eax
-    SET_VREG(%eax,rINST_FULL)
-    FETCH_INST_WORD(2)
-    ADVANCE_PC(2)
-    GOTO_NEXT
+    SET_VREG %eax rINST
+    FETCH_INST_OPCODE 2 %edx
+    ADVANCE_PC 2
+    GOTO_NEXT_R %edx
 
 
 /* ------------------------------ */
@@ -5345,17 +5520,16 @@ dvmAsmInstructionStart = .L_OP_NOP
      *      and-int/lit16, or-int/lit16, xor-int/lit16
      */
     /* binop/lit16 vA, vB, #+CCCC */
-    movzbl   rINST_HI,%eax              # eax<- 000000BA
+    movzbl   rINSTbl,%eax               # eax<- 000000BA
     sarl     $4,%eax                   # eax<- B
-    GET_VREG(%eax,%eax)                 # eax<- vB
+    GET_VREG_R %eax %eax                # eax<- vB
     movswl   2(rPC),%ecx                # ecx<- ssssCCCC
-    movzbl   rINST_HI,rINST_FULL        # rINST_FULL<- BA
-    andb     $0xf,rINST_LO             # rINST_FULL<- A
+    andb     $0xf,rINSTbl              # rINST<- A
     orl     %ecx,%eax                              # for example: addl %ecx, %eax
-    SET_VREG(%eax,rINST_FULL)
-    FETCH_INST_WORD(2)
-    ADVANCE_PC(2)
-    GOTO_NEXT
+    SET_VREG %eax rINST
+    FETCH_INST_OPCODE 2 %edx
+    ADVANCE_PC 2
+    GOTO_NEXT_R %edx
 
 
 /* ------------------------------ */
@@ -5373,17 +5547,16 @@ dvmAsmInstructionStart = .L_OP_NOP
      *      and-int/lit16, or-int/lit16, xor-int/lit16
      */
     /* binop/lit16 vA, vB, #+CCCC */
-    movzbl   rINST_HI,%eax              # eax<- 000000BA
+    movzbl   rINSTbl,%eax               # eax<- 000000BA
     sarl     $4,%eax                   # eax<- B
-    GET_VREG(%eax,%eax)                 # eax<- vB
+    GET_VREG_R %eax %eax                # eax<- vB
     movswl   2(rPC),%ecx                # ecx<- ssssCCCC
-    movzbl   rINST_HI,rINST_FULL        # rINST_FULL<- BA
-    andb     $0xf,rINST_LO             # rINST_FULL<- A
+    andb     $0xf,rINSTbl              # rINST<- A
     xor    %ecx,%eax                              # for example: addl %ecx, %eax
-    SET_VREG(%eax,rINST_FULL)
-    FETCH_INST_WORD(2)
-    ADVANCE_PC(2)
-    GOTO_NEXT
+    SET_VREG %eax rINST
+    FETCH_INST_OPCODE 2 %edx
+    ADVANCE_PC 2
+    GOTO_NEXT_R %edx
 
 
 /* ------------------------------ */
@@ -5404,13 +5577,12 @@ dvmAsmInstructionStart = .L_OP_NOP
     /* binop/lit8 vAA, vBB, #+CC */
     movzbl    2(rPC),%eax              # eax<- BB
     movsbl    3(rPC),%ecx              # ecx<- ssssssCC
-    movzx     rINST_HI,rINST_FULL      # rINST_FULL<- AA
-    GET_VREG  (%eax,%eax)              # eax<- rBB
+    GET_VREG_R   %eax %eax             # eax<- rBB
     addl %ecx,%eax                             # ex: addl %ecx,%eax
-    SET_VREG  (%eax,rINST_FULL)
-    FETCH_INST_WORD(2)
-    ADVANCE_PC(2)
-    GOTO_NEXT
+    FETCH_INST_OPCODE 2 %edx
+    SET_VREG   %eax rINST
+    ADVANCE_PC 2
+    GOTO_NEXT_R %edx
 
 
 /* ------------------------------ */
@@ -5431,13 +5603,12 @@ dvmAsmInstructionStart = .L_OP_NOP
     /* binop/lit8 vAA, vBB, #+CC */
     movzbl    2(rPC),%eax              # eax<- BB
     movsbl    3(rPC),%ecx              # ecx<- ssssssCC
-    movzx     rINST_HI,rINST_FULL      # rINST_FULL<- AA
-    GET_VREG  (%eax,%eax)              # eax<- rBB
+    GET_VREG_R   %eax %eax             # eax<- rBB
     subl  %eax,%ecx                             # ex: addl %ecx,%eax
-    SET_VREG  (%ecx,rINST_FULL)
-    FETCH_INST_WORD(2)
-    ADVANCE_PC(2)
-    GOTO_NEXT
+    FETCH_INST_OPCODE 2 %edx
+    SET_VREG   %ecx rINST
+    ADVANCE_PC 2
+    GOTO_NEXT_R %edx
 
 
 /* ------------------------------ */
@@ -5447,15 +5618,12 @@ dvmAsmInstructionStart = .L_OP_NOP
     /* mul/lit8 vAA, vBB, #+CC */
     movzbl    2(rPC),%eax              # eax<- BB
     movsbl    3(rPC),%ecx              # ecx<- ssssssCC
-    SPILL(rPC)
-    movzx     rINST_HI,rINST_FULL      # rINST_FULL<- AA
-    GET_VREG  (%eax,%eax)              # eax<- rBB
-    imull     %ecx,%eax                # trashes rPC
-    UNSPILL(rPC)
-    SET_VREG  (%eax,rINST_FULL)
-    FETCH_INST_WORD(2)
-    ADVANCE_PC(2)
-    GOTO_NEXT
+    GET_VREG_R   %eax %eax             # eax<- rBB
+    imull     %ecx,%eax                # trashes edx
+    FETCH_INST_OPCODE 2 %edx
+    ADVANCE_PC 2
+    SET_VREG  %eax rINST
+    GOTO_NEXT_R %edx
 
 /* ------------------------------ */
     .balign 64
@@ -5467,11 +5635,9 @@ dvmAsmInstructionStart = .L_OP_NOP
      * op0=minint & op1=-1
      */
     /* div/rem/lit8 vAA, vBB, #+CC */
-    movzbl    2(rPC),%eax              # eax<- BB
-    movsbl    3(rPC),%ecx              # ecx<- ssssssCC
-    GET_VREG  (%eax,%eax)              # eax<- rBB
-    movzx     rINST_HI,rINST_FULL      # rINST_FULL<- AA
-    SPILL(rPC)
+    movzbl    2(rPC),%eax        # eax<- BB
+    movsbl    3(rPC),%ecx        # ecx<- ssssssCC
+    GET_VREG_R  %eax %eax        # eax<- rBB
     cmpl     $0,%ecx
     je       common_errDivideByZero
     cmpl     $0x80000000,%eax
@@ -5493,11 +5659,9 @@ dvmAsmInstructionStart = .L_OP_NOP
      * op0=minint & op1=-1
      */
     /* div/rem/lit8 vAA, vBB, #+CC */
-    movzbl    2(rPC),%eax              # eax<- BB
-    movsbl    3(rPC),%ecx              # ecx<- ssssssCC
-    GET_VREG  (%eax,%eax)              # eax<- rBB
-    movzx     rINST_HI,rINST_FULL      # rINST_FULL<- AA
-    SPILL(rPC)
+    movzbl    2(rPC),%eax        # eax<- BB
+    movsbl    3(rPC),%ecx        # ecx<- ssssssCC
+    GET_VREG_R  %eax %eax        # eax<- rBB
     cmpl     $0,%ecx
     je       common_errDivideByZero
     cmpl     $0x80000000,%eax
@@ -5527,13 +5691,12 @@ dvmAsmInstructionStart = .L_OP_NOP
     /* binop/lit8 vAA, vBB, #+CC */
     movzbl    2(rPC),%eax              # eax<- BB
     movsbl    3(rPC),%ecx              # ecx<- ssssssCC
-    movzx     rINST_HI,rINST_FULL      # rINST_FULL<- AA
-    GET_VREG  (%eax,%eax)              # eax<- rBB
+    GET_VREG_R   %eax %eax             # eax<- rBB
     andl %ecx,%eax                             # ex: addl %ecx,%eax
-    SET_VREG  (%eax,rINST_FULL)
-    FETCH_INST_WORD(2)
-    ADVANCE_PC(2)
-    GOTO_NEXT
+    FETCH_INST_OPCODE 2 %edx
+    SET_VREG   %eax rINST
+    ADVANCE_PC 2
+    GOTO_NEXT_R %edx
 
 
 /* ------------------------------ */
@@ -5554,13 +5717,12 @@ dvmAsmInstructionStart = .L_OP_NOP
     /* binop/lit8 vAA, vBB, #+CC */
     movzbl    2(rPC),%eax              # eax<- BB
     movsbl    3(rPC),%ecx              # ecx<- ssssssCC
-    movzx     rINST_HI,rINST_FULL      # rINST_FULL<- AA
-    GET_VREG  (%eax,%eax)              # eax<- rBB
+    GET_VREG_R   %eax %eax             # eax<- rBB
     orl     %ecx,%eax                             # ex: addl %ecx,%eax
-    SET_VREG  (%eax,rINST_FULL)
-    FETCH_INST_WORD(2)
-    ADVANCE_PC(2)
-    GOTO_NEXT
+    FETCH_INST_OPCODE 2 %edx
+    SET_VREG   %eax rINST
+    ADVANCE_PC 2
+    GOTO_NEXT_R %edx
 
 
 /* ------------------------------ */
@@ -5581,13 +5743,12 @@ dvmAsmInstructionStart = .L_OP_NOP
     /* binop/lit8 vAA, vBB, #+CC */
     movzbl    2(rPC),%eax              # eax<- BB
     movsbl    3(rPC),%ecx              # ecx<- ssssssCC
-    movzx     rINST_HI,rINST_FULL      # rINST_FULL<- AA
-    GET_VREG  (%eax,%eax)              # eax<- rBB
+    GET_VREG_R   %eax %eax             # eax<- rBB
     xor    %ecx,%eax                             # ex: addl %ecx,%eax
-    SET_VREG  (%eax,rINST_FULL)
-    FETCH_INST_WORD(2)
-    ADVANCE_PC(2)
-    GOTO_NEXT
+    FETCH_INST_OPCODE 2 %edx
+    SET_VREG   %eax rINST
+    ADVANCE_PC 2
+    GOTO_NEXT_R %edx
 
 
 /* ------------------------------ */
@@ -5608,13 +5769,12 @@ dvmAsmInstructionStart = .L_OP_NOP
     /* binop/lit8 vAA, vBB, #+CC */
     movzbl    2(rPC),%eax              # eax<- BB
     movsbl    3(rPC),%ecx              # ecx<- ssssssCC
-    movzx     rINST_HI,rINST_FULL      # rINST_FULL<- AA
-    GET_VREG  (%eax,%eax)              # eax<- rBB
+    GET_VREG_R   %eax %eax             # eax<- rBB
     sall  %cl,%eax                             # ex: addl %ecx,%eax
-    SET_VREG  (%eax,rINST_FULL)
-    FETCH_INST_WORD(2)
-    ADVANCE_PC(2)
-    GOTO_NEXT
+    FETCH_INST_OPCODE 2 %edx
+    SET_VREG   %eax rINST
+    ADVANCE_PC 2
+    GOTO_NEXT_R %edx
 
 
 /* ------------------------------ */
@@ -5635,13 +5795,12 @@ dvmAsmInstructionStart = .L_OP_NOP
     /* binop/lit8 vAA, vBB, #+CC */
     movzbl    2(rPC),%eax              # eax<- BB
     movsbl    3(rPC),%ecx              # ecx<- ssssssCC
-    movzx     rINST_HI,rINST_FULL      # rINST_FULL<- AA
-    GET_VREG  (%eax,%eax)              # eax<- rBB
+    GET_VREG_R   %eax %eax             # eax<- rBB
     sarl    %cl,%eax                             # ex: addl %ecx,%eax
-    SET_VREG  (%eax,rINST_FULL)
-    FETCH_INST_WORD(2)
-    ADVANCE_PC(2)
-    GOTO_NEXT
+    FETCH_INST_OPCODE 2 %edx
+    SET_VREG   %eax rINST
+    ADVANCE_PC 2
+    GOTO_NEXT_R %edx
 
 
 /* ------------------------------ */
@@ -5662,13 +5821,12 @@ dvmAsmInstructionStart = .L_OP_NOP
     /* binop/lit8 vAA, vBB, #+CC */
     movzbl    2(rPC),%eax              # eax<- BB
     movsbl    3(rPC),%ecx              # ecx<- ssssssCC
-    movzx     rINST_HI,rINST_FULL      # rINST_FULL<- AA
-    GET_VREG  (%eax,%eax)              # eax<- rBB
+    GET_VREG_R   %eax %eax             # eax<- rBB
     shrl     %cl,%eax                             # ex: addl %ecx,%eax
-    SET_VREG  (%eax,rINST_FULL)
-    FETCH_INST_WORD(2)
-    ADVANCE_PC(2)
-    GOTO_NEXT
+    FETCH_INST_OPCODE 2 %edx
+    SET_VREG   %eax rINST
+    ADVANCE_PC 2
+    GOTO_NEXT_R %edx
 
 
 /* ------------------------------ */
@@ -5682,21 +5840,19 @@ dvmAsmInstructionStart = .L_OP_NOP
      * for: iget, iget-object, iget-boolean, iget-byte, iget-char, iget-short
      */
     /* op vA, vB, field@CCCC */
-    GET_GLUE(%ecx)
-    SPILL(rIBASE)                                 # need another reg
-    movzwl  2(rPC),rIBASE                         # rIBASE<- 0000CCCC
-    movl    offGlue_methodClassDex(%ecx),%eax     # eax<- DvmDex
-    movzbl  rINST_HI,%ecx                         # ecx<- BA
-    sarl    $4,%ecx                              # ecx<- B
-    movl    offDvmDex_pResFields(%eax),%eax       # eax<- pDvmDex->pResFields
-    movzbl  rINST_HI,rINST_FULL                   # rINST_FULL<- BA
-    andb    $0xf,rINST_LO                        # rINST_FULL<- A
-    GET_VREG(%ecx,%ecx)                           # ecx<- fp[B], the object ptr
-    movl    (%eax,rIBASE,4),%eax                  # resolved entry
-    testl   %eax,%eax                             # is resolved entry null?
-    jne     .LOP_IGET_VOLATILE_finish                    # no, already resolved
-    movl    rIBASE,OUT_ARG1(%esp)                 # needed by dvmResolveInstField
-    GET_GLUE(rIBASE)
+    movl    rGLUE,%ecx
+    movzwl  2(rPC),%edx                         # edx<- 0000CCCC
+    movl    offGlue_methodClassDex(%ecx),%eax   # eax<- DvmDex
+    movzbl  rINSTbl,%ecx                        # ecx<- BA
+    sarl    $4,%ecx                            # ecx<- B
+    movl    offDvmDex_pResFields(%eax),%eax     # eax<- pDvmDex->pResFields
+    andb    $0xf,rINSTbl                       # rINST<- A
+    GET_VREG_R %ecx %ecx                        # ecx<- fp[B], the object ptr
+    movl    (%eax,%edx,4),%eax                  # resolved entry
+    testl   %eax,%eax                           # is resolved entry null?
+    jne     .LOP_IGET_VOLATILE_finish                  # no, already resolved
+    movl    %edx,OUT_ARG1(%esp)                 # needed by dvmResolveInstField
+    movl    rGLUE,%edx
     jmp     .LOP_IGET_VOLATILE_resolve
 
 
@@ -5712,21 +5868,19 @@ dvmAsmInstructionStart = .L_OP_NOP
      * for: iput, iput-object, iput-boolean, iput-byte, iput-char, iput-short
      */
     /* op vA, vB, field@CCCC */
-    GET_GLUE(%ecx)
-    SPILL(rIBASE)                                 # need another reg
-    movzwl  2(rPC),rIBASE                         # rIBASE<- 0000CCCC
-    movl    offGlue_methodClassDex(%ecx),%eax     # eax<- DvmDex
-    movzbl  rINST_HI,%ecx                         # ecx<- BA
-    sarl    $4,%ecx                              # ecx<- B
-    movl    offDvmDex_pResFields(%eax),%eax       # eax<- pDvmDex->pResFields
-    movzbl  rINST_HI,rINST_FULL                   # rINST_FULL<- BA
-    andb    $0xf,rINST_LO                        # rINST_FULL<- A
-    GET_VREG(%ecx,%ecx)                           # ecx<- fp[B], the object ptr
-    movl    (%eax,rIBASE,4),%eax                  # resolved entry
-    testl   %eax,%eax                             # is resolved entry null?
-    jne     .LOP_IPUT_VOLATILE_finish                    # no, already resolved
-    movl    rIBASE,OUT_ARG1(%esp)
-    GET_GLUE(rIBASE)
+    movl    rGLUE,%ecx
+    movzwl  2(rPC),%edx                         # %edx<- 0000CCCC
+    movl    offGlue_methodClassDex(%ecx),%eax   # eax<- DvmDex
+    movzbl  rINSTbl,%ecx                        # ecx<- BA
+    sarl    $4,%ecx                            # ecx<- B
+    movl    offDvmDex_pResFields(%eax),%eax     # eax<- pDvmDex->pResFields
+    andb    $0xf,rINSTbl                       # rINST<- A
+    GET_VREG_R %ecx %ecx                        # ecx<- fp[B], the object ptr
+    movl    (%eax,%edx,4),%eax                  # resolved entry
+    testl   %eax,%eax                           # is resolved entry null?
+    jne     .LOP_IPUT_VOLATILE_finish                  # no, already resolved
+    movl    %edx,OUT_ARG1(%esp)
+    movl    rGLUE,%edx
     jmp     .LOP_IPUT_VOLATILE_resolve
 
 
@@ -5741,7 +5895,7 @@ dvmAsmInstructionStart = .L_OP_NOP
      * for: sget, sget-object, sget-boolean, sget-byte, sget-char, sget-short
      */
     /* op vAA, field@BBBB */
-    GET_GLUE(%ecx)
+    movl      rGLUE,%ecx
     movzwl    2(rPC),%eax                        # eax<- field ref BBBB
     movl      offGlue_methodClassDex(%ecx),%ecx  # ecx<- DvmDex
     movl      offDvmDex_pResFields(%ecx),%ecx    # ecx<- dvmDex->pResFields
@@ -5750,11 +5904,10 @@ dvmAsmInstructionStart = .L_OP_NOP
     je        .LOP_SGET_VOLATILE_resolve                # if not, make it so
 .LOP_SGET_VOLATILE_finish:     # field ptr in eax
     movl      offStaticField_value(%eax),%eax
-    movzbl    rINST_HI,%ecx                      # ecx<- AA
-    FETCH_INST_WORD(2)
-    ADVANCE_PC(2)
-    SET_VREG(%eax,%ecx)
-    GOTO_NEXT
+    FETCH_INST_OPCODE 2 %edx
+    ADVANCE_PC 2
+    SET_VREG %eax rINST
+    GOTO_NEXT_R %edx
 
 
 /* ------------------------------ */
@@ -5768,7 +5921,7 @@ dvmAsmInstructionStart = .L_OP_NOP
      * for: sput, sput-boolean, sput-byte, sput-char, sput-short
      */
     /* op vAA, field@BBBB */
-    GET_GLUE(%ecx)
+    movl      rGLUE,%ecx
     movzwl    2(rPC),%eax                        # eax<- field ref BBBB
     movl      offGlue_methodClassDex(%ecx),%ecx  # ecx<- DvmDex
     movl      offDvmDex_pResFields(%ecx),%ecx    # ecx<- dvmDex->pResFields
@@ -5776,12 +5929,11 @@ dvmAsmInstructionStart = .L_OP_NOP
     testl     %eax,%eax                          # resolved entry null?
     je        .LOP_SPUT_VOLATILE_resolve                # if not, make it so
 .LOP_SPUT_VOLATILE_finish:     # field ptr in eax
-    movzbl    rINST_HI,%ecx                      # ecx<- AA
-    GET_VREG(%ecx,%ecx)
-    FETCH_INST_WORD(2)
+    GET_VREG_R  %ecx rINST
+    FETCH_INST_OPCODE 2 %edx
+    ADVANCE_PC 2
     movl      %ecx,offStaticField_value(%eax)
-    ADVANCE_PC(2)
-    GOTO_NEXT
+    GOTO_NEXT_R %edx
 
 
 /* ------------------------------ */
@@ -5795,21 +5947,19 @@ dvmAsmInstructionStart = .L_OP_NOP
      * for: iget, iget-object, iget-boolean, iget-byte, iget-char, iget-short
      */
     /* op vA, vB, field@CCCC */
-    GET_GLUE(%ecx)
-    SPILL(rIBASE)                                 # need another reg
-    movzwl  2(rPC),rIBASE                         # rIBASE<- 0000CCCC
-    movl    offGlue_methodClassDex(%ecx),%eax     # eax<- DvmDex
-    movzbl  rINST_HI,%ecx                         # ecx<- BA
-    sarl    $4,%ecx                              # ecx<- B
-    movl    offDvmDex_pResFields(%eax),%eax       # eax<- pDvmDex->pResFields
-    movzbl  rINST_HI,rINST_FULL                   # rINST_FULL<- BA
-    andb    $0xf,rINST_LO                        # rINST_FULL<- A
-    GET_VREG(%ecx,%ecx)                           # ecx<- fp[B], the object ptr
-    movl    (%eax,rIBASE,4),%eax                  # resolved entry
-    testl   %eax,%eax                             # is resolved entry null?
-    jne     .LOP_IGET_OBJECT_VOLATILE_finish                    # no, already resolved
-    movl    rIBASE,OUT_ARG1(%esp)                 # needed by dvmResolveInstField
-    GET_GLUE(rIBASE)
+    movl    rGLUE,%ecx
+    movzwl  2(rPC),%edx                         # edx<- 0000CCCC
+    movl    offGlue_methodClassDex(%ecx),%eax   # eax<- DvmDex
+    movzbl  rINSTbl,%ecx                        # ecx<- BA
+    sarl    $4,%ecx                            # ecx<- B
+    movl    offDvmDex_pResFields(%eax),%eax     # eax<- pDvmDex->pResFields
+    andb    $0xf,rINSTbl                       # rINST<- A
+    GET_VREG_R %ecx %ecx                        # ecx<- fp[B], the object ptr
+    movl    (%eax,%edx,4),%eax                  # resolved entry
+    testl   %eax,%eax                           # is resolved entry null?
+    jne     .LOP_IGET_OBJECT_VOLATILE_finish                  # no, already resolved
+    movl    %edx,OUT_ARG1(%esp)                 # needed by dvmResolveInstField
+    movl    rGLUE,%edx
     jmp     .LOP_IGET_OBJECT_VOLATILE_resolve
 
 
@@ -5817,57 +5967,45 @@ dvmAsmInstructionStart = .L_OP_NOP
     .balign 64
 .L_OP_IGET_WIDE_VOLATILE: /* 0xe8 */
     /* (stub) */
-    GET_GLUE(%ecx)
-    SAVE_PC_TO_GLUE(%ecx)            # only need to export these two
-    SAVE_FP_TO_GLUE(%ecx)            # only need to export these two
+    SAVE_PC_FP_TO_GLUE %ecx          # leaves rGLUE in %ecx
     movl %ecx,OUT_ARG0(%esp)         # glue is first arg to function
     call      dvmMterp_OP_IGET_WIDE_VOLATILE     # do the real work
-    GET_GLUE(%ecx)
-    LOAD_PC_FROM_GLUE(%ecx)          # retrieve updated values
-    LOAD_FP_FROM_GLUE(%ecx)          # retrieve updated values
-    FETCH_INST()
+    mov       rGLUE,%ecx
+    LOAD_PC_FP_FROM_GLUE             # retrieve updated values
+    FETCH_INST
     GOTO_NEXT
 /* ------------------------------ */
     .balign 64
 .L_OP_IPUT_WIDE_VOLATILE: /* 0xe9 */
     /* (stub) */
-    GET_GLUE(%ecx)
-    SAVE_PC_TO_GLUE(%ecx)            # only need to export these two
-    SAVE_FP_TO_GLUE(%ecx)            # only need to export these two
+    SAVE_PC_FP_TO_GLUE %ecx          # leaves rGLUE in %ecx
     movl %ecx,OUT_ARG0(%esp)         # glue is first arg to function
     call      dvmMterp_OP_IPUT_WIDE_VOLATILE     # do the real work
-    GET_GLUE(%ecx)
-    LOAD_PC_FROM_GLUE(%ecx)          # retrieve updated values
-    LOAD_FP_FROM_GLUE(%ecx)          # retrieve updated values
-    FETCH_INST()
+    mov       rGLUE,%ecx
+    LOAD_PC_FP_FROM_GLUE             # retrieve updated values
+    FETCH_INST
     GOTO_NEXT
 /* ------------------------------ */
     .balign 64
 .L_OP_SGET_WIDE_VOLATILE: /* 0xea */
     /* (stub) */
-    GET_GLUE(%ecx)
-    SAVE_PC_TO_GLUE(%ecx)            # only need to export these two
-    SAVE_FP_TO_GLUE(%ecx)            # only need to export these two
+    SAVE_PC_FP_TO_GLUE %ecx          # leaves rGLUE in %ecx
     movl %ecx,OUT_ARG0(%esp)         # glue is first arg to function
     call      dvmMterp_OP_SGET_WIDE_VOLATILE     # do the real work
-    GET_GLUE(%ecx)
-    LOAD_PC_FROM_GLUE(%ecx)          # retrieve updated values
-    LOAD_FP_FROM_GLUE(%ecx)          # retrieve updated values
-    FETCH_INST()
+    mov       rGLUE,%ecx
+    LOAD_PC_FP_FROM_GLUE             # retrieve updated values
+    FETCH_INST
     GOTO_NEXT
 /* ------------------------------ */
     .balign 64
 .L_OP_SPUT_WIDE_VOLATILE: /* 0xeb */
     /* (stub) */
-    GET_GLUE(%ecx)
-    SAVE_PC_TO_GLUE(%ecx)            # only need to export these two
-    SAVE_FP_TO_GLUE(%ecx)            # only need to export these two
+    SAVE_PC_FP_TO_GLUE %ecx          # leaves rGLUE in %ecx
     movl %ecx,OUT_ARG0(%esp)         # glue is first arg to function
     call      dvmMterp_OP_SPUT_WIDE_VOLATILE     # do the real work
-    GET_GLUE(%ecx)
-    LOAD_PC_FROM_GLUE(%ecx)          # retrieve updated values
-    LOAD_FP_FROM_GLUE(%ecx)          # retrieve updated values
-    FETCH_INST()
+    mov       rGLUE,%ecx
+    LOAD_PC_FP_FROM_GLUE             # retrieve updated values
+    FETCH_INST
     GOTO_NEXT
 /* ------------------------------ */
     .balign 64
@@ -5887,17 +6025,14 @@ dvmAsmInstructionStart = .L_OP_NOP
      * exception is indicated by AA, with some detail provided by BBBB.
      */
     /* op AA, ref@BBBB */
-    GET_GLUE(%ecx)
+    movl     rGLUE,%ecx
     movzwl   2(rPC),%eax                     # eax<- BBBB
     movl     offGlue_method(%ecx),%ecx       # ecx<- glue->method
-    EXPORT_PC()
-    movzbl   rINST_HI,rINST_FULL             # rINST_FULL<- AA
+    EXPORT_PC
     movl     %eax,OUT_ARG2(%esp)             # arg2<- BBBB
-    movl     rINST_FULL,OUT_ARG1(%esp)       # arg1<- AA
+    movl     rINST,OUT_ARG1(%esp)            # arg1<- AA
     movl     %ecx,OUT_ARG0(%esp)             # arg0<- method
-    SPILL(rPC)
     call     dvmThrowVerificationError       # call(method, kind, ref)
-    UNSPILL(rPC)
     jmp      common_exceptionThrown          # handle exception
 
 /* ------------------------------ */
@@ -5911,36 +6046,32 @@ dvmAsmInstructionStart = .L_OP_NOP
      *
      * (*gDvmInlineOpsTable[opIndex].func)(arg0, arg1, arg2, arg3, pResult)
      *
+     * Ignores argument count - always loads 4.
+     *
      */
     /* [opt] execute-inline vAA, {vC, vD, vE, vF}, inline@BBBB */
-    GET_GLUE(%ecx)
-    EXPORT_PC()
+    movl      rGLUE,%ecx
+    EXPORT_PC
     movzwl    2(rPC),%eax               # eax<- BBBB
     leal      offGlue_retval(%ecx),%ecx # ecx<- & glue->retval
     movl      %ecx,OUT_ARG4(%esp)
-    sarl      $12,rINST_FULL           # rINST_FULL<- arg count (0-4)
-    SPILL(rPC)
     call      .LOP_EXECUTE_INLINE_continue      # make call; will return after
-    UNSPILL(rPC)
     testl     %eax,%eax                 # successful?
-    FETCH_INST_WORD(3)
+    FETCH_INST_OPCODE 3 %edx
     je        common_exceptionThrown    # no, handle exception
-    ADVANCE_PC(3)
-    GOTO_NEXT
+    ADVANCE_PC 3
+    GOTO_NEXT_R %edx
 
 /* ------------------------------ */
     .balign 64
 .L_OP_EXECUTE_INLINE_RANGE: /* 0xef */
     /* (stub) */
-    GET_GLUE(%ecx)
-    SAVE_PC_TO_GLUE(%ecx)            # only need to export these two
-    SAVE_FP_TO_GLUE(%ecx)            # only need to export these two
+    SAVE_PC_FP_TO_GLUE %ecx          # leaves rGLUE in %ecx
     movl %ecx,OUT_ARG0(%esp)         # glue is first arg to function
     call      dvmMterp_OP_EXECUTE_INLINE_RANGE     # do the real work
-    GET_GLUE(%ecx)
-    LOAD_PC_FROM_GLUE(%ecx)          # retrieve updated values
-    LOAD_FP_FROM_GLUE(%ecx)          # retrieve updated values
-    FETCH_INST()
+    mov       rGLUE,%ecx
+    LOAD_PC_FP_FROM_GLUE             # retrieve updated values
+    FETCH_INST
     GOTO_NEXT
 /* ------------------------------ */
     .balign 64
@@ -5949,23 +6080,20 @@ dvmAsmInstructionStart = .L_OP_NOP
     /*
      * invoke-direct-empty is a no-op in a "standard" interpreter.
      */
-    FETCH_INST_WORD(3)
-    ADVANCE_PC(3)
+    FETCH_INST_WORD 3
+    ADVANCE_PC 3
     GOTO_NEXT
 
 /* ------------------------------ */
     .balign 64
 .L_OP_RETURN_VOID_BARRIER: /* 0xf1 */
     /* (stub) */
-    GET_GLUE(%ecx)
-    SAVE_PC_TO_GLUE(%ecx)            # only need to export these two
-    SAVE_FP_TO_GLUE(%ecx)            # only need to export these two
+    SAVE_PC_FP_TO_GLUE %ecx          # leaves rGLUE in %ecx
     movl %ecx,OUT_ARG0(%esp)         # glue is first arg to function
     call      dvmMterp_OP_RETURN_VOID_BARRIER     # do the real work
-    GET_GLUE(%ecx)
-    LOAD_PC_FROM_GLUE(%ecx)          # retrieve updated values
-    LOAD_FP_FROM_GLUE(%ecx)          # retrieve updated values
-    FETCH_INST()
+    mov       rGLUE,%ecx
+    LOAD_PC_FP_FROM_GLUE             # retrieve updated values
+    FETCH_INST
     GOTO_NEXT
 /* ------------------------------ */
     .balign 64
@@ -5973,19 +6101,18 @@ dvmAsmInstructionStart = .L_OP_NOP
 /* File: x86/OP_IGET_QUICK.S */
     /* For: iget-quick, iget-object-quick */
     /* op vA, vB, offset@CCCC */
-    movzbl    rINST_HI,%ecx             # ecx<- BA
+    movzbl    rINSTbl,%ecx              # ecx<- BA
     sarl      $4,%ecx                  # ecx<- B
-    GET_VREG(%ecx,%ecx)                 # vB (object we're operating on)
+    GET_VREG_R  %ecx %ecx               # vB (object we're operating on)
     movzwl    2(rPC),%eax               # eax<- field byte offset
     cmpl      $0,%ecx                  # is object null?
     je        common_errNullObject
     movl      (%ecx,%eax,1),%eax
-    movzbl    rINST_HI,%ecx
-    FETCH_INST_WORD(2)
-    ADVANCE_PC(2)
-    andb      $0xf,%cl                 # rINST_FULL<- A
-    SET_VREG  (%eax,%ecx)               # fp[A]<- result
-    GOTO_NEXT
+    FETCH_INST_OPCODE 2 %edx
+    ADVANCE_PC 2
+    andb      $0xf,rINSTbl             # rINST<- A
+    SET_VREG  %eax rINST                # fp[A]<- result
+    GOTO_NEXT_R %edx
 
 /* ------------------------------ */
     .balign 64
@@ -5993,22 +6120,21 @@ dvmAsmInstructionStart = .L_OP_NOP
 /* File: x86/OP_IGET_WIDE_QUICK.S */
     /* For: iget-wide-quick */
     /* op vA, vB, offset@CCCC */
-    movzbl    rINST_HI,%ecx             # ecx<- BA
+    movzbl    rINSTbl,%ecx              # ecx<- BA
     sarl      $4,%ecx                  # ecx<- B
-    GET_VREG(%ecx,%ecx)                 # vB (object we're operating on)
+    GET_VREG_R  %ecx %ecx               # vB (object we're operating on)
     movzwl    2(rPC),%eax               # eax<- field byte offset
     cmpl      $0,%ecx                  # is object null?
     je        common_errNullObject
     leal      (%ecx,%eax,1),%eax        # eax<- address of 64-bit source
     movl      (%eax),%ecx               # ecx<- lsw
-    movl      4(%eax),%eax               # eax<- msw
-    movzbl    rINST_HI,rINST_FULL
-    andb      $0xf,rINST_LO            # rINST_FULL<- A
-    SET_VREG_WORD(%ecx,rINST_FULL,0)    # v[A+0]<- lsw
-    SET_VREG_WORD(%eax,rINST_FULL,1)    # v[A+1]<- msw
-    FETCH_INST_WORD(2)
-    ADVANCE_PC(2)
-    GOTO_NEXT
+    movl      4(%eax),%eax              # eax<- msw
+    andb      $0xf,rINSTbl             # rINST<- A
+    FETCH_INST_OPCODE 2 %edx
+    SET_VREG_WORD %ecx rINST 0          # v[A+0]<- lsw
+    SET_VREG_WORD %eax rINST 1          # v[A+1]<- msw
+    ADVANCE_PC 2
+    GOTO_NEXT_R %edx
 
 /* ------------------------------ */
     .balign 64
@@ -6017,19 +6143,18 @@ dvmAsmInstructionStart = .L_OP_NOP
 /* File: x86/OP_IGET_QUICK.S */
     /* For: iget-quick, iget-object-quick */
     /* op vA, vB, offset@CCCC */
-    movzbl    rINST_HI,%ecx             # ecx<- BA
+    movzbl    rINSTbl,%ecx              # ecx<- BA
     sarl      $4,%ecx                  # ecx<- B
-    GET_VREG(%ecx,%ecx)                 # vB (object we're operating on)
+    GET_VREG_R  %ecx %ecx               # vB (object we're operating on)
     movzwl    2(rPC),%eax               # eax<- field byte offset
     cmpl      $0,%ecx                  # is object null?
     je        common_errNullObject
     movl      (%ecx,%eax,1),%eax
-    movzbl    rINST_HI,%ecx
-    FETCH_INST_WORD(2)
-    ADVANCE_PC(2)
-    andb      $0xf,%cl                 # rINST_FULL<- A
-    SET_VREG  (%eax,%ecx)               # fp[A]<- result
-    GOTO_NEXT
+    FETCH_INST_OPCODE 2 %edx
+    ADVANCE_PC 2
+    andb      $0xf,rINSTbl             # rINST<- A
+    SET_VREG  %eax rINST                # fp[A]<- result
+    GOTO_NEXT_R %edx
 
 
 /* ------------------------------ */
@@ -6038,19 +6163,18 @@ dvmAsmInstructionStart = .L_OP_NOP
 /* File: x86/OP_IPUT_QUICK.S */
     /* For: iput-quick */
     /* op vA, vB, offset@CCCC */
-    movzbl    rINST_HI,%ecx             # ecx<- BA
+    movzbl    rINSTbl,%ecx              # ecx<- BA
     sarl      $4,%ecx                  # ecx<- B
-    GET_VREG(%ecx,%ecx)                 # vB (object we're operating on)
-    movzbl    rINST_HI,rINST_FULL
-    andb      $0xf,rINST_LO            # rINST_FULL<- A
-    GET_VREG(rINST_FULL,rINST_FULL)     # rINST_FULL<- v[A]
+    GET_VREG_R  %ecx %ecx               # vB (object we're operating on)
+    andb      $0xf,rINSTbl             # rINST<- A
+    GET_VREG_R  rINST,rINST             # rINST<- v[A]
     movzwl    2(rPC),%eax               # eax<- field byte offset
-    testl     %ecx,%ecx                  # is object null?
+    testl     %ecx,%ecx                 # is object null?
+    FETCH_INST_OPCODE 2 %edx
     je        common_errNullObject
-    movl      rINST_FULL,(%ecx,%eax,1)
-    FETCH_INST_WORD(2)
-    ADVANCE_PC(2)
-    GOTO_NEXT
+    movl      rINST,(%ecx,%eax,1)
+    ADVANCE_PC 2
+    GOTO_NEXT_R %edx
 
 /* ------------------------------ */
     .balign 64
@@ -6058,22 +6182,21 @@ dvmAsmInstructionStart = .L_OP_NOP
 /* File: x86/OP_IPUT_WIDE_QUICK.S */
     /* For: iput-wide-quick */
     /* op vA, vB, offset@CCCC */
-    movzbl    rINST_HI,%ecx             # ecx<- BA
+    movzbl    rINSTbl,%ecx              # ecx<- BA
     sarl      $4,%ecx                  # ecx<- B
-    GET_VREG(%ecx,%ecx)                 # vB (object we're operating on)
+    GET_VREG_R  %ecx %ecx               # vB (object we're operating on)
     movzwl    2(rPC),%eax               # eax<- field byte offset
     testl      %ecx,%ecx                # is object null?
     je        common_errNullObject
     leal      (%ecx,%eax,1),%ecx        # ecx<- Address of 64-bit target
-    movzbl    rINST_HI,rINST_FULL
-    andb      $0xf,rINST_LO            # rINST_FULL<- A
-    GET_VREG_WORD(%eax,rINST_FULL,0)    # eax<- lsw
-    GET_VREG_WORD(rINST_FULL,rINST_FULL,1) # rINST_FULL<- msw
+    andb      $0xf,rINSTbl             # rINST<- A
+    GET_VREG_WORD %eax rINST 0          # eax<- lsw
+    GET_VREG_WORD rINST rINST 1         # rINST<- msw
+    FETCH_INST_OPCODE 2 %edx
     movl      %eax,(%ecx)
-    movl      rINST_FULL,4(%ecx)
-    FETCH_INST_WORD(2)
-    ADVANCE_PC(2)
-    GOTO_NEXT
+    movl      rINST,4(%ecx)
+    ADVANCE_PC 2
+    GOTO_NEXT_R %edx
 
 /* ------------------------------ */
     .balign 64
@@ -6081,17 +6204,16 @@ dvmAsmInstructionStart = .L_OP_NOP
 /* File: x86/OP_IPUT_OBJECT_QUICK.S */
     /* For: iput-object-quick */
     /* op vA, vB, offset@CCCC */
-    movzbl    rINST_HI,%ecx             # ecx<- BA
+    movzbl    rINSTbl,%ecx              # ecx<- BA
     sarl      $4,%ecx                  # ecx<- B
-    GET_VREG(%ecx,%ecx)                 # vB (object we're operating on)
-    movzbl    rINST_HI,rINST_FULL
-    andb      $0xf,rINST_LO            # rINST_FULL<- A
-    GET_VREG(rINST_FULL,rINST_FULL)     # rINST_FULL<- v[A]
+    GET_VREG_R  %ecx %ecx               # vB (object we're operating on)
+    andb      $0xf,rINSTbl             # rINST<- A
+    GET_VREG_R  rINST rINST             # rINST<- v[A]
     movzwl    2(rPC),%eax               # eax<- field byte offset
     testl     %ecx,%ecx                 # is object null?
     je        common_errNullObject
-    movl      rINST_FULL,(%ecx,%eax,1)
-    GET_GLUE(%eax)
+    movl      rINST,(%ecx,%eax,1)
+    movl      rGLUE,%eax
     jmp       .LOP_IPUT_OBJECT_QUICK_finish
 
 /* ------------------------------ */
@@ -6110,12 +6232,12 @@ dvmAsmInstructionStart = .L_OP_NOP
     .if     (!0)
     andl      $0xf,%eax                # eax<- C (or stays CCCC)
     .endif
-    GET_VREG(%eax,%eax)                 # eax<- vC ("this" ptr)
+    GET_VREG_R  %eax %eax               # eax<- vC ("this" ptr)
     testl     %eax,%eax                 # null?
     je        common_errNullObject      # yep, throw exception
     movl      offObject_clazz(%eax),%eax # eax<- thisPtr->clazz
     movl      offClassObject_vtable(%eax),%eax # eax<- thisPtr->clazz->vtable
-    EXPORT_PC()                         # might throw later - get ready
+    EXPORT_PC                           # might throw later - get ready
     movl      (%eax,%ecx,4),%eax        # eax<- vtable[BBBB]
     jmp       common_invokeMethodNoRange
 
@@ -6136,12 +6258,12 @@ dvmAsmInstructionStart = .L_OP_NOP
     .if     (!1)
     andl      $0xf,%eax                # eax<- C (or stays CCCC)
     .endif
-    GET_VREG(%eax,%eax)                 # eax<- vC ("this" ptr)
+    GET_VREG_R  %eax %eax               # eax<- vC ("this" ptr)
     testl     %eax,%eax                 # null?
     je        common_errNullObject      # yep, throw exception
     movl      offObject_clazz(%eax),%eax # eax<- thisPtr->clazz
     movl      offClassObject_vtable(%eax),%eax # eax<- thisPtr->clazz->vtable
-    EXPORT_PC()                         # might throw later - get ready
+    EXPORT_PC                           # might throw later - get ready
     movl      (%eax,%ecx,4),%eax        # eax<- vtable[BBBB]
     jmp       common_invokeMethodRange
 
@@ -6157,20 +6279,20 @@ dvmAsmInstructionStart = .L_OP_NOP
      */
     /* op vB, {vD, vE, vF, vG, vA}, class@CCCC */
     /* op vAA, {vCCCC..v(CCCC+AA-1)}, meth@BBBB */
-    GET_GLUE(%ecx)
+    movl      rGLUE,%ecx
     movzwl    4(rPC),%eax               # eax<- GFED or CCCC
     movl      offGlue_method(%ecx),%ecx # ecx<- current method
     .if       (!0)
     andl      $0xf,%eax                # eax<- D (or stays CCCC)
     .endif
     movl      offMethod_clazz(%ecx),%ecx # ecx<- method->clazz
-    GET_VREG(%eax,%eax)                 # eax<- "this"
+    GET_VREG_R  %eax %eax               # eax<- "this"
     movl      offClassObject_super(%ecx),%ecx # ecx<- method->clazz->super
     testl     %eax,%eax                 # null "this"?
     je        common_errNullObject      # "this" is null, throw exception
     movzwl    2(rPC),%eax               # eax<- BBBB
     movl      offClassObject_vtable(%ecx),%ecx # ecx<- vtable
-    EXPORT_PC()
+    EXPORT_PC
     movl      (%ecx,%eax,4),%eax        # eax<- super->vtable[BBBB]
     jmp       common_invokeMethodNoRange
 
@@ -6186,20 +6308,20 @@ dvmAsmInstructionStart = .L_OP_NOP
      */
     /* op vB, {vD, vE, vF, vG, vA}, class@CCCC */
     /* op vAA, {vCCCC..v(CCCC+AA-1)}, meth@BBBB */
-    GET_GLUE(%ecx)
+    movl      rGLUE,%ecx
     movzwl    4(rPC),%eax               # eax<- GFED or CCCC
     movl      offGlue_method(%ecx),%ecx # ecx<- current method
     .if       (!1)
     andl      $0xf,%eax                # eax<- D (or stays CCCC)
     .endif
     movl      offMethod_clazz(%ecx),%ecx # ecx<- method->clazz
-    GET_VREG(%eax,%eax)                 # eax<- "this"
+    GET_VREG_R  %eax %eax               # eax<- "this"
     movl      offClassObject_super(%ecx),%ecx # ecx<- method->clazz->super
     testl     %eax,%eax                 # null "this"?
     je        common_errNullObject      # "this" is null, throw exception
     movzwl    2(rPC),%eax               # eax<- BBBB
     movl      offClassObject_vtable(%ecx),%ecx # ecx<- vtable
-    EXPORT_PC()
+    EXPORT_PC
     movl      (%ecx,%eax,4),%eax        # eax<- super->vtable[BBBB]
     jmp       common_invokeMethodRange
 
@@ -6215,21 +6337,19 @@ dvmAsmInstructionStart = .L_OP_NOP
      * for: iput-object
      */
     /* op vA, vB, field@CCCC */
-    GET_GLUE(%ecx)
-    SPILL(rIBASE)                                 # need another reg
-    movzwl  2(rPC),rIBASE                         # rIBASE<- 0000CCCC
-    movl    offGlue_methodClassDex(%ecx),%eax     # eax<- DvmDex
-    movzbl  rINST_HI,%ecx                         # ecx<- BA
-    sarl    $4,%ecx                              # ecx<- B
-    movl    offDvmDex_pResFields(%eax),%eax       # eax<- pDvmDex->pResFields
-    movzbl  rINST_HI,rINST_FULL                   # rINST_FULL<- BA
-    andb    $0xf,rINST_LO                        # rINST_FULL<- A
-    GET_VREG(%ecx,%ecx)                           # ecx<- fp[B], the object ptr
-    movl    (%eax,rIBASE,4),%eax                  # resolved entry
-    testl   %eax,%eax                             # is resolved entry null?
-    jne     .LOP_IPUT_OBJECT_VOLATILE_finish                    # no, already resolved
-    movl    rIBASE,OUT_ARG1(%esp)
-    GET_GLUE(rIBASE)
+    movl    rGLUE,%ecx
+    movzwl  2(rPC),%edx                         # edx<- 0000CCCC
+    movl    offGlue_methodClassDex(%ecx),%eax   # eax<- DvmDex
+    movzbl  rINSTbl,%ecx                        # ecx<- BA
+    sarl    $4,%ecx                            # ecx<- B
+    movl    offDvmDex_pResFields(%eax),%eax     # eax<- pDvmDex->pResFields
+    andb    $0xf,rINSTbl                       # rINST<- A
+    GET_VREG_R %ecx %ecx                        # ecx<- fp[B], the object ptr
+    movl    (%eax,%edx,4),%eax                  # resolved entry
+    testl   %eax,%eax                           # is resolved entry null?
+    jne     .LOP_IPUT_OBJECT_VOLATILE_finish                  # no, already resolved
+    movl    %edx,OUT_ARG1(%esp)
+    movl    rGLUE,%edx
     jmp     .LOP_IPUT_OBJECT_VOLATILE_resolve
 
 
@@ -6244,7 +6364,7 @@ dvmAsmInstructionStart = .L_OP_NOP
      * for: sget, sget-object, sget-boolean, sget-byte, sget-char, sget-short
      */
     /* op vAA, field@BBBB */
-    GET_GLUE(%ecx)
+    movl      rGLUE,%ecx
     movzwl    2(rPC),%eax                        # eax<- field ref BBBB
     movl      offGlue_methodClassDex(%ecx),%ecx  # ecx<- DvmDex
     movl      offDvmDex_pResFields(%ecx),%ecx    # ecx<- dvmDex->pResFields
@@ -6253,11 +6373,10 @@ dvmAsmInstructionStart = .L_OP_NOP
     je        .LOP_SGET_OBJECT_VOLATILE_resolve                # if not, make it so
 .LOP_SGET_OBJECT_VOLATILE_finish:     # field ptr in eax
     movl      offStaticField_value(%eax),%eax
-    movzbl    rINST_HI,%ecx                      # ecx<- AA
-    FETCH_INST_WORD(2)
-    ADVANCE_PC(2)
-    SET_VREG(%eax,%ecx)
-    GOTO_NEXT
+    FETCH_INST_OPCODE 2 %edx
+    ADVANCE_PC 2
+    SET_VREG %eax rINST
+    GOTO_NEXT_R %edx
 
 
 /* ------------------------------ */
@@ -6269,7 +6388,7 @@ dvmAsmInstructionStart = .L_OP_NOP
      * SPUT object handler.
      */
     /* op vAA, field@BBBB */
-    GET_GLUE(%ecx)
+    movl      rGLUE,%ecx
     movzwl    2(rPC),%eax                        # eax<- field ref BBBB
     movl      offGlue_methodClassDex(%ecx),%ecx  # ecx<- DvmDex
     movl      offDvmDex_pResFields(%ecx),%ecx    # ecx<- dvmDex->pResFields
@@ -6277,8 +6396,8 @@ dvmAsmInstructionStart = .L_OP_NOP
     testl     %eax,%eax                          # resolved entry null?
     je        .LOP_SPUT_OBJECT_VOLATILE_resolve                # if not, make it so
 .LOP_SPUT_OBJECT_VOLATILE_finish:     # field ptr in eax
-    movzbl    rINST_HI,%ecx                      # ecx<- AA
-    GET_VREG(%ecx,%ecx)
+    movzbl    rINSTbl,%ecx                       # ecx<- AA
+    GET_VREG_R  %ecx %ecx
     jmp       .LOP_SPUT_OBJECT_VOLATILE_continue
 
 
@@ -6312,101 +6431,92 @@ dvmAsmSisterStart:
 /* This is the less common path, so we'll redo some work
    here rather than force spills on the common path */
 .LOP_CONST_STRING_resolve:
-    GET_GLUE(%eax)
-    movl     %ecx,rINST_FULL           # rINST_FULL<- AA
-    EXPORT_PC()
+    movl     rGLUE,%eax
+    movl     %ecx,rINST                # rINST<- AA
+    EXPORT_PC
     movl     offGlue_method(%eax),%eax # eax<- glue->method
     movzwl   2(rPC),%ecx               # ecx<- BBBB
     movl     offMethod_clazz(%eax),%eax
-    SPILL(rPC)
     movl     %ecx,OUT_ARG1(%esp)
     movl     %eax,OUT_ARG0(%esp)
     call     dvmResolveString          # go resolve
-    UNSPILL(rPC)
     testl    %eax,%eax                 # failed?
     je       common_exceptionThrown
-    SET_VREG(%eax,rINST_FULL)
-    FETCH_INST_WORD(2)
-    ADVANCE_PC(2)
-    GOTO_NEXT
+    SET_VREG %eax rINST
+    FETCH_INST_OPCODE 2 %edx
+    ADVANCE_PC 2
+    GOTO_NEXT_R %edx
 
 /* continuation for OP_CONST_STRING_JUMBO */
 
 /* This is the less common path, so we'll redo some work
    here rather than force spills on the common path */
 .LOP_CONST_STRING_JUMBO_resolve:
-    GET_GLUE(%eax)
-    movl     %ecx,rINST_FULL           # rINST_FULL<- AA
-    EXPORT_PC()
+    movl     rGLUE,%eax
+    movl     %ecx,rINST                # rINST<- AA
+    EXPORT_PC
     movl     offGlue_method(%eax),%eax # eax<- glue->method
     movl     2(rPC),%ecx               # ecx<- BBBBBBBB
     movl     offMethod_clazz(%eax),%eax
-    SPILL(rPC)
     movl     %ecx,OUT_ARG1(%esp)
     movl     %eax,OUT_ARG0(%esp)
     call     dvmResolveString          # go resolve
-    UNSPILL(rPC)
     testl    %eax,%eax                 # failed?
     je       common_exceptionThrown
-    SET_VREG(%eax,rINST_FULL)
-    FETCH_INST_WORD(3)
-    ADVANCE_PC(3)
-    GOTO_NEXT
+    SET_VREG %eax rINST
+    FETCH_INST_OPCODE 3 %edx
+    ADVANCE_PC 3
+    GOTO_NEXT_R %edx
 
 /* continuation for OP_CONST_CLASS */
 
 /* This is the less common path, so we'll redo some work
    here rather than force spills on the common path */
 .LOP_CONST_CLASS_resolve:
-    GET_GLUE(%eax)
-    movl     %ecx,rINST_FULL           # rINST_FULL<- AA
-    EXPORT_PC()
+    movl     rGLUE,%eax
+    movl     %ecx,rINST                # rINST<- AA
+    EXPORT_PC
     movl     offGlue_method(%eax),%eax # eax<- glue->method
     movl     $1,OUT_ARG2(%esp)        # true
     movzwl   2(rPC),%ecx               # ecx<- BBBB
     movl     offMethod_clazz(%eax),%eax
-    SPILL(rPC)
     movl     %ecx,OUT_ARG1(%esp)
     movl     %eax,OUT_ARG0(%esp)
     call     dvmResolveClass           # go resolve
-    UNSPILL(rPC)
     testl    %eax,%eax                 # failed?
     je       common_exceptionThrown
-    SET_VREG(%eax,rINST_FULL)
-    FETCH_INST_WORD(2)
-    ADVANCE_PC(2)
-    GOTO_NEXT
+    SET_VREG %eax rINST
+    FETCH_INST_OPCODE 2 %edx
+    ADVANCE_PC 2
+    GOTO_NEXT_R %edx
 
 /* continuation for OP_MONITOR_ENTER */
 
 .LOP_MONITOR_ENTER_continue:
-    SPILL(rPC)                          # have to - caller save
     movl    %ecx,OUT_ARG0(%esp)
     movl    %eax,OUT_ARG1(%esp)
     call    dvmLockObject               # dvmLockObject(self,object)
-    UNSPILL(rPC)
 #ifdef WITH_DEADLOCK_PREDICTION
-    GET_GLUE(%ecx)
+    movl    rGLUE,%ecx
     movl    offGlueSelf(%ecx),%ecx      # ecx<- glue->self
     movl    offThread_exception(%ecx),%eax
     testl   %eax,%eax
     jne     common_exceptionThrown
 #endif
-    ADVANCE_PC(1)
+    ADVANCE_PC 1
     GOTO_NEXT
 
 /* continuation for OP_MONITOR_EXIT */
 
 .LOP_MONITOR_EXIT_continue:
     call    dvmUnlockObject             # unlock(self,obj)
-    UNSPILL(rPC)
-    FETCH_INST_WORD(1)
+    FETCH_INST_OPCODE 1 %edx
     testl   %eax,%eax                   # success?
-    ADVANCE_PC(1)
+    ADVANCE_PC 1
     je      common_exceptionThrown      # no, exception pending
-    GOTO_NEXT
+    GOTO_NEXT_R %edx
 .LOP_MONITOR_EXIT_errNullObject:
-    ADVANCE_PC(1)                       # advance before throw
+    ADVANCE_PC 1                        # advance before throw
     jmp     common_errNullObject
 
 /* continuation for OP_CHECK_CAST */
@@ -6415,51 +6525,45 @@ dvmAsmSisterStart:
      * Trivial test failed, need to perform full check.  This is common.
      *  ecx holds obj->clazz
      *  eax holds class resolved from BBBB
-     *  rINST_FULL holds object
+     *  rINST holds object
      */
 .LOP_CHECK_CAST_fullcheck:
     movl    %eax,OUT_ARG1(%esp)
     movl    %ecx,OUT_ARG0(%esp)
-    SPILL(rPC)
     call    dvmInstanceofNonTrivial     # eax<- boolean result
-    UNSPILL(rPC)
     testl   %eax,%eax                   # failed?
     jne     .LOP_CHECK_CAST_okay            # no, success
 
     # A cast has failed.  We need to throw a ClassCastException with the
     # class of the object that failed to be cast.
-    EXPORT_PC()
-    movl    offObject_clazz(rINST_FULL),%ecx  # ecx<- obj->clazz
+    EXPORT_PC
+    movl    offObject_clazz(rINST),%ecx  # ecx<- obj->clazz
     movl    $.LstrClassCastException,%eax
     movl    offClassObject_descriptor(%ecx),%ecx
     movl    %eax,OUT_ARG0(%esp)     # arg0<- message
     movl    %ecx,OUT_ARG1(%esp)     # arg1<- obj->clazz->descriptor
-    SPILL(rPC)
     call    dvmThrowExceptionWithClassMessage
-    UNSPILL(rPC)
     jmp     common_exceptionThrown
 
     /*
      * Resolution required.  This is the least-likely path, and we're
      * going to have to recreate some data.
      *
-     *  rINST_FULL holds object
+     *  rINST holds object
      */
 .LOP_CHECK_CAST_resolve:
-    GET_GLUE(%ecx)
-    EXPORT_PC()
+    movl    rGLUE,%ecx
+    EXPORT_PC
     movzwl  2(rPC),%eax                # eax<- BBBB
     movl    offGlue_method(%ecx),%ecx  # ecx<- glue->method
     movl    %eax,OUT_ARG1(%esp)        # arg1<- BBBB
     movl    offMethod_clazz(%ecx),%ecx # ecx<- metho->clazz
     movl    $0,OUT_ARG2(%esp)         # arg2<- false
     movl    %ecx,OUT_ARG0(%esp)        # arg0<- method->clazz
-    SPILL(rPC)
     call    dvmResolveClass            # eax<- resolved ClassObject ptr
-    UNSPILL(rPC)
     testl   %eax,%eax                  # got null?
     je      common_exceptionThrown     # yes, handle exception
-    movl    offObject_clazz(rINST_FULL),%ecx  # ecx<- obj->clazz
+    movl    offObject_clazz(rINST),%ecx  # ecx<- obj->clazz
     jmp     .LOP_CHECK_CAST_resolved       # pick up where we left off
 
 /* continuation for OP_INSTANCE_OF */
@@ -6468,8 +6572,7 @@ dvmAsmSisterStart:
      * Trivial test failed, need to perform full check.  This is common.
      *  eax holds obj->clazz
      *  ecx holds class resolved from BBBB
-     *  rINST_HI has BA
-     *  rPC already spilled
+     *  rINST has BA
      */
 .LOP_INSTANCE_OF_fullcheck:
     movl    %eax,OUT_ARG0(%esp)
@@ -6479,57 +6582,51 @@ dvmAsmSisterStart:
 
     /*
      * eax holds boolean result
-     * rINST_HI holds BA
+     * rINST holds BA
      */
 .LOP_INSTANCE_OF_store:
-    UNSPILL(rPC)
-    movzbl  rINST_HI,%ecx               # ecx<- BA
-    FETCH_INST_WORD(2)
-    andb    $0xf,%cl                   # ecl<- A
-    ADVANCE_PC(2)
-    SET_VREG(%eax,%ecx)                 # vA<- eax
-    GOTO_NEXT
+    FETCH_INST_OPCODE 2 %edx
+    andb    $0xf,rINSTbl               # <- A
+    ADVANCE_PC 2
+    SET_VREG %eax rINST                 # vA<- eax
+    GOTO_NEXT_R %edx
 
     /*
      * Trivial test succeeded, save and bail.
      *  r9 holds A
      */
 .LOP_INSTANCE_OF_trivial:
-    UNSPILL(rPC)
-    movzbl  rINST_HI,%ecx               # ecx<- BA
-    FETCH_INST_WORD(2)
-    andb    $0xf,%cl                   # ecl<- A
-    ADVANCE_PC(2)
+    FETCH_INST_OPCODE 2 %edx
+    andb    $0xf,rINSTbl               # <- A
+    ADVANCE_PC 2
     movl    $1,%eax
-    SET_VREG(%eax,%ecx)                  # vA<- true
-    GOTO_NEXT
+    SET_VREG %eax rINST                 # vA<- true
+    GOTO_NEXT_R %edx
 
     /*
      * Resolution required.  This is the least-likely path.
      *
-     *  rPC holds BBBB
-     *  rINST_HI holds BA
+     *  edx holds BBBB
+     *  rINST holds BA
      */
 .LOP_INSTANCE_OF_resolve:
-    movl    rPC,OUT_ARG1(%esp)          # arg1<- BBBB
-    GET_GLUE(%ecx)
-    UNSPILL(rPC)
+    movl    %edx,OUT_ARG1(%esp)         # arg1<- BBBB
+    movl    rGLUE,%ecx
     movl    offGlue_method(%ecx),%ecx
     movl    $1,OUT_ARG2(%esp)          # arg2<- true
     movl    offMethod_clazz(%ecx),%ecx  # ecx<- method->clazz
-    EXPORT_PC()
+    EXPORT_PC
     movl    %ecx,OUT_ARG0(%esp)         # arg0<- method->clazz
     call    dvmResolveClass             # eax<- resolved ClassObject ptr
-    UNSPILL(rPC)
     testl   %eax,%eax                   # success?
     je      common_exceptionThrown      # no, handle exception
 /* Now, we need to sync up with fast path.  We need eax to
  * hold the obj->clazz, and ecx to hold the resolved class
  */
     movl    %eax,%ecx                   # ecx<- resolved class
-    movzbl  rINST_HI,%eax               # eax<- BA
+    movl    rINST,%eax                # eax<- BA
     sarl    $4,%eax                    # eax<- B
-    GET_VREG(%eax,%eax)                 # eax<- vB (obj)
+    GET_VREG_R %eax %eax                # eax<- vB (obj)
     movl    offObject_clazz(%eax),%eax  # eax<- obj->clazz
     jmp     .LOP_INSTANCE_OF_resolved
 
@@ -6543,14 +6640,12 @@ dvmAsmSisterStart:
 .LOP_NEW_INSTANCE_finish: # ecx=class
     movl     %ecx,OUT_ARG0(%esp)
     call     dvmAllocObject             # eax<- new object
-    UNSPILL(rPC)
-    movl     rINST_FULL,%ecx
-    FETCH_INST_WORD(2)
+    FETCH_INST_OPCODE 2 %edx
     testl    %eax,%eax                  # success?
     je       common_exceptionThrown     # no, bail out
-    SET_VREG(%eax,%ecx)
-    ADVANCE_PC(2)
-    GOTO_NEXT
+    SET_VREG %eax rINST
+    ADVANCE_PC 2
+    GOTO_NEXT_R %edx
 
     /*
      * Class initialization required.
@@ -6558,13 +6653,12 @@ dvmAsmSisterStart:
      *  ecx holds class object
      */
 .LOP_NEW_INSTANCE_needinit:
-    SPILL_TMP(%ecx)                     # save object
+    SPILL_TMP1(%ecx)                    # save object
     movl    %ecx,OUT_ARG0(%esp)
     call    dvmInitClass                # initialize class
-    UNSPILL_TMP(%ecx)                   # restore object
+    UNSPILL_TMP1(%ecx)                  # restore object
     testl   %eax,%eax                   # success?
     jne     .LOP_NEW_INSTANCE_initialized     # success, continue
-    UNSPILL(rPC)                        # failed, restore PC
     jmp     common_exceptionThrown      # go deal with init exception
 
     /*
@@ -6572,7 +6666,7 @@ dvmAsmSisterStart:
      *
      */
 .LOP_NEW_INSTANCE_resolve:
-    GET_GLUE(%ecx)
+    movl    rGLUE,%ecx
     movzwl  2(rPC),%eax
     movl    offGlue_method(%ecx),%ecx   # ecx<- glue->method
     movl    %eax,OUT_ARG1(%esp)
@@ -6583,7 +6677,6 @@ dvmAsmSisterStart:
     movl    %eax,%ecx                   # ecx<- resolved ClassObject ptr
     testl   %ecx,%ecx                   # success?
     jne     .LOP_NEW_INSTANCE_resolved        # good to go
-    UNSPILL(rPC)
     jmp     common_exceptionThrown      # no, handle exception
 
     /*
@@ -6598,7 +6691,6 @@ dvmAsmSisterStart:
     movl    $.LstrInstantiationError,OUT_ARG0(%esp)
     movl    %eax,OUT_ARG1(%esp)
     call    dvmThrowExceptionWithClassMessage
-    UNSPILL(rPC)
     jmp     common_exceptionThrown
 
 /* continuation for OP_NEW_ARRAY */
@@ -6609,19 +6701,17 @@ dvmAsmSisterStart:
      *  eax holds array length (vB)
      */
 .LOP_NEW_ARRAY_resolve:
-    GET_GLUE(%ecx)
-    SPILL_TMP(%eax)                    # save array length
+    movl    rGLUE,%ecx
+    SPILL_TMP1(%eax)                   # save array length
     movl    offGlue_method(%ecx),%ecx  # ecx<- glue->method
     movzwl  2(rPC),%eax                # eax<- CCCC
     movl    offMethod_clazz(%ecx),%ecx # ecx<- method->clazz
     movl    %eax,OUT_ARG1(%esp)
     movl    $0,OUT_ARG2(%esp)
     movl    %ecx,OUT_ARG0(%esp)
-    SPILL(rPC)
     call    dvmResolveClass            # eax<- call(clazz,ref,flag)
-    UNSPILL(rPC)
     movl    %eax,%ecx
-    UNSPILL_TMP(%eax)
+    UNSPILL_TMP1(%eax)
     testl   %ecx,%ecx                  # successful resolution?
     je      common_exceptionThrown     # no, bail.
 # fall through to OP_NEW_ARRAY_finish
@@ -6636,16 +6726,13 @@ dvmAsmSisterStart:
     movl    %ecx,OUT_ARG0(%esp)
     movl    %eax,OUT_ARG1(%esp)
     movl    $ALLOC_DONT_TRACK,OUT_ARG2(%esp)
-    SPILL(rPC)
     call    dvmAllocArrayByClass    # eax<- call(clazz,length,flags)
-    UNSPILL(rPC)
+    FETCH_INST_OPCODE 2 %edx
     testl   %eax,%eax               # failed?
     je      common_exceptionThrown  # yup - go handle
-    movl    rINST_FULL,%ecx
-    FETCH_INST_WORD(2)
-    SET_VREG(%eax,%ecx)
-    ADVANCE_PC(2)
-    GOTO_NEXT
+    SET_VREG %eax rINST
+    ADVANCE_PC 2
+    GOTO_NEXT_R %edx
 
 /* continuation for OP_FILLED_NEW_ARRAY */
 
@@ -6653,7 +6740,6 @@ dvmAsmSisterStart:
     movl    offMethod_clazz(%eax),%eax        # eax<- method->clazz
     movl    %eax,OUT_ARG0(%esp)               # arg0<- clazz
     call    dvmResolveClass                   # eax<- call(clazz,ref,flag)
-    UNSPILL(rPC)
     testl   %eax,%eax                         # null?
     je      common_exceptionThrown            # yes, handle it
 
@@ -6662,16 +6748,15 @@ dvmAsmSisterStart:
     /*
      * On entry:
      *    eax holds array class [r0]
-     *    rINST_FULL holds AA or BB [r10]
+     *    rINST holds AA or BB [r10]
      *    ecx is scratch
-     *    rPC is valid, but has been spilled
      */
 .LOP_FILLED_NEW_ARRAY_continue:
     movl    offClassObject_descriptor(%eax),%ecx  # ecx<- arrayClass->descriptor
     movl    $ALLOC_DONT_TRACK,OUT_ARG2(%esp)     # arg2<- flags
     movzbl  1(%ecx),%ecx                          # ecx<- descriptor[1]
     movl    %eax,OUT_ARG0(%esp)                   # arg0<- arrayClass
-    GET_GLUE(%eax)
+    movl    rGLUE,%eax
     cmpb    $'I',%cl                             # supported?
     je      1f
     cmpb    $'L',%cl
@@ -6681,13 +6766,12 @@ dvmAsmSisterStart:
 1:
     movl    %ecx,offGlue_retval+4(%eax)           # save type
     .if      (!0)
-    SPILL_TMP(rINST_FULL)                         # save copy, need "B" later
-    sarl    $4,rINST_FULL
+    SPILL_TMP1(rINST)                              # save copy, need "B" later
+    sarl    $4,rINST
     .endif
-    movl    rINST_FULL,OUT_ARG1(%esp)             # arg1<- A or AA (length)
-    call    dvmAllocArrayByClass                  # eax<- call(arrayClass, length, flags)
-    UNSPILL(rPC)
-    GET_GLUE(%ecx)
+    movl    rINST,OUT_ARG1(%esp)                  # arg1<- A or AA (length)
+    call    dvmAllocArrayByClass     # eax<- call(arrayClass, length, flags)
+    movl    rGLUE,%ecx
     testl   %eax,%eax                             # alloc successful?
     je      common_exceptionThrown                # no, handle exception
     movl    %eax,offGlue_retval(%ecx)             # retval.l<- new array
@@ -6696,48 +6780,45 @@ dvmAsmSisterStart:
 
 /* at this point:
  *     eax is pointer to tgt
- *     rINST_FULL is length
+ *     rINST is length
  *     ecx is FEDC or CCCC
  *     TMP_SPILL is BA
- *     rPC is valid, but spilled
  *  We now need to copy values from registers into the array
  */
 
     .if 0
     # set up src pointer
-    SPILL(rFP)     # esi
-    SPILL(rIBASE)   # edi
+    SPILL_TMP2(%esi)
+    SPILL_TMP3(%edi)
     movl    %eax,%edi         # set up dst ptr
     leal    (rFP,%ecx,4),%esi # set up src ptr
-    movl    rINST_FULL,%ecx   # load count register
-    FETCH_INST_WORD(3)
+    movl    rINST,%ecx        # load count register
     rep
     movsd
-    GET_GLUE(%ecx)
-    UNSPILL(rIBASE)
+    UNSPILL_TMP2(%esi)
+    UNSPILL_TMP3(%edi)
+    movl    rGLUE,%ecx
     movl    offGlue_retval+4(%ecx),%eax      # eax<- type
-    UNSPILL(rFP)
+    FETCH_INST_OPCODE 3 %edx
     .else
-    testl  rINST_FULL,rINST_FULL
+    testl  rINST,rINST
     je     4f
-    UNSPILL_TMP(rPC)
-    andl   $0x0f,rPC            # rPC<- 0000000A
-    sall   $16,rPC              # rPC<- 000A0000
-    orl    %ecx,rPC              # rpc<- 000AFEDC
+    andl   $0x0f,%edx        # edx<- 0000000A
+    sall   $16,%edx          # edx<- 000A0000
+    orl    %ecx,%edx          # edx<- 000AFEDC
 3:
     movl   $0xf,%ecx
-    andl   rPC,%ecx           # ecx<- next reg to load
-    GET_VREG(%ecx,%ecx)
-    shrl   $4,rPC
+    andl   %edx,%ecx          # ecx<- next reg to load
+    GET_VREG_R %ecx %ecx
+    shrl   $4,%edx
     leal   4(%eax),%eax
     movl   %ecx,-4(%eax)
-    sub    $1,rINST_FULL
+    sub    $1,rINST
     jne    3b
 4:
-    GET_GLUE(%ecx)
-    UNSPILL(rPC)
+    movl   rGLUE,%ecx
     movl    offGlue_retval+4(%ecx),%eax      # eax<- type
-    FETCH_INST_WORD(3)
+    FETCH_INST_OPCODE 3 %edx
     .endif
 
     cmpb    $'I',%al                        # Int array?
@@ -6747,8 +6828,8 @@ dvmAsmSisterStart:
     shrl    $GC_CARD_SHIFT,%eax             # convert to card num
     movb    %cl,(%ecx,%eax)                  # mark card
 5:
-    ADVANCE_PC(3)
-    GOTO_NEXT
+    ADVANCE_PC 3
+    GOTO_NEXT_R %edx
 
 
     /*
@@ -6756,12 +6837,11 @@ dvmAsmSisterStart:
      * mode of filled-new-array.
      */
 .LOP_FILLED_NEW_ARRAY_notimpl:
-    movl    $.LstrInternalError,%eax
+    movl    $.LstrInternalErrorA,%eax
     movl    %eax,OUT_ARG0(%esp)
-    movl    $.LstrFilledNewArrayNotImpl,%eax
+    movl    $.LstrFilledNewArrayNotImplA,%eax
     movl    %eax,OUT_ARG1(%esp)
     call    dvmThrowException
-    UNSPILL(rPC)
     jmp     common_exceptionThrown
 
 /* continuation for OP_FILLED_NEW_ARRAY_RANGE */
@@ -6770,7 +6850,6 @@ dvmAsmSisterStart:
     movl    offMethod_clazz(%eax),%eax        # eax<- method->clazz
     movl    %eax,OUT_ARG0(%esp)               # arg0<- clazz
     call    dvmResolveClass                   # eax<- call(clazz,ref,flag)
-    UNSPILL(rPC)
     testl   %eax,%eax                         # null?
     je      common_exceptionThrown            # yes, handle it
 
@@ -6779,16 +6858,15 @@ dvmAsmSisterStart:
     /*
      * On entry:
      *    eax holds array class [r0]
-     *    rINST_FULL holds AA or BB [r10]
+     *    rINST holds AA or BB [r10]
      *    ecx is scratch
-     *    rPC is valid, but has been spilled
      */
 .LOP_FILLED_NEW_ARRAY_RANGE_continue:
     movl    offClassObject_descriptor(%eax),%ecx  # ecx<- arrayClass->descriptor
     movl    $ALLOC_DONT_TRACK,OUT_ARG2(%esp)     # arg2<- flags
     movzbl  1(%ecx),%ecx                          # ecx<- descriptor[1]
     movl    %eax,OUT_ARG0(%esp)                   # arg0<- arrayClass
-    GET_GLUE(%eax)
+    movl    rGLUE,%eax
     cmpb    $'I',%cl                             # supported?
     je      1f
     cmpb    $'L',%cl
@@ -6798,13 +6876,12 @@ dvmAsmSisterStart:
 1:
     movl    %ecx,offGlue_retval+4(%eax)           # save type
     .if      (!1)
-    SPILL_TMP(rINST_FULL)                         # save copy, need "B" later
-    sarl    $4,rINST_FULL
+    SPILL_TMP1(rINST)                              # save copy, need "B" later
+    sarl    $4,rINST
     .endif
-    movl    rINST_FULL,OUT_ARG1(%esp)             # arg1<- A or AA (length)
-    call    dvmAllocArrayByClass                  # eax<- call(arrayClass, length, flags)
-    UNSPILL(rPC)
-    GET_GLUE(%ecx)
+    movl    rINST,OUT_ARG1(%esp)                  # arg1<- A or AA (length)
+    call    dvmAllocArrayByClass     # eax<- call(arrayClass, length, flags)
+    movl    rGLUE,%ecx
     testl   %eax,%eax                             # alloc successful?
     je      common_exceptionThrown                # no, handle exception
     movl    %eax,offGlue_retval(%ecx)             # retval.l<- new array
@@ -6813,48 +6890,45 @@ dvmAsmSisterStart:
 
 /* at this point:
  *     eax is pointer to tgt
- *     rINST_FULL is length
+ *     rINST is length
  *     ecx is FEDC or CCCC
  *     TMP_SPILL is BA
- *     rPC is valid, but spilled
  *  We now need to copy values from registers into the array
  */
 
     .if 1
     # set up src pointer
-    SPILL(rFP)     # esi
-    SPILL(rIBASE)   # edi
+    SPILL_TMP2(%esi)
+    SPILL_TMP3(%edi)
     movl    %eax,%edi         # set up dst ptr
     leal    (rFP,%ecx,4),%esi # set up src ptr
-    movl    rINST_FULL,%ecx   # load count register
-    FETCH_INST_WORD(3)
+    movl    rINST,%ecx        # load count register
     rep
     movsd
-    GET_GLUE(%ecx)
-    UNSPILL(rIBASE)
+    UNSPILL_TMP2(%esi)
+    UNSPILL_TMP3(%edi)
+    movl    rGLUE,%ecx
     movl    offGlue_retval+4(%ecx),%eax      # eax<- type
-    UNSPILL(rFP)
+    FETCH_INST_OPCODE 3 %edx
     .else
-    testl  rINST_FULL,rINST_FULL
+    testl  rINST,rINST
     je     4f
-    UNSPILL_TMP(rPC)
-    andl   $0x0f,rPC            # rPC<- 0000000A
-    sall   $16,rPC              # rPC<- 000A0000
-    orl    %ecx,rPC              # rpc<- 000AFEDC
+    andl   $0x0f,%edx        # edx<- 0000000A
+    sall   $16,%edx          # edx<- 000A0000
+    orl    %ecx,%edx          # edx<- 000AFEDC
 3:
     movl   $0xf,%ecx
-    andl   rPC,%ecx           # ecx<- next reg to load
-    GET_VREG(%ecx,%ecx)
-    shrl   $4,rPC
+    andl   %edx,%ecx          # ecx<- next reg to load
+    GET_VREG_R %ecx %ecx
+    shrl   $4,%edx
     leal   4(%eax),%eax
     movl   %ecx,-4(%eax)
-    sub    $1,rINST_FULL
+    sub    $1,rINST
     jne    3b
 4:
-    GET_GLUE(%ecx)
-    UNSPILL(rPC)
+    movl   rGLUE,%ecx
     movl    offGlue_retval+4(%ecx),%eax      # eax<- type
-    FETCH_INST_WORD(3)
+    FETCH_INST_OPCODE 3 %edx
     .endif
 
     cmpb    $'I',%al                        # Int array?
@@ -6864,8 +6938,8 @@ dvmAsmSisterStart:
     shrl    $GC_CARD_SHIFT,%eax             # convert to card num
     movb    %cl,(%ecx,%eax)                  # mark card
 5:
-    ADVANCE_PC(3)
-    GOTO_NEXT
+    ADVANCE_PC 3
+    GOTO_NEXT_R %edx
 
 
     /*
@@ -6873,12 +6947,11 @@ dvmAsmSisterStart:
      * mode of filled-new-array.
      */
 .LOP_FILLED_NEW_ARRAY_RANGE_notimpl:
-    movl    $.LstrInternalError,%eax
+    movl    $.LstrInternalErrorA,%eax
     movl    %eax,OUT_ARG0(%esp)
-    movl    $.LstrFilledNewArrayNotImpl,%eax
+    movl    $.LstrFilledNewArrayNotImplA,%eax
     movl    %eax,OUT_ARG1(%esp)
     call    dvmThrowException
-    UNSPILL(rPC)
     jmp     common_exceptionThrown
 
 /* continuation for OP_CMPL_FLOAT */
@@ -6908,17 +6981,15 @@ dvmAsmSisterStart:
 /* continuation for OP_CMP_LONG */
 
 .LOP_CMP_LONG_bigger:
-    UNSPILL(rPC)
     movl      $1,%ecx
     jmp       .LOP_CMP_LONG_finish
 .LOP_CMP_LONG_smaller:
-    UNSPILL(rPC)
     movl      $-1,%ecx
 .LOP_CMP_LONG_finish:
-    SET_VREG(%ecx,rINST_FULL)
-    FETCH_INST_WORD(2)
-    ADVANCE_PC(2)
-    GOTO_NEXT
+    SET_VREG %ecx rINST
+    FETCH_INST_OPCODE 2 %edx
+    ADVANCE_PC 2
+    GOTO_NEXT_R %edx
 
 /* continuation for OP_AGET_WIDE */
 
@@ -6926,76 +6997,71 @@ dvmAsmSisterStart:
     leal      offArrayObject_contents(%eax,%ecx,8),%eax
     movl      (%eax),%ecx
     movl      4(%eax),%eax
-    SET_VREG_WORD(%ecx,rINST_FULL,0)
-    SET_VREG_WORD(%eax,rINST_FULL,1)
-    FETCH_INST_WORD(2)
-    ADVANCE_PC(2)
-    GOTO_NEXT
+    SET_VREG_WORD %ecx rINST 0
+    SET_VREG_WORD %eax rINST 1
+    FETCH_INST_OPCODE 2 %edx
+    ADVANCE_PC 2
+    GOTO_NEXT_R %edx
 
 /* continuation for OP_APUT_WIDE */
 
 .LOP_APUT_WIDE_finish:
     leal      offArrayObject_contents(%eax,%ecx,8),%eax
-    GET_VREG_WORD(%ecx,rINST_FULL,0)
-    GET_VREG_WORD(rINST_FULL,rINST_FULL,1)
-    movl      rINST_FULL,4(%eax)
-    FETCH_INST_WORD(2)
+    GET_VREG_WORD %ecx rINST 0
+    GET_VREG_WORD rINST rINST 1
+    movl      rINST,4(%eax)
+    FETCH_INST_OPCODE 2 %edx
     movl      %ecx,(%eax)
-    ADVANCE_PC(2)
-    GOTO_NEXT
+    ADVANCE_PC 2
+    GOTO_NEXT_R %edx
 
 /* continuation for OP_APUT_OBJECT */
 
     /* On entry:
      *   eax<- array object
      *   ecx<- index
-     *   rINST_FULL<- vAA
+     *   rINST<- vAA
      */
 .LOP_APUT_OBJECT_continue:
     leal      offArrayObject_contents(%eax,%ecx,4),%ecx
-    testl     rINST_FULL,rINST_FULL     # storing null reference?
+    testl     rINST,rINST     # storing null reference?
     je        .LOP_APUT_OBJECT_skip_check
-    SPILL(rPC)
-    SPILL_TMP(%ecx)
+    SPILL_TMP1(%ecx)
     movl      offObject_clazz(%eax),%eax # eax<- arrayObj->clazz
-    movl      offObject_clazz(rINST_FULL),%ecx # ecx<- obj->clazz
+    movl      offObject_clazz(rINST),%ecx # ecx<- obj->clazz
     movl      %eax,OUT_ARG1(%esp)
     movl      %ecx,OUT_ARG0(%esp)
     call      dvmCanPutArrayElement     # test object type vs. array type
-    UNSPILL(rPC)
-    UNSPILL_TMP(%ecx)
+    UNSPILL_TMP1(%ecx)
     testl     %eax,%eax
-    GET_GLUE(%eax)
+    movl      rGLUE,%eax
     je        common_errArrayStore
     movl      offGlue_cardTable(%eax),%eax   # get card table base
-    movl      rINST_FULL,(%ecx)
-    FETCH_INST_WORD(2)
+    movl      rINST,(%ecx)
+    FETCH_INST_OPCODE 2 %edx
     shrl      $GC_CARD_SHIFT,%ecx           # convert addr to card number
     movb      %al,(%eax,%ecx)                # mark card
-    ADVANCE_PC(2)
-    GOTO_NEXT
+    ADVANCE_PC 2
+    GOTO_NEXT_R %edx
 
 .LOP_APUT_OBJECT_skip_check:
-    movl      rINST_FULL,(%ecx)
-    FETCH_INST_WORD(2)
-    ADVANCE_PC(2)
-    GOTO_NEXT
+    movl      rINST,(%ecx)
+    FETCH_INST_OPCODE 2 %edx
+    ADVANCE_PC 2
+    GOTO_NEXT_R %edx
 
 /* continuation for OP_IGET */
 
 
 .LOP_IGET_resolve:
-    EXPORT_PC()
-    SPILL(rPC)
-    movl    offGlue_method(rIBASE),rPC            # rPC<- current method
-    UNSPILL(rIBASE)
-    movl    offMethod_clazz(rPC),rPC              # rPC<- method->clazz
-    SPILL_TMP(%ecx)                               # save object pointer across call
-    movl    rPC,OUT_ARG0(%esp)                    # pass in method->clazz
-    call    dvmResolveInstField                   #  ... to dvmResolveInstField
-    UNSPILL_TMP(%ecx)
-    UNSPILL(rPC)
-    testl   %eax,%eax                             #  ... which returns InstrField ptr
+    EXPORT_PC
+    movl    offGlue_method(%edx),%edx           # edx<- current method
+    movl    offMethod_clazz(%edx),%edx          # edx<- method->clazz
+    SPILL_TMP1(%ecx)                            # save obj pointer across call
+    movl    %edx,OUT_ARG0(%esp)                  # pass in method->clazz
+    call    dvmResolveInstField                 #  ... to dvmResolveInstField
+    UNSPILL_TMP1(%ecx)
+    testl   %eax,%eax                           #  returns InstrField ptr
     jne     .LOP_IGET_finish
     jmp     common_exceptionThrown
 
@@ -7004,35 +7070,30 @@ dvmAsmSisterStart:
      * Currently:
      *   eax holds resolved field
      *   ecx holds object
-     *   rIBASE is scratch, but needs to be unspilled
-     *   rINST_FULL holds A
+     *   rINST holds A
      */
-    movl    offInstField_byteOffset(%eax),%eax   # eax<- byte offset of field
-    UNSPILL(rIBASE)
-    testl   %ecx,%ecx                            # object null?
-    je      common_errNullObject                 # object was null
-    movl   (%ecx,%eax,1),%ecx                   # ecx<- obj.field (8/16/32 bits)
-    movl    rINST_FULL,%eax                      # eax<- A
-    FETCH_INST_WORD(2)
-    SET_VREG(%ecx,%eax)
-    ADVANCE_PC(2)
-    GOTO_NEXT
+    movl    offInstField_byteOffset(%eax),%eax  # eax<- byte offset of field
+    testl   %ecx,%ecx                           # object null?
+    je      common_errNullObject                # object was null
+    movl   (%ecx,%eax,1),%ecx                  # ecx<- obj.field (8/16/32 bits)
+    movl    rINST,%eax                          # eax<- A
+    FETCH_INST_OPCODE 2 %edx
+    SET_VREG %ecx %eax
+    ADVANCE_PC 2
+    GOTO_NEXT_R %edx
 
 /* continuation for OP_IGET_WIDE */
 
 
 .LOP_IGET_WIDE_resolve:
-    EXPORT_PC()
-    SPILL(rPC)
-    movl    offGlue_method(rIBASE),rPC            # rPC<- current method
-    UNSPILL(rIBASE)
-    movl    offMethod_clazz(rPC),rPC              # rPC<- method->clazz
-    SPILL_TMP(%ecx)                               # save object pointer across call
-    movl    rPC,OUT_ARG0(%esp)                    # pass in method->clazz
-    call    dvmResolveInstField                   #  ... to dvmResolveInstField
-    UNSPILL_TMP(%ecx)
-    UNSPILL(rPC)
-    testl   %eax,%eax                             #  ... which returns InstrField ptr
+    EXPORT_PC
+    movl    offGlue_method(%edx),%edx           # edx<- current method
+    movl    offMethod_clazz(%edx),%edx          # edx<- method->clazz
+    SPILL_TMP1(%ecx)                            # save objpointer across call
+    movl    rPC,OUT_ARG0(%esp)                  # pass in method->clazz
+    call    dvmResolveInstField                 #  ... to dvmResolveInstField
+    UNSPILL_TMP1(%ecx)
+    testl   %eax,%eax                           # returns InstrField ptr
     jne     .LOP_IGET_WIDE_finish
     jmp     common_exceptionThrown
 
@@ -7041,37 +7102,32 @@ dvmAsmSisterStart:
      * Currently:
      *   eax holds resolved field
      *   ecx holds object
-     *   rIBASE is scratch, but needs to be unspilled
-     *   rINST_FULL holds A
+     *   rINST holds A
      */
-    movl    offInstField_byteOffset(%eax),%eax   # eax<- byte offset of field
-    UNSPILL(rIBASE)
-    testl   %ecx,%ecx                            # object null?
-    je      common_errNullObject                 # object was null
-    leal    (%ecx,%eax,1),%eax                   # eax<- address of field
-    movl    (%eax),%ecx                          # ecx<- lsw
-    movl    4(%eax),%eax                         # eax<- msw
-    SET_VREG_WORD(%ecx,rINST_FULL,0)
-    SET_VREG_WORD(%eax,rINST_FULL,1)
-    FETCH_INST_WORD(2)
-    ADVANCE_PC(2)
-    GOTO_NEXT
+    movl    offInstField_byteOffset(%eax),%eax  # eax<- byte offset of field
+    testl   %ecx,%ecx                           # object null?
+    je      common_errNullObject                # object was null
+    leal    (%ecx,%eax,1),%eax                  # eax<- address of field
+    movl    (%eax),%ecx                         # ecx<- lsw
+    movl    4(%eax),%eax                        # eax<- msw
+    FETCH_INST_OPCODE 2 %edx
+    SET_VREG_WORD %ecx rINST 0
+    SET_VREG_WORD %eax rINST 1
+    ADVANCE_PC 2
+    GOTO_NEXT_R %edx
 
 /* continuation for OP_IGET_OBJECT */
 
 
 .LOP_IGET_OBJECT_resolve:
-    EXPORT_PC()
-    SPILL(rPC)
-    movl    offGlue_method(rIBASE),rPC            # rPC<- current method
-    UNSPILL(rIBASE)
-    movl    offMethod_clazz(rPC),rPC              # rPC<- method->clazz
-    SPILL_TMP(%ecx)                               # save object pointer across call
-    movl    rPC,OUT_ARG0(%esp)                    # pass in method->clazz
-    call    dvmResolveInstField                   #  ... to dvmResolveInstField
-    UNSPILL_TMP(%ecx)
-    UNSPILL(rPC)
-    testl   %eax,%eax                             #  ... which returns InstrField ptr
+    EXPORT_PC
+    movl    offGlue_method(%edx),%edx           # edx<- current method
+    movl    offMethod_clazz(%edx),%edx          # edx<- method->clazz
+    SPILL_TMP1(%ecx)                            # save obj pointer across call
+    movl    %edx,OUT_ARG0(%esp)                  # pass in method->clazz
+    call    dvmResolveInstField                 #  ... to dvmResolveInstField
+    UNSPILL_TMP1(%ecx)
+    testl   %eax,%eax                           #  returns InstrField ptr
     jne     .LOP_IGET_OBJECT_finish
     jmp     common_exceptionThrown
 
@@ -7080,35 +7136,30 @@ dvmAsmSisterStart:
      * Currently:
      *   eax holds resolved field
      *   ecx holds object
-     *   rIBASE is scratch, but needs to be unspilled
-     *   rINST_FULL holds A
+     *   rINST holds A
      */
-    movl    offInstField_byteOffset(%eax),%eax   # eax<- byte offset of field
-    UNSPILL(rIBASE)
-    testl   %ecx,%ecx                            # object null?
-    je      common_errNullObject                 # object was null
-    movl   (%ecx,%eax,1),%ecx                   # ecx<- obj.field (8/16/32 bits)
-    movl    rINST_FULL,%eax                      # eax<- A
-    FETCH_INST_WORD(2)
-    SET_VREG(%ecx,%eax)
-    ADVANCE_PC(2)
-    GOTO_NEXT
+    movl    offInstField_byteOffset(%eax),%eax  # eax<- byte offset of field
+    testl   %ecx,%ecx                           # object null?
+    je      common_errNullObject                # object was null
+    movl   (%ecx,%eax,1),%ecx                  # ecx<- obj.field (8/16/32 bits)
+    movl    rINST,%eax                          # eax<- A
+    FETCH_INST_OPCODE 2 %edx
+    SET_VREG %ecx %eax
+    ADVANCE_PC 2
+    GOTO_NEXT_R %edx
 
 /* continuation for OP_IGET_BOOLEAN */
 
 
 .LOP_IGET_BOOLEAN_resolve:
-    EXPORT_PC()
-    SPILL(rPC)
-    movl    offGlue_method(rIBASE),rPC            # rPC<- current method
-    UNSPILL(rIBASE)
-    movl    offMethod_clazz(rPC),rPC              # rPC<- method->clazz
-    SPILL_TMP(%ecx)                               # save object pointer across call
-    movl    rPC,OUT_ARG0(%esp)                    # pass in method->clazz
-    call    dvmResolveInstField                   #  ... to dvmResolveInstField
-    UNSPILL_TMP(%ecx)
-    UNSPILL(rPC)
-    testl   %eax,%eax                             #  ... which returns InstrField ptr
+    EXPORT_PC
+    movl    offGlue_method(%edx),%edx           # edx<- current method
+    movl    offMethod_clazz(%edx),%edx          # edx<- method->clazz
+    SPILL_TMP1(%ecx)                            # save obj pointer across call
+    movl    %edx,OUT_ARG0(%esp)                  # pass in method->clazz
+    call    dvmResolveInstField                 #  ... to dvmResolveInstField
+    UNSPILL_TMP1(%ecx)
+    testl   %eax,%eax                           #  returns InstrField ptr
     jne     .LOP_IGET_BOOLEAN_finish
     jmp     common_exceptionThrown
 
@@ -7117,35 +7168,30 @@ dvmAsmSisterStart:
      * Currently:
      *   eax holds resolved field
      *   ecx holds object
-     *   rIBASE is scratch, but needs to be unspilled
-     *   rINST_FULL holds A
+     *   rINST holds A
      */
-    movl    offInstField_byteOffset(%eax),%eax   # eax<- byte offset of field
-    UNSPILL(rIBASE)
-    testl   %ecx,%ecx                            # object null?
-    je      common_errNullObject                 # object was null
-    movzbl   (%ecx,%eax,1),%ecx                   # ecx<- obj.field (8/16/32 bits)
-    movl    rINST_FULL,%eax                      # eax<- A
-    FETCH_INST_WORD(2)
-    SET_VREG(%ecx,%eax)
-    ADVANCE_PC(2)
-    GOTO_NEXT
+    movl    offInstField_byteOffset(%eax),%eax  # eax<- byte offset of field
+    testl   %ecx,%ecx                           # object null?
+    je      common_errNullObject                # object was null
+    movzbl   (%ecx,%eax,1),%ecx                  # ecx<- obj.field (8/16/32 bits)
+    movl    rINST,%eax                          # eax<- A
+    FETCH_INST_OPCODE 2 %edx
+    SET_VREG %ecx %eax
+    ADVANCE_PC 2
+    GOTO_NEXT_R %edx
 
 /* continuation for OP_IGET_BYTE */
 
 
 .LOP_IGET_BYTE_resolve:
-    EXPORT_PC()
-    SPILL(rPC)
-    movl    offGlue_method(rIBASE),rPC            # rPC<- current method
-    UNSPILL(rIBASE)
-    movl    offMethod_clazz(rPC),rPC              # rPC<- method->clazz
-    SPILL_TMP(%ecx)                               # save object pointer across call
-    movl    rPC,OUT_ARG0(%esp)                    # pass in method->clazz
-    call    dvmResolveInstField                   #  ... to dvmResolveInstField
-    UNSPILL_TMP(%ecx)
-    UNSPILL(rPC)
-    testl   %eax,%eax                             #  ... which returns InstrField ptr
+    EXPORT_PC
+    movl    offGlue_method(%edx),%edx           # edx<- current method
+    movl    offMethod_clazz(%edx),%edx          # edx<- method->clazz
+    SPILL_TMP1(%ecx)                            # save obj pointer across call
+    movl    %edx,OUT_ARG0(%esp)                  # pass in method->clazz
+    call    dvmResolveInstField                 #  ... to dvmResolveInstField
+    UNSPILL_TMP1(%ecx)
+    testl   %eax,%eax                           #  returns InstrField ptr
     jne     .LOP_IGET_BYTE_finish
     jmp     common_exceptionThrown
 
@@ -7154,35 +7200,30 @@ dvmAsmSisterStart:
      * Currently:
      *   eax holds resolved field
      *   ecx holds object
-     *   rIBASE is scratch, but needs to be unspilled
-     *   rINST_FULL holds A
+     *   rINST holds A
      */
-    movl    offInstField_byteOffset(%eax),%eax   # eax<- byte offset of field
-    UNSPILL(rIBASE)
-    testl   %ecx,%ecx                            # object null?
-    je      common_errNullObject                 # object was null
-    movsbl   (%ecx,%eax,1),%ecx                   # ecx<- obj.field (8/16/32 bits)
-    movl    rINST_FULL,%eax                      # eax<- A
-    FETCH_INST_WORD(2)
-    SET_VREG(%ecx,%eax)
-    ADVANCE_PC(2)
-    GOTO_NEXT
+    movl    offInstField_byteOffset(%eax),%eax  # eax<- byte offset of field
+    testl   %ecx,%ecx                           # object null?
+    je      common_errNullObject                # object was null
+    movsbl   (%ecx,%eax,1),%ecx                  # ecx<- obj.field (8/16/32 bits)
+    movl    rINST,%eax                          # eax<- A
+    FETCH_INST_OPCODE 2 %edx
+    SET_VREG %ecx %eax
+    ADVANCE_PC 2
+    GOTO_NEXT_R %edx
 
 /* continuation for OP_IGET_CHAR */
 
 
 .LOP_IGET_CHAR_resolve:
-    EXPORT_PC()
-    SPILL(rPC)
-    movl    offGlue_method(rIBASE),rPC            # rPC<- current method
-    UNSPILL(rIBASE)
-    movl    offMethod_clazz(rPC),rPC              # rPC<- method->clazz
-    SPILL_TMP(%ecx)                               # save object pointer across call
-    movl    rPC,OUT_ARG0(%esp)                    # pass in method->clazz
-    call    dvmResolveInstField                   #  ... to dvmResolveInstField
-    UNSPILL_TMP(%ecx)
-    UNSPILL(rPC)
-    testl   %eax,%eax                             #  ... which returns InstrField ptr
+    EXPORT_PC
+    movl    offGlue_method(%edx),%edx           # edx<- current method
+    movl    offMethod_clazz(%edx),%edx          # edx<- method->clazz
+    SPILL_TMP1(%ecx)                            # save obj pointer across call
+    movl    %edx,OUT_ARG0(%esp)                  # pass in method->clazz
+    call    dvmResolveInstField                 #  ... to dvmResolveInstField
+    UNSPILL_TMP1(%ecx)
+    testl   %eax,%eax                           #  returns InstrField ptr
     jne     .LOP_IGET_CHAR_finish
     jmp     common_exceptionThrown
 
@@ -7191,35 +7232,30 @@ dvmAsmSisterStart:
      * Currently:
      *   eax holds resolved field
      *   ecx holds object
-     *   rIBASE is scratch, but needs to be unspilled
-     *   rINST_FULL holds A
+     *   rINST holds A
      */
-    movl    offInstField_byteOffset(%eax),%eax   # eax<- byte offset of field
-    UNSPILL(rIBASE)
-    testl   %ecx,%ecx                            # object null?
-    je      common_errNullObject                 # object was null
-    movzwl   (%ecx,%eax,1),%ecx                   # ecx<- obj.field (8/16/32 bits)
-    movl    rINST_FULL,%eax                      # eax<- A
-    FETCH_INST_WORD(2)
-    SET_VREG(%ecx,%eax)
-    ADVANCE_PC(2)
-    GOTO_NEXT
+    movl    offInstField_byteOffset(%eax),%eax  # eax<- byte offset of field
+    testl   %ecx,%ecx                           # object null?
+    je      common_errNullObject                # object was null
+    movzwl   (%ecx,%eax,1),%ecx                  # ecx<- obj.field (8/16/32 bits)
+    movl    rINST,%eax                          # eax<- A
+    FETCH_INST_OPCODE 2 %edx
+    SET_VREG %ecx %eax
+    ADVANCE_PC 2
+    GOTO_NEXT_R %edx
 
 /* continuation for OP_IGET_SHORT */
 
 
 .LOP_IGET_SHORT_resolve:
-    EXPORT_PC()
-    SPILL(rPC)
-    movl    offGlue_method(rIBASE),rPC            # rPC<- current method
-    UNSPILL(rIBASE)
-    movl    offMethod_clazz(rPC),rPC              # rPC<- method->clazz
-    SPILL_TMP(%ecx)                               # save object pointer across call
-    movl    rPC,OUT_ARG0(%esp)                    # pass in method->clazz
-    call    dvmResolveInstField                   #  ... to dvmResolveInstField
-    UNSPILL_TMP(%ecx)
-    UNSPILL(rPC)
-    testl   %eax,%eax                             #  ... which returns InstrField ptr
+    EXPORT_PC
+    movl    offGlue_method(%edx),%edx           # edx<- current method
+    movl    offMethod_clazz(%edx),%edx          # edx<- method->clazz
+    SPILL_TMP1(%ecx)                            # save obj pointer across call
+    movl    %edx,OUT_ARG0(%esp)                  # pass in method->clazz
+    call    dvmResolveInstField                 #  ... to dvmResolveInstField
+    UNSPILL_TMP1(%ecx)
+    testl   %eax,%eax                           #  returns InstrField ptr
     jne     .LOP_IGET_SHORT_finish
     jmp     common_exceptionThrown
 
@@ -7228,35 +7264,30 @@ dvmAsmSisterStart:
      * Currently:
      *   eax holds resolved field
      *   ecx holds object
-     *   rIBASE is scratch, but needs to be unspilled
-     *   rINST_FULL holds A
+     *   rINST holds A
      */
-    movl    offInstField_byteOffset(%eax),%eax   # eax<- byte offset of field
-    UNSPILL(rIBASE)
-    testl   %ecx,%ecx                            # object null?
-    je      common_errNullObject                 # object was null
-    movswl   (%ecx,%eax,1),%ecx                   # ecx<- obj.field (8/16/32 bits)
-    movl    rINST_FULL,%eax                      # eax<- A
-    FETCH_INST_WORD(2)
-    SET_VREG(%ecx,%eax)
-    ADVANCE_PC(2)
-    GOTO_NEXT
+    movl    offInstField_byteOffset(%eax),%eax  # eax<- byte offset of field
+    testl   %ecx,%ecx                           # object null?
+    je      common_errNullObject                # object was null
+    movswl   (%ecx,%eax,1),%ecx                  # ecx<- obj.field (8/16/32 bits)
+    movl    rINST,%eax                          # eax<- A
+    FETCH_INST_OPCODE 2 %edx
+    SET_VREG %ecx %eax
+    ADVANCE_PC 2
+    GOTO_NEXT_R %edx
 
 /* continuation for OP_IPUT */
 
 
 .LOP_IPUT_resolve:
-    EXPORT_PC()
-    SPILL(rPC)
-    movl    offGlue_method(rIBASE),rPC            # rPC<- current method
-    UNSPILL(rIBASE)
-    movl    offMethod_clazz(rPC),rPC              # rPC<- method->clazz
-    SPILL_TMP(%ecx)                               # save object pointer across call
-    movl    rPC,OUT_ARG0(%esp)                    # pass in method->clazz
-    call    dvmResolveInstField                   #  ... to dvmResolveInstField
-    UNSPILL_TMP(%ecx)
-    UNSPILL(rPC)
-    testl   %eax,%eax                             #  ... which returns InstrField ptr
+    EXPORT_PC
+    movl    offGlue_method(%edx),%edx           # edx<- current method
+    movl    offMethod_clazz(%edx),%edx          # edx<- method->clazz
+    SPILL_TMP1(%ecx)                            # save obj pointer across call
+    movl    %edx,OUT_ARG0(%esp)                 # pass in method->clazz
+    call    dvmResolveInstField                 #  ... to dvmResolveInstField
+    UNSPILL_TMP1(%ecx)
+    testl   %eax,%eax                           # returns InstrField ptr
     jne     .LOP_IPUT_finish
     jmp     common_exceptionThrown
 
@@ -7265,34 +7296,29 @@ dvmAsmSisterStart:
      * Currently:
      *   eax holds resolved field
      *   ecx holds object
-     *   rIBASE is scratch, but needs to be unspilled
-     *   rINST_FULL holds A
+     *   rINST holds A
      */
-    GET_VREG(rINST_FULL,rINST_FULL)              # rINST_FULL<- v[A]
+    GET_VREG_R rINST rINST                       # rINST<- v[A]
     movl    offInstField_byteOffset(%eax),%eax   # eax<- byte offset of field
-    UNSPILL(rIBASE)
     testl   %ecx,%ecx                            # object null?
     je      common_errNullObject                 # object was null
-    movl   rINST_FULL,(%ecx,%eax,1)            # obj.field <- v[A](8/16/32 bits)
-    FETCH_INST_WORD(2)
-    ADVANCE_PC(2)
-    GOTO_NEXT
+    FETCH_INST_OPCODE 2 %edx
+    movl   rINST,(%ecx,%eax,1)            # obj.field <- v[A](8/16/32 bits)
+    ADVANCE_PC 2
+    GOTO_NEXT_R %edx
 
 /* continuation for OP_IPUT_WIDE */
 
 
 .LOP_IPUT_WIDE_resolve:
-    EXPORT_PC()
-    SPILL(rPC)
-    movl    offGlue_method(rIBASE),rPC            # rPC<- current method
-    UNSPILL(rIBASE)
-    movl    offMethod_clazz(rPC),rPC              # rPC<- method->clazz
-    SPILL_TMP(%ecx)                               # save object pointer across call
-    movl    rPC,OUT_ARG0(%esp)                    # pass in method->clazz
-    call    dvmResolveInstField                   #  ... to dvmResolveInstField
-    UNSPILL_TMP(%ecx)
-    UNSPILL(rPC)
-    testl   %eax,%eax                             #  ... which returns InstrField ptr
+    EXPORT_PC
+    movl    offGlue_method(%edx),%edx           # edx<- current method
+    movl    offMethod_clazz(%edx),%edx          # edx<- method->clazz
+    SPILL_TMP1(%ecx)                            # save obj pointer across call
+    movl    %edx,OUT_ARG0(%esp)                 # pass in method->clazz
+    call    dvmResolveInstField                 #  ... to dvmResolveInstField
+    UNSPILL_TMP1(%ecx)
+    testl   %eax,%eax                           #  ... which returns InstrField ptr
     jne     .LOP_IPUT_WIDE_finish
     jmp     common_exceptionThrown
 
@@ -7301,37 +7327,33 @@ dvmAsmSisterStart:
      * Currently:
      *   eax holds resolved field
      *   ecx holds object
-     *   rIBASE is scratch, but needs to be unspilled
-     *   rINST_FULL holds A
+     *   %edx is scratch, but needs to be unspilled
+     *   rINST holds A
      */
-    movl    offInstField_byteOffset(%eax),%eax   # eax<- byte offset of field
-    UNSPILL(rIBASE)
-    testl   %ecx,%ecx                            # object null?
-    je      common_errNullObject                 # object was null
-    leal    (%ecx,%eax,1),%eax                   # eax<- address of field
-    GET_VREG_WORD(%ecx,rINST_FULL,0)             # ecx<- lsw
-    GET_VREG_WORD(rINST_FULL,rINST_FULL,1)       # rINST_FULL<- msw
-    movl    rINST_FULL,4(%eax)
-    FETCH_INST_WORD(2)
+    movl    offInstField_byteOffset(%eax),%eax  # eax<- byte offset of field
+    testl   %ecx,%ecx                           # object null?
+    je      common_errNullObject                # object was null
+    leal    (%ecx,%eax,1),%eax                  # eax<- address of field
+    GET_VREG_WORD %ecx rINST 0                  # ecx<- lsw
+    GET_VREG_WORD rINST rINST 1                 # rINST<- msw
+    FETCH_INST_OPCODE 2 %edx
+    movl    rINST,4(%eax)
     movl    %ecx,(%eax)
-    ADVANCE_PC(2)
-    GOTO_NEXT
+    ADVANCE_PC 2
+    GOTO_NEXT_R %edx
 
 /* continuation for OP_IPUT_OBJECT */
 
 
 .LOP_IPUT_OBJECT_resolve:
-    EXPORT_PC()
-    SPILL(rPC)
-    movl    offGlue_method(rIBASE),rPC            # rPC<- current method
-    UNSPILL(rIBASE)
-    movl    offMethod_clazz(rPC),rPC              # rPC<- method->clazz
-    SPILL_TMP(%ecx)                               # save object pointer across call
-    movl    rPC,OUT_ARG0(%esp)                    # pass in method->clazz
-    call    dvmResolveInstField                   #  ... to dvmResolveInstField
-    UNSPILL_TMP(%ecx)
-    UNSPILL(rPC)
-    testl   %eax,%eax                             #  ... which returns InstrField ptr
+    EXPORT_PC
+    movl    offGlue_method(%edx),%edx           # edx<- current method
+    movl    offMethod_clazz(%edx),%edx          # edx<- method->clazz
+    SPILL_TMP1(%ecx)                            # save obj pointer across call
+    movl    %edx,OUT_ARG0(%esp)                 # pass in method->clazz
+    call    dvmResolveInstField                 #  ... to dvmResolveInstField
+    UNSPILL_TMP1(%ecx)
+    testl   %eax,%eax                           # returns InstrField ptr
     jne     .LOP_IPUT_OBJECT_finish
     jmp     common_exceptionThrown
 
@@ -7340,41 +7362,37 @@ dvmAsmSisterStart:
      * Currently:
      *   eax holds resolved field
      *   ecx holds object
-     *   rIBASE is scratch, but needs to be unspilled
-     *   rINST_FULL holds A
+     *   %edx is scratch, but needs to be unspilled
+     *   rINST holds A
      */
-    GET_VREG(rINST_FULL,rINST_FULL)              # rINST_FULL<- v[A]
-    movl    offInstField_byteOffset(%eax),%eax   # eax<- byte offset of field
-    UNSPILL(rIBASE)
-    testl   %ecx,%ecx                            # object null?
-    je      common_errNullObject                 # object was null
-    movl    rINST_FULL,(%ecx,%eax)          # obj.field <- v[A](8/16/32 bits)
-    GET_GLUE(%eax)
-    testl   rINST_FULL,rINST_FULL                # stored a NULL?
-    movl    offGlue_cardTable(%eax),%eax         # get card table base
-    FETCH_INST_WORD(2)
-    je      1f                                   # skip card mark if null store
-    shrl    $GC_CARD_SHIFT,%ecx                 # object head to card number
-    movb    %al,(%eax,%ecx)                      # mark card
+    GET_VREG_R rINST rINST                      # rINST<- v[A]
+    movl    offInstField_byteOffset(%eax),%eax  # eax<- byte offset of field
+    testl   %ecx,%ecx                           # object null?
+    je      common_errNullObject                # object was null
+    movl    rINST,(%ecx,%eax)      # obj.field <- v[A](8/16/32 bits)
+    movl    rGLUE,%eax
+    testl   rINST,rINST                         # stored a NULL?
+    movl    offGlue_cardTable(%eax),%eax        # get card table base
+    FETCH_INST_OPCODE 2 %edx
+    je      1f                                  # skip card mark if null store
+    shrl    $GC_CARD_SHIFT,%ecx                # object head to card number
+    movb    %al,(%eax,%ecx)                     # mark card
 1:
-    ADVANCE_PC(2)
-    GOTO_NEXT
+    ADVANCE_PC 2
+    GOTO_NEXT_R %edx
 
 /* continuation for OP_IPUT_BOOLEAN */
 
 
 .LOP_IPUT_BOOLEAN_resolve:
-    EXPORT_PC()
-    SPILL(rPC)
-    movl    offGlue_method(rIBASE),rPC            # rPC<- current method
-    UNSPILL(rIBASE)
-    movl    offMethod_clazz(rPC),rPC              # rPC<- method->clazz
-    SPILL_TMP(%ecx)                               # save object pointer across call
-    movl    rPC,OUT_ARG0(%esp)                    # pass in method->clazz
-    call    dvmResolveInstField                   #  ... to dvmResolveInstField
-    UNSPILL_TMP(%ecx)
-    UNSPILL(rPC)
-    testl   %eax,%eax                             #  ... which returns InstrField ptr
+    EXPORT_PC
+    movl    offGlue_method(%edx),%edx           # edx<- current method
+    movl    offMethod_clazz(%edx),%edx          # edx<- method->clazz
+    SPILL_TMP1(%ecx)                            # save obj pointer across call
+    movl    %edx,OUT_ARG0(%esp)                 # pass in method->clazz
+    call    dvmResolveInstField                 #  ... to dvmResolveInstField
+    UNSPILL_TMP1(%ecx)
+    testl   %eax,%eax                           # returns InstrField ptr
     jne     .LOP_IPUT_BOOLEAN_finish
     jmp     common_exceptionThrown
 
@@ -7383,34 +7401,29 @@ dvmAsmSisterStart:
      * Currently:
      *   eax holds resolved field
      *   ecx holds object
-     *   rIBASE is scratch, but needs to be unspilled
-     *   rINST_FULL holds A
+     *   rINST holds A
      */
-    GET_VREG(rINST_FULL,rINST_FULL)              # rINST_FULL<- v[A]
+    GET_VREG_R rINST rINST                       # rINST<- v[A]
     movl    offInstField_byteOffset(%eax),%eax   # eax<- byte offset of field
-    UNSPILL(rIBASE)
     testl   %ecx,%ecx                            # object null?
     je      common_errNullObject                 # object was null
-    movb   rINST_LO,(%ecx,%eax,1)            # obj.field <- v[A](8/16/32 bits)
-    FETCH_INST_WORD(2)
-    ADVANCE_PC(2)
-    GOTO_NEXT
+    FETCH_INST_OPCODE 2 %edx
+    movb   rINSTbl,(%ecx,%eax,1)            # obj.field <- v[A](8/16/32 bits)
+    ADVANCE_PC 2
+    GOTO_NEXT_R %edx
 
 /* continuation for OP_IPUT_BYTE */
 
 
 .LOP_IPUT_BYTE_resolve:
-    EXPORT_PC()
-    SPILL(rPC)
-    movl    offGlue_method(rIBASE),rPC            # rPC<- current method
-    UNSPILL(rIBASE)
-    movl    offMethod_clazz(rPC),rPC              # rPC<- method->clazz
-    SPILL_TMP(%ecx)                               # save object pointer across call
-    movl    rPC,OUT_ARG0(%esp)                    # pass in method->clazz
-    call    dvmResolveInstField                   #  ... to dvmResolveInstField
-    UNSPILL_TMP(%ecx)
-    UNSPILL(rPC)
-    testl   %eax,%eax                             #  ... which returns InstrField ptr
+    EXPORT_PC
+    movl    offGlue_method(%edx),%edx           # edx<- current method
+    movl    offMethod_clazz(%edx),%edx          # edx<- method->clazz
+    SPILL_TMP1(%ecx)                            # save obj pointer across call
+    movl    %edx,OUT_ARG0(%esp)                 # pass in method->clazz
+    call    dvmResolveInstField                 #  ... to dvmResolveInstField
+    UNSPILL_TMP1(%ecx)
+    testl   %eax,%eax                           # returns InstrField ptr
     jne     .LOP_IPUT_BYTE_finish
     jmp     common_exceptionThrown
 
@@ -7419,34 +7432,29 @@ dvmAsmSisterStart:
      * Currently:
      *   eax holds resolved field
      *   ecx holds object
-     *   rIBASE is scratch, but needs to be unspilled
-     *   rINST_FULL holds A
+     *   rINST holds A
      */
-    GET_VREG(rINST_FULL,rINST_FULL)              # rINST_FULL<- v[A]
+    GET_VREG_R rINST rINST                       # rINST<- v[A]
     movl    offInstField_byteOffset(%eax),%eax   # eax<- byte offset of field
-    UNSPILL(rIBASE)
     testl   %ecx,%ecx                            # object null?
     je      common_errNullObject                 # object was null
-    movb   rINST_LO,(%ecx,%eax,1)            # obj.field <- v[A](8/16/32 bits)
-    FETCH_INST_WORD(2)
-    ADVANCE_PC(2)
-    GOTO_NEXT
+    FETCH_INST_OPCODE 2 %edx
+    movb   rINSTbl,(%ecx,%eax,1)            # obj.field <- v[A](8/16/32 bits)
+    ADVANCE_PC 2
+    GOTO_NEXT_R %edx
 
 /* continuation for OP_IPUT_CHAR */
 
 
 .LOP_IPUT_CHAR_resolve:
-    EXPORT_PC()
-    SPILL(rPC)
-    movl    offGlue_method(rIBASE),rPC            # rPC<- current method
-    UNSPILL(rIBASE)
-    movl    offMethod_clazz(rPC),rPC              # rPC<- method->clazz
-    SPILL_TMP(%ecx)                               # save object pointer across call
-    movl    rPC,OUT_ARG0(%esp)                    # pass in method->clazz
-    call    dvmResolveInstField                   #  ... to dvmResolveInstField
-    UNSPILL_TMP(%ecx)
-    UNSPILL(rPC)
-    testl   %eax,%eax                             #  ... which returns InstrField ptr
+    EXPORT_PC
+    movl    offGlue_method(%edx),%edx           # edx<- current method
+    movl    offMethod_clazz(%edx),%edx          # edx<- method->clazz
+    SPILL_TMP1(%ecx)                            # save obj pointer across call
+    movl    %edx,OUT_ARG0(%esp)                 # pass in method->clazz
+    call    dvmResolveInstField                 #  ... to dvmResolveInstField
+    UNSPILL_TMP1(%ecx)
+    testl   %eax,%eax                           # returns InstrField ptr
     jne     .LOP_IPUT_CHAR_finish
     jmp     common_exceptionThrown
 
@@ -7455,34 +7463,29 @@ dvmAsmSisterStart:
      * Currently:
      *   eax holds resolved field
      *   ecx holds object
-     *   rIBASE is scratch, but needs to be unspilled
-     *   rINST_FULL holds A
+     *   rINST holds A
      */
-    GET_VREG(rINST_FULL,rINST_FULL)              # rINST_FULL<- v[A]
+    GET_VREG_R rINST rINST                       # rINST<- v[A]
     movl    offInstField_byteOffset(%eax),%eax   # eax<- byte offset of field
-    UNSPILL(rIBASE)
     testl   %ecx,%ecx                            # object null?
     je      common_errNullObject                 # object was null
-    movw   rINST,(%ecx,%eax,1)            # obj.field <- v[A](8/16/32 bits)
-    FETCH_INST_WORD(2)
-    ADVANCE_PC(2)
-    GOTO_NEXT
+    FETCH_INST_OPCODE 2 %edx
+    movw   rINSTw,(%ecx,%eax,1)            # obj.field <- v[A](8/16/32 bits)
+    ADVANCE_PC 2
+    GOTO_NEXT_R %edx
 
 /* continuation for OP_IPUT_SHORT */
 
 
 .LOP_IPUT_SHORT_resolve:
-    EXPORT_PC()
-    SPILL(rPC)
-    movl    offGlue_method(rIBASE),rPC            # rPC<- current method
-    UNSPILL(rIBASE)
-    movl    offMethod_clazz(rPC),rPC              # rPC<- method->clazz
-    SPILL_TMP(%ecx)                               # save object pointer across call
-    movl    rPC,OUT_ARG0(%esp)                    # pass in method->clazz
-    call    dvmResolveInstField                   #  ... to dvmResolveInstField
-    UNSPILL_TMP(%ecx)
-    UNSPILL(rPC)
-    testl   %eax,%eax                             #  ... which returns InstrField ptr
+    EXPORT_PC
+    movl    offGlue_method(%edx),%edx           # edx<- current method
+    movl    offMethod_clazz(%edx),%edx          # edx<- method->clazz
+    SPILL_TMP1(%ecx)                            # save obj pointer across call
+    movl    %edx,OUT_ARG0(%esp)                 # pass in method->clazz
+    call    dvmResolveInstField                 #  ... to dvmResolveInstField
+    UNSPILL_TMP1(%ecx)
+    testl   %eax,%eax                           # returns InstrField ptr
     jne     .LOP_IPUT_SHORT_finish
     jmp     common_exceptionThrown
 
@@ -7491,18 +7494,16 @@ dvmAsmSisterStart:
      * Currently:
      *   eax holds resolved field
      *   ecx holds object
-     *   rIBASE is scratch, but needs to be unspilled
-     *   rINST_FULL holds A
+     *   rINST holds A
      */
-    GET_VREG(rINST_FULL,rINST_FULL)              # rINST_FULL<- v[A]
+    GET_VREG_R rINST rINST                       # rINST<- v[A]
     movl    offInstField_byteOffset(%eax),%eax   # eax<- byte offset of field
-    UNSPILL(rIBASE)
     testl   %ecx,%ecx                            # object null?
     je      common_errNullObject                 # object was null
-    movw   rINST,(%ecx,%eax,1)            # obj.field <- v[A](8/16/32 bits)
-    FETCH_INST_WORD(2)
-    ADVANCE_PC(2)
-    GOTO_NEXT
+    FETCH_INST_OPCODE 2 %edx
+    movw   rINSTw,(%ecx,%eax,1)            # obj.field <- v[A](8/16/32 bits)
+    ADVANCE_PC 2
+    GOTO_NEXT_R %edx
 
 /* continuation for OP_SGET */
 
@@ -7510,16 +7511,14 @@ dvmAsmSisterStart:
      * Go resolve the field
      */
 .LOP_SGET_resolve:
-    GET_GLUE(%ecx)
+    movl     rGLUE,%ecx
     movzwl   2(rPC),%eax                        # eax<- field ref BBBB
     movl     offGlue_method(%ecx),%ecx          # ecx<- current method
-    EXPORT_PC()                                 # could throw, need to export
+    EXPORT_PC                                   # could throw, need to export
     movl     offMethod_clazz(%ecx),%ecx         # ecx<- method->clazz
-    SPILL(rPC)
     movl     %eax,OUT_ARG1(%esp)
     movl     %ecx,OUT_ARG0(%esp)
     call     dvmResolveStaticField              # eax<- resolved StaticField ptr
-    UNSPILL(rPC)
     testl    %eax,%eax
     jne      .LOP_SGET_finish                 # success, continue
     jmp      common_exceptionThrown             # no, handle exception
@@ -7530,16 +7529,14 @@ dvmAsmSisterStart:
      * Go resolve the field
      */
 .LOP_SGET_WIDE_resolve:
-    GET_GLUE(%ecx)
+    movl     rGLUE,%ecx
     movzwl   2(rPC),%eax                        # eax<- field ref BBBB
     movl     offGlue_method(%ecx),%ecx          # ecx<- current method
-    EXPORT_PC()                                 # could throw, need to export
+    EXPORT_PC                                   # could throw, need to export
     movl     offMethod_clazz(%ecx),%ecx         # ecx<- method->clazz
-    SPILL(rPC)
     movl     %eax,OUT_ARG1(%esp)
     movl     %ecx,OUT_ARG0(%esp)
     call     dvmResolveStaticField              # eax<- resolved StaticField ptr
-    UNSPILL(rPC)
     testl    %eax,%eax
     jne      .LOP_SGET_WIDE_finish                 # success, continue
     jmp      common_exceptionThrown             # no, handle exception
@@ -7550,16 +7547,14 @@ dvmAsmSisterStart:
      * Go resolve the field
      */
 .LOP_SGET_OBJECT_resolve:
-    GET_GLUE(%ecx)
+    movl     rGLUE,%ecx
     movzwl   2(rPC),%eax                        # eax<- field ref BBBB
     movl     offGlue_method(%ecx),%ecx          # ecx<- current method
-    EXPORT_PC()                                 # could throw, need to export
+    EXPORT_PC                                   # could throw, need to export
     movl     offMethod_clazz(%ecx),%ecx         # ecx<- method->clazz
-    SPILL(rPC)
     movl     %eax,OUT_ARG1(%esp)
     movl     %ecx,OUT_ARG0(%esp)
     call     dvmResolveStaticField              # eax<- resolved StaticField ptr
-    UNSPILL(rPC)
     testl    %eax,%eax
     jne      .LOP_SGET_OBJECT_finish                 # success, continue
     jmp      common_exceptionThrown             # no, handle exception
@@ -7570,16 +7565,14 @@ dvmAsmSisterStart:
      * Go resolve the field
      */
 .LOP_SGET_BOOLEAN_resolve:
-    GET_GLUE(%ecx)
+    movl     rGLUE,%ecx
     movzwl   2(rPC),%eax                        # eax<- field ref BBBB
     movl     offGlue_method(%ecx),%ecx          # ecx<- current method
-    EXPORT_PC()                                 # could throw, need to export
+    EXPORT_PC                                   # could throw, need to export
     movl     offMethod_clazz(%ecx),%ecx         # ecx<- method->clazz
-    SPILL(rPC)
     movl     %eax,OUT_ARG1(%esp)
     movl     %ecx,OUT_ARG0(%esp)
     call     dvmResolveStaticField              # eax<- resolved StaticField ptr
-    UNSPILL(rPC)
     testl    %eax,%eax
     jne      .LOP_SGET_BOOLEAN_finish                 # success, continue
     jmp      common_exceptionThrown             # no, handle exception
@@ -7590,16 +7583,14 @@ dvmAsmSisterStart:
      * Go resolve the field
      */
 .LOP_SGET_BYTE_resolve:
-    GET_GLUE(%ecx)
+    movl     rGLUE,%ecx
     movzwl   2(rPC),%eax                        # eax<- field ref BBBB
     movl     offGlue_method(%ecx),%ecx          # ecx<- current method
-    EXPORT_PC()                                 # could throw, need to export
+    EXPORT_PC                                   # could throw, need to export
     movl     offMethod_clazz(%ecx),%ecx         # ecx<- method->clazz
-    SPILL(rPC)
     movl     %eax,OUT_ARG1(%esp)
     movl     %ecx,OUT_ARG0(%esp)
     call     dvmResolveStaticField              # eax<- resolved StaticField ptr
-    UNSPILL(rPC)
     testl    %eax,%eax
     jne      .LOP_SGET_BYTE_finish                 # success, continue
     jmp      common_exceptionThrown             # no, handle exception
@@ -7610,16 +7601,14 @@ dvmAsmSisterStart:
      * Go resolve the field
      */
 .LOP_SGET_CHAR_resolve:
-    GET_GLUE(%ecx)
+    movl     rGLUE,%ecx
     movzwl   2(rPC),%eax                        # eax<- field ref BBBB
     movl     offGlue_method(%ecx),%ecx          # ecx<- current method
-    EXPORT_PC()                                 # could throw, need to export
+    EXPORT_PC                                   # could throw, need to export
     movl     offMethod_clazz(%ecx),%ecx         # ecx<- method->clazz
-    SPILL(rPC)
     movl     %eax,OUT_ARG1(%esp)
     movl     %ecx,OUT_ARG0(%esp)
     call     dvmResolveStaticField              # eax<- resolved StaticField ptr
-    UNSPILL(rPC)
     testl    %eax,%eax
     jne      .LOP_SGET_CHAR_finish                 # success, continue
     jmp      common_exceptionThrown             # no, handle exception
@@ -7630,16 +7619,14 @@ dvmAsmSisterStart:
      * Go resolve the field
      */
 .LOP_SGET_SHORT_resolve:
-    GET_GLUE(%ecx)
+    movl     rGLUE,%ecx
     movzwl   2(rPC),%eax                        # eax<- field ref BBBB
     movl     offGlue_method(%ecx),%ecx          # ecx<- current method
-    EXPORT_PC()                                 # could throw, need to export
+    EXPORT_PC                                   # could throw, need to export
     movl     offMethod_clazz(%ecx),%ecx         # ecx<- method->clazz
-    SPILL(rPC)
     movl     %eax,OUT_ARG1(%esp)
     movl     %ecx,OUT_ARG0(%esp)
     call     dvmResolveStaticField              # eax<- resolved StaticField ptr
-    UNSPILL(rPC)
     testl    %eax,%eax
     jne      .LOP_SGET_SHORT_finish                 # success, continue
     jmp      common_exceptionThrown             # no, handle exception
@@ -7650,16 +7637,14 @@ dvmAsmSisterStart:
      * Go resolve the field
      */
 .LOP_SPUT_resolve:
-    GET_GLUE(%ecx)
+    movl     rGLUE,%ecx
     movzwl   2(rPC),%eax                        # eax<- field ref BBBB
     movl     offGlue_method(%ecx),%ecx          # ecx<- current method
-    EXPORT_PC()                                 # could throw, need to export
+    EXPORT_PC                                   # could throw, need to export
     movl     offMethod_clazz(%ecx),%ecx         # ecx<- method->clazz
-    SPILL(rPC)
     movl     %eax,OUT_ARG1(%esp)
     movl     %ecx,OUT_ARG0(%esp)
     call     dvmResolveStaticField              # eax<- resolved StaticField ptr
-    UNSPILL(rPC)
     testl    %eax,%eax
     jne      .LOP_SPUT_finish                 # success, continue
     jmp      common_exceptionThrown             # no, handle exception
@@ -7670,16 +7655,14 @@ dvmAsmSisterStart:
      * Go resolve the field
      */
 .LOP_SPUT_WIDE_resolve:
-    GET_GLUE(%ecx)
+    movl     rGLUE,%ecx
     movzwl   2(rPC),%eax                        # eax<- field ref BBBB
     movl     offGlue_method(%ecx),%ecx          # ecx<- current method
-    EXPORT_PC()                                 # could throw, need to export
+    EXPORT_PC                                   # could throw, need to export
     movl     offMethod_clazz(%ecx),%ecx         # ecx<- method->clazz
-    SPILL(rPC)
     movl     %eax,OUT_ARG1(%esp)
     movl     %ecx,OUT_ARG0(%esp)
     call     dvmResolveStaticField              # eax<- resolved StaticField ptr
-    UNSPILL(rPC)
     testl    %eax,%eax
     jne      .LOP_SPUT_WIDE_finish                 # success, continue
     jmp      common_exceptionThrown             # no, handle exception
@@ -7690,27 +7673,25 @@ dvmAsmSisterStart:
 .LOP_SPUT_OBJECT_continue:
     movl      %ecx,offStaticField_value(%eax)
     testl     %ecx,%ecx
-    GET_GLUE(%ecx)
-    FETCH_INST_WORD(2)
+    movl      rGLUE,%ecx
+    FETCH_INST_OPCODE 2 %edx
     je        1f
     movl      offGlue_cardTable(%ecx),%ecx       # get card table base
     shrl      $GC_CARD_SHIFT,%eax               # head to card number
     movb      %cl,(%ecx,%eax)                    # mark card
 1:
-    ADVANCE_PC(2)
-    GOTO_NEXT
+    ADVANCE_PC 2
+    GOTO_NEXT_R %edx
 
 .LOP_SPUT_OBJECT_resolve:
-    GET_GLUE(%ecx)
+    movl     rGLUE,%ecx
     movzwl   2(rPC),%eax                        # eax<- field ref BBBB
     movl     offGlue_method(%ecx),%ecx          # ecx<- current method
-    EXPORT_PC()                                 # could throw, need to export
+    EXPORT_PC                                   # could throw, need to export
     movl     offMethod_clazz(%ecx),%ecx         # ecx<- method->clazz
-    SPILL(rPC)
     movl     %eax,OUT_ARG1(%esp)
     movl     %ecx,OUT_ARG0(%esp)
     call     dvmResolveStaticField              # eax<- resolved StaticField ptr
-    UNSPILL(rPC)
     testl    %eax,%eax
     jne      .LOP_SPUT_OBJECT_finish                 # success, continue
     jmp      common_exceptionThrown             # no, handle exception
@@ -7721,16 +7702,14 @@ dvmAsmSisterStart:
      * Go resolve the field
      */
 .LOP_SPUT_BOOLEAN_resolve:
-    GET_GLUE(%ecx)
+    movl     rGLUE,%ecx
     movzwl   2(rPC),%eax                        # eax<- field ref BBBB
     movl     offGlue_method(%ecx),%ecx          # ecx<- current method
-    EXPORT_PC()                                 # could throw, need to export
+    EXPORT_PC                                   # could throw, need to export
     movl     offMethod_clazz(%ecx),%ecx         # ecx<- method->clazz
-    SPILL(rPC)
     movl     %eax,OUT_ARG1(%esp)
     movl     %ecx,OUT_ARG0(%esp)
     call     dvmResolveStaticField              # eax<- resolved StaticField ptr
-    UNSPILL(rPC)
     testl    %eax,%eax
     jne      .LOP_SPUT_BOOLEAN_finish                 # success, continue
     jmp      common_exceptionThrown             # no, handle exception
@@ -7741,16 +7720,14 @@ dvmAsmSisterStart:
      * Go resolve the field
      */
 .LOP_SPUT_BYTE_resolve:
-    GET_GLUE(%ecx)
+    movl     rGLUE,%ecx
     movzwl   2(rPC),%eax                        # eax<- field ref BBBB
     movl     offGlue_method(%ecx),%ecx          # ecx<- current method
-    EXPORT_PC()                                 # could throw, need to export
+    EXPORT_PC                                   # could throw, need to export
     movl     offMethod_clazz(%ecx),%ecx         # ecx<- method->clazz
-    SPILL(rPC)
     movl     %eax,OUT_ARG1(%esp)
     movl     %ecx,OUT_ARG0(%esp)
     call     dvmResolveStaticField              # eax<- resolved StaticField ptr
-    UNSPILL(rPC)
     testl    %eax,%eax
     jne      .LOP_SPUT_BYTE_finish                 # success, continue
     jmp      common_exceptionThrown             # no, handle exception
@@ -7761,16 +7738,14 @@ dvmAsmSisterStart:
      * Go resolve the field
      */
 .LOP_SPUT_CHAR_resolve:
-    GET_GLUE(%ecx)
+    movl     rGLUE,%ecx
     movzwl   2(rPC),%eax                        # eax<- field ref BBBB
     movl     offGlue_method(%ecx),%ecx          # ecx<- current method
-    EXPORT_PC()                                 # could throw, need to export
+    EXPORT_PC                                   # could throw, need to export
     movl     offMethod_clazz(%ecx),%ecx         # ecx<- method->clazz
-    SPILL(rPC)
     movl     %eax,OUT_ARG1(%esp)
     movl     %ecx,OUT_ARG0(%esp)
     call     dvmResolveStaticField              # eax<- resolved StaticField ptr
-    UNSPILL(rPC)
     testl    %eax,%eax
     jne      .LOP_SPUT_CHAR_finish                 # success, continue
     jmp      common_exceptionThrown             # no, handle exception
@@ -7781,16 +7756,14 @@ dvmAsmSisterStart:
      * Go resolve the field
      */
 .LOP_SPUT_SHORT_resolve:
-    GET_GLUE(%ecx)
+    movl     rGLUE,%ecx
     movzwl   2(rPC),%eax                        # eax<- field ref BBBB
     movl     offGlue_method(%ecx),%ecx          # ecx<- current method
-    EXPORT_PC()                                 # could throw, need to export
+    EXPORT_PC                                   # could throw, need to export
     movl     offMethod_clazz(%ecx),%ecx         # ecx<- method->clazz
-    SPILL(rPC)
     movl     %eax,OUT_ARG1(%esp)
     movl     %ecx,OUT_ARG0(%esp)
     call     dvmResolveStaticField              # eax<- resolved StaticField ptr
-    UNSPILL(rPC)
     testl    %eax,%eax
     jne      .LOP_SPUT_SHORT_finish                 # success, continue
     jmp      common_exceptionThrown             # no, handle exception
@@ -7803,7 +7776,6 @@ dvmAsmSisterStart:
     movl      %eax,OUT_ARG0(%esp)         # arg0<- clazz
     movl      $METHOD_VIRTUAL,OUT_ARG2(%esp) # arg2<- flags
     call      dvmResolveMethod            # eax<- call(clazz, ref, flags)
-    UNSPILL(rPC)
     testl     %eax,%eax                   # got null?
     jne       .LOP_INVOKE_VIRTUAL_continue        # no, continue
     jmp       common_exceptionThrown      # yes, handle exception
@@ -7817,7 +7789,7 @@ dvmAsmSisterStart:
     .if       (!0)
     andl      $0xf,%ecx                # ecx<- D (or stays CCCC)
     .endif
-    GET_VREG(%ecx,%ecx)                 # ecx<- "this"
+    GET_VREG_R  %ecx %ecx               # ecx<- "this"
     movzwl    offMethod_methodIndex(%eax),%eax  # eax<- baseMethod->methodIndex
     testl     %ecx,%ecx                 # null this?
     je        common_errNullObject      # go if so
@@ -7848,17 +7820,15 @@ dvmAsmSisterStart:
      * eax = method->clazz
     */
 .LOP_INVOKE_SUPER_resolve:
-    SPILL_TMP(%eax)                     # method->clazz
+    SPILL_TMP1(%eax)                    # method->clazz
     movl    %eax,OUT_ARG0(%esp)         # arg0<- method->clazz
     movzwl  2(rPC),%ecx                 # ecx<- BBBB
     movl    $METHOD_VIRTUAL,OUT_ARG2(%esp)  # arg2<- resolver method type
     movl    %ecx,OUT_ARG1(%esp)         # arg1<- ref
-    SPILL(rPC)
     call    dvmResolveMethod            # eax<- call(clazz, ref, flags)
-    UNSPILL(rPC)
     testl   %eax,%eax                   # got null?
     movl    %eax,%ecx                   # ecx<- resolved base method
-    UNSPILL_TMP(%eax)                   # restore method->clazz
+    UNSPILL_TMP1(%eax)                  # restore method->clazz
     jne     .LOP_INVOKE_SUPER_continue        # good to go - continue
     jmp     common_exceptionThrown      # handle exception
 
@@ -7880,9 +7850,8 @@ dvmAsmSisterStart:
      * frequent one.  We'll have to do some reloading.
      */
 .LOP_INVOKE_DIRECT_resolve:
-     SPILL_TMP(%ecx)
-     GET_GLUE(%ecx)
-     UNSPILL(rPC)
+     SPILL_TMP1(%ecx)
+     movl     rGLUE,%ecx
      movl     offGlue_method(%ecx),%ecx  # ecx<- glue->method
      movzwl   2(rPC),%eax      # reference (BBBB or CCCC)
      movl     offMethod_clazz(%ecx),%ecx # ecx<- method->clazz
@@ -7890,10 +7859,9 @@ dvmAsmSisterStart:
      movl     %eax,OUT_ARG1(%esp)
      movl     %ecx,OUT_ARG0(%esp)
      call     dvmResolveMethod # eax<- call(clazz, ref, flags)
-     UNSPILL_TMP(%ecx)
+     UNSPILL_TMP1(%ecx)
      testl    %eax,%eax
      jne      .LOP_INVOKE_DIRECT_finish
-     UNSPILL(rPC)
      jmp      common_exceptionThrown
 
 /* continuation for OP_INVOKE_STATIC */
@@ -7901,9 +7869,7 @@ dvmAsmSisterStart:
 .LOP_INVOKE_STATIC_continue:
     movl      $METHOD_STATIC,%eax
     movl      %eax,OUT_ARG2(%esp)       # arg2<- flags
-    SPILL(rPC)
     call      dvmResolveMethod          # call(clazz,ref,flags)
-    UNSPILL(rPC)
     testl     %eax,%eax                 # got null?
     jne       common_invokeMethodNoRange
     jmp       common_exceptionThrown
@@ -7912,7 +7878,6 @@ dvmAsmSisterStart:
 
 .LOP_INVOKE_INTERFACE_continue:
     call       dvmFindInterfaceMethodInCache # eax<- call(class, ref, method, dex)
-    UNSPILL(rPC)
     testl      %eax,%eax
     je         common_exceptionThrown
     jmp        common_invokeMethodNoRange
@@ -7925,7 +7890,6 @@ dvmAsmSisterStart:
     movl      %eax,OUT_ARG0(%esp)         # arg0<- clazz
     movl      $METHOD_VIRTUAL,OUT_ARG2(%esp) # arg2<- flags
     call      dvmResolveMethod            # eax<- call(clazz, ref, flags)
-    UNSPILL(rPC)
     testl     %eax,%eax                   # got null?
     jne       .LOP_INVOKE_VIRTUAL_RANGE_continue        # no, continue
     jmp       common_exceptionThrown      # yes, handle exception
@@ -7939,7 +7903,7 @@ dvmAsmSisterStart:
     .if       (!1)
     andl      $0xf,%ecx                # ecx<- D (or stays CCCC)
     .endif
-    GET_VREG(%ecx,%ecx)                 # ecx<- "this"
+    GET_VREG_R  %ecx %ecx               # ecx<- "this"
     movzwl    offMethod_methodIndex(%eax),%eax  # eax<- baseMethod->methodIndex
     testl     %ecx,%ecx                 # null this?
     je        common_errNullObject      # go if so
@@ -7970,17 +7934,15 @@ dvmAsmSisterStart:
      * eax = method->clazz
     */
 .LOP_INVOKE_SUPER_RANGE_resolve:
-    SPILL_TMP(%eax)                     # method->clazz
+    SPILL_TMP1(%eax)                    # method->clazz
     movl    %eax,OUT_ARG0(%esp)         # arg0<- method->clazz
     movzwl  2(rPC),%ecx                 # ecx<- BBBB
     movl    $METHOD_VIRTUAL,OUT_ARG2(%esp)  # arg2<- resolver method type
     movl    %ecx,OUT_ARG1(%esp)         # arg1<- ref
-    SPILL(rPC)
     call    dvmResolveMethod            # eax<- call(clazz, ref, flags)
-    UNSPILL(rPC)
     testl   %eax,%eax                   # got null?
     movl    %eax,%ecx                   # ecx<- resolved base method
-    UNSPILL_TMP(%eax)                   # restore method->clazz
+    UNSPILL_TMP1(%eax)                  # restore method->clazz
     jne     .LOP_INVOKE_SUPER_RANGE_continue        # good to go - continue
     jmp     common_exceptionThrown      # handle exception
 
@@ -8002,9 +7964,8 @@ dvmAsmSisterStart:
      * frequent one.  We'll have to do some reloading.
      */
 .LOP_INVOKE_DIRECT_RANGE_resolve:
-     SPILL_TMP(%ecx)
-     GET_GLUE(%ecx)
-     UNSPILL(rPC)
+     SPILL_TMP1(%ecx)
+     movl     rGLUE,%ecx
      movl     offGlue_method(%ecx),%ecx  # ecx<- glue->method
      movzwl   2(rPC),%eax      # reference (BBBB or CCCC)
      movl     offMethod_clazz(%ecx),%ecx # ecx<- method->clazz
@@ -8012,10 +7973,9 @@ dvmAsmSisterStart:
      movl     %eax,OUT_ARG1(%esp)
      movl     %ecx,OUT_ARG0(%esp)
      call     dvmResolveMethod # eax<- call(clazz, ref, flags)
-     UNSPILL_TMP(%ecx)
+     UNSPILL_TMP1(%ecx)
      testl    %eax,%eax
      jne      .LOP_INVOKE_DIRECT_RANGE_finish
-     UNSPILL(rPC)
      jmp      common_exceptionThrown
 
 /* continuation for OP_INVOKE_STATIC_RANGE */
@@ -8023,9 +7983,7 @@ dvmAsmSisterStart:
 .LOP_INVOKE_STATIC_RANGE_continue:
     movl      $METHOD_STATIC,%eax
     movl      %eax,OUT_ARG2(%esp)       # arg2<- flags
-    SPILL(rPC)
     call      dvmResolveMethod          # call(clazz,ref,flags)
-    UNSPILL(rPC)
     testl     %eax,%eax                 # got null?
     jne       common_invokeMethodRange
     jmp       common_exceptionThrown
@@ -8034,7 +7992,6 @@ dvmAsmSisterStart:
 
 .LOP_INVOKE_INTERFACE_RANGE_continue:
     call       dvmFindInterfaceMethodInCache # eax<- call(class, ref, method, dex)
-    UNSPILL(rPC)
     testl      %eax,%eax
     je         common_exceptionThrown
     jmp        common_invokeMethodRange
@@ -8053,8 +8010,8 @@ dvmAsmSisterStart:
     je       .LOP_FLOAT_TO_INT_special_case # fix up result
 
 .LOP_FLOAT_TO_INT_finish:
-    ADVANCE_PC(1)
-    GOTO_NEXT
+    ADVANCE_PC 1
+    GOTO_NEXT_R %edx
 
 .LOP_FLOAT_TO_INT_special_case:
     fnstsw   %ax
@@ -8086,8 +8043,8 @@ dvmAsmSisterStart:
     je       .LOP_FLOAT_TO_LONG_special_case # fix up result
 
 .LOP_FLOAT_TO_LONG_finish:
-    ADVANCE_PC(1)
-    GOTO_NEXT
+    ADVANCE_PC 1
+    GOTO_NEXT_R %edx
 
 .LOP_FLOAT_TO_LONG_special_case:
     fnstsw   %ax
@@ -8119,8 +8076,8 @@ dvmAsmSisterStart:
     je       .LOP_DOUBLE_TO_INT_special_case # fix up result
 
 .LOP_DOUBLE_TO_INT_finish:
-    ADVANCE_PC(1)
-    GOTO_NEXT
+    ADVANCE_PC 1
+    GOTO_NEXT_R %edx
 
 .LOP_DOUBLE_TO_INT_special_case:
     fnstsw   %ax
@@ -8152,8 +8109,8 @@ dvmAsmSisterStart:
     je       .LOP_DOUBLE_TO_LONG_special_case # fix up result
 
 .LOP_DOUBLE_TO_LONG_finish:
-    ADVANCE_PC(1)
-    GOTO_NEXT
+    ADVANCE_PC 1
+    GOTO_NEXT_R %edx
 
 .LOP_DOUBLE_TO_LONG_special_case:
     fnstsw   %ax
@@ -8176,62 +8133,53 @@ dvmAsmSisterStart:
     cltd
     idivl   %ecx
 .LOP_DIV_INT_finish_div:
-    movzbl   rINST_HI,%ecx         # ecl<- AA
-    SET_VREG(%eax,%ecx)
-    UNSPILL(rPC)
-    FETCH_INST_WORD(2)
-    ADVANCE_PC(2)
-    GOTO_NEXT
+    SET_VREG %eax rINST
+    FETCH_INST_OPCODE 2 %edx
+    ADVANCE_PC 2
+    GOTO_NEXT_R %edx
 
 /* continuation for OP_REM_INT */
 .LOP_REM_INT_continue_div:
     cltd
     idivl   %ecx
 .LOP_REM_INT_finish_div:
-    movzbl   rINST_HI,%ecx         # ecl<- AA
-    SET_VREG(%edx,%ecx)
-    UNSPILL(rPC)
-    FETCH_INST_WORD(2)
-    ADVANCE_PC(2)
-    GOTO_NEXT
+    SET_VREG %edx rINST
+    FETCH_INST_OPCODE 2 %edx
+    ADVANCE_PC 2
+    GOTO_NEXT_R %edx
 
 /* continuation for OP_MUL_LONG */
 
 .LOP_MUL_LONG_continue:
     leal      (%ecx,%edx),%edx    # full result now in %edx:%eax
-    movzbl    rINST_HI,%ecx       # ecx<- A
-    movl      %edx,4(rFP,%ecx,4)  # v[B+1]<- %edx
-    UNSPILL(rPC)                  # restore rPC/%edx
-    FETCH_INST_WORD(2)
-    UNSPILL(rIBASE)
-    movl      %eax,(rFP,%ecx,4)   # v[B]<- %eax
-    ADVANCE_PC(2)
-    GOTO_NEXT
+    FETCH_INST_OPCODE 2 %ecx
+    UNSPILL_TMP2(%esi)
+    movl      %edx,4(rFP,rINST,4)  # v[B+1]<- %edx
+    movl      %eax,(rFP,rINST,4)   # v[B]<- %eax
+    ADVANCE_PC 2
+    GOTO_NEXT_R %ecx
 
 /* continuation for OP_DIV_LONG */
 
 .LOP_DIV_LONG_continue:
     call     __divdi3
 .LOP_DIV_LONG_finish:
-    movzbl   rINST_HI,%ecx
-    SET_VREG_WORD(rPC,%ecx,1)
-    UNSPILL(rPC)
-    SET_VREG_WORD(%eax,%ecx,0)
-    FETCH_INST_WORD(2)
-    ADVANCE_PC(2)
-    GOTO_NEXT
+    SET_VREG_WORD %edx rINST 1
+    SET_VREG_WORD %eax rINST 0
+    FETCH_INST_OPCODE 2 %edx
+    ADVANCE_PC 2
+    GOTO_NEXT_R %edx
 
 .LOP_DIV_LONG_check_zero:
-    testl   rPC,rPC
+    testl   %edx,%edx
     jne     .LOP_DIV_LONG_notSpecial
-    UNSPILL(rPC)
     jmp     common_errDivideByZero
 .LOP_DIV_LONG_check_neg1:
-    testl   rPC,%eax
+    testl   %edx,%eax
     jne     .LOP_DIV_LONG_notSpecial
-    GET_VREG_WORD(rPC,%ecx,0)
-    GET_VREG_WORD(%ecx,%ecx,1)
-    testl    rPC,rPC
+    GET_VREG_WORD %edx %ecx 0
+    GET_VREG_WORD %ecx %ecx 1
+    testl    %edx,%edx
     jne      .LOP_DIV_LONG_notSpecial1
     cmpl     $0x80000000,%ecx
     jne      .LOP_DIV_LONG_notSpecial1
@@ -8245,25 +8193,22 @@ dvmAsmSisterStart:
 .LOP_REM_LONG_continue:
     call     __moddi3
 .LOP_REM_LONG_finish:
-    movzbl   rINST_HI,%ecx
-    SET_VREG_WORD(rPC,%ecx,1)
-    UNSPILL(rPC)
-    SET_VREG_WORD(%eax,%ecx,0)
-    FETCH_INST_WORD(2)
-    ADVANCE_PC(2)
-    GOTO_NEXT
+    SET_VREG_WORD %edx rINST 1
+    SET_VREG_WORD %eax rINST 0
+    FETCH_INST_OPCODE 2 %edx
+    ADVANCE_PC 2
+    GOTO_NEXT_R %edx
 
 .LOP_REM_LONG_check_zero:
-    testl   rPC,rPC
+    testl   %edx,%edx
     jne     .LOP_REM_LONG_notSpecial
-    UNSPILL(rPC)
     jmp     common_errDivideByZero
 .LOP_REM_LONG_check_neg1:
-    testl   rPC,%eax
+    testl   %edx,%eax
     jne     .LOP_REM_LONG_notSpecial
-    GET_VREG_WORD(rPC,%ecx,0)
-    GET_VREG_WORD(%ecx,%ecx,1)
-    testl    rPC,rPC
+    GET_VREG_WORD %edx %ecx 0
+    GET_VREG_WORD %ecx %ecx 1
+    testl    %edx,%edx
     jne      .LOP_REM_LONG_notSpecial1
     cmpl     $0x80000000,%ecx
     jne      .LOP_REM_LONG_notSpecial1
@@ -8275,89 +8220,82 @@ dvmAsmSisterStart:
 /* continuation for OP_SHL_LONG */
 
 .LOP_SHL_LONG_finish:
-    SET_VREG_WORD(%eax,%ecx,0)         # v[AA+0]<- %eax
-    ADVANCE_PC(2)
-    GOTO_NEXT
+    SET_VREG_WORD %eax rINST 0          # v[AA+0]<- %eax
+    ADVANCE_PC 2
+    GOTO_NEXT_R %edx
 
 /* continuation for OP_SHR_LONG */
 
 
 .LOP_SHR_LONG_finish:
-    SET_VREG_WORD(%eax,%ecx,0)         # v[AA+0]<- eax
-    ADVANCE_PC(2)
-    GOTO_NEXT
+    SET_VREG_WORD %eax rINST 0          # v[AA+0]<- eax
+    ADVANCE_PC 2
+    GOTO_NEXT_R %edx
 
 /* continuation for OP_USHR_LONG */
 
 
 .LOP_USHR_LONG_finish:
-    SET_VREG_WORD(%eax,%ecx,0)        # v[BB+0]<- eax
-    FETCH_INST_WORD(2)
-    ADVANCE_PC(2)
-    GOTO_NEXT
+    SET_VREG_WORD %eax rINST 0         # v[BB+0]<- eax
+    ADVANCE_PC 2
+    GOTO_NEXT_R %edx
 
 /* continuation for OP_DIV_INT_2ADDR */
 .LOP_DIV_INT_2ADDR_continue_div2addr:
     cltd
     idivl   %ecx
 .LOP_DIV_INT_2ADDR_finish_div2addr:
-    SET_VREG(%eax,rINST_FULL)
-    UNSPILL(rPC)
-    FETCH_INST_WORD(1)
-    ADVANCE_PC(1)
-    GOTO_NEXT
+    SET_VREG %eax rINST
+    FETCH_INST_OPCODE 1 %edx
+    ADVANCE_PC 1
+    GOTO_NEXT_R %edx
 
 /* continuation for OP_REM_INT_2ADDR */
 .LOP_REM_INT_2ADDR_continue_div2addr:
     cltd
     idivl   %ecx
 .LOP_REM_INT_2ADDR_finish_div2addr:
-    SET_VREG(%edx,rINST_FULL)
-    UNSPILL(rPC)
-    FETCH_INST_WORD(1)
-    ADVANCE_PC(1)
-    GOTO_NEXT
+    SET_VREG %edx rINST
+    FETCH_INST_OPCODE 1 %edx
+    ADVANCE_PC 1
+    GOTO_NEXT_R %edx
 
 /* continuation for OP_MUL_LONG_2ADDR */
 
 .LOP_MUL_LONG_2ADDR_continue:
-    leal      (%ecx,%edx),%edx    # full result now in %edx:%eax
-    movl      %edx,4(rIBASE)      # v[A+1]<- %edx
-    UNSPILL(rPC)                  # restore rPC/%edx
-    FETCH_INST_WORD(1)
-    movl      %eax,(rIBASE)       # v[A]<- %eax
+    leal      (%ecx,%edx),%edx         # full result now in %edx:%eax
+    movl      %edx,4(%esi)             # v[A+1]<- %edx
+    movl      %eax,(%esi)              # v[A]<- %eax
+    UNSPILL_TMP2(%esi)
+    FETCH_INST_OPCODE 1 %ecx
     UNSPILL(rFP)
-    UNSPILL(rIBASE)
-    ADVANCE_PC(1)
-    GOTO_NEXT
+    ADVANCE_PC 1
+    GOTO_NEXT_R %ecx
 
 /* continuation for OP_DIV_LONG_2ADDR */
 
 .LOP_DIV_LONG_2ADDR_continue:
     movl     %eax,OUT_ARG3(%esp)
-    movl     rPC,OUT_ARG0(%esp)
+    movl     %edx,OUT_ARG0(%esp)
     movl     %ecx,OUT_ARG1(%esp)
     call     __divdi3
 .LOP_DIV_LONG_2ADDR_finish:
-    movl     rINST_FULL,%ecx
-    SET_VREG_WORD(rPC,%ecx,1)
-    UNSPILL(rPC)
-    SET_VREG_WORD(%eax,%ecx,0)
-    FETCH_INST_WORD(1)
-    ADVANCE_PC(1)
-    GOTO_NEXT
+    SET_VREG_WORD %edx rINST 1
+    SET_VREG_WORD %eax rINST 0
+    FETCH_INST_OPCODE 1 %edx
+    ADVANCE_PC 1
+    GOTO_NEXT_R %edx
 
 .LOP_DIV_LONG_2ADDR_check_zero:
-    testl   rPC,rPC
+    testl   %edx,%edx
     jne     .LOP_DIV_LONG_2ADDR_notSpecial
-    UNSPILL(rPC)
     jmp     common_errDivideByZero
 .LOP_DIV_LONG_2ADDR_check_neg1:
-    testl   rPC,%eax
+    testl   %edx,%eax
     jne     .LOP_DIV_LONG_2ADDR_notSpecial
-    GET_VREG_WORD(rPC,rINST_FULL,0)
-    GET_VREG_WORD(%ecx,rINST_FULL,1)
-    testl    rPC,rPC
+    GET_VREG_WORD %edx rINST 0
+    GET_VREG_WORD %ecx rINST 1
+    testl    %edx,%edx
     jne      .LOP_DIV_LONG_2ADDR_notSpecial1
     cmpl     $0x80000000,%ecx
     jne      .LOP_DIV_LONG_2ADDR_notSpecial1
@@ -8370,29 +8308,26 @@ dvmAsmSisterStart:
 
 .LOP_REM_LONG_2ADDR_continue:
     movl     %eax,OUT_ARG3(%esp)
-    movl     rPC,OUT_ARG0(%esp)
+    movl     %edx,OUT_ARG0(%esp)
     movl     %ecx,OUT_ARG1(%esp)
     call     __moddi3
 .LOP_REM_LONG_2ADDR_finish:
-    movl     rINST_FULL,%ecx
-    SET_VREG_WORD(rPC,%ecx,1)
-    UNSPILL(rPC)
-    SET_VREG_WORD(%eax,%ecx,0)
-    FETCH_INST_WORD(1)
-    ADVANCE_PC(1)
-    GOTO_NEXT
+    SET_VREG_WORD %edx rINST 1
+    SET_VREG_WORD %eax rINST 0
+    FETCH_INST_OPCODE 1 %edx
+    ADVANCE_PC 1
+    GOTO_NEXT_R %edx
 
 .LOP_REM_LONG_2ADDR_check_zero:
-    testl   rPC,rPC
+    testl   %edx,%edx
     jne     .LOP_REM_LONG_2ADDR_notSpecial
-    UNSPILL(rPC)
     jmp     common_errDivideByZero
 .LOP_REM_LONG_2ADDR_check_neg1:
-    testl   rPC,%eax
+    testl   %edx,%eax
     jne     .LOP_REM_LONG_2ADDR_notSpecial
-    GET_VREG_WORD(rPC,rINST_FULL,0)
-    GET_VREG_WORD(%ecx,rINST_FULL,1)
-    testl    rPC,rPC
+    GET_VREG_WORD %edx rINST 0
+    GET_VREG_WORD %ecx rINST 1
+    testl    %edx,%edx
     jne      .LOP_REM_LONG_2ADDR_notSpecial1
     cmpl     $0x80000000,%ecx
     jne      .LOP_REM_LONG_2ADDR_notSpecial1
@@ -8405,88 +8340,81 @@ dvmAsmSisterStart:
 
 
 .LOP_SHL_LONG_2ADDR_finish:
-    SET_VREG_WORD(%eax,rINST_FULL,0)  # v[AA+0]<- eax
-    FETCH_INST_WORD(1)
-    ADVANCE_PC(1)
-    GOTO_NEXT
+    FETCH_INST_OPCODE 1 %edx
+    SET_VREG_WORD %eax rINST 0         # v[AA+0]<- eax
+    ADVANCE_PC 1
+    GOTO_NEXT_R %edx
 
 /* continuation for OP_SHR_LONG_2ADDR */
 
 
 .LOP_SHR_LONG_2ADDR_finish:
-    SET_VREG_WORD(%eax,rINST_FULL,0)  # v[AA+0]<- eax
-    FETCH_INST_WORD(1)
-    ADVANCE_PC(1)
-    GOTO_NEXT
+    FETCH_INST_OPCODE 1 %edx
+    SET_VREG_WORD %eax rINST 0    # v[AA+0]<- eax
+    ADVANCE_PC 1
+    GOTO_NEXT_R %edx
 
 /* continuation for OP_USHR_LONG_2ADDR */
 
 
 .LOP_USHR_LONG_2ADDR_finish:
-    SET_VREG_WORD(%eax,rINST_FULL,0)   # v[AA+0]<- eax
-    FETCH_INST_WORD(1)
-    ADVANCE_PC(1)
-    GOTO_NEXT
+    FETCH_INST_OPCODE 1 %edx
+    SET_VREG_WORD %eax rINST 0         # v[AA+0]<- eax
+    ADVANCE_PC 1
+    GOTO_NEXT_R %edx
 
 /* continuation for OP_DIV_INT_LIT16 */
 .LOP_DIV_INT_LIT16_continue_div:
     cltd
     idivl   %ecx
 .LOP_DIV_INT_LIT16_finish_div:
-    SET_VREG(%eax,rINST_FULL)
-    UNSPILL(rPC)
-    FETCH_INST_WORD(2)
-    ADVANCE_PC(2)
-    GOTO_NEXT
+    SET_VREG %eax rINST
+    FETCH_INST_OPCODE 2 %edx
+    ADVANCE_PC 2
+    GOTO_NEXT_R %edx
 
 /* continuation for OP_REM_INT_LIT16 */
 .LOP_REM_INT_LIT16_continue_div:
     cltd
     idivl   %ecx
 .LOP_REM_INT_LIT16_finish_div:
-    SET_VREG(%edx,rINST_FULL)
-    UNSPILL(rPC)
-    FETCH_INST_WORD(2)
-    ADVANCE_PC(2)
-    GOTO_NEXT
+    SET_VREG %edx rINST
+    FETCH_INST_OPCODE 2 %edx
+    ADVANCE_PC 2
+    GOTO_NEXT_R %edx
 
 /* continuation for OP_DIV_INT_LIT8 */
 .LOP_DIV_INT_LIT8_continue_div:
     cltd
     idivl   %ecx
 .LOP_DIV_INT_LIT8_finish_div:
-    SET_VREG(%eax,rINST_FULL)
-    UNSPILL(rPC)
-    FETCH_INST_WORD(2)
-    ADVANCE_PC(2)
-    GOTO_NEXT
+    SET_VREG %eax rINST
+    FETCH_INST_OPCODE 2 %edx
+    ADVANCE_PC 2
+    GOTO_NEXT_R %edx
 
 /* continuation for OP_REM_INT_LIT8 */
 .LOP_REM_INT_LIT8_continue_div:
     cltd
     idivl   %ecx
 .LOP_REM_INT_LIT8_finish_div:
-    SET_VREG(%edx,rINST_FULL)
-    UNSPILL(rPC)
-    FETCH_INST_WORD(2)
-    ADVANCE_PC(2)
-    GOTO_NEXT
+    SET_VREG %edx rINST
+    FETCH_INST_OPCODE 2 %edx
+    ADVANCE_PC 2
+    GOTO_NEXT_R %edx
 
 /* continuation for OP_IGET_VOLATILE */
 
 
 .LOP_IGET_VOLATILE_resolve:
-    EXPORT_PC()
-    SPILL(rPC)
-    movl    offGlue_method(rIBASE),rPC            # rPC<- current method
-    UNSPILL(rIBASE)
-    movl    offMethod_clazz(rPC),rPC              # rPC<- method->clazz
-    SPILL_TMP(%ecx)                               # save object pointer across call
-    movl    rPC,OUT_ARG0(%esp)                    # pass in method->clazz
-    call    dvmResolveInstField                   #  ... to dvmResolveInstField
-    UNSPILL_TMP(%ecx)
-    UNSPILL(rPC)
-    testl   %eax,%eax                             #  ... which returns InstrField ptr
+    EXPORT_PC
+    movl    offGlue_method(%edx),%edx           # edx<- current method
+    movl    offMethod_clazz(%edx),%edx          # edx<- method->clazz
+    SPILL_TMP1(%ecx)                            # save obj pointer across call
+    movl    %edx,OUT_ARG0(%esp)                  # pass in method->clazz
+    call    dvmResolveInstField                 #  ... to dvmResolveInstField
+    UNSPILL_TMP1(%ecx)
+    testl   %eax,%eax                           #  returns InstrField ptr
     jne     .LOP_IGET_VOLATILE_finish
     jmp     common_exceptionThrown
 
@@ -8495,35 +8423,30 @@ dvmAsmSisterStart:
      * Currently:
      *   eax holds resolved field
      *   ecx holds object
-     *   rIBASE is scratch, but needs to be unspilled
-     *   rINST_FULL holds A
+     *   rINST holds A
      */
-    movl    offInstField_byteOffset(%eax),%eax   # eax<- byte offset of field
-    UNSPILL(rIBASE)
-    testl   %ecx,%ecx                            # object null?
-    je      common_errNullObject                 # object was null
-    movl   (%ecx,%eax,1),%ecx                   # ecx<- obj.field (8/16/32 bits)
-    movl    rINST_FULL,%eax                      # eax<- A
-    FETCH_INST_WORD(2)
-    SET_VREG(%ecx,%eax)
-    ADVANCE_PC(2)
-    GOTO_NEXT
+    movl    offInstField_byteOffset(%eax),%eax  # eax<- byte offset of field
+    testl   %ecx,%ecx                           # object null?
+    je      common_errNullObject                # object was null
+    movl   (%ecx,%eax,1),%ecx                  # ecx<- obj.field (8/16/32 bits)
+    movl    rINST,%eax                          # eax<- A
+    FETCH_INST_OPCODE 2 %edx
+    SET_VREG %ecx %eax
+    ADVANCE_PC 2
+    GOTO_NEXT_R %edx
 
 /* continuation for OP_IPUT_VOLATILE */
 
 
 .LOP_IPUT_VOLATILE_resolve:
-    EXPORT_PC()
-    SPILL(rPC)
-    movl    offGlue_method(rIBASE),rPC            # rPC<- current method
-    UNSPILL(rIBASE)
-    movl    offMethod_clazz(rPC),rPC              # rPC<- method->clazz
-    SPILL_TMP(%ecx)                               # save object pointer across call
-    movl    rPC,OUT_ARG0(%esp)                    # pass in method->clazz
-    call    dvmResolveInstField                   #  ... to dvmResolveInstField
-    UNSPILL_TMP(%ecx)
-    UNSPILL(rPC)
-    testl   %eax,%eax                             #  ... which returns InstrField ptr
+    EXPORT_PC
+    movl    offGlue_method(%edx),%edx           # edx<- current method
+    movl    offMethod_clazz(%edx),%edx          # edx<- method->clazz
+    SPILL_TMP1(%ecx)                            # save obj pointer across call
+    movl    %edx,OUT_ARG0(%esp)                 # pass in method->clazz
+    call    dvmResolveInstField                 #  ... to dvmResolveInstField
+    UNSPILL_TMP1(%ecx)
+    testl   %eax,%eax                           # returns InstrField ptr
     jne     .LOP_IPUT_VOLATILE_finish
     jmp     common_exceptionThrown
 
@@ -8532,18 +8455,16 @@ dvmAsmSisterStart:
      * Currently:
      *   eax holds resolved field
      *   ecx holds object
-     *   rIBASE is scratch, but needs to be unspilled
-     *   rINST_FULL holds A
+     *   rINST holds A
      */
-    GET_VREG(rINST_FULL,rINST_FULL)              # rINST_FULL<- v[A]
+    GET_VREG_R rINST rINST                       # rINST<- v[A]
     movl    offInstField_byteOffset(%eax),%eax   # eax<- byte offset of field
-    UNSPILL(rIBASE)
     testl   %ecx,%ecx                            # object null?
     je      common_errNullObject                 # object was null
-    movl   rINST_FULL,(%ecx,%eax,1)            # obj.field <- v[A](8/16/32 bits)
-    FETCH_INST_WORD(2)
-    ADVANCE_PC(2)
-    GOTO_NEXT
+    FETCH_INST_OPCODE 2 %edx
+    movl   rINST,(%ecx,%eax,1)            # obj.field <- v[A](8/16/32 bits)
+    ADVANCE_PC 2
+    GOTO_NEXT_R %edx
 
 /* continuation for OP_SGET_VOLATILE */
 
@@ -8551,16 +8472,14 @@ dvmAsmSisterStart:
      * Go resolve the field
      */
 .LOP_SGET_VOLATILE_resolve:
-    GET_GLUE(%ecx)
+    movl     rGLUE,%ecx
     movzwl   2(rPC),%eax                        # eax<- field ref BBBB
     movl     offGlue_method(%ecx),%ecx          # ecx<- current method
-    EXPORT_PC()                                 # could throw, need to export
+    EXPORT_PC                                   # could throw, need to export
     movl     offMethod_clazz(%ecx),%ecx         # ecx<- method->clazz
-    SPILL(rPC)
     movl     %eax,OUT_ARG1(%esp)
     movl     %ecx,OUT_ARG0(%esp)
     call     dvmResolveStaticField              # eax<- resolved StaticField ptr
-    UNSPILL(rPC)
     testl    %eax,%eax
     jne      .LOP_SGET_VOLATILE_finish                 # success, continue
     jmp      common_exceptionThrown             # no, handle exception
@@ -8571,16 +8490,14 @@ dvmAsmSisterStart:
      * Go resolve the field
      */
 .LOP_SPUT_VOLATILE_resolve:
-    GET_GLUE(%ecx)
+    movl     rGLUE,%ecx
     movzwl   2(rPC),%eax                        # eax<- field ref BBBB
     movl     offGlue_method(%ecx),%ecx          # ecx<- current method
-    EXPORT_PC()                                 # could throw, need to export
+    EXPORT_PC                                   # could throw, need to export
     movl     offMethod_clazz(%ecx),%ecx         # ecx<- method->clazz
-    SPILL(rPC)
     movl     %eax,OUT_ARG1(%esp)
     movl     %ecx,OUT_ARG0(%esp)
     call     dvmResolveStaticField              # eax<- resolved StaticField ptr
-    UNSPILL(rPC)
     testl    %eax,%eax
     jne      .LOP_SPUT_VOLATILE_finish                 # success, continue
     jmp      common_exceptionThrown             # no, handle exception
@@ -8589,17 +8506,14 @@ dvmAsmSisterStart:
 
 
 .LOP_IGET_OBJECT_VOLATILE_resolve:
-    EXPORT_PC()
-    SPILL(rPC)
-    movl    offGlue_method(rIBASE),rPC            # rPC<- current method
-    UNSPILL(rIBASE)
-    movl    offMethod_clazz(rPC),rPC              # rPC<- method->clazz
-    SPILL_TMP(%ecx)                               # save object pointer across call
-    movl    rPC,OUT_ARG0(%esp)                    # pass in method->clazz
-    call    dvmResolveInstField                   #  ... to dvmResolveInstField
-    UNSPILL_TMP(%ecx)
-    UNSPILL(rPC)
-    testl   %eax,%eax                             #  ... which returns InstrField ptr
+    EXPORT_PC
+    movl    offGlue_method(%edx),%edx           # edx<- current method
+    movl    offMethod_clazz(%edx),%edx          # edx<- method->clazz
+    SPILL_TMP1(%ecx)                            # save obj pointer across call
+    movl    %edx,OUT_ARG0(%esp)                  # pass in method->clazz
+    call    dvmResolveInstField                 #  ... to dvmResolveInstField
+    UNSPILL_TMP1(%ecx)
+    testl   %eax,%eax                           #  returns InstrField ptr
     jne     .LOP_IGET_OBJECT_VOLATILE_finish
     jmp     common_exceptionThrown
 
@@ -8608,19 +8522,17 @@ dvmAsmSisterStart:
      * Currently:
      *   eax holds resolved field
      *   ecx holds object
-     *   rIBASE is scratch, but needs to be unspilled
-     *   rINST_FULL holds A
+     *   rINST holds A
      */
-    movl    offInstField_byteOffset(%eax),%eax   # eax<- byte offset of field
-    UNSPILL(rIBASE)
-    testl   %ecx,%ecx                            # object null?
-    je      common_errNullObject                 # object was null
-    movl   (%ecx,%eax,1),%ecx                   # ecx<- obj.field (8/16/32 bits)
-    movl    rINST_FULL,%eax                      # eax<- A
-    FETCH_INST_WORD(2)
-    SET_VREG(%ecx,%eax)
-    ADVANCE_PC(2)
-    GOTO_NEXT
+    movl    offInstField_byteOffset(%eax),%eax  # eax<- byte offset of field
+    testl   %ecx,%ecx                           # object null?
+    je      common_errNullObject                # object was null
+    movl   (%ecx,%eax,1),%ecx                  # ecx<- obj.field (8/16/32 bits)
+    movl    rINST,%eax                          # eax<- A
+    FETCH_INST_OPCODE 2 %edx
+    SET_VREG %ecx %eax
+    ADVANCE_PC 2
+    GOTO_NEXT_R %edx
 
 /* continuation for OP_EXECUTE_INLINE */
 
@@ -8634,30 +8546,30 @@ dvmAsmSisterStart:
      *
      *  Go ahead and load all 4 args, even if not used.
      */
-    movzwl    4(rPC),rPC
+    movzwl    4(rPC),%edx
 
     movl      $0xf,%ecx
-    andl      rPC,%ecx
-    GET_VREG(%ecx,%ecx)
-    sarl      $4,rPC
+    andl      %edx,%ecx
+    GET_VREG_R  %ecx %ecx
+    sarl      $4,%edx
     movl      %ecx,4+OUT_ARG0(%esp)
 
     movl      $0xf,%ecx
-    andl      rPC,%ecx
-    GET_VREG(%ecx,%ecx)
-    sarl      $4,rPC
+    andl      %edx,%ecx
+    GET_VREG_R  %ecx %ecx
+    sarl      $4,%edx
     movl      %ecx,4+OUT_ARG1(%esp)
 
     movl      $0xf,%ecx
-    andl      rPC,%ecx
-    GET_VREG(%ecx,%ecx)
-    sarl      $4,rPC
+    andl      %edx,%ecx
+    GET_VREG_R  %ecx %ecx
+    sarl      $4,%edx
     movl      %ecx,4+OUT_ARG2(%esp)
 
     movl      $0xf,%ecx
-    andl      rPC,%ecx
-    GET_VREG(%ecx,%ecx)
-    sarl      $4,rPC
+    andl      %edx,%ecx
+    GET_VREG_R  %ecx %ecx
+    sarl      $4,%edx
     movl      %ecx,4+OUT_ARG3(%esp)
 
     sall      $4,%eax      # index *= sizeof(table entry)
@@ -8667,31 +8579,28 @@ dvmAsmSisterStart:
 /* continuation for OP_IPUT_OBJECT_QUICK */
 
 .LOP_IPUT_OBJECT_QUICK_finish:
-    testl     rINST_FULL,rINST_FULL         # did we store null?
-    FETCH_INST_WORD(2)
+    testl     rINST,rINST               # did we store null?
+    FETCH_INST_OPCODE 2 %edx
     movl      offGlue_cardTable(%eax),%eax  # get card table base
     je        1f                            # skip card mark if null store
     shrl      $GC_CARD_SHIFT,%ecx          # object head to card number
     movb      %al,(%eax,%ecx)               # mark card
 1:
-    ADVANCE_PC(2)
-    GOTO_NEXT
+    ADVANCE_PC 2
+    GOTO_NEXT_R %edx
 
 /* continuation for OP_IPUT_OBJECT_VOLATILE */
 
 
 .LOP_IPUT_OBJECT_VOLATILE_resolve:
-    EXPORT_PC()
-    SPILL(rPC)
-    movl    offGlue_method(rIBASE),rPC            # rPC<- current method
-    UNSPILL(rIBASE)
-    movl    offMethod_clazz(rPC),rPC              # rPC<- method->clazz
-    SPILL_TMP(%ecx)                               # save object pointer across call
-    movl    rPC,OUT_ARG0(%esp)                    # pass in method->clazz
-    call    dvmResolveInstField                   #  ... to dvmResolveInstField
-    UNSPILL_TMP(%ecx)
-    UNSPILL(rPC)
-    testl   %eax,%eax                             #  ... which returns InstrField ptr
+    EXPORT_PC
+    movl    offGlue_method(%edx),%edx           # edx<- current method
+    movl    offMethod_clazz(%edx),%edx          # edx<- method->clazz
+    SPILL_TMP1(%ecx)                            # save obj pointer across call
+    movl    %edx,OUT_ARG0(%esp)                 # pass in method->clazz
+    call    dvmResolveInstField                 #  ... to dvmResolveInstField
+    UNSPILL_TMP1(%ecx)
+    testl   %eax,%eax                           # returns InstrField ptr
     jne     .LOP_IPUT_OBJECT_VOLATILE_finish
     jmp     common_exceptionThrown
 
@@ -8700,25 +8609,24 @@ dvmAsmSisterStart:
      * Currently:
      *   eax holds resolved field
      *   ecx holds object
-     *   rIBASE is scratch, but needs to be unspilled
-     *   rINST_FULL holds A
+     *   %edx is scratch, but needs to be unspilled
+     *   rINST holds A
      */
-    GET_VREG(rINST_FULL,rINST_FULL)              # rINST_FULL<- v[A]
-    movl    offInstField_byteOffset(%eax),%eax   # eax<- byte offset of field
-    UNSPILL(rIBASE)
-    testl   %ecx,%ecx                            # object null?
-    je      common_errNullObject                 # object was null
-    movl    rINST_FULL,(%ecx,%eax)          # obj.field <- v[A](8/16/32 bits)
-    GET_GLUE(%eax)
-    testl   rINST_FULL,rINST_FULL                # stored a NULL?
-    movl    offGlue_cardTable(%eax),%eax         # get card table base
-    FETCH_INST_WORD(2)
-    je      1f                                   # skip card mark if null store
-    shrl    $GC_CARD_SHIFT,%ecx                 # object head to card number
-    movb    %al,(%eax,%ecx)                      # mark card
+    GET_VREG_R rINST rINST                      # rINST<- v[A]
+    movl    offInstField_byteOffset(%eax),%eax  # eax<- byte offset of field
+    testl   %ecx,%ecx                           # object null?
+    je      common_errNullObject                # object was null
+    movl    rINST,(%ecx,%eax)      # obj.field <- v[A](8/16/32 bits)
+    movl    rGLUE,%eax
+    testl   rINST,rINST                         # stored a NULL?
+    movl    offGlue_cardTable(%eax),%eax        # get card table base
+    FETCH_INST_OPCODE 2 %edx
+    je      1f                                  # skip card mark if null store
+    shrl    $GC_CARD_SHIFT,%ecx                # object head to card number
+    movb    %al,(%eax,%ecx)                     # mark card
 1:
-    ADVANCE_PC(2)
-    GOTO_NEXT
+    ADVANCE_PC 2
+    GOTO_NEXT_R %edx
 
 /* continuation for OP_SGET_OBJECT_VOLATILE */
 
@@ -8726,16 +8634,14 @@ dvmAsmSisterStart:
      * Go resolve the field
      */
 .LOP_SGET_OBJECT_VOLATILE_resolve:
-    GET_GLUE(%ecx)
+    movl     rGLUE,%ecx
     movzwl   2(rPC),%eax                        # eax<- field ref BBBB
     movl     offGlue_method(%ecx),%ecx          # ecx<- current method
-    EXPORT_PC()                                 # could throw, need to export
+    EXPORT_PC                                   # could throw, need to export
     movl     offMethod_clazz(%ecx),%ecx         # ecx<- method->clazz
-    SPILL(rPC)
     movl     %eax,OUT_ARG1(%esp)
     movl     %ecx,OUT_ARG0(%esp)
     call     dvmResolveStaticField              # eax<- resolved StaticField ptr
-    UNSPILL(rPC)
     testl    %eax,%eax
     jne      .LOP_SGET_OBJECT_VOLATILE_finish                 # success, continue
     jmp      common_exceptionThrown             # no, handle exception
@@ -8746,27 +8652,25 @@ dvmAsmSisterStart:
 .LOP_SPUT_OBJECT_VOLATILE_continue:
     movl      %ecx,offStaticField_value(%eax)
     testl     %ecx,%ecx
-    GET_GLUE(%ecx)
-    FETCH_INST_WORD(2)
+    movl      rGLUE,%ecx
+    FETCH_INST_OPCODE 2 %edx
     je        1f
     movl      offGlue_cardTable(%ecx),%ecx       # get card table base
     shrl      $GC_CARD_SHIFT,%eax               # head to card number
     movb      %cl,(%ecx,%eax)                    # mark card
 1:
-    ADVANCE_PC(2)
-    GOTO_NEXT
+    ADVANCE_PC 2
+    GOTO_NEXT_R %edx
 
 .LOP_SPUT_OBJECT_VOLATILE_resolve:
-    GET_GLUE(%ecx)
+    movl     rGLUE,%ecx
     movzwl   2(rPC),%eax                        # eax<- field ref BBBB
     movl     offGlue_method(%ecx),%ecx          # ecx<- current method
-    EXPORT_PC()                                 # could throw, need to export
+    EXPORT_PC                                   # could throw, need to export
     movl     offMethod_clazz(%ecx),%ecx         # ecx<- method->clazz
-    SPILL(rPC)
     movl     %eax,OUT_ARG1(%esp)
     movl     %ecx,OUT_ARG0(%esp)
     call     dvmResolveStaticField              # eax<- resolved StaticField ptr
-    UNSPILL(rPC)
     testl    %eax,%eax
     jne      .LOP_SPUT_OBJECT_VOLATILE_finish                 # success, continue
     jmp      common_exceptionThrown             # no, handle exception
@@ -8803,26 +8707,26 @@ dvmAsmSisterEnd:
  *
  */
 dvmMterpStdRun:
-    push    %ebp
-    movl    %esp,%ebp
-    push    %edi
-    push    %esi
-    push    %ebx
+    movl    4(%esp), %ecx        # get incoming rGLUE
+    push    %ebp                 # save caller base pointer
+    push    %ecx                 # save rGLUE at (%ebp)
+    movl    %esp, %ebp           # set our %ebp
+/*
+ * At this point we've allocated two slots on the stack
+ * via push and stack is 8-byte aligned.  Allocate space
+ * for 8 spill slots, 3 local slots, 5 arg slots + 2 slots for
+ * padding to bring us to 16-byte alignment
+ */
+    subl    $(FRAME_SIZE-8), %esp
 
-/* at this point, stack is misaligned by 1 word
-   We're allocating spill space for 6 words, plus
-   outgoing argument (5 words) and local variables
-   (4 words) - 15 words or 60 bytes total. See
-   diagram in header.S
-*/
-    subl   $60,%esp
+/* Spill callee save regs */
+    movl    %edi,EDI_SPILL(%ebp)
+    movl    %esi,ESI_SPILL(%ebp)
+    movl    %ebx,EBX_SPILL(%ebp)
 
 /* Set up "named" registers */
-    movl    IN_ARG0(%ebp),%ecx
-    movl    %ecx,rGLUE_SPILL(%ebp)
-    LOAD_PC_FROM_GLUE(%ecx)
-    LOAD_FP_FROM_GLUE(%ecx)
-    movl    $dvmAsmInstructionStart,rIBASE
+    movl    offGlue_pc(%ecx),rPC
+    movl    offGlue_fp(%ecx),rFP
 
 /* Remember %esp for future "longjmp" */
     movl    %esp,offGlue_bailPtr(%ecx)
@@ -8835,7 +8739,7 @@ dvmMterpStdRun:
     jne     .Lnot_instr
 
    /* Normal case: start executing the instruction at rPC */
-    FETCH_INST()
+    FETCH_INST
     GOTO_NEXT
 
 .Lnot_instr:
@@ -8872,12 +8776,13 @@ dvmMterpStdRun:
 dvmMterpStdBail:
     movl    4(%esp),%ecx                 # grab glue
     movl    8(%esp),%eax                 # changeInterp to return reg
-    movl    offGlue_bailPtr(%ecx),%esp   # Stack back to normal
-    addl    $60,%esp                    # Strip dvmMterpStdRun's frame
-    pop     %ebx
-    pop     %esi
-    pop     %edi
-    pop     %ebp
+    movl    offGlue_bailPtr(%ecx),%esp   # Restore "setjmp" esp
+    movl    (FRAME_SIZE-8)(%esp), %ebp   # Restore %ebp at point of setjmp
+    movl    EDI_SPILL(%ebp),%edi
+    movl    ESI_SPILL(%ebp),%esi
+    movl    EBX_SPILL(%ebp),%ebx
+    movl    PREV_FP(%ebp),%ebp           # restore caller's ebp
+    addl    $FRAME_SIZE,%esp                    # strip frame
     ret                                  # return to dvmMterpStdRun's caller
 
 
@@ -8887,6 +8792,273 @@ dvmMterpStdBail:
     .section    .rodata
 .LstrBadEntryPoint:
     .asciz  "Bad entry point %d\n"
+
+
+/*
+ * FIXME: Should have the config/rebuild mechanism generate this
+ * for targets that need it.
+ */
+
+/* Jump table */
+dvmAsmInstructionJmpTable = .LdvmAsmInstructionJmpTable
+.LdvmAsmInstructionJmpTable:
+.long .L_OP_NOP
+.long .L_OP_MOVE
+.long .L_OP_MOVE_FROM16
+.long .L_OP_MOVE_16
+.long .L_OP_MOVE_WIDE
+.long .L_OP_MOVE_WIDE_FROM16
+.long .L_OP_MOVE_WIDE_16
+.long .L_OP_MOVE_OBJECT
+.long .L_OP_MOVE_OBJECT_FROM16
+.long .L_OP_MOVE_OBJECT_16
+.long .L_OP_MOVE_RESULT
+.long .L_OP_MOVE_RESULT_WIDE
+.long .L_OP_MOVE_RESULT_OBJECT
+.long .L_OP_MOVE_EXCEPTION
+.long .L_OP_RETURN_VOID
+.long .L_OP_RETURN
+.long .L_OP_RETURN_WIDE
+.long .L_OP_RETURN_OBJECT
+.long .L_OP_CONST_4
+.long .L_OP_CONST_16
+.long .L_OP_CONST
+.long .L_OP_CONST_HIGH16
+.long .L_OP_CONST_WIDE_16
+.long .L_OP_CONST_WIDE_32
+.long .L_OP_CONST_WIDE
+.long .L_OP_CONST_WIDE_HIGH16
+.long .L_OP_CONST_STRING
+.long .L_OP_CONST_STRING_JUMBO
+.long .L_OP_CONST_CLASS
+.long .L_OP_MONITOR_ENTER
+.long .L_OP_MONITOR_EXIT
+.long .L_OP_CHECK_CAST
+.long .L_OP_INSTANCE_OF
+.long .L_OP_ARRAY_LENGTH
+.long .L_OP_NEW_INSTANCE
+.long .L_OP_NEW_ARRAY
+.long .L_OP_FILLED_NEW_ARRAY
+.long .L_OP_FILLED_NEW_ARRAY_RANGE
+.long .L_OP_FILL_ARRAY_DATA
+.long .L_OP_THROW
+.long .L_OP_GOTO
+.long .L_OP_GOTO_16
+.long .L_OP_GOTO_32
+.long .L_OP_PACKED_SWITCH
+.long .L_OP_SPARSE_SWITCH
+.long .L_OP_CMPL_FLOAT
+.long .L_OP_CMPG_FLOAT
+.long .L_OP_CMPL_DOUBLE
+.long .L_OP_CMPG_DOUBLE
+.long .L_OP_CMP_LONG
+.long .L_OP_IF_EQ
+.long .L_OP_IF_NE
+.long .L_OP_IF_LT
+.long .L_OP_IF_GE
+.long .L_OP_IF_GT
+.long .L_OP_IF_LE
+.long .L_OP_IF_EQZ
+.long .L_OP_IF_NEZ
+.long .L_OP_IF_LTZ
+.long .L_OP_IF_GEZ
+.long .L_OP_IF_GTZ
+.long .L_OP_IF_LEZ
+.long .L_OP_UNUSED_3E
+.long .L_OP_UNUSED_3F
+.long .L_OP_UNUSED_40
+.long .L_OP_UNUSED_41
+.long .L_OP_UNUSED_42
+.long .L_OP_UNUSED_43
+.long .L_OP_AGET
+.long .L_OP_AGET_WIDE
+.long .L_OP_AGET_OBJECT
+.long .L_OP_AGET_BOOLEAN
+.long .L_OP_AGET_BYTE
+.long .L_OP_AGET_CHAR
+.long .L_OP_AGET_SHORT
+.long .L_OP_APUT
+.long .L_OP_APUT_WIDE
+.long .L_OP_APUT_OBJECT
+.long .L_OP_APUT_BOOLEAN
+.long .L_OP_APUT_BYTE
+.long .L_OP_APUT_CHAR
+.long .L_OP_APUT_SHORT
+.long .L_OP_IGET
+.long .L_OP_IGET_WIDE
+.long .L_OP_IGET_OBJECT
+.long .L_OP_IGET_BOOLEAN
+.long .L_OP_IGET_BYTE
+.long .L_OP_IGET_CHAR
+.long .L_OP_IGET_SHORT
+.long .L_OP_IPUT
+.long .L_OP_IPUT_WIDE
+.long .L_OP_IPUT_OBJECT
+.long .L_OP_IPUT_BOOLEAN
+.long .L_OP_IPUT_BYTE
+.long .L_OP_IPUT_CHAR
+.long .L_OP_IPUT_SHORT
+.long .L_OP_SGET
+.long .L_OP_SGET_WIDE
+.long .L_OP_SGET_OBJECT
+.long .L_OP_SGET_BOOLEAN
+.long .L_OP_SGET_BYTE
+.long .L_OP_SGET_CHAR
+.long .L_OP_SGET_SHORT
+.long .L_OP_SPUT
+.long .L_OP_SPUT_WIDE
+.long .L_OP_SPUT_OBJECT
+.long .L_OP_SPUT_BOOLEAN
+.long .L_OP_SPUT_BYTE
+.long .L_OP_SPUT_CHAR
+.long .L_OP_SPUT_SHORT
+.long .L_OP_INVOKE_VIRTUAL
+.long .L_OP_INVOKE_SUPER
+.long .L_OP_INVOKE_DIRECT
+.long .L_OP_INVOKE_STATIC
+.long .L_OP_INVOKE_INTERFACE
+.long .L_OP_UNUSED_73
+.long .L_OP_INVOKE_VIRTUAL_RANGE
+.long .L_OP_INVOKE_SUPER_RANGE
+.long .L_OP_INVOKE_DIRECT_RANGE
+.long .L_OP_INVOKE_STATIC_RANGE
+.long .L_OP_INVOKE_INTERFACE_RANGE
+.long .L_OP_UNUSED_79
+.long .L_OP_UNUSED_7A
+.long .L_OP_NEG_INT
+.long .L_OP_NOT_INT
+.long .L_OP_NEG_LONG
+.long .L_OP_NOT_LONG
+.long .L_OP_NEG_FLOAT
+.long .L_OP_NEG_DOUBLE
+.long .L_OP_INT_TO_LONG
+.long .L_OP_INT_TO_FLOAT
+.long .L_OP_INT_TO_DOUBLE
+.long .L_OP_LONG_TO_INT
+.long .L_OP_LONG_TO_FLOAT
+.long .L_OP_LONG_TO_DOUBLE
+.long .L_OP_FLOAT_TO_INT
+.long .L_OP_FLOAT_TO_LONG
+.long .L_OP_FLOAT_TO_DOUBLE
+.long .L_OP_DOUBLE_TO_INT
+.long .L_OP_DOUBLE_TO_LONG
+.long .L_OP_DOUBLE_TO_FLOAT
+.long .L_OP_INT_TO_BYTE
+.long .L_OP_INT_TO_CHAR
+.long .L_OP_INT_TO_SHORT
+.long .L_OP_ADD_INT
+.long .L_OP_SUB_INT
+.long .L_OP_MUL_INT
+.long .L_OP_DIV_INT
+.long .L_OP_REM_INT
+.long .L_OP_AND_INT
+.long .L_OP_OR_INT
+.long .L_OP_XOR_INT
+.long .L_OP_SHL_INT
+.long .L_OP_SHR_INT
+.long .L_OP_USHR_INT
+.long .L_OP_ADD_LONG
+.long .L_OP_SUB_LONG
+.long .L_OP_MUL_LONG
+.long .L_OP_DIV_LONG
+.long .L_OP_REM_LONG
+.long .L_OP_AND_LONG
+.long .L_OP_OR_LONG
+.long .L_OP_XOR_LONG
+.long .L_OP_SHL_LONG
+.long .L_OP_SHR_LONG
+.long .L_OP_USHR_LONG
+.long .L_OP_ADD_FLOAT
+.long .L_OP_SUB_FLOAT
+.long .L_OP_MUL_FLOAT
+.long .L_OP_DIV_FLOAT
+.long .L_OP_REM_FLOAT
+.long .L_OP_ADD_DOUBLE
+.long .L_OP_SUB_DOUBLE
+.long .L_OP_MUL_DOUBLE
+.long .L_OP_DIV_DOUBLE
+.long .L_OP_REM_DOUBLE
+.long .L_OP_ADD_INT_2ADDR
+.long .L_OP_SUB_INT_2ADDR
+.long .L_OP_MUL_INT_2ADDR
+.long .L_OP_DIV_INT_2ADDR
+.long .L_OP_REM_INT_2ADDR
+.long .L_OP_AND_INT_2ADDR
+.long .L_OP_OR_INT_2ADDR
+.long .L_OP_XOR_INT_2ADDR
+.long .L_OP_SHL_INT_2ADDR
+.long .L_OP_SHR_INT_2ADDR
+.long .L_OP_USHR_INT_2ADDR
+.long .L_OP_ADD_LONG_2ADDR
+.long .L_OP_SUB_LONG_2ADDR
+.long .L_OP_MUL_LONG_2ADDR
+.long .L_OP_DIV_LONG_2ADDR
+.long .L_OP_REM_LONG_2ADDR
+.long .L_OP_AND_LONG_2ADDR
+.long .L_OP_OR_LONG_2ADDR
+.long .L_OP_XOR_LONG_2ADDR
+.long .L_OP_SHL_LONG_2ADDR
+.long .L_OP_SHR_LONG_2ADDR
+.long .L_OP_USHR_LONG_2ADDR
+.long .L_OP_ADD_FLOAT_2ADDR
+.long .L_OP_SUB_FLOAT_2ADDR
+.long .L_OP_MUL_FLOAT_2ADDR
+.long .L_OP_DIV_FLOAT_2ADDR
+.long .L_OP_REM_FLOAT_2ADDR
+.long .L_OP_ADD_DOUBLE_2ADDR
+.long .L_OP_SUB_DOUBLE_2ADDR
+.long .L_OP_MUL_DOUBLE_2ADDR
+.long .L_OP_DIV_DOUBLE_2ADDR
+.long .L_OP_REM_DOUBLE_2ADDR
+.long .L_OP_ADD_INT_LIT16
+.long .L_OP_RSUB_INT
+.long .L_OP_MUL_INT_LIT16
+.long .L_OP_DIV_INT_LIT16
+.long .L_OP_REM_INT_LIT16
+.long .L_OP_AND_INT_LIT16
+.long .L_OP_OR_INT_LIT16
+.long .L_OP_XOR_INT_LIT16
+.long .L_OP_ADD_INT_LIT8
+.long .L_OP_RSUB_INT_LIT8
+.long .L_OP_MUL_INT_LIT8
+.long .L_OP_DIV_INT_LIT8
+.long .L_OP_REM_INT_LIT8
+.long .L_OP_AND_INT_LIT8
+.long .L_OP_OR_INT_LIT8
+.long .L_OP_XOR_INT_LIT8
+.long .L_OP_SHL_INT_LIT8
+.long .L_OP_SHR_INT_LIT8
+.long .L_OP_USHR_INT_LIT8
+.long .L_OP_IGET_VOLATILE
+.long .L_OP_IPUT_VOLATILE
+.long .L_OP_SGET_VOLATILE
+.long .L_OP_SPUT_VOLATILE
+.long .L_OP_IGET_OBJECT_VOLATILE
+.long .L_OP_IGET_WIDE_VOLATILE
+.long .L_OP_IPUT_WIDE_VOLATILE
+.long .L_OP_SGET_WIDE_VOLATILE
+.long .L_OP_SPUT_WIDE_VOLATILE
+.long .L_OP_BREAKPOINT
+.long .L_OP_THROW_VERIFICATION_ERROR
+.long .L_OP_EXECUTE_INLINE
+.long .L_OP_EXECUTE_INLINE_RANGE
+.long .L_OP_INVOKE_DIRECT_EMPTY
+.long .L_OP_RETURN_VOID_BARRIER
+.long .L_OP_IGET_QUICK
+.long .L_OP_IGET_WIDE_QUICK
+.long .L_OP_IGET_OBJECT_QUICK
+.long .L_OP_IPUT_QUICK
+.long .L_OP_IPUT_WIDE_QUICK
+.long .L_OP_IPUT_OBJECT_QUICK
+.long .L_OP_INVOKE_VIRTUAL_QUICK
+.long .L_OP_INVOKE_VIRTUAL_QUICK_RANGE
+.long .L_OP_INVOKE_SUPER_QUICK
+.long .L_OP_INVOKE_SUPER_QUICK_RANGE
+.long .L_OP_IPUT_OBJECT_VOLATILE
+.long .L_OP_SGET_OBJECT_VOLATILE
+.long .L_OP_SPUT_OBJECT_VOLATILE
+.long .L_OP_UNUSED_FF
+
 
 /* File: x86/footer.S */
 /*
@@ -8935,13 +9107,13 @@ dvmJitToInterpNoChain:
  * Common code when a backwards branch is taken
  *
  * On entry:
- *   ebx (a.k.a. rINST_FULL) -> PC adjustment in 16-bit words
+ *   ebx (a.k.a. rINST) -> PC adjustment in 16-bit words
  */
 common_backwardBranch:
-    GET_GLUE(%ecx)
+    movl    rGLUE,%ecx
     call   common_periodicChecks  # Note: expects rPC to be preserved
-    ADVANCE_PC_INDEXED(rINST_FULL)
-    FETCH_INST()
+    ADVANCE_PC_INDEXED rINST
+    FETCH_INST
     GOTO_NEXT
 
 
@@ -8951,7 +9123,7 @@ common_backwardBranch:
  *
  * On entry:
  *   eax = Method* methodToCall
- *   rINST trashed, must reload
+ *   rINSTw trashed, must reload
  */
 
 common_invokeMethodRange:
@@ -8961,12 +9133,11 @@ common_invokeMethodRange:
     * prepare to copy args to "outs" area of current frame
     */
 
-    movzbl      1(rPC),rINST_FULL       # rINST_FULL<- AA
+    movzbl      1(rPC),rINST       # rINST<- AA
     movzwl      4(rPC), %ecx            # %ecx<- CCCC
-    SPILL(rPC)
-    SAVEAREA_FROM_FP(%edx,rFP)          # %edx<- &StackSaveArea
-    test        rINST_FULL, rINST_FULL
-    movl        rINST_FULL, LOCAL0_OFFSET(%ebp) # LOCAL0_OFFSET(%ebp)<- AA
+    SAVEAREA_FROM_FP %edx               # %edx<- &StackSaveArea
+    test        rINST, rINST
+    movl        rINST, LOCAL0_OFFSET(%ebp) # LOCAL0_OFFSET(%ebp)<- AA
     jz          .LinvokeArgsDone        # no args; jump to args done
 
 
@@ -8997,13 +9168,12 @@ common_invokeMethodRange:
 
 common_invokeMethodNoRange:
 .LinvokeNewNoRange:
-    movzbl      1(rPC),rINST_FULL       # rINST_FULL<- BA
-    SPILL(rPC)
-    movl        rINST_FULL, LOCAL0_OFFSET(%ebp) # LOCAL0_OFFSET(%ebp)<- BA
+    movzbl      1(rPC),rINST       # rINST<- BA
+    movl        rINST, LOCAL0_OFFSET(%ebp) # LOCAL0_OFFSET(%ebp)<- BA
     shrl        $4, LOCAL0_OFFSET(%ebp)        # LOCAL0_OFFSET(%ebp)<- B
     je          .LinvokeArgsDone        # no args; jump to args done
     movzwl      4(rPC), %ecx            # %ecx<- GFED
-    SAVEAREA_FROM_FP(%edx,rFP)          # %edx<- &StackSaveArea
+    SAVEAREA_FROM_FP %edx               # %edx<- &StackSaveArea
 
    /*
     * %eax=methodToCall, %ecx=GFED, LOCAL0_OFFSET(%ebp)=count, %edx=outs
@@ -9018,9 +9188,9 @@ common_invokeMethodNoRange:
     jl          3f                      # handle 3 args
     je          4f                      # handle 4 args
 5:
-    andl        $15, rINST_FULL        # rINST<- A
+    andl        $15, rINST             # rINSTw<- A
     lea         -4(%edx), %edx          # %edx<- update &outs; &outs--
-    movl        (rFP, rINST_FULL, 4), %ecx # %ecx<- vA
+    movl        (rFP, rINST, 4), %ecx   # %ecx<- vA
     movl        %ecx, (%edx)            # *outs<- vA
     movl        LOCAL1_OFFSET(%ebp), %ecx       # %ecx<- GFED
 4:
@@ -9059,9 +9229,9 @@ common_invokeMethodNoRange:
     movzwl      offMethod_outsSize(%eax), %ecx # %ecx<- methodToCall->outsSize
     movl        %eax, LOCAL0_OFFSET(%ebp)       # LOCAL0_OFFSET<- methodToCall
     shl         $2, %edx               # %edx<- update offset
-    SAVEAREA_FROM_FP(%eax,rFP)          # %eax<- &StackSaveArea
+    SAVEAREA_FROM_FP %eax               # %eax<- &StackSaveArea
     subl        %edx, %eax              # %eax<- newFP; (old savearea - regsSize)
-    GET_GLUE(%edx)                      # %edx<- pMterpGlue
+    movl        rGLUE,%edx              # %edx<- pMterpGlue
     movl        %eax, LOCAL1_OFFSET(%ebp)       # LOCAL1_OFFSET(%ebp)<- &outs
     subl        $sizeofStackSaveArea, %eax # %eax<- newSaveArea (stack save area using newFP)
     movl        offGlue_interpStackEnd(%edx), %edx # %edx<- glue->interpStackEnd
@@ -9078,12 +9248,11 @@ common_invokeMethodNoRange:
     */
 
 #ifdef EASY_GDB
-    SAVEAREA_FROM_FP(%ecx,rFP)          # %ecx<- &StackSaveArea
+    SAVEAREA_FROM_FP %ecx               # %ecx<- &StackSaveArea
     movl        %ecx, offStackSaveArea_prevSave(%edx) # newSaveArea->prevSave<- &outs
 #endif
     movl        rFP, offStackSaveArea_prevFrame(%edx) # newSaveArea->prevFrame<- rFP
-    movl        rPC_SPILL(%ebp), %ecx
-    movl        %ecx, offStackSaveArea_savedPc(%edx) # newSaveArea->savedPc<- rPC
+    movl        rPC, offStackSaveArea_savedPc(%edx) # newSaveArea->savedPc<- rPC
     testl       $ACC_NATIVE, offMethod_accessFlags(%eax) # check for native call
     movl        %eax, offStackSaveArea_method(%edx) # newSaveArea->method<- method to call
     jne         .LinvokeNative          # handle native call
@@ -9094,7 +9263,7 @@ common_invokeMethodNoRange:
     */
 
     movl        offMethod_clazz(%eax), %edx # %edx<- method->clazz
-    GET_GLUE(%ecx)                      # %ecx<- pMterpGlue
+    movl        rGLUE,%ecx                  # %ecx<- pMterpGlue
     movl        offClassObject_pDvmDex(%edx), %edx # %edx<- method->clazz->pDvmDex
     movl        %eax, offGlue_method(%ecx) # glue->method<- methodToCall
     movl        %edx, offGlue_methodClassDex(%ecx) # glue->methodClassDex<- method->clazz->pDvmDex
@@ -9102,7 +9271,7 @@ common_invokeMethodNoRange:
     movl        offGlue_self(%ecx), %eax # %eax<- glue->self
     movl        LOCAL1_OFFSET(%ebp), rFP # rFP<- newFP
     movl        rFP, offThread_curFrame(%eax) # glue->self->curFrame<- newFP
-    FETCH_INST()
+    FETCH_INST
     GOTO_NEXT                           # jump to methodToCall->insns
 
    /*
@@ -9111,7 +9280,7 @@ common_invokeMethodNoRange:
     */
 
 .LinvokeNative:
-    GET_GLUE(%ecx)                      # %ecx<- pMterpGlue
+    movl        rGLUE,%ecx              # %ecx<- pMterpGlue
     movl        %eax, OUT_ARG1(%esp)    # push parameter methodToCall
     movl        offGlue_self(%ecx), %ecx        # %ecx<- glue->self
     movl        offThread_jniLocal_topCookie(%ecx), %eax # %eax<- self->localRef->...
@@ -9121,7 +9290,7 @@ common_invokeMethodNoRange:
     movl        %edx, offThread_curFrame(%ecx)  # glue->self->curFrame<- newFP
     movl        %ecx, OUT_ARG3(%esp)    # save glue->self
     movl        %ecx, OUT_ARG2(%esp)    # push parameter glue->self
-    GET_GLUE(%ecx)                      # %ecx<- pMterpGlue
+    movl        rGLUE,%ecx              # %ecx<- pMterpGlue
     movl        OUT_ARG1(%esp), %eax    # %eax<- methodToCall
     lea         offGlue_retval(%ecx), %ecx # %ecx<- &retval
     movl        %ecx, OUT_ARG0(%esp)    # push parameter pMterpGlue
@@ -9135,45 +9304,18 @@ common_invokeMethodNoRange:
     cmp         $0, offThread_exception(%eax) # check for exception
     movl        rFP, offThread_curFrame(%eax) # glue->self->curFrame<- rFP
     movl        %edx, offThread_jniLocal_topCookie(%eax) # new top <- old top
-    UNSPILL(rPC)
     jne         common_exceptionThrown  # handle exception
-    FETCH_INST_WORD(3)
-    ADVANCE_PC(3)
-    GOTO_NEXT                           # jump to next instruction
+    FETCH_INST_OPCODE 3 %edx
+    ADVANCE_PC 3
+    GOTO_NEXT_R %edx                    # jump to next instruction
 
 .LstackOverflow:    # eax=methodToCall
     movl        %eax, OUT_ARG1(%esp)    # push parameter methodToCall
-    GET_GLUE(%eax)                      # %eax<- pMterpGlue
+    movl        rGLUE,%eax              # %eax<- pMterpGlue
     movl        offGlue_self(%eax), %eax # %eax<- glue->self
     movl        %eax, OUT_ARG0(%esp)    # push parameter self
     call        dvmHandleStackOverflow  # call: (Thread* self, Method* meth)
-    UNSPILL(rPC)                        # return: void
     jmp         common_exceptionThrown  # handle exception
-
-
-/*
- * Common invoke code (old-style).
- * TUNING:  Rewrite along lines of new armv5 code?
- *
- * On entry:
- *   eax = Method* methodToCall
- *   ecx = bool methodCallRange
- *   rINST trashed, must reload
- */
-common_invokeOld:
-    movl     %ecx,OUT_ARG1(%esp)     # arg1<- methodCallRange
-    GET_GLUE(%ecx)
-    movzwl  (rPC),rINST_FULL         # recover rINST
-    movl     %eax,OUT_ARG2(%esp)     # arg2<- method
-    movzwl   4(rPC),%eax             # eax<- GFED or CCCC
-    SAVE_PC_TO_GLUE(%ecx)
-    SAVE_FP_TO_GLUE(%ecx)
-    movzbl   rINST_HI,rINST_FULL
-    movl     rINST_FULL,OUT_ARG3(%esp)# arg3<- AA
-    movl     %ecx,OUT_ARG0(%esp)     # arg0<- GLUE
-    movl     %eax,OUT_ARG4(%esp)     # arg4<- GFED/CCCC
-    call     dvmMterp_invokeMethod
-    jmp      common_resumeAfterGlueCall
 
 
 /*
@@ -9184,8 +9326,8 @@ common_invokeOld:
  *   ecx  -> GLUE pointer
  *   reentry type, e.g. kInterpEntryInstr stored in rGLUE->entryPoint
  *
- * Note: A call will normally kill %eax, rPC/%edx and %ecx.  To
- *       streamline the normal case, this routine will preserve rPC and
+ * Note: A call will normally kill %eax and %ecx.  To
+ *       streamline the normal case, this routine will preserve
  *       %ecx in addition to the normal caller save regs.  The save/restore
  *       is a bit ugly, but will happen in the relatively uncommon path.
  * TODO: Basic-block style Jit will need a hook here as well.  Fold it into
@@ -9204,7 +9346,7 @@ common_periodicChecks:
     movzbl (%eax),%eax             # get active count
 2:
     orl    (%ecx),%eax             # eax <- debuggerActive | activeProfilers
-    GET_GLUE(%ecx)                 # restore rGLUE
+    movl   rGLUE,%ecx              # restore rGLUE
     jne    3f                      # one or both active - switch interp
 
 5:
@@ -9214,14 +9356,13 @@ common_periodicChecks:
 1:
     /*  At this point, the return pointer to the caller of
      *  common_periodicChecks is on the top of stack.  We need to preserve
-     *  rPC(edx) and GLUE(ecx).  We'll spill rPC, and reload GLUE.
+     *  GLUE(ecx).
      *  The outgoing profile is:
      *      bool dvmCheckSuspendPending(Thread* self)
      *  Because we reached here via a call, go ahead and build a new frame.
      */
-    EXPORT_PC()                         # need for precise GC
+    EXPORT_PC                         # need for precise GC
     movl    offGlue_self(%ecx),%eax      # eax<- glue->self
-    SPILL(rPC)                      # save edx
     push    %ebp
     movl    %esp,%ebp
     subl    $24,%esp
@@ -9229,8 +9370,7 @@ common_periodicChecks:
     call    dvmCheckSuspendPending
     addl    $24,%esp
     pop     %ebp
-    UNSPILL(rPC)
-    GET_GLUE(%ecx)
+    movl    rGLUE,%ecx
 
     /*
      * Need to check to see if debugger or profiler flags got set
@@ -9250,8 +9390,8 @@ common_periodicChecks:
      */
 3:
     leal    (rPC,%ebx,2),rPC       # adjust pc to show target
-    GET_GLUE(%ecx)                 # bail expect GLUE already loaded
-    movl    $1,rINST_FULL         # set changeInterp to true
+    movl    rGLUE,%ecx             # bail expect GLUE already loaded
+    movl    $1,rINST              # set changeInterp to true
     jmp     common_gotoBail
 
 
@@ -9259,47 +9399,47 @@ common_periodicChecks:
  * Common code for handling a return instruction
  */
 common_returnFromMethod:
-    GET_GLUE(%ecx)
+    movl    rGLUE,%ecx
     /* Set entry mode in case we bail */
     movb    $kInterpEntryReturn,offGlue_entryPoint(%ecx)
-    xorl    rINST_FULL,rINST_FULL   # zero offset in case we switch interps
+    xorl    rINST,rINST   # zero offset in case we switch interps
     call    common_periodicChecks   # Note: expects %ecx to be preserved
 
-    SAVEAREA_FROM_FP(%eax,rFP)                    # eax<- saveArea (old)
+    SAVEAREA_FROM_FP %eax                         # eax<- saveArea (old)
     movl    offStackSaveArea_prevFrame(%eax),rFP  # rFP<- prevFrame
-    movl    (offStackSaveArea_method-sizeofStackSaveArea)(rFP),rINST_FULL
-    cmpl    $0,rINST_FULL                        # break?
+    movl    (offStackSaveArea_method-sizeofStackSaveArea)(rFP),rINST
+    cmpl    $0,rINST                             # break?
     je      common_gotoBail    # break frame, bail out completely
 
     movl    offStackSaveArea_savedPc(%eax),rPC    # pc<- saveArea->savedPC
     movl    offGlue_self(%ecx),%eax               # eax<- self
-    movl    rINST_FULL,offGlue_method(%ecx)  # glue->method = newSave->meethod
+    movl    rINST,offGlue_method(%ecx)  # glue->method = newSave->meethod
     movl    rFP,offThread_curFrame(%eax)     # self->curFrame = fp
-    movl    offMethod_clazz(rINST_FULL),%eax # eax<- method->clazz
-    FETCH_INST_WORD(3)
+    movl    offMethod_clazz(rINST),%eax      # eax<- method->clazz
+    FETCH_INST_OPCODE 3 %edx
     movl    offClassObject_pDvmDex(%eax),%eax # eax<- method->clazz->pDvmDex
-    ADVANCE_PC(3)
+    ADVANCE_PC 3
     movl    %eax,offGlue_methodClassDex(%ecx)
     /* not bailing - restore entry mode to default */
     movb    $kInterpEntryInstr,offGlue_entryPoint(%ecx)
-    GOTO_NEXT
+    GOTO_NEXT_R %edx
 
 /*
  * Prepare to strip the current frame and "longjump" back to caller of
  * dvmMterpStdRun.
  *
  * on entry:
- *    rINST_FULL holds changeInterp
+ *    rINST holds changeInterp
  *    ecx holds glue pointer
  *
  * expected profile: dvmMterpStdBail(MterpGlue *glue, bool changeInterp)
  */
 common_gotoBail:
-    SAVE_PC_TO_GLUE(%ecx)                # export state to glue
-    SAVE_FP_TO_GLUE(%ecx)
-    movl   %ecx,OUT_ARG0(%esp)           # glue in arg0
-    movl   rINST_FULL,OUT_ARG1(%esp)     # changeInterp in arg1
-    call    dvmMterpStdBail              # bail out....
+    movl   rPC,offGlue_pc(%ecx)     # export state to glue
+    movl   rFP,offGlue_fp(%ecx)
+    movl   %ecx,OUT_ARG0(%esp)      # glue in arg0
+    movl   rINST,OUT_ARG1(%esp)     # changeInterp in arg1
+    call   dvmMterpStdBail          # bail out....
 
 
 /*
@@ -9307,38 +9447,32 @@ common_gotoBail:
  * and start executing at the next instruction.
  */
  common_resumeAfterGlueCall:
-     GET_GLUE(%ecx)
-     LOAD_PC_FROM_GLUE(%ecx)
-     LOAD_FP_FROM_GLUE(%ecx)
-     FETCH_INST()
+     LOAD_PC_FP_FROM_GLUE
+     FETCH_INST
      GOTO_NEXT
 
 /*
  * Integer divide or mod by zero
  */
 common_errDivideByZero:
-    EXPORT_PC()
+    EXPORT_PC
     movl    $.LstrArithmeticException,%eax
     movl    %eax,OUT_ARG0(%esp)
     movl    $.LstrDivideByZero,%eax
     movl    %eax,OUT_ARG1(%esp)
-    SPILL(rPC)
     call    dvmThrowException
-    UNSPILL(rPC)
     jmp     common_exceptionThrown
 
 /*
  * Attempt to allocate an array with a negative size.
  */
 common_errNegativeArraySize:
-    EXPORT_PC()
+    EXPORT_PC
     movl    $.LstrNegativeArraySizeException,%eax
     movl    %eax,OUT_ARG0(%esp)
     xorl    %eax,%eax
     movl    %eax,OUT_ARG1(%esp)
-    SPILL(rPC)
     call    dvmThrowException
-    UNSPILL(rPC)
     jmp     common_exceptionThrown
 
 /*
@@ -9346,14 +9480,12 @@ common_errNegativeArraySize:
  */
 common_errNoSuchMethod:
 
-    EXPORT_PC()
+    EXPORT_PC
     movl    $.LstrNoSuchMethodError,%eax
     movl    %eax,OUT_ARG0(%esp)
     xorl    %eax,%eax
     movl    %eax,OUT_ARG1(%esp)
-    SPILL(rPC)
     call    dvmThrowException
-    UNSPILL(rPC)
     jmp     common_exceptionThrown
 
 /*
@@ -9361,41 +9493,35 @@ common_errNoSuchMethod:
  * NullPointerException and goto the exception processing code.
  */
 common_errNullObject:
-    EXPORT_PC()
+    EXPORT_PC
     movl    $.LstrNullPointerException,%eax
     movl    %eax,OUT_ARG0(%esp)
     xorl    %eax,%eax
     movl    %eax,OUT_ARG1(%esp)
-    SPILL(rPC)
     call    dvmThrowException
-    UNSPILL(rPC)
     jmp     common_exceptionThrown
 
 /*
  * Array index exceeds max.
  */
 common_errArrayIndex:
-    EXPORT_PC()
+    EXPORT_PC
     movl    $.LstrArrayIndexException,%eax
     movl    %eax,OUT_ARG0(%esp)
     xorl    %eax,%eax
     movl    %eax,OUT_ARG1(%esp)
-    SPILL(rPC)
     call    dvmThrowException
-    UNSPILL(rPC)
     jmp     common_exceptionThrown
 /*
  * Invalid array value.
  */
 common_errArrayStore:
-    EXPORT_PC()
+    EXPORT_PC
     movl    $.LstrArrayStoreException,%eax
     movl    %eax,OUT_ARG0(%esp)
     xorl    %eax,%eax
     movl    %eax,OUT_ARG1(%esp)
-    SPILL(rPC)
     call    dvmThrowException
-    UNSPILL(rPC)
     jmp     common_exceptionThrown
 
 /*
@@ -9408,9 +9534,9 @@ common_errArrayStore:
  * This does not return.
  */
 common_exceptionThrown:
-    GET_GLUE(%ecx)
-    SAVE_PC_TO_GLUE(%ecx)
-    SAVE_FP_TO_GLUE(%ecx)
+    movl    rGLUE,%ecx
+    movl    rPC,offGlue_pc(%ecx)
+    movl    rFP,offGlue_fp(%ecx)
     movl    %ecx,OUT_ARG0(%esp)
     call    dvmMterp_exceptionThrown
     jmp     common_resumeAfterGlueCall
@@ -9443,8 +9569,8 @@ common_abort:
     .asciz  "Ljava/lang/ClassCastException;"
 .LstrNoSuchMethodError:
     .asciz  "Ljava/lang/NoSuchMethodError;"
-.LstrInternalError:
+.LstrInternalErrorA:
     .asciz  "Ljava/lang/InternalError;"
-.LstrFilledNewArrayNotImpl:
+.LstrFilledNewArrayNotImplA:
     .asciz  "filled-new-array only implemented for 'int'"
 

@@ -9,27 +9,24 @@
      * instruction spec.
      */
     /* monitor-exit vAA */
-    movzbl  rINST_HI,rINST_FULL         # rINST_FULL<- AA
-    GET_VREG(%eax,rINST_FULL)
-    GET_GLUE(%ecx)
-    EXPORT_PC()
+    GET_VREG_R %eax rINST
+    movl    rGLUE,%ecx
+    EXPORT_PC
     testl   %eax,%eax                   # null object?
     je      .L${opcode}_errNullObject   # go if so
     movl    offGlue_self(%ecx),%ecx     # ecx<- glue->self
     movl    %eax,OUT_ARG1(%esp)
-    SPILL(rPC)
     movl    %ecx,OUT_ARG0(%esp)
     jmp     .L${opcode}_continue
 %break
 
 .L${opcode}_continue:
     call    dvmUnlockObject             # unlock(self,obj)
-    UNSPILL(rPC)
-    FETCH_INST_WORD(1)
+    FETCH_INST_OPCODE 1 %edx
     testl   %eax,%eax                   # success?
-    ADVANCE_PC(1)
+    ADVANCE_PC 1
     je      common_exceptionThrown      # no, exception pending
-    GOTO_NEXT
+    GOTO_NEXT_R %edx
 .L${opcode}_errNullObject:
-    ADVANCE_PC(1)                       # advance before throw
+    ADVANCE_PC 1                        # advance before throw
     jmp     common_errNullObject

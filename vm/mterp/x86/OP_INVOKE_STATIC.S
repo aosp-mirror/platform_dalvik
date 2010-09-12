@@ -8,15 +8,15 @@
      */
     /* op vB, {vD, vE, vF, vG, vA}, class@CCCC */
     /* op {vCCCC..v(CCCC+AA-1)}, meth@BBBB */
-    GET_GLUE(%ecx)
+    movl      rGLUE,%ecx
     movzwl    2(rPC),%eax               # eax<- BBBB
     movl      offGlue_methodClassDex(%ecx),%ecx # ecx<- pDvmDex
-    EXPORT_PC()
+    EXPORT_PC
     movl      offDvmDex_pResMethods(%ecx),%ecx  # ecx<- pDvmDex->pResMethods
     movl      (%ecx,%eax,4),%eax        # eax<- resolved methodToCall
     testl     %eax,%eax
     jne       common_invokeMethod${routine}
-    GET_GLUE(%ecx)
+    movl      rGLUE,%ecx
     movl      offGlue_method(%ecx),%ecx # ecx<- glue->method
     movzwl    2(rPC),%eax
     movl      offMethod_clazz(%ecx),%ecx# ecx<- method->clazz
@@ -28,9 +28,7 @@
 .L${opcode}_continue:
     movl      $$METHOD_STATIC,%eax
     movl      %eax,OUT_ARG2(%esp)       # arg2<- flags
-    SPILL(rPC)
     call      dvmResolveMethod          # call(clazz,ref,flags)
-    UNSPILL(rPC)
     testl     %eax,%eax                 # got null?
     jne       common_invokeMethod${routine}
     jmp       common_exceptionThrown

@@ -1,13 +1,11 @@
 %verify "executed"
     /* mul vA, vB */
-    movzx   rINST_HI,%ecx               # ecx<- A+
-    sarl    $$12,rINST_FULL             # rINST_FULL<- B
-    GET_VREG(%eax,rINST_FULL)           # eax<- vB
-    andb    $$0xf,%cl                   # ecx<- A
-    SPILL(rPC)
+    movzx   rINSTbl,%ecx               # ecx<- A+
+    sarl    $$4,rINST                 # rINST<- B
+    GET_VREG_R %eax rINST              # eax<- vB
+    andb    $$0xf,%cl                  # ecx<- A
     imull   (rFP,%ecx,4),%eax
-    UNSPILL(rPC)
-    SET_VREG(%eax,%ecx)
-    FETCH_INST_WORD(1)
-    ADVANCE_PC(1)
-    GOTO_NEXT
+    FETCH_INST_OPCODE 1 %edx
+    SET_VREG %eax %ecx
+    ADVANCE_PC 1
+    GOTO_NEXT_R %edx

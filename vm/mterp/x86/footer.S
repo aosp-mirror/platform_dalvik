@@ -44,13 +44,13 @@ dvmJitToInterpNoChain:
  * Common code when a backwards branch is taken
  *
  * On entry:
- *   ebx (a.k.a. rINST_FULL) -> PC adjustment in 16-bit words
+ *   ebx (a.k.a. rINST) -> PC adjustment in 16-bit words
  */
 common_backwardBranch:
-    GET_GLUE(%ecx)
+    movl    rGLUE,%ecx
     call   common_periodicChecks  # Note: expects rPC to be preserved
-    ADVANCE_PC_INDEXED(rINST_FULL)
-    FETCH_INST()
+    ADVANCE_PC_INDEXED rINST
+    FETCH_INST
     GOTO_NEXT
 
 
@@ -60,7 +60,7 @@ common_backwardBranch:
  *
  * On entry:
  *   eax = Method* methodToCall
- *   rINST trashed, must reload
+ *   rINSTw trashed, must reload
  */
 
 common_invokeMethodRange:
@@ -70,12 +70,11 @@ common_invokeMethodRange:
     * prepare to copy args to "outs" area of current frame
     */
 
-    movzbl      1(rPC),rINST_FULL       # rINST_FULL<- AA
+    movzbl      1(rPC),rINST       # rINST<- AA
     movzwl      4(rPC), %ecx            # %ecx<- CCCC
-    SPILL(rPC)
-    SAVEAREA_FROM_FP(%edx,rFP)          # %edx<- &StackSaveArea
-    test        rINST_FULL, rINST_FULL
-    movl        rINST_FULL, LOCAL0_OFFSET(%ebp) # LOCAL0_OFFSET(%ebp)<- AA
+    SAVEAREA_FROM_FP %edx               # %edx<- &StackSaveArea
+    test        rINST, rINST
+    movl        rINST, LOCAL0_OFFSET(%ebp) # LOCAL0_OFFSET(%ebp)<- AA
     jz          .LinvokeArgsDone        # no args; jump to args done
 
 
@@ -106,13 +105,12 @@ common_invokeMethodRange:
 
 common_invokeMethodNoRange:
 .LinvokeNewNoRange:
-    movzbl      1(rPC),rINST_FULL       # rINST_FULL<- BA
-    SPILL(rPC)
-    movl        rINST_FULL, LOCAL0_OFFSET(%ebp) # LOCAL0_OFFSET(%ebp)<- BA
+    movzbl      1(rPC),rINST       # rINST<- BA
+    movl        rINST, LOCAL0_OFFSET(%ebp) # LOCAL0_OFFSET(%ebp)<- BA
     shrl        $$4, LOCAL0_OFFSET(%ebp)        # LOCAL0_OFFSET(%ebp)<- B
     je          .LinvokeArgsDone        # no args; jump to args done
     movzwl      4(rPC), %ecx            # %ecx<- GFED
-    SAVEAREA_FROM_FP(%edx,rFP)          # %edx<- &StackSaveArea
+    SAVEAREA_FROM_FP %edx               # %edx<- &StackSaveArea
 
    /*
     * %eax=methodToCall, %ecx=GFED, LOCAL0_OFFSET(%ebp)=count, %edx=outs
@@ -127,9 +125,9 @@ common_invokeMethodNoRange:
     jl          3f                      # handle 3 args
     je          4f                      # handle 4 args
 5:
-    andl        $$15, rINST_FULL        # rINST<- A
+    andl        $$15, rINST             # rINSTw<- A
     lea         -4(%edx), %edx          # %edx<- update &outs; &outs--
-    movl        (rFP, rINST_FULL, 4), %ecx # %ecx<- vA
+    movl        (rFP, rINST, 4), %ecx   # %ecx<- vA
     movl        %ecx, (%edx)            # *outs<- vA
     movl        LOCAL1_OFFSET(%ebp), %ecx       # %ecx<- GFED
 4:
@@ -168,9 +166,9 @@ common_invokeMethodNoRange:
     movzwl      offMethod_outsSize(%eax), %ecx # %ecx<- methodToCall->outsSize
     movl        %eax, LOCAL0_OFFSET(%ebp)       # LOCAL0_OFFSET<- methodToCall
     shl         $$2, %edx               # %edx<- update offset
-    SAVEAREA_FROM_FP(%eax,rFP)          # %eax<- &StackSaveArea
+    SAVEAREA_FROM_FP %eax               # %eax<- &StackSaveArea
     subl        %edx, %eax              # %eax<- newFP; (old savearea - regsSize)
-    GET_GLUE(%edx)                      # %edx<- pMterpGlue
+    movl        rGLUE,%edx              # %edx<- pMterpGlue
     movl        %eax, LOCAL1_OFFSET(%ebp)       # LOCAL1_OFFSET(%ebp)<- &outs
     subl        $$sizeofStackSaveArea, %eax # %eax<- newSaveArea (stack save area using newFP)
     movl        offGlue_interpStackEnd(%edx), %edx # %edx<- glue->interpStackEnd
@@ -187,12 +185,11 @@ common_invokeMethodNoRange:
     */
 
 #ifdef EASY_GDB
-    SAVEAREA_FROM_FP(%ecx,rFP)          # %ecx<- &StackSaveArea
+    SAVEAREA_FROM_FP %ecx               # %ecx<- &StackSaveArea
     movl        %ecx, offStackSaveArea_prevSave(%edx) # newSaveArea->prevSave<- &outs
 #endif
     movl        rFP, offStackSaveArea_prevFrame(%edx) # newSaveArea->prevFrame<- rFP
-    movl        rPC_SPILL(%ebp), %ecx
-    movl        %ecx, offStackSaveArea_savedPc(%edx) # newSaveArea->savedPc<- rPC
+    movl        rPC, offStackSaveArea_savedPc(%edx) # newSaveArea->savedPc<- rPC
     testl       $$ACC_NATIVE, offMethod_accessFlags(%eax) # check for native call
     movl        %eax, offStackSaveArea_method(%edx) # newSaveArea->method<- method to call
     jne         .LinvokeNative          # handle native call
@@ -203,7 +200,7 @@ common_invokeMethodNoRange:
     */
 
     movl        offMethod_clazz(%eax), %edx # %edx<- method->clazz
-    GET_GLUE(%ecx)                      # %ecx<- pMterpGlue
+    movl        rGLUE,%ecx                  # %ecx<- pMterpGlue
     movl        offClassObject_pDvmDex(%edx), %edx # %edx<- method->clazz->pDvmDex
     movl        %eax, offGlue_method(%ecx) # glue->method<- methodToCall
     movl        %edx, offGlue_methodClassDex(%ecx) # glue->methodClassDex<- method->clazz->pDvmDex
@@ -211,7 +208,7 @@ common_invokeMethodNoRange:
     movl        offGlue_self(%ecx), %eax # %eax<- glue->self
     movl        LOCAL1_OFFSET(%ebp), rFP # rFP<- newFP
     movl        rFP, offThread_curFrame(%eax) # glue->self->curFrame<- newFP
-    FETCH_INST()
+    FETCH_INST
     GOTO_NEXT                           # jump to methodToCall->insns
 
    /*
@@ -220,7 +217,7 @@ common_invokeMethodNoRange:
     */
 
 .LinvokeNative:
-    GET_GLUE(%ecx)                      # %ecx<- pMterpGlue
+    movl        rGLUE,%ecx              # %ecx<- pMterpGlue
     movl        %eax, OUT_ARG1(%esp)    # push parameter methodToCall
     movl        offGlue_self(%ecx), %ecx        # %ecx<- glue->self
     movl        offThread_jniLocal_topCookie(%ecx), %eax # %eax<- self->localRef->...
@@ -230,7 +227,7 @@ common_invokeMethodNoRange:
     movl        %edx, offThread_curFrame(%ecx)  # glue->self->curFrame<- newFP
     movl        %ecx, OUT_ARG3(%esp)    # save glue->self
     movl        %ecx, OUT_ARG2(%esp)    # push parameter glue->self
-    GET_GLUE(%ecx)                      # %ecx<- pMterpGlue
+    movl        rGLUE,%ecx              # %ecx<- pMterpGlue
     movl        OUT_ARG1(%esp), %eax    # %eax<- methodToCall
     lea         offGlue_retval(%ecx), %ecx # %ecx<- &retval
     movl        %ecx, OUT_ARG0(%esp)    # push parameter pMterpGlue
@@ -244,45 +241,18 @@ common_invokeMethodNoRange:
     cmp         $$0, offThread_exception(%eax) # check for exception
     movl        rFP, offThread_curFrame(%eax) # glue->self->curFrame<- rFP
     movl        %edx, offThread_jniLocal_topCookie(%eax) # new top <- old top
-    UNSPILL(rPC)
     jne         common_exceptionThrown  # handle exception
-    FETCH_INST_WORD(3)
-    ADVANCE_PC(3)
-    GOTO_NEXT                           # jump to next instruction
+    FETCH_INST_OPCODE 3 %edx
+    ADVANCE_PC 3
+    GOTO_NEXT_R %edx                    # jump to next instruction
 
 .LstackOverflow:    # eax=methodToCall
     movl        %eax, OUT_ARG1(%esp)    # push parameter methodToCall
-    GET_GLUE(%eax)                      # %eax<- pMterpGlue
+    movl        rGLUE,%eax              # %eax<- pMterpGlue
     movl        offGlue_self(%eax), %eax # %eax<- glue->self
     movl        %eax, OUT_ARG0(%esp)    # push parameter self
     call        dvmHandleStackOverflow  # call: (Thread* self, Method* meth)
-    UNSPILL(rPC)                        # return: void
     jmp         common_exceptionThrown  # handle exception
-
-
-/*
- * Common invoke code (old-style).
- * TUNING:  Rewrite along lines of new armv5 code?
- *
- * On entry:
- *   eax = Method* methodToCall
- *   ecx = bool methodCallRange
- *   rINST trashed, must reload
- */
-common_invokeOld:
-    movl     %ecx,OUT_ARG1(%esp)     # arg1<- methodCallRange
-    GET_GLUE(%ecx)
-    movzwl  (rPC),rINST_FULL         # recover rINST
-    movl     %eax,OUT_ARG2(%esp)     # arg2<- method
-    movzwl   4(rPC),%eax             # eax<- GFED or CCCC
-    SAVE_PC_TO_GLUE(%ecx)
-    SAVE_FP_TO_GLUE(%ecx)
-    movzbl   rINST_HI,rINST_FULL
-    movl     rINST_FULL,OUT_ARG3(%esp)# arg3<- AA
-    movl     %ecx,OUT_ARG0(%esp)     # arg0<- GLUE
-    movl     %eax,OUT_ARG4(%esp)     # arg4<- GFED/CCCC
-    call     dvmMterp_invokeMethod
-    jmp      common_resumeAfterGlueCall
 
 
 /*
@@ -293,8 +263,8 @@ common_invokeOld:
  *   ecx  -> GLUE pointer
  *   reentry type, e.g. kInterpEntryInstr stored in rGLUE->entryPoint
  *
- * Note: A call will normally kill %eax, rPC/%edx and %ecx.  To
- *       streamline the normal case, this routine will preserve rPC and
+ * Note: A call will normally kill %eax and %ecx.  To
+ *       streamline the normal case, this routine will preserve
  *       %ecx in addition to the normal caller save regs.  The save/restore
  *       is a bit ugly, but will happen in the relatively uncommon path.
  * TODO: Basic-block style Jit will need a hook here as well.  Fold it into
@@ -313,7 +283,7 @@ common_periodicChecks:
     movzbl (%eax),%eax             # get active count
 2:
     orl    (%ecx),%eax             # eax <- debuggerActive | activeProfilers
-    GET_GLUE(%ecx)                 # restore rGLUE
+    movl   rGLUE,%ecx              # restore rGLUE
     jne    3f                      # one or both active - switch interp
 
 5:
@@ -323,14 +293,13 @@ common_periodicChecks:
 1:
     /*  At this point, the return pointer to the caller of
      *  common_periodicChecks is on the top of stack.  We need to preserve
-     *  rPC(edx) and GLUE(ecx).  We'll spill rPC, and reload GLUE.
+     *  GLUE(ecx).
      *  The outgoing profile is:
      *      bool dvmCheckSuspendPending(Thread* self)
      *  Because we reached here via a call, go ahead and build a new frame.
      */
-    EXPORT_PC()                         # need for precise GC
+    EXPORT_PC                         # need for precise GC
     movl    offGlue_self(%ecx),%eax      # eax<- glue->self
-    SPILL(rPC)                      # save edx
     push    %ebp
     movl    %esp,%ebp
     subl    $$24,%esp
@@ -338,8 +307,7 @@ common_periodicChecks:
     call    dvmCheckSuspendPending
     addl    $$24,%esp
     pop     %ebp
-    UNSPILL(rPC)
-    GET_GLUE(%ecx)
+    movl    rGLUE,%ecx
 
     /*
      * Need to check to see if debugger or profiler flags got set
@@ -359,8 +327,8 @@ common_periodicChecks:
      */
 3:
     leal    (rPC,%ebx,2),rPC       # adjust pc to show target
-    GET_GLUE(%ecx)                 # bail expect GLUE already loaded
-    movl    $$1,rINST_FULL         # set changeInterp to true
+    movl    rGLUE,%ecx             # bail expect GLUE already loaded
+    movl    $$1,rINST              # set changeInterp to true
     jmp     common_gotoBail
 
 
@@ -368,47 +336,47 @@ common_periodicChecks:
  * Common code for handling a return instruction
  */
 common_returnFromMethod:
-    GET_GLUE(%ecx)
+    movl    rGLUE,%ecx
     /* Set entry mode in case we bail */
     movb    $$kInterpEntryReturn,offGlue_entryPoint(%ecx)
-    xorl    rINST_FULL,rINST_FULL   # zero offset in case we switch interps
+    xorl    rINST,rINST   # zero offset in case we switch interps
     call    common_periodicChecks   # Note: expects %ecx to be preserved
 
-    SAVEAREA_FROM_FP(%eax,rFP)                    # eax<- saveArea (old)
+    SAVEAREA_FROM_FP %eax                         # eax<- saveArea (old)
     movl    offStackSaveArea_prevFrame(%eax),rFP  # rFP<- prevFrame
-    movl    (offStackSaveArea_method-sizeofStackSaveArea)(rFP),rINST_FULL
-    cmpl    $$0,rINST_FULL                        # break?
+    movl    (offStackSaveArea_method-sizeofStackSaveArea)(rFP),rINST
+    cmpl    $$0,rINST                             # break?
     je      common_gotoBail    # break frame, bail out completely
 
     movl    offStackSaveArea_savedPc(%eax),rPC    # pc<- saveArea->savedPC
     movl    offGlue_self(%ecx),%eax               # eax<- self
-    movl    rINST_FULL,offGlue_method(%ecx)  # glue->method = newSave->meethod
+    movl    rINST,offGlue_method(%ecx)  # glue->method = newSave->meethod
     movl    rFP,offThread_curFrame(%eax)     # self->curFrame = fp
-    movl    offMethod_clazz(rINST_FULL),%eax # eax<- method->clazz
-    FETCH_INST_WORD(3)
+    movl    offMethod_clazz(rINST),%eax      # eax<- method->clazz
+    FETCH_INST_OPCODE 3 %edx
     movl    offClassObject_pDvmDex(%eax),%eax # eax<- method->clazz->pDvmDex
-    ADVANCE_PC(3)
+    ADVANCE_PC 3
     movl    %eax,offGlue_methodClassDex(%ecx)
     /* not bailing - restore entry mode to default */
     movb    $$kInterpEntryInstr,offGlue_entryPoint(%ecx)
-    GOTO_NEXT
+    GOTO_NEXT_R %edx
 
 /*
  * Prepare to strip the current frame and "longjump" back to caller of
  * dvmMterpStdRun.
  *
  * on entry:
- *    rINST_FULL holds changeInterp
+ *    rINST holds changeInterp
  *    ecx holds glue pointer
  *
  * expected profile: dvmMterpStdBail(MterpGlue *glue, bool changeInterp)
  */
 common_gotoBail:
-    SAVE_PC_TO_GLUE(%ecx)                # export state to glue
-    SAVE_FP_TO_GLUE(%ecx)
-    movl   %ecx,OUT_ARG0(%esp)           # glue in arg0
-    movl   rINST_FULL,OUT_ARG1(%esp)     # changeInterp in arg1
-    call    dvmMterpStdBail              # bail out....
+    movl   rPC,offGlue_pc(%ecx)     # export state to glue
+    movl   rFP,offGlue_fp(%ecx)
+    movl   %ecx,OUT_ARG0(%esp)      # glue in arg0
+    movl   rINST,OUT_ARG1(%esp)     # changeInterp in arg1
+    call   dvmMterpStdBail          # bail out....
 
 
 /*
@@ -416,38 +384,32 @@ common_gotoBail:
  * and start executing at the next instruction.
  */
  common_resumeAfterGlueCall:
-     GET_GLUE(%ecx)
-     LOAD_PC_FROM_GLUE(%ecx)
-     LOAD_FP_FROM_GLUE(%ecx)
-     FETCH_INST()
+     LOAD_PC_FP_FROM_GLUE
+     FETCH_INST
      GOTO_NEXT
 
 /*
  * Integer divide or mod by zero
  */
 common_errDivideByZero:
-    EXPORT_PC()
+    EXPORT_PC
     movl    $$.LstrArithmeticException,%eax
     movl    %eax,OUT_ARG0(%esp)
     movl    $$.LstrDivideByZero,%eax
     movl    %eax,OUT_ARG1(%esp)
-    SPILL(rPC)
     call    dvmThrowException
-    UNSPILL(rPC)
     jmp     common_exceptionThrown
 
 /*
  * Attempt to allocate an array with a negative size.
  */
 common_errNegativeArraySize:
-    EXPORT_PC()
+    EXPORT_PC
     movl    $$.LstrNegativeArraySizeException,%eax
     movl    %eax,OUT_ARG0(%esp)
     xorl    %eax,%eax
     movl    %eax,OUT_ARG1(%esp)
-    SPILL(rPC)
     call    dvmThrowException
-    UNSPILL(rPC)
     jmp     common_exceptionThrown
 
 /*
@@ -455,14 +417,12 @@ common_errNegativeArraySize:
  */
 common_errNoSuchMethod:
 
-    EXPORT_PC()
+    EXPORT_PC
     movl    $$.LstrNoSuchMethodError,%eax
     movl    %eax,OUT_ARG0(%esp)
     xorl    %eax,%eax
     movl    %eax,OUT_ARG1(%esp)
-    SPILL(rPC)
     call    dvmThrowException
-    UNSPILL(rPC)
     jmp     common_exceptionThrown
 
 /*
@@ -470,41 +430,35 @@ common_errNoSuchMethod:
  * NullPointerException and goto the exception processing code.
  */
 common_errNullObject:
-    EXPORT_PC()
+    EXPORT_PC
     movl    $$.LstrNullPointerException,%eax
     movl    %eax,OUT_ARG0(%esp)
     xorl    %eax,%eax
     movl    %eax,OUT_ARG1(%esp)
-    SPILL(rPC)
     call    dvmThrowException
-    UNSPILL(rPC)
     jmp     common_exceptionThrown
 
 /*
  * Array index exceeds max.
  */
 common_errArrayIndex:
-    EXPORT_PC()
+    EXPORT_PC
     movl    $$.LstrArrayIndexException,%eax
     movl    %eax,OUT_ARG0(%esp)
     xorl    %eax,%eax
     movl    %eax,OUT_ARG1(%esp)
-    SPILL(rPC)
     call    dvmThrowException
-    UNSPILL(rPC)
     jmp     common_exceptionThrown
 /*
  * Invalid array value.
  */
 common_errArrayStore:
-    EXPORT_PC()
+    EXPORT_PC
     movl    $$.LstrArrayStoreException,%eax
     movl    %eax,OUT_ARG0(%esp)
     xorl    %eax,%eax
     movl    %eax,OUT_ARG1(%esp)
-    SPILL(rPC)
     call    dvmThrowException
-    UNSPILL(rPC)
     jmp     common_exceptionThrown
 
 /*
@@ -517,9 +471,9 @@ common_errArrayStore:
  * This does not return.
  */
 common_exceptionThrown:
-    GET_GLUE(%ecx)
-    SAVE_PC_TO_GLUE(%ecx)
-    SAVE_FP_TO_GLUE(%ecx)
+    movl    rGLUE,%ecx
+    movl    rPC,offGlue_pc(%ecx)
+    movl    rFP,offGlue_fp(%ecx)
     movl    %ecx,OUT_ARG0(%esp)
     call    dvmMterp_exceptionThrown
     jmp     common_resumeAfterGlueCall
@@ -552,7 +506,7 @@ common_abort:
     .asciz  "Ljava/lang/ClassCastException;"
 .LstrNoSuchMethodError:
     .asciz  "Ljava/lang/NoSuchMethodError;"
-.LstrInternalError:
+.LstrInternalErrorA:
     .asciz  "Ljava/lang/InternalError;"
-.LstrFilledNewArrayNotImpl:
+.LstrFilledNewArrayNotImplA:
     .asciz  "filled-new-array only implemented for 'int'"

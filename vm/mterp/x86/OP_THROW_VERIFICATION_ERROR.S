@@ -5,15 +5,12 @@
      * exception is indicated by AA, with some detail provided by BBBB.
      */
     /* op AA, ref@BBBB */
-    GET_GLUE(%ecx)
+    movl     rGLUE,%ecx
     movzwl   2(rPC),%eax                     # eax<- BBBB
     movl     offGlue_method(%ecx),%ecx       # ecx<- glue->method
-    EXPORT_PC()
-    movzbl   rINST_HI,rINST_FULL             # rINST_FULL<- AA
+    EXPORT_PC
     movl     %eax,OUT_ARG2(%esp)             # arg2<- BBBB
-    movl     rINST_FULL,OUT_ARG1(%esp)       # arg1<- AA
+    movl     rINST,OUT_ARG1(%esp)            # arg1<- AA
     movl     %ecx,OUT_ARG0(%esp)             # arg0<- method
-    SPILL(rPC)
     call     dvmThrowVerificationError       # call(method, kind, ref)
-    UNSPILL(rPC)
     jmp      common_exceptionThrown          # handle exception
