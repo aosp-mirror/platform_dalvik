@@ -346,7 +346,7 @@ static int preopt(int argc, char* const argv[])
         goto bail;
     }
 
-    outFd = open(outName, O_WRONLY | O_EXCL | O_CREAT);
+    outFd = open(outName, O_RDWR | O_EXCL | O_CREAT);
     if (outFd < 0) {
         perror(argv[0]);
         goto bail;
