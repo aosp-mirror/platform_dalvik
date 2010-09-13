@@ -15,7 +15,7 @@
 # limitations under the License.
 
 #
-# Usage: dex-preopt [options] path/to/input.jar path/to/output.dex
+# Usage: dex-preopt [options] path/to/input.jar path/to/output.odex
 #
 # This tool runs a host build of dalvikvm in order to preoptimize dex
 # files that will be run on a device.
@@ -40,12 +40,17 @@
 #     should be a directory with this name under build-dir/product. If
 #     not specified, then there must only be one such directory, and that
 #     one will be used.
+#   --boot-jars=list:of:jar:base:names -- Specify the list of base names
+#     of bootstrap classpath elements, colon-separated. This defaults to
+#     "core".
 #
 
 buildDir="."
 product=""
 bootstrap="no"
 bogus="no"
+bootJars="core:ext:framework:android.policy:services"
+# eventually, just bootJars="core"
 
 # Iterate over the arguments looking for options.
 while true; do
@@ -82,6 +87,8 @@ while true; do
         buildDir="${value}"
     elif [ "${option}" = 'product' -a "${hasValue}" = 'yes' ]; then
         product="${value}"
+    elif [ "${option}" = 'boot-jars' -a "${hasValue}" = 'yes' ]; then
+        bootJars="${value}"
     elif [ "${option}" = 'bootstrap' -a "${hasValue}" = 'no' ]; then
         bootstrap="yes"
     else
@@ -103,6 +110,12 @@ if [ "x${buildDir}" = 'x' ]; then
     exit 1
 elif [ ! '(' -d "${buildDir}" -a -w "${buildDir}" ')' ]; then
     echo "build directory is not a writable directory" 1>&2
+    exit 1
+fi
+
+# Sanity-check the specified boot jar list.
+if [ "x${bootJars}" = 'x' ]; then
+    echo "must specify non-empty boot-jars list" 1>&2
     exit 1
 fi
 
@@ -142,6 +155,37 @@ elif [ `expr -- "${dexopt}" : ".* "` != '0' ]; then
     exit 1
 fi
 
+# Transform the bootJars into full paths, maintaining the colon separator.
+BOOTCLASSPATH=`echo ":${bootJars}" | \
+    sed "s!:\([^:]*\)!:${product}/system/framework/\1.jar!g" | \
+    sed 's/^://'`
+export BOOTCLASSPATH
+
+if [ "${bootstrap}" = "yes" ]; then
+    echo "Processing boot class path..."
+
+    # Split the boot classpath into separate elements and iterate over them,
+    # processing each, in order.
+    elements=`echo "${BOOTCLASSPATH}" | sed 's/:/ /g'`
+
+    for inputFile in $elements; do
+        outputFile="`dirname ${inputFile}`/`basename ${inputFile} .jar`.odex"
+        echo "TODO: We would process ${inputFile} into ${outputFile}"
+    done
+else
+    inputFile=$1
+    outputFile=$2
+
+    if [ "x$inputFile" = 'x' ]; then
+        echo "must specify input and output files" 1>&2
+        exit 1
+    elif [ "x$outputFile" = 'x' ]; then
+        echo "must specify output file" 1>&2
+        exit 1
+    fi
+
+    echo "TODO: We would process ${inputFile} into ${outputFile}"
+fi
 
 ##
 ## TODO: The rest of this is unmodified from fadden's original prototype.
