@@ -322,18 +322,23 @@ bail:
  */
 static int preopt(int argc, char* const argv[])
 {
+    int zipFd = -1;
+    int outFd = -1;
+    int result = -1;
+
     if (argc != 5) {
-        LOGE("Wrong number of args for --preopt (found %d)\n", argc);
+        /*
+         * Use stderr here, since this variant is meant to be called on
+         * the host side.
+         */
+        fprintf(stderr, "Wrong number of args for --preopt (found %d)\n",
+                argc);
         goto bail;
     }
 
     const char* zipName = argv[2];
     const char* outName = argv[3];
     const char* dexoptFlags = argv[4];
-
-    int zipFd = -1;
-    int outFd = -1;
-    int result = -1;
 
     zipFd = open(zipName, O_RDONLY);
     if (zipFd < 0) {
