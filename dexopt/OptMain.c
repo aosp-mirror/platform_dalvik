@@ -17,7 +17,7 @@
 /*
  * Command-line DEX optimization and verification entry point.
  *
- * There are two ways to launch this:
+ * There are three ways to launch this:
  * (1) From the VM.  This takes a dozen args, one of which is a file
  *     descriptor that acts as both input and output.  This allows us to
  *     remain ignorant of where the DEX data originally came from.
@@ -26,6 +26,9 @@
  *     a filename for debug messages.  Many assumptions are made about
  *     what's going on (verification + optimization are enabled, boot
  *     class path is in BOOTCLASSPATH, etc).
+ * (3) On the host during a build for preoptimization. This behaves
+ *     almost the same as (2), except it takes file names instead of
+ *     file descriptors.
  *
  * There are some fragile aspects around bootclasspath entries, owing
  * largely to the VM's history of working on whenever it thought it needed
@@ -38,6 +41,8 @@
 #include "utils/Log.h"
 #include "cutils/process_name.h"
 
+#include <fcntl.h>
+#include <stdbool.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -50,7 +55,7 @@ static const char* kClassesDex = "classes.dex";
  * up front for the DEX optimization header.
  */
 static int extractAndProcessZip(int zipFd, int cacheFd,
-    const char* debugFileName, int isBootstrap, const char* bootClassPath,
+    const char* debugFileName, bool isBootstrap, const char* bootClassPath,
     const char* dexoptFlagStr)
 {
     ZipArchive zippy;
@@ -181,6 +186,60 @@ bail:
     return result;
 }
 
+/*
+ * Common functionality for normal device-side processing as well as
+ * preoptimization.
+ */
+static int processZipFile(int zipFd, int cacheFd, const char* zipName,
+        const char *dexoptFlags)
+{
+    int result = -1;
+    char* bcpCopy = NULL;
+
+    /*
+     * Check to see if this is a bootstrap class entry. If so, truncate
+     * the path.
+     */
+    const char* bcp = getenv("BOOTCLASSPATH");
+    if (bcp == NULL) {
+        LOGE("DexOptZ: BOOTCLASSPATH not set\n");
+        goto bail;
+    }
+
+    bool isBootstrap = false;
+    const char* match = strstr(bcp, zipName);
+    if (match != NULL) {
+        /*
+         * TODO: we have a partial string match, but that doesn't mean
+         * we've matched an entire path component. We should make sure
+         * that we're matching on the full zipName, and if not we
+         * should re-do the strstr starting at (match+1).
+         *
+         * The scenario would be a bootclasspath with something like
+         * "/system/framework/core.jar" while we're trying to optimize
+         * "/framework/core.jar". Not very likely since all paths are
+         * absolute and end with ".jar", but not impossible.
+         */
+        int matchOffset = match - bcp;
+        if (matchOffset > 0 && bcp[matchOffset-1] == ':')
+            matchOffset--;
+        LOGV("DexOptZ: found '%s' in bootclasspath, cutting off at %d\n",
+            inputFileName, matchOffset);
+        bcpCopy = strdup(bcp);
+        bcpCopy[matchOffset] = '\0';
+
+        bcp = bcpCopy;
+        LOGD("DexOptZ: truncated BOOTCLASSPATH to '%s'\n", bcp);
+        isBootstrap = true;
+    }
+
+    result = extractAndProcessZip(zipFd, cacheFd, zipName, isBootstrap,
+            bcp, dexoptFlags);
+
+bail:
+    free(bcpCopy);
+    return result;
+}
 
 /* advance to the next arg and extract it */
 #define GET_ARG(_var, _func, _msg)                                          \
@@ -200,8 +259,8 @@ bail:
  *   1. "--zip"
  *   2. zip fd (input, read-only)
  *   3. cache fd (output, read-write, locked with flock)
- *   4. filename of file being optimized (used for debug messages and
- *      for comparing against BOOTCLASSPATH -- does not need to be
+ *   4. filename of zipfile being optimized (used for debug messages and
+ *      for comparing against BOOTCLASSPATH; does not need to be
  *      accessible or even exist)
  *   5. dexopt flags
  *
@@ -216,10 +275,10 @@ bail:
 static int fromZip(int argc, char* const argv[])
 {
     int result = -1;
-    int zipFd, cacheFd, vmBuildVersion;
-    const char* inputFileName;
+    int zipFd, cacheFd;
+    const char* zipName;
     char* bcpCopy = NULL;
-    const char* dexoptFlagStr;
+    const char* dexoptFlags;
 
     if (argc != 6) {
         LOGE("Wrong number of args for --zip (found %d)\n", argc);
@@ -232,53 +291,73 @@ static int fromZip(int argc, char* const argv[])
 
     GET_ARG(zipFd, strtol, "bad zip fd");
     GET_ARG(cacheFd, strtol, "bad cache fd");
-    inputFileName = *++argv;
+    zipName = *++argv;
     --argc;
-    dexoptFlagStr = *++argv;
+    dexoptFlags = *++argv;
     --argc;
 
-    /*
-     * Check to see if this is a bootstrap class entry.  If so, truncate
-     * the path.
-     */
-    const char* bcp = getenv("BOOTCLASSPATH");
-    if (bcp == NULL) {
-        LOGE("DexOptZ: BOOTCLASSPATH not set\n");
+    result = processZipFile(zipFd, cacheFd, zipName, dexoptFlags);
+
+bail:
+    return result;
+}
+
+/*
+ * Parse arguments for a preoptimization run. This is when dalvikvm is run
+ * on a host to optimize dex files for eventual running on a (different)
+ * device. We want:
+ *   0. (name of dexopt command -- ignored)
+ *   1. "--preopt"
+ *   2. zipfile name
+ *   3. output file name
+ *   4. dexopt flags
+ *
+ * The BOOTCLASSPATH environment variable is assumed to hold the correct
+ * boot class path.  If the filename provided appears in the boot class
+ * path, the path will be truncated just before that entry (so that, if
+ * you were to dexopt "core.jar", your bootclasspath would be empty).
+ *
+ * This does not try to normalize the boot class path name, so the
+ * filename test won't catch you if you get creative.
+ */
+static int preopt(int argc, char* const argv[])
+{
+    if (argc != 5) {
+        LOGE("Wrong number of args for --preopt (found %d)\n", argc);
         goto bail;
     }
 
-    int isBootstrap = false;
-    const char* match = strstr(bcp, inputFileName);
-    if (match != NULL) {
-        /*
-         * TODO: we have a partial string match, but that doesn't mean
-         * we've matched an entire path component.  We should make sure
-         * that we're matching on the full inputFileName, and if not we
-         * should re-do the strstr starting at (match+1).
-         *
-         * The scenario would be a bootclasspath with something like
-         * "/system/framework/core.jar" while we're trying to optimize
-         * "/framework/core.jar".  Not very likely since all paths are
-         * absolute and end with ".jar", but not impossible.
-         */
-        int matchOffset = match - bcp;
-        if (matchOffset > 0 && bcp[matchOffset-1] == ':')
-            matchOffset--;
-        LOGV("DexOptZ: found '%s' in bootclasspath, cutting off at %d\n",
-            inputFileName, matchOffset);
-        bcpCopy = strdup(bcp);
-        bcpCopy[matchOffset] = '\0';
+    const char* zipName = argv[2];
+    const char* outName = argv[3];
+    const char* dexoptFlags = argv[4];
 
-        bcp = bcpCopy;
-        LOGD("DexOptZ: truncated BOOTCLASSPATH to '%s'\n", bcp);
-        isBootstrap = true;
+    int zipFd = -1;
+    int outFd = -1;
+    int result = -1;
+
+    zipFd = open(zipName, O_RDONLY);
+    if (zipFd < 0) {
+        perror(argv[0]);
+        goto bail;
     }
 
-    result = extractAndProcessZip(zipFd, cacheFd, inputFileName,
-                isBootstrap, bcp, dexoptFlagStr);
+    outFd = open(outName, O_WRONLY | O_EXCL | O_CREAT);
+    if (outFd < 0) {
+        perror(argv[0]);
+        goto bail;
+    }
+
+    result = processZipFile(zipFd, outFd, zipName, dexoptFlags);
 
 bail:
-    free(bcpCopy);
+    if (zipFd >= 0) {
+        close(zipFd);
+    }
+
+    if (outFd >= 0) {
+        close(outFd);
+    }
+
     return result;
 }
 
@@ -480,8 +559,15 @@ int main(int argc, char* const argv[])
             return fromZip(argc, argv);
         else if (strcmp(argv[1], "--dex") == 0)
             return fromDex(argc, argv);
+        else if (strcmp(argv[1], "--preopt") == 0)
+            return preopt(argc, argv);
     }
 
-    fprintf(stderr, "Usage: don't use this\n");
+    fprintf(stderr,
+        "Usage:\n\n"
+        "Short version: Don't use this.\n\n"
+        "Slightly longer version: This system-internal tool is used to\n"
+        "produce optimized dex files. See the source code for details.\n");
+
     return 1;
 }
