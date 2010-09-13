@@ -31,6 +31,10 @@ public final class Type implements TypeBearer, Comparable<Type> {
     private static final HashMap<String, Type> internTable =
         new HashMap<String, Type>(500);
 
+    /** {@code non-null;} table mapping types as {@code Class} objects to internal form */
+    private static final HashMap<Class, Type> CLASS_TYPE_MAP =
+        new HashMap<Class, Type>();
+
     /** basic type constant for {@code void} */
     public static final int BT_VOID = 0;
 
@@ -117,6 +121,20 @@ public final class Type implements TypeBearer, Comparable<Type> {
          * Note: VOID isn't put in the intern table, since it's special and
          * shouldn't be found by a normal call to intern().
          */
+
+        /*
+         * Create a mapping between types as Java Class objects
+         * and types in dx internal format.
+         */
+        CLASS_TYPE_MAP.put(boolean.class, BOOLEAN);
+        CLASS_TYPE_MAP.put(short.class, SHORT);
+        CLASS_TYPE_MAP.put(int.class, INT);
+        CLASS_TYPE_MAP.put(long.class, LONG);
+        CLASS_TYPE_MAP.put(char.class, CHAR);
+        CLASS_TYPE_MAP.put(byte.class, BYTE);
+        CLASS_TYPE_MAP.put(float.class, FLOAT);
+        CLASS_TYPE_MAP.put(double.class, DOUBLE);
+        CLASS_TYPE_MAP.put(void.class, VOID);
     }
 
     /**
@@ -277,6 +295,21 @@ public final class Type implements TypeBearer, Comparable<Type> {
     private Type initializedType;
 
     /**
+     * Returns the unique instance corresponding to the type represented by
+     * given {@code Class} object. See vmspec-2 sec4.3.2 for details on the
+     * field descriptor syntax. This method does <i>not</i> allow
+     * {@code "V"} (that is, type {@code void}) as a valid
+     * descriptor.
+     *
+     * @param clazz {@code non-null;} class whose descriptor
+     * will be internalized
+     * @return {@code non-null;} the corresponding instance
+     */
+    public static Type intern(Class clazz) {
+        return intern(getInternalTypeName(clazz));
+    }
+
+    /**
      * Returns the unique instance corresponding to the type with the
      * given descriptor. See vmspec-2 sec4.3.2 for details on the
      * field descriptor syntax. This method does <i>not</i> allow
@@ -289,7 +322,7 @@ public final class Type implements TypeBearer, Comparable<Type> {
      * invalid syntax
      */
     public static Type intern(String descriptor) {
-        
+
         Type result = internTable.get(descriptor);
         if (result != null) {
             return result;
@@ -362,6 +395,20 @@ public final class Type implements TypeBearer, Comparable<Type> {
     }
 
     /**
+     * Returns the unique instance corresponding to the type represented by
+     * given {@code Class} object, allowing {@code "V"} to return the type
+     * for {@code void}. Other than that one caveat, this method
+     * is identical to {@link #intern}.
+     *
+     * @param clazz {@code non-null;} class which descriptor
+     * will be internalized
+     * @return {@code non-null;} the corresponding instance
+     */
+    public static Type internReturnType(Class clazz) {
+        return internReturnType(getInternalTypeName(clazz));
+    }
+
+    /**
      * Returns the unique instance corresponding to the type with the
      * given descriptor, allowing {@code "V"} to return the type
      * for {@code void}. Other than that one caveat, this method
@@ -408,6 +455,31 @@ public final class Type implements TypeBearer, Comparable<Type> {
         }
 
         return intern('L' + name + ';');
+    }
+
+    /**
+     * Converts type name in the format as returned by reflection
+     * into dex internal form.
+     *
+     * @param clazz {@code non-null;} class whose name will be internalized
+     * @return string with the type name in dex internal format
+     */
+    public static String getInternalTypeName(Class clazz) {
+        if (clazz == null) {
+            throw new NullPointerException("clazz == null");
+        }
+
+        if (clazz.isPrimitive()) {
+            return CLASS_TYPE_MAP.get(clazz).getDescriptor();
+        }
+
+        String slashed = clazz.getName().replace('.', '/');
+
+        if (clazz.isArray()) {
+            return slashed;
+        }
+
+        return 'L' + slashed + ';';
     }
 
     /**

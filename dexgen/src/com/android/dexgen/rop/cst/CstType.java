@@ -134,6 +134,17 @@ public final class CstType extends TypedConstant {
     }
 
     /**
+     * Returns an interned instance of this class for the given
+     * {@code Class} instance.
+     *
+     * @param clazz {@code non-null;} the underlying {@code Class} object
+     * @return {@code non-null;} an appropriately-constructed instance
+     */
+    public static CstType intern(Class clazz) {
+        return intern(Type.intern(clazz));
+    }
+
+    /**
      * Constructs an instance.
      *
      * @param type {@code non-null;} the underlying type
