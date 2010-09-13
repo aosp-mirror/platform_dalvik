@@ -82,8 +82,8 @@ Field name is cantTouchThis
  Access flags are 0x11
   cantTouchThis is 77
   got expected set-final failure
-
   cantTouchThis is now 77
+  cantTouchThis is now 88
 cons modifiers=1
 SuperTarget constructor ()V
 Target constructor (IF)V : ii=7 ff=3.3333
