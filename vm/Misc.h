@@ -306,4 +306,23 @@ size_t strlcpy(char *dst, const char *src, size_t size);
  */
 void *dvmAllocRegion(size_t size, int prot, const char *name);
 
+/*
+ * Returns the pointer to the "absolute path" part of the given path
+ * string, treating first (if any) instance of "/./" as a sentinel
+ * indicating the start of the absolute path. If the path isn't absolute
+ * in the usual way (i.e., starts with "/") and doesn't have the sentinel,
+ * then this returns NULL.
+ *
+ * For example:
+ *     "/foo/bar/baz" returns "/foo/bar/baz"
+ *     "foo/./bar/baz" returns "/bar/baz"
+ *     "foo/bar/baz" returns NULL
+ *
+ * The sentinel is used specifically to aid in cross-optimization, where
+ * a host is processing dex files in a build tree, and where we don't want
+ * the build tree's directory structure to be baked into the output (such
+ * as, for example, in the dependency paths of optimized dex files).
+ */
+const char* dvmPathToAbsolutePortion(const char* path);
+
 #endif /*_DALVIK_MISC*/

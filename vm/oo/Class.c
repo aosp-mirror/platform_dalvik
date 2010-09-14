@@ -584,12 +584,23 @@ static ClassPathEntry* processClassPath(const char* pathStr, bool isBootstrap)
         if (*cp == '\0') {
             /* leading, trailing, or doubled ':'; ignore it */
         } else {
+            if (isBootstrap &&
+                    dvmPathToAbsolutePortion(cp) == NULL) {
+                LOGE("Non-absolute bootclasspath entry '%s'\n", cp);
+                free(cpe);
+                cpe = NULL;
+                goto bail;
+            }
+
             ClassPathEntry tmp;
             tmp.kind = kCpeUnknown;
             tmp.fileName = strdup(cp);
             tmp.ptr = NULL;
 
-            /* drop an end marker here so DEX loader can walk unfinished list */
+            /*
+             * Drop an end marker here so DEX loader can walk unfinished
+             * list.
+             */
             cpe[idx].kind = kCpeLastEntry;
             cpe[idx].fileName = NULL;
             cpe[idx].ptr = NULL;
@@ -599,9 +610,6 @@ static ClassPathEntry* processClassPath(const char* pathStr, bool isBootstrap)
                 free(tmp.fileName);
             } else {
                 /* copy over, pointers and all */
-                if (tmp.fileName[0] != '/')
-                    LOGW("Non-absolute bootclasspath entry '%s'\n",
-                        tmp.fileName);
                 cpe[idx] = tmp;
                 idx++;
             }
@@ -611,7 +619,7 @@ static ClassPathEntry* processClassPath(const char* pathStr, bool isBootstrap)
     }
     assert(idx <= count);
     if (idx == 0 && !gDvm.optimizing) {
-        LOGE("ERROR: no valid entries found in bootclasspath '%s'\n", pathStr);
+        LOGE("No valid entries found in bootclasspath '%s'\n", pathStr);
         free(cpe);
         cpe = NULL;
         goto bail;

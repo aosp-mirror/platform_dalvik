@@ -1182,7 +1182,10 @@ bool dvmCheckOptHeaderAndDependencies(int fd, bool sourceAvail, u4 modWhen,
     numDeps = read4LE(&ptr);
     LOGV("+++ DexOpt: numDeps = %d\n", numDeps);
     for (cpe = gDvm.bootClassPath; cpe->ptr != NULL; cpe++) {
-        const char* cacheFileName = getCacheFileName(cpe);
+        const char* cacheFileName =
+            dvmPathToAbsolutePortion(getCacheFileName(cpe));
+        assert(cacheFileName != NULL); /* guaranteed by Class.c */
+
         const u1* signature = getSignature(cpe);
         size_t len = strlen(cacheFileName) +1;
         u4 storedStrLen;
@@ -1252,7 +1255,10 @@ static int writeDependencies(int fd, u4 modWhen, u4 crc)
     numDeps = 0;
     bufLen = 0;
     for (cpe = gDvm.bootClassPath; cpe->ptr != NULL; cpe++) {
-        const char* cacheFileName = getCacheFileName(cpe);
+        const char* cacheFileName =
+            dvmPathToAbsolutePortion(getCacheFileName(cpe));
+        assert(cacheFileName != NULL); /* guaranteed by Class.c */
+
         LOGV("+++ DexOpt: found dep '%s'\n", cacheFileName);
 
         numDeps++;
@@ -1274,7 +1280,10 @@ static int writeDependencies(int fd, u4 modWhen, u4 crc)
 
     u1* ptr = buf + 4*4;
     for (cpe = gDvm.bootClassPath; cpe->ptr != NULL; cpe++) {
-        const char* cacheFileName = getCacheFileName(cpe);
+        const char* cacheFileName =
+            dvmPathToAbsolutePortion(getCacheFileName(cpe));
+        assert(cacheFileName != NULL); /* guaranteed by Class.c */
+
         const u1* signature = getSignature(cpe);
         int len = strlen(cacheFileName) +1;
 

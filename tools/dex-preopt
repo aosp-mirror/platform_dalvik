@@ -222,9 +222,15 @@ elif [ `expr -- "${dexopt}" : ".* "` != '0' ]; then
     exit 1
 fi
 
-# Transform the bootJars into full paths, maintaining the colon separator.
+# Expand the bootJars into paths that are relative from the build
+# directory, maintaining the colon separators. We also add "/./" to
+# separate the build system part of the path from the target system
+# suffix part of the path. The dexopt executable (deep inside the vm
+# really) uses this to know how to generate the names of the
+# dependencies (since we don't want the device files to contain bits
+# of pathname from the host build system).
 BOOTCLASSPATH=`echo ":${bootJars}" | \
-    sed "s!:\([^:]*\)!:${product}/system/framework/\1.jar!g" | \
+    sed "s!:\([^:]*\)!:${product}/./system/framework/\1.jar!g" | \
     sed 's/^://'`
 export BOOTCLASSPATH
 

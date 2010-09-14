@@ -715,3 +715,24 @@ void *dvmAllocRegion(size_t size, int prot, const char *name) {
     }
     return base;
 }
+
+/* documented in header file */
+const char* dvmPathToAbsolutePortion(const char* path) {
+    if (path == NULL) {
+        return NULL;
+    }
+
+    if (path[0] == '/') {
+        /* It's a regular absolute path. Return it. */
+        return path;
+    }
+
+    const char* sentinel = strstr(path, "/./");
+
+    if (sentinel != NULL) {
+        /* It's got the sentinel. Return a pointer to the second slash. */
+        return sentinel + 2;
+    }
+
+    return NULL;
+}
