@@ -42,15 +42,27 @@
 #     one will be used.
 #   --boot-jars=list:of:jar:base:names -- Specify the list of base names
 #     of bootstrap classpath elements, colon-separated. This defaults to
-#     "core".
+#     "core". However, as of this writing, a good choice to pass in here
+#     is "core:core-junit:ext:framework:android.policy:services".
+#   --verify={none,remote,all} -- Specify what level of verification to
+#     do. Defaults to "all".
+#   --optimize={none,verified,all} -- Specify which classes to optimize.
+#     Defaults to "verified".
+#   --no-register-maps -- Indicate that the output should not contain
+#     register maps. By default, register maps are created and included.
 #
 
+# Defaults.
 buildDir="."
 product=""
 bootstrap="no"
-bogus="no"
-bootJars="core:ext:framework:android.policy:services"
-# eventually, just bootJars="core"
+doVerify="all"
+doOptimize="verified"
+doRegisterMaps="yes"
+bootJars="core"
+
+optimizeFlags="" # built up from the more human-friendly options
+bogus="no" # indicates if there was an error during processing arguments
 
 # Iterate over the arguments looking for options.
 while true; do
@@ -91,31 +103,86 @@ while true; do
         bootJars="${value}"
     elif [ "${option}" = 'bootstrap' -a "${hasValue}" = 'no' ]; then
         bootstrap="yes"
+    elif [ "${option}" = 'verify' -a "${hasValue}" = 'yes' ]; then
+        doVerify="${value}"
+    elif [ "${option}" = 'optimize' -a "${hasValue}" = 'yes' ]; then
+        doOptimize="${value}"
+    elif [ "${option}" = 'no-register-maps' -a "${hasValue}" = 'no' ]; then
+        doRegisterMaps="no"
     else
         echo "unknown option: ${origOption}" 1>&2
         bogus="yes"
     fi
 done
 
-if [ "${bogus}" = 'yes' ]; then
-    # There was an error during option processing.
-    echo "usage: $0 [--bootstrap] [--build-dir=path/to/out]" 1>&2
-    echo "  path/to/input.jar path/to/output.dex" 1>&2
-    exit 1
+# Check and set up the input and output files. In the case of bootstrap
+# processing, verify that no files are specified.
+inputFile=$1
+outputFile=$2
+if [ "${bootstrap}" = "yes" ]; then
+    if [ "$#" != "0" ]; then
+        echo "unexpected arguments in --bootstrap mode" 1>&2
+        bogus=yes
+    fi
+elif [ "$#" != "2" ]; then
+    echo "must specify input and output files (and no more arguments)" 1>&2
+    bogus=yes
 fi
 
 # Sanity-check the specified build directory.
 if [ "x${buildDir}" = 'x' ]; then
     echo "must specify build directory" 1>&2
-    exit 1
+    bogus=yes
 elif [ ! '(' -d "${buildDir}" -a -w "${buildDir}" ')' ]; then
     echo "build directory is not a writable directory" 1>&2
-    exit 1
+    bogus=yes
 fi
 
 # Sanity-check the specified boot jar list.
 if [ "x${bootJars}" = 'x' ]; then
     echo "must specify non-empty boot-jars list" 1>&2
+    bogus=yes
+fi
+
+# Sanity-check and expand the verify option.
+if [ "x${doVerify}" = "xnone" ]; then
+    optimizeFlags="${optimizeFlags},v=n"
+elif [ "x${doVerify}" = "xremote" ]; then
+    optimizeFlags="${optimizeFlags},v=r"
+elif [ "x${doVerify}" = "xall" ]; then
+    optimizeFlags="${optimizeFlags},v=a"
+else
+    echo "bad value for --verify: ${doVerify}" 1>&2
+    bogus=yes
+fi
+
+# Sanity-check and expand the optimize option.
+if [ "x${doOptimize}" = "xnone" ]; then
+    optimizeFlags="${optimizeFlags},o=n"
+elif [ "x${doOptimize}" = "xverified" ]; then
+    optimizeFlags="${optimizeFlags},o=v"
+elif [ "x${doOptimize}" = "xall" ]; then
+    optimizeFlags="${optimizeFlags},o=a"
+else
+    echo "bad value for --optimize: ${doOptimize}" 1>&2
+    bogus=yes
+fi
+
+# Expand the register maps selection, if necessary.
+if [ "${doRegisterMaps}" = "yes" ]; then
+    optimizeFlags="${optimizeFlags},m=y"
+fi
+
+# Kill off the spare comma in optimizeFlags.
+optimizeFlags=`echo ${optimizeFlags} | sed 's/^,//'`
+
+# Error out if there was trouble.
+if [ "${bogus}" = 'yes' ]; then
+    # There was an error during option processing.
+    echo "usage: $0 [--bootstrap] [--build-dir=path/to/out]" 1>&2
+    echo "  [--product=name] [--boot-jars=list:of:names]" 1>&2
+    echo "  [--verify=type] [--optimize=type] [--no-register-maps]" 1>&2
+    echo "  path/to/input.jar path/to/output.odex" 1>&2
     exit 1
 fi
 
@@ -162,63 +229,27 @@ BOOTCLASSPATH=`echo ":${bootJars}" | \
 export BOOTCLASSPATH
 
 if [ "${bootstrap}" = "yes" ]; then
-    echo "Processing boot class path..."
-
     # Split the boot classpath into separate elements and iterate over them,
     # processing each, in order.
     elements=`echo "${BOOTCLASSPATH}" | sed 's/:/ /g'`
 
     for inputFile in $elements; do
+        echo "Processing ${inputFile}" 1>&2
         outputFile="`dirname ${inputFile}`/`basename ${inputFile} .jar`.odex"
-        echo "TODO: We would process ${inputFile} into ${outputFile}"
+        "${dexopt}" --preopt "${inputFile}" "${outputFile}" "${optimizeFlags}"
+        status="$?"
+        if [ "${status}" != "0" ]; then
+            exit "${status}"
+        fi
     done
 else
-    inputFile=$1
-    outputFile=$2
+    echo "Processing ${inputFile}" 1>&2
+    "${dexopt}" --preopt "${inputFile}" "${outputFile}" "${optimizeFlags}"
 
-    if [ "x$inputFile" = 'x' ]; then
-        echo "must specify input and output files" 1>&2
-        exit 1
-    elif [ "x$outputFile" = 'x' ]; then
-        echo "must specify output file" 1>&2
-        exit 1
+    status="$?"
+    if [ "${status}" != "0" ]; then
+        exit "${status}"
     fi
-
-    echo "TODO: We would process ${inputFile} into ${outputFile}"
 fi
 
-##
-## TODO: The rest of this is unmodified from fadden's original prototype.
-##
-exit 2
-
-basedir=$rootdir/out/host/linux-x86/pr/sim
-javadir=$basedir/system/framework
-
-# this is where we find bin/dexopt
-export ANDROID_ROOT=$basedir/system
-# location of "dalvik-cache" directory with optimized bootstrap DEX files
-export ANDROID_DATA=$basedir/data
-
-# bootstrap class path, must match what's on the device in init.rc
-export BOOTCLASSPATH=$javadir/core.jar:$javadir/ext.jar:$javadir/framework.jar:$javadir/android.policy.jar:$javadir/services.jar
-
-# dalvik-cache naming convention
-pfx=$ANDROID_DATA/dalvik-cache/work@gitdalvik-dev@out@host@linux-x86@pr@sim@system@framework@
-sfx=@classes.dex
-
-# configure as appropriate for debuggging
-export ANDROID_LOG_TAGS='*:d'
-
-if [ "$1" = "--mkboot" ]; then
-       echo making bootstrap classes
-       dexopt-wrapper $javadir/core.jar ${pfx}core.jar${sfx}
-       dexopt-wrapper $javadir/ext.jar ${pfx}ext.jar${sfx}
-       dexopt-wrapper $javadir/framework.jar ${pfx}framework.jar${sfx}
-       dexopt-wrapper $javadir/android.policy.jar ${pfx}android.policy.jar${sfx}
-       dexopt-wrapper $javadir/services.jar ${pfx}services.jar${sfx}
-       exit 0
-else
-       #echo Using bootstrap classes from $BOOTCLASSPATH
-       exec dexopt-wrapper $*
-fi
+echo "Done!" 1>&2
