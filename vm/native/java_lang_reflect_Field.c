@@ -22,8 +22,7 @@
 
 
 /*
- * Get the address of a field from an object.  This can be used with "get"
- * or "set".
+ * Validate access to a field.  Returns a pointer to the Field struct.
  *
  * "declaringClass" is the class in which the field was declared.  For an
  * instance field, "obj" is the object that holds the field data; for a
@@ -35,12 +34,12 @@
  * On failure, throws an exception and returns NULL.
  *
  * The documentation lists exceptional conditions and the exceptions that
- * should be thrown, but doesn't say which exception previals when two or
+ * should be thrown, but doesn't say which exception prevails when two or
  * more exceptional conditions exist at the same time.  For example,
  * attempting to set a protected field from an unrelated class causes an
  * IllegalAccessException, while passing in a data type that doesn't match
  * the field causes an IllegalArgumentException.  If code does both at the
- * same time, we have to choose one or othe other.
+ * same time, we have to choose one or the other.
  *
  * The expected order is:
  *  (1) Check for illegal access. Throw IllegalAccessException.
@@ -56,11 +55,10 @@
  * widening conversion until we're actually extracting the value from the
  * object (which won't work well if it's a null reference).
  */
-static JValue* getFieldDataAddr(Object* obj, ClassObject* declaringClass,
+static Field* validateFieldAccess(Object* obj, ClassObject* declaringClass,
     int slot, bool isSetOperation, bool noAccessCheck)
 {
     Field* field;
-    JValue* result;
 
     field = dvmSlotToField(declaringClass, slot);
     assert(field != NULL);
@@ -118,7 +116,6 @@ static JValue* getFieldDataAddr(Object* obj, ClassObject* declaringClass,
             }
         }
 
-        result = dvmStaticFieldPtr((StaticField*) field);
     } else {
         /*
          * Verify object is of correct type (i.e. it actually has the
@@ -128,24 +125,324 @@ static JValue* getFieldDataAddr(Object* obj, ClassObject* declaringClass,
         if (!dvmVerifyObjectInClass(obj, declaringClass)) {
             assert(dvmCheckException(dvmThreadSelf()));
             if (obj != NULL) {
-                LOGD("Wrong type of object for field lookup: %s %s\n",
+                LOGD("Wrong object type for field access: %s is not a %s\n",
                     obj->clazz->descriptor, declaringClass->descriptor);
             }
             return NULL;
         }
-        result = dvmFieldPtr(obj, ((InstField*) field)->byteOffset);
     }
 
-    return result;
+    return field;
 }
+
+/*
+ * Extracts the value of a static field.  Provides appropriate barriers
+ * for volatile fields.
+ *
+ * Sub-32-bit values are sign- or zero-extended to fill out 32 bits.
+ */
+static void getStaticFieldValue(const StaticField* sfield, JValue* value)
+{
+    if (!dvmIsVolatileField(&sfield->field)) {
+        /* just copy the whole thing */
+        *value = sfield->value;
+    } else {
+        /* need memory barriers and/or 64-bit atomic ops */
+        switch (sfield->field.signature[0]) {
+        case 'Z':
+            value->i = dvmGetStaticFieldBooleanVolatile(sfield);
+            break;
+        case 'B':
+            value->i = dvmGetStaticFieldByteVolatile(sfield);
+            break;
+        case 'S':
+            value->i = dvmGetStaticFieldShortVolatile(sfield);
+            break;
+        case 'C':
+            value->i = dvmGetStaticFieldCharVolatile(sfield);
+            break;
+        case 'I':
+            value->i = dvmGetStaticFieldIntVolatile(sfield);
+            break;
+        case 'F':
+            value->f = dvmGetStaticFieldFloatVolatile(sfield);
+            break;
+        case 'J':
+            value->j = dvmGetStaticFieldLongVolatile(sfield);
+            break;
+        case 'D':
+            value->d = dvmGetStaticFieldDoubleVolatile(sfield);
+            break;
+        case 'L':
+        case '[':
+            value->l = dvmGetStaticFieldObjectVolatile(sfield);
+            break;
+        default:
+            LOGE("Unhandled field signature '%s'\n", sfield->field.signature);
+            dvmAbort();
+        }
+    }
+}
+
+/*
+ * Extracts the value of an instance field.  Provides appropriate barriers
+ * for volatile fields.
+ *
+ * Sub-32-bit values are sign- or zero-extended to fill out 32 bits.
+ */
+static void getInstFieldValue(const InstField* ifield, Object* obj,
+    JValue* value)
+{
+    if (!dvmIsVolatileField(&ifield->field)) {
+        /* use type-specific get; really just 32-bit vs. 64-bit */
+        switch (ifield->field.signature[0]) {
+        case 'Z':
+            value->i = dvmGetFieldBoolean(obj, ifield->byteOffset);
+            break;
+        case 'B':
+            value->i = dvmGetFieldByte(obj, ifield->byteOffset);
+            break;
+        case 'S':
+            value->i = dvmGetFieldShort(obj, ifield->byteOffset);
+            break;
+        case 'C':
+            value->i = dvmGetFieldChar(obj, ifield->byteOffset);
+            break;
+        case 'I':
+            value->i = dvmGetFieldInt(obj, ifield->byteOffset);
+            break;
+        case 'F':
+            value->f = dvmGetFieldFloat(obj, ifield->byteOffset);
+            break;
+        case 'J':
+            value->j = dvmGetFieldLong(obj, ifield->byteOffset);
+            break;
+        case 'D':
+            value->d = dvmGetFieldDouble(obj, ifield->byteOffset);
+            break;
+        case 'L':
+        case '[':
+            value->l = dvmGetFieldObject(obj, ifield->byteOffset);
+            break;
+        default:
+            LOGE("Unhandled field signature '%s'\n", ifield->field.signature);
+            dvmAbort();
+        }
+    } else {
+        /* need memory barriers and/or 64-bit atomic ops */
+        switch (ifield->field.signature[0]) {
+        case 'Z':
+            value->i = dvmGetFieldBooleanVolatile(obj, ifield->byteOffset);
+            break;
+        case 'B':
+            value->i = dvmGetFieldByteVolatile(obj, ifield->byteOffset);
+            break;
+        case 'S':
+            value->i = dvmGetFieldShortVolatile(obj, ifield->byteOffset);
+            break;
+        case 'C':
+            value->i = dvmGetFieldCharVolatile(obj, ifield->byteOffset);
+            break;
+        case 'I':
+            value->i = dvmGetFieldIntVolatile(obj, ifield->byteOffset);
+            break;
+        case 'F':
+            value->f = dvmGetFieldFloatVolatile(obj, ifield->byteOffset);
+            break;
+        case 'J':
+            value->j = dvmGetFieldLongVolatile(obj, ifield->byteOffset);
+            break;
+        case 'D':
+            value->d = dvmGetFieldDoubleVolatile(obj, ifield->byteOffset);
+            break;
+        case 'L':
+        case '[':
+            value->l = dvmGetFieldObjectVolatile(obj, ifield->byteOffset);
+            break;
+        default:
+            LOGE("Unhandled field signature '%s'\n", ifield->field.signature);
+            dvmAbort();
+        }
+    }
+}
+
+/*
+ * Copies the value of the static or instance field into "*value".
+ */
+static void getFieldValue(const Field* field, Object* obj, JValue* value)
+{
+    if (dvmIsStaticField(field)) {
+        return getStaticFieldValue((const StaticField*) field, value);
+    } else {
+        return getInstFieldValue((const InstField*) field, obj, value);
+    }
+}
+
+/*
+ * Sets the value of a static field.  Provides appropriate barriers
+ * for volatile fields.
+ */
+static void setStaticFieldValue(StaticField* sfield, const JValue* value)
+{
+    if (!dvmIsVolatileField(&sfield->field)) {
+        switch (sfield->field.signature[0]) {
+        case 'L':
+        case '[':
+            dvmSetStaticFieldObject(sfield, value->l);
+            break;
+        default:
+            /* just copy the whole thing */
+            sfield->value = *value;
+            break;
+        }
+    } else {
+        /* need memory barriers and/or 64-bit atomic ops */
+        switch (sfield->field.signature[0]) {
+        case 'Z':
+            dvmSetStaticFieldBooleanVolatile(sfield, value->z);
+            break;
+        case 'B':
+            dvmSetStaticFieldByteVolatile(sfield, value->b);
+            break;
+        case 'S':
+            dvmSetStaticFieldShortVolatile(sfield, value->s);
+            break;
+        case 'C':
+            dvmSetStaticFieldCharVolatile(sfield, value->c);
+            break;
+        case 'I':
+            dvmSetStaticFieldIntVolatile(sfield, value->i);
+            break;
+        case 'F':
+            dvmSetStaticFieldFloatVolatile(sfield, value->f);
+            break;
+        case 'J':
+            dvmSetStaticFieldLongVolatile(sfield, value->j);
+            break;
+        case 'D':
+            dvmSetStaticFieldDoubleVolatile(sfield, value->d);
+            break;
+        case 'L':
+        case '[':
+            dvmSetStaticFieldObjectVolatile(sfield, value->l);
+            break;
+        default:
+            LOGE("Unhandled field signature '%s'\n", sfield->field.signature);
+            dvmAbort();
+        }
+    }
+}
+
+/*
+ * Sets the value of an instance field.  Provides appropriate barriers
+ * for volatile fields.
+ */
+static void setInstFieldValue(InstField* ifield, Object* obj,
+    const JValue* value)
+{
+    if (!dvmIsVolatileField(&ifield->field)) {
+        /* use type-specific set; really just 32-bit vs. 64-bit */
+        switch (ifield->field.signature[0]) {
+        case 'Z':
+            dvmSetFieldBoolean(obj, ifield->byteOffset, value->z);
+            break;
+        case 'B':
+            dvmSetFieldByte(obj, ifield->byteOffset, value->b);
+            break;
+        case 'S':
+            dvmSetFieldShort(obj, ifield->byteOffset, value->s);
+            break;
+        case 'C':
+            dvmSetFieldChar(obj, ifield->byteOffset, value->c);
+            break;
+        case 'I':
+            dvmSetFieldInt(obj, ifield->byteOffset, value->i);
+            break;
+        case 'F':
+            dvmSetFieldFloat(obj, ifield->byteOffset, value->f);
+            break;
+        case 'J':
+            dvmSetFieldLong(obj, ifield->byteOffset, value->j);
+            break;
+        case 'D':
+            dvmSetFieldDouble(obj, ifield->byteOffset, value->d);
+            break;
+        case 'L':
+        case '[':
+            dvmSetFieldObject(obj, ifield->byteOffset, value->l);
+            break;
+        default:
+            LOGE("Unhandled field signature '%s'\n", ifield->field.signature);
+            dvmAbort();
+        }
+#if ANDROID_SMP != 0
+        /*
+         * Special handling for final fields on SMP systems.  We need a
+         * store/store barrier here (JMM requirement).
+         */
+        if (dvmIsFinalField(&ifield->field)) {
+            ANDROID_MEMBAR_FULL(); /* TODO: replace full bar with store/store */
+        }
+#endif
+    } else {
+        /* need memory barriers and/or 64-bit atomic ops */
+        switch (ifield->field.signature[0]) {
+        case 'Z':
+            dvmSetFieldBooleanVolatile(obj, ifield->byteOffset, value->z);
+            break;
+        case 'B':
+            dvmSetFieldByteVolatile(obj, ifield->byteOffset, value->b);
+            break;
+        case 'S':
+            dvmSetFieldShortVolatile(obj, ifield->byteOffset, value->s);
+            break;
+        case 'C':
+            dvmSetFieldCharVolatile(obj, ifield->byteOffset, value->c);
+            break;
+        case 'I':
+            dvmSetFieldIntVolatile(obj, ifield->byteOffset, value->i);
+            break;
+        case 'F':
+            dvmSetFieldFloatVolatile(obj, ifield->byteOffset, value->f);
+            break;
+        case 'J':
+            dvmSetFieldLongVolatile(obj, ifield->byteOffset, value->j);
+            break;
+        case 'D':
+            dvmSetFieldDoubleVolatile(obj, ifield->byteOffset, value->d);
+            break;
+        case 'L':
+        case '[':
+            dvmSetFieldObjectVolatile(obj, ifield->byteOffset, value->l);
+            break;
+        default:
+            LOGE("Unhandled field signature '%s'\n", ifield->field.signature);
+            dvmAbort();
+        }
+    }
+}
+
+/*
+ * Copy "*value" into the static or instance field.
+ */
+static void setFieldValue(Field* field, Object* obj, const JValue* value)
+{
+    if (dvmIsStaticField(field)) {
+        return setStaticFieldValue((StaticField*) field, value);
+    } else {
+        return setInstFieldValue((InstField*) field, obj, value);
+    }
+}
+
+
 
 /*
  * public int getFieldModifiers(Class declaringClass, int slot)
  */
-static void Dalvik_java_lang_reflect_Field_getFieldModifiers(
-    const u4* args, JValue* pResult)
+static void Dalvik_java_lang_reflect_Field_getFieldModifiers(const u4* args,
+    JValue* pResult)
 {
-    // ignore thisPtr in args[0]
+    /* ignore thisPtr in args[0] */
     ClassObject* declaringClass = (ClassObject*) args[1];
     int slot = args[2];
     Field* field;
@@ -163,32 +460,26 @@ static void Dalvik_java_lang_reflect_Field_getFieldModifiers(
 static void Dalvik_java_lang_reflect_Field_getField(const u4* args,
     JValue* pResult)
 {
-    // ignore thisPtr in args[0]
+    /* ignore thisPtr in args[0] */
     Object* obj = (Object*) args[1];
     ClassObject* declaringClass = (ClassObject*) args[2];
     ClassObject* fieldType = (ClassObject*) args[3];
     int slot = args[4];
     bool noAccessCheck = (args[5] != 0);
+    Field* field;
     JValue value;
-    const JValue* fieldPtr;
     DataObject* result;
 
     //dvmDumpClass(obj->clazz, kDumpClassFullDetail);
 
-    /* get a pointer to the field's data; performs access checks */
-    fieldPtr = getFieldDataAddr(obj, declaringClass, slot, false,noAccessCheck);
-    if (fieldPtr == NULL)
+    /* get a pointer to the Field after validating access */
+    field = validateFieldAccess(obj, declaringClass, slot, false,noAccessCheck);
+    if (field == NULL)
         RETURN_VOID();
 
-    /* copy 4 or 8 bytes out */
-    if (fieldType->primitiveType == PRIM_LONG ||
-        fieldType->primitiveType == PRIM_DOUBLE)
-    {
-        value.j = fieldPtr->j;
-    } else {
-        value.i = fieldPtr->i;
-    }
+    getFieldValue(field, obj, &value);
 
+    /* if it's primitive, box it up */
     result = dvmWrapPrimitive(value, fieldType);
     dvmReleaseTrackedAlloc((Object*) result, NULL);
     RETURN_PTR(result);
@@ -204,14 +495,14 @@ static void Dalvik_java_lang_reflect_Field_getField(const u4* args,
 static void Dalvik_java_lang_reflect_Field_setField(const u4* args,
     JValue* pResult)
 {
-    // ignore thisPtr in args[0]
+    /* ignore thisPtr in args[0] */
     Object* obj = (Object*) args[1];
     ClassObject* declaringClass = (ClassObject*) args[2];
     ClassObject* fieldType = (ClassObject*) args[3];
     int slot = args[4];
     bool noAccessCheck = (args[5] != 0);
     Object* valueObj = (Object*) args[6];
-    JValue* fieldPtr;
+    Field* field;
     JValue value;
 
     /* unwrap primitive, or verify object type */
@@ -221,45 +512,12 @@ static void Dalvik_java_lang_reflect_Field_setField(const u4* args,
         RETURN_VOID();
     }
 
-    /* get a pointer to the field's data; performs access checks */
-    fieldPtr = getFieldDataAddr(obj, declaringClass, slot, true, noAccessCheck);
-    if (fieldPtr == NULL)
-        RETURN_VOID();
+    /* get a pointer to the Field after validating access */
+    field = validateFieldAccess(obj, declaringClass, slot, true, noAccessCheck);
 
-    /* get the field pointer in case we need to do additional checks */
-    Field* field = dvmSlotToField(declaringClass, slot);
-    assert(field != NULL);
-
-    /* store 4 or 8 bytes */
-    if (fieldType->primitiveType == PRIM_LONG ||
-        fieldType->primitiveType == PRIM_DOUBLE)
-    {
-        fieldPtr->j = value.j;
-    } else if (fieldType->primitiveType == PRIM_NOT) {
-        /* need to use the field-set calls to update GC data structures */
-        if (dvmIsStaticField(field)) {
-            StaticField* sfield = (StaticField*) field;
-            assert(fieldPtr == &sfield->value);
-            dvmSetStaticFieldObject(sfield, value.l);
-        } else {
-            InstField* ifield = (InstField*) field;
-            assert(fieldPtr == (JValue *)BYTE_OFFSET(obj, ifield->byteOffset));
-            dvmSetFieldObject(obj, ifield->byteOffset, value.l);
-        }
-    } else {
-        fieldPtr->i = value.i;
+    if (field != NULL) {
+        setFieldValue(field, obj, &value);
     }
-
-#if ANDROID_SMP != 0
-    /*
-     * Special handling for final fields on SMP systems.  We need a
-     * store/store barrier here (JMM requirement).
-     */
-    if (dvmIsFinalField(field)) {
-        ANDROID_MEMBAR_FULL();  /* TODO: replace full bar with store/store */
-    }
-#endif
-
     RETURN_VOID();
 }
 
@@ -288,7 +546,7 @@ static PrimitiveType convPrimType(int typeNum)
 static void Dalvik_java_lang_reflect_Field_getPrimitiveField(const u4* args,
     JValue* pResult)
 {
-    // ignore thisPtr in args[0]
+    /* ignore thisPtr in args[0] */
     Object* obj = (Object*) args[1];
     ClassObject* declaringClass = (ClassObject*) args[2];
     ClassObject* fieldType = (ClassObject*) args[3];
@@ -296,7 +554,7 @@ static void Dalvik_java_lang_reflect_Field_getPrimitiveField(const u4* args,
     bool noAccessCheck = (args[5] != 0);
     int typeNum = args[6];
     PrimitiveType targetType = convPrimType(typeNum);
-    const JValue* fieldPtr;
+    const Field* field;
     JValue value;
 
     if (!dvmIsPrimitiveClass(fieldType)) {
@@ -305,19 +563,12 @@ static void Dalvik_java_lang_reflect_Field_getPrimitiveField(const u4* args,
         RETURN_VOID();
     }
 
-    /* get a pointer to the field's data; performs access checks */
-    fieldPtr = getFieldDataAddr(obj, declaringClass, slot, false,noAccessCheck);
-    if (fieldPtr == NULL)
+    /* get a pointer to the Field after validating access */
+    field = validateFieldAccess(obj, declaringClass, slot, false,noAccessCheck);
+    if (field == NULL)
         RETURN_VOID();
 
-    /* copy 4 or 8 bytes out */
-    if (fieldType->primitiveType == PRIM_LONG ||
-        fieldType->primitiveType == PRIM_DOUBLE)
-    {
-        value.j = fieldPtr->j;
-    } else {
-        value.i = fieldPtr->i;
-    }
+    getFieldValue(field, obj, &value);
 
     /* retrieve value, performing a widening conversion if necessary */
     if (dvmConvertPrimitiveValue(fieldType->primitiveType, targetType,
@@ -339,16 +590,16 @@ static void Dalvik_java_lang_reflect_Field_getPrimitiveField(const u4* args,
 static void Dalvik_java_lang_reflect_Field_setPrimitiveField(const u4* args,
     JValue* pResult)
 {
-    // ignore thisPtr in args[0]
+    /* ignore thisPtr in args[0] */
     Object* obj = (Object*) args[1];
     ClassObject* declaringClass = (ClassObject*) args[2];
     ClassObject* fieldType = (ClassObject*) args[3];
     int slot = args[4];
     bool noAccessCheck = (args[5] != 0);
     int typeNum = args[6];
-    const s4* valuePtr = (s4*) &args[7];
+    const s4* valuePtr = (s4*) &args[7];    /* 64-bit vars spill into args[8] */
     PrimitiveType srcType = convPrimType(typeNum);
-    JValue* fieldPtr;
+    Field* field;
     JValue value;
 
     if (!dvmIsPrimitiveClass(fieldType)) {
@@ -366,32 +617,12 @@ static void Dalvik_java_lang_reflect_Field_setPrimitiveField(const u4* args,
         RETURN_VOID();
     }
 
-    /* get a pointer to the field's data; performs access checks */
-    fieldPtr = getFieldDataAddr(obj, declaringClass, slot, true, noAccessCheck);
-    if (fieldPtr == NULL)
-        RETURN_VOID();
+    /* get a pointer to the Field after validating access */
+    field = validateFieldAccess(obj, declaringClass, slot, true, noAccessCheck);
 
-    /* store 4 or 8 bytes */
-    if (fieldType->primitiveType == PRIM_LONG ||
-        fieldType->primitiveType == PRIM_DOUBLE)
-    {
-        fieldPtr->j = value.j;
-    } else {
-        fieldPtr->i = value.i;
+    if (field != NULL) {
+        setFieldValue(field, obj, &value);
     }
-
-#if ANDROID_SMP != 0
-    /*
-     * Special handling for final fields on SMP systems.  We need a
-     * store/store barrier here (JMM requirement).
-     */
-    Field* field = dvmSlotToField(declaringClass, slot);
-    assert(field != NULL);
-    if (dvmIsFinalField(field)) {
-        ANDROID_MEMBAR_FULL();  /* TODO: replace full bar with store/store */
-    }
-#endif
-
     RETURN_VOID();
 }
 
@@ -403,7 +634,7 @@ static void Dalvik_java_lang_reflect_Field_setPrimitiveField(const u4* args,
 static void Dalvik_java_lang_reflect_Field_getDeclaredAnnotations(
     const u4* args, JValue* pResult)
 {
-    // ignore thisPtr in args[0]
+    /* ignore thisPtr in args[0] */
     ClassObject* declaringClass = (ClassObject*) args[1];
     int slot = args[2];
     Field* field;
@@ -424,7 +655,7 @@ static void Dalvik_java_lang_reflect_Field_getDeclaredAnnotations(
 static void Dalvik_java_lang_reflect_Field_getSignatureAnnotation(const u4* args,
     JValue* pResult)
 {
-    // ignore thisPtr in args[0]
+    /* ignore thisPtr in args[0] */
     ClassObject* declaringClass = (ClassObject*) args[1];
     int slot = args[2];
     Field* field;
