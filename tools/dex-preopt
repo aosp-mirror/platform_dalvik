@@ -41,9 +41,13 @@
 #     not specified, then there must only be one such directory, and that
 #     one will be used.
 #   --boot-jars=list:of:jar:base:names -- Specify the list of base names
-#     of bootstrap classpath elements, colon-separated. This defaults to
-#     "core". However, as of this writing, a good choice to pass in here
-#     is "core:core-junit:ext:framework:android.policy:services".
+#     of bootstrap classpath elements, colon-separated. Order is significant
+#     and must match the BOOTCLASSPATH that is eventually specified at
+#     runtime on the device. This defaults to "core". However, this really
+#     needs to match the target product's BOOTCLASSPATH, which, as of this
+#     writing, doesn't have a super-strict way of being defined within the
+#     build. You can find variations of it in different init.rc files under
+#     system/core/rootdir or under product-specific directories.
 #   --verify={none,remote,all} -- Specify what level of verification to
 #     do. Defaults to "all".
 #   --optimize={none,verified,all} -- Specify which classes to optimize.
