@@ -19,6 +19,7 @@ include $(CLEAR_VARS)
 LOCAL_SDK_VERSION := 4
 LOCAL_SRC_FILES := $(call all-java-files-under, src)
 LOCAL_MODULE := dexgen
+LOCAL_MODULE_TAGS := optional
 
 include $(BUILD_STATIC_JAVA_LIBRARY)
 
