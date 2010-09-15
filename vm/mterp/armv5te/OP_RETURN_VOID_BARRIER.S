@@ -1,3 +1,3 @@
 %verify "executed"
-    SMP_DMB                             @ TODO: want "DMB ST"
+    SMP_DMB_ST
     b       common_returnFromMethod

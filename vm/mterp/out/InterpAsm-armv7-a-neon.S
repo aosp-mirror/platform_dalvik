@@ -248,12 +248,22 @@ unspecified registers or condition codes.
 #endif
 
 /*
- * Macro for data memory barrier; not meaningful pre-ARMv6K.
- * If the argument is nonzero, emit barrier; otherwise, emit nothing.
+ * Macro for data memory barrier.
  */
 .macro  SMP_DMB
 #if ANDROID_SMP != 0
     dmb
+#else
+    /* not SMP */
+#endif
+.endm
+
+/*
+ * Macro for data memory barrier (store/store variant).
+ */
+.macro  SMP_DMB_ST
+#if ANDROID_SMP != 0
+    dmb                                 @ TODO: want "dmb st" here
 #else
     /* not SMP */
 #endif
@@ -7408,7 +7418,7 @@ dalvik_inst:
     .balign 64
 .L_OP_RETURN_VOID_BARRIER: /* 0xf1 */
 /* File: armv5te/OP_RETURN_VOID_BARRIER.S */
-    SMP_DMB                             @ TODO: want "DMB ST"
+    SMP_DMB_ST
     b       common_returnFromMethod
 
 /* ------------------------------ */

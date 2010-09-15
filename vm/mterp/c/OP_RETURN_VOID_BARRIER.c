@@ -3,6 +3,6 @@ HANDLE_OPCODE(OP_RETURN_VOID_BARRIER /**/)
 #ifndef NDEBUG
     retval.j = 0xababababULL;   /* placate valgrind */
 #endif
-    ANDROID_MEMBAR_FULL();      /* TODO: use a store/store barrier */
+    ANDROID_MEMBAR_STORE();
     GOTO_returnFromMethod();
 OP_END
