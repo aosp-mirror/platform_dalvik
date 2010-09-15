@@ -21,7 +21,11 @@
 
 /* startup/shutdown */
 bool dvmInlineNativeStartup(void);
+bool dvmInlineNativeCheck(void);
 void dvmInlineNativeShutdown(void);
+
+Method* dvmFindInlinableMethod(const char* classDescriptor,
+    const char* methodName, const char* methodSignature);
 
 /*
  * Basic 4-argument inline operation handler.

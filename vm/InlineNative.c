@@ -791,6 +791,92 @@ int dvmGetInlineOpsTableLength(void)
     return NELEM(gDvmInlineOpsTable);
 }
 
+Method* dvmFindInlinableMethod(const char* classDescriptor,
+    const char* methodName, const char* methodSignature)
+{
+    /*
+     * Find the class.
+     */
+    ClassObject* clazz = dvmFindClassNoInit(classDescriptor, NULL);
+    if (clazz == NULL) {
+        LOGE("dvmFindInlinableMethod: can't find class '%s'",
+            classDescriptor);
+        dvmClearException(dvmThreadSelf());
+        return NULL;
+    }
+
+    /*
+     * Method could be virtual or direct.  Try both.  Don't use
+     * the "hier" versions.
+     */
+    Method* method = dvmFindDirectMethodByDescriptor(clazz, methodName,
+        methodSignature);
+    if (method == NULL) {
+        method = dvmFindVirtualMethodByDescriptor(clazz, methodName,
+            methodSignature);
+    }
+    if (method == NULL) {
+        LOGE("dvmFindInlinableMethod: can't find method %s.%s %s",
+            clazz->descriptor, methodName, methodSignature);
+        return NULL;
+    }
+
+    /*
+     * Check that the method is appropriate for inlining.
+     */
+    if (!dvmIsFinalClass(clazz) && !dvmIsFinalMethod(method)) {
+        LOGE("dvmFindInlinableMethod: can't inline non-final method %s.%s",
+            clazz->descriptor, method->name);
+        return NULL;
+    }
+    if (dvmIsSynchronizedMethod(method) ||
+            dvmIsDeclaredSynchronizedMethod(method)) {
+        LOGE("dvmFindInlinableMethod: can't inline synchronized method %s.%s",
+            clazz->descriptor, method->name);
+        return NULL;
+    }
+
+    return method;
+}
+
+/*
+ * Populate the methods table on first use.  It's possible the class
+ * hasn't been resolved yet, so we need to do the full "calling the
+ * method for the first time" routine.  (It's probably okay to skip
+ * the access checks.)
+ *
+ * Currently assuming that we're only inlining stuff loaded by the
+ * bootstrap class loader.  This is a safe assumption for many reasons.
+ */
+static Method* resolveInlineNative(int opIndex)
+{
+    assert(opIndex >= 0 && opIndex < NELEM(gDvmInlineOpsTable));
+    Method* method = gDvm.inlinedMethods[opIndex];
+    if (method != NULL) {
+        return method;
+    }
+
+    method = dvmFindInlinableMethod(
+        gDvmInlineOpsTable[opIndex].classDescriptor,
+        gDvmInlineOpsTable[opIndex].methodName,
+        gDvmInlineOpsTable[opIndex].methodSignature);
+
+    if (method == NULL) {
+        /* We already reported the error. */
+        return NULL;
+    }
+
+    gDvm.inlinedMethods[opIndex] = method;
+    IF_LOGV() {
+        char* desc = dexProtoCopyMethodDescriptor(&method->prototype);
+        LOGV("Registered for profile: %s.%s %s\n",
+            method->clazz->descriptor, method->name, desc);
+        free(desc);
+    }
+
+    return method;
+}
+
 /*
  * Make an inline call for the "debug" interpreter, used when the debugger
  * or profiler is active.
@@ -798,60 +884,30 @@ int dvmGetInlineOpsTableLength(void)
 bool dvmPerformInlineOp4Dbg(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
     JValue* pResult, int opIndex)
 {
-    Thread* self = dvmThreadSelf();
-    bool result;
-
-    assert(opIndex >= 0 && opIndex < NELEM(gDvmInlineOpsTable));
-
-    /*
-     * Populate the methods table on first use.  It's possible the class
-     * hasn't been resolved yet, so we need to do the full "calling the
-     * method for the first time" routine.  (It's probably okay to skip
-     * the access checks.)
-     *
-     * Currently assuming that we're only inlining stuff loaded by the
-     * bootstrap class loader.  This is a safe assumption for many reasons.
-     */
-    Method* method = gDvm.inlinedMethods[opIndex];
+    Method* method = resolveInlineNative(opIndex);
     if (method == NULL) {
-        ClassObject* clazz;
-
-        clazz = dvmFindClassNoInit(
-                gDvmInlineOpsTable[opIndex].classDescriptor, NULL);
-        if (clazz == NULL) {
-            LOGW("Warning: can't find class '%s'\n", clazz->descriptor);
-            goto skip_prof;
-        }
-        method = dvmFindDirectMethodByDescriptor(clazz,
-                    gDvmInlineOpsTable[opIndex].methodName,
-                    gDvmInlineOpsTable[opIndex].methodSignature);
-        if (method == NULL)
-            method = dvmFindVirtualMethodByDescriptor(clazz,
-                        gDvmInlineOpsTable[opIndex].methodName,
-                        gDvmInlineOpsTable[opIndex].methodSignature);
-        if (method == NULL) {
-            LOGW("Warning: can't find method %s.%s %s\n",
-                clazz->descriptor,
-                gDvmInlineOpsTable[opIndex].methodName,
-                gDvmInlineOpsTable[opIndex].methodSignature);
-            goto skip_prof;
-        }
-
-        gDvm.inlinedMethods[opIndex] = method;
-        IF_LOGV() {
-            char* desc = dexProtoCopyMethodDescriptor(&method->prototype);
-            LOGV("Registered for profile: %s.%s %s\n",
-                method->clazz->descriptor, method->name, desc);
-            free(desc);
-        }
+        return (*gDvmInlineOpsTable[opIndex].func)(arg0, arg1, arg2, arg3,
+            pResult);
     }
 
+    Thread* self = dvmThreadSelf();
     TRACE_METHOD_ENTER(self, method);
-    result = (*gDvmInlineOpsTable[opIndex].func)(arg0, arg1, arg2, arg3,
-                pResult);
+    bool result = (*gDvmInlineOpsTable[opIndex].func)(arg0, arg1, arg2, arg3,
+        pResult);
     TRACE_METHOD_EXIT(self, method);
     return result;
+}
 
-skip_prof:
-    return (*gDvmInlineOpsTable[opIndex].func)(arg0, arg1, arg2, arg3, pResult);
+/*
+ * Check that we can resolve every inline native.
+ */
+bool dvmInlineNativeCheck(void)
+{
+    int op;
+    for (op = 0; op < NELEM(gDvmInlineOpsTable); ++op) {
+        if (resolveInlineNative(op) == NULL) {
+            dvmAbort();
+        }
+    }
+    return true;
 }
