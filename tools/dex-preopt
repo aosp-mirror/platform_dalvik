@@ -254,7 +254,8 @@ if [ "${bootstrap}" = "yes" ]; then
     done
 else
     echo "Processing ${inputFile}" 1>&2
-    "${dexopt}" --preopt "${inputFile}" "${outputFile}" "${optimizeFlags}"
+    "${dexopt}" --preopt "${product}/${inputFile}" "${product}/${outputFile}" \
+        "${optimizeFlags}"
 
     status="$?"
     if [ "${status}" != "0" ]; then
