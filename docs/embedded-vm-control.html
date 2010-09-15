@@ -219,8 +219,7 @@ monitor locks are acquired.  If the program attempts to acquire a set
 of locks in a different order from what was seen earlier, the VM logs
 a warning and optionally throws an exception.
 
-<p>The command-line argument is set based on the
-<code>dalvik.vm.deadlock-predict</code> property.  Valid values are
+<p>Valid values for the command-line argument are
 <code>off</code> to disable it (default), <code>warn</code> to log the
 problem but continue executing, <code>err</code> to cause a
 <code>dalvik.system.PotentialDeadlockError</code> to be thrown from the
@@ -228,7 +227,7 @@ problem but continue executing, <code>err</code> to cause a
 the entire VM abort.
 
 <p>You will usually want to use:
-<pre>adb shell setprop dalvik.vm.deadlock-predict err</pre>
+<pre>adb shell setprop dalvik.vm.extra-opts -Xdeadlockpredict:err</pre>
 unless you are keeping an eye on the logs as they scroll by.
 
 <p>Please note that this feature is deadlock prediction, not deadlock
@@ -291,7 +290,7 @@ to check for corruption in a large set of files.
 
 <h2><a name="general">General Flags</a></h2>
 
-<p>In the "Honeycomb" release, a general mechanism for passing flags to
+<p>In the "Gingerbread" release, a general mechanism for passing flags to
 the VM was introduced:
 
 <pre>adb shell setprop dalvik.vm.extra-opts "flag1 flag2 ... flagN"</pre>
