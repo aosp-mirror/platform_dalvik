@@ -25,6 +25,10 @@ import dalvik.system.DexClassLoader;
  */
 public class DexClassLoaderHelper {
 
+    private static class DexClassLoaderHelperHolder {
+        private static final DexClassLoaderHelper INSTANCE = new DexClassLoaderHelper();
+    }
+
     private DexClassLoaderHelper() {
         // intentionally empty to disable direct instantiation
     }
@@ -51,9 +55,5 @@ public class DexClassLoaderHelper {
         ClassLoader myLoader = DexClassLoaderHelper.class.getClassLoader();
         return new DexClassLoader(pathHolder.getJarFilePath(), pathHolder.getDirLocation(),
                 null, myLoader);
-    }
-
-    private static class DexClassLoaderHelperHolder {
-        private static final DexClassLoaderHelper INSTANCE = new DexClassLoaderHelper();
     }
 }
