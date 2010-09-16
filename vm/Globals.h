@@ -273,7 +273,6 @@ struct DvmGlobals {
 
     /* field offsets - Throwable */
     int         offJavaLangThrowable_stackState;
-    int         offJavaLangThrowable_message;
     int         offJavaLangThrowable_cause;
 
     /* field offsets - java.lang.reflect.* */
