@@ -41,6 +41,7 @@ LOCAL_SHARED_LIBRARIES := \
     libssl \
     libz
 
+LOCAL_MODULE_TAGS := optional
 LOCAL_MODULE := dalvikvm
 
 include $(BUILD_EXECUTABLE)
@@ -64,9 +65,9 @@ ifeq ($(WITH_HOST_DALVIK),true)
     else
         LOCAL_LDLIBS += -ldl -lpthread
         LOCAL_SHARED_LIBRARIES += libdvm libcrypto libicuuc libicui18n libssl
-#        LOCAL_STATIC_LIBRARIES += libcutils liblog libdex libexpat libnativehelper libutils libz
     endif
 
+    LOCAL_MODULE_TAGS := optional
     LOCAL_MODULE := dalvikvm
 
     include $(BUILD_HOST_EXECUTABLE)
