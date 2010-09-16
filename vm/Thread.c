@@ -3105,6 +3105,8 @@ ThreadStatus dvmChangeStatus(Thread* self, ThreadStatus newStatus)
         self->threadId, self->status, newStatus);
 
     oldStatus = self->status;
+    if (oldStatus == newStatus)
+        return oldStatus;
 
     if (newStatus == THREAD_RUNNING) {
         /*
@@ -3157,7 +3159,6 @@ ThreadStatus dvmChangeStatus(Thread* self, ThreadStatus newStatus)
          * the thread is supposed to be suspended.  This is possibly faster
          * on SMP and slightly more correct, but less convenient.
          */
-        assert(oldStatus != THREAD_RUNNING);
         android_atomic_acquire_store(newStatus, &self->status);
         if (self->suspendCount != 0) {
             fullSuspendCheck(self);
