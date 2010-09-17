@@ -710,7 +710,7 @@ extern void dvmCompilerMarkInUse(CompilationUnit *cUnit, int reg)
           info->inUse = true;
 }
 
-void copyRegInfo(CompilationUnit *cUnit, int newReg, int oldReg)
+static void copyRegInfo(CompilationUnit *cUnit, int newReg, int oldReg)
 {
     RegisterInfo *newInfo = getRegInfo(cUnit, newReg);
     RegisterInfo *oldInfo = getRegInfo(cUnit, oldReg);

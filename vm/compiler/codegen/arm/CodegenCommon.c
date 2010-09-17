@@ -361,7 +361,7 @@ static void genBarrier(CompilationUnit *cUnit)
 }
 
 /* Create the PC reconstruction slot if not already done */
-extern ArmLIR *genCheckCommon(CompilationUnit *cUnit, int dOffset,
+static ArmLIR *genCheckCommon(CompilationUnit *cUnit, int dOffset,
                               ArmLIR *branch,
                               ArmLIR *pcrLabel)
 {

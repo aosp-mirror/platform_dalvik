@@ -327,7 +327,7 @@ void dvmCompilerPerformSafePointChecks(void)
     dvmCompilerPatchInlineCache();
 }
 
-bool compilerThreadStartup(void)
+static bool compilerThreadStartup(void)
 {
     JitEntry *pJitTable = NULL;
     unsigned char *pJitProfTable = NULL;
