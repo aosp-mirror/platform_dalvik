@@ -48,6 +48,7 @@ ifneq ($(SDK_ONLY),true)  # SDK_only doesn't need device version
 include $(CLEAR_VARS)
 LOCAL_SRC_FILES := $(dex_src_files)
 LOCAL_C_INCLUDES += $(dex_include_files)
+LOCAL_MODULE_TAGS := optional
 LOCAL_MODULE := libdex
 include $(BUILD_STATIC_LIBRARY)
 
@@ -62,5 +63,6 @@ endif # !SDK_ONLY
 include $(CLEAR_VARS)
 LOCAL_SRC_FILES := $(dex_src_files)
 LOCAL_C_INCLUDES += $(dex_include_files)
+LOCAL_MODULE_TAGS := optional
 LOCAL_MODULE := libdex
 include $(BUILD_HOST_STATIC_LIBRARY)
