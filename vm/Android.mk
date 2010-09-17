@@ -48,7 +48,7 @@ ifeq ($(TARGET_SIMULATOR),false)
     LOCAL_PRELINK_MODULE := true
 endif
 endif
-LOCAL_MODULE_TAGS := user
+LOCAL_MODULE_TAGS := optional
 LOCAL_MODULE := libdvm
 LOCAL_CFLAGS += $(target_smp_flag)
 include $(BUILD_SHARED_LIBRARY)
@@ -137,6 +137,7 @@ ifeq ($(WITH_HOST_DALVIK),true)
     endif
 
     LOCAL_CFLAGS += $(host_smp_flag)
+    LOCAL_MODULE_TAGS := optional
     LOCAL_MODULE := libdvm
 
     include $(BUILD_HOST_SHARED_LIBRARY)

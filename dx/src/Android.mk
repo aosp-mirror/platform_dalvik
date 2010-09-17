@@ -11,7 +11,7 @@ include $(CLEAR_VARS)
 
 LOCAL_SRC_FILES := $(call all-subdir-java-files)
 LOCAL_JAR_MANIFEST := ../etc/manifest.txt
-
+LOCAL_MODULE_TAGS := optional
 LOCAL_MODULE:= dx
 
 include $(BUILD_HOST_JAVA_LIBRARY)
@@ -25,7 +25,7 @@ endif # TARGET_BUILD_APPS
 include $(CLEAR_VARS)
 
 LOCAL_SRC_FILES := $(call all-subdir-java-files) $(call all-subdir-html-files)
-
+LOCAL_MODULE_TAGS := optional
 LOCAL_MODULE:= dx
 LOCAL_DROIDDOC_OPTIONS := -hidden
 LOCAL_MODULE_CLASS := JAVA_LIBRARIES
