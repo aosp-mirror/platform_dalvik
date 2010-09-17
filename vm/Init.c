@@ -1296,6 +1296,9 @@ int dvmStartup(int argc, const char* const argv[], bool ignoreUnrecognized,
     if (!dvmDebuggerStartup())
         goto fail;
 
+    if (!dvmInlineNativeCheck())
+        goto fail;
+
     /*
      * Init for either zygote mode or non-zygote mode.  The key difference
      * is that we don't start any additional threads in Zygote mode.
@@ -1349,7 +1352,7 @@ static bool registerSystemNatives(JNIEnv* pEnv)
     self->status = THREAD_NATIVE;
 
     if (jniRegisterSystemMethods(pEnv) < 0) {
-        LOGW("jniRegisterSystemMethods failed\n");
+        LOGE("jniRegisterSystemMethods failed");
         return false;
     }
 
@@ -1552,6 +1555,8 @@ int dvmPrepForDexOpt(const char* bootClassPath, DexOptimizerMode dexOptMode,
     if (!dvmInstanceofStartup())
         goto fail;
     if (!dvmClassStartup())
+        goto fail;
+    if (!dvmInlineNativeCheck())
         goto fail;
 
     /*
