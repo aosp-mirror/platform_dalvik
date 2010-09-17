@@ -53,7 +53,7 @@ LOCAL_SRC_FILES := $(src_files)
 LOCAL_C_INCLUDES := $(c_includes)
 LOCAL_STATIC_LIBRARIES := $(static_libraries)
 LOCAL_SHARED_LIBRARIES := $(shared_libraries) libcutils libexpat liblog libutils libz
-
+LOCAL_MODULE_TAGS := optional
 LOCAL_MODULE := libnativehelper
 
 include $(BUILD_SHARED_LIBRARY)
@@ -81,6 +81,7 @@ ifeq ($(WITH_HOST_DALVIK),true)
         LOCAL_STATIC_LIBRARIES := libcutils libexpat liblog libutils libz
     endif
 
+    LOCAL_MODULE_TAGS := optional
     LOCAL_MODULE := libnativehelper
     include $(BUILD_HOST_STATIC_LIBRARY)
 
