@@ -25,7 +25,7 @@
 # bootstrap classes must be created before this can be run on other files;
 # use the "--bootstrap" option to do this.
 #
-# The "output.dex" file must not already exist.
+# The "output.odex" file must not already exist.
 #
 # This is expected to be running in a user build environment, where
 # "dexopt" is available on the host.
@@ -36,10 +36,14 @@
 #     This is typically a directory named "out". If not specified, it is
 #     assumed to be the current directory. The specified input and output
 #     paths are taken to be relative to this directory.
-#   --product=name -- Specify the name of the product to work on. There
-#     should be a directory with this name under build-dir/product. If
-#     not specified, then there must only be one such directory, and that
-#     one will be used.
+#   --product-dir=path/to/product -- Specify the path, relative to the build
+#     directory, where the product tree to be used is. This directory should
+#     contain the boot classpath jar files. If not specified, then there
+#     must be a unique directory in the build named "target/product/NAME",
+#     and this is the directory that will be used.
+#   --boot-dir=path/to/bootclasspath -- Specify the path, relative to the
+#     product directory, of the directory where the boot classpath files
+#     reside. If not specified, this defaults to "system/framework"
 #   --boot-jars=list:of:jar:base:names -- Specify the list of base names
 #     of bootstrap classpath elements, colon-separated. Order is significant
 #     and must match the BOOTCLASSPATH that is eventually specified at
@@ -58,7 +62,8 @@
 
 # Defaults.
 buildDir="."
-product=""
+productDir=""
+bootDir="system/framework"
 bootstrap="no"
 doVerify="all"
 doOptimize="verified"
@@ -101,8 +106,10 @@ while true; do
     # Interpret the option
     if [ "${option}" = 'build-dir' -a "${hasValue}" = 'yes' ]; then
         buildDir="${value}"
-    elif [ "${option}" = 'product' -a "${hasValue}" = 'yes' ]; then
-        product="${value}"
+    elif [ "${option}" = 'boot-dir' -a "${hasValue}" = 'yes' ]; then
+        bootDir="${value}"
+    elif [ "${option}" = 'product-dir' -a "${hasValue}" = 'yes' ]; then
+        productDir="${value}"
     elif [ "${option}" = 'boot-jars' -a "${hasValue}" = 'yes' ]; then
         bootJars="${value}"
     elif [ "${option}" = 'bootstrap' -a "${hasValue}" = 'no' ]; then
@@ -138,7 +145,13 @@ if [ "x${buildDir}" = 'x' ]; then
     echo "must specify build directory" 1>&2
     bogus=yes
 elif [ ! '(' -d "${buildDir}" -a -w "${buildDir}" ')' ]; then
-    echo "build directory is not a writable directory" 1>&2
+    echo "build-dir is not a writable directory: ${buildDir}" 1>&2
+    bogus=yes
+fi
+
+# Sanity-check the specified boot classpath directory.
+if [ "x${bootDir}" = 'x' ]; then
+    echo "must specify boot classpath directory" 1>&2
     bogus=yes
 fi
 
@@ -184,7 +197,8 @@ optimizeFlags=`echo ${optimizeFlags} | sed 's/^,//'`
 if [ "${bogus}" = 'yes' ]; then
     # There was an error during option processing.
     echo "usage: $0 [--bootstrap] [--build-dir=path/to/out]" 1>&2
-    echo "  [--product=name] [--boot-jars=list:of:names]" 1>&2
+    echo "  [--product-dir=path/to/product] [--boot-dir=name]" 1>&2
+    echo "  [--boot-jars=list:of:names]" 1>&2
     echo "  [--verify=type] [--optimize=type] [--no-register-maps]" 1>&2
     echo "  path/to/input.jar path/to/output.odex" 1>&2
     exit 1
@@ -194,25 +208,34 @@ fi
 cd "${buildDir}"
 cd "`/bin/pwd`"
 
-# Verify and expand the product directory, picking up the default
-# if appropriate.
-if [ "x${product}" = 'x' ]; then
-    # Find the unique product directory.
-    product="`ls target/product`"
+# If needed, find the default product directory.
+if [ "x${productDir}" = 'x' ]; then
+    productDir="`ls target/product`"
     if [ "$?" != '0' ]; then
         echo "can't find product directory" 1>&2
         exit 1
-    elif [ `expr -- "${product}" : ".* "` != '0' ]; then
+    elif [ `expr -- "${productDir}" : ".* "` != '0' ]; then
         echo "ambiguous product directory" 1>&2
         exit 1
     fi
+    productDir="target/product/${productDir}"
 fi
 
-# Expand the product directory.
-product="target/product/${product}"
+# Verify the product directory.
+if [ ! '(' -d "${productDir}" -a -w "${productDir}" ')' ]; then
+    echo "product-dir is not a writable directory: ${productDir}" 1>&2
+    exit 1
+fi
 
-if [ ! '(' -d "${product}" -a -w "${product}" ')' ]; then
-    echo "product directory is not a writable directory" 1>&2
+# Expand and verify the boot classpath directory. We add "/./" here to
+# separate the build system part of the path from the target system
+# suffix part of the path. The dexopt executable (deep inside the vm
+# really) uses this to know how to generate the names of the
+# dependencies (since we don't want the device files to contain bits
+# of pathname from the host build system).
+bootDir="${productDir}/./${bootDir}"
+if [ ! '(' -d "${bootDir}" -a -w "${bootDir}" ')' ]; then
+    echo "boot-dir is not a writable directory: ${bootDir}" 1>&2
     exit 1
 fi
 
@@ -227,14 +250,9 @@ elif [ `expr -- "${dexopt}" : ".* "` != '0' ]; then
 fi
 
 # Expand the bootJars into paths that are relative from the build
-# directory, maintaining the colon separators. We also add "/./" to
-# separate the build system part of the path from the target system
-# suffix part of the path. The dexopt executable (deep inside the vm
-# really) uses this to know how to generate the names of the
-# dependencies (since we don't want the device files to contain bits
-# of pathname from the host build system).
+# directory, maintaining the colon separators.
 BOOTCLASSPATH=`echo ":${bootJars}" | \
-    sed "s!:\([^:]*\)!:${product}/./system/framework/\1.jar!g" | \
+    sed "s!:\([^:]*\)!:${bootDir}/\1.jar!g" | \
     sed 's/^://'`
 export BOOTCLASSPATH
 
@@ -254,8 +272,7 @@ if [ "${bootstrap}" = "yes" ]; then
     done
 else
     echo "Processing ${inputFile}" 1>&2
-    "${dexopt}" --preopt "${product}/${inputFile}" "${product}/${outputFile}" \
-        "${optimizeFlags}"
+    "${dexopt}" --preopt "${inputFile}" "${outputFile}" "${optimizeFlags}"
 
     status="$?"
     if [ "${status}" != "0" ]; then
