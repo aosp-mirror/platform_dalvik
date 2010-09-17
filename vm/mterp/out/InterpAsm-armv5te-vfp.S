@@ -249,6 +249,12 @@ unspecified registers or condition codes.
 .macro  SMP_DMB
 .endm
 
+/*
+ * Macro for data memory barrier; not meaningful pre-ARMv6K.
+ */
+.macro  SMP_DMB_ST
+.endm
+
 /* File: armv5te/entry.S */
 /*
  * Copyright (C) 2008 The Android Open Source Project
@@ -7454,7 +7460,7 @@ dalvik_inst:
     .balign 64
 .L_OP_RETURN_VOID_BARRIER: /* 0xf1 */
 /* File: armv5te/OP_RETURN_VOID_BARRIER.S */
-    SMP_DMB                             @ TODO: want "DMB ST"
+    SMP_DMB_ST
     b       common_returnFromMethod
 
 /* ------------------------------ */

@@ -381,7 +381,7 @@ static void setInstFieldValue(InstField* ifield, Object* obj,
          * store/store barrier here (JMM requirement).
          */
         if (dvmIsFinalField(&ifield->field)) {
-            ANDROID_MEMBAR_FULL(); /* TODO: replace full bar with store/store */
+            ANDROID_MEMBAR_STORE();
         }
 #endif
     } else {
