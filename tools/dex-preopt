@@ -31,11 +31,13 @@
 # "dexopt" is available on the host.
 #
 # Options:
-#   --bootstrap -- Process the bootstrap classes.
 #   --build-dir=path/to/out -- Specify where the base of the build tree is.
 #     This is typically a directory named "out". If not specified, it is
 #     assumed to be the current directory. The specified input and output
 #     paths are taken to be relative to this directory.
+#   --dexopt=path/to/dexopt -- Specify the path to the dexopt executable.
+#     If unspecified, there must be a unique subdirectory of the build-dir
+#     that looks like host/ARCH/bin which must contain dexopt.
 #   --product-dir=path/to/product -- Specify the path, relative to the build
 #     directory, where the product tree to be used is. This directory should
 #     contain the boot classpath jar files. If not specified, then there
@@ -52,6 +54,10 @@
 #     writing, doesn't have a super-strict way of being defined within the
 #     build. You can find variations of it in different init.rc files under
 #     system/core/rootdir or under product-specific directories.
+#   --bootstrap -- Process the bootstrap classes. If this is specified,
+#     then, instead of processing a specified input file, no other arguments
+#     are taken, and what is processed is the entirety of the boot jar
+#     list, in order.
 #   --verify={none,remote,all} -- Specify what level of verification to
 #     do. Defaults to "all".
 #   --optimize={none,verified,all} -- Specify which classes to optimize.
@@ -61,6 +67,7 @@
 #
 
 # Defaults.
+dexopt=""
 buildDir="."
 productDir=""
 bootDir="system/framework"
@@ -106,6 +113,8 @@ while true; do
     # Interpret the option
     if [ "${option}" = 'build-dir' -a "${hasValue}" = 'yes' ]; then
         buildDir="${value}"
+    elif [ "${option}" = 'dexopt' -a "${hasValue}" = 'yes' ]; then
+        dexopt="${value}"
     elif [ "${option}" = 'boot-dir' -a "${hasValue}" = 'yes' ]; then
         bootDir="${value}"
     elif [ "${option}" = 'product-dir' -a "${hasValue}" = 'yes' ]; then
@@ -196,9 +205,10 @@ optimizeFlags=`echo ${optimizeFlags} | sed 's/^,//'`
 # Error out if there was trouble.
 if [ "${bogus}" = 'yes' ]; then
     # There was an error during option processing.
-    echo "usage: $0 [--bootstrap] [--build-dir=path/to/out]" 1>&2
+    echo "usage: $0" 1>&2
+    echo "  [--build-dir=path/to/out] [--dexopt=path/to/dexopt]" 1>&2
     echo "  [--product-dir=path/to/product] [--boot-dir=name]" 1>&2
-    echo "  [--boot-jars=list:of:names]" 1>&2
+    echo "  [--boot-jars=list:of:names] [--bootstrap]" 1>&2
     echo "  [--verify=type] [--optimize=type] [--no-register-maps]" 1>&2
     echo "  path/to/input.jar path/to/output.odex" 1>&2
     exit 1
@@ -239,13 +249,19 @@ if [ ! '(' -d "${bootDir}" -a -w "${bootDir}" ')' ]; then
     exit 1
 fi
 
-# Find the dexopt binary.
-dexopt="`ls host/*/bin/dexopt`"
-if [ "$?" != '0' ]; then
-    echo "can't find dexopt binary" 1>&2
-    exit 1
-elif [ `expr -- "${dexopt}" : ".* "` != '0' ]; then
-    echo "ambiguous host directory" 1>&2
+# Find the dexopt binary if necesasry, and verify it.
+if [ "x${dexopt}" = 'x' ]; then
+    dexopt="`ls host/*/bin/dexopt`"
+    if [ "$?" != '0' ]; then
+        echo "can't find dexopt binary" 1>&2
+        exit 1
+    elif [ `expr -- "${dexopt}" : ".* "` != '0' ]; then
+        echo "ambiguous host directory" 1>&2
+        exit 1
+    fi
+fi
+if [ ! -x "${dexopt}" ]; then
+    echo "dexopt binary is not executable: ${dexopt}" 1>&2
     exit 1
 fi
 
