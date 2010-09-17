@@ -294,6 +294,14 @@ ifeq ($(dvm_arch),x86)
 		arch/$(dvm_arch_variant)/Hints386ABI.c \
 		mterp/out/InterpC-$(dvm_arch_variant).c \
 		mterp/out/InterpAsm-$(dvm_arch_variant).S
+    ifeq ($(WITH_JIT),true)
+      LOCAL_SRC_FILES += \
+		compiler/codegen/x86/Assemble.c \
+		compiler/codegen/x86/ArchUtility.c \
+		compiler/codegen/x86/ia32/Codegen.c \
+		compiler/codegen/x86/ia32/CallingConvention.S \
+		compiler/template/out/CompilerTemplateAsm-ia32.S
+    endif
   endif
 endif
 

@@ -17,6 +17,29 @@
  * Common subroutines and data.
  */
 
+#if defined(WITH_JIT)
+/*
+ * Placeholder entries for x86 JIT
+ */
+    .global dvmJitToInterpPunt
+dvmJitToInterpPunt:
+    .global dvmJitToInterpSingleStep
+dvmJitToInterpSingleStep:
+    .global dvmJitToInterpNoChainNoProfile
+dvmJitToInterpNoChainNoProfile:
+    .global dvmJitToInterpTraceSelectNoChain
+dvmJitToInterpTraceSelectNoChain:
+    .global dvmJitToInterpTraceSelect
+dvmJitToInterpTraceSelect:
+    .global dvmJitToInterpBackwardBranch
+dvmJitToInterpBackwardBranch:
+    .global dvmJitToInterpNormal
+dvmJitToInterpNormal:
+    .global dvmJitToInterpNoChain
+dvmJitToInterpNoChain:
+    jmp  common_abort
+#endif
+
 /*
  * Common code when a backwards branch is taken
  *
