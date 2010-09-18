@@ -577,7 +577,10 @@ void dvmCollectGarbageInternal(bool clearSoftRefs, GcReason reason)
     u4 rootSuspend, rootSuspendTime, rootStart, rootEnd;
     u4 dirtySuspend, dirtyStart, dirtyEnd;
     u4 totalTime;
-    size_t numObjects, numBytes;
+    size_t numObjectsFreed, numBytesFreed;
+    size_t currAllocated, currFootprint;
+    size_t extAllocated, extLimit;
+    size_t percentFree;
     GcMode gcMode;
     int oldThreadPriority = kInvalidPriority;
 
@@ -827,7 +830,7 @@ void dvmCollectGarbageInternal(bool clearSoftRefs, GcReason reason)
         dvmResumeAllThreads(SUSPEND_FOR_GC);
     }
     dvmHeapSweepUnmarkedObjects(gcMode, reason == GC_CONCURRENT,
-                                &numObjects, &numBytes);
+                                &numObjectsFreed, &numBytesFreed);
     LOGD_HEAP("Cleaning up...");
     dvmHeapFinishMarkStep();
     if (reason == GC_CONCURRENT) {
@@ -843,6 +846,9 @@ void dvmCollectGarbageInternal(bool clearSoftRefs, GcReason reason)
      * it just lets the heap grow more when necessary.
      */
     dvmHeapSourceGrowForUtilization();
+
+    currAllocated = dvmHeapSourceGetValue(HS_BYTES_ALLOCATED, NULL, 0);
+    currFootprint = dvmHeapSourceGetValue(HS_FOOTPRINT, NULL, 0);
 
 #if WITH_HPROF
     if (gcHeap->hprofContext != NULL) {
@@ -899,23 +905,39 @@ void dvmCollectGarbageInternal(bool clearSoftRefs, GcReason reason)
         }
     }
 
+    extAllocated = dvmHeapSourceGetValue(HS_EXTERNAL_BYTES_ALLOCATED, NULL, 0);
+    extLimit = dvmHeapSourceGetValue(HS_EXTERNAL_LIMIT, NULL, 0);
+    percentFree = 100 - (size_t)(100.0f * (float)currAllocated / currFootprint);
     if (reason != GC_CONCURRENT) {
         u4 markSweepTime = dirtyEnd - rootStart;
+        bool isSmall = numBytesFreed > 0 && numBytesFreed < 1024;
         totalTime = rootSuspendTime + markSweepTime;
-        LOGD("%s freed %d objects / %zd bytes in (%ums) %ums",
-             GcReasonStr[reason], numObjects, numBytes,
-             rootSuspendTime, markSweepTime);
+        LOGD("%s freed %s%zdK, %d%% free (%zdK/%zdK), external %zdK/%zdK, "
+             "paused %ums",
+             GcReasonStr[reason],
+             isSmall ? "<" : "",
+             numBytesFreed ? MAX(numBytesFreed / 1024, 1) : 0,
+             percentFree,
+             currAllocated / 1024, currFootprint / 1024,
+             extAllocated / 1024, extLimit / 1024,
+             markSweepTime);
     } else {
         u4 rootTime = rootEnd - rootStart;
         u4 dirtySuspendTime = dirtyStart - dirtySuspend;
         u4 dirtyTime = dirtyEnd - dirtyStart;
+        bool isSmall = numBytesFreed > 0 && numBytesFreed < 1024;
         totalTime = rootSuspendTime + rootTime + dirtySuspendTime + dirtyTime;
-        LOGD("%s freed %d objects / %zd bytes in (%ums) %ums (%ums) %ums",
-             GcReasonStr[reason], numObjects, numBytes,
-             rootSuspendTime, rootTime,
-             dirtySuspendTime, dirtyTime);
+        LOGD("%s freed %s%zdK, %d%% free (%zdK/%zdK), external %zdK/%zdK, "
+             "paused %ums+%ums",
+             GcReasonStr[reason],
+             isSmall ? "<" : "",
+             numBytesFreed ? MAX(numBytesFreed / 1024, 1) : 0,
+             percentFree,
+             currAllocated / 1024, currFootprint / 1024,
+             extAllocated / 1024, extLimit / 1024,
+             rootTime, dirtyTime);
     }
-    dvmLogGcStats(numObjects, numBytes, totalTime);
+    dvmLogGcStats(numObjectsFreed, numBytesFreed, totalTime);
     if (gcHeap->ddmHpifWhen != 0) {
         LOGD_HEAP("Sending VM heap info to DDM\n");
         dvmDdmSendHeapInfo(gcHeap->ddmHpifWhen, false);
