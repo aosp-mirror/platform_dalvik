@@ -254,6 +254,23 @@ static void Dalvik_sun_misc_Unsafe_putInt(const u4* args, JValue* pResult)
 }
 
 /*
+ * public native void putOrderedInt(Object obj, long offset, int newValue);
+ */
+static void Dalvik_sun_misc_Unsafe_putOrderedInt(const u4* args,
+    JValue* pResult)
+{
+    // We ignore the this pointer in args[0].
+    Object* obj = (Object*) args[1];
+    s8 offset = GET_ARG_LONG(args, 2);
+    s4 value = (s4) args[4];
+    s4* address = (s4*) (((u1*) obj) + offset);
+
+    ANDROID_MEMBAR_STORE();
+    *address = value;
+    RETURN_VOID();
+}
+
+/*
  * public native long getLong(Object obj, long offset);
  */
 static void Dalvik_sun_misc_Unsafe_getLong(const u4* args, JValue* pResult)
@@ -282,6 +299,23 @@ static void Dalvik_sun_misc_Unsafe_putLong(const u4* args, JValue* pResult)
 }
 
 /*
+ * public native void putOrderedLong(Object obj, long offset, long newValue);
+ */
+static void Dalvik_sun_misc_Unsafe_putOrderedLong(const u4* args,
+    JValue* pResult)
+{
+    // We ignore the this pointer in args[0].
+    Object* obj = (Object*) args[1];
+    s8 offset = GET_ARG_LONG(args, 2);
+    s8 value = GET_ARG_LONG(args, 4);
+    s8* address = (s8*) (((u1*) obj) + offset);
+
+    ANDROID_MEMBAR_STORE();
+    *address = value;
+    RETURN_VOID();
+}
+
+/*
  * public native Object getObject(Object obj, long offset);
  */
 static void Dalvik_sun_misc_Unsafe_getObject(const u4* args, JValue* pResult)
@@ -305,6 +339,25 @@ static void Dalvik_sun_misc_Unsafe_putObject(const u4* args, JValue* pResult)
     Object* value = (Object*) args[4];
     Object** address = (Object**) (((u1*) obj) + offset);
 
+    *address = value;
+    dvmWriteBarrierField(obj, address);
+    RETURN_VOID();
+}
+
+/*
+ * public native void putOrderedObject(Object obj, long offset,
+ *      Object newValue);
+ */
+static void Dalvik_sun_misc_Unsafe_putOrderedObject(const u4* args,
+    JValue* pResult)
+{
+    // We ignore the this pointer in args[0].
+    Object* obj = (Object*) args[1];
+    s8 offset = GET_ARG_LONG(args, 2);
+    Object* value = (Object*) args[4];
+    Object** address = (Object**) (((u1*) obj) + offset);
+
+    ANDROID_MEMBAR_STORE();
     *address = value;
     dvmWriteBarrierField(obj, address);
     RETURN_VOID();
@@ -340,13 +393,19 @@ const DalvikNativeMethod dvm_sun_misc_Unsafe[] = {
       Dalvik_sun_misc_Unsafe_getInt },
     { "putInt", "(Ljava/lang/Object;JI)V",
       Dalvik_sun_misc_Unsafe_putInt },
+    { "putOrderedInt", "(Ljava/lang/Object;JI)V",
+      Dalvik_sun_misc_Unsafe_putOrderedInt },
     { "getLong", "(Ljava/lang/Object;J)J",
       Dalvik_sun_misc_Unsafe_getLong },
     { "putLong", "(Ljava/lang/Object;JJ)V",
       Dalvik_sun_misc_Unsafe_putLong },
+    { "putOrderedLong", "(Ljava/lang/Object;JJ)V",
+      Dalvik_sun_misc_Unsafe_putOrderedLong },
     { "getObject", "(Ljava/lang/Object;J)Ljava/lang/Object;",
       Dalvik_sun_misc_Unsafe_getObject },
     { "putObject", "(Ljava/lang/Object;JLjava/lang/Object;)V",
       Dalvik_sun_misc_Unsafe_putObject },
+    { "putOrderedObject", "(Ljava/lang/Object;JLjava/lang/Object;)V",
+      Dalvik_sun_misc_Unsafe_putOrderedObject },
     { NULL, NULL, NULL },
 };
