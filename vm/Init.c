@@ -1556,8 +1556,6 @@ int dvmPrepForDexOpt(const char* bootClassPath, DexOptimizerMode dexOptMode,
         goto fail;
     if (!dvmClassStartup())
         goto fail;
-    if (!dvmInlineNativeCheck())
-        goto fail;
 
     /*
      * We leave gDvm.initializing set to "true" so that, if we're not
