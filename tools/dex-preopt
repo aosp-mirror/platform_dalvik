@@ -243,9 +243,9 @@ fi
 # really) uses this to know how to generate the names of the
 # dependencies (since we don't want the device files to contain bits
 # of pathname from the host build system).
-bootDir="${productDir}/./${bootDir}"
-if [ ! '(' -d "${bootDir}" -a -w "${bootDir}" ')' ]; then
-    echo "boot-dir is not a writable directory: ${bootDir}" 1>&2
+productBootDir="${productDir}/./${bootDir}"
+if [ ! '(' -d "${productBootDir}" -a -w "${productBootDir}" ')' ]; then
+    echo "boot-dir is not a writable directory: ${productBootDir}" 1>&2
     exit 1
 fi
 
@@ -268,7 +268,7 @@ fi
 # Expand the bootJars into paths that are relative from the build
 # directory, maintaining the colon separators.
 BOOTCLASSPATH=`echo ":${bootJars}" | \
-    sed "s!:\([^:]*\)!:${bootDir}/\1.jar!g" | \
+    sed "s!:\([^:]*\)!:${productBootDir}/\1.jar!g" | \
     sed 's/^://'`
 export BOOTCLASSPATH
 
@@ -288,6 +288,14 @@ if [ "${bootstrap}" = "yes" ]; then
     done
 else
     echo "Processing ${inputFile}" 1>&2
+
+    bootJarFile=`expr -- "${inputFile}" : "${productDir}/${bootDir}/\(.*\)"`
+    if [ "x${bootJarFile}" != 'x' ]; then
+        # The input file is in the boot classpath directory, so it needs
+        # to have "/./" inserted into it (see longer description above).
+        inputFile="${productBootDir}/${bootJarFile}"
+    fi
+
     "${dexopt}" --preopt "${inputFile}" "${outputFile}" "${optimizeFlags}"
 
     status="$?"
