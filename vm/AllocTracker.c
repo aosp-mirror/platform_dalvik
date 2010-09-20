@@ -461,7 +461,7 @@ static size_t computeStringTableSize(PointerSet* strings)
  *
  * Returns the string's length, in characters.
  */
-int convertUtf8ToUtf16BEUA(u1* utf16Str, const char* utf8Str)
+static int convertUtf8ToUtf16BEUA(u1* utf16Str, const char* utf8Str)
 {
     u1* origUtf16Str = utf16Str;
 

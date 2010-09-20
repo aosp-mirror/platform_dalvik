@@ -25,7 +25,7 @@ typedef struct LiveRange {
     int last;
 } LiveRange;
 
-int computeLiveRange(LiveRange *list, BasicBlock *bb, int seqNum)
+static int computeLiveRange(LiveRange *list, BasicBlock *bb, int seqNum)
 {
     MIR *mir;
     int i;
