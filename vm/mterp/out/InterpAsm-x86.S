@@ -4137,13 +4137,13 @@ dvmAsmInstructionStart = .L_OP_NOP
      * this code.   We spill rINSTw (ebx),
      * giving us eax, ebc, ecx and edx as computational
      * temps.  On top of that, we'll spill edi (rFP)
-     * for use as the vB pointer and esi for use
+     * for use as the vB pointer and esi (rPC) for use
      * as the vC pointer.  Yuck.
      */
     /* mul-long vAA, vBB, vCC */
     movzbl    2(rPC),%eax              # eax<- B
     movzbl    3(rPC),%ecx              # ecx<- C
-    SPILL_TMP2(%esi)
+    SPILL_TMP2(%esi)                   # save Dalvik PC
     SPILL(rFP)
     SPILL(rINST)
     leal      (rFP,%eax,4),%esi        # esi<- &v[B]
@@ -8151,9 +8151,9 @@ dvmAsmSisterStart:
 /* continuation for OP_MUL_LONG */
 
 .LOP_MUL_LONG_continue:
-    leal      (%ecx,%edx),%edx    # full result now in %edx:%eax
-    FETCH_INST_OPCODE 2 %ecx
-    UNSPILL_TMP2(%esi)
+    leal      (%ecx,%edx),%edx     # full result now in %edx:%eax
+    UNSPILL_TMP2(%esi)             # Restore Dalvik PC
+    FETCH_INST_OPCODE 2 %ecx       # Fetch next instruction
     movl      %edx,4(rFP,rINST,4)  # v[B+1]<- %edx
     movl      %eax,(rFP,rINST,4)   # v[B]<- %eax
     ADVANCE_PC 2
