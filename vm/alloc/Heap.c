@@ -912,7 +912,7 @@ void dvmCollectGarbageInternal(bool clearSoftRefs, GcReason reason)
         u4 markSweepTime = dirtyEnd - rootStart;
         bool isSmall = numBytesFreed > 0 && numBytesFreed < 1024;
         totalTime = rootSuspendTime + markSweepTime;
-        LOGD("%s freed %s%zdK, %d%% free (%zdK/%zdK), external %zdK/%zdK, "
+        LOGD("%s freed %s%zdK, %d%% free %zdK/%zdK, external %zdK/%zdK, "
              "paused %ums",
              GcReasonStr[reason],
              isSmall ? "<" : "",
@@ -927,7 +927,7 @@ void dvmCollectGarbageInternal(bool clearSoftRefs, GcReason reason)
         u4 dirtyTime = dirtyEnd - dirtyStart;
         bool isSmall = numBytesFreed > 0 && numBytesFreed < 1024;
         totalTime = rootSuspendTime + rootTime + dirtySuspendTime + dirtyTime;
-        LOGD("%s freed %s%zdK, %d%% free (%zdK/%zdK), external %zdK/%zdK, "
+        LOGD("%s freed %s%zdK, %d%% free %zdK/%zdK, external %zdK/%zdK, "
              "paused %ums+%ums",
              GcReasonStr[reason],
              isSmall ? "<" : "",
