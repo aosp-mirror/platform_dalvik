@@ -10174,6 +10174,10 @@ common_updateProfile:
     bl      dvmCompilerGetInterpretTemplate
     cmp     r0, r10                     @ special case?
     bne     jitSVShadowRunStart         @ set up self verification shadow space
+    @ Need to clear the inJitCodeCache flag
+    ldr    r10, [rGLUE, #offGlue_self]  @ r10 <- glue->self
+    mov    r3, #0                       @ 0 means not in the JIT code cache
+    str    r3, [r10, #offThread_inJitCodeCache] @ back to the interp land
     GET_INST_OPCODE(ip)
     GOTO_OPCODE(ip)
     /* no return */
