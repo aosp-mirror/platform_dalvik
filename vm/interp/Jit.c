@@ -173,26 +173,27 @@ void* dvmSelfVerificationRestoreState(const u2* pc, const void* fp,
     // Special case when punting after a single instruction
     if (exitState == kSVSPunt && pc == shadowSpace->startPC) {
         shadowSpace->selfVerificationState = kSVSIdle;
-    } else if (exitState == kSVSBackwardBranch && pc != shadowSpace->startPC) {
+    } else if (exitState == kSVSBackwardBranch && pc < shadowSpace->startPC) {
         /*
-         * Consider a loop which contains the following instructions:
+         * Consider a trace with a backward branch:
          *   1: ..
          *   2: ..
-         *   3: ..(single-stepped)
+         *   3: ..
          *   4: ..
-         *   5: Goto 1
+         *   5: Goto {1 or 2 or 3 or 4}
          *
-         * The state comparisons are conducted in two batches: 1,2 as the
-         * first batch and 4,5 as the second batch. If the execution in the
-         * JIT'ed code is resumed from 4, the start PC for self-verification
-         * will be set to 4. The exit point for 5 is a backward branch and
-         * will suggest the end PC to be 1, and will do the state comparison
-         * when 1 is hit for the second time in the interpreter. It is incorrect
-         * in this case as the work for 1,2 from the current iteration have been
-         * committed and the state comparison has been conducted.
+         * If there instruction 5 goes to 1 and there is no single-step
+         * instruction in the loop, pc is equal to shadowSpace->startPC and
+         * we will honor the backward branch condition.
          *
-         * So we alter the state from BackwardBranch to Normal and state
-         * comparison will be issued immediate following the goto.
+         * If the single-step instruction is outside the loop, then after
+         * resuming in the trace the startPC will be less than pc so we will
+         * also honor the backward branch condition.
+         *
+         * If the single-step is inside the loop, we won't hit the same endPC
+         * twice when the interpreter is re-executing the trace so we want to
+         * cancel the backward branch condition. In this case it can be
+         * detected as the endPC (ie pc) will be less than startPC.
          */
         shadowSpace->selfVerificationState = kSVSNormal;
     } else {
@@ -909,7 +910,19 @@ int dvmCheckJit(const u2* pc, Thread* self, InterpState* interpState,
             interpState->jitState = kJitSingleStepEnd;
             break;
         case kJitSingleStepEnd:
-            interpState->entryPoint = kInterpEntryResume;
+            /*
+             * Clear the inJitCodeCache flag and abandon the resume attempt if
+             * we cannot switch back to the translation due to corner-case
+             * conditions. If the flag is not cleared and the code cache is full
+             * we will be stuck in the debug interpreter as the code cache
+             * cannot be reset.
+             */
+            if (dvmJitStayInPortableInterpreter()) {
+                interpState->entryPoint = kInterpEntryInstr;
+                self->inJitCodeCache = 0;
+            } else {
+                interpState->entryPoint = kInterpEntryResume;
+            }
             interpState->jitState = kJitDone;
             switchInterp = true;
             break;
@@ -945,7 +958,8 @@ int dvmCheckJit(const u2* pc, Thread* self, InterpState* interpState,
      */
      assert(switchInterp == false || interpState->jitState == kJitDone ||
             interpState->jitState == kJitNot);
-     return switchInterp && !debugOrProfile && !stayOneMoreInst;
+     return switchInterp && !debugOrProfile && !stayOneMoreInst &&
+            !dvmJitStayInPortableInterpreter();
 }
 
 JitEntry *dvmFindJitEntry(const u2* pc)
@@ -975,9 +989,7 @@ void* dvmJitGetCodeAddr(const u2* dPC)
     int idx = dvmJitHash(dPC);
     const u2* npc = gDvmJit.pJitEntryTable[idx].dPC;
     if (npc != NULL) {
-        bool hideTranslation = (gDvm.sumThreadSuspendCount != 0) ||
-                               (gDvmJit.codeCacheFull == true) ||
-                               (gDvmJit.pProfTable == NULL);
+        bool hideTranslation = dvmJitHideTranslation();
 
         if (npc == dPC) {
 #if defined(WITH_JIT_TUNING)
@@ -1209,7 +1221,8 @@ bool dvmJitCheckTraceRequest(Thread* self, InterpState* interpState)
      * the jitState is kJitDone when switchInterp is set to true.
      */
     assert(switchInterp == false || interpState->jitState == kJitDone);
-    return switchInterp && !debugOrProfile;
+    return switchInterp && !debugOrProfile &&
+           !dvmJitStayInPortableInterpreter();
 }
 
 /*
