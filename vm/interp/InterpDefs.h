@@ -39,7 +39,7 @@ typedef enum InterpEntry {
 
 #if defined(WITH_JIT)
 /*
- * There are six entry points from the compiled code to the interpreter:
+ * There are seven entry points from the compiled code to the interpreter:
  * 1) dvmJitToInterpNormal: find if there is a corresponding compilation for
  *    the new dalvik PC. If so, chain the originating compilation with the
  *    target then jump to it.
@@ -161,6 +161,8 @@ typedef struct InterpState {
      */
     unsigned char**    ppJitProfTable; // Used to refresh pJitProfTable
     int                icRechainCount; // Count down to next rechain request
+    const void*        jitCacheStart;  // Code cache boundaries
+    const void*        jitCacheEnd;
 #endif
 
     bool        debugIsMethodEntry;     // used for method entry event triggers

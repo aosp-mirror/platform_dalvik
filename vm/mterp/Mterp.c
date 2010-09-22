@@ -81,6 +81,8 @@ bool dvmMterpStd(Thread* self, InterpState* glue)
     glue->pJitProfTable = gDvmJit.pProfTable;
     glue->ppJitProfTable = &gDvmJit.pProfTable;
     glue->jitThreshold = gDvmJit.threshold;
+    glue->jitCacheStart = gDvmJit.codeCache;
+    glue->jitCacheEnd = (char*)gDvmJit.codeCache + gDvmJit.codeCacheSize;
 #endif
 #if defined(WITH_INLINE_PROFILING)
     /*

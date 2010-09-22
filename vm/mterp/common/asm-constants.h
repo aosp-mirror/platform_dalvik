@@ -107,6 +107,8 @@ MTERP_OFFSET(offGlue_jitResumeDPC,      MterpGlue, jitResumeDPC, 72)
 MTERP_OFFSET(offGlue_jitThreshold,      MterpGlue, jitThreshold, 76)
 MTERP_OFFSET(offGlue_ppJitProfTable,    MterpGlue, ppJitProfTable, 80)
 MTERP_OFFSET(offGlue_icRechainCount,    MterpGlue, icRechainCount, 84)
+MTERP_OFFSET(offGlue_jitCacheStart,     MterpGlue, jitCacheStart, 88)
+MTERP_OFFSET(offGlue_jitCacheEnd,       MterpGlue, jitCacheEnd, 92)
 #endif
 /* make sure all JValue union members are stored at the same offset */
 MTERP_OFFSET(offGlue_retval_z,          MterpGlue, retval.z, 8)

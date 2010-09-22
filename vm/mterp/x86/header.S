@@ -48,7 +48,7 @@ eliminated and all arg references adjusted to be esp relative.
 Mterp notes:
 
 Some key interpreter variables will be assigned to registers.  Note that each
-will also have an associated spill location (mostly used useful for those assigned
+will also have an associated spill location (mostly useful for those assigned
 to callee save registers).
 
   nick     reg   purpose
@@ -62,8 +62,6 @@ Notes:
    o High order 16 bits of ebx must be zero on entry to handler
    o rPC, rFP, rINSTw/rINSTbl valid on handler entry and exit
    o eax, edx and ecx are scratch, rINSTw/ebx sometimes scratch
-   o rPC is in the caller save set, and will be killed across external calls. Don't
-     forget to SPILL/UNSPILL it around call points
 
 */
 
@@ -111,6 +109,15 @@ Notes:
 #define UNSPILL_TMP2(reg) movl TMP_SPILL2(%ebp),reg
 #define SPILL_TMP3(reg) movl reg,TMP_SPILL3(%ebp)
 #define UNSPILL_TMP3(reg) movl TMP_SPILL3(%ebp),reg
+
+#if defined(WITH_JIT)
+.macro GET_JIT_PROF_TABLE _glue _reg
+    movl    offGlue_pJitProfTable(\_glue),\_reg
+.endm
+.macro GET_JIT_THRESHOLD _glue _reg
+    movl    offGlue_jitThreshold(\_glue),\_reg
+.endm
+#endif
 
 /* save/restore the PC and/or FP from the glue struct */
 .macro SAVE_PC_FP_TO_GLUE _reg
@@ -585,3 +592,7 @@ Notes:
  * to expand the macros into assembler assignment statements.
  */
 #include "../common/asm-constants.h"
+
+#if defined(WITH_JIT)
+#include "../common/jit-config.h"
+#endif

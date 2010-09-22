@@ -55,7 +55,7 @@ eliminated and all arg references adjusted to be esp relative.
 Mterp notes:
 
 Some key interpreter variables will be assigned to registers.  Note that each
-will also have an associated spill location (mostly used useful for those assigned
+will also have an associated spill location (mostly useful for those assigned
 to callee save registers).
 
   nick     reg   purpose
@@ -69,8 +69,6 @@ Notes:
    o High order 16 bits of ebx must be zero on entry to handler
    o rPC, rFP, rINSTw/rINSTbl valid on handler entry and exit
    o eax, edx and ecx are scratch, rINSTw/ebx sometimes scratch
-   o rPC is in the caller save set, and will be killed across external calls. Don't
-     forget to SPILL/UNSPILL it around call points
 
 */
 
@@ -118,6 +116,15 @@ Notes:
 #define UNSPILL_TMP2(reg) movl TMP_SPILL2(%ebp),reg
 #define SPILL_TMP3(reg) movl reg,TMP_SPILL3(%ebp)
 #define UNSPILL_TMP3(reg) movl TMP_SPILL3(%ebp),reg
+
+#if defined(WITH_JIT)
+.macro GET_JIT_PROF_TABLE _glue _reg
+    movl    offGlue_pJitProfTable(\_glue),\_reg
+.endm
+.macro GET_JIT_THRESHOLD _glue _reg
+    movl    offGlue_jitThreshold(\_glue),\_reg
+.endm
+#endif
 
 /* save/restore the PC and/or FP from the glue struct */
 .macro SAVE_PC_FP_TO_GLUE _reg
@@ -592,6 +599,10 @@ Notes:
  * to expand the macros into assembler assignment statements.
  */
 #include "../common/asm-constants.h"
+
+#if defined(WITH_JIT)
+#include "../common/jit-config.h"
+#endif
 
 
     .global dvmAsmInstructionStart
@@ -9129,24 +9140,134 @@ dvmAsmInstructionJmpTable = .LdvmAsmInstructionJmpTable
 
 #if defined(WITH_JIT)
 /*
- * Placeholder entries for x86 JIT
+ * JIT-related re-entries into the interpreter.  In general, if the
+ * exit from a translation can at some point be chained, the entry
+ * here requires that control arrived via a call, and that the "rp"
+ * on TOS is actually a pointer to a 32-bit cell containing the Dalvik PC
+ * of the next insn to handle.  If no chaining will happen, the entry
+ * should be reached via a direct jump and rPC set beforehand.
  */
+
     .global dvmJitToInterpPunt
+/*
+ * The compiler will generate a jump to this entry point when it is
+ * having difficulty translating a Dalvik instruction.  We must skip
+ * the code cache lookup & prevent chaining to avoid bouncing between
+ * the interpreter and code cache. rPC must be set on entry.
+ */
 dvmJitToInterpPunt:
+#if defined(WITH_JIT_TUNING)
+    movl   rPC, OUT_ARG0(%esp)
+    call   dvmBumpPunt
+#endif
+    FETCH_INST_R %edx
+    GOTO_NEXT_R %edx
+
     .global dvmJitToInterpSingleStep
+/*
+ * Return to the interpreter to handle a single instruction.
+ * Should be reached via a call.
+ * On entry:
+ *   0(%esp)          <= native return address within trace
+ *   rPC              <= Dalvik PC of this instruction
+ *   OUT_ARG0+4(%esp) <= Dalvik PC of next instruction
+ */
 dvmJitToInterpSingleStep:
+    pop    %eax
+    movl   rGLUE, %ecx
+    movl   OUT_ARG0(%esp), %edx
+    movl   %eax,offGlue_jitResumeNPC(%ecx)
+    movl   %edx,offGlue_jitResumeDPC(%ecx)
+    movl   $kInterpEntryInstr,offGlue_entryPoint(%ecx)
+    movl   $1,rINST     # changeInterp <= true
+    jmp    common_gotoBail
+
     .global dvmJitToInterpNoChainNoProfile
+/*
+ * Return from the translation cache to the interpreter to do method
+ * invocation.  Check if the translation exists for the callee, but don't
+ * chain to it. rPC must be set on entry.
+ */
 dvmJitToInterpNoChainNoProfile:
+#if defined(WITH_JIT_TUNING)
+    call   dvmBumpNoChain
+#endif
+    movl   rPC,OUT_ARG0(%esp)
+    call   dvmJitGetCodeAddr         # is there a translation?
+    movl   rGLUE,%ecx
+    movl   offGlue_self(%ecx), %ecx  # ecx <- glue->self
+    movl   %eax,offThread_inJitCodeCache(%ecx)  # set inJitCodeCache flag
+    cmpl   $0, %eax
+    jz     1f
+    call   *%eax                     # exec translation if we've got one
+    # won't return
+1:
+    FETCH_INST_R %edx
+    GOTO_NEXT_R %edx
+
+/*
+ * Return from the translation cache and immediately request a
+ * translation fro the exit target, but don't attempt to chain.
+ * rPC set on entry.
+ */
     .global dvmJitToInterpTraceSelectNoChain
 dvmJitToInterpTraceSelectNoChain:
+#if defined(WITH_JIT_TUNING)
+    call   dvmBumpNoChain
+#endif
+    movl   rPC,OUT_ARG0(%esp)
+    call   dvmJitGetCodeAddr  # is there a translation?
+    movl   rGLUE,%ecx
+    movl   offGlue_self(%ecx),%ecx
+    cmpl   $0,%eax
+    movl   %eax,offThread_inJitCodeCache(%ecx)  # set inJitCodeCache flag
+    jz     1f
+    call   *%eax              # jump to tranlation
+    # won't return
+
+/* No Translation - request one */
+1:
+    GET_JIT_PROF_TABLE %ecx %eax
+    cmpl   $0, %eax          # JIT enabled?
+    jnz    2f                 # Request one if so
+    FETCH_INST_R %edx         # Continue interpreting if not
+    GOTO_NEXT_R %edx
+2:
+    movl   $kJitTSelectRequestHot,rINST  # ask for trace select
+    jmp    common_selectTrace
+
+/*
+ * Return from the translation cache and immediately request a
+ * translation for the exit target.  Reached via a call, and
+ * (TOS)->rPC.
+ */
     .global dvmJitToInterpTraceSelect
 dvmJitToInterpTraceSelect:
+    pop    rINST           # save chain cell address in callee save reg
+    movl   (rINST),rPC
+    movl   rPC,OUT_ARG0(%esp)
+    call   dvmJitGetCodeAddr  # is there a translation?
+    cmpl   $0,%eax
+    jz     1b                 # no - ask for one
+    movl   %eax,OUT_ARG0(%esp)
+# FIXME - need to adjust rINST to beginning of sequence
+    movl   rINST,OUT_ARG1(%esp)
+    call   dvmJitChain        # Attempt dvmJitChain(codeAddr,chainAddr)
+    cmpl   $0,%eax           # Success?
+    jz     toInterpreter      # didn't chain - interpret
+    call   *%eax
+    # won't return
+
+/*
+ * Placeholder entries for x86 JIT
+ */
     .global dvmJitToInterpBackwardBranch
 dvmJitToInterpBackwardBranch:
     .global dvmJitToInterpNormal
 dvmJitToInterpNormal:
     .global dvmJitToInterpNoChain
 dvmJitToInterpNoChain:
+toInterpreter:
     jmp  common_abort
 #endif
 
@@ -9158,10 +9279,56 @@ dvmJitToInterpNoChain:
  */
 common_backwardBranch:
     movl    rGLUE,%ecx
-    call   common_periodicChecks  # Note: expects rPC to be preserved
+    call   common_periodicChecks  # rPC and ecx/rGLUE preserved
+#if defined(WITH_JIT)
+    GET_JIT_PROF_TABLE %ecx %edx
+    ADVANCE_PC_INDEXED rINST
+    cmpl   $0,%edx
+    FETCH_INST
+    jz    1f                    # Profiling off - continue
+    .global updateProfile
+updateProfile:
+common_updateProfile:
+    # quick & dirty hash
+    movl   rPC, %eax
+    shrl   $12, %eax
+    xorl   rPC, %eax
+    andl   $((1<<JIT_PROF_SIZE_LOG_2)-1),%eax
+    decb   (%edx,%eax)
+    jz     2f
+1:
+    GOTO_NEXT
+2:
+/*
+ * Here, we switch to the debug interpreter to request
+ * trace selection.  First, though, check to see if there
+ * is already a native translation in place (and, if so,
+ * jump to it now.
+ */
+    GET_JIT_THRESHOLD %ecx rINST
+    EXPORT_PC
+    movb   rINSTbl,(%edx,%eax)   # reset counter
+    movl   offGlue_self(%ecx),rINST
+    movl   rPC,OUT_ARG0(%esp)
+    call   dvmJitGetCodeAddr   # already have one?
+    movl   %eax,offThread_inJitCodeCache(rINST)   # set the inJitCodeCache flag
+    cmpl   $0,%eax
+    jz     1f
+    call   *%eax        # FIXME: decide call vs/ jmp!.  No return either way
+1:
+    movl   $kJitTSelectRequest,%eax
+    # On entry, eax<- jitState, rPC valid
+common_selectTrace:
+    movl   rGLUE,%ecx
+    movl   %eax,offGlue_jitState(%ecx)
+    movl   $kInterpEntryInstr,offGlue_entryPoint(%ecx)
+    movl   $1,rINST
+    jmp    common_gotoBail
+#else
     ADVANCE_PC_INDEXED rINST
     FETCH_INST
     GOTO_NEXT
+#endif
 
 
 

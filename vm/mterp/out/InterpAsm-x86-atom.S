@@ -477,6 +477,7 @@
 .LintMax:
 .long   0x7FFFFFFF
 
+
     .global dvmAsmInstructionStart
     .type   dvmAsmInstructionStart, %function
 dvmAsmInstructionStart = .L_OP_NOP
