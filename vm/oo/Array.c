@@ -759,14 +759,20 @@ bool dvmUnboxObjectArray(ArrayObject* dstArray, const ArrayObject* srcArray,
     return true;
 }
 
-static size_t arrayElementWidth(const ArrayObject *array)
+/*
+ * Returns the width, in bytes, required by elements in instances of
+ * the array class.
+ */
+size_t dvmArrayClassElementWidth(const ClassObject* arrayClass)
 {
     const char *descriptor;
 
-    if (dvmIsObjectArray(array)) {
+    assert(dvmIsArrayClass(arrayClass));
+
+    if (dvmIsObjectArrayClass(arrayClass)) {
         return sizeof(Object *);
     } else {
-        descriptor = array->obj.clazz->descriptor;
+        descriptor = arrayClass->descriptor;
         switch (descriptor[1]) {
         case 'B': return 1;  /* byte */
         case 'C': return 2;  /* char */
@@ -778,7 +784,7 @@ static size_t arrayElementWidth(const ArrayObject *array)
         case 'Z': return 1;  /* boolean */
         }
     }
-    LOGE("object %p has an unhandled descriptor '%s'", array, descriptor);
+    LOGE("class %p has an unhandled descriptor '%s'", arrayClass, descriptor);
     dvmDumpThread(dvmThreadSelf(), false);
     dvmAbort();
     return 0;  /* Quiet the compiler. */
@@ -790,7 +796,7 @@ size_t dvmArrayObjectSize(const ArrayObject *array)
 
     assert(array != NULL);
     size = offsetof(ArrayObject, contents);
-    size += array->length * arrayElementWidth(array);
+    size += array->length * dvmArrayClassElementWidth(array->obj.clazz);
     return size;
 }
 
