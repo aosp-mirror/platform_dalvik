@@ -117,11 +117,21 @@ INLINE bool dvmIsArray(const ArrayObject* arrayObj)
  *
  * Does not verify that the object is actually a non-NULL object.
  */
-INLINE bool dvmIsObjectArray(const ArrayObject* arrayObj)
+INLINE bool dvmIsObjectArrayClass(const ClassObject* clazz)
 {
-    const char* descriptor = arrayObj->obj.clazz->descriptor;
+    const char* descriptor = clazz->descriptor;
     return descriptor[0] == '[' && (descriptor[1] == 'L' ||
                                     descriptor[1] == '[');
+}
+
+/*
+ * Verify that the array is an object array and not a primitive array.
+ *
+ * Does not verify that the object is actually a non-NULL object.
+ */
+INLINE bool dvmIsObjectArray(const ArrayObject* arrayObj)
+{
+    return dvmIsObjectArrayClass(arrayObj->obj.clazz);
 }
 
 /*
@@ -156,5 +166,11 @@ bool dvmUnboxObjectArray(ArrayObject* dstArray, const ArrayObject* srcArray,
  * Returns the size of the given array object in bytes.
  */
 size_t dvmArrayObjectSize(const ArrayObject *array);
+
+/*
+ * Returns the width, in bytes, required by elements in instances of
+ * the array class.
+ */
+size_t dvmArrayClassElementWidth(const ClassObject* clazz);
 
 #endif /*_DALVIK_OO_ARRAY*/

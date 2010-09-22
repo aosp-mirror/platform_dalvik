@@ -52,22 +52,7 @@ static void Dalvik_sun_misc_Unsafe_arrayIndexScale0(const u4* args,
     JValue* pResult)
 {
     ClassObject* clazz = (ClassObject*) args[0];
-    int result;
-
-    if ((clazz == gDvm.classArrayBoolean) ||
-            (clazz == gDvm.classArrayByte)) {
-        result = sizeof(u1);
-    } else if ((clazz == gDvm.classArrayChar) ||
-            (clazz == gDvm.classArrayShort)) {
-        result = sizeof(u2);
-    } else if ((clazz == gDvm.classArrayLong) ||
-            (clazz == gDvm.classArrayDouble)) {
-        result = sizeof(u8);
-    } else {
-        result = sizeof(u4);
-    }
-
-    RETURN_INT(result);
+    RETURN_INT(dvmArrayClassElementWidth(clazz));
 }
 
 /*
@@ -174,6 +159,7 @@ static void Dalvik_sun_misc_Unsafe_getLongVolatile(const u4* args,
     s8 offset = GET_ARG_LONG(args, 2);
     volatile int64_t* address = (volatile int64_t*) (((u1*) obj) + offset);
 
+    assert((offset & 7) == 0);
     RETURN_LONG(dvmQuasiAtomicRead64(address));
 }
 
@@ -189,6 +175,7 @@ static void Dalvik_sun_misc_Unsafe_putLongVolatile(const u4* args,
     s8 value = GET_ARG_LONG(args, 4);
     volatile int64_t* address = (volatile int64_t*) (((u1*) obj) + offset);
 
+    assert((offset & 7) == 0);
     dvmQuasiAtomicSwap64(value, address);
     RETURN_VOID();
 }
