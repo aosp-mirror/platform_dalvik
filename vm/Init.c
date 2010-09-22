@@ -1002,8 +1002,11 @@ static int dvmProcessOptions(int argc, const char* const argv[],
         }
     }
 
-    if (gDvm.heapSizeStart > gDvm.heapSizeMax) {
-        dvmFprintf(stderr, "Heap start size must be <= heap max size\n");
+    /* We should be able to cope with these being equal, but until
+     * http://b/2714377 is fixed, we can't.
+     */
+    if (gDvm.heapSizeStart >= gDvm.heapSizeMax) {
+        dvmFprintf(stderr, "Heap start size must be < heap max size\n");
         return -1;
     }
 
