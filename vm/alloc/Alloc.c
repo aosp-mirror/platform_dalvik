@@ -247,6 +247,8 @@ Object* dvmCloneObject(Object* obj)
  * We could do this per-thread or globally.  If it's global we don't have
  * to do the thread lookup but we do have to synchronize access to the list.
  *
+ * "obj" must not be NULL.
+ *
  * NOTE: "obj" is not a fully-formed object; in particular, obj->clazz will
  * usually be NULL since we're being called from dvmMalloc().
  */
@@ -255,6 +257,7 @@ void dvmAddTrackedAlloc(Object* obj, Thread* self)
     if (self == NULL)
         self = dvmThreadSelf();
 
+    assert(obj != NULL);
     assert(self != NULL);
     if (!dvmAddToReferenceTable(&self->internalLocalRefTable, obj)) {
         LOGE("threadid=%d: unable to add %p to internal ref table\n",

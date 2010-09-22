@@ -1261,7 +1261,8 @@ static StringObject* getExceptionMessage(Object* exception)
 
         dvmCallMethod(self, getMessageMethod, exception, &result);
         messageStr = (StringObject*) result.l;
-        dvmAddTrackedAlloc((Object*) messageStr, self);
+        if (messageStr != NULL)
+            dvmAddTrackedAlloc((Object*) messageStr, self);
 
         dvmChangeStatus(self, oldStatus);
     } else {
