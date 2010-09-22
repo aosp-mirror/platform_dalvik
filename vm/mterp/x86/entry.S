@@ -95,7 +95,8 @@ dvmMterpStdBail:
     movl    4(%esp),%ecx                 # grab glue
     movl    8(%esp),%eax                 # changeInterp to return reg
     movl    offGlue_bailPtr(%ecx),%esp   # Restore "setjmp" esp
-    movl    (FRAME_SIZE-8)(%esp), %ebp   # Restore %ebp at point of setjmp
+    movl    %esp,%ebp
+    addl    $$(FRAME_SIZE-8), %ebp       # Restore %ebp at point of setjmp
     movl    EDI_SPILL(%ebp),%edi
     movl    ESI_SPILL(%ebp),%esi
     movl    EBX_SPILL(%ebp),%ebx
