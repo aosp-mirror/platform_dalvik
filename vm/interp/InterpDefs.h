@@ -278,6 +278,31 @@ static inline bool dvmJitStayInPortableInterpreter()
     return dvmJitHideTranslation() ||
            (gDvmJit.compilerQueueLength >= gDvmJit.compilerHighWater);
 }
+
+/*
+ * Hide the translations and stick with the interpreter as long as one of the
+ * following conditions is true.
+ */
+static inline bool dvmJitHideTranslation()
+{
+    return (gDvm.sumThreadSuspendCount != 0) ||
+           (gDvmJit.codeCacheFull == true) ||
+           (gDvmJit.pProfTable == NULL);
+}
+
+/*
+ * The fast and debug interpreter may be doing ping-pong without making forward
+ * progress if the same trace building request sent upon entering the fast
+ * interpreter is rejected immediately by the debug interpreter. Use the
+ * following function to poll the rejection reasons and stay in the debug
+ * interpreter until they are cleared. This will guarantee forward progress
+ * in the extreme corner cases (eg set compiler threashold to 1).
+ */
+static inline bool dvmJitStayInPortableInterpreter()
+{
+    return dvmJitHideTranslation() ||
+           (gDvmJit.compilerQueueLength >= gDvmJit.compilerHighWater);
+}
 #endif
 
 #endif /*_DALVIK_INTERP_DEFS*/
