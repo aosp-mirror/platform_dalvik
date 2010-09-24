@@ -445,7 +445,8 @@ bool dvmLoadNativeCode(const char* pathName, Object* classLoader)
     bool verbose;
 
     /* reduce noise by not chattering about system libraries */
-    verbose = strncmp(pathName, "/system", sizeof("/system")-1) != 0;
+    verbose = !!strncmp(pathName, "/system", sizeof("/system")-1);
+    verbose = verbose && !!strncmp(pathName, "/vendor", sizeof("/vendor")-1);
 
     if (verbose)
         LOGD("Trying to load lib %s %p\n", pathName, classLoader);
