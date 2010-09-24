@@ -3397,11 +3397,12 @@ void dvmDumpThread(Thread* thread, bool isRunning)
  *  2:cpu:/bg_non_interactive
  *  1:cpuacct:/
  *
- * We return the part after the "/", which will be an empty string for
- * the default cgroup.  If the string is longer than "bufLen", the string
- * will be truncated.
+ * We return the part on the "cpu" line after the '/', which will be an
+ * empty string for the default cgroup.  If the string is longer than
+ * "bufLen", the string will be truncated.
  *
- * TODO: this is cloned from a static function in libcutils; expose that?
+ * On error, -1 is returned, and an error description will be stored in
+ * the buffer.
  */
 static int getSchedulerGroup(int tid, char* buf, size_t bufLen)
 {
@@ -3411,34 +3412,33 @@ static int getSchedulerGroup(int tid, char* buf, size_t bufLen)
     FILE *fp;
 
     snprintf(pathBuf, sizeof(pathBuf), "/proc/%d/cgroup", tid);
-    if (!(fp = fopen(pathBuf, "r"))) {
+    if ((fp = fopen(pathBuf, "r")) == NULL) {
+        snprintf(buf, bufLen, "[fopen-error:%d]", errno);
         return -1;
     }
 
-    while(fgets(lineBuf, sizeof(lineBuf) -1, fp)) {
-        char *next = lineBuf;
-        char *subsys;
-        char *grp;
+    while (fgets(lineBuf, sizeof(lineBuf) -1, fp) != NULL) {
+        char* subsys;
+        char* grp;
         size_t len;
 
         /* Junk the first field */
-        if (!strsep(&next, ":")) {
+        subsys = strchr(lineBuf, ':');
+        if (subsys == NULL) {
             goto out_bad_data;
         }
 
-        if (!(subsys = strsep(&next, ":"))) {
-            goto out_bad_data;
-        }
-
-        if (strcmp(subsys, "cpu")) {
+        if (strncmp(subsys, ":cpu:", 5) != 0) {
             /* Not the subsys we're looking for */
             continue;
         }
 
-        if (!(grp = strsep(&next, ":"))) {
+        grp = strchr(subsys, '/');
+        if (grp == NULL) {
             goto out_bad_data;
         }
         grp++; /* Drop the leading '/' */
+
         len = strlen(grp);
         grp[len-1] = '\0'; /* Drop the trailing '\n' */
 
@@ -3451,15 +3451,18 @@ static int getSchedulerGroup(int tid, char* buf, size_t bufLen)
         return 0;
     }
 
-    LOGE("Failed to find cpu subsys");
+    snprintf(buf, bufLen, "[no-cpu-subsys]");
     fclose(fp);
     return -1;
- out_bad_data:
+
+out_bad_data:
     LOGE("Bad cgroup data {%s}", lineBuf);
+    snprintf(buf, bufLen, "[data-parse-failed]");
     fclose(fp);
     return -1;
+
 #else
-    errno = ENOSYS;
+    snprintf(buf, bufLen, "[n/a]");
     return -1;
 #endif
 }
@@ -3538,10 +3541,8 @@ void dvmDumpThreadEx(const DebugOutputTarget* target, Thread* thread,
         sp.sched_priority = -1;
     }
     if (getSchedulerGroup(thread->systemTid, schedulerGroupBuf,
-            sizeof(schedulerGroupBuf)) != 0)
-    {
-        strcpy(schedulerGroupBuf, "unknown");
-    } else if (schedulerGroupBuf[0] == '\0') {
+                sizeof(schedulerGroupBuf)) == 0 &&
+            schedulerGroupBuf[0] == '\0') {
         strcpy(schedulerGroupBuf, "default");
     }
 
@@ -3717,6 +3718,8 @@ void dvmDumpAllThreadsEx(const DebugOutputTarget* target, bool grabLock)
  */
 void dvmNukeThread(Thread* thread)
 {
+    int killResult;
+
     /* suppress the heapworker watchdog to assist anyone using a debugger */
     gDvm.nativeDebuggerActive = true;
 
@@ -3739,9 +3742,15 @@ void dvmNukeThread(Thread* thread)
     LOGD("threadid=%d: sending two SIGSTKFLTs to threadid=%d (tid=%d) to"
          " cause debuggerd dump\n",
         dvmThreadSelf()->threadId, thread->threadId, thread->systemTid);
-    pthread_kill(thread->handle, SIGSTKFLT);
+    killResult = pthread_kill(thread->handle, SIGSTKFLT);
+    if (killResult != 0) {
+        LOGD("NOTE: pthread_kill #1 failed: %s\n", strerror(killResult));
+    }
     usleep(2 * 1000 * 1000);    // TODO: timed-wait until debuggerd attaches
-    pthread_kill(thread->handle, SIGSTKFLT);
+    killResult = pthread_kill(thread->handle, SIGSTKFLT);
+    if (killResult != 0) {
+        LOGD("NOTE: pthread_kill #2 failed: %s\n", strerror(killResult));
+    }
     LOGD("Sent, pausing to let debuggerd run\n");
     usleep(8 * 1000 * 1000);    // TODO: timed-wait until debuggerd finishes
 
