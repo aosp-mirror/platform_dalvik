@@ -25,32 +25,7 @@
 #include "compiler/CompilerUtility.h"
 #include "compiler/CompilerIR.h"
 #include "compiler/Dataflow.h"
-#include "ArmLIR.h"
-#include "Codegen.h"
 #include "Ralloc.h"
-
-/*
- * Register usage for 16-bit Thumb systems:
- *     r0-r3: Temp/argument
- *     lr(r14):      Temp for translations, return address for handlers
- *     rGLUE(r6):    Pointer to InterpState
- *     rFP(r5):      Dalvik frame pointer
- *     r4, r7:       Temp for translations
- *     r8, r9, r10:   Temp preserved across C calls
- *     r11, ip(r12):  Temp not preserved across C calls
- *
- * Register usage for 32-bit Thumb systems:
- *     r0-r3: Temp/argument
- *     lr(r14):      Temp for translations, return address for handlers
- *     rGLUE(r6):    Pointer to InterpState
- *     rFP(r5):      Dalvik frame pointer
- *     r4, r7:       Temp for translations
- *     r8, r9, r10   Temp preserved across C calls
- *     r11, ip(r12):      Temp not preserved across C calls
- *     fp0-fp15:     Hot temps, not preserved across C calls
- *     fp16-fp31:    Promotion pool
- *
- */
 
 #define SREG(c, s) ((c)->regLocation[(s)].sRegLow)
 /*
@@ -127,7 +102,7 @@ static RegisterInfo *getRegInfo(CompilationUnit *cUnit, int reg)
     return NULL;
 }
 
-static void flushRegWide(CompilationUnit *cUnit, int reg1, int reg2)
+void dvmCompilerFlushRegWide(CompilationUnit *cUnit, int reg1, int reg2)
 {
     RegisterInfo *info1 = getRegInfo(cUnit, reg1);
     RegisterInfo *info2 = getRegInfo(cUnit, reg2);
@@ -146,7 +121,7 @@ static void flushRegWide(CompilationUnit *cUnit, int reg1, int reg2)
     }
 }
 
-static void flushReg(CompilationUnit *cUnit, int reg)
+void dvmCompilerFlushReg(CompilationUnit *cUnit, int reg)
 {
     RegisterInfo *info = getRegInfo(cUnit, reg);
     if (info->live && info->dirty) {
@@ -166,9 +141,9 @@ static bool clobberRegBody(CompilationUnit *cUnit, RegisterInfo *p,
         if (p[i].reg == reg) {
             if (p[i].live && p[i].dirty) {
                 if (p[i].pair) {
-                    flushRegWide(cUnit, p[i].reg, p[i].partner);
+                    dvmCompilerFlushRegWide(cUnit, p[i].reg, p[i].partner);
                 } else {
-                    flushReg(cUnit, p[i].reg);
+                    dvmCompilerFlushReg(cUnit, p[i].reg);
                 }
             }
             p[i].live = false;
@@ -463,31 +438,6 @@ extern void dvmCompilerLockTemp(CompilationUnit *cUnit, int reg)
     dvmCompilerAbort(cUnit);
 }
 
-/* Clobber all regs that might be used by an external C call */
-extern void dvmCompilerClobberCallRegs(CompilationUnit *cUnit)
-{
-    dvmCompilerClobber(cUnit, r0);
-    dvmCompilerClobber(cUnit, r1);
-    dvmCompilerClobber(cUnit, r2);
-    dvmCompilerClobber(cUnit, r3);
-    dvmCompilerClobber(cUnit, r9); // Need to do this?, be conservative
-    dvmCompilerClobber(cUnit, r11);
-    dvmCompilerClobber(cUnit, r12);
-    dvmCompilerClobber(cUnit, rlr);
-}
-
-/* Clobber all of the temps that might be used by a handler. */
-extern void dvmCompilerClobberHandlerRegs(CompilationUnit *cUnit)
-{
-    //TUNING: reduce the set of regs used by handlers.  Only a few need lots.
-    dvmCompilerClobberCallRegs(cUnit);
-    dvmCompilerClobber(cUnit, r4PC);
-    dvmCompilerClobber(cUnit, r7);
-    dvmCompilerClobber(cUnit, r8);
-    dvmCompilerClobber(cUnit, r9);
-    dvmCompilerClobber(cUnit, r10);
-}
-
 extern void dvmCompilerResetDef(CompilationUnit *cUnit, int reg)
 {
     RegisterInfo *p = getRegInfo(cUnit, reg);
@@ -638,9 +588,9 @@ static void flushAllRegsBody(CompilationUnit *cUnit, RegisterInfo *info,
     for (i=0; i < numRegs; i++) {
         if (info[i].live && info[i].dirty) {
             if (info[i].pair) {
-                flushRegWide(cUnit, info[i].reg, info[i].partner);
+                dvmCompilerFlushRegWide(cUnit, info[i].reg, info[i].partner);
             } else {
-                flushReg(cUnit, info[i].reg);
+                dvmCompilerFlushReg(cUnit, info[i].reg);
             }
         }
     }
@@ -942,47 +892,6 @@ extern RegLocation dvmCompilerGetSrcWide(CompilationUnit *cUnit, MIR *mir,
     return getLocWide(cUnit, mir, low, high, true);
 }
 
-extern RegLocation dvmCompilerGetReturnWide(CompilationUnit *cUnit)
-{
-    RegLocation res = LOC_C_RETURN_WIDE;
-    dvmCompilerClobber(cUnit, r0);
-    dvmCompilerClobber(cUnit, r1);
-    dvmCompilerMarkInUse(cUnit, r0);
-    dvmCompilerMarkInUse(cUnit, r1);
-    dvmCompilerMarkPair(cUnit, res.lowReg, res.highReg);
-    return res;
-}
-
-extern RegLocation dvmCompilerGetReturnWideAlt(CompilationUnit *cUnit)
-{
-    RegLocation res = LOC_C_RETURN_WIDE;
-    res.lowReg = r2;
-    res.highReg = r3;
-    dvmCompilerClobber(cUnit, r2);
-    dvmCompilerClobber(cUnit, r3);
-    dvmCompilerMarkInUse(cUnit, r2);
-    dvmCompilerMarkInUse(cUnit, r3);
-    dvmCompilerMarkPair(cUnit, res.lowReg, res.highReg);
-    return res;
-}
-
-extern RegLocation dvmCompilerGetReturn(CompilationUnit *cUnit)
-{
-    RegLocation res = LOC_C_RETURN;
-    dvmCompilerClobber(cUnit, r0);
-    dvmCompilerMarkInUse(cUnit, r0);
-    return res;
-}
-
-extern RegLocation dvmCompilerGetReturnAlt(CompilationUnit *cUnit)
-{
-    RegLocation res = LOC_C_RETURN;
-    res.lowReg = r1;
-    dvmCompilerClobber(cUnit, r1);
-    dvmCompilerMarkInUse(cUnit, r1);
-    return res;
-}
-
 /* Kill the corresponding bit in the null-checked register list */
 extern void dvmCompilerKillNullCheckedLoc(CompilationUnit *cUnit,
                                           RegLocation loc)
@@ -996,15 +905,4 @@ extern void dvmCompilerKillNullCheckedLoc(CompilationUnit *cUnit,
                         dvmCompilerSRegHi(loc.sRegLow));
         }
     }
-}
-
-extern void dvmCompilerFlushRegWideForV5TEVFP(CompilationUnit *cUnit,
-                                              int reg1, int reg2)
-{
-    flushRegWide(cUnit, reg1, reg2);
-}
-
-extern void dvmCompilerFlushRegForV5TEVFP(CompilationUnit *cUnit, int reg)
-{
-    flushReg(cUnit, reg);
 }
