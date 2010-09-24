@@ -182,7 +182,7 @@ static void dvmUsage(const char* progName)
         " profile_field_access"
 #endif
 #if defined(WITH_JIT)
-        " jit"
+        " jit(" ARCH_VARIANT ")"
 #endif
 #if defined(WITH_SELF_VERIFICATION)
         " self_verification"
