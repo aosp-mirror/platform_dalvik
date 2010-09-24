@@ -184,8 +184,6 @@ void dvmCheckCallJNIMethod_staticNoRef(const u4* args, JValue* pResult,
 #define BASE_ENV(_env)  (((JNIEnvExt*)_env)->baseFuncTable)
 #define BASE_VM(_vm)    (((JavaVMExt*)_vm)->baseFuncTable)
 
-#define kRedundantDirectBufferTest false
-
 /*
  * Flags passed into checkThread().
  */
@@ -2374,59 +2372,6 @@ static void* Check_GetDirectBufferAddress(JNIEnv* env, jobject buf)
     CHECK_OBJECT(env, buf);
     void* result = BASE_ENV(env)->GetDirectBufferAddress(env, buf);
     CHECK_EXIT(env);
-
-    /* optional - check result vs. "safe" implementation */
-    if (kRedundantDirectBufferTest) {
-        jobject platformAddr = NULL;
-        void* checkResult = NULL;
-
-        /*
-         * Start by determining if the object supports the DirectBuffer
-         * interfaces.  Note this does not guarantee that it's a direct buffer.
-         */
-        if (JNI_FALSE == (*env)->IsInstanceOf(env, buf,
-                gDvm.jclassOrgApacheHarmonyNioInternalDirectBuffer))
-        {
-            goto bail;
-        }
-
-        /*
-         * Get the PlatformAddress object.
-         *
-         * If this isn't a direct buffer, platformAddr will be NULL and/or an
-         * exception will have been thrown.
-         */
-        platformAddr = (*env)->CallObjectMethod(env, buf,
-            (jmethodID) gDvm.methOrgApacheHarmonyNioInternalDirectBuffer_getEffectiveAddress);
-
-        if ((*env)->ExceptionCheck(env)) {
-            (*env)->ExceptionClear(env);
-            platformAddr = NULL;
-        }
-        if (platformAddr == NULL) {
-            LOGV("Got request for address of non-direct buffer\n");
-            goto bail;
-        }
-
-        jclass platformAddrClass = (*env)->FindClass(env,
-            "org/apache/harmony/luni/platform/PlatformAddress");
-        jmethodID toLongMethod = (*env)->GetMethodID(env, platformAddrClass,
-            "toLong", "()J");
-        checkResult = (void*)(u4)(*env)->CallLongMethod(env, platformAddr,
-                toLongMethod);
-
-    bail:
-        if (platformAddr != NULL)
-            (*env)->DeleteLocalRef(env, platformAddr);
-
-        if (result != checkResult) {
-            LOGW("JNI WARNING: direct buffer result mismatch (%p vs %p)\n",
-                result, checkResult);
-            abortMaybe();
-            /* keep going */
-        }
-    }
-
     return result;
 }
 

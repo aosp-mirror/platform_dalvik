@@ -257,6 +257,20 @@ static void storeValueWide(CompilationUnit *cUnit, RegLocation rlDest,
         }
     }
 }
+
+/*
+ * Perform a "reg cmp imm" operation and jump to the PCR region if condition
+ * satisfies.
+ */
+static ArmLIR *genRegImmCheck(CompilationUnit *cUnit,
+                              ArmConditionCode cond, int reg,
+                              int checkValue, int dOffset,
+                              ArmLIR *pcrLabel)
+{
+    ArmLIR *branch = genCmpImmBranch(cUnit, cond, reg, checkValue);
+    return genCheckCommon(cUnit, dOffset, branch, pcrLabel);
+}
+
 /*
  * Perform null-check on a register. sReg is the ssa register being checked,
  * and mReg is the machine register holding the actual value. If internal state

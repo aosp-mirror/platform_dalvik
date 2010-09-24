@@ -190,6 +190,9 @@ static void dvmUsage(const char* progName)
 #if ANDROID_SMP != 0
         " smp"
 #endif
+#ifdef WITH_INLINE_PROFILING
+        " inline_profiling"
+#endif
     );
 #ifdef DVM_SHOW_EXCEPTION
     dvmFprintf(stderr, " show_exception=%d", DVM_SHOW_EXCEPTION);
@@ -999,8 +1002,11 @@ static int dvmProcessOptions(int argc, const char* const argv[],
         }
     }
 
-    if (gDvm.heapSizeStart > gDvm.heapSizeMax) {
-        dvmFprintf(stderr, "Heap start size must be <= heap max size\n");
+    /* We should be able to cope with these being equal, but until
+     * http://b/2714377 is fixed, we can't.
+     */
+    if (gDvm.heapSizeStart >= gDvm.heapSizeMax) {
+        dvmFprintf(stderr, "Heap start size must be < heap max size\n");
         return -1;
     }
 
@@ -1293,6 +1299,9 @@ int dvmStartup(int argc, const char* const argv[], bool ignoreUnrecognized,
     if (!dvmDebuggerStartup())
         goto fail;
 
+    if (!dvmInlineNativeCheck())
+        goto fail;
+
     /*
      * Init for either zygote mode or non-zygote mode.  The key difference
      * is that we don't start any additional threads in Zygote mode.
@@ -1346,7 +1355,7 @@ static bool registerSystemNatives(JNIEnv* pEnv)
     self->status = THREAD_NATIVE;
 
     if (jniRegisterSystemMethods(pEnv) < 0) {
-        LOGW("jniRegisterSystemMethods failed\n");
+        LOGE("jniRegisterSystemMethods failed");
         return false;
     }
 

@@ -306,7 +306,7 @@ static const char* gOpNames[256] = {
 
     /* 0xf0 */
     "+invoke-direct-empty",
-    "UNUSED",
+    "+return-void-barrier",
     "+iget-quick",
     "+iget-wide-quick",
     "+iget-object-quick",

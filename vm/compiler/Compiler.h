@@ -83,7 +83,7 @@ typedef enum JitInstructionSetType {
     DALVIK_JIT_THUMB,
     DALVIK_JIT_THUMB2,
     DALVIK_JIT_THUMB2EE,
-    DALVIK_JIT_X86
+    DALVIK_JIT_IA32
 } JitInstructionSetType;
 
 /* Description of a compiled trace. */

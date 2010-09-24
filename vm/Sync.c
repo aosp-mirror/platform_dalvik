@@ -660,7 +660,7 @@ static void waitSetRemove(Monitor *mon, Thread *thread)
 /*
  * Converts the given relative waiting time into an absolute time.
  */
-void absoluteTime(s8 msec, s4 nsec, struct timespec *ts)
+static void absoluteTime(s8 msec, s4 nsec, struct timespec *ts)
 {
     s8 endSec;
 

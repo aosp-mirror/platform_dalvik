@@ -34,6 +34,7 @@
  *  - update the instruction info table generators and (if you changed an
  *    instruction format) instruction decoder in InstrUtils.c
  *  - update the instruction format list in InstrUtils.h, if necessary
+ *  - update the gOpNames table in OpCodeNames.c
  *  - update the parallel definitions in the class dalvik.bytecode.Opcodes
  *
  * Interpreter:
@@ -47,12 +48,11 @@
  *  (see notes in mterp/ReadMe.txt for rebuilding instructions)
  *
  * Verifier / optimizer:
- *  - update some stuff in analysis/DexOptimize.c, analysis/DexVerify.c,
+ *  - update some stuff in analysis/Optimize.c, analysis/DexVerify.c,
  *    and/or analysis/CodeVerify.c as needed
  *    - verify by running with verifier enabled (it's on by default)
  *
  * Tools:
- *  - update the OpCodeNames table in dexdump/OpCodeNames.c
  *  - update dexdump/DexDump.c if an instruction format has changed
  *
  * Note: The Dalvik VM tests (in the tests subdirectory) provide a convenient
@@ -347,7 +347,7 @@ typedef enum OpCode {
     OP_EXECUTE_INLINE_RANGE         = 0xef,
 
     OP_INVOKE_DIRECT_EMPTY          = 0xf0,
-    OP_UNUSED_F1                    = 0xf1, /* OP_INVOKE_DIRECT_EMPTY_RANGE? */
+    OP_RETURN_VOID_BARRIER          = 0xf1,
     OP_IGET_QUICK                   = 0xf2,
     OP_IGET_WIDE_QUICK              = 0xf3,
     OP_IGET_OBJECT_QUICK            = 0xf4,
@@ -644,7 +644,7 @@ typedef enum OpCode {
         H(OP_EXECUTE_INLINE_RANGE),                                         \
         /* f0..ff */                                                        \
         H(OP_INVOKE_DIRECT_EMPTY),                                          \
-        H(OP_UNUSED_F1),                                                    \
+        H(OP_RETURN_VOID_BARRIER),                                          \
         H(OP_IGET_QUICK),                                                   \
         H(OP_IGET_WIDE_QUICK),                                              \
         H(OP_IGET_OBJECT_QUICK),                                            \

@@ -4,11 +4,9 @@
      * op0=minint & op1=-1
      */
     /* div/rem/lit8 vAA, vBB, #+CC */
-    movzbl    2(rPC),%eax              # eax<- BB
-    movsbl    3(rPC),%ecx              # ecx<- ssssssCC
-    GET_VREG  (%eax,%eax)              # eax<- rBB
-    movzx     rINST_HI,rINST_FULL      # rINST_FULL<- AA
-    SPILL(rPC)
+    movzbl    2(rPC),%eax        # eax<- BB
+    movsbl    3(rPC),%ecx        # ecx<- ssssssCC
+    GET_VREG_R  %eax %eax        # eax<- rBB
     cmpl     $$0,%ecx
     je       common_errDivideByZero
     cmpl     $$0x80000000,%eax
@@ -23,8 +21,7 @@
     cltd
     idivl   %ecx
 .L${opcode}_finish_div:
-    SET_VREG($result,rINST_FULL)
-    UNSPILL(rPC)
-    FETCH_INST_WORD(2)
-    ADVANCE_PC(2)
-    GOTO_NEXT
+    SET_VREG $result rINST
+    FETCH_INST_OPCODE 2 %edx
+    ADVANCE_PC 2
+    GOTO_NEXT_R %edx

@@ -9,12 +9,11 @@
      *      xor-int, shl-int, shr-int, ushr-int
      */
     /* binop vAA, vBB, vCC */
-    movzbl   2(rPC),%eax            # eax<- BB
-    movzbl   3(rPC),%ecx            # ecx<- CC
-    GET_VREG(%eax,%eax)             # eax<- vBB
-    $instr              # ex: addl    (rFP,%ecx,4),%eax
-    movzbl   rINST_HI,%ecx         # ecx<- AA
-    FETCH_INST_WORD(2)
-    ADVANCE_PC(2)
-    SET_VREG($result,%ecx)
-    GOTO_NEXT
+    movzbl   2(rPC),%eax   # eax<- BB
+    movzbl   3(rPC),%ecx   # ecx<- CC
+    GET_VREG_R %eax %eax   # eax<- vBB
+    $instr                 # ex: addl    (rFP,%ecx,4),%eax
+    FETCH_INST_OPCODE 2 %edx
+    ADVANCE_PC 2
+    SET_VREG $result rINST
+    GOTO_NEXT_R %edx

@@ -22,9 +22,22 @@
     mov     r2, r0                      @ r2<- methodToCall
     mov     r0, r1                      @ r0<- newFP
     add     r1, rGLUE, #offGlue_retval  @ r1<- &retval
+#if defined(WITH_INLINE_PROFILING)
+    @ r2: methodToCall, r6: rGLUE
+    stmfd   sp!, {r2,r6}
+    stmfd   sp!, {r0-r3}
+    mov     r0, r2
+    mov     r1, r6
+    LDR_PC_LR ".LdvmFastMethodTraceEnter"
+    ldmfd   sp!, {r0-r3}
+#endif
 
     LDR_PC_LR "[r2, #offMethod_nativeFunc]"
 
+#if defined(WITH_INLINE_PROFILING)
+    ldmfd   sp!, {r0-r1}
+    LDR_PC_LR ".LdvmFastNativeMethodTraceExit"
+#endif
     @ Refresh Jit's on/off status
     ldr     r3, [rGLUE, #offGlue_ppJitProfTable]
 
@@ -95,6 +108,14 @@
 #if defined(WITH_SELF_VERIFICATION)
 .LdvmSelfVerificationMemOpDecode:
     .word   dvmSelfVerificationMemOpDecode
+#endif
+#if defined(WITH_INLINE_PROFILING)
+.LdvmFastMethodTraceEnter:
+    .word   dvmFastMethodTraceEnter
+.LdvmFastNativeMethodTraceExit:
+    .word   dvmFastNativeMethodTraceExit
+.LdvmFastJavaMethodTraceExit:
+    .word   dvmFastJavaMethodTraceExit
 #endif
 .L__aeabi_cdcmple:
     .word   __aeabi_cdcmple

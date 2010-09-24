@@ -3105,6 +3105,8 @@ ThreadStatus dvmChangeStatus(Thread* self, ThreadStatus newStatus)
         self->threadId, self->status, newStatus);
 
     oldStatus = self->status;
+    if (oldStatus == newStatus)
+        return oldStatus;
 
     if (newStatus == THREAD_RUNNING) {
         /*
@@ -3157,7 +3159,6 @@ ThreadStatus dvmChangeStatus(Thread* self, ThreadStatus newStatus)
          * the thread is supposed to be suspended.  This is possibly faster
          * on SMP and slightly more correct, but less convenient.
          */
-        assert(oldStatus != THREAD_RUNNING);
         android_atomic_acquire_store(newStatus, &self->status);
         if (self->suspendCount != 0) {
             fullSuspendCheck(self);
@@ -3505,7 +3506,6 @@ void dvmDumpThreadEx(const DebugOutputTarget* target, Thread* thread,
     int policy;                 // pthread policy
     struct sched_param sp;      // pthread scheduling parameters
     char schedstatBuf[64];      // contents of /proc/[pid]/task/[tid]/schedstat
-    int schedstatFd;
 
     /*
      * Get the java.lang.Thread object.  This function gets called from
@@ -3580,18 +3580,32 @@ void dvmDumpThreadEx(const DebugOutputTarget* target, Thread* thread,
         thread->systemTid, getpriority(PRIO_PROCESS, thread->systemTid),
         policy, sp.sched_priority, schedulerGroupBuf, (int)thread->handle);
 
-    snprintf(schedstatBuf, sizeof(schedstatBuf), "/proc/%d/task/%d/schedstat",
-             getpid(), thread->systemTid);
-    schedstatFd = open(schedstatBuf, O_RDONLY);
+    /* get some bits from /proc/self/stat */
+    ProcStatData procStatData;
+    if (!dvmGetThreadStats(&procStatData, thread->systemTid)) {
+        /* failed, use zeroed values */
+        memset(&procStatData, 0, sizeof(procStatData));
+    }
+
+    /* grab the scheduler stats for this thread */
+    snprintf(schedstatBuf, sizeof(schedstatBuf), "/proc/self/task/%d/schedstat",
+             thread->systemTid);
+    int schedstatFd = open(schedstatBuf, O_RDONLY);
+    strcpy(schedstatBuf, "0 0 0");          /* show this if open/read fails */
     if (schedstatFd >= 0) {
-        int bytes;
+        ssize_t bytes;
         bytes = read(schedstatFd, schedstatBuf, sizeof(schedstatBuf) - 1);
         close(schedstatFd);
-        if (bytes > 1) {
-            schedstatBuf[bytes-1] = 0;  // trailing newline
-            dvmPrintDebugMessage(target, "  | schedstat=( %s )\n", schedstatBuf);
+        if (bytes >= 1) {
+            schedstatBuf[bytes-1] = '\0';   /* remove trailing newline */
         }
     }
+
+    /* show what we got */
+    dvmPrintDebugMessage(target,
+        "  | schedstat=( %s ) utm=%lu stm=%lu core=%d\n",
+        schedstatBuf, procStatData.utime, procStatData.stime,
+        procStatData.processor);
 
 #ifdef WITH_MONITOR_TRACKING
     if (!isRunning) {

@@ -3084,8 +3084,14 @@ HANDLE_OPCODE(OP_INVOKE_DIRECT_EMPTY /*vB, {vD, vE, vF, vG, vA}, meth@CCCC*/)
 #endif
 OP_END
 
-/* File: c/OP_UNUSED_F1.c */
-HANDLE_OPCODE(OP_UNUSED_F1)
+/* File: c/OP_RETURN_VOID_BARRIER.c */
+HANDLE_OPCODE(OP_RETURN_VOID_BARRIER /**/)
+    ILOGV("|return-void");
+#ifndef NDEBUG
+    retval.j = 0xababababULL;   /* placate valgrind */
+#endif
+    ANDROID_MEMBAR_STORE();
+    GOTO_returnFromMethod();
 OP_END
 
 /* File: c/OP_IGET_QUICK.c */

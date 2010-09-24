@@ -2,14 +2,14 @@
     /*
      * Return the length of an array.
      */
-   movzbl   rINST_HI,%eax              # eax<- BA
-   sarl     $$12,rINST_FULL            # rINST_FULL<- B
-   GET_VREG(%ecx,rINST_FULL)           # ecx<- vB (object ref)
-   andb     $$0xf,%al                  # eax<- A
-   testl    %ecx,%ecx                  # is null?
+   mov      rINST,%eax                # eax<- BA
+   sarl     $$4,rINST                 # rINST<- B
+   GET_VREG_R %ecx rINST              # ecx<- vB (object ref)
+   andb     $$0xf,%al                 # eax<- A
+   testl    %ecx,%ecx                 # is null?
    je       common_errNullObject
-   FETCH_INST_WORD(1)
+   FETCH_INST_OPCODE 1 %edx
    movl     offArrayObject_length(%ecx),%ecx
-   ADVANCE_PC(1)
-   SET_VREG(%ecx,%eax)
-   GOTO_NEXT
+   ADVANCE_PC 1
+   SET_VREG %ecx %eax
+   GOTO_NEXT_R %edx

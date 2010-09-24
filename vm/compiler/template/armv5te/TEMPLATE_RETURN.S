@@ -5,6 +5,13 @@
      * address in the code cache following the invoke instruction. Otherwise
      * return to the special dvmJitToInterpNoChain entry point.
      */
+#if defined(WITH_INLINE_PROFILING)
+    stmfd   sp!, {r0-r2,lr}             @ preserve live registers
+    mov     r0, r6
+    @ r0=rGlue
+    LDR_PC_LR ".LdvmFastJavaMethodTraceExit"
+    ldmfd   sp!, {r0-r2,lr}             @ restore live registers
+#endif
     SAVEAREA_FROM_FP(r0, rFP)           @ r0<- saveArea (old)
     ldr     r10, [r0, #offStackSaveArea_prevFrame] @ r10<- saveArea->prevFrame
     ldr     r8, [rGLUE, #offGlue_pSelfSuspendCount] @ r8<- &suspendCount

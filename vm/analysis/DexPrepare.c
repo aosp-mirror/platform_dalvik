@@ -925,30 +925,38 @@ static void verifyAndOptimizeClass(DexFile* pDexFile, ClassObject* clazz,
     const char* classDescriptor;
     bool verified = false;
 
+    if (clazz->pDvmDex->pDexFile != pDexFile) {
+        /*
+         * The current DEX file defined a class that is also present in the
+         * bootstrap class path.  The class loader favored the bootstrap
+         * version, which means that we have a pointer to a class that is
+         * (a) not the one we want to examine, and (b) mapped read-only,
+         * so we will seg fault if we try to rewrite instructions inside it.
+         */
+        LOGD("DexOpt: not verifying/optimizing '%s': multiple definitions\n",
+            clazz->descriptor);
+        return;
+    }
+
     classDescriptor = dexStringByTypeIdx(pDexFile, pClassDef->classIdx);
 
     /*
      * First, try to verify it.
      */
     if (doVerify) {
-        if (clazz->pDvmDex->pDexFile != pDexFile) {
-            LOGD("DexOpt: not verifying '%s': multiple definitions\n",
-                classDescriptor);
+        if (dvmVerifyClass(clazz)) {
+            /*
+             * Set the "is preverified" flag in the DexClassDef.  We
+             * do it here, rather than in the ClassObject structure,
+             * because the DexClassDef is part of the odex file.
+             */
+            assert((clazz->accessFlags & JAVA_FLAGS_MASK) ==
+                pClassDef->accessFlags);
+            ((DexClassDef*)pClassDef)->accessFlags |= CLASS_ISPREVERIFIED;
+            verified = true;
         } else {
-            if (dvmVerifyClass(clazz)) {
-                /*
-                 * Set the "is preverified" flag in the DexClassDef.  We
-                 * do it here, rather than in the ClassObject structure,
-                 * because the DexClassDef is part of the odex file.
-                 */
-                assert((clazz->accessFlags & JAVA_FLAGS_MASK) ==
-                    pClassDef->accessFlags);
-                ((DexClassDef*)pClassDef)->accessFlags |= CLASS_ISPREVERIFIED;
-                verified = true;
-            } else {
-                // TODO: log when in verbose mode
-                LOGV("DexOpt: '%s' failed verification\n", classDescriptor);
-            }
+            // TODO: log when in verbose mode
+            LOGV("DexOpt: '%s' failed verification\n", classDescriptor);
         }
     }
 

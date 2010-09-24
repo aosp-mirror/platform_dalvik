@@ -39,12 +39,22 @@
 #endif
 
 /*
- * Macro for data memory barrier; not meaningful pre-ARMv6K.
- * If the argument is nonzero, emit barrier; otherwise, emit nothing.
+ * Macro for data memory barrier.
  */
 .macro  SMP_DMB
 #if ANDROID_SMP != 0
     dmb
+#else
+    /* not SMP */
+#endif
+.endm
+
+/*
+ * Macro for data memory barrier (store/store variant).
+ */
+.macro  SMP_DMB_ST
+#if ANDROID_SMP != 0
+    dmb                                 @ TODO: want "dmb st" here
 #else
     /* not SMP */
 #endif

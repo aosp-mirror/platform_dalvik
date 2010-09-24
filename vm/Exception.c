@@ -152,15 +152,6 @@ bool dvmExceptionStartup(void)
         return false;
     }
 
-    /* and one for the message field, in case we want to show it */
-    gDvm.offJavaLangThrowable_message =
-        dvmFindFieldOffset(gDvm.classJavaLangThrowable,
-            "detailMessage", "Ljava/lang/String;");
-    if (gDvm.offJavaLangThrowable_message < 0) {
-        LOGE("Unable to find Throwable.detailMessage\n");
-        return false;
-    }
-
     /* and one for the cause field, just 'cause */
     gDvm.offJavaLangThrowable_cause =
         dvmFindFieldOffset(gDvm.classJavaLangThrowable,
@@ -1244,6 +1235,51 @@ void dvmLogRawStackTrace(const int* intVals, int stackDepth)
 }
 
 /*
+ * Get the message string.  We'd like to just grab the field out of
+ * Throwable, but the getMessage() function can be overridden by the
+ * sub-class.
+ *
+ * Returns the message string object, or NULL if it wasn't set or
+ * we encountered a failure trying to retrieve it.  The string will
+ * be added to the tracked references table.
+ */
+static StringObject* getExceptionMessage(Object* exception)
+{
+    Thread* self = dvmThreadSelf();
+    Method* getMessageMethod;
+    StringObject* messageStr = NULL;
+
+    assert(exception == self->exception);
+    self->exception = NULL;
+
+    getMessageMethod = dvmFindVirtualMethodHierByDescriptor(exception->clazz,
+            "getMessage", "()Ljava/lang/String;");
+    if (getMessageMethod != NULL) {
+        /* could be in NATIVE mode from CheckJNI, so switch state */
+        ThreadStatus oldStatus = dvmChangeStatus(self, THREAD_RUNNING);
+        JValue result;
+
+        dvmCallMethod(self, getMessageMethod, exception, &result);
+        messageStr = (StringObject*) result.l;
+        if (messageStr != NULL)
+            dvmAddTrackedAlloc((Object*) messageStr, self);
+
+        dvmChangeStatus(self, oldStatus);
+    } else {
+        LOGW("WARNING: could not find getMessage in %s\n",
+            exception->clazz->descriptor);
+    }
+
+    if (self->exception != NULL) {
+        LOGW("NOTE: exception thrown while retrieving exception message: %s\n",
+            self->exception->clazz->descriptor);
+    }
+
+    self->exception = exception;
+    return messageStr;
+}
+
+/*
  * Print the direct stack trace of the given exception to the log.
  */
 static void logStackTraceOf(Object* exception)
@@ -1252,21 +1288,32 @@ static void logStackTraceOf(Object* exception)
     StringObject* messageStr;
     int stackSize;
     const int* intVals;
+    char* className;
 
-    messageStr = (StringObject*) dvmGetFieldObject(exception,
-                    gDvm.offJavaLangThrowable_message);
+    className = dvmDescriptorToDot(exception->clazz->descriptor);
+    messageStr = getExceptionMessage(exception);
     if (messageStr != NULL) {
         char* cp = dvmCreateCstrFromString(messageStr);
-        LOGI("%s: %s\n", exception->clazz->descriptor, cp);
+        dvmReleaseTrackedAlloc((Object*) messageStr, dvmThreadSelf());
+        messageStr = NULL;
+
+        LOGI("%s: %s\n", className, cp);
         free(cp);
     } else {
-        LOGI("%s:\n", exception->clazz->descriptor);
+        LOGI("%s:\n", className);
     }
+    free(className);
 
+    /*
+     * This relies on the stackState field, which contains the "raw"
+     * form of the stack.  The Throwable class may clear this field
+     * after it generates the "cooked" form, in which case we'll have
+     * nothing to show.
+     */
     stackData = (const ArrayObject*) dvmGetFieldObject(exception,
                     gDvm.offJavaLangThrowable_stackState);
     if (stackData == NULL) {
-        LOGI("  (no stack trace data found)\n");
+        LOGI("  (raw stack trace not found)\n");
         return;
     }
 

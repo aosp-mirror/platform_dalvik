@@ -752,7 +752,7 @@ int dvmCompilerDataFlowAttributes[kMirOpLast] = {
     // F0 OP_INVOKE_DIRECT_EMPTY
     DF_NOP,
 
-    // F1 OP_UNUSED_F1
+    // F1 OP_RETURN_VOID_BARRIER
     DF_NOP,
 
     // F2 OP_IGET_QUICK

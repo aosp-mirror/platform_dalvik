@@ -1,2 +1,2 @@
 %verify "executed"
-%include "x86/OP_IPUT.S" { "store":"movb","reg":"rINST_LO", "sqnum":"1" }
+%include "x86/OP_IPUT.S" { "store":"movb","reg":"rINSTbl", "sqnum":"1" }

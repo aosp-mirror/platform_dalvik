@@ -307,6 +307,16 @@ size_t strlcpy(char *dst, const char *src, size_t size);
 void *dvmAllocRegion(size_t size, int prot, const char *name);
 
 /*
+ * Get some per-thread stats from /proc/self/task/N/stat.
+ */
+typedef struct {
+    unsigned long utime;    /* number of jiffies scheduled in user mode */
+    unsigned long stime;    /* number of jiffies scheduled in kernel mode */
+    int processor;          /* number of CPU that last executed thread */
+} ProcStatData;
+bool dvmGetThreadStats(ProcStatData* pData, pid_t tid);
+
+/*
  * Returns the pointer to the "absolute path" part of the given path
  * string, treating first (if any) instance of "/./" as a sentinel
  * indicating the start of the absolute path. If the path isn't absolute

@@ -14,11 +14,11 @@
      *      sub-float/2addr, mul-float/2addr, div-float/2addr, rem-float/2addr
      */
     /* binop/2addr vA, vB */
-    movzx   rINST_HI,%ecx               # ecx<- A+
-    sarl    $$12,rINST_FULL             # rINST_FULL<- B
-    GET_VREG(%eax,rINST_FULL)           # eax<- vB
-    FETCH_INST_WORD(1)
-    andb    $$0xf,%cl                   # ecx<- A
-    $instr                              # for ex: addl   %eax,(rFP,%ecx,4)
-    ADVANCE_PC(1)
-    GOTO_NEXT
+    movzx   rINSTbl,%ecx               # ecx<- A+
+    sarl    $$4,rINST                 # rINST<- B
+    GET_VREG_R %eax rINST              # eax<- vB
+    FETCH_INST_OPCODE 1 %edx
+    andb    $$0xf,%cl                  # ecx<- A
+    $instr                             # for ex: addl   %eax,(rFP,%ecx,4)
+    ADVANCE_PC 1
+    GOTO_NEXT_R %edx

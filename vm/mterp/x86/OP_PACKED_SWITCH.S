@@ -10,18 +10,15 @@
      * for: packed-switch, sparse-switch
      */
     /* op vAA, +BBBB */
-    movzbl  rINST_HI,rINST_FULL         # rINST_FULL<- AA
-    movl    2(rPC),%ecx                 # ecx<- BBBBbbbb
-    GET_VREG(%eax,rINST_FULL)           # eax<- vAA
-    leal    (rPC,%ecx,2),%ecx           # ecx<- PC + BBBBbbbb*2
-    movl    %eax,OUT_ARG1(%esp)         # ARG1<- vAA
-    movl    %ecx,OUT_ARG0(%esp)         # ARG0<- switchData
-    SPILL(rPC)
+    movl    2(rPC),%ecx           # ecx<- BBBBbbbb
+    GET_VREG_R %eax rINST         # eax<- vAA
+    leal    (rPC,%ecx,2),%ecx     # ecx<- PC + BBBBbbbb*2
+    movl    %eax,OUT_ARG1(%esp)   # ARG1<- vAA
+    movl    %ecx,OUT_ARG0(%esp)   # ARG0<- switchData
     call    $func
-    UNSPILL(rPC)
     testl   %eax,%eax
-    movl    %eax,rINST_FULL             # set up word offset
-    jle     common_backwardBranch       # check on special actions
-    ADVANCE_PC_INDEXED(rINST_FULL)
-    FETCH_INST()
+    movl    %eax,rINST            # set up word offset
+    jle     common_backwardBranch # check on special actions
+    ADVANCE_PC_INDEXED rINST
+    FETCH_INST
     GOTO_NEXT

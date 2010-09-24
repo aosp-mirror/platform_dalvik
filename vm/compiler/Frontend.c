@@ -377,7 +377,7 @@ CompilerMethodStats *dvmCompilerAnalyzeMethodBody(const Method *method,
  * Crawl the stack of the thread that requesed compilation to see if any of the
  * ancestors are on the blacklist.
  */
-bool filterMethodByCallGraph(Thread *thread, const char *curMethodName)
+static bool filterMethodByCallGraph(Thread *thread, const char *curMethodName)
 {
     /* Crawl the Dalvik stack frames and compare the method name*/
     StackSaveArea *ssaPtr = ((StackSaveArea *) thread->curFrame) - 1;

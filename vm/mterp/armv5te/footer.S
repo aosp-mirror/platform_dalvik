@@ -450,8 +450,18 @@ common_periodicChecks:
     cmp     r1, #0                      @ debugger enabled?
     ldrneb  r1, [r1]                    @ yes, r1<- debuggerActive (boolean)
     ldr     r2, [r2]                    @ r2<- activeProfilers (int)
-    orrne   ip, ip, r1                  @ ip<- suspendCount | debuggerActive
+    orrnes  ip, ip, r1                  @ ip<- suspendCount | debuggerActive
+    /*
+     * Don't switch the interpreter in the libdvm_traceview build even if the
+     * profiler is active.
+     * The code here is opted for less intrusion instead of performance.
+     * That is, *pActiveProfilers is still loaded into r2 even though it is not
+     * used when WITH_INLINE_PROFILING is defined.
+     */
+#if !defined(WITH_INLINE_PROFILING)
     orrs    ip, ip, r2                  @ ip<- suspend|debugger|profiler; set Z
+#endif
+
 
     bxeq    lr                          @ all zero, return
 
@@ -488,16 +498,21 @@ common_periodicChecks:
      * Reload the debugger/profiler enable flags.  We're checking to see
      * if either of these got set while we were suspended.
      *
-     * We can't really avoid the #ifdefs here, because the fields don't
-     * exist when the feature is disabled.
+     * If WITH_INLINE_PROFILING is configured, don't check whether the profiler
+     * is enabled or not as the profiling will be done inline.
      */
     ldr     r1, [rGLUE, #offGlue_pDebuggerActive]   @ r1<- &debuggerActive
     cmp     r1, #0                      @ debugger enabled?
     ldrneb  r1, [r1]                    @ yes, r1<- debuggerActive (boolean)
+
+#if !defined(WITH_INLINE_PROFILING)
     ldr     r2, [rGLUE, #offGlue_pActiveProfilers]  @ r2<- &activeProfilers
     ldr     r2, [r2]                    @ r2<- activeProfilers (int)
-
     orrs    r1, r1, r2
+#else
+    cmp     r1, #0                      @ only consult the debuggerActive flag
+#endif
+
     beq     2f
 
 1:  @ debugger/profiler enabled, bail out; glue->entryPoint was set above
@@ -624,6 +639,13 @@ common_invokeMethodNoRange:
     mov     r9, #0
     str     r9, [r10, #offStackSaveArea_returnAddr]
 #endif
+#if defined(WITH_INLINE_PROFILING)
+    stmfd   sp!, {r0-r3}                @ preserve r0-r3
+    mov     r1, r6
+    @ r0=methodToCall, r1=rGlue
+    bl      dvmFastMethodTraceEnter
+    ldmfd   sp!, {r0-r3}                @ restore r0-r3
+#endif
     str     r0, [r10, #offStackSaveArea_method]
     tst     r3, #ACC_NATIVE
     bne     .LinvokeNative
@@ -693,9 +715,20 @@ dalvik_mterp:
 .Lskip:
 #endif
 
+#if defined(WITH_INLINE_PROFILING)
+    @ r2=JNIMethod, r6=rGLUE
+    stmfd   sp!, {r2,r6}
+#endif
+
     @mov     lr, pc                      @ set return addr
     @ldr     pc, [r2, #offMethod_nativeFunc] @ pc<- methodToCall->nativeFunc
     LDR_PC_LR "[r2, #offMethod_nativeFunc]"
+
+#if defined(WITH_INLINE_PROFILING)
+    @ r0=JNIMethod, r1=rGLUE
+    ldmfd   sp!, {r0-r1}
+    bl      dvmFastNativeMethodTraceExit
+#endif
 
 #if defined(WITH_JIT)
     ldr     r3, [rGLUE, #offGlue_ppJitProfTable] @ Refresh Jit's on/off status
@@ -769,6 +802,13 @@ common_returnFromMethod:
     mov     r9, #0
     bl      common_periodicChecks
 
+#if defined(WITH_INLINE_PROFILING)
+    stmfd   sp!, {r0-r3}                @ preserve r0-r3
+    mov     r0, r6
+    @ r0=rGlue
+    bl      dvmFastJavaMethodTraceExit
+    ldmfd   sp!, {r0-r3}                @ restore r0-r3
+#endif
     SAVEAREA_FROM_FP(r0, rFP)           @ r0<- saveArea (old)
     ldr     rFP, [r0, #offStackSaveArea_prevFrame] @ fp = saveArea->prevFrame
     ldr     r9, [r0, #offStackSaveArea_savedPc] @ r9 = saveArea->savedPc

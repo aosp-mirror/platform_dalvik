@@ -46,6 +46,8 @@ static bool rewriteExecuteInline(Method* method, u2* insns,
     MethodType methodType);
 static bool rewriteExecuteInlineRange(Method* method, u2* insns,
     MethodType methodType);
+static void rewriteReturnVoid(Method* method, u2* insns);
+static bool needsReturnBarrier(Method* method);
 
 
 /*
@@ -59,60 +61,25 @@ InlineSub* dvmCreateInlineSubsTable(void)
     const InlineOperation* ops = dvmGetInlineOpsTable();
     const int count = dvmGetInlineOpsTableLength();
     InlineSub* table;
-    Method* method;
-    ClassObject* clazz;
     int i, tableIndex;
 
     /*
      * Allocate for optimism: one slot per entry, plus an end-of-list marker.
      */
-    table = malloc(sizeof(InlineSub) * (count+1));
+    table = calloc(count + 1, sizeof(InlineSub));
 
     tableIndex = 0;
     for (i = 0; i < count; i++) {
-        clazz = dvmFindClassNoInit(ops[i].classDescriptor, NULL);
-        if (clazz == NULL) {
-            LOGV("DexOpt: can't inline for class '%s': not found\n",
-                ops[i].classDescriptor);
-            dvmClearOptException(dvmThreadSelf());
-        } else {
-            /*
-             * Method could be virtual or direct.  Try both.  Don't use
-             * the "hier" versions.
-             */
-            method = dvmFindDirectMethodByDescriptor(clazz, ops[i].methodName,
-                        ops[i].methodSignature);
-            if (method == NULL)
-                method = dvmFindVirtualMethodByDescriptor(clazz, ops[i].methodName,
-                        ops[i].methodSignature);
-            if (method == NULL) {
-                LOGW("DexOpt: can't inline %s.%s %s: method not found\n",
-                    ops[i].classDescriptor, ops[i].methodName,
-                    ops[i].methodSignature);
-            } else {
-                if (!dvmIsFinalClass(clazz) && !dvmIsFinalMethod(method)) {
-                    LOGW("DexOpt: WARNING: inline op on non-final class/method "
-                         "%s.%s\n",
-                        clazz->descriptor, method->name);
-                    /* fail? */
-                }
-                if (dvmIsSynchronizedMethod(method) ||
-                    dvmIsDeclaredSynchronizedMethod(method))
-                {
-                    LOGW("DexOpt: WARNING: inline op on synchronized method "
-                         "%s.%s\n",
-                        clazz->descriptor, method->name);
-                    /* fail? */
-                }
+        Method* method = dvmFindInlinableMethod(ops[i].classDescriptor,
+            ops[i].methodName, ops[i].methodSignature);
+        if (method != NULL) {
+            table[tableIndex].method = method;
+            table[tableIndex].inlineIdx = i;
+            tableIndex++;
 
-                table[tableIndex].method = method;
-                table[tableIndex].inlineIdx = i;
-                tableIndex++;
-
-                LOGV("DexOpt: will inline %d: %s.%s %s\n", i,
-                    ops[i].classDescriptor, ops[i].methodName,
-                    ops[i].methodSignature);
-            }
+            LOGV("DexOpt: will inline %d: %s.%s %s\n", i,
+                ops[i].classDescriptor, ops[i].methodName,
+                ops[i].methodSignature);
         }
     }
 
@@ -179,6 +146,9 @@ static void optimizeMethod(Method* method, bool essentialOnly)
 
     if (dvmIsNativeMethod(method) || dvmIsAbstractMethod(method))
         return;
+
+    /* compute this once per method */
+    bool needRetBar = needsReturnBarrier(method);
 
     insns = (u2*) method->insns;
     assert(insns != NULL);
@@ -274,6 +244,11 @@ rewrite_static_field2:
                 rewriteStaticField(method, insns, volatileOpc);
                 notMatched = false;
                 break;
+            case OP_RETURN_VOID:
+                if (needRetBar)
+                    rewriteReturnVoid(method, insns);
+                notMatched = false;
+                break;
             default:
                 assert(notMatched);
                 break;
@@ -337,7 +312,7 @@ rewrite_static_field2:
 /*
  * Update a 16-bit code unit in "meth".
  */
-static inline void updateCode(const Method* meth, u2* ptr, u2 newVal)
+static inline void updateCodeUnit(const Method* meth, u2* ptr, u2 newVal)
 {
     if (gDvm.optimizing) {
         /* dexopt time, alter the output directly */
@@ -346,6 +321,14 @@ static inline void updateCode(const Method* meth, u2* ptr, u2 newVal)
         /* runtime, toggle the page read/write status */
         dvmDexChangeDex2(meth->clazz->pDvmDex, ptr, newVal);
     }
+}
+
+/*
+ * Update the 8-bit opcode portion of a 16-bit code unit in "meth".
+ */
+static inline void updateOpCode(const Method* meth, u2* ptr, OpCode opCode)
+{
+    updateCodeUnit(meth, ptr, (ptr[0] & 0xff00) | (u2) opCode);
 }
 
 /*
@@ -655,12 +638,12 @@ static bool rewriteInstField(Method* method, u2* insns, OpCode quickOpc,
     }
 
     if (volatileOpc != OP_NOP && dvmIsVolatileField(&instField->field)) {
-        updateCode(method, insns, (insns[0] & 0xff00) | (u2) volatileOpc);
+        updateOpCode(method, insns, volatileOpc);
         LOGV("DexOpt: rewrote ifield access %s.%s --> volatile\n",
             instField->field.clazz->descriptor, instField->field.name);
     } else if (quickOpc != OP_NOP) {
-        updateCode(method, insns, (insns[0] & 0xff00) | (u2) quickOpc);
-        updateCode(method, insns+1, (u2) instField->byteOffset);
+        updateOpCode(method, insns, quickOpc);
+        updateCodeUnit(method, insns+1, (u2) instField->byteOffset);
         LOGV("DexOpt: rewrote ifield access %s.%s --> %d\n",
             instField->field.clazz->descriptor, instField->field.name,
             instField->byteOffset);
@@ -700,7 +683,7 @@ static bool rewriteStaticField(Method* method, u2* insns, OpCode volatileOpc)
     }
 
     if (dvmIsVolatileField(&staticField->field)) {
-        updateCode(method, insns, (insns[0] & 0xff00) | (u2) volatileOpc);
+        updateOpCode(method, insns, volatileOpc);
         LOGV("DexOpt: rewrote sfield access %s.%s --> volatile\n",
             staticField->field.clazz->descriptor, staticField->field.name);
     }
@@ -873,8 +856,8 @@ static bool rewriteVirtualInvoke(Method* method, u2* insns, OpCode newOpc)
      * Note: Method->methodIndex is a u2 and is range checked during the
      * initial load.
      */
-    updateCode(method, insns, (insns[0] & 0xff00) | (u2) newOpc);
-    updateCode(method, insns+1, baseMethod->methodIndex);
+    updateOpCode(method, insns, newOpc);
+    updateCodeUnit(method, insns+1, baseMethod->methodIndex);
 
     //LOGI("DexOpt: rewrote call to %s.%s --> %s.%s\n",
     //    method->clazz->descriptor, method->name,
@@ -918,8 +901,7 @@ static bool rewriteEmptyDirectInvoke(Method* method, u2* insns)
          * OP_INVOKE_DIRECT when debugging is enabled.
          */
         assert((insns[0] & 0xff) == OP_INVOKE_DIRECT);
-        updateCode(method, insns,
-            (insns[0] & 0xff00) | (u2) OP_INVOKE_DIRECT_EMPTY);
+        updateOpCode(method, insns, OP_INVOKE_DIRECT_EMPTY);
 
         //LOGI("DexOpt: marked-empty call to %s.%s --> %s.%s\n",
         //    method->clazz->descriptor, method->name,
@@ -1050,9 +1032,8 @@ static bool rewriteExecuteInline(Method* method, u2* insns,
             assert((insns[0] & 0xff) == OP_INVOKE_DIRECT ||
                    (insns[0] & 0xff) == OP_INVOKE_STATIC ||
                    (insns[0] & 0xff) == OP_INVOKE_VIRTUAL);
-            updateCode(method, insns,
-                (insns[0] & 0xff00) | (u2) OP_EXECUTE_INLINE);
-            updateCode(method, insns+1, (u2) inlineSubs->inlineIdx);
+            updateOpCode(method, insns, OP_EXECUTE_INLINE);
+            updateCodeUnit(method, insns+1, (u2) inlineSubs->inlineIdx);
 
             //LOGI("DexOpt: execute-inline %s.%s --> %s.%s\n",
             //    method->clazz->descriptor, method->name,
@@ -1091,9 +1072,8 @@ static bool rewriteExecuteInlineRange(Method* method, u2* insns,
             assert((insns[0] & 0xff) == OP_INVOKE_DIRECT_RANGE ||
                    (insns[0] & 0xff) == OP_INVOKE_STATIC_RANGE ||
                    (insns[0] & 0xff) == OP_INVOKE_VIRTUAL_RANGE);
-            updateCode(method, insns,
-                (insns[0] & 0xff00) | (u2) OP_EXECUTE_INLINE_RANGE);
-            updateCode(method, insns+1, (u2) inlineSubs->inlineIdx);
+            updateOpCode(method, insns, OP_EXECUTE_INLINE_RANGE);
+            updateCodeUnit(method, insns+1, (u2) inlineSubs->inlineIdx);
 
             //LOGI("DexOpt: execute-inline/range %s.%s --> %s.%s\n",
             //    method->clazz->descriptor, method->name,
@@ -1105,4 +1085,55 @@ static bool rewriteExecuteInlineRange(Method* method, u2* insns,
     }
 
     return false;
+}
+
+/*
+ * Returns "true" if the return-void instructions in this method should
+ * be converted to return-void-barrier.
+ *
+ * This is needed to satisfy a Java Memory Model requirement regarding
+ * the construction of objects with final fields.  (This does not apply
+ * to <clinit> or static fields, since appropriate barriers are guaranteed
+ * by the class initialization process.)
+ */
+static bool needsReturnBarrier(Method* method)
+{
+    if (!gDvm.dexOptForSmp)
+        return false;
+    if (strcmp(method->name, "<init>") != 0)
+        return false;
+
+    /*
+     * Check to see if the class has any final fields.  If not, we don't
+     * need to generate a barrier instruction.
+     */
+    const ClassObject* clazz = method->clazz;
+    int idx = clazz->ifieldCount;
+    while (--idx >= 0) {
+        if (dvmIsFinalField(&clazz->ifields[idx].field))
+            break;
+    }
+    if (idx < 0)
+        return false;
+
+    /*
+     * In theory, we only need to do this if the method actually modifies
+     * a final field.  In practice, non-constructor methods are allowed
+     * to modify final fields by the VM, and there are tools that rely on
+     * this behavior.  (The compiler does not allow it.)
+     *
+     * If we alter the verifier to restrict final-field updates to
+     * constructors, we can tighten this up as well.
+     */
+
+    return true;
+}
+
+/*
+ * Convert a return-void to a return-void-barrier.
+ */
+static void rewriteReturnVoid(Method* method, u2* insns)
+{
+    assert((insns[0] & 0xff) == OP_RETURN_VOID);
+    updateOpCode(method, insns, OP_RETURN_VOID_BARRIER);
 }

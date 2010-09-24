@@ -14,12 +14,15 @@
 #define GOTO_TARGET_DECL(_target, ...)                                      \
     void dvmMterp_##_target(MterpGlue* glue, ## __VA_ARGS__);
 
+/* (void)xxx to quiet unused variable compiler warnings. */
 #define GOTO_TARGET(_target, ...)                                           \
     void dvmMterp_##_target(MterpGlue* glue, ## __VA_ARGS__) {              \
         u2 ref, vsrc1, vsrc2, vdst;                                         \
         u2 inst = FETCH(0);                                                 \
         const Method* methodToCall;                                         \
-        StackSaveArea* debugSaveArea;
+        StackSaveArea* debugSaveArea;                                       \
+        (void)ref; (void)vsrc1; (void)vsrc2; (void)vdst; (void)inst;        \
+        (void)methodToCall; (void)debugSaveArea;
 
 #define GOTO_TARGET_END }
 
@@ -43,11 +46,13 @@
  * Opcode handler framing macros.  Here, each opcode is a separate function
  * that takes a "glue" argument and returns void.  We can't declare
  * these "static" because they may be called from an assembly stub.
+ * (void)xxx to quiet unused variable compiler warnings.
  */
 #define HANDLE_OPCODE(_op)                                                  \
     void dvmMterp_##_op(MterpGlue* glue) {                                  \
         u2 ref, vsrc1, vsrc2, vdst;                                         \
-        u2 inst = FETCH(0);
+        u2 inst = FETCH(0);                                                 \
+        (void)ref; (void)vsrc1; (void)vsrc2; (void)vdst; (void)inst;
 
 #define OP_END }
 

@@ -177,6 +177,13 @@ dvmCompiler_TEMPLATE_RETURN:
      * address in the code cache following the invoke instruction. Otherwise
      * return to the special dvmJitToInterpNoChain entry point.
      */
+#if defined(WITH_INLINE_PROFILING)
+    stmfd   sp!, {r0-r2,lr}             @ preserve live registers
+    mov     r0, r6
+    @ r0=rGlue
+    LDR_PC_LR ".LdvmFastJavaMethodTraceExit"
+    ldmfd   sp!, {r0-r2,lr}             @ restore live registers
+#endif
     SAVEAREA_FROM_FP(r0, rFP)           @ r0<- saveArea (old)
     ldr     r10, [r0, #offStackSaveArea_prevFrame] @ r10<- saveArea->prevFrame
     ldr     r8, [rGLUE, #offGlue_pSelfSuspendCount] @ r8<- &suspendCount
@@ -274,6 +281,13 @@ dvmCompiler_TEMPLATE_INVOKE_METHOD_NO_OPT:
     str     r3, [rGLUE, #offGlue_methodClassDex] @ glue->methodClassDex = ...
     mov     rFP, r1                         @ fp = newFp
     str     rFP, [r2, #offThread_curFrame]  @ self->curFrame = newFp
+#if defined(WITH_INLINE_PROFILING)
+    stmfd   sp!, {r0-r3}                    @ preserve r0-r3
+    mov     r1, r6
+    @ r0=methodToCall, r1=rGlue
+    LDR_PC_LR ".LdvmFastMethodTraceEnter"
+    ldmfd   sp!, {r0-r3}                    @ restore r0-r3
+#endif
 
     @ Start executing the callee
 #if defined(WITH_JIT_TUNING)
@@ -329,6 +343,13 @@ dvmCompiler_TEMPLATE_INVOKE_METHOD_CHAIN:
     str     r3, [rGLUE, #offGlue_methodClassDex] @ glue->methodClassDex = ...
     mov     rFP, r1                         @ fp = newFp
     str     rFP, [r2, #offThread_curFrame]  @ self->curFrame = newFp
+#if defined(WITH_INLINE_PROFILING)
+    stmfd   sp!, {r0-r2,lr}             @ preserve clobbered live registers
+    mov     r1, r6
+    @ r0=methodToCall, r1=rGlue
+    LDR_PC_LR ".LdvmFastMethodTraceEnter"
+    ldmfd   sp!, {r0-r2,lr}             @ restore registers
+#endif
 
     bx      lr                              @ return to the callee-chaining cell
 
@@ -436,9 +457,24 @@ dvmCompiler_TEMPLATE_INVOKE_METHOD_NATIVE:
     mov     r2, r0                      @ r2<- methodToCall
     mov     r0, r1                      @ r0<- newFP
     add     r1, rGLUE, #offGlue_retval  @ r1<- &retval
+#if defined(WITH_INLINE_PROFILING)
+    @ r2=methodToCall, r6=rGLUE
+    stmfd   sp!, {r2,r6}                @ to be consumed after JNI return
+    stmfd   sp!, {r0-r3}                @ preserve r0-r3
+    mov     r0, r2
+    mov     r1, r6
+    @ r0=JNIMethod, r1=rGlue
+    LDR_PC_LR ".LdvmFastMethodTraceEnter"
+    ldmfd   sp!, {r0-r3}                @ restore r0-r3
+#endif
 
     blx     r8                          @ off to the native code
 
+#if defined(WITH_INLINE_PROFILING)
+    ldmfd   sp!, {r0-r1}                @ restore r2 and r6
+    @ r0=JNIMethod, r1=rGlue
+    LDR_PC_LR ".LdvmFastNativeMethodTraceExit"
+#endif
     @ native return; r9=self, r10=newSaveArea
     @ equivalent to dvmPopJniLocals
     ldr     r2, [r10, #offStackSaveArea_returnAddr] @ r2 = chaining cell ret
@@ -1181,9 +1217,22 @@ dvmCompiler_TEMPLATE_MONITOR_ENTER_DEBUG:
     mov     r2, r0                      @ r2<- methodToCall
     mov     r0, r1                      @ r0<- newFP
     add     r1, rGLUE, #offGlue_retval  @ r1<- &retval
+#if defined(WITH_INLINE_PROFILING)
+    @ r2: methodToCall, r6: rGLUE
+    stmfd   sp!, {r2,r6}
+    stmfd   sp!, {r0-r3}
+    mov     r0, r2
+    mov     r1, r6
+    LDR_PC_LR ".LdvmFastMethodTraceEnter"
+    ldmfd   sp!, {r0-r3}
+#endif
 
     LDR_PC_LR "[r2, #offMethod_nativeFunc]"
 
+#if defined(WITH_INLINE_PROFILING)
+    ldmfd   sp!, {r0-r1}
+    LDR_PC_LR ".LdvmFastNativeMethodTraceExit"
+#endif
     @ Refresh Jit's on/off status
     ldr     r3, [rGLUE, #offGlue_ppJitProfTable]
 
@@ -1254,6 +1303,14 @@ dvmCompiler_TEMPLATE_MONITOR_ENTER_DEBUG:
 #if defined(WITH_SELF_VERIFICATION)
 .LdvmSelfVerificationMemOpDecode:
     .word   dvmSelfVerificationMemOpDecode
+#endif
+#if defined(WITH_INLINE_PROFILING)
+.LdvmFastMethodTraceEnter:
+    .word   dvmFastMethodTraceEnter
+.LdvmFastNativeMethodTraceExit:
+    .word   dvmFastNativeMethodTraceExit
+.LdvmFastJavaMethodTraceExit:
+    .word   dvmFastJavaMethodTraceExit
 #endif
 .L__aeabi_cdcmple:
     .word   __aeabi_cdcmple

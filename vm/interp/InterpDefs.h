@@ -233,7 +233,11 @@ Method* dvmInterpFindInterfaceMethod(ClassObject* thisClass, u4 methodIdx,
  */
 static inline bool dvmDebuggerOrProfilerActive(void)
 {
-    return gDvm.debuggerActive || gDvm.activeProfilers != 0;
+    bool result = gDvm.debuggerActive;
+#if !defined(WITH_INLINE_PROFILING)
+    result = result || (gDvm.activeProfilers != 0);
+#endif
+    return result;
 }
 
 #if defined(WITH_JIT)
@@ -243,9 +247,11 @@ static inline bool dvmDebuggerOrProfilerActive(void)
  */
 static inline bool dvmJitDebuggerOrProfilerActive()
 {
-    return gDvmJit.pProfTable != NULL
-        || gDvm.activeProfilers != 0
-        || gDvm.debuggerActive;
+    bool result = (gDvmJit.pProfTable != NULL) || gDvm.debuggerActive;
+#if !defined(WITH_INLINE_PROFILING)
+    result = result || (gDvm.activeProfilers != 0);
+#endif
+    return result;
 }
 
 /*
@@ -272,6 +278,7 @@ static inline bool dvmJitStayInPortableInterpreter()
     return dvmJitHideTranslation() ||
            (gDvmJit.compilerQueueLength >= gDvmJit.compilerHighWater);
 }
+
 #endif
 
 #endif /*_DALVIK_INTERP_DEFS*/

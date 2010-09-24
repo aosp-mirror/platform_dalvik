@@ -7,10 +7,9 @@
     /* op vAA, vBB, vCC */
     movzbl    2(rPC),%eax               # eax<- BB
     movzbl    3(rPC),%ecx               # ecx<- CC
-    movzbl    rINST_HI,rINST_FULL       # rINST_FULL<- AA
-    GET_VREG(%eax,%eax)                 # eax<- vBB (array object)
-    GET_VREG(%ecx,%ecx)                 # ecs<- vCC (requested index)
-    GET_VREG(rINST_FULL,rINST_FULL)     # rINST_FULL<- vAA
+    GET_VREG_R  %eax %eax               # eax<- vBB (array object)
+    GET_VREG_R  %ecx %ecx               # ecs<- vCC (requested index)
+    GET_VREG_R  rINST rINST             # rINST<- vAA
     testl     %eax,%eax                 # null array object?
     je        common_errNullObject      # bail if so
     cmpl      offArrayObject_length(%eax),%ecx
@@ -21,34 +20,32 @@
     /* On entry:
      *   eax<- array object
      *   ecx<- index
-     *   rINST_FULL<- vAA
+     *   rINST<- vAA
      */
 .L${opcode}_continue:
     leal      offArrayObject_contents(%eax,%ecx,4),%ecx
-    testl     rINST_FULL,rINST_FULL     # storing null reference?
+    testl     rINST,rINST     # storing null reference?
     je        .L${opcode}_skip_check
-    SPILL(rPC)
-    SPILL_TMP(%ecx)
+    SPILL_TMP1(%ecx)
     movl      offObject_clazz(%eax),%eax # eax<- arrayObj->clazz
-    movl      offObject_clazz(rINST_FULL),%ecx # ecx<- obj->clazz
+    movl      offObject_clazz(rINST),%ecx # ecx<- obj->clazz
     movl      %eax,OUT_ARG1(%esp)
     movl      %ecx,OUT_ARG0(%esp)
     call      dvmCanPutArrayElement     # test object type vs. array type
-    UNSPILL(rPC)
-    UNSPILL_TMP(%ecx)
+    UNSPILL_TMP1(%ecx)
     testl     %eax,%eax
-    GET_GLUE(%eax)
+    movl      rGLUE,%eax
     je        common_errArrayStore
     movl      offGlue_cardTable(%eax),%eax   # get card table base
-    movl      rINST_FULL,(%ecx)
-    FETCH_INST_WORD(2)
+    movl      rINST,(%ecx)
+    FETCH_INST_OPCODE 2 %edx
     shrl      $$GC_CARD_SHIFT,%ecx           # convert addr to card number
     movb      %al,(%eax,%ecx)                # mark card
-    ADVANCE_PC(2)
-    GOTO_NEXT
+    ADVANCE_PC 2
+    GOTO_NEXT_R %edx
 
 .L${opcode}_skip_check:
-    movl      rINST_FULL,(%ecx)
-    FETCH_INST_WORD(2)
-    ADVANCE_PC(2)
-    GOTO_NEXT
+    movl      rINST,(%ecx)
+    FETCH_INST_OPCODE 2 %edx
+    ADVANCE_PC 2
+    GOTO_NEXT_R %edx
