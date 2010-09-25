@@ -23,7 +23,7 @@
 #include "compiler/CompilerInternals.h"
 #include "compiler/codegen/arm/ArmLIR.h"
 #include "mterp/common/FindInterface.h"
-#include "compiler/codegen/arm/Ralloc.h"
+#include "compiler/codegen/Ralloc.h"
 #include "compiler/codegen/arm/Codegen.h"
 #include "compiler/Loop.h"
 #include "ArchVariant.h"

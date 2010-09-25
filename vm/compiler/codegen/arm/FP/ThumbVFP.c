@@ -19,10 +19,6 @@
  * variant-specific code.
  */
 
-extern void dvmCompilerFlushRegWideForV5TEVFP(CompilationUnit *cUnit,
-                                              int reg1, int reg2);
-extern void dvmCompilerFlushRegForV5TEVFP(CompilationUnit *cUnit, int reg);
-
 /*
  * Take the address of a Dalvik register and store it into rDest.
  * Clobber any live values associated either with the Dalvik value
@@ -35,10 +31,9 @@ static void loadValueAddressDirect(CompilationUnit *cUnit, RegLocation rlSrc,
                           dvmCompilerUpdateLoc(cUnit, rlSrc);
      if (rlSrc.location == kLocPhysReg) {
          if (rlSrc.wide) {
-             dvmCompilerFlushRegWideForV5TEVFP(cUnit, rlSrc.lowReg,
-                                               rlSrc.highReg);
+             dvmCompilerFlushRegWide(cUnit, rlSrc.lowReg, rlSrc.highReg);
          } else {
-             dvmCompilerFlushRegForV5TEVFP(cUnit, rlSrc.lowReg);
+             dvmCompilerFlushReg(cUnit, rlSrc.lowReg);
          }
      }
      dvmCompilerClobber(cUnit, rDest);
