@@ -1551,12 +1551,14 @@ dvmHeapSourceGetNumHeaps()
  * GCs.
  */
 
-
-static bool
-externalAllocPossible(const HeapSource *hs, size_t n)
+/*
+ * Returns true if the requested number of bytes can be allocated from
+ * available storage.
+ */
+static bool externalBytesAvailable(const HeapSource *hs, size_t numBytes)
 {
     const Heap *heap;
-    size_t currentHeapSize;
+    size_t currentHeapSize, newHeapSize;
 
     /* Make sure that this allocation is even possible.
      * Don't let the external size plus the actual heap size
@@ -1568,14 +1570,13 @@ externalAllocPossible(const HeapSource *hs, size_t n)
      */
     heap = hs2heap(hs);
     currentHeapSize = mspace_max_allowed_footprint(heap->msp);
-    if (currentHeapSize + hs->externalBytesAllocated + n <=
-            heap->absoluteMaxSize)
-    {
+    newHeapSize = currentHeapSize + hs->externalBytesAllocated + numBytes;
+    if (newHeapSize <= heap->absoluteMaxSize) {
         return true;
     }
-    HSTRACE("externalAllocPossible(): "
+    HSTRACE("externalBytesAvailable(): "
             "footprint %zu + extAlloc %zu + n %zu >= max %zu (space for %zu)\n",
-            currentHeapSize, hs->externalBytesAllocated, n,
+            currentHeapSize, hs->externalBytesAllocated, numBytes,
             heap->absoluteMaxSize,
             heap->absoluteMaxSize -
                     (currentHeapSize + hs->externalBytesAllocated));
@@ -1589,7 +1590,7 @@ externalAllocPossible(const HeapSource *hs, size_t n)
  * If there's enough room for that memory, returns true.  If not, returns
  * false and does not update the count.
  *
- * The caller must ensure externalAllocPossible(hs, n) == true.
+ * The caller must ensure externalBytesAvailable(hs, n) == true.
  */
 static bool
 externalAlloc(HeapSource *hs, size_t n, bool grow)
@@ -1597,7 +1598,7 @@ externalAlloc(HeapSource *hs, size_t n, bool grow)
     assert(hs->externalLimit >= hs->externalBytesAllocated);
 
     HSTRACE("externalAlloc(%zd%s)\n", n, grow ? ", grow" : "");
-    assert(externalAllocPossible(hs, n));  // The caller must ensure this.
+    assert(externalBytesAvailable(hs, n));  // The caller must ensure this.
 
     /* External allocations have their own "free space" that they
      * can allocate from without causing a GC.
@@ -1643,6 +1644,63 @@ gcForExternalAlloc(bool collectSoftReferences)
 }
 
 /*
+ * Returns true if there is enough unused storage to perform an
+ * external allocation of the specified size.  If there insufficient
+ * free storage we try to releasing memory from external allocations
+ * and trimming the heap.
+ */
+static bool externalAllocPossible(const HeapSource *hs, size_t n)
+{
+    /*
+     * If there is sufficient space return immediately.
+     */
+    if (externalBytesAvailable(hs, n)) {
+        return true;
+    }
+    /*
+     * There is insufficient space.  Wait for the garbage collector to
+     * become inactive before proceeding.
+     */
+    while (gDvm.gcHeap->gcRunning) {
+        dvmWaitForConcurrentGcToComplete();
+    }
+    /*
+     * The heap may have grown or become trimmed while we were
+     * waiting.
+     */
+    if (externalBytesAvailable(hs, n)) {
+        return true;
+    }
+    /*
+     * Try garbage collecting without clearing soft references.  This
+     * may expand the heap.
+     */
+    gcForExternalAlloc(false);
+    if (externalBytesAvailable(hs, n)) {
+        return true;
+    }
+    /*
+     * Try garbage collecting clearing soft references.  This may
+     * expand the heap or make trimming more effective.
+     */
+    gcForExternalAlloc(true);
+    if (externalBytesAvailable(hs, n)) {
+        return true;
+    }
+    /*
+     * Try trimming the mspace to reclaim unused pages.
+     */
+    dvmHeapSourceTrim(NULL, 0);
+    if (externalBytesAvailable(hs, n)) {
+        return true;
+    }
+    /*
+     * Nothing worked, return an error.
+     */
+    return false;
+}
+
+/*
  * Updates the internal count of externally-allocated memory.  If there's
  * enough room for that memory, returns true.  If not, returns false and
  * does not update the count.
@@ -1663,9 +1721,13 @@ dvmTrackExternalAllocation(size_t n)
     HS_BOILERPLATE();
     assert(hs->externalLimit >= hs->externalBytesAllocated);
 
+    /*
+     * The externalAlloc calls require the externalAllocPossible
+     * invariant to be established.
+     */
     if (!externalAllocPossible(hs, n)) {
         LOGE_HEAP("%zd-byte external allocation "
-                "too large for this process.\n", n);
+                  "too large for this process.", n);
         goto out;
     }
 
@@ -1677,19 +1739,21 @@ dvmTrackExternalAllocation(size_t n)
         ret = true;
         goto out;
     }
-
-    if (gDvm.gcHeap->gcRunning) {
-        /*
-         * The GC is concurrently tracing the heap.  Release the heap
-         * lock, wait for the GC to complete, and try again.
-         */
+    /*
+     * Wait until garbage collector is quiescent before proceeding.
+     */
+    while (gDvm.gcHeap->gcRunning) {
         dvmWaitForConcurrentGcToComplete();
-        if (externalAlloc(hs, n, false)) {
-            ret = true;
-            goto out;
-        }
     }
-
+    /*
+     * Re-establish the invariant if it was lost while we were
+     * waiting.
+     */
+    if (!externalAllocPossible(hs, n)) {
+        LOGE_HEAP("%zd-byte external allocation "
+                  "too large for this process.", n);
+        goto out;
+    }
     /* The "allocation" failed.  Free up some space by doing
      * a full garbage collection.  This may grow the heap source
      * if the live set is sufficiently large.
