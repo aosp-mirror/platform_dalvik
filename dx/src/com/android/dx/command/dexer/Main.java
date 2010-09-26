@@ -55,6 +55,43 @@ import java.util.jar.Manifest;
  */
 public class Main {
     /**
+     * {@code non-null;} the lengthy message that tries to discourage
+     * people from defining core classes in applications
+     */
+    private static final String IN_RE_CORE_CLASSES =
+        "Ill-advised or mistaken usage of a core class (java.* or javax.*)\n" +
+        "when not building a core library.\n\n" +
+        "This is often due to inadvertently including a core library file\n" +
+        "in your application's project, when using an IDE (such as\n" +
+        "Eclipse). If you are sure you're not intentionally defining a\n" +
+        "core class, then this is the most likely explanation of what's\n" +
+        "going on.\n\n" +
+        "However, you might actually be trying to define a class in a core\n" +
+        "namespace, the source of which you may have taken, for example,\n" +
+        "from a non-Android virtual machine project. This will most\n" +
+        "assuredly not work. At a minimum, it jeopardizes the\n" +
+        "compatibility of your app with future versions of the platform.\n" +
+        "It is also often of questionable legality.\n\n" +
+        "If you really intend to build a core library -- which is only\n" +
+        "appropriate as part of creating a full virtual machine\n" +
+        "distribution, as opposed to compiling an application -- then use\n" +
+        "the \"--core-library\" option to suppress this error message.\n\n" +
+        "If you go ahead and use \"--core-library\" but are in fact\n" +
+        "building an application, then be forewarned that your application\n" +
+        "will still fail to build or run, at some point. Please be\n" +
+        "prepared for angry customers who find, for example, that your\n" +
+        "application ceases to function once they upgrade their operating\n" +
+        "system. You will be to blame for this problem.\n\n" +
+        "If you are legitimately using some code that happens to be in a\n" +
+        "core package, then the easiest safe alternative you have is to\n" +
+        "repackage that code. That is, move the classes in question into\n" +
+        "your own package namespace. This means that they will never be in\n" +
+        "conflict with core system classes. JarJar is a tool that may help\n" +
+        "you in this endeavor. If you find that you cannot do this, then\n" +
+        "that is an indication that the path you are on will ultimately\n" +
+        "lead to pain, suffering, grief, and lamentation.\n";
+
+    /**
      * {@code non-null;} name for the {@code .dex} file that goes into
      * {@code .jar} files
      */
@@ -347,52 +384,8 @@ public class Main {
          * working. Try to help them understand what's happening.
          */
 
-        DxConsole.err.println("\ntrouble processing \"" + name + "\":");
-        DxConsole.err.println("\n" +
-                "Attempt to include a core class (java.* or javax.*) in " +
-                "something other\n" +
-                "than a core library. It is likely that you have " +
-                "attempted to include\n" +
-                "in an application the core library (or a part thereof) " +
-                "from a desktop\n" +
-                "virtual machine. This will most assuredly not work. " +
-                "At a minimum, it\n" +
-                "jeopardizes the compatibility of your app with future " +
-                "versions of the\n" +
-                "platform. It is also often of questionable legality.\n" +
-                "\n" +
-                "If you really intend to build a core library -- which is " +
-                "only\n" +
-                "appropriate as part of creating a full virtual machine " +
-                "distribution,\n" +
-                "as opposed to compiling an application -- then use the\n" +
-                "\"--core-library\" option to suppress this error message.\n" +
-                "\n" +
-                "If you go ahead and use \"--core-library\" but are in " +
-                "fact building an\n" +
-                "application, then be forewarned that your application " +
-                "will still fail\n" +
-                "to build or run, at some point. Please be prepared for " +
-                "angry customers\n" +
-                "who find, for example, that your application ceases to " +
-                "function once\n" +
-                "they upgrade their operating system. You will be to " +
-                "blame for this\n" +
-                "problem.\n" +
-                "\n" +
-                "If you are legitimately using some code that happens to " +
-                "be in a core\n" +
-                "package, then the easiest safe alternative you have is " +
-                "to repackage\n" +
-                "that code. That is, move the classes in question into " +
-                "your own package\n" +
-                "namespace. This means that they will never be in " +
-                "conflict with core\n" +
-                "system classes. If you find that you cannot do this, " +
-                "then that is an\n" +
-                "indication that the path you are on will ultimately lead " +
-                "to pain,\n" +
-                "suffering, grief, and lamentation.\n");
+        DxConsole.err.println("\ntrouble processing \"" + name + "\":\n\n" +
+                IN_RE_CORE_CLASSES);
         errors++;
         throw new StopProcessing();
     }
