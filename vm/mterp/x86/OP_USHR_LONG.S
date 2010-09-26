@@ -23,8 +23,8 @@
     movl      %edx,%eax
     xorl      %edx,%edx
 2:
+    SET_VREG_WORD %edx rINST 1          # v[AA+1]<- edx
     FETCH_INST_OPCODE 2 %edx
-    SET_VREG_WORD %edx rINST 1          # v[BB+1]<- edx
     jmp       .L${opcode}_finish
 %break
 
