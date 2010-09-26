@@ -1030,11 +1030,14 @@ static int dvmProcessOptions(int argc, const char* const argv[],
         }
     }
 
-    /* We should be able to cope with these being equal, but until
-     * http://b/2714377 is fixed, we can't.
+    /* External allocations count against the space we "reserve" by setting
+     * the heap max size greater than the heap start size. Without a gap,
+     * no external allocations will succeed. You won't get very far like that,
+     * so let's not even try.
      */
     if (gDvm.heapSizeStart >= gDvm.heapSizeMax) {
-        dvmFprintf(stderr, "Heap start size must be < heap max size\n");
+        dvmFprintf(stderr, "External allocations require a gap between the "
+            "heap start size and max size\n");
         return -1;
     }
 
