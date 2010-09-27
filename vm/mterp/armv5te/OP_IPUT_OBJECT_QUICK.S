@@ -14,6 +14,6 @@
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     str     r0, [r3, r1]                @ obj.field (always 32 bits)<- r0
     cmp     r0, #0
-    strneb  r2, [r2, r3, lsr #GC_CARD_SHIFT] @ mark card on non-null store
+    strneb  r2, [r2, r3, lsr #GC_CARD_SHIFT] @ mark card based on obj head
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     GOTO_OPCODE(ip)                     @ jump to next instruction

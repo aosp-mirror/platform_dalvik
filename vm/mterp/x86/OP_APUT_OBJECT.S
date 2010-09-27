@@ -31,6 +31,7 @@
     SPILL_TMP(%ecx)
     movl      offObject_clazz(%eax),%eax # eax<- arrayObj->clazz
     movl      offObject_clazz(rINST_FULL),%ecx # ecx<- obj->clazz
+    movl      %eax,LOCAL0_OFFSET(%ebp)  # save copy of object head
     movl      %eax,OUT_ARG1(%esp)
     movl      %ecx,OUT_ARG0(%esp)
     call      dvmCanPutArrayElement     # test object type vs. array type
@@ -41,9 +42,10 @@
     je        common_errArrayStore
     movl      offGlue_cardTable(%eax),%eax   # get card table base
     movl      rINST_FULL,(%ecx)
+    movl      LOCAL0_OFFSET(%ebp),%ecx       # recover object head
     FETCH_INST_WORD(2)
-    shrl      $$GC_CARD_SHIFT,%ecx           # convert addr to card number
-    movb      %al,(%eax,%ecx)                # mark card
+    shrl      $$GC_CARD_SHIFT,%ecx           # object head to card number
+    movb      %al,(%eax,%ecx)                # mark card using object head
     ADVANCE_PC(2)
     GOTO_NEXT
 

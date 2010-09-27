@@ -64,7 +64,7 @@
     FETCH_INST_WORD(2)
     je      1f                                   # skip card mark if null store
     shrl    $$GC_CARD_SHIFT,%ecx                 # object head to card number
-    movb    %al,(%eax,%ecx)                      # mark card
+    movb    %al,(%eax,%ecx)                      # mark card using object head
 1:
     ADVANCE_PC(2)
     GOTO_NEXT
