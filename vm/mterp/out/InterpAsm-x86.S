@@ -2894,7 +2894,7 @@ dvmAsmInstructionStart = .L_OP_NOP
     movl      (%ecx,%eax,4),%eax                 # eax<- resolved StaticField
     testl     %eax,%eax                          # resolved entry null?
     je        .LOP_SPUT_OBJECT_resolve                # if not, make it so
-.LOP_SPUT_OBJECT_finish:     # field ptr in eax
+.LOP_SPUT_OBJECT_finish:                              # field ptr in eax
     movzbl    rINSTbl,%ecx                       # ecx<- AA
     GET_VREG_R  %ecx %ecx
     jmp       .LOP_SPUT_OBJECT_continue
@@ -6395,7 +6395,7 @@ dvmAsmInstructionStart = .L_OP_NOP
     movl      (%ecx,%eax,4),%eax                 # eax<- resolved StaticField
     testl     %eax,%eax                          # resolved entry null?
     je        .LOP_SPUT_OBJECT_VOLATILE_resolve                # if not, make it so
-.LOP_SPUT_OBJECT_VOLATILE_finish:     # field ptr in eax
+.LOP_SPUT_OBJECT_VOLATILE_finish:                              # field ptr in eax
     movzbl    rINSTbl,%ecx                       # ecx<- AA
     GET_VREG_R  %ecx %ecx
     jmp       .LOP_SPUT_OBJECT_VOLATILE_continue
@@ -6826,7 +6826,7 @@ dvmAsmSisterStart:
     movl    offGlue_retval(%ecx),%eax        # eax<- object head
     movl    offGlue_cardTable(%ecx),%ecx     # card table base
     shrl    $GC_CARD_SHIFT,%eax             # convert to card num
-    movb    %cl,(%ecx,%eax)                  # mark card
+    movb    %cl,(%ecx,%eax)                  # mark card based on object head
 5:
     ADVANCE_PC 3
     GOTO_NEXT_R %edx
@@ -6936,7 +6936,7 @@ dvmAsmSisterStart:
     movl    offGlue_retval(%ecx),%eax        # eax<- object head
     movl    offGlue_cardTable(%ecx),%ecx     # card table base
     shrl    $GC_CARD_SHIFT,%eax             # convert to card num
-    movb    %cl,(%ecx,%eax)                  # mark card
+    movb    %cl,(%ecx,%eax)                  # mark card based on object head
 5:
     ADVANCE_PC 3
     GOTO_NEXT_R %edx
@@ -7024,23 +7024,25 @@ dvmAsmSisterStart:
      */
 .LOP_APUT_OBJECT_continue:
     leal      offArrayObject_contents(%eax,%ecx,4),%ecx
-    testl     rINST,rINST     # storing null reference?
+    testl     rINST,rINST                    # storing null reference?
     je        .LOP_APUT_OBJECT_skip_check
-    SPILL_TMP1(%ecx)
-    movl      offObject_clazz(%eax),%eax # eax<- arrayObj->clazz
-    movl      offObject_clazz(rINST),%ecx # ecx<- obj->clazz
+    SPILL_TMP1(%ecx)                         # save target address
+    SPILL_TMP2(%eax)                         # save object head
+    movl      offObject_clazz(%eax),%eax     # eax<- arrayObj->clazz
+    movl      offObject_clazz(rINST),%ecx    # ecx<- obj->clazz
     movl      %eax,OUT_ARG1(%esp)
     movl      %ecx,OUT_ARG0(%esp)
-    call      dvmCanPutArrayElement     # test object type vs. array type
-    UNSPILL_TMP1(%ecx)
+    call      dvmCanPutArrayElement          # test object type vs. array type
+    UNSPILL_TMP1(%ecx)                       # recover target address
     testl     %eax,%eax
     movl      rGLUE,%eax
     je        common_errArrayStore
     movl      offGlue_cardTable(%eax),%eax   # get card table base
-    movl      rINST,(%ecx)
+    movl      rINST,(%ecx)                   # store into array
+    UNSPILL_TMP2(%ecx)                       # recover object head
     FETCH_INST_OPCODE 2 %edx
-    shrl      $GC_CARD_SHIFT,%ecx           # convert addr to card number
-    movb      %al,(%eax,%ecx)                # mark card
+    shrl      $GC_CARD_SHIFT,%ecx           # object head to card number
+    movb      %al,(%eax,%ecx)                # mark card using object head
     ADVANCE_PC 2
     GOTO_NEXT_R %edx
 
@@ -7376,7 +7378,7 @@ dvmAsmSisterStart:
     FETCH_INST_OPCODE 2 %edx
     je      1f                                  # skip card mark if null store
     shrl    $GC_CARD_SHIFT,%ecx                # object head to card number
-    movb    %al,(%eax,%ecx)                     # mark card
+    movb    %al,(%eax,%ecx)                     # mark card using object head
 1:
     ADVANCE_PC 2
     GOTO_NEXT_R %edx
@@ -7671,11 +7673,13 @@ dvmAsmSisterStart:
 
 
 .LOP_SPUT_OBJECT_continue:
-    movl      %ecx,offStaticField_value(%eax)
-    testl     %ecx,%ecx
+    movl      %ecx,offStaticField_value(%eax)    # do the store
+    testl     %ecx,%ecx                          # stored null object ptr?
     movl      rGLUE,%ecx
     FETCH_INST_OPCODE 2 %edx
-    je        1f
+    movl      offGlue_method(%ecx),%eax          # eax<- current method
+    je        1f                                 # skip card mark if null
+    movl      offMethod_clazz(%eax),%eax         # eax<- method->clazz
     movl      offGlue_cardTable(%ecx),%ecx       # get card table base
     shrl      $GC_CARD_SHIFT,%eax               # head to card number
     movb      %cl,(%ecx,%eax)                    # mark card
@@ -8584,7 +8588,7 @@ dvmAsmSisterStart:
     movl      offGlue_cardTable(%eax),%eax  # get card table base
     je        1f                            # skip card mark if null store
     shrl      $GC_CARD_SHIFT,%ecx          # object head to card number
-    movb      %al,(%eax,%ecx)               # mark card
+    movb      %al,(%eax,%ecx)               # mark card based on object head
 1:
     ADVANCE_PC 2
     GOTO_NEXT_R %edx
@@ -8623,7 +8627,7 @@ dvmAsmSisterStart:
     FETCH_INST_OPCODE 2 %edx
     je      1f                                  # skip card mark if null store
     shrl    $GC_CARD_SHIFT,%ecx                # object head to card number
-    movb    %al,(%eax,%ecx)                     # mark card
+    movb    %al,(%eax,%ecx)                     # mark card using object head
 1:
     ADVANCE_PC 2
     GOTO_NEXT_R %edx
@@ -8650,11 +8654,13 @@ dvmAsmSisterStart:
 
 
 .LOP_SPUT_OBJECT_VOLATILE_continue:
-    movl      %ecx,offStaticField_value(%eax)
-    testl     %ecx,%ecx
+    movl      %ecx,offStaticField_value(%eax)    # do the store
+    testl     %ecx,%ecx                          # stored null object ptr?
     movl      rGLUE,%ecx
     FETCH_INST_OPCODE 2 %edx
-    je        1f
+    movl      offGlue_method(%ecx),%eax          # eax<- current method
+    je        1f                                 # skip card mark if null
+    movl      offMethod_clazz(%eax),%eax         # eax<- method->clazz
     movl      offGlue_cardTable(%ecx),%ecx       # get card table base
     shrl      $GC_CARD_SHIFT,%eax               # head to card number
     movb      %cl,(%ecx,%eax)                    # mark card

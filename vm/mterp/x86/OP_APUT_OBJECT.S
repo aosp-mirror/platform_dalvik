@@ -24,23 +24,25 @@
      */
 .L${opcode}_continue:
     leal      offArrayObject_contents(%eax,%ecx,4),%ecx
-    testl     rINST,rINST     # storing null reference?
+    testl     rINST,rINST                    # storing null reference?
     je        .L${opcode}_skip_check
-    SPILL_TMP1(%ecx)
-    movl      offObject_clazz(%eax),%eax # eax<- arrayObj->clazz
-    movl      offObject_clazz(rINST),%ecx # ecx<- obj->clazz
+    SPILL_TMP1(%ecx)                         # save target address
+    SPILL_TMP2(%eax)                         # save object head
+    movl      offObject_clazz(%eax),%eax     # eax<- arrayObj->clazz
+    movl      offObject_clazz(rINST),%ecx    # ecx<- obj->clazz
     movl      %eax,OUT_ARG1(%esp)
     movl      %ecx,OUT_ARG0(%esp)
-    call      dvmCanPutArrayElement     # test object type vs. array type
-    UNSPILL_TMP1(%ecx)
+    call      dvmCanPutArrayElement          # test object type vs. array type
+    UNSPILL_TMP1(%ecx)                       # recover target address
     testl     %eax,%eax
     movl      rGLUE,%eax
     je        common_errArrayStore
     movl      offGlue_cardTable(%eax),%eax   # get card table base
-    movl      rINST,(%ecx)
+    movl      rINST,(%ecx)                   # store into array
+    UNSPILL_TMP2(%ecx)                       # recover object head
     FETCH_INST_OPCODE 2 %edx
-    shrl      $$GC_CARD_SHIFT,%ecx           # convert addr to card number
-    movb      %al,(%eax,%ecx)                # mark card
+    shrl      $$GC_CARD_SHIFT,%ecx           # object head to card number
+    movb      %al,(%eax,%ecx)                # mark card using object head
     ADVANCE_PC 2
     GOTO_NEXT_R %edx
 

@@ -42,10 +42,9 @@
     ldr     r2, [rGLUE, #offGlue_cardTable]  @ r2<- card table base
     beq     common_errNullObject        @ object was null
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
-    add     r9, r3                      @ r9<- direct ptr to target location
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     $barrier                            @ releasing store
-    str     r0, [r9]                    @ obj.field (8/16/32 bits)<- r0
+    str     r0, [r9, r3]                @ obj.field (32 bits)<- r0
     cmp     r0, #0                      @ stored a null reference?
     strneb  r2, [r2, r9, lsr #GC_CARD_SHIFT]  @ mark card if not
     GOTO_OPCODE(ip)                     @ jump to next instruction
