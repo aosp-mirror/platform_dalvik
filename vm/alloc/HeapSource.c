@@ -1674,16 +1674,8 @@ static bool externalAllocPossible(const HeapSource *hs, size_t n)
         return true;
     }
     /*
-     * Try garbage collecting without clearing soft references.  This
-     * may expand the heap.
-     */
-    gcForExternalAlloc(false);
-    if (externalBytesAvailable(hs, n)) {
-        return true;
-    }
-    /*
-     * Try garbage collecting clearing soft references.  This may
-     * expand the heap or make trimming more effective.
+     * Try a garbage collection that clears soft references.  This may
+     * make trimming more effective.
      */
     gcForExternalAlloc(true);
     if (externalBytesAvailable(hs, n)) {
