@@ -8508,7 +8508,7 @@ dvmAsmSisterStart:
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     @ no-op                             @ releasing store
-    str     r0, [r9,r3]                 @ obj.field (32 bits)<- r0
+    str     r0, [r9, r3]                @ obj.field (32 bits)<- r0
     cmp     r0, #0                      @ stored a null reference?
     strneb  r2, [r2, r9, lsr #GC_CARD_SHIFT]  @ mark card if not
     GOTO_OPCODE(ip)                     @ jump to next instruction
@@ -9350,7 +9350,7 @@ d2l_doconv:
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     SMP_DMB                            @ releasing store
-    str     r0, [r9,r3]                 @ obj.field (32 bits)<- r0
+    str     r0, [r9, r3]                @ obj.field (32 bits)<- r0
     cmp     r0, #0                      @ stored a null reference?
     strneb  r2, [r2, r9, lsr #GC_CARD_SHIFT]  @ mark card if not
     GOTO_OPCODE(ip)                     @ jump to next instruction
