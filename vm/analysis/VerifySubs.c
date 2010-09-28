@@ -176,18 +176,19 @@ bool dvmSetTryFlags(const Method* meth, InsnFlags* insnFlags)
 bool dvmCheckSwitchTargets(const Method* meth, InsnFlags* insnFlags,
     int curOffset)
 {
-    const int insnCount = dvmGetMethodInsnsSize(meth);
+    const s4 insnCount = dvmGetMethodInsnsSize(meth);
     const u2* insns = meth->insns + curOffset;
     const u2* switchInsns;
     u2 expectedSignature;
-    int switchCount, tableSize;
-    int offsetToSwitch, offsetToKeys, offsetToTargets, targ;
-    int offset, absOffset;
+    u4 switchCount, tableSize;
+    s4 offsetToSwitch, offsetToKeys, offsetToTargets;
+    s4 offset, absOffset;
+    u4 targ;
 
     assert(curOffset >= 0 && curOffset < insnCount);
 
     /* make sure the start of the switch is in range */
-    offsetToSwitch = (s2) insns[1];
+    offsetToSwitch = insns[1] | ((s4) insns[2]) << 16;
     if (curOffset + offsetToSwitch < 0 ||
         curOffset + offsetToSwitch + 2 >= insnCount)
     {
