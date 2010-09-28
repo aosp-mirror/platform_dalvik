@@ -232,7 +232,7 @@ bool dvmCheckSwitchTargets(const Method* meth, InsnFlags* insnFlags,
     }
 
     /* make sure the end of the switch is in range */
-    if (curOffset + offsetToSwitch + tableSize > insnCount) {
+    if (curOffset + offsetToSwitch + tableSize > (u4) insnCount) {
         LOG_VFY_METH(meth,
             "VFY: invalid switch end: at %d, switch offset %d, end %d, count %d\n",
             curOffset, offsetToSwitch, curOffset + offsetToSwitch + tableSize,
