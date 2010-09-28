@@ -1651,6 +1651,8 @@ gcForExternalAlloc(bool collectSoftReferences)
  */
 static bool externalAllocPossible(const HeapSource *hs, size_t n)
 {
+    size_t bytesTrimmed[HEAP_SOURCE_MAX_HEAP_COUNT];
+
     /*
      * If there is sufficient space return immediately.
      */
@@ -1690,7 +1692,7 @@ static bool externalAllocPossible(const HeapSource *hs, size_t n)
     /*
      * Try trimming the mspace to reclaim unused pages.
      */
-    dvmHeapSourceTrim(NULL, 0);
+    dvmHeapSourceTrim(bytesTrimmed, NELEM(bytesTrimmed));
     if (externalBytesAvailable(hs, n)) {
         return true;
     }
