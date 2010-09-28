@@ -3094,11 +3094,10 @@ bool dvmVerifyCodeFlow(VerifierData* vdata)
             dvmFindSystemClassNoInit("Ljava/lang/Object;");
 
     if (meth->registersSize * insnsSize > 4*1024*1024) {
-        /* should probably base this on actual memory requirements */
         LOG_VFY_METH(meth,
-            "VFY: arbitrarily rejecting large method (regs=%d count=%d)\n",
+            "VFY: warning: method is huge (regs=%d insnsSize=%d)\n",
             meth->registersSize, insnsSize);
-        goto bail;
+        /* might be bogus data, might be some huge generated method */
     }
 
     /*
