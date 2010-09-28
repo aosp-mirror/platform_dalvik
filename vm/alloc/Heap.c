@@ -845,7 +845,9 @@ void dvmCollectGarbageInternal(bool clearSoftRefs, GcReason reason)
      * This doesn't actually resize any memory;
      * it just lets the heap grow more when necessary.
      */
-    dvmHeapSourceGrowForUtilization();
+    if (reason != GC_EXTERNAL_ALLOC) {
+        dvmHeapSourceGrowForUtilization();
+    }
 
     currAllocated = dvmHeapSourceGetValue(HS_BYTES_ALLOCATED, NULL, 0);
     currFootprint = dvmHeapSourceGetValue(HS_FOOTPRINT, NULL, 0);
