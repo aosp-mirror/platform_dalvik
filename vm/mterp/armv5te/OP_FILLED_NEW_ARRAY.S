@@ -87,7 +87,7 @@
     ldr     r2, [rGLUE, #offGlue_cardTable]  @ r2<- card table base
     GET_INST_OPCODE(ip)                      @ ip<- opcode from rINST
     cmp     r1, #'I'                         @ Is int array?
-    strneb  r2, [r2, r0, lsr #GC_CARD_SHIFT] @ Mark card if not
+    strneb  r2, [r2, r0, lsr #GC_CARD_SHIFT] @ Mark card based on object head
     GOTO_OPCODE(ip)                          @ execute it
 
     /*
