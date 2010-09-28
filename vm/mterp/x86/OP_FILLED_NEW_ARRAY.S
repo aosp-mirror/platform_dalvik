@@ -114,7 +114,7 @@
     movl    offGlue_retval(%ecx),%eax        # eax<- object head
     movl    offGlue_cardTable(%ecx),%ecx     # card table base
     shrl    $$GC_CARD_SHIFT,%eax             # convert to card num
-    movb    %cl,(%ecx,%eax)                  # mark card
+    movb    %cl,(%ecx,%eax)                  # mark card based on object head
 5:
     ADVANCE_PC 3
     GOTO_NEXT_R %edx

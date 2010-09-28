@@ -13,7 +13,7 @@
     movl      (%ecx,%eax,4),%eax                 # eax<- resolved StaticField
     testl     %eax,%eax                          # resolved entry null?
     je        .L${opcode}_resolve                # if not, make it so
-.L${opcode}_finish:     # field ptr in eax
+.L${opcode}_finish:                              # field ptr in eax
     movzbl    rINSTbl,%ecx                       # ecx<- AA
     GET_VREG_R  %ecx %ecx
     jmp       .L${opcode}_continue
@@ -21,11 +21,13 @@
 
 
 .L${opcode}_continue:
-    movl      %ecx,offStaticField_value(%eax)
-    testl     %ecx,%ecx
+    movl      %ecx,offStaticField_value(%eax)    # do the store
+    testl     %ecx,%ecx                          # stored null object ptr?
     movl      rGLUE,%ecx
     FETCH_INST_OPCODE 2 %edx
-    je        1f
+    movl      offGlue_method(%ecx),%eax          # eax<- current method
+    je        1f                                 # skip card mark if null
+    movl      offMethod_clazz(%eax),%eax         # eax<- method->clazz
     movl      offGlue_cardTable(%ecx),%ecx       # get card table base
     shrl      $$GC_CARD_SHIFT,%eax               # head to card number
     movb      %cl,(%ecx,%eax)                    # mark card

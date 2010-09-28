@@ -1522,7 +1522,9 @@ static bool handleFmt21c_Fmt31c(CompilationUnit *cUnit, MIR *mir)
         case OP_SPUT: {
             int valOffset = offsetof(StaticField, value);
             int tReg = dvmCompilerAllocTemp(cUnit);
+            int objHead;
             bool isVolatile;
+            bool isSputObject;
             const Method *method = (mir->OptimizationFlags & MIR_CALLEE) ?
                 mir->meta.calleeMethod : cUnit->method;
             void *fieldPtr = (void*)
@@ -1532,6 +1534,9 @@ static bool handleFmt21c_Fmt31c(CompilationUnit *cUnit, MIR *mir)
                          (mir->dalvikInsn.opCode == OP_SPUT_OBJECT_VOLATILE) ||
                          dvmIsVolatileField(fieldPtr);
 
+            isSputObject = (mir->dalvikInsn.opCode == OP_SPUT_OBJECT) ||
+                           (mir->dalvikInsn.opCode == OP_SPUT_OBJECT_VOLATILE);
+
             if (fieldPtr == NULL) {
                 LOGE("Unexpected null static field");
                 dvmAbort();
@@ -1540,18 +1545,22 @@ static bool handleFmt21c_Fmt31c(CompilationUnit *cUnit, MIR *mir)
             rlSrc = dvmCompilerGetSrc(cUnit, mir, 0);
             rlSrc = loadValue(cUnit, rlSrc, kAnyReg);
             loadConstant(cUnit, tReg,  (int) fieldPtr + valOffset);
-
+            if (isSputObject) {
+                objHead = dvmCompilerAllocTemp(cUnit);
+                loadConstant(cUnit, objHead, (intptr_t)method->clazz);
+            }
             HEAP_ACCESS_SHADOW(true);
             storeWordDisp(cUnit, tReg, 0 ,rlSrc.lowReg);
+            dvmCompilerFreeTemp(cUnit, tReg);
             HEAP_ACCESS_SHADOW(false);
             if (isVolatile) {
                 dvmCompilerGenMemBarrier(cUnit);
             }
-            if (mir->dalvikInsn.opCode == OP_SPUT_OBJECT) {
-                /* NOTE: marking card based on field address */
-                markCard(cUnit, rlSrc.lowReg, tReg);
+            if (isSputObject) {
+                /* NOTE: marking card based object head */
+                markCard(cUnit, rlSrc.lowReg, objHead);
+                dvmCompilerFreeTemp(cUnit, objHead);
             }
-            dvmCompilerFreeTemp(cUnit, tReg);
 
             break;
         }
