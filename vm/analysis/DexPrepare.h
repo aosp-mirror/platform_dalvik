@@ -34,6 +34,7 @@ typedef enum DexOptimizerMode {
 /* some additional bit flags for dexopt */
 enum DexoptFlags {
     DEXOPT_GEN_REGISTER_MAPS = 1, /* generate register maps during verify */
+    DEXOPT_UNIPROCESSOR = 1 << 1, /* assume a uniprocessor target */
 };
 
 /*

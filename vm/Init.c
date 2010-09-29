@@ -1556,6 +1556,7 @@ int dvmPrepForDexOpt(const char* bootClassPath, DexOptimizerMode dexOptMode,
     gDvm.dexOptMode = dexOptMode;
     gDvm.classVerifyMode = verifyMode;
     gDvm.generateRegisterMaps = (dexoptFlags & DEXOPT_GEN_REGISTER_MAPS) != 0;
+    gDvm.dexOptForSmp = (dexoptFlags & DEXOPT_UNIPROCESSOR) == 0;
 
     /*
      * Initialize the heap, some basic thread control mutexes, and

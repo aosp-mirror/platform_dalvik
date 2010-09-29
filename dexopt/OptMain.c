@@ -125,12 +125,12 @@ static int extractAndProcessZip(int zipFd, int cacheFd,
         goto bail;
     }
 
-    /*
-     * Prep the VM and perform the optimization.
-     */
+    /* Parse the options. */
+
     DexClassVerifyMode verifyMode = VERIFY_MODE_ALL;
     DexOptimizerMode dexOptMode = OPTIMIZE_MODE_VERIFIED;
     int dexoptFlags = 0;        /* bit flags, from enum DexoptFlags */
+
     if (dexoptFlagStr[0] != '\0') {
         const char* opc;
         const char* val;
@@ -159,7 +159,17 @@ static int extractAndProcessZip(int zipFd, int cacheFd,
         if (opc != NULL) {
             dexoptFlags |= DEXOPT_GEN_REGISTER_MAPS;
         }
+
+        opc = strstr(dexoptFlagStr, "u=y");     /* uniprocessor target */
+        if (opc != NULL) {
+            dexoptFlags |= DEXOPT_UNIPROCESSOR;
+        }
     }
+
+    /*
+     * Prep the VM and perform the optimization.
+     */
+
     if (dvmPrepForDexOpt(bootClassPath, dexOptMode, verifyMode,
             dexoptFlags) != 0)
     {
