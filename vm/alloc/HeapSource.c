@@ -1685,6 +1685,7 @@ static bool externalAllocPossible(const HeapSource *hs, size_t n)
      * Try trimming the mspace to reclaim unused pages.
      */
     dvmHeapSourceTrim(bytesTrimmed, NELEM(bytesTrimmed));
+    snapIdealFootprint();
     if (externalBytesAvailable(hs, n)) {
         return true;
     }
