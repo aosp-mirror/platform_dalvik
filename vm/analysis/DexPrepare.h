@@ -33,8 +33,14 @@ typedef enum DexOptimizerMode {
 
 /* some additional bit flags for dexopt */
 enum DexoptFlags {
-    DEXOPT_GEN_REGISTER_MAPS = 1, /* generate register maps during verify */
-    DEXOPT_UNIPROCESSOR = 1 << 1, /* assume a uniprocessor target */
+    DEXOPT_OPT_ENABLED       = 1,       /* optimizations enabled? */
+    DEXOPT_OPT_ALL           = 1 << 1,  /* optimize when verify fails? */
+    DEXOPT_VERIFY_ENABLED    = 1 << 2,  /* verification enabled? */
+    DEXOPT_VERIFY_ALL        = 1 << 3,  /* verify bootstrap classes? */
+    DEXOPT_IS_BOOTSTRAP      = 1 << 4,  /* is dex in bootstrap class path? */
+    DEXOPT_GEN_REGISTER_MAPS = 1 << 5,  /* generate register maps during vfy */
+    DEXOPT_UNIPROCESSOR      = 1 << 6,  /* specify uniprocessor target */
+    DEXOPT_SMP               = 1 << 7   /* specify SMP target */
 };
 
 /*

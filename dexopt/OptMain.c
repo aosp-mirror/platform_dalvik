@@ -160,9 +160,13 @@ static int extractAndProcessZip(int zipFd, int cacheFd,
             dexoptFlags |= DEXOPT_GEN_REGISTER_MAPS;
         }
 
-        opc = strstr(dexoptFlagStr, "u=y");     /* uniprocessor target */
+        opc = strstr(dexoptFlagStr, "u=");      /* uniprocessor target */
         if (opc != NULL) {
-            dexoptFlags |= DEXOPT_UNIPROCESSOR;
+            switch (*(opc+2)) {
+            case 'y':   dexoptFlags |= DEXOPT_UNIPROCESSOR;     break;
+            case 'n':   dexoptFlags |= DEXOPT_SMP;              break;
+            default:                                            break;
+            }
         }
     }
 
@@ -350,6 +354,13 @@ static int preopt(int argc, char* const argv[])
     const char* outName = argv[3];
     const char* dexoptFlags = argv[4];
 
+    if (strstr(dexoptFlags, "u=y") == NULL &&
+        strstr(dexoptFlags, "u=n") == NULL)
+    {
+        fprintf(stderr, "Either 'u=y' or 'u=n' must be specified\n");
+        goto bail;
+    }
+
     zipFd = open(zipName, O_RDONLY);
     if (zipFd < 0) {
         perror(argv[0]);
@@ -483,7 +494,6 @@ static int fromDex(int argc, char* const argv[])
     bool onlyOptVerifiedDex = false;
     DexClassVerifyMode verifyMode;
     DexOptimizerMode dexOptMode;
-    int dexoptFlags = 0;
 
     /* ugh -- upgrade these to a bit field if they get any more complex */
     if ((flags & DEXOPT_VERIFY_ENABLED) != 0) {
@@ -502,13 +512,8 @@ static int fromDex(int argc, char* const argv[])
     } else {
         dexOptMode = OPTIMIZE_MODE_NONE;
     }
-    if ((flags & DEXOPT_GEN_REGISTER_MAP) != 0) {
-        dexoptFlags |= DEXOPT_GEN_REGISTER_MAPS;
-    }
 
-    if (dvmPrepForDexOpt(bootClassPath, dexOptMode, verifyMode,
-            dexoptFlags) != 0)
-    {
+    if (dvmPrepForDexOpt(bootClassPath, dexOptMode, verifyMode, flags) != 0) {
         LOGE("VM init failed\n");
         goto bail;
     }

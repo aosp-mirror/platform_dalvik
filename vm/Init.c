@@ -1568,7 +1568,14 @@ int dvmPrepForDexOpt(const char* bootClassPath, DexOptimizerMode dexOptMode,
     gDvm.dexOptMode = dexOptMode;
     gDvm.classVerifyMode = verifyMode;
     gDvm.generateRegisterMaps = (dexoptFlags & DEXOPT_GEN_REGISTER_MAPS) != 0;
-    gDvm.dexOptForSmp = (dexoptFlags & DEXOPT_UNIPROCESSOR) == 0;
+    if (dexoptFlags & DEXOPT_SMP) {
+        assert((dexoptFlags & DEXOPT_UNIPROCESSOR) == 0);
+        gDvm.dexOptForSmp = true;
+    } else if (dexoptFlags & DEXOPT_UNIPROCESSOR) {
+        gDvm.dexOptForSmp = false;
+    } else {
+        gDvm.dexOptForSmp = (ANDROID_SMP != 0);
+    }
 
     /*
      * Initialize the heap, some basic thread control mutexes, and
