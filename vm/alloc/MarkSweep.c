@@ -558,34 +558,6 @@ static size_t objectSize(const Object *obj)
 }
 
 /*
- * Scans backward to the header of a marked object that spans the
- * given address.  Returns NULL if there is no spanning marked object.
- */
-static Object *previousGrayObject(u1 *start, HeapBitmap *markBits,
-                                  HeapBitmap *liveBits)
-{
-    u1 *end = (u1 *)markBits->base;
-    u1 *ptr;
-
-    assert(start >= end);
-    for (ptr = start; ptr >= end; ptr -= HB_OBJECT_ALIGNMENT) {
-        if (dvmHeapBitmapIsObjectBitSet(liveBits, ptr)) {
-            break;
-        }
-    }
-    if (ptr < end || !dvmHeapBitmapIsObjectBitSet(markBits, ptr)) {
-         return NULL;
-    } else {
-        Object *obj = (Object *)ptr;
-        size_t size = objectSize(obj);
-        if (ptr + size < start) {
-            return NULL;
-        }
-        return obj;
-    }
-}
-
-/*
  * Scans forward to the header of the next marked object between start
  * and limit.  Returns NULL if no marked objects are in that region.
  */
@@ -627,16 +599,6 @@ static void scanGrayObjects(GcMarkContext *ctx)
              */
             u1 *addr = dvmAddrFromCard(card);
             /*
-             * If the last object on the previous card terminates on
-             * the current card it is gray and must be scanned.
-             */
-            if (!dvmHeapBitmapIsObjectBitSet(liveBits, addr)) {
-                Object *prev = previousGrayObject(addr, markBits, liveBits);
-                if (prev != NULL) {
-                    scanObject(prev, ctx);
-                }
-            }
-            /*
              * Scan through all black objects that start on the
              * current card.
              */
@@ -647,7 +609,7 @@ static void scanGrayObjects(GcMarkContext *ctx)
                 if (obj == NULL)
                     break;
                 scanObject(obj, ctx);
-                next = (u1*)obj + HB_OBJECT_ALIGNMENT;
+                next = (u1*)obj + ALIGN_UP(objectSize(obj), HB_OBJECT_ALIGNMENT);
             }
         }
     }

@@ -138,42 +138,14 @@ void dvmMarkCard(const void *addr)
 }
 
 /*
- * Handles the complexity of object arrays for isObjectDirty.  Array
- * objects are exactly marked so all spanned cards are examined.
- */
-static bool isObjectArrayDirty(const Object *obj)
-{
-    u1 *ptr, *limit;
-    size_t size;
-
-    assert(obj != NULL);
-    assert(dvmIsValidObject(obj));
-    assert(IS_CLASS_FLAG_SET(obj->clazz, CLASS_ISOBJECTARRAY));
-    size = dvmArrayObjectSize((const ArrayObject *)obj);
-    ptr = dvmCardFromAddr(obj);
-    limit = dvmCardFromAddr((u1 *)obj + size - 1) + 1;
-    assert(ptr != limit);
-    for (; ptr != limit; ++ptr) {
-        if (*ptr == GC_CARD_DIRTY) {
-            return true;
-        }
-    }
-    return false;
-}
-
-/*
  * Returns true if the object is on a dirty card.
  */
 static bool isObjectDirty(const Object *obj)
 {
     assert(obj != NULL);
     assert(dvmIsValidObject(obj));
-    if (IS_CLASS_FLAG_SET(obj->clazz, CLASS_ISOBJECTARRAY)) {
-        return isObjectArrayDirty(obj);
-   } else {
-        u1 *card = dvmCardFromAddr(obj);
-        return *card == GC_CARD_DIRTY;
-    }
+    u1 *card = dvmCardFromAddr(obj);
+    return *card == GC_CARD_DIRTY;
 }
 
 /*
@@ -239,10 +211,29 @@ static bool isWeakInternedString(const Object *obj)
 }
 
 /*
- * Callback applied to marked objects.  If the object is found to be
- * gray a message is written to the log.  By virtue of where the card
- * table verification occurs weak references have yet to be blackened
- * and so their containing objects are permitted to be gray.
+ * Returns true if the given object has been pushed on the mark stack
+ * by root marking.
+ */
+static bool isPushedOnMarkStack(const Object *obj)
+{
+    GcMarkContext *ctx = &gDvm.gcHeap->markContext;
+    const Object **ptr;
+
+    for (ptr = ctx->stack.top; ptr != ctx->stack.base; ++ptr) {
+        if (*ptr == obj) {
+            return true;
+        }
+    }
+    return false;
+}
+
+/*
+ * Callback applied to marked objects.  If the object is gray and on
+ * an unmarked card an error is logged and the VM is aborted.  Card
+ * table verification occurs between root marking and weak reference
+ * processing.  We treat objects marked from the roots and weak
+ * references specially as it is permissible for these objects to be
+ * gray and on an unmarked card.
  */
 static void verifyCardTableCallback(void *ptr, void *arg)
 {
@@ -258,8 +249,10 @@ static void verifyCardTableCallback(void *ptr, void *arg)
         return;
     } else if (isWeakInternedString(obj)) {
         return;
+    } else if (isPushedOnMarkStack(obj)) {
+        return;
     } else {
-        LOGE("Verify failed, object %p is gray", obj);
+        LOGE("Verify failed, object %p is gray and on an unmarked card", obj);
         dvmDumpObject(obj);
         dvmAbort();
     }
