@@ -64,21 +64,25 @@
 #     Defaults to "verified".
 #   --no-register-maps -- Indicate that the output should not contain
 #     register maps. By default, register maps are created and included.
+#   --uniprocessor -- Indicate that the output should target a uniprocessor.
+#     By default, optimizations will be made that specifically target
+#     SMP processors (which will merely be superfluous on uniprocessors).
 #
 
 # Defaults.
-dexopt=""
-buildDir="."
-productDir=""
-bootDir="system/framework"
-bootstrap="no"
-doVerify="all"
-doOptimize="verified"
-doRegisterMaps="yes"
-bootJars="core"
+dexopt=''
+buildDir='.'
+productDir=''
+bootDir='system/framework'
+bootstrap='no'
+doVerify='all'
+doOptimize='verified'
+doRegisterMaps='yes'
+doUniprocessor='no'
+bootJars='core'
 
-optimizeFlags="" # built up from the more human-friendly options
-bogus="no" # indicates if there was an error during processing arguments
+optimizeFlags='' # built up from the more human-friendly options
+bogus='no' # indicates if there was an error during processing arguments
 
 # Iterate over the arguments looking for options.
 while true; do
@@ -97,7 +101,7 @@ while true; do
         # Option has the form "--option=value".
         option="${optionBeforeValue}"
         value=`expr -- "${origOption}" : '--[^=]*=\(.*\)'`
-        hasValue="yes"
+        hasValue='yes'
     else
         option=`expr -- "${origOption}" : '--\(.*\)'`
         if [ "$?" = '1' ]; then
@@ -106,7 +110,7 @@ while true; do
         fi
         # Option has the form "--option".
         value=""
-        hasValue="no"
+        hasValue='no'
     fi
     shift
 
@@ -122,16 +126,18 @@ while true; do
     elif [ "${option}" = 'boot-jars' -a "${hasValue}" = 'yes' ]; then
         bootJars="${value}"
     elif [ "${option}" = 'bootstrap' -a "${hasValue}" = 'no' ]; then
-        bootstrap="yes"
+        bootstrap='yes'
     elif [ "${option}" = 'verify' -a "${hasValue}" = 'yes' ]; then
         doVerify="${value}"
     elif [ "${option}" = 'optimize' -a "${hasValue}" = 'yes' ]; then
         doOptimize="${value}"
     elif [ "${option}" = 'no-register-maps' -a "${hasValue}" = 'no' ]; then
-        doRegisterMaps="no"
+        doRegisterMaps='no'
+    elif [ "${option}" = 'uniprocessor' -a "${hasValue}" = 'no' ]; then
+        doUniprocessor='yes'
     else
         echo "unknown option: ${origOption}" 1>&2
-        bogus="yes"
+        bogus='yes'
     fi
 done
 
@@ -139,12 +145,12 @@ done
 # processing, verify that no files are specified.
 inputFile=$1
 outputFile=$2
-if [ "${bootstrap}" = "yes" ]; then
-    if [ "$#" != "0" ]; then
+if [ "${bootstrap}" = 'yes' ]; then
+    if [ "$#" != '0' ]; then
         echo "unexpected arguments in --bootstrap mode" 1>&2
         bogus=yes
     fi
-elif [ "$#" != "2" ]; then
+elif [ "$#" != '2' ]; then
     echo "must specify input and output files (and no more arguments)" 1>&2
     bogus=yes
 fi
@@ -171,11 +177,11 @@ if [ "x${bootJars}" = 'x' ]; then
 fi
 
 # Sanity-check and expand the verify option.
-if [ "x${doVerify}" = "xnone" ]; then
+if [ "x${doVerify}" = 'xnone' ]; then
     optimizeFlags="${optimizeFlags},v=n"
-elif [ "x${doVerify}" = "xremote" ]; then
+elif [ "x${doVerify}" = 'xremote' ]; then
     optimizeFlags="${optimizeFlags},v=r"
-elif [ "x${doVerify}" = "xall" ]; then
+elif [ "x${doVerify}" = 'xall' ]; then
     optimizeFlags="${optimizeFlags},v=a"
 else
     echo "bad value for --verify: ${doVerify}" 1>&2
@@ -183,11 +189,11 @@ else
 fi
 
 # Sanity-check and expand the optimize option.
-if [ "x${doOptimize}" = "xnone" ]; then
+if [ "x${doOptimize}" = 'xnone' ]; then
     optimizeFlags="${optimizeFlags},o=n"
-elif [ "x${doOptimize}" = "xverified" ]; then
+elif [ "x${doOptimize}" = 'xverified' ]; then
     optimizeFlags="${optimizeFlags},o=v"
-elif [ "x${doOptimize}" = "xall" ]; then
+elif [ "x${doOptimize}" = 'xall' ]; then
     optimizeFlags="${optimizeFlags},o=a"
 else
     echo "bad value for --optimize: ${doOptimize}" 1>&2
@@ -195,8 +201,13 @@ else
 fi
 
 # Expand the register maps selection, if necessary.
-if [ "${doRegisterMaps}" = "yes" ]; then
+if [ "${doRegisterMaps}" = 'yes' ]; then
     optimizeFlags="${optimizeFlags},m=y"
+fi
+
+# Expand the uniprocessor directive, if necessary.
+if [ "${doUniprocessor}" = 'yes' ]; then
+    optimizeFlags="${optimizeFlags},u=y"
 fi
 
 # Kill off the spare comma in optimizeFlags.
@@ -206,11 +217,11 @@ optimizeFlags=`echo ${optimizeFlags} | sed 's/^,//'`
 if [ "${bogus}" = 'yes' ]; then
     # There was an error during option processing.
     echo "usage: $0" 1>&2
-    echo "  [--build-dir=path/to/out] [--dexopt=path/to/dexopt]" 1>&2
-    echo "  [--product-dir=path/to/product] [--boot-dir=name]" 1>&2
-    echo "  [--boot-jars=list:of:names] [--bootstrap]" 1>&2
-    echo "  [--verify=type] [--optimize=type] [--no-register-maps]" 1>&2
-    echo "  path/to/input.jar path/to/output.odex" 1>&2
+    echo '  [--build-dir=path/to/out] [--dexopt=path/to/dexopt]' 1>&2
+    echo '  [--product-dir=path/to/product] [--boot-dir=name]' 1>&2
+    echo '  [--boot-jars=list:of:names] [--bootstrap]' 1>&2
+    echo '  [--verify=type] [--optimize=type] [--no-register-maps]' 1>&2
+    echo '  [--uniprocessor] path/to/input.jar path/to/output.odex' 1>&2
     exit 1
 fi
 
@@ -272,7 +283,7 @@ BOOTCLASSPATH=`echo ":${bootJars}" | \
     sed 's/^://'`
 export BOOTCLASSPATH
 
-if [ "${bootstrap}" = "yes" ]; then
+if [ "${bootstrap}" = 'yes' ]; then
     # Split the boot classpath into separate elements and iterate over them,
     # processing each, in order.
     elements=`echo "${BOOTCLASSPATH}" | sed 's/:/ /g'`
@@ -282,7 +293,7 @@ if [ "${bootstrap}" = "yes" ]; then
         outputFile="`dirname ${inputFile}`/`basename ${inputFile} .jar`.odex"
         "${dexopt}" --preopt "${inputFile}" "${outputFile}" "${optimizeFlags}"
         status="$?"
-        if [ "${status}" != "0" ]; then
+        if [ "${status}" != '0' ]; then
             exit "${status}"
         fi
     done
@@ -299,7 +310,7 @@ else
     "${dexopt}" --preopt "${inputFile}" "${outputFile}" "${optimizeFlags}"
 
     status="$?"
-    if [ "${status}" != "0" ]; then
+    if [ "${status}" != '0' ]; then
         exit "${status}"
     fi
 fi
