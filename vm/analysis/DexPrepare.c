@@ -398,7 +398,7 @@ bool dvmOptimizeDexFile(int fd, off_t dexOffset, long dexLength,
         if (isBootstrap)
             flags |= DEXOPT_IS_BOOTSTRAP;
         if (gDvm.generateRegisterMaps)
-            flags |= DEXOPT_GEN_REGISTER_MAP;
+            flags |= DEXOPT_GEN_REGISTER_MAPS;
         sprintf(values[9], "%d", flags);
         argv[curArg++] = values[9];
 
