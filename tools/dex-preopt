@@ -208,6 +208,8 @@ fi
 # Expand the uniprocessor directive, if necessary.
 if [ "${doUniprocessor}" = 'yes' ]; then
     optimizeFlags="${optimizeFlags},u=y"
+else
+    optimizeFlags="${optimizeFlags},u=n"
 fi
 
 # Kill off the spare comma in optimizeFlags.
