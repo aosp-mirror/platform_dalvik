@@ -63,7 +63,8 @@ u4 dvmPlatformInvokeHints(const DexProto* proto);
  */
 char* dvmCreateSystemLibraryName(char* libName);
 //void dvmLoadNativeLibrary(StringObject* libNameObj, Object* classLoader);
-bool dvmLoadNativeCode(const char* fileName, Object* classLoader);
+bool dvmLoadNativeCode(const char* fileName, Object* classLoader,
+        char** detail);
 
 
 /*
