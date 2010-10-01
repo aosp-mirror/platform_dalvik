@@ -694,17 +694,17 @@ void dvmDumpObject(const Object* obj)
     int i;
 
     if (obj == NULL || obj->clazz == NULL) {
-        LOGW("Null or malformed object not dumped\n");
+        LOGW("Null or malformed object not dumped");
         return;
     }
 
     clazz = obj->clazz;
-    LOGD("----- Object dump: %p (%s, %d bytes) -----\n",
+    LOGD("----- Object dump: %p (%s, %d bytes) -----",
         obj, clazz->descriptor, (int) clazz->objectSize);
     //printHexDump(obj, clazz->objectSize);
-    LOGD("  Fields:\n");
+    LOGD("  Fields:");
     while (clazz != NULL) {
-        LOGD("    -- %s\n", clazz->descriptor);
+        LOGD("    -- %s", clazz->descriptor);
         for (i = 0; i < clazz->ifieldCount; i++) {
             const InstField* pField = &clazz->ifields[i];
             char type = pField->field.signature[0];
@@ -717,7 +717,7 @@ void dvmDumpObject(const Object* obj)
                 else
                     dval = dvmGetFieldDouble(obj, pField->byteOffset);
 
-                LOGD("    %2d: '%s' '%s' af=%04x off=%d %.3f\n", i,
+                LOGD("    %2d: '%s' '%s' af=%04x off=%d %.3f", i,
                     pField->field.name, pField->field.signature,
                     pField->field.accessFlags, pField->byteOffset, dval);
             } else {
@@ -730,12 +730,47 @@ void dvmDumpObject(const Object* obj)
                 else
                     lval = dvmGetFieldInt(obj, pField->byteOffset);
 
-                LOGD("    %2d: '%s' '%s' af=%04x off=%d 0x%08llx\n", i,
+                LOGD("    %2d: '%s' '%s' af=%04x off=%d 0x%08llx", i,
                     pField->field.name, pField->field.signature,
                     pField->field.accessFlags, pField->byteOffset, lval);
             }
         }
 
         clazz = clazz->super;
+    }
+    if (obj->clazz == gDvm.classJavaLangClass) {
+        LOGD("  Static fields:");
+        const StaticField* sfields = &((ClassObject *)obj)->sfields[0];
+        for (i = 0; i < ((ClassObject *)obj)->sfieldCount; ++i) {
+            const StaticField* pField = &sfields[i];
+            size_t byteOffset = (size_t)pField - (size_t)sfields;
+            char type = pField->field.signature[0];
+
+            if (type == 'F' || type == 'D') {
+                double dval;
+
+                if (type == 'F')
+                    dval = pField->value.f;
+                else
+                    dval = pField->value.d;
+
+                LOGD("    %2d: '%s' '%s' af=%04x off=%zd %.3f", i,
+                     pField->field.name, pField->field.signature,
+                     pField->field.accessFlags, byteOffset, dval);
+            } else {
+                u8 lval;
+
+                if (type == 'J')
+                    lval = pField->value.j;
+                else if (type == 'Z')
+                    lval = pField->value.z;
+                else
+                    lval = pField->value.i;
+
+                LOGD("    %2d: '%s' '%s' af=%04x off=%zd 0x%08llx", i,
+                     pField->field.name, pField->field.signature,
+                     pField->field.accessFlags, byteOffset, lval);
+            }
+        }
     }
 }
