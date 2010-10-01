@@ -1544,20 +1544,20 @@ static bool handleFmt21c_Fmt31c(CompilationUnit *cUnit, MIR *mir)
 
             rlSrc = dvmCompilerGetSrc(cUnit, mir, 0);
             rlSrc = loadValue(cUnit, rlSrc, kAnyReg);
-            loadConstant(cUnit, tReg,  (int) fieldPtr + valOffset);
+            loadConstant(cUnit, tReg,  (int) fieldPtr);
             if (isSputObject) {
                 objHead = dvmCompilerAllocTemp(cUnit);
-                loadConstant(cUnit, objHead, (intptr_t)method->clazz);
+                loadWordDisp(cUnit, tReg, offsetof(Field, clazz), objHead);
             }
             HEAP_ACCESS_SHADOW(true);
-            storeWordDisp(cUnit, tReg, 0 ,rlSrc.lowReg);
+            storeWordDisp(cUnit, tReg, valOffset ,rlSrc.lowReg);
             dvmCompilerFreeTemp(cUnit, tReg);
             HEAP_ACCESS_SHADOW(false);
             if (isVolatile) {
                 dvmCompilerGenMemBarrier(cUnit);
             }
             if (isSputObject) {
-                /* NOTE: marking card based object head */
+                /* NOTE: marking card based sfield->clazz */
                 markCard(cUnit, rlSrc.lowReg, objHead);
                 dvmCompilerFreeTemp(cUnit, objHead);
             }

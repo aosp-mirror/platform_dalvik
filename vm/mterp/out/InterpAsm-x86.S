@@ -7675,11 +7675,10 @@ dvmAsmSisterStart:
 .LOP_SPUT_OBJECT_continue:
     movl      %ecx,offStaticField_value(%eax)    # do the store
     testl     %ecx,%ecx                          # stored null object ptr?
-    movl      rGLUE,%ecx
     FETCH_INST_OPCODE 2 %edx
-    movl      offGlue_method(%ecx),%eax          # eax<- current method
     je        1f                                 # skip card mark if null
-    movl      offMethod_clazz(%eax),%eax         # eax<- method->clazz
+    movl      rGLUE,%ecx
+    movl      offField_clazz(%eax),%eax          # eax<- method->clazz
     movl      offGlue_cardTable(%ecx),%ecx       # get card table base
     shrl      $GC_CARD_SHIFT,%eax               # head to card number
     movb      %cl,(%ecx,%eax)                    # mark card
@@ -8656,11 +8655,10 @@ dvmAsmSisterStart:
 .LOP_SPUT_OBJECT_VOLATILE_continue:
     movl      %ecx,offStaticField_value(%eax)    # do the store
     testl     %ecx,%ecx                          # stored null object ptr?
-    movl      rGLUE,%ecx
     FETCH_INST_OPCODE 2 %edx
-    movl      offGlue_method(%ecx),%eax          # eax<- current method
     je        1f                                 # skip card mark if null
-    movl      offMethod_clazz(%eax),%eax         # eax<- method->clazz
+    movl      rGLUE,%ecx
+    movl      offField_clazz(%eax),%eax          # eax<- method->clazz
     movl      offGlue_cardTable(%ecx),%ecx       # get card table base
     shrl      $GC_CARD_SHIFT,%eax               # head to card number
     movb      %cl,(%ecx,%eax)                    # mark card
