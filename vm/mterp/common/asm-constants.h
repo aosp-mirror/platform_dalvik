@@ -161,6 +161,9 @@ MTERP_OFFSET(offInstField_byteOffset,   InstField, byteOffset, 24)
 MTERP_OFFSET(offInstField_byteOffset,   InstField, byteOffset, 16)
 #endif
 
+/* Field fields */
+MTERP_OFFSET(offField_clazz,            Field, clazz, 0)
+
 /* StaticField fields */
 #ifdef PROFILE_FIELD_ACCESS
 MTERP_OFFSET(offStaticField_value,      StaticField, value, 24)
