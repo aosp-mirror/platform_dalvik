@@ -589,10 +589,7 @@ When working on native code it's not uncommon to see a failure like this:
 <p>
 In some cases it means what it says &mdash; the library wasn't found.  In
 other cases the library exists but couldn't be opened by dlopen(), and
-the details of the failure can be found in logcat.  For example:
-<pre>D/dalvikvm(  870): Trying to load lib /sdcard/libfoo.so 0x4001ff48
-I/dalvikvm(  870): Unable to dlopen(/sdcard/libfoo.so): Cannot load library: /sdcard/libfoo.so is not a valid ELF object
-</pre>
+the details of the failure can be found in the exception's detail message.
 <p>
 Common reasons why you might encounter "library not found" exceptions:
 <ul>

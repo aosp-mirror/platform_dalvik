@@ -258,130 +258,6 @@ char* dvmCreateSystemLibraryName(char* libName)
         return strdup(buf);
 }
 
-
-#if 0
-/*
- * Find a library, given the lib's system-dependent name (e.g. "libjpeg.so").
- *
- * We need to search through the path defined by the java.library.path
- * property.
- *
- * Returns NULL if the library was not found.
- */
-static char* findLibrary(const char* libSysName)
-{
-    char* javaLibraryPath = NULL;
-    char* testName = NULL;
-    char* start;
-    char* cp;
-    bool done;
-
-    javaLibraryPath = dvmGetProperty("java.library.path");
-    if (javaLibraryPath == NULL)
-        goto bail;
-
-    LOGVV("+++ path is '%s'\n", javaLibraryPath);
-
-    start = cp = javaLibraryPath;
-    while (cp != NULL) {
-        char pathBuf[256];
-        int len;
-
-        cp = strchr(start, ':');
-        if (cp != NULL)
-            *cp = '\0';
-
-        len = snprintf(pathBuf, sizeof(pathBuf), "%s/%s", start, libSysName);
-        if (len >= (int) sizeof(pathBuf)) {
-            LOGW("Path overflowed %d bytes: '%s' / '%s'\n",
-                len, start, libSysName);
-            /* keep going, next one might fit */
-        } else {
-            LOGVV("+++  trying '%s'\n", pathBuf);
-            if (access(pathBuf, R_OK) == 0) {
-                testName = strdup(pathBuf);
-                break;
-            }
-        }
-
-        start = cp +1;
-    }
-
-bail:
-    free(javaLibraryPath);
-    return testName;
-}
-
-/*
- * Load a native shared library, given the system-independent piece of
- * the library name.
- *
- * Throws an exception on failure.
- */
-void dvmLoadNativeLibrary(StringObject* libNameObj, Object* classLoader)
-{
-    char* libName = NULL;
-    char* libSysName = NULL;
-    char* libPath = NULL;
-
-    /*
-     * If "classLoader" isn't NULL, call the class loader's "findLibrary"
-     * method with the lib name.  If it returns a non-NULL result, we use
-     * that as the pathname.
-     */
-    if (classLoader != NULL) {
-        Method* findLibrary;
-        Object* findLibResult;
-
-        findLibrary = dvmFindVirtualMethodByDescriptor(classLoader->clazz,
-            "findLibrary", "(Ljava/lang/String;)Ljava/lang/String;");
-        if (findLibrary == NULL) {
-            LOGW("Could not find findLibrary() in %s\n",
-                classLoader->clazz->name);
-            dvmThrowException("Ljava/lang/UnsatisfiedLinkError;",
-                "findLibrary");
-            goto bail;
-        }
-
-        findLibResult = (Object*)(u4) dvmCallMethod(findLibrary, classLoader,
-                                            libNameObj);
-        if (dvmCheckException()) {
-            LOGV("returning early on exception\n");
-            goto bail;
-        }
-        if (findLibResult != NULL) {
-            /* success! */
-            libPath = dvmCreateCstrFromString(libNameObj);
-            LOGI("Found library through CL: '%s'\n", libPath);
-            dvmLoadNativeCode(libPath, classLoader);
-            goto bail;
-        }
-    }
-
-    libName = dvmCreateCstrFromString(libNameObj);
-    if (libName == NULL)
-        goto bail;
-    libSysName = dvmCreateSystemLibraryName(libName);
-    if (libSysName == NULL)
-        goto bail;
-
-    libPath = findLibrary(libSysName);
-    if (libPath != NULL) {
-        LOGD("Found library through path: '%s'\n", libPath);
-        dvmLoadNativeCode(libPath, classLoader);
-    } else {
-        LOGW("Unable to locate shared lib matching '%s'\n", libSysName);
-        dvmThrowException("Ljava/lang/UnsatisfiedLinkError;", libName);
-    }
-
-bail:
-    free(libName);
-    free(libSysName);
-    free(libPath);
-}
-#endif
-
-
 /*
  * Check the result of an earlier call to JNI_OnLoad on this library.  If
  * the call has not yet finished in another thread, wait for it.
@@ -436,9 +312,12 @@ typedef int (*OnLoadFunc)(JavaVM*, void*);
  * The library will be associated with the specified class loader.  The JNI
  * spec says we can't load the same library into more than one class loader.
  *
- * Returns "true" on success.
+ * Returns "true" on success. On failure, sets *detail to a
+ * human-readable description of the error or NULL if no detail is
+ * available; ownership of the string is transferred to the caller.
  */
-bool dvmLoadNativeCode(const char* pathName, Object* classLoader)
+bool dvmLoadNativeCode(const char* pathName, Object* classLoader,
+        char** detail)
 {
     SharedLib* pEntry;
     void* handle;
@@ -450,6 +329,8 @@ bool dvmLoadNativeCode(const char* pathName, Object* classLoader)
 
     if (verbose)
         LOGD("Trying to load lib %s %p\n", pathName, classLoader);
+
+    *detail = NULL;
 
     /*
      * See if we've already loaded it.  If we have, and the class loader
@@ -504,7 +385,7 @@ bool dvmLoadNativeCode(const char* pathName, Object* classLoader)
     dvmChangeStatus(self, oldStatus);
 
     if (handle == NULL) {
-        LOGI("Unable to dlopen(%s): %s\n", pathName, dlerror());
+        *detail = strdup(dlerror());
         return false;
     }
 
