@@ -61,27 +61,35 @@ static void Dalvik_java_lang_Runtime_nativeExit(const u4* args,
 }
 
 /*
- * static boolean nativeLoad(String filename, ClassLoader loader)
+ * static String nativeLoad(String filename, ClassLoader loader)
  *
  * Load the specified full path as a dynamic library filled with
- * JNI-compatible methods.
+ * JNI-compatible methods. Returns null on success, or a failure
+ * message on failure.
  */
 static void Dalvik_java_lang_Runtime_nativeLoad(const u4* args,
     JValue* pResult)
 {
     StringObject* fileNameObj = (StringObject*) args[0];
     Object* classLoader = (Object*) args[1];
-    char* fileName;
-    int result;
+    char* fileName = NULL;
+    StringObject* result = NULL;
+    char* reason = NULL;
+    bool success;
 
-    if (fileNameObj == NULL)
-        RETURN_INT(false);
+    assert(fileNameObj != NULL);
     fileName = dvmCreateCstrFromString(fileNameObj);
 
-    result = dvmLoadNativeCode(fileName, classLoader);
+    success = dvmLoadNativeCode(fileName, classLoader, &reason);
+    if (!success) {
+        const char* msg = (reason != NULL) ? reason : "unknown failure";
+        result = dvmCreateStringFromCstr(msg);
+        dvmReleaseTrackedAlloc((Object*) result, NULL);
+    }
 
+    free(reason);
     free(fileName);
-    RETURN_INT(result);
+    RETURN_PTR(result);
 }
 
 /*
@@ -179,7 +187,7 @@ const DalvikNativeMethod dvm_java_lang_Runtime[] = {
         Dalvik_java_lang_Runtime_maxMemory },
     { "nativeExit",         "(IZ)V",
         Dalvik_java_lang_Runtime_nativeExit },
-    { "nativeLoad",         "(Ljava/lang/String;Ljava/lang/ClassLoader;)Z",
+    { "nativeLoad",         "(Ljava/lang/String;Ljava/lang/ClassLoader;)Ljava/lang/String;",
         Dalvik_java_lang_Runtime_nativeLoad },
     { "runFinalization",    "(Z)V",
         Dalvik_java_lang_Runtime_runFinalization },
