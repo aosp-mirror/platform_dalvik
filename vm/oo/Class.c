@@ -4636,9 +4636,12 @@ ClassObject* dvmFindLoadedClass(const char* descriptor)
 
 /*
  * Retrieve the system (a/k/a application) class loader.
+ *
+ * The caller must call dvmReleaseTrackedAlloc on the result.
  */
 Object* dvmGetSystemClassLoader(void)
 {
+    Thread* self = dvmThreadSelf();
     ClassObject* clazz;
     Method* getSysMeth;
     Object* loader;
@@ -4653,8 +4656,9 @@ Object* dvmGetSystemClassLoader(void)
         return NULL;
 
     JValue result;
-    dvmCallMethod(dvmThreadSelf(), getSysMeth, NULL, &result);
+    dvmCallMethod(self, getSysMeth, NULL, &result);
     loader = (Object*)result.l;
+    dvmAddTrackedAlloc(loader, self);
     return loader;
 }
 

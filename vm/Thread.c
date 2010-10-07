@@ -887,6 +887,7 @@ bool dvmPrepMainThread(void)
         return false;
     }
     dvmSetFieldObject(threadObj, ctxtClassLoaderOffset, systemLoader);
+    dvmReleaseTrackedAlloc(systemLoader, NULL);
 
     /*
      * Finish our thread prep.

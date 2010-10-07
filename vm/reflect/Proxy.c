@@ -1013,6 +1013,10 @@ static void proxyInvoker(const u4* args, JValue* pResult,
      *
      * We don't need to repackage exceptions, so if one has been thrown
      * just jump to the end.
+     *
+     * We're not adding invokeResult.l to the tracked allocation list, but
+     * since we're just unboxing it or returning it to interpreted code
+     * that shouldn't be a problem.
      */
     dvmCallMethod(self, invoke, handler, &invokeResult,
         thisObj, methodObj, argArray);

@@ -2888,6 +2888,7 @@ void dvmDbgExecuteMethod(DebugInvokeReq* pReq)
      * to preserve that across the method invocation.
      */
     oldExcept = dvmGetException(self);
+    dvmAddTrackedAlloc(oldExcept, self);
     dvmClearException(self);
 
     oldStatus = dvmChangeStatus(self, THREAD_RUNNING);
@@ -2941,6 +2942,7 @@ void dvmDbgExecuteMethod(DebugInvokeReq* pReq)
 
     if (oldExcept != NULL)
         dvmSetException(self, oldExcept);
+    dvmReleaseTrackedAlloc(oldExcept, self);
     dvmChangeStatus(self, oldStatus);
 }
 

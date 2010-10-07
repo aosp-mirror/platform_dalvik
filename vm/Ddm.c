@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 /*
  * Handle Dalvik Debug Monitor requests and events.
  *
@@ -41,6 +42,7 @@ bool dvmDdmHandlePacket(const u1* buf, int dataLen, u1** pReplyBuf,
     Thread* self = dvmThreadSelf();
     const int kChunkHdrLen = 8;
     ArrayObject* dataArray = NULL;
+    Object* chunk = NULL;
     bool result = false;
 
     assert(dataLen >= 0);
@@ -122,17 +124,18 @@ bool dvmDdmHandlePacket(const u1* buf, int dataLen, u1** pReplyBuf,
         goto bail;
     }
 
-    Object* chunk;
     ArrayObject* replyData;
     chunk = (Object*) callRes.l;
     if (chunk == NULL)
         goto bail;
 
+    /* not strictly necessary -- we don't alloc from managed heap here */
+    dvmAddTrackedAlloc(chunk, self);
+
     /*
      * Pull the pieces out of the chunk.  We copy the results into a
      * newly-allocated buffer that the caller can free.  We don't want to
      * continue using the Chunk object because nothing has a reference to it.
-     * (If we do an alloc in here, we need to dvmAddTrackedAlloc it.)
      *
      * We could avoid this by returning type/data/offset/length and having
      * the caller be aware of the object lifetime issues, but that
@@ -175,7 +178,8 @@ bool dvmDdmHandlePacket(const u1* buf, int dataLen, u1** pReplyBuf,
         (char*) reply, reply, length);
 
 bail:
-    dvmReleaseTrackedAlloc((Object*) dataArray, NULL);
+    dvmReleaseTrackedAlloc((Object*) dataArray, self);
+    dvmReleaseTrackedAlloc(chunk, self);
     return result;
 }
 

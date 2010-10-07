@@ -246,6 +246,7 @@ void dvmSetCommandLineProperties(Object* propObj)
  */
 char* dvmGetProperty(const char* key)
 {
+    Thread* self = dvmThreadSelf();
     ClassObject* system;
     Method* getProp;
     StringObject* keyObj = NULL;
@@ -270,15 +271,17 @@ char* dvmGetProperty(const char* key)
         goto bail;
 
     JValue val;
-    dvmCallMethod(dvmThreadSelf(), getProp, NULL, &val, keyObj);
+    dvmCallMethod(self, getProp, NULL, &val, keyObj);
     valueObj = (StringObject*) val.l;
     if (valueObj == NULL)
         goto bail;
+
+    /* don't need to call dvmAddTrackedAlloc on result; conv to C string safe */
 
     result = dvmCreateCstrFromString(valueObj);
     /* fall through with result */
 
 bail:
-    dvmReleaseTrackedAlloc((Object*)keyObj, NULL);
+    dvmReleaseTrackedAlloc((Object*)keyObj, self);
     return result;
 }
