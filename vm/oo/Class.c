@@ -1604,33 +1604,12 @@ got_class:
     assert(dvmIsClassLinked(clazz));
     assert(gDvm.classJavaLangClass != NULL);
     assert(clazz->obj.clazz == gDvm.classJavaLangClass);
-    if (clazz != gDvm.classJavaLangObject) {
-        if (clazz->super == NULL) {
-            LOGE("Non-Object has no superclass (gDvm.classJavaLangObject=%p)\n",
-                gDvm.classJavaLangObject);
-            dvmAbort();
-        }
-    }
+    assert(clazz == gDvm.classJavaLangObject || clazz->super != NULL);
     if (!dvmIsInterfaceClass(clazz)) {
         //LOGI("class=%s vtableCount=%d, virtualMeth=%d\n",
         //    clazz->descriptor, clazz->vtableCount,
         //    clazz->virtualMethodCount);
         assert(clazz->vtableCount >= clazz->virtualMethodCount);
-    }
-
-    /*
-     * Normally class objects are initialized before we instantiate them,
-     * but we can't do that with java.lang.Class (chicken, meet egg).  We
-     * do it explicitly here.
-     *
-     * The verifier could call here to find Class while verifying Class,
-     * so we need to check for CLASS_VERIFYING as well as !initialized.
-     */
-    if (clazz == gDvm.classJavaLangClass && !dvmIsClassInitialized(clazz) &&
-        !(clazz->status == CLASS_VERIFYING))
-    {
-        LOGV("+++ explicitly initializing %s\n", clazz->descriptor);
-        dvmInitClass(clazz);
     }
 
 bail:

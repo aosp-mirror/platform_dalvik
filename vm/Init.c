@@ -1295,6 +1295,16 @@ int dvmStartup(int argc, const char* const argv[], bool ignoreUnrecognized,
         goto fail;
 
     /*
+     * Explicitly initialize java.lang.Class.  This doesn't happen
+     * automatically because it's allocated specially (it's an instance
+     * of itself).  Must happen before registration of system natives,
+     * which make some calls that throw assertions if the classes they
+     * operate on aren't initialized.
+     */
+    if (!dvmInitClass(gDvm.classJavaLangClass))
+        goto fail;
+
+    /*
      * Register the system native methods, which are registered through JNI.
      */
     if (!registerSystemNatives(pEnv))
