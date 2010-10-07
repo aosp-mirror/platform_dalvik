@@ -344,6 +344,7 @@ bool dvmClassStartup(void)
         classObjectSize(CLASS_SFIELD_SLOTS), ALLOC_DEFAULT);
     DVM_OBJECT_INIT(&gDvm.classJavaLangClass->obj, gDvm.classJavaLangClass);
     gDvm.classJavaLangClass->descriptor = "Ljava/lang/Class;";
+
     /*
      * Process the bootstrap class path.  This means opening the specified
      * DEX or Jar files and possibly running them through the optimizer.
@@ -353,6 +354,19 @@ bool dvmClassStartup(void)
 
     if (gDvm.bootClassPath == NULL)
         return false;
+
+    /*
+     * We should be able to find classes now.  Get the vtable index for
+     * the class loader loadClass() method.
+     */
+    ClassObject* clClass = dvmFindSystemClassNoInit("Ljava/lang/ClassLoader;");
+    Method* meth = dvmFindVirtualMethodByDescriptor(clClass, "loadClass",
+            "(Ljava/lang/String;)Ljava/lang/Class;");
+    if (meth == NULL) {
+        LOGE("Unable to find loadClass() in java.lang.ClassLoader\n");
+        return false;
+    }
+    gDvm.voffJavaLangClassLoader_loadClass = meth->methodIndex;
 
     return true;
 }
@@ -1236,8 +1250,6 @@ static ClassObject* findClassFromLoaderNoInit(const char* descriptor,
 
     char* dotName = NULL;
     StringObject* nameObj = NULL;
-    Object* excep;
-    Method* loadClass;
 
     /* convert "Landroid/debug/Stuff;" to "android.debug.Stuff" */
     dotName = dvmDescriptorToDot(descriptor);
@@ -1251,14 +1263,6 @@ static ClassObject* findClassFromLoaderNoInit(const char* descriptor,
         goto bail;
     }
 
-    // TODO: cache the vtable offset
-    loadClass = dvmFindVirtualMethodHierByDescriptor(loader->clazz, "loadClass",
-                 "(Ljava/lang/String;)Ljava/lang/Class;");
-    if (loadClass == NULL) {
-        LOGW("Couldn't find loadClass in ClassLoader\n");
-        goto bail;
-    }
-
     dvmMethodTraceClassPrepBegin();
 
     /*
@@ -1268,13 +1272,15 @@ static ClassObject* findClassFromLoaderNoInit(const char* descriptor,
      * the bootstrap class loader can find it before doing its own load.
      */
     LOGVV("--- Invoking loadClass(%s, %p)\n", dotName, loader);
+    const Method* loadClass =
+        loader->clazz->vtable[gDvm.voffJavaLangClassLoader_loadClass];
     JValue result;
     dvmCallMethod(self, loadClass, loader, &result, nameObj);
     clazz = (ClassObject*) result.l;
 
     dvmMethodTraceClassPrepEnd();
 
-    excep = dvmGetException(self);
+    Object* excep = dvmGetException(self);
     if (excep != NULL) {
 #if DVM_SHOW_EXCEPTION >= 2
         LOGD("NOTE: loadClass '%s' %p threw exception %s\n",
@@ -1293,6 +1299,8 @@ static ClassObject* findClassFromLoaderNoInit(const char* descriptor,
             "ClassLoader returned null");
         goto bail;
     }
+
+    /* not adding clazz to tracked-alloc list, because it's a ClassObject */
 
     dvmAddInitiatingLoader(clazz, loader);
 

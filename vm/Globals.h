@@ -275,6 +275,9 @@ struct DvmGlobals {
     int         offJavaLangThrowable_stackState;
     int         offJavaLangThrowable_cause;
 
+    /* method offsets - ClassLoader */
+    int         voffJavaLangClassLoader_loadClass;
+
     /* field offsets - java.lang.reflect.* */
     int         offJavaLangReflectAccessibleObject_flag;
     int         offJavaLangReflectConstructor_slot;
