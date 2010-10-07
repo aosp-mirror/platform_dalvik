@@ -1445,7 +1445,8 @@ static ClassObject* findClassNoInit(const char* descriptor, Object* loader,
         /*
          * Lock the class while we link it so other threads must wait for us
          * to finish.  Set the "initThreadId" so we can identify recursive
-         * invocation.
+         * invocation.  (Note all accesses to initThreadId here are
+         * guarded by the class object's lock.)
          */
         dvmLockObject(self, (Object*) clazz);
         clazz->initThreadId = self->threadId;
@@ -4130,13 +4131,26 @@ static bool validateSuperDescriptors(const ClassObject* clazz)
 /*
  * Returns true if the class is being initialized by us (which means that
  * calling dvmInitClass will return immediately after fiddling with locks).
+ * Returns false if it's not being initialized, or if it's being
+ * initialized by another thread.
  *
- * There isn't a race here, because either clazz->initThreadId won't match
- * us, or it will and it was set in the same thread.
+ * The value for initThreadId is always set to "self->threadId", by the
+ * thread doing the initializing.  If it was done by the current thread,
+ * we are guaranteed to see "initializing" and our thread ID, even on SMP.
+ * If it was done by another thread, the only bad situation is one in
+ * which we see "initializing" and a stale copy of our own thread ID
+ * while another thread is actually handling init.
+ *
+ * The initThreadId field is used during class linking, so it *is*
+ * possible to have a stale value floating around.  We need to ensure
+ * that memory accesses happen in the correct order.
  */
 bool dvmIsClassInitializing(const ClassObject* clazz)
 {
-    return (clazz->status == CLASS_INITIALIZING &&
+    ClassStatus status;
+
+    status = android_atomic_acquire_load((ClassStatus*) &clazz->status);
+    return (status == CLASS_INITIALIZING &&
             clazz->initThreadId == dvmThreadSelf()->threadId);
 }
 
@@ -4403,8 +4417,9 @@ noverify:
     initializedByUs = true;
 #endif
 
-    clazz->status = CLASS_INITIALIZING;
+    /* order matters here, esp. interaction with dvmIsClassInitializing */
     clazz->initThreadId = self->threadId;
+    android_atomic_release_store(CLASS_INITIALIZING, &clazz->status);
     dvmUnlockObject(self, (Object*) clazz);
 
     /* init our superclass */
