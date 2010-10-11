@@ -712,11 +712,12 @@
     with an appropriate <code>move-result*</code> variant as the immediately
     subsequent instruction.
     <p><code>invoke-virtual</code> is used to invoke a normal virtual
-    method (a method that is not <code>static</code> or <code>final</code>,
-    and is not a constructor).</p>
+    method (a method that is not <code>private</code>, <code>static</code>,
+    or <code>final</code>, and is also not a constructor).</p>
     <p><code>invoke-super</code> is used to invoke the closest superclass's
     virtual method (as opposed to the one with the same <code>method_id</code>
-    in the calling class).</p>
+    in the calling class). The same method restrictions hold as for
+    <code>invoke-virtual</code>.</p>
     <p><code>invoke-direct</code> is used to invoke a non-<code>static</code>
     direct method (that is, an instance method that is by its nature
     non-overridable, namely either a <code>private</code> instance method
