@@ -14,6 +14,9 @@
  * limitations under the License.
  */
 
+#ifndef _DALVIK_ALLOC_WRITEBARRIER
+#define _DALVIK_ALLOC_WRITEBARRIER
+
 /*
  * Note writes to the heap. These functions must be called if a field
  * of an Object in the heap changes, and before any GC safe-point. The
@@ -46,3 +49,5 @@ INLINE void dvmWriteBarrierArray(const ArrayObject *obj,
 {
     dvmMarkCard((Object *)obj);
 }
+
+#endif /* _DALVIK_ALLOC_WRITEBARRIER */
