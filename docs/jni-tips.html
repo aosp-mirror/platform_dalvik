@@ -12,7 +12,8 @@
 <li> <a href="#What_s_JNI_">What's JNI?</a>
 </li>
 <li> <a href="#JavaVM_and_JNIEnv">JavaVM and JNIEnv</a>
-
+</li>
+<li> <a href="#Threads">Threads</a>
 </li>
 <li> <a href="#jclass_jmethodID_and_jfieldID">jclass, jmethodID, and jfieldID</a>
 </li>
@@ -71,7 +72,7 @@ JNI defines two key data structures, "JavaVM" and "JNIEnv".  Both of these are e
 pointers to pointers to function tables.  (In the C++ version, it's a class whose sole member
 is a pointer to a function table.)  The JavaVM provides the "invocation interface" functions,
 which allow you to create and destroy the VM.  In theory you can have multiple VMs per process,
-but Android's VMs only allow one.
+but Android's VM only allows one.
 </p><p>
 The JNIEnv provides most of the JNI functions.  Your native functions all receive a JNIEnv as
 the first argument.
@@ -87,8 +88,39 @@ depending on whether it's included into ".c" or ".cpp".  For this reason it's a 
 include JNIEnv arguments in header files included by both languages.  (Put another way: if your
 header file requires "#ifdef __cplusplus", you may have to do some extra work if anything in
 that header refers to JNIEnv.)
+
 </p><p>
+</p><h2><a name="Threads"> Threads </a></h2>
+<p>
+All VM threads are Linux threads, scheduled by the kernel.  They're usually
+started using Java language features (notably <code>Thread.start()</code>),
+but they can also be created elsewhere and then attached to the VM.  For
+example, a thread started with <code>pthread_create</code> can be attached
+with the JNI <code>AttachCurrentThread</code> or
+<code>AttachCurrentThreadAsDaemon</code> functions.  Until a thread is
+attached to the VM, it has no JNIEnv, and
+<strong>cannot make JNI calls</strong>.
 </p><p>
+Attaching a natively-created thread causes the VM to allocate and initialize
+a <code>Thread</code> object, add it to the "main" <code>ThreadGroup</code>,
+and add the thread to the set that is visible to the debugger.  Calling
+<code>AttachCurrentThread</code> on an already-attached thread is a no-op.
+</p><p>
+The Dalvik VM does not suspend threads executing native code.  If
+garbage collection is in progress, or the debugger has issued a suspend
+request, the VM will pause the thread the next time it makes a JNI call.
+</p><p>
+Threads attached through JNI <strong>must call
+<code>DetachCurrentThread</code> before they exit</strong>.
+If coding this directly is awkward, in Android &gt;= 2.0 you
+can use <code>pthread_key_create</code> to define a destructor
+function that will be called before the thread exits, and
+call <code>DetachCurrentThread</code> from there.  (Use that
+key with <code>pthread_setspecific</code> to store the JNIEnv in
+thread-local-storage; that way it'll be passed into your destructor as
+the argument.)
+
+
 </p><h2><a name="jclass_jmethodID_and_jfieldID"> jclass, jmethodID, and jfieldID </a></h2>
 <p>
 If you want to access an object's field from native code, you would do the following:
@@ -576,6 +608,10 @@ that use 64-bit pointers, <strong>you need to stash your native pointers in a
     converted to "_00024" during searches for method names.  Working
     around this requires using explicit registration or moving the
     native methods out of inner classes.
+    <li>Until 2.0, it was not possible to use a <code>pthread_key_create</code>
+    destructor function to avoid the VM's "thread must be detached before
+    exit" check.  (The VM also uses a pthread key destructor function,
+    so it'd be a race to see which gets called first.)
     <li>"Weak global" references were not implemented until 2.2 ("Froyo").
     Older VMs will vigorously reject attempts to use them.  You can use
     the Android platform version constants to test for support.
