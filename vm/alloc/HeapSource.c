@@ -377,7 +377,6 @@ static bool
 addNewHeap(HeapSource *hs, mspace msp, size_t mspAbsoluteMaxSize)
 {
     Heap heap;
-    void *base;
 
     if (hs->numHeaps >= HEAP_SOURCE_MAX_HEAP_COUNT) {
         LOGE("Attempt to create too many heaps (%zd >= %zd)\n",
@@ -395,9 +394,11 @@ addNewHeap(HeapSource *hs, mspace msp, size_t mspAbsoluteMaxSize)
         heap.base = hs->heapBase;
         heap.limit = hs->heapBase + heap.absoluteMaxSize;
     } else {
-        size_t overhead;
+        void *sbrk0 = contiguous_mspace_sbrk0(hs->heaps[0].msp);
+        char *base = (char *)ALIGN_UP_TO_PAGE_SIZE(sbrk0);
+        size_t overhead = base - hs->heaps[0].base;
 
-        overhead = ALIGN_UP_TO_PAGE_SIZE(oldHeapOverhead(hs, true));
+        assert(((size_t)hs->heaps[0].base & (SYSTEM_PAGE_SIZE - 1)) == 0);
         if (overhead + HEAP_MIN_FREE >= hs->absoluteMaxSize) {
             LOGE_HEAP("No room to create any more heaps "
                     "(%zd overhead, %zd max)\n",
@@ -405,10 +406,8 @@ addNewHeap(HeapSource *hs, mspace msp, size_t mspAbsoluteMaxSize)
             return false;
         }
         hs->heaps[0].absoluteMaxSize = overhead;
-        heap.absoluteMaxSize = hs->absoluteMaxSize - overhead;
-        base = contiguous_mspace_sbrk0(hs->heaps[0].msp);
         hs->heaps[0].limit = base;
-        base = (void *)ALIGN_UP_TO_PAGE_SIZE(base);
+        heap.absoluteMaxSize = hs->absoluteMaxSize - overhead;
         heap.msp = createMspace(base, HEAP_MIN_FREE, heap.absoluteMaxSize);
         heap.concurrentStartBytes = HEAP_MIN_FREE - CONCURRENT_START;
         heap.base = base;
