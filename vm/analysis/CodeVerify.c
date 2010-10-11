@@ -1002,6 +1002,24 @@ static RegType primSigCharToRegType(char sigChar)
 }
 
 /*
+ * See if the method matches the MethodType.
+ */
+static bool isCorrectInvokeKind(MethodType methodType, Method* resMethod)
+{
+    switch (methodType) {
+    case METHOD_DIRECT:
+        return dvmIsDirectMethod(resMethod);
+    case METHOD_STATIC:
+        return dvmIsStaticMethod(resMethod);
+    case METHOD_VIRTUAL:
+    case METHOD_INTERFACE:
+        return !dvmIsDirectMethod(resMethod);
+    default:
+        return false;
+    }
+}
+
+/*
  * Verify the arguments to a method.  We're executing in "method", making
  * a call to the method reference in vB.
  *
@@ -1060,10 +1078,9 @@ static Method* verifyInvocationArgs(const Method* meth, const RegType* insnRegs,
             //char* curMethodDesc =
             //    dexProtoCopyMethodDescriptor(&meth->prototype);
 
-            LOGI("Could not find method %s.%s, referenced from "
-                 "method %s.%s\n",
-                 dotMissingClass, methodName/*, methodDesc*/,
-                 dotMethClass, meth->name/*, curMethodDesc*/);
+            LOGI("Could not find method %s.%s, referenced from method %s.%s\n",
+                dotMissingClass, methodName/*, methodDesc*/,
+                dotMethClass, meth->name/*, curMethodDesc*/);
 
             free(dotMissingClass);
             free(dotMethClass);
@@ -1090,6 +1107,16 @@ static Method* verifyInvocationArgs(const Method* meth, const RegType* insnRegs,
                     resMethod->clazz->descriptor, resMethod->name);
             goto bad_sig;
         }
+    }
+
+    /*
+     * See if the method type implied by the invoke instruction matches the
+     * access flags for the target method.
+     */
+    if (!isCorrectInvokeKind(methodType, resMethod)) {
+        LOG_VFY("VFY: invoke type does not match method type of %s.%s\n",
+            resMethod->clazz->descriptor, resMethod->name);
+        goto fail;
     }
 
     /*
