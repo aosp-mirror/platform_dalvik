@@ -1,5 +1,5 @@
     @ r0 = methodToCall, r1 = returnCell, rPC = dalvikCallsite
-    ldrh    r7, [r0, #offMethod_registersSize]  @ r7<- methodToCall->regsSize
+    @ r7 = methodToCall->registersSize
     ldr     r9, [rGLUE, #offGlue_interpStackEnd]    @ r9<- interpStackEnd
     ldr     r8, [rGLUE, #offGlue_pSelfSuspendCount] @ r8<- &suspendCount
     add     r3, r1, #1  @ Thumb addr is odd
@@ -12,8 +12,6 @@
     @ r1 = newFP, r0 = methodToCall, r3 = returnCell, rPC = dalvikCallsite
     str     rPC, [rFP, #(offStackSaveArea_currentPc - sizeofStackSaveArea)]
     str     rPC, [r1, #(offStackSaveArea_savedPc - sizeofStackSaveArea)]
-    ldr     rPC, [r0, #offMethod_insns]     @ rPC<- methodToCall->insns
-
 
     @ set up newSaveArea
     str     rFP, [r1, #(offStackSaveArea_prevFrame - sizeofStackSaveArea)]
