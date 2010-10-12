@@ -305,11 +305,10 @@ dvmCompiler_TEMPLATE_INVOKE_METHOD_CHAIN:
      * Thumb code through the link register to transfer control to the callee
      * method through a dedicated chaining cell.
      */
-    @ r0 = methodToCall, r1 = returnCell, rPC = dalvikCallsite
+    @ r0 = methodToCall, r1 = returnCell, r2 = methodToCall->outsSize
+    @ rPC = dalvikCallsite, r7 = methodToCall->registersSize
     @ methodToCall is guaranteed to be non-native
 .LinvokeChain:
-    ldrh    r7, [r0, #offMethod_registersSize]  @ r7<- methodToCall->regsSize
-    ldrh    r2, [r0, #offMethod_outsSize]  @ r2<- methodToCall->outsSize
     ldr     r9, [rGLUE, #offGlue_interpStackEnd]    @ r9<- interpStackEnd
     ldr     r8, [rGLUE, #offGlue_pSelfSuspendCount] @ r8<- &suspendCount
     add     r3, r1, #1  @ Thumb addr is odd
@@ -325,8 +324,6 @@ dvmCompiler_TEMPLATE_INVOKE_METHOD_CHAIN:
     ldr     r9, [r0, #offMethod_clazz]      @ r9<- method->clazz
     str     rPC, [rFP, #(offStackSaveArea_currentPc - sizeofStackSaveArea)]
     str     rPC, [r1, #(offStackSaveArea_savedPc - sizeofStackSaveArea)]
-    ldr     rPC, [r0, #offMethod_insns]     @ rPC<- methodToCall->insns
-
 
     @ set up newSaveArea
     str     rFP, [r1, #(offStackSaveArea_prevFrame - sizeofStackSaveArea)]
@@ -393,6 +390,8 @@ dvmCompiler_TEMPLATE_INVOKE_METHOD_PREDICTED_CHAIN:
     add     r10, r10, #1
     streq   r10, [r7, #0]
 #endif
+    ldreqh  r7, [r0, #offMethod_registersSize]  @ r7<- methodToCall->regsSize
+    ldreqh  r2, [r0, #offMethod_outsSize]  @ r2<- methodToCall->outsSize
     beq     .LinvokeChain   @ predicted chain is valid
     ldr     r7, [r3, #offClassObject_vtable] @ r7 <- this->class->vtable
     cmp     r8, #0          @ initialized class or not
@@ -415,7 +414,7 @@ dvmCompiler_TEMPLATE_INVOKE_METHOD_PREDICTED_CHAIN:
 dvmCompiler_TEMPLATE_INVOKE_METHOD_NATIVE:
 /* File: armv5te/TEMPLATE_INVOKE_METHOD_NATIVE.S */
     @ r0 = methodToCall, r1 = returnCell, rPC = dalvikCallsite
-    ldrh    r7, [r0, #offMethod_registersSize]  @ r7<- methodToCall->regsSize
+    @ r7 = methodToCall->registersSize
     ldr     r9, [rGLUE, #offGlue_interpStackEnd]    @ r9<- interpStackEnd
     ldr     r8, [rGLUE, #offGlue_pSelfSuspendCount] @ r8<- &suspendCount
     add     r3, r1, #1  @ Thumb addr is odd
@@ -428,8 +427,6 @@ dvmCompiler_TEMPLATE_INVOKE_METHOD_NATIVE:
     @ r1 = newFP, r0 = methodToCall, r3 = returnCell, rPC = dalvikCallsite
     str     rPC, [rFP, #(offStackSaveArea_currentPc - sizeofStackSaveArea)]
     str     rPC, [r1, #(offStackSaveArea_savedPc - sizeofStackSaveArea)]
-    ldr     rPC, [r0, #offMethod_insns]     @ rPC<- methodToCall->insns
-
 
     @ set up newSaveArea
     str     rFP, [r1, #(offStackSaveArea_prevFrame - sizeofStackSaveArea)]

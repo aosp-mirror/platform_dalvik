@@ -1062,16 +1062,21 @@ static void genInvokeSingletonCommon(CompilationUnit *cUnit, MIR *mir,
     ArmLIR *retChainingCell = &labelList[bb->fallThrough->id];
 
     /* r1 = &retChainingCell */
-    dvmCompilerLockTemp(cUnit, r1);
     ArmLIR *addrRetChain = opRegRegImm(cUnit, kOpAdd, r1, rpc, 0);
+
     /* r4PC = dalvikCallsite */
     loadConstant(cUnit, r4PC,
                  (int) (cUnit->method->insns + mir->offset));
     addrRetChain->generic.target = (LIR *) retChainingCell;
+
+    /* r7 = calleeMethod->registersSize */
+    loadConstant(cUnit, r7, calleeMethod->registersSize);
     /*
      * r0 = calleeMethod (loaded upon calling genInvokeSingletonCommon)
      * r1 = &ChainingCell
+     * r2 = calleeMethod->outsSize (to be loaded later for Java callees)
      * r4PC = callsiteDPC
+     * r7 = calleeMethod->registersSize
      */
     if (dvmIsNativeMethod(calleeMethod)) {
         genDispatchToHandler(cUnit, TEMPLATE_INVOKE_METHOD_NATIVE);
@@ -1079,6 +1084,8 @@ static void genInvokeSingletonCommon(CompilationUnit *cUnit, MIR *mir,
         gDvmJit.invokeNative++;
 #endif
     } else {
+        /* For Java callees, set up r2 to be calleeMethod->outsSize */
+        loadConstant(cUnit, r2, calleeMethod->outsSize);
         genDispatchToHandler(cUnit, TEMPLATE_INVOKE_METHOD_CHAIN);
 #if defined(WITH_JIT_TUNING)
         gDvmJit.invokeMonomorphic++;
