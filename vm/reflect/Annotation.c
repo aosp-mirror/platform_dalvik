@@ -716,7 +716,7 @@ static Object* createAnnotationMember(const ClassObject* clazz,
     u4 elementNameIdx;
     const char* name;
     AnnotationValue avalue;
-    JValue result;
+    JValue unused;
     bool failed = true;
 
     elementNameIdx = readUleb128(pPtr);
@@ -760,7 +760,7 @@ static Object* createAnnotationMember(const ClassObject* clazz,
 
     /* call 4-argument constructor */
     dvmCallMethod(self, gDvm.methOrgApacheHarmonyLangAnnotationAnnotationMember_init,
-        newMember, &result, nameObj, valueObj, methodReturn, methodObj);
+        newMember, &unused, nameObj, valueObj, methodReturn, methodObj);
     if (dvmCheckException(self)) {
         LOGD("Failed constructing annotation element\n");
         goto bail;
