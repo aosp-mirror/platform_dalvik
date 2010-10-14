@@ -29,9 +29,9 @@
     je        .L${opcode}_skip_check
     SPILL(rPC)
     SPILL_TMP(%ecx)
+    movl      %eax,LOCAL0_OFFSET(%ebp)   # save copy of object head
     movl      offObject_clazz(%eax),%eax # eax<- arrayObj->clazz
     movl      offObject_clazz(rINST_FULL),%ecx # ecx<- obj->clazz
-    movl      %eax,LOCAL0_OFFSET(%ebp)  # save copy of object head
     movl      %eax,OUT_ARG1(%esp)
     movl      %ecx,OUT_ARG0(%esp)
     call      dvmCanPutArrayElement     # test object type vs. array type
