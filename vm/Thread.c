@@ -1682,7 +1682,8 @@ static void* interpThreadStart(void* arg)
 
     /*
      * Notify the debugger & DDM.  The debugger notification may cause
-     * us to suspend ourselves (and others).
+     * us to suspend ourselves (and others).  The thread state may change
+     * to VMWAIT briefly if network packets are sent.
      */
     if (gDvm.debuggerConnected)
         dvmDbgPostThreadStart(self);
