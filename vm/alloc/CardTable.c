@@ -167,9 +167,12 @@ static void countWhiteReferenceVisitor(void *addr, void *arg)
     assert(addr != NULL);
     assert(arg != NULL);
     obj = *(Object **)addr;
+    if (obj == NULL) {
+        return;
+    }
     assert(dvmIsValidObject(obj));
     ctx = arg;
-    if (obj == NULL || dvmHeapBitmapIsObjectBitSet(ctx->markBits, obj)) {
+    if (dvmHeapBitmapIsObjectBitSet(ctx->markBits, obj)) {
         return;
     }
     ctx->whiteRefs += 1;
