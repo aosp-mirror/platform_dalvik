@@ -131,7 +131,7 @@ hprofShutdown(hprof_context_t *tailCtx)
                 /* continue to fail-handler below */
             }
         } else {
-            outFd = open(tailCtx->fileName, O_WRONLY|O_CREAT, 0644);
+            outFd = open(tailCtx->fileName, O_WRONLY|O_CREAT|O_TRUNC, 0644);
             if (outFd < 0) {
                 LOGE("can't open %s: %s\n", headCtx->fileName, strerror(errno));
                 /* continue to fail-handler below */
