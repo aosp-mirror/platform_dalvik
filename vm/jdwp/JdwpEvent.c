@@ -1288,5 +1288,10 @@ void dvmJdwpDdmSendChunkV(JdwpState* state, int type, const struct iovec* iov,
     wrapiov[0].iov_base = header;
     wrapiov[0].iov_len = sizeof(header);
 
+    /*
+     * Make sure we're in VMWAIT in case the write blocks.
+     */
+    int oldStatus = dvmDbgThreadWaiting();
     dvmJdwpSendBufferedRequest(state, wrapiov, iovcnt+1);
+    dvmDbgThreadContinuing(oldStatus);
 }
