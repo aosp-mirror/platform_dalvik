@@ -4054,6 +4054,9 @@ static void gcScanInterpStackReferences(Thread *thread)
                             /* this is very bad */
                             LOGE("PGC: invalid ref in reg %d: 0x%08x\n",
                                 method->registersSize-1 - i, rval);
+                            LOGE("PGC: %s.%s addr 0x%04x\n",
+                                method->clazz->descriptor, method->name,
+                                saveArea->xtra.currentPc - method->insns);
                         } else
 #endif
                         {
