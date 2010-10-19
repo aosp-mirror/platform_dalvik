@@ -165,16 +165,21 @@ you must have a card inserted and the permission enabled in your application.
 </p>
 
 
-<h3>Android 2.2 ("Froyo"), Android 2.x ("Gingerbread")</h3>
+<h3>Android 2.2 ("Froyo")</h3>
 <p>
 DDMS heap dump requests are now streamed directly out of the VM, removing
 the external storage requirement.
 </p>
 
-<h3>Android 2.x ("Honeycomb")</h3>
+<h3>Android 2.3 ("Gingerbread")</h3>
 <p>
 The <code>kill -10</code> (<code>SIGUSR1</code>) method of generating heap
-dumps has been removed, in favor of a much more useful shell command:
+dumps has been removed from the VM.
+</p>
+
+<h3>Android x.y ("Honeycomb")</h3>
+<p>
+A new command-line tool has been added:
 </p>
 <blockquote><pre>am dumpheap &lt;pid&gt; &lt;output-file-name&gt;</pre></blockquote>
 <p>
@@ -183,7 +188,9 @@ phone.  It's only necessary for the application to be debuggable (by setting
 <code>android:debuggable="true"</code> in the <code>&lt;application&gt;</code>
 element of the app manifest).  The output file is opened by "am", which
 means you can write the data to a file on <code>/sdcard</code> without
-needing the <code>WRITE_EXTERNAL_STORAGE</code> permission.
+needing the <code>WRITE_EXTERNAL_STORAGE</code> permission in your app.
+<p>
+The <code>runhat</code> shell function has been updated to use this.
 </p>
 
 <h2>Examining the data</h2>
