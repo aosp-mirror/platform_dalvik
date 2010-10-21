@@ -995,13 +995,17 @@ common_resumeAfterGlueCall:
     GOTO_OPCODE(ip)                     @ jump to next instruction
 
 /*
- * Invalid array index.
+ * Invalid array index. Note that our calling convention is strange; we use r1
+ * and r3 because those just happen to be the registers all our callers are
+ * using. We shuffle them here before calling the C function.
+ * r1: index
+ * r3: size
  */
 common_errArrayIndex:
     EXPORT_PC()
-    ldr     r0, strArrayIndexException
-    mov     r1, #0
-    bl      dvmThrowException
+    mov     r0, r1
+    mov     r1, r3
+    bl      dvmThrowAIOOBE
     b       common_exceptionThrown
 
 /*
@@ -1191,8 +1195,6 @@ dvmConfigureFP:
     .align  2
 strArithmeticException:
     .word   .LstrArithmeticException
-strArrayIndexException:
-    .word   .LstrArrayIndexException
 strArrayStoreException:
     .word   .LstrArrayStoreException
 strDivideByZero:
@@ -1233,8 +1235,6 @@ strPrintLong:
     .asciz  "Bad entry point %d\n"
 .LstrArithmeticException:
     .asciz  "Ljava/lang/ArithmeticException;"
-.LstrArrayIndexException:
-    .asciz  "Ljava/lang/ArrayIndexOutOfBoundsException;"
 .LstrArrayStoreException:
     .asciz  "Ljava/lang/ArrayStoreException;"
 .LstrClassCastException:

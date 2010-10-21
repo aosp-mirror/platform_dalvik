@@ -2275,13 +2275,13 @@ dalvik_inst:
     and     r2, r0, #255                @ r2<- BB
     mov     r3, r0, lsr #8              @ r3<- CC
     GET_VREG(rINST, r2)                 @ rINST<- vBB (array object)
-    GET_VREG(r0, r3)                    @ r0<- vCC (requested index)
+    GET_VREG(r1, r3)                    @ r1<- vCC (requested index)
     cmp     rINST, #0                   @ null array object?
     GET_VREG(r9, r9)                    @ r9<- vAA
     beq     common_errNullObject        @ yes, bail
     ldr     r3, [rINST, #offArrayObject_length]   @ r3<- arrayObj->length
-    add     r10, rINST, r0, lsl #2      @ r10<- arrayObj + index*width
-    cmp     r0, r3                      @ compare unsigned index, length
+    add     r10, rINST, r1, lsl #2      @ r10<- arrayObj + index*width
+    cmp     r1, r3                      @ compare unsigned index, length
     bcc     .LOP_APUT_OBJECT_finish          @ we're okay, continue on
     b       common_errArrayIndex        @ index >= length, bail
 
@@ -10324,12 +10324,14 @@ common_resumeAfterGlueCall:
 
 /*
  * Invalid array index.
+ * r0: index
+ * r1: size
  */
 common_errArrayIndex:
     EXPORT_PC()
-    ldr     r0, strArrayIndexException
-    mov     r1, #0
-    bl      dvmThrowException
+    mov     r0, r1
+    mov     r1, r3
+    bl      dvmThrowAIOOBE
     b       common_exceptionThrown
 
 /*
@@ -10519,8 +10521,6 @@ dvmConfigureFP:
     .align  2
 strArithmeticException:
     .word   .LstrArithmeticException
-strArrayIndexException:
-    .word   .LstrArrayIndexException
 strArrayStoreException:
     .word   .LstrArrayStoreException
 strDivideByZero:
@@ -10561,8 +10561,6 @@ strPrintLong:
     .asciz  "Bad entry point %d\n"
 .LstrArithmeticException:
     .asciz  "Ljava/lang/ArithmeticException;"
-.LstrArrayIndexException:
-    .asciz  "Ljava/lang/ArrayIndexOutOfBoundsException;"
 .LstrArrayStoreException:
     .asciz  "Ljava/lang/ArrayStoreException;"
 .LstrClassCastException:
