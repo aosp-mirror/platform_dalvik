@@ -13,8 +13,7 @@ HANDLE_OPCODE(OP_APUT_OBJECT /*vAA, vBB, vCC*/)
         if (!checkForNull((Object*) arrayObj))
             GOTO_exceptionThrown();
         if (GET_REGISTER(vsrc2) >= arrayObj->length) {
-            dvmThrowException("Ljava/lang/ArrayIndexOutOfBoundsException;",
-                NULL);
+            dvmThrowAIOOBE(GET_REGISTER(vsrc2), arrayObj->length);
             GOTO_exceptionThrown();
         }
         obj = (Object*) GET_REGISTER(vdst);
