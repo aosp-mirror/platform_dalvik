@@ -238,7 +238,7 @@ static int processZipFile(int zipFd, int cacheFd, const char* zipName,
         if (matchOffset > 0 && bcp[matchOffset-1] == ':')
             matchOffset--;
         LOGV("DexOptZ: found '%s' in bootclasspath, cutting off at %d\n",
-            inputFileName, matchOffset);
+            zipName, matchOffset);
         bcpCopy = strdup(bcp);
         bcpCopy[matchOffset] = '\0';
 
