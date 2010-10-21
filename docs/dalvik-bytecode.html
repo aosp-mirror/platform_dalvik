@@ -24,8 +24,13 @@
     such as (but not limited to) the program counter and a reference to the
     <code>.dex</code> file that contains the method.
   </li>
-  <li>Registers are 32 bits wide. Adjacent register pairs are used for 64-bit
-    values.
+  <li>When used for bit values (such as integers and floating point
+    numbers), registers are considered 32 bits wide. Adjacent register
+    pairs are used for 64-bit values. There is no alignment requirement
+    for register pairs.
+  </li>
+  <li>When used for object references, registers are considered wide enough
+    to hold exactly one such reference.
   </li>
   <li>In terms of bitwise representation, <code>(Object) null == (int)
     0</code>.
@@ -52,7 +57,11 @@
   reasonably common, many instructions are limited to only addressing
   the first 16
   registers. When reasonably possible, instructions allow references to
-  up to the first 256 registers. In cases where an instruction variant isn't
+  up to the first 256 registers. In addition, some instructions have variants
+  that allow for much larger register counts, including a pair of catch-all
+  <code>move</code> instructions that can address registers in the range
+  <code>v0</code> &ndash; <code>v65535</code>.
+  In cases where an instruction variant isn't
   available to address a desired register, it is expected that the register
   contents get moved from the original register to a low register (before the
   operation) and/or moved from a low result register to a high register
@@ -64,7 +73,7 @@
   encountered during the normal flow of execution. In addition, the
   instructions must be located on even-numbered bytecode offsets (that is,
   4-byte aligned). In order to meet this requirement, dex generation tools
-  should emit an extra <code>nop</code> instruction as a spacer if such an
+  must emit an extra <code>nop</code> instruction as a spacer if such an
   instruction would otherwise be unaligned. Finally, though not required,
   it is expected that most tools will choose to emit these instructions at
   the ends of methods, since otherwise it would likely be the case that
@@ -81,16 +90,18 @@
 <li>Human-syntax and mnemonics:
   <ul>
   <li>Dest-then-source ordering for arguments.</li>
-  <li>Some opcodes have a disambiguating suffix with respect to the type(s)
-    they operate on: Type-general 64-bit opcodes
-    are suffixed with <code>-wide</code>.
-    Type-specific opcodes are suffixed with their type (or a
+  <li>Some opcodes have a disambiguating name suffix to indicate the type(s)
+    they operate on:
+    <ul>
+    <li>Type-general 32-bit opcodes are unmarked.</li>
+    <li>Type-general 64-bit opcodes are suffixed with <code>-wide</code>.</li>
+    <li>Type-specific opcodes are suffixed with their type (or a
     straightforward abbreviation), one of: <code>-boolean</code>
     <code>-byte</code> <code>-char</code> <code>-short</code>
     <code>-int</code> <code>-long</code> <code>-float</code>
     <code>-double</code> <code>-object</code> <code>-string</code>
-    <code>-class</code> <code>-void</code>. Type-general 32-bit opcodes
-    are unmarked.
+    <code>-class</code> <code>-void</code>.</li>
+    </ul>
   </li>
   <li>Some opcodes have a disambiguating suffix to distinguish
     otherwise-identical operations that have different instruction layouts
@@ -98,6 +109,27 @@
     ("<code>/</code>") and mainly exist at all to make there be a one-to-one
     mapping with static constants in the code that generates and interprets
     executables (that is, to reduce ambiguity for humans).
+  </li>
+  <li>In the descriptions here, the width of a value (indicating, e.g., the
+    range of a constant or the number of registers possibly addressed) is
+    emphasized by the use of a character per four bits of width.
+  </li>
+  <li>For example, in the instruction
+    "<code>move-wide/from16 vAA, vBBBB</code>":
+    <ul>
+    <li>"<code>move</code>" is the base opcode, indicating the base operation
+    (move a register's value).</li>
+    <li>"<code>wide</code>" is the name suffix, indicating that it operates
+    on wide (64 bit) data.</li>
+    <li>"<code>from16</code>" is the opcode suffix, indicating a variant
+    that has a 16-bit register reference as a source.</li>
+    <li>"<code>vAA</code>" is the destination register (implied by the
+    operation; again, the rule is that destination arguments always come
+    first), which must be in the range <code>v0</code> &ndash;
+    <code>v255</code>.</li>
+    <li>"<code>vBBBB</code>" is the source register, which must be in the
+    range <code>v0</code> &ndash; <code>v65535</code>.</li>
+    </ul>
   </li>
   </ul>
 </li>
@@ -237,7 +269,7 @@
   <td>0d 11x</td>
   <td>move-exception vAA</td>
   <td><code>A:</code> destination register (8 bits)</td>
-  <td>Save a just-caught exception into the given register. This should
+  <td>Save a just-caught exception into the given register. This must
     be the first instruction of any exception handler whose caught
     exception is not to be ignored, and this instruction must <i>only</i>
     ever occur as the first instruction of an exception handler; anywhere

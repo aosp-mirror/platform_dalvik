@@ -172,9 +172,9 @@ pool index), and "<code>meth</code>" (method pool index).</p>
 
 <p>Similar to the representation of constant pool indices, there are
 also suggested (optional) forms that indicate prelinked offsets or
-indices. These prelinked values include "<code>vtaboff</code>"
-(vtable offset), "<code>fieldoff</code>" (field offset), and
-"<code>iface</code>" (interface pool index).</p>
+indices. There are two types of suggested prelinked value: vtable offsets
+(indicated as "<code>vtaboff</code>") and field offsets (indicated as
+"<code>fieldoff</code>").</p>
 
 <p>In the cases where a format value isn't explictly part of the syntax
 but instead picks a variant, each variant is listed with the prefix
@@ -293,8 +293,8 @@ the correspondence.</p>
 <tr>
   <td>22cs</td>
   <td><i><code>op</code></i> vA, vB, fieldoff@CCCC</td>
-  <td><i>(suggested format for statically linked field access instructions of
-    format 22c)</i>
+  <td><i>suggested format for statically linked field access instructions of
+    format 22c</i>
   </td>
 </tr>
 <tr>
@@ -360,8 +360,8 @@ the correspondence.</p>
     <i>[<code>B=1</code>] <code>op</code></i> {vD},
     vtaboff@CCCC<br/>
   </td>
-  <td><i>(suggested format for statically linked <code>invoke-virtual</code>
-    and <code>invoke-super</code> instructions of format 35c)</i>
+  <td><i>suggested format for statically linked <code>invoke-virtual</code>
+    and <code>invoke-super</code> instructions of format 35c</i>
   </td>
 </tr>
 <tr>
@@ -369,9 +369,9 @@ the correspondence.</p>
   <td>3rc</td>
   <td><i><code>op</code></i> {vCCCC .. vNNNN}, meth@BBBB<br/>
     <i><code>op</code></i> {vCCCC .. vNNNN}, type@BBBB<br/>
-    <p><i>(where <code>NNNN = CCCC+AA-1</code>, that is <code>A</code>
+    <p><i>where <code>NNNN = CCCC+AA-1</code>, that is <code>A</code>
     determines the count <code>0..255</code>, and <code>C</code>
-    determines the first register)</i></p>
+    determines the first register</i></p>
   </td>
   <td>&nbsp;</td>
 </tr>
@@ -379,12 +379,12 @@ the correspondence.</p>
   <td>AA|<i>op</i> BBBB CCCC</td>
   <td>3rms</td>
   <td><i><code>op</code></i> {vCCCC .. vNNNN}, vtaboff@BBBB<br/>
-    <p><i>(where <code>NNNN = CCCC+AA-1</code>, that is <code>A</code>
+    <p><i>where <code>NNNN = CCCC+AA-1</code>, that is <code>A</code>
     determines the count <code>0..255</code>, and <code>C</code>
-    determines the first register)</i></p>
+    determines the first register</i></p>
   </td>
-  <td><i>(suggested format for statically linked <code>invoke-virtual</code>
-    and <code>invoke-super</code> instructions of format <code>3rc</code>)</i>
+  <td><i>suggested format for statically linked <code>invoke-virtual</code>
+    and <code>invoke-super</code> instructions of format <code>3rc</code></i>
   </td>
 </tr>
 <tr>
@@ -425,9 +425,9 @@ the correspondence.</p>
   <td>5rc</td>
   <td><i><code>exop</code></i> {vBBBB .. vNNNN}, meth@AAAAAAAA<br/>
     <i><code>exop</code></i> {vBBBB .. vNNNN}, type@AAAAAAAA<br/>
-    <p><i>(where <code>NNNN = BBBB+CCCC-1</code>, that is
+    <p><i>where <code>NNNN = BBBB+CCCC-1</code>, that is
     <code>B</code> determines the first register and <code>C</code>
-    determines the count <code>0..65535</code>)</i></p>
+    determines the count <code>0..65535</code></i></p>
   </td>
   <td>&nbsp;</td>
 </tr>
