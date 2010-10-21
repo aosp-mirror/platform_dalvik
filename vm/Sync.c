@@ -1249,8 +1249,7 @@ void dvmObjectWait(Thread* self, Object *obj, s8 msec, s4 nsec,
          * any other thread gets a chance.
          */
         inflateMonitor(self, obj);
-        LOG_THIN("(%d) lock %p fattened by wait() to count %d",
-                 self->threadId, &obj->lock, mon->lockCount);
+        LOG_THIN("(%d) lock %p fattened by wait()", self->threadId, &obj->lock);
     }
     mon = LW_MONITOR(obj->lock);
     waitMonitor(self, mon, msec, nsec, interruptShouldThrow);
