@@ -989,10 +989,7 @@ GOTO_TARGET_DECL(exceptionThrown);
         if (!checkForNull((Object*) arrayObj))                              \
             GOTO_exceptionThrown();                                         \
         if (GET_REGISTER(vsrc2) >= arrayObj->length) {                      \
-            LOGV("Invalid array access: %p %d (len=%d)\n",                  \
-                arrayObj, vsrc2, arrayObj->length);                         \
-            dvmThrowException("Ljava/lang/ArrayIndexOutOfBoundsException;", \
-                NULL);                                                      \
+            dvmThrowAIOOBE(GET_REGISTER(vsrc2), arrayObj->length);          \
             GOTO_exceptionThrown();                                         \
         }                                                                   \
         SET_REGISTER##_regsize(vdst,                                        \
@@ -1016,8 +1013,7 @@ GOTO_TARGET_DECL(exceptionThrown);
         if (!checkForNull((Object*) arrayObj))                              \
             GOTO_exceptionThrown();                                         \
         if (GET_REGISTER(vsrc2) >= arrayObj->length) {                      \
-            dvmThrowException("Ljava/lang/ArrayIndexOutOfBoundsException;", \
-                NULL);                                                      \
+            dvmThrowAIOOBE(GET_REGISTER(vsrc2), arrayObj->length);          \
             GOTO_exceptionThrown();                                         \
         }                                                                   \
         ILOGV("+ APUT[%d]=0x%08x", GET_REGISTER(vsrc2), GET_REGISTER(vdst));\
@@ -2436,8 +2432,7 @@ HANDLE_OPCODE(OP_APUT_OBJECT /*vAA, vBB, vCC*/)
         if (!checkForNull((Object*) arrayObj))
             GOTO_exceptionThrown();
         if (GET_REGISTER(vsrc2) >= arrayObj->length) {
-            dvmThrowException("Ljava/lang/ArrayIndexOutOfBoundsException;",
-                NULL);
+            dvmThrowAIOOBE(GET_REGISTER(vsrc2), arrayObj->length);
             GOTO_exceptionThrown();
         }
         obj = (Object*) GET_REGISTER(vdst);

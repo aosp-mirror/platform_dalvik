@@ -3113,6 +3113,17 @@ bail:
     return newArray;
 }
 
+static bool checkArrayElementBounds(ArrayObject* arrayObj, jsize index) {
+    assert(arrayObj != NULL);
+    if (index < 0 || index >= (int) arrayObj->length) {
+        dvmThrowExceptionFmt("Ljava/lang/ArrayIndexOutOfBoundsException;",
+            "%s index=%d length=%d", arrayObj->obj.clazz->descriptor, index,
+            arrayObj->length);
+        return false;
+    }
+    return true;
+}
+
 /*
  * Get one element of an Object array.
  *
@@ -3125,13 +3136,7 @@ static jobject GetObjectArrayElement(JNIEnv* env, jobjectArray jarr,
 
     ArrayObject* arrayObj = (ArrayObject*) dvmDecodeIndirectRef(env, jarr);
     jobject retval = NULL;
-
-    assert(arrayObj != NULL);
-
-    /* check the array bounds */
-    if (index < 0 || index >= (int) arrayObj->length) {
-        dvmThrowException("Ljava/lang/ArrayIndexOutOfBoundsException;",
-            arrayObj->obj.clazz->descriptor);
+    if (!checkArrayElementBounds(arrayObj, index)) {
         goto bail;
     }
 
@@ -3152,13 +3157,7 @@ static void SetObjectArrayElement(JNIEnv* env, jobjectArray jarr,
     JNI_ENTER();
 
     ArrayObject* arrayObj = (ArrayObject*) dvmDecodeIndirectRef(env, jarr);
-
-    assert(arrayObj != NULL);
-
-    /* check the array bounds */
-    if (index < 0 || index >= (int) arrayObj->length) {
-        dvmThrowException("Ljava/lang/ArrayIndexOutOfBoundsException;",
-            arrayObj->obj.clazz->descriptor);
+    if (!checkArrayElementBounds(arrayObj, index)) {
         goto bail;
     }
 
@@ -3244,6 +3243,15 @@ NEW_PRIMITIVE_ARRAY(jdoubleArray, Double, 'D');
         JNI_EXIT();                                                         \
     }
 
+static void throwArrayRegionOutOfBounds(ArrayObject* arrayObj, jsize start,
+    jsize len, const char* arrayIdentifier)
+{
+    dvmThrowExceptionFmt("Ljava/lang/ArrayIndexOutOfBoundsException;",
+        "%s offset=%d length=%d %s.length=%d",
+        arrayObj->obj.clazz->descriptor, start, len, arrayIdentifier,
+        arrayObj->length);
+}
+
 /*
  * Copy a section of a primitive array to a buffer.
  */
@@ -3256,8 +3264,7 @@ NEW_PRIMITIVE_ARRAY(jdoubleArray, Double, 'D');
             (ArrayObject*) dvmDecodeIndirectRef(env, jarr);                 \
         _ctype* data = (_ctype*) arrayObj->contents;                        \
         if (start < 0 || len < 0 || start + len > (int) arrayObj->length) { \
-            dvmThrowException("Ljava/lang/ArrayIndexOutOfBoundsException;", \
-                arrayObj->obj.clazz->descriptor);                           \
+            throwArrayRegionOutOfBounds(arrayObj, start, len, "src");       \
         } else {                                                            \
             memcpy(buf, data + start, len * sizeof(_ctype));                \
         }                                                                   \
@@ -3276,8 +3283,7 @@ NEW_PRIMITIVE_ARRAY(jdoubleArray, Double, 'D');
             (ArrayObject*) dvmDecodeIndirectRef(env, jarr);                 \
         _ctype* data = (_ctype*) arrayObj->contents;                        \
         if (start < 0 || len < 0 || start + len > (int) arrayObj->length) { \
-            dvmThrowException("Ljava/lang/ArrayIndexOutOfBoundsException;", \
-                arrayObj->obj.clazz->descriptor);                           \
+            throwArrayRegionOutOfBounds(arrayObj, start, len, "dst");       \
         } else {                                                            \
             memcpy(data + start, buf, len * sizeof(_ctype));                \
         }                                                                   \

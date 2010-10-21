@@ -263,7 +263,7 @@ unspecified registers or condition codes.
  */
 .macro  SMP_DMB_ST
 #if ANDROID_SMP != 0
-    dmb                                 @ TODO: want "dmb st" here
+    dmb     st
 #else
     /* not SMP */
 #endif
