@@ -29,7 +29,14 @@
     cmp     r3, r8          @ predicted class == actual class?
 #if defined(WITH_JIT_TUNING)
     ldr     r7, .LdvmICHitCount
+#if defined(WORKAROUND_CORTEX_A9_745320)
+    /* Don't use conditional loads if the HW defect exists */
+    bne     101f
+    ldr     r10, [r7, #0]
+101:
+#else
     ldreq   r10, [r7, #0]
+#endif
     add     r10, r10, #1
     streq   r10, [r7, #0]
 #endif
