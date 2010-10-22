@@ -637,7 +637,7 @@ struct DvmGlobals {
      * Dalvik instruction counts (256 entries).
      */
     int*        executedInstrCounts;
-    bool        instructionCountEnableCount;
+    int         instructionCountEnableCount;
 
     /*
      * Signal catcher thread (for SIGQUIT).
