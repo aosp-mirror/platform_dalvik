@@ -13,7 +13,14 @@
      *    rFP - Dalvik frame pointer
      */
     cmp     lr, #0
+#if defined(WORKAROUND_CORTEX_A9_745320)
+    /* Don't use conditional loads if the HW defect exists */
+    beq     101f
+    ldr     r1,[lr, #3]
+101:
+#else
     ldrne   r1,[lr, #3]
+#endif
     ldr     r2, .LinterpPunt
     mov     r0, r1                       @ set Dalvik PC
     bx      r2

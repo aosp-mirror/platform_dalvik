@@ -10263,7 +10263,14 @@ common_periodicChecks:
     ldr     ip, [r3]                    @ ip<- suspendCount (int)
 
     cmp     r1, #0                      @ debugger enabled?
+#if defined(WORKAROUND_CORTEX_A9_745320)
+    /* Don't use conditional loads if the HW defect exists */
+    beq     101f
+    ldrb    r1, [r1]                    @ yes, r1<- debuggerActive (boolean)
+101:
+#else
     ldrneb  r1, [r1]                    @ yes, r1<- debuggerActive (boolean)
+#endif
     ldr     r2, [r2]                    @ r2<- activeProfilers (int)
     orrnes  ip, ip, r1                  @ ip<- suspendCount | debuggerActive
     /*
@@ -10318,7 +10325,14 @@ common_periodicChecks:
      */
     ldr     r1, [rGLUE, #offGlue_pDebuggerActive]   @ r1<- &debuggerActive
     cmp     r1, #0                      @ debugger enabled?
+#if defined(WORKAROUND_CORTEX_A9_745320)
+    /* Don't use conditional loads if the HW defect exists */
+    beq     101f
+    ldrb    r1, [r1]                    @ yes, r1<- debuggerActive (boolean)
+101:
+#else
     ldrneb  r1, [r1]                    @ yes, r1<- debuggerActive (boolean)
+#endif
 
 #if !defined(WITH_INLINE_PROFILING)
     ldr     r2, [rGLUE, #offGlue_pActiveProfilers]  @ r2<- &activeProfilers
@@ -10630,7 +10644,14 @@ common_returnFromMethod:
                                         @ r2<- method we're returning to
     ldr     r3, [rGLUE, #offGlue_self]  @ r3<- glue->self
     cmp     r2, #0                      @ is this a break frame?
+#if defined(WORKAROUND_CORTEX_A9_745320)
+    /* Don't use conditional loads if the HW defect exists */
+    beq     101f
+    ldr     r10, [r2, #offMethod_clazz] @ r10<- method->clazz
+101:
+#else
     ldrne   r10, [r2, #offMethod_clazz] @ r10<- method->clazz
+#endif
     mov     r1, #0                      @ "want switch" = false
     beq     common_gotoBail             @ break frame, bail out completely
 

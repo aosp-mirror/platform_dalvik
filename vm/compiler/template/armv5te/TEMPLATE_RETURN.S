@@ -33,7 +33,7 @@
 #endif
     ldr     r1, .LdvmJitToInterpNoChainNoProfile @ defined in footer.S
     mov     rFP, r10                    @ publish new FP
-    ldrne   r10, [r2, #offMethod_clazz] @ r10<- method->clazz
+    ldr     r10, [r2, #offMethod_clazz] @ r10<- method->clazz
     ldr     r8, [r8]                    @ r8<- suspendCount
 
     str     r2, [rGLUE, #offGlue_method]@ glue->method = newSave->method
