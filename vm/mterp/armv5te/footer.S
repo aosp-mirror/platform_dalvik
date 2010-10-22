@@ -720,9 +720,8 @@ dalvik_mterp:
     stmfd   sp!, {r2,r6}
 #endif
 
-    @mov     lr, pc                      @ set return addr
-    @ldr     pc, [r2, #offMethod_nativeFunc] @ pc<- methodToCall->nativeFunc
-    LDR_PC_LR "[r2, #offMethod_nativeFunc]"
+    mov     lr, pc                      @ set return addr
+    ldr     pc, [r2, #offMethod_nativeFunc] @ pc<- methodToCall->nativeFunc
 
 #if defined(WITH_INLINE_PROFILING)
     @ r0=JNIMethod, r1=rGLUE

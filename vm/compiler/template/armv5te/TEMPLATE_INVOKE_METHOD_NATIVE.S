@@ -46,7 +46,8 @@
     mov     r0, r2
     mov     r1, r6
     @ r0=JNIMethod, r1=rGlue
-    LDR_PC_LR ".LdvmFastMethodTraceEnter"
+    mov     lr, pc
+    ldr     pc, .LdvmFastMethodTraceEnter
     ldmfd   sp!, {r0-r3}                @ restore r0-r3
 #endif
 
@@ -55,7 +56,8 @@
 #if defined(WITH_INLINE_PROFILING)
     ldmfd   sp!, {r0-r1}                @ restore r2 and r6
     @ r0=JNIMethod, r1=rGlue
-    LDR_PC_LR ".LdvmFastNativeMethodTraceExit"
+    mov     lr, pc
+    ldr     pc, .LdvmFastNativeMethodTraceExit
 #endif
     @ native return; r9=self, r10=newSaveArea
     @ equivalent to dvmPopJniLocals

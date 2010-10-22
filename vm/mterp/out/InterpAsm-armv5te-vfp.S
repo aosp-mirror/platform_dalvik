@@ -214,36 +214,6 @@ unspecified registers or condition codes.
  */
 
 /*
- * Macro for "LDR PC,xxx", which is not allowed pre-ARMv5.  Essentially a
- * one-way branch.
- *
- * May modify IP.  Does not modify LR.
- */
-.macro  LDR_PC source
-    ldr     pc, \source
-.endm
-
-/*
- * Macro for "MOV LR,PC / LDR PC,xxx", which is not allowed pre-ARMv5.
- * Jump to subroutine.
- *
- * May modify IP and LR.
- */
-.macro  LDR_PC_LR source
-    mov     lr, pc
-    ldr     pc, \source
-.endm
-
-/*
- * Macro for "LDMFD SP!, {...regs...,PC}".
- *
- * May modify IP and LR.
- */
-.macro  LDMFD_PC regs
-    ldmfd   sp!, {\regs,pc}
-.endm
-
-/*
  * Macro for data memory barrier; not meaningful pre-ARMv6K.
  */
 .macro  SMP_DMB
@@ -411,7 +381,7 @@ dvmMterpStdBail:
     ldr     sp, [r0, #offGlue_bailPtr]      @ sp<- saved SP
     mov     r0, r1                          @ return the changeInterp value
     add     sp, sp, #4                      @ un-align 64
-    LDMFD_PC "r4-r10,fp"                    @ restore 9 regs and return
+    ldmfd   sp!, {r4-r10,fp,pc}             @ restore 9 regs and return
 
 
 /*
@@ -2261,9 +2231,6 @@ dalvik_inst:
 /* File: armv5te/OP_APUT_OBJECT.S */
     /*
      * Store an object into an array.  vBB[vCC] <- vAA.
-     *
-     * Note: using the usual FETCH/and/shift stuff, this fits in exactly 17
-     * instructions.  We use a pair of FETCH_Bs instead.
      */
     /* op vAA, vBB, vCC */
     FETCH(r0, 1)                        @ r0<- CCBB
@@ -9295,7 +9262,7 @@ d2l_doconv:
     ldr     r0, [rFP, ip, lsl #2]       @ r0<- vC
 0:
     ldr     r9, .LOP_EXECUTE_INLINE_table       @ table of InlineOperation
-    LDR_PC  "[r9, r10, lsl #4]"         @ sizeof=16, "func" is first entry
+    ldr     pc, [r9, r10, lsl #4]       @ sizeof=16, "func" is first entry
     @ (not reached)
 
 .LOP_EXECUTE_INLINE_table:
@@ -9324,7 +9291,7 @@ d2l_doconv:
     GET_VREG(r0, ip)                    @ r0<- vBase[0]
 0:
     ldr     r9, .LOP_EXECUTE_INLINE_RANGE_table       @ table of InlineOperation
-    LDR_PC  "[r9, r10, lsl #4]"         @ sizeof=16, "func" is first entry
+    ldr     pc, [r9, r10, lsl #4]       @ sizeof=16, "func" is first entry
     @ (not reached)
 
 .LOP_EXECUTE_INLINE_RANGE_table:
@@ -10110,9 +10077,8 @@ dalvik_mterp:
     stmfd   sp!, {r2,r6}
 #endif
 
-    @mov     lr, pc                      @ set return addr
-    @ldr     pc, [r2, #offMethod_nativeFunc] @ pc<- methodToCall->nativeFunc
-    LDR_PC_LR "[r2, #offMethod_nativeFunc]"
+    mov     lr, pc                      @ set return addr
+    ldr     pc, [r2, #offMethod_nativeFunc] @ pc<- methodToCall->nativeFunc
 
 #if defined(WITH_INLINE_PROFILING)
     @ r0=JNIMethod, r1=rGLUE
@@ -10385,9 +10351,11 @@ common_resumeAfterGlueCall:
     GOTO_OPCODE(ip)                     @ jump to next instruction
 
 /*
- * Invalid array index.
- * r0: index
- * r1: size
+ * Invalid array index. Note that our calling convention is strange; we use r1
+ * and r3 because those just happen to be the registers all our callers are
+ * using. We shuffle them here before calling the C function.
+ * r1: index
+ * r3: size
  */
 common_errArrayIndex:
     EXPORT_PC()

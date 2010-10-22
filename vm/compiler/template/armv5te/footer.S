@@ -28,15 +28,18 @@
     stmfd   sp!, {r0-r3}
     mov     r0, r2
     mov     r1, r6
-    LDR_PC_LR ".LdvmFastMethodTraceEnter"
+    mov     lr, pc
+    ldr     pc, .LdvmFastMethodTraceEnter
     ldmfd   sp!, {r0-r3}
 #endif
 
-    LDR_PC_LR "[r2, #offMethod_nativeFunc]"
+    mov     lr, pc
+    ldr     pc, [r2, #offMethod_nativeFunc]
 
 #if defined(WITH_INLINE_PROFILING)
     ldmfd   sp!, {r0-r1}
-    LDR_PC_LR ".LdvmFastNativeMethodTraceExit"
+    mov     lr, pc
+    ldr     pc, .LdvmFastNativeMethodTraceExit
 #endif
     @ Refresh Jit's on/off status
     ldr     r3, [rGLUE, #offGlue_ppJitProfTable]
