@@ -1554,11 +1554,10 @@ static bool dvmInitJDWP(void)
  * of initialization and then returns with "initializing" still set.  (Used
  * by DexOpt command-line utility.)
  *
- * Attempting to use JNI or internal natives will fail.  It's best if
- * no bytecode gets executed, which means no <clinit>, which means no
- * exception-throwing.  We check the "initializing" flag anyway when
- * throwing an exception, so we can insert some code that avoids chucking
- * an exception when we're optimizing stuff.
+ * Attempting to use JNI or internal natives will fail.  It's best
+ * if no bytecode gets executed, which means no <clinit>, which means
+ * no exception-throwing.  (In practice we need to initialize Class and
+ * Object, and probably some exception classes.)
  *
  * Returns 0 on success.
  */

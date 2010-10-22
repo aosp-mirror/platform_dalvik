@@ -4308,8 +4308,17 @@ noverify:
      * We need to ensure that certain instructions, notably accesses to
      * volatile fields, are replaced before any code is executed.  This
      * must happen even if DEX optimizations are disabled.
+     *
+     * The only exception to this rule is that we don't want to do this
+     * during dexopt.  We don't generally initialize classes at all
+     * during dexopt, but because we're loading classes we need Class and
+     * Object (and possibly some Throwable stuff if a class isn't found).
+     * If optimizations are disabled, we don't want to output optimized
+     * instructions at this time.  This means we will be executing <clinit>
+     * code with un-fixed volatiles, but we're only doing it for a few
+     * system classes, and dexopt runs single-threaded.
      */
-    if (!IS_CLASS_FLAG_SET(clazz, CLASS_ISOPTIMIZED)) {
+    if (!IS_CLASS_FLAG_SET(clazz, CLASS_ISOPTIMIZED) && !gDvm.optimizing) {
         LOGV("+++ late optimize on %s (pv=%d)\n",
             clazz->descriptor, IS_CLASS_FLAG_SET(clazz, CLASS_ISPREVERIFIED));
         dvmOptimizeClass(clazz, true);
