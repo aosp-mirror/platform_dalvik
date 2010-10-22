@@ -292,7 +292,10 @@ public final class Type implements TypeBearer, Comparable<Type> {
      * invalid syntax
      */
     public static Type intern(String descriptor) {
-        Type result = internTable.get(descriptor);
+        Type result;
+        synchronized (internTable) {
+            result = internTable.get(descriptor);
+        }
         if (result != null) {
             return result;
         }

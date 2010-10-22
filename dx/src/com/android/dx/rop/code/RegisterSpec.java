@@ -60,16 +60,18 @@ public final class RegisterSpec
      */
     private static RegisterSpec intern(int reg, TypeBearer type,
             LocalItem local) {
-        theInterningItem.set(reg, type, local);
-        RegisterSpec found = theInterns.get(theInterningItem);
+        synchronized (theInterns) {
+            theInterningItem.set(reg, type, local);
+            RegisterSpec found = theInterns.get(theInterningItem);
 
-        if (found != null) {
+            if (found != null) {
+                return found;
+            }
+
+            found = theInterningItem.toRegisterSpec();
+            theInterns.put(found, found);
             return found;
         }
-
-        found = theInterningItem.toRegisterSpec();
-        theInterns.put(found, found);
-        return found;
     }
 
     /**
