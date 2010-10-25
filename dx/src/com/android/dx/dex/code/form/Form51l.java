@@ -92,11 +92,6 @@ public final class Form51l extends InsnFormat {
         long value =
             ((CstLiteral64) ((CstInsn) insn).getConstant()).getLongBits();
 
-        write(out,
-              opcodeUnit(insn, regs.get(0).getReg()),
-              (short) value,
-              (short) (value >> 16),
-              (short) (value >> 32),
-              (short) (value >> 48));
+        write(out, opcodeUnit(insn, regs.get(0).getReg()), value);
     }
 }

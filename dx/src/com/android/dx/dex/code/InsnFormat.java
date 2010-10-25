@@ -28,7 +28,7 @@ import com.android.dx.util.Hex;
 /**
  * Base class for all instruction format handlers. Instruction format
  * handlers know how to translate {@link DalvInsn} instances into
- * streams of code words, as well as human-oriented listing strings
+ * streams of code units, as well as human-oriented listing strings
  * representing such translations.
  */
 public abstract class InsnFormat {
@@ -243,7 +243,8 @@ public abstract class InsnFormat {
      * Helper method to return a branch address string.
      *
      * @param insn {@code non-null;} the instruction in question
-     * @return {@code non-null;} the string form of the instruction's branch target
+     * @return {@code non-null;} the string form of the instruction's
+     * branch target
      */
     protected static String branchString(DalvInsn insn) {
         TargetInsn ti = (TargetInsn) insn;
@@ -266,10 +267,12 @@ public abstract class InsnFormat {
     }
 
     /**
-     * Helper method to return a constant string.
+     * Helper method to return the constant string for a {@link CstInsn}
+     * in human form.
      *
      * @param insn {@code non-null;} a constant-bearing instruction
-     * @return {@code non-null;} the string form of the contained constant
+     * @return {@code non-null;} the human string form of the contained
+     * constant
      */
     protected static String cstString(DalvInsn insn) {
         CstInsn ci = (CstInsn) insn;
@@ -367,16 +370,6 @@ public abstract class InsnFormat {
     }
 
     /**
-     * Helper method to determine if a signed int value fits in three bytes.
-     *
-     * @param value the value in question
-     * @return {@code true} iff it's in the range -0x800000..+0x7fffff
-     */
-    protected static boolean signedFitsIn3Bytes(int value) {
-        return value == ((value << 8) >> 8);
-    }
-
-    /**
      * Helper method to extract the callout-argument index from an
      * appropriate instruction.
      *
@@ -413,6 +406,25 @@ public abstract class InsnFormat {
         }
 
         return (short) (opcode | (arg << 8));
+    }
+
+    /**
+     * Helper method to get an extended (16-bit) opcode out of an
+     * instruction, returning it as a code unit. The opcode
+     * <i>must</i> be an extended opcode.
+     *
+     * @param insn {@code non-null;} the instruction containing the
+     * extended opcode
+     * @return the opcode as a code unit
+     */
+    protected static short opcodeUnit(DalvInsn insn) {
+        int opcode = insn.getOpcode().getOpcode();
+
+        if ((opcode < 0x100) || (opcode > 0xffff)) {
+            throw new IllegalArgumentException("opcode out of range 0..65535");
+        }
+
+        return (short) opcode;
     }
 
     /**
@@ -513,7 +525,7 @@ public abstract class InsnFormat {
      * @param c2 code unit to write
      */
     protected static void write(AnnotatedOutput out, short c0, short c1,
-                                short c2) {
+            short c2) {
         out.writeShort(c0);
         out.writeShort(c1);
         out.writeShort(c2);
@@ -529,7 +541,7 @@ public abstract class InsnFormat {
      * @param c3 code unit to write
      */
     protected static void write(AnnotatedOutput out, short c0, short c1,
-                                short c2, short c3) {
+            short c2, short c3) {
         out.writeShort(c0);
         out.writeShort(c1);
         out.writeShort(c2);
@@ -547,7 +559,7 @@ public abstract class InsnFormat {
      * @param c4 code unit to write
      */
     protected static void write(AnnotatedOutput out, short c0, short c1,
-                                short c2, short c3, short c4) {
+            short c2, short c3, short c4) {
         out.writeShort(c0);
         out.writeShort(c1);
         out.writeShort(c2);
@@ -556,23 +568,60 @@ public abstract class InsnFormat {
     }
 
     /**
-     * Writes six code units to the given output destination.
+     * Writes three code units to the given output destination, where the
+     * second and third are represented as single <code>int</code> and emitted
+     * in little-endian order.
      *
      * @param out {@code non-null;} where to write to
      * @param c0 code unit to write
-     * @param c1 code unit to write
-     * @param c2 code unit to write
+     * @param c1c2 code unit pair to write
+     */
+    protected static void write(AnnotatedOutput out, short c0, int c1c2) {
+        write(out, c0, (short) c1c2, (short) (c1c2 >> 16));
+    }
+
+    /**
+     * Writes four code units to the given output destination, where the
+     * second and third are represented as single <code>int</code> and emitted
+     * in little-endian order.
+     *
+     * @param out {@code non-null;} where to write to
+     * @param c0 code unit to write
+     * @param c1c2 code unit pair to write
+     * @param c3 code unit to write
+     */
+    protected static void write(AnnotatedOutput out, short c0, int c1c2,
+            short c3) {
+        write(out, c0, (short) c1c2, (short) (c1c2 >> 16), c3);
+    }
+
+    /**
+     * Writes five code units to the given output destination, where the
+     * second and third are represented as single <code>int</code> and emitted
+     * in little-endian order.
+     *
+     * @param out {@code non-null;} where to write to
+     * @param c0 code unit to write
+     * @param c1c2 code unit pair to write
      * @param c3 code unit to write
      * @param c4 code unit to write
-     * @param c5 code unit to write
      */
-    protected static void write(AnnotatedOutput out, short c0, short c1,
-                                short c2, short c3, short c4, short c5) {
-        out.writeShort(c0);
-        out.writeShort(c1);
-        out.writeShort(c2);
-        out.writeShort(c3);
-        out.writeShort(c4);
-        out.writeShort(c5);
+    protected static void write(AnnotatedOutput out, short c0, int c1c2,
+            short c3, short c4) {
+        write(out, c0, (short) c1c2, (short) (c1c2 >> 16), c3, c4);
+    }
+
+    /**
+     * Writes five code units to the given output destination, where the
+     * second through fifth are represented as single <code>long</code>
+     * and emitted in little-endian order.
+     *
+     * @param out {@code non-null;} where to write to
+     * @param c0 code unit to write
+     * @param c1c2c3c4 code unit quad to write
+     */
+    protected static void write(AnnotatedOutput out, short c0, long c1c2c3c4) {
+        write(out, c0, (short) c1c2c3c4, (short) (c1c2c3c4 >> 16),
+                (short) (c1c2c3c4 >> 32), (short) (c1c2c3c4 >> 48));
     }
 }
