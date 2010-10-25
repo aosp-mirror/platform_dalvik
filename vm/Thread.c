@@ -504,6 +504,17 @@ void dvmLockThreadList(Thread* self)
 }
 
 /*
+ * Try to lock the thread list.
+ *
+ * Returns "true" if we locked it.  This is a "fast" mutex, so if the
+ * current thread holds the lock this will fail.
+ */
+bool dvmTryLockThreadList(void)
+{
+    return (dvmTryLockMutex(&gDvm.threadListLock) == 0);
+}
+
+/*
  * Release the thread list global lock.
  */
 void dvmUnlockThreadList(void)
