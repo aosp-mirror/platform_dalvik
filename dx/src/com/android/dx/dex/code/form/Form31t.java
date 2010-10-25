@@ -89,8 +89,6 @@ public final class Form31t extends InsnFormat {
         RegisterSpecList regs = insn.getRegisters();
         int offset = ((TargetInsn) insn).getTargetOffset();
 
-        write(out, opcodeUnit(insn, regs.get(0).getReg()),
-                (short) offset,
-                (short) (offset >> 16));
+        write(out, opcodeUnit(insn, regs.get(0).getReg()), offset);
     }
 }

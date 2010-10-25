@@ -121,9 +121,6 @@ public final class Form31c extends InsnFormat {
         RegisterSpecList regs = insn.getRegisters();
         int cpi = ((CstInsn) insn).getIndex();
 
-        write(out,
-                opcodeUnit(insn, regs.get(0).getReg()),
-                (short) cpi,
-                (short) (cpi >> 16));
+        write(out, opcodeUnit(insn, regs.get(0).getReg()), cpi);
     }
 }
