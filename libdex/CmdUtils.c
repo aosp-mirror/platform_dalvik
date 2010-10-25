@@ -128,11 +128,21 @@ UnzipToFileResult dexOpenAndMap(const char* fileName, const char* tempFileName,
              * Try .zip/.jar/.apk, all of which are Zip archives with
              * "classes.dex" inside.  We need to extract the compressed
              * data to a temp file, the location of which varies.
+             *
+             * On the device we must use /sdcard because most other
+             * directories aren't writable (either because of permissions
+             * or because the volume is mounted read-only).  On desktop
+             * it's nice to use the designated temp directory.
              */
-            if (access("/tmp", W_OK) == 0)
+            if (access("/tmp", W_OK) == 0) {
                 sprintf(tempNameBuf, "/tmp/dex-temp-%d", getpid());
-            else
+            } else if (access("/sdcard", W_OK) == 0) {
                 sprintf(tempNameBuf, "/sdcard/dex-temp-%d", getpid());
+            } else {
+                fprintf(stderr,
+                    "NOTE: /tmp and /sdcard unavailable for temp files\n");
+                sprintf(tempNameBuf, "dex-temp-%d", getpid());
+            }
 
             tempFileName = tempNameBuf;
         }
@@ -205,6 +215,7 @@ bail:
     if (fd >= 0)
         close(fd);
     if (removeTemp) {
+        /* this will fail if the OS doesn't allow removal of a mapped file */
         if (unlink(tempFileName) != 0) {
             fprintf(stderr, "WARNING: unable to remove temp '%s'\n",
                 tempFileName);
