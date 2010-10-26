@@ -435,11 +435,12 @@ static void genHoistedChecks(CompilationUnit *cUnit)
                 boundCheckMIR->dalvikInsn.vA = loopAnalysis->endConditionReg;
                 boundCheckMIR->dalvikInsn.vB = globalMinC;
                 /*
-                 * If the end condition is ">", add 1 back to the constant field
-                 * to reflect the fact that the smallest index value is
-                 * "endValue + constant + 1".
+                 * If the end condition is ">" in the source, the check in the
+                 * Dalvik bytecode is OP_IF_LE. In this case add 1 back to the
+                 * constant field to reflect the fact that the smallest index
+                 * value is "endValue + constant + 1".
                  */
-                if (loopAnalysis->loopBranchOpcode == OP_IF_LT) {
+                if (loopAnalysis->loopBranchOpcode == OP_IF_LE) {
                     boundCheckMIR->dalvikInsn.vB++;
                 }
                 dvmCompilerAppendMIR(entry, boundCheckMIR);
