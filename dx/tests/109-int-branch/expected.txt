@@ -36,7 +36,7 @@ regs: 0005; ins: 0001; outs: 0000
   0002: move-object v1, v2
   0003: move-object v2, v1
   0004: const/4 v3, #int 0 // #0
-  0005: aget-object v2, v2, v3
+  0005: aget v2, v2, v3
   0007: move v3, v0
   0008: if-ge v2, v3, 000b // +0003
   000a: nop
