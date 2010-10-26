@@ -2262,6 +2262,12 @@ static ClassObject* digForSuperclass(ClassObject* c1, ClassObject* c2)
  * If the dimensions don't match, we want to convert to an array of Object
  * with the least dimension, e.g. String[][] + String[][][][] = Object[][].
  *
+ * Arrays of primitive types effectively have one less dimension when
+ * merging.  int[] + float[] = Object, int[] + String[] = Object,
+ * int[][] + float[][] = Object[], int[][] + String[] = Object[].  (The
+ * only time this function doesn't return an array class is when one of
+ * the arguments is a 1-dimensional primitive array.)
+ *
  * This gets a little awkward because we may have to ask the VM to create
  * a new array type with the appropriate element and dimensions.  However, we
  * shouldn't be doing this often.
@@ -2270,28 +2276,56 @@ static ClassObject* findCommonArraySuperclass(ClassObject* c1, ClassObject* c2)
 {
     ClassObject* arrayClass = NULL;
     ClassObject* commonElem;
+    int arrayDim1, arrayDim2;
     int i, numDims;
+    bool hasPrimitive = false;
 
+    arrayDim1 = c1->arrayDim;
+    arrayDim2 = c2->arrayDim;
     assert(c1->arrayDim > 0);
     assert(c2->arrayDim > 0);
 
-    if (c1->arrayDim == c2->arrayDim) {
-        //commonElem = digForSuperclass(c1->elementClass, c2->elementClass);
-        commonElem = findCommonSuperclass(c1->elementClass, c2->elementClass);
-        numDims = c1->arrayDim;
-    } else {
-        if (c1->arrayDim < c2->arrayDim)
-            numDims = c1->arrayDim;
-        else
-            numDims = c2->arrayDim;
-        commonElem = c1->super;     // == java.lang.Object
+    if (dvmIsPrimitiveClass(c1->elementClass)) {
+        arrayDim1--;
+        hasPrimitive = true;
+    }
+    if (dvmIsPrimitiveClass(c2->elementClass)) {
+        arrayDim2--;
+        hasPrimitive = true;
     }
 
-    /* walk from the element to the (multi-)dimensioned array type */
+    if (!hasPrimitive && arrayDim1 == arrayDim2) {
+        /*
+         * Two arrays of reference types with equal dimensions.  Try to
+         * find a good match.
+         */
+        commonElem = findCommonSuperclass(c1->elementClass, c2->elementClass);
+        numDims = arrayDim1;
+    } else {
+        /*
+         * Mismatched array depths and/or array(s) of primitives.  We want
+         * Object, or an Object array with appropriate dimensions.
+         *
+         * We initialize arrayClass to Object here, because it's possible
+         * for us to set numDims=0.
+         */
+        if (arrayDim1 < arrayDim2)
+            numDims = arrayDim1;
+        else
+            numDims = arrayDim2;
+        arrayClass = commonElem = c1->super;     // == java.lang.Object
+    }
+
+    /*
+     * Find an appropriately-dimensioned array class.  This is easiest
+     * to do iteratively, using the array class found by the current round
+     * as the element type for the next round.
+     */
     for (i = 0; i < numDims; i++) {
         arrayClass = dvmFindArrayClassForElement(commonElem);
         commonElem = arrayClass;
     }
+    assert(arrayClass != NULL);
 
     LOGVV("ArrayMerge '%s' + '%s' --> '%s'\n",
         c1->descriptor, c2->descriptor, arrayClass->descriptor);
@@ -2306,8 +2340,8 @@ static ClassObject* findCommonArraySuperclass(ClassObject* c1, ClassObject* c2)
  * depth" of each, move up toward the root of the deepest one until they're
  * at the same depth, then walk both up to the root until they match.
  *
- * If both classes are arrays of non-primitive types, we need to merge
- * based on array depth and element type.
+ * If both classes are arrays, we need to merge based on array depth and
+ * element type.
  *
  * If one class is an interface, we check to see if the other class/interface
  * (or one of its predecessors) implements the interface.  If so, we return
@@ -2348,10 +2382,7 @@ static ClassObject* findCommonSuperclass(ClassObject* c1, ClassObject* c2)
         return c2;
     }
 
-    if (dvmIsArrayClass(c1) && dvmIsArrayClass(c2) &&
-        !dvmIsPrimitiveClass(c1->elementClass) &&
-        !dvmIsPrimitiveClass(c2->elementClass))
-    {
+    if (dvmIsArrayClass(c1) && dvmIsArrayClass(c2)) {
         return findCommonArraySuperclass(c1, c2);
     }
 
