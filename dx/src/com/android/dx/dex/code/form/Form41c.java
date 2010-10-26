@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007 The Android Open Source Project
+ * Copyright (C) 2010 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,24 +19,27 @@ package com.android.dx.dex.code.form;
 import com.android.dx.dex.code.CstInsn;
 import com.android.dx.dex.code.DalvInsn;
 import com.android.dx.dex.code.InsnFormat;
+import com.android.dx.rop.code.RegisterSpec;
 import com.android.dx.rop.code.RegisterSpecList;
 import com.android.dx.rop.cst.Constant;
-import com.android.dx.rop.cst.CstLiteralBits;
+import com.android.dx.rop.cst.CstFieldRef;
+import com.android.dx.rop.cst.CstString;
+import com.android.dx.rop.cst.CstType;
 import com.android.dx.util.AnnotatedOutput;
 
 /**
- * Instruction format {@code 22s}. See the instruction format spec
+ * Instruction format {@code 41c}. See the instruction format spec
  * for details.
  */
-public final class Form22s extends InsnFormat {
+public final class Form41c extends InsnFormat {
     /** {@code non-null;} unique instance of this class */
-    public static final InsnFormat THE_ONE = new Form22s();
+    public static final InsnFormat THE_ONE = new Form41c();
 
     /**
      * Constructs an instance. This class is not publicly
      * instantiable. Use {@link #THE_ONE}.
      */
-    private Form22s() {
+    private Form41c() {
         // This space intentionally left blank.
     }
 
@@ -44,64 +47,79 @@ public final class Form22s extends InsnFormat {
     @Override
     public String insnArgString(DalvInsn insn) {
         RegisterSpecList regs = insn.getRegisters();
-        CstLiteralBits value = (CstLiteralBits) ((CstInsn) insn).getConstant();
-
-        return regs.get(0).regString() + ", " + regs.get(1).regString()
-            + ", " + literalBitsString(value);
+        return regs.get(0).regString() + ", " + cstString(insn);
     }
 
     /** {@inheritDoc} */
     @Override
     public String insnCommentString(DalvInsn insn, boolean noteIndices) {
-        CstLiteralBits value = (CstLiteralBits) ((CstInsn) insn).getConstant();
-        return literalBitsComment(value, 16);
+        if (noteIndices) {
+            return cstComment(insn);
+        } else {
+            return "";
+        }
     }
 
     /** {@inheritDoc} */
     @Override
     public int codeSize() {
-        return 2;
+        return 4;
     }
 
     /** {@inheritDoc} */
     @Override
     public boolean isCompatible(DalvInsn insn) {
+        if (!(insn instanceof CstInsn)) {
+            return false;
+        }
+
         RegisterSpecList regs = insn.getRegisters();
-        if (!((insn instanceof CstInsn) &&
-              (regs.size() == 2) &&
-              unsignedFitsInNibble(regs.get(0).getReg()) &&
-              unsignedFitsInNibble(regs.get(1).getReg()))) {
+        RegisterSpec reg;
+
+        switch (regs.size()) {
+            case 1: {
+                reg = regs.get(0);
+                break;
+            }
+            case 2: {
+                /*
+                 * This format is allowed for ops that are effectively
+                 * 2-arg but where the two args are identical.
+                 */
+                reg = regs.get(0);
+                if (reg.getReg() != regs.get(1).getReg()) {
+                    return false;
+                }
+                break;
+            }
+            default: {
+                return false;
+            }
+        }
+
+        if (!unsignedFitsInShort(reg.getReg())) {
             return false;
         }
 
         CstInsn ci = (CstInsn) insn;
         Constant cst = ci.getConstant();
 
-        if (!(cst instanceof CstLiteralBits)) {
-            return false;
-        }
-
-        CstLiteralBits cb = (CstLiteralBits) cst;
-
-        return cb.fitsInInt() && signedFitsInShort(cb.getIntBits());
+        return (cst instanceof CstType) ||
+            (cst instanceof CstFieldRef);
     }
 
     /** {@inheritDoc} */
     @Override
     public InsnFormat nextUp() {
-        return Form32s.THE_ONE;
+        return null;
     }
 
     /** {@inheritDoc} */
     @Override
     public void writeTo(AnnotatedOutput out, DalvInsn insn) {
         RegisterSpecList regs = insn.getRegisters();
-        int value =
-            ((CstLiteralBits) ((CstInsn) insn).getConstant()).getIntBits();
+        int cpi = ((CstInsn) insn).getIndex();
 
-        write(out,
-              opcodeUnit(insn,
-                         makeByte(regs.get(0).getReg(), regs.get(1).getReg())),
-              (short) value);
+        write(out, opcodeUnit(insn), cpi, (short) regs.get(0).getReg());
     }
 }
