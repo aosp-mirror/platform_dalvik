@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007 The Android Open Source Project
+ * Copyright (C) 2010 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,18 +23,18 @@ import com.android.dx.rop.code.RegisterSpecList;
 import com.android.dx.util.AnnotatedOutput;
 
 /**
- * Instruction format {@code 32x}. See the instruction format spec
+ * Instruction format {@code 33x}. See the instruction format spec
  * for details.
  */
-public final class Form32x extends InsnFormat {
+public final class Form33x extends InsnFormat {
     /** {@code non-null;} unique instance of this class */
-    public static final InsnFormat THE_ONE = new Form32x();
+    public static final InsnFormat THE_ONE = new Form33x();
 
     /**
      * Constructs an instance. This class is not publicly
      * instantiable. Use {@link #THE_ONE}.
      */
-    private Form32x() {
+    private Form33x() {
         // This space intentionally left blank.
     }
 
@@ -42,7 +42,8 @@ public final class Form32x extends InsnFormat {
     @Override
     public String insnArgString(DalvInsn insn) {
         RegisterSpecList regs = insn.getRegisters();
-        return regs.get(0).regString() + ", " + regs.get(1).regString();
+        return regs.get(0).regString() + ", " + regs.get(1).regString() +
+            ", " + regs.get(2).regString();
     }
 
     /** {@inheritDoc} */
@@ -62,26 +63,27 @@ public final class Form32x extends InsnFormat {
     @Override
     public boolean isCompatible(DalvInsn insn) {
         RegisterSpecList regs = insn.getRegisters();
+
         return (insn instanceof SimpleInsn) &&
-            (regs.size() == 2) &&
-            unsignedFitsInShort(regs.get(0).getReg()) &&
-            unsignedFitsInShort(regs.get(1).getReg());
+            (regs.size() == 3) &&
+            unsignedFitsInByte(regs.get(0).getReg()) &&
+            unsignedFitsInByte(regs.get(1).getReg()) &&
+            unsignedFitsInShort(regs.get(2).getReg());
     }
 
     /** {@inheritDoc} */
     @Override
     public InsnFormat nextUp() {
-        return Form33x.THE_ONE;
+        return null;
     }
 
     /** {@inheritDoc} */
     @Override
     public void writeTo(AnnotatedOutput out, DalvInsn insn) {
         RegisterSpecList regs = insn.getRegisters();
-
         write(out,
-              opcodeUnit(insn, 0),
-              (short) regs.get(0).getReg(),
-              (short) regs.get(1).getReg());
+                opcodeUnit(insn),
+                codeUnit(regs.get(0).getReg(), regs.get(1).getReg()),
+                (short) regs.get(2).getReg());
     }
 }

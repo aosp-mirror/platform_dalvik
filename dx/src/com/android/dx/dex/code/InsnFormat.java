@@ -16,6 +16,7 @@
 
 package com.android.dx.dex.code;
 
+import com.android.dx.rop.code.RegisterSpec;
 import com.android.dx.rop.code.RegisterSpecList;
 import com.android.dx.rop.cst.Constant;
 import com.android.dx.rop.cst.CstInteger;
@@ -177,6 +178,49 @@ public abstract class InsnFormat {
         }
 
         sb.append('}');
+
+        return sb.toString();
+    }
+
+    /**
+     * Helper method to return a register range string.
+     *
+     * @param list {@code non-null;} the list of registers (which must be
+     * sequential)
+     * @return {@code non-null;} the string form
+     */
+    protected static String regRangeString(RegisterSpecList list) {
+        int size = list.size();
+        StringBuilder sb = new StringBuilder(30);
+
+        sb.append("{");
+
+        switch (size) {
+            case 0: {
+                // Nothing to do.
+                break;
+            }
+            case 1: {
+                sb.append(list.get(0).regString());
+                break;
+            }
+            default: {
+                RegisterSpec lastReg = list.get(size - 1);
+                if (lastReg.getCategory() == 2) {
+                    /*
+                     * Add one to properly represent a list-final
+                     * category-2 register.
+                     */
+                    lastReg = lastReg.withOffset(1);
+                }
+
+                sb.append(list.get(0).regString());
+                sb.append("..");
+                sb.append(lastReg.regString());
+            }
+        }
+
+        sb.append("}");
 
         return sb.toString();
     }
@@ -367,6 +411,34 @@ public abstract class InsnFormat {
      */
     protected static boolean unsignedFitsInShort(int value) {
         return value == (value & 0xffff);
+    }
+
+    /**
+     * Helper method to determine if a list of registers are sequential,
+     * including degenerate cases for empty or single-element lists.
+     *
+     * @param list {@code non-null;} the list of registers
+     * @return {@code true} iff the list is sequentially ordered
+     */
+    protected static boolean isRegListSequential(RegisterSpecList list) {
+        int sz = list.size();
+
+        if (sz < 2) {
+            return true;
+        }
+
+        int first = list.get(0).getReg();
+        int next = first;
+
+        for (int i = 0; i < sz; i++) {
+            RegisterSpec one = list.get(i);
+            if (one.getReg() != next) {
+                return false;
+            }
+            next += one.getCategory();
+        }
+
+        return true;
     }
 
     /**

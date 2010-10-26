@@ -104,15 +104,15 @@ public final class Form31c extends InsnFormat {
         CstInsn ci = (CstInsn) insn;
         Constant cst = ci.getConstant();
 
-        return ((cst instanceof CstType) ||
-                (cst instanceof CstFieldRef) ||
-                (cst instanceof CstString));
+        return (cst instanceof CstType) ||
+            (cst instanceof CstFieldRef) ||
+            (cst instanceof CstString);
     }
 
     /** {@inheritDoc} */
     @Override
     public InsnFormat nextUp() {
-        return null;
+        return Form41c.THE_ONE;
     }
 
     /** {@inheritDoc} */
