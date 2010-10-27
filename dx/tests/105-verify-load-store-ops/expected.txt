@@ -2,6 +2,8 @@ Generated: ./op_aaload.class
 aaload: expected failure occurred
 Generated: ./op_aastore.class
 aastore: expected failure occurred
+Generated: ./op_aastore2.class
+aastore2: expected failure occurred
 Generated: ./op_astore.class
 astore: expected failure occurred
 Generated: ./op_astore_0.class
