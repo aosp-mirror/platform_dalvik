@@ -291,7 +291,7 @@ import java.util.ArrayList;
         super.run(frame, offset, opcode);
 
         SourcePosition pos = method.makeSourcePosistion(offset);
-        RegisterSpec localTarget = getLocalTarget();
+        RegisterSpec localTarget = getLocalTarget(opcode == ByteOps.ISTORE);
         int destCount = resultCount();
         RegisterSpec dest;
 

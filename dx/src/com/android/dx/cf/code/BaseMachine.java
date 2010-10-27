@@ -78,7 +78,8 @@ public abstract class BaseMachine implements Machine {
     /**
      * Constructs an instance.
      *
-     * @param prototype {@code non-null;} the prototype for the associated method
+     * @param prototype {@code non-null;} the prototype for the
+     * associated method
      */
     public BaseMachine(Prototype prototype) {
         if (prototype == null) {
@@ -365,11 +366,14 @@ public abstract class BaseMachine implements Machine {
      * should be the sole result set by a call to {@link #setResult} (or
      * the combination {@link #clearResult} then {@link #addResult}.
      *
+     * @param isMove {@code true} if the operation being performed on the
+     * local is a move. This will cause constant values to be propagated
+     * to the returned local
      * @return {@code null-ok;} the salient register spec or {@code null} if no
      * local target was set since the last time {@link #clearArgs} was
      * called
      */
-    protected final RegisterSpec getLocalTarget() {
+    protected final RegisterSpec getLocalTarget(boolean isMove) {
         if (localTarget == null) {
             return null;
         }
@@ -384,7 +388,16 @@ public abstract class BaseMachine implements Machine {
         Type localType = localTarget.getType();
 
         if (resultType == localType) {
-            return localTarget;
+            /*
+             * If this is to be a move operation and the result is a
+             * known value, make the returned localTarget embody that
+             * value.
+             */
+            if (isMove) {
+                return localTarget.withType(result);
+            } else {
+                return localTarget;
+            }
         }
 
         if (! Merger.isPossiblyAssignableFrom(localType, resultType)) {
@@ -516,7 +529,7 @@ public abstract class BaseMachine implements Machine {
              * Note: getLocalTarget() doesn't necessarily return
              * localTarget directly.
              */
-            frame.getLocals().set(getLocalTarget());
+            frame.getLocals().set(getLocalTarget(false));
         } else {
             ExecutionStack stack = frame.getStack();
             for (int i = 0; i < resultCount; i++) {

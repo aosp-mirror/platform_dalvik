@@ -20,7 +20,7 @@ block 0004
   next 0009
 block 000c
   pred 006e
-  blort.j:@000c: move-int v4:I=10 <- v0:I=10
+  blort.j:@000c: move-int v4:I <- v0:I
   blort.j:@000c: goto . <- .
   next 000e
 block 005d

@@ -46,7 +46,10 @@ public final class RegisterSpec
     /** {@code non-null;} type loaded or stored */
     private final TypeBearer type;
 
-    /** {@code null-ok;} local variable info associated with this register, if any */
+    /**
+     * {@code null-ok;} local variable info associated with this register,
+     * if any
+     */
     private final LocalItem local;
 
     /**
