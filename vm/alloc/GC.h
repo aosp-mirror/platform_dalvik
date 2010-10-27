@@ -138,18 +138,4 @@ void dvmGcMarkJniGlobalRefs(void);
  */
 void dvmGcMarkDebuggerRefs(void);
 
-/*
- * Optional heap profiling.
- */
-#if WITH_HPROF && !defined(_DALVIK_HPROF_HPROF)
-#include "hprof/Hprof.h"
-#define HPROF_SET_GC_SCAN_STATE(tag_, thread_) \
-    dvmHeapSetHprofGcScanState((tag_), (thread_))
-#define HPROF_CLEAR_GC_SCAN_STATE() \
-    dvmHeapSetHprofGcScanState(0, 0)
-#else
-#define HPROF_SET_GC_SCAN_STATE(tag_, thread_)  do {} while (false)
-#define HPROF_CLEAR_GC_SCAN_STATE()  do {} while (false)
-#endif
-
 #endif  // _DALVIK_ALLOC_GC

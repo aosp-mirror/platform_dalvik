@@ -228,7 +228,8 @@ static void dumpReferencesCallback(void *ptr, void *arg)
 /*
  * Root visitor that looks for matching references.
  */
-static void dumpReferencesRootVisitor(void *ptr, void *arg)
+static void dumpReferencesRootVisitor(void *ptr, u4 threadId,
+                                      RootType type, void *arg)
 {
     Object *obj = *(Object **)ptr;
     Object *lookingFor = *(Object **)arg;

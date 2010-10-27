@@ -131,12 +131,6 @@ static void markObjectNonNull(const Object *obj, GcMarkContext *ctx,
              */
             MARK_STACK_PUSH(ctx->stack, obj);
         }
-
-#if WITH_HPROF
-        if (gDvm.gcHeap->hprofContext != NULL) {
-            hprofMarkRootObject(gDvm.gcHeap->hprofContext, obj, 0);
-        }
-#endif
     }
 }
 
@@ -198,8 +192,6 @@ void dvmHeapMarkRootSet()
 {
     GcHeap *gcHeap = gDvm.gcHeap;
 
-    HPROF_SET_GC_SCAN_STATE(HPROF_ROOT_STICKY_CLASS, 0);
-
     LOG_SCAN("immune objects");
     dvmMarkImmuneObjects(gcHeap->markContext.immuneLimit);
 
@@ -208,40 +200,23 @@ void dvmHeapMarkRootSet()
     LOG_SCAN("primitive classes\n");
     dvmGcScanPrimitiveClasses();
 
-    /* dvmGcScanRootThreadGroups() sets a bunch of
-     * different scan states internally.
-     */
-    HPROF_CLEAR_GC_SCAN_STATE();
-
     LOG_SCAN("root thread groups\n");
     dvmGcScanRootThreadGroups();
-
-    HPROF_SET_GC_SCAN_STATE(HPROF_ROOT_INTERNED_STRING, 0);
 
     LOG_SCAN("interned strings\n");
     dvmGcScanInternedStrings();
 
-    HPROF_SET_GC_SCAN_STATE(HPROF_ROOT_JNI_GLOBAL, 0);
-
     LOG_SCAN("JNI global refs\n");
     dvmGcMarkJniGlobalRefs();
-
-    HPROF_SET_GC_SCAN_STATE(HPROF_ROOT_REFERENCE_CLEANUP, 0);
 
     LOG_SCAN("pending reference operations\n");
     dvmHeapMarkLargeTableRefs(gcHeap->referenceOperations);
 
-    HPROF_SET_GC_SCAN_STATE(HPROF_ROOT_FINALIZING, 0);
-
     LOG_SCAN("pending finalizations\n");
     dvmHeapMarkLargeTableRefs(gcHeap->pendingFinalizationRefs);
 
-    HPROF_SET_GC_SCAN_STATE(HPROF_ROOT_DEBUGGER, 0);
-
     LOG_SCAN("debugger refs\n");
     dvmGcMarkDebuggerRefs();
-
-    HPROF_SET_GC_SCAN_STATE(HPROF_ROOT_VM_INTERNAL, 0);
 
     /* Mark any special objects we have sitting around.
      */
@@ -250,15 +225,13 @@ void dvmHeapMarkRootSet()
     dvmMarkObjectNonNull(gDvm.internalErrorObj);
     dvmMarkObjectNonNull(gDvm.noClassDefFoundErrorObj);
 //TODO: scan object references sitting in gDvm;  use pointer begin & end
-
-    HPROF_CLEAR_GC_SCAN_STATE();
 }
 
 /*
  * Callback applied to root references.  If the root location contains
  * a white reference it is pushed on the mark stack and grayed.
  */
-static void markObjectVisitor(void *addr, void *arg)
+static void markObjectVisitor(void *addr, RootType type, u4 thread, void *arg)
 {
     Object *obj;
 
@@ -519,11 +492,6 @@ static void scanObject(const Object *obj, GcMarkContext *ctx)
     assert(obj != NULL);
     assert(ctx != NULL);
     assert(obj->clazz != NULL);
-#if WITH_HPROF
-    if (gDvm.gcHeap->hprofContext != NULL) {
-        hprofDumpHeapObject(gDvm.gcHeap->hprofContext, obj);
-    }
-#endif
     /* Dispatch a type-specific scan routine. */
     if (obj->clazz == gDvm.classJavaLangClass) {
         scanClassObject((ClassObject *)obj, ctx);
@@ -986,13 +954,11 @@ void dvmHeapScheduleFinalizations()
     ref = newPendingRefs.table;
     lastRef = newPendingRefs.nextEntry;
     assert(ref < lastRef);
-    HPROF_SET_GC_SCAN_STATE(HPROF_ROOT_FINALIZING, 0);
     while (ref < lastRef) {
         assert(*ref != NULL);
         markObject(*ref, ctx);
         ref++;
     }
-    HPROF_CLEAR_GC_SCAN_STATE();
     processMarkStack(ctx);
     dvmSignalHeapWorker(false);
 }

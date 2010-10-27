@@ -110,15 +110,6 @@ struct GcHeap {
     int             ddmHpsgWhat;
     int             ddmNhsgWhen;
     int             ddmNhsgWhat;
-
-#if WITH_HPROF
-    bool            hprofDumpOnGc;
-    const char*     hprofFileName;
-    int             hprofFd;
-    hprof_context_t *hprofContext;
-    int             hprofResult;
-    bool            hprofDirectToDdms;
-#endif
 };
 
 bool dvmLockHeap(void);

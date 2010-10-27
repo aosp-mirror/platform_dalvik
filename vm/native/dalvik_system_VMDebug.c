@@ -19,6 +19,7 @@
  */
 #include "Dalvik.h"
 #include "native/InternalNativePriv.h"
+#include "hprof/Hprof.h"
 
 #include <string.h>
 #include <unistd.h>

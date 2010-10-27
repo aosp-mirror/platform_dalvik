@@ -19,11 +19,36 @@
 
 #include "Dalvik.h"
 
+typedef enum {
+  ROOT_UNKNOWN = 0,
+  ROOT_JNI_GLOBAL,
+  ROOT_JNI_LOCAL,
+  ROOT_JAVA_FRAME,
+  ROOT_NATIVE_STACK,
+  ROOT_STICKY_CLASS,
+  ROOT_THREAD_BLOCK,
+  ROOT_MONITOR_USED,
+  ROOT_THREAD_OBJECT,
+  ROOT_INTERNED_STRING,
+  ROOT_FINALIZING,
+  ROOT_DEBUGGER,
+  ROOT_REFERENCE_CLEANUP,
+  ROOT_VM_INTERNAL,
+  ROOT_JNI_MONITOR,
+} RootType;
+
 /*
  * Callback invoked with the address of a reference and a user
  * supplied context argument.
  */
 typedef void Visitor(void *addr, void *arg);
+
+/*
+ * Like a Visitor, but passes root specific information such as the
+ * containing thread id and the root type.  In cases where a root is
+ * not specific to a thread, 0, an invalid thread id is provided.
+ */
+typedef void RootVisitor(void *addr, u4 threadId, RootType type, void *arg);
 
 /*
  * Visits references in an object.
@@ -33,6 +58,6 @@ void dvmVisitObject(Visitor *visitor, Object *obj, void *arg);
 /*
  * Visits references in the root set.
  */
-void dvmVisitRoots(Visitor *visitor, void *arg);
+void dvmVisitRoots(RootVisitor *visitor, void *arg);
 
 #endif /* _DALVIK_ALLOC_VISIT */

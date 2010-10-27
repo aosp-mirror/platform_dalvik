@@ -25,7 +25,6 @@
 #include "alloc/DdmHeap.h"
 #include "alloc/HeapSource.h"
 #include "alloc/MarkSweep.h"
-#include "alloc/Visit.h"
 
 #include "utils/threads.h"      // need Android thread priorities
 #define kInvalidPriority        10000
@@ -41,8 +40,7 @@ static const char* GcReasonStr[] = {
     [GC_FOR_MALLOC] = "GC_FOR_MALLOC",
     [GC_CONCURRENT] = "GC_CONCURRENT",
     [GC_EXPLICIT] = "GC_EXPLICIT",
-    [GC_EXTERNAL_ALLOC] = "GC_EXTERNAL_ALLOC",
-    [GC_HPROF_DUMP_HEAP] = "GC_HPROF_DUMP_HEAP"
+    [GC_EXTERNAL_ALLOC] = "GC_EXTERNAL_ALLOC"
 };
 
 /*
@@ -71,10 +69,6 @@ bool dvmHeapStartup()
     gcHeap->ddmHpsgWhat = 0;
     gcHeap->ddmNhsgWhen = 0;
     gcHeap->ddmNhsgWhat = 0;
-#if WITH_HPROF
-    gcHeap->hprofDumpOnGc = false;
-    gcHeap->hprofContext = NULL;
-#endif
     gDvm.gcHeap = gcHeap;
 
     /* Set up the lists and lock we'll use for finalizable
@@ -661,46 +655,6 @@ void dvmCollectGarbageInternal(bool clearSoftRefs, GcReason reason)
 
     dvmMethodTraceGCBegin();
 
-#if WITH_HPROF
-
-/* Set DUMP_HEAP_ON_DDMS_UPDATE to 1 to enable heap dumps
- * whenever DDMS requests a heap update (HPIF chunk).
- * The output files will appear in /data/misc, which must
- * already exist.
- * You must define "WITH_HPROF := true" in your buildspec.mk
- * and recompile libdvm for this to work.
- *
- * To enable stack traces for each allocation, define
- * "WITH_HPROF_STACK := true" in buildspec.mk.  This option slows down
- * allocations and also requires 8 additional bytes per object on the
- * GC heap.
- */
-#define DUMP_HEAP_ON_DDMS_UPDATE 0
-#if DUMP_HEAP_ON_DDMS_UPDATE
-    gcHeap->hprofDumpOnGc |= (gcHeap->ddmHpifWhen != 0);
-#endif
-
-    if (gcHeap->hprofDumpOnGc) {
-        char nameBuf[128];
-
-        gcHeap->hprofResult = -1;
-
-        if (gcHeap->hprofFileName == NULL) {
-            /* no filename was provided; invent one */
-            sprintf(nameBuf, "/data/misc/heap-dump-tm%d-pid%d.hprof",
-                (int) time(NULL), (int) getpid());
-            gcHeap->hprofFileName = nameBuf;
-        }
-        gcHeap->hprofContext = hprofStartup(gcHeap->hprofFileName,
-                gcHeap->hprofFd, gcHeap->hprofDirectToDdms);
-        if (gcHeap->hprofContext != NULL) {
-            hprofStartHeapDump(gcHeap->hprofContext);
-        }
-        gcHeap->hprofDumpOnGc = false;
-        gcHeap->hprofFileName = NULL;
-    }
-#endif
-
     /* Set up the marking context.
      */
     if (!dvmHeapBeginMarkStep(gcMode)) {
@@ -852,16 +806,6 @@ void dvmCollectGarbageInternal(bool clearSoftRefs, GcReason reason)
     currAllocated = dvmHeapSourceGetValue(HS_BYTES_ALLOCATED, NULL, 0);
     currFootprint = dvmHeapSourceGetValue(HS_FOOTPRINT, NULL, 0);
 
-#if WITH_HPROF
-    if (gcHeap->hprofContext != NULL) {
-        hprofFinishHeapDump(gcHeap->hprofContext);
-//TODO: write a HEAP_SUMMARY record
-        if (hprofShutdown(gcHeap->hprofContext))
-            gcHeap->hprofResult = 0;    /* indicate success */
-        gcHeap->hprofContext = NULL;
-    }
-#endif
-
     /* Now that we've freed up the GC heap, return any large
      * free chunks back to the system.  They'll get paged back
      * in the next time they're used.  Don't do it immediately,
@@ -963,45 +907,3 @@ void dvmWaitForConcurrentGcToComplete(void)
     dvmWaitCond(&gDvm.gcHeapCond, &gDvm.gcHeapLock);
     dvmChangeStatus(self, oldStatus);
 }
-
-#if WITH_HPROF
-/*
- * Perform garbage collection, writing heap information to the specified file.
- *
- * If "fd" is >= 0, the output will be written to that file descriptor.
- * Otherwise, "fileName" is used to create an output file.
- *
- * If "fileName" is NULL, a suitable name will be generated automatically.
- * (TODO: remove this when the SIGUSR1 feature goes away)
- *
- * If "directToDdms" is set, the other arguments are ignored, and data is
- * sent directly to DDMS.
- *
- * Returns 0 on success, or an error code on failure.
- */
-int hprofDumpHeap(const char* fileName, int fd, bool directToDdms)
-{
-    int result;
-
-    dvmLockMutex(&gDvm.gcHeapLock);
-
-    gDvm.gcHeap->hprofDumpOnGc = true;
-    gDvm.gcHeap->hprofFileName = fileName;
-    gDvm.gcHeap->hprofFd = fd;
-    gDvm.gcHeap->hprofDirectToDdms = directToDdms;
-    dvmCollectGarbageInternal(false, GC_HPROF_DUMP_HEAP);
-    result = gDvm.gcHeap->hprofResult;
-
-    dvmUnlockMutex(&gDvm.gcHeapLock);
-
-    return result;
-}
-
-void dvmHeapSetHprofGcScanState(hprof_heap_tag_t state, u4 threadSerialNumber)
-{
-    if (gDvm.gcHeap->hprofContext != NULL) {
-        hprofSetGcScanState(gDvm.gcHeap->hprofContext, state,
-                threadSerialNumber);
-    }
-}
-#endif
