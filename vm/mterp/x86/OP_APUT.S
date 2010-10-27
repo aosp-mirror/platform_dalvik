@@ -13,7 +13,9 @@
     testl     %eax,%eax                 # null array object?
     je        common_errNullObject      # bail if so
     cmpl      offArrayObject_length(%eax),%ecx
-    jae       common_errArrayIndex      # index >= length, bail
+    jae       common_errArrayIndex      # index >= length, bail.  Expects:
+                                        #   arrayObj in eax
+                                        #   index in ecx
     leal      offArrayObject_contents(%eax,%ecx,$shift),%eax
 .L${opcode}_finish:
     GET_VREG_R  %ecx rINST

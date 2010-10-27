@@ -440,14 +440,16 @@ common_errNullObject:
 
 /*
  * Array index exceeds max.
+ * On entry:
+ *    eax <- array object
+ *    ecx <- index
  */
 common_errArrayIndex:
     EXPORT_PC
-    movl    $$.LstrArrayIndexException,%eax
-    movl    %eax,OUT_ARG0(%esp)
-    xorl    %eax,%eax
+    movl    offArrayObject_length(%eax), %eax
+    movl    %ecx,OUT_ARG0(%esp)
     movl    %eax,OUT_ARG1(%esp)
-    call    dvmThrowException
+    call    dvmThrowAIOOBE        # dvmThrowAIOO(index, length)
     jmp     common_exceptionThrown
 /*
  * Invalid array value.
@@ -494,8 +496,6 @@ common_abort:
     .asciz  "Ljava/lang/ArithmeticException;"
 .LstrDivideByZero:
     .asciz  "divide by zero"
-.LstrArrayIndexException:
-    .asciz  "Ljava/lang/ArrayIndexOutOfBoundsException;"
 .LstrArrayStoreException:
     .asciz  "Ljava/lang/ArrayStoreException;"
 .LstrNegativeArraySizeException:

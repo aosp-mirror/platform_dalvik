@@ -1939,7 +1939,9 @@ dvmAsmInstructionStart = .L_OP_NOP
     testl     %eax,%eax                 # null array object?
     je        common_errNullObject      # bail if so
     cmpl      offArrayObject_length(%eax),%ecx
-    jae       common_errArrayIndex      # index >= length, bail
+    jae       common_errArrayIndex      # index >= length, bail.  Expects
+                                        #    arrayObj in eax
+                                        #    index in ecx
     movl     offArrayObject_contents(%eax,%ecx,4),%eax
 .LOP_AGET_finish:
     FETCH_INST_OPCODE 2 %edx
@@ -1964,7 +1966,9 @@ dvmAsmInstructionStart = .L_OP_NOP
     je        common_errNullObject      # bail if so
     cmpl      offArrayObject_length(%eax),%ecx
     jb        .LOP_AGET_WIDE_finish        # index < length, OK
-    jmp       common_errArrayIndex      # index >= length, bail
+    jmp       common_errArrayIndex      # index >= length, bail.  Expects
+                                        #    arrayObj in eax
+                                        #    index in ecx
 
 /* ------------------------------ */
     .balign 64
@@ -1984,7 +1988,9 @@ dvmAsmInstructionStart = .L_OP_NOP
     testl     %eax,%eax                 # null array object?
     je        common_errNullObject      # bail if so
     cmpl      offArrayObject_length(%eax),%ecx
-    jae       common_errArrayIndex      # index >= length, bail
+    jae       common_errArrayIndex      # index >= length, bail.  Expects
+                                        #    arrayObj in eax
+                                        #    index in ecx
     movl     offArrayObject_contents(%eax,%ecx,4),%eax
 .LOP_AGET_OBJECT_finish:
     FETCH_INST_OPCODE 2 %edx
@@ -2011,7 +2017,9 @@ dvmAsmInstructionStart = .L_OP_NOP
     testl     %eax,%eax                 # null array object?
     je        common_errNullObject      # bail if so
     cmpl      offArrayObject_length(%eax),%ecx
-    jae       common_errArrayIndex      # index >= length, bail
+    jae       common_errArrayIndex      # index >= length, bail.  Expects
+                                        #    arrayObj in eax
+                                        #    index in ecx
     movzbl     offArrayObject_contents(%eax,%ecx,1),%eax
 .LOP_AGET_BOOLEAN_finish:
     FETCH_INST_OPCODE 2 %edx
@@ -2038,7 +2046,9 @@ dvmAsmInstructionStart = .L_OP_NOP
     testl     %eax,%eax                 # null array object?
     je        common_errNullObject      # bail if so
     cmpl      offArrayObject_length(%eax),%ecx
-    jae       common_errArrayIndex      # index >= length, bail
+    jae       common_errArrayIndex      # index >= length, bail.  Expects
+                                        #    arrayObj in eax
+                                        #    index in ecx
     movsbl     offArrayObject_contents(%eax,%ecx,1),%eax
 .LOP_AGET_BYTE_finish:
     FETCH_INST_OPCODE 2 %edx
@@ -2065,7 +2075,9 @@ dvmAsmInstructionStart = .L_OP_NOP
     testl     %eax,%eax                 # null array object?
     je        common_errNullObject      # bail if so
     cmpl      offArrayObject_length(%eax),%ecx
-    jae       common_errArrayIndex      # index >= length, bail
+    jae       common_errArrayIndex      # index >= length, bail.  Expects
+                                        #    arrayObj in eax
+                                        #    index in ecx
     movzwl     offArrayObject_contents(%eax,%ecx,2),%eax
 .LOP_AGET_CHAR_finish:
     FETCH_INST_OPCODE 2 %edx
@@ -2092,7 +2104,9 @@ dvmAsmInstructionStart = .L_OP_NOP
     testl     %eax,%eax                 # null array object?
     je        common_errNullObject      # bail if so
     cmpl      offArrayObject_length(%eax),%ecx
-    jae       common_errArrayIndex      # index >= length, bail
+    jae       common_errArrayIndex      # index >= length, bail.  Expects
+                                        #    arrayObj in eax
+                                        #    index in ecx
     movswl     offArrayObject_contents(%eax,%ecx,2),%eax
 .LOP_AGET_SHORT_finish:
     FETCH_INST_OPCODE 2 %edx
@@ -2118,7 +2132,9 @@ dvmAsmInstructionStart = .L_OP_NOP
     testl     %eax,%eax                 # null array object?
     je        common_errNullObject      # bail if so
     cmpl      offArrayObject_length(%eax),%ecx
-    jae       common_errArrayIndex      # index >= length, bail
+    jae       common_errArrayIndex      # index >= length, bail.  Expects:
+                                        #   arrayObj in eax
+                                        #   index in ecx
     leal      offArrayObject_contents(%eax,%ecx,4),%eax
 .LOP_APUT_finish:
     GET_VREG_R  %ecx rINST
@@ -2144,7 +2160,9 @@ dvmAsmInstructionStart = .L_OP_NOP
     je        common_errNullObject      # bail if so
     cmpl      offArrayObject_length(%eax),%ecx
     jb        .LOP_APUT_WIDE_finish        # index < length, OK
-    jmp       common_errArrayIndex      # index >= length, bail
+    jmp       common_errArrayIndex      # index >= length, bail.  Expects:
+                                        #   arrayObj in eax
+                                        #   index in ecx
 
 /* ------------------------------ */
     .balign 64
@@ -2165,7 +2183,9 @@ dvmAsmInstructionStart = .L_OP_NOP
     je        common_errNullObject      # bail if so
     cmpl      offArrayObject_length(%eax),%ecx
     jb        .LOP_APUT_OBJECT_continue
-    jmp       common_errArrayIndex      # index >= length, bail
+    jmp       common_errArrayIndex      # index >= length, bail.  Expects
+                                        #    arrayObj in eax
+                                        #    index in ecx
 
 /* ------------------------------ */
     .balign 64
@@ -2185,7 +2205,9 @@ dvmAsmInstructionStart = .L_OP_NOP
     testl     %eax,%eax                 # null array object?
     je        common_errNullObject      # bail if so
     cmpl      offArrayObject_length(%eax),%ecx
-    jae       common_errArrayIndex      # index >= length, bail
+    jae       common_errArrayIndex      # index >= length, bail.  Expects:
+                                        #   arrayObj in eax
+                                        #   index in ecx
     leal      offArrayObject_contents(%eax,%ecx,1),%eax
 .LOP_APUT_BOOLEAN_finish:
     GET_VREG_R  %ecx rINST
@@ -2213,7 +2235,9 @@ dvmAsmInstructionStart = .L_OP_NOP
     testl     %eax,%eax                 # null array object?
     je        common_errNullObject      # bail if so
     cmpl      offArrayObject_length(%eax),%ecx
-    jae       common_errArrayIndex      # index >= length, bail
+    jae       common_errArrayIndex      # index >= length, bail.  Expects:
+                                        #   arrayObj in eax
+                                        #   index in ecx
     leal      offArrayObject_contents(%eax,%ecx,1),%eax
 .LOP_APUT_BYTE_finish:
     GET_VREG_R  %ecx rINST
@@ -2241,7 +2265,9 @@ dvmAsmInstructionStart = .L_OP_NOP
     testl     %eax,%eax                 # null array object?
     je        common_errNullObject      # bail if so
     cmpl      offArrayObject_length(%eax),%ecx
-    jae       common_errArrayIndex      # index >= length, bail
+    jae       common_errArrayIndex      # index >= length, bail.  Expects:
+                                        #   arrayObj in eax
+                                        #   index in ecx
     leal      offArrayObject_contents(%eax,%ecx,2),%eax
 .LOP_APUT_CHAR_finish:
     GET_VREG_R  %ecx rINST
@@ -2269,7 +2295,9 @@ dvmAsmInstructionStart = .L_OP_NOP
     testl     %eax,%eax                 # null array object?
     je        common_errNullObject      # bail if so
     cmpl      offArrayObject_length(%eax),%ecx
-    jae       common_errArrayIndex      # index >= length, bail
+    jae       common_errArrayIndex      # index >= length, bail.  Expects:
+                                        #   arrayObj in eax
+                                        #   index in ecx
     leal      offArrayObject_contents(%eax,%ecx,2),%eax
 .LOP_APUT_SHORT_finish:
     GET_VREG_R  %ecx rINST
@@ -9508,14 +9536,16 @@ common_errNullObject:
 
 /*
  * Array index exceeds max.
+ * On entry:
+ *    eax <- array object
+ *    ecx <- index
  */
 common_errArrayIndex:
     EXPORT_PC
-    movl    $.LstrArrayIndexException,%eax
-    movl    %eax,OUT_ARG0(%esp)
-    xorl    %eax,%eax
+    movl    offArrayObject_length(%eax), %eax
+    movl    %ecx,OUT_ARG0(%esp)
     movl    %eax,OUT_ARG1(%esp)
-    call    dvmThrowException
+    call    dvmThrowAIOOBE        # dvmThrowAIOO(index, length)
     jmp     common_exceptionThrown
 /*
  * Invalid array value.
@@ -9562,8 +9592,6 @@ common_abort:
     .asciz  "Ljava/lang/ArithmeticException;"
 .LstrDivideByZero:
     .asciz  "divide by zero"
-.LstrArrayIndexException:
-    .asciz  "Ljava/lang/ArrayIndexOutOfBoundsException;"
 .LstrArrayStoreException:
     .asciz  "Ljava/lang/ArrayStoreException;"
 .LstrNegativeArraySizeException:

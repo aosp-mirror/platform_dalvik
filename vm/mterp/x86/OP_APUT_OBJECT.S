@@ -14,7 +14,9 @@
     je        common_errNullObject      # bail if so
     cmpl      offArrayObject_length(%eax),%ecx
     jb        .L${opcode}_continue
-    jmp       common_errArrayIndex      # index >= length, bail
+    jmp       common_errArrayIndex      # index >= length, bail.  Expects
+                                        #    arrayObj in eax
+                                        #    index in ecx
 %break
 
     /* On entry:
