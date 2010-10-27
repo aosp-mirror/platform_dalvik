@@ -324,9 +324,37 @@ static void enableDebugFeatures(u4 debugFlags)
 }
 
 /*
+ * Set Linux capability flags.
+ *
+ * Returns 0 on success, errno on failure.
+ */
+static int setCapabilities(int64_t permitted, int64_t effective)
+{
+#ifdef HAVE_ANDROID_OS
+    struct __user_cap_header_struct capheader;
+    struct __user_cap_data_struct capdata;
+
+    memset(&capheader, 0, sizeof(capheader));
+    memset(&capdata, 0, sizeof(capdata));
+
+    capheader.version = _LINUX_CAPABILITY_VERSION;
+    capheader.pid = 0;
+
+    capdata.effective = effective;
+    capdata.permitted = permitted;
+
+    LOGV("CAPSET perm=%llx eff=%llx\n", permitted, effective);
+    if (capset(&capheader, &capdata) != 0)
+        return errno;
+#endif /*HAVE_ANDROID_OS*/
+
+    return 0;
+}
+
+/*
  * Utility routine to fork zygote and specialize the child process.
  */
-static pid_t forkAndSpecializeCommon(const u4* args)
+static pid_t forkAndSpecializeCommon(const u4* args, bool isSystemServer)
 {
     pid_t pid;
 
@@ -335,6 +363,21 @@ static pid_t forkAndSpecializeCommon(const u4* args)
     ArrayObject* gids = (ArrayObject *)args[2];
     u4 debugFlags = args[3];
     ArrayObject *rlimits = (ArrayObject *)args[4];
+    int64_t permittedCapabilities, effectiveCapabilities;
+
+    if (isSystemServer) {
+        /*
+         * Don't use GET_ARG_LONG here for now.  gcc is generating code
+         * that uses register d8 as a temporary, and that's coming out
+         * scrambled in the child process.  b/3138621
+         */
+        //permittedCapabilities = GET_ARG_LONG(args, 5);
+        //effectiveCapabilities = GET_ARG_LONG(args, 7);
+        permittedCapabilities = args[5] | (int64_t) args[6] << 32;
+        effectiveCapabilities = args[7] | (int64_t) args[8] << 32;
+    } else {
+        permittedCapabilities = effectiveCapabilities = 0;
+    }
 
     if (!gDvm.zygote) {
         dvmThrowException("Ljava/lang/IllegalStateException;",
@@ -399,6 +442,13 @@ static pid_t forkAndSpecializeCommon(const u4* args)
             dvmAbort();
         }
 
+        err = setCapabilities(permittedCapabilities, effectiveCapabilities);
+        if (err != 0) {
+            LOGE("cannot set capabilities (%llx,%llx): %s\n",
+                permittedCapabilities, effectiveCapabilities, strerror(err));
+            dvmAbort();
+        }
+
         /*
          * Our system thread ID has changed.  Get the new one.
          */
@@ -429,19 +479,20 @@ static void Dalvik_dalvik_system_Zygote_forkAndSpecialize(const u4* args,
 {
     pid_t pid;
 
-    pid = forkAndSpecializeCommon(args);
+    pid = forkAndSpecializeCommon(args, false);
 
     RETURN_INT(pid);
 }
 
 /* native public static int forkSystemServer(int uid, int gid,
- *     int[] gids, int debugFlags);
+ *     int[] gids, int debugFlags, long permittedCapabilities,
+ *     long effectiveCapabilities);
  */
 static void Dalvik_dalvik_system_Zygote_forkSystemServer(
         const u4* args, JValue* pResult)
 {
     pid_t pid;
-    pid = forkAndSpecializeCommon(args);
+    pid = forkAndSpecializeCommon(args, true);
 
     /* The zygote process checks whether the child process has died or not. */
     if (pid > 0) {
@@ -466,7 +517,7 @@ const DalvikNativeMethod dvm_dalvik_system_Zygote[] = {
         Dalvik_dalvik_system_Zygote_fork },
     { "forkAndSpecialize",            "(II[II[[I)I",
         Dalvik_dalvik_system_Zygote_forkAndSpecialize },
-    { "forkSystemServer",            "(II[II[[I)I",
+    { "forkSystemServer",            "(II[II[[IJJ)I",
         Dalvik_dalvik_system_Zygote_forkSystemServer },
     { NULL, NULL, NULL },
 };
