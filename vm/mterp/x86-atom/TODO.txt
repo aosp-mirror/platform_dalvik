@@ -11,6 +11,7 @@ Items requiring attention:
 
 (md) Correct OP_MONITOR_EXIT (need to adjust PC before throw)
 (md) OP_THROW needs to export the PC
+(md) Use dvmThrowAIOOBE(index, lentgh) for array bounds error.
 
 (lo) Implement OP_BREAKPOINT
 (lo) Implement OP_EXECUTE_INLINE_RANGE
