@@ -27,6 +27,7 @@ function oneop()
 
 oneop aaload
 oneop aastore
+oneop aastore2 # second aastore test
 oneop astore
 oneop astore_0
 oneop astore_1

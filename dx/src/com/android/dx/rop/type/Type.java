@@ -27,7 +27,10 @@ import java.util.HashMap;
  * other using {@code ==}.
  */
 public final class Type implements TypeBearer, Comparable<Type> {
-    /** {@code non-null;} intern table mapping string descriptors to instances */
+    /**
+     * {@code non-null;} intern table mapping string descriptors to
+     * instances
+     */
     private static final HashMap<String, Type> internTable =
         new HashMap<String, Type>(500);
 
@@ -252,9 +255,9 @@ public final class Type implements TypeBearer, Comparable<Type> {
     private final int newAt;
 
     /**
-     * {@code null-ok;} the internal-form class name corresponding to this type, if
-     * calculated; only valid if {@code this} is a reference type and
-     * additionally not a return address
+     * {@code null-ok;} the internal-form class name corresponding to
+     * this type, if calculated; only valid if {@code this} is a
+     * reference type and additionally not a return address
      */
     private String className;
 
@@ -392,7 +395,8 @@ public final class Type implements TypeBearer, Comparable<Type> {
      * with {@code "["} and calling {@code intern("L" + name + ";")}
      * in all other cases.
      *
-     * @param name {@code non-null;} the name of the class whose type is desired
+     * @param name {@code non-null;} the name of the class whose type
+     * is desired
      * @return {@code non-null;} the corresponding type
      * @throws IllegalArgumentException thrown if the name has
      * invalid syntax
