@@ -1,28 +1,5 @@
 Generated: ./blort.class
 reading blort.class...
-method <init> ()V
-first 0002
-block 0002
-  blort.j:@0000: move-param-object(0) v0:NffffLblort; <- .
-  blort.j:@0000: goto . <- .
-  next 0000
-block 0000
-  pred 0002
-  blort.j:@0000: move-object v2:NffffLblort; <- v0:NffffLblort;
-  blort.j:@0001: move-object v5:NffffLblort; <- v2:NffffLblort;
-  blort.j:@0001: move-object v2:NffffLblort; <- v5:NffffLblort;
-  blort.j:@0001: move-object v3:NffffLblort; <- v5:NffffLblort;
-  blort.j:@0002: move-object v5:NffffLblort; <- v3:NffffLblort;
-  blort.j:@0002: move-object v3:NffffLblort; <- v5:NffffLblort;
-  blort.j:@0002: move-object v4:NffffLblort; <- v5:NffffLblort;
-  blort.j:@0003: move-object v1:NffffLblort; <- v4:NffffLblort;
-  blort.j:@0005: goto . <- .
-  next 0003
-block 0003
-  pred 0000
-  blort.j:@0005: return-void . <- .
-  returns
-
 method test_jsr ()Ljava/lang/Object;
 first 005c
 block 005c
