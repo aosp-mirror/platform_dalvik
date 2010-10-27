@@ -296,10 +296,6 @@ struct DvmGlobals {
     /* method pointers - java.lang.ref.Reference */
     Method*     methJavaLangRefReference_enqueueInternal;
 
-    /* field offsets - java.nio.Buffer and java.nio.DirectByteBufferImpl */
-    //int         offJavaNioBuffer_capacity;
-    //int         offJavaNioDirectByteBufferImpl_pointer;
-
     /* method pointers - java.security.AccessController */
     volatile int javaSecurityAccessControllerReady;
     Method*     methJavaSecurityAccessController_doPrivileged[4];
