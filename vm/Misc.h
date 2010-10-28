@@ -128,7 +128,6 @@ void dvmPrintDebugMessage(const DebugOutputTarget* target, const char* format,
 #endif
     ;
 
-
 /*
  * Return a newly-allocated string in which all occurrences of '.' have
  * been changed to '/'.  If we find a '/' in the original string, NULL

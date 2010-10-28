@@ -61,6 +61,7 @@ typedef enum BBType {
     kMethodExitBlock,
     kPCReconstruction,
     kExceptionHandling,
+    kCatchEntry,
 } BBType;
 
 typedef struct ChainCellCounts {
@@ -133,20 +134,47 @@ typedef struct MIR {
 
 struct BasicBlockDataFlow;
 
+/* FIXME - debugging prupose only */
+typedef enum BlockAttributes {
+    kEndsWithThrow = 0,
+    kCatchBlock,
+} BlockAttributes;
+
+/* For successorBlockList */
+typedef enum BlockListType {
+    kNotUsed = 0,
+    kCatch,
+    kPackedSwitch,
+    kSparseSwitch,
+} BlockListType;
+
+#define BA_ENDS_WITH_THROW              (1 << kEndsWithThrow)
+#define BA_CATCH_BLOCK                  (1 << kCatchBlock)
+
 typedef struct BasicBlock {
     int id;
-    int visited;
+    bool visited;
     unsigned int startOffset;
     const Method *containingMethod;     // For blocks from the callee
     BBType blockType;
     bool needFallThroughBranch;         // For blocks ended due to length limit
     bool isFallThroughFromInvoke;       // True means the block needs alignment
+    u4 blockAttributes;                 // FIXME - debugging purpose only
+    u4 exceptionTypeIdx;                // FIXME - will be put elsewhere
     MIR *firstMIRInsn;
     MIR *lastMIRInsn;
     struct BasicBlock *fallThrough;
     struct BasicBlock *taken;
-    struct BasicBlock *next;            // Serial link for book keeping purposes
+    struct BasicBlock *iDom;            // Immediate dominator
     struct BasicBlockDataFlow *dataFlowInfo;
+    BitVector *predecessors;
+    BitVector *dominators;
+    BitVector *iDominated;              // Set nodes being immediately dominated
+    BitVector *domFrontier;             // Dominance frontier
+    struct {                            // For one-to-many successors like
+        BlockListType blockListType;    // switch and exception handling
+        GrowableList blocks;
+    } successorBlockList;
 } BasicBlock;
 
 struct LoopAnalysis;
@@ -161,7 +189,7 @@ typedef enum AssemblerStatus {
 typedef struct CompilationUnit {
     int numInsts;
     int numBlocks;
-    BasicBlock **blockList;
+    GrowableList blockList;
     const Method *method;
     const JitTraceDescription *traceDesc;
     LIR *firstLIRInsn;
@@ -213,6 +241,20 @@ typedef struct CompilationUnit {
      * MAX_CHAINED_SWITCH_CASES cases.
      */
     const u2 *switchOverflowPad;
+
+    /* New fields only for method-based compilation */
+    int numReachableBlocks;
+    int numDalvikRegisters;             // method->registersSize + inlined
+    BasicBlock *entryBlock;
+    BasicBlock *exitBlock;
+    GrowableList dfsOrder;
+    GrowableList domPostOrderTraversal;
+    BitVector *tryBlockAddr;
+    BitVector **defBlockMatrix;         // numDalvikRegister x numBlocks
+    BitVector *tempBlockV;
+    BitVector *tempDalvikRegisterV;
+    BitVector *tempSSARegisterV;        // numSSARegs
+    bool printSSANames;
 } CompilationUnit;
 
 #if defined(WITH_SELF_VERIFICATION)
@@ -221,7 +263,7 @@ typedef struct CompilationUnit {
 #define HEAP_ACCESS_SHADOW(_state)
 #endif
 
-BasicBlock *dvmCompilerNewBB(BBType blockType);
+BasicBlock *dvmCompilerNewBB(BBType blockType, int blockId);
 
 void dvmCompilerAppendMIR(BasicBlock *bb, MIR *mir);
 

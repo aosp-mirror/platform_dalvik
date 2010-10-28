@@ -376,7 +376,8 @@ static ArmLIR *genCheckCommon(CompilationUnit *cUnit, int dOffset,
         pcrLabel->operands[0] = dPC;
         pcrLabel->operands[1] = dOffset;
         /* Insert the place holder to the growable list */
-        dvmInsertGrowableList(&cUnit->pcReconstructionList, pcrLabel);
+        dvmInsertGrowableList(&cUnit->pcReconstructionList,
+                              (intptr_t) pcrLabel);
     }
     /* Branch to the PC reconstruction code */
     branch->generic.target = (LIR *) pcrLabel;

@@ -82,7 +82,8 @@ retry:
             LOGI("Total arena pages for JIT: %d", numArenaBlocks);
         goto retry;
     }
-    return NULL;
+    /* Should not reach here */
+    dvmAbort();
 }
 
 /* Reclaim all the arena blocks allocated so far */
@@ -101,8 +102,8 @@ void dvmInitGrowableList(GrowableList *gList, size_t initLength)
 {
     gList->numAllocated = initLength;
     gList->numUsed = 0;
-    gList->elemList = (void **) dvmCompilerNew(sizeof(void *) * initLength,
-                                               true);
+    gList->elemList = (intptr_t *) dvmCompilerNew(sizeof(intptr_t) * initLength,
+                                                  true);
 }
 
 /* Expand the capacity of a growable list */
@@ -114,14 +115,15 @@ static void expandGrowableList(GrowableList *gList)
     } else {
         newLength += 128;
     }
-    void *newArray = dvmCompilerNew(sizeof(void *) * newLength, true);
-    memcpy(newArray, gList->elemList, sizeof(void *) * gList->numAllocated);
+    intptr_t *newArray =
+        (intptr_t *) dvmCompilerNew(sizeof(intptr_t) * newLength, true);
+    memcpy(newArray, gList->elemList, sizeof(intptr_t) * gList->numAllocated);
     gList->numAllocated = newLength;
-    gList->elemList = (void **)newArray;
+    gList->elemList = newArray;
 }
 
 /* Insert a new element into the growable list */
-void dvmInsertGrowableList(GrowableList *gList, void *elem)
+void dvmInsertGrowableList(GrowableList *gList, intptr_t elem)
 {
     assert(gList->numAllocated != 0);
     if (gList->numUsed == gList->numAllocated) {
@@ -130,10 +132,30 @@ void dvmInsertGrowableList(GrowableList *gList, void *elem)
     gList->elemList[gList->numUsed++] = elem;
 }
 
+void dvmGrowableListIteratorInit(GrowableList *gList,
+                                 GrowableListIterator *iterator)
+{
+    iterator->list = gList;
+    iterator->idx = 0;
+    iterator->size = gList->numUsed;
+}
+
+intptr_t dvmGrowableListIteratorNext(GrowableListIterator *iterator)
+{
+    assert(iterator->size == iterator->list->numUsed);
+    if (iterator->idx == iterator->size) return 0;
+    return iterator->list->elemList[iterator->idx++];
+}
+
+intptr_t dvmGrowableListGetElement(const GrowableList *gList, size_t idx)
+{
+    assert(idx < gList->numUsed);
+    return gList->elemList[idx];
+}
+
 /* Debug Utility - dump a compilation unit */
 void dvmCompilerDumpCompilationUnit(CompilationUnit *cUnit)
 {
-    int i;
     BasicBlock *bb;
     char *blockTypeNames[] = {
         "Normal Chaining Cell",
@@ -156,9 +178,13 @@ void dvmCompilerDumpCompilationUnit(CompilationUnit *cUnit)
          cUnit->method->name);
     LOGD("%d insns", dvmGetMethodInsnsSize(cUnit->method));
     LOGD("%d blocks in total", cUnit->numBlocks);
+    GrowableListIterator iterator;
 
-    for (i = 0; i < cUnit->numBlocks; i++) {
-        bb = cUnit->blockList[i];
+    dvmGrowableListIteratorInit(&cUnit->blockList, &iterator);
+
+    while (true) {
+        bb = (BasicBlock *) dvmGrowableListIteratorNext(&iterator);
+        if (bb == NULL) break;
         LOGD("Block %d (%s) (insn %04x - %04x%s)\n",
              bb->id,
              blockTypeNames[bb->blockType],
@@ -275,7 +301,7 @@ bool dvmCompilerSetBit(BitVector *pBits, int num)
     assert(num >= 0);
     if (num >= pBits->storageSize * (int)sizeof(u4) * 8) {
         if (!pBits->expandable)
-            return false;
+            dvmAbort();
 
         /* Round up to word boundaries for "num+1" bits */
         int newSize = (num + 1 + 31) >> 5;
@@ -290,6 +316,36 @@ bool dvmCompilerSetBit(BitVector *pBits, int num)
 
     pBits->storage[num >> 5] |= 1 << (num & 0x1f);
     return true;
+}
+
+/*
+ * Mark the specified bit as "unset".
+ *
+ * Returns "false" if the bit is outside the range of the vector and we're
+ * not allowed to expand.
+ *
+ * NOTE: this is the sister implementation of dvmClearBit. In this version
+ * memory is allocated from the compiler arena.
+ */
+bool dvmCompilerClearBit(BitVector *pBits, int num)
+{
+    assert(num >= 0);
+    if (num >= pBits->storageSize * (int)sizeof(u4) * 8) {
+        LOGE("Trying to clear a bit that is not set in the vector yet!");
+        dvmAbort();
+    }
+
+    pBits->storage[num >> 5] &= ~(1 << (num & 0x1f));
+    return true;
+}
+
+/*
+ * If set is true, mark all bits as 1. Otherwise mark all bits as 0.
+ */
+void dvmCompilerMarkAllBits(BitVector *pBits, bool set)
+{
+    int value = set ? -1 : 0;
+    memset(pBits->storage, value, pBits->storageSize * (int)sizeof(u4));
 }
 
 void dvmDebugBitVector(char *msg, const BitVector *bv, int length)
@@ -314,4 +370,42 @@ void dvmCompilerAbort(CompilationUnit *cUnit)
      * Matching setjmp in compiler thread work loop in Compiler.c.
      */
     longjmp(*cUnit->bailPtr, 1);
+}
+
+void dvmDumpBlockBitVector(const GrowableList *blocks, char *msg,
+                           const BitVector *bv, int length)
+{
+    int i;
+
+    LOGE("%s", msg);
+    for (i = 0; i < length; i++) {
+        if (dvmIsBitSet(bv, i)) {
+            BasicBlock *bb =
+                (BasicBlock *) dvmGrowableListGetElement(blocks, i);
+            char blockName[BLOCK_NAME_LEN];
+            dvmGetBlockName(bb, blockName);
+            LOGE("Bit %d / %s is set", i, blockName);
+        }
+    }
+}
+
+void dvmGetBlockName(BasicBlock *bb, char *name)
+{
+    switch (bb->blockType) {
+        case kMethodEntryBlock:
+            snprintf(name, BLOCK_NAME_LEN, "entry");
+            break;
+        case kMethodExitBlock:
+            snprintf(name, BLOCK_NAME_LEN, "exit");
+            break;
+        case kDalvikByteCode:
+            snprintf(name, BLOCK_NAME_LEN, "block%04x", bb->startOffset);
+            break;
+        case kExceptionHandling:
+            snprintf(name, BLOCK_NAME_LEN, "exception%04x", bb->startOffset);
+            break;
+        default:
+            snprintf(name, BLOCK_NAME_LEN, "??");
+            break;
+    }
 }

@@ -809,7 +809,7 @@ int dvmCompilerDataFlowAttributes[kMirOpLast] = {
 };
 
 /* Return the Dalvik register/subscript pair of a given SSA register */
-int dvmConvertSSARegToDalvik(CompilationUnit *cUnit, int ssaReg)
+int dvmConvertSSARegToDalvik(const CompilationUnit *cUnit, int ssaReg)
 {
       return GET_ELEM_N(cUnit->ssaToDalvikMap, int, ssaReg);
 }
@@ -819,21 +819,58 @@ int dvmConvertSSARegToDalvik(CompilationUnit *cUnit, int ssaReg)
  * and subscript pair. Each SSA register can be used to index the
  * ssaToDalvikMap list to get the subscript[31..16]/dalvik_reg[15..0] mapping.
  */
-char *dvmCompilerGetDalvikDisassembly(DecodedInstruction *insn,
+char *dvmCompilerGetDalvikDisassembly(const DecodedInstruction *insn,
                                       char *note)
 {
     char buffer[256];
     int opcode = insn->opcode;
     int dfAttributes = dvmCompilerDataFlowAttributes[opcode];
+    int flags = dexGetFlagsFromOpcode(insn->opcode);
     char *ret;
 
     buffer[0] = 0;
-    strcpy(buffer, dexGetOpcodeName(opcode));
+    if (opcode >= kMirOpFirst) {
+        if (opcode == kMirOpPhi) {
+            strcpy(buffer, "PHI");
+        }
+        else {
+            sprintf(buffer, "Opcode 0x%x", opcode);
+        }
+    } else {
+        strcpy(buffer, dexGetOpcodeName(opcode));
+    }
 
     if (note)
         strcat(buffer, note);
 
-    if (dfAttributes & DF_FORMAT_35C) {
+    /* For branches, decode the instructions to print out the branch targets */
+    if (flags & kInstrCanBranch) {
+        InstructionFormat dalvikFormat = dexGetFormatFromOpcode(insn->opcode);
+        int offset = 0;
+        switch (dalvikFormat) {
+            case kFmt21t:
+                snprintf(buffer + strlen(buffer), 256, " v%d,", insn->vA);
+                offset = (int) insn->vB;
+                break;
+            case kFmt22t:
+                snprintf(buffer + strlen(buffer), 256, " v%d, v%d,",
+                         insn->vA, insn->vB);
+                offset = (int) insn->vC;
+                break;
+            case kFmt10t:
+            case kFmt20t:
+            case kFmt30t:
+                offset = (int) insn->vA;
+                break;
+            default:
+                LOGE("Unexpected branch format: %d", dalvikFormat);
+                dvmAbort();
+                break;
+        }
+        snprintf(buffer + strlen(buffer), 256, " (%c%x)",
+                 offset > 0 ? '+' : '-',
+                 offset > 0 ? offset : -offset);
+    } else if (dfAttributes & DF_FORMAT_35C) {
         unsigned int i;
         for (i = 0; i < insn->vA; i++) {
             if (i != 0) strcat(buffer, ",");
@@ -851,18 +888,153 @@ char *dvmCompilerGetDalvikDisassembly(DecodedInstruction *insn,
         if (dfAttributes & DF_B_IS_REG) {
             snprintf(buffer + strlen(buffer), 256, ", v%d", insn->vB);
         }
-        else {
+        else if (opcode < kMirOpFirst) {
             snprintf(buffer + strlen(buffer), 256, ", (#%d)", insn->vB);
         }
         if (dfAttributes & DF_C_IS_REG) {
             snprintf(buffer + strlen(buffer), 256, ", v%d", insn->vC);
         }
-        else {
+        else if (opcode < kMirOpFirst) {
             snprintf(buffer + strlen(buffer), 256, ", (#%d)", insn->vC);
         }
     }
     int length = strlen(buffer) + 1;
     ret = (char *)dvmCompilerNew(length, false);
+    memcpy(ret, buffer, length);
+    return ret;
+}
+
+char *getSSAName(const CompilationUnit *cUnit, int ssaReg, char *name)
+{
+    int ssa2DalvikValue = dvmConvertSSARegToDalvik(cUnit, ssaReg);
+
+    sprintf(name, "v%d_%d",
+            DECODE_REG(ssa2DalvikValue), DECODE_SUB(ssa2DalvikValue));
+    return name;
+}
+
+/*
+ * Dalvik instruction disassembler with optional SSA printing.
+ */
+char *dvmCompilerFullDisassembler(const CompilationUnit *cUnit,
+                                  const MIR *mir)
+{
+    char buffer[256];
+    char operand0[256], operand1[256];
+    const DecodedInstruction *insn = &mir->dalvikInsn;
+    int opcode = insn->opcode;
+    int dfAttributes = dvmCompilerDataFlowAttributes[opcode];
+    int flags = dexGetFlagsFromOpcode(insn->opcode);
+    char *ret;
+    int length;
+
+    buffer[0] = 0;
+    if (opcode >= kMirOpFirst) {
+        if (opcode == kMirOpPhi) {
+            snprintf(buffer, 256, "PHI %s = (%s",
+                     getSSAName(cUnit, mir->ssaRep->defs[0], operand0),
+                     getSSAName(cUnit, mir->ssaRep->uses[0], operand1));
+            int i;
+            for (i = 1; i < mir->ssaRep->numUses; i++) {
+                snprintf(buffer + strlen(buffer), 256, ", %s",
+                         getSSAName(cUnit, mir->ssaRep->uses[i], operand0));
+            }
+            snprintf(buffer + strlen(buffer), 256, ")");
+        }
+        else {
+            sprintf(buffer, "Opcode 0x%x", opcode);
+        }
+        goto done;
+    } else {
+        strcpy(buffer, dexGetOpcodeName(opcode));
+    }
+
+    /* For branches, decode the instructions to print out the branch targets */
+    if (flags & kInstrCanBranch) {
+        InstructionFormat dalvikFormat = dexGetFormatFromOpcode(insn->opcode);
+        int delta = 0;
+        switch (dalvikFormat) {
+            case kFmt21t:
+                snprintf(buffer + strlen(buffer), 256, " %s, ",
+                         getSSAName(cUnit, mir->ssaRep->uses[0], operand0));
+                delta = (int) insn->vB;
+                break;
+            case kFmt22t:
+                snprintf(buffer + strlen(buffer), 256, " %s, %s, ",
+                         getSSAName(cUnit, mir->ssaRep->uses[0], operand0),
+                         getSSAName(cUnit, mir->ssaRep->uses[1], operand1));
+                delta = (int) insn->vC;
+                break;
+            case kFmt10t:
+            case kFmt20t:
+            case kFmt30t:
+                delta = (int) insn->vA;
+                break;
+            default:
+                LOGE("Unexpected branch format: %d", dalvikFormat);
+                dvmAbort();
+                break;
+        }
+        snprintf(buffer + strlen(buffer), 256, " %04x",
+                 mir->offset + delta);
+    } else if (dfAttributes & (DF_FORMAT_35C | DF_FORMAT_3RC)) {
+        unsigned int i;
+        for (i = 0; i < insn->vA; i++) {
+            if (i != 0) strcat(buffer, ",");
+            snprintf(buffer + strlen(buffer), 256, " %s",
+                     getSSAName(cUnit, mir->ssaRep->uses[i], operand0));
+        }
+    } else {
+        int udIdx;
+        if (mir->ssaRep->numDefs) {
+
+            for (udIdx = 0; udIdx < mir->ssaRep->numDefs; udIdx++) {
+                snprintf(buffer + strlen(buffer), 256, " %s",
+                         getSSAName(cUnit, mir->ssaRep->defs[udIdx], operand0));
+            }
+            strcat(buffer, ",");
+        }
+        if (mir->ssaRep->numUses) {
+            /* No leading ',' for the first use */
+            snprintf(buffer + strlen(buffer), 256, " %s",
+                     getSSAName(cUnit, mir->ssaRep->uses[0], operand0));
+            for (udIdx = 1; udIdx < mir->ssaRep->numUses; udIdx++) {
+                snprintf(buffer + strlen(buffer), 256, ", %s",
+                         getSSAName(cUnit, mir->ssaRep->uses[udIdx], operand0));
+            }
+        }
+        if (opcode < kMirOpFirst) {
+            InstructionFormat dalvikFormat = dexGetFormatFromOpcode(opcode);
+            switch (dalvikFormat) {
+                case kFmt11n:        // op vA, #+B
+                case kFmt21s:        // op vAA, #+BBBB
+                case kFmt21h:        // op vAA, #+BBBB00000[00000000]
+                case kFmt31i:        // op vAA, #+BBBBBBBB
+                case kFmt51l:        // op vAA, #+BBBBBBBBBBBBBBBB
+                    snprintf(buffer + strlen(buffer), 256, " #%#x", insn->vB);
+                    break;
+                case kFmt21c:        // op vAA, thing@BBBB
+                case kFmt31c:        // op vAA, thing@BBBBBBBB
+                    snprintf(buffer + strlen(buffer), 256, " @%#x", insn->vB);
+                    break;
+                case kFmt22b:        // op vAA, vBB, #+CC
+                case kFmt22s:        // op vA, vB, #+CCCC
+                    snprintf(buffer + strlen(buffer), 256, " #%#x", insn->vC);
+                    break;
+                case kFmt22c:        // op vA, vB, thing@CCCC
+                case kFmt22cs:       // [opt] op vA, vB, field offset CCCC
+                    snprintf(buffer + strlen(buffer), 256, " @%#x", insn->vC);
+                    break;
+                    /* No need for special printing */
+                default:
+                    break;
+            }
+        }
+    }
+
+done:
+    length = strlen(buffer) + 1;
+    ret = (char *) dvmCompilerNew(length, false);
     memcpy(ret, buffer, length);
     return ret;
 }
@@ -920,7 +1092,7 @@ static inline void handleLiveInUse(BitVector *useV, BitVector *defV,
 }
 
 /* Mark a reg as being defined */
-static inline void handleLiveInDef(BitVector *defV, int dalvikRegId)
+static inline void handleDef(BitVector *defV, int dalvikRegId)
 {
     dvmCompilerSetBit(defV, dalvikRegId);
 }
@@ -929,22 +1101,19 @@ static inline void handleLiveInDef(BitVector *defV, int dalvikRegId)
  * Find out live-in variables for natural loops. Variables that are live-in in
  * the main loop body are considered to be defined in the entry block.
  */
-void dvmCompilerFindLiveIn(CompilationUnit *cUnit, BasicBlock *bb)
+bool dvmCompilerFindLocalLiveIn(CompilationUnit *cUnit, BasicBlock *bb)
 {
     MIR *mir;
     BitVector *useV, *defV, *liveInV;
 
-    if (bb->blockType != kDalvikByteCode &&
-        bb->blockType != kTraceEntryBlock) {
-        return;
-    }
+    if (bb->dataFlowInfo == NULL) return false;
 
     useV = bb->dataFlowInfo->useV =
-        dvmCompilerAllocBitVector(cUnit->method->registersSize, false);
+        dvmCompilerAllocBitVector(cUnit->numDalvikRegisters, false);
     defV = bb->dataFlowInfo->defV =
-        dvmCompilerAllocBitVector(cUnit->method->registersSize, false);
+        dvmCompilerAllocBitVector(cUnit->numDalvikRegisters, false);
     liveInV = bb->dataFlowInfo->liveInV =
-        dvmCompilerAllocBitVector(cUnit->method->registersSize, false);
+        dvmCompilerAllocBitVector(cUnit->numDalvikRegisters, false);
 
     for (mir = bb->firstMIRInsn; mir; mir = mir->next) {
         int dfAttributes =
@@ -972,12 +1141,13 @@ void dvmCompilerFindLiveIn(CompilationUnit *cUnit, BasicBlock *bb)
             }
         }
         if (dfAttributes & DF_HAS_DEFS) {
-            handleLiveInDef(defV, dInsn->vA);
+            handleDef(defV, dInsn->vA);
             if (dfAttributes & DF_DA_WIDE) {
-                handleLiveInDef(defV, dInsn->vA+1);
+                handleDef(defV, dInsn->vA+1);
             }
         }
     }
+    return true;
 }
 
 /* Find out the latest SSA register for a given Dalvik register */
@@ -1002,7 +1172,7 @@ static void handleSSADef(CompilationUnit *cUnit, int *defs, int dalvikReg,
     cUnit->dalvikToSSAMap[dalvikReg] = newD2SMapping;
 
     int newS2DMapping = ENCODE_REG_SUB(dalvikReg, dalvikSub);
-    dvmInsertGrowableList(cUnit->ssaToDalvikMap, (void *) newS2DMapping);
+    dvmInsertGrowableList(cUnit->ssaToDalvikMap, newS2DMapping);
 
     defs[regIndex] = ssaReg;
 }
@@ -1038,13 +1208,11 @@ static void dataFlowSSAFormat3RC(CompilationUnit *cUnit, MIR *mir)
 }
 
 /* Entry function to convert a block into SSA representation */
-void dvmCompilerDoSSAConversion(CompilationUnit *cUnit, BasicBlock *bb)
+bool dvmCompilerDoSSAConversion(CompilationUnit *cUnit, BasicBlock *bb)
 {
     MIR *mir;
 
-    if (bb->blockType != kDalvikByteCode && bb->blockType != kTraceEntryBlock) {
-        return;
-    }
+    if (bb->dataFlowInfo == NULL) return false;
 
     for (mir = bb->firstMIRInsn; mir; mir = mir->next) {
         mir->ssaRep = (struct SSARepresentation *)
@@ -1150,13 +1318,18 @@ void dvmCompilerDoSSAConversion(CompilationUnit *cUnit, BasicBlock *bb)
         }
     }
 
+    /*
+     * Take a snapshot of Dalvik->SSA mapping at the end of each block. The
+     * input to PHI nodes can be derived from the snapshot of all predecessor
+     * blocks.
+     */
     bb->dataFlowInfo->dalvikToSSAMap =
         (int *)dvmCompilerNew(sizeof(int) * cUnit->method->registersSize,
                               false);
 
-    /* Take a snapshot of Dalvik->SSA mapping at the end of each block */
     memcpy(bb->dataFlowInfo->dalvikToSSAMap, cUnit->dalvikToSSAMap,
            sizeof(int) * cUnit->method->registersSize);
+    return true;
 }
 
 /* Setup a constant value for opcodes thare have the DF_SETS_CONST attribute */
@@ -1166,7 +1339,7 @@ static void setConstant(CompilationUnit *cUnit, int ssaReg, int value)
     cUnit->constantValues[ssaReg] = value;
 }
 
-void dvmCompilerDoConstantPropagation(CompilationUnit *cUnit, BasicBlock *bb)
+bool dvmCompilerDoConstantPropagation(CompilationUnit *cUnit, BasicBlock *bb)
 {
     MIR *mir;
     BitVector *isConstantV = cUnit->isConstantV;
@@ -1236,9 +1409,10 @@ void dvmCompilerDoConstantPropagation(CompilationUnit *cUnit, BasicBlock *bb)
         }
     }
     /* TODO: implement code to handle arithmetic operations */
+    return true;
 }
 
-void dvmCompilerFindInductionVariables(struct CompilationUnit *cUnit,
+bool dvmCompilerFindInductionVariables(struct CompilationUnit *cUnit,
                                        struct BasicBlock *bb)
 {
     BitVector *isIndVarV = cUnit->loopAnalysis->isIndVarV;
@@ -1248,13 +1422,13 @@ void dvmCompilerFindInductionVariables(struct CompilationUnit *cUnit,
 
     if (bb->blockType != kDalvikByteCode &&
         bb->blockType != kTraceEntryBlock) {
-        return;
+        return false;
     }
 
     /* If the bb doesn't have a phi it cannot contain an induction variable */
     if (bb->firstMIRInsn == NULL ||
         bb->firstMIRInsn->dalvikInsn.opcode != kMirOpPhi) {
-        return;
+        return false;
     }
 
     /* Find basic induction variable first */
@@ -1314,7 +1488,7 @@ void dvmCompilerFindInductionVariables(struct CompilationUnit *cUnit,
                     ivInfo->m = 1;         // always 1 to basic iv
                     ivInfo->c = 0;         // N/A to basic iv
                     ivInfo->inc = deltaValue;
-                    dvmInsertGrowableList(ivList, (void *) ivInfo);
+                    dvmInsertGrowableList(ivList, (intptr_t) ivInfo);
                     cUnit->loopAnalysis->numBasicIV++;
                     break;
                 }
@@ -1396,10 +1570,11 @@ void dvmCompilerFindInductionVariables(struct CompilationUnit *cUnit,
                 ivInfo->m = ivInfoOld->m;
                 ivInfo->c = c + ivInfoOld->c;
                 ivInfo->inc = ivInfoOld->inc;
-                dvmInsertGrowableList(ivList, (void *) ivInfo);
+                dvmInsertGrowableList(ivList, (intptr_t) ivInfo);
             }
         }
     }
+    return true;
 }
 
 /* Setup the basic data structures for SSA conversion */
@@ -1424,8 +1599,7 @@ void dvmInitializeSSAConversion(CompilationUnit *cUnit)
      * into "(0 << 16) | i"
      */
     for (i = 0; i < numDalvikReg; i++) {
-        dvmInsertGrowableList(cUnit->ssaToDalvikMap,
-                              (void *) ENCODE_REG_SUB(i, 0));
+        dvmInsertGrowableList(cUnit->ssaToDalvikMap, ENCODE_REG_SUB(i, 0));
     }
 
     /*
@@ -1442,10 +1616,17 @@ void dvmInitializeSSAConversion(CompilationUnit *cUnit)
     /*
      * Allocate the BasicBlockDataFlow structure for the entry and code blocks
      */
-    for (i = 0; i < cUnit->numBlocks; i++) {
-        BasicBlock *bb = cUnit->blockList[i];
+    GrowableListIterator iterator;
+
+    dvmGrowableListIteratorInit(&cUnit->blockList, &iterator);
+
+    while (true) {
+        BasicBlock *bb = (BasicBlock *) dvmGrowableListIteratorNext(&iterator);
+        if (bb == NULL) break;
         if (bb->blockType == kDalvikByteCode ||
-            bb->blockType == kTraceEntryBlock) {
+            bb->blockType == kTraceEntryBlock ||
+            bb->blockType == kMethodEntryBlock ||
+            bb->blockType == kMethodExitBlock) {
             bb->dataFlowInfo = (BasicBlockDataFlow *)
                 dvmCompilerNew(sizeof(BasicBlockDataFlow),
                                true);
@@ -1453,18 +1634,109 @@ void dvmInitializeSSAConversion(CompilationUnit *cUnit)
     }
 }
 
-void dvmCompilerDataFlowAnalysisDispatcher(CompilationUnit *cUnit,
-                void (*func)(CompilationUnit *, BasicBlock *))
+/* Clear the visited flag for each BB */
+bool dvmCompilerClearVisitedFlag(struct CompilationUnit *cUnit,
+                                 struct BasicBlock *bb)
 {
-    int i;
-    for (i = 0; i < cUnit->numBlocks; i++) {
-        BasicBlock *bb = cUnit->blockList[i];
-        (*func)(cUnit, bb);
+    bb->visited = false;
+    return true;
+}
+
+void dvmCompilerDataFlowAnalysisDispatcher(CompilationUnit *cUnit,
+                bool (*func)(CompilationUnit *, BasicBlock *),
+                DataFlowAnalysisMode dfaMode,
+                bool isIterative)
+{
+    bool change = true;
+
+    while (change) {
+        change = false;
+
+        /* Scan all blocks and perform the operations specified in func */
+        if (dfaMode == kAllNodes) {
+            GrowableListIterator iterator;
+            dvmGrowableListIteratorInit(&cUnit->blockList, &iterator);
+            while (true) {
+                BasicBlock *bb =
+                    (BasicBlock *) dvmGrowableListIteratorNext(&iterator);
+                if (bb == NULL) break;
+                change |= (*func)(cUnit, bb);
+            }
+        }
+        /*
+         * Scan all reachable blocks and perform the operations specified in
+         * func.
+         */
+        else if (dfaMode == kReachableNodes) {
+            int numReachableBlocks = cUnit->numReachableBlocks;
+            int idx;
+            const GrowableList *blockList = &cUnit->blockList;
+
+            for (idx = 0; idx < numReachableBlocks; idx++) {
+                int blockIdx = cUnit->dfsOrder.elemList[idx];
+                BasicBlock *bb =
+                    (BasicBlock *) dvmGrowableListGetElement(blockList,
+                                                             blockIdx);
+                change |= (*func)(cUnit, bb);
+            }
+        }
+        /*
+         * Scan all reachable blocks by the pre-order in the depth-first-search
+         * CFG and perform the operations specified in func.
+         */
+        else if (dfaMode == kPreOrderDFSTraversal) {
+            int numReachableBlocks = cUnit->numReachableBlocks;
+            int idx;
+            const GrowableList *blockList = &cUnit->blockList;
+
+            for (idx = 0; idx < numReachableBlocks; idx++) {
+                int dfsIdx = cUnit->dfsOrder.elemList[idx];
+                BasicBlock *bb =
+                    (BasicBlock *) dvmGrowableListGetElement(blockList, dfsIdx);
+                change |= (*func)(cUnit, bb);
+            }
+        }
+        /*
+         * Scan all reachable blocks by the post-order in the depth-first-search
+         * CFG and perform the operations specified in func.
+         */
+        else if (dfaMode == kPostOrderDFSTraversal) {
+            int numReachableBlocks = cUnit->numReachableBlocks;
+            int idx;
+            const GrowableList *blockList = &cUnit->blockList;
+
+            for (idx = numReachableBlocks - 1; idx >= 0; idx--) {
+                int dfsIdx = cUnit->dfsOrder.elemList[idx];
+                BasicBlock *bb =
+                    (BasicBlock *) dvmGrowableListGetElement(blockList, dfsIdx);
+                change |= (*func)(cUnit, bb);
+            }
+        }
+        /*
+         * Scan all reachable blocks by the post-order in the dominator tree
+         * and perform the operations specified in func.
+         */
+        else if (dfaMode == kPostOrderDOMTraversal) {
+            int numReachableBlocks = cUnit->numReachableBlocks;
+            int idx;
+            const GrowableList *blockList = &cUnit->blockList;
+
+            for (idx = 0; idx < numReachableBlocks; idx++) {
+                int domIdx = cUnit->domPostOrderTraversal.elemList[idx];
+                BasicBlock *bb =
+                    (BasicBlock *) dvmGrowableListGetElement(blockList, domIdx);
+                change |= (*func)(cUnit, bb);
+            }
+        }
+        /* If isIterative is false, exit the loop after the first iteration */
+        change &= isIterative;
     }
 }
 
 /* Main entry point to do SSA conversion for non-loop traces */
 void dvmCompilerNonLoopAnalysis(CompilationUnit *cUnit)
 {
-    dvmCompilerDataFlowAnalysisDispatcher(cUnit, dvmCompilerDoSSAConversion);
+    dvmCompilerDataFlowAnalysisDispatcher(cUnit, dvmCompilerDoSSAConversion,
+                                          kAllNodes,
+                                          false /* isIterative */);
 }

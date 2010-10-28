@@ -917,7 +917,7 @@ static void genReturnCommon(CompilationUnit *cUnit, MIR *mir)
     pcrLabel->operands[0] = dPC;
     pcrLabel->operands[1] = mir->offset;
     /* Insert the place holder to the growable list */
-    dvmInsertGrowableList(&cUnit->pcReconstructionList, pcrLabel);
+    dvmInsertGrowableList(&cUnit->pcReconstructionList, (intptr_t) pcrLabel);
     /* Branch to the PC reconstruction code */
     branch->generic.target = (LIR *) pcrLabel;
 }
@@ -1161,7 +1161,8 @@ static void genInvokeVirtualCommon(CompilationUnit *cUnit, MIR *mir,
         pcrLabel->operands[0] = dPC;
         pcrLabel->operands[1] = mir->offset;
         /* Insert the place holder to the growable list */
-        dvmInsertGrowableList(&cUnit->pcReconstructionList, pcrLabel);
+        dvmInsertGrowableList(&cUnit->pcReconstructionList,
+                              (intptr_t) pcrLabel);
     }
 
     /* return through lr+2 - punt to the interpreter */
@@ -3013,7 +3014,8 @@ static bool handleFmt35c_3rc(CompilationUnit *cUnit, MIR *mir, BasicBlock *bb,
                 pcrLabel->operands[0] = dPC;
                 pcrLabel->operands[1] = mir->offset;
                 /* Insert the place holder to the growable list */
-                dvmInsertGrowableList(&cUnit->pcReconstructionList, pcrLabel);
+                dvmInsertGrowableList(&cUnit->pcReconstructionList,
+                                      (intptr_t) pcrLabel);
             }
 
             /* return through lr+2 - punt to the interpreter */
@@ -3886,7 +3888,7 @@ static void setupLoopEntryBlock(CompilationUnit *cUnit, BasicBlock *entry,
         (int) (cUnit->method->insns + entry->startOffset);
     pcrLabel->operands[1] = entry->startOffset;
     /* Insert the place holder to the growable list */
-    dvmInsertGrowableList(&cUnit->pcReconstructionList, pcrLabel);
+    dvmInsertGrowableList(&cUnit->pcReconstructionList, (intptr_t) pcrLabel);
 
     /*
      * Next, create two branches - one branch over to the loop body and the
@@ -3939,7 +3941,8 @@ void dvmCompilerMIR2LIR(CompilationUnit *cUnit)
         dvmInitGrowableList(&chainingListByType[i], 2);
     }
 
-    BasicBlock **blockList = cUnit->blockList;
+    GrowableListIterator iterator;
+    dvmGrowableListIteratorInit(&cUnit->blockList, &iterator);
 
     if (cUnit->executionCount) {
         /*
@@ -3976,14 +3979,15 @@ void dvmCompilerMIR2LIR(CompilationUnit *cUnit)
     }
 
     /* Handle the content in each basic block */
-    for (i = 0; i < cUnit->numBlocks; i++) {
-        blockList[i]->visited = true;
+    for (i = 0; ; i++) {
         MIR *mir;
+        BasicBlock *bb = (BasicBlock *) dvmGrowableListIteratorNext(&iterator);
+        if (bb == NULL) break;
 
-        labelList[i].operands[0] = blockList[i]->startOffset;
+        labelList[i].operands[0] = bb->startOffset;
 
-        if (blockList[i]->blockType >= kChainingCellGap) {
-            if (blockList[i]->isFallThroughFromInvoke == true) {
+        if (bb->blockType >= kChainingCellGap) {
+            if (bb->isFallThroughFromInvoke == true) {
                 /* Align this block first since it is a return chaining cell */
                 newLIR0(cUnit, kArmPseudoPseudoAlign4);
             }
@@ -3994,56 +3998,53 @@ void dvmCompilerMIR2LIR(CompilationUnit *cUnit)
             dvmCompilerAppendLIR(cUnit, (LIR *) &labelList[i]);
         }
 
-        if (blockList[i]->blockType == kTraceEntryBlock) {
+        if (bb->blockType == kTraceEntryBlock) {
             labelList[i].opcode = kArmPseudoEntryBlock;
-            if (blockList[i]->firstMIRInsn == NULL) {
+            if (bb->firstMIRInsn == NULL) {
                 continue;
             } else {
-              setupLoopEntryBlock(cUnit, blockList[i],
-                                  &labelList[blockList[i]->fallThrough->id]);
+              setupLoopEntryBlock(cUnit, bb,
+                                  &labelList[bb->fallThrough->id]);
             }
-        } else if (blockList[i]->blockType == kTraceExitBlock) {
+        } else if (bb->blockType == kTraceExitBlock) {
             labelList[i].opcode = kArmPseudoExitBlock;
             goto gen_fallthrough;
-        } else if (blockList[i]->blockType == kDalvikByteCode) {
+        } else if (bb->blockType == kDalvikByteCode) {
             labelList[i].opcode = kArmPseudoNormalBlockLabel;
             /* Reset the register state */
             dvmCompilerResetRegPool(cUnit);
             dvmCompilerClobberAllRegs(cUnit);
             dvmCompilerResetNullCheck(cUnit);
         } else {
-            switch (blockList[i]->blockType) {
+            switch (bb->blockType) {
                 case kChainingCellNormal:
                     labelList[i].opcode = kArmPseudoChainingCellNormal;
                     /* handle the codegen later */
                     dvmInsertGrowableList(
-                        &chainingListByType[kChainingCellNormal], (void *) i);
+                        &chainingListByType[kChainingCellNormal], i);
                     break;
                 case kChainingCellInvokeSingleton:
                     labelList[i].opcode =
                         kArmPseudoChainingCellInvokeSingleton;
                     labelList[i].operands[0] =
-                        (int) blockList[i]->containingMethod;
+                        (int) bb->containingMethod;
                     /* handle the codegen later */
                     dvmInsertGrowableList(
-                        &chainingListByType[kChainingCellInvokeSingleton],
-                        (void *) i);
+                        &chainingListByType[kChainingCellInvokeSingleton], i);
                     break;
                 case kChainingCellInvokePredicted:
                     labelList[i].opcode =
                         kArmPseudoChainingCellInvokePredicted;
                     /* handle the codegen later */
                     dvmInsertGrowableList(
-                        &chainingListByType[kChainingCellInvokePredicted],
-                        (void *) i);
+                        &chainingListByType[kChainingCellInvokePredicted], i);
                     break;
                 case kChainingCellHot:
                     labelList[i].opcode =
                         kArmPseudoChainingCellHot;
                     /* handle the codegen later */
                     dvmInsertGrowableList(
-                        &chainingListByType[kChainingCellHot],
-                        (void *) i);
+                        &chainingListByType[kChainingCellHot], i);
                     break;
                 case kPCReconstruction:
                     /* Make sure exception handling block is next */
@@ -4068,7 +4069,7 @@ void dvmCompilerMIR2LIR(CompilationUnit *cUnit)
                     /* handle the codegen later */
                     dvmInsertGrowableList(
                         &chainingListByType[kChainingCellBackwardBranch],
-                        (void *) i);
+                        i);
                     break;
 #endif
                 default:
@@ -4079,7 +4080,7 @@ void dvmCompilerMIR2LIR(CompilationUnit *cUnit)
 
         ArmLIR *headLIR = NULL;
 
-        for (mir = blockList[i]->firstMIRInsn; mir; mir = mir->next) {
+        for (mir = bb->firstMIRInsn; mir; mir = mir->next) {
 
             dvmCompilerResetRegPool(cUnit);
             if (gDvmJit.disableOpt & (1 << kTrackLiveTemps)) {
@@ -4147,7 +4148,7 @@ void dvmCompilerMIR2LIR(CompilationUnit *cUnit)
                     case kFmt20t:
                     case kFmt30t:
                         notHandled = handleFmt10t_Fmt20t_Fmt30t(cUnit,
-                                  mir, blockList[i], labelList);
+                                  mir, bb, labelList);
                         break;
                     case kFmt10x:
                         notHandled = handleFmt10x(cUnit, mir);
@@ -4176,8 +4177,7 @@ void dvmCompilerMIR2LIR(CompilationUnit *cUnit)
                         notHandled = handleFmt21s(cUnit, mir);
                         break;
                     case kFmt21t:
-                        notHandled = handleFmt21t(cUnit, mir, blockList[i],
-                                                  labelList);
+                        notHandled = handleFmt21t(cUnit, mir, bb, labelList);
                         break;
                     case kFmt22b:
                     case kFmt22s:
@@ -4190,8 +4190,7 @@ void dvmCompilerMIR2LIR(CompilationUnit *cUnit)
                         notHandled = handleFmt22cs(cUnit, mir);
                         break;
                     case kFmt22t:
-                        notHandled = handleFmt22t(cUnit, mir, blockList[i],
-                                                  labelList);
+                        notHandled = handleFmt22t(cUnit, mir, bb, labelList);
                         break;
                     case kFmt22x:
                     case kFmt32x:
@@ -4205,12 +4204,12 @@ void dvmCompilerMIR2LIR(CompilationUnit *cUnit)
                         break;
                     case kFmt3rc:
                     case kFmt35c:
-                        notHandled = handleFmt35c_3rc(cUnit, mir, blockList[i],
+                        notHandled = handleFmt35c_3rc(cUnit, mir, bb,
                                                       labelList);
                         break;
                     case kFmt3rms:
                     case kFmt35ms:
-                        notHandled = handleFmt35ms_3rms(cUnit, mir,blockList[i],
+                        notHandled = handleFmt35ms_3rms(cUnit, mir, bb,
                                                         labelList);
                         break;
                     case kFmt35mi:
@@ -4235,7 +4234,7 @@ void dvmCompilerMIR2LIR(CompilationUnit *cUnit)
             }
         }
 
-        if (blockList[i]->blockType == kTraceEntryBlock) {
+        if (bb->blockType == kTraceEntryBlock) {
             dvmCompilerAppendLIR(cUnit,
                                  (LIR *) cUnit->loopAnalysis->branchToBody);
             dvmCompilerAppendLIR(cUnit,
@@ -4256,9 +4255,9 @@ gen_fallthrough:
          * Check if the block is terminated due to trace length constraint -
          * insert an unconditional branch to the chaining cell.
          */
-        if (blockList[i]->needFallThroughBranch) {
+        if (bb->needFallThroughBranch) {
             genUnconditionalBranch(cUnit,
-                                   &labelList[blockList[i]->fallThrough->id]);
+                                   &labelList[bb->fallThrough->id]);
         }
 
     }
@@ -4279,6 +4278,9 @@ gen_fallthrough:
 
         for (j = 0; j < chainingListByType[i].numUsed; j++) {
             int blockId = blockIdList[j];
+            BasicBlock *chainingBlock =
+                (BasicBlock *) dvmGrowableListGetElement(&cUnit->blockList,
+                                                         blockId);
 
             /* Align this chaining cell first */
             newLIR0(cUnit, kArmPseudoPseudoAlign4);
@@ -4287,30 +4289,28 @@ gen_fallthrough:
             dvmCompilerAppendLIR(cUnit, (LIR *) &labelList[blockId]);
 
 
-            switch (blockList[blockId]->blockType) {
+            switch (chainingBlock->blockType) {
                 case kChainingCellNormal:
-                    handleNormalChainingCell(cUnit,
-                      blockList[blockId]->startOffset);
+                    handleNormalChainingCell(cUnit, chainingBlock->startOffset);
                     break;
                 case kChainingCellInvokeSingleton:
                     handleInvokeSingletonChainingCell(cUnit,
-                        blockList[blockId]->containingMethod);
+                        chainingBlock->containingMethod);
                     break;
                 case kChainingCellInvokePredicted:
                     handleInvokePredictedChainingCell(cUnit);
                     break;
                 case kChainingCellHot:
-                    handleHotChainingCell(cUnit,
-                        blockList[blockId]->startOffset);
+                    handleHotChainingCell(cUnit, chainingBlock->startOffset);
                     break;
 #if defined(WITH_SELF_VERIFICATION) || defined(WITH_JIT_TUNING)
                 case kChainingCellBackwardBranch:
                     handleBackwardBranchChainingCell(cUnit,
-                        blockList[blockId]->startOffset);
+                        chainingBlock->startOffset);
                     break;
 #endif
                 default:
-                    LOGE("Bad blocktype %d", blockList[blockId]->blockType);
+                    LOGE("Bad blocktype %d", chainingBlock->blockType);
                     dvmCompilerAbort(cUnit);
             }
         }

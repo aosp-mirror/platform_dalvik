@@ -1821,7 +1821,7 @@ GOTO_TARGET(returnFromMethod)
 #endif
 
         /* back up to previous frame and see if we hit a break */
-        fp = saveArea->prevFrame;
+        fp = (u4*)saveArea->prevFrame;
         assert(fp != NULL);
         if (dvmIsBreakFrame(fp)) {
             /* bail without popping the method frame from stack */
@@ -1933,7 +1933,7 @@ GOTO_TARGET(exceptionThrown)
          * the "catch" blocks.
          */
         catchRelPc = dvmFindCatchBlock(self, pc - curMethod->insns,
-                    exception, false, (void*)&fp);
+                    exception, false, (void**)(void*)&fp);
 
         /*
          * Restore the stack bounds after an overflow.  This isn't going to
@@ -2166,7 +2166,7 @@ GOTO_TARGET(invokeMethod, bool methodCallRange, const Method* _methodToCall,
             curMethod = methodToCall;
             methodClassDex = curMethod->clazz->pDvmDex;
             pc = methodToCall->insns;
-            fp = self->curFrame = newFp;
+            self->curFrame = fp = newFp;
 #ifdef EASY_GDB
             debugSaveArea = SAVEAREA_FROM_FP(newFp);
 #endif

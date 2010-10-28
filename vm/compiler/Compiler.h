@@ -236,6 +236,15 @@ typedef enum JitOptimizationHints {
 
 #define JIT_OPT_NO_LOOP         (1 << kJitOptNoLoop)
 
+/* Customized node traversal orders for different needs */
+typedef enum DataFlowAnalysisMode {
+    kAllNodes = 0,              // All nodes
+    kReachableNodes,            // All reachable nodes
+    kPreOrderDFSTraversal,      // Depth-First-Search / Pre-Order
+    kPostOrderDFSTraversal,     // Depth-First-Search / Post-Order
+    kPostOrderDOMTraversal,     // Dominator tree / Post-Order
+} DataFlowAnalysisMode;
+
 typedef struct CompilerMethodStats {
     const Method *method;       // Used as hash entry signature
     int dalvikSize;             // # of bytes for dalvik bytecodes
@@ -262,8 +271,7 @@ CompilerMethodStats *dvmCompilerAnalyzeMethodBody(const Method *method,
                                                   bool isCallee);
 bool dvmCompilerCanIncludeThisInstruction(const Method *method,
                                           const DecodedInstruction *insn);
-bool dvmCompileMethod(struct CompilationUnit *cUnit, const Method *method,
-                      JitTranslationInfo *info);
+bool dvmCompileMethod(const Method *method);
 bool dvmCompileTrace(JitTraceDescription *trace, int numMaxInsts,
                      JitTranslationInfo *info, jmp_buf *bailPtr, int optHints);
 void dvmCompilerDumpStats(void);
@@ -273,22 +281,31 @@ void dvmCompilerSortAndPrintTraceProfiles(void);
 void dvmCompilerPerformSafePointChecks(void);
 void dvmCompilerInlineMIR(struct CompilationUnit *cUnit);
 void dvmInitializeSSAConversion(struct CompilationUnit *cUnit);
-int dvmConvertSSARegToDalvik(struct CompilationUnit *cUnit, int ssaReg);
+int dvmConvertSSARegToDalvik(const struct CompilationUnit *cUnit, int ssaReg);
 bool dvmCompilerLoopOpt(struct CompilationUnit *cUnit);
 void dvmCompilerNonLoopAnalysis(struct CompilationUnit *cUnit);
-void dvmCompilerFindLiveIn(struct CompilationUnit *cUnit,
-                           struct BasicBlock *bb);
-void dvmCompilerDoSSAConversion(struct CompilationUnit *cUnit,
+bool dvmCompilerFindLocalLiveIn(struct CompilationUnit *cUnit,
                                 struct BasicBlock *bb);
-void dvmCompilerDoConstantPropagation(struct CompilationUnit *cUnit,
+bool dvmCompilerDoSSAConversion(struct CompilationUnit *cUnit,
+                                struct BasicBlock *bb);
+bool dvmCompilerDoConstantPropagation(struct CompilationUnit *cUnit,
                                       struct BasicBlock *bb);
-void dvmCompilerFindInductionVariables(struct CompilationUnit *cUnit,
+bool dvmCompilerFindInductionVariables(struct CompilationUnit *cUnit,
                                        struct BasicBlock *bb);
-char *dvmCompilerGetDalvikDisassembly(DecodedInstruction *insn, char *note);
+/* Clear the visited flag for each BB */
+bool dvmCompilerClearVisitedFlag(struct CompilationUnit *cUnit,
+                                 struct BasicBlock *bb);
+char *dvmCompilerGetDalvikDisassembly(const DecodedInstruction *insn,
+                                      char *note);
+char *dvmCompilerFullDisassembler(const struct CompilationUnit *cUnit,
+                                  const struct MIR *mir);
 char *dvmCompilerGetSSAString(struct CompilationUnit *cUnit,
                               struct SSARepresentation *ssaRep);
 void dvmCompilerDataFlowAnalysisDispatcher(struct CompilationUnit *cUnit,
-                void (*func)(struct CompilationUnit *, struct BasicBlock *));
+                bool (*func)(struct CompilationUnit *, struct BasicBlock *),
+                DataFlowAnalysisMode dfaMode,
+                bool isIterative);
+void dvmCompilerMethodSSATransformation(struct CompilationUnit *cUnit);
 void dvmCompilerStateRefresh(void);
 JitTraceDescription *dvmCopyTraceDescriptor(const u2 *pc,
                                             const struct JitEntry *desc);

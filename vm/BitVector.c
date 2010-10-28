@@ -143,6 +143,24 @@ void dvmClearAllBits(BitVector* pBits)
 }
 
 /*
+ * Mark specified number of bits as "set". Cannot set all bits like ClearAll
+ * since there might be unused bits - setting those to one will confuse the
+ * iterator.
+ */
+void dvmSetInitialBits(BitVector* pBits, int numBits)
+{
+    int i;
+    assert(((numBits + 31) >> 5) <= pBits->storageSize);
+    for (i = 0; i < (numBits >> 5); i++) {
+        pBits->storage[i] = -1;
+    }
+    int remNumBits = numBits & 0x1f;
+    if (remNumBits) {
+        pBits->storage[i] = (1 << remNumBits) - 1;
+    }
+}
+
+/*
  * Determine whether or not the specified bit is set.
  */
 bool dvmIsBitSet(const BitVector* pBits, int num)
@@ -194,8 +212,7 @@ bool dvmCopyBitVector(BitVector *dest, const BitVector *src)
 }
 
 /*
- * Intersect two bit vectores and merge the result on top of the pre-existing
- * value in the dest vector.
+ * Intersect two bit vectors and store the result to the dest vector.
  */
 bool dvmIntersectBitVectors(BitVector *dest, const BitVector *src1,
                             const BitVector *src2)
@@ -208,7 +225,71 @@ bool dvmIntersectBitVectors(BitVector *dest, const BitVector *src1,
 
     int i;
     for (i = 0; i < dest->storageSize; i++) {
-        dest->storage[i] |= src1->storage[i] & src2->storage[i];
+        dest->storage[i] = src1->storage[i] & src2->storage[i];
     }
     return true;
+}
+
+/*
+ * Unify two bit vectors and store the result to the dest vector.
+ */
+bool dvmUnifyBitVectors(BitVector *dest, const BitVector *src1,
+                        const BitVector *src2)
+{
+    if (dest->storageSize != src1->storageSize ||
+        dest->storageSize != src2->storageSize ||
+        dest->expandable != src1->expandable ||
+        dest->expandable != src2->expandable)
+        return false;
+
+    int i;
+    for (i = 0; i < dest->storageSize; i++) {
+        dest->storage[i] = src1->storage[i] | src2->storage[i];
+    }
+    return true;
+}
+
+/*
+ * Compare two bit vectors and return true if difference is seen.
+ */
+bool dvmCompareBitVectors(const BitVector *src1, const BitVector *src2)
+{
+    if (src1->storageSize != src2->storageSize ||
+        src1->expandable != src2->expandable)
+        return true;
+
+    int i;
+    for (i = 0; i < src1->storageSize; i++) {
+        if (src1->storage[i] != src2->storage[i]) return true;
+    }
+    return false;
+}
+
+/* Initialize the iterator structure */
+void dvmBitVectorIteratorInit(BitVector* pBits, BitVectorIterator* iterator)
+{
+    iterator->pBits = pBits;
+    iterator->bitSize = pBits->storageSize * sizeof(u4) * 8;
+    iterator->idx = 0;
+}
+
+/* Return the next position set to 1. -1 means end-of-element reached */
+int dvmBitVectorIteratorNext(BitVectorIterator* iterator)
+{
+    const BitVector* pBits = iterator->pBits;
+    u4 bitIndex = iterator->idx;
+
+    assert(iterator->bitSize == pBits->storageSize * sizeof(u4) * 8);
+    if (bitIndex >= iterator->bitSize) return -1;
+
+    for (; bitIndex < iterator->bitSize; bitIndex++) {
+        int wordIndex = bitIndex >> 5;
+        int mask = 1 << (bitIndex & 0x1f);
+        if (pBits->storage[wordIndex] & mask) {
+            iterator->idx = bitIndex+1;
+            return bitIndex;
+        }
+    }
+    /* No more set bits */
+    return -1;
 }

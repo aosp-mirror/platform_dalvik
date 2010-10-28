@@ -38,18 +38,24 @@
  */
 static void handlePhiPlacement(CompilationUnit *cUnit)
 {
-    BasicBlock *entry = cUnit->blockList[0];
-    BasicBlock *loopBody = cUnit->blockList[1];
-    BasicBlock *loopBranch = cUnit->blockList[2];
+    BasicBlock *entry =
+        (BasicBlock *) dvmGrowableListGetElement(&cUnit->blockList, 0);
+    BasicBlock *loopBody =
+        (BasicBlock *) dvmGrowableListGetElement(&cUnit->blockList, 1);
+    BasicBlock *loopBranch =
+        (BasicBlock *) dvmGrowableListGetElement(&cUnit->blockList, 2);
     dvmCopyBitVector(entry->dataFlowInfo->defV,
                      loopBody->dataFlowInfo->liveInV);
 
     BitVector *phiV = dvmCompilerAllocBitVector(cUnit->method->registersSize,
                                                 false);
+    BitVector *phi2V = dvmCompilerAllocBitVector(cUnit->method->registersSize,
+                                                 false);
     dvmIntersectBitVectors(phiV, entry->dataFlowInfo->defV,
                            loopBody->dataFlowInfo->defV);
-    dvmIntersectBitVectors(phiV, entry->dataFlowInfo->defV,
+    dvmIntersectBitVectors(phi2V, entry->dataFlowInfo->defV,
                            loopBranch->dataFlowInfo->defV);
+    dvmUnifyBitVectors(phiV, phiV, phi2V);
 
     /* Insert the PHI MIRs */
     int i;
@@ -66,9 +72,12 @@ static void handlePhiPlacement(CompilationUnit *cUnit)
 
 static void fillPhiNodeContents(CompilationUnit *cUnit)
 {
-    BasicBlock *entry = cUnit->blockList[0];
-    BasicBlock *loopBody = cUnit->blockList[1];
-    BasicBlock *loopBranch = cUnit->blockList[2];
+    BasicBlock *entry =
+        (BasicBlock *) dvmGrowableListGetElement(&cUnit->blockList, 0);
+    BasicBlock *loopBody =
+        (BasicBlock *) dvmGrowableListGetElement(&cUnit->blockList, 1);
+    BasicBlock *loopBranch =
+        (BasicBlock *) dvmGrowableListGetElement(&cUnit->blockList, 2);
     MIR *mir;
 
     for (mir = loopBody->firstMIRInsn; mir; mir = mir->next) {
@@ -165,7 +174,8 @@ static void dumpHoistedChecks(CompilationUnit *cUnit)
 static bool isLoopOptimizable(CompilationUnit *cUnit)
 {
     unsigned int i;
-    BasicBlock *loopBranch = cUnit->blockList[2];
+    BasicBlock *loopBranch =
+        (BasicBlock *) dvmGrowableListGetElement(&cUnit->blockList, 2);
     LoopAnalysis *loopAnalysis = cUnit->loopAnalysis;
 
     if (loopAnalysis->numBasicIV != 1) return false;
@@ -290,7 +300,7 @@ static void updateRangeCheckInfo(CompilationUnit *cUnit, int arrayReg,
                 arrayAccessInfo->maxC = (ivInfo->c > 0) ? ivInfo->c : 0;
                 arrayAccessInfo->minC = (ivInfo->c < 0) ? ivInfo->c : 0;
                 dvmInsertGrowableList(loopAnalysis->arrayAccessInfo,
-                                      arrayAccessInfo);
+                                      (intptr_t) arrayAccessInfo);
             }
             break;
         }
@@ -300,7 +310,8 @@ static void updateRangeCheckInfo(CompilationUnit *cUnit, int arrayReg,
 /* Returns true if the loop body cannot throw any exceptions */
 static bool doLoopBodyCodeMotion(CompilationUnit *cUnit)
 {
-    BasicBlock *loopBody = cUnit->blockList[1];
+    BasicBlock *loopBody =
+        (BasicBlock *) dvmGrowableListGetElement(&cUnit->blockList, 1);
     MIR *mir;
     bool loopBodyCanThrow = false;
 
@@ -387,7 +398,8 @@ static bool doLoopBodyCodeMotion(CompilationUnit *cUnit)
 static void genHoistedChecks(CompilationUnit *cUnit)
 {
     unsigned int i;
-    BasicBlock *entry = cUnit->blockList[0];
+    BasicBlock *entry =
+        (BasicBlock *) dvmGrowableListGetElement(&cUnit->blockList, 0);
     LoopAnalysis *loopAnalysis = cUnit->loopAnalysis;
     int globalMaxC = 0;
     int globalMinC = 0;
@@ -477,21 +489,28 @@ bool dvmCompilerLoopOpt(CompilationUnit *cUnit)
     LoopAnalysis *loopAnalysis =
         (LoopAnalysis *)dvmCompilerNew(sizeof(LoopAnalysis), true);
 
-    assert(cUnit->blockList[0]->blockType == kTraceEntryBlock);
-    assert(cUnit->blockList[2]->blockType == kDalvikByteCode);
-    assert(cUnit->blockList[3]->blockType == kTraceExitBlock);
+    assert(((BasicBlock *) dvmGrowableListGetElement(&cUnit->blockList, 0))
+                               ->blockType == kTraceEntryBlock);
+    assert(((BasicBlock *) dvmGrowableListGetElement(&cUnit->blockList, 2))
+                               ->blockType == kDalvikByteCode);
+    assert(((BasicBlock *) dvmGrowableListGetElement(&cUnit->blockList, 3))
+                               ->blockType == kTraceExitBlock);
 
     cUnit->loopAnalysis = loopAnalysis;
     /*
      * Find live-in variables to the loop body so that we can fake their
      * definitions in the entry block.
      */
-    dvmCompilerDataFlowAnalysisDispatcher(cUnit, dvmCompilerFindLiveIn);
+    dvmCompilerDataFlowAnalysisDispatcher(cUnit, dvmCompilerFindLocalLiveIn,
+                                          kAllNodes,
+                                          false /* isIterative */);
 
     /* Insert phi nodes to the loop body */
     handlePhiPlacement(cUnit);
 
-    dvmCompilerDataFlowAnalysisDispatcher(cUnit, dvmCompilerDoSSAConversion);
+    dvmCompilerDataFlowAnalysisDispatcher(cUnit, dvmCompilerDoSSAConversion,
+                                          kAllNodes,
+                                          false /* isIterative */);
     fillPhiNodeContents(cUnit);
 
     /* Constant propagation */
@@ -500,7 +519,9 @@ bool dvmCompilerLoopOpt(CompilationUnit *cUnit)
         (int *)dvmCompilerNew(sizeof(int) * cUnit->numSSARegs,
                               true);
     dvmCompilerDataFlowAnalysisDispatcher(cUnit,
-                                          dvmCompilerDoConstantPropagation);
+                                          dvmCompilerDoConstantPropagation,
+                                          kAllNodes,
+                                          false /* isIterative */);
     DEBUG_LOOP(dumpConstants(cUnit);)
 
     /* Find induction variables - basic and dependent */
@@ -509,7 +530,9 @@ bool dvmCompilerLoopOpt(CompilationUnit *cUnit)
     dvmInitGrowableList(loopAnalysis->ivList, 4);
     loopAnalysis->isIndVarV = dvmAllocBitVector(cUnit->numSSARegs, false);
     dvmCompilerDataFlowAnalysisDispatcher(cUnit,
-                                          dvmCompilerFindInductionVariables);
+                                          dvmCompilerFindInductionVariables,
+                                          kAllNodes,
+                                          false /* isIterative */);
     DEBUG_LOOP(dumpIVList(cUnit);)
 
     /* If the loop turns out to be non-optimizable, return early */

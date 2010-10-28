@@ -284,14 +284,16 @@ static void tryInlineVirtualCallsite(CompilationUnit *cUnit,
 
 void dvmCompilerInlineMIR(CompilationUnit *cUnit)
 {
-    int i;
     bool isRange = false;
+    GrowableListIterator iterator;
 
+    dvmGrowableListIteratorInit(&cUnit->blockList, &iterator);
     /*
      * Analyze the basic block containing an invoke to see if it can be inlined
      */
-    for (i = 0; i < cUnit->numBlocks; i++) {
-        BasicBlock *bb = cUnit->blockList[i];
+    while (true) {
+        BasicBlock *bb = (BasicBlock *) dvmGrowableListIteratorNext(&iterator);
+        if (bb == NULL) break;
         if (bb->blockType != kDalvikByteCode)
             continue;
         MIR *lastMIRInsn = bb->lastMIRInsn;

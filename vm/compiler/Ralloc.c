@@ -25,35 +25,6 @@ typedef struct LiveRange {
     int last;
 } LiveRange;
 
-static int computeLiveRange(LiveRange *list, BasicBlock *bb, int seqNum)
-{
-    MIR *mir;
-    int i;
-
-    if (bb->blockType != kDalvikByteCode &&
-        bb->blockType != kTraceEntryBlock)
-        return seqNum;
-
-    for (mir = bb->firstMIRInsn; mir; mir = mir->next) {
-        SSARepresentation *ssaRep = mir->ssaRep;
-        mir->seqNum = seqNum;
-        if (ssaRep) {
-            for (i=0; i< ssaRep->numUses; i++) {
-                int reg = ssaRep->uses[i];
-                list[reg].first = MIN(list[reg].first, seqNum);
-                list[reg].active = true;
-            }
-            for (i=0; i< ssaRep->numDefs; i++) {
-                int reg = ssaRep->defs[i];
-                list[reg].last = MAX(list[reg].last, seqNum + 1);
-                list[reg].active = true;
-            }
-            seqNum += 2;
-        }
-    }
-    return seqNum;
-}
-
 /*
  * Quick & dirty - make FP usage sticky.  This is strictly a hint - local
  * code generation will handle misses.  It might be worthwhile to collaborate
@@ -121,7 +92,6 @@ static const RegLocation freshLoc = {kLocDalvikFrame, 0, 0, INVALID_REG,
 void dvmCompilerRegAlloc(CompilationUnit *cUnit)
 {
     int i;
-    int seqNum = 0;
     LiveRange *ranges;
     RegLocation *loc;
 
@@ -133,9 +103,14 @@ void dvmCompilerRegAlloc(CompilationUnit *cUnit)
     }
     cUnit->regLocation = loc;
 
+    GrowableListIterator iterator;
+
+    dvmGrowableListIteratorInit(&cUnit->blockList, &iterator);
     /* Do type inference pass */
-    for (i=0; i < cUnit->numBlocks; i++) {
-        inferTypes(cUnit, cUnit->blockList[i]);
+    while (true) {
+        BasicBlock *bb = (BasicBlock *) dvmGrowableListIteratorNext(&iterator);
+        if (bb == NULL) break;
+        inferTypes(cUnit, bb);
     }
 
     if (simpleTrace(cUnit)) {
@@ -153,7 +128,6 @@ void dvmCompilerRegAlloc(CompilationUnit *cUnit)
         ranges = (LiveRange *)dvmCompilerNew(cUnit->numSSARegs * sizeof(*ranges), true);
         for (i=0; i < cUnit->numSSARegs; i++)
             ranges[i].active = false;
-        seqNum = computeLiveRange(ranges, cUnit->blockList[i], seqNum);
         //TODO: phi squash & linear scan promotion
     }
 }
