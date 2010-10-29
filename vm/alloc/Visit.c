@@ -217,7 +217,7 @@ void dvmVisitRoots(RootVisitor *visitor, void *arg)
     visitHashTable(visitor, gDvm.internedStrings, ROOT_INTERNED_STRING, arg);
     visitHashTable(visitor, gDvm.literalStrings, ROOT_INTERNED_STRING, arg);
     visitReferenceTable(visitor, &gDvm.jniGlobalRefTable, 0, ROOT_JNI_GLOBAL, arg);
-    visitReferenceTable(visitor, &gDvm.jniPinRefTable, 0, ROOT_NATIVE_STACK, arg);
+    visitReferenceTable(visitor, &gDvm.jniPinRefTable, 0, ROOT_VM_INTERNAL, arg);
     visitLargeHeapRefTable(visitor, gDvm.gcHeap->referenceOperations, ROOT_REFERENCE_CLEANUP, arg);
     visitLargeHeapRefTable(visitor, gDvm.gcHeap->pendingFinalizationRefs, ROOT_FINALIZING, arg);
     visitThreads(visitor, arg);
