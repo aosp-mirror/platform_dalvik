@@ -80,10 +80,9 @@ public class BlockDumper
      * @param args commandline parsedArgs
      */
     public static void dump(byte[] bytes, PrintStream out,
-                            String filePath, boolean rop, Args args) {
-        BlockDumper bd =
-            new BlockDumper(bytes, out, filePath,
-                            rop, args);
+            String filePath, boolean rop, Args args) {
+        BlockDumper bd = new BlockDumper(bytes, out, filePath,
+                rop, args);
         bd.dump();
     }
 
@@ -91,9 +90,8 @@ public class BlockDumper
      * Constructs an instance. This class is not publicly instantiable.
      * Use {@link #dump}.
      */
-    BlockDumper(byte[] bytes, PrintStream out,
-                        String filePath,
-                        boolean rop, Args args) {
+    BlockDumper(byte[] bytes, PrintStream out, String filePath,
+            boolean rop, Args args) {
         super(bytes, out, filePath, args);
 
         this.rop = rop;
@@ -153,7 +151,7 @@ public class BlockDumper
     /** {@inheritDoc} */
     @Override
     public void startParsingMember(ByteArray bytes, int offset, String name,
-                                   String descriptor) {
+            String descriptor) {
         if (descriptor.indexOf('(') < 0) {
             // It's a field, not a method
             return;
@@ -181,7 +179,7 @@ public class BlockDumper
     /** {@inheritDoc} */
     @Override
     public void endParsingMember(ByteArray bytes, int offset, String name,
-                                 String descriptor, Member member) {
+            String descriptor, Member member) {
         if (!(member instanceof Method)) {
             return;
         }
@@ -190,8 +188,8 @@ public class BlockDumper
             return;
         }
 
-        ConcreteMethod meth = new ConcreteMethod((Method) member, classFile,
-                                                 true, true);
+        ConcreteMethod meth =
+            new ConcreteMethod((Method) member, classFile, true, true);
 
         if (rop) {
             ropDump(meth);
@@ -212,7 +210,7 @@ public class BlockDumper
         int sz = list.size();
         CodeObserver codeObserver = new CodeObserver(bytes, BlockDumper.this);
 
-        // Reset the dump cursor to the start of the bytecode
+        // Reset the dump cursor to the start of the bytecode.
         setAt(bytes, 0);
 
         suppressDump = false;
@@ -229,8 +227,8 @@ public class BlockDumper
             }
 
             parsed(bytes, start, 0,
-                   "block " + Hex.u2(bb.getLabel()) + ": " +
-                   Hex.u2(start) + ".." + Hex.u2(end));
+                    "block " + Hex.u2(bb.getLabel()) + ": " +
+                    Hex.u2(start) + ".." + Hex.u2(end));
             changeIndent(1);
 
             int len;
@@ -269,7 +267,7 @@ public class BlockDumper
         int end = bytes.size();
         if (byteAt < end) {
             parsed(bytes, byteAt, end - byteAt,
-                   "dead code " + Hex.u2(byteAt) + ".." + Hex.u2(end));
+                    "dead code " + Hex.u2(byteAt) + ".." + Hex.u2(end));
         }
 
         suppressDump = true;
@@ -281,21 +279,17 @@ public class BlockDumper
      * @param meth {@code non-null;} method data to dump
      */
     private void ropDump(ConcreteMethod meth) {
+        TranslationAdvice advice = DexTranslationAdvice.THE_ONE;
         BytecodeArray code = meth.getCode();
         ByteArray bytes = code.getBytes();
-
-        TranslationAdvice advice = DexTranslationAdvice.THE_ONE;
-
-        RopMethod rmeth =
-            Ropper.convert(meth, advice);
+        RopMethod rmeth = Ropper.convert(meth, advice);
         StringBuffer sb = new StringBuffer(2000);
 
         if (optimize) {
             boolean isStatic = AccessFlags.isStatic(meth.getAccessFlags());
-
             int paramWidth = computeParamWidth(meth, isStatic);
-            rmeth = Optimizer.optimize(rmeth, paramWidth, isStatic, true,
-                    advice);
+            rmeth =
+                Optimizer.optimize(rmeth, paramWidth, isStatic, true, advice);
         }
 
         BasicBlockList blocks = rmeth.getBlocks();

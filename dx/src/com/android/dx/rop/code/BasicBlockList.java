@@ -49,7 +49,7 @@ public final class BasicBlockList extends LabeledList {
      *
      * @param old block to copy
      */
-    private BasicBlockList (BasicBlockList old) {
+    private BasicBlockList(BasicBlockList old) {
         super(old);
         regCount = old.regCount;
     }
@@ -146,7 +146,6 @@ public final class BasicBlockList extends LabeledList {
 
         return result;
     }
-
 
     /**
      * Gets the first block in the list with the given label, if any.
@@ -257,8 +256,7 @@ public final class BasicBlockList extends LabeledList {
      * @return {@code true} if the two blocks' non-primary successors
      * are identical
      */
-    public boolean catchesEqual(BasicBlock block1,
-            BasicBlock block2) {
+    public boolean catchesEqual(BasicBlock block1, BasicBlock block2) {
         TypeList catches1 = block1.getExceptionHandlerTypes();
         TypeList catches2 = block2.getExceptionHandlerTypes();
 

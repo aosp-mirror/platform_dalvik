@@ -16,16 +16,13 @@
 
 package com.android.dx.util;
 
-import com.android.dx.cf.code.ByteBlock;
-
 /**
  * A list of labeled items, allowing easy lookup by label.
  */
 public class LabeledList extends FixedSizeList {
-
     /**
-     * Sparse array indexed by label to FixedSizeList index.
-     * -1 = invalid label.
+     * Sparse array indexed by label to FixedSizeList index;
+     * {@code -1} for an invalid label.
      */
     private final IntList labelToIndex;
 
@@ -41,7 +38,7 @@ public class LabeledList extends FixedSizeList {
      *
      * @param old instance to copy
      */
-    protected LabeledList(LabeledList old) {
+    public LabeledList(LabeledList old) {
         super(old.size());
         labelToIndex = old.labelToIndex.mutableCopy();
 
@@ -63,12 +60,12 @@ public class LabeledList extends FixedSizeList {
     public int getMaxLabel() {
         int sz = labelToIndex.size();
 
-        // Gobble any deleted labels that may be at the end...
+        // Gobble any deleted labels that may be at the end.
         int i;
         for (i = sz - 1; (i >= 0) && (labelToIndex.get(i) < 0); i--)
-            ;
+            /*empty*/ ;
 
-        int newSize = i+1;
+        int newSize = i + 1;
 
         labelToIndex.shrink(newSize);
 
@@ -76,19 +73,21 @@ public class LabeledList extends FixedSizeList {
     }
 
     /**
-     * Removes a label from the label-to-index mapping
+     * Removes a label from the label-to-index mapping.
+     *
      * @param oldLabel label to remove
      */
-    protected void removeLabel(int oldLabel) {
+    private void removeLabel(int oldLabel) {
         labelToIndex.set(oldLabel, -1);
     }
 
     /**
-     * Adds a label and index to the label-to-index mapping
+     * Adds a label and index to the label-to-index mapping.
+     *
      * @param label new label
      * @param index index of block.
      */
-    protected void addLabelIndex(int label, int index) {
+    private void addLabelIndex(int label, int index) {
         int origSz = labelToIndex.size();
 
         for (int i = 0; i <= (label - origSz); i++) {
@@ -123,11 +122,11 @@ public class LabeledList extends FixedSizeList {
     }
 
     /**
-     * Rebuilds the label-to-index mapping after a shrinkToFit().
-     * Note: assumes that the labels that are in the list are the same
-     * although the indicies may have changed.
+     * Rebuilds the label-to-index mapping after a {@code shrinkToFit()}.
+     * Note: This assumes that the labels that are in the list are the
+     * same, although the indicies may have changed.
      */
-    protected void rebuildLabelToIndex() {
+    private void rebuildLabelToIndex() {
         int szItems = size();
 
         for (int i = 0; i < szItems; i++) {
