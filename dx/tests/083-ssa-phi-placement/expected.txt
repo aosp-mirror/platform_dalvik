@@ -40,11 +40,11 @@ block 0000
   pred 0046
   live in:{}
   Blort.java:21@0000: const-int(1) v4:I=1 <- .
-  Blort.java:21@0001: move-int v1:I <- v4:I=1
+  Blort.java:21@0001: move-int v1:I=1 <- v4:I=1
   Blort.java:22@0002: const-int(1) v4:I=1 <- .
-  Blort.java:22@0003: move-int v2:I <- v4:I=1
+  Blort.java:22@0003: move-int v2:I=1 <- v4:I=1
   Blort.java:23@0004: const-int(0) v4:I=0 <- .
-  Blort.java:23@0005: move-int v3:I <- v4:I=0
+  Blort.java:23@0005: move-int v3:I=0 <- v4:I=0
   Blort.java:23@0005: goto . <- .
   next 0049
   live out:{}
@@ -203,7 +203,7 @@ block 0011
   pred 0004
   live in:{}
   Blort.java:55@0011: const-int(0) v3:I=0 <- .
-  Blort.java:55@0012: move-int v2:I <- v3:I=0
+  Blort.java:55@0012: move-int v2:I=0 <- v3:I=0
   Blort.java:56@0013: move-int v3:I <- v1:I
   Blort.java:56@0014: switch({1, 2}) . <- v3:I
   next 0030
