@@ -80,7 +80,6 @@ public class AllTests {
         // Crashes on RI.
         // suite.addTestSuite(X509CertSelectorTest.class);
         suite.addTestSuite(X509Certificate2Test.class);
-        suite.addTestSuite(PolicyNodeTest.class);
 
         // $JUnit-END$
         return suite;
