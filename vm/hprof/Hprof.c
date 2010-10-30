@@ -264,7 +264,7 @@ int hprofDumpHeap(const char* fileName, int fd, bool directToDdms)
     hprofFinishHeapDump(ctx);
 //TODO: write a HEAP_SUMMARY record
     success = hprofShutdown(ctx) ? 0 : -1;
-    dvmSuspendAllThreads(SUSPEND_FOR_HPROF);
+    dvmResumeAllThreads(SUSPEND_FOR_HPROF);
     dvmUnlockHeap();
     return success;
 }
