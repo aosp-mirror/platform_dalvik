@@ -93,6 +93,6 @@ int dvmCompilerTargetOptHint(int key)
     return res;
 }
 
-void dvmCompilerGenMemBarrier(CompilationUnit *cUnit)
+void dvmCompilerGenMemBarrier(CompilationUnit *cUnit, int barrierKind)
 {
 }
