@@ -195,7 +195,7 @@ ClassObject* dvmGenerateProxyClass(StringObject* str, ArrayObject* interfaces,
     dvmSetFieldObject((Object *)newClass,
                       offsetof(ClassObject, classLoader),
                       (Object *)loader);
-#if WITH_HPROF && WITH_HPROF_STACK
+#if WITH_HPROF_STACK
     hprofFillInStackTrace(newClass);
 #endif
 

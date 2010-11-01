@@ -142,6 +142,11 @@ LOCAL_SRC_FILES := \
 	analysis/Optimize.c \
 	analysis/RegisterMap.c \
 	analysis/VerifySubs.c \
+	hprof/Hprof.c \
+	hprof/HprofClass.c \
+	hprof/HprofHeap.c \
+	hprof/HprofOutput.c \
+	hprof/HprofString.c \
 	interp/Interp.c.arm \
 	interp/Stack.c \
 	jdwp/ExpandBuf.c \
@@ -222,26 +227,12 @@ ifeq ($(WITH_JIT),true)
 	interp/Jit.c
 endif
 
-WITH_HPROF := $(strip $(WITH_HPROF))
-ifeq ($(WITH_HPROF),)
-  WITH_HPROF := true
-endif
-ifeq ($(WITH_HPROF),true)
+ifeq ($(strip $(WITH_HPROF_STACK)),true)
   LOCAL_SRC_FILES += \
-	hprof/Hprof.c \
-	hprof/HprofClass.c \
-	hprof/HprofHeap.c \
-	hprof/HprofOutput.c \
-	hprof/HprofString.c
-  LOCAL_CFLAGS += -DWITH_HPROF=1
-
-  ifeq ($(strip $(WITH_HPROF_STACK)),true)
-    LOCAL_SRC_FILES += \
 	hprof/HprofStack.c \
 	hprof/HprofStackFrame.c
-    LOCAL_CFLAGS += -DWITH_HPROF_STACK=1
-  endif # WITH_HPROF_STACK
-endif   # WITH_HPROF
+  LOCAL_CFLAGS += -DWITH_HPROF_STACK=1
+endif # WITH_HPROF_STACK
 
 LOCAL_C_INCLUDES += \
 	$(JNI_H_INCLUDE) \
