@@ -93,7 +93,7 @@ int dvmCompilerTargetOptHint(int key)
     return res;
 }
 
-void dvmCompilerGenMemBarrier(CompilationUnit *cUnit)
+void dvmCompilerGenMemBarrier(CompilationUnit *cUnit, int barrierKind)
 {
 #if ANDROID_SMP != 0
 #error armv5+smp not supported
