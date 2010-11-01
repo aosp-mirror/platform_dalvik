@@ -1,16 +1,16 @@
 reading Blort.class...
 method <init> ()V
 first 000c
-block 000a
-  pred 000c
-  Blort.java:2@0000: move-param-object(0) v0:"this"NffffLBlort; <- .
-  Blort.java:2@0000: goto . <- .
-  next 0000
 block 0000
   pred 000a
   Blort.java:2@0001: Rop{invoke-direct . <- Ljava/lang/Object; call throws <any
   >}(java.lang.Object.<init>:()V catch) . <- v0:NffffLBlort;
   next 000b
+block 000a
+  pred 000c
+  Blort.java:2@0000: move-param-object(0) v0:"this"NffffLBlort; <- .
+  Blort.java:2@0000: goto . <- .
+  next 0000
 block 000b
   pred 0000
   Blort.java:2@0004: return-void . <- .
@@ -41,11 +41,6 @@ block 0004
 
 method testNoLocals ()V
 first 0016
-block 0014
-  pred 0016
-  Blort.java:9@0000: move-param-object(0) v6:"this"LBlort; <- .
-  Blort.java:9@0000: goto . <- .
-  next 0000
 block 0000
   pred 0014
   @????: move-int v2:I=5 <- v0:I=5
@@ -56,6 +51,11 @@ block 0000
   t.methodThatNeedsInvokeRange:(IIIIII)V catch) . <- v0:I=5 v1:I=0 v2:I=5 v3:I=
   0 v4:I=5 v5:I=0
   next 0015
+block 0014
+  pred 0016
+  Blort.java:9@0000: move-param-object(0) v6:"this"LBlort; <- .
+  Blort.java:9@0000: goto . <- .
+  next 0000
 block 0015
   pred 0000
   Blort.java:10@0009: return-void . <- .
@@ -68,11 +68,6 @@ block 0016
 
 method testMixedLocals ()V
 first 0034
-block 0032
-  pred 0034
-  Blort.java:13@0000: move-param-object(0) v6:"this"LBlort; <- .
-  Blort.java:13@0000: goto . <- .
-  next 0000
 block 0000
   pred 0032
   Blort.java:13@0000: const-int(6) v0:I=6 <- .
@@ -91,6 +86,11 @@ block 000f
   rt.methodThatNeedsInvokeRange:(IIIIII)V catch) . <- v0:I v1:I=0 v2:I v3:I=1 v
   4:I=5 v5:I=0
   next 0033
+block 0032
+  pred 0034
+  Blort.java:13@0000: move-param-object(0) v6:"this"LBlort; <- .
+  Blort.java:13@0000: goto . <- .
+  next 0000
 block 0033
   pred 000f
   Blort.java:18@0018: return-void . <- .
@@ -104,11 +104,6 @@ block 0034
 
 method testMixedWorseCase ()V
 first 0038
-block 0036
-  pred 0038
-  Blort.java:24@0000: move-param-object(0) v12:"this"LBlort; <- .
-  Blort.java:24@0000: goto . <- .
-  next 0000
 block 0000
   pred 0036
   Blort.java:24@0000: const-int(6) v0:I=6 <- .
@@ -133,6 +128,11 @@ block 0011
   rt.methodThatNeedsInvokeRange:(IIIIII)V catch) . <- v6:I v7:I=0 v8:I v9:I=1 v
   10:I=5 v11:I=0
   next 0037
+block 0036
+  pred 0038
+  Blort.java:24@0000: move-param-object(0) v12:"this"LBlort; <- .
+  Blort.java:24@0000: goto . <- .
+  next 0000
 block 0037
   pred 0011
   Blort.java:30@001a: return-void . <- .
@@ -146,6 +146,12 @@ block 0038
 
 method testAllParams (IIIIII)V
 first 001c
+block 0000
+  pred 001a
+  Blort.java:33@0009: Rop{invoke-static . <- I I I I I I call throws <any>}(Blo
+  rt.methodThatNeedsInvokeRange:(IIIIII)V catch) . <- v1:I v2:I v3:I v4:I v5:I 
+  v6:I
+  next 001b
 block 001a
   pred 001c
   Blort.java:33@0000: move-param-object(0) v0:"this"LBlort; <- .
@@ -157,12 +163,6 @@ block 001a
   Blort.java:33@0000: move-param-int(6) v6:"f"I <- .
   Blort.java:33@0000: goto . <- .
   next 0000
-block 0000
-  pred 001a
-  Blort.java:33@0009: Rop{invoke-static . <- I I I I I I call throws <any>}(Blo
-  rt.methodThatNeedsInvokeRange:(IIIIII)V catch) . <- v1:I v2:I v3:I v4:I v5:I 
-  v6:I
-  next 001b
 block 001b
   pred 0000
   Blort.java:34@000c: return-void . <- .
@@ -173,12 +173,6 @@ block 001c
 
 method testTailParams (II)V
 first 0022
-block 0020
-  pred 0022
-  Blort.java:38@0000: move-param-int(0) v6:"destPos"I <- .
-  Blort.java:38@0000: move-param-int(1) v7:"length"I <- .
-  Blort.java:38@0000: goto . <- .
-  next 0000
 block 0000
   pred 0020
   Blort.java:38@0000: const-int(6) v0:I=6 <- .
@@ -192,6 +186,12 @@ block 0000
   rt.methodThatNeedsInvokeRange:(IIIIII)V catch) . <- v0:I v1:I=0 v2:I v3:I=0 v
   4:I v5:I
   next 0021
+block 0020
+  pred 0022
+  Blort.java:38@0000: move-param-int(0) v6:"destPos"I <- .
+  Blort.java:38@0000: move-param-int(1) v7:"length"I <- .
+  Blort.java:38@0000: goto . <- .
+  next 0000
 block 0021
   pred 0000
   Blort.java:42@000f: return-void . <- .
@@ -203,11 +203,6 @@ block 0022
 
 method testFlip ()V
 first 0034
-block 0032
-  pred 0034
-  Blort.java:47@0000: move-param-object(0) v11:"this"LBlort; <- .
-  Blort.java:47@0000: goto . <- .
-  next 0000
 block 0000
   pred 0032
   Blort.java:47@0000: const-int(6) v0:I=6 <- .
@@ -231,6 +226,11 @@ block 000f
   rt.methodThatNeedsInvokeRange:(IIIIII)V catch) . <- v5:I v6:I=0 v7:I v8:I=1 v
   9:I=5 v10:I=0
   next 0033
+block 0032
+  pred 0034
+  Blort.java:47@0000: move-param-object(0) v11:"this"LBlort; <- .
+  Blort.java:47@0000: goto . <- .
+  next 0000
 block 0033
   pred 000f
   Blort.java:52@0018: return-void . <- .
@@ -244,12 +244,6 @@ block 0034
 
 method testMixedCategory (Z)J
 first 0044
-block 003c
-  pred 0044
-  Blort.java:57@0000: move-param-object(0) v8:"this"LBlort; <- .
-  Blort.java:57@0000: move-param-int(1) v9:"foo"Z <- .
-  Blort.java:57@0000: goto . <- .
-  next 0000
 block 0000
   pred 003c
   Blort.java:57@0001: if-eqz-int . <- v9:I
@@ -274,11 +268,6 @@ block 0017
   Blort.java:63@0018: conv-i2l v4:J <- v3:I
   Blort.java:63@0019: goto . <- .
   next 003d
-block 0043
-  pred 001a
-  Blort.java:65@001a: Rop{move-result J <- . flows} v6:J <- .
-  Blort.java:65@001a: goto . <- .
-  next 001d
 block 001a
   pred 0000
   Blort.java:65@001a: Rop{invoke-static . <- . call throws <any>}(java.lang.Sys
@@ -290,11 +279,22 @@ block 001d
   @????: move-long v4:J <- v6:"offset"J
   Blort.java:66@001f: goto . <- .
   next 003d
+block 003c
+  pred 0044
+  Blort.java:57@0000: move-param-object(0) v8:"this"LBlort; <- .
+  Blort.java:57@0000: move-param-int(1) v9:"foo"Z <- .
+  Blort.java:57@0000: goto . <- .
+  next 0000
 block 003d
   pred 0017
   pred 001d
   Blort.java:66@001f: return-long . <- v4:J
   returns
+block 0043
+  pred 001a
+  Blort.java:65@001a: Rop{move-result J <- . flows} v6:J <- .
+  Blort.java:65@001a: goto . <- .
+  next 001d
 block 0044
   @????: const-int(0) v1:I=0 <- .
   @????: goto . <- .

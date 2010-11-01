@@ -16,6 +16,8 @@
 
 package com.android.dx.util;
 
+import java.util.Arrays;
+
 /**
  * A list of labeled items, allowing easy lookup by label.
  */
@@ -57,7 +59,7 @@ public class LabeledList extends FixedSizeList {
      *
      * @return {@code >= 0;} the maximum label
      */
-    public int getMaxLabel() {
+    public final int getMaxLabel() {
         int sz = labelToIndex.size();
 
         // Gobble any deleted labels that may be at the end.
@@ -105,12 +107,37 @@ public class LabeledList extends FixedSizeList {
      * @return {@code >= -1;} the index of the so-labelled item, or {@code -1}
      * if none is found
      */
-    public int indexOfLabel(int label) {
+    public final int indexOfLabel(int label) {
         if (label >= labelToIndex.size()) {
             return -1;
         } else {
             return labelToIndex.get(label);
         }
+    }
+
+    /**
+     * Gets an array containing all of the labels used in this instance,
+     * in order. The returned array is freshly-allocated and so may be
+     * modified safely by the caller without impacting this instance.
+     *
+     * @return {@code non-null;} ordered array of labels
+     * @throws NullPointerException thrown if there are any {@code null}
+     * items in this instance
+     */
+    public final int[] getLabelsInOrder() {
+        int sz = size();
+        int[] result = new int[sz];
+
+        for (int i = 0; i < sz; i++) {
+            LabeledItem li = (LabeledItem) get0(i);
+            if (li == null) {
+                throw new NullPointerException("null at index " + i);
+            }
+            result[i] = li.getLabel();
+        }
+
+        Arrays.sort(result);
+        return result;
     }
 
     /** @inheritDoc */
@@ -130,7 +157,7 @@ public class LabeledList extends FixedSizeList {
         int szItems = size();
 
         for (int i = 0; i < szItems; i++) {
-            LabeledItem li = (LabeledItem)get0(i);
+            LabeledItem li = (LabeledItem) get0(i);
 
             if (li != null) {
                 labelToIndex.set(li.getLabel(), i);

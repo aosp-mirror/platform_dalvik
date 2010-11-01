@@ -293,31 +293,30 @@ public class BlockDumper
         }
 
         BasicBlockList blocks = rmeth.getBlocks();
+        int[] order = blocks.getLabelsInOrder();
 
         sb.append("first " + Hex.u2(rmeth.getFirstLabel()) + "\n");
 
-        int sz = blocks.size();
-        for (int i = 0; i < sz; i++) {
-            BasicBlock bb = blocks.get(i);
-            int label = bb.getLabel();
+        for (int label : order) {
+            BasicBlock bb = blocks.get(blocks.indexOfLabel(label));
             sb.append("block ");
             sb.append(Hex.u2(label));
             sb.append("\n");
 
             IntList preds = rmeth.labelToPredecessors(label);
             int psz = preds.size();
-            for (int j = 0; j < psz; j++) {
+            for (int i = 0; i < psz; i++) {
                 sb.append("  pred ");
-                sb.append(Hex.u2(preds.get(j)));
+                sb.append(Hex.u2(preds.get(i)));
                 sb.append("\n");
             }
 
             InsnList il = bb.getInsns();
             int ilsz = il.size();
-            for (int j = 0; j < ilsz; j++) {
-                Insn one = il.get(j);
+            for (int i = 0; i < ilsz; i++) {
+                Insn one = il.get(i);
                 sb.append("  ");
-                sb.append(il.get(j).toHuman());
+                sb.append(il.get(i).toHuman());
                 sb.append("\n");
             }
 
@@ -327,8 +326,8 @@ public class BlockDumper
                 sb.append("  returns\n");
             } else {
                 int primary = bb.getPrimarySuccessor();
-                for (int j = 0; j < ssz; j++) {
-                    int succ = successors.get(j);
+                for (int i = 0; i < ssz; i++) {
+                    int succ = successors.get(i);
                     sb.append("  next ");
                     sb.append(Hex.u2(succ));
 
