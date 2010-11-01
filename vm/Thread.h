@@ -219,11 +219,6 @@ typedef struct Thread {
     struct LockedObjectData* pLockedObjects;
 #endif
 
-#ifdef WITH_ALLOC_LIMITS
-    /* allocation limit, for Debug.setAllocationLimit() regression testing */
-    int         allocLimit;
-#endif
-
     /* base time for per-thread CPU timing (used by method profiling) */
     bool        cpuClockBaseSet;
     u8          cpuClockBase;

@@ -581,13 +581,6 @@ struct DvmGlobals {
     int             allocRecordHead;        /* most-recently-added entry */
     int             allocRecordCount;       /* #of valid entries */
 
-#ifdef WITH_ALLOC_LIMITS
-    /* set on first use of an alloc limit, never cleared */
-    bool        checkAllocLimits;
-    /* allocation limit, for setGlobalAllocationLimit() regression testing */
-    int         allocationLimit;
-#endif
-
 #ifdef WITH_DEADLOCK_PREDICTION
     /* global lock on history tree accesses */
     pthread_mutex_t deadlockHistoryLock;

@@ -442,23 +442,8 @@ static void Dalvik_dalvik_system_VMDebug_stopEmulatorTracing(const u4* args,
 static void Dalvik_dalvik_system_VMDebug_setAllocationLimit(const u4* args,
     JValue* pResult)
 {
-#if defined(WITH_ALLOC_LIMITS)
-    gDvm.checkAllocLimits = true;
-
-    Thread* self = dvmThreadSelf();
-    int newLimit = args[0];
-    int oldLimit = self->allocLimit;
-
-    if (newLimit < -1) {
-        LOGE("WARNING: bad limit request (%d)\n", newLimit);
-        newLimit = -1;
-    }
-    self->allocLimit = newLimit;
-    RETURN_INT(oldLimit);
-#else
     UNUSED_PARAMETER(args);
     RETURN_INT(-1);
-#endif
 }
 
 /*
@@ -469,23 +454,8 @@ static void Dalvik_dalvik_system_VMDebug_setAllocationLimit(const u4* args,
 static void Dalvik_dalvik_system_VMDebug_setGlobalAllocationLimit(const u4* args,
     JValue* pResult)
 {
-#if defined(WITH_ALLOC_LIMITS)
-    gDvm.checkAllocLimits = true;
-
-    int newLimit = args[0];
-    int oldLimit = gDvm.allocationLimit;
-
-    if (newLimit < -1 || newLimit > 0) {
-        LOGE("WARNING: bad limit request (%d)\n", newLimit);
-        newLimit = -1;
-    }
-    // TODO: should use an atomic swap here
-    gDvm.allocationLimit = newLimit;
-    RETURN_INT(oldLimit);
-#else
     UNUSED_PARAMETER(args);
     RETURN_INT(-1);
-#endif
 }
 
 /*

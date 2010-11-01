@@ -936,10 +936,6 @@ static Thread* allocThread(int interpStackSize)
     thread->status = THREAD_INITIALIZING;
     thread->suspendCount = 0;
 
-#ifdef WITH_ALLOC_LIMITS
-    thread->allocLimit = -1;
-#endif
-
     /*
      * Allocate and initialize the interpreted code stack.  We essentially
      * "lose" the alloc pointer, which points at the bottom of the stack,
