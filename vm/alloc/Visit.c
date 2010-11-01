@@ -213,7 +213,9 @@ void dvmVisitRoots(RootVisitor *visitor, void *arg)
     assert(visitor != NULL);
     visitHashTable(visitor, gDvm.loadedClasses, ROOT_STICKY_CLASS, arg);
     visitArray(visitor, (Object **)gDvm.primitiveClass, NELEM(gDvm.primitiveClass), ROOT_STICKY_CLASS, arg);
-    visitHashTable(visitor, gDvm.dbgRegistry, ROOT_DEBUGGER, arg);
+    if (gDvm.dbgRegistry != NULL) {
+        visitHashTable(visitor, gDvm.dbgRegistry, ROOT_DEBUGGER, arg);
+    }
     visitHashTable(visitor, gDvm.internedStrings, ROOT_INTERNED_STRING, arg);
     visitHashTable(visitor, gDvm.literalStrings, ROOT_INTERNED_STRING, arg);
     visitReferenceTable(visitor, &gDvm.jniGlobalRefTable, 0, ROOT_JNI_GLOBAL, arg);
