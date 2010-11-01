@@ -122,11 +122,9 @@ static void Dalvik_dalvik_system_VMDebug_getVmFeatureList(const u4* args,
     /* VM responds to DDMS method profiling requests */
     features[idx++] = "method-trace-profiling";
     features[idx++] = "method-trace-profiling-streaming";
-#ifdef WITH_HPROF
     /* VM responds to DDMS heap dump requests */
     features[idx++] = "hprof-heap-dump";
     features[idx++] = "hprof-heap-dump-streaming";
-#endif
 
     assert(idx <= MAX_FEATURE_COUNT);
 
@@ -646,7 +644,6 @@ static void Dalvik_dalvik_system_VMDebug_threadCpuTimeNanos(const u4* args,
 static void Dalvik_dalvik_system_VMDebug_dumpHprofData(const u4* args,
     JValue* pResult)
 {
-#ifdef WITH_HPROF
     StringObject* fileNameStr = (StringObject*) args[0];
     Object* fileDescriptor = (Object*) args[1];
     char* fileName;
@@ -687,9 +684,6 @@ static void Dalvik_dalvik_system_VMDebug_dumpHprofData(const u4* args,
             "Failure during heap dump -- check log output for details");
         RETURN_VOID();
     }
-#else
-    dvmThrowException("Ljava/lang/UnsupportedOperationException;", NULL);
-#endif
 
     RETURN_VOID();
 }
@@ -702,7 +696,6 @@ static void Dalvik_dalvik_system_VMDebug_dumpHprofData(const u4* args,
 static void Dalvik_dalvik_system_VMDebug_dumpHprofDataDdms(const u4* args,
     JValue* pResult)
 {
-#ifdef WITH_HPROF
     int result;
 
     result = hprofDumpHeap("[DDMS]", -1, true);
@@ -713,9 +706,6 @@ static void Dalvik_dalvik_system_VMDebug_dumpHprofDataDdms(const u4* args,
             "Failure during heap dump -- check log output for details");
         RETURN_VOID();
     }
-#else
-    dvmThrowException("Ljava/lang/UnsupportedOperationException;", NULL);
-#endif
 
     RETURN_VOID();
 }

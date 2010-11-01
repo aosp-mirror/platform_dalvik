@@ -21,7 +21,7 @@
 #include <stdlib.h>
 #include <stddef.h>
 
-#if WITH_HPROF && WITH_HPROF_STACK
+#if WITH_HPROF_STACK
 #include "hprof/Hprof.h"
 #endif
 
@@ -65,7 +65,7 @@ ArrayObject* dvmAllocArray(ClassObject* arrayClass, size_t length,
         newArray->length = length;
         LOGVV("AllocArray: %s [%d] (%d)\n",
             arrayClass->descriptor, (int) length, (int) size);
-#if WITH_HPROF && WITH_HPROF_STACK
+#if WITH_HPROF_STACK
         hprofFillInStackTrace(&newArray->obj);
 #endif
         dvmTrackAllocation(arrayClass, size);
@@ -437,7 +437,7 @@ static ClassObject* createArrayClass(const char* descriptor, Object* loader)
                       (Object *)elementClass->classLoader);
     newClass->arrayDim = arrayDim;
     newClass->status = CLASS_INITIALIZED;
-#if WITH_HPROF && WITH_HPROF_STACK
+#if WITH_HPROF_STACK
     hprofFillInStackTrace(newClass);
 #endif
 
@@ -644,7 +644,7 @@ static ClassObject* createPrimitiveClass(int idx)
     newClass->descriptor = kClassDescriptors[idx];
     //newClass->super = gDvm.classJavaLangObject;
     newClass->status = CLASS_INITIALIZED;
-#if WITH_HPROF && WITH_HPROF_STACK
+#if WITH_HPROF_STACK
     hprofFillInStackTrace(newClass);
 #endif
 

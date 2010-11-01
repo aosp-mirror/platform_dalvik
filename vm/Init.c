@@ -145,9 +145,7 @@ static void dvmUsage(const char* progName)
 #ifdef WITH_DEADLOCK_PREDICTION
         " deadlock_prediction"
 #endif
-#ifdef WITH_HPROF
         " hprof"
-#endif
 #ifdef WITH_HPROF_STACK
         " hprof_stack"
 #endif
