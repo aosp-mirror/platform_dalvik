@@ -16,8 +16,9 @@
 
 # opcode-gen <file>
 #
-# Use the file bytecodes.txt to generate code inside <file>, based on
-# the directives found in that file:
+# This script uses the file bytecodes.txt (in this directory) to
+# generate code inside the given <file>, based on the directives found
+# in that file:
 #
 #     opcodes:   static final ints for each opcode
 #     dops:      static final objects for each opcode
@@ -114,26 +115,87 @@ consumeUntil != "" {
 
 { print; }
 
-function readBytecodes(i, parts) {
-    for (i = 0; i < 256; i++) {
-        $0 = "";
-        while (($0 == "") || (index($0, "#") != 0)) {
-            if ((getline <bytecodeFile) != 1) {
-                print "trouble reading bytecode file";
-                exit 1;
-            }
+# Read the bytecode description file.
+function readBytecodes(i, parts, line, cmd, status, count) {
+    # locals: parts, line, cmd, status, count
+    for (;;) {
+        # Read a line.
+        status = getline line <bytecodeFile;
+        if (status == 0) break;
+        if (status < 0) {
+            print "trouble reading bytecode file";
+            exit 1;
         }
-        split($0, parts);
-        hex[i] = parts[1];
-        format[i] = parts[2];
-        hasres[i] = (parts[3] == "n") ? "false" : "true";
-        name[i] = parts[4];
-        uppername[i] = toupper(parts[4]);
-        gsub("[---/]", "_", uppername[i]);
-        split(name[i], parts, "/");
-        family[i] = toupper(parts[1]);
-        gsub("-", "_", family[i]);
+
+        # Clean up the line and extract the command
+        gsub(/  */, " ", line);
+        sub(/ *#.*$/, "", line);
+        sub(/ $/, "", line);
+        sub(/^ /, "", line);
+        count = split(line, parts);
+        if (count == 0) continue; # Blank or comment line.
+        cmd = parts[1];
+        sub(/^[a-z][a-z]* */, "", line); # Remove the command from line.
+
+        if (cmd == "op") {
+            status = defineOpcode(line);
+        } else if (cmd == "format") {
+            status = defineFormat(line);
+        } else {
+            status = -1;
+        }
+
+        if (status != 0) {
+            printf("syntax error on line: %s\n", line);
+        }
     }
+}
+
+# Define an opcode.
+function defineOpcode(line, count, parts, idx) {
+    # locals: count, parts, idx
+    count = split(line, parts);
+    if (count != 4)  return -1;
+    idx = parseHex(parts[1]);
+    if (idx < 0) return -1;
+
+    hex[idx] = parts[1];
+    format[idx] = parts[2];
+    hasres[idx] = (parts[3] == "n") ? "false" : "true";
+    name[idx] = parts[4];
+    uppername[idx] = toupper(parts[4]);
+    gsub("[---/]", "_", uppername[idx]);
+    split(name[idx], parts, "/");
+    family[idx] = toupper(parts[1]);
+    gsub("-", "_", family[idx]);
+
+    return 0;
+}
+
+# Define a format family.
+function defineFormat(line, count, parts) {
+    # locals: count, parts
+    count = split(line, parts);
+    if (count < 1)  return -1;
+    formats[parts[1]] = line;
+    return 0;
+}
+
+# Convert a hex value to an int.
+function parseHex(hex, result, chars, count, c, i) {
+    # locals: result, chars, count, c, i
+    hex = tolower(hex);
+    count = split(hex, chars, "");
+    result = 0;
+    for (i = 1; i <= count; i++) {
+        c = index("0123456789abcdef", chars[i]);
+        if (c == 0) {
+            printf("bogus hex value: %s\n", hex);
+            return -1;
+        }
+        result = (result * 16) + c - 1;
+    }
+    return result;
 }
 ' "$file" > "$tmpfile"
 
