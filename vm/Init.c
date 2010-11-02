@@ -149,9 +149,6 @@ static void dvmUsage(const char* progName)
 #ifdef WITH_HPROF_STACK
         " hprof_stack"
 #endif
-#ifdef WITH_ALLOC_LIMITS
-        " alloc_limits"
-#endif
 #ifdef WITH_TRACKREF_CHECKS
         " trackref_checks"
 #endif

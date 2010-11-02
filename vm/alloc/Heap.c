@@ -52,11 +52,6 @@ bool dvmHeapStartup()
 {
     GcHeap *gcHeap;
 
-#if defined(WITH_ALLOC_LIMITS)
-    gDvm.checkAllocLimits = false;
-    gDvm.allocationLimit = -1;
-#endif
-
     gcHeap = dvmHeapSourceStartup(gDvm.heapSizeStart, gDvm.heapSizeMax);
     if (gcHeap == NULL) {
         return false;
@@ -409,45 +404,6 @@ void* dvmMalloc(size_t size, int flags)
 {
     GcHeap *gcHeap = gDvm.gcHeap;
     void *ptr;
-
-#if defined(WITH_ALLOC_LIMITS)
-    /*
-     * See if they've exceeded the allocation limit for this thread.
-     *
-     * A limit value of -1 means "no limit".
-     *
-     * This is enabled at compile time because it requires us to do a
-     * TLS lookup for the Thread pointer.  This has enough of a performance
-     * impact that we don't want to do it if we don't have to.  (Now that
-     * we're using gDvm.checkAllocLimits we may want to reconsider this,
-     * but it's probably still best to just compile the check out of
-     * production code -- one less thing to hit on every allocation.)
-     */
-    if (gDvm.checkAllocLimits) {
-        Thread* self = dvmThreadSelf();
-        if (self != NULL) {
-            int count = self->allocLimit;
-            if (count > 0) {
-                self->allocLimit--;
-            } else if (count == 0) {
-                /* fail! */
-                assert(!gDvm.initializing);
-                self->allocLimit = -1;
-                dvmThrowException("Ldalvik/system/AllocationLimitError;",
-                    "thread allocation limit exceeded");
-                return NULL;
-            }
-        }
-    }
-
-    if (gDvm.allocationLimit >= 0) {
-        assert(!gDvm.initializing);
-        gDvm.allocationLimit = -1;
-        dvmThrowException("Ldalvik/system/AllocationLimitError;",
-            "global allocation limit exceeded");
-        return NULL;
-    }
-#endif
 
     dvmLockHeap();
 
