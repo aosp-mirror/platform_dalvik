@@ -43,7 +43,7 @@ enum InstructionFormat {
     kFmt11n,        // op vA, #+B
     kFmt11x,        // op vAA
     kFmt10t,        // op +AA
-    kFmt20bc,       // op AA, thing@BBBB
+    kFmt20bc,       // [opt] op AA, thing@BBBB
     kFmt20t,        // op +AAAA
     kFmt22x,        // op vAA, vBBBB
     kFmt21t,        // op vAA, +BBBB
@@ -56,20 +56,19 @@ enum InstructionFormat {
     kFmt22s,        // op vA, vB, #+CCCC
     kFmt22c,        // op vA, vB, thing@CCCC
     kFmt22cs,       // [opt] op vA, vB, field offset CCCC
-    kFmt32x,        // op vAAAA, vBBBB
     kFmt30t,        // op +AAAAAAAA
-    kFmt31t,        // op vAA, +BBBBBBBB
+    kFmt32x,        // op vAAAA, vBBBB
     kFmt31i,        // op vAA, #+BBBBBBBB
-    kFmt31c,        // op vAA, thing@BBBBBBBB
-    kFmt35c,        // op {vC, vD, vE, vF, vG}, thing@BBBB (B: count, A: vG)
+    kFmt31t,        // op vAA, +BBBBBBBB
+    kFmt31c,        // op vAA, string@BBBBBBBB
+    kFmt35c,        // op {vD, vE, vF, vG, vA}, thing@CCCC (decoded differently)
     kFmt35ms,       // [opt] invoke-virtual+super
     kFmt35fs,       // [opt] invoke-interface
     kFmt3rc,        // op {vCCCC .. v(CCCC+AA-1)}, meth@BBBB
     kFmt3rms,       // [opt] invoke-virtual+super/range
-    kFmt3rfs,       // [opt] invoke-interface/range
+    kFmt51l,        // op vAA, #+BBBBBBBBBBBBBBBB
     kFmt3inline,    // [opt] inline invoke
     kFmt3rinline,   // [opt] inline invoke/range
-    kFmt51l,        // op vAA, #+BBBBBBBBBBBBBBBB
 };
 
 /*
