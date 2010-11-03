@@ -46,14 +46,6 @@ bool dvmComputeCodeWidths(const Method* meth, InsnFlags* insnFlags,
 /* set the "in try" flag for sections of code wrapped with a "try" block */
 bool dvmSetTryFlags(const Method* meth, InsnFlags* insnFlags);
 
-/* check switch targets and set the "branch target" flag for destinations */
-bool dvmCheckSwitchTargets(const Method* meth, InsnFlags* insnFlags,
-    int curOffset);
-
-/* verify branch target and set "branch target" flag on the destination */
-bool dvmCheckBranchTarget(const Method* meth, InsnFlags* insnFlags,
-    int curOffset, bool selfOkay);
-
 /* verification failure reporting */
 #define LOG_VFY(...)                dvmLogVerifyFailure(NULL, __VA_ARGS__)
 #define LOG_VFY_METH(_meth, ...)    dvmLogVerifyFailure(_meth, __VA_ARGS__)

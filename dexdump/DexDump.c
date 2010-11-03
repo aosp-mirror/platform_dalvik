@@ -945,7 +945,6 @@ void dumpInstruction(DexFile* pDexFile, const DexCode* pCode, int insnIdx,
         }
         break;
     case kFmt3rms:       // [opt] invoke-virtual+super/range
-    case kFmt3rfs:       // [opt] invoke-interface/range
         {
             /*
              * This doesn't match the "dx" output when some of the args are

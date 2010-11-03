@@ -1088,7 +1088,7 @@ void dexDecodeInstruction(const InstructionFormat* fmts, const u2* insns,
     case kFmt20t:       // op +AAAA
         pDec->vA = (s2) FETCH(1);                   // sign-extend 16-bit value
         break;
-    case kFmt20bc:      // op AA, thing@BBBB
+    case kFmt20bc:      // [opt] op AA, thing@BBBB
     case kFmt21c:       // op vAA, thing@BBBB
     case kFmt22x:       // op vAA, vBBBB
         pDec->vA = INST_AA(inst);
@@ -1134,7 +1134,7 @@ void dexDecodeInstruction(const InstructionFormat* fmts, const u2* insns,
         pDec->vA = FETCH(1) | ((u4) FETCH(2) << 16); // signed 32-bit value
         break;
     case kFmt31t:       // op vAA, +BBBBBBBB
-    case kFmt31c:       // op vAA, thing@BBBBBBBB
+    case kFmt31c:       // op vAA, string@BBBBBBBB
         pDec->vA = INST_AA(inst);
         pDec->vB = FETCH(1) | ((u4) FETCH(2) << 16); // 32-bit value
         break;
@@ -1219,9 +1219,6 @@ void dexDecodeInstruction(const InstructionFormat* fmts, const u2* insns,
         pDec->vA = INST_AA(inst);
         pDec->vB = FETCH(1);
         pDec->vC = FETCH(2);
-        break;
-    case kFmt3rfs:      // [opt] invoke-interface/range
-        assert(false);  // TODO
         break;
     case kFmt51l:       // op vAA, #+BBBBBBBBBBBBBBBB
         pDec->vA = INST_AA(inst);
