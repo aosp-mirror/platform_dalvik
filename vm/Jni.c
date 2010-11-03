@@ -2409,17 +2409,15 @@ static jmethodID GetMethodID(JNIEnv* env, jclass jclazz, const char* name,
             meth = NULL;
         }
         if (meth == NULL) {
-            LOGD("GetMethodID: method not found: %s.%s:%s\n",
-                clazz->descriptor, name, sig);
-            dvmThrowException("Ljava/lang/NoSuchMethodError;", name);
-        }
-
-        /*
-         * The method's class may not be the same as clazz, but if
-         * it isn't this must be a virtual method and the class must
-         * be a superclass (and, hence, already initialized).
-         */
-        if (meth != NULL) {
+            dvmThrowExceptionFmt("Ljava/lang/NoSuchMethodError;",
+                "no method with name='%s' signature='%s' in class %s",
+                name, sig, clazz->descriptor);
+        } else {
+            /*
+             * The method's class may not be the same as clazz, but if
+             * it isn't this must be a virtual method and the class must
+             * be a superclass (and, hence, already initialized).
+             */
             assert(dvmIsClassInitialized(meth->clazz) ||
                    dvmIsClassInitializing(meth->clazz));
         }
@@ -2432,8 +2430,8 @@ static jmethodID GetMethodID(JNIEnv* env, jclass jclazz, const char* name,
 /*
  * Get a field ID (instance fields).
  */
-static jfieldID GetFieldID(JNIEnv* env, jclass jclazz,
-    const char* name, const char* sig)
+static jfieldID GetFieldID(JNIEnv* env, jclass jclazz, const char* name,
+    const char* sig)
 {
     JNI_ENTER();
 
@@ -2446,9 +2444,9 @@ static jfieldID GetFieldID(JNIEnv* env, jclass jclazz,
     } else {
         id = (jfieldID) dvmFindInstanceFieldHier(clazz, name, sig);
         if (id == NULL) {
-            LOGD("GetFieldID: unable to find field %s.%s:%s\n",
-                clazz->descriptor, name, sig);
-            dvmThrowException("Ljava/lang/NoSuchFieldError;", name);
+            dvmThrowExceptionFmt("Ljava/lang/NoSuchFieldError;",
+                "no field with name='%s' signature='%s' in class %s",
+                name, sig, clazz->descriptor);
         }
     }
     JNI_EXIT();
@@ -2487,8 +2485,11 @@ static jmethodID GetStaticMethodID(JNIEnv* env, jclass jclazz,
         }
 
         id = (jmethodID) meth;
-        if (id == NULL)
-            dvmThrowException("Ljava/lang/NoSuchMethodError;", name);
+        if (id == NULL) {
+            dvmThrowExceptionFmt("Ljava/lang/NoSuchMethodError;",
+                "no static method with name='%s' signature='%s' in class %s",
+                name, sig, clazz->descriptor);
+        }
     }
 
     JNI_EXIT();
@@ -2511,8 +2512,11 @@ static jfieldID GetStaticFieldID(JNIEnv* env, jclass jclazz,
         id = NULL;
     } else {
         id = (jfieldID) dvmFindStaticField(clazz, name, sig);
-        if (id == NULL)
-            dvmThrowException("Ljava/lang/NoSuchFieldError;", name);
+        if (id == NULL) {
+            dvmThrowExceptionFmt("Ljava/lang/NoSuchFieldError;",
+                "no static field with name='%s' signature='%s' in class %s",
+                name, sig, clazz->descriptor);
+        }
     }
     JNI_EXIT();
     return id;
