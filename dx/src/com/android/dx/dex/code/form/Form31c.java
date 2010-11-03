@@ -104,15 +104,15 @@ public final class Form31c extends InsnFormat {
         CstInsn ci = (CstInsn) insn;
         Constant cst = ci.getConstant();
 
-        return ((cst instanceof CstType) ||
-                (cst instanceof CstFieldRef) ||
-                (cst instanceof CstString));
+        return (cst instanceof CstType) ||
+            (cst instanceof CstFieldRef) ||
+            (cst instanceof CstString);
     }
 
     /** {@inheritDoc} */
     @Override
     public InsnFormat nextUp() {
-        return null;
+        return Form41c.THE_ONE;
     }
 
     /** {@inheritDoc} */
@@ -121,9 +121,6 @@ public final class Form31c extends InsnFormat {
         RegisterSpecList regs = insn.getRegisters();
         int cpi = ((CstInsn) insn).getIndex();
 
-        write(out,
-                opcodeUnit(insn, regs.get(0).getReg()),
-                (short) cpi,
-                (short) (cpi >> 16));
+        write(out, opcodeUnit(insn, regs.get(0).getReg()), cpi);
     }
 }

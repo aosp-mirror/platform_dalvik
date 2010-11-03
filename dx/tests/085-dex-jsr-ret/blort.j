@@ -15,18 +15,6 @@
 .class blort
 .super java/lang/Object
 
-.method public <init>()V
-    .limit locals 2
-    .limit stack 3
-
-    aload_0
-    dup
-    dup
-    astore_1
-    pop2
-    return
-.end method
-
 ; Test jsr and jsr_w.
 .method public test_jsr()Ljava/lang/Object;
     .limit locals 3
@@ -37,9 +25,9 @@
     pop
     ; Call j1 with different locals
     ldc 10
-    astore_0
+    istore_0
     jsr j1
-    aload_0
+    iload_0
     pop
     jsr j3
     areturn

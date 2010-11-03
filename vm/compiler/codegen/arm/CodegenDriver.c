@@ -317,7 +317,7 @@ static void genIGet(CompilationUnit *cUnit, MIR *mir, OpSize size,
                  size, rlObj.sRegLow);
     HEAP_ACCESS_SHADOW(false);
     if (isVolatile) {
-        dvmCompilerGenMemBarrier(cUnit);
+        dvmCompilerGenMemBarrier(cUnit, kSY);
     }
 
     storeValue(cUnit, rlDest, rlResult);
@@ -339,7 +339,7 @@ static void genIPut(CompilationUnit *cUnit, MIR *mir, OpSize size,
                  NULL);/* null object? */
 
     if (isVolatile) {
-        dvmCompilerGenMemBarrier(cUnit);
+        dvmCompilerGenMemBarrier(cUnit, kSY);
     }
     HEAP_ACCESS_SHADOW(true);
     storeBaseDisp(cUnit, rlObj.lowReg, fieldOffset, rlSrc.lowReg, size);
@@ -1062,16 +1062,21 @@ static void genInvokeSingletonCommon(CompilationUnit *cUnit, MIR *mir,
     ArmLIR *retChainingCell = &labelList[bb->fallThrough->id];
 
     /* r1 = &retChainingCell */
-    dvmCompilerLockTemp(cUnit, r1);
     ArmLIR *addrRetChain = opRegRegImm(cUnit, kOpAdd, r1, rpc, 0);
+
     /* r4PC = dalvikCallsite */
     loadConstant(cUnit, r4PC,
                  (int) (cUnit->method->insns + mir->offset));
     addrRetChain->generic.target = (LIR *) retChainingCell;
+
+    /* r7 = calleeMethod->registersSize */
+    loadConstant(cUnit, r7, calleeMethod->registersSize);
     /*
      * r0 = calleeMethod (loaded upon calling genInvokeSingletonCommon)
      * r1 = &ChainingCell
+     * r2 = calleeMethod->outsSize (to be loaded later for Java callees)
      * r4PC = callsiteDPC
+     * r7 = calleeMethod->registersSize
      */
     if (dvmIsNativeMethod(calleeMethod)) {
         genDispatchToHandler(cUnit, TEMPLATE_INVOKE_METHOD_NATIVE);
@@ -1079,6 +1084,8 @@ static void genInvokeSingletonCommon(CompilationUnit *cUnit, MIR *mir,
         gDvmJit.invokeNative++;
 #endif
     } else {
+        /* For Java callees, set up r2 to be calleeMethod->outsSize */
+        loadConstant(cUnit, r2, calleeMethod->outsSize);
         genDispatchToHandler(cUnit, TEMPLATE_INVOKE_METHOD_CHAIN);
 #if defined(WITH_JIT_TUNING)
         gDvmJit.invokeMonomorphic++;
@@ -1215,7 +1222,6 @@ static void genPuntToInterp(CompilationUnit *cUnit, unsigned int offset)
     /* r0 = dalvik pc */
     dvmCompilerFlushAllRegs(cUnit);
     loadConstant(cUnit, r0, (int) (cUnit->method->insns + offset));
-    loadWordDisp(cUnit, r0, offsetof(Object, clazz), r3);
     loadWordDisp(cUnit, rGLUE, offsetof(InterpState,
                  jitToInterpEntries.dvmJitToInterpPunt), r1);
     opReg(cUnit, kOpBlx, r1);
@@ -1323,8 +1329,10 @@ static bool handleFmt10x(CompilationUnit *cUnit, MIR *mir)
         return true;
     }
     switch (dalvikOpCode) {
-        case OP_RETURN_VOID:
         case OP_RETURN_VOID_BARRIER:
+            dvmCompilerGenMemBarrier(cUnit, kST);
+            // Intentional fallthrough
+        case OP_RETURN_VOID:
             genReturnCommon(cUnit,mir);
             break;
         case OP_UNUSED_73:
@@ -1480,7 +1488,7 @@ static bool handleFmt21c_Fmt31c(CompilationUnit *cUnit, MIR *mir)
             loadConstant(cUnit, tReg,  (int) fieldPtr + valOffset);
 
             if (isVolatile) {
-                dvmCompilerGenMemBarrier(cUnit);
+                dvmCompilerGenMemBarrier(cUnit, kSY);
             }
             HEAP_ACCESS_SHADOW(true);
             loadWordDisp(cUnit, tReg, 0, rlResult.lowReg);
@@ -1555,7 +1563,7 @@ static bool handleFmt21c_Fmt31c(CompilationUnit *cUnit, MIR *mir)
             dvmCompilerFreeTemp(cUnit, tReg);
             HEAP_ACCESS_SHADOW(false);
             if (isVolatile) {
-                dvmCompilerGenMemBarrier(cUnit);
+                dvmCompilerGenMemBarrier(cUnit, kSY);
             }
             if (isSputObject) {
                 /* NOTE: marking card based sfield->clazz */

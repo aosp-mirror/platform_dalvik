@@ -36,6 +36,12 @@ INLINE void dvmThrowException(const char* exceptionDescriptor,
 }
 
 /*
+ * Throw an ArrayIndexOutOfBoundsException in the current thread, using the given
+ * index and array length in the detail message.
+ */
+void dvmThrowAIOOBE(int index, int length);
+
+/*
  * Like dvmThrowChainedException, but takes printf-style args for the message.
  */
 void dvmThrowExceptionFmtV(const char* exceptionDescriptor, const char* fmt,

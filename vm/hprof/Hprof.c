@@ -21,7 +21,10 @@
  * heap, and some analysis tools require that the class and string data
  * appear first.
  */
+
 #include "Hprof.h"
+#include "alloc/HeapInternal.h"
+#include "alloc/Visit.h"
 
 #include <string.h>
 #include <unistd.h>
@@ -29,7 +32,6 @@
 #include <errno.h>
 #include <sys/time.h>
 #include <time.h>
-
 
 #define kHeadSuffix "-hptemp"
 
@@ -182,4 +184,87 @@ hprofFreeContext(hprof_context_t *ctx)
     free(ctx->fileName);
     free(ctx->fileDataPtr);
     free(ctx);
+}
+
+/*
+ * Visitor invoked on every root reference.
+ */
+static void hprofRootVisitor(void *addr, u4 threadId, RootType type, void *arg)
+{
+    static const hprof_heap_tag_t xlate[] = {
+        HPROF_ROOT_UNKNOWN,
+        HPROF_ROOT_JNI_GLOBAL,
+        HPROF_ROOT_JNI_LOCAL,
+        HPROF_ROOT_JAVA_FRAME,
+        HPROF_ROOT_NATIVE_STACK,
+        HPROF_ROOT_STICKY_CLASS,
+        HPROF_ROOT_THREAD_BLOCK,
+        HPROF_ROOT_MONITOR_USED,
+        HPROF_ROOT_THREAD_OBJECT,
+        HPROF_ROOT_INTERNED_STRING,
+        HPROF_ROOT_FINALIZING,
+        HPROF_ROOT_DEBUGGER,
+        HPROF_ROOT_REFERENCE_CLEANUP,
+        HPROF_ROOT_VM_INTERNAL,
+        HPROF_ROOT_JNI_MONITOR,
+    };
+    hprof_context_t *ctx;
+
+    assert(arg != NULL);
+    assert(type < NELEM(xlate));
+    ctx = arg;
+    ctx->gcScanState = xlate[type];
+    ctx->gcThreadSerialNumber = threadId;
+    hprofMarkRootObject(ctx, addr, 0);
+    ctx->gcScanState = 0;
+    ctx->gcThreadSerialNumber = 0;
+}
+
+/*
+ * Visitor invoked on every heap object.
+ */
+static void hprofBitmapCallback(void *ptr, void *arg)
+{
+    Object *obj;
+    hprof_context_t *ctx;
+
+    assert(ptr != NULL);
+    assert(arg != NULL);
+    obj = ptr;
+    ctx = arg;
+    hprofDumpHeapObject(ctx, obj);
+}
+
+/*
+ * Walk the roots and heap writing heap information to the specified
+ * file.
+ *
+ * If "fd" is >= 0, the output will be written to that file descriptor.
+ * Otherwise, "fileName" is used to create an output file.
+ *
+ * If "directToDdms" is set, the other arguments are ignored, and data is
+ * sent directly to DDMS.
+ *
+ * Returns 0 on success, or an error code on failure.
+ */
+int hprofDumpHeap(const char* fileName, int fd, bool directToDdms)
+{
+    hprof_context_t *ctx;
+    int success;
+
+    assert(fileName != NULL);
+    dvmLockHeap();
+    dvmSuspendAllThreads(SUSPEND_FOR_HPROF);
+    ctx = hprofStartup(fileName, fd, directToDdms);
+    if (ctx == NULL) {
+        return -1;
+    }
+    dvmVisitRoots(hprofRootVisitor, ctx);
+    dvmHeapBitmapWalk(dvmHeapSourceGetLiveBits(), hprofBitmapCallback, ctx);
+    hprofFinishHeapDump(ctx);
+//TODO: write a HEAP_SUMMARY record
+    success = hprofShutdown(ctx) ? 0 : -1;
+    dvmResumeAllThreads(SUSPEND_FOR_HPROF);
+    dvmUnlockHeap();
+    return success;
 }

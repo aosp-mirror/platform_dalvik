@@ -1,15 +1,15 @@
 reading Blort.class...
 method <init> ()V
 first 000c
+block 0000
+  pred 000a
+  Blort.java:17@0001: Rop{invoke-direct . <- Ljava/lang/Object; call throws <any>}(java.lang.Object.<init>:()V catch) . <- v0:NffffLBlort;
+  next 000b
 block 000a
   pred 000c
   Blort.java:17@0000: move-param-object(0) v0:NffffLBlort; <- .
   Blort.java:17@0000: goto . <- .
   next 0000
-block 0000
-  pred 000a
-  Blort.java:17@0001: Rop{invoke-direct . <- Ljava/lang/Object; call throws <any>}(java.lang.Object.<init>:()V catch) . <- v0:NffffLBlort;
-  next 000b
 block 000b
   pred 0000
   Blort.java:17@0004: return-void . <- .
@@ -35,11 +35,6 @@ block 0004
 
 method edgeSplitMoveException ()V
 first 0027
-block 001e
-  pred 0027
-  Blort.java:31@0000: move-param-object(0) v1:LBlort; <- .
-  Blort.java:31@0000: goto . <- .
-  next 0000
 block 0000
   pred 001e
   Blort.java:31@0001: Rop{invoke-virtual . <- Ljava/lang/Object; call throws <any>}(java.lang.Object.hashCode:()I catch java.lang.Throwable) . <- v1:LBlort;
@@ -50,6 +45,11 @@ block 0004
   Blort.java:32@0006: Rop{invoke-virtual . <- Ljava/lang/Object; call throws <any>}(java.lang.Object.hashCode:()I catch java.lang.Throwable) . <- v1:LBlort;
   next 0028
   next 001f *
+block 001e
+  pred 0027
+  Blort.java:31@0000: move-param-object(0) v1:LBlort; <- .
+  Blort.java:31@0000: goto . <- .
+  next 0000
 block 001f
   pred 0004
   pred 0028
@@ -67,14 +67,14 @@ block 0028
 
 method infiniteLoop ()V
 first 0003
-block 0002
-  pred 0003
-  Blort.java:41@0000: move-param-object(0) v0:LBlort; <- .
-  Blort.java:41@0000: goto . <- .
-  next 0000
 block 0000
   pred 0000
   pred 0002
+  Blort.java:41@0000: goto . <- .
+  next 0000
+block 0002
+  pred 0003
+  Blort.java:41@0000: move-param-object(0) v0:LBlort; <- .
   Blort.java:41@0000: goto . <- .
   next 0000
 block 0003

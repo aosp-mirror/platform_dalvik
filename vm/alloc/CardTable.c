@@ -179,6 +179,77 @@ static void countWhiteReferenceVisitor(void *addr, void *arg)
 }
 
 /*
+ * Visitor that logs white references.
+ */
+static void dumpWhiteReferenceVisitor(void *addr, void *arg)
+{
+    WhiteReferenceCounter *ctx;
+    Object *obj;
+
+    assert(addr != NULL);
+    assert(arg != NULL);
+    obj = *(Object **)addr;
+    if (obj == NULL) {
+        return;
+    }
+    assert(dvmIsValidObject(obj));
+    ctx = arg;
+    if (dvmHeapBitmapIsObjectBitSet(ctx->markBits, obj)) {
+        return;
+    }
+    LOGE("object %p is white", obj);
+}
+
+/*
+ * Visitor that signals the caller when a matching reference is found.
+ */
+static void dumpReferencesVisitor(void *pObj, void *arg)
+{
+    Object *obj = *(Object **)pObj;
+    Object *lookingFor = *(Object **)arg;
+    if (lookingFor != NULL && lookingFor == obj) {
+        *(Object **)arg = NULL;
+    }
+}
+
+static void dumpReferencesCallback(void *ptr, void *arg)
+{
+    Object *obj = arg;
+    if (ptr == obj) {
+        return;
+    }
+    dvmVisitObject(dumpReferencesVisitor, ptr, &obj);
+    if (obj == NULL) {
+        LOGD("Found %p in the heap @ %p", arg, ptr);
+        dvmDumpObject(ptr);
+    }
+}
+
+/*
+ * Root visitor that looks for matching references.
+ */
+static void dumpReferencesRootVisitor(void *ptr, u4 threadId,
+                                      RootType type, void *arg)
+{
+    Object *obj = *(Object **)ptr;
+    Object *lookingFor = *(Object **)arg;
+    if (obj == lookingFor) {
+        LOGD("Found %p in a root @ %p", arg, ptr);
+    }
+}
+
+/*
+ * Invokes visitors to search for references to an object.
+ */
+static void dumpReferences(const Object *obj)
+{
+    HeapBitmap *bitmap = dvmHeapSourceGetLiveBits();
+    void *arg = (void *)obj;
+    dvmVisitRoots(dumpReferencesRootVisitor, arg);
+    dvmHeapBitmapWalk(bitmap, dumpReferencesCallback, arg);
+}
+
+/*
  * Returns true if the given object is a reference object and the
  * just the referent is unmarked.
  */
@@ -257,6 +328,8 @@ static void verifyCardTableCallback(void *ptr, void *arg)
     } else {
         LOGE("Verify failed, object %p is gray and on an unmarked card", obj);
         dvmDumpObject(obj);
+        dvmVisitObject(dumpWhiteReferenceVisitor, obj, &ctx);
+        dumpReferences(obj);
         dvmAbort();
     }
 }

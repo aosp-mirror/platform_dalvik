@@ -56,6 +56,11 @@ u1 *dvmCardFromAddr(const void *addr);
 void *dvmAddrFromCard(const u1 *card);
 
 /*
+ * Returns true if addr points to a valid card.
+ */
+bool dvmIsValidCard(const u1 *card);
+
+/*
  * Set the card associated with the given address to GC_CARD_DIRTY.
  */
 void dvmMarkCard(const void *addr);

@@ -723,6 +723,7 @@ void dvmPrintExceptionStackTrace(void)
     if (exception == NULL)
         return;
 
+    dvmAddTrackedAlloc(exception, self);
     self->exception = NULL;
     printMethod = dvmFindVirtualMethodHierByDescriptor(exception->clazz,
                     "printStackTrace", "()V");
@@ -740,6 +741,7 @@ void dvmPrintExceptionStackTrace(void)
     }
 
     self->exception = exception;
+    dvmReleaseTrackedAlloc(exception, self);
 }
 
 /*
@@ -1250,6 +1252,7 @@ static StringObject* getExceptionMessage(Object* exception)
     StringObject* messageStr = NULL;
 
     assert(exception == self->exception);
+    dvmAddTrackedAlloc(exception, self);
     self->exception = NULL;
 
     getMessageMethod = dvmFindVirtualMethodHierByDescriptor(exception->clazz,
@@ -1276,6 +1279,7 @@ static StringObject* getExceptionMessage(Object* exception)
     }
 
     self->exception = exception;
+    dvmReleaseTrackedAlloc(exception, self);
     return messageStr;
 }
 
@@ -1348,4 +1352,10 @@ void dvmLogExceptionStackTrace(void)
         LOGI("Caused by:\n");
         exception = cause;
     }
+}
+
+void dvmThrowAIOOBE(int index, int length)
+{
+    dvmThrowExceptionFmt("Ljava/lang/ArrayIndexOutOfBoundsException;",
+        "index=%d length=%d", index, length);
 }

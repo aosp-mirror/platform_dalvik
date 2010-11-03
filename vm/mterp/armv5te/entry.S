@@ -153,7 +153,7 @@ dvmMterpStdBail:
     ldr     sp, [r0, #offGlue_bailPtr]      @ sp<- saved SP
     mov     r0, r1                          @ return the changeInterp value
     add     sp, sp, #4                      @ un-align 64
-    LDMFD_PC "r4-r10,fp"                    @ restore 9 regs and return
+    ldmfd   sp!, {r4-r10,fp,pc}             @ restore 9 regs and return
 
 
 /*

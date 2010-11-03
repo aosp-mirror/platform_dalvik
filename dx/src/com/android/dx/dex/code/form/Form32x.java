@@ -71,7 +71,7 @@ public final class Form32x extends InsnFormat {
     /** {@inheritDoc} */
     @Override
     public InsnFormat nextUp() {
-        return null;
+        return Form33x.THE_ONE;
     }
 
     /** {@inheritDoc} */

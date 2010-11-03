@@ -9,7 +9,8 @@
     stmfd   sp!, {r0-r2,lr}             @ preserve live registers
     mov     r0, r6
     @ r0=rGlue
-    LDR_PC_LR ".LdvmFastJavaMethodTraceExit"
+    mov     lr, pc
+    ldr     pc, .LdvmFastJavaMethodTraceExit
     ldmfd   sp!, {r0-r2,lr}             @ restore live registers
 #endif
     SAVEAREA_FROM_FP(r0, rFP)           @ r0<- saveArea (old)

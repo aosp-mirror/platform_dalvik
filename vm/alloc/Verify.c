@@ -33,7 +33,6 @@ static void dumpReferencesCallback(void *ptr, void *arg)
 {
     Object *obj = arg;
     if (ptr == obj) {
-        LOGD("skipping %p == %p", ptr, obj);
         return;
     }
     dvmVisitObject(dumpReferencesVisitor, ptr, &obj);
@@ -43,7 +42,8 @@ static void dumpReferencesCallback(void *ptr, void *arg)
     }
 }
 
-static void dumpReferencesRootVisitor(void *ptr, void *arg)
+static void dumpReferencesRootVisitor(void *ptr, u4 threadId,
+                                      RootType type, void *arg)
 {
     Object *obj = *(Object **)ptr;
     Object *lookingFor = *(Object **)arg;
@@ -121,9 +121,18 @@ void dvmVerifyBitmap(const HeapBitmap *bitmap)
 }
 
 /*
+ * Helper function to call verifyReference from the root verifier.
+ */
+static void verifyRootReference(void *addr, u4 threadId,
+                                RootType type, void *arg)
+{
+    verifyReference(addr, arg);
+}
+
+/*
  * Verifies references in the roots.
  */
 void dvmVerifyRoots(void)
 {
-    dvmVisitRoots(verifyReference, NULL);
+    dvmVisitRoots(verifyRootReference, NULL);
 }

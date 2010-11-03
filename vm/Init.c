@@ -145,14 +145,9 @@ static void dvmUsage(const char* progName)
 #ifdef WITH_DEADLOCK_PREDICTION
         " deadlock_prediction"
 #endif
-#ifdef WITH_HPROF
         " hprof"
-#endif
 #ifdef WITH_HPROF_STACK
         " hprof_stack"
-#endif
-#ifdef WITH_ALLOC_LIMITS
-        " alloc_limits"
 #endif
 #ifdef WITH_TRACKREF_CHECKS
         " trackref_checks"
@@ -1030,11 +1025,14 @@ static int dvmProcessOptions(int argc, const char* const argv[],
         }
     }
 
-    /* We should be able to cope with these being equal, but until
-     * http://b/2714377 is fixed, we can't.
+    /* External allocations count against the space we "reserve" by setting
+     * the heap max size greater than the heap start size. Without a gap,
+     * no external allocations will succeed. You won't get very far like that,
+     * so let's not even try.
      */
     if (gDvm.heapSizeStart >= gDvm.heapSizeMax) {
-        dvmFprintf(stderr, "Heap start size must be < heap max size\n");
+        dvmFprintf(stderr, "External allocations require a gap between the "
+            "heap start size and max size\n");
         return -1;
     }
 
@@ -1236,6 +1234,8 @@ int dvmStartup(int argc, const char* const argv[], bool ignoreUnrecognized,
         goto fail;
     if (!dvmClassStartup())
         goto fail;
+    if (!dvmBaseClassStartup())
+        goto fail;
     if (!dvmThreadObjStartup())
         goto fail;
     if (!dvmExceptionStartup())
@@ -1289,6 +1289,16 @@ int dvmStartup(int argc, const char* const argv[], bool ignoreUnrecognized,
      * JNI calls to work.
      */
     if (!dvmPrepMainForJni(pEnv))
+        goto fail;
+
+    /*
+     * Explicitly initialize java.lang.Class.  This doesn't happen
+     * automatically because it's allocated specially (it's an instance
+     * of itself).  Must happen before registration of system natives,
+     * which make some calls that throw assertions if the classes they
+     * operate on aren't initialized.
+     */
+    if (!dvmInitClass(gDvm.classJavaLangClass))
         goto fail;
 
     /*
@@ -1539,11 +1549,10 @@ static bool dvmInitJDWP(void)
  * of initialization and then returns with "initializing" still set.  (Used
  * by DexOpt command-line utility.)
  *
- * Attempting to use JNI or internal natives will fail.  It's best if
- * no bytecode gets executed, which means no <clinit>, which means no
- * exception-throwing.  We check the "initializing" flag anyway when
- * throwing an exception, so we can insert some code that avoids chucking
- * an exception when we're optimizing stuff.
+ * Attempting to use JNI or internal natives will fail.  It's best
+ * if no bytecode gets executed, which means no <clinit>, which means
+ * no exception-throwing.  (In practice we need to initialize Class and
+ * Object, and probably some exception classes.)
  *
  * Returns 0 on success.
  */

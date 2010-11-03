@@ -83,8 +83,6 @@ public final class Form30t extends InsnFormat {
     public void writeTo(AnnotatedOutput out, DalvInsn insn) {
         int offset = ((TargetInsn) insn).getTargetOffset();
 
-        write(out, opcodeUnit(insn, 0),
-                (short) offset,
-                (short) (offset >> 16));
+        write(out, opcodeUnit(insn, 0), offset);
     }
 }

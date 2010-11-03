@@ -504,6 +504,17 @@ void dvmLockThreadList(Thread* self)
 }
 
 /*
+ * Try to lock the thread list.
+ *
+ * Returns "true" if we locked it.  This is a "fast" mutex, so if the
+ * current thread holds the lock this will fail.
+ */
+bool dvmTryLockThreadList(void)
+{
+    return (dvmTryLockMutex(&gDvm.threadListLock) == 0);
+}
+
+/*
  * Release the thread list global lock.
  */
 void dvmUnlockThreadList(void)
@@ -523,6 +534,7 @@ static const char* getSuspendCauseStr(SuspendCause why)
     case SUSPEND_FOR_DEBUG_EVENT:   return "debug-event";
     case SUSPEND_FOR_STACK_DUMP:    return "stack-dump";
     case SUSPEND_FOR_VERIFY:        return "verify";
+    case SUSPEND_FOR_HPROF:         return "hprof";
 #if defined(WITH_JIT)
     case SUSPEND_FOR_TBL_RESIZE:    return "table-resize";
     case SUSPEND_FOR_IC_PATCH:      return "inline-cache-patch";
@@ -887,6 +899,7 @@ bool dvmPrepMainThread(void)
         return false;
     }
     dvmSetFieldObject(threadObj, ctxtClassLoaderOffset, systemLoader);
+    dvmReleaseTrackedAlloc(systemLoader, NULL);
 
     /*
      * Finish our thread prep.
@@ -922,10 +935,6 @@ static Thread* allocThread(int interpStackSize)
 
     thread->status = THREAD_INITIALIZING;
     thread->suspendCount = 0;
-
-#ifdef WITH_ALLOC_LIMITS
-    thread->allocLimit = -1;
-#endif
 
     /*
      * Allocate and initialize the interpreted code stack.  We essentially
@@ -1681,7 +1690,8 @@ static void* interpThreadStart(void* arg)
 
     /*
      * Notify the debugger & DDM.  The debugger notification may cause
-     * us to suspend ourselves (and others).
+     * us to suspend ourselves (and others).  The thread state may change
+     * to VMWAIT briefly if network packets are sent.
      */
     if (gDvm.debuggerConnected)
         dvmDbgPostThreadStart(self);
@@ -4167,16 +4177,10 @@ static void gcScanThread(Thread *thread)
         /* continue anyway */
     }
 
-    HPROF_SET_GC_SCAN_STATE(HPROF_ROOT_THREAD_OBJECT, thread->threadId);
-
     dvmMarkObject(thread->threadObj);   // could be NULL, when constructing
-
-    HPROF_SET_GC_SCAN_STATE(HPROF_ROOT_NATIVE_STACK, thread->threadId);
 
     dvmMarkObject(thread->exception);   // usually NULL
     gcScanReferenceTable(&thread->internalLocalRefTable);
-
-    HPROF_SET_GC_SCAN_STATE(HPROF_ROOT_JNI_LOCAL, thread->threadId);
 
 #ifdef USE_INDIRECT_REF
     gcScanIndirectRefTable(&thread->jniLocalRefTable);
@@ -4185,16 +4189,10 @@ static void gcScanThread(Thread *thread)
 #endif
 
     if (thread->jniMonitorRefTable.table != NULL) {
-        HPROF_SET_GC_SCAN_STATE(HPROF_ROOT_JNI_MONITOR, thread->threadId);
-
         gcScanReferenceTable(&thread->jniMonitorRefTable);
     }
 
-    HPROF_SET_GC_SCAN_STATE(HPROF_ROOT_JAVA_FRAME, thread->threadId);
-
     gcScanInterpStackReferences(thread);
-
-    HPROF_CLEAR_GC_SCAN_STATE();
 }
 
 static void gcScanAllThreads()

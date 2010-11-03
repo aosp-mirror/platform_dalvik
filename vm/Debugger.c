@@ -2888,7 +2888,10 @@ void dvmDbgExecuteMethod(DebugInvokeReq* pReq)
      * to preserve that across the method invocation.
      */
     oldExcept = dvmGetException(self);
-    dvmClearException(self);
+    if (oldExcept != NULL) {
+        dvmAddTrackedAlloc(oldExcept, self);
+        dvmClearException(self);
+    }
 
     oldStatus = dvmChangeStatus(self, THREAD_RUNNING);
 
@@ -2937,10 +2940,23 @@ void dvmDbgExecuteMethod(DebugInvokeReq* pReq)
                 pReq->resultTag, newTag);
             pReq->resultTag = newTag;
         }
+
+        /*
+         * Register the object.  We don't actually need an ObjectId yet,
+         * but we do need to be sure that the GC won't move or discard the
+         * object when we switch out of RUNNING.  The ObjectId conversion
+         * will add the object to the "do not touch" list.
+         *
+         * We can't use the "tracked allocation" mechanism here because
+         * the object is going to be handed off to a different thread.
+         */
+        (void) objectToObjectId(pReq->resultValue.l);
     }
 
-    if (oldExcept != NULL)
+    if (oldExcept != NULL) {
         dvmSetException(self, oldExcept);
+        dvmReleaseTrackedAlloc(oldExcept, self);
+    }
     dvmChangeStatus(self, oldStatus);
 }
 

@@ -19,6 +19,7 @@
  */
 #include "Dalvik.h"
 #include "native/InternalNativePriv.h"
+#include "hprof/Hprof.h"
 
 #include <string.h>
 #include <unistd.h>
@@ -121,11 +122,9 @@ static void Dalvik_dalvik_system_VMDebug_getVmFeatureList(const u4* args,
     /* VM responds to DDMS method profiling requests */
     features[idx++] = "method-trace-profiling";
     features[idx++] = "method-trace-profiling-streaming";
-#ifdef WITH_HPROF
     /* VM responds to DDMS heap dump requests */
     features[idx++] = "hprof-heap-dump";
     features[idx++] = "hprof-heap-dump-streaming";
-#endif
 
     assert(idx <= MAX_FEATURE_COUNT);
 
@@ -443,23 +442,8 @@ static void Dalvik_dalvik_system_VMDebug_stopEmulatorTracing(const u4* args,
 static void Dalvik_dalvik_system_VMDebug_setAllocationLimit(const u4* args,
     JValue* pResult)
 {
-#if defined(WITH_ALLOC_LIMITS)
-    gDvm.checkAllocLimits = true;
-
-    Thread* self = dvmThreadSelf();
-    int newLimit = args[0];
-    int oldLimit = self->allocLimit;
-
-    if (newLimit < -1) {
-        LOGE("WARNING: bad limit request (%d)\n", newLimit);
-        newLimit = -1;
-    }
-    self->allocLimit = newLimit;
-    RETURN_INT(oldLimit);
-#else
     UNUSED_PARAMETER(args);
     RETURN_INT(-1);
-#endif
 }
 
 /*
@@ -470,23 +454,8 @@ static void Dalvik_dalvik_system_VMDebug_setAllocationLimit(const u4* args,
 static void Dalvik_dalvik_system_VMDebug_setGlobalAllocationLimit(const u4* args,
     JValue* pResult)
 {
-#if defined(WITH_ALLOC_LIMITS)
-    gDvm.checkAllocLimits = true;
-
-    int newLimit = args[0];
-    int oldLimit = gDvm.allocationLimit;
-
-    if (newLimit < -1 || newLimit > 0) {
-        LOGE("WARNING: bad limit request (%d)\n", newLimit);
-        newLimit = -1;
-    }
-    // TODO: should use an atomic swap here
-    gDvm.allocationLimit = newLimit;
-    RETURN_INT(oldLimit);
-#else
     UNUSED_PARAMETER(args);
     RETURN_INT(-1);
-#endif
 }
 
 /*
@@ -645,7 +614,6 @@ static void Dalvik_dalvik_system_VMDebug_threadCpuTimeNanos(const u4* args,
 static void Dalvik_dalvik_system_VMDebug_dumpHprofData(const u4* args,
     JValue* pResult)
 {
-#ifdef WITH_HPROF
     StringObject* fileNameStr = (StringObject*) args[0];
     Object* fileDescriptor = (Object*) args[1];
     char* fileName;
@@ -686,9 +654,6 @@ static void Dalvik_dalvik_system_VMDebug_dumpHprofData(const u4* args,
             "Failure during heap dump -- check log output for details");
         RETURN_VOID();
     }
-#else
-    dvmThrowException("Ljava/lang/UnsupportedOperationException;", NULL);
-#endif
 
     RETURN_VOID();
 }
@@ -701,7 +666,6 @@ static void Dalvik_dalvik_system_VMDebug_dumpHprofData(const u4* args,
 static void Dalvik_dalvik_system_VMDebug_dumpHprofDataDdms(const u4* args,
     JValue* pResult)
 {
-#ifdef WITH_HPROF
     int result;
 
     result = hprofDumpHeap("[DDMS]", -1, true);
@@ -712,9 +676,6 @@ static void Dalvik_dalvik_system_VMDebug_dumpHprofDataDdms(const u4* args,
             "Failure during heap dump -- check log output for details");
         RETURN_VOID();
     }
-#else
-    dvmThrowException("Ljava/lang/UnsupportedOperationException;", NULL);
-#endif
 
     RETURN_VOID();
 }

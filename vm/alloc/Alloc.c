@@ -21,7 +21,7 @@
 #include "alloc/HeapInternal.h"
 #include "alloc/HeapSource.h"
 
-#if WITH_HPROF && WITH_HPROF_STACK
+#if WITH_HPROF_STACK
 #include "hprof/Hprof.h"
 #endif
 
@@ -184,7 +184,7 @@ Object* dvmAllocObject(ClassObject* clazz, int flags)
     newObj = dvmMalloc(clazz->objectSize, flags);
     if (newObj != NULL) {
         DVM_OBJECT_INIT(newObj, clazz);
-#if WITH_HPROF && WITH_HPROF_STACK
+#if WITH_HPROF_STACK
         hprofFillInStackTrace(newObj);
 #endif
         dvmTrackAllocation(clazz, clazz->objectSize);
@@ -227,7 +227,7 @@ Object* dvmCloneObject(Object* obj)
     copy = dvmMalloc(size, flags);
     if (copy == NULL)
         return NULL;
-#if WITH_HPROF && WITH_HPROF_STACK
+#if WITH_HPROF_STACK
     hprofFillInStackTrace(copy);
     dvmTrackAllocation(obj->clazz, size);
 #endif

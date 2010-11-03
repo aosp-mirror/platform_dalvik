@@ -16,6 +16,7 @@
 
 #include "Dalvik.h"
 #include "alloc/clz.h"
+#include "alloc/CardTable.h"
 #include "alloc/HeapBitmap.h"
 #include "alloc/HeapInternal.h"
 #include "alloc/HeapSource.h"
@@ -41,8 +42,12 @@
 
 #define LOG_SCAN(...)   LOGV_GC("SCAN: " __VA_ARGS__)
 
+#define ALIGN_DOWN(x, n) ((size_t)(x) & -(n))
 #define ALIGN_UP(x, n) (((size_t)(x) + (n) - 1) & ~((n) - 1))
 #define ALIGN_UP_TO_PAGE_SIZE(p) ALIGN_UP(p, SYSTEM_PAGE_SIZE)
+
+typedef unsigned long Word;
+const size_t kWordSize = sizeof(Word);
 
 /* Do not cast the result of this to a boolean; the only set bit
  * may be > 1<<8.
@@ -126,12 +131,6 @@ static void markObjectNonNull(const Object *obj, GcMarkContext *ctx,
              */
             MARK_STACK_PUSH(ctx->stack, obj);
         }
-
-#if WITH_HPROF
-        if (gDvm.gcHeap->hprofContext != NULL) {
-            hprofMarkRootObject(gDvm.gcHeap->hprofContext, obj, 0);
-        }
-#endif
     }
 }
 
@@ -193,8 +192,6 @@ void dvmHeapMarkRootSet()
 {
     GcHeap *gcHeap = gDvm.gcHeap;
 
-    HPROF_SET_GC_SCAN_STATE(HPROF_ROOT_STICKY_CLASS, 0);
-
     LOG_SCAN("immune objects");
     dvmMarkImmuneObjects(gcHeap->markContext.immuneLimit);
 
@@ -203,40 +200,23 @@ void dvmHeapMarkRootSet()
     LOG_SCAN("primitive classes\n");
     dvmGcScanPrimitiveClasses();
 
-    /* dvmGcScanRootThreadGroups() sets a bunch of
-     * different scan states internally.
-     */
-    HPROF_CLEAR_GC_SCAN_STATE();
-
     LOG_SCAN("root thread groups\n");
     dvmGcScanRootThreadGroups();
-
-    HPROF_SET_GC_SCAN_STATE(HPROF_ROOT_INTERNED_STRING, 0);
 
     LOG_SCAN("interned strings\n");
     dvmGcScanInternedStrings();
 
-    HPROF_SET_GC_SCAN_STATE(HPROF_ROOT_JNI_GLOBAL, 0);
-
     LOG_SCAN("JNI global refs\n");
     dvmGcMarkJniGlobalRefs();
-
-    HPROF_SET_GC_SCAN_STATE(HPROF_ROOT_REFERENCE_CLEANUP, 0);
 
     LOG_SCAN("pending reference operations\n");
     dvmHeapMarkLargeTableRefs(gcHeap->referenceOperations);
 
-    HPROF_SET_GC_SCAN_STATE(HPROF_ROOT_FINALIZING, 0);
-
     LOG_SCAN("pending finalizations\n");
     dvmHeapMarkLargeTableRefs(gcHeap->pendingFinalizationRefs);
 
-    HPROF_SET_GC_SCAN_STATE(HPROF_ROOT_DEBUGGER, 0);
-
     LOG_SCAN("debugger refs\n");
     dvmGcMarkDebuggerRefs();
-
-    HPROF_SET_GC_SCAN_STATE(HPROF_ROOT_VM_INTERNAL, 0);
 
     /* Mark any special objects we have sitting around.
      */
@@ -245,15 +225,13 @@ void dvmHeapMarkRootSet()
     dvmMarkObjectNonNull(gDvm.internalErrorObj);
     dvmMarkObjectNonNull(gDvm.noClassDefFoundErrorObj);
 //TODO: scan object references sitting in gDvm;  use pointer begin & end
-
-    HPROF_CLEAR_GC_SCAN_STATE();
 }
 
 /*
  * Callback applied to root references.  If the root location contains
  * a white reference it is pushed on the mark stack and grayed.
  */
-static void markObjectVisitor(void *addr, void *arg)
+static void markObjectVisitor(void *addr, RootType type, u4 thread, void *arg)
 {
     Object *obj;
 
@@ -514,11 +492,6 @@ static void scanObject(const Object *obj, GcMarkContext *ctx)
     assert(obj != NULL);
     assert(ctx != NULL);
     assert(obj->clazz != NULL);
-#if WITH_HPROF
-    if (gDvm.gcHeap->hprofContext != NULL) {
-        hprofDumpHeapObject(gDvm.gcHeap->hprofContext, obj);
-    }
-#endif
     /* Dispatch a type-specific scan routine. */
     if (obj->clazz == gDvm.classJavaLangClass) {
         scanClassObject((ClassObject *)obj, ctx);
@@ -561,9 +534,10 @@ static size_t objectSize(const Object *obj)
  * Scans forward to the header of the next marked object between start
  * and limit.  Returns NULL if no marked objects are in that region.
  */
-static Object *nextGrayObject(u1 *base, u1 *limit, HeapBitmap *markBits)
+static Object *nextGrayObject(const u1 *base, const u1 *limit,
+                              const HeapBitmap *markBits)
 {
-    u1 *ptr;
+    const u1 *ptr;
 
     assert(base < limit);
     assert(limit - base <= GC_CARD_SIZE);
@@ -575,43 +549,144 @@ static Object *nextGrayObject(u1 *base, u1 *limit, HeapBitmap *markBits)
 }
 
 /*
- * Scan the card table looking for objects that have been grayed by
- * the mutator.
+ * Scans each byte from start below end returning the address of the
+ * first dirty card.  Returns NULL if no dirty card is found.
+ */
+static const u1 *scanBytesForDirtyCard(const u1 *start, const u1 *end)
+{
+    const u1 *ptr;
+
+    assert(start <= end);
+    for (ptr = start; ptr < end; ++ptr) {
+        if (*ptr == GC_CARD_DIRTY) {
+            return ptr;
+        }
+    }
+    return NULL;
+}
+
+/*
+ * Like scanBytesForDirtyCard but scans the range from start below end
+ * by words.  Assumes start and end are word aligned.
+ */
+static const u1 *scanWordsForDirtyCard(const u1 *start, const u1 *end)
+{
+    const u1 *ptr;
+
+    assert((uintptr_t)start % kWordSize == 0);
+    assert((uintptr_t)end % kWordSize == 0);
+    assert(start <= end);
+    for (ptr = start; ptr < end; ptr += kWordSize) {
+        if (*(const Word *)ptr != 0) {
+            const u1 *dirty = scanBytesForDirtyCard(ptr, ptr + kWordSize);
+            if (dirty != NULL) {
+                return dirty;
+            }
+        }
+    }
+    return NULL;
+}
+
+/*
+ * Scans the card table as quickly as possible looking for a dirty
+ * card.  Returns the address of the first dirty card found or NULL if
+ * no dirty cards were found.
+ */
+static const u1 *nextDirtyCard(const u1 *start, const u1 *end)
+{
+    const u1 *wstart = (u1 *)ALIGN_UP(start, kWordSize);
+    const u1 *wend = (u1 *)ALIGN_DOWN(end, kWordSize);
+    const u1 *ptr, *dirty;
+
+    assert(start <= end);
+    assert(start <= wstart);
+    assert(end >= wend);
+    ptr = start;
+    if (wstart < end) {
+        /* Scan the leading unaligned bytes. */
+        dirty = scanBytesForDirtyCard(ptr, wstart);
+        if (dirty != NULL) {
+            return dirty;
+        }
+        /* Scan the range of aligned words. */
+        dirty = scanWordsForDirtyCard(wstart, wend);
+        if (dirty != NULL) {
+            return dirty;
+        }
+        ptr = wend;
+    }
+    /* Scan trailing unaligned bytes. */
+    dirty = scanBytesForDirtyCard(ptr, end);
+    if (dirty != NULL) {
+        return dirty;
+    }
+    return NULL;
+}
+
+/*
+ * Scans range of dirty cards between start and end.  A range of dirty
+ * cards is composed consecutively dirty cards or dirty cards spanned
+ * by a gray object.  Returns the address of a clean card if the scan
+ * reached a clean card or NULL if the scan reached the end.
+ */
+const u1 *scanDirtyCards(const u1 *start, const u1 *end,
+                         GcMarkContext *ctx)
+{
+    const HeapBitmap *markBits = ctx->bitmap;
+    const u1 *card = start, *prevAddr = NULL;
+    while (card < end) {
+        if (*card != GC_CARD_DIRTY) {
+            return card;
+        }
+        const u1 *ptr = prevAddr ? prevAddr : dvmAddrFromCard(card);
+        const u1 *limit = ptr + GC_CARD_SIZE;
+        while (ptr < limit) {
+            Object *obj = nextGrayObject(ptr, limit, markBits);
+            if (obj == NULL) {
+                break;
+            }
+            scanObject(obj, ctx);
+            ptr = (u1*)obj + ALIGN_UP(objectSize(obj), HB_OBJECT_ALIGNMENT);
+        }
+        if (ptr < limit) {
+            /* Ended within the current card, advance to the next card. */
+            ++card;
+            prevAddr = NULL;
+        } else {
+            /* Ended past the current card, skip ahead. */
+            card = dvmCardFromAddr(ptr);
+            prevAddr = ptr;
+        }
+    }
+    return NULL;
+}
+
+/*
+ * Blackens gray objects found on dirty cards.
  */
 static void scanGrayObjects(GcMarkContext *ctx)
 {
     GcHeap *h = gDvm.gcHeap;
-    HeapBitmap *markBits, *liveBits;
-    u1 *card, *baseCard, *limitCard;
+    const u1 *base, *limit, *ptr, *dirty;
     size_t footprint;
 
-    markBits = ctx->bitmap;
-    liveBits = dvmHeapSourceGetLiveBits();
     footprint = dvmHeapSourceGetValue(HS_FOOTPRINT, NULL, 0);
-    baseCard = &h->cardTableBase[0];
-    limitCard = dvmCardFromAddr((u1 *)dvmHeapSourceGetBase() + footprint);
-    assert(limitCard <= &h->cardTableBase[h->cardTableLength]);
-    for (card = baseCard; card != limitCard; ++card) {
-        if (*card == GC_CARD_DIRTY) {
-            /*
-             * The card is dirty.  Scan all of the objects that
-             * intersect with the card address.
-             */
-            u1 *addr = dvmAddrFromCard(card);
-            /*
-             * Scan through all black objects that start on the
-             * current card.
-             */
-            u1 *limit = addr + GC_CARD_SIZE;
-            u1 *next = addr;
-            while (next < limit) {
-                Object *obj = nextGrayObject(next, limit, markBits);
-                if (obj == NULL)
-                    break;
-                scanObject(obj, ctx);
-                next = (u1*)obj + ALIGN_UP(objectSize(obj), HB_OBJECT_ALIGNMENT);
-            }
+    base = &h->cardTableBase[0];
+    limit = dvmCardFromAddr((u1 *)dvmHeapSourceGetBase() + footprint);
+    assert(limit <= &h->cardTableBase[h->cardTableLength]);
+
+    ptr = base;
+    for (;;) {
+        dirty = nextDirtyCard(ptr, limit);
+        if (dirty == NULL) {
+            break;
         }
+        assert((dirty > ptr) && (dirty < limit));
+        ptr = scanDirtyCards(dirty, limit, ctx);
+        if (ptr == NULL) {
+            break;
+        }
+        assert((ptr > dirty) && (ptr < limit));
     }
 }
 
@@ -879,13 +954,11 @@ void dvmHeapScheduleFinalizations()
     ref = newPendingRefs.table;
     lastRef = newPendingRefs.nextEntry;
     assert(ref < lastRef);
-    HPROF_SET_GC_SCAN_STATE(HPROF_ROOT_FINALIZING, 0);
     while (ref < lastRef) {
         assert(*ref != NULL);
         markObject(*ref, ctx);
         ref++;
     }
-    HPROF_CLEAR_GC_SCAN_STATE();
     processMarkStack(ctx);
     dvmSignalHeapWorker(false);
 }

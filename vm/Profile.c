@@ -897,7 +897,7 @@ void dvmEmulatorTraceStop(void)
 /*
  * Start instruction counting.
  */
-void dvmStartInstructionCounting()
+void dvmStartInstructionCounting(void)
 {
 #if defined(WITH_INLINE_PROFILING)
     LOGW("Instruction counting not supported with inline profiling");
@@ -908,9 +908,9 @@ void dvmStartInstructionCounting()
 }
 
 /*
- * Start instruction counting.
+ * Stop instruction counting.
  */
-void dvmStopInstructionCounting()
+void dvmStopInstructionCounting(void)
 {
     if (gDvm.instructionCountEnableCount == 0) {
         LOGE("ERROR: instruction counting not enabled\n");

@@ -344,6 +344,7 @@ bool dvmClassStartup(void)
         classObjectSize(CLASS_SFIELD_SLOTS), ALLOC_DEFAULT);
     DVM_OBJECT_INIT(&gDvm.classJavaLangClass->obj, gDvm.classJavaLangClass);
     gDvm.classJavaLangClass->descriptor = "Ljava/lang/Class;";
+
     /*
      * Process the bootstrap class path.  This means opening the specified
      * DEX or Jar files and possibly running them through the optimizer.
@@ -353,6 +354,27 @@ bool dvmClassStartup(void)
 
     if (gDvm.bootClassPath == NULL)
         return false;
+
+    return true;
+}
+
+/*
+ * We should be able to find classes now.  Get the vtable index for
+ * the class loader loadClass() method.
+ *
+ * This doesn't work in dexopt when operating on core.jar, because
+ * there aren't any classes to load.
+ */
+bool dvmBaseClassStartup(void)
+{
+    ClassObject* clClass = dvmFindSystemClassNoInit("Ljava/lang/ClassLoader;");
+    Method* meth = dvmFindVirtualMethodByDescriptor(clClass, "loadClass",
+            "(Ljava/lang/String;)Ljava/lang/Class;");
+    if (meth == NULL) {
+        LOGE("Unable to find loadClass() in java.lang.ClassLoader\n");
+        return false;
+    }
+    gDvm.voffJavaLangClassLoader_loadClass = meth->methodIndex;
 
     return true;
 }
@@ -1236,8 +1258,6 @@ static ClassObject* findClassFromLoaderNoInit(const char* descriptor,
 
     char* dotName = NULL;
     StringObject* nameObj = NULL;
-    Object* excep;
-    Method* loadClass;
 
     /* convert "Landroid/debug/Stuff;" to "android.debug.Stuff" */
     dotName = dvmDescriptorToDot(descriptor);
@@ -1251,14 +1271,6 @@ static ClassObject* findClassFromLoaderNoInit(const char* descriptor,
         goto bail;
     }
 
-    // TODO: cache the vtable offset
-    loadClass = dvmFindVirtualMethodHierByDescriptor(loader->clazz, "loadClass",
-                 "(Ljava/lang/String;)Ljava/lang/Class;");
-    if (loadClass == NULL) {
-        LOGW("Couldn't find loadClass in ClassLoader\n");
-        goto bail;
-    }
-
     dvmMethodTraceClassPrepBegin();
 
     /*
@@ -1268,13 +1280,15 @@ static ClassObject* findClassFromLoaderNoInit(const char* descriptor,
      * the bootstrap class loader can find it before doing its own load.
      */
     LOGVV("--- Invoking loadClass(%s, %p)\n", dotName, loader);
+    const Method* loadClass =
+        loader->clazz->vtable[gDvm.voffJavaLangClassLoader_loadClass];
     JValue result;
     dvmCallMethod(self, loadClass, loader, &result, nameObj);
     clazz = (ClassObject*) result.l;
 
     dvmMethodTraceClassPrepEnd();
 
-    excep = dvmGetException(self);
+    Object* excep = dvmGetException(self);
     if (excep != NULL) {
 #if DVM_SHOW_EXCEPTION >= 2
         LOGD("NOTE: loadClass '%s' %p threw exception %s\n",
@@ -1293,6 +1307,8 @@ static ClassObject* findClassFromLoaderNoInit(const char* descriptor,
             "ClassLoader returned null");
         goto bail;
     }
+
+    /* not adding clazz to tracked-alloc list, because it's a ClassObject */
 
     dvmAddInitiatingLoader(clazz, loader);
 
@@ -1445,7 +1461,8 @@ static ClassObject* findClassNoInit(const char* descriptor, Object* loader,
         /*
          * Lock the class while we link it so other threads must wait for us
          * to finish.  Set the "initThreadId" so we can identify recursive
-         * invocation.
+         * invocation.  (Note all accesses to initThreadId here are
+         * guarded by the class object's lock.)
          */
         dvmLockObject(self, (Object*) clazz);
         clazz->initThreadId = self->threadId;
@@ -1604,33 +1621,12 @@ got_class:
     assert(dvmIsClassLinked(clazz));
     assert(gDvm.classJavaLangClass != NULL);
     assert(clazz->obj.clazz == gDvm.classJavaLangClass);
-    if (clazz != gDvm.classJavaLangObject) {
-        if (clazz->super == NULL) {
-            LOGE("Non-Object has no superclass (gDvm.classJavaLangObject=%p)\n",
-                gDvm.classJavaLangObject);
-            dvmAbort();
-        }
-    }
+    assert(clazz == gDvm.classJavaLangObject || clazz->super != NULL);
     if (!dvmIsInterfaceClass(clazz)) {
         //LOGI("class=%s vtableCount=%d, virtualMeth=%d\n",
         //    clazz->descriptor, clazz->vtableCount,
         //    clazz->virtualMethodCount);
         assert(clazz->vtableCount >= clazz->virtualMethodCount);
-    }
-
-    /*
-     * Normally class objects are initialized before we instantiate them,
-     * but we can't do that with java.lang.Class (chicken, meet egg).  We
-     * do it explicitly here.
-     *
-     * The verifier could call here to find Class while verifying Class,
-     * so we need to check for CLASS_VERIFYING as well as !initialized.
-     */
-    if (clazz == gDvm.classJavaLangClass && !dvmIsClassInitialized(clazz) &&
-        !(clazz->status == CLASS_VERIFYING))
-    {
-        LOGV("+++ explicitly initializing %s\n", clazz->descriptor);
-        dvmInitClass(clazz);
     }
 
 bail:
@@ -4151,13 +4147,26 @@ static bool validateSuperDescriptors(const ClassObject* clazz)
 /*
  * Returns true if the class is being initialized by us (which means that
  * calling dvmInitClass will return immediately after fiddling with locks).
+ * Returns false if it's not being initialized, or if it's being
+ * initialized by another thread.
  *
- * There isn't a race here, because either clazz->initThreadId won't match
- * us, or it will and it was set in the same thread.
+ * The value for initThreadId is always set to "self->threadId", by the
+ * thread doing the initializing.  If it was done by the current thread,
+ * we are guaranteed to see "initializing" and our thread ID, even on SMP.
+ * If it was done by another thread, the only bad situation is one in
+ * which we see "initializing" and a stale copy of our own thread ID
+ * while another thread is actually handling init.
+ *
+ * The initThreadId field is used during class linking, so it *is*
+ * possible to have a stale value floating around.  We need to ensure
+ * that memory accesses happen in the correct order.
  */
 bool dvmIsClassInitializing(const ClassObject* clazz)
 {
-    return (clazz->status == CLASS_INITIALIZING &&
+    ClassStatus status;
+
+    status = android_atomic_acquire_load((ClassStatus*) &clazz->status);
+    return (status == CLASS_INITIALIZING &&
             clazz->initThreadId == dvmThreadSelf()->threadId);
 }
 
@@ -4299,8 +4308,17 @@ noverify:
      * We need to ensure that certain instructions, notably accesses to
      * volatile fields, are replaced before any code is executed.  This
      * must happen even if DEX optimizations are disabled.
+     *
+     * The only exception to this rule is that we don't want to do this
+     * during dexopt.  We don't generally initialize classes at all
+     * during dexopt, but because we're loading classes we need Class and
+     * Object (and possibly some Throwable stuff if a class isn't found).
+     * If optimizations are disabled, we don't want to output optimized
+     * instructions at this time.  This means we will be executing <clinit>
+     * code with un-fixed volatiles, but we're only doing it for a few
+     * system classes, and dexopt runs single-threaded.
      */
-    if (!IS_CLASS_FLAG_SET(clazz, CLASS_ISOPTIMIZED)) {
+    if (!IS_CLASS_FLAG_SET(clazz, CLASS_ISOPTIMIZED) && !gDvm.optimizing) {
         LOGV("+++ late optimize on %s (pv=%d)\n",
             clazz->descriptor, IS_CLASS_FLAG_SET(clazz, CLASS_ISPREVERIFIED));
         dvmOptimizeClass(clazz, true);
@@ -4424,8 +4442,9 @@ noverify:
     initializedByUs = true;
 #endif
 
-    clazz->status = CLASS_INITIALIZING;
+    /* order matters here, esp. interaction with dvmIsClassInitializing */
     clazz->initThreadId = self->threadId;
+    android_atomic_release_store(CLASS_INITIALIZING, &clazz->status);
     dvmUnlockObject(self, (Object*) clazz);
 
     /* init our superclass */
@@ -4626,9 +4645,12 @@ ClassObject* dvmFindLoadedClass(const char* descriptor)
 
 /*
  * Retrieve the system (a/k/a application) class loader.
+ *
+ * The caller must call dvmReleaseTrackedAlloc on the result.
  */
 Object* dvmGetSystemClassLoader(void)
 {
+    Thread* self = dvmThreadSelf();
     ClassObject* clazz;
     Method* getSysMeth;
     Object* loader;
@@ -4643,8 +4665,9 @@ Object* dvmGetSystemClassLoader(void)
         return NULL;
 
     JValue result;
-    dvmCallMethod(dvmThreadSelf(), getSysMeth, NULL, &result);
+    dvmCallMethod(self, getSysMeth, NULL, &result);
     loader = (Object*)result.l;
+    dvmAddTrackedAlloc(loader, self);
     return loader;
 }
 

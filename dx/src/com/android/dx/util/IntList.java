@@ -280,8 +280,8 @@ public final class IntList extends MutabilityControl {
     /**
      * Returns the last element in the array without modifying the array
      *
-     * @return last value in the array.
-     * @exception IndexOutOfBoundsException if stack is empty.
+     * @return last value in the array
+     * @throws IndexOutOfBoundsException if stack is empty
      */
     public int top() {
         return get(size - 1);
@@ -290,8 +290,8 @@ public final class IntList extends MutabilityControl {
     /**
      * Pops an element off the end of the list and decreasing the size by one.
      *
-     * @return value from what was the last element.
-     * @exception IndexOutOfBoundsException if stack is empty.
+     * @return value from what was the last element
+     * @throws IndexOutOfBoundsException if stack is empty
      */
     public int pop() {
         throwIfImmutable();
@@ -307,8 +307,8 @@ public final class IntList extends MutabilityControl {
     /**
      * Pops N elements off the end of the list and decreasing the size by N.
      *
-     * @param n {@code >= 0;} number of elements to remove from end.
-     * @exception IndexOutOfBoundsException if stack is smaller than N
+     * @param n {@code >= 0;} number of elements to remove from end
+     * @throws IndexOutOfBoundsException if stack is smaller than N
      */
     public void pop(int n) {
         throwIfImmutable();
@@ -367,6 +367,7 @@ public final class IntList extends MutabilityControl {
      * Returns the index of the given value, or -1 if the value does not
      * appear in the list.  This will do a binary search if the list is
      * sorted or a linear search if not.
+     *
      * @param value value to find
      * @return index of value or -1
      */

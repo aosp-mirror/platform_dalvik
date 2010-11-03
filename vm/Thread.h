@@ -219,11 +219,6 @@ typedef struct Thread {
     struct LockedObjectData* pLockedObjects;
 #endif
 
-#ifdef WITH_ALLOC_LIMITS
-    /* allocation limit, for Debug.setAllocationLimit() regression testing */
-    int         allocLimit;
-#endif
-
     /* base time for per-thread CPU timing (used by method profiling) */
     bool        cpuClockBaseSet;
     u8          cpuClockBase;
@@ -273,6 +268,8 @@ Thread* dvmThreadSelf(void);
 
 /* grab the thread list global lock */
 void dvmLockThreadList(Thread* self);
+/* try to grab the thread list global lock */
+bool dvmTryLockThreadList(void);
 /* release the thread list global lock */
 void dvmUnlockThreadList(void);
 
@@ -287,6 +284,7 @@ typedef enum SuspendCause {
     SUSPEND_FOR_STACK_DUMP,
     SUSPEND_FOR_DEX_OPT,
     SUSPEND_FOR_VERIFY,
+    SUSPEND_FOR_HPROF,
 #if defined(WITH_JIT)
     SUSPEND_FOR_TBL_RESIZE,  // jit-table resize
     SUSPEND_FOR_IC_PATCH,    // polymorphic callsite inline-cache patch

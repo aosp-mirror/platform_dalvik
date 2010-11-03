@@ -53,7 +53,7 @@
     ldr     r0, [rFP, ip, lsl #2]       @ r0<- vC
 0:
     ldr     r9, .L${opcode}_table       @ table of InlineOperation
-    LDR_PC  "[r9, r10, lsl #4]"         @ sizeof=16, "func" is first entry
+    ldr     pc, [r9, r10, lsl #4]       @ sizeof=16, "func" is first entry
     @ (not reached)
 
 .L${opcode}_table:

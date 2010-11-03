@@ -34,7 +34,8 @@ void dvmVisitObject(Visitor *visitor, Object *obj, void *arg)
 /*
  * Applies a verification function to all present values in the hash table.
  */
-static void visitHashTable(Visitor *visitor, HashTable *table, void *arg)
+static void visitHashTable(RootVisitor *visitor, HashTable *table,
+                           RootType type, void *arg)
 {
     int i;
 
@@ -44,17 +45,32 @@ static void visitHashTable(Visitor *visitor, HashTable *table, void *arg)
     for (i = 0; i < table->tableSize; ++i) {
         HashEntry *entry = &table->pEntries[i];
         if (entry->data != NULL && entry->data != HASH_TOMBSTONE) {
-            (*visitor)(&entry->data, arg);
+            (*visitor)(&entry->data, 0, type, arg);
         }
     }
     dvmHashTableUnlock(table);
 }
 
 /*
+ * Applies a verification function to all elements in the array.
+ */
+static void visitArray(RootVisitor *visitor, Object **array, size_t length,
+                       RootType type, void *arg)
+{
+    size_t i;
+
+    assert(visitor != NULL);
+    assert(array != NULL);
+    for (i = 0; i < length; ++i) {
+        (*visitor)(&array[i], 0, type, arg);
+    }
+}
+
+/*
  * Visits all entries in the reference table.
  */
-static void visitReferenceTable(Visitor *visitor, const ReferenceTable *table,
-                                void *arg)
+static void visitReferenceTable(RootVisitor *visitor, ReferenceTable *table,
+                                u4 threadId, RootType type, void *arg)
 {
     Object **entry;
 
@@ -62,7 +78,7 @@ static void visitReferenceTable(Visitor *visitor, const ReferenceTable *table,
     assert(table != NULL);
     for (entry = table->table; entry < table->nextEntry; ++entry) {
         assert(entry != NULL);
-        (*visitor)(entry, arg);
+        (*visitor)(entry, threadId, type, arg);
     }
 }
 
@@ -70,29 +86,32 @@ static void visitReferenceTable(Visitor *visitor, const ReferenceTable *table,
  * Visits a large heap reference table.  These objects are list heads.
  * As such, it is valid for table to be NULL.
  */
-static void visitLargeHeapRefTable(Visitor *visitor, LargeHeapRefTable *table,
-                                   void *arg)
+static void visitLargeHeapRefTable(RootVisitor *visitor,
+                                   LargeHeapRefTable *table,
+                                   RootType type, void *arg)
 {
     assert(visitor != NULL);
     for (; table != NULL; table = table->next) {
-        visitReferenceTable(visitor, &table->refs, arg);
+        visitReferenceTable(visitor, &table->refs, 0, type, arg);
     }
 }
 
 /*
  * Visits all stack slots. TODO: visit native methods.
  */
-static void visitThreadStack(Visitor *visitor, Thread *thread, void *arg)
+static void visitThreadStack(RootVisitor *visitor, Thread *thread, void *arg)
 {
     const StackSaveArea *saveArea;
-    u4 *framePtr;
+    u4 *fp;
+    u4 threadId;
 
     assert(visitor != NULL);
     assert(thread != NULL);
-    framePtr = (u4 *)thread->curFrame;
-    for (; framePtr != NULL; framePtr = saveArea->prevFrame) {
+    threadId = thread->threadId;
+    fp = (u4 *)thread->curFrame;
+    for (; fp != NULL; fp = saveArea->prevFrame) {
         Method *method;
-        saveArea = SAVEAREA_FROM_FP(framePtr);
+        saveArea = SAVEAREA_FROM_FP(fp);
         method = (Method *)saveArea->method;
         if (method != NULL && !dvmIsNativeMethod(method)) {
             const RegisterMap* pMap = dvmGetExpandedRegisterMap(method);
@@ -111,8 +130,8 @@ static void visitThreadStack(Visitor *visitor, Thread *thread, void *arg)
                  * scan.
                  */
                 for (i = 0; i < method->registersSize; ++i) {
-                    if (dvmIsValidObject((Object *)framePtr[i])) {
-                        (*visitor)(&framePtr[i], arg);
+                    if (dvmIsValidObject((Object *)fp[i])) {
+                        (*visitor)(&fp[i], threadId, ROOT_JAVA_FRAME, arg);
                     }
                 }
             } else {
@@ -135,7 +154,7 @@ static void visitThreadStack(Visitor *visitor, Thread *thread, void *arg)
                         /*
                          * Register is marked as live, it's a valid root.
                          */
-                        (*visitor)(&framePtr[i], arg);
+                        (*visitor)(&fp[i], threadId, ROOT_JAVA_FRAME, arg);
                     }
                 }
                 dvmReleaseRegisterMapLine(pMap, regVector);
@@ -144,7 +163,7 @@ static void visitThreadStack(Visitor *visitor, Thread *thread, void *arg)
         /*
          * Don't fall into an infinite loop if things get corrupted.
          */
-        assert((uintptr_t)saveArea->prevFrame > (uintptr_t)framePtr ||
+        assert((uintptr_t)saveArea->prevFrame > (uintptr_t)fp ||
                saveArea->prevFrame == NULL);
     }
 }
@@ -152,16 +171,19 @@ static void visitThreadStack(Visitor *visitor, Thread *thread, void *arg)
 /*
  * Visits all roots associated with a thread.
  */
-static void visitThread(Visitor *visitor, Thread *thread, void *arg)
+static void visitThread(RootVisitor *visitor, Thread *thread, void *arg)
 {
+    u4 threadId;
+
     assert(visitor != NULL);
     assert(thread != NULL);
-    (*visitor)(&thread->threadObj, arg);
-    (*visitor)(&thread->exception, arg);
-    visitReferenceTable(visitor, &thread->internalLocalRefTable, arg);
-    visitReferenceTable(visitor, &thread->jniLocalRefTable, arg);
-    if (thread->jniMonitorRefTable.table) {
-        visitReferenceTable(visitor, &thread->jniMonitorRefTable, arg);
+    threadId = thread->threadId;
+    (*visitor)(&thread->threadObj, threadId, ROOT_THREAD_OBJECT, arg);
+    (*visitor)(&thread->exception, threadId, ROOT_NATIVE_STACK, arg);
+    visitReferenceTable(visitor, &thread->internalLocalRefTable, threadId, ROOT_NATIVE_STACK, arg);
+    visitReferenceTable(visitor, &thread->jniLocalRefTable, threadId, ROOT_JNI_LOCAL, arg);
+    if (thread->jniMonitorRefTable.table != NULL) {
+        visitReferenceTable(visitor, &thread->jniMonitorRefTable, threadId, ROOT_JNI_MONITOR, arg);
     }
     visitThreadStack(visitor, thread, arg);
 }
@@ -169,7 +191,7 @@ static void visitThread(Visitor *visitor, Thread *thread, void *arg)
 /*
  * Visits all threads on the thread list.
  */
-static void visitThreads(Visitor *visitor, void *arg)
+static void visitThreads(RootVisitor *visitor, void *arg)
 {
     Thread *thread;
 
@@ -184,22 +206,24 @@ static void visitThreads(Visitor *visitor, void *arg)
 }
 
 /*
- * Visits roots.  TODO: visit all roots.
+ * Visits roots.  TODO: visit cached global references.
  */
-void dvmVisitRoots(Visitor *visitor, void *arg)
+void dvmVisitRoots(RootVisitor *visitor, void *arg)
 {
     assert(visitor != NULL);
-    visitHashTable(visitor, gDvm.loadedClasses, arg);
-    visitHashTable(visitor, gDvm.dbgRegistry, arg);
-    visitHashTable(visitor, gDvm.internedStrings, arg);
-    visitHashTable(visitor, gDvm.literalStrings, arg);
-    visitReferenceTable(visitor, &gDvm.jniGlobalRefTable, arg);
-    visitReferenceTable(visitor, &gDvm.jniPinRefTable, arg);
-    visitLargeHeapRefTable(visitor, gDvm.gcHeap->referenceOperations, arg);
-    visitLargeHeapRefTable(visitor, gDvm.gcHeap->pendingFinalizationRefs, arg);
+    visitHashTable(visitor, gDvm.loadedClasses, ROOT_STICKY_CLASS, arg);
+    visitArray(visitor, (Object **)gDvm.primitiveClass, NELEM(gDvm.primitiveClass), ROOT_STICKY_CLASS, arg);
+    if (gDvm.dbgRegistry != NULL) {
+        visitHashTable(visitor, gDvm.dbgRegistry, ROOT_DEBUGGER, arg);
+    }
+    visitHashTable(visitor, gDvm.internedStrings, ROOT_INTERNED_STRING, arg);
+    visitHashTable(visitor, gDvm.literalStrings, ROOT_INTERNED_STRING, arg);
+    visitReferenceTable(visitor, &gDvm.jniGlobalRefTable, 0, ROOT_JNI_GLOBAL, arg);
+    visitReferenceTable(visitor, &gDvm.jniPinRefTable, 0, ROOT_VM_INTERNAL, arg);
+    visitLargeHeapRefTable(visitor, gDvm.gcHeap->referenceOperations, ROOT_REFERENCE_CLEANUP, arg);
+    visitLargeHeapRefTable(visitor, gDvm.gcHeap->pendingFinalizationRefs, ROOT_FINALIZING, arg);
     visitThreads(visitor, arg);
-    (*visitor)(&gDvm.outOfMemoryObj, arg);
-    (*visitor)(&gDvm.internalErrorObj, arg);
-    (*visitor)(&gDvm.noClassDefFoundErrorObj, arg);
-    /* TODO: visit cached global references. */
+    (*visitor)(&gDvm.outOfMemoryObj, 0, ROOT_VM_INTERNAL, arg);
+    (*visitor)(&gDvm.internalErrorObj, 0, ROOT_VM_INTERNAL, arg);
+    (*visitor)(&gDvm.noClassDefFoundErrorObj, 0, ROOT_VM_INTERNAL, arg);
 }

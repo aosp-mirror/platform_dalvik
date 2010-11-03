@@ -66,7 +66,6 @@ ifeq ($(dvm_make_debug_vm),true)
   LOCAL_CFLAGS += -DWITH_INSTR_CHECKS
   LOCAL_CFLAGS += -DWITH_EXTRA_OBJECT_VALIDATION
   LOCAL_CFLAGS += -DWITH_TRACKREF_CHECKS
-  LOCAL_CFLAGS += -DWITH_ALLOC_LIMITS
   LOCAL_CFLAGS += -DWITH_EXTRA_GC_CHECKS=1
   #LOCAL_CFLAGS += -DCHECK_MUTEX
   #LOCAL_CFLAGS += -DPROFILE_FIELD_ACCESS
@@ -142,6 +141,11 @@ LOCAL_SRC_FILES := \
 	analysis/Optimize.c \
 	analysis/RegisterMap.c \
 	analysis/VerifySubs.c \
+	hprof/Hprof.c \
+	hprof/HprofClass.c \
+	hprof/HprofHeap.c \
+	hprof/HprofOutput.c \
+	hprof/HprofString.c \
 	interp/Interp.c.arm \
 	interp/Stack.c \
 	jdwp/ExpandBuf.c \
@@ -222,26 +226,12 @@ ifeq ($(WITH_JIT),true)
 	interp/Jit.c
 endif
 
-WITH_HPROF := $(strip $(WITH_HPROF))
-ifeq ($(WITH_HPROF),)
-  WITH_HPROF := true
-endif
-ifeq ($(WITH_HPROF),true)
+ifeq ($(strip $(WITH_HPROF_STACK)),true)
   LOCAL_SRC_FILES += \
-	hprof/Hprof.c \
-	hprof/HprofClass.c \
-	hprof/HprofHeap.c \
-	hprof/HprofOutput.c \
-	hprof/HprofString.c
-  LOCAL_CFLAGS += -DWITH_HPROF=1
-
-  ifeq ($(strip $(WITH_HPROF_STACK)),true)
-    LOCAL_SRC_FILES += \
 	hprof/HprofStack.c \
 	hprof/HprofStackFrame.c
-    LOCAL_CFLAGS += -DWITH_HPROF_STACK=1
-  endif # WITH_HPROF_STACK
-endif   # WITH_HPROF
+  LOCAL_CFLAGS += -DWITH_HPROF_STACK=1
+endif # WITH_HPROF_STACK
 
 LOCAL_C_INCLUDES += \
 	$(JNI_H_INCLUDE) \
@@ -266,7 +256,7 @@ ifeq ($(dvm_arch),arm)
   #LOCAL_CFLAGS += -march=armv7-a -mfloat-abi=softfp -mfpu=vfp
   LOCAL_CFLAGS += -Werror
   MTERP_ARCH_KNOWN := true
-  # Select architecture-specific sources (armv4t, armv5te etc.)
+  # Select architecture-specific sources (armv5te, armv7-a, etc.)
   LOCAL_SRC_FILES += \
 		arch/arm/CallOldABI.S \
 		arch/arm/CallEABI.S \
@@ -276,13 +266,14 @@ ifeq ($(dvm_arch),arm)
 
   ifeq ($(WITH_JIT),true)
     LOCAL_SRC_FILES += \
-		compiler/codegen/arm/RallocUtil.c \
+		compiler/codegen/RallocUtil.c \
 		compiler/codegen/arm/$(dvm_arch_variant)/Codegen.c \
 		compiler/codegen/arm/$(dvm_arch_variant)/CallingConvention.S \
 		compiler/codegen/arm/Assemble.c \
 		compiler/codegen/arm/ArchUtility.c \
 		compiler/codegen/arm/LocalOptimizations.c \
 		compiler/codegen/arm/GlobalOptimizations.c \
+		compiler/codegen/arm/ArmRallocUtil.c \
 		compiler/template/out/CompilerTemplateAsm-$(dvm_arch_variant).S
   endif
 endif

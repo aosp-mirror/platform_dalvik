@@ -41,15 +41,18 @@ public final class BytecodeArray {
     /** {@code non-null;} underlying bytes */
     private final ByteArray bytes;
 
-    /** {@code non-null;} constant pool to use when resolving constant pool indices */
+    /**
+     * {@code non-null;} constant pool to use when resolving constant
+     * pool indices
+     */
     private final ConstantPool pool;
 
     /**
      * Constructs an instance.
      *
      * @param bytes {@code non-null;} underlying bytes
-     * @param pool {@code non-null;} constant pool to use when resolving constant
-     * pool indices
+     * @param pool {@code non-null;} constant pool to use when
+     * resolving constant pool indices
      */
     public BytecodeArray(ByteArray bytes, ConstantPool pool) {
         if (bytes == null) {
@@ -96,7 +99,8 @@ public final class BytecodeArray {
     /**
      * Parses each instruction in the array, in order.
      *
-     * @param visitor {@code null-ok;} visitor to call back to for each instruction
+     * @param visitor {@code null-ok;} visitor to call back to for
+     * each instruction
      */
     public void forEach(Visitor visitor) {
         int sz = bytes.size();
@@ -140,7 +144,8 @@ public final class BytecodeArray {
      * set new bits in the work set during the process.
      *
      * @param workSet {@code non-null;} the work set to process
-     * @param visitor {@code non-null;} visitor to call back to for each instruction
+     * @param visitor {@code non-null;} visitor to call back to for
+     * each instruction
      */
     public void processWorkSet(int[] workSet, Visitor visitor) {
         if (visitor == null) {
@@ -431,6 +436,10 @@ public final class BytecodeArray {
                     return 1;
                 }
                 case ByteOps.BALOAD: {
+                    /*
+                     * Note: This is a load from either a byte[] or a
+                     * boolean[].
+                     */
                     visitor.visitNoArgs(ByteOps.IALOAD, offset, 1, Type.BYTE);
                     return 1;
                 }
@@ -543,6 +552,10 @@ public final class BytecodeArray {
                     return 1;
                 }
                 case ByteOps.BASTORE: {
+                    /*
+                     * Note: This is a load from either a byte[] or a
+                     * boolean[].
+                     */
                     visitor.visitNoArgs(ByteOps.IASTORE, offset, 1,
                                         Type.BYTE);
                     return 1;
@@ -964,22 +977,28 @@ public final class BytecodeArray {
             while (true) {
                 boolean punt = false;
 
-                // First check if the next bytecode is dup
+                // First, check if the next bytecode is dup.
                 int nextByte = bytes.getUnsignedByte(curOffset++);
                 if (nextByte != ByteOps.DUP)
                     break;
 
-                // Next check if the expected array index is pushed to the stack
+                /*
+                 * Next, check if the expected array index is pushed to
+                 * the stack.
+                 */
                 parseInstruction(curOffset, constantVisitor);
                 if (constantVisitor.length == 0 ||
                         !(constantVisitor.cst instanceof CstInteger) ||
                         constantVisitor.value != nInit)
                     break;
 
-                // Next, fetch the init value and record it
+                // Next, fetch the init value and record it.
                 curOffset += constantVisitor.length;
 
-                // Next find out what kind of constant is pushed onto the stack
+                /*
+                 * Next, find out what kind of constant is pushed onto
+                 * the stack.
+                 */
                 parseInstruction(curOffset, constantVisitor);
                 if (constantVisitor.length == 0 ||
                         !(constantVisitor.cst instanceof CstLiteralBits))
@@ -989,7 +1008,7 @@ public final class BytecodeArray {
                 initVals.add(constantVisitor.cst);
 
                 nextByte = bytes.getUnsignedByte(curOffset++);
-                // Now, check if the value is stored to the array properly
+                // Now, check if the value is stored to the array properly.
                 switch (value) {
                     case ByteOps.NEWARRAY_BYTE:
                     case ByteOps.NEWARRAY_BOOLEAN: {
@@ -1222,8 +1241,8 @@ public final class BytecodeArray {
          * @param opcode the opcode
          * @param offset offset to the instruction
          * @param length length of the instruction, in bytes
-         * @param cases {@code non-null;} list of (value, target) pairs, plus the
-         * default target
+         * @param cases {@code non-null;} list of (value, target)
+         * pairs, plus the default target
          * @param padding the bytes found in the padding area (if any),
          * packed
          */
@@ -1236,7 +1255,8 @@ public final class BytecodeArray {
          * @param offset   offset to the instruction
          * @param length   length of the instruction, in bytes
          * @param type {@code non-null;} the type of the array
-         * @param initVals {@code non-null;} list of bytecode offsets for init values
+         * @param initVals {@code non-null;} list of bytecode offsets
+         * for init values
          */
         public void visitNewarray(int offset, int length, CstType type,
                 ArrayList<Constant> initVals);

@@ -95,9 +95,6 @@ public final class Form31i extends InsnFormat {
         int value =
             ((CstLiteralBits) ((CstInsn) insn).getConstant()).getIntBits();
 
-        write(out,
-              opcodeUnit(insn, regs.get(0).getReg()),
-              (short) value,
-              (short) (value >> 16));
+        write(out, opcodeUnit(insn, regs.get(0).getReg()), value);
     }
 }

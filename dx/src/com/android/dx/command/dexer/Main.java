@@ -45,6 +45,9 @@ import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.jar.Attributes;
 import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
@@ -139,6 +142,12 @@ public class Main {
      */
     private static TreeMap<String, byte[]> outputResources;
 
+    /** thread pool object used for multi-threaded file processing */
+    private static ExecutorService threadPool;
+
+    /** true if any files are successfully processed */
+    private static boolean anyFilesProcessed;
+
     /**
      * This class is uninstantiable.
      */
@@ -212,18 +221,33 @@ public class Main {
             outputDex.setDumpWidth(args.dumpWidth);
         }
 
-        boolean any = false;
+        anyFilesProcessed = false;
         String[] fileNames = args.fileNames;
+
+        if (args.numThreads > 1) {
+            threadPool = Executors.newFixedThreadPool(args.numThreads);
+        }
 
         try {
             for (int i = 0; i < fileNames.length; i++) {
-                any |= processOne(fileNames[i]);
+                if (processOne(fileNames[i])) {
+                    anyFilesProcessed = true;
+                }
             }
         } catch (StopProcessing ex) {
             /*
              * Ignore it and just let the warning/error reporting do
              * their things.
              */
+        }
+
+        if (args.numThreads > 1) {
+            try {
+                threadPool.shutdown();
+                threadPool.awaitTermination(600L, TimeUnit.SECONDS);
+            } catch (InterruptedException ex) {
+                throw new RuntimeException("Timed out waiting for threads.");
+            }
         }
 
         if (warnings != 0) {
@@ -237,7 +261,7 @@ public class Main {
             return false;
         }
 
-        if (!(any || args.emptyOk)) {
+        if (!(anyFilesProcessed || args.emptyOk)) {
             DxConsole.err.println("no classfiles specified");
             return false;
         }
@@ -263,7 +287,12 @@ public class Main {
         opener = new ClassPathOpener(pathname, false,
                 new ClassPathOpener.Consumer() {
             public boolean processFileBytes(String name, byte[] bytes) {
-                return Main.processFileBytes(name, bytes);
+                if (args.numThreads > 1) {
+                    threadPool.execute(new ParallelProcessor(name, bytes));
+                    return false;
+                } else {
+                    return Main.processFileBytes(name, bytes);
+                }
             }
             public void onException(Exception ex) {
                 if (ex instanceof StopProcessing) {
@@ -310,11 +339,15 @@ public class Main {
 
         if (isClass) {
             if (keepResources && args.keepClassesInJar) {
-                outputResources.put(fixedName, bytes);
+                synchronized (outputResources) {
+                    outputResources.put(fixedName, bytes);
+                }
             }
             return processClass(fixedName, bytes);
         } else {
-            outputResources.put(fixedName, bytes);
+            synchronized (outputResources) {
+                outputResources.put(fixedName, bytes);
+            }
             return true;
         }
     }
@@ -335,7 +368,9 @@ public class Main {
         try {
             ClassDefItem clazz =
                 CfTranslator.translate(name, bytes, args.cfOptions);
-            outputDex.add(clazz);
+            synchronized (outputDex) {
+                outputDex.add(clazz);
+            }
             return true;
         } catch (ParseException ex) {
             DxConsole.err.println("\ntrouble processing:");
@@ -799,6 +834,9 @@ public class Main {
         /** Options for dex.cf.* */
         public CfOptions cfOptions;
 
+        /** number of threads to run with */
+        public int numThreads = 1;
+
         /**
          * Parses the given command-line arguments.
          *
@@ -882,6 +920,9 @@ public class Main {
                     }
                 } else if (arg.equals("--no-locals")) {
                     localInfo = false;
+                } else if (arg.startsWith("--num-threads=")) {
+                    arg = arg.substring(arg.indexOf('=') + 1);
+                    numThreads = Integer.parseInt(arg);
                 } else {
                     System.err.println("unknown option: " + arg);
                     throw new UsageException();
@@ -925,6 +966,35 @@ public class Main {
             cfOptions.dontOptimizeListFile = dontOptimizeListFile;
             cfOptions.statistics = statistics;
             cfOptions.warn = DxConsole.err;
+        }
+    }
+
+    /** Runnable helper class to process files in multiple threads */
+    private static class ParallelProcessor implements Runnable {
+
+        String path;
+        byte[] bytes;
+
+        /**
+         * Constructs an instance.
+         *
+         * @param path {@code non-null;} filename of element. May not be a valid
+         * filesystem path.
+         * @param bytes {@code non-null;} file data
+         */
+        private ParallelProcessor(String path, byte bytes[]) {
+            this.path = path;
+            this.bytes = bytes;
+        }
+
+        /**
+         * Task run by each thread in the thread pool. Runs processFileBytes
+         * with the given path and bytes.
+         */
+        public void run() {
+            if (Main.processFileBytes(path, bytes)) {
+                anyFilesProcessed = true;
+            }
         }
     }
 }

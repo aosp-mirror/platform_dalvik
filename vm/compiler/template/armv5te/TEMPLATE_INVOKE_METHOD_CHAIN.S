@@ -3,11 +3,10 @@
      * Thumb code through the link register to transfer control to the callee
      * method through a dedicated chaining cell.
      */
-    @ r0 = methodToCall, r1 = returnCell, rPC = dalvikCallsite
+    @ r0 = methodToCall, r1 = returnCell, r2 = methodToCall->outsSize
+    @ rPC = dalvikCallsite, r7 = methodToCall->registersSize
     @ methodToCall is guaranteed to be non-native
 .LinvokeChain:
-    ldrh    r7, [r0, #offMethod_registersSize]  @ r7<- methodToCall->regsSize
-    ldrh    r2, [r0, #offMethod_outsSize]  @ r2<- methodToCall->outsSize
     ldr     r9, [rGLUE, #offGlue_interpStackEnd]    @ r9<- interpStackEnd
     ldr     r8, [rGLUE, #offGlue_pSelfSuspendCount] @ r8<- &suspendCount
     add     r3, r1, #1  @ Thumb addr is odd
@@ -23,8 +22,6 @@
     ldr     r9, [r0, #offMethod_clazz]      @ r9<- method->clazz
     str     rPC, [rFP, #(offStackSaveArea_currentPc - sizeofStackSaveArea)]
     str     rPC, [r1, #(offStackSaveArea_savedPc - sizeofStackSaveArea)]
-    ldr     rPC, [r0, #offMethod_insns]     @ rPC<- methodToCall->insns
-
 
     @ set up newSaveArea
     str     rFP, [r1, #(offStackSaveArea_prevFrame - sizeofStackSaveArea)]
@@ -45,7 +42,8 @@
     stmfd   sp!, {r0-r2,lr}             @ preserve clobbered live registers
     mov     r1, r6
     @ r0=methodToCall, r1=rGlue
-    LDR_PC_LR ".LdvmFastMethodTraceEnter"
+    mov     lr, pc
+    ldr     pc, .LdvmFastMethodTraceEnter
     ldmfd   sp!, {r0-r2,lr}             @ restore registers
 #endif
 

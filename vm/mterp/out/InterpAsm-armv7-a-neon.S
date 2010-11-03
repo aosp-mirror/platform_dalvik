@@ -213,36 +213,6 @@ unspecified registers or condition codes.
  * ===========================================================================
  */
 
-/*
- * Macro for "LDR PC,xxx", which is not allowed pre-ARMv5.  Essentially a
- * one-way branch.
- *
- * May modify IP.  Does not modify LR.
- */
-.macro  LDR_PC source
-    ldr     pc, \source
-.endm
-
-/*
- * Macro for "MOV LR,PC / LDR PC,xxx", which is not allowed pre-ARMv5.
- * Jump to subroutine.
- *
- * May modify IP and LR.
- */
-.macro  LDR_PC_LR source
-    mov     lr, pc
-    ldr     pc, \source
-.endm
-
-/*
- * Macro for "LDMFD SP!, {...regs...,PC}".
- *
- * May modify IP and LR.
- */
-.macro  LDMFD_PC regs
-    ldmfd   sp!, {\regs,pc}
-.endm
-
 #if !defined(ANDROID_SMP)
 # error "Must define ANDROID_SMP"
 #endif
@@ -425,7 +395,7 @@ dvmMterpStdBail:
     ldr     sp, [r0, #offGlue_bailPtr]      @ sp<- saved SP
     mov     r0, r1                          @ return the changeInterp value
     add     sp, sp, #4                      @ un-align 64
-    LDMFD_PC "r4-r10,fp"                    @ restore 9 regs and return
+    ldmfd   sp!, {r4-r10,fp,pc}             @ restore 9 regs and return
 
 
 /*
@@ -2265,9 +2235,6 @@ dalvik_inst:
 /* File: armv5te/OP_APUT_OBJECT.S */
     /*
      * Store an object into an array.  vBB[vCC] <- vAA.
-     *
-     * Note: using the usual FETCH/and/shift stuff, this fits in exactly 17
-     * instructions.  We use a pair of FETCH_Bs instead.
      */
     /* op vAA, vBB, vCC */
     FETCH(r0, 1)                        @ r0<- CCBB
@@ -2275,13 +2242,13 @@ dalvik_inst:
     and     r2, r0, #255                @ r2<- BB
     mov     r3, r0, lsr #8              @ r3<- CC
     GET_VREG(rINST, r2)                 @ rINST<- vBB (array object)
-    GET_VREG(r0, r3)                    @ r0<- vCC (requested index)
+    GET_VREG(r1, r3)                    @ r1<- vCC (requested index)
     cmp     rINST, #0                   @ null array object?
     GET_VREG(r9, r9)                    @ r9<- vAA
     beq     common_errNullObject        @ yes, bail
     ldr     r3, [rINST, #offArrayObject_length]   @ r3<- arrayObj->length
-    add     r10, rINST, r0, lsl #2      @ r10<- arrayObj + index*width
-    cmp     r0, r3                      @ compare unsigned index, length
+    add     r10, rINST, r1, lsl #2      @ r10<- arrayObj + index*width
+    cmp     r1, r3                      @ compare unsigned index, length
     bcc     .LOP_APUT_OBJECT_finish          @ we're okay, continue on
     b       common_errArrayIndex        @ index >= length, bail
 
@@ -9233,7 +9200,7 @@ d2l_doconv:
     ldr     r0, [rFP, ip, lsl #2]       @ r0<- vC
 0:
     ldr     r9, .LOP_EXECUTE_INLINE_table       @ table of InlineOperation
-    LDR_PC  "[r9, r10, lsl #4]"         @ sizeof=16, "func" is first entry
+    ldr     pc, [r9, r10, lsl #4]       @ sizeof=16, "func" is first entry
     @ (not reached)
 
 .LOP_EXECUTE_INLINE_table:
@@ -9262,7 +9229,7 @@ d2l_doconv:
     GET_VREG(r0, ip)                    @ r0<- vBase[0]
 0:
     ldr     r9, .LOP_EXECUTE_INLINE_RANGE_table       @ table of InlineOperation
-    LDR_PC  "[r9, r10, lsl #4]"         @ sizeof=16, "func" is first entry
+    ldr     pc, [r9, r10, lsl #4]       @ sizeof=16, "func" is first entry
     @ (not reached)
 
 .LOP_EXECUTE_INLINE_RANGE_table:
@@ -10062,9 +10029,8 @@ dalvik_mterp:
     stmfd   sp!, {r2,r6}
 #endif
 
-    @mov     lr, pc                      @ set return addr
-    @ldr     pc, [r2, #offMethod_nativeFunc] @ pc<- methodToCall->nativeFunc
-    LDR_PC_LR "[r2, #offMethod_nativeFunc]"
+    mov     lr, pc                      @ set return addr
+    ldr     pc, [r2, #offMethod_nativeFunc] @ pc<- methodToCall->nativeFunc
 
 #if defined(WITH_INLINE_PROFILING)
     @ r0=JNIMethod, r1=rGLUE
@@ -10344,13 +10310,17 @@ common_resumeAfterGlueCall:
     GOTO_OPCODE(ip)                     @ jump to next instruction
 
 /*
- * Invalid array index.
+ * Invalid array index. Note that our calling convention is strange; we use r1
+ * and r3 because those just happen to be the registers all our callers are
+ * using. We shuffle them here before calling the C function.
+ * r1: index
+ * r3: size
  */
 common_errArrayIndex:
     EXPORT_PC()
-    ldr     r0, strArrayIndexException
-    mov     r1, #0
-    bl      dvmThrowException
+    mov     r0, r1
+    mov     r1, r3
+    bl      dvmThrowAIOOBE
     b       common_exceptionThrown
 
 /*
@@ -10540,8 +10510,6 @@ dvmConfigureFP:
     .align  2
 strArithmeticException:
     .word   .LstrArithmeticException
-strArrayIndexException:
-    .word   .LstrArrayIndexException
 strArrayStoreException:
     .word   .LstrArrayStoreException
 strDivideByZero:
@@ -10582,8 +10550,6 @@ strPrintLong:
     .asciz  "Bad entry point %d\n"
 .LstrArithmeticException:
     .asciz  "Ljava/lang/ArithmeticException;"
-.LstrArrayIndexException:
-    .asciz  "Ljava/lang/ArrayIndexOutOfBoundsException;"
 .LstrArrayStoreException:
     .asciz  "Ljava/lang/ArrayStoreException;"
 .LstrClassCastException:

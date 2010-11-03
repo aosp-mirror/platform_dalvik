@@ -46,7 +46,10 @@ public final class RegisterSpec
     /** {@code non-null;} type loaded or stored */
     private final TypeBearer type;
 
-    /** {@code null-ok;} local variable info associated with this register, if any */
+    /**
+     * {@code null-ok;} local variable info associated with this register,
+     * if any
+     */
     private final LocalItem local;
 
     /**
@@ -60,16 +63,18 @@ public final class RegisterSpec
      */
     private static RegisterSpec intern(int reg, TypeBearer type,
             LocalItem local) {
-        theInterningItem.set(reg, type, local);
-        RegisterSpec found = theInterns.get(theInterningItem);
+        synchronized (theInterns) {
+            theInterningItem.set(reg, type, local);
+            RegisterSpec found = theInterns.get(theInterningItem);
 
-        if (found != null) {
+            if (found != null) {
+                return found;
+            }
+
+            found = theInterningItem.toRegisterSpec();
+            theInterns.put(found, found);
             return found;
         }
-
-        found = theInterningItem.toRegisterSpec();
-        theInterns.put(found, found);
-        return found;
     }
 
     /**

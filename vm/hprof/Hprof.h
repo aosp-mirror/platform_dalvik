@@ -251,13 +251,9 @@ bool hprofShutdown(hprof_context_t *ctx);
 void hprofFreeContext(hprof_context_t *ctx);
 
 /*
- * Heap.c functions
- *
- * The contents of the hprof directory have no knowledge of
- * the heap implementation; these functions require heap knowledge,
- * so they are implemented in Heap.c.
+ * HprofVisit.c functions
  */
+
 int hprofDumpHeap(const char* fileName, int fd, bool directToDdms);
-void dvmHeapSetHprofGcScanState(hprof_heap_tag_t state, u4 threadSerialNumber);
 
 #endif  // _DALVIK_HPROF_HPROF

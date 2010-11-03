@@ -89,7 +89,7 @@ public final class Form22s extends InsnFormat {
     /** {@inheritDoc} */
     @Override
     public InsnFormat nextUp() {
-        return null;
+        return Form32s.THE_ONE;
     }
 
     /** {@inheritDoc} */

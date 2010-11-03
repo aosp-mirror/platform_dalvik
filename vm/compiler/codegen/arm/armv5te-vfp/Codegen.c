@@ -15,6 +15,7 @@
  */
 #define _CODEGEN_C
 #define _ARMV5TE_VFP
+#define TGT_LIR ArmLIR
 
 #include "Dalvik.h"
 #include "interp/InterpDefs.h"
@@ -23,18 +24,20 @@
 #include "compiler/CompilerInternals.h"
 #include "compiler/codegen/arm/ArmLIR.h"
 #include "mterp/common/FindInterface.h"
-#include "compiler/codegen/arm/Ralloc.h"
+#include "compiler/codegen/Ralloc.h"
 #include "compiler/codegen/arm/Codegen.h"
 #include "compiler/Loop.h"
 #include "ArchVariant.h"
 
-/* Architectural independent building blocks */
+/* Arm codegen building blocks */
 #include "../CodegenCommon.c"
 
 /* Thumb-specific factory utilities */
 #include "../Thumb/Factory.c"
-/* Factory utilities dependent on arch-specific features */
-#include "../CodegenFactory.c"
+/* Target independent factory utilities */
+#include "../../CodegenFactory.c"
+/* Arm-specific factory utilities */
+#include "../ArchFactory.c"
 
 /* Thumb-specific codegen routines */
 #include "../Thumb/Gen.c"

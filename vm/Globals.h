@@ -275,6 +275,9 @@ struct DvmGlobals {
     int         offJavaLangThrowable_stackState;
     int         offJavaLangThrowable_cause;
 
+    /* method offsets - ClassLoader */
+    int         voffJavaLangClassLoader_loadClass;
+
     /* field offsets - java.lang.reflect.* */
     int         offJavaLangReflectAccessibleObject_flag;
     int         offJavaLangReflectConstructor_slot;
@@ -292,10 +295,6 @@ struct DvmGlobals {
 
     /* method pointers - java.lang.ref.Reference */
     Method*     methJavaLangRefReference_enqueueInternal;
-
-    /* field offsets - java.nio.Buffer and java.nio.DirectByteBufferImpl */
-    //int         offJavaNioBuffer_capacity;
-    //int         offJavaNioDirectByteBufferImpl_pointer;
 
     /* method pointers - java.security.AccessController */
     volatile int javaSecurityAccessControllerReady;
@@ -582,13 +581,6 @@ struct DvmGlobals {
     int             allocRecordHead;        /* most-recently-added entry */
     int             allocRecordCount;       /* #of valid entries */
 
-#ifdef WITH_ALLOC_LIMITS
-    /* set on first use of an alloc limit, never cleared */
-    bool        checkAllocLimits;
-    /* allocation limit, for setGlobalAllocationLimit() regression testing */
-    int         allocationLimit;
-#endif
-
 #ifdef WITH_DEADLOCK_PREDICTION
     /* global lock on history tree accesses */
     pthread_mutex_t deadlockHistoryLock;
@@ -634,7 +626,7 @@ struct DvmGlobals {
      * Dalvik instruction counts (256 entries).
      */
     int*        executedInstrCounts;
-    bool        instructionCountEnableCount;
+    int         instructionCountEnableCount;
 
     /*
      * Signal catcher thread (for SIGQUIT).

@@ -103,12 +103,12 @@ public final class Form21c extends InsnFormat {
 
         CstInsn ci = (CstInsn) insn;
         int cpi = ci.getIndex();
+        Constant cst = ci.getConstant();
 
         if (! unsignedFitsInShort(cpi)) {
             return false;
         }
 
-        Constant cst = ci.getConstant();
         return (cst instanceof CstType) ||
             (cst instanceof CstFieldRef) ||
             (cst instanceof CstString);

@@ -12,267 +12,292 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+#
 # Bytecode definition file
 #
-# Columns are:
+
+# One line per instruction format family. Each line consists of a
+# series of instruction formats that all take (potentially) compatible
+# arguments. The order is the preferred order (most to least
+# preferable) of formats, when more than one opcode could be used for
+# a given instruction's arguments.
+#
+# Note: The family that starts with 12x has a mix of both two- and
+# three- register formats. This is because some of the two-register
+# opcodes effectively take three, with a destination and two sources
+# where the destination and one of the sources have to be the same.
+
+format 10t 20t 30t
+format 10x
+format 11n 21s 21h 31i 51l
+format 11x
+format 12x 22x 23x 32x 33x  # See note, above.
+format 21c 31c 41c
+format 21t 31t
+format 22b 22s 32s
+format 22c 52c
+format 22t
+format 35c 3rc 5rc
+
+# One line per opcode. Columns are:
 #   hex for opcode
 #   format
 #   has result register (y/n)
 #   opcode name
 
-00 10x n nop
-01 12x y move
-02 22x y move/from16
-03 32x y move/16
-04 12x y move-wide
-05 22x y move-wide/from16
-06 32x y move-wide/16
-07 12x y move-object
-08 22x y move-object/from16
-09 32x y move-object/16
-0a 11x y move-result
-0b 11x y move-result-wide
-0c 11x y move-result-object
-0d 11x y move-exception
-0e 10x n return-void
-0f 11x n return
-10 11x n return-wide
-11 11x n return-object
-12 11n y const/4
-13 21s y const/16
-14 31i y const
-15 21h y const/high16
-16 21s y const-wide/16
-17 31i y const-wide/32
-18 51l y const-wide
-19 21h y const-wide/high16
-1a 21c y const-string
-1b 31c y const-string/jumbo
-1c 21c y const-class
-1d 11x n monitor-enter
-1e 11x n monitor-exit
-1f 21c y check-cast
-20 22c y instance-of
-21 12x y array-length
-22 21c y new-instance
-23 22c y new-array
-24 35c n filled-new-array
-25 3rc n filled-new-array/range
-26 31t n fill-array-data
-27 11x n throw
-28 10t n goto
-29 20t n goto/16
-2a 30t n goto/32
-2b 31t n packed-switch
-2c 31t n sparse-switch
-2d 23x y cmpl-float
-2e 23x y cmpg-float
-2f 23x y cmpl-double
-30 23x y cmpg-double
-31 23x y cmp-long
-32 22t n if-eq
-33 22t n if-ne
-34 22t n if-lt
-35 22t n if-ge
-36 22t n if-gt
-37 22t n if-le
-38 21t n if-eqz
-39 21t n if-nez
-3a 21t n if-ltz
-3b 21t n if-gez
-3c 21t n if-gtz
-3d 21t n if-lez
-3e 10x n unused-3e
-3f 10x n unused-3f
-40 10x n unused-40
-41 10x n unused-41
-42 10x n unused-42
-43 10x n unused-43
-44 23x y aget
-45 23x y aget-wide
-46 23x y aget-object
-47 23x y aget-boolean
-48 23x y aget-byte
-49 23x y aget-char
-4a 23x y aget-short
-4b 23x n aput
-4c 23x n aput-wide
-4d 23x n aput-object
-4e 23x n aput-boolean
-4f 23x n aput-byte
-50 23x n aput-char
-51 23x n aput-short
-52 22c y iget
-53 22c y iget-wide
-54 22c y iget-object
-55 22c y iget-boolean
-56 22c y iget-byte
-57 22c y iget-char
-58 22c y iget-short
-59 22c n iput
-5a 22c n iput-wide
-5b 22c n iput-object
-5c 22c n iput-boolean
-5d 22c n iput-byte
-5e 22c n iput-char
-5f 22c n iput-short
-60 21c y sget
-61 21c y sget-wide
-62 21c y sget-object
-63 21c y sget-boolean
-64 21c y sget-byte
-65 21c y sget-char
-66 21c y sget-short
-67 21c n sput
-68 21c n sput-wide
-69 21c n sput-object
-6a 21c n sput-boolean
-6b 21c n sput-byte
-6c 21c n sput-char
-6d 21c n sput-short
-6e 35c n invoke-virtual
-6f 35c n invoke-super
-70 35c n invoke-direct
-71 35c n invoke-static
-72 35c n invoke-interface
-73 10x n unused-73
-74 3rc n invoke-virtual/range
-75 3rc n invoke-super/range
-76 3rc n invoke-direct/range
-77 3rc n invoke-static/range
-78 3rc n invoke-interface/range
-79 10x n unused-79
-7a 10x n unused-7a
-7b 12x y neg-int
-7c 12x y not-int
-7d 12x y neg-long
-7e 12x y not-long
-7f 12x y neg-float
-80 12x y neg-double
-81 12x y int-to-long
-82 12x y int-to-float
-83 12x y int-to-double
-84 12x y long-to-int
-85 12x y long-to-float
-86 12x y long-to-double
-87 12x y float-to-int
-88 12x y float-to-long
-89 12x y float-to-double
-8a 12x y double-to-int
-8b 12x y double-to-long
-8c 12x y double-to-float
-8d 12x y int-to-byte
-8e 12x y int-to-char
-8f 12x y int-to-short
-90 23x y add-int
-91 23x y sub-int
-92 23x y mul-int
-93 23x y div-int
-94 23x y rem-int
-95 23x y and-int
-96 23x y or-int
-97 23x y xor-int
-98 23x y shl-int
-99 23x y shr-int
-9a 23x y ushr-int
-9b 23x y add-long
-9c 23x y sub-long
-9d 23x y mul-long
-9e 23x y div-long
-9f 23x y rem-long
-a0 23x y and-long
-a1 23x y or-long
-a2 23x y xor-long
-a3 23x y shl-long
-a4 23x y shr-long
-a5 23x y ushr-long
-a6 23x y add-float
-a7 23x y sub-float
-a8 23x y mul-float
-a9 23x y div-float
-aa 23x y rem-float
-ab 23x y add-double
-ac 23x y sub-double
-ad 23x y mul-double
-ae 23x y div-double
-af 23x y rem-double
-b0 12x y add-int/2addr
-b1 12x y sub-int/2addr
-b2 12x y mul-int/2addr
-b3 12x y div-int/2addr
-b4 12x y rem-int/2addr
-b5 12x y and-int/2addr
-b6 12x y or-int/2addr
-b7 12x y xor-int/2addr
-b8 12x y shl-int/2addr
-b9 12x y shr-int/2addr
-ba 12x y ushr-int/2addr
-bb 12x y add-long/2addr
-bc 12x y sub-long/2addr
-bd 12x y mul-long/2addr
-be 12x y div-long/2addr
-bf 12x y rem-long/2addr
-c0 12x y and-long/2addr
-c1 12x y or-long/2addr
-c2 12x y xor-long/2addr
-c3 12x y shl-long/2addr
-c4 12x y shr-long/2addr
-c5 12x y ushr-long/2addr
-c6 12x y add-float/2addr
-c7 12x y sub-float/2addr
-c8 12x y mul-float/2addr
-c9 12x y div-float/2addr
-ca 12x y rem-float/2addr
-cb 12x y add-double/2addr
-cc 12x y sub-double/2addr
-cd 12x y mul-double/2addr
-ce 12x y div-double/2addr
-cf 12x y rem-double/2addr
-d0 22s y add-int/lit16
-d1 22s y rsub-int
-d2 22s y mul-int/lit16
-d3 22s y div-int/lit16
-d4 22s y rem-int/lit16
-d5 22s y and-int/lit16
-d6 22s y or-int/lit16
-d7 22s y xor-int/lit16
-d8 22b y add-int/lit8
-d9 22b y rsub-int/lit8
-da 22b y mul-int/lit8
-db 22b y div-int/lit8
-dc 22b y rem-int/lit8
-dd 22b y and-int/lit8
-de 22b y or-int/lit8
-df 22b y xor-int/lit8
-e0 22b y shl-int/lit8
-e1 22b y shr-int/lit8
-e2 22b y ushr-int/lit8
-e3 10x n unused-e3
-e4 10x n unused-e4
-e5 10x n unused-e5
-e6 10x n unused-e6
-e7 10x n unused-e7
-e8 10x n unused-e8
-e9 10x n unused-e9
-ea 10x n unused-ea
-eb 10x n unused-eb
-ec 10x n unused-ec
-ed 10x n unused-ed
-ee 10x n unused-ee
-ef 10x n unused-ef
-f0 10x n unused-f0
-f1 10x n unused-f1
-f2 10x n unused-f2
-f3 10x n unused-f3
-f4 10x n unused-f4
-f5 10x n unused-f5
-f6 10x n unused-f6
-f7 10x n unused-f7
-f8 10x n unused-f8
-f9 10x n unused-f9
-fa 10x n unused-fa
-fb 10x n unused-fb
-fc 10x n unused-fc
-fd 10x n unused-fd
-fe 10x n unused-fe
-ff 10x n unused-ff
+op 00 10x n nop
+op 01 12x y move
+op 02 22x y move/from16
+op 03 32x y move/16
+op 04 12x y move-wide
+op 05 22x y move-wide/from16
+op 06 32x y move-wide/16
+op 07 12x y move-object
+op 08 22x y move-object/from16
+op 09 32x y move-object/16
+op 0a 11x y move-result
+op 0b 11x y move-result-wide
+op 0c 11x y move-result-object
+op 0d 11x y move-exception
+op 0e 10x n return-void
+op 0f 11x n return
+op 10 11x n return-wide
+op 11 11x n return-object
+op 12 11n y const/4
+op 13 21s y const/16
+op 14 31i y const
+op 15 21h y const/high16
+op 16 21s y const-wide/16
+op 17 31i y const-wide/32
+op 18 51l y const-wide
+op 19 21h y const-wide/high16
+op 1a 21c y const-string
+op 1b 31c y const-string/jumbo
+op 1c 21c y const-class
+op 1d 11x n monitor-enter
+op 1e 11x n monitor-exit
+op 1f 21c y check-cast
+op 20 22c y instance-of
+op 21 12x y array-length
+op 22 21c y new-instance
+op 23 22c y new-array
+op 24 35c n filled-new-array
+op 25 3rc n filled-new-array/range
+op 26 31t n fill-array-data
+op 27 11x n throw
+op 28 10t n goto
+op 29 20t n goto/16
+op 2a 30t n goto/32
+op 2b 31t n packed-switch
+op 2c 31t n sparse-switch
+op 2d 23x y cmpl-float
+op 2e 23x y cmpg-float
+op 2f 23x y cmpl-double
+op 30 23x y cmpg-double
+op 31 23x y cmp-long
+op 32 22t n if-eq
+op 33 22t n if-ne
+op 34 22t n if-lt
+op 35 22t n if-ge
+op 36 22t n if-gt
+op 37 22t n if-le
+op 38 21t n if-eqz
+op 39 21t n if-nez
+op 3a 21t n if-ltz
+op 3b 21t n if-gez
+op 3c 21t n if-gtz
+op 3d 21t n if-lez
+op 3e 10x n unused-3e
+op 3f 10x n unused-3f
+op 40 10x n unused-40
+op 41 10x n unused-41
+op 42 10x n unused-42
+op 43 10x n unused-43
+op 44 23x y aget
+op 45 23x y aget-wide
+op 46 23x y aget-object
+op 47 23x y aget-boolean
+op 48 23x y aget-byte
+op 49 23x y aget-char
+op 4a 23x y aget-short
+op 4b 23x n aput
+op 4c 23x n aput-wide
+op 4d 23x n aput-object
+op 4e 23x n aput-boolean
+op 4f 23x n aput-byte
+op 50 23x n aput-char
+op 51 23x n aput-short
+op 52 22c y iget
+op 53 22c y iget-wide
+op 54 22c y iget-object
+op 55 22c y iget-boolean
+op 56 22c y iget-byte
+op 57 22c y iget-char
+op 58 22c y iget-short
+op 59 22c n iput
+op 5a 22c n iput-wide
+op 5b 22c n iput-object
+op 5c 22c n iput-boolean
+op 5d 22c n iput-byte
+op 5e 22c n iput-char
+op 5f 22c n iput-short
+op 60 21c y sget
+op 61 21c y sget-wide
+op 62 21c y sget-object
+op 63 21c y sget-boolean
+op 64 21c y sget-byte
+op 65 21c y sget-char
+op 66 21c y sget-short
+op 67 21c n sput
+op 68 21c n sput-wide
+op 69 21c n sput-object
+op 6a 21c n sput-boolean
+op 6b 21c n sput-byte
+op 6c 21c n sput-char
+op 6d 21c n sput-short
+op 6e 35c n invoke-virtual
+op 6f 35c n invoke-super
+op 70 35c n invoke-direct
+op 71 35c n invoke-static
+op 72 35c n invoke-interface
+op 73 10x n unused-73
+op 74 3rc n invoke-virtual/range
+op 75 3rc n invoke-super/range
+op 76 3rc n invoke-direct/range
+op 77 3rc n invoke-static/range
+op 78 3rc n invoke-interface/range
+op 79 10x n unused-79
+op 7a 10x n unused-7a
+op 7b 12x y neg-int
+op 7c 12x y not-int
+op 7d 12x y neg-long
+op 7e 12x y not-long
+op 7f 12x y neg-float
+op 80 12x y neg-double
+op 81 12x y int-to-long
+op 82 12x y int-to-float
+op 83 12x y int-to-double
+op 84 12x y long-to-int
+op 85 12x y long-to-float
+op 86 12x y long-to-double
+op 87 12x y float-to-int
+op 88 12x y float-to-long
+op 89 12x y float-to-double
+op 8a 12x y double-to-int
+op 8b 12x y double-to-long
+op 8c 12x y double-to-float
+op 8d 12x y int-to-byte
+op 8e 12x y int-to-char
+op 8f 12x y int-to-short
+op 90 23x y add-int
+op 91 23x y sub-int
+op 92 23x y mul-int
+op 93 23x y div-int
+op 94 23x y rem-int
+op 95 23x y and-int
+op 96 23x y or-int
+op 97 23x y xor-int
+op 98 23x y shl-int
+op 99 23x y shr-int
+op 9a 23x y ushr-int
+op 9b 23x y add-long
+op 9c 23x y sub-long
+op 9d 23x y mul-long
+op 9e 23x y div-long
+op 9f 23x y rem-long
+op a0 23x y and-long
+op a1 23x y or-long
+op a2 23x y xor-long
+op a3 23x y shl-long
+op a4 23x y shr-long
+op a5 23x y ushr-long
+op a6 23x y add-float
+op a7 23x y sub-float
+op a8 23x y mul-float
+op a9 23x y div-float
+op aa 23x y rem-float
+op ab 23x y add-double
+op ac 23x y sub-double
+op ad 23x y mul-double
+op ae 23x y div-double
+op af 23x y rem-double
+op b0 12x y add-int/2addr
+op b1 12x y sub-int/2addr
+op b2 12x y mul-int/2addr
+op b3 12x y div-int/2addr
+op b4 12x y rem-int/2addr
+op b5 12x y and-int/2addr
+op b6 12x y or-int/2addr
+op b7 12x y xor-int/2addr
+op b8 12x y shl-int/2addr
+op b9 12x y shr-int/2addr
+op ba 12x y ushr-int/2addr
+op bb 12x y add-long/2addr
+op bc 12x y sub-long/2addr
+op bd 12x y mul-long/2addr
+op be 12x y div-long/2addr
+op bf 12x y rem-long/2addr
+op c0 12x y and-long/2addr
+op c1 12x y or-long/2addr
+op c2 12x y xor-long/2addr
+op c3 12x y shl-long/2addr
+op c4 12x y shr-long/2addr
+op c5 12x y ushr-long/2addr
+op c6 12x y add-float/2addr
+op c7 12x y sub-float/2addr
+op c8 12x y mul-float/2addr
+op c9 12x y div-float/2addr
+op ca 12x y rem-float/2addr
+op cb 12x y add-double/2addr
+op cc 12x y sub-double/2addr
+op cd 12x y mul-double/2addr
+op ce 12x y div-double/2addr
+op cf 12x y rem-double/2addr
+op d0 22s y add-int/lit16
+op d1 22s y rsub-int
+op d2 22s y mul-int/lit16
+op d3 22s y div-int/lit16
+op d4 22s y rem-int/lit16
+op d5 22s y and-int/lit16
+op d6 22s y or-int/lit16
+op d7 22s y xor-int/lit16
+op d8 22b y add-int/lit8
+op d9 22b y rsub-int/lit8
+op da 22b y mul-int/lit8
+op db 22b y div-int/lit8
+op dc 22b y rem-int/lit8
+op dd 22b y and-int/lit8
+op de 22b y or-int/lit8
+op df 22b y xor-int/lit8
+op e0 22b y shl-int/lit8
+op e1 22b y shr-int/lit8
+op e2 22b y ushr-int/lit8
+op e3 10x n unused-e3
+op e4 10x n unused-e4
+op e5 10x n unused-e5
+op e6 10x n unused-e6
+op e7 10x n unused-e7
+op e8 10x n unused-e8
+op e9 10x n unused-e9
+op ea 10x n unused-ea
+op eb 10x n unused-eb
+op ec 10x n unused-ec
+op ed 10x n unused-ed
+op ee 10x n unused-ee
+op ef 10x n unused-ef
+op f0 10x n unused-f0
+op f1 10x n unused-f1
+op f2 10x n unused-f2
+op f3 10x n unused-f3
+op f4 10x n unused-f4
+op f5 10x n unused-f5
+op f6 10x n unused-f6
+op f7 10x n unused-f7
+op f8 10x n unused-f8
+op f9 10x n unused-f9
+op fa 10x n unused-fa
+op fb 10x n unused-fb
+op fc 10x n unused-fc
+op fd 10x n unused-fd
+op fe 10x n unused-fe
+op ff 10x n unused-ff

@@ -27,10 +27,11 @@ represents four bits, read from high bits to low, with vertical bars
 ("<code>|</code>") interspersed to aid in reading. Uppercase letters
 in sequence from "<code>A</code>" are used to indicate fields within
 the format (which then get defined further by the syntax column). The term
-"<code>op</code>" is used to indicate the position of the eight-bit
-opcode within the format. A slashed zero ("<code>&Oslash;</code>") is
-used to indicate that all bits should be zero in the indicated
-position.</p>
+"<code>op</code>" is used to indicate the position of an eight-bit
+opcode within the format, and similarly "<code>exop</code>" is used
+to indicate an extended sixteen-bit opcode. A slashed zero
+("<code>&Oslash;</code>") is used to indicate that all bits must be
+zero in the indicated position.</p>
 
 <p>For example, the format "<code>B|A|<i>op</i> CCCC</code>" indicates
 that the format consists of two 16-bit code units. The first word
@@ -171,9 +172,9 @@ pool index), and "<code>meth</code>" (method pool index).</p>
 
 <p>Similar to the representation of constant pool indices, there are
 also suggested (optional) forms that indicate prelinked offsets or
-indices. These prelinked values include "<code>vtaboff</code>"
-(vtable offset), "<code>fieldoff</code>" (field offset), and
-"<code>iface</code>" (interface pool index).</p>
+indices. There are two types of suggested prelinked value: vtable offsets
+(indicated as "<code>vtaboff</code>") and field offsets (indicated as
+"<code>fieldoff</code>").</p>
 
 <p>In the cases where a format value isn't explictly part of the syntax
 but instead picks a variant, each variant is listed with the prefix
@@ -292,8 +293,8 @@ the correspondence.</p>
 <tr>
   <td>22cs</td>
   <td><i><code>op</code></i> vA, vB, fieldoff@CCCC</td>
-  <td><i>(suggested format for statically linked field access instructions of
-    format 22c)</i>
+  <td><i>suggested format for statically linked field access instructions of
+    format 22c</i>
   </td>
 </tr>
 <tr>
@@ -325,7 +326,7 @@ the correspondence.</p>
   <td>const-string/jumbo</td>
 </tr>
 <tr>
-  <td>B|A|<i>op</i> CCCC G|F|E|D</td>
+  <td rowspan="2">B|A|<i>op</i> CCCC G|F|E|D</td>
   <td>35c</td>
   <td><i>[<code>B=5</code>] <code>op</code></i> {vD, vE, vF, vG, vA},
     meth@CCCC<br/>
@@ -345,7 +346,6 @@ the correspondence.</p>
   <td>&nbsp;</td>
 </tr>
 <tr>
-  <td>B|A|<i>op</i> CCCC G|F|E|D</td>
   <td>35ms</td>
 
   <td><i>[<code>B=5</code>] <code>op</code></i> {vD, vE, vF, vG, vA},
@@ -359,62 +359,30 @@ the correspondence.</p>
     <i>[<code>B=1</code>] <code>op</code></i> {vD},
     vtaboff@CCCC<br/>
   </td>
-  <td><i>(suggested format for statically linked <code>invoke-virtual</code>
-    and <code>invoke-super</code> instructions of format 35c)</i>
+  <td><i>suggested format for statically linked <code>invoke-virtual</code>
+    and <code>invoke-super</code> instructions of format 35c</i>
   </td>
 </tr>
 <tr>
-  <td>B|A|<i>op</i> DDCC H|G|F|E</td>
-  <td>35fs</td>
-  <td><i>[<code>B=5</code>] <code>op</code></i> {vE, vF, vG, vH, vA},
-    vtaboff@CC, iface@DD<br/>
-    <i>[<code>B=4</code>] <code>op</code></i> {vE, vF, vG, vH},
-    vtaboff@CC, iface@DD<br/>
-    <i>[<code>B=3</code>] <code>op</code></i> {vE, vF, vG},
-    vtaboff@CC, iface@DD<br/>
-    <i>[<code>B=2</code>] <code>op</code></i> {vE, vF},
-    vtaboff@CC, iface@DD<br/>
-    <i>[<code>B=1</code>] <code>op</code></i> {vE},
-    vtaboff@CC, iface@DD<br/>
-  </td>
-  <td><i>(suggested format for statically linked <code>invoke-interface</code>
-    instructions of format 35c)</i>
-  </td>
-</tr>
-<tr>
-  <td>AA|<i>op</i> BBBB CCCC</td>
+  <td rowspan="2">AA|<i>op</i> BBBB CCCC</td>
   <td>3rc</td>
   <td><i><code>op</code></i> {vCCCC .. vNNNN}, meth@BBBB<br/>
     <i><code>op</code></i> {vCCCC .. vNNNN}, type@BBBB<br/>
-    <p><i>(where <code>NNNN = CCCC+AA-1</code>, that is <code>A</code>
+    <p><i>where <code>NNNN = CCCC+AA-1</code>, that is <code>A</code>
     determines the count <code>0..255</code>, and <code>C</code>
-    determines the first register)</i></p>
+    determines the first register</i></p>
   </td>
   <td>&nbsp;</td>
 </tr>
 <tr>
-  <td>AA|<i>op</i> BBBB CCCC</td>
   <td>3rms</td>
   <td><i><code>op</code></i> {vCCCC .. vNNNN}, vtaboff@BBBB<br/>
-    <p><i>(where <code>NNNN = CCCC+AA-1</code>, that is <code>A</code>
+    <p><i>where <code>NNNN = CCCC+AA-1</code>, that is <code>A</code>
     determines the count <code>0..255</code>, and <code>C</code>
-    determines the first register)</i></p>
+    determines the first register</i></p>
   </td>
-  <td><i>(suggested format for statically linked <code>invoke-virtual</code>
-    and <code>invoke-super</code> instructions of format <code>3rc</code>)</i>
-  </td>
-</tr>
-<tr>
-  <td>AA|<i>op</i> CCBB DDDD</td>
-  <td>3rfs</td>
-  <td><i><code>op</code></i> {vDDDD .. vNNNN}, vtaboff@BB,
-    iface@CC<br/>
-    <p><i>(where <code>NNNN = DDDD+AA-1</code>, that is <code>A</code>
-    determines the count <code>0..255</code>, and <code>D</code>
-    determines the first register)</i></p>
-  </td>
-  <td><i>(suggested format for statically linked <code>invoke-interface</code>
-    instructions of format <code>3rc</code>)</i>
+  <td><i>suggested format for statically linked <code>invoke-virtual</code>
+    and <code>invoke-super</code> instructions of format <code>3rc</code></i>
   </td>
 </tr>
 <tr>
@@ -422,6 +390,44 @@ the correspondence.</p>
   <td>51l</td>
   <td><i><code>op</code></i> vAA, #+BBBBBBBBBBBBBBBB</td>
   <td>const-wide</td>
+</tr>
+<tr>
+  <td rowspan="2"><i>exop</i> BB|AA CCCC</td>
+  <td>33x</td>
+  <td><i><code>exop</code></i> vAA, vBB, vCCCC</td>
+  <td>&nbsp;</td>
+</tr>
+<tr>
+  <td>32s</td>
+  <td><i><code>exop</code></i> vAA, vBB, #+CCCC</td>
+  <td>&nbsp;</td>
+</tr>
+<tr>
+  <td><i>exop</i> AAAA<sub>lo</sub> AAAA<sub>hi</sub> BBBB
+  <td>41c</td>
+  <td><i><code>exop</code></i> vBBBB, field@AAAAAAAA<br/>
+    <i><code>exop</code></i> vBBBB, type@AAAAAAAA
+  </td>
+  <td>&nbsp;</td>
+</tr>
+<tr>
+  <td rowspan="2"><i>exop</i> AAAA<sub>lo</sub> AAAA<sub>hi</sub>
+    BBBB CCCC</td>
+  <td>52c</td>
+  <td><i><code>exop</code></i> vBBBB, vCCCC, field@AAAAAAAA<br/>
+    <i><code>exop</code></i> vBBBB, vCCCC, type@AAAAAAAA
+  </td>
+  <td>&nbsp;</td>
+</tr>
+<tr>
+  <td>5rc</td>
+  <td><i><code>exop</code></i> {vBBBB .. vNNNN}, meth@AAAAAAAA<br/>
+    <i><code>exop</code></i> {vBBBB .. vNNNN}, type@AAAAAAAA<br/>
+    <p><i>where <code>NNNN = BBBB+CCCC-1</code>, that is
+    <code>B</code> determines the first register and <code>C</code>
+    determines the count <code>0..65535</code></i></p>
+  </td>
+  <td>&nbsp;</td>
 </tr>
 </tbody>
 </table>
