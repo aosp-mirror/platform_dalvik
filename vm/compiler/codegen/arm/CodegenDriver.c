@@ -1219,7 +1219,6 @@ static void genPuntToInterp(CompilationUnit *cUnit, unsigned int offset)
     /* r0 = dalvik pc */
     dvmCompilerFlushAllRegs(cUnit);
     loadConstant(cUnit, r0, (int) (cUnit->method->insns + offset));
-    loadWordDisp(cUnit, r0, offsetof(Object, clazz), r3);
     loadWordDisp(cUnit, rGLUE, offsetof(InterpState,
                  jitToInterpEntries.dvmJitToInterpPunt), r1);
     opReg(cUnit, kOpBlx, r1);
