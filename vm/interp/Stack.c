@@ -722,13 +722,14 @@ Object* dvmInvokeMethod(Object* obj, const Method* method,
         verifyCount += width;
     }
 
+#ifndef NDEBUG
     if (verifyCount != method->insSize) {
         LOGE("Got vfycount=%d insSize=%d for %s.%s\n", verifyCount,
             method->insSize, clazz->descriptor, method->name);
         assert(false);
         goto bail;
     }
-    //dvmDumpThreadStack(dvmThreadSelf());
+#endif
 
     if (dvmIsNativeMethod(method)) {
         TRACE_METHOD_ENTER(self, method);
@@ -768,7 +769,7 @@ Object* dvmInvokeMethod(Object* obj, const Method* method,
          * in "retval" is undefined.
          */
         if (returnType != NULL) {
-            retObj = (Object*)dvmWrapPrimitive(retval, returnType);
+            retObj = (Object*)dvmBoxPrimitive(retval, returnType);
             dvmReleaseTrackedAlloc(retObj, NULL);
         }
     }
