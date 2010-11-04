@@ -913,6 +913,16 @@ static void verifyAndOptimizeClasses(DexFile* pDexFile, bool doVerify,
         dvmFreeInlineSubsTable(gDvm.inlineSubs);
         gDvm.inlineSubs = NULL;
     }
+
+#ifdef VERIFIER_STATS
+    LOGI("Verifier stats:\n");
+    LOGI(" methods examined        : %u\n", gDvm.verifierStats.methodsExamined);
+    LOGI(" instructions examined   : %u\n", gDvm.verifierStats.instrsExamined);
+    LOGI(" instructions re-examined: %u\n", gDvm.verifierStats.instrsReexamined);
+    LOGI(" copying of register sets: %u\n", gDvm.verifierStats.copyRegCount);
+    LOGI(" merging of register sets: %u\n", gDvm.verifierStats.mergeRegCount);
+    LOGI(" ...that caused changes  : %u\n", gDvm.verifierStats.mergeRegChanged);
+#endif
 }
 
 /*

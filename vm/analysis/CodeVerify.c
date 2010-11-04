@@ -357,6 +357,32 @@ static RegType primitiveTypeToRegType(PrimitiveType primType)
 }
 
 /*
+ * Given a 32-bit constant, return the most-restricted RegType enum entry
+ * that can hold the value.
+ */
+static char determineCat1Const(s4 value)
+{
+    if (value < -32768)
+        return kRegTypeInteger;
+    else if (value < -128)
+        return kRegTypeShort;
+    else if (value < 0)
+        return kRegTypeByte;
+    else if (value == 0)
+        return kRegTypeZero;
+    else if (value == 1)
+        return kRegTypeOne;
+    else if (value < 128)
+        return kRegTypePosByte;
+    else if (value < 32768)
+        return kRegTypePosShort;
+    else if (value < 65536)
+        return kRegTypeChar;
+    else
+        return kRegTypeInteger;
+}
+
+/*
  * Create a new uninitialized instance map.
  *
  * The map is allocated and populated with address entries.  The addresses
@@ -2337,9 +2363,10 @@ static RegType mergeTypes(RegType type1, RegType type2, bool* pChanged)
      * Use the table if we can, and reject any attempts to merge something
      * from the table with a reference type.
      *
-     * The uninitialized table entry at index zero *will* show up as a
-     * simple kRegTypeUninit value.  Since this cannot be merged with
-     * anything but itself, the rules do the right thing.
+     * Uninitialized references are composed of the enum ORed with an
+     * index value.  The uninitialized table entry at index zero *will*
+     * show up as a simple kRegTypeUninit value.  Since this cannot be
+     * merged with anything but itself, the rules do the right thing.
      */
     if (type1 < kRegTypeMAX) {
         if (type2 < kRegTypeMAX) {
@@ -2416,6 +2443,9 @@ static void updateRegisters(const Method* meth, InsnFlags* insnFlags,
         LOGVV("COPY into 0x%04x\n", nextInsn);
         copyRegisters(targetRegs, workRegs, insnRegCount + kExtraRegs);
         dvmInsnSetChanged(insnFlags, nextInsn, true);
+#ifdef VERIFIER_STATS
+        gDvm.verifierStats.copyRegCount++;
+#endif
     } else {
         if (gDebugVerbose) {
             LOGVV("MERGE into 0x%04x\n", nextInsn);
@@ -2426,6 +2456,8 @@ static void updateRegisters(const Method* meth, InsnFlags* insnFlags,
         bool changed = false;
         int i;
 
+        assert(dvmInsnIsBranchTarget(insnFlags, nextInsn));
+
         for (i = 0; i < insnRegCount + kExtraRegs; i++) {
             targetRegs[i] = mergeTypes(targetRegs[i], workRegs[i], &changed);
         }
@@ -2434,6 +2466,11 @@ static void updateRegisters(const Method* meth, InsnFlags* insnFlags,
             //LOGI(" RESULT (changed=%d)\n", changed);
             //dumpRegTypes(meth, insnFlags, targetRegs, 0, "rslt", NULL, 0);
         }
+#ifdef VERIFIER_STATS
+        gDvm.verifierStats.mergeRegCount++;
+        if (changed)
+            gDvm.verifierStats.mergeRegChanged++;
+#endif
 
         if (changed)
             dvmInsnSetChanged(insnFlags, nextInsn, true);
@@ -3043,7 +3080,7 @@ bail:
  */
 
 /*
- * Entry point for the detailed code-flow analysis.
+ * Entry point for the detailed code-flow analysis of a single method.
  */
 bool dvmVerifyCodeFlow(VerifierData* vdata)
 {
@@ -3054,6 +3091,10 @@ bool dvmVerifyCodeFlow(VerifierData* vdata)
     RegisterTable regTable;
 
     memset(&regTable, 0, sizeof(regTable));
+
+#ifdef VERIFIER_STATS
+    gDvm.verifierStats.methodsExamined++;
+#endif
 
 #ifndef NDEBUG
     checkMergeTab();     // only need to do this if table gets updated
@@ -3432,6 +3473,14 @@ static bool verifyInstruction(const Method* meth, InsnFlags* insnFlags,
     const u2* insns = meth->insns + insnIdx;
     bool result = false;
 
+#ifdef VERIFIER_STATS
+    if (dvmInsnIsVisited(insnFlags, insnIdx)) {
+        gDvm.verifierStats.instrsReexamined++;
+    } else {
+        gDvm.verifierStats.instrsExamined++;
+    }
+#endif
+
     /*
      * Once we finish decoding the instruction, we need to figure out where
      * we can go from here.  There are three possible ways to transfer
@@ -3655,12 +3704,12 @@ static bool verifyInstruction(const Method* meth, InsnFlags* insnFlags,
     case OP_CONST:
         /* could be boolean, int, float, or a null reference */
         setRegisterType(workRegs, decInsn.vA,
-            dvmDetermineCat1Const((s4)decInsn.vB));
+            determineCat1Const((s4)decInsn.vB));
         break;
     case OP_CONST_HIGH16:
         /* could be boolean, int, float, or a null reference */
         setRegisterType(workRegs, decInsn.vA,
-            dvmDetermineCat1Const((s4) decInsn.vB << 16));
+            determineCat1Const((s4) decInsn.vB << 16));
         break;
     case OP_CONST_WIDE_16:
     case OP_CONST_WIDE_32:

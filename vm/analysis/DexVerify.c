@@ -20,6 +20,7 @@
  */
 #include "Dalvik.h"
 #include "analysis/CodeVerify.h"
+#include "libdex/DexCatch.h"
 
 
 /* fwd */
@@ -92,6 +93,152 @@ bool dvmVerifyClass(ClassObject* clazz)
 
 
 /*
+ * Compute the width of the instruction at each address in the instruction
+ * stream.  Addresses that are in the middle of an instruction, or that
+ * are part of switch table data, are not set (so the caller should probably
+ * initialize "insnFlags" to zero).
+ *
+ * If "pNewInstanceCount" is not NULL, it will be set to the number of
+ * new-instance instructions in the method.
+ *
+ * Performs some static checks, notably:
+ * - opcode of first instruction begins at index 0
+ * - only documented instructions may appear
+ * - each instruction follows the last
+ * - last byte of last instruction is at (code_length-1)
+ *
+ * Logs an error and returns "false" on failure.
+ */
+static bool computeCodeWidths(const Method* meth, InsnFlags* insnFlags,
+    int* pNewInstanceCount)
+{
+    size_t insnCount = dvmGetMethodInsnsSize(meth);
+    const u2* insns = meth->insns;
+    bool result = false;
+    int newInstanceCount = 0;
+    int i;
+
+
+    for (i = 0; i < (int) insnCount; /**/) {
+        size_t width = dexGetInstrOrTableWidthAbs(gDvm.instrWidth, insns);
+        if (width == 0) {
+            LOG_VFY_METH(meth,
+                "VFY: invalid post-opt instruction (0x%04x)\n", *insns);
+            goto bail;
+        }
+
+        if ((*insns & 0xff) == OP_NEW_INSTANCE)
+            newInstanceCount++;
+
+        if (width > 65535) {
+            LOG_VFY_METH(meth, "VFY: insane width %d\n", width);
+            goto bail;
+        }
+
+        insnFlags[i] |= width;
+        i += width;
+        insns += width;
+    }
+    if (i != (int) dvmGetMethodInsnsSize(meth)) {
+        LOG_VFY_METH(meth, "VFY: code did not end where expected (%d vs. %d)\n",
+            i, dvmGetMethodInsnsSize(meth));
+        goto bail;
+    }
+
+    result = true;
+    if (pNewInstanceCount != NULL)
+        *pNewInstanceCount = newInstanceCount;
+
+bail:
+    return result;
+}
+
+/*
+ * Set the "in try" flags for all instructions protected by "try" statements.
+ * Also sets the "branch target" flags for exception handlers.
+ *
+ * Call this after widths have been set in "insnFlags".
+ *
+ * Returns "false" if something in the exception table looks fishy, but
+ * we're expecting the exception table to be somewhat sane.
+ */
+static bool scanTryCatchBlocks(const Method* meth, InsnFlags* insnFlags)
+{
+    u4 insnsSize = dvmGetMethodInsnsSize(meth);
+    const DexCode* pCode = dvmGetMethodCode(meth);
+    u4 triesSize = pCode->triesSize;
+    const DexTry* pTries;
+    u4 handlersSize;
+    u4 offset;
+    u4 i;
+
+    if (triesSize == 0) {
+        return true;
+    }
+
+    pTries = dexGetTries(pCode);
+    handlersSize = dexGetHandlersSize(pCode);
+
+    for (i = 0; i < triesSize; i++) {
+        const DexTry* pTry = &pTries[i];
+        u4 start = pTry->startAddr;
+        u4 end = start + pTry->insnCount;
+        u4 addr;
+
+        if ((start >= end) || (start >= insnsSize) || (end > insnsSize)) {
+            LOG_VFY_METH(meth,
+                "VFY: bad exception entry: startAddr=%d endAddr=%d (size=%d)\n",
+                start, end, insnsSize);
+            return false;
+        }
+
+        if (dvmInsnGetWidth(insnFlags, start) == 0) {
+            LOG_VFY_METH(meth,
+                "VFY: 'try' block starts inside an instruction (%d)\n",
+                start);
+            return false;
+        }
+
+        for (addr = start; addr < end;
+            addr += dvmInsnGetWidth(insnFlags, addr))
+        {
+            assert(dvmInsnGetWidth(insnFlags, addr) != 0);
+            dvmInsnSetInTry(insnFlags, addr, true);
+        }
+    }
+
+    /* Iterate over each of the handlers to verify target addresses. */
+    offset = dexGetFirstHandlerOffset(pCode);
+    for (i = 0; i < handlersSize; i++) {
+        DexCatchIterator iterator;
+        dexCatchIteratorInit(&iterator, pCode, offset);
+
+        for (;;) {
+            DexCatchHandler* handler = dexCatchIteratorNext(&iterator);
+            u4 addr;
+
+            if (handler == NULL) {
+                break;
+            }
+
+            addr = handler->address;
+            if (dvmInsnGetWidth(insnFlags, addr) == 0) {
+                LOG_VFY_METH(meth,
+                    "VFY: exception handler starts at bad address (%d)\n",
+                    addr);
+                return false;
+            }
+
+            dvmInsnSetBranchTarget(insnFlags, addr, true);
+        }
+
+        offset = dexCatchIteratorGetEndOffset(&iterator, pCode);
+    }
+
+    return true;
+}
+
+/*
  * Perform verification on a single method.
  *
  * We do this in three passes:
@@ -109,7 +256,7 @@ bool dvmVerifyClass(ClassObject* clazz)
  * Confirmed here:
  * - code array must not be empty
  * - (N/A) code_length must be less than 65536
- * Confirmed by dvmComputeCodeWidths():
+ * Confirmed by computeCodeWidths():
  * - opcode of first instruction begins at index 0
  * - only documented instructions may appear
  * - each instruction follows the last
@@ -177,7 +324,7 @@ static bool verifyMethod(Method* meth)
      * Count up the #of occurrences of new-instance instructions while we're
      * at it.
      */
-    if (!dvmComputeCodeWidths(meth, vdata.insnFlags, &newInstanceCount))
+    if (!computeCodeWidths(meth, vdata.insnFlags, &newInstanceCount))
         goto bail;
 
     /*
@@ -191,7 +338,7 @@ static bool verifyMethod(Method* meth)
     /*
      * Set the "in try" flags for all instructions guarded by a "try" block.
      */
-    if (!dvmSetTryFlags(meth, vdata.insnFlags))
+    if (!scanTryCatchBlocks(meth, vdata.insnFlags))
         goto bail;
 
     /*
@@ -201,12 +348,10 @@ static bool verifyMethod(Method* meth)
         goto bail;
 
     /*
-     * Do code-flow analysis.  Do this after verifying the branch targets
-     * so we don't need to worry about it here.
+     * Do code-flow analysis.
      *
-     * If there are no registers, we don't need to do much in the way of
-     * analysis, but we still need to verify that nothing actually tries
-     * to use a register.
+     * We could probably skip this for a method with no registers, but
+     * that's so rare that there's little point in checking.
      */
     if (!dvmVerifyCodeFlow(&vdata)) {
         //LOGD("+++ %s failed code flow\n", meth->name);

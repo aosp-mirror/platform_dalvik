@@ -658,6 +658,10 @@ struct DvmGlobals {
 
     /* some RegisterMap statistics, useful during development */
     void*       registerMapStats;
+
+#ifdef VERIFIER_STATS
+    VerifierStats verifierStats;
+#endif
 };
 
 extern struct DvmGlobals gDvm;
