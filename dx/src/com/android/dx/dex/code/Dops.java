@@ -1172,7 +1172,8 @@ public final class Dops {
     /**
      * Gets the {@link Dop} for the given opcode value.
      *
-     * @param opcode {@code DalvOps.MIN_VALUE..DalvOps.MAX_VALUE;} the opcode value
+     * @param opcode {@code DalvOps.MIN_VALUE..DalvOps.MAX_VALUE;} the
+     * opcode value
      * @return {@code non-null;} the associated opcode instance
      */
     public static Dop get(int opcode) {
@@ -1194,7 +1195,8 @@ public final class Dops {
      * Gets the {@link Dop} with the given family/format combination, if
      * any.
      *
-     * @param family {@code DalvOps.MIN_VALUE..DalvOps.MAX_VALUE;} the opcode family
+     * @param family {@code DalvOps.MIN_VALUE..DalvOps.MAX_VALUE;} the
+     * opcode family
      * @param format {@code non-null;} the opcode's instruction format
      * @return {@code null-ok;} the corresponding opcode, or {@code null} if
      * there is none

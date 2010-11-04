@@ -45,11 +45,183 @@ public final class RopToDop {
         // This space intentionally left blank.
     }
 
+    /*
+     * The following comment lists each opcode that should be considered
+     * the "head" of an opcode chain, in terms of the process of fitting
+     * an instruction's arguments to an actual opcode. This list is
+     * automatically generated and may be of use in double-checking the
+     * manually-generated static initialization code for this class.
+     *
+     * TODO: Make opcode-gen produce useful code in this case instead
+     * of just a comment.
+     */
+
+    // BEGIN(first-opcodes); GENERATED AUTOMATICALLY BY opcode-gen
+    //     DalvOps.NOP
+    //     DalvOps.MOVE
+    //     DalvOps.MOVE_WIDE
+    //     DalvOps.MOVE_OBJECT
+    //     DalvOps.MOVE_RESULT
+    //     DalvOps.MOVE_RESULT_WIDE
+    //     DalvOps.MOVE_RESULT_OBJECT
+    //     DalvOps.MOVE_EXCEPTION
+    //     DalvOps.RETURN_VOID
+    //     DalvOps.RETURN
+    //     DalvOps.RETURN_WIDE
+    //     DalvOps.RETURN_OBJECT
+    //     DalvOps.CONST_4
+    //     DalvOps.CONST_WIDE_16
+    //     DalvOps.CONST_STRING
+    //     DalvOps.CONST_CLASS
+    //     DalvOps.MONITOR_ENTER
+    //     DalvOps.MONITOR_EXIT
+    //     DalvOps.CHECK_CAST
+    //     DalvOps.INSTANCE_OF
+    //     DalvOps.ARRAY_LENGTH
+    //     DalvOps.NEW_INSTANCE
+    //     DalvOps.NEW_ARRAY
+    //     DalvOps.FILLED_NEW_ARRAY
+    //     DalvOps.FILL_ARRAY_DATA
+    //     DalvOps.THROW
+    //     DalvOps.GOTO
+    //     DalvOps.PACKED_SWITCH
+    //     DalvOps.SPARSE_SWITCH
+    //     DalvOps.CMPL_FLOAT
+    //     DalvOps.CMPG_FLOAT
+    //     DalvOps.CMPL_DOUBLE
+    //     DalvOps.CMPG_DOUBLE
+    //     DalvOps.CMP_LONG
+    //     DalvOps.IF_EQ
+    //     DalvOps.IF_NE
+    //     DalvOps.IF_LT
+    //     DalvOps.IF_GE
+    //     DalvOps.IF_GT
+    //     DalvOps.IF_LE
+    //     DalvOps.IF_EQZ
+    //     DalvOps.IF_NEZ
+    //     DalvOps.IF_LTZ
+    //     DalvOps.IF_GEZ
+    //     DalvOps.IF_GTZ
+    //     DalvOps.IF_LEZ
+    //     DalvOps.AGET
+    //     DalvOps.AGET_WIDE
+    //     DalvOps.AGET_OBJECT
+    //     DalvOps.AGET_BOOLEAN
+    //     DalvOps.AGET_BYTE
+    //     DalvOps.AGET_CHAR
+    //     DalvOps.AGET_SHORT
+    //     DalvOps.APUT
+    //     DalvOps.APUT_WIDE
+    //     DalvOps.APUT_OBJECT
+    //     DalvOps.APUT_BOOLEAN
+    //     DalvOps.APUT_BYTE
+    //     DalvOps.APUT_CHAR
+    //     DalvOps.APUT_SHORT
+    //     DalvOps.IGET
+    //     DalvOps.IGET_WIDE
+    //     DalvOps.IGET_OBJECT
+    //     DalvOps.IGET_BOOLEAN
+    //     DalvOps.IGET_BYTE
+    //     DalvOps.IGET_CHAR
+    //     DalvOps.IGET_SHORT
+    //     DalvOps.IPUT
+    //     DalvOps.IPUT_WIDE
+    //     DalvOps.IPUT_OBJECT
+    //     DalvOps.IPUT_BOOLEAN
+    //     DalvOps.IPUT_BYTE
+    //     DalvOps.IPUT_CHAR
+    //     DalvOps.IPUT_SHORT
+    //     DalvOps.SGET
+    //     DalvOps.SGET_WIDE
+    //     DalvOps.SGET_OBJECT
+    //     DalvOps.SGET_BOOLEAN
+    //     DalvOps.SGET_BYTE
+    //     DalvOps.SGET_CHAR
+    //     DalvOps.SGET_SHORT
+    //     DalvOps.SPUT
+    //     DalvOps.SPUT_WIDE
+    //     DalvOps.SPUT_OBJECT
+    //     DalvOps.SPUT_BOOLEAN
+    //     DalvOps.SPUT_BYTE
+    //     DalvOps.SPUT_CHAR
+    //     DalvOps.SPUT_SHORT
+    //     DalvOps.INVOKE_VIRTUAL
+    //     DalvOps.INVOKE_SUPER
+    //     DalvOps.INVOKE_DIRECT
+    //     DalvOps.INVOKE_STATIC
+    //     DalvOps.INVOKE_INTERFACE
+    //     DalvOps.NEG_INT
+    //     DalvOps.NOT_INT
+    //     DalvOps.NEG_LONG
+    //     DalvOps.NOT_LONG
+    //     DalvOps.NEG_FLOAT
+    //     DalvOps.NEG_DOUBLE
+    //     DalvOps.INT_TO_LONG
+    //     DalvOps.INT_TO_FLOAT
+    //     DalvOps.INT_TO_DOUBLE
+    //     DalvOps.LONG_TO_INT
+    //     DalvOps.LONG_TO_FLOAT
+    //     DalvOps.LONG_TO_DOUBLE
+    //     DalvOps.FLOAT_TO_INT
+    //     DalvOps.FLOAT_TO_LONG
+    //     DalvOps.FLOAT_TO_DOUBLE
+    //     DalvOps.DOUBLE_TO_INT
+    //     DalvOps.DOUBLE_TO_LONG
+    //     DalvOps.DOUBLE_TO_FLOAT
+    //     DalvOps.INT_TO_BYTE
+    //     DalvOps.INT_TO_CHAR
+    //     DalvOps.INT_TO_SHORT
+    //     DalvOps.ADD_INT_2ADDR
+    //     DalvOps.SUB_INT_2ADDR
+    //     DalvOps.MUL_INT_2ADDR
+    //     DalvOps.DIV_INT_2ADDR
+    //     DalvOps.REM_INT_2ADDR
+    //     DalvOps.AND_INT_2ADDR
+    //     DalvOps.OR_INT_2ADDR
+    //     DalvOps.XOR_INT_2ADDR
+    //     DalvOps.SHL_INT_2ADDR
+    //     DalvOps.SHR_INT_2ADDR
+    //     DalvOps.USHR_INT_2ADDR
+    //     DalvOps.ADD_LONG_2ADDR
+    //     DalvOps.SUB_LONG_2ADDR
+    //     DalvOps.MUL_LONG_2ADDR
+    //     DalvOps.DIV_LONG_2ADDR
+    //     DalvOps.REM_LONG_2ADDR
+    //     DalvOps.AND_LONG_2ADDR
+    //     DalvOps.OR_LONG_2ADDR
+    //     DalvOps.XOR_LONG_2ADDR
+    //     DalvOps.SHL_LONG_2ADDR
+    //     DalvOps.SHR_LONG_2ADDR
+    //     DalvOps.USHR_LONG_2ADDR
+    //     DalvOps.ADD_FLOAT_2ADDR
+    //     DalvOps.SUB_FLOAT_2ADDR
+    //     DalvOps.MUL_FLOAT_2ADDR
+    //     DalvOps.DIV_FLOAT_2ADDR
+    //     DalvOps.REM_FLOAT_2ADDR
+    //     DalvOps.ADD_DOUBLE_2ADDR
+    //     DalvOps.SUB_DOUBLE_2ADDR
+    //     DalvOps.MUL_DOUBLE_2ADDR
+    //     DalvOps.DIV_DOUBLE_2ADDR
+    //     DalvOps.REM_DOUBLE_2ADDR
+    //     DalvOps.ADD_INT_LIT8
+    //     DalvOps.RSUB_INT_LIT8
+    //     DalvOps.MUL_INT_LIT8
+    //     DalvOps.DIV_INT_LIT8
+    //     DalvOps.REM_INT_LIT8
+    //     DalvOps.AND_INT_LIT8
+    //     DalvOps.OR_INT_LIT8
+    //     DalvOps.XOR_INT_LIT8
+    //     DalvOps.SHL_INT_LIT8
+    //     DalvOps.SHR_INT_LIT8
+    //     DalvOps.USHR_INT_LIT8
+    // END(first-opcodes)
+
     static {
         /*
          * Note: The choices made here are to pick the optimistically
          * smallest Dalvik opcode, and leave it to later processing to
-         * pessimize.
+         * pessimize. See the automatically-generated comment above
+         * for reference.
          */
         MAP = new HashMap<Rop, Dop>(400);
         MAP.put(Rops.NOP,               Dops.NOP);
