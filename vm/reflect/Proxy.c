@@ -880,7 +880,7 @@ static ArrayObject* boxMethodArgs(const Method* method, const u4* args)
         case 'S':
         case 'I':
             value.i = args[srcIndex++];
-            argObjects[argCount] = (Object*) dvmWrapPrimitive(value,
+            argObjects[argCount] = (Object*) dvmBoxPrimitive(value,
                 dvmFindPrimitiveClass(descChar));
             /* argObjects is tracked, don't need to hold this too */
             dvmReleaseTrackedAlloc(argObjects[argCount], NULL);
@@ -890,7 +890,7 @@ static ArrayObject* boxMethodArgs(const Method* method, const u4* args)
         case 'J':
             value.j = dvmGetArgLong(args, srcIndex);
             srcIndex += 2;
-            argObjects[argCount] = (Object*) dvmWrapPrimitive(value,
+            argObjects[argCount] = (Object*) dvmBoxPrimitive(value,
                 dvmFindPrimitiveClass(descChar));
             dvmReleaseTrackedAlloc(argObjects[argCount], NULL);
             argCount++;
@@ -1044,7 +1044,7 @@ static void proxyInvoker(const u4* args, JValue* pResult,
         }
         pResult->l = NULL;
     } else {
-        if (!dvmUnwrapPrimitive(invokeResult.l, returnType, pResult)) {
+        if (!dvmUnboxPrimitive(invokeResult.l, returnType, pResult)) {
             dvmThrowExceptionWithClassMessage("Ljava/lang/ClassCastException;",
                 ((Object*)invokeResult.l)->clazz->descriptor);
             goto bail;

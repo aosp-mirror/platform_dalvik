@@ -480,7 +480,7 @@ static void Dalvik_java_lang_reflect_Field_getField(const u4* args,
     getFieldValue(field, obj, &value);
 
     /* if it's primitive, box it up */
-    result = dvmWrapPrimitive(value, fieldType);
+    result = dvmBoxPrimitive(value, fieldType);
     dvmReleaseTrackedAlloc((Object*) result, NULL);
     RETURN_PTR(result);
 }
@@ -505,8 +505,8 @@ static void Dalvik_java_lang_reflect_Field_setField(const u4* args,
     Field* field;
     JValue value;
 
-    /* unwrap primitive, or verify object type */
-    if (!dvmUnwrapPrimitive(valueObj, fieldType, &value)) {
+    /* unbox primitive, or verify object type */
+    if (!dvmUnboxPrimitive(valueObj, fieldType, &value)) {
         dvmThrowException("Ljava/lang/IllegalArgumentException;",
             "invalid value for field");
         RETURN_VOID();

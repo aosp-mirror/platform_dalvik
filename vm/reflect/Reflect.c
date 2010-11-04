@@ -1022,7 +1022,7 @@ int dvmConvertArgument(DataObject* arg, ClassObject* type, s4* destPtr)
  *
  * The caller must call dvmReleaseTrackedAlloc on the result.
  */
-DataObject* dvmWrapPrimitive(JValue value, ClassObject* returnType)
+DataObject* dvmBoxPrimitive(JValue value, ClassObject* returnType)
 {
     static const char* boxTypes[] = {       // order from enum PrimitiveType
         "Ljava/lang/Boolean;",
@@ -1086,7 +1086,7 @@ DataObject* dvmWrapPrimitive(JValue value, ClassObject* returnType)
  *
  * Returns "true" on success, "false" on failure.
  */
-bool dvmUnwrapPrimitive(Object* value, ClassObject* returnType,
+bool dvmUnboxPrimitive(Object* value, ClassObject* returnType,
     JValue* pResult)
 {
     PrimitiveType typeIndex = returnType->primitiveType;
