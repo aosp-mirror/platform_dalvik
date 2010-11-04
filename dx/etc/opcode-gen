@@ -20,9 +20,11 @@
 # generate code inside the given <file>, based on the directives found
 # in that file:
 #
-#     opcodes:   static final ints for each opcode
-#     dops:      static final objects for each opcode
-#     dops-init: initialization code for the "dops"
+#     opcodes:       static final ints for each opcode
+#     dops:          static final objects for each opcode
+#     dops-init:     initialization code for the "dops"
+#     first-opcodes: a comment indicating which opcodes are at the head
+#                    position of instruction fitting chains
 
 file="$1"
 tmpfile="/tmp/$$.txt"
@@ -57,7 +59,9 @@ bytecodeFile="$progdir/bytecode.txt"
 awk -v "bytecodeFile=$bytecodeFile" '
 
 BEGIN {
+    MAX_OPCODE = 65535;
     readBytecodes();
+    deriveOpcodeChains();
     consumeUntil = "";
 }
 
@@ -73,9 +77,23 @@ consumeUntil != "" {
     consumeUntil = "END(opcodes)";
     print;
 
-    for (i = 0; i < 256; i++) {
+    for (i = 0; i <= MAX_OPCODE; i++) {
+        if (hex[i] == "") continue;
         printf("    public static final int %s = 0x%s;\n",
                uppername[i], hex[i]);
+    }
+
+    next;
+}
+
+/BEGIN\(first-opcodes\)/ {
+    consumeUntil = "END(first-opcodes)";
+    print;
+
+    for (i = 0; i <= MAX_OPCODE; i++) {
+        if (isFirst[i] == "true") {
+            printf("    //     DalvOps.%s\n", uppername[i]);
+        }
     }
 
     next;
@@ -85,8 +103,8 @@ consumeUntil != "" {
     consumeUntil = "END(dops)";
     print;
 
-    for (i = 0; i < 256; i++) {
-        if (index(name[i], "unused") != 0) {
+    for (i = 0; i <= MAX_OPCODE; i++) {
+        if ((hex[i] == "") || (index(name[i], "unused") != 0)) {
             continue;
         }
         printf("    public static final Dop %s =\n" \
@@ -94,6 +112,7 @@ consumeUntil != "" {
                "            Form%s.THE_ONE, %s, \"%s\");\n\n",
                uppername[i], uppername[i], family[i], format[i], hasres[i],
                name[i]);
+        # TODO: Include nextOpcode[i] in the constructor.
     }
 
     next;
@@ -103,7 +122,10 @@ consumeUntil != "" {
     consumeUntil = "END(dops-init)";
     print;
 
-    for (i = 0; i < 256; i++) {
+    for (i = 0; i <= MAX_OPCODE; i++) {
+        if ((hex[i] == "") || (index(name[i], "unused") != 0)) {
+            continue;
+        }
         if (index(name[i], "unused") != 0) {
             continue;
         }
@@ -127,7 +149,7 @@ function readBytecodes(i, parts, line, cmd, status, count) {
             exit 1;
         }
 
-        # Clean up the line and extract the command
+        # Clean up the line and extract the command.
         gsub(/  */, " ", line);
         sub(/ *#.*$/, "", line);
         sub(/ $/, "", line);
@@ -169,16 +191,79 @@ function defineOpcode(line, count, parts, idx) {
     family[idx] = toupper(parts[1]);
     gsub("-", "_", family[idx]);
 
+    # This association is used when computing "next" opcodes.
+    familyFormat[family[idx],format[idx]] = idx;
+
+    if (nextFormat[format[idx]] == "") {
+        printf("unknown format: %s\n", format[idx]);
+        return 1;
+    }
+
     return 0;
 }
 
 # Define a format family.
-function defineFormat(line, count, parts) {
-    # locals: count, parts
+function defineFormat(line, count, parts, i) {
+    # locals: count, parts, i
     count = split(line, parts);
     if (count < 1)  return -1;
     formats[parts[1]] = line;
+
+    parts[count + 1] = "none";
+    for (i = 1; i <= count; i++) {
+        nextFormat[parts[i]] = parts[i + 1];
+    }
+
     return 0;
+}
+
+# Produce the nextOpcode and isFirst arrays. The former indicates, for
+# each opcode, which one should be tried next when doing instruction
+# fitting. The latter indicates which opcodes are at the head of an
+# instruction fitting chain.
+function deriveOpcodeChains(i, op) {
+    # locals: i, op
+
+    for (i = 0; i <= MAX_OPCODE; i++) {
+        if ((hex[i] == "") || (index(name[i], "unused") != 0)) {
+            continue;
+        }
+        isFirst[i] = "true";
+    }
+
+    for (i = 0; i <= MAX_OPCODE; i++) {
+        if ((hex[i] == "") || (index(name[i], "unused") != 0)) {
+            continue;
+        }
+        op = findNextOpcode(i);
+        nextOpcode[i] = op;
+        if (op != -1) {
+            isFirst[op] = "false";
+        }
+    }
+}
+
+# Given an opcode by index, find the next opcode in the same family
+# (that is, with the same base name) to try when matching instructions
+# to opcodes. This simply walks the nextFormat chain looking for a
+# match. This returns the index of the matching opcode or -1 if there
+# is none.
+function findNextOpcode(idx, fam, fmt, result) {
+    # locals: fam, fmt, result
+    fam = family[idx];
+    fmt = format[idx];
+
+    # Not every opcode has a version with every possible format, so
+    # we have to iterate down the chain until we find one or run out of
+    # formats to try.
+    for (fmt = nextFormat[format[idx]]; fmt != "none"; fmt = nextFormat[fmt]) {
+        result = familyFormat[fam,fmt];
+        if (result != "") {
+            return result;
+        }
+    }
+
+    return -1;
 }
 
 # Convert a hex value to an int.
