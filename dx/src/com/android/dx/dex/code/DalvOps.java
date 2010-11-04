@@ -24,6 +24,9 @@ public final class DalvOps {
     /** pseudo-opcode used for nonstandard format "instructions" */
     public static final int SPECIAL_FORMAT = -1;
 
+    /** pseudo-opcode used to indicate there is no next opcode */
+    public static final int NO_NEXT = -1;
+
     /** minimum valid opcode value */
     public static final int MIN_VALUE = -1;
 

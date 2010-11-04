@@ -107,12 +107,16 @@ consumeUntil != "" {
         if ((hex[i] == "") || (index(name[i], "unused") != 0)) {
             continue;
         }
+
+        nextOp = nextOpcode[i];
+        nextOp = (nextOp == -1) ? "NO_NEXT" : uppername[nextOp];
+
         printf("    public static final Dop %s =\n" \
                "        new Dop(DalvOps.%s, DalvOps.%s,\n" \
-               "            Form%s.THE_ONE, %s, \"%s\");\n\n",
-               uppername[i], uppername[i], family[i], format[i], hasres[i],
-               name[i]);
-        # TODO: Include nextOpcode[i] in the constructor.
+               "            DalvOps.%s, Form%s.THE_ONE, %s,\n" \
+               "            \"%s\");\n\n",
+               uppername[i], uppername[i], family[i], nextOp, format[i],
+               hasres[i], name[i]);
     }
 
     next;

@@ -14,8 +14,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Run this from this directory.
+# Set up prog to be the path of this script, including following symlinks,
+# and set up progdir to be the fully-qualified pathname of its directory.
+prog="$0"
+while [ -h "${prog}" ]; do
+    newProg=`/bin/ls -ld "${prog}"`
+    newProg=`expr "${newProg}" : ".* -> \(.*\)$"`
+    if expr "x${newProg}" : 'x/' >/dev/null; then
+        prog="${newProg}"
+    else
+        progdir=`dirname "${prog}"`
+        prog="${progdir}/${newProg}"
+    fi
+done
+oldwd=`pwd`
+progdir=`dirname "${prog}"`
 
-./opcode-gen ../src/com/android/dx/dex/code/DalvOps.java
-./opcode-gen ../src/com/android/dx/dex/code/Dops.java
-./opcode-gen ../src/com/android/dx/dex/code/RopToDop.java
+# Be in the parent of the progdir when running the rest of the script.
+cd "${progdir}/.."
+
+${progdir}/opcode-gen src/com/android/dx/dex/code/DalvOps.java
+${progdir}/opcode-gen src/com/android/dx/dex/code/Dops.java
+${progdir}/opcode-gen src/com/android/dx/dex/code/RopToDop.java
