@@ -1410,33 +1410,22 @@ public final class Dops {
     }
 
     /**
-     * Gets the {@link Dop} with the given family/format combination, if
-     * any.
+     * Gets the next {@link Dop} in the instruction fitting chain after the
+     * given instance, if any.
      *
-     * @param family {@code DalvOps.MIN_VALUE..DalvOps.MAX_VALUE;} the
-     * opcode family
-     * @param format {@code non-null;} the opcode's instruction format
-     * @return {@code null-ok;} the corresponding opcode, or {@code null} if
-     * there is none
+     * @param opcode {@code non-null;} the opcode
+     * @return {@code null-ok;} the next opcode in the same family, in the
+     * chain of opcodes to try, or {@code null} if the given opcode is
+     * the last in its chain
      */
-    public static Dop getOrNull(int family, InsnFormat format) {
-        if (format == null) {
-            throw new NullPointerException("format == null");
+    public static Dop getNextOrNull(Dop opcode) {
+        int nextOpcode = opcode.getNextOpcode();
+
+        if (nextOpcode == DalvOps.NO_NEXT) {
+            return null;
         }
 
-        int len = DOPS.length;
-
-        // TODO: Linear search is bad.
-        for (int i = 0; i < len; i++) {
-            Dop dop = DOPS[i];
-            if ((dop != null) &&
-                (dop.getFamily() == family) &&
-                (dop.getFormat() == format)) {
-                return dop;
-            }
-        }
-
-        return null;
+        return get(nextOpcode);
     }
 
     /**
