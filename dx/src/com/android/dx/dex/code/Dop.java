@@ -20,11 +20,24 @@ package com.android.dx.dex.code;
  * Representation of an opcode.
  */
 public final class Dop {
-    /** DalvOps.MIN_VALUE..DalvOps.MAX_VALUE; the opcode value itself */
+    /**
+     * {@code DalvOps.MIN_VALUE..DalvOps.MAX_VALUE;} the opcode value
+     * itself
+     */
     private final int opcode;
 
-    /** DalvOps.MIN_VALUE..DalvOps.MAX_VALUE; the opcode family */
+    /**
+     * {@code DalvOps.MIN_VALUE..DalvOps.MAX_VALUE;} the opcode family
+     */
     private final int family;
+
+    /**
+     * {@code DalvOps.MIN_VALUE..DalvOps.MAX_VALUE;} what opcode (by
+     * number) to try next when attempting to match an opcode to
+     * particular arguments; {@code DalvOps.NO_NEXT} to indicate that
+     * this is the last opcode to try in a particular chain
+     */
+    private final int nextOpcode;
 
     /** {@code non-null;} the instruction format */
     private final InsnFormat format;
@@ -40,20 +53,31 @@ public final class Dop {
      *
      * @param opcode {@code DalvOps.MIN_VALUE..DalvOps.MAX_VALUE;} the opcode
      * value itself
-     * @param family {@code DalvOps.MIN_VALUE..DalvOps.MAX_VALUE;} the opcode family
+     * @param family {@code DalvOps.MIN_VALUE..DalvOps.MAX_VALUE;} the
+     * opcode family
+     * @param nextOpcode {@code DalvOps.NO_NEXT..DalvOps.MAX_VALUE;}
+     * what opcode (by number) to try next when attempting to match an
+     * opcode to particular arguments; {@code DalvOps.NO_NEXT} to
+     * indicate that this is the last opcode to try in a particular
+     * chain
      * @param format {@code non-null;} the instruction format
      * @param hasResult whether the opcode has a result register; if so it
      * is always the first register
      * @param name {@code non-null;} the name
      */
-    public Dop(int opcode, int family, InsnFormat format,
-               boolean hasResult, String name) {
+    public Dop(int opcode, int family, int nextOpcode, InsnFormat format,
+            boolean hasResult, String name) {
         if ((opcode < DalvOps.MIN_VALUE) || (opcode > DalvOps.MAX_VALUE)) {
             throw new IllegalArgumentException("bogus opcode");
         }
 
         if ((family < DalvOps.MIN_VALUE) || (family > DalvOps.MAX_VALUE)) {
             throw new IllegalArgumentException("bogus family");
+        }
+
+        if ((nextOpcode < DalvOps.MIN_VALUE)
+                || (nextOpcode > DalvOps.MAX_VALUE)) {
+            throw new IllegalArgumentException("bogus nextOpcode");
         }
 
         if (format == null) {
@@ -66,6 +90,7 @@ public final class Dop {
 
         this.opcode = opcode;
         this.family = family;
+        this.nextOpcode = nextOpcode;
         this.format = format;
         this.hasResult = hasResult;
         this.name = name;
@@ -121,6 +146,18 @@ public final class Dop {
      */
     public String getName() {
         return name;
+    }
+
+    /**
+     * Gets the opcode value to try next when attempting to match an
+     * opcode to particular arguments. This returns {@code
+     * DalvOps.NO_NEXT} to indicate that this is the last opcode to
+     * try in a particular chain.
+     *
+     * @return {@code DalvOps.MIN_VALUE..DalvOps.MAX_VALUE;} the opcode value
+     */
+    public int getNextOpcode() {
+        return nextOpcode;
     }
 
     /**
