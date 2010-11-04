@@ -889,8 +889,13 @@ static void Dalvik_dalvik_system_VMDebug_countInstancesOfClass(const u4* args,
     JValue* pResult)
 {
     ClassObject* clazz = (ClassObject*)args[0];
+    bool countAssignable = args[1];
     if (clazz == NULL) {
         RETURN_LONG(0);
+    }
+    if (countAssignable) {
+        size_t count = dvmCountAssignableInstancesOfClass(clazz);
+        RETURN_LONG((long long)count);
     } else {
         size_t count = dvmCountInstancesOfClass(clazz);
         RETURN_LONG((long long)count);
@@ -954,7 +959,7 @@ const DalvikNativeMethod dvm_dalvik_system_VMDebug[] = {
         Dalvik_dalvik_system_VMDebug_crash },
     { "infopoint",                 "(I)V",
         Dalvik_dalvik_system_VMDebug_infopoint },
-    { "countInstancesOfClass",     "(Ljava/lang/Class;)J",
+    { "countInstancesOfClass",     "(Ljava/lang/Class;Z)J",
         Dalvik_dalvik_system_VMDebug_countInstancesOfClass },
     { NULL, NULL, NULL },
 };

@@ -180,8 +180,13 @@ void dvmTrackExternalFree(size_t n);
 size_t dvmGetExternalBytesAllocated(void);
 
 /*
- * Returns a count of the extant instances of a class.
+ * Returns a count of the direct instances of a class.
  */
 size_t dvmCountInstancesOfClass(const ClassObject *clazz);
+
+/*
+ * Returns a count of the instances of a class and its subclasses.
+ */
+size_t dvmCountAssignableInstancesOfClass(const ClassObject *clazz);
 
 #endif /*_DALVIK_ALLOC_ALLOC*/

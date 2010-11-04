@@ -305,11 +305,11 @@ void dvmCollectGarbage(bool collectSoftReferences)
 typedef struct {
     const ClassObject *clazz;
     size_t count;
-} CountInstancesOfClassContext;
+} CountContext;
 
 static void countInstancesOfClassCallback(void *ptr, void *arg)
 {
-    CountInstancesOfClassContext *ctx = arg;
+    CountContext *ctx = arg;
     const Object *obj = ptr;
 
     assert(ctx != NULL);
@@ -320,10 +320,31 @@ static void countInstancesOfClassCallback(void *ptr, void *arg)
 
 size_t dvmCountInstancesOfClass(const ClassObject *clazz)
 {
-    CountInstancesOfClassContext ctx = { clazz, 0 };
+    CountContext ctx = { clazz, 0 };
     HeapBitmap *bitmap = dvmHeapSourceGetLiveBits();
     dvmLockHeap();
     dvmHeapBitmapWalk(bitmap, countInstancesOfClassCallback, &ctx);
+    dvmUnlockHeap();
+    return ctx.count;
+}
+
+static void countAssignableInstancesOfClassCallback(void *ptr, void *arg)
+{
+    CountContext *ctx = arg;
+    const Object *obj = ptr;
+
+    assert(ctx != NULL);
+    if (dvmInstanceof(obj->clazz, ctx->clazz)) {
+        ctx->count += 1;
+    }
+}
+
+size_t dvmCountAssignableInstancesOfClass(const ClassObject *clazz)
+{
+    CountContext ctx = { clazz, 0 };
+    HeapBitmap *bitmap = dvmHeapSourceGetLiveBits();
+    dvmLockHeap();
+    dvmHeapBitmapWalk(bitmap, countAssignableInstancesOfClassCallback, &ctx);
     dvmUnlockHeap();
     return ctx.count;
 }
