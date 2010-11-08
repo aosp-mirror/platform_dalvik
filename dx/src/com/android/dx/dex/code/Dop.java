@@ -20,22 +20,17 @@ package com.android.dx.dex.code;
  * Representation of an opcode.
  */
 public final class Dop {
-    /**
-     * {@code DalvOps.MIN_VALUE..DalvOps.MAX_VALUE;} the opcode value
-     * itself
-     */
+    /** {@code DalvOps.isValid();} the opcode value itself */
     private final int opcode;
 
-    /**
-     * {@code DalvOps.MIN_VALUE..DalvOps.MAX_VALUE;} the opcode family
-     */
+    /** {@code DalvOps.isValid();} the opcode family */
     private final int family;
 
     /**
-     * {@code DalvOps.MIN_VALUE..DalvOps.MAX_VALUE;} what opcode (by
-     * number) to try next when attempting to match an opcode to
-     * particular arguments; {@code DalvOps.NO_NEXT} to indicate that
-     * this is the last opcode to try in a particular chain
+     * {@code DalvOps.isValid();} what opcode (by number) to try next
+     * when attempting to match an opcode to particular arguments;
+     * {@code DalvOps.NO_NEXT} to indicate that this is the last
+     * opcode to try in a particular chain
      */
     private final int nextOpcode;
 
@@ -51,15 +46,13 @@ public final class Dop {
     /**
      * Constructs an instance.
      *
-     * @param opcode {@code DalvOps.MIN_VALUE..DalvOps.MAX_VALUE;} the opcode
-     * value itself
-     * @param family {@code DalvOps.MIN_VALUE..DalvOps.MAX_VALUE;} the
-     * opcode family
-     * @param nextOpcode {@code DalvOps.NO_NEXT..DalvOps.MAX_VALUE;}
-     * what opcode (by number) to try next when attempting to match an
-     * opcode to particular arguments; {@code DalvOps.NO_NEXT} to
-     * indicate that this is the last opcode to try in a particular
-     * chain
+     * @param opcode {@code DalvOps.isValid();} the opcode value
+     * itself
+     * @param family {@code DalvOps.isValid();} the opcode family
+     * @param nextOpcode {@code DalvOps.isValid();} what opcode (by
+     * number) to try next when attempting to match an opcode to
+     * particular arguments; {@code DalvOps.NO_NEXT} to indicate that
+     * this is the last opcode to try in a particular chain
      * @param format {@code non-null;} the instruction format
      * @param hasResult whether the opcode has a result register; if so it
      * is always the first register
@@ -67,16 +60,15 @@ public final class Dop {
      */
     public Dop(int opcode, int family, int nextOpcode, InsnFormat format,
             boolean hasResult, String name) {
-        if ((opcode < DalvOps.MIN_VALUE) || (opcode > DalvOps.MAX_VALUE)) {
+        if (!DalvOps.isValidShape(opcode)) {
             throw new IllegalArgumentException("bogus opcode");
         }
 
-        if ((family < DalvOps.MIN_VALUE) || (family > DalvOps.MAX_VALUE)) {
+        if (!DalvOps.isValidShape(family)) {
             throw new IllegalArgumentException("bogus family");
         }
 
-        if ((nextOpcode < DalvOps.MIN_VALUE)
-                || (nextOpcode > DalvOps.MAX_VALUE)) {
+        if (!DalvOps.isValidShape(nextOpcode)) {
             throw new IllegalArgumentException("bogus nextOpcode");
         }
 

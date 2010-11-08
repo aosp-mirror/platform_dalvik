@@ -298,4 +298,32 @@ public final class DalvOps {
     private DalvOps() {
         // This space intentionally left blank.
     }
+
+    /**
+     * Determines if the given opcode has the right "shape" to be
+     * valid. This includes the range {@code 0x00..0xfe}, the range
+     * {@code 0x00ff..0xffff} where the low-order byte is {@code
+     * 0xff}, and the special opcode values {@code SPECIAL_FORMAT} and
+     * {@code NO_NEXT}. Note that not all of the opcode values that
+     * pass this test are in fact used. This method is meant to
+     * perform a quick check to reject blatantly wrong values (e.g.
+     * when validating arguments).
+     *
+     * @param opcode the opcode value
+     * @return {@code true} iff the value has the right "shape" to be
+     * possibly valid
+     */
+    public static boolean isValidShape(int opcode) {
+        // Note: SPECIAL_FORMAT == NO_NEXT.
+        if ((opcode >= SPECIAL_FORMAT) && (opcode <= 0xff)) {
+            return true;
+        }
+
+        if ((opcode >= 0xff) && (opcode <= 0xffff)
+                && ((opcode & 0xff) == 0xff)) {
+            return true;
+        }
+
+        return false;
+    }
 }
