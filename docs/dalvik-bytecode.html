@@ -156,7 +156,14 @@
   <td>00 10x</td>
   <td>nop</td>
   <td>&nbsp;</td>
-  <td>Waste cycles.</td>
+  <td>Waste cycles.
+    <p><b>Note:</b>
+    Data-bearing pseudo-instructions are tagged with this opcode, in which
+    case the high-order byte of the opcode unit indicates the nature of
+    the data. See "<code>packed-switch</code> Format",
+    "<code>sparse-switch</code> Format", and
+    "<code>fill-array-data</code> Format" below.</p>
+  </td>
 </tr>
 <tr>
   <td>01 12x</td>
@@ -1039,7 +1046,7 @@
 </tr>
 <tr>
   <td>05ff..12ff 52c</td>
-  <td>i<i>instanceop</i> vBBBB, vCCCC, field@AAAAAAAA<br/>
+  <td>i<i>instanceop</i>/jumbo vBBBB, vCCCC, field@AAAAAAAA<br/>
     05ff: iget/jumbo<br/>
     06ff: iget-wide/jumbo<br/>
     07ff: iget-object/jumbo<br/>
@@ -1067,7 +1074,7 @@
 </tr>
 <tr>
   <td>13ff..20ff 41c</td>
-  <td>s<i>staticop</i> vBBBB, field@AAAAAAAA<br/>
+  <td>s<i>staticop</i>/jumbo vBBBB, field@AAAAAAAA<br/>
     13ff: sget/jumbo<br/>
     14ff: sget-wide/jumbo<br/>
     15ff: sget-object/jumbo<br/>
