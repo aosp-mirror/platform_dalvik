@@ -62,6 +62,10 @@ public final class Form33x extends InsnFormat {
     /** {@inheritDoc} */
     @Override
     public boolean isCompatible(DalvInsn insn) {
+        if (! ALLOW_EXTENDED_OPCODES) {
+            return false;
+        }
+
         RegisterSpecList regs = insn.getRegisters();
 
         return (insn instanceof SimpleInsn) &&

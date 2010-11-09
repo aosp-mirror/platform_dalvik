@@ -34,6 +34,13 @@ import com.android.dx.util.Hex;
  */
 public abstract class InsnFormat {
     /**
+     * flag to enable/disable the new extended opcode formats; meant as a
+     * temporary measure until VM support for the salient opcodes is
+     * added. TODO: Remove this declaration when the VM can deal.
+     */
+    public static boolean ALLOW_EXTENDED_OPCODES = false;
+
+    /**
      * Returns the string form, suitable for inclusion in a listing
      * dump, of the given instruction. The instruction must be of this
      * instance's format for proper operation.

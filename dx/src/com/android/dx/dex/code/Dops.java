@@ -39,7 +39,10 @@ import com.android.dx.dex.code.form.Form31t;
 import com.android.dx.dex.code.form.Form32x;
 import com.android.dx.dex.code.form.Form35c;
 import com.android.dx.dex.code.form.Form3rc;
+import com.android.dx.dex.code.form.Form41c;
 import com.android.dx.dex.code.form.Form51l;
+import com.android.dx.dex.code.form.Form52c;
+import com.android.dx.dex.code.form.Form5rc;
 import com.android.dx.dex.code.form.SpecialFormat;
 
 /**
@@ -217,12 +220,12 @@ public final class Dops {
 
     public static final Dop CHECK_CAST =
         new Dop(DalvOps.CHECK_CAST, DalvOps.CHECK_CAST,
-            DalvOps.NO_NEXT, Form21c.THE_ONE, true,
+            DalvOps.CHECK_CAST_JUMBO, Form21c.THE_ONE, true,
             "check-cast");
 
     public static final Dop INSTANCE_OF =
         new Dop(DalvOps.INSTANCE_OF, DalvOps.INSTANCE_OF,
-            DalvOps.NO_NEXT, Form22c.THE_ONE, true,
+            DalvOps.INSTANCE_OF_JUMBO, Form22c.THE_ONE, true,
             "instance-of");
 
     public static final Dop ARRAY_LENGTH =
@@ -232,12 +235,12 @@ public final class Dops {
 
     public static final Dop NEW_INSTANCE =
         new Dop(DalvOps.NEW_INSTANCE, DalvOps.NEW_INSTANCE,
-            DalvOps.NO_NEXT, Form21c.THE_ONE, true,
+            DalvOps.NEW_INSTANCE_JUMBO, Form21c.THE_ONE, true,
             "new-instance");
 
     public static final Dop NEW_ARRAY =
         new Dop(DalvOps.NEW_ARRAY, DalvOps.NEW_ARRAY,
-            DalvOps.NO_NEXT, Form22c.THE_ONE, true,
+            DalvOps.NEW_ARRAY_JUMBO, Form22c.THE_ONE, true,
             "new-array");
 
     public static final Dop FILLED_NEW_ARRAY =
@@ -247,7 +250,7 @@ public final class Dops {
 
     public static final Dop FILLED_NEW_ARRAY_RANGE =
         new Dop(DalvOps.FILLED_NEW_ARRAY_RANGE, DalvOps.FILLED_NEW_ARRAY,
-            DalvOps.NO_NEXT, Form3rc.THE_ONE, false,
+            DalvOps.FILLED_NEW_ARRAY_JUMBO, Form3rc.THE_ONE, false,
             "filled-new-array/range");
 
     public static final Dop FILL_ARRAY_DATA =
@@ -442,142 +445,142 @@ public final class Dops {
 
     public static final Dop IGET =
         new Dop(DalvOps.IGET, DalvOps.IGET,
-            DalvOps.NO_NEXT, Form22c.THE_ONE, true,
+            DalvOps.IGET_JUMBO, Form22c.THE_ONE, true,
             "iget");
 
     public static final Dop IGET_WIDE =
         new Dop(DalvOps.IGET_WIDE, DalvOps.IGET_WIDE,
-            DalvOps.NO_NEXT, Form22c.THE_ONE, true,
+            DalvOps.IGET_WIDE_JUMBO, Form22c.THE_ONE, true,
             "iget-wide");
 
     public static final Dop IGET_OBJECT =
         new Dop(DalvOps.IGET_OBJECT, DalvOps.IGET_OBJECT,
-            DalvOps.NO_NEXT, Form22c.THE_ONE, true,
+            DalvOps.IGET_OBJECT_JUMBO, Form22c.THE_ONE, true,
             "iget-object");
 
     public static final Dop IGET_BOOLEAN =
         new Dop(DalvOps.IGET_BOOLEAN, DalvOps.IGET_BOOLEAN,
-            DalvOps.NO_NEXT, Form22c.THE_ONE, true,
+            DalvOps.IGET_BOOLEAN_JUMBO, Form22c.THE_ONE, true,
             "iget-boolean");
 
     public static final Dop IGET_BYTE =
         new Dop(DalvOps.IGET_BYTE, DalvOps.IGET_BYTE,
-            DalvOps.NO_NEXT, Form22c.THE_ONE, true,
+            DalvOps.IGET_BYTE_JUMBO, Form22c.THE_ONE, true,
             "iget-byte");
 
     public static final Dop IGET_CHAR =
         new Dop(DalvOps.IGET_CHAR, DalvOps.IGET_CHAR,
-            DalvOps.NO_NEXT, Form22c.THE_ONE, true,
+            DalvOps.IGET_CHAR_JUMBO, Form22c.THE_ONE, true,
             "iget-char");
 
     public static final Dop IGET_SHORT =
         new Dop(DalvOps.IGET_SHORT, DalvOps.IGET_SHORT,
-            DalvOps.NO_NEXT, Form22c.THE_ONE, true,
+            DalvOps.IGET_SHORT_JUMBO, Form22c.THE_ONE, true,
             "iget-short");
 
     public static final Dop IPUT =
         new Dop(DalvOps.IPUT, DalvOps.IPUT,
-            DalvOps.NO_NEXT, Form22c.THE_ONE, false,
+            DalvOps.IPUT_JUMBO, Form22c.THE_ONE, false,
             "iput");
 
     public static final Dop IPUT_WIDE =
         new Dop(DalvOps.IPUT_WIDE, DalvOps.IPUT_WIDE,
-            DalvOps.NO_NEXT, Form22c.THE_ONE, false,
+            DalvOps.IPUT_WIDE_JUMBO, Form22c.THE_ONE, false,
             "iput-wide");
 
     public static final Dop IPUT_OBJECT =
         new Dop(DalvOps.IPUT_OBJECT, DalvOps.IPUT_OBJECT,
-            DalvOps.NO_NEXT, Form22c.THE_ONE, false,
+            DalvOps.IPUT_OBJECT_JUMBO, Form22c.THE_ONE, false,
             "iput-object");
 
     public static final Dop IPUT_BOOLEAN =
         new Dop(DalvOps.IPUT_BOOLEAN, DalvOps.IPUT_BOOLEAN,
-            DalvOps.NO_NEXT, Form22c.THE_ONE, false,
+            DalvOps.IPUT_BOOLEAN_JUMBO, Form22c.THE_ONE, false,
             "iput-boolean");
 
     public static final Dop IPUT_BYTE =
         new Dop(DalvOps.IPUT_BYTE, DalvOps.IPUT_BYTE,
-            DalvOps.NO_NEXT, Form22c.THE_ONE, false,
+            DalvOps.IPUT_BYTE_JUMBO, Form22c.THE_ONE, false,
             "iput-byte");
 
     public static final Dop IPUT_CHAR =
         new Dop(DalvOps.IPUT_CHAR, DalvOps.IPUT_CHAR,
-            DalvOps.NO_NEXT, Form22c.THE_ONE, false,
+            DalvOps.IPUT_CHAR_JUMBO, Form22c.THE_ONE, false,
             "iput-char");
 
     public static final Dop IPUT_SHORT =
         new Dop(DalvOps.IPUT_SHORT, DalvOps.IPUT_SHORT,
-            DalvOps.NO_NEXT, Form22c.THE_ONE, false,
+            DalvOps.IPUT_SHORT_JUMBO, Form22c.THE_ONE, false,
             "iput-short");
 
     public static final Dop SGET =
         new Dop(DalvOps.SGET, DalvOps.SGET,
-            DalvOps.NO_NEXT, Form21c.THE_ONE, true,
+            DalvOps.SGET_JUMBO, Form21c.THE_ONE, true,
             "sget");
 
     public static final Dop SGET_WIDE =
         new Dop(DalvOps.SGET_WIDE, DalvOps.SGET_WIDE,
-            DalvOps.NO_NEXT, Form21c.THE_ONE, true,
+            DalvOps.SGET_WIDE_JUMBO, Form21c.THE_ONE, true,
             "sget-wide");
 
     public static final Dop SGET_OBJECT =
         new Dop(DalvOps.SGET_OBJECT, DalvOps.SGET_OBJECT,
-            DalvOps.NO_NEXT, Form21c.THE_ONE, true,
+            DalvOps.SGET_OBJECT_JUMBO, Form21c.THE_ONE, true,
             "sget-object");
 
     public static final Dop SGET_BOOLEAN =
         new Dop(DalvOps.SGET_BOOLEAN, DalvOps.SGET_BOOLEAN,
-            DalvOps.NO_NEXT, Form21c.THE_ONE, true,
+            DalvOps.SGET_BOOLEAN_JUMBO, Form21c.THE_ONE, true,
             "sget-boolean");
 
     public static final Dop SGET_BYTE =
         new Dop(DalvOps.SGET_BYTE, DalvOps.SGET_BYTE,
-            DalvOps.NO_NEXT, Form21c.THE_ONE, true,
+            DalvOps.SGET_BYTE_JUMBO, Form21c.THE_ONE, true,
             "sget-byte");
 
     public static final Dop SGET_CHAR =
         new Dop(DalvOps.SGET_CHAR, DalvOps.SGET_CHAR,
-            DalvOps.NO_NEXT, Form21c.THE_ONE, true,
+            DalvOps.SGET_CHAR_JUMBO, Form21c.THE_ONE, true,
             "sget-char");
 
     public static final Dop SGET_SHORT =
         new Dop(DalvOps.SGET_SHORT, DalvOps.SGET_SHORT,
-            DalvOps.NO_NEXT, Form21c.THE_ONE, true,
+            DalvOps.SGET_SHORT_JUMBO, Form21c.THE_ONE, true,
             "sget-short");
 
     public static final Dop SPUT =
         new Dop(DalvOps.SPUT, DalvOps.SPUT,
-            DalvOps.NO_NEXT, Form21c.THE_ONE, false,
+            DalvOps.SPUT_JUMBO, Form21c.THE_ONE, false,
             "sput");
 
     public static final Dop SPUT_WIDE =
         new Dop(DalvOps.SPUT_WIDE, DalvOps.SPUT_WIDE,
-            DalvOps.NO_NEXT, Form21c.THE_ONE, false,
+            DalvOps.SPUT_WIDE_JUMBO, Form21c.THE_ONE, false,
             "sput-wide");
 
     public static final Dop SPUT_OBJECT =
         new Dop(DalvOps.SPUT_OBJECT, DalvOps.SPUT_OBJECT,
-            DalvOps.NO_NEXT, Form21c.THE_ONE, false,
+            DalvOps.SPUT_OBJECT_JUMBO, Form21c.THE_ONE, false,
             "sput-object");
 
     public static final Dop SPUT_BOOLEAN =
         new Dop(DalvOps.SPUT_BOOLEAN, DalvOps.SPUT_BOOLEAN,
-            DalvOps.NO_NEXT, Form21c.THE_ONE, false,
+            DalvOps.SPUT_BOOLEAN_JUMBO, Form21c.THE_ONE, false,
             "sput-boolean");
 
     public static final Dop SPUT_BYTE =
         new Dop(DalvOps.SPUT_BYTE, DalvOps.SPUT_BYTE,
-            DalvOps.NO_NEXT, Form21c.THE_ONE, false,
+            DalvOps.SPUT_BYTE_JUMBO, Form21c.THE_ONE, false,
             "sput-byte");
 
     public static final Dop SPUT_CHAR =
         new Dop(DalvOps.SPUT_CHAR, DalvOps.SPUT_CHAR,
-            DalvOps.NO_NEXT, Form21c.THE_ONE, false,
+            DalvOps.SPUT_CHAR_JUMBO, Form21c.THE_ONE, false,
             "sput-char");
 
     public static final Dop SPUT_SHORT =
         new Dop(DalvOps.SPUT_SHORT, DalvOps.SPUT_SHORT,
-            DalvOps.NO_NEXT, Form21c.THE_ONE, false,
+            DalvOps.SPUT_SHORT_JUMBO, Form21c.THE_ONE, false,
             "sput-short");
 
     public static final Dop INVOKE_VIRTUAL =
@@ -607,27 +610,27 @@ public final class Dops {
 
     public static final Dop INVOKE_VIRTUAL_RANGE =
         new Dop(DalvOps.INVOKE_VIRTUAL_RANGE, DalvOps.INVOKE_VIRTUAL,
-            DalvOps.NO_NEXT, Form3rc.THE_ONE, false,
+            DalvOps.INVOKE_VIRTUAL_JUMBO, Form3rc.THE_ONE, false,
             "invoke-virtual/range");
 
     public static final Dop INVOKE_SUPER_RANGE =
         new Dop(DalvOps.INVOKE_SUPER_RANGE, DalvOps.INVOKE_SUPER,
-            DalvOps.NO_NEXT, Form3rc.THE_ONE, false,
+            DalvOps.INVOKE_SUPER_JUMBO, Form3rc.THE_ONE, false,
             "invoke-super/range");
 
     public static final Dop INVOKE_DIRECT_RANGE =
         new Dop(DalvOps.INVOKE_DIRECT_RANGE, DalvOps.INVOKE_DIRECT,
-            DalvOps.NO_NEXT, Form3rc.THE_ONE, false,
+            DalvOps.INVOKE_DIRECT_JUMBO, Form3rc.THE_ONE, false,
             "invoke-direct/range");
 
     public static final Dop INVOKE_STATIC_RANGE =
         new Dop(DalvOps.INVOKE_STATIC_RANGE, DalvOps.INVOKE_STATIC,
-            DalvOps.NO_NEXT, Form3rc.THE_ONE, false,
+            DalvOps.INVOKE_STATIC_JUMBO, Form3rc.THE_ONE, false,
             "invoke-static/range");
 
     public static final Dop INVOKE_INTERFACE_RANGE =
         new Dop(DalvOps.INVOKE_INTERFACE_RANGE, DalvOps.INVOKE_INTERFACE,
-            DalvOps.NO_NEXT, Form3rc.THE_ONE, false,
+            DalvOps.INVOKE_INTERFACE_JUMBO, Form3rc.THE_ONE, false,
             "invoke-interface/range");
 
     public static final Dop NEG_INT =
@@ -1150,6 +1153,196 @@ public final class Dops {
             DalvOps.NO_NEXT, Form22b.THE_ONE, true,
             "ushr-int/lit8");
 
+    public static final Dop CHECK_CAST_JUMBO =
+        new Dop(DalvOps.CHECK_CAST_JUMBO, DalvOps.CHECK_CAST,
+            DalvOps.NO_NEXT, Form41c.THE_ONE, false,
+            "check-cast/jumbo");
+
+    public static final Dop INSTANCE_OF_JUMBO =
+        new Dop(DalvOps.INSTANCE_OF_JUMBO, DalvOps.INSTANCE_OF,
+            DalvOps.NO_NEXT, Form52c.THE_ONE, true,
+            "instance-of/jumbo");
+
+    public static final Dop NEW_INSTANCE_JUMBO =
+        new Dop(DalvOps.NEW_INSTANCE_JUMBO, DalvOps.NEW_INSTANCE,
+            DalvOps.NO_NEXT, Form41c.THE_ONE, true,
+            "new-instance/jumbo");
+
+    public static final Dop NEW_ARRAY_JUMBO =
+        new Dop(DalvOps.NEW_ARRAY_JUMBO, DalvOps.NEW_ARRAY,
+            DalvOps.NO_NEXT, Form52c.THE_ONE, true,
+            "new-array/jumbo");
+
+    public static final Dop FILLED_NEW_ARRAY_JUMBO =
+        new Dop(DalvOps.FILLED_NEW_ARRAY_JUMBO, DalvOps.FILLED_NEW_ARRAY,
+            DalvOps.NO_NEXT, Form5rc.THE_ONE, false,
+            "filled-new-array/jumbo");
+
+    public static final Dop IGET_JUMBO =
+        new Dop(DalvOps.IGET_JUMBO, DalvOps.IGET,
+            DalvOps.NO_NEXT, Form52c.THE_ONE, true,
+            "iget/jumbo");
+
+    public static final Dop IGET_WIDE_JUMBO =
+        new Dop(DalvOps.IGET_WIDE_JUMBO, DalvOps.IGET_WIDE,
+            DalvOps.NO_NEXT, Form52c.THE_ONE, true,
+            "iget-wide/jumbo");
+
+    public static final Dop IGET_OBJECT_JUMBO =
+        new Dop(DalvOps.IGET_OBJECT_JUMBO, DalvOps.IGET_OBJECT,
+            DalvOps.NO_NEXT, Form52c.THE_ONE, true,
+            "iget-object/jumbo");
+
+    public static final Dop IGET_BOOLEAN_JUMBO =
+        new Dop(DalvOps.IGET_BOOLEAN_JUMBO, DalvOps.IGET_BOOLEAN,
+            DalvOps.NO_NEXT, Form52c.THE_ONE, true,
+            "iget-boolean/jumbo");
+
+    public static final Dop IGET_BYTE_JUMBO =
+        new Dop(DalvOps.IGET_BYTE_JUMBO, DalvOps.IGET_BYTE,
+            DalvOps.NO_NEXT, Form52c.THE_ONE, true,
+            "iget-byte/jumbo");
+
+    public static final Dop IGET_CHAR_JUMBO =
+        new Dop(DalvOps.IGET_CHAR_JUMBO, DalvOps.IGET_CHAR,
+            DalvOps.NO_NEXT, Form52c.THE_ONE, true,
+            "iget-char/jumbo");
+
+    public static final Dop IGET_SHORT_JUMBO =
+        new Dop(DalvOps.IGET_SHORT_JUMBO, DalvOps.IGET_SHORT,
+            DalvOps.NO_NEXT, Form52c.THE_ONE, true,
+            "iget-short/jumbo");
+
+    public static final Dop IPUT_JUMBO =
+        new Dop(DalvOps.IPUT_JUMBO, DalvOps.IPUT,
+            DalvOps.NO_NEXT, Form52c.THE_ONE, false,
+            "iput/jumbo");
+
+    public static final Dop IPUT_WIDE_JUMBO =
+        new Dop(DalvOps.IPUT_WIDE_JUMBO, DalvOps.IPUT_WIDE,
+            DalvOps.NO_NEXT, Form52c.THE_ONE, false,
+            "iput-wide/jumbo");
+
+    public static final Dop IPUT_OBJECT_JUMBO =
+        new Dop(DalvOps.IPUT_OBJECT_JUMBO, DalvOps.IPUT_OBJECT,
+            DalvOps.NO_NEXT, Form52c.THE_ONE, false,
+            "iput-object/jumbo");
+
+    public static final Dop IPUT_BOOLEAN_JUMBO =
+        new Dop(DalvOps.IPUT_BOOLEAN_JUMBO, DalvOps.IPUT_BOOLEAN,
+            DalvOps.NO_NEXT, Form52c.THE_ONE, false,
+            "iput-boolean/jumbo");
+
+    public static final Dop IPUT_BYTE_JUMBO =
+        new Dop(DalvOps.IPUT_BYTE_JUMBO, DalvOps.IPUT_BYTE,
+            DalvOps.NO_NEXT, Form52c.THE_ONE, false,
+            "iput-byte/jumbo");
+
+    public static final Dop IPUT_CHAR_JUMBO =
+        new Dop(DalvOps.IPUT_CHAR_JUMBO, DalvOps.IPUT_CHAR,
+            DalvOps.NO_NEXT, Form52c.THE_ONE, false,
+            "iput-char/jumbo");
+
+    public static final Dop IPUT_SHORT_JUMBO =
+        new Dop(DalvOps.IPUT_SHORT_JUMBO, DalvOps.IPUT_SHORT,
+            DalvOps.NO_NEXT, Form52c.THE_ONE, false,
+            "iput-short/jumbo");
+
+    public static final Dop SGET_JUMBO =
+        new Dop(DalvOps.SGET_JUMBO, DalvOps.SGET,
+            DalvOps.NO_NEXT, Form41c.THE_ONE, true,
+            "sget/jumbo");
+
+    public static final Dop SGET_WIDE_JUMBO =
+        new Dop(DalvOps.SGET_WIDE_JUMBO, DalvOps.SGET_WIDE,
+            DalvOps.NO_NEXT, Form41c.THE_ONE, true,
+            "sget-wide/jumbo");
+
+    public static final Dop SGET_OBJECT_JUMBO =
+        new Dop(DalvOps.SGET_OBJECT_JUMBO, DalvOps.SGET_OBJECT,
+            DalvOps.NO_NEXT, Form41c.THE_ONE, true,
+            "sget-object/jumbo");
+
+    public static final Dop SGET_BOOLEAN_JUMBO =
+        new Dop(DalvOps.SGET_BOOLEAN_JUMBO, DalvOps.SGET_BOOLEAN,
+            DalvOps.NO_NEXT, Form41c.THE_ONE, true,
+            "sget-boolean/jumbo");
+
+    public static final Dop SGET_BYTE_JUMBO =
+        new Dop(DalvOps.SGET_BYTE_JUMBO, DalvOps.SGET_BYTE,
+            DalvOps.NO_NEXT, Form41c.THE_ONE, true,
+            "sget-byte/jumbo");
+
+    public static final Dop SGET_CHAR_JUMBO =
+        new Dop(DalvOps.SGET_CHAR_JUMBO, DalvOps.SGET_CHAR,
+            DalvOps.NO_NEXT, Form41c.THE_ONE, true,
+            "sget-char/jumbo");
+
+    public static final Dop SGET_SHORT_JUMBO =
+        new Dop(DalvOps.SGET_SHORT_JUMBO, DalvOps.SGET_SHORT,
+            DalvOps.NO_NEXT, Form41c.THE_ONE, true,
+            "sget-short/jumbo");
+
+    public static final Dop SPUT_JUMBO =
+        new Dop(DalvOps.SPUT_JUMBO, DalvOps.SPUT,
+            DalvOps.NO_NEXT, Form41c.THE_ONE, false,
+            "sput/jumbo");
+
+    public static final Dop SPUT_WIDE_JUMBO =
+        new Dop(DalvOps.SPUT_WIDE_JUMBO, DalvOps.SPUT_WIDE,
+            DalvOps.NO_NEXT, Form41c.THE_ONE, false,
+            "sput-wide/jumbo");
+
+    public static final Dop SPUT_OBJECT_JUMBO =
+        new Dop(DalvOps.SPUT_OBJECT_JUMBO, DalvOps.SPUT_OBJECT,
+            DalvOps.NO_NEXT, Form41c.THE_ONE, false,
+            "sput-object/jumbo");
+
+    public static final Dop SPUT_BOOLEAN_JUMBO =
+        new Dop(DalvOps.SPUT_BOOLEAN_JUMBO, DalvOps.SPUT_BOOLEAN,
+            DalvOps.NO_NEXT, Form41c.THE_ONE, false,
+            "sput-boolean/jumbo");
+
+    public static final Dop SPUT_BYTE_JUMBO =
+        new Dop(DalvOps.SPUT_BYTE_JUMBO, DalvOps.SPUT_BYTE,
+            DalvOps.NO_NEXT, Form41c.THE_ONE, false,
+            "sput-byte/jumbo");
+
+    public static final Dop SPUT_CHAR_JUMBO =
+        new Dop(DalvOps.SPUT_CHAR_JUMBO, DalvOps.SPUT_CHAR,
+            DalvOps.NO_NEXT, Form41c.THE_ONE, false,
+            "sput-char/jumbo");
+
+    public static final Dop SPUT_SHORT_JUMBO =
+        new Dop(DalvOps.SPUT_SHORT_JUMBO, DalvOps.SPUT_SHORT,
+            DalvOps.NO_NEXT, Form41c.THE_ONE, false,
+            "sput-short/jumbo");
+
+    public static final Dop INVOKE_VIRTUAL_JUMBO =
+        new Dop(DalvOps.INVOKE_VIRTUAL_JUMBO, DalvOps.INVOKE_VIRTUAL,
+            DalvOps.NO_NEXT, Form5rc.THE_ONE, false,
+            "invoke-virtual/jumbo");
+
+    public static final Dop INVOKE_SUPER_JUMBO =
+        new Dop(DalvOps.INVOKE_SUPER_JUMBO, DalvOps.INVOKE_SUPER,
+            DalvOps.NO_NEXT, Form5rc.THE_ONE, false,
+            "invoke-super/jumbo");
+
+    public static final Dop INVOKE_DIRECT_JUMBO =
+        new Dop(DalvOps.INVOKE_DIRECT_JUMBO, DalvOps.INVOKE_DIRECT,
+            DalvOps.NO_NEXT, Form5rc.THE_ONE, false,
+            "invoke-direct/jumbo");
+
+    public static final Dop INVOKE_STATIC_JUMBO =
+        new Dop(DalvOps.INVOKE_STATIC_JUMBO, DalvOps.INVOKE_STATIC,
+            DalvOps.NO_NEXT, Form5rc.THE_ONE, false,
+            "invoke-static/jumbo");
+
+    public static final Dop INVOKE_INTERFACE_JUMBO =
+        new Dop(DalvOps.INVOKE_INTERFACE_JUMBO, DalvOps.INVOKE_INTERFACE,
+            DalvOps.NO_NEXT, Form5rc.THE_ONE, false,
+            "invoke-interface/jumbo");
+
     // END(dops)
 
     // Static initialization.
@@ -1377,6 +1570,44 @@ public final class Dops {
         set(SHL_INT_LIT8);
         set(SHR_INT_LIT8);
         set(USHR_INT_LIT8);
+        set(CHECK_CAST_JUMBO);
+        set(INSTANCE_OF_JUMBO);
+        set(NEW_INSTANCE_JUMBO);
+        set(NEW_ARRAY_JUMBO);
+        set(FILLED_NEW_ARRAY_JUMBO);
+        set(IGET_JUMBO);
+        set(IGET_WIDE_JUMBO);
+        set(IGET_OBJECT_JUMBO);
+        set(IGET_BOOLEAN_JUMBO);
+        set(IGET_BYTE_JUMBO);
+        set(IGET_CHAR_JUMBO);
+        set(IGET_SHORT_JUMBO);
+        set(IPUT_JUMBO);
+        set(IPUT_WIDE_JUMBO);
+        set(IPUT_OBJECT_JUMBO);
+        set(IPUT_BOOLEAN_JUMBO);
+        set(IPUT_BYTE_JUMBO);
+        set(IPUT_CHAR_JUMBO);
+        set(IPUT_SHORT_JUMBO);
+        set(SGET_JUMBO);
+        set(SGET_WIDE_JUMBO);
+        set(SGET_OBJECT_JUMBO);
+        set(SGET_BOOLEAN_JUMBO);
+        set(SGET_BYTE_JUMBO);
+        set(SGET_CHAR_JUMBO);
+        set(SGET_SHORT_JUMBO);
+        set(SPUT_JUMBO);
+        set(SPUT_WIDE_JUMBO);
+        set(SPUT_OBJECT_JUMBO);
+        set(SPUT_BOOLEAN_JUMBO);
+        set(SPUT_BYTE_JUMBO);
+        set(SPUT_CHAR_JUMBO);
+        set(SPUT_SHORT_JUMBO);
+        set(INVOKE_VIRTUAL_JUMBO);
+        set(INVOKE_SUPER_JUMBO);
+        set(INVOKE_DIRECT_JUMBO);
+        set(INVOKE_STATIC_JUMBO);
+        set(INVOKE_INTERFACE_JUMBO);
         // END(dops-init)
     }
 
