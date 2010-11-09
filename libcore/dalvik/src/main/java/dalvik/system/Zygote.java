@@ -109,12 +109,27 @@ public class Zygote {
      * dimension having a length of 3 and representing
      * (resource, rlim_cur, rlim_max). These are set via the posix
      * setrlimit(2) call.
+     * @param permittedCapabilities argument for setcap()
+     * @param effectiveCapabilities argument for setcap()
      *
      * @return 0 if this is the child, pid of the child
      * if this is the parent, or -1 on error.
+     *
+     * @hide
      */
-    native public static int forkSystemServer(int uid, int gid, 
-            int[] gids, int debugFlags, int[][] rlimits);
+    native public static int forkSystemServer(int uid, int gid,
+            int[] gids, int debugFlags, int[][] rlimits,
+            long permittedCapabilities, long effectiveCapabilities);
+
+    /*
+     * For bug 3176774, we needed to update forkSystemServer() after
+     * the API was locked down.  To avoid going out of sync with the
+     * API description file, we provide a dummy function here.
+     */
+    public static int forkSystemServer(int uid, int gid,
+            int[] gids, int debugFlags, int[][] rlimits) {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * Special method to start the system server process.
