@@ -68,6 +68,10 @@ public final class Form5rc extends InsnFormat {
     /** {@inheritDoc} */
     @Override
     public boolean isCompatible(DalvInsn insn) {
+        if (! ALLOW_EXTENDED_OPCODES) {
+            return false;
+        }
+
         if (!(insn instanceof CstInsn)) {
             return false;
         }

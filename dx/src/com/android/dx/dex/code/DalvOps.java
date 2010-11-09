@@ -31,7 +31,7 @@ public final class DalvOps {
     public static final int MIN_VALUE = -1;
 
     /** maximum valid opcode value */
-    public static final int MAX_VALUE = 0xff;
+    public static final int MAX_VALUE = 0xffff;
 
     // BEGIN(opcodes); GENERATED AUTOMATICALLY BY opcode-gen
     public static final int NOP = 0x00;
@@ -96,12 +96,6 @@ public final class DalvOps {
     public static final int IF_GEZ = 0x3b;
     public static final int IF_GTZ = 0x3c;
     public static final int IF_LEZ = 0x3d;
-    public static final int UNUSED_3E = 0x3e;
-    public static final int UNUSED_3F = 0x3f;
-    public static final int UNUSED_40 = 0x40;
-    public static final int UNUSED_41 = 0x41;
-    public static final int UNUSED_42 = 0x42;
-    public static final int UNUSED_43 = 0x43;
     public static final int AGET = 0x44;
     public static final int AGET_WIDE = 0x45;
     public static final int AGET_OBJECT = 0x46;
@@ -149,14 +143,11 @@ public final class DalvOps {
     public static final int INVOKE_DIRECT = 0x70;
     public static final int INVOKE_STATIC = 0x71;
     public static final int INVOKE_INTERFACE = 0x72;
-    public static final int UNUSED_73 = 0x73;
     public static final int INVOKE_VIRTUAL_RANGE = 0x74;
     public static final int INVOKE_SUPER_RANGE = 0x75;
     public static final int INVOKE_DIRECT_RANGE = 0x76;
     public static final int INVOKE_STATIC_RANGE = 0x77;
     public static final int INVOKE_INTERFACE_RANGE = 0x78;
-    public static final int UNUSED_79 = 0x79;
-    public static final int UNUSED_7A = 0x7a;
     public static final int NEG_INT = 0x7b;
     public static final int NOT_INT = 0x7c;
     public static final int NEG_LONG = 0x7d;
@@ -261,35 +252,44 @@ public final class DalvOps {
     public static final int SHL_INT_LIT8 = 0xe0;
     public static final int SHR_INT_LIT8 = 0xe1;
     public static final int USHR_INT_LIT8 = 0xe2;
-    public static final int UNUSED_E3 = 0xe3;
-    public static final int UNUSED_E4 = 0xe4;
-    public static final int UNUSED_E5 = 0xe5;
-    public static final int UNUSED_E6 = 0xe6;
-    public static final int UNUSED_E7 = 0xe7;
-    public static final int UNUSED_E8 = 0xe8;
-    public static final int UNUSED_E9 = 0xe9;
-    public static final int UNUSED_EA = 0xea;
-    public static final int UNUSED_EB = 0xeb;
-    public static final int UNUSED_EC = 0xec;
-    public static final int UNUSED_ED = 0xed;
-    public static final int UNUSED_EE = 0xee;
-    public static final int UNUSED_EF = 0xef;
-    public static final int UNUSED_F0 = 0xf0;
-    public static final int UNUSED_F1 = 0xf1;
-    public static final int UNUSED_F2 = 0xf2;
-    public static final int UNUSED_F3 = 0xf3;
-    public static final int UNUSED_F4 = 0xf4;
-    public static final int UNUSED_F5 = 0xf5;
-    public static final int UNUSED_F6 = 0xf6;
-    public static final int UNUSED_F7 = 0xf7;
-    public static final int UNUSED_F8 = 0xf8;
-    public static final int UNUSED_F9 = 0xf9;
-    public static final int UNUSED_FA = 0xfa;
-    public static final int UNUSED_FB = 0xfb;
-    public static final int UNUSED_FC = 0xfc;
-    public static final int UNUSED_FD = 0xfd;
-    public static final int UNUSED_FE = 0xfe;
-    public static final int UNUSED_FF = 0xff;
+    public static final int CHECK_CAST_JUMBO = 0x00ff;
+    public static final int INSTANCE_OF_JUMBO = 0x01ff;
+    public static final int NEW_INSTANCE_JUMBO = 0x02ff;
+    public static final int NEW_ARRAY_JUMBO = 0x03ff;
+    public static final int FILLED_NEW_ARRAY_JUMBO = 0x04ff;
+    public static final int IGET_JUMBO = 0x05ff;
+    public static final int IGET_WIDE_JUMBO = 0x06ff;
+    public static final int IGET_OBJECT_JUMBO = 0x07ff;
+    public static final int IGET_BOOLEAN_JUMBO = 0x08ff;
+    public static final int IGET_BYTE_JUMBO = 0x09ff;
+    public static final int IGET_CHAR_JUMBO = 0x0aff;
+    public static final int IGET_SHORT_JUMBO = 0x0bff;
+    public static final int IPUT_JUMBO = 0x0cff;
+    public static final int IPUT_WIDE_JUMBO = 0x0dff;
+    public static final int IPUT_OBJECT_JUMBO = 0x0eff;
+    public static final int IPUT_BOOLEAN_JUMBO = 0x0fff;
+    public static final int IPUT_BYTE_JUMBO = 0x10ff;
+    public static final int IPUT_CHAR_JUMBO = 0x11ff;
+    public static final int IPUT_SHORT_JUMBO = 0x12ff;
+    public static final int SGET_JUMBO = 0x13ff;
+    public static final int SGET_WIDE_JUMBO = 0x14ff;
+    public static final int SGET_OBJECT_JUMBO = 0x15ff;
+    public static final int SGET_BOOLEAN_JUMBO = 0x16ff;
+    public static final int SGET_BYTE_JUMBO = 0x17ff;
+    public static final int SGET_CHAR_JUMBO = 0x18ff;
+    public static final int SGET_SHORT_JUMBO = 0x19ff;
+    public static final int SPUT_JUMBO = 0x1aff;
+    public static final int SPUT_WIDE_JUMBO = 0x1bff;
+    public static final int SPUT_OBJECT_JUMBO = 0x1cff;
+    public static final int SPUT_BOOLEAN_JUMBO = 0x1dff;
+    public static final int SPUT_BYTE_JUMBO = 0x1eff;
+    public static final int SPUT_CHAR_JUMBO = 0x1fff;
+    public static final int SPUT_SHORT_JUMBO = 0x20ff;
+    public static final int INVOKE_VIRTUAL_JUMBO = 0x21ff;
+    public static final int INVOKE_SUPER_JUMBO = 0x22ff;
+    public static final int INVOKE_DIRECT_JUMBO = 0x23ff;
+    public static final int INVOKE_STATIC_JUMBO = 0x24ff;
+    public static final int INVOKE_INTERFACE_JUMBO = 0x25ff;
     // END(opcodes)
 
     /**

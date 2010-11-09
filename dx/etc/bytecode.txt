@@ -107,12 +107,12 @@ op 3a 21t n if-ltz
 op 3b 21t n if-gez
 op 3c 21t n if-gtz
 op 3d 21t n if-lez
-op 3e 10x n unused-3e
-op 3f 10x n unused-3f
-op 40 10x n unused-40
-op 41 10x n unused-41
-op 42 10x n unused-42
-op 43 10x n unused-43
+# unused: op 3e
+# unused: op 3f
+# unused: op 40
+# unused: op 41
+# unused: op 42
+# unused: op 43
 op 44 23x y aget
 op 45 23x y aget-wide
 op 46 23x y aget-object
@@ -160,14 +160,14 @@ op 6f 35c n invoke-super
 op 70 35c n invoke-direct
 op 71 35c n invoke-static
 op 72 35c n invoke-interface
-op 73 10x n unused-73
+# unused: op 73
 op 74 3rc n invoke-virtual/range
 op 75 3rc n invoke-super/range
 op 76 3rc n invoke-direct/range
 op 77 3rc n invoke-static/range
 op 78 3rc n invoke-interface/range
-op 79 10x n unused-79
-op 7a 10x n unused-7a
+# unused: op 79
+# unused: op 7a
 op 7b 12x y neg-int
 op 7c 12x y not-int
 op 7d 12x y neg-long
@@ -272,32 +272,43 @@ op df 22b y xor-int/lit8
 op e0 22b y shl-int/lit8
 op e1 22b y shr-int/lit8
 op e2 22b y ushr-int/lit8
-op e3 10x n unused-e3
-op e4 10x n unused-e4
-op e5 10x n unused-e5
-op e6 10x n unused-e6
-op e7 10x n unused-e7
-op e8 10x n unused-e8
-op e9 10x n unused-e9
-op ea 10x n unused-ea
-op eb 10x n unused-eb
-op ec 10x n unused-ec
-op ed 10x n unused-ed
-op ee 10x n unused-ee
-op ef 10x n unused-ef
-op f0 10x n unused-f0
-op f1 10x n unused-f1
-op f2 10x n unused-f2
-op f3 10x n unused-f3
-op f4 10x n unused-f4
-op f5 10x n unused-f5
-op f6 10x n unused-f6
-op f7 10x n unused-f7
-op f8 10x n unused-f8
-op f9 10x n unused-f9
-op fa 10x n unused-fa
-op fb 10x n unused-fb
-op fc 10x n unused-fc
-op fd 10x n unused-fd
-op fe 10x n unused-fe
-op ff 10x n unused-ff
+# unused: op e3..fe
+op 00ff 41c n check-cast/jumbo
+op 01ff 52c y instance-of/jumbo
+op 02ff 41c y new-instance/jumbo
+op 03ff 52c y new-array/jumbo
+op 04ff 5rc n filled-new-array/jumbo
+op 05ff 52c y iget/jumbo
+op 06ff 52c y iget-wide/jumbo
+op 07ff 52c y iget-object/jumbo
+op 08ff 52c y iget-boolean/jumbo
+op 09ff 52c y iget-byte/jumbo
+op 0aff 52c y iget-char/jumbo
+op 0bff 52c y iget-short/jumbo
+op 0cff 52c n iput/jumbo
+op 0dff 52c n iput-wide/jumbo
+op 0eff 52c n iput-object/jumbo
+op 0fff 52c n iput-boolean/jumbo
+op 10ff 52c n iput-byte/jumbo
+op 11ff 52c n iput-char/jumbo
+op 12ff 52c n iput-short/jumbo
+op 13ff 41c y sget/jumbo
+op 14ff 41c y sget-wide/jumbo
+op 15ff 41c y sget-object/jumbo
+op 16ff 41c y sget-boolean/jumbo
+op 17ff 41c y sget-byte/jumbo
+op 18ff 41c y sget-char/jumbo
+op 19ff 41c y sget-short/jumbo
+op 1aff 41c n sput/jumbo
+op 1bff 41c n sput-wide/jumbo
+op 1cff 41c n sput-object/jumbo
+op 1dff 41c n sput-boolean/jumbo
+op 1eff 41c n sput-byte/jumbo
+op 1fff 41c n sput-char/jumbo
+op 20ff 41c n sput-short/jumbo
+op 21ff 5rc n invoke-virtual/jumbo
+op 22ff 5rc n invoke-super/jumbo
+op 23ff 5rc n invoke-direct/jumbo
+op 24ff 5rc n invoke-static/jumbo
+op 25ff 5rc n invoke-interface/jumbo
+# unused: op 26ff..ffff
