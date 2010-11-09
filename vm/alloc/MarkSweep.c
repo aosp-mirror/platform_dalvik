@@ -57,43 +57,57 @@ static inline long isMarked(const void *obj, const GcMarkContext *ctx)
     return dvmHeapBitmapIsObjectBitSet(ctx->bitmap, obj);
 }
 
+/*
+ * Initializes the stack top and advises the mark stack pages as needed.
+ */
 static bool createMarkStack(GcMarkStack *stack)
 {
-    const Object **limit;
-    const char *name;
-    size_t size;
-
-    /* Create a stack big enough for the worst possible case,
-     * where the heap is perfectly full of the smallest object.
-     * TODO: be better about memory usage; use a smaller stack with
-     *       overflow detection and recovery.
-     */
-    size = dvmHeapSourceGetIdealFootprint() * sizeof(Object*) /
-            (sizeof(Object) + HEAP_SOURCE_CHUNK_OVERHEAD);
-    size = ALIGN_UP_TO_PAGE_SIZE(size);
-    name = "dalvik-mark-stack";
-    limit = dvmAllocRegion(size, PROT_READ | PROT_WRITE, name);
-    if (limit == NULL) {
-        LOGE_GC("Could not mmap %zd-byte ashmem region '%s'", size, name);
-        return false;
-    }
-    stack->limit = limit;
-    stack->base = (const Object **)((uintptr_t)limit + size);
+    assert(stack != NULL);
+    size_t length = dvmHeapSourceGetIdealFootprint() * sizeof(Object*) /
+        (sizeof(Object) + HEAP_SOURCE_CHUNK_OVERHEAD);
+    madvise(stack->base, length, MADV_NORMAL);
     stack->top = stack->base;
     return true;
 }
 
+/*
+ * Assigns NULL to the stack top and advises the mark stack pages as
+ * not needed.
+ */
 static void destroyMarkStack(GcMarkStack *stack)
 {
-    munmap((char *)stack->limit,
-            (uintptr_t)stack->base - (uintptr_t)stack->limit);
-    memset(stack, 0, sizeof(*stack));
+    assert(stack != NULL);
+    madvise(stack->base, stack->length, MADV_DONTNEED);
+    stack->top = NULL;
 }
 
-#define MARK_STACK_PUSH(stack, obj) \
-    do { \
-        *--(stack).top = (obj); \
-    } while (false)
+/*
+ * Pops an object from the mark stack.
+ */
+static void markStackPush(GcMarkStack *stack, const Object *obj)
+{
+    assert(stack != NULL);
+    assert(stack->base <= stack->top);
+    assert(stack->limit > stack->top);
+    assert(obj != NULL);
+    *stack->top = obj;
+    ++stack->top;
+}
+
+/*
+ * Pushes an object on the mark stack.
+ */
+static const Object *markStackPop(GcMarkStack *stack)
+{
+    const Object *obj;
+
+    assert(stack != NULL);
+    assert(stack->base < stack->top);
+    assert(stack->limit > stack->top);
+    --stack->top;
+    obj = *stack->top;
+    return obj;
+}
 
 bool dvmHeapBeginMarkStep(GcMode mode)
 {
@@ -129,7 +143,7 @@ static void markObjectNonNull(const Object *obj, GcMarkContext *ctx,
         if (checkFinger && (void *)obj < ctx->finger) {
             /* This object will need to go on the mark stack.
              */
-            MARK_STACK_PUSH(ctx->stack, obj);
+            markStackPush(&ctx->stack, obj);
         }
     }
 }
@@ -502,18 +516,21 @@ static void scanObject(const Object *obj, GcMarkContext *ctx)
     }
 }
 
-static void
-processMarkStack(GcMarkContext *ctx)
+/*
+ * Scan anything that's on the mark stack.  We can't use the bitmaps
+ * anymore, so use a finger that points past the end of them.
+ */
+static void processMarkStack(GcMarkContext *ctx)
 {
-    const Object **const base = ctx->stack.base;
+    GcMarkStack *stack;
 
-    /* Scan anything that's on the mark stack.
-     * We can't use the bitmaps anymore, so use
-     * a finger that points past the end of them.
-     */
+    assert(ctx != NULL);
     ctx->finger = (void *)ULONG_MAX;
-    while (ctx->stack.top != base) {
-        scanObject(*ctx->stack.top++, ctx);
+    stack = &ctx->stack;
+    assert(stack->top >= stack->base);
+    while (stack->top > stack->base) {
+        const Object *obj = markStackPop(stack);
+        scanObject(obj, ctx);
     }
 }
 

@@ -19,20 +19,22 @@
 #include "alloc/HeapBitmap.h"
 #include "alloc/HeapSource.h"
 
-/* Downward-growing stack for better cache read behavior.
- */
 typedef struct {
-    /* Lowest address (inclusive)
+    /* Highest address (exclusive)
      */
     const Object **limit;
 
-    /* Current top of the stack (inclusive)
+    /* Current top of the stack (exclusive)
      */
     const Object **top;
 
-    /* Highest address (exclusive)
+    /* Lowest address (inclusive)
      */
     const Object **base;
+
+    /* Maximum stack size, in bytes.
+     */
+    size_t length;
 } GcMarkStack;
 
 /* This is declared publicly so that it can be included in gDvm.gcHeap.

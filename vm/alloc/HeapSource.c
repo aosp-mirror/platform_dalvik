@@ -476,6 +476,38 @@ static void gcDaemonShutdown(void)
 }
 
 /*
+ * Create a stack big enough for the worst possible case, where the
+ * heap is perfectly full of the smallest object.
+ * TODO: be better about memory usage; use a smaller stack with
+ *       overflow detection and recovery.
+ */
+static bool allocMarkStack(GcMarkStack *stack, size_t maximumSize)
+{
+    const char *name = "dalvik-mark-stack";
+    void *addr;
+
+    assert(stack != NULL);
+    stack->length = maximumSize * sizeof(Object*) /
+        (sizeof(Object) + HEAP_SOURCE_CHUNK_OVERHEAD);
+    addr = dvmAllocRegion(stack->length, PROT_READ | PROT_WRITE, name);
+    if (addr == NULL) {
+        return false;
+    }
+    stack->base = (const Object **)addr;
+    stack->limit = (const Object **)((char *)addr + stack->length);
+    stack->top = NULL;
+    madvise(stack->base, stack->length, MADV_DONTNEED);
+    return true;
+}
+
+static void freeMarkStack(GcMarkStack *stack)
+{
+    assert(stack != NULL);
+    munmap(stack->base, stack->length);
+    memset(stack, 0, sizeof(*stack));
+}
+
+/*
  * Initializes the heap source; must be called before any other
  * dvmHeapSource*() functions.  Returns a GcHeap structure
  * allocated from the heap source.
@@ -555,7 +587,12 @@ dvmHeapSourceStartup(size_t startSize, size_t absoluteMaxSize)
         dvmHeapBitmapDelete(&hs->liveBits);
         goto fail;
     }
-
+    if (!allocMarkStack(&gcHeap->markContext.stack, hs->absoluteMaxSize)) {
+        LOGE("Can't create markStack");
+        dvmHeapBitmapDelete(&hs->markBits);
+        dvmHeapBitmapDelete(&hs->liveBits);
+        goto fail;
+    }
     gcHeap->markContext.bitmap = &hs->markBits;
     gcHeap->heapSource = hs;
 
@@ -618,16 +655,12 @@ void
 dvmHeapSourceShutdown(GcHeap **gcHeap)
 {
     if (*gcHeap != NULL && (*gcHeap)->heapSource != NULL) {
-        HeapSource *hs;
-
-        hs = (*gcHeap)->heapSource;
-
+        HeapSource *hs = (*gcHeap)->heapSource;
         assert((char *)*gcHeap >= hs->heapBase);
         assert((char *)*gcHeap < hs->heapBase + hs->heapLength);
-
         dvmHeapBitmapDelete(&hs->liveBits);
         dvmHeapBitmapDelete(&hs->markBits);
-
+        freeMarkStack(&(*gcHeap)->markContext.stack);
         munmap(hs->heapBase, hs->heapLength);
         gHs = NULL;
         *gcHeap = NULL;
