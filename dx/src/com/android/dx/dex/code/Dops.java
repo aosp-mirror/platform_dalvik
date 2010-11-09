@@ -205,7 +205,7 @@ public final class Dops {
 
     public static final Dop CONST_CLASS =
         new Dop(DalvOps.CONST_CLASS, DalvOps.CONST_CLASS,
-            DalvOps.NO_NEXT, Form21c.THE_ONE, true,
+            DalvOps.CONST_CLASS_JUMBO, Form21c.THE_ONE, true,
             "const-class");
 
     public static final Dop MONITOR_ENTER =
@@ -1153,6 +1153,11 @@ public final class Dops {
             DalvOps.NO_NEXT, Form22b.THE_ONE, true,
             "ushr-int/lit8");
 
+    public static final Dop CONST_CLASS_JUMBO =
+        new Dop(DalvOps.CONST_CLASS_JUMBO, DalvOps.CONST_CLASS,
+            DalvOps.NO_NEXT, Form41c.THE_ONE, true,
+            "const-class/jumbo");
+
     public static final Dop CHECK_CAST_JUMBO =
         new Dop(DalvOps.CHECK_CAST_JUMBO, DalvOps.CHECK_CAST,
             DalvOps.NO_NEXT, Form41c.THE_ONE, false,
@@ -1570,6 +1575,7 @@ public final class Dops {
         set(SHL_INT_LIT8);
         set(SHR_INT_LIT8);
         set(USHR_INT_LIT8);
+        set(CONST_CLASS_JUMBO);
         set(CHECK_CAST_JUMBO);
         set(INSTANCE_OF_JUMBO);
         set(NEW_INSTANCE_JUMBO);
