@@ -52,7 +52,7 @@ include $(CLEAR_VARS)
 LOCAL_SRC_FILES := $(src_files)
 LOCAL_C_INCLUDES := $(c_includes)
 LOCAL_STATIC_LIBRARIES := $(static_libraries)
-LOCAL_SHARED_LIBRARIES := $(shared_libraries) libcutils libexpat liblog libutils libz
+LOCAL_SHARED_LIBRARIES := $(shared_libraries) libcutils libexpat liblog libstlport libutils libz
 LOCAL_MODULE_TAGS := optional
 LOCAL_MODULE := libnativehelper
 
