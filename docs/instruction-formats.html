@@ -56,7 +56,10 @@ format "<code>21t</code>" is of length two, contains one register reference,
 and additionally contains a branch target.</p>
 
 <p>Suggested static linking formats have an additional "<code>s</code>" suffix,
-making them four characters total.</p>
+making them four characters total. Similarly, suggested "inline" linking
+formats have an additional "<code>i</code>" suffix. (In this context, inline
+linking is like static linking, except with more direct ties into a
+virtual machine's implementation.)</p>
 
 <p>The full list of typecode letters are as follows. Note that some
 forms have different sizes, depending on the format:</p>
@@ -326,45 +329,70 @@ the correspondence.</p>
   <td>const-string/jumbo</td>
 </tr>
 <tr>
-  <td rowspan="2">B|A|<i>op</i> CCCC G|F|E|D</td>
+  <td rowspan="3">A|G|<i>op</i> BBBB F|E|D|C</td>
   <td>35c</td>
-  <td><i>[<code>B=5</code>] <code>op</code></i> {vD, vE, vF, vG, vA},
-    meth@CCCC<br/>
-    <i>[<code>B=5</code>] <code>op</code></i> {vD, vE, vF, vG, vA},
-    type@CCCC<br/>
-    <i>[<code>B=4</code>] <code>op</code></i> {vD, vE, vF, vG},
-    <i><code>kind</code></i>@CCCC<br/>
-    <i>[<code>B=3</code>] <code>op</code></i> {vD, vE, vF},
-    <i><code>kind</code></i>@CCCC<br/>
-    <i>[<code>B=2</code>] <code>op</code></i> {vD, vE},
-    <i><code>kind</code></i>@CCCC<br/>
-    <i>[<code>B=1</code>] <code>op</code></i> {vD},
-    <i><code>kind</code></i>@CCCC<br/>
-    <i>[<code>B=0</code>] <code>op</code></i> {},
-    <i><code>kind</code></i>@CCCC
+  <td><i>[<code>A=5</code>] <code>op</code></i> {vC, vD, vE, vF, vG},
+    meth@BBBB<br/>
+    <i>[<code>A=5</code>] <code>op</code></i> {vC, vD, vE, vF, vG},
+    type@BBBB<br/>
+    <i>[<code>A=4</code>] <code>op</code></i> {vC, vD, vE, vF},
+    <i><code>kind</code></i>@BBBB<br/>
+    <i>[<code>A=3</code>] <code>op</code></i> {vC, vD, vE},
+    <i><code>kind</code></i>@BBBB<br/>
+    <i>[<code>A=2</code>] <code>op</code></i> {vC, vD},
+    <i><code>kind</code></i>@BBBB<br/>
+    <i>[<code>A=1</code>] <code>op</code></i> {vC},
+    <i><code>kind</code></i>@BBBB<br/>
+    <i>[<code>A=0</code>] <code>op</code></i> {},
+    <i><code>kind</code></i>@BBBB<br/>
+    <p><i>The unusual choice in lettering here reflects a desire to make
+    the count and the reference index have the same label as in format
+    3rc.</i></p>
   </td>
   <td>&nbsp;</td>
 </tr>
 <tr>
   <td>35ms</td>
-
-  <td><i>[<code>B=5</code>] <code>op</code></i> {vD, vE, vF, vG, vA},
-    vtaboff@CCCC<br/>
-    <i>[<code>B=4</code>] <code>op</code></i> {vD, vE, vF, vG},
-    vtaboff@CCCC<br/>
-    <i>[<code>B=3</code>] <code>op</code></i> {vD, vE, vF},
-    vtaboff@CCCC<br/>
-    <i>[<code>B=2</code>] <code>op</code></i> {vD, vE},
-    vtaboff@CCCC<br/>
-    <i>[<code>B=1</code>] <code>op</code></i> {vD},
-    vtaboff@CCCC<br/>
+  <td><i>[<code>A=5</code>] <code>op</code></i> {vC, vD, vE, vF, vG},
+    vtaboff@BBBB<br/>
+    <i>[<code>A=4</code>] <code>op</code></i> {vC, vD, vE, vF},
+    vtaboff@BBBB<br/>
+    <i>[<code>A=3</code>] <code>op</code></i> {vC, vD, vE},
+    vtaboff@BBBB<br/>
+    <i>[<code>A=2</code>] <code>op</code></i> {vC, vD},
+    vtaboff@BBBB<br/>
+    <i>[<code>A=1</code>] <code>op</code></i> {vC},
+    vtaboff@BBBB<br/>
+    <p><i>The unusual choice in lettering here reflects a desire to make
+    the count and the reference index have the same label as in format
+    3rms.</i></p>
   </td>
   <td><i>suggested format for statically linked <code>invoke-virtual</code>
     and <code>invoke-super</code> instructions of format 35c</i>
   </td>
 </tr>
 <tr>
-  <td rowspan="2">AA|<i>op</i> BBBB CCCC</td>
+  <td>35mi</td>
+  <td><i>[<code>A=5</code>] <code>op</code></i> {vC, vD, vE, vF, vG},
+    inline@BBBB<br/>
+    <i>[<code>A=4</code>] <code>op</code></i> {vC, vD, vE, vF},
+    inline@BBBB<br/>
+    <i>[<code>A=3</code>] <code>op</code></i> {vC, vD, vE},
+    inline@BBBB<br/>
+    <i>[<code>A=2</code>] <code>op</code></i> {vC, vD},
+    inline@BBBB<br/>
+    <i>[<code>A=1</code>] <code>op</code></i> {vC},
+    inline@BBBB<br/>
+    <p><i>The unusual choice in lettering here reflects a desire to make
+    the count and the reference index have the same label as in format
+    3rmi.</i></p>
+  </td>
+  <td><i>suggested format for inline linked <code>invoke-static</code>
+    and <code>invoke-virtual</code> instructions of format 35c</i>
+  </td>
+</tr>
+<tr>
+  <td rowspan="3">AA|<i>op</i> BBBB CCCC</td>
   <td>3rc</td>
   <td><i><code>op</code></i> {vCCCC .. vNNNN}, meth@BBBB<br/>
     <i><code>op</code></i> {vCCCC .. vNNNN}, type@BBBB<br/>
@@ -383,6 +411,17 @@ the correspondence.</p>
   </td>
   <td><i>suggested format for statically linked <code>invoke-virtual</code>
     and <code>invoke-super</code> instructions of format <code>3rc</code></i>
+  </td>
+</tr>
+<tr>
+  <td>3rmi</td>
+  <td><i><code>op</code></i> {vCCCC .. vNNNN}, inline@BBBB<br/>
+    <p><i>where <code>NNNN = CCCC+AA-1</code>, that is <code>A</code>
+    determines the count <code>0..255</code>, and <code>C</code>
+    determines the first register</i></p>
+  </td>
+  <td><i>suggested format for inline linked <code>invoke-static</code>
+    and <code>invoke-virtual</code> instructions of format 3rc</i>
   </td>
 </tr>
 <tr>
