@@ -33,6 +33,13 @@ to indicate an extended sixteen-bit opcode. A slashed zero
 ("<code>&Oslash;</code>") is used to indicate that all bits must be
 zero in the indicated position.</p>
 
+<p>For the most part, lettering proceeds from earlier code units to
+later code units, and low-order to high-order within a code unit.
+However, there are a few exceptions to this general rule, which are
+done in order to make the naming of similar-meaning parts be the same
+across different instruction formats. These cases are noted explicitly
+in the format descriptions.</p>
+
 <p>For example, the format "<code>B|A|<i>op</i> CCCC</code>" indicates
 that the format consists of two 16-bit code units. The first word
 consists of the opcode in the low eight bits and a pair of four-bit
@@ -181,7 +188,7 @@ indices. There are two types of suggested prelinked value: vtable offsets
 
 <p>In the cases where a format value isn't explictly part of the syntax
 but instead picks a variant, each variant is listed with the prefix
-"<code>[<i>X</i>=<i>N</i>]</code>" (e.g., "<code>[B=2]</code>") to indicate
+"<code>[<i>X</i>=<i>N</i>]</code>" (e.g., "<code>[A=2]</code>") to indicate
 the correspondence.</p>
 
 <h2>The Formats</h2>
@@ -442,29 +449,37 @@ the correspondence.</p>
   <td>&nbsp;</td>
 </tr>
 <tr>
-  <td><i>exop</i> AAAA<sub>lo</sub> AAAA<sub>hi</sub> BBBB
+  <td><i>exop</i> BBBB<sub>lo</sub> BBBB<sub>hi</sub> AAAA
   <td>41c</td>
-  <td><i><code>exop</code></i> vBBBB, field@AAAAAAAA<br/>
-    <i><code>exop</code></i> vBBBB, type@AAAAAAAA
+  <td><i><code>exop</code></i> vAAAA, field@BBBBBBBB<br/>
+    <i><code>exop</code></i> vAAAA, type@BBBBBBBB
+    <p><i>The unusual choice in lettering here reflects a desire to make
+    the letters match their use in related formats 21c and 31c.</i></p>
   </td>
   <td>&nbsp;</td>
 </tr>
 <tr>
-  <td rowspan="2"><i>exop</i> AAAA<sub>lo</sub> AAAA<sub>hi</sub>
-    BBBB CCCC</td>
+  <td><i>exop</i> CCCC<sub>lo</sub> CCCC<sub>hi</sub>
+    AAAA BBBB</td>
   <td>52c</td>
-  <td><i><code>exop</code></i> vBBBB, vCCCC, field@AAAAAAAA<br/>
-    <i><code>exop</code></i> vBBBB, vCCCC, type@AAAAAAAA
+  <td><i><code>exop</code></i> vAAAA, vBBBB, field@CCCCCCCC<br/>
+    <i><code>exop</code></i> vAAAA, vBBBB, type@CCCCCCCC
+    <p><i>The unusual choice in lettering here reflects a desire to make
+    the letters match their use in related formats 22c and 22cs.</i></p>
   </td>
   <td>&nbsp;</td>
 </tr>
 <tr>
+  <td><i>exop</i> BBBB<sub>lo</sub> BBBB<sub>hi</sub>
+    AAAA CCCC</td>
   <td>5rc</td>
-  <td><i><code>exop</code></i> {vBBBB .. vNNNN}, meth@AAAAAAAA<br/>
-    <i><code>exop</code></i> {vBBBB .. vNNNN}, type@AAAAAAAA<br/>
-    <p><i>where <code>NNNN = BBBB+CCCC-1</code>, that is
-    <code>B</code> determines the first register and <code>C</code>
-    determines the count <code>0..65535</code></i></p>
+  <td><i><code>exop</code></i> {vCCCC .. vNNNN}, meth@BBBBBBBB<br/>
+    <i><code>exop</code></i> {vCCCC .. vNNNN}, type@BBBBBBBB<br/>
+    <p><i>where <code>NNNN = CCCC+AAAA-1</code>, that is <code>A</code>
+    determines the count <code>0..65535</code>, and <code>C</code>
+    determines the first register</i></p>
+    <p><i>The unusual choice in lettering here reflects a desire to make
+    the letters match their use in related formats 3rc, 3rms, and 3rmi.</i></p>
   </td>
   <td>&nbsp;</td>
 </tr>
