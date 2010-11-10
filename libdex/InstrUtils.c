@@ -1005,10 +1005,10 @@ InstructionFormat* dexCreateInstrFormatTable(void)
             fmt = kFmt3rms;
             break;
         case OP_EXECUTE_INLINE:
-            fmt = kFmt3inline;
+            fmt = kFmt35mi;
             break;
         case OP_EXECUTE_INLINE_RANGE:
-            fmt = kFmt3rinline;
+            fmt = kFmt3rmi;
             break;
         case OP_INVOKE_DIRECT_EMPTY:
             fmt = kFmt35c;
@@ -1146,26 +1146,23 @@ void dexDecodeInstruction(const InstructionFormat* fmts, const u2* insns,
         pDec->vA = INST_AA(inst);
         pDec->vB = FETCH(1) | ((u4) FETCH(2) << 16);
         break;
-    case kFmt35c:       // op vB, {vD..vG,vA}, thing@CCCC
+    case kFmt35c:       // op {vC, vD, vE, vF, vG}, thing@BBBB
     case kFmt35ms:      // [opt] invoke-virtual+super
         {
             /*
-             * The lettering changes that came about when we went from 4 args
-             * to 5 made the "range" versions of the calls different from
-             * the non-range versions.  We have the choice between decoding
-             * them the way the spec shows and having lots of conditionals
-             * in the verifier, or mapping the values onto their original
-             * registers and leaving the verifier intact.
+             * Note that the fields mentioned in the spec don't appear in
+             * their "usual" positions here compared to most formats. This
+             * was done so that the field names for the argument count and
+             * reference index match between this format and the corresponding
+             * range formats (3rc and friends).
              *
-             * Current plan is to leave the verifier alone.  We can fix it
-             * later if it's architecturally unbearable.
-             *
-             * Bottom line: method constant is always in vB.
+             * Bottom line: The argument count is always in vA, and the
+             * method constant is always in vB.
              */
             u2 regList;
             int i, count;
 
-            pDec->vA = INST_B(inst);
+            pDec->vA = INST_B(inst); // This is labeled A in the spec.
             pDec->vB = FETCH(1);
             regList = FETCH(2);
 
@@ -1175,7 +1172,10 @@ void dexDecodeInstruction(const InstructionFormat* fmts, const u2* insns,
             }
             count = pDec->vA;
             if (count == 5) {
-                /* 5th arg comes from A field in instruction */
+                /*
+                 * Per note above, the 5th arg comes from the A field in the
+                 * instruction, but it's labeled G in the spec.
+                 */
                 pDec->arg[4] = INST_A(inst);
                 count--;
             }
@@ -1188,12 +1188,13 @@ void dexDecodeInstruction(const InstructionFormat* fmts, const u2* insns,
                 pDec->vC = pDec->arg[0];
         }
         break;
-    case kFmt3inline:   // [opt] inline invoke
+    case kFmt35mi:   // [opt] inline invoke
         {
+            /* See note under case 35c, above. */
             u2 regList;
             int i;
 
-            pDec->vA = INST_B(inst);
+            pDec->vA = INST_B(inst); // This is labeled A in the spec.
             pDec->vB = FETCH(1);
             regList = FETCH(2);
 
@@ -1215,7 +1216,7 @@ void dexDecodeInstruction(const InstructionFormat* fmts, const u2* insns,
         break;
     case kFmt3rc:       // op {vCCCC .. v(CCCC+AA-1)}, meth@BBBB
     case kFmt3rms:      // [opt] invoke-virtual+super/range
-    case kFmt3rinline:  // [opt] execute-inline/range
+    case kFmt3rmi:      // [opt] execute-inline/range
         pDec->vA = INST_AA(inst);
         pDec->vB = FETCH(1);
         pDec->vC = FETCH(2);

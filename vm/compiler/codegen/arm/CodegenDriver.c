@@ -4214,8 +4214,8 @@ void dvmCompilerMIR2LIR(CompilationUnit *cUnit)
                         notHandled = handleFmt35ms_3rms(cUnit, mir,blockList[i],
                                                         labelList);
                         break;
-                    case kFmt3inline:
-                    case kFmt3rinline:
+                    case kFmt35mi:
+                    case kFmt3rmi:
                         notHandled = handleExecuteInline(cUnit, mir);
                         break;
                     case kFmt51l:

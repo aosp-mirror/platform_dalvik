@@ -878,9 +878,8 @@ void dumpInstruction(DexFile* pDexFile, const DexCode* pCode, int insnIdx,
     case kFmt32x:        // op vAAAA, vBBBB
         printf(" v%d, v%d", pDecInsn->vA, pDecInsn->vB);
         break;
-    case kFmt35c:        // op vB, {vD, vE, vF, vG, vA}, thing@CCCC
+    case kFmt35c:        // op {vC, vD, vE, vF, vG}, thing@BBBB
         {
-            /* NOTE: decoding of 35c doesn't quite match spec */
             fputs(" {", stdout);
             for (i = 0; i < (int) pDecInsn->vA; i++) {
                 if (i == 0)
@@ -960,7 +959,7 @@ void dumpInstruction(DexFile* pDexFile, const DexCode* pCode, int insnIdx,
             printf("}, [%04x] // vtable #%04x", pDecInsn->vB, pDecInsn->vB);
         }
         break;
-    case kFmt3rinline:   // [opt] execute-inline/range
+    case kFmt3rmi:       // [opt] execute-inline/range
         {
             fputs(" {", stdout);
             for (i = 0; i < (int) pDecInsn->vA; i++) {
@@ -972,7 +971,7 @@ void dumpInstruction(DexFile* pDexFile, const DexCode* pCode, int insnIdx,
             printf("}, [%04x] // inline #%04x", pDecInsn->vB, pDecInsn->vB);
         }
         break;
-    case kFmt3inline:    // [opt] inline invoke
+    case kFmt35mi:       // [opt] inline invoke
         {
 #if 0
             const InlineOperation* inlineOpsTable = dvmGetInlineOpsTable();

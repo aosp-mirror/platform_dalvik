@@ -61,14 +61,21 @@ enum InstructionFormat {
     kFmt31i,        // op vAA, #+BBBBBBBB
     kFmt31t,        // op vAA, +BBBBBBBB
     kFmt31c,        // op vAA, string@BBBBBBBB
-    kFmt35c,        // op {vD, vE, vF, vG, vA}, thing@CCCC (decoded differently)
+    kFmt35c,        // op {vC,vD,vE,vF,vG}, thing@BBBB
     kFmt35ms,       // [opt] invoke-virtual+super
     kFmt35fs,       // [opt] invoke-interface
     kFmt3rc,        // op {vCCCC .. v(CCCC+AA-1)}, meth@BBBB
     kFmt3rms,       // [opt] invoke-virtual+super/range
     kFmt51l,        // op vAA, #+BBBBBBBBBBBBBBBB
-    kFmt3inline,    // [opt] inline invoke
-    kFmt3rinline,   // [opt] inline invoke/range
+    kFmt35mi,       // [opt] inline invoke
+    kFmt3rmi,       // [opt] inline invoke/range
+    /* coming soon:
+    kFmt33x,        // exop vAA, vBB, vCCCC
+    kFmt32s,        // exop vAA, vBB, #+CCCC
+    kFmt41c,        // exop vAAAA, thing@BBBBBBBB
+    kFmt52c,        // exop vAAAA, vCCCC, thing@BBBBBBBB
+    kFmt5rc,        // exop {vCCCC .. v(CCCC+AAAA-1)}, meth@BBBBBBBB
+    */
 };
 
 /*
