@@ -1063,10 +1063,12 @@ void dexDecodeInstruction(const InstructionFormat* fmts, const u2* insns,
     DecodedInstruction* pDec)
 {
     u2 inst = *insns;
+    OpCode opCode = (OpCode) INST_INST(inst);
+    InstructionFormat format = dexGetInstrFormat(fmts, opCode);
 
-    pDec->opCode = (OpCode) INST_INST(inst);
+    pDec->opCode = opCode;
 
-    switch (dexGetInstrFormat(fmts, pDec->opCode)) {
+    switch (format) {
     case kFmt10x:       // op
         /* nothing to do; copy the AA bits out for the verifier */
         pDec->vA = INST_AA(inst);
@@ -1130,7 +1132,7 @@ void dexDecodeInstruction(const InstructionFormat* fmts, const u2* insns,
         pDec->vB = INST_B(inst);
         pDec->vC = FETCH(1);
         break;
-    case kFmt30t:        // op +AAAAAAAA
+    case kFmt30t:       // op +AAAAAAAA
         pDec->vA = FETCH(1) | ((u4) FETCH(2) << 16); // signed 32-bit value
         break;
     case kFmt31t:       // op vAA, +BBBBBBBB
@@ -1148,6 +1150,7 @@ void dexDecodeInstruction(const InstructionFormat* fmts, const u2* insns,
         break;
     case kFmt35c:       // op {vC, vD, vE, vF, vG}, thing@BBBB
     case kFmt35ms:      // [opt] invoke-virtual+super
+    case kFmt35mi:      // [opt] inline invoke
         {
             /*
              * Note that the fields mentioned in the spec don't appear in
@@ -1157,7 +1160,7 @@ void dexDecodeInstruction(const InstructionFormat* fmts, const u2* insns,
              * range formats (3rc and friends).
              *
              * Bottom line: The argument count is always in vA, and the
-             * method constant is always in vB.
+             * method constant (or equivalent) is always in vB.
              */
             u2 regList;
             int i, count;
@@ -1166,49 +1169,38 @@ void dexDecodeInstruction(const InstructionFormat* fmts, const u2* insns,
             pDec->vB = FETCH(1);
             regList = FETCH(2);
 
-            if (pDec->vA > 5) {
-                LOGW("Invalid arg count in 35c/35ms (%d)\n", pDec->vA);
-                goto bail;
-            }
             count = pDec->vA;
-            if (count == 5) {
+
+            /*
+             * Copy the argument registers into the arg[] array, and
+             * also copy the first argument (if any) into vC. (The
+             * DecodedInstruction structure doesn't have separate
+             * fields for {vD, vE, vF, vG}, so there's no need to make
+             * copies of those.) Note that cases 5..2 fall through.
+             */
+            switch (count) {
+            case 5: {
+                if (format == kFmt35mi) {
+                    /* A fifth arg is verboten for inline invokes. */
+                    LOGW("Invalid arg count in 35mi (5)\n");
+                    goto bail;
+                }
                 /*
-                 * Per note above, the 5th arg comes from the A field in the
+                 * Per note at the top of this format decoder, the
+                 * fifth argument comes from the A field in the
                  * instruction, but it's labeled G in the spec.
                  */
                 pDec->arg[4] = INST_A(inst);
-                count--;
             }
-            for (i = 0; i < count; i++) {
-                pDec->arg[i] = regList & 0x0f;
-                regList >>= 4;
-            }
-            /* copy arg[0] to vC; we don't have vD/vE/vF, so ignore those */
-            if (pDec->vA > 0)
-                pDec->vC = pDec->arg[0];
-        }
-        break;
-    case kFmt35mi:   // [opt] inline invoke
-        {
-            /* See note under case 35c, above. */
-            u2 regList;
-            int i;
-
-            pDec->vA = INST_B(inst); // This is labeled A in the spec.
-            pDec->vB = FETCH(1);
-            regList = FETCH(2);
-
-            if (pDec->vA > 4) {
-                LOGW("Invalid arg count in 3inline (%d)\n", pDec->vA);
+            case 4: pDec->arg[3] = (regList >> 12) & 0x0f;
+            case 3: pDec->arg[2] = (regList >> 8) & 0x0f;
+            case 2: pDec->arg[1] = (regList >> 4) & 0x0f;
+            case 1: pDec->vC = pDec->arg[0] = regList & 0x0f; break;
+            case 0: break; // Valid, but no need to do anything.
+            default:
+                LOGW("Invalid arg count in 35c/35ms/35mi (%d)\n", count);
                 goto bail;
             }
-            for (i = 0; i < (int) pDec->vA; i++) {
-                pDec->arg[i] = regList & 0x0f;
-                regList >>= 4;
-            }
-            /* copy arg[0] to vC; we don't have vD/vE/vF, so ignore those */
-            if (pDec->vA > 0)
-                pDec->vC = pDec->arg[0];
         }
         break;
     case kFmt35fs:      // [opt] invoke-interface
@@ -1223,14 +1215,11 @@ void dexDecodeInstruction(const InstructionFormat* fmts, const u2* insns,
         break;
     case kFmt51l:       // op vAA, #+BBBBBBBBBBBBBBBB
         pDec->vA = INST_AA(inst);
-        pDec->vB_wide = FETCH(1);
-        pDec->vB_wide |= (u8)FETCH(2) << 16;
-        pDec->vB_wide |= (u8)FETCH(3) << 32;
-        pDec->vB_wide |= (u8)FETCH(4) << 48;
+        pDec->vB_wide = FETCH(1) | ((u8) FETCH(2) << 16)
+            | ((u8) FETCH(3) << 32) | ((u8) FETCH(4) << 48);
         break;
     default:
-        LOGW("Can't decode unexpected format %d (op=%d)\n",
-            dexGetInstrFormat(fmts, pDec->opCode), pDec->opCode);
+        LOGW("Can't decode unexpected format %d (op=%d)\n", format, opCode);
         assert(false);
         break;
     }
