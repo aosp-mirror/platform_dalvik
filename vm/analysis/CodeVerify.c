@@ -3513,9 +3513,9 @@ static bool verifyInstruction(const Method* meth, InsnFlags* insnFlags,
 #ifndef NDEBUG
     memset(&decInsn, 0x81, sizeof(decInsn));
 #endif
-    dexDecodeInstruction(gDvm.instrFormat, insns, &decInsn);
+    dexDecodeInstruction(&gDvm.instrInfo, insns, &decInsn);
 
-    int nextFlags = dexGetInstrFlags(gDvm.instrFlags, decInsn.opCode);
+    int nextFlags = dexGetInstrFlags(gDvm.instrInfo.flags, decInsn.opCode);
 
     /*
      * Make a copy of the previous register state.  If the instruction

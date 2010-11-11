@@ -46,7 +46,7 @@ static void inlineGetter(CompilationUnit *cUnit,
     MIR *newGetterMIR = dvmCompilerNew(sizeof(MIR), true);
     DecodedInstruction getterInsn;
 
-    dexDecodeInstruction(gDvm.instrFormat, calleeMethod->insns, &getterInsn);
+    dexDecodeInstruction(&gDvm.instrInfo, calleeMethod->insns, &getterInsn);
 
     if (!dvmCompilerCanIncludeThisInstruction(calleeMethod, &getterInsn))
         return;
@@ -85,7 +85,7 @@ static void inlineGetter(CompilationUnit *cUnit,
     /* Now setup the Dalvik instruction with converted src/dst registers */
     newGetterMIR->dalvikInsn = getterInsn;
 
-    newGetterMIR->width = gDvm.instrWidth[getterInsn.opCode];
+    newGetterMIR->width = gDvm.instrInfo.widths[getterInsn.opCode];
 
     newGetterMIR->OptimizationFlags |= MIR_CALLEE;
 
@@ -137,7 +137,7 @@ static void inlineSetter(CompilationUnit *cUnit,
     MIR *newSetterMIR = dvmCompilerNew(sizeof(MIR), true);
     DecodedInstruction setterInsn;
 
-    dexDecodeInstruction(gDvm.instrFormat, calleeMethod->insns, &setterInsn);
+    dexDecodeInstruction(&gDvm.instrInfo, calleeMethod->insns, &setterInsn);
 
     if (!dvmCompilerCanIncludeThisInstruction(calleeMethod, &setterInsn))
         return;
@@ -164,7 +164,7 @@ static void inlineSetter(CompilationUnit *cUnit,
     /* Now setup the Dalvik instruction with converted src/dst registers */
     newSetterMIR->dalvikInsn = setterInsn;
 
-    newSetterMIR->width = gDvm.instrWidth[setterInsn.opCode];
+    newSetterMIR->width = gDvm.instrInfo.widths[setterInsn.opCode];
 
     newSetterMIR->OptimizationFlags |= MIR_CALLEE;
 
@@ -296,7 +296,7 @@ void dvmCompilerInlineMIR(CompilationUnit *cUnit)
             continue;
         MIR *lastMIRInsn = bb->lastMIRInsn;
         int opCode = lastMIRInsn->dalvikInsn.opCode;
-        int flags = dexGetInstrFlags(gDvm.instrFlags, opCode);
+        int flags = dexGetInstrFlags(gDvm.instrInfo.flags, opCode);
 
         /* No invoke - continue */
         if ((flags & kInstrInvoke) == 0)

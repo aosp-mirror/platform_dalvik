@@ -495,12 +495,11 @@ struct DvmGlobals {
      */
     AtomicCache* instanceofCache;
 
-    /* instruction width table, used for optimization and verification */
-    InstructionWidth*   instrWidth;
-    /* instruction flags table, used for verification */
-    InstructionFlags*   instrFlags;
-    /* instruction format table, used for verification */
-    InstructionFormat*  instrFormat;
+    /*
+     * instruction info tables, used for optimization, verification, and
+     * compilation. This is a struct that contains several pointers.
+     */
+    InstructionInfoTables instrInfo;
 
     /* inline substitution table, used during optimization */
     InlineSub*          inlineSubs;

@@ -34,6 +34,7 @@
  *  - this enum
  *  - the switch inside dexDecodeInstruction() in InstrUtils.c
  *  - the switch inside dumpInstruction() in DexDump.c
+ *  - the switch inside dvmCompilerMIR2LIR() in CodegenDriver.c
  */
 typedef unsigned char InstructionFormat;
 enum InstructionFormat {
@@ -63,7 +64,6 @@ enum InstructionFormat {
     kFmt31c,        // op vAA, string@BBBBBBBB
     kFmt35c,        // op {vC,vD,vE,vF,vG}, thing@BBBB
     kFmt35ms,       // [opt] invoke-virtual+super
-    kFmt35fs,       // [opt] invoke-interface
     kFmt3rc,        // op {vCCCC .. v(CCCC+AA-1)}, meth@BBBB
     kFmt3rms,       // [opt] invoke-virtual+super/range
     kFmt51l,        // op vAA, #+BBBBBBBBBBBBBBBB
@@ -73,9 +73,27 @@ enum InstructionFormat {
     kFmt33x,        // exop vAA, vBB, vCCCC
     kFmt32s,        // exop vAA, vBB, #+CCCC
     kFmt41c,        // exop vAAAA, thing@BBBBBBBB
-    kFmt52c,        // exop vAAAA, vCCCC, thing@BBBBBBBB
+    kFmt52c,        // exop vAAAA, vBBBB, thing@CCCCCCCC
     kFmt5rc,        // exop {vCCCC .. v(CCCC+AAAA-1)}, meth@BBBBBBBB
     */
+};
+
+/*
+ * Different kinds of indexed reference, for formats that include such an
+ * indexed reference (e.g., 21c and 35c)
+ */
+typedef unsigned char InstructionIndexType;
+enum InstructionIndexType {
+    kIndexUnknown = 0,
+    kIndexNone,         // has no index
+    kIndexVaries,       // "It depends." Used for throw-verification-error
+    kIndexClassRef,     // class reference index
+    kIndexStringRef,    // string reference index
+    kIndexMethodRef,    // method reference index
+    kIndexFieldRef,     // field reference index
+    kIndexInlineMethod, // inline method index (for inline linked methods)
+    kIndexVtableOffset, // vtable offset (for static linked methods)
+    kIndexFieldOffset   // field offset (for static linked fields)
 };
 
 /*
@@ -88,6 +106,7 @@ typedef struct DecodedInstruction {
     u4      vC;
     u4      arg[5];         /* vC/D/E/F/G in invoke or filled-new-array */
     OpCode  opCode;
+    InstructionIndexType indexType;
 } DecodedInstruction;
 
 /*
@@ -110,24 +129,22 @@ enum InstructionFlags {
     kInstrUnconditional = 1 << 6,   // unconditional branch
 };
 
+/*
+ * Struct that includes a pointer to each of the instruction information
+ * tables.
+ */
+typedef struct InstructionInfoTables {
+    InstructionFormat*    formats;
+    InstructionIndexType* indexTypes;
+    InstructionFlags*     flags;
+    InstructionWidth*     widths;
+} InstructionInfoTables;
 
 /*
  * Allocate and populate a 256-element array with instruction widths.  A
  * width of zero means the entry does not exist.
  */
 InstructionWidth* dexCreateInstrWidthTable(void);
-
-#if 0       // no longer used
-/*
- * Returns the width of the specified instruction, or 0 if not defined.
- * Optimized instructions use negative values.
- */
-DEX_INLINE int dexGetInstrWidth(const InstructionWidth* widths, OpCode opCode)
-{
-   // assert(/*opCode >= 0 &&*/ opCode < kNumDalvikInstructions);
-    return widths[opCode];
-}
-#endif
 
 /*
  * Return the width of the specified instruction, or 0 if not defined.
@@ -152,7 +169,6 @@ DEX_INLINE size_t dexGetInstrWidthAbs(const InstructionWidth* widths,
 size_t dexGetInstrOrTableWidthAbs(const InstructionWidth* widths,
     const u2* insns);
 
-
 /*
  * Allocate and populate a 256-element array with instruction flags.
  */
@@ -166,7 +182,6 @@ DEX_INLINE int dexGetInstrFlags(const InstructionFlags* flags, OpCode opCode)
     //assert(/*opCode >= 0 &&*/ opCode < kNumDalvikInstructions);
     return flags[opCode];
 }
-
 
 /*
  * Allocate and populate a 256-element array with instruction formats.
@@ -184,9 +199,37 @@ DEX_INLINE InstructionFormat dexGetInstrFormat(const InstructionFormat* fmts,
 }
 
 /*
+ * Allocate and populate an array with index types for all instructions.
+ * Used in conjunction with dexDecodeInstruction.
+ */
+InstructionIndexType* dexCreateInstrIndexTypeTable(void);
+
+/*
+ * Return the instruction index type for the specified opcode.
+ */
+DEX_INLINE InstructionIndexType dexGetInstrIndexType(
+    const InstructionIndexType* types, OpCode opCode)
+{
+    //assert(/*opCode >= 0 &&*/ opCode < kNumDalvikInstructions);
+    return types[opCode];
+}
+
+/*
+ * Construct all of the instruction info tables, storing references to
+ * them into the given struct. This returns 0 on success or non-zero on
+ * failure. If this fails, then no net allocation will have occurred.
+ */
+int dexCreateInstructionInfoTables(InstructionInfoTables* info);
+
+/*
+ * Free up the tables referred to by the given instruction info struct.
+ */
+void dexFreeInstructionInfoTables(InstructionInfoTables* info);
+
+/*
  * Decode the instruction pointed to by "insns".
  */
-void dexDecodeInstruction(const InstructionFormat* fmts, const u2* insns,
+void dexDecodeInstruction(const InstructionInfoTables* info, const u2* insns,
     DecodedInstruction* pDec);
 
 #endif /*_LIBDEX_INSTRUTILS*/

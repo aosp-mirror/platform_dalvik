@@ -33,12 +33,7 @@ static bool verifyInstructions(VerifierData* vdata);
  */
 bool dvmVerificationStartup(void)
 {
-    gDvm.instrWidth = dexCreateInstrWidthTable();
-    gDvm.instrFormat = dexCreateInstrFormatTable();
-    gDvm.instrFlags = dexCreateInstrFlagsTable();
-    if (gDvm.instrWidth == NULL || gDvm.instrFormat == NULL ||
-        gDvm.instrFlags == NULL)
-    {
+    if (dexCreateInstructionInfoTables(&gDvm.instrInfo)) {
         LOGE("Unable to create instruction tables\n");
         return false;
     }
@@ -51,11 +46,8 @@ bool dvmVerificationStartup(void)
  */
 void dvmVerificationShutdown(void)
 {
-    free(gDvm.instrWidth);
-    free(gDvm.instrFormat);
-    free(gDvm.instrFlags);
+    dexFreeInstructionInfoTables(&gDvm.instrInfo);
 }
-
 
 /*
  * Verify a class.
@@ -120,7 +112,8 @@ static bool computeCodeWidths(const Method* meth, InsnFlags* insnFlags,
 
 
     for (i = 0; i < (int) insnCount; /**/) {
-        size_t width = dexGetInstrOrTableWidthAbs(gDvm.instrWidth, insns);
+        size_t width =
+            dexGetInstrOrTableWidthAbs(gDvm.instrInfo.widths, insns);
         if (width == 0) {
             LOG_VFY_METH(meth,
                 "VFY: invalid post-opt instruction (0x%04x)\n", *insns);
@@ -825,8 +818,8 @@ static bool verifyInstructions(VerifierData* vdata)
     const Method* meth = vdata->method;
     const DvmDex* pDvmDex = meth->clazz->pDvmDex;
     InsnFlags* insnFlags = vdata->insnFlags;
-    const InstructionFormat* formatTable = gDvm.instrFormat;
-    const InstructionFlags* flagTable = gDvm.instrFlags;
+    const InstructionInfoTables* infoTables = &gDvm.instrInfo;
+    const InstructionFlags* flagTable = gDvm.instrInfo.flags;
     const u2* insns = meth->insns;
     unsigned int codeOffset;
 
@@ -841,7 +834,7 @@ static bool verifyInstructions(VerifierData* vdata)
         DecodedInstruction decInsn;
         bool okay = true;
 
-        dexDecodeInstruction(formatTable, meth->insns + codeOffset, &decInsn);
+        dexDecodeInstruction(infoTables, meth->insns + codeOffset, &decInsn);
 
         /*
          * Check register, type, class, field, method, and string indices
