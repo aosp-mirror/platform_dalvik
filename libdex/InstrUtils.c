@@ -1577,6 +1577,42 @@ void dexDecodeInstruction(const InstructionInfoTables* info, const u2* insns,
         pDec->vA = INST_AA(inst);
         pDec->vB_wide = FETCH_u4(1) | ((u8) FETCH_u4(3) << 32);
         break;
+    case kFmt33x:       // exop vAA, vBB, vCCCC
+        pDec->vA = FETCH(1) & 0xff;
+        pDec->vB = FETCH(1) >> 8;
+        pDec->vC = FETCH(2);
+        break;
+    case kFmt32s:       // exop vAA, vBB, #+CCCC
+        pDec->vA = FETCH(1) & 0xff;
+        pDec->vB = FETCH(1) >> 8;
+        pDec->vC = (s2) FETCH(2);                   // sign-extend 16-bit value
+        break;
+    case kFmt41c:       // exop vAAAA, thing@BBBBBBBB
+        /*
+         * The order of fields for this format in the spec is {B, A},
+         * to match formats 21c and 31c.
+         */
+        pDec->vB = FETCH_u4(1);                     // 32-bit value
+        pDec->vA = FETCH(3);
+        break;
+    case kFmt52c:       // exop vAAAA, vBBBB, thing@CCCCCCCC
+        /*
+         * The order of fields for this format in the spec is {C, A, B},
+         * to match formats 22c and 22cs.
+         */
+        pDec->vC = FETCH_u4(1);                     // 32-bit value
+        pDec->vA = FETCH(3);
+        pDec->vB = FETCH(4);
+        break;
+    case kFmt5rc:       // exop {vCCCC .. v(CCCC+AAAA-1)}, meth@BBBBBBBB
+        /*
+         * The order of fields for this format in the spec is {B, A, C},
+         * to match formats 3rc and friends.
+         */
+        pDec->vB = FETCH_u4(1);                     // 32-bit value
+        pDec->vA = FETCH(3);
+        pDec->vC = FETCH(4);
+        break;
     default:
         LOGW("Can't decode unexpected format %d (op=%d)\n", format, opCode);
         assert(false);
