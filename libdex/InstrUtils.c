@@ -1241,7 +1241,7 @@ InstructionIndexType* dexCreateInstrIndexTypeTable(void)
         case OP_NEW_ARRAY:
         case OP_FILLED_NEW_ARRAY:
         case OP_FILLED_NEW_ARRAY_RANGE:
-            indexType = kIndexClassRef;
+            indexType = kIndexTypeRef;
             break;
         case OP_SGET:
         case OP_SGET_WIDE:

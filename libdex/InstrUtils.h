@@ -85,7 +85,7 @@ enum InstructionIndexType {
     kIndexUnknown = 0,
     kIndexNone,         // has no index
     kIndexVaries,       // "It depends." Used for throw-verification-error
-    kIndexClassRef,     // class reference index
+    kIndexTypeRef,      // type reference index
     kIndexStringRef,    // string reference index
     kIndexMethodRef,    // method reference index
     kIndexFieldRef,     // field reference index

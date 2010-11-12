@@ -766,8 +766,8 @@ static char* indexString(DexFile* pDexFile,
         outSize = snprintf(buf, bufSize, "<index-varies> // thing@%0*x",
                 width, index);
         break;
-    case kIndexClassRef:
-        outSize = snprintf(buf, bufSize, "%s // class@%0*x",
+    case kIndexTypeRef:
+        outSize = snprintf(buf, bufSize, "%s // type@%0*x",
                 getClassDescriptor(pDexFile, index), width, index);
         break;
     case kIndexStringRef:
