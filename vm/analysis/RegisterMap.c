@@ -256,14 +256,15 @@ RegisterMap* dvmGenerateRegisterMapV(VerifierData* vdata)
     mapData = pMap->data;
     for (i = 0; i < (int) vdata->insnsSize; i++) {
         if (dvmInsnIsGcPoint(vdata->insnFlags, i)) {
-            assert(vdata->addrRegs[i] != NULL);
+            assert(vdata->registerLines[i].regTypes != NULL);
             if (format == kRegMapFormatCompact8) {
                 *mapData++ = i;
             } else /*kRegMapFormatCompact16*/ {
                 *mapData++ = i & 0xff;
                 *mapData++ = i >> 8;
             }
-            outputTypeVector(vdata->addrRegs[i], vdata->insnRegCount, mapData);
+            outputTypeVector(vdata->registerLines[i].regTypes,
+                vdata->insnRegCount, mapData);
             mapData += regWidth;
         }
     }
@@ -508,7 +509,7 @@ static bool verifyMap(VerifierData* vdata, const RegisterMap* pMap)
             dvmAbort();
         }
 
-        const RegType* regs = vdata->addrRegs[addr];
+        const RegType* regs = vdata->registerLines[addr].regTypes;
         if (regs == NULL) {
             LOGE("GLITCH: addr %d has no data\n", addr);
             return false;
