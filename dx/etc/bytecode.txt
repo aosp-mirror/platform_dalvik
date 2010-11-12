@@ -41,275 +41,290 @@ format 35c 3rc 5rc
 
 # One line per opcode. Columns are:
 #   hex for opcode
-#   format
-#   has result register (y/n)
 #   opcode name
+#   format
+#   has result register; one of:
+#     y
+#     n
+#   index type; one of:
+#     none
+#     varies
+#     type-ref
+#     string-ref
+#     method-ref
+#     field-ref
+#     inline-method
+#     vtable-offset
+#     field-offset
+#   flags; pipe-combined combo of one or more of:
+#     optimized     -- optimized; not to be included in unoptimized dex files
+#     branch        -- might branch to an address
+#     continue      -- might continue to the next address in sequence
+#     switch        -- is a switch
+#     unconditional -- is an unconditional branch
+#     throw         -- might throw an exception
+#     return        -- is a return from method
+#     invoke        -- is a method invoke
 
-op 00 10x n nop
-op 01 12x y move
-op 02 22x y move/from16
-op 03 32x y move/16
-op 04 12x y move-wide
-op 05 22x y move-wide/from16
-op 06 32x y move-wide/16
-op 07 12x y move-object
-op 08 22x y move-object/from16
-op 09 32x y move-object/16
-op 0a 11x y move-result
-op 0b 11x y move-result-wide
-op 0c 11x y move-result-object
-op 0d 11x y move-exception
-op 0e 10x n return-void
-op 0f 11x n return
-op 10 11x n return-wide
-op 11 11x n return-object
-op 12 11n y const/4
-op 13 21s y const/16
-op 14 31i y const
-op 15 21h y const/high16
-op 16 21s y const-wide/16
-op 17 31i y const-wide/32
-op 18 51l y const-wide
-op 19 21h y const-wide/high16
-op 1a 21c y const-string
-op 1b 31c y const-string/jumbo
-op 1c 21c y const-class
-op 1d 11x n monitor-enter
-op 1e 11x n monitor-exit
-op 1f 21c y check-cast
-op 20 22c y instance-of
-op 21 12x y array-length
-op 22 21c y new-instance
-op 23 22c y new-array
-op 24 35c n filled-new-array
-op 25 3rc n filled-new-array/range
-op 26 31t n fill-array-data
-op 27 11x n throw
-op 28 10t n goto
-op 29 20t n goto/16
-op 2a 30t n goto/32
-op 2b 31t n packed-switch
-op 2c 31t n sparse-switch
-op 2d 23x y cmpl-float
-op 2e 23x y cmpg-float
-op 2f 23x y cmpl-double
-op 30 23x y cmpg-double
-op 31 23x y cmp-long
-op 32 22t n if-eq
-op 33 22t n if-ne
-op 34 22t n if-lt
-op 35 22t n if-ge
-op 36 22t n if-gt
-op 37 22t n if-le
-op 38 21t n if-eqz
-op 39 21t n if-nez
-op 3a 21t n if-ltz
-op 3b 21t n if-gez
-op 3c 21t n if-gtz
-op 3d 21t n if-lez
-# unused: op 3e
-# unused: op 3f
-# unused: op 40
-# unused: op 41
-# unused: op 42
-# unused: op 43
-op 44 23x y aget
-op 45 23x y aget-wide
-op 46 23x y aget-object
-op 47 23x y aget-boolean
-op 48 23x y aget-byte
-op 49 23x y aget-char
-op 4a 23x y aget-short
-op 4b 23x n aput
-op 4c 23x n aput-wide
-op 4d 23x n aput-object
-op 4e 23x n aput-boolean
-op 4f 23x n aput-byte
-op 50 23x n aput-char
-op 51 23x n aput-short
-op 52 22c y iget
-op 53 22c y iget-wide
-op 54 22c y iget-object
-op 55 22c y iget-boolean
-op 56 22c y iget-byte
-op 57 22c y iget-char
-op 58 22c y iget-short
-op 59 22c n iput
-op 5a 22c n iput-wide
-op 5b 22c n iput-object
-op 5c 22c n iput-boolean
-op 5d 22c n iput-byte
-op 5e 22c n iput-char
-op 5f 22c n iput-short
-op 60 21c y sget
-op 61 21c y sget-wide
-op 62 21c y sget-object
-op 63 21c y sget-boolean
-op 64 21c y sget-byte
-op 65 21c y sget-char
-op 66 21c y sget-short
-op 67 21c n sput
-op 68 21c n sput-wide
-op 69 21c n sput-object
-op 6a 21c n sput-boolean
-op 6b 21c n sput-byte
-op 6c 21c n sput-char
-op 6d 21c n sput-short
-op 6e 35c n invoke-virtual
-op 6f 35c n invoke-super
-op 70 35c n invoke-direct
-op 71 35c n invoke-static
-op 72 35c n invoke-interface
+op   00 nop                    10x  n none          continue
+op   01 move                   12x  y none          continue
+op   02 move/from16            22x  y none          continue
+op   03 move/16                32x  y none          continue
+op   04 move-wide              12x  y none          continue
+op   05 move-wide/from16       22x  y none          continue
+op   06 move-wide/16           32x  y none          continue
+op   07 move-object            12x  y none          continue
+op   08 move-object/from16     22x  y none          continue
+op   09 move-object/16         32x  y none          continue
+op   0a move-result            11x  y none          continue
+op   0b move-result-wide       11x  y none          continue
+op   0c move-result-object     11x  y none          continue
+op   0d move-exception         11x  y none          continue
+op   0e return-void            10x  n none          return
+op   0f return                 11x  n none          return
+op   10 return-wide            11x  n none          return
+op   11 return-object          11x  n none          return
+op   12 const/4                11n  y none          continue
+op   13 const/16               21s  y none          continue
+op   14 const                  31i  y none          continue
+op   15 const/high16           21h  y none          continue
+op   16 const-wide/16          21s  y none          continue
+op   17 const-wide/32          31i  y none          continue
+op   18 const-wide             51l  y none          continue
+op   19 const-wide/high16      21h  y none          continue
+op   1a const-string           21c  y string-ref    continue|throw
+op   1b const-string/jumbo     31c  y string-ref    continue|throw
+op   1c const-class            21c  y type-ref      continue|throw
+op   1d monitor-enter          11x  n none          continue|throw
+op   1e monitor-exit           11x  n none          continue|throw
+op   1f check-cast             21c  y type-ref      continue|throw
+op   20 instance-of            22c  y type-ref      continue|throw
+op   21 array-length           12x  y none          continue|throw
+op   22 new-instance           21c  y type-ref      continue|throw
+op   23 new-array              22c  y type-ref      continue|throw
+op   24 filled-new-array       35c  n type-ref      continue|throw
+op   25 filled-new-array/range 3rc  n type-ref      continue|throw
+op   26 fill-array-data        31t  n none          continue
+op   27 throw                  11x  n none          throw
+op   28 goto                   10t  n none          branch|unconditional
+op   29 goto/16                20t  n none          branch|unconditional
+op   2a goto/32                30t  n none          branch|unconditional
+op   2b packed-switch          31t  n none          continue|switch
+op   2c sparse-switch          31t  n none          continue|switch
+op   2d cmpl-float             23x  y none          continue
+op   2e cmpg-float             23x  y none          continue
+op   2f cmpl-double            23x  y none          continue
+op   30 cmpg-double            23x  y none          continue
+op   31 cmp-long               23x  y none          continue
+op   32 if-eq                  22t  n none          continue|branch
+op   33 if-ne                  22t  n none          continue|branch
+op   34 if-lt                  22t  n none          continue|branch
+op   35 if-ge                  22t  n none          continue|branch
+op   36 if-gt                  22t  n none          continue|branch
+op   37 if-le                  22t  n none          continue|branch
+op   38 if-eqz                 21t  n none          continue|branch
+op   39 if-nez                 21t  n none          continue|branch
+op   3a if-ltz                 21t  n none          continue|branch
+op   3b if-gez                 21t  n none          continue|branch
+op   3c if-gtz                 21t  n none          continue|branch
+op   3d if-lez                 21t  n none          continue|branch
+# unused: op 3e..43
+op   44 aget                   23x  y none          continue|throw
+op   45 aget-wide              23x  y none          continue|throw
+op   46 aget-object            23x  y none          continue|throw
+op   47 aget-boolean           23x  y none          continue|throw
+op   48 aget-byte              23x  y none          continue|throw
+op   49 aget-char              23x  y none          continue|throw
+op   4a aget-short             23x  y none          continue|throw
+op   4b aput                   23x  n none          continue|throw
+op   4c aput-wide              23x  n none          continue|throw
+op   4d aput-object            23x  n none          continue|throw
+op   4e aput-boolean           23x  n none          continue|throw
+op   4f aput-byte              23x  n none          continue|throw
+op   50 aput-char              23x  n none          continue|throw
+op   51 aput-short             23x  n none          continue|throw
+op   52 iget                   22c  y field-ref     continue|throw
+op   53 iget-wide              22c  y field-ref     continue|throw
+op   54 iget-object            22c  y field-ref     continue|throw
+op   55 iget-boolean           22c  y field-ref     continue|throw
+op   56 iget-byte              22c  y field-ref     continue|throw
+op   57 iget-char              22c  y field-ref     continue|throw
+op   58 iget-short             22c  y field-ref     continue|throw
+op   59 iput                   22c  n field-ref     continue|throw
+op   5a iput-wide              22c  n field-ref     continue|throw
+op   5b iput-object            22c  n field-ref     continue|throw
+op   5c iput-boolean           22c  n field-ref     continue|throw
+op   5d iput-byte              22c  n field-ref     continue|throw
+op   5e iput-char              22c  n field-ref     continue|throw
+op   5f iput-short             22c  n field-ref     continue|throw
+op   60 sget                   21c  y field-ref     continue|throw
+op   61 sget-wide              21c  y field-ref     continue|throw
+op   62 sget-object            21c  y field-ref     continue|throw
+op   63 sget-boolean           21c  y field-ref     continue|throw
+op   64 sget-byte              21c  y field-ref     continue|throw
+op   65 sget-char              21c  y field-ref     continue|throw
+op   66 sget-short             21c  y field-ref     continue|throw
+op   67 sput                   21c  n field-ref     continue|throw
+op   68 sput-wide              21c  n field-ref     continue|throw
+op   69 sput-object            21c  n field-ref     continue|throw
+op   6a sput-boolean           21c  n field-ref     continue|throw
+op   6b sput-byte              21c  n field-ref     continue|throw
+op   6c sput-char              21c  n field-ref     continue|throw
+op   6d sput-short             21c  n field-ref     continue|throw
+op   6e invoke-virtual         35c  n method-ref    continue|throw|invoke
+op   6f invoke-super           35c  n method-ref    continue|throw|invoke
+op   70 invoke-direct          35c  n method-ref    continue|throw|invoke
+op   71 invoke-static          35c  n method-ref    continue|throw|invoke
+op   72 invoke-interface       35c  n method-ref    continue|throw|invoke
 # unused: op 73
-op 74 3rc n invoke-virtual/range
-op 75 3rc n invoke-super/range
-op 76 3rc n invoke-direct/range
-op 77 3rc n invoke-static/range
-op 78 3rc n invoke-interface/range
-# unused: op 79
-# unused: op 7a
-op 7b 12x y neg-int
-op 7c 12x y not-int
-op 7d 12x y neg-long
-op 7e 12x y not-long
-op 7f 12x y neg-float
-op 80 12x y neg-double
-op 81 12x y int-to-long
-op 82 12x y int-to-float
-op 83 12x y int-to-double
-op 84 12x y long-to-int
-op 85 12x y long-to-float
-op 86 12x y long-to-double
-op 87 12x y float-to-int
-op 88 12x y float-to-long
-op 89 12x y float-to-double
-op 8a 12x y double-to-int
-op 8b 12x y double-to-long
-op 8c 12x y double-to-float
-op 8d 12x y int-to-byte
-op 8e 12x y int-to-char
-op 8f 12x y int-to-short
-op 90 23x y add-int
-op 91 23x y sub-int
-op 92 23x y mul-int
-op 93 23x y div-int
-op 94 23x y rem-int
-op 95 23x y and-int
-op 96 23x y or-int
-op 97 23x y xor-int
-op 98 23x y shl-int
-op 99 23x y shr-int
-op 9a 23x y ushr-int
-op 9b 23x y add-long
-op 9c 23x y sub-long
-op 9d 23x y mul-long
-op 9e 23x y div-long
-op 9f 23x y rem-long
-op a0 23x y and-long
-op a1 23x y or-long
-op a2 23x y xor-long
-op a3 23x y shl-long
-op a4 23x y shr-long
-op a5 23x y ushr-long
-op a6 23x y add-float
-op a7 23x y sub-float
-op a8 23x y mul-float
-op a9 23x y div-float
-op aa 23x y rem-float
-op ab 23x y add-double
-op ac 23x y sub-double
-op ad 23x y mul-double
-op ae 23x y div-double
-op af 23x y rem-double
-op b0 12x y add-int/2addr
-op b1 12x y sub-int/2addr
-op b2 12x y mul-int/2addr
-op b3 12x y div-int/2addr
-op b4 12x y rem-int/2addr
-op b5 12x y and-int/2addr
-op b6 12x y or-int/2addr
-op b7 12x y xor-int/2addr
-op b8 12x y shl-int/2addr
-op b9 12x y shr-int/2addr
-op ba 12x y ushr-int/2addr
-op bb 12x y add-long/2addr
-op bc 12x y sub-long/2addr
-op bd 12x y mul-long/2addr
-op be 12x y div-long/2addr
-op bf 12x y rem-long/2addr
-op c0 12x y and-long/2addr
-op c1 12x y or-long/2addr
-op c2 12x y xor-long/2addr
-op c3 12x y shl-long/2addr
-op c4 12x y shr-long/2addr
-op c5 12x y ushr-long/2addr
-op c6 12x y add-float/2addr
-op c7 12x y sub-float/2addr
-op c8 12x y mul-float/2addr
-op c9 12x y div-float/2addr
-op ca 12x y rem-float/2addr
-op cb 12x y add-double/2addr
-op cc 12x y sub-double/2addr
-op cd 12x y mul-double/2addr
-op ce 12x y div-double/2addr
-op cf 12x y rem-double/2addr
-op d0 22s y add-int/lit16
-op d1 22s y rsub-int
-op d2 22s y mul-int/lit16
-op d3 22s y div-int/lit16
-op d4 22s y rem-int/lit16
-op d5 22s y and-int/lit16
-op d6 22s y or-int/lit16
-op d7 22s y xor-int/lit16
-op d8 22b y add-int/lit8
-op d9 22b y rsub-int/lit8
-op da 22b y mul-int/lit8
-op db 22b y div-int/lit8
-op dc 22b y rem-int/lit8
-op dd 22b y and-int/lit8
-op de 22b y or-int/lit8
-op df 22b y xor-int/lit8
-op e0 22b y shl-int/lit8
-op e1 22b y shr-int/lit8
-op e2 22b y ushr-int/lit8
+op   74 invoke-virtual/range   3rc  n method-ref    continue|throw|invoke
+op   75 invoke-super/range     3rc  n method-ref    continue|throw|invoke
+op   76 invoke-direct/range    3rc  n method-ref    continue|throw|invoke
+op   77 invoke-static/range    3rc  n method-ref    continue|throw|invoke
+op   78 invoke-interface/range 3rc  n method-ref    continue|throw|invoke
+# unused: op 79..7a
+op   7b neg-int                12x  y none          continue
+op   7c not-int                12x  y none          continue
+op   7d neg-long               12x  y none          continue
+op   7e not-long               12x  y none          continue
+op   7f neg-float              12x  y none          continue
+op   80 neg-double             12x  y none          continue
+op   81 int-to-long            12x  y none          continue
+op   82 int-to-float           12x  y none          continue
+op   83 int-to-double          12x  y none          continue
+op   84 long-to-int            12x  y none          continue
+op   85 long-to-float          12x  y none          continue
+op   86 long-to-double         12x  y none          continue
+op   87 float-to-int           12x  y none          continue
+op   88 float-to-long          12x  y none          continue
+op   89 float-to-double        12x  y none          continue
+op   8a double-to-int          12x  y none          continue
+op   8b double-to-long         12x  y none          continue
+op   8c double-to-float        12x  y none          continue
+op   8d int-to-byte            12x  y none          continue
+op   8e int-to-char            12x  y none          continue
+op   8f int-to-short           12x  y none          continue
+op   90 add-int                23x  y none          continue
+op   91 sub-int                23x  y none          continue
+op   92 mul-int                23x  y none          continue
+op   93 div-int                23x  y none          continue|throw
+op   94 rem-int                23x  y none          continue|throw
+op   95 and-int                23x  y none          continue
+op   96 or-int                 23x  y none          continue
+op   97 xor-int                23x  y none          continue
+op   98 shl-int                23x  y none          continue
+op   99 shr-int                23x  y none          continue
+op   9a ushr-int               23x  y none          continue
+op   9b add-long               23x  y none          continue
+op   9c sub-long               23x  y none          continue
+op   9d mul-long               23x  y none          continue
+op   9e div-long               23x  y none          continue|throw
+op   9f rem-long               23x  y none          continue|throw
+op   a0 and-long               23x  y none          continue
+op   a1 or-long                23x  y none          continue
+op   a2 xor-long               23x  y none          continue
+op   a3 shl-long               23x  y none          continue
+op   a4 shr-long               23x  y none          continue
+op   a5 ushr-long              23x  y none          continue
+op   a6 add-float              23x  y none          continue
+op   a7 sub-float              23x  y none          continue
+op   a8 mul-float              23x  y none          continue
+op   a9 div-float              23x  y none          continue
+op   aa rem-float              23x  y none          continue
+op   ab add-double             23x  y none          continue
+op   ac sub-double             23x  y none          continue
+op   ad mul-double             23x  y none          continue
+op   ae div-double             23x  y none          continue
+op   af rem-double             23x  y none          continue
+op   b0 add-int/2addr          12x  y none          continue
+op   b1 sub-int/2addr          12x  y none          continue
+op   b2 mul-int/2addr          12x  y none          continue
+op   b3 div-int/2addr          12x  y none          continue|throw
+op   b4 rem-int/2addr          12x  y none          continue|throw
+op   b5 and-int/2addr          12x  y none          continue
+op   b6 or-int/2addr           12x  y none          continue
+op   b7 xor-int/2addr          12x  y none          continue
+op   b8 shl-int/2addr          12x  y none          continue
+op   b9 shr-int/2addr          12x  y none          continue
+op   ba ushr-int/2addr         12x  y none          continue
+op   bb add-long/2addr         12x  y none          continue
+op   bc sub-long/2addr         12x  y none          continue
+op   bd mul-long/2addr         12x  y none          continue
+op   be div-long/2addr         12x  y none          continue|throw
+op   bf rem-long/2addr         12x  y none          continue|throw
+op   c0 and-long/2addr         12x  y none          continue
+op   c1 or-long/2addr          12x  y none          continue
+op   c2 xor-long/2addr         12x  y none          continue
+op   c3 shl-long/2addr         12x  y none          continue
+op   c4 shr-long/2addr         12x  y none          continue
+op   c5 ushr-long/2addr        12x  y none          continue
+op   c6 add-float/2addr        12x  y none          continue
+op   c7 sub-float/2addr        12x  y none          continue
+op   c8 mul-float/2addr        12x  y none          continue
+op   c9 div-float/2addr        12x  y none          continue
+op   ca rem-float/2addr        12x  y none          continue
+op   cb add-double/2addr       12x  y none          continue
+op   cc sub-double/2addr       12x  y none          continue
+op   cd mul-double/2addr       12x  y none          continue
+op   ce div-double/2addr       12x  y none          continue
+op   cf rem-double/2addr       12x  y none          continue
+op   d0 add-int/lit16          22s  y none          continue
+op   d1 rsub-int               22s  y none          continue
+op   d2 mul-int/lit16          22s  y none          continue
+op   d3 div-int/lit16          22s  y none          continue|throw
+op   d4 rem-int/lit16          22s  y none          continue|throw
+op   d5 and-int/lit16          22s  y none          continue
+op   d6 or-int/lit16           22s  y none          continue
+op   d7 xor-int/lit16          22s  y none          continue
+op   d8 add-int/lit8           22b  y none          continue
+op   d9 rsub-int/lit8          22b  y none          continue
+op   da mul-int/lit8           22b  y none          continue
+op   db div-int/lit8           22b  y none          continue|throw
+op   dc rem-int/lit8           22b  y none          continue|throw
+op   dd and-int/lit8           22b  y none          continue
+op   de or-int/lit8            22b  y none          continue
+op   df xor-int/lit8           22b  y none          continue
+op   e0 shl-int/lit8           22b  y none          continue
+op   e1 shr-int/lit8           22b  y none          continue
+op   e2 ushr-int/lit8          22b  y none          continue
 # unused: op e3..fe
-op 00ff 41c y const-class/jumbo
-op 01ff 41c n check-cast/jumbo
-op 02ff 52c y instance-of/jumbo
-op 03ff 41c y new-instance/jumbo
-op 04ff 52c y new-array/jumbo
-op 05ff 5rc n filled-new-array/jumbo
-op 06ff 52c y iget/jumbo
-op 07ff 52c y iget-wide/jumbo
-op 08ff 52c y iget-object/jumbo
-op 09ff 52c y iget-boolean/jumbo
-op 0aff 52c y iget-byte/jumbo
-op 0bff 52c y iget-char/jumbo
-op 0cff 52c y iget-short/jumbo
-op 0dff 52c n iput/jumbo
-op 0eff 52c n iput-wide/jumbo
-op 0fff 52c n iput-object/jumbo
-op 10ff 52c n iput-boolean/jumbo
-op 11ff 52c n iput-byte/jumbo
-op 12ff 52c n iput-char/jumbo
-op 13ff 52c n iput-short/jumbo
-op 14ff 41c y sget/jumbo
-op 15ff 41c y sget-wide/jumbo
-op 16ff 41c y sget-object/jumbo
-op 17ff 41c y sget-boolean/jumbo
-op 18ff 41c y sget-byte/jumbo
-op 19ff 41c y sget-char/jumbo
-op 1aff 41c y sget-short/jumbo
-op 1bff 41c n sput/jumbo
-op 1cff 41c n sput-wide/jumbo
-op 1dff 41c n sput-object/jumbo
-op 1eff 41c n sput-boolean/jumbo
-op 1fff 41c n sput-byte/jumbo
-op 20ff 41c n sput-char/jumbo
-op 21ff 41c n sput-short/jumbo
-op 22ff 5rc n invoke-virtual/jumbo
-op 23ff 5rc n invoke-super/jumbo
-op 24ff 5rc n invoke-direct/jumbo
-op 25ff 5rc n invoke-static/jumbo
-op 26ff 5rc n invoke-interface/jumbo
+op 00ff const-class/jumbo      41c  y type-ref      continue|throw
+op 01ff check-cast/jumbo       41c  n type-ref      continue|throw
+op 02ff instance-of/jumbo      52c  y type-ref      continue|throw
+op 03ff new-instance/jumbo     41c  y type-ref      continue|throw
+op 04ff new-array/jumbo        52c  y type-ref      continue|throw
+op 05ff filled-new-array/jumbo 5rc  n type-ref      continue|throw
+op 06ff iget/jumbo             52c  y field-ref     continue|throw
+op 07ff iget-wide/jumbo        52c  y field-ref     continue|throw
+op 08ff iget-object/jumbo      52c  y field-ref     continue|throw
+op 09ff iget-boolean/jumbo     52c  y field-ref     continue|throw
+op 0aff iget-byte/jumbo        52c  y field-ref     continue|throw
+op 0bff iget-char/jumbo        52c  y field-ref     continue|throw
+op 0cff iget-short/jumbo       52c  y field-ref     continue|throw
+op 0dff iput/jumbo             52c  n field-ref     continue|throw
+op 0eff iput-wide/jumbo        52c  n field-ref     continue|throw
+op 0fff iput-object/jumbo      52c  n field-ref     continue|throw
+op 10ff iput-boolean/jumbo     52c  n field-ref     continue|throw
+op 11ff iput-byte/jumbo        52c  n field-ref     continue|throw
+op 12ff iput-char/jumbo        52c  n field-ref     continue|throw
+op 13ff iput-short/jumbo       52c  n field-ref     continue|throw
+op 14ff sget/jumbo             41c  y field-ref     continue|throw
+op 15ff sget-wide/jumbo        41c  y field-ref     continue|throw
+op 16ff sget-object/jumbo      41c  y field-ref     continue|throw
+op 17ff sget-boolean/jumbo     41c  y field-ref     continue|throw
+op 18ff sget-byte/jumbo        41c  y field-ref     continue|throw
+op 19ff sget-char/jumbo        41c  y field-ref     continue|throw
+op 1aff sget-short/jumbo       41c  y field-ref     continue|throw
+op 1bff sput/jumbo             41c  n field-ref     continue|throw
+op 1cff sput-wide/jumbo        41c  n field-ref     continue|throw
+op 1dff sput-object/jumbo      41c  n field-ref     continue|throw
+op 1eff sput-boolean/jumbo     41c  n field-ref     continue|throw
+op 1fff sput-byte/jumbo        41c  n field-ref     continue|throw
+op 20ff sput-char/jumbo        41c  n field-ref     continue|throw
+op 21ff sput-short/jumbo       41c  n field-ref     continue|throw
+op 22ff invoke-virtual/jumbo   5rc  n method-ref    continue|throw|invoke
+op 23ff invoke-super/jumbo     5rc  n method-ref    continue|throw|invoke
+op 24ff invoke-direct/jumbo    5rc  n method-ref    continue|throw|invoke
+op 25ff invoke-static/jumbo    5rc  n method-ref    continue|throw|invoke
+op 26ff invoke-interface/jumbo 5rc  n method-ref    continue|throw|invoke
 # unused: op 27ff..ffff
