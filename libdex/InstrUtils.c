@@ -25,8 +25,7 @@
 /*
  * Generate a table that holds the width of all instructions.
  *
- * Standard instructions have positive values, optimizer instructions
- * have negative values, unimplemented instructions have a width of zero.
+ * Unimplemented instructions have a width of zero.
  *
  * I'm doing it with a giant switch statement because it's easier to
  * maintain and update than a static table with 256 unadorned integers,
@@ -35,9 +34,6 @@
  *
  * (To save space in the binary we could generate a static table with a
  * command-line utility.)
- *
- * TODO: it doesn't look like we're using the negative values anymore.
- * Consider switching to only positive values.
  */
 InstructionWidth* dexCreateInstrWidthTable(void)
 {
@@ -288,11 +284,10 @@ InstructionWidth* dexCreateInstrWidthTable(void)
             break;
 
         /*
-         * Optimized instructions.  We return negative size values for these
-         * to distinguish them.
+         * Optimized instructions.
          */
         case OP_RETURN_VOID_BARRIER:
-            width = -1;
+            width = 1;
             break;
         case OP_IGET_QUICK:
         case OP_IGET_WIDE_QUICK:
@@ -313,7 +308,7 @@ InstructionWidth* dexCreateInstrWidthTable(void)
         case OP_SGET_WIDE_VOLATILE:
         case OP_SPUT_WIDE_VOLATILE:
         case OP_THROW_VERIFICATION_ERROR:
-            width = -2;
+            width = 2;
             break;
         case OP_INVOKE_VIRTUAL_QUICK:
         case OP_INVOKE_VIRTUAL_QUICK_RANGE:
@@ -322,7 +317,7 @@ InstructionWidth* dexCreateInstrWidthTable(void)
         case OP_EXECUTE_INLINE:
         case OP_EXECUTE_INLINE_RANGE:
         case OP_INVOKE_DIRECT_EMPTY:
-            width = -3;
+            width = 3;
             break;
 
         /* these should never appear when scanning bytecode */
@@ -1628,7 +1623,7 @@ bail:
  * works for special OP_NOP entries, including switch statement data tables
  * and array data.
  */
-size_t dexGetInstrOrTableWidthAbs(const InstructionWidth* widths,
+size_t dexGetInstrOrTableWidth(const InstructionWidth* widths,
     const u2* insns)
 {
     size_t width;
@@ -1642,7 +1637,7 @@ size_t dexGetInstrOrTableWidthAbs(const InstructionWidth* widths,
         u4 len = insns[2] | (((u4)insns[3]) << 16);
         width = 4 + (elemWidth * len + 1) / 2;
     } else {
-        width = dexGetInstrWidthAbs(widths, INST_INST(insns[0]));
+        width = dexGetInstrWidth(widths, INST_INST(insns[0]));
     }
     return width;
 }

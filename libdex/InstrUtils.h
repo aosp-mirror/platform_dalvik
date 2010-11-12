@@ -108,9 +108,9 @@ typedef struct DecodedInstruction {
 } DecodedInstruction;
 
 /*
- * Instruction width, a value in the range -3 to 5.
+ * Instruction width, a value in the range 0 to 5.
  */
-typedef signed char InstructionWidth;
+typedef unsigned char InstructionWidth;
 
 /*
  * Instruction flags, used by the verifier and JIT to determine where
@@ -147,16 +147,11 @@ InstructionWidth* dexCreateInstrWidthTable(void);
 /*
  * Return the width of the specified instruction, or 0 if not defined.
  */
-DEX_INLINE size_t dexGetInstrWidthAbs(const InstructionWidth* widths,
+DEX_INLINE size_t dexGetInstrWidth(const InstructionWidth* widths,
     OpCode opCode)
 {
     //assert(/*opCode >= 0 &&*/ opCode < kNumDalvikInstructions);
-
-    int val = widths[opCode];
-    if (val < 0)
-        val = -val;
-    /* XXX - the no-compare trick may be a cycle slower on ARM */
-    return val;
+    return widths[opCode];
 }
 
 /*
@@ -164,7 +159,7 @@ DEX_INLINE size_t dexGetInstrWidthAbs(const InstructionWidth* widths,
  * works for special OP_NOP entries, including switch statement data tables
  * and array data.
  */
-size_t dexGetInstrOrTableWidthAbs(const InstructionWidth* widths,
+size_t dexGetInstrOrTableWidth(const InstructionWidth* widths,
     const u2* insns);
 
 /*

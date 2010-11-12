@@ -112,8 +112,7 @@ static bool computeCodeWidths(const Method* meth, InsnFlags* insnFlags,
 
 
     for (i = 0; i < (int) insnCount; /**/) {
-        size_t width =
-            dexGetInstrOrTableWidthAbs(gDvm.instrInfo.widths, insns);
+        size_t width = dexGetInstrOrTableWidth(gDvm.instrInfo.widths, insns);
         if (width == 0) {
             LOG_VFY_METH(meth,
                 "VFY: invalid post-opt instruction (0x%04x)\n", *insns);

@@ -2456,8 +2456,6 @@ static void updateRegisters(const Method* meth, InsnFlags* insnFlags,
         bool changed = false;
         int i;
 
-        assert(dvmInsnIsBranchTarget(insnFlags, nextInsn));
-
         for (i = 0; i < insnRegCount + kExtraRegs; i++) {
             targetRegs[i] = mergeTypes(targetRegs[i], workRegs[i], &changed);
         }
