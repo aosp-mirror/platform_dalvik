@@ -61,7 +61,6 @@ format 35c 3rc 5rc
 #     branch        -- might branch to an address
 #     continue      -- might continue to the next address in sequence
 #     switch        -- is a switch
-#     unconditional -- is an unconditional branch
 #     throw         -- might throw an exception
 #     return        -- is a return from method
 #     invoke        -- is a method invoke
@@ -106,9 +105,9 @@ op   24 filled-new-array       35c  n type-ref      continue|throw
 op   25 filled-new-array/range 3rc  n type-ref      continue|throw
 op   26 fill-array-data        31t  n none          continue
 op   27 throw                  11x  n none          throw
-op   28 goto                   10t  n none          branch|unconditional
-op   29 goto/16                20t  n none          branch|unconditional
-op   2a goto/32                30t  n none          branch|unconditional
+op   28 goto                   10t  n none          branch
+op   29 goto/16                20t  n none          branch
+op   2a goto/32                30t  n none          branch
 op   2b packed-switch          31t  n none          continue|switch
 op   2c sparse-switch          31t  n none          continue|switch
 op   2d cmpl-float             23x  y none          continue
