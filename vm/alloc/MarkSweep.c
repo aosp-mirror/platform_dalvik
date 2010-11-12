@@ -525,7 +525,7 @@ static void processMarkStack(GcMarkContext *ctx)
     GcMarkStack *stack;
 
     assert(ctx != NULL);
-    ctx->finger = (void *)ULONG_MAX;
+    assert(ctx->finger == (void *)ULONG_MAX);
     stack = &ctx->stack;
     assert(stack->top >= stack->base);
     while (stack->top > stack->base) {
@@ -733,6 +733,8 @@ void dvmHeapScanMarkedObjects(void)
      * Walk across the bitmaps and scan each object.
      */
     dvmHeapBitmapScanWalk(ctx->bitmap, scanBitmapCallback, ctx);
+
+    ctx->finger = (void *)ULONG_MAX;
 
     /* We've walked the mark bitmaps.  Scan anything that's
      * left on the mark stack.
