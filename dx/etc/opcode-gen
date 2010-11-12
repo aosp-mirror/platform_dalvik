@@ -60,6 +60,8 @@ awk -v "bytecodeFile=$bytecodeFile" '
 
 BEGIN {
     MAX_OPCODE = 65535;
+    initIndexTypes();
+    initFlags();
     readBytecodes();
     deriveOpcodeChains();
     consumeUntil = "";
@@ -116,7 +118,7 @@ consumeUntil != "" {
                "            DalvOps.%s, Form%s.THE_ONE, %s,\n" \
                "            \"%s\");\n\n",
                uppername[i], uppername[i], family[i], nextOp, format[i],
-               hasres[i], name[i]);
+               hasResult[i], name[i]);
     }
 
     next;
@@ -181,15 +183,20 @@ function readBytecodes(i, parts, line, cmd, status, count) {
 function defineOpcode(line, count, parts, idx) {
     # locals: count, parts, idx
     count = split(line, parts);
-    if (count != 4)  return -1;
+    if (count != 6)  return -1;
     idx = parseHex(parts[1]);
     if (idx < 0) return -1;
 
+    # Extract directly specified values from the line.
     hex[idx] = parts[1];
-    format[idx] = parts[2];
-    hasres[idx] = (parts[3] == "n") ? "false" : "true";
-    name[idx] = parts[4];
-    uppername[idx] = toupper(parts[4]);
+    name[idx] = parts[2];
+    format[idx] = parts[3];
+    hasResult[idx] = (parts[4] == "n") ? "false" : "true";
+    indexType[idx] = parts[5];
+    flags[idx] = parts[6];
+
+    # Calculate derived values.
+    uppername[idx] = toupper(name[idx]);
     gsub("[---/]", "_", uppername[idx]);
     split(name[idx], parts, "/");
     family[idx] = toupper(parts[1]);
@@ -198,8 +205,20 @@ function defineOpcode(line, count, parts, idx) {
     # This association is used when computing "next" opcodes.
     familyFormat[family[idx],format[idx]] = idx;
 
+    # Verify values.
+
     if (nextFormat[format[idx]] == "") {
         printf("unknown format: %s\n", format[idx]);
+        return 1;
+    }
+
+    if (indexTypeValues[indexType[idx]] == "") {
+        printf("unknown index type: %s\n", indexType[idx]);
+        return 1;
+    }
+
+    if (flagsToC(flags[idx]) == "") {
+        printf("bogus flags: %s\n", flags[idx]);
         return 1;
     }
 
@@ -284,6 +303,54 @@ function parseHex(hex, result, chars, count, c, i) {
         }
         result = (result * 16) + c - 1;
     }
+    return result;
+}
+
+# Initialize the indexTypes data.
+function initIndexTypes() {
+    indexTypeValues["unknown"]       = "kIndexUnknown";
+    indexTypeValues["none"]          = "kIndexNone";
+    indexTypeValues["varies"]        = "kIndexVaries";
+    indexTypeValues["type-ref"]      = "kIndexTypeRef";
+    indexTypeValues["string-ref"]    = "kIndexStringRef";
+    indexTypeValues["method-ref"]    = "kIndexMethodRef";
+    indexTypeValues["field-ref"]     = "kIndexFieldRef";
+    indexTypeValues["inline-method"] = "kIndexInlineMethod";
+    indexTypeValues["vtable-offset"] = "kIndexVtableOffset";
+    indexTypeValues["field-offset"]  = "kIndexFieldOffset";
+}
+
+# Initialize the flags data.
+function initFlags() {
+    flagValues["branch"]        = "kInstrCanBranch";
+    flagValues["continue"]      = "kInstrCanContinue";
+    flagValues["switch"]        = "kInstrCanSwitch";
+    flagValues["unconditional"] = "kInstrUnconditional";
+    flagValues["throw"]         = "kInstrCanThrow";
+    flagValues["return"]        = "kInstrCanReturn";
+    flagValues["invoke"]        = "kInstrInvoke";
+    flagValues["optimized"]     = "kInstrOptimized";
+}
+
+# Translate the given flags into the equivalent C expression. Returns
+# "" on error.
+function flagsToC(f, parts, result, i) {
+    # locals: parts, result, i
+    count = split(f, parts, /\|/); # Split input at pipe characters.
+
+    for (i = 1; i <= count; i++) {
+        f = flagValues[parts[i]];
+        if (f == "") {
+            printf("bogus flag: %s\n", f);
+            return ""; # Bogus flag name.
+        }
+        if (i == 1) {
+            result = f;
+        } else {
+            result = result "|" f;
+        }
+    }
+
     return result;
 }
 ' "$file" > "$tmpfile"
