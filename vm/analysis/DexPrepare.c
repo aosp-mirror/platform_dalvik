@@ -917,11 +917,14 @@ static void verifyAndOptimizeClasses(DexFile* pDexFile, bool doVerify,
 #ifdef VERIFIER_STATS
     LOGI("Verifier stats:\n");
     LOGI(" methods examined        : %u\n", gDvm.verifierStats.methodsExamined);
+    LOGI(" monitor-enter methods   : %u\n", gDvm.verifierStats.monEnterMethods);
     LOGI(" instructions examined   : %u\n", gDvm.verifierStats.instrsExamined);
     LOGI(" instructions re-examined: %u\n", gDvm.verifierStats.instrsReexamined);
     LOGI(" copying of register sets: %u\n", gDvm.verifierStats.copyRegCount);
     LOGI(" merging of register sets: %u\n", gDvm.verifierStats.mergeRegCount);
     LOGI(" ...that caused changes  : %u\n", gDvm.verifierStats.mergeRegChanged);
+    LOGI(" uninit searches         : %u\n", gDvm.verifierStats.uninitSearches);
+    LOGI(" max memory required     : %u\n", gDvm.verifierStats.biggestAlloc);
 #endif
 }
 
