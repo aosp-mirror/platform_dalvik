@@ -34,6 +34,11 @@ progdir=`pwd`
 # Be in the parent of the progdir when running the rest of the script.
 cd ".."
 
+echo "processing DalvOps.java"
 ${progdir}/opcode-gen src/com/android/dx/dex/code/DalvOps.java
+
+echo "processing Dops.java"
 ${progdir}/opcode-gen src/com/android/dx/dex/code/Dops.java
+
+echo "processing RopToDop.java"
 ${progdir}/opcode-gen src/com/android/dx/dex/code/RopToDop.java

@@ -62,7 +62,7 @@ BEGIN {
     MAX_OPCODE = 65535;
     initIndexTypes();
     initFlags();
-    readBytecodes();
+    if (readBytecodes()) exit 1;
     deriveOpcodeChains();
     consumeUntil = "";
 }
@@ -169,8 +169,11 @@ function readBytecodes(i, parts, line, cmd, status, count) {
 
         if (status != 0) {
             printf("syntax error on line: %s\n", line);
+            return 1;
         }
     }
+
+    return 0;
 }
 
 # Define an opcode.
@@ -242,16 +245,12 @@ function deriveOpcodeChains(i, op) {
     # locals: i, op
 
     for (i = 0; i <= MAX_OPCODE; i++) {
-        if ((hex[i] == "") || (index(name[i], "unused") != 0)) {
-            continue;
-        }
+        if (isUnused(i)) continue;
         isFirst[i] = "true";
     }
 
     for (i = 0; i <= MAX_OPCODE; i++) {
-        if ((hex[i] == "") || (index(name[i], "unused") != 0)) {
-            continue;
-        }
+        if (isUnused(i)) continue;
         op = findNextOpcode(i);
         nextOpcode[i] = op;
         if (op != -1) {
