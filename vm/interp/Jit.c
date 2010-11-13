@@ -784,7 +784,7 @@ int dvmCheckJit(const u2* pc, Thread* self, InterpState* interpState,
                 interpState->jitState = kJitTSelectEnd;
             }
 
-            if (  ((flags & kInstrUnconditional) == 0) &&
+            if (!dexIsGoto(flags) &&
                   /* don't end trace on INVOKE_DIRECT_EMPTY  */
                   (decInsn.opCode != OP_INVOKE_DIRECT_EMPTY) &&
                   ((flags & (kInstrCanBranch |

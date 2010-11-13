@@ -124,7 +124,6 @@ enum InstructionFlags {
     kInstrCanThrow      = 1 << 3,   // could cause an exception to be thrown
     kInstrCanReturn     = 1 << 4,   // returns, no additional statements
     kInstrInvoke        = 1 << 5,   // a flavor of invoke
-    kInstrUnconditional = 1 << 6,   // unconditional branch
 };
 
 /*
@@ -174,6 +173,14 @@ DEX_INLINE int dexGetInstrFlags(const InstructionFlags* flags, OpCode opCode)
 {
     //assert(/*opCode >= 0 &&*/ opCode < kNumDalvikInstructions);
     return flags[opCode];
+}
+
+/*
+ * Returns true if the given flags represent a goto (unconditional branch).
+ */
+DEX_INLINE bool dexIsGoto(int flags)
+{
+    return (flags & (kInstrCanBranch | kInstrCanContinue)) == kInstrCanBranch;
 }
 
 /*

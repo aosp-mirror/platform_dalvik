@@ -586,7 +586,7 @@ InstructionFlags* dexCreateInstrFlagsTable(void)
         case OP_GOTO:
         case OP_GOTO_16:
         case OP_GOTO_32:
-            flags = kInstrCanBranch | kInstrUnconditional;
+            flags = kInstrCanBranch;
             break;
 
         /* conditional branches */

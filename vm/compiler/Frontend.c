@@ -820,7 +820,7 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
             /* For unconditional branches, request a hot chaining cell */
             } else {
 #if !defined(WITH_SELF_VERIFICATION)
-                newBB = dvmCompilerNewBB(flags & kInstrUnconditional ?
+                newBB = dvmCompilerNewBB(dexIsGoto(flags) ?
                                                   kChainingCellHot :
                                                   kChainingCellNormal);
                 newBB->startOffset = targetOffset;
@@ -830,7 +830,7 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
                     targetOffset <= curBB->lastMIRInsn->offset) {
                     newBB = dvmCompilerNewBB(kChainingCellBackwardBranch);
                 } else {
-                    newBB = dvmCompilerNewBB(flags & kInstrUnconditional ?
+                    newBB = dvmCompilerNewBB(dexIsGoto(flags) ?
                                                       kChainingCellHot :
                                                       kChainingCellNormal);
                 }
