@@ -85,7 +85,7 @@ consumeUntil != "" {
     for (i = 0; i <= MAX_OPCODE; i++) {
         if (isUnused(i) || isOptimized(i)) continue;
         printf("    public static final int %s = 0x%s;\n",
-               uppername[i], hex[i]);
+               constName[i], hex[i]);
     }
 
     next;
@@ -98,7 +98,7 @@ consumeUntil != "" {
     for (i = 0; i <= MAX_OPCODE; i++) {
         if (isUnused(i) || isOptimized(i)) continue;
         if (isFirst[i] == "true") {
-            printf("    //     DalvOps.%s\n", uppername[i]);
+            printf("    //     DalvOps.%s\n", constName[i]);
         }
     }
 
@@ -113,13 +113,13 @@ consumeUntil != "" {
         if (isUnused(i) || isOptimized(i)) continue;
 
         nextOp = nextOpcode[i];
-        nextOp = (nextOp == -1) ? "NO_NEXT" : uppername[nextOp];
+        nextOp = (nextOp == -1) ? "NO_NEXT" : constName[nextOp];
 
         printf("    public static final Dop %s =\n" \
                "        new Dop(DalvOps.%s, DalvOps.%s,\n" \
                "            DalvOps.%s, Form%s.THE_ONE, %s,\n" \
                "            \"%s\");\n\n",
-               uppername[i], uppername[i], family[i], nextOp, format[i],
+               constName[i], constName[i], family[i], nextOp, format[i],
                hasResult[i], name[i]);
     }
 
@@ -132,7 +132,7 @@ consumeUntil != "" {
 
     for (i = 0; i <= MAX_OPCODE; i++) {
         if (isUnused(i) || isOptimized(i)) continue;
-        printf("        set(%s);\n", uppername[i]);
+        printf("        set(%s);\n", constName[i]);
     }
 
     next;
@@ -143,7 +143,7 @@ consumeUntil != "" {
     print;
 
     for (i = 0; i <= MAX_LIBDEX_OPCODE; i++) {
-        printf("    OP_%-28s = 0x%02x,\n", uppernameOrUnusedByte(i), i);
+        printf("    OP_%-28s = 0x%02x,\n", constNameOrUnusedByte(i), i);
     }
 
     next;
@@ -154,8 +154,19 @@ consumeUntil != "" {
     print;
 
     for (i = 0; i <= MAX_LIBDEX_OPCODE; i++) {
-        content = sprintf("        H(OP_%s),", uppernameOrUnusedByte(i));
+        content = sprintf("        H(OP_%s),", constNameOrUnusedByte(i));
         printf("%-78s\\\n", content);
+    }
+
+    next;
+}
+
+/BEGIN\(libdex-opcode-names\)/ {
+    consumeUntil = "END(libdex-opcode-names)";
+    print;
+
+    for (i = 0; i <= MAX_LIBDEX_OPCODE; i++) {
+        printf("    \"%s\",\n", nameOrUnusedByte(i));
     }
 
     next;
@@ -219,11 +230,13 @@ function defineOpcode(line, count, parts, idx) {
     flags[idx] = parts[6];
 
     # Calculate derived values.
-    uppername[idx] = toupper(name[idx]);
-    gsub("[---/]", "_", uppername[idx]);
+    constName[idx] = toupper(name[idx]);
+    gsub("[---/]", "_", constName[idx]); # Dash and slash become underscore.
+    gsub("[+^]", "", constName[idx]);    # Plus and caret are removed.
     split(name[idx], parts, "/");
     family[idx] = toupper(parts[1]);
-    gsub("-", "_", family[idx]);
+    gsub("-", "_", family[idx]);         # Dash becomes underscore.
+    gsub("[+^]", "", family[idx]);       # Plus and caret are removed.
 
     # This association is used when computing "next" opcodes.
     familyFormat[family[idx],format[idx]] = idx;
@@ -385,26 +398,37 @@ function isOptimized(idx, parts, f) {
     return 0;
 }
 
-# Returns true if the given opcode (by index) is unused. This is true either
-# if there is no definition at all for the opcode or if there is a definition
-# and the name contains the string "unused".
-function isUnused(idx, n) {
-    # locals: n
-    n = name[idx];
-    return (n == "") || (index(n, "unused") != 0);
+# Returns true if there is no definition for given opcode (by index).
+function isUnused(idx) {
+    return (name[idx] == "");
 }
 
-# Returns the uppercase name of the given single-byte opcode (by
-# index) or the string "UNUSED_XX" (where XX is the index in hex) if
-# the opcode is unused. The odd case for this function is 255, which
-# is the first extended (two-byte) opcode. For the purposes of this
+# Returns the constant name of the given single-byte opcode (by index)
+# or the string "UNUSED_XX" (where XX is the index in hex) if the
+# opcode is unused. The odd case for this function is 255, which is
+# the first extended (two-byte) opcode. For the purposes of this
 # function, it is considered unused. (This is meant as a stop-gap
 # measure for code that is not yet prepared to deal with extended
 # opcodes.)
-function uppernameOrUnusedByte(idx, n) {
-    n = uppername[idx];
+function constNameOrUnusedByte(idx, n) {
+    n = constName[idx];
     if ((n == "") || (i == 255)) {
        return toupper(sprintf("UNUSED_%02x", idx));
+    }
+    return n;
+}
+
+# Returns the (human-oriented) name of the given single-byte opcode
+# (by index) or the string "unused-xx" (where xx is the index in hex)
+# if the opcode is unused. The odd case for this function is 255,
+# which is the first extended (two-byte) opcode. For the purposes of
+# this function, it is considered unused. (This is meant as a stop-gap
+# measure for code that is not yet prepared to deal with extended
+# opcodes.)
+function nameOrUnusedByte(idx, n) {
+    n = name[idx];
+    if ((n == "") || (i == 255)) {
+       return sprintf("unused-%02x", idx);
     }
     return n;
 }

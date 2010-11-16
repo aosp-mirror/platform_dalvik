@@ -16,25 +16,20 @@
 
 /*
  * Table of Dalvik opcode names.
+ *
+ * IMPORTANT NOTE: The contents of this file are mostly generated
+ * automatically by the opcode-gen tool. Any edits to the generated
+ * sections will get wiped out the next time the tool is run.
  */
+
 #include "OpCodeNames.h"
-
 #include <assert.h>
-
-/*
- * The following two lines work, but slashes and dashes both turn into
- * underscores, and the strings are all upper case.  The output is easier
- * to read if we do the strings by hand (could probably write a
- * post-processing function easily enough if maintenance becomes annoying).
- */
-//#define H(_op) #_op
-//DEFINE_GOTO_TABLE(gOpNames)
 
 /*
  * Dalvik opcode names.
  */
-static const char* gOpNames[256] = {
-    /* 0x00 */
+static const char* gOpNames[kNumDalvikInstructions] = {
+    // BEGIN(libdex-opcode-names); GENERATED AUTOMATICALLY BY opcode-gen
     "nop",
     "move",
     "move/from16",
@@ -51,8 +46,6 @@ static const char* gOpNames[256] = {
     "move-exception",
     "return-void",
     "return",
-
-    /* 0x10 */
     "return-wide",
     "return-object",
     "const/4",
@@ -69,8 +62,6 @@ static const char* gOpNames[256] = {
     "monitor-enter",
     "monitor-exit",
     "check-cast",
-
-    /* 0x20 */
     "instance-of",
     "array-length",
     "new-instance",
@@ -87,8 +78,6 @@ static const char* gOpNames[256] = {
     "cmpl-float",
     "cmpg-float",
     "cmpl-double",
-
-    /* 0x30 */
     "cmpg-double",
     "cmp-long",
     "if-eq",
@@ -103,14 +92,12 @@ static const char* gOpNames[256] = {
     "if-gez",
     "if-gtz",
     "if-lez",
-    "UNUSED",
-    "UNUSED",
-
-    /* 0x40 */
-    "UNUSED",
-    "UNUSED",
-    "UNUSED",
-    "UNUSED",
+    "unused-3e",
+    "unused-3f",
+    "unused-40",
+    "unused-41",
+    "unused-42",
+    "unused-43",
     "aget",
     "aget-wide",
     "aget-object",
@@ -123,8 +110,6 @@ static const char* gOpNames[256] = {
     "aput-object",
     "aput-boolean",
     "aput-byte",
-
-    /* 0x50 */
     "aput-char",
     "aput-short",
     "iget",
@@ -141,8 +126,6 @@ static const char* gOpNames[256] = {
     "iput-byte",
     "iput-char",
     "iput-short",
-
-    /* 0x60 */
     "sget",
     "sget-wide",
     "sget-object",
@@ -159,26 +142,22 @@ static const char* gOpNames[256] = {
     "sput-short",
     "invoke-virtual",
     "invoke-super",
-
-    /* 0x70 */
     "invoke-direct",
     "invoke-static",
     "invoke-interface",
-    "UNUSED",
+    "unused-73",
     "invoke-virtual/range",
     "invoke-super/range",
     "invoke-direct/range",
     "invoke-static/range",
     "invoke-interface/range",
-    "UNUSED",
-    "UNUSED",
+    "unused-79",
+    "unused-7a",
     "neg-int",
     "not-int",
     "neg-long",
     "not-long",
     "neg-float",
-
-    /* 0x80 */
     "neg-double",
     "int-to-long",
     "int-to-float",
@@ -195,8 +174,6 @@ static const char* gOpNames[256] = {
     "int-to-byte",
     "int-to-char",
     "int-to-short",
-
-    /* 0x90 */
     "add-int",
     "sub-int",
     "mul-int",
@@ -213,8 +190,6 @@ static const char* gOpNames[256] = {
     "mul-long",
     "div-long",
     "rem-long",
-
-    /* 0xa0 */
     "and-long",
     "or-long",
     "xor-long",
@@ -231,8 +206,6 @@ static const char* gOpNames[256] = {
     "mul-double",
     "div-double",
     "rem-double",
-
-    /* 0xb0 */
     "add-int/2addr",
     "sub-int/2addr",
     "mul-int/2addr",
@@ -249,8 +222,6 @@ static const char* gOpNames[256] = {
     "mul-long/2addr",
     "div-long/2addr",
     "rem-long/2addr",
-
-    /* 0xc0 */
     "and-long/2addr",
     "or-long/2addr",
     "xor-long/2addr",
@@ -267,8 +238,6 @@ static const char* gOpNames[256] = {
     "mul-double/2addr",
     "div-double/2addr",
     "rem-double/2addr",
-
-    /* 0xd0 */
     "add-int/lit16",
     "rsub-int",
     "mul-int/lit16",
@@ -285,8 +254,6 @@ static const char* gOpNames[256] = {
     "and-int/lit8",
     "or-int/lit8",
     "xor-int/lit8",
-
-    /* 0xe0 */
     "shl-int/lit8",
     "shr-int/lit8",
     "ushr-int/lit8",
@@ -299,12 +266,10 @@ static const char* gOpNames[256] = {
     "+iput-wide-volatile",
     "+sget-wide-volatile",
     "+sput-wide-volatile",
-    "^breakpoint",                  // does not appear in DEX files
-    "^throw-verification-error",    // does not appear in DEX files
+    "^breakpoint",
+    "^throw-verification-error",
     "+execute-inline",
     "+execute-inline/range",
-
-    /* 0xf0 */
     "+invoke-direct-empty",
     "+return-void-barrier",
     "+iget-quick",
@@ -320,7 +285,8 @@ static const char* gOpNames[256] = {
     "+iput-object-volatile",
     "+sget-object-volatile",
     "+sput-object-volatile",
-    "UNUSED",
+    "unused-ff",
+    // END(libdex-opcode-names)
 };
 
 /*

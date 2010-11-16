@@ -44,7 +44,6 @@
  *  - update the instruction info table generators and (if you changed an
  *    instruction format) instruction decoder in InstrUtils.c
  *  - update the instruction format list in InstrUtils.h, if necessary
- *  - update the gOpNames table in OpCodeNames.c
  *  - update the parallel definitions in the class dalvik.bytecode.Opcodes
  *
  * Interpreter:

@@ -38,3 +38,4 @@ ${progdir}/opcode-gen dx/src/com/android/dx/dex/code/DalvOps.java
 ${progdir}/opcode-gen dx/src/com/android/dx/dex/code/Dops.java
 ${progdir}/opcode-gen dx/src/com/android/dx/dex/code/RopToDop.java
 ${progdir}/opcode-gen libdex/OpCode.h
+${progdir}/opcode-gen libdex/OpCodeNames.c
