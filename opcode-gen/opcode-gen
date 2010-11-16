@@ -29,6 +29,8 @@
 file="$1"
 tmpfile="/tmp/$$.txt"
 
+echo "processing `basename $1`"
+
 if [ "x$1" = "x" ]; then
     echo "must specify a file"
     exit 1
