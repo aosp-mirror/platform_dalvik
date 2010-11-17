@@ -172,7 +172,72 @@ consumeUntil != "" {
     next;
 }
 
+/BEGIN\(libdex-widths\)/ {
+    consumeUntil = "END(libdex-widths)";
+    print;
+
+    col = 1;
+    for (i = 0; i <= MAX_LIBDEX_OPCODE; i++) {
+        value = sprintf("%d,", isUnusedByte(i) ? 0 : width[i]);
+        col = colPrint(value, (i == MAX_LIBDEX_OPCODE), col, 16, 2, "    ");
+    }
+
+    next;
+}
+
+/BEGIN\(libdex-flags\)/ {
+    consumeUntil = "END(libdex-flags)";
+    print;
+
+    for (i = 0; i <= MAX_LIBDEX_OPCODE; i++) {
+        value = flagsToC(isUnusedByte(i) ? 0 : flags[i]);
+        printf("    %s,\n", value);
+    }
+
+    next;
+}
+
+/BEGIN\(libdex-formats\)/ {
+    consumeUntil = "END(libdex-formats)";
+    print;
+
+    col = 1;
+    for (i = 0; i <= MAX_LIBDEX_OPCODE; i++) {
+        value = sprintf("kFmt%s,", isUnusedByte(i) ? "00x" : format[i]);
+        col = colPrint(value, (i == MAX_LIBDEX_OPCODE), col, 7, 9, "    ");
+    }
+
+    next;
+}
+
+/BEGIN\(libdex-index-types\)/ {
+    consumeUntil = "END(libdex-index-types)";
+    print;
+
+    col = 1;
+    for (i = 0; i <= MAX_LIBDEX_OPCODE; i++) {
+        value = isUnusedByte(i) ? "unknown" : indexType[i];
+        value = sprintf("%s,", indexTypeValues[value]);
+        col = colPrint(value, (i == MAX_LIBDEX_OPCODE), col, 3, 19, "    ");
+    }
+
+    next;
+}
+
 { print; }
+
+# Helper to print out an element in a multi-column fashion. It returns
+# the (one-based) column number that the next element will be printed
+# in.
+function colPrint(value, isLast, col, numCols, colWidth, linePrefix) {
+    isLast = (isLast || (col == numCols));
+    printf("%s%-*s%s",
+        (col == 1) ? linePrefix : " ",
+        isLast ? 1 : colWidth, value,
+        isLast ? "\n" : "");
+
+    return (col % numCols) + 1;
+}
 
 # Read the bytecode description file.
 function readBytecodes(i, parts, line, cmd, status, count) {
@@ -230,13 +295,18 @@ function defineOpcode(line, count, parts, idx) {
     flags[idx] = parts[6];
 
     # Calculate derived values.
+
     constName[idx] = toupper(name[idx]);
     gsub("[---/]", "_", constName[idx]); # Dash and slash become underscore.
     gsub("[+^]", "", constName[idx]);    # Plus and caret are removed.
     split(name[idx], parts, "/");
+
     family[idx] = toupper(parts[1]);
     gsub("-", "_", family[idx]);         # Dash becomes underscore.
     gsub("[+^]", "", family[idx]);       # Plus and caret are removed.
+
+    split(format[idx], parts, "");       # Width is the first format char.
+    width[idx] = parts[1];
 
     # This association is used when computing "next" opcodes.
     familyFormat[family[idx],format[idx]] = idx;
@@ -398,39 +468,39 @@ function isOptimized(idx, parts, f) {
     return 0;
 }
 
-# Returns true if there is no definition for given opcode (by index).
+# Returns true if there is no definition for the given opcode (by index).
 function isUnused(idx) {
     return (name[idx] == "");
 }
 
+# Returns true if there is no definition for the given opcode (by
+# index), taken as a single-byte opcode. The odd case for this
+# function is 255, which is the first extended (two-byte) opcode. For
+# the purposes of this function, it is considered unused. (This is
+# meant as a stop-gap measure for code that is not yet prepared to
+# deal with extended opcodes.)
+function isUnusedByte(idx) {
+    return (idx == 255) || (name[idx] == "");
+}
+
 # Returns the constant name of the given single-byte opcode (by index)
 # or the string "UNUSED_XX" (where XX is the index in hex) if the
-# opcode is unused. The odd case for this function is 255, which is
-# the first extended (two-byte) opcode. For the purposes of this
-# function, it is considered unused. (This is meant as a stop-gap
-# measure for code that is not yet prepared to deal with extended
-# opcodes.)
-function constNameOrUnusedByte(idx, n) {
-    n = constName[idx];
-    if ((n == "") || (i == 255)) {
+# opcode is unused. See isUnusedByte(), above, for more info.
+function constNameOrUnusedByte(idx) {
+    if (isUnusedByte(idx)) {
        return toupper(sprintf("UNUSED_%02x", idx));
     }
-    return n;
+    return constName[idx];
 }
 
 # Returns the (human-oriented) name of the given single-byte opcode
 # (by index) or the string "unused-xx" (where xx is the index in hex)
-# if the opcode is unused. The odd case for this function is 255,
-# which is the first extended (two-byte) opcode. For the purposes of
-# this function, it is considered unused. (This is meant as a stop-gap
-# measure for code that is not yet prepared to deal with extended
-# opcodes.)
-function nameOrUnusedByte(idx, n) {
-    n = name[idx];
-    if ((n == "") || (i == 255)) {
+# if the opcode is unused. See isUnusedByte(), above, for more info.
+function nameOrUnusedByte(idx) {
+    if (isUnusedByte(idx)) {
        return sprintf("unused-%02x", idx);
     }
-    return n;
+    return name[idx];
 }
 ' "$file" > "$tmpfile"
 

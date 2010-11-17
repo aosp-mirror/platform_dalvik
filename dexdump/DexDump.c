@@ -1032,7 +1032,7 @@ void dumpInstruction(DexFile* pDexFile, const DexCode* pCode, int insnIdx,
                 pDecInsn->vA, conv.d, pDecInsn->vB_wide);
         }
         break;
-    case kFmtUnknown:
+    case kFmt00x:        // unknown op or breakpoint
         break;
     default:
         printf(" ???");

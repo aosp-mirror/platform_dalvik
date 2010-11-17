@@ -38,7 +38,7 @@
  */
 typedef unsigned char InstructionFormat;
 enum InstructionFormat {
-    kFmtUnknown = 0,
+    kFmt00x = 0,    // unknown format (also used for "breakpoint" opcode)
     kFmt10x,        // op
     kFmt12x,        // op vA, vB
     kFmt11n,        // op vA, #+B

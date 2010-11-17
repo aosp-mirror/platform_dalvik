@@ -41,7 +41,7 @@ format 22t
 format 35c 3rc 5rc
 
 # Optimized formats
-format 00x  # not in spec; used for breakpoint
+format 00x  # not in spec; used for undefined opcodes and breakpoint
 format 20bc # not in spec; used for throw-verification-error
 format 22cs
 format 35mi
@@ -57,6 +57,7 @@ format 3rms
 #     y
 #     n
 #   index type; one of:
+#     unknown -- used for undefined opcodes and breakpoint
 #     none
 #     varies
 #     type-ref
@@ -311,7 +312,7 @@ op   e8 +iget-wide-volatile         22c  y field-ref     optimized|continue|thro
 op   e9 +iput-wide-volatile         22c  n field-ref     optimized|continue|throw
 op   ea +sget-wide-volatile         21c  y field-ref     optimized|continue|throw
 op   eb +sput-wide-volatile         21c  n field-ref     optimized|continue|throw
-op   ec ^breakpoint                 00x  n none          optimized|continue|throw
+op   ec ^breakpoint                 00x  n unknown       optimized
 op   ed ^throw-verification-error   20bc n varies        optimized|throw
 op   ee +execute-inline             35mi n inline-method optimized|continue|throw
 op   ef +execute-inline/range       3rmi n inline-method optimized|continue|throw
