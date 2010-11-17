@@ -3557,7 +3557,7 @@ static bool verifyInstruction(const Method* meth, InsnFlags* insnFlags,
 #ifndef NDEBUG
     memset(&decInsn, 0x81, sizeof(decInsn));
 #endif
-    dexDecodeInstruction(&gDvm.instrInfo, insns, &decInsn);
+    dexDecodeInstruction(insns, &decInsn);
 
     int nextFlags = dexGetInstrFlags(gDvm.instrInfo.flags, decInsn.opCode);
 

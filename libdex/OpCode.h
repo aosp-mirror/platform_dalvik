@@ -41,8 +41,8 @@
  *    immediately below in this file.
  *
  * Opcode definitions and attributes:
- *  - update the instruction info table generators and (if you changed an
- *    instruction format) instruction decoder in InstrUtils.c
+ *  - update the instruction decoder in InstrUtils.c if you added a new
+ *    instruction format.
  *  - update the instruction format list in InstrUtils.h, if necessary
  *  - update the parallel definitions in the class dalvik.bytecode.Opcodes
  *
