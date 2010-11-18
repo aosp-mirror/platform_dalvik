@@ -6556,21 +6556,20 @@ dvmAsmSisterStart:
      *  rINST holds object
      */
 .LOP_CHECK_CAST_fullcheck:
+    movl    %eax,sReg0                 # we'll need the desired class on failure
     movl    %eax,OUT_ARG1(%esp)
     movl    %ecx,OUT_ARG0(%esp)
-    call    dvmInstanceofNonTrivial     # eax<- boolean result
-    testl   %eax,%eax                   # failed?
-    jne     .LOP_CHECK_CAST_okay            # no, success
+    call    dvmInstanceofNonTrivial    # eax<- boolean result
+    testl   %eax,%eax                  # failed?
+    jne     .LOP_CHECK_CAST_okay           # no, success
 
-    # A cast has failed.  We need to throw a ClassCastException with the
-    # class of the object that failed to be cast.
+    # A cast has failed.  We need to throw a ClassCastException.
     EXPORT_PC
-    movl    offObject_clazz(rINST),%ecx  # ecx<- obj->clazz
-    movl    $.LstrClassCastException,%eax
-    movl    offClassObject_descriptor(%ecx),%ecx
-    movl    %eax,OUT_ARG0(%esp)     # arg0<- message
-    movl    %ecx,OUT_ARG1(%esp)     # arg1<- obj->clazz->descriptor
-    call    dvmThrowExceptionWithClassMessage
+    movl    offObject_clazz(rINST),%eax
+    movl    %eax,OUT_ARG0(%esp)                 # arg0<- obj->clazz
+    movl    sReg0,%ecx
+    movl    %ecx,OUT_ARG1(%esp)                 # arg1<- desired class
+    call    dvmThrowClassCastException
     jmp     common_exceptionThrown
 
     /*
@@ -9598,8 +9597,6 @@ common_abort:
     .asciz  "Ljava/lang/NegativeArraySizeException;"
 .LstrInstantiationError:
     .asciz  "Ljava/lang/InstantiationError;"
-.LstrClassCastException:
-    .asciz  "Ljava/lang/ClassCastException;"
 .LstrNoSuchMethodError:
     .asciz  "Ljava/lang/NoSuchMethodError;"
 .LstrInternalErrorA:

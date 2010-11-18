@@ -502,8 +502,6 @@ common_abort:
     .asciz  "Ljava/lang/NegativeArraySizeException;"
 .LstrInstantiationError:
     .asciz  "Ljava/lang/InstantiationError;"
-.LstrClassCastException:
-    .asciz  "Ljava/lang/ClassCastException;"
 .LstrNoSuchMethodError:
     .asciz  "Ljava/lang/NoSuchMethodError;"
 .LstrInternalErrorA:
