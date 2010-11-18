@@ -8149,21 +8149,20 @@ dvmAsmSisterStart:
     /*
      * Trivial test failed, need to perform full check.  This is common.
      *  r0 holds obj->clazz
-     *  r1 holds class resolved from BBBB
+     *  r1 holds desired class resolved from BBBB
      *  r9 holds object
      */
 .LOP_CHECK_CAST_fullcheck:
+    mov     r10, r1                     @ avoid ClassObject getting clobbered
     bl      dvmInstanceofNonTrivial     @ r0<- boolean result
     cmp     r0, #0                      @ failed?
     bne     .LOP_CHECK_CAST_okay            @ no, success
 
-    @ A cast has failed.  We need to throw a ClassCastException with the
-    @ class of the object that failed to be cast.
+    @ A cast has failed.  We need to throw a ClassCastException.
     EXPORT_PC()                         @ about to throw
-    ldr     r3, [r9, #offObject_clazz]  @ r3<- obj->clazz
-    ldr     r0, .LstrClassCastExceptionPtr
-    ldr     r1, [r3, #offClassObject_descriptor] @ r1<- obj->clazz->descriptor
-    bl      dvmThrowExceptionWithClassMessage
+    ldr     r0, [r9, #offObject_clazz]  @ r0<- obj->clazz (actual class)
+    mov     r1, r10                     @ r1<- desired class
+    bl      dvmThrowClassCastException
     b       common_exceptionThrown
 
     /*
@@ -8184,9 +8183,6 @@ dvmAsmSisterStart:
     mov     r1, r0                      @ r1<- class resolved from BBB
     ldr     r0, [r9, #offObject_clazz]  @ r0<- obj->clazz
     b       .LOP_CHECK_CAST_resolved        @ pick up where we left off
-
-.LstrClassCastExceptionPtr:
-    .word   .LstrClassCastException
 
 /* continuation for OP_INSTANCE_OF */
 
@@ -11072,8 +11068,6 @@ strPrintLong:
     .asciz  "Ljava/lang/ArithmeticException;"
 .LstrArrayStoreException:
     .asciz  "Ljava/lang/ArrayStoreException;"
-.LstrClassCastException:
-    .asciz  "Ljava/lang/ClassCastException;"
 .LstrDivideByZero:
     .asciz  "divide by zero"
 .LstrFilledNewArrayNotImpl:

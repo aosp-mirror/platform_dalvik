@@ -1257,8 +1257,6 @@ strPrintLong:
     .asciz  "Ljava/lang/ArithmeticException;"
 .LstrArrayStoreException:
     .asciz  "Ljava/lang/ArrayStoreException;"
-.LstrClassCastException:
-    .asciz  "Ljava/lang/ClassCastException;"
 .LstrDivideByZero:
     .asciz  "divide by zero"
 .LstrFilledNewArrayNotImpl:
