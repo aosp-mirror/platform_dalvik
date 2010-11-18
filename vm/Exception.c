@@ -1359,3 +1359,13 @@ void dvmThrowAIOOBE(int index, int length)
     dvmThrowExceptionFmt("Ljava/lang/ArrayIndexOutOfBoundsException;",
         "index=%d length=%d", index, length);
 }
+
+void dvmThrowClassCastException(ClassObject* actual, ClassObject* desired)
+{
+    char* actualClassName = dvmDescriptorToDot(actual->descriptor);
+    char* desiredClassName = dvmDescriptorToDot(desired->descriptor);
+    dvmThrowExceptionFmt("Ljava/lang/ClassCastException;", "%s cannot be cast to %s",
+        actualClassName, desiredClassName);
+    free(desiredClassName);
+    free(actualClassName);
+}
