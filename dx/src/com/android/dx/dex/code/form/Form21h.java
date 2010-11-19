@@ -97,12 +97,6 @@ public final class Form21h extends InsnFormat {
 
     /** {@inheritDoc} */
     @Override
-    public InsnFormat nextUp() {
-        return Form31i.THE_ONE;
-    }
-
-    /** {@inheritDoc} */
-    @Override
     public void writeTo(AnnotatedOutput out, DalvInsn insn) {
         RegisterSpecList regs = insn.getRegisters();
         CstLiteralBits cb = (CstLiteralBits) ((CstInsn) insn).getConstant();

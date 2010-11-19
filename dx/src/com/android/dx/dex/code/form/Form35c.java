@@ -95,12 +95,6 @@ public final class Form35c extends InsnFormat {
 
     /** {@inheritDoc} */
     @Override
-    public InsnFormat nextUp() {
-        return Form3rc.THE_ONE;
-    }
-
-    /** {@inheritDoc} */
-    @Override
     public void writeTo(AnnotatedOutput out, DalvInsn insn) {
         int cpi = ((CstInsn) insn).getIndex();
         RegisterSpecList regs = explicitize(insn.getRegisters());

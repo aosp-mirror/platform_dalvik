@@ -144,17 +144,6 @@ public abstract class InsnFormat {
     }
 
     /**
-     * Returns the next instruction format to try to match an instruction
-     * with, presuming that this instance isn't compatible, if any.
-     *
-     * <p>Subclasses must override this method.</p>
-     *
-     * @return {@code null-ok;} the next format to try, or {@code null} if
-     * there are no suitable alternatives
-     */
-    public abstract InsnFormat nextUp();
-
-    /**
      * Writes the code units for the given instruction to the given
      * output destination. The instruction must be of this instance's format.
      *

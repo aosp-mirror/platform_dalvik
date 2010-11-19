@@ -74,12 +74,6 @@ public final class Form30t extends InsnFormat {
 
     /** {@inheritDoc} */
     @Override
-    public InsnFormat nextUp() {
-        return null;
-    }
-
-    /** {@inheritDoc} */
-    @Override
     public void writeTo(AnnotatedOutput out, DalvInsn insn) {
         int offset = ((TargetInsn) insn).getTargetOffset();
 

@@ -81,12 +81,6 @@ public final class Form51l extends InsnFormat {
 
     /** {@inheritDoc} */
     @Override
-    public InsnFormat nextUp() {
-        return null;
-    }
-
-    /** {@inheritDoc} */
-    @Override
     public void writeTo(AnnotatedOutput out, DalvInsn insn) {
         RegisterSpecList regs = insn.getRegisters();
         long value =

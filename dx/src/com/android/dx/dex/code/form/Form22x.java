@@ -71,12 +71,6 @@ public final class Form22x extends InsnFormat {
 
     /** {@inheritDoc} */
     @Override
-    public InsnFormat nextUp() {
-        return Form23x.THE_ONE;
-    }
-
-    /** {@inheritDoc} */
-    @Override
     public void writeTo(AnnotatedOutput out, DalvInsn insn) {
         RegisterSpecList regs = insn.getRegisters();
         write(out,

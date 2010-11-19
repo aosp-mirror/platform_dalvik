@@ -67,12 +67,6 @@ public final class SpecialFormat extends InsnFormat {
 
     /** {@inheritDoc} */
     @Override
-    public InsnFormat nextUp() {
-        throw new RuntimeException("unsupported");
-    }
-
-    /** {@inheritDoc} */
-    @Override
     public void writeTo(AnnotatedOutput out, DalvInsn insn) {
         throw new RuntimeException("unsupported");
     }
