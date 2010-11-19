@@ -750,7 +750,7 @@ int dvmCheckJit(const u2* pc, Thread* self, InterpState* interpState,
 #if defined(SHOW_TRACE)
             LOGD("TraceGen: adding %s", dexGetOpcodeName(decInsn.opCode));
 #endif
-            flags = dexGetInstrFlags(gDvm.instrInfo.flags, decInsn.opCode);
+            flags = dexGetInstrFlags(decInsn.opCode);
             len = dexGetInstrOrTableWidth(lastPC);
             offset = lastPC - interpState->method->insns;
             assert((unsigned) offset <

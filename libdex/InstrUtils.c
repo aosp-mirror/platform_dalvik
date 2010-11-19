@@ -468,14 +468,6 @@ InstructionInfoTables gDexOpcodeInfo = {
 };
 
 /*
- * Copy pointers to all of the instruction info tables into
- * the given struct.
- */
-void dexGetInstructionInfoTables(InstructionInfoTables* info) {
-    *info = gDexOpcodeInfo;
-}
-
-/*
  * Handy macros for helping decode instructions.
  */
 #define FETCH(_offset)      (insns[(_offset)])
@@ -500,10 +492,10 @@ void dexDecodeInstruction(const u2* insns, DecodedInstruction* pDec)
 {
     u2 inst = *insns;
     OpCode opCode = (OpCode) INST_INST(inst);
-    InstructionFormat format = dexGetInstrFormat(gOpcodeFormatTable, opCode);
+    InstructionFormat format = dexGetInstrFormat(opCode);
 
     pDec->opCode = opCode;
-    pDec->indexType = dexGetInstrIndexType(gOpcodeIndexTypeTable, opCode);
+    pDec->indexType = dexGetInstrIndexType(opCode);
 
     switch (format) {
     case kFmt10x:       // op
@@ -715,7 +707,7 @@ size_t dexGetInstrOrTableWidth(const u2* insns)
         u4 len = insns[2] | (((u4)insns[3]) << 16);
         width = 4 + (elemWidth * len + 1) / 2;
     } else {
-        width = dexGetInstrWidth(gOpcodeWidthTable, INST_INST(insns[0]));
+        width = dexGetInstrWidth(INST_INST(insns[0]));
     }
     return width;
 }

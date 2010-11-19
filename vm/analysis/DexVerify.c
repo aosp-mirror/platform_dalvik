@@ -33,7 +33,7 @@ static bool verifyInstructions(VerifierData* vdata);
  */
 bool dvmVerificationStartup(void)
 {
-    dexGetInstructionInfoTables(&gDvm.instrInfo);
+    /* No need to do anything here. */
     return true;
 }
 
@@ -813,7 +813,6 @@ static bool verifyInstructions(VerifierData* vdata)
     const Method* meth = vdata->method;
     const DvmDex* pDvmDex = meth->clazz->pDvmDex;
     InsnFlags* insnFlags = vdata->insnFlags;
-    const InstructionFlags* flagTable = gDvm.instrInfo.flags;
     const u2* insns = meth->insns;
     unsigned int codeOffset;
 
@@ -1221,7 +1220,7 @@ static bool verifyInstructions(VerifierData* vdata)
         const int kGcMask = kInstrCanBranch | kInstrCanSwitch |
             kInstrCanThrow | kInstrCanReturn;
 
-        InstructionFlags opFlags = dexGetInstrFlags(flagTable, decInsn.opCode);
+        InstructionFlags opFlags = dexGetInstrFlags(decInsn.opCode);
         if ((opFlags & kGcMask) != 0) {
             /*
              * This instruction is probably a GC point.  Branch instructions

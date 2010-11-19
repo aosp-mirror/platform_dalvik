@@ -34,7 +34,7 @@ static inline int parseInsn(const u2 *codePtr, DecodedInstruction *decInsn,
     if (opcode == OP_NOP && instr != 0) {
         return 0;
     } else {
-        insnWidth = gDvm.instrInfo.widths[opcode];
+        insnWidth = dexGetInstrWidth(opcode);
         if (insnWidth < 0) {
             insnWidth = -insnWidth;
         }
@@ -205,7 +205,7 @@ static int compareMethod(const CompilerMethodStats *m1,
 static int analyzeInlineTarget(DecodedInstruction *dalvikInsn, int attributes,
                                int offset)
 {
-    int flags = dexGetInstrFlags(gDvm.instrInfo.flags, dalvikInsn->opCode);
+    int flags = dexGetInstrFlags(dalvikInsn->opCode);
     int dalvikOpCode = dalvikInsn->opCode;
 
     if ((flags & kInstrInvoke) &&
@@ -570,8 +570,7 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
         dvmCompilerAppendMIR(curBB, insn);
         cUnit.numInsts++;
 
-        int flags =
-            dexGetInstrFlags(gDvm.instrInfo.flags, insn->dalvikInsn.opCode);
+        int flags = dexGetInstrFlags(insn->dalvikInsn.opCode);
 
         if ((flags & kInstrInvoke) &&
             (insn->dalvikInsn.opCode != OP_INVOKE_DIRECT_EMPTY)) {
@@ -644,8 +643,7 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
         /* Link the taken and fallthrough blocks */
         BasicBlock *searchBB;
 
-        int flags = dexGetInstrFlags(gDvm.instrInfo.flags,
-                                     lastInsn->dalvikInsn.opCode);
+        int flags = dexGetInstrFlags(lastInsn->dalvikInsn.opCode);
 
         if (flags & kInstrInvoke) {
             cUnit.hasInvoke = true;
@@ -1208,9 +1206,8 @@ bool dvmCompileMethod(CompilationUnit *cUnit, const Method *method,
                      * aligned to 4-byte boundary (alignment instruction to be
                      * inserted later.
                      */
-                    if (dexGetInstrFlags(gDvm.instrInfo.flags,
-                           curBB->lastMIRInsn->dalvikInsn.opCode) &
-                        kInstrInvoke) {
+                    if (dexGetInstrFlags(curBB->lastMIRInsn->dalvikInsn.opCode)
+                            & kInstrInvoke) {
                         newBB->isFallThroughFromInvoke = true;
                     }
 

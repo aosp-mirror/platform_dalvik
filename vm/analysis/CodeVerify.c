@@ -3559,7 +3559,7 @@ static bool verifyInstruction(const Method* meth, InsnFlags* insnFlags,
 #endif
     dexDecodeInstruction(insns, &decInsn);
 
-    int nextFlags = dexGetInstrFlags(gDvm.instrInfo.flags, decInsn.opCode);
+    int nextFlags = dexGetInstrFlags(decInsn.opCode);
 
     /*
      * Make a copy of the previous register state.  If the instruction

@@ -311,7 +311,7 @@ static bool doLoopBodyCodeMotion(CompilationUnit *cUnit)
         /* Skip extended MIR instructions */
         if (dInsn->opCode > 255) continue;
 
-        int instrFlags = dexGetInstrFlags(gDvm.instrInfo.flags, dInsn->opCode);
+        int instrFlags = dexGetInstrFlags(dInsn->opCode);
 
         /* Instruction is clean */
         if ((instrFlags & kInstrCanThrow) == 0) continue;

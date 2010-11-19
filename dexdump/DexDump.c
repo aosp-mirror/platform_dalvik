@@ -49,8 +49,6 @@
 
 static const char* gProgName = "dexdump";
 
-static InstructionInfoTables gInstrInfo;
-
 typedef enum OutputFormat {
     OUTPUT_PLAIN = 0,               /* default */
     OUTPUT_XML,                     /* fancy */
@@ -710,7 +708,7 @@ static char* indexString(DexFile* pDexFile,
     u4 width;
 
     /* TODO: Make the index *always* be in field B, to simplify this code. */
-    switch (dexGetInstrFormat(gInstrInfo.formats, pDecInsn->opCode)) {
+    switch (dexGetInstrFormat(pDecInsn->opCode)) {
     case kFmt20bc:
     case kFmt21c:
     case kFmt35c:
@@ -882,7 +880,7 @@ void dumpInstruction(DexFile* pDexFile, const DexCode* pCode, int insnIdx,
                 indexBufChars, sizeof(indexBufChars));
     }
 
-    switch (dexGetInstrFormat(gInstrInfo.formats, pDecInsn->opCode)) {
+    switch (dexGetInstrFormat(pDecInsn->opCode)) {
     case kFmt10x:        // op
         break;
     case kFmt12x:        // op vA, vB
@@ -1089,7 +1087,7 @@ void dumpBytecodes(DexFile* pDexFile, const DexMethod* pDexMethod)
             insnWidth = 4 + ((size * width) + 1) / 2;
         } else {
             opCode = instr & 0xff;
-            insnWidth = dexGetInstrWidth(gInstrInfo.widths, opCode);
+            insnWidth = dexGetInstrWidth(opCode);
             if (insnWidth == 0) {
                 fprintf(stderr,
                     "GLITCH: zero-width instruction at idx=0x%04x\n", insnIdx);
@@ -1889,9 +1887,6 @@ int main(int argc, char* const argv[])
         fprintf(stderr, "Can't specify both -c and -i\n");
         wantUsage = true;
     }
-
-    /* initialize some VM tables */
-    dexGetInstructionInfoTables(&gInstrInfo);
 
     if (wantUsage) {
         usage();

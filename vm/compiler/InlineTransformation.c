@@ -85,7 +85,7 @@ static void inlineGetter(CompilationUnit *cUnit,
     /* Now setup the Dalvik instruction with converted src/dst registers */
     newGetterMIR->dalvikInsn = getterInsn;
 
-    newGetterMIR->width = gDvm.instrInfo.widths[getterInsn.opCode];
+    newGetterMIR->width = dexGetInstrWidth(getterInsn.opCode);
 
     newGetterMIR->OptimizationFlags |= MIR_CALLEE;
 
@@ -164,7 +164,7 @@ static void inlineSetter(CompilationUnit *cUnit,
     /* Now setup the Dalvik instruction with converted src/dst registers */
     newSetterMIR->dalvikInsn = setterInsn;
 
-    newSetterMIR->width = gDvm.instrInfo.widths[setterInsn.opCode];
+    newSetterMIR->width = dexGetInstrWidth(setterInsn.opCode);
 
     newSetterMIR->OptimizationFlags |= MIR_CALLEE;
 
@@ -296,7 +296,7 @@ void dvmCompilerInlineMIR(CompilationUnit *cUnit)
             continue;
         MIR *lastMIRInsn = bb->lastMIRInsn;
         int opCode = lastMIRInsn->dalvikInsn.opCode;
-        int flags = dexGetInstrFlags(gDvm.instrInfo.flags, opCode);
+        int flags = dexGetInstrFlags(opCode);
 
         /* No invoke - continue */
         if ((flags & kInstrInvoke) == 0)

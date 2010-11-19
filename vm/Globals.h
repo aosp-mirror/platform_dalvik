@@ -495,12 +495,6 @@ struct DvmGlobals {
      */
     AtomicCache* instanceofCache;
 
-    /*
-     * instruction info tables, used for optimization, verification, and
-     * compilation. This is a struct that contains several pointers.
-     */
-    InstructionInfoTables instrInfo;
-
     /* inline substitution table, used during optimization */
     InlineSub*          inlineSubs;
 
