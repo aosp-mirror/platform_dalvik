@@ -46,7 +46,7 @@ static void inlineGetter(CompilationUnit *cUnit,
     MIR *newGetterMIR = dvmCompilerNew(sizeof(MIR), true);
     DecodedInstruction getterInsn;
 
-    dexDecodeInstruction(&gDvm.instrInfo, calleeMethod->insns, &getterInsn);
+    dexDecodeInstruction(calleeMethod->insns, &getterInsn);
 
     if (!dvmCompilerCanIncludeThisInstruction(calleeMethod, &getterInsn))
         return;
@@ -137,7 +137,7 @@ static void inlineSetter(CompilationUnit *cUnit,
     MIR *newSetterMIR = dvmCompilerNew(sizeof(MIR), true);
     DecodedInstruction setterInsn;
 
-    dexDecodeInstruction(&gDvm.instrInfo, calleeMethod->insns, &setterInsn);
+    dexDecodeInstruction(calleeMethod->insns, &setterInsn);
 
     if (!dvmCompilerCanIncludeThisInstruction(calleeMethod, &setterInsn))
         return;

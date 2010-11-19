@@ -288,7 +288,7 @@ static bool selfVerificationDebugInterp(const u2* pc, Thread* self,
     SelfVerificationState state = shadowSpace->selfVerificationState;
 
     DecodedInstruction decInsn;
-    dexDecodeInstruction(&gDvm.instrInfo, pc, &decInsn);
+    dexDecodeInstruction(pc, &decInsn);
 
     //LOGD("### DbgIntp(%d): PC: 0x%x endPC: 0x%x state: %d len: %d %s",
     //    self->threadId, (int)pc, (int)shadowSpace->endPC, state,
@@ -669,7 +669,7 @@ static void insertMoveResult(const u2 *lastPC, int len, int offset,
     DecodedInstruction nextDecInsn;
     const u2 *moveResultPC = lastPC + len;
 
-    dexDecodeInstruction(&gDvm.instrInfo, moveResultPC, &nextDecInsn);
+    dexDecodeInstruction(moveResultPC, &nextDecInsn);
     if ((nextDecInsn.opCode != OP_MOVE_RESULT) &&
         (nextDecInsn.opCode != OP_MOVE_RESULT_WIDE) &&
         (nextDecInsn.opCode != OP_MOVE_RESULT_OBJECT))
@@ -685,8 +685,7 @@ static void insertMoveResult(const u2 *lastPC, int len, int offset,
     interpState->trace[currTraceRun].frag.isCode = true;
     interpState->totalTraceLen++;
 
-    interpState->currRunLen = dexGetInstrOrTableWidth(gDvm.instrInfo.widths,
-                                                      moveResultPC);
+    interpState->currRunLen = dexGetInstrOrTableWidth(moveResultPC);
 }
 
 /*
@@ -733,7 +732,7 @@ int dvmCheckJit(const u2* pc, Thread* self, InterpState* interpState,
             /* First instruction - just remember the PC and exit */
             if (lastPC == NULL) break;
             /* Grow the trace around the last PC if jitState is kJitTSelect */
-            dexDecodeInstruction(&gDvm.instrInfo, lastPC, &decInsn);
+            dexDecodeInstruction(lastPC, &decInsn);
 
             /*
              * Treat {PACKED,SPARSE}_SWITCH as trace-ending instructions due
@@ -752,7 +751,7 @@ int dvmCheckJit(const u2* pc, Thread* self, InterpState* interpState,
             LOGD("TraceGen: adding %s", dexGetOpcodeName(decInsn.opCode));
 #endif
             flags = dexGetInstrFlags(gDvm.instrInfo.flags, decInsn.opCode);
-            len = dexGetInstrOrTableWidth(gDvm.instrInfo.widths, lastPC);
+            len = dexGetInstrOrTableWidth(lastPC);
             offset = lastPC - interpState->method->insns;
             assert((unsigned) offset <
                    dvmGetMethodInsnsSize(interpState->method));

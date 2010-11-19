@@ -40,7 +40,7 @@ static inline int parseInsn(const u2 *codePtr, DecodedInstruction *decInsn,
         }
     }
 
-    dexDecodeInstruction(&gDvm.instrInfo, codePtr, decInsn);
+    dexDecodeInstruction(codePtr, decInsn);
     if (printMe) {
         char *decodedString = dvmCompilerGetDalvikDisassembly(decInsn, NULL);
         LOGD("%p: %#06x %s\n", codePtr, opcode, decodedString);

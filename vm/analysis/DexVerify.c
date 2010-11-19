@@ -33,11 +33,7 @@ static bool verifyInstructions(VerifierData* vdata);
  */
 bool dvmVerificationStartup(void)
 {
-    if (dexCreateInstructionInfoTables(&gDvm.instrInfo)) {
-        LOGE("Unable to create instruction tables\n");
-        return false;
-    }
-
+    dexGetInstructionInfoTables(&gDvm.instrInfo);
     return true;
 }
 
@@ -46,7 +42,7 @@ bool dvmVerificationStartup(void)
  */
 void dvmVerificationShutdown(void)
 {
-    dexFreeInstructionInfoTables(&gDvm.instrInfo);
+    /* No need to do anything here. */
 }
 
 /*
@@ -112,7 +108,7 @@ static bool computeCodeWidths(const Method* meth, InsnFlags* insnFlags,
 
 
     for (i = 0; i < (int) insnCount; /**/) {
-        size_t width = dexGetInstrOrTableWidth(gDvm.instrInfo.widths, insns);
+        size_t width = dexGetInstrOrTableWidth(insns);
         if (width == 0) {
             LOG_VFY_METH(meth,
                 "VFY: invalid post-opt instruction (0x%04x)\n", *insns);
@@ -817,7 +813,6 @@ static bool verifyInstructions(VerifierData* vdata)
     const Method* meth = vdata->method;
     const DvmDex* pDvmDex = meth->clazz->pDvmDex;
     InsnFlags* insnFlags = vdata->insnFlags;
-    const InstructionInfoTables* infoTables = &gDvm.instrInfo;
     const InstructionFlags* flagTable = gDvm.instrInfo.flags;
     const u2* insns = meth->insns;
     unsigned int codeOffset;
@@ -833,7 +828,7 @@ static bool verifyInstructions(VerifierData* vdata)
         DecodedInstruction decInsn;
         bool okay = true;
 
-        dexDecodeInstruction(infoTables, meth->insns + codeOffset, &decInsn);
+        dexDecodeInstruction(meth->insns + codeOffset, &decInsn);
 
         /*
          * Check register, type, class, field, method, and string indices
