@@ -32,9 +32,6 @@ typedef enum {
     VERIFY_MODE_ALL
 } DexClassVerifyMode;
 
-bool dvmVerificationStartup(void);
-void dvmVerificationShutdown(void);
-
 /*
  * Verify a single class.
  */

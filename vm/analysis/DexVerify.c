@@ -29,23 +29,6 @@ static bool verifyInstructions(VerifierData* vdata);
 
 
 /*
- * Initialize some things we need for verification.
- */
-bool dvmVerificationStartup(void)
-{
-    /* No need to do anything here. */
-    return true;
-}
-
-/*
- * Free up some things we needed for verification.
- */
-void dvmVerificationShutdown(void)
-{
-    /* No need to do anything here. */
-}
-
-/*
  * Verify a class.
  *
  * By the time we get here, the value of gDvm.classVerifyMode should already

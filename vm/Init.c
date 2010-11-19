@@ -1226,8 +1226,6 @@ int dvmStartup(int argc, const char* const argv[], bool ignoreUnrecognized,
         goto fail;
     if (!dvmInlineNativeStartup())
         goto fail;
-    if (!dvmVerificationStartup())
-        goto fail;
     if (!dvmRegisterMapStartup())
         goto fail;
     if (!dvmInstanceofStartup())
@@ -1596,8 +1594,6 @@ int dvmPrepForDexOpt(const char* bootClassPath, DexOptimizerMode dexOptMode,
         goto fail;
     if (!dvmInlineNativeStartup())
         goto fail;
-    if (!dvmVerificationStartup())
-        goto fail;
     if (!dvmRegisterMapStartup())
         goto fail;
     if (!dvmInstanceofStartup())
@@ -1687,7 +1683,6 @@ void dvmShutdown(void)
     dvmExceptionShutdown();
     dvmThreadShutdown();
     dvmClassShutdown();
-    dvmVerificationShutdown();
     dvmRegisterMapShutdown();
     dvmInstanceofShutdown();
     dvmInlineNativeShutdown();
