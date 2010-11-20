@@ -1360,12 +1360,26 @@ void dvmThrowAIOOBE(int index, int length)
         "index=%d length=%d", index, length);
 }
 
-void dvmThrowClassCastException(ClassObject* actual, ClassObject* desired)
+static void dvmThrowTypeError(const char* exceptionClassName, const char* fmt,
+    ClassObject* actual, ClassObject* desired)
 {
     char* actualClassName = dvmDescriptorToDot(actual->descriptor);
     char* desiredClassName = dvmDescriptorToDot(desired->descriptor);
-    dvmThrowExceptionFmt("Ljava/lang/ClassCastException;", "%s cannot be cast to %s",
+    dvmThrowExceptionFmt(exceptionClassName, fmt,
         actualClassName, desiredClassName);
     free(desiredClassName);
     free(actualClassName);
+}
+
+void dvmThrowArrayStoreException(ClassObject* actual, ClassObject* desired)
+{
+    dvmThrowTypeError("Ljava/lang/ArrayStoreException;",
+        "%s cannot be stored in an array of type %s",
+        actual, desired);
+}
+
+void dvmThrowClassCastException(ClassObject* actual, ClassObject* desired)
+{
+    dvmThrowTypeError("Ljava/lang/ClassCastException;",
+        "%s cannot be cast to %s", actual, desired);
 }

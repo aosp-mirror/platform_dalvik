@@ -13,6 +13,7 @@ Items requiring attention:
 (md) OP_THROW needs to export the PC
 (md) Use dvmThrowAIOOBE(index, length) for array bounds errors.
 (md) Use dvmThrowClassCastException(actual, desired) for class cast errors.
+(md) Use dvmThrowArrayStoreException(actual, desired) for array store errors.
 
 (lo) Implement OP_BREAKPOINT
 (lo) Implement OP_EXECUTE_INLINE_RANGE
