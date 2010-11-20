@@ -32,7 +32,7 @@
     ldr     r1, [rINST, #offObject_clazz]  @ r1<- arrayObj->clazz
     bl      dvmCanPutArrayElement       @ test object type vs. array type
     cmp     r0, #0                      @ okay?
-    beq     common_errArrayStore        @ no
+    beq     .L${opcode}_throw           @ no
     mov     r1, rINST                   @ r1<- arrayObj
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     ldr     r2, [rGLUE, #offGlue_cardTable]     @ get biased CT base
@@ -46,3 +46,10 @@
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     str     r9, [r10, #offArrayObject_contents] @ vBB[vCC]<- vAA
     GOTO_OPCODE(ip)                     @ jump to next instruction
+.L${opcode}_throw:
+    @ The types don't match.  We need to throw an ArrayStoreException.
+    ldr     r0, [r9, #offObject_clazz]
+    ldr     r1, [rINST, #offObject_clazz]
+    EXPORT_PC()
+    bl      dvmThrowArrayStoreException
+    b       common_exceptionThrown

@@ -2192,9 +2192,7 @@ HANDLE_OPCODE(OP_APUT_OBJECT /*vAA, vBB, vCC*/)
                 LOGV("Can't put a '%s'(%p) into array type='%s'(%p)\n",
                     obj->clazz->descriptor, obj,
                     arrayObj->obj.clazz->descriptor, arrayObj);
-                //dvmDumpClass(obj->clazz);
-                //dvmDumpClass(arrayObj->obj.clazz);
-                dvmThrowException("Ljava/lang/ArrayStoreException;", NULL);
+                dvmThrowArrayStoreException(obj->clazz, arrayObj->obj.clazz);
                 GOTO_exceptionThrown();
             }
         }

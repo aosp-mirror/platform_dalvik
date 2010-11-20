@@ -451,17 +451,6 @@ common_errArrayIndex:
     movl    %eax,OUT_ARG1(%esp)
     call    dvmThrowAIOOBE        # dvmThrowAIOO(index, length)
     jmp     common_exceptionThrown
-/*
- * Invalid array value.
- */
-common_errArrayStore:
-    EXPORT_PC
-    movl    $$.LstrArrayStoreException,%eax
-    movl    %eax,OUT_ARG0(%esp)
-    xorl    %eax,%eax
-    movl    %eax,OUT_ARG1(%esp)
-    call    dvmThrowException
-    jmp     common_exceptionThrown
 
 /*
  * Somebody has thrown an exception.  Handle it.
@@ -496,8 +485,6 @@ common_abort:
     .asciz  "Ljava/lang/ArithmeticException;"
 .LstrDivideByZero:
     .asciz  "divide by zero"
-.LstrArrayStoreException:
-    .asciz  "Ljava/lang/ArrayStoreException;"
 .LstrNegativeArraySizeException:
     .asciz  "Ljava/lang/NegativeArraySizeException;"
 .LstrInstantiationError:

@@ -8194,7 +8194,7 @@ dvmAsmSisterStart:
     ldr     r1, [rINST, #offObject_clazz]  @ r1<- arrayObj->clazz
     bl      dvmCanPutArrayElement       @ test object type vs. array type
     cmp     r0, #0                      @ okay?
-    beq     common_errArrayStore        @ no
+    beq     .LOP_APUT_OBJECT_throw           @ no
     mov     r1, rINST                   @ r1<- arrayObj
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     ldr     r2, [rGLUE, #offGlue_cardTable]     @ get biased CT base
@@ -8208,6 +8208,13 @@ dvmAsmSisterStart:
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     str     r9, [r10, #offArrayObject_contents] @ vBB[vCC]<- vAA
     GOTO_OPCODE(ip)                     @ jump to next instruction
+.LOP_APUT_OBJECT_throw:
+    @ The types don't match.  We need to throw an ArrayStoreException.
+    ldr     r0, [r9, #offObject_clazz]
+    ldr     r1, [rINST, #offObject_clazz]
+    EXPORT_PC()
+    bl      dvmThrowArrayStoreException
+    b       common_exceptionThrown
 
 /* continuation for OP_IGET */
 
@@ -10320,16 +10327,6 @@ common_errArrayIndex:
     b       common_exceptionThrown
 
 /*
- * Invalid array value.
- */
-common_errArrayStore:
-    EXPORT_PC()
-    ldr     r0, strArrayStoreException
-    mov     r1, #0
-    bl      dvmThrowException
-    b       common_exceptionThrown
-
-/*
  * Integer divide or mod by zero.
  */
 common_errDivideByZero:
@@ -10506,8 +10503,6 @@ dvmConfigureFP:
     .align  2
 strArithmeticException:
     .word   .LstrArithmeticException
-strArrayStoreException:
-    .word   .LstrArrayStoreException
 strDivideByZero:
     .word   .LstrDivideByZero
 strNegativeArraySizeException:
@@ -10546,8 +10541,6 @@ strPrintLong:
     .asciz  "Bad entry point %d\n"
 .LstrArithmeticException:
     .asciz  "Ljava/lang/ArithmeticException;"
-.LstrArrayStoreException:
-    .asciz  "Ljava/lang/ArrayStoreException;"
 .LstrDivideByZero:
     .asciz  "divide by zero"
 .LstrFilledNewArrayNotImpl:
