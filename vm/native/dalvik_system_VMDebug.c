@@ -531,12 +531,23 @@ static void Dalvik_dalvik_system_VMDebug_getInstructionCount(const u4* args,
     JValue* pResult)
 {
     ArrayObject* countArray = (ArrayObject*) args[0];
-    int* storage;
 
-    storage = (int*) countArray->contents;
-    sched_yield();
-    memcpy(storage, gDvm.executedInstrCounts,
-        kNumDalvikInstructions * sizeof(int));
+    if (countArray != NULL) {
+        int* storage = (int*) countArray->contents;
+        u4 length = countArray->length;
+
+        /*
+         * Ensure that we copy at most kNumDalvikInstructions
+         * elements, but no more than the length of the given array.
+         */
+        if (length > kNumDalvikInstructions) {
+            length = kNumDalvikInstructions;
+        }
+
+        sched_yield();
+        memcpy(storage, gDvm.executedInstrCounts, length * sizeof(int));
+    }
+
     RETURN_VOID();
 }
 
