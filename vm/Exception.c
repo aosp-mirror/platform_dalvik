@@ -317,13 +317,13 @@ bail:
 }
 
 /*
- * Throw the named exception using the dotted form of the class
+ * Throw the named exception using the human-readable form of the class
  * descriptor as the exception message, and with the specified cause.
  */
 void dvmThrowChainedExceptionWithClassMessage(const char* exceptionDescriptor,
     const char* messageDescriptor, Object* cause)
 {
-    char* message = dvmDescriptorToDot(messageDescriptor);
+    char* message = dvmHumanReadableDescriptor(messageDescriptor);
 
     dvmThrowChainedException(exceptionDescriptor, message, cause);
     free(message);
@@ -1158,7 +1158,7 @@ ArrayObject* dvmGetStackTraceRaw(const int* intVals, int stackDepth)
         else
             lineNumber = dvmLineNumFromPC(meth, pc);
 
-        dotName = dvmDescriptorToDot(meth->clazz->descriptor);
+        dotName = dvmHumanReadableDescriptor(meth->clazz->descriptor);
         className = dvmCreateStringFromCstr(dotName);
         free(dotName);
 
@@ -1220,7 +1220,7 @@ void dvmLogRawStackTrace(const int* intVals, int stackDepth)
             lineNumber = dvmLineNumFromPC(meth, pc);
 
         // probably don't need to do this, but it looks nicer
-        dotName = dvmDescriptorToDot(meth->clazz->descriptor);
+        dotName = dvmHumanReadableDescriptor(meth->clazz->descriptor);
 
         if (dvmIsNativeMethod(meth)) {
             LOGI("\tat %s.%s(Native Method)\n", dotName, meth->name);
@@ -1294,7 +1294,7 @@ static void logStackTraceOf(Object* exception)
     const int* intVals;
     char* className;
 
-    className = dvmDescriptorToDot(exception->clazz->descriptor);
+    className = dvmHumanReadableDescriptor(exception->clazz->descriptor);
     messageStr = getExceptionMessage(exception);
     if (messageStr != NULL) {
         char* cp = dvmCreateCstrFromString(messageStr);
@@ -1363,8 +1363,8 @@ void dvmThrowAIOOBE(int index, int length)
 static void dvmThrowTypeError(const char* exceptionClassName, const char* fmt,
     ClassObject* actual, ClassObject* desired)
 {
-    char* actualClassName = dvmDescriptorToDot(actual->descriptor);
-    char* desiredClassName = dvmDescriptorToDot(desired->descriptor);
+    char* actualClassName = dvmHumanReadableDescriptor(actual->descriptor);
+    char* desiredClassName = dvmHumanReadableDescriptor(desired->descriptor);
     dvmThrowExceptionFmt(exceptionClassName, fmt,
         actualClassName, desiredClassName);
     free(desiredClassName);

@@ -1052,14 +1052,15 @@ static char* classNameFromIndex(const Method* method, int ref,
     }
 
     const char* className = dexStringByTypeIdx(pDvmDex->pDexFile, ref);
-    char* dotClassName = dvmDescriptorToDot(className);
+    char* dotClassName = dvmHumanReadableDescriptor(className);
     if (flags == 0)
         return dotClassName;
 
     char* result = (char*) malloc(kBufLen);
 
     if ((flags & kThrowShow_accessFromClass) != 0) {
-        char* dotFromName = dvmDescriptorToDot(method->clazz->descriptor);
+        char* dotFromName =
+            dvmHumanReadableDescriptor(method->clazz->descriptor);
         snprintf(result, kBufLen, "tried to access class %s from class %s",
             dotClassName, dotFromName);
         free(dotFromName);
@@ -1089,11 +1090,12 @@ static char* fieldNameFromIndex(const Method* method, int ref,
     className = dexStringByTypeIdx(pDvmDex->pDexFile, pFieldId->classIdx);
     fieldName = dexStringById(pDvmDex->pDexFile, pFieldId->nameIdx);
 
-    char* dotName = dvmDescriptorToDot(className);
+    char* dotName = dvmHumanReadableDescriptor(className);
     char* result = (char*) malloc(kBufLen);
 
     if ((flags & kThrowShow_accessFromClass) != 0) {
-        char* dotFromName = dvmDescriptorToDot(method->clazz->descriptor);
+        char* dotFromName =
+            dvmHumanReadableDescriptor(method->clazz->descriptor);
         snprintf(result, kBufLen, "tried to access field %s.%s from class %s",
             dotName, fieldName, dotFromName);
         free(dotFromName);
@@ -1122,11 +1124,12 @@ static char* methodNameFromIndex(const Method* method, int ref,
     className = dexStringByTypeIdx(pDvmDex->pDexFile, pMethodId->classIdx);
     methodName = dexStringById(pDvmDex->pDexFile, pMethodId->nameIdx);
 
-    char* dotName = dvmDescriptorToDot(className);
+    char* dotName = dvmHumanReadableDescriptor(className);
     char* result = (char*) malloc(kBufLen);
 
     if ((flags & kThrowShow_accessFromClass) != 0) {
-        char* dotFromName = dvmDescriptorToDot(method->clazz->descriptor);
+        char* dotFromName =
+            dvmHumanReadableDescriptor(method->clazz->descriptor);
         char* desc = dexProtoCopyMethodDescriptor(&method->prototype);
         snprintf(result, kBufLen,
             "tried to access method %s.%s:%s from class %s",

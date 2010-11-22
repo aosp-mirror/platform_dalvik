@@ -72,79 +72,14 @@ classCmp(const void *v1, const void *v2)
 static int
 getPrettyClassNameId(const char *descriptor)
 {
-    hprof_string_id classNameId;
-    char *dotName = dvmDescriptorToDot(descriptor);
-
-    /* Hprof suggests that array class names be converted from, e.g.,
-     * "[[[I" to "int[][][]" and "[Lorg.blort.Spaz;" to
-     * "org.blort.Spaz[]".
-     */
-    if (dotName[0] == '[') {
-        const char *c;
-        char *newName;
-        char *nc;
-        size_t dim;
-        size_t newLen;
-
-        c = dotName;
-        dim = 0;
-        while (*c == '[') {
-            dim++;
-            c++;
-        }
-        if (*c == 'L') {
-            c++;
-        } else {
-            /* It's a primitive type;  we should use a pretty name.
-             * Add semicolons to make all strings have the format
-             * of object class names.
-             */
-            switch (*c) {
-            case 'Z': c = "boolean;";    break;
-            case 'C': c = "char;";       break;
-            case 'F': c = "float;";      break;
-            case 'D': c = "double;";     break;
-            case 'B': c = "byte;";       break;
-            case 'S': c = "short;";      break;
-            case 'I': c = "int;";        break;
-            case 'J': c = "long;";       break;
-            default: assert(false); c = "UNKNOWN;"; break;
-            }
-        }
-
-        /* We have a string of the form "name;" and
-         * we want to replace the semicolon with as many
-         * "[]" pairs as is in dim.
-         */
-        newLen = strlen(c)-1 + dim*2;
-        newName = malloc(newLen + 1);
-        if (newName == NULL) {
-            return -1;
-        }
-        strcpy(newName, c);
-        newName[newLen] = '\0';
-
-        /* Point nc to the semicolon.
-         */
-        nc = newName + newLen - dim*2;
-        assert(*nc == ';');
-
-        while (dim--) {
-            *nc++ = '[';
-            *nc++ = ']';
-        }
-        assert(*nc == '\0');
-
-        classNameId = hprofLookupStringId(newName);
-        free(newName);
-    } else {
-        classNameId = hprofLookupStringId(dotName);
+    char* name = dvmHumanReadableDescriptor(descriptor);
+    if (name == NULL) {
+        return -1;
     }
-
-    free(dotName);
+    hprof_string_id classNameId = hprofLookupStringId(name);
+    free(name);
     return classNameId;
 }
-
 
 hprof_class_object_id
 hprofLookupClassId(const ClassObject *clazz)

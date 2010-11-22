@@ -185,18 +185,30 @@ bool dvmIntersectBitVectors(BitVector *dest, const BitVector *src1,
 char* dvmDotToSlash(const char* str);
 
 /*
+ * Return a newly-allocated string containing a human-readable equivalent
+ * of 'descriptor'. So "I" would be "int", "[[I" would be "int[][]",
+ * "[Ljava/lang/String;" would be "java.lang.String[]", and so forth.
+ */
+char* dvmHumanReadableDescriptor(const char* descriptor);
+
+/*
  * Return a newly-allocated string for the "dot version" of the class
  * name for the given type descriptor. That is, The initial "L" and
  * final ";" (if any) have been removed and all occurrences of '/'
  * have been changed to '.'.
+ *
+ * "Dot version" names are used in the class loading machinery.
+ * See also dvmHumanReadableDescriptor.
  */
 char* dvmDescriptorToDot(const char* str);
 
 /*
  * Return a newly-allocated string for the type descriptor
  * corresponding to the "dot version" of the given class name. That
- * is, non-array names are surrounde by "L" and ";", and all
+ * is, non-array names are surrounded by "L" and ";", and all
  * occurrences of '.' have been changed to '/'.
+ *
+ * "Dot version" names are used in the class loading machinery.
  */
 char* dvmDotToDescriptor(const char* str);
 

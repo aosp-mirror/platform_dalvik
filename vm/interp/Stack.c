@@ -1224,7 +1224,7 @@ static void dumpFrames(const DebugOutputTarget* target, void* framePtr,
             else
                 relPc = -1;
 
-            char* className = dvmDescriptorToDot(method->clazz->descriptor);
+            char* className = dvmHumanReadableDescriptor(method->clazz->descriptor);
             if (dvmIsNativeMethod(method))
                 dvmPrintDebugMessage(target,
                     "  at %s.%s(Native Method)\n", className, method->name);
@@ -1251,7 +1251,7 @@ static void dumpFrames(const DebugOutputTarget* target, void* framePtr,
                     Object* obj = dvmGetMonitorObject(mon);
                     if (obj != NULL) {
                         Thread* joinThread = NULL;
-                        className = dvmDescriptorToDot(obj->clazz->descriptor);
+                        className = dvmHumanReadableDescriptor(obj->clazz->descriptor);
                         if (strcmp(className, "java.lang.VMThread") == 0) {
                             joinThread = dvmGetThreadFromThreadObject(obj);
                         }
@@ -1269,7 +1269,7 @@ static void dumpFrames(const DebugOutputTarget* target, void* framePtr,
                     Object* obj;
                     Thread* owner;
                     if (extractMonitorEnterObject(thread, &obj, &owner)) {
-                        className = dvmDescriptorToDot(obj->clazz->descriptor);
+                        className = dvmHumanReadableDescriptor(obj->clazz->descriptor);
                         if (owner != NULL) {
                             char* threadName = dvmGetThreadName(owner);
                             dvmPrintDebugMessage(target,

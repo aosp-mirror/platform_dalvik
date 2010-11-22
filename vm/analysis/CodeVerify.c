@@ -1112,8 +1112,10 @@ static Method* verifyInvocationArgs(const Method* meth,
         classDescriptor = dexStringByTypeIdx(pDexFile, pMethodId->classIdx);
 
         if (!gDvm.optimizing) {
-            char* dotMissingClass = dvmDescriptorToDot(classDescriptor);
-            char* dotMethClass = dvmDescriptorToDot(meth->clazz->descriptor);
+            char* dotMissingClass =
+                dvmHumanReadableDescriptor(classDescriptor);
+            char* dotMethClass =
+                dvmHumanReadableDescriptor(meth->clazz->descriptor);
             //char* curMethodDesc =
             //    dexProtoCopyMethodDescriptor(&meth->prototype);
 
