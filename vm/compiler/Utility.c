@@ -277,7 +277,8 @@ bool dvmCompilerSetBit(BitVector *pBits, int num)
         if (!pBits->expandable)
             return false;
 
-        int newSize = (num + 31) >> 5;
+        /* Round up to word boundaries for "num+1" bits */
+        int newSize = (num + 1 + 31) >> 5;
         assert(newSize > pBits->storageSize);
         u4 *newStorage = dvmCompilerNew(newSize * sizeof(u4), false);
         memcpy(newStorage, pBits->storage, pBits->storageSize * sizeof(u4));
