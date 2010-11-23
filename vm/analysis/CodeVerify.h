@@ -181,6 +181,12 @@ typedef struct VerifierData {
      * in GC points.
      */
     RegisterLine*   registerLines;
+
+    /*
+     * The number of occurrences of specific opcodes.
+     */
+    size_t          newInstanceCount;
+    size_t          monitorEnterCount;
 } VerifierData;
 
 

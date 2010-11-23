@@ -55,7 +55,11 @@ typedef enum RegisterTrackingMode {
  * The only reason not to do it is that it slightly increases the time
  * required to perform verification.
  */
-#define DEAD_CODE_SCAN  true
+#ifndef NDEBUG
+# define DEAD_CODE_SCAN  true
+#else
+# define DEAD_CODE_SCAN  false
+#endif
 
 static bool gDebugVerbose = false;      // TODO: remove this
 
@@ -73,9 +77,9 @@ int gDvm__gcSimpleData = 0;
 static inline bool doVerboseLogging(const Method* meth) {
     return false;       /* COMMENT OUT to enable verbose debugging */
 
-    const char* cd = "Landroid/net/http/Request;";
-    const char* mn = "readResponse";
-    const char* sg = "(Landroid/net/http/AndroidHttpClientConnection;)V";
+    const char* cd = "Lcom/android/bluetooth/opp/BluetoothOppService;";
+    const char* mn = "scanFile";
+    const char* sg = "(Landroid/database/Cursor;I)Z";
     return (strcmp(meth->clazz->descriptor, cd) == 0 &&
             dvmCompareNameDescriptorAndMethod(mn, sg, meth) == 0);
 }
@@ -402,8 +406,8 @@ static char determineCat1Const(s4 value)
  * Very few methods have 10 or more new-instance instructions; the
  * majority have 0 or 1.  Occasionally a static initializer will have 200+.
  *
- * TODO: merge this into the static pass; want to avoid walking through
- * the instructions yet again just to set up this table
+ * TODO: merge this into the static pass or initRegisterTable; want to
+ * avoid walking through the instructions yet again just to set up this table
  */
 UninitInstanceMap* dvmCreateUninitInstanceMap(const Method* meth,
     const InsnFlags* insnFlags, int newInstanceCount)
@@ -480,6 +484,10 @@ int dvmSetUninitInstance(UninitInstanceMap* uninitMap, int addr,
     int idx;
 
     assert(clazz != NULL);
+
+#ifdef VERIFIER_STATS
+    gDvm.verifierStats.uninitSearches++;
+#endif
 
     /* TODO: binary search when numEntries > 8 */
     for (idx = uninitMap->numEntries - 1; idx >= 0; idx--) {
@@ -1542,6 +1550,12 @@ static void setRegisterType(RegisterLine* registerLine, u4 vdst,
         dvmAbort();
         break;
     }
+
+    /*
+     * Clear the monitor entry bits for this register.
+     */
+    if (registerLine->monitorEntries != NULL)
+        registerLine->monitorEntries[vdst] = 0;
 }
 
 /*
@@ -1713,8 +1727,6 @@ static void markRefsAsInitialized(RegisterLine* registerLine, int insnRegCount,
  * by now.  If not, we mark them as "conflict" to prevent them from being
  * used (otherwise, markRefsAsInitialized would mark the old ones and the
  * new ones at the same time).
- *
- * TODO: clear mon stack bits
  */
 static void markUninitRefsAsInvalid(RegisterLine* registerLine,
     int insnRegCount, UninitInstanceMap* uninitMap, RegType uninitType)
@@ -1726,6 +1738,8 @@ static void markUninitRefsAsInvalid(RegisterLine* registerLine,
     for (i = 0; i < insnRegCount; i++) {
         if (insnRegs[i] == uninitType) {
             insnRegs[i] = kRegTypeConflict;
+            if (registerLine->monitorEntries != NULL)
+                registerLine->monitorEntries[i] = 0;
             changed++;
         }
     }
@@ -1759,6 +1773,7 @@ static inline void copyRegisterLine(RegisterLine* dst, const RegisterLine* src,
             numRegs * sizeof(MonitorEntries));
         memcpy(dst->monitorStack, src->monitorStack,
             kMaxMonitorStackDepth * sizeof(u4));
+        dst->monitorStackTop = src->monitorStackTop;
     }
 }
 
@@ -1785,6 +1800,7 @@ static inline void copyLineFromTable(RegisterLine* dst,
 }
 
 
+#ifndef NDEBUG
 /*
  * Compare two register lines.  Returns 0 if they match.
  *
@@ -1795,10 +1811,33 @@ static inline int compareLineToTable(const RegisterTable* regTable,
     int insnIdx, const RegisterLine* line2)
 {
     const RegisterLine* line1 = getRegisterLine(regTable, insnIdx);
-    /* TODO: compare mon stack and stack bits */
+    if (line1->monitorEntries != NULL) {
+        int result;
+
+        if (line2->monitorEntries == NULL)
+            return 1;
+        result = memcmp(line1->monitorEntries, line2->monitorEntries,
+            regTable->insnRegCountPlus * sizeof(MonitorEntries));
+        if (result != 0) {
+            LOG_VFY("monitorEntries mismatch\n");
+            return result;
+        }
+        result = line1->monitorStackTop - line2->monitorStackTop;
+        if (result != 0) {
+            LOG_VFY("monitorStackTop mismatch\n");
+            return result;
+        }
+        result = memcmp(line1->monitorStack, line2->monitorStack,
+            line1->monitorStackTop);
+        if (result != 0) {
+            LOG_VFY("monitorStack mismatch\n");
+            return result;
+        }
+    }
     return memcmp(line1->regTypes, line2->regTypes,
             regTable->insnRegCountPlus * sizeof(RegType));
 }
+#endif
 
 /*
  * Register type categories, for type checking.
@@ -1901,7 +1940,10 @@ static void copyRegister1(RegisterLine* registerLine, u4 vdst, u4 vsrc,
         LOG_VFY("VFY: copy1 v%u<-v%u type=%d cat=%d\n", vdst, vsrc, type, cat);
     } else {
         setRegisterType(registerLine, vdst, type);
-        /* TODO copy mon stack bits for Ref; will be cleared for 1nr */
+        if (cat == kTypeCategoryRef && registerLine->monitorEntries != NULL) {
+            registerLine->monitorEntries[vdst] =
+                registerLine->monitorEntries[vsrc];
+        }
     }
 }
 
@@ -2474,13 +2516,32 @@ static RegType mergeTypes(RegType type1, RegType type2, bool* pChanged)
 }
 
 /*
+ * Merge the bits that indicate which monitor entry addresses on the stack
+ * are associated with this register.
+ *
+ * The merge is a simple bitwise AND.
+ *
+ * Sets "*pChanged" to "true" if the result doesn't match "ents1".
+ */
+static MonitorEntries mergeMonitorEntries(MonitorEntries ents1,
+    MonitorEntries ents2, bool* pChanged)
+{
+    MonitorEntries result = ents1 & ents2;
+    if (result != ents1)
+        *pChanged = true;
+    return result;
+}
+
+/*
  * Control can transfer to "nextInsn".
  *
  * Merge the registers from "workLine" into "regTable" at "nextInsn", and
  * set the "changed" flag on the target address if any of the registers
  * has changed.
+ *
+ * Returns "false" if we detect mis-matched monitor stacks.
  */
-static void updateRegisters(const Method* meth, InsnFlags* insnFlags,
+static bool updateRegisters(const Method* meth, InsnFlags* insnFlags,
     RegisterTable* regTable, int nextInsn, const RegisterLine* workLine)
 {
     const size_t insnRegCountPlus = regTable->insnRegCountPlus;
@@ -2510,16 +2571,41 @@ static void updateRegisters(const Method* meth, InsnFlags* insnFlags,
         /* merge registers, set Changed only if different */
         RegisterLine* targetLine = getRegisterLine(regTable, nextInsn);
         RegType* targetRegs = targetLine->regTypes;
+        MonitorEntries* workMonEnts = workLine->monitorEntries;
+        MonitorEntries* targetMonEnts = targetLine->monitorEntries;
         bool changed = false;
         unsigned int idx;
 
         assert(targetRegs != NULL);
 
-        /* TODO: check mon stacks are the same; if different, fail somehow */
+        if (targetMonEnts != NULL) {
+            /*
+             * Monitor stacks must be identical.
+             */
+            if (targetLine->monitorStackTop != workLine->monitorStackTop) {
+                LOG_VFY_METH(meth,
+                    "VFY: mismatched stack depth %d vs. %d at 0x%04x\n",
+                    targetLine->monitorStackTop, workLine->monitorStackTop,
+                    nextInsn);
+                return false;
+            }
+            if (memcmp(targetLine->monitorStack, workLine->monitorStack,
+                    targetLine->monitorStackTop * sizeof(u4)) != 0)
+            {
+                LOG_VFY_METH(meth, "VFY: mismatched monitor stacks at 0x%04x\n",
+                    nextInsn);
+                return false;
+            }
+        }
+
         for (idx = 0; idx < insnRegCountPlus; idx++) {
             targetRegs[idx] =
                     mergeTypes(targetRegs[idx], workRegs[idx], &changed);
-            /* TODO merge monitorEntries */
+
+            if (targetMonEnts != NULL) {
+                targetMonEnts[idx] = mergeMonitorEntries(targetMonEnts[idx],
+                    workMonEnts[idx], &changed);
+            }
         }
 
         if (gDebugVerbose) {
@@ -2535,6 +2621,8 @@ static void updateRegisters(const Method* meth, InsnFlags* insnFlags,
         if (changed)
             dvmInsnSetChanged(insnFlags, nextInsn, true);
     }
+
+    return true;
 }
 
 
@@ -2860,6 +2948,29 @@ static ClassObject* getCaughtExceptionType(const Method* meth, int insnIdx,
 }
 
 /*
+ * Helper for initRegisterTable.
+ *
+ * Returns an updated copy of "storage".
+ */
+static u1* assignLineStorage(u1* storage, RegisterLine* line,
+    bool trackMonitors, size_t regTypeSize, size_t monEntSize, size_t stackSize)
+{
+    line->regTypes = (RegType*) storage;
+    storage += regTypeSize;
+
+    if (trackMonitors) {
+        line->monitorEntries = (MonitorEntries*) storage;
+        storage += monEntSize;
+        line->monitorStack = (u4*) storage;
+        storage += stackSize;
+
+        assert(line->monitorStackTop == 0);
+    }
+
+    return storage;
+}
+
+/*
  * Initialize the RegisterTable.
  *
  * Every instruction address can have a different set of information about
@@ -2872,13 +2983,20 @@ static ClassObject* getCaughtExceptionType(const Method* meth, int insnIdx,
  * We jump through some hoops here to minimize the total number of
  * allocations we have to perform per method verified.
  */
-static bool initRegisterTable(const Method* meth, const InsnFlags* insnFlags,
+static bool initRegisterTable(const VerifierData* vdata,
     RegisterTable* regTable, RegisterTrackingMode trackRegsFor)
 {
-    const int insnsSize = dvmGetMethodInsnsSize(meth);
+    const Method* meth = vdata->method;
+    const int insnsSize = vdata->insnsSize;
+    const InsnFlags* insnFlags = vdata->insnFlags;
     const int kExtraLines = 2;  /* workLine, savedLine */
     int i;
 
+    /*
+     * Every address gets a RegisterLine struct.  This is wasteful, but
+     * not so much that it's worth chasing through an extra level of
+     * indirection.
+     */
     regTable->insnRegCountPlus = meth->registersSize + kExtraRegs;
     regTable->registerLines =
         (RegisterLine*) calloc(insnsSize, sizeof(RegisterLine));
@@ -2926,17 +3044,36 @@ static bool initRegisterTable(const Method* meth, const InsnFlags* insnFlags,
 
     /*
      * Allocate storage for the register type arrays.
-     * TODO: also allocate and assign storage for monitor tracking
+     * TODO: set trackMonitors based on global config option
      */
-    regTable->lineAlloc =
-        calloc(regTable->insnRegCountPlus * interestingCount, sizeof(RegType));
+    size_t regTypeSize = regTable->insnRegCountPlus * sizeof(RegType);
+    size_t monEntSize = regTable->insnRegCountPlus * sizeof(MonitorEntries);
+    size_t stackSize = kMaxMonitorStackDepth * sizeof(u4);
+    bool trackMonitors;
+
+    if (gDvm.monitorVerification) {
+        trackMonitors = (vdata->monitorEnterCount != 0);
+    } else {
+        trackMonitors = false;
+    }
+
+    size_t spacePerEntry = regTypeSize +
+        (trackMonitors ? monEntSize + stackSize : 0);
+    regTable->lineAlloc = calloc(interestingCount, spacePerEntry);
     if (regTable->lineAlloc == NULL)
         return false;
+
+#ifdef VERIFIER_STATS
+    size_t totalSpace = interestingCount * spacePerEntry +
+        insnsSize * sizeof(RegisterLine);
+    if (gDvm.verifierStats.biggestAlloc < totalSpace)
+        gDvm.verifierStats.biggestAlloc = totalSpace;
+#endif
 
     /*
      * Populate the sparse register line table.
      */
-    RegType* regPtr = regTable->lineAlloc;
+    u1* storage = regTable->lineAlloc;
     for (i = 0; i < insnsSize; i++) {
         bool interesting;
 
@@ -2957,28 +3094,27 @@ static bool initRegisterTable(const Method* meth, const InsnFlags* insnFlags,
         }
 
         if (interesting) {
-            regTable->registerLines[i].regTypes = regPtr;
-            regPtr += regTable->insnRegCountPlus;
+            storage = assignLineStorage(storage, &regTable->registerLines[i],
+                trackMonitors, regTypeSize, monEntSize, stackSize);
         }
     }
 
     /*
      * Grab storage for our "temporary" register lines.
      */
-    regTable->workLine.regTypes = regPtr;
-    regPtr += regTable->insnRegCountPlus;
-    regTable->savedLine.regTypes = regPtr;
-    regPtr += regTable->insnRegCountPlus;
+    storage = assignLineStorage(storage, &regTable->workLine,
+        trackMonitors, regTypeSize, monEntSize, stackSize);
+    storage = assignLineStorage(storage, &regTable->savedLine,
+        trackMonitors, regTypeSize, monEntSize, stackSize);
 
     //LOGD("Tracking registers for [%d], total %d in %d units\n",
     //    trackRegsFor, interestingCount-kExtraLines, insnsSize);
 
-    assert(regPtr - (RegType*)regTable->lineAlloc ==
-        (int) (regTable->insnRegCountPlus * interestingCount));
+    assert(storage - (u1*)regTable->lineAlloc ==
+        (int) (interestingCount * spacePerEntry));
     assert(regTable->registerLines[0].regTypes != NULL);
     return true;
 }
-
 
 /*
  * Verify that the arguments in a filled-new-array instruction are valid.
@@ -3153,6 +3289,89 @@ bail:
     return result;
 }
 
+/*
+ * Handle a monitor-enter instruction.
+ */
+void handleMonitorEnter(RegisterLine* workLine, u4 regIdx, u4 insnIdx,
+    VerifyError* pFailure)
+{
+    /*
+     * This should only be true if structured lock checking is disabled.
+     * TODO: assert that this is the case
+     */
+    if (workLine->monitorEntries == NULL)
+        return;
+
+    if (!regTypeIsReference(getRegisterType(workLine, regIdx))) {
+        LOG_VFY("VFY: monitor-enter on non-object\n");
+        *pFailure = VERIFY_ERROR_GENERIC;
+        return;
+    }
+
+    if (workLine->monitorStackTop == kMaxMonitorStackDepth) {
+        LOG_VFY("VFY: monitor-enter stack overflow (%d)\n",
+            kMaxMonitorStackDepth);
+        *pFailure = VERIFY_ERROR_GENERIC;
+        return;
+    }
+
+    /*
+     * Push an entry on the stack, and set a bit in the register flags to
+     * indicate that it's associated with this register.
+     */
+    workLine->monitorEntries[regIdx] |= 1 << workLine->monitorStackTop;
+    workLine->monitorStack[workLine->monitorStackTop++] = insnIdx;
+}
+
+/*
+ * Handle a monitor-exit instruction.
+ */
+void handleMonitorExit(RegisterLine* workLine, u4 regIdx, u4 insnIdx,
+    VerifyError* pFailure)
+{
+    /*
+     * This should only be true if structured lock checking is disabled.
+     * TODO: assert that this is the case
+     */
+    if (workLine->monitorEntries == NULL)
+        return;
+
+    if (!regTypeIsReference(getRegisterType(workLine, regIdx))) {
+        LOG_VFY("VFY: monitor-exit on non-object\n");
+        *pFailure = VERIFY_ERROR_GENERIC;
+        return;
+    }
+
+    if (workLine->monitorStackTop == 0) {
+        LOG_VFY("VFY: monitor-exit stack underflow\n");
+        *pFailure = VERIFY_ERROR_GENERIC;
+        return;
+    }
+
+    /*
+     * Confirm that the entry at the top of the stack is associated with
+     * the register.  Pop the top entry off.
+     */
+    workLine->monitorStackTop--;
+#ifdef BUG_3215458_FIXED
+    if ((workLine->monitorEntries[regIdx] & (1 << workLine->monitorStackTop))
+            == 0)
+    {
+        LOG_VFY("VFY: monitor-exit bit %d not set: addr=0x%04x (bits[%d]=0x%x)\n",
+            workLine->monitorStackTop, insnIdx, regIdx,
+            workLine->monitorEntries[regIdx]);
+        *pFailure = VERIFY_ERROR_GENERIC;
+        return;
+    }
+#endif
+    workLine->monitorStack[workLine->monitorStackTop] = 0;
+
+    /*
+     * Clear the bit from the register flags.
+     */
+    workLine->monitorEntries[regIdx] &= ~(1 << workLine->monitorStackTop);
+}
+
 
 /*
  * ===========================================================================
@@ -3207,6 +3426,8 @@ bool dvmVerifyCodeFlow(VerifierData* vdata)
 
 #ifdef VERIFIER_STATS
     gDvm.verifierStats.methodsExamined++;
+    if (vdata->monitorEnterCount)
+        gDvm.verifierStats.monEnterMethods++;
 #endif
 
     /* TODO: move this elsewhere -- we don't need to do this for every method */
@@ -3224,7 +3445,7 @@ bool dvmVerifyCodeFlow(VerifierData* vdata)
      * also going to create the register map, we need to retain the
      * register lists for a larger set of addresses.
      */
-    if (!initRegisterTable(meth, vdata->insnFlags, &regTable,
+    if (!initRegisterTable(vdata, &regTable,
             generateRegisterMap ? kTrackRegsGcPoints : kTrackRegsBranches))
         goto bail;
 
@@ -3669,13 +3890,15 @@ static bool verifyInstruction(const Method* meth, InsnFlags* insnFlags,
             RegType returnType = getMethodReturnType(meth);
             checkTypeCategory(returnType, kTypeCategory1nr, &failure);
             if (!VERIFY_OK(failure))
-                LOG_VFY("VFY: return-32 not expected\n");
+                LOG_VFY("VFY: return-1nr not expected\n");
 
             /* check the register contents */
             returnType = getRegisterType(workLine, decInsn.vA);
             checkTypeCategory(returnType, kTypeCategory1nr, &failure);
-            if (!VERIFY_OK(failure))
-                LOG_VFY("VFY: return-32 on invalid register v%d\n", decInsn.vA);
+            if (!VERIFY_OK(failure)) {
+                LOG_VFY("VFY: return-1nr on invalid register v%d\n",
+                    decInsn.vA);
+            }
         }
         break;
     case OP_RETURN_WIDE:
@@ -3788,12 +4011,32 @@ static bool verifyInstruction(const Method* meth, InsnFlags* insnFlags,
         break;
 
     case OP_MONITOR_ENTER:
+        handleMonitorEnter(workLine, decInsn.vA, insnIdx, &failure);
+        break;
     case OP_MONITOR_EXIT:
-        tmpType = getRegisterType(workLine, decInsn.vA);
-        if (!regTypeIsReference(tmpType)) {
-            LOG_VFY("VFY: monitor op on non-object\n");
-            failure = VERIFY_ERROR_GENERIC;
-        }
+        /*
+         * monitor-exit instructions are odd.  They can throw exceptions,
+         * but when they do they act as if they succeeded and the PC is
+         * pointing to the following instruction.  (This behavior goes back
+         * to the need to handle asynchronous exceptions, a now-deprecated
+         * feature that Dalvik doesn't support.)
+         *
+         * In practice we don't need to worry about this.  The only
+         * exceptions that can be thrown from monitor-exit are for a
+         * null reference and -exit without a matching -enter.  If the
+         * structured locking checks are working, the former would have
+         * failed on the -enter instruction, and the latter is impossible.
+         *
+         * This is fortunate, because issue 3221411 prevents us from
+         * chasing the "can throw" path when monitor verification is
+         * enabled.  If we can fully verify the locking we can ignore
+         * some catch blocks (which will show up as "dead" code when
+         * we skip them here); if we can't, then the code path could be
+         * "live" so we still need to check it.
+         */
+        if (workLine->monitorEntries != NULL)
+            nextFlags &= ~kInstrCanThrow;
+        handleMonitorExit(workLine, decInsn.vA, insnIdx, &failure);
         break;
 
     case OP_CHECK_CAST:
@@ -5490,8 +5733,9 @@ sput_1nr_common:
              * Merge registers into what we have for the next instruction,
              * and set the "changed" flag if needed.
              */
-            updateRegisters(meth, insnFlags, regTable, insnIdx+insnWidth,
-                workLine);
+            if (!updateRegisters(meth, insnFlags, regTable, insnIdx+insnWidth,
+                    workLine))
+                goto bail;
         } else {
             /*
              * We're not recording register data for the next instruction,
@@ -5531,8 +5775,9 @@ sput_1nr_common:
             goto bail;
 
         /* update branch target, set "changed" if appropriate */
-        updateRegisters(meth, insnFlags, regTable, insnIdx+branchTarget,
-            workLine);
+        if (!updateRegisters(meth, insnFlags, regTable, insnIdx+branchTarget,
+                workLine))
+            goto bail;
     }
 
     /*
@@ -5570,7 +5815,9 @@ sput_1nr_common:
             if (!checkMoveException(meth, absOffset, "switch"))
                 goto bail;
 
-            updateRegisters(meth, insnFlags, regTable, absOffset, workLine);
+            if (!updateRegisters(meth, insnFlags, regTable, absOffset,
+                    workLine))
+                goto bail;
         }
     }
 
@@ -5583,6 +5830,7 @@ sput_1nr_common:
     {
         const DexCode* pCode = dvmGetMethodCode(meth);
         DexCatchIterator iterator;
+        bool hasCatchAll = false;
 
         if (dexFindCatchHandler(&iterator, pCode, insnIdx)) {
             for (;;) {
@@ -5592,11 +5840,51 @@ sput_1nr_common:
                     break;
                 }
 
-                /* note we use savedLine, not workLine */
-                updateRegisters(meth, insnFlags, regTable, handler->address,
-                    &regTable->savedLine);
+                if (handler->typeIdx == kDexNoIndex)
+                    hasCatchAll = true;
+
+                /*
+                 * Merge registers into the "catch" block.  We want to
+                 * use the "savedRegs" rather than "workRegs", because
+                 * at runtime the exception will be thrown before the
+                 * instruction modifies any registers.
+                 */
+                if (!updateRegisters(meth, insnFlags, regTable,
+                        handler->address, &regTable->savedLine))
+                    goto bail;
             }
         }
+
+        /*
+         * If the monitor stack depth is nonzero, there must be a "catch all"
+         * handler for this instruction.  This does apply to monitor-exit
+         * because of async exception handling.
+         */
+        if (workLine->monitorStackTop != 0 && !hasCatchAll) {
+            /*
+             * The state in workLine reflects the post-execution state.
+             * If the current instruction is a monitor-enter and the monitor
+             * stack was empty, we don't need a catch-all (if it throws,
+             * it will do so before grabbing the lock).
+             */
+            if (!(decInsn.opCode == OP_MONITOR_ENTER &&
+                  workLine->monitorStackTop == 1))
+            {
+                LOG_VFY_METH(meth,
+                    "VFY: no catch-all for instruction at 0x%04x\n", insnIdx);
+                goto bail;
+            }
+        }
+    }
+
+    /*
+     * If we're returning from the method, make sure our monitor stack
+     * is empty.
+     */
+    if ((nextFlags & kInstrCanReturn) != 0 && workLine->monitorStackTop != 0) {
+        LOG_VFY_METH(meth, "VFY: return with stack depth=%d at 0x%04x\n",
+            workLine->monitorStackTop, insnIdx);
+        goto bail;
     }
 
     /*
@@ -5702,10 +5990,13 @@ static void dumpRegTypes(const Method* meth, const InsnFlags* insnFlags,
             regChars[1 + i + (i/4) + 2] = tch;
     }
 
-    if (addr == 0 && addrName != NULL)
-        LOGI("%c%s %s\n", branchTarget ? '>' : ' ', addrName, regChars);
-    else
-        LOGI("%c0x%04x %s\n", branchTarget ? '>' : ' ', addr, regChars);
+    if (addr == 0 && addrName != NULL) {
+        LOGI("%c%s %s mst=%d\n", branchTarget ? '>' : ' ',
+            addrName, regChars, registerLine->monitorStackTop);
+    } else {
+        LOGI("%c0x%04x %s mst=%d\n", branchTarget ? '>' : ' ',
+            addr, regChars, registerLine->monitorStackTop);
+    }
 
     if (displayFlags & DRT_SHOW_REF_TYPES) {
         for (i = 0; i < regCount + kExtraRegs; i++) {

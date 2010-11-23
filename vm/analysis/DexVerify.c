@@ -65,12 +65,12 @@ bool dvmVerifyClass(ClassObject* clazz)
 
 /*
  * Compute the width of the instruction at each address in the instruction
- * stream.  Addresses that are in the middle of an instruction, or that
- * are part of switch table data, are not set (so the caller should probably
- * initialize "insnFlags" to zero).
+ * stream, and store it in vdata->insnFlags.  Addresses that are in the
+ * middle of an instruction, or that are part of switch table data, are not
+ * touched (so the caller should probably initialize "insnFlags" to zero).
  *
- * If "pNewInstanceCount" is not NULL, it will be set to the number of
- * new-instance instructions in the method.
+ * The "newInstanceCount" and "monitorEnterCount" fields in vdata are
+ * also set.
  *
  * Performs some static checks, notably:
  * - opcode of first instruction begins at index 0
@@ -80,26 +80,28 @@ bool dvmVerifyClass(ClassObject* clazz)
  *
  * Logs an error and returns "false" on failure.
  */
-static bool computeCodeWidths(const Method* meth, InsnFlags* insnFlags,
-    int* pNewInstanceCount)
+static bool computeWidthsAndCountOps(VerifierData* vdata)
 {
-    size_t insnCount = dvmGetMethodInsnsSize(meth);
+    const Method* meth = vdata->method;
+    InsnFlags* insnFlags = vdata->insnFlags;
+    size_t insnCount = vdata->insnsSize;
     const u2* insns = meth->insns;
     bool result = false;
     int newInstanceCount = 0;
+    int monitorEnterCount = 0;
     int i;
-
 
     for (i = 0; i < (int) insnCount; /**/) {
         size_t width = dexGetInstrOrTableWidth(insns);
         if (width == 0) {
-            LOG_VFY_METH(meth,
-                "VFY: invalid post-opt instruction (0x%04x)\n", *insns);
+            LOG_VFY_METH(meth, "VFY: invalid instruction (0x%04x)\n", *insns);
             goto bail;
         }
 
         if ((*insns & 0xff) == OP_NEW_INSTANCE)
             newInstanceCount++;
+        if ((*insns & 0xff) == OP_MONITOR_ENTER)
+            monitorEnterCount++;
 
         if (width > 65535) {
             LOG_VFY_METH(meth, "VFY: insane width %d\n", width);
@@ -117,8 +119,8 @@ static bool computeCodeWidths(const Method* meth, InsnFlags* insnFlags,
     }
 
     result = true;
-    if (pNewInstanceCount != NULL)
-        *pNewInstanceCount = newInstanceCount;
+    vdata->newInstanceCount = newInstanceCount;
+    vdata->monitorEnterCount = monitorEnterCount;
 
 bail:
     return result;
@@ -227,7 +229,7 @@ static bool scanTryCatchBlocks(const Method* meth, InsnFlags* insnFlags)
  * Confirmed here:
  * - code array must not be empty
  * - (N/A) code_length must be less than 65536
- * Confirmed by computeCodeWidths():
+ * Confirmed by computeWidthsAndCountOps():
  * - opcode of first instruction begins at index 0
  * - only documented instructions may appear
  * - each instruction follows the last
@@ -236,7 +238,6 @@ static bool scanTryCatchBlocks(const Method* meth, InsnFlags* insnFlags)
 static bool verifyMethod(Method* meth)
 {
     bool result = false;
-    int newInstanceCount;
 
     /*
      * Verifier state blob.  Various values will be cached here so we
@@ -292,17 +293,16 @@ static bool verifyMethod(Method* meth)
 
     /*
      * Compute the width of each instruction and store the result in insnFlags.
-     * Count up the #of occurrences of new-instance instructions while we're
-     * at it.
+     * Count up the #of occurrences of certain opcodes while we're at it.
      */
-    if (!computeCodeWidths(meth, vdata.insnFlags, &newInstanceCount))
+    if (!computeWidthsAndCountOps(&vdata))
         goto bail;
 
     /*
      * Allocate a map to hold the classes of uninitialized instances.
      */
     vdata.uninitMap = dvmCreateUninitInstanceMap(meth, vdata.insnFlags,
-        newInstanceCount);
+        vdata.newInstanceCount);
     if (vdata.uninitMap == NULL)
         goto bail;
 

@@ -118,6 +118,8 @@ struct DvmGlobals {
     DexOptimizerMode    dexOptMode;
     DexClassVerifyMode  classVerifyMode;
 
+    bool        monitorVerification;
+
     bool        dexOptForSmp;
 
     /*
