@@ -280,7 +280,8 @@ bool dvmSetBit(BitVector* pBits, int num)
         if (!pBits->expandable)
             return false;
 
-        int newSize = (num + 31) >> 5;
+        /* Round up to word boundaries for "num+1" bits */
+        int newSize = (num + 1 + 31) >> 5;
         assert(newSize > pBits->storageSize);
         pBits->storage = realloc(pBits->storage, newSize * sizeof(u4));
         memset(&pBits->storage[pBits->storageSize], 0x00,
