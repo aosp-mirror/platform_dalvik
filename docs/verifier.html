@@ -115,9 +115,14 @@ The verifier uses a fairly simple-minded model.  If you enter a monitor
 held in register N, you can exit the monitor using register N or any
 subsequently-made copies of register N.  The verifier does not attempt
 to identify previously-made copies, track loads and stores through
-fields, or recognize identical constant values (e.g. the result of two
-<code>const-class</code> instructions on the same class will always result
-in the same reference).
+fields, or recognize identical constant values (for example, the result
+values from two <code>const-class</code> instructions on the same class
+will be the same reference, but the verifier doesn't recognize this).
+
+<p>
+Further, you may only exit the monitor most recently entered.  "Hand
+over hand" locking techniques, e.g. "lock A; lock B; unlock A; unlock B",
+are not allowed.
 
 <p>
 This means that there are a number of situations in which the verifier
