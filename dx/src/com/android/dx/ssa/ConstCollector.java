@@ -16,12 +16,20 @@
 
 package com.android.dx.ssa;
 
-import com.android.dx.rop.code.*;
+import com.android.dx.rop.code.LocalItem;
+import com.android.dx.rop.code.PlainCstInsn;
+import com.android.dx.rop.code.PlainInsn;
+import com.android.dx.rop.code.RegOps;
+import com.android.dx.rop.code.RegisterSpec;
+import com.android.dx.rop.code.RegisterSpecList;
+import com.android.dx.rop.code.Rop;
+import com.android.dx.rop.code.Rops;
+import com.android.dx.rop.code.SourcePosition;
+import com.android.dx.rop.code.ThrowingCstInsn;
 import com.android.dx.rop.cst.Constant;
 import com.android.dx.rop.cst.CstString;
 import com.android.dx.rop.cst.TypedConstant;
 import com.android.dx.rop.type.StdTypeList;
-import com.android.dx.rop.type.Type;
 import com.android.dx.rop.type.TypeBearer;
 
 import java.util.ArrayList;
@@ -29,7 +37,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Map;
 
 /**
@@ -174,6 +181,14 @@ public class ConstCollector {
 
             TypedConstant cst = (TypedConstant) typeBearer;
 
+            // Find defining instruction for move-result-pseudo instructions
+            if (insn.getOpcode().getOpcode() == RegOps.MOVE_RESULT_PSEUDO) {
+                int pred = insn.getBlock().getPredecessors().nextSetBit(0);
+                ArrayList<SsaInsn> predInsns;
+                predInsns = ssaMeth.getBlocks().get(pred).getInsns();
+                insn = predInsns.get(predInsns.size()-1);
+            }
+
             if (insn.canThrow()) {
                 /*
                  * Don't move anything other than strings -- the risk
@@ -241,6 +256,7 @@ public class ConstCollector {
                 return ret;
             }
 
+            @Override
             public boolean equals (Object obj) {
                 return obj == this;
             }
