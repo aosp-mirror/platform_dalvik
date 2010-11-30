@@ -138,6 +138,28 @@ consumeUntil != "" {
     next;
 }
 
+/BEGIN\(libcore-opcodes\)/ {
+    consumeUntil = "END(libcore-opcodes)";
+    print;
+
+    for (i = 0; i <= MAX_LIBDEX_OPCODE; i++) {
+        if (isUnusedByte(i) || isOptimized(i)) continue;
+        printf("    int OP_%-28s = 0x%02x;\n", constName[i], i);
+    }
+
+    next;
+}
+
+/BEGIN\(libcore-maximum-value\)/ {
+    consumeUntil = "END(libcore-maximum-value)";
+    print;
+
+    # TODO: Make this smarter.
+    printf("        MAXIMUM_VALUE = %d;\n", MAX_LIBDEX_OPCODE);
+
+    next;
+}
+
 /BEGIN\(libdex-opcode-enum\)/ {
     consumeUntil = "END(libdex-opcode-enum)";
     print;
