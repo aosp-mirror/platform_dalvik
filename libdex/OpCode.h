@@ -20,54 +20,13 @@
  * IMPORTANT NOTE: The contents of this file are mostly generated
  * automatically by the opcode-gen tool. Any edits to the generated
  * sections will get wiped out the next time the tool is run.
+ *
+ * See the file opcode-gen/README.txt for information about updating
+ * opcodes and instruction formats.
  */
 
 #ifndef _LIBDEX_OPCODE
 #define _LIBDEX_OPCODE
-
-/*
- * If you add, delete, or renumber instructions, you need to change things
- * in various places.  Renumbering really only affects the "unused" opcodes,
- * which are given explicit enumeration values to make it easier to find
- * the places in the code that need to be updated when making changes --
- * if you replace "OP_UNUSED_2D" and neglect to update a switch statement,
- * the compiler will complain about an unknown value.
- *
- * Bytecode definition and generated code:
- *
- *  - update bytecode.txt in the opcode-gen directory
- *  - run opcode-gen/regen-all; this will regenerate a number of tables,
- *    definitions, and declarations in the code, including the ones
- *    immediately below in this file.
- *
- * Opcode definitions and attributes:
- *  - update the instruction decoder in InstrUtils.c if you added a new
- *    instruction format.
- *  - update the instruction format list in InstrUtils.h, if necessary
- *  - update the parallel definitions in the class dalvik.bytecode.Opcodes
- *
- * Interpreter:
- *  - implement/update the instruction in C in mterp/c/...
- *    - verify new code by running with "dalvik.vm.execution-mode =
- *      int:portable" or "-Xint:portable"
- *  - implement/update the instruction in ARM in mterp/armv5/...
- *    - verify by enabling ARM handler for that instruction in mterp config
- *      and running int:fast as above
- *  - repeat for other platforms (x86, ...)
- *  (see notes in mterp/ReadMe.txt for rebuilding instructions)
- *
- * Verifier / optimizer:
- *  - update some stuff in analysis/Optimize.c, analysis/DexVerify.c,
- *    and/or analysis/CodeVerify.c as needed
- *    - verify by running with verifier enabled (it's on by default)
- *
- * Tools:
- *  - update dexdump/DexDump.c if an instruction format has changed
- *
- * Note: The Dalvik VM tests (in the tests subdirectory) provide a convenient
- * way to test most of the above without doing any rebuilds.  In particular,
- * test 003-omnibus-opcodes will exercise most of the opcodes.
- */
 
 /* the highest opcode value of a valid Dalvik opcode, plus one */
 #define kNumDalvikInstructions 256
