@@ -40,3 +40,10 @@ ${progdir}/opcode-gen dx/src/com/android/dx/dex/code/RopToDop.java
 ${progdir}/opcode-gen libdex/InstrUtils.c
 ${progdir}/opcode-gen libdex/OpCode.h
 ${progdir}/opcode-gen libdex/OpCodeNames.c
+
+# It's a minor shame that these files live in a different top-level project.
+# So it goes.
+${progdir}/opcode-gen \
+    ../libcore/dalvik/src/main/java/dalvik/bytecode/OpcodeInfo.java
+${progdir}/opcode-gen \
+    ../libcore/dalvik/src/main/java/dalvik/bytecode/Opcodes.java
