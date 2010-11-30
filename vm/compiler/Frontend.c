@@ -208,8 +208,7 @@ static int analyzeInlineTarget(DecodedInstruction *dalvikInsn, int attributes,
     int flags = dexGetInstrFlags(dalvikInsn->opCode);
     int dalvikOpCode = dalvikInsn->opCode;
 
-    if ((flags & kInstrInvoke) &&
-        (dalvikOpCode != OP_INVOKE_DIRECT_EMPTY)) {
+    if (flags & kInstrInvoke) {
         attributes &= ~METHOD_IS_LEAF;
     }
 
@@ -572,8 +571,7 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
 
         int flags = dexGetInstrFlags(insn->dalvikInsn.opCode);
 
-        if ((flags & kInstrInvoke) &&
-            (insn->dalvikInsn.opCode != OP_INVOKE_DIRECT_EMPTY)) {
+        if (flags & kInstrInvoke) {
             assert(numInsts == 1);
             CallsiteInfo *callsiteInfo =
                 dvmCompilerNew(sizeof(CallsiteInfo), true);
@@ -673,13 +671,10 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
          * currently only due to trace length constraint. In this case we need
          * to generate an explicit branch at the end of the block to jump to
          * the chaining cell.
-         *
-         * NOTE: INVOKE_DIRECT_EMPTY is actually not an invoke but a nop
          */
         curBB->needFallThroughBranch =
             ((flags & (kInstrCanBranch | kInstrCanSwitch | kInstrCanReturn |
-                       kInstrInvoke)) == 0) ||
-            (lastInsn->dalvikInsn.opCode == OP_INVOKE_DIRECT_EMPTY);
+                       kInstrInvoke)) == 0);
 
         /* Only form a loop if JIT_OPT_NO_LOOP is not set */
         if (curBB->taken == NULL &&

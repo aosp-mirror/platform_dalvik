@@ -302,10 +302,6 @@ void dvmCompilerInlineMIR(CompilationUnit *cUnit)
         if ((flags & kInstrInvoke) == 0)
             continue;
 
-        /* Not a real invoke - continue */
-        if (opCode == OP_INVOKE_DIRECT_EMPTY)
-            continue;
-
         /*
          * If the invoke itself is selected for single stepping, don't bother
          * to inline it.

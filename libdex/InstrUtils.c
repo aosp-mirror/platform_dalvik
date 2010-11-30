@@ -297,7 +297,7 @@ static InstructionFlags gOpcodeFlagsTable[kNumDalvikInstructions] = {
     kInstrCanThrow,
     kInstrCanContinue|kInstrCanThrow,
     kInstrCanContinue|kInstrCanThrow,
-    kInstrCanContinue|kInstrCanThrow|kInstrInvoke,
+    kInstrCanContinue,
     kInstrCanReturn,
     kInstrCanContinue|kInstrCanThrow,
     kInstrCanContinue|kInstrCanThrow,

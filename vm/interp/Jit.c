@@ -784,8 +784,6 @@ int dvmCheckJit(const u2* pc, Thread* self, InterpState* interpState,
             }
 
             if (!dexIsGoto(flags) &&
-                  /* don't end trace on INVOKE_DIRECT_EMPTY  */
-                  (decInsn.opCode != OP_INVOKE_DIRECT_EMPTY) &&
                   ((flags & (kInstrCanBranch |
                              kInstrCanSwitch |
                              kInstrCanReturn |

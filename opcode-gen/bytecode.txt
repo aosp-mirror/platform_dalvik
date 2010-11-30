@@ -74,7 +74,10 @@ format 3rms
 #     switch        -- is a switch
 #     throw         -- might throw an exception
 #     return        -- is a return from method
-#     invoke        -- is a method invoke
+#     invoke        -- is a method invoke; this is only used for true
+#                      method invokes and notably *not* vm-implemented
+#                      execute-inline nor the nop-equivalent
+#                      invoke-direct-empty
 
 # Regular opcodes (with a couple holes)
 op   00 nop                         10x  n none          continue
@@ -316,7 +319,7 @@ op   ec ^breakpoint                 00x  n unknown       optimized
 op   ed ^throw-verification-error   20bc n varies        optimized|throw
 op   ee +execute-inline             35mi n inline-method optimized|continue|throw
 op   ef +execute-inline/range       3rmi n inline-method optimized|continue|throw
-op   f0 +invoke-direct-empty        35c  n method-ref    optimized|continue|throw|invoke
+op   f0 +invoke-direct-empty        35c  n method-ref    optimized|continue
 op   f1 +return-void-barrier        10x  n none          optimized|return
 op   f2 +iget-quick                 22cs y field-offset  optimized|continue|throw
 op   f3 +iget-wide-quick            22cs y field-offset  optimized|continue|throw
