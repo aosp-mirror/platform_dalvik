@@ -86,27 +86,25 @@ static void visitInterfaces(Visitor *visitor, ClassObject *clazz,
  */
 static void visitClassObject(Visitor *visitor, Object *obj, void *arg)
 {
-    ClassObject *classObj;
-    ClassStatus status;
+    ClassObject *asClass;
 
     assert(visitor != NULL);
     assert(obj != NULL);
     assert(obj->clazz != NULL);
     assert(!strcmp(obj->clazz->descriptor, "Ljava/lang/Class;"));
-    classObj = (ClassObject *)obj;
     (*visitor)(&obj->clazz, arg);
-    if (IS_CLASS_FLAG_SET(classObj, CLASS_ISARRAY)) {
-        (*visitor)(&classObj->elementClass, arg);
+    asClass = (ClassObject *)obj;
+    if (IS_CLASS_FLAG_SET(asClass, CLASS_ISARRAY)) {
+        (*visitor)(&asClass->elementClass, arg);
     }
-    status = classObj->status;
-    if (status > CLASS_IDX) {
-        (*visitor)(&classObj->super, arg);
+    if (asClass->status > CLASS_IDX) {
+        (*visitor)(&asClass->super, arg);
     }
-    (*visitor)(&classObj->classLoader, arg);
+    (*visitor)(&asClass->classLoader, arg);
     visitFields(visitor, obj, arg);
-    visitStaticFields(visitor, classObj, arg);
-    if (status > CLASS_IDX) {
-        visitInterfaces(visitor, classObj, arg);
+    visitStaticFields(visitor, asClass, arg);
+    if (asClass->status > CLASS_IDX) {
+      visitInterfaces(visitor, asClass, arg);
     }
 }
 

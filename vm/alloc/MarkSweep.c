@@ -277,7 +277,7 @@ void dvmHeapReMarkRootSet(void)
 /*
  * Scans instance fields.
  */
-static void scanInstanceFields(const Object *obj, GcMarkContext *ctx)
+static void scanFields(const Object *obj, GcMarkContext *ctx)
 {
     assert(obj != NULL);
     assert(obj->clazz != NULL);
@@ -286,16 +286,17 @@ static void scanInstanceFields(const Object *obj, GcMarkContext *ctx)
     if (obj->clazz->refOffsets != CLASS_WALK_SUPER) {
         unsigned int refOffsets = obj->clazz->refOffsets;
         while (refOffsets != 0) {
-            const int rshift = CLZ(refOffsets);
+            size_t rshift = CLZ(refOffsets);
+            size_t offset = CLASS_OFFSET_FROM_CLZ(rshift);
+            Object *ref = dvmGetFieldObject((Object*)obj, offset);
+            markObject(ref, ctx);
             refOffsets &= ~(CLASS_HIGH_BIT >> rshift);
-            markObject(dvmGetFieldObject((Object*)obj,
-                                          CLASS_OFFSET_FROM_CLZ(rshift)), ctx);
         }
     } else {
         ClassObject *clazz;
-        int i;
         for (clazz = obj->clazz; clazz != NULL; clazz = clazz->super) {
             InstField *field = clazz->ifields;
+            int i;
             for (i = 0; i < clazz->ifieldRefCount; ++i, ++field) {
                 void *addr = BYTE_OFFSET((Object *)obj, field->byteOffset);
                 markObject(((JValue *)addr)->l, ctx);
@@ -305,40 +306,61 @@ static void scanInstanceFields(const Object *obj, GcMarkContext *ctx)
 }
 
 /*
- * Scans the header, static field references, and interface
- * pointers of a class object.
+ * Scans the static fields of a class object.
  */
-static void scanClassObject(const ClassObject *obj, GcMarkContext *ctx)
+static void scanStaticFields(const ClassObject *clazz, GcMarkContext *ctx)
 {
     int i;
 
-    assert(obj != NULL);
-    assert(obj->obj.clazz == gDvm.classJavaLangClass);
+    assert(clazz != NULL);
     assert(ctx != NULL);
+    for (i = 0; i < clazz->sfieldCount; ++i) {
+        char ch = clazz->sfields[i].field.signature[0];
+        if (ch == '[' || ch == 'L') {
+            markObject(clazz->sfields[i].value.l, ctx);
+        }
+    }
+}
 
-    markObject((Object *)obj->obj.clazz, ctx);
-    if (IS_CLASS_FLAG_SET(obj, CLASS_ISARRAY)) {
-        markObject((Object *)obj->elementClass, ctx);
+/*
+ * Visit the interfaces of a class object.
+ */
+static void scanInterfaces(const ClassObject *clazz, GcMarkContext *ctx)
+{
+    int i;
+
+    assert(clazz != NULL);
+    assert(ctx != NULL);
+    for (i = 0; i < clazz->interfaceCount; ++i) {
+        markObject((const Object *)clazz->interfaces[i], ctx);
+    }
+}
+
+/*
+ * Scans the header, static field references, and interface
+ * pointers of a class object.
+ */
+static void scanClassObject(const Object *obj, GcMarkContext *ctx)
+{
+    const ClassObject *asClass;
+
+    assert(obj != NULL);
+    assert(obj->clazz == gDvm.classJavaLangClass);
+    assert(ctx != NULL);
+    markObject((const Object *)obj->clazz, ctx);
+    asClass = (const ClassObject *)obj;
+    if (IS_CLASS_FLAG_SET(asClass, CLASS_ISARRAY)) {
+        markObject((const Object *)asClass->elementClass, ctx);
     }
     /* Do super and the interfaces contain Objects and not dex idx values? */
-    if (obj->status > CLASS_IDX) {
-        markObject((Object *)obj->super, ctx);
+    if (asClass->status > CLASS_IDX) {
+        markObject((const Object *)asClass->super, ctx);
     }
-    markObject(obj->classLoader, ctx);
-    /* Scan static field references. */
-    for (i = 0; i < obj->sfieldCount; ++i) {
-        char ch = obj->sfields[i].field.signature[0];
-        if (ch == '[' || ch == 'L') {
-            markObject(obj->sfields[i].value.l, ctx);
-        }
-    }
-    /* Scan the instance fields. */
-    scanInstanceFields((const Object *)obj, ctx);
-    /* Scan interface references. */
-    if (obj->status > CLASS_IDX) {
-        for (i = 0; i < obj->interfaceCount; ++i) {
-            markObject((Object *)obj->interfaces[i], ctx);
-        }
+    markObject((const Object *)asClass->classLoader, ctx);
+    scanFields(obj, ctx);
+    scanStaticFields(asClass, ctx);
+    if (asClass->status > CLASS_IDX) {
+        scanInterfaces(asClass, ctx);
     }
 }
 
@@ -346,19 +368,17 @@ static void scanClassObject(const ClassObject *obj, GcMarkContext *ctx)
  * Scans the header of all array objects.  If the array object is
  * specialized to a reference type, scans the array data as well.
  */
-static void scanArrayObject(const ArrayObject *obj, GcMarkContext *ctx)
+static void scanArrayObject(const Object *obj, GcMarkContext *ctx)
 {
-    size_t i;
-
     assert(obj != NULL);
-    assert(obj->obj.clazz != NULL);
+    assert(obj->clazz != NULL);
     assert(ctx != NULL);
-    /* Scan the class object reference. */
-    markObject((Object *)obj->obj.clazz, ctx);
-    if (IS_CLASS_FLAG_SET(obj->obj.clazz, CLASS_ISOBJECTARRAY)) {
-        /* Scan the array contents. */
-        Object **contents = (Object **)obj->contents;
-        for (i = 0; i < obj->length; ++i) {
+    markObject((const Object *)obj->clazz, ctx);
+    if (IS_CLASS_FLAG_SET(obj->clazz, CLASS_ISOBJECTARRAY)) {
+        const ArrayObject *array = (const ArrayObject *)obj;
+        const Object **contents = (const Object **)array->contents;
+        size_t i;
+        for (i = 0; i < array->length; ++i) {
             markObject(contents[i], ctx);
         }
     }
@@ -480,16 +500,14 @@ static void delayReferenceReferent(Object *obj, GcMarkContext *ctx)
 /*
  * Scans the header and field references of a data object.
  */
-static void scanDataObject(DataObject *obj, GcMarkContext *ctx)
+static void scanDataObject(const Object *obj, GcMarkContext *ctx)
 {
     assert(obj != NULL);
-    assert(obj->obj.clazz != NULL);
+    assert(obj->clazz != NULL);
     assert(ctx != NULL);
-    /* Scan the class object. */
-    markObject((Object *)obj->obj.clazz, ctx);
-    /* Scan the instance fields. */
-    scanInstanceFields((const Object *)obj, ctx);
-    if (IS_CLASS_FLAG_SET(obj->obj.clazz, CLASS_ISREFERENCE)) {
+    markObject((const Object *)obj->clazz, ctx);
+    scanFields(obj, ctx);
+    if (IS_CLASS_FLAG_SET(obj->clazz, CLASS_ISREFERENCE)) {
         delayReferenceReferent((Object *)obj, ctx);
     }
 }
@@ -503,13 +521,12 @@ static void scanObject(const Object *obj, GcMarkContext *ctx)
     assert(obj != NULL);
     assert(ctx != NULL);
     assert(obj->clazz != NULL);
-    /* Dispatch a type-specific scan routine. */
     if (obj->clazz == gDvm.classJavaLangClass) {
-        scanClassObject((ClassObject *)obj, ctx);
+        scanClassObject(obj, ctx);
     } else if (IS_CLASS_FLAG_SET(obj->clazz, CLASS_ISARRAY)) {
-        scanArrayObject((ArrayObject *)obj, ctx);
+        scanArrayObject(obj, ctx);
     } else {
-        scanDataObject((DataObject *)obj, ctx);
+        scanDataObject(obj, ctx);
     }
 }
 
