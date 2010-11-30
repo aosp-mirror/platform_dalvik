@@ -47,6 +47,7 @@ static DalvikNativeClass gDvmNativeMethodSet[] = {
             dvm_java_security_AccessController, 0 },
     { "Ljava/util/concurrent/atomic/AtomicLong;",
             dvm_java_util_concurrent_atomic_AtomicLong, 0 },
+    { "Ldalvik/bytecode/OpcodeInfo;",     dvm_dalvik_bytecode_OpcodeInfo, 0 },
     { "Ldalvik/system/VMDebug;",          dvm_dalvik_system_VMDebug, 0 },
     { "Ldalvik/system/DexFile;",          dvm_dalvik_system_DexFile, 0 },
     { "Ldalvik/system/VMRuntime;",        dvm_dalvik_system_VMRuntime, 0 },
