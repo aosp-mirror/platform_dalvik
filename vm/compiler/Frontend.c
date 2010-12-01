@@ -34,13 +34,13 @@ static inline int parseInsn(const u2 *codePtr, DecodedInstruction *decInsn,
     if (opcode == OP_NOP && instr != 0) {
         return 0;
     } else {
-        insnWidth = gDvm.instrWidth[opcode];
+        insnWidth = dexGetInstrWidth(opcode);
         if (insnWidth < 0) {
             insnWidth = -insnWidth;
         }
     }
 
-    dexDecodeInstruction(gDvm.instrFormat, codePtr, decInsn);
+    dexDecodeInstruction(codePtr, decInsn);
     if (printMe) {
         char *decodedString = dvmCompilerGetDalvikDisassembly(decInsn, NULL);
         LOGD("%p: %#06x %s\n", codePtr, opcode, decodedString);
@@ -205,11 +205,10 @@ static int compareMethod(const CompilerMethodStats *m1,
 static int analyzeInlineTarget(DecodedInstruction *dalvikInsn, int attributes,
                                int offset)
 {
-    int flags = dexGetInstrFlags(gDvm.instrFlags, dalvikInsn->opCode);
+    int flags = dexGetInstrFlags(dalvikInsn->opCode);
     int dalvikOpCode = dalvikInsn->opCode;
 
-    if ((flags & kInstrInvoke) &&
-        (dalvikOpCode != OP_INVOKE_DIRECT_EMPTY)) {
+    if (flags & kInstrInvoke) {
         attributes &= ~METHOD_IS_LEAF;
     }
 
@@ -570,10 +569,9 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
         dvmCompilerAppendMIR(curBB, insn);
         cUnit.numInsts++;
 
-        int flags = dexGetInstrFlags(gDvm.instrFlags, insn->dalvikInsn.opCode);
+        int flags = dexGetInstrFlags(insn->dalvikInsn.opCode);
 
-        if ((flags & kInstrInvoke) &&
-            (insn->dalvikInsn.opCode != OP_INVOKE_DIRECT_EMPTY)) {
+        if (flags & kInstrInvoke) {
             assert(numInsts == 1);
             CallsiteInfo *callsiteInfo =
                 dvmCompilerNew(sizeof(CallsiteInfo), true);
@@ -643,8 +641,7 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
         /* Link the taken and fallthrough blocks */
         BasicBlock *searchBB;
 
-        int flags = dexGetInstrFlags(gDvm.instrFlags,
-                                     lastInsn->dalvikInsn.opCode);
+        int flags = dexGetInstrFlags(lastInsn->dalvikInsn.opCode);
 
         if (flags & kInstrInvoke) {
             cUnit.hasInvoke = true;
@@ -674,13 +671,10 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
          * currently only due to trace length constraint. In this case we need
          * to generate an explicit branch at the end of the block to jump to
          * the chaining cell.
-         *
-         * NOTE: INVOKE_DIRECT_EMPTY is actually not an invoke but a nop
          */
         curBB->needFallThroughBranch =
             ((flags & (kInstrCanBranch | kInstrCanSwitch | kInstrCanReturn |
-                       kInstrInvoke)) == 0) ||
-            (lastInsn->dalvikInsn.opCode == OP_INVOKE_DIRECT_EMPTY);
+                       kInstrInvoke)) == 0);
 
         /* Only form a loop if JIT_OPT_NO_LOOP is not set */
         if (curBB->taken == NULL &&
@@ -819,7 +813,7 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
             /* For unconditional branches, request a hot chaining cell */
             } else {
 #if !defined(WITH_SELF_VERIFICATION)
-                newBB = dvmCompilerNewBB(flags & kInstrUnconditional ?
+                newBB = dvmCompilerNewBB(dexIsGoto(flags) ?
                                                   kChainingCellHot :
                                                   kChainingCellNormal);
                 newBB->startOffset = targetOffset;
@@ -829,7 +823,7 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
                     targetOffset <= curBB->lastMIRInsn->offset) {
                     newBB = dvmCompilerNewBB(kChainingCellBackwardBranch);
                 } else {
-                    newBB = dvmCompilerNewBB(flags & kInstrUnconditional ?
+                    newBB = dvmCompilerNewBB(dexIsGoto(flags) ?
                                                       kChainingCellHot :
                                                       kChainingCellNormal);
                 }
@@ -1207,9 +1201,8 @@ bool dvmCompileMethod(CompilationUnit *cUnit, const Method *method,
                      * aligned to 4-byte boundary (alignment instruction to be
                      * inserted later.
                      */
-                    if (dexGetInstrFlags(gDvm.instrFlags,
-                           curBB->lastMIRInsn->dalvikInsn.opCode) &
-                        kInstrInvoke) {
+                    if (dexGetInstrFlags(curBB->lastMIRInsn->dalvikInsn.opCode)
+                            & kInstrInvoke) {
                         newBB->isFallThroughFromInvoke = true;
                     }
 

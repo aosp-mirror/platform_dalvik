@@ -1029,16 +1029,6 @@ common_errArrayIndex:
     b       common_exceptionThrown
 
 /*
- * Invalid array value.
- */
-common_errArrayStore:
-    EXPORT_PC()
-    ldr     r0, strArrayStoreException
-    mov     r1, #0
-    bl      dvmThrowException
-    b       common_exceptionThrown
-
-/*
  * Integer divide or mod by zero.
  */
 common_errDivideByZero:
@@ -1215,8 +1205,6 @@ dvmConfigureFP:
     .align  2
 strArithmeticException:
     .word   .LstrArithmeticException
-strArrayStoreException:
-    .word   .LstrArrayStoreException
 strDivideByZero:
     .word   .LstrDivideByZero
 strNegativeArraySizeException:
@@ -1255,10 +1243,6 @@ strPrintLong:
     .asciz  "Bad entry point %d\n"
 .LstrArithmeticException:
     .asciz  "Ljava/lang/ArithmeticException;"
-.LstrArrayStoreException:
-    .asciz  "Ljava/lang/ArrayStoreException;"
-.LstrClassCastException:
-    .asciz  "Ljava/lang/ClassCastException;"
 .LstrDivideByZero:
     .asciz  "divide by zero"
 .LstrFilledNewArrayNotImpl:

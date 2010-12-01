@@ -62,6 +62,10 @@ public final class Form33x extends InsnFormat {
     /** {@inheritDoc} */
     @Override
     public boolean isCompatible(DalvInsn insn) {
+        if (! ALLOW_EXTENDED_OPCODES) {
+            return false;
+        }
+
         RegisterSpecList regs = insn.getRegisters();
 
         return (insn instanceof SimpleInsn) &&
@@ -69,12 +73,6 @@ public final class Form33x extends InsnFormat {
             unsignedFitsInByte(regs.get(0).getReg()) &&
             unsignedFitsInByte(regs.get(1).getReg()) &&
             unsignedFitsInShort(regs.get(2).getReg());
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public InsnFormat nextUp() {
-        return null;
     }
 
     /** {@inheritDoc} */

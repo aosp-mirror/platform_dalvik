@@ -8149,21 +8149,20 @@ dvmAsmSisterStart:
     /*
      * Trivial test failed, need to perform full check.  This is common.
      *  r0 holds obj->clazz
-     *  r1 holds class resolved from BBBB
+     *  r1 holds desired class resolved from BBBB
      *  r9 holds object
      */
 .LOP_CHECK_CAST_fullcheck:
+    mov     r10, r1                     @ avoid ClassObject getting clobbered
     bl      dvmInstanceofNonTrivial     @ r0<- boolean result
     cmp     r0, #0                      @ failed?
     bne     .LOP_CHECK_CAST_okay            @ no, success
 
-    @ A cast has failed.  We need to throw a ClassCastException with the
-    @ class of the object that failed to be cast.
+    @ A cast has failed.  We need to throw a ClassCastException.
     EXPORT_PC()                         @ about to throw
-    ldr     r3, [r9, #offObject_clazz]  @ r3<- obj->clazz
-    ldr     r0, .LstrClassCastExceptionPtr
-    ldr     r1, [r3, #offClassObject_descriptor] @ r1<- obj->clazz->descriptor
-    bl      dvmThrowExceptionWithClassMessage
+    ldr     r0, [r9, #offObject_clazz]  @ r0<- obj->clazz (actual class)
+    mov     r1, r10                     @ r1<- desired class
+    bl      dvmThrowClassCastException
     b       common_exceptionThrown
 
     /*
@@ -8184,9 +8183,6 @@ dvmAsmSisterStart:
     mov     r1, r0                      @ r1<- class resolved from BBB
     ldr     r0, [r9, #offObject_clazz]  @ r0<- obj->clazz
     b       .LOP_CHECK_CAST_resolved        @ pick up where we left off
-
-.LstrClassCastExceptionPtr:
-    .word   .LstrClassCastException
 
 /* continuation for OP_INSTANCE_OF */
 
@@ -8702,7 +8698,7 @@ OP_CMPG_FLOAT_nan:
     ldr     r1, [rINST, #offObject_clazz]  @ r1<- arrayObj->clazz
     bl      dvmCanPutArrayElement       @ test object type vs. array type
     cmp     r0, #0                      @ okay?
-    beq     common_errArrayStore        @ no
+    beq     .LOP_APUT_OBJECT_throw           @ no
     mov     r1, rINST                   @ r1<- arrayObj
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     ldr     r2, [rGLUE, #offGlue_cardTable]     @ get biased CT base
@@ -8716,6 +8712,13 @@ OP_CMPG_FLOAT_nan:
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     str     r9, [r10, #offArrayObject_contents] @ vBB[vCC]<- vAA
     GOTO_OPCODE(ip)                     @ jump to next instruction
+.LOP_APUT_OBJECT_throw:
+    @ The types don't match.  We need to throw an ArrayStoreException.
+    ldr     r0, [r9, #offObject_clazz]
+    ldr     r1, [rINST, #offObject_clazz]
+    EXPORT_PC()
+    bl      dvmThrowArrayStoreException
+    b       common_exceptionThrown
 
 /* continuation for OP_IGET */
 
@@ -10844,16 +10847,6 @@ common_errArrayIndex:
     b       common_exceptionThrown
 
 /*
- * Invalid array value.
- */
-common_errArrayStore:
-    EXPORT_PC()
-    ldr     r0, strArrayStoreException
-    mov     r1, #0
-    bl      dvmThrowException
-    b       common_exceptionThrown
-
-/*
  * Integer divide or mod by zero.
  */
 common_errDivideByZero:
@@ -11030,8 +11023,6 @@ dvmConfigureFP:
     .align  2
 strArithmeticException:
     .word   .LstrArithmeticException
-strArrayStoreException:
-    .word   .LstrArrayStoreException
 strDivideByZero:
     .word   .LstrDivideByZero
 strNegativeArraySizeException:
@@ -11070,10 +11061,6 @@ strPrintLong:
     .asciz  "Bad entry point %d\n"
 .LstrArithmeticException:
     .asciz  "Ljava/lang/ArithmeticException;"
-.LstrArrayStoreException:
-    .asciz  "Ljava/lang/ArrayStoreException;"
-.LstrClassCastException:
-    .asciz  "Ljava/lang/ClassCastException;"
 .LstrDivideByZero:
     .asciz  "divide by zero"
 .LstrFilledNewArrayNotImpl:

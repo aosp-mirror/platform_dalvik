@@ -118,6 +118,8 @@ struct DvmGlobals {
     DexOptimizerMode    dexOptMode;
     DexClassVerifyMode  classVerifyMode;
 
+    bool        monitorVerification;
+
     bool        dexOptForSmp;
 
     /*
@@ -495,13 +497,6 @@ struct DvmGlobals {
      */
     AtomicCache* instanceofCache;
 
-    /* instruction width table, used for optimization and verification */
-    InstructionWidth*   instrWidth;
-    /* instruction flags table, used for verification */
-    InstructionFlags*   instrFlags;
-    /* instruction format table, used for verification */
-    InstructionFormat*  instrFormat;
-
     /* inline substitution table, used during optimization */
     InlineSub*          inlineSubs;
 
@@ -623,7 +618,7 @@ struct DvmGlobals {
     Method**    inlinedMethods;
 
     /*
-     * Dalvik instruction counts (256 entries).
+     * Dalvik instruction counts (kNumDalvikInstructions entries).
      */
     int*        executedInstrCounts;
     int         instructionCountEnableCount;
@@ -658,6 +653,10 @@ struct DvmGlobals {
 
     /* some RegisterMap statistics, useful during development */
     void*       registerMapStats;
+
+#ifdef VERIFIER_STATS
+    VerifierStats verifierStats;
+#endif
 };
 
 extern struct DvmGlobals gDvm;

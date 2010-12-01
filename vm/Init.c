@@ -120,6 +120,7 @@ static void dvmUsage(const char* progName)
     dvmFprintf(stderr, "  -Xgc:[no]concurrent\n");
     dvmFprintf(stderr, "  -Xgc:[no]verifycardtable\n");
     dvmFprintf(stderr, "  -Xgenregmap\n");
+    dvmFprintf(stderr, "  -Xverifyopt:[no]checkmon\n");
     dvmFprintf(stderr, "  -Xcheckdexsum\n");
 #if defined(WITH_JIT)
     dvmFprintf(stderr, "  -Xincludeselectedop\n");
@@ -139,15 +140,15 @@ static void dvmUsage(const char* progName)
     dvmFprintf(stderr, "Configured with:"
         " debugger"
         " profiler"
+        " hprof"
+#ifdef WITH_HPROF_STACK
+        " hprof_stack"
+#endif
 #ifdef WITH_MONITOR_TRACKING
         " monitor_tracking"
 #endif
 #ifdef WITH_DEADLOCK_PREDICTION
         " deadlock_prediction"
-#endif
-        " hprof"
-#ifdef WITH_HPROF_STACK
-        " hprof_stack"
 #endif
 #ifdef WITH_TRACKREF_CHECKS
         " trackref_checks"
@@ -984,6 +985,11 @@ static int dvmProcessOptions(int argc, const char* const argv[],
             gDvm.generateRegisterMaps = true;
             LOGV("Register maps will be generated during verification\n");
 
+        } else if (strcmp(argv[i], "Xverifyopt:checkmon") == 0) {
+            gDvm.monitorVerification = true;
+        } else if (strcmp(argv[i], "Xverifyopt:nocheckmon") == 0) {
+            gDvm.monitorVerification = false;
+
         } else if (strncmp(argv[i], "-Xgc:", 5) == 0) {
             if (strcmp(argv[i] + 5, "precise") == 0)
                 gDvm.preciseGc = true;
@@ -1076,6 +1082,7 @@ static void setCommandLineDefaults()
     /* default verification and optimization modes */
     gDvm.classVerifyMode = VERIFY_MODE_ALL;
     gDvm.dexOptMode = OPTIMIZE_MODE_VERIFIED;
+    gDvm.monitorVerification = false;
 
     /*
      * Default execution mode.
@@ -1225,8 +1232,6 @@ int dvmStartup(int argc, const char* const argv[], bool ignoreUnrecognized,
     if (!dvmThreadStartup())
         goto fail;
     if (!dvmInlineNativeStartup())
-        goto fail;
-    if (!dvmVerificationStartup())
         goto fail;
     if (!dvmRegisterMapStartup())
         goto fail;
@@ -1596,8 +1601,6 @@ int dvmPrepForDexOpt(const char* bootClassPath, DexOptimizerMode dexOptMode,
         goto fail;
     if (!dvmInlineNativeStartup())
         goto fail;
-    if (!dvmVerificationStartup())
-        goto fail;
     if (!dvmRegisterMapStartup())
         goto fail;
     if (!dvmInstanceofStartup())
@@ -1687,7 +1690,6 @@ void dvmShutdown(void)
     dvmExceptionShutdown();
     dvmThreadShutdown();
     dvmClassShutdown();
-    dvmVerificationShutdown();
     dvmRegisterMapShutdown();
     dvmInstanceofShutdown();
     dvmInlineNativeShutdown();

@@ -33,6 +33,13 @@ to indicate an extended sixteen-bit opcode. A slashed zero
 ("<code>&Oslash;</code>") is used to indicate that all bits must be
 zero in the indicated position.</p>
 
+<p>For the most part, lettering proceeds from earlier code units to
+later code units, and low-order to high-order within a code unit.
+However, there are a few exceptions to this general rule, which are
+done in order to make the naming of similar-meaning parts be the same
+across different instruction formats. These cases are noted explicitly
+in the format descriptions.</p>
+
 <p>For example, the format "<code>B|A|<i>op</i> CCCC</code>" indicates
 that the format consists of two 16-bit code units. The first word
 consists of the opcode in the low eight bits and a pair of four-bit
@@ -45,7 +52,7 @@ values in the high eight bits; and the second word consists of a single
 for the format, which is used in other documents and in code to identify
 the format.</p>
 
-<p>Format IDs consist of three characters, two digits followed by a
+<p>Most format IDs consist of three characters, two digits followed by a
 letter. The first digit indicates the number of 16-bit code units in the
 format. The second digit indicates the maximum number of registers that the
 format contains (maximum, since some formats can accomodate a variable
@@ -56,7 +63,12 @@ format "<code>21t</code>" is of length two, contains one register reference,
 and additionally contains a branch target.</p>
 
 <p>Suggested static linking formats have an additional "<code>s</code>" suffix,
-making them four characters total.</p>
+making them four characters total. Similarly, suggested "inline" linking
+formats have an additional "<code>i</code>" suffix. (In this context, inline
+linking is like static linking, except with more direct ties into a
+virtual machine's implementation.) Finally, one oddball suggested format
+("<code>20bc</code>") includes two pieces of data which are represented in
+its format ID.</p>
 
 <p>The full list of typecode letters are as follows. Note that some
 forms have different sizes, depending on the format:</p>
@@ -178,7 +190,7 @@ indices. There are two types of suggested prelinked value: vtable offsets
 
 <p>In the cases where a format value isn't explictly part of the syntax
 but instead picks a variant, each variant is listed with the prefix
-"<code>[<i>X</i>=<i>N</i>]</code>" (e.g., "<code>[B=2]</code>") to indicate
+"<code>[<i>X</i>=<i>N</i>]</code>" (e.g., "<code>[A=2]</code>") to indicate
 the correspondence.</p>
 
 <h2>The Formats</h2>
@@ -193,6 +205,13 @@ the correspondence.</p>
 </tr>
 </thead>
 <tbody>
+<tr>
+  <td><i>N/A</i></td>
+  <td>00x</td>
+  <td><i><code>N/A</code></i></td>
+  <td><i>pseudo-format used for unused opcodes; suggested for use as the
+    nominal format for a breakpoint opcode</i></td>
+</tr>
 <tr>
   <td>&Oslash;&Oslash;|<i>op</i></td>
   <td>10x</td>
@@ -226,6 +245,14 @@ the correspondence.</p>
   <td>20t</td>
   <td><i><code>op</code></i> +AAAA</td>
   <td>goto/16</td>
+</tr>
+<tr>
+  <td>AA|<i>op</i> BBBB</td></td>
+  <td>20bc</td>
+  <td><i><code>op</code></i> BB, kind@AAAA</td>
+  <td><i>suggested format for statically determined verification errors;
+    B is the type of error and A is an index into a type-appropriate
+    table (e.g. method references for a no-such-method error)</i></td>
 </tr>
 <tr>
   <td rowspan="5">AA|<i>op</i> BBBB</td>
@@ -326,45 +353,70 @@ the correspondence.</p>
   <td>const-string/jumbo</td>
 </tr>
 <tr>
-  <td rowspan="2">B|A|<i>op</i> CCCC G|F|E|D</td>
+  <td rowspan="3">A|G|<i>op</i> BBBB F|E|D|C</td>
   <td>35c</td>
-  <td><i>[<code>B=5</code>] <code>op</code></i> {vD, vE, vF, vG, vA},
-    meth@CCCC<br/>
-    <i>[<code>B=5</code>] <code>op</code></i> {vD, vE, vF, vG, vA},
-    type@CCCC<br/>
-    <i>[<code>B=4</code>] <code>op</code></i> {vD, vE, vF, vG},
-    <i><code>kind</code></i>@CCCC<br/>
-    <i>[<code>B=3</code>] <code>op</code></i> {vD, vE, vF},
-    <i><code>kind</code></i>@CCCC<br/>
-    <i>[<code>B=2</code>] <code>op</code></i> {vD, vE},
-    <i><code>kind</code></i>@CCCC<br/>
-    <i>[<code>B=1</code>] <code>op</code></i> {vD},
-    <i><code>kind</code></i>@CCCC<br/>
-    <i>[<code>B=0</code>] <code>op</code></i> {},
-    <i><code>kind</code></i>@CCCC
+  <td><i>[<code>A=5</code>] <code>op</code></i> {vC, vD, vE, vF, vG},
+    meth@BBBB<br/>
+    <i>[<code>A=5</code>] <code>op</code></i> {vC, vD, vE, vF, vG},
+    type@BBBB<br/>
+    <i>[<code>A=4</code>] <code>op</code></i> {vC, vD, vE, vF},
+    <i><code>kind</code></i>@BBBB<br/>
+    <i>[<code>A=3</code>] <code>op</code></i> {vC, vD, vE},
+    <i><code>kind</code></i>@BBBB<br/>
+    <i>[<code>A=2</code>] <code>op</code></i> {vC, vD},
+    <i><code>kind</code></i>@BBBB<br/>
+    <i>[<code>A=1</code>] <code>op</code></i> {vC},
+    <i><code>kind</code></i>@BBBB<br/>
+    <i>[<code>A=0</code>] <code>op</code></i> {},
+    <i><code>kind</code></i>@BBBB<br/>
+    <p><i>The unusual choice in lettering here reflects a desire to make
+    the count and the reference index have the same label as in format
+    3rc.</i></p>
   </td>
   <td>&nbsp;</td>
 </tr>
 <tr>
   <td>35ms</td>
-
-  <td><i>[<code>B=5</code>] <code>op</code></i> {vD, vE, vF, vG, vA},
-    vtaboff@CCCC<br/>
-    <i>[<code>B=4</code>] <code>op</code></i> {vD, vE, vF, vG},
-    vtaboff@CCCC<br/>
-    <i>[<code>B=3</code>] <code>op</code></i> {vD, vE, vF},
-    vtaboff@CCCC<br/>
-    <i>[<code>B=2</code>] <code>op</code></i> {vD, vE},
-    vtaboff@CCCC<br/>
-    <i>[<code>B=1</code>] <code>op</code></i> {vD},
-    vtaboff@CCCC<br/>
+  <td><i>[<code>A=5</code>] <code>op</code></i> {vC, vD, vE, vF, vG},
+    vtaboff@BBBB<br/>
+    <i>[<code>A=4</code>] <code>op</code></i> {vC, vD, vE, vF},
+    vtaboff@BBBB<br/>
+    <i>[<code>A=3</code>] <code>op</code></i> {vC, vD, vE},
+    vtaboff@BBBB<br/>
+    <i>[<code>A=2</code>] <code>op</code></i> {vC, vD},
+    vtaboff@BBBB<br/>
+    <i>[<code>A=1</code>] <code>op</code></i> {vC},
+    vtaboff@BBBB<br/>
+    <p><i>The unusual choice in lettering here reflects a desire to make
+    the count and the reference index have the same label as in format
+    3rms.</i></p>
   </td>
   <td><i>suggested format for statically linked <code>invoke-virtual</code>
     and <code>invoke-super</code> instructions of format 35c</i>
   </td>
 </tr>
 <tr>
-  <td rowspan="2">AA|<i>op</i> BBBB CCCC</td>
+  <td>35mi</td>
+  <td><i>[<code>A=5</code>] <code>op</code></i> {vC, vD, vE, vF, vG},
+    inline@BBBB<br/>
+    <i>[<code>A=4</code>] <code>op</code></i> {vC, vD, vE, vF},
+    inline@BBBB<br/>
+    <i>[<code>A=3</code>] <code>op</code></i> {vC, vD, vE},
+    inline@BBBB<br/>
+    <i>[<code>A=2</code>] <code>op</code></i> {vC, vD},
+    inline@BBBB<br/>
+    <i>[<code>A=1</code>] <code>op</code></i> {vC},
+    inline@BBBB<br/>
+    <p><i>The unusual choice in lettering here reflects a desire to make
+    the count and the reference index have the same label as in format
+    3rmi.</i></p>
+  </td>
+  <td><i>suggested format for inline linked <code>invoke-static</code>
+    and <code>invoke-virtual</code> instructions of format 35c</i>
+  </td>
+</tr>
+<tr>
+  <td rowspan="3">AA|<i>op</i> BBBB CCCC</td>
   <td>3rc</td>
   <td><i><code>op</code></i> {vCCCC .. vNNNN}, meth@BBBB<br/>
     <i><code>op</code></i> {vCCCC .. vNNNN}, type@BBBB<br/>
@@ -386,6 +438,17 @@ the correspondence.</p>
   </td>
 </tr>
 <tr>
+  <td>3rmi</td>
+  <td><i><code>op</code></i> {vCCCC .. vNNNN}, inline@BBBB<br/>
+    <p><i>where <code>NNNN = CCCC+AA-1</code>, that is <code>A</code>
+    determines the count <code>0..255</code>, and <code>C</code>
+    determines the first register</i></p>
+  </td>
+  <td><i>suggested format for inline linked <code>invoke-static</code>
+    and <code>invoke-virtual</code> instructions of format 3rc</i>
+  </td>
+</tr>
+<tr>
   <td>AA|<i>op</i> BBBB<sub>lo</sub> BBBB BBBB BBBB<sub>hi</sub></td>
   <td>51l</td>
   <td><i><code>op</code></i> vAA, #+BBBBBBBBBBBBBBBB</td>
@@ -403,29 +466,37 @@ the correspondence.</p>
   <td>&nbsp;</td>
 </tr>
 <tr>
-  <td><i>exop</i> AAAA<sub>lo</sub> AAAA<sub>hi</sub> BBBB
+  <td><i>exop</i> BBBB<sub>lo</sub> BBBB<sub>hi</sub> AAAA
   <td>41c</td>
-  <td><i><code>exop</code></i> vBBBB, field@AAAAAAAA<br/>
-    <i><code>exop</code></i> vBBBB, type@AAAAAAAA
+  <td><i><code>exop</code></i> vAAAA, field@BBBBBBBB<br/>
+    <i><code>exop</code></i> vAAAA, type@BBBBBBBB
+    <p><i>The unusual choice in lettering here reflects a desire to make
+    the letters match their use in related formats 21c and 31c.</i></p>
   </td>
   <td>&nbsp;</td>
 </tr>
 <tr>
-  <td rowspan="2"><i>exop</i> AAAA<sub>lo</sub> AAAA<sub>hi</sub>
-    BBBB CCCC</td>
+  <td><i>exop</i> CCCC<sub>lo</sub> CCCC<sub>hi</sub>
+    AAAA BBBB</td>
   <td>52c</td>
-  <td><i><code>exop</code></i> vBBBB, vCCCC, field@AAAAAAAA<br/>
-    <i><code>exop</code></i> vBBBB, vCCCC, type@AAAAAAAA
+  <td><i><code>exop</code></i> vAAAA, vBBBB, field@CCCCCCCC<br/>
+    <i><code>exop</code></i> vAAAA, vBBBB, type@CCCCCCCC
+    <p><i>The unusual choice in lettering here reflects a desire to make
+    the letters match their use in related formats 22c and 22cs.</i></p>
   </td>
   <td>&nbsp;</td>
 </tr>
 <tr>
+  <td><i>exop</i> BBBB<sub>lo</sub> BBBB<sub>hi</sub>
+    AAAA CCCC</td>
   <td>5rc</td>
-  <td><i><code>exop</code></i> {vBBBB .. vNNNN}, meth@AAAAAAAA<br/>
-    <i><code>exop</code></i> {vBBBB .. vNNNN}, type@AAAAAAAA<br/>
-    <p><i>where <code>NNNN = BBBB+CCCC-1</code>, that is
-    <code>B</code> determines the first register and <code>C</code>
-    determines the count <code>0..65535</code></i></p>
+  <td><i><code>exop</code></i> {vCCCC .. vNNNN}, meth@BBBBBBBB<br/>
+    <i><code>exop</code></i> {vCCCC .. vNNNN}, type@BBBBBBBB<br/>
+    <p><i>where <code>NNNN = CCCC+AAAA-1</code>, that is <code>A</code>
+    determines the count <code>0..65535</code>, and <code>C</code>
+    determines the first register</i></p>
+    <p><i>The unusual choice in lettering here reflects a desire to make
+    the letters match their use in related formats 3rc, 3rms, and 3rmi.</i></p>
   </td>
   <td>&nbsp;</td>
 </tr>

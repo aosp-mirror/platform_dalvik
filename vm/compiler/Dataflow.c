@@ -20,9 +20,10 @@
 #include "libdex/OpCodeNames.h"
 
 /*
- * Main table containing data flow attributes for each bytecode. The first
- * 256 entries are for Dalvik bytecode instructions, where extended opcode at
- * the MIR level are appended afterwards.
+ * Main table containing data flow attributes for each bytecode. The
+ * first kNumDalvikInstructions entries are for Dalvik bytecode
+ * instructions, where extended opcode at the MIR level are appended
+ * afterwards.
  *
  * TODO - many optimization flags are incomplete - they will only limit the
  * scope of optimizations but will not cause mis-optimizations.

@@ -19,155 +19,8 @@
  */
 #include "Dalvik.h"
 #include "analysis/CodeVerify.h"
-#include "libdex/DexCatch.h"
 #include "libdex/InstrUtils.h"
 
-
-/*
- * Compute the width of the instruction at each address in the instruction
- * stream.  Addresses that are in the middle of an instruction, or that
- * are part of switch table data, are not set (so the caller should probably
- * initialize "insnFlags" to zero).
- *
- * If "pNewInstanceCount" is not NULL, it will be set to the number of
- * new-instance instructions in the method.
- *
- * Performs some static checks, notably:
- * - opcode of first instruction begins at index 0
- * - only documented instructions may appear
- * - each instruction follows the last
- * - last byte of last instruction is at (code_length-1)
- *
- * Logs an error and returns "false" on failure.
- */
-bool dvmComputeCodeWidths(const Method* meth, InsnFlags* insnFlags,
-    int* pNewInstanceCount)
-{
-    size_t insnCount = dvmGetMethodInsnsSize(meth);
-    const u2* insns = meth->insns;
-    bool result = false;
-    int newInstanceCount = 0;
-    int i;
-
-
-    for (i = 0; i < (int) insnCount; /**/) {
-        size_t width = dexGetInstrOrTableWidthAbs(gDvm.instrWidth, insns);
-        if (width == 0) {
-            LOG_VFY_METH(meth,
-                "VFY: invalid post-opt instruction (0x%04x)\n", *insns);
-            goto bail;
-        }
-
-        if ((*insns & 0xff) == OP_NEW_INSTANCE)
-            newInstanceCount++;
-
-        if (width > 65535) {
-            LOG_VFY_METH(meth, "VFY: insane width %d\n", width);
-            goto bail;
-        }
-
-        insnFlags[i] |= width;
-        i += width;
-        insns += width;
-    }
-    if (i != (int) dvmGetMethodInsnsSize(meth)) {
-        LOG_VFY_METH(meth, "VFY: code did not end where expected (%d vs. %d)\n",
-            i, dvmGetMethodInsnsSize(meth));
-        goto bail;
-    }
-
-    result = true;
-    if (pNewInstanceCount != NULL)
-        *pNewInstanceCount = newInstanceCount;
-
-bail:
-    return result;
-}
-
-/*
- * Set the "in try" flags for all instructions protected by "try" statements.
- * Also sets the "branch target" flags for exception handlers.
- *
- * Call this after widths have been set in "insnFlags".
- *
- * Returns "false" if something in the exception table looks fishy, but
- * we're expecting the exception table to be somewhat sane.
- */
-bool dvmSetTryFlags(const Method* meth, InsnFlags* insnFlags)
-{
-    u4 insnsSize = dvmGetMethodInsnsSize(meth);
-    const DexCode* pCode = dvmGetMethodCode(meth);
-    u4 triesSize = pCode->triesSize;
-    const DexTry* pTries;
-    u4 handlersSize;
-    u4 offset;
-    u4 i;
-
-    if (triesSize == 0) {
-        return true;
-    }
-
-    pTries = dexGetTries(pCode);
-    handlersSize = dexGetHandlersSize(pCode);
-
-    for (i = 0; i < triesSize; i++) {
-        const DexTry* pTry = &pTries[i];
-        u4 start = pTry->startAddr;
-        u4 end = start + pTry->insnCount;
-        u4 addr;
-
-        if ((start >= end) || (start >= insnsSize) || (end > insnsSize)) {
-            LOG_VFY_METH(meth,
-                "VFY: bad exception entry: startAddr=%d endAddr=%d (size=%d)\n",
-                start, end, insnsSize);
-            return false;
-        }
-
-        if (dvmInsnGetWidth(insnFlags, start) == 0) {
-            LOG_VFY_METH(meth,
-                "VFY: 'try' block starts inside an instruction (%d)\n",
-                start);
-            return false;
-        }
-
-        for (addr = start; addr < end;
-            addr += dvmInsnGetWidth(insnFlags, addr))
-        {
-            assert(dvmInsnGetWidth(insnFlags, addr) != 0);
-            dvmInsnSetInTry(insnFlags, addr, true);
-        }
-    }
-
-    /* Iterate over each of the handlers to verify target addresses. */
-    offset = dexGetFirstHandlerOffset(pCode);
-    for (i = 0; i < handlersSize; i++) {
-        DexCatchIterator iterator;
-        dexCatchIteratorInit(&iterator, pCode, offset);
-
-        for (;;) {
-            DexCatchHandler* handler = dexCatchIteratorNext(&iterator);
-            u4 addr;
-
-            if (handler == NULL) {
-                break;
-            }
-
-            addr = handler->address;
-            if (dvmInsnGetWidth(insnFlags, addr) == 0) {
-                LOG_VFY_METH(meth,
-                    "VFY: exception handler starts at bad address (%d)\n",
-                    addr);
-                return false;
-            }
-
-            dvmInsnSetBranchTarget(insnFlags, addr, true);
-        }
-
-        offset = dexCatchIteratorGetEndOffset(&iterator, pCode);
-    }
-
-    return true;
-}
 
 /*
  * Output a code verifier warning message.  For the pre-verifier it's not
@@ -209,8 +62,8 @@ void dvmLogUnableToResolveClass(const char* missingClassDescr,
     if (gDvm.optimizing)
         return;
 
-    char* dotMissingClass = dvmDescriptorToDot(missingClassDescr);
-    char* dotFromClass = dvmDescriptorToDot(meth->clazz->descriptor);
+    char* dotMissingClass = dvmHumanReadableDescriptor(missingClassDescr);
+    char* dotFromClass = dvmHumanReadableDescriptor(meth->clazz->descriptor);
     //char* methodDescr = dexProtoCopyMethodDescriptor(&meth->prototype);
 
     LOGE("Could not find class '%s', referenced from method %s.%s\n",
@@ -265,30 +118,4 @@ bool dvmGetBranchTarget(const Method* meth, InsnFlags* insnFlags,
     }
 
     return true;
-}
-
-/*
- * Given a 32-bit constant, return the most-restricted RegType enum entry
- * that can hold the value.
- */
-char dvmDetermineCat1Const(s4 value)
-{
-    if (value < -32768)
-        return kRegTypeInteger;
-    else if (value < -128)
-        return kRegTypeShort;
-    else if (value < 0)
-        return kRegTypeByte;
-    else if (value == 0)
-        return kRegTypeZero;
-    else if (value == 1)
-        return kRegTypeOne;
-    else if (value < 128)
-        return kRegTypePosByte;
-    else if (value < 32768)
-        return kRegTypePosShort;
-    else if (value < 65536)
-        return kRegTypeChar;
-    else
-        return kRegTypeInteger;
 }

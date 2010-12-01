@@ -69,6 +69,10 @@ public final class Form52c extends InsnFormat {
     /** {@inheritDoc} */
     @Override
     public boolean isCompatible(DalvInsn insn) {
+        if (! ALLOW_EXTENDED_OPCODES) {
+            return false;
+        }
+
         RegisterSpecList regs = insn.getRegisters();
         if (!((insn instanceof CstInsn) &&
               (regs.size() == 2) &&
@@ -82,12 +86,6 @@ public final class Form52c extends InsnFormat {
 
         return (cst instanceof CstType) ||
             (cst instanceof CstFieldRef);
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public InsnFormat nextUp() {
-        return null;
     }
 
     /** {@inheritDoc} */

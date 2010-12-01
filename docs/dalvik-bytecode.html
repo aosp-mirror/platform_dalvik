@@ -156,7 +156,14 @@
   <td>00 10x</td>
   <td>nop</td>
   <td>&nbsp;</td>
-  <td>Waste cycles.</td>
+  <td>Waste cycles.
+    <p><b>Note:</b>
+    Data-bearing pseudo-instructions are tagged with this opcode, in which
+    case the high-order byte of the opcode unit indicates the nature of
+    the data. See "<code>packed-switch</code> Format",
+    "<code>sparse-switch</code> Format", and
+    "<code>fill-array-data</code> Format" below.</p>
+  </td>
 </tr>
 <tr>
   <td>01 12x</td>
@@ -976,6 +983,16 @@
 </tr>
 <tr>
   <td>00ff 41c</td>
+  <td>const-class/jumbo vBBBB, type@AAAAAAAA</td>
+  <td><code>A:</code> type index (32 bits)<br/>
+    <code>B:</code> destination register (16 bits)</td>
+  <td>Move a reference to the class specified by the given index into the
+    specified register. See <code>const-class</code> description above
+    for details, caveats, and suggestions.
+  </td>
+</tr>
+<tr>
+  <td>01ff 41c</td>
   <td>check-cast/jumbo vBBBB, type@AAAAAAAA</td>
   <td><code>A:</code> type index (32 bits)<br/>
     <code>B:</code> reference-bearing register (16 bits)
@@ -987,7 +1004,7 @@
   </td>
 </tr>
 <tr>
-  <td>01ff 52c</td>
+  <td>02ff 52c</td>
   <td>instance-of/jumbo  vBBBB, vCCCC, type@AAAAAAAA</td>
   <td><code>A:</code> type index (32 bits)<br/>
     <code>B:</code> destination register (16 bits)<br/>
@@ -1001,7 +1018,7 @@
   </td>
 </tr>
 <tr>
-  <td>02ff 41c</td>
+  <td>03ff 41c</td>
   <td>new-instance/jumbo vBBBB, type@AAAAAAAA</td>
   <td><code>A:</code> type index (32 bits)<br/>
     <code>B:</code> destination register (16 bits)
@@ -1012,7 +1029,7 @@
   </td>
 </tr>
 <tr>
-  <td>03ff 52c</td>
+  <td>04ff 52c</td>
   <td>new-array/jumbo vBBBB, vCCCC, type@AAAAAAAA</td>
   <td><code>A:</code> type index (32 bits)<br/>
     <code>B:</code> destination register (16 bits)<br/>
@@ -1024,7 +1041,7 @@
   </td>
 </tr>
 <tr>
-  <td>04ff 5rc</td>
+  <td>05ff 5rc</td>
   <td>filled-new-array/jumbo {vCCCC .. vNNNN}, type@AAAAAAAA</td>
   <td><code>A:</code> type index (32 bits)<br/>
     <code>B:</code> array size and argument word count (16 bits)<br/>
@@ -1038,22 +1055,22 @@
   </td>
 </tr>
 <tr>
-  <td>05ff..12ff 52c</td>
-  <td>i<i>instanceop</i> vBBBB, vCCCC, field@AAAAAAAA<br/>
-    05ff: iget/jumbo<br/>
-    06ff: iget-wide/jumbo<br/>
-    07ff: iget-object/jumbo<br/>
-    08ff: iget-boolean/jumbo<br/>
-    09ff: iget-byte/jumbo<br/>
-    0aff: iget-char/jumbo<br/>
-    0bff: iget-short/jumbo<br/>
-    0cff: iput/jumbo<br/>
-    0dff: iput-wide/jumbo<br/>
-    0eff: iput-object/jumbo<br/>
-    0fff: iput-boolean/jumbo<br/>
-    10ff: iput-byte/jumbo<br/>
-    11ff: iput-char/jumbo<br/>
-    12ff: iput-short/jumbo
+  <td>06ff..13ff 52c</td>
+  <td>i<i>instanceop</i>/jumbo vBBBB, vCCCC, field@AAAAAAAA<br/>
+    06ff: iget/jumbo<br/>
+    07ff: iget-wide/jumbo<br/>
+    08ff: iget-object/jumbo<br/>
+    09ff: iget-boolean/jumbo<br/>
+    0aff: iget-byte/jumbo<br/>
+    0bff: iget-char/jumbo<br/>
+    0cff: iget-short/jumbo<br/>
+    0dff: iput/jumbo<br/>
+    0eff: iput-wide/jumbo<br/>
+    0fff: iput-object/jumbo<br/>
+    10ff: iput-boolean/jumbo<br/>
+    11ff: iput-byte/jumbo<br/>
+    12ff: iput-char/jumbo<br/>
+    13ff: iput-short/jumbo
   </td>
   <td><code>A:</code> instance field reference index (32 bits)<br/>
     <code>B:</code> value register or pair; may be source or dest
@@ -1066,22 +1083,22 @@
   </td>
 </tr>
 <tr>
-  <td>13ff..20ff 41c</td>
-  <td>s<i>staticop</i> vBBBB, field@AAAAAAAA<br/>
-    13ff: sget/jumbo<br/>
-    14ff: sget-wide/jumbo<br/>
-    15ff: sget-object/jumbo<br/>
-    16ff: sget-boolean/jumbo<br/>
-    17ff: sget-byte/jumbo<br/>
-    18ff: sget-char/jumbo<br/>
-    19ff: sget-short/jumbo<br/>
-    1aff: sput/jumbo<br/>
-    1bff: sput-wide/jumbo<br/>
-    1cff: sput-object/jumbo<br/>
-    1dff: sput-boolean/jumbo<br/>
-    1eff: sput-byte/jumbo<br/>
-    1fff: sput-char/jumbo<br/>
-    20ff: sput-short/jumbo
+  <td>14ff..21ff 41c</td>
+  <td>s<i>staticop</i>/jumbo vBBBB, field@AAAAAAAA<br/>
+    14ff: sget/jumbo<br/>
+    15ff: sget-wide/jumbo<br/>
+    16ff: sget-object/jumbo<br/>
+    17ff: sget-boolean/jumbo<br/>
+    18ff: sget-byte/jumbo<br/>
+    19ff: sget-char/jumbo<br/>
+    1aff: sget-short/jumbo<br/>
+    1bff: sput/jumbo<br/>
+    1cff: sput-wide/jumbo<br/>
+    1dff: sput-object/jumbo<br/>
+    1eff: sput-boolean/jumbo<br/>
+    1fff: sput-byte/jumbo<br/>
+    20ff: sput-char/jumbo<br/>
+    21ff: sput-short/jumbo
   </td>
   <td><code>A:</code> instance field reference index (32 bits)<br/>
     <code>B:</code> value register or pair; may be source or dest
@@ -1093,13 +1110,13 @@
   </td>
 </tr>
 <tr>
-  <td>21ff..25ff 5rc</td>
+  <td>22ff..26ff 5rc</td>
   <td>invoke-<i>kind</i>/jumbo {vCCCC .. vNNNN}, meth@AAAAAAAA<br/>
-    21ff: invoke-virtual/jumbo<br/>
-    22ff: invoke-super/jumbo<br/>
-    23ff: invoke-direct/jumbo<br/>
-    24ff: invoke-static/jumbo<br/>
-    25ff: invoke-interface/jumbo
+    22ff: invoke-virtual/jumbo<br/>
+    23ff: invoke-super/jumbo<br/>
+    24ff: invoke-direct/jumbo<br/>
+    25ff: invoke-static/jumbo<br/>
+    26ff: invoke-interface/jumbo
   </td>
   <td><code>A:</code> method reference index (32 bits)<br/>
     <code>B:</code> argument word count (16 bits)<br/>

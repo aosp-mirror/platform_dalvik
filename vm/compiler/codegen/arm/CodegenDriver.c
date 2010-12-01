@@ -1233,7 +1233,7 @@ static void genPuntToInterp(CompilationUnit *cUnit, unsigned int offset)
  */
 static void genInterpSingleStep(CompilationUnit *cUnit, MIR *mir)
 {
-    int flags = dexGetInstrFlags(gDvm.instrFlags, mir->dalvikInsn.opCode);
+    int flags = dexGetInstrFlags(mir->dalvikInsn.opCode);
     int flagsToCheck = kInstrCanBranch | kInstrCanSwitch | kInstrCanReturn |
                        kInstrCanThrow;
 
@@ -1283,7 +1283,7 @@ static void genMonitorPortable(CompilationUnit *cUnit, MIR *mir)
     if (isEnter) {
         /* Get dPC of next insn */
         loadConstant(cUnit, r4PC, (int)(cUnit->method->insns + mir->offset +
-                 dexGetInstrWidthAbs(gDvm.instrWidth, OP_MONITOR_ENTER)));
+                 dexGetInstrWidth(OP_MONITOR_ENTER)));
 #if defined(WITH_DEADLOCK_PREDICTION)
         genDispatchToHandler(cUnit, TEMPLATE_MONITOR_ENTER_DEBUG);
 #else
@@ -1297,7 +1297,7 @@ static void genMonitorPortable(CompilationUnit *cUnit, MIR *mir)
         ArmLIR *branchOver = genCmpImmBranch(cUnit, kArmCondNe, r0, 0);
         loadConstant(cUnit, r0,
                      (int) (cUnit->method->insns + mir->offset +
-                     dexGetInstrWidthAbs(gDvm.instrWidth, OP_MONITOR_EXIT)));
+                     dexGetInstrWidth(OP_MONITOR_EXIT)));
         genDispatchToHandler(cUnit, TEMPLATE_THROW_EXCEPTION_COMMON);
         ArmLIR *target = newLIR0(cUnit, kArmPseudoTargetLabel);
         target->defMask = ENCODE_ALL;
@@ -4097,8 +4097,7 @@ void dvmCompilerMIR2LIR(CompilationUnit *cUnit)
 
 
             OpCode dalvikOpCode = mir->dalvikInsn.opCode;
-            InstructionFormat dalvikFormat =
-                dexGetInstrFormat(gDvm.instrFormat, dalvikOpCode);
+            InstructionFormat dalvikFormat = dexGetInstrFormat(dalvikOpCode);
             char *note;
             if (mir->OptimizationFlags & MIR_INLINED) {
                 note = " (I)";
@@ -4214,8 +4213,8 @@ void dvmCompilerMIR2LIR(CompilationUnit *cUnit)
                         notHandled = handleFmt35ms_3rms(cUnit, mir,blockList[i],
                                                         labelList);
                         break;
-                    case kFmt3inline:
-                    case kFmt3rinline:
+                    case kFmt35mi:
+                    case kFmt3rmi:
                         notHandled = handleExecuteInline(cUnit, mir);
                         break;
                     case kFmt51l:
@@ -4384,13 +4383,13 @@ void dvmCompilerArchDump(void)
 
     streak = i = 0;
     buf[0] = 0;
-    while (opcodeCoverage[i] == 0 && i < 256) {
+    while (opcodeCoverage[i] == 0 && i < kNumDalvikInstructions) {
         i++;
     }
-    if (i == 256) {
+    if (i == kNumDalvikInstructions) {
         return;
     }
-    for (start = i++, streak = 1; i < 256; i++) {
+    for (start = i++, streak = 1; i < kNumDalvikInstructions; i++) {
         if (opcodeCoverage[i]) {
             streak++;
         } else {
@@ -4400,10 +4399,10 @@ void dvmCompilerArchDump(void)
                 sprintf(buf+strlen(buf), "%x-%x,", start, start + streak - 1);
             }
             streak = 0;
-            while (opcodeCoverage[i] == 0 && i < 256) {
+            while (opcodeCoverage[i] == 0 && i < kNumDalvikInstructions) {
                 i++;
             }
-            if (i < 256) {
+            if (i < kNumDalvikInstructions) {
                 streak = 1;
                 start = i;
             }

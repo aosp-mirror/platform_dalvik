@@ -40,6 +40,17 @@ INLINE void dvmThrowException(const char* exceptionDescriptor,
  * index and array length in the detail message.
  */
 void dvmThrowAIOOBE(int index, int length);
+/*
+ * Throw an ArrayStoreException in the current thread, using the given classes'
+ * names in the detail message.
+ */
+void dvmThrowArrayStoreException(ClassObject* actual, ClassObject* desired);
+
+/**
+ * Throw a ClassCastException in the current thread, using the given classes'
+ * names in the detail message.
+ */
+void dvmThrowClassCastException(ClassObject* actual, ClassObject* desired);
 
 /*
  * Like dvmThrowChainedException, but takes printf-style args for the message.

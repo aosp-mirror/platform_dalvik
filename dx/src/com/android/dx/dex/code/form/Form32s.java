@@ -66,6 +66,10 @@ public final class Form32s extends InsnFormat {
     /** {@inheritDoc} */
     @Override
     public boolean isCompatible(DalvInsn insn) {
+        if (! ALLOW_EXTENDED_OPCODES) {
+            return false;
+        }
+
         RegisterSpecList regs = insn.getRegisters();
         if (!((insn instanceof CstInsn) &&
               (regs.size() == 2) &&
@@ -84,12 +88,6 @@ public final class Form32s extends InsnFormat {
         CstLiteralBits cb = (CstLiteralBits) cst;
 
         return cb.fitsInInt() && signedFitsInShort(cb.getIntBits());
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public InsnFormat nextUp() {
-        return null;
     }
 
     /** {@inheritDoc} */

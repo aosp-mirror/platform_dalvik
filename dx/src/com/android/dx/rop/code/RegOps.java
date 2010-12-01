@@ -306,7 +306,7 @@ public final class RegOps {
     /**
      * Gets the name of the given opcode.
      *
-     * @param opcode {@code >= 0, <= 255;} the opcode
+     * @param opcode the opcode
      * @return {@code non-null;} its name
      */
     public static String opName(int opcode) {

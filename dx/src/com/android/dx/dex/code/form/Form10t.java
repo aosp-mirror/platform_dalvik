@@ -78,12 +78,6 @@ public final class Form10t extends InsnFormat {
 
     /** {@inheritDoc} */
     @Override
-    public InsnFormat nextUp() {
-        return Form20t.THE_ONE;
-    }
-
-    /** {@inheritDoc} */
-    @Override
     public void writeTo(AnnotatedOutput out, DalvInsn insn) {
         int offset = ((TargetInsn) insn).getTargetOffset();
 

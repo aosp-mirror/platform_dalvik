@@ -22,8 +22,7 @@ HANDLE_OPCODE(OP_CHECK_CAST /*vAA, class@BBBB*/)
                     GOTO_exceptionThrown();
             }
             if (!dvmInstanceof(obj->clazz, clazz)) {
-                dvmThrowExceptionWithClassMessage(
-                    "Ljava/lang/ClassCastException;", obj->clazz->descriptor);
+                dvmThrowClassCastException(obj->clazz, clazz);
                 GOTO_exceptionThrown();
             }
         }

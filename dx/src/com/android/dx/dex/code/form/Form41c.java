@@ -69,6 +69,10 @@ public final class Form41c extends InsnFormat {
     /** {@inheritDoc} */
     @Override
     public boolean isCompatible(DalvInsn insn) {
+        if (! ALLOW_EXTENDED_OPCODES) {
+            return false;
+        }
+
         if (!(insn instanceof CstInsn)) {
             return false;
         }
@@ -106,12 +110,6 @@ public final class Form41c extends InsnFormat {
 
         return (cst instanceof CstType) ||
             (cst instanceof CstFieldRef);
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public InsnFormat nextUp() {
-        return null;
     }
 
     /** {@inheritDoc} */

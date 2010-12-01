@@ -322,7 +322,11 @@ static void Dalvik_java_lang_Class_getModifiers(const u4* args, JValue* pResult)
 /*
  * private native String getNameNative()
  *
- * Return the class' name.
+ * Return the class' name. The exact format is bizarre, but it's the specified
+ * behavior: keywords for primitive types, regular "[I" form for primitive
+ * arrays (so "int" but "[I"), and arrays of reference types written
+ * between "L" and ";" but with dots rather than slashes (so "java.lang.String"
+ * but "[Ljava.lang.String;"). Madness.
  */
 static void Dalvik_java_lang_Class_getNameNative(const u4* args, JValue* pResult)
 {
@@ -370,37 +374,6 @@ static void Dalvik_java_lang_Class_getNameNative(const u4* args, JValue* pResult
     }
 
     dvmReleaseTrackedAlloc((Object*) nameObj, NULL);
-
-#if 0
-    /* doesn't work -- need "java.lang.String" not "java/lang/String" */
-    {
-        /*
-         * Find the string in the DEX file and use the copy in the intern
-         * table if it already exists (else put one there).  Only works
-         * for strings in the DEX file, e.g. not arrays.
-         *
-         * We have to do the class lookup by name in the DEX file because
-         * we don't have a DexClassDef pointer in the ClassObject, and it's
-         * not worth adding one there just for this.  Should be cheaper
-         * to do this than the string-creation above.
-         */
-        const DexFile* pDexFile = clazz->pDexFile;
-        const DexClassDef* pClassDef;
-        const DexClassId* pClassId;
-
-        pDexFile = clazz->pDexFile;
-        pClassDef = dvmDexFindClass(pDexFile, clazz->descriptor);
-        pClassId = dvmDexGetClassId(pDexFile, pClassDef->classIdx);
-        nameObj = dvmDexGetResolvedString(pDexFile, pClassId->nameIdx);
-        if (nameObj == NULL) {
-            nameObj = dvmResolveString(clazz, pClassId->nameIdx);
-            if (nameObj == NULL)
-                LOGW("WARNING: couldn't find string %u for '%s'\n",
-                    pClassId->nameIdx, clazz->name);
-        }
-    }
-#endif
-
     RETURN_PTR(nameObj);
 }
 

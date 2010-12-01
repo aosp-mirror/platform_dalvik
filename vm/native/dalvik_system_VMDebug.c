@@ -531,12 +531,23 @@ static void Dalvik_dalvik_system_VMDebug_getInstructionCount(const u4* args,
     JValue* pResult)
 {
     ArrayObject* countArray = (ArrayObject*) args[0];
-    int* storage;
 
-    storage = (int*) countArray->contents;
-    sched_yield();
-    memcpy(storage, gDvm.executedInstrCounts,
-        kNumDalvikInstructions * sizeof(int));
+    if (countArray != NULL) {
+        int* storage = (int*) countArray->contents;
+        u4 length = countArray->length;
+
+        /*
+         * Ensure that we copy at most kNumDalvikInstructions
+         * elements, but no more than the length of the given array.
+         */
+        if (length > kNumDalvikInstructions) {
+            length = kNumDalvikInstructions;
+        }
+
+        sched_yield();
+        memcpy(storage, gDvm.executedInstrCounts, length * sizeof(int));
+    }
+
     RETURN_VOID();
 }
 
@@ -850,8 +861,13 @@ static void Dalvik_dalvik_system_VMDebug_countInstancesOfClass(const u4* args,
     JValue* pResult)
 {
     ClassObject* clazz = (ClassObject*)args[0];
+    bool countAssignable = args[1];
     if (clazz == NULL) {
         RETURN_LONG(0);
+    }
+    if (countAssignable) {
+        size_t count = dvmCountAssignableInstancesOfClass(clazz);
+        RETURN_LONG((long long)count);
     } else {
         size_t count = dvmCountInstancesOfClass(clazz);
         RETURN_LONG((long long)count);
@@ -915,7 +931,7 @@ const DalvikNativeMethod dvm_dalvik_system_VMDebug[] = {
         Dalvik_dalvik_system_VMDebug_crash },
     { "infopoint",                 "(I)V",
         Dalvik_dalvik_system_VMDebug_infopoint },
-    { "countInstancesOfClass",     "(Ljava/lang/Class;)J",
+    { "countInstancesOfClass",     "(Ljava/lang/Class;Z)J",
         Dalvik_dalvik_system_VMDebug_countInstancesOfClass },
     { NULL, NULL, NULL },
 };

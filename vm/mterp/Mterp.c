@@ -48,7 +48,7 @@ bool dvmCheckAsmConstants(void)
      */
     const int width = 64;
     int interpSize = dvmAsmInstructionEnd - dvmAsmInstructionStart;
-    if (interpSize != 0 && interpSize != 256*width) {
+    if (interpSize != 0 && interpSize != kNumDalvikInstructions*width) {
         LOGE("ERROR: unexpected asm interp size %d\n", interpSize);
         LOGE("(did an instruction handler exceed %d bytes?)\n", width);
         dvmAbort();

@@ -409,11 +409,73 @@ char* dvmDotToSlash(const char* str)
     return newStr;
 }
 
+char* dvmHumanReadableDescriptor(const char* descriptor)
+{
+    char *dotName = dvmDescriptorToDot(descriptor);
+    if (descriptor[0] == 'L') {
+        return dotName;
+    }
+
+    const char* c = dotName;
+    size_t dim = 0;
+    while (*c == '[') {
+        dim++;
+        c++;
+    }
+    if (*c == 'L') {
+        c++;
+    } else {
+        /* It's a primitive type;  we should use a pretty name.
+         * Add semicolons to make all strings have the format
+         * of object class names.
+         */
+        switch (*c) {
+        case 'Z': c = "boolean;";    break;
+        case 'C': c = "char;";       break;
+        case 'F': c = "float;";      break;
+        case 'D': c = "double;";     break;
+        case 'B': c = "byte;";       break;
+        case 'S': c = "short;";      break;
+        case 'I': c = "int;";        break;
+        case 'J': c = "long;";       break;
+        default: assert(false); c = "UNKNOWN;"; break;
+        }
+    }
+
+    /* We have a string of the form "name;" and
+     * we want to replace the semicolon with as many
+     * "[]" pairs as is in dim.
+     */
+    size_t newLen = strlen(c)-1 + dim*2;
+    char* newName = malloc(newLen + 1);
+    if (newName == NULL) {
+        return NULL;
+    }
+    strcpy(newName, c);
+    newName[newLen] = '\0';
+
+    /* Point nc to the semicolon.
+     */
+    char* nc = newName + newLen - dim*2;
+    assert(*nc == ';');
+
+    while (dim--) {
+        *nc++ = '[';
+        *nc++ = ']';
+    }
+    assert(*nc == '\0');
+    free(dotName);
+    return newName;
+}
+
 /*
  * Return a newly-allocated string for the "dot version" of the class
  * name for the given type descriptor. That is, The initial "L" and
  * final ";" (if any) have been removed and all occurrences of '/'
  * have been changed to '.'.
+ *
+ * "Dot version" names are used in the class loading machinery.
+ * See also dvmHumanReadableDescriptor.
  */
 char* dvmDescriptorToDot(const char* str)
 {
@@ -443,7 +505,9 @@ char* dvmDescriptorToDot(const char* str)
  * Return a newly-allocated string for the type descriptor
  * corresponding to the "dot version" of the given class name. That
  * is, non-array names are surrounded by "L" and ";", and all
- * occurrences of '.' are changed to '/'.
+ * occurrences of '.' have been changed to '/'.
+ *
+ * "Dot version" names are used in the class loading machinery.
  */
 char* dvmDotToDescriptor(const char* str)
 {

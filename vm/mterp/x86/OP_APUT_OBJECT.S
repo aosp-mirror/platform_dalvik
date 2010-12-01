@@ -34,11 +34,24 @@
     movl      offObject_clazz(rINST),%ecx    # ecx<- obj->clazz
     movl      %eax,OUT_ARG1(%esp)
     movl      %ecx,OUT_ARG0(%esp)
+    movl      %ecx,sReg0                     # store the two classes for later
+    movl      %eax,sReg1
     call      dvmCanPutArrayElement          # test object type vs. array type
     UNSPILL_TMP1(%ecx)                       # recover target address
     testl     %eax,%eax
     movl      rGLUE,%eax
-    je        common_errArrayStore
+    jne       .L${opcode}_types_okay
+
+    # The types don't match.  We need to throw an ArrayStoreException.
+    EXPORT_PC
+    movl      sReg0,%eax                     # restore the two classes...
+    movl      %eax,OUT_ARG0(%esp)
+    movl      sReg1,%ecx
+    movl      %ecx,OUT_ARG1(%esp)
+    call      dvmThrowArrayStoreException    # ...and throw
+    jmp       common_exceptionThrown
+
+.L${opcode}_types_okay:
     movl      offGlue_cardTable(%eax),%eax   # get card table base
     movl      rINST,(%ecx)                   # store into array
     UNSPILL_TMP2(%ecx)                       # recover object head

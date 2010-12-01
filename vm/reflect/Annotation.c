@@ -401,7 +401,7 @@ static bool processAnnotationValue(const ClassObject* clazz,
     case kDexAnnotationByte:
         pValue->value.i = (s1) readSignedInt(ptr, valueArg);
         if (resultStyle == kAllObjects) {
-            elemObj = (Object*) dvmWrapPrimitive(pValue->value,
+            elemObj = (Object*) dvmBoxPrimitive(pValue->value,
                         dvmFindPrimitiveClass('B'));
             setObject = true;
         }
@@ -409,7 +409,7 @@ static bool processAnnotationValue(const ClassObject* clazz,
     case kDexAnnotationShort:
         pValue->value.i = (s2) readSignedInt(ptr, valueArg);
         if (resultStyle == kAllObjects) {
-            elemObj = (Object*) dvmWrapPrimitive(pValue->value,
+            elemObj = (Object*) dvmBoxPrimitive(pValue->value,
                         dvmFindPrimitiveClass('S'));
             setObject = true;
         }
@@ -417,7 +417,7 @@ static bool processAnnotationValue(const ClassObject* clazz,
     case kDexAnnotationChar:
         pValue->value.i = (u2) readUnsignedInt(ptr, valueArg, false);
         if (resultStyle == kAllObjects) {
-            elemObj = (Object*) dvmWrapPrimitive(pValue->value,
+            elemObj = (Object*) dvmBoxPrimitive(pValue->value,
                         dvmFindPrimitiveClass('C'));
             setObject = true;
         }
@@ -425,7 +425,7 @@ static bool processAnnotationValue(const ClassObject* clazz,
     case kDexAnnotationInt:
         pValue->value.i = readSignedInt(ptr, valueArg);
         if (resultStyle == kAllObjects) {
-            elemObj = (Object*) dvmWrapPrimitive(pValue->value,
+            elemObj = (Object*) dvmBoxPrimitive(pValue->value,
                         dvmFindPrimitiveClass('I'));
             setObject = true;
         }
@@ -433,7 +433,7 @@ static bool processAnnotationValue(const ClassObject* clazz,
     case kDexAnnotationLong:
         pValue->value.j = readSignedLong(ptr, valueArg);
         if (resultStyle == kAllObjects) {
-            elemObj = (Object*) dvmWrapPrimitive(pValue->value,
+            elemObj = (Object*) dvmBoxPrimitive(pValue->value,
                         dvmFindPrimitiveClass('J'));
             setObject = true;
         }
@@ -441,7 +441,7 @@ static bool processAnnotationValue(const ClassObject* clazz,
     case kDexAnnotationFloat:
         pValue->value.i = readUnsignedInt(ptr, valueArg, true);
         if (resultStyle == kAllObjects) {
-            elemObj = (Object*) dvmWrapPrimitive(pValue->value,
+            elemObj = (Object*) dvmBoxPrimitive(pValue->value,
                         dvmFindPrimitiveClass('F'));
             setObject = true;
         }
@@ -449,7 +449,7 @@ static bool processAnnotationValue(const ClassObject* clazz,
     case kDexAnnotationDouble:
         pValue->value.j = readUnsignedLong(ptr, valueArg, true);
         if (resultStyle == kAllObjects) {
-            elemObj = (Object*) dvmWrapPrimitive(pValue->value,
+            elemObj = (Object*) dvmBoxPrimitive(pValue->value,
                         dvmFindPrimitiveClass('D'));
             setObject = true;
         }
@@ -457,7 +457,7 @@ static bool processAnnotationValue(const ClassObject* clazz,
     case kDexAnnotationBoolean:
         pValue->value.i = (valueArg != 0);
         if (resultStyle == kAllObjects) {
-            elemObj = (Object*) dvmWrapPrimitive(pValue->value,
+            elemObj = (Object*) dvmBoxPrimitive(pValue->value,
                         dvmFindPrimitiveClass('Z'));
             setObject = true;
         }

@@ -46,7 +46,7 @@ static void inlineGetter(CompilationUnit *cUnit,
     MIR *newGetterMIR = dvmCompilerNew(sizeof(MIR), true);
     DecodedInstruction getterInsn;
 
-    dexDecodeInstruction(gDvm.instrFormat, calleeMethod->insns, &getterInsn);
+    dexDecodeInstruction(calleeMethod->insns, &getterInsn);
 
     if (!dvmCompilerCanIncludeThisInstruction(calleeMethod, &getterInsn))
         return;
@@ -85,7 +85,7 @@ static void inlineGetter(CompilationUnit *cUnit,
     /* Now setup the Dalvik instruction with converted src/dst registers */
     newGetterMIR->dalvikInsn = getterInsn;
 
-    newGetterMIR->width = gDvm.instrWidth[getterInsn.opCode];
+    newGetterMIR->width = dexGetInstrWidth(getterInsn.opCode);
 
     newGetterMIR->OptimizationFlags |= MIR_CALLEE;
 
@@ -137,7 +137,7 @@ static void inlineSetter(CompilationUnit *cUnit,
     MIR *newSetterMIR = dvmCompilerNew(sizeof(MIR), true);
     DecodedInstruction setterInsn;
 
-    dexDecodeInstruction(gDvm.instrFormat, calleeMethod->insns, &setterInsn);
+    dexDecodeInstruction(calleeMethod->insns, &setterInsn);
 
     if (!dvmCompilerCanIncludeThisInstruction(calleeMethod, &setterInsn))
         return;
@@ -164,7 +164,7 @@ static void inlineSetter(CompilationUnit *cUnit,
     /* Now setup the Dalvik instruction with converted src/dst registers */
     newSetterMIR->dalvikInsn = setterInsn;
 
-    newSetterMIR->width = gDvm.instrWidth[setterInsn.opCode];
+    newSetterMIR->width = dexGetInstrWidth(setterInsn.opCode);
 
     newSetterMIR->OptimizationFlags |= MIR_CALLEE;
 
@@ -296,14 +296,10 @@ void dvmCompilerInlineMIR(CompilationUnit *cUnit)
             continue;
         MIR *lastMIRInsn = bb->lastMIRInsn;
         int opCode = lastMIRInsn->dalvikInsn.opCode;
-        int flags = dexGetInstrFlags(gDvm.instrFlags, opCode);
+        int flags = dexGetInstrFlags(opCode);
 
         /* No invoke - continue */
         if ((flags & kInstrInvoke) == 0)
-            continue;
-
-        /* Not a real invoke - continue */
-        if (opCode == OP_INVOKE_DIRECT_EMPTY)
             continue;
 
         /*

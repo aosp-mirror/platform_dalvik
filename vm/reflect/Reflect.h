@@ -77,16 +77,16 @@ int dvmConvertPrimitiveValue(PrimitiveType srcType,
 int dvmConvertArgument(DataObject* arg, ClassObject* type, s4* ins);
 
 /*
- * Create a wrapper object for a primitive data type.  If "returnType" is
+ * Box a primitive value into an object.  If "returnType" is
  * not primitive, this just returns "value" cast to an object.
  */
-DataObject* dvmWrapPrimitive(JValue value, ClassObject* returnType);
+DataObject* dvmBoxPrimitive(JValue value, ClassObject* returnType);
 
 /*
  * Unwrap a boxed primitive.  If "returnType" is not primitive, this just
  * returns "value" cast into a JValue.
  */
-bool dvmUnwrapPrimitive(Object* value, ClassObject* returnType,
+bool dvmUnboxPrimitive(Object* value, ClassObject* returnType,
     JValue* pResult);
 
 /*

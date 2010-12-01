@@ -20,40 +20,12 @@
  */
 #include "Dalvik.h"
 #include "analysis/CodeVerify.h"
+#include "libdex/DexCatch.h"
 
 
 /* fwd */
 static bool verifyMethod(Method* meth);
 static bool verifyInstructions(VerifierData* vdata);
-
-
-/*
- * Initialize some things we need for verification.
- */
-bool dvmVerificationStartup(void)
-{
-    gDvm.instrWidth = dexCreateInstrWidthTable();
-    gDvm.instrFormat = dexCreateInstrFormatTable();
-    gDvm.instrFlags = dexCreateInstrFlagsTable();
-    if (gDvm.instrWidth == NULL || gDvm.instrFormat == NULL ||
-        gDvm.instrFlags == NULL)
-    {
-        LOGE("Unable to create instruction tables\n");
-        return false;
-    }
-
-    return true;
-}
-
-/*
- * Free up some things we needed for verification.
- */
-void dvmVerificationShutdown(void)
-{
-    free(gDvm.instrWidth);
-    free(gDvm.instrFormat);
-    free(gDvm.instrFlags);
-}
 
 
 /*
@@ -92,6 +64,154 @@ bool dvmVerifyClass(ClassObject* clazz)
 
 
 /*
+ * Compute the width of the instruction at each address in the instruction
+ * stream, and store it in vdata->insnFlags.  Addresses that are in the
+ * middle of an instruction, or that are part of switch table data, are not
+ * touched (so the caller should probably initialize "insnFlags" to zero).
+ *
+ * The "newInstanceCount" and "monitorEnterCount" fields in vdata are
+ * also set.
+ *
+ * Performs some static checks, notably:
+ * - opcode of first instruction begins at index 0
+ * - only documented instructions may appear
+ * - each instruction follows the last
+ * - last byte of last instruction is at (code_length-1)
+ *
+ * Logs an error and returns "false" on failure.
+ */
+static bool computeWidthsAndCountOps(VerifierData* vdata)
+{
+    const Method* meth = vdata->method;
+    InsnFlags* insnFlags = vdata->insnFlags;
+    size_t insnCount = vdata->insnsSize;
+    const u2* insns = meth->insns;
+    bool result = false;
+    int newInstanceCount = 0;
+    int monitorEnterCount = 0;
+    int i;
+
+    for (i = 0; i < (int) insnCount; /**/) {
+        size_t width = dexGetInstrOrTableWidth(insns);
+        if (width == 0) {
+            LOG_VFY_METH(meth, "VFY: invalid instruction (0x%04x)\n", *insns);
+            goto bail;
+        }
+
+        if ((*insns & 0xff) == OP_NEW_INSTANCE)
+            newInstanceCount++;
+        if ((*insns & 0xff) == OP_MONITOR_ENTER)
+            monitorEnterCount++;
+
+        if (width > 65535) {
+            LOG_VFY_METH(meth, "VFY: insane width %d\n", width);
+            goto bail;
+        }
+
+        insnFlags[i] |= width;
+        i += width;
+        insns += width;
+    }
+    if (i != (int) dvmGetMethodInsnsSize(meth)) {
+        LOG_VFY_METH(meth, "VFY: code did not end where expected (%d vs. %d)\n",
+            i, dvmGetMethodInsnsSize(meth));
+        goto bail;
+    }
+
+    result = true;
+    vdata->newInstanceCount = newInstanceCount;
+    vdata->monitorEnterCount = monitorEnterCount;
+
+bail:
+    return result;
+}
+
+/*
+ * Set the "in try" flags for all instructions protected by "try" statements.
+ * Also sets the "branch target" flags for exception handlers.
+ *
+ * Call this after widths have been set in "insnFlags".
+ *
+ * Returns "false" if something in the exception table looks fishy, but
+ * we're expecting the exception table to be somewhat sane.
+ */
+static bool scanTryCatchBlocks(const Method* meth, InsnFlags* insnFlags)
+{
+    u4 insnsSize = dvmGetMethodInsnsSize(meth);
+    const DexCode* pCode = dvmGetMethodCode(meth);
+    u4 triesSize = pCode->triesSize;
+    const DexTry* pTries;
+    u4 handlersSize;
+    u4 offset;
+    u4 i;
+
+    if (triesSize == 0) {
+        return true;
+    }
+
+    pTries = dexGetTries(pCode);
+    handlersSize = dexGetHandlersSize(pCode);
+
+    for (i = 0; i < triesSize; i++) {
+        const DexTry* pTry = &pTries[i];
+        u4 start = pTry->startAddr;
+        u4 end = start + pTry->insnCount;
+        u4 addr;
+
+        if ((start >= end) || (start >= insnsSize) || (end > insnsSize)) {
+            LOG_VFY_METH(meth,
+                "VFY: bad exception entry: startAddr=%d endAddr=%d (size=%d)\n",
+                start, end, insnsSize);
+            return false;
+        }
+
+        if (dvmInsnGetWidth(insnFlags, start) == 0) {
+            LOG_VFY_METH(meth,
+                "VFY: 'try' block starts inside an instruction (%d)\n",
+                start);
+            return false;
+        }
+
+        for (addr = start; addr < end;
+            addr += dvmInsnGetWidth(insnFlags, addr))
+        {
+            assert(dvmInsnGetWidth(insnFlags, addr) != 0);
+            dvmInsnSetInTry(insnFlags, addr, true);
+        }
+    }
+
+    /* Iterate over each of the handlers to verify target addresses. */
+    offset = dexGetFirstHandlerOffset(pCode);
+    for (i = 0; i < handlersSize; i++) {
+        DexCatchIterator iterator;
+        dexCatchIteratorInit(&iterator, pCode, offset);
+
+        for (;;) {
+            DexCatchHandler* handler = dexCatchIteratorNext(&iterator);
+            u4 addr;
+
+            if (handler == NULL) {
+                break;
+            }
+
+            addr = handler->address;
+            if (dvmInsnGetWidth(insnFlags, addr) == 0) {
+                LOG_VFY_METH(meth,
+                    "VFY: exception handler starts at bad address (%d)\n",
+                    addr);
+                return false;
+            }
+
+            dvmInsnSetBranchTarget(insnFlags, addr, true);
+        }
+
+        offset = dexCatchIteratorGetEndOffset(&iterator, pCode);
+    }
+
+    return true;
+}
+
+/*
  * Perform verification on a single method.
  *
  * We do this in three passes:
@@ -109,7 +229,7 @@ bool dvmVerifyClass(ClassObject* clazz)
  * Confirmed here:
  * - code array must not be empty
  * - (N/A) code_length must be less than 65536
- * Confirmed by dvmComputeCodeWidths():
+ * Confirmed by computeWidthsAndCountOps():
  * - opcode of first instruction begins at index 0
  * - only documented instructions may appear
  * - each instruction follows the last
@@ -118,7 +238,6 @@ bool dvmVerifyClass(ClassObject* clazz)
 static bool verifyMethod(Method* meth)
 {
     bool result = false;
-    int newInstanceCount;
 
     /*
      * Verifier state blob.  Various values will be cached here so we
@@ -174,24 +293,23 @@ static bool verifyMethod(Method* meth)
 
     /*
      * Compute the width of each instruction and store the result in insnFlags.
-     * Count up the #of occurrences of new-instance instructions while we're
-     * at it.
+     * Count up the #of occurrences of certain opcodes while we're at it.
      */
-    if (!dvmComputeCodeWidths(meth, vdata.insnFlags, &newInstanceCount))
+    if (!computeWidthsAndCountOps(&vdata))
         goto bail;
 
     /*
      * Allocate a map to hold the classes of uninitialized instances.
      */
     vdata.uninitMap = dvmCreateUninitInstanceMap(meth, vdata.insnFlags,
-        newInstanceCount);
+        vdata.newInstanceCount);
     if (vdata.uninitMap == NULL)
         goto bail;
 
     /*
      * Set the "in try" flags for all instructions guarded by a "try" block.
      */
-    if (!dvmSetTryFlags(meth, vdata.insnFlags))
+    if (!scanTryCatchBlocks(meth, vdata.insnFlags))
         goto bail;
 
     /*
@@ -201,12 +319,10 @@ static bool verifyMethod(Method* meth)
         goto bail;
 
     /*
-     * Do code-flow analysis.  Do this after verifying the branch targets
-     * so we don't need to worry about it here.
+     * Do code-flow analysis.
      *
-     * If there are no registers, we don't need to do much in the way of
-     * analysis, but we still need to verify that nothing actually tries
-     * to use a register.
+     * We could probably skip this for a method with no registers, but
+     * that's so rare that there's little point in checking.
      */
     if (!dvmVerifyCodeFlow(&vdata)) {
         //LOGD("+++ %s failed code flow\n", meth->name);
@@ -680,8 +796,6 @@ static bool verifyInstructions(VerifierData* vdata)
     const Method* meth = vdata->method;
     const DvmDex* pDvmDex = meth->clazz->pDvmDex;
     InsnFlags* insnFlags = vdata->insnFlags;
-    const InstructionFormat* formatTable = gDvm.instrFormat;
-    const InstructionFlags* flagTable = gDvm.instrFlags;
     const u2* insns = meth->insns;
     unsigned int codeOffset;
 
@@ -696,7 +810,7 @@ static bool verifyInstructions(VerifierData* vdata)
         DecodedInstruction decInsn;
         bool okay = true;
 
-        dexDecodeInstruction(formatTable, meth->insns + codeOffset, &decInsn);
+        dexDecodeInstruction(meth->insns + codeOffset, &decInsn);
 
         /*
          * Check register, type, class, field, method, and string indices
@@ -1089,7 +1203,7 @@ static bool verifyInstructions(VerifierData* vdata)
         const int kGcMask = kInstrCanBranch | kInstrCanSwitch |
             kInstrCanThrow | kInstrCanReturn;
 
-        InstructionFlags opFlags = dexGetInstrFlags(flagTable, decInsn.opCode);
+        InstructionFlags opFlags = dexGetInstrFlags(decInsn.opCode);
         if ((opFlags & kGcMask) != 0) {
             /*
              * This instruction is probably a GC point.  Branch instructions

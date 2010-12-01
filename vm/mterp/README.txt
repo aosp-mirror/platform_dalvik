@@ -90,9 +90,9 @@ The commands are:
 
   op-end
 
-    Indicates the end of the opcode list.  All 256 opcodes are emitted
-    when this is seen, followed by any code that didn't fit inside the
-    fixed-size instruction handler space.
+    Indicates the end of the opcode list.  All kNumDalvikInstructions
+    opcodes are emitted when this is seen, followed by any code that
+    didn't fit inside the fixed-size instruction handler space.
 
 
 The order of "op" directives is not significant; the generation tool will
@@ -108,8 +108,9 @@ For the <directory> specified in the "op" command, the "c" directory
 is special in two ways: (1) the sources are assumed to be C code, and
 will be inserted into the generated C file; (2) when a C implementation
 is emitted, a "glue stub" is emitted in the assembly source file.
-(The generator script always emits 256 assembly instructions, unless
-"asm-stub" was left blank, in which case it only emits some labels.)
+(The generator script always emits kNumDalvikInstructions assembly
+instructions, unless "asm-stub" was left blank, in which case it only
+emits some labels.)
 
 
 ==== Instruction file format ====

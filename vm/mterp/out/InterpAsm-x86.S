@@ -6556,21 +6556,20 @@ dvmAsmSisterStart:
      *  rINST holds object
      */
 .LOP_CHECK_CAST_fullcheck:
+    movl    %eax,sReg0                 # we'll need the desired class on failure
     movl    %eax,OUT_ARG1(%esp)
     movl    %ecx,OUT_ARG0(%esp)
-    call    dvmInstanceofNonTrivial     # eax<- boolean result
-    testl   %eax,%eax                   # failed?
-    jne     .LOP_CHECK_CAST_okay            # no, success
+    call    dvmInstanceofNonTrivial    # eax<- boolean result
+    testl   %eax,%eax                  # failed?
+    jne     .LOP_CHECK_CAST_okay           # no, success
 
-    # A cast has failed.  We need to throw a ClassCastException with the
-    # class of the object that failed to be cast.
+    # A cast has failed.  We need to throw a ClassCastException.
     EXPORT_PC
-    movl    offObject_clazz(rINST),%ecx  # ecx<- obj->clazz
-    movl    $.LstrClassCastException,%eax
-    movl    offClassObject_descriptor(%ecx),%ecx
-    movl    %eax,OUT_ARG0(%esp)     # arg0<- message
-    movl    %ecx,OUT_ARG1(%esp)     # arg1<- obj->clazz->descriptor
-    call    dvmThrowExceptionWithClassMessage
+    movl    offObject_clazz(rINST),%eax
+    movl    %eax,OUT_ARG0(%esp)                 # arg0<- obj->clazz
+    movl    sReg0,%ecx
+    movl    %ecx,OUT_ARG1(%esp)                 # arg1<- desired class
+    call    dvmThrowClassCastException
     jmp     common_exceptionThrown
 
     /*
@@ -7060,11 +7059,24 @@ dvmAsmSisterStart:
     movl      offObject_clazz(rINST),%ecx    # ecx<- obj->clazz
     movl      %eax,OUT_ARG1(%esp)
     movl      %ecx,OUT_ARG0(%esp)
+    movl      %ecx,sReg0                     # store the two classes for later
+    movl      %eax,sReg1
     call      dvmCanPutArrayElement          # test object type vs. array type
     UNSPILL_TMP1(%ecx)                       # recover target address
     testl     %eax,%eax
     movl      rGLUE,%eax
-    je        common_errArrayStore
+    jne       .LOP_APUT_OBJECT_types_okay
+
+    # The types don't match.  We need to throw an ArrayStoreException.
+    EXPORT_PC
+    movl      sReg0,%eax                     # restore the two classes...
+    movl      %eax,OUT_ARG0(%esp)
+    movl      sReg1,%ecx
+    movl      %ecx,OUT_ARG1(%esp)
+    call      dvmThrowArrayStoreException    # ...and throw
+    jmp       common_exceptionThrown
+
+.LOP_APUT_OBJECT_types_okay:
     movl      offGlue_cardTable(%eax),%eax   # get card table base
     movl      rINST,(%ecx)                   # store into array
     UNSPILL_TMP2(%ecx)                       # recover object head
@@ -9547,17 +9559,6 @@ common_errArrayIndex:
     movl    %eax,OUT_ARG1(%esp)
     call    dvmThrowAIOOBE        # dvmThrowAIOO(index, length)
     jmp     common_exceptionThrown
-/*
- * Invalid array value.
- */
-common_errArrayStore:
-    EXPORT_PC
-    movl    $.LstrArrayStoreException,%eax
-    movl    %eax,OUT_ARG0(%esp)
-    xorl    %eax,%eax
-    movl    %eax,OUT_ARG1(%esp)
-    call    dvmThrowException
-    jmp     common_exceptionThrown
 
 /*
  * Somebody has thrown an exception.  Handle it.
@@ -9592,14 +9593,10 @@ common_abort:
     .asciz  "Ljava/lang/ArithmeticException;"
 .LstrDivideByZero:
     .asciz  "divide by zero"
-.LstrArrayStoreException:
-    .asciz  "Ljava/lang/ArrayStoreException;"
 .LstrNegativeArraySizeException:
     .asciz  "Ljava/lang/NegativeArraySizeException;"
 .LstrInstantiationError:
     .asciz  "Ljava/lang/InstantiationError;"
-.LstrClassCastException:
-    .asciz  "Ljava/lang/ClassCastException;"
 .LstrNoSuchMethodError:
     .asciz  "Ljava/lang/NoSuchMethodError;"
 .LstrInternalErrorA:

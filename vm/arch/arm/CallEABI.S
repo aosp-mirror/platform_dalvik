@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 /*
  * JNI method invocation.  This is used to call a C/C++ JNI method.  The
  * argument list has to be pushed onto the native stack according to
@@ -150,8 +151,15 @@ DBG bne     dvmAbort
     @ Not static: set r1 to *argv++ ("this"), and set argc--.
     @
     @ Note the "this" pointer is not included in the method signature.
+#ifdef WORKAROUND_CORTEX_A9_745320
+    bne     1f
+    ldr     r1, [r9], #4
+    sub     r3, r3, #1
+1:
+#else
     ldreq   r1, [r9], #4
     subeq   r3, r3, #1
+#endif
 
     @ Do we have arg padding flags in "argInfo"? (just need to check hi bit)
     teq     r2, #0
@@ -205,9 +213,17 @@ DBG bne     dvmAbort
     @ out of argv.
     movs    r2, r2, lsr #1
 
+#ifdef WORKAROUND_CORTEX_A9_745320
+    bcs     1f
+    ldr     ip, [r7], #4                @ ip = *r7++ (pull from argv)
+    str     ip, [r8], #4                @ *r8++ = ip (write to stack)
+    b       .Lfast_copy_loop
+1:
+#else
     ldrcc   ip, [r7], #4                @ ip = *r7++ (pull from argv)
     strcc   ip, [r8], #4                @ *r8++ = ip (write to stack)
     bcc     .Lfast_copy_loop
+#endif
 
 DBG movcs   ip, #-3                     @ DEBUG DEBUG - make pad word obvious
 DBG strcs   ip, [r8]                    @ DEBUG DEBUG
@@ -249,16 +265,24 @@ DBG strcs   ip, [r8]                    @ DEBUG DEBUG
     @ We're back, result is in r0 or (for long/double) r0-r1.
     @
     @ In theory, we need to use the "return type" arg to figure out what
-    @ we have and how to return it.  However, unless we have an FPU,
-    @ all we need to do is copy r0-r1 into the JValue union.
+    @ we have and how to return it.  However, unless we have an FPU and
+    @ "hard" fp calling conventions, all we need to do is copy r0-r1 into
+    @ the JValue union.
     @
     @ Thought: could redefine DalvikJniReturnType such that single-word
     @ and double-word values occupy different ranges; simple comparison
     @ allows us to choose between str and stm.  Probably not worthwhile.
     @
     cmp     r5, #0                      @ DALVIK_JNI_RETURN_VOID?
+#ifdef WORKAROUND_CORTEX_A9_745320
+    beq     1f
+    ldr     ip, [r4, #12]               @ pReturn
+    stmia   ip, {r0-r1}                 @ pReturn->j <- r0/r1
+1:
+#else
     ldrne   ip, [r4, #12]               @ pReturn
     stmneia ip, {r0-r1}                 @ pReturn->j <- r0/r1
+#endif
 
     @ Restore the registers we saved and return (restores lr into pc, and
     @ the initial stack pointer into sp).

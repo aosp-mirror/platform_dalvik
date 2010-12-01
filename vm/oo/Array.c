@@ -708,7 +708,7 @@ bool dvmUnboxObjectArray(ArrayObject* dstArray, const ArrayObject* srcArray,
          * primitive type exactly matches the box class, but it's not
          * necessary for correctness.
          */
-        if (!dvmUnwrapPrimitive(*src, dstElemClass, &result)) {
+        if (!dvmUnboxPrimitive(*src, dstElemClass, &result)) {
             LOGW("dvmCopyObjectArray: can't store %s in %s\n",
                 (*src)->clazz->descriptor, dstElemClass->descriptor);
             return false;

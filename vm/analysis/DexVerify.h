@@ -32,15 +32,6 @@ typedef enum {
     VERIFY_MODE_ALL
 } DexClassVerifyMode;
 
-bool dvmVerificationStartup(void);
-void dvmVerificationShutdown(void);
-
-/*
- * Perform verification on all classes loaded from this DEX file.  If
- * enabled, it must happen before optimization.
- */
-bool dvmVerifyAllClasses(DexFile* pDexFile);
-
 /*
  * Verify a single class.
  */
@@ -50,5 +41,18 @@ bool dvmVerifyClass(ClassObject* clazz);
  * Release the storage associated with a RegisterMap.
  */
 void dvmFreeRegisterMap(RegisterMap* pMap);
+
+/* some verifier counters, for debugging */
+typedef struct {
+    size_t  methodsExamined;    /* number of methods examined */
+    size_t  monEnterMethods;    /* number of methods with monitor-enter */
+    size_t  instrsExamined;     /* incr on first visit of instruction */
+    size_t  instrsReexamined;   /* incr on each repeat visit of instruction */
+    size_t  copyRegCount;       /* calls from updateRegisters->copyRegisters */
+    size_t  mergeRegCount;      /* calls from updateRegisters->merge */
+    size_t  mergeRegChanged;    /* calls from updateRegisters->merge, changed */
+    size_t  uninitSearches;     /* times we've had to search the uninit table */
+    size_t  biggestAlloc;       /* largest RegisterLine table alloc */
+} VerifierStats;
 
 #endif /*_DALVIK_DEXVERIFY*/

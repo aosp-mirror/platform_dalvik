@@ -290,10 +290,10 @@ static bool isWeakInternedString(const Object *obj)
  */
 static bool isPushedOnMarkStack(const Object *obj)
 {
-    GcMarkContext *ctx = &gDvm.gcHeap->markContext;
+    GcMarkStack *stack = &gDvm.gcHeap->markContext.stack;
     const Object **ptr;
 
-    for (ptr = ctx->stack.top; ptr != ctx->stack.base; ++ptr) {
+    for (ptr = stack->base; ptr < stack->top; ++ptr) {
         if (*ptr == obj) {
             return true;
         }

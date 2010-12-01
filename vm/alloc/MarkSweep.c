@@ -36,10 +36,7 @@
 #define LOGD_GC(...)    LOG(LOG_DEBUG, GC_LOG_TAG, __VA_ARGS__)
 #endif
 
-#define LOGI_GC(...)    LOG(LOG_INFO, GC_LOG_TAG, __VA_ARGS__)
-#define LOGW_GC(...)    LOG(LOG_WARN, GC_LOG_TAG, __VA_ARGS__)
 #define LOGE_GC(...)    LOG(LOG_ERROR, GC_LOG_TAG, __VA_ARGS__)
-
 #define LOG_SCAN(...)   LOGV_GC("SCAN: " __VA_ARGS__)
 
 #define ALIGN_DOWN(x, n) ((size_t)(x) & -(n))
@@ -57,43 +54,57 @@ static inline long isMarked(const void *obj, const GcMarkContext *ctx)
     return dvmHeapBitmapIsObjectBitSet(ctx->bitmap, obj);
 }
 
+/*
+ * Initializes the stack top and advises the mark stack pages as needed.
+ */
 static bool createMarkStack(GcMarkStack *stack)
 {
-    const Object **limit;
-    const char *name;
-    size_t size;
-
-    /* Create a stack big enough for the worst possible case,
-     * where the heap is perfectly full of the smallest object.
-     * TODO: be better about memory usage; use a smaller stack with
-     *       overflow detection and recovery.
-     */
-    size = dvmHeapSourceGetIdealFootprint() * sizeof(Object*) /
-            (sizeof(Object) + HEAP_SOURCE_CHUNK_OVERHEAD);
-    size = ALIGN_UP_TO_PAGE_SIZE(size);
-    name = "dalvik-mark-stack";
-    limit = dvmAllocRegion(size, PROT_READ | PROT_WRITE, name);
-    if (limit == NULL) {
-        LOGE_GC("Could not mmap %zd-byte ashmem region '%s'", size, name);
-        return false;
-    }
-    stack->limit = limit;
-    stack->base = (const Object **)((uintptr_t)limit + size);
+    assert(stack != NULL);
+    size_t length = dvmHeapSourceGetIdealFootprint() * sizeof(Object*) /
+        (sizeof(Object) + HEAP_SOURCE_CHUNK_OVERHEAD);
+    madvise(stack->base, length, MADV_NORMAL);
     stack->top = stack->base;
     return true;
 }
 
+/*
+ * Assigns NULL to the stack top and advises the mark stack pages as
+ * not needed.
+ */
 static void destroyMarkStack(GcMarkStack *stack)
 {
-    munmap((char *)stack->limit,
-            (uintptr_t)stack->base - (uintptr_t)stack->limit);
-    memset(stack, 0, sizeof(*stack));
+    assert(stack != NULL);
+    madvise(stack->base, stack->length, MADV_DONTNEED);
+    stack->top = NULL;
 }
 
-#define MARK_STACK_PUSH(stack, obj) \
-    do { \
-        *--(stack).top = (obj); \
-    } while (false)
+/*
+ * Pops an object from the mark stack.
+ */
+static void markStackPush(GcMarkStack *stack, const Object *obj)
+{
+    assert(stack != NULL);
+    assert(stack->base <= stack->top);
+    assert(stack->limit > stack->top);
+    assert(obj != NULL);
+    *stack->top = obj;
+    ++stack->top;
+}
+
+/*
+ * Pushes an object on the mark stack.
+ */
+static const Object *markStackPop(GcMarkStack *stack)
+{
+    const Object *obj;
+
+    assert(stack != NULL);
+    assert(stack->base < stack->top);
+    assert(stack->limit > stack->top);
+    --stack->top;
+    obj = *stack->top;
+    return obj;
+}
 
 bool dvmHeapBeginMarkStep(GcMode mode)
 {
@@ -129,7 +140,7 @@ static void markObjectNonNull(const Object *obj, GcMarkContext *ctx,
         if (checkFinger && (void *)obj < ctx->finger) {
             /* This object will need to go on the mark stack.
              */
-            MARK_STACK_PUSH(ctx->stack, obj);
+            markStackPush(&ctx->stack, obj);
         }
     }
 }
@@ -266,7 +277,7 @@ void dvmHeapReMarkRootSet(void)
 /*
  * Scans instance fields.
  */
-static void scanInstanceFields(const Object *obj, GcMarkContext *ctx)
+static void scanFields(const Object *obj, GcMarkContext *ctx)
 {
     assert(obj != NULL);
     assert(obj->clazz != NULL);
@@ -275,16 +286,17 @@ static void scanInstanceFields(const Object *obj, GcMarkContext *ctx)
     if (obj->clazz->refOffsets != CLASS_WALK_SUPER) {
         unsigned int refOffsets = obj->clazz->refOffsets;
         while (refOffsets != 0) {
-            const int rshift = CLZ(refOffsets);
+            size_t rshift = CLZ(refOffsets);
+            size_t offset = CLASS_OFFSET_FROM_CLZ(rshift);
+            Object *ref = dvmGetFieldObject((Object*)obj, offset);
+            markObject(ref, ctx);
             refOffsets &= ~(CLASS_HIGH_BIT >> rshift);
-            markObject(dvmGetFieldObject((Object*)obj,
-                                          CLASS_OFFSET_FROM_CLZ(rshift)), ctx);
         }
     } else {
         ClassObject *clazz;
-        int i;
         for (clazz = obj->clazz; clazz != NULL; clazz = clazz->super) {
             InstField *field = clazz->ifields;
+            int i;
             for (i = 0; i < clazz->ifieldRefCount; ++i, ++field) {
                 void *addr = BYTE_OFFSET((Object *)obj, field->byteOffset);
                 markObject(((JValue *)addr)->l, ctx);
@@ -294,40 +306,61 @@ static void scanInstanceFields(const Object *obj, GcMarkContext *ctx)
 }
 
 /*
- * Scans the header, static field references, and interface
- * pointers of a class object.
+ * Scans the static fields of a class object.
  */
-static void scanClassObject(const ClassObject *obj, GcMarkContext *ctx)
+static void scanStaticFields(const ClassObject *clazz, GcMarkContext *ctx)
 {
     int i;
 
-    assert(obj != NULL);
-    assert(obj->obj.clazz == gDvm.classJavaLangClass);
+    assert(clazz != NULL);
     assert(ctx != NULL);
+    for (i = 0; i < clazz->sfieldCount; ++i) {
+        char ch = clazz->sfields[i].field.signature[0];
+        if (ch == '[' || ch == 'L') {
+            markObject(clazz->sfields[i].value.l, ctx);
+        }
+    }
+}
 
-    markObject((Object *)obj->obj.clazz, ctx);
-    if (IS_CLASS_FLAG_SET(obj, CLASS_ISARRAY)) {
-        markObject((Object *)obj->elementClass, ctx);
+/*
+ * Visit the interfaces of a class object.
+ */
+static void scanInterfaces(const ClassObject *clazz, GcMarkContext *ctx)
+{
+    int i;
+
+    assert(clazz != NULL);
+    assert(ctx != NULL);
+    for (i = 0; i < clazz->interfaceCount; ++i) {
+        markObject((const Object *)clazz->interfaces[i], ctx);
+    }
+}
+
+/*
+ * Scans the header, static field references, and interface
+ * pointers of a class object.
+ */
+static void scanClassObject(const Object *obj, GcMarkContext *ctx)
+{
+    const ClassObject *asClass;
+
+    assert(obj != NULL);
+    assert(obj->clazz == gDvm.classJavaLangClass);
+    assert(ctx != NULL);
+    markObject((const Object *)obj->clazz, ctx);
+    asClass = (const ClassObject *)obj;
+    if (IS_CLASS_FLAG_SET(asClass, CLASS_ISARRAY)) {
+        markObject((const Object *)asClass->elementClass, ctx);
     }
     /* Do super and the interfaces contain Objects and not dex idx values? */
-    if (obj->status > CLASS_IDX) {
-        markObject((Object *)obj->super, ctx);
+    if (asClass->status > CLASS_IDX) {
+        markObject((const Object *)asClass->super, ctx);
     }
-    markObject(obj->classLoader, ctx);
-    /* Scan static field references. */
-    for (i = 0; i < obj->sfieldCount; ++i) {
-        char ch = obj->sfields[i].field.signature[0];
-        if (ch == '[' || ch == 'L') {
-            markObject(obj->sfields[i].value.l, ctx);
-        }
-    }
-    /* Scan the instance fields. */
-    scanInstanceFields((const Object *)obj, ctx);
-    /* Scan interface references. */
-    if (obj->status > CLASS_IDX) {
-        for (i = 0; i < obj->interfaceCount; ++i) {
-            markObject((Object *)obj->interfaces[i], ctx);
-        }
+    markObject((const Object *)asClass->classLoader, ctx);
+    scanFields(obj, ctx);
+    scanStaticFields(asClass, ctx);
+    if (asClass->status > CLASS_IDX) {
+        scanInterfaces(asClass, ctx);
     }
 }
 
@@ -335,19 +368,17 @@ static void scanClassObject(const ClassObject *obj, GcMarkContext *ctx)
  * Scans the header of all array objects.  If the array object is
  * specialized to a reference type, scans the array data as well.
  */
-static void scanArrayObject(const ArrayObject *obj, GcMarkContext *ctx)
+static void scanArrayObject(const Object *obj, GcMarkContext *ctx)
 {
-    size_t i;
-
     assert(obj != NULL);
-    assert(obj->obj.clazz != NULL);
+    assert(obj->clazz != NULL);
     assert(ctx != NULL);
-    /* Scan the class object reference. */
-    markObject((Object *)obj->obj.clazz, ctx);
-    if (IS_CLASS_FLAG_SET(obj->obj.clazz, CLASS_ISOBJECTARRAY)) {
-        /* Scan the array contents. */
-        Object **contents = (Object **)obj->contents;
-        for (i = 0; i < obj->length; ++i) {
+    markObject((const Object *)obj->clazz, ctx);
+    if (IS_CLASS_FLAG_SET(obj->clazz, CLASS_ISOBJECTARRAY)) {
+        const ArrayObject *array = (const ArrayObject *)obj;
+        const Object **contents = (const Object **)array->contents;
+        size_t i;
+        for (i = 0; i < array->length; ++i) {
             markObject(contents[i], ctx);
         }
     }
@@ -469,16 +500,14 @@ static void delayReferenceReferent(Object *obj, GcMarkContext *ctx)
 /*
  * Scans the header and field references of a data object.
  */
-static void scanDataObject(DataObject *obj, GcMarkContext *ctx)
+static void scanDataObject(const Object *obj, GcMarkContext *ctx)
 {
     assert(obj != NULL);
-    assert(obj->obj.clazz != NULL);
+    assert(obj->clazz != NULL);
     assert(ctx != NULL);
-    /* Scan the class object. */
-    markObject((Object *)obj->obj.clazz, ctx);
-    /* Scan the instance fields. */
-    scanInstanceFields((const Object *)obj, ctx);
-    if (IS_CLASS_FLAG_SET(obj->obj.clazz, CLASS_ISREFERENCE)) {
+    markObject((const Object *)obj->clazz, ctx);
+    scanFields(obj, ctx);
+    if (IS_CLASS_FLAG_SET(obj->clazz, CLASS_ISREFERENCE)) {
         delayReferenceReferent((Object *)obj, ctx);
     }
 }
@@ -492,28 +521,30 @@ static void scanObject(const Object *obj, GcMarkContext *ctx)
     assert(obj != NULL);
     assert(ctx != NULL);
     assert(obj->clazz != NULL);
-    /* Dispatch a type-specific scan routine. */
     if (obj->clazz == gDvm.classJavaLangClass) {
-        scanClassObject((ClassObject *)obj, ctx);
+        scanClassObject(obj, ctx);
     } else if (IS_CLASS_FLAG_SET(obj->clazz, CLASS_ISARRAY)) {
-        scanArrayObject((ArrayObject *)obj, ctx);
+        scanArrayObject(obj, ctx);
     } else {
-        scanDataObject((DataObject *)obj, ctx);
+        scanDataObject(obj, ctx);
     }
 }
 
-static void
-processMarkStack(GcMarkContext *ctx)
+/*
+ * Scan anything that's on the mark stack.  We can't use the bitmaps
+ * anymore, so use a finger that points past the end of them.
+ */
+static void processMarkStack(GcMarkContext *ctx)
 {
-    const Object **const base = ctx->stack.base;
+    GcMarkStack *stack;
 
-    /* Scan anything that's on the mark stack.
-     * We can't use the bitmaps anymore, so use
-     * a finger that points past the end of them.
-     */
-    ctx->finger = (void *)ULONG_MAX;
-    while (ctx->stack.top != base) {
-        scanObject(*ctx->stack.top++, ctx);
+    assert(ctx != NULL);
+    assert(ctx->finger == (void *)ULONG_MAX);
+    stack = &ctx->stack;
+    assert(stack->top >= stack->base);
+    while (stack->top > stack->base) {
+        const Object *obj = markStackPop(stack);
+        scanObject(obj, ctx);
     }
 }
 
@@ -716,6 +747,8 @@ void dvmHeapScanMarkedObjects(void)
      * Walk across the bitmaps and scan each object.
      */
     dvmHeapBitmapScanWalk(ctx->bitmap, scanBitmapCallback, ctx);
+
+    ctx->finger = (void *)ULONG_MAX;
 
     /* We've walked the mark bitmaps.  Scan anything that's
      * left on the mark stack.

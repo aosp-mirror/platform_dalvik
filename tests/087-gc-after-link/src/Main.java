@@ -69,26 +69,35 @@ public class Main {
         private Class<?> findDexClass(String name)
                 throws TestFailed, InvocationTargetException
         {
+            Object dexFile = null;
+            Class dexClass = null;
 
             try {
-                /*
-                 * Find the DexFile class, and construct a DexFile object
-                 * through reflection, then call loadCLass on it.
-                 */
-                Class mDexClass = ClassLoader.getSystemClassLoader().
-                        loadClass("dalvik/system/DexFile");
-                Constructor ctor = mDexClass.
-                        getConstructor(new Class[] {String.class});
-                Object mDexFile = ctor.newInstance(DEX_FILE);
-                Method meth = mDexClass.
-                        getMethod("loadClass",
+                try {
+                    /*
+                     * Find the DexFile class, and construct a DexFile object
+                     * through reflection, then call loadClass on it.
+                     */
+                    dexClass = ClassLoader.getSystemClassLoader().
+                            loadClass("dalvik/system/DexFile");
+                    Constructor ctor = dexClass.
+                            getConstructor(new Class[] {String.class});
+                    dexFile = ctor.newInstance(DEX_FILE);
+                    Method meth = dexClass.getMethod("loadClass",
                             new Class[] { String.class, ClassLoader.class });
-                /*
-                 * Invoking loadClass on CLASS_NAME is expected to
-                 * throw an InvocationTargetException. Anything else
-                 * is an error we can't recover from.
-                 */
-                meth.invoke(mDexFile, name, this);
+                    /*
+                     * Invoking loadClass on CLASS_NAME is expected to
+                     * throw an InvocationTargetException. Anything else
+                     * is an error we can't recover from.
+                     */
+                    meth.invoke(dexFile, name, this);
+                } finally {
+                    if (dexFile != null) {
+                        /* close the DexFile to make CloseGuard happy */
+                        Method meth = dexClass.getMethod("close", (Class[]) null);
+                        meth.invoke(dexFile);
+                    }
+                }
             } catch (NoSuchMethodException nsme) {
                 throw new TestFailed(nsme);
             } catch (InstantiationException ie) {

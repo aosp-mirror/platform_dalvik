@@ -34,6 +34,13 @@ import com.android.dx.util.Hex;
  */
 public abstract class InsnFormat {
     /**
+     * flag to enable/disable the new extended opcode formats; meant as a
+     * temporary measure until VM support for the salient opcodes is
+     * added. TODO: Remove this declaration when the VM can deal.
+     */
+    public static boolean ALLOW_EXTENDED_OPCODES = false;
+
+    /**
      * Returns the string form, suitable for inclusion in a listing
      * dump, of the given instruction. The instruction must be of this
      * instance's format for proper operation.
@@ -135,17 +142,6 @@ public abstract class InsnFormat {
     public boolean branchFits(TargetInsn insn) {
         return false;
     }
-
-    /**
-     * Returns the next instruction format to try to match an instruction
-     * with, presuming that this instance isn't compatible, if any.
-     *
-     * <p>Subclasses must override this method.</p>
-     *
-     * @return {@code null-ok;} the next format to try, or {@code null} if
-     * there are no suitable alternatives
-     */
-    public abstract InsnFormat nextUp();
 
     /**
      * Writes the code units for the given instruction to the given
