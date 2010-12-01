@@ -15,7 +15,7 @@
  */
 
 #include "Dalvik.h"
-#include "libdex/OpCode.h"
+#include "libdex/DexOpcodes.h"
 #include "interp/Jit.h"
 #include "CompilerInternals.h"
 #include "Dataflow.h"

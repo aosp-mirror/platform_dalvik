@@ -15,7 +15,7 @@
  */
 
 #include "../../CompilerInternals.h"
-#include "libdex/OpCodeNames.h"
+#include "libdex/DexOpcodes.h"
 #include "X86LIR.h"
 
 /* Dump instructions and constant pool contents */

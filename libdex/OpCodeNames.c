@@ -22,7 +22,7 @@
  * sections will get wiped out the next time the tool is run.
  */
 
-#include "OpCodeNames.h"
+#include "DexOpcodes.h"
 #include <assert.h>
 
 /*

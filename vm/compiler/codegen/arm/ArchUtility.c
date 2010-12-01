@@ -15,7 +15,7 @@
  */
 
 #include "../../CompilerInternals.h"
-#include "libdex/OpCodeNames.h"
+#include "libdex/DexOpcodes.h"
 #include "ArmLIR.h"
 
 static char *shiftNames[4] = {

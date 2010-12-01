@@ -32,9 +32,9 @@
 #include "libdex/DexFile.h"
 #include "libdex/DexCatch.h"
 #include "libdex/DexClass.h"
+#include "libdex/DexOpcodes.h"
 #include "libdex/DexProto.h"
 #include "libdex/InstrUtils.h"
-#include "libdex/OpCodeNames.h"
 #include "libdex/SysUtil.h"
 #include "libdex/CmdUtils.h"
 
