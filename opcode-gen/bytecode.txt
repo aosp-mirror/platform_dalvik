@@ -41,8 +41,8 @@ format 22t
 format 35c 3rc 5rc
 
 # Optimized formats
-format 00x  # not in spec; used for undefined opcodes and breakpoint
-format 20bc # not in spec; used for throw-verification-error
+format 00x 
+format 20bc
 format 22cs
 format 35mi
 format 35ms

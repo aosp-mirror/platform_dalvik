@@ -52,7 +52,7 @@ values in the high eight bits; and the second word consists of a single
 for the format, which is used in other documents and in code to identify
 the format.</p>
 
-<p>Format IDs consist of three characters, two digits followed by a
+<p>Most format IDs consist of three characters, two digits followed by a
 letter. The first digit indicates the number of 16-bit code units in the
 format. The second digit indicates the maximum number of registers that the
 format contains (maximum, since some formats can accomodate a variable
@@ -66,7 +66,9 @@ and additionally contains a branch target.</p>
 making them four characters total. Similarly, suggested "inline" linking
 formats have an additional "<code>i</code>" suffix. (In this context, inline
 linking is like static linking, except with more direct ties into a
-virtual machine's implementation.)</p>
+virtual machine's implementation.) Finally, one oddball suggested format
+("<code>20bc</code>") includes two pieces of data which are represented in
+its format ID.</p>
 
 <p>The full list of typecode letters are as follows. Note that some
 forms have different sizes, depending on the format:</p>
@@ -204,6 +206,13 @@ the correspondence.</p>
 </thead>
 <tbody>
 <tr>
+  <td><i>N/A</i></td>
+  <td>00x</td>
+  <td><i><code>N/A</code></i></td>
+  <td><i>pseudo-format used for unused opcodes; suggested for use as the
+    nominal format for a breakpoint opcode</i></td>
+</tr>
+<tr>
   <td>&Oslash;&Oslash;|<i>op</i></td>
   <td>10x</td>
   <td><i><code>op</code></i></td>
@@ -236,6 +245,14 @@ the correspondence.</p>
   <td>20t</td>
   <td><i><code>op</code></i> +AAAA</td>
   <td>goto/16</td>
+</tr>
+<tr>
+  <td>AA|<i>op</i> BBBB</td></td>
+  <td>20bc</td>
+  <td><i><code>op</code></i> BB, kind@AAAA</td>
+  <td><i>suggested format for statically determined verification errors;
+    B is the type of error and A is an index into a type-appropriate
+    table (e.g. method references for a no-such-method error)</i></td>
 </tr>
 <tr>
   <td rowspan="5">AA|<i>op</i> BBBB</td>
