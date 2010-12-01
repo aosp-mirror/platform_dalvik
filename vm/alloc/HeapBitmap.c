@@ -131,65 +131,27 @@ void dvmHeapBitmapSweepWalk(const HeapBitmap *liveHb, const HeapBitmap *markHb,
     assert(liveHb->bits != NULL);
     assert(markHb != NULL);
     assert(markHb->bits != NULL);
+    assert(liveHb->base == markHb->base);
+    assert(liveHb->bitsLen == markHb->bitsLen);
     assert(callback != NULL);
 
-    if (liveHb->base != markHb->base) {
-        LOGW("dvmHeapBitmapSweepWalk: bitmaps cover different heaps (%zd != %zd)",
-             liveHb->base, markHb->base);
-        return;
-    }
-    if (liveHb->bitsLen != markHb->bitsLen) {
-        LOGW("dvmHeapBitmapSweepWalk: size of bitmaps differ (%zd != %zd)",
-             liveHb->bitsLen, markHb->bitsLen);
-        return;
-    }
-    if (liveHb->max < liveHb->base && markHb->max < markHb->base) {
+    if (liveHb->max < liveHb->base) {
         /* Easy case; both are obviously empty.
          */
         return;
     }
 
-    /* First, walk along the section of the bitmaps that may be the same.
-     */
-    if (liveHb->max >= liveHb->base && markHb->max >= markHb->base) {
-        unsigned long *live, *mark;
-        uintptr_t offset;
+    unsigned long *live, *mark;
+    uintptr_t offset;
 
-        offset = ((liveHb->max < markHb->max) ? liveHb->max : markHb->max) - liveHb->base;
-//TODO: keep track of which (and whether) one is longer for later
-        index = HB_OFFSET_TO_INDEX(offset);
+    offset = liveHb->max - liveHb->base;
+    index = HB_OFFSET_TO_INDEX(offset);
 
-        live = liveHb->bits;
-        mark = markHb->bits;
-        for (i = 0; i <= index; i++) {
-//TODO: unroll this. pile up a few in locals?
-            unsigned long garbage = live[i] & ~mark[i];
-            DECODE_BITS(liveHb, garbage, false);
-//BUG: if the callback was called, either max could have changed.
-        }
-        /* The next index to look at.
-         */
-        index++;
-    } else {
-        /* One of the bitmaps is empty.
-         */
-        index = 0;
-    }
-
-    /* If one bitmap's max is larger, walk through the rest of the
-     * set bits.
-     */
-const HeapBitmap *longHb;
-unsigned long *p;
-//TODO: may be the same size, in which case this is wasted work
-    longHb = (liveHb->max > markHb->max) ? liveHb : markHb;
-    i = index;
-    index = HB_OFFSET_TO_INDEX(longHb->max - longHb->base);
-    p = longHb->bits + i;
-    for (/* i = i */; i <= index; i++) {
-//TODO: unroll this
-        unsigned long bits = *p++;
-        DECODE_BITS(longHb, bits, true);
+    live = liveHb->bits;
+    mark = markHb->bits;
+    for (i = 0; i <= index; i++) {
+        unsigned long garbage = live[i] & ~mark[i];
+        DECODE_BITS(liveHb, garbage, false);
     }
 
     if (pb > pointerBuf) {
