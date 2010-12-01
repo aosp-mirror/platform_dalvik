@@ -79,7 +79,10 @@ format 3rms
 #                      execute-inline nor the nop-equivalent
 #                      invoke-direct-empty
 
+#
 # Regular opcodes (with a couple holes)
+#
+
 op   00 nop                         10x  n none          continue
 op   01 move                        12x  y none          continue
 op   02 move/from16                 22x  y none          continue
@@ -302,10 +305,10 @@ op   e0 shl-int/lit8                22b  y none          continue
 op   e1 shr-int/lit8                22b  y none          continue
 op   e2 ushr-int/lit8               22b  y none          continue
 
+#
 # Optimized opcodes (not valid in an unoptimized dex file)
 #
-# Note: Technically "breakpoint" isn't really an optimized opcode, but
-# it fits the label in terms of not being valid in dex files.
+
 op   e3 +iget-volatile              22c  y field-ref     optimized|continue|throw
 op   e4 +iput-volatile              22c  n field-ref     optimized|continue|throw
 op   e5 +sget-volatile              21c  y field-ref     optimized|continue|throw
@@ -315,11 +318,22 @@ op   e8 +iget-wide-volatile         22c  y field-ref     optimized|continue|thro
 op   e9 +iput-wide-volatile         22c  n field-ref     optimized|continue|throw
 op   ea +sget-wide-volatile         21c  y field-ref     optimized|continue|throw
 op   eb +sput-wide-volatile         21c  n field-ref     optimized|continue|throw
+
+# Technically "breakpoint" isn't really an optimized opcode, but it
+# fits the label in terms of not being valid in regular dex files.
 op   ec ^breakpoint                 00x  n unknown       optimized
+
 op   ed ^throw-verification-error   20bc n varies        optimized|throw
 op   ee +execute-inline             35mi n inline-method optimized|continue|throw
 op   ef +execute-inline/range       3rmi n inline-method optimized|continue|throw
+
+# This opcode is marked neither as "invoke" nor "throw" since it is
+# executed as a nop except if a debugger is attached. And given that
+# dexopt would have been the thing that inserted this instruction,
+# having already verified the method and the one it (would have)
+# called, we know that it couldn't possibly throw.
 op   f0 +invoke-direct-empty        35c  n method-ref    optimized|continue
+
 op   f1 +return-void-barrier        10x  n none          optimized|return
 op   f2 +iget-quick                 22cs y field-offset  optimized|continue|throw
 op   f3 +iget-wide-quick            22cs y field-offset  optimized|continue|throw
@@ -335,7 +349,10 @@ op   fc +iput-object-volatile       22c  n field-ref     optimized|continue|thro
 op   fd +sget-object-volatile       21c  y field-ref     optimized|continue|throw
 op   fe +sput-object-volatile       21c  n field-ref     optimized|continue|throw
 
-# Extended-width opcodes 
+#
+# Extended-width opcodes
+#
+
 op 00ff const-class/jumbo           41c  y type-ref      continue|throw
 op 01ff check-cast/jumbo            41c  n type-ref      continue|throw
 op 02ff instance-of/jumbo           52c  y type-ref      continue|throw
