@@ -1070,10 +1070,17 @@ void dumpBytecodes(DexFile* pDexFile, const DexMethod* pDexMethod)
     insnIdx = 0;
     while (insnIdx < (int) pCode->insnsSize) {
         int insnWidth;
-        OpCode opCode;
         DecodedInstruction decInsn;
         u2 instr;
 
+        /*
+         * Note: This code parallels the function
+         * dexGetInstrOrTableWidth() in InstrUtils.c, but this version
+         * can deal with data in either endianness.
+         *
+         * TODO: Figure out if this really matters, and possibly change
+         * this to just use dexGetInstrOrTableWidth().
+         */
         instr = get2LE((const u1*)insns);
         if (instr == kPackedSwitchSignature) {
             insnWidth = 4 + get2LE((const u1*)(insns+1)) * 2;
@@ -1083,10 +1090,10 @@ void dumpBytecodes(DexFile* pDexFile, const DexMethod* pDexMethod)
             int width = get2LE((const u1*)(insns+1));
             int size = get2LE((const u1*)(insns+2)) |
                        (get2LE((const u1*)(insns+3))<<16);
-            // The plus 1 is to round up for odd size and width
+            // The plus 1 is to round up for odd size and width.
             insnWidth = 4 + ((size * width) + 1) / 2;
         } else {
-            opCode = instr & 0xff;
+            OpCode opCode = dexOpCodeFromCodeUnit(instr);
             insnWidth = dexGetInstrWidth(opCode);
             if (insnWidth == 0) {
                 fprintf(stderr,

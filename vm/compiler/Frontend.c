@@ -27,7 +27,7 @@ static inline int parseInsn(const u2 *codePtr, DecodedInstruction *decInsn,
                             bool printMe)
 {
     u2 instr = *codePtr;
-    OpCode opcode = instr & 0xff;
+    OpCode opcode = dexOpCodeFromCodeUnit(instr);
     int insnWidth;
 
     // Don't parse instruction data

@@ -472,7 +472,6 @@ InstructionInfoTables gDexOpcodeInfo = {
  */
 #define FETCH(_offset)      (insns[(_offset)])
 #define FETCH_u4(_offset)   (fetch_u4_impl((_offset), insns))
-#define INST_INST(_inst)    ((_inst) & 0xff)
 #define INST_A(_inst)       (((u2)(_inst) >> 8) & 0x0f)
 #define INST_B(_inst)       ((u2)(_inst) >> 12)
 #define INST_AA(_inst)      ((_inst) >> 8)
@@ -491,7 +490,7 @@ static inline u4 fetch_u4_impl(u4 offset, const u2* insns) {
 void dexDecodeInstruction(const u2* insns, DecodedInstruction* pDec)
 {
     u2 inst = *insns;
-    OpCode opCode = (OpCode) INST_INST(inst);
+    OpCode opCode = dexOpCodeFromCodeUnit(inst);
     InstructionFormat format = dexGetInstrFormat(opCode);
 
     pDec->opCode = opCode;
@@ -705,9 +704,10 @@ size_t dexGetInstrOrTableWidth(const u2* insns)
     } else if (*insns == kArrayDataSignature) {
         u2 elemWidth = insns[1];
         u4 len = insns[2] | (((u4)insns[3]) << 16);
+        // The plus 1 is to round up for odd size and width.
         width = 4 + (elemWidth * len + 1) / 2;
     } else {
-        width = dexGetInstrWidth(INST_INST(insns[0]));
+        width = dexGetInstrWidth(dexOpCodeFromCodeUnit(insns[0]));
     }
     return width;
 }

@@ -28,7 +28,14 @@
 #ifndef _LIBDEX_OPCODE
 #define _LIBDEX_OPCODE
 
-/* the highest opcode value of a valid Dalvik opcode, plus one */
+#include "DexFile.h"
+
+/*
+ * the highest possible packed opcode value of a valid Dalvik opcode, plus one
+ *
+ * TODO: Change this once the rest of the code is prepared to deal with
+ * extended opcodes.
+ */
 #define kNumDalvikInstructions 256
 
 /*
@@ -41,8 +48,9 @@
 
 /*
  * Enumeration of all Dalvik opcodes, where the enumeration value
- * associated with each is the corresponding opcode number as noted in
- * the Dalvik bytecode spec.
+ * associated with each is the corresponding packed opcode number.
+ * This is different than the opcode value from the Dalvik bytecode
+ * spec for opcode values >= 0xff; see dexOpCodeFromCodeUnit() below.
  *
  * A note about the "breakpoint" opcode. This instruction is special,
  * in that it should never be seen by anything but the debug
@@ -577,5 +585,28 @@ typedef enum OpCode {
         H(OP_UNUSED_FF),                                                      \
         /* END(libdex-goto-table) */                                          \
     };
+
+/*
+ * Return the OpCode for a given raw opcode code unit (which may
+ * include data payload). The packed index is a zero-based index which
+ * can be used to point into various opcode-related tables. The Dalvik
+ * opcode space is inherently sparse, in that the opcode unit is 16
+ * bits wide, but for most opcodes, eight of those bits are for data.
+ */
+DEX_INLINE OpCode dexOpCodeFromCodeUnit(u2 codeUnit) {
+    /*
+     * This will want to become table-driven should the opcode layout
+     * get more complicated.
+     *
+     * Note: This has to match the corresponding code in opcode-gen, so
+     * that data tables get generated in a consistent way.
+     */
+    int lowByte = codeUnit & 0xff;
+    if (lowByte != 0xff) {
+        return (OpCode) lowByte;
+    } else {
+        return (OpCode) ((codeUnit >> 8) | 0x100);
+    }
+}
 
 #endif /*_LIBDEX_OPCODE*/

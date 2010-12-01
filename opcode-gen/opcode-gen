@@ -480,6 +480,17 @@ function flagsToC(f, parts, result, i) {
     return result;
 }
 
+# Given a packed opcode, returns the raw (unpacked) opcode value.
+function unpackOpcode(idx) {
+    # Note: This must be the inverse of the corresponding code in
+    # libdex/OpCode.h.
+    if (idx <= 0xff) {
+        return idx;
+    } else {
+        return (idx << 8) | 0xff;
+    }
+}
+
 # Returns true if the given opcode (by index) is an "optimized" opcode.
 function isOptimized(idx, parts, f) {
     # locals: parts, f

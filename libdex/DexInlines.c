@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 /*
  * Generate non-inline copies of inline functions in header files.
  */
@@ -27,4 +28,5 @@
 #include "DexProto.h"
 #include "InstrUtils.h"
 #include "Leb128.h"
+#include "OpCode.h"
 #include "ZipArchive.h"
