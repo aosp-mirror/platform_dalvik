@@ -22,11 +22,11 @@ dex_src_files := \
 	DexFile.c \
 	DexInlines.c \
 	DexOptData.c \
+	DexOpcodes.c \
 	DexProto.c \
 	DexSwapVerify.c \
 	InstrUtils.c \
 	Leb128.c \
-	OpCodeNames.c \
 	OptInvocation.c \
 	sha1.c \
 	SysUtil.c \
