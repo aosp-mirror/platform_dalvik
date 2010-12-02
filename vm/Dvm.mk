@@ -141,6 +141,7 @@ LOCAL_SRC_FILES := \
 	analysis/Optimize.c \
 	analysis/RegisterMap.c \
 	analysis/VerifySubs.c \
+	analysis/VfyBasicBlock.c \
 	hprof/Hprof.c \
 	hprof/HprofClass.c \
 	hprof/HprofHeap.c \

@@ -62,6 +62,22 @@ typedef enum ExecutionMode {
 } ExecutionMode;
 
 /*
+ * Register map generation mode.  Only applicable when generateRegisterMaps
+ * is enabled.  (The "disabled" state is not folded into this because
+ * there are callers like dexopt that want to enable/disable without
+ * specifying the configuration details.)
+ *
+ * "TypePrecise" is slower and requires additional storage for the register
+ * maps, but allows type-precise GC.  "LivePrecise" is even slower and
+ * requires additional heap during processing, but allows live-precise GC.
+ */
+typedef enum {
+    kRegisterMapModeUnknown = 0,
+    kRegisterMapModeTypePrecise,
+    kRegisterMapModeLivePrecise
+} RegisterMapMode;
+
+/*
  * All fields are initialized to zero.
  *
  * Storage allocated here must be freed by a subsystem shutdown function or
@@ -118,6 +134,9 @@ struct DvmGlobals {
     DexOptimizerMode    dexOptMode;
     DexClassVerifyMode  classVerifyMode;
 
+    bool        generateRegisterMaps;
+    RegisterMapMode     registerMapMode;
+
     bool        monitorVerification;
 
     bool        dexOptForSmp;
@@ -128,7 +147,6 @@ struct DvmGlobals {
     bool        preciseGc;
     bool        preVerify;
     bool        postVerify;
-    bool        generateRegisterMaps;
     bool        concurrentMarkSweep;
     bool        verifyCardTable;
 

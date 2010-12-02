@@ -111,7 +111,7 @@ static bool computeWidthsAndCountOps(VerifierData* vdata)
         i += width;
         insns += width;
     }
-    if (i != (int) dvmGetMethodInsnsSize(meth)) {
+    if (i != (int) vdata->insnsSize) {
         LOG_VFY_METH(meth, "VFY: code did not end where expected (%d vs. %d)\n",
             i, dvmGetMethodInsnsSize(meth));
         goto bail;
@@ -140,19 +140,16 @@ static bool scanTryCatchBlocks(const Method* meth, InsnFlags* insnFlags)
     const DexCode* pCode = dvmGetMethodCode(meth);
     u4 triesSize = pCode->triesSize;
     const DexTry* pTries;
-    u4 handlersSize;
-    u4 offset;
-    u4 i;
+    u4 idx;
 
     if (triesSize == 0) {
         return true;
     }
 
     pTries = dexGetTries(pCode);
-    handlersSize = dexGetHandlersSize(pCode);
 
-    for (i = 0; i < triesSize; i++) {
-        const DexTry* pTry = &pTries[i];
+    for (idx = 0; idx < triesSize; idx++) {
+        const DexTry* pTry = &pTries[idx];
         u4 start = pTry->startAddr;
         u4 end = start + pTry->insnCount;
         u4 addr;
@@ -180,8 +177,9 @@ static bool scanTryCatchBlocks(const Method* meth, InsnFlags* insnFlags)
     }
 
     /* Iterate over each of the handlers to verify target addresses. */
-    offset = dexGetFirstHandlerOffset(pCode);
-    for (i = 0; i < handlersSize; i++) {
+    u4 handlersSize = dexGetHandlersSize(pCode);
+    u4 offset = dexGetFirstHandlerOffset(pCode);
+    for (idx = 0; idx < handlersSize; idx++) {
         DexCatchIterator iterator;
         dexCatchIteratorInit(&iterator, pCode, offset);
 
@@ -252,6 +250,7 @@ static bool verifyMethod(Method* meth)
     vdata.insnRegCount = meth->registersSize;
     vdata.insnFlags = NULL;
     vdata.uninitMap = NULL;
+    vdata.basicBlocks = NULL;
 
     /*
      * If there aren't any instructions, make sure that's expected, then
@@ -285,8 +284,7 @@ static bool verifyMethod(Method* meth)
      * TODO: Consider keeping a reusable pre-allocated array sitting
      * around for smaller methods.
      */
-    vdata.insnFlags = (InsnFlags*)
-        calloc(dvmGetMethodInsnsSize(meth), sizeof(InsnFlags));
+    vdata.insnFlags = (InsnFlags*) calloc(vdata.insnsSize, sizeof(InsnFlags));
     if (vdata.insnFlags == NULL)
         goto bail;
 
@@ -307,12 +305,14 @@ static bool verifyMethod(Method* meth)
 
     /*
      * Set the "in try" flags for all instructions guarded by a "try" block.
+     * Also sets the "branch target" flag on exception handlers.
      */
     if (!scanTryCatchBlocks(meth, vdata.insnFlags))
         goto bail;
 
     /*
-     * Perform static instruction verification.
+     * Perform static instruction verification.  Also sets the "branch
+     * target" flags.
      */
     if (!verifyInstructions(&vdata))
         goto bail;
@@ -332,6 +332,7 @@ success:
     result = true;
 
 bail:
+    dvmFreeVfyBasicBlocks(&vdata);
     dvmFreeUninitInstanceMap(vdata.uninitMap);
     free(vdata.insnFlags);
     return result;
@@ -717,10 +718,10 @@ static bool checkBranchTarget(const Method* meth, InsnFlags* insnFlags,
     int curOffset, bool selfOkay)
 {
     const int insnCount = dvmGetMethodInsnsSize(meth);
-    int offset, absOffset;
+    s4 offset, absOffset;
     bool isConditional;
 
-    if (!dvmGetBranchTarget(meth, insnFlags, curOffset, &offset,
+    if (!dvmGetBranchOffset(meth, insnFlags, curOffset, &offset,
             &isConditional))
         return false;
 
@@ -1208,8 +1209,12 @@ static bool verifyInstructions(VerifierData* vdata)
              * This instruction is probably a GC point.  Branch instructions
              * only qualify if they go backward, so for those we need to
              * check the offset.
+             *
+             * TODO: we could also scan the targets of a "switch" statement,
+             * and if none of them branch backward we could ignore that
+             * instruction as well.
              */
-            int offset;
+            s4 offset;
             bool unused;
             if ((opFlags & kInstrCanBranch) != 0) {
                 /*
@@ -1217,7 +1222,7 @@ static bool verifyInstructions(VerifierData* vdata)
                  * component was tagged with kVfyBranch, but it's easier
                  * to just grab it again than cart the state around.
                  */
-                if (!dvmGetBranchTarget(meth, insnFlags, codeOffset, &offset,
+                if (!dvmGetBranchOffset(meth, insnFlags, codeOffset, &offset,
                         &unused))
                 {
                     /* should never happen */

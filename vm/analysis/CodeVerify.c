@@ -3445,6 +3445,14 @@ bool dvmVerifyCodeFlow(VerifierData* vdata)
     vdata->registerLines = NULL;     /* don't set this until we need it */
 
     /*
+     * Compute basic blocks if we want to do liveness analysis.
+     */
+    if (gDvm.registerMapMode == kRegisterMapModeLivePrecise) {
+        if (!dvmComputeVfyBasicBlocks(vdata))
+            goto bail;
+    }
+
+    /*
      * Initialize the types of the registers that correspond to the
      * method arguments.  We can determine this from the method signature.
      */
@@ -3763,7 +3771,7 @@ static bool verifyInstruction(const Method* meth, InsnFlags* insnFlags,
     RegisterLine* workLine = &regTable->workLine;
     const DexFile* pDexFile = meth->clazz->pDvmDex->pDexFile;
     ClassObject* resClass;
-    int branchTarget = 0;
+    s4 branchTarget = 0;
     const int insnRegCount = meth->registersSize;
     RegType tmpType;
     DecodedInstruction decInsn;
@@ -5754,7 +5762,7 @@ sput_1nr_common:
     if ((nextFlags & kInstrCanBranch) != 0) {
         bool isConditional;
 
-        if (!dvmGetBranchTarget(meth, insnFlags, insnIdx, &branchTarget,
+        if (!dvmGetBranchOffset(meth, insnFlags, insnIdx, &branchTarget,
                 &isConditional))
         {
             /* should never happen after static verification */

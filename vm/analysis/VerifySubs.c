@@ -79,8 +79,8 @@ void dvmLogUnableToResolveClass(const char* missingClassDescr,
  *
  * Returns "false" on failure (e.g. this isn't a branch instruction).
  */
-bool dvmGetBranchTarget(const Method* meth, InsnFlags* insnFlags,
-    int curOffset, int* pOffset, bool* pConditional)
+bool dvmGetBranchOffset(const Method* meth, const InsnFlags* insnFlags,
+    int curOffset, s4* pOffset, bool* pConditional)
 {
     const u2* insns = meth->insns + curOffset;
 

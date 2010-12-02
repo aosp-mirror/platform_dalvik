@@ -21,6 +21,7 @@
 #define _DALVIK_CODEVERIFY
 
 #include "analysis/VerifySubs.h"
+#include "analysis/VfyBasicBlock.h"
 
 
 /*
@@ -187,6 +188,12 @@ typedef struct VerifierData {
      */
     size_t          newInstanceCount;
     size_t          monitorEnterCount;
+
+    /*
+     * Array of pointers to basic blocks, one entry per code unit.  Used
+     * for liveness analysis.
+     */
+    VfyBasicBlock** basicBlocks;
 } VerifierData;
 
 

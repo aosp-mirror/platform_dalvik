@@ -119,7 +119,7 @@ static void dvmUsage(const char* progName)
     dvmFprintf(stderr, "  -Xgc:[no]postverify\n");
     dvmFprintf(stderr, "  -Xgc:[no]concurrent\n");
     dvmFprintf(stderr, "  -Xgc:[no]verifycardtable\n");
-    dvmFprintf(stderr, "  -Xgenregmap\n");
+    dvmFprintf(stderr, "  -X[no]genregmap\n");
     dvmFprintf(stderr, "  -Xverifyopt:[no]checkmon\n");
     dvmFprintf(stderr, "  -Xcheckdexsum\n");
 #if defined(WITH_JIT)
@@ -983,7 +983,8 @@ static int dvmProcessOptions(int argc, const char* const argv[],
 
         } else if (strcmp(argv[i], "-Xgenregmap") == 0) {
             gDvm.generateRegisterMaps = true;
-            LOGV("Register maps will be generated during verification\n");
+        } else if (strcmp(argv[i], "-Xnogenregmap") == 0) {
+            gDvm.generateRegisterMaps = false;
 
         } else if (strcmp(argv[i], "Xverifyopt:checkmon") == 0) {
             gDvm.monitorVerification = true;
@@ -1083,6 +1084,8 @@ static void setCommandLineDefaults()
     gDvm.classVerifyMode = VERIFY_MODE_ALL;
     gDvm.dexOptMode = OPTIMIZE_MODE_VERIFIED;
     gDvm.monitorVerification = false;
+    gDvm.generateRegisterMaps = true;
+    gDvm.registerMapMode = kRegisterMapModeTypePrecise;
 
     /*
      * Default execution mode.

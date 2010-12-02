@@ -61,9 +61,9 @@ void dvmLogVerifyFailure(const Method* meth, const char* format, ...)
 void dvmLogUnableToResolveClass(const char* missingClassDescr,
     const Method* meth);
 
-/* extract the relative branch target from a branch instruction */
-bool dvmGetBranchTarget(const Method* meth, InsnFlags* insnFlags,
-    int curOffset, int* pOffset, bool* pConditional);
+/* extract the relative branch offset from a branch instruction */
+bool dvmGetBranchOffset(const Method* meth, const InsnFlags* insnFlags,
+    int curOffset, s4* pOffset, bool* pConditional);
 
 /* return a RegType enumeration value that "value" just fits into */
 char dvmDetermineCat1Const(s4 value);
