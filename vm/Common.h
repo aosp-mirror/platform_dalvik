@@ -31,7 +31,7 @@
 # undef assert
 # define assert(x) \
     ((x) ? ((void)0) : (LOGE("ASSERT FAILED (%s:%d): %s\n", \
-        __FILE__, __LINE__, #x), *(int*)39=39, 0) )
+        __FILE__, __LINE__, #x), *(int*)39=39, (void)0) )
 #endif
 
 #define MIN(x,y) (((x) < (y)) ? (x) : (y))
