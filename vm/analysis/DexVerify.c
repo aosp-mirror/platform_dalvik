@@ -96,17 +96,16 @@ static bool computeWidthsAndCountOps(VerifierData* vdata)
         if (width == 0) {
             LOG_VFY_METH(meth, "VFY: invalid instruction (0x%04x)\n", *insns);
             goto bail;
+        } else if (width > 65535) {
+            LOG_VFY_METH(meth,
+                "VFY: warning: unusually large instr width (%d)\n", width);
         }
 
-        if ((*insns & 0xff) == OP_NEW_INSTANCE)
+        OpCode opcode = dexOpCodeFromCodeUnit(*insns);
+        if (opcode == OP_NEW_INSTANCE)
             newInstanceCount++;
-        if ((*insns & 0xff) == OP_MONITOR_ENTER)
+        if (opcode == OP_MONITOR_ENTER)
             monitorEnterCount++;
-
-        if (width > 65535) {
-            LOG_VFY_METH(meth, "VFY: insane width %d\n", width);
-            goto bail;
-        }
 
         insnFlags[i] |= width;
         i += width;

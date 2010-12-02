@@ -20,12 +20,6 @@
  *
  * TODO: might benefit from a signature-->class lookup cache.  Could avoid
  * some string-peeling and wouldn't need to compute hashes.
- *
- * TODO: we do too much stuff in here that could be done in the static
- * verification pass.  It's convenient, because we have all of the
- * necessary information, but it's more efficient to do it over in
- * DexVerify.c because in here we may have to process instructions
- * multiple times.
  */
 #include "Dalvik.h"
 #include "analysis/CodeVerify.h"
@@ -478,7 +472,7 @@ void dvmFreeUninitInstanceMap(UninitInstanceMap* uninitMap)
  * Entries, once set, do not change -- a given address can only allocate
  * one type of object.
  */
-int dvmSetUninitInstance(UninitInstanceMap* uninitMap, int addr,
+static int setUninitInstance(UninitInstanceMap* uninitMap, int addr,
     ClassObject* clazz)
 {
     int idx;
@@ -512,7 +506,8 @@ int dvmSetUninitInstance(UninitInstanceMap* uninitMap, int addr,
 /*
  * Get the class object at the specified index.
  */
-ClassObject* dvmGetUninitInstance(const UninitInstanceMap* uninitMap, int idx)
+static ClassObject* getUninitInstance(const UninitInstanceMap* uninitMap,
+    int idx)
 {
     assert(idx >= 0 && idx < uninitMap->numEntries);
     return uninitMap->map[idx].clazz;
@@ -555,7 +550,7 @@ static ClassObject* regTypeReferenceToClass(RegType type,
     assert(regTypeIsReference(type) && type != kRegTypeZero);
     if (regTypeIsUninitReference(type)) {
         assert(uninitMap != NULL);
-        return dvmGetUninitInstance(uninitMap, regTypeToUninitIndex(type));
+        return getUninitInstance(uninitMap, regTypeToUninitIndex(type));
     } else {
         return (ClassObject*) type;
     }
@@ -787,7 +782,7 @@ static bool setTypesFromSignature(const Method* meth, RegType* regTypes,
          * field access until the superclass constructor is called.
          */
         if (isInitMethod(meth) && meth->clazz != gDvm.classJavaLangObject) {
-            int uidx = dvmSetUninitInstance(uninitMap, kUninitThisArgAddr,
+            int uidx = setUninitInstance(uninitMap, kUninitThisArgAddr,
                             meth->clazz);
             assert(uidx == 0);
             regTypes[argStart + actualArgs] = regTypeFromUninitIndex(uidx);
@@ -1699,7 +1694,7 @@ static void markRefsAsInitialized(RegisterLine* registerLine, int insnRegCount,
     RegType initType;
     int i, changed;
 
-    clazz = dvmGetUninitInstance(uninitMap, regTypeToUninitIndex(uninitType));
+    clazz = getUninitInstance(uninitMap, regTypeToUninitIndex(uninitType));
     if (clazz == NULL) {
         LOGE("VFY: unable to find type=0x%x (idx=%d)\n",
             uninitType, regTypeToUninitIndex(uninitType));
@@ -4122,7 +4117,7 @@ static bool verifyInstruction(const Method* meth, InsnFlags* insnFlags,
             }
 
             /* add resolved class to uninit map if not already there */
-            int uidx = dvmSetUninitInstance(uninitMap, insnIdx, resClass);
+            int uidx = setUninitInstance(uninitMap, insnIdx, resClass);
             assert(uidx >= 0);
             uninitType = regTypeFromUninitIndex(uidx);
 
