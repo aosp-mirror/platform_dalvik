@@ -55,7 +55,7 @@ static InstructionWidth gOpcodeWidthTable[kNumDalvikInstructions] = {
  * Table that maps each opcode to the flags associated with that
  * opcode.
  */
-static InstructionFlags gOpcodeFlagsTable[kNumDalvikInstructions] = {
+static u1 gOpcodeFlagsTable[kNumDalvikInstructions] = {
     // BEGIN(libdex-flags); GENERATED AUTOMATICALLY BY opcode-gen
     kInstrCanContinue,
     kInstrCanContinue,
@@ -320,7 +320,7 @@ static InstructionFlags gOpcodeFlagsTable[kNumDalvikInstructions] = {
  * Table that maps each opcode to the instruction format associated
  * that opcode.
  */
-static InstructionFormat gOpcodeFormatTable[kNumDalvikInstructions] = {
+static u1 gOpcodeFormatTable[kNumDalvikInstructions] = {
     // BEGIN(libdex-formats); GENERATED AUTOMATICALLY BY opcode-gen
     kFmt10x,  kFmt12x,  kFmt22x,  kFmt32x,  kFmt12x,  kFmt22x,  kFmt32x,
     kFmt12x,  kFmt22x,  kFmt32x,  kFmt11x,  kFmt11x,  kFmt11x,  kFmt11x,
@@ -366,7 +366,7 @@ static InstructionFormat gOpcodeFormatTable[kNumDalvikInstructions] = {
  * Table that maps each opcode to the index type implied by that
  * opcode.
  */
-static InstructionIndexType gOpcodeIndexTypeTable[kNumDalvikInstructions] = {
+static u1 gOpcodeIndexTypeTable[kNumDalvikInstructions] = {
     // BEGIN(libdex-index-types); GENERATED AUTOMATICALLY BY opcode-gen
     kIndexNone,         kIndexNone,         kIndexNone,
     kIndexNone,         kIndexNone,         kIndexNone,
@@ -709,5 +709,6 @@ size_t dexGetInstrOrTableWidth(const u2* insns)
     } else {
         width = dexGetInstrWidth(dexOpcodeFromCodeUnit(insns[0]));
     }
+
     return width;
 }
