@@ -96,14 +96,11 @@ static void markStackPush(GcMarkStack *stack, const Object *obj)
  */
 static const Object *markStackPop(GcMarkStack *stack)
 {
-    const Object *obj;
-
     assert(stack != NULL);
     assert(stack->base < stack->top);
     assert(stack->limit > stack->top);
     --stack->top;
-    obj = *stack->top;
-    return obj;
+    return *stack->top;
 }
 
 bool dvmHeapBeginMarkStep(GcMode mode)
