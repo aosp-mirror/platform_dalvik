@@ -120,7 +120,7 @@ typedef struct InstructionInfoTables {
     u1*                formats;    /* InstructionFormat elements */
     u1*                indexTypes; /* InstructionIndexType elements */
     OpcodeFlags*       flags;
-    InstructionWidth* widths;
+    InstructionWidth*  widths;
 } InstructionInfoTables;
 
 /*
