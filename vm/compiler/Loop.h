@@ -27,7 +27,7 @@ typedef struct LoopAnalysis {
     int numBasicIV;                     // number of basic induction variables
     int ssaBIV;                         // basic IV in SSA name
     bool isCountUpLoop;                 // count up or down loop
-    OpCode loopBranchOpcode;            // OP_IF_XXX for the loop back branch
+    Opcode loopBranchOpcode;            // OP_IF_XXX for the loop back branch
     int endConditionReg;                // vB in "vA op vB"
     LIR *branchToBody;                  // branch over to the body from entry
     LIR *branchToPCR;                   // branch over to the PCR cell

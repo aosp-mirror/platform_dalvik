@@ -212,7 +212,7 @@ def emitAsmHeader(outfp, dict):
     # with overflow here.
     outfp.write("    .balign 4\n")
     # Emit a label so that gdb will say the right thing.  We prepend an
-    # underscore so the symbol name doesn't clash with the OpCode enum.
+    # underscore so the symbol name doesn't clash with the Opcode enum.
     template_name = "dvmCompiler_%(opcode)s" % dict
     outfp.write("    .global %s\n" % template_name);
     outfp.write("%s:\n" % template_name);

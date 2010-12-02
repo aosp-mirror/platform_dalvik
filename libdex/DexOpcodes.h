@@ -50,7 +50,7 @@
  * Enumeration of all Dalvik opcodes, where the enumeration value
  * associated with each is the corresponding packed opcode number.
  * This is different than the opcode value from the Dalvik bytecode
- * spec for opcode values >= 0xff; see dexOpCodeFromCodeUnit() below.
+ * spec for opcode values >= 0xff; see dexOpcodeFromCodeUnit() below.
  *
  * A note about the "breakpoint" opcode. This instruction is special,
  * in that it should never be seen by anything but the debug
@@ -59,7 +59,7 @@
  * can find the next instruction" aren't possible. (This is
  * correctable, but probably not useful.)
  */
-typedef enum OpCode {
+typedef enum Opcode {
     // BEGIN(libdex-opcode-enum); GENERATED AUTOMATICALLY BY opcode-gen
     OP_NOP                          = 0x00,
     OP_MOVE                         = 0x01,
@@ -318,7 +318,7 @@ typedef enum OpCode {
     OP_SPUT_OBJECT_VOLATILE         = 0xfe,
     OP_UNUSED_FF                    = 0xff,
     // END(libdex-opcode-enum)
-} OpCode;
+} Opcode;
 
 /*
  * Macro used to generate a computed goto table for use in implementing
@@ -587,13 +587,13 @@ typedef enum OpCode {
     };
 
 /*
- * Return the OpCode for a given raw opcode code unit (which may
+ * Return the Opcode for a given raw opcode code unit (which may
  * include data payload). The packed index is a zero-based index which
  * can be used to point into various opcode-related tables. The Dalvik
  * opcode space is inherently sparse, in that the opcode unit is 16
  * bits wide, but for most opcodes, eight of those bits are for data.
  */
-DEX_INLINE OpCode dexOpCodeFromCodeUnit(u2 codeUnit) {
+DEX_INLINE Opcode dexOpcodeFromCodeUnit(u2 codeUnit) {
     /*
      * This will want to become table-driven should the opcode layout
      * get more complicated.
@@ -603,15 +603,15 @@ DEX_INLINE OpCode dexOpCodeFromCodeUnit(u2 codeUnit) {
      */
     int lowByte = codeUnit & 0xff;
     if (lowByte != 0xff) {
-        return (OpCode) lowByte;
+        return (Opcode) lowByte;
     } else {
-        return (OpCode) ((codeUnit >> 8) | 0x100);
+        return (Opcode) ((codeUnit >> 8) | 0x100);
     }
 }
 
 /*
  * Return the name of an opcode.
  */
-const char* dexGetOpcodeName(OpCode op);
+const char* dexGetOpcodeName(Opcode op);
 
 #endif /*_LIBDEX_DEXOPCODES*/

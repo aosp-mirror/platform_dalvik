@@ -100,7 +100,7 @@ typedef struct DecodedInstruction {
     u8      vB_wide;        /* for kFmt51l */
     u4      vC;
     u4      arg[5];         /* vC/D/E/F/G in invoke or filled-new-array */
-    OpCode  opCode;
+    Opcode  opcode;
     InstructionIndexType indexType;
 } DecodedInstruction;
 
@@ -142,10 +142,10 @@ extern InstructionInfoTables gDexOpcodeInfo;
 /*
  * Return the width of the specified instruction, or 0 if not defined.
  */
-DEX_INLINE size_t dexGetInstrWidth(OpCode opCode)
+DEX_INLINE size_t dexGetInstrWidth(Opcode opcode)
 {
-    //assert(/*opCode >= 0 &&*/ opCode < kNumDalvikInstructions);
-    return gDexOpcodeInfo.widths[opCode];
+    //assert(/*opcode >= 0 &&*/ opcode < kNumDalvikInstructions);
+    return gDexOpcodeInfo.widths[opcode];
 }
 
 /*
@@ -158,10 +158,10 @@ size_t dexGetInstrOrTableWidth(const u2* insns);
 /*
  * Returns the flags for the specified opcode.
  */
-DEX_INLINE int dexGetInstrFlags(OpCode opCode)
+DEX_INLINE int dexGetInstrFlags(Opcode opcode)
 {
-    //assert(/*opCode >= 0 &&*/ opCode < kNumDalvikInstructions);
-    return gDexOpcodeInfo.flags[opCode];
+    //assert(/*opcode >= 0 &&*/ opcode < kNumDalvikInstructions);
+    return gDexOpcodeInfo.flags[opcode];
 }
 
 /*
@@ -175,19 +175,19 @@ DEX_INLINE bool dexIsGoto(int flags)
 /*
  * Return the instruction format for the specified opcode.
  */
-DEX_INLINE InstructionFormat dexGetInstrFormat(OpCode opCode)
+DEX_INLINE InstructionFormat dexGetInstrFormat(Opcode opcode)
 {
-    //assert(/*opCode >= 0 &&*/ opCode < kNumDalvikInstructions);
-    return gDexOpcodeInfo.formats[opCode];
+    //assert(/*opcode >= 0 &&*/ opcode < kNumDalvikInstructions);
+    return gDexOpcodeInfo.formats[opcode];
 }
 
 /*
  * Return the instruction index type for the specified opcode.
  */
-DEX_INLINE InstructionIndexType dexGetInstrIndexType(OpCode opCode)
+DEX_INLINE InstructionIndexType dexGetInstrIndexType(Opcode opcode)
 {
-    //assert(/*opCode >= 0 &&*/ opCode < kNumDalvikInstructions);
-    return gDexOpcodeInfo.indexTypes[opCode];
+    //assert(/*opcode >= 0 &&*/ opcode < kNumDalvikInstructions);
+    return gDexOpcodeInfo.indexTypes[opcode];
 }
 
 /*

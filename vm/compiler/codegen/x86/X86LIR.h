@@ -134,7 +134,7 @@ typedef enum OpKind {
 
 typedef struct X86LIR {
     LIR generic;
-    //X86OpCode opCode;
+    //X86Opcode opcode;
     int operands[4];    // [0..3] = [dest, src1, src2, extra]
     bool isNop;         // LIR is optimized away
     bool branchInsertSV;// mark for insertion of branch before this instruction,

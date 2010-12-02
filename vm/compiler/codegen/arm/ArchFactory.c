@@ -89,7 +89,7 @@ static TGT_LIR *genBoundsCheck(CompilationUnit *cUnit, int rIndex,
  * Jump to the out-of-line handler in ARM mode to finish executing the
  * remaining of more complex instructions.
  */
-static void genDispatchToHandler(CompilationUnit *cUnit, TemplateOpCode opCode)
+static void genDispatchToHandler(CompilationUnit *cUnit, TemplateOpcode opcode)
 {
     /*
      * NOTE - In practice BLX only needs one operand, but since the assembler
@@ -101,9 +101,9 @@ static void genDispatchToHandler(CompilationUnit *cUnit, TemplateOpCode opCode)
      */
     dvmCompilerClobberHandlerRegs(cUnit);
     newLIR2(cUnit, kThumbBlx1,
-            (int) gDvmJit.codeCache + templateEntryOffsets[opCode],
-            (int) gDvmJit.codeCache + templateEntryOffsets[opCode]);
+            (int) gDvmJit.codeCache + templateEntryOffsets[opcode],
+            (int) gDvmJit.codeCache + templateEntryOffsets[opcode]);
     newLIR2(cUnit, kThumbBlx2,
-            (int) gDvmJit.codeCache + templateEntryOffsets[opCode],
-            (int) gDvmJit.codeCache + templateEntryOffsets[opCode]);
+            (int) gDvmJit.codeCache + templateEntryOffsets[opcode],
+            (int) gDvmJit.codeCache + templateEntryOffsets[opcode]);
 }

@@ -490,11 +490,11 @@ static inline u4 fetch_u4_impl(u4 offset, const u2* insns) {
 void dexDecodeInstruction(const u2* insns, DecodedInstruction* pDec)
 {
     u2 inst = *insns;
-    OpCode opCode = dexOpCodeFromCodeUnit(inst);
-    InstructionFormat format = dexGetInstrFormat(opCode);
+    Opcode opcode = dexOpcodeFromCodeUnit(inst);
+    InstructionFormat format = dexGetInstrFormat(opcode);
 
-    pDec->opCode = opCode;
-    pDec->indexType = dexGetInstrIndexType(opCode);
+    pDec->opcode = opcode;
+    pDec->indexType = dexGetInstrIndexType(opcode);
 
     switch (format) {
     case kFmt10x:       // op
@@ -679,7 +679,7 @@ void dexDecodeInstruction(const u2* insns, DecodedInstruction* pDec)
         pDec->vC = FETCH(4);
         break;
     default:
-        LOGW("Can't decode unexpected format %d (op=%d)\n", format, opCode);
+        LOGW("Can't decode unexpected format %d (op=%d)\n", format, opcode);
         assert(false);
         break;
     }
@@ -707,7 +707,7 @@ size_t dexGetInstrOrTableWidth(const u2* insns)
         // The plus 1 is to round up for odd size and width.
         width = 4 + (elemWidth * len + 1) / 2;
     } else {
-        width = dexGetInstrWidth(dexOpCodeFromCodeUnit(insns[0]));
+        width = dexGetInstrWidth(dexOpcodeFromCodeUnit(insns[0]));
     }
     return width;
 }

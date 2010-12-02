@@ -64,7 +64,7 @@ void dvmBreakpointShutdown(void)
 typedef struct {
     Method*     method;                 /* method we're associated with */
     u2*         addr;                   /* absolute memory address */
-    u1          originalOpCode;         /* original 8-bit opcode value */
+    u1          originalOpcode;         /* original 8-bit opcode value */
     int         setCount;               /* #of times this breakpoint was set */
 } Breakpoint;
 
@@ -167,14 +167,14 @@ static int dvmBreakpointSetFind(const BreakpointSet* pSet, const u2* addr)
  *
  * Returns "true" with the opcode in *pOrig on success.
  */
-static bool dvmBreakpointSetOriginalOpCode(const BreakpointSet* pSet,
+static bool dvmBreakpointSetOriginalOpcode(const BreakpointSet* pSet,
     const u2* addr, u1* pOrig)
 {
     int idx = dvmBreakpointSetFind(pSet, addr);
     if (idx < 0)
         return false;
 
-    *pOrig = pSet->breakpoints[idx].originalOpCode;
+    *pOrig = pSet->breakpoints[idx].originalOpcode;
     return true;
 }
 
@@ -239,7 +239,7 @@ static bool dvmBreakpointSetAdd(BreakpointSet* pSet, Method* method,
         pBreak = &pSet->breakpoints[pSet->count++];
         pBreak->method = method;
         pBreak->addr = (u2*)addr;
-        pBreak->originalOpCode = *(u1*)addr;
+        pBreak->originalOpcode = *(u1*)addr;
         pBreak->setCount = 1;
 
         /*
@@ -318,7 +318,7 @@ static void dvmBreakpointSetRemove(BreakpointSet* pSet, Method* method,
              * need to.  (Not worth worrying about.)
              */
             dvmDexChangeDex1(method->clazz->pDvmDex, (u1*)addr,
-                pBreak->originalOpCode);
+                pBreak->originalOpcode);
             ANDROID_MEMBAR_FULL();
 
             if (idx != pSet->count-1) {
@@ -435,13 +435,13 @@ void dvmClearBreakAddr(Method* method, unsigned int instrOffset)
  * the restoration of the original opcode.  The fact that we're holding
  * the lock prevents other threads from confusing things further.)
  */
-u1 dvmGetOriginalOpCode(const u2* addr)
+u1 dvmGetOriginalOpcode(const u2* addr)
 {
     BreakpointSet* pSet = gDvm.breakpointSet;
     u1 orig = 0;
 
     dvmBreakpointSetLock(pSet);
-    if (!dvmBreakpointSetOriginalOpCode(pSet, addr, &orig)) {
+    if (!dvmBreakpointSetOriginalOpcode(pSet, addr, &orig)) {
         orig = *(u1*)addr;
         if (orig == OP_BREAKPOINT) {
             LOGE("GLITCH: can't find breakpoint, opcode is still set\n");

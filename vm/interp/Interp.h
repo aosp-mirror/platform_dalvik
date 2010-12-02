@@ -52,7 +52,7 @@ void dvmClearSingleStep(Thread* thread);
 /*
  * Recover the opcode that was replaced by a breakpoint.
  */
-u1 dvmGetOriginalOpCode(const u2* addr);
+u1 dvmGetOriginalOpcode(const u2* addr);
 
 /*
  * Flush any breakpoints associated with methods in "clazz".

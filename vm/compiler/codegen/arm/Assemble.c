@@ -26,7 +26,7 @@
 #define MAX_ASSEMBLER_RETRIES 10
 
 /*
- * opcode: ArmOpCode enum
+ * opcode: ArmOpcode enum
  * skeleton: pre-designated bit-pattern for this opcode
  * k0: key to applying ds/de
  * ds: dest start bit position
@@ -930,8 +930,8 @@ static AssemblerStatus assembleInstructions(CompilationUnit *cUnit,
     ArmLIR *lir;
 
     for (lir = (ArmLIR *) cUnit->firstLIRInsn; lir; lir = NEXT_LIR(lir)) {
-        if (lir->opCode < 0) {
-            if ((lir->opCode == kArmPseudoPseudoAlign4) &&
+        if (lir->opcode < 0) {
+            if ((lir->opcode == kArmPseudoPseudoAlign4) &&
                 /* 1 means padding is needed */
                 (lir->operands[0] == 1)) {
                 *bufferAddr++ = PADDING_MOV_R5_R5;
@@ -943,10 +943,10 @@ static AssemblerStatus assembleInstructions(CompilationUnit *cUnit,
             continue;
         }
 
-        if (lir->opCode == kThumbLdrPcRel ||
-            lir->opCode == kThumb2LdrPcRel12 ||
-            lir->opCode == kThumbAddPcRel ||
-            ((lir->opCode == kThumb2Vldrs) && (lir->operands[1] == rpc))) {
+        if (lir->opcode == kThumbLdrPcRel ||
+            lir->opcode == kThumb2LdrPcRel12 ||
+            lir->opcode == kThumbAddPcRel ||
+            ((lir->opcode == kThumb2Vldrs) && (lir->operands[1] == rpc))) {
             ArmLIR *lirTarget = (ArmLIR *) lir->generic.target;
             intptr_t pc = (lir->generic.offset + 4) & ~3;
             intptr_t target = lirTarget->generic.offset;
@@ -955,18 +955,18 @@ static AssemblerStatus assembleInstructions(CompilationUnit *cUnit,
                 LOGE("PC-rel distance is not multiples of 4: %d\n", delta);
                 dvmCompilerAbort(cUnit);
             }
-            if ((lir->opCode == kThumb2LdrPcRel12) && (delta > 4091)) {
+            if ((lir->opcode == kThumb2LdrPcRel12) && (delta > 4091)) {
                 return kRetryHalve;
             } else if (delta > 1020) {
                 return kRetryHalve;
             }
-            if (lir->opCode == kThumb2Vldrs) {
+            if (lir->opcode == kThumb2Vldrs) {
                 lir->operands[2] = delta >> 2;
             } else {
-                lir->operands[1] = (lir->opCode == kThumb2LdrPcRel12) ?
+                lir->operands[1] = (lir->opcode == kThumb2LdrPcRel12) ?
                                     delta : delta >> 2;
             }
-        } else if (lir->opCode == kThumb2Cbnz || lir->opCode == kThumb2Cbz) {
+        } else if (lir->opcode == kThumb2Cbnz || lir->opcode == kThumb2Cbz) {
             ArmLIR *targetLIR = (ArmLIR *) lir->generic.target;
             intptr_t pc = lir->generic.offset + 4;
             intptr_t target = targetLIR->generic.offset;
@@ -975,15 +975,15 @@ static AssemblerStatus assembleInstructions(CompilationUnit *cUnit,
                 /* Convert to cmp rx,#0 / b[eq/ne] tgt pair */
                 ArmLIR *newInst = dvmCompilerNew(sizeof(ArmLIR), true);
                 /* Make new branch instruction and insert after */
-                newInst->opCode = kThumbBCond;
+                newInst->opcode = kThumbBCond;
                 newInst->operands[0] = 0;
-                newInst->operands[1] = (lir->opCode == kThumb2Cbz) ?
+                newInst->operands[1] = (lir->opcode == kThumb2Cbz) ?
                                         kArmCondEq : kArmCondNe;
                 newInst->generic.target = lir->generic.target;
                 dvmCompilerSetupResourceMasks(newInst);
                 dvmCompilerInsertLIRAfter((LIR *)lir, (LIR *)newInst);
                 /* Convert the cb[n]z to a cmp rx, #0 ] */
-                lir->opCode = kThumbCmpRI8;
+                lir->opcode = kThumbCmpRI8;
                 /* operand[0] is src1 in both cb[n]z & CmpRI8 */
                 lir->operands[1] = 0;
                 lir->generic.target = 0;
@@ -992,17 +992,17 @@ static AssemblerStatus assembleInstructions(CompilationUnit *cUnit,
             } else {
                 lir->operands[1] = delta >> 1;
             }
-        } else if (lir->opCode == kThumbBCond ||
-                   lir->opCode == kThumb2BCond) {
+        } else if (lir->opcode == kThumbBCond ||
+                   lir->opcode == kThumb2BCond) {
             ArmLIR *targetLIR = (ArmLIR *) lir->generic.target;
             intptr_t pc = lir->generic.offset + 4;
             intptr_t target = targetLIR->generic.offset;
             int delta = target - pc;
-            if ((lir->opCode == kThumbBCond) && (delta > 254 || delta < -256)) {
+            if ((lir->opcode == kThumbBCond) && (delta > 254 || delta < -256)) {
                 return kRetryHalve;
             }
             lir->operands[0] = delta >> 1;
-        } else if (lir->opCode == kThumbBUncond) {
+        } else if (lir->opcode == kThumbBUncond) {
             ArmLIR *targetLIR = (ArmLIR *) lir->generic.target;
             intptr_t pc = lir->generic.offset + 4;
             intptr_t target = targetLIR->generic.offset;
@@ -1012,8 +1012,8 @@ static AssemblerStatus assembleInstructions(CompilationUnit *cUnit,
                 dvmCompilerAbort(cUnit);
             }
             lir->operands[0] = delta >> 1;
-        } else if (lir->opCode == kThumbBlx1) {
-            assert(NEXT_LIR(lir)->opCode == kThumbBlx2);
+        } else if (lir->opcode == kThumbBlx1) {
+            assert(NEXT_LIR(lir)->opcode == kThumbBlx2);
             /* curPC is Thumb */
             intptr_t curPC = (startAddr + lir->generic.offset + 4) & ~3;
             intptr_t target = lir->operands[1];
@@ -1029,7 +1029,7 @@ static AssemblerStatus assembleInstructions(CompilationUnit *cUnit,
             NEXT_LIR(lir)->operands[0] = (delta>> 1) & 0x7ff;
         }
 
-        ArmEncodingMap *encoder = &EncodingMap[lir->opCode];
+        ArmEncodingMap *encoder = &EncodingMap[lir->opcode];
         u4 bits = encoder->skeleton;
         int i;
         for (i = 0; i < 4; i++) {
@@ -1218,10 +1218,10 @@ void dvmCompilerAssembleLIR(CompilationUnit *cUnit, JitTranslationInfo *info)
          armLIR;
          armLIR = NEXT_LIR(armLIR)) {
         armLIR->generic.offset = offset;
-        if (armLIR->opCode >= 0 && !armLIR->isNop) {
-            armLIR->size = EncodingMap[armLIR->opCode].size * 2;
+        if (armLIR->opcode >= 0 && !armLIR->isNop) {
+            armLIR->size = EncodingMap[armLIR->opcode].size * 2;
             offset += armLIR->size;
-        } else if (armLIR->opCode == kArmPseudoPseudoAlign4) {
+        } else if (armLIR->opcode == kArmPseudoPseudoAlign4) {
             if (offset & 0x2) {
                 offset += 2;
                 armLIR->operands[0] = 1;
@@ -1247,7 +1247,7 @@ void dvmCompilerAssembleLIR(CompilationUnit *cUnit, JitTranslationInfo *info)
     ArmLIR *chainCellOffsetLIR = (ArmLIR *) cUnit->chainCellOffsetLIR;
     assert(chainCellOffsetLIR);
     assert(chainCellOffset < 0x10000);
-    assert(chainCellOffsetLIR->opCode == kArm16BitData &&
+    assert(chainCellOffsetLIR->opcode == kArm16BitData &&
            chainCellOffsetLIR->operands[0] == CHAIN_CELL_OFFSET_TAG);
 
     /*
@@ -1369,7 +1369,7 @@ void dvmCompilerAssembleLIR(CompilationUnit *cUnit, JitTranslationInfo *info)
  * Returns the skeleton bit pattern associated with an opcode.  All
  * variable fields are zeroed.
  */
-static u4 getSkeleton(ArmOpCode op)
+static u4 getSkeleton(ArmOpcode op)
 {
     return EncodingMap[op].skeleton;
 }

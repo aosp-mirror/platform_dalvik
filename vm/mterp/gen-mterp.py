@@ -267,7 +267,7 @@ def emitAsmHeader(outfp, dict):
     # with overflow here.
     outfp.write("    .balign %d\n" % handler_size_bytes)
     # Emit a label so that gdb will say the right thing.  We prepend an
-    # underscore so the symbol name doesn't clash with the OpCode enum.
+    # underscore so the symbol name doesn't clash with the Opcode enum.
     outfp.write(label_prefix + "_%(opcode)s: /* 0x%(opnum)02x */\n" % dict)
 
 #

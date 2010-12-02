@@ -283,7 +283,7 @@ void dvmDumpLIRInsn(LIR *arg, unsigned char *baseAddr)
     const bool dumpNop = false;
 
     /* Handle pseudo-ops individually, and all regular insns as a group */
-    switch(lir->opCode) {
+    switch(lir->opcode) {
         case kArmChainingCellBottom:
             LOGD("-------- end of chaining cells (0x%04x)\n", offset);
             break;
@@ -345,9 +345,9 @@ void dvmDumpLIRInsn(LIR *arg, unsigned char *baseAddr)
             if (lir->isNop && !dumpNop) {
                 break;
             }
-            buildInsnString(EncodingMap[lir->opCode].name, lir, opName,
+            buildInsnString(EncodingMap[lir->opcode].name, lir, opName,
                             baseAddr, 256);
-            buildInsnString(EncodingMap[lir->opCode].fmt, lir, buf, baseAddr,
+            buildInsnString(EncodingMap[lir->opcode].fmt, lir, buf, baseAddr,
                             256);
             LOGD("%p (%04x): %-8s%s%s\n",
                  baseAddr + offset, offset, opName, buf,

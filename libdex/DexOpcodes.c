@@ -292,7 +292,7 @@ static const char* gOpNames[kNumDalvikInstructions] = {
 /*
  * Return the name of an opcode.
  */
-const char* dexGetOpcodeName(OpCode op)
+const char* dexGetOpcodeName(Opcode op)
 {
     assert(op >= 0 && op < kNumDalvikInstructions);
     return gOpNames[op];

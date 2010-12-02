@@ -101,7 +101,7 @@ static bool computeWidthsAndCountOps(VerifierData* vdata)
                 "VFY: warning: unusually large instr width (%d)\n", width);
         }
 
-        OpCode opcode = dexOpCodeFromCodeUnit(*insns);
+        Opcode opcode = dexOpcodeFromCodeUnit(*insns);
         if (opcode == OP_NEW_INSTANCE)
             newInstanceCount++;
         if (opcode == OP_MONITOR_ENTER)
@@ -816,7 +816,7 @@ static bool verifyInstructions(VerifierData* vdata)
          * for out-of-range values.  Do additional checks on branch targets
          * and some special cases like new-instance and new-array.
          */
-        switch (decInsn.opCode) {
+        switch (decInsn.opcode) {
         case OP_NOP:
         case OP_RETURN_VOID:
             /* nothing to check */
@@ -1178,7 +1178,7 @@ static bool verifyInstructions(VerifierData* vdata)
         case OP_UNUSED_79:
         case OP_UNUSED_7A:
         case OP_UNUSED_FF:
-            LOGE("VFY: unexpected opcode %02x\n", decInsn.opCode);
+            LOGE("VFY: unexpected opcode %02x\n", decInsn.opcode);
             okay = false;
             break;
 
@@ -1190,7 +1190,7 @@ static bool verifyInstructions(VerifierData* vdata)
 
         if (!okay) {
             LOG_VFY_METH(meth, "VFY:  rejecting opcode 0x%02x at 0x%04x\n",
-                decInsn.opCode, codeOffset);
+                decInsn.opcode, codeOffset);
             return false;
         }
 
@@ -1202,7 +1202,7 @@ static bool verifyInstructions(VerifierData* vdata)
         const int kGcMask = kInstrCanBranch | kInstrCanSwitch |
             kInstrCanThrow | kInstrCanReturn;
 
-        InstructionFlags opFlags = dexGetInstrFlags(decInsn.opCode);
+        InstructionFlags opFlags = dexGetInstrFlags(decInsn.opcode);
         if ((opFlags & kGcMask) != 0) {
             /*
              * This instruction is probably a GC point.  Branch instructions
@@ -1222,7 +1222,7 @@ static bool verifyInstructions(VerifierData* vdata)
                 {
                     /* should never happen */
                     LOGE("VFY: opcode %02x flagged as can branch, no target\n",
-                        decInsn.opCode);
+                        decInsn.opcode);
                     dvmAbort();
                 }
                 if (offset <= 0) {
