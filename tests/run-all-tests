@@ -40,6 +40,9 @@ while true; do
     if [ "x$1" = "x--local" ]; then
         run_args="${run_args} --local"
         shift
+    elif [ "x$1" = "x--host" ]; then
+        run_args="${run_args} --host"
+        shift
     elif [ "x$1" = "x--reference" ]; then
         run_args="${run_args} --reference"
         shift
@@ -95,7 +98,7 @@ if [ "$usage" = "yes" ]; then
 	    "further documentation:"
         echo "    --debug --dev --fast --local --no-optimize --no-verify" \
 	    "--portable"
-	echo "    --reference --update --valgrind --zygote"
+	echo "    --reference --update --valgrind --zygote --host"
     ) 1>&2
     exit 1
 fi

@@ -6809,7 +6809,7 @@ dvmAsmSisterStart:
  *     eax is pointer to tgt
  *     rINST is length
  *     ecx is FEDC or CCCC
- *     TMP_SPILL is BA
+ *     TMP_SPILL1 is BA
  *  We now need to copy values from registers into the array
  */
 
@@ -6817,8 +6817,8 @@ dvmAsmSisterStart:
     # set up src pointer
     SPILL_TMP2(%esi)
     SPILL_TMP3(%edi)
-    movl    %eax,%edi         # set up dst ptr
     leal    (rFP,%ecx,4),%esi # set up src ptr
+    movl    %eax,%edi         # set up dst ptr
     movl    rINST,%ecx        # load count register
     rep
     movsd
@@ -6830,6 +6830,7 @@ dvmAsmSisterStart:
     .else
     testl  rINST,rINST
     je     4f
+    UNSPILL_TMP1(%edx)        # restore "BA"
     andl   $0x0f,%edx        # edx<- 0000000A
     sall   $16,%edx          # edx<- 000A0000
     orl    %ecx,%edx          # edx<- 000AFEDC
@@ -6919,7 +6920,7 @@ dvmAsmSisterStart:
  *     eax is pointer to tgt
  *     rINST is length
  *     ecx is FEDC or CCCC
- *     TMP_SPILL is BA
+ *     TMP_SPILL1 is BA
  *  We now need to copy values from registers into the array
  */
 
@@ -6927,8 +6928,8 @@ dvmAsmSisterStart:
     # set up src pointer
     SPILL_TMP2(%esi)
     SPILL_TMP3(%edi)
-    movl    %eax,%edi         # set up dst ptr
     leal    (rFP,%ecx,4),%esi # set up src ptr
+    movl    %eax,%edi         # set up dst ptr
     movl    rINST,%ecx        # load count register
     rep
     movsd
@@ -6940,6 +6941,7 @@ dvmAsmSisterStart:
     .else
     testl  rINST,rINST
     je     4f
+    UNSPILL_TMP1(%edx)        # restore "BA"
     andl   $0x0f,%edx        # edx<- 0000000A
     sall   $16,%edx          # edx<- 000A0000
     orl    %ecx,%edx          # edx<- 000AFEDC
