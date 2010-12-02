@@ -3290,16 +3290,15 @@ bail:
 void handleMonitorEnter(RegisterLine* workLine, u4 regIdx, u4 insnIdx,
     VerifyError* pFailure)
 {
-    /*
-     * This should only be true if structured lock checking is disabled.
-     * TODO: assert that this is the case
-     */
-    if (workLine->monitorEntries == NULL)
-        return;
-
     if (!regTypeIsReference(getRegisterType(workLine, regIdx))) {
         LOG_VFY("VFY: monitor-enter on non-object\n");
         *pFailure = VERIFY_ERROR_GENERIC;
+        return;
+    }
+
+    if (workLine->monitorEntries == NULL) {
+        /* should only be true if monitor verification is disabled */
+        assert(!gDvm.monitorVerification);
         return;
     }
 
@@ -3324,16 +3323,15 @@ void handleMonitorEnter(RegisterLine* workLine, u4 regIdx, u4 insnIdx,
 void handleMonitorExit(RegisterLine* workLine, u4 regIdx, u4 insnIdx,
     VerifyError* pFailure)
 {
-    /*
-     * This should only be true if structured lock checking is disabled.
-     * TODO: assert that this is the case
-     */
-    if (workLine->monitorEntries == NULL)
-        return;
-
     if (!regTypeIsReference(getRegisterType(workLine, regIdx))) {
         LOG_VFY("VFY: monitor-exit on non-object\n");
         *pFailure = VERIFY_ERROR_GENERIC;
+        return;
+    }
+
+    if (workLine->monitorEntries == NULL) {
+        /* should only be true if monitor verification is disabled */
+        assert(!gDvm.monitorVerification);
         return;
     }
 
