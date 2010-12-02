@@ -676,35 +676,13 @@ void dvmCollectGarbageInternal(bool clearSoftRefs, GcReason reason)
         dvmHeapReScanMarkedObjects();
     }
 
-    /* All strongly-reachable objects have now been marked.
+    /*
+     * All strongly-reachable objects have now been marked.  Process
+     * weakly-reachable objects discovered while tracing.
      */
-    LOGD_HEAP("Handling soft references...");
-    if (!clearSoftRefs) {
-        dvmHandleSoftRefs(&gcHeap->softReferences);
-    }
-    dvmClearWhiteRefs(&gcHeap->softReferences);
-
-    LOGD_HEAP("Handling weak references...");
-    dvmClearWhiteRefs(&gcHeap->weakReferences);
-
-    /* Once all weak-reachable objects have been taken
-     * care of, any remaining unmarked objects can be finalized.
-     */
-    LOGD_HEAP("Finding finalizations...");
-    dvmHeapScheduleFinalizations();
-
-    LOGD_HEAP("Handling f-reachable soft references...");
-    dvmClearWhiteRefs(&gcHeap->softReferences);
-
-    LOGD_HEAP("Handling f-reachable weak references...");
-    dvmClearWhiteRefs(&gcHeap->weakReferences);
-
-    /* Any remaining objects that are not pending finalization
-     * could be phantom-reachable.  This will mark any phantom-reachable
-     * objects, as well as enqueue their references.
-     */
-    LOGD_HEAP("Handling phantom references...");
-    dvmClearWhiteRefs(&gcHeap->phantomReferences);
+    dvmHeapProcessReferences(&gcHeap->softReferences, clearSoftRefs,
+                             &gcHeap->weakReferences,
+                             &gcHeap->phantomReferences);
 
 #if defined(WITH_JIT)
     /*

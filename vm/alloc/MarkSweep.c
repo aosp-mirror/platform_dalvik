@@ -811,7 +811,7 @@ static void enqueueReference(Object *ref)
  * removed from the list.  References with white referents biased
  * toward saving are blackened and also removed from the list.
  */
-void dvmHandleSoftRefs(Object **list)
+static void preserveSomeSoftReferences(Object **list)
 {
     GcMarkContext *ctx;
     Object *ref, *referent;
@@ -852,7 +852,7 @@ void dvmHandleSoftRefs(Object **list)
  * referents.  Cleared references registered to a reference queue are
  * scheduled for appending by the heap worker thread.
  */
-void dvmClearWhiteRefs(Object **list)
+static void clearWhiteReferences(Object **list)
 {
     GcMarkContext *ctx;
     Object *ref, *referent;
@@ -888,7 +888,7 @@ void dvmClearWhiteRefs(Object **list)
 /* Find unreachable objects that need to be finalized,
  * and schedule them for finalization.
  */
-void dvmHeapScheduleFinalizations()
+static void scheduleFinalizations(void)
 {
     HeapRefTable newPendingRefs;
     LargeHeapRefTable *finRefs = gDvm.gcHeap->finalizableRefs;
@@ -910,8 +910,8 @@ void dvmHeapScheduleFinalizations()
         //      we can schedule them next time.  Watch out,
         //      because we may be expecting to free up space
         //      by calling finalizers.
-        LOGE_GC("dvmHeapScheduleFinalizations(): no room for "
-                "pending finalizations\n");
+        LOGE_GC("scheduleFinalizations(): no room for "
+                "pending finalizations");
         dvmAbort();
     }
 
@@ -930,8 +930,8 @@ void dvmHeapScheduleFinalizations()
                 if (!dvmHeapAddToHeapRefTable(&newPendingRefs, *ref)) {
                     //TODO: add the current table and allocate
                     //      a new, smaller one.
-                    LOGE_GC("dvmHeapScheduleFinalizations(): "
-                            "no room for any more pending finalizations: %zd\n",
+                    LOGE_GC("scheduleFinalizations(): "
+                            "no room for any more pending finalizations: %zd",
                             dvmHeapNumHeapRefTableEntries(&newPendingRefs));
                     dvmAbort();
                 }
@@ -956,7 +956,7 @@ void dvmHeapScheduleFinalizations()
         totalPendCount += newPendCount;
         finRefs = finRefs->next;
     }
-    LOGD_GC("dvmHeapScheduleFinalizations(): %zd finalizers triggered.\n",
+    LOGD_GC("scheduleFinalizations(): %zd finalizers triggered.",
             totalPendCount);
     if (totalPendCount == 0) {
         /* No objects required finalization.
@@ -971,8 +971,8 @@ void dvmHeapScheduleFinalizations()
     if (!dvmHeapAddTableToLargeTable(&gDvm.gcHeap->pendingFinalizationRefs,
                 &newPendingRefs))
     {
-        LOGE_GC("dvmHeapScheduleFinalizations(): can't insert new "
-                "pending finalizations\n");
+        LOGE_GC("scheduleFinalizations(): can't insert new "
+                "pending finalizations");
         dvmAbort();
     }
 
@@ -991,6 +991,52 @@ void dvmHeapScheduleFinalizations()
     }
     processMarkStack(ctx);
     dvmSignalHeapWorker(false);
+}
+
+/*
+ * Process reference class instances and schedule finalizations.
+ */
+void dvmHeapProcessReferences(Object **softReferences, bool clearSoftRefs,
+                              Object **weakReferences,
+                              Object **phantomReferences)
+{
+    assert(softReferences != NULL);
+    assert(weakReferences != NULL);
+    assert(phantomReferences != NULL);
+    /*
+     * Unless we are required to clear soft references with white
+     * references, preserve some white referents.
+     */
+    if (!clearSoftRefs) {
+        preserveSomeSoftReferences(softReferences);
+    }
+    /*
+     * Clear all remaining soft and weak references with white
+     * referents.
+     */
+    clearWhiteReferences(softReferences);
+    clearWhiteReferences(weakReferences);
+    /*
+     * Preserve all white objects with finalize methods and schedule
+     * them for finalization.
+     */
+    scheduleFinalizations();
+    /*
+     * Clear all f-reachable soft and weak references with white
+     * referents.
+     */
+    clearWhiteReferences(softReferences);
+    clearWhiteReferences(weakReferences);
+    /*
+     * Clear all phantom references with white referents.
+     */
+    clearWhiteReferences(phantomReferences);
+    /*
+     * At this point all reference lists should be empty.
+     */
+    assert(*softReferences == NULL);
+    assert(*weakReferences == NULL);
+    assert(*phantomReferences == NULL);
 }
 
 void dvmHeapFinishMarkStep()

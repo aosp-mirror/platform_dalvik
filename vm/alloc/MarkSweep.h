@@ -51,9 +51,9 @@ void dvmHeapMarkRootSet(void);
 void dvmHeapReMarkRootSet(void);
 void dvmHeapScanMarkedObjects(void);
 void dvmHeapReScanMarkedObjects(void);
-void dvmHandleSoftRefs(Object **list);
-void dvmClearWhiteRefs(Object **list);
-void dvmHeapScheduleFinalizations(void);
+void dvmHeapProcessReferences(Object **softReferences, bool clearSoftRefs,
+                              Object **weakReferences,
+                              Object **phantomReferences);
 void dvmHeapFinishMarkStep(void);
 void dvmHeapSweepSystemWeaks(void);
 void dvmHeapSweepUnmarkedObjects(GcMode mode, bool isConcurrent,
