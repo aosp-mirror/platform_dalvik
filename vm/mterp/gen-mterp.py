@@ -22,8 +22,8 @@
 import sys, string, re, time
 from string import Template
 
-interp_defs_file = "../../libdex/OpCode.h" # need opcode list
-kNumDalvikInstructions = 256 # TODO: Derive this from OpCode.h.
+interp_defs_file = "../../libdex/DexOpcodes.h" # need opcode list
+kNumDalvikInstructions = 256 # TODO: Derive this from DexOpcodes.h.
 
 verbose = False
 handler_size_bits = -1000

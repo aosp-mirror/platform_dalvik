@@ -18,8 +18,7 @@
 
 #include "Dalvik.h"
 #include "interp/InterpDefs.h"
-#include "libdex/OpCode.h"
-#include "libdex/OpCodeNames.h"
+#include "libdex/DexOpcodes.h"
 #include "compiler/CompilerInternals.h"
 #include "compiler/codegen/x86/X86LIR.h"
 #include "mterp/common/FindInterface.h"

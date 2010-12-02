@@ -71,7 +71,7 @@
 #include "analysis/DexPrepare.h"
 #include "analysis/RegisterMap.h"
 #include "Init.h"
-#include "libdex/OpCode.h"
+#include "libdex/DexOpcodes.h"
 #include "libdex/InstrUtils.h"
 #include "AllocTracker.h"
 #include "PointerSet.h"

@@ -17,7 +17,7 @@
 #include "Dalvik.h"
 #include "Dataflow.h"
 #include "Loop.h"
-#include "libdex/OpCodeNames.h"
+#include "libdex/DexOpcodes.h"
 
 /*
  * Main table containing data flow attributes for each bytecode. The

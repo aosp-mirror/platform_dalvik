@@ -37,8 +37,8 @@ cd ".."
 ${progdir}/opcode-gen dx/src/com/android/dx/dex/code/DalvOps.java
 ${progdir}/opcode-gen dx/src/com/android/dx/dex/code/Dops.java
 ${progdir}/opcode-gen dx/src/com/android/dx/dex/code/RopToDop.java
+${progdir}/opcode-gen libdex/DexOpcodes.h
 ${progdir}/opcode-gen libdex/InstrUtils.c
-${progdir}/opcode-gen libdex/OpCode.h
 ${progdir}/opcode-gen libdex/OpCodeNames.c
 
 # It's a minor shame that these files live in a different top-level project.

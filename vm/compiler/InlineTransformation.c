@@ -16,7 +16,7 @@
 
 #include "Dalvik.h"
 #include "Dataflow.h"
-#include "libdex/OpCodeNames.h"
+#include "libdex/DexOpcodes.h"
 
 /* Convert the reg id from the callee to the original id passed by the caller */
 static inline u4 convertRegId(const DecodedInstruction *invoke,

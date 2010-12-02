@@ -21,7 +21,7 @@
 #define _LIBDEX_INSTRUTILS
 
 #include "DexFile.h"
-#include "OpCode.h"
+#include "DexOpcodes.h"
 
 /*
  * Dalvik-defined instruction formats.
