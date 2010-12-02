@@ -411,61 +411,62 @@ char* dvmDotToSlash(const char* str)
 
 char* dvmHumanReadableDescriptor(const char* descriptor)
 {
-    char *dotName = dvmDescriptorToDot(descriptor);
-    if (descriptor[0] == 'L') {
-        return dotName;
-    }
-
-    const char* c = dotName;
+    // Count the number of '['s to get the dimensionality.
+    const char* c = descriptor;
     size_t dim = 0;
     while (*c == '[') {
         dim++;
         c++;
     }
+
+    // Work out how large the result will be.
+    size_t resultLength;
     if (*c == 'L') {
-        c++;
+        // "[[La/b/C;" -> "a.b.C[][]".
+        resultLength = strlen(c) - 2 + 2*dim;
+        c++; // Skip the 'L'.
     } else {
-        /* It's a primitive type;  we should use a pretty name.
-         * Add semicolons to make all strings have the format
-         * of object class names.
-         */
+        // "[[B" -> "byte[][]".
+        // To make life easier, we make primitives look like unqualified
+        // reference types.
         switch (*c) {
-        case 'Z': c = "boolean;";    break;
-        case 'C': c = "char;";       break;
-        case 'F': c = "float;";      break;
-        case 'D': c = "double;";     break;
-        case 'B': c = "byte;";       break;
-        case 'S': c = "short;";      break;
-        case 'I': c = "int;";        break;
-        case 'J': c = "long;";       break;
-        default: assert(false); c = "UNKNOWN;"; break;
+        case 'B': c = "byte;"; break;
+        case 'C': c = "char;"; break;
+        case 'D': c = "double;"; break;
+        case 'F': c = "float;"; break;
+        case 'I': c = "int;"; break;
+        case 'J': c = "long;"; break;
+        case 'S': c = "short;"; break;
+        case 'Z': c = "boolean;"; break;
+        default: return strdup(descriptor);
         }
+        resultLength = strlen(c) - 1 + 2*dim;
     }
 
-    /* We have a string of the form "name;" and
-     * we want to replace the semicolon with as many
-     * "[]" pairs as is in dim.
-     */
-    size_t newLen = strlen(c)-1 + dim*2;
-    char* newName = malloc(newLen + 1);
-    if (newName == NULL) {
+    // Allocate enough space.
+    char* result = malloc(resultLength + 1);
+    if (result == NULL) {
         return NULL;
     }
-    strcpy(newName, c);
-    newName[newLen] = '\0';
 
-    /* Point nc to the semicolon.
-     */
-    char* nc = newName + newLen - dim*2;
-    assert(*nc == ';');
-
-    while (dim--) {
-        *nc++ = '[';
-        *nc++ = ']';
+    // At this point, 'c' is a string of the form "fully/qualified/Type;"
+    // or "primitive;". Rewrite the type with '.' instead of '/':
+    const char* p = c;
+    char* q = result;
+    while (*p != ';') {
+        char ch = *p++;
+        if (ch == '/') {
+          ch = '.';
+        }
+        *q++ = ch;
     }
-    assert(*nc == '\0');
-    free(dotName);
-    return newName;
+    // ...and replace the semicolon with 'dim' "[]" pairs:
+    while (dim--) {
+        *q++ = '[';
+        *q++ = ']';
+    }
+    *q = '\0';
+    return result;
 }
 
 /*
