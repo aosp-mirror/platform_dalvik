@@ -57,6 +57,9 @@ while true; do
     elif [ "x$1" = "x--reference" ]; then
         RUN="${progdir}/etc/reference-run-test-classes"
         shift
+    elif [ "x$1" = "x--host" ]; then
+        RUN="${progdir}/etc/host-run-test-jar"
+        shift
     elif [ "x$1" = "x--jit" ]; then
         run_args="${run_args} --jit"
         shift
@@ -158,6 +161,7 @@ if [ "$usage" = "yes" ]; then
 	    "If used, then the"
 	echo "                   other runtime options are ignored."
         echo "    --local        Use a host-local virtual machine."
+        echo "    --host         Use the host-mode virtual machine."
         echo "    --valgrind     Use valgrind when running locally."
         echo "    --reference    Use a host-local reference virtual machine."
     ) 1>&2
