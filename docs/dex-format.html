@@ -2138,8 +2138,10 @@ be ordered by initial offset and must not overlap.</p>
 <tr>
   <td>handler_off</td>
   <td>ushort</td>
-  <td>offset in bytes from the start of the associated encoded handler data
-    to the <code>catch_handler_item</code> for this entry
+  <td>offset in bytes from the start of the associated
+    <code>encoded_catch_hander_list</code> to the
+    <code>encoded_catch_handler</code> for this entry. This must be an
+    offset to the start of an <code>encoded_catch_handler</code>.
   </td>
 </tr>
 </tbody>
