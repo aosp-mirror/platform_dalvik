@@ -225,7 +225,7 @@ static void genMonitorEnter(CompilationUnit *cUnit, MIR *mir)
 
     /* Get dPC of next insn */
     loadConstant(cUnit, r4PC, (int)(cUnit->method->insns + mir->offset +
-                 dexGetInstrWidth(OP_MONITOR_ENTER)));
+                 dexGetWidthFromOpcode(OP_MONITOR_ENTER)));
     // Export PC (part 2)
     newLIR3(cUnit, kThumb2StrRRI8Predec, r3, rFP,
             sizeof(StackSaveArea) -
@@ -289,7 +289,7 @@ static void genMonitorExit(CompilationUnit *cUnit, MIR *mir)
     ArmLIR *branchOver = genCmpImmBranch(cUnit, kArmCondNe, r0, 0);
     loadConstant(cUnit, r0,
                  (int) (cUnit->method->insns + mir->offset +
-                 dexGetInstrWidth(OP_MONITOR_EXIT)));
+                 dexGetWidthFromOpcode(OP_MONITOR_EXIT)));
     genDispatchToHandler(cUnit, TEMPLATE_THROW_EXCEPTION_COMMON);
 
     // Resume here

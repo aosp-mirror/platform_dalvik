@@ -311,7 +311,7 @@ static bool doLoopBodyCodeMotion(CompilationUnit *cUnit)
         /* Skip extended MIR instructions */
         if (dInsn->opcode >= kNumDalvikInstructions) continue;
 
-        int instrFlags = dexGetInstrFlags(dInsn->opcode);
+        int instrFlags = dexGetFlagsFromOpcode(dInsn->opcode);
 
         /* Instruction is clean */
         if ((instrFlags & kInstrCanThrow) == 0) continue;

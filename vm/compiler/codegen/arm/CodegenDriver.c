@@ -1233,7 +1233,7 @@ static void genPuntToInterp(CompilationUnit *cUnit, unsigned int offset)
  */
 static void genInterpSingleStep(CompilationUnit *cUnit, MIR *mir)
 {
-    int flags = dexGetInstrFlags(mir->dalvikInsn.opcode);
+    int flags = dexGetFlagsFromOpcode(mir->dalvikInsn.opcode);
     int flagsToCheck = kInstrCanBranch | kInstrCanSwitch | kInstrCanReturn |
                        kInstrCanThrow;
 
@@ -1283,7 +1283,7 @@ static void genMonitorPortable(CompilationUnit *cUnit, MIR *mir)
     if (isEnter) {
         /* Get dPC of next insn */
         loadConstant(cUnit, r4PC, (int)(cUnit->method->insns + mir->offset +
-                 dexGetInstrWidth(OP_MONITOR_ENTER)));
+                 dexGetWidthFromOpcode(OP_MONITOR_ENTER)));
 #if defined(WITH_DEADLOCK_PREDICTION)
         genDispatchToHandler(cUnit, TEMPLATE_MONITOR_ENTER_DEBUG);
 #else
@@ -1297,7 +1297,7 @@ static void genMonitorPortable(CompilationUnit *cUnit, MIR *mir)
         ArmLIR *branchOver = genCmpImmBranch(cUnit, kArmCondNe, r0, 0);
         loadConstant(cUnit, r0,
                      (int) (cUnit->method->insns + mir->offset +
-                     dexGetInstrWidth(OP_MONITOR_EXIT)));
+                     dexGetWidthFromOpcode(OP_MONITOR_EXIT)));
         genDispatchToHandler(cUnit, TEMPLATE_THROW_EXCEPTION_COMMON);
         ArmLIR *target = newLIR0(cUnit, kArmPseudoTargetLabel);
         target->defMask = ENCODE_ALL;
@@ -4097,7 +4097,7 @@ void dvmCompilerMIR2LIR(CompilationUnit *cUnit)
 
 
             Opcode dalvikOpcode = mir->dalvikInsn.opcode;
-            InstructionFormat dalvikFormat = dexGetInstrFormat(dalvikOpcode);
+            InstructionFormat dalvikFormat = dexGetFormatFromOpcode(dalvikOpcode);
             char *note;
             if (mir->OptimizationFlags & MIR_INLINED) {
                 note = " (I)";

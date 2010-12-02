@@ -92,7 +92,7 @@ static bool computeWidthsAndCountOps(VerifierData* vdata)
     int i;
 
     for (i = 0; i < (int) insnCount; /**/) {
-        size_t width = dexGetInstrOrTableWidth(insns);
+        size_t width = dexGetWidthFromInstruction(insns);
         if (width == 0) {
             LOG_VFY_METH(meth, "VFY: invalid instruction (0x%04x)\n", *insns);
             goto bail;
@@ -1202,7 +1202,7 @@ static bool verifyInstructions(VerifierData* vdata)
         const int kGcMask = kInstrCanBranch | kInstrCanSwitch |
             kInstrCanThrow | kInstrCanReturn;
 
-        InstructionFlags opFlags = dexGetInstrFlags(decInsn.opcode);
+        OpcodeFlags opFlags = dexGetFlagsFromOpcode(decInsn.opcode);
         if ((opFlags & kGcMask) != 0) {
             /*
              * This instruction is probably a GC point.  Branch instructions

@@ -3757,7 +3757,7 @@ static bool verifyInstruction(const Method* meth, InsnFlags* insnFlags,
      * We can also return, in which case there is no successor instruction
      * from this point.
      *
-     * The behavior can be determined from the InstructionFlags.
+     * The behavior can be determined from the OpcodeFlags.
      */
 
     RegisterLine* workLine = &regTable->workLine;
@@ -3775,7 +3775,7 @@ static bool verifyInstruction(const Method* meth, InsnFlags* insnFlags,
 #endif
     dexDecodeInstruction(insns, &decInsn);
 
-    int nextFlags = dexGetInstrFlags(decInsn.opcode);
+    int nextFlags = dexGetFlagsFromOpcode(decInsn.opcode);
 
     /*
      * Make a copy of the previous register state.  If the instruction

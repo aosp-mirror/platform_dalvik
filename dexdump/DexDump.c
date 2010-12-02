@@ -708,7 +708,7 @@ static char* indexString(DexFile* pDexFile,
     u4 width;
 
     /* TODO: Make the index *always* be in field B, to simplify this code. */
-    switch (dexGetInstrFormat(pDecInsn->opcode)) {
+    switch (dexGetFormatFromOpcode(pDecInsn->opcode)) {
     case kFmt20bc:
     case kFmt21c:
     case kFmt35c:
@@ -880,7 +880,7 @@ void dumpInstruction(DexFile* pDexFile, const DexCode* pCode, int insnIdx,
                 indexBufChars, sizeof(indexBufChars));
     }
 
-    switch (dexGetInstrFormat(pDecInsn->opcode)) {
+    switch (dexGetFormatFromOpcode(pDecInsn->opcode)) {
     case kFmt10x:        // op
         break;
     case kFmt12x:        // op vA, vB
@@ -1075,11 +1075,11 @@ void dumpBytecodes(DexFile* pDexFile, const DexMethod* pDexMethod)
 
         /*
          * Note: This code parallels the function
-         * dexGetInstrOrTableWidth() in InstrUtils.c, but this version
+         * dexGetWidthFromInstruction() in InstrUtils.c, but this version
          * can deal with data in either endianness.
          *
          * TODO: Figure out if this really matters, and possibly change
-         * this to just use dexGetInstrOrTableWidth().
+         * this to just use dexGetWidthFromInstruction().
          */
         instr = get2LE((const u1*)insns);
         if (instr == kPackedSwitchSignature) {
@@ -1094,7 +1094,7 @@ void dumpBytecodes(DexFile* pDexFile, const DexMethod* pDexMethod)
             insnWidth = 4 + ((size * width) + 1) / 2;
         } else {
             Opcode opcode = dexOpcodeFromCodeUnit(instr);
-            insnWidth = dexGetInstrWidth(opcode);
+            insnWidth = dexGetWidthFromOpcode(opcode);
             if (insnWidth == 0) {
                 fprintf(stderr,
                     "GLITCH: zero-width instruction at idx=0x%04x\n", insnIdx);

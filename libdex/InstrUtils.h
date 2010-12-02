@@ -72,7 +72,7 @@ typedef enum {
  * Types of indexed reference that are associated with opcodes whose
  * formats include such an indexed reference (e.g., 21c and 35c).
  */
-typedef enum InstructionIndexType {
+typedef enum {
     kIndexUnknown = 0,
     kIndexNone,         // has no index
     kIndexVaries,       // "It depends." Used for throw-verification-error
@@ -86,18 +86,18 @@ typedef enum InstructionIndexType {
 } InstructionIndexType;
 
 /*
- * Instruction width implied by an opcode; a value in the range 0 to
- * 5. Note that there are special "pseudo-instructions" which are used
- * to encode switch and data tables, and these don't have a fixed width.
- * See dexGetInstrOrTableWidth(), below.
+ * Instruction width implied by an opcode's format; a value in the
+ * range 0 to 5. Note that there are special "pseudo-instructions"
+ * which are used to encode switch and data tables, and these don't
+ * have a fixed width. See dexGetWidthFromInstruction(), below.
  */
 typedef u1 InstructionWidth;
 
 /*
  * Opcode control flow flags, used by the verifier and JIT.
  */
-typedef u1 InstructionFlags;
-enum InstructionFlagsBits {
+typedef u1 OpcodeFlags;
+enum OpcodeFlagsBits {
     kInstrCanBranch     = 1,        // conditional or unconditional branch
     kInstrCanContinue   = 1 << 1,   // flow can continue to next statement
     kInstrCanSwitch     = 1 << 2,   // switch statement
@@ -117,9 +117,9 @@ enum InstructionFlagsBits {
  * suffice.
  */
 typedef struct InstructionInfoTables {
-    u1*               formats;    /* InstructionFormat elements */
-    u1*               indexTypes; /* InstructionIndexType elements */
-    InstructionFlags* flags;
+    u1*                formats;    /* InstructionFormat elements */
+    u1*                indexTypes; /* InstructionIndexType elements */
+    OpcodeFlags*       flags;
     InstructionWidth* widths;
 } InstructionInfoTables;
 
@@ -142,9 +142,9 @@ typedef struct DecodedInstruction {
 } DecodedInstruction;
 
 /*
- * Return the width of the specified instruction, or 0 if not defined.
+ * Return the instruction width of the specified opcode, or 0 if not defined.
  */
-DEX_INLINE size_t dexGetInstrWidth(Opcode opcode)
+DEX_INLINE size_t dexGetWidthFromOpcode(Opcode opcode)
 {
     //assert(/*opcode >= 0 &&*/ opcode < kNumDalvikInstructions);
     return gDexOpcodeInfo.widths[opcode];
@@ -155,12 +155,12 @@ DEX_INLINE size_t dexGetInstrWidth(Opcode opcode)
  * works for special OP_NOP entries, including switch statement data tables
  * and array data.
  */
-size_t dexGetInstrOrTableWidth(const u2* insns);
+size_t dexGetWidthFromInstruction(const u2* insns);
 
 /*
  * Returns the flags for the specified opcode.
  */
-DEX_INLINE InstructionFlags dexGetInstrFlags(Opcode opcode)
+DEX_INLINE OpcodeFlags dexGetFlagsFromOpcode(Opcode opcode)
 {
     //assert(/*opcode >= 0 &&*/ opcode < kNumDalvikInstructions);
     return gDexOpcodeInfo.flags[opcode];
@@ -169,7 +169,7 @@ DEX_INLINE InstructionFlags dexGetInstrFlags(Opcode opcode)
 /*
  * Returns true if the given flags represent a goto (unconditional branch).
  */
-DEX_INLINE bool dexIsGoto(InstructionFlags flags)
+DEX_INLINE bool dexIsGoto(OpcodeFlags flags)
 {
     return (flags & (kInstrCanBranch | kInstrCanContinue)) == kInstrCanBranch;
 }
@@ -177,7 +177,7 @@ DEX_INLINE bool dexIsGoto(InstructionFlags flags)
 /*
  * Return the instruction format for the specified opcode.
  */
-DEX_INLINE InstructionFormat dexGetInstrFormat(Opcode opcode)
+DEX_INLINE InstructionFormat dexGetFormatFromOpcode(Opcode opcode)
 {
     //assert(/*opcode >= 0 &&*/ opcode < kNumDalvikInstructions);
     return (InstructionFormat) gDexOpcodeInfo.formats[opcode];
@@ -186,7 +186,7 @@ DEX_INLINE InstructionFormat dexGetInstrFormat(Opcode opcode)
 /*
  * Return the instruction index type for the specified opcode.
  */
-DEX_INLINE InstructionIndexType dexGetInstrIndexType(Opcode opcode)
+DEX_INLINE InstructionIndexType dexGetIndexTypeFromOpcode(Opcode opcode)
 {
     //assert(/*opcode >= 0 &&*/ opcode < kNumDalvikInstructions);
     return (InstructionIndexType) gDexOpcodeInfo.indexTypes[opcode];

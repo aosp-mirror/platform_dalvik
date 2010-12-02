@@ -34,7 +34,7 @@ static inline int parseInsn(const u2 *codePtr, DecodedInstruction *decInsn,
     if (opcode == OP_NOP && instr != 0) {
         return 0;
     } else {
-        insnWidth = dexGetInstrWidth(opcode);
+        insnWidth = dexGetWidthFromOpcode(opcode);
         if (insnWidth < 0) {
             insnWidth = -insnWidth;
         }
@@ -205,7 +205,7 @@ static int compareMethod(const CompilerMethodStats *m1,
 static int analyzeInlineTarget(DecodedInstruction *dalvikInsn, int attributes,
                                int offset)
 {
-    int flags = dexGetInstrFlags(dalvikInsn->opcode);
+    int flags = dexGetFlagsFromOpcode(dalvikInsn->opcode);
     int dalvikOpcode = dalvikInsn->opcode;
 
     if (flags & kInstrInvoke) {
@@ -569,7 +569,7 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
         dvmCompilerAppendMIR(curBB, insn);
         cUnit.numInsts++;
 
-        int flags = dexGetInstrFlags(insn->dalvikInsn.opcode);
+        int flags = dexGetFlagsFromOpcode(insn->dalvikInsn.opcode);
 
         if (flags & kInstrInvoke) {
             assert(numInsts == 1);
@@ -641,7 +641,7 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
         /* Link the taken and fallthrough blocks */
         BasicBlock *searchBB;
 
-        int flags = dexGetInstrFlags(lastInsn->dalvikInsn.opcode);
+        int flags = dexGetFlagsFromOpcode(lastInsn->dalvikInsn.opcode);
 
         if (flags & kInstrInvoke) {
             cUnit.hasInvoke = true;
@@ -1201,7 +1201,7 @@ bool dvmCompileMethod(CompilationUnit *cUnit, const Method *method,
                      * aligned to 4-byte boundary (alignment instruction to be
                      * inserted later.
                      */
-                    if (dexGetInstrFlags(curBB->lastMIRInsn->dalvikInsn.opcode)
+                    if (dexGetFlagsFromOpcode(curBB->lastMIRInsn->dalvikInsn.opcode)
                             & kInstrInvoke) {
                         newBB->isFallThroughFromInvoke = true;
                     }

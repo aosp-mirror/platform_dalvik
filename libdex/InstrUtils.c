@@ -30,7 +30,7 @@
  * use that opcode, in (16-bit) code units. Unimplemented opcodes as
  * well as the "breakpoint" opcode have a width of zero.
  */
-static InstructionWidth gOpcodeWidthTable[kNumDalvikInstructions] = {
+static InstructionWidth gInstructionWidthTable[kNumDalvikInstructions] = {
     // BEGIN(libdex-widths); GENERATED AUTOMATICALLY BY opcode-gen
     1, 1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 1, 1, 1, 1, 1,
     1, 1, 1, 2, 3, 2, 2, 3, 5, 2, 2, 3, 2, 1, 1, 2,
@@ -320,7 +320,7 @@ static u1 gOpcodeFlagsTable[kNumDalvikInstructions] = {
  * Table that maps each opcode to the instruction format associated
  * that opcode.
  */
-static u1 gOpcodeFormatTable[kNumDalvikInstructions] = {
+static u1 gInstructionFormatTable[kNumDalvikInstructions] = {
     // BEGIN(libdex-formats); GENERATED AUTOMATICALLY BY opcode-gen
     kFmt10x,  kFmt12x,  kFmt22x,  kFmt32x,  kFmt12x,  kFmt22x,  kFmt32x,
     kFmt12x,  kFmt22x,  kFmt32x,  kFmt11x,  kFmt11x,  kFmt11x,  kFmt11x,
@@ -366,7 +366,7 @@ static u1 gOpcodeFormatTable[kNumDalvikInstructions] = {
  * Table that maps each opcode to the index type implied by that
  * opcode.
  */
-static u1 gOpcodeIndexTypeTable[kNumDalvikInstructions] = {
+static u1 gInstructionIndexTypeTable[kNumDalvikInstructions] = {
     // BEGIN(libdex-index-types); GENERATED AUTOMATICALLY BY opcode-gen
     kIndexNone,         kIndexNone,         kIndexNone,
     kIndexNone,         kIndexNone,         kIndexNone,
@@ -461,10 +461,10 @@ static u1 gOpcodeIndexTypeTable[kNumDalvikInstructions] = {
  * Global InstructionInfoTables struct.
  */
 InstructionInfoTables gDexOpcodeInfo = {
-    gOpcodeFormatTable,
-    gOpcodeIndexTypeTable,
+    gInstructionFormatTable,
+    gInstructionIndexTypeTable,
     gOpcodeFlagsTable,
-    gOpcodeWidthTable
+    gInstructionWidthTable
 };
 
 /*
@@ -491,10 +491,10 @@ void dexDecodeInstruction(const u2* insns, DecodedInstruction* pDec)
 {
     u2 inst = *insns;
     Opcode opcode = dexOpcodeFromCodeUnit(inst);
-    InstructionFormat format = dexGetInstrFormat(opcode);
+    InstructionFormat format = dexGetFormatFromOpcode(opcode);
 
     pDec->opcode = opcode;
-    pDec->indexType = dexGetInstrIndexType(opcode);
+    pDec->indexType = dexGetIndexTypeFromOpcode(opcode);
 
     switch (format) {
     case kFmt10x:       // op
@@ -693,7 +693,7 @@ bail:
  * works for special OP_NOP entries, including switch statement data tables
  * and array data.
  */
-size_t dexGetInstrOrTableWidth(const u2* insns)
+size_t dexGetWidthFromInstruction(const u2* insns)
 {
     size_t width;
 
@@ -707,7 +707,7 @@ size_t dexGetInstrOrTableWidth(const u2* insns)
         // The plus 1 is to round up for odd size and width.
         width = 4 + (elemWidth * len + 1) / 2;
     } else {
-        width = dexGetInstrWidth(dexOpcodeFromCodeUnit(insns[0]));
+        width = dexGetWidthFromOpcode(dexOpcodeFromCodeUnit(insns[0]));
     }
 
     return width;
