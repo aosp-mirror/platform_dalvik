@@ -178,8 +178,7 @@ HB_INLINE_PROTO(
  * object pointers that correspond to garbage objects.  Call
  * <callback> zero or more times with lists of these object pointers.
  *
- * The callback is permitted to increase the bitmap's max; the walk
- * will use the updated max as a terminating condition.
+ * The callback is not permitted to increase the max of either bitmap.
  */
 void dvmHeapBitmapSweepWalk(const HeapBitmap *liveHb, const HeapBitmap *markHb,
                             BitmapSweepCallback *callback, void *callbackArg);
