@@ -48,8 +48,8 @@ consumeUntil != "" {
 }
 
 # Detect directives.
-/BEGIN\([a-z---]*\)/ {
-    i = match($0, /BEGIN\([a-z---]*\)/);
+/BEGIN\([a-z-]*\)/ {
+    i = match($0, /BEGIN\([a-z-]*\)/);
     emission = substr($0, i + 6, RLENGTH - 7);
     consumeUntil = "END(" emission ")";
     emissionHandled = 0;
