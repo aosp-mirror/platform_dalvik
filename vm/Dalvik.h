@@ -57,7 +57,6 @@
 #include "alloc/CardTable.h"
 #include "alloc/HeapDebug.h"
 #include "alloc/HeapWorker.h"
-#include "alloc/GC.h"
 #include "alloc/WriteBarrier.h"
 #include "oo/AccessCheck.h"
 #include "JarFile.h"
