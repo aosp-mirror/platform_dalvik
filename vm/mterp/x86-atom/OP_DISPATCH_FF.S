@@ -14,7 +14,7 @@
     */
 
    /*
-    * File: OP_UNUSED_FF.S
+    * File: OP_DISPATCH_FF.S
     */
 
 %include "x86-atom/unused.S"

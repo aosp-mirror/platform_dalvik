@@ -285,7 +285,7 @@ static const char* gOpNames[kNumDalvikInstructions] = {
     "+iput-object-volatile",
     "+sget-object-volatile",
     "+sput-object-volatile",
-    "unused-ff",
+    "dispatch-ff",
     // END(libdex-opcode-names)
 };
 

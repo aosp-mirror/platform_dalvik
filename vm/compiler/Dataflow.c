@@ -795,7 +795,7 @@ int dvmCompilerDataFlowAttributes[kMirOpLast] = {
     // FE OP_SPUT_OBJECT_VOLATILE
     DF_UA,
 
-    // FF OP_UNUSED_FF
+    // FF OP_DISPATCH_FF
     DF_NOP,
 
     // Beginning of extended MIR opcodes
