@@ -180,6 +180,13 @@ void dvmTrackExternalFree(size_t n);
 size_t dvmGetExternalBytesAllocated(void);
 
 /*
+ * Initiate garbage collection.
+ *
+ * This usually happens automatically, but can also be caused by Runtime.gc().
+ */
+void dvmCollectGarbage(bool collectSoftRefs);
+
+/*
  * Returns a count of the direct instances of a class.
  */
 size_t dvmCountInstancesOfClass(const ClassObject *clazz);
