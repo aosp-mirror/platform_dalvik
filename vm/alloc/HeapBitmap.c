@@ -83,8 +83,7 @@ dvmHeapBitmapZero(HeapBitmap *hb)
  * object pointers that correspond to garbage objects.  Call
  * <callback> zero or more times with lists of these object pointers.
  *
- * The callback is permitted to increase the bitmap's max; the walk
- * will use the updated max as a terminating condition,
+ * The callback is not permitted to increase the max of either bitmap.
  */
 void dvmHeapBitmapSweepWalk(const HeapBitmap *liveHb, const HeapBitmap *markHb,
                             BitmapSweepCallback *callback, void *callbackArg)
@@ -94,38 +93,8 @@ void dvmHeapBitmapSweepWalk(const HeapBitmap *liveHb, const HeapBitmap *markHb,
     void **pb = pointerBuf;
     size_t index;
     size_t i;
-
-#define FLUSH_POINTERBUF() \
-    do { \
-        (*callback)(pb - pointerBuf, (void **)pointerBuf, \
-                    callbackArg); \
-        pb = pointerBuf; \
-    } while (false)
-
-#define DECODE_BITS(hb_, bits_, update_index_) \
-    do { \
-        if (UNLIKELY(bits_ != 0)) { \
-            static const unsigned long kHighBit = \
-                    (unsigned long)1 << (HB_BITS_PER_WORD - 1); \
-            const uintptr_t ptrBase = HB_INDEX_TO_OFFSET(i) + hb_->base; \
-/*TODO: hold onto ptrBase so we can shrink max later if possible */ \
-/*TODO: see if this is likely or unlikely */ \
-            while (bits_ != 0) { \
-                const int rshift = CLZ(bits_); \
-                bits_ &= ~(kHighBit >> rshift); \
-                *pb++ = (void *)(ptrBase + rshift * HB_OBJECT_ALIGNMENT); \
-            } \
-            /* Make sure that there are always enough slots available */ \
-            /* for an entire word of 1s. */ \
-            if (kPointerBufSize - (pb - pointerBuf) < HB_BITS_PER_WORD) { \
-                FLUSH_POINTERBUF(); \
-                if (update_index_) { \
-                    /* The callback may have caused hb_->max to grow. */ \
-                    index = HB_OFFSET_TO_INDEX(hb_->max - hb_->base); \
-                } \
-            } \
-        } \
-    } while (false)
+    unsigned long *live, *mark;
+    uintptr_t offset;
 
     assert(liveHb != NULL);
     assert(liveHb->bits != NULL);
@@ -134,29 +103,34 @@ void dvmHeapBitmapSweepWalk(const HeapBitmap *liveHb, const HeapBitmap *markHb,
     assert(liveHb->base == markHb->base);
     assert(liveHb->bitsLen == markHb->bitsLen);
     assert(callback != NULL);
-
     if (liveHb->max < liveHb->base) {
         /* Easy case; both are obviously empty.
          */
         return;
     }
-
-    unsigned long *live, *mark;
-    uintptr_t offset;
-
     offset = liveHb->max - liveHb->base;
     index = HB_OFFSET_TO_INDEX(offset);
-
     live = liveHb->bits;
     mark = markHb->bits;
     for (i = 0; i <= index; i++) {
         unsigned long garbage = live[i] & ~mark[i];
-        DECODE_BITS(liveHb, garbage, false);
+        if (UNLIKELY(garbage != 0)) {
+            unsigned long highBit = 1 << (HB_BITS_PER_WORD - 1);
+            uintptr_t ptrBase = HB_INDEX_TO_OFFSET(i) + liveHb->base;
+            while (garbage != 0) {
+                int shift = CLZ(garbage);
+                garbage &= ~(highBit >> shift);
+                *pb++ = (void *)(ptrBase + shift * HB_OBJECT_ALIGNMENT);
+            }
+            /* Make sure that there are always enough slots available */
+            /* for an entire word of 1s. */
+            if (kPointerBufSize - (pb - pointerBuf) < HB_BITS_PER_WORD) {
+                (*callback)(pb - pointerBuf, pointerBuf, callbackArg);
+                pb = pointerBuf;
+            }
+        }
     }
-
     if (pb > pointerBuf) {
-        FLUSH_POINTERBUF();
+        (*callback)(pb - pointerBuf, pointerBuf, callbackArg);
     }
-#undef FLUSH_POINTERBUF
-#undef DECODE_BITS
 }
