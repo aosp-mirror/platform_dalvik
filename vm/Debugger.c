@@ -238,32 +238,6 @@ bail:
 }
 
 /*
- * (This is a HashForeachFunc callback.)
- */
-static int markRef(void* data, void* arg)
-{
-    UNUSED_PARAMETER(arg);
-
-    //LOGI("dbg mark %p\n", data);
-    dvmMarkObjectNonNull(data);
-    return 0;
-}
-
-/* Mark all of the registered debugger references so the
- * GC doesn't collect them.
- */
-void dvmGcMarkDebuggerRefs()
-{
-    /* dvmDebuggerStartup() may not have been called before the first GC.
-     */
-    if (gDvm.dbgRegistry != NULL) {
-        dvmHashTableLock(gDvm.dbgRegistry);
-        dvmHashForeach(gDvm.dbgRegistry, markRef, NULL);
-        dvmHashTableUnlock(gDvm.dbgRegistry);
-    }
-}
-
-/*
  * Verify that an object has been registered.  If it hasn't, the debugger
  * is asking for something we didn't send it, which means something
  * somewhere is broken.

@@ -29,15 +29,12 @@
 #define GC_LOG_TAG      LOG_TAG "-gc"
 
 #if LOG_NDEBUG
-#define LOGV_GC(...)    ((void)0)
 #define LOGD_GC(...)    ((void)0)
 #else
-#define LOGV_GC(...)    LOG(LOG_VERBOSE, GC_LOG_TAG, __VA_ARGS__)
 #define LOGD_GC(...)    LOG(LOG_DEBUG, GC_LOG_TAG, __VA_ARGS__)
 #endif
 
 #define LOGE_GC(...)    LOG(LOG_ERROR, GC_LOG_TAG, __VA_ARGS__)
-#define LOG_SCAN(...)   LOGV_GC("SCAN: " __VA_ARGS__)
 
 #define ALIGN_DOWN(x, n) ((size_t)(x) & -(n))
 #define ALIGN_UP(x, n) (((size_t)(x) + (n) - 1) & ~((n) - 1))
@@ -155,19 +152,21 @@ static void markObject(const Object *obj, GcMarkContext *ctx)
     }
 }
 
-/* If the object hasn't already been marked, mark it and
- * schedule it to be scanned for references.
- *
- * obj may not be NULL.  The macro dvmMarkObject() should
- * be used in situations where a reference may be NULL.
- *
- * This function may only be called when marking the root
- * set.  When recursing, use the internal markObject().
+/*
+ * Callback applied to root references during the initial root
+ * marking.  Visited roots are always marked but are only pushed on
+ * the mark stack if their address is below the finger.
  */
-void dvmMarkObjectNonNull(const Object *obj)
+static void rootMarkObjectVisitor(void *addr, RootType type, u4 thread, void *arg)
 {
-    assert(obj != NULL);
-    markObjectNonNull(obj, &gDvm.gcHeap->markContext, false);
+    Object *obj;
+
+    assert(addr != NULL);
+    assert(arg != NULL);
+    obj = *(Object **)addr;
+    if (obj != NULL) {
+        markObjectNonNull(obj, arg, false);
+    }
 }
 
 /* Mark the set of root objects.
@@ -199,45 +198,14 @@ void dvmMarkObjectNonNull(const Object *obj)
 void dvmHeapMarkRootSet()
 {
     GcHeap *gcHeap = gDvm.gcHeap;
-
-    LOG_SCAN("immune objects");
     dvmMarkImmuneObjects(gcHeap->markContext.immuneLimit);
-
-    LOG_SCAN("root class loader\n");
-    dvmGcScanRootClassLoader();
-    LOG_SCAN("primitive classes\n");
-    dvmGcScanPrimitiveClasses();
-
-    LOG_SCAN("root thread groups\n");
-    dvmGcScanRootThreadGroups();
-
-    LOG_SCAN("interned strings\n");
-    dvmGcScanInternedStrings();
-
-    LOG_SCAN("JNI global refs\n");
-    dvmGcMarkJniGlobalRefs();
-
-    LOG_SCAN("pending reference operations\n");
-    dvmHeapMarkLargeTableRefs(gcHeap->referenceOperations);
-
-    LOG_SCAN("pending finalizations\n");
-    dvmHeapMarkLargeTableRefs(gcHeap->pendingFinalizationRefs);
-
-    LOG_SCAN("debugger refs\n");
-    dvmGcMarkDebuggerRefs();
-
-    /* Mark any special objects we have sitting around.
-     */
-    LOG_SCAN("special objects\n");
-    dvmMarkObjectNonNull(gDvm.outOfMemoryObj);
-    dvmMarkObjectNonNull(gDvm.internalErrorObj);
-    dvmMarkObjectNonNull(gDvm.noClassDefFoundErrorObj);
-//TODO: scan object references sitting in gDvm;  use pointer begin & end
+    dvmVisitRoots(rootMarkObjectVisitor, &gcHeap->markContext);
 }
 
 /*
- * Callback applied to root references.  If the root location contains
- * a white reference it is pushed on the mark stack and grayed.
+ * Callback applied to root references during root remarking.  If the
+ * root location contains a white reference it is pushed on the mark
+ * stack and grayed.
  */
 static void markObjectVisitor(void *addr, RootType type, u4 thread, void *arg)
 {
@@ -260,16 +228,6 @@ void dvmHeapReMarkRootSet(void)
     assert(ctx->finger == (void *)ULONG_MAX);
     dvmVisitRoots(markObjectVisitor, ctx);
 }
-
-/*
- * Nothing past this point is allowed to use dvmMarkObject() or
- * dvmMarkObjectNonNull(), which are for root-marking only.
- * Scanning/recursion must use markObject(), which takes the finger
- * into account.
- */
-#undef dvmMarkObject
-#define dvmMarkObject __dont_use_dvmMarkObject__
-#define dvmMarkObjectNonNull __dont_use_dvmMarkObjectNonNull__
 
 /*
  * Scans instance fields.
@@ -751,8 +709,6 @@ void dvmHeapScanMarkedObjects(void)
      * left on the mark stack.
      */
     processMarkStack(ctx);
-
-    LOG_SCAN("done with marked objects\n");
 }
 
 void dvmHeapReScanMarkedObjects(void)

@@ -97,7 +97,8 @@ static void visitLargeHeapRefTable(RootVisitor *visitor,
 }
 
 /*
- * Visits all stack slots. TODO: visit native methods.
+ * Visits all stack slots except those belonging to native method
+ * arguments.
  */
 static void visitThreadStack(RootVisitor *visitor, Thread *thread, void *arg)
 {
@@ -154,6 +155,17 @@ static void visitThreadStack(RootVisitor *visitor, Thread *thread, void *arg)
                         /*
                          * Register is marked as live, it's a valid root.
                          */
+#if WITH_EXTRA_GC_CHECKS
+                        if (fp[i] != 0 && !dvmIsValidObject((Object *)fp[i])) {
+                            /* this is very bad */
+                            LOGE("PGC: invalid ref in reg %d: %#x",
+                                 method->registersSize - 1 - i, fp[i]);
+                            LOGE("PGC: %s.%s addr %#x",
+                                 method->clazz->descriptor, method->name,
+                                 saveArea->xtra.currentPc - method->insns);
+                            continue;
+                        }
+#endif
                         (*visitor)(&fp[i], threadId, ROOT_JAVA_FRAME, arg);
                     }
                 }
@@ -216,10 +228,15 @@ void dvmVisitRoots(RootVisitor *visitor, void *arg)
     if (gDvm.dbgRegistry != NULL) {
         visitHashTable(visitor, gDvm.dbgRegistry, ROOT_DEBUGGER, arg);
     }
-    visitHashTable(visitor, gDvm.internedStrings, ROOT_INTERNED_STRING, arg);
-    visitHashTable(visitor, gDvm.literalStrings, ROOT_INTERNED_STRING, arg);
+    if (gDvm.literalStrings != NULL) {
+        visitHashTable(visitor, gDvm.literalStrings, ROOT_INTERNED_STRING, arg);
+    }
+    dvmLockMutex(&gDvm.jniGlobalRefLock);
     visitReferenceTable(visitor, &gDvm.jniGlobalRefTable, 0, ROOT_JNI_GLOBAL, arg);
+    dvmUnlockMutex(&gDvm.jniGlobalRefLock);
+    dvmLockMutex(&gDvm.jniPinRefLock);
     visitReferenceTable(visitor, &gDvm.jniPinRefTable, 0, ROOT_VM_INTERNAL, arg);
+    dvmUnlockMutex(&gDvm.jniPinRefLock);
     visitLargeHeapRefTable(visitor, gDvm.gcHeap->referenceOperations, ROOT_REFERENCE_CLEANUP, arg);
     visitLargeHeapRefTable(visitor, gDvm.gcHeap->pendingFinalizationRefs, ROOT_FINALIZING, arg);
     visitThreads(visitor, arg);
