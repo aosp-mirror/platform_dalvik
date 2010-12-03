@@ -113,7 +113,7 @@ emission == "libcore-opcodes" {
 
     for (i = 0; i <= MAX_OPCODE; i++) {
         if (isUnused(i) || isOptimized(i)) continue;
-        printf("    int OP_%-28s = 0x%02x;\n", constName[i], i);
+        printf("    int OP_%-28s = 0x%04x;\n", constName[i], i);
     }
 }
 
@@ -416,6 +416,7 @@ function unpackOpcode(idx) {
     if (idx <= 255) {
         return idx;
     } else {
+        idx -= 256;
         return (idx * 256) + 255;
     }
 }
