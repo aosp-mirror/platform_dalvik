@@ -848,27 +848,34 @@ void dvmLogNativeMethodEntry(const Method* method, const u4* args)
         *desc != '\0');
     }
 
+    char* className = dvmHumanReadableDescriptor(method->clazz->descriptor);
     char* signature = dexProtoCopyMethodDescriptor(&method->prototype);
-    LOGI_NATIVE("-> %s.%s%s %s(%s)", method->clazz->descriptor, method->name,
-            signature, thisString, argsString);
+    LOGI_NATIVE("-> %s %s%s %s(%s)", className, method->name, signature,
+        thisString, argsString);
+    free(className);
     free(signature);
 }
 
 void dvmLogNativeMethodExit(const Method* method, Thread* self,
         const JValue returnValue)
 {
+    char* className = dvmHumanReadableDescriptor(method->clazz->descriptor);
     char* signature = dexProtoCopyMethodDescriptor(&method->prototype);
     if (dvmCheckException(self)) {
         Object* exception = dvmGetException(self);
-        LOGI_NATIVE("<- %s.%s%s threw %s", method->clazz->descriptor,
-                method->name, signature, exception->clazz->descriptor);
+        char* exceptionClassName =
+            dvmHumanReadableDescriptor(exception->clazz->descriptor);
+        LOGI_NATIVE("<- %s %s%s threw %s", className,
+            method->name, signature, exceptionClassName);
+        free(exceptionClassName);
     } else {
         char returnValueString[128] = { 0 };
         char returnType = method->shorty[0];
         appendValue(returnType, returnValue,
-                returnValueString, sizeof(returnValueString), false);
-        LOGI_NATIVE("<- %s.%s%s returned %s", method->clazz->descriptor,
-                method->name, signature, returnValueString);
+            returnValueString, sizeof(returnValueString), false);
+        LOGI_NATIVE("<- %s %s%s returned %s", className,
+            method->name, signature, returnValueString);
     }
+    free(className);
     free(signature);
 }
