@@ -146,7 +146,7 @@ def opEnd(tokens):
 
 #
 # Extract an ordered list of instructions from the VM sources.  We use the
-# "goto table" definition macro, which has exactly kNumDalvikInstructions
+# "goto table" definition macro, which has exactly kNumPackedOpcodes
 # entries.
 #
 def getOpcodeList():
@@ -164,7 +164,7 @@ def getOpcodeList():
 
 
 #
-# Load and emit opcodes for all kNumDalvikInstructions instructions.
+# Load and emit opcodes for all kNumPackedOpcodes instructions.
 #
 def loadAndEmitOpcodes():
     sister_list = []

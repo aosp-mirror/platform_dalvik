@@ -23,7 +23,7 @@ import sys, string, re, time
 from string import Template
 
 interp_defs_file = "../../libdex/DexOpcodes.h" # need opcode list
-kNumDalvikInstructions = 256 # TODO: Derive this from DexOpcodes.h.
+kNumPackedOpcodes = 256 # TODO: Derive this from DexOpcodes.h.
 
 verbose = False
 handler_size_bits = -1000
@@ -152,7 +152,7 @@ def opEnd(tokens):
 
 #
 # Extract an ordered list of instructions from the VM sources.  We use the
-# "goto table" definition macro, which has exactly kNumDalvikInstructions
+# "goto table" definition macro, which has exactly kNumPackedOpcodes
 # entries.
 #
 def getOpcodeList():
@@ -166,19 +166,19 @@ def getOpcodeList():
         opcodes.append("OP_" + match.group(1))
     opcode_fp.close()
 
-    if len(opcodes) != kNumDalvikInstructions:
+    if len(opcodes) != kNumPackedOpcodes:
         print "ERROR: found %d opcodes in Interp.h (expected %d)" \
-                % (len(opcodes), kNumDalvikInstructions)
+                % (len(opcodes), kNumPackedOpcodes)
         raise SyntaxError, "bad opcode count"
     return opcodes
 
 
 #
-# Load and emit opcodes for all kNumDalvikInstructions instructions.
+# Load and emit opcodes for all kNumPackedOpcodes instructions.
 #
 def loadAndEmitOpcodes():
     sister_list = []
-    assert len(opcodes) == kNumDalvikInstructions
+    assert len(opcodes) == kNumPackedOpcodes
     need_dummy_start = False
 
     # point dvmAsmInstructionStart at the first handler or stub
@@ -187,7 +187,7 @@ def loadAndEmitOpcodes():
     asm_fp.write("dvmAsmInstructionStart = " + label_prefix + "_OP_NOP\n")
     asm_fp.write("    .text\n\n")
 
-    for i in xrange(kNumDalvikInstructions):
+    for i in xrange(kNumPackedOpcodes):
         op = opcodes[i]
 
         if opcode_locations.has_key(op):

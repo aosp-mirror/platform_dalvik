@@ -30,7 +30,7 @@
  * use that opcode, in (16-bit) code units. Unimplemented opcodes as
  * well as the "breakpoint" opcode have a width of zero.
  */
-static InstructionWidth gInstructionWidthTable[kNumDalvikInstructions] = {
+static InstructionWidth gInstructionWidthTable[kNumPackedOpcodes] = {
     // BEGIN(libdex-widths); GENERATED AUTOMATICALLY BY opcode-gen
     1, 1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 1, 1, 1, 1, 1,
     1, 1, 1, 2, 3, 2, 2, 3, 5, 2, 2, 3, 2, 1, 1, 2,
@@ -55,7 +55,7 @@ static InstructionWidth gInstructionWidthTable[kNumDalvikInstructions] = {
  * Table that maps each opcode to the flags associated with that
  * opcode.
  */
-static u1 gOpcodeFlagsTable[kNumDalvikInstructions] = {
+static u1 gOpcodeFlagsTable[kNumPackedOpcodes] = {
     // BEGIN(libdex-flags); GENERATED AUTOMATICALLY BY opcode-gen
     kInstrCanContinue,
     kInstrCanContinue,
@@ -320,7 +320,7 @@ static u1 gOpcodeFlagsTable[kNumDalvikInstructions] = {
  * Table that maps each opcode to the instruction format associated
  * that opcode.
  */
-static u1 gInstructionFormatTable[kNumDalvikInstructions] = {
+static u1 gInstructionFormatTable[kNumPackedOpcodes] = {
     // BEGIN(libdex-formats); GENERATED AUTOMATICALLY BY opcode-gen
     kFmt10x,  kFmt12x,  kFmt22x,  kFmt32x,  kFmt12x,  kFmt22x,  kFmt32x,
     kFmt12x,  kFmt22x,  kFmt32x,  kFmt11x,  kFmt11x,  kFmt11x,  kFmt11x,
@@ -366,7 +366,7 @@ static u1 gInstructionFormatTable[kNumDalvikInstructions] = {
  * Table that maps each opcode to the index type implied by that
  * opcode.
  */
-static u1 gInstructionIndexTypeTable[kNumDalvikInstructions] = {
+static u1 gInstructionIndexTypeTable[kNumPackedOpcodes] = {
     // BEGIN(libdex-index-types); GENERATED AUTOMATICALLY BY opcode-gen
     kIndexNone,         kIndexNone,         kIndexNone,
     kIndexNone,         kIndexNone,         kIndexNone,
