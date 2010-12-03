@@ -316,7 +316,7 @@ typedef enum Opcode {
     OP_IPUT_OBJECT_VOLATILE         = 0xfc,
     OP_SGET_OBJECT_VOLATILE         = 0xfd,
     OP_SPUT_OBJECT_VOLATILE         = 0xfe,
-    OP_UNUSED_FF                    = 0xff,
+    OP_DISPATCH_FF                  = 0xff,
     // END(libdex-opcode-enum)
 } Opcode;
 
@@ -582,7 +582,7 @@ typedef enum Opcode {
         H(OP_IPUT_OBJECT_VOLATILE),                                           \
         H(OP_SGET_OBJECT_VOLATILE),                                           \
         H(OP_SPUT_OBJECT_VOLATILE),                                           \
-        H(OP_UNUSED_FF),                                                      \
+        H(OP_DISPATCH_FF),                                                    \
         /* END(libdex-goto-table) */                                          \
     };
 

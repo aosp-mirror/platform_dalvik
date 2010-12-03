@@ -5656,7 +5656,7 @@ sput_1nr_common:
     case OP_UNUSED_79:
     case OP_UNUSED_7A:
     case OP_BREAKPOINT:
-    case OP_UNUSED_FF:
+    case OP_DISPATCH_FF:
         failure = VERIFY_ERROR_GENERIC;
         break;
 

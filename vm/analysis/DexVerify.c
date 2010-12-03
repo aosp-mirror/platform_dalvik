@@ -1177,7 +1177,7 @@ static bool verifyInstructions(VerifierData* vdata)
         case OP_UNUSED_73:
         case OP_UNUSED_79:
         case OP_UNUSED_7A:
-        case OP_UNUSED_FF:
+        case OP_DISPATCH_FF:
             LOGE("VFY: unexpected opcode %02x\n", decInsn.opcode);
             okay = false;
             break;

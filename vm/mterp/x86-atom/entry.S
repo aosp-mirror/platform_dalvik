@@ -388,4 +388,4 @@ dvmAsmInstructionJmpTable = .LdvmAsmInstructionJmpTable
 .long .L_OP_UNUSED_FC
 .long .L_OP_UNUSED_FD
 .long .L_OP_UNUSED_FE
-.long .L_OP_UNUSED_FF
+.long .L_OP_DISPATCH_FF

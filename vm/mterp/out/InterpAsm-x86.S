@@ -6431,8 +6431,8 @@ dvmAsmInstructionStart = .L_OP_NOP
 
 /* ------------------------------ */
     .balign 64
-.L_OP_UNUSED_FF: /* 0xff */
-/* File: x86/OP_UNUSED_FF.S */
+.L_OP_DISPATCH_FF: /* 0xff */
+/* File: x86/OP_DISPATCH_FF.S */
 /* File: x86/unused.S */
     jmp     common_abort
 
@@ -9104,7 +9104,7 @@ dvmAsmInstructionJmpTable = .LdvmAsmInstructionJmpTable
 .long .L_OP_IPUT_OBJECT_VOLATILE
 .long .L_OP_SGET_OBJECT_VOLATILE
 .long .L_OP_SPUT_OBJECT_VOLATILE
-.long .L_OP_UNUSED_FF
+.long .L_OP_DISPATCH_FF
 
 
 /* File: x86/footer.S */
