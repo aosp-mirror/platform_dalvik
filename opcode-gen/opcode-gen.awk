@@ -16,11 +16,13 @@
 
 BEGIN {
     MAX_OPCODE = 65535;
-    MAX_LIBDEX_OPCODE = 255; # TODO: Will not be true for long!
+    MAX_PACKED_OPCODE = 511;
+    MAX_PACKED_OPCODE = 255; # TODO: Not for long!
     initIndexTypes();
     initFlags();
     if (readBytecodes()) exit 1;
     deriveOpcodeChains();
+    createPackedTables();
     consumeUntil = "";
 }
 
@@ -96,20 +98,20 @@ consumeUntil != "" {
     consumeUntil = "END(libcore-opcodes)";
     print;
 
-    for (i = 0; i <= MAX_LIBDEX_OPCODE; i++) {
-        if (isUnusedByte(i) || isOptimized(i)) continue;
+    for (i = 0; i <= MAX_OPCODE; i++) {
+        if (isUnused(i) || isOptimized(i)) continue;
         printf("    int OP_%-28s = 0x%02x;\n", constName[i], i);
     }
 
     next;
 }
 
-/BEGIN\(libcore-maximum-value\)/ {
-    consumeUntil = "END(libcore-maximum-value)";
+/BEGIN\(libcore-maximum-values\)/ {
+    consumeUntil = "END(libcore-maximum-values)";
     print;
 
-    # TODO: Make this smarter.
-    printf("        MAXIMUM_VALUE = %d;\n", MAX_LIBDEX_OPCODE);
+    printf("        MAXIMUM_VALUE = %d;\n", MAX_OPCODE);
+    printf("        MAXIMUM_PACKED_VALUE = %d;\n", MAX_PACKED_OPCODE);
 
     next;
 }
@@ -118,8 +120,8 @@ consumeUntil != "" {
     consumeUntil = "END(libdex-opcode-enum)";
     print;
 
-    for (i = 0; i <= MAX_LIBDEX_OPCODE; i++) {
-        printf("    OP_%-28s = 0x%02x,\n", constNameOrUnusedByte(i), i);
+    for (i = 0; i <= MAX_PACKED_OPCODE; i++) {
+        printf("    OP_%-28s = 0x%02x,\n", packedConstName[i], i);
     }
 
     next;
@@ -129,8 +131,8 @@ consumeUntil != "" {
     consumeUntil = "END(libdex-goto-table)";
     print;
 
-    for (i = 0; i <= MAX_LIBDEX_OPCODE; i++) {
-        content = sprintf("        H(OP_%s),", constNameOrUnusedByte(i));
+    for (i = 0; i <= MAX_PACKED_OPCODE; i++) {
+        content = sprintf("        H(OP_%s),", packedConstName[i]);
         printf("%-78s\\\n", content);
     }
 
@@ -141,8 +143,8 @@ consumeUntil != "" {
     consumeUntil = "END(libdex-opcode-names)";
     print;
 
-    for (i = 0; i <= MAX_LIBDEX_OPCODE; i++) {
-        printf("    \"%s\",\n", nameOrUnusedByte(i));
+    for (i = 0; i <= MAX_PACKED_OPCODE; i++) {
+        printf("    \"%s\",\n", packedName[i]);
     }
 
     next;
@@ -153,9 +155,9 @@ consumeUntil != "" {
     print;
 
     col = 1;
-    for (i = 0; i <= MAX_LIBDEX_OPCODE; i++) {
-        value = sprintf("%d,", isUnusedByte(i) ? 0 : width[i]);
-        col = colPrint(value, (i == MAX_LIBDEX_OPCODE), col, 16, 2, "    ");
+    for (i = 0; i <= MAX_PACKED_OPCODE; i++) {
+        value = sprintf("%d,", packedWidth[i]);
+        col = colPrint(value, (i == MAX_PACKED_OPCODE), col, 16, 2, "    ");
     }
 
     next;
@@ -165,8 +167,8 @@ consumeUntil != "" {
     consumeUntil = "END(libdex-flags)";
     print;
 
-    for (i = 0; i <= MAX_LIBDEX_OPCODE; i++) {
-        value = flagsToC(isUnusedByte(i) ? 0 : flags[i]);
+    for (i = 0; i <= MAX_PACKED_OPCODE; i++) {
+        value = flagsToC(packedFlags[i]);
         printf("    %s,\n", value);
     }
 
@@ -178,9 +180,9 @@ consumeUntil != "" {
     print;
 
     col = 1;
-    for (i = 0; i <= MAX_LIBDEX_OPCODE; i++) {
-        value = sprintf("kFmt%s,", isUnusedByte(i) ? "00x" : format[i]);
-        col = colPrint(value, (i == MAX_LIBDEX_OPCODE), col, 7, 9, "    ");
+    for (i = 0; i <= MAX_PACKED_OPCODE; i++) {
+        value = sprintf("kFmt%s,", packedFormat[i]);
+        col = colPrint(value, (i == MAX_PACKED_OPCODE), col, 7, 9, "    ");
     }
 
     next;
@@ -191,10 +193,9 @@ consumeUntil != "" {
     print;
 
     col = 1;
-    for (i = 0; i <= MAX_LIBDEX_OPCODE; i++) {
-        value = isUnusedByte(i) ? "unknown" : indexType[i];
-        value = sprintf("%s,", indexTypeValues[value]);
-        col = colPrint(value, (i == MAX_LIBDEX_OPCODE), col, 3, 19, "    ");
+    for (i = 0; i <= MAX_PACKED_OPCODE; i++) {
+        value = sprintf("%s,", indexTypeValues[packedIndexType[i]]);
+        col = colPrint(value, (i == MAX_PACKED_OPCODE), col, 3, 19, "    ");
     }
 
     next;
@@ -367,6 +368,74 @@ function findNextOpcode(idx, fam, fmt, result) {
     return -1;
 }
 
+# Construct the tables of info indexed by packed opcode. The packed opcode
+# values are in the range 0-0x1ff, whereas the unpacked opcodes sparsely
+# span the range 0-0xffff.
+function createPackedTables(i, op) {
+    # locals: i, op
+    for (i = 0; i <= MAX_PACKED_OPCODE; i++) {
+        op = unpackOpcode(i);
+        if (i == 255) {
+            # Special case: This is the low-opcode slot for a would-be
+            # extended opcode dispatch implementation.
+            packedName[i]      = "dispatch-ff";
+            packedConstName[i] = "DISPATCH_FF";
+            packedFormat[i]    = "00x";
+            packedFlags[i]     = 0;
+            packedWidth[i]     = 0;
+            packedIndexType[i] = "unknown";
+        } else if (isUnused(op)) {
+            packedName[i]      = unusedName(op);
+            packedConstName[i] = unusedConstName(op);
+            packedFormat[i]    = "00x";
+            packedFlags[i]     = 0;
+            packedWidth[i]     = 0;
+            packedIndexType[i] = "unknown";
+        } else {
+            packedName[i]      = name[op];
+            packedConstName[i] = constName[op];
+            packedFormat[i]    = format[op];
+            packedFlags[i]     = flags[op];
+            packedWidth[i]     = width[op];
+            packedIndexType[i] = indexType[op];
+        }
+    }
+}
+
+# Given a packed opcode, returns the raw (unpacked) opcode value.
+function unpackOpcode(idx) {
+    # Note: This must be the inverse of the corresponding code in
+    # libdex/DexOpcodes.h.
+    if (idx <= 255) {
+        return idx;
+    } else {
+        return (idx * 256) + 255;
+    }
+}
+
+# Returns the "unused" name of the given opcode (by index).
+# That is, this is the human-oriented name to use for an opcode
+# definition in cases
+# where the opcode isn't used.
+function unusedName(idx) {
+    if (idx <= 255) {
+         return sprintf("unused-%02x", idx);
+    } else {
+         return sprintf("unused-%04x", idx);
+    }
+}
+
+# Returns the "unused" constant name of the given opcode (by index).
+# That is, this is the name to use for a constant definition in cases
+# where the opcode isn't used.
+function unusedConstName(idx) {
+    if (idx <= 255) {
+         return toupper(sprintf("UNUSED_%02x", idx));
+    } else {
+         return toupper(sprintf("UNUSED_%04x", idx));
+    }
+}
+
 # Convert a hex value to an int.
 function parseHex(hex, result, chars, count, c, i) {
     # locals: result, chars, count, c, i
@@ -434,17 +503,6 @@ function flagsToC(f, parts, result, i) {
     return result;
 }
 
-# Given a packed opcode, returns the raw (unpacked) opcode value.
-function unpackOpcode(idx) {
-    # Note: This must be the inverse of the corresponding code in
-    # libdex/DexOpcodes.h.
-    if (idx <= 0xff) {
-        return idx;
-    } else {
-        return (idx * 0x100) + 0xff;
-    }
-}
-
 # Returns true if the given opcode (by index) is an "optimized" opcode.
 function isOptimized(idx, parts, f) {
     # locals: parts, f
@@ -458,34 +516,4 @@ function isOptimized(idx, parts, f) {
 # Returns true if there is no definition for the given opcode (by index).
 function isUnused(idx) {
     return (name[idx] == "");
-}
-
-# Returns true if there is no definition for the given opcode (by
-# index), taken as a single-byte opcode. The odd case for this
-# function is 255, which is the first extended (two-byte) opcode. For
-# the purposes of this function, it is considered unused. (This is
-# meant as a stop-gap measure for code that is not yet prepared to
-# deal with extended opcodes.)
-function isUnusedByte(idx) {
-    return (idx == 255) || (name[idx] == "");
-}
-
-# Returns the constant name of the given single-byte opcode (by index)
-# or the string "UNUSED_XX" (where XX is the index in hex) if the
-# opcode is unused. See isUnusedByte(), above, for more info.
-function constNameOrUnusedByte(idx) {
-    if (isUnusedByte(idx)) {
-       return toupper(sprintf("UNUSED_%02x", idx));
-    }
-    return constName[idx];
-}
-
-# Returns the (human-oriented) name of the given single-byte opcode
-# (by index) or the string "unused-xx" (where xx is the index in hex)
-# if the opcode is unused. See isUnusedByte(), above, for more info.
-function nameOrUnusedByte(idx) {
-    if (isUnusedByte(idx)) {
-       return sprintf("unused-%02x", idx);
-    }
-    return name[idx];
 }
