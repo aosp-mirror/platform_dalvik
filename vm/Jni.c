@@ -1043,50 +1043,6 @@ void dvmDumpJniReferenceTables(void)
     dvmDumpReferenceTable(&gDvm.jniPinRefTable, "JNI pinned array");
 }
 
-/*
- * GC helper function to mark all JNI global references.
- *
- * We're currently handling the "pin" table here too.
- */
-void dvmGcMarkJniGlobalRefs()
-{
-    Object** op;
-
-    dvmLockMutex(&gDvm.jniGlobalRefLock);
-
-#ifdef USE_INDIRECT_REF
-    IndirectRefTable* pRefTable = &gDvm.jniGlobalRefTable;
-    op = pRefTable->table;
-    int numEntries = dvmIndirectRefTableEntries(pRefTable);
-    int i;
-
-    for (i = 0; i < numEntries; i++) {
-        Object* obj = *op;
-        if (obj != NULL)
-            dvmMarkObjectNonNull(obj);
-        op++;
-    }
-#else
-    op = gDvm.jniGlobalRefTable.table;
-    while ((uintptr_t)op < (uintptr_t)gDvm.jniGlobalRefTable.nextEntry) {
-        dvmMarkObjectNonNull(*(op++));
-    }
-#endif
-
-    dvmUnlockMutex(&gDvm.jniGlobalRefLock);
-
-
-    dvmLockMutex(&gDvm.jniPinRefLock);
-
-    op = gDvm.jniPinRefTable.table;
-    while ((uintptr_t)op < (uintptr_t)gDvm.jniPinRefTable.nextEntry) {
-        dvmMarkObjectNonNull(*(op++));
-    }
-
-    dvmUnlockMutex(&gDvm.jniPinRefLock);
-}
-
-
 #ifndef USE_INDIRECT_REF
 /*
  * Determine if "obj" appears in the argument list for the native method.

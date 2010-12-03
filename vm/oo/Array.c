@@ -799,16 +799,3 @@ size_t dvmArrayObjectSize(const ArrayObject *array)
     size += array->length * dvmArrayClassElementWidth(array->obj.clazz);
     return size;
 }
-
-/*
- * Add all primitive classes to the root set of objects.
-TODO: do these belong to the root class loader?
- */
-void dvmGcScanPrimitiveClasses()
-{
-    int i;
-
-    for (i = 0; i < PRIM_MAX; i++) {
-        dvmMarkObject((Object *)gDvm.primitiveClass[i]);    // may be NULL
-    }
-}

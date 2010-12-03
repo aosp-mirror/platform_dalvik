@@ -4884,34 +4884,6 @@ void dvmDumpFieldAccessCounts(void)
 }
 #endif
 
-
-/*
- * Mark all classes associated with the built-in loader.
- */
-static int markClassObject(void *clazz, void *arg)
-{
-    UNUSED_PARAMETER(arg);
-
-    dvmMarkObjectNonNull((Object *)clazz);
-    return 0;
-}
-
-/*
- * The garbage collector calls this to mark the class objects for all
- * loaded classes.
- */
-void dvmGcScanRootClassLoader()
-{
-    /* dvmClassStartup() may not have been called before the first GC.
-     */
-    if (gDvm.loadedClasses != NULL) {
-        dvmHashTableLock(gDvm.loadedClasses);
-        dvmHashForeach(gDvm.loadedClasses, markClassObject, NULL);
-        dvmHashTableUnlock(gDvm.loadedClasses);
-    }
-}
-
-
 /*
  * ===========================================================================
  *      Method Prototypes and Descriptors

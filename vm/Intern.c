@@ -169,27 +169,6 @@ bool dvmIsWeakInternedString(const StringObject* strObj)
     return found == strObj;
 }
 
-static int markStringObject(void* strObj, void* arg)
-{
-    UNUSED_PARAMETER(arg);
-    dvmMarkObjectNonNull(strObj);
-    return 0;
-}
-
-/*
- * Blacken string references from the literal string table.  The
- * literal table is a root.
- */
-void dvmGcScanInternedStrings()
-{
-    /* It's possible for a GC to happen before dvmStringInternStartup()
-     * is called.
-     */
-    if (gDvm.literalStrings != NULL) {
-        dvmHashForeach(gDvm.literalStrings, markStringObject, NULL);
-    }
-}
-
 /*
  * Clear white references from the intern table.
  */
