@@ -12,7 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+#
 # Awk helper script for opcode-gen.
+#
+
+#
+# Initialization.
+#
 
 BEGIN {
     MAX_OPCODE = 65535;
@@ -24,32 +30,48 @@ BEGIN {
     deriveOpcodeChains();
     createPackedTables();
     consumeUntil = "";
+    emission = "";
 }
 
+#
+# General control (must appear above directive handlers).
+#
+
+# Clear out the preexisting output within a directive section.
 consumeUntil != "" {
     if (index($0, consumeUntil) != 0) {
         consumeUntil = "";
-    } else {
-        next;
+        print;
     }
+
+    next;
 }
 
-/BEGIN\(opcodes\)/ {
-    consumeUntil = "END(opcodes)";
+# Detect directives.
+/BEGIN\([a-z---]*\)/ {
+    i = match($0, /BEGIN\([a-z---]*\)/);
+    emission = substr($0, i + 6, RLENGTH - 7);
+    consumeUntil = "END(" emission ")";
+    emissionHandled = 0;
     print;
+}
+
+#
+# Handlers for all of the directives.
+#
+
+emission == "opcodes" {
+    emissionHandled = 1;
 
     for (i = 0; i <= MAX_OPCODE; i++) {
         if (isUnused(i) || isOptimized(i)) continue;
         printf("    public static final int %s = 0x%s;\n",
                constName[i], hex[i]);
     }
-
-    next;
 }
 
-/BEGIN\(first-opcodes\)/ {
-    consumeUntil = "END(first-opcodes)";
-    print;
+emission == "first-opcodes" {
+    emissionHandled = 1;
 
     for (i = 0; i <= MAX_OPCODE; i++) {
         if (isUnused(i) || isOptimized(i)) continue;
@@ -57,13 +79,10 @@ consumeUntil != "" {
             printf("    //     DalvOps.%s\n", constName[i]);
         }
     }
-
-    next;
 }
 
-/BEGIN\(dops\)/ {
-    consumeUntil = "END(dops)";
-    print;
+emission == "dops" {
+    emissionHandled = 1;
 
     for (i = 0; i <= MAX_OPCODE; i++) {
         if (isUnused(i) || isOptimized(i)) continue;
@@ -78,130 +97,118 @@ consumeUntil != "" {
                constName[i], constName[i], family[i], nextOp, format[i],
                hasResult[i], name[i]);
     }
-
-    next;
 }
 
-/BEGIN\(dops-init\)/ {
-    consumeUntil = "END(dops-init)";
-    print;
+emission == "dops-init" {
+    emissionHandled = 1;
 
     for (i = 0; i <= MAX_OPCODE; i++) {
         if (isUnused(i) || isOptimized(i)) continue;
         printf("        set(%s);\n", constName[i]);
     }
-
-    next;
 }
 
-/BEGIN\(libcore-opcodes\)/ {
-    consumeUntil = "END(libcore-opcodes)";
-    print;
+emission == "libcore-opcodes" {
+    emissionHandled = 1;
 
     for (i = 0; i <= MAX_OPCODE; i++) {
         if (isUnused(i) || isOptimized(i)) continue;
         printf("    int OP_%-28s = 0x%02x;\n", constName[i], i);
     }
-
-    next;
 }
 
-/BEGIN\(libcore-maximum-values\)/ {
-    consumeUntil = "END(libcore-maximum-values)";
-    print;
+emission == "libcore-maximum-values" {
+    emissionHandled = 1;
 
     printf("        MAXIMUM_VALUE = %d;\n", MAX_OPCODE);
     printf("        MAXIMUM_PACKED_VALUE = %d;\n", MAX_PACKED_OPCODE);
-
-    next;
 }
 
-/BEGIN\(libdex-opcode-enum\)/ {
-    consumeUntil = "END(libdex-opcode-enum)";
-    print;
+emission == "libdex-opcode-enum" {
+    emissionHandled = 1;
 
     for (i = 0; i <= MAX_PACKED_OPCODE; i++) {
         printf("    OP_%-28s = 0x%02x,\n", packedConstName[i], i);
     }
-
-    next;
 }
 
-/BEGIN\(libdex-goto-table\)/ {
-    consumeUntil = "END(libdex-goto-table)";
-    print;
+emission == "libdex-goto-table" {
+    emissionHandled = 1;
 
     for (i = 0; i <= MAX_PACKED_OPCODE; i++) {
         content = sprintf("        H(OP_%s),", packedConstName[i]);
         printf("%-78s\\\n", content);
     }
-
-    next;
 }
 
-/BEGIN\(libdex-opcode-names\)/ {
-    consumeUntil = "END(libdex-opcode-names)";
-    print;
+emission == "libdex-opcode-names" {
+    emissionHandled = 1;
 
     for (i = 0; i <= MAX_PACKED_OPCODE; i++) {
         printf("    \"%s\",\n", packedName[i]);
     }
-
-    next;
 }
 
-/BEGIN\(libdex-widths\)/ {
-    consumeUntil = "END(libdex-widths)";
-    print;
+emission == "libdex-widths" {
+    emissionHandled = 1;
 
     col = 1;
     for (i = 0; i <= MAX_PACKED_OPCODE; i++) {
         value = sprintf("%d,", packedWidth[i]);
         col = colPrint(value, (i == MAX_PACKED_OPCODE), col, 16, 2, "    ");
     }
-
-    next;
 }
 
-/BEGIN\(libdex-flags\)/ {
-    consumeUntil = "END(libdex-flags)";
-    print;
+emission == "libdex-flags" {
+    emissionHandled = 1;
 
     for (i = 0; i <= MAX_PACKED_OPCODE; i++) {
         value = flagsToC(packedFlags[i]);
         printf("    %s,\n", value);
     }
-
-    next;
 }
 
-/BEGIN\(libdex-formats\)/ {
-    consumeUntil = "END(libdex-formats)";
-    print;
+emission == "libdex-formats" {
+    emissionHandled = 1;
 
     col = 1;
     for (i = 0; i <= MAX_PACKED_OPCODE; i++) {
         value = sprintf("kFmt%s,", packedFormat[i]);
         col = colPrint(value, (i == MAX_PACKED_OPCODE), col, 7, 9, "    ");
     }
-
-    next;
 }
 
-/BEGIN\(libdex-index-types\)/ {
-    consumeUntil = "END(libdex-index-types)";
-    print;
+emission == "libdex-index-types" {
+    emissionHandled = 1;
 
     col = 1;
     for (i = 0; i <= MAX_PACKED_OPCODE; i++) {
         value = sprintf("%s,", indexTypeValues[packedIndexType[i]]);
         col = colPrint(value, (i == MAX_PACKED_OPCODE), col, 3, 19, "    ");
     }
+}
 
+#
+# General control (must appear after the directives).
+#
+
+# Handle the end of directive processing.
+emission != "" {
+    if (!emissionHandled) {
+        printf("WARNING: unknown tag \"%s\"\n", emission) >"/dev/stderr";
+        consumeUntil = "";
+    }
+
+    emission = "";
     next;
 }
 
+# Most lines just get copied from the source as-is.
 { print; }
+
+#
+# Helper functions.
+#
 
 # Helper to print out an element in a multi-column fashion. It returns
 # the (one-based) column number that the next element will be printed
@@ -247,7 +254,7 @@ function readBytecodes(i, parts, line, cmd, status, count) {
         }
 
         if (status != 0) {
-            printf("syntax error on line: %s\n", line);
+            printf("syntax error on line: %s\n", line) >"/dev/stderr";
             return 1;
         }
     }
@@ -291,17 +298,17 @@ function defineOpcode(line, count, parts, idx) {
     # Verify values.
 
     if (nextFormat[format[idx]] == "") {
-        printf("unknown format: %s\n", format[idx]);
+        printf("unknown format: %s\n", format[idx]) >"/dev/stderr";
         return 1;
     }
 
     if (indexTypeValues[indexType[idx]] == "") {
-        printf("unknown index type: %s\n", indexType[idx]);
+        printf("unknown index type: %s\n", indexType[idx]) >"/dev/stderr";
         return 1;
     }
 
     if (flagsToC(flags[idx]) == "") {
-        printf("bogus flags: %s\n", flags[idx]);
+        printf("bogus flags: %s\n", flags[idx]) >"/dev/stderr";
         return 1;
     }
 
@@ -445,7 +452,7 @@ function parseHex(hex, result, chars, count, c, i) {
     for (i = 1; i <= count; i++) {
         c = index("0123456789abcdef", chars[i]);
         if (c == 0) {
-            printf("bogus hex value: %s\n", hex);
+            printf("bogus hex value: %s\n", hex) >"/dev/stderr";
             return -1;
         }
         result = (result * 16) + c - 1;
@@ -489,7 +496,7 @@ function flagsToC(f, parts, result, i) {
     for (i = 1; i <= count; i++) {
         f = flagValues[parts[i]];
         if (f == "") {
-            printf("bogus flag: %s\n", f);
+            printf("bogus flag: %s\n", f) >"/dev/stderr";
             return ""; # Bogus flag name.
         } else if (f == "0") {
             # Nothing to append for this case.

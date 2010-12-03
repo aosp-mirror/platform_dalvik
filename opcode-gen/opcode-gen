@@ -20,15 +20,16 @@
 # generate code inside the given <file>, based on the directives found
 # in that file. Refer to those files to understand what's being
 # generated. (Look for comments that say "BEGIN(name)" where "name" is
-# one of the directives defined below.
+# one of the "emission" directives defined in opcode-gen.awk in this
+# directory.)
 
 file="$1"
 tmpfile="/tmp/$$.txt"
 
-echo "processing `basename $1`"
+echo "processing `basename $1`" 1>&2
 
 if [ "x$1" = "x" ]; then
-    echo "must specify a file"
+    echo "must specify a file" 1>&2
     exit 1
 fi
 
@@ -57,5 +58,10 @@ bytecodeFile="$progdir/bytecode.txt"
 awk -v "bytecodeFile=$bytecodeFile" -f "$progdir/opcode-gen.awk" \
     "$file" > "$tmpfile"
 
-cp "$tmpfile" "$file"
-rm "$tmpfile"
+if [ "$?" = "0" ]; then
+    cp "$tmpfile" "$file"
+    rm "$tmpfile"
+else
+    echo "error running awk" 1>&2
+    exit 1
+fi
