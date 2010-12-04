@@ -149,21 +149,30 @@ void dvmAbstractMethodStub(const u4* args, JValue* pResult)
 
 /*
  * Verify that "obj" is non-null and is an instance of "clazz".
+ * Used to implement reflection on fields and methods.
  *
  * Returns "false" and throws an exception if not.
  */
 bool dvmVerifyObjectInClass(Object* obj, ClassObject* clazz)
 {
+    const char* exceptionClass = NULL;
     if (obj == NULL) {
-        dvmThrowException("Ljava/lang/NullPointerException;", NULL);
+        exceptionClass = "Ljava/lang/NullPointerException;";
+    } else if (!dvmInstanceof(obj->clazz, clazz)) {
+        exceptionClass = "Ljava/lang/IllegalArgumentException;";
+    }
+    if (exceptionClass != NULL) {
+        char* expectedClassName = dvmHumanReadableDescriptor(clazz->descriptor);
+        char* actualClassName = (obj != NULL)
+            ? dvmHumanReadableDescriptor(obj->clazz->descriptor)
+            : strdup("null");
+        dvmThrowExceptionFmt(exceptionClass,
+            "expected receiver of type %s, not %s",
+            expectedClassName, actualClassName);
+        free(expectedClassName);
+        free(actualClassName);
         return false;
     }
-    if (!dvmInstanceof(obj->clazz, clazz)) {
-        dvmThrowException("Ljava/lang/IllegalArgumentException;",
-            "object is not an instance of the class");
-        return false;
-    }
-
     return true;
 }
 
