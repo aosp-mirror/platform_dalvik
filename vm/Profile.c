@@ -164,10 +164,10 @@ bool dvmProfilingStartup(void)
     /*
      * Allocate storage for instruction counters.
      */
-    gDvm.executedInstrCounts = (int*) malloc(kNumDalvikInstructions * sizeof(int));
+    gDvm.executedInstrCounts = (int*) malloc(kNumPackedOpcodes * sizeof(int));
     if (gDvm.executedInstrCounts == NULL)
         return false;
-    memset(gDvm.executedInstrCounts, 0, kNumDalvikInstructions * sizeof(int));
+    memset(gDvm.executedInstrCounts, 0, kNumPackedOpcodes * sizeof(int));
 
 #ifdef UPDATE_MAGIC_PAGE
     /*

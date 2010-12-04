@@ -21,7 +21,7 @@
 
 /*
  * Main table containing data flow attributes for each bytecode. The
- * first kNumDalvikInstructions entries are for Dalvik bytecode
+ * first kNumPackedOpcodes entries are for Dalvik bytecode
  * instructions, where extended opcode at the MIR level are appended
  * afterwards.
  *

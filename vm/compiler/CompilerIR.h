@@ -78,7 +78,7 @@ typedef struct LIR {
 } LIR;
 
 enum ExtendedMIROpcode {
-    kMirOpFirst = kNumDalvikInstructions,
+    kMirOpFirst = kNumPackedOpcodes,
     kMirOpPhi = kMirOpFirst,
     kMirOpNullNRangeUpCheck,
     kMirOpNullNRangeDownCheck,

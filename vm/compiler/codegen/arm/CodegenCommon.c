@@ -30,7 +30,7 @@
 static intptr_t templateEntryOffsets[TEMPLATE_LAST_MARK];
 
 /* Track exercised opcodes */
-static int opcodeCoverage[kNumDalvikInstructions];
+static int opcodeCoverage[kNumPackedOpcodes];
 
 static void setMemRefType(ArmLIR *lir, bool isLoad, int memType)
 {

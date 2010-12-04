@@ -4383,13 +4383,13 @@ void dvmCompilerArchDump(void)
 
     streak = i = 0;
     buf[0] = 0;
-    while (opcodeCoverage[i] == 0 && i < kNumDalvikInstructions) {
+    while (opcodeCoverage[i] == 0 && i < kNumPackedOpcodes) {
         i++;
     }
-    if (i == kNumDalvikInstructions) {
+    if (i == kNumPackedOpcodes) {
         return;
     }
-    for (start = i++, streak = 1; i < kNumDalvikInstructions; i++) {
+    for (start = i++, streak = 1; i < kNumPackedOpcodes; i++) {
         if (opcodeCoverage[i]) {
             streak++;
         } else {
@@ -4399,10 +4399,10 @@ void dvmCompilerArchDump(void)
                 sprintf(buf+strlen(buf), "%x-%x,", start, start + streak - 1);
             }
             streak = 0;
-            while (opcodeCoverage[i] == 0 && i < kNumDalvikInstructions) {
+            while (opcodeCoverage[i] == 0 && i < kNumPackedOpcodes) {
                 i++;
             }
-            if (i < kNumDalvikInstructions) {
+            if (i < kNumPackedOpcodes) {
                 streak = 1;
                 start = i;
             }

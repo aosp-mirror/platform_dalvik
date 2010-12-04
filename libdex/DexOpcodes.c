@@ -28,7 +28,7 @@
 /*
  * Dalvik opcode names.
  */
-static const char* gOpNames[kNumDalvikInstructions] = {
+static const char* gOpNames[kNumPackedOpcodes] = {
     // BEGIN(libdex-opcode-names); GENERATED AUTOMATICALLY BY opcode-gen
     "nop",
     "move",
@@ -294,6 +294,6 @@ static const char* gOpNames[kNumDalvikInstructions] = {
  */
 const char* dexGetOpcodeName(Opcode op)
 {
-    assert(op >= 0 && op < kNumDalvikInstructions);
+    assert(op >= 0 && op < kNumPackedOpcodes);
     return gOpNames[op];
 }

@@ -31,16 +31,23 @@
 #include "DexFile.h"
 
 /*
- * the highest possible packed opcode value of a valid Dalvik opcode, plus one
+ * kMaxOpcodeValue: the highest possible raw (unpacked) opcode value
+ *
+ * kNumPackedOpcodes: the highest possible packed opcode value of a
+ * valid Dalvik opcode, plus one
  *
  * TODO: Change this once the rest of the code is prepared to deal with
  * extended opcodes.
  */
-#define kNumDalvikInstructions 256
+// BEGIN(libdex-maximum-values); GENERATED AUTOMATICALLY BY opcode-gen
+#define kMaxOpcodeValue 0xff
+#define kNumPackedOpcodes 0x100
+// END(libdex-maximum-values); GENERATED AUTOMATICALLY BY opcode-gen
 
 /*
- * Switch-statement signatures are a "NOP" followed by a code.  (A true NOP
- * is 0x0000.)
+ * Switch table and array data signatures are a code unit consisting
+ * of "NOP" (0x00) in the low-order byte and a non-zero identifying
+ * code in the high-order byte. (A true NOP is 0x0000.)
  */
 #define kPackedSwitchSignature  0x0100
 #define kSparseSwitchSignature  0x0200
@@ -325,7 +332,7 @@ typedef enum Opcode {
  * an interpreter in C.
  */
 #define DEFINE_GOTO_TABLE(_name) \
-    static const void* _name[kNumDalvikInstructions] = {                      \
+    static const void* _name[kNumPackedOpcodes] = {                      \
         /* BEGIN(libdex-goto-table); GENERATED AUTOMATICALLY BY opcode-gen */ \
         H(OP_NOP),                                                            \
         H(OP_MOVE),                                                           \
