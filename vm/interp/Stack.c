@@ -637,6 +637,20 @@ bail:
     dvmPopFrame(self);
 }
 
+static void throwArgumentTypeMismatch(int argIndex, ClassObject* expected,
+    DataObject* arg)
+{
+    char* expectedClassName = dvmHumanReadableDescriptor(expected->descriptor);
+    char* actualClassName = (arg != NULL)
+        ? dvmHumanReadableDescriptor(arg->obj.clazz->descriptor)
+        : strdup("null");
+    dvmThrowExceptionFmt("Ljava/lang/IllegalArgumentException;",
+        "argument %d should have type %s, got %s",
+        argIndex + 1, expectedClassName, actualClassName);
+    free(expectedClassName);
+    free(actualClassName);
+}
+
 /*
  * Invoke a method, using the specified arguments and return type, through
  * one of the reflection interfaces.  Could be a virtual or direct method
@@ -666,10 +680,9 @@ Object* dvmInvokeMethod(Object* obj, const Method* method,
     else
         argListLength = 0;
     if (argListLength != (int) params->length) {
-        LOGI("invoke: expected %d args, received %d args\n",
+        dvmThrowExceptionFmt("Ljava/lang/IllegalArgumentException;",
+            "wrong number of arguments; expected %d, got %d",
             params->length, argListLength);
-        dvmThrowException("Ljava/lang/IllegalArgumentException;",
-            "wrong number of arguments");
         return NULL;
     }
 
@@ -706,15 +719,9 @@ Object* dvmInvokeMethod(Object* obj, const Method* method,
 
         width = dvmConvertArgument(*args++, *types++, ins);
         if (width < 0) {
-            if (*(args-1) != NULL) {
-                LOGV("invoke: type mismatch on arg %d ('%s' '%s')\n",
-                    i, (*(args-1))->obj.clazz->descriptor,
-                    (*(types-1))->descriptor);
-            }
             dvmPopFrame(self);      // throw wants to pull PC out of stack
             needPop = false;
-            dvmThrowException("Ljava/lang/IllegalArgumentException;",
-                "argument type mismatch");
+            throwArgumentTypeMismatch(i, *(types-1), *(args-1));
             goto bail;
         }
 

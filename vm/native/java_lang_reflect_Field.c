@@ -124,10 +124,6 @@ static Field* validateFieldAccess(Object* obj, ClassObject* declaringClass,
          */
         if (!dvmVerifyObjectInClass(obj, declaringClass)) {
             assert(dvmCheckException(dvmThreadSelf()));
-            if (obj != NULL) {
-                LOGD("Wrong object type for field access: %s is not a %s\n",
-                    obj->clazz->descriptor, declaringClass->descriptor);
-            }
             return NULL;
         }
     }
