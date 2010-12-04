@@ -127,8 +127,8 @@ emission == "libcore-maximum-values" {
 emission == "libdex-maximum-values" {
     emissionHandled = 1;
 
-    printf("#define kMaxOpcodeValue = 0x%x;\n", MAX_OPCODE);
-    printf("#define kNumPackedOpcodes = 0x%x;\n", MAX_PACKED_OPCODE + 1);
+    printf("#define kMaxOpcodeValue 0x%x\n", MAX_OPCODE);
+    printf("#define kNumPackedOpcodes 0x%x\n", MAX_PACKED_OPCODE + 1);
 }
 
 emission == "libdex-opcode-enum" {
