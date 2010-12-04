@@ -53,6 +53,11 @@ consumeUntil != "" {
     emission = substr($0, i + 6, RLENGTH - 7);
     consumeUntil = "END(" emission ")";
     emissionHandled = 0;
+}
+
+# Most lines just get copied from the source as-is, including the start
+# comment for directives.
+{
     print;
 }
 
@@ -195,11 +200,8 @@ emission == "libdex-index-types" {
     }
 }
 
-#
-# General control (must appear after the directives).
-#
-
-# Handle the end of directive processing.
+# Handle the end of directive processing (must appear after the directive
+# clauses).
 emission != "" {
     if (!emissionHandled) {
         printf("WARNING: unknown tag \"%s\"\n", emission) >"/dev/stderr";
@@ -207,11 +209,7 @@ emission != "" {
     }
 
     emission = "";
-    next;
 }
-
-# Most lines just get copied from the source as-is.
-{ print; }
 
 #
 # Helper functions.
@@ -288,7 +286,7 @@ function defineOpcode(line, count, parts, idx) {
     # Calculate derived values.
 
     constName[idx] = toupper(name[idx]);
-    gsub("[---/]", "_", constName[idx]); # Dash and slash become underscore.
+    gsub("[/-]", "_", constName[idx]);   # Dash and slash become underscore.
     gsub("[+^]", "", constName[idx]);    # Plus and caret are removed.
     split(name[idx], parts, "/");
 
