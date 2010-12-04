@@ -146,7 +146,7 @@ typedef struct DecodedInstruction {
  */
 DEX_INLINE size_t dexGetWidthFromOpcode(Opcode opcode)
 {
-    //assert(/*opcode >= 0 &&*/ opcode < kNumPackedOpcodes);
+    assert((u4) opcode < kNumPackedOpcodes);
     return gDexOpcodeInfo.widths[opcode];
 }
 
@@ -162,7 +162,7 @@ size_t dexGetWidthFromInstruction(const u2* insns);
  */
 DEX_INLINE OpcodeFlags dexGetFlagsFromOpcode(Opcode opcode)
 {
-    //assert(/*opcode >= 0 &&*/ opcode < kNumPackedOpcodes);
+    assert((u4) opcode < kNumPackedOpcodes);
     return gDexOpcodeInfo.flags[opcode];
 }
 
@@ -179,7 +179,7 @@ DEX_INLINE bool dexIsGoto(OpcodeFlags flags)
  */
 DEX_INLINE InstructionFormat dexGetFormatFromOpcode(Opcode opcode)
 {
-    //assert(/*opcode >= 0 &&*/ opcode < kNumPackedOpcodes);
+    assert((u4) opcode < kNumPackedOpcodes);
     return (InstructionFormat) gDexOpcodeInfo.formats[opcode];
 }
 
@@ -188,7 +188,7 @@ DEX_INLINE InstructionFormat dexGetFormatFromOpcode(Opcode opcode)
  */
 DEX_INLINE InstructionIndexType dexGetIndexTypeFromOpcode(Opcode opcode)
 {
-    //assert(/*opcode >= 0 &&*/ opcode < kNumPackedOpcodes);
+    assert((u4) opcode < kNumPackedOpcodes);
     return (InstructionIndexType) gDexOpcodeInfo.indexTypes[opcode];
 }
 
