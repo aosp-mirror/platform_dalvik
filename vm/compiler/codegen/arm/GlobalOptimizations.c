@@ -31,7 +31,7 @@ static void applyRedundantBranchElimination(CompilationUnit *cUnit)
          thisLIR = NEXT_LIR(thisLIR)) {
 
         /* Branch to the next instruction */
-        if (thisLIR->opCode == kThumbBUncond) {
+        if (thisLIR->opcode == kThumbBUncond) {
             ArmLIR *nextLIR = thisLIR;
 
             while (true) {
@@ -48,7 +48,7 @@ static void applyRedundantBranchElimination(CompilationUnit *cUnit)
                 /*
                  * Found real useful stuff between the branch and the target
                  */
-                if (!isPseudoOpCode(nextLIR->opCode))
+                if (!isPseudoOpcode(nextLIR->opcode))
                     break;
             }
         }

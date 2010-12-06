@@ -30,7 +30,7 @@
  * use that opcode, in (16-bit) code units. Unimplemented opcodes as
  * well as the "breakpoint" opcode have a width of zero.
  */
-static InstructionWidth gOpcodeWidthTable[kNumDalvikInstructions] = {
+static InstructionWidth gInstructionWidthTable[kNumPackedOpcodes] = {
     // BEGIN(libdex-widths); GENERATED AUTOMATICALLY BY opcode-gen
     1, 1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 1, 1, 1, 1, 1,
     1, 1, 1, 2, 3, 2, 2, 3, 5, 2, 2, 3, 2, 1, 1, 2,
@@ -55,7 +55,7 @@ static InstructionWidth gOpcodeWidthTable[kNumDalvikInstructions] = {
  * Table that maps each opcode to the flags associated with that
  * opcode.
  */
-static InstructionFlags gOpcodeFlagsTable[kNumDalvikInstructions] = {
+static u1 gOpcodeFlagsTable[kNumPackedOpcodes] = {
     // BEGIN(libdex-flags); GENERATED AUTOMATICALLY BY opcode-gen
     kInstrCanContinue,
     kInstrCanContinue,
@@ -320,7 +320,7 @@ static InstructionFlags gOpcodeFlagsTable[kNumDalvikInstructions] = {
  * Table that maps each opcode to the instruction format associated
  * that opcode.
  */
-static InstructionFormat gOpcodeFormatTable[kNumDalvikInstructions] = {
+static u1 gInstructionFormatTable[kNumPackedOpcodes] = {
     // BEGIN(libdex-formats); GENERATED AUTOMATICALLY BY opcode-gen
     kFmt10x,  kFmt12x,  kFmt22x,  kFmt32x,  kFmt12x,  kFmt22x,  kFmt32x,
     kFmt12x,  kFmt22x,  kFmt32x,  kFmt11x,  kFmt11x,  kFmt11x,  kFmt11x,
@@ -366,7 +366,7 @@ static InstructionFormat gOpcodeFormatTable[kNumDalvikInstructions] = {
  * Table that maps each opcode to the index type implied by that
  * opcode.
  */
-static InstructionIndexType gOpcodeIndexTypeTable[kNumDalvikInstructions] = {
+static u1 gInstructionIndexTypeTable[kNumPackedOpcodes] = {
     // BEGIN(libdex-index-types); GENERATED AUTOMATICALLY BY opcode-gen
     kIndexNone,         kIndexNone,         kIndexNone,
     kIndexNone,         kIndexNone,         kIndexNone,
@@ -461,10 +461,10 @@ static InstructionIndexType gOpcodeIndexTypeTable[kNumDalvikInstructions] = {
  * Global InstructionInfoTables struct.
  */
 InstructionInfoTables gDexOpcodeInfo = {
-    gOpcodeFormatTable,
-    gOpcodeIndexTypeTable,
+    gInstructionFormatTable,
+    gInstructionIndexTypeTable,
     gOpcodeFlagsTable,
-    gOpcodeWidthTable
+    gInstructionWidthTable
 };
 
 /*
@@ -472,7 +472,6 @@ InstructionInfoTables gDexOpcodeInfo = {
  */
 #define FETCH(_offset)      (insns[(_offset)])
 #define FETCH_u4(_offset)   (fetch_u4_impl((_offset), insns))
-#define INST_INST(_inst)    ((_inst) & 0xff)
 #define INST_A(_inst)       (((u2)(_inst) >> 8) & 0x0f)
 #define INST_B(_inst)       ((u2)(_inst) >> 12)
 #define INST_AA(_inst)      ((_inst) >> 8)
@@ -491,11 +490,11 @@ static inline u4 fetch_u4_impl(u4 offset, const u2* insns) {
 void dexDecodeInstruction(const u2* insns, DecodedInstruction* pDec)
 {
     u2 inst = *insns;
-    OpCode opCode = (OpCode) INST_INST(inst);
-    InstructionFormat format = dexGetInstrFormat(opCode);
+    Opcode opcode = dexOpcodeFromCodeUnit(inst);
+    InstructionFormat format = dexGetFormatFromOpcode(opcode);
 
-    pDec->opCode = opCode;
-    pDec->indexType = dexGetInstrIndexType(opCode);
+    pDec->opcode = opcode;
+    pDec->indexType = dexGetIndexTypeFromOpcode(opcode);
 
     switch (format) {
     case kFmt10x:       // op
@@ -680,7 +679,7 @@ void dexDecodeInstruction(const u2* insns, DecodedInstruction* pDec)
         pDec->vC = FETCH(4);
         break;
     default:
-        LOGW("Can't decode unexpected format %d (op=%d)\n", format, opCode);
+        LOGW("Can't decode unexpected format %d (op=%d)\n", format, opcode);
         assert(false);
         break;
     }
@@ -694,7 +693,7 @@ bail:
  * works for special OP_NOP entries, including switch statement data tables
  * and array data.
  */
-size_t dexGetInstrOrTableWidth(const u2* insns)
+size_t dexGetWidthFromInstruction(const u2* insns)
 {
     size_t width;
 
@@ -705,9 +704,11 @@ size_t dexGetInstrOrTableWidth(const u2* insns)
     } else if (*insns == kArrayDataSignature) {
         u2 elemWidth = insns[1];
         u4 len = insns[2] | (((u4)insns[3]) << 16);
+        // The plus 1 is to round up for odd size and width.
         width = 4 + (elemWidth * len + 1) / 2;
     } else {
-        width = dexGetInstrWidth(INST_INST(insns[0]));
+        width = dexGetWidthFromOpcode(dexOpcodeFromCodeUnit(insns[0]));
     }
+
     return width;
 }

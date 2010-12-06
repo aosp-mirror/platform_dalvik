@@ -28,7 +28,7 @@ typedef enum {
  *     ...
  */
     TEMPLATE_LAST_MARK,
-} TemplateOpCode;
+} TemplateOpcode;
 #undef JIT_TEMPLATE
 
 #endif /* _DALVIK_VM_COMPILER_CODEGEN_ARM_ARMV5TE_VFP_ARCHVARIANT_H */

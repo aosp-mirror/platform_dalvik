@@ -22,13 +22,13 @@
  * sections will get wiped out the next time the tool is run.
  */
 
-#include "OpCodeNames.h"
+#include "DexOpcodes.h"
 #include <assert.h>
 
 /*
  * Dalvik opcode names.
  */
-static const char* gOpNames[kNumDalvikInstructions] = {
+static const char* gOpNames[kNumPackedOpcodes] = {
     // BEGIN(libdex-opcode-names); GENERATED AUTOMATICALLY BY opcode-gen
     "nop",
     "move",
@@ -285,15 +285,15 @@ static const char* gOpNames[kNumDalvikInstructions] = {
     "+iput-object-volatile",
     "+sget-object-volatile",
     "+sput-object-volatile",
-    "unused-ff",
+    "dispatch-ff",
     // END(libdex-opcode-names)
 };
 
 /*
  * Return the name of an opcode.
  */
-const char* dexGetOpcodeName(OpCode op)
+const char* dexGetOpcodeName(Opcode op)
 {
-    assert(op >= 0 && op < kNumDalvikInstructions);
+    assert(op >= 0 && op < kNumPackedOpcodes);
     return gOpNames[op];
 }

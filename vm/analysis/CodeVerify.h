@@ -304,28 +304,6 @@ UninitInstanceMap* dvmCreateUninitInstanceMap(const Method* meth,
 void dvmFreeUninitInstanceMap(UninitInstanceMap* uninitMap);
 
 /*
- * Associate a class with an address.  Returns the map slot index, or -1
- * if the address isn't listed in the map (shouldn't happen) or if a
- * different class is already associated with the address (shouldn't
- * happen either).
- */
-//int dvmSetUninitInstance(UninitInstanceMap* uninitMap, int addr,
-//    ClassObject* clazz);
-
-/*
- * Return the class associated with an uninitialized reference.  Pass in
- * the map index.
- */
-//ClassObject* dvmGetUninitInstance(const UninitInstanceMap* uninitMap, int idx);
-
-/*
- * Clear the class associated with an uninitialized reference.  Pass in
- * the map index.
- */
-//void dvmClearUninitInstance(UninitInstanceMap* uninitMap, int idx);
-
-
-/*
  * Verify bytecode in "meth".  "insnFlags" should be populated with
  * instruction widths and "in try" flags.
  */

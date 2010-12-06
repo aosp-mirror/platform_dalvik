@@ -2932,11 +2932,11 @@ HANDLE_OPCODE(OP_BREAKPOINT)
          * time we get here, the breakpoint has already been handled and
          * the thread resumed.
          */
-        u1 originalOpCode = dvmGetOriginalOpCode(pc);
-        LOGV("+++ break 0x%02x (0x%04x -> 0x%04x)\n", originalOpCode, inst,
-            INST_REPLACE_OP(inst, originalOpCode));
-        inst = INST_REPLACE_OP(inst, originalOpCode);
-        FINISH_BKPT(originalOpCode);
+        u1 originalOpcode = dvmGetOriginalOpcode(pc);
+        LOGV("+++ break 0x%02x (0x%04x -> 0x%04x)\n", originalOpcode, inst,
+            INST_REPLACE_OP(inst, originalOpcode));
+        inst = INST_REPLACE_OP(inst, originalOpcode);
+        FINISH_BKPT(originalOpcode);
     }
 #else
     LOGE("Breakpoint hit in non-debug interpreter\n");
@@ -3142,8 +3142,8 @@ OP_END
 HANDLE_SPUT_X(OP_SPUT_OBJECT_VOLATILE,  "-object-volatile", ObjectVolatile, _AS_OBJECT)
 OP_END
 
-/* File: c/OP_UNUSED_FF.c */
-HANDLE_OPCODE(OP_UNUSED_FF)
+/* File: c/OP_DISPATCH_FF.c */
+HANDLE_OPCODE(OP_DISPATCH_FF)
     /*
      * In portable interp, most unused opcodes will fall through to here.
      */

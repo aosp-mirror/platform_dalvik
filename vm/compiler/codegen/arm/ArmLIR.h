@@ -306,14 +306,14 @@ typedef enum ArmConditionCode {
     kArmCondNv = 0xf,    /* 1111 */
 } ArmConditionCode;
 
-#define isPseudoOpCode(opCode) ((int)(opCode) < 0)
+#define isPseudoOpcode(opcode) ((int)(opcode) < 0)
 
 /*
  * The following enum defines the list of supported Thumb instructions by the
  * assembler. Their corresponding snippet positions will be defined in
  * Assemble.c.
  */
-typedef enum ArmOpCode {
+typedef enum ArmOpcode {
     kArmChainingCellBottom = -18,
     kArmPseudoBarrier = -17,
     kArmPseudoExtended = -16,
@@ -625,7 +625,7 @@ typedef enum ArmOpCode {
     kThumb2Dmb,          /* dmb [1111001110111111100011110101] option[3-0] */
 
     kArmLast,
-} ArmOpCode;
+} ArmOpcode;
 
 /* DMB option encodings */
 typedef enum ArmOpDmbOptions {
@@ -728,7 +728,7 @@ typedef struct ArmEncodingMap {
         int end;   /* end for kFmtBitBlt, 1-bit slice end for FP regs */
         int start; /* start for kFmtBitBlt, 4-bit slice end for FP regs */
     } fieldLoc[4];
-    ArmOpCode opCode;
+    ArmOpcode opcode;
     int flags;
     char *name;
     char* fmt;
@@ -758,7 +758,7 @@ extern ArmEncodingMap EncodingMap[kArmLast];
  */
 typedef struct ArmLIR {
     LIR generic;
-    ArmOpCode opCode;
+    ArmOpcode opcode;
     int operands[4];    // [0..3] = [dest, src1, src2, extra]
     bool isNop;         // LIR is optimized away
     bool branchInsertSV;// mark for insertion of branch before this instruction,

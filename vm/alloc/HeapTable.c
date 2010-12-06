@@ -182,17 +182,3 @@ Object *dvmHeapGetNextObjectFromLargeTable(LargeHeapRefTable **pTable)
 
     return obj;
 }
-
-void dvmHeapMarkLargeTableRefs(LargeHeapRefTable *table)
-{
-    while (table != NULL) {
-        Object **ref, **lastRef;
-
-        ref = table->refs.table;
-        lastRef = table->refs.nextEntry;
-        while (ref < lastRef) {
-            dvmMarkObjectNonNull(*ref++);
-        }
-        table = table->next;
-    }
-}

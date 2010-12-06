@@ -92,21 +92,20 @@ static bool computeWidthsAndCountOps(VerifierData* vdata)
     int i;
 
     for (i = 0; i < (int) insnCount; /**/) {
-        size_t width = dexGetInstrOrTableWidth(insns);
+        size_t width = dexGetWidthFromInstruction(insns);
         if (width == 0) {
             LOG_VFY_METH(meth, "VFY: invalid instruction (0x%04x)\n", *insns);
             goto bail;
+        } else if (width > 65535) {
+            LOG_VFY_METH(meth,
+                "VFY: warning: unusually large instr width (%d)\n", width);
         }
 
-        if ((*insns & 0xff) == OP_NEW_INSTANCE)
+        Opcode opcode = dexOpcodeFromCodeUnit(*insns);
+        if (opcode == OP_NEW_INSTANCE)
             newInstanceCount++;
-        if ((*insns & 0xff) == OP_MONITOR_ENTER)
+        if (opcode == OP_MONITOR_ENTER)
             monitorEnterCount++;
-
-        if (width > 65535) {
-            LOG_VFY_METH(meth, "VFY: insane width %d\n", width);
-            goto bail;
-        }
 
         insnFlags[i] |= width;
         i += width;
@@ -817,7 +816,7 @@ static bool verifyInstructions(VerifierData* vdata)
          * for out-of-range values.  Do additional checks on branch targets
          * and some special cases like new-instance and new-array.
          */
-        switch (decInsn.opCode) {
+        switch (decInsn.opcode) {
         case OP_NOP:
         case OP_RETURN_VOID:
             /* nothing to check */
@@ -1178,8 +1177,8 @@ static bool verifyInstructions(VerifierData* vdata)
         case OP_UNUSED_73:
         case OP_UNUSED_79:
         case OP_UNUSED_7A:
-        case OP_UNUSED_FF:
-            LOGE("VFY: unexpected opcode %02x\n", decInsn.opCode);
+        case OP_DISPATCH_FF:
+            LOGE("VFY: unexpected opcode %02x\n", decInsn.opcode);
             okay = false;
             break;
 
@@ -1191,7 +1190,7 @@ static bool verifyInstructions(VerifierData* vdata)
 
         if (!okay) {
             LOG_VFY_METH(meth, "VFY:  rejecting opcode 0x%02x at 0x%04x\n",
-                decInsn.opCode, codeOffset);
+                decInsn.opcode, codeOffset);
             return false;
         }
 
@@ -1203,7 +1202,7 @@ static bool verifyInstructions(VerifierData* vdata)
         const int kGcMask = kInstrCanBranch | kInstrCanSwitch |
             kInstrCanThrow | kInstrCanReturn;
 
-        InstructionFlags opFlags = dexGetInstrFlags(decInsn.opCode);
+        OpcodeFlags opFlags = dexGetFlagsFromOpcode(decInsn.opcode);
         if ((opFlags & kGcMask) != 0) {
             /*
              * This instruction is probably a GC point.  Branch instructions
@@ -1223,7 +1222,7 @@ static bool verifyInstructions(VerifierData* vdata)
                 {
                     /* should never happen */
                     LOGE("VFY: opcode %02x flagged as can branch, no target\n",
-                        decInsn.opCode);
+                        decInsn.opcode);
                     dvmAbort();
                 }
                 if (offset <= 0) {

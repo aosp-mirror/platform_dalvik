@@ -30,13 +30,13 @@
 static intptr_t templateEntryOffsets[TEMPLATE_LAST_MARK];
 
 /* Track exercised opcodes */
-static int opcodeCoverage[kNumDalvikInstructions];
+static int opcodeCoverage[kNumPackedOpcodes];
 
 static void setMemRefType(ArmLIR *lir, bool isLoad, int memType)
 {
     u8 *maskPtr;
     u8 mask;
-    assert( EncodingMap[lir->opCode].flags & (IS_LOAD | IS_STORE));
+    assert( EncodingMap[lir->opcode].flags & (IS_LOAD | IS_STORE));
     if (isLoad) {
         maskPtr = &lir->useMask;
         mask = ENCODE_MEM_USE;
@@ -108,15 +108,15 @@ static inline void setupRegMask(u8 *mask, int reg)
  */
 static void setupResourceMasks(ArmLIR *lir)
 {
-    int opCode = lir->opCode;
+    int opcode = lir->opcode;
     int flags;
 
-    if (opCode <= 0) {
+    if (opcode <= 0) {
         lir->useMask = lir->defMask = 0;
         return;
     }
 
-    flags = EncodingMap[lir->opCode].flags;
+    flags = EncodingMap[lir->opcode].flags;
 
     /* Set up the mask for resources that are updated */
     if (flags & (IS_LOAD | IS_STORE)) {
@@ -202,35 +202,35 @@ static void setupResourceMasks(ArmLIR *lir)
  * The following are building blocks to construct low-level IRs with 0 - 4
  * operands.
  */
-static ArmLIR *newLIR0(CompilationUnit *cUnit, ArmOpCode opCode)
+static ArmLIR *newLIR0(CompilationUnit *cUnit, ArmOpcode opcode)
 {
     ArmLIR *insn = dvmCompilerNew(sizeof(ArmLIR), true);
-    assert(isPseudoOpCode(opCode) || (EncodingMap[opCode].flags & NO_OPERAND));
-    insn->opCode = opCode;
+    assert(isPseudoOpcode(opcode) || (EncodingMap[opcode].flags & NO_OPERAND));
+    insn->opcode = opcode;
     setupResourceMasks(insn);
     dvmCompilerAppendLIR(cUnit, (LIR *) insn);
     return insn;
 }
 
-static ArmLIR *newLIR1(CompilationUnit *cUnit, ArmOpCode opCode,
+static ArmLIR *newLIR1(CompilationUnit *cUnit, ArmOpcode opcode,
                            int dest)
 {
     ArmLIR *insn = dvmCompilerNew(sizeof(ArmLIR), true);
-    assert(isPseudoOpCode(opCode) || (EncodingMap[opCode].flags & IS_UNARY_OP));
-    insn->opCode = opCode;
+    assert(isPseudoOpcode(opcode) || (EncodingMap[opcode].flags & IS_UNARY_OP));
+    insn->opcode = opcode;
     insn->operands[0] = dest;
     setupResourceMasks(insn);
     dvmCompilerAppendLIR(cUnit, (LIR *) insn);
     return insn;
 }
 
-static ArmLIR *newLIR2(CompilationUnit *cUnit, ArmOpCode opCode,
+static ArmLIR *newLIR2(CompilationUnit *cUnit, ArmOpcode opcode,
                            int dest, int src1)
 {
     ArmLIR *insn = dvmCompilerNew(sizeof(ArmLIR), true);
-    assert(isPseudoOpCode(opCode) ||
-           (EncodingMap[opCode].flags & IS_BINARY_OP));
-    insn->opCode = opCode;
+    assert(isPseudoOpcode(opcode) ||
+           (EncodingMap[opcode].flags & IS_BINARY_OP));
+    insn->opcode = opcode;
     insn->operands[0] = dest;
     insn->operands[1] = src1;
     setupResourceMasks(insn);
@@ -238,16 +238,16 @@ static ArmLIR *newLIR2(CompilationUnit *cUnit, ArmOpCode opCode,
     return insn;
 }
 
-static ArmLIR *newLIR3(CompilationUnit *cUnit, ArmOpCode opCode,
+static ArmLIR *newLIR3(CompilationUnit *cUnit, ArmOpcode opcode,
                            int dest, int src1, int src2)
 {
     ArmLIR *insn = dvmCompilerNew(sizeof(ArmLIR), true);
-    if (!(EncodingMap[opCode].flags & IS_TERTIARY_OP)) {
-        LOGE("Bad LIR3: %s[%d]",EncodingMap[opCode].name,opCode);
+    if (!(EncodingMap[opcode].flags & IS_TERTIARY_OP)) {
+        LOGE("Bad LIR3: %s[%d]",EncodingMap[opcode].name,opcode);
     }
-    assert(isPseudoOpCode(opCode) ||
-           (EncodingMap[opCode].flags & IS_TERTIARY_OP));
-    insn->opCode = opCode;
+    assert(isPseudoOpcode(opcode) ||
+           (EncodingMap[opcode].flags & IS_TERTIARY_OP));
+    insn->opcode = opcode;
     insn->operands[0] = dest;
     insn->operands[1] = src1;
     insn->operands[2] = src2;
@@ -257,13 +257,13 @@ static ArmLIR *newLIR3(CompilationUnit *cUnit, ArmOpCode opCode,
 }
 
 #if defined(_ARMV7_A) || defined(_ARMV7_A_NEON)
-static ArmLIR *newLIR4(CompilationUnit *cUnit, ArmOpCode opCode,
+static ArmLIR *newLIR4(CompilationUnit *cUnit, ArmOpcode opcode,
                            int dest, int src1, int src2, int info)
 {
     ArmLIR *insn = dvmCompilerNew(sizeof(ArmLIR), true);
-    assert(isPseudoOpCode(opCode) ||
-           (EncodingMap[opCode].flags & IS_QUAD_OP));
-    insn->opCode = opCode;
+    assert(isPseudoOpcode(opcode) ||
+           (EncodingMap[opcode].flags & IS_QUAD_OP));
+    insn->opcode = opcode;
     insn->operands[0] = dest;
     insn->operands[1] = src1;
     insn->operands[2] = src2;
@@ -283,9 +283,9 @@ static RegLocation inlinedTarget(CompilationUnit *cUnit, MIR *mir,
                                   bool fpHint)
 {
     if (mir->next &&
-        ((mir->next->dalvikInsn.opCode == OP_MOVE_RESULT) ||
-         (mir->next->dalvikInsn.opCode == OP_MOVE_RESULT_OBJECT))) {
-        mir->next->dalvikInsn.opCode = OP_NOP;
+        ((mir->next->dalvikInsn.opcode == OP_MOVE_RESULT) ||
+         (mir->next->dalvikInsn.opcode == OP_MOVE_RESULT_OBJECT))) {
+        mir->next->dalvikInsn.opcode = OP_NOP;
         return dvmCompilerGetDest(cUnit, mir->next, 0);
     } else {
         RegLocation res = LOC_DALVIK_RETURN_VAL;
@@ -338,8 +338,8 @@ static RegLocation inlinedTargetWide(CompilationUnit *cUnit, MIR *mir,
                                       bool fpHint)
 {
     if (mir->next &&
-        (mir->next->dalvikInsn.opCode == OP_MOVE_RESULT_WIDE)) {
-        mir->next->dalvikInsn.opCode = OP_NOP;
+        (mir->next->dalvikInsn.opcode == OP_MOVE_RESULT_WIDE)) {
+        mir->next->dalvikInsn.opcode = OP_NOP;
         return dvmCompilerGetDestWide(cUnit, mir->next, 0, 1);
     } else {
         RegLocation res = LOC_DALVIK_RETURN_VAL_WIDE;
@@ -372,7 +372,7 @@ static ArmLIR *genCheckCommon(CompilationUnit *cUnit, int dOffset,
     if (pcrLabel == NULL) {
         int dPC = (int) (cUnit->method->insns + dOffset);
         pcrLabel = dvmCompilerNew(sizeof(ArmLIR), true);
-        pcrLabel->opCode = kArmPseudoPCReconstructionCell;
+        pcrLabel->opcode = kArmPseudoPCReconstructionCell;
         pcrLabel->operands[0] = dPC;
         pcrLabel->operands[1] = dOffset;
         /* Insert the place holder to the growable list */

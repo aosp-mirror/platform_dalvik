@@ -25,15 +25,29 @@
  * opcodes and instruction formats.
  */
 
-#ifndef _LIBDEX_OPCODE
-#define _LIBDEX_OPCODE
+#ifndef _LIBDEX_DEXOPCODES
+#define _LIBDEX_DEXOPCODES
 
-/* the highest opcode value of a valid Dalvik opcode, plus one */
-#define kNumDalvikInstructions 256
+#include "DexFile.h"
 
 /*
- * Switch-statement signatures are a "NOP" followed by a code.  (A true NOP
- * is 0x0000.)
+ * kMaxOpcodeValue: the highest possible raw (unpacked) opcode value
+ *
+ * kNumPackedOpcodes: the highest possible packed opcode value of a
+ * valid Dalvik opcode, plus one
+ *
+ * TODO: Change this once the rest of the code is prepared to deal with
+ * extended opcodes.
+ */
+// BEGIN(libdex-maximum-values); GENERATED AUTOMATICALLY BY opcode-gen
+#define kMaxOpcodeValue 0xff
+#define kNumPackedOpcodes 0x100
+// END(libdex-maximum-values); GENERATED AUTOMATICALLY BY opcode-gen
+
+/*
+ * Switch table and array data signatures are a code unit consisting
+ * of "NOP" (0x00) in the low-order byte and a non-zero identifying
+ * code in the high-order byte. (A true NOP is 0x0000.)
  */
 #define kPackedSwitchSignature  0x0100
 #define kSparseSwitchSignature  0x0200
@@ -41,8 +55,9 @@
 
 /*
  * Enumeration of all Dalvik opcodes, where the enumeration value
- * associated with each is the corresponding opcode number as noted in
- * the Dalvik bytecode spec.
+ * associated with each is the corresponding packed opcode number.
+ * This is different than the opcode value from the Dalvik bytecode
+ * spec for opcode values >= 0xff; see dexOpcodeFromCodeUnit() below.
  *
  * A note about the "breakpoint" opcode. This instruction is special,
  * in that it should never be seen by anything but the debug
@@ -51,7 +66,7 @@
  * can find the next instruction" aren't possible. (This is
  * correctable, but probably not useful.)
  */
-typedef enum OpCode {
+typedef enum Opcode {
     // BEGIN(libdex-opcode-enum); GENERATED AUTOMATICALLY BY opcode-gen
     OP_NOP                          = 0x00,
     OP_MOVE                         = 0x01,
@@ -308,16 +323,16 @@ typedef enum OpCode {
     OP_IPUT_OBJECT_VOLATILE         = 0xfc,
     OP_SGET_OBJECT_VOLATILE         = 0xfd,
     OP_SPUT_OBJECT_VOLATILE         = 0xfe,
-    OP_UNUSED_FF                    = 0xff,
+    OP_DISPATCH_FF                  = 0xff,
     // END(libdex-opcode-enum)
-} OpCode;
+} Opcode;
 
 /*
  * Macro used to generate a computed goto table for use in implementing
  * an interpreter in C.
  */
 #define DEFINE_GOTO_TABLE(_name) \
-    static const void* _name[kNumDalvikInstructions] = {                      \
+    static const void* _name[kNumPackedOpcodes] = {                      \
         /* BEGIN(libdex-goto-table); GENERATED AUTOMATICALLY BY opcode-gen */ \
         H(OP_NOP),                                                            \
         H(OP_MOVE),                                                           \
@@ -574,8 +589,36 @@ typedef enum OpCode {
         H(OP_IPUT_OBJECT_VOLATILE),                                           \
         H(OP_SGET_OBJECT_VOLATILE),                                           \
         H(OP_SPUT_OBJECT_VOLATILE),                                           \
-        H(OP_UNUSED_FF),                                                      \
+        H(OP_DISPATCH_FF),                                                    \
         /* END(libdex-goto-table) */                                          \
     };
 
-#endif /*_LIBDEX_OPCODE*/
+/*
+ * Return the Opcode for a given raw opcode code unit (which may
+ * include data payload). The packed index is a zero-based index which
+ * can be used to point into various opcode-related tables. The Dalvik
+ * opcode space is inherently sparse, in that the opcode unit is 16
+ * bits wide, but for most opcodes, eight of those bits are for data.
+ */
+DEX_INLINE Opcode dexOpcodeFromCodeUnit(u2 codeUnit) {
+    /*
+     * This will want to become table-driven should the opcode layout
+     * get more complicated.
+     *
+     * Note: This has to match the corresponding code in opcode-gen, so
+     * that data tables get generated in a consistent way.
+     */
+    int lowByte = codeUnit & 0xff;
+    if (lowByte != 0xff) {
+        return (Opcode) lowByte;
+    } else {
+        return (Opcode) ((codeUnit >> 8) | 0x100);
+    }
+}
+
+/*
+ * Return the name of an opcode.
+ */
+const char* dexGetOpcodeName(Opcode op);
+
+#endif /*_LIBDEX_DEXOPCODES*/

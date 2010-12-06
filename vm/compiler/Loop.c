@@ -58,7 +58,7 @@ static void handlePhiPlacement(CompilationUnit *cUnit)
             continue;
         }
         MIR *phi = dvmCompilerNew(sizeof(MIR), true);
-        phi->dalvikInsn.opCode = kMirOpPhi;
+        phi->dalvikInsn.opcode = kMirOpPhi;
         phi->dalvikInsn.vA = i;
         dvmCompilerPrependMIR(loopBody, phi);
     }
@@ -72,7 +72,7 @@ static void fillPhiNodeContents(CompilationUnit *cUnit)
     MIR *mir;
 
     for (mir = loopBody->firstMIRInsn; mir; mir = mir->next) {
-        if (mir->dalvikInsn.opCode != kMirOpPhi) break;
+        if (mir->dalvikInsn.opcode != kMirOpPhi) break;
         int dalvikReg = mir->dalvikInsn.vA;
 
         mir->ssaRep->numUses = 2;
@@ -185,7 +185,7 @@ static bool isLoopOptimizable(CompilationUnit *cUnit)
     }
 
     MIR *branch = loopBranch->lastMIRInsn;
-    OpCode opCode = branch->dalvikInsn.opCode;
+    Opcode opcode = branch->dalvikInsn.opcode;
 
     /*
      * If the instruction is not accessing the IV as the first operand, return
@@ -208,7 +208,7 @@ static bool isLoopOptimizable(CompilationUnit *cUnit)
          * If the condition op is not > or >=, this is not an optimization
          * candidate.
          */
-        if (opCode != OP_IF_GT && opCode != OP_IF_GE) {
+        if (opcode != OP_IF_GT && opcode != OP_IF_GE) {
             return false;
         }
         /*
@@ -229,7 +229,7 @@ static bool isLoopOptimizable(CompilationUnit *cUnit)
          * If the condition op is not < or <=, this is not an optimization
          * candidate.
          */
-        if (opCode == OP_IF_LT || opCode == OP_IF_LE) {
+        if (opcode == OP_IF_LT || opcode == OP_IF_LE) {
             /*
              * If the comparison is not between the BIV and a loop invariant,
              * return false.
@@ -241,11 +241,11 @@ static bool isLoopOptimizable(CompilationUnit *cUnit)
                 return false;
             }
             loopAnalysis->endConditionReg = DECODE_REG(endReg);
-        } else if (opCode != OP_IF_LTZ && opCode != OP_IF_LEZ) {
+        } else if (opcode != OP_IF_LTZ && opcode != OP_IF_LEZ) {
             return false;
         }
     }
-    loopAnalysis->loopBranchOpcode = opCode;
+    loopAnalysis->loopBranchOpcode = opcode;
     return true;
 }
 
@@ -306,12 +306,12 @@ static bool doLoopBodyCodeMotion(CompilationUnit *cUnit)
     for (mir = loopBody->firstMIRInsn; mir; mir = mir->next) {
         DecodedInstruction *dInsn = &mir->dalvikInsn;
         int dfAttributes =
-            dvmCompilerDataFlowAttributes[mir->dalvikInsn.opCode];
+            dvmCompilerDataFlowAttributes[mir->dalvikInsn.opcode];
 
         /* Skip extended MIR instructions */
-        if (dInsn->opCode >= kNumDalvikInstructions) continue;
+        if (dInsn->opcode >= kNumPackedOpcodes) continue;
 
-        int instrFlags = dexGetInstrFlags(dInsn->opCode);
+        int instrFlags = dexGetFlagsFromOpcode(dInsn->opcode);
 
         /* Instruction is clean */
         if ((instrFlags & kInstrCanThrow) == 0) continue;
@@ -403,7 +403,7 @@ static void genHoistedChecks(CompilationUnit *cUnit)
             dvmConvertSSARegToDalvik(cUnit, arrayAccessInfo->ivReg));
 
         MIR *rangeCheckMIR = dvmCompilerNew(sizeof(MIR), true);
-        rangeCheckMIR->dalvikInsn.opCode = (loopAnalysis->isCountUpLoop) ?
+        rangeCheckMIR->dalvikInsn.opcode = (loopAnalysis->isCountUpLoop) ?
             kMirOpNullNRangeUpCheck : kMirOpNullNRangeDownCheck;
         rangeCheckMIR->dalvikInsn.vA = arrayReg;
         rangeCheckMIR->dalvikInsn.vB = idxReg;
@@ -423,7 +423,7 @@ static void genHoistedChecks(CompilationUnit *cUnit)
     if (loopAnalysis->arrayAccessInfo->numUsed != 0) {
         if (loopAnalysis->isCountUpLoop) {
             MIR *boundCheckMIR = dvmCompilerNew(sizeof(MIR), true);
-            boundCheckMIR->dalvikInsn.opCode = kMirOpLowerBound;
+            boundCheckMIR->dalvikInsn.opcode = kMirOpLowerBound;
             boundCheckMIR->dalvikInsn.vA = idxReg;
             boundCheckMIR->dalvikInsn.vB = globalMinC;
             dvmCompilerAppendMIR(entry, boundCheckMIR);
@@ -431,7 +431,7 @@ static void genHoistedChecks(CompilationUnit *cUnit)
             if (loopAnalysis->loopBranchOpcode == OP_IF_LT ||
                 loopAnalysis->loopBranchOpcode == OP_IF_LE) {
                 MIR *boundCheckMIR = dvmCompilerNew(sizeof(MIR), true);
-                boundCheckMIR->dalvikInsn.opCode = kMirOpLowerBound;
+                boundCheckMIR->dalvikInsn.opcode = kMirOpLowerBound;
                 boundCheckMIR->dalvikInsn.vA = loopAnalysis->endConditionReg;
                 boundCheckMIR->dalvikInsn.vB = globalMinC;
                 /*
@@ -448,14 +448,14 @@ static void genHoistedChecks(CompilationUnit *cUnit)
                 /* Array index will fall below 0 */
                 if (globalMinC < 0) {
                     MIR *boundCheckMIR = dvmCompilerNew(sizeof(MIR), true);
-                    boundCheckMIR->dalvikInsn.opCode = kMirOpPunt;
+                    boundCheckMIR->dalvikInsn.opcode = kMirOpPunt;
                     dvmCompilerAppendMIR(entry, boundCheckMIR);
                 }
             } else if (loopAnalysis->loopBranchOpcode == OP_IF_LEZ) {
                 /* Array index will fall below 0 */
                 if (globalMinC < -1) {
                     MIR *boundCheckMIR = dvmCompilerNew(sizeof(MIR), true);
-                    boundCheckMIR->dalvikInsn.opCode = kMirOpPunt;
+                    boundCheckMIR->dalvikInsn.opcode = kMirOpPunt;
                     dvmCompilerAppendMIR(entry, boundCheckMIR);
                 }
             } else {

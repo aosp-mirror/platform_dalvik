@@ -24,6 +24,8 @@
 #include "HeapTable.h"
 #include "MarkSweep.h"
 
+typedef struct HeapSource HeapSource;
+
 struct GcHeap {
     HeapSource      *heapSource;
 
@@ -130,20 +132,10 @@ void dvmLogMadviseStats(size_t madvisedSizes[], size_t arrayLen);
 #define LOGV_HEAP(...)    LOG(LOG_VERBOSE, HEAP_LOG_TAG, __VA_ARGS__)
 #define LOGD_HEAP(...)    LOG(LOG_DEBUG, HEAP_LOG_TAG, __VA_ARGS__)
 #endif
-#define LOGI_HEAP(...)    LOG(LOG_INFO, HEAP_LOG_TAG, __VA_ARGS__)
+#define LOGI_HEAP(...) \
+    (!gDvm.zygote ? LOG(LOG_INFO, HEAP_LOG_TAG, __VA_ARGS__) : (void)0)
 #define LOGW_HEAP(...)    LOG(LOG_WARN, HEAP_LOG_TAG, __VA_ARGS__)
 #define LOGE_HEAP(...)    LOG(LOG_ERROR, HEAP_LOG_TAG, __VA_ARGS__)
-
-#define QUIET_ZYGOTE_GC 1
-#if QUIET_ZYGOTE_GC
-#undef LOGI_HEAP
-#define LOGI_HEAP(...) \
-    do { \
-        if (!gDvm.zygote) { \
-            LOG(LOG_INFO, HEAP_LOG_TAG, __VA_ARGS__); \
-        } \
-    } while (false)
-#endif
 
 #define FRACTIONAL_MB(n)    (n) / (1024 * 1024), \
                             ((((n) % (1024 * 1024)) / 1024) * 1000) / 1024

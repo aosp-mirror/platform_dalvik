@@ -20,7 +20,6 @@
 
 typedef ReferenceTable HeapRefTable;
 typedef struct LargeHeapRefTable LargeHeapRefTable;
-typedef struct HeapSource HeapSource;
 
 struct LargeHeapRefTable {
     LargeHeapRefTable *next;

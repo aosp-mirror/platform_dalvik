@@ -2343,11 +2343,6 @@ void dvmHeapSweepUnmarkedObjects(GcMode mode, int *numFreed, size_t *sizeFreed)
     /* do nothing */
 }
 
-void dvmMarkObjectNonNull(const Object *obj)
-{
-    assert(!"implemented");
-}
-
 void dvmMarkDirtyObjects(void)
 {
     assert(!"implemented");

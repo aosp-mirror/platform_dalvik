@@ -7741,8 +7741,8 @@ dalvik_inst:
 
 /* ------------------------------ */
     .balign 64
-.L_OP_UNUSED_FF: /* 0xff */
-/* File: armv5te/OP_UNUSED_FF.S */
+.L_OP_DISPATCH_FF: /* 0xff */
+/* File: armv5te/OP_DISPATCH_FF.S */
 /* File: armv5te/unused.S */
     bl      common_abort
 

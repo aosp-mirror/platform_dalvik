@@ -29,15 +29,12 @@
 #define GC_LOG_TAG      LOG_TAG "-gc"
 
 #if LOG_NDEBUG
-#define LOGV_GC(...)    ((void)0)
 #define LOGD_GC(...)    ((void)0)
 #else
-#define LOGV_GC(...)    LOG(LOG_VERBOSE, GC_LOG_TAG, __VA_ARGS__)
 #define LOGD_GC(...)    LOG(LOG_DEBUG, GC_LOG_TAG, __VA_ARGS__)
 #endif
 
 #define LOGE_GC(...)    LOG(LOG_ERROR, GC_LOG_TAG, __VA_ARGS__)
-#define LOG_SCAN(...)   LOGV_GC("SCAN: " __VA_ARGS__)
 
 #define ALIGN_DOWN(x, n) ((size_t)(x) & -(n))
 #define ALIGN_UP(x, n) (((size_t)(x) + (n) - 1) & ~((n) - 1))
@@ -96,14 +93,11 @@ static void markStackPush(GcMarkStack *stack, const Object *obj)
  */
 static const Object *markStackPop(GcMarkStack *stack)
 {
-    const Object *obj;
-
     assert(stack != NULL);
     assert(stack->base < stack->top);
     assert(stack->limit > stack->top);
     --stack->top;
-    obj = *stack->top;
-    return obj;
+    return *stack->top;
 }
 
 bool dvmHeapBeginMarkStep(GcMode mode)
@@ -158,19 +152,21 @@ static void markObject(const Object *obj, GcMarkContext *ctx)
     }
 }
 
-/* If the object hasn't already been marked, mark it and
- * schedule it to be scanned for references.
- *
- * obj may not be NULL.  The macro dvmMarkObject() should
- * be used in situations where a reference may be NULL.
- *
- * This function may only be called when marking the root
- * set.  When recursing, use the internal markObject().
+/*
+ * Callback applied to root references during the initial root
+ * marking.  Visited roots are always marked but are only pushed on
+ * the mark stack if their address is below the finger.
  */
-void dvmMarkObjectNonNull(const Object *obj)
+static void rootMarkObjectVisitor(void *addr, RootType type, u4 thread, void *arg)
 {
-    assert(obj != NULL);
-    markObjectNonNull(obj, &gDvm.gcHeap->markContext, false);
+    Object *obj;
+
+    assert(addr != NULL);
+    assert(arg != NULL);
+    obj = *(Object **)addr;
+    if (obj != NULL) {
+        markObjectNonNull(obj, arg, false);
+    }
 }
 
 /* Mark the set of root objects.
@@ -202,45 +198,14 @@ void dvmMarkObjectNonNull(const Object *obj)
 void dvmHeapMarkRootSet()
 {
     GcHeap *gcHeap = gDvm.gcHeap;
-
-    LOG_SCAN("immune objects");
     dvmMarkImmuneObjects(gcHeap->markContext.immuneLimit);
-
-    LOG_SCAN("root class loader\n");
-    dvmGcScanRootClassLoader();
-    LOG_SCAN("primitive classes\n");
-    dvmGcScanPrimitiveClasses();
-
-    LOG_SCAN("root thread groups\n");
-    dvmGcScanRootThreadGroups();
-
-    LOG_SCAN("interned strings\n");
-    dvmGcScanInternedStrings();
-
-    LOG_SCAN("JNI global refs\n");
-    dvmGcMarkJniGlobalRefs();
-
-    LOG_SCAN("pending reference operations\n");
-    dvmHeapMarkLargeTableRefs(gcHeap->referenceOperations);
-
-    LOG_SCAN("pending finalizations\n");
-    dvmHeapMarkLargeTableRefs(gcHeap->pendingFinalizationRefs);
-
-    LOG_SCAN("debugger refs\n");
-    dvmGcMarkDebuggerRefs();
-
-    /* Mark any special objects we have sitting around.
-     */
-    LOG_SCAN("special objects\n");
-    dvmMarkObjectNonNull(gDvm.outOfMemoryObj);
-    dvmMarkObjectNonNull(gDvm.internalErrorObj);
-    dvmMarkObjectNonNull(gDvm.noClassDefFoundErrorObj);
-//TODO: scan object references sitting in gDvm;  use pointer begin & end
+    dvmVisitRoots(rootMarkObjectVisitor, &gcHeap->markContext);
 }
 
 /*
- * Callback applied to root references.  If the root location contains
- * a white reference it is pushed on the mark stack and grayed.
+ * Callback applied to root references during root remarking.  If the
+ * root location contains a white reference it is pushed on the mark
+ * stack and grayed.
  */
 static void markObjectVisitor(void *addr, RootType type, u4 thread, void *arg)
 {
@@ -263,16 +228,6 @@ void dvmHeapReMarkRootSet(void)
     assert(ctx->finger == (void *)ULONG_MAX);
     dvmVisitRoots(markObjectVisitor, ctx);
 }
-
-/*
- * Nothing past this point is allowed to use dvmMarkObject() or
- * dvmMarkObjectNonNull(), which are for root-marking only.
- * Scanning/recursion must use markObject(), which takes the finger
- * into account.
- */
-#undef dvmMarkObject
-#define dvmMarkObject __dont_use_dvmMarkObject__
-#define dvmMarkObjectNonNull __dont_use_dvmMarkObjectNonNull__
 
 /*
  * Scans instance fields.
@@ -754,8 +709,6 @@ void dvmHeapScanMarkedObjects(void)
      * left on the mark stack.
      */
     processMarkStack(ctx);
-
-    LOG_SCAN("done with marked objects\n");
 }
 
 void dvmHeapReScanMarkedObjects(void)
@@ -814,7 +767,7 @@ static void enqueueReference(Object *ref)
  * removed from the list.  References with white referents biased
  * toward saving are blackened and also removed from the list.
  */
-void dvmHandleSoftRefs(Object **list)
+static void preserveSomeSoftReferences(Object **list)
 {
     GcMarkContext *ctx;
     Object *ref, *referent;
@@ -855,7 +808,7 @@ void dvmHandleSoftRefs(Object **list)
  * referents.  Cleared references registered to a reference queue are
  * scheduled for appending by the heap worker thread.
  */
-void dvmClearWhiteRefs(Object **list)
+static void clearWhiteReferences(Object **list)
 {
     GcMarkContext *ctx;
     Object *ref, *referent;
@@ -891,7 +844,7 @@ void dvmClearWhiteRefs(Object **list)
 /* Find unreachable objects that need to be finalized,
  * and schedule them for finalization.
  */
-void dvmHeapScheduleFinalizations()
+static void scheduleFinalizations(void)
 {
     HeapRefTable newPendingRefs;
     LargeHeapRefTable *finRefs = gDvm.gcHeap->finalizableRefs;
@@ -913,8 +866,8 @@ void dvmHeapScheduleFinalizations()
         //      we can schedule them next time.  Watch out,
         //      because we may be expecting to free up space
         //      by calling finalizers.
-        LOGE_GC("dvmHeapScheduleFinalizations(): no room for "
-                "pending finalizations\n");
+        LOGE_GC("scheduleFinalizations(): no room for "
+                "pending finalizations");
         dvmAbort();
     }
 
@@ -933,8 +886,8 @@ void dvmHeapScheduleFinalizations()
                 if (!dvmHeapAddToHeapRefTable(&newPendingRefs, *ref)) {
                     //TODO: add the current table and allocate
                     //      a new, smaller one.
-                    LOGE_GC("dvmHeapScheduleFinalizations(): "
-                            "no room for any more pending finalizations: %zd\n",
+                    LOGE_GC("scheduleFinalizations(): "
+                            "no room for any more pending finalizations: %zd",
                             dvmHeapNumHeapRefTableEntries(&newPendingRefs));
                     dvmAbort();
                 }
@@ -959,7 +912,7 @@ void dvmHeapScheduleFinalizations()
         totalPendCount += newPendCount;
         finRefs = finRefs->next;
     }
-    LOGD_GC("dvmHeapScheduleFinalizations(): %zd finalizers triggered.\n",
+    LOGD_GC("scheduleFinalizations(): %zd finalizers triggered.",
             totalPendCount);
     if (totalPendCount == 0) {
         /* No objects required finalization.
@@ -974,8 +927,8 @@ void dvmHeapScheduleFinalizations()
     if (!dvmHeapAddTableToLargeTable(&gDvm.gcHeap->pendingFinalizationRefs,
                 &newPendingRefs))
     {
-        LOGE_GC("dvmHeapScheduleFinalizations(): can't insert new "
-                "pending finalizations\n");
+        LOGE_GC("scheduleFinalizations(): can't insert new "
+                "pending finalizations");
         dvmAbort();
     }
 
@@ -994,6 +947,52 @@ void dvmHeapScheduleFinalizations()
     }
     processMarkStack(ctx);
     dvmSignalHeapWorker(false);
+}
+
+/*
+ * Process reference class instances and schedule finalizations.
+ */
+void dvmHeapProcessReferences(Object **softReferences, bool clearSoftRefs,
+                              Object **weakReferences,
+                              Object **phantomReferences)
+{
+    assert(softReferences != NULL);
+    assert(weakReferences != NULL);
+    assert(phantomReferences != NULL);
+    /*
+     * Unless we are required to clear soft references with white
+     * references, preserve some white referents.
+     */
+    if (!clearSoftRefs) {
+        preserveSomeSoftReferences(softReferences);
+    }
+    /*
+     * Clear all remaining soft and weak references with white
+     * referents.
+     */
+    clearWhiteReferences(softReferences);
+    clearWhiteReferences(weakReferences);
+    /*
+     * Preserve all white objects with finalize methods and schedule
+     * them for finalization.
+     */
+    scheduleFinalizations();
+    /*
+     * Clear all f-reachable soft and weak references with white
+     * referents.
+     */
+    clearWhiteReferences(softReferences);
+    clearWhiteReferences(weakReferences);
+    /*
+     * Clear all phantom references with white referents.
+     */
+    clearWhiteReferences(phantomReferences);
+    /*
+     * At this point all reference lists should be empty.
+     */
+    assert(*softReferences == NULL);
+    assert(*weakReferences == NULL);
+    assert(*phantomReferences == NULL);
 }
 
 void dvmHeapFinishMarkStep()

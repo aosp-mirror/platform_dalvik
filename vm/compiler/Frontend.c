@@ -15,7 +15,7 @@
  */
 
 #include "Dalvik.h"
-#include "libdex/OpCode.h"
+#include "libdex/DexOpcodes.h"
 #include "interp/Jit.h"
 #include "CompilerInternals.h"
 #include "Dataflow.h"
@@ -27,14 +27,14 @@ static inline int parseInsn(const u2 *codePtr, DecodedInstruction *decInsn,
                             bool printMe)
 {
     u2 instr = *codePtr;
-    OpCode opcode = instr & 0xff;
+    Opcode opcode = dexOpcodeFromCodeUnit(instr);
     int insnWidth;
 
     // Don't parse instruction data
     if (opcode == OP_NOP && instr != 0) {
         return 0;
     } else {
-        insnWidth = dexGetInstrWidth(opcode);
+        insnWidth = dexGetWidthFromOpcode(opcode);
         if (insnWidth < 0) {
             insnWidth = -insnWidth;
         }
@@ -59,7 +59,7 @@ static inline bool findBlockBoundary(const Method *caller, MIR *insn,
                                      unsigned int *target, bool *isInvoke,
                                      const Method **callee)
 {
-    switch (insn->dalvikInsn.opCode) {
+    switch (insn->dalvikInsn.opcode) {
         /* Target is not compile-time constant */
         case OP_RETURN_VOID:
         case OP_RETURN:
@@ -157,7 +157,7 @@ static inline bool findBlockBoundary(const Method *caller, MIR *insn,
 
 static inline bool isGoto(MIR *insn)
 {
-    switch (insn->dalvikInsn.opCode) {
+    switch (insn->dalvikInsn.opcode) {
         case OP_GOTO:
         case OP_GOTO_16:
         case OP_GOTO_32:
@@ -172,7 +172,7 @@ static inline bool isGoto(MIR *insn)
  */
 static inline bool isUnconditionalBranch(MIR *insn)
 {
-    switch (insn->dalvikInsn.opCode) {
+    switch (insn->dalvikInsn.opcode) {
         case OP_RETURN_VOID:
         case OP_RETURN:
         case OP_RETURN_WIDE:
@@ -205,19 +205,19 @@ static int compareMethod(const CompilerMethodStats *m1,
 static int analyzeInlineTarget(DecodedInstruction *dalvikInsn, int attributes,
                                int offset)
 {
-    int flags = dexGetInstrFlags(dalvikInsn->opCode);
-    int dalvikOpCode = dalvikInsn->opCode;
+    int flags = dexGetFlagsFromOpcode(dalvikInsn->opcode);
+    int dalvikOpcode = dalvikInsn->opcode;
 
     if (flags & kInstrInvoke) {
         attributes &= ~METHOD_IS_LEAF;
     }
 
     if (!(flags & kInstrCanReturn)) {
-        if (!(dvmCompilerDataFlowAttributes[dalvikOpCode] &
+        if (!(dvmCompilerDataFlowAttributes[dalvikOpcode] &
               DF_IS_GETTER)) {
             attributes &= ~METHOD_IS_GETTER;
         }
-        if (!(dvmCompilerDataFlowAttributes[dalvikOpCode] &
+        if (!(dvmCompilerDataFlowAttributes[dalvikOpcode] &
               DF_IS_SETTER)) {
             attributes &= ~METHOD_IS_SETTER;
         }
@@ -229,7 +229,7 @@ static int analyzeInlineTarget(DecodedInstruction *dalvikInsn, int attributes,
      * otherwise.
      */
     if (flags & kInstrCanReturn) {
-        if (dalvikOpCode == OP_RETURN_VOID) {
+        if (dalvikOpcode == OP_RETURN_VOID) {
             attributes &= ~METHOD_IS_GETTER;
         }
         else {
@@ -241,7 +241,7 @@ static int analyzeInlineTarget(DecodedInstruction *dalvikInsn, int attributes,
         attributes &= ~METHOD_IS_THROW_FREE;
     }
 
-    if (offset == 0 && dalvikOpCode == OP_RETURN_VOID) {
+    if (offset == 0 && dalvikOpcode == OP_RETURN_VOID) {
         attributes |= METHOD_IS_EMPTY;
     }
 
@@ -250,7 +250,7 @@ static int analyzeInlineTarget(DecodedInstruction *dalvikInsn, int attributes,
      * If so, don't inline the callee as there is no stack frame for the
      * interpreter to single-step through the instruction.
      */
-    if (SINGLE_STEP_OP(dalvikOpCode)) {
+    if (SINGLE_STEP_OP(dalvikOpcode)) {
         attributes &= ~(METHOD_IS_GETTER | METHOD_IS_SETTER);
     }
 
@@ -569,7 +569,7 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
         dvmCompilerAppendMIR(curBB, insn);
         cUnit.numInsts++;
 
-        int flags = dexGetInstrFlags(insn->dalvikInsn.opCode);
+        int flags = dexGetFlagsFromOpcode(insn->dalvikInsn.opcode);
 
         if (flags & kInstrInvoke) {
             assert(numInsts == 1);
@@ -641,7 +641,7 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
         /* Link the taken and fallthrough blocks */
         BasicBlock *searchBB;
 
-        int flags = dexGetInstrFlags(lastInsn->dalvikInsn.opCode);
+        int flags = dexGetFlagsFromOpcode(lastInsn->dalvikInsn.opcode);
 
         if (flags & kInstrInvoke) {
             cUnit.hasInvoke = true;
@@ -737,8 +737,8 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
             cUnit.hasLoop = true;
         }
 
-        if (lastInsn->dalvikInsn.opCode == OP_PACKED_SWITCH ||
-            lastInsn->dalvikInsn.opCode == OP_SPARSE_SWITCH) {
+        if (lastInsn->dalvikInsn.opcode == OP_PACKED_SWITCH ||
+            lastInsn->dalvikInsn.opcode == OP_SPARSE_SWITCH) {
             int i;
             const u2 *switchData = desc->method->insns + lastInsn->offset +
                              lastInsn->dalvikInsn.vB;
@@ -756,7 +756,7 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
             }
 
             s4 *targets = (s4 *) (switchData + 2 +
-                    (lastInsn->dalvikInsn.opCode == OP_PACKED_SWITCH ?
+                    (lastInsn->dalvikInsn.opcode == OP_PACKED_SWITCH ?
                      2 : size * 2));
 
             /* One chaining cell for the first MAX_CHAINED_SWITCH_CASES cases */
@@ -965,7 +965,7 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
 bool dvmCompilerCanIncludeThisInstruction(const Method *method,
                                           const DecodedInstruction *insn)
 {
-    switch (insn->opCode) {
+    switch (insn->opcode) {
         case OP_NEW_INSTANCE:
         case OP_CHECK_CAST: {
             ClassObject *classPtr = (void*)
@@ -1201,7 +1201,7 @@ bool dvmCompileMethod(CompilationUnit *cUnit, const Method *method,
                      * aligned to 4-byte boundary (alignment instruction to be
                      * inserted later.
                      */
-                    if (dexGetInstrFlags(curBB->lastMIRInsn->dalvikInsn.opCode)
+                    if (dexGetFlagsFromOpcode(curBB->lastMIRInsn->dalvikInsn.opcode)
                             & kInstrInvoke) {
                         newBB->isFallThroughFromInvoke = true;
                     }

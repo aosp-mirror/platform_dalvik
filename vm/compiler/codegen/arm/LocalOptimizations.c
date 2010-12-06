@@ -165,7 +165,7 @@ static void applyLoadStoreElimination(CompilationUnit *cUnit,
                     /*
                      * Saw a real instruction that the store can be sunk after
                      */
-                    if (!isPseudoOpCode(checkLIR->opCode)) {
+                    if (!isPseudoOpcode(checkLIR->opcode)) {
                         sinkDistance++;
                     }
                 }
@@ -196,7 +196,7 @@ static void applyLoadHoisting(CompilationUnit *cUnit,
             continue;
         }
 
-        if (firstLoad && (EncodingMap[thisLIR->opCode].flags & IS_LOAD)) {
+        if (firstLoad && (EncodingMap[thisLIR->opcode].flags & IS_LOAD)) {
             /*
              * Ensure nothing will be hoisted in front of this load because
              * it's result will likely be needed soon.
@@ -388,7 +388,7 @@ static void applyLoadHoisting(CompilationUnit *cUnit,
                      * Saw a real instruction that hosting the load is
                      * beneficial
                      */
-                    if (!isPseudoOpCode(checkLIR->opCode)) {
+                    if (!isPseudoOpcode(checkLIR->opcode)) {
                         hoistDistance++;
                     }
                 }
@@ -491,7 +491,7 @@ static void applyLoadHoisting(CompilationUnit *cUnit,
                  * Saw a real instruction that hosting the load is
                  * beneficial
                  */
-                if (!isPseudoOpCode(checkLIR->opCode)) {
+                if (!isPseudoOpcode(checkLIR->opcode)) {
                     hoistDistance++;
                 }
             }

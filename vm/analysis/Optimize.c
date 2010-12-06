@@ -37,10 +37,10 @@ struct InlineSub {
 
 /* fwd */
 static void optimizeMethod(Method* method, bool essentialOnly);
-static bool rewriteInstField(Method* method, u2* insns, OpCode quickOpc,
-    OpCode volatileOpc);
-static bool rewriteStaticField(Method* method, u2* insns, OpCode volatileOpc);
-static bool rewriteVirtualInvoke(Method* method, u2* insns, OpCode newOpc);
+static bool rewriteInstField(Method* method, u2* insns, Opcode quickOpc,
+    Opcode volatileOpc);
+static bool rewriteStaticField(Method* method, u2* insns, Opcode volatileOpc);
+static bool rewriteVirtualInvoke(Method* method, u2* insns, Opcode newOpc);
 static bool rewriteEmptyDirectInvoke(Method* method, u2* insns);
 static bool rewriteExecuteInline(Method* method, u2* insns,
     MethodType methodType);
@@ -155,7 +155,7 @@ static void optimizeMethod(Method* method, bool essentialOnly)
     insnsSize = dvmGetMethodInsnsSize(method);
 
     while (insnsSize > 0) {
-        OpCode quickOpc, volatileOpc = OP_NOP;
+        Opcode quickOpc, volatileOpc = OP_NOP;
         int width;
         bool notMatched = false;
 
@@ -299,7 +299,7 @@ rewrite_static_field2:
             }
         }
 
-        width = dexGetInstrOrTableWidth(insns);
+        width = dexGetWidthFromInstruction(insns);
         assert(width > 0);
 
         insns += width;
@@ -326,9 +326,9 @@ static inline void updateCodeUnit(const Method* meth, u2* ptr, u2 newVal)
 /*
  * Update the 8-bit opcode portion of a 16-bit code unit in "meth".
  */
-static inline void updateOpCode(const Method* meth, u2* ptr, OpCode opCode)
+static inline void updateOpcode(const Method* meth, u2* ptr, Opcode opcode)
 {
-    updateCodeUnit(meth, ptr, (ptr[0] & 0xff00) | (u2) opCode);
+    updateCodeUnit(meth, ptr, (ptr[0] & 0xff00) | (u2) opcode);
 }
 
 /*
@@ -616,8 +616,8 @@ StaticField* dvmOptResolveStaticField(ClassObject* referrer, u4 sfieldIdx,
  *
  * "method" is the referring method.
  */
-static bool rewriteInstField(Method* method, u2* insns, OpCode quickOpc,
-    OpCode volatileOpc)
+static bool rewriteInstField(Method* method, u2* insns, Opcode quickOpc,
+    Opcode volatileOpc)
 {
     ClassObject* clazz = method->clazz;
     u2 fieldIdx = insns[1];
@@ -638,11 +638,11 @@ static bool rewriteInstField(Method* method, u2* insns, OpCode quickOpc,
     }
 
     if (volatileOpc != OP_NOP && dvmIsVolatileField(&instField->field)) {
-        updateOpCode(method, insns, volatileOpc);
+        updateOpcode(method, insns, volatileOpc);
         LOGV("DexOpt: rewrote ifield access %s.%s --> volatile\n",
             instField->field.clazz->descriptor, instField->field.name);
     } else if (quickOpc != OP_NOP) {
-        updateOpCode(method, insns, quickOpc);
+        updateOpcode(method, insns, quickOpc);
         updateCodeUnit(method, insns+1, (u2) instField->byteOffset);
         LOGV("DexOpt: rewrote ifield access %s.%s --> %d\n",
             instField->field.clazz->descriptor, instField->field.name,
@@ -665,7 +665,7 @@ static bool rewriteInstField(Method* method, u2* insns, OpCode quickOpc,
  *
  * "method" is the referring method.
  */
-static bool rewriteStaticField(Method* method, u2* insns, OpCode volatileOpc)
+static bool rewriteStaticField(Method* method, u2* insns, Opcode volatileOpc)
 {
     ClassObject* clazz = method->clazz;
     u2 fieldIdx = insns[1];
@@ -683,7 +683,7 @@ static bool rewriteStaticField(Method* method, u2* insns, OpCode volatileOpc)
     }
 
     if (dvmIsVolatileField(&staticField->field)) {
-        updateOpCode(method, insns, volatileOpc);
+        updateOpcode(method, insns, volatileOpc);
         LOGV("DexOpt: rewrote sfield access %s.%s --> volatile\n",
             staticField->field.clazz->descriptor, staticField->field.name);
     }
@@ -832,7 +832,7 @@ Method* dvmOptResolveMethod(ClassObject* referrer, u4 methodIdx,
  * We want to replace the method constant pool index BBBB with the
  * vtable index.
  */
-static bool rewriteVirtualInvoke(Method* method, u2* insns, OpCode newOpc)
+static bool rewriteVirtualInvoke(Method* method, u2* insns, Opcode newOpc)
 {
     ClassObject* clazz = method->clazz;
     Method* baseMethod;
@@ -856,7 +856,7 @@ static bool rewriteVirtualInvoke(Method* method, u2* insns, OpCode newOpc)
      * Note: Method->methodIndex is a u2 and is range checked during the
      * initial load.
      */
-    updateOpCode(method, insns, newOpc);
+    updateOpcode(method, insns, newOpc);
     updateCodeUnit(method, insns+1, baseMethod->methodIndex);
 
     //LOGI("DexOpt: rewrote call to %s.%s --> %s.%s\n",
@@ -901,7 +901,7 @@ static bool rewriteEmptyDirectInvoke(Method* method, u2* insns)
          * OP_INVOKE_DIRECT when debugging is enabled.
          */
         assert((insns[0] & 0xff) == OP_INVOKE_DIRECT);
-        updateOpCode(method, insns, OP_INVOKE_DIRECT_EMPTY);
+        updateOpcode(method, insns, OP_INVOKE_DIRECT_EMPTY);
 
         //LOGI("DexOpt: marked-empty call to %s.%s --> %s.%s\n",
         //    method->clazz->descriptor, method->name,
@@ -1032,7 +1032,7 @@ static bool rewriteExecuteInline(Method* method, u2* insns,
             assert((insns[0] & 0xff) == OP_INVOKE_DIRECT ||
                    (insns[0] & 0xff) == OP_INVOKE_STATIC ||
                    (insns[0] & 0xff) == OP_INVOKE_VIRTUAL);
-            updateOpCode(method, insns, OP_EXECUTE_INLINE);
+            updateOpcode(method, insns, OP_EXECUTE_INLINE);
             updateCodeUnit(method, insns+1, (u2) inlineSubs->inlineIdx);
 
             //LOGI("DexOpt: execute-inline %s.%s --> %s.%s\n",
@@ -1072,7 +1072,7 @@ static bool rewriteExecuteInlineRange(Method* method, u2* insns,
             assert((insns[0] & 0xff) == OP_INVOKE_DIRECT_RANGE ||
                    (insns[0] & 0xff) == OP_INVOKE_STATIC_RANGE ||
                    (insns[0] & 0xff) == OP_INVOKE_VIRTUAL_RANGE);
-            updateOpCode(method, insns, OP_EXECUTE_INLINE_RANGE);
+            updateOpcode(method, insns, OP_EXECUTE_INLINE_RANGE);
             updateCodeUnit(method, insns+1, (u2) inlineSubs->inlineIdx);
 
             //LOGI("DexOpt: execute-inline/range %s.%s --> %s.%s\n",
@@ -1135,5 +1135,5 @@ static bool needsReturnBarrier(Method* method)
 static void rewriteReturnVoid(Method* method, u2* insns)
 {
     assert((insns[0] & 0xff) == OP_RETURN_VOID);
-    updateOpCode(method, insns, OP_RETURN_VOID_BARRIER);
+    updateOpcode(method, insns, OP_RETURN_VOID_BARRIER);
 }

@@ -537,11 +537,11 @@ static void Dalvik_dalvik_system_VMDebug_getInstructionCount(const u4* args,
         u4 length = countArray->length;
 
         /*
-         * Ensure that we copy at most kNumDalvikInstructions
+         * Ensure that we copy at most kNumPackedOpcodes
          * elements, but no more than the length of the given array.
          */
-        if (length > kNumDalvikInstructions) {
-            length = kNumDalvikInstructions;
+        if (length > kNumPackedOpcodes) {
+            length = kNumPackedOpcodes;
         }
 
         sched_yield();
@@ -560,7 +560,7 @@ static void Dalvik_dalvik_system_VMDebug_resetInstructionCount(const u4* args,
     JValue* pResult)
 {
     sched_yield();
-    memset(gDvm.executedInstrCounts, 0, kNumDalvikInstructions * sizeof(int));
+    memset(gDvm.executedInstrCounts, 0, kNumPackedOpcodes * sizeof(int));
     RETURN_VOID();
 }
 

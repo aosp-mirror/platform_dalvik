@@ -15325,8 +15325,8 @@ OP_IF_LEZ_2f:
     FINISH_A                            # jump to next instruction
 /* ------------------------------ */
     .balign 64
-.L_OP_UNUSED_FF: /* 0xff */
-/* File: x86-atom/OP_UNUSED_FF.S */
+.L_OP_DISPATCH_FF: /* 0xff */
+/* File: x86-atom/OP_DISPATCH_FF.S */
    /* Copyright (C) 2008 The Android Open Source Project
     *
     * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15343,7 +15343,7 @@ OP_IF_LEZ_2f:
     */
 
    /*
-    * File: OP_UNUSED_FF.S
+    * File: OP_DISPATCH_FF.S
     */
 
 /* File: x86-atom/unused.S */
@@ -17871,7 +17871,7 @@ dvmAsmInstructionJmpTable = .LdvmAsmInstructionJmpTable
 .long .L_OP_UNUSED_FC
 .long .L_OP_UNUSED_FD
 .long .L_OP_UNUSED_FE
-.long .L_OP_UNUSED_FF
+.long .L_OP_DISPATCH_FF
 
 /* File: x86-atom/footer.S */
    /* Copyright (C) 2008 The Android Open Source Project

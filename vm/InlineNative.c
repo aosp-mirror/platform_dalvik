@@ -137,7 +137,8 @@ static bool javaLangString_charAt(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
     //LOGI("String.charAt this=0x%08x index=%d\n", arg0, arg1);
     count = dvmGetFieldInt((Object*) arg0, STRING_FIELDOFF_COUNT);
     if ((s4) arg1 < 0 || (s4) arg1 >= count) {
-        dvmThrowException("Ljava/lang/StringIndexOutOfBoundsException;", NULL);
+        dvmThrowExceptionFmt("Ljava/lang/StringIndexOutOfBoundsException;",
+            "index=%d length=%d", arg1, count);
         return false;
     } else {
         offset = dvmGetFieldInt((Object*) arg0, STRING_FIELDOFF_OFFSET);

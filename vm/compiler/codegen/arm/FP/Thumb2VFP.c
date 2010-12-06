@@ -25,7 +25,7 @@ static bool genArithOpFloat(CompilationUnit *cUnit, MIR *mir,
      * Don't attempt to optimize register usage since these opcodes call out to
      * the handlers.
      */
-    switch (mir->dalvikInsn.opCode) {
+    switch (mir->dalvikInsn.opcode) {
         case OP_ADD_FLOAT_2ADDR:
         case OP_ADD_FLOAT:
             op = kThumb2Vadds;
@@ -66,7 +66,7 @@ static bool genArithOpDouble(CompilationUnit *cUnit, MIR *mir,
     int op = kThumbBkpt;
     RegLocation rlResult;
 
-    switch (mir->dalvikInsn.opCode) {
+    switch (mir->dalvikInsn.opcode) {
         case OP_ADD_DOUBLE_2ADDR:
         case OP_ADD_DOUBLE:
             op = kThumb2Vaddd;
@@ -109,7 +109,7 @@ static bool genArithOpDouble(CompilationUnit *cUnit, MIR *mir,
 
 static bool genConversion(CompilationUnit *cUnit, MIR *mir)
 {
-    OpCode opCode = mir->dalvikInsn.opCode;
+    Opcode opcode = mir->dalvikInsn.opcode;
     int op = kThumbBkpt;
     bool longSrc = false;
     bool longDest = false;
@@ -118,7 +118,7 @@ static bool genConversion(CompilationUnit *cUnit, MIR *mir)
     RegLocation rlDest;
     RegLocation rlResult;
 
-    switch (opCode) {
+    switch (opcode) {
         case OP_INT_TO_FLOAT:
             longSrc = false;
             longDest = false;
@@ -213,7 +213,7 @@ static bool genCmpFP(CompilationUnit *cUnit, MIR *mir, RegLocation rlDest,
     int defaultResult;
     RegLocation rlResult;
 
-    switch(mir->dalvikInsn.opCode) {
+    switch(mir->dalvikInsn.opcode) {
         case OP_CMPL_FLOAT:
             isDouble = false;
             defaultResult = -1;

@@ -16,7 +16,7 @@
 
 #include "Dalvik.h"
 #include "Dataflow.h"
-#include "libdex/OpCodeNames.h"
+#include "libdex/DexOpcodes.h"
 
 /* Convert the reg id from the callee to the original id passed by the caller */
 static inline u4 convertRegId(const DecodedInstruction *invoke,
@@ -56,17 +56,17 @@ static void inlineGetter(CompilationUnit *cUnit,
      * by a move result.
      */
     if ((moveResultMIR == NULL) ||
-        (moveResultMIR->dalvikInsn.opCode != OP_MOVE_RESULT &&
-         moveResultMIR->dalvikInsn.opCode != OP_MOVE_RESULT_OBJECT &&
-         moveResultMIR->dalvikInsn.opCode != OP_MOVE_RESULT_WIDE)) {
+        (moveResultMIR->dalvikInsn.opcode != OP_MOVE_RESULT &&
+         moveResultMIR->dalvikInsn.opcode != OP_MOVE_RESULT_OBJECT &&
+         moveResultMIR->dalvikInsn.opcode != OP_MOVE_RESULT_WIDE)) {
         return;
     }
 
-    int dfFlags = dvmCompilerDataFlowAttributes[getterInsn.opCode];
+    int dfFlags = dvmCompilerDataFlowAttributes[getterInsn.opcode];
 
     /* Expecting vA to be the destination register */
     if (dfFlags & (DF_UA | DF_UA_WIDE)) {
-        LOGE("opcode %d has DF_UA set (not expected)", getterInsn.opCode);
+        LOGE("opcode %d has DF_UA set (not expected)", getterInsn.opcode);
         dvmAbort();
     }
 
@@ -85,7 +85,7 @@ static void inlineGetter(CompilationUnit *cUnit,
     /* Now setup the Dalvik instruction with converted src/dst registers */
     newGetterMIR->dalvikInsn = getterInsn;
 
-    newGetterMIR->width = dexGetInstrWidth(getterInsn.opCode);
+    newGetterMIR->width = dexGetWidthFromOpcode(getterInsn.opcode);
 
     newGetterMIR->OptimizationFlags |= MIR_CALLEE;
 
@@ -102,7 +102,7 @@ static void inlineGetter(CompilationUnit *cUnit,
     if (isPredicted) {
         MIR *invokeMIRSlow = dvmCompilerNew(sizeof(MIR), true);
         *invokeMIRSlow = *invokeMIR;
-        invokeMIR->dalvikInsn.opCode = kMirOpCheckInlinePrediction;
+        invokeMIR->dalvikInsn.opcode = kMirOpCheckInlinePrediction;
 
         /* Use vC to denote the first argument (ie this) */
         if (!isRange) {
@@ -142,7 +142,7 @@ static void inlineSetter(CompilationUnit *cUnit,
     if (!dvmCompilerCanIncludeThisInstruction(calleeMethod, &setterInsn))
         return;
 
-    int dfFlags = dvmCompilerDataFlowAttributes[setterInsn.opCode];
+    int dfFlags = dvmCompilerDataFlowAttributes[setterInsn.opcode];
 
     if (dfFlags & (DF_UA | DF_UA_WIDE)) {
         setterInsn.vA = convertRegId(&invokeMIR->dalvikInsn, calleeMethod,
@@ -164,7 +164,7 @@ static void inlineSetter(CompilationUnit *cUnit,
     /* Now setup the Dalvik instruction with converted src/dst registers */
     newSetterMIR->dalvikInsn = setterInsn;
 
-    newSetterMIR->width = dexGetInstrWidth(setterInsn.opCode);
+    newSetterMIR->width = dexGetWidthFromOpcode(setterInsn.opcode);
 
     newSetterMIR->OptimizationFlags |= MIR_CALLEE;
 
@@ -181,7 +181,7 @@ static void inlineSetter(CompilationUnit *cUnit,
     if (isPredicted) {
         MIR *invokeMIRSlow = dvmCompilerNew(sizeof(MIR), true);
         *invokeMIRSlow = *invokeMIR;
-        invokeMIR->dalvikInsn.opCode = kMirOpCheckInlinePrediction;
+        invokeMIR->dalvikInsn.opcode = kMirOpCheckInlinePrediction;
 
         /* Use vC to denote the first argument (ie this) */
         if (!isRange) {
@@ -248,7 +248,7 @@ static void inlineEmptyVirtualCallee(CompilationUnit *cUnit,
 {
     MIR *invokeMIRSlow = dvmCompilerNew(sizeof(MIR), true);
     *invokeMIRSlow = *invokeMIR;
-    invokeMIR->dalvikInsn.opCode = kMirOpCheckInlinePrediction;
+    invokeMIR->dalvikInsn.opcode = kMirOpCheckInlinePrediction;
 
     dvmCompilerInsertMIRAfter(invokeBB, invokeMIR, invokeMIRSlow);
     invokeMIRSlow->OptimizationFlags |= MIR_INLINED_PRED;
@@ -295,8 +295,8 @@ void dvmCompilerInlineMIR(CompilationUnit *cUnit)
         if (bb->blockType != kDalvikByteCode)
             continue;
         MIR *lastMIRInsn = bb->lastMIRInsn;
-        int opCode = lastMIRInsn->dalvikInsn.opCode;
-        int flags = dexGetInstrFlags(opCode);
+        int opcode = lastMIRInsn->dalvikInsn.opcode;
+        int flags = dexGetFlagsFromOpcode(opcode);
 
         /* No invoke - continue */
         if ((flags & kInstrInvoke) == 0)
@@ -306,12 +306,12 @@ void dvmCompilerInlineMIR(CompilationUnit *cUnit)
          * If the invoke itself is selected for single stepping, don't bother
          * to inline it.
          */
-        if (SINGLE_STEP_OP(opCode))
+        if (SINGLE_STEP_OP(opcode))
             continue;
 
         const Method *calleeMethod;
 
-        switch (opCode) {
+        switch (opcode) {
             case OP_INVOKE_SUPER:
             case OP_INVOKE_DIRECT:
             case OP_INVOKE_STATIC:
@@ -336,7 +336,7 @@ void dvmCompilerInlineMIR(CompilationUnit *cUnit)
             return;
         }
 
-        switch (opCode) {
+        switch (opcode) {
             case OP_INVOKE_VIRTUAL:
             case OP_INVOKE_VIRTUAL_QUICK:
             case OP_INVOKE_INTERFACE:

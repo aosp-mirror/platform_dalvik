@@ -618,7 +618,7 @@ struct DvmGlobals {
     Method**    inlinedMethods;
 
     /*
-     * Dalvik instruction counts (kNumDalvikInstructions entries).
+     * Dalvik instruction counts (kNumPackedOpcodes entries).
      */
     int*        executedInstrCounts;
     int         instructionCountEnableCount;

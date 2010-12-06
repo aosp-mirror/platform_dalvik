@@ -37,8 +37,8 @@ run_args=""
 usage="no"
 
 while true; do
-    if [ "x$1" = "x--local" ]; then
-        run_args="${run_args} --local"
+    if [ "x$1" = "x--host" ]; then
+        run_args="${run_args} --host"
         shift
     elif [ "x$1" = "x--reference" ]; then
         run_args="${run_args} --reference"
@@ -92,10 +92,10 @@ if [ "$usage" = "yes" ]; then
         echo "  $prog --help     Print this message."
         echo "  $prog [options]  Run all tests with the given options."
         echo "  Options are all passed to run-test; refer to that for " \
-	    "further documentation:"
-        echo "    --debug --dev --fast --local --no-optimize --no-verify" \
-	    "--portable"
-	echo "    --reference --update --valgrind --zygote"
+             "further documentation:"
+        echo "    --debug --dev --fast --host --no-optimize --no-verify" \
+             "--portable"
+        echo "    --reference --update --valgrind --zygote"
     ) 1>&2
     exit 1
 fi

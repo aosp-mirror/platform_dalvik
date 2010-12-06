@@ -20,12 +20,6 @@
  *
  * TODO: might benefit from a signature-->class lookup cache.  Could avoid
  * some string-peeling and wouldn't need to compute hashes.
- *
- * TODO: we do too much stuff in here that could be done in the static
- * verification pass.  It's convenient, because we have all of the
- * necessary information, but it's more efficient to do it over in
- * DexVerify.c because in here we may have to process instructions
- * multiple times.
  */
 #include "Dalvik.h"
 #include "analysis/CodeVerify.h"
@@ -478,7 +472,7 @@ void dvmFreeUninitInstanceMap(UninitInstanceMap* uninitMap)
  * Entries, once set, do not change -- a given address can only allocate
  * one type of object.
  */
-int dvmSetUninitInstance(UninitInstanceMap* uninitMap, int addr,
+static int setUninitInstance(UninitInstanceMap* uninitMap, int addr,
     ClassObject* clazz)
 {
     int idx;
@@ -512,7 +506,8 @@ int dvmSetUninitInstance(UninitInstanceMap* uninitMap, int addr,
 /*
  * Get the class object at the specified index.
  */
-ClassObject* dvmGetUninitInstance(const UninitInstanceMap* uninitMap, int idx)
+static ClassObject* getUninitInstance(const UninitInstanceMap* uninitMap,
+    int idx)
 {
     assert(idx >= 0 && idx < uninitMap->numEntries);
     return uninitMap->map[idx].clazz;
@@ -555,7 +550,7 @@ static ClassObject* regTypeReferenceToClass(RegType type,
     assert(regTypeIsReference(type) && type != kRegTypeZero);
     if (regTypeIsUninitReference(type)) {
         assert(uninitMap != NULL);
-        return dvmGetUninitInstance(uninitMap, regTypeToUninitIndex(type));
+        return getUninitInstance(uninitMap, regTypeToUninitIndex(type));
     } else {
         return (ClassObject*) type;
     }
@@ -787,7 +782,7 @@ static bool setTypesFromSignature(const Method* meth, RegType* regTypes,
          * field access until the superclass constructor is called.
          */
         if (isInitMethod(meth) && meth->clazz != gDvm.classJavaLangObject) {
-            int uidx = dvmSetUninitInstance(uninitMap, kUninitThisArgAddr,
+            int uidx = setUninitInstance(uninitMap, kUninitThisArgAddr,
                             meth->clazz);
             assert(uidx == 0);
             regTypes[argStart + actualArgs] = regTypeFromUninitIndex(uidx);
@@ -1699,7 +1694,7 @@ static void markRefsAsInitialized(RegisterLine* registerLine, int insnRegCount,
     RegType initType;
     int i, changed;
 
-    clazz = dvmGetUninitInstance(uninitMap, regTypeToUninitIndex(uninitType));
+    clazz = getUninitInstance(uninitMap, regTypeToUninitIndex(uninitType));
     if (clazz == NULL) {
         LOGE("VFY: unable to find type=0x%x (idx=%d)\n",
             uninitType, regTypeToUninitIndex(uninitType));
@@ -3762,7 +3757,7 @@ static bool verifyInstruction(const Method* meth, InsnFlags* insnFlags,
      * We can also return, in which case there is no successor instruction
      * from this point.
      *
-     * The behavior can be determined from the InstructionFlags.
+     * The behavior can be determined from the OpcodeFlags.
      */
 
     RegisterLine* workLine = &regTable->workLine;
@@ -3780,7 +3775,7 @@ static bool verifyInstruction(const Method* meth, InsnFlags* insnFlags,
 #endif
     dexDecodeInstruction(insns, &decInsn);
 
-    int nextFlags = dexGetInstrFlags(decInsn.opCode);
+    int nextFlags = dexGetFlagsFromOpcode(decInsn.opcode);
 
     /*
      * Make a copy of the previous register state.  If the instruction
@@ -3800,7 +3795,7 @@ static bool verifyInstruction(const Method* meth, InsnFlags* insnFlags,
 #endif
     }
 
-    switch (decInsn.opCode) {
+    switch (decInsn.opcode) {
     case OP_NOP:
         /*
          * A "pure" NOP has no effect on anything.  Data tables start with
@@ -4120,7 +4115,7 @@ static bool verifyInstruction(const Method* meth, InsnFlags* insnFlags,
             }
 
             /* add resolved class to uninit map if not already there */
-            int uidx = dvmSetUninitInstance(uninitMap, insnIdx, resClass);
+            int uidx = setUninitInstance(uninitMap, insnIdx, resClass);
             assert(uidx >= 0);
             uninitType = regTypeFromUninitIndex(uidx);
 
@@ -4166,7 +4161,7 @@ static bool verifyInstruction(const Method* meth, InsnFlags* insnFlags,
             LOG_VFY("VFY: filled-new-array on non-array class\n");
             failure = VERIFY_ERROR_GENERIC;
         } else {
-            bool isRange = (decInsn.opCode == OP_FILLED_NEW_ARRAY_RANGE);
+            bool isRange = (decInsn.opcode == OP_FILLED_NEW_ARRAY_RANGE);
 
             /* check the arguments to the instruction */
             verifyFilledNewArrayRegs(meth, workLine, &decInsn,
@@ -5188,10 +5183,10 @@ sput_1nr_common:
             bool isRange;
             bool isSuper;
 
-            isRange =  (decInsn.opCode == OP_INVOKE_VIRTUAL_RANGE ||
-                        decInsn.opCode == OP_INVOKE_SUPER_RANGE);
-            isSuper =  (decInsn.opCode == OP_INVOKE_SUPER ||
-                        decInsn.opCode == OP_INVOKE_SUPER_RANGE);
+            isRange =  (decInsn.opcode == OP_INVOKE_VIRTUAL_RANGE ||
+                        decInsn.opcode == OP_INVOKE_SUPER_RANGE);
+            isSuper =  (decInsn.opcode == OP_INVOKE_SUPER ||
+                        decInsn.opcode == OP_INVOKE_SUPER_RANGE);
 
             calledMethod = verifyInvocationArgs(meth, workLine, insnRegCount,
                             &decInsn, uninitMap, METHOD_VIRTUAL, isRange,
@@ -5210,7 +5205,7 @@ sput_1nr_common:
             Method* calledMethod;
             bool isRange;
 
-            isRange =  (decInsn.opCode == OP_INVOKE_DIRECT_RANGE);
+            isRange =  (decInsn.opcode == OP_INVOKE_DIRECT_RANGE);
             calledMethod = verifyInvocationArgs(meth, workLine, insnRegCount,
                             &decInsn, uninitMap, METHOD_DIRECT, isRange,
                             false, &failure);
@@ -5289,7 +5284,7 @@ sput_1nr_common:
             Method* calledMethod;
             bool isRange;
 
-            isRange =  (decInsn.opCode == OP_INVOKE_STATIC_RANGE);
+            isRange =  (decInsn.opcode == OP_INVOKE_STATIC_RANGE);
             calledMethod = verifyInvocationArgs(meth, workLine, insnRegCount,
                             &decInsn, uninitMap, METHOD_STATIC, isRange,
                             false, &failure);
@@ -5308,7 +5303,7 @@ sput_1nr_common:
             Method* absMethod;
             bool isRange;
 
-            isRange =  (decInsn.opCode == OP_INVOKE_INTERFACE_RANGE);
+            isRange =  (decInsn.opcode == OP_INVOKE_INTERFACE_RANGE);
             absMethod = verifyInvocationArgs(meth, workLine, insnRegCount,
                             &decInsn, uninitMap, METHOD_INTERFACE, isRange,
                             false, &failure);
@@ -5661,7 +5656,7 @@ sput_1nr_common:
     case OP_UNUSED_79:
     case OP_UNUSED_7A:
     case OP_BREAKPOINT:
-    case OP_UNUSED_FF:
+    case OP_DISPATCH_FF:
         failure = VERIFY_ERROR_GENERIC;
         break;
 
@@ -5675,15 +5670,15 @@ sput_1nr_common:
         if (failure == VERIFY_ERROR_GENERIC || gDvm.optimizing) {
             /* immediate failure, reject class */
             LOG_VFY_METH(meth, "VFY:  rejecting opcode 0x%02x at 0x%04x\n",
-                decInsn.opCode, insnIdx);
+                decInsn.opcode, insnIdx);
             goto bail;
         } else {
             /* replace opcode and continue on */
             LOGD("VFY: replacing opcode 0x%02x at 0x%04x\n",
-                decInsn.opCode, insnIdx);
+                decInsn.opcode, insnIdx);
             if (!replaceFailingInstruction(meth, insnFlags, insnIdx, failure)) {
                 LOG_VFY_METH(meth, "VFY:  rejecting opcode 0x%02x at 0x%04x\n",
-                    decInsn.opCode, insnIdx);
+                    decInsn.opcode, insnIdx);
                 goto bail;
             }
             /* IMPORTANT: meth->insns may have been changed */
@@ -5865,7 +5860,7 @@ sput_1nr_common:
              * stack was empty, we don't need a catch-all (if it throws,
              * it will do so before grabbing the lock).
              */
-            if (!(decInsn.opCode == OP_MONITOR_ENTER &&
+            if (!(decInsn.opcode == OP_MONITOR_ENTER &&
                   workLine->monitorStackTop == 1))
             {
                 LOG_VFY_METH(meth,

@@ -57,7 +57,7 @@ static bool genCmpFP(CompilationUnit *cUnit, MIR *mir, RegLocation rlDest,
      * Don't attempt to optimize register usage since these opcodes call out to
      * the handlers.
      */
-    switch (mir->dalvikInsn.opCode) {
+    switch (mir->dalvikInsn.opcode) {
         case OP_CMPL_FLOAT:
             loadValueDirectFixed(cUnit, rlSrc1, r0);
             loadValueDirectFixed(cUnit, rlSrc2, r1);

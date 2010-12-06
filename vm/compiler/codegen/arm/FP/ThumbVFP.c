@@ -65,28 +65,28 @@ static bool genArithOpFloat(CompilationUnit *cUnit, MIR *mir,
                             RegLocation rlDest, RegLocation rlSrc1,
                             RegLocation rlSrc2)
 {
-    TemplateOpCode opCode;
+    TemplateOpcode opcode;
 
     /*
      * Don't attempt to optimize register usage since these opcodes call out to
      * the handlers.
      */
-    switch (mir->dalvikInsn.opCode) {
+    switch (mir->dalvikInsn.opcode) {
         case OP_ADD_FLOAT_2ADDR:
         case OP_ADD_FLOAT:
-            opCode = TEMPLATE_ADD_FLOAT_VFP;
+            opcode = TEMPLATE_ADD_FLOAT_VFP;
             break;
         case OP_SUB_FLOAT_2ADDR:
         case OP_SUB_FLOAT:
-            opCode = TEMPLATE_SUB_FLOAT_VFP;
+            opcode = TEMPLATE_SUB_FLOAT_VFP;
             break;
         case OP_DIV_FLOAT_2ADDR:
         case OP_DIV_FLOAT:
-            opCode = TEMPLATE_DIV_FLOAT_VFP;
+            opcode = TEMPLATE_DIV_FLOAT_VFP;
             break;
         case OP_MUL_FLOAT_2ADDR:
         case OP_MUL_FLOAT:
-            opCode = TEMPLATE_MUL_FLOAT_VFP;
+            opcode = TEMPLATE_MUL_FLOAT_VFP;
             break;
         case OP_REM_FLOAT_2ADDR:
         case OP_REM_FLOAT:
@@ -99,7 +99,7 @@ static bool genArithOpFloat(CompilationUnit *cUnit, MIR *mir,
     loadValueAddressDirect(cUnit, rlDest, r0);
     loadValueAddressDirect(cUnit, rlSrc1, r1);
     loadValueAddressDirect(cUnit, rlSrc2, r2);
-    genDispatchToHandler(cUnit, opCode);
+    genDispatchToHandler(cUnit, opcode);
     rlDest = dvmCompilerUpdateLoc(cUnit, rlDest);
     if (rlDest.location == kLocPhysReg) {
         dvmCompilerClobber(cUnit, rlDest.lowReg);
@@ -111,24 +111,24 @@ static bool genArithOpDouble(CompilationUnit *cUnit, MIR *mir,
                              RegLocation rlDest, RegLocation rlSrc1,
                              RegLocation rlSrc2)
 {
-    TemplateOpCode opCode;
+    TemplateOpcode opcode;
 
-    switch (mir->dalvikInsn.opCode) {
+    switch (mir->dalvikInsn.opcode) {
         case OP_ADD_DOUBLE_2ADDR:
         case OP_ADD_DOUBLE:
-            opCode = TEMPLATE_ADD_DOUBLE_VFP;
+            opcode = TEMPLATE_ADD_DOUBLE_VFP;
             break;
         case OP_SUB_DOUBLE_2ADDR:
         case OP_SUB_DOUBLE:
-            opCode = TEMPLATE_SUB_DOUBLE_VFP;
+            opcode = TEMPLATE_SUB_DOUBLE_VFP;
             break;
         case OP_DIV_DOUBLE_2ADDR:
         case OP_DIV_DOUBLE:
-            opCode = TEMPLATE_DIV_DOUBLE_VFP;
+            opcode = TEMPLATE_DIV_DOUBLE_VFP;
             break;
         case OP_MUL_DOUBLE_2ADDR:
         case OP_MUL_DOUBLE:
-            opCode = TEMPLATE_MUL_DOUBLE_VFP;
+            opcode = TEMPLATE_MUL_DOUBLE_VFP;
             break;
         case OP_REM_DOUBLE_2ADDR:
         case OP_REM_DOUBLE:
@@ -142,7 +142,7 @@ static bool genArithOpDouble(CompilationUnit *cUnit, MIR *mir,
     loadValueAddressDirect(cUnit, rlDest, r0);
     loadValueAddressDirect(cUnit, rlSrc1, r1);
     loadValueAddressDirect(cUnit, rlSrc2, r2);
-    genDispatchToHandler(cUnit, opCode);
+    genDispatchToHandler(cUnit, opcode);
     rlDest = dvmCompilerUpdateLocWide(cUnit, rlDest);
     if (rlDest.location == kLocPhysReg) {
         dvmCompilerClobber(cUnit, rlDest.lowReg);
@@ -153,13 +153,13 @@ static bool genArithOpDouble(CompilationUnit *cUnit, MIR *mir,
 
 static bool genConversion(CompilationUnit *cUnit, MIR *mir)
 {
-    OpCode opCode = mir->dalvikInsn.opCode;
+    Opcode opcode = mir->dalvikInsn.opcode;
     bool longSrc = false;
     bool longDest = false;
     RegLocation rlSrc;
     RegLocation rlDest;
-    TemplateOpCode template;
-    switch (opCode) {
+    TemplateOpcode template;
+    switch (opcode) {
         case OP_INT_TO_FLOAT:
             longSrc = false;
             longDest = false;
@@ -226,11 +226,11 @@ static bool genConversion(CompilationUnit *cUnit, MIR *mir)
 static bool genCmpFP(CompilationUnit *cUnit, MIR *mir, RegLocation rlDest,
                      RegLocation rlSrc1, RegLocation rlSrc2)
 {
-    TemplateOpCode template;
+    TemplateOpcode template;
     RegLocation rlResult = dvmCompilerGetReturn(cUnit);
     bool wide = true;
 
-    switch(mir->dalvikInsn.opCode) {
+    switch(mir->dalvikInsn.opcode) {
         case OP_CMPL_FLOAT:
             template = TEMPLATE_CMPL_FLOAT_VFP;
             wide = false;

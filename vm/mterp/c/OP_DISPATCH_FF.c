@@ -1,4 +1,4 @@
-HANDLE_OPCODE(OP_UNUSED_FF)
+HANDLE_OPCODE(OP_DISPATCH_FF)
     /*
      * In portable interp, most unused opcodes will fall through to here.
      */

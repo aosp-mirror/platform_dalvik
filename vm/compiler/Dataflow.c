@@ -17,11 +17,11 @@
 #include "Dalvik.h"
 #include "Dataflow.h"
 #include "Loop.h"
-#include "libdex/OpCodeNames.h"
+#include "libdex/DexOpcodes.h"
 
 /*
  * Main table containing data flow attributes for each bytecode. The
- * first kNumDalvikInstructions entries are for Dalvik bytecode
+ * first kNumPackedOpcodes entries are for Dalvik bytecode
  * instructions, where extended opcode at the MIR level are appended
  * afterwards.
  *
@@ -795,7 +795,7 @@ int dvmCompilerDataFlowAttributes[kMirOpLast] = {
     // FE OP_SPUT_OBJECT_VOLATILE
     DF_UA,
 
-    // FF OP_UNUSED_FF
+    // FF OP_DISPATCH_FF
     DF_NOP,
 
     // Beginning of extended MIR opcodes
@@ -823,7 +823,7 @@ char *dvmCompilerGetDalvikDisassembly(DecodedInstruction *insn,
                                       char *note)
 {
     char buffer[256];
-    int opcode = insn->opCode;
+    int opcode = insn->opcode;
     int dfAttributes = dvmCompilerDataFlowAttributes[opcode];
     char *ret;
 
@@ -948,7 +948,7 @@ void dvmCompilerFindLiveIn(CompilationUnit *cUnit, BasicBlock *bb)
 
     for (mir = bb->firstMIRInsn; mir; mir = mir->next) {
         int dfAttributes =
-            dvmCompilerDataFlowAttributes[mir->dalvikInsn.opCode];
+            dvmCompilerDataFlowAttributes[mir->dalvikInsn.opcode];
         DecodedInstruction *dInsn = &mir->dalvikInsn;
 
         if (dfAttributes & DF_HAS_USES) {
@@ -1050,7 +1050,7 @@ void dvmCompilerDoSSAConversion(CompilationUnit *cUnit, BasicBlock *bb)
         mir->ssaRep = dvmCompilerNew(sizeof(SSARepresentation), true);
 
         int dfAttributes =
-            dvmCompilerDataFlowAttributes[mir->dalvikInsn.opCode];
+            dvmCompilerDataFlowAttributes[mir->dalvikInsn.opcode];
 
         int numUses = 0;
 
@@ -1167,7 +1167,7 @@ void dvmCompilerDoConstantPropagation(CompilationUnit *cUnit, BasicBlock *bb)
 
     for (mir = bb->firstMIRInsn; mir; mir = mir->next) {
         int dfAttributes =
-            dvmCompilerDataFlowAttributes[mir->dalvikInsn.opCode];
+            dvmCompilerDataFlowAttributes[mir->dalvikInsn.opcode];
 
         DecodedInstruction *dInsn = &mir->dalvikInsn;
 
@@ -1176,7 +1176,7 @@ void dvmCompilerDoConstantPropagation(CompilationUnit *cUnit, BasicBlock *bb)
         /* Handle instructions that set up constants directly */
         if (dfAttributes & DF_SETS_CONST) {
             if (dfAttributes & DF_DA) {
-                switch (dInsn->opCode) {
+                switch (dInsn->opcode) {
                     case OP_CONST_4:
                     case OP_CONST_16:
                     case OP_CONST:
@@ -1190,7 +1190,7 @@ void dvmCompilerDoConstantPropagation(CompilationUnit *cUnit, BasicBlock *bb)
                         break;
                 }
             } else if (dfAttributes & DF_DA_WIDE) {
-                switch (dInsn->opCode) {
+                switch (dInsn->opcode) {
                     case OP_CONST_WIDE_16:
                     case OP_CONST_WIDE_32:
                         setConstant(cUnit, mir->ssaRep->defs[0], dInsn->vB);
@@ -1247,14 +1247,14 @@ void dvmCompilerFindInductionVariables(struct CompilationUnit *cUnit,
 
     /* If the bb doesn't have a phi it cannot contain an induction variable */
     if (bb->firstMIRInsn == NULL ||
-        bb->firstMIRInsn->dalvikInsn.opCode != kMirOpPhi) {
+        bb->firstMIRInsn->dalvikInsn.opcode != kMirOpPhi) {
         return;
     }
 
     /* Find basic induction variable first */
     for (mir = bb->firstMIRInsn; mir; mir = mir->next) {
         int dfAttributes =
-            dvmCompilerDataFlowAttributes[mir->dalvikInsn.opCode];
+            dvmCompilerDataFlowAttributes[mir->dalvikInsn.opcode];
 
         if (!(dfAttributes & DF_IS_LINEAR)) continue;
 
@@ -1266,14 +1266,14 @@ void dvmCompilerFindInductionVariables(struct CompilationUnit *cUnit,
          */
         MIR *phi;
         for (phi = bb->firstMIRInsn; phi; phi = phi->next) {
-            if (phi->dalvikInsn.opCode != kMirOpPhi) break;
+            if (phi->dalvikInsn.opcode != kMirOpPhi) break;
 
             if (phi->ssaRep->defs[0] == mir->ssaRep->uses[0] &&
                 phi->ssaRep->uses[1] == mir->ssaRep->defs[0]) {
                 bool deltaIsConstant = false;
                 int deltaValue;
 
-                switch (mir->dalvikInsn.opCode) {
+                switch (mir->dalvikInsn.opcode) {
                     case OP_ADD_INT:
                         if (dvmIsBitSet(isConstantV,
                                         mir->ssaRep->uses[1])) {
@@ -1319,7 +1319,7 @@ void dvmCompilerFindInductionVariables(struct CompilationUnit *cUnit,
     /* Find dependent induction variable now */
     for (mir = bb->firstMIRInsn; mir; mir = mir->next) {
         int dfAttributes =
-            dvmCompilerDataFlowAttributes[mir->dalvikInsn.opCode];
+            dvmCompilerDataFlowAttributes[mir->dalvikInsn.opcode];
 
         if (!(dfAttributes & DF_IS_LINEAR)) continue;
 
@@ -1340,7 +1340,7 @@ void dvmCompilerFindInductionVariables(struct CompilationUnit *cUnit,
             bool cIsConstant = false;
             int c = 0;
 
-            switch (mir->dalvikInsn.opCode) {
+            switch (mir->dalvikInsn.opcode) {
                 case OP_ADD_INT:
                     if (dvmIsBitSet(isConstantV,
                                     mir->ssaRep->uses[1])) {

@@ -23,7 +23,7 @@
 #include "Jit.h"
 
 
-#include "libdex/OpCodeNames.h"
+#include "libdex/DexOpcodes.h"
 #include <unistd.h>
 #include <pthread.h>
 #include <sys/time.h>
@@ -260,7 +260,7 @@ static void selfVerificationDumpTrace(const u2* pc, Thread* self)
         decInsn = &(shadowSpace->trace[i].decInsn);
         /* Not properly decoding instruction, some registers may be garbage */
         LOGD("0x%x: (0x%04x) %s",
-            addr, offset, dexGetOpcodeName(decInsn->opCode));
+            addr, offset, dexGetOpcodeName(decInsn->opcode));
     }
 }
 
@@ -292,7 +292,7 @@ static bool selfVerificationDebugInterp(const u2* pc, Thread* self,
 
     //LOGD("### DbgIntp(%d): PC: 0x%x endPC: 0x%x state: %d len: %d %s",
     //    self->threadId, (int)pc, (int)shadowSpace->endPC, state,
-    //    shadowSpace->traceLength, dexGetOpcodeName(decInsn.opCode));
+    //    shadowSpace->traceLength, dexGetOpcodeName(decInsn.opcode));
 
     if (state == kSVSIdle || state == kSVSStart) {
         LOGD("~~~ DbgIntrp: INCORRECT PREVIOUS STATE(%d): %d",
@@ -670,9 +670,9 @@ static void insertMoveResult(const u2 *lastPC, int len, int offset,
     const u2 *moveResultPC = lastPC + len;
 
     dexDecodeInstruction(moveResultPC, &nextDecInsn);
-    if ((nextDecInsn.opCode != OP_MOVE_RESULT) &&
-        (nextDecInsn.opCode != OP_MOVE_RESULT_WIDE) &&
-        (nextDecInsn.opCode != OP_MOVE_RESULT_OBJECT))
+    if ((nextDecInsn.opcode != OP_MOVE_RESULT) &&
+        (nextDecInsn.opcode != OP_MOVE_RESULT_WIDE) &&
+        (nextDecInsn.opcode != OP_MOVE_RESULT_OBJECT))
         return;
 
     /* We need to start a new trace run */
@@ -685,7 +685,7 @@ static void insertMoveResult(const u2 *lastPC, int len, int offset,
     interpState->trace[currTraceRun].frag.isCode = true;
     interpState->totalTraceLen++;
 
-    interpState->currRunLen = dexGetInstrOrTableWidth(moveResultPC);
+    interpState->currRunLen = dexGetWidthFromInstruction(moveResultPC);
 }
 
 /*
@@ -740,18 +740,18 @@ int dvmCheckJit(const u2* pc, Thread* self, InterpState* interpState,
              * cells.
              */
             if (interpState->totalTraceLen != 0 &&
-                (decInsn.opCode == OP_PACKED_SWITCH ||
-                 decInsn.opCode == OP_SPARSE_SWITCH)) {
+                (decInsn.opcode == OP_PACKED_SWITCH ||
+                 decInsn.opcode == OP_SPARSE_SWITCH)) {
                 interpState->jitState = kJitTSelectEnd;
                 break;
             }
 
 
 #if defined(SHOW_TRACE)
-            LOGD("TraceGen: adding %s", dexGetOpcodeName(decInsn.opCode));
+            LOGD("TraceGen: adding %s", dexGetOpcodeName(decInsn.opcode));
 #endif
-            flags = dexGetInstrFlags(decInsn.opCode);
-            len = dexGetInstrOrTableWidth(lastPC);
+            flags = dexGetFlagsFromOpcode(decInsn.opcode);
+            len = dexGetWidthFromInstruction(lastPC);
             offset = lastPC - interpState->method->insns;
             assert((unsigned) offset <
                    dvmGetMethodInsnsSize(interpState->method));
@@ -791,7 +791,7 @@ int dvmCheckJit(const u2* pc, Thread* self, InterpState* interpState,
                     interpState->jitState = kJitTSelectEnd;
 #if defined(SHOW_TRACE)
                 LOGD("TraceGen: ending on %s, basic block end",
-                     dexGetOpcodeName(decInsn.opCode));
+                     dexGetOpcodeName(decInsn.opcode));
 #endif
 
                 /*
@@ -807,7 +807,7 @@ int dvmCheckJit(const u2* pc, Thread* self, InterpState* interpState,
                 }
             }
             /* Break on throw or self-loop */
-            if ((decInsn.opCode == OP_THROW) || (lastPC == pc)){
+            if ((decInsn.opcode == OP_THROW) || (lastPC == pc)){
                 interpState->jitState = kJitTSelectEnd;
             }
             if (interpState->totalTraceLen >= JIT_MAX_TRACE_LEN) {
@@ -829,7 +829,7 @@ int dvmCheckJit(const u2* pc, Thread* self, InterpState* interpState,
                  * instruction (which is already included in the trace
                  * containing the invoke.
                  */
-                if (decInsn.opCode != OP_RETURN_VOID) {
+                if (decInsn.opcode != OP_RETURN_VOID) {
                     stayOneMoreInst = true;
                 }
             }

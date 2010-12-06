@@ -51,8 +51,8 @@ debug_mode="no"
 usage="no"
 
 while true; do
-    if [ "x$1" = "x--local" ]; then
-        RUN="${progdir}/etc/local-run-test-jar"
+    if [ "x$1" = "x--host" ]; then
+        RUN="${progdir}/etc/host-run-test-jar"
         shift
     elif [ "x$1" = "x--reference" ]; then
         RUN="${progdir}/etc/reference-run-test-classes"
@@ -140,11 +140,11 @@ if [ "$usage" = "yes" ]; then
         echo "  $prog --help                          Print this message."
         echo "  $prog [options] [test-name]           Run test normally."
         echo "  $prog --dev [options] [test-name]     Development mode" \
-	    "(dumps to stdout)."
+             "(dumps to stdout)."
         echo "  $prog --update [options] [test-name]  Update mode" \
-	    "(replaces expected.txt)."
+             "(replaces expected.txt)."
         echo '  Omitting the test name or specifying "-" will use the' \
-	    "current directory."
+             "current directory."
         echo "  Runtime Options:"
         echo "    --fast         Use the fast interpreter (the default)."
         echo "    --jit          Use the jit."
@@ -155,9 +155,9 @@ if [ "$usage" = "yes" ]; then
         echo "    --no-optimize  Turn off optimization (on by default)."
         echo "    --no-precise   Turn off precise GC (on by default)."
         echo "    --zygote       Spawn the process from the Zygote." \
-	    "If used, then the"
-	echo "                   other runtime options are ignored."
-        echo "    --local        Use a host-local virtual machine."
+             "If used, then the"
+        echo "                   other runtime options are ignored."
+        echo "    --host         Use the host-mode virtual machine."
         echo "    --valgrind     Use valgrind when running locally."
         echo "    --reference    Use a host-local reference virtual machine."
     ) 1>&2
@@ -208,7 +208,7 @@ elif [ "$update_mode" = "yes" ]; then
     build_exit="$?"
     if [ "$build_exit" = '0' ]; then
         "./${run}" $run_args "$@" >"$output" 2>&1
-	sed -e 's/[[:cntrl:]]$//g' < "$output" >"${td_expected}"
+        sed -e 's/[[:cntrl:]]$//g' < "$output" >"${td_expected}"
         good="yes"
     else
         cat "$build_output" 1>&2

@@ -74,7 +74,7 @@ static ArmLIR *loadConstantNoClobber(CompilationUnit *cUnit, int rDest,
         dataTarget = addWordData(cUnit, value, false);
     }
     ArmLIR *loadPcRel = dvmCompilerNew(sizeof(ArmLIR), true);
-    loadPcRel->opCode = kThumbLdrPcRel;
+    loadPcRel->opcode = kThumbLdrPcRel;
     loadPcRel->generic.target = (LIR *) dataTarget;
     loadPcRel->operands[0] = tDest;
     setupResourceMasks(loadPcRel);
@@ -121,16 +121,16 @@ static ArmLIR *loadConstant(CompilationUnit *cUnit, int rDest, int value)
 
 static ArmLIR *opNone(CompilationUnit *cUnit, OpKind op)
 {
-    ArmOpCode opCode = kThumbBkpt;
+    ArmOpcode opcode = kThumbBkpt;
     switch (op) {
         case kOpUncondBr:
-            opCode = kThumbBUncond;
+            opcode = kThumbBUncond;
             break;
         default:
             LOGE("Jit: bad case in opNone");
             dvmCompilerAbort(cUnit);
     }
-    return newLIR0(cUnit, opCode);
+    return newLIR0(cUnit, opcode);
 }
 
 static ArmLIR *opCondBranch(CompilationUnit *cUnit, ArmConditionCode cc)
@@ -140,33 +140,33 @@ static ArmLIR *opCondBranch(CompilationUnit *cUnit, ArmConditionCode cc)
 
 static ArmLIR *opImm(CompilationUnit *cUnit, OpKind op, int value)
 {
-    ArmOpCode opCode = kThumbBkpt;
+    ArmOpcode opcode = kThumbBkpt;
     switch (op) {
         case kOpPush:
-            opCode = kThumbPush;
+            opcode = kThumbPush;
             break;
         case kOpPop:
-            opCode = kThumbPop;
+            opcode = kThumbPop;
             break;
         default:
             LOGE("Jit: bad case in opCondBranch");
             dvmCompilerAbort(cUnit);
     }
-    return newLIR1(cUnit, opCode, value);
+    return newLIR1(cUnit, opcode, value);
 }
 
 static ArmLIR *opReg(CompilationUnit *cUnit, OpKind op, int rDestSrc)
 {
-    ArmOpCode opCode = kThumbBkpt;
+    ArmOpcode opcode = kThumbBkpt;
     switch (op) {
         case kOpBlx:
-            opCode = kThumbBlxR;
+            opcode = kThumbBlxR;
             break;
         default:
             LOGE("Jit: bad case in opReg");
             dvmCompilerAbort(cUnit);
     }
-    return newLIR1(cUnit, opCode, rDestSrc);
+    return newLIR1(cUnit, opcode, rDestSrc);
 }
 
 static ArmLIR *opRegImm(CompilationUnit *cUnit, OpKind op, int rDestSrc1,
@@ -176,36 +176,36 @@ static ArmLIR *opRegImm(CompilationUnit *cUnit, OpKind op, int rDestSrc1,
     bool neg = (value < 0);
     int absValue = (neg) ? -value : value;
     bool shortForm = (absValue & 0xff) == absValue;
-    ArmOpCode opCode = kThumbBkpt;
+    ArmOpcode opcode = kThumbBkpt;
     switch (op) {
         case kOpAdd:
             if ( !neg && (rDestSrc1 == 13) && (value <= 508)) { /* sp */
                 assert((value & 0x3) == 0);
                 return newLIR1(cUnit, kThumbAddSpI7, value >> 2);
             } else if (shortForm) {
-                opCode = (neg) ? kThumbSubRI8 : kThumbAddRI8;
+                opcode = (neg) ? kThumbSubRI8 : kThumbAddRI8;
             } else
-                opCode = kThumbAddRRR;
+                opcode = kThumbAddRRR;
             break;
         case kOpSub:
             if (!neg && (rDestSrc1 == 13) && (value <= 508)) { /* sp */
                 assert((value & 0x3) == 0);
                 return newLIR1(cUnit, kThumbSubSpI7, value >> 2);
             } else if (shortForm) {
-                opCode = (neg) ? kThumbAddRI8 : kThumbSubRI8;
+                opcode = (neg) ? kThumbAddRI8 : kThumbSubRI8;
             } else
-                opCode = kThumbSubRRR;
+                opcode = kThumbSubRRR;
             break;
         case kOpCmp:
             if (neg)
                shortForm = false;
             if (LOWREG(rDestSrc1) && shortForm) {
-                opCode = kThumbCmpRI8;
+                opcode = kThumbCmpRI8;
             } else if (LOWREG(rDestSrc1)) {
-                opCode = kThumbCmpRR;
+                opcode = kThumbCmpRR;
             } else {
                 shortForm = false;
-                opCode = kThumbCmpHL;
+                opcode = kThumbCmpHL;
             }
             break;
         default:
@@ -214,14 +214,14 @@ static ArmLIR *opRegImm(CompilationUnit *cUnit, OpKind op, int rDestSrc1,
             break;
     }
     if (shortForm)
-        res = newLIR2(cUnit, opCode, rDestSrc1, absValue);
+        res = newLIR2(cUnit, opcode, rDestSrc1, absValue);
     else {
         int rScratch = dvmCompilerAllocTemp(cUnit);
         res = loadConstant(cUnit, rScratch, value);
         if (op == kOpCmp)
-            newLIR2(cUnit, opCode, rDestSrc1, rScratch);
+            newLIR2(cUnit, opcode, rDestSrc1, rScratch);
         else
-            newLIR3(cUnit, opCode, rDestSrc1, rDestSrc1, rScratch);
+            newLIR3(cUnit, opcode, rDestSrc1, rDestSrc1, rScratch);
     }
     return res;
 }
@@ -229,13 +229,13 @@ static ArmLIR *opRegImm(CompilationUnit *cUnit, OpKind op, int rDestSrc1,
 static ArmLIR *opRegRegReg(CompilationUnit *cUnit, OpKind op, int rDest,
                            int rSrc1, int rSrc2)
 {
-    ArmOpCode opCode = kThumbBkpt;
+    ArmOpcode opcode = kThumbBkpt;
     switch (op) {
         case kOpAdd:
-            opCode = kThumbAddRRR;
+            opcode = kThumbAddRRR;
             break;
         case kOpSub:
-            opCode = kThumbSubRRR;
+            opcode = kThumbSubRRR;
             break;
         default:
             if (rDest == rSrc1) {
@@ -251,7 +251,7 @@ static ArmLIR *opRegRegReg(CompilationUnit *cUnit, OpKind op, int rDest,
             }
             break;
     }
-    return newLIR3(cUnit, opCode, rDest, rSrc1, rSrc2);
+    return newLIR3(cUnit, opcode, rDest, rSrc1, rSrc2);
 }
 
 static ArmLIR *opRegRegImm(CompilationUnit *cUnit, OpKind op, int rDest,
@@ -260,7 +260,7 @@ static ArmLIR *opRegRegImm(CompilationUnit *cUnit, OpKind op, int rDest,
     ArmLIR *res;
     bool neg = (value < 0);
     int absValue = (neg) ? -value : value;
-    ArmOpCode opCode = kThumbBkpt;
+    ArmOpcode opcode = kThumbBkpt;
     bool shortForm = (absValue & 0x7) == absValue;
     switch(op) {
         case kOpAdd:
@@ -269,52 +269,52 @@ static ArmLIR *opRegRegImm(CompilationUnit *cUnit, OpKind op, int rDest,
             if ((rSrc1 == 13) && (value <= 1020)) { /* sp */
                 assert((value & 0x3) == 0);
                 shortForm = true;
-                opCode = kThumbAddSpRel;
+                opcode = kThumbAddSpRel;
                 value >>= 2;
             } else if ((rSrc1 == 15) && (value <= 1020)) { /* pc */
                 assert((value & 0x3) == 0);
                 shortForm = true;
-                opCode = kThumbAddPcRel;
+                opcode = kThumbAddPcRel;
                 value >>= 2;
             } else if (shortForm) {
-                opCode = (neg) ? kThumbSubRRI3 : kThumbAddRRI3;
+                opcode = (neg) ? kThumbSubRRI3 : kThumbAddRRI3;
             } else if ((absValue > 0) && (absValue <= (255 + 7))) {
                 /* Two shots - 1st handle the 7 */
-                opCode = (neg) ? kThumbSubRRI3 : kThumbAddRRI3;
-                res = newLIR3(cUnit, opCode, rDest, rSrc1, 7);
-                opCode = (neg) ? kThumbSubRI8 : kThumbAddRI8;
-                newLIR2(cUnit, opCode, rDest, absValue - 7);
+                opcode = (neg) ? kThumbSubRRI3 : kThumbAddRRI3;
+                res = newLIR3(cUnit, opcode, rDest, rSrc1, 7);
+                opcode = (neg) ? kThumbSubRI8 : kThumbAddRI8;
+                newLIR2(cUnit, opcode, rDest, absValue - 7);
                 return res;
             } else
-                opCode = kThumbAddRRR;
+                opcode = kThumbAddRRR;
             break;
 
         case kOpSub:
             if (rDest == rSrc1)
                 return opRegImm(cUnit, op, rDest, value);
             if (shortForm) {
-                opCode = (neg) ? kThumbAddRRI3 : kThumbSubRRI3;
+                opcode = (neg) ? kThumbAddRRI3 : kThumbSubRRI3;
             } else if ((absValue > 0) && (absValue <= (255 + 7))) {
                 /* Two shots - 1st handle the 7 */
-                opCode = (neg) ? kThumbAddRRI3 : kThumbSubRRI3;
-                res = newLIR3(cUnit, opCode, rDest, rSrc1, 7);
-                opCode = (neg) ? kThumbAddRI8 : kThumbSubRI8;
-                newLIR2(cUnit, opCode, rDest, absValue - 7);
+                opcode = (neg) ? kThumbAddRRI3 : kThumbSubRRI3;
+                res = newLIR3(cUnit, opcode, rDest, rSrc1, 7);
+                opcode = (neg) ? kThumbAddRI8 : kThumbSubRI8;
+                newLIR2(cUnit, opcode, rDest, absValue - 7);
                 return res;
             } else
-                opCode = kThumbSubRRR;
+                opcode = kThumbSubRRR;
             break;
         case kOpLsl:
                 shortForm = (!neg && value <= 31);
-                opCode = kThumbLslRRI5;
+                opcode = kThumbLslRRI5;
                 break;
         case kOpLsr:
                 shortForm = (!neg && value <= 31);
-                opCode = kThumbLsrRRI5;
+                opcode = kThumbLsrRRI5;
                 break;
         case kOpAsr:
                 shortForm = (!neg && value <= 31);
-                opCode = kThumbAsrRRI5;
+                opcode = kThumbAsrRRI5;
                 break;
         case kOpMul:
         case kOpAnd:
@@ -335,15 +335,15 @@ static ArmLIR *opRegRegImm(CompilationUnit *cUnit, OpKind op, int rDest,
             break;
     }
     if (shortForm)
-        res = newLIR3(cUnit, opCode, rDest, rSrc1, absValue);
+        res = newLIR3(cUnit, opcode, rDest, rSrc1, absValue);
     else {
         if (rDest != rSrc1) {
             res = loadConstant(cUnit, rDest, value);
-            newLIR3(cUnit, opCode, rDest, rSrc1, rDest);
+            newLIR3(cUnit, opcode, rDest, rSrc1, rDest);
         } else {
             int rScratch = dvmCompilerAllocTemp(cUnit);
             res = loadConstant(cUnit, rScratch, value);
-            newLIR3(cUnit, opCode, rDest, rSrc1, rScratch);
+            newLIR3(cUnit, opcode, rDest, rSrc1, rScratch);
         }
     }
     return res;
@@ -353,65 +353,65 @@ static ArmLIR *opRegReg(CompilationUnit *cUnit, OpKind op, int rDestSrc1,
                         int rSrc2)
 {
     ArmLIR *res;
-    ArmOpCode opCode = kThumbBkpt;
+    ArmOpcode opcode = kThumbBkpt;
     switch (op) {
         case kOpAdc:
-            opCode = kThumbAdcRR;
+            opcode = kThumbAdcRR;
             break;
         case kOpAnd:
-            opCode = kThumbAndRR;
+            opcode = kThumbAndRR;
             break;
         case kOpBic:
-            opCode = kThumbBicRR;
+            opcode = kThumbBicRR;
             break;
         case kOpCmn:
-            opCode = kThumbCmnRR;
+            opcode = kThumbCmnRR;
             break;
         case kOpCmp:
-            opCode = kThumbCmpRR;
+            opcode = kThumbCmpRR;
             break;
         case kOpXor:
-            opCode = kThumbEorRR;
+            opcode = kThumbEorRR;
             break;
         case kOpMov:
             if (LOWREG(rDestSrc1) && LOWREG(rSrc2))
-                opCode = kThumbMovRR;
+                opcode = kThumbMovRR;
             else if (!LOWREG(rDestSrc1) && !LOWREG(rSrc2))
-                opCode = kThumbMovRR_H2H;
+                opcode = kThumbMovRR_H2H;
             else if (LOWREG(rDestSrc1))
-                opCode = kThumbMovRR_H2L;
+                opcode = kThumbMovRR_H2L;
             else
-                opCode = kThumbMovRR_L2H;
+                opcode = kThumbMovRR_L2H;
             break;
         case kOpMul:
-            opCode = kThumbMul;
+            opcode = kThumbMul;
             break;
         case kOpMvn:
-            opCode = kThumbMvn;
+            opcode = kThumbMvn;
             break;
         case kOpNeg:
-            opCode = kThumbNeg;
+            opcode = kThumbNeg;
             break;
         case kOpOr:
-            opCode = kThumbOrr;
+            opcode = kThumbOrr;
             break;
         case kOpSbc:
-            opCode = kThumbSbc;
+            opcode = kThumbSbc;
             break;
         case kOpTst:
-            opCode = kThumbTst;
+            opcode = kThumbTst;
             break;
         case kOpLsl:
-            opCode = kThumbLslRR;
+            opcode = kThumbLslRR;
             break;
         case kOpLsr:
-            opCode = kThumbLsrRR;
+            opcode = kThumbLsrRR;
             break;
         case kOpAsr:
-            opCode = kThumbAsrRR;
+            opcode = kThumbAsrRR;
             break;
         case kOpRor:
-            opCode = kThumbRorRR;
+            opcode = kThumbRorRR;
         case kOpAdd:
         case kOpSub:
             return opRegRegReg(cUnit, op, rDestSrc1, rDestSrc1, rSrc2);
@@ -432,7 +432,7 @@ static ArmLIR *opRegReg(CompilationUnit *cUnit, OpKind op, int rDestSrc1,
             dvmCompilerAbort(cUnit);
             break;
     }
-    return newLIR2(cUnit, opCode, rDestSrc1, rSrc2);
+    return newLIR2(cUnit, opcode, rDestSrc1, rSrc2);
 }
 
 static ArmLIR *loadConstantValueWide(CompilationUnit *cUnit, int rDestLo,
@@ -450,7 +450,7 @@ static ArmLIR *loadBaseIndexed(CompilationUnit *cUnit, int rBase,
 {
     ArmLIR *first = NULL;
     ArmLIR *res;
-    ArmOpCode opCode = kThumbBkpt;
+    ArmOpcode opcode = kThumbBkpt;
     int rNewIndex = rIndex;
     if (scale) {
         // Scale the index, but can't trash the original.
@@ -459,25 +459,25 @@ static ArmLIR *loadBaseIndexed(CompilationUnit *cUnit, int rBase,
     }
     switch (size) {
         case kWord:
-            opCode = kThumbLdrRRR;
+            opcode = kThumbLdrRRR;
             break;
         case kUnsignedHalf:
-            opCode = kThumbLdrhRRR;
+            opcode = kThumbLdrhRRR;
             break;
         case kSignedHalf:
-            opCode = kThumbLdrshRRR;
+            opcode = kThumbLdrshRRR;
             break;
         case kUnsignedByte:
-            opCode = kThumbLdrbRRR;
+            opcode = kThumbLdrbRRR;
             break;
         case kSignedByte:
-            opCode = kThumbLdrsbRRR;
+            opcode = kThumbLdrsbRRR;
             break;
         default:
             LOGE("Jit: bad case in loadBaseIndexed");
             dvmCompilerAbort(cUnit);
     }
-    res = newLIR3(cUnit, opCode, rDest, rBase, rNewIndex);
+    res = newLIR3(cUnit, opcode, rDest, rBase, rNewIndex);
 #if defined(WITH_SELF_VERIFICATION)
     if (cUnit->heapMemOp)
         res->branchInsertSV = true;
@@ -493,7 +493,7 @@ static ArmLIR *storeBaseIndexed(CompilationUnit *cUnit, int rBase,
 {
     ArmLIR *first = NULL;
     ArmLIR *res;
-    ArmOpCode opCode = kThumbBkpt;
+    ArmOpcode opcode = kThumbBkpt;
     int rNewIndex = rIndex;
     if (scale) {
         rNewIndex = dvmCompilerAllocTemp(cUnit);
@@ -501,21 +501,21 @@ static ArmLIR *storeBaseIndexed(CompilationUnit *cUnit, int rBase,
     }
     switch (size) {
         case kWord:
-            opCode = kThumbStrRRR;
+            opcode = kThumbStrRRR;
             break;
         case kUnsignedHalf:
         case kSignedHalf:
-            opCode = kThumbStrhRRR;
+            opcode = kThumbStrhRRR;
             break;
         case kUnsignedByte:
         case kSignedByte:
-            opCode = kThumbStrbRRR;
+            opcode = kThumbStrbRRR;
             break;
         default:
             LOGE("Jit: bad case in storeBaseIndexed");
             dvmCompilerAbort(cUnit);
     }
-    res = newLIR3(cUnit, opCode, rSrc, rBase, rNewIndex);
+    res = newLIR3(cUnit, opcode, rSrc, rBase, rNewIndex);
 #if defined(WITH_SELF_VERIFICATION)
     if (cUnit->heapMemOp)
         res->branchInsertSV = true;
@@ -566,7 +566,7 @@ static ArmLIR *loadBaseDispBody(CompilationUnit *cUnit, MIR *mir, int rBase,
     ArmLIR *res;
     ArmLIR *load = NULL;
     ArmLIR *load2 = NULL;
-    ArmOpCode opCode = kThumbBkpt;
+    ArmOpcode opcode = kThumbBkpt;
     bool shortForm = false;
     int encodedDisp = displacement;
     bool pair = false;
@@ -579,9 +579,9 @@ static ArmLIR *loadBaseDispBody(CompilationUnit *cUnit, MIR *mir, int rBase,
                 assert((displacement & 0x3) == 0);
                 shortForm = true;
                 encodedDisp >>= 2;
-                opCode = kThumbLdrRRI5;
+                opcode = kThumbLdrRRI5;
             } else {
-                opCode = kThumbLdrRRR;
+                opcode = kThumbLdrRRR;
             }
             break;
         case kWord:
@@ -589,19 +589,19 @@ static ArmLIR *loadBaseDispBody(CompilationUnit *cUnit, MIR *mir, int rBase,
                 (displacement <= 1020) && (displacement >= 0)) {
                 shortForm = true;
                 encodedDisp >>= 2;
-                opCode = kThumbLdrPcRel;
+                opcode = kThumbLdrPcRel;
             } else if (LOWREG(rDest) && (rBase == r13) &&
                       (displacement <= 1020) && (displacement >= 0)) {
                 shortForm = true;
                 encodedDisp >>= 2;
-                opCode = kThumbLdrSpRel;
+                opcode = kThumbLdrSpRel;
             } else if (displacement < 128 && displacement >= 0) {
                 assert((displacement & 0x3) == 0);
                 shortForm = true;
                 encodedDisp >>= 2;
-                opCode = kThumbLdrRRI5;
+                opcode = kThumbLdrRRI5;
             } else {
-                opCode = kThumbLdrRRR;
+                opcode = kThumbLdrRRR;
             }
             break;
         case kUnsignedHalf:
@@ -609,33 +609,33 @@ static ArmLIR *loadBaseDispBody(CompilationUnit *cUnit, MIR *mir, int rBase,
                 assert((displacement & 0x1) == 0);
                 shortForm = true;
                 encodedDisp >>= 1;
-                opCode = kThumbLdrhRRI5;
+                opcode = kThumbLdrhRRI5;
             } else {
-                opCode = kThumbLdrhRRR;
+                opcode = kThumbLdrhRRR;
             }
             break;
         case kSignedHalf:
-            opCode = kThumbLdrshRRR;
+            opcode = kThumbLdrshRRR;
             break;
         case kUnsignedByte:
             if (displacement < 32 && displacement >= 0) {
                 shortForm = true;
-                opCode = kThumbLdrbRRI5;
+                opcode = kThumbLdrbRRI5;
             } else {
-                opCode = kThumbLdrbRRR;
+                opcode = kThumbLdrbRRR;
             }
             break;
         case kSignedByte:
-            opCode = kThumbLdrsbRRR;
+            opcode = kThumbLdrsbRRR;
             break;
         default:
             LOGE("Jit: bad case in loadBaseIndexedBody");
             dvmCompilerAbort(cUnit);
     }
     if (shortForm) {
-        load = res = newLIR3(cUnit, opCode, rDest, rBase, encodedDisp);
+        load = res = newLIR3(cUnit, opcode, rDest, rBase, encodedDisp);
         if (pair) {
-            load2 = newLIR3(cUnit, opCode, rDestHi, rBase, encodedDisp+1);
+            load2 = newLIR3(cUnit, opcode, rDestHi, rBase, encodedDisp+1);
         }
     } else {
         if (pair) {
@@ -648,7 +648,7 @@ static ArmLIR *loadBaseDispBody(CompilationUnit *cUnit, MIR *mir, int rBase,
             int rTmp = (rBase == rDest) ? dvmCompilerAllocFreeTemp(cUnit)
                                         : rDest;
             res = loadConstant(cUnit, rTmp, displacement);
-            load = newLIR3(cUnit, opCode, rDest, rBase, rTmp);
+            load = newLIR3(cUnit, opcode, rDest, rBase, rTmp);
             if (rBase == rFP)
                 annotateDalvikRegAccess(load, displacement >> 2,
                                         true /* isLoad */);
@@ -696,7 +696,7 @@ static ArmLIR *storeBaseDispBody(CompilationUnit *cUnit, int rBase,
     ArmLIR *res;
     ArmLIR *store = NULL;
     ArmLIR *store2 = NULL;
-    ArmOpCode opCode = kThumbBkpt;
+    ArmOpcode opcode = kThumbBkpt;
     bool shortForm = false;
     int encodedDisp = displacement;
     bool pair = false;
@@ -710,9 +710,9 @@ static ArmLIR *storeBaseDispBody(CompilationUnit *cUnit, int rBase,
                 pair = true;
                 shortForm = true;
                 encodedDisp >>= 2;
-                opCode = kThumbStrRRI5;
+                opcode = kThumbStrRRI5;
             } else {
-                opCode = kThumbStrRRR;
+                opcode = kThumbStrRRR;
             }
             break;
         case kWord:
@@ -720,9 +720,9 @@ static ArmLIR *storeBaseDispBody(CompilationUnit *cUnit, int rBase,
                 assert((displacement & 0x3) == 0);
                 shortForm = true;
                 encodedDisp >>= 2;
-                opCode = kThumbStrRRI5;
+                opcode = kThumbStrRRI5;
             } else {
-                opCode = kThumbStrRRR;
+                opcode = kThumbStrRRR;
             }
             break;
         case kUnsignedHalf:
@@ -731,18 +731,18 @@ static ArmLIR *storeBaseDispBody(CompilationUnit *cUnit, int rBase,
                 assert((displacement & 0x1) == 0);
                 shortForm = true;
                 encodedDisp >>= 1;
-                opCode = kThumbStrhRRI5;
+                opcode = kThumbStrhRRI5;
             } else {
-                opCode = kThumbStrhRRR;
+                opcode = kThumbStrhRRR;
             }
             break;
         case kUnsignedByte:
         case kSignedByte:
             if (displacement < 32 && displacement >= 0) {
                 shortForm = true;
-                opCode = kThumbStrbRRI5;
+                opcode = kThumbStrbRRI5;
             } else {
-                opCode = kThumbStrbRRR;
+                opcode = kThumbStrbRRR;
             }
             break;
         default:
@@ -750,9 +750,9 @@ static ArmLIR *storeBaseDispBody(CompilationUnit *cUnit, int rBase,
             dvmCompilerAbort(cUnit);
     }
     if (shortForm) {
-        store = res = newLIR3(cUnit, opCode, rSrc, rBase, encodedDisp);
+        store = res = newLIR3(cUnit, opcode, rSrc, rBase, encodedDisp);
         if (pair) {
-            store2 = newLIR3(cUnit, opCode, rSrcHi, rBase, encodedDisp + 1);
+            store2 = newLIR3(cUnit, opcode, rSrcHi, rBase, encodedDisp + 1);
         }
     } else {
         int rScratch = dvmCompilerAllocTemp(cUnit);
@@ -762,7 +762,7 @@ static ArmLIR *storeBaseDispBody(CompilationUnit *cUnit, int rBase,
             store2 = newLIR3(cUnit, kThumbStrRRI5, rSrcHi, rScratch, 1);
         } else {
             res = loadConstant(cUnit, rScratch, displacement);
-            store = newLIR3(cUnit, opCode, rSrc, rBase, rScratch);
+            store = newLIR3(cUnit, opcode, rSrc, rBase, rScratch);
         }
         dvmCompilerFreeTemp(cUnit, rScratch);
     }
@@ -818,20 +818,20 @@ static void loadPair(CompilationUnit *cUnit, int base, int lowReg, int highReg)
 static ArmLIR* genRegCopyNoInsert(CompilationUnit *cUnit, int rDest, int rSrc)
 {
     ArmLIR* res;
-    ArmOpCode opCode;
+    ArmOpcode opcode;
     res = dvmCompilerNew(sizeof(ArmLIR), true);
     if (LOWREG(rDest) && LOWREG(rSrc))
-        opCode = kThumbMovRR;
+        opcode = kThumbMovRR;
     else if (!LOWREG(rDest) && !LOWREG(rSrc))
-         opCode = kThumbMovRR_H2H;
+         opcode = kThumbMovRR_H2H;
     else if (LOWREG(rDest))
-         opCode = kThumbMovRR_H2L;
+         opcode = kThumbMovRR_H2L;
     else
-         opCode = kThumbMovRR_L2H;
+         opcode = kThumbMovRR_L2H;
 
     res->operands[0] = rDest;
     res->operands[1] = rSrc;
-    res->opCode = opCode;
+    res->opcode = opcode;
     setupResourceMasks(res);
     if (rDest == rSrc) {
         res->isNop = true;

@@ -32,9 +32,9 @@
 #include "libdex/DexFile.h"
 #include "libdex/DexCatch.h"
 #include "libdex/DexClass.h"
+#include "libdex/DexOpcodes.h"
 #include "libdex/DexProto.h"
 #include "libdex/InstrUtils.h"
-#include "libdex/OpCodeNames.h"
 #include "libdex/SysUtil.h"
 #include "libdex/CmdUtils.h"
 
@@ -708,7 +708,7 @@ static char* indexString(DexFile* pDexFile,
     u4 width;
 
     /* TODO: Make the index *always* be in field B, to simplify this code. */
-    switch (dexGetInstrFormat(pDecInsn->opCode)) {
+    switch (dexGetFormatFromOpcode(pDecInsn->opcode)) {
     case kFmt20bc:
     case kFmt21c:
     case kFmt35c:
@@ -857,7 +857,7 @@ void dumpInstruction(DexFile* pDexFile, const DexCode* pCode, int insnIdx,
         }
     }
 
-    if (pDecInsn->opCode == OP_NOP) {
+    if (pDecInsn->opcode == OP_NOP) {
         u2 instr = get2LE((const u1*) &insns[insnIdx]);
         if (instr == kPackedSwitchSignature) {
             printf("|%04x: packed-switch-data (%d units)",
@@ -872,7 +872,7 @@ void dumpInstruction(DexFile* pDexFile, const DexCode* pCode, int insnIdx,
             printf("|%04x: nop // spacer", insnIdx);
         }
     } else {
-        printf("|%04x: %s", insnIdx, dexGetOpcodeName(pDecInsn->opCode));
+        printf("|%04x: %s", insnIdx, dexGetOpcodeName(pDecInsn->opcode));
     }
 
     if (pDecInsn->indexType != kIndexNone) {
@@ -880,7 +880,7 @@ void dumpInstruction(DexFile* pDexFile, const DexCode* pCode, int insnIdx,
                 indexBufChars, sizeof(indexBufChars));
     }
 
-    switch (dexGetInstrFormat(pDecInsn->opCode)) {
+    switch (dexGetFormatFromOpcode(pDecInsn->opcode)) {
     case kFmt10x:        // op
         break;
     case kFmt12x:        // op vA, vB
@@ -921,7 +921,7 @@ void dumpInstruction(DexFile* pDexFile, const DexCode* pCode, int insnIdx,
         break;
     case kFmt21h:        // op vAA, #+BBBB0000[00000000]
         // The printed format varies a bit based on the actual opcode.
-        if (pDecInsn->opCode == OP_CONST_HIGH16) {
+        if (pDecInsn->opcode == OP_CONST_HIGH16) {
             s4 value = pDecInsn->vB << 16;
             printf(" v%d, #int %d // #%x",
                 pDecInsn->vA, value, (u2)pDecInsn->vB);
@@ -1070,10 +1070,17 @@ void dumpBytecodes(DexFile* pDexFile, const DexMethod* pDexMethod)
     insnIdx = 0;
     while (insnIdx < (int) pCode->insnsSize) {
         int insnWidth;
-        OpCode opCode;
         DecodedInstruction decInsn;
         u2 instr;
 
+        /*
+         * Note: This code parallels the function
+         * dexGetWidthFromInstruction() in InstrUtils.c, but this version
+         * can deal with data in either endianness.
+         *
+         * TODO: Figure out if this really matters, and possibly change
+         * this to just use dexGetWidthFromInstruction().
+         */
         instr = get2LE((const u1*)insns);
         if (instr == kPackedSwitchSignature) {
             insnWidth = 4 + get2LE((const u1*)(insns+1)) * 2;
@@ -1083,11 +1090,11 @@ void dumpBytecodes(DexFile* pDexFile, const DexMethod* pDexMethod)
             int width = get2LE((const u1*)(insns+1));
             int size = get2LE((const u1*)(insns+2)) |
                        (get2LE((const u1*)(insns+3))<<16);
-            // The plus 1 is to round up for odd size and width
+            // The plus 1 is to round up for odd size and width.
             insnWidth = 4 + ((size * width) + 1) / 2;
         } else {
-            opCode = instr & 0xff;
-            insnWidth = dexGetInstrWidth(opCode);
+            Opcode opcode = dexOpcodeFromCodeUnit(instr);
+            insnWidth = dexGetWidthFromOpcode(opcode);
             if (insnWidth == 0) {
                 fprintf(stderr,
                     "GLITCH: zero-width instruction at idx=0x%04x\n", insnIdx);
