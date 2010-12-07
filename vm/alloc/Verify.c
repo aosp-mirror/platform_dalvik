@@ -31,14 +31,14 @@ static void dumpReferencesVisitor(void *pObj, void *arg)
 
 static void dumpReferencesCallback(void *ptr, void *arg)
 {
-    Object *obj = arg;
+    Object *obj = (Object *)arg;
     if (ptr == obj) {
         return;
     }
-    dvmVisitObject(dumpReferencesVisitor, ptr, &obj);
+    dvmVisitObject(dumpReferencesVisitor, (Object *)ptr, &obj);
     if (obj == NULL) {
         LOGD("Found %p in the heap @ %p", arg, ptr);
-        dvmDumpObject(ptr);
+        dvmDumpObject((Object *)ptr);
     }
 }
 
@@ -79,7 +79,7 @@ static void verifyReference(void *addr, void *arg)
         isValid = dvmIsValidObject(obj);
     }
     if (!isValid) {
-        Object **parent = arg;
+        Object **parent = (Object **)arg;
         if (*parent != NULL) {
             LOGE("Verify of object %p failed", *parent);
             dvmDumpObject(*parent);
@@ -108,7 +108,7 @@ void dvmVerifyObject(const Object *obj)
  */
 static void verifyBitmapCallback(void *ptr, void *arg)
 {
-    dvmVerifyObject(ptr);
+    dvmVerifyObject((Object *)ptr);
 }
 
 /*

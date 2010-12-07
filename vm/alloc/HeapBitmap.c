@@ -39,7 +39,7 @@ dvmHeapBitmapInit(HeapBitmap *hb, const void *base, size_t maxSize,
         LOGE("Could not mmap %zd-byte ashmem region '%s'", bitsLen, name);
         return false;
     }
-    hb->bits = bits;
+    hb->bits = (unsigned long *)bits;
     hb->bitsLen = hb->allocLen = bitsLen;
     hb->base = (uintptr_t)base;
     hb->max = hb->base - 1;

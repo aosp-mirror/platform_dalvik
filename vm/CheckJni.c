@@ -1056,7 +1056,7 @@ static void* createGuardedCopy(const void* buf, size_t len, bool modOkay)
     uLong adler = 0;
     if (!modOkay) {
         adler = adler32(0L, Z_NULL, 0);
-        adler = adler32(adler, buf, len);
+        adler = adler32(adler, (const Bytef*)buf, len);
         *(uLong*)newBuf = adler;
     }
 
@@ -1142,7 +1142,7 @@ static bool checkGuardedCopy(const void* dataBuf, bool modOkay)
      */
     if (!modOkay) {
         uLong adler = adler32(0L, Z_NULL, 0);
-        adler = adler32(adler, dataBuf, len);
+        adler = adler32(adler, (const Bytef*)dataBuf, len);
         if (pExtra->adler != adler) {
             LOGE("JNI: buffer modified (0x%08lx vs 0x%08lx) at addr %p",
                 pExtra->adler, adler, dataBuf);
@@ -1804,7 +1804,7 @@ SET_TYPE_FIELD(jdouble, Double, PRIM_DOUBLE);
         CHECK_EXIT(env);                                                    \
         return _retok;                                                      \
     }
-CALL_VIRTUAL(jobject, Object, Object* result, result=, result, 'L');
+CALL_VIRTUAL(jobject, Object, Object* result, result=(Object*), result, 'L');
 CALL_VIRTUAL(jboolean, Boolean, jboolean result, result=, result, 'Z');
 CALL_VIRTUAL(jbyte, Byte, jbyte result, result=, result, 'B');
 CALL_VIRTUAL(jchar, Char, jchar result, result=, result, 'C');
@@ -1870,7 +1870,7 @@ CALL_VIRTUAL(void, Void, , , , 'V');
         CHECK_EXIT(env);                                                    \
         return _retok;                                                      \
     }
-CALL_NONVIRTUAL(jobject, Object, Object* result, result=, result, 'L');
+CALL_NONVIRTUAL(jobject, Object, Object* result, result=(Object*), result, 'L');
 CALL_NONVIRTUAL(jboolean, Boolean, jboolean result, result=, result, 'Z');
 CALL_NONVIRTUAL(jbyte, Byte, jbyte result, result=, result, 'B');
 CALL_NONVIRTUAL(jchar, Char, jchar result, result=, result, 'C');
@@ -1933,7 +1933,7 @@ CALL_NONVIRTUAL(void, Void, , , , 'V');
         CHECK_EXIT(env);                                                    \
         return _retok;                                                      \
     }
-CALL_STATIC(jobject, Object, Object* result, result=, result, 'L');
+CALL_STATIC(jobject, Object, Object* result, result=(Object*), result, 'L');
 CALL_STATIC(jboolean, Boolean, jboolean result, result=, result, 'Z');
 CALL_STATIC(jbyte, Byte, jbyte result, result=, result, 'B');
 CALL_STATIC(jchar, Char, jchar result, result=, result, 'C');
@@ -1973,7 +1973,7 @@ static const jchar* Check_GetStringChars(JNIEnv* env, jstring string,
     result = BASE_ENV(env)->GetStringChars(env, string, isCopy);
     if (((JNIEnvExt*)env)->forceDataCopy && result != NULL) {
         // TODO: fix for indirect
-        int len = dvmStringLen(string) * 2;
+        int len = dvmStringLen((StringObject*) string) * 2;
         result = (const jchar*) createGuardedCopy(result, len, false);
         if (isCopy != NULL)
             *isCopy = JNI_TRUE;
@@ -2029,7 +2029,7 @@ static const char* Check_GetStringUTFChars(JNIEnv* env, jstring string,
     result = BASE_ENV(env)->GetStringUTFChars(env, string, isCopy);
     if (((JNIEnvExt*)env)->forceDataCopy && result != NULL) {
         // TODO: fix for indirect
-        int len = dvmStringUtf8ByteLen(string) + 1;
+        int len = dvmStringUtf8ByteLen((StringObject*) string) + 1;
         result = (const char*) createGuardedCopy(result, len, false);
         if (isCopy != NULL)
             *isCopy = JNI_TRUE;
@@ -2296,7 +2296,7 @@ static const jchar* Check_GetStringCritical(JNIEnv* env, jstring string,
     result = BASE_ENV(env)->GetStringCritical(env, string, isCopy);
     if (((JNIEnvExt*)env)->forceDataCopy && result != NULL) {
         // TODO: fix for indirect
-        int len = dvmStringLen(string) * 2;
+        int len = dvmStringLen((StringObject*) string) * 2;
         result = (const jchar*) createGuardedCopy(result, len, false);
         if (isCopy != NULL)
             *isCopy = JNI_TRUE;

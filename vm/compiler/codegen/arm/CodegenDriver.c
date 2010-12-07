@@ -205,7 +205,7 @@ static bool genConversionPortable(CompilationUnit *cUnit, MIR *mir)
 static void selfVerificationBranchInsert(LIR *currentLIR, ArmOpcode opcode,
                           int dest, int src1)
 {
-     ArmLIR *insn = dvmCompilerNew(sizeof(ArmLIR), true);
+     ArmLIR *insn = (ArmLIR *) dvmCompilerNew(sizeof(ArmLIR), true);
      insn->opcode = opcode;
      insn->operands[0] = dest;
      insn->operands[1] = src1;
@@ -912,7 +912,7 @@ static void genReturnCommon(CompilationUnit *cUnit, MIR *mir)
     /* Insert branch, but defer setting of target */
     ArmLIR *branch = genUnconditionalBranch(cUnit, NULL);
     /* Set up the place holder to reconstruct this Dalvik PC */
-    ArmLIR *pcrLabel = dvmCompilerNew(sizeof(ArmLIR), true);
+    ArmLIR *pcrLabel = (ArmLIR *) dvmCompilerNew(sizeof(ArmLIR), true);
     pcrLabel->opcode = kArmPseudoPCReconstructionCell;
     pcrLabel->operands[0] = dPC;
     pcrLabel->operands[1] = mir->offset;
@@ -1156,7 +1156,7 @@ static void genInvokeVirtualCommon(CompilationUnit *cUnit, MIR *mir,
      */
     if (pcrLabel == NULL) {
         int dPC = (int) (cUnit->method->insns + mir->offset);
-        pcrLabel = dvmCompilerNew(sizeof(ArmLIR), true);
+        pcrLabel = (ArmLIR *) dvmCompilerNew(sizeof(ArmLIR), true);
         pcrLabel->opcode = kArmPseudoPCReconstructionCell;
         pcrLabel->operands[0] = dPC;
         pcrLabel->operands[1] = mir->offset;
@@ -1481,7 +1481,7 @@ static bool handleFmt21c_Fmt31c(CompilationUnit *cUnit, MIR *mir)
 
             isVolatile = (mir->dalvikInsn.opcode == OP_SGET_VOLATILE) ||
                          (mir->dalvikInsn.opcode == OP_SGET_OBJECT_VOLATILE) ||
-                         dvmIsVolatileField(fieldPtr);
+                         dvmIsVolatileField((Field *) fieldPtr);
 
             rlDest = dvmCompilerGetDest(cUnit, mir, 0);
             rlResult = dvmCompilerEvalLoc(cUnit, rlDest, kAnyReg, true);
@@ -1541,7 +1541,7 @@ static bool handleFmt21c_Fmt31c(CompilationUnit *cUnit, MIR *mir)
 
             isVolatile = (mir->dalvikInsn.opcode == OP_SPUT_VOLATILE) ||
                          (mir->dalvikInsn.opcode == OP_SPUT_OBJECT_VOLATILE) ||
-                         dvmIsVolatileField(fieldPtr);
+                         dvmIsVolatileField((Field *) fieldPtr);
 
             isSputObject = (mir->dalvikInsn.opcode == OP_SPUT_OBJECT) ||
                            (mir->dalvikInsn.opcode == OP_SPUT_OBJECT_VOLATILE);
@@ -1600,7 +1600,7 @@ static bool handleFmt21c_Fmt31c(CompilationUnit *cUnit, MIR *mir)
              * Obey the calling convention and don't mess with the register
              * usage.
              */
-            ClassObject *classPtr = (void*)
+            ClassObject *classPtr = (ClassObject *)
               (cUnit->method->clazz->pDvmDex->pResClasses[mir->dalvikInsn.vB]);
 
             if (classPtr == NULL) {
@@ -3008,7 +3008,7 @@ static bool handleFmt35c_3rc(CompilationUnit *cUnit, MIR *mir, BasicBlock *bb,
              */
             if (pcrLabel == NULL) {
                 int dPC = (int) (cUnit->method->insns + mir->offset);
-                pcrLabel = dvmCompilerNew(sizeof(ArmLIR), true);
+                pcrLabel = (ArmLIR *) dvmCompilerNew(sizeof(ArmLIR), true);
                 pcrLabel->opcode = kArmPseudoPCReconstructionCell;
                 pcrLabel->operands[0] = dPC;
                 pcrLabel->operands[1] = mir->offset;
@@ -3832,8 +3832,8 @@ static void genValidationForPredictedInline(CompilationUnit *cUnit, MIR *mir)
 static void handleExtendedMIR(CompilationUnit *cUnit, MIR *mir)
 {
     int opOffset = mir->dalvikInsn.opcode - kMirOpFirst;
-    char *msg = dvmCompilerNew(strlen(extendedMIROpNames[opOffset]) + 1,
-                               false);
+    char *msg = (char *)dvmCompilerNew(strlen(extendedMIROpNames[opOffset]) + 1,
+                                        false);
     strcpy(msg, extendedMIROpNames[opOffset]);
     newLIR1(cUnit, kArmPseudoExtended, (int) msg);
 
@@ -3880,7 +3880,7 @@ static void setupLoopEntryBlock(CompilationUnit *cUnit, BasicBlock *entry,
                                 ArmLIR *bodyLabel)
 {
     /* Set up the place holder to reconstruct this Dalvik PC */
-    ArmLIR *pcrLabel = dvmCompilerNew(sizeof(ArmLIR), true);
+    ArmLIR *pcrLabel = (ArmLIR *) dvmCompilerNew(sizeof(ArmLIR), true);
     pcrLabel->opcode = kArmPseudoPCReconstructionCell;
     pcrLabel->operands[0] =
         (int) (cUnit->method->insns + entry->startOffset);
@@ -3892,13 +3892,13 @@ static void setupLoopEntryBlock(CompilationUnit *cUnit, BasicBlock *entry,
      * Next, create two branches - one branch over to the loop body and the
      * other branch to the PCR cell to punt.
      */
-    ArmLIR *branchToBody = dvmCompilerNew(sizeof(ArmLIR), true);
+    ArmLIR *branchToBody = (ArmLIR *) dvmCompilerNew(sizeof(ArmLIR), true);
     branchToBody->opcode = kThumbBUncond;
     branchToBody->generic.target = (LIR *) bodyLabel;
     setupResourceMasks(branchToBody);
     cUnit->loopAnalysis->branchToBody = (LIR *) branchToBody;
 
-    ArmLIR *branchToPCR = dvmCompilerNew(sizeof(ArmLIR), true);
+    ArmLIR *branchToPCR = (ArmLIR *) dvmCompilerNew(sizeof(ArmLIR), true);
     branchToPCR->opcode = kThumbBUncond;
     branchToPCR->generic.target = (LIR *) pcrLabel;
     setupResourceMasks(branchToPCR);
@@ -3928,7 +3928,7 @@ void dvmCompilerMIR2LIR(CompilationUnit *cUnit)
 {
     /* Used to hold the labels of each block */
     ArmLIR *labelList =
-        dvmCompilerNew(sizeof(ArmLIR) * cUnit->numBlocks, true);
+        (ArmLIR *) dvmCompilerNew(sizeof(ArmLIR) * cUnit->numBlocks, true);
     GrowableList chainingListByType[kChainingCellGap];
     int i;
 
@@ -4345,6 +4345,7 @@ gen_fallthrough:
 /* Accept the work and start compiling */
 bool dvmCompilerDoWork(CompilerWorkOrder *work)
 {
+    JitTraceDescription *desc;
     bool res;
 
     if (gDvmJit.codeCacheFull) {
@@ -4354,14 +4355,16 @@ bool dvmCompilerDoWork(CompilerWorkOrder *work)
     switch (work->kind) {
         case kWorkOrderTrace:
             /* Start compilation with maximally allowed trace length */
-            res = dvmCompileTrace(work->info, JIT_MAX_TRACE_LEN, &work->result,
+            desc = (JitTraceDescription *)work->info;
+            res = dvmCompileTrace(desc, JIT_MAX_TRACE_LEN, &work->result,
                                   work->bailPtr, 0 /* no hints */);
             break;
         case kWorkOrderTraceDebug: {
             bool oldPrintMe = gDvmJit.printMe;
             gDvmJit.printMe = true;
             /* Start compilation with maximally allowed trace length */
-            res = dvmCompileTrace(work->info, JIT_MAX_TRACE_LEN, &work->result,
+            desc = (JitTraceDescription *)work->info;
+            res = dvmCompileTrace(desc, JIT_MAX_TRACE_LEN, &work->result,
                                   work->bailPtr, 0 /* no hints */);
             gDvmJit.printMe = oldPrintMe;
             break;

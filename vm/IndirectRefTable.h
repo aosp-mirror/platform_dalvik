@@ -236,7 +236,7 @@ INLINE u4 dvmIndirectRefToIndex(IndirectRef iref)
  */
 INLINE IndirectRefKind dvmGetIndirectRefType(IndirectRef iref)
 {
-    return (u4) iref & 0x03;
+    return (IndirectRefKind)((u4) iref & 0x03);
 }
 
 /*

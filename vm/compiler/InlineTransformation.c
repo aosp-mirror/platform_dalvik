@@ -43,7 +43,7 @@ static void inlineGetter(CompilationUnit *cUnit,
 {
     BasicBlock *moveResultBB = invokeBB->fallThrough;
     MIR *moveResultMIR = moveResultBB->firstMIRInsn;
-    MIR *newGetterMIR = dvmCompilerNew(sizeof(MIR), true);
+    MIR *newGetterMIR = (MIR *)dvmCompilerNew(sizeof(MIR), true);
     DecodedInstruction getterInsn;
 
     dexDecodeInstruction(calleeMethod->insns, &getterInsn);
@@ -100,7 +100,7 @@ static void inlineGetter(CompilationUnit *cUnit,
     dvmCompilerInsertMIRAfter(invokeBB, invokeMIR, newGetterMIR);
 
     if (isPredicted) {
-        MIR *invokeMIRSlow = dvmCompilerNew(sizeof(MIR), true);
+        MIR *invokeMIRSlow = (MIR *)dvmCompilerNew(sizeof(MIR), true);
         *invokeMIRSlow = *invokeMIR;
         invokeMIR->dalvikInsn.opcode = kMirOpCheckInlinePrediction;
 
@@ -134,7 +134,7 @@ static void inlineSetter(CompilationUnit *cUnit,
                          bool isPredicted,
                          bool isRange)
 {
-    MIR *newSetterMIR = dvmCompilerNew(sizeof(MIR), true);
+    MIR *newSetterMIR = (MIR *)dvmCompilerNew(sizeof(MIR), true);
     DecodedInstruction setterInsn;
 
     dexDecodeInstruction(calleeMethod->insns, &setterInsn);
@@ -179,7 +179,7 @@ static void inlineSetter(CompilationUnit *cUnit,
     dvmCompilerInsertMIRAfter(invokeBB, invokeMIR, newSetterMIR);
 
     if (isPredicted) {
-        MIR *invokeMIRSlow = dvmCompilerNew(sizeof(MIR), true);
+        MIR *invokeMIRSlow = (MIR *)dvmCompilerNew(sizeof(MIR), true);
         *invokeMIRSlow = *invokeMIR;
         invokeMIR->dalvikInsn.opcode = kMirOpCheckInlinePrediction;
 
@@ -246,7 +246,7 @@ static void inlineEmptyVirtualCallee(CompilationUnit *cUnit,
                                      MIR *invokeMIR,
                                      BasicBlock *invokeBB)
 {
-    MIR *invokeMIRSlow = dvmCompilerNew(sizeof(MIR), true);
+    MIR *invokeMIRSlow = (MIR *)dvmCompilerNew(sizeof(MIR), true);
     *invokeMIRSlow = *invokeMIR;
     invokeMIR->dalvikInsn.opcode = kMirOpCheckInlinePrediction;
 

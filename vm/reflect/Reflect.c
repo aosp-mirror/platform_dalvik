@@ -1043,7 +1043,7 @@ DataObject* dvmBoxPrimitive(JValue value, ClassObject* returnType)
     if (typeIndex == PRIM_NOT) {
         /* add to tracking table so return value is always in table */
         if (value.l != NULL)
-            dvmAddTrackedAlloc(value.l, NULL);
+            dvmAddTrackedAlloc((Object*)value.l, NULL);
         return (DataObject*) value.l;
     }
 

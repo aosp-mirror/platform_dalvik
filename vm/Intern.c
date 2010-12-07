@@ -63,7 +63,7 @@ static StringObject* lookupInternedString(StringObject* strObj, bool isLiteral)
         /*
          * Check the literal table for a match.
          */
-        StringObject* literal = dvmHashTableLookup(gDvm.literalStrings,
+        StringObject* literal = (StringObject*)dvmHashTableLookup(gDvm.literalStrings,
                                                    hash, strObj,
                                                    dvmHashcmpStrings,
                                                    false);
@@ -77,7 +77,7 @@ static StringObject* lookupInternedString(StringObject* strObj, bool isLiteral)
              * There is no match in the literal table, check the
              * interned string table.
              */
-            StringObject* interned = dvmHashTableLookup(gDvm.internedStrings,
+            StringObject* interned = (StringObject*)dvmHashTableLookup(gDvm.internedStrings,
                                                         hash, strObj,
                                                         dvmHashcmpStrings,
                                                         false);
@@ -87,7 +87,7 @@ static StringObject* lookupInternedString(StringObject* strObj, bool isLiteral)
                  * matching string to the literal table.
                  */
                 dvmHashTableRemove(gDvm.internedStrings, hash, interned);
-                found = dvmHashTableLookup(gDvm.literalStrings,
+                found = (StringObject*)dvmHashTableLookup(gDvm.literalStrings,
                                            hash, interned,
                                            dvmHashcmpStrings,
                                            true);
@@ -97,7 +97,7 @@ static StringObject* lookupInternedString(StringObject* strObj, bool isLiteral)
                  * No match in the literal table or the interned
                  * table.  Insert into the literal table.
                  */
-                found = dvmHashTableLookup(gDvm.literalStrings,
+                found = (StringObject*)dvmHashTableLookup(gDvm.literalStrings,
                                            hash, strObj,
                                            dvmHashcmpStrings,
                                            true);
@@ -108,7 +108,7 @@ static StringObject* lookupInternedString(StringObject* strObj, bool isLiteral)
         /*
          * Check the literal table for a match.
          */
-        found = dvmHashTableLookup(gDvm.literalStrings,
+        found = (StringObject*)dvmHashTableLookup(gDvm.literalStrings,
                                    hash, strObj,
                                    dvmHashcmpStrings,
                                    false);
@@ -117,7 +117,7 @@ static StringObject* lookupInternedString(StringObject* strObj, bool isLiteral)
              * No match was found in the literal table.  Insert into
              * the intern table.
              */
-            found = dvmHashTableLookup(gDvm.internedStrings,
+            found = (StringObject*)dvmHashTableLookup(gDvm.internedStrings,
                                        hash, strObj,
                                        dvmHashcmpStrings,
                                        true);
@@ -163,8 +163,8 @@ bool dvmIsWeakInternedString(const StringObject* strObj)
     }
     dvmLockMutex(&gDvm.internLock);
     hash = dvmComputeStringHash(strObj);
-    found = dvmHashTableLookup(gDvm.internedStrings, hash, (void*)strObj,
-                               dvmHashcmpStrings, false);
+    found = (StringObject*)dvmHashTableLookup(gDvm.internedStrings, hash,
+                               (StringObject*)strObj, dvmHashcmpStrings, false);
     dvmUnlockMutex(&gDvm.internLock);
     return found == strObj;
 }

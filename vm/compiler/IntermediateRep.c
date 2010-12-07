@@ -20,7 +20,7 @@
 /* Allocate a new basic block */
 BasicBlock *dvmCompilerNewBB(BBType blockType)
 {
-    BasicBlock *bb = dvmCompilerNew(sizeof(BasicBlock), true);
+    BasicBlock *bb = (BasicBlock *)dvmCompilerNew(sizeof(BasicBlock), true);
     bb->blockType = blockType;
     return bb;
 }

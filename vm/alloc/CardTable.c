@@ -64,7 +64,7 @@ bool dvmCardTableStartup(void)
     if (allocBase == NULL) {
         return false;
     }
-    gcHeap->cardTableBase = allocBase;
+    gcHeap->cardTableBase = (u1*)allocBase;
     gcHeap->cardTableLength = length;
     /* All zeros is the correct initial value; all clean. */
     assert(GC_CARD_CLEAN == 0);
@@ -171,7 +171,7 @@ static void countWhiteReferenceVisitor(void *addr, void *arg)
         return;
     }
     assert(dvmIsValidObject(obj));
-    ctx = arg;
+    ctx = (WhiteReferenceCounter *)arg;
     if (dvmHeapBitmapIsObjectBitSet(ctx->markBits, obj)) {
         return;
     }
@@ -193,7 +193,7 @@ static void dumpWhiteReferenceVisitor(void *addr, void *arg)
         return;
     }
     assert(dvmIsValidObject(obj));
-    ctx = arg;
+    ctx = (WhiteReferenceCounter*)arg;
     if (dvmHeapBitmapIsObjectBitSet(ctx->markBits, obj)) {
         return;
     }
@@ -214,14 +214,14 @@ static void dumpReferencesVisitor(void *pObj, void *arg)
 
 static void dumpReferencesCallback(void *ptr, void *arg)
 {
-    Object *obj = arg;
+    Object *obj = (Object *)arg;
     if (ptr == obj) {
         return;
     }
-    dvmVisitObject(dumpReferencesVisitor, ptr, &obj);
+    dvmVisitObject(dumpReferencesVisitor, (Object *)ptr, &obj);
     if (obj == NULL) {
         LOGD("Found %p in the heap @ %p", arg, ptr);
-        dvmDumpObject(ptr);
+        dvmDumpObject((Object *)ptr);
     }
 }
 
@@ -311,8 +311,8 @@ static bool isPushedOnMarkStack(const Object *obj)
  */
 static void verifyCardTableCallback(void *ptr, void *arg)
 {
-    Object *obj = ptr;
-    WhiteReferenceCounter ctx = { arg, 0 };
+    Object *obj = (Object *)ptr;
+    WhiteReferenceCounter ctx = { (HeapBitmap *)arg, 0 };
 
     dvmVisitObject(countWhiteReferenceVisitor, obj, &ctx);
     if (ctx.whiteRefs == 0) {

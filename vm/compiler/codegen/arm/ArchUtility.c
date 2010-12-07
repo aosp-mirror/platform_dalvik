@@ -375,7 +375,7 @@ void dvmCompilerCodegenDump(CompilationUnit *cUnit)
     LOGD("installed code is at %p\n", cUnit->baseAddr);
     LOGD("total size is %d bytes\n", cUnit->totalSize);
     for (lirInsn = cUnit->firstLIRInsn; lirInsn; lirInsn = lirInsn->next) {
-        dvmDumpLIRInsn(lirInsn, cUnit->baseAddr);
+        dvmDumpLIRInsn(lirInsn, (unsigned char *) cUnit->baseAddr);
     }
     for (lirInsn = cUnit->wordList; lirInsn; lirInsn = lirInsn->next) {
         armLIR = (ArmLIR *) lirInsn;

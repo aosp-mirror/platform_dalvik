@@ -277,10 +277,11 @@ CompilerMethodStats *dvmCompilerAnalyzeMethodBody(const Method *method,
 
     /* For lookup only */
     dummyMethodEntry.method = method;
-    realMethodEntry = dvmHashTableLookup(gDvmJit.methodStatsTable, hashValue,
-                                         &dummyMethodEntry,
-                                         (HashCompareFunc) compareMethod,
-                                         false);
+    realMethodEntry =
+        (CompilerMethodStats *) dvmHashTableLookup(gDvmJit.methodStatsTable, hashValue,
+                                                   &dummyMethodEntry,
+                                                   (HashCompareFunc) compareMethod,
+                                                   false);
 
     /* This method has never been analyzed before - create an entry */
     if (realMethodEntry == NULL) {
@@ -463,7 +464,7 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
     if (gDvmJit.methodTable) {
         int len = strlen(desc->method->clazz->descriptor) +
                   strlen(desc->method->name) + 1;
-        char *fullSignature = dvmCompilerNew(len, true);
+        char *fullSignature = (char *)dvmCompilerNew(len, true);
         strcpy(fullSignature, desc->method->clazz->descriptor);
         strcat(fullSignature, desc->method->name);
 
@@ -558,7 +559,7 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
     while (1) {
         MIR *insn;
         int width;
-        insn = dvmCompilerNew(sizeof(MIR), true);
+        insn = (MIR *)dvmCompilerNew(sizeof(MIR), true);
         insn->offset = curOffset;
         width = parseInsn(codePtr, &insn->dalvikInsn, cUnit.printMe);
 
@@ -574,9 +575,9 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
         if (flags & kInstrInvoke) {
             assert(numInsts == 1);
             CallsiteInfo *callsiteInfo =
-                dvmCompilerNew(sizeof(CallsiteInfo), true);
-            callsiteInfo->clazz = currRun[1].meta;
-            callsiteInfo->method = currRun[2].meta;
+                (CallsiteInfo *)dvmCompilerNew(sizeof(CallsiteInfo), true);
+            callsiteInfo->clazz = (ClassObject *)currRun[1].meta;
+            callsiteInfo->method = (Method *)currRun[2].meta;
             insn->meta.callsiteInfo = callsiteInfo;
         }
 
@@ -867,7 +868,7 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
     cUnit.traceDesc = desc;
     cUnit.numBlocks = numBlocks;
     blockList = cUnit.blockList =
-        dvmCompilerNew(sizeof(BasicBlock *) * numBlocks, true);
+        (BasicBlock **)dvmCompilerNew(sizeof(BasicBlock *) * numBlocks, true);
 
     int i;
 
@@ -968,7 +969,7 @@ bool dvmCompilerCanIncludeThisInstruction(const Method *method,
     switch (insn->opcode) {
         case OP_NEW_INSTANCE:
         case OP_CHECK_CAST: {
-            ClassObject *classPtr = (void*)
+            ClassObject *classPtr = (ClassObject *)(void*)
               (method->clazz->pDvmDex->pResClasses[insn->vB]);
 
             /* Class hasn't been initialized yet */
@@ -1091,7 +1092,7 @@ bool dvmCompileMethod(CompilationUnit *cUnit, const Method *method,
      * basic block. Identify block boundaries at the mean time.
      */
     while (codePtr < codeEnd) {
-        MIR *insn = dvmCompilerNew(sizeof(MIR), true);
+        MIR *insn = (MIR *)dvmCompilerNew(sizeof(MIR), true);
         insn->offset = curOffset;
         int width = parseInsn(codePtr, &insn->dalvikInsn, false);
         bool isInvoke = false;
@@ -1151,7 +1152,7 @@ bool dvmCompileMethod(CompilationUnit *cUnit, const Method *method,
     }
 
     BasicBlock **blockList;
-    blockList = cUnit->blockList =
+    blockList = cUnit->blockList = (BasicBlock **)
         dvmCompilerNew(sizeof(BasicBlock *) * (numBlocks + numInvokeTargets),
                        true);
 

@@ -108,7 +108,7 @@ bool dvmHeapBeginMarkStep(GcMode mode)
         return false;
     }
     ctx->finger = NULL;
-    ctx->immuneLimit = dvmHeapSourceGetImmuneLimit(mode);
+    ctx->immuneLimit = (char*)dvmHeapSourceGetImmuneLimit(mode);
     return true;
 }
 
@@ -160,12 +160,14 @@ static void markObject(const Object *obj, GcMarkContext *ctx)
 static void rootMarkObjectVisitor(void *addr, RootType type, u4 thread, void *arg)
 {
     Object *obj;
+    GcMarkContext *ctx;
 
     assert(addr != NULL);
     assert(arg != NULL);
     obj = *(Object **)addr;
+    ctx = (GcMarkContext *)arg;
     if (obj != NULL) {
-        markObjectNonNull(obj, arg, false);
+        markObjectNonNull(obj, ctx, false);
     }
 }
 
@@ -210,12 +212,14 @@ void dvmHeapMarkRootSet()
 static void markObjectVisitor(void *addr, RootType type, u4 thread, void *arg)
 {
     Object *obj;
+    GcMarkContext *ctx;
 
     assert(addr != NULL);
     assert(arg != NULL);
     obj = *(Object **)addr;
+    ctx = (GcMarkContext *)arg;
     if (obj != NULL) {
-        markObjectNonNull(obj, arg, true);
+        markObjectNonNull(obj, ctx, true);
     }
 }
 
@@ -254,7 +258,8 @@ static void scanFields(const Object *obj, GcMarkContext *ctx)
             int i;
             for (i = 0; i < clazz->ifieldRefCount; ++i, ++field) {
                 void *addr = BYTE_OFFSET((Object *)obj, field->byteOffset);
-                markObject(((JValue *)addr)->l, ctx);
+                Object *ref = (Object *)((JValue *)addr)->l;
+                markObject(ref, ctx);
             }
         }
     }
@@ -272,7 +277,8 @@ static void scanStaticFields(const ClassObject *clazz, GcMarkContext *ctx)
     for (i = 0; i < clazz->sfieldCount; ++i) {
         char ch = clazz->sfields[i].field.signature[0];
         if (ch == '[' || ch == 'L') {
-            markObject(clazz->sfields[i].value.l, ctx);
+            Object *obj = (Object *)clazz->sfields[i].value.l;
+            markObject(obj, ctx);
         }
     }
 }
@@ -624,7 +630,7 @@ const u1 *scanDirtyCards(const u1 *start, const u1 *end,
         if (*card != GC_CARD_DIRTY) {
             return card;
         }
-        const u1 *ptr = prevAddr ? prevAddr : dvmAddrFromCard(card);
+        const u1 *ptr = prevAddr ? prevAddr : (u1*)dvmAddrFromCard(card);
         const u1 *limit = ptr + GC_CARD_SIZE;
         while (ptr < limit) {
             Object *obj = nextGrayObject(ptr, limit, markBits);
@@ -683,9 +689,9 @@ static void scanGrayObjects(GcMarkContext *ctx)
  */
 static void scanBitmapCallback(void *addr, void *finger, void *arg)
 {
-    GcMarkContext *ctx = arg;
+    GcMarkContext *ctx = (GcMarkContext *)arg;
     ctx->finger = (void *)finger;
-    scanObject(addr, ctx);
+    scanObject((Object *)addr, ctx);
 }
 
 /* Given bitmaps with the root set marked, find and mark all
@@ -1020,7 +1026,7 @@ typedef struct {
 
 static void sweepBitmapCallback(size_t numPtrs, void **ptrs, void *arg)
 {
-    SweepContext *ctx = arg;
+    SweepContext *ctx = (SweepContext *)arg;
 
     if (ctx->isConcurrent) {
         dvmLockHeap();

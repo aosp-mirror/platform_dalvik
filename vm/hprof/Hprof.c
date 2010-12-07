@@ -45,7 +45,7 @@ hprofStartup(const char *outputFileName, int fd, bool directToDdms)
     hprofStartup_Stack();
 #endif
 
-    hprof_context_t *ctx = malloc(sizeof(*ctx));
+    hprof_context_t *ctx = (hprof_context_t *)malloc(sizeof(*ctx));
     if (ctx == NULL) {
         LOGE("hprof: can't allocate context.\n");
         return NULL;
@@ -72,7 +72,7 @@ hprofShutdown(hprof_context_t *tailCtx)
      * Create a new context struct for the start of the file.  We
      * heap-allocate it so we can share the "free" function.
      */
-    hprof_context_t *headCtx = malloc(sizeof(*headCtx));
+    hprof_context_t *headCtx = (hprof_context_t *)malloc(sizeof(*headCtx));
     if (headCtx == NULL) {
         LOGE("hprof: can't allocate context.\n");
         hprofFreeContext(tailCtx);
@@ -212,10 +212,10 @@ static void hprofRootVisitor(void *addr, u4 threadId, RootType type, void *arg)
 
     assert(arg != NULL);
     assert(type < NELEM(xlate));
-    ctx = arg;
+    ctx = (hprof_context_t *)arg;
     ctx->gcScanState = xlate[type];
     ctx->gcThreadSerialNumber = threadId;
-    hprofMarkRootObject(ctx, addr, 0);
+    hprofMarkRootObject(ctx, (Object *)addr, 0);
     ctx->gcScanState = 0;
     ctx->gcThreadSerialNumber = 0;
 }
@@ -230,8 +230,8 @@ static void hprofBitmapCallback(void *ptr, void *arg)
 
     assert(ptr != NULL);
     assert(arg != NULL);
-    obj = ptr;
-    ctx = arg;
+    obj = (Object *)ptr;
+    ctx = (hprof_context_t *)arg;
     hprofDumpHeapObject(ctx, obj);
 }
 

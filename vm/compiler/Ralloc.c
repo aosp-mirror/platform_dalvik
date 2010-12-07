@@ -150,7 +150,7 @@ void dvmCompilerRegAlloc(CompilationUnit *cUnit)
         }
     } else {
         // Compute live ranges
-        ranges = dvmCompilerNew(cUnit->numSSARegs * sizeof(*ranges), true);
+        ranges = (LiveRange *)dvmCompilerNew(cUnit->numSSARegs * sizeof(*ranges), true);
         for (i=0; i < cUnit->numSSARegs; i++)
             ranges[i].active = false;
         seqNum = computeLiveRange(ranges, cUnit->blockList[i], seqNum);

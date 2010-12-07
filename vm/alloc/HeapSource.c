@@ -549,14 +549,14 @@ dvmHeapSourceStartup(size_t startSize, size_t absoluteMaxSize)
 
     /* Allocate a descriptor from the heap we just created.
      */
-    gcHeap = mspace_malloc(msp, sizeof(*gcHeap));
+    gcHeap = (GcHeap *)mspace_malloc(msp, sizeof(*gcHeap));
     if (gcHeap == NULL) {
         LOGE_HEAP("Can't allocate heap descriptor\n");
         goto fail;
     }
     memset(gcHeap, 0, sizeof(*gcHeap));
 
-    hs = mspace_malloc(msp, sizeof(*hs));
+    hs = (HeapSource *)mspace_malloc(msp, sizeof(*hs));
     if (hs == NULL) {
         LOGE_HEAP("Can't allocate heap source\n");
         goto fail;
@@ -572,7 +572,7 @@ dvmHeapSourceStartup(size_t startSize, size_t absoluteMaxSize)
     hs->numHeaps = 0;
     hs->sawZygote = gDvm.zygote;
     hs->hasGcThread = false;
-    hs->heapBase = base;
+    hs->heapBase = (char *)base;
     hs->heapLength = length;
     if (!addNewHeap(hs, msp, absoluteMaxSize)) {
         LOGE_HEAP("Can't add initial heap\n");
@@ -994,7 +994,7 @@ size_t dvmHeapSourceFreeList(size_t numPtrs, void **ptrs)
     heap = ptr2heap(gHs, *ptrs);
     numBytes = 0;
     if (heap != NULL) {
-        mspace *msp = heap->msp;
+        mspace msp = heap->msp;
         // Calling mspace_free on shared heaps disrupts sharing too
         // much. For heap[0] -- the 'active heap' -- we call
         // mspace_free, but on the other heaps we only do some

@@ -139,7 +139,7 @@ LinearAllocHdr* dvmLinearAllocCreate(Object* classLoader)
         return NULL;
     }
 
-    pHdr->mapAddr = mmap(NULL, pHdr->mapLength, PROT_READ | PROT_WRITE,
+    pHdr->mapAddr = (char*)mmap(NULL, pHdr->mapLength, PROT_READ | PROT_WRITE,
         MAP_PRIVATE, fd, 0);
     if (pHdr->mapAddr == MAP_FAILED) {
         LOGE("LinearAlloc mmap(%d) failed: %s\n", pHdr->mapLength,
@@ -202,7 +202,7 @@ LinearAllocHdr* dvmLinearAllocCreate(Object* classLoader)
     if (ENFORCE_READ_ONLY) {
         /* allocate the per-page ref count */
         int numPages = (pHdr->mapLength+SYSTEM_PAGE_SIZE-1) / SYSTEM_PAGE_SIZE;
-        pHdr->writeRefCount = calloc(numPages, sizeof(short));
+        pHdr->writeRefCount = (short*)calloc(numPages, sizeof(short));
         if (pHdr->writeRefCount == NULL) {
             free(pHdr);
             return NULL;

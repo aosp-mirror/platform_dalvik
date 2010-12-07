@@ -155,7 +155,7 @@ static void getStackFrames(Thread* self, AllocRecord* pRec)
         const StackSaveArea* saveArea = SAVEAREA_FROM_FP(fp);
         const Method* method = saveArea->method;
 
-        if (!dvmIsBreakFrame(fp)) {
+        if (!dvmIsBreakFrame((u4*) fp)) {
             pRec->stackElem[stackDepth].method = method;
             if (dvmIsNativeMethod(method)) {
                 pRec->stackElem[stackDepth].pc = 0;

@@ -897,7 +897,7 @@ int dvmFindCatchBlock(Thread* self, int relPc, Object* exception,
          * if this was a native method.
          */
         assert(saveArea->prevFrame != NULL);
-        if (dvmIsBreakFrame(saveArea->prevFrame)) {
+        if (dvmIsBreakFrame((u4*)saveArea->prevFrame)) {
             if (!scanOnly)
                 break;      // bail with catchAddr == -1
 
@@ -914,7 +914,7 @@ int dvmFindCatchBlock(Thread* self, int relPc, Object* exception,
             saveArea = SAVEAREA_FROM_FP(fp);
             fp = saveArea->prevFrame;           // this may be a good one
             while (fp != NULL) {
-                if (!dvmIsBreakFrame(fp)) {
+                if (!dvmIsBreakFrame((u4*)fp)) {
                     saveArea = SAVEAREA_FROM_FP(fp);
                     if (!dvmIsNativeMethod(saveArea->method))
                         break;
@@ -1001,7 +1001,7 @@ void* dvmFillInStackTraceInternal(Thread* thread, bool wantObject, int* pCount)
         const StackSaveArea* saveArea = SAVEAREA_FROM_FP(fp);
         const Method* method = saveArea->method;
 
-        if (dvmIsBreakFrame(fp))
+        if (dvmIsBreakFrame((u4*)fp))
             break;
         if (!dvmInstanceof(method->clazz, gDvm.classJavaLangThrowable))
             break;
@@ -1018,7 +1018,7 @@ void* dvmFillInStackTraceInternal(Thread* thread, bool wantObject, int* pCount)
     while (fp != NULL) {
         const StackSaveArea* saveArea = SAVEAREA_FROM_FP(fp);
 
-        if (!dvmIsBreakFrame(fp))
+        if (!dvmIsBreakFrame((u4*)fp))
             stackDepth++;
 
         assert(fp != saveArea->prevFrame);
@@ -1059,7 +1059,7 @@ void* dvmFillInStackTraceInternal(Thread* thread, bool wantObject, int* pCount)
         const StackSaveArea* saveArea = SAVEAREA_FROM_FP(fp);
         const Method* method = saveArea->method;
 
-        if (!dvmIsBreakFrame(fp)) {
+        if (!dvmIsBreakFrame((u4*)fp)) {
             //LOGD("EXCEP keeping %s.%s\n", method->clazz->descriptor,
             //         method->name);
 

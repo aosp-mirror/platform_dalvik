@@ -209,7 +209,7 @@ static void crawlDalvikStack(Thread *thread, bool print)
         saveArea = SAVEAREA_FROM_FP(fp);
 
         if (print) {
-            if (dvmIsBreakFrame(fp)) {
+            if (dvmIsBreakFrame((u4*)fp)) {
                 LOGD("  #%d: break frame (%p)",
                      stackLevel, saveArea->returnAddr);
             }

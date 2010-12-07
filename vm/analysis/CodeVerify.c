@@ -427,7 +427,7 @@ UninitInstanceMap* dvmCreateUninitInstanceMap(const Method* meth,
      */
     int size = offsetof(UninitInstanceMap, map) +
                 newInstanceCount * sizeof(uninitMap->map[0]);
-    uninitMap = calloc(1, size);
+    uninitMap = (UninitInstanceMap*)calloc(1, size);
     if (uninitMap == NULL)
         return NULL;
     uninitMap->numEntries = newInstanceCount;
@@ -3068,7 +3068,7 @@ static bool initRegisterTable(const VerifierData* vdata,
     /*
      * Populate the sparse register line table.
      */
-    u1* storage = regTable->lineAlloc;
+    u1* storage = (u1*)regTable->lineAlloc;
     for (i = 0; i < insnsSize; i++) {
         bool interesting;
 

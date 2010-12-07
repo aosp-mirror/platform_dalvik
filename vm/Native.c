@@ -200,7 +200,7 @@ static SharedLib* findSharedLibEntry(const char* pathName)
 
     ent = dvmHashTableLookup(gDvm.nativeLibs, hash, (void*)pathName,
                 hashcmpNameStr, false);
-    return ent;
+    return (SharedLib*)ent;
 }
 
 /*
@@ -218,8 +218,8 @@ static SharedLib* addSharedLibEntry(SharedLib* pLib)
      * our own pointer back.  If somebody beat us to the punch, we'll get
      * their pointer back instead.
      */
-    return dvmHashTableLookup(gDvm.nativeLibs, hash, pLib, hashcmpSharedLib,
-                true);
+    return (SharedLib*)dvmHashTableLookup(gDvm.nativeLibs, hash, pLib,
+                hashcmpSharedLib, true);
 }
 
 /*
@@ -426,7 +426,7 @@ bool dvmLoadNativeCode(const char* pathName, Object* classLoader,
              * top of the stack is around Runtime.loadLibrary().  (See
              * the comments in the JNI FindClass function.)
              */
-            OnLoadFunc func = vonLoad;
+            OnLoadFunc func = (OnLoadFunc)vonLoad;
             Object* prevOverride = self->classLoaderOverride;
 
             self->classLoaderOverride = classLoader;
@@ -558,7 +558,7 @@ static char* createJniNameString(const char* classDescriptor,
 
     *pLen = 4 + descriptorLength + strlen(methodName);
 
-    result = malloc(*pLen +1);
+    result = (char*)malloc(*pLen +1);
     if (result == NULL)
         return NULL;
 

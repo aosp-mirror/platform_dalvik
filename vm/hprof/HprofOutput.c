@@ -85,7 +85,7 @@ hprofContextInit(hprof_context_t *ctx, char *fileName, int fd,
     ctx->fd = fd;
 
     ctx->curRec.allocLen = 128;
-    ctx->curRec.body = malloc(ctx->curRec.allocLen);
+    ctx->curRec.body = (unsigned char *)malloc(ctx->curRec.allocLen);
 //xxx check for/return an error
 
     if (writeHeader) {
@@ -194,7 +194,7 @@ guaranteeRecordAppend(hprof_record_t *rec, size_t nmore)
         if (newAllocLen < minSize) {
             newAllocLen = rec->allocLen + nmore + nmore/2;
         }
-        newBody = realloc(rec->body, newAllocLen);
+        newBody = (unsigned char *)realloc(rec->body, newAllocLen);
         if (newBody != NULL) {
             rec->body = newBody;
             rec->allocLen = newAllocLen;

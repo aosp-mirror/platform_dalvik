@@ -60,7 +60,7 @@ static ArmLIR *loadFPConstantValue(CompilationUnit *cUnit, int rDest,
     if (dataTarget == NULL) {
         dataTarget = addWordData(cUnit, value, false);
     }
-    ArmLIR *loadPcRel = dvmCompilerNew(sizeof(ArmLIR), true);
+    ArmLIR *loadPcRel = (ArmLIR *) dvmCompilerNew(sizeof(ArmLIR), true);
     loadPcRel->opcode = kThumb2Vldrs;
     loadPcRel->generic.target = (LIR *) dataTarget;
     loadPcRel->operands[0] = rDest;
@@ -170,7 +170,7 @@ static ArmLIR *loadConstantNoClobber(CompilationUnit *cUnit, int rDest,
     if (dataTarget == NULL) {
         dataTarget = addWordData(cUnit, value, false);
     }
-    ArmLIR *loadPcRel = dvmCompilerNew(sizeof(ArmLIR), true);
+    ArmLIR *loadPcRel = (ArmLIR *) dvmCompilerNew(sizeof(ArmLIR), true);
     loadPcRel->opcode = kThumb2LdrPcRel12;
     loadPcRel->generic.target = (LIR *) dataTarget;
     loadPcRel->operands[0] = rDest;
@@ -1121,7 +1121,7 @@ static ArmLIR *genCmpImmBranch(CompilationUnit *cUnit,
 
 static ArmLIR *fpRegCopy(CompilationUnit *cUnit, int rDest, int rSrc)
 {
-    ArmLIR* res = dvmCompilerNew(sizeof(ArmLIR), true);
+    ArmLIR* res = (ArmLIR *) dvmCompilerNew(sizeof(ArmLIR), true);
     res->operands[0] = rDest;
     res->operands[1] = rSrc;
     if (rDest == rSrc) {
@@ -1151,7 +1151,7 @@ static ArmLIR* genRegCopyNoInsert(CompilationUnit *cUnit, int rDest, int rSrc)
     ArmOpcode opcode;
     if (FPREG(rDest) || FPREG(rSrc))
         return fpRegCopy(cUnit, rDest, rSrc);
-    res = dvmCompilerNew(sizeof(ArmLIR), true);
+    res = (ArmLIR *) dvmCompilerNew(sizeof(ArmLIR), true);
     if (LOWREG(rDest) && LOWREG(rSrc))
         opcode = kThumbMovRR;
     else if (!LOWREG(rDest) && !LOWREG(rSrc))

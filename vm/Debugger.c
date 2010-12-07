@@ -355,9 +355,9 @@ static FrameId frameToFrameId(const void* frame)
 {
     return (FrameId)(u4) frame;
 }
-static void* frameIdToFrame(FrameId id)
+static u4* frameIdToFrame(FrameId id)
 {
-    return (void*)(u4) id;
+    return (u4*)(u4) id;
 }
 
 
@@ -581,7 +581,8 @@ void dvmDbgGetClassList(u4* pNumClasses, RefTypeId** pClassRefBuf)
 
     dvmHashTableLock(gDvm.loadedClasses);
     *pNumClasses = dvmHashTableNumEntries(gDvm.loadedClasses);
-    pRefType = *pClassRefBuf = malloc(sizeof(RefTypeId) * *pNumClasses);
+    pRefType = *pClassRefBuf =
+        (RefTypeId*)malloc(sizeof(RefTypeId) * *pNumClasses);
 
     if (dvmHashForeach(gDvm.loadedClasses, copyRefType, &pRefType) != 0) {
         LOGW("Warning: problem getting class list\n");
@@ -615,7 +616,7 @@ void dvmDbgGetVisibleClassList(ObjectId classLoaderId, u4* pNumClasses,
 
     /* over-allocate the return buffer */
     maxClasses = dvmHashTableNumEntries(gDvm.loadedClasses);
-    *pClassRefBuf = malloc(sizeof(RefTypeId) * maxClasses);
+    *pClassRefBuf = (RefTypeId*)malloc(sizeof(RefTypeId) * maxClasses);
 
     /*
      * Run through the list, looking for matches.
@@ -2137,7 +2138,7 @@ int dvmDbgGetThreadFrameCount(ObjectId threadId)
 
     framePtr = thread->curFrame;
     while (framePtr != NULL) {
-        if (!dvmIsBreakFrame(framePtr))
+        if (!dvmIsBreakFrame((u4*)framePtr))
             count++;
 
         framePtr = SAVEAREA_FROM_FP(framePtr)->prevFrame;
@@ -2173,7 +2174,7 @@ bool dvmDbgGetThreadFrame(ObjectId threadId, int num, FrameId* pFrameId,
         const StackSaveArea* saveArea = SAVEAREA_FROM_FP(framePtr);
         const Method* method = saveArea->method;
 
-        if (!dvmIsBreakFrame(framePtr)) {
+        if (!dvmIsBreakFrame((u4*)framePtr)) {
             if (count == num) {
                 *pFrameId = frameToFrameId(framePtr);
                 if (dvmIsInterfaceClass(method->clazz))
@@ -2553,7 +2554,7 @@ void dvmDbgPostException(void* throwFp, int throwRelPc, void* catchFp,
     }
 
     /* need this for InstanceOnly filters */
-    Object* thisObj = getThisObject(throwFp);
+    Object* thisObj = getThisObject((u4*)throwFp);
 
     /*
      * Hand the event to the JDWP exception handler.  Note we're using the
@@ -2826,8 +2827,10 @@ JdwpError dvmDbgInvokeMethod(ObjectId threadId, ObjectId objectId,
     *pResultTag = targetThread->invokeReq.resultTag;
     if (isTagPrimitive(targetThread->invokeReq.resultTag))
         *pResultValue = targetThread->invokeReq.resultValue.j;
-    else
-        *pResultValue = objectToObjectId(targetThread->invokeReq.resultValue.l);
+    else {
+        Object* tmpObj = (Object*)targetThread->invokeReq.resultValue.l;
+        *pResultValue = objectToObjectId(tmpObj);
+    }
     *pExceptObj = targetThread->invokeReq.exceptObj;
     err = targetThread->invokeReq.err;
 
@@ -2908,7 +2911,7 @@ void dvmDbgExecuteMethod(DebugInvokeReq* pReq)
         pReq->resultValue.j = 0; /*0xadadadad;*/
     } else if (pReq->resultTag == JT_OBJECT) {
         /* if no exception thrown, examine object result more closely */
-        u1 newTag = resultTagFromObject(pReq->resultValue.l);
+        u1 newTag = resultTagFromObject((Object*)pReq->resultValue.l);
         if (newTag != pReq->resultTag) {
             LOGVV("  JDWP promoted result from %d to %d\n",
                 pReq->resultTag, newTag);
@@ -2924,7 +2927,7 @@ void dvmDbgExecuteMethod(DebugInvokeReq* pReq)
          * We can't use the "tracked allocation" mechanism here because
          * the object is going to be handed off to a different thread.
          */
-        (void) objectToObjectId(pReq->resultValue.l);
+        (void) objectToObjectId((Object*)pReq->resultValue.l);
     }
 
     if (oldExcept != NULL) {
@@ -2978,7 +2981,7 @@ const AddressSet *dvmAddressSetForLine(const Method* method, int line)
     u4 insnsSize = dvmGetMethodInsnsSize(method);
     AddressSetContext context;
 
-    result = calloc(1, sizeof(AddressSet) + (insnsSize/8) + 1);
+    result = (AddressSet*)calloc(1, sizeof(AddressSet) + (insnsSize/8) + 1);
     result->setSize = insnsSize;
 
     memset(&context, 0, sizeof(context));

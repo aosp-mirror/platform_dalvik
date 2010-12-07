@@ -50,7 +50,7 @@ void dvmPrintHexDumpEx(int priority, const char* tag, const void* vaddr,
     size_t length, HexDumpMode mode)
 {
     static const char gHexDigit[] = "0123456789abcdef";
-    const unsigned char* addr = vaddr;
+    const unsigned char* addr = (const unsigned char*)vaddr;
     char out[77];           /* exact fit */
     unsigned int offset;    /* offset to show while printing */
     char* hex;
@@ -259,7 +259,7 @@ retry:
     if (!pBits->expandable)
         return -1;
 
-    pBits->storage = realloc(pBits->storage,
+    pBits->storage = (u4*)realloc(pBits->storage,
                     (pBits->storageSize + kBitVectorGrowth) * sizeof(u4));
     memset(&pBits->storage[pBits->storageSize], 0x00,
         kBitVectorGrowth * sizeof(u4));
@@ -283,7 +283,7 @@ bool dvmSetBit(BitVector* pBits, int num)
         /* Round up to word boundaries for "num+1" bits */
         int newSize = (num + 1 + 31) >> 5;
         assert(newSize > pBits->storageSize);
-        pBits->storage = realloc(pBits->storage, newSize * sizeof(u4));
+        pBits->storage = (u4*)realloc(pBits->storage, newSize * sizeof(u4));
         memset(&pBits->storage[pBits->storageSize], 0x00,
             (newSize - pBits->storageSize) * sizeof(u4));
         pBits->storageSize = newSize;
@@ -444,7 +444,7 @@ char* dvmHumanReadableDescriptor(const char* descriptor)
     }
 
     // Allocate enough space.
-    char* result = malloc(resultLength + 1);
+    char* result = (char*)malloc(resultLength + 1);
     if (result == NULL) {
         return NULL;
     }
@@ -488,7 +488,7 @@ char* dvmDescriptorToDot(const char* str)
         str++; /* Skip the 'L'. */
     }
 
-    newStr = malloc(at + 1); /* Add one for the '\0'. */
+    newStr = (char*)malloc(at + 1); /* Add one for the '\0'. */
     if (newStr == NULL)
         return NULL;
 
@@ -522,7 +522,7 @@ char* dvmDotToDescriptor(const char* str)
         wrapElSemi = 1;
     }
 
-    newStr = at = malloc(length + 1); /* + 1 for the '\0' */
+    newStr = at = (char*)malloc(length + 1); /* + 1 for the '\0' */
 
     if (newStr == NULL) {
         return NULL;
@@ -557,7 +557,7 @@ char* dvmDescriptorToName(const char* str)
 {
     if (str[0] == 'L') {
         size_t length = strlen(str) - 1;
-        char* newStr = malloc(length);
+        char* newStr = (char*)malloc(length);
 
         if (newStr == NULL) {
             return NULL;
@@ -579,7 +579,7 @@ char* dvmNameToDescriptor(const char* str)
 {
     if (str[0] != '[') {
         size_t length = strlen(str);
-        char* descriptor = malloc(length + 3);
+        char* descriptor = (char*)malloc(length + 3);
 
         if (descriptor == NULL) {
             return NULL;

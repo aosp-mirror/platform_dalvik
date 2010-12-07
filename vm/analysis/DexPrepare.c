@@ -342,7 +342,7 @@ bool dvmOptimizeDexFile(int fd, off_t dexOffset, long dexLength,
             LOGW("ANDROID_ROOT not set, defaulting to /system\n");
             androidRoot = "/system";
         }
-        execFile = malloc(strlen(androidRoot) + strlen(kDexOptBin) + 1);
+        execFile = (char*)malloc(strlen(androidRoot) + strlen(kDexOptBin) + 1);
         strcpy(execFile, androidRoot);
         strcat(execFile, kDexOptBin);
 
@@ -1287,7 +1287,7 @@ static int writeDependencies(int fd, u4 modWhen, u4 crc)
 
     bufLen += 4*4 + numDeps * (4+kSHA1DigestLen);
 
-    buf = malloc(bufLen);
+    buf = (u1*)malloc(bufLen);
 
     set4LE(buf+0, modWhen);
     set4LE(buf+4, crc);

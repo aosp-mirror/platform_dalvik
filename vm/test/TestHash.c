@@ -142,10 +142,10 @@ bool dvmTestHash(void)
 
     /* two entries, same hash, different values */
     char* str1;
-    str1 = dvmHashTableLookup(pTab, hash, strdup("one"),
+    str1 = (char*) dvmHashTableLookup(pTab, hash, strdup("one"),
             (HashCompareFunc) strcmp, true);
     assert(str1 != NULL);
-    str = dvmHashTableLookup(pTab, hash, strdup("two"),
+    str = (const char*) dvmHashTableLookup(pTab, hash, strdup("two"),
             (HashCompareFunc) strcmp, true);
 
     /* remove the first one */
@@ -167,10 +167,12 @@ bool dvmTestHash(void)
     }
 
     /* see if we can find them */
-    str = dvmHashTableLookup(pTab, hash, "one", (HashCompareFunc) strcmp,false);
+    str = (const char*) dvmHashTableLookup(pTab, hash, "one",
+            (HashCompareFunc) strcmp,false);
     if (str != NULL)
         LOGE("TestHash deleted entry has returned!");
-    str = dvmHashTableLookup(pTab, hash, "two", (HashCompareFunc) strcmp,false);
+    str = (const char*) dvmHashTableLookup(pTab, hash, "two",
+            (HashCompareFunc) strcmp,false);
     if (str == NULL)
         LOGE("TestHash entry vanished\n");
 

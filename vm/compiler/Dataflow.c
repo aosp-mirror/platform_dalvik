@@ -862,7 +862,7 @@ char *dvmCompilerGetDalvikDisassembly(DecodedInstruction *insn,
         }
     }
     int length = strlen(buffer) + 1;
-    ret = dvmCompilerNew(length, false);
+    ret = (char *)dvmCompilerNew(length, false);
     memcpy(ret, buffer, length);
     return ret;
 }
@@ -904,7 +904,7 @@ char *dvmCompilerGetSSAString(CompilationUnit *cUnit, SSARepresentation *ssaRep)
     }
 
     int length = strlen(buffer) + 1;
-    ret = dvmCompilerNew(length, false);
+    ret = (char *)dvmCompilerNew(length, false);
     memcpy(ret, buffer, length);
     return ret;
 }
@@ -1015,7 +1015,7 @@ static void dataFlowSSAFormat35C(CompilationUnit *cUnit, MIR *mir)
     int i;
 
     mir->ssaRep->numUses = numUses;
-    mir->ssaRep->uses = dvmCompilerNew(sizeof(int) * numUses, false);
+    mir->ssaRep->uses = (int *)dvmCompilerNew(sizeof(int) * numUses, false);
 
     for (i = 0; i < numUses; i++) {
         handleSSAUse(cUnit, mir->ssaRep->uses, dInsn->arg[i], i);
@@ -1030,7 +1030,7 @@ static void dataFlowSSAFormat3RC(CompilationUnit *cUnit, MIR *mir)
     int i;
 
     mir->ssaRep->numUses = numUses;
-    mir->ssaRep->uses = dvmCompilerNew(sizeof(int) * numUses, false);
+    mir->ssaRep->uses = (int *)dvmCompilerNew(sizeof(int) * numUses, false);
 
     for (i = 0; i < numUses; i++) {
         handleSSAUse(cUnit, mir->ssaRep->uses, dInsn->vC+i, i);
@@ -1047,7 +1047,8 @@ void dvmCompilerDoSSAConversion(CompilationUnit *cUnit, BasicBlock *bb)
     }
 
     for (mir = bb->firstMIRInsn; mir; mir = mir->next) {
-        mir->ssaRep = dvmCompilerNew(sizeof(SSARepresentation), true);
+        mir->ssaRep = (struct SSARepresentation *)
+            dvmCompilerNew(sizeof(SSARepresentation), true);
 
         int dfAttributes =
             dvmCompilerDataFlowAttributes[mir->dalvikInsn.opcode];
@@ -1084,8 +1085,10 @@ void dvmCompilerDoSSAConversion(CompilationUnit *cUnit, BasicBlock *bb)
 
         if (numUses) {
             mir->ssaRep->numUses = numUses;
-            mir->ssaRep->uses = dvmCompilerNew(sizeof(int) * numUses, false);
-            mir->ssaRep->fpUse = dvmCompilerNew(sizeof(bool) * numUses, false);
+            mir->ssaRep->uses = (int *)dvmCompilerNew(sizeof(int) * numUses,
+                                                      false);
+            mir->ssaRep->fpUse = (bool *)dvmCompilerNew(sizeof(bool) * numUses,
+                                                false);
         }
 
         int numDefs = 0;
@@ -1099,8 +1102,10 @@ void dvmCompilerDoSSAConversion(CompilationUnit *cUnit, BasicBlock *bb)
 
         if (numDefs) {
             mir->ssaRep->numDefs = numDefs;
-            mir->ssaRep->defs = dvmCompilerNew(sizeof(int) * numDefs, false);
-            mir->ssaRep->fpDef = dvmCompilerNew(sizeof(bool) * numDefs, false);
+            mir->ssaRep->defs = (int *)dvmCompilerNew(sizeof(int) * numDefs,
+                                                      false);
+            mir->ssaRep->fpDef = (bool *)dvmCompilerNew(sizeof(bool) * numDefs,
+                                                        false);
         }
 
         DecodedInstruction *dInsn = &mir->dalvikInsn;
@@ -1146,7 +1151,8 @@ void dvmCompilerDoSSAConversion(CompilationUnit *cUnit, BasicBlock *bb)
     }
 
     bb->dataFlowInfo->dalvikToSSAMap =
-        dvmCompilerNew(sizeof(int) * cUnit->method->registersSize, false);
+        (int *)dvmCompilerNew(sizeof(int) * cUnit->method->registersSize,
+                              false);
 
     /* Take a snapshot of Dalvik->SSA mapping at the end of each block */
     memcpy(bb->dataFlowInfo->dalvikToSSAMap, cUnit->dalvikToSSAMap,
@@ -1299,7 +1305,7 @@ void dvmCompilerFindInductionVariables(struct CompilationUnit *cUnit,
                 }
                 if (deltaIsConstant) {
                     dvmSetBit(isIndVarV, mir->ssaRep->uses[0]);
-                    InductionVariableInfo *ivInfo =
+                    InductionVariableInfo *ivInfo = (InductionVariableInfo *)
                         dvmCompilerNew(sizeof(InductionVariableInfo),
                                        false);
 
@@ -1372,13 +1378,13 @@ void dvmCompilerFindInductionVariables(struct CompilationUnit *cUnit,
             if (cIsConstant) {
                 unsigned int i;
                 dvmSetBit(isIndVarV, mir->ssaRep->defs[0]);
-                InductionVariableInfo *ivInfo =
+                InductionVariableInfo *ivInfo = (InductionVariableInfo *)
                     dvmCompilerNew(sizeof(InductionVariableInfo),
                                    false);
                 InductionVariableInfo *ivInfoOld = NULL ;
 
                 for (i = 0; i < ivList->numUsed; i++) {
-                    ivInfoOld = ivList->elemList[i];
+                    ivInfoOld = (InductionVariableInfo *) ivList->elemList[i];
                     if (ivInfoOld->ssaReg == mir->ssaRep->uses[0]) break;
                 }
 
@@ -1402,7 +1408,8 @@ void dvmInitializeSSAConversion(CompilationUnit *cUnit)
     int i;
     int numDalvikReg = cUnit->method->registersSize;
 
-    cUnit->ssaToDalvikMap = dvmCompilerNew(sizeof(GrowableList), false);
+    cUnit->ssaToDalvikMap = (GrowableList *)dvmCompilerNew(sizeof(GrowableList),
+                                                           false);
     dvmInitGrowableList(cUnit->ssaToDalvikMap, numDalvikReg);
 
     /*
@@ -1426,7 +1433,8 @@ void dvmInitializeSSAConversion(CompilationUnit *cUnit)
      * while the high 16 bit is the current subscript. The original Dalvik
      * register N is mapped to SSA register N with subscript 0.
      */
-    cUnit->dalvikToSSAMap = dvmCompilerNew(sizeof(int) * numDalvikReg, false);
+    cUnit->dalvikToSSAMap = (int *)dvmCompilerNew(sizeof(int) * numDalvikReg,
+                                                  false);
     for (i = 0; i < numDalvikReg; i++) {
         cUnit->dalvikToSSAMap[i] = i;
     }
@@ -1438,7 +1446,9 @@ void dvmInitializeSSAConversion(CompilationUnit *cUnit)
         BasicBlock *bb = cUnit->blockList[i];
         if (bb->blockType == kDalvikByteCode ||
             bb->blockType == kTraceEntryBlock) {
-            bb->dataFlowInfo = dvmCompilerNew(sizeof(BasicBlockDataFlow), true);
+            bb->dataFlowInfo = (BasicBlockDataFlow *)
+                dvmCompilerNew(sizeof(BasicBlockDataFlow),
+                               true);
         }
     }
 }

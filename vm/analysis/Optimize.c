@@ -66,7 +66,7 @@ InlineSub* dvmCreateInlineSubsTable(void)
     /*
      * Allocate for optimism: one slot per entry, plus an end-of-list marker.
      */
-    table = calloc(count + 1, sizeof(InlineSub));
+    table = (InlineSub*)calloc(count + 1, sizeof(InlineSub));
 
     tableIndex = 0;
     for (i = 0; i < count; i++) {

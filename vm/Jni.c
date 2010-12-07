@@ -844,7 +844,7 @@ static void deleteGlobalReference(jobject jobj)
     }
 #else
     if (!dvmRemoveFromReferenceTable(&gDvm.jniGlobalRefTable,
-            gDvm.jniGlobalRefTable.table, jobj))
+            gDvm.jniGlobalRefTable.table, (Object*)jobj))
     {
         LOGW("JNI: DeleteGlobalRef(%p) failed to find entry (valid=%d)\n",
             jobj, dvmIsValidObject((Object*) jobj));
@@ -1056,7 +1056,7 @@ static bool findInArgList(Thread* self, Object* obj)
     u4* fp;
     int i;
 
-    fp = self->curFrame;
+    fp = (u4*)self->curFrame;
     while (1) {
         /*
          * Back up over JNI PushLocalFrame frames.  This works because the
@@ -1069,7 +1069,7 @@ static bool findInArgList(Thread* self, Object* obj)
         meth = saveArea->method;
         if (meth != SAVEAREA_FROM_FP(saveArea->prevFrame)->method)
             break;
-        fp = saveArea->prevFrame;
+        fp = (u4*)saveArea->prevFrame;
     }
 
     LOGVV("+++ scanning %d args in %s (%s)\n",
@@ -1149,6 +1149,7 @@ jobjectRefType dvmGetJNIRefType(JNIEnv* env, jobject jobj)
         return (jobjectRefType) dvmGetIndirectRefType(jobj);
     }
 #else
+    Object* obj = dvmDecodeIndirectRef(env, jobj);
     ReferenceTable* pRefTable = getLocalRefTable(env);
     Thread* self = dvmThreadSelf();
 
@@ -1157,23 +1158,24 @@ jobjectRefType dvmGetJNIRefType(JNIEnv* env, jobject jobj)
     }
 
     /* check args */
-    if (findInArgList(self, jobj)) {
-        //LOGI("--- REF found %p on stack\n", jobj);
+    if (findInArgList(self, obj)) {
+        //LOGI("--- REF found %p on stack", obj);
         return JNILocalRefType;
     }
 
     /* check locals */
-    if (dvmFindInReferenceTable(pRefTable, pRefTable->table, jobj) != NULL) {
-        //LOGI("--- REF found %p in locals\n", jobj);
+    if (dvmFindInReferenceTable(pRefTable, pRefTable->table,
+            obj) != NULL) {
+        //LOGI("--- REF found %p in locals", obj);
         return JNILocalRefType;
     }
 
     /* check globals */
     dvmLockMutex(&gDvm.jniGlobalRefLock);
     if (dvmFindInReferenceTable(&gDvm.jniGlobalRefTable,
-            gDvm.jniGlobalRefTable.table, jobj))
+            gDvm.jniGlobalRefTable.table, obj))
     {
-        //LOGI("--- REF found %p in globals\n", jobj);
+        //LOGI("--- REF found %p in globals", obj);
         dvmUnlockMutex(&gDvm.jniGlobalRefLock);
         return JNIGlobalRefType;
     }
@@ -1324,7 +1326,7 @@ void dvmUseJNIBridge(Method* method, void* func)
     DalvikBridgeFunc bridge = shouldTrace(method)
         ? dvmTraceCallJNIMethod
         : dvmSelectJNIBridge(method);
-    dvmSetNativeFunc(method, bridge, func);
+    dvmSetNativeFunc(method, bridge, (const u2*)func);
 }
 
 /*
@@ -1630,7 +1632,7 @@ void dvmCallJNIMethod_general(const u4* args, JValue* pResult,
     assert(method->insns != NULL);
 
     COMPUTE_STACK_SUM(self);
-    dvmPlatformInvoke(env, staticMethodClass,
+    dvmPlatformInvoke(env, (ClassObject*)staticMethodClass,
         method->jniArgInfo, method->insSize, modArgs, method->shorty,
         (void*)method->insns, pResult);
     CHECK_STACK_SUM(self);
@@ -1727,7 +1729,7 @@ void dvmCallJNIMethod_staticNoRef(const u4* args, JValue* pResult,
     ANDROID_MEMBAR_FULL();      /* guarantee ordering on method->insns */
 
     COMPUTE_STACK_SUM(self);
-    dvmPlatformInvoke(self->jniEnv, staticMethodClass,
+    dvmPlatformInvoke(self->jniEnv, (ClassObject*)staticMethodClass,
         method->jniArgInfo, method->insSize, args, method->shorty,
         (void*)method->insns, pResult);
     CHECK_STACK_SUM(self);
@@ -2522,7 +2524,7 @@ GET_STATIC_TYPE_FIELD(jdouble, Double, false);
 /*
  * Set a static field.
  */
-#define SET_STATIC_TYPE_FIELD(_ctype, _jname, _isref)                       \
+#define SET_STATIC_TYPE_FIELD(_ctype, _ctype2, _jname, _isref)              \
     static void SetStatic##_jname##Field(JNIEnv* env, jclass jclazz,        \
         jfieldID fieldID, _ctype value)                                     \
     {                                                                       \
@@ -2535,7 +2537,7 @@ GET_STATIC_TYPE_FIELD(jdouble, Double, false);
                     dvmDecodeIndirectRef(env, (jobject)(u4)value);          \
                 dvmSetStaticFieldObjectVolatile(sfield, valObj);            \
             } else {                                                        \
-                dvmSetStaticField##_jname##Volatile(sfield, value);         \
+                dvmSetStaticField##_jname##Volatile(sfield, (_ctype2)value);\
             }                                                               \
         } else {                                                            \
             if (_isref) {                                                   \
@@ -2543,20 +2545,20 @@ GET_STATIC_TYPE_FIELD(jdouble, Double, false);
                     dvmDecodeIndirectRef(env, (jobject)(u4)value);          \
                 dvmSetStaticFieldObject(sfield, valObj);                    \
             } else {                                                        \
-                dvmSetStaticField##_jname(sfield, value);                   \
+                dvmSetStaticField##_jname(sfield, (_ctype2)value);          \
             }                                                               \
         }                                                                   \
         JNI_EXIT();                                                         \
     }
-SET_STATIC_TYPE_FIELD(jobject, Object, true);
-SET_STATIC_TYPE_FIELD(jboolean, Boolean, false);
-SET_STATIC_TYPE_FIELD(jbyte, Byte, false);
-SET_STATIC_TYPE_FIELD(jchar, Char, false);
-SET_STATIC_TYPE_FIELD(jshort, Short, false);
-SET_STATIC_TYPE_FIELD(jint, Int, false);
-SET_STATIC_TYPE_FIELD(jlong, Long, false);
-SET_STATIC_TYPE_FIELD(jfloat, Float, false);
-SET_STATIC_TYPE_FIELD(jdouble, Double, false);
+SET_STATIC_TYPE_FIELD(jobject, Object*, Object, true);
+SET_STATIC_TYPE_FIELD(jboolean, bool, Boolean, false);
+SET_STATIC_TYPE_FIELD(jbyte, s1, Byte, false);
+SET_STATIC_TYPE_FIELD(jchar, u2, Char, false);
+SET_STATIC_TYPE_FIELD(jshort, s2, Short, false);
+SET_STATIC_TYPE_FIELD(jint, s4, Int, false);
+SET_STATIC_TYPE_FIELD(jlong, s8, Long, false);
+SET_STATIC_TYPE_FIELD(jfloat, float, Float, false);
+SET_STATIC_TYPE_FIELD(jdouble, double, Double, false);
 
 /*
  * Get an instance field.
@@ -2604,7 +2606,7 @@ GET_TYPE_FIELD(jdouble, Double, false);
 /*
  * Set an instance field.
  */
-#define SET_TYPE_FIELD(_ctype, _jname, _isref)                              \
+#define SET_TYPE_FIELD(_ctype, _ctype2, _jname, _isref)                     \
     static void Set##_jname##Field(JNIEnv* env, jobject jobj,               \
         jfieldID fieldID, _ctype value)                                     \
     {                                                                       \
@@ -2618,7 +2620,7 @@ GET_TYPE_FIELD(jdouble, Double, false);
                 dvmSetFieldObjectVolatile(obj, field->byteOffset, valObj);  \
             } else {                                                        \
                 dvmSetField##_jname##Volatile(obj,                          \
-                    field->byteOffset, value);                              \
+                    field->byteOffset, (_ctype2)value);                     \
             }                                                               \
         } else {                                                            \
             if (_isref) {                                                   \
@@ -2626,20 +2628,21 @@ GET_TYPE_FIELD(jdouble, Double, false);
                     dvmDecodeIndirectRef(env, (jobject)(u4)value);          \
                 dvmSetFieldObject(obj, field->byteOffset, valObj);          \
             } else {                                                        \
-                dvmSetField##_jname(obj, field->byteOffset, value);         \
+                dvmSetField##_jname(obj,                                    \
+                    field->byteOffset, (_ctype2)value);                     \
             }                                                               \
         }                                                                   \
         JNI_EXIT();                                                         \
     }
-SET_TYPE_FIELD(jobject, Object, true);
-SET_TYPE_FIELD(jboolean, Boolean, false);
-SET_TYPE_FIELD(jbyte, Byte, false);
-SET_TYPE_FIELD(jchar, Char, false);
-SET_TYPE_FIELD(jshort, Short, false);
-SET_TYPE_FIELD(jint, Int, false);
-SET_TYPE_FIELD(jlong, Long, false);
-SET_TYPE_FIELD(jfloat, Float, false);
-SET_TYPE_FIELD(jdouble, Double, false);
+SET_TYPE_FIELD(jobject, Object*, Object, true);
+SET_TYPE_FIELD(jboolean, bool, Boolean, false);
+SET_TYPE_FIELD(jbyte, s1, Byte, false);
+SET_TYPE_FIELD(jchar, u2, Char, false);
+SET_TYPE_FIELD(jshort, s2, Short, false);
+SET_TYPE_FIELD(jint, s4, Int, false);
+SET_TYPE_FIELD(jlong, s8, Long, false);
+SET_TYPE_FIELD(jfloat, float, Float, false);
+SET_TYPE_FIELD(jdouble, double, Double, false);
 
 /*
  * Make a virtual method call.
@@ -2665,7 +2668,7 @@ SET_TYPE_FIELD(jdouble, Double, false);
         dvmCallMethodV(_self, meth, obj, true, &result, args);              \
         va_end(args);                                                       \
         if (_isref && !dvmCheckException(_self))                            \
-            result.l = addLocalReference(env, result.l);                    \
+            result.l = addLocalReference(env, (Object*)result.l);           \
         JNI_EXIT();                                                         \
         return _retok;                                                      \
     }                                                                       \
@@ -2683,7 +2686,7 @@ SET_TYPE_FIELD(jdouble, Double, false);
         }                                                                   \
         dvmCallMethodV(_self, meth, obj, true, &result, args);              \
         if (_isref && !dvmCheckException(_self))                            \
-            result.l = addLocalReference(env, result.l);                    \
+            result.l = addLocalReference(env, (Object*)result.l);           \
         JNI_EXIT();                                                         \
         return _retok;                                                      \
     }                                                                       \
@@ -2701,7 +2704,7 @@ SET_TYPE_FIELD(jdouble, Double, false);
         }                                                                   \
         dvmCallMethodA(_self, meth, obj, true, &result, args);              \
         if (_isref && !dvmCheckException(_self))                            \
-            result.l = addLocalReference(env, result.l);                    \
+            result.l = addLocalReference(env, (Object*)result.l);           \
         JNI_EXIT();                                                         \
         return _retok;                                                      \
     }
@@ -2742,7 +2745,7 @@ CALL_VIRTUAL(void, Void, , , false);
         va_start(args, methodID);                                           \
         dvmCallMethodV(_self, meth, obj, true, &result, args);              \
         if (_isref && !dvmCheckException(_self))                            \
-            result.l = addLocalReference(env, result.l);                    \
+            result.l = addLocalReference(env, (Object*)result.l);           \
         va_end(args);                                                       \
         JNI_EXIT();                                                         \
         return _retok;                                                      \
@@ -2763,7 +2766,7 @@ CALL_VIRTUAL(void, Void, , , false);
         }                                                                   \
         dvmCallMethodV(_self, meth, obj, true, &result, args);              \
         if (_isref && !dvmCheckException(_self))                            \
-            result.l = addLocalReference(env, result.l);                    \
+            result.l = addLocalReference(env, (Object*)result.l);           \
         JNI_EXIT();                                                         \
         return _retok;                                                      \
     }                                                                       \
@@ -2783,7 +2786,7 @@ CALL_VIRTUAL(void, Void, , , false);
         }                                                                   \
         dvmCallMethodA(_self, meth, obj, true, &result, args);              \
         if (_isref && !dvmCheckException(_self))                            \
-            result.l = addLocalReference(env, result.l);                    \
+            result.l = addLocalReference(env, (Object*)result.l);           \
         JNI_EXIT();                                                         \
         return _retok;                                                      \
     }
@@ -2814,7 +2817,7 @@ CALL_NONVIRTUAL(void, Void, , , false);
         dvmCallMethodV(_self, (Method*)methodID, NULL, true, &result, args);\
         va_end(args);                                                       \
         if (_isref && !dvmCheckException(_self))                            \
-            result.l = addLocalReference(env, result.l);                    \
+            result.l = addLocalReference(env, (Object*)result.l);           \
         JNI_EXIT();                                                         \
         return _retok;                                                      \
     }                                                                       \
@@ -2826,7 +2829,7 @@ CALL_NONVIRTUAL(void, Void, , , false);
         JValue result;                                                      \
         dvmCallMethodV(_self, (Method*)methodID, NULL, true, &result, args);\
         if (_isref && !dvmCheckException(_self))                            \
-            result.l = addLocalReference(env, result.l);                    \
+            result.l = addLocalReference(env, (Object*)result.l);           \
         JNI_EXIT();                                                         \
         return _retok;                                                      \
     }                                                                       \
@@ -2838,7 +2841,7 @@ CALL_NONVIRTUAL(void, Void, , , false);
         JValue result;                                                      \
         dvmCallMethodA(_self, (Method*)methodID, NULL, true, &result, args);\
         if (_isref && !dvmCheckException(_self))                            \
-            result.l = addLocalReference(env, result.l);                    \
+            result.l = addLocalReference(env, (Object*)result.l);           \
         JNI_EXIT();                                                         \
         return _retok;                                                      \
     }
@@ -4283,11 +4286,12 @@ jint JNI_CreateJavaVM(JavaVM** p_vm, JNIEnv** p_env, void* vm_args)
             fprintf(stderr, "ERROR: arg %d string was null\n", i);
             goto bail;
         } else if (strcmp(optStr, "vfprintf") == 0) {
-            gDvm.vfprintfHook = args->options[i].extraInfo;
+            gDvm.vfprintfHook =
+                (int (*)(FILE *, const char*, va_list))args->options[i].extraInfo;
         } else if (strcmp(optStr, "exit") == 0) {
-            gDvm.exitHook = args->options[i].extraInfo;
+            gDvm.exitHook = (void (*)(int)) args->options[i].extraInfo;
         } else if (strcmp(optStr, "abort") == 0) {
-            gDvm.abortHook = args->options[i].extraInfo;
+            gDvm.abortHook = (void (*)(void))args->options[i].extraInfo;
         } else if (strcmp(optStr, "-Xcheck:jni") == 0) {
             checkJni = true;
         } else if (strncmp(optStr, "-Xjniopts:", 10) == 0) {

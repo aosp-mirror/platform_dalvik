@@ -30,7 +30,7 @@ static void visitFields(Visitor *visitor, Object *obj, void *arg)
         while (refOffsets != 0) {
             size_t rshift = CLZ(refOffsets);
             size_t offset = CLASS_OFFSET_FROM_CLZ(rshift);
-            Object **ref = BYTE_OFFSET(obj, offset);
+            Object **ref = (Object **)BYTE_OFFSET(obj, offset);
             (*visitor)(ref, arg);
             refOffsets &= ~(CLASS_HIGH_BIT >> rshift);
         }
@@ -41,7 +41,7 @@ static void visitFields(Visitor *visitor, Object *obj, void *arg)
             int i;
             for (i = 0; i < clazz->ifieldRefCount; ++i, ++field) {
                 size_t offset = field->byteOffset;
-                Object **ref = BYTE_OFFSET(obj, offset);
+                Object **ref = (Object **)BYTE_OFFSET(obj, offset);
                 (*visitor)(ref, arg);
             }
         }
@@ -152,7 +152,7 @@ static void visitReferenceObject(Visitor *visitor, Object *obj, void *arg)
     assert(obj->clazz != NULL);
     visitDataObject(visitor, obj, arg);
     size_t offset = gDvm.offJavaLangRefReference_referent;
-    Object **ref = BYTE_OFFSET(obj, offset);
+    Object **ref = (Object **)BYTE_OFFSET(obj, offset);
     (*visitor)(ref, arg);
 }
 

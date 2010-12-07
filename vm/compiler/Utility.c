@@ -117,7 +117,7 @@ static void expandGrowableList(GrowableList *gList)
     void *newArray = dvmCompilerNew(sizeof(void *) * newLength, true);
     memcpy(newArray, gList->elemList, sizeof(void *) * gList->numAllocated);
     gList->numAllocated = newLength;
-    gList->elemList = newArray;
+    gList->elemList = (void **)newArray;
 }
 
 /* Insert a new element into the growable list */
@@ -280,7 +280,7 @@ bool dvmCompilerSetBit(BitVector *pBits, int num)
         /* Round up to word boundaries for "num+1" bits */
         int newSize = (num + 1 + 31) >> 5;
         assert(newSize > pBits->storageSize);
-        u4 *newStorage = dvmCompilerNew(newSize * sizeof(u4), false);
+        u4 *newStorage = (u4*)dvmCompilerNew(newSize * sizeof(u4), false);
         memcpy(newStorage, pBits->storage, pBits->storageSize * sizeof(u4));
         memset(&newStorage[pBits->storageSize], 0,
                (newSize - pBits->storageSize) * sizeof(u4));

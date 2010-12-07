@@ -204,7 +204,7 @@ static void setupResourceMasks(ArmLIR *lir)
  */
 static ArmLIR *newLIR0(CompilationUnit *cUnit, ArmOpcode opcode)
 {
-    ArmLIR *insn = dvmCompilerNew(sizeof(ArmLIR), true);
+    ArmLIR *insn = (ArmLIR *) dvmCompilerNew(sizeof(ArmLIR), true);
     assert(isPseudoOpcode(opcode) || (EncodingMap[opcode].flags & NO_OPERAND));
     insn->opcode = opcode;
     setupResourceMasks(insn);
@@ -215,7 +215,7 @@ static ArmLIR *newLIR0(CompilationUnit *cUnit, ArmOpcode opcode)
 static ArmLIR *newLIR1(CompilationUnit *cUnit, ArmOpcode opcode,
                            int dest)
 {
-    ArmLIR *insn = dvmCompilerNew(sizeof(ArmLIR), true);
+    ArmLIR *insn = (ArmLIR *) dvmCompilerNew(sizeof(ArmLIR), true);
     assert(isPseudoOpcode(opcode) || (EncodingMap[opcode].flags & IS_UNARY_OP));
     insn->opcode = opcode;
     insn->operands[0] = dest;
@@ -227,7 +227,7 @@ static ArmLIR *newLIR1(CompilationUnit *cUnit, ArmOpcode opcode,
 static ArmLIR *newLIR2(CompilationUnit *cUnit, ArmOpcode opcode,
                            int dest, int src1)
 {
-    ArmLIR *insn = dvmCompilerNew(sizeof(ArmLIR), true);
+    ArmLIR *insn = (ArmLIR *) dvmCompilerNew(sizeof(ArmLIR), true);
     assert(isPseudoOpcode(opcode) ||
            (EncodingMap[opcode].flags & IS_BINARY_OP));
     insn->opcode = opcode;
@@ -241,7 +241,7 @@ static ArmLIR *newLIR2(CompilationUnit *cUnit, ArmOpcode opcode,
 static ArmLIR *newLIR3(CompilationUnit *cUnit, ArmOpcode opcode,
                            int dest, int src1, int src2)
 {
-    ArmLIR *insn = dvmCompilerNew(sizeof(ArmLIR), true);
+    ArmLIR *insn = (ArmLIR *) dvmCompilerNew(sizeof(ArmLIR), true);
     if (!(EncodingMap[opcode].flags & IS_TERTIARY_OP)) {
         LOGE("Bad LIR3: %s[%d]",EncodingMap[opcode].name,opcode);
     }
@@ -260,7 +260,7 @@ static ArmLIR *newLIR3(CompilationUnit *cUnit, ArmOpcode opcode,
 static ArmLIR *newLIR4(CompilationUnit *cUnit, ArmOpcode opcode,
                            int dest, int src1, int src2, int info)
 {
-    ArmLIR *insn = dvmCompilerNew(sizeof(ArmLIR), true);
+    ArmLIR *insn = (ArmLIR *) dvmCompilerNew(sizeof(ArmLIR), true);
     assert(isPseudoOpcode(opcode) ||
            (EncodingMap[opcode].flags & IS_QUAD_OP));
     insn->opcode = opcode;
@@ -321,7 +321,7 @@ static ArmLIR *addWordData(CompilationUnit *cUnit, int value, bool inPlace)
 {
     /* Add the constant to the literal pool */
     if (!inPlace) {
-        ArmLIR *newValue = dvmCompilerNew(sizeof(ArmLIR), true);
+        ArmLIR *newValue = (ArmLIR *) dvmCompilerNew(sizeof(ArmLIR), true);
         newValue->operands[0] = value;
         newValue->generic.next = cUnit->wordList;
         cUnit->wordList = (LIR *) newValue;
@@ -371,7 +371,7 @@ static ArmLIR *genCheckCommon(CompilationUnit *cUnit, int dOffset,
     /* Set up the place holder to reconstruct this Dalvik PC */
     if (pcrLabel == NULL) {
         int dPC = (int) (cUnit->method->insns + dOffset);
-        pcrLabel = dvmCompilerNew(sizeof(ArmLIR), true);
+        pcrLabel = (ArmLIR *) dvmCompilerNew(sizeof(ArmLIR), true);
         pcrLabel->opcode = kArmPseudoPCReconstructionCell;
         pcrLabel->operands[0] = dPC;
         pcrLabel->operands[1] = dOffset;

@@ -110,7 +110,7 @@ static void visitThreadStack(RootVisitor *visitor, Thread *thread, void *arg)
     assert(thread != NULL);
     threadId = thread->threadId;
     fp = (u4 *)thread->curFrame;
-    for (; fp != NULL; fp = saveArea->prevFrame) {
+    for (; fp != NULL; fp = (u4 *)saveArea->prevFrame) {
         Method *method;
         saveArea = SAVEAREA_FROM_FP(fp);
         method = (Method *)saveArea->method;

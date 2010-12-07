@@ -224,66 +224,66 @@ static void logClassLoad(char type, ClassObject* clazz) {
 static void linearAllocTests()
 {
     char* fiddle;
-    int try = 1;
+    int test = 1;
 
-    switch (try) {
+    switch (test) {
     case 0:
-        fiddle = dvmLinearAlloc(NULL, 3200-28);
-        dvmLinearReadOnly(NULL, fiddle);
+        fiddle = (char*)dvmLinearAlloc(NULL, 3200-28);
+        dvmLinearReadOnly(NULL, (char*)fiddle);
         break;
     case 1:
-        fiddle = dvmLinearAlloc(NULL, 3200-24);
-        dvmLinearReadOnly(NULL, fiddle);
+        fiddle = (char*)dvmLinearAlloc(NULL, 3200-24);
+        dvmLinearReadOnly(NULL, (char*)fiddle);
         break;
     case 2:
-        fiddle = dvmLinearAlloc(NULL, 3200-20);
-        dvmLinearReadOnly(NULL, fiddle);
+        fiddle = (char*)dvmLinearAlloc(NULL, 3200-20);
+        dvmLinearReadOnly(NULL, (char*)fiddle);
         break;
     case 3:
-        fiddle = dvmLinearAlloc(NULL, 3200-16);
-        dvmLinearReadOnly(NULL, fiddle);
+        fiddle = (char*)dvmLinearAlloc(NULL, 3200-16);
+        dvmLinearReadOnly(NULL, (char*)fiddle);
         break;
     case 4:
-        fiddle = dvmLinearAlloc(NULL, 3200-12);
-        dvmLinearReadOnly(NULL, fiddle);
+        fiddle = (char*)dvmLinearAlloc(NULL, 3200-12);
+        dvmLinearReadOnly(NULL, (char*)fiddle);
         break;
     }
-    fiddle = dvmLinearAlloc(NULL, 896);
-    dvmLinearReadOnly(NULL, fiddle);
-    fiddle = dvmLinearAlloc(NULL, 20);      // watch addr of this alloc
-    dvmLinearReadOnly(NULL, fiddle);
+    fiddle = (char*)dvmLinearAlloc(NULL, 896);
+    dvmLinearReadOnly(NULL, (char*)fiddle);
+    fiddle = (char*)dvmLinearAlloc(NULL, 20);      // watch addr of this alloc
+    dvmLinearReadOnly(NULL, (char*)fiddle);
 
-    fiddle = dvmLinearAlloc(NULL, 1);
+    fiddle = (char*)dvmLinearAlloc(NULL, 1);
     fiddle[0] = 'q';
     dvmLinearReadOnly(NULL, fiddle);
-    fiddle = dvmLinearAlloc(NULL, 4096);
+    fiddle = (char*)dvmLinearAlloc(NULL, 4096);
     fiddle[0] = 'x';
     fiddle[4095] = 'y';
     dvmLinearReadOnly(NULL, fiddle);
     dvmLinearFree(NULL, fiddle);
-    fiddle = dvmLinearAlloc(NULL, 0);
+    fiddle = (char*)dvmLinearAlloc(NULL, 0);
     dvmLinearReadOnly(NULL, fiddle);
-    fiddle = dvmLinearRealloc(NULL, fiddle, 12);
+    fiddle = (char*)dvmLinearRealloc(NULL, fiddle, 12);
     fiddle[11] = 'z';
+    dvmLinearReadOnly(NULL, (char*)fiddle);
+    fiddle = (char*)dvmLinearRealloc(NULL, fiddle, 5);
     dvmLinearReadOnly(NULL, fiddle);
-    fiddle = dvmLinearRealloc(NULL, fiddle, 5);
-    dvmLinearReadOnly(NULL, fiddle);
-    fiddle = dvmLinearAlloc(NULL, 17001);
+    fiddle = (char*)dvmLinearAlloc(NULL, 17001);
     fiddle[0] = 'x';
     fiddle[17000] = 'y';
-    dvmLinearReadOnly(NULL, fiddle);
+    dvmLinearReadOnly(NULL, (char*)fiddle);
 
-    char* str = dvmLinearStrdup(NULL, "This is a test!");
+    char* str = (char*)dvmLinearStrdup(NULL, "This is a test!");
     LOGI("GOT: '%s'\n", str);
 
     /* try to check the bounds; allocator may round allocation size up */
-    fiddle = dvmLinearAlloc(NULL, 12);
+    fiddle = (char*)dvmLinearAlloc(NULL, 12);
     LOGI("Should be 1: %d\n", dvmLinearAllocContains(fiddle, 12));
     LOGI("Should be 0: %d\n", dvmLinearAllocContains(fiddle, 13));
     LOGI("Should be 0: %d\n", dvmLinearAllocContains(fiddle - 128*1024, 1));
 
     dvmLinearAllocDump(NULL);
-    dvmLinearFree(NULL, str);
+    dvmLinearFree(NULL, (char*)str);
 }
 
 static size_t classObjectSize(size_t sfieldCount)
@@ -337,7 +337,7 @@ bool dvmClassStartup(void)
      * If it's NULL, we just fall back to the InitiatingLoaderList in the
      * ClassObject, so it's not fatal to fail this allocation.
      */
-    gDvm.initiatingLoaderList =
+    gDvm.initiatingLoaderList = (InitiatingLoaderList*)
         calloc(ZYGOTE_CLASS_CUTOFF, sizeof(InitiatingLoaderList));
 
     gDvm.classJavaLangClass = (ClassObject*) dvmMalloc(
@@ -1059,7 +1059,7 @@ ClassObject* dvmLookupClass(const char* descriptor, Object* loader,
      * here, but this is an extremely rare case, and it's simpler to have
      * the wait-for-class code centralized.
      */
-    if (found != NULL && !unprepOkay && !dvmIsClassLinked(found)) {
+    if (found && !unprepOkay && !dvmIsClassLinked((ClassObject*)found)) {
         LOGV("Ignoring not-yet-ready %s, using slow path\n",
             ((ClassObject*)found)->descriptor);
         found = NULL;
@@ -2478,7 +2478,7 @@ bool dvmLinkClass(ClassObject* clazz)
              */
             assert(sizeof(*interfaceIdxArray) == sizeof(*clazz->interfaces));
             size_t len = clazz->interfaceCount * sizeof(*interfaceIdxArray);
-            interfaceIdxArray = malloc(len);
+            interfaceIdxArray = (u4*)malloc(len);
             if (interfaceIdxArray == NULL) {
                 LOGW("Unable to allocate memory to link %s", clazz->descriptor);
                 goto bail;
@@ -2890,8 +2890,8 @@ static bool createVtable(ClassObject* clazz)
         if (actualCount < maxCount) {
             assert(clazz->vtable != NULL);
             dvmLinearReadOnly(clazz->classLoader, clazz->vtable);
-            clazz->vtable = dvmLinearRealloc(clazz->classLoader, clazz->vtable,
-                sizeof(*(clazz->vtable)) * actualCount);
+            clazz->vtable = (Method **)dvmLinearRealloc(clazz->classLoader,
+                clazz->vtable, sizeof(*(clazz->vtable)) * actualCount);
             if (clazz->vtable == NULL) {
                 LOGE("vtable realloc failed\n");
                 goto bail;
@@ -3200,11 +3200,13 @@ static bool createIftable(ClassObject* clazz)
                 if (mirandaCount == mirandaAlloc) {
                     mirandaAlloc += 8;
                     if (mirandaList == NULL) {
-                        mirandaList = dvmLinearAlloc(clazz->classLoader,
+                        mirandaList = (Method**)dvmLinearAlloc(
+                                        clazz->classLoader,
                                         mirandaAlloc * sizeof(Method*));
                     } else {
                         dvmLinearReadOnly(clazz->classLoader, mirandaList);
-                        mirandaList = dvmLinearRealloc(clazz->classLoader,
+                        mirandaList = (Method**)dvmLinearRealloc(
+                                clazz->classLoader,
                                 mirandaList, mirandaAlloc * sizeof(Method*));
                     }
                     assert(mirandaList != NULL);    // mem failed + we leaked
@@ -3882,8 +3884,8 @@ static void initSFields(ClassObject* clazz)
              * All's well, so store the value.
              */
             if (isObj) {
-                dvmSetStaticFieldObject(sfield, value.value.l);
-                dvmReleaseTrackedAlloc(value.value.l, self);
+                dvmSetStaticFieldObject(sfield, (Object*)value.value.l);
+                dvmReleaseTrackedAlloc((Object*)value.value.l, self);
             } else {
                 /*
                  * Note: This always stores the full width of a
@@ -4569,7 +4571,7 @@ void dvmSetNativeFunc(Method* method, DalvikBridgeFunc func,
         /* update both, ensuring that "insns" is observed first */
         method->insns = insns;
         android_atomic_release_store((int32_t) func,
-            (void*) &method->nativeFunc);
+            (volatile int32_t*)(void*) &method->nativeFunc);
     } else {
         /* only update nativeFunc */
         method->nativeFunc = func;
@@ -4613,7 +4615,7 @@ void dvmSetRegisterMap(Method* method, const RegisterMap* pMap)
  */
 static int findClassCallback(void* vclazz, void* arg)
 {
-    ClassObject* clazz = vclazz;
+    ClassObject* clazz = (ClassObject*)vclazz;
     const char* descriptor = (const char*) arg;
 
     if (strcmp(clazz->descriptor, descriptor) == 0)

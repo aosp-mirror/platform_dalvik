@@ -121,7 +121,7 @@ int dvmDexFileOpenFromFd(int fd, DvmDex** ppDvmDex)
         goto bail;
     }
 
-    pDexFile = dexFileParse(memMap.addr, memMap.length, parseFlags);
+    pDexFile = dexFileParse((u1*)memMap.addr, memMap.length, parseFlags);
     if (pDexFile == NULL) {
         LOGE("DEX parse failed\n");
         sysReleaseShmem(&memMap);
@@ -164,7 +164,7 @@ int dvmDexFileOpenPartial(const void* addr, int len, DvmDex** ppDvmDex)
         parseFlags |= kDexParseVerifyChecksum;
     */
 
-    pDexFile = dexFileParse(addr, len, parseFlags);
+    pDexFile = dexFileParse((u1*)addr, len, parseFlags);
     if (pDexFile == NULL) {
         LOGE("DEX parse failed\n");
         goto bail;

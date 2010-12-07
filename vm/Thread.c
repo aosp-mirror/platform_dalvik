@@ -954,7 +954,7 @@ static Thread* allocThread(int interpStackSize)
     }
     memset(stackBottom, 0xc5, interpStackSize);     // stop valgrind complaints
 #else
-    stackBottom = mmap(NULL, interpStackSize, PROT_READ | PROT_WRITE,
+    stackBottom = (u1*) mmap(NULL, interpStackSize, PROT_READ | PROT_WRITE,
         MAP_PRIVATE | MAP_ANON, -1, 0);
     if (stackBottom == MAP_FAILED) {
 #if defined(WITH_SELF_VERIFICATION)
@@ -2197,7 +2197,7 @@ void dvmDetachCurrentThread(void)
 
         if (curDepth == 1) {
             /* not expecting a lingering break frame; just look at curFrame */
-            assert(!dvmIsBreakFrame(self->curFrame));
+            assert(!dvmIsBreakFrame((u4*)self->curFrame));
             StackSaveArea* ssa = SAVEAREA_FROM_FP(self->curFrame);
             if (dvmIsNativeMethod(ssa->method))
                 topIsNative = true;

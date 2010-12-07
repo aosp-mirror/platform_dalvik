@@ -527,7 +527,7 @@ static bool processAnnotationValue(const ClassObject* clazz,
                 return false;
             } else {
                 assert(sfield->field.clazz->descriptor[0] == 'L');
-                elemObj = sfield->value.l;
+                elemObj = (Object*)sfield->value.l;
                 setObject = true;
                 dvmAddTrackedAlloc(elemObj, self);      // balance the Release
             }
@@ -562,7 +562,7 @@ static bool processAnnotationValue(const ClassObject* clazz,
                     dvmReleaseTrackedAlloc((Object*)newArray, self);
                     return false;
                 }
-                Object* obj = avalue.value.l;
+                Object* obj = (Object*)avalue.value.l;
                 dvmSetObjectArrayElement(newArray, count, obj);
                 dvmReleaseTrackedAlloc(obj, self);
             }
@@ -725,7 +725,7 @@ static Object* createAnnotationMember(const ClassObject* clazz,
         LOGW("Failed processing annotation value\n");
         goto bail;
     }
-    valueObj = avalue.value.l;
+    valueObj = (Object*)avalue.value.l;
 
     /* new member to hold the element */
     newMember =
@@ -868,7 +868,7 @@ static Object* processEncodedAnnotation(const ClassObject* clazz,
         goto bail;
     }
 
-    newAnno = result.l;
+    newAnno = (Object*)result.l;
 
 bail:
     dvmReleaseTrackedAlloc((Object*) elementArray, NULL);
@@ -1162,7 +1162,7 @@ static Object* getAnnotationValue(const ClassObject* clazz,
         return GAV_FAILED;
     }
 
-    return avalue.value.l;
+    return (Object*)avalue.value.l;
 }
 
 
@@ -1806,7 +1806,7 @@ Object* dvmGetAnnotationDefaultValue(const Method* method)
 
     /* convert the return type, if necessary */
     ClassObject* methodReturn = dvmGetBoxedReturnType(method);
-    Object* obj = avalue.value.l;
+    Object* obj = (Object*)avalue.value.l;
     obj = convertReturnType(obj, methodReturn);
 
     return obj;

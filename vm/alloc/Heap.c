@@ -458,7 +458,7 @@ void* dvmMalloc(size_t size, int flags)
          * internal tracking list.
          */
         if ((flags & ALLOC_DONT_TRACK) == 0) {
-            dvmAddTrackedAlloc(ptr, NULL);
+            dvmAddTrackedAlloc((Object*)ptr, NULL);
         }
     } else {
         /*

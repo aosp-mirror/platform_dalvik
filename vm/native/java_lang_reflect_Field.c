@@ -288,7 +288,7 @@ static void setStaticFieldValue(StaticField* sfield, const JValue* value)
         switch (sfield->field.signature[0]) {
         case 'L':
         case '[':
-            dvmSetStaticFieldObject(sfield, value->l);
+            dvmSetStaticFieldObject(sfield, (Object*)value->l);
             break;
         default:
             /* just copy the whole thing */
@@ -324,7 +324,7 @@ static void setStaticFieldValue(StaticField* sfield, const JValue* value)
             break;
         case 'L':
         case '[':
-            dvmSetStaticFieldObjectVolatile(sfield, value->l);
+            dvmSetStaticFieldObjectVolatile(sfield, (Object*)value->l);
             break;
         default:
             LOGE("Unhandled field signature '%s'\n", sfield->field.signature);
@@ -369,7 +369,7 @@ static void setInstFieldValue(InstField* ifield, Object* obj,
             break;
         case 'L':
         case '[':
-            dvmSetFieldObject(obj, ifield->byteOffset, value->l);
+            dvmSetFieldObject(obj, ifield->byteOffset, (Object *)value->l);
             break;
         default:
             LOGE("Unhandled field signature '%s'\n", ifield->field.signature);
@@ -413,7 +413,7 @@ static void setInstFieldValue(InstField* ifield, Object* obj,
             break;
         case 'L':
         case '[':
-            dvmSetFieldObjectVolatile(obj, ifield->byteOffset, value->l);
+            dvmSetFieldObjectVolatile(obj, ifield->byteOffset, (Object*)value->l);
             break;
         default:
             LOGE("Unhandled field signature '%s'\n", ifield->field.signature);

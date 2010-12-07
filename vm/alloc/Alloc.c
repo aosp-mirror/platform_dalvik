@@ -181,7 +181,7 @@ Object* dvmAllocObject(ClassObject* clazz, int flags)
     }
 
     /* allocate on GC heap; memory is zeroed out */
-    newObj = dvmMalloc(clazz->objectSize, flags);
+    newObj = (Object*)dvmMalloc(clazz->objectSize, flags);
     if (newObj != NULL) {
         DVM_OBJECT_INIT(newObj, clazz);
 #if WITH_HPROF_STACK
@@ -224,7 +224,7 @@ Object* dvmCloneObject(Object* obj)
         size = obj->clazz->objectSize;
     }
 
-    copy = dvmMalloc(size, flags);
+    copy = (Object*)dvmMalloc(size, flags);
     if (copy == NULL)
         return NULL;
 #if WITH_HPROF_STACK
@@ -312,8 +312,8 @@ typedef struct {
 
 static void countInstancesOfClassCallback(void *ptr, void *arg)
 {
-    CountContext *ctx = arg;
-    const Object *obj = ptr;
+    CountContext *ctx = (CountContext *)arg;
+    const Object *obj = (const Object *)ptr;
 
     assert(ctx != NULL);
     if (obj->clazz == ctx->clazz) {
@@ -333,8 +333,8 @@ size_t dvmCountInstancesOfClass(const ClassObject *clazz)
 
 static void countAssignableInstancesOfClassCallback(void *ptr, void *arg)
 {
-    CountContext *ctx = arg;
-    const Object *obj = ptr;
+    CountContext *ctx = (CountContext *)arg;
+    const Object *obj = (const Object *)ptr;
 
     assert(ctx != NULL);
     if (dvmInstanceof(obj->clazz, ctx->clazz)) {

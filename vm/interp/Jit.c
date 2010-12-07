@@ -114,7 +114,7 @@ void* dvmSelfVerificationSaveState(const u2* pc, const void* fp,
 
     // Create a copy of the InterpState
     memcpy(&(shadowSpace->interpState), interpState, sizeof(InterpState));
-    shadowSpace->interpState.fp = shadowSpace->shadowFP;
+    shadowSpace->interpState.fp = (u4*)shadowSpace->shadowFP;
     shadowSpace->interpState.interpStackEnd = (u1*)shadowSpace->registerSpace;
 
     // Create a copy of the stack
@@ -140,7 +140,7 @@ void* dvmSelfVerificationRestoreState(const u2* pc, const void* fp,
     Thread *self = dvmThreadSelf();
     ShadowSpace *shadowSpace = self->shadowSpace;
     // Official InterpState structure
-    InterpState *realGlue = shadowSpace->glue;
+    InterpState *realGlue = (InterpState*)shadowSpace->glue;
     shadowSpace->endPC = pc;
     shadowSpace->endShadowFP = fp;
     shadowSpace->jitExitState = exitState;

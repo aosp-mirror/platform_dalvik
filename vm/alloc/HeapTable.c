@@ -88,7 +88,7 @@ bool dvmHeapAddRefToLargeTable(LargeHeapRefTable **tableP, Object *ref)
 
     /* Allocate a new table.
      */
-    table = calloc(1, sizeof(LargeHeapRefTable));
+    table = (LargeHeapRefTable *)calloc(1, sizeof(LargeHeapRefTable));
     if (table == NULL) {
         LOGE_HEAP("Can't allocate a new large ref table\n");
         return false;
@@ -123,7 +123,7 @@ bool dvmHeapAddTableToLargeTable(LargeHeapRefTable **tableP, HeapRefTable *refs)
 
     /* Allocate a node.
      */
-    table = calloc(1, sizeof(LargeHeapRefTable));
+    table = (LargeHeapRefTable *)calloc(1, sizeof(LargeHeapRefTable));
     if (table == NULL) {
         LOGE_HEAP("Can't allocate a new large ref table\n");
         return false;

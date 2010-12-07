@@ -59,7 +59,7 @@ ArrayObject* dvmAllocArray(ClassObject* arrayClass, size_t length,
     /* Note that we assume that the Array class does not
      * override finalize().
      */
-    newArray = dvmMalloc(size, allocFlags);
+    newArray = (ArrayObject*)dvmMalloc(size, allocFlags);
     if (newArray != NULL) {
         DVM_OBJECT_INIT(&newArray->obj, arrayClass);
         newArray->length = length;
@@ -719,7 +719,7 @@ bool dvmUnboxObjectArray(ArrayObject* dstArray, const ArrayObject* srcArray,
         case PRIM_BOOLEAN:
         case PRIM_BYTE:
             {
-                u1* tmp = dst;
+                u1* tmp = (u1*)dst;
                 *tmp++ = result.b;
                 dst = tmp;
             }
@@ -727,7 +727,7 @@ bool dvmUnboxObjectArray(ArrayObject* dstArray, const ArrayObject* srcArray,
         case PRIM_CHAR:
         case PRIM_SHORT:
             {
-                u2* tmp = dst;
+                u2* tmp = (u2*)dst;
                 *tmp++ = result.s;
                 dst = tmp;
             }
@@ -735,7 +735,7 @@ bool dvmUnboxObjectArray(ArrayObject* dstArray, const ArrayObject* srcArray,
         case PRIM_FLOAT:
         case PRIM_INT:
             {
-                u4* tmp = dst;
+                u4* tmp = (u4*)dst;
                 *tmp++ = result.i;
                 dst = tmp;
             }
@@ -743,7 +743,7 @@ bool dvmUnboxObjectArray(ArrayObject* dstArray, const ArrayObject* srcArray,
         case PRIM_DOUBLE:
         case PRIM_LONG:
             {
-                u8* tmp = dst;
+                u8* tmp = (u8*)dst;
                 *tmp++ = result.j;
                 dst = tmp;
             }

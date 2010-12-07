@@ -726,7 +726,7 @@ static void updateExceptionClassList(const Method* method, PointerSet* throws)
 
     /* grab a local copy to work on */
     for (i = 0; i < mixLen; i++) {
-        mixSet[i] = dvmPointerSetGetEntry(throws, i);
+        mixSet[i] = (ClassObject*)dvmPointerSetGetEntry(throws, i);
     }
 
     for (i = 0; i < mixLen; i++) {
@@ -1044,7 +1044,7 @@ static void proxyInvoker(const u4* args, JValue* pResult,
         }
         pResult->l = NULL;
     } else {
-        if (!dvmUnboxPrimitive(invokeResult.l, returnType, pResult)) {
+        if (!dvmUnboxPrimitive((Object*)invokeResult.l, returnType, pResult)) {
             dvmThrowExceptionWithClassMessage("Ljava/lang/ClassCastException;",
                 ((Object*)invokeResult.l)->clazz->descriptor);
             goto bail;

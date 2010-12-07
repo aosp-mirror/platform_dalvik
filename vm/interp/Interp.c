@@ -228,7 +228,7 @@ static bool dvmBreakpointSetAdd(BreakpointSet* pSet, Method* method,
             LOGV("+++ increasing breakpoint set size to %d\n", newSize);
 
             /* pSet->breakpoints will be NULL on first entry */
-            newVec = realloc(pSet->breakpoints, newSize * sizeof(Breakpoint));
+            newVec = (Breakpoint*)realloc(pSet->breakpoints, newSize * sizeof(Breakpoint));
             if (newVec == NULL)
                 return false;
 
@@ -528,7 +528,7 @@ bool dvmAddSingleStep(Thread* thread, int size, int depth)
         saveArea = SAVEAREA_FROM_FP(fp);
         method = saveArea->method;
 
-        if (!dvmIsBreakFrame(fp) && !dvmIsNativeMethod(method))
+        if (!dvmIsBreakFrame((u4*)fp) && !dvmIsNativeMethod(method))
             break;
         prevFp = fp;
     }
@@ -545,7 +545,7 @@ bool dvmAddSingleStep(Thread* thread, int size, int depth)
          */
         LOGV("##### init step while in native method\n");
         fp = prevFp;
-        assert(!dvmIsBreakFrame(fp));
+        assert(!dvmIsBreakFrame((u4*)fp));
         assert(dvmIsNativeMethod(SAVEAREA_FROM_FP(fp)->method));
         saveArea = SAVEAREA_FROM_FP(fp);
     }

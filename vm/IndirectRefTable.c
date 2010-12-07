@@ -299,7 +299,7 @@ bool dvmRemoveFromIndirectRefTable(IndirectRefTable* pRef, u4 cookie,
         updateSlotRemove(pRef, idx);
 
 #ifndef NDEBUG
-        pRef->table[idx] = (IndirectRef) 0xd3d3d3d3;
+        pRef->table[idx] = (Object*)0xd3d3d3d3;
 #endif
 
         int numHoles =

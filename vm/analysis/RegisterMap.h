@@ -67,7 +67,7 @@ void dvmRegisterMapShutdown(void);
  * Get the format.
  */
 INLINE RegisterMapFormat dvmRegisterMapGetFormat(const RegisterMap* pMap) {
-    return pMap->format & ~(kRegMapFormatOnHeap);
+    return (RegisterMapFormat)(pMap->format & ~(kRegMapFormatOnHeap));
 }
 
 /*

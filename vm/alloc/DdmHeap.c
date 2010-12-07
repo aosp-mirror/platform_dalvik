@@ -273,7 +273,7 @@ heap_chunk_callback(const void *chunkptr, size_t chunklen,
          */
         state = HPSG_STATE(SOLIDITY_FREE, 0);
     } else {
-        const Object *obj = userptr;
+        const Object *obj = (const Object *)userptr;
         /* If we're looking at the native heap, we'll just return
          * (SOLIDITY_HARD, KIND_NATIVE) for all allocated chunks
          */

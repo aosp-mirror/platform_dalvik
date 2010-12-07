@@ -147,7 +147,7 @@ static void applyLoadStoreElimination(CompilationUnit *cUnit,
                         /* The store can be sunk for at least one cycle */
                         if (sinkDistance != 0) {
                             ArmLIR *newStoreLIR =
-                                dvmCompilerNew(sizeof(ArmLIR), true);
+                                (ArmLIR *)dvmCompilerNew(sizeof(ArmLIR), true);
                             *newStoreLIR = *thisLIR;
                             newStoreLIR->age = cUnit->optRound;
                             /*
@@ -369,7 +369,7 @@ static void applyLoadHoisting(CompilationUnit *cUnit,
                         /* The load can be hoisted for at least one cycle */
                         if (hoistDistance != 0) {
                             ArmLIR *newLoadLIR =
-                                dvmCompilerNew(sizeof(ArmLIR), true);
+                                (ArmLIR *)dvmCompilerNew(sizeof(ArmLIR), true);
                             *newLoadLIR = *thisLIR;
                             newLoadLIR->age = cUnit->optRound;
                             /*
@@ -473,7 +473,7 @@ static void applyLoadHoisting(CompilationUnit *cUnit,
                     /* The store can be hoisted for at least one cycle */
                     if (hoistDistance != 0) {
                         ArmLIR *newLoadLIR =
-                            dvmCompilerNew(sizeof(ArmLIR), true);
+                            (ArmLIR *)dvmCompilerNew(sizeof(ArmLIR), true);
                         *newLoadLIR = *thisLIR;
                         newLoadLIR->age = cUnit->optRound;
                         /*

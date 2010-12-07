@@ -167,7 +167,7 @@ static int setgroupsIntarray(ArrayObject* gidArray)
     }
 
     /* just in case gid_t and u4 are different... */
-    gids = alloca(sizeof(gid_t) * gidArray->length);
+    gids = (gid_t *)alloca(sizeof(gid_t) * gidArray->length);
     contents = (s4 *)gidArray->contents;
 
     for (i = 0 ; i < gidArray->length ; i++) {
