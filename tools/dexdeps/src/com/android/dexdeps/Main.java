@@ -29,8 +29,14 @@ import java.util.zip.ZipInputStream;
 public class Main {
     private static final String CLASSES_DEX = "classes.dex";
 
-    private String mInputFileName;
+    private String[] mInputFileNames;
     private String mOutputFormat = "xml";
+
+    /**
+     * whether to only emit info about classes used; when {@code false},
+     * info about fields and methods is also emitted
+     */
+    private boolean mJustClasses = false;
 
     /**
      * Entry point.
@@ -46,17 +52,31 @@ public class Main {
     void run(String[] args) {
         try {
             parseArgs(args);
-            RandomAccessFile raf = openInputFile();
-            DexData dexData = new DexData(raf);
-            dexData.load();
+            boolean first = true;
 
-            Output.generate(dexData, mOutputFormat);
+            for (String fileName : mInputFileNames) {
+                RandomAccessFile raf = openInputFile(fileName);
+                DexData dexData = new DexData(raf);
+                dexData.load();
+
+                if (first) {
+                    first = false;
+                    Output.generateFirstHeader(fileName, mOutputFormat);
+                } else {
+                    Output.generateHeader(fileName, mOutputFormat);
+                }
+
+                Output.generate(dexData, mOutputFormat, mJustClasses);
+                Output.generateFooter(mOutputFormat);
+                raf.close();
+            }
         } catch (UsageException ue) {
             usage();
             System.exit(2);
         } catch (IOException ioe) {
-            if (ioe.getMessage() != null)
+            if (ioe.getMessage() != null) {
                 System.err.println("Failed: " + ioe);
+            }
             System.exit(1);
         } catch (DexDataException dde) {
             /* a message was already reported, just bail quietly */
@@ -65,16 +85,18 @@ public class Main {
     }
 
     /**
-     * Opens the input file, which could be a .dex or a .jar/.apk with a
+     * Opens an input file, which could be a .dex or a .jar/.apk with a
      * classes.dex inside.  If the latter, we extract the contents to a
      * temporary file.
+     *
+     * @param fileName the name of the file to open
      */
-    RandomAccessFile openInputFile() throws IOException {
+    RandomAccessFile openInputFile(String fileName) throws IOException {
         RandomAccessFile raf;
 
-        raf = openInputFileAsZip();
+        raf = openInputFileAsZip(fileName);
         if (raf == null) {
-            File inputFile = new File(mInputFileName);
+            File inputFile = new File(fileName);
             raf = new RandomAccessFile(inputFile, "r");
         }
 
@@ -82,25 +104,26 @@ public class Main {
     }
 
     /**
-     * Tries to open the input file as a Zip archive (jar/apk) with a
+     * Tries to open an input file as a Zip archive (jar/apk) with a
      * "classes.dex" inside.
      *
+     * @param fileName the name of the file to open
      * @return a RandomAccessFile for classes.dex, or null if the input file
      *         is not a zip archive
      * @throws IOException if the file isn't found, or it's a zip and
      *         classes.dex isn't found inside
      */
-    RandomAccessFile openInputFileAsZip() throws IOException {
+    RandomAccessFile openInputFileAsZip(String fileName) throws IOException {
         ZipFile zipFile;
 
         /*
          * Try it as a zip file.
          */
         try {
-            zipFile = new ZipFile(mInputFileName);
+            zipFile = new ZipFile(fileName);
         } catch (FileNotFoundException fnfe) {
             /* not found, no point in retrying as non-zip */
-            System.err.println("Unable to open '" + mInputFileName + "': " +
+            System.err.println("Unable to open '" + fileName + "': " +
                 fnfe.getMessage());
             throw fnfe;
         } catch (ZipException ze) {
@@ -116,7 +139,7 @@ public class Main {
         ZipEntry entry = zipFile.getEntry(CLASSES_DEX);
         if (entry == null) {
             System.err.println("Unable to find '" + CLASSES_DEX +
-                "' in '" + mInputFileName + "'");
+                "' in '" + fileName + "'");
             zipFile.close();
             throw new ZipException();
         }
@@ -175,28 +198,34 @@ public class Main {
                     throw new UsageException();
                 }
                 //System.out.println("+++ using format " + mOutputFormat);
+            } else if (arg.equals("--just-classes")) {
+                mJustClasses = true;
             } else {
                 System.err.println("Unknown option '" + arg + "'");
                 throw new UsageException();
             }
         }
 
-        // expecting one argument left
-        if (idx != args.length - 1) {
+        // We expect at least one more argument (file name).
+        int fileCount = args.length - idx;
+        if (fileCount == 0) {
             throw new UsageException();
         }
 
-        mInputFileName = args[idx];
+        mInputFileNames = new String[fileCount];
+        System.arraycopy(args, idx, mInputFileNames, 0, fileCount);
     }
 
     /**
      * Prints command-line usage info.
      */
     void usage() {
-        System.err.println("DEX dependency scanner v1.1");
-        System.err.println("Copyright (C) 2009 The Android Open Source Project\n");
-        System.err.println("Usage: dexdeps [options] <file.{dex,apk,jar}>");
-        System.err.println("Options:");
-        System.err.println("  --format={xml,brief}");
+        System.err.print(
+                "DEX dependency scanner v1.2\n" +
+                "Copyright (C) 2009 The Android Open Source Project\n\n" +
+                "Usage: dexdeps [options] <file.{dex,apk,jar}> ...\n" +
+                "Options:\n" +
+                "  --format={xml,brief}\n" +
+                "  --just-classes\n");
     }
 }
