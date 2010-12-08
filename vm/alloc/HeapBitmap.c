@@ -88,8 +88,7 @@ dvmHeapBitmapZero(HeapBitmap *hb)
 void dvmHeapBitmapSweepWalk(const HeapBitmap *liveHb, const HeapBitmap *markHb,
                             BitmapSweepCallback *callback, void *callbackArg)
 {
-    static const size_t kPointerBufSize = 128;
-    void *pointerBuf[kPointerBufSize];
+    void *pointerBuf[4 * HB_BITS_PER_WORD];
     void **pb = pointerBuf;
     size_t index;
     size_t i;
@@ -124,7 +123,7 @@ void dvmHeapBitmapSweepWalk(const HeapBitmap *liveHb, const HeapBitmap *markHb,
             }
             /* Make sure that there are always enough slots available */
             /* for an entire word of 1s. */
-            if (kPointerBufSize - (pb - pointerBuf) < HB_BITS_PER_WORD) {
+            if (NELEM(pointerBuf) - (pb - pointerBuf) < HB_BITS_PER_WORD) {
                 (*callback)(pb - pointerBuf, pointerBuf, callbackArg);
                 pb = pointerBuf;
             }
