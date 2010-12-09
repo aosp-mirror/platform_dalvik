@@ -16,6 +16,8 @@
 
 package com.android.dexdeps;
 
+import java.io.PrintStream;
+
 /**
  * Generate fancy output.
  */
@@ -26,11 +28,51 @@ public class Output {
     private static final String IN3 = "      ";
     private static final String IN4 = "        ";
 
-    public static void generate(DexData dexData, String format) {
+    private static final PrintStream out = System.out;
+
+    private static void generateHeader0(String fileName, String format) {
         if (format.equals("brief")) {
-            printBrief(dexData);
+            if (fileName != null) {
+                out.println("File: " + fileName);
+            }
         } else if (format.equals("xml")) {
-            printXml(dexData);
+            if (fileName != null) {
+                out.println(IN0 + "<external file=\"" + fileName + "\">");
+            } else {
+                out.println(IN0 + "<external>");
+            }
+        } else {
+            /* should've been trapped in arg handler */
+            throw new RuntimeException("unknown output format");
+        }
+    }
+
+    public static void generateFirstHeader(String fileName, String format) {
+        generateHeader0(fileName, format);
+    }
+
+    public static void generateHeader(String fileName, String format) {
+        out.println();
+        generateHeader0(fileName, format);
+    }
+
+    public static void generateFooter(String format) {
+        if (format.equals("brief")) {
+            // Nothing to do.
+        } else if (format.equals("xml")) {
+            out.println("</external>");
+        } else {
+            /* should've been trapped in arg handler */
+            throw new RuntimeException("unknown output format");
+        }
+    }
+
+    public static void generate(DexData dexData, String format,
+            boolean justClasses) {
+        if (format.equals("brief")) {
+            printBrief(dexData, justClasses);
+        } else if (format.equals("xml")) {
+            printXml(dexData, justClasses);
         } else {
             /* should've been trapped in arg handler */
             throw new RuntimeException("unknown output format");
@@ -40,23 +82,29 @@ public class Output {
     /**
      * Prints the data in a simple human-readable format.
      */
-    static void printBrief(DexData dexData) {
+    static void printBrief(DexData dexData, boolean justClasses) {
         ClassRef[] externClassRefs = dexData.getExternalReferences();
 
-        printClassRefs(externClassRefs);
-        printFieldRefs(externClassRefs);
-        printMethodRefs(externClassRefs);
+        printClassRefs(externClassRefs, justClasses);
+
+        if (!justClasses) {
+            printFieldRefs(externClassRefs);
+            printMethodRefs(externClassRefs);
+        }
     }
 
     /**
      * Prints the list of classes in a simple human-readable format.
      */
-    static void printClassRefs(ClassRef[] classes) {
-        System.out.println("Classes:");
+    static void printClassRefs(ClassRef[] classes, boolean justClasses) {
+        if (!justClasses) {
+            out.println("Classes:");
+        }
+
         for (int i = 0; i < classes.length; i++) {
             ClassRef ref = classes[i];
 
-            System.out.println(descriptorToDot(ref.getName()));
+            out.println(descriptorToDot(ref.getName()));
         }
     }
 
@@ -64,14 +112,14 @@ public class Output {
      * Prints the list of fields in a simple human-readable format.
      */
     static void printFieldRefs(ClassRef[] classes) {
-        System.out.println("\nFields:");
+        out.println("\nFields:");
         for (int i = 0; i < classes.length; i++) {
             FieldRef[] fields = classes[i].getFieldArray();
 
             for (int j = 0; j < fields.length; j++) {
                 FieldRef ref = fields[j];
 
-                System.out.println(descriptorToDot(ref.getDeclClassName()) +
+                out.println(descriptorToDot(ref.getDeclClassName()) +
                     "." + ref.getName() + " : " + ref.getTypeName());
             }
         }
@@ -81,29 +129,26 @@ public class Output {
      * Prints the list of methods in a simple human-readable format.
      */
     static void printMethodRefs(ClassRef[] classes) {
-        System.out.println("\nMethods:");
+        out.println("\nMethods:");
         for (int i = 0; i < classes.length; i++) {
             MethodRef[] methods = classes[i].getMethodArray();
 
             for (int j = 0; j < methods.length; j++) {
                 MethodRef ref = methods[j];
 
-                System.out.println(descriptorToDot(ref.getDeclClassName()) +
+                out.println(descriptorToDot(ref.getDeclClassName()) +
                     "." + ref.getName() + " : " + ref.getDescriptor());
             }
         }
     }
-
 
     /**
      * Prints the output in XML format.
      *
      * We shouldn't need to XML-escape the field/method info.
      */
-    static void printXml(DexData dexData) {
+    static void printXml(DexData dexData, boolean justClasses) {
         ClassRef[] externClassRefs = dexData.getExternalReferences();
-
-        System.out.println(IN0 + "<external>");
 
         /*
          * Iterate through externClassRefs.  For each class, dump all of
@@ -121,24 +166,25 @@ public class Output {
              */
             if (!packageName.equals(prevPackage)) {
                 if (prevPackage != null) {
-                    System.out.println(IN1 + "</package>");
+                    out.println(IN1 + "</package>");
                 }
 
-                System.out.println(IN1 +
+                out.println(IN1 +
                     "<package name=\"" + packageName + "\">");
 
                 prevPackage = packageName;
             }
 
-            System.out.println(IN2 + "<class name=\"" + className + "\">");
-            printXmlFields(cref);
-            printXmlMethods(cref);
-            System.out.println(IN2 + "</class>");
+            out.println(IN2 + "<class name=\"" + className + "\">");
+            if (!justClasses) {
+                printXmlFields(cref);
+                printXmlMethods(cref);
+            }
+            out.println(IN2 + "</class>");
         }
 
         if (prevPackage != null)
-            System.out.println(IN1 + "</package>");
-        System.out.println(IN0 + "</external>");
+            out.println(IN1 + "</package>");
     }
 
     /**
@@ -149,7 +195,7 @@ public class Output {
         for (int i = 0; i < fields.length; i++) {
             FieldRef fref = fields[i];
 
-            System.out.println(IN3 + "<field name=\"" + fref.getName() +
+            out.println(IN3 + "<field name=\"" + fref.getName() +
                 "\" type=\"" + descriptorToDot(fref.getTypeName()) + "\"/>");
         }
     }
@@ -167,22 +213,22 @@ public class Output {
             constructor = mref.getName().equals("<init>");
             if (constructor) {
                 // use class name instead of method name
-                System.out.println(IN3 + "<constructor name=\"" +
+                out.println(IN3 + "<constructor name=\"" +
                     classNameOnly(declClassName) + "\">");
             } else {
-                System.out.println(IN3 + "<method name=\"" + mref.getName() +
+                out.println(IN3 + "<method name=\"" + mref.getName() +
                     "\" return=\"" + descriptorToDot(mref.getReturnTypeName()) +
                     "\">");
             }
             String[] args = mref.getArgumentTypeNames();
             for (int j = 0; j < args.length; j++) {
-                System.out.println(IN4 + "<parameter type=\"" +
+                out.println(IN4 + "<parameter type=\"" +
                     descriptorToDot(args[j]) + "\"/>");
             }
             if (constructor) {
-                System.out.println(IN3 + "</constructor>");
+                out.println(IN3 + "</constructor>");
             } else {
-                System.out.println(IN3 + "</method>");
+                out.println(IN3 + "</method>");
             }
         }
     }

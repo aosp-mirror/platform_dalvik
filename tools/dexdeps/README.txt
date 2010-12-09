@@ -9,7 +9,7 @@ requires a certain minimum API level to execute.
 
 Basic usage:
 
-  dexdeps [options] <file.{dex,apk,jar}>
+  dexdeps [options] <file.{dex,apk,jar}> ...
 
 For zip archives (including .jar and .apk), dexdeps will look for a
 "classes.dex" entry.
@@ -25,3 +25,8 @@ Supported options are:
 
     "xml" produces a larger output file, readable with an XML browser.  Types
     are shown in a more human-readable form (e.g. "[I" becomes "int[]").
+
+  --just-classes
+
+    Indicates that output should only include a list of classes, as
+    opposed to also listing fields and methods.
