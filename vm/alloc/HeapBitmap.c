@@ -123,7 +123,7 @@ void dvmHeapBitmapSweepWalk(const HeapBitmap *liveHb, const HeapBitmap *markHb,
             }
             /* Make sure that there are always enough slots available */
             /* for an entire word of 1s. */
-            if (NELEM(pointerBuf) - (pb - pointerBuf) < HB_BITS_PER_WORD) {
+            if (pb >= &pointerBuf[NELEM(pointerBuf) - HB_BITS_PER_WORD]) {
                 (*callback)(pb - pointerBuf, pointerBuf, callbackArg);
                 pb = pointerBuf;
             }
