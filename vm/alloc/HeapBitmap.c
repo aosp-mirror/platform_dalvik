@@ -86,14 +86,14 @@ dvmHeapBitmapZero(HeapBitmap *hb)
  * The callback is not permitted to increase the max of either bitmap.
  */
 void dvmHeapBitmapSweepWalk(const HeapBitmap *liveHb, const HeapBitmap *markHb,
+                            uintptr_t base, uintptr_t max,
                             BitmapSweepCallback *callback, void *callbackArg)
 {
     void *pointerBuf[4 * HB_BITS_PER_WORD];
     void **pb = pointerBuf;
-    size_t index;
     size_t i;
+    size_t start, end;
     unsigned long *live, *mark;
-    uintptr_t offset;
 
     assert(liveHb != NULL);
     assert(liveHb->bits != NULL);
@@ -102,16 +102,19 @@ void dvmHeapBitmapSweepWalk(const HeapBitmap *liveHb, const HeapBitmap *markHb,
     assert(liveHb->base == markHb->base);
     assert(liveHb->bitsLen == markHb->bitsLen);
     assert(callback != NULL);
+    assert(base <= max);
+    assert(base >= liveHb->base);
+    assert(max <= liveHb->max);
     if (liveHb->max < liveHb->base) {
         /* Easy case; both are obviously empty.
          */
         return;
     }
-    offset = liveHb->max - liveHb->base;
-    index = HB_OFFSET_TO_INDEX(offset);
+    start = HB_OFFSET_TO_INDEX(base - liveHb->base);
+    end = HB_OFFSET_TO_INDEX(max - liveHb->base);
     live = liveHb->bits;
     mark = markHb->bits;
-    for (i = 0; i <= index; i++) {
+    for (i = start; i <= end; i++) {
         unsigned long garbage = live[i] & ~mark[i];
         if (UNLIKELY(garbage != 0)) {
             unsigned long highBit = 1 << (HB_BITS_PER_WORD - 1);

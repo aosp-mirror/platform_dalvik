@@ -731,49 +731,6 @@ dvmHeapSourceGetValue(enum HeapSourceValueSpec spec, size_t perHeapStats[],
     return total;
 }
 
-static void aliasBitmap(HeapBitmap *dst, HeapBitmap *src,
-                        uintptr_t base, uintptr_t max) {
-    size_t offset;
-
-    dst->base = base;
-    dst->max = max;
-    dst->bitsLen = HB_OFFSET_TO_BYTE_INDEX(max - base) + sizeof(dst->bits);
-    /* The exclusive limit from bitsLen is greater than the inclusive max. */
-    assert(base + HB_MAX_OFFSET(dst) > max);
-    /* The exclusive limit is at most one word of bits beyond max. */
-    assert((base + HB_MAX_OFFSET(dst)) - max <=
-           HB_OBJECT_ALIGNMENT * HB_BITS_PER_WORD);
-    dst->allocLen = dst->bitsLen;
-    offset = base - src->base;
-    assert(HB_OFFSET_TO_MASK(offset) == 1 << 31);
-    dst->bits = &src->bits[HB_OFFSET_TO_INDEX(offset)];
-}
-
-/*
- * Initializes a vector of object and mark bits to the object and mark
- * bits of each heap.  The bits are aliased to the heapsource
- * object and mark bitmaps.  This routine is used by the sweep code
- * which needs to free each object in the correct heap.
- */
-void dvmHeapSourceGetObjectBitmaps(HeapBitmap liveBits[], HeapBitmap markBits[],
-                                   size_t numHeaps)
-{
-    HeapSource *hs = gHs;
-    uintptr_t base, max;
-    size_t i;
-
-    HS_BOILERPLATE();
-
-    assert(numHeaps == hs->numHeaps);
-    for (i = 0; i < hs->numHeaps; ++i) {
-        base = (uintptr_t)hs->heaps[i].base;
-        /* -1 because limit is exclusive but max is inclusive. */
-        max = MIN((uintptr_t)hs->heaps[i].limit - 1, hs->markBits.max);
-        aliasBitmap(&liveBits[i], &hs->liveBits, base, max);
-        aliasBitmap(&markBits[i], &hs->markBits, base, max);
-    }
-}
-
 /*
  * Get the bitmap representing all live objects.
  */
@@ -782,6 +739,16 @@ HeapBitmap *dvmHeapSourceGetLiveBits(void)
     HS_BOILERPLATE();
 
     return &gHs->liveBits;
+}
+
+/*
+ * Get the bitmap representing all marked objects.
+ */
+HeapBitmap *dvmHeapSourceGetMarkBits(void)
+{
+    HS_BOILERPLATE();
+
+    return &gHs->markBits;
 }
 
 void dvmHeapSourceSwapBitmaps(void)

@@ -61,17 +61,16 @@ void dvmHeapSourceThreadShutdown(void);
  */
 void dvmHeapSourceShutdown(GcHeap **gcHeap);
 
-/*
- * Initializes a vector of object and mark bits to the object and mark
- * bits of each heap.
- */
-void dvmHeapSourceGetObjectBitmaps(HeapBitmap liveBits[], HeapBitmap markBits[],
-                                   size_t numHeaps);
 
 /*
  * Get the bitmap representing all live objects.
  */
 HeapBitmap *dvmHeapSourceGetLiveBits(void);
+
+/*
+ * Get the bitmap representing all marked objects.
+ */
+HeapBitmap *dvmHeapSourceGetMarkBits(void);
 
 /*
  * Gets the begining of the allocation for the HeapSource.

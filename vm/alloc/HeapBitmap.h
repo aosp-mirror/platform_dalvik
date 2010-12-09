@@ -181,6 +181,7 @@ HB_INLINE_PROTO(
  * The callback is not permitted to increase the max of either bitmap.
  */
 void dvmHeapBitmapSweepWalk(const HeapBitmap *liveHb, const HeapBitmap *markHb,
+                            uintptr_t base, uintptr_t max,
                             BitmapSweepCallback *callback, void *callbackArg);
 
 /*
