@@ -26,6 +26,7 @@
 #include "Inlines.h"
 #include "Misc.h"
 #include "Bits.h"
+#include "BitVector.h"
 #include "libdex/SysUtil.h"
 #include "libdex/DexFile.h"
 #include "libdex/DexProto.h"

@@ -130,54 +130,6 @@ void dvmPrintDebugMessage(const DebugOutputTarget* target, const char* format,
 
 
 /*
- * Expanding bitmap, used for tracking resources.  Bits are numbered starting
- * from zero.
- *
- * All operations on a BitVector are unsynchronized.
- */
-typedef struct BitVector {
-    bool    expandable;     /* expand bitmap if we run out? */
-    int     storageSize;    /* current size, in 32-bit words */
-    u4*     storage;
-} BitVector;
-
-/* allocate a bit vector with enough space to hold "startBits" bits */
-BitVector* dvmAllocBitVector(int startBits, bool expandable);
-void dvmFreeBitVector(BitVector* pBits);
-
-/*
- * dvmAllocBit always allocates the first possible bit.  If we run out of
- * space in the bitmap, and it's not marked expandable, dvmAllocBit
- * returns -1.
- *
- * dvmSetBit sets the specified bit, expanding the vector if necessary
- * (and possible).
- *
- * dvmIsBitSet returns "true" if the bit is set.
- */
-int dvmAllocBit(BitVector* pBits);
-bool dvmSetBit(BitVector* pBits, int num);
-void dvmClearBit(BitVector* pBits, int num);
-void dvmClearAllBits(BitVector* pBits);
-bool dvmIsBitSet(const BitVector* pBits, int num);
-
-/* count the number of bits that have been set */
-int dvmCountSetBits(const BitVector* pBits);
-
-/* copy one vector to the other compatible one */
-bool dvmCopyBitVector(BitVector *dest, const BitVector *src);
-
-/*
- * Intersect two bit vectores and merge the result on top of the pre-existing
- * value in the dest vector.
- */
-bool dvmIntersectBitVectors(BitVector *dest, const BitVector *src1,
-                            const BitVector *src2);
-
-#define kBitVectorGrowth    4   /* increase by 4 u4s when limit hit */
-
-
-/*
  * Return a newly-allocated string in which all occurrences of '.' have
  * been changed to '/'.  If we find a '/' in the original string, NULL
  * is returned to avoid ambiguity.
