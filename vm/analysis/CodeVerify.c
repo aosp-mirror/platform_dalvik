@@ -55,14 +55,8 @@ typedef enum RegisterTrackingMode {
 # define DEAD_CODE_SCAN  false
 #endif
 
-static bool gDebugVerbose = false;      // TODO: remove this
+static bool gDebugVerbose = false;
 
-#if 0
-int gDvm__totalInstr = 0;
-int gDvm__gcInstr = 0;
-int gDvm__gcData = 0;
-int gDvm__gcSimpleData = 0;
-#endif
 
 /*
  * Selectively enable verbose debug logging -- use this to activate
@@ -3178,22 +3172,19 @@ static bool replaceFailingInstruction(const Method* meth, InsnFlags* insnFlags,
     int insnIdx, VerifyError failure)
 {
     VerifyErrorRefType refType;
-    const u2* oldInsns = meth->insns + insnIdx;
-    u2 oldInsn = *oldInsns;
+    u2* oldInsns = (u2*) meth->insns + insnIdx;
     bool result = false;
 
     if (gDvm.optimizing)
         LOGD("Weird: RFI during dexopt?");
-
-    //LOGD("  was 0x%04x\n", oldInsn);
-    u2* newInsns = (u2*) meth->insns + insnIdx;
 
     /*
      * Generate the new instruction out of the old.
      *
      * First, make sure this is an instruction we're expecting to stomp on.
      */
-    switch (oldInsn & 0xff) {
+    Opcode opcode = dexOpcodeFromCodeUnit(*oldInsns);
+    switch (opcode) {
     case OP_CONST_CLASS:                // insn[1] == class ref, 2 bytes
     case OP_CHECK_CAST:
     case OP_INSTANCE_OF:
@@ -3250,10 +3241,11 @@ static bool replaceFailingInstruction(const Method* meth, InsnFlags* insnFlags,
 
     default:
         /* could handle this in a generic way, but this is probably safer */
-        LOG_VFY("GLITCH: verifier asked to replace opcode 0x%02x\n",
-            oldInsn & 0xff);
+        LOG_VFY("GLITCH: verifier asked to replace opcode 0x%02x\n", opcode);
         goto bail;
     }
+
+    assert((dexGetFlagsFromOpcode(opcode) & kInstrCanThrow) != 0);
 
     /* write a NOP over the third code unit, if necessary */
     int width = dvmInsnGetWidth(insnFlags, insnIdx);
@@ -3262,8 +3254,7 @@ static bool replaceFailingInstruction(const Method* meth, InsnFlags* insnFlags,
         /* nothing to do */
         break;
     case 3:
-        dvmDexChangeDex2(meth->clazz->pDvmDex, newInsns+2, OP_NOP);
-        //newInsns[2] = OP_NOP;
+        dvmDexChangeDex2(meth->clazz->pDvmDex, oldInsns+2, OP_NOP);
         break;
     default:
         /* whoops */
@@ -3275,8 +3266,7 @@ static bool replaceFailingInstruction(const Method* meth, InsnFlags* insnFlags,
     /* encode the opcode, with the failure code in the high byte */
     u2 newVal = OP_THROW_VERIFICATION_ERROR |
         (failure << 8) | (refType << (8 + kVerifyErrorRefTypeShift));
-    //newInsns[0] = newVal;
-    dvmDexChangeDex2(meth->clazz->pDvmDex, newInsns, newVal);
+    dvmDexChangeDex2(meth->clazz->pDvmDex, oldInsns, newVal);
 
     result = true;
 
