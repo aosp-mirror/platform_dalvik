@@ -68,4 +68,7 @@ bool dvmGetBranchOffset(const Method* meth, const InsnFlags* insnFlags,
 /* return a RegType enumeration value that "value" just fits into */
 char dvmDetermineCat1Const(s4 value);
 
+/* debugging */
+bool dvmWantVerboseVerification(const Method* meth);
+
 #endif /*_DALVIK_VERIFYSUBS*/

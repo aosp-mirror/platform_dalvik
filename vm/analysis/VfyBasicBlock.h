@@ -21,7 +21,6 @@
 #ifndef _DALVIK_VFYBASICBLOCK
 #define _DALVIK_VFYBASICBLOCK
 
-#include "libdex/InstrUtils.h"
 #include "PointerSet.h"
 
 struct VerifierData;
@@ -32,11 +31,21 @@ struct VerifierData;
  *
  * This is used for liveness analysis, which is a reverse-flow algorithm,
  * so we need to mantain a list of predecessors for each block.
+ *
+ * "liveRegs" indicates the set of registers that are live at the end of
+ * the basic block (after the last instruction has executed).  Successor
+ * blocks will compare their results with this to see if this block needs
+ * to be re-evaluated.  Note that this is not the same as the contents of
+ * the RegisterLine for the last instruction in the block (which reflects
+ * the state *before* the instruction has executed).
  */
 typedef struct {
     u4              firstAddr;      /* address of first instruction */
     u4              lastAddr;       /* address of last instruction */
     PointerSet*     predecessors;   /* set of basic blocks that can flow here */
+    BitVector*      liveRegs;       /* liveness for each register */
+    bool            changed;        /* input set has changed, must re-eval */
+    bool            visited;        /* block has been visited at least once */
 } VfyBasicBlock;
 
 /*

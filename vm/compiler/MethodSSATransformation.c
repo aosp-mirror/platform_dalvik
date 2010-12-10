@@ -346,9 +346,9 @@ static void computeSuccLiveIn(BitVector *dest,
         dvmAbort();
     }
 
-    int i;
-    for (i = 0; i < dest->storageSize; i++) {
-        dest->storage[i] |= src1->storage[i] & ~src2->storage[i];
+    unsigned int idx;
+    for (idx = 0; idx < dest->storageSize; idx++) {
+        dest->storage[idx] |= src1->storage[idx] & ~src2->storage[idx];
     }
 }
 

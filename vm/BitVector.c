@@ -28,13 +28,12 @@
  * Allocate a bit vector with enough space to hold at least the specified
  * number of bits.
  */
-BitVector* dvmAllocBitVector(int startBits, bool expandable)
+BitVector* dvmAllocBitVector(unsigned int startBits, bool expandable)
 {
     BitVector* bv;
-    int count;
+    unsigned int count;
 
     assert(sizeof(bv->storage[0]) == 4);        /* assuming 32-bit units */
-    assert(startBits >= 0);
 
     bv = (BitVector*) malloc(sizeof(BitVector));
 
@@ -68,7 +67,7 @@ void dvmFreeBitVector(BitVector* pBits)
  */
 int dvmAllocBit(BitVector* pBits)
 {
-    int word, bit;
+    unsigned int word, bit;
 
 retry:
     for (word = 0; word < pBits->storageSize; word++) {
@@ -77,7 +76,7 @@ retry:
              * There are unallocated bits in this word.  Return the first.
              */
             bit = ffs(~(pBits->storage[word])) -1;
-            assert(bit >= 0 && bit < 32);
+            assert(bit < 32);
             pBits->storage[word] |= 1 << bit;
             return (word << 5) | bit;
         }
@@ -99,36 +98,38 @@ retry:
 
 /*
  * Mark the specified bit as "set".
- *
- * Returns "false" if the bit is outside the range of the vector and we're
- * not allowed to expand.
  */
-bool dvmSetBit(BitVector* pBits, int num)
+void dvmSetBit(BitVector* pBits, unsigned int num)
 {
-    assert(num >= 0);
-    if (num >= pBits->storageSize * (int)sizeof(u4) * 8) {
-        if (!pBits->expandable)
-            return false;
+    if (num >= pBits->storageSize * sizeof(u4) * 8) {
+        if (!pBits->expandable) {
+            LOGE("Attempt to set bit outside valid range (%d, limit is %d)\n",
+                num, pBits->storageSize * sizeof(u4) * 8);
+            dvmAbort();
+        }
 
         /* Round up to word boundaries for "num+1" bits */
-        int newSize = (num + 1 + 31) >> 5;
+        unsigned int newSize = (num + 1 + 31) >> 5;
         assert(newSize > pBits->storageSize);
         pBits->storage = (u4*)realloc(pBits->storage, newSize * sizeof(u4));
+        if (pBits->storage == NULL) {
+            LOGE("BitVector expansion to %d failed\n", newSize * sizeof(u4));
+            dvmAbort();
+        }
         memset(&pBits->storage[pBits->storageSize], 0x00,
             (newSize - pBits->storageSize) * sizeof(u4));
         pBits->storageSize = newSize;
     }
 
     pBits->storage[num >> 5] |= 1 << (num & 0x1f);
-    return true;
 }
 
 /*
  * Mark the specified bit as "clear".
  */
-void dvmClearBit(BitVector* pBits, int num)
+void dvmClearBit(BitVector* pBits, unsigned int num)
 {
-    assert(num >= 0 && num < (int) pBits->storageSize * (int)sizeof(u4) * 8);
+    assert(num < pBits->storageSize * sizeof(u4) * 8);
 
     pBits->storage[num >> 5] &= ~(1 << (num & 0x1f));
 }
@@ -138,7 +139,7 @@ void dvmClearBit(BitVector* pBits, int num)
  */
 void dvmClearAllBits(BitVector* pBits)
 {
-    int count = pBits->storageSize;
+    unsigned int count = pBits->storageSize;
     memset(pBits->storage, 0, count * sizeof(u4));
 }
 
@@ -147,27 +148,27 @@ void dvmClearAllBits(BitVector* pBits)
  * since there might be unused bits - setting those to one will confuse the
  * iterator.
  */
-void dvmSetInitialBits(BitVector* pBits, int numBits)
+void dvmSetInitialBits(BitVector* pBits, unsigned int numBits)
 {
-    int i;
+    unsigned int idx;
     assert(((numBits + 31) >> 5) <= pBits->storageSize);
-    for (i = 0; i < (numBits >> 5); i++) {
-        pBits->storage[i] = -1;
+    for (idx = 0; idx < (numBits >> 5); idx++) {
+        pBits->storage[idx] = -1;
     }
-    int remNumBits = numBits & 0x1f;
+    unsigned int remNumBits = numBits & 0x1f;
     if (remNumBits) {
-        pBits->storage[i] = (1 << remNumBits) - 1;
+        pBits->storage[idx] = (1 << remNumBits) - 1;
     }
 }
 
 /*
  * Determine whether or not the specified bit is set.
  */
-bool dvmIsBitSet(const BitVector* pBits, int num)
+bool dvmIsBitSet(const BitVector* pBits, unsigned int num)
 {
-    assert(num >= 0 && num < (int) pBits->storageSize * (int)sizeof(u4) * 8);
+    assert(num < pBits->storageSize * sizeof(u4) * 8);
 
-    int val = pBits->storage[num >> 5] & (1 << (num & 0x1f));
+    unsigned int val = pBits->storage[num >> 5] & (1 << (num & 0x1f));
     return (val != 0);
 }
 
@@ -176,8 +177,8 @@ bool dvmIsBitSet(const BitVector* pBits, int num)
  */
 int dvmCountSetBits(const BitVector* pBits)
 {
-    int word;
-    int count = 0;
+    unsigned int word;
+    unsigned int count = 0;
 
     for (word = 0; word < pBits->storageSize; word++) {
         u4 val = pBits->storage[word];
@@ -199,16 +200,27 @@ int dvmCountSetBits(const BitVector* pBits)
 }
 
 /*
- * Copy a whole vector to the other. Only do that when the both vectors have
- * the same size and attribute.
+ * If the vector sizes don't match, log an error and abort.
  */
-bool dvmCopyBitVector(BitVector *dest, const BitVector *src)
+static void checkSizes(const BitVector* bv1, const BitVector* bv2)
 {
-    if (dest->storageSize != src->storageSize ||
-        dest->expandable != src->expandable)
-        return false;
+    if (bv1->storageSize != bv2->storageSize) {
+        LOGE("Mismatched vector sizes (%d, %d)\n",
+            bv1->storageSize, bv2->storageSize);
+        dvmAbort();
+    }
+}
+
+/*
+ * Copy a whole vector to the other. Only do that when the both vectors have
+ * the same size.
+ */
+void dvmCopyBitVector(BitVector *dest, const BitVector *src)
+{
+    /* if dest is expandable and < src, we could expand dest to match */
+    checkSizes(dest, src);
+
     memcpy(dest->storage, src->storage, sizeof(u4) * dest->storageSize);
-    return true;
 }
 
 /*
@@ -223,9 +235,9 @@ bool dvmIntersectBitVectors(BitVector *dest, const BitVector *src1,
         dest->expandable != src2->expandable)
         return false;
 
-    int i;
-    for (i = 0; i < dest->storageSize; i++) {
-        dest->storage[i] = src1->storage[i] & src2->storage[i];
+    unsigned int idx;
+    for (idx = 0; idx < dest->storageSize; idx++) {
+        dest->storage[idx] = src1->storage[idx] & src2->storage[idx];
     }
     return true;
 }
@@ -242,9 +254,9 @@ bool dvmUnifyBitVectors(BitVector *dest, const BitVector *src1,
         dest->expandable != src2->expandable)
         return false;
 
-    int i;
-    for (i = 0; i < dest->storageSize; i++) {
-        dest->storage[i] = src1->storage[i] | src2->storage[i];
+    unsigned int idx;
+    for (idx = 0; idx < dest->storageSize; idx++) {
+        dest->storage[idx] = src1->storage[idx] | src2->storage[idx];
     }
     return true;
 }
@@ -258,9 +270,9 @@ bool dvmCompareBitVectors(const BitVector *src1, const BitVector *src2)
         src1->expandable != src2->expandable)
         return true;
 
-    int i;
-    for (i = 0; i < src1->storageSize; i++) {
-        if (src1->storage[i] != src2->storage[i]) return true;
+    unsigned int idx;
+    for (idx = 0; idx < src1->storageSize; idx++) {
+        if (src1->storage[idx] != src2->storage[idx]) return true;
     }
     return false;
 }
@@ -283,8 +295,8 @@ int dvmBitVectorIteratorNext(BitVectorIterator* iterator)
     if (bitIndex >= iterator->bitSize) return -1;
 
     for (; bitIndex < iterator->bitSize; bitIndex++) {
-        int wordIndex = bitIndex >> 5;
-        int mask = 1 << (bitIndex & 0x1f);
+        unsigned int wordIndex = bitIndex >> 5;
+        unsigned int mask = 1 << (bitIndex & 0x1f);
         if (pBits->storage[wordIndex] & mask) {
             iterator->idx = bitIndex+1;
             return bitIndex;
@@ -292,4 +304,29 @@ int dvmBitVectorIteratorNext(BitVectorIterator* iterator)
     }
     /* No more set bits */
     return -1;
+}
+
+
+/*
+ * Merge the contents of "src" into "dst", checking to see if this causes
+ * any changes to occur.  This is a logical OR.
+ *
+ * Returns "true" if the contents of the destination vector were modified.
+ */
+bool dvmCheckMergeBitVectors(BitVector* dst, const BitVector* src)
+{
+    bool changed = false;
+
+    checkSizes(dst, src);
+
+    unsigned int idx;
+    for (idx = 0; idx < dst->storageSize; idx++) {
+        u4 merged = src->storage[idx] | dst->storage[idx];
+        if (dst->storage[idx] != merged) {
+            dst->storage[idx] = merged;
+            changed = true;
+        }
+    }
+
+    return changed;
 }
