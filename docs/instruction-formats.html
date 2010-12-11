@@ -62,13 +62,14 @@ indicates the type of any extra data encoded by the format. For example,
 format "<code>21t</code>" is of length two, contains one register reference,
 and additionally contains a branch target.</p>
 
-<p>Suggested static linking formats have an additional "<code>s</code>" suffix,
-making them four characters total. Similarly, suggested "inline" linking
-formats have an additional "<code>i</code>" suffix. (In this context, inline
-linking is like static linking, except with more direct ties into a
-virtual machine's implementation.) Finally, one oddball suggested format
-("<code>20bc</code>") includes two pieces of data which are represented in
-its format ID.</p>
+<p>Suggested static linking formats have an additional
+"<code>s</code>" suffix, making them four characters total. Similarly,
+suggested "inline" linking formats have an additional "<code>i</code>"
+suffix. (In this context, inline linking is like static linking,
+except with more direct ties into a virtual machine's implementation.) 
+Finally, a couple oddball suggested formats (e.g.,
+"<code>20bc</code>") include two pieces of data which are both
+represented in its format ID.</p>
 
 <p>The full list of typecode letters are as follows. Note that some
 forms have different sizes, depending on the format:</p>
@@ -464,6 +465,16 @@ the correspondence.</p>
   <td>32s</td>
   <td><i><code>exop</code></i> vAA, vBB, #+CCCC</td>
   <td>&nbsp;</td>
+</tr>
+<tr>
+  <td><i>exop</i> BBBB AAAA<sub>lo</sub> AAAA<sub>hi</sub></td></td>
+  <td>40bc</td>
+  <td><i><code>exop</code></i> BBBB, kind@AAAAAAAA
+    <p><i>The unusual choice in lettering here reflects a desire to make
+    the letters match their use in related format 20bc.</i></p>
+  </td>
+  <td><i>suggested format for statically determined verification errors;
+    see <code>20bc</code>, above</i></td>
 </tr>
 <tr>
   <td><i>exop</i> BBBB<sub>lo</sub> BBBB<sub>hi</sub> AAAA
