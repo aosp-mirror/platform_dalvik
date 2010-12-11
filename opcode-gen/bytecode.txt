@@ -48,6 +48,7 @@ format 35mi
 format 35ms
 format 3rmi
 format 3rms
+format 40sc
 
 # One line per opcode. Columns are:
 #   hex for opcode
@@ -392,4 +393,11 @@ op 23ff invoke-super/jumbo          5rc  n method-ref    continue|throw|invoke
 op 24ff invoke-direct/jumbo         5rc  n method-ref    continue|throw|invoke
 op 25ff invoke-static/jumbo         5rc  n method-ref    continue|throw|invoke
 op 26ff invoke-interface/jumbo      5rc  n method-ref    continue|throw|invoke
-# unused: op 27ff..ffff
+
+# unused: op 27ff..feff
+
+#
+# Optimized opcodes (not valid in an unoptimized dex file)
+#
+
+op ffff ^throw-verification-error/jumbo 40sc n varies        optimized|throw
