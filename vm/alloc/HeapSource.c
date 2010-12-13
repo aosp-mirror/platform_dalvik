@@ -731,6 +731,20 @@ dvmHeapSourceGetValue(enum HeapSourceValueSpec spec, size_t perHeapStats[],
     return total;
 }
 
+void dvmHeapSourceGetRegions(uintptr_t *base, uintptr_t *max, size_t numHeaps)
+{
+    HeapSource *hs = gHs;
+    size_t i;
+
+    HS_BOILERPLATE();
+
+    assert(numHeaps <= hs->numHeaps);
+    for (i = 0; i < numHeaps; ++i) {
+        base[i] = (uintptr_t)hs->heaps[i].base;
+        max[i] = MIN((uintptr_t)hs->heaps[i].limit - 1, hs->markBits.max);
+    }
+}
+
 /*
  * Get the bitmap representing all live objects.
  */

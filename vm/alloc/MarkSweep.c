@@ -1066,24 +1066,29 @@ void dvmHeapSweepSystemWeaks(void)
 void dvmHeapSweepUnmarkedObjects(GcMode mode, bool isConcurrent,
                                  size_t *numObjects, size_t *numBytes)
 {
+    uintptr_t base[HEAP_SOURCE_MAX_HEAP_COUNT];
+    uintptr_t max[HEAP_SOURCE_MAX_HEAP_COUNT];
     SweepContext ctx;
     HeapBitmap *prevLive, *prevMark;
-    uintptr_t base, max;
+    size_t numHeaps, numSweepHeaps;
+    size_t i;
 
-    prevLive = dvmHeapSourceGetMarkBits();
-    prevMark = dvmHeapSourceGetLiveBits();
+    numHeaps = dvmHeapSourceGetNumHeaps();
+    dvmHeapSourceGetRegions(base, max, numHeaps);
     if (mode == GC_PARTIAL) {
-        assert((uintptr_t)gDvm.gcHeap->markContext.immuneLimit == prevMark->base);
-        base = (uintptr_t)dvmHeapSourceGetImmuneLimit(mode);
+        assert((uintptr_t)gDvm.gcHeap->markContext.immuneLimit == base[0]);
+        numSweepHeaps = 1;
     } else {
-        base = prevLive->base;
+        numSweepHeaps = numHeaps;
     }
-    max = prevLive->max;
     ctx.numObjects = ctx.numBytes = 0;
     ctx.isConcurrent = isConcurrent;
-    dvmHeapBitmapSweepWalk(prevLive, prevMark,
-                           base, max,
-                           sweepBitmapCallback, &ctx);
+    prevLive = dvmHeapSourceGetMarkBits();
+    prevMark = dvmHeapSourceGetLiveBits();
+    for (i = 0; i < numSweepHeaps; ++i) {
+        dvmHeapBitmapSweepWalk(prevLive, prevMark, base[i], max[i],
+                               sweepBitmapCallback, &ctx);
+    }
     *numObjects = ctx.numObjects;
     *numBytes = ctx.numBytes;
     if (gDvm.allocProf.enabled) {
