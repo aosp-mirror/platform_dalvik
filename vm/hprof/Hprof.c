@@ -209,13 +209,16 @@ static void hprofRootVisitor(void *addr, u4 threadId, RootType type, void *arg)
         HPROF_ROOT_JNI_MONITOR,
     };
     hprof_context_t *ctx;
+    Object *obj;
 
+    assert(addr != NULL);
     assert(arg != NULL);
     assert(type < NELEM(xlate));
+    obj = *(Object **)addr;
     ctx = (hprof_context_t *)arg;
     ctx->gcScanState = xlate[type];
     ctx->gcThreadSerialNumber = threadId;
-    hprofMarkRootObject(ctx, (Object *)addr, 0);
+    hprofMarkRootObject(ctx, obj, 0);
     ctx->gcScanState = 0;
     ctx->gcThreadSerialNumber = 0;
 }
