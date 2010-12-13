@@ -34,8 +34,6 @@
 #endif
 
 /*
- * FIXME - redo for x86
- *
  * Translation layout in the code cache.  Note that the codeAddress pointer
  * in JitTable will point directly to the code body (field codeAddress).  The
  * chain cell offset codeAddress - 2, and (if present) executionCount is at
@@ -52,7 +50,7 @@
  *   |  .                            .
  *   |  |                            |
  *   |  +----------------------------+
- *   |  | Chaining Cells             |  -> 12/16 bytes each, must be 4 byte aligned
+ *   |  | Chaining Cells             |  -> 16 bytes each, 8 byte aligned
  *   |  .                            .
  *   |  .                            .
  *   |  |                            |
@@ -66,8 +64,8 @@
  *      |                            |
  *      +----------------------------+
  *      | Literal pool               |  -> 4-byte aligned, variable size
- *      .                            .
- *      .                            .
+ *      .                            .     Note: for x86 literals will
+ *      .                            .     generally appear inline.
  *      |                            |
  *      +----------------------------+
  *

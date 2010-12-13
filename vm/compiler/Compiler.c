@@ -627,6 +627,11 @@ static void *compilerThreadStart(void *arg)
                         compileOK = dvmCompilerDoWork(&work);
                     }
                     if (aborted || !compileOK) {
+#if 0 // for x86 JIT testing
+                        dvmJitSetCodeAddr(work.pc,
+                                          dvmCompilerGetInterpretTemplate(),
+                                          work.result.instructionSet);
+#endif
                         dvmCompilerArenaReset();
                     } else if (!work.result.discardResult &&
                                work.result.codeAddress) {

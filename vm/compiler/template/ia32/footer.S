@@ -7,12 +7,12 @@
     .text
     .align  4
 /*
- * FIXME - need a cacheflush for x86
+ * FIXME - verify that we don't need an explicit cache flush
+ * for x86.
  */
     .global cacheflush
 cacheflush:
-    movl  $$0xdeadf0f0, %eax
-    call *%eax
+    ret
 
 
     .global dmvCompilerTemplateEnd

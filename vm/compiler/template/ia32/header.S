@@ -16,6 +16,12 @@
 
 #if defined(WITH_JIT)
 
+/* Subset of defines from mterp/x86/header.S */
+#define rGLUE (%ebp)
+#define rPC   %esi
+#define rFP   %edi
+#define rINST %ebx
+
 /*
  * This is a #include, not a %include, because we want the C pre-processor
  * to expand the macros into assembler assignment statements.
