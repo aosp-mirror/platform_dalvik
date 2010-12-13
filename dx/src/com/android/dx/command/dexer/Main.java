@@ -120,8 +120,8 @@ public class Main {
      */
     private static final String[] JAVAX_CORE = {
         "accessibility", "crypto", "imageio", "management", "naming", "net",
-        "print", "rmi", "security", "sound", "sql", "swing", "transaction",
-        "xml"
+        "print", "rmi", "security", "sip", "sound", "sql", "swing",
+        "transaction", "xml"
     };
 
     /** number of warnings during processing */
