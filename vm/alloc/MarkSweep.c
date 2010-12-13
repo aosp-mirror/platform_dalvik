@@ -154,10 +154,11 @@ static void markObject(const Object *obj, GcMarkContext *ctx)
 
 /*
  * Callback applied to root references during the initial root
- * marking.  Visited roots are always marked but are only pushed on
- * the mark stack if their address is below the finger.
+ * marking.  Marks white objects but does not push them on the mark
+ * stack.
  */
-static void rootMarkObjectVisitor(void *addr, RootType type, u4 thread, void *arg)
+static void rootMarkObjectVisitor(void *addr, RootType type, u4 thread,
+                                  void *arg)
 {
     Object *obj;
     GcMarkContext *ctx;
@@ -205,11 +206,11 @@ void dvmHeapMarkRootSet()
 }
 
 /*
- * Callback applied to root references during root remarking.  If the
- * root location contains a white reference it is pushed on the mark
- * stack and grayed.
+ * Callback applied to root references during root remarking.  Marks
+ * white objects and pushes them on the mark stack.
  */
-static void markObjectVisitor(void *addr, RootType type, u4 thread, void *arg)
+static void rootReMarkObjectVisitor(void *addr, RootType type, u4 thread,
+                                    void *arg)
 {
     Object *obj;
     GcMarkContext *ctx;
@@ -230,7 +231,7 @@ void dvmHeapReMarkRootSet(void)
 {
     GcMarkContext *ctx = &gDvm.gcHeap->markContext;
     assert(ctx->finger == (void *)ULONG_MAX);
-    dvmVisitRoots(markObjectVisitor, ctx);
+    dvmVisitRoots(rootReMarkObjectVisitor, ctx);
 }
 
 /*
