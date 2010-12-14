@@ -113,10 +113,10 @@ static void genLong3Addr(CompilationUnit *cUnit, MIR *mir, OpKind firstOp,
 void dvmCompilerInitializeRegAlloc(CompilationUnit *cUnit)
 {
     int numTemps = sizeof(coreTemps)/sizeof(int);
-    RegisterPool *pool = dvmCompilerNew(sizeof(*pool), true);
+    RegisterPool *pool = (RegisterPool *) dvmCompilerNew(sizeof(*pool), true);
     cUnit->regPool = pool;
     pool->numCoreTemps = numTemps;
-    pool->coreTemps =
+    pool->coreTemps = (RegisterInfo *)
             dvmCompilerNew(numTemps * sizeof(*pool->coreTemps), true);
     pool->numFPTemps = 0;
     pool->FPTemps = NULL;

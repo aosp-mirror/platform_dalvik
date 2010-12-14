@@ -73,7 +73,7 @@ static ArmLIR *loadConstantNoClobber(CompilationUnit *cUnit, int rDest,
     if (dataTarget == NULL) {
         dataTarget = addWordData(cUnit, value, false);
     }
-    ArmLIR *loadPcRel = dvmCompilerNew(sizeof(ArmLIR), true);
+    ArmLIR *loadPcRel = (ArmLIR *) dvmCompilerNew(sizeof(ArmLIR), true);
     loadPcRel->opcode = kThumbLdrPcRel;
     loadPcRel->generic.target = (LIR *) dataTarget;
     loadPcRel->operands[0] = tDest;
@@ -819,7 +819,7 @@ static ArmLIR* genRegCopyNoInsert(CompilationUnit *cUnit, int rDest, int rSrc)
 {
     ArmLIR* res;
     ArmOpcode opcode;
-    res = dvmCompilerNew(sizeof(ArmLIR), true);
+    res = (ArmLIR *) dvmCompilerNew(sizeof(ArmLIR), true);
     if (LOWREG(rDest) && LOWREG(rSrc))
         opcode = kThumbMovRR;
     else if (!LOWREG(rDest) && !LOWREG(rSrc))
