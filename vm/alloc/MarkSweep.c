@@ -853,7 +853,7 @@ static void clearWhiteReferences(Object **list)
  */
 static void scheduleFinalizations(void)
 {
-    HeapRefTable newPendingRefs;
+    ReferenceTable newPendingRefs;
     LargeHeapRefTable *finRefs = gDvm.gcHeap->finalizableRefs;
     Object **ref;
     Object **lastRef;
@@ -890,12 +890,12 @@ static void scheduleFinalizations(void)
         lastRef = finRefs->refs.nextEntry;
         while (ref < lastRef) {
             if (!isMarked(*ref, ctx)) {
-                if (!dvmHeapAddToHeapRefTable(&newPendingRefs, *ref)) {
+                if (!dvmAddToReferenceTable(&newPendingRefs, *ref)) {
                     //TODO: add the current table and allocate
                     //      a new, smaller one.
                     LOGE_GC("scheduleFinalizations(): "
                             "no room for any more pending finalizations: %zd",
-                            dvmHeapNumHeapRefTableEntries(&newPendingRefs));
+                            dvmReferenceTableEntries(&newPendingRefs));
                     dvmAbort();
                 }
                 newPendCount++;

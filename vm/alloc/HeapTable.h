@@ -18,31 +18,19 @@
 
 #include "ReferenceTable.h"
 
-typedef ReferenceTable HeapRefTable;
-typedef struct LargeHeapRefTable LargeHeapRefTable;
-
 struct LargeHeapRefTable {
-    LargeHeapRefTable *next;
-    HeapRefTable refs;
+    struct LargeHeapRefTable *next;
+    ReferenceTable refs;
 };
 
-bool dvmHeapInitHeapRefTable(HeapRefTable *refs);
-void dvmHeapFreeHeapRefTable(HeapRefTable *refs);
+typedef struct LargeHeapRefTable LargeHeapRefTable;
+
+bool dvmHeapInitHeapRefTable(ReferenceTable *refs);
 void dvmHeapFreeLargeTable(LargeHeapRefTable *table);
-void dvmHeapHeapTableFree(void *ptr);
 bool dvmHeapAddRefToLargeTable(LargeHeapRefTable **tableP, Object *ref);
 void dvmHeapMarkLargeTableRefs(LargeHeapRefTable *table);
 bool dvmHeapAddTableToLargeTable(LargeHeapRefTable **tableP,
-        HeapRefTable *refs);
+        ReferenceTable *refs);
 Object *dvmHeapGetNextObjectFromLargeTable(LargeHeapRefTable **pTable);
-
-#define dvmHeapAddToHeapRefTable(refs, ptr) \
-            dvmAddToReferenceTable((refs), (ptr))
-
-#define dvmHeapNumHeapRefTableEntries(refs) \
-            dvmReferenceTableEntries(refs)
-
-#define dvmHeapRemoveFromHeapRefTable(refs, ptr) \
-            dvmRemoveFromReferenceTable((refs), (refs)->table, (ptr))
 
 #endif  // _DALVIK_ALLOC_HEAP_TABLE

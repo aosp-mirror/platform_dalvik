@@ -23,25 +23,9 @@
 static const int kLargeHeapRefTableNElems = 1024;
 static const int  kFinalizableRefDefault = 128;
 
-void dvmHeapHeapTableFree(void *ptr)
+bool dvmHeapInitHeapRefTable(ReferenceTable *refs)
 {
-    free(ptr);
-}
-
-#define heapRefTableIsFull(refs) \
-    dvmIsReferenceTableFull(refs)
-
-bool dvmHeapInitHeapRefTable(HeapRefTable *refs)
-{
-    memset(refs, 0, sizeof(*refs));
     return dvmInitReferenceTable(refs, kFinalizableRefDefault, INT_MAX);
-}
-
-/* Frees the array inside the HeapRefTable, not the HeapRefTable itself.
- */
-void dvmHeapFreeHeapRefTable(HeapRefTable *refs)
-{
-    dvmClearReferenceTable(refs);
 }
 
 /*
@@ -65,7 +49,7 @@ bool dvmHeapAddRefToLargeTable(LargeHeapRefTable **tableP, Object *ref)
         /* Find an empty slot for this reference.
          */
         prevTable = NULL;
-        while (table != NULL && heapRefTableIsFull(&table->refs)) {
+        while (table != NULL && dvmIsReferenceTableFull(&table->refs)) {
             prevTable = table;
             table = table->next;
         }
@@ -97,7 +81,7 @@ bool dvmHeapAddRefToLargeTable(LargeHeapRefTable **tableP, Object *ref)
                                kLargeHeapRefTableNElems,
                                INT_MAX)) {
         LOGE_HEAP("Can't initialize a new large ref table\n");
-        dvmHeapHeapTableFree(table);
+        free(table);
         return false;
     }
 
@@ -111,13 +95,13 @@ insert:
      */
     assert(table == *tableP);
     assert(table != NULL);
-    assert(!heapRefTableIsFull(&table->refs));
+    assert(!dvmIsReferenceTableFull(&table->refs));
     *table->refs.nextEntry++ = ref;
 
     return true;
 }
 
-bool dvmHeapAddTableToLargeTable(LargeHeapRefTable **tableP, HeapRefTable *refs)
+bool dvmHeapAddTableToLargeTable(LargeHeapRefTable **tableP, ReferenceTable *refs)
 {
     LargeHeapRefTable *table;
 
@@ -144,8 +128,8 @@ void dvmHeapFreeLargeTable(LargeHeapRefTable *table)
 {
     while (table != NULL) {
         LargeHeapRefTable *next = table->next;
-        dvmHeapFreeHeapRefTable(&table->refs);
-        dvmHeapHeapTableFree(table);
+        dvmClearReferenceTable(&table->refs);
+        free(table);
         table = next;
     }
 }
@@ -160,7 +144,7 @@ Object *dvmHeapGetNextObjectFromLargeTable(LargeHeapRefTable **pTable)
     obj = NULL;
     table = *pTable;
     if (table != NULL) {
-        HeapRefTable *refs = &table->refs;
+        ReferenceTable *refs = &table->refs;
 
         /* We should never have an empty table node in the list.
          */
@@ -176,7 +160,7 @@ Object *dvmHeapGetNextObjectFromLargeTable(LargeHeapRefTable **pTable)
         if (refs->nextEntry == refs->table) {
             *pTable = table->next;
             dvmClearReferenceTable(refs);
-            dvmHeapHeapTableFree(table);
+            free(table);
         }
     }
 
