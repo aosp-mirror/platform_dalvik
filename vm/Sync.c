@@ -408,9 +408,12 @@ static void logContentionEvent(Thread *self, u4 waitMs, u4 samplePercent,
     len = strlen(procName);
     cp = logWriteString(cp, procName, len);
 
-    /* Emit the main thread status, 5 bytes. */
-    bool isMainThread = (self->systemTid == getpid());
-    cp = logWriteInt(cp, isMainThread);
+    /* Emit the sensitive thread ("main thread") status, 5 bytes. */
+    bool isSensitive = false;
+    if (gDvm.isSensitiveThreadHook != NULL) {
+        isSensitive = gDvm.isSensitiveThreadHook();
+    }
+    cp = logWriteInt(cp, isSensitive);
 
     /* Emit self thread name string, <= 37 bytes. */
     selfName = dvmGetThreadName(self);
@@ -431,10 +434,10 @@ static void logContentionEvent(Thread *self, u4 waitMs, u4 samplePercent,
 
     /* Emit the lock owner source code file name, <= 37 bytes. */
     if (ownerFileName == NULL) {
-      ownerFileName = "";
+        ownerFileName = "";
     } else if (strcmp(fileName, ownerFileName) == 0) {
-      /* Common case, so save on log space. */
-      ownerFileName = "-";
+        /* Common case, so save on log space. */
+        ownerFileName = "-";
     }
     cp = logWriteString(cp, ownerFileName, strlen(ownerFileName));
 
