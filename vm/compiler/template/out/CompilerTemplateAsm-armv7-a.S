@@ -108,17 +108,6 @@ unspecified registers or condition codes.
  * ===========================================================================
  */
 
-/*
- * Macro for "MOV LR,PC / LDR PC,xxx", which is not allowed pre-ARMv5.
- * Jump to subroutine.
- *
- * May modify IP and LR.
- */
-.macro  LDR_PC_LR source
-    mov     lr, pc
-    ldr     pc, \source
-.endm
-
 
     .global dvmCompilerTemplateStart
     .type   dvmCompilerTemplateStart, %function
@@ -181,7 +170,8 @@ dvmCompiler_TEMPLATE_RETURN:
     stmfd   sp!, {r0-r2,lr}             @ preserve live registers
     mov     r0, r6
     @ r0=rGlue
-    LDR_PC_LR ".LdvmFastJavaMethodTraceExit"
+    mov     lr, pc
+    ldr     pc, .LdvmFastJavaMethodTraceExit
     ldmfd   sp!, {r0-r2,lr}             @ restore live registers
 #endif
     SAVEAREA_FROM_FP(r0, rFP)           @ r0<- saveArea (old)
@@ -285,7 +275,8 @@ dvmCompiler_TEMPLATE_INVOKE_METHOD_NO_OPT:
     stmfd   sp!, {r0-r3}                    @ preserve r0-r3
     mov     r1, r6
     @ r0=methodToCall, r1=rGlue
-    LDR_PC_LR ".LdvmFastMethodTraceEnter"
+    mov     lr, pc
+    ldr     pc, .LdvmFastMethodTraceEnter
     ldmfd   sp!, {r0-r3}                    @ restore r0-r3
 #endif
 
@@ -344,7 +335,8 @@ dvmCompiler_TEMPLATE_INVOKE_METHOD_CHAIN:
     stmfd   sp!, {r0-r2,lr}             @ preserve clobbered live registers
     mov     r1, r6
     @ r0=methodToCall, r1=rGlue
-    LDR_PC_LR ".LdvmFastMethodTraceEnter"
+    mov     lr, pc
+    ldr     pc, .LdvmFastMethodTraceEnter
     ldmfd   sp!, {r0-r2,lr}             @ restore registers
 #endif
 
@@ -468,7 +460,8 @@ dvmCompiler_TEMPLATE_INVOKE_METHOD_NATIVE:
     mov     r0, r2
     mov     r1, r6
     @ r0=JNIMethod, r1=rGlue
-    LDR_PC_LR ".LdvmFastMethodTraceEnter"
+    mov     lr, pc
+    ldr     pc, .LdvmFastMethodTraceEnter
     ldmfd   sp!, {r0-r3}                @ restore r0-r3
 #endif
 
@@ -477,7 +470,8 @@ dvmCompiler_TEMPLATE_INVOKE_METHOD_NATIVE:
 #if defined(WITH_INLINE_PROFILING)
     ldmfd   sp!, {r0-r1}                @ restore r2 and r6
     @ r0=JNIMethod, r1=rGlue
-    LDR_PC_LR ".LdvmFastNativeMethodTraceExit"
+    mov     lr, pc
+    ldr     pc, .LdvmFastNativeMethodTraceExit
 #endif
     @ native return; r9=self, r10=newSaveArea
     @ equivalent to dvmPopJniLocals
@@ -1511,15 +1505,18 @@ dvmCompiler_TEMPLATE_MONITOR_ENTER_DEBUG:
     stmfd   sp!, {r0-r3}
     mov     r0, r2
     mov     r1, r6
-    LDR_PC_LR ".LdvmFastMethodTraceEnter"
+    mov     lr, pc
+    ldr     pc, .LdvmFastMethodTraceEnter
     ldmfd   sp!, {r0-r3}
 #endif
 
-    LDR_PC_LR "[r2, #offMethod_nativeFunc]"
+    mov     lr, pc
+    ldr     pc, [r2, #offMethod_nativeFunc]
 
 #if defined(WITH_INLINE_PROFILING)
     ldmfd   sp!, {r0-r1}
-    LDR_PC_LR ".LdvmFastNativeMethodTraceExit"
+    mov     lr, pc
+    ldr     pc, .LdvmFastNativeMethodTraceExit
 #endif
     @ Refresh Jit's on/off status
     ldr     r3, [rGLUE, #offGlue_ppJitProfTable]

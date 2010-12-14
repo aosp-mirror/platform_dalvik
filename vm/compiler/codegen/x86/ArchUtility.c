@@ -22,3 +22,9 @@
 void dvmCompilerCodegenDump(CompilationUnit *cUnit)
 {
 }
+
+/* Target-specific cache flushing (not needed for x86 */
+int dvmCompilerCacheFlush(long start, long end, long flags)
+{
+    return 0;
+}

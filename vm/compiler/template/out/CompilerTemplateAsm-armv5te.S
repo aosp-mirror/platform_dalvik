@@ -108,17 +108,6 @@ unspecified registers or condition codes.
  * ===========================================================================
  */
 
-/*
- * Macro for "MOV LR,PC / LDR PC,xxx", which is not allowed pre-ARMv5.
- * Jump to subroutine.
- *
- * May modify IP and LR.
- */
-.macro  LDR_PC_LR source
-    mov     lr, pc
-    ldr     pc, \source
-.endm
-
 
     .global dvmCompilerTemplateStart
     .type   dvmCompilerTemplateStart, %function
@@ -181,7 +170,8 @@ dvmCompiler_TEMPLATE_RETURN:
     stmfd   sp!, {r0-r2,lr}             @ preserve live registers
     mov     r0, r6
     @ r0=rGlue
-    LDR_PC_LR ".LdvmFastJavaMethodTraceExit"
+    mov     lr, pc
+    ldr     pc, .LdvmFastJavaMethodTraceExit
     ldmfd   sp!, {r0-r2,lr}             @ restore live registers
 #endif
     SAVEAREA_FROM_FP(r0, rFP)           @ r0<- saveArea (old)
@@ -285,7 +275,8 @@ dvmCompiler_TEMPLATE_INVOKE_METHOD_NO_OPT:
     stmfd   sp!, {r0-r3}                    @ preserve r0-r3
     mov     r1, r6
     @ r0=methodToCall, r1=rGlue
-    LDR_PC_LR ".LdvmFastMethodTraceEnter"
+    mov     lr, pc
+    ldr     pc, .LdvmFastMethodTraceEnter
     ldmfd   sp!, {r0-r3}                    @ restore r0-r3
 #endif
 
@@ -344,7 +335,8 @@ dvmCompiler_TEMPLATE_INVOKE_METHOD_CHAIN:
     stmfd   sp!, {r0-r2,lr}             @ preserve clobbered live registers
     mov     r1, r6
     @ r0=methodToCall, r1=rGlue
-    LDR_PC_LR ".LdvmFastMethodTraceEnter"
+    mov     lr, pc
+    ldr     pc, .LdvmFastMethodTraceEnter
     ldmfd   sp!, {r0-r2,lr}             @ restore registers
 #endif
 
@@ -468,7 +460,8 @@ dvmCompiler_TEMPLATE_INVOKE_METHOD_NATIVE:
     mov     r0, r2
     mov     r1, r6
     @ r0=JNIMethod, r1=rGlue
-    LDR_PC_LR ".LdvmFastMethodTraceEnter"
+    mov     lr, pc
+    ldr     pc, .LdvmFastMethodTraceEnter
     ldmfd   sp!, {r0-r3}                @ restore r0-r3
 #endif
 
@@ -477,7 +470,8 @@ dvmCompiler_TEMPLATE_INVOKE_METHOD_NATIVE:
 #if defined(WITH_INLINE_PROFILING)
     ldmfd   sp!, {r0-r1}                @ restore r2 and r6
     @ r0=JNIMethod, r1=rGlue
-    LDR_PC_LR ".LdvmFastNativeMethodTraceExit"
+    mov     lr, pc
+    ldr     pc, .LdvmFastNativeMethodTraceExit
 #endif
     @ native return; r9=self, r10=newSaveArea
     @ equivalent to dvmPopJniLocals
@@ -527,7 +521,8 @@ dvmCompiler_TEMPLATE_CMPG_DOUBLE:
     /* op vAA, vBB, vCC */
     push    {r0-r3}                     @ save operands
     mov     r11, lr                     @ save return address
-    LDR_PC_LR ".L__aeabi_cdcmple"       @ PIC way of "bl __aeabi_cdcmple"
+    mov     lr, pc
+    ldr     pc, .L__aeabi_cdcmple       @ PIC way of "bl __aeabi_cdcmple"
     bhi     .LTEMPLATE_CMPG_DOUBLE_gt_or_nan       @ C set and Z clear, disambiguate
     mvncc   r0, #0                      @ (less than) r1<- -1
     moveq   r0, #0                      @ (equal) r1<- 0, trumps less than
@@ -540,7 +535,8 @@ dvmCompiler_TEMPLATE_CMPG_DOUBLE:
 .LTEMPLATE_CMPG_DOUBLE_gt_or_nan:
     pop     {r2-r3}                     @ restore operands in reverse order
     pop     {r0-r1}                     @ restore operands in reverse order
-    LDR_PC_LR ".L__aeabi_cdcmple"       @ r0<- Z set if eq, C clear if <
+    mov     lr, pc
+    ldr     pc, .L__aeabi_cdcmple       @ r0<- Z set if eq, C clear if <
     movcc   r0, #1                      @ (greater than) r1<- 1
     bxcc    r11
     mov     r0, #1                            @ r1<- 1 or -1 for NaN
@@ -569,7 +565,8 @@ dvmCompiler_TEMPLATE_CMPL_DOUBLE:
     /* op vAA, vBB, vCC */
     push    {r0-r3}                     @ save operands
     mov     r11, lr                     @ save return address
-    LDR_PC_LR ".L__aeabi_cdcmple"       @ PIC way of "bl __aeabi_cdcmple"
+    mov     lr, pc
+    ldr     pc, .L__aeabi_cdcmple       @ PIC way of "bl __aeabi_cdcmple"
     bhi     .LTEMPLATE_CMPL_DOUBLE_gt_or_nan       @ C set and Z clear, disambiguate
     mvncc   r0, #0                      @ (less than) r1<- -1
     moveq   r0, #0                      @ (equal) r1<- 0, trumps less than
@@ -582,7 +579,8 @@ dvmCompiler_TEMPLATE_CMPL_DOUBLE:
 .LTEMPLATE_CMPL_DOUBLE_gt_or_nan:
     pop     {r2-r3}                     @ restore operands in reverse order
     pop     {r0-r1}                     @ restore operands in reverse order
-    LDR_PC_LR ".L__aeabi_cdcmple"       @ r0<- Z set if eq, C clear if <
+    mov     lr, pc
+    ldr     pc, .L__aeabi_cdcmple       @ r0<- Z set if eq, C clear if <
     movcc   r0, #1                      @ (greater than) r1<- 1
     bxcc    r11
     mvn     r0, #0                            @ r1<- 1 or -1 for NaN
@@ -631,7 +629,8 @@ dvmCompiler_TEMPLATE_CMPG_FLOAT:
     mov     r9, r0                      @ Save copies - we may need to redo
     mov     r10, r1
     mov     r11, lr                     @ save return address
-    LDR_PC_LR ".L__aeabi_cfcmple"       @ cmp <=: C clear if <, Z set if eq
+    mov     lr, pc
+    ldr     pc, .L__aeabi_cfcmple       @ cmp <=: C clear if <, Z set if eq
     bhi     .LTEMPLATE_CMPG_FLOAT_gt_or_nan       @ C set and Z clear, disambiguate
     mvncc   r0, #0                      @ (less than) r0<- -1
     moveq   r0, #0                      @ (equal) r0<- 0, trumps less than
@@ -642,7 +641,8 @@ dvmCompiler_TEMPLATE_CMPG_FLOAT:
 .LTEMPLATE_CMPG_FLOAT_gt_or_nan:
     mov     r0, r10                     @ restore in reverse order
     mov     r1, r9
-    LDR_PC_LR ".L__aeabi_cfcmple"       @ r0<- Z set if eq, C clear if <
+    mov     lr, pc
+    ldr     pc, .L__aeabi_cfcmple       @ r0<- Z set if eq, C clear if <
     movcc   r0, #1                      @ (greater than) r1<- 1
     bxcc    r11
     mov     r0, #1                            @ r1<- 1 or -1 for NaN
@@ -691,7 +691,8 @@ dvmCompiler_TEMPLATE_CMPL_FLOAT:
     mov     r9, r0                      @ Save copies - we may need to redo
     mov     r10, r1
     mov     r11, lr                     @ save return address
-    LDR_PC_LR ".L__aeabi_cfcmple"       @ cmp <=: C clear if <, Z set if eq
+    mov     lr, pc
+    ldr     pc, .L__aeabi_cfcmple       @ cmp <=: C clear if <, Z set if eq
     bhi     .LTEMPLATE_CMPL_FLOAT_gt_or_nan       @ C set and Z clear, disambiguate
     mvncc   r0, #0                      @ (less than) r0<- -1
     moveq   r0, #0                      @ (equal) r0<- 0, trumps less than
@@ -702,7 +703,8 @@ dvmCompiler_TEMPLATE_CMPL_FLOAT:
 .LTEMPLATE_CMPL_FLOAT_gt_or_nan:
     mov     r0, r10                     @ restore in reverse order
     mov     r1, r9
-    LDR_PC_LR ".L__aeabi_cfcmple"       @ r0<- Z set if eq, C clear if <
+    mov     lr, pc
+    ldr     pc, .L__aeabi_cfcmple       @ r0<- Z set if eq, C clear if <
     movcc   r0, #1                      @ (greater than) r1<- 1
     bxcc    r11
     mvn     r0, #0                            @ r1<- 1 or -1 for NaN
@@ -1234,15 +1236,18 @@ dvmCompiler_TEMPLATE_MONITOR_ENTER_DEBUG:
     stmfd   sp!, {r0-r3}
     mov     r0, r2
     mov     r1, r6
-    LDR_PC_LR ".LdvmFastMethodTraceEnter"
+    mov     lr, pc
+    ldr     pc, .LdvmFastMethodTraceEnter
     ldmfd   sp!, {r0-r3}
 #endif
 
-    LDR_PC_LR "[r2, #offMethod_nativeFunc]"
+    mov     lr, pc
+    ldr     pc, [r2, #offMethod_nativeFunc]
 
 #if defined(WITH_INLINE_PROFILING)
     ldmfd   sp!, {r0-r1}
-    LDR_PC_LR ".LdvmFastNativeMethodTraceExit"
+    mov     lr, pc
+    ldr     pc, .LdvmFastNativeMethodTraceExit
 #endif
     @ Refresh Jit's on/off status
     ldr     r3, [rGLUE, #offGlue_ppJitProfTable]
