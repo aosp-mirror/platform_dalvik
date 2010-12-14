@@ -38,7 +38,6 @@
 #include <unistd.h>
 #include <pthread.h>
 #include <time.h>
-#include <sys/time.h>
 #include <errno.h>
 
 #define LOG_THIN    LOGV
@@ -973,8 +972,10 @@ void dvmLockObject(Thread* self, Object *obj)
 {
     volatile u4 *thinp;
     ThreadStatus oldStatus;
-    useconds_t sleepDelay;
-    const useconds_t maxSleepDelay = 1 << 20;
+    struct timespec tm;
+    long sleepDelayNs;
+    long minSleepDelayNs = 1000000;  /* 1 millisecond */
+    long maxSleepDelayNs = 1000000000;  /* 1 second */
     u4 thin, newThin, threadId;
 
     assert(self != NULL);
@@ -1028,7 +1029,7 @@ retry:
             /*
              * Spin until the thin lock is released or inflated.
              */
-            sleepDelay = 0;
+            sleepDelayNs = 0;
             for (;;) {
                 thin = *thinp;
                 /*
@@ -1056,13 +1057,21 @@ retry:
                          * The lock has not been released.  Yield so
                          * the owning thread can run.
                          */
-                        if (sleepDelay == 0) {
+                        if (sleepDelayNs == 0) {
                             sched_yield();
-                            sleepDelay = 1000;
+                            sleepDelayNs = minSleepDelayNs;
                         } else {
-                            usleep(sleepDelay);
-                            if (sleepDelay < maxSleepDelay / 2) {
-                                sleepDelay *= 2;
+                            tm.tv_sec = 0;
+                            tm.tv_nsec = sleepDelayNs;
+                            nanosleep(&tm, NULL);
+                            /*
+                             * Prepare the next delay value.  Wrap to
+                             * avoid once a second polls for eternity.
+                             */
+                            if (sleepDelayNs < maxSleepDelayNs / 2) {
+                                sleepDelayNs *= 2;
+                            } else {
+                                sleepDelayNs = minSleepDelayNs;
                             }
                         }
                     }
