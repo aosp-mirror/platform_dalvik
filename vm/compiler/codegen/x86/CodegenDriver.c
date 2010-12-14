@@ -35,6 +35,7 @@ extern X86LIR *opReg(CompilationUnit *cUnit, OpKind op, int rDestSrc);
 static int opcodeCoverage[kNumPackedOpcodes];
 static intptr_t templateEntryOffsets[TEMPLATE_LAST_MARK];
 
+#if 0   // Avoid compiler warnings when x86 disabled during development
 /*
  * Bail to the interpreter.  Will not return to this trace.
  * On entry, rPC must be set correctly.
@@ -79,6 +80,7 @@ static void genInterpSingleStep(CompilationUnit *cUnit, MIR *mir)
     storeWordDisp(cUnit, rESP, OUT_ARG0, rECX);
     opReg(cUnit, kOpCall, rEAX);
 }
+#endif
 
 /*
  * The following are the first-level codegen routines that analyze the format
@@ -211,6 +213,7 @@ void dvmCompilerMIR2LIR(CompilationUnit *cUnit)
 /* Accept the work and start compiling */
 bool dvmCompilerDoWork(CompilerWorkOrder *work)
 {
+    JitTraceDescription *desc;
     bool res;
 
     if (gDvmJit.codeCacheFull) {
@@ -220,14 +223,16 @@ bool dvmCompilerDoWork(CompilerWorkOrder *work)
     switch (work->kind) {
         case kWorkOrderTrace:
             /* Start compilation with maximally allowed trace length */
-            res = dvmCompileTrace(work->info, JIT_MAX_TRACE_LEN, &work->result,
+            desc = (JitTraceDescription *)work->info;
+            res = dvmCompileTrace(desc, JIT_MAX_TRACE_LEN, &work->result,
                                   work->bailPtr, 0 /* no hints */);
             break;
         case kWorkOrderTraceDebug: {
             bool oldPrintMe = gDvmJit.printMe;
             gDvmJit.printMe = true;
             /* Start compilation with maximally allowed trace length */
-            res = dvmCompileTrace(work->info, JIT_MAX_TRACE_LEN, &work->result,
+            desc = (JitTraceDescription *)work->info;
+            res = dvmCompileTrace(desc, JIT_MAX_TRACE_LEN, &work->result,
                                   work->bailPtr, 0 /* no hints */);
             gDvmJit.printMe = oldPrintMe;
             break;

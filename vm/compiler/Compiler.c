@@ -178,8 +178,8 @@ bool dvmCompilerSetupCodeCache(void)
     gDvmJit.codeCacheByteUsed = templateSize;
 
     /* Only flush the part in the code cache that is being used now */
-    cacheflush((intptr_t) gDvmJit.codeCache,
-               (intptr_t) gDvmJit.codeCache + templateSize, 0);
+    dvmCompilerCacheFlush((intptr_t) gDvmJit.codeCache,
+                          (intptr_t) gDvmJit.codeCache + templateSize, 0);
 
     int result = mprotect(gDvmJit.codeCache, gDvmJit.codeCacheSize,
                           PROTECT_CODE_CACHE_ATTRS);
@@ -281,8 +281,9 @@ static void resetCodeCache(void)
     memset((char *) gDvmJit.codeCache + gDvmJit.templateSize,
            0,
            gDvmJit.codeCacheByteUsed - gDvmJit.templateSize);
-    cacheflush((intptr_t) gDvmJit.codeCache,
-               (intptr_t) gDvmJit.codeCache + gDvmJit.codeCacheByteUsed, 0);
+    dvmCompilerCacheFlush((intptr_t) gDvmJit.codeCache,
+                          (intptr_t) gDvmJit.codeCache +
+                          gDvmJit.codeCacheByteUsed, 0);
 
     PROTECT_CODE_CACHE(gDvmJit.codeCache, gDvmJit.codeCacheByteUsed);
 

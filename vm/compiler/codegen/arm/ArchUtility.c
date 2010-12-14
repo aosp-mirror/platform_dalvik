@@ -385,3 +385,9 @@ void dvmCompilerCodegenDump(CompilationUnit *cUnit)
              armLIR->operands[0]);
     }
 }
+
+/* Target-specific cache flushing */
+int dvmCompilerCacheFlush(long start, long end, long flags)
+{
+    return cacheflush(start, end, flags);
+}

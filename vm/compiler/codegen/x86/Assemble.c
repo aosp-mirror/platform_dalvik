@@ -20,7 +20,6 @@
 #include "../../CompilerInternals.h"
 #include "X86LIR.h"
 #include "Codegen.h"
-#include <unistd.h>             /* for cacheflush */
 #include <sys/mman.h>           /* for protection change */
 
 #define MAX_ASSEMBLER_RETRIES 10

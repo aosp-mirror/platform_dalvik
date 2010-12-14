@@ -20,7 +20,6 @@
 #include "../../CompilerInternals.h"
 #include "ArmLIR.h"
 #include "Codegen.h"
-#include <unistd.h>             /* for cacheflush */
 #include <sys/mman.h>           /* for protection change */
 
 #define MAX_ASSEMBLER_RETRIES 10
@@ -1353,8 +1352,8 @@ void dvmCompilerAssembleLIR(CompilationUnit *cUnit, JitTranslationInfo *info)
     installDataContent(cUnit);
 
     /* Flush dcache and invalidate the icache to maintain coherence */
-    cacheflush((long)cUnit->baseAddr,
-               (long)((char *) cUnit->baseAddr + offset), 0);
+    dvmCompilerCacheFlush((long)cUnit->baseAddr,
+                          (long)((char *) cUnit->baseAddr + offset), 0);
     UPDATE_CODE_CACHE_PATCHES();
 
     PROTECT_CODE_CACHE(cUnit->baseAddr, offset);
@@ -1449,7 +1448,7 @@ void* dvmJitChain(void* tgtAddr, u4* branchAddr)
         UNPROTECT_CODE_CACHE(branchAddr, sizeof(*branchAddr));
 
         *branchAddr = newInst;
-        cacheflush((long)branchAddr, (long)branchAddr + 4, 0);
+        dvmCompilerCacheFlush((long)branchAddr, (long)branchAddr + 4, 0);
         UPDATE_CODE_CACHE_PATCHES();
 
         PROTECT_CODE_CACHE(branchAddr, sizeof(*branchAddr));
@@ -1489,7 +1488,7 @@ static void inlineCachePatchEnqueue(PredictedChainingCell *cellAddr,
          */
         android_atomic_release_store((int32_t)newContent->clazz,
             (volatile int32_t *)(void *)&cellAddr->clazz);
-        cacheflush((intptr_t) cellAddr, (intptr_t) (cellAddr+1), 0);
+        dvmCompilerCacheFlush((intptr_t) cellAddr, (intptr_t) (cellAddr+1), 0);
         UPDATE_CODE_CACHE_PATCHES();
 
         PROTECT_CODE_CACHE(cellAddr, sizeof(*cellAddr));
@@ -1681,7 +1680,7 @@ void dvmCompilerPatchInlineCache(void)
     }
 
     /* Then synchronize the I/D cache */
-    cacheflush((long) minAddr, (long) (maxAddr+1), 0);
+    dvmCompilerCacheFlush((long) minAddr, (long) (maxAddr+1), 0);
     UPDATE_CODE_CACHE_PATCHES();
 
     PROTECT_CODE_CACHE(gDvmJit.codeCache, gDvmJit.codeCacheByteUsed);
@@ -1802,7 +1801,7 @@ void dvmJitUnchainAll()
                     highAddress = lastAddress;
             }
         }
-        cacheflush((long)lowAddress, (long)highAddress, 0);
+        dvmCompilerCacheFlush((long)lowAddress, (long)highAddress, 0);
         UPDATE_CODE_CACHE_PATCHES();
 
         PROTECT_CODE_CACHE(gDvmJit.codeCache, gDvmJit.codeCacheByteUsed);
