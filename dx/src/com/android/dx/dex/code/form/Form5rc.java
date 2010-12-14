@@ -101,6 +101,6 @@ public final class Form5rc extends InsnFormat {
         int firstReg = (regs.size() == 0) ? 0 : regs.get(0).getReg();
         int count = regs.getWordCount();
 
-        write(out, opcodeUnit(insn), cpi, (short) firstReg, (short) count);
+        write(out, opcodeUnit(insn), cpi, (short) count, (short) firstReg);
     }
 }
