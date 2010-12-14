@@ -4292,6 +4292,8 @@ jint JNI_CreateJavaVM(JavaVM** p_vm, JNIEnv** p_env, void* vm_args)
             gDvm.exitHook = (void (*)(int)) args->options[i].extraInfo;
         } else if (strcmp(optStr, "abort") == 0) {
             gDvm.abortHook = (void (*)(void))args->options[i].extraInfo;
+        } else if (strcmp(optStr, "sensitiveThread") == 0) {
+            gDvm.isSensitiveThreadHook = (_Bool (*)(void))args->options[i].extraInfo;
         } else if (strcmp(optStr, "-Xcheck:jni") == 0) {
             checkJni = true;
         } else if (strncmp(optStr, "-Xjniopts:", 10) == 0) {

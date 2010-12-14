@@ -121,6 +121,7 @@ struct DvmGlobals {
     int         (*vfprintfHook)(FILE*, const char*, va_list);
     void        (*exitHook)(int);
     void        (*abortHook)(void);
+    bool        (*isSensitiveThreadHook)(void);
 
     int         jniGrefLimit;       // 0 means no limit
     char*       jniTrace;
