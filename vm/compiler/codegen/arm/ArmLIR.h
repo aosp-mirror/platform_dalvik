@@ -119,10 +119,6 @@ typedef struct RegisterPool {
     int numFPTemps;
     RegisterInfo *FPTemps;
     int nextFPTemp;
-    int numCoreRegs;
-    RegisterInfo *coreRegs;
-    int numFPRegs;
-    RegisterInfo *FPRegs;
 } RegisterPool;
 
 typedef enum ResourceEncodingPos {

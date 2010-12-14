@@ -906,8 +906,8 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
         dvmCompilerDumpCompilationUnit(&cUnit);
     }
 
-    /* Allocate Registers */
-    dvmCompilerRegAlloc(&cUnit);
+    /* Allocate Registers using simple local allocation scheme */
+    dvmCompilerLocalRegAlloc(&cUnit);
 
     /* Convert MIR to LIR, etc. */
     dvmCompilerMIR2LIR(&cUnit);

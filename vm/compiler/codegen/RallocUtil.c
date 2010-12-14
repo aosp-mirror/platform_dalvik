@@ -364,10 +364,6 @@ extern void dvmCompilerFreeTemp(CompilationUnit *cUnit, int reg)
     dvmCompilerAbort(cUnit);
 }
 
-/*
- * FIXME - this needs to also check the preserved pool once we start
- * start using preserved registers.
- */
 extern RegisterInfo *dvmCompilerIsLive(CompilationUnit *cUnit, int reg)
 {
     RegisterInfo *p = cUnit->regPool->coreTemps;

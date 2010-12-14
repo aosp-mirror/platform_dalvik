@@ -120,14 +120,8 @@ void dvmCompilerInitializeRegAlloc(CompilationUnit *cUnit)
             dvmCompilerNew(numTemps * sizeof(*pool->coreTemps), true);
     pool->numFPTemps = 0;
     pool->FPTemps = NULL;
-    pool->numCoreRegs = 0;
-    pool->coreRegs = NULL;
-    pool->numFPRegs = 0;
-    pool->FPRegs = NULL;
     dvmCompilerInitPool(pool->coreTemps, coreTemps, pool->numCoreTemps);
     dvmCompilerInitPool(pool->FPTemps, NULL, 0);
-    dvmCompilerInitPool(pool->coreRegs, NULL, 0);
-    dvmCompilerInitPool(pool->FPRegs, NULL, 0);
     pool->nullCheckedRegs =
         dvmCompilerAllocBitVector(cUnit->numSSARegs, false);
 }

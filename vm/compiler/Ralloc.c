@@ -18,13 +18,6 @@
 #include "CompilerInternals.h"
 #include "Dataflow.h"
 
-typedef struct LiveRange {
-    int ssaName;
-    bool active;
-    int first;
-    int last;
-} LiveRange;
-
 /*
  * Quick & dirty - make FP usage sticky.  This is strictly a hint - local
  * code generation will handle misses.  It might be worthwhile to collaborate
@@ -54,45 +47,17 @@ static void inferTypes(CompilationUnit *cUnit, BasicBlock *bb)
     }
 }
 
-/*
- * Determine whether to use simple or aggressive register allocation.  In
- * general, loops and full methods will get aggressive.
- */
-static bool simpleTrace(CompilationUnit *cUnit)
-{
-    //TODO: flesh out
-    return true;
-}
-
-/*
- * Target-independent register allocation.  Requires target-dependent
- * helper functions and assumes free list, temp list and spill region.
- * Uses a variant of linear scan and produces a mapping between SSA names
- * and location.  Location may be original Dalvik register, hardware
- * register or spill location.
- *
- * Method:
- *    0.  Allocate the structure to hold the SSA name life ranges
- *    1.  Number each MIR instruction, counting by 2.
- *        +0 -> The "read" of the operands
- *        +1 -> The definition of the target resource
- *    2.  Compute live ranges for all SSA names *not* including the
- *        subscript 0 original Dalvik names.  Phi functions ignored
- *        at this point.
- *    3.  Sort the live range list by lowest range start.
- *    4.  Process and remove all Phi functions.
- *        o If there is no live range collisions among all operands and
- *          the target of a Phi function, collapse operands and target
- *          and rewrite using target SSA name.
- *        o If there is a collision, introduce copies.
- *    5.  Allocate in order of increasing live range start.
- */
 static const RegLocation freshLoc = {kLocDalvikFrame, 0, 0, INVALID_REG,
                                      INVALID_REG, INVALID_SREG};
-void dvmCompilerRegAlloc(CompilationUnit *cUnit)
+
+/*
+ * Local register allocation for simple traces.  Most of the work for
+ * local allocation is done on the fly.  Here we do some initialization
+ * and type inference.
+ */
+void dvmCompilerLocalRegAlloc(CompilationUnit *cUnit)
 {
     int i;
-    LiveRange *ranges;
     RegLocation *loc;
 
     /* Allocate the location map */
@@ -113,21 +78,9 @@ void dvmCompilerRegAlloc(CompilationUnit *cUnit)
         inferTypes(cUnit, bb);
     }
 
-    if (simpleTrace(cUnit)) {
-        /*
-         * Just rename everything back to subscript 0 names and don't do
-         * any explicit promotion.  Local allocator will opportunistically
-         * promote on the fly.
-         */
-        for (i=0; i < cUnit->numSSARegs; i++) {
-            cUnit->regLocation[i].sRegLow =
+    /* Remap SSA names back to original frame locations. */
+    for (i=0; i < cUnit->numSSARegs; i++) {
+        cUnit->regLocation[i].sRegLow =
                 DECODE_REG(dvmConvertSSARegToDalvik(cUnit, loc[i].sRegLow));
-        }
-    } else {
-        // Compute live ranges
-        ranges = (LiveRange *)dvmCompilerNew(cUnit->numSSARegs * sizeof(*ranges), true);
-        for (i=0; i < cUnit->numSSARegs; i++)
-            ranges[i].active = false;
-        //TODO: phi squash & linear scan promotion
     }
 }

@@ -44,7 +44,7 @@ void dvmJitUnchainAll(void);
 void dvmCompilerPatchInlineCache(void);
 
 /* Implemented in codegen/<target>/Ralloc.c */
-void dvmCompilerRegAlloc(CompilationUnit *cUnit);
+void dvmCompilerLocalRegAlloc(CompilationUnit *cUnit);
 
 /* Implemented in codegen/<target>/Thumb<version>Util.c */
 void dvmCompilerInitializeRegAlloc(CompilationUnit *cUnit);
