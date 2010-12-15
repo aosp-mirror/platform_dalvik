@@ -40,6 +40,19 @@ int dvmRawDexFileOpen(const char* fileName, const char* odexOutputName,
     RawDexFile** ppDexFile, bool isBootstrap);
 
 /*
+ * Open a raw ".dex" file based on the given chunk of memory, and load
+ * it. The bytes are assumed to be owned by the caller for the
+ * purposes of memory management and further assumed to not be touched
+ * by the caller while the raw dex file remains open. The bytes *may*
+ * be modified as the result of issuing this call.
+ *
+ * On success, returns 0 and sets "*ppDexFile" to a newly-allocated DexFile.
+ * On failure, returns a meaningful error code [currently just -1].
+ */
+int dvmRawDexFileOpenArray(const u1* pBytes, u4 length,
+    RawDexFile** ppDexFile);
+
+/*
  * Free a RawDexFile structure, along with any associated structures.
  */
 void dvmRawDexFileFree(RawDexFile* pRawDexFile);

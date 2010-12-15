@@ -13,19 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 /*
  * Open an unoptimized DEX file.
  */
 #include "Dalvik.h"
 
-/*
- * Open an unoptimized DEX file.  This finds the optimized version in the
- * cache, constructing it if necessary.
- */
+/* See documentation comment in header. */
 int dvmRawDexFileOpen(const char* fileName, const char* odexOutputName,
     RawDexFile** ppRawDexFile, bool isBootstrap)
 {
-    // TODO - should be very similar to what JarFile does
+    // TODO - should be very similar to what JarFile does.
+    return -1;
+}
+
+/* See documentation comment in header. */
+int dvmRawDexFileOpenArray(const u1* pBytes, u4 length,
+    RawDexFile** ppDexFile)
+{
+    // TODO - should be very similar to what JarFile does.
     return -1;
 }
 
