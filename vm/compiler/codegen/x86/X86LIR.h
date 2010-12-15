@@ -80,10 +80,6 @@ typedef struct RegisterPool {
     int numFPTemps;
     RegisterInfo *FPTemps;
     int nextFPTemp;
-    int numCoreRegs;
-    RegisterInfo *coreRegs;
-    int numMMRegs;
-    RegisterInfo *MMRegs;
 } RegisterPool;
 
 typedef enum OpSize {
