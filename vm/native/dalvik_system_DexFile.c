@@ -30,6 +30,7 @@ typedef struct DexOrJar {
     bool        okayToFree;
     RawDexFile* pRawDexFile;
     JarFile*    pJarFile;
+    u1*         pDexMemory; // malloc()ed memory, if any
 } DexOrJar;
 
 /*
@@ -46,6 +47,7 @@ void dvmFreeDexOrJar(void* vptr)
     else
         dvmJarFileFree(pDexOrJar->pJarFile);
     free(pDexOrJar->fileName);
+    free(pDexOrJar->pDexMemory);
     free(pDexOrJar);
 }
 
@@ -87,6 +89,35 @@ static bool validateCookie(int cookie)
     }
 
     return true;
+}
+
+
+/*
+ * Add given DexOrJar to the hash table of user-loaded dex files.
+ */
+static void addToDexFileTable(DexOrJar* pDexOrJar) {
+    /*
+     * Later on, we will receive this pointer as an argument and need
+     * to find it in the hash table without knowing if it's valid or
+     * not, which means we can't compute a hash value from anything
+     * inside DexOrJar. We don't share DexOrJar structs when the same
+     * file is opened multiple times, so we can just use the low 32
+     * bits of the pointer as the hash.
+     */
+    u4 hash = (u4) pDexOrJar;
+    void* result;
+
+    dvmHashTableLock(gDvm.userDexFiles);
+    result = dvmHashTableLookup(gDvm.userDexFiles, hash, pDexOrJar,
+            hashcmpDexOrJar, true);
+    dvmHashTableUnlock(gDvm.userDexFiles);
+
+    if (result != pDexOrJar) {
+        LOGE("Pointer has already been added?\n");
+        dvmAbort();
+    }
+
+    pDexOrJar->okayToFree = true;
 }
 
 /*
@@ -182,31 +213,65 @@ static void Dalvik_dalvik_system_DexFile_openDexFile(const u4* args,
 
     if (pDexOrJar != NULL) {
         pDexOrJar->fileName = sourceName;
-
-        /*
-         * Add to hash table.
-         *
-         * Later on we will receive this pointer as an argument and need
-         * to find it in the hash table without knowing if it's valid or
-         * not, which means we can't compute a hash value from anything
-         * inside DexOrJar.  We don't share DexOrJar structs when the same
-         * file is opened multiple times, so we can just use the low 32
-         * bits of the pointer as the hash.
-         */
-        u4 hash = (u4) pDexOrJar;
-        void* result;
-        dvmHashTableLock(gDvm.userDexFiles);
-        result = dvmHashTableLookup(gDvm.userDexFiles, hash, pDexOrJar,
-                    hashcmpDexOrJar, true);
-        dvmHashTableUnlock(gDvm.userDexFiles);
-        if (result != pDexOrJar) {
-            LOGE("Pointer has already been added?\n");
-            dvmAbort();
-        }
-
-        pDexOrJar->okayToFree = true;
-    } else
+        addToDexFileTable(pDexOrJar);
+    } else {
         free(sourceName);
+    }
+
+    RETURN_PTR(pDexOrJar);
+}
+
+/*
+ * private static int openDexFile(byte[] fileContents) throws IOException
+ *
+ * Open a DEX file represented in a byte[], returning a pointer to our
+ * internal data structure.
+ *
+ * The system will only perform "essential" optimizations on the given file.
+ *
+ * TODO: should be using "long" for a pointer.
+ */
+static void Dalvik_dalvik_system_DexFile_openDexFile_bytearray(const u4* args,
+    JValue* pResult)
+{
+    ArrayObject* fileContentsObj = (ArrayObject*) args[0];
+    u4 length;
+    u1* pBytes;
+    RawDexFile* pRawDexFile;
+    DexOrJar* pDexOrJar = NULL;
+
+    if (fileContentsObj == NULL) {
+        dvmThrowException("Ljava/lang/NullPointerException;", NULL);
+        RETURN_VOID();
+    }
+
+    /* TODO: Avoid making a copy of the array. */
+    length = fileContentsObj->length;
+    pBytes = (u1*) malloc(length);
+
+    if (pBytes == NULL) {
+        dvmThrowException("Ljava/lang/RuntimeException;",
+                "unable to allocate DEX memory");
+        RETURN_VOID();
+    }
+
+    memcpy(pBytes, fileContentsObj->contents, length);
+
+    if (dvmRawDexFileOpenArray(pBytes, length, &pRawDexFile) != 0) {
+        LOGV("Unable to open in-memory DEX file\n");
+        free(pBytes);
+        dvmThrowException("Ljava/io/RuntimeException;",
+                "unable to open in-memory DEX file");
+        RETURN_VOID();
+    }
+
+    LOGV("Opening in-memory DEX\n");
+    pDexOrJar = (DexOrJar*) malloc(sizeof(DexOrJar));
+    pDexOrJar->isDex = true;
+    pDexOrJar->pRawDexFile = pRawDexFile;
+    pDexOrJar->pDexMemory = pBytes;
+    pDexOrJar->fileName = strdup("<memory>"); // Needs to be free()able.
+    addToDexFileTable(pDexOrJar);
 
     RETURN_PTR(pDexOrJar);
 }
@@ -452,6 +517,8 @@ static void Dalvik_dalvik_system_DexFile_isDexOptNeeded(const u4* args,
 const DalvikNativeMethod dvm_dalvik_system_DexFile[] = {
     { "openDexFile",        "(Ljava/lang/String;Ljava/lang/String;I)I",
         Dalvik_dalvik_system_DexFile_openDexFile },
+    { "openDexFile",        "([B)I",
+        Dalvik_dalvik_system_DexFile_openDexFile_bytearray },
     { "closeDexFile",       "(I)V",
         Dalvik_dalvik_system_DexFile_closeDexFile },
     { "defineClass",        "(Ljava/lang/String;Ljava/lang/ClassLoader;ILjava/security/ProtectionDomain;)Ljava/lang/Class;",
