@@ -36,9 +36,10 @@ static void recordDFSPreOrder(CompilationUnit *cUnit, BasicBlock *block)
         dvmGrowableListIteratorInit(&block->successorBlockList.blocks,
                                     &iterator);
         while (true) {
-            BasicBlock *succBB =
-                (BasicBlock *) dvmGrowableListIteratorNext(&iterator);
-            if (succBB == NULL) break;
+            SuccessorBlockInfo *successorBlockInfo =
+                (SuccessorBlockInfo *) dvmGrowableListIteratorNext(&iterator);
+            if (successorBlockInfo == NULL) break;
+            BasicBlock *succBB = successorBlockInfo->block;
             recordDFSPreOrder(cUnit, succBB);
         }
     }
@@ -154,9 +155,10 @@ static bool computeDominanceFrontier(CompilationUnit *cUnit, BasicBlock *bb)
         dvmGrowableListIteratorInit(&bb->successorBlockList.blocks,
                                     &iterator);
         while (true) {
-            BasicBlock *succBB =
-                (BasicBlock *) dvmGrowableListIteratorNext(&iterator);
-            if (succBB == NULL) break;
+            SuccessorBlockInfo *successorBlockInfo =
+                (SuccessorBlockInfo *) dvmGrowableListIteratorNext(&iterator);
+            if (successorBlockInfo == NULL) break;
+            BasicBlock *succBB = successorBlockInfo->block;
             if (!dvmIsBitSet(succBB->dominators, bb->id)) {
                 dvmSetBit(bb->domFrontier, succBB->id);
             }
@@ -373,9 +375,10 @@ static bool computeBlockLiveIns(CompilationUnit *cUnit, BasicBlock *bb)
         dvmGrowableListIteratorInit(&bb->successorBlockList.blocks,
                                     &iterator);
         while (true) {
-            BasicBlock *succBB =
-                (BasicBlock *) dvmGrowableListIteratorNext(&iterator);
-            if (succBB == NULL) break;
+            SuccessorBlockInfo *successorBlockInfo =
+                (SuccessorBlockInfo *) dvmGrowableListIteratorNext(&iterator);
+            if (successorBlockInfo == NULL) break;
+            BasicBlock *succBB = successorBlockInfo->block;
             if (succBB->dataFlowInfo) {
                 computeSuccLiveIn(tempDalvikRegisterV,
                                   succBB->dataFlowInfo->liveInV,

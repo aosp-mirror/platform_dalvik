@@ -134,12 +134,6 @@ typedef struct MIR {
 
 struct BasicBlockDataFlow;
 
-/* FIXME - debugging prupose only */
-typedef enum BlockAttributes {
-    kEndsWithThrow = 0,
-    kCatchBlock,
-} BlockAttributes;
-
 /* For successorBlockList */
 typedef enum BlockListType {
     kNotUsed = 0,
@@ -147,9 +141,6 @@ typedef enum BlockListType {
     kPackedSwitch,
     kSparseSwitch,
 } BlockListType;
-
-#define BA_ENDS_WITH_THROW              (1 << kEndsWithThrow)
-#define BA_CATCH_BLOCK                  (1 << kCatchBlock)
 
 typedef struct BasicBlock {
     int id;
@@ -159,8 +150,6 @@ typedef struct BasicBlock {
     BBType blockType;
     bool needFallThroughBranch;         // For blocks ended due to length limit
     bool isFallThroughFromInvoke;       // True means the block needs alignment
-    u4 blockAttributes;                 // FIXME - debugging purpose only
-    u4 exceptionTypeIdx;                // FIXME - will be put elsewhere
     MIR *firstMIRInsn;
     MIR *lastMIRInsn;
     struct BasicBlock *fallThrough;
@@ -176,6 +165,17 @@ typedef struct BasicBlock {
         GrowableList blocks;
     } successorBlockList;
 } BasicBlock;
+
+/*
+ * The "blocks" field in "successorBlockList" points to an array of
+ * elements with the type "SuccessorBlockInfo".
+ * For catch blocks, key is type index for the exception.
+ * For swtich blocks, key is the case value.
+ */
+typedef struct SuccessorBlockInfo {
+    BasicBlock *block;
+    int key;
+} SuccessorBlockInfo;
 
 struct LoopAnalysis;
 struct RegisterPool;

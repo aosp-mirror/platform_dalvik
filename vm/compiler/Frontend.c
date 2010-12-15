@@ -1073,9 +1073,6 @@ static BasicBlock *splitBlock(CompilationUnit *cUnit,
     bottomBlock->firstMIRInsn = insn;
     bottomBlock->lastMIRInsn = origBlock->lastMIRInsn;
 
-    /* Only the top half of split blocks is tagged as BA_CATCH_BLOCK */
-    bottomBlock->blockAttributes = origBlock->blockAttributes & ~BA_CATCH_BLOCK;
-
     /* Handle the taken path */
     bottomBlock->taken = origBlock->taken;
     if (bottomBlock->taken) {
@@ -1104,17 +1101,16 @@ static BasicBlock *splitBlock(CompilationUnit *cUnit,
         dvmGrowableListIteratorInit(&bottomBlock->successorBlockList.blocks,
                                     &iterator);
         while (true) {
-            BasicBlock *bb =
-                (BasicBlock *) dvmGrowableListIteratorNext(&iterator);
-            if (bb == NULL) break;
+            SuccessorBlockInfo *successorBlockInfo =
+                (SuccessorBlockInfo *) dvmGrowableListIteratorNext(&iterator);
+            if (successorBlockInfo == NULL) break;
+            BasicBlock *bb = successorBlockInfo->block;
             dvmCompilerClearBit(bb->predecessors, origBlock->id);
             dvmCompilerSetBit(bb->predecessors, bottomBlock->id);
         }
     }
 
     origBlock->lastMIRInsn = insn->prev;
-    /* Only the bottom half of split blocks is tagged as BA_ENDS_WITH_THROW */
-    origBlock->blockAttributes &= ~BA_ENDS_WITH_THROW;
 
     insn->prev->next = NULL;
     insn->prev = NULL;
@@ -1210,18 +1206,8 @@ void dumpCFG(CompilationUnit *cUnit, const char *dirPrefix)
         } else if (bb->blockType == kMethodExitBlock) {
             fprintf(file, "  exit [shape=Mdiamond];\n");
         } else if (bb->blockType == kDalvikByteCode) {
-            fprintf(file, "  block%04x [shape=%s,label = \"{ \\\n",
-                    bb->startOffset,
-                    bb->blockAttributes & BA_CATCH_BLOCK ?
-                      "Mrecord" : "record");
-            if (bb->blockAttributes & BA_CATCH_BLOCK) {
-                if (bb->exceptionTypeIdx == kDexNoIndex) {
-                    fprintf(file, "    {any\\l} |\\\n");
-                } else {
-                    fprintf(file, "    {throwable type:%x\\l} |\\\n",
-                            bb->exceptionTypeIdx);
-                }
-            }
+            fprintf(file, "  block%04x [shape=record,label = \"{ \\\n",
+                    bb->startOffset);
             const MIR *mir;
             for (mir = bb->firstMIRInsn; mir; mir = mir->next) {
                 fprintf(file, "    {%04x %s\\l}%s\\\n", mir->offset,
@@ -1258,20 +1244,24 @@ void dumpCFG(CompilationUnit *cUnit, const char *dirPrefix)
             GrowableListIterator iterator;
             dvmGrowableListIteratorInit(&bb->successorBlockList.blocks,
                                         &iterator);
-
-            BasicBlock *destBlock =
-                (BasicBlock *) dvmGrowableListIteratorNext(&iterator);
+            SuccessorBlockInfo *successorBlockInfo =
+                (SuccessorBlockInfo *) dvmGrowableListIteratorNext(&iterator);
 
             int succId = 0;
             while (true) {
-                if (destBlock == NULL) break;
-                BasicBlock *nextBlock =
-                    (BasicBlock *) dvmGrowableListIteratorNext(&iterator);
-                fprintf(file, "    {<f%d> %04x\\l}%s\\\n",
+                if (successorBlockInfo == NULL) break;
+
+                BasicBlock *destBlock = successorBlockInfo->block;
+                SuccessorBlockInfo *nextSuccessorBlockInfo =
+                  (SuccessorBlockInfo *) dvmGrowableListIteratorNext(&iterator);
+
+                fprintf(file, "    {<f%d> %04x: %04x\\l}%s\\\n",
                         succId++,
+                        successorBlockInfo->key,
                         destBlock->startOffset,
-                        (nextBlock != NULL) ? " | " : " ");
-                destBlock = nextBlock;
+                        (nextSuccessorBlockInfo != NULL) ? " | " : " ");
+
+                successorBlockInfo = nextSuccessorBlockInfo;
             }
             fprintf(file, "  }\"];\n\n");
 
@@ -1287,9 +1277,12 @@ void dumpCFG(CompilationUnit *cUnit, const char *dirPrefix)
 
                 succId = 0;
                 while (true) {
-                    BasicBlock *destBlock =
-                        (BasicBlock *) dvmGrowableListIteratorNext(&iterator);
-                    if (destBlock == NULL) break;
+                    SuccessorBlockInfo *successorBlockInfo =
+                        (SuccessorBlockInfo *)
+                            dvmGrowableListIteratorNext(&iterator);
+                    if (successorBlockInfo == NULL) break;
+
+                    BasicBlock *destBlock = successorBlockInfo->block;
 
                     dvmGetBlockName(destBlock, blockName2);
                     fprintf(file, "  succ%04x:f%d:e -> %s:n\n",
@@ -1339,9 +1332,11 @@ static bool verifyPredInfo(CompilationUnit *cUnit, BasicBlock *bb)
             dvmGrowableListIteratorInit(&predBB->successorBlockList.blocks,
                                         &iterator);
             while (true) {
-                BasicBlock *succBB =
-                    (BasicBlock *) dvmGrowableListIteratorNext(&iterator);
-                if (succBB == NULL) break;
+                SuccessorBlockInfo *successorBlockInfo =
+                    (SuccessorBlockInfo *)
+                        dvmGrowableListIteratorNext(&iterator);
+                if (successorBlockInfo == NULL) break;
+                BasicBlock *succBB = successorBlockInfo->block;
                 if (succBB == bb) {
                     found = true;
                     break;
@@ -1404,13 +1399,15 @@ static void processTryCatchBlocks(CompilationUnit *cUnit)
                 break;
             }
 
-            BasicBlock *catchBlock = findBlock(cUnit, handler->address,
-                                               /* split */
-                                               false,
-                                               /* create */
-                                               true);
-            catchBlock->blockAttributes |= BA_CATCH_BLOCK;
-            catchBlock->exceptionTypeIdx = handler->typeIdx;
+            /*
+             * Create dummy catch blocks first. Since these are created before
+             * other blocks are processed, "split" is specified as false.
+             */
+            findBlock(cUnit, handler->address,
+                      /* split */
+                      false,
+                      /* create */
+                      true);
         }
 
         offset = dexCatchIteratorGetEndOffset(&iterator, pCode);
@@ -1487,8 +1484,10 @@ static void processCanSwitch(CompilationUnit *cUnit, BasicBlock *curBlock,
     u2 *switchData= (u2 *) (cUnit->method->insns + curOffset +
                             insn->dalvikInsn.vB);
     int size;
+    int *keyTable;
     int *targetTable;
     int i;
+    int firstKey;
 
     /*
      * Packed switch data format:
@@ -1502,7 +1501,9 @@ static void processCanSwitch(CompilationUnit *cUnit, BasicBlock *curBlock,
     if (insn->dalvikInsn.opcode == OP_PACKED_SWITCH) {
         assert(switchData[0] == kPackedSwitchSignature);
         size = switchData[1];
+        firstKey = switchData[2] | (switchData[3] << 16);
         targetTable = (int *) &switchData[4];
+        keyTable = NULL;        // Make the compiler happy
     /*
      * Sparse switch data format:
      *  ushort ident = 0x0200   magic value
@@ -1515,7 +1516,9 @@ static void processCanSwitch(CompilationUnit *cUnit, BasicBlock *curBlock,
     } else {
         assert(switchData[0] == kSparseSwitchSignature);
         size = switchData[1];
+        keyTable = (int *) &switchData[2];
         targetTable = (int *) &switchData[2 + size*2];
+        firstKey = 0;   // To make the compiler happy
     }
 
     if (curBlock->successorBlockList.blockListType != kNotUsed) {
@@ -1534,8 +1537,14 @@ static void processCanSwitch(CompilationUnit *cUnit, BasicBlock *curBlock,
                                           true,
                                           /* create */
                                           true);
+        SuccessorBlockInfo *successorBlockInfo =
+            (SuccessorBlockInfo *) dvmCompilerNew(sizeof(SuccessorBlockInfo),
+                                                  false);
+        successorBlockInfo->block = caseBlock;
+        successorBlockInfo->key = (insn->dalvikInsn.opcode == OP_PACKED_SWITCH)?
+                                  firstKey + i : keyTable[i];
         dvmInsertGrowableList(&curBlock->successorBlockList.blocks,
-                              (intptr_t) caseBlock);
+                              (intptr_t) successorBlockInfo);
         dvmCompilerSetBit(caseBlock->predecessors, curBlock->id);
     }
 
@@ -1559,7 +1568,6 @@ static void processCanThrow(CompilationUnit *cUnit, BasicBlock *curBlock,
     const Method *method = cUnit->method;
     const DexCode *dexCode = dvmGetMethodCode(method);
 
-    curBlock->blockAttributes |= BA_ENDS_WITH_THROW;
     /* In try block */
     if (dvmIsBitSet(tryBlockAddr, curOffset)) {
         DexCatchIterator iterator;
@@ -1591,9 +1599,13 @@ static void processCanThrow(CompilationUnit *cUnit, BasicBlock *curBlock,
                                                /* create */
                                                false);
 
-            assert(catchBlock->blockAttributes & BA_CATCH_BLOCK);
+            SuccessorBlockInfo *successorBlockInfo =
+              (SuccessorBlockInfo *) dvmCompilerNew(sizeof(SuccessorBlockInfo),
+                                                    false);
+            successorBlockInfo->block = catchBlock;
+            successorBlockInfo->key = handler->typeIdx;
             dvmInsertGrowableList(&curBlock->successorBlockList.blocks,
-                                  (intptr_t) catchBlock);
+                                  (intptr_t) successorBlockInfo);
             dvmCompilerSetBit(catchBlock->predecessors, curBlock->id);
         }
     } else {
