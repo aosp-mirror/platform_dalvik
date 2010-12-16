@@ -30,57 +30,20 @@
  * Copy the given number of bytes from one fd to another, first
  * seeking the source fd to the start of the file.
  */
-static int copyFileToFile(int destFd, int srcFd, u4 size)
+static int copyFileToFile(int destFd, int srcFd, size_t size)
 {
-    u1* buf = malloc(size);
-    int result = -1;
-    ssize_t amt;
-
-    if (buf == NULL) {
-        LOGE("malloc failure (errno %d)\n", errno);
-        goto bail;
-    }
-
     if (lseek(srcFd, 0, SEEK_SET) != 0) {
         LOGE("lseek failure (errno %d)\n", errno);
-        goto bail;
+        return -1;
     }
 
-    amt = read(srcFd, buf, size);
-
-    if (amt < 0) {
-        LOGE("read failure (errno %d)\n", errno);
-        goto bail;
-    }
-
-    if (amt != (ssize_t) size) {
-        LOGE("short read (%d < %ud)\n", (int) amt, size);
-        goto bail;
-    }
-
-    amt = write(destFd, buf, size);
-
-    if (amt < 0) {
-        LOGE("write failure (errno %d)\n", errno);
-        goto bail;
-    }
-
-    if (amt != (ssize_t) size) {
-        LOGE("short write (%d < %ud)\n", (int) amt, size);
-        goto bail;
-    }
-
-    result = 0; // Success!
-
-bail:
-    free(buf);
-    return result;
+    return sysCopyFileToFile(destFd, srcFd, size);
 }
 
 /*
  * Get the modification time and size in bytes for the given fd.
  */
-static int getModTimeAndSize(int fd, u4* modTime, u4* size)
+static int getModTimeAndSize(int fd, u4* modTime, size_t* size)
 {
     struct stat buf;
     int result = fstat(fd, &buf);
@@ -91,7 +54,8 @@ static int getModTimeAndSize(int fd, u4* modTime, u4* size)
     }
 
     *modTime = (u4) buf.st_mtime;
-    *size = (u4) buf.st_size;
+    *size = (size_t) buf.st_size;
+    assert((size_t) buf.st_size == buf.st_size);
 
     return 0;
 }
@@ -161,7 +125,7 @@ int dvmRawDexFileOpen(const char* fileName, const char* odexOutputName,
     int optFd = -1;
     u4 modTime = 0;
     u4 adler32 = 0;
-    u4 fileSize = 0;
+    size_t fileSize = 0;
     bool newFile = false;
     bool locked = false;
 
