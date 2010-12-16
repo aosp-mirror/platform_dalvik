@@ -215,6 +215,9 @@ static void hprofRootVisitor(void *addr, u4 threadId, RootType type, void *arg)
     assert(arg != NULL);
     assert(type < NELEM(xlate));
     obj = *(Object **)addr;
+    if (obj == NULL) {
+        return;
+    }
     ctx = (hprof_context_t *)arg;
     ctx->gcScanState = xlate[type];
     ctx->gcThreadSerialNumber = threadId;
