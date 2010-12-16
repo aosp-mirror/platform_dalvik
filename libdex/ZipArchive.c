@@ -573,7 +573,7 @@ int dexZipGetEntryInfo(const ZipArchive* pArchive, ZipEntry entry,
  * Uncompress "deflate" data from the archive's file to an open file
  * descriptor.
  */
-static int inflateToFile(int inFd, int outFd, size_t uncompLen, size_t compLen)
+static int inflateToFile(int outFd, int inFd, size_t uncompLen, size_t compLen)
 {
     int result = -1;
     const size_t kBufSize = 32768;
@@ -677,32 +677,6 @@ bail:
 }
 
 /*
- * Copy bytes from input to output.
- */
-static int copyFileToFile(int inFd, int outFd, size_t uncompLen)
-{
-    const size_t kBufSize = 32768;
-    unsigned char buf[kBufSize];
-
-    while (uncompLen != 0) {
-        size_t getSize = (uncompLen > kBufSize) ? kBufSize : uncompLen;
-
-        ssize_t actual = TEMP_FAILURE_RETRY(read(inFd, buf, getSize));
-        if (actual != (ssize_t) getSize) {
-            LOGW("Zip: copy read failed (%d vs %zd)\n", (int)actual, getSize);
-            return -1;
-        }
-
-        if (sysWriteFully(outFd, buf, getSize, "Zip copy") != 0)
-            return -1;
-
-        uncompLen -= getSize;
-    }
-
-    return 0;
-}
-
-/*
  * Uncompress an entry, in its entirety, to an open file descriptor.
  *
  * TODO: this doesn't verify the data's CRC, but probably should (especially
@@ -733,10 +707,10 @@ int dexZipExtractEntryToFile(const ZipArchive* pArchive,
     }
 
     if (method == kCompressStored) {
-        if (copyFileToFile(pArchive->mFd, fd, uncompLen) != 0)
+        if (sysCopyFileToFile(fd, pArchive->mFd, uncompLen) != 0)
             goto bail;
     } else {
-        if (inflateToFile(pArchive->mFd, fd, uncompLen, compLen) != 0)
+        if (inflateToFile(fd, pArchive->mFd, uncompLen, compLen) != 0)
             goto bail;
     }
 

@@ -113,4 +113,10 @@ void sysReleaseShmem(MemMapping* pMap);
  */
 int sysWriteFully(int fd, const void* buf, size_t count, const char* logMsg);
 
+/*
+ * Copy the given number of bytes from one fd to another. Returns
+ * 0 on success, -1 on failure.
+ */
+int sysCopyFileToFile(int outFd, int inFd, size_t count);
+
 #endif /*_DALVIK_SYSUTIL*/

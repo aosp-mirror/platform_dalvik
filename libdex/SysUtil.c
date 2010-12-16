@@ -406,3 +406,28 @@ int sysWriteFully(int fd, const void* buf, size_t count, const char* logMsg)
 
     return 0;
 }
+
+/* See documentation comment in header file. */
+int sysCopyFileToFile(int outFd, int inFd, size_t count)
+{
+    const size_t kBufSize = 32768;
+    unsigned char buf[kBufSize];
+
+    while (count != 0) {
+        size_t getSize = (count > kBufSize) ? kBufSize : count;
+
+        ssize_t actual = TEMP_FAILURE_RETRY(read(inFd, buf, getSize));
+        if (actual != (ssize_t) getSize) {
+            LOGW("sysCopyFileToFile: copy read failed (%d vs %zd)\n",
+                (int) actual, getSize);
+            return -1;
+        }
+
+        if (sysWriteFully(outFd, buf, getSize, "sysCopyFileToFile") != 0)
+            return -1;
+
+        count -= getSize;
+    }
+
+    return 0;
+}
