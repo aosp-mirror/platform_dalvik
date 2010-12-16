@@ -200,12 +200,14 @@ static void Dalvik_dalvik_system_DexFile_openDexFile(const u4* args,
         pDexOrJar = (DexOrJar*) malloc(sizeof(DexOrJar));
         pDexOrJar->isDex = true;
         pDexOrJar->pRawDexFile = pRawDexFile;
+        pDexOrJar->pDexMemory = NULL;
     } else if (dvmJarFileOpen(sourceName, outputName, &pJarFile, false) == 0) {
         LOGV("Opening DEX file '%s' (Jar)\n", sourceName);
 
         pDexOrJar = (DexOrJar*) malloc(sizeof(DexOrJar));
         pDexOrJar->isDex = false;
         pDexOrJar->pJarFile = pJarFile;
+        pDexOrJar->pDexMemory = NULL;
     } else {
         LOGV("Unable to open DEX file '%s'\n", sourceName);
         dvmThrowException("Ljava/io/IOException;", "unable to open DEX file");
