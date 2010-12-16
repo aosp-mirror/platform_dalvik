@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 /*
  * Access the contents of a Jar file.
  *
@@ -20,6 +21,7 @@
  * just wants a zip archive with "classes.dex" inside.  In Android the
  * most common example is ".apk".
  */
+
 #include "Dalvik.h"
 #include "libdex/OptInvocation.h"
 
@@ -186,6 +188,11 @@ bail:
 int dvmJarFileOpen(const char* fileName, const char* odexOutputName,
     JarFile** ppJarFile, bool isBootstrap)
 {
+    /*
+     * TODO: This function has been duplicated and modified to become
+     * dvmRawDexFileOpen() in RawDexFile.c. This should be refactored.
+     */
+
     ZipArchive archive;
     DvmDex* pDvmDex = NULL;
     char* cachedName = NULL;
@@ -254,7 +261,7 @@ tryArchive:
             } else {
                 cachedName = strdup(odexOutputName);
             }
-            LOGV("dvmDexCacheStatus: Checking cache for %s (%s)\n",
+            LOGV("dvmJarFileOpen: Checking cache for %s (%s)\n",
                 fileName, cachedName);
             fd = dvmOpenCachedDexFile(fileName, cachedName,
                     dexGetZipEntryModTime(&archive, entry),

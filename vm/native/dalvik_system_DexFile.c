@@ -20,6 +20,16 @@
 #include "Dalvik.h"
 #include "native/InternalNativePriv.h"
 
+/*
+ * Return true if the given name ends with ".dex".
+ */
+static bool hasDexExtension(const char* name) {
+    size_t len = strlen(name);
+
+    return (len >= 5)
+        && (name[len - 5] != '/')
+        && (strcmp(&name[len - 4], ".dex") == 0);
+}
 
 /*
  * Internal struct for managing DexFile.
@@ -191,10 +201,12 @@ static void Dalvik_dalvik_system_DexFile_openDexFile(const u4* args,
     }
 
     /*
-     * Try to open it directly as a DEX.  If that fails, try it as a Zip
-     * with a "classes.dex" inside.
+     * Try to open it directly as a DEX if the name ends with ".dex".
+     * If that fails (or isn't tried in the first place), try it as a
+     * Zip with a "classes.dex" inside.
      */
-    if (dvmRawDexFileOpen(sourceName, outputName, &pRawDexFile, false) == 0) {
+    if (hasDexExtension(sourceName)
+            && dvmRawDexFileOpen(sourceName, outputName, &pRawDexFile, false) == 0) {
         LOGV("Opening DEX file '%s' (DEX)\n", sourceName);
 
         pDexOrJar = (DexOrJar*) malloc(sizeof(DexOrJar));
