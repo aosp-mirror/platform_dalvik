@@ -17,14 +17,272 @@
 /*
  * Open an unoptimized DEX file.
  */
+
 #include "Dalvik.h"
+#include "libdex/OptInvocation.h"
+
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
+
+/*
+ * Copy the given number of bytes from one fd to another, first
+ * seeking the source fd to the start of the file.
+ */
+static int copyFileToFile(int destFd, int srcFd, u4 size)
+{
+    u1* buf = malloc(size);
+    int result = -1;
+    ssize_t amt;
+
+    if (buf == NULL) {
+        LOGE("malloc failure (errno %d)\n", errno);
+        goto bail;
+    }
+
+    if (lseek(srcFd, 0, SEEK_SET) != 0) {
+        LOGE("lseek failure (errno %d)\n", errno);
+        goto bail;
+    }
+
+    amt = read(srcFd, buf, size);
+
+    if (amt < 0) {
+        LOGE("read failure (errno %d)\n", errno);
+        goto bail;
+    }
+
+    if (amt != (ssize_t) size) {
+        LOGE("short read (%d < %ud)\n", (int) amt, size);
+        goto bail;
+    }
+
+    amt = write(destFd, buf, size);
+
+    if (amt < 0) {
+        LOGE("write failure (errno %d)\n", errno);
+        goto bail;
+    }
+
+    if (amt != (ssize_t) size) {
+        LOGE("short write (%d < %ud)\n", (int) amt, size);
+        goto bail;
+    }
+
+    result = 0; // Success!
+
+bail:
+    free(buf);
+    return result;
+}
+
+/*
+ * Get the modification time and size in bytes for the given fd.
+ */
+static int getModTimeAndSize(int fd, u4* modTime, u4* size)
+{
+    struct stat buf;
+    int result = fstat(fd, &buf);
+
+    if (result < 0) {
+        LOGE("Unable to determing mod time (errno %d)\n", errno);
+        return -1;
+    }
+
+    *modTime = (u4) buf.st_mtime;
+    *size = (u4) buf.st_size;
+
+    return 0;
+}
+
+/*
+ * Verify the dex file magic number, and get the adler32 checksum out
+ * of the given fd, which is presumed to be a reference to a dex file
+ * with the cursor at the start of the file. The fd's cursor is
+ * modified by this operation.
+ */
+static int verifyMagicAndGetAdler32(int fd, u4 *adler32)
+{
+    /*
+     * The start of a dex file is eight bytes of magic followed by
+     * four bytes of checksum.
+     */
+    u1 headerStart[12];
+    ssize_t amt = read(fd, headerStart, sizeof(headerStart));
+
+    if (amt < 0) {
+        LOGE("Unable to read header (errno %d)\n", errno);
+        return -1;
+    }
+
+    if (amt != sizeof(headerStart)) {
+        LOGE("Unable to read full header (only got %d bytes)\n", (int) amt);
+        return -1;
+    }
+
+    if (memcmp(headerStart, DEX_MAGIC DEX_MAGIC_VERS, 8) != 0) {
+        LOGE("Unexpected dex magic (0x%02x%02x%02x%02x%02x%02x%02x%02x)\n",
+                headerStart[0], headerStart[1], headerStart[2],
+                headerStart[3], headerStart[4], headerStart[5],
+                headerStart[6], headerStart[7]);
+        return -1;
+    }
+
+    /*
+     * We can't just cast the data to a u4 and read it, since the
+     * platform might be big-endian (also, because that would make the
+     * compiler complain about type-punned pointers). We assume here
+     * that the dex file is in the standard little-endian format; if
+     * that assumption turns out to be invalid, code that runs later
+     * will notice and complain.
+     */
+    *adler32 = (u4) headerStart[8]
+        | (((u4) headerStart[9]) << 8)
+        | (((u4) headerStart[10]) << 16)
+        | (((u4) headerStart[11]) << 24);
+
+    return 0;
+}
 
 /* See documentation comment in header. */
 int dvmRawDexFileOpen(const char* fileName, const char* odexOutputName,
     RawDexFile** ppRawDexFile, bool isBootstrap)
 {
-    // TODO - should be very similar to what JarFile does.
-    return -1;
+    /*
+     * TODO: This duplicates a lot of code from dvmJarFileOpen() in
+     * JarFile.c. This should be refactored.
+     */
+
+    DvmDex* pDvmDex = NULL;
+    char* cachedName = NULL;
+    int result = -1;
+    int dexFd = -1;
+    int optFd = -1;
+    u4 modTime = 0;
+    u4 adler32 = 0;
+    u4 fileSize = 0;
+    bool newFile = false;
+    bool locked = false;
+
+    dexFd = open(fileName, O_RDONLY);
+    if (dexFd < 0) goto bail;
+
+    /* If we fork/exec into dexopt, don't let it inherit the open fd. */
+    dvmSetCloseOnExec(dexFd);
+
+    if (verifyMagicAndGetAdler32(dexFd, &adler32) < 0) {
+        LOGE("Error with header for %s\n", fileName);
+        goto bail;
+    }
+
+    if (getModTimeAndSize(dexFd, &modTime, &fileSize) < 0) {
+        LOGE("Error with stat for %s\n", fileName);
+        goto bail;
+    }
+
+    /*
+     * See if the cached file matches. If so, optFd will become a reference
+     * to the cached file and will have been seeked to just past the "opt"
+     * header.
+     */
+
+    if (odexOutputName == NULL) {
+        cachedName = dexOptGenerateCacheFileName(fileName, NULL);
+        if (cachedName == NULL)
+            goto bail;
+    } else {
+        cachedName = strdup(odexOutputName);
+    }
+
+    LOGV("dvmRawDexFileOpen: Checking cache for %s (%s)\n",
+            fileName, cachedName);
+
+    optFd = dvmOpenCachedDexFile(fileName, cachedName, modTime,
+        adler32, isBootstrap, &newFile, /*createIfMissing=*/true);
+
+    if (optFd < 0) {
+        LOGI("Unable to open or create cache for %s (%s)\n",
+                fileName, cachedName);
+        goto bail;
+    }
+    locked = true;
+
+    /*
+     * If optFd points to a new file (because there was no cached
+     * version, or the cached version was stale), generate the
+     * optimized DEX. The file descriptor returned is still locked,
+     * and is positioned just past the optimization header.
+     */
+    if (newFile) {
+        u8 startWhen, copyWhen, endWhen;
+        bool result;
+        off_t dexOffset;
+
+        dexOffset = lseek(optFd, 0, SEEK_CUR);
+        result = (dexOffset > 0);
+
+        if (result) {
+            startWhen = dvmGetRelativeTimeUsec();
+            result = copyFileToFile(optFd, dexFd, fileSize) == 0;
+            copyWhen = dvmGetRelativeTimeUsec();
+        }
+
+        if (result) {
+            result = dvmOptimizeDexFile(optFd, dexOffset, fileSize,
+                fileName, modTime, adler32, isBootstrap);
+        }
+
+        if (!result) {
+            LOGE("Unable to extract+optimize DEX from '%s'\n", fileName);
+            goto bail;
+        }
+
+        endWhen = dvmGetRelativeTimeUsec();
+        LOGD("DEX prep '%s': copy in %dms, rewrite %dms\n",
+            fileName,
+            (int) (copyWhen - startWhen) / 1000,
+            (int) (endWhen - copyWhen) / 1000);
+    }
+
+    /*
+     * Map the cached version.  This immediately rewinds the fd, so it
+     * doesn't have to be seeked anywhere in particular.
+     */
+    if (dvmDexFileOpenFromFd(optFd, &pDvmDex) != 0) {
+        LOGI("Unable to map cached %s\n", fileName);
+        goto bail;
+    }
+
+    if (locked) {
+        /* unlock the fd */
+        if (!dvmUnlockCachedDexFile(optFd)) {
+            /* uh oh -- this process needs to exit or we'll wedge the system */
+            LOGE("Unable to unlock DEX file\n");
+            goto bail;
+        }
+        locked = false;
+    }
+
+    LOGV("Successfully opened '%s'\n", fileName);
+
+    *ppRawDexFile = (RawDexFile*) calloc(1, sizeof(RawDexFile));
+    (*ppRawDexFile)->cacheFileName = cachedName;
+    (*ppRawDexFile)->pDvmDex = pDvmDex;
+    cachedName = NULL;      // don't free it below
+    result = 0;
+
+bail:
+    free(cachedName);
+    if (dexFd >= 0) {
+        close(dexFd);
+    }
+    if (optFd >= 0) {
+        if (locked)
+            (void) dvmUnlockCachedDexFile(optFd);
+        close(optFd);
+    }
+    return result;
 }
 
 /* See documentation comment in header. */
