@@ -83,6 +83,29 @@ static inline u4 dvmJitHash( const u2* p ) {
 }
 
 /*
+ * The width of the chain field in JitEntryInfo sets the upper
+ * bound on the number of translations.  Be careful if changing
+ * the size of JitEntry struct - the Dalvik PC to JitEntry
+ * hash functions have built-in knowledge of the size.
+ */
+#define JIT_ENTRY_CHAIN_WIDTH 2
+#define JIT_MAX_ENTRIES (1 << (JIT_ENTRY_CHAIN_WIDTH * 8))
+
+/*
+ * The trace profiling counters are allocated in blocks and individual
+ * counters must not move so long as any referencing trace exists.
+ */
+#define JIT_PROF_BLOCK_ENTRIES 1024
+#define JIT_PROF_BLOCK_BUCKETS (JIT_MAX_ENTRIES / JIT_PROF_BLOCK_ENTRIES)
+
+typedef s4 JitTraceCounter_t;
+
+typedef struct JitTraceProfCounters {
+    unsigned int           next;
+    JitTraceCounter_t      *buckets[JIT_PROF_BLOCK_BUCKETS];
+} JitTraceProfCounters;
+
+/*
  * Entries in the JIT's address lookup hash table.
  * Fields which may be updated by multiple threads packed into a
  * single 32-bit word to allow use of atomic update.
@@ -94,7 +117,7 @@ typedef struct JitEntryInfo {
     unsigned int           inlineCandidate:1;
     unsigned int           profileEnabled:1;
     JitInstructionSetType  instructionSet:4;
-    unsigned int           unused:8;
+    unsigned int           profileOffset:8;
     u2                     chain;                 /* Index of next in chain */
 } JitEntryInfo;
 
@@ -120,7 +143,12 @@ void dvmJitResetTable(void);
 struct JitEntry *dvmFindJitEntry(const u2* pc);
 s8 dvmJitd2l(double d);
 s8 dvmJitf2l(float f);
-void dvmJitSetCodeAddr(const u2* dPC, void *nPC, JitInstructionSetType set);
+void dvmJitSetCodeAddr(const u2* dPC, void *nPC, JitInstructionSetType set,
+                       int profilePrefixSize);
 void dvmJitAbortTraceSelect(InterpState* interpState);
+JitTraceCounter_t *dvmJitNextTraceCounter(void);
+void dvmJitTraceProfilingOff(void);
+void dvmJitTraceProfilingOn(void);
+void dvmJitChangeProfileMode(TraceProfilingModes newState);
 
 #endif /*_DALVIK_INTERP_JIT*/

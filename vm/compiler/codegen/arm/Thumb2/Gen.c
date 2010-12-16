@@ -15,12 +15,63 @@
  */
 
 /*
- * This file contains codegen for the Thumb ISA and is intended to be
+ * This file contains codegen for the Thumb2 ISA and is intended to be
  * includes by:
  *
  *        Codegen-$(TARGET_ARCH_VARIANT).c
  *
  */
+
+/*
+ * Reserve 6 bytes at the beginning of the trace
+ *        +----------------------------+
+ *        | prof count addr (4 bytes)  |
+ *        +----------------------------+
+ *        | chain cell offset (2 bytes)|
+ *        +----------------------------+
+ *
+ * ...and then code to increment the execution
+ *
+ * For continuous profiling (10 bytes)
+ *       ldr   r0, [pc-8]   @ get prof count addr    [4 bytes]
+ *       ldr   r1, [r0]     @ load counter           [2 bytes]
+ *       add   r1, #1       @ increment              [2 bytes]
+ *       str   r1, [r0]     @ store                  [2 bytes]
+ *
+ * For periodic profiling (4 bytes)
+ *       call  TEMPLATE_PERIODIC_PROFILING
+ *
+ * and return the size (in bytes) of the generated code.
+ */
+
+static int genTraceProfileEntry(CompilationUnit *cUnit)
+{
+    intptr_t addr = (intptr_t)dvmJitNextTraceCounter();
+    assert(__BYTE_ORDER == __LITTLE_ENDIAN);
+    newLIR1(cUnit, kArm16BitData, addr & 0xffff);
+    newLIR1(cUnit, kArm16BitData, (addr >> 16) & 0xffff);
+    cUnit->chainCellOffsetLIR =
+        (LIR *) newLIR1(cUnit, kArm16BitData, CHAIN_CELL_OFFSET_TAG);
+    cUnit->headerSize = 6;
+    if ((gDvmJit.profileMode == kTraceProfilingContinuous) ||
+        (gDvmJit.profileMode == kTraceProfilingDisabled)) {
+        /* Thumb[2] instruction used directly here to ensure correct size */
+        newLIR2(cUnit, kThumb2LdrPcReln12, r0, 8);
+        newLIR3(cUnit, kThumbLdrRRI5, r1, r0, 0);
+        newLIR2(cUnit, kThumbAddRI8, r1, 1);
+        newLIR3(cUnit, kThumbStrRRI5, r1, r0, 0);
+        return 10;
+    } else {
+        int opcode = TEMPLATE_PERIODIC_PROFILING;
+        newLIR2(cUnit, kThumbBlx1,
+            (int) gDvmJit.codeCache + templateEntryOffsets[opcode],
+            (int) gDvmJit.codeCache + templateEntryOffsets[opcode]);
+        newLIR2(cUnit, kThumbBlx2,
+            (int) gDvmJit.codeCache + templateEntryOffsets[opcode],
+            (int) gDvmJit.codeCache + templateEntryOffsets[opcode]);
+        return 4;
+    }
+}
 
 static void genNegFloat(CompilationUnit *cUnit, RegLocation rlDest,
                         RegLocation rlSrc)

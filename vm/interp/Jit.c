@@ -511,7 +511,7 @@ void dvmJitStats()
 
         LOGD("JIT: %d Translation chains, %d interp stubs",
              gDvmJit.translationChains, stubs);
-        if (gDvmJit.profile) {
+        if (gDvmJit.profileMode == kTraceProfilingContinuous) {
             dvmCompilerSortAndPrintTraceProfiles();
         }
     }
@@ -987,23 +987,30 @@ void* dvmJitGetCodeAddr(const u2* dPC)
     const u2* npc = gDvmJit.pJitEntryTable[idx].dPC;
     if (npc != NULL) {
         bool hideTranslation = dvmJitHideTranslation();
-
         if (npc == dPC) {
+            int offset = (gDvmJit.profileMode >= kTraceProfilingContinuous) ?
+                 0 : gDvmJit.pJitEntryTable[idx].u.info.profileOffset;
+            intptr_t codeAddress =
+                (intptr_t)gDvmJit.pJitEntryTable[idx].codeAddress;
 #if defined(WITH_JIT_TUNING)
             gDvmJit.addrLookupsFound++;
 #endif
-            return hideTranslation ?
-                NULL : gDvmJit.pJitEntryTable[idx].codeAddress;
+            return hideTranslation ?  NULL : (void *)(codeAddress + offset);
         } else {
             int chainEndMarker = gDvmJit.jitTableSize;
             while (gDvmJit.pJitEntryTable[idx].u.info.chain != chainEndMarker) {
                 idx = gDvmJit.pJitEntryTable[idx].u.info.chain;
                 if (gDvmJit.pJitEntryTable[idx].dPC == dPC) {
+                    int offset = (gDvmJit.profileMode >=
+                        kTraceProfilingContinuous) ? 0 :
+                        gDvmJit.pJitEntryTable[idx].u.info.profileOffset;
+                    intptr_t codeAddress =
+                        (intptr_t)gDvmJit.pJitEntryTable[idx].codeAddress;
 #if defined(WITH_JIT_TUNING)
                     gDvmJit.addrLookupsFound++;
 #endif
-                    return hideTranslation ?
-                        NULL : gDvmJit.pJitEntryTable[idx].codeAddress;
+                    return hideTranslation ? NULL :
+                        (void *)(codeAddress + offset);
                 }
             }
         }
@@ -1019,9 +1026,16 @@ void* dvmJitGetCodeAddr(const u2* dPC)
  * NOTE: Once a codeAddress field transitions from initial state to
  * JIT'd code, it must not be altered without first halting all
  * threads.  This routine should only be called by the compiler
- * thread.
+ * thread.  We defer the setting of the profile prefix size until
+ * after the new code address is set to ensure that the prefix offset
+ * is never applied to the initial interpret-only translation.  All
+ * translations with non-zero profile prefixes will still be correct
+ * if entered as if the profile offset is 0, but the interpret-only
+ * template cannot handle a non-zero prefix.
  */
-void dvmJitSetCodeAddr(const u2* dPC, void *nPC, JitInstructionSetType set) {
+void dvmJitSetCodeAddr(const u2* dPC, void *nPC, JitInstructionSetType set,
+                       int profilePrefixSize)
+{
     JitEntryInfoUnion oldValue;
     JitEntryInfoUnion newValue;
     JitEntry *jitEntry = lookupAndAdd(dPC, false);
@@ -1035,6 +1049,8 @@ void dvmJitSetCodeAddr(const u2* dPC, void *nPC, JitInstructionSetType set) {
              oldValue.infoWord, newValue.infoWord,
              &jitEntry->u.infoWord) != 0);
     jitEntry->codeAddress = nPC;
+    newValue.info.profileOffset = profilePrefixSize;
+    jitEntry->u = newValue;
 }
 
 /*
@@ -1286,6 +1302,7 @@ bool dvmJitResizeJitTable( unsigned int size )
             p->u.info.chain = chain;
         }
     }
+
     dvmUnlockMutex(&gDvmJit.tableLock);
 
     free(pOldTable);
@@ -1306,12 +1323,46 @@ void dvmJitResetTable(void)
     unsigned int i;
 
     dvmLockMutex(&gDvmJit.tableLock);
+
+    /* Note: If need to preserve any existing counts. Do so here. */
+    for (i=0; i < JIT_PROF_BLOCK_BUCKETS; i++) {
+        if (gDvmJit.pJitTraceProfCounters->buckets[i])
+            memset((void *) gDvmJit.pJitTraceProfCounters->buckets[i],
+                   0, sizeof(JitTraceCounter_t) * JIT_PROF_BLOCK_ENTRIES);
+    }
+    gDvmJit.pJitTraceProfCounters->next = 0;
+
     memset((void *) jitEntry, 0, sizeof(JitEntry) * size);
     for (i=0; i< size; i++) {
         jitEntry[i].u.info.chain = size;  /* Initialize chain termination */
     }
     gDvmJit.jitTableEntriesUsed = 0;
     dvmUnlockMutex(&gDvmJit.tableLock);
+}
+
+/*
+ * Return the address of the next trace profile counter.  This address
+ * will be embedded in the generated code for the trace, and thus cannot
+ * change while the trace exists.
+ */
+JitTraceCounter_t *dvmJitNextTraceCounter()
+{
+    int idx = gDvmJit.pJitTraceProfCounters->next / JIT_PROF_BLOCK_ENTRIES;
+    int elem = gDvmJit.pJitTraceProfCounters->next % JIT_PROF_BLOCK_ENTRIES;
+    JitTraceCounter_t *res;
+    /* Lazily allocate blocks of counters */
+    if (!gDvmJit.pJitTraceProfCounters->buckets[idx]) {
+        JitTraceCounter_t *p =
+              (JitTraceCounter_t*) calloc(JIT_PROF_BLOCK_ENTRIES, sizeof(*p));
+        if (!p) {
+            LOGE("Failed to allocate block of trace profile counters");
+            dvmAbort();
+        }
+        gDvmJit.pJitTraceProfCounters->buckets[idx] = p;
+    }
+    res = &gDvmJit.pJitTraceProfCounters->buckets[idx][elem];
+    gDvmJit.pJitTraceProfCounters->next++;
+    return res;
 }
 
 /*
@@ -1344,6 +1395,35 @@ s8 dvmJitf2l(float f)
         return 0;
     else
         return (s8)f;
+}
+
+/* Should only be called by the compiler thread */
+void dvmJitChangeProfileMode(TraceProfilingModes newState)
+{
+    if (gDvmJit.profileMode != newState) {
+        gDvmJit.profileMode = newState;
+        dvmJitUnchainAll();
+    }
+}
+
+void dvmJitTraceProfilingOn()
+{
+    if (gDvmJit.profileMode == kTraceProfilingPeriodicOff)
+        dvmCompilerWorkEnqueue(NULL, kWorkOrderProfileMode,
+                               (void*) kTraceProfilingPeriodicOn);
+    else if (gDvmJit.profileMode == kTraceProfilingDisabled)
+        dvmCompilerWorkEnqueue(NULL, kWorkOrderProfileMode,
+                               (void*) kTraceProfilingContinuous);
+}
+
+void dvmJitTraceProfilingOff()
+{
+    if (gDvmJit.profileMode == kTraceProfilingPeriodicOn)
+        dvmCompilerWorkEnqueue(NULL, kWorkOrderProfileMode,
+                               (void*) kTraceProfilingPeriodicOff);
+    else if (gDvmJit.profileMode == kTraceProfilingContinuous)
+        dvmCompilerWorkEnqueue(NULL, kWorkOrderProfileMode,
+                               (void*) kTraceProfilingDisabled);
 }
 
 #endif /* WITH_JIT */

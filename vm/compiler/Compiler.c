@@ -332,6 +332,7 @@ static bool compilerThreadStartup(void)
 {
     JitEntry *pJitTable = NULL;
     unsigned char *pJitProfTable = NULL;
+    JitTraceProfCounters *pJitTraceProfCounters = NULL;
     unsigned int i;
 
     if (!dvmCompilerArchInit())
@@ -398,6 +399,15 @@ static bool compilerThreadStartup(void)
     /* Is chain field wide enough for termination pattern? */
     assert(pJitTable[0].u.info.chain == gDvmJit.jitTableSize);
 
+    /* Allocate the trace profiling structure */
+    pJitTraceProfCounters = (JitTraceProfCounters*)
+                             calloc(1, sizeof(*pJitTraceProfCounters));
+    if (!pJitTraceProfCounters) {
+        LOGE("jit trace prof counters allocation failed\n");
+        dvmUnlockMutex(&gDvmJit.tableLock);
+        goto fail;
+    }
+
     gDvmJit.pJitEntryTable = pJitTable;
     gDvmJit.jitTableMask = gDvmJit.jitTableSize - 1;
     gDvmJit.jitTableEntriesUsed = 0;
@@ -409,6 +419,7 @@ static bool compilerThreadStartup(void)
      */
     gDvmJit.pProfTable = dvmDebuggerOrProfilerActive() ? NULL : pJitProfTable;
     gDvmJit.pProfTableCopy = pJitProfTable;
+    gDvmJit.pJitTraceProfCounters = pJitTraceProfCounters;
     dvmUnlockMutex(&gDvmJit.tableLock);
 
     /* Signal running threads to refresh their cached pJitTable pointers */
@@ -620,27 +631,19 @@ static void *compilerThreadStart(void *arg)
                 if (gDvmJit.haltCompilerThread) {
                     LOGD("Compiler shutdown in progress - discarding request");
                 } else if (!gDvmJit.codeCacheFull) {
-                    bool compileOK = false;
                     jmp_buf jmpBuf;
                     work.bailPtr = &jmpBuf;
                     bool aborted = setjmp(jmpBuf);
                     if (!aborted) {
-                        compileOK = dvmCompilerDoWork(&work);
+                        bool codeCompiled = dvmCompilerDoWork(&work);
+                        if (codeCompiled && !work.result.discardResult &&
+                                work.result.codeAddress) {
+                            dvmJitSetCodeAddr(work.pc, work.result.codeAddress,
+                                              work.result.instructionSet,
+                                              work.result.profileCodeSize);
+                        }
                     }
-                    if (aborted || !compileOK) {
-#if 0 // for x86 JIT testing
-                        dvmJitSetCodeAddr(work.pc,
-                                          dvmCompilerGetInterpretTemplate(),
-                                          work.result.instructionSet);
-#endif
-                        dvmCompilerArenaReset();
-                    } else if (!work.result.discardResult &&
-                               work.result.codeAddress) {
-                        /* Make sure that proper code addr is installed */
-                        assert(work.result.codeAddress != NULL);
-                        dvmJitSetCodeAddr(work.pc, work.result.codeAddress,
-                                          work.result.instructionSet);
-                    }
+                    dvmCompilerArenaReset();
                 }
                 free(work.info);
 #if defined(WITH_JIT_TUNING)
@@ -697,7 +700,8 @@ void dvmCompilerShutdown(void)
     gDvmJit.pProfTable = NULL;
     gDvmJit.pProfTableCopy = NULL;
 
-    if (gDvm.verboseShutdown) {
+    if (gDvm.verboseShutdown ||
+            gDvmJit.profileMode == kTraceProfilingContinuous) {
         dvmCompilerDumpStats();
         while (gDvmJit.compilerQueueLength)
           sleep(5);

@@ -619,6 +619,8 @@ typedef enum ArmOpcode {
     kThumb2Bfc,          /* bfc [11110011011011110] [0] imm3[14-12]
                                   rd[11-8] imm2[7-6] [0] msb[4-0] */
     kThumb2Dmb,          /* dmb [1111001110111111100011110101] option[3-0] */
+    kThumb2LdrPcReln12,  /* ldr rd,[pc,-#imm12] [1111100011011111] rt[15-12]
+                                  imm12[11-0] */
 
     kArmLast,
 } ArmOpcode;

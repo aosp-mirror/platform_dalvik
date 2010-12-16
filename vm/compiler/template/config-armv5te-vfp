@@ -48,6 +48,7 @@ op-start armv5te-vfp
     op TEMPLATE_INTERPRET armv5te
     op TEMPLATE_MONITOR_ENTER armv5te
     op TEMPLATE_MONITOR_ENTER_DEBUG armv5te
+    op TEMPLATE_PERIODIC_PROFILING armv5te
 
 op-end
 

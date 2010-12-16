@@ -206,11 +206,11 @@ typedef struct CompilationUnit {
     void *baseAddr;
     bool printMe;
     bool allSingleStep;
-    bool executionCount;                // Add code to count trace executions
     bool hasLoop;                       // Contains a loop
     bool hasInvoke;                     // Contains an invoke instruction
     bool heapMemOp;                     // Mark mem ops for self verification
     bool wholeMethod;
+    int profileCodeSize;                // Size of the profile prefix in bytes
     int numChainingCells[kChainingCellGap];
     LIR *firstChainingLIR[kChainingCellGap];
     LIR *chainingCellBottom;

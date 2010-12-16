@@ -45,15 +45,8 @@
 #define COMPILER_TRACE_CHAINING(X)
 
 /* Macro to change the permissions applied to a chunk of the code cache */
-#if !defined(WITH_JIT_TUNING)
 #define PROTECT_CODE_CACHE_ATTRS       (PROT_READ | PROT_EXEC)
 #define UNPROTECT_CODE_CACHE_ATTRS     (PROT_READ | PROT_EXEC | PROT_WRITE)
-#else
-/* When doing JIT profiling always grant the write permission */
-#define PROTECT_CODE_CACHE_ATTRS       (PROT_READ | PROT_EXEC |                \
-                                  (gDvmJit.profile ? PROT_WRITE : 0))
-#define UNPROTECT_CODE_CACHE_ATTRS     (PROT_READ | PROT_EXEC | PROT_WRITE)
-#endif
 
 /* Acquire the lock before removing PROT_WRITE from the specified mem region */
 #define UNPROTECT_CODE_CACHE(addr, size)                                       \
@@ -90,6 +83,7 @@ typedef enum JitInstructionSetType {
 typedef struct JitTranslationInfo {
     void *codeAddress;
     JitInstructionSetType instructionSet;
+    int profileCodeSize;
     bool discardResult;         // Used for debugging divergence and IC patching
     bool methodCompilationAborted;  // Cannot compile the whole method
     Thread *requestingThread;   // For debugging purpose
@@ -100,6 +94,7 @@ typedef enum WorkOrderKind {
     kWorkOrderMethod = 1,       // Work is to compile a whole method
     kWorkOrderTrace = 2,        // Work is to compile code fragment(s)
     kWorkOrderTraceDebug = 3,   // Work is to compile/debug code fragment(s)
+    kWorkOrderProfileMode = 4,  // Change profiling mode
 } WorkOrderKind;
 
 typedef struct CompilerWorkOrder {

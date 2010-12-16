@@ -876,6 +876,11 @@ ArmEncodingMap EncodingMap[kArmLast] = {
                  kFmtBitBlt, 3, 0, kFmtUnused, -1, -1, kFmtUnused, -1, -1,
                  kFmtUnused, -1, -1, IS_UNARY_OP,
                  "dmb","#!0B",2),
+    ENCODING_MAP(kThumb2LdrPcReln12,       0xf85f0000,
+                 kFmtBitBlt, 15, 12, kFmtBitBlt, 11, 0, kFmtUnused, -1, -1,
+                 kFmtUnused, -1, -1,
+                 IS_BINARY_OP | REG_DEF0 | REG_USE_PC | IS_LOAD,
+                 "ldr", "r!0d, [rpc, -#!1d]", 2),
 };
 
 /*
@@ -1163,21 +1168,21 @@ static void matchSignatureBreakpoint(const CompilationUnit *cUnit,
 /*
  * Translation layout in the code cache.  Note that the codeAddress pointer
  * in JitTable will point directly to the code body (field codeAddress).  The
- * chain cell offset codeAddress - 2, and (if present) executionCount is at
- * codeAddress - 6.
+ * chain cell offset codeAddress - 2, and the address of the trace profile
+ * counter is at codeAddress - 6.
  *
  *      +----------------------------+
- *      | Execution count            |  -> [Optional] 4 bytes
+ *      | Trace Profile Counter addr |  -> 4 bytes
  *      +----------------------------+
  *   +--| Offset to chain cell counts|  -> 2 bytes
  *   |  +----------------------------+
- *   |  | Code body                  |  -> Start address for translation
- *   |  |                            |     variable in 2-byte chunks
- *   |  .                            .     (JitTable's codeAddress points here)
+ *   |  | Trace profile code         |  <- entry point when profiling
+ *   |  .  -   -   -   -   -   -   - .
+ *   |  | Code body                  |  <- entry point when not profiling
  *   |  .                            .
  *   |  |                            |
  *   |  +----------------------------+
- *   |  | Chaining Cells             |  -> 12/16 bytes each, must be 4 byte aligned
+ *   |  | Chaining Cells             |  -> 12/16 bytes, 4 byte aligned
  *   |  .                            .
  *   |  .                            .
  *   |  |                            |
@@ -1251,13 +1256,10 @@ void dvmCompilerAssembleLIR(CompilationUnit *cUnit, JitTranslationInfo *info)
            chainCellOffsetLIR->operands[0] == CHAIN_CELL_OFFSET_TAG);
 
     /*
-     * Replace the CHAIN_CELL_OFFSET_TAG with the real value. If trace
-     * profiling is enabled, subtract 4 (occupied by the counter word) from
-     * the absolute offset as the value stored in chainCellOffsetLIR is the
-     * delta from &chainCellOffsetLIR to &ChainCellCounts.
+     * Adjust the CHAIN_CELL_OFFSET_TAG LIR's offset to remove the
+     * space occupied by the pointer to the trace profiling counter.
      */
-    chainCellOffsetLIR->operands[0] =
-        gDvmJit.profile ? (chainCellOffset - 4) : chainCellOffset;
+    chainCellOffsetLIR->operands[0] = chainCellOffset - 4;
 
     offset += sizeof(chainCellCounts) + descSize;
 
@@ -1363,6 +1365,8 @@ void dvmCompilerAssembleLIR(CompilationUnit *cUnit, JitTranslationInfo *info)
     /* If applicable, mark low bit to denote thumb */
     if (info->instructionSet != DALVIK_JIT_ARM)
         info->codeAddress = (char*)info->codeAddress + 1;
+    /* transfer the size of the profiling code */
+    info->profileCodeSize = cUnit->profileCodeSize;
 }
 
 /*
@@ -1836,14 +1840,37 @@ static char *getTraceBase(const JitEntry *p)
         (6 + (p->u.info.instructionSet == DALVIK_JIT_ARM ? 0 : 1));
 }
 
+/* Handy function to retrieve the profile count */
+static inline JitTraceCounter_t getProfileCount(const JitEntry *entry)
+{
+    if (entry->dPC == 0 || entry->codeAddress == 0 ||
+        entry->codeAddress == dvmCompilerGetInterpretTemplate())
+        return 0;
+
+    JitTraceCounter_t **p = (JitTraceCounter_t **) getTraceBase(entry);
+
+    return **p;
+}
+
+/* Handy function to reset the profile count */
+static inline void resetProfileCount(const JitEntry *entry)
+{
+    if (entry->dPC == 0 || entry->codeAddress == 0 ||
+        entry->codeAddress == dvmCompilerGetInterpretTemplate())
+        return;
+
+    JitTraceCounter_t **p = (JitTraceCounter_t **) getTraceBase(entry);
+
+    **p = 0;
+}
+
 /* Dumps profile info for a single trace */
 static int dumpTraceProfile(JitEntry *p, bool silent, bool reset,
                             unsigned long sum)
 {
     ChainCellCounts* pCellCounts;
     char* traceBase;
-    u4* pExecutionCount;
-    u4 executionCount;
+    JitTraceCounter_t count;
     u2* pCellOffset;
     JitTraceDescription *desc;
     const Method* method;
@@ -1861,14 +1888,12 @@ static int dumpTraceProfile(JitEntry *p, bool silent, bool reset,
             LOGD("TRACEPROFILE 0x%08x 0 INTERPRET_ONLY  0 0", (int)traceBase);
         return 0;
     }
-
-    pExecutionCount = (u4*) (traceBase);
-    executionCount = *pExecutionCount;
+    count = getProfileCount(p);
     if (reset) {
-        *pExecutionCount =0;
+        resetProfileCount(p);
     }
     if (silent) {
-        return executionCount;
+        return count;
     }
     pCellOffset = (u2*) (traceBase + 4);
     pCellCounts = (ChainCellCounts*) ((char *)pCellOffset + *pCellOffset);
@@ -1893,8 +1918,8 @@ static int dumpTraceProfile(JitEntry *p, bool silent, bool reset,
 
     LOGD("TRACEPROFILE 0x%08x % 10d %5.2f%% [%#x(+%d), %d] %s%s;%s",
          (int)traceBase,
-         executionCount,
-         ((float ) executionCount) / sum * 100.0,
+         count,
+         ((float ) count) / sum * 100.0,
          desc->trace[0].frag.startOffset,
          desc->trace[0].frag.numInsts,
          addrToLine.lineNum,
@@ -1919,7 +1944,7 @@ static int dumpTraceProfile(JitEntry *p, bool silent, bool reset,
              methodDesc);
     }
 
-    return executionCount;
+    return count;
 }
 
 /* Create a copy of the trace descriptor of an existing compilation */
@@ -1948,27 +1973,14 @@ JitTraceDescription *dvmCopyTraceDescriptor(const u2 *pc,
     return newCopy;
 }
 
-/* Handy function to retrieve the profile count */
-static inline int getProfileCount(const JitEntry *entry)
-{
-    if (entry->dPC == 0 || entry->codeAddress == 0 ||
-        entry->codeAddress == dvmCompilerGetInterpretTemplate())
-        return 0;
-
-    u4 *pExecutionCount = (u4 *) getTraceBase(entry);
-
-    return *pExecutionCount;
-}
-
-
 /* qsort callback function */
 static int sortTraceProfileCount(const void *entry1, const void *entry2)
 {
     const JitEntry *jitEntry1 = (const JitEntry *)entry1;
     const JitEntry *jitEntry2 = (const JitEntry *)entry2;
 
-    int count1 = getProfileCount(jitEntry1);
-    int count2 = getProfileCount(jitEntry2);
+    JitTraceCounter_t count1 = getProfileCount(jitEntry1);
+    JitTraceCounter_t count2 = getProfileCount(jitEntry2);
     return (count1 == count2) ? 0 : ((count1 > count2) ? -1 : 1);
 }
 

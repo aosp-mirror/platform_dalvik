@@ -104,6 +104,8 @@
     .word   dvmMterpCommonExceptionThrown
 .LdvmLockObject:
     .word   dvmLockObject
+.LdvmJitTraceProfilingOff:
+    .word   dvmJitTraceProfilingOff
 #if defined(WITH_JIT_TUNING)
 .LdvmICHitCount:
     .word   gDvmICHitCount

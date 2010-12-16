@@ -23,6 +23,62 @@
  */
 
 /*
+ * Reserve 6 bytes at the beginning of the trace
+ *        +----------------------------+
+ *        | prof count addr (4 bytes)  |
+ *        +----------------------------+
+ *        | chain cell offset (2 bytes)|
+ *        +----------------------------+
+ *
+ * ...and then code to increment the execution
+ *
+ * For continuous profiling (12 bytes):
+ *
+ *       mov   r0, pc       @ move adr of "mov r0,pc" + 4 to r0
+ *       sub   r0, #10      @ back up to addr prof count pointer
+ *       ldr   r0, [r0]     @ get address of counter
+ *       ldr   r1, [r0]
+ *       add   r1, #1
+ *       str   r1, [r0]
+ *
+ * For periodic profiling (4 bytes):
+ *       call  TEMPLATE_PERIODIC_PROFILING
+ *
+ * and return the size (in bytes) of the generated code.
+ */
+
+static int genTraceProfileEntry(CompilationUnit *cUnit)
+{
+    intptr_t addr = (intptr_t)dvmJitNextTraceCounter();
+    assert(__BYTE_ORDER == __LITTLE_ENDIAN);
+    newLIR1(cUnit, kArm16BitData, addr & 0xffff);
+    newLIR1(cUnit, kArm16BitData, (addr >> 16) & 0xffff);
+    cUnit->chainCellOffsetLIR =
+        (LIR *) newLIR1(cUnit, kArm16BitData, CHAIN_CELL_OFFSET_TAG);
+    cUnit->headerSize = 6;
+    if ((gDvmJit.profileMode == kTraceProfilingContinuous) ||
+        (gDvmJit.profileMode == kTraceProfilingDisabled)) {
+        /* Thumb instruction used directly here to ensure correct size */
+        newLIR2(cUnit, kThumbMovRR_H2L, r0, rpc);
+        newLIR2(cUnit, kThumbSubRI8, r0, 10);
+        newLIR3(cUnit, kThumbLdrRRI5, r0, r0, 0);
+        newLIR3(cUnit, kThumbLdrRRI5, r1, r0, 0);
+        newLIR2(cUnit, kThumbAddRI8, r1, 1);
+        newLIR3(cUnit, kThumbStrRRI5, r1, r0, 0);
+        return 12;
+    } else {
+        int opcode = TEMPLATE_PERIODIC_PROFILING;
+        newLIR2(cUnit, kThumbBlx1,
+            (int) gDvmJit.codeCache + templateEntryOffsets[opcode],
+            (int) gDvmJit.codeCache + templateEntryOffsets[opcode]);
+        newLIR2(cUnit, kThumbBlx2,
+            (int) gDvmJit.codeCache + templateEntryOffsets[opcode],
+            (int) gDvmJit.codeCache + templateEntryOffsets[opcode]);
+        return 4;
+    }
+}
+
+/*
  * Perform a "reg cmp imm" operation and jump to the PCR region if condition
  * satisfies.
  */

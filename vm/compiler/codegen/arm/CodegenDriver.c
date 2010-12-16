@@ -3536,7 +3536,6 @@ static void handleHotChainingCell(CompilationUnit *cUnit,
     addWordData(cUnit, (int) (cUnit->method->insns + offset), true);
 }
 
-#if defined(WITH_SELF_VERIFICATION) || defined(WITH_JIT_TUNING)
 /* Chaining cell for branches that branch back into the same basic block */
 static void handleBackwardBranchChainingCell(CompilationUnit *cUnit,
                                              unsigned int offset)
@@ -3558,7 +3557,6 @@ static void handleBackwardBranchChainingCell(CompilationUnit *cUnit,
     addWordData(cUnit, (int) (cUnit->method->insns + offset), true);
 }
 
-#endif
 /* Chaining cell for monomorphic method invocations. */
 static void handleInvokeSingletonChainingCell(CompilationUnit *cUnit,
                                               const Method *callee)
@@ -3944,39 +3942,8 @@ void dvmCompilerMIR2LIR(CompilationUnit *cUnit)
     GrowableListIterator iterator;
     dvmGrowableListIteratorInit(&cUnit->blockList, &iterator);
 
-    if (cUnit->executionCount) {
-        /*
-         * Reserve 6 bytes at the beginning of the trace
-         *        +----------------------------+
-         *        | execution count (4 bytes)  |
-         *        +----------------------------+
-         *        | chain cell offset (2 bytes)|
-         *        +----------------------------+
-         * ...and then code to increment the execution
-         * count:
-         *       mov   r0, pc       @ move adr of "mov r0,pc" + 4 to r0
-         *       sub   r0, #10      @ back up to addr of executionCount
-         *       ldr   r1, [r0]
-         *       add   r1, #1
-         *       str   r1, [r0]
-         */
-        newLIR1(cUnit, kArm16BitData, 0);
-        newLIR1(cUnit, kArm16BitData, 0);
-        cUnit->chainCellOffsetLIR =
-            (LIR *) newLIR1(cUnit, kArm16BitData, CHAIN_CELL_OFFSET_TAG);
-        cUnit->headerSize = 6;
-        /* Thumb instruction used directly here to ensure correct size */
-        newLIR2(cUnit, kThumbMovRR_H2L, r0, rpc);
-        newLIR2(cUnit, kThumbSubRI8, r0, 10);
-        newLIR3(cUnit, kThumbLdrRRI5, r1, r0, 0);
-        newLIR2(cUnit, kThumbAddRI8, r1, 1);
-        newLIR3(cUnit, kThumbStrRRI5, r1, r0, 0);
-    } else {
-         /* Just reserve 2 bytes for the chain cell offset */
-        cUnit->chainCellOffsetLIR =
-            (LIR *) newLIR1(cUnit, kArm16BitData, CHAIN_CELL_OFFSET_TAG);
-        cUnit->headerSize = 2;
-    }
+    /* Traces start with a profiling entry point.  Generate it here */
+    cUnit->profileCodeSize = genTraceProfileEntry(cUnit);
 
     /* Handle the content in each basic block */
     for (i = 0; ; i++) {
@@ -4062,7 +4029,6 @@ void dvmCompilerMIR2LIR(CompilationUnit *cUnit)
                         opReg(cUnit, kOpBlx, r1);
                     }
                     break;
-#if defined(WITH_SELF_VERIFICATION) || defined(WITH_JIT_TUNING)
                 case kChainingCellBackwardBranch:
                     labelList[i].opcode =
                         kArmPseudoChainingCellBackwardBranch;
@@ -4071,7 +4037,6 @@ void dvmCompilerMIR2LIR(CompilationUnit *cUnit)
                         &chainingListByType[kChainingCellBackwardBranch],
                         i);
                     break;
-#endif
                 default:
                     break;
             }
@@ -4303,12 +4268,10 @@ gen_fallthrough:
                 case kChainingCellHot:
                     handleHotChainingCell(cUnit, chainingBlock->startOffset);
                     break;
-#if defined(WITH_SELF_VERIFICATION) || defined(WITH_JIT_TUNING)
                 case kChainingCellBackwardBranch:
                     handleBackwardBranchChainingCell(cUnit,
                         chainingBlock->startOffset);
                     break;
-#endif
                 default:
                     LOGE("Bad blocktype %d", chainingBlock->blockType);
                     dvmCompilerAbort(cUnit);
@@ -4342,11 +4305,15 @@ gen_fallthrough:
 #endif
 }
 
-/* Accept the work and start compiling */
+/*
+ * Accept the work and start compiling.  Returns true if compilation
+ * is attempted.
+ */
 bool dvmCompilerDoWork(CompilerWorkOrder *work)
 {
     JitTraceDescription *desc;
-    bool res;
+    bool isCompile;
+    bool success = true;
 
     if (gDvmJit.codeCacheFull) {
         return false;
@@ -4354,27 +4321,35 @@ bool dvmCompilerDoWork(CompilerWorkOrder *work)
 
     switch (work->kind) {
         case kWorkOrderTrace:
+            isCompile = true;
             /* Start compilation with maximally allowed trace length */
             desc = (JitTraceDescription *)work->info;
-            res = dvmCompileTrace(desc, JIT_MAX_TRACE_LEN, &work->result,
-                                  work->bailPtr, 0 /* no hints */);
+            success = dvmCompileTrace(desc, JIT_MAX_TRACE_LEN, &work->result,
+                                        work->bailPtr, 0 /* no hints */);
             break;
         case kWorkOrderTraceDebug: {
             bool oldPrintMe = gDvmJit.printMe;
             gDvmJit.printMe = true;
+            isCompile = true;
             /* Start compilation with maximally allowed trace length */
             desc = (JitTraceDescription *)work->info;
-            res = dvmCompileTrace(desc, JIT_MAX_TRACE_LEN, &work->result,
-                                  work->bailPtr, 0 /* no hints */);
+            success = dvmCompileTrace(desc, JIT_MAX_TRACE_LEN, &work->result,
+                                        work->bailPtr, 0 /* no hints */);
             gDvmJit.printMe = oldPrintMe;
             break;
         }
+        case kWorkOrderProfileMode:
+            dvmJitChangeProfileMode((TraceProfilingModes)work->info);
+            isCompile = false;
+            break;
         default:
-            res = false;
+            isCompile = false;
             LOGE("Jit: unknown work order type");
             assert(0);  // Bail if debug build, discard otherwise
     }
-    return res;
+    if (!success)
+        work->result.codeAddress = NULL;
+    return isCompile;
 }
 
 /* Architectural-specific debugging helpers go here */

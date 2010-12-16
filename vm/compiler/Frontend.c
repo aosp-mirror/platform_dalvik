@@ -458,9 +458,6 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
     /* Initialize the printMe flag */
     cUnit.printMe = gDvmJit.printMe;
 
-    /* Initialize the profile flag */
-    cUnit.executionCount = gDvmJit.profile;
-
     /* Setup the method */
     cUnit.method = desc->method;
 
@@ -634,6 +631,7 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
     for (blockId = 0; blockId < blockList->numUsed; blockId++) {
         curBB = (BasicBlock *) dvmGrowableListGetElement(blockList, blockId);
         MIR *lastInsn = curBB->lastMIRInsn;
+        BasicBlock *backwardCell;
         /* Skip empty blocks */
         if (lastInsn == NULL) {
             continue;
@@ -708,25 +706,11 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
             exitBB->needFallThroughBranch = true;
 
             loopBranch->taken = exitBB;
-#if defined(WITH_SELF_VERIFICATION)
-            BasicBlock *backwardCell =
+            backwardCell =
                 dvmCompilerNewBB(kChainingCellBackwardBranch, numBlocks++);
             dvmInsertGrowableList(blockList, (intptr_t) backwardCell);
             backwardCell->startOffset = entryCodeBB->startOffset;
             loopBranch->fallThrough = backwardCell;
-#elif defined(WITH_JIT_TUNING)
-            if (gDvmJit.profile) {
-                BasicBlock *backwardCell =
-                    dvmCompilerNewBB(kChainingCellBackwardBranch, numBlocks++);
-                dvmInsertGrowableList(blockList, (intptr_t) backwardCell);
-                backwardCell->startOffset = entryCodeBB->startOffset;
-                loopBranch->fallThrough = backwardCell;
-            } else {
-                loopBranch->fallThrough = entryCodeBB;
-            }
-#else
-            loopBranch->fallThrough = entryCodeBB;
-#endif
 
             /* Create the chaining cell as the fallthrough of the exit block */
             exitChainingCell = dvmCompilerNewBB(kChainingCellNormal,

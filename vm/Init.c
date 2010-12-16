@@ -949,7 +949,7 @@ static int dvmProcessOptions(int argc, const char* const argv[],
         } else if (strncmp(argv[i], "-Xjitverbose", 12) == 0) {
           gDvmJit.printMe = true;
         } else if (strncmp(argv[i], "-Xjitprofile", 12) == 0) {
-          gDvmJit.profile = true;
+          gDvmJit.profileMode = kTraceProfilingContinuous;
         } else if (strncmp(argv[i], "-Xjitdisableopt", 15) == 0) {
           /* Disable selected optimizations */
           if (argv[i][15] == ':') {

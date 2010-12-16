@@ -83,6 +83,7 @@ bool dvmMterpStd(Thread* self, InterpState* glue)
     glue->jitThreshold = gDvmJit.threshold;
     glue->jitCacheStart = gDvmJit.codeCache;
     glue->jitCacheEnd = (char*)gDvmJit.codeCache + gDvmJit.codeCacheSize;
+    glue->pProfileCountdown = &gDvmJit.profileCountdown;
 #endif
 #if defined(WITH_INLINE_PROFILING)
     /*

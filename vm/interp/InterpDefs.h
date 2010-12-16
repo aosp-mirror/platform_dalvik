@@ -161,17 +161,12 @@ typedef struct InterpState {
      */
     unsigned char**    ppJitProfTable; // Used to refresh pJitProfTable
     int                icRechainCount; // Count down to next rechain request
+    const void*        pProfileCountdown; // Address of profile countdown timer
+
+    struct JitToInterpEntries jitToInterpEntries;
+
     const void*        jitCacheStart;  // Code cache boundaries
     const void*        jitCacheEnd;
-#endif
-
-    bool        debugIsMethodEntry;     // used for method entry event triggers
-#if defined(WITH_TRACKREF_CHECKS)
-    int         debugTrackedRefStart;   // tracked refs from prior invocations
-#endif
-
-#if defined(WITH_JIT)
-    struct JitToInterpEntries jitToInterpEntries;
 
     int currTraceRun;
     int totalTraceLen;        // Number of Dalvik insts in trace
@@ -184,6 +179,12 @@ typedef struct InterpState {
     JitTraceRun trace[MAX_JIT_RUN_LEN];
     double calleeSave[JIT_CALLEE_SAVE_DOUBLE_COUNT];
 #endif
+
+    bool        debugIsMethodEntry;     // used for method entry event triggers
+#if defined(WITH_TRACKREF_CHECKS)
+    int         debugTrackedRefStart;   // tracked refs from prior invocations
+#endif
+
 
 } InterpState;
 

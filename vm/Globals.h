@@ -682,6 +682,14 @@ extern struct DvmGlobals gDvm;
 
 #if defined(WITH_JIT)
 
+/* Trace profiling modes.  Ordering matters - off states before on states */
+typedef enum TraceProfilingModes {
+    kTraceProfilingDisabled = 0,      // Not profiling
+    kTraceProfilingPeriodicOff = 1,   // Periodic profiling, off phase
+    kTraceProfilingContinuous = 2,    // Always profiling
+    kTraceProfilingPeriodicOn = 3     // Periodic profiling, on phase
+} TraceProfilingModes;
+
 /*
  * Exiting the compiled code w/o chaining will incur overhead to look up the
  * target in the code cache which is extra work only when JIT is enabled. So
@@ -720,8 +728,11 @@ struct DvmJitGlobals {
      * are stored in each thread. */
     struct JitEntry *pJitEntryTable;
 
-    /* Array of profile threshold counters */
+    /* Array of compilation trigger threshold counters */
     unsigned char *pProfTable;
+
+    /* Trace profiling counters */
+    struct JitTraceProfCounters *pJitTraceProfCounters;
 
     /* Copy of pProfTable used for temporarily disabling the Jit */
     unsigned char *pProfTableCopy;
@@ -801,8 +812,11 @@ struct DvmJitGlobals {
     /* Flag to dump all compiled code */
     bool printMe;
 
-    /* Flag to count trace execution */
-    bool profile;
+    /* Trace profiling mode */
+    TraceProfilingModes profileMode;
+
+    /* Periodic trace profiling countdown timer */
+    int profileCountdown;
 
     /* Vector to disable selected optimizations */
     int disableOpt;
