@@ -1,19 +1,18 @@
-/* //device/tools/dmtracedump/TraceDump.c
-**
-** Copyright 2006, The Android Open Source Project
-**
-** Licensed under the Apache License, Version 2.0 (the "License");
-** you may not use this file except in compliance with the License.
-** You may obtain a copy of the License at
-**
-**     http://www.apache.org/licenses/LICENSE-2.0
-**
-** Unless required by applicable law or agreed to in writing, software
-** distributed under the License is distributed on an "AS IS" BASIS,
-** WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-** See the License for the specific language governing permissions and
-** limitations under the License.
-*/
+/*
+ * Copyright (C) 2006 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 /*
  * Process dmtrace output.
@@ -46,18 +45,6 @@ int versionNumber;
 
 /* Size of temporary buffers for escaping html strings */
 #define HTML_BUFSIZE 10240
-
-/* Size of methodId->method cache */
-#define METHOD_CACHE_SIZE 2048
-#define METHOD_CACHE_SIZE_MASK (METHOD_CACHE_SIZE - 1)
-
-/* Some filter constants */
-#define FILTER_TAG '*'
-#define FILTER_FLAG_THREAD '+'
-#define FILTER_TYPE_CLASS 0
-#define FILTER_TYPE_METHOD 1
-
-#define DEFAULT_ACTIVE_THREADS 8
 
 char *htmlHeader =
 "<html>\n<head>\n<script type=\"text/javascript\" src=\"%ssortable.js\"></script>\n"
@@ -140,7 +127,6 @@ typedef struct DataHeader {
 typedef struct ThreadEntry {
     int         threadId;
     const char* threadName;
-    uint64_t    elapsedTime;
 } ThreadEntry;
 
 struct MethodEntry;
@@ -198,8 +184,6 @@ typedef struct DataKeys {
     ThreadEntry* threads;
     int          numMethods;
     MethodEntry* methods;       /* 2 extra methods: "toplevel" and "unknown" */
-    int*         methodCache;   /* methodId->methodIndex mapping */
-    // TODO change to map methodId->method itself
 } DataKeys;
 
 #define TOPLEVEL_INDEX 0
@@ -211,15 +195,10 @@ typedef struct StackEntry {
 } StackEntry;
 
 typedef struct CallStack {
-    int           top;
-    StackEntry    calls[MAX_STACK_DEPTH];
-    uint64_t      lastEventTime;
-    uint64_t      threadStartTime;
-    uint64_t*     remTimes;
-    // Note: remTimes keeps a sum of 'un-allocated' time for each thread, in case
-    // we need to allocate it to one (or many) filter later. This would happen when
-    // we see a method exit that maches a filter, but whose entry we hadn't seen.
-    // TODO: consider moving remTimes into FilterTimes and change logic appropriately
+    int         top;
+    StackEntry  calls[MAX_STACK_DEPTH];
+    uint64_t    lastEventTime;
+    uint64_t    threadStartTime;
 } CallStack;
 
 typedef struct DiffEntry {
@@ -236,7 +215,6 @@ typedef struct Options {
     const char* traceFileName;
     const char* diffFileName;
     const char* graphFileName;
-    const char* filterFileName;
     int keepDotFile;
     int dump;
     int outputHtml;
@@ -252,31 +230,6 @@ typedef struct TraceData {
     int numUniqueMethods;
     UniqueMethodEntry *uniqueMethods;
 } TraceData;
-
-typedef struct FilterKey {
-    int       type[2];    /* 0=class, 1=method; 2 needed for start and end keys */
-    uint32_t  flags;      /* 1st bit = include cross-thread time */
-    char*     keys[2];    /* 2 needed for start and end keys */
-} FilterKey;
-
-typedef struct FilterTimes {
-    uint64_t   totalWaitTime;
-    uint64_t*  threadWaitTimes;
-    uint64_t*  threadExecutionTimesWhileWaiting;
-    uint64_t*  threadExecutionTimes;
-} FilterTimes;
-
-typedef struct Filter {
-    char*       filterName;
-    FilterKey*  filterKeys;
-    int         numKeys;
-    int         activeCount;
-    int*        activeThreads;
-    int*        activationKeys;
-    FilterTimes times;
-} Filter;
-
-int numFilters = 0; // global
 
 static Options gOptions;
 
@@ -440,37 +393,6 @@ int compareElapsedInclusive(const void *a, const void *b) {
         if (result == 0)
             result = strcmp(methodA->signature, methodB->signature);
     }
-    return result;
-}
-
-/*
- * This comparison function is called from qsort() to sort
- * threads into decreasing order of elapsed time.
- */
-int compareElapsed(const void *a, const void *b) {
-    const ThreadEntry *threadA, *threadB;
-    uint64_t elapsed1, elapsed2;
-    int result = 0;
-
-    threadA = (ThreadEntry const *)a;
-    threadB = (ThreadEntry const *)b;
-    elapsed1 = threadA->elapsedTime;
-    elapsed2 = threadB->elapsedTime;
-    if (elapsed1 < elapsed2)
-        return 1;
-    if (elapsed1 > elapsed2)
-        return -1;
-
-    /* If the elapsed times of two threads are equal, then sort them
-     * by thread id.
-     */
-    int idA = threadA->threadId;
-    int idB = threadB->threadId;
-    if (idA < idB)
-        result = -1;
-    if (idA > idB)
-        result = 1;
-
     return result;
 }
 
@@ -647,7 +569,6 @@ void freeDataKeys(DataKeys* pKeys)
     free(pKeys->fileData);
     free(pKeys->threads);
     free(pKeys->methods);
-    free(pKeys->methodCache);
     free(pKeys);
 }
 
@@ -674,31 +595,26 @@ int findNextChar(const char* data, int len, char lookFor)
     return -1;
 }
 
-int countLinesToChar(const char* data, int len, const char toFind)
+/*
+ * Count the number of lines until the next token.
+ *
+ * Returns -1 if none found before EOF.
+ */
+int countLinesToToken(const char* data, int len)
 {
     int count = 0;
     int next;
 
-    while (*data != toFind) {
+    while (*data != TOKEN_CHAR) {
         next = findNextChar(data, len, '\n');
         if (next < 0)
-	    return count;
+            return -1;
         count++;
         data += next+1;
         len -= next+1;
     }
 
     return count;
-}
-
-/*
- * Count the number of lines until the next token.
- *
- * Returns 0 if none found before EOF.
- */
-int countLinesToToken(const char* data, int len)
-{
-    return countLinesToChar(data, len, TOKEN_CHAR);
 }
 
 /*
@@ -1060,6 +976,9 @@ DataKeys* parseKeys(FILE *fp, int verbose)
     if (offset < 0)
         goto fail;
 
+    /* Reduce our allocation now that we know where the end of the key section is. */
+    pKeys->fileData = (char *)realloc(pKeys->fileData, offset);
+    pKeys->fileLen = offset;
     /* Leave fp pointing to the beginning of the data section. */
     fseek(fp, offset, SEEK_SET);
 
@@ -1085,7 +1004,7 @@ DataKeys* parseKeys(FILE *fp, int verbose)
         printf("Methods (%d):\n", pKeys->numMethods);
         for (i = 0; i < pKeys->numMethods; i++) {
             printf("0x%08x %s : %s : %s\n",
-                   pKeys->methods[i].methodId >> 2, pKeys->methods[i].className,
+                   pKeys->methods[i].methodId, pKeys->methods[i].className,
                    pKeys->methods[i].methodName, pKeys->methods[i].signature);
         }
     }
@@ -1159,7 +1078,7 @@ int parseDataHeader(FILE *fp, DataHeader* pHeader)
 }
 
 /*
- * Look up a method by its method ID (using binary search).
+ * Look up a method by it's method ID.
  *
  * Returns NULL if no matching method was found.
  */
@@ -1167,18 +1086,6 @@ MethodEntry* lookupMethod(DataKeys* pKeys, unsigned int methodId)
 {
     int hi, lo, mid;
     unsigned int id;
-    int hashedId;
-
-    /* Create cache if it doesn't already exist */
-    if (pKeys->methodCache == NULL) {
-        pKeys->methodCache = (int*) calloc(METHOD_CACHE_SIZE, sizeof(int));
-    }
-
-    // ids are multiples of 4, so shift
-    hashedId = (methodId >> 2) & METHOD_CACHE_SIZE_MASK;
-    if (pKeys->methodCache[hashedId]) /* cache hit */
-        if (pKeys->methods[pKeys->methodCache[hashedId]].methodId == methodId)
-	    return &pKeys->methods[pKeys->methodCache[hashedId]];
 
     lo = 0;
     hi = pKeys->numMethods - 1;
@@ -1187,11 +1094,9 @@ MethodEntry* lookupMethod(DataKeys* pKeys, unsigned int methodId)
         mid = (hi + lo) / 2;
 
         id = pKeys->methods[mid].methodId;
-        if (id == methodId) {         /* match, put in cache */
-	    hashedId = (methodId >> 2) & METHOD_CACHE_SIZE_MASK;
-	    pKeys->methodCache[hashedId] = mid;
-	    return &pKeys->methods[mid];
-	} else if (id < methodId)       /* too low */
+        if (id == methodId)           /* match */
+            return &pKeys->methods[mid];
+        else if (id < methodId)       /* too low */
             lo = mid + 1;
         else                          /* too high */
             hi = mid - 1;
@@ -1585,7 +1490,6 @@ void outputTableOfContents()
     printf("<ul>\n");
     printf("  <li><a href=\"#exclusive\">Exclusive profile</a></li>\n");
     printf("  <li><a href=\"#inclusive\">Inclusive profile</a></li>\n");
-    printf("  <li><a href=\"#thread\">Thread profile</a></li>\n");
     printf("  <li><a href=\"#class\">Class/method profile</a></li>\n");
     printf("  <li><a href=\"#method\">Method/class profile</a></li>\n");
     printf("</ul>\n\n");
@@ -1596,7 +1500,6 @@ void outputNavigationBar()
     printf("<a href=\"#contents\">[Top]</a>\n");
     printf("<a href=\"#exclusive\">[Exclusive]</a>\n");
     printf("<a href=\"#inclusive\">[Inclusive]</a>\n");
-    printf("<a href=\"#thread\">[Thread]</a>\n");
     printf("<a href=\"#class\">[Class]</a>\n");
     printf("<a href=\"#method\">[Method]</a>\n");
     printf("<br><br>\n");
@@ -1772,10 +1675,12 @@ void printInclusiveProfile(MethodEntry **pMethods, int numMethods,
     char classBuf[HTML_BUFSIZE], methodBuf[HTML_BUFSIZE];
     char signatureBuf[HTML_BUFSIZE];
     char anchor_buf[80];
+    char *anchor_close = "";
 
     total = sumThreadTime;
     anchor_buf[0] = 0;
     if (gOptions.outputHtml) {
+        anchor_close = "</a>";
         printf("<a name=\"inclusive\"></a>\n");
         printf("<hr>\n");
         outputNavigationBar();
@@ -1858,122 +1763,6 @@ void printInclusiveProfile(MethodEntry **pMethods, int numMethods,
     if (gOptions.outputHtml) {
         printf("</pre>\n");
     }
-}
-
-void printThreadProfile(ThreadEntry *pThreads, int numThreads, uint64_t sumThreadTime, Filter** filters)
-{
-    int ii, jj;
-    ThreadEntry thread;
-    double total, per, sum_per;
-    uint64_t sum;
-    char threadBuf[HTML_BUFSIZE];
-    char anchor_buf[80];
-    int drawTable;
-
-    total = sumThreadTime;
-    anchor_buf[0] = 0;
-    if (gOptions.outputHtml) {
-        printf("<a name=\"thread\"></a>\n");
-        printf("<hr>\n");
-        outputNavigationBar();
-    } else {
-        printf("\n%s\n", profileSeparator);
-    }
-
-    /* Sort the threads into decreasing order of elapsed time. */
-    qsort(pThreads, numThreads, sizeof(ThreadEntry), compareElapsed);
-
-    printf("\nElapsed times for each thread, sorted by elapsed time.\n");
-    printf("Also includes percentage of time spent during the <i>execution</i> of any filters.\n\n");
-
-    if (gOptions.outputHtml) {
-        printf("<br><br>\n<pre>\n");
-    }
-
-    printf("    Usecs   self %%  sum %%");
-    for (ii = 0; ii < numFilters; ++ii) {
-        printf("  %s %%", filters[ii]->filterName);
-    }
-    printf("  tid   ThreadName\n");
-    sum = 0;
-
-    for (ii = 0; ii < numThreads; ++ii) {
-        int threadId;
-        char *threadName;
-        uint64_t time;
-
-        thread = pThreads[ii];
-
-        threadId = thread.threadId;
-        threadName = (char*)(thread.threadName);
-        time = thread.elapsedTime;
-
-        sum += time;
-        per = 100.0 * time / total;
-        sum_per = 100.0 * sum / total;
-
-        if (gOptions.outputHtml) {
-	    threadName = htmlEscape(threadName, threadBuf, HTML_BUFSIZE);
-        }
-
-	printf("%9llu  %6.2f %6.2f", time, per, sum_per);
-	for (jj = 0; jj < numFilters; jj++) {
-	    printf(" %6.2f", 100.0 * filters[jj]->times.threadExecutionTimes[threadId] / time);
-	}
-	printf("    %3d %s\n", threadId, threadName);
-    }
-
-    if (gOptions.outputHtml)
-        printf("</pre><br />");
-
-    printf("\n\nBreak-down of portion of time spent by each thread while waiting on a filter method.\n");
-
-    for (ii = 0; ii < numFilters; ++ii) {
-        // Draw a table for each filter that measures wait time
-        drawTable = 0;
-	for (jj = 0; jj < filters[ii]->numKeys; jj++)
-	    if (filters[ii]->filterKeys[jj].flags == 1)
-	        drawTable = 1;
-
-	if (drawTable) {
-
-	    if (gOptions.outputHtml)
-	        printf("<br/><br/>\n<pre>\n");
-	    printf("Filter: %s\n", filters[ii]->filterName);
-	    printf("Total waiting cycles: %llu (%6.2f%% of total)\n",
-		   filters[ii]->times.totalWaitTime,
-		   100.0 * filters[ii]->times.totalWaitTime / sum);
-
-	    if (filters[ii]->times.totalWaitTime > 0) {
-
-	        printf("Details: \n\n");
-
-		printf(" Waiting cycles    %% of total waiting time   execution time while waiting    thread name\n");
-
-		for (jj = 0; jj < numThreads; jj++) {
-
-		    thread = pThreads[jj];
-
-		    char *threadName;
-		    threadName = (char*) thread.threadName;
-		    if (gOptions.outputHtml) {
-		        threadName = htmlEscape(threadName, threadBuf, HTML_BUFSIZE);
-		    }
-
-		    printf(" %9llu                   %6.2f                     %6.2f               %s\n",
-			   filters[ii]->times.threadWaitTimes[thread.threadId],
-			   100.0 * filters[ii]->times.threadWaitTimes[thread.threadId] / filters[ii]->times.totalWaitTime,
-			   100.0 * filters[ii]->times.threadExecutionTimesWhileWaiting[thread.threadId] / filters[ii]->times.totalWaitTime,
-			   threadName);
-		}
-	    }
-
-	    if (gOptions.outputHtml)
-	        printf("</pre>\n");
-
-	}
-    }
-
 }
 
 void createClassList(TraceData* traceData, MethodEntry **pMethods, int numMethods)
@@ -2477,464 +2266,16 @@ void printMethodProfiles(TraceData* traceData, uint64_t sumThreadTime)
 }
 
 /*
- * Determines whether the given FilterKey matches the method. The FilterKey's
- * key that is used to match against the method is determined by index.
- */
-int keyMatchesMethod(FilterKey filterKey, MethodEntry* method, int index)
-{
-    if (filterKey.type[index] == 0) { // Class
-#if 0
-        fprintf(stderr, "  class is %s; filter key is %s\n", method->className, filterKey.keys[index]);
-#endif
-        if (strcmp(method->className, filterKey.keys[index]) == 0) {
-	    return 1;
-	}
-    } else { // Method
-        if (method->methodName != NULL) {
-	    // Get fully-qualified name
-            // TODO: parse class name and method name an put them in structure to avoid
-            // allocating memory here
-	    char* str = malloc ((strlen(method->className) + strlen(method->methodName) + 2) * sizeof(char));
-	    strcpy(str, method->className);
-	    strcat(str, ".");
-	    strcat(str, method->methodName);
-#if 0
-	    fprintf(stderr, "  method is %s; filter key is %s\n", str, filterKey.keys[index]);
-#endif
-	    if (strcmp(str, filterKey.keys[index]) == 0) {
-	        free(str);
-	        return 1;
-	    }
-	    free(str);
-	}
-    }
-    return 0;
-}
-
-/*
- * Adds the appropriate times to the given filter based on the given method. Activates and
- * de-activates filters as necessary.
- *
- * A filter is activated when the given method matches the 'entry' key of one of its FilterKeys.
- * It is de-activated when the method matches the 'exit' key of the same FilterKey that activated it
- * in the first place. Thus, a filter may be active more than once on the same thread (activated by
- * different FilterKeys). A filter may also be active on different threads at the same time.
- *
- * While the filter is active on thread 1, elapsed time is allocated to different buckets which
- * include: thread execution time (i.e., time thread 1 spent executing while filter was active),
- * thread waiting time (i.e., time thread 1 waited while other threads executed), and execution
- * time while waiting (i.e., time thread x spent executing while thread 1 was waiting). We also
- * keep track of the total waiting time for a given filter.
- *
- * Lastly, we keep track of remaining (un-allocated) time for cases in which we exit a method we
- * had not entered before, and that method happens to match the 'exit' key of a FilterKey.
- */
-int filterMethod(MethodEntry* method, Filter* filter, int entry, int threadId, int numThreads,
-		 uint64_t elapsed, uint64_t remTime)
-{
-    int ii, jj;
-    int activeCount, addedWaitTimeThreadsCount;
-    int* activeThreads;
-    int* activationKeys;
-    int* addedWaitTimeThreads;
-
-    // flags
-    int addWaitTime = 0;
-    int deactivation = 0;
-    int addedExecutionTime = 0;
-    int addedExecutionTimeWhileWaiting = 0;
-    int addedWaitTime;
-    int addedRemTime = 0;
-    int threadKeyPairActive = 0;
-
-    if (filter->times.threadWaitTimes == NULL && filter->times.threadExecutionTimes == NULL &&
-	filter->times.threadExecutionTimesWhileWaiting == NULL) {
-        filter->times.threadWaitTimes = (uint64_t*) calloc(MAX_THREADS, sizeof(uint64_t));
-	filter->times.threadExecutionTimesWhileWaiting =
-          (uint64_t*) calloc(MAX_THREADS, sizeof(uint64_t));
-	filter->times.threadExecutionTimes = (uint64_t*) calloc(MAX_THREADS, sizeof(uint64_t));
-    }
-
-    int verbose = 0;
-
-    if (verbose)
-        fprintf(stderr,
-                "Running %s filter for class %s method %s, thread %d; activeCount: %d time: %llu\n",
-                filter->filterName, method->className, method->methodName, threadId,
-                filter->activeCount, elapsed);
-
-    // If active on some thread
-    if (filter->activeCount > 0) {
-
-        // Initialize active structures in case there are any de-activations
-        activeThreads = (int*) calloc(filter->activeCount, sizeof(int));
-	activationKeys = (int*) calloc(filter->activeCount, sizeof(int));
-	activeCount = 0;
-
-	// Initialize structure to help us determine which threads we've already added wait time to
-	addedWaitTimeThreads = (int*) calloc(filter->activeCount, sizeof(int));
-	addedWaitTimeThreadsCount = 0;
-
-        // Add times to appropriate sums and de-activate (if necessary)
-        for (ii = 0; ii < filter->activeCount; ii++) {
-
-	    if (verbose) {
-	        fprintf(stderr, "  Analyzing active thread with id %d, activated by key [%s, %s]\n",
-			filter->activeThreads[ii],
-                        filter->filterKeys[filter->activationKeys[ii]].keys[0],
-			filter->filterKeys[filter->activationKeys[ii]].keys[1]);
-	    }
-
-	    // If active on THIS thread -> add to execution time (only add once!)
-	    if (filter->activeThreads[ii] == threadId && !addedExecutionTime) {
-	        if (verbose)
-		    fprintf(stderr, "  Adding execution time to this thead\n");
-	        filter->times.threadExecutionTimes[threadId] += elapsed;
-		addedExecutionTime = 1;
-	    }
-
-	    // If active on ANOTHER thread (or this one too) with CROSS_THREAD_FLAG -> add to
-            // both thread's waiting time + total
-	    if (filter->filterKeys[filter->activationKeys[ii]].flags == 1) {
-
-	        // Add time to thread that is waiting (add to each waiting thread at most once!)
-	        addedWaitTime = 0;
-		for (jj = 0; jj < addedWaitTimeThreadsCount; jj++) {
-		    if (addedWaitTimeThreads[jj] == filter->activeThreads[ii])
-		        addedWaitTime = 1;
-		}
-	        if (!addedWaitTime) {
-		    if (verbose)
-		        fprintf(stderr, "  Adding wait time to waiting thread\n");
-		    filter->times.threadWaitTimes[filter->activeThreads[ii]] += elapsed;
-		    addedWaitTimeThreads[addedWaitTimeThreadsCount++] = filter->activeThreads[ii];
-		}
-
-                // Add execution time to this thread while the other is waiting (only add once!)
-                // [Flag is needed only because outside for loop might iterate through same
-                // thread twice?] TODO: verify
-		if (!addedExecutionTimeWhileWaiting) {
-		    if (verbose)
-		        fprintf(stderr, "  Adding exec time to this thread while thread waits\n");
-		    filter->times.threadExecutionTimesWhileWaiting[threadId] += elapsed;
-		    addedExecutionTimeWhileWaiting = 1;
-		}
-
-		addWaitTime = 1;
-	    }
-
-	    // If a method exit matches the EXIT method of an ACTIVE key -> de-activate
-            // the KEY (not the entire filter!!)
-	    if (!entry && keyMatchesMethod(filter->filterKeys[filter->activationKeys[ii]],
-					   method, 1)) {
-	        if (verbose)
-		    fprintf(stderr, "  Exit key matched!\n");
-
-	        // Deactivate by removing (NOT adding) entries from activeThreads and activationKeys
-	        deactivation = 1; // singal that lists should be replaced
-	    } else {
-	        // No de-activation -> copy old entries into new lists
-	        activeThreads[activeCount] = filter->activeThreads[ii];
-		activationKeys[activeCount++] = filter->activationKeys[ii];
-	    }
-	}
-
-	// If waiting on ANY thread, add wait time to total (but only ONCE!)
-	if (addWaitTime) {
-	    filter->times.totalWaitTime += elapsed;
-	}
-
-	// If de-activation occurred, replace lists
-	if (deactivation) {
-	    // TODO: Free memory from old lists
-
-	    // Set new lists
-	    filter->activeThreads = activeThreads;
-	    filter->activationKeys = activationKeys;
-	    filter->activeCount = activeCount;
-	} else {
-	    // TODO: Free memory from new lists
-	}
-
-    }  // Else, continue (we might be activating the filter on a different thread)
-
-
-    if (entry) { // ENTRY
-        if (verbose)
-	    fprintf(stderr, "  Here at the entry\n");
-        // If method matches entry key -> activate thread (do not add time since it's a new entry!)
-        for (ii = 0; ii < filter->numKeys; ii++) {
-	    if (keyMatchesMethod(filter->filterKeys[ii], method, 0)) {
-	        if (verbose)
-		    fprintf(stderr, "  Entry key matched!\n");
-	        // Activate thread only if thread/key pair is not already active
-	        for (jj = 0; jj < filter->activeCount; jj++) {
-		    if (filter->activeThreads[jj] == threadId && filter->activationKeys[jj] == ii)
-		        threadKeyPairActive = 1;
-		}
-	        // TODO: WORRY ABOUT MEMORY WHEN ACTIVE_COUNT > DEFAULT_ACTIVE_THREAD (unlikely)
-	        // TODO: what if the same thread is active multiple times by different keys?
-		// nothing, we just have to make sure we dont double-add, and we dont..
-		if (!threadKeyPairActive) {
-		    filter->activeThreads[filter->activeCount] = threadId;
-		    filter->activationKeys[filter->activeCount++] = ii;
-		}
-	    }
-	}
-    } else { // EXIT
-        // If method matches a terminal key -> add remTime to total (no need to active/de-activate)
-        for (ii = 0; ii < filter->numKeys; ii++) {
-	    if (!deactivation && keyMatchesMethod(filter->filterKeys[ii], method, 1) &&
-		keyMatchesMethod(filter->filterKeys[ii], method, 0)) {
-	        // Add remTime(s)
-	        // TODO: think about how we should add remTimes.. should we add remTime to threads
-	        // that were waiting or being waited on? for now, keep it simple and just add the
-	        // execution time to the current thread.
-	        filter->times.threadExecutionTimes[threadId] += remTime;
-		addedRemTime = 1;
-	    }
-	}
-    }
-
-    return addedExecutionTime | (addedRemTime << 1);
-}
-
-void dumpFilters(Filter** filters) {
-    int i;
-    for (i = 0; i < numFilters; i++) {
-        int j;
-	fprintf(stderr, "FILTER %s\n", filters[i]->filterName);
-	for (j = 0; j < filters[i]->numKeys; j++) {
-	    fprintf(stderr, "Keys: %s, type %d", filters[i]->filterKeys[j].keys[0],
-		    filters[i]->filterKeys[j].type[0]);
-	    if (filters[i]->filterKeys[j].keys[1] != NULL) {
-	        fprintf(stderr, " AND %s, type %d", filters[i]->filterKeys[j].keys[1],
-			filters[i]->filterKeys[j].type[1]);
-	    }
-	    fprintf(stderr, "; flags: %d\n", filters[i]->filterKeys[j].flags);
-	}
-    }
-}
-
-/*
- * See parseFilters for required data format.
- * 'data' must point to the beginning of a filter definition.
- */
-char* parseFilter(char* data, char* dataEnd, Filter** filters, int num) {
-
-    Filter* filter;
-    int next, count, i;
-    int tmpOffset, tmpKeyLen;
-    char* tmpKey;
-    char* key1;
-    char* key2;
-
-    filter = (Filter*) malloc(sizeof(Filter));
-    filter->activeCount = 0;
-    filter->activeThreads = (int*) calloc(DEFAULT_ACTIVE_THREADS, sizeof(int));
-    filter->activationKeys = (int*) calloc(DEFAULT_ACTIVE_THREADS, sizeof(int));
-
-    next = findNextChar(data + 1, dataEnd - data - 1, '\n');
-    if (next < 0) {
-        // TODO: what should we do here?
-        // End of file reached...
-    }
-    data[next+1] = '\0';
-    filter->filterName = data + 1;
-    data += next + 2; // Careful
-
-    /*
-     * Count the number of keys (one per line).
-     */
-    count = countLinesToChar(data, dataEnd - data, FILTER_TAG);
-    if (count <= 0) {
-        fprintf(stderr,
-		"ERROR: failed while parsing filter %s (found %d keys)\n",
-		filter->filterName, count);
-	return NULL; // TODO: Should do something else
-	// Could return filter with 0 keys instead (probably better to avoid random segfaults)
-    }
-
-    filter->filterKeys = (FilterKey*) malloc(sizeof(FilterKey) * count);
-
-    /*
-     * Extract all entries.
-     */
-    tmpOffset = 0;
-    for (i = 0; i < count; i++) {
-        next = findNextChar(data, dataEnd - data, '\n');
-	//        assert(next > 0); // TODO: revise... (skip if next == 0 ?)
-        data[next] = '\0';
-	tmpKey = data;
-
-        if (*data == FILTER_FLAG_THREAD) {
-            filter->filterKeys[i].flags = 1;
-            tmpKey++;
-	} else {
-            filter->filterKeys[i].flags = 0;
-	}
-
-	tmpOffset = findNextChar(tmpKey, next, ',');
-
-        if (tmpOffset < 0) {
-            // No comma, so only 1 key
-            key1 = tmpKey;
-	    key2 = tmpKey;
-
-	    // Get type for key1
-            filter->filterKeys[i].type[0] = FILTER_TYPE_CLASS; // default
-            tmpOffset = findNextChar(key1, next, '(');
-	    if (tmpOffset > 0) {
-	        if (findNextChar(key1, next, ')') == tmpOffset + 1) {
-		    filter->filterKeys[i].type[0] = FILTER_TYPE_METHOD;
-		    filter->filterKeys[i].type[1] = FILTER_TYPE_METHOD;
-		}
-		key1[tmpOffset] = '\0';
-	    }
-	} else {
-	    // Pair of keys
-	    tmpKey[tmpOffset] = '\0';
-	    key1 = tmpKey;
-	    key2 = tmpKey + tmpOffset + 1;
-
-	    // Get type for key1
-	    filter->filterKeys[i].type[0] = FILTER_TYPE_CLASS;
-	    tmpKeyLen = tmpOffset;
-            tmpOffset = findNextChar(key1, tmpKeyLen, '(');
-	    if (tmpOffset > 0) {
-	        if (findNextChar(key1, tmpKeyLen, ')') == tmpOffset + 1) {
-		    filter->filterKeys[i].type[0] = FILTER_TYPE_METHOD;
-		}
-		key1[tmpOffset] = '\0';
-	    }
-
-	    // Get type for key2
-	    filter->filterKeys[i].type[1] = FILTER_TYPE_CLASS;
-            tmpOffset = findNextChar(key2, next - tmpKeyLen, '(');
-	    if (tmpOffset > 0) {
-	        if (findNextChar(key2, next - tmpKeyLen, ')') == tmpOffset + 1) {
-		    filter->filterKeys[i].type[1] = FILTER_TYPE_METHOD;
-		}
-		key2[tmpOffset] = '\0';
-	    }
-	}
-
-	filter->filterKeys[i].keys[0] = key1;
-	filter->filterKeys[i].keys[1] = key2;
-        data += next+1;
-    }
-
-    filter->numKeys = count;
-    filters[num] = filter;
-
-    return data;
-}
-
-/*
- * Parses filters from given file. The file must follow the following format:
- *
- * *FilterName    <- creates a new filter with keys to follow
- * A.method()     <- key that triggers whenever A.method() enters/exit
- * Class          <- key that triggers whenever any method from Class enters/exits
- * +CrossThread   <- same as above, but keeps track of execution times accross threads
- * B.m(),C.m()    <- key that triggers filter on when B.m() enters and off when C.m() exits
- *
- * TODO: add concrete example to make things clear
- */
-Filter** parseFilters(const char* filterFileName) {
-
-    Filter** filters = NULL;
-    FILE* fp = NULL;
-    long len;
-    char* data;
-    char* dataEnd;
-    char* dataStart;
-    int i, next, count;
-
-    fp = fopen(filterFileName, "r");
-    if (fp == NULL)
-        goto bail;
-
-    if (fseek(fp, 0L, SEEK_END) != 0) {
-        perror("fseek");
-        goto bail;
-    }
-
-    len = ftell(fp);
-    if (len == 0) {
-        fprintf(stderr, "WARNING: Filter file is empty.\n");
-        goto bail;
-    }
-    rewind(fp);
-
-    data = (char*) malloc(len);
-    if (data == NULL) {
-        fprintf(stderr, "ERROR: unable to alloc %ld bytes for filter file\n", len);
-        goto bail;
-    }
-
-    // Read file into memory
-    if (fread(data, 1, len, fp) != (size_t) len) {
-        fprintf(stderr, "ERROR: unable to read %ld bytes from filter file\n", len);
-        goto bail;
-    }
-
-    dataStart = data;
-    dataEnd = data + len;
-
-    // Figure out how many filters there are
-    numFilters = 0;
-    next = -1;
-
-    while (1) {
-        if (*data == FILTER_TAG)
-	    numFilters++;
-        next = findNextChar(data, len, '\n');
-        if (next < 0)
-            break;
-        data += next+1;
-        len -= next+1;
-    }
-
-    if (numFilters == 0) {
-        fprintf(stderr, "WARNING: no filters found. Continuing without filters\n");
-        goto bail;
-    }
-
-    filters = (Filter**) calloc(numFilters, sizeof(Filter *));
-    if (filters == NULL) {
-        fprintf(stderr, "ERROR: unable to alloc memory for filters");
-        goto bail;
-    }
-
-    data = dataStart;
-    for (i = 0; i < numFilters; i++) {
-        data = parseFilter(data, dataEnd, filters, i);
-    }
-
-    return filters;
-
-bail:
-    if (fp != NULL)
-        fclose(fp);
-
-    return NULL;
-
-}
-
-
-/*
  * Read the key and data files and return the MethodEntries for those files
  */
-DataKeys* parseDataKeys(TraceData* traceData, const char* traceFileName,
-			uint64_t* threadTime, Filter** filters)
+DataKeys* parseDataKeys(TraceData* traceData, const char* traceFileName, uint64_t* threadTime)
 {
     DataKeys* dataKeys = NULL;
     MethodEntry **pMethods = NULL;
     MethodEntry* method;
     FILE* dataFp = NULL;
     DataHeader dataHeader;
-    int ii, jj, numThreads;
+    int ii;
     uint64_t currentTime;
     MethodEntry* caller;
 
@@ -2943,12 +2284,10 @@ DataKeys* parseDataKeys(TraceData* traceData, const char* traceFileName,
         goto bail;
 
     if ((dataKeys = parseKeys(dataFp, 0)) == NULL)
-       goto bail;
+        goto bail;
 
     if (parseDataHeader(dataFp, &dataHeader) < 0)
         goto bail;
-
-    numThreads = dataKeys->numThreads;
 
 #if 0
     FILE *dumpStream = fopen("debug", "w");
@@ -2959,7 +2298,6 @@ DataKeys* parseDataKeys(TraceData* traceData, const char* traceFileName,
         int action;
         unsigned int methodId;
         CallStack *pStack;
-
         /*
          * Extract values from file.
          */
@@ -2978,7 +2316,6 @@ DataKeys* parseDataKeys(TraceData* traceData, const char* traceFileName,
             pStack->top = 0;
             pStack->lastEventTime = currentTime;
             pStack->threadStartTime = currentTime;
-	    pStack->remTimes = (uint64_t*) calloc(numFilters, sizeof(uint64_t));
             traceData->stacks[threadId] = pStack;
         }
 
@@ -2989,16 +2326,16 @@ DataKeys* parseDataKeys(TraceData* traceData, const char* traceFileName,
 
 #if 0
         if (method->methodName) {
-	    fprintf(dumpStream, "%2d %-8llu %d %8llu r %d c %d %s.%s %s\n",
-	           threadId, currentTime, action, pStack->threadStartTime,
-	           method->recursiveEntries,
-	           pStack->top, method->className, method->methodName,
-	           method->signature);
+            fprintf(dumpStream, "%2d %-8llu %d %8llu r %d c %d %s.%s %s\n",
+                    threadId, currentTime, action, pStack->threadStartTime,
+                    method->recursiveEntries,
+                    pStack->top, method->className, method->methodName,
+                    method->signature);
         } else {
-	    printf(dumpStream, "%2d %-8llu %d %8llu r %d c %d %s\n",
-	           threadId, currentTime, action, pStack->threadStartTime,
-	           method->recursiveEntries,
-	           pStack->top, method->className);
+            fprintf(dumpStream, "%2d %-8llu %d %8llu r %d c %d %s\n",
+                    threadId, currentTime, action, pStack->threadStartTime,
+                    method->recursiveEntries,
+                    pStack->top, method->className);
         }
 #endif
 
@@ -3031,26 +2368,6 @@ DataKeys* parseDataKeys(TraceData* traceData, const char* traceFileName,
             /* Push the method on the stack for this thread */
             pStack->calls[pStack->top].method = method;
             pStack->calls[pStack->top++].entryTime = currentTime;
-
-	    // For each filter
-	    int result = 0;
-	    for (ii = 0; ii < numFilters; ii++) {
-	        result = filterMethod(method, filters[ii], 1, threadId, numThreads,
-				       currentTime - pStack->lastEventTime, pStack->remTimes[ii]);
-
-		// TODO: make remTimes work properly
-		// Consider moving remTimes handling together with the rest
-		// of time handling and clean up the return codes
-		/*
-		if (result == 0) { // no time added, no remTime added
-		    pStack->remTimes[ii] += currentTime - pStack->lastEventTime;
-		} else if (result == 3 || result == 4) { // remTime added
-		    // Reset remTime, since it's been added
-		    pStack->remTimes[ii] = 0;
-		}
-		*/
-	    }
-
         } else {
             /* This is a method exit */
             uint64_t entryTime = 0;
@@ -3088,24 +2405,6 @@ DataKeys* parseDataKeys(TraceData* traceData, const char* traceFileName,
             if (method->recursiveEntries == 0) {
                 method->topExclusive += currentTime - pStack->lastEventTime;
             }
-
-	    // For each filter
-	    int result = 0;
-	    for (ii = 0; ii < numFilters; ii++) {
-	        result = filterMethod(method, filters[ii], 0, threadId, numThreads,
-				       currentTime - pStack->lastEventTime, pStack->remTimes[ii]);
-
-		// TODO: make remTimes work properly
-		/*
-		if (result == 0) { // no time added, no remTime added
-		    pStack->remTimes[ii] += currentTime - pStack->lastEventTime;
-		} else if (result == 3 || result == 4) { // remTime added
-		    // Reset remTime, since it's been added
-		    pStack->remTimes[ii] = 0;
-		}
-		*/
-	    }
-
         }
         /* Remember the time of the last entry or exit event */
         pStack->lastEventTime = currentTime;
@@ -3117,23 +2416,18 @@ DataKeys* parseDataKeys(TraceData* traceData, const char* traceFileName,
      */
     CallStack *pStack;
     int threadId;
-    uint64_t elapsedTime = 0;
     uint64_t sumThreadTime = 0;
     for (threadId = 0; threadId < MAX_THREADS; ++threadId) {
-
         pStack = traceData->stacks[threadId];
 
         /* If this thread never existed, then continue with next thread */
         if (pStack == NULL)
             continue;
 
-        /* Calculate times spent in thread, and add it to total time */
-        elapsedTime = pStack->lastEventTime - pStack->threadStartTime;
-        sumThreadTime += elapsedTime;
+        /* Also, add up the time taken by all of the threads */
+        sumThreadTime += pStack->lastEventTime - pStack->threadStartTime;
 
         for (ii = 0; ii < pStack->top; ++ii) {
-	  //printf("in loop\n");
-
             if (ii == 0)
                 caller = &dataKeys->methods[TOPLEVEL_INDEX];
             else
@@ -3145,33 +2439,7 @@ DataKeys* parseDataKeys(TraceData* traceData, const char* traceFileName,
             uint64_t entryTime = pStack->calls[ii].entryTime;
             uint64_t elapsed = pStack->lastEventTime - entryTime;
             addInclusiveTime(caller, method, elapsed);
-
-	    // For each filter
-	    int result = 0;
-	    for (ii = 0; ii < numFilters; ii++) {
-	        result = filterMethod(method, filters[ii], 0, threadId, numThreads,
-				       currentTime - pStack->lastEventTime, pStack->remTimes[ii]);
-
-		// TODO: make remTimes work properly
-		/*
-		if (result == 0) { // no time added, no remTime added
-		    pStack->remTimes[ii] += currentTime - pStack->lastEventTime;
-		} else if (result == 3 || result == 4) { // remTime added
-		    // Reset remTime, since it's been added
-		    pStack->remTimes[ii] = 0;
-		}
-		*/
-	    }
         }
-
-	/* Save the per-thread elapsed time in the DataKeys struct */
-	for (ii = 0; ii < dataKeys->numThreads; ++ii) {
-	    if (dataKeys->threads[ii].threadId == threadId) {
-                dataKeys->threads[ii].elapsedTime = elapsedTime;
-	    }
-	}
-
-
     }
     caller = &dataKeys->methods[TOPLEVEL_INDEX];
     caller->elapsedInclusive = sumThreadTime;
@@ -3208,14 +2476,12 @@ MethodEntry** parseMethodEntries(DataKeys* dataKeys)
     return pMethods;
 }
 
-
 /*
  * Produce a function profile from the following methods
  */
-void profileTrace(TraceData* traceData, MethodEntry **pMethods, int numMethods, uint64_t sumThreadTime,
-                  ThreadEntry *pThreads, int numThreads, Filter** filters)
+void profileTrace(TraceData* traceData, MethodEntry **pMethods, int numMethods, uint64_t sumThreadTime)
 {
-   /* Print the html header, if necessary */
+    /* Print the html header, if necessary */
     if (gOptions.outputHtml) {
         printf(htmlHeader, gOptions.sortableUrl);
         outputTableOfContents();
@@ -3223,8 +2489,6 @@ void profileTrace(TraceData* traceData, MethodEntry **pMethods, int numMethods, 
 
     printExclusiveProfile(pMethods, numMethods, sumThreadTime);
     printInclusiveProfile(pMethods, numMethods, sumThreadTime);
-
-    printThreadProfile(pThreads, numThreads, sumThreadTime, filters);
 
     createClassList(traceData, pMethods, numMethods);
     printClassProfiles(traceData, sumThreadTime);
@@ -3491,7 +2755,7 @@ void createDiff(DataKeys* d1, uint64_t sum1, DataKeys* d2, uint64_t sum2)
     if (gOptions.outputHtml) {
         printf("</table>\n");
         printf("<h3>Run 1 methods not found in Run 2</h3>");
-        printf(tableHeaderMissing);
+        printf(tableHeaderMissing, "?");
     }
 
     for (i = 0; i < d1->numMethods; ++i) {
@@ -3503,7 +2767,7 @@ void createDiff(DataKeys* d1, uint64_t sum1, DataKeys* d2, uint64_t sum2)
     if (gOptions.outputHtml) {
         printf("</table>\n");
         printf("<h3>Run 2 methods not found in Run 1</h3>");
-        printf(tableHeaderMissing);
+        printf(tableHeaderMissing, "?");
     }
 
     for (i = 0; i < d2->numMethods; ++i) {
@@ -3517,10 +2781,10 @@ void createDiff(DataKeys* d1, uint64_t sum1, DataKeys* d2, uint64_t sum2)
 
 int usage(const char *program)
 {
-    fprintf(stderr, "usage: %s [-ho] [-s sortable] [-d trace-file-name] [-g outfile] [-f filter-file] trace-file-name\n", program);
+    fprintf(stderr, "Copyright (C) 2006 The Android Open Source Project\n\n");
+    fprintf(stderr, "usage: %s [-ho] [-s sortable] [-d trace-file-name] [-g outfile] trace-file-name\n", program);
     fprintf(stderr, "  -d trace-file-name  - Diff with this trace\n");
     fprintf(stderr, "  -g outfile          - Write graph to 'outfile'\n");
-    fprintf(stderr, "  -f filter-file      - Filter functions as specified in file\n");
     fprintf(stderr, "  -k                  - When writing a graph, keep the intermediate DOT file\n");
     fprintf(stderr, "  -h                  - Turn on HTML output\n");
     fprintf(stderr, "  -o                  - Dump the dmtrace file instead of profiling\n");
@@ -3533,7 +2797,7 @@ int usage(const char *program)
 int parseOptions(int argc, char **argv)
 {
     while (1) {
-        int opt = getopt(argc, argv, "d:hg:kos:t:f:");
+        int opt = getopt(argc, argv, "d:hg:kos:t:");
         if (opt == -1)
             break;
         switch (opt) {
@@ -3542,9 +2806,6 @@ int parseOptions(int argc, char **argv)
                 break;
             case 'g':
                 gOptions.graphFileName = optarg;
-                break;
-            case 'f':
-	        gOptions.filterFileName = optarg;
                 break;
             case 'k':
                 gOptions.keepDotFile = 1;
@@ -3573,7 +2834,6 @@ int parseOptions(int argc, char **argv)
  */
 int main(int argc, char** argv)
 {
-
     gOptions.threshold = -1;
 
     // Parse the options
@@ -3593,15 +2853,9 @@ int main(int argc, char** argv)
 
     uint64_t sumThreadTime = 0;
 
-    Filter** filters = NULL;
-    if (gOptions.filterFileName != NULL) {
-        filters = parseFilters(gOptions.filterFileName);
-    }
-
     TraceData data1;
-    memset(&data1, 0, sizeof(data1));
     DataKeys* dataKeys = parseDataKeys(&data1, gOptions.traceFileName,
-                                       &sumThreadTime, filters);
+                                       &sumThreadTime);
     if (dataKeys == NULL) {
         fprintf(stderr, "Cannot read trace.\n");
         exit(1);
@@ -3610,15 +2864,14 @@ int main(int argc, char** argv)
     if (gOptions.diffFileName != NULL) {
         uint64_t sum2;
         TraceData data2;
-        DataKeys* d2 = parseDataKeys(&data2, gOptions.diffFileName, &sum2, filters);
+        DataKeys* d2 = parseDataKeys(&data2, gOptions.diffFileName, &sum2);
 
         createDiff(d2, sum2, dataKeys, sumThreadTime);
 
         freeDataKeys(d2);
     } else {
         MethodEntry** methods = parseMethodEntries(dataKeys);
-        profileTrace(&data1, methods, dataKeys->numMethods, sumThreadTime,
-                     dataKeys->threads, dataKeys->numThreads, filters);
+        profileTrace(&data1, methods, dataKeys->numMethods, sumThreadTime);
         if (gOptions.graphFileName != NULL) {
             createInclusiveProfileGraphNew(dataKeys);
         }
