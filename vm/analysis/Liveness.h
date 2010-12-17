@@ -15,13 +15,13 @@
  */
 
 /*
- * Backward flow analysis.
+ * Liveness analysis.
  */
-#ifndef _DALVIK_BACKWARDFLOW
-#define _DALVIK_BACKWARDFLOW
+#ifndef _DALVIK_LIVENESS
+#define _DALVIK_LIVENESS
 
 struct VerifierData;
 
 bool dvmComputeLiveness(struct VerifierData* vdata);
 
-#endif /*_DALVIK_BACKWARDFLOW*/
+#endif /*_DALVIK_LIVENESS*/

@@ -15,7 +15,7 @@
  */
 
 /*
- * Backward analysis for Dalvik bytecode.
+ * Liveness analysis for Dalvik bytecode.
  */
 #include "Dalvik.h"
 #include "analysis/Liveness.h"
@@ -23,6 +23,7 @@
 
 static bool processInstruction(VerifierData* vdata, u4 curIdx,
     BitVector* workBits);
+static bool markDebugLocals(VerifierData* vdata);
 static void dumpLiveState(const VerifierData* vdata, u4 curIdx,
     const BitVector* workBits);
 
@@ -264,6 +265,12 @@ bool dvmComputeLiveness(VerifierData* vdata)
         checkIdx += insnWidth;
     }
 #endif
+
+    /*
+     * Factor in the debug info, if any.
+     */
+    if (!markDebugLocals(vdata))
+        goto bail;
 
     result = true;
 
@@ -720,6 +727,67 @@ static bool processInstruction(VerifierData* vdata, u4 insnIdx,
     case OP_DISPATCH_FF:
         return false;
     }
+
+    return true;
+}
+
+/*
+ * This is a dexDecodeDebugInfo callback, used by markDebugLocals().
+ */
+static void markLocalsCb(void* ctxt, u2 reg, u4 startAddress, u4 endAddress,
+    const char* name, const char* descriptor, const char* signature)
+{
+    VerifierData* vdata = (VerifierData*) ctxt;
+    bool verbose = dvmWantVerboseVerification(vdata->method);
+
+    if (verbose) {
+        LOGI("%04x-%04x %2d (%s %s)\n",
+            startAddress, endAddress, reg, name, descriptor);
+    }
+
+    bool wide = (descriptor[0] == 'D' || descriptor[0] == 'J');
+    assert(reg <= vdata->insnRegCount + (wide ? 1 : 0));
+
+    /*
+     * Set the bit in all GC point instructions in the range
+     * [startAddress, endAddress).
+     */
+    unsigned int idx;
+    for (idx = startAddress; idx < endAddress; idx++) {
+        BitVector* liveRegs = vdata->registerLines[idx].liveRegs;
+        if (liveRegs != NULL) {
+            if (wide) {
+                GENW(liveRegs, reg);
+            } else {
+                GEN(liveRegs, reg);
+            }
+        }
+    }
+}
+
+/*
+ * Mark all debugger-visible locals as live.
+ *
+ * The "locals" table describes the positions of the various locals in the
+ * stack frame based on the current execution address.  If the debugger
+ * wants to display one, it issues a request by "slot number".  We need
+ * to ensure that references in stack slots that might be queried by the
+ * debugger aren't GCed.
+ *
+ * (If the GC had some way to mark the slot as invalid we wouldn't have
+ * to do this.  We could also have the debugger interface check the
+ * register map and simply refuse to return a "dead" value, but that's
+ * potentially confusing since the referred-to object might actually be
+ * alive, and being able to see it without having to hunt around for a
+ * "live" stack frame is useful.)
+ */
+static bool markDebugLocals(VerifierData* vdata)
+{
+    const Method* meth = vdata->method;
+
+    dexDecodeDebugInfo(meth->clazz->pDvmDex->pDexFile, dvmGetMethodCode(meth),
+        meth->clazz->descriptor, meth->prototype.protoIdx, meth->accessFlags,
+        NULL, markLocalsCb, vdata);
 
     return true;
 }
