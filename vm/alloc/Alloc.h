@@ -160,26 +160,6 @@ void dvmSetTargetHeapUtilization(float newTarget);
 size_t dvmMinimumHeapSize(size_t size, bool set);
 
 /*
- * Updates the internal count of externally-allocated memory.  If there's
- * enough room for that memory, returns true.  If not, returns false and
- * does not update the count.
- *
- * May cause a GC as a side-effect.
- */
-bool dvmTrackExternalAllocation(size_t n);
-
-/*
- * Reduces the internal count of externally-allocated memory.
- */
-void dvmTrackExternalFree(size_t n);
-
-/*
- * Returns the number of externally-allocated bytes being tracked by
- * dvmTrackExternalAllocation/Free().
- */
-size_t dvmGetExternalBytesAllocated(void);
-
-/*
  * Initiate garbage collection.
  *
  * This usually happens automatically, but can also be caused by Runtime.gc().

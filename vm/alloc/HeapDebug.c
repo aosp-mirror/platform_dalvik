@@ -249,10 +249,7 @@ void dvmLogGcStats(size_t numFreed, size_t sizeFreed, size_t gcTimeMs)
     uordblks = footprint = 0;
 #endif
 
-    externalLimit =
-            dvmHeapSourceGetValue(HS_EXTERNAL_LIMIT, NULL, 0);
-    externalBytesAllocated =
-            dvmHeapSourceGetValue(HS_EXTERNAL_BYTES_ALLOCATED, NULL, 0);
+    externalLimit = externalBytesAllocated = 0;
     event3 =
             (long long)intToFloat12(footprint) << 36 |
             (long long)intToFloat12(uordblks) << 24 |
