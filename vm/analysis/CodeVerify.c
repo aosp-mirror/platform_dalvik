@@ -22,6 +22,7 @@
  * some string-peeling and wouldn't need to compute hashes.
  */
 #include "Dalvik.h"
+#include "analysis/BackwardFlow.h"
 #include "analysis/CodeVerify.h"
 #include "analysis/Optimize.h"
 #include "analysis/RegisterMap.h"
@@ -57,22 +58,8 @@ typedef enum RegisterTrackingMode {
 
 static bool gDebugVerbose = false;
 
-
-/*
- * Selectively enable verbose debug logging -- use this to activate
- * dumpRegTypes() calls for all instructions in the specified method.
- */
-static inline bool doVerboseLogging(const Method* meth) {
-    return false;       /* COMMENT OUT to enable verbose debugging */
-
-    const char* cd = "Lcom/android/bluetooth/opp/BluetoothOppService;";
-    const char* mn = "scanFile";
-    const char* sg = "(Landroid/database/Cursor;I)Z";
-    return (strcmp(meth->clazz->descriptor, cd) == 0 &&
-            dvmCompareNameDescriptorAndMethod(mn, sg, meth) == 0);
-}
-
-#define SHOW_REG_DETAILS    (0 /*| DRT_SHOW_REF_TYPES | DRT_SHOW_LOCALS*/)
+#define SHOW_REG_DETAILS \
+    (0 | DRT_SHOW_LIVENESS /*| DRT_SHOW_REF_TYPES | DRT_SHOW_LOCALS*/)
 
 /*
  * We need an extra "pseudo register" to hold the return type briefly.  It
@@ -125,13 +112,12 @@ static RegType getInvocationThis(const RegisterLine* registerLine,\
     const DecodedInstruction* pDecInsn, VerifyError* pFailure);
 static void verifyRegisterType(const RegisterLine* registerLine, \
     u4 vsrc, RegType checkType, VerifyError* pFailure);
-static bool doCodeVerification(const Method* meth, InsnFlags* insnFlags,\
-    RegisterTable* regTable, UninitInstanceMap* uninitMap);
+static bool doCodeVerification(VerifierData* vdata, RegisterTable* regTable);
 static bool verifyInstruction(const Method* meth, InsnFlags* insnFlags,\
     RegisterTable* regTable, int insnIdx, UninitInstanceMap* uninitMap,
     int* pStartGuess);
 static ClassObject* findCommonSuperclass(ClassObject* c1, ClassObject* c2);
-static void dumpRegTypes(const Method* meth, const InsnFlags* insnFlags,\
+static void dumpRegTypes(const VerifierData* vdata, \
     const RegisterLine* registerLine, int addr, const char* addrName,
     const UninitInstanceMap* uninitMap, int displayFlags);
 
@@ -140,6 +126,7 @@ enum {
     DRT_SIMPLE          = 0,
     DRT_SHOW_REF_TYPES  = 0x01,
     DRT_SHOW_LOCALS     = 0x02,
+    DRT_SHOW_LIVENESS   = 0x04,
 };
 
 
@@ -2554,8 +2541,8 @@ static bool updateRegisters(const Method* meth, InsnFlags* insnFlags,
     } else {
         if (gDebugVerbose) {
             LOGVV("MERGE into 0x%04x\n", nextInsn);
-            //dumpRegTypes(meth, insnFlags, targetRegs, 0, "targ", NULL, 0);
-            //dumpRegTypes(meth, insnFlags, workRegs, 0, "work", NULL, 0);
+            //dumpRegTypes(vdata, targetRegs, 0, "targ", NULL, 0);
+            //dumpRegTypes(vdata, workRegs, 0, "work", NULL, 0);
         }
         /* merge registers, set Changed only if different */
         RegisterLine* targetLine = getRegisterLine(regTable, nextInsn);
@@ -2599,7 +2586,7 @@ static bool updateRegisters(const Method* meth, InsnFlags* insnFlags,
 
         if (gDebugVerbose) {
             //LOGI(" RESULT (changed=%d)\n", changed);
-            //dumpRegTypes(meth, insnFlags, targetRegs, 0, "rslt", NULL, 0);
+            //dumpRegTypes(vdata, targetRegs, 0, "rslt", NULL, 0);
         }
 #ifdef VERIFIER_STATS
         gDvm.verifierStats.mergeRegCount++;
@@ -2966,8 +2953,8 @@ static u1* assignLineStorage(u1* storage, RegisterLine* line,
  * what's in which register, but for verification purposes we only need to
  * store it at branch target addresses (because we merge into that).
  *
- * By zeroing out the storage we are effectively initializing the register
- * information to kRegTypeUnknown.
+ * By zeroing out the regType storage we are effectively initializing the
+ * register information to kRegTypeUnknown.
  *
  * We jump through some hoops here to minimize the total number of
  * allocations we have to perform per method verified.
@@ -3061,6 +3048,9 @@ static bool initRegisterTable(const VerifierData* vdata,
 
     /*
      * Populate the sparse register line table.
+     *
+     * There is a RegisterLine associated with every address, but not
+     * every RegisterLine has non-NULL pointers to storage for its fields.
      */
     u1* storage = (u1*)regTable->lineAlloc;
     for (i = 0; i < insnsSize; i++) {
@@ -3104,6 +3094,24 @@ static bool initRegisterTable(const VerifierData* vdata,
     assert(regTable->registerLines[0].regTypes != NULL);
     return true;
 }
+
+/*
+ * Free up any "hairy" structures associated with register lines.
+ */
+static void freeRegisterLineInnards(VerifierData* vdata)
+{
+    unsigned int idx;
+
+    if (vdata->registerLines == NULL)
+        return;
+
+    for (idx = 0; idx < vdata->insnsSize; idx++) {
+        BitVector* liveRegs = vdata->registerLines[idx].liveRegs;
+        if (liveRegs != NULL)
+            dvmFreeBitVector(liveRegs);
+    }
+}
+
 
 /*
  * Verify that the arguments in a filled-new-array instruction are valid.
@@ -3432,13 +3440,32 @@ bool dvmVerifyCodeFlow(VerifierData* vdata)
             generateRegisterMap ? kTrackRegsGcPoints : kTrackRegsBranches))
         goto bail;
 
-    vdata->registerLines = NULL;     /* don't set this until we need it */
+    vdata->registerLines = regTable.registerLines;
 
     /*
-     * Compute basic blocks if we want to do liveness analysis.
+     * Perform liveness analysis.
+     *
+     * We can do this before or after the main verifier pass.  The choice
+     * affects whether or not we see the effects of verifier instruction
+     * changes, i.e. substitution of throw-verification-error.
+     *
+     * In practice the ordering doesn't really matter, because T-V-E
+     * just prunes "can continue", creating regions of dead code (with
+     * corresponding register map data that will never be used).
      */
-    if (gDvm.registerMapMode == kRegisterMapModeLivePrecise) {
+    if (generateRegisterMap &&
+        gDvm.registerMapMode == kRegisterMapModeLivePrecise)
+    {
+        /*
+         * Compute basic blocks and predecessor lists.
+         */
         if (!dvmComputeVfyBasicBlocks(vdata))
+            goto bail;
+
+        /*
+         * Compute liveness.
+         */
+        if (!dvmComputeLiveness(vdata))
             goto bail;
     }
 
@@ -3453,16 +3480,13 @@ bool dvmVerifyCodeFlow(VerifierData* vdata)
     /*
      * Run the verifier.
      */
-    if (!doCodeVerification(meth, vdata->insnFlags, &regTable,
-            vdata->uninitMap))
+    if (!doCodeVerification(vdata, &regTable))
         goto bail;
 
     /*
      * Generate a register map.
      */
     if (generateRegisterMap) {
-        vdata->registerLines = regTable.registerLines;
-
         RegisterMap* pMap = dvmGenerateRegisterMapV(vdata);
         if (pMap != NULL) {
             /*
@@ -3480,6 +3504,7 @@ bool dvmVerifyCodeFlow(VerifierData* vdata)
     result = true;
 
 bail:
+    freeRegisterLineInnards(vdata);
     free(regTable.registerLines);
     free(regTable.lineAlloc);
     return result;
@@ -3535,9 +3560,11 @@ bail:
  * instruction if a register contains an uninitialized instance created
  * by that same instrutcion.
  */
-static bool doCodeVerification(const Method* meth, InsnFlags* insnFlags,
-    RegisterTable* regTable, UninitInstanceMap* uninitMap)
+static bool doCodeVerification(VerifierData* vdata, RegisterTable* regTable)
 {
+    const Method* meth = vdata->method;
+    InsnFlags* insnFlags = vdata->insnFlags;
+    UninitInstanceMap* uninitMap = vdata->uninitMap;
     const int insnsSize = dvmGetMethodInsnsSize(meth);
     bool result = false;
     bool debugVerbose = false;
@@ -3548,7 +3575,7 @@ static bool doCodeVerification(const Method* meth, InsnFlags* insnFlags,
      */
     dvmInsnSetChanged(insnFlags, 0, true);
 
-    if (doVerboseLogging(meth)) {
+    if (dvmWantVerboseVerification(meth)) {
         IF_LOGI() {
             char* desc = dexProtoCopyMethodDescriptor(&meth->prototype);
             LOGI("Now verifying: %s.%s %s (ins=%d regs=%d)\n",
@@ -3618,15 +3645,15 @@ static bool doCodeVerification(const Method* meth, InsnFlags* insnFlags,
                 LOG_VFY("HUH? workLine diverged in %s.%s %s\n",
                         meth->clazz->descriptor, meth->name, desc);
                 free(desc);
-                dumpRegTypes(meth, insnFlags, registerLine, 0, "work",
+                dumpRegTypes(vdata, registerLine, 0, "work",
                     uninitMap, DRT_SHOW_REF_TYPES | DRT_SHOW_LOCALS);
-                dumpRegTypes(meth, insnFlags, registerLine, 0, "insn",
+                dumpRegTypes(vdata, registerLine, 0, "insn",
                     uninitMap, DRT_SHOW_REF_TYPES | DRT_SHOW_LOCALS);
             }
 #endif
         }
         if (debugVerbose) {
-            dumpRegTypes(meth, insnFlags, &regTable->workLine, insnIdx,
+            dumpRegTypes(vdata, &regTable->workLine, insnIdx,
                 NULL, uninitMap, SHOW_REG_DETAILS);
         }
 
@@ -5920,10 +5947,12 @@ static void logLocalsCb(void *cnxt, u2 reg, u4 startAddress, u4 endAddress,
 /*
  * Dump the register types for the specifed address to the log file.
  */
-static void dumpRegTypes(const Method* meth, const InsnFlags* insnFlags,
+static void dumpRegTypes(const VerifierData* vdata,
     const RegisterLine* registerLine, int addr, const char* addrName,
     const UninitInstanceMap* uninitMap, int displayFlags)
 {
+    const Method* meth = vdata->method;
+    const InsnFlags* insnFlags = vdata->insnFlags;
     const RegType* addrRegs = registerLine->regTypes;
     int regCount = meth->registersSize;
     int fullRegCount = regCount + kExtraRegs;
@@ -5987,6 +6016,26 @@ static void dumpRegTypes(const Method* meth, const InsnFlags* insnFlags,
     } else {
         LOGI("%c0x%04x %s mst=%d\n", branchTarget ? '>' : ' ',
             addr, regChars, registerLine->monitorStackTop);
+    }
+    if (displayFlags & DRT_SHOW_LIVENESS) {
+        /*
+         * We can't use registerLine->liveRegs because it might be the
+         * "work line" rather than the copy from RegisterTable.
+         */
+        BitVector* liveRegs = vdata->registerLines[addr].liveRegs;
+        if (liveRegs != NULL)  {
+            char liveChars[regCharSize + 1];
+            memset(liveChars, ' ', regCharSize);
+            liveChars[regCharSize] = '\0';
+
+            for (i = 0; i < regCount; i++) {
+                bool isLive = dvmIsBitSet(liveRegs, i);
+                liveChars[i + 1 + (i / 4)] = isLive ? '+' : '-';
+            }
+            LOGI("        %s\n", liveChars);
+        } else {
+            LOGI("        %c\n", '#');
+        }
     }
 
     if (displayFlags & DRT_SHOW_REF_TYPES) {

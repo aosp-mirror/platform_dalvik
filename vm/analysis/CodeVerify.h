@@ -120,12 +120,18 @@ typedef u4 MonitorEntries;
  * instruction.  We track the status of all registers, and (if the method
  * has any monitor-enter instructions) maintain a stack of entered monitors
  * (identified by code unit offset).
+ *
+ * If live-precise register maps are enabled, the "liveRegs" vector will
+ * be populated.  Unlike the other lists of registers here, we do not
+ * track the liveness of the method result register (which is not visible
+ * to the GC).
  */
 typedef struct {
     RegType*        regTypes;
     MonitorEntries* monitorEntries;
     u4*             monitorStack;
     unsigned int    monitorStackTop;
+    BitVector*      liveRegs;
 } RegisterLine;
 
 /*

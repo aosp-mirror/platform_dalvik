@@ -28,7 +28,7 @@
  */
 typedef struct BitVector {
     bool    expandable;     /* expand bitmap if we run out? */
-    int     storageSize;    /* current size, in 32-bit words */
+    u4      storageSize;    /* current size, in 32-bit words */
     u4*     storage;
 } BitVector;
 
@@ -40,7 +40,7 @@ typedef struct BitVectorIterator {
 } BitVectorIterator;
 
 /* allocate a bit vector with enough space to hold "startBits" bits */
-BitVector* dvmAllocBitVector(int startBits, bool expandable);
+BitVector* dvmAllocBitVector(unsigned int startBits, bool expandable);
 void dvmFreeBitVector(BitVector* pBits);
 
 /*
@@ -49,24 +49,25 @@ void dvmFreeBitVector(BitVector* pBits);
  * returns -1.
  *
  * dvmSetBit sets the specified bit, expanding the vector if necessary
- * (and possible).
+ * (and possible).  Attempting to set a bit past the limit of a non-expandable
+ * bit vector will cause a fatal error.
  *
  * dvmSetInitialBits sets all bits in [0..numBits-1]. Won't expand the vector.
  *
  * dvmIsBitSet returns "true" if the bit is set.
  */
 int dvmAllocBit(BitVector* pBits);
-bool dvmSetBit(BitVector* pBits, int num);
-void dvmClearBit(BitVector* pBits, int num);
+void dvmSetBit(BitVector* pBits, unsigned int num);
+void dvmClearBit(BitVector* pBits, unsigned int num);
 void dvmClearAllBits(BitVector* pBits);
-void dvmSetInitialBits(BitVector* pBits, int numBits);
-bool dvmIsBitSet(const BitVector* pBits, int num);
+void dvmSetInitialBits(BitVector* pBits, unsigned int numBits);
+bool dvmIsBitSet(const BitVector* pBits, unsigned int num);
 
 /* count the number of bits that have been set */
 int dvmCountSetBits(const BitVector* pBits);
 
-/* copy one vector to the other compatible one */
-bool dvmCopyBitVector(BitVector *dest, const BitVector *src);
+/* copy one vector to another of equal size */
+void dvmCopyBitVector(BitVector *dest, const BitVector *src);
 
 /*
  * Intersect two bit vectors and store the result to the dest vector.
@@ -79,6 +80,14 @@ bool dvmIntersectBitVectors(BitVector *dest, const BitVector *src1,
  */
 bool dvmUnifyBitVectors(BitVector *dest, const BitVector *src1,
                         const BitVector *src2);
+
+/*
+ * Merge the contents of "src" into "dst", checking to see if this causes
+ * any changes to occur.
+ *
+ * Returns "true" if the contents of the destination vector were modified.
+ */
+bool dvmCheckMergeBitVectors(BitVector* dst, const BitVector* src);
 
 /*
  * Compare two bit vectors and return true if difference is seen.

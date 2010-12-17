@@ -23,6 +23,21 @@
 
 
 /*
+ * This is used when debugging to apply a magnifying glass to the
+ * verification of a particular method.
+ */
+bool dvmWantVerboseVerification(const Method* meth)
+{
+    return false;       /* COMMENT OUT to enable verbose debugging */
+
+    const char* cd = "Lcom/android/server/am/ActivityManagerService;";
+    const char* mn = "trimApplications";
+    const char* sg = "()V";
+    return (strcmp(meth->clazz->descriptor, cd) == 0 &&
+            dvmCompareNameDescriptorAndMethod(mn, sg, meth) == 0);
+}
+
+/*
  * Output a code verifier warning message.  For the pre-verifier it's not
  * a big deal if something fails (and it may even be expected), but if
  * we're doing just-in-time verification it's significant.

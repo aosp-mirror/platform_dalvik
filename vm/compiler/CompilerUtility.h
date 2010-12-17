@@ -63,9 +63,9 @@ void dvmGrowableListIteratorInit(GrowableList *gList,
 intptr_t dvmGrowableListIteratorNext(GrowableListIterator *iterator);
 intptr_t dvmGrowableListGetElement(const GrowableList *gList, size_t idx);
 
-BitVector* dvmCompilerAllocBitVector(int startBits, bool expandable);
-bool dvmCompilerSetBit(BitVector* pBits, int num);
-bool dvmCompilerClearBit(BitVector* pBits, int num);
+BitVector* dvmCompilerAllocBitVector(unsigned int startBits, bool expandable);
+bool dvmCompilerSetBit(BitVector* pBits, unsigned int num);
+bool dvmCompilerClearBit(BitVector* pBits, unsigned int num);
 void dvmCompilerMarkAllBits(BitVector *pBits, bool set);
 void dvmDebugBitVector(char *msg, const BitVector *bv, int length);
 void dvmDumpLIRInsn(struct LIR *lir, unsigned char *baseAddr);

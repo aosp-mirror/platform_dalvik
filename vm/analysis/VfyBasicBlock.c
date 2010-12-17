@@ -75,13 +75,28 @@ static VfyBasicBlock* allocVfyBasicBlock(VerifierData* vdata, u4 idx)
     if (newBlock == NULL)
         return NULL;
 
-    newBlock->predecessors = dvmPointerSetAlloc(8);
+    /*
+     * TODO: there is no good default size here -- the problem is that most
+     * addresses will only have one predecessor, but a fair number will
+     * have 10+, and a few will have 100+ (e.g. the synthetic "finally"
+     * in a large synchronized method).  We probably want to use a small
+     * base allocation (perhaps two) and then have the first overflow
+     * allocation jump dramatically (to 32 or thereabouts).
+     */
+    newBlock->predecessors = dvmPointerSetAlloc(32);
     if (newBlock->predecessors == NULL) {
         free(newBlock);
         return NULL;
     }
 
     newBlock->firstAddr = (u4) -1;      // DEBUG
+
+    newBlock->liveRegs = dvmAllocBitVector(vdata->insnRegCount, false);
+    if (newBlock->liveRegs == NULL) {
+        dvmPointerSetFree(newBlock->predecessors);
+        free(newBlock);
+        return NULL;
+    }
 
     return newBlock;
 }
@@ -211,6 +226,13 @@ static bool setPredecessors(VerifierData* vdata, VfyBasicBlock* curBlock,
         }
     }
 
+    if (false) {
+        if (dvmPointerSetGetCount(curBlock->predecessors) > 256) {
+            LOGI("Lots of preds at 0x%04x in %s.%s:%s\n", curIdx,
+                meth->clazz->descriptor, meth->name, meth->shorty);
+        }
+    }
+
     return true;
 }
 
@@ -235,14 +257,14 @@ static void dumpBasicBlocks(const VerifierData* vdata)
             block->firstAddr, block->lastAddr);
 
         PointerSet* preds = block->predecessors;
-        size_t numDeps = dvmPointerSetGetCount(preds);
+        size_t numPreds = dvmPointerSetGetCount(preds);
 
-        if (numDeps > 0) {
+        if (numPreds > 0) {
             count += snprintf(printBuf + count, sizeof(printBuf) - count,
                     "preds:");
 
             unsigned int predIdx;
-            for (predIdx = 0; predIdx < numDeps; predIdx++) {
+            for (predIdx = 0; predIdx < numPreds; predIdx++) {
                 if (count >= (int) sizeof(printBuf))
                     break;
                 const VfyBasicBlock* pred =
@@ -255,8 +277,13 @@ static void dumpBasicBlocks(const VerifierData* vdata)
                     "(no preds)");
         }
 
+        printBuf[sizeof(printBuf)-2] = '!';
+        printBuf[sizeof(printBuf)-1] = '\0';
+
         LOGI("%s", printBuf);
     }
+
+    usleep(100 * 1000);      /* ugh...let logcat catch up */
 }
 
 
@@ -280,15 +307,7 @@ bool dvmComputeVfyBasicBlocks(VerifierData* vdata)
     u4 idx, blockStartAddr;
     bool result = false;
 
-    bool verbose = false;
-    if (false) {
-        if (strcmp(meth->clazz->descriptor, "Ljava/security/Provider;") == 0 &&
-            strcmp(meth->name, "entrySet") == 0)
-        {
-            verbose = true;
-        }
-    }
-
+    bool verbose = false; //dvmWantVerboseVerification(meth);
     if (verbose) {
         LOGI("Basic blocks for %s.%s:%s\n",
             meth->clazz->descriptor, meth->name, meth->shorty);

@@ -269,13 +269,12 @@ void dvmCompilerDumpStats(void)
  * NOTE: this is the sister implementation of dvmAllocBitVector. In this version
  * memory is allocated from the compiler arena.
  */
-BitVector* dvmCompilerAllocBitVector(int startBits, bool expandable)
+BitVector* dvmCompilerAllocBitVector(unsigned int startBits, bool expandable)
 {
     BitVector* bv;
-    int count;
+    unsigned int count;
 
     assert(sizeof(bv->storage[0]) == 4);        /* assuming 32-bit units */
-    assert(startBits >= 0);
 
     bv = (BitVector*) dvmCompilerNew(sizeof(BitVector), false);
 
@@ -296,15 +295,14 @@ BitVector* dvmCompilerAllocBitVector(int startBits, bool expandable)
  * NOTE: this is the sister implementation of dvmSetBit. In this version
  * memory is allocated from the compiler arena.
  */
-bool dvmCompilerSetBit(BitVector *pBits, int num)
+bool dvmCompilerSetBit(BitVector *pBits, unsigned int num)
 {
-    assert(num >= 0);
-    if (num >= pBits->storageSize * (int)sizeof(u4) * 8) {
+    if (num >= pBits->storageSize * sizeof(u4) * 8) {
         if (!pBits->expandable)
             dvmAbort();
 
         /* Round up to word boundaries for "num+1" bits */
-        int newSize = (num + 1 + 31) >> 5;
+        unsigned int newSize = (num + 1 + 31) >> 5;
         assert(newSize > pBits->storageSize);
         u4 *newStorage = (u4*)dvmCompilerNew(newSize * sizeof(u4), false);
         memcpy(newStorage, pBits->storage, pBits->storageSize * sizeof(u4));
@@ -327,10 +325,9 @@ bool dvmCompilerSetBit(BitVector *pBits, int num)
  * NOTE: this is the sister implementation of dvmClearBit. In this version
  * memory is allocated from the compiler arena.
  */
-bool dvmCompilerClearBit(BitVector *pBits, int num)
+bool dvmCompilerClearBit(BitVector *pBits, unsigned int num)
 {
-    assert(num >= 0);
-    if (num >= pBits->storageSize * (int)sizeof(u4) * 8) {
+    if (num >= pBits->storageSize * sizeof(u4) * 8) {
         LOGE("Trying to clear a bit that is not set in the vector yet!");
         dvmAbort();
     }
