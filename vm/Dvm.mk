@@ -136,10 +136,10 @@ LOCAL_SRC_FILES := \
 	alloc/DdmHeap.c \
 	alloc/Verify.c \
 	alloc/Visit.c \
-	analysis/BackwardFlow.c \
 	analysis/CodeVerify.c \
 	analysis/DexPrepare.c \
 	analysis/DexVerify.c \
+	analysis/Liveness.c \
 	analysis/Optimize.c \
 	analysis/RegisterMap.c \
 	analysis/VerifySubs.c \

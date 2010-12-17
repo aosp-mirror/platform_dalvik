@@ -18,7 +18,7 @@
  * Backward analysis for Dalvik bytecode.
  */
 #include "Dalvik.h"
-#include "analysis/BackwardFlow.h"
+#include "analysis/Liveness.h"
 #include "analysis/CodeVerify.h"
 
 static bool processInstruction(VerifierData* vdata, u4 curIdx,

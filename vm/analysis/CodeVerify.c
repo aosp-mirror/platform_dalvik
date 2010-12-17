@@ -22,7 +22,7 @@
  * some string-peeling and wouldn't need to compute hashes.
  */
 #include "Dalvik.h"
-#include "analysis/BackwardFlow.h"
+#include "analysis/Liveness.h"
 #include "analysis/CodeVerify.h"
 #include "analysis/Optimize.h"
 #include "analysis/RegisterMap.h"
