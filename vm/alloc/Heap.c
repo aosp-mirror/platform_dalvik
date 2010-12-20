@@ -39,8 +39,7 @@
 static const char* GcReasonStr[] = {
     [GC_FOR_MALLOC] = "GC_FOR_MALLOC",
     [GC_CONCURRENT] = "GC_CONCURRENT",
-    [GC_EXPLICIT] = "GC_EXPLICIT",
-    [GC_EXTERNAL_ALLOC] = "GC_EXTERNAL_ALLOC"
+    [GC_EXPLICIT] = "GC_EXPLICIT"
 };
 
 /*
@@ -529,7 +528,6 @@ void dvmCollectGarbageInternal(bool clearSoftRefs, GcReason reason)
     u4 totalTime;
     size_t numObjectsFreed, numBytesFreed;
     size_t currAllocated, currFootprint;
-    size_t extAllocated, extLimit;
     size_t percentFree;
     GcMode gcMode;
     int oldThreadPriority = kInvalidPriority;
@@ -733,9 +731,7 @@ void dvmCollectGarbageInternal(bool clearSoftRefs, GcReason reason)
      * This doesn't actually resize any memory;
      * it just lets the heap grow more when necessary.
      */
-    if (reason != GC_EXTERNAL_ALLOC) {
-        dvmHeapSourceGrowForUtilization();
-    }
+    dvmHeapSourceGrowForUtilization();
 
     currAllocated = dvmHeapSourceGetValue(HS_BYTES_ALLOCATED, NULL, 0);
     currFootprint = dvmHeapSourceGetValue(HS_FOOTPRINT, NULL, 0);
@@ -785,21 +781,17 @@ void dvmCollectGarbageInternal(bool clearSoftRefs, GcReason reason)
         }
     }
 
-    extAllocated = dvmHeapSourceGetValue(HS_EXTERNAL_BYTES_ALLOCATED, NULL, 0);
-    extLimit = dvmHeapSourceGetValue(HS_EXTERNAL_LIMIT, NULL, 0);
     percentFree = 100 - (size_t)(100.0f * (float)currAllocated / currFootprint);
     if (reason != GC_CONCURRENT) {
         u4 markSweepTime = dirtyEnd - rootStart;
         bool isSmall = numBytesFreed > 0 && numBytesFreed < 1024;
         totalTime = rootSuspendTime + markSweepTime;
-        LOGD("%s freed %s%zdK, %d%% free %zdK/%zdK, external %zdK/%zdK, "
-             "paused %ums",
+        LOGD("%s freed %s%zdK, %d%% free %zdK/%zdK, paused %ums",
              GcReasonStr[reason],
              isSmall ? "<" : "",
              numBytesFreed ? MAX(numBytesFreed / 1024, 1) : 0,
              percentFree,
              currAllocated / 1024, currFootprint / 1024,
-             extAllocated / 1024, extLimit / 1024,
              markSweepTime);
     } else {
         u4 rootTime = rootEnd - rootStart;
@@ -807,14 +799,12 @@ void dvmCollectGarbageInternal(bool clearSoftRefs, GcReason reason)
         u4 dirtyTime = dirtyEnd - dirtyStart;
         bool isSmall = numBytesFreed > 0 && numBytesFreed < 1024;
         totalTime = rootSuspendTime + rootTime + dirtySuspendTime + dirtyTime;
-        LOGD("%s freed %s%zdK, %d%% free %zdK/%zdK, external %zdK/%zdK, "
-             "paused %ums+%ums",
+        LOGD("%s freed %s%zdK, %d%% free %zdK/%zdK, paused %ums+%ums",
              GcReasonStr[reason],
              isSmall ? "<" : "",
              numBytesFreed ? MAX(numBytesFreed / 1024, 1) : 0,
              percentFree,
              currAllocated / 1024, currFootprint / 1024,
-             extAllocated / 1024, extLimit / 1024,
              rootTime, dirtyTime);
     }
     dvmLogGcStats(numObjectsFreed, numBytesFreed, totalTime);

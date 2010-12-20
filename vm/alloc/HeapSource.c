@@ -175,14 +175,6 @@ struct HeapSource {
      */
     size_t numHeaps;
 
-    /* External allocation count.
-     */
-    size_t externalBytesAllocated;
-
-    /* The maximum number of external bytes that may be allocated.
-     */
-    size_t externalLimit;
-
     /* True if zygote mode was active when the HeapSource was created.
      */
     bool sawZygote;
@@ -692,16 +684,6 @@ dvmHeapSourceGetValue(enum HeapSourceValueSpec spec, size_t perHeapStats[],
 
     HS_BOILERPLATE();
 
-    switch (spec) {
-    case HS_EXTERNAL_BYTES_ALLOCATED:
-        return hs->externalBytesAllocated;
-    case HS_EXTERNAL_LIMIT:
-        return hs->externalLimit;
-    default:
-        // look at all heaps.
-        ;
-    }
-
     assert(arrayLen >= hs->numHeaps || perHeapStats == NULL);
     for (i = 0; i < hs->numHeaps; i++) {
         Heap *const heap = &hs->heaps[i];
@@ -877,24 +859,18 @@ heapAllocAndGrow(HeapSource *hs, Heap *heap, size_t n)
     size_t max;
 
     /* Grow as much as possible, but don't let the real footprint
-     * plus external allocations go over the absolute max.
+     * go over the absolute max.
      */
     max = heap->absoluteMaxSize;
-    if (max > hs->externalBytesAllocated) {
-        max -= hs->externalBytesAllocated;
 
-        mspace_set_max_allowed_footprint(heap->msp, max);
-        ptr = dvmHeapSourceAlloc(n);
+    mspace_set_max_allowed_footprint(heap->msp, max);
+    ptr = dvmHeapSourceAlloc(n);
 
-        /* Shrink back down as small as possible.  Our caller may
-         * readjust max_allowed to a more appropriate value.
-         */
-        mspace_set_max_allowed_footprint(heap->msp,
-                mspace_footprint(heap->msp));
-    } else {
-        ptr = NULL;
-    }
-
+    /* Shrink back down as small as possible.  Our caller may
+     * readjust max_allowed to a more appropriate value.
+     */
+    mspace_set_max_allowed_footprint(heap->msp,
+                                     mspace_footprint(heap->msp));
     return ptr;
 }
 
@@ -1127,10 +1103,10 @@ dvmHeapSourceFootprint()
 }
 
 /*
- * Return the real bytes used by old heaps and external memory
- * plus the soft usage of the current heap.  When a soft limit
- * is in effect, this is effectively what it's compared against
- * (though, in practice, it only looks at the current heap).
+ * Return the real bytes used by old heaps plus the soft usage of the
+ * current heap.  When a soft limit is in effect, this is effectively
+ * what it's compared against (though, in practice, it only looks at
+ * the current heap).
  */
 static size_t
 getSoftFootprint(bool includeActive)
@@ -1140,7 +1116,7 @@ getSoftFootprint(bool includeActive)
 
     HS_BOILERPLATE();
 
-    ret = oldHeapOverhead(hs, false) + hs->externalBytesAllocated;
+    ret = oldHeapOverhead(hs, false);
     if (includeActive) {
         ret += hs->heaps[0].bytesAllocated;
     }
@@ -1217,7 +1193,7 @@ setIdealFootprint(size_t max)
     }
 
     /* Convert max into a size that applies to the active heap.
-     * Old heaps and external allocations will count against the ideal size.
+     * Old heaps will count against the ideal size.
      */
     size_t overhead = getSoftFootprint(false);
     size_t activeMax;
@@ -1231,12 +1207,10 @@ setIdealFootprint(size_t max)
     hs->idealSize = max;
 
     HSTRACE("IDEAL %zd->%zd (%d), soft %zd->%zd (%d), allowed %zd->%zd (%d), "
-            "ext %zd\n",
             oldHs.idealSize, hs->idealSize, hs->idealSize - oldHs.idealSize,
             oldHs.softLimit, hs->softLimit, hs->softLimit - oldHs.softLimit,
             oldAllowedFootprint, mspace_max_allowed_footprint(msp),
-            mspace_max_allowed_footprint(msp) - oldAllowedFootprint,
-            hs->externalBytesAllocated);
+            mspace_max_allowed_footprint(msp) - oldAllowedFootprint);
 
 }
 
@@ -1311,12 +1285,6 @@ dvmMinimumHeapSize(size_t size, bool set)
     oldMinimumSize = hs->minimumSize;
 
     if (set) {
-        /* Don't worry about external allocations right now.
-         * setIdealFootprint() will take them into account when
-         * minimumSize is used, and it's better to hold onto the
-         * intended minimumSize than to clamp it arbitrarily based
-         * on the current allocations.
-         */
         if (size > hs->absoluteMaxSize) {
             size = hs->absoluteMaxSize;
         }
@@ -1393,26 +1361,8 @@ void dvmHeapSourceGrowForUtilization()
      * the current heap.
      */
     currentHeapUsed = heap->bytesAllocated;
-#define LET_EXTERNAL_INFLUENCE_UTILIZATION 1
-#if LET_EXTERNAL_INFLUENCE_UTILIZATION
-    /* This is a hack to deal with the side-effects of moving
-     * bitmap data out of the Dalvik heap.  Since the amount
-     * of free space after a GC scales with the size of the
-     * live set, many apps expected the large free space that
-     * appeared along with megabytes' worth of bitmaps.  When
-     * the bitmaps were removed, the free size shrank significantly,
-     * and apps started GCing constantly.  This makes it so the
-     * post-GC free space is the same size it would have been
-     * if the bitmaps were still in the Dalvik heap.
-     */
-    currentHeapUsed += hs->externalBytesAllocated;
-#endif
     targetHeapSize =
             getUtilizationTarget(currentHeapUsed, hs->targetUtilization);
-#if LET_EXTERNAL_INFLUENCE_UTILIZATION
-    currentHeapUsed -= hs->externalBytesAllocated;
-    targetHeapSize -= hs->externalBytesAllocated;
-#endif
 
     /* The ideal size includes the old heaps; add overhead so that
      * it can be immediately subtracted again in setIdealFootprint().
@@ -1435,24 +1385,20 @@ void dvmHeapSourceGrowForUtilization()
         LOGD_HEAP("GC old usage %zd.%zd%%; now "
                 "%zd.%03zdMB used / %zd.%03zdMB soft max "
                 "(%zd.%03zdMB over, "
-                "%zd.%03zdMB ext, "
                 "%zd.%03zdMB real max)\n",
                 FRACTIONAL_PCT(currentHeapUsed, oldIdealSize),
                 FRACTIONAL_MB(currentHeapUsed),
                 FRACTIONAL_MB(hs->softLimit),
                 FRACTIONAL_MB(overhead),
-                FRACTIONAL_MB(hs->externalBytesAllocated),
                 FRACTIONAL_MB(newHeapMax));
     } else {
         LOGD_HEAP("GC old usage %zd.%zd%%; now "
                 "%zd.%03zdMB used / %zd.%03zdMB real max "
-                "(%zd.%03zdMB over, "
-                "%zd.%03zdMB ext)\n",
+                "(%zd.%03zdMB over)\n",
                 FRACTIONAL_PCT(currentHeapUsed, oldIdealSize),
                 FRACTIONAL_MB(currentHeapUsed),
                 FRACTIONAL_MB(newHeapMax),
-                FRACTIONAL_MB(overhead),
-                FRACTIONAL_MB(hs->externalBytesAllocated));
+                FRACTIONAL_MB(overhead));
     }
 }
 
@@ -1552,347 +1498,6 @@ dvmHeapSourceGetNumHeaps()
     HS_BOILERPLATE();
 
     return hs->numHeaps;
-}
-
-
-/*
- * External allocation tracking
- *
- * In some situations, memory outside of the heap is tied to the
- * lifetime of objects in the heap.  Since that memory is kept alive
- * by heap objects, it should provide memory pressure that can influence
- * GCs.
- */
-
-/*
- * Returns true if the requested number of bytes can be allocated from
- * available storage.
- */
-static bool externalBytesAvailable(const HeapSource *hs, size_t numBytes)
-{
-    const Heap *heap;
-    size_t currentHeapSize, newHeapSize;
-
-    /* Make sure that this allocation is even possible.
-     * Don't let the external size plus the actual heap size
-     * go over the absolute max.  This essentially treats
-     * external allocations as part of the active heap.
-     *
-     * Note that this will fail "mysteriously" if there's
-     * a small softLimit but a large heap footprint.
-     */
-    heap = hs2heap(hs);
-    currentHeapSize = mspace_max_allowed_footprint(heap->msp);
-    newHeapSize = currentHeapSize + hs->externalBytesAllocated + numBytes;
-    if (newHeapSize <= heap->absoluteMaxSize) {
-        return true;
-    }
-    HSTRACE("externalBytesAvailable(): "
-            "footprint %zu + extAlloc %zu + n %zu >= max %zu (space for %zu)\n",
-            currentHeapSize, hs->externalBytesAllocated, numBytes,
-            heap->absoluteMaxSize,
-            heap->absoluteMaxSize -
-                    (currentHeapSize + hs->externalBytesAllocated));
-    return false;
-}
-
-#define EXTERNAL_TARGET_UTILIZATION 820  // 80%
-
-/*
- * Tries to update the internal count of externally-allocated memory.
- * If there's enough room for that memory, returns true.  If not, returns
- * false and does not update the count.
- *
- * The caller must ensure externalBytesAvailable(hs, n) == true.
- */
-static bool
-externalAlloc(HeapSource *hs, size_t n, bool grow)
-{
-    assert(hs->externalLimit >= hs->externalBytesAllocated);
-
-    HSTRACE("externalAlloc(%zd%s)\n", n, grow ? ", grow" : "");
-    assert(externalBytesAvailable(hs, n));  // The caller must ensure this.
-
-    /* External allocations have their own "free space" that they
-     * can allocate from without causing a GC.
-     */
-    if (hs->externalBytesAllocated + n <= hs->externalLimit) {
-        hs->externalBytesAllocated += n;
-#if PROFILE_EXTERNAL_ALLOCATIONS
-        if (gDvm.allocProf.enabled) {
-            Thread* self = dvmThreadSelf();
-            gDvm.allocProf.externalAllocCount++;
-            gDvm.allocProf.externalAllocSize += n;
-            if (self != NULL) {
-                self->allocProf.externalAllocCount++;
-                self->allocProf.externalAllocSize += n;
-            }
-        }
-#endif
-        return true;
-    }
-    if (!grow) {
-        return false;
-    }
-
-    /* GROW */
-    hs->externalBytesAllocated += n;
-    hs->externalLimit = getUtilizationTarget(
-            hs->externalBytesAllocated, EXTERNAL_TARGET_UTILIZATION);
-    HSTRACE("EXTERNAL grow limit to %zd\n", hs->externalLimit);
-    return true;
-}
-
-static void
-gcForExternalAlloc(bool collectSoftReferences)
-{
-    if (gDvm.allocProf.enabled) {
-        Thread* self = dvmThreadSelf();
-        gDvm.allocProf.gcCount++;
-        if (self != NULL) {
-            self->allocProf.gcCount++;
-        }
-    }
-    dvmCollectGarbageInternal(collectSoftReferences, GC_EXTERNAL_ALLOC);
-}
-
-/*
- * Returns true if there is enough unused storage to perform an
- * external allocation of the specified size.  If there insufficient
- * free storage we try to releasing memory from external allocations
- * and trimming the heap.
- */
-static bool externalAllocPossible(const HeapSource *hs, size_t n)
-{
-    size_t bytesTrimmed[HEAP_SOURCE_MAX_HEAP_COUNT];
-
-    /*
-     * If there is sufficient space return immediately.
-     */
-    if (externalBytesAvailable(hs, n)) {
-        return true;
-    }
-    /*
-     * There is insufficient space.  Wait for the garbage collector to
-     * become inactive before proceeding.
-     */
-    while (gDvm.gcHeap->gcRunning) {
-        dvmWaitForConcurrentGcToComplete();
-    }
-    /*
-     * The heap may have grown or become trimmed while we were
-     * waiting.
-     */
-    if (externalBytesAvailable(hs, n)) {
-        return true;
-    }
-    /*
-     * Try a garbage collection that clears soft references.  This may
-     * make trimming more effective.
-     */
-    gcForExternalAlloc(true);
-    if (externalBytesAvailable(hs, n)) {
-        return true;
-    }
-    /*
-     * Try trimming the mspace to reclaim unused pages.
-     */
-    dvmHeapSourceTrim(bytesTrimmed, NELEM(bytesTrimmed));
-    snapIdealFootprint();
-    if (externalBytesAvailable(hs, n)) {
-        return true;
-    }
-    /*
-     * Nothing worked, return an error.
-     */
-    return false;
-}
-
-/*
- * Updates the internal count of externally-allocated memory.  If there's
- * enough room for that memory, returns true.  If not, returns false and
- * does not update the count.
- *
- * May cause a GC as a side-effect.
- */
-bool
-dvmTrackExternalAllocation(size_t n)
-{
-    HeapSource *hs = gHs;
-    bool ret = false;
-
-    /* gHs caches an entry in gDvm.gcHeap;  we need to hold the
-     * heap lock if we're going to look at it.
-     */
-    dvmLockHeap();
-
-    HS_BOILERPLATE();
-    assert(hs->externalLimit >= hs->externalBytesAllocated);
-
-    /*
-     * The externalAlloc calls require the externalAllocPossible
-     * invariant to be established.
-     */
-    if (!externalAllocPossible(hs, n)) {
-        LOGE_HEAP("%zd-byte external allocation "
-                  "too large for this process.", n);
-        goto out;
-    }
-
-    /* Try "allocating" using the existing "free space".
-     */
-    HSTRACE("EXTERNAL alloc %zu (%zu < %zu)\n",
-            n, hs->externalBytesAllocated, hs->externalLimit);
-    if (externalAlloc(hs, n, false)) {
-        ret = true;
-        goto out;
-    }
-    /*
-     * Wait until garbage collector is quiescent before proceeding.
-     */
-    while (gDvm.gcHeap->gcRunning) {
-        dvmWaitForConcurrentGcToComplete();
-    }
-    /*
-     * Re-establish the invariant if it was lost while we were
-     * waiting.
-     */
-    if (!externalAllocPossible(hs, n)) {
-        LOGE_HEAP("%zd-byte external allocation "
-                  "too large for this process.", n);
-        goto out;
-    }
-    /* The "allocation" failed.  Free up some space by doing
-     * a full garbage collection.  This may grow the heap source
-     * if the live set is sufficiently large.
-     */
-    HSTRACE("EXTERNAL alloc %zd: GC 1\n", n);
-    gcForExternalAlloc(false);  // don't collect SoftReferences
-    if (externalAlloc(hs, n, false)) {
-        ret = true;
-        goto out;
-    }
-
-    /* Even that didn't work;  this is an exceptional state.
-     * Try harder, growing the heap source if necessary.
-     */
-    HSTRACE("EXTERNAL alloc %zd: frag\n", n);
-    ret = externalAlloc(hs, n, true);
-    if (ret) {
-        goto out;
-    }
-
-    /* We couldn't even grow enough to satisfy the request.
-     * Try one last GC, collecting SoftReferences this time.
-     */
-    HSTRACE("EXTERNAL alloc %zd: GC 2\n", n);
-    gcForExternalAlloc(true);  // collect SoftReferences
-    ret = externalAlloc(hs, n, true);
-    if (!ret) {
-        LOGE_HEAP("Out of external memory on a %zu-byte allocation.\n", n);
-    }
-
-#if PROFILE_EXTERNAL_ALLOCATIONS
-    if (gDvm.allocProf.enabled) {
-        Thread* self = dvmThreadSelf();
-        gDvm.allocProf.failedExternalAllocCount++;
-        gDvm.allocProf.failedExternalAllocSize += n;
-        if (self != NULL) {
-            self->allocProf.failedExternalAllocCount++;
-            self->allocProf.failedExternalAllocSize += n;
-        }
-    }
-#endif
-
-out:
-    dvmUnlockHeap();
-
-    return ret;
-}
-
-/*
- * Reduces the internal count of externally-allocated memory.
- */
-void
-dvmTrackExternalFree(size_t n)
-{
-    HeapSource *hs = gHs;
-    size_t newExternalLimit;
-    size_t oldExternalBytesAllocated;
-
-    HSTRACE("EXTERNAL free %zu (%zu < %zu)\n",
-            n, hs->externalBytesAllocated, hs->externalLimit);
-
-    /* gHs caches an entry in gDvm.gcHeap;  we need to hold the
-     * heap lock if we're going to look at it.
-     */
-    dvmLockHeap();
-
-    HS_BOILERPLATE();
-    assert(hs->externalLimit >= hs->externalBytesAllocated);
-
-    oldExternalBytesAllocated = hs->externalBytesAllocated;
-    if (n <= hs->externalBytesAllocated) {
-        hs->externalBytesAllocated -= n;
-    } else {
-        n = hs->externalBytesAllocated;
-        hs->externalBytesAllocated = 0;
-    }
-
-#if PROFILE_EXTERNAL_ALLOCATIONS
-    if (gDvm.allocProf.enabled) {
-        Thread* self = dvmThreadSelf();
-        gDvm.allocProf.externalFreeCount++;
-        gDvm.allocProf.externalFreeSize += n;
-        if (self != NULL) {
-            self->allocProf.externalFreeCount++;
-            self->allocProf.externalFreeSize += n;
-        }
-    }
-#endif
-
-    /* Shrink as quickly as we can.
-     */
-    newExternalLimit = getUtilizationTarget(
-            hs->externalBytesAllocated, EXTERNAL_TARGET_UTILIZATION);
-    if (newExternalLimit < oldExternalBytesAllocated) {
-        /* Make sure that the remaining free space is at least
-         * big enough to allocate something of the size that was
-         * just freed.  This makes it more likely that
-         *     externalFree(N); externalAlloc(N);
-         * will work without causing a GC.
-         */
-        HSTRACE("EXTERNAL free preserved %zu extra free bytes\n",
-                oldExternalBytesAllocated - newExternalLimit);
-        newExternalLimit = oldExternalBytesAllocated;
-    }
-    if (newExternalLimit < hs->externalLimit) {
-        hs->externalLimit = newExternalLimit;
-    }
-
-    dvmUnlockHeap();
-}
-
-/*
- * Returns the number of externally-allocated bytes being tracked by
- * dvmTrackExternalAllocation/Free().
- */
-size_t
-dvmGetExternalBytesAllocated()
-{
-    const HeapSource *hs = gHs;
-    size_t ret;
-
-    /* gHs caches an entry in gDvm.gcHeap;  we need to hold the
-     * heap lock if we're going to look at it.  We also need the
-     * lock for the call to setIdealFootprint().
-     */
-    dvmLockHeap();
-    HS_BOILERPLATE();
-    ret = hs->externalBytesAllocated;
-    dvmUnlockHeap();
-
-    return ret;
 }
 
 void *dvmHeapSourceGetImmuneLimit(GcMode mode)

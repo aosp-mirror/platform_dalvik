@@ -82,17 +82,6 @@ typedef struct AllocProfState {
 
     int     classInitCount;     // #of initialized classes
     u8      classInitTime;      // cumulative time spent in class init (nsec)
-
-#if PROFILE_EXTERNAL_ALLOCATIONS
-    int     externalAllocCount; // #of calls to dvmTrackExternalAllocation()
-    int     externalAllocSize;  // #of bytes passed to ...ExternalAllocation()
-
-    int     failedExternalAllocCount; // #of times an allocation failed
-    int     failedExternalAllocSize;  // cumulative size of failed allocations
-
-    int     externalFreeCount;  // #of calls to dvmTrackExternalFree()
-    int     externalFreeSize;   // #of bytes passed to ...ExternalFree()
-#endif  // PROFILE_EXTERNAL_ALLOCATIONS
 } AllocProfState;
 
 

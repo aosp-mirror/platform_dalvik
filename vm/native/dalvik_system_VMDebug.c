@@ -209,20 +209,6 @@ static void clearAllocProfStateFields(AllocProfState *allocProf,
     if (kinds & KIND_CLASS_INIT_TIME) {
         allocProf->classInitTime = 0;
     }
-#if PROFILE_EXTERNAL_ALLOCATIONS
-    if (kinds & KIND_EXT_ALLOCATED_OBJECTS) {
-        allocProf->externalAllocCount = 0;
-    }
-    if (kinds & KIND_EXT_ALLOCATED_BYTES) {
-        allocProf->externalAllocSize = 0;
-    }
-    if (kinds & KIND_EXT_FREED_OBJECTS) {
-        allocProf->externalFreeCount = 0;
-    }
-    if (kinds & KIND_EXT_FREED_BYTES) {
-        allocProf->externalFreeSize = 0;
-    }
-#endif // PROFILE_EXTERNAL_ALLOCATIONS
 }
 
 /*
@@ -294,20 +280,6 @@ static void Dalvik_dalvik_system_VMDebug_getAllocCount(const u4* args,
         /* convert nsec to usec, reduce to 32 bits */
         pResult->i = (int) (allocProf->classInitTime / 1000);
         break;
-#if PROFILE_EXTERNAL_ALLOCATIONS
-    case KIND_EXT_ALLOCATED_OBJECTS:
-        pResult->i = allocProf->externalAllocCount;
-        break;
-    case KIND_EXT_ALLOCATED_BYTES:
-        pResult->i = allocProf->externalAllocSize;
-        break;
-    case KIND_EXT_FREED_OBJECTS:
-        pResult->i = allocProf->externalFreeCount;
-        break;
-    case KIND_EXT_FREED_BYTES:
-        pResult->i = allocProf->externalFreeSize;
-        break;
-#endif // PROFILE_EXTERNAL_ALLOCATIONS
     default:
         assert(false);
         pResult->i = -1;
