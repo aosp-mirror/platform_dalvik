@@ -825,9 +825,10 @@ void dvmCollectGarbageInternal(bool clearSoftRefs, GcReason reason)
 void dvmWaitForConcurrentGcToComplete(void)
 {
     Thread *self = dvmThreadSelf();
-    ThreadStatus oldStatus;
     assert(self != NULL);
-    oldStatus = dvmChangeStatus(self, THREAD_VMWAIT);
-    dvmWaitCond(&gDvm.gcHeapCond, &gDvm.gcHeapLock);
-    dvmChangeStatus(self, oldStatus);
+    while (gDvm.gcHeap->gcRunning) {
+        ThreadStatus oldStatus = dvmChangeStatus(self, THREAD_VMWAIT);
+        dvmWaitCond(&gDvm.gcHeapCond, &gDvm.gcHeapLock);
+        dvmChangeStatus(self, oldStatus);
+    }
 }

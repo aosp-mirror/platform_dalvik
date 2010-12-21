@@ -84,8 +84,10 @@ typedef enum {
 void dvmCollectGarbageInternal(bool clearSoftRefs, GcReason reason);
 
 /*
- * Blocks the until the GC thread signals the completion of a
- * concurrent GC.
+ * Blocks the calling thread until the garbage collector is inactive.
+ * The caller must hold the heap lock as this call releases and
+ * re-acquires the heap lock.  After returning, no garbage collection
+ * will be in progress and the heap lock will be held by the caller.
  */
 void dvmWaitForConcurrentGcToComplete(void);
 
