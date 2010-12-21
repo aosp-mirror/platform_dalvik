@@ -379,9 +379,7 @@ static void* heapWorkerThreadStart(void* arg)
                  */
                 dvmUnlockMutex(&gDvm.heapWorkerLock);
                 dvmLockHeap();
-                while (gDvm.gcHeap->gcRunning) {
-                    dvmWaitForConcurrentGcToComplete();
-                }
+                dvmWaitForConcurrentGcToComplete();
                 dvmLockMutex(&gDvm.heapWorkerLock);
 
                 memset(madvisedSizes, 0, sizeof(madvisedSizes));
@@ -425,9 +423,7 @@ static void* heapWorkerThreadStart(void* arg)
         dvmUnlockMutex(&gDvm.heapWorkerLock);
         dvmChangeStatus(NULL, THREAD_RUNNING);
         dvmLockHeap();
-        while (gDvm.gcHeap->gcRunning) {
-            dvmWaitForConcurrentGcToComplete();
-        }
+        dvmWaitForConcurrentGcToComplete();
         dvmLockMutex(&gDvm.heapWorkerLock);
         dvmUnlockHeap();
         LOGV("HeapWorker is awake\n");
