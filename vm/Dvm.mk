@@ -185,7 +185,6 @@ LOCAL_SRC_FILES := \
 	native/java_lang_reflect_Proxy.c \
 	native/java_security_AccessController.c \
 	native/java_util_concurrent_atomic_AtomicLong.c \
-	native/org_apache_harmony_dalvik_NativeTestTarget.c \
 	native/org_apache_harmony_dalvik_ddmc_DdmServer.c \
 	native/org_apache_harmony_dalvik_ddmc_DdmVmInternal.c \
 	native/sun_misc_Unsafe.c \
