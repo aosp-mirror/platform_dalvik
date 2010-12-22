@@ -98,25 +98,6 @@ extern u4 __memcmp16(const u2* s0, const u2* s1, size_t count);
 
 /*
  * ===========================================================================
- *      org.apache.harmony.dalvik.NativeTestTarget
- * ===========================================================================
- */
-
-/*
- * public static void emptyInlineMethod
- *
- * This exists only for benchmarks.
- */
-static bool org_apache_harmony_dalvik_NativeTestTarget_emptyInlineMethod(
-    u4 arg0, u4 arg1, u4 arg2, u4 arg3, JValue* pResult)
-{
-    // do nothing
-    return true;
-}
-
-
-/*
- * ===========================================================================
  *      java.lang.String
  * ===========================================================================
  */
@@ -703,10 +684,6 @@ static bool javaLangDouble_longBitsToDouble(u4 arg0, u4 arg1, u4 arg2, u4 arg,
  * the dispatch code in compiler/codegen/<target>/Codegen.c.
  */
 const InlineOperation gDvmInlineOpsTable[] = {
-    { org_apache_harmony_dalvik_NativeTestTarget_emptyInlineMethod,
-        "Lorg/apache/harmony/dalvik/NativeTestTarget;",
-        "emptyInlineMethod", "()V" },
-
     { javaLangString_charAt,
         "Ljava/lang/String;", "charAt", "(I)C" },
     { javaLangString_compareTo,
