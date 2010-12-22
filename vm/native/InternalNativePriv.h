@@ -107,6 +107,7 @@ extern const DalvikNativeMethod dvm_dalvik_system_Zygote[];
 extern const DalvikNativeMethod dvm_dalvik_system_VMStack[];
 extern const DalvikNativeMethod dvm_org_apache_harmony_dalvik_ddmc_DdmServer[];
 extern const DalvikNativeMethod dvm_org_apache_harmony_dalvik_ddmc_DdmVmInternal[];
+extern const DalvikNativeMethod dvm_org_apache_harmony_dalvik_NativeTestTarget[];
 extern const DalvikNativeMethod dvm_sun_misc_Unsafe[];
 
 #endif /*_DALVIK_NATIVE_INTERNALNATIVEPRIV*/
