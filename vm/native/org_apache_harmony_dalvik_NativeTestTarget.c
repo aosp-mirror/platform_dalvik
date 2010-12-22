@@ -15,23 +15,28 @@
  */
 
 /*
- * Dalvik VM version info.
+ * org.apache.harmony.dalvik.NativeTestTarget
  */
-#ifndef _DALVIK_VERSION
-#define _DALVIK_VERSION
+#include "Dalvik.h"
+#include "native/InternalNativePriv.h"
+
 
 /*
- * The version we show to tourists.
+ * public static void emptyInternalStaticMethod()
+ *
+ * For benchmarks, a do-nothing internal method with no arguments.
  */
-#define DALVIK_MAJOR_VERSION    1
-#define DALVIK_MINOR_VERSION    5
-#define DALVIK_BUG_VERSION      0
+static void Dalvik_org_apache_harmony_dalvik_NativeTestTarget_emptyInternalMethod(
+    const u4* args, JValue* pResult)
+{
+    UNUSED_PARAMETER(args);
 
-/*
- * VM build number.  This must change whenever something that affects the
- * way classes load changes, e.g. field ordering or vtable layout.  Changing
- * this guarantees that the optimized form of the DEX file is regenerated.
- */
-#define DALVIK_VM_BUILD         24
+    RETURN_VOID();
+}
 
-#endif /*_DALVIK_VERSION*/
+const DalvikNativeMethod dvm_org_apache_harmony_dalvik_NativeTestTarget[] =
+{
+    { "emptyInternalStaticMethod", "()V",
+        Dalvik_org_apache_harmony_dalvik_NativeTestTarget_emptyInternalMethod },
+    { NULL, NULL, NULL },
+};

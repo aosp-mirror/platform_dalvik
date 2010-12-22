@@ -57,6 +57,8 @@ static DalvikNativeClass gDvmNativeMethodSet[] = {
             dvm_org_apache_harmony_dalvik_ddmc_DdmServer, 0 },
     { "Lorg/apache/harmony/dalvik/ddmc/DdmVmInternal;",
             dvm_org_apache_harmony_dalvik_ddmc_DdmVmInternal, 0 },
+    { "Lorg/apache/harmony/dalvik/NativeTestTarget;",
+            dvm_org_apache_harmony_dalvik_NativeTestTarget, 0 },
     { "Lsun/misc/Unsafe;",                dvm_sun_misc_Unsafe, 0 },
     { NULL, NULL, 0 },
 };
