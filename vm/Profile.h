@@ -24,11 +24,6 @@
 
 #include <stdio.h>
 
-/* External allocations are hackish enough that it's worthwhile
- * separating them for possible removal later.
- */
-#define PROFILE_EXTERNAL_ALLOCATIONS 1
-
 struct Thread;      // extern
 
 
