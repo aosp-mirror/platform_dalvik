@@ -781,14 +781,17 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
         if (curBB->taken == NULL &&
             (isGoto(lastInsn) || isInvoke ||
             (targetOffset != UNKNOWN_TARGET && targetOffset != curOffset))) {
-            BasicBlock *newBB;
+            BasicBlock *newBB = NULL;
             if (isInvoke) {
                 /* Monomorphic callee */
                 if (callee) {
-                    newBB = dvmCompilerNewBB(kChainingCellInvokeSingleton,
-                                             numBlocks++);
-                    newBB->startOffset = 0;
-                    newBB->containingMethod = callee;
+                    /* JNI call doesn't need a chaining cell */
+                    if (!dvmIsNativeMethod(callee)) {
+                        newBB = dvmCompilerNewBB(kChainingCellInvokeSingleton,
+                                                 numBlocks++);
+                        newBB->startOffset = 0;
+                        newBB->containingMethod = callee;
+                    }
                 /* Will resolve at runtime */
                 } else {
                     newBB = dvmCompilerNewBB(kChainingCellInvokePredicted,
@@ -818,8 +821,10 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
                 newBB->startOffset = targetOffset;
 #endif
             }
-            curBB->taken = newBB;
-            dvmInsertGrowableList(blockList, (intptr_t) newBB);
+            if (newBB) {
+                curBB->taken = newBB;
+                dvmInsertGrowableList(blockList, (intptr_t) newBB);
+            }
         }
     }
 
