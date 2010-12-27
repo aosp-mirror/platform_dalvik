@@ -3129,8 +3129,6 @@ static bool handleFmt35c_3rc(CompilationUnit *cUnit, MIR *mir, BasicBlock *bb,
 static bool handleFmt35ms_3rms(CompilationUnit *cUnit, MIR *mir,
                                BasicBlock *bb, ArmLIR *labelList)
 {
-    ArmLIR *retChainingCell = &labelList[bb->fallThrough->id];
-    ArmLIR *predChainingCell = &labelList[bb->taken->id];
     ArmLIR *pcrLabel = NULL;
 
     /* An invoke with the MIR_INLINED is effectively a no-op */
@@ -3143,6 +3141,8 @@ static bool handleFmt35ms_3rms(CompilationUnit *cUnit, MIR *mir,
         case OP_INVOKE_VIRTUAL_QUICK_RANGE:
         case OP_INVOKE_VIRTUAL_QUICK: {
             int methodIndex = dInsn->vB;
+            ArmLIR *retChainingCell = &labelList[bb->fallThrough->id];
+            ArmLIR *predChainingCell = &labelList[bb->taken->id];
 
             /*
              * If the invoke has non-null misPredBranchOver, we need to generate
