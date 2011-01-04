@@ -40,8 +40,8 @@
  * extended opcodes.
  */
 // BEGIN(libdex-maximum-values); GENERATED AUTOMATICALLY BY opcode-gen
-#define kMaxOpcodeValue 0xff
-#define kNumPackedOpcodes 0x100
+#define kMaxOpcodeValue 0xffff
+#define kNumPackedOpcodes 0x200
 // END(libdex-maximum-values); GENERATED AUTOMATICALLY BY opcode-gen
 
 /*
@@ -324,6 +324,262 @@ typedef enum Opcode {
     OP_SGET_OBJECT_VOLATILE         = 0xfd,
     OP_SPUT_OBJECT_VOLATILE         = 0xfe,
     OP_DISPATCH_FF                  = 0xff,
+    OP_CONST_CLASS_JUMBO            = 0x100,
+    OP_CHECK_CAST_JUMBO             = 0x101,
+    OP_INSTANCE_OF_JUMBO            = 0x102,
+    OP_NEW_INSTANCE_JUMBO           = 0x103,
+    OP_NEW_ARRAY_JUMBO              = 0x104,
+    OP_FILLED_NEW_ARRAY_JUMBO       = 0x105,
+    OP_IGET_JUMBO                   = 0x106,
+    OP_IGET_WIDE_JUMBO              = 0x107,
+    OP_IGET_OBJECT_JUMBO            = 0x108,
+    OP_IGET_BOOLEAN_JUMBO           = 0x109,
+    OP_IGET_BYTE_JUMBO              = 0x10a,
+    OP_IGET_CHAR_JUMBO              = 0x10b,
+    OP_IGET_SHORT_JUMBO             = 0x10c,
+    OP_IPUT_JUMBO                   = 0x10d,
+    OP_IPUT_WIDE_JUMBO              = 0x10e,
+    OP_IPUT_OBJECT_JUMBO            = 0x10f,
+    OP_IPUT_BOOLEAN_JUMBO           = 0x110,
+    OP_IPUT_BYTE_JUMBO              = 0x111,
+    OP_IPUT_CHAR_JUMBO              = 0x112,
+    OP_IPUT_SHORT_JUMBO             = 0x113,
+    OP_SGET_JUMBO                   = 0x114,
+    OP_SGET_WIDE_JUMBO              = 0x115,
+    OP_SGET_OBJECT_JUMBO            = 0x116,
+    OP_SGET_BOOLEAN_JUMBO           = 0x117,
+    OP_SGET_BYTE_JUMBO              = 0x118,
+    OP_SGET_CHAR_JUMBO              = 0x119,
+    OP_SGET_SHORT_JUMBO             = 0x11a,
+    OP_SPUT_JUMBO                   = 0x11b,
+    OP_SPUT_WIDE_JUMBO              = 0x11c,
+    OP_SPUT_OBJECT_JUMBO            = 0x11d,
+    OP_SPUT_BOOLEAN_JUMBO           = 0x11e,
+    OP_SPUT_BYTE_JUMBO              = 0x11f,
+    OP_SPUT_CHAR_JUMBO              = 0x120,
+    OP_SPUT_SHORT_JUMBO             = 0x121,
+    OP_INVOKE_VIRTUAL_JUMBO         = 0x122,
+    OP_INVOKE_SUPER_JUMBO           = 0x123,
+    OP_INVOKE_DIRECT_JUMBO          = 0x124,
+    OP_INVOKE_STATIC_JUMBO          = 0x125,
+    OP_INVOKE_INTERFACE_JUMBO       = 0x126,
+    OP_UNUSED_27FF                  = 0x127,
+    OP_UNUSED_28FF                  = 0x128,
+    OP_UNUSED_29FF                  = 0x129,
+    OP_UNUSED_2AFF                  = 0x12a,
+    OP_UNUSED_2BFF                  = 0x12b,
+    OP_UNUSED_2CFF                  = 0x12c,
+    OP_UNUSED_2DFF                  = 0x12d,
+    OP_UNUSED_2EFF                  = 0x12e,
+    OP_UNUSED_2FFF                  = 0x12f,
+    OP_UNUSED_30FF                  = 0x130,
+    OP_UNUSED_31FF                  = 0x131,
+    OP_UNUSED_32FF                  = 0x132,
+    OP_UNUSED_33FF                  = 0x133,
+    OP_UNUSED_34FF                  = 0x134,
+    OP_UNUSED_35FF                  = 0x135,
+    OP_UNUSED_36FF                  = 0x136,
+    OP_UNUSED_37FF                  = 0x137,
+    OP_UNUSED_38FF                  = 0x138,
+    OP_UNUSED_39FF                  = 0x139,
+    OP_UNUSED_3AFF                  = 0x13a,
+    OP_UNUSED_3BFF                  = 0x13b,
+    OP_UNUSED_3CFF                  = 0x13c,
+    OP_UNUSED_3DFF                  = 0x13d,
+    OP_UNUSED_3EFF                  = 0x13e,
+    OP_UNUSED_3FFF                  = 0x13f,
+    OP_UNUSED_40FF                  = 0x140,
+    OP_UNUSED_41FF                  = 0x141,
+    OP_UNUSED_42FF                  = 0x142,
+    OP_UNUSED_43FF                  = 0x143,
+    OP_UNUSED_44FF                  = 0x144,
+    OP_UNUSED_45FF                  = 0x145,
+    OP_UNUSED_46FF                  = 0x146,
+    OP_UNUSED_47FF                  = 0x147,
+    OP_UNUSED_48FF                  = 0x148,
+    OP_UNUSED_49FF                  = 0x149,
+    OP_UNUSED_4AFF                  = 0x14a,
+    OP_UNUSED_4BFF                  = 0x14b,
+    OP_UNUSED_4CFF                  = 0x14c,
+    OP_UNUSED_4DFF                  = 0x14d,
+    OP_UNUSED_4EFF                  = 0x14e,
+    OP_UNUSED_4FFF                  = 0x14f,
+    OP_UNUSED_50FF                  = 0x150,
+    OP_UNUSED_51FF                  = 0x151,
+    OP_UNUSED_52FF                  = 0x152,
+    OP_UNUSED_53FF                  = 0x153,
+    OP_UNUSED_54FF                  = 0x154,
+    OP_UNUSED_55FF                  = 0x155,
+    OP_UNUSED_56FF                  = 0x156,
+    OP_UNUSED_57FF                  = 0x157,
+    OP_UNUSED_58FF                  = 0x158,
+    OP_UNUSED_59FF                  = 0x159,
+    OP_UNUSED_5AFF                  = 0x15a,
+    OP_UNUSED_5BFF                  = 0x15b,
+    OP_UNUSED_5CFF                  = 0x15c,
+    OP_UNUSED_5DFF                  = 0x15d,
+    OP_UNUSED_5EFF                  = 0x15e,
+    OP_UNUSED_5FFF                  = 0x15f,
+    OP_UNUSED_60FF                  = 0x160,
+    OP_UNUSED_61FF                  = 0x161,
+    OP_UNUSED_62FF                  = 0x162,
+    OP_UNUSED_63FF                  = 0x163,
+    OP_UNUSED_64FF                  = 0x164,
+    OP_UNUSED_65FF                  = 0x165,
+    OP_UNUSED_66FF                  = 0x166,
+    OP_UNUSED_67FF                  = 0x167,
+    OP_UNUSED_68FF                  = 0x168,
+    OP_UNUSED_69FF                  = 0x169,
+    OP_UNUSED_6AFF                  = 0x16a,
+    OP_UNUSED_6BFF                  = 0x16b,
+    OP_UNUSED_6CFF                  = 0x16c,
+    OP_UNUSED_6DFF                  = 0x16d,
+    OP_UNUSED_6EFF                  = 0x16e,
+    OP_UNUSED_6FFF                  = 0x16f,
+    OP_UNUSED_70FF                  = 0x170,
+    OP_UNUSED_71FF                  = 0x171,
+    OP_UNUSED_72FF                  = 0x172,
+    OP_UNUSED_73FF                  = 0x173,
+    OP_UNUSED_74FF                  = 0x174,
+    OP_UNUSED_75FF                  = 0x175,
+    OP_UNUSED_76FF                  = 0x176,
+    OP_UNUSED_77FF                  = 0x177,
+    OP_UNUSED_78FF                  = 0x178,
+    OP_UNUSED_79FF                  = 0x179,
+    OP_UNUSED_7AFF                  = 0x17a,
+    OP_UNUSED_7BFF                  = 0x17b,
+    OP_UNUSED_7CFF                  = 0x17c,
+    OP_UNUSED_7DFF                  = 0x17d,
+    OP_UNUSED_7EFF                  = 0x17e,
+    OP_UNUSED_7FFF                  = 0x17f,
+    OP_UNUSED_80FF                  = 0x180,
+    OP_UNUSED_81FF                  = 0x181,
+    OP_UNUSED_82FF                  = 0x182,
+    OP_UNUSED_83FF                  = 0x183,
+    OP_UNUSED_84FF                  = 0x184,
+    OP_UNUSED_85FF                  = 0x185,
+    OP_UNUSED_86FF                  = 0x186,
+    OP_UNUSED_87FF                  = 0x187,
+    OP_UNUSED_88FF                  = 0x188,
+    OP_UNUSED_89FF                  = 0x189,
+    OP_UNUSED_8AFF                  = 0x18a,
+    OP_UNUSED_8BFF                  = 0x18b,
+    OP_UNUSED_8CFF                  = 0x18c,
+    OP_UNUSED_8DFF                  = 0x18d,
+    OP_UNUSED_8EFF                  = 0x18e,
+    OP_UNUSED_8FFF                  = 0x18f,
+    OP_UNUSED_90FF                  = 0x190,
+    OP_UNUSED_91FF                  = 0x191,
+    OP_UNUSED_92FF                  = 0x192,
+    OP_UNUSED_93FF                  = 0x193,
+    OP_UNUSED_94FF                  = 0x194,
+    OP_UNUSED_95FF                  = 0x195,
+    OP_UNUSED_96FF                  = 0x196,
+    OP_UNUSED_97FF                  = 0x197,
+    OP_UNUSED_98FF                  = 0x198,
+    OP_UNUSED_99FF                  = 0x199,
+    OP_UNUSED_9AFF                  = 0x19a,
+    OP_UNUSED_9BFF                  = 0x19b,
+    OP_UNUSED_9CFF                  = 0x19c,
+    OP_UNUSED_9DFF                  = 0x19d,
+    OP_UNUSED_9EFF                  = 0x19e,
+    OP_UNUSED_9FFF                  = 0x19f,
+    OP_UNUSED_A0FF                  = 0x1a0,
+    OP_UNUSED_A1FF                  = 0x1a1,
+    OP_UNUSED_A2FF                  = 0x1a2,
+    OP_UNUSED_A3FF                  = 0x1a3,
+    OP_UNUSED_A4FF                  = 0x1a4,
+    OP_UNUSED_A5FF                  = 0x1a5,
+    OP_UNUSED_A6FF                  = 0x1a6,
+    OP_UNUSED_A7FF                  = 0x1a7,
+    OP_UNUSED_A8FF                  = 0x1a8,
+    OP_UNUSED_A9FF                  = 0x1a9,
+    OP_UNUSED_AAFF                  = 0x1aa,
+    OP_UNUSED_ABFF                  = 0x1ab,
+    OP_UNUSED_ACFF                  = 0x1ac,
+    OP_UNUSED_ADFF                  = 0x1ad,
+    OP_UNUSED_AEFF                  = 0x1ae,
+    OP_UNUSED_AFFF                  = 0x1af,
+    OP_UNUSED_B0FF                  = 0x1b0,
+    OP_UNUSED_B1FF                  = 0x1b1,
+    OP_UNUSED_B2FF                  = 0x1b2,
+    OP_UNUSED_B3FF                  = 0x1b3,
+    OP_UNUSED_B4FF                  = 0x1b4,
+    OP_UNUSED_B5FF                  = 0x1b5,
+    OP_UNUSED_B6FF                  = 0x1b6,
+    OP_UNUSED_B7FF                  = 0x1b7,
+    OP_UNUSED_B8FF                  = 0x1b8,
+    OP_UNUSED_B9FF                  = 0x1b9,
+    OP_UNUSED_BAFF                  = 0x1ba,
+    OP_UNUSED_BBFF                  = 0x1bb,
+    OP_UNUSED_BCFF                  = 0x1bc,
+    OP_UNUSED_BDFF                  = 0x1bd,
+    OP_UNUSED_BEFF                  = 0x1be,
+    OP_UNUSED_BFFF                  = 0x1bf,
+    OP_UNUSED_C0FF                  = 0x1c0,
+    OP_UNUSED_C1FF                  = 0x1c1,
+    OP_UNUSED_C2FF                  = 0x1c2,
+    OP_UNUSED_C3FF                  = 0x1c3,
+    OP_UNUSED_C4FF                  = 0x1c4,
+    OP_UNUSED_C5FF                  = 0x1c5,
+    OP_UNUSED_C6FF                  = 0x1c6,
+    OP_UNUSED_C7FF                  = 0x1c7,
+    OP_UNUSED_C8FF                  = 0x1c8,
+    OP_UNUSED_C9FF                  = 0x1c9,
+    OP_UNUSED_CAFF                  = 0x1ca,
+    OP_UNUSED_CBFF                  = 0x1cb,
+    OP_UNUSED_CCFF                  = 0x1cc,
+    OP_UNUSED_CDFF                  = 0x1cd,
+    OP_UNUSED_CEFF                  = 0x1ce,
+    OP_UNUSED_CFFF                  = 0x1cf,
+    OP_UNUSED_D0FF                  = 0x1d0,
+    OP_UNUSED_D1FF                  = 0x1d1,
+    OP_UNUSED_D2FF                  = 0x1d2,
+    OP_UNUSED_D3FF                  = 0x1d3,
+    OP_UNUSED_D4FF                  = 0x1d4,
+    OP_UNUSED_D5FF                  = 0x1d5,
+    OP_UNUSED_D6FF                  = 0x1d6,
+    OP_UNUSED_D7FF                  = 0x1d7,
+    OP_UNUSED_D8FF                  = 0x1d8,
+    OP_UNUSED_D9FF                  = 0x1d9,
+    OP_UNUSED_DAFF                  = 0x1da,
+    OP_UNUSED_DBFF                  = 0x1db,
+    OP_UNUSED_DCFF                  = 0x1dc,
+    OP_UNUSED_DDFF                  = 0x1dd,
+    OP_UNUSED_DEFF                  = 0x1de,
+    OP_UNUSED_DFFF                  = 0x1df,
+    OP_UNUSED_E0FF                  = 0x1e0,
+    OP_UNUSED_E1FF                  = 0x1e1,
+    OP_UNUSED_E2FF                  = 0x1e2,
+    OP_UNUSED_E3FF                  = 0x1e3,
+    OP_UNUSED_E4FF                  = 0x1e4,
+    OP_UNUSED_E5FF                  = 0x1e5,
+    OP_UNUSED_E6FF                  = 0x1e6,
+    OP_UNUSED_E7FF                  = 0x1e7,
+    OP_UNUSED_E8FF                  = 0x1e8,
+    OP_UNUSED_E9FF                  = 0x1e9,
+    OP_UNUSED_EAFF                  = 0x1ea,
+    OP_UNUSED_EBFF                  = 0x1eb,
+    OP_UNUSED_ECFF                  = 0x1ec,
+    OP_UNUSED_EDFF                  = 0x1ed,
+    OP_UNUSED_EEFF                  = 0x1ee,
+    OP_UNUSED_EFFF                  = 0x1ef,
+    OP_UNUSED_F0FF                  = 0x1f0,
+    OP_UNUSED_F1FF                  = 0x1f1,
+    OP_UNUSED_F2FF                  = 0x1f2,
+    OP_UNUSED_F3FF                  = 0x1f3,
+    OP_UNUSED_F4FF                  = 0x1f4,
+    OP_UNUSED_F5FF                  = 0x1f5,
+    OP_UNUSED_F6FF                  = 0x1f6,
+    OP_UNUSED_F7FF                  = 0x1f7,
+    OP_UNUSED_F8FF                  = 0x1f8,
+    OP_UNUSED_F9FF                  = 0x1f9,
+    OP_UNUSED_FAFF                  = 0x1fa,
+    OP_UNUSED_FBFF                  = 0x1fb,
+    OP_UNUSED_FCFF                  = 0x1fc,
+    OP_UNUSED_FDFF                  = 0x1fd,
+    OP_UNUSED_FEFF                  = 0x1fe,
+    OP_THROW_VERIFICATION_ERROR_JUMBO = 0x1ff,
     // END(libdex-opcode-enum)
 } Opcode;
 
@@ -590,6 +846,262 @@ typedef enum Opcode {
         H(OP_SGET_OBJECT_VOLATILE),                                           \
         H(OP_SPUT_OBJECT_VOLATILE),                                           \
         H(OP_DISPATCH_FF),                                                    \
+        H(OP_CONST_CLASS_JUMBO),                                              \
+        H(OP_CHECK_CAST_JUMBO),                                               \
+        H(OP_INSTANCE_OF_JUMBO),                                              \
+        H(OP_NEW_INSTANCE_JUMBO),                                             \
+        H(OP_NEW_ARRAY_JUMBO),                                                \
+        H(OP_FILLED_NEW_ARRAY_JUMBO),                                         \
+        H(OP_IGET_JUMBO),                                                     \
+        H(OP_IGET_WIDE_JUMBO),                                                \
+        H(OP_IGET_OBJECT_JUMBO),                                              \
+        H(OP_IGET_BOOLEAN_JUMBO),                                             \
+        H(OP_IGET_BYTE_JUMBO),                                                \
+        H(OP_IGET_CHAR_JUMBO),                                                \
+        H(OP_IGET_SHORT_JUMBO),                                               \
+        H(OP_IPUT_JUMBO),                                                     \
+        H(OP_IPUT_WIDE_JUMBO),                                                \
+        H(OP_IPUT_OBJECT_JUMBO),                                              \
+        H(OP_IPUT_BOOLEAN_JUMBO),                                             \
+        H(OP_IPUT_BYTE_JUMBO),                                                \
+        H(OP_IPUT_CHAR_JUMBO),                                                \
+        H(OP_IPUT_SHORT_JUMBO),                                               \
+        H(OP_SGET_JUMBO),                                                     \
+        H(OP_SGET_WIDE_JUMBO),                                                \
+        H(OP_SGET_OBJECT_JUMBO),                                              \
+        H(OP_SGET_BOOLEAN_JUMBO),                                             \
+        H(OP_SGET_BYTE_JUMBO),                                                \
+        H(OP_SGET_CHAR_JUMBO),                                                \
+        H(OP_SGET_SHORT_JUMBO),                                               \
+        H(OP_SPUT_JUMBO),                                                     \
+        H(OP_SPUT_WIDE_JUMBO),                                                \
+        H(OP_SPUT_OBJECT_JUMBO),                                              \
+        H(OP_SPUT_BOOLEAN_JUMBO),                                             \
+        H(OP_SPUT_BYTE_JUMBO),                                                \
+        H(OP_SPUT_CHAR_JUMBO),                                                \
+        H(OP_SPUT_SHORT_JUMBO),                                               \
+        H(OP_INVOKE_VIRTUAL_JUMBO),                                           \
+        H(OP_INVOKE_SUPER_JUMBO),                                             \
+        H(OP_INVOKE_DIRECT_JUMBO),                                            \
+        H(OP_INVOKE_STATIC_JUMBO),                                            \
+        H(OP_INVOKE_INTERFACE_JUMBO),                                         \
+        H(OP_UNUSED_27FF),                                                    \
+        H(OP_UNUSED_28FF),                                                    \
+        H(OP_UNUSED_29FF),                                                    \
+        H(OP_UNUSED_2AFF),                                                    \
+        H(OP_UNUSED_2BFF),                                                    \
+        H(OP_UNUSED_2CFF),                                                    \
+        H(OP_UNUSED_2DFF),                                                    \
+        H(OP_UNUSED_2EFF),                                                    \
+        H(OP_UNUSED_2FFF),                                                    \
+        H(OP_UNUSED_30FF),                                                    \
+        H(OP_UNUSED_31FF),                                                    \
+        H(OP_UNUSED_32FF),                                                    \
+        H(OP_UNUSED_33FF),                                                    \
+        H(OP_UNUSED_34FF),                                                    \
+        H(OP_UNUSED_35FF),                                                    \
+        H(OP_UNUSED_36FF),                                                    \
+        H(OP_UNUSED_37FF),                                                    \
+        H(OP_UNUSED_38FF),                                                    \
+        H(OP_UNUSED_39FF),                                                    \
+        H(OP_UNUSED_3AFF),                                                    \
+        H(OP_UNUSED_3BFF),                                                    \
+        H(OP_UNUSED_3CFF),                                                    \
+        H(OP_UNUSED_3DFF),                                                    \
+        H(OP_UNUSED_3EFF),                                                    \
+        H(OP_UNUSED_3FFF),                                                    \
+        H(OP_UNUSED_40FF),                                                    \
+        H(OP_UNUSED_41FF),                                                    \
+        H(OP_UNUSED_42FF),                                                    \
+        H(OP_UNUSED_43FF),                                                    \
+        H(OP_UNUSED_44FF),                                                    \
+        H(OP_UNUSED_45FF),                                                    \
+        H(OP_UNUSED_46FF),                                                    \
+        H(OP_UNUSED_47FF),                                                    \
+        H(OP_UNUSED_48FF),                                                    \
+        H(OP_UNUSED_49FF),                                                    \
+        H(OP_UNUSED_4AFF),                                                    \
+        H(OP_UNUSED_4BFF),                                                    \
+        H(OP_UNUSED_4CFF),                                                    \
+        H(OP_UNUSED_4DFF),                                                    \
+        H(OP_UNUSED_4EFF),                                                    \
+        H(OP_UNUSED_4FFF),                                                    \
+        H(OP_UNUSED_50FF),                                                    \
+        H(OP_UNUSED_51FF),                                                    \
+        H(OP_UNUSED_52FF),                                                    \
+        H(OP_UNUSED_53FF),                                                    \
+        H(OP_UNUSED_54FF),                                                    \
+        H(OP_UNUSED_55FF),                                                    \
+        H(OP_UNUSED_56FF),                                                    \
+        H(OP_UNUSED_57FF),                                                    \
+        H(OP_UNUSED_58FF),                                                    \
+        H(OP_UNUSED_59FF),                                                    \
+        H(OP_UNUSED_5AFF),                                                    \
+        H(OP_UNUSED_5BFF),                                                    \
+        H(OP_UNUSED_5CFF),                                                    \
+        H(OP_UNUSED_5DFF),                                                    \
+        H(OP_UNUSED_5EFF),                                                    \
+        H(OP_UNUSED_5FFF),                                                    \
+        H(OP_UNUSED_60FF),                                                    \
+        H(OP_UNUSED_61FF),                                                    \
+        H(OP_UNUSED_62FF),                                                    \
+        H(OP_UNUSED_63FF),                                                    \
+        H(OP_UNUSED_64FF),                                                    \
+        H(OP_UNUSED_65FF),                                                    \
+        H(OP_UNUSED_66FF),                                                    \
+        H(OP_UNUSED_67FF),                                                    \
+        H(OP_UNUSED_68FF),                                                    \
+        H(OP_UNUSED_69FF),                                                    \
+        H(OP_UNUSED_6AFF),                                                    \
+        H(OP_UNUSED_6BFF),                                                    \
+        H(OP_UNUSED_6CFF),                                                    \
+        H(OP_UNUSED_6DFF),                                                    \
+        H(OP_UNUSED_6EFF),                                                    \
+        H(OP_UNUSED_6FFF),                                                    \
+        H(OP_UNUSED_70FF),                                                    \
+        H(OP_UNUSED_71FF),                                                    \
+        H(OP_UNUSED_72FF),                                                    \
+        H(OP_UNUSED_73FF),                                                    \
+        H(OP_UNUSED_74FF),                                                    \
+        H(OP_UNUSED_75FF),                                                    \
+        H(OP_UNUSED_76FF),                                                    \
+        H(OP_UNUSED_77FF),                                                    \
+        H(OP_UNUSED_78FF),                                                    \
+        H(OP_UNUSED_79FF),                                                    \
+        H(OP_UNUSED_7AFF),                                                    \
+        H(OP_UNUSED_7BFF),                                                    \
+        H(OP_UNUSED_7CFF),                                                    \
+        H(OP_UNUSED_7DFF),                                                    \
+        H(OP_UNUSED_7EFF),                                                    \
+        H(OP_UNUSED_7FFF),                                                    \
+        H(OP_UNUSED_80FF),                                                    \
+        H(OP_UNUSED_81FF),                                                    \
+        H(OP_UNUSED_82FF),                                                    \
+        H(OP_UNUSED_83FF),                                                    \
+        H(OP_UNUSED_84FF),                                                    \
+        H(OP_UNUSED_85FF),                                                    \
+        H(OP_UNUSED_86FF),                                                    \
+        H(OP_UNUSED_87FF),                                                    \
+        H(OP_UNUSED_88FF),                                                    \
+        H(OP_UNUSED_89FF),                                                    \
+        H(OP_UNUSED_8AFF),                                                    \
+        H(OP_UNUSED_8BFF),                                                    \
+        H(OP_UNUSED_8CFF),                                                    \
+        H(OP_UNUSED_8DFF),                                                    \
+        H(OP_UNUSED_8EFF),                                                    \
+        H(OP_UNUSED_8FFF),                                                    \
+        H(OP_UNUSED_90FF),                                                    \
+        H(OP_UNUSED_91FF),                                                    \
+        H(OP_UNUSED_92FF),                                                    \
+        H(OP_UNUSED_93FF),                                                    \
+        H(OP_UNUSED_94FF),                                                    \
+        H(OP_UNUSED_95FF),                                                    \
+        H(OP_UNUSED_96FF),                                                    \
+        H(OP_UNUSED_97FF),                                                    \
+        H(OP_UNUSED_98FF),                                                    \
+        H(OP_UNUSED_99FF),                                                    \
+        H(OP_UNUSED_9AFF),                                                    \
+        H(OP_UNUSED_9BFF),                                                    \
+        H(OP_UNUSED_9CFF),                                                    \
+        H(OP_UNUSED_9DFF),                                                    \
+        H(OP_UNUSED_9EFF),                                                    \
+        H(OP_UNUSED_9FFF),                                                    \
+        H(OP_UNUSED_A0FF),                                                    \
+        H(OP_UNUSED_A1FF),                                                    \
+        H(OP_UNUSED_A2FF),                                                    \
+        H(OP_UNUSED_A3FF),                                                    \
+        H(OP_UNUSED_A4FF),                                                    \
+        H(OP_UNUSED_A5FF),                                                    \
+        H(OP_UNUSED_A6FF),                                                    \
+        H(OP_UNUSED_A7FF),                                                    \
+        H(OP_UNUSED_A8FF),                                                    \
+        H(OP_UNUSED_A9FF),                                                    \
+        H(OP_UNUSED_AAFF),                                                    \
+        H(OP_UNUSED_ABFF),                                                    \
+        H(OP_UNUSED_ACFF),                                                    \
+        H(OP_UNUSED_ADFF),                                                    \
+        H(OP_UNUSED_AEFF),                                                    \
+        H(OP_UNUSED_AFFF),                                                    \
+        H(OP_UNUSED_B0FF),                                                    \
+        H(OP_UNUSED_B1FF),                                                    \
+        H(OP_UNUSED_B2FF),                                                    \
+        H(OP_UNUSED_B3FF),                                                    \
+        H(OP_UNUSED_B4FF),                                                    \
+        H(OP_UNUSED_B5FF),                                                    \
+        H(OP_UNUSED_B6FF),                                                    \
+        H(OP_UNUSED_B7FF),                                                    \
+        H(OP_UNUSED_B8FF),                                                    \
+        H(OP_UNUSED_B9FF),                                                    \
+        H(OP_UNUSED_BAFF),                                                    \
+        H(OP_UNUSED_BBFF),                                                    \
+        H(OP_UNUSED_BCFF),                                                    \
+        H(OP_UNUSED_BDFF),                                                    \
+        H(OP_UNUSED_BEFF),                                                    \
+        H(OP_UNUSED_BFFF),                                                    \
+        H(OP_UNUSED_C0FF),                                                    \
+        H(OP_UNUSED_C1FF),                                                    \
+        H(OP_UNUSED_C2FF),                                                    \
+        H(OP_UNUSED_C3FF),                                                    \
+        H(OP_UNUSED_C4FF),                                                    \
+        H(OP_UNUSED_C5FF),                                                    \
+        H(OP_UNUSED_C6FF),                                                    \
+        H(OP_UNUSED_C7FF),                                                    \
+        H(OP_UNUSED_C8FF),                                                    \
+        H(OP_UNUSED_C9FF),                                                    \
+        H(OP_UNUSED_CAFF),                                                    \
+        H(OP_UNUSED_CBFF),                                                    \
+        H(OP_UNUSED_CCFF),                                                    \
+        H(OP_UNUSED_CDFF),                                                    \
+        H(OP_UNUSED_CEFF),                                                    \
+        H(OP_UNUSED_CFFF),                                                    \
+        H(OP_UNUSED_D0FF),                                                    \
+        H(OP_UNUSED_D1FF),                                                    \
+        H(OP_UNUSED_D2FF),                                                    \
+        H(OP_UNUSED_D3FF),                                                    \
+        H(OP_UNUSED_D4FF),                                                    \
+        H(OP_UNUSED_D5FF),                                                    \
+        H(OP_UNUSED_D6FF),                                                    \
+        H(OP_UNUSED_D7FF),                                                    \
+        H(OP_UNUSED_D8FF),                                                    \
+        H(OP_UNUSED_D9FF),                                                    \
+        H(OP_UNUSED_DAFF),                                                    \
+        H(OP_UNUSED_DBFF),                                                    \
+        H(OP_UNUSED_DCFF),                                                    \
+        H(OP_UNUSED_DDFF),                                                    \
+        H(OP_UNUSED_DEFF),                                                    \
+        H(OP_UNUSED_DFFF),                                                    \
+        H(OP_UNUSED_E0FF),                                                    \
+        H(OP_UNUSED_E1FF),                                                    \
+        H(OP_UNUSED_E2FF),                                                    \
+        H(OP_UNUSED_E3FF),                                                    \
+        H(OP_UNUSED_E4FF),                                                    \
+        H(OP_UNUSED_E5FF),                                                    \
+        H(OP_UNUSED_E6FF),                                                    \
+        H(OP_UNUSED_E7FF),                                                    \
+        H(OP_UNUSED_E8FF),                                                    \
+        H(OP_UNUSED_E9FF),                                                    \
+        H(OP_UNUSED_EAFF),                                                    \
+        H(OP_UNUSED_EBFF),                                                    \
+        H(OP_UNUSED_ECFF),                                                    \
+        H(OP_UNUSED_EDFF),                                                    \
+        H(OP_UNUSED_EEFF),                                                    \
+        H(OP_UNUSED_EFFF),                                                    \
+        H(OP_UNUSED_F0FF),                                                    \
+        H(OP_UNUSED_F1FF),                                                    \
+        H(OP_UNUSED_F2FF),                                                    \
+        H(OP_UNUSED_F3FF),                                                    \
+        H(OP_UNUSED_F4FF),                                                    \
+        H(OP_UNUSED_F5FF),                                                    \
+        H(OP_UNUSED_F6FF),                                                    \
+        H(OP_UNUSED_F7FF),                                                    \
+        H(OP_UNUSED_F8FF),                                                    \
+        H(OP_UNUSED_F9FF),                                                    \
+        H(OP_UNUSED_FAFF),                                                    \
+        H(OP_UNUSED_FBFF),                                                    \
+        H(OP_UNUSED_FCFF),                                                    \
+        H(OP_UNUSED_FDFF),                                                    \
+        H(OP_UNUSED_FEFF),                                                    \
+        H(OP_THROW_VERIFICATION_ERROR_JUMBO),                                 \
         /* END(libdex-goto-table) */                                          \
     };
 

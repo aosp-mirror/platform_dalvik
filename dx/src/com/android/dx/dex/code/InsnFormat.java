@@ -488,8 +488,9 @@ public abstract class InsnFormat {
     protected static short opcodeUnit(DalvInsn insn) {
         int opcode = insn.getOpcode().getOpcode();
 
-        if ((opcode < 0x100) || (opcode > 0xffff)) {
-            throw new IllegalArgumentException("opcode out of range 0..65535");
+        if ((opcode < 0xff) || (opcode > 0xffff)) {
+            throw new IllegalArgumentException(
+                "extended opcode out of range 255..65535");
         }
 
         return (short) opcode;

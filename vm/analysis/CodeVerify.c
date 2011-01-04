@@ -424,7 +424,8 @@ UninitInstanceMap* dvmCreateUninitInstanceMap(const Method* meth,
     for (addr = 0; addr < insnsSize; /**/) {
         int width = dvmInsnGetWidth(insnFlags, addr);
 
-        if ((*insns & 0xff) == OP_NEW_INSTANCE)
+        Opcode opcode = dexOpcodeFromCodeUnit(*insns);
+        if (opcode == OP_NEW_INSTANCE || opcode == OP_NEW_INSTANCE_JUMBO)
             uninitMap->map[idx++].addr = addr;
 
         addr += width;
@@ -3169,7 +3170,10 @@ static void verifyFilledNewArrayRegs(const Method* meth,
  * The throw-verification-error instruction requires two code units.  Some
  * of the replaced instructions require three; the third code unit will
  * receive a "nop".  The instruction's length will be left unchanged
- * in "insnFlags".
+ * in "insnFlags".  If the erroring instruction is a jumbo instruction,
+ * the throw-verification-error-jumbo instruction requires four code units.
+ * Some jumbo instructions require five, and the fifth code unit will become
+ * a "nop".
  *
  * The VM postpones setting of debugger breakpoints in unverified classes,
  * so there should be no clashes with the debugger.
@@ -3200,6 +3204,12 @@ static bool replaceFailingInstruction(const Method* meth, InsnFlags* insnFlags,
     case OP_NEW_ARRAY:
     case OP_FILLED_NEW_ARRAY:           // insn[1] == class ref, 3 bytes
     case OP_FILLED_NEW_ARRAY_RANGE:
+    case OP_CONST_CLASS_JUMBO:          // insn[1/2] == class ref, 4 bytes
+    case OP_CHECK_CAST_JUMBO:
+    case OP_NEW_INSTANCE_JUMBO:
+    case OP_INSTANCE_OF_JUMBO:          // insn[1/2] == class ref, 5 bytes
+    case OP_NEW_ARRAY_JUMBO:
+    case OP_FILLED_NEW_ARRAY_JUMBO:
         refType = VERIFY_ERROR_REF_CLASS;
         break;
 
@@ -3231,6 +3241,34 @@ static bool replaceFailingInstruction(const Method* meth, InsnFlags* insnFlags,
     case OP_SPUT_SHORT:
     case OP_SPUT_WIDE:
     case OP_SPUT_OBJECT:
+    case OP_SGET_JUMBO:                 // insn[1/2] == field ref, 4 bytes
+    case OP_SGET_BOOLEAN_JUMBO:
+    case OP_SGET_BYTE_JUMBO:
+    case OP_SGET_CHAR_JUMBO:
+    case OP_SGET_SHORT_JUMBO:
+    case OP_SGET_WIDE_JUMBO:
+    case OP_SGET_OBJECT_JUMBO:
+    case OP_SPUT_JUMBO:
+    case OP_SPUT_BOOLEAN_JUMBO:
+    case OP_SPUT_BYTE_JUMBO:
+    case OP_SPUT_CHAR_JUMBO:
+    case OP_SPUT_SHORT_JUMBO:
+    case OP_SPUT_WIDE_JUMBO:
+    case OP_SPUT_OBJECT_JUMBO:
+    case OP_IGET_JUMBO:                 // insn[1/2] == field ref, 5 bytes
+    case OP_IGET_BOOLEAN_JUMBO:
+    case OP_IGET_BYTE_JUMBO:
+    case OP_IGET_CHAR_JUMBO:
+    case OP_IGET_SHORT_JUMBO:
+    case OP_IGET_WIDE_JUMBO:
+    case OP_IGET_OBJECT_JUMBO:
+    case OP_IPUT_JUMBO:
+    case OP_IPUT_BOOLEAN_JUMBO:
+    case OP_IPUT_BYTE_JUMBO:
+    case OP_IPUT_CHAR_JUMBO:
+    case OP_IPUT_SHORT_JUMBO:
+    case OP_IPUT_WIDE_JUMBO:
+    case OP_IPUT_OBJECT_JUMBO:
         refType = VERIFY_ERROR_REF_FIELD;
         break;
 
@@ -3244,6 +3282,11 @@ static bool replaceFailingInstruction(const Method* meth, InsnFlags* insnFlags,
     case OP_INVOKE_STATIC_RANGE:
     case OP_INVOKE_INTERFACE:
     case OP_INVOKE_INTERFACE_RANGE:
+    case OP_INVOKE_VIRTUAL_JUMBO:       // insn[1/2] == method ref, 5 bytes
+    case OP_INVOKE_SUPER_JUMBO:
+    case OP_INVOKE_DIRECT_JUMBO:
+    case OP_INVOKE_STATIC_JUMBO:
+    case OP_INVOKE_INTERFACE_JUMBO:
         refType = VERIFY_ERROR_REF_METHOD;
         break;
 
@@ -3259,10 +3302,14 @@ static bool replaceFailingInstruction(const Method* meth, InsnFlags* insnFlags,
     int width = dvmInsnGetWidth(insnFlags, insnIdx);
     switch (width) {
     case 2:
+    case 4:
         /* nothing to do */
         break;
     case 3:
         dvmDexChangeDex2(meth->clazz->pDvmDex, oldInsns+2, OP_NOP);
+        break;
+    case 5:
+        dvmDexChangeDex2(meth->clazz->pDvmDex, oldInsns+4, OP_NOP);
         break;
     default:
         /* whoops */
@@ -3271,10 +3318,22 @@ static bool replaceFailingInstruction(const Method* meth, InsnFlags* insnFlags,
         dvmAbort();
     }
 
-    /* encode the opcode, with the failure code in the high byte */
-    u2 newVal = OP_THROW_VERIFICATION_ERROR |
-        (failure << 8) | (refType << (8 + kVerifyErrorRefTypeShift));
-    dvmDexChangeDex2(meth->clazz->pDvmDex, oldInsns, newVal);
+    /* check for jumbo opcodes */
+    if (opcode > OP_DISPATCH_FF) {
+        /* replace opcode and failure code */
+        assert(width == 4 || width == 5);
+        u2 newVal = (u2) ((OP_THROW_VERIFICATION_ERROR_JUMBO << 8) |
+                           OP_DISPATCH_FF);
+        dvmDexChangeDex2(meth->clazz->pDvmDex, oldInsns, newVal);
+        newVal = failure | (refType << kVerifyErrorRefTypeShift);
+        dvmDexChangeDex2(meth->clazz->pDvmDex, oldInsns+3, newVal);
+    } else {
+        /* encode the opcode, with the failure code in the high byte */
+        assert(width == 2 || width == 3);
+        u2 newVal = OP_THROW_VERIFICATION_ERROR |
+            (failure << 8) | (refType << (8 + kVerifyErrorRefTypeShift));
+        dvmDexChangeDex2(meth->clazz->pDvmDex, oldInsns, newVal);
+    }
 
     result = true;
 
@@ -4013,6 +4072,7 @@ static bool verifyInstruction(const Method* meth, InsnFlags* insnFlags,
             regTypeFromClass(gDvm.classJavaLangString));
         break;
     case OP_CONST_CLASS:
+    case OP_CONST_CLASS_JUMBO:
         assert(gDvm.classJavaLangClass != NULL);
         /* make sure we can resolve the class; access check is important */
         resClass = dvmOptResolveClass(meth->clazz, decInsn.vB, &failure);
@@ -4058,6 +4118,7 @@ static bool verifyInstruction(const Method* meth, InsnFlags* insnFlags,
         break;
 
     case OP_CHECK_CAST:
+    case OP_CHECK_CAST_JUMBO:
         /*
          * If this instruction succeeds, we will promote register vA to
          * the type in vB.  (This could be a demotion -- not expected, so
@@ -4086,6 +4147,7 @@ static bool verifyInstruction(const Method* meth, InsnFlags* insnFlags,
         }
         break;
     case OP_INSTANCE_OF:
+    case OP_INSTANCE_OF_JUMBO:
         /* make sure we're checking a reference type */
         tmpType = getRegisterType(workLine, decInsn.vB);
         if (!regTypeIsReference(tmpType)) {
@@ -4121,6 +4183,7 @@ static bool verifyInstruction(const Method* meth, InsnFlags* insnFlags,
         break;
 
     case OP_NEW_INSTANCE:
+    case OP_NEW_INSTANCE_JUMBO:
         resClass = dvmOptResolveClass(meth->clazz, decInsn.vB, &failure);
         if (resClass == NULL) {
             const char* badClassDesc = dexStringByTypeIdx(pDexFile, decInsn.vB);
@@ -4156,6 +4219,7 @@ static bool verifyInstruction(const Method* meth, InsnFlags* insnFlags,
         }
         break;
     case OP_NEW_ARRAY:
+    case OP_NEW_ARRAY_JUMBO:
         resClass = dvmOptResolveClass(meth->clazz, decInsn.vC, &failure);
         if (resClass == NULL) {
             const char* badClassDesc = dexStringByTypeIdx(pDexFile, decInsn.vC);
@@ -4175,6 +4239,7 @@ static bool verifyInstruction(const Method* meth, InsnFlags* insnFlags,
         break;
     case OP_FILLED_NEW_ARRAY:
     case OP_FILLED_NEW_ARRAY_RANGE:
+    case OP_FILLED_NEW_ARRAY_JUMBO:
         resClass = dvmOptResolveClass(meth->clazz, decInsn.vB, &failure);
         if (resClass == NULL) {
             const char* badClassDesc = dexStringByTypeIdx(pDexFile, decInsn.vB);
@@ -4186,7 +4251,8 @@ static bool verifyInstruction(const Method* meth, InsnFlags* insnFlags,
             LOG_VFY("VFY: filled-new-array on non-array class\n");
             failure = VERIFY_ERROR_GENERIC;
         } else {
-            bool isRange = (decInsn.opcode == OP_FILLED_NEW_ARRAY_RANGE);
+            bool isRange = (decInsn.opcode == OP_FILLED_NEW_ARRAY_RANGE ||
+                            decInsn.opcode == OP_FILLED_NEW_ARRAY_JUMBO);
 
             /* check the arguments to the instruction */
             verifyFilledNewArrayRegs(meth, workLine, &decInsn,
@@ -4698,18 +4764,23 @@ aput_1nr_common:
 
     case OP_IGET:
     case OP_IGET_VOLATILE:
+    case OP_IGET_JUMBO:
         tmpType = kRegTypeInteger;
         goto iget_1nr_common;
     case OP_IGET_BOOLEAN:
+    case OP_IGET_BOOLEAN_JUMBO:
         tmpType = kRegTypeBoolean;
         goto iget_1nr_common;
     case OP_IGET_BYTE:
+    case OP_IGET_BYTE_JUMBO:
         tmpType = kRegTypeByte;
         goto iget_1nr_common;
     case OP_IGET_CHAR:
+    case OP_IGET_CHAR_JUMBO:
         tmpType = kRegTypeChar;
         goto iget_1nr_common;
     case OP_IGET_SHORT:
+    case OP_IGET_SHORT_JUMBO:
         tmpType = kRegTypeShort;
         goto iget_1nr_common;
 iget_1nr_common:
@@ -4740,6 +4811,7 @@ iget_1nr_common:
         break;
     case OP_IGET_WIDE:
     case OP_IGET_WIDE_VOLATILE:
+    case OP_IGET_WIDE_JUMBO:
         {
             RegType dstType;
             InstField* instField;
@@ -4773,6 +4845,7 @@ iget_1nr_common:
         break;
     case OP_IGET_OBJECT:
     case OP_IGET_OBJECT_VOLATILE:
+    case OP_IGET_OBJECT_JUMBO:
         {
             ClassObject* fieldClass;
             InstField* instField;
@@ -4800,18 +4873,23 @@ iget_1nr_common:
         break;
     case OP_IPUT:
     case OP_IPUT_VOLATILE:
+    case OP_IPUT_JUMBO:
         tmpType = kRegTypeInteger;
         goto iput_1nr_common;
     case OP_IPUT_BOOLEAN:
+    case OP_IPUT_BOOLEAN_JUMBO:
         tmpType = kRegTypeBoolean;
         goto iput_1nr_common;
     case OP_IPUT_BYTE:
+    case OP_IPUT_BYTE_JUMBO:
         tmpType = kRegTypeByte;
         goto iput_1nr_common;
     case OP_IPUT_CHAR:
+    case OP_IPUT_CHAR_JUMBO:
         tmpType = kRegTypeChar;
         goto iput_1nr_common;
     case OP_IPUT_SHORT:
+    case OP_IPUT_SHORT_JUMBO:
         tmpType = kRegTypeShort;
         goto iput_1nr_common;
 iput_1nr_common:
@@ -4860,6 +4938,7 @@ iput_1nr_common:
         break;
     case OP_IPUT_WIDE:
     case OP_IPUT_WIDE_VOLATILE:
+    case OP_IPUT_WIDE_JUMBO:
         tmpType = getRegisterType(workLine, decInsn.vA);
         {
             RegType typeHi = getRegisterType(workLine, decInsn.vA+1);
@@ -4896,6 +4975,7 @@ iput_1nr_common:
         break;
     case OP_IPUT_OBJECT:
     case OP_IPUT_OBJECT_VOLATILE:
+    case OP_IPUT_OBJECT_JUMBO:
         {
             ClassObject* fieldClass;
             ClassObject* valueClass;
@@ -4952,18 +5032,23 @@ iput_1nr_common:
 
     case OP_SGET:
     case OP_SGET_VOLATILE:
+    case OP_SGET_JUMBO:
         tmpType = kRegTypeInteger;
         goto sget_1nr_common;
     case OP_SGET_BOOLEAN:
+    case OP_SGET_BOOLEAN_JUMBO:
         tmpType = kRegTypeBoolean;
         goto sget_1nr_common;
     case OP_SGET_BYTE:
+    case OP_SGET_BYTE_JUMBO:
         tmpType = kRegTypeByte;
         goto sget_1nr_common;
     case OP_SGET_CHAR:
+    case OP_SGET_CHAR_JUMBO:
         tmpType = kRegTypeChar;
         goto sget_1nr_common;
     case OP_SGET_SHORT:
+    case OP_SGET_SHORT_JUMBO:
         tmpType = kRegTypeShort;
         goto sget_1nr_common;
 sget_1nr_common:
@@ -4997,6 +5082,7 @@ sget_1nr_common:
         break;
     case OP_SGET_WIDE:
     case OP_SGET_WIDE_VOLATILE:
+    case OP_SGET_WIDE_JUMBO:
         {
             StaticField* staticField;
             RegType dstType;
@@ -5027,6 +5113,7 @@ sget_1nr_common:
         break;
     case OP_SGET_OBJECT:
     case OP_SGET_OBJECT_VOLATILE:
+    case OP_SGET_OBJECT_JUMBO:
         {
             StaticField* staticField;
             ClassObject* fieldClass;
@@ -5051,18 +5138,23 @@ sget_1nr_common:
         break;
     case OP_SPUT:
     case OP_SPUT_VOLATILE:
+    case OP_SPUT_JUMBO:
         tmpType = kRegTypeInteger;
         goto sput_1nr_common;
     case OP_SPUT_BOOLEAN:
+    case OP_SPUT_BOOLEAN_JUMBO:
         tmpType = kRegTypeBoolean;
         goto sput_1nr_common;
     case OP_SPUT_BYTE:
+    case OP_SPUT_BYTE_JUMBO:
         tmpType = kRegTypeByte;
         goto sput_1nr_common;
     case OP_SPUT_CHAR:
+    case OP_SPUT_CHAR_JUMBO:
         tmpType = kRegTypeChar;
         goto sput_1nr_common;
     case OP_SPUT_SHORT:
+    case OP_SPUT_SHORT_JUMBO:
         tmpType = kRegTypeShort;
         goto sput_1nr_common;
 sput_1nr_common:
@@ -5113,6 +5205,7 @@ sput_1nr_common:
         break;
     case OP_SPUT_WIDE:
     case OP_SPUT_WIDE_VOLATILE:
+    case OP_SPUT_WIDE_JUMBO:
         tmpType = getRegisterType(workLine, decInsn.vA);
         {
             RegType typeHi = getRegisterType(workLine, decInsn.vA+1);
@@ -5146,6 +5239,7 @@ sput_1nr_common:
         break;
     case OP_SPUT_OBJECT:
     case OP_SPUT_OBJECT_VOLATILE:
+    case OP_SPUT_OBJECT_JUMBO:
         {
             ClassObject* fieldClass;
             ClassObject* valueClass;
@@ -5200,8 +5294,10 @@ sput_1nr_common:
 
     case OP_INVOKE_VIRTUAL:
     case OP_INVOKE_VIRTUAL_RANGE:
+    case OP_INVOKE_VIRTUAL_JUMBO:
     case OP_INVOKE_SUPER:
     case OP_INVOKE_SUPER_RANGE:
+    case OP_INVOKE_SUPER_JUMBO:
         {
             Method* calledMethod;
             RegType returnType;
@@ -5209,9 +5305,12 @@ sput_1nr_common:
             bool isSuper;
 
             isRange =  (decInsn.opcode == OP_INVOKE_VIRTUAL_RANGE ||
-                        decInsn.opcode == OP_INVOKE_SUPER_RANGE);
+                        decInsn.opcode == OP_INVOKE_VIRTUAL_JUMBO ||
+                        decInsn.opcode == OP_INVOKE_SUPER_RANGE ||
+                        decInsn.opcode == OP_INVOKE_SUPER_JUMBO);
             isSuper =  (decInsn.opcode == OP_INVOKE_SUPER ||
-                        decInsn.opcode == OP_INVOKE_SUPER_RANGE);
+                        decInsn.opcode == OP_INVOKE_SUPER_RANGE ||
+                        decInsn.opcode == OP_INVOKE_SUPER_JUMBO);
 
             calledMethod = verifyInvocationArgs(meth, workLine, insnRegCount,
                             &decInsn, uninitMap, METHOD_VIRTUAL, isRange,
@@ -5225,12 +5324,14 @@ sput_1nr_common:
         break;
     case OP_INVOKE_DIRECT:
     case OP_INVOKE_DIRECT_RANGE:
+    case OP_INVOKE_DIRECT_JUMBO:
         {
             RegType returnType;
             Method* calledMethod;
             bool isRange;
 
-            isRange =  (decInsn.opcode == OP_INVOKE_DIRECT_RANGE);
+            isRange =  (decInsn.opcode == OP_INVOKE_DIRECT_RANGE ||
+                        decInsn.opcode == OP_INVOKE_DIRECT_JUMBO);
             calledMethod = verifyInvocationArgs(meth, workLine, insnRegCount,
                             &decInsn, uninitMap, METHOD_DIRECT, isRange,
                             false, &failure);
@@ -5304,12 +5405,14 @@ sput_1nr_common:
         break;
     case OP_INVOKE_STATIC:
     case OP_INVOKE_STATIC_RANGE:
+    case OP_INVOKE_STATIC_JUMBO:
         {
             RegType returnType;
             Method* calledMethod;
             bool isRange;
 
-            isRange =  (decInsn.opcode == OP_INVOKE_STATIC_RANGE);
+            isRange =  (decInsn.opcode == OP_INVOKE_STATIC_RANGE ||
+                        decInsn.opcode == OP_INVOKE_STATIC_JUMBO);
             calledMethod = verifyInvocationArgs(meth, workLine, insnRegCount,
                             &decInsn, uninitMap, METHOD_STATIC, isRange,
                             false, &failure);
@@ -5323,12 +5426,14 @@ sput_1nr_common:
         break;
     case OP_INVOKE_INTERFACE:
     case OP_INVOKE_INTERFACE_RANGE:
+    case OP_INVOKE_INTERFACE_JUMBO:
         {
             RegType /*thisType,*/ returnType;
             Method* absMethod;
             bool isRange;
 
-            isRange =  (decInsn.opcode == OP_INVOKE_INTERFACE_RANGE);
+            isRange =  (decInsn.opcode == OP_INVOKE_INTERFACE_RANGE ||
+                        decInsn.opcode == OP_INVOKE_INTERFACE_JUMBO);
             absMethod = verifyInvocationArgs(meth, workLine, insnRegCount,
                             &decInsn, uninitMap, METHOD_INTERFACE, isRange,
                             false, &failure);
@@ -5619,6 +5724,7 @@ sput_1nr_common:
      * inserted in the course of verification, we can expect to see it here.
      */
     case OP_THROW_VERIFICATION_ERROR:
+    case OP_THROW_VERIFICATION_ERROR_JUMBO:
         break;
 
     /*
@@ -5682,6 +5788,222 @@ sput_1nr_common:
     case OP_UNUSED_7A:
     case OP_BREAKPOINT:
     case OP_DISPATCH_FF:
+    case OP_UNUSED_27FF:
+    case OP_UNUSED_28FF:
+    case OP_UNUSED_29FF:
+    case OP_UNUSED_2AFF:
+    case OP_UNUSED_2BFF:
+    case OP_UNUSED_2CFF:
+    case OP_UNUSED_2DFF:
+    case OP_UNUSED_2EFF:
+    case OP_UNUSED_2FFF:
+    case OP_UNUSED_30FF:
+    case OP_UNUSED_31FF:
+    case OP_UNUSED_32FF:
+    case OP_UNUSED_33FF:
+    case OP_UNUSED_34FF:
+    case OP_UNUSED_35FF:
+    case OP_UNUSED_36FF:
+    case OP_UNUSED_37FF:
+    case OP_UNUSED_38FF:
+    case OP_UNUSED_39FF:
+    case OP_UNUSED_3AFF:
+    case OP_UNUSED_3BFF:
+    case OP_UNUSED_3CFF:
+    case OP_UNUSED_3DFF:
+    case OP_UNUSED_3EFF:
+    case OP_UNUSED_3FFF:
+    case OP_UNUSED_40FF:
+    case OP_UNUSED_41FF:
+    case OP_UNUSED_42FF:
+    case OP_UNUSED_43FF:
+    case OP_UNUSED_44FF:
+    case OP_UNUSED_45FF:
+    case OP_UNUSED_46FF:
+    case OP_UNUSED_47FF:
+    case OP_UNUSED_48FF:
+    case OP_UNUSED_49FF:
+    case OP_UNUSED_4AFF:
+    case OP_UNUSED_4BFF:
+    case OP_UNUSED_4CFF:
+    case OP_UNUSED_4DFF:
+    case OP_UNUSED_4EFF:
+    case OP_UNUSED_4FFF:
+    case OP_UNUSED_50FF:
+    case OP_UNUSED_51FF:
+    case OP_UNUSED_52FF:
+    case OP_UNUSED_53FF:
+    case OP_UNUSED_54FF:
+    case OP_UNUSED_55FF:
+    case OP_UNUSED_56FF:
+    case OP_UNUSED_57FF:
+    case OP_UNUSED_58FF:
+    case OP_UNUSED_59FF:
+    case OP_UNUSED_5AFF:
+    case OP_UNUSED_5BFF:
+    case OP_UNUSED_5CFF:
+    case OP_UNUSED_5DFF:
+    case OP_UNUSED_5EFF:
+    case OP_UNUSED_5FFF:
+    case OP_UNUSED_60FF:
+    case OP_UNUSED_61FF:
+    case OP_UNUSED_62FF:
+    case OP_UNUSED_63FF:
+    case OP_UNUSED_64FF:
+    case OP_UNUSED_65FF:
+    case OP_UNUSED_66FF:
+    case OP_UNUSED_67FF:
+    case OP_UNUSED_68FF:
+    case OP_UNUSED_69FF:
+    case OP_UNUSED_6AFF:
+    case OP_UNUSED_6BFF:
+    case OP_UNUSED_6CFF:
+    case OP_UNUSED_6DFF:
+    case OP_UNUSED_6EFF:
+    case OP_UNUSED_6FFF:
+    case OP_UNUSED_70FF:
+    case OP_UNUSED_71FF:
+    case OP_UNUSED_72FF:
+    case OP_UNUSED_73FF:
+    case OP_UNUSED_74FF:
+    case OP_UNUSED_75FF:
+    case OP_UNUSED_76FF:
+    case OP_UNUSED_77FF:
+    case OP_UNUSED_78FF:
+    case OP_UNUSED_79FF:
+    case OP_UNUSED_7AFF:
+    case OP_UNUSED_7BFF:
+    case OP_UNUSED_7CFF:
+    case OP_UNUSED_7DFF:
+    case OP_UNUSED_7EFF:
+    case OP_UNUSED_7FFF:
+    case OP_UNUSED_80FF:
+    case OP_UNUSED_81FF:
+    case OP_UNUSED_82FF:
+    case OP_UNUSED_83FF:
+    case OP_UNUSED_84FF:
+    case OP_UNUSED_85FF:
+    case OP_UNUSED_86FF:
+    case OP_UNUSED_87FF:
+    case OP_UNUSED_88FF:
+    case OP_UNUSED_89FF:
+    case OP_UNUSED_8AFF:
+    case OP_UNUSED_8BFF:
+    case OP_UNUSED_8CFF:
+    case OP_UNUSED_8DFF:
+    case OP_UNUSED_8EFF:
+    case OP_UNUSED_8FFF:
+    case OP_UNUSED_90FF:
+    case OP_UNUSED_91FF:
+    case OP_UNUSED_92FF:
+    case OP_UNUSED_93FF:
+    case OP_UNUSED_94FF:
+    case OP_UNUSED_95FF:
+    case OP_UNUSED_96FF:
+    case OP_UNUSED_97FF:
+    case OP_UNUSED_98FF:
+    case OP_UNUSED_99FF:
+    case OP_UNUSED_9AFF:
+    case OP_UNUSED_9BFF:
+    case OP_UNUSED_9CFF:
+    case OP_UNUSED_9DFF:
+    case OP_UNUSED_9EFF:
+    case OP_UNUSED_9FFF:
+    case OP_UNUSED_A0FF:
+    case OP_UNUSED_A1FF:
+    case OP_UNUSED_A2FF:
+    case OP_UNUSED_A3FF:
+    case OP_UNUSED_A4FF:
+    case OP_UNUSED_A5FF:
+    case OP_UNUSED_A6FF:
+    case OP_UNUSED_A7FF:
+    case OP_UNUSED_A8FF:
+    case OP_UNUSED_A9FF:
+    case OP_UNUSED_AAFF:
+    case OP_UNUSED_ABFF:
+    case OP_UNUSED_ACFF:
+    case OP_UNUSED_ADFF:
+    case OP_UNUSED_AEFF:
+    case OP_UNUSED_AFFF:
+    case OP_UNUSED_B0FF:
+    case OP_UNUSED_B1FF:
+    case OP_UNUSED_B2FF:
+    case OP_UNUSED_B3FF:
+    case OP_UNUSED_B4FF:
+    case OP_UNUSED_B5FF:
+    case OP_UNUSED_B6FF:
+    case OP_UNUSED_B7FF:
+    case OP_UNUSED_B8FF:
+    case OP_UNUSED_B9FF:
+    case OP_UNUSED_BAFF:
+    case OP_UNUSED_BBFF:
+    case OP_UNUSED_BCFF:
+    case OP_UNUSED_BDFF:
+    case OP_UNUSED_BEFF:
+    case OP_UNUSED_BFFF:
+    case OP_UNUSED_C0FF:
+    case OP_UNUSED_C1FF:
+    case OP_UNUSED_C2FF:
+    case OP_UNUSED_C3FF:
+    case OP_UNUSED_C4FF:
+    case OP_UNUSED_C5FF:
+    case OP_UNUSED_C6FF:
+    case OP_UNUSED_C7FF:
+    case OP_UNUSED_C8FF:
+    case OP_UNUSED_C9FF:
+    case OP_UNUSED_CAFF:
+    case OP_UNUSED_CBFF:
+    case OP_UNUSED_CCFF:
+    case OP_UNUSED_CDFF:
+    case OP_UNUSED_CEFF:
+    case OP_UNUSED_CFFF:
+    case OP_UNUSED_D0FF:
+    case OP_UNUSED_D1FF:
+    case OP_UNUSED_D2FF:
+    case OP_UNUSED_D3FF:
+    case OP_UNUSED_D4FF:
+    case OP_UNUSED_D5FF:
+    case OP_UNUSED_D6FF:
+    case OP_UNUSED_D7FF:
+    case OP_UNUSED_D8FF:
+    case OP_UNUSED_D9FF:
+    case OP_UNUSED_DAFF:
+    case OP_UNUSED_DBFF:
+    case OP_UNUSED_DCFF:
+    case OP_UNUSED_DDFF:
+    case OP_UNUSED_DEFF:
+    case OP_UNUSED_DFFF:
+    case OP_UNUSED_E0FF:
+    case OP_UNUSED_E1FF:
+    case OP_UNUSED_E2FF:
+    case OP_UNUSED_E3FF:
+    case OP_UNUSED_E4FF:
+    case OP_UNUSED_E5FF:
+    case OP_UNUSED_E6FF:
+    case OP_UNUSED_E7FF:
+    case OP_UNUSED_E8FF:
+    case OP_UNUSED_E9FF:
+    case OP_UNUSED_EAFF:
+    case OP_UNUSED_EBFF:
+    case OP_UNUSED_ECFF:
+    case OP_UNUSED_EDFF:
+    case OP_UNUSED_EEFF:
+    case OP_UNUSED_EFFF:
+    case OP_UNUSED_F0FF:
+    case OP_UNUSED_F1FF:
+    case OP_UNUSED_F2FF:
+    case OP_UNUSED_F3FF:
+    case OP_UNUSED_F4FF:
+    case OP_UNUSED_F5FF:
+    case OP_UNUSED_F6FF:
+    case OP_UNUSED_F7FF:
+    case OP_UNUSED_F8FF:
+    case OP_UNUSED_F9FF:
+    case OP_UNUSED_FAFF:
+    case OP_UNUSED_FBFF:
+    case OP_UNUSED_FCFF:
+    case OP_UNUSED_FDFF:
+    case OP_UNUSED_FEFF:
         failure = VERIFY_ERROR_GENERIC;
         break;
 

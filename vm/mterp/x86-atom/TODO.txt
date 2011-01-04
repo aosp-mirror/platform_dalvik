@@ -8,6 +8,7 @@ Items requiring attention:
      skip a memory load when debugger support is completely disabled)
 (hi) WITH_DEBUGGER and WITH_PROFILER are no longer defined (but are
      assumed to be enabled)
+(hi) Add implementations for jumbo opcodes (40 instructions)
 (hi) Implement OP_DISPATCH_FF for real. (Right now it's treated as
      an unused instruction.)
 

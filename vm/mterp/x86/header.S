@@ -226,6 +226,16 @@ Notes:
      jmp     *dvmAsmInstructionJmpTable(,\_reg,4)
 .endm
 
+   /*
+    * Jumbo version of GOTO_NEXT that assumes _reg preloaded with table
+    * offset of the jumbo instruction, which is the top half of the extended
+    * opcode + 0x100.  Loads rINST with BBBB field, similar to GOTO_NEXT_R
+    */
+.macro GOTO_NEXT_JUMBO_R _reg
+     movzwl  6(rPC),rINST
+     jmp     *dvmAsmInstructionJmpTable(,\_reg,4)
+.endm
+
 /*
  * Get/set the 32-bit value from a Dalvik register.
  */

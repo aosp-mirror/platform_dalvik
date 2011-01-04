@@ -24,11 +24,12 @@ bool INTERP_FUNC_NAME(Thread* self, InterpState* interpState)
     u4* fp;                     // frame pointer
     u2 inst;                    // current instruction
     /* instruction decoding */
-    u2 ref;                     // 16-bit quantity fetched directly
+    u4 ref;                     // 16 or 32-bit quantity fetched directly
     u2 vsrc1, vsrc2, vdst;      // usually used for register indexes
     /* method call setup */
     const Method* methodToCall;
     bool methodCallRange;
+    bool jumboFormat;
 
 
 #if defined(THREADED_INTERP)

@@ -23,7 +23,6 @@
 BEGIN {
     MAX_OPCODE = 65535;
     MAX_PACKED_OPCODE = 511;
-    MAX_PACKED_OPCODE = 255; # TODO: Not for long!
     initIndexTypes();
     initFlags();
     if (readBytecodes()) exit 1;

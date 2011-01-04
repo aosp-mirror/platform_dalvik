@@ -212,6 +212,29 @@ common_selectTrace:
 
 
 /*
+ * Common code for jumbo method invocation.
+ *
+ * On entry:
+ *   eax = Method* methodToCall
+ *   rINSTw trashed, must reload
+ */
+
+common_invokeMethodJumbo:
+.LinvokeNewJumbo:
+
+   /*
+    * prepare to copy args to "outs" area of current frame
+    */
+    movzwl      6(rPC),rINST            # rINST<- BBBB
+    movzwl      8(rPC), %ecx            # %ecx<- CCCC
+    ADVANCE_PC 2                        # adjust pc to make return similar
+    SAVEAREA_FROM_FP %edx               # %edx<- &StackSaveArea
+    test        rINST, rINST
+    movl        rINST, LOCAL0_OFFSET(%ebp) # LOCAL0_OFFSET(%ebp)<- BBBB
+    jz          .LinvokeArgsDone        # no args; jump to args done
+    jmp         .LinvokeRangeArgs       # handle args like invoke range
+
+/*
  * Common code for method invocation with range.
  *
  * On entry:
@@ -239,6 +262,7 @@ common_invokeMethodRange:
     * (very few methods have > 10 args; could unroll for common cases)
     */
 
+.LinvokeRangeArgs:
     movl        %ebx, LOCAL1_OFFSET(%ebp)       # LOCAL1_OFFSET(%ebp)<- save %ebx
     lea         (rFP, %ecx, 4), %ecx    # %ecx<- &vCCCC
     shll        $$2, LOCAL0_OFFSET(%ebp)        # LOCAL0_OFFSET(%ebp)<- offset

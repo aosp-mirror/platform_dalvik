@@ -721,6 +721,7 @@ static char* indexString(DexFile* pDexFile,
         width = 4;
         break;
     case kFmt31c:
+    case kFmt40sc:
     case kFmt41c:
     case kFmt5rc:
         index = pDecInsn->vB;

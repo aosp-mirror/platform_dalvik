@@ -544,14 +544,14 @@ static inline bool checkForNullExportPC(Object* obj, u4* fp, const u2* pc)
 
 /* File: c/opcommon.c */
 /* forward declarations of goto targets */
-GOTO_TARGET_DECL(filledNewArray, bool methodCallRange);
-GOTO_TARGET_DECL(invokeVirtual, bool methodCallRange);
-GOTO_TARGET_DECL(invokeSuper, bool methodCallRange);
-GOTO_TARGET_DECL(invokeInterface, bool methodCallRange);
-GOTO_TARGET_DECL(invokeDirect, bool methodCallRange);
-GOTO_TARGET_DECL(invokeStatic, bool methodCallRange);
-GOTO_TARGET_DECL(invokeVirtualQuick, bool methodCallRange);
-GOTO_TARGET_DECL(invokeSuperQuick, bool methodCallRange);
+GOTO_TARGET_DECL(filledNewArray, bool methodCallRange, bool jumboFormat);
+GOTO_TARGET_DECL(invokeVirtual, bool methodCallRange, bool jumboFormat);
+GOTO_TARGET_DECL(invokeSuper, bool methodCallRange, bool jumboFormat);
+GOTO_TARGET_DECL(invokeInterface, bool methodCallRange, bool jumboFormat);
+GOTO_TARGET_DECL(invokeDirect, bool methodCallRange, bool jumboFormat);
+GOTO_TARGET_DECL(invokeStatic, bool methodCallRange, bool jumboFormat);
+GOTO_TARGET_DECL(invokeVirtualQuick, bool methodCallRange, bool jumboFormat);
+GOTO_TARGET_DECL(invokeSuperQuick, bool methodCallRange, bool jumboFormat);
 GOTO_TARGET_DECL(invokeMethod, bool methodCallRange, const Method* methodToCall,
     u2 count, u2 regs);
 GOTO_TARGET_DECL(returnFromMethod);
@@ -1080,6 +1080,34 @@ GOTO_TARGET_DECL(exceptionThrown);
     }                                                                       \
     FINISH(2);
 
+#define HANDLE_IGET_X_JUMBO(_opcode, _opname, _ftype, _regsize)             \
+    HANDLE_OPCODE(_opcode /*vBBBB, vCCCC, class@AAAAAAAA*/)                 \
+    {                                                                       \
+        InstField* ifield;                                                  \
+        Object* obj;                                                        \
+        EXPORT_PC();                                                        \
+        ref = FETCH(1) | (u4)FETCH(2) << 16;   /* field ref */              \
+        vdst = FETCH(3);                                                    \
+        vsrc1 = FETCH(4);                      /* object ptr */             \
+        ILOGV("|iget%s/jumbo v%d,v%d,field@0x%08x",                         \
+            (_opname), vdst, vsrc1, ref);                                   \
+        obj = (Object*) GET_REGISTER(vsrc1);                                \
+        if (!checkForNull(obj))                                             \
+            GOTO_exceptionThrown();                                         \
+        ifield = (InstField*) dvmDexGetResolvedField(methodClassDex, ref);  \
+        if (ifield == NULL) {                                               \
+            ifield = dvmResolveInstField(curMethod->clazz, ref);            \
+            if (ifield == NULL)                                             \
+                GOTO_exceptionThrown();                                     \
+        }                                                                   \
+        SET_REGISTER##_regsize(vdst,                                        \
+            dvmGetField##_ftype(obj, ifield->byteOffset));                  \
+        ILOGV("+ IGET '%s'=0x%08llx", ifield->field.name,                   \
+            (u8) GET_REGISTER##_regsize(vdst));                             \
+        UPDATE_FIELD_GET(&ifield->field);                                   \
+    }                                                                       \
+    FINISH(5);
+
 #define HANDLE_IGET_X_QUICK(_opcode, _opname, _ftype, _regsize)             \
     HANDLE_OPCODE(_opcode /*vA, vB, field@CCCC*/)                           \
     {                                                                       \
@@ -1124,6 +1152,34 @@ GOTO_TARGET_DECL(exceptionThrown);
         UPDATE_FIELD_PUT(&ifield->field);                                   \
     }                                                                       \
     FINISH(2);
+
+#define HANDLE_IPUT_X_JUMBO(_opcode, _opname, _ftype, _regsize)             \
+    HANDLE_OPCODE(_opcode /*vBBBB, vCCCC, class@AAAAAAAA*/)                 \
+    {                                                                       \
+        InstField* ifield;                                                  \
+        Object* obj;                                                        \
+        EXPORT_PC();                                                        \
+        ref = FETCH(1) | (u4)FETCH(2) << 16;   /* field ref */              \
+        vdst = FETCH(3);                                                    \
+        vsrc1 = FETCH(4);                      /* object ptr */             \
+        ILOGV("|iput%s/jumbo v%d,v%d,field@0x%08x",                         \
+            (_opname), vdst, vsrc1, ref);                                   \
+        obj = (Object*) GET_REGISTER(vsrc1);                                \
+        if (!checkForNull(obj))                                             \
+            GOTO_exceptionThrown();                                         \
+        ifield = (InstField*) dvmDexGetResolvedField(methodClassDex, ref);  \
+        if (ifield == NULL) {                                               \
+            ifield = dvmResolveInstField(curMethod->clazz, ref);            \
+            if (ifield == NULL)                                             \
+                GOTO_exceptionThrown();                                     \
+        }                                                                   \
+        dvmSetField##_ftype(obj, ifield->byteOffset,                        \
+            GET_REGISTER##_regsize(vdst));                                  \
+        ILOGV("+ IPUT '%s'=0x%08llx", ifield->field.name,                   \
+            (u8) GET_REGISTER##_regsize(vdst));                             \
+        UPDATE_FIELD_PUT(&ifield->field);                                   \
+    }                                                                       \
+    FINISH(5);
 
 #define HANDLE_IPUT_X_QUICK(_opcode, _opname, _ftype, _regsize)             \
     HANDLE_OPCODE(_opcode /*vA, vB, field@CCCC*/)                           \
@@ -1172,6 +1228,30 @@ GOTO_TARGET_DECL(exceptionThrown);
     }                                                                       \
     FINISH(2);
 
+#define HANDLE_SGET_X_JUMBO(_opcode, _opname, _ftype, _regsize)             \
+    HANDLE_OPCODE(_opcode /*vBBBB, class@AAAAAAAA*/)                        \
+    {                                                                       \
+        StaticField* sfield;                                                \
+        ref = FETCH(1) | (u4)FETCH(2) << 16;   /* field ref */              \
+        vdst = FETCH(3);                                                    \
+        ILOGV("|sget%s/jumbo v%d,sfield@0x%08x", (_opname), vdst, ref);     \
+        sfield = (StaticField*)dvmDexGetResolvedField(methodClassDex, ref); \
+        if (sfield == NULL) {                                               \
+            EXPORT_PC();                                                    \
+            sfield = dvmResolveStaticField(curMethod->clazz, ref);          \
+            if (sfield == NULL)                                             \
+                GOTO_exceptionThrown();                                     \
+            if (dvmDexGetResolvedField(methodClassDex, ref) == NULL) {      \
+                ABORT_JIT_TSELECT();                                        \
+            }                                                               \
+        }                                                                   \
+        SET_REGISTER##_regsize(vdst, dvmGetStaticField##_ftype(sfield));    \
+        ILOGV("+ SGET '%s'=0x%08llx",                                       \
+            sfield->field.name, (u8)GET_REGISTER##_regsize(vdst));          \
+        UPDATE_FIELD_GET(&sfield->field);                                   \
+    }                                                                       \
+    FINISH(4);
+
 #define HANDLE_SPUT_X(_opcode, _opname, _ftype, _regsize)                   \
     HANDLE_OPCODE(_opcode /*vAA, field@BBBB*/)                              \
     {                                                                       \
@@ -1195,6 +1275,30 @@ GOTO_TARGET_DECL(exceptionThrown);
         UPDATE_FIELD_PUT(&sfield->field);                                   \
     }                                                                       \
     FINISH(2);
+
+#define HANDLE_SPUT_X_JUMBO(_opcode, _opname, _ftype, _regsize)             \
+    HANDLE_OPCODE(_opcode /*vBBBB, class@AAAAAAAA*/)                        \
+    {                                                                       \
+        StaticField* sfield;                                                \
+        ref = FETCH(1) | (u4)FETCH(2) << 16;   /* field ref */              \
+        vdst = FETCH(3);                                                    \
+        ILOGV("|sput%s/jumbo v%d,sfield@0x%08x", (_opname), vdst, ref);     \
+        sfield = (StaticField*)dvmDexGetResolvedField(methodClassDex, ref); \
+        if (sfield == NULL) {                                               \
+            EXPORT_PC();                                                    \
+            sfield = dvmResolveStaticField(curMethod->clazz, ref);          \
+            if (sfield == NULL)                                             \
+                GOTO_exceptionThrown();                                     \
+            if (dvmDexGetResolvedField(methodClassDex, ref) == NULL) {      \
+                ABORT_JIT_TSELECT();                                        \
+            }                                                               \
+        }                                                                   \
+        dvmSetStaticField##_ftype(sfield, GET_REGISTER##_regsize(vdst));    \
+        ILOGV("+ SPUT '%s'=0x%08llx",                                       \
+            sfield->field.name, (u8)GET_REGISTER##_regsize(vdst));          \
+        UPDATE_FIELD_PUT(&sfield->field);                                   \
+    }                                                                       \
+    FINISH(4);
 
 /* File: c/OP_NOP.c */
 HANDLE_OPCODE(OP_NOP)
@@ -1759,12 +1863,12 @@ OP_END
 
 /* File: c/OP_FILLED_NEW_ARRAY.c */
 HANDLE_OPCODE(OP_FILLED_NEW_ARRAY /*vB, {vD, vE, vF, vG, vA}, class@CCCC*/)
-    GOTO_invoke(filledNewArray, false);
+    GOTO_invoke(filledNewArray, false, false);
 OP_END
 
 /* File: c/OP_FILLED_NEW_ARRAY_RANGE.c */
 HANDLE_OPCODE(OP_FILLED_NEW_ARRAY_RANGE /*{vCCCC..v(CCCC+AA-1)}, class@BBBB*/)
-    GOTO_invoke(filledNewArray, true);
+    GOTO_invoke(filledNewArray, true, false);
 OP_END
 
 /* File: c/OP_FILL_ARRAY_DATA.c */
@@ -2239,27 +2343,27 @@ OP_END
 
 /* File: c/OP_INVOKE_VIRTUAL.c */
 HANDLE_OPCODE(OP_INVOKE_VIRTUAL /*vB, {vD, vE, vF, vG, vA}, meth@CCCC*/)
-    GOTO_invoke(invokeVirtual, false);
+    GOTO_invoke(invokeVirtual, false, false);
 OP_END
 
 /* File: c/OP_INVOKE_SUPER.c */
 HANDLE_OPCODE(OP_INVOKE_SUPER /*vB, {vD, vE, vF, vG, vA}, meth@CCCC*/)
-    GOTO_invoke(invokeSuper, false);
+    GOTO_invoke(invokeSuper, false, false);
 OP_END
 
 /* File: c/OP_INVOKE_DIRECT.c */
 HANDLE_OPCODE(OP_INVOKE_DIRECT /*vB, {vD, vE, vF, vG, vA}, meth@CCCC*/)
-    GOTO_invoke(invokeDirect, false);
+    GOTO_invoke(invokeDirect, false, false);
 OP_END
 
 /* File: c/OP_INVOKE_STATIC.c */
 HANDLE_OPCODE(OP_INVOKE_STATIC /*vB, {vD, vE, vF, vG, vA}, meth@CCCC*/)
-    GOTO_invoke(invokeStatic, false);
+    GOTO_invoke(invokeStatic, false, false);
 OP_END
 
 /* File: c/OP_INVOKE_INTERFACE.c */
 HANDLE_OPCODE(OP_INVOKE_INTERFACE /*vB, {vD, vE, vF, vG, vA}, meth@CCCC*/)
-    GOTO_invoke(invokeInterface, false);
+    GOTO_invoke(invokeInterface, false, false);
 OP_END
 
 /* File: c/OP_UNUSED_73.c */
@@ -2268,27 +2372,27 @@ OP_END
 
 /* File: c/OP_INVOKE_VIRTUAL_RANGE.c */
 HANDLE_OPCODE(OP_INVOKE_VIRTUAL_RANGE /*{vCCCC..v(CCCC+AA-1)}, meth@BBBB*/)
-    GOTO_invoke(invokeVirtual, true);
+    GOTO_invoke(invokeVirtual, true, false);
 OP_END
 
 /* File: c/OP_INVOKE_SUPER_RANGE.c */
 HANDLE_OPCODE(OP_INVOKE_SUPER_RANGE /*{vCCCC..v(CCCC+AA-1)}, meth@BBBB*/)
-    GOTO_invoke(invokeSuper, true);
+    GOTO_invoke(invokeSuper, true, false);
 OP_END
 
 /* File: c/OP_INVOKE_DIRECT_RANGE.c */
 HANDLE_OPCODE(OP_INVOKE_DIRECT_RANGE /*{vCCCC..v(CCCC+AA-1)}, meth@BBBB*/)
-    GOTO_invoke(invokeDirect, true);
+    GOTO_invoke(invokeDirect, true, false);
 OP_END
 
 /* File: c/OP_INVOKE_STATIC_RANGE.c */
 HANDLE_OPCODE(OP_INVOKE_STATIC_RANGE /*{vCCCC..v(CCCC+AA-1)}, meth@BBBB*/)
-    GOTO_invoke(invokeStatic, true);
+    GOTO_invoke(invokeStatic, true, false);
 OP_END
 
 /* File: c/OP_INVOKE_INTERFACE_RANGE.c */
 HANDLE_OPCODE(OP_INVOKE_INTERFACE_RANGE /*{vCCCC..v(CCCC+AA-1)}, meth@BBBB*/)
-    GOTO_invoke(invokeInterface, true);
+    GOTO_invoke(invokeInterface, true, false);
 OP_END
 
 /* File: c/OP_UNUSED_79.c */
@@ -2965,7 +3069,7 @@ HANDLE_OPCODE(OP_INVOKE_DIRECT_EMPTY /*vB, {vD, vE, vF, vG, vA}, meth@CCCC*/)
     } else {
         //LOGI("Running empty\n");
         /* fall through to OP_INVOKE_DIRECT */
-        GOTO_invoke(invokeDirect, false);
+        GOTO_invoke(invokeDirect, false, false);
     }
 #endif
 OP_END
@@ -3006,22 +3110,22 @@ OP_END
 
 /* File: c/OP_INVOKE_VIRTUAL_QUICK.c */
 HANDLE_OPCODE(OP_INVOKE_VIRTUAL_QUICK /*vB, {vD, vE, vF, vG, vA}, meth@CCCC*/)
-    GOTO_invoke(invokeVirtualQuick, false);
+    GOTO_invoke(invokeVirtualQuick, false, false);
 OP_END
 
 /* File: c/OP_INVOKE_VIRTUAL_QUICK_RANGE.c */
 HANDLE_OPCODE(OP_INVOKE_VIRTUAL_QUICK_RANGE/*{vCCCC..v(CCCC+AA-1)}, meth@BBBB*/)
-    GOTO_invoke(invokeVirtualQuick, true);
+    GOTO_invoke(invokeVirtualQuick, true, false);
 OP_END
 
 /* File: c/OP_INVOKE_SUPER_QUICK.c */
 HANDLE_OPCODE(OP_INVOKE_SUPER_QUICK /*vB, {vD, vE, vF, vG, vA}, meth@CCCC*/)
-    GOTO_invoke(invokeSuperQuick, false);
+    GOTO_invoke(invokeSuperQuick, false, false);
 OP_END
 
 /* File: c/OP_INVOKE_SUPER_QUICK_RANGE.c */
 HANDLE_OPCODE(OP_INVOKE_SUPER_QUICK_RANGE /*{vCCCC..v(CCCC+AA-1)}, meth@BBBB*/)
-    GOTO_invoke(invokeSuperQuick, true);
+    GOTO_invoke(invokeSuperQuick, true, false);
 OP_END
 
 /* File: c/OP_IPUT_OBJECT_VOLATILE.c */
@@ -3039,11 +3143,1210 @@ OP_END
 /* File: c/OP_DISPATCH_FF.c */
 HANDLE_OPCODE(OP_DISPATCH_FF)
     /*
-     * In portable interp, most unused opcodes will fall through to here.
+     * Indicates extended opcode.  Use next 8 bits to choose where to branch.
      */
-    LOGE("unknown opcode 0x%02x\n", INST_INST(inst));
-    dvmAbort();
-    FINISH(1);
+    DISPATCH_EXTENDED(INST_AA(inst));
+OP_END
+
+/* File: c/OP_CONST_CLASS_JUMBO.c */
+HANDLE_OPCODE(OP_CONST_CLASS_JUMBO /*vBBBB, class@AAAAAAAA*/)
+    {
+        ClassObject* clazz;
+
+        ref = FETCH(1) | (u4)FETCH(2) << 16;
+        vdst = FETCH(3);
+        ILOGV("|const-class/jumbo v%d class@0x%08x", vdst, ref);
+        clazz = dvmDexGetResolvedClass(methodClassDex, ref);
+        if (clazz == NULL) {
+            EXPORT_PC();
+            clazz = dvmResolveClass(curMethod->clazz, ref, true);
+            if (clazz == NULL)
+                GOTO_exceptionThrown();
+        }
+        SET_REGISTER(vdst, (u4) clazz);
+    }
+    FINISH(4);
+OP_END
+
+/* File: c/OP_CHECK_CAST_JUMBO.c */
+HANDLE_OPCODE(OP_CHECK_CAST_JUMBO /*vBBBB, class@AAAAAAAA*/)
+    {
+        ClassObject* clazz;
+        Object* obj;
+
+        EXPORT_PC();
+
+        ref = FETCH(1) | (u4)FETCH(2) << 16;     /* class to check against */
+        vsrc1 = FETCH(3);
+        ILOGV("|check-cast/jumbo v%d,class@0x%08x", vsrc1, ref);
+
+        obj = (Object*)GET_REGISTER(vsrc1);
+        if (obj != NULL) {
+#if defined(WITH_EXTRA_OBJECT_VALIDATION)
+            if (!checkForNull(obj))
+                GOTO_exceptionThrown();
+#endif
+            clazz = dvmDexGetResolvedClass(methodClassDex, ref);
+            if (clazz == NULL) {
+                clazz = dvmResolveClass(curMethod->clazz, ref, false);
+                if (clazz == NULL)
+                    GOTO_exceptionThrown();
+            }
+            if (!dvmInstanceof(obj->clazz, clazz)) {
+                dvmThrowClassCastException(obj->clazz, clazz);
+                GOTO_exceptionThrown();
+            }
+        }
+    }
+    FINISH(4);
+OP_END
+
+/* File: c/OP_INSTANCE_OF_JUMBO.c */
+HANDLE_OPCODE(OP_INSTANCE_OF_JUMBO /*vBBBB, vCCCC, class@AAAAAAAA*/)
+    {
+        ClassObject* clazz;
+        Object* obj;
+
+        ref = FETCH(1) | (u4)FETCH(2) << 16;     /* class to check against */
+        vdst = FETCH(3);
+        vsrc1 = FETCH(4);   /* object to check */
+        ILOGV("|instance-of/jumbo v%d,v%d,class@0x%08x", vdst, vsrc1, ref);
+
+        obj = (Object*)GET_REGISTER(vsrc1);
+        if (obj == NULL) {
+            SET_REGISTER(vdst, 0);
+        } else {
+#if defined(WITH_EXTRA_OBJECT_VALIDATION)
+            if (!checkForNullExportPC(obj, fp, pc))
+                GOTO_exceptionThrown();
+#endif
+            clazz = dvmDexGetResolvedClass(methodClassDex, ref);
+            if (clazz == NULL) {
+                EXPORT_PC();
+                clazz = dvmResolveClass(curMethod->clazz, ref, true);
+                if (clazz == NULL)
+                    GOTO_exceptionThrown();
+            }
+            SET_REGISTER(vdst, dvmInstanceof(obj->clazz, clazz));
+        }
+    }
+    FINISH(5);
+OP_END
+
+/* File: c/OP_NEW_INSTANCE_JUMBO.c */
+HANDLE_OPCODE(OP_NEW_INSTANCE_JUMBO /*vBBBB, class@AAAAAAAA*/)
+    {
+        ClassObject* clazz;
+        Object* newObj;
+
+        EXPORT_PC();
+
+        ref = FETCH(1) | (u4)FETCH(2) << 16;
+        vdst = FETCH(3);
+        ILOGV("|new-instance/jumbo v%d,class@0x%08x", vdst, ref);
+        clazz = dvmDexGetResolvedClass(methodClassDex, ref);
+        if (clazz == NULL) {
+            clazz = dvmResolveClass(curMethod->clazz, ref, false);
+            if (clazz == NULL)
+                GOTO_exceptionThrown();
+        }
+
+        if (!dvmIsClassInitialized(clazz) && !dvmInitClass(clazz))
+            GOTO_exceptionThrown();
+
+        /*
+         * The JIT needs dvmDexGetResolvedClass() to return non-null.
+         * Since we use the portable interpreter to build the trace, this extra
+         * check is not needed for mterp.
+         */
+        if (!dvmDexGetResolvedClass(methodClassDex, ref)) {
+            /* Class initialization is still ongoing - abandon the trace */
+            ABORT_JIT_TSELECT();
+        }
+
+        /*
+         * Verifier now tests for interface/abstract class.
+         */
+        //if (dvmIsInterfaceClass(clazz) || dvmIsAbstractClass(clazz)) {
+        //    dvmThrowExceptionWithClassMessage("Ljava/lang/InstantiationError;",
+        //        clazz->descriptor);
+        //    GOTO_exceptionThrown();
+        //}
+        newObj = dvmAllocObject(clazz, ALLOC_DONT_TRACK);
+        if (newObj == NULL)
+            GOTO_exceptionThrown();
+        SET_REGISTER(vdst, (u4) newObj);
+    }
+    FINISH(4);
+OP_END
+
+/* File: c/OP_NEW_ARRAY_JUMBO.c */
+HANDLE_OPCODE(OP_NEW_ARRAY_JUMBO /*vBBBB, vCCCC, class@AAAAAAAA*/)
+    {
+        ClassObject* arrayClass;
+        ArrayObject* newArray;
+        s4 length;
+
+        EXPORT_PC();
+
+        ref = FETCH(1) | (u4)FETCH(2) << 16;
+        vdst = FETCH(3);
+        vsrc1 = FETCH(4);       /* length reg */
+        ILOGV("|new-array/jumbo v%d,v%d,class@0x%08x  (%d elements)",
+            vdst, vsrc1, ref, (s4) GET_REGISTER(vsrc1));
+        length = (s4) GET_REGISTER(vsrc1);
+        if (length < 0) {
+            dvmThrowException("Ljava/lang/NegativeArraySizeException;", NULL);
+            GOTO_exceptionThrown();
+        }
+        arrayClass = dvmDexGetResolvedClass(methodClassDex, ref);
+        if (arrayClass == NULL) {
+            arrayClass = dvmResolveClass(curMethod->clazz, ref, false);
+            if (arrayClass == NULL)
+                GOTO_exceptionThrown();
+        }
+        /* verifier guarantees this is an array class */
+        assert(dvmIsArrayClass(arrayClass));
+        assert(dvmIsClassInitialized(arrayClass));
+
+        newArray = dvmAllocArrayByClass(arrayClass, length, ALLOC_DONT_TRACK);
+        if (newArray == NULL)
+            GOTO_exceptionThrown();
+        SET_REGISTER(vdst, (u4) newArray);
+    }
+    FINISH(5);
+OP_END
+
+/* File: c/OP_FILLED_NEW_ARRAY_JUMBO.c */
+HANDLE_OPCODE(OP_FILLED_NEW_ARRAY_JUMBO /*{vCCCC..v(CCCC+BBBB-1)}, class@AAAAAAAA*/)
+    GOTO_invoke(filledNewArray, true, true);
+OP_END
+
+/* File: c/OP_IGET_JUMBO.c */
+HANDLE_IGET_X_JUMBO(OP_IGET_JUMBO,          "", Int, )
+OP_END
+
+/* File: c/OP_IGET_WIDE_JUMBO.c */
+HANDLE_IGET_X_JUMBO(OP_IGET_WIDE_JUMBO,     "-wide", Long, _WIDE)
+OP_END
+
+/* File: c/OP_IGET_OBJECT_JUMBO.c */
+HANDLE_IGET_X_JUMBO(OP_IGET_OBJECT_JUMBO,   "-object", Object, _AS_OBJECT)
+OP_END
+
+/* File: c/OP_IGET_BOOLEAN_JUMBO.c */
+HANDLE_IGET_X_JUMBO(OP_IGET_BOOLEAN_JUMBO,  "", Int, )
+OP_END
+
+/* File: c/OP_IGET_BYTE_JUMBO.c */
+HANDLE_IGET_X_JUMBO(OP_IGET_BYTE_JUMBO,     "", Int, )
+OP_END
+
+/* File: c/OP_IGET_CHAR_JUMBO.c */
+HANDLE_IGET_X_JUMBO(OP_IGET_CHAR_JUMBO,     "", Int, )
+OP_END
+
+/* File: c/OP_IGET_SHORT_JUMBO.c */
+HANDLE_IGET_X_JUMBO(OP_IGET_SHORT_JUMBO,    "", Int, )
+OP_END
+
+/* File: c/OP_IPUT_JUMBO.c */
+HANDLE_IPUT_X_JUMBO(OP_IPUT_JUMBO,          "", Int, )
+OP_END
+
+/* File: c/OP_IPUT_WIDE_JUMBO.c */
+HANDLE_IPUT_X_JUMBO(OP_IPUT_WIDE_JUMBO,     "-wide", Long, _WIDE)
+OP_END
+
+/* File: c/OP_IPUT_OBJECT_JUMBO.c */
+/*
+ * The VM spec says we should verify that the reference being stored into
+ * the field is assignment compatible.  In practice, many popular VMs don't
+ * do this because it slows down a very common operation.  It's not so bad
+ * for us, since "dexopt" quickens it whenever possible, but it's still an
+ * issue.
+ *
+ * To make this spec-complaint, we'd need to add a ClassObject pointer to
+ * the Field struct, resolve the field's type descriptor at link or class
+ * init time, and then verify the type here.
+ */
+HANDLE_IPUT_X_JUMBO(OP_IPUT_OBJECT_JUMBO,   "-object", Object, _AS_OBJECT)
+OP_END
+
+/* File: c/OP_IPUT_BOOLEAN_JUMBO.c */
+HANDLE_IPUT_X_JUMBO(OP_IPUT_BOOLEAN_JUMBO,  "", Int, )
+OP_END
+
+/* File: c/OP_IPUT_BYTE_JUMBO.c */
+HANDLE_IPUT_X_JUMBO(OP_IPUT_BYTE_JUMBO,     "", Int, )
+OP_END
+
+/* File: c/OP_IPUT_CHAR_JUMBO.c */
+HANDLE_IPUT_X_JUMBO(OP_IPUT_CHAR_JUMBO,     "", Int, )
+OP_END
+
+/* File: c/OP_IPUT_SHORT_JUMBO.c */
+HANDLE_IPUT_X_JUMBO(OP_IPUT_SHORT_JUMBO,    "", Int, )
+OP_END
+
+/* File: c/OP_SGET_JUMBO.c */
+HANDLE_SGET_X_JUMBO(OP_SGET_JUMBO,          "", Int, )
+OP_END
+
+/* File: c/OP_SGET_WIDE_JUMBO.c */
+HANDLE_SGET_X_JUMBO(OP_SGET_WIDE_JUMBO,     "-wide", Long, _WIDE)
+OP_END
+
+/* File: c/OP_SGET_OBJECT_JUMBO.c */
+HANDLE_SGET_X_JUMBO(OP_SGET_OBJECT_JUMBO,   "-object", Object, _AS_OBJECT)
+OP_END
+
+/* File: c/OP_SGET_BOOLEAN_JUMBO.c */
+HANDLE_SGET_X_JUMBO(OP_SGET_BOOLEAN_JUMBO,  "", Int, )
+OP_END
+
+/* File: c/OP_SGET_BYTE_JUMBO.c */
+HANDLE_SGET_X_JUMBO(OP_SGET_BYTE_JUMBO,     "", Int, )
+OP_END
+
+/* File: c/OP_SGET_CHAR_JUMBO.c */
+HANDLE_SGET_X_JUMBO(OP_SGET_CHAR_JUMBO,     "", Int, )
+OP_END
+
+/* File: c/OP_SGET_SHORT_JUMBO.c */
+HANDLE_SGET_X_JUMBO(OP_SGET_SHORT_JUMBO,    "", Int, )
+OP_END
+
+/* File: c/OP_SPUT_JUMBO.c */
+HANDLE_SPUT_X_JUMBO(OP_SPUT_JUMBO,          "", Int, )
+OP_END
+
+/* File: c/OP_SPUT_WIDE_JUMBO.c */
+HANDLE_SPUT_X_JUMBO(OP_SPUT_WIDE_JUMBO,     "-wide", Long, _WIDE)
+OP_END
+
+/* File: c/OP_SPUT_OBJECT_JUMBO.c */
+HANDLE_SPUT_X_JUMBO(OP_SPUT_OBJECT_JUMBO,   "-object", Object, _AS_OBJECT)
+OP_END
+
+/* File: c/OP_SPUT_BOOLEAN_JUMBO.c */
+HANDLE_SPUT_X_JUMBO(OP_SPUT_BOOLEAN_JUMBO,          "", Int, )
+OP_END
+
+/* File: c/OP_SPUT_BYTE_JUMBO.c */
+HANDLE_SPUT_X_JUMBO(OP_SPUT_BYTE_JUMBO,     "", Int, )
+OP_END
+
+/* File: c/OP_SPUT_CHAR_JUMBO.c */
+HANDLE_SPUT_X_JUMBO(OP_SPUT_CHAR_JUMBO,     "", Int, )
+OP_END
+
+/* File: c/OP_SPUT_SHORT_JUMBO.c */
+HANDLE_SPUT_X_JUMBO(OP_SPUT_SHORT_JUMBO,    "", Int, )
+OP_END
+
+/* File: c/OP_INVOKE_VIRTUAL_JUMBO.c */
+HANDLE_OPCODE(OP_INVOKE_VIRTUAL_JUMBO /*{vCCCC..v(CCCC+BBBB-1)}, meth@AAAAAAAA*/)
+    GOTO_invoke(invokeVirtual, true, true);
+OP_END
+
+/* File: c/OP_INVOKE_SUPER_JUMBO.c */
+HANDLE_OPCODE(OP_INVOKE_SUPER_JUMBO /*{vCCCC..v(CCCC+BBBB-1)}, meth@AAAAAAAA*/)
+    GOTO_invoke(invokeSuper, true, true);
+OP_END
+
+/* File: c/OP_INVOKE_DIRECT_JUMBO.c */
+HANDLE_OPCODE(OP_INVOKE_DIRECT_JUMBO /*{vCCCC..v(CCCC+BBBB-1)}, meth@AAAAAAAA*/)
+    GOTO_invoke(invokeDirect, true, true);
+OP_END
+
+/* File: c/OP_INVOKE_STATIC_JUMBO.c */
+HANDLE_OPCODE(OP_INVOKE_STATIC_JUMBO /*{vCCCC..v(CCCC+BBBB-1)}, meth@AAAAAAAA*/)
+    GOTO_invoke(invokeStatic, true, true);
+OP_END
+
+/* File: c/OP_INVOKE_INTERFACE_JUMBO.c */
+HANDLE_OPCODE(OP_INVOKE_INTERFACE_JUMBO /*{vCCCC..v(CCCC+BBBB-1)}, meth@AAAAAAAA*/)
+    GOTO_invoke(invokeInterface, true, true);
+OP_END
+
+/* File: c/OP_UNUSED_27FF.c */
+HANDLE_OPCODE(OP_UNUSED_27FF)
+OP_END
+
+/* File: c/OP_UNUSED_28FF.c */
+HANDLE_OPCODE(OP_UNUSED_28FF)
+OP_END
+
+/* File: c/OP_UNUSED_29FF.c */
+HANDLE_OPCODE(OP_UNUSED_29FF)
+OP_END
+
+/* File: c/OP_UNUSED_2AFF.c */
+HANDLE_OPCODE(OP_UNUSED_2AFF)
+OP_END
+
+/* File: c/OP_UNUSED_2BFF.c */
+HANDLE_OPCODE(OP_UNUSED_2BFF)
+OP_END
+
+/* File: c/OP_UNUSED_2CFF.c */
+HANDLE_OPCODE(OP_UNUSED_2CFF)
+OP_END
+
+/* File: c/OP_UNUSED_2DFF.c */
+HANDLE_OPCODE(OP_UNUSED_2DFF)
+OP_END
+
+/* File: c/OP_UNUSED_2EFF.c */
+HANDLE_OPCODE(OP_UNUSED_2EFF)
+OP_END
+
+/* File: c/OP_UNUSED_2FFF.c */
+HANDLE_OPCODE(OP_UNUSED_2FFF)
+OP_END
+
+/* File: c/OP_UNUSED_30FF.c */
+HANDLE_OPCODE(OP_UNUSED_30FF)
+OP_END
+
+/* File: c/OP_UNUSED_31FF.c */
+HANDLE_OPCODE(OP_UNUSED_31FF)
+OP_END
+
+/* File: c/OP_UNUSED_32FF.c */
+HANDLE_OPCODE(OP_UNUSED_32FF)
+OP_END
+
+/* File: c/OP_UNUSED_33FF.c */
+HANDLE_OPCODE(OP_UNUSED_33FF)
+OP_END
+
+/* File: c/OP_UNUSED_34FF.c */
+HANDLE_OPCODE(OP_UNUSED_34FF)
+OP_END
+
+/* File: c/OP_UNUSED_35FF.c */
+HANDLE_OPCODE(OP_UNUSED_35FF)
+OP_END
+
+/* File: c/OP_UNUSED_36FF.c */
+HANDLE_OPCODE(OP_UNUSED_36FF)
+OP_END
+
+/* File: c/OP_UNUSED_37FF.c */
+HANDLE_OPCODE(OP_UNUSED_37FF)
+OP_END
+
+/* File: c/OP_UNUSED_38FF.c */
+HANDLE_OPCODE(OP_UNUSED_38FF)
+OP_END
+
+/* File: c/OP_UNUSED_39FF.c */
+HANDLE_OPCODE(OP_UNUSED_39FF)
+OP_END
+
+/* File: c/OP_UNUSED_3AFF.c */
+HANDLE_OPCODE(OP_UNUSED_3AFF)
+OP_END
+
+/* File: c/OP_UNUSED_3BFF.c */
+HANDLE_OPCODE(OP_UNUSED_3BFF)
+OP_END
+
+/* File: c/OP_UNUSED_3CFF.c */
+HANDLE_OPCODE(OP_UNUSED_3CFF)
+OP_END
+
+/* File: c/OP_UNUSED_3DFF.c */
+HANDLE_OPCODE(OP_UNUSED_3DFF)
+OP_END
+
+/* File: c/OP_UNUSED_3EFF.c */
+HANDLE_OPCODE(OP_UNUSED_3EFF)
+OP_END
+
+/* File: c/OP_UNUSED_3FFF.c */
+HANDLE_OPCODE(OP_UNUSED_3FFF)
+OP_END
+
+/* File: c/OP_UNUSED_40FF.c */
+HANDLE_OPCODE(OP_UNUSED_40FF)
+OP_END
+
+/* File: c/OP_UNUSED_41FF.c */
+HANDLE_OPCODE(OP_UNUSED_41FF)
+OP_END
+
+/* File: c/OP_UNUSED_42FF.c */
+HANDLE_OPCODE(OP_UNUSED_42FF)
+OP_END
+
+/* File: c/OP_UNUSED_43FF.c */
+HANDLE_OPCODE(OP_UNUSED_43FF)
+OP_END
+
+/* File: c/OP_UNUSED_44FF.c */
+HANDLE_OPCODE(OP_UNUSED_44FF)
+OP_END
+
+/* File: c/OP_UNUSED_45FF.c */
+HANDLE_OPCODE(OP_UNUSED_45FF)
+OP_END
+
+/* File: c/OP_UNUSED_46FF.c */
+HANDLE_OPCODE(OP_UNUSED_46FF)
+OP_END
+
+/* File: c/OP_UNUSED_47FF.c */
+HANDLE_OPCODE(OP_UNUSED_47FF)
+OP_END
+
+/* File: c/OP_UNUSED_48FF.c */
+HANDLE_OPCODE(OP_UNUSED_48FF)
+OP_END
+
+/* File: c/OP_UNUSED_49FF.c */
+HANDLE_OPCODE(OP_UNUSED_49FF)
+OP_END
+
+/* File: c/OP_UNUSED_4AFF.c */
+HANDLE_OPCODE(OP_UNUSED_4AFF)
+OP_END
+
+/* File: c/OP_UNUSED_4BFF.c */
+HANDLE_OPCODE(OP_UNUSED_4BFF)
+OP_END
+
+/* File: c/OP_UNUSED_4CFF.c */
+HANDLE_OPCODE(OP_UNUSED_4CFF)
+OP_END
+
+/* File: c/OP_UNUSED_4DFF.c */
+HANDLE_OPCODE(OP_UNUSED_4DFF)
+OP_END
+
+/* File: c/OP_UNUSED_4EFF.c */
+HANDLE_OPCODE(OP_UNUSED_4EFF)
+OP_END
+
+/* File: c/OP_UNUSED_4FFF.c */
+HANDLE_OPCODE(OP_UNUSED_4FFF)
+OP_END
+
+/* File: c/OP_UNUSED_50FF.c */
+HANDLE_OPCODE(OP_UNUSED_50FF)
+OP_END
+
+/* File: c/OP_UNUSED_51FF.c */
+HANDLE_OPCODE(OP_UNUSED_51FF)
+OP_END
+
+/* File: c/OP_UNUSED_52FF.c */
+HANDLE_OPCODE(OP_UNUSED_52FF)
+OP_END
+
+/* File: c/OP_UNUSED_53FF.c */
+HANDLE_OPCODE(OP_UNUSED_53FF)
+OP_END
+
+/* File: c/OP_UNUSED_54FF.c */
+HANDLE_OPCODE(OP_UNUSED_54FF)
+OP_END
+
+/* File: c/OP_UNUSED_55FF.c */
+HANDLE_OPCODE(OP_UNUSED_55FF)
+OP_END
+
+/* File: c/OP_UNUSED_56FF.c */
+HANDLE_OPCODE(OP_UNUSED_56FF)
+OP_END
+
+/* File: c/OP_UNUSED_57FF.c */
+HANDLE_OPCODE(OP_UNUSED_57FF)
+OP_END
+
+/* File: c/OP_UNUSED_58FF.c */
+HANDLE_OPCODE(OP_UNUSED_58FF)
+OP_END
+
+/* File: c/OP_UNUSED_59FF.c */
+HANDLE_OPCODE(OP_UNUSED_59FF)
+OP_END
+
+/* File: c/OP_UNUSED_5AFF.c */
+HANDLE_OPCODE(OP_UNUSED_5AFF)
+OP_END
+
+/* File: c/OP_UNUSED_5BFF.c */
+HANDLE_OPCODE(OP_UNUSED_5BFF)
+OP_END
+
+/* File: c/OP_UNUSED_5CFF.c */
+HANDLE_OPCODE(OP_UNUSED_5CFF)
+OP_END
+
+/* File: c/OP_UNUSED_5DFF.c */
+HANDLE_OPCODE(OP_UNUSED_5DFF)
+OP_END
+
+/* File: c/OP_UNUSED_5EFF.c */
+HANDLE_OPCODE(OP_UNUSED_5EFF)
+OP_END
+
+/* File: c/OP_UNUSED_5FFF.c */
+HANDLE_OPCODE(OP_UNUSED_5FFF)
+OP_END
+
+/* File: c/OP_UNUSED_60FF.c */
+HANDLE_OPCODE(OP_UNUSED_60FF)
+OP_END
+
+/* File: c/OP_UNUSED_61FF.c */
+HANDLE_OPCODE(OP_UNUSED_61FF)
+OP_END
+
+/* File: c/OP_UNUSED_62FF.c */
+HANDLE_OPCODE(OP_UNUSED_62FF)
+OP_END
+
+/* File: c/OP_UNUSED_63FF.c */
+HANDLE_OPCODE(OP_UNUSED_63FF)
+OP_END
+
+/* File: c/OP_UNUSED_64FF.c */
+HANDLE_OPCODE(OP_UNUSED_64FF)
+OP_END
+
+/* File: c/OP_UNUSED_65FF.c */
+HANDLE_OPCODE(OP_UNUSED_65FF)
+OP_END
+
+/* File: c/OP_UNUSED_66FF.c */
+HANDLE_OPCODE(OP_UNUSED_66FF)
+OP_END
+
+/* File: c/OP_UNUSED_67FF.c */
+HANDLE_OPCODE(OP_UNUSED_67FF)
+OP_END
+
+/* File: c/OP_UNUSED_68FF.c */
+HANDLE_OPCODE(OP_UNUSED_68FF)
+OP_END
+
+/* File: c/OP_UNUSED_69FF.c */
+HANDLE_OPCODE(OP_UNUSED_69FF)
+OP_END
+
+/* File: c/OP_UNUSED_6AFF.c */
+HANDLE_OPCODE(OP_UNUSED_6AFF)
+OP_END
+
+/* File: c/OP_UNUSED_6BFF.c */
+HANDLE_OPCODE(OP_UNUSED_6BFF)
+OP_END
+
+/* File: c/OP_UNUSED_6CFF.c */
+HANDLE_OPCODE(OP_UNUSED_6CFF)
+OP_END
+
+/* File: c/OP_UNUSED_6DFF.c */
+HANDLE_OPCODE(OP_UNUSED_6DFF)
+OP_END
+
+/* File: c/OP_UNUSED_6EFF.c */
+HANDLE_OPCODE(OP_UNUSED_6EFF)
+OP_END
+
+/* File: c/OP_UNUSED_6FFF.c */
+HANDLE_OPCODE(OP_UNUSED_6FFF)
+OP_END
+
+/* File: c/OP_UNUSED_70FF.c */
+HANDLE_OPCODE(OP_UNUSED_70FF)
+OP_END
+
+/* File: c/OP_UNUSED_71FF.c */
+HANDLE_OPCODE(OP_UNUSED_71FF)
+OP_END
+
+/* File: c/OP_UNUSED_72FF.c */
+HANDLE_OPCODE(OP_UNUSED_72FF)
+OP_END
+
+/* File: c/OP_UNUSED_73FF.c */
+HANDLE_OPCODE(OP_UNUSED_73FF)
+OP_END
+
+/* File: c/OP_UNUSED_74FF.c */
+HANDLE_OPCODE(OP_UNUSED_74FF)
+OP_END
+
+/* File: c/OP_UNUSED_75FF.c */
+HANDLE_OPCODE(OP_UNUSED_75FF)
+OP_END
+
+/* File: c/OP_UNUSED_76FF.c */
+HANDLE_OPCODE(OP_UNUSED_76FF)
+OP_END
+
+/* File: c/OP_UNUSED_77FF.c */
+HANDLE_OPCODE(OP_UNUSED_77FF)
+OP_END
+
+/* File: c/OP_UNUSED_78FF.c */
+HANDLE_OPCODE(OP_UNUSED_78FF)
+OP_END
+
+/* File: c/OP_UNUSED_79FF.c */
+HANDLE_OPCODE(OP_UNUSED_79FF)
+OP_END
+
+/* File: c/OP_UNUSED_7AFF.c */
+HANDLE_OPCODE(OP_UNUSED_7AFF)
+OP_END
+
+/* File: c/OP_UNUSED_7BFF.c */
+HANDLE_OPCODE(OP_UNUSED_7BFF)
+OP_END
+
+/* File: c/OP_UNUSED_7CFF.c */
+HANDLE_OPCODE(OP_UNUSED_7CFF)
+OP_END
+
+/* File: c/OP_UNUSED_7DFF.c */
+HANDLE_OPCODE(OP_UNUSED_7DFF)
+OP_END
+
+/* File: c/OP_UNUSED_7EFF.c */
+HANDLE_OPCODE(OP_UNUSED_7EFF)
+OP_END
+
+/* File: c/OP_UNUSED_7FFF.c */
+HANDLE_OPCODE(OP_UNUSED_7FFF)
+OP_END
+
+/* File: c/OP_UNUSED_80FF.c */
+HANDLE_OPCODE(OP_UNUSED_80FF)
+OP_END
+
+/* File: c/OP_UNUSED_81FF.c */
+HANDLE_OPCODE(OP_UNUSED_81FF)
+OP_END
+
+/* File: c/OP_UNUSED_82FF.c */
+HANDLE_OPCODE(OP_UNUSED_82FF)
+OP_END
+
+/* File: c/OP_UNUSED_83FF.c */
+HANDLE_OPCODE(OP_UNUSED_83FF)
+OP_END
+
+/* File: c/OP_UNUSED_84FF.c */
+HANDLE_OPCODE(OP_UNUSED_84FF)
+OP_END
+
+/* File: c/OP_UNUSED_85FF.c */
+HANDLE_OPCODE(OP_UNUSED_85FF)
+OP_END
+
+/* File: c/OP_UNUSED_86FF.c */
+HANDLE_OPCODE(OP_UNUSED_86FF)
+OP_END
+
+/* File: c/OP_UNUSED_87FF.c */
+HANDLE_OPCODE(OP_UNUSED_87FF)
+OP_END
+
+/* File: c/OP_UNUSED_88FF.c */
+HANDLE_OPCODE(OP_UNUSED_88FF)
+OP_END
+
+/* File: c/OP_UNUSED_89FF.c */
+HANDLE_OPCODE(OP_UNUSED_89FF)
+OP_END
+
+/* File: c/OP_UNUSED_8AFF.c */
+HANDLE_OPCODE(OP_UNUSED_8AFF)
+OP_END
+
+/* File: c/OP_UNUSED_8BFF.c */
+HANDLE_OPCODE(OP_UNUSED_8BFF)
+OP_END
+
+/* File: c/OP_UNUSED_8CFF.c */
+HANDLE_OPCODE(OP_UNUSED_8CFF)
+OP_END
+
+/* File: c/OP_UNUSED_8DFF.c */
+HANDLE_OPCODE(OP_UNUSED_8DFF)
+OP_END
+
+/* File: c/OP_UNUSED_8EFF.c */
+HANDLE_OPCODE(OP_UNUSED_8EFF)
+OP_END
+
+/* File: c/OP_UNUSED_8FFF.c */
+HANDLE_OPCODE(OP_UNUSED_8FFF)
+OP_END
+
+/* File: c/OP_UNUSED_90FF.c */
+HANDLE_OPCODE(OP_UNUSED_90FF)
+OP_END
+
+/* File: c/OP_UNUSED_91FF.c */
+HANDLE_OPCODE(OP_UNUSED_91FF)
+OP_END
+
+/* File: c/OP_UNUSED_92FF.c */
+HANDLE_OPCODE(OP_UNUSED_92FF)
+OP_END
+
+/* File: c/OP_UNUSED_93FF.c */
+HANDLE_OPCODE(OP_UNUSED_93FF)
+OP_END
+
+/* File: c/OP_UNUSED_94FF.c */
+HANDLE_OPCODE(OP_UNUSED_94FF)
+OP_END
+
+/* File: c/OP_UNUSED_95FF.c */
+HANDLE_OPCODE(OP_UNUSED_95FF)
+OP_END
+
+/* File: c/OP_UNUSED_96FF.c */
+HANDLE_OPCODE(OP_UNUSED_96FF)
+OP_END
+
+/* File: c/OP_UNUSED_97FF.c */
+HANDLE_OPCODE(OP_UNUSED_97FF)
+OP_END
+
+/* File: c/OP_UNUSED_98FF.c */
+HANDLE_OPCODE(OP_UNUSED_98FF)
+OP_END
+
+/* File: c/OP_UNUSED_99FF.c */
+HANDLE_OPCODE(OP_UNUSED_99FF)
+OP_END
+
+/* File: c/OP_UNUSED_9AFF.c */
+HANDLE_OPCODE(OP_UNUSED_9AFF)
+OP_END
+
+/* File: c/OP_UNUSED_9BFF.c */
+HANDLE_OPCODE(OP_UNUSED_9BFF)
+OP_END
+
+/* File: c/OP_UNUSED_9CFF.c */
+HANDLE_OPCODE(OP_UNUSED_9CFF)
+OP_END
+
+/* File: c/OP_UNUSED_9DFF.c */
+HANDLE_OPCODE(OP_UNUSED_9DFF)
+OP_END
+
+/* File: c/OP_UNUSED_9EFF.c */
+HANDLE_OPCODE(OP_UNUSED_9EFF)
+OP_END
+
+/* File: c/OP_UNUSED_9FFF.c */
+HANDLE_OPCODE(OP_UNUSED_9FFF)
+OP_END
+
+/* File: c/OP_UNUSED_A0FF.c */
+HANDLE_OPCODE(OP_UNUSED_A0FF)
+OP_END
+
+/* File: c/OP_UNUSED_A1FF.c */
+HANDLE_OPCODE(OP_UNUSED_A1FF)
+OP_END
+
+/* File: c/OP_UNUSED_A2FF.c */
+HANDLE_OPCODE(OP_UNUSED_A2FF)
+OP_END
+
+/* File: c/OP_UNUSED_A3FF.c */
+HANDLE_OPCODE(OP_UNUSED_A3FF)
+OP_END
+
+/* File: c/OP_UNUSED_A4FF.c */
+HANDLE_OPCODE(OP_UNUSED_A4FF)
+OP_END
+
+/* File: c/OP_UNUSED_A5FF.c */
+HANDLE_OPCODE(OP_UNUSED_A5FF)
+OP_END
+
+/* File: c/OP_UNUSED_A6FF.c */
+HANDLE_OPCODE(OP_UNUSED_A6FF)
+OP_END
+
+/* File: c/OP_UNUSED_A7FF.c */
+HANDLE_OPCODE(OP_UNUSED_A7FF)
+OP_END
+
+/* File: c/OP_UNUSED_A8FF.c */
+HANDLE_OPCODE(OP_UNUSED_A8FF)
+OP_END
+
+/* File: c/OP_UNUSED_A9FF.c */
+HANDLE_OPCODE(OP_UNUSED_A9FF)
+OP_END
+
+/* File: c/OP_UNUSED_AAFF.c */
+HANDLE_OPCODE(OP_UNUSED_AAFF)
+OP_END
+
+/* File: c/OP_UNUSED_ABFF.c */
+HANDLE_OPCODE(OP_UNUSED_ABFF)
+OP_END
+
+/* File: c/OP_UNUSED_ACFF.c */
+HANDLE_OPCODE(OP_UNUSED_ACFF)
+OP_END
+
+/* File: c/OP_UNUSED_ADFF.c */
+HANDLE_OPCODE(OP_UNUSED_ADFF)
+OP_END
+
+/* File: c/OP_UNUSED_AEFF.c */
+HANDLE_OPCODE(OP_UNUSED_AEFF)
+OP_END
+
+/* File: c/OP_UNUSED_AFFF.c */
+HANDLE_OPCODE(OP_UNUSED_AFFF)
+OP_END
+
+/* File: c/OP_UNUSED_B0FF.c */
+HANDLE_OPCODE(OP_UNUSED_B0FF)
+OP_END
+
+/* File: c/OP_UNUSED_B1FF.c */
+HANDLE_OPCODE(OP_UNUSED_B1FF)
+OP_END
+
+/* File: c/OP_UNUSED_B2FF.c */
+HANDLE_OPCODE(OP_UNUSED_B2FF)
+OP_END
+
+/* File: c/OP_UNUSED_B3FF.c */
+HANDLE_OPCODE(OP_UNUSED_B3FF)
+OP_END
+
+/* File: c/OP_UNUSED_B4FF.c */
+HANDLE_OPCODE(OP_UNUSED_B4FF)
+OP_END
+
+/* File: c/OP_UNUSED_B5FF.c */
+HANDLE_OPCODE(OP_UNUSED_B5FF)
+OP_END
+
+/* File: c/OP_UNUSED_B6FF.c */
+HANDLE_OPCODE(OP_UNUSED_B6FF)
+OP_END
+
+/* File: c/OP_UNUSED_B7FF.c */
+HANDLE_OPCODE(OP_UNUSED_B7FF)
+OP_END
+
+/* File: c/OP_UNUSED_B8FF.c */
+HANDLE_OPCODE(OP_UNUSED_B8FF)
+OP_END
+
+/* File: c/OP_UNUSED_B9FF.c */
+HANDLE_OPCODE(OP_UNUSED_B9FF)
+OP_END
+
+/* File: c/OP_UNUSED_BAFF.c */
+HANDLE_OPCODE(OP_UNUSED_BAFF)
+OP_END
+
+/* File: c/OP_UNUSED_BBFF.c */
+HANDLE_OPCODE(OP_UNUSED_BBFF)
+OP_END
+
+/* File: c/OP_UNUSED_BCFF.c */
+HANDLE_OPCODE(OP_UNUSED_BCFF)
+OP_END
+
+/* File: c/OP_UNUSED_BDFF.c */
+HANDLE_OPCODE(OP_UNUSED_BDFF)
+OP_END
+
+/* File: c/OP_UNUSED_BEFF.c */
+HANDLE_OPCODE(OP_UNUSED_BEFF)
+OP_END
+
+/* File: c/OP_UNUSED_BFFF.c */
+HANDLE_OPCODE(OP_UNUSED_BFFF)
+OP_END
+
+/* File: c/OP_UNUSED_C0FF.c */
+HANDLE_OPCODE(OP_UNUSED_C0FF)
+OP_END
+
+/* File: c/OP_UNUSED_C1FF.c */
+HANDLE_OPCODE(OP_UNUSED_C1FF)
+OP_END
+
+/* File: c/OP_UNUSED_C2FF.c */
+HANDLE_OPCODE(OP_UNUSED_C2FF)
+OP_END
+
+/* File: c/OP_UNUSED_C3FF.c */
+HANDLE_OPCODE(OP_UNUSED_C3FF)
+OP_END
+
+/* File: c/OP_UNUSED_C4FF.c */
+HANDLE_OPCODE(OP_UNUSED_C4FF)
+OP_END
+
+/* File: c/OP_UNUSED_C5FF.c */
+HANDLE_OPCODE(OP_UNUSED_C5FF)
+OP_END
+
+/* File: c/OP_UNUSED_C6FF.c */
+HANDLE_OPCODE(OP_UNUSED_C6FF)
+OP_END
+
+/* File: c/OP_UNUSED_C7FF.c */
+HANDLE_OPCODE(OP_UNUSED_C7FF)
+OP_END
+
+/* File: c/OP_UNUSED_C8FF.c */
+HANDLE_OPCODE(OP_UNUSED_C8FF)
+OP_END
+
+/* File: c/OP_UNUSED_C9FF.c */
+HANDLE_OPCODE(OP_UNUSED_C9FF)
+OP_END
+
+/* File: c/OP_UNUSED_CAFF.c */
+HANDLE_OPCODE(OP_UNUSED_CAFF)
+OP_END
+
+/* File: c/OP_UNUSED_CBFF.c */
+HANDLE_OPCODE(OP_UNUSED_CBFF)
+OP_END
+
+/* File: c/OP_UNUSED_CCFF.c */
+HANDLE_OPCODE(OP_UNUSED_CCFF)
+OP_END
+
+/* File: c/OP_UNUSED_CDFF.c */
+HANDLE_OPCODE(OP_UNUSED_CDFF)
+OP_END
+
+/* File: c/OP_UNUSED_CEFF.c */
+HANDLE_OPCODE(OP_UNUSED_CEFF)
+OP_END
+
+/* File: c/OP_UNUSED_CFFF.c */
+HANDLE_OPCODE(OP_UNUSED_CFFF)
+OP_END
+
+/* File: c/OP_UNUSED_D0FF.c */
+HANDLE_OPCODE(OP_UNUSED_D0FF)
+OP_END
+
+/* File: c/OP_UNUSED_D1FF.c */
+HANDLE_OPCODE(OP_UNUSED_D1FF)
+OP_END
+
+/* File: c/OP_UNUSED_D2FF.c */
+HANDLE_OPCODE(OP_UNUSED_D2FF)
+OP_END
+
+/* File: c/OP_UNUSED_D3FF.c */
+HANDLE_OPCODE(OP_UNUSED_D3FF)
+OP_END
+
+/* File: c/OP_UNUSED_D4FF.c */
+HANDLE_OPCODE(OP_UNUSED_D4FF)
+OP_END
+
+/* File: c/OP_UNUSED_D5FF.c */
+HANDLE_OPCODE(OP_UNUSED_D5FF)
+OP_END
+
+/* File: c/OP_UNUSED_D6FF.c */
+HANDLE_OPCODE(OP_UNUSED_D6FF)
+OP_END
+
+/* File: c/OP_UNUSED_D7FF.c */
+HANDLE_OPCODE(OP_UNUSED_D7FF)
+OP_END
+
+/* File: c/OP_UNUSED_D8FF.c */
+HANDLE_OPCODE(OP_UNUSED_D8FF)
+OP_END
+
+/* File: c/OP_UNUSED_D9FF.c */
+HANDLE_OPCODE(OP_UNUSED_D9FF)
+OP_END
+
+/* File: c/OP_UNUSED_DAFF.c */
+HANDLE_OPCODE(OP_UNUSED_DAFF)
+OP_END
+
+/* File: c/OP_UNUSED_DBFF.c */
+HANDLE_OPCODE(OP_UNUSED_DBFF)
+OP_END
+
+/* File: c/OP_UNUSED_DCFF.c */
+HANDLE_OPCODE(OP_UNUSED_DCFF)
+OP_END
+
+/* File: c/OP_UNUSED_DDFF.c */
+HANDLE_OPCODE(OP_UNUSED_DDFF)
+OP_END
+
+/* File: c/OP_UNUSED_DEFF.c */
+HANDLE_OPCODE(OP_UNUSED_DEFF)
+OP_END
+
+/* File: c/OP_UNUSED_DFFF.c */
+HANDLE_OPCODE(OP_UNUSED_DFFF)
+OP_END
+
+/* File: c/OP_UNUSED_E0FF.c */
+HANDLE_OPCODE(OP_UNUSED_E0FF)
+OP_END
+
+/* File: c/OP_UNUSED_E1FF.c */
+HANDLE_OPCODE(OP_UNUSED_E1FF)
+OP_END
+
+/* File: c/OP_UNUSED_E2FF.c */
+HANDLE_OPCODE(OP_UNUSED_E2FF)
+OP_END
+
+/* File: c/OP_UNUSED_E3FF.c */
+HANDLE_OPCODE(OP_UNUSED_E3FF)
+OP_END
+
+/* File: c/OP_UNUSED_E4FF.c */
+HANDLE_OPCODE(OP_UNUSED_E4FF)
+OP_END
+
+/* File: c/OP_UNUSED_E5FF.c */
+HANDLE_OPCODE(OP_UNUSED_E5FF)
+OP_END
+
+/* File: c/OP_UNUSED_E6FF.c */
+HANDLE_OPCODE(OP_UNUSED_E6FF)
+OP_END
+
+/* File: c/OP_UNUSED_E7FF.c */
+HANDLE_OPCODE(OP_UNUSED_E7FF)
+OP_END
+
+/* File: c/OP_UNUSED_E8FF.c */
+HANDLE_OPCODE(OP_UNUSED_E8FF)
+OP_END
+
+/* File: c/OP_UNUSED_E9FF.c */
+HANDLE_OPCODE(OP_UNUSED_E9FF)
+OP_END
+
+/* File: c/OP_UNUSED_EAFF.c */
+HANDLE_OPCODE(OP_UNUSED_EAFF)
+OP_END
+
+/* File: c/OP_UNUSED_EBFF.c */
+HANDLE_OPCODE(OP_UNUSED_EBFF)
+OP_END
+
+/* File: c/OP_UNUSED_ECFF.c */
+HANDLE_OPCODE(OP_UNUSED_ECFF)
+OP_END
+
+/* File: c/OP_UNUSED_EDFF.c */
+HANDLE_OPCODE(OP_UNUSED_EDFF)
+OP_END
+
+/* File: c/OP_UNUSED_EEFF.c */
+HANDLE_OPCODE(OP_UNUSED_EEFF)
+OP_END
+
+/* File: c/OP_UNUSED_EFFF.c */
+HANDLE_OPCODE(OP_UNUSED_EFFF)
+OP_END
+
+/* File: c/OP_UNUSED_F0FF.c */
+HANDLE_OPCODE(OP_UNUSED_F0FF)
+OP_END
+
+/* File: c/OP_UNUSED_F1FF.c */
+HANDLE_OPCODE(OP_UNUSED_F1FF)
+OP_END
+
+/* File: c/OP_UNUSED_F2FF.c */
+HANDLE_OPCODE(OP_UNUSED_F2FF)
+OP_END
+
+/* File: c/OP_UNUSED_F3FF.c */
+HANDLE_OPCODE(OP_UNUSED_F3FF)
+OP_END
+
+/* File: c/OP_UNUSED_F4FF.c */
+HANDLE_OPCODE(OP_UNUSED_F4FF)
+OP_END
+
+/* File: c/OP_UNUSED_F5FF.c */
+HANDLE_OPCODE(OP_UNUSED_F5FF)
+OP_END
+
+/* File: c/OP_UNUSED_F6FF.c */
+HANDLE_OPCODE(OP_UNUSED_F6FF)
+OP_END
+
+/* File: c/OP_UNUSED_F7FF.c */
+HANDLE_OPCODE(OP_UNUSED_F7FF)
+OP_END
+
+/* File: c/OP_UNUSED_F8FF.c */
+HANDLE_OPCODE(OP_UNUSED_F8FF)
+OP_END
+
+/* File: c/OP_UNUSED_F9FF.c */
+HANDLE_OPCODE(OP_UNUSED_F9FF)
+OP_END
+
+/* File: c/OP_UNUSED_FAFF.c */
+HANDLE_OPCODE(OP_UNUSED_FAFF)
+OP_END
+
+/* File: c/OP_UNUSED_FBFF.c */
+HANDLE_OPCODE(OP_UNUSED_FBFF)
+OP_END
+
+/* File: c/OP_UNUSED_FCFF.c */
+HANDLE_OPCODE(OP_UNUSED_FCFF)
+OP_END
+
+/* File: c/OP_UNUSED_FDFF.c */
+HANDLE_OPCODE(OP_UNUSED_FDFF)
+OP_END
+
+/* File: c/OP_UNUSED_FEFF.c */
+HANDLE_OPCODE(OP_UNUSED_FEFF)
+  /*
+   * In portable interp, most unused opcodes will fall through to here.
+   */
+  LOGE("unknown opcode 0x%04x\n", INST_INST(inst));
+  dvmAbort();
+  FINISH(1);
+OP_END
+
+/* File: c/OP_THROW_VERIFICATION_ERROR_JUMBO.c */
+HANDLE_OPCODE(OP_THROW_VERIFICATION_ERROR_JUMBO)
+    EXPORT_PC();
+    vsrc1 = FETCH(1);
+    ref = FETCH(2) | (u4)FETCH(3) << 16;      /* class/field/method ref */
+    dvmThrowVerificationError(curMethod, vsrc1, ref);
+    GOTO_exceptionThrown();
 OP_END
 
 /* File: cstubs/entry.c */
@@ -3139,7 +4442,7 @@ void dvmMterpStdBail(MterpGlue* glue, bool changeInterp)
  * next instruction.  Here, these are subroutines that return to the caller.
  */
 
-GOTO_TARGET(filledNewArray, bool methodCallRange)
+GOTO_TARGET(filledNewArray, bool methodCallRange, bool jumboFormat)
     {
         ClassObject* arrayClass;
         ArrayObject* newArray;
@@ -3150,19 +4453,28 @@ GOTO_TARGET(filledNewArray, bool methodCallRange)
 
         EXPORT_PC();
 
-        ref = FETCH(1);             /* class ref */
-        vdst = FETCH(2);            /* first 4 regs -or- range base */
-
-        if (methodCallRange) {
-            vsrc1 = INST_AA(inst);  /* #of elements */
-            arg5 = -1;              /* silence compiler warning */
-            ILOGV("|filled-new-array-range args=%d @0x%04x {regs=v%d-v%d}",
+        if (jumboFormat) {
+            ref = FETCH(1) | (u4)FETCH(2) << 16;  /* class ref */
+            vsrc1 = FETCH(3);                     /* #of elements */
+            vdst = FETCH(4);                      /* range base */
+            arg5 = -1;                            /* silence compiler warning */
+            ILOGV("|filled-new-array/jumbo args=%d @0x%08x {regs=v%d-v%d}",
                 vsrc1, ref, vdst, vdst+vsrc1-1);
         } else {
-            arg5 = INST_A(inst);
-            vsrc1 = INST_B(inst);   /* #of elements */
-            ILOGV("|filled-new-array args=%d @0x%04x {regs=0x%04x %x}",
-                vsrc1, ref, vdst, arg5);
+            ref = FETCH(1);             /* class ref */
+            vdst = FETCH(2);            /* first 4 regs -or- range base */
+
+            if (methodCallRange) {
+                vsrc1 = INST_AA(inst);  /* #of elements */
+                arg5 = -1;              /* silence compiler warning */
+                ILOGV("|filled-new-array-range args=%d @0x%04x {regs=v%d-v%d}",
+                    vsrc1, ref, vdst, vdst+vsrc1-1);
+            } else {
+                arg5 = INST_A(inst);
+                vsrc1 = INST_B(inst);   /* #of elements */
+                ILOGV("|filled-new-array args=%d @0x%04x {regs=0x%04x %x}",
+                   vsrc1, ref, vdst, arg5);
+            }
         }
 
         /*
@@ -3231,35 +4543,49 @@ GOTO_TARGET(filledNewArray, bool methodCallRange)
 
         retval.l = newArray;
     }
-    FINISH(3);
+    if (jumboFormat) {
+        FINISH(5);
+    } else {
+        FINISH(3);
+    }
 GOTO_TARGET_END
 
 
-GOTO_TARGET(invokeVirtual, bool methodCallRange)
+GOTO_TARGET(invokeVirtual, bool methodCallRange, bool jumboFormat)
     {
         Method* baseMethod;
         Object* thisPtr;
 
         EXPORT_PC();
 
-        vsrc1 = INST_AA(inst);      /* AA (count) or BA (count + arg 5) */
-        ref = FETCH(1);             /* method ref */
-        vdst = FETCH(2);            /* 4 regs -or- first reg */
-
-        /*
-         * The object against which we are executing a method is always
-         * in the first argument.
-         */
-        if (methodCallRange) {
-            assert(vsrc1 > 0);
-            ILOGV("|invoke-virtual-range args=%d @0x%04x {regs=v%d-v%d}",
+        if (jumboFormat) {
+            ref = FETCH(1) | (u4)FETCH(2) << 16;  /* method ref */
+            vsrc1 = FETCH(3);                     /* count */
+            vdst = FETCH(4);                      /* first reg */
+            ADJUST_PC(2);     /* advance pc partially to make returns easier */
+            ILOGV("|invoke-virtual/jumbo args=%d @0x%08x {regs=v%d-v%d}",
                 vsrc1, ref, vdst, vdst+vsrc1-1);
             thisPtr = (Object*) GET_REGISTER(vdst);
         } else {
-            assert((vsrc1>>4) > 0);
-            ILOGV("|invoke-virtual args=%d @0x%04x {regs=0x%04x %x}",
-                vsrc1 >> 4, ref, vdst, vsrc1 & 0x0f);
-            thisPtr = (Object*) GET_REGISTER(vdst & 0x0f);
+            vsrc1 = INST_AA(inst);      /* AA (count) or BA (count + arg 5) */
+            ref = FETCH(1);             /* method ref */
+            vdst = FETCH(2);            /* 4 regs -or- first reg */
+
+            /*
+             * The object against which we are executing a method is always
+             * in the first argument.
+             */
+            if (methodCallRange) {
+                assert(vsrc1 > 0);
+                ILOGV("|invoke-virtual-range args=%d @0x%04x {regs=v%d-v%d}",
+                    vsrc1, ref, vdst, vdst+vsrc1-1);
+                thisPtr = (Object*) GET_REGISTER(vdst);
+            } else {
+                assert((vsrc1>>4) > 0);
+                ILOGV("|invoke-virtual args=%d @0x%04x {regs=0x%04x %x}",
+                    vsrc1 >> 4, ref, vdst, vsrc1 & 0x0f);
+                thisPtr = (Object*) GET_REGISTER(vdst & 0x0f);
+            }
         }
 
         if (!checkForNull(thisPtr))
@@ -3331,26 +4657,37 @@ GOTO_TARGET(invokeVirtual, bool methodCallRange)
     }
 GOTO_TARGET_END
 
-GOTO_TARGET(invokeSuper, bool methodCallRange)
+GOTO_TARGET(invokeSuper, bool methodCallRange, bool jumboFormat)
     {
         Method* baseMethod;
         u2 thisReg;
 
         EXPORT_PC();
 
-        vsrc1 = INST_AA(inst);      /* AA (count) or BA (count + arg 5) */
-        ref = FETCH(1);             /* method ref */
-        vdst = FETCH(2);            /* 4 regs -or- first reg */
-
-        if (methodCallRange) {
-            ILOGV("|invoke-super-range args=%d @0x%04x {regs=v%d-v%d}",
+        if (jumboFormat) {
+            ref = FETCH(1) | (u4)FETCH(2) << 16;  /* method ref */
+            vsrc1 = FETCH(3);                     /* count */
+            vdst = FETCH(4);                      /* first reg */
+            ADJUST_PC(2);     /* advance pc partially to make returns easier */
+            ILOGV("|invoke-super/jumbo args=%d @0x%08x {regs=v%d-v%d}",
                 vsrc1, ref, vdst, vdst+vsrc1-1);
             thisReg = vdst;
         } else {
-            ILOGV("|invoke-super args=%d @0x%04x {regs=0x%04x %x}",
-                vsrc1 >> 4, ref, vdst, vsrc1 & 0x0f);
-            thisReg = vdst & 0x0f;
+            vsrc1 = INST_AA(inst);      /* AA (count) or BA (count + arg 5) */
+            ref = FETCH(1);             /* method ref */
+            vdst = FETCH(2);            /* 4 regs -or- first reg */
+
+            if (methodCallRange) {
+                ILOGV("|invoke-super-range args=%d @0x%04x {regs=v%d-v%d}",
+                    vsrc1, ref, vdst, vdst+vsrc1-1);
+                thisReg = vdst;
+            } else {
+                ILOGV("|invoke-super args=%d @0x%04x {regs=0x%04x %x}",
+                    vsrc1 >> 4, ref, vdst, vsrc1 & 0x0f);
+                thisReg = vdst & 0x0f;
+            }
         }
+
         /* impossible in well-formed code, but we must check nevertheless */
         if (!checkForNull((Object*) GET_REGISTER(thisReg)))
             GOTO_exceptionThrown();
@@ -3409,32 +4746,43 @@ GOTO_TARGET(invokeSuper, bool methodCallRange)
     }
 GOTO_TARGET_END
 
-GOTO_TARGET(invokeInterface, bool methodCallRange)
+GOTO_TARGET(invokeInterface, bool methodCallRange, bool jumboFormat)
     {
         Object* thisPtr;
         ClassObject* thisClass;
 
         EXPORT_PC();
 
-        vsrc1 = INST_AA(inst);      /* AA (count) or BA (count + arg 5) */
-        ref = FETCH(1);             /* method ref */
-        vdst = FETCH(2);            /* 4 regs -or- first reg */
-
-        /*
-         * The object against which we are executing a method is always
-         * in the first argument.
-         */
-        if (methodCallRange) {
-            assert(vsrc1 > 0);
-            ILOGV("|invoke-interface-range args=%d @0x%04x {regs=v%d-v%d}",
+        if (jumboFormat) {
+            ref = FETCH(1) | (u4)FETCH(2) << 16;  /* method ref */
+            vsrc1 = FETCH(3);                     /* count */
+            vdst = FETCH(4);                      /* first reg */
+            ADJUST_PC(2);     /* advance pc partially to make returns easier */
+            ILOGV("|invoke-interface/jumbo args=%d @0x%08x {regs=v%d-v%d}",
                 vsrc1, ref, vdst, vdst+vsrc1-1);
             thisPtr = (Object*) GET_REGISTER(vdst);
         } else {
-            assert((vsrc1>>4) > 0);
-            ILOGV("|invoke-interface args=%d @0x%04x {regs=0x%04x %x}",
-                vsrc1 >> 4, ref, vdst, vsrc1 & 0x0f);
-            thisPtr = (Object*) GET_REGISTER(vdst & 0x0f);
+            vsrc1 = INST_AA(inst);      /* AA (count) or BA (count + arg 5) */
+            ref = FETCH(1);             /* method ref */
+            vdst = FETCH(2);            /* 4 regs -or- first reg */
+
+            /*
+             * The object against which we are executing a method is always
+             * in the first argument.
+             */
+            if (methodCallRange) {
+                assert(vsrc1 > 0);
+                ILOGV("|invoke-interface-range args=%d @0x%04x {regs=v%d-v%d}",
+                    vsrc1, ref, vdst, vdst+vsrc1-1);
+                thisPtr = (Object*) GET_REGISTER(vdst);
+            } else {
+                assert((vsrc1>>4) > 0);
+                ILOGV("|invoke-interface args=%d @0x%04x {regs=0x%04x %x}",
+                    vsrc1 >> 4, ref, vdst, vsrc1 & 0x0f);
+                thisPtr = (Object*) GET_REGISTER(vdst & 0x0f);
+            }
         }
+
         if (!checkForNull(thisPtr))
             GOTO_exceptionThrown();
 
@@ -3459,25 +4807,36 @@ GOTO_TARGET(invokeInterface, bool methodCallRange)
     }
 GOTO_TARGET_END
 
-GOTO_TARGET(invokeDirect, bool methodCallRange)
+GOTO_TARGET(invokeDirect, bool methodCallRange, bool jumboFormat)
     {
         u2 thisReg;
 
-        vsrc1 = INST_AA(inst);      /* AA (count) or BA (count + arg 5) */
-        ref = FETCH(1);             /* method ref */
-        vdst = FETCH(2);            /* 4 regs -or- first reg */
-
         EXPORT_PC();
 
-        if (methodCallRange) {
-            ILOGV("|invoke-direct-range args=%d @0x%04x {regs=v%d-v%d}",
+        if (jumboFormat) {
+            ref = FETCH(1) | (u4)FETCH(2) << 16;  /* method ref */
+            vsrc1 = FETCH(3);                     /* count */
+            vdst = FETCH(4);                      /* first reg */
+            ADJUST_PC(2);     /* advance pc partially to make returns easier */
+            ILOGV("|invoke-direct/jumbo args=%d @0x%08x {regs=v%d-v%d}",
                 vsrc1, ref, vdst, vdst+vsrc1-1);
             thisReg = vdst;
         } else {
-            ILOGV("|invoke-direct args=%d @0x%04x {regs=0x%04x %x}",
-                vsrc1 >> 4, ref, vdst, vsrc1 & 0x0f);
-            thisReg = vdst & 0x0f;
+            vsrc1 = INST_AA(inst);      /* AA (count) or BA (count + arg 5) */
+            ref = FETCH(1);             /* method ref */
+            vdst = FETCH(2);            /* 4 regs -or- first reg */
+
+            if (methodCallRange) {
+                ILOGV("|invoke-direct-range args=%d @0x%04x {regs=v%d-v%d}",
+                    vsrc1, ref, vdst, vdst+vsrc1-1);
+                thisReg = vdst;
+            } else {
+                ILOGV("|invoke-direct args=%d @0x%04x {regs=0x%04x %x}",
+                    vsrc1 >> 4, ref, vdst, vsrc1 & 0x0f);
+                thisReg = vdst & 0x0f;
+            }
         }
+
         if (!checkForNull((Object*) GET_REGISTER(thisReg)))
             GOTO_exceptionThrown();
 
@@ -3494,19 +4853,28 @@ GOTO_TARGET(invokeDirect, bool methodCallRange)
     }
 GOTO_TARGET_END
 
-GOTO_TARGET(invokeStatic, bool methodCallRange)
-    vsrc1 = INST_AA(inst);      /* AA (count) or BA (count + arg 5) */
-    ref = FETCH(1);             /* method ref */
-    vdst = FETCH(2);            /* 4 regs -or- first reg */
-
+GOTO_TARGET(invokeStatic, bool methodCallRange, bool jumboFormat)
     EXPORT_PC();
 
-    if (methodCallRange)
-        ILOGV("|invoke-static-range args=%d @0x%04x {regs=v%d-v%d}",
+    if (jumboFormat) {
+        ref = FETCH(1) | (u4)FETCH(2) << 16;  /* method ref */
+        vsrc1 = FETCH(3);                     /* count */
+        vdst = FETCH(4);                      /* first reg */
+        ADJUST_PC(2);     /* advance pc partially to make returns easier */
+        ILOGV("|invoke-static/jumbo args=%d @0x%08x {regs=v%d-v%d}",
             vsrc1, ref, vdst, vdst+vsrc1-1);
-    else
-        ILOGV("|invoke-static args=%d @0x%04x {regs=0x%04x %x}",
-            vsrc1 >> 4, ref, vdst, vsrc1 & 0x0f);
+    } else {
+        vsrc1 = INST_AA(inst);      /* AA (count) or BA (count + arg 5) */
+        ref = FETCH(1);             /* method ref */
+        vdst = FETCH(2);            /* 4 regs -or- first reg */
+
+        if (methodCallRange)
+            ILOGV("|invoke-static-range args=%d @0x%04x {regs=v%d-v%d}",
+                vsrc1, ref, vdst, vdst+vsrc1-1);
+        else
+            ILOGV("|invoke-static args=%d @0x%04x {regs=0x%04x %x}",
+                vsrc1 >> 4, ref, vdst, vsrc1 & 0x0f);
+    }
 
     methodToCall = dvmDexGetResolvedMethod(methodClassDex, ref);
     if (methodToCall == NULL) {
@@ -3529,7 +4897,7 @@ GOTO_TARGET(invokeStatic, bool methodCallRange)
     GOTO_invokeMethod(methodCallRange, methodToCall, vsrc1, vdst);
 GOTO_TARGET_END
 
-GOTO_TARGET(invokeVirtualQuick, bool methodCallRange)
+GOTO_TARGET(invokeVirtualQuick, bool methodCallRange, bool jumboFormat)
     {
         Object* thisPtr;
 
@@ -3566,7 +4934,7 @@ GOTO_TARGET(invokeVirtualQuick, bool methodCallRange)
          * Combine the object we found with the vtable offset in the
          * method.
          */
-        assert(ref < thisPtr->clazz->vtableCount);
+        assert(ref < (unsigned int) thisPtr->clazz->vtableCount);
         methodToCall = thisPtr->clazz->vtable[ref];
 
 #if 0
@@ -3588,7 +4956,7 @@ GOTO_TARGET(invokeVirtualQuick, bool methodCallRange)
     }
 GOTO_TARGET_END
 
-GOTO_TARGET(invokeSuperQuick, bool methodCallRange)
+GOTO_TARGET(invokeSuperQuick, bool methodCallRange, bool jumboFormat)
     {
         u2 thisReg;
 
@@ -3617,7 +4985,7 @@ GOTO_TARGET(invokeSuperQuick, bool methodCallRange)
             GOTO_exceptionThrown();
         }
 #else
-        assert(ref < curMethod->clazz->super->vtableCount);
+        assert(ref < (unsigned int) curMethod->clazz->super->vtableCount);
 #endif
 
         /*

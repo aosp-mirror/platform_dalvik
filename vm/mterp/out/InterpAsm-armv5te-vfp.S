@@ -7743,9 +7743,2834 @@ dalvik_inst:
     .balign 64
 .L_OP_DISPATCH_FF: /* 0xff */
 /* File: armv5te/OP_DISPATCH_FF.S */
+    mov     ip, rINST, lsr #8           @ r9<- extended opcode
+    add     ip, ip, #256                @ add offset for extended opcodes
+    GOTO_OPCODE(ip)                     @ go to proper extended handler
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_CONST_CLASS_JUMBO: /* 0x100 */
+/* File: armv5te/OP_CONST_CLASS_JUMBO.S */
+    /* const-class/jumbo vBBBB, Class@AAAAAAAA */
+    FETCH(r0, 1)                        @ r0<- aaaa (lo)
+    ldr     r2, [rGLUE, #offGlue_methodClassDex]    @ r2<- glue->methodClassDex
+    FETCH(r1, 2)                        @ r1<- AAAA (hi)
+    ldr     r2, [r2, #offDvmDex_pResClasses]   @ r2<- dvmDex->pResClasses
+    orr     r1, r0, r1, lsl #16         @ r1<- AAAAaaaa
+    FETCH(r9, 3)                        @ r9<- BBBB
+    ldr     r0, [r2, r1, lsl #2]        @ r0<- pResClasses[AAAAaaaa]
+    cmp     r0, #0                      @ not yet resolved?
+    beq     .LOP_CONST_CLASS_JUMBO_resolve
+    FETCH_ADVANCE_INST(4)               @ advance rPC, load rINST
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    SET_VREG(r0, r9)                    @ vBBBB<- r0
+    GOTO_OPCODE(ip)                     @ jump to next instruction
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_CHECK_CAST_JUMBO: /* 0x101 */
+/* File: armv5te/OP_CHECK_CAST_JUMBO.S */
+    /*
+     * Check to see if a cast from one class to another is allowed.
+     */
+    /* check-cast/jumbo vBBBB, class@AAAAAAAA */
+    FETCH(r0, 1)                        @ r0<- aaaa (lo)
+    FETCH(r2, 2)                        @ r2<- AAAA (hi)
+    FETCH(r3, 3)                        @ r3<- BBBB
+    orr     r2, r0, r2, lsl #16         @ r2<- AAAAaaaa
+    GET_VREG(r9, r3)                    @ r9<- object
+    ldr     r0, [rGLUE, #offGlue_methodClassDex]    @ r0<- pDvmDex
+    cmp     r9, #0                      @ is object null?
+    ldr     r0, [r0, #offDvmDex_pResClasses]    @ r0<- pDvmDex->pResClasses
+    beq     .LOP_CHECK_CAST_JUMBO_okay            @ null obj, cast always succeeds
+    ldr     r1, [r0, r2, lsl #2]        @ r1<- resolved class
+    ldr     r0, [r9, #offObject_clazz]  @ r0<- obj->clazz
+    cmp     r1, #0                      @ have we resolved this before?
+    beq     .LOP_CHECK_CAST_JUMBO_resolve         @ not resolved, do it now
+.LOP_CHECK_CAST_JUMBO_resolved:
+    cmp     r0, r1                      @ same class (trivial success)?
+    bne     .LOP_CHECK_CAST_JUMBO_fullcheck       @ no, do full check
+    b       .LOP_CHECK_CAST_JUMBO_okay            @ yes, finish up
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_INSTANCE_OF_JUMBO: /* 0x102 */
+/* File: armv5te/OP_INSTANCE_OF_JUMBO.S */
+    /*
+     * Check to see if an object reference is an instance of a class.
+     *
+     * Most common situation is a non-null object, being compared against
+     * an already-resolved class.
+     *
+     * TODO: convert most of this into a common subroutine, shared with
+     *       OP_INSTANCE_OF.S.
+     */
+    /* instance-of/jumbo vBBBB, vCCCC, class@AAAAAAAA */
+    FETCH(r3, 4)                        @ r3<- vCCCC
+    FETCH(r9, 3)                        @ r9<- vBBBB
+    GET_VREG(r0, r3)                    @ r0<- vCCCC (object)
+    ldr     r2, [rGLUE, #offGlue_methodClassDex]    @ r2<- pDvmDex
+    cmp     r0, #0                      @ is object null?
+    beq     .LOP_INSTANCE_OF_JUMBO_store           @ null obj, not an instance, store r0
+    FETCH(r1, 1)                        @ r1<- aaaa (lo)
+    FETCH(r3, 2)                        @ r3<- AAAA (hi)
+    ldr     r2, [r2, #offDvmDex_pResClasses]    @ r2<- pDvmDex->pResClasses
+    orr     r3, r1, r3, lsl #16         @ r3<- AAAAaaaa
+    ldr     r1, [r2, r3, lsl #2]        @ r1<- resolved class
+    ldr     r0, [r0, #offObject_clazz]  @ r0<- obj->clazz
+    cmp     r1, #0                      @ have we resolved this before?
+    beq     .LOP_INSTANCE_OF_JUMBO_resolve         @ not resolved, do it now
+    b       .LOP_INSTANCE_OF_JUMBO_resolved        @ resolved, continue
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_NEW_INSTANCE_JUMBO: /* 0x103 */
+/* File: armv5te/OP_NEW_INSTANCE_JUMBO.S */
+    /*
+     * Create a new instance of a class.
+     */
+    /* new-instance/jumbo vBBBB, class@AAAAAAAA */
+    FETCH(r0, 1)                        @ r0<- aaaa (lo)
+    FETCH(r1, 2)                        @ r1<- AAAA (hi)
+    ldr     r3, [rGLUE, #offGlue_methodClassDex]    @ r3<- pDvmDex
+    orr     r1, r0, r1, lsl #16         @ r1<- AAAAaaaa
+    ldr     r3, [r3, #offDvmDex_pResClasses]    @ r3<- pDvmDex->pResClasses
+    ldr     r0, [r3, r1, lsl #2]        @ r0<- resolved class
+    EXPORT_PC()                         @ req'd for init, resolve, alloc
+    cmp     r0, #0                      @ already resolved?
+    beq     .LOP_NEW_INSTANCE_JUMBO_resolve         @ no, resolve it now
+.LOP_NEW_INSTANCE_JUMBO_resolved:   @ r0=class
+    ldrb    r1, [r0, #offClassObject_status]    @ r1<- ClassStatus enum
+    cmp     r1, #CLASS_INITIALIZED      @ has class been initialized?
+    bne     .LOP_NEW_INSTANCE_JUMBO_needinit        @ no, init class now
+.LOP_NEW_INSTANCE_JUMBO_initialized: @ r0=class
+    mov     r1, #ALLOC_DONT_TRACK       @ flags for alloc call
+    bl      dvmAllocObject              @ r0<- new object
+    b       .LOP_NEW_INSTANCE_JUMBO_finish          @ continue
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_NEW_ARRAY_JUMBO: /* 0x104 */
+/* File: armv5te/OP_NEW_ARRAY_JUMBO.S */
+    /*
+     * Allocate an array of objects, specified with the array class
+     * and a count.
+     *
+     * The verifier guarantees that this is an array class, so we don't
+     * check for it here.
+     */
+    /* new-array/jumbo vBBBB, vCCCC, class@AAAAAAAA */
+    FETCH(r2, 1)                        @ r2<- aaaa (lo)
+    FETCH(r3, 2)                        @ r3<- AAAA (hi)
+    FETCH(r0, 4)                        @ r0<- vCCCC
+    orr     r2, r2, r3, lsl #16         @ r2<- AAAAaaaa
+    ldr     r3, [rGLUE, #offGlue_methodClassDex]    @ r3<- pDvmDex
+    GET_VREG(r1, r0)                    @ r1<- vCCCC (array length)
+    ldr     r3, [r3, #offDvmDex_pResClasses]    @ r3<- pDvmDex->pResClasses
+    cmp     r1, #0                      @ check length
+    ldr     r0, [r3, r2, lsl #2]        @ r0<- resolved class
+    bmi     common_errNegativeArraySize @ negative length, bail
+    cmp     r0, #0                      @ already resolved?
+    EXPORT_PC()                         @ req'd for resolve, alloc
+    bne     .LOP_NEW_ARRAY_JUMBO_finish          @ resolved, continue
+    b       .LOP_NEW_ARRAY_JUMBO_resolve         @ do resolve now
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_FILLED_NEW_ARRAY_JUMBO: /* 0x105 */
+/* File: armv5te/OP_FILLED_NEW_ARRAY_JUMBO.S */
+    /*
+     * Create a new array with elements filled from registers.
+     *
+     * TODO: convert most of this into a common subroutine, shared with
+     *       OP_FILLED_NEW_ARRAY.S.
+     */
+    /* filled-new-array/jumbo {vCCCC..v(CCCC+BBBB-1)}, type@AAAAAAAA */
+    ldr     r3, [rGLUE, #offGlue_methodClassDex]    @ r3<- pDvmDex
+    FETCH(r0, 1)                        @ r0<- aaaa (lo)
+    FETCH(r1, 2)                        @ r1<- AAAA (hi)
+    ldr     r3, [r3, #offDvmDex_pResClasses]    @ r3<- pDvmDex->pResClasses
+    orr     r1, r0, r1, lsl #16         @ r1<- AAAAaaaa
+    ldr     r0, [r3, r1, lsl #2]        @ r0<- resolved class
+    EXPORT_PC()                         @ need for resolve and alloc
+    cmp     r0, #0                      @ already resolved?
+    bne     .LOP_FILLED_NEW_ARRAY_JUMBO_continue        @ yes, continue on
+8:  ldr     r3, [rGLUE, #offGlue_method] @ r3<- glue->method
+    mov     r2, #0                      @ r2<- false
+    ldr     r0, [r3, #offMethod_clazz]  @ r0<- method->clazz
+    bl      dvmResolveClass             @ r0<- call(clazz, ref)
+    cmp     r0, #0                      @ got null?
+    beq     common_exceptionThrown      @ yes, handle exception
+    b       .LOP_FILLED_NEW_ARRAY_JUMBO_continue
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_IGET_JUMBO: /* 0x106 */
+/* File: armv5te/OP_IGET_JUMBO.S */
+    /*
+     * Jumbo 32-bit instance field get.
+     *
+     * for: iget/jumbo, iget-object/jumbo, iget-boolean/jumbo, iget-byte/jumbo,
+     *      iget-char/jumbo, iget-short/jumbo
+     */
+    /* exop vBBBB, vCCCC, field@AAAAAAAA */
+    FETCH(r1, 1)                        @ r1<- aaaa (lo)
+    FETCH(r2, 2)                        @ r2<- AAAA (hi)
+    FETCH(r0, 4)                        @ r0<- CCCC
+    ldr     r3, [rGLUE, #offGlue_methodClassDex]    @ r3<- DvmDex
+    orr     r1, r1, r2, lsl #16         @ r1<- AAAAaaaa
+    ldr     r2, [r3, #offDvmDex_pResFields] @ r2<- pDvmDex->pResFields
+    GET_VREG(r9, r0)                    @ r9<- fp[CCCC], the object pointer
+    ldr     r0, [r2, r1, lsl #2]        @ r0<- resolved InstField ptr
+    cmp     r0, #0                      @ is resolved entry null?
+    bne     .LOP_IGET_JUMBO_finish          @ no, already resolved
+8:  ldr     r2, [rGLUE, #offGlue_method]    @ r2<- current method
+    EXPORT_PC()                         @ resolve() could throw
+    ldr     r0, [r2, #offMethod_clazz]  @ r0<- method->clazz
+    bl      dvmResolveInstField         @ r0<- resolved InstField ptr
+    b       .LOP_IGET_JUMBO_resolved        @ resolved, continue
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_IGET_WIDE_JUMBO: /* 0x107 */
+/* File: armv5te/OP_IGET_WIDE_JUMBO.S */
+    /*
+     * Jumbo 64-bit instance field get.
+     */
+    /* iget-wide/jumbo vBBBB, vCCCC, field@AAAAAAAA */
+    FETCH(r1, 1)                        @ r1<- aaaa (lo)
+    FETCH(r2, 2)                        @ r2<- AAAA (hi)
+    FETCH(r0, 4)                        @ r0<- CCCC
+    ldr     r3, [rGLUE, #offGlue_methodClassDex]    @ r3<- DvmDex
+    orr     r1, r1, r2, lsl #16         @ r1<- AAAAaaaa
+    ldr     r2, [r3, #offDvmDex_pResFields] @ r2<- pResFields
+    GET_VREG(r9, r0)                    @ r9<- fp[CCCC], the object pointer
+    ldr     r0, [r2, r1, lsl #2]        @ r0<- resolved InstField ptr
+    cmp     r0, #0                      @ is resolved entry null?
+    bne     .LOP_IGET_WIDE_JUMBO_finish          @ no, already resolved
+8:  ldr     r2, [rGLUE, #offGlue_method] @ r2<- current method
+    EXPORT_PC()                         @ resolve() could throw
+    ldr     r0, [r2, #offMethod_clazz]  @ r0<- method->clazz
+    bl      dvmResolveInstField         @ r0<- resolved InstField ptr
+    b       .LOP_IGET_WIDE_JUMBO_resolved        @ resolved, continue
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_IGET_OBJECT_JUMBO: /* 0x108 */
+/* File: armv5te/OP_IGET_OBJECT_JUMBO.S */
+/* File: armv5te/OP_IGET_JUMBO.S */
+    /*
+     * Jumbo 32-bit instance field get.
+     *
+     * for: iget/jumbo, iget-object/jumbo, iget-boolean/jumbo, iget-byte/jumbo,
+     *      iget-char/jumbo, iget-short/jumbo
+     */
+    /* exop vBBBB, vCCCC, field@AAAAAAAA */
+    FETCH(r1, 1)                        @ r1<- aaaa (lo)
+    FETCH(r2, 2)                        @ r2<- AAAA (hi)
+    FETCH(r0, 4)                        @ r0<- CCCC
+    ldr     r3, [rGLUE, #offGlue_methodClassDex]    @ r3<- DvmDex
+    orr     r1, r1, r2, lsl #16         @ r1<- AAAAaaaa
+    ldr     r2, [r3, #offDvmDex_pResFields] @ r2<- pDvmDex->pResFields
+    GET_VREG(r9, r0)                    @ r9<- fp[CCCC], the object pointer
+    ldr     r0, [r2, r1, lsl #2]        @ r0<- resolved InstField ptr
+    cmp     r0, #0                      @ is resolved entry null?
+    bne     .LOP_IGET_OBJECT_JUMBO_finish          @ no, already resolved
+8:  ldr     r2, [rGLUE, #offGlue_method]    @ r2<- current method
+    EXPORT_PC()                         @ resolve() could throw
+    ldr     r0, [r2, #offMethod_clazz]  @ r0<- method->clazz
+    bl      dvmResolveInstField         @ r0<- resolved InstField ptr
+    b       .LOP_IGET_OBJECT_JUMBO_resolved        @ resolved, continue
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_IGET_BOOLEAN_JUMBO: /* 0x109 */
+/* File: armv5te/OP_IGET_BOOLEAN_JUMBO.S */
+@include "armv5te/OP_IGET_JUMBO.S" { "load":"ldrb", "sqnum":"1" }
+/* File: armv5te/OP_IGET_JUMBO.S */
+    /*
+     * Jumbo 32-bit instance field get.
+     *
+     * for: iget/jumbo, iget-object/jumbo, iget-boolean/jumbo, iget-byte/jumbo,
+     *      iget-char/jumbo, iget-short/jumbo
+     */
+    /* exop vBBBB, vCCCC, field@AAAAAAAA */
+    FETCH(r1, 1)                        @ r1<- aaaa (lo)
+    FETCH(r2, 2)                        @ r2<- AAAA (hi)
+    FETCH(r0, 4)                        @ r0<- CCCC
+    ldr     r3, [rGLUE, #offGlue_methodClassDex]    @ r3<- DvmDex
+    orr     r1, r1, r2, lsl #16         @ r1<- AAAAaaaa
+    ldr     r2, [r3, #offDvmDex_pResFields] @ r2<- pDvmDex->pResFields
+    GET_VREG(r9, r0)                    @ r9<- fp[CCCC], the object pointer
+    ldr     r0, [r2, r1, lsl #2]        @ r0<- resolved InstField ptr
+    cmp     r0, #0                      @ is resolved entry null?
+    bne     .LOP_IGET_BOOLEAN_JUMBO_finish          @ no, already resolved
+8:  ldr     r2, [rGLUE, #offGlue_method]    @ r2<- current method
+    EXPORT_PC()                         @ resolve() could throw
+    ldr     r0, [r2, #offMethod_clazz]  @ r0<- method->clazz
+    bl      dvmResolveInstField         @ r0<- resolved InstField ptr
+    b       .LOP_IGET_BOOLEAN_JUMBO_resolved        @ resolved, continue
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_IGET_BYTE_JUMBO: /* 0x10a */
+/* File: armv5te/OP_IGET_BYTE_JUMBO.S */
+@include "armv5te/OP_IGET_JUMBO.S" { "load":"ldrsb", "sqnum":"2" }
+/* File: armv5te/OP_IGET_JUMBO.S */
+    /*
+     * Jumbo 32-bit instance field get.
+     *
+     * for: iget/jumbo, iget-object/jumbo, iget-boolean/jumbo, iget-byte/jumbo,
+     *      iget-char/jumbo, iget-short/jumbo
+     */
+    /* exop vBBBB, vCCCC, field@AAAAAAAA */
+    FETCH(r1, 1)                        @ r1<- aaaa (lo)
+    FETCH(r2, 2)                        @ r2<- AAAA (hi)
+    FETCH(r0, 4)                        @ r0<- CCCC
+    ldr     r3, [rGLUE, #offGlue_methodClassDex]    @ r3<- DvmDex
+    orr     r1, r1, r2, lsl #16         @ r1<- AAAAaaaa
+    ldr     r2, [r3, #offDvmDex_pResFields] @ r2<- pDvmDex->pResFields
+    GET_VREG(r9, r0)                    @ r9<- fp[CCCC], the object pointer
+    ldr     r0, [r2, r1, lsl #2]        @ r0<- resolved InstField ptr
+    cmp     r0, #0                      @ is resolved entry null?
+    bne     .LOP_IGET_BYTE_JUMBO_finish          @ no, already resolved
+8:  ldr     r2, [rGLUE, #offGlue_method]    @ r2<- current method
+    EXPORT_PC()                         @ resolve() could throw
+    ldr     r0, [r2, #offMethod_clazz]  @ r0<- method->clazz
+    bl      dvmResolveInstField         @ r0<- resolved InstField ptr
+    b       .LOP_IGET_BYTE_JUMBO_resolved        @ resolved, continue
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_IGET_CHAR_JUMBO: /* 0x10b */
+/* File: armv5te/OP_IGET_CHAR_JUMBO.S */
+@include "armv5te/OP_IGET_JUMBO.S" { "load":"ldrh", "sqnum":"3" }
+/* File: armv5te/OP_IGET_JUMBO.S */
+    /*
+     * Jumbo 32-bit instance field get.
+     *
+     * for: iget/jumbo, iget-object/jumbo, iget-boolean/jumbo, iget-byte/jumbo,
+     *      iget-char/jumbo, iget-short/jumbo
+     */
+    /* exop vBBBB, vCCCC, field@AAAAAAAA */
+    FETCH(r1, 1)                        @ r1<- aaaa (lo)
+    FETCH(r2, 2)                        @ r2<- AAAA (hi)
+    FETCH(r0, 4)                        @ r0<- CCCC
+    ldr     r3, [rGLUE, #offGlue_methodClassDex]    @ r3<- DvmDex
+    orr     r1, r1, r2, lsl #16         @ r1<- AAAAaaaa
+    ldr     r2, [r3, #offDvmDex_pResFields] @ r2<- pDvmDex->pResFields
+    GET_VREG(r9, r0)                    @ r9<- fp[CCCC], the object pointer
+    ldr     r0, [r2, r1, lsl #2]        @ r0<- resolved InstField ptr
+    cmp     r0, #0                      @ is resolved entry null?
+    bne     .LOP_IGET_CHAR_JUMBO_finish          @ no, already resolved
+8:  ldr     r2, [rGLUE, #offGlue_method]    @ r2<- current method
+    EXPORT_PC()                         @ resolve() could throw
+    ldr     r0, [r2, #offMethod_clazz]  @ r0<- method->clazz
+    bl      dvmResolveInstField         @ r0<- resolved InstField ptr
+    b       .LOP_IGET_CHAR_JUMBO_resolved        @ resolved, continue
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_IGET_SHORT_JUMBO: /* 0x10c */
+/* File: armv5te/OP_IGET_SHORT_JUMBO.S */
+@include "armv5te/OP_IGET_JUMBO.S" { "load":"ldrsh", "sqnum":"4" }
+/* File: armv5te/OP_IGET_JUMBO.S */
+    /*
+     * Jumbo 32-bit instance field get.
+     *
+     * for: iget/jumbo, iget-object/jumbo, iget-boolean/jumbo, iget-byte/jumbo,
+     *      iget-char/jumbo, iget-short/jumbo
+     */
+    /* exop vBBBB, vCCCC, field@AAAAAAAA */
+    FETCH(r1, 1)                        @ r1<- aaaa (lo)
+    FETCH(r2, 2)                        @ r2<- AAAA (hi)
+    FETCH(r0, 4)                        @ r0<- CCCC
+    ldr     r3, [rGLUE, #offGlue_methodClassDex]    @ r3<- DvmDex
+    orr     r1, r1, r2, lsl #16         @ r1<- AAAAaaaa
+    ldr     r2, [r3, #offDvmDex_pResFields] @ r2<- pDvmDex->pResFields
+    GET_VREG(r9, r0)                    @ r9<- fp[CCCC], the object pointer
+    ldr     r0, [r2, r1, lsl #2]        @ r0<- resolved InstField ptr
+    cmp     r0, #0                      @ is resolved entry null?
+    bne     .LOP_IGET_SHORT_JUMBO_finish          @ no, already resolved
+8:  ldr     r2, [rGLUE, #offGlue_method]    @ r2<- current method
+    EXPORT_PC()                         @ resolve() could throw
+    ldr     r0, [r2, #offMethod_clazz]  @ r0<- method->clazz
+    bl      dvmResolveInstField         @ r0<- resolved InstField ptr
+    b       .LOP_IGET_SHORT_JUMBO_resolved        @ resolved, continue
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_IPUT_JUMBO: /* 0x10d */
+/* File: armv5te/OP_IPUT_JUMBO.S */
+    /*
+     * Jumbo 32-bit instance field put.
+     *
+     * for: iput/jumbo, iput-boolean/jumbo, iput-byte/jumbo, iput-char/jumbo,
+     *      iput-short/jumbo
+     */
+    /* exop vBBBB, vCCCC, field@AAAAAAAA */
+    FETCH(r1, 1)                        @ r1<- aaaa (lo)
+    FETCH(r2, 2)                        @ r2<- AAAA (hi)
+    FETCH(r0, 4)                        @ r0<- CCCC
+    ldr     r3, [rGLUE, #offGlue_methodClassDex]    @ r3<- DvmDex
+    orr     r1, r1, r2, lsl #16         @ r1<- AAAAaaaa
+    ldr     r2, [r3, #offDvmDex_pResFields] @ r2<- pDvmDex->pResFields
+    GET_VREG(r9, r0)                    @ r9<- fp[CCCC], the object pointer
+    ldr     r0, [r2, r1, lsl #2]        @ r0<- resolved InstField ptr
+    cmp     r0, #0                      @ is resolved entry null?
+    bne     .LOP_IPUT_JUMBO_finish          @ no, already resolved
+8:  ldr     r2, [rGLUE, #offGlue_method]    @ r2<- current method
+    EXPORT_PC()                         @ resolve() could throw
+    ldr     r0, [r2, #offMethod_clazz]  @ r0<- method->clazz
+    bl      dvmResolveInstField         @ r0<- resolved InstField ptr
+    b       .LOP_IPUT_JUMBO_resolved        @ resolved, continue
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_IPUT_WIDE_JUMBO: /* 0x10e */
+/* File: armv5te/OP_IPUT_WIDE_JUMBO.S */
+    /* iput-wide/jumbo vBBBB, vCCCC, field@AAAAAAAA */
+    FETCH(r1, 1)                        @ r1<- aaaa (lo)
+    FETCH(r2, 2)                        @ r2<- AAAA (hi)
+    FETCH(r0, 4)                        @ r0<- CCCC
+    ldr     r3, [rGLUE, #offGlue_methodClassDex]    @ r3<- DvmDex
+    orr     r1, r1, r2, lsl #16         @ r1<- AAAAaaaa
+    ldr     r2, [r3, #offDvmDex_pResFields] @ r2<- pResFields
+    GET_VREG(r9, r0)                    @ r9<- fp[B], the object pointer
+    ldr     r0, [r2, r1, lsl #2]        @ r0<- resolved InstField ptr
+    cmp     r0, #0                      @ is resolved entry null?
+    bne     .LOP_IPUT_WIDE_JUMBO_finish          @ no, already resolved
+8:  ldr     r2, [rGLUE, #offGlue_method] @ r2<- current method
+    EXPORT_PC()                         @ resolve() could throw
+    ldr     r0, [r2, #offMethod_clazz]  @ r0<- method->clazz
+    bl      dvmResolveInstField         @ r0<- resolved InstField ptr
+    b       .LOP_IPUT_WIDE_JUMBO_resolved        @ resolved, continue
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_IPUT_OBJECT_JUMBO: /* 0x10f */
+/* File: armv5te/OP_IPUT_OBJECT_JUMBO.S */
+    /*
+     * Jumbo 32-bit instance field put.
+     */
+    /* iput-object/jumbo vBBBB, vCCCC, field@AAAAAAAA */
+    FETCH(r1, 1)                        @ r1<- aaaa (lo)
+    FETCH(r2, 2)                        @ r2<- AAAA (hi)
+    FETCH(r0, 4)                        @ r0<- CCCC
+    ldr     r3, [rGLUE, #offGlue_methodClassDex]    @ r3<- DvmDex
+    orr     r1, r1, r2, lsl #16         @ r1<- AAAAaaaa
+    ldr     r2, [r3, #offDvmDex_pResFields] @ r2<- pDvmDex->pResFields
+    GET_VREG(r9, r0)                    @ r9<- fp[CCCC], the object pointer
+    ldr     r0, [r2, r1, lsl #2]        @ r0<- resolved InstField ptr
+    cmp     r0, #0                      @ is resolved entry null?
+    bne     .LOP_IPUT_OBJECT_JUMBO_finish          @ no, already resolved
+8:  ldr     r2, [rGLUE, #offGlue_method]    @ r2<- current method
+    EXPORT_PC()                         @ resolve() could throw
+    ldr     r0, [r2, #offMethod_clazz]  @ r0<- method->clazz
+    bl      dvmResolveInstField         @ r0<- resolved InstField ptr
+    b       .LOP_IPUT_OBJECT_JUMBO_resolved        @ resolved, continue
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_IPUT_BOOLEAN_JUMBO: /* 0x110 */
+/* File: armv5te/OP_IPUT_BOOLEAN_JUMBO.S */
+@include "armv5te/OP_IPUT_JUMBO.S" { "store":"strb", "sqnum":"1" }
+/* File: armv5te/OP_IPUT_JUMBO.S */
+    /*
+     * Jumbo 32-bit instance field put.
+     *
+     * for: iput/jumbo, iput-boolean/jumbo, iput-byte/jumbo, iput-char/jumbo,
+     *      iput-short/jumbo
+     */
+    /* exop vBBBB, vCCCC, field@AAAAAAAA */
+    FETCH(r1, 1)                        @ r1<- aaaa (lo)
+    FETCH(r2, 2)                        @ r2<- AAAA (hi)
+    FETCH(r0, 4)                        @ r0<- CCCC
+    ldr     r3, [rGLUE, #offGlue_methodClassDex]    @ r3<- DvmDex
+    orr     r1, r1, r2, lsl #16         @ r1<- AAAAaaaa
+    ldr     r2, [r3, #offDvmDex_pResFields] @ r2<- pDvmDex->pResFields
+    GET_VREG(r9, r0)                    @ r9<- fp[CCCC], the object pointer
+    ldr     r0, [r2, r1, lsl #2]        @ r0<- resolved InstField ptr
+    cmp     r0, #0                      @ is resolved entry null?
+    bne     .LOP_IPUT_BOOLEAN_JUMBO_finish          @ no, already resolved
+8:  ldr     r2, [rGLUE, #offGlue_method]    @ r2<- current method
+    EXPORT_PC()                         @ resolve() could throw
+    ldr     r0, [r2, #offMethod_clazz]  @ r0<- method->clazz
+    bl      dvmResolveInstField         @ r0<- resolved InstField ptr
+    b       .LOP_IPUT_BOOLEAN_JUMBO_resolved        @ resolved, continue
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_IPUT_BYTE_JUMBO: /* 0x111 */
+/* File: armv5te/OP_IPUT_BYTE_JUMBO.S */
+@include "armv5te/OP_IPUT_JUMBO.S" { "store":"strb", "sqnum":"2" }
+/* File: armv5te/OP_IPUT_JUMBO.S */
+    /*
+     * Jumbo 32-bit instance field put.
+     *
+     * for: iput/jumbo, iput-boolean/jumbo, iput-byte/jumbo, iput-char/jumbo,
+     *      iput-short/jumbo
+     */
+    /* exop vBBBB, vCCCC, field@AAAAAAAA */
+    FETCH(r1, 1)                        @ r1<- aaaa (lo)
+    FETCH(r2, 2)                        @ r2<- AAAA (hi)
+    FETCH(r0, 4)                        @ r0<- CCCC
+    ldr     r3, [rGLUE, #offGlue_methodClassDex]    @ r3<- DvmDex
+    orr     r1, r1, r2, lsl #16         @ r1<- AAAAaaaa
+    ldr     r2, [r3, #offDvmDex_pResFields] @ r2<- pDvmDex->pResFields
+    GET_VREG(r9, r0)                    @ r9<- fp[CCCC], the object pointer
+    ldr     r0, [r2, r1, lsl #2]        @ r0<- resolved InstField ptr
+    cmp     r0, #0                      @ is resolved entry null?
+    bne     .LOP_IPUT_BYTE_JUMBO_finish          @ no, already resolved
+8:  ldr     r2, [rGLUE, #offGlue_method]    @ r2<- current method
+    EXPORT_PC()                         @ resolve() could throw
+    ldr     r0, [r2, #offMethod_clazz]  @ r0<- method->clazz
+    bl      dvmResolveInstField         @ r0<- resolved InstField ptr
+    b       .LOP_IPUT_BYTE_JUMBO_resolved        @ resolved, continue
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_IPUT_CHAR_JUMBO: /* 0x112 */
+/* File: armv5te/OP_IPUT_CHAR_JUMBO.S */
+@include "armv5te/OP_IPUT_JUMBO.S" { "store":"strh", "sqnum":"3" }
+/* File: armv5te/OP_IPUT_JUMBO.S */
+    /*
+     * Jumbo 32-bit instance field put.
+     *
+     * for: iput/jumbo, iput-boolean/jumbo, iput-byte/jumbo, iput-char/jumbo,
+     *      iput-short/jumbo
+     */
+    /* exop vBBBB, vCCCC, field@AAAAAAAA */
+    FETCH(r1, 1)                        @ r1<- aaaa (lo)
+    FETCH(r2, 2)                        @ r2<- AAAA (hi)
+    FETCH(r0, 4)                        @ r0<- CCCC
+    ldr     r3, [rGLUE, #offGlue_methodClassDex]    @ r3<- DvmDex
+    orr     r1, r1, r2, lsl #16         @ r1<- AAAAaaaa
+    ldr     r2, [r3, #offDvmDex_pResFields] @ r2<- pDvmDex->pResFields
+    GET_VREG(r9, r0)                    @ r9<- fp[CCCC], the object pointer
+    ldr     r0, [r2, r1, lsl #2]        @ r0<- resolved InstField ptr
+    cmp     r0, #0                      @ is resolved entry null?
+    bne     .LOP_IPUT_CHAR_JUMBO_finish          @ no, already resolved
+8:  ldr     r2, [rGLUE, #offGlue_method]    @ r2<- current method
+    EXPORT_PC()                         @ resolve() could throw
+    ldr     r0, [r2, #offMethod_clazz]  @ r0<- method->clazz
+    bl      dvmResolveInstField         @ r0<- resolved InstField ptr
+    b       .LOP_IPUT_CHAR_JUMBO_resolved        @ resolved, continue
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_IPUT_SHORT_JUMBO: /* 0x113 */
+/* File: armv5te/OP_IPUT_SHORT_JUMBO.S */
+@include "armv5te/OP_IPUT_JUMBO.S" { "store":"strh", "sqnum":"4" }
+/* File: armv5te/OP_IPUT_JUMBO.S */
+    /*
+     * Jumbo 32-bit instance field put.
+     *
+     * for: iput/jumbo, iput-boolean/jumbo, iput-byte/jumbo, iput-char/jumbo,
+     *      iput-short/jumbo
+     */
+    /* exop vBBBB, vCCCC, field@AAAAAAAA */
+    FETCH(r1, 1)                        @ r1<- aaaa (lo)
+    FETCH(r2, 2)                        @ r2<- AAAA (hi)
+    FETCH(r0, 4)                        @ r0<- CCCC
+    ldr     r3, [rGLUE, #offGlue_methodClassDex]    @ r3<- DvmDex
+    orr     r1, r1, r2, lsl #16         @ r1<- AAAAaaaa
+    ldr     r2, [r3, #offDvmDex_pResFields] @ r2<- pDvmDex->pResFields
+    GET_VREG(r9, r0)                    @ r9<- fp[CCCC], the object pointer
+    ldr     r0, [r2, r1, lsl #2]        @ r0<- resolved InstField ptr
+    cmp     r0, #0                      @ is resolved entry null?
+    bne     .LOP_IPUT_SHORT_JUMBO_finish          @ no, already resolved
+8:  ldr     r2, [rGLUE, #offGlue_method]    @ r2<- current method
+    EXPORT_PC()                         @ resolve() could throw
+    ldr     r0, [r2, #offMethod_clazz]  @ r0<- method->clazz
+    bl      dvmResolveInstField         @ r0<- resolved InstField ptr
+    b       .LOP_IPUT_SHORT_JUMBO_resolved        @ resolved, continue
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_SGET_JUMBO: /* 0x114 */
+/* File: armv5te/OP_SGET_JUMBO.S */
+    /*
+     * Jumbo 32-bit SGET handler.
+     *
+     * for: sget/jumbo, sget-object/jumbo, sget-boolean/jumbo, sget-byte/jumbo,
+     *      sget-char/jumbo, sget-short/jumbo
+     */
+    /* exop vBBBB, field@AAAAAAAA */
+    ldr     r2, [rGLUE, #offGlue_methodClassDex]    @ r2<- DvmDex
+    FETCH(r0, 1)                        @ r0<- aaaa (lo)
+    FETCH(r1, 2)                        @ r1<- AAAA (hi)
+    ldr     r2, [r2, #offDvmDex_pResFields] @ r2<- dvmDex->pResFields
+    orr     r1, r0, r1, lsl #16         @ r1<- AAAAaaaa
+    ldr     r0, [r2, r1, lsl #2]        @ r0<- resolved StaticField ptr
+    cmp     r0, #0                      @ is resolved entry null?
+    beq     .LOP_SGET_JUMBO_resolve         @ yes, do resolve
+.LOP_SGET_JUMBO_finish: @ field ptr in r0
+    ldr     r1, [r0, #offStaticField_value] @ r1<- field value
+    @ no-op                             @ acquiring load
+    FETCH(r2, 3)                        @ r2<- BBBB
+    FETCH_ADVANCE_INST(4)               @ advance rPC, load rINST
+    SET_VREG(r1, r2)                    @ fp[BBBB]<- r1
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    GOTO_OPCODE(ip)                     @ jump to next instruction
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_SGET_WIDE_JUMBO: /* 0x115 */
+/* File: armv5te/OP_SGET_WIDE_JUMBO.S */
+    /*
+     * Jumbo 64-bit SGET handler.
+     */
+    /* sget-wide/jumbo vBBBB, field@AAAAAAAA */
+    ldr     r2, [rGLUE, #offGlue_methodClassDex]    @ r2<- DvmDex
+    FETCH(r0, 1)                        @ r0<- aaaa (lo)
+    FETCH(r1, 2)                        @ r1<- AAAA (hi)
+    ldr     r2, [r2, #offDvmDex_pResFields] @ r2<- dvmDex->pResFields
+    orr     r1, r0, r1, lsl #16         @ r1<- AAAAaaaa
+    ldr     r0, [r2, r1, lsl #2]        @ r0<- resolved StaticField ptr
+    cmp     r0, #0                      @ is resolved entry null?
+    beq     .LOP_SGET_WIDE_JUMBO_resolve         @ yes, do resolve
+.LOP_SGET_WIDE_JUMBO_finish:
+    FETCH(r9, 3)                        @ r9<- BBBB
+    ldrd    r0, [r0, #offStaticField_value] @ r0/r1<- field value (aligned)
+    add     r9, rFP, r9, lsl #2         @ r9<- &fp[BBBB]
+    FETCH_ADVANCE_INST(4)               @ advance rPC, load rINST
+    stmia   r9, {r0-r1}                 @ vBBBB/vBBBB+1<- r0/r1
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    GOTO_OPCODE(ip)                     @ jump to next instruction
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_SGET_OBJECT_JUMBO: /* 0x116 */
+/* File: armv5te/OP_SGET_OBJECT_JUMBO.S */
+/* File: armv5te/OP_SGET_JUMBO.S */
+    /*
+     * Jumbo 32-bit SGET handler.
+     *
+     * for: sget/jumbo, sget-object/jumbo, sget-boolean/jumbo, sget-byte/jumbo,
+     *      sget-char/jumbo, sget-short/jumbo
+     */
+    /* exop vBBBB, field@AAAAAAAA */
+    ldr     r2, [rGLUE, #offGlue_methodClassDex]    @ r2<- DvmDex
+    FETCH(r0, 1)                        @ r0<- aaaa (lo)
+    FETCH(r1, 2)                        @ r1<- AAAA (hi)
+    ldr     r2, [r2, #offDvmDex_pResFields] @ r2<- dvmDex->pResFields
+    orr     r1, r0, r1, lsl #16         @ r1<- AAAAaaaa
+    ldr     r0, [r2, r1, lsl #2]        @ r0<- resolved StaticField ptr
+    cmp     r0, #0                      @ is resolved entry null?
+    beq     .LOP_SGET_OBJECT_JUMBO_resolve         @ yes, do resolve
+.LOP_SGET_OBJECT_JUMBO_finish: @ field ptr in r0
+    ldr     r1, [r0, #offStaticField_value] @ r1<- field value
+    @ no-op                             @ acquiring load
+    FETCH(r2, 3)                        @ r2<- BBBB
+    FETCH_ADVANCE_INST(4)               @ advance rPC, load rINST
+    SET_VREG(r1, r2)                    @ fp[BBBB]<- r1
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    GOTO_OPCODE(ip)                     @ jump to next instruction
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_SGET_BOOLEAN_JUMBO: /* 0x117 */
+/* File: armv5te/OP_SGET_BOOLEAN_JUMBO.S */
+/* File: armv5te/OP_SGET_JUMBO.S */
+    /*
+     * Jumbo 32-bit SGET handler.
+     *
+     * for: sget/jumbo, sget-object/jumbo, sget-boolean/jumbo, sget-byte/jumbo,
+     *      sget-char/jumbo, sget-short/jumbo
+     */
+    /* exop vBBBB, field@AAAAAAAA */
+    ldr     r2, [rGLUE, #offGlue_methodClassDex]    @ r2<- DvmDex
+    FETCH(r0, 1)                        @ r0<- aaaa (lo)
+    FETCH(r1, 2)                        @ r1<- AAAA (hi)
+    ldr     r2, [r2, #offDvmDex_pResFields] @ r2<- dvmDex->pResFields
+    orr     r1, r0, r1, lsl #16         @ r1<- AAAAaaaa
+    ldr     r0, [r2, r1, lsl #2]        @ r0<- resolved StaticField ptr
+    cmp     r0, #0                      @ is resolved entry null?
+    beq     .LOP_SGET_BOOLEAN_JUMBO_resolve         @ yes, do resolve
+.LOP_SGET_BOOLEAN_JUMBO_finish: @ field ptr in r0
+    ldr     r1, [r0, #offStaticField_value] @ r1<- field value
+    @ no-op                             @ acquiring load
+    FETCH(r2, 3)                        @ r2<- BBBB
+    FETCH_ADVANCE_INST(4)               @ advance rPC, load rINST
+    SET_VREG(r1, r2)                    @ fp[BBBB]<- r1
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    GOTO_OPCODE(ip)                     @ jump to next instruction
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_SGET_BYTE_JUMBO: /* 0x118 */
+/* File: armv5te/OP_SGET_BYTE_JUMBO.S */
+/* File: armv5te/OP_SGET_JUMBO.S */
+    /*
+     * Jumbo 32-bit SGET handler.
+     *
+     * for: sget/jumbo, sget-object/jumbo, sget-boolean/jumbo, sget-byte/jumbo,
+     *      sget-char/jumbo, sget-short/jumbo
+     */
+    /* exop vBBBB, field@AAAAAAAA */
+    ldr     r2, [rGLUE, #offGlue_methodClassDex]    @ r2<- DvmDex
+    FETCH(r0, 1)                        @ r0<- aaaa (lo)
+    FETCH(r1, 2)                        @ r1<- AAAA (hi)
+    ldr     r2, [r2, #offDvmDex_pResFields] @ r2<- dvmDex->pResFields
+    orr     r1, r0, r1, lsl #16         @ r1<- AAAAaaaa
+    ldr     r0, [r2, r1, lsl #2]        @ r0<- resolved StaticField ptr
+    cmp     r0, #0                      @ is resolved entry null?
+    beq     .LOP_SGET_BYTE_JUMBO_resolve         @ yes, do resolve
+.LOP_SGET_BYTE_JUMBO_finish: @ field ptr in r0
+    ldr     r1, [r0, #offStaticField_value] @ r1<- field value
+    @ no-op                             @ acquiring load
+    FETCH(r2, 3)                        @ r2<- BBBB
+    FETCH_ADVANCE_INST(4)               @ advance rPC, load rINST
+    SET_VREG(r1, r2)                    @ fp[BBBB]<- r1
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    GOTO_OPCODE(ip)                     @ jump to next instruction
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_SGET_CHAR_JUMBO: /* 0x119 */
+/* File: armv5te/OP_SGET_CHAR_JUMBO.S */
+/* File: armv5te/OP_SGET_JUMBO.S */
+    /*
+     * Jumbo 32-bit SGET handler.
+     *
+     * for: sget/jumbo, sget-object/jumbo, sget-boolean/jumbo, sget-byte/jumbo,
+     *      sget-char/jumbo, sget-short/jumbo
+     */
+    /* exop vBBBB, field@AAAAAAAA */
+    ldr     r2, [rGLUE, #offGlue_methodClassDex]    @ r2<- DvmDex
+    FETCH(r0, 1)                        @ r0<- aaaa (lo)
+    FETCH(r1, 2)                        @ r1<- AAAA (hi)
+    ldr     r2, [r2, #offDvmDex_pResFields] @ r2<- dvmDex->pResFields
+    orr     r1, r0, r1, lsl #16         @ r1<- AAAAaaaa
+    ldr     r0, [r2, r1, lsl #2]        @ r0<- resolved StaticField ptr
+    cmp     r0, #0                      @ is resolved entry null?
+    beq     .LOP_SGET_CHAR_JUMBO_resolve         @ yes, do resolve
+.LOP_SGET_CHAR_JUMBO_finish: @ field ptr in r0
+    ldr     r1, [r0, #offStaticField_value] @ r1<- field value
+    @ no-op                             @ acquiring load
+    FETCH(r2, 3)                        @ r2<- BBBB
+    FETCH_ADVANCE_INST(4)               @ advance rPC, load rINST
+    SET_VREG(r1, r2)                    @ fp[BBBB]<- r1
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    GOTO_OPCODE(ip)                     @ jump to next instruction
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_SGET_SHORT_JUMBO: /* 0x11a */
+/* File: armv5te/OP_SGET_SHORT_JUMBO.S */
+/* File: armv5te/OP_SGET_JUMBO.S */
+    /*
+     * Jumbo 32-bit SGET handler.
+     *
+     * for: sget/jumbo, sget-object/jumbo, sget-boolean/jumbo, sget-byte/jumbo,
+     *      sget-char/jumbo, sget-short/jumbo
+     */
+    /* exop vBBBB, field@AAAAAAAA */
+    ldr     r2, [rGLUE, #offGlue_methodClassDex]    @ r2<- DvmDex
+    FETCH(r0, 1)                        @ r0<- aaaa (lo)
+    FETCH(r1, 2)                        @ r1<- AAAA (hi)
+    ldr     r2, [r2, #offDvmDex_pResFields] @ r2<- dvmDex->pResFields
+    orr     r1, r0, r1, lsl #16         @ r1<- AAAAaaaa
+    ldr     r0, [r2, r1, lsl #2]        @ r0<- resolved StaticField ptr
+    cmp     r0, #0                      @ is resolved entry null?
+    beq     .LOP_SGET_SHORT_JUMBO_resolve         @ yes, do resolve
+.LOP_SGET_SHORT_JUMBO_finish: @ field ptr in r0
+    ldr     r1, [r0, #offStaticField_value] @ r1<- field value
+    @ no-op                             @ acquiring load
+    FETCH(r2, 3)                        @ r2<- BBBB
+    FETCH_ADVANCE_INST(4)               @ advance rPC, load rINST
+    SET_VREG(r1, r2)                    @ fp[BBBB]<- r1
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    GOTO_OPCODE(ip)                     @ jump to next instruction
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_SPUT_JUMBO: /* 0x11b */
+/* File: armv5te/OP_SPUT_JUMBO.S */
+    /*
+     * Jumbo 32-bit SPUT handler.
+     *
+     * for: sput/jumbo, sput-boolean/jumbo, sput-byte/jumbo, sput-char/jumbo,
+     *      sput-short/jumbo
+     */
+    /* exop vBBBB, field@AAAAAAAA */
+    ldr     r2, [rGLUE, #offGlue_methodClassDex]    @ r2<- DvmDex
+    FETCH(r0, 1)                        @ r0<- aaaa (lo)
+    FETCH(r1, 2)                        @ r1<- AAAA (hi)
+    ldr     r2, [r2, #offDvmDex_pResFields] @ r2<- dvmDex->pResFields
+    orr     r1, r0, r1, lsl #16         @ r1<- AAAAaaaa
+    ldr     r0, [r2, r1, lsl #2]        @ r0<- resolved StaticField ptr
+    cmp     r0, #0                      @ is resolved entry null?
+    beq     .LOP_SPUT_JUMBO_resolve         @ yes, do resolve
+.LOP_SPUT_JUMBO_finish:   @ field ptr in r0
+    FETCH(r2, 3)                        @ r2<- BBBB
+    FETCH_ADVANCE_INST(4)               @ advance rPC, load rINST
+    GET_VREG(r1, r2)                    @ r1<- fp[BBBB]
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    @ no-op                             @ releasing store
+    str     r1, [r0, #offStaticField_value] @ field<- vBBBB
+    GOTO_OPCODE(ip)                     @ jump to next instruction
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_SPUT_WIDE_JUMBO: /* 0x11c */
+/* File: armv5te/OP_SPUT_WIDE_JUMBO.S */
+    /*
+     * Jumbo 64-bit SPUT handler.
+     */
+    /* sput-wide/jumbo vBBBB, field@AAAAAAAA */
+    ldr     r0, [rGLUE, #offGlue_methodClassDex]  @ r0<- DvmDex
+    FETCH(r1, 1)                        @ r1<- aaaa (lo)
+    FETCH(r2, 2)                        @ r2<- AAAA (hi)
+    ldr     r0, [r0, #offDvmDex_pResFields] @ r0<- dvmDex->pResFields
+    orr     r1, r1, r2, lsl #16         @ r1<- AAAAaaaa
+    FETCH(r9, 3)                        @ r9<- BBBB
+    ldr     r2, [r0, r1, lsl #2]        @ r2<- resolved StaticField ptr
+    add     r9, rFP, r9, lsl #2         @ r9<- &fp[BBBB]
+    cmp     r2, #0                      @ is resolved entry null?
+    beq     .LOP_SPUT_WIDE_JUMBO_resolve         @ yes, do resolve
+.LOP_SPUT_WIDE_JUMBO_finish: @ field ptr in r2, BBBB in r9
+    FETCH_ADVANCE_INST(4)               @ advance rPC, load rINST
+    ldmia   r9, {r0-r1}                 @ r0/r1<- vBBBB/vBBBB+1
+    GET_INST_OPCODE(r10)                @ extract opcode from rINST
+    strd    r0, [r2, #offStaticField_value] @ field<- vBBBB/vBBBB+1
+    GOTO_OPCODE(r10)                    @ jump to next instruction
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_SPUT_OBJECT_JUMBO: /* 0x11d */
+/* File: armv5te/OP_SPUT_OBJECT_JUMBO.S */
+    /*
+     * Jumbo 32-bit SPUT handler for objects
+     */
+    /* sput-object/jumbo vBBBB, field@AAAAAAAA */
+    ldr     r2, [rGLUE, #offGlue_methodClassDex]    @ r2<- DvmDex
+    FETCH(r0, 1)                        @ r0<- aaaa (lo)
+    FETCH(r1, 2)                        @ r1<- AAAA (hi)
+    ldr     r2, [r2, #offDvmDex_pResFields] @ r2<- dvmDex->pResFields
+    orr     r1, r0, r1, lsl #16         @ r1<- AAAAaaaa
+    ldr     r0, [r2, r1, lsl #2]        @ r0<- resolved StaticField ptr
+    cmp     r0, #0                      @ is resolved entry null?
+    bne     .LOP_SPUT_OBJECT_JUMBO_finish          @ no, continue
+    ldr     r9, [rGLUE, #offGlue_method]    @ r9<- current method
+    EXPORT_PC()                         @ resolve() could throw, so export now
+    ldr     r0, [r9, #offMethod_clazz]  @ r0<- method->clazz
+    bl      dvmResolveStaticField       @ r0<- resolved StaticField ptr
+    cmp     r0, #0                      @ success?
+    bne     .LOP_SPUT_OBJECT_JUMBO_finish          @ yes, finish
+    b       common_exceptionThrown      @ no, handle exception
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_SPUT_BOOLEAN_JUMBO: /* 0x11e */
+/* File: armv5te/OP_SPUT_BOOLEAN_JUMBO.S */
+/* File: armv5te/OP_SPUT_JUMBO.S */
+    /*
+     * Jumbo 32-bit SPUT handler.
+     *
+     * for: sput/jumbo, sput-boolean/jumbo, sput-byte/jumbo, sput-char/jumbo,
+     *      sput-short/jumbo
+     */
+    /* exop vBBBB, field@AAAAAAAA */
+    ldr     r2, [rGLUE, #offGlue_methodClassDex]    @ r2<- DvmDex
+    FETCH(r0, 1)                        @ r0<- aaaa (lo)
+    FETCH(r1, 2)                        @ r1<- AAAA (hi)
+    ldr     r2, [r2, #offDvmDex_pResFields] @ r2<- dvmDex->pResFields
+    orr     r1, r0, r1, lsl #16         @ r1<- AAAAaaaa
+    ldr     r0, [r2, r1, lsl #2]        @ r0<- resolved StaticField ptr
+    cmp     r0, #0                      @ is resolved entry null?
+    beq     .LOP_SPUT_BOOLEAN_JUMBO_resolve         @ yes, do resolve
+.LOP_SPUT_BOOLEAN_JUMBO_finish:   @ field ptr in r0
+    FETCH(r2, 3)                        @ r2<- BBBB
+    FETCH_ADVANCE_INST(4)               @ advance rPC, load rINST
+    GET_VREG(r1, r2)                    @ r1<- fp[BBBB]
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    @ no-op                             @ releasing store
+    str     r1, [r0, #offStaticField_value] @ field<- vBBBB
+    GOTO_OPCODE(ip)                     @ jump to next instruction
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_SPUT_BYTE_JUMBO: /* 0x11f */
+/* File: armv5te/OP_SPUT_BYTE_JUMBO.S */
+/* File: armv5te/OP_SPUT_JUMBO.S */
+    /*
+     * Jumbo 32-bit SPUT handler.
+     *
+     * for: sput/jumbo, sput-boolean/jumbo, sput-byte/jumbo, sput-char/jumbo,
+     *      sput-short/jumbo
+     */
+    /* exop vBBBB, field@AAAAAAAA */
+    ldr     r2, [rGLUE, #offGlue_methodClassDex]    @ r2<- DvmDex
+    FETCH(r0, 1)                        @ r0<- aaaa (lo)
+    FETCH(r1, 2)                        @ r1<- AAAA (hi)
+    ldr     r2, [r2, #offDvmDex_pResFields] @ r2<- dvmDex->pResFields
+    orr     r1, r0, r1, lsl #16         @ r1<- AAAAaaaa
+    ldr     r0, [r2, r1, lsl #2]        @ r0<- resolved StaticField ptr
+    cmp     r0, #0                      @ is resolved entry null?
+    beq     .LOP_SPUT_BYTE_JUMBO_resolve         @ yes, do resolve
+.LOP_SPUT_BYTE_JUMBO_finish:   @ field ptr in r0
+    FETCH(r2, 3)                        @ r2<- BBBB
+    FETCH_ADVANCE_INST(4)               @ advance rPC, load rINST
+    GET_VREG(r1, r2)                    @ r1<- fp[BBBB]
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    @ no-op                             @ releasing store
+    str     r1, [r0, #offStaticField_value] @ field<- vBBBB
+    GOTO_OPCODE(ip)                     @ jump to next instruction
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_SPUT_CHAR_JUMBO: /* 0x120 */
+/* File: armv5te/OP_SPUT_CHAR_JUMBO.S */
+/* File: armv5te/OP_SPUT_JUMBO.S */
+    /*
+     * Jumbo 32-bit SPUT handler.
+     *
+     * for: sput/jumbo, sput-boolean/jumbo, sput-byte/jumbo, sput-char/jumbo,
+     *      sput-short/jumbo
+     */
+    /* exop vBBBB, field@AAAAAAAA */
+    ldr     r2, [rGLUE, #offGlue_methodClassDex]    @ r2<- DvmDex
+    FETCH(r0, 1)                        @ r0<- aaaa (lo)
+    FETCH(r1, 2)                        @ r1<- AAAA (hi)
+    ldr     r2, [r2, #offDvmDex_pResFields] @ r2<- dvmDex->pResFields
+    orr     r1, r0, r1, lsl #16         @ r1<- AAAAaaaa
+    ldr     r0, [r2, r1, lsl #2]        @ r0<- resolved StaticField ptr
+    cmp     r0, #0                      @ is resolved entry null?
+    beq     .LOP_SPUT_CHAR_JUMBO_resolve         @ yes, do resolve
+.LOP_SPUT_CHAR_JUMBO_finish:   @ field ptr in r0
+    FETCH(r2, 3)                        @ r2<- BBBB
+    FETCH_ADVANCE_INST(4)               @ advance rPC, load rINST
+    GET_VREG(r1, r2)                    @ r1<- fp[BBBB]
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    @ no-op                             @ releasing store
+    str     r1, [r0, #offStaticField_value] @ field<- vBBBB
+    GOTO_OPCODE(ip)                     @ jump to next instruction
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_SPUT_SHORT_JUMBO: /* 0x121 */
+/* File: armv5te/OP_SPUT_SHORT_JUMBO.S */
+/* File: armv5te/OP_SPUT_JUMBO.S */
+    /*
+     * Jumbo 32-bit SPUT handler.
+     *
+     * for: sput/jumbo, sput-boolean/jumbo, sput-byte/jumbo, sput-char/jumbo,
+     *      sput-short/jumbo
+     */
+    /* exop vBBBB, field@AAAAAAAA */
+    ldr     r2, [rGLUE, #offGlue_methodClassDex]    @ r2<- DvmDex
+    FETCH(r0, 1)                        @ r0<- aaaa (lo)
+    FETCH(r1, 2)                        @ r1<- AAAA (hi)
+    ldr     r2, [r2, #offDvmDex_pResFields] @ r2<- dvmDex->pResFields
+    orr     r1, r0, r1, lsl #16         @ r1<- AAAAaaaa
+    ldr     r0, [r2, r1, lsl #2]        @ r0<- resolved StaticField ptr
+    cmp     r0, #0                      @ is resolved entry null?
+    beq     .LOP_SPUT_SHORT_JUMBO_resolve         @ yes, do resolve
+.LOP_SPUT_SHORT_JUMBO_finish:   @ field ptr in r0
+    FETCH(r2, 3)                        @ r2<- BBBB
+    FETCH_ADVANCE_INST(4)               @ advance rPC, load rINST
+    GET_VREG(r1, r2)                    @ r1<- fp[BBBB]
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    @ no-op                             @ releasing store
+    str     r1, [r0, #offStaticField_value] @ field<- vBBBB
+    GOTO_OPCODE(ip)                     @ jump to next instruction
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_INVOKE_VIRTUAL_JUMBO: /* 0x122 */
+/* File: armv5te/OP_INVOKE_VIRTUAL_JUMBO.S */
+    /*
+     * Handle a virtual method call.
+     */
+    /* invoke-virtual/jumbo {vCCCC..v(CCCC+BBBB-1)}, meth@AAAAAAAA */
+    ldr     r3, [rGLUE, #offGlue_methodClassDex]    @ r3<- pDvmDex
+    FETCH(r0, 1)                        @ r1<- aaaa (lo)
+    FETCH(r1, 2)                        @ r1<- AAAA (hi)
+    ldr     r3, [r3, #offDvmDex_pResMethods]    @ r3<- pDvmDex->pResMethods
+    orr     r1, r0, r1, lsl #16         @ r1<- AAAAaaaa
+    ldr     r0, [r3, r1, lsl #2]        @ r0<- resolved baseMethod
+    cmp     r0, #0                      @ already resolved?
+    EXPORT_PC()                         @ must export for invoke
+    bne     .LOP_INVOKE_VIRTUAL_JUMBO_continue        @ yes, continue on
+    ldr     r3, [rGLUE, #offGlue_method] @ r3<- glue->method
+    ldr     r0, [r3, #offMethod_clazz]  @ r0<- method->clazz
+    mov     r2, #METHOD_VIRTUAL         @ resolver method type
+    bl      dvmResolveMethod            @ r0<- call(clazz, ref, flags)
+    cmp     r0, #0                      @ got null?
+    bne     .LOP_INVOKE_VIRTUAL_JUMBO_continue        @ no, continue
+    b       common_exceptionThrown      @ yes, handle exception
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_INVOKE_SUPER_JUMBO: /* 0x123 */
+/* File: armv5te/OP_INVOKE_SUPER_JUMBO.S */
+    /*
+     * Handle a "super" method call.
+     */
+    /* invoke-super/jumbo {vCCCC..v(CCCC+BBBB-1)}, meth@AAAAAAAA */
+    FETCH(r10, 4)                       @ r10<- CCCC
+    ldr     r3, [rGLUE, #offGlue_methodClassDex]    @ r3<- pDvmDex
+    FETCH(r0, 1)                        @ r1<- aaaa (lo)
+    FETCH(r1, 2)                        @ r1<- AAAA (hi)
+    ldr     r3, [r3, #offDvmDex_pResMethods]    @ r3<- pDvmDex->pResMethods
+    orr     r1, r0, r1, lsl #16         @ r1<- AAAAaaaa
+    GET_VREG(r2, r10)                   @ r2<- "this" ptr
+    ldr     r0, [r3, r1, lsl #2]        @ r0<- resolved baseMethod
+    cmp     r2, #0                      @ null "this"?
+    ldr     r9, [rGLUE, #offGlue_method] @ r9<- current method
+    beq     common_errNullObject        @ null "this", throw exception
+    cmp     r0, #0                      @ already resolved?
+    ldr     r9, [r9, #offMethod_clazz]  @ r9<- method->clazz
+    EXPORT_PC()                         @ must export for invoke
+    bne     .LOP_INVOKE_SUPER_JUMBO_continue        @ resolved, continue on
+    b       .LOP_INVOKE_SUPER_JUMBO_resolve         @ do resolve now
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_INVOKE_DIRECT_JUMBO: /* 0x124 */
+/* File: armv5te/OP_INVOKE_DIRECT_JUMBO.S */
+    /*
+     * Handle a direct method call.
+     *
+     * (We could defer the "is 'this' pointer null" test to the common
+     * method invocation code, and use a flag to indicate that static
+     * calls don't count.  If we do this as part of copying the arguments
+     * out we could avoiding loading the first arg twice.)
+     *
+     */
+    /* invoke-direct/jumbo {vCCCC..v(CCCC+BBBB-1)}, meth@AAAAAAAA */
+    ldr     r3, [rGLUE, #offGlue_methodClassDex]    @ r3<- pDvmDex
+    FETCH(r0, 1)                        @ r1<- aaaa (lo)
+    FETCH(r1, 2)                        @ r1<- AAAA (hi)
+    ldr     r3, [r3, #offDvmDex_pResMethods]    @ r3<- pDvmDex->pResMethods
+    orr     r1, r0, r1, lsl #16         @ r1<- AAAAaaaa
+    FETCH(r10, 4)                       @ r10<- CCCC
+    ldr     r0, [r3, r1, lsl #2]        @ r0<- resolved methodToCall
+    cmp     r0, #0                      @ already resolved?
+    EXPORT_PC()                         @ must export for invoke
+    GET_VREG(r2, r10)                   @ r2<- "this" ptr
+    beq     .LOP_INVOKE_DIRECT_JUMBO_resolve         @ not resolved, do it now
+.LOP_INVOKE_DIRECT_JUMBO_finish:
+    cmp     r2, #0                      @ null "this" ref?
+    bne     common_invokeMethodJumbo    @ no, continue on
+    b       common_errNullObject        @ yes, throw exception
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_INVOKE_STATIC_JUMBO: /* 0x125 */
+/* File: armv5te/OP_INVOKE_STATIC_JUMBO.S */
+    /*
+     * Handle a static method call.
+     */
+    /* invoke-static/jumbo {vCCCC..v(CCCC+BBBB-1)}, meth@AAAAAAAA */
+    ldr     r3, [rGLUE, #offGlue_methodClassDex]    @ r3<- pDvmDex
+    FETCH(r0, 1)                        @ r1<- aaaa (lo)
+    FETCH(r1, 2)                        @ r1<- AAAA (hi)
+    ldr     r3, [r3, #offDvmDex_pResMethods]    @ r3<- pDvmDex->pResMethods
+    orr     r1, r0, r1, lsl #16         @ r1<- AAAAaaaa
+    ldr     r0, [r3, r1, lsl #2]        @ r0<- resolved methodToCall
+    cmp     r0, #0                      @ already resolved?
+    EXPORT_PC()                         @ must export for invoke
+    bne     common_invokeMethodJumbo    @ yes, continue on
+0:  ldr     r3, [rGLUE, #offGlue_method] @ r3<- glue->method
+    ldr     r0, [r3, #offMethod_clazz]  @ r0<- method->clazz
+    mov     r2, #METHOD_STATIC          @ resolver method type
+    bl      dvmResolveMethod            @ r0<- call(clazz, ref, flags)
+    cmp     r0, #0                      @ got null?
+    bne     common_invokeMethodJumbo    @ no, continue
+    b       common_exceptionThrown      @ yes, handle exception
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_INVOKE_INTERFACE_JUMBO: /* 0x126 */
+/* File: armv5te/OP_INVOKE_INTERFACE_JUMBO.S */
+    /*
+     * Handle an interface method call.
+     */
+    /* invoke-interface/jumbo {vCCCC..v(CCCC+BBBB-1)}, meth@AAAAAAAA */
+    FETCH(r2, 4)                        @ r2<- CCCC
+    FETCH(r0, 1)                        @ r0<- aaaa (lo)
+    FETCH(r1, 2)                        @ r1<- AAAA (hi)
+    EXPORT_PC()                         @ must export for invoke
+    orr     r1, r0, r1, lsl #16         @ r1<- AAAAaaaa
+    GET_VREG(r0, r2)                    @ r0<- first arg ("this")
+    ldr     r3, [rGLUE, #offGlue_methodClassDex]    @ r3<- methodClassDex
+    cmp     r0, #0                      @ null obj?
+    ldr     r2, [rGLUE, #offGlue_method]  @ r2<- method
+    beq     common_errNullObject        @ yes, fail
+    ldr     r0, [r0, #offObject_clazz]  @ r0<- thisPtr->clazz
+    bl      dvmFindInterfaceMethodInCache @ r0<- call(class, ref, method, dex)
+    cmp     r0, #0                      @ failed?
+    beq     common_exceptionThrown      @ yes, handle exception
+    b       common_invokeMethodJumbo    @ jump to common handler
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_27FF: /* 0x127 */
+/* File: armv5te/OP_UNUSED_27FF.S */
 /* File: armv5te/unused.S */
     bl      common_abort
 
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_28FF: /* 0x128 */
+/* File: armv5te/OP_UNUSED_28FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_29FF: /* 0x129 */
+/* File: armv5te/OP_UNUSED_29FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_2AFF: /* 0x12a */
+/* File: armv5te/OP_UNUSED_2AFF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_2BFF: /* 0x12b */
+/* File: armv5te/OP_UNUSED_2BFF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_2CFF: /* 0x12c */
+/* File: armv5te/OP_UNUSED_2CFF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_2DFF: /* 0x12d */
+/* File: armv5te/OP_UNUSED_2DFF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_2EFF: /* 0x12e */
+/* File: armv5te/OP_UNUSED_2EFF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_2FFF: /* 0x12f */
+/* File: armv5te/OP_UNUSED_2FFF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_30FF: /* 0x130 */
+/* File: armv5te/OP_UNUSED_30FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_31FF: /* 0x131 */
+/* File: armv5te/OP_UNUSED_31FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_32FF: /* 0x132 */
+/* File: armv5te/OP_UNUSED_32FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_33FF: /* 0x133 */
+/* File: armv5te/OP_UNUSED_33FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_34FF: /* 0x134 */
+/* File: armv5te/OP_UNUSED_34FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_35FF: /* 0x135 */
+/* File: armv5te/OP_UNUSED_35FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_36FF: /* 0x136 */
+/* File: armv5te/OP_UNUSED_36FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_37FF: /* 0x137 */
+/* File: armv5te/OP_UNUSED_37FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_38FF: /* 0x138 */
+/* File: armv5te/OP_UNUSED_38FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_39FF: /* 0x139 */
+/* File: armv5te/OP_UNUSED_39FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_3AFF: /* 0x13a */
+/* File: armv5te/OP_UNUSED_3AFF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_3BFF: /* 0x13b */
+/* File: armv5te/OP_UNUSED_3BFF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_3CFF: /* 0x13c */
+/* File: armv5te/OP_UNUSED_3CFF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_3DFF: /* 0x13d */
+/* File: armv5te/OP_UNUSED_3DFF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_3EFF: /* 0x13e */
+/* File: armv5te/OP_UNUSED_3EFF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_3FFF: /* 0x13f */
+/* File: armv5te/OP_UNUSED_3FFF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_40FF: /* 0x140 */
+/* File: armv5te/OP_UNUSED_40FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_41FF: /* 0x141 */
+/* File: armv5te/OP_UNUSED_41FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_42FF: /* 0x142 */
+/* File: armv5te/OP_UNUSED_42FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_43FF: /* 0x143 */
+/* File: armv5te/OP_UNUSED_43FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_44FF: /* 0x144 */
+/* File: armv5te/OP_UNUSED_44FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_45FF: /* 0x145 */
+/* File: armv5te/OP_UNUSED_45FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_46FF: /* 0x146 */
+/* File: armv5te/OP_UNUSED_46FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_47FF: /* 0x147 */
+/* File: armv5te/OP_UNUSED_47FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_48FF: /* 0x148 */
+/* File: armv5te/OP_UNUSED_48FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_49FF: /* 0x149 */
+/* File: armv5te/OP_UNUSED_49FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_4AFF: /* 0x14a */
+/* File: armv5te/OP_UNUSED_4AFF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_4BFF: /* 0x14b */
+/* File: armv5te/OP_UNUSED_4BFF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_4CFF: /* 0x14c */
+/* File: armv5te/OP_UNUSED_4CFF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_4DFF: /* 0x14d */
+/* File: armv5te/OP_UNUSED_4DFF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_4EFF: /* 0x14e */
+/* File: armv5te/OP_UNUSED_4EFF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_4FFF: /* 0x14f */
+/* File: armv5te/OP_UNUSED_4FFF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_50FF: /* 0x150 */
+/* File: armv5te/OP_UNUSED_50FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_51FF: /* 0x151 */
+/* File: armv5te/OP_UNUSED_51FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_52FF: /* 0x152 */
+/* File: armv5te/OP_UNUSED_52FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_53FF: /* 0x153 */
+/* File: armv5te/OP_UNUSED_53FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_54FF: /* 0x154 */
+/* File: armv5te/OP_UNUSED_54FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_55FF: /* 0x155 */
+/* File: armv5te/OP_UNUSED_55FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_56FF: /* 0x156 */
+/* File: armv5te/OP_UNUSED_56FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_57FF: /* 0x157 */
+/* File: armv5te/OP_UNUSED_57FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_58FF: /* 0x158 */
+/* File: armv5te/OP_UNUSED_58FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_59FF: /* 0x159 */
+/* File: armv5te/OP_UNUSED_59FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_5AFF: /* 0x15a */
+/* File: armv5te/OP_UNUSED_5AFF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_5BFF: /* 0x15b */
+/* File: armv5te/OP_UNUSED_5BFF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_5CFF: /* 0x15c */
+/* File: armv5te/OP_UNUSED_5CFF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_5DFF: /* 0x15d */
+/* File: armv5te/OP_UNUSED_5DFF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_5EFF: /* 0x15e */
+/* File: armv5te/OP_UNUSED_5EFF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_5FFF: /* 0x15f */
+/* File: armv5te/OP_UNUSED_5FFF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_60FF: /* 0x160 */
+/* File: armv5te/OP_UNUSED_60FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_61FF: /* 0x161 */
+/* File: armv5te/OP_UNUSED_61FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_62FF: /* 0x162 */
+/* File: armv5te/OP_UNUSED_62FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_63FF: /* 0x163 */
+/* File: armv5te/OP_UNUSED_63FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_64FF: /* 0x164 */
+/* File: armv5te/OP_UNUSED_64FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_65FF: /* 0x165 */
+/* File: armv5te/OP_UNUSED_65FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_66FF: /* 0x166 */
+/* File: armv5te/OP_UNUSED_66FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_67FF: /* 0x167 */
+/* File: armv5te/OP_UNUSED_67FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_68FF: /* 0x168 */
+/* File: armv5te/OP_UNUSED_68FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_69FF: /* 0x169 */
+/* File: armv5te/OP_UNUSED_69FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_6AFF: /* 0x16a */
+/* File: armv5te/OP_UNUSED_6AFF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_6BFF: /* 0x16b */
+/* File: armv5te/OP_UNUSED_6BFF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_6CFF: /* 0x16c */
+/* File: armv5te/OP_UNUSED_6CFF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_6DFF: /* 0x16d */
+/* File: armv5te/OP_UNUSED_6DFF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_6EFF: /* 0x16e */
+/* File: armv5te/OP_UNUSED_6EFF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_6FFF: /* 0x16f */
+/* File: armv5te/OP_UNUSED_6FFF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_70FF: /* 0x170 */
+/* File: armv5te/OP_UNUSED_70FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_71FF: /* 0x171 */
+/* File: armv5te/OP_UNUSED_71FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_72FF: /* 0x172 */
+/* File: armv5te/OP_UNUSED_72FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_73FF: /* 0x173 */
+/* File: armv5te/OP_UNUSED_73FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_74FF: /* 0x174 */
+/* File: armv5te/OP_UNUSED_74FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_75FF: /* 0x175 */
+/* File: armv5te/OP_UNUSED_75FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_76FF: /* 0x176 */
+/* File: armv5te/OP_UNUSED_76FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_77FF: /* 0x177 */
+/* File: armv5te/OP_UNUSED_77FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_78FF: /* 0x178 */
+/* File: armv5te/OP_UNUSED_78FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_79FF: /* 0x179 */
+/* File: armv5te/OP_UNUSED_79FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_7AFF: /* 0x17a */
+/* File: armv5te/OP_UNUSED_7AFF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_7BFF: /* 0x17b */
+/* File: armv5te/OP_UNUSED_7BFF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_7CFF: /* 0x17c */
+/* File: armv5te/OP_UNUSED_7CFF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_7DFF: /* 0x17d */
+/* File: armv5te/OP_UNUSED_7DFF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_7EFF: /* 0x17e */
+/* File: armv5te/OP_UNUSED_7EFF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_7FFF: /* 0x17f */
+/* File: armv5te/OP_UNUSED_7FFF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_80FF: /* 0x180 */
+/* File: armv5te/OP_UNUSED_80FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_81FF: /* 0x181 */
+/* File: armv5te/OP_UNUSED_81FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_82FF: /* 0x182 */
+/* File: armv5te/OP_UNUSED_82FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_83FF: /* 0x183 */
+/* File: armv5te/OP_UNUSED_83FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_84FF: /* 0x184 */
+/* File: armv5te/OP_UNUSED_84FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_85FF: /* 0x185 */
+/* File: armv5te/OP_UNUSED_85FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_86FF: /* 0x186 */
+/* File: armv5te/OP_UNUSED_86FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_87FF: /* 0x187 */
+/* File: armv5te/OP_UNUSED_87FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_88FF: /* 0x188 */
+/* File: armv5te/OP_UNUSED_88FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_89FF: /* 0x189 */
+/* File: armv5te/OP_UNUSED_89FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_8AFF: /* 0x18a */
+/* File: armv5te/OP_UNUSED_8AFF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_8BFF: /* 0x18b */
+/* File: armv5te/OP_UNUSED_8BFF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_8CFF: /* 0x18c */
+/* File: armv5te/OP_UNUSED_8CFF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_8DFF: /* 0x18d */
+/* File: armv5te/OP_UNUSED_8DFF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_8EFF: /* 0x18e */
+/* File: armv5te/OP_UNUSED_8EFF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_8FFF: /* 0x18f */
+/* File: armv5te/OP_UNUSED_8FFF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_90FF: /* 0x190 */
+/* File: armv5te/OP_UNUSED_90FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_91FF: /* 0x191 */
+/* File: armv5te/OP_UNUSED_91FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_92FF: /* 0x192 */
+/* File: armv5te/OP_UNUSED_92FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_93FF: /* 0x193 */
+/* File: armv5te/OP_UNUSED_93FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_94FF: /* 0x194 */
+/* File: armv5te/OP_UNUSED_94FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_95FF: /* 0x195 */
+/* File: armv5te/OP_UNUSED_95FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_96FF: /* 0x196 */
+/* File: armv5te/OP_UNUSED_96FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_97FF: /* 0x197 */
+/* File: armv5te/OP_UNUSED_97FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_98FF: /* 0x198 */
+/* File: armv5te/OP_UNUSED_98FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_99FF: /* 0x199 */
+/* File: armv5te/OP_UNUSED_99FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_9AFF: /* 0x19a */
+/* File: armv5te/OP_UNUSED_9AFF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_9BFF: /* 0x19b */
+/* File: armv5te/OP_UNUSED_9BFF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_9CFF: /* 0x19c */
+/* File: armv5te/OP_UNUSED_9CFF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_9DFF: /* 0x19d */
+/* File: armv5te/OP_UNUSED_9DFF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_9EFF: /* 0x19e */
+/* File: armv5te/OP_UNUSED_9EFF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_9FFF: /* 0x19f */
+/* File: armv5te/OP_UNUSED_9FFF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_A0FF: /* 0x1a0 */
+/* File: armv5te/OP_UNUSED_A0FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_A1FF: /* 0x1a1 */
+/* File: armv5te/OP_UNUSED_A1FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_A2FF: /* 0x1a2 */
+/* File: armv5te/OP_UNUSED_A2FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_A3FF: /* 0x1a3 */
+/* File: armv5te/OP_UNUSED_A3FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_A4FF: /* 0x1a4 */
+/* File: armv5te/OP_UNUSED_A4FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_A5FF: /* 0x1a5 */
+/* File: armv5te/OP_UNUSED_A5FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_A6FF: /* 0x1a6 */
+/* File: armv5te/OP_UNUSED_A6FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_A7FF: /* 0x1a7 */
+/* File: armv5te/OP_UNUSED_A7FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_A8FF: /* 0x1a8 */
+/* File: armv5te/OP_UNUSED_A8FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_A9FF: /* 0x1a9 */
+/* File: armv5te/OP_UNUSED_A9FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_AAFF: /* 0x1aa */
+/* File: armv5te/OP_UNUSED_AAFF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_ABFF: /* 0x1ab */
+/* File: armv5te/OP_UNUSED_ABFF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_ACFF: /* 0x1ac */
+/* File: armv5te/OP_UNUSED_ACFF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_ADFF: /* 0x1ad */
+/* File: armv5te/OP_UNUSED_ADFF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_AEFF: /* 0x1ae */
+/* File: armv5te/OP_UNUSED_AEFF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_AFFF: /* 0x1af */
+/* File: armv5te/OP_UNUSED_AFFF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_B0FF: /* 0x1b0 */
+/* File: armv5te/OP_UNUSED_B0FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_B1FF: /* 0x1b1 */
+/* File: armv5te/OP_UNUSED_B1FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_B2FF: /* 0x1b2 */
+/* File: armv5te/OP_UNUSED_B2FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_B3FF: /* 0x1b3 */
+/* File: armv5te/OP_UNUSED_B3FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_B4FF: /* 0x1b4 */
+/* File: armv5te/OP_UNUSED_B4FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_B5FF: /* 0x1b5 */
+/* File: armv5te/OP_UNUSED_B5FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_B6FF: /* 0x1b6 */
+/* File: armv5te/OP_UNUSED_B6FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_B7FF: /* 0x1b7 */
+/* File: armv5te/OP_UNUSED_B7FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_B8FF: /* 0x1b8 */
+/* File: armv5te/OP_UNUSED_B8FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_B9FF: /* 0x1b9 */
+/* File: armv5te/OP_UNUSED_B9FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_BAFF: /* 0x1ba */
+/* File: armv5te/OP_UNUSED_BAFF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_BBFF: /* 0x1bb */
+/* File: armv5te/OP_UNUSED_BBFF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_BCFF: /* 0x1bc */
+/* File: armv5te/OP_UNUSED_BCFF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_BDFF: /* 0x1bd */
+/* File: armv5te/OP_UNUSED_BDFF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_BEFF: /* 0x1be */
+/* File: armv5te/OP_UNUSED_BEFF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_BFFF: /* 0x1bf */
+/* File: armv5te/OP_UNUSED_BFFF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_C0FF: /* 0x1c0 */
+/* File: armv5te/OP_UNUSED_C0FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_C1FF: /* 0x1c1 */
+/* File: armv5te/OP_UNUSED_C1FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_C2FF: /* 0x1c2 */
+/* File: armv5te/OP_UNUSED_C2FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_C3FF: /* 0x1c3 */
+/* File: armv5te/OP_UNUSED_C3FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_C4FF: /* 0x1c4 */
+/* File: armv5te/OP_UNUSED_C4FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_C5FF: /* 0x1c5 */
+/* File: armv5te/OP_UNUSED_C5FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_C6FF: /* 0x1c6 */
+/* File: armv5te/OP_UNUSED_C6FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_C7FF: /* 0x1c7 */
+/* File: armv5te/OP_UNUSED_C7FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_C8FF: /* 0x1c8 */
+/* File: armv5te/OP_UNUSED_C8FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_C9FF: /* 0x1c9 */
+/* File: armv5te/OP_UNUSED_C9FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_CAFF: /* 0x1ca */
+/* File: armv5te/OP_UNUSED_CAFF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_CBFF: /* 0x1cb */
+/* File: armv5te/OP_UNUSED_CBFF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_CCFF: /* 0x1cc */
+/* File: armv5te/OP_UNUSED_CCFF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_CDFF: /* 0x1cd */
+/* File: armv5te/OP_UNUSED_CDFF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_CEFF: /* 0x1ce */
+/* File: armv5te/OP_UNUSED_CEFF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_CFFF: /* 0x1cf */
+/* File: armv5te/OP_UNUSED_CFFF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_D0FF: /* 0x1d0 */
+/* File: armv5te/OP_UNUSED_D0FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_D1FF: /* 0x1d1 */
+/* File: armv5te/OP_UNUSED_D1FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_D2FF: /* 0x1d2 */
+/* File: armv5te/OP_UNUSED_D2FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_D3FF: /* 0x1d3 */
+/* File: armv5te/OP_UNUSED_D3FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_D4FF: /* 0x1d4 */
+/* File: armv5te/OP_UNUSED_D4FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_D5FF: /* 0x1d5 */
+/* File: armv5te/OP_UNUSED_D5FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_D6FF: /* 0x1d6 */
+/* File: armv5te/OP_UNUSED_D6FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_D7FF: /* 0x1d7 */
+/* File: armv5te/OP_UNUSED_D7FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_D8FF: /* 0x1d8 */
+/* File: armv5te/OP_UNUSED_D8FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_D9FF: /* 0x1d9 */
+/* File: armv5te/OP_UNUSED_D9FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_DAFF: /* 0x1da */
+/* File: armv5te/OP_UNUSED_DAFF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_DBFF: /* 0x1db */
+/* File: armv5te/OP_UNUSED_DBFF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_DCFF: /* 0x1dc */
+/* File: armv5te/OP_UNUSED_DCFF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_DDFF: /* 0x1dd */
+/* File: armv5te/OP_UNUSED_DDFF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_DEFF: /* 0x1de */
+/* File: armv5te/OP_UNUSED_DEFF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_DFFF: /* 0x1df */
+/* File: armv5te/OP_UNUSED_DFFF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_E0FF: /* 0x1e0 */
+/* File: armv5te/OP_UNUSED_E0FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_E1FF: /* 0x1e1 */
+/* File: armv5te/OP_UNUSED_E1FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_E2FF: /* 0x1e2 */
+/* File: armv5te/OP_UNUSED_E2FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_E3FF: /* 0x1e3 */
+/* File: armv5te/OP_UNUSED_E3FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_E4FF: /* 0x1e4 */
+/* File: armv5te/OP_UNUSED_E4FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_E5FF: /* 0x1e5 */
+/* File: armv5te/OP_UNUSED_E5FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_E6FF: /* 0x1e6 */
+/* File: armv5te/OP_UNUSED_E6FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_E7FF: /* 0x1e7 */
+/* File: armv5te/OP_UNUSED_E7FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_E8FF: /* 0x1e8 */
+/* File: armv5te/OP_UNUSED_E8FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_E9FF: /* 0x1e9 */
+/* File: armv5te/OP_UNUSED_E9FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_EAFF: /* 0x1ea */
+/* File: armv5te/OP_UNUSED_EAFF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_EBFF: /* 0x1eb */
+/* File: armv5te/OP_UNUSED_EBFF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_ECFF: /* 0x1ec */
+/* File: armv5te/OP_UNUSED_ECFF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_EDFF: /* 0x1ed */
+/* File: armv5te/OP_UNUSED_EDFF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_EEFF: /* 0x1ee */
+/* File: armv5te/OP_UNUSED_EEFF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_EFFF: /* 0x1ef */
+/* File: armv5te/OP_UNUSED_EFFF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_F0FF: /* 0x1f0 */
+/* File: armv5te/OP_UNUSED_F0FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_F1FF: /* 0x1f1 */
+/* File: armv5te/OP_UNUSED_F1FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_F2FF: /* 0x1f2 */
+/* File: armv5te/OP_UNUSED_F2FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_F3FF: /* 0x1f3 */
+/* File: armv5te/OP_UNUSED_F3FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_F4FF: /* 0x1f4 */
+/* File: armv5te/OP_UNUSED_F4FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_F5FF: /* 0x1f5 */
+/* File: armv5te/OP_UNUSED_F5FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_F6FF: /* 0x1f6 */
+/* File: armv5te/OP_UNUSED_F6FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_F7FF: /* 0x1f7 */
+/* File: armv5te/OP_UNUSED_F7FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_F8FF: /* 0x1f8 */
+/* File: armv5te/OP_UNUSED_F8FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_F9FF: /* 0x1f9 */
+/* File: armv5te/OP_UNUSED_F9FF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_FAFF: /* 0x1fa */
+/* File: armv5te/OP_UNUSED_FAFF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_FBFF: /* 0x1fb */
+/* File: armv5te/OP_UNUSED_FBFF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_FCFF: /* 0x1fc */
+/* File: armv5te/OP_UNUSED_FCFF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_FDFF: /* 0x1fd */
+/* File: armv5te/OP_UNUSED_FDFF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_FEFF: /* 0x1fe */
+/* File: armv5te/OP_UNUSED_FEFF.S */
+/* File: armv5te/unused.S */
+    bl      common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_THROW_VERIFICATION_ERROR_JUMBO: /* 0x1ff */
+/* File: armv5te/OP_THROW_VERIFICATION_ERROR_JUMBO.S */
+    /*
+     * Handle a jumbo throw-verification-error instruction.  This throws an
+     * exception for an error discovered during verification.  The
+     * exception is indicated by BBBB, with some detail provided by AAAAAAAA.
+     */
+    /* exop BBBB, Class@AAAAAAAA */
+    FETCH(r1, 1)                        @ r1<- aaaa (lo)
+    FETCH(r2, 2)                        @ r2<- AAAA (hi)
+    ldr     r0, [rGLUE, #offGlue_method]    @ r0<- glue->method
+    orr     r2, r1, r2, lsl #16         @ r2<- AAAAaaaa
+    EXPORT_PC()                         @ export the PC
+    FETCH(r1, 3)                        @ r1<- BBBB
+    bl      dvmThrowVerificationError   @ always throws
+    b       common_exceptionThrown      @ handle exception
 
 
     .balign 64
@@ -9353,6 +12178,977 @@ d2l_doconv:
     strneb  r2, [r2, r9, lsr #GC_CARD_SHIFT]  @ mark card based on obj head
     GOTO_OPCODE(ip)                     @ jump to next instruction
 
+/* continuation for OP_CONST_CLASS_JUMBO */
+
+    /*
+     * Continuation if the Class has not yet been resolved.
+     *  r1: AAAAAAAA (Class ref)
+     *  r9: target register
+     */
+.LOP_CONST_CLASS_JUMBO_resolve:
+    EXPORT_PC()
+    ldr     r0, [rGLUE, #offGlue_method] @ r0<- glue->method
+    mov     r2, #1                      @ r2<- true
+    ldr     r0, [r0, #offMethod_clazz]  @ r0<- method->clazz
+    bl      dvmResolveClass             @ r0<- Class reference
+    cmp     r0, #0                      @ failed?
+    beq     common_exceptionThrown      @ yup, handle the exception
+    FETCH_ADVANCE_INST(4)               @ advance rPC, load rINST
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    SET_VREG(r0, r9)                    @ vBBBB<- r0
+    GOTO_OPCODE(ip)                     @ jump to next instruction
+
+/* continuation for OP_CHECK_CAST_JUMBO */
+
+    /*
+     * Trivial test failed, need to perform full check.  This is common.
+     *  r0 holds obj->clazz
+     *  r1 holds desired class resolved from AAAAAAAA
+     *  r9 holds object
+     */
+.LOP_CHECK_CAST_JUMBO_fullcheck:
+    mov     r10, r1                     @ avoid ClassObject getting clobbered
+    bl      dvmInstanceofNonTrivial     @ r0<- boolean result
+    cmp     r0, #0                      @ failed?
+    bne     .LOP_CHECK_CAST_JUMBO_okay            @ no, success
+
+    @ A cast has failed.  We need to throw a ClassCastException.
+    EXPORT_PC()                         @ about to throw
+    ldr     r0, [r9, #offObject_clazz]  @ r0<- obj->clazz (actual class)
+    mov     r1, r10                     @ r1<- desired class
+    bl      dvmThrowClassCastException
+    b       common_exceptionThrown
+
+    /*
+     * Advance PC and get the next opcode.
+     */
+.LOP_CHECK_CAST_JUMBO_okay:
+    FETCH_ADVANCE_INST(4)               @ advance rPC, load rINST
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    GOTO_OPCODE(ip)                     @ jump to next instruction
+
+    /*
+     * Resolution required.  This is the least-likely path.
+     *
+     *  r2 holds AAAAAAAA
+     *  r9 holds object
+     */
+.LOP_CHECK_CAST_JUMBO_resolve:
+    EXPORT_PC()                         @ resolve() could throw
+    ldr     r3, [rGLUE, #offGlue_method] @ r3<- glue->method
+    mov     r1, r2                      @ r1<- AAAAAAAA
+    mov     r2, #0                      @ r2<- false
+    ldr     r0, [r3, #offMethod_clazz]  @ r0<- method->clazz
+    bl      dvmResolveClass             @ r0<- resolved ClassObject ptr
+    cmp     r0, #0                      @ got null?
+    beq     common_exceptionThrown      @ yes, handle exception
+    mov     r1, r0                      @ r1<- class resolved from AAAAAAAA
+    ldr     r0, [r9, #offObject_clazz]  @ r0<- obj->clazz
+    b       .LOP_CHECK_CAST_JUMBO_resolved        @ pick up where we left off
+
+/* continuation for OP_INSTANCE_OF_JUMBO */
+
+    /*
+     * Class resolved, determine type of check necessary.  This is common.
+     *  r0 holds obj->clazz
+     *  r1 holds class resolved from AAAAAAAA
+     *  r9 holds BBBB
+     */
+.LOP_INSTANCE_OF_JUMBO_resolved:
+    cmp     r0, r1                      @ same class (trivial success)?
+    beq     .LOP_INSTANCE_OF_JUMBO_trivial         @ yes, trivial finish
+    @ fall through to OP_INSTANCE_OF_JUMBO_fullcheck
+
+    /*
+     * Trivial test failed, need to perform full check.  This is common.
+     *  r0 holds obj->clazz
+     *  r1 holds class resolved from AAAAAAAA
+     *  r9 holds BBBB
+     */
+.LOP_INSTANCE_OF_JUMBO_fullcheck:
+    bl      dvmInstanceofNonTrivial     @ r0<- boolean result
+    @ fall through to OP_INSTANCE_OF_JUMBO_store
+
+    /*
+     * r0 holds boolean result
+     * r9 holds BBBB
+     */
+.LOP_INSTANCE_OF_JUMBO_store:
+    FETCH_ADVANCE_INST(5)               @ advance rPC, load rINST
+    SET_VREG(r0, r9)                    @ vBBBB<- r0
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    GOTO_OPCODE(ip)                     @ jump to next instruction
+
+    /*
+     * Trivial test succeeded, save and bail.
+     *  r9 holds BBBB
+     */
+.LOP_INSTANCE_OF_JUMBO_trivial:
+    mov     r0, #1                      @ indicate success
+    @ could b OP_INSTANCE_OF_JUMBO_store, but copying is faster and cheaper
+    FETCH_ADVANCE_INST(5)               @ advance rPC, load rINST
+    SET_VREG(r0, r9)                    @ vBBBB<- r0
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    GOTO_OPCODE(ip)                     @ jump to next instruction
+
+    /*
+     * Resolution required.  This is the least-likely path.
+     *
+     *  r3 holds AAAAAAAA
+     *  r9 holds BBBB
+     */
+
+.LOP_INSTANCE_OF_JUMBO_resolve:
+    EXPORT_PC()                         @ resolve() could throw
+    ldr     r0, [rGLUE, #offGlue_method]    @ r0<- glue->method
+    mov     r1, r3                      @ r1<- AAAAAAAA
+    mov     r2, #1                      @ r2<- true
+    ldr     r0, [r0, #offMethod_clazz]  @ r0<- method->clazz
+    bl      dvmResolveClass             @ r0<- resolved ClassObject ptr
+    cmp     r0, #0                      @ got null?
+    beq     common_exceptionThrown      @ yes, handle exception
+    FETCH(r3, 4)                        @ r3<- vCCCC
+    mov     r1, r0                      @ r1<- class resolved from AAAAAAAA
+    GET_VREG(r0, r3)                    @ r0<- vCCCC (object)
+    ldr     r0, [r0, #offObject_clazz]  @ r0<- obj->clazz
+    b       .LOP_INSTANCE_OF_JUMBO_resolved        @ pick up where we left off
+
+/* continuation for OP_NEW_INSTANCE_JUMBO */
+
+    .balign 32                          @ minimize cache lines
+.LOP_NEW_INSTANCE_JUMBO_finish: @ r0=new object
+    FETCH(r3, 3)                        @ r3<- BBBB
+    cmp     r0, #0                      @ failed?
+    beq     common_exceptionThrown      @ yes, handle the exception
+    FETCH_ADVANCE_INST(4)               @ advance rPC, load rINST
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    SET_VREG(r0, r3)                    @ vBBBB<- r0
+    GOTO_OPCODE(ip)                     @ jump to next instruction
+
+    /*
+     * Class initialization required.
+     *
+     *  r0 holds class object
+     */
+.LOP_NEW_INSTANCE_JUMBO_needinit:
+    mov     r9, r0                      @ save r0
+    bl      dvmInitClass                @ initialize class
+    cmp     r0, #0                      @ check boolean result
+    mov     r0, r9                      @ restore r0
+    bne     .LOP_NEW_INSTANCE_JUMBO_initialized     @ success, continue
+    b       common_exceptionThrown      @ failed, deal with init exception
+
+    /*
+     * Resolution required.  This is the least-likely path.
+     *
+     *  r1 holds AAAAAAAA
+     */
+.LOP_NEW_INSTANCE_JUMBO_resolve:
+    ldr     r3, [rGLUE, #offGlue_method] @ r3<- glue->method
+    mov     r2, #0                      @ r2<- false
+    ldr     r0, [r3, #offMethod_clazz]  @ r0<- method->clazz
+    bl      dvmResolveClass             @ r0<- resolved ClassObject ptr
+    cmp     r0, #0                      @ got null?
+    bne     .LOP_NEW_INSTANCE_JUMBO_resolved        @ no, continue
+    b       common_exceptionThrown      @ yes, handle exception
+
+/* continuation for OP_NEW_ARRAY_JUMBO */
+
+
+    /*
+     * Resolve class.  (This is an uncommon case.)
+     *
+     *  r1 holds array length
+     *  r2 holds class ref AAAAAAAA
+     */
+.LOP_NEW_ARRAY_JUMBO_resolve:
+    ldr     r3, [rGLUE, #offGlue_method] @ r3<- glue->method
+    mov     r9, r1                      @ r9<- length (save)
+    mov     r1, r2                      @ r1<- AAAAAAAA
+    mov     r2, #0                      @ r2<- false
+    ldr     r0, [r3, #offMethod_clazz]  @ r0<- method->clazz
+    bl      dvmResolveClass             @ r0<- call(clazz, ref)
+    cmp     r0, #0                      @ got null?
+    mov     r1, r9                      @ r1<- length (restore)
+    beq     common_exceptionThrown      @ yes, handle exception
+    @ fall through to OP_NEW_ARRAY_JUMBO_finish
+
+    /*
+     * Finish allocation.
+     *
+     *  r0 holds class
+     *  r1 holds array length
+     */
+.LOP_NEW_ARRAY_JUMBO_finish:
+    mov     r2, #ALLOC_DONT_TRACK       @ don't track in local refs table
+    bl      dvmAllocArrayByClass        @ r0<- call(clazz, length, flags)
+    cmp     r0, #0                      @ failed?
+    FETCH(r2, 3)                        @ r2<- vBBBB
+    beq     common_exceptionThrown      @ yes, handle the exception
+    FETCH_ADVANCE_INST(5)               @ advance rPC, load rINST
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    SET_VREG(r0, r2)                    @ vBBBB<- r0
+    GOTO_OPCODE(ip)                     @ jump to next instruction
+
+/* continuation for OP_FILLED_NEW_ARRAY_JUMBO */
+
+    /*
+     * On entry:
+     *  r0 holds array class
+     */
+.LOP_FILLED_NEW_ARRAY_JUMBO_continue:
+    ldr     r3, [r0, #offClassObject_descriptor] @ r3<- arrayClass->descriptor
+    mov     r2, #ALLOC_DONT_TRACK       @ r2<- alloc flags
+    ldrb    rINST, [r3, #1]             @ rINST<- descriptor[1]
+    FETCH(r1, 3)                        @ r1<- BBBB (length)
+    cmp     rINST, #'I'                 @ array of ints?
+    cmpne   rINST, #'L'                 @ array of objects?
+    cmpne   rINST, #'['                 @ array of arrays?
+    mov     r9, r1                      @ save length in r9
+    bne     .LOP_FILLED_NEW_ARRAY_JUMBO_notimpl         @ no, not handled yet
+    bl      dvmAllocArrayByClass        @ r0<- call(arClass, length, flags)
+    cmp     r0, #0                      @ null return?
+    beq     common_exceptionThrown      @ alloc failed, handle exception
+
+    FETCH(r1, 4)                        @ r1<- CCCC
+    str     r0, [rGLUE, #offGlue_retval]      @ retval.l <- new array
+    str     rINST, [rGLUE, #offGlue_retval+4] @ retval.h <- type
+    add     r0, r0, #offArrayObject_contents @ r0<- newArray->contents
+    subs    r9, r9, #1                  @ length--, check for neg
+    FETCH_ADVANCE_INST(5)               @ advance to next instr, load rINST
+    bmi     2f                          @ was zero, bail
+
+    @ copy values from registers into the array
+    @ r0=array, r1=CCCC, r9=BBBB (length)
+    add     r2, rFP, r1, lsl #2         @ r2<- &fp[CCCC]
+1:  ldr     r3, [r2], #4                @ r3<- *r2++
+    subs    r9, r9, #1                  @ count--
+    str     r3, [r0], #4                @ *contents++ = vX
+    bpl     1b
+
+2:  ldr     r0, [rGLUE, #offGlue_retval]     @ r0<- object
+    ldr     r1, [rGLUE, #offGlue_retval+4]   @ r1<- type
+    ldr     r2, [rGLUE, #offGlue_cardTable]  @ r2<- card table base
+    GET_INST_OPCODE(ip)                      @ ip<- opcode from rINST
+    cmp     r1, #'I'                         @ Is int array?
+    strneb  r2, [r2, r0, lsr #GC_CARD_SHIFT] @ Mark card based on object head
+    GOTO_OPCODE(ip)                          @ execute it
+
+    /*
+     * Throw an exception indicating that we have not implemented this
+     * mode of filled-new-array.
+     */
+.LOP_FILLED_NEW_ARRAY_JUMBO_notimpl:
+    ldr     r0, .L_strInternalError
+    ldr     r1, .L_strFilledNewArrayNotImpl
+    bl      dvmThrowException
+    b       common_exceptionThrown
+
+/* continuation for OP_IGET_JUMBO */
+
+    /*
+     * Currently:
+     *  r0 holds resolved field
+     *  r9 holds object
+     */
+.LOP_IGET_JUMBO_resolved:
+    cmp     r0, #0                      @ resolution unsuccessful?
+    beq     common_exceptionThrown      @ yes, throw exception
+    @ fall through to OP_IGET_JUMBO_finish
+
+    /*
+     * Currently:
+     *  r0 holds resolved field
+     *  r9 holds object
+     */
+.LOP_IGET_JUMBO_finish:
+    @bl      common_squeak0
+    cmp     r9, #0                      @ check object for null
+    ldr     r3, [r0, #offInstField_byteOffset]  @ r3<- byte offset of field
+    beq     common_errNullObject        @ object was null
+    ldr   r0, [r9, r3]                @ r0<- obj.field (8/16/32 bits)
+    @ no-op                             @ acquiring load
+    FETCH(r2, 3)                        @ r2<- BBBB
+    FETCH_ADVANCE_INST(5)               @ advance rPC, load rINST
+    SET_VREG(r0, r2)                    @ fp[BBBB]<- r0
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    GOTO_OPCODE(ip)                     @ jump to next instruction
+
+/* continuation for OP_IGET_WIDE_JUMBO */
+
+    /*
+     * Currently:
+     *  r0 holds resolved field
+     *  r9 holds object
+     */
+.LOP_IGET_WIDE_JUMBO_resolved:
+    cmp     r0, #0                      @ resolution unsuccessful?
+    beq     common_exceptionThrown      @ yes, throw exception
+    @ fall through to OP_IGET_WIDE_JUMBO_finish
+
+    /*
+     * Currently:
+     *  r0 holds resolved field
+     *  r9 holds object
+     */
+.LOP_IGET_WIDE_JUMBO_finish:
+    cmp     r9, #0                      @ check object for null
+    ldr     r3, [r0, #offInstField_byteOffset]  @ r3<- byte offset of field
+    beq     common_errNullObject        @ object was null
+    ldrd    r0, [r9, r3]                @ r0/r1<- obj.field (64-bit align ok)
+    FETCH(r2, 3)                        @ r2<- BBBB
+    FETCH_ADVANCE_INST(5)               @ advance rPC, load rINST
+    add     r3, rFP, r2, lsl #2         @ r3<- &fp[BBBB]
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    stmia   r3, {r0-r1}                 @ fp[BBBB]<- r0/r1
+    GOTO_OPCODE(ip)                     @ jump to next instruction
+
+/* continuation for OP_IGET_OBJECT_JUMBO */
+
+    /*
+     * Currently:
+     *  r0 holds resolved field
+     *  r9 holds object
+     */
+.LOP_IGET_OBJECT_JUMBO_resolved:
+    cmp     r0, #0                      @ resolution unsuccessful?
+    beq     common_exceptionThrown      @ yes, throw exception
+    @ fall through to OP_IGET_OBJECT_JUMBO_finish
+
+    /*
+     * Currently:
+     *  r0 holds resolved field
+     *  r9 holds object
+     */
+.LOP_IGET_OBJECT_JUMBO_finish:
+    @bl      common_squeak0
+    cmp     r9, #0                      @ check object for null
+    ldr     r3, [r0, #offInstField_byteOffset]  @ r3<- byte offset of field
+    beq     common_errNullObject        @ object was null
+    ldr   r0, [r9, r3]                @ r0<- obj.field (8/16/32 bits)
+    @ no-op                             @ acquiring load
+    FETCH(r2, 3)                        @ r2<- BBBB
+    FETCH_ADVANCE_INST(5)               @ advance rPC, load rINST
+    SET_VREG(r0, r2)                    @ fp[BBBB]<- r0
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    GOTO_OPCODE(ip)                     @ jump to next instruction
+
+/* continuation for OP_IGET_BOOLEAN_JUMBO */
+
+    /*
+     * Currently:
+     *  r0 holds resolved field
+     *  r9 holds object
+     */
+.LOP_IGET_BOOLEAN_JUMBO_resolved:
+    cmp     r0, #0                      @ resolution unsuccessful?
+    beq     common_exceptionThrown      @ yes, throw exception
+    @ fall through to OP_IGET_BOOLEAN_JUMBO_finish
+
+    /*
+     * Currently:
+     *  r0 holds resolved field
+     *  r9 holds object
+     */
+.LOP_IGET_BOOLEAN_JUMBO_finish:
+    @bl      common_squeak1
+    cmp     r9, #0                      @ check object for null
+    ldr     r3, [r0, #offInstField_byteOffset]  @ r3<- byte offset of field
+    beq     common_errNullObject        @ object was null
+    ldr   r0, [r9, r3]                @ r0<- obj.field (8/16/32 bits)
+    @ no-op                             @ acquiring load
+    FETCH(r2, 3)                        @ r2<- BBBB
+    FETCH_ADVANCE_INST(5)               @ advance rPC, load rINST
+    SET_VREG(r0, r2)                    @ fp[BBBB]<- r0
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    GOTO_OPCODE(ip)                     @ jump to next instruction
+
+/* continuation for OP_IGET_BYTE_JUMBO */
+
+    /*
+     * Currently:
+     *  r0 holds resolved field
+     *  r9 holds object
+     */
+.LOP_IGET_BYTE_JUMBO_resolved:
+    cmp     r0, #0                      @ resolution unsuccessful?
+    beq     common_exceptionThrown      @ yes, throw exception
+    @ fall through to OP_IGET_BYTE_JUMBO_finish
+
+    /*
+     * Currently:
+     *  r0 holds resolved field
+     *  r9 holds object
+     */
+.LOP_IGET_BYTE_JUMBO_finish:
+    @bl      common_squeak2
+    cmp     r9, #0                      @ check object for null
+    ldr     r3, [r0, #offInstField_byteOffset]  @ r3<- byte offset of field
+    beq     common_errNullObject        @ object was null
+    ldr   r0, [r9, r3]                @ r0<- obj.field (8/16/32 bits)
+    @ no-op                             @ acquiring load
+    FETCH(r2, 3)                        @ r2<- BBBB
+    FETCH_ADVANCE_INST(5)               @ advance rPC, load rINST
+    SET_VREG(r0, r2)                    @ fp[BBBB]<- r0
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    GOTO_OPCODE(ip)                     @ jump to next instruction
+
+/* continuation for OP_IGET_CHAR_JUMBO */
+
+    /*
+     * Currently:
+     *  r0 holds resolved field
+     *  r9 holds object
+     */
+.LOP_IGET_CHAR_JUMBO_resolved:
+    cmp     r0, #0                      @ resolution unsuccessful?
+    beq     common_exceptionThrown      @ yes, throw exception
+    @ fall through to OP_IGET_CHAR_JUMBO_finish
+
+    /*
+     * Currently:
+     *  r0 holds resolved field
+     *  r9 holds object
+     */
+.LOP_IGET_CHAR_JUMBO_finish:
+    @bl      common_squeak3
+    cmp     r9, #0                      @ check object for null
+    ldr     r3, [r0, #offInstField_byteOffset]  @ r3<- byte offset of field
+    beq     common_errNullObject        @ object was null
+    ldr   r0, [r9, r3]                @ r0<- obj.field (8/16/32 bits)
+    @ no-op                             @ acquiring load
+    FETCH(r2, 3)                        @ r2<- BBBB
+    FETCH_ADVANCE_INST(5)               @ advance rPC, load rINST
+    SET_VREG(r0, r2)                    @ fp[BBBB]<- r0
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    GOTO_OPCODE(ip)                     @ jump to next instruction
+
+/* continuation for OP_IGET_SHORT_JUMBO */
+
+    /*
+     * Currently:
+     *  r0 holds resolved field
+     *  r9 holds object
+     */
+.LOP_IGET_SHORT_JUMBO_resolved:
+    cmp     r0, #0                      @ resolution unsuccessful?
+    beq     common_exceptionThrown      @ yes, throw exception
+    @ fall through to OP_IGET_SHORT_JUMBO_finish
+
+    /*
+     * Currently:
+     *  r0 holds resolved field
+     *  r9 holds object
+     */
+.LOP_IGET_SHORT_JUMBO_finish:
+    @bl      common_squeak4
+    cmp     r9, #0                      @ check object for null
+    ldr     r3, [r0, #offInstField_byteOffset]  @ r3<- byte offset of field
+    beq     common_errNullObject        @ object was null
+    ldr   r0, [r9, r3]                @ r0<- obj.field (8/16/32 bits)
+    @ no-op                             @ acquiring load
+    FETCH(r2, 3)                        @ r2<- BBBB
+    FETCH_ADVANCE_INST(5)               @ advance rPC, load rINST
+    SET_VREG(r0, r2)                    @ fp[BBBB]<- r0
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    GOTO_OPCODE(ip)                     @ jump to next instruction
+
+/* continuation for OP_IPUT_JUMBO */
+
+    /*
+     * Currently:
+     *  r0 holds resolved field
+     *  r9 holds object
+     */
+.LOP_IPUT_JUMBO_resolved:
+     cmp     r0, #0                     @ resolution unsuccessful?
+     beq     common_exceptionThrown     @ yes, throw exception
+     @ fall through to OP_IPUT_JUMBO_finish
+
+    /*
+     * Currently:
+     *  r0 holds resolved field
+     *  r9 holds object
+     */
+.LOP_IPUT_JUMBO_finish:
+    @bl      common_squeak0
+    ldr     r3, [r0, #offInstField_byteOffset]  @ r3<- byte offset of field
+    FETCH(r1, 3)                        @ r1<- BBBB
+    cmp     r9, #0                      @ check object for null
+    GET_VREG(r0, r1)                    @ r0<- fp[BBBB]
+    beq     common_errNullObject        @ object was null
+    FETCH_ADVANCE_INST(5)               @ advance rPC, load rINST
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    @ no-op                             @ releasing store
+    str  r0, [r9, r3]                @ obj.field (8/16/32 bits)<- r0
+    GOTO_OPCODE(ip)                     @ jump to next instruction
+
+/* continuation for OP_IPUT_WIDE_JUMBO */
+
+    /*
+     * Currently:
+     *  r0 holds resolved field
+     *  r9 holds object
+     */
+.LOP_IPUT_WIDE_JUMBO_resolved:
+     cmp     r0, #0                     @ resolution unsuccessful?
+     beq     common_exceptionThrown     @ yes, throw exception
+     @ fall through to OP_IPUT_WIDE_JUMBO_finish
+
+    /*
+     * Currently:
+     *  r0 holds resolved field
+     *  r9 holds object
+     */
+.LOP_IPUT_WIDE_JUMBO_finish:
+    cmp     r9, #0                      @ check object for null
+    FETCH(r2, 3)                        @ r1<- BBBB
+    ldr     r3, [r0, #offInstField_byteOffset]  @ r3<- byte offset of field
+    add     r2, rFP, r2, lsl #2         @ r3<- &fp[BBBB]
+    beq     common_errNullObject        @ object was null
+    FETCH_ADVANCE_INST(5)               @ advance rPC, load rINST
+    ldmia   r2, {r0-r1}                 @ r0/r1<- fp[BBBB]
+    GET_INST_OPCODE(r10)                @ extract opcode from rINST
+    strd    r0, [r9, r3]                @ obj.field (64 bits, aligned)<- r0/r1
+    GOTO_OPCODE(r10)                    @ jump to next instruction
+
+/* continuation for OP_IPUT_OBJECT_JUMBO */
+
+    /*
+     * Currently:
+     *  r0 holds resolved field
+     *  r9 holds object
+     */
+.LOP_IPUT_OBJECT_JUMBO_resolved:
+     cmp     r0, #0                     @ resolution unsuccessful?
+     beq     common_exceptionThrown     @ yes, throw exception
+     @ fall through to OP_IPUT_OBJECT_JUMBO_finish
+
+    /*
+     * Currently:
+     *  r0 holds resolved field
+     *  r9 holds object
+     */
+.LOP_IPUT_OBJECT_JUMBO_finish:
+    @bl      common_squeak0
+    ldr     r3, [r0, #offInstField_byteOffset]  @ r3<- byte offset of field
+    FETCH(r1, 3)                        @ r1<- BBBB
+    cmp     r9, #0                      @ check object for null
+    GET_VREG(r0, r1)                    @ r0<- fp[BBBB]
+    ldr     r2, [rGLUE, #offGlue_cardTable]  @ r2<- card table base
+    beq     common_errNullObject        @ object was null
+    FETCH_ADVANCE_INST(5)               @ advance rPC, load rINST
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    @ no-op                             @ releasing store
+    str     r0, [r9, r3]                @ obj.field (32 bits)<- r0
+    cmp     r0, #0                      @ stored a null reference?
+    strneb  r2, [r2, r9, lsr #GC_CARD_SHIFT]  @ mark card if not
+    GOTO_OPCODE(ip)                     @ jump to next instruction
+
+/* continuation for OP_IPUT_BOOLEAN_JUMBO */
+
+    /*
+     * Currently:
+     *  r0 holds resolved field
+     *  r9 holds object
+     */
+.LOP_IPUT_BOOLEAN_JUMBO_resolved:
+     cmp     r0, #0                     @ resolution unsuccessful?
+     beq     common_exceptionThrown     @ yes, throw exception
+     @ fall through to OP_IPUT_BOOLEAN_JUMBO_finish
+
+    /*
+     * Currently:
+     *  r0 holds resolved field
+     *  r9 holds object
+     */
+.LOP_IPUT_BOOLEAN_JUMBO_finish:
+    @bl      common_squeak1
+    ldr     r3, [r0, #offInstField_byteOffset]  @ r3<- byte offset of field
+    FETCH(r1, 3)                        @ r1<- BBBB
+    cmp     r9, #0                      @ check object for null
+    GET_VREG(r0, r1)                    @ r0<- fp[BBBB]
+    beq     common_errNullObject        @ object was null
+    FETCH_ADVANCE_INST(5)               @ advance rPC, load rINST
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    @ no-op                             @ releasing store
+    str  r0, [r9, r3]                @ obj.field (8/16/32 bits)<- r0
+    GOTO_OPCODE(ip)                     @ jump to next instruction
+
+/* continuation for OP_IPUT_BYTE_JUMBO */
+
+    /*
+     * Currently:
+     *  r0 holds resolved field
+     *  r9 holds object
+     */
+.LOP_IPUT_BYTE_JUMBO_resolved:
+     cmp     r0, #0                     @ resolution unsuccessful?
+     beq     common_exceptionThrown     @ yes, throw exception
+     @ fall through to OP_IPUT_BYTE_JUMBO_finish
+
+    /*
+     * Currently:
+     *  r0 holds resolved field
+     *  r9 holds object
+     */
+.LOP_IPUT_BYTE_JUMBO_finish:
+    @bl      common_squeak2
+    ldr     r3, [r0, #offInstField_byteOffset]  @ r3<- byte offset of field
+    FETCH(r1, 3)                        @ r1<- BBBB
+    cmp     r9, #0                      @ check object for null
+    GET_VREG(r0, r1)                    @ r0<- fp[BBBB]
+    beq     common_errNullObject        @ object was null
+    FETCH_ADVANCE_INST(5)               @ advance rPC, load rINST
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    @ no-op                             @ releasing store
+    str  r0, [r9, r3]                @ obj.field (8/16/32 bits)<- r0
+    GOTO_OPCODE(ip)                     @ jump to next instruction
+
+/* continuation for OP_IPUT_CHAR_JUMBO */
+
+    /*
+     * Currently:
+     *  r0 holds resolved field
+     *  r9 holds object
+     */
+.LOP_IPUT_CHAR_JUMBO_resolved:
+     cmp     r0, #0                     @ resolution unsuccessful?
+     beq     common_exceptionThrown     @ yes, throw exception
+     @ fall through to OP_IPUT_CHAR_JUMBO_finish
+
+    /*
+     * Currently:
+     *  r0 holds resolved field
+     *  r9 holds object
+     */
+.LOP_IPUT_CHAR_JUMBO_finish:
+    @bl      common_squeak3
+    ldr     r3, [r0, #offInstField_byteOffset]  @ r3<- byte offset of field
+    FETCH(r1, 3)                        @ r1<- BBBB
+    cmp     r9, #0                      @ check object for null
+    GET_VREG(r0, r1)                    @ r0<- fp[BBBB]
+    beq     common_errNullObject        @ object was null
+    FETCH_ADVANCE_INST(5)               @ advance rPC, load rINST
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    @ no-op                             @ releasing store
+    str  r0, [r9, r3]                @ obj.field (8/16/32 bits)<- r0
+    GOTO_OPCODE(ip)                     @ jump to next instruction
+
+/* continuation for OP_IPUT_SHORT_JUMBO */
+
+    /*
+     * Currently:
+     *  r0 holds resolved field
+     *  r9 holds object
+     */
+.LOP_IPUT_SHORT_JUMBO_resolved:
+     cmp     r0, #0                     @ resolution unsuccessful?
+     beq     common_exceptionThrown     @ yes, throw exception
+     @ fall through to OP_IPUT_SHORT_JUMBO_finish
+
+    /*
+     * Currently:
+     *  r0 holds resolved field
+     *  r9 holds object
+     */
+.LOP_IPUT_SHORT_JUMBO_finish:
+    @bl      common_squeak4
+    ldr     r3, [r0, #offInstField_byteOffset]  @ r3<- byte offset of field
+    FETCH(r1, 3)                        @ r1<- BBBB
+    cmp     r9, #0                      @ check object for null
+    GET_VREG(r0, r1)                    @ r0<- fp[BBBB]
+    beq     common_errNullObject        @ object was null
+    FETCH_ADVANCE_INST(5)               @ advance rPC, load rINST
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    @ no-op                             @ releasing store
+    str  r0, [r9, r3]                @ obj.field (8/16/32 bits)<- r0
+    GOTO_OPCODE(ip)                     @ jump to next instruction
+
+/* continuation for OP_SGET_JUMBO */
+
+    /*
+     * Continuation if the field has not yet been resolved.
+     *  r1: AAAAAAAA field ref
+     */
+.LOP_SGET_JUMBO_resolve:
+    ldr     r2, [rGLUE, #offGlue_method]    @ r2<- current method
+    EXPORT_PC()                         @ resolve() could throw, so export now
+    ldr     r0, [r2, #offMethod_clazz]  @ r0<- method->clazz
+    bl      dvmResolveStaticField       @ r0<- resolved StaticField ptr
+    cmp     r0, #0                      @ success?
+    bne     .LOP_SGET_JUMBO_finish          @ yes, finish
+    b       common_exceptionThrown      @ no, handle exception
+
+/* continuation for OP_SGET_WIDE_JUMBO */
+
+    /*
+     * Continuation if the field has not yet been resolved.
+     *  r1: BBBB field ref
+     *
+     * Returns StaticField pointer in r0.
+     */
+.LOP_SGET_WIDE_JUMBO_resolve:
+    ldr     r2, [rGLUE, #offGlue_method]    @ r2<- current method
+    EXPORT_PC()                         @ resolve() could throw, so export now
+    ldr     r0, [r2, #offMethod_clazz]  @ r0<- method->clazz
+    bl      dvmResolveStaticField       @ r0<- resolved StaticField ptr
+    cmp     r0, #0                      @ success?
+    bne     .LOP_SGET_WIDE_JUMBO_finish          @ yes, finish
+    b       common_exceptionThrown      @ no, handle exception
+
+/* continuation for OP_SGET_OBJECT_JUMBO */
+
+    /*
+     * Continuation if the field has not yet been resolved.
+     *  r1: AAAAAAAA field ref
+     */
+.LOP_SGET_OBJECT_JUMBO_resolve:
+    ldr     r2, [rGLUE, #offGlue_method]    @ r2<- current method
+    EXPORT_PC()                         @ resolve() could throw, so export now
+    ldr     r0, [r2, #offMethod_clazz]  @ r0<- method->clazz
+    bl      dvmResolveStaticField       @ r0<- resolved StaticField ptr
+    cmp     r0, #0                      @ success?
+    bne     .LOP_SGET_OBJECT_JUMBO_finish          @ yes, finish
+    b       common_exceptionThrown      @ no, handle exception
+
+/* continuation for OP_SGET_BOOLEAN_JUMBO */
+
+    /*
+     * Continuation if the field has not yet been resolved.
+     *  r1: AAAAAAAA field ref
+     */
+.LOP_SGET_BOOLEAN_JUMBO_resolve:
+    ldr     r2, [rGLUE, #offGlue_method]    @ r2<- current method
+    EXPORT_PC()                         @ resolve() could throw, so export now
+    ldr     r0, [r2, #offMethod_clazz]  @ r0<- method->clazz
+    bl      dvmResolveStaticField       @ r0<- resolved StaticField ptr
+    cmp     r0, #0                      @ success?
+    bne     .LOP_SGET_BOOLEAN_JUMBO_finish          @ yes, finish
+    b       common_exceptionThrown      @ no, handle exception
+
+/* continuation for OP_SGET_BYTE_JUMBO */
+
+    /*
+     * Continuation if the field has not yet been resolved.
+     *  r1: AAAAAAAA field ref
+     */
+.LOP_SGET_BYTE_JUMBO_resolve:
+    ldr     r2, [rGLUE, #offGlue_method]    @ r2<- current method
+    EXPORT_PC()                         @ resolve() could throw, so export now
+    ldr     r0, [r2, #offMethod_clazz]  @ r0<- method->clazz
+    bl      dvmResolveStaticField       @ r0<- resolved StaticField ptr
+    cmp     r0, #0                      @ success?
+    bne     .LOP_SGET_BYTE_JUMBO_finish          @ yes, finish
+    b       common_exceptionThrown      @ no, handle exception
+
+/* continuation for OP_SGET_CHAR_JUMBO */
+
+    /*
+     * Continuation if the field has not yet been resolved.
+     *  r1: AAAAAAAA field ref
+     */
+.LOP_SGET_CHAR_JUMBO_resolve:
+    ldr     r2, [rGLUE, #offGlue_method]    @ r2<- current method
+    EXPORT_PC()                         @ resolve() could throw, so export now
+    ldr     r0, [r2, #offMethod_clazz]  @ r0<- method->clazz
+    bl      dvmResolveStaticField       @ r0<- resolved StaticField ptr
+    cmp     r0, #0                      @ success?
+    bne     .LOP_SGET_CHAR_JUMBO_finish          @ yes, finish
+    b       common_exceptionThrown      @ no, handle exception
+
+/* continuation for OP_SGET_SHORT_JUMBO */
+
+    /*
+     * Continuation if the field has not yet been resolved.
+     *  r1: AAAAAAAA field ref
+     */
+.LOP_SGET_SHORT_JUMBO_resolve:
+    ldr     r2, [rGLUE, #offGlue_method]    @ r2<- current method
+    EXPORT_PC()                         @ resolve() could throw, so export now
+    ldr     r0, [r2, #offMethod_clazz]  @ r0<- method->clazz
+    bl      dvmResolveStaticField       @ r0<- resolved StaticField ptr
+    cmp     r0, #0                      @ success?
+    bne     .LOP_SGET_SHORT_JUMBO_finish          @ yes, finish
+    b       common_exceptionThrown      @ no, handle exception
+
+/* continuation for OP_SPUT_JUMBO */
+
+    /*
+     * Continuation if the field has not yet been resolved.
+     *  r1: AAAAAAAA field ref
+     */
+.LOP_SPUT_JUMBO_resolve:
+    ldr     r2, [rGLUE, #offGlue_method]    @ r2<- current method
+    EXPORT_PC()                         @ resolve() could throw, so export now
+    ldr     r0, [r2, #offMethod_clazz]  @ r0<- method->clazz
+    bl      dvmResolveStaticField       @ r0<- resolved StaticField ptr
+    cmp     r0, #0                      @ success?
+    bne     .LOP_SPUT_JUMBO_finish          @ yes, finish
+    b       common_exceptionThrown      @ no, handle exception
+
+/* continuation for OP_SPUT_WIDE_JUMBO */
+
+    /*
+     * Continuation if the field has not yet been resolved.
+     *  r1: BBBB field ref
+     *  r9: &fp[AA]
+     *
+     * Returns StaticField pointer in r2.
+     */
+.LOP_SPUT_WIDE_JUMBO_resolve:
+    ldr     r2, [rGLUE, #offGlue_method]    @ r2<- current method
+    EXPORT_PC()                         @ resolve() could throw, so export now
+    ldr     r0, [r2, #offMethod_clazz]  @ r0<- method->clazz
+    bl      dvmResolveStaticField       @ r0<- resolved StaticField ptr
+    cmp     r0, #0                      @ success?
+    mov     r2, r0                      @ copy to r2
+    bne     .LOP_SPUT_WIDE_JUMBO_finish          @ yes, finish
+    b       common_exceptionThrown      @ no, handle exception
+
+/* continuation for OP_SPUT_OBJECT_JUMBO */
+
+.LOP_SPUT_OBJECT_JUMBO_finish:   @ field ptr in r0
+    FETCH(r2, 3)                        @ r2<- BBBB
+    FETCH_ADVANCE_INST(4)               @ advance rPC, load rINST
+    GET_VREG(r1, r2)                    @ r1<- fp[BBBB]
+    ldr     r2, [rGLUE, #offGlue_cardTable]  @ r2<- card table base
+    ldr     r9, [r0, #offField_clazz]   @ r9<- field->clazz
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    @ no-op                             @ releasing store
+    str     r1, [r0, #offStaticField_value]  @ field<- vBBBB
+    cmp     r1, #0                      @ stored a null object?
+    strneb  r2, [r2, r9, lsr #GC_CARD_SHIFT]  @ mark card based on obj head
+    GOTO_OPCODE(ip)                     @ jump to next instruction
+
+/* continuation for OP_SPUT_BOOLEAN_JUMBO */
+
+    /*
+     * Continuation if the field has not yet been resolved.
+     *  r1: AAAAAAAA field ref
+     */
+.LOP_SPUT_BOOLEAN_JUMBO_resolve:
+    ldr     r2, [rGLUE, #offGlue_method]    @ r2<- current method
+    EXPORT_PC()                         @ resolve() could throw, so export now
+    ldr     r0, [r2, #offMethod_clazz]  @ r0<- method->clazz
+    bl      dvmResolveStaticField       @ r0<- resolved StaticField ptr
+    cmp     r0, #0                      @ success?
+    bne     .LOP_SPUT_BOOLEAN_JUMBO_finish          @ yes, finish
+    b       common_exceptionThrown      @ no, handle exception
+
+/* continuation for OP_SPUT_BYTE_JUMBO */
+
+    /*
+     * Continuation if the field has not yet been resolved.
+     *  r1: AAAAAAAA field ref
+     */
+.LOP_SPUT_BYTE_JUMBO_resolve:
+    ldr     r2, [rGLUE, #offGlue_method]    @ r2<- current method
+    EXPORT_PC()                         @ resolve() could throw, so export now
+    ldr     r0, [r2, #offMethod_clazz]  @ r0<- method->clazz
+    bl      dvmResolveStaticField       @ r0<- resolved StaticField ptr
+    cmp     r0, #0                      @ success?
+    bne     .LOP_SPUT_BYTE_JUMBO_finish          @ yes, finish
+    b       common_exceptionThrown      @ no, handle exception
+
+/* continuation for OP_SPUT_CHAR_JUMBO */
+
+    /*
+     * Continuation if the field has not yet been resolved.
+     *  r1: AAAAAAAA field ref
+     */
+.LOP_SPUT_CHAR_JUMBO_resolve:
+    ldr     r2, [rGLUE, #offGlue_method]    @ r2<- current method
+    EXPORT_PC()                         @ resolve() could throw, so export now
+    ldr     r0, [r2, #offMethod_clazz]  @ r0<- method->clazz
+    bl      dvmResolveStaticField       @ r0<- resolved StaticField ptr
+    cmp     r0, #0                      @ success?
+    bne     .LOP_SPUT_CHAR_JUMBO_finish          @ yes, finish
+    b       common_exceptionThrown      @ no, handle exception
+
+/* continuation for OP_SPUT_SHORT_JUMBO */
+
+    /*
+     * Continuation if the field has not yet been resolved.
+     *  r1: AAAAAAAA field ref
+     */
+.LOP_SPUT_SHORT_JUMBO_resolve:
+    ldr     r2, [rGLUE, #offGlue_method]    @ r2<- current method
+    EXPORT_PC()                         @ resolve() could throw, so export now
+    ldr     r0, [r2, #offMethod_clazz]  @ r0<- method->clazz
+    bl      dvmResolveStaticField       @ r0<- resolved StaticField ptr
+    cmp     r0, #0                      @ success?
+    bne     .LOP_SPUT_SHORT_JUMBO_finish          @ yes, finish
+    b       common_exceptionThrown      @ no, handle exception
+
+/* continuation for OP_INVOKE_VIRTUAL_JUMBO */
+
+    /*
+     * At this point:
+     *  r0 = resolved base method
+     */
+.LOP_INVOKE_VIRTUAL_JUMBO_continue:
+    FETCH(r10, 4)                       @ r10<- CCCC
+    GET_VREG(r1, r10)                   @ r1<- "this" ptr
+    ldrh    r2, [r0, #offMethod_methodIndex]    @ r2<- baseMethod->methodIndex
+    cmp     r1, #0                      @ is "this" null?
+    beq     common_errNullObject        @ null "this", throw exception
+    ldr     r3, [r1, #offObject_clazz]  @ r1<- thisPtr->clazz
+    ldr     r3, [r3, #offClassObject_vtable]    @ r3<- thisPtr->clazz->vtable
+    ldr     r0, [r3, r2, lsl #2]        @ r3<- vtable[methodIndex]
+    bl      common_invokeMethodJumbo    @ continue on
+
+/* continuation for OP_INVOKE_SUPER_JUMBO */
+
+    /*
+     * At this point:
+     *  r0 = resolved base method
+     *  r9 = method->clazz
+     */
+.LOP_INVOKE_SUPER_JUMBO_continue:
+    ldr     r1, [r9, #offClassObject_super]     @ r1<- method->clazz->super
+    ldrh    r2, [r0, #offMethod_methodIndex]    @ r2<- baseMethod->methodIndex
+    ldr     r3, [r1, #offClassObject_vtableCount]   @ r3<- super->vtableCount
+    EXPORT_PC()                         @ must export for invoke
+    cmp     r2, r3                      @ compare (methodIndex, vtableCount)
+    bcs     .LOP_INVOKE_SUPER_JUMBO_nsm             @ method not present in superclass
+    ldr     r1, [r1, #offClassObject_vtable]    @ r1<- ...clazz->super->vtable
+    ldr     r0, [r1, r2, lsl #2]        @ r3<- vtable[methodIndex]
+    bl      common_invokeMethodJumbo    @ continue on
+
+.LOP_INVOKE_SUPER_JUMBO_resolve:
+    mov     r0, r9                      @ r0<- method->clazz
+    mov     r2, #METHOD_VIRTUAL         @ resolver method type
+    bl      dvmResolveMethod            @ r0<- call(clazz, ref, flags)
+    cmp     r0, #0                      @ got null?
+    bne     .LOP_INVOKE_SUPER_JUMBO_continue        @ no, continue
+    b       common_exceptionThrown      @ yes, handle exception
+
+    /*
+     * Throw a NoSuchMethodError with the method name as the message.
+     *  r0 = resolved base method
+     */
+.LOP_INVOKE_SUPER_JUMBO_nsm:
+    ldr     r1, [r0, #offMethod_name]   @ r1<- method name
+    b       common_errNoSuchMethod
+
+/* continuation for OP_INVOKE_DIRECT_JUMBO */
+
+    /*
+     * On entry:
+     *  r1 = reference (CCCC)
+     *  r10 = "this" register
+     */
+.LOP_INVOKE_DIRECT_JUMBO_resolve:
+    ldr     r3, [rGLUE, #offGlue_method] @ r3<- glue->method
+    ldr     r0, [r3, #offMethod_clazz]  @ r0<- method->clazz
+    mov     r2, #METHOD_DIRECT          @ resolver method type
+    bl      dvmResolveMethod            @ r0<- call(clazz, ref, flags)
+    cmp     r0, #0                      @ got null?
+    GET_VREG(r2, r10)                   @ r2<- "this" ptr (reload)
+    bne     .LOP_INVOKE_DIRECT_JUMBO_finish          @ no, continue
+    b       common_exceptionThrown      @ yes, handle exception
+
     .size   dvmAsmSisterStart, .-dvmAsmSisterStart
     .global dvmAsmSisterEnd
 dvmAsmSisterEnd:
@@ -9920,6 +13716,27 @@ common_gotoBail:
 
 
 /*
+ * Common code for jumbo method invocation.
+ * NOTE: this adjusts rPC to account for the difference in instruction width.
+ * As a result, the savedPc in the stack frame will not be wholly accurate. So
+ * long as that is only used for source file line number calculations, we're
+ * okay.
+ *
+ * On entry:
+ *  r0 is "Method* methodToCall", the method we're trying to call
+ */
+common_invokeMethodJumbo:
+.LinvokeNewJumbo:
+    @ prepare to copy args to "outs" area of current frame
+    add     rPC, rPC, #4                @ adjust pc to make return consistent
+    FETCH(r2, 1)                        @ r2<- BBBB (arg count)
+    SAVEAREA_FROM_FP(r10, rFP)          @ r10<- stack save area
+    cmp     r2, #0                      @ no args?
+    beq     .LinvokeArgsDone            @ if no args, skip the rest
+    FETCH(r1, 2)                        @ r1<- CCCC
+    b       .LinvokeRangeArgs           @ handle args like invoke range
+
+/*
  * Common code for method invocation with range.
  *
  * On entry:
@@ -9933,16 +13750,15 @@ common_invokeMethodRange:
     beq     .LinvokeArgsDone            @ if no args, skip the rest
     FETCH(r1, 2)                        @ r1<- CCCC
 
+.LinvokeRangeArgs:
     @ r0=methodToCall, r1=CCCC, r2=count, r10=outs
     @ (very few methods have > 10 args; could unroll for common cases)
     add     r3, rFP, r1, lsl #2         @ r3<- &fp[CCCC]
     sub     r10, r10, r2, lsl #2        @ r10<- "outs" area, for call args
-    ldrh    r9, [r0, #offMethod_registersSize]  @ r9<- methodToCall->regsSize
 1:  ldr     r1, [r3], #4                @ val = *fp++
     subs    r2, r2, #1                  @ count--
     str     r1, [r10], #4               @ *outs++ = val
     bne     1b                          @ ...while count != 0
-    ldrh    r3, [r0, #offMethod_outsSize]   @ r3<- methodToCall->outsSize
     b       .LinvokeArgsDone
 
 /*
@@ -9957,11 +13773,9 @@ common_invokeMethodNoRange:
     movs    r2, rINST, lsr #12          @ r2<- B (arg count) -- test for zero
     SAVEAREA_FROM_FP(r10, rFP)          @ r10<- stack save area
     FETCH(r1, 2)                        @ r1<- GFED (load here to hide latency)
-    ldrh    r9, [r0, #offMethod_registersSize]  @ r9<- methodToCall->regsSize
-    ldrh    r3, [r0, #offMethod_outsSize]  @ r3<- methodToCall->outsSize
     beq     .LinvokeArgsDone
 
-    @ r0=methodToCall, r1=GFED, r3=outSize, r2=count, r9=regSize, r10=outs
+    @ r0=methodToCall, r1=GFED, r2=count, r10=outs
 .LinvokeNonRange:
     rsb     r2, r2, #5                  @ r2<- 5-r2
     add     pc, pc, r2, lsl #4          @ computed goto, 4 instrs each
@@ -9988,7 +13802,9 @@ common_invokeMethodNoRange:
     str     r2, [r10, #-4]!             @ *--outs = vD
 0:  @ fall through to .LinvokeArgsDone
 
-.LinvokeArgsDone: @ r0=methodToCall, r3=outSize, r9=regSize
+.LinvokeArgsDone: @ r0=methodToCall
+    ldrh    r9, [r0, #offMethod_registersSize]  @ r9<- methodToCall->regsSize
+    ldrh    r3, [r0, #offMethod_outsSize]  @ r3<- methodToCall->outsSize
     ldr     r2, [r0, #offMethod_insns]  @ r2<- method->insns
     ldr     rINST, [r0, #offMethod_clazz]  @ rINST<- method->clazz
     @ find space for the new stack frame, check for overflow

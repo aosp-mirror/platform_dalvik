@@ -560,6 +560,27 @@ common_gotoBail:
 
 
 /*
+ * Common code for jumbo method invocation.
+ * NOTE: this adjusts rPC to account for the difference in instruction width.
+ * As a result, the savedPc in the stack frame will not be wholly accurate. So
+ * long as that is only used for source file line number calculations, we're
+ * okay.
+ *
+ * On entry:
+ *  r0 is "Method* methodToCall", the method we're trying to call
+ */
+common_invokeMethodJumbo:
+.LinvokeNewJumbo:
+    @ prepare to copy args to "outs" area of current frame
+    add     rPC, rPC, #4                @ adjust pc to make return consistent
+    FETCH(r2, 1)                        @ r2<- BBBB (arg count)
+    SAVEAREA_FROM_FP(r10, rFP)          @ r10<- stack save area
+    cmp     r2, #0                      @ no args?
+    beq     .LinvokeArgsDone            @ if no args, skip the rest
+    FETCH(r1, 2)                        @ r1<- CCCC
+    b       .LinvokeRangeArgs           @ handle args like invoke range
+
+/*
  * Common code for method invocation with range.
  *
  * On entry:
@@ -573,16 +594,15 @@ common_invokeMethodRange:
     beq     .LinvokeArgsDone            @ if no args, skip the rest
     FETCH(r1, 2)                        @ r1<- CCCC
 
+.LinvokeRangeArgs:
     @ r0=methodToCall, r1=CCCC, r2=count, r10=outs
     @ (very few methods have > 10 args; could unroll for common cases)
     add     r3, rFP, r1, lsl #2         @ r3<- &fp[CCCC]
     sub     r10, r10, r2, lsl #2        @ r10<- "outs" area, for call args
-    ldrh    r9, [r0, #offMethod_registersSize]  @ r9<- methodToCall->regsSize
 1:  ldr     r1, [r3], #4                @ val = *fp++
     subs    r2, r2, #1                  @ count--
     str     r1, [r10], #4               @ *outs++ = val
     bne     1b                          @ ...while count != 0
-    ldrh    r3, [r0, #offMethod_outsSize]   @ r3<- methodToCall->outsSize
     b       .LinvokeArgsDone
 
 /*
@@ -597,11 +617,9 @@ common_invokeMethodNoRange:
     movs    r2, rINST, lsr #12          @ r2<- B (arg count) -- test for zero
     SAVEAREA_FROM_FP(r10, rFP)          @ r10<- stack save area
     FETCH(r1, 2)                        @ r1<- GFED (load here to hide latency)
-    ldrh    r9, [r0, #offMethod_registersSize]  @ r9<- methodToCall->regsSize
-    ldrh    r3, [r0, #offMethod_outsSize]  @ r3<- methodToCall->outsSize
     beq     .LinvokeArgsDone
 
-    @ r0=methodToCall, r1=GFED, r3=outSize, r2=count, r9=regSize, r10=outs
+    @ r0=methodToCall, r1=GFED, r2=count, r10=outs
 .LinvokeNonRange:
     rsb     r2, r2, #5                  @ r2<- 5-r2
     add     pc, pc, r2, lsl #4          @ computed goto, 4 instrs each
@@ -628,7 +646,9 @@ common_invokeMethodNoRange:
     str     r2, [r10, #-4]!             @ *--outs = vD
 0:  @ fall through to .LinvokeArgsDone
 
-.LinvokeArgsDone: @ r0=methodToCall, r3=outSize, r9=regSize
+.LinvokeArgsDone: @ r0=methodToCall
+    ldrh    r9, [r0, #offMethod_registersSize]  @ r9<- methodToCall->regsSize
+    ldrh    r3, [r0, #offMethod_outsSize]  @ r3<- methodToCall->outsSize
     ldr     r2, [r0, #offMethod_insns]  @ r2<- method->insns
     ldr     rINST, [r0, #offMethod_clazz]  @ rINST<- method->clazz
     @ find space for the new stack frame, check for overflow

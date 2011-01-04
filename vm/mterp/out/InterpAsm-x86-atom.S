@@ -15380,6 +15380,9478 @@ OP_IF_LEZ_2f:
     call        common_abort
 
 
+/* ------------------------------ */
+    .balign 64
+.L_OP_CONST_CLASS_JUMBO: /* 0x100 */
+/* File: x86-atom/OP_CONST_CLASS_JUMBO.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_CHECK_CAST_JUMBO: /* 0x101 */
+/* File: x86-atom/OP_CHECK_CAST_JUMBO.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_INSTANCE_OF_JUMBO: /* 0x102 */
+/* File: x86-atom/OP_INSTANCE_OF_JUMBO.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_NEW_INSTANCE_JUMBO: /* 0x103 */
+/* File: x86-atom/OP_NEW_INSTANCE_JUMBO.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_NEW_ARRAY_JUMBO: /* 0x104 */
+/* File: x86-atom/OP_NEW_ARRAY_JUMBO.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_FILLED_NEW_ARRAY_JUMBO: /* 0x105 */
+/* File: x86-atom/OP_FILLED_NEW_ARRAY_JUMBO.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_IGET_JUMBO: /* 0x106 */
+/* File: x86-atom/OP_IGET_JUMBO.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_IGET_WIDE_JUMBO: /* 0x107 */
+/* File: x86-atom/OP_IGET_WIDE_JUMBO.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_IGET_OBJECT_JUMBO: /* 0x108 */
+/* File: x86-atom/OP_IGET_OBJECT_JUMBO.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_IGET_BOOLEAN_JUMBO: /* 0x109 */
+/* File: x86-atom/OP_IGET_BOOLEAN_JUMBO.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_IGET_BYTE_JUMBO: /* 0x10a */
+/* File: x86-atom/OP_IGET_BYTE_JUMBO.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_IGET_CHAR_JUMBO: /* 0x10b */
+/* File: x86-atom/OP_IGET_CHAR_JUMBO.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_IGET_SHORT_JUMBO: /* 0x10c */
+/* File: x86-atom/OP_IGET_SHORT_JUMBO.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_IPUT_JUMBO: /* 0x10d */
+/* File: x86-atom/OP_IPUT_JUMBO.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_IPUT_WIDE_JUMBO: /* 0x10e */
+/* File: x86-atom/OP_IPUT_WIDE_JUMBO.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_IPUT_OBJECT_JUMBO: /* 0x10f */
+/* File: x86-atom/OP_IPUT_OBJECT_JUMBO.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_IPUT_BOOLEAN_JUMBO: /* 0x110 */
+/* File: x86-atom/OP_IPUT_BOOLEAN_JUMBO.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_IPUT_BYTE_JUMBO: /* 0x111 */
+/* File: x86-atom/OP_IPUT_BYTE_JUMBO.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_IPUT_CHAR_JUMBO: /* 0x112 */
+/* File: x86-atom/OP_IPUT_CHAR_JUMBO.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_IPUT_SHORT_JUMBO: /* 0x113 */
+/* File: x86-atom/OP_IPUT_SHORT_JUMBO.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_SGET_JUMBO: /* 0x114 */
+/* File: x86-atom/OP_SGET_JUMBO.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_SGET_WIDE_JUMBO: /* 0x115 */
+/* File: x86-atom/OP_SGET_WIDE_JUMBO.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_SGET_OBJECT_JUMBO: /* 0x116 */
+/* File: x86-atom/OP_SGET_OBJECT_JUMBO.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_SGET_BOOLEAN_JUMBO: /* 0x117 */
+/* File: x86-atom/OP_SGET_BOOLEAN_JUMBO.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_SGET_BYTE_JUMBO: /* 0x118 */
+/* File: x86-atom/OP_SGET_BYTE_JUMBO.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_SGET_CHAR_JUMBO: /* 0x119 */
+/* File: x86-atom/OP_SGET_CHAR_JUMBO.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_SGET_SHORT_JUMBO: /* 0x11a */
+/* File: x86-atom/OP_SGET_SHORT_JUMBO.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_SPUT_JUMBO: /* 0x11b */
+/* File: x86-atom/OP_SPUT_JUMBO.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_SPUT_WIDE_JUMBO: /* 0x11c */
+/* File: x86-atom/OP_SPUT_WIDE_JUMBO.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_SPUT_OBJECT_JUMBO: /* 0x11d */
+/* File: x86-atom/OP_SPUT_OBJECT_JUMBO.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_SPUT_BOOLEAN_JUMBO: /* 0x11e */
+/* File: x86-atom/OP_SPUT_BOOLEAN_JUMBO.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_SPUT_BYTE_JUMBO: /* 0x11f */
+/* File: x86-atom/OP_SPUT_BYTE_JUMBO.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_SPUT_CHAR_JUMBO: /* 0x120 */
+/* File: x86-atom/OP_SPUT_CHAR_JUMBO.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_SPUT_SHORT_JUMBO: /* 0x121 */
+/* File: x86-atom/OP_SPUT_SHORT_JUMBO.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_INVOKE_VIRTUAL_JUMBO: /* 0x122 */
+/* File: x86-atom/OP_INVOKE_VIRTUAL_JUMBO.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_INVOKE_SUPER_JUMBO: /* 0x123 */
+/* File: x86-atom/OP_INVOKE_SUPER_JUMBO.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_INVOKE_DIRECT_JUMBO: /* 0x124 */
+/* File: x86-atom/OP_INVOKE_DIRECT_JUMBO.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_INVOKE_STATIC_JUMBO: /* 0x125 */
+/* File: x86-atom/OP_INVOKE_STATIC_JUMBO.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_INVOKE_INTERFACE_JUMBO: /* 0x126 */
+/* File: x86-atom/OP_INVOKE_INTERFACE_JUMBO.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_27FF: /* 0x127 */
+/* File: x86-atom/OP_UNUSED_27FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_28FF: /* 0x128 */
+/* File: x86-atom/OP_UNUSED_28FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_29FF: /* 0x129 */
+/* File: x86-atom/OP_UNUSED_29FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_2AFF: /* 0x12a */
+/* File: x86-atom/OP_UNUSED_2AFF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_2BFF: /* 0x12b */
+/* File: x86-atom/OP_UNUSED_2BFF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_2CFF: /* 0x12c */
+/* File: x86-atom/OP_UNUSED_2CFF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_2DFF: /* 0x12d */
+/* File: x86-atom/OP_UNUSED_2DFF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_2EFF: /* 0x12e */
+/* File: x86-atom/OP_UNUSED_2EFF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_2FFF: /* 0x12f */
+/* File: x86-atom/OP_UNUSED_2FFF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_30FF: /* 0x130 */
+/* File: x86-atom/OP_UNUSED_30FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_31FF: /* 0x131 */
+/* File: x86-atom/OP_UNUSED_31FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_32FF: /* 0x132 */
+/* File: x86-atom/OP_UNUSED_32FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_33FF: /* 0x133 */
+/* File: x86-atom/OP_UNUSED_33FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_34FF: /* 0x134 */
+/* File: x86-atom/OP_UNUSED_34FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_35FF: /* 0x135 */
+/* File: x86-atom/OP_UNUSED_35FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_36FF: /* 0x136 */
+/* File: x86-atom/OP_UNUSED_36FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_37FF: /* 0x137 */
+/* File: x86-atom/OP_UNUSED_37FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_38FF: /* 0x138 */
+/* File: x86-atom/OP_UNUSED_38FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_39FF: /* 0x139 */
+/* File: x86-atom/OP_UNUSED_39FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_3AFF: /* 0x13a */
+/* File: x86-atom/OP_UNUSED_3AFF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_3BFF: /* 0x13b */
+/* File: x86-atom/OP_UNUSED_3BFF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_3CFF: /* 0x13c */
+/* File: x86-atom/OP_UNUSED_3CFF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_3DFF: /* 0x13d */
+/* File: x86-atom/OP_UNUSED_3DFF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_3EFF: /* 0x13e */
+/* File: x86-atom/OP_UNUSED_3EFF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_3FFF: /* 0x13f */
+/* File: x86-atom/OP_UNUSED_3FFF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_40FF: /* 0x140 */
+/* File: x86-atom/OP_UNUSED_40FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_41FF: /* 0x141 */
+/* File: x86-atom/OP_UNUSED_41FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_42FF: /* 0x142 */
+/* File: x86-atom/OP_UNUSED_42FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_43FF: /* 0x143 */
+/* File: x86-atom/OP_UNUSED_43FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_44FF: /* 0x144 */
+/* File: x86-atom/OP_UNUSED_44FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_45FF: /* 0x145 */
+/* File: x86-atom/OP_UNUSED_45FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_46FF: /* 0x146 */
+/* File: x86-atom/OP_UNUSED_46FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_47FF: /* 0x147 */
+/* File: x86-atom/OP_UNUSED_47FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_48FF: /* 0x148 */
+/* File: x86-atom/OP_UNUSED_48FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_49FF: /* 0x149 */
+/* File: x86-atom/OP_UNUSED_49FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_4AFF: /* 0x14a */
+/* File: x86-atom/OP_UNUSED_4AFF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_4BFF: /* 0x14b */
+/* File: x86-atom/OP_UNUSED_4BFF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_4CFF: /* 0x14c */
+/* File: x86-atom/OP_UNUSED_4CFF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_4DFF: /* 0x14d */
+/* File: x86-atom/OP_UNUSED_4DFF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_4EFF: /* 0x14e */
+/* File: x86-atom/OP_UNUSED_4EFF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_4FFF: /* 0x14f */
+/* File: x86-atom/OP_UNUSED_4FFF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_50FF: /* 0x150 */
+/* File: x86-atom/OP_UNUSED_50FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_51FF: /* 0x151 */
+/* File: x86-atom/OP_UNUSED_51FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_52FF: /* 0x152 */
+/* File: x86-atom/OP_UNUSED_52FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_53FF: /* 0x153 */
+/* File: x86-atom/OP_UNUSED_53FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_54FF: /* 0x154 */
+/* File: x86-atom/OP_UNUSED_54FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_55FF: /* 0x155 */
+/* File: x86-atom/OP_UNUSED_55FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_56FF: /* 0x156 */
+/* File: x86-atom/OP_UNUSED_56FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_57FF: /* 0x157 */
+/* File: x86-atom/OP_UNUSED_57FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_58FF: /* 0x158 */
+/* File: x86-atom/OP_UNUSED_58FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_59FF: /* 0x159 */
+/* File: x86-atom/OP_UNUSED_59FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_5AFF: /* 0x15a */
+/* File: x86-atom/OP_UNUSED_5AFF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_5BFF: /* 0x15b */
+/* File: x86-atom/OP_UNUSED_5BFF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_5CFF: /* 0x15c */
+/* File: x86-atom/OP_UNUSED_5CFF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_5DFF: /* 0x15d */
+/* File: x86-atom/OP_UNUSED_5DFF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_5EFF: /* 0x15e */
+/* File: x86-atom/OP_UNUSED_5EFF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_5FFF: /* 0x15f */
+/* File: x86-atom/OP_UNUSED_5FFF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_60FF: /* 0x160 */
+/* File: x86-atom/OP_UNUSED_60FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_61FF: /* 0x161 */
+/* File: x86-atom/OP_UNUSED_61FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_62FF: /* 0x162 */
+/* File: x86-atom/OP_UNUSED_62FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_63FF: /* 0x163 */
+/* File: x86-atom/OP_UNUSED_63FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_64FF: /* 0x164 */
+/* File: x86-atom/OP_UNUSED_64FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_65FF: /* 0x165 */
+/* File: x86-atom/OP_UNUSED_65FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_66FF: /* 0x166 */
+/* File: x86-atom/OP_UNUSED_66FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_67FF: /* 0x167 */
+/* File: x86-atom/OP_UNUSED_67FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_68FF: /* 0x168 */
+/* File: x86-atom/OP_UNUSED_68FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_69FF: /* 0x169 */
+/* File: x86-atom/OP_UNUSED_69FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_6AFF: /* 0x16a */
+/* File: x86-atom/OP_UNUSED_6AFF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_6BFF: /* 0x16b */
+/* File: x86-atom/OP_UNUSED_6BFF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_6CFF: /* 0x16c */
+/* File: x86-atom/OP_UNUSED_6CFF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_6DFF: /* 0x16d */
+/* File: x86-atom/OP_UNUSED_6DFF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_6EFF: /* 0x16e */
+/* File: x86-atom/OP_UNUSED_6EFF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_6FFF: /* 0x16f */
+/* File: x86-atom/OP_UNUSED_6FFF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_70FF: /* 0x170 */
+/* File: x86-atom/OP_UNUSED_70FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_71FF: /* 0x171 */
+/* File: x86-atom/OP_UNUSED_71FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_72FF: /* 0x172 */
+/* File: x86-atom/OP_UNUSED_72FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_73FF: /* 0x173 */
+/* File: x86-atom/OP_UNUSED_73FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_74FF: /* 0x174 */
+/* File: x86-atom/OP_UNUSED_74FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_75FF: /* 0x175 */
+/* File: x86-atom/OP_UNUSED_75FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_76FF: /* 0x176 */
+/* File: x86-atom/OP_UNUSED_76FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_77FF: /* 0x177 */
+/* File: x86-atom/OP_UNUSED_77FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_78FF: /* 0x178 */
+/* File: x86-atom/OP_UNUSED_78FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_79FF: /* 0x179 */
+/* File: x86-atom/OP_UNUSED_79FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_7AFF: /* 0x17a */
+/* File: x86-atom/OP_UNUSED_7AFF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_7BFF: /* 0x17b */
+/* File: x86-atom/OP_UNUSED_7BFF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_7CFF: /* 0x17c */
+/* File: x86-atom/OP_UNUSED_7CFF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_7DFF: /* 0x17d */
+/* File: x86-atom/OP_UNUSED_7DFF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_7EFF: /* 0x17e */
+/* File: x86-atom/OP_UNUSED_7EFF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_7FFF: /* 0x17f */
+/* File: x86-atom/OP_UNUSED_7FFF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_80FF: /* 0x180 */
+/* File: x86-atom/OP_UNUSED_80FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_81FF: /* 0x181 */
+/* File: x86-atom/OP_UNUSED_81FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_82FF: /* 0x182 */
+/* File: x86-atom/OP_UNUSED_82FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_83FF: /* 0x183 */
+/* File: x86-atom/OP_UNUSED_83FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_84FF: /* 0x184 */
+/* File: x86-atom/OP_UNUSED_84FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_85FF: /* 0x185 */
+/* File: x86-atom/OP_UNUSED_85FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_86FF: /* 0x186 */
+/* File: x86-atom/OP_UNUSED_86FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_87FF: /* 0x187 */
+/* File: x86-atom/OP_UNUSED_87FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_88FF: /* 0x188 */
+/* File: x86-atom/OP_UNUSED_88FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_89FF: /* 0x189 */
+/* File: x86-atom/OP_UNUSED_89FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_8AFF: /* 0x18a */
+/* File: x86-atom/OP_UNUSED_8AFF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_8BFF: /* 0x18b */
+/* File: x86-atom/OP_UNUSED_8BFF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_8CFF: /* 0x18c */
+/* File: x86-atom/OP_UNUSED_8CFF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_8DFF: /* 0x18d */
+/* File: x86-atom/OP_UNUSED_8DFF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_8EFF: /* 0x18e */
+/* File: x86-atom/OP_UNUSED_8EFF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_8FFF: /* 0x18f */
+/* File: x86-atom/OP_UNUSED_8FFF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_90FF: /* 0x190 */
+/* File: x86-atom/OP_UNUSED_90FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_91FF: /* 0x191 */
+/* File: x86-atom/OP_UNUSED_91FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_92FF: /* 0x192 */
+/* File: x86-atom/OP_UNUSED_92FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_93FF: /* 0x193 */
+/* File: x86-atom/OP_UNUSED_93FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_94FF: /* 0x194 */
+/* File: x86-atom/OP_UNUSED_94FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_95FF: /* 0x195 */
+/* File: x86-atom/OP_UNUSED_95FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_96FF: /* 0x196 */
+/* File: x86-atom/OP_UNUSED_96FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_97FF: /* 0x197 */
+/* File: x86-atom/OP_UNUSED_97FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_98FF: /* 0x198 */
+/* File: x86-atom/OP_UNUSED_98FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_99FF: /* 0x199 */
+/* File: x86-atom/OP_UNUSED_99FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_9AFF: /* 0x19a */
+/* File: x86-atom/OP_UNUSED_9AFF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_9BFF: /* 0x19b */
+/* File: x86-atom/OP_UNUSED_9BFF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_9CFF: /* 0x19c */
+/* File: x86-atom/OP_UNUSED_9CFF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_9DFF: /* 0x19d */
+/* File: x86-atom/OP_UNUSED_9DFF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_9EFF: /* 0x19e */
+/* File: x86-atom/OP_UNUSED_9EFF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_9FFF: /* 0x19f */
+/* File: x86-atom/OP_UNUSED_9FFF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_A0FF: /* 0x1a0 */
+/* File: x86-atom/OP_UNUSED_A0FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_A1FF: /* 0x1a1 */
+/* File: x86-atom/OP_UNUSED_A1FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_A2FF: /* 0x1a2 */
+/* File: x86-atom/OP_UNUSED_A2FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_A3FF: /* 0x1a3 */
+/* File: x86-atom/OP_UNUSED_A3FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_A4FF: /* 0x1a4 */
+/* File: x86-atom/OP_UNUSED_A4FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_A5FF: /* 0x1a5 */
+/* File: x86-atom/OP_UNUSED_A5FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_A6FF: /* 0x1a6 */
+/* File: x86-atom/OP_UNUSED_A6FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_A7FF: /* 0x1a7 */
+/* File: x86-atom/OP_UNUSED_A7FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_A8FF: /* 0x1a8 */
+/* File: x86-atom/OP_UNUSED_A8FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_A9FF: /* 0x1a9 */
+/* File: x86-atom/OP_UNUSED_A9FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_AAFF: /* 0x1aa */
+/* File: x86-atom/OP_UNUSED_AAFF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_ABFF: /* 0x1ab */
+/* File: x86-atom/OP_UNUSED_ABFF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_ACFF: /* 0x1ac */
+/* File: x86-atom/OP_UNUSED_ACFF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_ADFF: /* 0x1ad */
+/* File: x86-atom/OP_UNUSED_ADFF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_AEFF: /* 0x1ae */
+/* File: x86-atom/OP_UNUSED_AEFF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_AFFF: /* 0x1af */
+/* File: x86-atom/OP_UNUSED_AFFF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_B0FF: /* 0x1b0 */
+/* File: x86-atom/OP_UNUSED_B0FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_B1FF: /* 0x1b1 */
+/* File: x86-atom/OP_UNUSED_B1FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_B2FF: /* 0x1b2 */
+/* File: x86-atom/OP_UNUSED_B2FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_B3FF: /* 0x1b3 */
+/* File: x86-atom/OP_UNUSED_B3FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_B4FF: /* 0x1b4 */
+/* File: x86-atom/OP_UNUSED_B4FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_B5FF: /* 0x1b5 */
+/* File: x86-atom/OP_UNUSED_B5FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_B6FF: /* 0x1b6 */
+/* File: x86-atom/OP_UNUSED_B6FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_B7FF: /* 0x1b7 */
+/* File: x86-atom/OP_UNUSED_B7FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_B8FF: /* 0x1b8 */
+/* File: x86-atom/OP_UNUSED_B8FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_B9FF: /* 0x1b9 */
+/* File: x86-atom/OP_UNUSED_B9FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_BAFF: /* 0x1ba */
+/* File: x86-atom/OP_UNUSED_BAFF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_BBFF: /* 0x1bb */
+/* File: x86-atom/OP_UNUSED_BBFF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_BCFF: /* 0x1bc */
+/* File: x86-atom/OP_UNUSED_BCFF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_BDFF: /* 0x1bd */
+/* File: x86-atom/OP_UNUSED_BDFF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_BEFF: /* 0x1be */
+/* File: x86-atom/OP_UNUSED_BEFF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_BFFF: /* 0x1bf */
+/* File: x86-atom/OP_UNUSED_BFFF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_C0FF: /* 0x1c0 */
+/* File: x86-atom/OP_UNUSED_C0FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_C1FF: /* 0x1c1 */
+/* File: x86-atom/OP_UNUSED_C1FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_C2FF: /* 0x1c2 */
+/* File: x86-atom/OP_UNUSED_C2FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_C3FF: /* 0x1c3 */
+/* File: x86-atom/OP_UNUSED_C3FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_C4FF: /* 0x1c4 */
+/* File: x86-atom/OP_UNUSED_C4FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_C5FF: /* 0x1c5 */
+/* File: x86-atom/OP_UNUSED_C5FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_C6FF: /* 0x1c6 */
+/* File: x86-atom/OP_UNUSED_C6FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_C7FF: /* 0x1c7 */
+/* File: x86-atom/OP_UNUSED_C7FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_C8FF: /* 0x1c8 */
+/* File: x86-atom/OP_UNUSED_C8FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_C9FF: /* 0x1c9 */
+/* File: x86-atom/OP_UNUSED_C9FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_CAFF: /* 0x1ca */
+/* File: x86-atom/OP_UNUSED_CAFF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_CBFF: /* 0x1cb */
+/* File: x86-atom/OP_UNUSED_CBFF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_CCFF: /* 0x1cc */
+/* File: x86-atom/OP_UNUSED_CCFF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_CDFF: /* 0x1cd */
+/* File: x86-atom/OP_UNUSED_CDFF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_CEFF: /* 0x1ce */
+/* File: x86-atom/OP_UNUSED_CEFF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_CFFF: /* 0x1cf */
+/* File: x86-atom/OP_UNUSED_CFFF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_D0FF: /* 0x1d0 */
+/* File: x86-atom/OP_UNUSED_D0FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_D1FF: /* 0x1d1 */
+/* File: x86-atom/OP_UNUSED_D1FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_D2FF: /* 0x1d2 */
+/* File: x86-atom/OP_UNUSED_D2FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_D3FF: /* 0x1d3 */
+/* File: x86-atom/OP_UNUSED_D3FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_D4FF: /* 0x1d4 */
+/* File: x86-atom/OP_UNUSED_D4FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_D5FF: /* 0x1d5 */
+/* File: x86-atom/OP_UNUSED_D5FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_D6FF: /* 0x1d6 */
+/* File: x86-atom/OP_UNUSED_D6FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_D7FF: /* 0x1d7 */
+/* File: x86-atom/OP_UNUSED_D7FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_D8FF: /* 0x1d8 */
+/* File: x86-atom/OP_UNUSED_D8FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_D9FF: /* 0x1d9 */
+/* File: x86-atom/OP_UNUSED_D9FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_DAFF: /* 0x1da */
+/* File: x86-atom/OP_UNUSED_DAFF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_DBFF: /* 0x1db */
+/* File: x86-atom/OP_UNUSED_DBFF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_DCFF: /* 0x1dc */
+/* File: x86-atom/OP_UNUSED_DCFF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_DDFF: /* 0x1dd */
+/* File: x86-atom/OP_UNUSED_DDFF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_DEFF: /* 0x1de */
+/* File: x86-atom/OP_UNUSED_DEFF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_DFFF: /* 0x1df */
+/* File: x86-atom/OP_UNUSED_DFFF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_E0FF: /* 0x1e0 */
+/* File: x86-atom/OP_UNUSED_E0FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_E1FF: /* 0x1e1 */
+/* File: x86-atom/OP_UNUSED_E1FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_E2FF: /* 0x1e2 */
+/* File: x86-atom/OP_UNUSED_E2FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_E3FF: /* 0x1e3 */
+/* File: x86-atom/OP_UNUSED_E3FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_E4FF: /* 0x1e4 */
+/* File: x86-atom/OP_UNUSED_E4FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_E5FF: /* 0x1e5 */
+/* File: x86-atom/OP_UNUSED_E5FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_E6FF: /* 0x1e6 */
+/* File: x86-atom/OP_UNUSED_E6FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_E7FF: /* 0x1e7 */
+/* File: x86-atom/OP_UNUSED_E7FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_E8FF: /* 0x1e8 */
+/* File: x86-atom/OP_UNUSED_E8FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_E9FF: /* 0x1e9 */
+/* File: x86-atom/OP_UNUSED_E9FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_EAFF: /* 0x1ea */
+/* File: x86-atom/OP_UNUSED_EAFF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_EBFF: /* 0x1eb */
+/* File: x86-atom/OP_UNUSED_EBFF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_ECFF: /* 0x1ec */
+/* File: x86-atom/OP_UNUSED_ECFF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_EDFF: /* 0x1ed */
+/* File: x86-atom/OP_UNUSED_EDFF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_EEFF: /* 0x1ee */
+/* File: x86-atom/OP_UNUSED_EEFF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_EFFF: /* 0x1ef */
+/* File: x86-atom/OP_UNUSED_EFFF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_F0FF: /* 0x1f0 */
+/* File: x86-atom/OP_UNUSED_F0FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_F1FF: /* 0x1f1 */
+/* File: x86-atom/OP_UNUSED_F1FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_F2FF: /* 0x1f2 */
+/* File: x86-atom/OP_UNUSED_F2FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_F3FF: /* 0x1f3 */
+/* File: x86-atom/OP_UNUSED_F3FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_F4FF: /* 0x1f4 */
+/* File: x86-atom/OP_UNUSED_F4FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_F5FF: /* 0x1f5 */
+/* File: x86-atom/OP_UNUSED_F5FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_F6FF: /* 0x1f6 */
+/* File: x86-atom/OP_UNUSED_F6FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_F7FF: /* 0x1f7 */
+/* File: x86-atom/OP_UNUSED_F7FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_F8FF: /* 0x1f8 */
+/* File: x86-atom/OP_UNUSED_F8FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_F9FF: /* 0x1f9 */
+/* File: x86-atom/OP_UNUSED_F9FF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_FAFF: /* 0x1fa */
+/* File: x86-atom/OP_UNUSED_FAFF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_FBFF: /* 0x1fb */
+/* File: x86-atom/OP_UNUSED_FBFF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_FCFF: /* 0x1fc */
+/* File: x86-atom/OP_UNUSED_FCFF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_FDFF: /* 0x1fd */
+/* File: x86-atom/OP_UNUSED_FDFF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_UNUSED_FEFF: /* 0x1fe */
+/* File: x86-atom/OP_UNUSED_FEFF.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_THROW_VERIFICATION_ERROR_JUMBO: /* 0x1ff */
+/* File: x86-atom/OP_THROW_VERIFICATION_ERROR_JUMBO.S */
+/* File: x86-atom/unused.S */
+   /* Copyright (C) 2008 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    * http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+    */
+
+   /*
+    * File: unused.S
+    *
+    * Code: Common code for unused bytecodes. Uses no subtitutions.
+    *
+    * For: all unused bytecodes
+    *
+    * Description: aborts if executed.
+    *
+    * Format: ØØ|op (10x)
+    *
+    * Syntax: op
+    */
+
+    call        common_abort
+
+
 
     .balign 64
     .size   dvmAsmInstructionStart, .-dvmAsmInstructionStart

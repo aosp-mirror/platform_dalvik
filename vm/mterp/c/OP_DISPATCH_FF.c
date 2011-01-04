@@ -1,8 +1,6 @@
 HANDLE_OPCODE(OP_DISPATCH_FF)
     /*
-     * In portable interp, most unused opcodes will fall through to here.
+     * Indicates extended opcode.  Use next 8 bits to choose where to branch.
      */
-    LOGE("unknown opcode 0x%02x\n", INST_INST(inst));
-    dvmAbort();
-    FINISH(1);
+    DISPATCH_EXTENDED(INST_AA(inst));
 OP_END

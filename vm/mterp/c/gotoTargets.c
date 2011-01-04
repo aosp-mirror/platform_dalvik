@@ -8,7 +8,7 @@
  * next instruction.  Here, these are subroutines that return to the caller.
  */
 
-GOTO_TARGET(filledNewArray, bool methodCallRange)
+GOTO_TARGET(filledNewArray, bool methodCallRange, bool jumboFormat)
     {
         ClassObject* arrayClass;
         ArrayObject* newArray;
@@ -19,19 +19,28 @@ GOTO_TARGET(filledNewArray, bool methodCallRange)
 
         EXPORT_PC();
 
-        ref = FETCH(1);             /* class ref */
-        vdst = FETCH(2);            /* first 4 regs -or- range base */
-
-        if (methodCallRange) {
-            vsrc1 = INST_AA(inst);  /* #of elements */
-            arg5 = -1;              /* silence compiler warning */
-            ILOGV("|filled-new-array-range args=%d @0x%04x {regs=v%d-v%d}",
+        if (jumboFormat) {
+            ref = FETCH(1) | (u4)FETCH(2) << 16;  /* class ref */
+            vsrc1 = FETCH(3);                     /* #of elements */
+            vdst = FETCH(4);                      /* range base */
+            arg5 = -1;                            /* silence compiler warning */
+            ILOGV("|filled-new-array/jumbo args=%d @0x%08x {regs=v%d-v%d}",
                 vsrc1, ref, vdst, vdst+vsrc1-1);
         } else {
-            arg5 = INST_A(inst);
-            vsrc1 = INST_B(inst);   /* #of elements */
-            ILOGV("|filled-new-array args=%d @0x%04x {regs=0x%04x %x}",
-                vsrc1, ref, vdst, arg5);
+            ref = FETCH(1);             /* class ref */
+            vdst = FETCH(2);            /* first 4 regs -or- range base */
+
+            if (methodCallRange) {
+                vsrc1 = INST_AA(inst);  /* #of elements */
+                arg5 = -1;              /* silence compiler warning */
+                ILOGV("|filled-new-array-range args=%d @0x%04x {regs=v%d-v%d}",
+                    vsrc1, ref, vdst, vdst+vsrc1-1);
+            } else {
+                arg5 = INST_A(inst);
+                vsrc1 = INST_B(inst);   /* #of elements */
+                ILOGV("|filled-new-array args=%d @0x%04x {regs=0x%04x %x}",
+                   vsrc1, ref, vdst, arg5);
+            }
         }
 
         /*
@@ -100,35 +109,49 @@ GOTO_TARGET(filledNewArray, bool methodCallRange)
 
         retval.l = newArray;
     }
-    FINISH(3);
+    if (jumboFormat) {
+        FINISH(5);
+    } else {
+        FINISH(3);
+    }
 GOTO_TARGET_END
 
 
-GOTO_TARGET(invokeVirtual, bool methodCallRange)
+GOTO_TARGET(invokeVirtual, bool methodCallRange, bool jumboFormat)
     {
         Method* baseMethod;
         Object* thisPtr;
 
         EXPORT_PC();
 
-        vsrc1 = INST_AA(inst);      /* AA (count) or BA (count + arg 5) */
-        ref = FETCH(1);             /* method ref */
-        vdst = FETCH(2);            /* 4 regs -or- first reg */
-
-        /*
-         * The object against which we are executing a method is always
-         * in the first argument.
-         */
-        if (methodCallRange) {
-            assert(vsrc1 > 0);
-            ILOGV("|invoke-virtual-range args=%d @0x%04x {regs=v%d-v%d}",
+        if (jumboFormat) {
+            ref = FETCH(1) | (u4)FETCH(2) << 16;  /* method ref */
+            vsrc1 = FETCH(3);                     /* count */
+            vdst = FETCH(4);                      /* first reg */
+            ADJUST_PC(2);     /* advance pc partially to make returns easier */
+            ILOGV("|invoke-virtual/jumbo args=%d @0x%08x {regs=v%d-v%d}",
                 vsrc1, ref, vdst, vdst+vsrc1-1);
             thisPtr = (Object*) GET_REGISTER(vdst);
         } else {
-            assert((vsrc1>>4) > 0);
-            ILOGV("|invoke-virtual args=%d @0x%04x {regs=0x%04x %x}",
-                vsrc1 >> 4, ref, vdst, vsrc1 & 0x0f);
-            thisPtr = (Object*) GET_REGISTER(vdst & 0x0f);
+            vsrc1 = INST_AA(inst);      /* AA (count) or BA (count + arg 5) */
+            ref = FETCH(1);             /* method ref */
+            vdst = FETCH(2);            /* 4 regs -or- first reg */
+
+            /*
+             * The object against which we are executing a method is always
+             * in the first argument.
+             */
+            if (methodCallRange) {
+                assert(vsrc1 > 0);
+                ILOGV("|invoke-virtual-range args=%d @0x%04x {regs=v%d-v%d}",
+                    vsrc1, ref, vdst, vdst+vsrc1-1);
+                thisPtr = (Object*) GET_REGISTER(vdst);
+            } else {
+                assert((vsrc1>>4) > 0);
+                ILOGV("|invoke-virtual args=%d @0x%04x {regs=0x%04x %x}",
+                    vsrc1 >> 4, ref, vdst, vsrc1 & 0x0f);
+                thisPtr = (Object*) GET_REGISTER(vdst & 0x0f);
+            }
         }
 
         if (!checkForNull(thisPtr))
@@ -200,26 +223,37 @@ GOTO_TARGET(invokeVirtual, bool methodCallRange)
     }
 GOTO_TARGET_END
 
-GOTO_TARGET(invokeSuper, bool methodCallRange)
+GOTO_TARGET(invokeSuper, bool methodCallRange, bool jumboFormat)
     {
         Method* baseMethod;
         u2 thisReg;
 
         EXPORT_PC();
 
-        vsrc1 = INST_AA(inst);      /* AA (count) or BA (count + arg 5) */
-        ref = FETCH(1);             /* method ref */
-        vdst = FETCH(2);            /* 4 regs -or- first reg */
-
-        if (methodCallRange) {
-            ILOGV("|invoke-super-range args=%d @0x%04x {regs=v%d-v%d}",
+        if (jumboFormat) {
+            ref = FETCH(1) | (u4)FETCH(2) << 16;  /* method ref */
+            vsrc1 = FETCH(3);                     /* count */
+            vdst = FETCH(4);                      /* first reg */
+            ADJUST_PC(2);     /* advance pc partially to make returns easier */
+            ILOGV("|invoke-super/jumbo args=%d @0x%08x {regs=v%d-v%d}",
                 vsrc1, ref, vdst, vdst+vsrc1-1);
             thisReg = vdst;
         } else {
-            ILOGV("|invoke-super args=%d @0x%04x {regs=0x%04x %x}",
-                vsrc1 >> 4, ref, vdst, vsrc1 & 0x0f);
-            thisReg = vdst & 0x0f;
+            vsrc1 = INST_AA(inst);      /* AA (count) or BA (count + arg 5) */
+            ref = FETCH(1);             /* method ref */
+            vdst = FETCH(2);            /* 4 regs -or- first reg */
+
+            if (methodCallRange) {
+                ILOGV("|invoke-super-range args=%d @0x%04x {regs=v%d-v%d}",
+                    vsrc1, ref, vdst, vdst+vsrc1-1);
+                thisReg = vdst;
+            } else {
+                ILOGV("|invoke-super args=%d @0x%04x {regs=0x%04x %x}",
+                    vsrc1 >> 4, ref, vdst, vsrc1 & 0x0f);
+                thisReg = vdst & 0x0f;
+            }
         }
+
         /* impossible in well-formed code, but we must check nevertheless */
         if (!checkForNull((Object*) GET_REGISTER(thisReg)))
             GOTO_exceptionThrown();
@@ -278,32 +312,43 @@ GOTO_TARGET(invokeSuper, bool methodCallRange)
     }
 GOTO_TARGET_END
 
-GOTO_TARGET(invokeInterface, bool methodCallRange)
+GOTO_TARGET(invokeInterface, bool methodCallRange, bool jumboFormat)
     {
         Object* thisPtr;
         ClassObject* thisClass;
 
         EXPORT_PC();
 
-        vsrc1 = INST_AA(inst);      /* AA (count) or BA (count + arg 5) */
-        ref = FETCH(1);             /* method ref */
-        vdst = FETCH(2);            /* 4 regs -or- first reg */
-
-        /*
-         * The object against which we are executing a method is always
-         * in the first argument.
-         */
-        if (methodCallRange) {
-            assert(vsrc1 > 0);
-            ILOGV("|invoke-interface-range args=%d @0x%04x {regs=v%d-v%d}",
+        if (jumboFormat) {
+            ref = FETCH(1) | (u4)FETCH(2) << 16;  /* method ref */
+            vsrc1 = FETCH(3);                     /* count */
+            vdst = FETCH(4);                      /* first reg */
+            ADJUST_PC(2);     /* advance pc partially to make returns easier */
+            ILOGV("|invoke-interface/jumbo args=%d @0x%08x {regs=v%d-v%d}",
                 vsrc1, ref, vdst, vdst+vsrc1-1);
             thisPtr = (Object*) GET_REGISTER(vdst);
         } else {
-            assert((vsrc1>>4) > 0);
-            ILOGV("|invoke-interface args=%d @0x%04x {regs=0x%04x %x}",
-                vsrc1 >> 4, ref, vdst, vsrc1 & 0x0f);
-            thisPtr = (Object*) GET_REGISTER(vdst & 0x0f);
+            vsrc1 = INST_AA(inst);      /* AA (count) or BA (count + arg 5) */
+            ref = FETCH(1);             /* method ref */
+            vdst = FETCH(2);            /* 4 regs -or- first reg */
+
+            /*
+             * The object against which we are executing a method is always
+             * in the first argument.
+             */
+            if (methodCallRange) {
+                assert(vsrc1 > 0);
+                ILOGV("|invoke-interface-range args=%d @0x%04x {regs=v%d-v%d}",
+                    vsrc1, ref, vdst, vdst+vsrc1-1);
+                thisPtr = (Object*) GET_REGISTER(vdst);
+            } else {
+                assert((vsrc1>>4) > 0);
+                ILOGV("|invoke-interface args=%d @0x%04x {regs=0x%04x %x}",
+                    vsrc1 >> 4, ref, vdst, vsrc1 & 0x0f);
+                thisPtr = (Object*) GET_REGISTER(vdst & 0x0f);
+            }
         }
+
         if (!checkForNull(thisPtr))
             GOTO_exceptionThrown();
 
@@ -328,25 +373,36 @@ GOTO_TARGET(invokeInterface, bool methodCallRange)
     }
 GOTO_TARGET_END
 
-GOTO_TARGET(invokeDirect, bool methodCallRange)
+GOTO_TARGET(invokeDirect, bool methodCallRange, bool jumboFormat)
     {
         u2 thisReg;
 
-        vsrc1 = INST_AA(inst);      /* AA (count) or BA (count + arg 5) */
-        ref = FETCH(1);             /* method ref */
-        vdst = FETCH(2);            /* 4 regs -or- first reg */
-
         EXPORT_PC();
 
-        if (methodCallRange) {
-            ILOGV("|invoke-direct-range args=%d @0x%04x {regs=v%d-v%d}",
+        if (jumboFormat) {
+            ref = FETCH(1) | (u4)FETCH(2) << 16;  /* method ref */
+            vsrc1 = FETCH(3);                     /* count */
+            vdst = FETCH(4);                      /* first reg */
+            ADJUST_PC(2);     /* advance pc partially to make returns easier */
+            ILOGV("|invoke-direct/jumbo args=%d @0x%08x {regs=v%d-v%d}",
                 vsrc1, ref, vdst, vdst+vsrc1-1);
             thisReg = vdst;
         } else {
-            ILOGV("|invoke-direct args=%d @0x%04x {regs=0x%04x %x}",
-                vsrc1 >> 4, ref, vdst, vsrc1 & 0x0f);
-            thisReg = vdst & 0x0f;
+            vsrc1 = INST_AA(inst);      /* AA (count) or BA (count + arg 5) */
+            ref = FETCH(1);             /* method ref */
+            vdst = FETCH(2);            /* 4 regs -or- first reg */
+
+            if (methodCallRange) {
+                ILOGV("|invoke-direct-range args=%d @0x%04x {regs=v%d-v%d}",
+                    vsrc1, ref, vdst, vdst+vsrc1-1);
+                thisReg = vdst;
+            } else {
+                ILOGV("|invoke-direct args=%d @0x%04x {regs=0x%04x %x}",
+                    vsrc1 >> 4, ref, vdst, vsrc1 & 0x0f);
+                thisReg = vdst & 0x0f;
+            }
         }
+
         if (!checkForNull((Object*) GET_REGISTER(thisReg)))
             GOTO_exceptionThrown();
 
@@ -363,19 +419,28 @@ GOTO_TARGET(invokeDirect, bool methodCallRange)
     }
 GOTO_TARGET_END
 
-GOTO_TARGET(invokeStatic, bool methodCallRange)
-    vsrc1 = INST_AA(inst);      /* AA (count) or BA (count + arg 5) */
-    ref = FETCH(1);             /* method ref */
-    vdst = FETCH(2);            /* 4 regs -or- first reg */
-
+GOTO_TARGET(invokeStatic, bool methodCallRange, bool jumboFormat)
     EXPORT_PC();
 
-    if (methodCallRange)
-        ILOGV("|invoke-static-range args=%d @0x%04x {regs=v%d-v%d}",
+    if (jumboFormat) {
+        ref = FETCH(1) | (u4)FETCH(2) << 16;  /* method ref */
+        vsrc1 = FETCH(3);                     /* count */
+        vdst = FETCH(4);                      /* first reg */
+        ADJUST_PC(2);     /* advance pc partially to make returns easier */
+        ILOGV("|invoke-static/jumbo args=%d @0x%08x {regs=v%d-v%d}",
             vsrc1, ref, vdst, vdst+vsrc1-1);
-    else
-        ILOGV("|invoke-static args=%d @0x%04x {regs=0x%04x %x}",
-            vsrc1 >> 4, ref, vdst, vsrc1 & 0x0f);
+    } else {
+        vsrc1 = INST_AA(inst);      /* AA (count) or BA (count + arg 5) */
+        ref = FETCH(1);             /* method ref */
+        vdst = FETCH(2);            /* 4 regs -or- first reg */
+
+        if (methodCallRange)
+            ILOGV("|invoke-static-range args=%d @0x%04x {regs=v%d-v%d}",
+                vsrc1, ref, vdst, vdst+vsrc1-1);
+        else
+            ILOGV("|invoke-static args=%d @0x%04x {regs=0x%04x %x}",
+                vsrc1 >> 4, ref, vdst, vsrc1 & 0x0f);
+    }
 
     methodToCall = dvmDexGetResolvedMethod(methodClassDex, ref);
     if (methodToCall == NULL) {
@@ -398,7 +463,7 @@ GOTO_TARGET(invokeStatic, bool methodCallRange)
     GOTO_invokeMethod(methodCallRange, methodToCall, vsrc1, vdst);
 GOTO_TARGET_END
 
-GOTO_TARGET(invokeVirtualQuick, bool methodCallRange)
+GOTO_TARGET(invokeVirtualQuick, bool methodCallRange, bool jumboFormat)
     {
         Object* thisPtr;
 
@@ -435,7 +500,7 @@ GOTO_TARGET(invokeVirtualQuick, bool methodCallRange)
          * Combine the object we found with the vtable offset in the
          * method.
          */
-        assert(ref < thisPtr->clazz->vtableCount);
+        assert(ref < (unsigned int) thisPtr->clazz->vtableCount);
         methodToCall = thisPtr->clazz->vtable[ref];
 
 #if 0
@@ -457,7 +522,7 @@ GOTO_TARGET(invokeVirtualQuick, bool methodCallRange)
     }
 GOTO_TARGET_END
 
-GOTO_TARGET(invokeSuperQuick, bool methodCallRange)
+GOTO_TARGET(invokeSuperQuick, bool methodCallRange, bool jumboFormat)
     {
         u2 thisReg;
 
@@ -486,7 +551,7 @@ GOTO_TARGET(invokeSuperQuick, bool methodCallRange)
             GOTO_exceptionThrown();
         }
 #else
-        assert(ref < curMethod->clazz->super->vtableCount);
+        assert(ref < (unsigned int) curMethod->clazz->super->vtableCount);
 #endif
 
         /*

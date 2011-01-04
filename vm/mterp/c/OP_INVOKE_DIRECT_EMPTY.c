@@ -9,7 +9,7 @@ HANDLE_OPCODE(OP_INVOKE_DIRECT_EMPTY /*vB, {vD, vE, vF, vG, vA}, meth@CCCC*/)
     } else {
         //LOGI("Running empty\n");
         /* fall through to OP_INVOKE_DIRECT */
-        GOTO_invoke(invokeDirect, false);
+        GOTO_invoke(invokeDirect, false, false);
     }
 #endif
 OP_END

@@ -63,6 +63,7 @@ typedef enum {
     kFmt3rmi,       // [opt] inline invoke/range
     kFmt33x,        // exop vAA, vBB, vCCCC
     kFmt32s,        // exop vAA, vBB, #+CCCC
+    kFmt40sc,       // [opt] exop AAAA, thing@BBBBBBBB
     kFmt41c,        // exop vAAAA, thing@BBBBBBBB
     kFmt52c,        // exop vAAAA, vBBBB, thing@CCCCCCCC
     kFmt5rc,        // exop {vCCCC .. v(CCCC+AAAA-1)}, thing@BBBBBBBB

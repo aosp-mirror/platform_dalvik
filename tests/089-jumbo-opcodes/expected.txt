@@ -1,0 +1,10 @@
+Invoked virtual
+Invoked super
+Invoked direct
+Invoked static
+Invoked interface
+Got expected InstantationError
+Got expected NoSuchFieldError
+Got expected NoSuchFieldError
+Got expected NoSuchMethodError
+Got expected NoSuchMethodError

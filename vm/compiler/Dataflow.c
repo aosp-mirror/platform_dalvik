@@ -798,10 +798,777 @@ int dvmCompilerDataFlowAttributes[kMirOpLast] = {
     // FF OP_DISPATCH_FF
     DF_NOP,
 
-    // Beginning of extended MIR opcodes
-    // 100 OP_MIR_PHI
-    DF_PHI | DF_DA,
+    // 100 OP_CONST_CLASS_JUMBO vAAAA, type@BBBBBBBB
+    DF_DA,
 
+    // 101 OP_CHECK_CAST_JUMBO vAAAA, type@BBBBBBBB
+    DF_UA,
+
+    // 102 OP_INSTANCE_OF_JUMBO vAAAA, vBBBB, type@CCCCCCCC
+    DF_DA | DF_UB,
+
+    // 103 OP_NEW_INSTANCE_JUMBO vAAAA, type@BBBBBBBB
+    DF_DA,
+
+    // 104 OP_NEW_ARRAY_JUMBO vAAAA, vBBBB, type@CCCCCCCC
+    DF_DA | DF_UB,
+
+    // 105 OP_FILLED_NEW_ARRAY_JUMBO {vCCCC .. vNNNN}, type@BBBBBBBB
+    DF_FORMAT_3RC,
+
+    // 106 OP_IGET_JUMBO vAAAA, vBBBB, field@CCCCCCCC
+    DF_DA | DF_UB | DF_IS_GETTER,
+
+    // 107 OP_IGET_WIDE_JUMBO vAAAA, vBBBB, field@CCCCCCCC
+    DF_DA_WIDE | DF_UB | DF_IS_GETTER,
+
+    // 108 OP_IGET_OBJECT_JUMBO vAAAA, vBBBB, field@CCCCCCCC
+    DF_DA | DF_UB | DF_IS_GETTER,
+
+    // 109 OP_IGET_BOOLEAN_JUMBO vAAAA, vBBBB, field@CCCCCCCC
+    DF_DA | DF_UB | DF_IS_GETTER,
+
+    // 10A OP_IGET_BYTE_JUMBO vAAAA, vBBBB, field@CCCCCCCC
+    DF_DA | DF_UB | DF_IS_GETTER,
+
+    // 10B OP_IGET_CHAR_JUMBO vAAAA, vBBBB, field@CCCCCCCC
+    DF_DA | DF_UB | DF_IS_GETTER,
+
+    // 10C OP_IGET_SHORT_JUMBO vAAAA, vBBBB, field@CCCCCCCC
+    DF_DA | DF_UB | DF_IS_GETTER,
+
+    // 10D OP_IPUT_JUMBO vAAAA, vBBBB, field@CCCCCCCC
+    DF_UA | DF_UB | DF_IS_SETTER,
+
+    // 10E OP_IPUT_WIDE_JUMBO vAAAA, vBBBB, field@CCCCCCCC
+    DF_UA_WIDE | DF_UB | DF_IS_SETTER,
+
+    // 10F OP_IPUT_OBJECT_JUMBO vAAAA, vBBBB, field@CCCCCCCC
+    DF_UA | DF_UB | DF_IS_SETTER,
+
+    // 110 OP_IPUT_BOOLEAN_JUMBO vAAAA, vBBBB, field@CCCCCCCC
+    DF_UA | DF_UB | DF_IS_SETTER,
+
+    // 111 OP_IPUT_BYTE_JUMBO vAAAA, vBBBB, field@CCCCCCCC
+    DF_UA | DF_UB | DF_IS_SETTER,
+
+    // 112 OP_IPUT_CHAR_JUMBO vAAAA, vBBBB, field@CCCCCCCC
+    DF_UA | DF_UB | DF_IS_SETTER,
+
+    // 113 OP_IPUT_SHORT_JUMBO vAAAA, vBBBB, field@CCCCCCCC
+    DF_UA | DF_UB | DF_IS_SETTER,
+
+    // 114 OP_SGET_JUMBO vAAAA, vBBBB, field@CCCCCCCC
+    DF_DA | DF_IS_GETTER,
+
+    // 115 OP_SGET_WIDE_JUMBO vAAAA, vBBBB, field@CCCCCCCC
+    DF_DA_WIDE | DF_IS_GETTER,
+
+    // 116 OP_SGET_OBJECT_JUMBO vAAAA, vBBBB, field@CCCCCCCC
+    DF_DA | DF_IS_GETTER,
+
+    // 117 OP_SGET_BOOLEAN_JUMBO vAAAA, vBBBB, field@CCCCCCCC
+    DF_DA | DF_IS_GETTER,
+
+    // 118 OP_SGET_BYTE_JUMBO vAAAA, vBBBB, field@CCCCCCCC
+    DF_DA | DF_IS_GETTER,
+
+    // 119 OP_SGET_CHAR_JUMBO vAAAA, vBBBB, field@CCCCCCCC
+    DF_DA | DF_IS_GETTER,
+
+    // 11A OP_SGET_SHORT_JUMBO vAAAA, vBBBB, field@CCCCCCCC
+    DF_DA | DF_IS_GETTER,
+
+    // 11B OP_SPUT_JUMBO vAAAA, vBBBB, field@CCCCCCCC
+    DF_UA | DF_IS_SETTER,
+
+    // 11C OP_SPUT_WIDE_JUMBO vAAAA, vBBBB, field@CCCCCCCC
+    DF_UA_WIDE | DF_IS_SETTER,
+
+    // 11D OP_SPUT_OBJECT_JUMBO vAAAA, vBBBB, field@CCCCCCCC
+    DF_UA | DF_IS_SETTER,
+
+    // 11E OP_SPUT_BOOLEAN_JUMBO vAAAA, vBBBB, field@CCCCCCCC
+    DF_UA | DF_IS_SETTER,
+
+    // 11F OP_SPUT_BYTE_JUMBO vAAAA, vBBBB, field@CCCCCCCC
+    DF_UA | DF_IS_SETTER,
+
+    // 120 OP_SPUT_CHAR_JUMBO vAAAA, vBBBB, field@CCCCCCCC
+    DF_UA | DF_IS_SETTER,
+
+    // 121 OP_SPUT_SHORT_JUMBO vAAAA, vBBBB, field@CCCCCCCC
+    DF_UA | DF_IS_SETTER,
+
+    // 122 OP_INVOKE_VIRTUAL_JUMBO {vCCCC .. vNNNN}, meth@BBBBBBBB
+    DF_FORMAT_3RC,
+
+    // 123 OP_INVOKE_SUPER_JUMBO {vCCCC .. vNNNN}, meth@BBBBBBBB
+    DF_FORMAT_3RC,
+
+    // 124 OP_INVOKE_DIRECT_JUMBO {vCCCC .. vNNNN}, meth@BBBBBBBB
+    DF_FORMAT_3RC,
+
+    // 125 OP_INVOKE_STATIC_JUMBO {vCCCC .. vNNNN}, meth@BBBBBBBB
+    DF_FORMAT_3RC,
+
+    // 126 OP_INVOKE_INTERFACE_JUMBO {vCCCC .. vNNNN}, meth@BBBBBBBB
+    DF_FORMAT_3RC,
+
+    // 127 OP_UNUSED_27FF
+    DF_NOP,
+
+    // 128 OP_UNUSED_28FF
+    DF_NOP,
+
+    // 129 OP_UNUSED_29FF
+    DF_NOP,
+
+    // 12A OP_UNUSED_2AFF
+    DF_NOP,
+
+    // 12B OP_UNUSED_2BFF
+    DF_NOP,
+
+    // 12C OP_UNUSED_2CFF
+    DF_NOP,
+
+    // 12D OP_UNUSED_2DFF
+    DF_NOP,
+
+    // 12E OP_UNUSED_2EFF
+    DF_NOP,
+
+    // 12F OP_UNUSED_2FFF
+    DF_NOP,
+
+    // 130 OP_UNUSED_30FF
+    DF_NOP,
+
+    // 131 OP_UNUSED_31FF
+    DF_NOP,
+
+    // 132 OP_UNUSED_32FF
+    DF_NOP,
+
+    // 133 OP_UNUSED_33FF
+    DF_NOP,
+
+    // 134 OP_UNUSED_34FF
+    DF_NOP,
+
+    // 135 OP_UNUSED_35FF
+    DF_NOP,
+
+    // 136 OP_UNUSED_36FF
+    DF_NOP,
+
+    // 137 OP_UNUSED_37FF
+    DF_NOP,
+
+    // 138 OP_UNUSED_38FF
+    DF_NOP,
+
+    // 139 OP_UNUSED_39FF
+    DF_NOP,
+
+    // 13A OP_UNUSED_3AFF
+    DF_NOP,
+
+    // 13B OP_UNUSED_3BFF
+    DF_NOP,
+
+    // 13C OP_UNUSED_3CFF
+    DF_NOP,
+
+    // 13D OP_UNUSED_3DFF
+    DF_NOP,
+
+    // 13E OP_UNUSED_3EFF
+    DF_NOP,
+
+    // 13F OP_UNUSED_3FFF
+    DF_NOP,
+
+    // 140 OP_UNUSED_40FF
+    DF_NOP,
+
+    // 141 OP_UNUSED_41FF
+    DF_NOP,
+
+    // 142 OP_UNUSED_42FF
+    DF_NOP,
+
+    // 143 OP_UNUSED_43FF
+    DF_NOP,
+
+    // 144 OP_UNUSED_44FF
+    DF_NOP,
+
+    // 145 OP_UNUSED_45FF
+    DF_NOP,
+
+    // 146 OP_UNUSED_46FF
+    DF_NOP,
+
+    // 147 OP_UNUSED_47FF
+    DF_NOP,
+
+    // 148 OP_UNUSED_48FF
+    DF_NOP,
+
+    // 149 OP_UNUSED_49FF
+    DF_NOP,
+
+    // 14A OP_UNUSED_4AFF
+    DF_NOP,
+
+    // 14B OP_UNUSED_4BFF
+    DF_NOP,
+
+    // 14C OP_UNUSED_4CFF
+    DF_NOP,
+
+    // 14D OP_UNUSED_4DFF
+    DF_NOP,
+
+    // 14E OP_UNUSED_4EFF
+    DF_NOP,
+
+    // 14F OP_UNUSED_4FFF
+    DF_NOP,
+
+    // 150 OP_UNUSED_50FF
+    DF_NOP,
+
+    // 151 OP_UNUSED_51FF
+    DF_NOP,
+
+    // 152 OP_UNUSED_52FF
+    DF_NOP,
+
+    // 153 OP_UNUSED_53FF
+    DF_NOP,
+
+    // 154 OP_UNUSED_54FF
+    DF_NOP,
+
+    // 155 OP_UNUSED_55FF
+    DF_NOP,
+
+    // 156 OP_UNUSED_56FF
+    DF_NOP,
+
+    // 157 OP_UNUSED_57FF
+    DF_NOP,
+
+    // 158 OP_UNUSED_58FF
+    DF_NOP,
+
+    // 159 OP_UNUSED_59FF
+    DF_NOP,
+
+    // 15A OP_UNUSED_5AFF
+    DF_NOP,
+
+    // 15B OP_UNUSED_5BFF
+    DF_NOP,
+
+    // 15C OP_UNUSED_5CFF
+    DF_NOP,
+
+    // 15D OP_UNUSED_5DFF
+    DF_NOP,
+
+    // 15E OP_UNUSED_5EFF
+    DF_NOP,
+
+    // 15F OP_UNUSED_5FFF
+    DF_NOP,
+
+    // 160 OP_UNUSED_60FF
+    DF_NOP,
+
+    // 161 OP_UNUSED_61FF
+    DF_NOP,
+
+    // 162 OP_UNUSED_62FF
+    DF_NOP,
+
+    // 163 OP_UNUSED_63FF
+    DF_NOP,
+
+    // 164 OP_UNUSED_64FF
+    DF_NOP,
+
+    // 165 OP_UNUSED_65FF
+    DF_NOP,
+
+    // 166 OP_UNUSED_66FF
+    DF_NOP,
+
+    // 167 OP_UNUSED_67FF
+    DF_NOP,
+
+    // 168 OP_UNUSED_68FF
+    DF_NOP,
+
+    // 169 OP_UNUSED_69FF
+    DF_NOP,
+
+    // 16A OP_UNUSED_6AFF
+    DF_NOP,
+
+    // 16B OP_UNUSED_6BFF
+    DF_NOP,
+
+    // 16C OP_UNUSED_6CFF
+    DF_NOP,
+
+    // 16D OP_UNUSED_6DFF
+    DF_NOP,
+
+    // 16E OP_UNUSED_6EFF
+    DF_NOP,
+
+    // 16F OP_UNUSED_6FFF
+    DF_NOP,
+
+    // 170 OP_UNUSED_70FF
+    DF_NOP,
+
+    // 171 OP_UNUSED_71FF
+    DF_NOP,
+
+    // 172 OP_UNUSED_72FF
+    DF_NOP,
+
+    // 173 OP_UNUSED_73FF
+    DF_NOP,
+
+    // 174 OP_UNUSED_74FF
+    DF_NOP,
+
+    // 175 OP_UNUSED_75FF
+    DF_NOP,
+
+    // 176 OP_UNUSED_76FF
+    DF_NOP,
+
+    // 177 OP_UNUSED_77FF
+    DF_NOP,
+
+    // 178 OP_UNUSED_78FF
+    DF_NOP,
+
+    // 179 OP_UNUSED_79FF
+    DF_NOP,
+
+    // 17A OP_UNUSED_7AFF
+    DF_NOP,
+
+    // 17B OP_UNUSED_7BFF
+    DF_NOP,
+
+    // 17C OP_UNUSED_7CFF
+    DF_NOP,
+
+    // 17D OP_UNUSED_7DFF
+    DF_NOP,
+
+    // 17E OP_UNUSED_7EFF
+    DF_NOP,
+
+    // 17F OP_UNUSED_7FFF
+    DF_NOP,
+
+    // 180 OP_UNUSED_80FF
+    DF_NOP,
+
+    // 181 OP_UNUSED_81FF
+    DF_NOP,
+
+    // 182 OP_UNUSED_82FF
+    DF_NOP,
+
+    // 183 OP_UNUSED_83FF
+    DF_NOP,
+
+    // 184 OP_UNUSED_84FF
+    DF_NOP,
+
+    // 185 OP_UNUSED_85FF
+    DF_NOP,
+
+    // 186 OP_UNUSED_86FF
+    DF_NOP,
+
+    // 187 OP_UNUSED_87FF
+    DF_NOP,
+
+    // 188 OP_UNUSED_88FF
+    DF_NOP,
+
+    // 189 OP_UNUSED_89FF
+    DF_NOP,
+
+    // 18A OP_UNUSED_8AFF
+    DF_NOP,
+
+    // 18B OP_UNUSED_8BFF
+    DF_NOP,
+
+    // 18C OP_UNUSED_8CFF
+    DF_NOP,
+
+    // 18D OP_UNUSED_8DFF
+    DF_NOP,
+
+    // 18E OP_UNUSED_8EFF
+    DF_NOP,
+
+    // 18F OP_UNUSED_8FFF
+    DF_NOP,
+
+    // 190 OP_UNUSED_90FF
+    DF_NOP,
+
+    // 191 OP_UNUSED_91FF
+    DF_NOP,
+
+    // 192 OP_UNUSED_92FF
+    DF_NOP,
+
+    // 193 OP_UNUSED_93FF
+    DF_NOP,
+
+    // 194 OP_UNUSED_94FF
+    DF_NOP,
+
+    // 195 OP_UNUSED_95FF
+    DF_NOP,
+
+    // 196 OP_UNUSED_96FF
+    DF_NOP,
+
+    // 197 OP_UNUSED_97FF
+    DF_NOP,
+
+    // 198 OP_UNUSED_98FF
+    DF_NOP,
+
+    // 199 OP_UNUSED_99FF
+    DF_NOP,
+
+    // 19A OP_UNUSED_9AFF
+    DF_NOP,
+
+    // 19B OP_UNUSED_9BFF
+    DF_NOP,
+
+    // 19C OP_UNUSED_9CFF
+    DF_NOP,
+
+    // 19D OP_UNUSED_9DFF
+    DF_NOP,
+
+    // 19E OP_UNUSED_9EFF
+    DF_NOP,
+
+    // 19F OP_UNUSED_9FFF
+    DF_NOP,
+
+    // 1A0 OP_UNUSED_A0FF
+    DF_NOP,
+
+    // 1A1 OP_UNUSED_A1FF
+    DF_NOP,
+
+    // 1A2 OP_UNUSED_A2FF
+    DF_NOP,
+
+    // 1A3 OP_UNUSED_A3FF
+    DF_NOP,
+
+    // 1A4 OP_UNUSED_A4FF
+    DF_NOP,
+
+    // 1A5 OP_UNUSED_A5FF
+    DF_NOP,
+
+    // 1A6 OP_UNUSED_A6FF
+    DF_NOP,
+
+    // 1A7 OP_UNUSED_A7FF
+    DF_NOP,
+
+    // 1A8 OP_UNUSED_A8FF
+    DF_NOP,
+
+    // 1A9 OP_UNUSED_A9FF
+    DF_NOP,
+
+    // 1AA OP_UNUSED_AAFF
+    DF_NOP,
+
+    // 1AB OP_UNUSED_ABFF
+    DF_NOP,
+
+    // 1AC OP_UNUSED_ACFF
+    DF_NOP,
+
+    // 1AD OP_UNUSED_ADFF
+    DF_NOP,
+
+    // 1AE OP_UNUSED_AEFF
+    DF_NOP,
+
+    // 1AF OP_UNUSED_AFFF
+    DF_NOP,
+
+    // 1B0 OP_UNUSED_B0FF
+    DF_NOP,
+
+    // 1B1 OP_UNUSED_B1FF
+    DF_NOP,
+
+    // 1B2 OP_UNUSED_B2FF
+    DF_NOP,
+
+    // 1B3 OP_UNUSED_B3FF
+    DF_NOP,
+
+    // 1B4 OP_UNUSED_B4FF
+    DF_NOP,
+
+    // 1B5 OP_UNUSED_B5FF
+    DF_NOP,
+
+    // 1B6 OP_UNUSED_B6FF
+    DF_NOP,
+
+    // 1B7 OP_UNUSED_B7FF
+    DF_NOP,
+
+    // 1B8 OP_UNUSED_B8FF
+    DF_NOP,
+
+    // 1B9 OP_UNUSED_B9FF
+    DF_NOP,
+
+    // 1BA OP_UNUSED_BAFF
+    DF_NOP,
+
+    // 1BB OP_UNUSED_BBFF
+    DF_NOP,
+
+    // 1BC OP_UNUSED_BCFF
+    DF_NOP,
+
+    // 1BD OP_UNUSED_BDFF
+    DF_NOP,
+
+    // 1BE OP_UNUSED_BEFF
+    DF_NOP,
+
+    // 1BF OP_UNUSED_BFFF
+    DF_NOP,
+
+    // 1C0 OP_UNUSED_C0FF
+    DF_NOP,
+
+    // 1C1 OP_UNUSED_C1FF
+    DF_NOP,
+
+    // 1C2 OP_UNUSED_C2FF
+    DF_NOP,
+
+    // 1C3 OP_UNUSED_C3FF
+    DF_NOP,
+
+    // 1C4 OP_UNUSED_C4FF
+    DF_NOP,
+
+    // 1C5 OP_UNUSED_C5FF
+    DF_NOP,
+
+    // 1C6 OP_UNUSED_C6FF
+    DF_NOP,
+
+    // 1C7 OP_UNUSED_C7FF
+    DF_NOP,
+
+    // 1C8 OP_UNUSED_C8FF
+    DF_NOP,
+
+    // 1C9 OP_UNUSED_C9FF
+    DF_NOP,
+
+    // 1CA OP_UNUSED_CAFF
+    DF_NOP,
+
+    // 1CB OP_UNUSED_CBFF
+    DF_NOP,
+
+    // 1CC OP_UNUSED_CCFF
+    DF_NOP,
+
+    // 1CD OP_UNUSED_CDFF
+    DF_NOP,
+
+    // 1CE OP_UNUSED_CEFF
+    DF_NOP,
+
+    // 1CF OP_UNUSED_CFFF
+    DF_NOP,
+
+    // 1D0 OP_UNUSED_D0FF
+    DF_NOP,
+
+    // 1D1 OP_UNUSED_D1FF
+    DF_NOP,
+
+    // 1D2 OP_UNUSED_D2FF
+    DF_NOP,
+
+    // 1D3 OP_UNUSED_D3FF
+    DF_NOP,
+
+    // 1D4 OP_UNUSED_D4FF
+    DF_NOP,
+
+    // 1D5 OP_UNUSED_D5FF
+    DF_NOP,
+
+    // 1D6 OP_UNUSED_D6FF
+    DF_NOP,
+
+    // 1D7 OP_UNUSED_D7FF
+    DF_NOP,
+
+    // 1D8 OP_UNUSED_D8FF
+    DF_NOP,
+
+    // 1D9 OP_UNUSED_D9FF
+    DF_NOP,
+
+    // 1DA OP_UNUSED_DAFF
+    DF_NOP,
+
+    // 1DB OP_UNUSED_DBFF
+    DF_NOP,
+
+    // 1DC OP_UNUSED_DCFF
+    DF_NOP,
+
+    // 1DD OP_UNUSED_DDFF
+    DF_NOP,
+
+    // 1DE OP_UNUSED_DEFF
+    DF_NOP,
+
+    // 1DF OP_UNUSED_DFFF
+    DF_NOP,
+
+    // 1E0 OP_UNUSED_E0FF
+    DF_NOP,
+
+    // 1E1 OP_UNUSED_E1FF
+    DF_NOP,
+
+    // 1E2 OP_UNUSED_E2FF
+    DF_NOP,
+
+    // 1E3 OP_UNUSED_E3FF
+    DF_NOP,
+
+    // 1E4 OP_UNUSED_E4FF
+    DF_NOP,
+
+    // 1E5 OP_UNUSED_E5FF
+    DF_NOP,
+
+    // 1E6 OP_UNUSED_E6FF
+    DF_NOP,
+
+    // 1E7 OP_UNUSED_E7FF
+    DF_NOP,
+
+    // 1E8 OP_UNUSED_E8FF
+    DF_NOP,
+
+    // 1E9 OP_UNUSED_E9FF
+    DF_NOP,
+
+    // 1EA OP_UNUSED_EAFF
+    DF_NOP,
+
+    // 1EB OP_UNUSED_EBFF
+    DF_NOP,
+
+    // 1EC OP_UNUSED_ECFF
+    DF_NOP,
+
+    // 1ED OP_UNUSED_EDFF
+    DF_NOP,
+
+    // 1EE OP_UNUSED_EEFF
+    DF_NOP,
+
+    // 1EF OP_UNUSED_EFFF
+    DF_NOP,
+
+    // 1F0 OP_UNUSED_F0FF
+    DF_NOP,
+
+    // 1F1 OP_UNUSED_F1FF
+    DF_NOP,
+
+    // 1F2 OP_UNUSED_F2FF
+    DF_NOP,
+
+    // 1F3 OP_UNUSED_F3FF
+    DF_NOP,
+
+    // 1F4 OP_UNUSED_F4FF
+    DF_NOP,
+
+    // 1F5 OP_UNUSED_F5FF
+    DF_NOP,
+
+    // 1F6 OP_UNUSED_F6FF
+    DF_NOP,
+
+    // 1F7 OP_UNUSED_F7FF
+    DF_NOP,
+
+    // 1F8 OP_UNUSED_F8FF
+    DF_NOP,
+
+    // 1F9 OP_UNUSED_F9FF
+    DF_NOP,
+
+    // 1FA OP_UNUSED_FAFF
+    DF_NOP,
+
+    // 1FB OP_UNUSED_FBFF
+    DF_NOP,
+
+    // 1FC OP_UNUSED_FCFF
+    DF_NOP,
+
+    // 1FD OP_UNUSED_FDFF
+    DF_NOP,
+
+    // 1FE OP_UNUSED_FEFF
+    DF_NOP,
+
+    // 1FF OP_THROW_VERIFICATION_ERROR_JUMBO
+    DF_NOP,
+
+    // Beginning of extended MIR opcodes
+    // 200 OP_MIR_PHI
+    DF_PHI | DF_DA,
     /*
      * For extended MIR inserted at the MIR2LIR stage, it is okay to have
      * undefined values here.

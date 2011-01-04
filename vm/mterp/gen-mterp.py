@@ -23,7 +23,7 @@ import sys, string, re, time
 from string import Template
 
 interp_defs_file = "../../libdex/DexOpcodes.h" # need opcode list
-kNumPackedOpcodes = 256 # TODO: Derive this from DexOpcodes.h.
+kNumPackedOpcodes = 512 # TODO: Derive this from DexOpcodes.h.
 
 verbose = False
 handler_size_bits = -1000

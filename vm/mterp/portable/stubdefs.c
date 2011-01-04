@@ -36,10 +36,14 @@
 # define FINISH_BKPT(_opcode) {                                             \
         goto *handlerTable[_opcode];                                        \
     }
+# define DISPATCH_EXTENDED(_opcode) {                                       \
+        goto *handlerTable[0x100 + _opcode];                                \
+    }
 #else
 # define HANDLE_OPCODE(_op) case _op:
 # define FINISH(_offset)    { ADJUST_PC(_offset); break; }
 # define FINISH_BKPT(opcode) { > not implemented < }
+# define DISPATCH_EXTENDED(opcode) goto case (0x100 + opcode);
 #endif
 
 #define OP_END
@@ -61,9 +65,10 @@
 
 #define GOTO_returnFromMethod() goto returnFromMethod;
 
-#define GOTO_invoke(_target, _methodCallRange)                              \
+#define GOTO_invoke(_target, _methodCallRange, _jumboFormat)                \
     do {                                                                    \
         methodCallRange = _methodCallRange;                                 \
+        jumboFormat = _jumboFormat;                                         \
         goto _target;                                                       \
     } while(false)
 
