@@ -80,6 +80,12 @@ ArrayObject* dvmAllocArrayByClass(ClassObject* arrayClass, // OP_NEW_ARRAY
 bool dvmInterpHandleFillArrayData(ArrayObject* arrayObject,// OP_FILL_ARRAY_DATA
                                   const u2* arrayData);
 
+/* Originally declared in compiler/codegen/arm/Assemble.c */
+const Method *dvmJitToPatchPredictedChain(const Method *method,
+                                          InterpState *interpState,
+                                          PredictedChainingCell *cell,
+                                          const ClassObject *clazz);
+
 /*
  * Switch dispatch offset calculation for OP_PACKED_SWITCH & OP_SPARSE_SWITCH
  * Used in CodegenDriver.c
