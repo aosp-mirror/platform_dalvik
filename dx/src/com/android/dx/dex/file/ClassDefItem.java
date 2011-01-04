@@ -16,6 +16,7 @@
 
 package com.android.dx.dex.file;
 
+import com.android.dx.dex.SizeOf;
 import com.android.dx.rop.annotation.Annotations;
 import com.android.dx.rop.annotation.AnnotationsList;
 import com.android.dx.rop.code.AccessFlags;
@@ -34,7 +35,6 @@ import com.android.dx.util.Writers;
 import java.io.PrintWriter;
 import java.io.Writer;
 import java.util.ArrayList;
-import java.util.TreeSet;
 
 /**
  * Representation of a Dalvik class, which is basically a set of
@@ -42,8 +42,6 @@ import java.util.TreeSet;
  * information.
  */
 public final class ClassDefItem extends IndexedItem {
-    /** size of instances when written out to a file, in bytes */
-    public static final int WRITE_SIZE = 32;
 
     /** {@code non-null;} type constant for this class */
     private final CstType thisClass;
@@ -122,7 +120,7 @@ public final class ClassDefItem extends IndexedItem {
     /** {@inheritDoc} */
     @Override
     public int writeSize() {
-        return WRITE_SIZE;
+        return SizeOf.CLASS_DEF_ITEM;
     }
 
     /** {@inheritDoc} */
