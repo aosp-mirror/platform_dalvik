@@ -66,11 +66,14 @@ bool dvmCompilerArchVariantInit(void)
     assert(sizeof(StackSaveArea) < 236);
 
     /*
-     * EA is calculated by doing "Rn + imm5 << 2", make sure that the last
+     * EA is calculated by doing "Rn + imm5 << 2". Make sure that the last
      * offset from the struct is less than 128.
      */
-    assert((offsetof(InterpState, jitToInterpEntries) +
-            sizeof(struct JitToInterpEntries)) <= 128);
+    if ((offsetof(InterpState, jitToInterpEntries) +
+         sizeof(struct JitToInterpEntries)) >= 128) {
+        LOGE("InterpState.jitToInterpEntries size overflow");
+        dvmAbort();
+    }
     return true;
 }
 

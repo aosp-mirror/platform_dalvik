@@ -39,13 +39,15 @@ typedef enum InterpEntry {
 
 #if defined(WITH_JIT)
 /*
- * There are seven entry points from the compiled code to the interpreter:
+<<<<<<< HEAD
+ * NOTE: Only entry points dispatched via [&InterpState + #offset] are put
+ * in this struct, and there are six of them:
  * 1) dvmJitToInterpNormal: find if there is a corresponding compilation for
  *    the new dalvik PC. If so, chain the originating compilation with the
- *    target then jump to it.
- * 2) dvmJitToInterpInvokeNoChain: similar to 1) but don't chain. This is
- *    for handling 1-to-many mappings like virtual method call and
- *    packed switch.
+ *    target then jump to it. If the destination trace doesn't exist, update
+ *    the profile count for that Dalvik PC.
+ * 2) dvmJitToInterpNoChain: similar to dvmJitToInterpNormal but chaining is
+ *    not performed.
  * 3) dvmJitToInterpPunt: use the fast interpreter to execute the next
  *    instruction(s) and stay there as long as it is appropriate to return
  *    to the compiled land. This is used when the jit'ed code is about to
@@ -55,25 +57,18 @@ typedef enum InterpEntry {
  *    compiled code to resume execution. This is mainly used as debugging
  *    feature to bypass problematic opcode implementations without
  *    disturbing the trace formation.
- * 5) dvmJitToTraceSelect: if there is a single exit from a translation that
- *    has already gone hot enough to be translated, we should assume that
- *    the exit point should also be translated (this is a common case for
- *    invokes).  This trace exit will first check for a chaining
- *    opportunity, and if none is available will switch to the debug
- *    interpreter immediately for trace selection (as if threshold had
- *    just been reached).
- * 6) dvmJitToPredictedChain: patch the chaining cell for a virtual call site
- *    to a predicted callee.
- * 7) dvmJitToBackwardBranch: (WITH_SELF_VERIFICATION ONLY) special case of 1)
- *    and 5). This is used instead if the ending branch of the trace jumps back
- *    into the same basic block.
+ * 5) dvmJitToTraceSelect: Similar to dvmJitToInterpNormal except for the
+ *    profiling operation. If the new Dalvik PC is dominated by an already
+ *    translated trace, directly request a new translation if the destinaion
+ *    trace doesn't exist.
+ * 6) dvmJitToBackwardBranch: special case for SELF_VERIFICATION when the
+ *    destination Dalvik PC is included by the trace itself.
  */
 struct JitToInterpEntries {
     void *dvmJitToInterpNormal;
     void *dvmJitToInterpNoChain;
     void *dvmJitToInterpPunt;
     void *dvmJitToInterpSingleStep;
-    void *dvmJitToInterpTraceSelectNoChain;
     void *dvmJitToInterpTraceSelect;
 #if defined(WITH_SELF_VERIFICATION)
     void *dvmJitToInterpBackwardBranch;
