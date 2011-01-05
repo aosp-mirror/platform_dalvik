@@ -1111,7 +1111,7 @@ static void genInvokeSingletonCommon(CompilationUnit *cUnit, MIR *mir,
  * 0x426a99b8 : ldr     r0, [r7, #44] --> r0 <- this->class->vtable[methodIdx]
  * 0x426a99ba : cmp     r1, #0        --> compare r1 (rechain count) against 0
  * 0x426a99bc : bgt     0x426a99c2    --> >=0? don't rechain
- * 0x426a99be : ldr     r7, [r6, #96] --+ dvmJitToPatchPredictedChain
+ * 0x426a99be : ldr     r7, [pc, #off]--+ dvmJitToPatchPredictedChain
  * 0x426a99c0 : blx     r7            --+
  * 0x426a99c2 : add     r1, pc, #12   --> r1 <- &retChainingCell
  * 0x426a99c4 : blx_1   0x426a9098    --+ TEMPLATE_INVOKE_METHOD_NO_OPT
@@ -1183,8 +1183,7 @@ static void genInvokeVirtualCommon(CompilationUnit *cUnit, MIR *mir,
     /* Check if rechain limit is reached */
     ArmLIR *bypassRechaining = genCmpImmBranch(cUnit, kArmCondGt, r1, 0);
 
-    loadWordDisp(cUnit, rGLUE, offsetof(InterpState,
-                 jitToInterpEntries.dvmJitToPatchPredictedChain), r7);
+    LOAD_FUNC_ADDR(cUnit, r7, (int) dvmJitToPatchPredictedChain);
 
     genRegCopy(cUnit, r1, rGLUE);
 
@@ -2930,7 +2929,7 @@ static bool handleFmt35c_3rc(CompilationUnit *cUnit, MIR *mir, BasicBlock *bb,
          * 0x47357e6e : mov     r1, r8         --> r1 <- &retChainingCell
          * 0x47357e70 : cmp     r1, #0         --> compare against 0
          * 0x47357e72 : bgt     0x47357e7c     --> >=0? don't rechain
-         * 0x47357e74 : ldr     r7, [r6, #108] --+
+         * 0x47357e74 : ldr     r7, [pc, #off] --+
          * 0x47357e76 : mov     r2, r9           | dvmJitToPatchPredictedChain
          * 0x47357e78 : mov     r3, r10          |
          * 0x47357e7a : blx     r7             --+
@@ -3073,8 +3072,7 @@ static bool handleFmt35c_3rc(CompilationUnit *cUnit, MIR *mir, BasicBlock *bb,
             ArmLIR *bypassRechaining = genCmpImmBranch(cUnit, kArmCondGt,
                                                        r1, 0);
 
-            loadWordDisp(cUnit, rGLUE, offsetof(InterpState,
-                         jitToInterpEntries.dvmJitToPatchPredictedChain), r7);
+            LOAD_FUNC_ADDR(cUnit, r7, (int) dvmJitToPatchPredictedChain);
 
             genRegCopy(cUnit, r1, rGLUE);
             genRegCopy(cUnit, r2, r9);

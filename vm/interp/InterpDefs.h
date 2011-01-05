@@ -75,7 +75,6 @@ struct JitToInterpEntries {
     void *dvmJitToInterpSingleStep;
     void *dvmJitToInterpTraceSelectNoChain;
     void *dvmJitToInterpTraceSelect;
-    void *dvmJitToPatchPredictedChain;
 #if defined(WITH_SELF_VERIFICATION)
     void *dvmJitToInterpBackwardBranch;
 #endif

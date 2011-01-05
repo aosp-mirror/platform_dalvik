@@ -1562,12 +1562,8 @@ static void inlineCachePatchEnqueue(PredictedChainingCell *cellAddr,
  *      rechain attempt to happen.
  *   2) Chain is not setup because the callee has not been created yet. Reset
  *      the rechain count to a small number and retry in the near future.
- *   3) Ask all other threads to stop before patching this chaining cell.
- *      This is required because another thread may have passed the class check
- *      but hasn't reached the chaining cell yet to follow the chain. If we
- *      patch the content before halting the other thread, there could be a
- *      small window for race conditions to happen that it may follow the new
- *      but wrong chain to invoke a different method.
+ *   3) Enqueue the new content for the chaining cell which will be appled in
+ *      next safe point.
  */
 const Method *dvmJitToPatchPredictedChain(const Method *method,
                                           InterpState *interpState,
