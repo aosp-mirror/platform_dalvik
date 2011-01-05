@@ -109,11 +109,11 @@ MTERP_OFFSET(offGlue_ppJitProfTable,    MterpGlue, ppJitProfTable, 80)
 MTERP_OFFSET(offGlue_icRechainCount,    MterpGlue, icRechainCount, 84)
 MTERP_OFFSET(offGlue_pProfileCountdown, MterpGlue, pProfileCountdown, 88)
 #if defined(WITH_SELF_VERIFICATION)
-MTERP_OFFSET(offGlue_jitCacheStart,     MterpGlue, jitCacheStart, 124)
-MTERP_OFFSET(offGlue_jitCacheEnd,       MterpGlue, jitCacheEnd, 128)
+MTERP_OFFSET(offGlue_jitCacheStart,     MterpGlue, jitCacheStart, 116)
+MTERP_OFFSET(offGlue_jitCacheEnd,       MterpGlue, jitCacheEnd, 120)
 #else
-MTERP_OFFSET(offGlue_jitCacheStart,     MterpGlue, jitCacheStart, 120)
-MTERP_OFFSET(offGlue_jitCacheEnd,       MterpGlue, jitCacheEnd, 124)
+MTERP_OFFSET(offGlue_jitCacheStart,     MterpGlue, jitCacheStart, 112)
+MTERP_OFFSET(offGlue_jitCacheEnd,       MterpGlue, jitCacheEnd, 116)
 #endif
 #endif
 /* make sure all JValue union members are stored at the same offset */
