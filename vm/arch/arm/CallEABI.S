@@ -319,6 +319,7 @@ DBG strcs   ip, [r8]                    @ DEBUG DEBUG
 .Lno_arg_info:
     mov     r5, r2, lsr #28             @ r5<- return type
     ldr     r6, [r4, #4]                @ r6<- short signature
+    add     r6, r6, #1                  @ advance past return type
     mov     r2, #0                      @ r2<- word count, init to zero
 
 .Lcount_loop:
@@ -359,6 +360,7 @@ DBG bne     dvmAbort                    @ DEBUG
     @ the signature again, "copying" pad words when appropriate, storing
     @ upward into the stack.
     ldr     r6, [r4, #4]                @ r6<- signature
+    add     r6, r6, #1                  @ advance past return type
     add     r7, r7, #8                  @ r7<- r7+8 (assume argv 0/1 in r2/r3)
 
     @ Eat first arg or two, for the stuff that goes into r2/r3.
@@ -369,8 +371,8 @@ DBG bne     dvmAbort                    @ DEBUG
 
     @ First arg was 32-bit, check the next
     ldrb    ip, [r6], #1                @ ip<- *signature++
-    cmp     r6, #'D'
-    cmpne   r6, #'J'
+    cmp     ip, #'D'
+    cmpne   ip, #'J'
     subeq   r7, #4                      @ r7<- r7-4 (take it back - pad word)
     beq     .Lstack_copy_loop2          @ start with char we already have
 
