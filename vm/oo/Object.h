@@ -629,6 +629,14 @@ Method* dvmFindMethodHier(const ClassObject* clazz, const char* methodName,
     const DexProto* proto);
 
 /*
+ * Find a method in an interface hierarchy.
+ */
+Method* dvmFindInterfaceMethodHierByDescriptor(const ClassObject* iface,
+    const char* methodName, const char* descriptor);
+Method* dvmFindInterfaceMethodHier(const ClassObject* iface,
+    const char* methodName, const DexProto* proto);
+
+/*
  * Find the implementation of "meth" in "clazz".
  *
  * Returns NULL and throws an exception if not found.
