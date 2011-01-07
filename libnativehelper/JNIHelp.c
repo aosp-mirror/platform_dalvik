@@ -37,18 +37,18 @@ int jniRegisterNativeMethods(JNIEnv* env, const char* className,
     LOGV("Registering %s natives\n", className);
     clazz = (*env)->FindClass(env, className);
     if (clazz == NULL) {
-        LOGE("Native registration unable to find class '%s'\n", className);
-        return -1;
+        LOGE("Native registration unable to find class '%s', aborting\n",
+            className);
+        abort();
     }
 
-    int result = 0;
     if ((*env)->RegisterNatives(env, clazz, gMethods, numMethods) < 0) {
-        LOGE("RegisterNatives failed for '%s'\n", className);
-        result = -1;
+        LOGE("RegisterNatives failed for '%s', aborting\n", className);
+        abort();
     }
 
     (*env)->DeleteLocalRef(env, clazz);
-    return result;
+    return 0;
 }
 
 /*
