@@ -287,7 +287,6 @@ Method* dvmResolveInterfaceMethod(const ClassObject* referrer, u4 methodIdx)
     ClassObject* resClass;
     const DexMethodId* pMethodId;
     Method* resMethod;
-    int i;
 
     LOGVV("--- resolving interface method %d (referrer=%s)\n",
         methodIdx, referrer->descriptor);
@@ -338,23 +337,10 @@ Method* dvmResolveInterfaceMethod(const ClassObject* referrer, u4 methodIdx)
 
     LOGVV("+++ looking for '%s' '%s' in resClass='%s'\n",
         methodName, methodSig, resClass->descriptor);
-    resMethod = dvmFindVirtualMethod(resClass, methodName, &proto);
+    resMethod = dvmFindInterfaceMethodHier(resClass, methodName, &proto);
     if (resMethod == NULL) {
-        LOGVV("+++ did not resolve immediately\n");
-        for (i = 0; i < resClass->iftableCount; i++) {
-            resMethod = dvmFindVirtualMethod(resClass->iftable[i].clazz,
-                            methodName, &proto);
-            if (resMethod != NULL)
-                break;
-        }
-
-        if (resMethod == NULL) {
-            dvmThrowException("Ljava/lang/NoSuchMethodError;", methodName);
-            return NULL;
-        }
-    } else {
-        LOGVV("+++ resolved immediately: %s (%s %d)\n", resMethod->name,
-            resMethod->clazz->descriptor, (u4) resMethod->methodIndex);
+        dvmThrowException("Ljava/lang/NoSuchMethodError;", methodName);
+        return NULL;
     }
 
     LOGVV("--- found interface method %d (%s.%s)\n",

@@ -2333,6 +2333,11 @@ static jboolean IsInstanceOf(JNIEnv* env, jobject jobj, jclass jclazz)
 /*
  * Get a method ID for an instance method.
  *
+ * While Dalvik bytecode has distinct instructions for virtual, super,
+ * static, direct, and interface method invocation, JNI only provides
+ * two functions for acquiring a method ID.  This call handles everything
+ * but static methods.
+ *
  * JNI defines <init> as an instance method, but Dalvik considers it a
  * "direct" method, so we have to special-case it here.
  *
@@ -2349,10 +2354,16 @@ static jmethodID GetMethodID(JNIEnv* env, jclass jclazz, const char* name,
 
     if (!dvmIsClassInitialized(clazz) && !dvmInitClass(clazz)) {
         assert(dvmCheckException(_self));
+    } else if (dvmIsInterfaceClass(clazz)) {
+        Method* meth = dvmFindInterfaceMethodHierByDescriptor(clazz, name, sig);
+        if (meth == NULL) {
+            dvmThrowExceptionFmt("Ljava/lang/NoSuchMethodError;",
+                "no method with name='%s' signature='%s' in interface %s",
+                name, sig, clazz->descriptor);
+        }
+        id = (jmethodID) meth;
     } else {
-        Method* meth;
-
-        meth = dvmFindVirtualMethodHierByDescriptor(clazz, name, sig);
+        Method* meth = dvmFindVirtualMethodHierByDescriptor(clazz, name, sig);
         if (meth == NULL) {
             /* search private methods and constructors; non-hierarchical */
             meth = dvmFindDirectMethodByDescriptor(clazz, name, sig);
