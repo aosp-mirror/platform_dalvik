@@ -517,7 +517,7 @@ Method* dvmFindVirtualMethod(const ClassObject* clazz, const char* methodName,
 
 /*
  * Find a "virtual" method in a class.  If we don't find it, try the
- * superclass.
+ * superclass.  Does not examine interfaces.
  *
  * Returns NULL if the method can't be found.  (Does not throw an exception.)
  */
@@ -530,7 +530,7 @@ Method* dvmFindVirtualMethodHierByDescriptor(const ClassObject* clazz,
 
 /*
  * Find a "virtual" method in a class.  If we don't find it, try the
- * superclass.
+ * superclass.  Does not examine interfaces.
  *
  * Returns NULL if the method can't be found.  (Does not throw an exception.)
  */
@@ -539,6 +539,51 @@ Method* dvmFindVirtualMethodHier(const ClassObject* clazz,
 {
     return findMethodInListByProto(clazz, METHOD_VIRTUAL, true, methodName,
             proto);
+}
+
+/*
+ * Find a method in an interface.  Searches superinterfaces.
+ *
+ * Returns NULL if the method can't be found.  (Does not throw an exception.)
+ */
+Method* dvmFindInterfaceMethodHierByDescriptor(const ClassObject* iface,
+    const char* methodName, const char* descriptor)
+{
+    Method* resMethod = dvmFindVirtualMethodByDescriptor(iface,
+        methodName, descriptor);
+    if (resMethod == NULL) {
+        /* scan superinterfaces and superclass interfaces */
+        int i;
+        for (i = 0; i < iface->iftableCount; i++) {
+            resMethod = dvmFindVirtualMethodByDescriptor(iface->iftable[i].clazz,
+                methodName, descriptor);
+            if (resMethod != NULL)
+                break;
+        }
+    }
+    return resMethod;
+}
+
+/*
+ * Find a method in an interface.  Searches superinterfaces.
+ *
+ * Returns NULL if the method can't be found.  (Does not throw an exception.)
+ */
+Method* dvmFindInterfaceMethodHier(const ClassObject* iface,
+    const char* methodName, const DexProto* proto)
+{
+    Method* resMethod = dvmFindVirtualMethod(iface, methodName, proto);
+    if (resMethod == NULL) {
+        /* scan superinterfaces and superclass interfaces */
+        int i;
+        for (i = 0; i < iface->iftableCount; i++) {
+            resMethod = dvmFindVirtualMethod(iface->iftable[i].clazz,
+                methodName, proto);
+            if (resMethod != NULL)
+                break;
+        }
+    }
+    return resMethod;
 }
 
 /*
