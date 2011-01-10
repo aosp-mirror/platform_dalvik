@@ -151,6 +151,43 @@ static void Dalvik_dalvik_system_VMRuntime_disableJitCompilation(const u4* args,
     RETURN_VOID();
 }
 
+static void Dalvik_dalvik_system_VMRuntime_newNonMovableArray(const u4* args,
+    JValue* pResult)
+{
+    ClassObject* elementClass = (ClassObject*) args[1];
+    int length = args[2];
+    ArrayObject* newArray;
+
+    if (elementClass == NULL) {
+        dvmThrowException("Ljava/lang/NullPointerException;", NULL);
+        RETURN_VOID();
+    }
+    if (length < 0) {
+        dvmThrowException("Ljava/lang/NegativeArraySizeException;", NULL);
+        RETURN_VOID();
+    }
+
+    // TODO: right now, we don't have a copying collector, so there's no need
+    // to do anything special here, but we ought to pass the non-movability
+    // through to the allocator.
+    newArray = dvmAllocObjectArray(elementClass, length, ALLOC_DEFAULT);
+    if (newArray == NULL) {
+        assert(dvmCheckException(dvmThreadSelf()));
+        RETURN_VOID();
+    }
+    dvmReleaseTrackedAlloc((Object*) newArray, NULL);
+
+    RETURN_PTR(newArray);
+}
+
+static void Dalvik_dalvik_system_VMRuntime_addressOf(const u4* args,
+    JValue* pResult)
+{
+    ArrayObject* array = (ArrayObject*) args[1];
+    s8 result = (uintptr_t) array->contents;
+    RETURN_LONG(result);
+}
+
 const DalvikNativeMethod dvm_dalvik_system_VMRuntime[] = {
     { "getTargetHeapUtilization", "()F",
         Dalvik_dalvik_system_VMRuntime_getTargetHeapUtilization },
@@ -166,5 +203,9 @@ const DalvikNativeMethod dvm_dalvik_system_VMRuntime[] = {
         Dalvik_dalvik_system_VMRuntime_startJitCompilation },
     { "disableJitCompilation", "()V",
         Dalvik_dalvik_system_VMRuntime_disableJitCompilation },
+    { "newNonMovableArray", "(Ljava/lang/Class;I)Ljava/lang/Object;",
+        Dalvik_dalvik_system_VMRuntime_newNonMovableArray },
+    { "addressOf", "(Ljava/lang/Object;)J",
+        Dalvik_dalvik_system_VMRuntime_addressOf },
     { NULL, NULL, NULL },
 };
