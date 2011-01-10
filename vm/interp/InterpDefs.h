@@ -39,7 +39,6 @@ typedef enum InterpEntry {
 
 #if defined(WITH_JIT)
 /*
-<<<<<<< HEAD
  * NOTE: Only entry points dispatched via [&InterpState + #offset] are put
  * in this struct, and there are six of them:
  * 1) dvmJitToInterpNormal: find if there is a corresponding compilation for

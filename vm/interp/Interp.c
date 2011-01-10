@@ -1238,7 +1238,6 @@ void dvmInterpret(Thread* self, const Method* method, JValue* pResult)
     extern void dvmJitToInterpNoChain();
     extern void dvmJitToInterpPunt();
     extern void dvmJitToInterpSingleStep();
-    extern void dvmJitToInterpTraceSelectNoChain();
     extern void dvmJitToInterpTraceSelect();
 #if defined(WITH_SELF_VERIFICATION)
     extern void dvmJitToInterpBackwardBranch();
