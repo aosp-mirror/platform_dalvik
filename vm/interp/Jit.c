@@ -1325,12 +1325,14 @@ void dvmJitResetTable(void)
     dvmLockMutex(&gDvmJit.tableLock);
 
     /* Note: If need to preserve any existing counts. Do so here. */
-    for (i=0; i < JIT_PROF_BLOCK_BUCKETS; i++) {
-        if (gDvmJit.pJitTraceProfCounters->buckets[i])
-            memset((void *) gDvmJit.pJitTraceProfCounters->buckets[i],
-                   0, sizeof(JitTraceCounter_t) * JIT_PROF_BLOCK_ENTRIES);
+    if (gDvmJit.pJitTraceProfCounters) {
+        for (i=0; i < JIT_PROF_BLOCK_BUCKETS; i++) {
+            if (gDvmJit.pJitTraceProfCounters->buckets[i])
+                memset((void *) gDvmJit.pJitTraceProfCounters->buckets[i],
+                       0, sizeof(JitTraceCounter_t) * JIT_PROF_BLOCK_ENTRIES);
+        }
+        gDvmJit.pJitTraceProfCounters->next = 0;
     }
-    gDvmJit.pJitTraceProfCounters->next = 0;
 
     memset((void *) jitEntry, 0, sizeof(JitEntry) * size);
     for (i=0; i< size; i++) {
