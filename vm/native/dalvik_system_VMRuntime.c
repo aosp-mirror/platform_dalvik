@@ -54,34 +54,6 @@ static void Dalvik_dalvik_system_VMRuntime_nativeSetTargetHeapUtilization(
 }
 
 /*
- * native long nativeMinimumHeapSize(long size, boolean set)
- *
- * If set is true, sets the new minimum heap size to size; always
- * returns the current (or previous) size.  If size is negative or
- * zero, removes the current minimum constraint (if present).
- */
-static void Dalvik_dalvik_system_VMRuntime_nativeMinimumHeapSize(
-    const u4* args, JValue* pResult)
-{
-    s8 longSize = GET_ARG_LONG(args, 1);
-    size_t size;
-    bool set = (args[3] != 0);
-
-    /* Fit in 32 bits. */
-    if (longSize < 0) {
-        size = 0;
-    } else if (longSize > INT_MAX) {
-        size = INT_MAX;
-    } else {
-        size = (size_t)longSize;
-    }
-
-    size = dvmMinimumHeapSize(size, set);
-
-    RETURN_LONG(size);
-}
-
-/*
  * public native void gcSoftReferences()
  *
  * Does a GC and forces collection of SoftReferences that are
@@ -198,8 +170,6 @@ const DalvikNativeMethod dvm_dalvik_system_VMRuntime[] = {
         Dalvik_dalvik_system_VMRuntime_getTargetHeapUtilization },
     { "nativeSetTargetHeapUtilization", "(F)V",
         Dalvik_dalvik_system_VMRuntime_nativeSetTargetHeapUtilization },
-    { "nativeMinimumHeapSize", "(JZ)J",
-        Dalvik_dalvik_system_VMRuntime_nativeMinimumHeapSize },
     { "gcSoftReferences", "()V",
         Dalvik_dalvik_system_VMRuntime_gcSoftReferences },
     { "runFinalizationSync", "()V",
