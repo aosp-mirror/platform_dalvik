@@ -66,44 +66,6 @@ static void setIdealFootprint(size_t max);
 #define HSTRACE(...)  /**/
 #endif
 
-/*
-=======================================================
-=======================================================
-=======================================================
-
-How will this be used?
-allocating/freeing: Heap.c just wants to say "alloc(n)" and get a ptr
-    - if allocating in large doesn't work, try allocating from small
-Heap.c will use HeapSource.h; HeapSource.c will do the right thing
-    between small and large
-    - some operations should be abstracted; put in a structure
-
-How do we manage the size trade-offs?
-- keep mspace max footprint clamped to actual footprint
-- if small-alloc returns null, adjust large vs. small ratio
-    - give small all available slack and retry
-    - success or fail, snap back to actual footprint and give rest to large
-
-managed as "small actual" + "large actual" + "delta to allowed total footprint"
-- when allocating from one source or the other, give the delta to the
-    active source, but snap back afterwards
-- that may not work so great for a gc heap, because small will always consume.
-    - but we need to use the memory, and the current max is the amount we
-      need to fill before a GC.
-
-Find a way to permanently steal pages from the middle of the heap
-    - segment tricks?
-
-Allocate String and char[] in a separate heap?
-
-Maybe avoid growing small heap, even if there's slack?  Look at
-live ratio of small heap after a gc; scale it based on that.
-
-=======================================================
-=======================================================
-=======================================================
-*/
-
 typedef struct {
     /* The mspace to allocate from.
      */
@@ -338,7 +300,7 @@ createMspace(void *base, size_t startSize, size_t absoluteMaxSize)
     mspace msp;
 
     /* Create an unlocked dlmalloc mspace to use as
-     * a small-object heap source.
+     * a heap source.
      *
      * We start off reserving heapSizeStart/2 bytes but
      * letting the heap grow to heapSizeStart.  This saves
@@ -532,7 +494,7 @@ dvmHeapSourceStartup(size_t startSize, size_t absoluteMaxSize)
     }
 
     /* Create an unlocked dlmalloc mspace to use as
-     * the small object heap source.
+     * a heap source.
      */
     msp = createMspace(base, startSize, absoluteMaxSize);
     if (msp == NULL) {
