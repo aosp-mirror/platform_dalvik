@@ -184,6 +184,11 @@ static void Dalvik_dalvik_system_VMRuntime_addressOf(const u4* args,
     JValue* pResult)
 {
     ArrayObject* array = (ArrayObject*) args[1];
+    if (!dvmIsArray(array)) {
+        dvmThrowException("Ljava/lang/IllegalArgumentException;", NULL);
+        RETURN_VOID();
+    }
+    // TODO: we should also check that this is a non-movable array.
     s8 result = (uintptr_t) array->contents;
     RETURN_LONG(result);
 }
