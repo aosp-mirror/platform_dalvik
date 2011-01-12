@@ -106,10 +106,6 @@ struct HeapSource {
      */
     size_t targetUtilization;
 
-    /* Requested minimum heap size, or zero if there is no minimum.
-     */
-    size_t minimumSize;
-
     /* The starting heap size.
      */
     size_t startSize;
@@ -518,7 +514,6 @@ dvmHeapSourceStartup(size_t startSize, size_t absoluteMaxSize)
     memset(hs, 0, sizeof(*hs));
 
     hs->targetUtilization = DEFAULT_HEAP_UTILIZATION;
-    hs->minimumSize = 0;
     hs->startSize = startSize;
     hs->absoluteMaxSize = absoluteMaxSize;
     hs->idealSize = startSize;
@@ -1150,8 +1145,6 @@ setIdealFootprint(size_t max)
                 FRACTIONAL_MB(max),
                 FRACTIONAL_MB(hs->absoluteMaxSize));
         max = hs->absoluteMaxSize;
-    } else if (max < hs->minimumSize) {
-        max = hs->minimumSize;
     }
 
     /* Convert max into a size that applies to the active heap.
@@ -1223,48 +1216,6 @@ void dvmSetTargetHeapUtilization(float newTarget)
             (size_t)(newTarget * (float)HEAP_UTILIZATION_MAX);
     LOGV("Set heap target utilization to %zd/%d (%f)\n",
             hs->targetUtilization, HEAP_UTILIZATION_MAX, newTarget);
-}
-
-/*
- * If set is true, sets the new minimum heap size to size; always
- * returns the current (or previous) size.  If size is negative,
- * removes the current minimum constraint (if present).
- */
-size_t
-dvmMinimumHeapSize(size_t size, bool set)
-{
-    HeapSource *hs = gHs;
-    size_t oldMinimumSize;
-
-    /* gHs caches an entry in gDvm.gcHeap;  we need to hold the
-     * heap lock if we're going to look at it.  We also need the
-     * lock for the call to setIdealFootprint().
-     */
-    dvmLockHeap();
-
-    HS_BOILERPLATE();
-
-    oldMinimumSize = hs->minimumSize;
-
-    if (set) {
-        if (size > hs->absoluteMaxSize) {
-            size = hs->absoluteMaxSize;
-        }
-        hs->minimumSize = size;
-        if (size > hs->idealSize) {
-            /* Force a snap to the minimum value, which we just set
-             * and which setIdealFootprint() will take into consideration.
-             */
-            setIdealFootprint(hs->idealSize);
-        }
-        /* Otherwise we'll just keep it in mind the next time
-         * setIdealFootprint() is called.
-         */
-    }
-
-    dvmUnlockHeap();
-
-    return oldMinimumSize;
 }
 
 /*

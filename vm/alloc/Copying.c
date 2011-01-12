@@ -745,11 +745,6 @@ void dvmSetTargetHeapUtilization(float newTarget)
     assert(newTarget > 0.0f && newTarget < 1.0f);
 }
 
-size_t dvmMinimumHeapSize(size_t size, bool set)
-{
-    return gDvm.gcHeap->heapSource->minimumSize;
-}
-
 /*
  * Expands the size of the heap after a collection.  At present we
  * commit the pages for maximum size of the heap so this routine is
