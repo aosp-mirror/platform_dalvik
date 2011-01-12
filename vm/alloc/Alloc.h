@@ -153,13 +153,6 @@ float dvmGetTargetHeapUtilization(void);
 void dvmSetTargetHeapUtilization(float newTarget);
 
 /*
- * If set is true, sets the new minimum heap size to size; always
- * returns the current (or previous) size.  If size is zero,
- * removes the current minimum constraint (if present).
- */
-size_t dvmMinimumHeapSize(size_t size, bool set);
-
-/*
  * Initiate garbage collection.
  *
  * This usually happens automatically, but can also be caused by Runtime.gc().
