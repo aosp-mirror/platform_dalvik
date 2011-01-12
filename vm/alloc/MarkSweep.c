@@ -790,7 +790,10 @@ static void preserveSomeSoftReferences(Object **list)
     while (*list != NULL) {
         ref = dequeuePendingReference(list);
         referent = dvmGetFieldObject(ref, referentOffset);
-        assert(referent != NULL);
+        if (referent == NULL) {
+            /* Referent was cleared by the user during marking. */
+            continue;
+        }
         marked = isMarked(referent, ctx);
         if (!marked && ((++counter) & 1)) {
             /* Referent is white and biased toward saving, mark it. */
@@ -828,8 +831,7 @@ static void clearWhiteReferences(Object **list)
     while (*list != NULL) {
         ref = dequeuePendingReference(list);
         referent = dvmGetFieldObject(ref, referentOffset);
-        assert(referent != NULL);
-        if (!isMarked(referent, ctx)) {
+        if (referent != NULL && !isMarked(referent, ctx)) {
             /* Referent is white, clear it. */
             clearReference(ref);
             if (isEnqueuable(ref)) {
