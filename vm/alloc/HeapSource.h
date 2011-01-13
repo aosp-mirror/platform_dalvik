@@ -86,9 +86,7 @@ enum HeapSourceValueSpec {
     HS_FOOTPRINT,
     HS_ALLOWED_FOOTPRINT,
     HS_BYTES_ALLOCATED,
-    HS_OBJECTS_ALLOCATED,
-    HS_EXTERNAL_BYTES_ALLOCATED,
-    HS_EXTERNAL_LIMIT
+    HS_OBJECTS_ALLOCATED
 };
 size_t dvmHeapSourceGetValue(enum HeapSourceValueSpec spec,
                              size_t perHeapStats[], size_t arrayLen);

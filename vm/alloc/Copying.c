@@ -552,12 +552,6 @@ size_t dvmHeapSourceGetValue(enum HeapSourceValueSpec spec,
 
     heapSource = gDvm.gcHeap->heapSource;
     switch (spec) {
-    case HS_EXTERNAL_BYTES_ALLOCATED:
-        value = 0;
-        break;
-    case HS_EXTERNAL_LIMIT:
-        value = 0;
-        break;
     case HS_FOOTPRINT:
         value = heapSource->maximumSize;
         break;
