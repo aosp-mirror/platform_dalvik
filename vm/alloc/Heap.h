@@ -72,10 +72,6 @@ typedef enum {
     GC_CONCURRENT,
     /* Explicit GC via Runtime.gc(), VMRuntime.gc(), or SIGUSR1. */
     GC_EXPLICIT,
-    /* GC to try to reduce heap footprint to allow more non-GC'ed memory. */
-    GC_EXTERNAL_ALLOC,
-    /* GC to dump heap contents to a file, only used under WITH_HPROF */
-    GC_HPROF_DUMP_HEAP
 } GcReason;
 
 /*
