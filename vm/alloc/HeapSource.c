@@ -303,7 +303,7 @@ createMspace(void *base, size_t startSize, size_t absoluteMaxSize)
      * memory in the case where a process uses even less
      * than the starting size.
      */
-    LOGV_HEAP("Creating VM heap of size %u\n", startSize);
+    LOGV_HEAP("Creating VM heap of size %zu\n", startSize);
     errno = 0;
     msp = create_contiguous_mspace_with_base(startSize/2,
             absoluteMaxSize, /*locked=*/false, base);
@@ -316,7 +316,7 @@ createMspace(void *base, size_t startSize, size_t absoluteMaxSize)
         /* There's no guarantee that errno has meaning when the call
          * fails, but it often does.
          */
-        LOGE_HEAP("Can't create VM heap of size (%u,%u): %s\n",
+        LOGE_HEAP("Can't create VM heap of size (%zu,%zu): %s\n",
             startSize/2, absoluteMaxSize, strerror(errno));
     }
 
