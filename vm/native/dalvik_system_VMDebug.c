@@ -401,31 +401,6 @@ static void Dalvik_dalvik_system_VMDebug_stopEmulatorTracing(const u4* args,
 }
 
 /*
- * static int setAllocationLimit(int limit)
- *
- * Set the current allocation limit in this thread.  Return the previous
- * value.
- */
-static void Dalvik_dalvik_system_VMDebug_setAllocationLimit(const u4* args,
-    JValue* pResult)
-{
-    UNUSED_PARAMETER(args);
-    RETURN_INT(-1);
-}
-
-/*
- * static int setGlobalAllocationLimit(int limit)
- *
- * Set the allocation limit for this process.  Returns the previous value.
- */
-static void Dalvik_dalvik_system_VMDebug_setGlobalAllocationLimit(const u4* args,
-    JValue* pResult)
-{
-    UNUSED_PARAMETER(args);
-    RETURN_INT(-1);
-}
-
-/*
  * static boolean isDebuggerConnected()
  *
  * Returns "true" if a debugger is attached.
@@ -862,10 +837,6 @@ const DalvikNativeMethod dvm_dalvik_system_VMDebug[] = {
         Dalvik_dalvik_system_VMDebug_startEmulatorTracing },
     { "stopEmulatorTracing",        "()V",
         Dalvik_dalvik_system_VMDebug_stopEmulatorTracing },
-    { "setAllocationLimit",         "(I)I",
-        Dalvik_dalvik_system_VMDebug_setAllocationLimit },
-    { "setGlobalAllocationLimit",   "(I)I",
-        Dalvik_dalvik_system_VMDebug_setGlobalAllocationLimit },
     { "startInstructionCounting",   "()V",
         Dalvik_dalvik_system_VMDebug_startInstructionCounting },
     { "stopInstructionCounting",    "()V",
