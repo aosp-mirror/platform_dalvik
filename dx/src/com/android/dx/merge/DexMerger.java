@@ -524,17 +524,17 @@ public final class DexMerger {
     private void transformClassData(DexReader in, IndexMap indexMap) throws IOException {
         contentsOut.classDatas.size++;
 
-        int staticFieldsSize = in.readUnsignedLeb128();
-        classDataItemWriter.writeUnsignedLeb128(staticFieldsSize);
+        int staticFieldsSize = in.readUleb128();
+        classDataItemWriter.writeUleb128(staticFieldsSize);
 
-        int instanceFieldsSize = in.readUnsignedLeb128();
-        classDataItemWriter.writeUnsignedLeb128(instanceFieldsSize);
+        int instanceFieldsSize = in.readUleb128();
+        classDataItemWriter.writeUleb128(instanceFieldsSize);
 
-        int directMethodsSize = in.readUnsignedLeb128();
-        classDataItemWriter.writeUnsignedLeb128(directMethodsSize);
+        int directMethodsSize = in.readUleb128();
+        classDataItemWriter.writeUleb128(directMethodsSize);
 
-        int virtualMethodsSize = in.readUnsignedLeb128();
-        classDataItemWriter.writeUnsignedLeb128(virtualMethodsSize);
+        int virtualMethodsSize = in.readUleb128();
+        classDataItemWriter.writeUleb128(virtualMethodsSize);
 
         transformEncodedFields(in, indexMap, staticFieldsSize);
         transformEncodedFields(in, indexMap, instanceFieldsSize);
@@ -548,12 +548,12 @@ public final class DexMerger {
         int inFieldIndex = 0;
         int lastOutFieldIndex = 0;
         for (int i = 0; i < count; i++) {
-            inFieldIndex += in.readUnsignedLeb128(); // field idx diff
+            inFieldIndex += in.readUleb128(); // field idx diff
             int outFieldIndex = indexMap.fieldIds[inFieldIndex];
-            classDataItemWriter.writeUnsignedLeb128(outFieldIndex - lastOutFieldIndex);
+            classDataItemWriter.writeUleb128(outFieldIndex - lastOutFieldIndex);
             lastOutFieldIndex = outFieldIndex;
 
-            classDataItemWriter.writeUnsignedLeb128(in.readUnsignedLeb128()); // access flags
+            classDataItemWriter.writeUleb128(in.readUleb128()); // access flags
         }
     }
 
@@ -565,20 +565,20 @@ public final class DexMerger {
         int inMethodIndex = 0;
         int lastOutMethodIndex = 0;
         for (int i = 0; i < count; i++) {
-            inMethodIndex += in.readUnsignedLeb128(); // method idx diff
+            inMethodIndex += in.readUleb128(); // method idx diff
             int outMethodIndex = indexMap.methodIds[inMethodIndex];
-            classDataItemWriter.writeUnsignedLeb128(outMethodIndex - lastOutMethodIndex);
+            classDataItemWriter.writeUleb128(outMethodIndex - lastOutMethodIndex);
             lastOutMethodIndex = outMethodIndex;
 
-            classDataItemWriter.writeUnsignedLeb128(in.readUnsignedLeb128()); // access flags
+            classDataItemWriter.writeUleb128(in.readUleb128()); // access flags
 
-            int codeOff = in.readUnsignedLeb128(); // code off
+            int codeOff = in.readUleb128(); // code off
             if (codeOff == 0) {
-                classDataItemWriter.writeUnsignedLeb128(0);
+                classDataItemWriter.writeUleb128(0);
             } else {
                 int inPosition = in.getPosition();
                 codeItemWriter.alignToFourBytes();
-                classDataItemWriter.writeUnsignedLeb128(codeItemWriter.getCursor());
+                classDataItemWriter.writeUleb128(codeItemWriter.getCursor());
 
                 in.seek(codeOff);
                 transformCodeItem(in, indexMap);
@@ -636,8 +636,8 @@ public final class DexMerger {
 
     private void transformEncodedCatchHandlerList(DexReader in, IndexMap indexMap)
             throws IOException {
-        int size = in.readUnsignedLeb128(); // size
-        codeItemWriter.writeUnsignedLeb128(size);
+        int size = in.readUleb128(); // size
+        codeItemWriter.writeUleb128(size);
 
         for (int i = 0; i < size; i++) {
             transformEncodedCatchHandler(in, indexMap);
@@ -645,17 +645,17 @@ public final class DexMerger {
     }
 
     private void transformEncodedCatchHandler(DexReader in, IndexMap indexMap) throws IOException {
-        int size = in.readSignedLeb128(); // size
-        codeItemWriter.writeSignedLeb128(size);
+        int size = in.readSleb128(); // size
+        codeItemWriter.writeSleb128(size);
 
         int handlersCount = Math.abs(size);
         for (int i = 0; i < handlersCount; i++) {
-            codeItemWriter.writeUnsignedLeb128(indexMap.typeIds[in.readUnsignedLeb128()]); // type idx
-            codeItemWriter.writeUnsignedLeb128(in.readUnsignedLeb128()); // addr
+            codeItemWriter.writeUleb128(indexMap.typeIds[in.readUleb128()]); // type idx
+            codeItemWriter.writeUleb128(in.readUleb128()); // addr
         }
 
         if (size <= 0) {
-            codeItemWriter.writeUnsignedLeb128(in.readUnsignedLeb128()); // catch all addr
+            codeItemWriter.writeUleb128(in.readUleb128()); // catch all addr
         }
     }
 

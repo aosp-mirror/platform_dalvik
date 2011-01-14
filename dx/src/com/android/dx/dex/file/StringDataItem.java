@@ -78,7 +78,7 @@ public final class StringDataItem extends OffsettedItem {
             out.annotate(bytes.size() + 1, value.toQuoted());
         }
 
-        out.writeUnsignedLeb128(utf16Size);
+        out.writeUleb128(utf16Size);
         out.write(bytes);
         out.writeByte(0);
     }

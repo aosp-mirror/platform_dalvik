@@ -224,7 +224,7 @@ public final class ByteArrayAnnotatedOutput
     }
 
     /** {@inheritDoc} */
-    public int writeUnsignedLeb128(int value) {
+    public int writeUleb128(int value) {
         if (stretchy) {
             ensureCapacity(cursor + 5); // pessimistic
         }
@@ -234,7 +234,7 @@ public final class ByteArrayAnnotatedOutput
     }
 
     /** {@inheritDoc} */
-    public int writeSignedLeb128(int value) {
+    public int writeSleb128(int value) {
         if (stretchy) {
             ensureCapacity(cursor + 5); // pessimistic
         }

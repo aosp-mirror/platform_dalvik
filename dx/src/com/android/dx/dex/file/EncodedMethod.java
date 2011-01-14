@@ -187,9 +187,9 @@ public final class EncodedMethod extends EncodedMember
                     "    code_off:     " + Hex.u4(codeOff));
         }
 
-        out.writeUnsignedLeb128(diff);
-        out.writeUnsignedLeb128(accessFlags);
-        out.writeUnsignedLeb128(codeOff);
+        out.writeUleb128(diff);
+        out.writeUleb128(accessFlags);
+        out.writeUleb128(codeOff);
 
         return methodIdx;
     }

@@ -75,7 +75,7 @@ public interface Output {
      * @param value value to write, treated as an unsigned value
      * @return {@code 1..5;} the number of bytes actually written
      */
-    public int writeUnsignedLeb128(int value);
+    public int writeUleb128(int value);
 
     /**
      * Writes a DWARFv3-style unsigned LEB128 integer. For details,
@@ -85,7 +85,7 @@ public interface Output {
      * @param value value to write
      * @return {@code 1..5;} the number of bytes actually written
      */
-    public int writeSignedLeb128(int value);
+    public int writeSleb128(int value);
 
     /**
      * Writes a {@link ByteArray} to this instance.
