@@ -3063,7 +3063,7 @@ HANDLE_OPCODE(OP_INVOKE_DIRECT_EMPTY /*vB, {vD, vE, vF, vG, vA}, meth@CCCC*/)
     //LOGI("Ignoring empty\n");
     FINISH(3);
 #else
-    if (!gDvm.debuggerActive) {
+    if (!DEBUGGER_ACTIVE) {
         //LOGI("Skipping empty\n");
         FINISH(3);      // don't want it to show up in profiler output
     } else {
@@ -5137,7 +5137,7 @@ GOTO_TARGET(exceptionThrown)
          * here, and have the JNI exception code do the reporting to the
          * debugger.
          */
-        if (gDvm.debuggerActive) {
+        if (DEBUGGER_ACTIVE) {
             void* catchFrame;
             catchRelPc = dvmFindCatchBlock(self, pc - curMethod->insns,
                         exception, true, &catchFrame);
@@ -5419,7 +5419,7 @@ GOTO_TARGET(invokeMethod, bool methodCallRange, const Method* _methodToCall,
             DUMP_REGS(methodToCall, newFp, true);   // show input args
 
 #if (INTERP_TYPE == INTERP_DBG)
-            if (gDvm.debuggerActive) {
+            if (DEBUGGER_ACTIVE) {
                 dvmDbgPostLocationEvent(methodToCall, -1,
                     dvmGetThisPtr(curMethod, fp), DBG_METHOD_ENTRY);
             }
@@ -5446,7 +5446,7 @@ GOTO_TARGET(invokeMethod, bool methodCallRange, const Method* _methodToCall,
             (*methodToCall->nativeFunc)(newFp, &retval, methodToCall, self);
 
 #if (INTERP_TYPE == INTERP_DBG)
-            if (gDvm.debuggerActive) {
+            if (DEBUGGER_ACTIVE) {
                 dvmDbgPostLocationEvent(methodToCall, -1,
                     dvmGetThisPtr(curMethod, fp), DBG_METHOD_EXIT);
             }

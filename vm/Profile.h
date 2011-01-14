@@ -113,30 +113,24 @@ enum {
  */
 #define TRACE_METHOD_ENTER(_self, _method)                                 \
     do {                                                                    \
-        if (gDvm.activeProfilers != 0) {                                    \
-            if (gDvm.methodTrace.traceEnabled)                              \
-                dvmMethodTraceAdd(_self, _method, METHOD_TRACE_ENTER);      \
-            if (gDvm.emulatorTraceEnableCount != 0)                         \
-                dvmEmitEmulatorTrace(_method, METHOD_TRACE_ENTER);          \
-        }                                                                   \
+        if (gDvm.interpBreak & kSubModeMethodTrace)                         \
+            dvmMethodTraceAdd(_self, _method, METHOD_TRACE_ENTER);          \
+        if (gDvm.interpBreak & kSubModeEmulatorTrace)                       \
+            dvmEmitEmulatorTrace(_method, METHOD_TRACE_ENTER);              \
     } while(0);
 #define TRACE_METHOD_EXIT(_self, _method)                                  \
     do {                                                                    \
-        if (gDvm.activeProfilers != 0) {                                    \
-            if (gDvm.methodTrace.traceEnabled)                              \
-                dvmMethodTraceAdd(_self, _method, METHOD_TRACE_EXIT);       \
-            if (gDvm.emulatorTraceEnableCount != 0)                         \
-                dvmEmitEmulatorTrace(_method, METHOD_TRACE_EXIT);           \
-        }                                                                   \
+        if (gDvm.interpBreak & kSubModeMethodTrace)                         \
+            dvmMethodTraceAdd(_self, _method, METHOD_TRACE_EXIT);           \
+        if (gDvm.interpBreak & kSubModeEmulatorTrace)                       \
+            dvmEmitEmulatorTrace(_method, METHOD_TRACE_EXIT);               \
     } while(0);
 #define TRACE_METHOD_UNROLL(_self, _method)                                \
     do {                                                                    \
-        if (gDvm.activeProfilers != 0) {                                    \
-            if (gDvm.methodTrace.traceEnabled)                              \
-                dvmMethodTraceAdd(_self, _method, METHOD_TRACE_UNROLL);     \
-            if (gDvm.emulatorTraceEnableCount != 0)                         \
-                dvmEmitEmulatorTrace(_method, METHOD_TRACE_UNROLL);         \
-        }                                                                   \
+        if (gDvm.interpBreak & kSubModeMethodTrace)                         \
+            dvmMethodTraceAdd(_self, _method, METHOD_TRACE_UNROLL);         \
+        if (gDvm.interpBreak & kSubModeEmulatorTrace)                       \
+            dvmEmitEmulatorTrace(_method, METHOD_TRACE_UNROLL);             \
     } while(0);
 
 void dvmMethodTraceAdd(struct Thread* self, const Method* method, int action);

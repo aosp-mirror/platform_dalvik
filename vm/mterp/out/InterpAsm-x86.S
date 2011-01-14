@@ -13695,6 +13695,7 @@ common_invokeMethodNoRange:
  *       is a bit ugly, but will happen in the relatively uncommon path.
  * TODO: Basic-block style Jit will need a hook here as well.  Fold it into
  *       the suspendCount check so we can get both in 1 shot.
+ * TUNING: Improve scheduling here & do initial single test for all.
  */
 common_periodicChecks:
     movl    offGlue_pSelfSuspendCount(%ecx),%eax    # eax <- &suspendCount
@@ -13702,17 +13703,9 @@ common_periodicChecks:
     jne     1f
 
 6:
-    movl   offGlue_pDebuggerActive(%ecx),%eax      # eax <- &DebuggerActive
-    movl   offGlue_pActiveProfilers(%ecx),%ecx     # ecx <- &ActiveProfilers
-    testl  %eax,%eax               # debugger enabled?
-    je     2f
-    movzbl (%eax),%eax             # get active count
-2:
-    orl    (%ecx),%eax             # eax <- debuggerActive | activeProfilers
-    movl   rGLUE,%ecx              # restore rGLUE
-    jne    3f                      # one or both active - switch interp
-
-5:
+    movl   offGlue_pInterpBreak(%ecx),%eax    # eax <- &interpBreak
+    cmpl   $0,(%eax)              # something interesting happening?
+    jne    3f                      # yes - switch interpreters
     ret
 
     /* Check for suspend */

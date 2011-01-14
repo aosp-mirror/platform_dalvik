@@ -1215,6 +1215,23 @@ void dvmThrowVerificationError(const Method* method, int kind, int ref)
 }
 
 /*
+ * Update interpBreak
+ */
+void dvmUpdateInterpBreak(int newMode, bool enable)
+{
+    ExecutionSubModes oldValue, newValue;
+
+    do {
+        oldValue = gDvm.interpBreak;
+        newValue = enable ? oldValue | newMode : oldValue & ~newMode;
+    } while (android_atomic_release_cas(oldValue, newValue,
+            &gDvm.interpBreak) != 0);
+#if defined(WITH_JIT)
+    dvmCompilerStateRefresh();
+#endif
+}
+
+/*
  * Main interpreter loop entry point.  Select "standard" or "debug"
  * interpreter and switch between them as required.
  *

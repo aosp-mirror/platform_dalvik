@@ -2775,7 +2775,7 @@ bool dvmLinkClass(ClassObject* clazz)
      * The class has been prepared and resolved but possibly not yet verified
      * at this point.
      */
-    if (gDvm.debuggerActive) {
+    if (DEBUGGER_ACTIVE) {
         dvmDbgPostClassPrepare(clazz);
     }
 

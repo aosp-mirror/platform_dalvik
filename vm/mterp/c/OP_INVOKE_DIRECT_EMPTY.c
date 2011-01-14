@@ -3,7 +3,7 @@ HANDLE_OPCODE(OP_INVOKE_DIRECT_EMPTY /*vB, {vD, vE, vF, vG, vA}, meth@CCCC*/)
     //LOGI("Ignoring empty\n");
     FINISH(3);
 #else
-    if (!gDvm.debuggerActive) {
+    if (!DEBUGGER_ACTIVE) {
         //LOGI("Skipping empty\n");
         FINISH(3);      // don't want it to show up in profiler output
     } else {

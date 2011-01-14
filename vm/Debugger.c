@@ -392,15 +392,12 @@ void dvmDbgConnected(void)
  */
 void dvmDbgActive(void)
 {
-    if (gDvm.debuggerActive)
+    if (DEBUGGER_ACTIVE)
         return;
 
     LOGI("Debugger is active\n");
     dvmInitBreakpoints();
-    gDvm.debuggerActive = true;
-#if defined(WITH_JIT)
-    dvmCompilerStateRefresh();
-#endif
+    dvmUpdateInterpBreak(kSubModeDebuggerActive, true);
 }
 
 /*
@@ -415,7 +412,7 @@ void dvmDbgDisconnected(void)
 {
     assert(gDvm.debuggerConnected);
 
-    gDvm.debuggerActive = false;
+    dvmUpdateInterpBreak(kSubModeDebuggerActive, false);
 
     dvmHashTableLock(gDvm.dbgRegistry);
     gDvm.debuggerConnected = false;
@@ -428,9 +425,6 @@ void dvmDbgDisconnected(void)
 
     dvmHashTableClear(gDvm.dbgRegistry);
     dvmHashTableUnlock(gDvm.dbgRegistry);
-#if defined(WITH_JIT)
-    dvmCompilerStateRefresh();
-#endif
 }
 
 /*
@@ -440,7 +434,7 @@ void dvmDbgDisconnected(void)
  */
 bool dvmDbgIsDebuggerConnected(void)
 {
-    return gDvm.debuggerActive;
+    return DEBUGGER_ACTIVE;
 }
 
 /*
@@ -2576,7 +2570,7 @@ void dvmDbgPostException(void* throwFp, int throwRelPc, void* catchFp,
  */
 void dvmDbgPostThreadStart(Thread* thread)
 {
-    if (gDvm.debuggerActive) {
+    if (DEBUGGER_ACTIVE) {
         dvmJdwpPostThreadChange(gDvm.jdwpState,
             objectToObjectId(thread->threadObj), true);
     }
@@ -2589,7 +2583,7 @@ void dvmDbgPostThreadStart(Thread* thread)
  */
 void dvmDbgPostThreadDeath(Thread* thread)
 {
-    if (gDvm.debuggerActive) {
+    if (DEBUGGER_ACTIVE) {
         dvmJdwpPostThreadChange(gDvm.jdwpState,
             objectToObjectId(thread->threadObj), false);
     }

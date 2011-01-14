@@ -13596,48 +13596,21 @@ common_backwardBranch:
  *  r9 is trampoline PC adjustment *in bytes*
  */
 common_periodicChecks:
+    ldr     r1, [rGLUE, #offGlue_pInterpBreak] @ r3<- &interpBreak
+    /* speculatively load address of thread-specific suspend count */
     ldr     r3, [rGLUE, #offGlue_pSelfSuspendCount] @ r3<- &suspendCount
-
-    ldr     r1, [rGLUE, #offGlue_pDebuggerActive]   @ r1<- &debuggerActive
-    ldr     r2, [rGLUE, #offGlue_pActiveProfilers]  @ r2<- &activeProfilers
-
+    ldr     r1, [r1]                                @ r1<- interpBreak
+    /* speculatively load thread-specific suspend count */
     ldr     ip, [r3]                    @ ip<- suspendCount (int)
-
-    cmp     r1, #0                      @ debugger enabled?
-#if defined(WORKAROUND_CORTEX_A9_745320)
-    /* Don't use conditional loads if the HW defect exists */
-    beq     101f
-    ldrb    r1, [r1]                    @ yes, r1<- debuggerActive (boolean)
-101:
-#else
-    ldrneb  r1, [r1]                    @ yes, r1<- debuggerActive (boolean)
-#endif
-    ldr     r2, [r2]                    @ r2<- activeProfilers (int)
-    orrnes  ip, ip, r1                  @ ip<- suspendCount | debuggerActive
-    /*
-     * Don't switch the interpreter in the libdvm_traceview build even if the
-     * profiler is active.
-     * The code here is opted for less intrusion instead of performance.
-     * That is, *pActiveProfilers is still loaded into r2 even though it is not
-     * used when WITH_INLINE_PROFILING is defined.
-     */
-#if !defined(WITH_INLINE_PROFILING)
-    orrs    ip, ip, r2                  @ ip<- suspend|debugger|profiler; set Z
-#endif
-
-
-    bxeq    lr                          @ all zero, return
-
+    cmp     r1, #0                                  @ anything unusual?
+    bxeq    lr                                      @ return if not
     /*
      * One or more interesting events have happened.  Figure out what.
      *
-     * If debugging or profiling are compiled in, we need to disambiguate.
-     *
      * r0 still holds the reentry type.
      */
-    ldr     ip, [r3]                    @ ip<- suspendCount (int)
     cmp     ip, #0                      @ want suspend?
-    beq     1f                          @ no, must be debugger/profiler
+    beq     3f                          @ no, must be something else
 
     stmfd   sp!, {r0, lr}               @ preserve r0 and lr
 #if defined(WITH_JIT)
@@ -13658,41 +13631,32 @@ common_periodicChecks:
     ldmfd   sp!, {r0, lr}               @ restore r0 and lr
 
     /*
-     * Reload the debugger/profiler enable flags.  We're checking to see
-     * if either of these got set while we were suspended.
-     *
-     * If WITH_INLINE_PROFILING is configured, don't check whether the profiler
-     * is enabled or not as the profiling will be done inline.
+     * Reload the interpBreak flags - they may have changed while we
+     * were suspended.
      */
-    ldr     r1, [rGLUE, #offGlue_pDebuggerActive]   @ r1<- &debuggerActive
-    cmp     r1, #0                      @ debugger enabled?
-#if defined(WORKAROUND_CORTEX_A9_745320)
-    /* Don't use conditional loads if the HW defect exists */
-    beq     101f
-    ldrb    r1, [r1]                    @ yes, r1<- debuggerActive (boolean)
-101:
+    ldr     r1, [rGLUE, #offGlue_pInterpBreak]   @ r1<- &interpBreak
+    ldr     r1, [r1]                    @ r1<- interpBreak
+3:
+    /*
+     * TODO: this code is too fragile.  Need a general mechanism
+     * to identify what actions to take by submode.  Some profiling modes
+     * (instruction count) need to single-step, while method tracing
+     * may not.  Debugging with breakpoints can run unfettered, but
+     * source-level single-stepping requires Dalvik singlestepping.
+     * GC may require a one-shot action and then full-speed resumption.
+     */
+#if defined(WITH_INLINE_PROFILING)
+    ands    r1, #(kSubModeDebuggerActive | kSubModeEmulatorTrace | kSubModeInstCounting)
 #else
-    ldrneb  r1, [r1]                    @ yes, r1<- debuggerActive (boolean)
+    ands    r1, #(kSubModeDebuggerActive | kSubModeEmulatorTrace | kSubModeInstCounting | kSubModeMethodTrace)
 #endif
+    bxeq    lr                          @ nothing to do, return
 
-#if !defined(WITH_INLINE_PROFILING)
-    ldr     r2, [rGLUE, #offGlue_pActiveProfilers]  @ r2<- &activeProfilers
-    ldr     r2, [r2]                    @ r2<- activeProfilers (int)
-    orrs    r1, r1, r2
-#else
-    cmp     r1, #0                      @ only consult the debuggerActive flag
-#endif
-
-    beq     2f
-
-1:  @ debugger/profiler enabled, bail out; glue->entryPoint was set above
+    @ debugger/profiler enabled, bail out; glue->entryPoint was set above
     str     r0, [rGLUE, #offGlue_entryPoint]    @ store r0, need for debug/prof
     add     rPC, rPC, r9                @ update rPC
     mov     r1, #1                      @ "want switch" = true
     b       common_gotoBail             @ side exit
-
-2:
-    bx      lr                          @ nothing to do, return
 
 
 /*
