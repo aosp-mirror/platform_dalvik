@@ -74,6 +74,10 @@ bool dvmCompilerArchVariantInit(void)
         LOGE("InterpState.jitToInterpEntries size overflow");
         dvmAbort();
     }
+
+    /* FIXME - comment out the following to enable method-based JIT */
+    gDvmJit.disableOpt |= (1 << kMethodJit);
+
     return true;
 }
 

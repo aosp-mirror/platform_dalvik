@@ -28,6 +28,9 @@ bool dvmCompilerDoWork(CompilerWorkOrder *work);
 /* Lower middle-level IR to low-level IR */
 void dvmCompilerMIR2LIR(CompilationUnit *cUnit);
 
+/* Lower middle-level IR to low-level IR for the whole method */
+void dvmCompilerMethodMIR2LIR(CompilationUnit *cUnit);
+
 /* Assemble LIR into machine code */
 void dvmCompilerAssembleLIR(CompilationUnit *cUnit, JitTranslationInfo *info);
 

@@ -72,7 +72,7 @@ dvmJitToInterpNoChainNoProfile:
     call   dvmBumpNoChain
 #endif
     movl   rPC,OUT_ARG0(%esp)
-    call   dvmJitGetCodeAddr         # is there a translation?
+    call   dvmJitGetTraceAddr        # is there a translation?
     movl   rGLUE,%ecx
     movl   offGlue_self(%ecx), %ecx  # ecx <- glue->self
     movl   %eax,offThread_inJitCodeCache(%ecx)  # set inJitCodeCache flag
@@ -95,7 +95,7 @@ dvmJitToInterpTraceSelectNoChain:
     call   dvmBumpNoChain
 #endif
     movl   rPC,OUT_ARG0(%esp)
-    call   dvmJitGetCodeAddr  # is there a translation?
+    call   dvmJitGetTraceAddr # is there a translation?
     movl   rGLUE,%ecx
     movl   offGlue_self(%ecx),%ecx
     cmpl   $$0,%eax
@@ -125,7 +125,7 @@ dvmJitToInterpTraceSelect:
     pop    rINST           # save chain cell address in callee save reg
     movl   (rINST),rPC
     movl   rPC,OUT_ARG0(%esp)
-    call   dvmJitGetCodeAddr  # is there a translation?
+    call   dvmJitGetTraceAddr # is there a translation?
     cmpl   $$0,%eax
     jz     1b                 # no - ask for one
     movl   %eax,OUT_ARG0(%esp)
@@ -189,7 +189,7 @@ common_updateProfile:
     movb   rINSTbl,(%edx,%eax)   # reset counter
     movl   offGlue_self(%ecx),rINST
     movl   rPC,OUT_ARG0(%esp)
-    call   dvmJitGetCodeAddr   # already have one?
+    call   dvmJitGetTraceAddr  # already have one?
     movl   %eax,offThread_inJitCodeCache(rINST)   # set the inJitCodeCache flag
     cmpl   $$0,%eax
     jz     1f

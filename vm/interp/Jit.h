@@ -134,7 +134,8 @@ typedef struct JitEntry {
 
 int dvmCheckJit(const u2* pc, Thread* self, InterpState* interpState,
                 const ClassObject *callsiteClass, const Method* curMethod);
-void* dvmJitGetCodeAddr(const u2* dPC);
+void* dvmJitGetTraceAddr(const u2* dPC);
+void* dvmJitGetMethodAddr(const u2* dPC);
 bool dvmJitCheckTraceRequest(Thread* self, InterpState* interpState);
 void dvmJitStopTranslationRequests(void);
 void dvmJitStats(void);
@@ -144,7 +145,7 @@ struct JitEntry *dvmFindJitEntry(const u2* pc);
 s8 dvmJitd2l(double d);
 s8 dvmJitf2l(float f);
 void dvmJitSetCodeAddr(const u2* dPC, void *nPC, JitInstructionSetType set,
-                       int profilePrefixSize);
+                       bool isMethodEntry, int profilePrefixSize);
 void dvmJitAbortTraceSelect(InterpState* interpState);
 JitTraceCounter_t *dvmJitNextTraceCounter(void);
 void dvmJitTraceProfilingOff(void);

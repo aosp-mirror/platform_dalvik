@@ -904,24 +904,28 @@ static ArmLIR *genUnconditionalBranch(CompilationUnit *cUnit, ArmLIR *target)
 /* Perform the actual operation for OP_RETURN_* */
 static void genReturnCommon(CompilationUnit *cUnit, MIR *mir)
 {
-    genDispatchToHandler(cUnit, gDvmJit.methodTraceSupport ?
-        TEMPLATE_RETURN_PROF :
-        TEMPLATE_RETURN);
+    if (!cUnit->methodJitMode) {
+        genDispatchToHandler(cUnit, gDvmJit.methodTraceSupport ?
+            TEMPLATE_RETURN_PROF :
+            TEMPLATE_RETURN);
 #if defined(WITH_JIT_TUNING)
-    gDvmJit.returnOp++;
+        gDvmJit.returnOp++;
 #endif
-    int dPC = (int) (cUnit->method->insns + mir->offset);
-    /* Insert branch, but defer setting of target */
-    ArmLIR *branch = genUnconditionalBranch(cUnit, NULL);
-    /* Set up the place holder to reconstruct this Dalvik PC */
-    ArmLIR *pcrLabel = (ArmLIR *) dvmCompilerNew(sizeof(ArmLIR), true);
-    pcrLabel->opcode = kArmPseudoPCReconstructionCell;
-    pcrLabel->operands[0] = dPC;
-    pcrLabel->operands[1] = mir->offset;
-    /* Insert the place holder to the growable list */
-    dvmInsertGrowableList(&cUnit->pcReconstructionList, (intptr_t) pcrLabel);
-    /* Branch to the PC reconstruction code */
-    branch->generic.target = (LIR *) pcrLabel;
+        int dPC = (int) (cUnit->method->insns + mir->offset);
+        /* Insert branch, but defer setting of target */
+        ArmLIR *branch = genUnconditionalBranch(cUnit, NULL);
+        /* Set up the place holder to reconstruct this Dalvik PC */
+        ArmLIR *pcrLabel = (ArmLIR *) dvmCompilerNew(sizeof(ArmLIR), true);
+        pcrLabel->opcode = kArmPseudoPCReconstructionCell;
+        pcrLabel->operands[0] = dPC;
+        pcrLabel->operands[1] = mir->offset;
+        /* Insert the place holder to the growable list */
+        dvmInsertGrowableList(&cUnit->pcReconstructionList,
+                              (intptr_t) pcrLabel);
+        /* Branch to the PC reconstruction code */
+        branch->generic.target = (LIR *) pcrLabel;
+    }
+    /* TODO: Move result to InterpState for non-void returns */
 }
 
 static void genProcessArgsNoRange(CompilationUnit *cUnit, MIR *mir,
@@ -3197,6 +3201,25 @@ static bool handleFmt35c_3rc_5rc(CompilationUnit *cUnit, MIR *mir,
     return false;
 }
 
+/* "this" pointer is already in r0 */
+static void genValidationForMethodCallee(CompilationUnit *cUnit, MIR *mir,
+                                            ArmLIR **classCheck)
+{
+    CallsiteInfo *callsiteInfo = mir->meta.callsiteInfo;
+    dvmCompilerLockAllTemps(cUnit);
+
+    loadConstant(cUnit, r1, (int) callsiteInfo->clazz);
+
+    loadWordDisp(cUnit, r0, offsetof(Object, clazz), r2);
+    /* Branch to the slow path if classes are not equal */
+    opRegReg(cUnit, kOpCmp, r1, r2);
+    /*
+     * Set the misPredBranchOver target so that it will be generated when the
+     * code for the non-optimized invoke is generated.
+     */
+    *classCheck = opCondBranch(cUnit, kArmCondNe);
+}
+
 static bool handleFmt35ms_3rms(CompilationUnit *cUnit, MIR *mir,
                                BasicBlock *bb, ArmLIR *labelList)
 {
@@ -3228,6 +3251,29 @@ static bool handleFmt35ms_3rms(CompilationUnit *cUnit, MIR *mir,
                 genProcessArgsNoRange(cUnit, mir, dInsn, &pcrLabel);
             else
                 genProcessArgsRange(cUnit, mir, dInsn, &pcrLabel);
+
+
+            if (mir->OptimizationFlags & MIR_INVOKE_METHOD_JIT) {
+                const Method *calleeMethod = mir->meta.callsiteInfo->method;
+                void *calleeAddr = dvmJitGetMethodAddr(calleeMethod->insns);
+                if (calleeAddr) {
+                    ArmLIR *classCheck;
+                    cUnit->printMe = true;
+                    genValidationForMethodCallee(cUnit, mir, &classCheck);
+                    newLIR2(cUnit, kThumbBl1, (int) calleeAddr,
+                            (int) calleeAddr);
+                    newLIR2(cUnit, kThumbBl2, (int) calleeAddr,
+                            (int) calleeAddr);
+                    genUnconditionalBranch(cUnit, retChainingCell);
+
+                    /* Target of slow path */
+                    ArmLIR *slowPathLabel = newLIR0(cUnit,
+                                                    kArmPseudoTargetLabel);
+
+                    slowPathLabel->defMask = ENCODE_ALL;
+                    classCheck->generic.target = (LIR *) slowPathLabel;
+                }
+            }
 
             genInvokeVirtualCommon(cUnit, mir, methodIndex,
                                    retChainingCell,

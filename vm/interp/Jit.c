@@ -548,18 +548,25 @@ void dvmJitAbortTraceSelect(InterpState* interpState)
  * Find an entry in the JitTable, creating if necessary.
  * Returns null if table is full.
  */
-static JitEntry *lookupAndAdd(const u2* dPC, bool callerLocked)
+static JitEntry *lookupAndAdd(const u2* dPC, bool callerLocked,
+                              bool isMethodEntry)
 {
     u4 chainEndMarker = gDvmJit.jitTableSize;
     u4 idx = dvmJitHash(dPC);
 
-    /* Walk the bucket chain to find an exact match for our PC */
+    /*
+     * Walk the bucket chain to find an exact match for our PC and trace/method
+     * type
+     */
     while ((gDvmJit.pJitEntryTable[idx].u.info.chain != chainEndMarker) &&
-           (gDvmJit.pJitEntryTable[idx].dPC != dPC)) {
+           ((gDvmJit.pJitEntryTable[idx].dPC != dPC) ||
+            (gDvmJit.pJitEntryTable[idx].u.info.isMethodEntry !=
+             isMethodEntry))) {
         idx = gDvmJit.pJitEntryTable[idx].u.info.chain;
     }
 
-    if (gDvmJit.pJitEntryTable[idx].dPC != dPC) {
+    if (gDvmJit.pJitEntryTable[idx].dPC != dPC ||
+        gDvmJit.pJitEntryTable[idx].u.info.isMethodEntry != isMethodEntry) {
         /*
          * No match.  Aquire jitTableLock and find the last
          * slot in the chain. Possibly continue the chain walk in case
@@ -578,7 +585,9 @@ static JitEntry *lookupAndAdd(const u2* dPC, bool callerLocked)
         if (gDvmJit.pJitEntryTable[idx].dPC != NULL) {
             u4 prev;
             while (gDvmJit.pJitEntryTable[idx].u.info.chain != chainEndMarker) {
-                if (gDvmJit.pJitEntryTable[idx].dPC == dPC) {
+                if (gDvmJit.pJitEntryTable[idx].dPC == dPC &&
+                    gDvmJit.pJitEntryTable[idx].u.info.isMethodEntry ==
+                        isMethodEntry) {
                     /* Another thread got there first for this dPC */
                     if (!callerLocked)
                         dvmUnlockMutex(&gDvmJit.tableLock);
@@ -617,10 +626,13 @@ static JitEntry *lookupAndAdd(const u2* dPC, bool callerLocked)
             }
         }
         if (gDvmJit.pJitEntryTable[idx].dPC == NULL) {
+            gDvmJit.pJitEntryTable[idx].u.info.isMethodEntry = isMethodEntry;
             /*
              * Initialize codeAddress and allocate the slot.  Must
              * happen in this order (since dPC is set, the entry is live.
              */
+            android_atomic_release_store((int32_t)dPC,
+                 (volatile int32_t *)(void *)&gDvmJit.pJitEntryTable[idx].dPC);
             gDvmJit.pJitEntryTable[idx].dPC = dPC;
             gDvmJit.jitTableEntriesUsed++;
         } else {
@@ -895,7 +907,9 @@ int dvmCheckJit(const u2* pc, Thread* self, InterpState* interpState,
                  * successfully entered a work order.
                  */
                 JitEntry *jitEntry =
-                    lookupAndAdd(interpState->currTraceHead, false);
+                    lookupAndAdd(interpState->currTraceHead,
+                                 false /* lock */,
+                                 false /* method entry */);
                 if (jitEntry) {
                     setTraceConstruction(jitEntry, false);
                 }
@@ -978,16 +992,17 @@ JitEntry *dvmFindJitEntry(const u2* pc)
 }
 
 /*
- * If a translated code address exists for the davik byte code
- * pointer return it.  This routine needs to be fast.
+ * Walk through the JIT profile table and find the corresponding JIT code, in
+ * the specified format (ie trace vs method). This routine needs to be fast.
  */
-void* dvmJitGetCodeAddr(const u2* dPC)
+void* getCodeAddrCommon(const u2* dPC, bool methodEntry)
 {
     int idx = dvmJitHash(dPC);
-    const u2* npc = gDvmJit.pJitEntryTable[idx].dPC;
-    if (npc != NULL) {
+    const u2* pc = gDvmJit.pJitEntryTable[idx].dPC;
+    if (pc != NULL) {
         bool hideTranslation = dvmJitHideTranslation();
-        if (npc == dPC) {
+        if (pc == dPC &&
+            gDvmJit.pJitEntryTable[idx].u.info.isMethodEntry == methodEntry) {
             int offset = (gDvmJit.profileMode >= kTraceProfilingContinuous) ?
                  0 : gDvmJit.pJitEntryTable[idx].u.info.profileOffset;
             intptr_t codeAddress =
@@ -1000,7 +1015,9 @@ void* dvmJitGetCodeAddr(const u2* dPC)
             int chainEndMarker = gDvmJit.jitTableSize;
             while (gDvmJit.pJitEntryTable[idx].u.info.chain != chainEndMarker) {
                 idx = gDvmJit.pJitEntryTable[idx].u.info.chain;
-                if (gDvmJit.pJitEntryTable[idx].dPC == dPC) {
+                if (gDvmJit.pJitEntryTable[idx].dPC == dPC &&
+                    gDvmJit.pJitEntryTable[idx].u.info.isMethodEntry ==
+                        methodEntry) {
                     int offset = (gDvmJit.profileMode >=
                         kTraceProfilingContinuous) ? 0 :
                         gDvmJit.pJitEntryTable[idx].u.info.profileOffset;
@@ -1022,6 +1039,24 @@ void* dvmJitGetCodeAddr(const u2* dPC)
 }
 
 /*
+ * If a translated code address, in trace format, exists for the davik byte code
+ * pointer return it.
+ */
+void* dvmJitGetTraceAddr(const u2* dPC)
+{
+    return getCodeAddrCommon(dPC, false /* method entry */);
+}
+
+/*
+ * If a translated code address, in whole-method format, exists for the davik
+ * byte code pointer return it.
+ */
+void* dvmJitGetMethodAddr(const u2* dPC)
+{
+    return getCodeAddrCommon(dPC, true /* method entry */);
+}
+
+/*
  * Register the translated code pointer into the JitTable.
  * NOTE: Once a codeAddress field transitions from initial state to
  * JIT'd code, it must not be altered without first halting all
@@ -1034,16 +1069,17 @@ void* dvmJitGetCodeAddr(const u2* dPC)
  * template cannot handle a non-zero prefix.
  */
 void dvmJitSetCodeAddr(const u2* dPC, void *nPC, JitInstructionSetType set,
-                       int profilePrefixSize)
+                       bool isMethodEntry, int profilePrefixSize)
 {
     JitEntryInfoUnion oldValue;
     JitEntryInfoUnion newValue;
-    JitEntry *jitEntry = lookupAndAdd(dPC, false);
+    JitEntry *jitEntry = lookupAndAdd(dPC, false, isMethodEntry);
     assert(jitEntry);
     /* Note: order of update is important */
     do {
         oldValue = jitEntry->u;
         newValue = oldValue;
+        newValue.info.isMethodEntry = isMethodEntry;
         newValue.info.instructionSet = set;
     } while (android_atomic_release_cas(
              oldValue.infoWord, newValue.infoWord,
@@ -1152,7 +1188,9 @@ bool dvmJitCheckTraceRequest(Thread* self, InterpState* interpState)
          */
         if (interpState->jitState == kJitTSelectRequest ||
             interpState->jitState == kJitTSelectRequestHot) {
-            JitEntry *slot = lookupAndAdd(interpState->pc, false);
+            JitEntry *slot = lookupAndAdd(interpState->pc,
+                                          false /* lock */,
+                                          false /* method entry */);
             if (slot == NULL) {
                 /*
                  * Table is full.  This should have been
@@ -1294,7 +1332,8 @@ bool dvmJitResizeJitTable( unsigned int size )
         if (pOldTable[i].dPC) {
             JitEntry *p;
             u2 chain;
-            p = lookupAndAdd(pOldTable[i].dPC, true /* holds tableLock*/ );
+            p = lookupAndAdd(pOldTable[i].dPC, true /* holds tableLock*/,
+                             pOldTable[i].u.info.isMethodEntry);
             p->codeAddress = pOldTable[i].codeAddress;
             /* We need to preserve the new chain field, but copy the rest */
             chain = p->u.info.chain;

@@ -29,8 +29,8 @@ static void recordDFSPreOrder(CompilationUnit *cUnit, BasicBlock *block)
     /* Enqueue the block id */
     dvmInsertGrowableList(&cUnit->dfsOrder, block->id);
 
-    if (block->taken) recordDFSPreOrder(cUnit, block->taken);
     if (block->fallThrough) recordDFSPreOrder(cUnit, block->fallThrough);
+    if (block->taken) recordDFSPreOrder(cUnit, block->taken);
     if (block->successorBlockList.blockListType != kNotUsed) {
         GrowableListIterator iterator;
         dvmGrowableListIteratorInit(&block->successorBlockList.blocks,
@@ -185,13 +185,6 @@ static bool computeDominanceFrontier(CompilationUnit *cUnit, BasicBlock *bb)
             }
         }
     }
-    if (cUnit->printMe) {
-        char blockName[BLOCK_NAME_LEN];
-        dvmGetBlockName(bb, blockName);
-        dvmDumpBlockBitVector(blockList, blockName, bb->domFrontier,
-                              cUnit->numBlocks);
-    }
-
     return true;
 }
 
@@ -399,11 +392,11 @@ static void insertPhiNodes(CompilationUnit *cUnit)
     int dalvikReg;
     const GrowableList *blockList = &cUnit->blockList;
     BitVector *phiBlocks =
-        dvmCompilerAllocBitVector(cUnit->numDalvikRegisters, false);
+        dvmCompilerAllocBitVector(cUnit->numBlocks, false);
     BitVector *tmpBlocks =
-        dvmCompilerAllocBitVector(cUnit->numDalvikRegisters, false);
+        dvmCompilerAllocBitVector(cUnit->numBlocks, false);
     BitVector *inputBlocks =
-        dvmCompilerAllocBitVector(cUnit->numDalvikRegisters, false);
+        dvmCompilerAllocBitVector(cUnit->numBlocks, false);
 
     cUnit->tempDalvikRegisterV =
         dvmCompilerAllocBitVector(cUnit->numDalvikRegisters, false);

@@ -1592,7 +1592,7 @@ char *dvmCompilerGetDalvikDisassembly(const DecodedInstruction *insn,
     char buffer[256];
     int opcode = insn->opcode;
     int dfAttributes = dvmCompilerDataFlowAttributes[opcode];
-    int flags = dexGetFlagsFromOpcode(insn->opcode);
+    int flags;
     char *ret;
 
     buffer[0] = 0;
@@ -1603,8 +1603,10 @@ char *dvmCompilerGetDalvikDisassembly(const DecodedInstruction *insn,
         else {
             sprintf(buffer, "Opcode 0x%x", opcode);
         }
+        flags = 0;
     } else {
         strcpy(buffer, dexGetOpcodeName(opcode));
+        flags = dexGetFlagsFromOpcode(insn->opcode);
     }
 
     if (note)
@@ -1630,7 +1632,8 @@ char *dvmCompilerGetDalvikDisassembly(const DecodedInstruction *insn,
                 offset = (int) insn->vA;
                 break;
             default:
-                LOGE("Unexpected branch format: %d", dalvikFormat);
+                LOGE("Unexpected branch format %d / opcode %#x", dalvikFormat,
+                     opcode);
                 dvmAbort();
                 break;
         }

@@ -644,6 +644,7 @@ static void *compilerThreadStart(void *arg)
                                 work.result.codeAddress) {
                             dvmJitSetCodeAddr(work.pc, work.result.codeAddress,
                                               work.result.instructionSet,
+                                              false, /* not method entry */
                                               work.result.profileCodeSize);
                         }
                     }

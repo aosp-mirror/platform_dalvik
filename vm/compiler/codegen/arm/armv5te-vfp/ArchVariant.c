@@ -79,6 +79,10 @@ bool dvmCompilerArchVariantInit(void)
         LOGE("InterpState.jitToInterpEntries size overflow");
         dvmAbort();
     }
+
+    /* No method JIT for Thumb backend */
+    gDvmJit.disableOpt |= (1 << kMethodJit);
+
     return true;
 }
 

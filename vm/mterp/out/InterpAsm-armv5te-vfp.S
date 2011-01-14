@@ -13294,7 +13294,7 @@ dvmJitToInterpTraceSelectNoChain:
 #endif
     ldr    r10, [rGLUE, #offGlue_self]  @ callee saved r10 <- glue->self
     mov    r0,rPC
-    bl     dvmJitGetCodeAddr        @ Is there a translation?
+    bl     dvmJitGetTraceAddr       @ Is there a translation?
     str    r0, [r10, #offThread_inJitCodeCache] @ set the inJitCodeCache flag
     mov    r1, rPC                  @ arg1 of translation may need this
     mov    lr, #0                   @  in case target is HANDLER_INTERPRET
@@ -13314,7 +13314,7 @@ dvmJitToInterpTraceSelect:
     add    rINST,lr,#-5            @ save start of chain branch
     add    rINST, #-4              @  .. which is 9 bytes back
     mov    r0,rPC
-    bl     dvmJitGetCodeAddr       @ Is there a translation?
+    bl     dvmJitGetTraceAddr      @ Is there a translation?
     str    r0, [r10, #offThread_inJitCodeCache] @ set the inJitCodeCache flag
     cmp    r0,#0
     beq    2f
@@ -13361,7 +13361,7 @@ dvmJitToInterpNormal:
     bl     dvmBumpNormal
 #endif
     mov    r0,rPC
-    bl     dvmJitGetCodeAddr        @ Is there a translation?
+    bl     dvmJitGetTraceAddr      @ Is there a translation?
     str    r0, [r10, #offThread_inJitCodeCache] @ set the inJitCodeCache flag
     cmp    r0,#0
     beq    toInterpreter            @ go if not, otherwise do chain
@@ -13384,7 +13384,7 @@ dvmJitToInterpNoChainNoProfile:
 #endif
     ldr    r10, [rGLUE, #offGlue_self]  @ callee saved r10 <- glue->self
     mov    r0,rPC
-    bl     dvmJitGetCodeAddr        @ Is there a translation?
+    bl     dvmJitGetTraceAddr       @ Is there a translation?
     str    r0, [r10, #offThread_inJitCodeCache] @ set the inJitCodeCache flag
     mov    r1, rPC                  @ arg1 of translation may need this
     mov    lr, #0                   @  in case target is HANDLER_INTERPRET
@@ -13407,7 +13407,7 @@ dvmJitToInterpNoChain:
 #endif
     ldr    r10, [rGLUE, #offGlue_self]  @ callee saved r10 <- glue->self
     mov    r0,rPC
-    bl     dvmJitGetCodeAddr        @ Is there a translation?
+    bl     dvmJitGetTraceAddr       @ Is there a translation?
     str    r0, [r10, #offThread_inJitCodeCache] @ set the inJitCodeCache flag
     mov    r1, rPC                  @ arg1 of translation may need this
     mov    lr, #0                   @  in case target is HANDLER_INTERPRET
@@ -13460,7 +13460,7 @@ common_updateProfile:
     strb    r1,[r0,r3,lsr #(32 - JIT_PROF_SIZE_LOG_2)] @ reset counter
     EXPORT_PC()
     mov     r0,rPC
-    bl      dvmJitGetCodeAddr           @ r0<- dvmJitGetCodeAddr(rPC)
+    bl      dvmJitGetTraceAddr          @ r0<- dvmJitGetTraceAddr(rPC)
     str     r0, [r10, #offThread_inJitCodeCache] @ set the inJitCodeCache flag
     mov     r1, rPC                     @ arg1 of translation may need this
     mov     lr, #0                      @  in case target is HANDLER_INTERPRET

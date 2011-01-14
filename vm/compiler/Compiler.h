@@ -215,6 +215,7 @@ typedef enum JitMethodAttributes {
     kIsThrowFree,       /* Method doesn't throw */
     kIsGetter,          /* Method fits the getter pattern */
     kIsSetter,          /* Method fits the setter pattern */
+    kCannotCompile,     /* Method cannot be compiled */
 } JitMethodAttributes;
 
 #define METHOD_IS_CALLEE        (1 << kIsCallee)
@@ -224,6 +225,7 @@ typedef enum JitMethodAttributes {
 #define METHOD_IS_THROW_FREE    (1 << kIsThrowFree)
 #define METHOD_IS_GETTER        (1 << kIsGetter)
 #define METHOD_IS_SETTER        (1 << kIsSetter)
+#define METHOD_CANNOT_COMPILE   (1 << kCannotCompile)
 
 /* Vectors to provide optimization hints */
 typedef enum JitOptimizationHints {
@@ -267,7 +269,7 @@ CompilerMethodStats *dvmCompilerAnalyzeMethodBody(const Method *method,
                                                   bool isCallee);
 bool dvmCompilerCanIncludeThisInstruction(const Method *method,
                                           const DecodedInstruction *insn);
-bool dvmCompileMethod(const Method *method);
+bool dvmCompileMethod(const Method *method, JitTranslationInfo *info);
 bool dvmCompileTrace(JitTraceDescription *trace, int numMaxInsts,
                      JitTranslationInfo *info, jmp_buf *bailPtr, int optHints);
 void dvmCompilerDumpStats(void);
@@ -275,7 +277,8 @@ void dvmCompilerDrainQueue(void);
 void dvmJitUnchainAll(void);
 void dvmCompilerSortAndPrintTraceProfiles(void);
 void dvmCompilerPerformSafePointChecks(void);
-void dvmCompilerInlineMIR(struct CompilationUnit *cUnit);
+void dvmCompilerInlineMIR(struct CompilationUnit *cUnit,
+                          JitTranslationInfo *info);
 void dvmInitializeSSAConversion(struct CompilationUnit *cUnit);
 int dvmConvertSSARegToDalvik(const struct CompilationUnit *cUnit, int ssaReg);
 bool dvmCompilerLoopOpt(struct CompilationUnit *cUnit);

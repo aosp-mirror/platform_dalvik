@@ -288,11 +288,12 @@ CompilerMethodStats *dvmCompilerAnalyzeMethodBody(const Method *method,
 
     /* For lookup only */
     dummyMethodEntry.method = method;
-    realMethodEntry =
-        (CompilerMethodStats *) dvmHashTableLookup(gDvmJit.methodStatsTable, hashValue,
-                                                   &dummyMethodEntry,
-                                                   (HashCompareFunc) compareMethod,
-                                                   false);
+    realMethodEntry = (CompilerMethodStats *)
+        dvmHashTableLookup(gDvmJit.methodStatsTable,
+                           hashValue,
+                           &dummyMethodEntry,
+                           (HashCompareFunc) compareMethod,
+                           false);
 
     /* This method has never been analyzed before - create an entry */
     if (realMethodEntry == NULL) {
@@ -440,7 +441,7 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
 #endif
 
     /* If we've already compiled this trace, just return success */
-    if (dvmJitGetCodeAddr(startCodePtr) && !info->discardResult) {
+    if (dvmJitGetTraceAddr(startCodePtr) && !info->discardResult) {
         /*
          * Make sure the codeAddress is NULL so that it won't clobber the
          * existing entry.
@@ -588,11 +589,12 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
         int flags = dexGetFlagsFromOpcode(insn->dalvikInsn.opcode);
 
         if (flags & kInstrInvoke) {
+            const Method *calleeMethod = (const Method *) currRun[2].meta;
             assert(numInsts == 1);
             CallsiteInfo *callsiteInfo =
                 (CallsiteInfo *)dvmCompilerNew(sizeof(CallsiteInfo), true);
             callsiteInfo->clazz = (ClassObject *)currRun[1].meta;
-            callsiteInfo->method = (Method *)currRun[2].meta;
+            callsiteInfo->method = calleeMethod;
             insn->meta.callsiteInfo = callsiteInfo;
         }
 
@@ -870,7 +872,7 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
 
     /* Inline transformation @ the MIR level */
     if (cUnit.hasInvoke && !(gDvmJit.disableOpt & (1 << kMethodInlining))) {
-        dvmCompilerInlineMIR(&cUnit);
+        dvmCompilerInlineMIR(&cUnit, info);
     }
 
     cUnit.numDalvikRegisters = cUnit.method->registersSize;
@@ -921,6 +923,7 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
     } while (cUnit.assemblerStatus == kRetryAll);
 
     if (cUnit.printMe) {
+        LOGD("Trace Dalvik PC: %p", startCodePtr);
         dvmCompilerCodegenDump(&cUnit);
         LOGD("End %s%s, %d Dalvik instructions",
              desc->method->clazz->descriptor, desc->method->name,
@@ -939,14 +942,6 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
     assert(cUnit.assemblerStatus == kSuccess);
 #if defined(WITH_JIT_TUNING)
     methodStats->nativeSize += cUnit.totalSize;
-#endif
-
-    /* FIXME - to exercise the method parser, uncomment the following code */
-#if 0
-    bool dvmCompileMethod(const Method *method);
-    if (desc->trace[0].frag.startOffset == 0) {
-        dvmCompileMethod(desc->method);
-    }
 #endif
 
     return info->codeAddress != NULL;
@@ -1671,7 +1666,7 @@ static void processCanThrow(CompilationUnit *cUnit, BasicBlock *curBlock,
  * TODO: implementation will be revisited when the trace builder can provide
  * whole-method traces.
  */
-bool dvmCompileMethod(const Method *method)
+bool dvmCompileMethod(const Method *method, JitTranslationInfo *info)
 {
     CompilationUnit cUnit;
     const DexCode *dexCode = dvmGetMethodCode(method);
@@ -1680,11 +1675,26 @@ bool dvmCompileMethod(const Method *method)
     int numBlocks = 0;
     unsigned int curOffset = 0;
 
+    /* Method already compiled */
+    if (dvmJitGetMethodAddr(codePtr)) {
+        info->codeAddress = NULL;
+        return false;
+    }
+
     memset(&cUnit, 0, sizeof(cUnit));
     cUnit.method = method;
 
+    cUnit.methodJitMode = true;
+
     /* Initialize the block list */
     dvmInitGrowableList(&cUnit.blockList, 4);
+
+    /*
+     * FIXME - PC reconstruction list won't be needed after the codegen routines
+     * are enhanced to true method mode.
+     */
+    /* Initialize the PC reconstruction list */
+    dvmInitGrowableList(&cUnit.pcReconstructionList, 8);
 
     /* Allocate the bit-vector to track the beginning of basic blocks */
     BitVector *tryBlockAddr = dvmCompilerAllocBitVector(dexCode->insnsSize,
@@ -1789,6 +1799,10 @@ bool dvmCompileMethod(const Method *method)
         }
     }
 
+    if (cUnit.printMe) {
+        dvmCompilerDumpCompilationUnit(&cUnit);
+    }
+
     /* Adjust this value accordingly once inlining is performed */
     cUnit.numDalvikRegisters = cUnit.method->registersSize;
 
@@ -1802,10 +1816,41 @@ bool dvmCompileMethod(const Method *method)
     /* Perform SSA transformation for the whole method */
     dvmCompilerMethodSSATransformation(&cUnit);
 
-    if (cUnit.printMe) dumpCFG(&cUnit, "/data/tombstones/");
+    dvmCompilerInitializeRegAlloc(&cUnit);  // Needs to happen after SSA naming
 
-    /* Reset the compiler resource pool */
-    dvmCompilerArenaReset();
+    /* Allocate Registers using simple local allocation scheme */
+    dvmCompilerLocalRegAlloc(&cUnit);
+
+    /* Convert MIR to LIR, etc. */
+    dvmCompilerMethodMIR2LIR(&cUnit);
+
+    // Debugging only
+    //dumpCFG(&cUnit, "/data/tombstones/");
+
+    /* Method is not empty */
+    if (cUnit.firstLIRInsn) {
+        /* Convert LIR into machine code. Loop for recoverable retries */
+        do {
+            dvmCompilerAssembleLIR(&cUnit, info);
+            cUnit.assemblerRetries++;
+            if (cUnit.printMe && cUnit.assemblerStatus != kSuccess)
+                LOGD("Assembler abort #%d on %d",cUnit.assemblerRetries,
+                      cUnit.assemblerStatus);
+        } while (cUnit.assemblerStatus == kRetryAll);
+
+        if (cUnit.printMe) {
+            dvmCompilerCodegenDump(&cUnit);
+        }
+
+        if (info->codeAddress) {
+            dvmJitSetCodeAddr(dexCode->insns, info->codeAddress,
+                              info->instructionSet, true, 0);
+            /*
+             * Clear the codeAddress for the enclosing trace to reuse the info
+             */
+            info->codeAddress = NULL;
+        }
+    }
 
     return false;
 }
