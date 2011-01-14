@@ -954,7 +954,6 @@ Method* dvmOptResolveInterfaceMethod(ClassObject* referrer, u4 methodIdx)
             methodName, methodSig, resClass->descriptor);
         resMethod = dvmFindInterfaceMethodHier(resClass, methodName, &proto);
         if (resMethod == NULL) {
-            dvmThrowException("Ljava/lang/NoSuchMethodError;", methodName);
             return NULL;
         }
 
