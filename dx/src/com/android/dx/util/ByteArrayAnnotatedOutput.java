@@ -225,38 +225,22 @@ public final class ByteArrayAnnotatedOutput
 
     /** {@inheritDoc} */
     public int writeUnsignedLeb128(int value) {
-        int remaining = value >> 7;
-        int count = 0;
-
-        while (remaining != 0) {
-            writeByte((value & 0x7f) | 0x80);
-            value = remaining;
-            remaining >>= 7;
-            count++;
+        if (stretchy) {
+            ensureCapacity(cursor + 5); // pessimistic
         }
-
-        writeByte(value & 0x7f);
-        return count + 1;
+        int byteCount = Leb128Utils.writeUnsignedLeb128(data, cursor, value);
+        cursor += byteCount;
+        return byteCount;
     }
 
     /** {@inheritDoc} */
     public int writeSignedLeb128(int value) {
-        int remaining = value >> 7;
-        int count = 0;
-        boolean hasMore = true;
-        int end = ((value & Integer.MIN_VALUE) == 0) ? 0 : -1;
-
-        while (hasMore) {
-            hasMore = (remaining != end)
-                || ((remaining & 1) != ((value >> 6) & 1));
-
-            writeByte((value & 0x7f) | (hasMore ? 0x80 : 0));
-            value = remaining;
-            remaining >>= 7;
-            count++;
+        if (stretchy) {
+            ensureCapacity(cursor + 5); // pessimistic
         }
-
-        return count;
+        int byteCount = Leb128Utils.writeSignedLeb128(data, cursor, value);
+        cursor += byteCount;
+        return byteCount;
     }
 
     /** {@inheritDoc} */
