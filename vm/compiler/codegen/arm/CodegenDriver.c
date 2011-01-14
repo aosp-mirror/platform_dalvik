@@ -4107,21 +4107,30 @@ void dvmCompilerMIR2LIR(CompilationUnit *cUnit)
                 note = NULL;
             }
 
-            ArmLIR *boundaryLIR =
-                newLIR2(cUnit, kArmPseudoDalvikByteCodeBoundary,
-                        mir->offset,
-                        (int) dvmCompilerGetDalvikDisassembly(&mir->dalvikInsn,
-                                                              note));
-            if (mir->ssaRep) {
-                char *ssaString = dvmCompilerGetSSAString(cUnit, mir->ssaRep);
-                newLIR1(cUnit, kArmPseudoSSARep, (int) ssaString);
+            ArmLIR *boundaryLIR;
+
+            /*
+             * Don't generate the boundary LIR unless we are debugging this
+             * trace or we need a scheduling barrier.
+             */
+            if (headLIR == NULL || cUnit->printMe == true) {
+                boundaryLIR =
+                    newLIR2(cUnit, kArmPseudoDalvikByteCodeBoundary,
+                            mir->offset,
+                            (int) dvmCompilerGetDalvikDisassembly(
+                                &mir->dalvikInsn, note));
+                /* Remember the first LIR for this block */
+                if (headLIR == NULL) {
+                    headLIR = boundaryLIR;
+                    /* Set the first boundaryLIR as a scheduling barrier */
+                    headLIR->defMask = ENCODE_ALL;
+                }
             }
 
-            /* Remember the first LIR for this block */
-            if (headLIR == NULL) {
-                headLIR = boundaryLIR;
-                /* Set the first boundaryLIR as a scheduling barrier */
-                headLIR->defMask = ENCODE_ALL;
+            /* Don't generate the SSA annotation unless verbose mode is on */
+            if (cUnit->printMe && mir->ssaRep) {
+                char *ssaString = dvmCompilerGetSSAString(cUnit, mir->ssaRep);
+                newLIR1(cUnit, kArmPseudoSSARep, (int) ssaString);
             }
 
             bool notHandled;
