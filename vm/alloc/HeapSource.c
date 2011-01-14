@@ -1319,7 +1319,6 @@ void dvmHeapSourceGrowForUtilization()
  * Return free pages to the system.
  * TODO: move this somewhere else, especially the native heap part.
  */
-
 static void releasePagesInRange(void *start, void *end, void *nbytes)
 {
     /* Linux requires that the madvise() start address is page-aligned.
