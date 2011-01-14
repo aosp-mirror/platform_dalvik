@@ -664,6 +664,9 @@ Method* dvmFindMethodHier(const ClassObject* clazz, const char* methodName,
  * from the class' vtable.  If "clazz" is an interface, we have to do a
  * little more digging.
  *
+ * For "direct" methods (private / constructor), we just return the
+ * original Method.
+ *
  * (This is used for reflection and JNI "call method" calls.)
  */
 const Method* dvmGetVirtualizedMethod(const ClassObject* clazz,
@@ -672,10 +675,11 @@ const Method* dvmGetVirtualizedMethod(const ClassObject* clazz,
     Method* actualMeth;
     int methodIndex;
 
-    assert(!dvmIsStaticMethod(meth));
-
-    if (dvmIsPrivateMethod(meth))   // no vtable entry for these
+    if (dvmIsDirectMethod(meth)) {
+        /* no vtable entry for these */
+        assert(!dvmIsStaticMethod(meth));
         return meth;
+    }
 
     /*
      * If the method was declared in an interface, we need to scan through
