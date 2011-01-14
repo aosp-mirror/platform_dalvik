@@ -41,8 +41,8 @@ extern int jniRegisterSystemMethods(JNIEnv* env);
 
 /* fwd */
 static bool registerSystemNatives(JNIEnv* pEnv);
-static bool dvmInitJDWP(void);
-static bool dvmInitZygote(void);
+static bool initJdwp(void);
+static bool initZygote(void);
 
 
 /* global state */
@@ -67,7 +67,7 @@ int gDvmICHitCount;
  *
  * We follow the tradition of unhyphenated compound words.
  */
-static void dvmUsage(const char* progName)
+static void usage(const char* progName)
 {
     dvmFprintf(stderr, "%s: [options] class [argument ...]\n", progName);
     dvmFprintf(stderr, "%s: [options] -jar file.jar [argument ...]\n",progName);
@@ -241,16 +241,16 @@ static void showVersion(void)
  * Returns 0 (a useless size) if "s" is malformed or specifies a low or
  * non-evenly-divisible value.
  */
-static unsigned int dvmParseMemOption(const char *s, unsigned int div)
+static size_t parseMemOption(const char *s, size_t div)
 {
     /* strtoul accepts a leading [+-], which we don't want,
      * so make sure our string starts with a decimal digit.
      */
     if (isdigit(*s)) {
         const char *s2;
-        unsigned int val;
+        size_t val;
 
-        val = (unsigned int)strtoul(s, (char **)&s2, 10);
+        val = strtoul(s, (char **)&s2, 10);
         if (s2 != s) {
             /* s2 should be pointing just after the number.
              * If this is the end of the string, the user
@@ -267,7 +267,7 @@ static unsigned int dvmParseMemOption(const char *s, unsigned int div)
                  */
                 c = *s2++;
                 if (*s2 == '\0') {
-                    unsigned int mul;
+                    size_t mul;
 
                     if (c == '\0') {
                         mul = 1;
@@ -283,12 +283,12 @@ static unsigned int dvmParseMemOption(const char *s, unsigned int div)
                         return 0;
                     }
 
-                    if (val <= UINT_MAX / mul) {
+                    if (val <= SIZE_MAX / mul) {
                         val *= mul;
                     } else {
                         /* Clamp to a multiple of 1024.
                          */
-                        val = UINT_MAX & ~(1024-1);
+                        val = SIZE_MAX & ~(1024-1);
                     }
                 } else {
                     /* There's more than one character after the
@@ -662,7 +662,7 @@ static void processXjitmethod(const char *opt)
  * Returns 0 on success, -1 on failure, and 1 for the special case of
  * "-version" where we want to stop without showing an error message.
  */
-static int dvmProcessOptions(int argc, const char* const argv[],
+static int processOptions(int argc, const char* const argv[],
     bool ignoreUnrecognized)
 {
     int i;
@@ -766,7 +766,7 @@ static int dvmProcessOptions(int argc, const char* const argv[],
             assert(false);
 
         } else if (strncmp(argv[i], "-Xms", 4) == 0) {
-            unsigned int val = dvmParseMemOption(argv[i]+4, 1024);
+            size_t val = parseMemOption(argv[i]+4, 1024);
             if (val != 0) {
                 if (val >= kMinHeapStartSize && val <= kMaxHeapSize) {
                     gDvm.heapSizeStart = val;
@@ -781,7 +781,7 @@ static int dvmProcessOptions(int argc, const char* const argv[],
                 return -1;
             }
         } else if (strncmp(argv[i], "-Xmx", 4) == 0) {
-            unsigned int val = dvmParseMemOption(argv[i]+4, 1024);
+            size_t val = parseMemOption(argv[i]+4, 1024);
             if (val != 0) {
                 if (val >= kMinHeapSize && val <= kMaxHeapSize) {
                     gDvm.heapSizeMax = val;
@@ -796,7 +796,7 @@ static int dvmProcessOptions(int argc, const char* const argv[],
                 return -1;
             }
         } else if (strncmp(argv[i], "-Xss", 4) == 0) {
-            unsigned int val = dvmParseMemOption(argv[i]+4, 1);
+            size_t val = parseMemOption(argv[i]+4, 1);
             if (val != 0) {
                 if (val >= kMinStackSize && val <= kMaxStackSize) {
                     gDvm.stackSize = val;
@@ -1171,11 +1171,11 @@ int dvmStartup(int argc, const char* const argv[], bool ignoreUnrecognized,
     /*
      * Process the option flags (if any).
      */
-    cc = dvmProcessOptions(argc, argv, ignoreUnrecognized);
+    cc = processOptions(argc, argv, ignoreUnrecognized);
     if (cc != 0) {
         if (cc < 0) {
             dvmFprintf(stderr, "\n");
-            dvmUsage("dalvikvm");
+            usage("dalvikvm");
         }
         goto fail;
     }
@@ -1339,7 +1339,7 @@ int dvmStartup(int argc, const char* const argv[], bool ignoreUnrecognized,
      * is that we don't start any additional threads in Zygote mode.
      */
     if (gDvm.zygote) {
-        if (!dvmInitZygote())
+        if (!initZygote())
             goto fail;
     } else {
         if (!dvmInitAfterZygote())
@@ -1401,7 +1401,7 @@ static bool registerSystemNatives(JNIEnv* pEnv)
 /*
  * Do zygote-mode-only initialization.
  */
-static bool dvmInitZygote(void)
+static bool initZygote(void)
 {
     /* zygote goes into its own process group */
     setpgid(0,0);
@@ -1450,7 +1450,7 @@ bool dvmInitAfterZygote(void)
      * "suspend=y", this will pause the VM.  We probably want this to
      * come last.
      */
-    if (!dvmInitJDWP()) {
+    if (!initJdwp()) {
         LOGD("JDWP init failed; continuing anyway\n");
     }
 
@@ -1489,7 +1489,7 @@ bool dvmInitAfterZygote(void)
  *
  * This gets more complicated with a nonzero value for "timeout".
  */
-static bool dvmInitJDWP(void)
+static bool initJdwp(void)
 {
     assert(!gDvm.zygote);
 
