@@ -34,21 +34,21 @@ public final class EncodedValueTransformer {
     }
 
     public void transformArray() throws IOException {
-        int size = in.readUnsignedLeb128(); // size
-        out.writeUnsignedLeb128(size);
+        int size = in.readUleb128(); // size
+        out.writeUleb128(size);
         for (int i = 0; i < size; i++) {
             transformValue();
         }
     }
 
     public void transformAnnotation() throws IOException {
-        out.writeUnsignedLeb128(indexMap.typeIds[in.readUnsignedLeb128()]); // type idx
+        out.writeUleb128(indexMap.typeIds[in.readUleb128()]); // type idx
 
-        int size = in.readUnsignedLeb128(); // size
-        out.writeUnsignedLeb128(size);
+        int size = in.readUleb128(); // size
+        out.writeUleb128(size);
 
         for (int i = 0; i < size; i++) {
-            out.writeUnsignedLeb128(indexMap.stringIds[in.readUnsignedLeb128()]); // name idx
+            out.writeUleb128(indexMap.stringIds[in.readUleb128()]); // name idx
             transformValue();
         }
     }

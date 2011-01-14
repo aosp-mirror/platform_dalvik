@@ -159,19 +159,19 @@ public final class DexWriter implements Closeable {
             bufferedByteCount += 4;
         }
 
-        public void writeUnsignedLeb128(int i) throws IOException {
+        public void writeUleb128(int i) throws IOException {
             ensureCapacity(5);
             bufferedByteCount += Leb128Utils.writeUnsignedLeb128(buffer, bufferedByteCount, i);
         }
 
-        public void writeSignedLeb128(int i) throws IOException {
+        public void writeSleb128(int i) throws IOException {
             ensureCapacity(5);
             bufferedByteCount += Leb128Utils.writeSignedLeb128(buffer, bufferedByteCount, i);
         }
 
         public void writeStringDataItem(String value) throws IOException {
             int length = value.length();
-            writeUnsignedLeb128(length);
+            writeUleb128(length);
             write(Mutf8.encode(value));
             writeByte(0);
         }

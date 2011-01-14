@@ -22,6 +22,8 @@ import java.io.UTFDataFormatException;
 
 /**
  * Modified UTF-8 as described in the dex file format spec.
+ *
+ * <p>Derived from libcore's MUTF-8 encoder at java.nio.charset.ModifiedUtf8.
  */
 public final class Mutf8 {
     private Mutf8() {}

@@ -146,8 +146,8 @@ public final class EncodedField extends EncodedMember
                     AccessFlags.fieldString(accessFlags));
         }
 
-        out.writeUnsignedLeb128(diff);
-        out.writeUnsignedLeb128(accessFlags);
+        out.writeUleb128(diff);
+        out.writeUleb128(accessFlags);
 
         return fieldIdx;
     }

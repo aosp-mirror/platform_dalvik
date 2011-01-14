@@ -20,26 +20,49 @@ import com.android.dx.dex.DexException;
 import com.android.dx.dex.SizeOf;
 import com.android.dx.dex.TableOfContents;
 import java.io.Closeable;
+import java.io.DataInput;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.RandomAccessFile;
+import java.util.Arrays;
 
 /**
  * All int offsets are unsigned.
  */
 public final class DexReader implements Closeable {
     private final String name;
-    private final RandomAccessFile randomAccessFile;
+    private final byte[] fileContents;
     private final TableOfContents tableOfContents;
+    private int position = 0;
+
+    private final DataInput asDataInput = new DataInputStub() {
+        public byte readByte() throws IOException {
+            return DexReader.this.readByte();
+        }
+    };
 
     /**
      * Creates a new DexReader that reads ints and shorts in little-endian byte
      * order.
      */
     public DexReader(File file) throws IOException {
-        this.name = file.getPath();
-        this.randomAccessFile = new RandomAccessFile(file, "r");
-        this.tableOfContents = new TableOfContents(this);
+        name = file.getPath();
+
+        FileInputStream in = new FileInputStream(file);
+        int length = (int) file.length();
+        fileContents = new byte[length];
+
+        int count = 0;
+        while (count < length) {
+            int bytesRead = in.read(fileContents, count, length - count);
+            if (bytesRead == -1) {
+                throw new IOException("Expected " + length + " bytes but was " + count);
+            }
+            count += bytesRead;
+        }
+        in.close();
+
+        tableOfContents = new TableOfContents(this);
     }
 
     public TableOfContents getTableOfContents() {
@@ -47,34 +70,38 @@ public final class DexReader implements Closeable {
     }
 
     public int getPosition() throws IOException {
-        return (int) randomAccessFile.getFilePointer();
+        return position;
     }
 
     public void seek(int offset) throws IOException {
-        randomAccessFile.seek(offset & 0xFFFFFFFFL);
+        position = offset;
     }
 
-    public void close() throws IOException {
-        randomAccessFile.close();
-    }
+    public void close() throws IOException {}
 
     public int readInt() throws IOException {
-        int v = randomAccessFile.readInt();
-        return Integer.reverseBytes(v);
+        int result = (fileContents[position] & 0xff)
+                | (fileContents[position + 1] & 0xff) << 8
+                | (fileContents[position + 2] & 0xff) << 16
+                | (fileContents[position + 3] & 0xff) << 24;
+        position += 4;
+        return result;
     }
 
     public short readShort() throws IOException {
-        short v = randomAccessFile.readShort();
-        return Short.reverseBytes(v);
+        int result = (fileContents[position] & 0xff)
+                | (fileContents[position + 1] & 0xff) << 8;
+        position += 2;
+        return (short) result;
     }
 
     public byte readByte() throws IOException {
-        return randomAccessFile.readByte();
+        return (byte) (fileContents[position++] & 0xff);
     }
 
     public byte[] readByteArray(int length) throws IOException {
-        byte[] result = new byte[length];
-        randomAccessFile.readFully(result);
+        byte[] result = Arrays.copyOfRange(fileContents, position, position + length);
+        position += length;
         return result;
     }
 
@@ -86,32 +113,32 @@ public final class DexReader implements Closeable {
         return result;
     }
 
-    public int readUnsignedLeb128() throws IOException {
-        return Leb128Utils.readUnsignedLeb128(randomAccessFile);
+    public int readUleb128() throws IOException {
+        return Leb128Utils.readUnsignedLeb128(asDataInput);
     }
 
-    public int readSignedLeb128() throws IOException {
-        return Leb128Utils.readSignedLeb128(randomAccessFile);
+    public int readSleb128() throws IOException {
+        return Leb128Utils.readSignedLeb128(asDataInput);
     }
 
     public short[] readTypeList(int offset) throws IOException {
         if (offset == 0) {
             return new short[0];
         }
-        long position = randomAccessFile.getFilePointer();
-        randomAccessFile.seek(offset);
+        int savedPosition = position;
+        position = offset;
         int size = readInt();
         short[] parameters = new short[size];
         for (int i = 0; i < size; i++) {
             parameters[i] = readShort();
         }
-        randomAccessFile.seek(position);
+        position = savedPosition;
         return parameters;
     }
 
     public String readStringDataItem() throws IOException {
-        int expectedLength = readUnsignedLeb128();
-        String result = Mutf8.decode(randomAccessFile, new char[expectedLength]);
+        int expectedLength = readUleb128();
+        String result = Mutf8.decode(asDataInput, new char[expectedLength]);
         if (result.length() != expectedLength) {
             throw new DexException("Declared length " + expectedLength + " doesn't match decoded "
                     + "length of " + result.length());
@@ -123,16 +150,64 @@ public final class DexReader implements Closeable {
      * Reads a string at the given index. This method does not disturb the seek position.
      */
     public String readString(int index) throws IOException {
-        long position = randomAccessFile.getFilePointer();
+        int savedPosition = position;
         seek(tableOfContents.stringIds.off + (index * SizeOf.STRING_ID_ITEM));
         int stringDataOff = readInt();
         seek(stringDataOff);
         String result = readStringDataItem();
-        randomAccessFile.seek(position);
+        position = savedPosition;
         return result;
     }
 
     @Override public String toString() {
         return name;
+    }
+
+    private static class DataInputStub implements DataInput {
+        public byte readByte() throws IOException {
+            throw new UnsupportedOperationException();
+        }
+        public void readFully(byte[] buffer) throws IOException {
+            throw new UnsupportedOperationException();
+        }
+        public void readFully(byte[] buffer, int offset, int count) throws IOException {
+            throw new UnsupportedOperationException();
+        }
+        public int skipBytes(int i) throws IOException {
+            throw new UnsupportedOperationException();
+        }
+        public boolean readBoolean() throws IOException {
+            throw new UnsupportedOperationException();
+        }
+        public int readUnsignedByte() throws IOException {
+            throw new UnsupportedOperationException();
+        }
+        public short readShort() throws IOException {
+            throw new UnsupportedOperationException();
+        }
+        public int readUnsignedShort() throws IOException {
+            throw new UnsupportedOperationException();
+        }
+        public char readChar() throws IOException {
+            throw new UnsupportedOperationException();
+        }
+        public int readInt() throws IOException {
+            throw new UnsupportedOperationException();
+        }
+        public long readLong() throws IOException {
+            throw new UnsupportedOperationException();
+        }
+        public float readFloat() throws IOException {
+            throw new UnsupportedOperationException();
+        }
+        public double readDouble() throws IOException {
+            throw new UnsupportedOperationException();
+        }
+        public String readLine() throws IOException {
+            throw new UnsupportedOperationException();
+        }
+        public String readUTF() throws IOException {
+            throw new UnsupportedOperationException();
+        }
     }
 }
