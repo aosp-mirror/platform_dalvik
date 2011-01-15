@@ -18,8 +18,12 @@ package com.android.dx.merge;
 
 import com.android.dx.dex.SizeOf;
 import com.android.dx.dex.TableOfContents;
-import com.android.dx.util.DexReader;
-import com.android.dx.util.DexWriter;
+import com.android.dx.io.ClassDef;
+import com.android.dx.io.DexBuffer;
+import com.android.dx.io.DexHasher;
+import com.android.dx.io.FieldId;
+import com.android.dx.io.MethodId;
+import com.android.dx.io.ProtoId;
 import com.android.dx.util.Uint;
 import java.io.File;
 import java.io.IOException;
@@ -30,30 +34,27 @@ import java.util.logging.Logger;
  * Combine two dex files into one.
  */
 public final class DexMerger {
-    public static final int NO_INDEX = -1;
     private static final Logger logger = Logger.getLogger(DexMerger.class.getName());
 
     private final File dexOut;
-    private final DexWriter dexWriter;
-    private final DexWriter.Section headerWriter;
-    private final DexWriter.Section idsDefsWriter;
-    private final DexWriter.Section mapListWriter;
-    private final DexWriter.Section typeListWriter;
-    private final DexWriter.Section annotationSetRefListWriter;
-    private final DexWriter.Section annotationSetItemWriter;
-    private final DexWriter.Section classDataItemWriter;
-    private final DexWriter.Section codeItemWriter;
-    private final DexWriter.Section stringDataItemWriter;
-    private final DexWriter.Section debugInfoItemWriter;
-    private final DexWriter.Section annotationItemWriter;
-    private final DexWriter.Section encodedArrayItemWriter;
-    private final DexWriter.Section annotationsDirectoryItemWriter;
-    private final TableOfContents contentsOut = new TableOfContents();
-    private final DexReader dexA;
-    private final DexReader dexB;
-    private final TableOfContents contentsA;
-    private final TableOfContents contentsB;
+    private final DexBuffer dexWriter = new DexBuffer();
+    private final DexBuffer.Section headerWriter;
+    private final DexBuffer.Section idsDefsWriter;
+    private final DexBuffer.Section mapListWriter;
+    private final DexBuffer.Section typeListWriter;
+    private final DexBuffer.Section annotationSetRefListWriter;
+    private final DexBuffer.Section annotationSetItemWriter;
+    private final DexBuffer.Section classDataItemWriter;
+    private final DexBuffer.Section codeItemWriter;
+    private final DexBuffer.Section stringDataItemWriter;
+    private final DexBuffer.Section debugInfoItemWriter;
+    private final DexBuffer.Section annotationItemWriter;
+    private final DexBuffer.Section encodedArrayItemWriter;
+    private final DexBuffer.Section annotationsDirectoryItemWriter;
+    private final TableOfContents contentsOut;
 
+    private final DexBuffer dexA = new DexBuffer();
+    private final DexBuffer dexB = new DexBuffer();
     private final IndexMap aIndexMap;
     private final IndexMap bIndexMap;
 
@@ -64,34 +65,34 @@ public final class DexMerger {
 
         this.dexOut = dexOut;
 
-        dexWriter = new DexWriter(dexOut);
-        dexA = new DexReader(a);
-        dexB = new DexReader(b);
-        contentsA = dexA.getTableOfContents();
-        contentsB = dexB.getTableOfContents();
+        dexA.loadFrom(a);
+        dexB.loadFrom(b);
 
-        aIndexMap = new IndexMap(contentsA);
-        bIndexMap = new IndexMap(contentsB);
+        TableOfContents aContents = dexA.getTableOfContents();
+        TableOfContents bContents = dexB.getTableOfContents();
 
-        // header
-        headerWriter = dexWriter.newSection(SizeOf.HEADER_ITEM, "header");
+        aIndexMap = new IndexMap(dexWriter, aContents);
+        bIndexMap = new IndexMap(dexWriter, bContents);
+
+        headerWriter = dexWriter.appendSection(SizeOf.HEADER_ITEM, "header");
 
         // All IDs and definitions sections
         int idsDefsMaxSize
-                = (contentsA.stringIds.size + contentsB.stringIds.size) * SizeOf.STRING_ID_ITEM
-                + (contentsA.typeIds.size + contentsB.typeIds.size) * SizeOf.TYPE_ID_ITEM
-                + (contentsA.protoIds.size + contentsB.protoIds.size) * SizeOf.PROTO_ID_ITEM
-                + (contentsA.fieldIds.size + contentsB.fieldIds.size) * SizeOf.MEMBER_ID_ITEM
-                + (contentsA.methodIds.size + contentsB.methodIds.size) * SizeOf.MEMBER_ID_ITEM
-                + (contentsA.classDefs.size + contentsB.classDefs.size) * SizeOf.CLASS_DEF_ITEM;
-        idsDefsWriter = dexWriter.newSection(idsDefsMaxSize, "ids defs");
+                = (aContents.stringIds.size + bContents.stringIds.size) * SizeOf.STRING_ID_ITEM
+                + (aContents.typeIds.size + bContents.typeIds.size) * SizeOf.TYPE_ID_ITEM
+                + (aContents.protoIds.size + bContents.protoIds.size) * SizeOf.PROTO_ID_ITEM
+                + (aContents.fieldIds.size + bContents.fieldIds.size) * SizeOf.MEMBER_ID_ITEM
+                + (aContents.methodIds.size + bContents.methodIds.size) * SizeOf.MEMBER_ID_ITEM
+                + (aContents.classDefs.size + bContents.classDefs.size) * SizeOf.CLASS_DEF_ITEM;
+        idsDefsWriter = dexWriter.appendSection(idsDefsMaxSize, "ids defs");
 
         // data section
+        contentsOut = dexWriter.getTableOfContents();
         contentsOut.dataOff = dexWriter.getLength();
 
         contentsOut.mapList.off = dexWriter.getLength();
         contentsOut.mapList.size = 1;
-        mapListWriter = dexWriter.newSection(SizeOf.UINT
+        mapListWriter = dexWriter.appendSection(SizeOf.UINT
                 + (contentsOut.sections.length * SizeOf.MAP_ITEM), "map list");
 
         /*
@@ -110,58 +111,59 @@ public final class DexMerger {
 
         contentsOut.typeLists.off = dexWriter.getLength();
         contentsOut.typeLists.size = 0;
-        int maxTypeListBytes = contentsA.typeLists.byteCount + contentsB.typeLists.byteCount;
-        typeListWriter = dexWriter.newSection(maxTypeListBytes * 5, "type list");
+        int maxTypeListBytes = aContents.typeLists.byteCount + bContents.typeLists.byteCount;
+        typeListWriter = dexWriter.appendSection(maxTypeListBytes * 5, "type list");
 
         contentsOut.annotationSetRefLists.off = dexWriter.getLength();
         contentsOut.annotationSetRefLists.size = 0;
-        annotationSetRefListWriter = dexWriter.newSection(SizeOf.UINT, "annotation set ref list");
+        annotationSetRefListWriter = dexWriter.appendSection(SizeOf.UINT, "annotation set ref list");
 
         contentsOut.annotationSets.off = dexWriter.getLength();
         contentsOut.annotationSets.size = 0;
-        annotationSetItemWriter = dexWriter.newSection(SizeOf.UINT, "annotation set item");
+        annotationSetItemWriter = dexWriter.appendSection(SizeOf.UINT, "annotation set item");
 
         contentsOut.classDatas.off = dexWriter.getLength();
         contentsOut.classDatas.size = 0;
-        int maxClassDataItemBytes = contentsA.classDatas.byteCount + contentsB.classDatas.byteCount;
-        classDataItemWriter = dexWriter.newSection(maxClassDataItemBytes * 2, "class data");
+        int maxClassDataItemBytes = aContents.classDatas.byteCount + bContents.classDatas.byteCount;
+        classDataItemWriter = dexWriter.appendSection(maxClassDataItemBytes * 2, "class data");
 
         contentsOut.codes.off = dexWriter.getLength();
         contentsOut.codes.size = 0;
-        int maxCodeItemBytes = contentsA.codes.byteCount + contentsB.codes.byteCount;
-        codeItemWriter = dexWriter.newSection(maxCodeItemBytes, "code item");
+        int maxCodeItemBytes = aContents.codes.byteCount + bContents.codes.byteCount;
+        codeItemWriter = dexWriter.appendSection(maxCodeItemBytes, "code item");
 
         contentsOut.stringDatas.off = dexWriter.getLength();
         contentsOut.stringDatas.size = 0;
-        int maxStringDataItemBytes = contentsA.stringDatas.byteCount
-                + contentsB.stringDatas.byteCount;
-        stringDataItemWriter = dexWriter.newSection(maxStringDataItemBytes * 2, "string data");
+        int maxStringDataItemBytes = aContents.stringDatas.byteCount
+                + bContents.stringDatas.byteCount;
+        stringDataItemWriter = dexWriter.appendSection(maxStringDataItemBytes * 2, "string data");
 
         contentsOut.debugInfos.off = dexWriter.getLength();
         contentsOut.debugInfos.size = 0;
-        int maxDebugInfoItemBytes = contentsA.debugInfos.byteCount + contentsB.debugInfos.byteCount;
-        debugInfoItemWriter = dexWriter.newSection(maxDebugInfoItemBytes, "debug info");
+        int maxDebugInfoItemBytes = aContents.debugInfos.byteCount + bContents.debugInfos.byteCount;
+        debugInfoItemWriter = dexWriter.appendSection(maxDebugInfoItemBytes, "debug info");
 
         contentsOut.annotations.off = dexWriter.getLength();
         contentsOut.annotations.size = 0;
-        int maxAnnotationItemBytes = contentsA.annotations.byteCount
-                + contentsB.annotations.byteCount;
-        annotationItemWriter = dexWriter.newSection(maxAnnotationItemBytes, "annotation");
+        int maxAnnotationItemBytes = aContents.annotations.byteCount
+                + bContents.annotations.byteCount;
+        annotationItemWriter = dexWriter.appendSection(maxAnnotationItemBytes, "annotation");
 
         contentsOut.encodedArrays.off = dexWriter.getLength();
         contentsOut.encodedArrays.size = 0;
-        int maxEncodedArrayItemBytes = contentsA.encodedArrays.byteCount
-                + contentsB.encodedArrays.byteCount;
-        encodedArrayItemWriter = dexWriter.newSection(
+        int maxEncodedArrayItemBytes = aContents.encodedArrays.byteCount
+                + bContents.encodedArrays.byteCount;
+        encodedArrayItemWriter = dexWriter.appendSection(
                 maxEncodedArrayItemBytes * 2, "encoded array");
 
         contentsOut.annotationsDirectories.off = dexWriter.getLength();
         contentsOut.annotationsDirectories.size = 0;
-        int maxAnnotationsDirectoryItemBytes = contentsA.annotationsDirectories.byteCount
-                + contentsB.annotationsDirectories.byteCount;
-        annotationsDirectoryItemWriter = dexWriter.newSection(
+        int maxAnnotationsDirectoryItemBytes = aContents.annotationsDirectories.byteCount
+                + bContents.annotationsDirectories.byteCount;
+        annotationsDirectoryItemWriter = dexWriter.appendSection(
                 maxAnnotationsDirectoryItemBytes, "annotations");
 
+        dexWriter.noMoreSections();
         contentsOut.dataSize = dexWriter.getLength() - contentsOut.dataOff;
     }
 
@@ -183,8 +185,8 @@ public final class DexMerger {
         contentsOut.writeMap(mapListWriter);
 
         // close (and flush) the result, then reopen to generate and write the hashes
-        dexWriter.close();
-        new DexHasher().writeHashes(dexOut);
+        new DexHasher().writeHashes(dexWriter);
+        dexWriter.writeTo(dexOut);
 
         long elapsed = System.nanoTime() - start;
         logger.info(String.format("Merged. Result length=%.1fKiB. Took %.1fs",
@@ -197,24 +199,24 @@ public final class DexMerger {
      */
     abstract class IdMerger<T extends Comparable<T>> {
         public final void merge() throws IOException {
-            dexA.seek(getSection(contentsA).off);
-            dexB.seek(getSection(contentsB).off);
-            getSection(contentsOut).off = idsDefsWriter.getCursor();
+            TableOfContents.Section aSection = getSection(dexA.getTableOfContents());
+            TableOfContents.Section bSection = getSection(dexB.getTableOfContents());
+            DexBuffer.Section aIn = dexA.open(aSection.off);
+            DexBuffer.Section bIn = dexB.open(bSection.off);
+            getSection(contentsOut).off = idsDefsWriter.getPosition();
 
             int aIndex = 0;
             int bIndex = 0;
             int outCount = 0;
-            int aCount = getSection(contentsA).size;
-            int bCount = getSection(contentsB).size;
             T a = null;
             T b = null;
 
             while (true) {
-                if (a == null && aIndex < aCount) {
-                    a = read(dexA, aIndexMap, aIndex);
+                if (a == null && aIndex < aSection.size) {
+                    a = read(aIn, aIndexMap, aIndex);
                 }
-                if (b == null && bIndex < bCount) {
-                    b = read(dexB, bIndexMap, bIndex);
+                if (b == null && bIndex < bSection.size) {
+                    b = read(bIn, bIndexMap, bIndex);
                 }
 
                 // Write the smaller of a and b. If they're equal, write only once
@@ -251,7 +253,7 @@ public final class DexMerger {
         }
 
         abstract TableOfContents.Section getSection(TableOfContents tableOfContents);
-        abstract T read(DexReader in, IndexMap indexMap, int index) throws IOException;
+        abstract T read(DexBuffer.Section in, IndexMap indexMap, int index) throws IOException;
         abstract void updateIndex(IndexMap indexMap, int oldIndex, int newIndex);
         abstract void write(T value) throws IOException;
     }
@@ -262,7 +264,8 @@ public final class DexMerger {
                 return tableOfContents.stringIds;
             }
 
-            @Override String read(DexReader in, IndexMap indexMap, int index) throws IOException {
+            @Override String read(DexBuffer.Section in, IndexMap indexMap, int index)
+                    throws IOException {
                 return in.readString(index);
             }
 
@@ -272,7 +275,7 @@ public final class DexMerger {
 
             @Override void write(String value) throws IOException {
                 contentsOut.stringDatas.size++;
-                idsDefsWriter.writeInt(stringDataItemWriter.getCursor());
+                idsDefsWriter.writeInt(stringDataItemWriter.getPosition());
                 stringDataItemWriter.writeStringDataItem(value);
             }
         }.merge();
@@ -284,12 +287,13 @@ public final class DexMerger {
                 return tableOfContents.typeIds;
             }
 
-            @Override Uint read(DexReader in, IndexMap indexMap, int index) throws IOException {
-                return new Uint(indexMap.stringIds[in.readInt()]);
+            @Override Uint read(DexBuffer.Section in, IndexMap indexMap, int index)
+                    throws IOException {
+                return new Uint(indexMap.adjustString(in.readInt()));
             }
 
             @Override void updateIndex(IndexMap indexMap, int oldIndex, int newIndex) {
-                indexMap.typeIds[oldIndex] = newIndex;
+                indexMap.typeIds[oldIndex] = (short) newIndex;
             }
 
             @Override void write(Uint value) throws IOException {
@@ -304,14 +308,13 @@ public final class DexMerger {
                 return tableOfContents.protoIds;
             }
 
-            @Override ProtoId read(DexReader in, IndexMap indexMap, int index) throws IOException {
-                ProtoId result = new ProtoId(in);
-                result.adjust(indexMap);
-                return result;
+            @Override ProtoId read(DexBuffer.Section in, IndexMap indexMap, int index)
+                    throws IOException {
+                return indexMap.adjust(in.readProtoId());
             }
 
             @Override void updateIndex(IndexMap indexMap, int oldIndex, int newIndex) {
-                indexMap.protoIds[oldIndex] = newIndex;
+                indexMap.protoIds[oldIndex] = (short) newIndex;
             }
 
             @Override void write(ProtoId value) throws IOException {
@@ -327,14 +330,13 @@ public final class DexMerger {
                 return tableOfContents.fieldIds;
             }
 
-            @Override FieldId read(DexReader in, IndexMap indexMap, int index) throws IOException {
-                FieldId result = new FieldId(in);
-                result.adjust(indexMap);
-                return result;
+            @Override
+            FieldId read(DexBuffer.Section in, IndexMap indexMap, int index) throws IOException {
+                return indexMap.adjust(in.readFieldId());
             }
 
             @Override void updateIndex(IndexMap indexMap, int oldIndex, int newIndex) {
-                indexMap.fieldIds[oldIndex] = newIndex;
+                indexMap.fieldIds[oldIndex] = (short) newIndex;
             }
 
             @Override void write(FieldId value) throws IOException {
@@ -349,14 +351,13 @@ public final class DexMerger {
                 return tableOfContents.methodIds;
             }
 
-            @Override MethodId read(DexReader in, IndexMap indexMap, int index) throws IOException {
-                MethodId result = new MethodId(in);
-                result.adjust(indexMap);
-                return result;
+            @Override MethodId read(DexBuffer.Section in, IndexMap indexMap, int index)
+                    throws IOException {
+                return indexMap.adjust(in.readMethodId());
             }
 
             @Override void updateIndex(IndexMap indexMap, int oldIndex, int newIndex) {
-                indexMap.methodIds[oldIndex] = newIndex;
+                indexMap.methodIds[oldIndex] = (short) newIndex;
             }
 
             @Override void write(MethodId methodId) throws IOException {
@@ -367,13 +368,13 @@ public final class DexMerger {
 
     private void mergeClassDefs() throws IOException {
         SortableType[] types = getSortedTypes();
-        contentsOut.classDefs.off = idsDefsWriter.getCursor();
+        contentsOut.classDefs.off = idsDefsWriter.getPosition();
         contentsOut.classDefs.size = types.length;
 
         for (SortableType type : types) {
-            DexReader in = type.prepareReader();
+            DexBuffer in = type.getBuffer();
             IndexMap indexMap = (in == dexA) ? aIndexMap : bIndexMap;
-            transformClassDef(in, indexMap);
+            transformClassDef(in, type.getClassDef(), indexMap);
         }
     }
 
@@ -417,15 +418,15 @@ public final class DexMerger {
      * Reads just enough data on each class so that we can sort it and then find
      * it later.
      */
-    private void readSortableTypes(SortableType[] sortableTypes, DexReader reader,
+    private void readSortableTypes(SortableType[] sortableTypes, DexBuffer buffer,
             IndexMap indexMap) throws IOException {
-        TableOfContents tableOfContents = reader.getTableOfContents();
-        reader.seek(tableOfContents.classDefs.off);
+        TableOfContents tableOfContents = buffer.getTableOfContents();
+        DexBuffer.Section classDefsIn = buffer.open(tableOfContents.classDefs.off);
 
         for (int i = 0; i < tableOfContents.classDefs.size; i++) {
-            SortableType sortableType = new SortableType(reader);
-            sortableType.adjust(indexMap);
-            int t = sortableType.getType();
+            SortableType sortableType = indexMap.adjust(
+                    new SortableType(buffer, classDefsIn.readClassDef()));
+            int t = sortableType.getTypeIndex();
             if (sortableTypes[t] == null) {
                 sortableTypes[t] = sortableType;
             }
@@ -436,60 +437,47 @@ public final class DexMerger {
      * Reads a class_def_item beginning at {@code in} and writes the index and
      * data.
      */
-    private void transformClassDef(DexReader in, IndexMap indexMap) throws IOException {
+    private void transformClassDef(DexBuffer in, ClassDef classDef, IndexMap indexMap)
+            throws IOException {
         idsDefsWriter.assertFourByteAligned();
-        idsDefsWriter.writeInt(indexMap.typeIds[in.readInt()]); // class idx
-        idsDefsWriter.writeInt(in.readInt()); // access flags
-        int inSuperclassIndex = in.readInt(); // superclass idx
-        int outSuperclassIndex = inSuperclassIndex != NO_INDEX
-                ? indexMap.typeIds[inSuperclassIndex]
-                : NO_INDEX;
-        idsDefsWriter.writeInt(outSuperclassIndex);
+        idsDefsWriter.writeInt(classDef.getTypeIndex());
+        idsDefsWriter.writeInt(classDef.getAccessFlags());
+        idsDefsWriter.writeInt(classDef.getSupertypeIndex());
 
-        int interfaceOff = in.readInt(); // interface off
-        short[] interfaces = in.readTypeList(interfaceOff);
-        indexMap.adjustTypeList(interfaces);
+        short[] interfaces = classDef.getInterfaces();
         int typeListPosition = writeTypeList(interfaces);
         idsDefsWriter.writeInt(typeListPosition);
 
-        int sourceFileIndex = in.readInt(); // source file idx
-        if (sourceFileIndex != NO_INDEX) {
-            sourceFileIndex = indexMap.stringIds[sourceFileIndex];
-        }
+        int sourceFileIndex = indexMap.adjustString(
+                classDef.getSourceFileIndex()); // source file idx
         idsDefsWriter.writeInt(sourceFileIndex);
 
-        int annotationsOff = in.readInt(); // annotations off
+        int annotationsOff = classDef.getAnnotationsOffset();
         if (annotationsOff == 0) {
             idsDefsWriter.writeInt(0);
         } else {
-            int position = in.getPosition();
-            in.seek(annotationsOff);
+            DexBuffer.Section annotationsIn = in.open(annotationsOff);
             annotationsDirectoryItemWriter.alignToFourBytes();
-            idsDefsWriter.writeInt(annotationsDirectoryItemWriter.getCursor());
-            transformAnnotations(in, indexMap);
-            in.seek(position);
+            idsDefsWriter.writeInt(annotationsDirectoryItemWriter.getPosition());
+            transformAnnotations(annotationsIn, indexMap);
         }
 
-        int classDataOff = in.readInt(); // class data off
+        int classDataOff = classDef.getClassDataOffset();
         if (classDataOff == 0) {
             idsDefsWriter.writeInt(0);
         } else {
-            int position = in.getPosition();
-            in.seek(classDataOff);
-            idsDefsWriter.writeInt(classDataItemWriter.getCursor());
-            transformClassData(in, indexMap);
-            in.seek(position);
+            DexBuffer.Section classDataIn = in.open(classDataOff);
+            idsDefsWriter.writeInt(classDataItemWriter.getPosition());
+            transformClassData(classDataIn, indexMap);
         }
 
-        int staticValuesOff = in.readInt(); // static values off
+        int staticValuesOff = classDef.getStaticValuesOffset();
         if (staticValuesOff == 0) {
             idsDefsWriter.writeInt(0);
         } else {
-            int position = in.getPosition();
-            in.seek(staticValuesOff);
-            idsDefsWriter.writeInt(encodedArrayItemWriter.getCursor());
-            transformStaticValues(in, indexMap);
-            in.seek(position);
+            DexBuffer.Section staticValuesIn = in.open(staticValuesOff);
+            idsDefsWriter.writeInt(encodedArrayItemWriter.getPosition());
+            transformStaticValues(staticValuesIn, indexMap);
         }
     }
 
@@ -499,13 +487,13 @@ public final class DexMerger {
         }
         contentsOut.typeLists.size++;
         typeListWriter.alignToFourBytes();
-        int cursor = typeListWriter.getCursor();
+        int cursor = typeListWriter.getPosition();
         typeListWriter.writeInt(interfaces.length);
         typeListWriter.write(interfaces);
         return cursor;
     }
 
-    private void transformAnnotations(DexReader in, IndexMap indexMap) throws IOException {
+    private void transformAnnotations(DexBuffer.Section in, IndexMap indexMap) throws IOException {
         contentsOut.annotationsDirectories.size++;
 
         // TODO: retain annotations
@@ -521,7 +509,7 @@ public final class DexMerger {
         annotationsDirectoryItemWriter.writeInt(0);
     }
 
-    private void transformClassData(DexReader in, IndexMap indexMap) throws IOException {
+    private void transformClassData(DexBuffer.Section in, IndexMap indexMap) throws IOException {
         contentsOut.classDatas.size++;
 
         int staticFieldsSize = in.readUleb128();
@@ -543,13 +531,13 @@ public final class DexMerger {
         transformEncodedMethods(in, indexMap, virtualMethodsSize);
     }
 
-    private void transformEncodedFields(DexReader in, IndexMap indexMap, int count)
+    private void transformEncodedFields(DexBuffer.Section in, IndexMap indexMap, int count)
             throws IOException {
         int inFieldIndex = 0;
         int lastOutFieldIndex = 0;
         for (int i = 0; i < count; i++) {
             inFieldIndex += in.readUleb128(); // field idx diff
-            int outFieldIndex = indexMap.fieldIds[inFieldIndex];
+            int outFieldIndex = indexMap.adjustField(inFieldIndex);
             classDataItemWriter.writeUleb128(outFieldIndex - lastOutFieldIndex);
             lastOutFieldIndex = outFieldIndex;
 
@@ -560,13 +548,13 @@ public final class DexMerger {
     /**
      * Transforms a list of encoded methods.
      */
-    private void transformEncodedMethods(DexReader in, IndexMap indexMap, int count)
+    private void transformEncodedMethods(DexBuffer.Section in, IndexMap indexMap, int count)
             throws IOException {
         int inMethodIndex = 0;
         int lastOutMethodIndex = 0;
         for (int i = 0; i < count; i++) {
             inMethodIndex += in.readUleb128(); // method idx diff
-            int outMethodIndex = indexMap.methodIds[inMethodIndex];
+            int outMethodIndex = indexMap.adjustMethod(inMethodIndex);
             classDataItemWriter.writeUleb128(outMethodIndex - lastOutMethodIndex);
             lastOutMethodIndex = outMethodIndex;
 
@@ -576,18 +564,14 @@ public final class DexMerger {
             if (codeOff == 0) {
                 classDataItemWriter.writeUleb128(0);
             } else {
-                int inPosition = in.getPosition();
                 codeItemWriter.alignToFourBytes();
-                classDataItemWriter.writeUleb128(codeItemWriter.getCursor());
-
-                in.seek(codeOff);
-                transformCodeItem(in, indexMap);
-                in.seek(inPosition);
+                classDataItemWriter.writeUleb128(codeItemWriter.getPosition());
+                transformCodeItem(in.open(codeOff), indexMap);
             }
         }
     }
 
-    private void transformCodeItem(DexReader in, IndexMap indexMap) throws IOException {
+    private void transformCodeItem(DexBuffer.Section in, IndexMap indexMap) throws IOException {
         contentsOut.codes.size++;
         codeItemWriter.assertFourByteAligned();
 
@@ -628,13 +612,13 @@ public final class DexMerger {
         }
     }
 
-    private void transformTryItem(DexReader in, IndexMap indexMap) throws IOException {
+    private void transformTryItem(DexBuffer.Section in, IndexMap indexMap) throws IOException {
         codeItemWriter.writeInt(in.readInt()); // start addr
         codeItemWriter.writeShort(in.readShort()); // insn count
         codeItemWriter.writeShort(in.readShort()); // handler off
     }
 
-    private void transformEncodedCatchHandlerList(DexReader in, IndexMap indexMap)
+    private void transformEncodedCatchHandlerList(DexBuffer.Section in, IndexMap indexMap)
             throws IOException {
         int size = in.readUleb128(); // size
         codeItemWriter.writeUleb128(size);
@@ -644,13 +628,14 @@ public final class DexMerger {
         }
     }
 
-    private void transformEncodedCatchHandler(DexReader in, IndexMap indexMap) throws IOException {
+    private void transformEncodedCatchHandler(DexBuffer.Section in, IndexMap indexMap)
+            throws IOException {
         int size = in.readSleb128(); // size
         codeItemWriter.writeSleb128(size);
 
         int handlersCount = Math.abs(size);
         for (int i = 0; i < handlersCount; i++) {
-            codeItemWriter.writeUleb128(indexMap.typeIds[in.readUleb128()]); // type idx
+            codeItemWriter.writeUleb128(indexMap.adjustType(in.readUleb128())); // type idx
             codeItemWriter.writeUleb128(in.readUleb128()); // addr
         }
 
@@ -659,7 +644,7 @@ public final class DexMerger {
         }
     }
 
-    private void transformStaticValues(DexReader in, IndexMap indexMap) throws IOException {
+    private void transformStaticValues(DexBuffer.Section in, IndexMap indexMap) throws IOException {
         contentsOut.encodedArrays.size++;
         new EncodedValueTransformer(indexMap, in, encodedArrayItemWriter).transformArray();
     }

@@ -16,9 +16,9 @@
 
 package com.android.dx.dex;
 
-import com.android.dx.util.DexReader;
-import com.android.dx.util.DexWriter;
+import com.android.dx.io.DexBuffer;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 
 /**
@@ -66,51 +66,51 @@ public final class TableOfContents {
         signature = new byte[20];
     }
 
-    public TableOfContents(DexReader in) throws IOException {
-        byte[] magic = in.readByteArray(8);
+    public void readFrom(DexBuffer buffer) throws IOException {
+        readHeader(buffer.open(0));
+        readMap(buffer.open(mapList.off));
+    }
+
+    private void readHeader(DexBuffer.Section headerIn) throws UnsupportedEncodingException {
+        byte[] magic = headerIn.readByteArray(8);
         if (!Arrays.equals(DexFormat.MAGIC.getBytes("UTF-8"), magic)) {
             throw new DexException("Unexpected magic: " + Arrays.toString(magic));
         }
 
-        checksum = in.readInt();
-        signature = in.readByteArray(20);
-        fileSize = in.readInt();
-        int headerSize = in.readInt();
+        checksum = headerIn.readInt();
+        signature = headerIn.readByteArray(20);
+        fileSize = headerIn.readInt();
+        int headerSize = headerIn.readInt();
         if (headerSize != SizeOf.HEADER_ITEM) {
             throw new DexException("Unexpected header: 0x" + Integer.toHexString(headerSize));
         }
-        int endianTag = in.readInt();
+        int endianTag = headerIn.readInt();
         if (endianTag != DexFormat.ENDIAN_TAG) {
             throw new DexException("Unexpected endian tag: 0x" + Integer.toHexString(endianTag));
         }
-        linkSize = in.readInt();
-        linkOff = in.readInt();
-        mapList.off = in.readInt();
+        linkSize = headerIn.readInt();
+        linkOff = headerIn.readInt();
+        mapList.off = headerIn.readInt();
         if (mapList.off == 0) {
             throw new DexException("Cannot merge dex files that do not contain a map");
         }
-        stringIds.size = in.readInt();
-        stringIds.off = in.readInt();
-        typeIds.size = in.readInt();
-        typeIds.off = in.readInt();
-        protoIds.size = in.readInt();
-        protoIds.off = in.readInt();
-        fieldIds.size = in.readInt();
-        fieldIds.off = in.readInt();
-        methodIds.size = in.readInt();
-        methodIds.off = in.readInt();
-        classDefs.size = in.readInt();
-        classDefs.off = in.readInt();
-        dataSize = in.readInt();
-        dataOff = in.readInt();
-
-        int position = in.getPosition();
-        in.seek(mapList.off);
-        readMap(in);
-        in.seek(position);
+        stringIds.size = headerIn.readInt();
+        stringIds.off = headerIn.readInt();
+        typeIds.size = headerIn.readInt();
+        typeIds.off = headerIn.readInt();
+        protoIds.size = headerIn.readInt();
+        protoIds.off = headerIn.readInt();
+        fieldIds.size = headerIn.readInt();
+        fieldIds.off = headerIn.readInt();
+        methodIds.size = headerIn.readInt();
+        methodIds.off = headerIn.readInt();
+        classDefs.size = headerIn.readInt();
+        classDefs.off = headerIn.readInt();
+        dataSize = headerIn.readInt();
+        dataOff = headerIn.readInt();
     }
 
-    private void readMap(DexReader in) throws IOException {
+    private void readMap(DexBuffer.Section in) throws IOException {
         int mapSize = in.readInt();
 
         Section previous = null;
@@ -157,7 +157,7 @@ public final class TableOfContents {
         throw new IllegalArgumentException("No such map item: " + type);
     }
 
-    public void writeHeader(DexWriter.Section out) throws IOException {
+    public void writeHeader(DexBuffer.Section out) throws IOException {
         out.write(DexFormat.MAGIC.getBytes("UTF-8"));
         out.writeInt(checksum);
         out.write(signature);
@@ -183,7 +183,7 @@ public final class TableOfContents {
         out.writeInt(dataOff);
     }
 
-    public void writeMap(DexWriter.Section out) throws IOException {
+    public void writeMap(DexBuffer.Section out) throws IOException {
         int count = 0;
         for (Section s : sections) {
             if (s.size > 0) {

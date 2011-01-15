@@ -17,6 +17,11 @@
 package com.android.dx.merge;
 
 import com.android.dx.dex.TableOfContents;
+import com.android.dx.io.ClassDef;
+import com.android.dx.io.DexBuffer;
+import com.android.dx.io.FieldId;
+import com.android.dx.io.MethodId;
+import com.android.dx.io.ProtoId;
 
 /**
  * Maps the index offsets from one dex file to those in another. For example, if
@@ -24,23 +29,81 @@ import com.android.dx.dex.TableOfContents;
  * {@code strings[5]}.
  */
 public final class IndexMap {
+    private final DexBuffer target;
     public final int[] stringIds;
-    public final int[] typeIds;
-    public final int[] protoIds;
-    public final int[] fieldIds;
-    public final int[] methodIds;
+    public final short[] typeIds;
+    public final short[] protoIds;
+    public final short[] fieldIds;
+    public final short[] methodIds;
 
-    public IndexMap(TableOfContents tableOfContents) {
-        stringIds = new int[tableOfContents.stringIds.size];
-        typeIds = new int[tableOfContents.typeIds.size];
-        protoIds = new int[tableOfContents.protoIds.size];
-        fieldIds = new int[tableOfContents.fieldIds.size];
-        methodIds = new int[tableOfContents.methodIds.size];
+    public IndexMap(DexBuffer target, TableOfContents tableOfContents) {
+        this.target = target;
+        this.stringIds = new int[tableOfContents.stringIds.size];
+        this.typeIds = new short[tableOfContents.typeIds.size];
+        this.protoIds = new short[tableOfContents.protoIds.size];
+        this.fieldIds = new short[tableOfContents.fieldIds.size];
+        this.methodIds = new short[tableOfContents.methodIds.size];
     }
 
-    public void adjustTypeList(short[] typeList) {
+    public int adjustString(int stringIndex) {
+        return stringIndex == ClassDef.NO_INDEX ? ClassDef.NO_INDEX : stringIds[stringIndex];
+    }
+
+    public short adjustType(int typeIndex) {
+        return (typeIndex == ClassDef.NO_INDEX) ? ClassDef.NO_INDEX : typeIds[typeIndex];
+    }
+
+    public short[] adjustTypeList(short[] typeList) {
+        short[] result = new short[typeList.length];
         for (int i = 0; i < typeList.length; i++) {
-            typeList[i] = (short) typeIds[typeList[i]];
+            result[i] = adjustType(typeList[i]);
         }
+        return result;
+    }
+
+    public short adjustProto(int protoIndex) {
+        return protoIds[protoIndex];
+    }
+
+    public short adjustField(int fieldIndex) {
+        return fieldIds[fieldIndex];
+    }
+
+    public short adjustMethod(int methodIndex) {
+        return methodIds[methodIndex];
+    }
+
+    public MethodId adjust(MethodId methodId) {
+        return new MethodId(target,
+                adjustType(methodId.getDeclaringClassIndex()),
+                adjustProto(methodId.getProtoIndex()),
+                adjustString(methodId.getNameIndex()));
+    }
+
+    public FieldId adjust(FieldId fieldId) {
+        return new FieldId(target,
+                adjustType(fieldId.getDeclaringClassIndex()),
+                adjustType(fieldId.getTypeIndex()),
+                adjustString(fieldId.getNameIndex()));
+
+    }
+
+    public ProtoId adjust(ProtoId protoId) {
+        return new ProtoId(target,
+                adjustString(protoId.getShortyIndex()),
+                adjustType(protoId.getReturnTypeIndex()),
+                adjustTypeList(protoId.getParameters()));
+    }
+
+    public ClassDef adjust(ClassDef classDef) {
+        return new ClassDef(target, classDef.getOffset(), adjustType(classDef.getTypeIndex()),
+                classDef.getAccessFlags(), adjustType(classDef.getSupertypeIndex()),
+                classDef.getInterfacesOffset(), adjustTypeList(classDef.getInterfaces()),
+                classDef.getSourceFileIndex(), classDef.getAnnotationsOffset(),
+                classDef.getClassDataOffset(), classDef.getStaticValuesOffset());
+    }
+
+    public SortableType adjust(SortableType sortableType) {
+        return new SortableType(sortableType.getBuffer(), adjust(sortableType.getClassDef()));
     }
 }

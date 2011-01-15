@@ -22,7 +22,7 @@ import java.util.BitSet;
 /**
  * Adjusts a block of instructions to a new index.
  */
-public final class InstructionTransformer {
+final class InstructionTransformer {
 
     private static final Instruction[] INSTRUCTIONS = new Instruction[] {
             // 0x00...0x0f
@@ -342,7 +342,7 @@ public final class InstructionTransformer {
         @Override public void transform(short[] instructions, int i, IndexMap indexMap,
                 BitSet skippedInstructions) throws DexException {
             int stringIndex = instructions[i + 1] & 0xFFFF;
-            int mappedIndex = indexMap.stringIds[stringIndex];
+            int mappedIndex = indexMap.adjustString(stringIndex);
             if (mappedIndex > 0xFFFF) {
                 throw new DexException("Cannot convert string to jumbo string!");
             }
@@ -369,7 +369,7 @@ public final class InstructionTransformer {
         @Override public void transform(short[] instructions, int i, IndexMap indexMap,
                 BitSet skippedInstructions) throws DexException {
             short field = instructions[i + 1];
-            instructions[i + 1] = (short) indexMap.fieldIds[field];
+            instructions[i + 1] = (short) indexMap.adjustField(field);
         }
     }
 
@@ -380,7 +380,7 @@ public final class InstructionTransformer {
         @Override public void transform(short[] instructions, int i, IndexMap indexMap,
                 BitSet skippedInstructions) throws DexException {
             short type = instructions[i + 1];
-            instructions[i + 1] = (short) indexMap.typeIds[type];
+            instructions[i + 1] = (short) indexMap.adjustType(type);
         }
     }
 
@@ -391,7 +391,7 @@ public final class InstructionTransformer {
         @Override public void transform(short[] instructions, int i, IndexMap indexMap,
                 BitSet skippedInstructions) throws DexException {
             short method = instructions[i + 1];
-            instructions[i + 1] = (short) indexMap.methodIds[method];
+            instructions[i + 1] = (short) indexMap.adjustMethod(method);
         }
     }
 

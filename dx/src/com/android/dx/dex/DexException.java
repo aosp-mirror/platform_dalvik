@@ -16,13 +16,14 @@
 
 package com.android.dx.dex;
 
-import java.io.IOException;
-
 /**
- * Thrown when there's a format problem reading or writing a dex file.
+ * Thrown when there's a format problem reading a dex file.
  */
-public final class DexException extends IOException {
+public final class DexException extends RuntimeException {
     public DexException(String message) {
         super(message);
+    }
+    public DexException(Exception cause) {
+        super(cause);
     }
 }

@@ -16,15 +16,15 @@
 
 package com.android.dx.merge;
 
-import com.android.dx.util.DexReader;
-import java.io.IOException;
+import com.android.dx.io.ClassDef;
+import com.android.dx.io.DexBuffer;
 import java.util.Comparator;
 
 /**
  * Name and structure of a type. Used to order types such that each type is
  * preceded by its supertype and implemented interfaces.
  */
-public final class SortableType {
+final class SortableType {
     public static final Comparator<SortableType> NULLS_LAST_ORDER = new Comparator<SortableType>() {
         public int compare(SortableType a, SortableType b) {
             if (a == b) {
@@ -39,46 +39,29 @@ public final class SortableType {
             if (a.depth != b.depth) {
                 return a.depth - b.depth;
             }
-            return a.type - b.type;
+            return a.getTypeIndex() - b.getTypeIndex();
         }
     };
 
-    private final DexReader reader;
-    private final int offset;
-    private int type;
-    private int supertype;
-    private final short[] interfaces;
+    private final DexBuffer buffer;
+    private ClassDef classDef;
     private int depth = -1;
 
-    public SortableType(DexReader reader) throws IOException {
-        this.reader = reader;
-        this.offset = reader.getPosition();
-        this.type = reader.readInt(); // class idx
-        reader.readInt(); // access flags
-        this.supertype = reader.readInt(); // superclass idx
-        int interfacesOff = reader.readInt(); // interface off
-        this.interfaces = reader.readTypeList(interfacesOff);
-        reader.readInt(); // source file index
-        reader.readInt(); // annotations off
-        reader.readInt(); // class data off
-        reader.readInt(); // static values off
+    public SortableType(DexBuffer buffer, ClassDef classDef) {
+        this.buffer = buffer;
+        this.classDef = classDef;
     }
 
-    public void adjust(IndexMap indexMap) {
-        type = indexMap.typeIds[type];
-        if (supertype != DexMerger.NO_INDEX) {
-            supertype = indexMap.typeIds[supertype];
-        }
-        indexMap.adjustTypeList(interfaces);
+    public DexBuffer getBuffer() {
+        return buffer;
     }
 
-    public DexReader prepareReader() throws IOException {
-        reader.seek(offset);
-        return reader;
+    public ClassDef getClassDef() {
+        return classDef;
     }
 
-    public int getType() {
-        return type;
+    public int getTypeIndex() {
+        return classDef.getTypeIndex();
     }
 
     /**
@@ -88,10 +71,10 @@ public final class SortableType {
      */
     public boolean tryAssignDepth(SortableType[] types) {
         int max;
-        if (supertype == DexMerger.NO_INDEX) {
+        if (classDef.getSupertypeIndex() == ClassDef.NO_INDEX) {
             max = 0; // this is Object.class or an interface
         } else {
-            SortableType sortableSupertype = types[supertype];
+            SortableType sortableSupertype = types[classDef.getSupertypeIndex()];
             if (sortableSupertype == null) {
                 max = 1; // unknown, so assume it's a root.
             } else if (sortableSupertype.depth == -1) {
@@ -101,7 +84,7 @@ public final class SortableType {
             }
         }
 
-        for (short interfaceIndex : interfaces) {
+        for (short interfaceIndex : classDef.getInterfaces()) {
             SortableType implemented = types[interfaceIndex];
             if (implemented == null) {
                 max = Math.max(max, 1); // unknown, so assume it's a root.

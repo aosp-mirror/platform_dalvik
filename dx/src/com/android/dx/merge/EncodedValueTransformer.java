@@ -16,18 +16,16 @@
 
 package com.android.dx.merge;
 
-import com.android.dx.util.DexReader;
-import com.android.dx.util.DexWriter;
+import com.android.dx.io.DexBuffer;
 import com.android.dx.util.Unsigned;
 import java.io.IOException;
 
-public final class EncodedValueTransformer {
-
+final class EncodedValueTransformer {
     private final IndexMap indexMap;
-    private final DexReader in;
-    private final DexWriter.Section out;
+    private final DexBuffer.Section in;
+    private final DexBuffer.Section out;
 
-    public EncodedValueTransformer(IndexMap indexMap, DexReader in, DexWriter.Section out) {
+    public EncodedValueTransformer(IndexMap indexMap, DexBuffer.Section in, DexBuffer.Section out) {
         this.indexMap = indexMap;
         this.in = in;
         this.out = out;
@@ -42,13 +40,13 @@ public final class EncodedValueTransformer {
     }
 
     public void transformAnnotation() throws IOException {
-        out.writeUleb128(indexMap.typeIds[in.readUleb128()]); // type idx
+        out.writeUleb128(indexMap.adjustType(in.readUleb128())); // type idx
 
         int size = in.readUleb128(); // size
         out.writeUleb128(size);
 
         for (int i = 0; i < size; i++) {
-            out.writeUleb128(indexMap.stringIds[in.readUleb128()]); // name idx
+            out.writeUleb128(indexMap.adjustString(in.readUleb128())); // name idx
             transformValue();
         }
     }
@@ -73,23 +71,23 @@ public final class EncodedValueTransformer {
 
         case 0x17: // string
             int indexIn = readIndex(in, size);
-            int indexOut = indexMap.stringIds[indexIn];
+            int indexOut = indexMap.adjustString(indexIn);
             writeTypeAndSizeAndIndex(type, indexOut, out);
             break;
         case 0x18: // type
             indexIn = readIndex(in, size);
-            indexOut = indexMap.typeIds[indexIn];
+            indexOut = indexMap.adjustType(indexIn);
             writeTypeAndSizeAndIndex(type, indexOut, out);
             break;
         case 0x19: // field
         case 0x1b: // enum
             indexIn = readIndex(in, size);
-            indexOut = indexMap.fieldIds[indexIn];
+            indexOut = indexMap.adjustField(indexIn);
             writeTypeAndSizeAndIndex(type, indexOut, out);
             break;
         case 0x1a: // method
             indexIn = readIndex(in, size);
-            indexOut = indexMap.methodIds[indexIn];
+            indexOut = indexMap.adjustMethod(indexIn);
             writeTypeAndSizeAndIndex(type, indexOut, out);
             break;
 
@@ -110,7 +108,7 @@ public final class EncodedValueTransformer {
         }
     }
 
-    private int readIndex(DexReader in, int byteCount) throws IOException {
+    private int readIndex(DexBuffer.Section in, int byteCount) throws IOException {
         int result = 0;
         int shift = 0;
         for (int i = 0; i < byteCount; i++) {
@@ -120,7 +118,7 @@ public final class EncodedValueTransformer {
         return result;
     }
 
-    private void writeTypeAndSizeAndIndex(int type, int index, DexWriter.Section out)
+    private void writeTypeAndSizeAndIndex(int type, int index, DexBuffer.Section out)
             throws IOException {
         int byteCount;
         if (Unsigned.compare(index, 0xff) <= 0) {
@@ -141,7 +139,8 @@ public final class EncodedValueTransformer {
         }
     }
 
-    private void copyBytes(DexReader in, DexWriter.Section out, int size) throws IOException {
+    private void copyBytes(DexBuffer.Section in, DexBuffer.Section out, int size)
+            throws IOException {
         for (int i = 0; i < size; i++) {
             out.writeByte(in.readByte());
         }
