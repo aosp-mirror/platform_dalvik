@@ -172,8 +172,7 @@ struct HeapSource {
 /*
  * Returns true iff a soft limit is in effect for the active heap.
  */
-static inline bool
-softLimited(const HeapSource *hs)
+static bool isSoftLimited(const HeapSource *hs)
 {
     /* softLimit will be either SIZE_MAX or the limit for the
      * active mspace.  idealSize can be greater than softLimit
@@ -191,7 +190,7 @@ softLimited(const HeapSource *hs)
 static size_t
 getAllocLimit(const HeapSource *hs)
 {
-    if (softLimited(hs)) {
+    if (isSoftLimited(hs)) {
         return hs->softLimit;
     } else {
         return mspace_max_allowed_footprint(hs2heap(hs)->msp);
@@ -871,7 +870,7 @@ dvmHeapSourceAllocAndGrow(size_t n)
     }
 
     oldIdealSize = hs->idealSize;
-    if (softLimited(hs)) {
+    if (isSoftLimited(hs)) {
         /* We're soft-limited.  Try removing the soft limit to
          * see if we can allocate without actually growing.
          */
@@ -1313,7 +1312,7 @@ void dvmHeapSourceGrowForUtilization()
         heap->concurrentStartBytes = freeBytes - CONCURRENT_START;
     }
     newHeapMax = mspace_max_allowed_footprint(heap->msp);
-    if (softLimited(hs)) {
+    if (isSoftLimited(hs)) {
         LOGD_HEAP("GC old usage %zd.%zd%%; now "
                 "%zd.%03zdMB used / %zd.%03zdMB soft max "
                 "(%zd.%03zdMB over, "
