@@ -20,6 +20,8 @@ import com.android.dx.rop.type.Type;
 import com.android.dx.rop.type.TypeList;
 import com.android.dx.util.FixedSizeList;
 
+import java.util.BitSet;
+
 /**
  * List of {@link RegisterSpec} instances.
  */
@@ -291,6 +293,39 @@ public final class RegisterSpecList
     }
 
     /**
+     * Returns a new instance, which contains a subset of the elements
+     * specified by the given BitSet. Indexes in the BitSet with a zero
+     * are included, while indexes with a one are excluded. Mutability
+     * of the result is inherited from the original.
+     *
+     * @param exclusionSet {@code non-null;} set of registers to exclude
+     * @return {@code non-null;} an appropriately-constructed instance
+     */
+    public RegisterSpecList subset(BitSet exclusionSet) {
+        int newSize = size() - exclusionSet.cardinality();
+
+        if (newSize == 0) {
+            return EMPTY;
+        }
+
+        RegisterSpecList result = new RegisterSpecList(newSize);
+
+        int newIndex = 0;
+        for (int oldIndex = 0; oldIndex < size(); oldIndex++) {
+            if (!exclusionSet.get(oldIndex)) {
+                result.set0(newIndex, get0(oldIndex));
+                newIndex++;
+            }
+        }
+
+        if (isImmutable()) {
+            result.setImmutable();
+        }
+
+        return result;
+    }
+
+    /**
      * Returns an instance that is identical to this one, except that
      * all register numbers are offset by the given amount. Mutability
      * of the result is inherited from the original.
@@ -324,15 +359,20 @@ public final class RegisterSpecList
 
     /**
      * Returns an instance that is identical to this one, except that
-     * all register numbers are renumbered sequentially from the given
-     * base, with the first number duplicated if indicated.
+     * all incompatible register numbers are renumbered sequentially from
+     * the given base, with the first number duplicated if indicated. If
+     * a null BitSet is given, it indicates all registers are compatible.
      *
      * @param base the base register number
      * @param duplicateFirst whether to duplicate the first number
+     * @param compatRegs {@code null-ok;} either a {@code non-null} set of
+     * compatible registers, or {@code null} to indicate all registers are
+     * compatible
      * @return {@code non-null;} an appropriately-constructed instance
      */
-    public RegisterSpecList withSequentialRegisters(int base,
-                                                    boolean duplicateFirst) {
+    public RegisterSpecList withExpandedRegisters(int base,
+                                                  boolean duplicateFirst,
+                                                  BitSet compatRegs) {
         int sz = size();
 
         if (sz == 0) {
@@ -344,11 +384,19 @@ public final class RegisterSpecList
 
         for (int i = 0; i < sz; i++) {
             RegisterSpec one = (RegisterSpec) get0(i);
-            result.set0(i, one.withReg(base));
+            boolean replace = (compatRegs == null) ? true : !compatRegs.get(i);
+
+            if (replace) {
+                result.set0(i, one.withReg(base));
+                if (!duplicateFirst) {
+                    base += one.getCategory();
+                }
+            } else {
+                result.set0(i, one);
+            }
+
             if (duplicateFirst) {
                 duplicateFirst = false;
-            } else {
-                base += one.getCategory();
             }
         }
 
@@ -358,5 +406,4 @@ public final class RegisterSpecList
 
         return result;
     }
-
 }

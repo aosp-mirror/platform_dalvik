@@ -24,6 +24,8 @@ import com.android.dx.rop.cst.Constant;
 import com.android.dx.rop.cst.CstLiteralBits;
 import com.android.dx.util.AnnotatedOutput;
 
+import java.util.BitSet;
+
 /**
  * Instruction format {@code 22s}. See the instruction format spec
  * for details.
@@ -84,6 +86,17 @@ public final class Form22s extends InsnFormat {
         CstLiteralBits cb = (CstLiteralBits) cst;
 
         return cb.fitsInInt() && signedFitsInShort(cb.getIntBits());
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public BitSet compatibleRegs(DalvInsn insn) {
+        RegisterSpecList regs = insn.getRegisters();
+        BitSet bits = new BitSet(2);
+
+        bits.set(0, unsignedFitsInNibble(regs.get(0).getReg()));
+        bits.set(1, unsignedFitsInNibble(regs.get(1).getReg()));
+        return bits;
     }
 
     /** {@inheritDoc} */

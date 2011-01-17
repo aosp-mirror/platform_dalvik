@@ -23,6 +23,8 @@ import com.android.dx.util.AnnotatedOutput;
 import com.android.dx.util.Hex;
 import com.android.dx.util.TwoColumnOutput;
 
+import java.util.BitSet;
+
 /**
  * Base class for Dalvik instructions.
  */
@@ -205,60 +207,85 @@ public abstract class DalvInsn {
 
     /**
      * Gets the minimum distinct registers required for this instruction.
+     * Uses the given BitSet to determine which registers require
+     * replacement, and ignores registers that are already compatible.
      * This assumes that the result (if any) can share registers with the
      * sources (if any), that each source register is unique, and that
      * (to be explicit here) category-2 values take up two consecutive
      * registers.
      *
+     * @param compatRegs {@code non-null;} set of compatible registers
      * @return {@code >= 0;} the minimum distinct register requirement
      */
-    public final int getMinimumRegisterRequirement() {
+    public final int getMinimumRegisterRequirement(BitSet compatRegs) {
         boolean hasResult = hasResult();
         int regSz = registers.size();
-        int resultRequirement = hasResult ? registers.get(0).getCategory() : 0;
+        int resultRequirement = 0;
         int sourceRequirement = 0;
 
+        if (hasResult && !compatRegs.get(0)) {
+            resultRequirement = registers.get(0).getCategory();
+        }
+
         for (int i = hasResult ? 1 : 0; i < regSz; i++) {
-            sourceRequirement += registers.get(i).getCategory();
+            if (!compatRegs.get(i)) {
+                sourceRequirement += registers.get(i).getCategory();
+            }
         }
 
         return Math.max(sourceRequirement, resultRequirement);
     }
 
     /**
-     * Gets the instruction prefix required, if any, to use in a high
-     * register transformed version of this instance.
+     * Gets the instruction that is equivalent to this one, except that
+     * it uses sequential registers starting at {@code 0} (storing
+     * the result, if any, in register {@code 0} as well).
      *
-     * @see #hrVersion
+     * @return {@code non-null;} the replacement
+     */
+    public DalvInsn getLowRegVersion() {
+        RegisterSpecList regs =
+            registers.withExpandedRegisters(0, hasResult(), null);
+        return withRegisters(regs);
+    }
+
+    /**
+     * Gets the instruction prefix required, if any, to use in an expanded
+     * version of this instance. Will not generate moves for registers
+     * marked compatible to the format by the given BitSet.
      *
+     * @see #expandedVersion
+     *
+     * @param compatRegs {@code non-null;} set of compatible registers
      * @return {@code null-ok;} the prefix, if any
      */
-    public DalvInsn hrPrefix() {
+    public DalvInsn expandedPrefix(BitSet compatRegs) {
         RegisterSpecList regs = registers;
-        int sz = regs.size();
+        boolean firstBit = compatRegs.get(0);
 
-        if (hasResult()) {
-            if (sz == 1) {
-                return null;
-            }
-            regs = regs.withoutFirst();
-        } else if (sz == 0) {
-            return null;
-        }
+        if (hasResult()) compatRegs.set(0);
+
+        regs = regs.subset(compatRegs);
+
+        if (hasResult()) compatRegs.set(0, firstBit);
+
+        if (regs.size() == 0) return null;
 
         return new HighRegisterPrefix(position, regs);
     }
 
     /**
-     * Gets the instruction suffix required, if any, to use in a high
-     * register transformed version of this instance.
+     * Gets the instruction suffix required, if any, to use in an expanded
+     * version of this instance. Will not generate a move for a register
+     * marked compatible to the format by the given BitSet.
      *
-     * @see #hrVersion
+     * @see #expandedVersion
      *
+     * @param compatRegs {@code non-null;} set of compatible registers
      * @return {@code null-ok;} the suffix, if any
      */
-    public DalvInsn hrSuffix() {
-        if (hasResult()) {
+    public DalvInsn expandedSuffix(BitSet compatRegs) {
+        if (hasResult() && !compatRegs.get(0)) {
             RegisterSpec r = registers.get(0);
             return makeMove(position, r, r.withReg(0));
         } else {
@@ -268,20 +295,21 @@ public abstract class DalvInsn {
 
     /**
      * Gets the instruction that is equivalent to this one, except that
-     * uses sequential registers starting at {@code 0} (storing
-     * the result, if any, in register {@code 0} as well). The
-     * sequence of instructions from {@link #hrPrefix} and {@link
-     * #hrSuffix} (if non-null) surrounding the result of a call to
-     * this method are the high register transformation of this
-     * instance, and it is guaranteed that the number of low registers
-     * used will be the number returned by {@link
-     * #getMinimumRegisterRequirement}.
+     * it replaces incompatible registers with sequential registers
+     * starting at {@code 0} (storing the result, if any, in register
+     * {@code 0} as well). The sequence of instructions from
+     * {@link #expandedPrefix} and {@link #expandedSuffix} (if non-null)
+     * surrounding the result of a call to this method are the expanded
+     * transformation of this instance, and it is guaranteed that the
+     * number of low registers used will be the number returned by
+     * {@link #getMinimumRegisterRequirement}.
      *
+     * @param compatRegs {@code non-null;} set of compatible registers
      * @return {@code non-null;} the replacement
      */
-    public DalvInsn hrVersion() {
+    public DalvInsn expandedVersion(BitSet compatRegs) {
         RegisterSpecList regs =
-            registers.withSequentialRegisters(0, hasResult());
+            registers.withExpandedRegisters(0, hasResult(), compatRegs);
         return withRegisters(regs);
     }
 

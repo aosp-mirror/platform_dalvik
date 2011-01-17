@@ -181,6 +181,7 @@ public final class RopTranslator {
          * subsequent block in the case of synchronized methods.
          */
         method.getBlocks().forEachInsn(new Insn.BaseVisitor() {
+            @Override
             public void visitPlainCstInsn(PlainCstInsn insn) {
                 if (insn.getOpcode().getOpcode()== RegOps.MOVE_PARAM) {
                     int param =

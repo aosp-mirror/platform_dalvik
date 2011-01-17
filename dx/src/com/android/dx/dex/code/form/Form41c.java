@@ -23,9 +23,10 @@ import com.android.dx.rop.code.RegisterSpec;
 import com.android.dx.rop.code.RegisterSpecList;
 import com.android.dx.rop.cst.Constant;
 import com.android.dx.rop.cst.CstFieldRef;
-import com.android.dx.rop.cst.CstString;
 import com.android.dx.rop.cst.CstType;
 import com.android.dx.util.AnnotatedOutput;
+
+import java.util.BitSet;
 
 /**
  * Instruction format {@code 41c}. See the instruction format spec
@@ -110,6 +111,26 @@ public final class Form41c extends InsnFormat {
 
         return (cst instanceof CstType) ||
             (cst instanceof CstFieldRef);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public BitSet compatibleRegs(DalvInsn insn) {
+        RegisterSpecList regs = insn.getRegisters();
+        int sz = regs.size();
+        BitSet bits = new BitSet(sz);
+        boolean compat = unsignedFitsInByte(regs.get(0).getReg());
+
+        if (sz == 1) {
+            bits.set(0, compat);
+        } else {
+            if (regs.get(0).getReg() == regs.get(1).getReg()) {
+                bits.set(0, compat);
+                bits.set(1, compat);
+            }
+        }
+
+        return bits;
     }
 
     /** {@inheritDoc} */

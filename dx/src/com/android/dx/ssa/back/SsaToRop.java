@@ -18,31 +18,25 @@ package com.android.dx.ssa.back;
 
 import com.android.dx.rop.code.BasicBlock;
 import com.android.dx.rop.code.BasicBlockList;
-import com.android.dx.rop.code.CstInsn;
 import com.android.dx.rop.code.InsnList;
-import com.android.dx.rop.code.RegOps;
 import com.android.dx.rop.code.RegisterSpec;
 import com.android.dx.rop.code.RegisterSpecList;
+import com.android.dx.rop.code.Rop;
 import com.android.dx.rop.code.RopMethod;
 import com.android.dx.rop.code.Rops;
-import com.android.dx.rop.code.Rop;
-import com.android.dx.rop.cst.CstInteger;
-import com.android.dx.ssa.NormalSsaInsn;
 import com.android.dx.ssa.BasicRegisterMapper;
 import com.android.dx.ssa.PhiInsn;
 import com.android.dx.ssa.RegisterMapper;
 import com.android.dx.ssa.SsaBasicBlock;
 import com.android.dx.ssa.SsaInsn;
 import com.android.dx.ssa.SsaMethod;
-import com.android.dx.util.IntList;
 import com.android.dx.util.Hex;
+import com.android.dx.util.IntList;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
 import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
 
 /**
  * Converts a method in SSA form to ROP form.
