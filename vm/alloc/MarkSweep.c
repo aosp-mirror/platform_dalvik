@@ -46,7 +46,7 @@ const size_t kWordSize = sizeof(Word);
 /* Do not cast the result of this to a boolean; the only set bit
  * may be > 1<<8.
  */
-static inline long isMarked(const void *obj, const GcMarkContext *ctx)
+static long isMarked(const void *obj, const GcMarkContext *ctx)
 {
     return dvmHeapBitmapIsObjectBitSet(ctx->bitmap, obj);
 }
