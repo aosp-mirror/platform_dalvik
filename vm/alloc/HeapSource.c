@@ -73,7 +73,7 @@ typedef struct {
 
     /* The largest size that this heap is allowed to grow to.
      */
-    size_t absoluteMaxSize;
+    size_t maximumSize;
 
     /* Number of bytes allocated from this mspace for objects,
      * including any overhead.  This value is NOT exact, and
@@ -112,7 +112,7 @@ struct HeapSource {
 
     /* The largest that the heap source as a whole is allowed to grow.
      */
-    size_t absoluteMaxSize;
+    size_t maximumSize;
 
     /* The desired max size of the heap source as a whole.
      */
@@ -290,7 +290,7 @@ static void countFree(Heap *heap, const void *ptr, size_t *numBytes)
 static HeapSource *gHs = NULL;
 
 static mspace
-createMspace(void *base, size_t startSize, size_t absoluteMaxSize)
+createMspace(void *base, size_t startSize, size_t maximumSize)
 {
     mspace msp;
 
@@ -305,7 +305,7 @@ createMspace(void *base, size_t startSize, size_t absoluteMaxSize)
     LOGV_HEAP("Creating VM heap of size %zu\n", startSize);
     errno = 0;
     msp = create_contiguous_mspace_with_base(startSize/2,
-            absoluteMaxSize, /*locked=*/false, base);
+            maximumSize, /*locked=*/false, base);
     if (msp != NULL) {
         /* Don't let the heap grow past the starting size without
          * our intervention.
@@ -316,7 +316,7 @@ createMspace(void *base, size_t startSize, size_t absoluteMaxSize)
          * fails, but it often does.
          */
         LOGE_HEAP("Can't create VM heap of size (%zu,%zu): %s\n",
-            startSize/2, absoluteMaxSize, strerror(errno));
+            startSize/2, maximumSize, strerror(errno));
     }
 
     return msp;
@@ -338,29 +338,29 @@ addNewHeap(HeapSource *hs, mspace msp, size_t mspAbsoluteMaxSize)
 
     if (msp != NULL) {
         heap.msp = msp;
-        heap.absoluteMaxSize = mspAbsoluteMaxSize;
+        heap.maximumSize = mspAbsoluteMaxSize;
         heap.concurrentStartBytes = SIZE_MAX;
         heap.base = hs->heapBase;
-        heap.limit = hs->heapBase + heap.absoluteMaxSize;
+        heap.limit = hs->heapBase + heap.maximumSize;
     } else {
         void *sbrk0 = contiguous_mspace_sbrk0(hs->heaps[0].msp);
         char *base = (char *)ALIGN_UP_TO_PAGE_SIZE(sbrk0);
         size_t overhead = base - hs->heaps[0].base;
 
         assert(((size_t)hs->heaps[0].base & (SYSTEM_PAGE_SIZE - 1)) == 0);
-        if (overhead + HEAP_MIN_FREE >= hs->absoluteMaxSize) {
+        if (overhead + HEAP_MIN_FREE >= hs->maximumSize) {
             LOGE_HEAP("No room to create any more heaps "
                     "(%zd overhead, %zd max)\n",
-                    overhead, hs->absoluteMaxSize);
+                    overhead, hs->maximumSize);
             return false;
         }
-        hs->heaps[0].absoluteMaxSize = overhead;
+        hs->heaps[0].maximumSize = overhead;
         hs->heaps[0].limit = base;
-        heap.absoluteMaxSize = hs->absoluteMaxSize - overhead;
-        heap.msp = createMspace(base, HEAP_MIN_FREE, heap.absoluteMaxSize);
+        heap.maximumSize = hs->maximumSize - overhead;
+        heap.msp = createMspace(base, HEAP_MIN_FREE, heap.maximumSize);
         heap.concurrentStartBytes = HEAP_MIN_FREE - CONCURRENT_START;
         heap.base = base;
-        heap.limit = heap.base + heap.absoluteMaxSize;
+        heap.limit = heap.base + heap.maximumSize;
         if (heap.msp == NULL) {
             return false;
         }
@@ -462,7 +462,7 @@ static void freeMarkStack(GcMarkStack *stack)
  * allocated from the heap source.
  */
 GcHeap *
-dvmHeapSourceStartup(size_t startSize, size_t absoluteMaxSize)
+dvmHeapSourceStartup(size_t startSize, size_t maximumSize)
 {
     GcHeap *gcHeap;
     HeapSource *hs;
@@ -472,9 +472,9 @@ dvmHeapSourceStartup(size_t startSize, size_t absoluteMaxSize)
 
     assert(gHs == NULL);
 
-    if (startSize > absoluteMaxSize) {
+    if (startSize > maximumSize) {
         LOGE("Bad heap parameters (start=%d, max=%d)\n",
-           startSize, absoluteMaxSize);
+           startSize, maximumSize);
         return NULL;
     }
 
@@ -482,7 +482,7 @@ dvmHeapSourceStartup(size_t startSize, size_t absoluteMaxSize)
      * Allocate a contiguous region of virtual memory to subdivided
      * among the heaps managed by the garbage collector.
      */
-    length = ALIGN_UP_TO_PAGE_SIZE(absoluteMaxSize);
+    length = ALIGN_UP_TO_PAGE_SIZE(maximumSize);
     base = dvmAllocRegion(length, PROT_NONE, "dalvik-heap");
     if (base == NULL) {
         return NULL;
@@ -491,7 +491,7 @@ dvmHeapSourceStartup(size_t startSize, size_t absoluteMaxSize)
     /* Create an unlocked dlmalloc mspace to use as
      * a heap source.
      */
-    msp = createMspace(base, startSize, absoluteMaxSize);
+    msp = createMspace(base, startSize, maximumSize);
     if (msp == NULL) {
         goto fail;
     }
@@ -514,7 +514,7 @@ dvmHeapSourceStartup(size_t startSize, size_t absoluteMaxSize)
 
     hs->targetUtilization = DEFAULT_HEAP_UTILIZATION;
     hs->startSize = startSize;
-    hs->absoluteMaxSize = absoluteMaxSize;
+    hs->maximumSize = maximumSize;
     hs->idealSize = startSize;
     hs->softLimit = SIZE_MAX;    // no soft limit at first
     hs->numHeaps = 0;
@@ -522,7 +522,7 @@ dvmHeapSourceStartup(size_t startSize, size_t absoluteMaxSize)
     hs->hasGcThread = false;
     hs->heapBase = (char *)base;
     hs->heapLength = length;
-    if (!addNewHeap(hs, msp, absoluteMaxSize)) {
+    if (!addNewHeap(hs, msp, maximumSize)) {
         LOGE_HEAP("Can't add initial heap\n");
         goto fail;
     }
@@ -535,7 +535,7 @@ dvmHeapSourceStartup(size_t startSize, size_t absoluteMaxSize)
         dvmHeapBitmapDelete(&hs->liveBits);
         goto fail;
     }
-    if (!allocMarkStack(&gcHeap->markContext.stack, hs->absoluteMaxSize)) {
+    if (!allocMarkStack(&gcHeap->markContext.stack, hs->maximumSize)) {
         LOGE("Can't create markStack");
         dvmHeapBitmapDelete(&hs->markBits);
         dvmHeapBitmapDelete(&hs->liveBits);
@@ -817,7 +817,7 @@ heapAllocAndGrow(HeapSource *hs, Heap *heap, size_t n)
     /* Grow as much as possible, but don't let the real footprint
      * go over the absolute max.
      */
-    max = heap->absoluteMaxSize;
+    max = heap->maximumSize;
 
     mspace_set_max_allowed_footprint(heap->msp, max);
     ptr = dvmHeapSourceAlloc(n);
@@ -1139,11 +1139,11 @@ setIdealFootprint(size_t max)
 
     HS_BOILERPLATE();
 
-    if (max > hs->absoluteMaxSize) {
+    if (max > hs->maximumSize) {
         LOGI_HEAP("Clamp target GC heap from %zd.%03zdMB to %u.%03uMB\n",
                 FRACTIONAL_MB(max),
-                FRACTIONAL_MB(hs->absoluteMaxSize));
-        max = hs->absoluteMaxSize;
+                FRACTIONAL_MB(hs->maximumSize));
+        max = hs->maximumSize;
     }
 
     /* Convert max into a size that applies to the active heap.
