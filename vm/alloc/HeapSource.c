@@ -201,8 +201,7 @@ getAllocLimit(const HeapSource *hs)
  * Returns the current footprint of all heaps.  If includeActive
  * is false, don't count the heap at index 0.
  */
-static inline size_t
-oldHeapOverhead(const HeapSource *hs, bool includeActive)
+static size_t oldHeapOverhead(const HeapSource *hs, bool includeActive)
 {
     size_t footprint = 0;
     size_t i;
@@ -223,8 +222,7 @@ oldHeapOverhead(const HeapSource *hs, bool includeActive)
  * Returns the heap that <ptr> could have come from, or NULL
  * if it could not have come from any heap.
  */
-static inline Heap *
-ptr2heap(const HeapSource *hs, const void *ptr)
+static Heap *ptr2heap(const HeapSource *hs, const void *ptr)
 {
     const size_t numHeaps = hs->numHeaps;
     size_t i;
