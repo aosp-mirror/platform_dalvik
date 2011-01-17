@@ -18,9 +18,25 @@ package com.android.dx.merge;
 
 import com.android.dx.io.DexBuffer;
 import com.android.dx.util.Unsigned;
-import java.io.IOException;
 
 final class EncodedValueTransformer {
+    private static final int ENCODED_BYTE = 0x00;
+    private static final int ENCODED_SHORT = 0x02;
+    private static final int ENCODED_CHAR = 0x03;
+    private static final int ENCODED_INT = 0x04;
+    private static final int ENCODED_LONG = 0x06;
+    private static final int ENCODED_FLOAT = 0x10;
+    private static final int ENCODED_DOUBLE = 0x11;
+    private static final int ENCODED_STRING = 0x17;
+    private static final int ENCODED_TYPE = 0x18;
+    private static final int ENCODED_FIELD = 0x19;
+    private static final int ENCODED_ENUM = 0x1b;
+    private static final int ENCODED_METHOD = 0x1a;
+    private static final int ENCODED_ARRAY = 0x1c;
+    private static final int ENCODED_ANNOTATION = 0x1d;
+    private static final int ENCODED_NULL = 0x1e;
+    private static final int ENCODED_BOOLEAN = 0x1f;
+
     private final IndexMap indexMap;
     private final DexBuffer.Section in;
     private final DexBuffer.Section out;
@@ -31,7 +47,7 @@ final class EncodedValueTransformer {
         this.out = out;
     }
 
-    public void transformArray() throws IOException {
+    public void transformArray() {
         int size = in.readUleb128(); // size
         out.writeUleb128(size);
         for (int i = 0; i < size; i++) {
@@ -39,7 +55,7 @@ final class EncodedValueTransformer {
         }
     }
 
-    public void transformAnnotation() throws IOException {
+    public void transformAnnotation() {
         out.writeUleb128(indexMap.adjustType(in.readUleb128())); // type idx
 
         int size = in.readUleb128(); // size
@@ -51,64 +67,64 @@ final class EncodedValueTransformer {
         }
     }
 
-    public void transformValue() throws IOException {
+    public void transformValue() {
         int argAndType = in.readByte() & 0xff;
         int type = argAndType & 0x1f;
         int arg = (argAndType & 0xe0) >> 5;
         int size = arg + 1;
 
         switch (type) {
-        case 0x00: // byte
-        case 0x02: // short
-        case 0x03: // char
-        case 0x04: // int
-        case 0x06: // long
-        case 0x10: // float
-        case 0x11: // double
+        case ENCODED_BYTE:
+        case ENCODED_SHORT:
+        case ENCODED_CHAR:
+        case ENCODED_INT:
+        case ENCODED_LONG:
+        case ENCODED_FLOAT:
+        case ENCODED_DOUBLE:
             out.writeByte(argAndType);
             copyBytes(in, out, size);
             break;
 
-        case 0x17: // string
+        case ENCODED_STRING:
             int indexIn = readIndex(in, size);
             int indexOut = indexMap.adjustString(indexIn);
             writeTypeAndSizeAndIndex(type, indexOut, out);
             break;
-        case 0x18: // type
+        case ENCODED_TYPE:
             indexIn = readIndex(in, size);
             indexOut = indexMap.adjustType(indexIn);
             writeTypeAndSizeAndIndex(type, indexOut, out);
             break;
-        case 0x19: // field
-        case 0x1b: // enum
+        case ENCODED_FIELD:
+        case ENCODED_ENUM:
             indexIn = readIndex(in, size);
             indexOut = indexMap.adjustField(indexIn);
             writeTypeAndSizeAndIndex(type, indexOut, out);
             break;
-        case 0x1a: // method
+        case ENCODED_METHOD:
             indexIn = readIndex(in, size);
             indexOut = indexMap.adjustMethod(indexIn);
             writeTypeAndSizeAndIndex(type, indexOut, out);
             break;
 
-        case 0x1c: // array
+        case ENCODED_ARRAY:
             out.writeByte(argAndType);
             transformArray();
             break;
 
-        case 0x1d: // annotation
+        case ENCODED_ANNOTATION:
             out.writeByte(argAndType);
             transformAnnotation();
             break;
 
-        case 0x1e: // null
-        case 0x1f: // boolean
+        case ENCODED_NULL:
+        case ENCODED_BOOLEAN:
             out.writeByte(argAndType);
             break;
         }
     }
 
-    private int readIndex(DexBuffer.Section in, int byteCount) throws IOException {
+    private int readIndex(DexBuffer.Section in, int byteCount) {
         int result = 0;
         int shift = 0;
         for (int i = 0; i < byteCount; i++) {
@@ -118,8 +134,7 @@ final class EncodedValueTransformer {
         return result;
     }
 
-    private void writeTypeAndSizeAndIndex(int type, int index, DexBuffer.Section out)
-            throws IOException {
+    private void writeTypeAndSizeAndIndex(int type, int index, DexBuffer.Section out) {
         int byteCount;
         if (Unsigned.compare(index, 0xff) <= 0) {
             byteCount = 1;
@@ -139,8 +154,7 @@ final class EncodedValueTransformer {
         }
     }
 
-    private void copyBytes(DexBuffer.Section in, DexBuffer.Section out, int size)
-            throws IOException {
+    private void copyBytes(DexBuffer.Section in, DexBuffer.Section out, int size) {
         for (int i = 0; i < size; i++) {
             out.writeByte(in.readByte());
         }

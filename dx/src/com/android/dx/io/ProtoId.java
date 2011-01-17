@@ -17,7 +17,6 @@
 package com.android.dx.io;
 
 import com.android.dx.util.Unsigned;
-import java.io.IOException;
 import java.util.Arrays;
 
 public final class ProtoId implements Comparable<ProtoId> {
@@ -57,7 +56,7 @@ public final class ProtoId implements Comparable<ProtoId> {
         return parameters;
     }
 
-    public void writeTo(DexBuffer.Section out, int typeListOffset) throws IOException {
+    public void writeTo(DexBuffer.Section out, int typeListOffset) {
         out.writeInt(shortyIndex);
         out.writeInt(returnTypeIndex);
         out.writeInt(typeListOffset);
@@ -68,18 +67,17 @@ public final class ProtoId implements Comparable<ProtoId> {
             return shortyIndex + " " + returnTypeIndex + " " + Arrays.toString(parameters);
         }
 
-        DexBuffer.Section in = buffer.open(0);
         StringBuilder result = new StringBuilder()
-                .append(in.readString(shortyIndex))
+                .append(buffer.strings().get(shortyIndex))
                 .append(": ")
-                .append(in.readTypeName(returnTypeIndex))
+                .append(buffer.typeNames().get(returnTypeIndex))
                 .append(" (");
         int j = 0;
         for (short parameter : parameters) {
             if (j > 0) {
                 result.append(", ");
             }
-            result.append(in.readTypeName(parameter));
+            result.append(buffer.typeNames().get(parameter));
             j++;
         }
         result.append(")");

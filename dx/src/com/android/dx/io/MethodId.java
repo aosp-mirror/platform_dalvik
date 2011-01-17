@@ -17,7 +17,6 @@
 package com.android.dx.io;
 
 import com.android.dx.util.Unsigned;
-import java.io.IOException;
 
 public final class MethodId implements Comparable<MethodId> {
     private final DexBuffer buffer;
@@ -54,7 +53,7 @@ public final class MethodId implements Comparable<MethodId> {
         return Unsigned.compare(protoIndex, other.protoIndex);
     }
 
-    public void writeTo(DexBuffer.Section out) throws IOException {
+    public void writeTo(DexBuffer.Section out) {
         out.writeShort(declaringClassIndex);
         out.writeShort(protoIndex);
         out.writeInt(nameIndex);
@@ -64,9 +63,8 @@ public final class MethodId implements Comparable<MethodId> {
         if (buffer == null) {
             return declaringClassIndex + " " + protoIndex + " " + nameIndex;
         }
-        DexBuffer.Section in = buffer.open(0);
-        return in.readTypeName(declaringClassIndex)
-                + " " + in.readProtoId(protoIndex)
-                + " " + in.readString(nameIndex);
+        return buffer.typeNames().get(declaringClassIndex)
+                + " " + buffer.protoIds().get(protoIndex)
+                + " " + buffer.strings().get(nameIndex);
     }
 }

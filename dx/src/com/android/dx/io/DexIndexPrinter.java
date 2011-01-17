@@ -45,39 +45,42 @@ public final class DexIndexPrinter {
     }
 
     private void printStrings() throws IOException {
-        DexBuffer.Section in = dexBuffer.open(tableOfContents.stringIds.off);
-        for (int i = 0; i < tableOfContents.stringIds.size; i++) {
-            String s = in.readString(i);
-            System.out.println("string " + i + ": " + s);
+        int index = 0;
+        for (String string : dexBuffer.strings()) {
+            System.out.println("string " + index + ": " + string);
+            index++;
         }
     }
 
     private void printTypeIds() throws IOException {
-        DexBuffer.Section in = dexBuffer.open(tableOfContents.typeIds.off);
-        for (int i = 0; i < tableOfContents.typeIds.size; i++) {
-            int stringIndex = in.readInt();
-            System.out.println("type " + i + ": " + in.readString(stringIndex));
+        int index = 0;
+        for (Integer type : dexBuffer.typeIds()) {
+            System.out.println("type " + index + ": " + dexBuffer.strings().get(type));
+            index++;
         }
     }
 
     private void printProtoIds() throws IOException {
-        DexBuffer.Section in = dexBuffer.open(tableOfContents.protoIds.off);
-        for (int i = 0; i < tableOfContents.protoIds.size; i++) {
-            System.out.println("proto " + i + ": " + in.readProtoId());
+        int index = 0;
+        for (ProtoId protoId : dexBuffer.protoIds()) {
+            System.out.println("proto " + index + ": " + protoId);
+            index++;
         }
     }
 
     private void printFieldIds() throws IOException {
-        DexBuffer.Section in = dexBuffer.open(tableOfContents.fieldIds.off);
-        for (int i = 0; i < tableOfContents.fieldIds.size; i++) {
-            System.out.println("field " + i + ": " + in.readFieldId());
+        int index = 0;
+        for (FieldId fieldId : dexBuffer.fieldIds()) {
+            System.out.println("field " + index + ": " + fieldId);
+            index++;
         }
     }
 
     private void printMethodIds() throws IOException {
-        DexBuffer.Section in = dexBuffer.open(tableOfContents.methodIds.off);
-        for (int i = 0; i < tableOfContents.methodIds.size; i++) {
-            System.out.println("method " + i + ": " + in.readMethodId());
+        int index = 0;
+        for (MethodId methodId : dexBuffer.methodIds()) {
+            System.out.println("methodId " + index + ": " + methodId);
+            index++;
         }
     }
 
@@ -91,7 +94,7 @@ public final class DexIndexPrinter {
             int size = in.readInt();
             System.out.print("Type list i=" + i + ", size=" + size + ", elements=");
             for (int t = 0; t < size; t++) {
-                System.out.print(" " + in.readTypeName((int) in.readShort()));
+                System.out.print(" " + dexBuffer.typeNames().get((int) in.readShort()));
             }
             if (size % 2 == 1) {
                 in.readShort(); // retain alignment
@@ -101,9 +104,10 @@ public final class DexIndexPrinter {
     }
 
     private void printClassDefs() {
-        DexBuffer.Section in = dexBuffer.open(tableOfContents.classDefs.off);
-        for (int i = 0; i < tableOfContents.classDefs.size; i++) {
-            System.out.println("class def " + i + ": " + in.readClassDef());
+        int index = 0;
+        for (ClassDef classDef : dexBuffer.classDefs()) {
+            System.out.println("class def " + index + ": " + classDef);
+            index++;
         }
     }
 

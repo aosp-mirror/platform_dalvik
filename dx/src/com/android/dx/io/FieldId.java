@@ -17,7 +17,6 @@
 package com.android.dx.io;
 
 import com.android.dx.util.Unsigned;
-import java.io.IOException;
 
 public final class FieldId implements Comparable<FieldId> {
     private final DexBuffer buffer;
@@ -54,7 +53,7 @@ public final class FieldId implements Comparable<FieldId> {
         return Unsigned.compare(typeIndex, other.typeIndex); // should always be 0
     }
 
-    public void writeTo(DexBuffer.Section out) throws IOException {
+    public void writeTo(DexBuffer.Section out) {
         out.writeShort(declaringClassIndex);
         out.writeShort(typeIndex);
         out.writeInt(nameIndex);
@@ -64,9 +63,8 @@ public final class FieldId implements Comparable<FieldId> {
         if (buffer == null) {
             return declaringClassIndex + " " + typeIndex + " " + nameIndex;
         }
-        DexBuffer.Section in = buffer.open(0);
-        return in.readType(declaringClassIndex)
-                + " { " + in.readTypeName(typeIndex)
-                + " " + in.readString(nameIndex) + " }";
+        return buffer.typeNames().get(declaringClassIndex)
+                + " { " + buffer.typeNames().get(typeIndex)
+                + " " + buffer.strings().get(nameIndex) + " }";
     }
 }

@@ -95,10 +95,9 @@ public final class ClassDef {
         }
 
         StringBuilder result = new StringBuilder();
-        DexBuffer.Section in = buffer.open(0);
-        result.append(in.readTypeName(typeIndex));
+        result.append(buffer.typeNames().get(typeIndex));
         if (supertypeIndex != NO_INDEX) {
-            result.append(" extends ").append(in.readTypeName(supertypeIndex));
+            result.append(" extends ").append(buffer.typeNames().get(supertypeIndex));
         }
         return result.toString();
     }
