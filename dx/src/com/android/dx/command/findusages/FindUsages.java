@@ -64,7 +64,7 @@ public final class FindUsages {
                     CodeReader.Instruction instruction, short[] instructions, int offset) {
                 int field = instructions[offset + 1];
                 if (fieldIds.contains(field)) {
-                    out.println("Field referenced by " + location() + " " + instruction);
+                    out.println(location() + ": field reference (" + instruction + ")");
                 }
             }
         });
@@ -74,7 +74,7 @@ public final class FindUsages {
                     CodeReader.Instruction instruction, short[] instructions, int offset) {
                 int methodId = instructions[offset + 1];
                 if (methodIds.contains(methodId)) {
-                    out.println("Method referenced by " + location() + " " + instruction);
+                    out.println(location() + ": method reference (" + instruction + ")");
                 }
             }
         });
@@ -84,7 +84,7 @@ public final class FindUsages {
         String className = dex.typeNames().get(currentClass.getTypeIndex());
         if (currentMethod != null) {
             MethodId methodId = dex.methodIds().get(currentMethod.getMethodIndex());
-            return className + "#" + dex.strings().get(methodId.getNameIndex());
+            return className + "." + dex.strings().get(methodId.getNameIndex());
         } else {
             return className;
         }
@@ -109,14 +109,14 @@ public final class FindUsages {
             ClassData classData = dex.readClassData(classDef);
             for (ClassData.Field field : classData.allFields()) {
                 if (fieldIds.contains(field.getFieldIndex())) {
-                    out.println("Field declared by " + location());
+                    out.println(location() + " field declared");
                 }
             }
 
             for (ClassData.Method method : classData.allMethods()) {
                 currentMethod = method;
                 if (methodIds.contains(method.getMethodIndex())) {
-                    out.println("Method declared by " + location());
+                    out.println(location() + " method declared");
                 }
                 if (method.getCodeOffset() != 0) {
                     codeReader.visitAll(dex.readCode(method).getInstructions());

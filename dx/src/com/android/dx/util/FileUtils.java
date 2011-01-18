@@ -89,4 +89,13 @@ public final class FileUtils {
 
         return result;
     }
+
+    /**
+     * Returns true if {@code fileName} names a .zip, .jar, or .apk.
+     */
+    public static boolean hasArchiveSuffix(String fileName) {
+        return fileName.endsWith(".zip")
+                || fileName.endsWith(".jar")
+                || fileName.endsWith(".apk");
+    }
 }

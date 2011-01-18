@@ -1,0 +1,9 @@
+StreamTokenizer.nval
+Field referenced by LFoo;#readStreamTokenizerNval iget-wide vA, vB, field@CCCC
+Field referenced by LFoo;#writeStreamTokenizerNval iput-wide vA, vB, field@CCCC
+ArrayList.remove()
+Method referenced by LFoo;#callArrayListRemoveIndex invoke-virtual {vD, vE, vF, vG, vA}, meth@CCCC
+Method referenced by LFoo;#callArrayListRemoveValue invoke-virtual {vD, vE, vF, vG, vA}, meth@CCCC
+Collection.remove()
+String.valueOf()
+Method referenced by LFoo;#callStringValueOf invoke-static {vD, vE, vF, vG, vA}, meth@CCCC
