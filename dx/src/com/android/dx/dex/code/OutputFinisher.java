@@ -28,6 +28,7 @@ import com.android.dx.rop.cst.CstUtf8;
 import com.android.dx.rop.type.Type;
 
 import java.util.ArrayList;
+import java.util.BitSet;
 import java.util.HashSet;
 
 /**
@@ -450,19 +451,19 @@ public final class OutputFinisher {
             Dop originalOpcode = opcodes[i];
             Dop newOpcode = findOpcodeForInsn(insn, originalOpcode);
 
-            if (originalOpcode == newOpcode) {
-                continue;
-            }
-
             if (newOpcode == null) {
                 /*
-                 * The instruction will need to be expanded, so reserve
-                 * registers for it.
+                 * The instruction will need to be expanded, so find the
+                 * expanded opcode and reserve registers for it.
                  */
-                int reserve = insn.getMinimumRegisterRequirement();
+                Dop expandedOp = findExpandedOpcodeForInsn(insn);
+                BitSet compatRegs = expandedOp.getFormat().compatibleRegs(insn);
+                int reserve = insn.getMinimumRegisterRequirement(compatRegs);
                 if (reserve > newReservedCount) {
                     newReservedCount = reserve;
                 }
+            } else if (originalOpcode == newOpcode) {
+                continue;
             }
 
             opcodes[i] = newOpcode;
@@ -502,6 +503,17 @@ public final class OutputFinisher {
         }
 
         return guess;
+    }
+
+    /**
+     * Finds the proper opcode for the given instruction, ignoring
+     * register constraints.
+     *
+     * @param insn {@code non-null;} the instruction in question
+     * @return {@code non-null;} the opcode that fits
+     */
+    private Dop findExpandedOpcodeForInsn(DalvInsn insn) {
+        return findOpcodeForInsn(insn.getLowRegVersion(), insn.getOpcode());
     }
 
     /**
@@ -583,16 +595,14 @@ public final class OutputFinisher {
                 suffix = null;
             } else {
                 // Expansion is required.
-                prefix = insn.hrPrefix();
-                suffix = insn.hrSuffix();
+                currentOpcode = findExpandedOpcodeForInsn(insn);
+                BitSet compatRegs =
+                    currentOpcode.getFormat().compatibleRegs(insn);
+                prefix = insn.expandedPrefix(compatRegs);
+                suffix = insn.expandedSuffix(compatRegs);
 
-                /*
-                 * Get the initial guess as to the hr version, but then
-                 * let findOpcodeForInsn() pick a better format, if any.
-                 */
-                insn = insn.hrVersion();
-                originalOpcode = insn.getOpcode();
-                currentOpcode = findOpcodeForInsn(insn, originalOpcode);
+                // Expand necessary registers to fit the new format
+                insn = insn.expandedVersion(compatRegs);
             }
 
             if (prefix != null) {

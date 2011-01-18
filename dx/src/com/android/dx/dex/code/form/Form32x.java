@@ -22,6 +22,8 @@ import com.android.dx.dex.code.SimpleInsn;
 import com.android.dx.rop.code.RegisterSpecList;
 import com.android.dx.util.AnnotatedOutput;
 
+import java.util.BitSet;
+
 /**
  * Instruction format {@code 32x}. See the instruction format spec
  * for details.
@@ -66,6 +68,17 @@ public final class Form32x extends InsnFormat {
             (regs.size() == 2) &&
             unsignedFitsInShort(regs.get(0).getReg()) &&
             unsignedFitsInShort(regs.get(1).getReg());
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public BitSet compatibleRegs(DalvInsn insn) {
+        RegisterSpecList regs = insn.getRegisters();
+        BitSet bits = new BitSet(2);
+
+        bits.set(0, unsignedFitsInShort(regs.get(0).getReg()));
+        bits.set(1, unsignedFitsInShort(regs.get(1).getReg()));
+        return bits;
     }
 
     /** {@inheritDoc} */
