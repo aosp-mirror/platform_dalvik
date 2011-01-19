@@ -19,6 +19,7 @@ package com.android.dx.dex;
 public final class DexFormat {
     private DexFormat() {}
 
+    public static final String DEX_IN_JAR_NAME = "classes.dex";
     public static final String MAGIC = "dex\n035\0";
     public static final int ENDIAN_TAG = 0x12345678;
 }

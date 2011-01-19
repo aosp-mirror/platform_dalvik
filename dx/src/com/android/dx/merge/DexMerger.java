@@ -37,7 +37,6 @@ import java.util.logging.Logger;
 public final class DexMerger {
     private static final Logger logger = Logger.getLogger(DexMerger.class.getName());
 
-    private final File dexOut;
     private final DexBuffer dexWriter = new DexBuffer();
     private final DexBuffer.Section headerWriter;
     private final DexBuffer.Section idsDefsWriter;
@@ -54,26 +53,19 @@ public final class DexMerger {
     private final DexBuffer.Section annotationsDirectoryWriter;
     private final TableOfContents contentsOut;
 
-    private final DexBuffer dexA = new DexBuffer();
-    private final DexBuffer dexB = new DexBuffer();
+    private final DexBuffer dexA;
+    private final DexBuffer dexB;
     private final IndexMap aIndexMap;
     private final IndexMap bIndexMap;
     private final InstructionTransformer aInstructionTransformer;
     private final InstructionTransformer bInstructionTransformer;
 
-    public DexMerger(File dexOut, File a, File b) throws IOException {
-        if (!a.exists() || !b.exists()) {
-            throw new IllegalArgumentException();
-        }
-
-        this.dexOut = dexOut;
-
-        dexA.loadFrom(a);
-        dexB.loadFrom(b);
+    public DexMerger(DexBuffer dexA, DexBuffer dexB) throws IOException {
+        this.dexA = dexA;
+        this.dexB = dexB;
 
         TableOfContents aContents = dexA.getTableOfContents();
         TableOfContents bContents = dexB.getTableOfContents();
-
         aIndexMap = new IndexMap(dexWriter, aContents);
         bIndexMap = new IndexMap(dexWriter, bContents);
         aInstructionTransformer = new InstructionTransformer(aIndexMap);
@@ -172,7 +164,7 @@ public final class DexMerger {
         contentsOut.dataSize = dexWriter.getLength() - contentsOut.dataOff;
     }
 
-    public void merge() throws IOException {
+    public DexBuffer merge() throws IOException {
         long start = System.nanoTime();
 
         mergeStringIds();
@@ -191,11 +183,19 @@ public final class DexMerger {
 
         // close (and flush) the result, then reopen to generate and write the hashes
         new DexHasher().writeHashes(dexWriter);
-        dexWriter.writeTo(dexOut);
 
         long elapsed = System.nanoTime() - start;
-        logger.info(String.format("Merged. Result length=%.1fKiB. Took %.1fs",
-                dexOut.length() / 1024f, elapsed / 1000000000f));
+        logger.info(String.format("Merged dex A (%d defs/%.1fKiB) with dex B "
+                + "(%d defs/%.1fKiB). Result is %d defs/%.1fKiB. Took %.1fs",
+                dexA.getTableOfContents().classDefs.size,
+                dexA.getLength() / 1024f,
+                dexB.getTableOfContents().classDefs.size,
+                dexB.getLength() / 1024f,
+                contentsOut.classDefs.size,
+                dexWriter.getLength() / 1024f,
+                elapsed / 1000000000f));
+
+        return dexWriter;
     }
 
     /**
@@ -410,7 +410,9 @@ public final class DexMerger {
 
         // Strip nulls from the end
         int firstNull = Arrays.asList(sortableTypes).indexOf(null);
-        return Arrays.copyOfRange(sortableTypes, 0, firstNull);
+        return firstNull != -1
+                ? Arrays.copyOfRange(sortableTypes, 0, firstNull)
+                : sortableTypes;
     }
 
     /**
@@ -623,7 +625,13 @@ public final class DexMerger {
             return;
         }
 
-        new DexMerger(new File(args[0]), new File(args[1]), new File(args[2])).merge();
+        DexBuffer dexA = new DexBuffer();
+        dexA.loadFrom(new File(args[1]));
+        DexBuffer dexB = new DexBuffer();
+        dexB.loadFrom(new File(args[2]));
+
+        DexBuffer merged = new DexMerger(dexA, dexB).merge();
+        merged.writeTo(new File(args[0]));
     }
 
     private static void printUsage() {

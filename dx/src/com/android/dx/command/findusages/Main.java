@@ -16,9 +16,13 @@
 
 package com.android.dx.command.findusages;
 
+import com.android.dx.dex.DexFormat;
 import com.android.dx.io.DexBuffer;
+import com.android.dx.util.FileUtils;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.util.zip.ZipFile;
 
 public final class Main {
     public static void main(String[] args) throws IOException {
@@ -27,7 +31,14 @@ public final class Main {
         String memberName = args[2];
 
         DexBuffer dex = new DexBuffer();
-        dex.loadFrom(new File(dexFile));
+        if (FileUtils.hasArchiveSuffix(dexFile)) {
+            ZipFile zip = new ZipFile(dexFile);
+            InputStream in = zip.getInputStream(zip.getEntry(DexFormat.DEX_IN_JAR_NAME));
+            dex.loadFrom(in);
+            zip.close();
+        } else {
+            dex.loadFrom(new File(dexFile));
+        }
 
         new FindUsages(dex, declaredBy, memberName, System.out).findUsages();
     }

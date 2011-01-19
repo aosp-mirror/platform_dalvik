@@ -125,7 +125,8 @@ public final class DexBuffer {
         }
 
         this.data = bytesOut.toByteArray();
-        tableOfContents.readFrom(this);
+        this.length = data.length;
+        this.tableOfContents.readFrom(this);
     }
 
     public void loadFrom(File file) throws IOException {
