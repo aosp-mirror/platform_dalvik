@@ -74,9 +74,10 @@ struct DvmGlobals {
     char*       bootClassPathStr;
     char*       classPathStr;
 
-    unsigned int    heapSizeStart;
-    unsigned int    heapSizeMax;
-    unsigned int    stackSize;
+    size_t      heapStartingSize;
+    size_t      heapMaximumSize;
+    size_t      heapGrowthLimit;
+    size_t      stackSize;
 
     bool        verboseGc;
     bool        verboseJni;

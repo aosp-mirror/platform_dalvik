@@ -29,6 +29,8 @@ int dvmGetHeapDebugInfo(HeapDebugInfoType info)
         return (int)dvmHeapSourceGetValue(HS_FOOTPRINT, NULL, 0);
     case kVirtualHeapAllocated:
         return (int)dvmHeapSourceGetValue(HS_BYTES_ALLOCATED, NULL, 0);
+    case kVirtualHeapMaximumSize:
+        return dvmHeapSourceGetMaximumSize();
     default:
         return -1;
     }
