@@ -818,6 +818,8 @@ static int processOptions(int argc, const char* const argv[],
                 return -1;
             }
 
+        } else if (strncmp(argv[i], "-XX:+DisableExplicitGC", 22) == 0) {
+            gDvm.disableExplicitGc = true;
         } else if (strcmp(argv[i], "-verbose") == 0 ||
             strcmp(argv[i], "-verbose:class") == 0)
         {
