@@ -169,4 +169,9 @@ size_t dvmCountInstancesOfClass(const ClassObject *clazz);
  */
 size_t dvmCountAssignableInstancesOfClass(const ClassObject *clazz);
 
+/*
+ * Removes any growth limits from the heap.
+ */
+void dvmClearGrowthLimit(void);
+
 #endif /*_DALVIK_ALLOC_ALLOC*/
