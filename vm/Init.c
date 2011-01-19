@@ -119,6 +119,7 @@ static void usage(const char* progName)
     dvmFprintf(stderr, "  -Xgc:[no]postverify\n");
     dvmFprintf(stderr, "  -Xgc:[no]concurrent\n");
     dvmFprintf(stderr, "  -Xgc:[no]verifycardtable\n");
+    dvmFprintf(stderr, "  -XX:+DisableExplicitGC\n");
     dvmFprintf(stderr, "  -Xgenregmap\n");
     dvmFprintf(stderr, "  -Xverifyopt:[no]checkmon\n");
     dvmFprintf(stderr, "  -Xcheckdexsum\n");
