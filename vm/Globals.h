@@ -132,6 +132,7 @@ struct DvmGlobals {
     bool        generateRegisterMaps;
     bool        concurrentMarkSweep;
     bool        verifyCardTable;
+    bool        disableExplicitGc;
 
     int         assertionCtrlCount;
     AssertionControl*   assertionCtrl;
