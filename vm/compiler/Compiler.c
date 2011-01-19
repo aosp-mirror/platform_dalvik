@@ -99,6 +99,7 @@ bool dvmCompilerWorkEnqueue(const u2 *pc, WorkOrderKind kind, void* info)
     newOrder->result.codeAddress = NULL;
     newOrder->result.discardResult =
         (kind == kWorkOrderTraceDebug) ? true : false;
+    newOrder->result.cacheVersion = gDvmJit.cacheVersion;
     newOrder->result.requestingThread = dvmThreadSelf();
 
     gDvmJit.compilerWorkEnqueueIndex++;
@@ -263,6 +264,9 @@ static void resetCodeCache(void)
 
     /* Lock the mutex to clean up the work queue */
     dvmLockMutex(&gDvmJit.compilerLock);
+
+    /* Update the translation cache version */
+    gDvmJit.cacheVersion++;
 
     /* Drain the work queue to free the work orders */
     while (workQueueLength()) {
@@ -747,6 +751,33 @@ void dvmCompilerStateRefresh()
      */
     if (gDvmJit.pProfTableCopy == NULL) {
         return;
+    }
+
+    /*
+     * On the first enabling of method tracing, switch the compiler
+     * into a mode that includes trace support for invokes and returns.
+     * If there are any existing translations, flush them.  NOTE:  we
+     * can't blindly flush the translation cache because this code
+     * may be executed before the compiler thread has finished
+     * initialization.
+     */
+    if ((gDvm.interpBreak & kSubModeMethodTrace) &&
+        !gDvmJit.methodTraceSupport) {
+        bool resetRequired;
+        /*
+         * compilerLock will prevent new compilations from being
+         * installed while we are working.
+         */
+        dvmLockMutex(&gDvmJit.compilerLock);
+        gDvmJit.cacheVersion++; // invalidate compilations in flight
+        gDvmJit.methodTraceSupport = true;
+        resetRequired = (gDvmJit.numCompilations != 0);
+        dvmUnlockMutex(&gDvmJit.compilerLock);
+        if (resetRequired) {
+            dvmSuspendAllThreads(SUSPEND_FOR_CC_RESET);
+            resetCodeCache();
+            dvmResumeAllThreads(SUSPEND_FOR_CC_RESET);
+        }
     }
 
     dvmLockMutex(&gDvmJit.tableLock);

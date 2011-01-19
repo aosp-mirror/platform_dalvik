@@ -904,7 +904,9 @@ static ArmLIR *genUnconditionalBranch(CompilationUnit *cUnit, ArmLIR *target)
 /* Perform the actual operation for OP_RETURN_* */
 static void genReturnCommon(CompilationUnit *cUnit, MIR *mir)
 {
-    genDispatchToHandler(cUnit, TEMPLATE_RETURN);
+    genDispatchToHandler(cUnit, gDvmJit.methodTraceSupport ?
+        TEMPLATE_RETURN_PROF :
+        TEMPLATE_RETURN);
 #if defined(WITH_JIT_TUNING)
     gDvmJit.returnOp++;
 #endif
@@ -1082,14 +1084,18 @@ static void genInvokeSingletonCommon(CompilationUnit *cUnit, MIR *mir,
      * r7 = calleeMethod->registersSize
      */
     if (dvmIsNativeMethod(calleeMethod)) {
-        genDispatchToHandler(cUnit, TEMPLATE_INVOKE_METHOD_NATIVE);
+        genDispatchToHandler(cUnit, gDvmJit.methodTraceSupport ?
+            TEMPLATE_INVOKE_METHOD_NATIVE_PROF :
+            TEMPLATE_INVOKE_METHOD_NATIVE);
 #if defined(WITH_JIT_TUNING)
         gDvmJit.invokeNative++;
 #endif
     } else {
         /* For Java callees, set up r2 to be calleeMethod->outsSize */
         loadConstant(cUnit, r2, calleeMethod->outsSize);
-        genDispatchToHandler(cUnit, TEMPLATE_INVOKE_METHOD_CHAIN);
+        genDispatchToHandler(cUnit, gDvmJit.methodTraceSupport ?
+            TEMPLATE_INVOKE_METHOD_CHAIN_PROF :
+            TEMPLATE_INVOKE_METHOD_CHAIN);
 #if defined(WITH_JIT_TUNING)
         gDvmJit.invokeMonomorphic++;
 #endif
@@ -1148,7 +1154,9 @@ static void genInvokeVirtualCommon(CompilationUnit *cUnit, MIR *mir,
     ArmLIR *predictedChainingCell = opRegRegImm(cUnit, kOpAdd, r2, rpc, 0);
     predictedChainingCell->generic.target = (LIR *) predChainingCell;
 
-    genDispatchToHandler(cUnit, TEMPLATE_INVOKE_METHOD_PREDICTED_CHAIN);
+    genDispatchToHandler(cUnit, gDvmJit.methodTraceSupport ?
+        TEMPLATE_INVOKE_METHOD_PREDICTED_CHAIN_PROF :
+        TEMPLATE_INVOKE_METHOD_PREDICTED_CHAIN);
 
     /* return through lr - jump to the chaining cell */
     genUnconditionalBranch(cUnit, predChainingCell);
@@ -1211,7 +1219,9 @@ static void genInvokeVirtualCommon(CompilationUnit *cUnit, MIR *mir,
      * r1 = &ChainingCell,
      * r4PC = callsiteDPC,
      */
-    genDispatchToHandler(cUnit, TEMPLATE_INVOKE_METHOD_NO_OPT);
+    genDispatchToHandler(cUnit, gDvmJit.methodTraceSupport ?
+        TEMPLATE_INVOKE_METHOD_NO_OPT_PROF :
+        TEMPLATE_INVOKE_METHOD_NO_OPT);
 #if defined(WITH_JIT_TUNING)
     gDvmJit.invokePolymorphic++;
 #endif
@@ -3053,7 +3063,9 @@ static bool handleFmt35c_3rc_5rc(CompilationUnit *cUnit, MIR *mir,
                 opRegRegImm(cUnit, kOpAdd, r2, rpc, 0);
             predictedChainingCell->generic.target = (LIR *) predChainingCell;
 
-            genDispatchToHandler(cUnit, TEMPLATE_INVOKE_METHOD_PREDICTED_CHAIN);
+            genDispatchToHandler(cUnit, gDvmJit.methodTraceSupport ?
+                TEMPLATE_INVOKE_METHOD_PREDICTED_CHAIN_PROF :
+                TEMPLATE_INVOKE_METHOD_PREDICTED_CHAIN);
 
             /* return through lr - jump to the chaining cell */
             genUnconditionalBranch(cUnit, predChainingCell);
@@ -3156,7 +3168,9 @@ static bool handleFmt35c_3rc_5rc(CompilationUnit *cUnit, MIR *mir,
              * r1 = &ChainingCell,
              * r4PC = callsiteDPC,
              */
-            genDispatchToHandler(cUnit, TEMPLATE_INVOKE_METHOD_NO_OPT);
+            genDispatchToHandler(cUnit, gDvmJit.methodTraceSupport ?
+                TEMPLATE_INVOKE_METHOD_NO_OPT_PROF :
+                TEMPLATE_INVOKE_METHOD_NO_OPT);
 #if defined(WITH_JIT_TUNING)
             gDvmJit.invokePolymorphic++;
 #endif
@@ -3166,7 +3180,9 @@ static bool handleFmt35c_3rc_5rc(CompilationUnit *cUnit, MIR *mir,
         }
         /* NOP */
         case OP_INVOKE_DIRECT_EMPTY: {
-            return false;
+            if (gDvmJit.methodTraceSupport)
+                genInterpSingleStep(cUnit, mir);
+            break;
         }
         case OP_FILLED_NEW_ARRAY:
         case OP_FILLED_NEW_ARRAY_RANGE:

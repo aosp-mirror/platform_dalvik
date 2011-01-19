@@ -87,6 +87,7 @@ typedef struct JitTranslationInfo {
     bool discardResult;         // Used for debugging divergence and IC patching
     bool methodCompilationAborted;  // Cannot compile the whole method
     Thread *requestingThread;   // For debugging purpose
+    int cacheVersion;           // Used to identify stale trace requests
 } JitTranslationInfo;
 
 typedef enum WorkOrderKind {

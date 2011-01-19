@@ -1326,6 +1326,22 @@ void dvmCompilerAssembleLIR(CompilationUnit *cUnit, JitTranslationInfo *info)
     /* Don't go all the way if the goal is just to get the verbose output */
     if (info->discardResult) return;
 
+    /*
+     * The cache might disappear - acquire lock and check version
+     * Continue holding lock until translation cache update is complete.
+     * These actions are required here in the compiler thread because
+     * it is unaffected by suspend requests and doesn't know if a
+     * translation cache flush is in progress.
+     */
+    dvmLockMutex(&gDvmJit.compilerLock);
+    if (info->cacheVersion != gDvmJit.cacheVersion) {
+        /* Cache changed - discard current translation */
+        info->discardResult = true;
+        info->codeAddress = NULL;
+        dvmUnlockMutex(&gDvmJit.compilerLock);
+        return;
+    }
+
     cUnit->baseAddr = (char *) gDvmJit.codeCache + gDvmJit.codeCacheByteUsed;
     gDvmJit.codeCacheByteUsed += offset;
 
@@ -1353,12 +1369,16 @@ void dvmCompilerAssembleLIR(CompilationUnit *cUnit, JitTranslationInfo *info)
     /* Write the literals directly into the code cache */
     installDataContent(cUnit);
 
+
     /* Flush dcache and invalidate the icache to maintain coherence */
     dvmCompilerCacheFlush((long)cUnit->baseAddr,
                           (long)((char *) cUnit->baseAddr + offset), 0);
     UPDATE_CODE_CACHE_PATCHES();
 
     PROTECT_CODE_CACHE(cUnit->baseAddr, offset);
+
+    /* Translation cache update complete - release lock */
+    dvmUnlockMutex(&gDvmJit.compilerLock);
 
     /* Record code entry point and instruction set */
     info->codeAddress = (char*)cUnit->baseAddr + cUnit->headerSize;

@@ -186,9 +186,6 @@ static void usage(const char* progName)
 #if ANDROID_SMP != 0
         " smp"
 #endif
-#ifdef WITH_INLINE_PROFILING
-        " inline_profiling"
-#endif
     );
 #ifdef DVM_SHOW_EXCEPTION
     dvmFprintf(stderr, " show_exception=%d", DVM_SHOW_EXCEPTION);

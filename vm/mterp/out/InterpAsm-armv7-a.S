@@ -13583,11 +13583,7 @@ common_periodicChecks:
      * source-level single-stepping requires Dalvik singlestepping.
      * GC may require a one-shot action and then full-speed resumption.
      */
-#if defined(WITH_INLINE_PROFILING)
     ands    r1, #(kSubModeDebuggerActive | kSubModeEmulatorTrace | kSubModeInstCounting)
-#else
-    ands    r1, #(kSubModeDebuggerActive | kSubModeEmulatorTrace | kSubModeInstCounting | kSubModeMethodTrace)
-#endif
     bxeq    lr                          @ nothing to do, return
 
     @ debugger/profiler enabled, bail out; glue->entryPoint was set above
@@ -13717,10 +13713,12 @@ common_invokeMethodNoRange:
     ldr     r9, [rGLUE, #offGlue_interpStackEnd]    @ r9<- interpStackEnd
     sub     r3, r10, r3, lsl #2         @ r3<- bottom (newsave - outsSize)
     cmp     r3, r9                      @ bottom < interpStackEnd?
+    ldr     lr, [rGLUE, #offGlue_pInterpBreak]
     ldr     r3, [r0, #offMethod_accessFlags] @ r3<- methodToCall->accessFlags
     blo     .LstackOverflow             @ yes, this frame will overflow stack
 
     @ set up newSaveArea
+    ldr     lr, [lr]                    @ lr<- active submodes
 #ifdef EASY_GDB
     SAVEAREA_FROM_FP(ip, rFP)           @ ip<- stack save area
     str     ip, [r10, #offStackSaveArea_prevSave]
@@ -13731,13 +13729,14 @@ common_invokeMethodNoRange:
     mov     r9, #0
     str     r9, [r10, #offStackSaveArea_returnAddr]
 #endif
-#if defined(WITH_INLINE_PROFILING)
+    ands    lr, #kSubModeMethodTrace    @ method tracing?
+    beq     1f                          @ skip if not
     stmfd   sp!, {r0-r3}                @ preserve r0-r3
     mov     r1, r6
     @ r0=methodToCall, r1=rGlue
     bl      dvmFastMethodTraceEnter
     ldmfd   sp!, {r0-r3}                @ restore r0-r3
-#endif
+1:
     str     r0, [r10, #offStackSaveArea_method]
     tst     r3, #ACC_NATIVE
     bne     .LinvokeNative
@@ -13787,9 +13786,11 @@ common_invokeMethodNoRange:
     @ Prep for the native call
     @ r0=methodToCall, r1=newFp, r10=newSaveArea
     ldr     r3, [rGLUE, #offGlue_self]      @ r3<- glue->self
+    ldr     lr, [rGLUE, #offGlue_pInterpBreak]
     ldr     r9, [r3, #offThread_jniLocal_topCookie] @ r9<- thread->localRef->...
     str     r1, [r3, #offThread_curFrame]   @ self->curFrame = newFp
     str     r9, [r10, #offStackSaveArea_localRefCookie] @newFp->localRefCookie=top
+    ldr     lr, [lr]                    @ lr<- active submodes
     mov     r9, r3                      @ r9<- glue->self (preserve)
 
     mov     r2, r0                      @ r2<- methodToCall
@@ -13807,20 +13808,24 @@ dalvik_mterp:
 .Lskip:
 #endif
 
-#if defined(WITH_INLINE_PROFILING)
+    ands    lr, #kSubModeMethodTrace    @ method tracing?
+    beq     110f                        @ hop if not
     @ r2=JNIMethod, r6=rGLUE
     stmfd   sp!, {r2,r6}
-#endif
 
     mov     lr, pc                      @ set return addr
     ldr     pc, [r2, #offMethod_nativeFunc] @ pc<- methodToCall->nativeFunc
 
-#if defined(WITH_INLINE_PROFILING)
     @ r0=JNIMethod, r1=rGLUE
     ldmfd   sp!, {r0-r1}
     bl      dvmFastNativeMethodTraceExit
-#endif
-
+    @ r2=JNIMethod, r6=rGLUE
+    stmfd   sp!, {r2,r6}
+    b       220f
+110:
+    mov     lr, pc                      @ set return addr
+    ldr     pc, [r2, #offMethod_nativeFunc] @ pc<- methodToCall->nativeFunc
+220:
 #if defined(WITH_JIT)
     ldr     r3, [rGLUE, #offGlue_ppJitProfTable] @ Refresh Jit's on/off status
 #endif
@@ -13893,19 +13898,22 @@ common_returnFromMethod:
     mov     r9, #0
     bl      common_periodicChecks
 
-#if defined(WITH_INLINE_PROFILING)
+    ldr     lr, [rGLUE, #offGlue_pInterpBreak]
+    SAVEAREA_FROM_FP(r0, rFP)
+    ldr     lr, [lr]                    @ lr<- active submodes
+    ldr     r9, [r0, #offStackSaveArea_savedPc] @ r9 = saveArea->savedPc
+    ands    lr, #kSubModeMethodTrace    @ method tracing?
+    beq     333f
     stmfd   sp!, {r0-r3}                @ preserve r0-r3
     mov     r0, r6
     @ r0=rGlue
     bl      dvmFastJavaMethodTraceExit
     ldmfd   sp!, {r0-r3}                @ restore r0-r3
-#endif
-    SAVEAREA_FROM_FP(r0, rFP)           @ r0<- saveArea (old)
+333:
     ldr     rFP, [r0, #offStackSaveArea_prevFrame] @ fp = saveArea->prevFrame
-    ldr     r9, [r0, #offStackSaveArea_savedPc] @ r9 = saveArea->savedPc
+    ldr     r3, [rGLUE, #offGlue_self]  @ r3<- glue->self
     ldr     r2, [rFP, #(offStackSaveArea_method - sizeofStackSaveArea)]
                                         @ r2<- method we're returning to
-    ldr     r3, [rGLUE, #offGlue_self]  @ r3<- glue->self
     cmp     r2, #0                      @ is this a break frame?
 #if defined(WORKAROUND_CORTEX_A9_745320)
     /* Don't use conditional loads if the HW defect exists */

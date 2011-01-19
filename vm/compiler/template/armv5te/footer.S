@@ -17,12 +17,15 @@
     str     r9, [r1, #(offStackSaveArea_localRefCookie - sizeofStackSaveArea)]
                                         @ newFp->localRefCookie=top
     mov     r9, r3                      @ r9<- glue->self (preserve)
+    ldr     lr, [rGLUE, #offGlue_pInterpBreak]
     SAVEAREA_FROM_FP(r10, r1)           @ r10<- new stack save area
 
     mov     r2, r0                      @ r2<- methodToCall
+    ldr     lr, [lr]                    @ lr<- set of active profilers
     mov     r0, r1                      @ r0<- newFP
     add     r1, rGLUE, #offGlue_retval  @ r1<- &retval
-#if defined(WITH_INLINE_PROFILING)
+    ands    lr, #kSubModeMethodTrace
+    beq     121f                        @ hop if not profiling
     @ r2: methodToCall, r6: rGLUE
     stmfd   sp!, {r2,r6}
     stmfd   sp!, {r0-r3}
@@ -31,16 +34,18 @@
     mov     lr, pc
     ldr     pc, .LdvmFastMethodTraceEnter
     ldmfd   sp!, {r0-r3}
-#endif
 
     mov     lr, pc
     ldr     pc, [r2, #offMethod_nativeFunc]
 
-#if defined(WITH_INLINE_PROFILING)
     ldmfd   sp!, {r0-r1}
     mov     lr, pc
     ldr     pc, .LdvmFastNativeMethodTraceExit
-#endif
+    b       212f
+121:
+    mov     lr, pc
+    ldr     pc, [r2, #offMethod_nativeFunc]
+212:
     @ Refresh Jit's on/off status
     ldr     r3, [rGLUE, #offGlue_ppJitProfTable]
 
@@ -114,14 +119,12 @@
 .LdvmSelfVerificationMemOpDecode:
     .word   dvmSelfVerificationMemOpDecode
 #endif
-#if defined(WITH_INLINE_PROFILING)
 .LdvmFastMethodTraceEnter:
     .word   dvmFastMethodTraceEnter
 .LdvmFastNativeMethodTraceExit:
     .word   dvmFastNativeMethodTraceExit
 .LdvmFastJavaMethodTraceExit:
     .word   dvmFastJavaMethodTraceExit
-#endif
 .L__aeabi_cdcmple:
     .word   __aeabi_cdcmple
 .L__aeabi_cfcmple:

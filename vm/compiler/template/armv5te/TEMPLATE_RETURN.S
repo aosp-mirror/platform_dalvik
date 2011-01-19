@@ -5,7 +5,7 @@
      * address in the code cache following the invoke instruction. Otherwise
      * return to the special dvmJitToInterpNoChain entry point.
      */
-#if defined(WITH_INLINE_PROFILING)
+#if defined(TEMPLATE_INLINE_PROFILING)
     stmfd   sp!, {r0-r2,lr}             @ preserve live registers
     mov     r0, r6
     @ r0=rGlue

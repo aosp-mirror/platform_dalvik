@@ -166,7 +166,7 @@ dvmCompiler_TEMPLATE_RETURN:
      * address in the code cache following the invoke instruction. Otherwise
      * return to the special dvmJitToInterpNoChain entry point.
      */
-#if defined(WITH_INLINE_PROFILING)
+#if defined(TEMPLATE_INLINE_PROFILING)
     stmfd   sp!, {r0-r2,lr}             @ preserve live registers
     mov     r0, r6
     @ r0=rGlue
@@ -271,7 +271,7 @@ dvmCompiler_TEMPLATE_INVOKE_METHOD_NO_OPT:
     str     r3, [rGLUE, #offGlue_methodClassDex] @ glue->methodClassDex = ...
     mov     rFP, r1                         @ fp = newFp
     str     rFP, [r2, #offThread_curFrame]  @ self->curFrame = newFp
-#if defined(WITH_INLINE_PROFILING)
+#if defined(TEMPLATE_INLINE_PROFILING)
     stmfd   sp!, {r0-r3}                    @ preserve r0-r3
     mov     r1, r6
     @ r0=methodToCall, r1=rGlue
@@ -331,7 +331,7 @@ dvmCompiler_TEMPLATE_INVOKE_METHOD_CHAIN:
     str     r3, [rGLUE, #offGlue_methodClassDex] @ glue->methodClassDex = ...
     mov     rFP, r1                         @ fp = newFp
     str     rFP, [r2, #offThread_curFrame]  @ self->curFrame = newFp
-#if defined(WITH_INLINE_PROFILING)
+#if defined(TEMPLATE_INLINE_PROFILING)
     stmfd   sp!, {r0-r2,lr}             @ preserve clobbered live registers
     mov     r1, r6
     @ r0=methodToCall, r1=rGlue
@@ -453,7 +453,7 @@ dvmCompiler_TEMPLATE_INVOKE_METHOD_NATIVE:
     mov     r2, r0                      @ r2<- methodToCall
     mov     r0, r1                      @ r0<- newFP
     add     r1, rGLUE, #offGlue_retval  @ r1<- &retval
-#if defined(WITH_INLINE_PROFILING)
+#if defined(TEMPLATE_INLINE_PROFILING)
     @ r2=methodToCall, r6=rGLUE
     stmfd   sp!, {r2,r6}                @ to be consumed after JNI return
     stmfd   sp!, {r0-r3}                @ preserve r0-r3
@@ -467,7 +467,7 @@ dvmCompiler_TEMPLATE_INVOKE_METHOD_NATIVE:
 
     blx     r8                          @ off to the native code
 
-#if defined(WITH_INLINE_PROFILING)
+#if defined(TEMPLATE_INLINE_PROFILING)
     ldmfd   sp!, {r0-r1}                @ restore r2 and r6
     @ r0=JNIMethod, r1=rGlue
     mov     lr, pc
@@ -1505,6 +1505,370 @@ dvmCompiler_TEMPLATE_PERIODIC_PROFILING:
      blx    r0
      bx     r4
 
+/* ------------------------------ */
+    .balign 4
+    .global dvmCompiler_TEMPLATE_RETURN_PROF
+dvmCompiler_TEMPLATE_RETURN_PROF:
+/* File: armv5te/TEMPLATE_RETURN_PROF.S */
+#define TEMPLATE_INLINE_PROFILING
+/* File: armv5te/TEMPLATE_RETURN.S */
+    /*
+     * Unwind a frame from the Dalvik stack for compiled OP_RETURN_XXX.
+     * If the stored value in returnAddr
+     * is non-zero, the caller is compiled by the JIT thus return to the
+     * address in the code cache following the invoke instruction. Otherwise
+     * return to the special dvmJitToInterpNoChain entry point.
+     */
+#if defined(TEMPLATE_INLINE_PROFILING)
+    stmfd   sp!, {r0-r2,lr}             @ preserve live registers
+    mov     r0, r6
+    @ r0=rGlue
+    mov     lr, pc
+    ldr     pc, .LdvmFastJavaMethodTraceExit
+    ldmfd   sp!, {r0-r2,lr}             @ restore live registers
+#endif
+    SAVEAREA_FROM_FP(r0, rFP)           @ r0<- saveArea (old)
+    ldr     r10, [r0, #offStackSaveArea_prevFrame] @ r10<- saveArea->prevFrame
+    ldr     r8, [rGLUE, #offGlue_pSelfSuspendCount] @ r8<- &suspendCount
+    ldr     rPC, [r0, #offStackSaveArea_savedPc] @ rPC<- saveArea->savedPc
+#if !defined(WITH_SELF_VERIFICATION)
+    ldr     r9,  [r0, #offStackSaveArea_returnAddr] @ r9<- chaining cell ret
+#else
+    mov     r9, #0                      @ disable chaining
+#endif
+    ldr     r2, [r10, #(offStackSaveArea_method - sizeofStackSaveArea)]
+                                        @ r2<- method we're returning to
+    ldr     r3, [rGLUE, #offGlue_self]  @ r3<- glue->self
+    cmp     r2, #0                      @ break frame?
+#if !defined(WITH_SELF_VERIFICATION)
+    beq     1f                          @ bail to interpreter
+#else
+    blxeq   lr                          @ punt to interpreter and compare state
+#endif
+    ldr     r1, .LdvmJitToInterpNoChainNoProfile @ defined in footer.S
+    mov     rFP, r10                    @ publish new FP
+    ldr     r10, [r2, #offMethod_clazz] @ r10<- method->clazz
+    ldr     r8, [r8]                    @ r8<- suspendCount
+
+    str     r2, [rGLUE, #offGlue_method]@ glue->method = newSave->method
+    ldr     r0, [r10, #offClassObject_pDvmDex] @ r0<- method->clazz->pDvmDex
+    str     rFP, [r3, #offThread_curFrame] @ self->curFrame = fp
+    add     rPC, rPC, #6                @ publish new rPC (advance 6 bytes)
+    str     r0, [rGLUE, #offGlue_methodClassDex]
+    cmp     r8, #0                      @ check the suspendCount
+    movne   r9, #0                      @ clear the chaining cell address
+    str     r9, [r3, #offThread_inJitCodeCache] @ in code cache or not
+    cmp     r9, #0                      @ chaining cell exists?
+    blxne   r9                          @ jump to the chaining cell
+#if defined(WITH_JIT_TUNING)
+    mov     r0, #kCallsiteInterpreted
+#endif
+    mov     pc, r1                      @ callsite is interpreted
+1:
+    stmia   rGLUE, {rPC, rFP}           @ SAVE_PC_FP_TO_GLUE()
+    ldr     r2, .LdvmMterpStdBail       @ defined in footer.S
+    mov     r1, #0                      @ changeInterp = false
+    mov     r0, rGLUE                   @ Expecting rGLUE in r0
+    blx     r2                          @ exit the interpreter
+
+#undef TEMPLATE_INLINE_PROFILING
+
+/* ------------------------------ */
+    .balign 4
+    .global dvmCompiler_TEMPLATE_INVOKE_METHOD_NO_OPT_PROF
+dvmCompiler_TEMPLATE_INVOKE_METHOD_NO_OPT_PROF:
+/* File: armv5te/TEMPLATE_INVOKE_METHOD_NO_OPT_PROF.S */
+#define TEMPLATE_INLINE_PROFILING
+/* File: armv5te/TEMPLATE_INVOKE_METHOD_NO_OPT.S */
+    /*
+     * For polymorphic callsites - setup the Dalvik frame and load Dalvik PC
+     * into rPC then jump to dvmJitToInterpNoChain to dispatch the
+     * runtime-resolved callee.
+     */
+    @ r0 = methodToCall, r1 = returnCell, rPC = dalvikCallsite
+    ldrh    r7, [r0, #offMethod_registersSize]  @ r7<- methodToCall->regsSize
+    ldrh    r2, [r0, #offMethod_outsSize]  @ r2<- methodToCall->outsSize
+    ldr     r9, [rGLUE, #offGlue_interpStackEnd]    @ r9<- interpStackEnd
+    ldr     r8, [rGLUE, #offGlue_pSelfSuspendCount] @ r8<- &suspendCount
+    add     r3, r1, #1  @ Thumb addr is odd
+    SAVEAREA_FROM_FP(r1, rFP)           @ r1<- stack save area
+    sub     r1, r1, r7, lsl #2          @ r1<- newFp (old savearea - regsSize)
+    SAVEAREA_FROM_FP(r10, r1)           @ r10<- stack save area
+    sub     r10, r10, r2, lsl #2        @ r10<- bottom (newsave - outsSize)
+    ldr     r8, [r8]                    @ r8<- suspendCount (int)
+    cmp     r10, r9                     @ bottom < interpStackEnd?
+    bxlo    lr                          @ return to raise stack overflow excep.
+    @ r1 = newFP, r0 = methodToCall, r3 = returnCell, rPC = dalvikCallsite
+    ldr     r9, [r0, #offMethod_clazz]      @ r9<- method->clazz
+    ldr     r10, [r0, #offMethod_accessFlags] @ r10<- methodToCall->accessFlags
+    str     rPC, [rFP, #(offStackSaveArea_currentPc - sizeofStackSaveArea)]
+    str     rPC, [r1, #(offStackSaveArea_savedPc - sizeofStackSaveArea)]
+    ldr     rPC, [r0, #offMethod_insns]     @ rPC<- methodToCall->insns
+
+
+    @ set up newSaveArea
+    str     rFP, [r1, #(offStackSaveArea_prevFrame - sizeofStackSaveArea)]
+    str     r3, [r1, #(offStackSaveArea_returnAddr - sizeofStackSaveArea)]
+    str     r0, [r1, #(offStackSaveArea_method - sizeofStackSaveArea)]
+    cmp     r8, #0                      @ suspendCount != 0
+    bxne    lr                          @ bail to the interpreter
+    tst     r10, #ACC_NATIVE
+#if !defined(WITH_SELF_VERIFICATION)
+    bne     .LinvokeNative
+#else
+    bxne    lr                          @ bail to the interpreter
+#endif
+
+    ldr     r10, .LdvmJitToInterpTraceSelectNoChain
+    ldr     r3, [r9, #offClassObject_pDvmDex] @ r3<- method->clazz->pDvmDex
+    ldr     r2, [rGLUE, #offGlue_self]      @ r2<- glue->self
+
+    @ Update "glue" values for the new method
+    str     r0, [rGLUE, #offGlue_method]    @ glue->method = methodToCall
+    str     r3, [rGLUE, #offGlue_methodClassDex] @ glue->methodClassDex = ...
+    mov     rFP, r1                         @ fp = newFp
+    str     rFP, [r2, #offThread_curFrame]  @ self->curFrame = newFp
+#if defined(TEMPLATE_INLINE_PROFILING)
+    stmfd   sp!, {r0-r3}                    @ preserve r0-r3
+    mov     r1, r6
+    @ r0=methodToCall, r1=rGlue
+    mov     lr, pc
+    ldr     pc, .LdvmFastMethodTraceEnter
+    ldmfd   sp!, {r0-r3}                    @ restore r0-r3
+#endif
+
+    @ Start executing the callee
+#if defined(WITH_JIT_TUNING)
+    mov     r0, #kInlineCacheMiss
+#endif
+    mov     pc, r10                         @ dvmJitToInterpTraceSelectNoChain
+
+#undef TEMPLATE_INLINE_PROFILING
+
+/* ------------------------------ */
+    .balign 4
+    .global dvmCompiler_TEMPLATE_INVOKE_METHOD_CHAIN_PROF
+dvmCompiler_TEMPLATE_INVOKE_METHOD_CHAIN_PROF:
+/* File: armv5te/TEMPLATE_INVOKE_METHOD_CHAIN_PROF.S */
+#define TEMPLATE_INLINE_PROFILING
+/* File: armv5te/TEMPLATE_INVOKE_METHOD_CHAIN.S */
+    /*
+     * For monomorphic callsite, setup the Dalvik frame and return to the
+     * Thumb code through the link register to transfer control to the callee
+     * method through a dedicated chaining cell.
+     */
+    @ r0 = methodToCall, r1 = returnCell, r2 = methodToCall->outsSize
+    @ rPC = dalvikCallsite, r7 = methodToCall->registersSize
+    @ methodToCall is guaranteed to be non-native
+.LinvokeChainProf:
+    ldr     r9, [rGLUE, #offGlue_interpStackEnd]    @ r9<- interpStackEnd
+    ldr     r8, [rGLUE, #offGlue_pSelfSuspendCount] @ r8<- &suspendCount
+    add     r3, r1, #1  @ Thumb addr is odd
+    SAVEAREA_FROM_FP(r1, rFP)           @ r1<- stack save area
+    sub     r1, r1, r7, lsl #2          @ r1<- newFp (old savearea - regsSize)
+    SAVEAREA_FROM_FP(r10, r1)           @ r10<- stack save area
+    add     r12, lr, #2                 @ setup the punt-to-interp address
+    sub     r10, r10, r2, lsl #2        @ r10<- bottom (newsave - outsSize)
+    ldr     r8, [r8]                    @ r8<- suspendCount (int)
+    cmp     r10, r9                     @ bottom < interpStackEnd?
+    bxlo    r12                         @ return to raise stack overflow excep.
+    @ r1 = newFP, r0 = methodToCall, r3 = returnCell, rPC = dalvikCallsite
+    ldr     r9, [r0, #offMethod_clazz]      @ r9<- method->clazz
+    str     rPC, [rFP, #(offStackSaveArea_currentPc - sizeofStackSaveArea)]
+    str     rPC, [r1, #(offStackSaveArea_savedPc - sizeofStackSaveArea)]
+
+    @ set up newSaveArea
+    str     rFP, [r1, #(offStackSaveArea_prevFrame - sizeofStackSaveArea)]
+    str     r3, [r1, #(offStackSaveArea_returnAddr - sizeofStackSaveArea)]
+    str     r0, [r1, #(offStackSaveArea_method - sizeofStackSaveArea)]
+    cmp     r8, #0                      @ suspendCount != 0
+    bxne    r12                         @ bail to the interpreter
+
+    ldr     r3, [r9, #offClassObject_pDvmDex] @ r3<- method->clazz->pDvmDex
+    ldr     r2, [rGLUE, #offGlue_self]      @ r2<- glue->self
+
+    @ Update "glue" values for the new method
+    str     r0, [rGLUE, #offGlue_method]    @ glue->method = methodToCall
+    str     r3, [rGLUE, #offGlue_methodClassDex] @ glue->methodClassDex = ...
+    mov     rFP, r1                         @ fp = newFp
+    str     rFP, [r2, #offThread_curFrame]  @ self->curFrame = newFp
+#if defined(TEMPLATE_INLINE_PROFILING)
+    stmfd   sp!, {r0-r2,lr}             @ preserve clobbered live registers
+    mov     r1, r6
+    @ r0=methodToCall, r1=rGlue
+    mov     lr, pc
+    ldr     pc, .LdvmFastMethodTraceEnter
+    ldmfd   sp!, {r0-r2,lr}             @ restore registers
+#endif
+
+    bx      lr                              @ return to the callee-chaining cell
+
+#undef TEMPLATE_INLINE_PROFILING
+
+/* ------------------------------ */
+    .balign 4
+    .global dvmCompiler_TEMPLATE_INVOKE_METHOD_PREDICTED_CHAIN_PROF
+dvmCompiler_TEMPLATE_INVOKE_METHOD_PREDICTED_CHAIN_PROF:
+/* File: armv5te/TEMPLATE_INVOKE_METHOD_PREDICTED_CHAIN_PROF.S */
+#define TEMPLATE_INLINE_PROFILING
+/* File: armv5te/TEMPLATE_INVOKE_METHOD_PREDICTED_CHAIN.S */
+    /*
+     * For polymorphic callsite, check whether the cached class pointer matches
+     * the current one. If so setup the Dalvik frame and return to the
+     * Thumb code through the link register to transfer control to the callee
+     * method through a dedicated chaining cell.
+     *
+     * The predicted chaining cell is declared in ArmLIR.h with the
+     * following layout:
+     *
+     *  typedef struct PredictedChainingCell {
+     *      u4 branch;
+     *      const ClassObject *clazz;
+     *      const Method *method;
+     *      u4 counter;
+     *  } PredictedChainingCell;
+     *
+     * Upon returning to the callsite:
+     *    - lr  : to branch to the chaining cell
+     *    - lr+2: to punt to the interpreter
+     *    - lr+4: to fully resolve the callee and may rechain.
+     *            r3 <- class
+     *            r9 <- counter
+     */
+    @ r0 = this, r1 = returnCell, r2 = predictedChainCell, rPC = dalvikCallsite
+    ldr     r3, [r0, #offObject_clazz]  @ r3 <- this->class
+    ldr     r8, [r2, #4]    @ r8 <- predictedChainCell->clazz
+    ldr     r0, [r2, #8]    @ r0 <- predictedChainCell->method
+    ldr     r9, [rGLUE, #offGlue_icRechainCount]   @ r1 <- shared rechainCount
+    cmp     r3, r8          @ predicted class == actual class?
+#if defined(WITH_JIT_TUNING)
+    ldr     r7, .LdvmICHitCount
+#if defined(WORKAROUND_CORTEX_A9_745320)
+    /* Don't use conditional loads if the HW defect exists */
+    bne     101f
+    ldr     r10, [r7, #0]
+101:
+#else
+    ldreq   r10, [r7, #0]
+#endif
+    add     r10, r10, #1
+    streq   r10, [r7, #0]
+#endif
+    ldreqh  r7, [r0, #offMethod_registersSize]  @ r7<- methodToCall->regsSize
+    ldreqh  r2, [r0, #offMethod_outsSize]  @ r2<- methodToCall->outsSize
+    beq     .LinvokeChainProf   @ predicted chain is valid
+    ldr     r7, [r3, #offClassObject_vtable] @ r7 <- this->class->vtable
+    cmp     r8, #0          @ initialized class or not
+    moveq   r1, #0
+    subne   r1, r9, #1      @ count--
+    strne   r1, [rGLUE, #offGlue_icRechainCount]   @ write back to InterpState
+    add     lr, lr, #4      @ return to fully-resolve landing pad
+    /*
+     * r1 <- count
+     * r2 <- &predictedChainCell
+     * r3 <- this->class
+     * r4 <- dPC
+     * r7 <- this->class->vtable
+     */
+    bx      lr
+
+#undef TEMPLATE_INLINE_PROFILING
+
+/* ------------------------------ */
+    .balign 4
+    .global dvmCompiler_TEMPLATE_INVOKE_METHOD_NATIVE_PROF
+dvmCompiler_TEMPLATE_INVOKE_METHOD_NATIVE_PROF:
+/* File: armv5te/TEMPLATE_INVOKE_METHOD_NATIVE_PROF.S */
+#define TEMPLATE_INLINE_PROFILING
+/* File: armv5te/TEMPLATE_INVOKE_METHOD_NATIVE.S */
+    @ r0 = methodToCall, r1 = returnCell, rPC = dalvikCallsite
+    @ r7 = methodToCall->registersSize
+    ldr     r9, [rGLUE, #offGlue_interpStackEnd]    @ r9<- interpStackEnd
+    ldr     r8, [rGLUE, #offGlue_pSelfSuspendCount] @ r8<- &suspendCount
+    add     r3, r1, #1  @ Thumb addr is odd
+    SAVEAREA_FROM_FP(r1, rFP)           @ r1<- stack save area
+    sub     r1, r1, r7, lsl #2          @ r1<- newFp (old savearea - regsSize)
+    SAVEAREA_FROM_FP(r10, r1)           @ r10<- stack save area
+    ldr     r8, [r8]                    @ r3<- suspendCount (int)
+    cmp     r10, r9                     @ bottom < interpStackEnd?
+    bxlo    lr                          @ return to raise stack overflow excep.
+    @ r1 = newFP, r0 = methodToCall, r3 = returnCell, rPC = dalvikCallsite
+    str     rPC, [rFP, #(offStackSaveArea_currentPc - sizeofStackSaveArea)]
+    str     rPC, [r1, #(offStackSaveArea_savedPc - sizeofStackSaveArea)]
+
+    @ set up newSaveArea
+    str     rFP, [r1, #(offStackSaveArea_prevFrame - sizeofStackSaveArea)]
+    str     r3, [r1, #(offStackSaveArea_returnAddr - sizeofStackSaveArea)]
+    ldr     r3, [rGLUE, #offGlue_self]      @ r3<- glue->self
+    str     r0, [r1, #(offStackSaveArea_method - sizeofStackSaveArea)]
+    cmp     r8, #0                      @ suspendCount != 0
+    ldr     r8, [r0, #offMethod_nativeFunc] @ r8<- method->nativeFunc
+#if !defined(WITH_SELF_VERIFICATION)
+    bxne    lr                          @ bail to the interpreter
+#else
+    bx      lr                          @ bail to interpreter unconditionally
+#endif
+
+    @ go ahead and transfer control to the native code
+    ldr     r9, [r3, #offThread_jniLocal_topCookie] @ r9<- thread->localRef->...
+    mov     r2, #0
+    str     r1, [r3, #offThread_curFrame]   @ self->curFrame = newFp
+    str     r2, [r3, #offThread_inJitCodeCache] @ not in the jit code cache
+    str     r9, [r1, #(offStackSaveArea_localRefCookie - sizeofStackSaveArea)]
+                                        @ newFp->localRefCookie=top
+    mov     r9, r3                      @ r9<- glue->self (preserve)
+    SAVEAREA_FROM_FP(r10, r1)           @ r10<- new stack save area
+
+    mov     r2, r0                      @ r2<- methodToCall
+    mov     r0, r1                      @ r0<- newFP
+    add     r1, rGLUE, #offGlue_retval  @ r1<- &retval
+#if defined(TEMPLATE_INLINE_PROFILING)
+    @ r2=methodToCall, r6=rGLUE
+    stmfd   sp!, {r2,r6}                @ to be consumed after JNI return
+    stmfd   sp!, {r0-r3}                @ preserve r0-r3
+    mov     r0, r2
+    mov     r1, r6
+    @ r0=JNIMethod, r1=rGlue
+    mov     lr, pc
+    ldr     pc, .LdvmFastMethodTraceEnter
+    ldmfd   sp!, {r0-r3}                @ restore r0-r3
+#endif
+
+    blx     r8                          @ off to the native code
+
+#if defined(TEMPLATE_INLINE_PROFILING)
+    ldmfd   sp!, {r0-r1}                @ restore r2 and r6
+    @ r0=JNIMethod, r1=rGlue
+    mov     lr, pc
+    ldr     pc, .LdvmFastNativeMethodTraceExit
+#endif
+    @ native return; r9=self, r10=newSaveArea
+    @ equivalent to dvmPopJniLocals
+    ldr     r2, [r10, #offStackSaveArea_returnAddr] @ r2 = chaining cell ret
+    ldr     r0, [r10, #offStackSaveArea_localRefCookie] @ r0<- saved->top
+    ldr     r1, [r9, #offThread_exception] @ check for exception
+    str     rFP, [r9, #offThread_curFrame]  @ self->curFrame = fp
+    cmp     r1, #0                      @ null?
+    str     r0, [r9, #offThread_jniLocal_topCookie] @ new top <- old top
+    ldr     r0, [rFP, #(offStackSaveArea_currentPc - sizeofStackSaveArea)]
+
+    @ r0 = dalvikCallsitePC
+    bne     .LhandleException           @ no, handle exception
+
+    str     r2, [r9, #offThread_inJitCodeCache] @ set the mode properly
+    cmp     r2, #0                      @ return chaining cell still exists?
+    bxne    r2                          @ yes - go ahead
+
+    @ continue executing the next instruction through the interpreter
+    ldr     r1, .LdvmJitToInterpTraceSelectNoChain @ defined in footer.S
+    add     rPC, r0, #6                 @ reconstruct new rPC (advance 6 bytes)
+#if defined(WITH_JIT_TUNING)
+    mov     r0, #kCallsiteInterpreted
+#endif
+    mov     pc, r1
+
+#undef TEMPLATE_INLINE_PROFILING
+
     .size   dvmCompilerTemplateStart, .-dvmCompilerTemplateStart
 /* File: armv5te/footer.S */
 /*
@@ -1526,12 +1890,15 @@ dvmCompiler_TEMPLATE_PERIODIC_PROFILING:
     str     r9, [r1, #(offStackSaveArea_localRefCookie - sizeofStackSaveArea)]
                                         @ newFp->localRefCookie=top
     mov     r9, r3                      @ r9<- glue->self (preserve)
+    ldr     lr, [rGLUE, #offGlue_pInterpBreak]
     SAVEAREA_FROM_FP(r10, r1)           @ r10<- new stack save area
 
     mov     r2, r0                      @ r2<- methodToCall
+    ldr     lr, [lr]                    @ lr<- set of active profilers
     mov     r0, r1                      @ r0<- newFP
     add     r1, rGLUE, #offGlue_retval  @ r1<- &retval
-#if defined(WITH_INLINE_PROFILING)
+    ands    lr, #kSubModeMethodTrace
+    beq     121f                        @ hop if not profiling
     @ r2: methodToCall, r6: rGLUE
     stmfd   sp!, {r2,r6}
     stmfd   sp!, {r0-r3}
@@ -1540,16 +1907,18 @@ dvmCompiler_TEMPLATE_PERIODIC_PROFILING:
     mov     lr, pc
     ldr     pc, .LdvmFastMethodTraceEnter
     ldmfd   sp!, {r0-r3}
-#endif
 
     mov     lr, pc
     ldr     pc, [r2, #offMethod_nativeFunc]
 
-#if defined(WITH_INLINE_PROFILING)
     ldmfd   sp!, {r0-r1}
     mov     lr, pc
     ldr     pc, .LdvmFastNativeMethodTraceExit
-#endif
+    b       212f
+121:
+    mov     lr, pc
+    ldr     pc, [r2, #offMethod_nativeFunc]
+212:
     @ Refresh Jit's on/off status
     ldr     r3, [rGLUE, #offGlue_ppJitProfTable]
 
@@ -1623,14 +1992,12 @@ dvmCompiler_TEMPLATE_PERIODIC_PROFILING:
 .LdvmSelfVerificationMemOpDecode:
     .word   dvmSelfVerificationMemOpDecode
 #endif
-#if defined(WITH_INLINE_PROFILING)
 .LdvmFastMethodTraceEnter:
     .word   dvmFastMethodTraceEnter
 .LdvmFastNativeMethodTraceExit:
     .word   dvmFastNativeMethodTraceExit
 .LdvmFastJavaMethodTraceExit:
     .word   dvmFastJavaMethodTraceExit
-#endif
 .L__aeabi_cdcmple:
     .word   __aeabi_cdcmple
 .L__aeabi_cfcmple:

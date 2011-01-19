@@ -449,6 +449,11 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
         return true;
     }
 
+    /* If the work order is stale, discard it */
+    if (info->cacheVersion != gDvmJit.cacheVersion) {
+        return false;
+    }
+
     compilationId++;
     memset(&cUnit, 0, sizeof(CompilationUnit));
 

@@ -39,7 +39,7 @@
     mov     r2, r0                      @ r2<- methodToCall
     mov     r0, r1                      @ r0<- newFP
     add     r1, rGLUE, #offGlue_retval  @ r1<- &retval
-#if defined(WITH_INLINE_PROFILING)
+#if defined(TEMPLATE_INLINE_PROFILING)
     @ r2=methodToCall, r6=rGLUE
     stmfd   sp!, {r2,r6}                @ to be consumed after JNI return
     stmfd   sp!, {r0-r3}                @ preserve r0-r3
@@ -53,7 +53,7 @@
 
     blx     r8                          @ off to the native code
 
-#if defined(WITH_INLINE_PROFILING)
+#if defined(TEMPLATE_INLINE_PROFILING)
     ldmfd   sp!, {r0-r1}                @ restore r2 and r6
     @ r0=JNIMethod, r1=rGlue
     mov     lr, pc

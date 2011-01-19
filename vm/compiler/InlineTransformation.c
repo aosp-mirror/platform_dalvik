@@ -304,6 +304,10 @@ void dvmCompilerInlineMIR(CompilationUnit *cUnit)
         if ((flags & kInstrInvoke) == 0)
             continue;
 
+        /* Disable inlining when doing method tracing */
+        if (gDvmJit.methodTraceSupport)
+            continue;
+
         /*
          * If the invoke itself is selected for single stepping, don't bother
          * to inline it.
