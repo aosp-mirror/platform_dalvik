@@ -46,7 +46,7 @@
  * Initializes the card table; must be called before any other
  * dvmCardTable*() functions.
  */
-bool dvmCardTableStartup(void)
+bool dvmCardTableStartup(size_t heapMaximumSize)
 {
     size_t length;
     void *allocBase;
@@ -57,7 +57,7 @@ bool dvmCardTableStartup(void)
     assert(heapBase != NULL);
 
     /* Set up the card table */
-    length = gDvm.heapSizeMax / GC_CARD_SIZE;
+    length = heapMaximumSize / GC_CARD_SIZE;
     /* Allocate an extra 256 bytes to allow fixed low-byte of base */
     allocBase = dvmAllocRegion(length + 0x100, PROT_READ | PROT_WRITE,
                             "dalvik-card-table");

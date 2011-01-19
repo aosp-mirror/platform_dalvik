@@ -51,7 +51,13 @@ bool dvmHeapStartup()
 {
     GcHeap *gcHeap;
 
-    gcHeap = dvmHeapSourceStartup(gDvm.heapSizeStart, gDvm.heapSizeMax);
+    if (gDvm.heapGrowthLimit == 0) {
+        gDvm.heapGrowthLimit = gDvm.heapMaximumSize;
+    }
+
+    gcHeap = dvmHeapSourceStartup(gDvm.heapStartingSize,
+                                  gDvm.heapMaximumSize,
+                                  gDvm.heapGrowthLimit);
     if (gcHeap == NULL) {
         return false;
     }
@@ -73,7 +79,7 @@ bool dvmHeapStartup()
     gcHeap->pendingFinalizationRefs = NULL;
     gcHeap->referenceOperations = NULL;
 
-    if (!dvmCardTableStartup()) {
+    if (!dvmCardTableStartup(gDvm.heapMaximumSize)) {
         LOGE_HEAP("card table startup failed.");
         return false;
     }
@@ -236,7 +242,7 @@ static void *tryMalloc(size_t size)
      * going to succeed.  We have to collect SoftReferences before
      * throwing an OOME, though.
      */
-    if (size >= gDvm.heapSizeMax) {
+    if (size >= gDvm.heapGrowthLimit) {
         LOGW_HEAP("dvmMalloc(%zu/0x%08zx): "
                 "someone's allocating a huge buffer\n", size, size);
         ptr = NULL;

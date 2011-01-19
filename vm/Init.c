@@ -769,7 +769,7 @@ static int processOptions(int argc, const char* const argv[],
             size_t val = parseMemOption(argv[i]+4, 1024);
             if (val != 0) {
                 if (val >= kMinHeapStartSize && val <= kMaxHeapSize) {
-                    gDvm.heapSizeStart = val;
+                    gDvm.heapStartingSize = val;
                 } else {
                     dvmFprintf(stderr,
                         "Invalid -Xms '%s', range is %dKB to %dKB\n",
@@ -784,7 +784,7 @@ static int processOptions(int argc, const char* const argv[],
             size_t val = parseMemOption(argv[i]+4, 1024);
             if (val != 0) {
                 if (val >= kMinHeapSize && val <= kMaxHeapSize) {
-                    gDvm.heapSizeMax = val;
+                    gDvm.heapMaximumSize = val;
                 } else {
                     dvmFprintf(stderr,
                         "Invalid -Xmx '%s', range is %dKB to %dKB\n",
@@ -793,6 +793,14 @@ static int processOptions(int argc, const char* const argv[],
                 }
             } else {
                 dvmFprintf(stderr, "Invalid -Xmx option '%s'\n", argv[i]);
+                return -1;
+            }
+        } else if (strncmp(argv[i], "-XX:HeapGrowthLimit=", 20) == 0) {
+            size_t val = parseMemOption(argv[i] + 20, 1024);
+            if (val != 0) {
+                gDvm.heapGrowthLimit = val;
+            } else {
+                dvmFprintf(stderr, "Invalid -XX:HeapGrowthLimit option '%s'\n", argv[i]);
                 return -1;
             }
         } else if (strncmp(argv[i], "-Xss", 4) == 0) {
@@ -1058,8 +1066,9 @@ static void setCommandLineDefaults()
     /* Defaults overridden by -Xms and -Xmx.
      * TODO: base these on a system or application-specific default
      */
-    gDvm.heapSizeStart = 2 * 1024 * 1024;   // Spec says 16MB; too big for us.
-    gDvm.heapSizeMax = 16 * 1024 * 1024;    // Spec says 75% physical mem
+    gDvm.heapStartingSize = 2 * 1024 * 1024;  // Spec says 16MB; too big for us.
+    gDvm.heapMaximumSize = 16 * 1024 * 1024;  // Spec says 75% physical mem
+    gDvm.heapGrowthLimit = 0;  // 0 means no growth limit
     gDvm.stackSize = kDefaultStackSize;
 
     gDvm.concurrentMarkSweep = true;

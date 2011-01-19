@@ -31,6 +31,7 @@ extern void dlmalloc_walk_free_pages(void(*)(void*, void*, void*), void*);
 
 static void snapIdealFootprint(void);
 static void setIdealFootprint(size_t max);
+static size_t getMaximumSize(const HeapSource *hs);
 
 #define ALIGN_UP_TO_PAGE_SIZE(p) \
     (((size_t)(p) + (SYSTEM_PAGE_SIZE - 1)) & ~(SYSTEM_PAGE_SIZE - 1))
@@ -113,6 +114,16 @@ struct HeapSource {
     /* The largest that the heap source as a whole is allowed to grow.
      */
     size_t maximumSize;
+
+    /*
+     * The largest size we permit the heap to grow.  This value allows
+     * the user to limit the heap growth below the maximum size.  This
+     * is a work around until we can dynamically set the maximum size.
+     * This value can range between the starting size and the maximum
+     * size but should never be set below the current footprint of the
+     * heap.
+     */
+    size_t growthLimit;
 
     /* The desired max size of the heap source as a whole.
      */
@@ -321,7 +332,7 @@ createMspace(void *base, size_t startSize, size_t maximumSize)
 }
 
 static bool
-addNewHeap(HeapSource *hs, mspace msp, size_t mspAbsoluteMaxSize)
+addNewHeap(HeapSource *hs, mspace msp, size_t maximumSize)
 {
     Heap heap;
 
@@ -336,7 +347,7 @@ addNewHeap(HeapSource *hs, mspace msp, size_t mspAbsoluteMaxSize)
 
     if (msp != NULL) {
         heap.msp = msp;
-        heap.maximumSize = mspAbsoluteMaxSize;
+        heap.maximumSize = maximumSize;
         heap.concurrentStartBytes = SIZE_MAX;
         heap.base = hs->heapBase;
         heap.limit = hs->heapBase + heap.maximumSize;
@@ -354,7 +365,7 @@ addNewHeap(HeapSource *hs, mspace msp, size_t mspAbsoluteMaxSize)
         }
         hs->heaps[0].maximumSize = overhead;
         hs->heaps[0].limit = base;
-        heap.maximumSize = hs->maximumSize - overhead;
+        heap.maximumSize = hs->growthLimit - overhead;
         heap.msp = createMspace(base, HEAP_MIN_FREE, heap.maximumSize);
         heap.concurrentStartBytes = HEAP_MIN_FREE - CONCURRENT_START;
         heap.base = base;
@@ -460,7 +471,7 @@ static void freeMarkStack(GcMarkStack *stack)
  * allocated from the heap source.
  */
 GcHeap *
-dvmHeapSourceStartup(size_t startSize, size_t maximumSize)
+dvmHeapSourceStartup(size_t startSize, size_t maximumSize, size_t growthLimit)
 {
     GcHeap *gcHeap;
     HeapSource *hs;
@@ -470,9 +481,9 @@ dvmHeapSourceStartup(size_t startSize, size_t maximumSize)
 
     assert(gHs == NULL);
 
-    if (startSize > maximumSize) {
-        LOGE("Bad heap parameters (start=%d, max=%d)\n",
-           startSize, maximumSize);
+    if (!(startSize <= growthLimit && growthLimit <= maximumSize)) {
+        LOGE("Bad heap size parameters (start=%zd, max=%zd, limit=%zd)",
+             startSize, maximumSize, growthLimit);
         return NULL;
     }
 
@@ -513,6 +524,7 @@ dvmHeapSourceStartup(size_t startSize, size_t maximumSize)
     hs->targetUtilization = DEFAULT_HEAP_UTILIZATION;
     hs->startSize = startSize;
     hs->maximumSize = maximumSize;
+    hs->growthLimit = growthLimit;
     hs->idealSize = startSize;
     hs->softLimit = SIZE_MAX;    // no soft limit at first
     hs->numHeaps = 0;
@@ -520,7 +532,7 @@ dvmHeapSourceStartup(size_t startSize, size_t maximumSize)
     hs->hasGcThread = false;
     hs->heapBase = (char *)base;
     hs->heapLength = length;
-    if (!addNewHeap(hs, msp, maximumSize)) {
+    if (!addNewHeap(hs, msp, growthLimit)) {
         LOGE_HEAP("Can't add initial heap\n");
         goto fail;
     }
@@ -1056,6 +1068,38 @@ dvmHeapSourceFootprint()
     return oldHeapOverhead(gHs, true);
 }
 
+static size_t getMaximumSize(const HeapSource *hs)
+{
+    return hs->growthLimit;
+}
+
+/*
+ * Returns the current maximum size of the heap source respecting any
+ * growth limits.
+ */
+size_t dvmHeapSourceGetMaximumSize()
+{
+    HS_BOILERPLATE();
+    return getMaximumSize(gHs);
+}
+
+/*
+ * Removes any growth limits.  Allows the user to allocate up to the
+ * maximum heap size.
+ */
+void dvmClearGrowthLimit()
+{
+    size_t overhead;
+
+    HS_BOILERPLATE();
+    dvmLockHeap();
+    dvmWaitForConcurrentGcToComplete();
+    gHs->growthLimit = gHs->maximumSize;
+    overhead = oldHeapOverhead(gHs, false);
+    gHs->heaps[0].maximumSize = gHs->maximumSize - overhead;
+    dvmUnlockHeap();
+}
+
 /*
  * Return the real bytes used by old heaps plus the soft usage of the
  * current heap.  When a soft limit is in effect, this is effectively
@@ -1134,14 +1178,16 @@ setIdealFootprint(size_t max)
     size_t oldAllowedFootprint =
             mspace_max_allowed_footprint(msp);
 #endif
+    size_t maximumSize;
 
     HS_BOILERPLATE();
 
-    if (max > hs->maximumSize) {
+    maximumSize = getMaximumSize(hs);
+    if (max > maximumSize) {
         LOGI_HEAP("Clamp target GC heap from %zd.%03zdMB to %u.%03uMB\n",
                 FRACTIONAL_MB(max),
-                FRACTIONAL_MB(hs->maximumSize));
-        max = hs->maximumSize;
+                FRACTIONAL_MB(maximumSize));
+        max = maximumSize;
     }
 
     /* Convert max into a size that applies to the active heap.

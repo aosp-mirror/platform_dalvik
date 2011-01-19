@@ -107,7 +107,7 @@ skip_when:
         *b++ = (u1)reason;
 
         /* max allowed heap size in bytes */
-        set4BE(b, gDvm.heapSizeMax); b += 4;
+        set4BE(b, dvmHeapSourceGetMaximumSize()); b += 4;
 
         /* current heap size in bytes */
         set4BE(b, dvmHeapSourceGetValue(HS_FOOTPRINT, NULL, 0)); b += 4;

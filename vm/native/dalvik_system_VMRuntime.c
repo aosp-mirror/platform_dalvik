@@ -165,6 +165,13 @@ static void Dalvik_dalvik_system_VMRuntime_addressOf(const u4* args,
     RETURN_LONG(result);
 }
 
+static void Dalvik_dalvik_system_VMRuntime_clearGrowthLimit(const u4* args,
+    JValue* pResult)
+{
+    dvmClearGrowthLimit();
+    RETURN_VOID();
+}
+
 const DalvikNativeMethod dvm_dalvik_system_VMRuntime[] = {
     { "getTargetHeapUtilization", "()F",
         Dalvik_dalvik_system_VMRuntime_getTargetHeapUtilization },
@@ -182,5 +189,7 @@ const DalvikNativeMethod dvm_dalvik_system_VMRuntime[] = {
         Dalvik_dalvik_system_VMRuntime_newNonMovableArray },
     { "addressOf", "(Ljava/lang/Object;)J",
         Dalvik_dalvik_system_VMRuntime_addressOf },
+    { "clearGrowthLimit", "()V",
+        Dalvik_dalvik_system_VMRuntime_clearGrowthLimit },
     { NULL, NULL, NULL },
 };
