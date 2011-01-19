@@ -549,6 +549,13 @@ void dvmCollectGarbageInternal(bool clearSoftRefs, GcReason reason)
     gcMode = (reason == GC_FOR_MALLOC) ? GC_PARTIAL : GC_FULL;
     gcHeap->gcRunning = true;
 
+    /*
+     * Grab the heapWorkerLock to prevent the HeapWorker thread from
+     * doing work.  If it's executing a finalizer or an enqueue operation
+     * it won't be holding the lock, so this should return quickly.
+     */
+    dvmLockMutex(&gDvm.heapWorkerLock);
+
     rootSuspend = dvmGetRelativeTimeMsec();
     dvmSuspendAllThreads(SUSPEND_FOR_GC);
     rootStart = dvmGetRelativeTimeMsec();
@@ -587,12 +594,6 @@ void dvmCollectGarbageInternal(bool clearSoftRefs, GcReason reason)
             }
         }
     }
-
-    /* Wait for the HeapWorker thread to block.
-     * (It may also already be suspended in interp code,
-     * in which case it's not holding heapWorkerLock.)
-     */
-    dvmLockMutex(&gDvm.heapWorkerLock);
 
     /* Make sure that the HeapWorker thread hasn't become
      * wedged inside interp code.  If it has, this call will
@@ -828,6 +829,26 @@ void dvmCollectGarbageInternal(bool clearSoftRefs, GcReason reason)
     }
 }
 
+/*
+ * If the concurrent GC is running, wait for it to finish.  The caller
+ * must hold the heap lock.
+ *
+ * Note: the second dvmChangeStatus() could stall if we were in RUNNING
+ * on entry, and some other thread has asked us to suspend.  In that
+ * case we will be suspended with the heap lock held, which can lead to
+ * deadlock if the other thread tries to do something with the managed heap.
+ * For example, the debugger might suspend us and then execute a method that
+ * allocates memory.  We can avoid this situation by releasing the lock
+ * before self-suspending.  (The developer can work around this specific
+ * situation by single-stepping the VM.  Alternatively, we could disable
+ * concurrent GC when the debugger is attached, but that might change
+ * behavior more than is desirable.)
+ *
+ * This should not be a problem in production, because any GC-related
+ * activity will grab the lock before issuing a suspend-all.  (We may briefly
+ * suspend when the GC thread calls dvmUnlockHeap before dvmResumeAllThreads,
+ * but there's no risk of deadlock.)
+ */
 void dvmWaitForConcurrentGcToComplete(void)
 {
     Thread *self = dvmThreadSelf();
