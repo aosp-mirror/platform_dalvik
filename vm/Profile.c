@@ -212,28 +212,12 @@ void dvmProfilingShutdown(void)
 }
 
 /*
- * Update the "active profilers" count.
- *
- * "count" should be +1 or -1.
+ * Update the set of active profilers
  */
-static void updateActiveProfilers(int count)
+static void updateActiveProfilers(ExecutionSubModes newMode, bool enable)
 {
-    int oldValue, newValue;
-
-    do {
-        oldValue = gDvm.activeProfilers;
-        newValue = oldValue + count;
-        if (newValue < 0) {
-            LOGE("Can't have %d active profilers\n", newValue);
-            dvmAbort();
-        }
-    } while (android_atomic_release_cas(oldValue, newValue,
-            &gDvm.activeProfilers) != 0);
-
-    LOGD("+++ active profiler count now %d\n", newValue);
-#if defined(WITH_JIT)
-    dvmCompilerStateRefresh();
-#endif
+    dvmUpdateInterpBreak(newMode, enable);
+    LOGD("+++ active profiler set now %d\n", gDvm.interpBreak);
 }
 
 
@@ -348,7 +332,9 @@ void dvmMethodTraceStart(const char* traceFileName, int traceFd, int bufferSize,
         dvmMethodTraceStop();
         dvmLockMutex(&state->startStopLock);
     }
-    updateActiveProfilers(1);
+    /* Should only have a single trace going at once */
+    assert((gDvm.interpBreak & kSubModeMethodTrace) == 0);
+    updateActiveProfilers(kSubModeMethodTrace, true);
     LOGI("TRACE STARTED: '%s' %dKB\n", traceFileName, bufferSize / 1024);
 
     /*
@@ -416,7 +402,7 @@ void dvmMethodTraceStart(const char* traceFileName, int traceFd, int bufferSize,
     return;
 
 fail:
-    updateActiveProfilers(-1);
+    updateActiveProfilers(kSubModeMethodTrace, false);
     if (state->traceFile != NULL) {
         fclose(state->traceFile);
         state->traceFile = NULL;
@@ -508,7 +494,7 @@ void dvmMethodTraceStop(void)
         dvmUnlockMutex(&state->startStopLock);
         return;
     } else {
-        updateActiveProfilers(-1);
+        updateActiveProfilers(kSubModeMethodTrace, false);
     }
 
     /* compute elapsed time */
@@ -574,7 +560,7 @@ void dvmMethodTraceStop(void)
     LOGI("TRACE STOPPED%s: writing %d records\n",
         state->overflow ? " (NOTE: overflowed buffer)" : "",
         (finalCurOffset - TRACE_HEADER_LEN) / TRACE_REC_SIZE);
-    if (gDvm.debuggerActive) {
+    if (DEBUGGER_ACTIVE) {
         LOGW("WARNING: a debugger is active; method-tracing results "
              "will be skewed\n");
     }
@@ -736,7 +722,7 @@ void dvmMethodTraceAdd(Thread* self, const Method* method, int action)
 void dvmFastMethodTraceEnter(const Method* method,
                              const struct InterpState* interpState)
 {
-    if (gDvm.activeProfilers) {
+    if (gDvm.interpBreak & kSubModeMethodTrace) {
         dvmMethodTraceAdd(interpState->self, method, METHOD_TRACE_ENTER);
     }
 }
@@ -748,7 +734,7 @@ void dvmFastMethodTraceEnter(const Method* method,
  */
 void dvmFastJavaMethodTraceExit(const struct InterpState* interpState)
 {
-    if (gDvm.activeProfilers) {
+    if (gDvm.interpBreak & kSubModeMethodTrace) {
         dvmMethodTraceAdd(interpState->self, interpState->method,
                           METHOD_TRACE_EXIT);
     }
@@ -762,7 +748,7 @@ void dvmFastJavaMethodTraceExit(const struct InterpState* interpState)
 void dvmFastNativeMethodTraceExit(const Method* method,
                                   const struct InterpState* interpState)
 {
-    if (gDvm.activeProfilers) {
+    if (gDvm.interpBreak & kSubModeMethodTrace) {
         dvmMethodTraceAdd(interpState->self, method, METHOD_TRACE_EXIT);
     }
 }
@@ -869,12 +855,11 @@ void dvmEmulatorTraceStart(void)
     if (gDvm.emulatorTracePage == NULL)
         return;
 
-    updateActiveProfilers(1);
-
     /* in theory we should make this an atomic inc; in practice not important */
     gDvm.emulatorTraceEnableCount++;
     if (gDvm.emulatorTraceEnableCount == 1)
         LOGD("--- emulator method traces enabled\n");
+    updateActiveProfilers(kSubModeEmulatorTrace, true);
 }
 
 /*
@@ -886,11 +871,12 @@ void dvmEmulatorTraceStop(void)
         LOGE("ERROR: emulator tracing not enabled\n");
         return;
     }
-    updateActiveProfilers(-1);
     /* in theory we should make this an atomic inc; in practice not important */
     gDvm.emulatorTraceEnableCount--;
     if (gDvm.emulatorTraceEnableCount == 0)
         LOGD("--- emulator method traces disabled\n");
+    updateActiveProfilers(kSubModeEmulatorTrace,
+                          (gDvm.emulatorTraceEnableCount != 0));
 }
 
 
@@ -902,9 +888,9 @@ void dvmStartInstructionCounting(void)
 #if defined(WITH_INLINE_PROFILING)
     LOGW("Instruction counting not supported with inline profiling");
 #endif
-    updateActiveProfilers(1);
     /* in theory we should make this an atomic inc; in practice not important */
     gDvm.instructionCountEnableCount++;
+    updateActiveProfilers(kSubModeInstCounting, true);
 }
 
 /*
@@ -916,8 +902,9 @@ void dvmStopInstructionCounting(void)
         LOGE("ERROR: instruction counting not enabled\n");
         dvmAbort();
     }
-    updateActiveProfilers(-1);
     gDvm.instructionCountEnableCount--;
+    updateActiveProfilers(kSubModeInstCounting,
+                          (gDvm.instructionCountEnableCount != 0));
 }
 
 

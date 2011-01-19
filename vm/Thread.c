@@ -243,14 +243,18 @@ static void waitForThreadSuspend(Thread* self, Thread* thread);
 static int getThreadPriorityFromSystem(void);
 
 /*
- * The JIT needs to know if any thread is suspended.  We do this by
- * maintaining a global sum of all threads' suspend counts.  All suspendCount
- * updates should go through this after aquiring threadSuspendCountLock.
+ * If there is any thread suspend request outstanding,
+ * we need to mark it in interpState to signal the interpreter that
+ * something is pending.  We do this by maintaining a global sum of
+ * all threads' suspend counts.  All suspendCount updates should go
+ * through this after aquiring threadSuspendCountLock.
  */
-static inline void dvmAddToThreadSuspendCount(int *pSuspendCount, int delta)
+static void dvmAddToThreadSuspendCount(int *pSuspendCount, int delta)
 {
     *pSuspendCount += delta;
     gDvm.sumThreadSuspendCount += delta;
+    dvmUpdateInterpBreak(kSubModeSuspendRequest,
+                         (gDvm.sumThreadSuspendCount != 0));
 }
 
 /*
@@ -1797,12 +1801,10 @@ static void threadExitUncaughtException(Thread* self, Object* group)
     }
 
 bail:
-#if defined(WITH_JIT)
     /* Remove this thread's suspendCount from global suspendCount sum */
     lockThreadSuspendCount();
     dvmAddToThreadSuspendCount(&self->suspendCount, -self->suspendCount);
     unlockThreadSuspendCount();
-#endif
     dvmReleaseTrackedAlloc(exception, self);
 }
 

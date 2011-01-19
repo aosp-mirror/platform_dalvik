@@ -59,4 +59,9 @@ u1 dvmGetOriginalOpcode(const u2* addr);
  */
 void dvmFlushBreakpoints(ClassObject* clazz);
 
+/*
+ * Update interpBreak
+ */
+void dvmUpdateInterpBreak(int newMode, bool enable);
+
 #endif /*_DALVIK_INTERP_INTERP*/

@@ -1488,7 +1488,7 @@ static void checkDebugAndProf(const u2* pc, const u4* fp, Thread* self,
         static const char* mn = "shiftTest2";
         static const char* sg = "()V";
 
-        if (/*gDvm.debuggerActive &&*/
+        if (/*DEBUGGER_ACTIVE &&*/
             strcmp(method->clazz->descriptor, cd) == 0 &&
             strcmp(method->name, mn) == 0 &&
             strcmp(method->shorty, sg) == 0)
@@ -1499,7 +1499,7 @@ static void checkDebugAndProf(const u2* pc, const u4* fp, Thread* self,
             dumpRegs(method, fp, true);
         }
 
-        if (!gDvm.debuggerActive)
+        if (!DEBUGGER_ACTIVE)
             *pIsMethodEntry = false;
     }
 #endif
@@ -1516,7 +1516,7 @@ static void checkDebugAndProf(const u2* pc, const u4* fp, Thread* self,
         *pIsMethodEntry = false;
         TRACE_METHOD_ENTER(self, method);
     }
-    if (gDvm.debuggerActive) {
+    if (DEBUGGER_ACTIVE) {
         updateDebugger(method, pc, fp, isEntry, self);
     }
     if (gDvm.instructionCountEnableCount != 0) {
@@ -3425,7 +3425,7 @@ HANDLE_OPCODE(OP_INVOKE_DIRECT_EMPTY /*vB, {vD, vE, vF, vG, vA}, meth@CCCC*/)
     //LOGI("Ignoring empty\n");
     FINISH(3);
 #else
-    if (!gDvm.debuggerActive) {
+    if (!DEBUGGER_ACTIVE) {
         //LOGI("Skipping empty\n");
         FINISH(3);      // don't want it to show up in profiler output
     } else {
@@ -5417,7 +5417,7 @@ GOTO_TARGET(exceptionThrown)
          * here, and have the JNI exception code do the reporting to the
          * debugger.
          */
-        if (gDvm.debuggerActive) {
+        if (DEBUGGER_ACTIVE) {
             void* catchFrame;
             catchRelPc = dvmFindCatchBlock(self, pc - curMethod->insns,
                         exception, true, &catchFrame);
@@ -5699,7 +5699,7 @@ GOTO_TARGET(invokeMethod, bool methodCallRange, const Method* _methodToCall,
             DUMP_REGS(methodToCall, newFp, true);   // show input args
 
 #if (INTERP_TYPE == INTERP_DBG)
-            if (gDvm.debuggerActive) {
+            if (DEBUGGER_ACTIVE) {
                 dvmDbgPostLocationEvent(methodToCall, -1,
                     dvmGetThisPtr(curMethod, fp), DBG_METHOD_ENTRY);
             }
@@ -5726,7 +5726,7 @@ GOTO_TARGET(invokeMethod, bool methodCallRange, const Method* _methodToCall,
             (*methodToCall->nativeFunc)(newFp, &retval, methodToCall, self);
 
 #if (INTERP_TYPE == INTERP_DBG)
-            if (gDvm.debuggerActive) {
+            if (DEBUGGER_ACTIVE) {
                 dvmDbgPostLocationEvent(methodToCall, -1,
                     dvmGetThisPtr(curMethod, fp), DBG_METHOD_EXIT);
             }

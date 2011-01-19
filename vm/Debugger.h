@@ -32,6 +32,8 @@ struct ClassObject;
 struct Method;
 struct Thread;
 
+#define DEBUGGER_ACTIVE (gDvm.interpBreak & kSubModeDebuggerActive)
+
 /*
  * Used by StepControl to track a set of addresses associated with
  * a single line.

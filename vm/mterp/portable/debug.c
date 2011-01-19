@@ -194,7 +194,7 @@ static void checkDebugAndProf(const u2* pc, const u4* fp, Thread* self,
         static const char* mn = "shiftTest2";
         static const char* sg = "()V";
 
-        if (/*gDvm.debuggerActive &&*/
+        if (/*DEBUGGER_ACTIVE &&*/
             strcmp(method->clazz->descriptor, cd) == 0 &&
             strcmp(method->name, mn) == 0 &&
             strcmp(method->shorty, sg) == 0)
@@ -205,7 +205,7 @@ static void checkDebugAndProf(const u2* pc, const u4* fp, Thread* self,
             dumpRegs(method, fp, true);
         }
 
-        if (!gDvm.debuggerActive)
+        if (!DEBUGGER_ACTIVE)
             *pIsMethodEntry = false;
     }
 #endif
@@ -222,7 +222,7 @@ static void checkDebugAndProf(const u2* pc, const u4* fp, Thread* self,
         *pIsMethodEntry = false;
         TRACE_METHOD_ENTER(self, method);
     }
-    if (gDvm.debuggerActive) {
+    if (DEBUGGER_ACTIVE) {
         updateDebugger(method, pc, fp, isEntry, self);
     }
     if (gDvm.instructionCountEnableCount != 0) {

@@ -96,12 +96,7 @@ bool dvmMterpStd(Thread* self, InterpState* glue)
         TRACE_METHOD_ENTER(self, glue->method);
     }
 #endif
-    if (gDvm.jdwpConfigured) {
-        glue->pDebuggerActive = &gDvm.debuggerActive;
-    } else {
-        glue->pDebuggerActive = NULL;
-    }
-    glue->pActiveProfilers = &gDvm.activeProfilers;
+    glue->pInterpBreak = &gDvm.interpBreak;
 
     IF_LOGVV() {
         char* desc = dexProtoCopyMethodDescriptor(&glue->method->prototype);

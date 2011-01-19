@@ -123,10 +123,8 @@ typedef struct InterpState {
     volatile int*   pSelfSuspendCount;
     /* Biased base of GC's card table */
     u1*             cardTable;
-    /* points at gDvm.debuggerActive, or NULL if debugger not enabled */
-    volatile u1*    pDebuggerActive;
-    /* points at gDvm.activeProfilers */
-    volatile int*   pActiveProfilers;
+    /* points at gDvm.interpBreak */
+    volatile int* pInterpBreak;
     /* ----------------------------------------------------------------------
      */
 
@@ -229,11 +227,16 @@ Method* dvmInterpFindInterfaceMethod(ClassObject* thisClass, u4 methodIdx,
  */
 static inline bool dvmDebuggerOrProfilerActive(void)
 {
-    bool result = gDvm.debuggerActive;
-#if !defined(WITH_INLINE_PROFILING)
-    result = result || (gDvm.activeProfilers != 0);
+#if defined(WITH_INLINE_PROFILING)
+    return gDvm.interpBreak & (kSubModeDebuggerActive |
+                               kSubModeEmulatorTrace |
+                               kSubModeInstCounting);
+#else
+    return gDvm.interpBreak & (kSubModeDebuggerActive |
+                               kSubModeEmulatorTrace |
+                               kSubModeMethodTrace |
+                               kSubModeInstCounting);
 #endif
-    return result;
 }
 
 #if defined(WITH_JIT)
@@ -243,11 +246,7 @@ static inline bool dvmDebuggerOrProfilerActive(void)
  */
 static inline bool dvmJitDebuggerOrProfilerActive()
 {
-    bool result = (gDvmJit.pProfTable != NULL) || gDvm.debuggerActive;
-#if !defined(WITH_INLINE_PROFILING)
-    result = result || (gDvm.activeProfilers != 0);
-#endif
-    return result;
+    return (gDvmJit.pProfTable != NULL) || dvmDebuggerOrProfilerActive();
 }
 
 /*
