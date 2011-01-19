@@ -138,38 +138,37 @@ static void Dalvik_java_lang_Runtime_availableProcessors(const u4* args,
     RETURN_INT((int)result);
 }
 /*
- * public void maxMemory()
+ * public long maxMemory()
  *
  * Returns GC heap max memory in bytes.
  */
 static void Dalvik_java_lang_Runtime_maxMemory(const u4* args, JValue* pResult)
 {
-    unsigned int result = gDvm.heapSizeMax;
-    RETURN_LONG(result);
+    RETURN_LONG(dvmGetHeapDebugInfo(kVirtualHeapMaximumSize));
 }
 
 /*
- * public void totalMemory()
+ * public long totalMemory()
  *
  * Returns GC heap total memory in bytes.
  */
 static void Dalvik_java_lang_Runtime_totalMemory(const u4* args,
     JValue* pResult)
 {
-    int result = dvmGetHeapDebugInfo(kVirtualHeapSize);
-    RETURN_LONG(result);
+    RETURN_LONG(dvmGetHeapDebugInfo(kVirtualHeapSize));
 }
 
 /*
- * public void freeMemory()
+ * public long freeMemory()
  *
  * Returns GC heap free memory in bytes.
  */
 static void Dalvik_java_lang_Runtime_freeMemory(const u4* args,
     JValue* pResult)
 {
-    int result = dvmGetHeapDebugInfo(kVirtualHeapSize)
-                 - dvmGetHeapDebugInfo(kVirtualHeapAllocated);
+    size_t size = dvmGetHeapDebugInfo(kVirtualHeapSize);
+    size_t allocated = dvmGetHeapDebugInfo(kVirtualHeapAllocated);
+    long long result = size - allocated;
     if (result < 0) {
         result = 0;
     }

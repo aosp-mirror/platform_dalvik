@@ -32,7 +32,9 @@
  * Initializes the heap source; must be called before any other
  * dvmHeapSource*() functions.
  */
-GcHeap *dvmHeapSourceStartup(size_t startSize, size_t absoluteMaxSize);
+GcHeap *dvmHeapSourceStartup(size_t startingSize,
+                             size_t maximumSize,
+                             size_t growthLimit);
 
 /*
  * If the HeapSource was created while in zygote mode, this
@@ -196,5 +198,11 @@ void dvmMarkImmuneObjects(const char *immuneLimit);
  * below this pointer are immune.
  */
 void *dvmHeapSourceGetImmuneLimit(GcMode mode);
+
+/*
+ * Returns the maximum size of the heap.  This value will be either
+ * the value of -Xmx or a user supplied growth limit.
+ */
+size_t dvmHeapSourceGetMaximumSize(void);
 
 #endif  // _DALVIK_HEAP_SOURCE

@@ -32,7 +32,7 @@
  * Initializes the card table; must be called before any other
  * dvmCardTable*() functions.
  */
-bool dvmCardTableStartup(void);
+bool dvmCardTableStartup(size_t heapMaximumSize);
 
 /*
  * Tears down the entire CardTable structure.
