@@ -21,6 +21,7 @@ typedef enum HeapDebugInfoType {
     kNativeHeapSize = 1,
     kVirtualHeapAllocated = 2,
     kNativeHeapAllocated = 3,
+    kVirtualHeapMaximumSize = 4
 } HeapDebugInfoType;
 
 /* Return the specified value.
