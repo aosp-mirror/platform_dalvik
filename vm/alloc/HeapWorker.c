@@ -384,7 +384,6 @@ static void* heapWorkerThreadStart(void* arg)
 
                 memset(madvisedSizes, 0, sizeof(madvisedSizes));
                 dvmHeapSourceTrim(madvisedSizes, HEAP_SOURCE_MAX_HEAP_COUNT);
-                dvmLogMadviseStats(madvisedSizes, HEAP_SOURCE_MAX_HEAP_COUNT);
 
                 dvmUnlockHeap();
 
