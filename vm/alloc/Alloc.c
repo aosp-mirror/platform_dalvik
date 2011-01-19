@@ -297,6 +297,9 @@ void dvmReleaseTrackedAlloc(Object* obj, Thread* self)
  */
 void dvmCollectGarbage(bool collectSoftReferences)
 {
+    if (gDvm.disableExplicitGc) {
+        return;
+    }
     dvmLockHeap();
     dvmWaitForConcurrentGcToComplete();
     dvmCollectGarbageInternal(collectSoftReferences, GC_EXPLICIT);
