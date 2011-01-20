@@ -766,6 +766,7 @@ struct DvmJitGlobals {
     /* JIT Compiler Control */
     bool               haltCompilerThread;
     bool               blockingMode;
+    bool               methodTraceSupport;
     pthread_t          compilerHandle;
     pthread_mutex_t    compilerLock;
     pthread_mutex_t    compilerICPatchLock;
@@ -783,6 +784,9 @@ struct DvmJitGlobals {
 
     /* Compiled code cache */
     void* codeCache;
+
+    /* Translation cache version (protected by compilerLock */
+    int cacheVersion;
 
     /* Bytes used by the code templates */
     unsigned int templateSize;

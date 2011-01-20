@@ -227,16 +227,9 @@ Method* dvmInterpFindInterfaceMethod(ClassObject* thisClass, u4 methodIdx,
  */
 static inline bool dvmDebuggerOrProfilerActive(void)
 {
-#if defined(WITH_INLINE_PROFILING)
     return gDvm.interpBreak & (kSubModeDebuggerActive |
                                kSubModeEmulatorTrace |
                                kSubModeInstCounting);
-#else
-    return gDvm.interpBreak & (kSubModeDebuggerActive |
-                               kSubModeEmulatorTrace |
-                               kSubModeMethodTrace |
-                               kSubModeInstCounting);
-#endif
 }
 
 #if defined(WITH_JIT)

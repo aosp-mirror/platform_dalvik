@@ -1,3 +1,4 @@
+%default { "chaintgt" : ".LinvokeChain" }
     /*
      * For polymorphic callsite, check whether the cached class pointer matches
      * the current one. If so setup the Dalvik frame and return to the
@@ -42,7 +43,7 @@
 #endif
     ldreqh  r7, [r0, #offMethod_registersSize]  @ r7<- methodToCall->regsSize
     ldreqh  r2, [r0, #offMethod_outsSize]  @ r2<- methodToCall->outsSize
-    beq     .LinvokeChain   @ predicted chain is valid
+    beq     $chaintgt   @ predicted chain is valid
     ldr     r7, [r3, #offClassObject_vtable] @ r7 <- this->class->vtable
     cmp     r8, #0          @ initialized class or not
     moveq   r1, #0

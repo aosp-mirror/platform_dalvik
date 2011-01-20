@@ -18,6 +18,7 @@
  * Android's method call profiling goodies.
  */
 #include "Dalvik.h"
+#include <interp/InterpDefs.h>
 
 #include <stdlib.h>
 #include <stddef.h>
@@ -712,8 +713,6 @@ void dvmMethodTraceAdd(Thread* self, const Method* method, int action)
     *ptr++ = (u1) (clockDiff >> 24);
 }
 
-#if defined(WITH_INLINE_PROFILING)
-#include <interp/InterpDefs.h>
 
 /*
  * Register the METHOD_TRACE_ENTER action for the fast interpreter and
@@ -752,7 +751,6 @@ void dvmFastNativeMethodTraceExit(const Method* method,
         dvmMethodTraceAdd(interpState->self, method, METHOD_TRACE_EXIT);
     }
 }
-#endif
 
 /*
  * We just did something with a method.  Emit a record by setting a value
@@ -885,9 +883,6 @@ void dvmEmulatorTraceStop(void)
  */
 void dvmStartInstructionCounting(void)
 {
-#if defined(WITH_INLINE_PROFILING)
-    LOGW("Instruction counting not supported with inline profiling");
-#endif
     /* in theory we should make this an atomic inc; in practice not important */
     gDvm.instructionCountEnableCount++;
     updateActiveProfilers(kSubModeInstCounting, true);

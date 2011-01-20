@@ -85,18 +85,13 @@ bool dvmMterpStd(Thread* self, InterpState* glue)
     glue->jitCacheEnd = (char*)gDvmJit.codeCache + gDvmJit.codeCacheSize;
     glue->pProfileCountdown = &gDvmJit.profileCountdown;
 #endif
-#if defined(WITH_INLINE_PROFILING)
-    /*
-     * If WITH_INLINE_PROFILING is defined, we won't switch to the debug
-     * interpreter when a new method is entered. So we need to register the
-     * METHOD_ENTER action here.
-     */
+    glue->pInterpBreak = &gDvm.interpBreak;
+
+    /* Handle method entry bookkeeping */
     if (glue->debugIsMethodEntry) {
         glue->debugIsMethodEntry = false;
         TRACE_METHOD_ENTER(self, glue->method);
     }
-#endif
-    glue->pInterpBreak = &gDvm.interpBreak;
 
     IF_LOGVV() {
         char* desc = dexProtoCopyMethodDescriptor(&glue->method->prototype);

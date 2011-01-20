@@ -1,3 +1,4 @@
+%default { "chaintgt" : ".LinvokeChain" }
     /*
      * For monomorphic callsite, setup the Dalvik frame and return to the
      * Thumb code through the link register to transfer control to the callee
@@ -6,7 +7,7 @@
     @ r0 = methodToCall, r1 = returnCell, r2 = methodToCall->outsSize
     @ rPC = dalvikCallsite, r7 = methodToCall->registersSize
     @ methodToCall is guaranteed to be non-native
-.LinvokeChain:
+$chaintgt:
     ldr     r9, [rGLUE, #offGlue_interpStackEnd]    @ r9<- interpStackEnd
     ldr     r8, [rGLUE, #offGlue_pSelfSuspendCount] @ r8<- &suspendCount
     add     r3, r1, #1  @ Thumb addr is odd
@@ -38,7 +39,7 @@
     str     r3, [rGLUE, #offGlue_methodClassDex] @ glue->methodClassDex = ...
     mov     rFP, r1                         @ fp = newFp
     str     rFP, [r2, #offThread_curFrame]  @ self->curFrame = newFp
-#if defined(WITH_INLINE_PROFILING)
+#if defined(TEMPLATE_INLINE_PROFILING)
     stmfd   sp!, {r0-r2,lr}             @ preserve clobbered live registers
     mov     r1, r6
     @ r0=methodToCall, r1=rGlue
