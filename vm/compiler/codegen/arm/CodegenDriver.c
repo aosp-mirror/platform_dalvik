@@ -3254,7 +3254,7 @@ static bool handleFmt35ms_3rms(CompilationUnit *cUnit, MIR *mir,
 static bool genInlinedCompareTo(CompilationUnit *cUnit, MIR *mir)
 {
 #if defined(USE_GLOBAL_STRING_DEFS)
-    return false;
+    return handleExecuteInlineC(cUnit, mir);
 #else
     ArmLIR *rollback;
     RegLocation rlThis = dvmCompilerGetSrc(cUnit, mir, 0);
@@ -3273,14 +3273,14 @@ static bool genInlinedCompareTo(CompilationUnit *cUnit, MIR *mir)
     genDispatchToHandler(cUnit, TEMPLATE_STRING_COMPARETO);
     storeValue(cUnit, inlinedTarget(cUnit, mir, false),
                dvmCompilerGetReturn(cUnit));
-    return true;
+    return false;
 #endif
 }
 
 static bool genInlinedFastIndexOf(CompilationUnit *cUnit, MIR *mir)
 {
 #if defined(USE_GLOBAL_STRING_DEFS)
-    return false;
+    return handleExecuteInlineC(cUnit, mir);
 #else
     RegLocation rlThis = dvmCompilerGetSrc(cUnit, mir, 0);
     RegLocation rlChar = dvmCompilerGetSrc(cUnit, mir, 1);
@@ -3294,7 +3294,7 @@ static bool genInlinedFastIndexOf(CompilationUnit *cUnit, MIR *mir)
     genDispatchToHandler(cUnit, TEMPLATE_STRING_INDEXOF);
     storeValue(cUnit, inlinedTarget(cUnit, mir, false),
                dvmCompilerGetReturn(cUnit));
-    return true;
+    return false;
 #endif
 }
 
@@ -3417,103 +3417,102 @@ static bool genInlinedLongDoubleConversion(CompilationUnit *cUnit, MIR *mir)
 }
 
 /*
+ * JITs a call to a C function.
+ * TODO: use this for faster native method invocation for simple native
+ * methods (http://b/3069458).
+ */
+static bool handleExecuteInlineC(CompilationUnit *cUnit, MIR *mir)
+{
+    DecodedInstruction *dInsn = &mir->dalvikInsn;
+    int operation = dInsn->vB;
+    unsigned int i;
+    const InlineOperation* inLineTable = dvmGetInlineOpsTable();
+    uintptr_t fn = (int) inLineTable[operation].func;
+    if (fn == 0) {
+        dvmCompilerAbort(cUnit);
+    }
+    dvmCompilerFlushAllRegs(cUnit);   /* Everything to home location */
+    dvmCompilerClobberCallRegs(cUnit);
+    dvmCompilerClobber(cUnit, r4PC);
+    dvmCompilerClobber(cUnit, r7);
+    int offset = offsetof(InterpState, retval);
+    opRegRegImm(cUnit, kOpAdd, r4PC, rGLUE, offset);
+    opImm(cUnit, kOpPush, (1<<r4PC) | (1<<r7));
+    LOAD_FUNC_ADDR(cUnit, r4PC, fn);
+    genExportPC(cUnit, mir);
+    for (i=0; i < dInsn->vA; i++) {
+        loadValueDirect(cUnit, dvmCompilerGetSrc(cUnit, mir, i), i);
+    }
+    opReg(cUnit, kOpBlx, r4PC);
+    opRegImm(cUnit, kOpAdd, r13, 8);
+    /* NULL? */
+    ArmLIR *branchOver = genCmpImmBranch(cUnit, kArmCondNe, r0, 0);
+    loadConstant(cUnit, r0, (int) (cUnit->method->insns + mir->offset));
+    genDispatchToHandler(cUnit, TEMPLATE_THROW_EXCEPTION_COMMON);
+    ArmLIR *target = newLIR0(cUnit, kArmPseudoTargetLabel);
+    target->defMask = ENCODE_ALL;
+    branchOver->generic.target = (LIR *) target;
+    return false;
+}
+
+/*
  * NOTE: Handles both range and non-range versions (arguments
  * have already been normalized by this point).
  */
 static bool handleExecuteInline(CompilationUnit *cUnit, MIR *mir)
 {
     DecodedInstruction *dInsn = &mir->dalvikInsn;
-    switch( mir->dalvikInsn.opcode) {
-        case OP_EXECUTE_INLINE_RANGE:
-        case OP_EXECUTE_INLINE: {
-            unsigned int i;
-            const InlineOperation* inLineTable = dvmGetInlineOpsTable();
-            int offset = offsetof(InterpState, retval);
-            int operation = dInsn->vB;
-            switch (operation) {
-                case INLINE_EMPTYINLINEMETHOD:
-                    return false;  /* Nop */
-                case INLINE_STRING_LENGTH:
-                    return genInlinedStringLength(cUnit, mir);
-                case INLINE_STRING_IS_EMPTY:
-                    return genInlinedStringIsEmpty(cUnit, mir);
-                case INLINE_MATH_ABS_INT:
-                    return genInlinedAbsInt(cUnit, mir);
-                case INLINE_MATH_ABS_LONG:
-                    return genInlinedAbsLong(cUnit, mir);
-                case INLINE_MATH_MIN_INT:
-                    return genInlinedMinMaxInt(cUnit, mir, true);
-                case INLINE_MATH_MAX_INT:
-                    return genInlinedMinMaxInt(cUnit, mir, false);
-                case INLINE_STRING_CHARAT:
-                    return genInlinedStringCharAt(cUnit, mir);
-                case INLINE_MATH_SQRT:
-                    if (genInlineSqrt(cUnit, mir))
-                        return false;
-                    else
-                        break;   /* Handle with C routine */
-                case INLINE_MATH_ABS_FLOAT:
-                    if (genInlinedAbsFloat(cUnit, mir))
-                        return false;
-                    else
-                        break;
-                case INLINE_MATH_ABS_DOUBLE:
-                    if (genInlinedAbsDouble(cUnit, mir))
-                        return false;
-                    else
-                        break;
-                case INLINE_STRING_COMPARETO:
-                    if (genInlinedCompareTo(cUnit, mir))
-                        return false;
-                    else
-                        break;
-                case INLINE_STRING_FASTINDEXOF_II:
-                    if (genInlinedFastIndexOf(cUnit, mir))
-                        return false;
-                    else
-                        break;
-                case INLINE_FLOAT_TO_RAW_INT_BITS:
-                case INLINE_INT_BITS_TO_FLOAT:
-                    return genInlinedIntFloatConversion(cUnit, mir);
-                case INLINE_DOUBLE_TO_RAW_LONG_BITS:
-                case INLINE_LONG_BITS_TO_DOUBLE:
-                    return genInlinedLongDoubleConversion(cUnit, mir);
-                case INLINE_STRING_EQUALS:
-                case INLINE_MATH_COS:
-                case INLINE_MATH_SIN:
-                case INLINE_FLOAT_TO_INT_BITS:
-                case INLINE_DOUBLE_TO_LONG_BITS:
-                    break;   /* Handle with C routine */
-                default:
-                    dvmCompilerAbort(cUnit);
-            }
-            dvmCompilerFlushAllRegs(cUnit);   /* Everything to home location */
-            dvmCompilerClobberCallRegs(cUnit);
-            dvmCompilerClobber(cUnit, r4PC);
-            dvmCompilerClobber(cUnit, r7);
-            opRegRegImm(cUnit, kOpAdd, r4PC, rGLUE, offset);
-            opImm(cUnit, kOpPush, (1<<r4PC) | (1<<r7));
-            LOAD_FUNC_ADDR(cUnit, r4PC, (int)inLineTable[operation].func);
-            genExportPC(cUnit, mir);
-            for (i=0; i < dInsn->vA; i++) {
-                loadValueDirect(cUnit, dvmCompilerGetSrc(cUnit, mir, i), i);
-            }
-            opReg(cUnit, kOpBlx, r4PC);
-            opRegImm(cUnit, kOpAdd, r13, 8);
-            /* NULL? */
-            ArmLIR *branchOver = genCmpImmBranch(cUnit, kArmCondNe, r0, 0);
-            loadConstant(cUnit, r0,
-                         (int) (cUnit->method->insns + mir->offset));
-            genDispatchToHandler(cUnit, TEMPLATE_THROW_EXCEPTION_COMMON);
-            ArmLIR *target = newLIR0(cUnit, kArmPseudoTargetLabel);
-            target->defMask = ENCODE_ALL;
-            branchOver->generic.target = (LIR *) target;
-            break;
-        }
-        default:
-            return true;
+    assert(dInsn->opcode == OP_EXECUTE_INLINE_RANGE ||
+           dInsn->opcode == OP_EXECUTE_INLINE);
+    switch (dInsn->vB) {
+        case INLINE_EMPTYINLINEMETHOD:
+            return false;  /* Nop */
+
+        /* These ones we potentially JIT inline. */
+        case INLINE_STRING_LENGTH:
+            return genInlinedStringLength(cUnit, mir);
+        case INLINE_STRING_IS_EMPTY:
+            return genInlinedStringIsEmpty(cUnit, mir);
+        case INLINE_MATH_ABS_INT:
+            return genInlinedAbsInt(cUnit, mir);
+        case INLINE_MATH_ABS_LONG:
+            return genInlinedAbsLong(cUnit, mir);
+        case INLINE_MATH_MIN_INT:
+            return genInlinedMinMaxInt(cUnit, mir, true);
+        case INLINE_MATH_MAX_INT:
+            return genInlinedMinMaxInt(cUnit, mir, false);
+        case INLINE_STRING_CHARAT:
+            return genInlinedStringCharAt(cUnit, mir);
+        case INLINE_MATH_SQRT:
+            return genInlineSqrt(cUnit, mir);
+        case INLINE_MATH_ABS_FLOAT:
+            return genInlinedAbsFloat(cUnit, mir);
+        case INLINE_MATH_ABS_DOUBLE:
+            return genInlinedAbsDouble(cUnit, mir);
+        case INLINE_STRING_COMPARETO:
+            return genInlinedCompareTo(cUnit, mir);
+        case INLINE_STRING_FASTINDEXOF_II:
+            return genInlinedFastIndexOf(cUnit, mir);
+        case INLINE_FLOAT_TO_RAW_INT_BITS:
+        case INLINE_INT_BITS_TO_FLOAT:
+            return genInlinedIntFloatConversion(cUnit, mir);
+        case INLINE_DOUBLE_TO_RAW_LONG_BITS:
+        case INLINE_LONG_BITS_TO_DOUBLE:
+            return genInlinedLongDoubleConversion(cUnit, mir);
+
+        /*
+         * These ones we just JIT a call to a C function for.
+         * TODO: special-case these in the other "invoke" call paths.
+         */
+        case INLINE_STRING_EQUALS:
+        case INLINE_MATH_COS:
+        case INLINE_MATH_SIN:
+        case INLINE_FLOAT_TO_INT_BITS:
+        case INLINE_DOUBLE_TO_LONG_BITS:
+            return handleExecuteInlineC(cUnit, mir);
     }
-    return false;
+    dvmCompilerAbort(cUnit);
+    return false; // Not reachable; keeps compiler happy.
 }
 
 static bool handleFmt51l(CompilationUnit *cUnit, MIR *mir)

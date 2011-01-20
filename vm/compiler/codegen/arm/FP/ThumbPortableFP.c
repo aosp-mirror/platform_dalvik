@@ -46,7 +46,7 @@ static bool genArithOpDouble(CompilationUnit *cUnit, MIR *mir,
 
 static bool genInlineSqrt(CompilationUnit *cUnit, MIR *mir)
 {
-    return false;   /* punt to C handler */
+    return handleExecuteInlineC(cUnit, mir);
 }
 
 static bool genCmpFP(CompilationUnit *cUnit, MIR *mir, RegLocation rlDest,

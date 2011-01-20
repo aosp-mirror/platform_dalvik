@@ -58,7 +58,7 @@ static bool genInlineSqrt(CompilationUnit *cUnit, MIR *mir)
  * to the handlers rather than load the operands into core registers
  * and then move the values to FP regs in the handlers.  Other implementations
  * may prefer passing data in registers (and the latter approach would
- * yeild cleaner register handling - avoiding the requirement that operands
+ * yield cleaner register handling - avoiding the requirement that operands
  * be flushed to memory prior to the call).
  */
 static bool genArithOpFloat(CompilationUnit *cUnit, MIR *mir,

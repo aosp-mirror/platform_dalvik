@@ -411,7 +411,7 @@ static bool genInlinedAbsFloat(CompilationUnit *cUnit, MIR *mir)
     RegLocation rlResult = dvmCompilerEvalLoc(cUnit, rlDest, kFPReg, true);
     newLIR2(cUnit, kThumb2Vabss, rlResult.lowReg, rlSrc.lowReg);
     storeValue(cUnit, rlDest, rlResult);
-    return true;
+    return false;
 }
 
 static bool genInlinedAbsDouble(CompilationUnit *cUnit, MIR *mir)
@@ -423,7 +423,7 @@ static bool genInlinedAbsDouble(CompilationUnit *cUnit, MIR *mir)
     newLIR2(cUnit, kThumb2Vabsd, S2D(rlResult.lowReg, rlResult.highReg),
             S2D(rlSrc.lowReg, rlSrc.highReg));
     storeValueWide(cUnit, rlDest, rlResult);
-    return true;
+    return false;
 }
 
 static bool genInlinedMinMaxInt(CompilationUnit *cUnit, MIR *mir, bool isMin)
