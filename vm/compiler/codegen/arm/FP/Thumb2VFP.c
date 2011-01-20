@@ -203,7 +203,7 @@ static bool genInlineSqrt(CompilationUnit *cUnit, MIR *mir)
     label->defMask = ENCODE_ALL;
     branch->generic.target = (LIR *)label;
     storeValueWide(cUnit, rlDest, rlResult);
-    return true;
+    return false;
 }
 
 static bool genCmpFP(CompilationUnit *cUnit, MIR *mir, RegLocation rlDest,

@@ -224,7 +224,7 @@ static bool genInlinedAbsFloat(CompilationUnit *cUnit, MIR *mir)
     storeWordDisp(cUnit, rGLUE, offset, reg0);
     //TUNING: rewrite this to not clobber
     dvmCompilerClobber(cUnit, reg0);
-    return true;
+    return false;
 }
 
 static bool genInlinedAbsDouble(CompilationUnit *cUnit, MIR *mir)
@@ -242,7 +242,7 @@ static bool genInlinedAbsDouble(CompilationUnit *cUnit, MIR *mir)
     storeWordDisp(cUnit, rGLUE, offset + 4, reghi);
     //TUNING: rewrite this to not clobber
     dvmCompilerClobber(cUnit, reghi);
-    return true;
+    return false;
 }
 
 /* No select in thumb, so we need to branch.  Thumb2 will do better */
