@@ -814,7 +814,6 @@ void dvmCollectGarbageInternal(bool clearSoftRefs, GcReason reason)
              currAllocated / 1024, currFootprint / 1024,
              rootTime, dirtyTime);
     }
-    dvmLogGcStats(numObjectsFreed, numBytesFreed, totalTime);
     if (gcHeap->ddmHpifWhen != 0) {
         LOGD_HEAP("Sending VM heap info to DDM\n");
         dvmDdmSendHeapInfo(gcHeap->ddmHpifWhen, false);
