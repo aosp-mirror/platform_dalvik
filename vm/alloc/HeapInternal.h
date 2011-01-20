@@ -116,8 +116,6 @@ struct GcHeap {
 
 bool dvmLockHeap(void);
 void dvmUnlockHeap(void);
-void dvmLogGcStats(size_t numFreed, size_t sizeFreed, size_t gcTimeMs);
-void dvmLogMadviseStats(size_t madvisedSizes[], size_t arrayLen);
 
 /*
  * Logging helpers
