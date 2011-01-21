@@ -17,6 +17,7 @@
 package com.android.dx.command.dexer;
 
 import com.android.dx.Version;
+import com.android.dx.cf.code.SimException;
 import com.android.dx.cf.direct.ClassPathOpener;
 import com.android.dx.cf.iface.ParseException;
 import com.android.dx.command.DxConsole;
@@ -348,9 +349,14 @@ public class Main {
             public void onException(Exception ex) {
                 if (ex instanceof StopProcessing) {
                     throw (StopProcessing) ex;
+                } else if (ex instanceof SimException) {
+                    DxConsole.err.println("\nEXCEPTION FROM SIMULATION:");
+                    DxConsole.err.println(ex.getMessage() + "\n");
+                    DxConsole.err.println(((SimException) ex).getContext());
+                } else {
+                    DxConsole.err.println("\nUNEXPECTED TOP-LEVEL EXCEPTION:");
+                    ex.printStackTrace(DxConsole.err);
                 }
-                DxConsole.err.println("\nUNEXPECTED TOP-LEVEL EXCEPTION:");
-                ex.printStackTrace(DxConsole.err);
                 errors++;
             }
             public void onProcessArchiveStart(File file) {
