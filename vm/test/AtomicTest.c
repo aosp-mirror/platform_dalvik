@@ -61,7 +61,6 @@ static int andTest = 0;
 static int orTest = 0;
 static int casTest = 0;
 static int failingCasTest = 0;
-static int swapTest = 0;
 static int64_t wideCasTest = 0x6600000077000000LL;
 
 /*
@@ -342,19 +341,14 @@ bool dvmTestAtomicSpeed(void)
      */
     andTest = 0xffd7fa96;
     orTest = 0x122221ff;
-    swapTest = 0x11111111;
     android_atomic_and(0xfffdaf96, &andTest);
     android_atomic_or(0xdeaaeb00, &orTest);
-    int oldSwap = android_atomic_swap(0x22222222, &swapTest);
-    int oldSwap2 = android_atomic_swap(0x33333333, &swapTest);
     if (android_atomic_release_cas(failingCasTest+1, failingCasTest-1,
             &failingCasTest) == 0)
         dvmFprintf(stdout, "failing test did not fail!\n");
 
     dvmFprintf(stdout, "andTest = 0x%x\n", andTest);
     dvmFprintf(stdout, "orTest = 0x%x\n", orTest);
-    dvmFprintf(stdout, "swapTest = 0x%x -> 0x%x\n", oldSwap, oldSwap2);
-    dvmFprintf(stdout, "swapTest = 0x%x -> 0x%x\n", oldSwap2, swapTest);
     dvmFprintf(stdout, "failingCasTest = %d\n", failingCasTest);
 
 #ifdef TEST_BIONIC
