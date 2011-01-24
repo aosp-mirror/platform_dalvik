@@ -216,7 +216,7 @@ Object *dvmGetNextHeapWorkerObject(HeapWorkerOperation *op)
 /* Do a full garbage collection, which may grow the
  * heap as a side-effect if the live set is large.
  */
-static void gcForMalloc(bool collectSoftReferences)
+static void gcForMalloc(bool clearSoftReferences)
 {
     if (gDvm.allocProf.enabled) {
         Thread* self = dvmThreadSelf();
@@ -227,9 +227,9 @@ static void gcForMalloc(bool collectSoftReferences)
     }
     /* This may adjust the soft limit as a side-effect.
      */
-    LOGD_HEAP("dvmMalloc initiating GC%s\n",
-            collectSoftReferences ? "(collect SoftReferences)" : "");
-    dvmCollectGarbageInternal(collectSoftReferences, GC_FOR_MALLOC);
+    LOGD_HEAP("dvmMalloc initiating GC%s",
+            clearSoftReferences ? "(clear SoftReferences)" : "");
+    dvmCollectGarbageInternal(clearSoftReferences, GC_FOR_MALLOC);
 }
 
 /* Try as hard as possible to allocate some memory.

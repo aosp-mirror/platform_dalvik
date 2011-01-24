@@ -155,9 +155,12 @@ void dvmSetTargetHeapUtilization(float newTarget);
 /*
  * Initiate garbage collection.
  *
- * This usually happens automatically, but can also be caused by Runtime.gc().
+ * This usually happens automatically, but can also be caused by
+ * Runtime.gc().  If clearSoftReferences is true, the garbage
+ * collector will not attempt to preserve any softly-reachable
+ * SoftReference referents.
  */
-void dvmCollectGarbage(bool collectSoftRefs);
+void dvmCollectGarbage(bool clearSoftReferences);
 
 /*
  * Returns a count of the direct instances of a class.
