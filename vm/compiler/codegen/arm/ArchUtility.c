@@ -25,18 +25,24 @@ static char *shiftNames[4] = {
     "ror"};
 
 /* Decode and print a ARM register name */
-static char * decodeRegList(int vector, char *buf)
+static char * decodeRegList(ArmOpcode opcode, int vector, char *buf)
 {
     int i;
     bool printed = false;
     buf[0] = 0;
-    for (i = 0; i < 8; i++, vector >>= 1) {
+    for (i = 0; i < 16; i++, vector >>= 1) {
         if (vector & 0x1) {
+            int regId = i;
+            if (opcode == kThumbPush && i == 8) {
+                regId = rlr;
+            } else if (opcode == kThumbPop && i == 8) {
+                regId = rpc;
+            }
             if (printed) {
-                sprintf(buf + strlen(buf), ", r%d", i);
+                sprintf(buf + strlen(buf), ", r%d", regId);
             } else {
                 printed = true;
-                sprintf(buf, "r%d", i);
+                sprintf(buf, "r%d", regId);
             }
         }
     }
@@ -209,7 +215,7 @@ static void buildInsnString(char *fmt, ArmLIR *lir, char* buf,
                        strcpy(tbuf, "see above");
                        break;
                    case 'R':
-                       decodeRegList(operand, tbuf);
+                       decodeRegList(lir->opcode, operand, tbuf);
                        break;
                    default:
                        strcpy(tbuf,"DecodeError");

@@ -641,7 +641,7 @@ ArmEncodingMap EncodingMap[kArmLast] = {
                  kFmtUnused, -1, -1,
                  IS_UNARY_OP | REG_DEF_SP | REG_USE_SP | REG_DEF_LIST0
                  | IS_LOAD, "pop", "<!0R>", 2),
-    ENCODING_MAP(kThumb2Push,          0xe8ad0000,
+    ENCODING_MAP(kThumb2Push,          0xe92d0000,
                  kFmtBitBlt, 15, 0, kFmtUnused, -1, -1, kFmtUnused, -1, -1,
                  kFmtUnused, -1, -1,
                  IS_UNARY_OP | REG_DEF_SP | REG_USE_SP | REG_USE_LIST0
