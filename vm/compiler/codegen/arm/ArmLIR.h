@@ -515,7 +515,7 @@ typedef enum ArmOpcode {
     kThumb2StrbRRI12,    /* strb rt,[rn,#imm12] [111110001000]
                                        rt[15..12] rn[19..16] imm12[11..0] */
     kThumb2Pop,          /* pop     [1110100010111101] list[15-0]*/
-    kThumb2Push,         /* push    [1110100010101101] list[15-0]*/
+    kThumb2Push,         /* push    [1110100100101101] list[15-0]*/
     kThumb2CmpRI8,       /* cmp rn, #<const> [11110] i [011011] rn[19-16] [0]
                                        imm3 [1111] imm8[7..0] */
     kThumb2AdcRRR,       /* adc [111010110101] rn[19..16] [0000] rd[11..8]

@@ -234,12 +234,30 @@ static ArmLIR *opImm(CompilationUnit *cUnit, OpKind op, int value)
 {
     ArmOpcode opcode = kThumbBkpt;
     switch (op) {
-        case kOpPush:
-            opcode = ((value & 0xff00) != 0) ? kThumb2Push : kThumbPush;
+        case kOpPush: {
+            if ((value & 0xff00) == 0) {
+                opcode = kThumbPush;
+            } else if ((value & 0xff00) == (1 << rlr)) {
+                /* Thumb push can handle lr, which is encoded by bit 8 */
+                opcode = kThumbPush;
+                value = (value & 0xff) | (1<<8);
+            } else {
+                opcode = kThumb2Push;
+            }
             break;
-        case kOpPop:
-            opcode = ((value & 0xff00) != 0) ? kThumb2Pop : kThumbPop;
+        }
+        case kOpPop: {
+            if ((value & 0xff00) == 0) {
+                opcode = kThumbPop;
+            } else if ((value & 0xff00) == (1 << rpc)) {
+                /* Thumb pop can handle pc, which is encoded by bit 8 */
+                opcode = kThumbPop;
+                value = (value & 0xff) | (1<<8);
+            } else {
+                opcode = kThumb2Pop;
+            }
             break;
+        }
         default:
             assert(0);
     }
