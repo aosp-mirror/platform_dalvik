@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-/* Forward decalraton the portable versions due to circular dependency */
+/* Forward-declare the portable versions due to circular dependency */
 static bool genArithOpFloatPortable(CompilationUnit *cUnit, MIR *mir,
                                     RegLocation rlDest, RegLocation rlSrc1,
                                     RegLocation rlSrc2);
@@ -24,6 +24,8 @@ static bool genArithOpDoublePortable(CompilationUnit *cUnit, MIR *mir,
                                      RegLocation rlSrc2);
 
 static bool genConversionPortable(CompilationUnit *cUnit, MIR *mir);
+
+static bool handleExecuteInlineC(CompilationUnit *cUnit, MIR *mir);
 
 static bool genConversion(CompilationUnit *cUnit, MIR *mir)
 {
