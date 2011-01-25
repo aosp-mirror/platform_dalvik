@@ -158,37 +158,37 @@ static bool genConversion(CompilationUnit *cUnit, MIR *mir)
     bool longDest = false;
     RegLocation rlSrc;
     RegLocation rlDest;
-    TemplateOpcode template;
+    TemplateOpcode templateOpcode;
     switch (opcode) {
         case OP_INT_TO_FLOAT:
             longSrc = false;
             longDest = false;
-            template = TEMPLATE_INT_TO_FLOAT_VFP;
+            templateOpcode = TEMPLATE_INT_TO_FLOAT_VFP;
             break;
         case OP_FLOAT_TO_INT:
             longSrc = false;
             longDest = false;
-            template = TEMPLATE_FLOAT_TO_INT_VFP;
+            templateOpcode = TEMPLATE_FLOAT_TO_INT_VFP;
             break;
         case OP_DOUBLE_TO_FLOAT:
             longSrc = true;
             longDest = false;
-            template = TEMPLATE_DOUBLE_TO_FLOAT_VFP;
+            templateOpcode = TEMPLATE_DOUBLE_TO_FLOAT_VFP;
             break;
         case OP_FLOAT_TO_DOUBLE:
             longSrc = false;
             longDest = true;
-            template = TEMPLATE_FLOAT_TO_DOUBLE_VFP;
+            templateOpcode = TEMPLATE_FLOAT_TO_DOUBLE_VFP;
             break;
         case OP_INT_TO_DOUBLE:
             longSrc = false;
             longDest = true;
-            template = TEMPLATE_INT_TO_DOUBLE_VFP;
+            templateOpcode = TEMPLATE_INT_TO_DOUBLE_VFP;
             break;
         case OP_DOUBLE_TO_INT:
             longSrc = true;
             longDest = false;
-            template = TEMPLATE_DOUBLE_TO_INT_VFP;
+            templateOpcode = TEMPLATE_DOUBLE_TO_INT_VFP;
             break;
         case OP_LONG_TO_DOUBLE:
         case OP_FLOAT_TO_LONG:
@@ -212,7 +212,7 @@ static bool genConversion(CompilationUnit *cUnit, MIR *mir)
     }
     loadValueAddressDirect(cUnit, rlDest, r0);
     loadValueAddressDirect(cUnit, rlSrc, r1);
-    genDispatchToHandler(cUnit, template);
+    genDispatchToHandler(cUnit, templateOpcode);
     if (rlDest.wide) {
         rlDest = dvmCompilerUpdateLocWide(cUnit, rlDest);
         dvmCompilerClobber(cUnit, rlDest.highReg);
@@ -226,31 +226,31 @@ static bool genConversion(CompilationUnit *cUnit, MIR *mir)
 static bool genCmpFP(CompilationUnit *cUnit, MIR *mir, RegLocation rlDest,
                      RegLocation rlSrc1, RegLocation rlSrc2)
 {
-    TemplateOpcode template;
+    TemplateOpcode templateOpcode;
     RegLocation rlResult = dvmCompilerGetReturn(cUnit);
     bool wide = true;
 
     switch(mir->dalvikInsn.opcode) {
         case OP_CMPL_FLOAT:
-            template = TEMPLATE_CMPL_FLOAT_VFP;
+            templateOpcode = TEMPLATE_CMPL_FLOAT_VFP;
             wide = false;
             break;
         case OP_CMPG_FLOAT:
-            template = TEMPLATE_CMPG_FLOAT_VFP;
+            templateOpcode = TEMPLATE_CMPG_FLOAT_VFP;
             wide = false;
             break;
         case OP_CMPL_DOUBLE:
-            template = TEMPLATE_CMPL_DOUBLE_VFP;
+            templateOpcode = TEMPLATE_CMPL_DOUBLE_VFP;
             break;
         case OP_CMPG_DOUBLE:
-            template = TEMPLATE_CMPG_DOUBLE_VFP;
+            templateOpcode = TEMPLATE_CMPG_DOUBLE_VFP;
             break;
         default:
             return true;
     }
     loadValueAddressDirect(cUnit, rlSrc1, r0);
     loadValueAddressDirect(cUnit, rlSrc2, r1);
-    genDispatchToHandler(cUnit, template);
+    genDispatchToHandler(cUnit, templateOpcode);
     storeValue(cUnit, rlDest, rlResult);
     return false;
 }
