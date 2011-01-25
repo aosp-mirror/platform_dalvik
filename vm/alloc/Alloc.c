@@ -325,8 +325,8 @@ static void countInstancesOfClassCallback(void *ptr, void *arg)
 size_t dvmCountInstancesOfClass(const ClassObject *clazz)
 {
     CountContext ctx = { clazz, 0 };
-    HeapBitmap *bitmap = dvmHeapSourceGetLiveBits();
     dvmLockHeap();
+    HeapBitmap *bitmap = dvmHeapSourceGetLiveBits();
     dvmHeapBitmapWalk(bitmap, countInstancesOfClassCallback, &ctx);
     dvmUnlockHeap();
     return ctx.count;
@@ -346,8 +346,8 @@ static void countAssignableInstancesOfClassCallback(void *ptr, void *arg)
 size_t dvmCountAssignableInstancesOfClass(const ClassObject *clazz)
 {
     CountContext ctx = { clazz, 0 };
-    HeapBitmap *bitmap = dvmHeapSourceGetLiveBits();
     dvmLockHeap();
+    HeapBitmap *bitmap = dvmHeapSourceGetLiveBits();
     dvmHeapBitmapWalk(bitmap, countAssignableInstancesOfClassCallback, &ctx);
     dvmUnlockHeap();
     return ctx.count;
