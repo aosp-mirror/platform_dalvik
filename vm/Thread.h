@@ -81,7 +81,7 @@ void dvmSlayDaemons(void);
 #define kInternalRefMax         4096    /* mainly a sanity check */
 
 #define kMinStackSize       (512 + STACK_OVERFLOW_RESERVE)
-#define kDefaultStackSize   (12*1024)   /* three 4K pages */
+#define kDefaultStackSize   (16*1024)   /* four 4K pages */
 #define kMaxStackSize       (256*1024 + STACK_OVERFLOW_RESERVE)
 
 /*
