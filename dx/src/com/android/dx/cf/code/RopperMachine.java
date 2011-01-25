@@ -32,6 +32,7 @@ import com.android.dx.rop.code.ThrowingInsn;
 import com.android.dx.rop.code.TranslationAdvice;
 import com.android.dx.rop.cst.Constant;
 import com.android.dx.rop.cst.CstFieldRef;
+import com.android.dx.rop.cst.CstInteger;
 import com.android.dx.rop.cst.CstMethodRef;
 import com.android.dx.rop.cst.CstNat;
 import com.android.dx.rop.cst.CstType;
@@ -517,19 +518,40 @@ import java.util.ArrayList;
              */
             cst = CstType.intern(rop.getResult());
         } else if ((cst == null) && (sourceCount == 2)) {
+            TypeBearer firstType = sources.get(0).getTypeBearer();
             TypeBearer lastType = sources.get(1).getTypeBearer();
 
-            if (lastType.isConstant()
-                    && advice.hasConstantOperation(rop,
-                    sources.get(0), sources.get(1))) {
-                /*
-                 * The target architecture has an instruction that can
-                 * build in the constant found in the second argument,
-                 * so pull it out of the sources and just use it as a
-                 * constant here.
-                 */
-                cst = (Constant) lastType;
-                sources = sources.withoutLast();
+            if ((lastType.isConstant() || firstType.isConstant()) &&
+                 advice.hasConstantOperation(rop, sources.get(0),
+                                             sources.get(1))) {
+
+                if (lastType.isConstant()) {
+                    /*
+                     * The target architecture has an instruction that can
+                     * build in the constant found in the second argument,
+                     * so pull it out of the sources and just use it as a
+                     * constant here.
+                     */
+                    cst = (Constant) lastType;
+                    sources = sources.withoutLast();
+
+                    // For subtraction, change to addition and invert constant
+                    if (rop.getOpcode() == RegOps.SUB) {
+                        ropOpcode = RegOps.ADD;
+                        CstInteger cstInt = (CstInteger) lastType;
+                        cst = CstInteger.make(-cstInt.getValue());
+                    }
+                } else {
+                    /*
+                     * The target architecture has an instruction that can
+                     * build in the constant found in the first argument,
+                     * so pull it out of the sources and just use it as a
+                     * constant here.
+                     */
+                    cst = (Constant) firstType;
+                    sources = sources.withoutFirst();
+                }
+
                 rop = Rops.ropFor(ropOpcode, destType, sources, cst);
             }
         }

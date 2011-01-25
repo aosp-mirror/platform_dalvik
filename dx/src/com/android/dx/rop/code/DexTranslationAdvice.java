@@ -60,13 +60,20 @@ public final class DexTranslationAdvice
             return false;
         }
 
+        // Return false if second source isn't a constant
         if (! (sourceB.getTypeBearer() instanceof CstInteger)) {
-            return false;
+            // Except for rsub-int (reverse sub) where first source is constant
+            if (sourceA.getTypeBearer() instanceof CstInteger &&
+                    opcode.getOpcode() == RegOps.SUB) {
+                CstInteger cst = (CstInteger) sourceA.getTypeBearer();
+                return cst.fitsIn16Bits();
+            } else {
+                return false;
+            }
         }
 
         CstInteger cst = (CstInteger) sourceB.getTypeBearer();
 
-        // TODO handle rsub
         switch (opcode.getOpcode()) {
             // These have 8 and 16 bit cst representations
             case RegOps.REM:
@@ -82,6 +89,10 @@ public final class DexTranslationAdvice
             case RegOps.SHR:
             case RegOps.USHR:
                 return cst.fitsIn8Bits();
+            // No sub-const insn, so check if equivalent add-const fits
+            case RegOps.SUB:
+                CstInteger cst2 = CstInteger.make(-cst.getValue());
+                return cst2.fitsIn16Bits();
             default:
                 return false;
         }

@@ -318,10 +318,10 @@ public final class RopToDop {
         MAP.put(Rops.ADD_CONST_INT,        Dops.ADD_INT_LIT8);
         // Note: No dalvik ops for other types of add_const.
 
+        MAP.put(Rops.SUB_CONST_INT,        Dops.RSUB_INT_LIT8);
         /*
-         * Note: No dalvik ops for any type of sub_const; there's a
-         * *reverse* sub (constant - reg) for ints, though, but that
-         * should end up getting handled at optimization time.
+         * Note: No dalvik ops for any type of sub_const; instead
+         * there's a *reverse* sub (constant - reg) for ints only.
          */
 
         MAP.put(Rops.MUL_CONST_INT,        Dops.MUL_INT_LIT8);
