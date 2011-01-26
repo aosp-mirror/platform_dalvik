@@ -37,6 +37,7 @@ cd ".."
 ${progdir}/opcode-gen dx/src/com/android/dx/dex/code/DalvOps.java
 ${progdir}/opcode-gen dx/src/com/android/dx/dex/code/Dops.java
 ${progdir}/opcode-gen dx/src/com/android/dx/dex/code/RopToDop.java
+${progdir}/opcode-gen dx/src/com/android/dx/io/OpcodeInfo.java
 ${progdir}/opcode-gen libdex/DexOpcodes.c
 ${progdir}/opcode-gen libdex/DexOpcodes.h
 ${progdir}/opcode-gen libdex/InstrUtils.c
