@@ -195,9 +195,10 @@ static void buildInsnString(char *fmt, ArmLIR *lir, char* buf,
                        }
                        break;
                    case 't':
-                       sprintf(tbuf,"0x%08x",
+                       sprintf(tbuf,"0x%08x (L%p)",
                                (int) baseAddr + lir->generic.offset + 4 +
-                               (operand << 1));
+                               (operand << 1),
+                               lir->generic.target);
                        break;
                    case 'u': {
                        int offset_1 = lir->operands[0];
@@ -302,8 +303,6 @@ void dvmDumpLIRInsn(LIR *arg, unsigned char *baseAddr)
         case kArmPseudoSSARep:
             DUMP_SSA_REP(LOGD("-------- %s\n", (char *) dest));
             break;
-        case kArmPseudoTargetLabel:
-            break;
         case kArmPseudoChainingCellBackwardBranch:
             LOGD("-------- chaining cell (backward branch): 0x%04x\n", dest);
             break;
@@ -344,8 +343,9 @@ void dvmDumpLIRInsn(LIR *arg, unsigned char *baseAddr)
         case kArmPseudoEHBlockLabel:
             LOGD("Exception_Handling:\n");
             break;
+        case kArmPseudoTargetLabel:
         case kArmPseudoNormalBlockLabel:
-            LOGD("L%#06x:\n", dest);
+            LOGD("L%p:\n", lir);
             break;
         default:
             if (lir->isNop && !dumpNop) {

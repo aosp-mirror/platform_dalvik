@@ -49,5 +49,8 @@
 /* MIR2LIR dispatcher and architectural independent codegen routines */
 #include "../CodegenDriver.c"
 
+/* Driver for method-based JIT */
+#include "../armv7-a-neon/MethodCodegenDriver.c"
+
 /* Architecture manifest */
 #include "ArchVariant.c"

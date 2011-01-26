@@ -1032,6 +1032,17 @@ static AssemblerStatus assembleInstructions(CompilationUnit *cUnit,
 
             lir->operands[0] = (delta >> 12) & 0x7ff;
             NEXT_LIR(lir)->operands[0] = (delta>> 1) & 0x7ff;
+        } else if (lir->opcode == kThumbBl1) {
+            assert(NEXT_LIR(lir)->opcode == kThumbBl2);
+            /* Both curPC and target are Thumb */
+            intptr_t curPC = startAddr + lir->generic.offset + 4;
+            intptr_t target = lir->operands[1];
+
+            int delta = target - curPC;
+            assert((delta >= -(1<<22)) && (delta <= ((1<<22)-2)));
+
+            lir->operands[0] = (delta >> 12) & 0x7ff;
+            NEXT_LIR(lir)->operands[0] = (delta>> 1) & 0x7ff;
         }
 
         ArmEncodingMap *encoder = &EncodingMap[lir->opcode];
@@ -1213,8 +1224,8 @@ void dvmCompilerAssembleLIR(CompilationUnit *cUnit, JitTranslationInfo *info)
     int i;
     ChainCellCounts chainCellCounts;
     int descSize =
-        cUnit->wholeMethod ? 0 : jitTraceDescriptionSize(cUnit->traceDesc);
-    int chainingCellGap;
+        cUnit->methodJitMode ? 0 : jitTraceDescriptionSize(cUnit->traceDesc);
+    int chainingCellGap = 0;
 
     info->instructionSet = cUnit->instructionSet;
 
@@ -1240,30 +1251,34 @@ void dvmCompilerAssembleLIR(CompilationUnit *cUnit, JitTranslationInfo *info)
     /* Const values have to be word aligned */
     offset = (offset + 3) & ~3;
 
-    /*
-     * Get the gap (# of u4) between the offset of chaining cell count and
-     * the bottom of real chaining cells. If the translation has chaining
-     * cells, the gap is guaranteed to be multiples of 4.
-     */
-    chainingCellGap = (offset - cUnit->chainingCellBottom->offset) >> 2;
-
-    /* Add space for chain cell counts & trace description */
     u4 chainCellOffset = offset;
-    ArmLIR *chainCellOffsetLIR = (ArmLIR *) cUnit->chainCellOffsetLIR;
-    assert(chainCellOffsetLIR);
-    assert(chainCellOffset < 0x10000);
-    assert(chainCellOffsetLIR->opcode == kArm16BitData &&
-           chainCellOffsetLIR->operands[0] == CHAIN_CELL_OFFSET_TAG);
+    ArmLIR *chainCellOffsetLIR = NULL;
 
-    /*
-     * Adjust the CHAIN_CELL_OFFSET_TAG LIR's offset to remove the
-     * space occupied by the pointer to the trace profiling counter.
-     */
-    chainCellOffsetLIR->operands[0] = chainCellOffset - 4;
+    if (!cUnit->methodJitMode) {
+        /*
+         * Get the gap (# of u4) between the offset of chaining cell count and
+         * the bottom of real chaining cells. If the translation has chaining
+         * cells, the gap is guaranteed to be multiples of 4.
+         */
+        chainingCellGap = (offset - cUnit->chainingCellBottom->offset) >> 2;
 
-    offset += sizeof(chainCellCounts) + descSize;
+        /* Add space for chain cell counts & trace description */
+        chainCellOffsetLIR = (ArmLIR *) cUnit->chainCellOffsetLIR;
+        assert(chainCellOffsetLIR);
+        assert(chainCellOffset < 0x10000);
+        assert(chainCellOffsetLIR->opcode == kArm16BitData &&
+               chainCellOffsetLIR->operands[0] == CHAIN_CELL_OFFSET_TAG);
 
-    assert((offset & 0x3) == 0);  /* Should still be word aligned */
+        /*
+         * Adjust the CHAIN_CELL_OFFSET_TAG LIR's offset to remove the
+         * space occupied by the pointer to the trace profiling counter.
+         */
+        chainCellOffsetLIR->operands[0] = chainCellOffset - 4;
+
+        offset += sizeof(chainCellCounts) + descSize;
+
+        assert((offset & 0x3) == 0);  /* Should still be word aligned */
+    }
 
     /* Set up offsets for literals */
     cUnit->dataOffset = offset;
@@ -1301,8 +1316,10 @@ void dvmCompilerAssembleLIR(CompilationUnit *cUnit, JitTranslationInfo *info)
             break;
         case kRetryAll:
             if (cUnit->assemblerRetries < MAX_ASSEMBLER_RETRIES) {
-                /* Restore pristine chain cell marker on retry */
-                chainCellOffsetLIR->operands[0] = CHAIN_CELL_OFFSET_TAG;
+                if (!cUnit->methodJitMode) {
+                    /* Restore pristine chain cell marker on retry */
+                    chainCellOffsetLIR->operands[0] = CHAIN_CELL_OFFSET_TAG;
+                }
                 return;
             }
             /* Too many retries - reset and try cutting the trace in half */
@@ -1351,20 +1368,23 @@ void dvmCompilerAssembleLIR(CompilationUnit *cUnit, JitTranslationInfo *info)
     memcpy((char*)cUnit->baseAddr, cUnit->codeBuffer, chainCellOffset);
     gDvmJit.numCompilations++;
 
-    /* Install the chaining cell counts */
-    for (i=0; i< kChainingCellGap; i++) {
-        chainCellCounts.u.count[i] = cUnit->numChainingCells[i];
+    if (!cUnit->methodJitMode) {
+        /* Install the chaining cell counts */
+        for (i=0; i< kChainingCellGap; i++) {
+            chainCellCounts.u.count[i] = cUnit->numChainingCells[i];
+        }
+
+        /* Set the gap number in the chaining cell count structure */
+        chainCellCounts.u.count[kChainingCellGap] = chainingCellGap;
+
+        memcpy((char*)cUnit->baseAddr + chainCellOffset, &chainCellCounts,
+               sizeof(chainCellCounts));
+
+        /* Install the trace description */
+        memcpy((char*) cUnit->baseAddr + chainCellOffset +
+                       sizeof(chainCellCounts),
+               cUnit->traceDesc, descSize);
     }
-
-    /* Set the gap number in the chaining cell count structure */
-    chainCellCounts.u.count[kChainingCellGap] = chainingCellGap;
-
-    memcpy((char*)cUnit->baseAddr + chainCellOffset, &chainCellCounts,
-           sizeof(chainCellCounts));
-
-    /* Install the trace description */
-    memcpy((char*)cUnit->baseAddr + chainCellOffset + sizeof(chainCellCounts),
-           cUnit->traceDesc, descSize);
 
     /* Write the literals directly into the code cache */
     installDataContent(cUnit);
@@ -1609,7 +1629,7 @@ const Method *dvmJitToPatchPredictedChain(const Method *method,
         PROTECT_CODE_CACHE(cell, sizeof(*cell));
         goto done;
     }
-    int tgtAddr = (int) dvmJitGetCodeAddr(method->insns);
+    int tgtAddr = (int) dvmJitGetTraceAddr(method->insns);
 
     /*
      * Compilation not made yet for the callee. Reset the counter to a small
@@ -1808,14 +1828,16 @@ void dvmJitUnchainAll()
 
         for (i = 0; i < gDvmJit.jitTableSize; i++) {
             if (gDvmJit.pJitEntryTable[i].dPC &&
-                   gDvmJit.pJitEntryTable[i].codeAddress &&
-                   (gDvmJit.pJitEntryTable[i].codeAddress !=
-                    dvmCompilerGetInterpretTemplate())) {
+                !gDvmJit.pJitEntryTable[i].u.info.isMethodEntry &&
+                gDvmJit.pJitEntryTable[i].codeAddress &&
+                (gDvmJit.pJitEntryTable[i].codeAddress !=
+                 dvmCompilerGetInterpretTemplate())) {
                 u4* lastAddress;
                 lastAddress =
                       dvmJitUnchain(gDvmJit.pJitEntryTable[i].codeAddress);
                 if (lowAddress == NULL ||
-                      (u4*)gDvmJit.pJitEntryTable[i].codeAddress < lowAddress)
+                      (u4*)gDvmJit.pJitEntryTable[i].codeAddress <
+                      lowAddress)
                     lowAddress = lastAddress;
                 if (lastAddress > highAddress)
                     highAddress = lastAddress;

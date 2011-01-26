@@ -99,6 +99,7 @@ typedef enum {
     kMIRInlined,                        // Invoke is inlined (ie dead)
     kMIRInlinedPred,                    // Invoke is inlined via prediction
     kMIRCallee,                         // Instruction is inlined from callee
+    kMIRInvokeMethodJIT,                // Callee is JIT'ed as a whole method
 } MIROptimizationFlagPositons;
 
 #define MIR_IGNORE_NULL_CHECK           (1 << kMIRIgnoreNullCheck)
@@ -108,6 +109,7 @@ typedef enum {
 #define MIR_INLINED                     (1 << kMIRInlined)
 #define MIR_INLINED_PRED                (1 << kMIRInlinedPred)
 #define MIR_CALLEE                      (1 << kMIRCallee)
+#define MIR_INVOKE_METHOD_JIT           (1 << kMIRInvokeMethodJIT)
 
 typedef struct CallsiteInfo {
     const ClassObject *clazz;
@@ -209,7 +211,6 @@ typedef struct CompilationUnit {
     bool hasLoop;                       // Contains a loop
     bool hasInvoke;                     // Contains an invoke instruction
     bool heapMemOp;                     // Mark mem ops for self verification
-    bool wholeMethod;
     int profileCodeSize;                // Size of the profile prefix in bytes
     int numChainingCells[kChainingCellGap];
     LIR *firstChainingLIR[kChainingCellGap];
@@ -243,10 +244,12 @@ typedef struct CompilationUnit {
     const u2 *switchOverflowPad;
 
     /* New fields only for method-based compilation */
+    bool methodJitMode;
     int numReachableBlocks;
     int numDalvikRegisters;             // method->registersSize + inlined
     BasicBlock *entryBlock;
     BasicBlock *exitBlock;
+    BasicBlock *curBlock;
     GrowableList dfsOrder;
     GrowableList domPostOrderTraversal;
     BitVector *tryBlockAddr;
@@ -255,6 +258,7 @@ typedef struct CompilationUnit {
     BitVector *tempDalvikRegisterV;
     BitVector *tempSSARegisterV;        // numSSARegs
     bool printSSANames;
+    void *blockLabelList;
 } CompilationUnit;
 
 #if defined(WITH_SELF_VERIFICATION)
