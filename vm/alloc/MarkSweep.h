@@ -46,7 +46,7 @@ typedef struct {
     const void *finger;   // only used while scanning/recursing.
 } GcMarkContext;
 
-bool dvmHeapBeginMarkStep(GcMode mode);
+bool dvmHeapBeginMarkStep(bool isPartial);
 void dvmHeapMarkRootSet(void);
 void dvmHeapReMarkRootSet(void);
 void dvmHeapScanMarkedObjects(void);
@@ -56,7 +56,7 @@ void dvmHeapProcessReferences(Object **softReferences, bool clearSoftRefs,
                               Object **phantomReferences);
 void dvmHeapFinishMarkStep(void);
 void dvmHeapSweepSystemWeaks(void);
-void dvmHeapSweepUnmarkedObjects(GcMode mode, bool isConcurrent,
+void dvmHeapSweepUnmarkedObjects(bool isPartial, bool isConcurrent,
                                  size_t *numObjects, size_t *numBytes);
 
 #endif  // _DALVIK_ALLOC_MARK_SWEEP
