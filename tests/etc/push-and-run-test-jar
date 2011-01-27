@@ -10,7 +10,7 @@
 #   --portable    -- use the portable interpreter
 #   --debug       -- wait for debugger to attach
 #   --zygote      -- use the zygote (if so, all other options are ignored)
-#   --dev         -- development mode
+#   --dev         -- development mode (print the vm invocation cmdline)
 #   --no-verify   -- turn off verification (on by default)
 #   --no-optimize -- turn off optimization (on by default)
 #   --no-precise  -- turn off precise GC (on by default)
@@ -28,6 +28,7 @@ OPTIMIZE="y"
 ZYGOTE="n"
 QUIET="n"
 PRECISE="y"
+DEV_MODE="n"
 
 while true; do
     if [ "x$1" = "x--quiet" ]; then
@@ -53,7 +54,7 @@ while true; do
         msg "Spawning from zygote"
         shift
     elif [ "x$1" = "x--dev" ]; then
-        # not used; ignore
+        DEV_MODE="y"
         shift
     elif [ "x$1" = "x--no-verify" ]; then
         VERIFY="n"
@@ -125,6 +126,10 @@ fi
 if [ "$ZYGOTE" = "y" ]; then
     adb shell cd /data \; dvz -classpath test.jar Main "$@"
 else
-    adb shell cd /data \; dalvikvm $DEX_VERIFY $DEX_OPTIMIZE $DEX_DEBUG \
-        $GC_OPTS -cp test.jar "-Xint:${INTERP}" -ea Main "$@"
+    cmdline="cd /data; dalvikvm $DEX_VERIFY $DEX_OPTIMIZE $DEX_DEBUG \
+        $GC_OPTS -cp test.jar -Xint:${INTERP} -ea Main"
+    if [ "$DEV_MODE" = "y" ]; then
+        echo $cmdline "$@"
+    fi
+    adb shell $cmdline "$@"
 fi
