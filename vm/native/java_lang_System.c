@@ -20,6 +20,33 @@
 #include "Dalvik.h"
 #include "native/InternalNativePriv.h"
 
+/*
+ * Call the appropriate copy function given the circumstances.
+ */
+static void copy(void *dest, const void *src, size_t n, bool sameArray,
+        size_t elemSize)
+{
+    if (sameArray) {
+        /* Might overlap. */
+        if (elemSize == sizeof(Object*)) {
+            /*
+             * In addition to handling overlap properly, bcopy()
+             * guarantees atomic treatment of words. This is needed so
+             * that concurrent threads never see half-formed pointers
+             * or ints. The former is required for proper gc behavior,
+             * and the latter is also required for proper high-level
+             * language support.
+             *
+             * Note: bcopy()'s argument order is different than memcpy().
+             */
+            bcopy(src, dest, n);
+        } else {
+            memmove(dest, src, n);
+        }
+    } else {
+        memcpy(dest, src, n); /* Can't overlap; use faster function. */
+    }
+}
 
 /*
  * public static void arraycopy(Object src, int srcPos, Object dest,
@@ -30,7 +57,6 @@
  */
 static void Dalvik_java_lang_System_arraycopy(const u4* args, JValue* pResult)
 {
-    void* (*copyFunc)(void *dest, const void *src, size_t n);
     ArrayObject* srcArray;
     ArrayObject* dstArray;
     ClassObject* srcClass;
@@ -38,6 +64,7 @@ static void Dalvik_java_lang_System_arraycopy(const u4* args, JValue* pResult)
     int srcPos, dstPos, length;
     char srcType, dstType;
     bool srcPrim, dstPrim;
+    bool sameArray;
 
     srcArray = (ArrayObject*) args[0];
     srcPos = args[1];
@@ -45,10 +72,7 @@ static void Dalvik_java_lang_System_arraycopy(const u4* args, JValue* pResult)
     dstPos = args[3];
     length = args[4];
 
-    if (srcArray == dstArray)
-        copyFunc = memmove;         /* might overlap */
-    else
-        copyFunc = memcpy;          /* can't overlap, use faster func */
+    sameArray = (srcArray == dstArray);
 
     /* check for null or bad pointer */
     if (!dvmValidateObject((Object*)srcArray) ||
@@ -126,9 +150,10 @@ static void Dalvik_java_lang_System_arraycopy(const u4* args, JValue* pResult)
                 dstArray->contents, dstPos * width,
                 srcArray->contents, srcPos * width,
                 length * width);
-        (*copyFunc)((u1*)dstArray->contents + dstPos * width,
+        copy((u1*)dstArray->contents + dstPos * width,
                 (const u1*)srcArray->contents + srcPos * width,
-                length * width);
+                length * width,
+                sameArray, width);
     } else {
         /*
          * Neither class is primitive.  See if elements in "src" are instances
@@ -147,9 +172,10 @@ static void Dalvik_java_lang_System_arraycopy(const u4* args, JValue* pResult)
                 dstArray->contents, dstPos * width,
                 srcArray->contents, srcPos * width,
                 length * width);
-            (*copyFunc)((u1*)dstArray->contents + dstPos * width,
+            copy((u1*)dstArray->contents + dstPos * width,
                     (const u1*)srcArray->contents + srcPos * width,
-                    length * width);
+                    length * width,
+                    sameArray, width);
             dvmWriteBarrierArray(dstArray, dstPos, dstPos+length);
         } else {
             /*
@@ -194,9 +220,10 @@ static void Dalvik_java_lang_System_arraycopy(const u4* args, JValue* pResult)
                 dstArray->contents, dstPos * width,
                 srcArray->contents, srcPos * width,
                 copyCount, length);
-            (*copyFunc)((u1*)dstArray->contents + dstPos * width,
+            copy((u1*)dstArray->contents + dstPos * width,
                     (const u1*)srcArray->contents + srcPos * width,
-                    copyCount * width);
+                    copyCount * width,
+                    sameArray, width);
             dvmWriteBarrierArray(dstArray, 0, copyCount);
             if (copyCount != length) {
                 dvmThrowExceptionFmt("Ljava/lang/ArrayStoreException;",
