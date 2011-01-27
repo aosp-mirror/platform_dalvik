@@ -404,7 +404,7 @@ static void *gcDaemonThread(void* arg)
         dvmWaitCond(&gHs->gcThreadCond, &gHs->gcThreadMutex);
         dvmLockHeap();
         dvmChangeStatus(NULL, THREAD_RUNNING);
-        dvmCollectGarbageInternal(false, GC_CONCURRENT);
+        dvmCollectGarbageInternal(GC_CONCURRENT);
         dvmChangeStatus(NULL, THREAD_VMWAIT);
         dvmUnlockHeap();
     }
@@ -1474,9 +1474,9 @@ dvmHeapSourceGetNumHeaps()
     return hs->numHeaps;
 }
 
-void *dvmHeapSourceGetImmuneLimit(GcMode mode)
+void *dvmHeapSourceGetImmuneLimit(bool isPartial)
 {
-    if (mode == GC_PARTIAL) {
+    if (isPartial) {
         return hs2heap(gHs)->base;
     } else {
         return NULL;

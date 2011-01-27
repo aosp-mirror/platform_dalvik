@@ -100,7 +100,7 @@ static const Object *markStackPop(GcMarkStack *stack)
     return *stack->top;
 }
 
-bool dvmHeapBeginMarkStep(GcMode mode)
+bool dvmHeapBeginMarkStep(bool isPartial)
 {
     GcMarkContext *ctx = &gDvm.gcHeap->markContext;
 
@@ -108,7 +108,7 @@ bool dvmHeapBeginMarkStep(GcMode mode)
         return false;
     }
     ctx->finger = NULL;
-    ctx->immuneLimit = dvmHeapSourceGetImmuneLimit(mode);
+    ctx->immuneLimit = dvmHeapSourceGetImmuneLimit(isPartial);
     return true;
 }
 
@@ -1058,7 +1058,7 @@ void dvmHeapSweepSystemWeaks(void)
  * Walk through the list of objects that haven't been marked and free
  * them.  Assumes the bitmaps have been swapped.
  */
-void dvmHeapSweepUnmarkedObjects(GcMode mode, bool isConcurrent,
+void dvmHeapSweepUnmarkedObjects(bool isPartial, bool isConcurrent,
                                  size_t *numObjects, size_t *numBytes)
 {
     HeapBitmap currMark[HEAP_SOURCE_MAX_HEAP_COUNT];
@@ -1069,7 +1069,7 @@ void dvmHeapSweepUnmarkedObjects(GcMode mode, bool isConcurrent,
 
     numBitmaps = dvmHeapSourceGetNumHeaps();
     dvmHeapSourceGetObjectBitmaps(currLive, currMark, numBitmaps);
-    if (mode == GC_PARTIAL) {
+    if (isPartial) {
         numSweepBitmaps = 1;
         assert((uintptr_t)gDvm.gcHeap->markContext.immuneLimit == currLive[0].base);
     } else {
