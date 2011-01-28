@@ -30,12 +30,13 @@ static void copy(void *dest, const void *src, size_t n, bool sameArray,
         /* Might overlap. */
         if (elemSize == sizeof(Object*)) {
             /*
-             * In addition to handling overlap properly, bcopy()
-             * guarantees atomic treatment of words. This is needed so
-             * that concurrent threads never see half-formed pointers
-             * or ints. The former is required for proper gc behavior,
-             * and the latter is also required for proper high-level
-             * language support.
+             * In addition to handling overlap properly, on Bionic
+             * bcopy() guarantees atomic treatment of words, whereas
+             * Bionic memmove() does not (as of this writing).
+             * Atomicity is needed so that concurrent threads never
+             * see half-formed pointers or ints. The former is
+             * required for proper gc behavior, and the latter is also
+             * required for proper high-level language support.
              *
              * Note: bcopy()'s argument order is different than memcpy().
              */
