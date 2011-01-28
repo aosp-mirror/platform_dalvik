@@ -51,51 +51,59 @@ static bool needsReturnBarrier(Method* method);
 
 
 /*
- * Create a table of inline substitutions.
+ * Create a table of inline substitutions.  Sets gDvm.inlineSubs.
  *
  * TODO: this is currently just a linear array.  We will want to put this
  * into a hash table as the list size increases.
  */
-InlineSub* dvmCreateInlineSubsTable(void)
+bool dvmCreateInlineSubsTable(void)
 {
     const InlineOperation* ops = dvmGetInlineOpsTable();
     const int count = dvmGetInlineOpsTableLength();
     InlineSub* table;
     int i, tableIndex;
 
+    assert(gDvm.inlineSubs == NULL);
+
     /*
-     * Allocate for optimism: one slot per entry, plus an end-of-list marker.
+     * One slot per entry, plus an end-of-list marker.
      */
-    table = (InlineSub*)calloc(count + 1, sizeof(InlineSub));
+    table = (InlineSub*) calloc(count + 1, sizeof(InlineSub));
 
     tableIndex = 0;
     for (i = 0; i < count; i++) {
         Method* method = dvmFindInlinableMethod(ops[i].classDescriptor,
             ops[i].methodName, ops[i].methodSignature);
-        if (method != NULL) {
-            table[tableIndex].method = method;
-            table[tableIndex].inlineIdx = i;
-            tableIndex++;
-
-            LOGV("DexOpt: will inline %d: %s.%s %s\n", i,
+        if (method == NULL) {
+            /*
+             * Not expected.  We only use this for key methods in core
+             * classes, so we should always be able to find them.
+             */
+            LOGE("Unable to find method for inlining: %s.%s:%s\n",
                 ops[i].classDescriptor, ops[i].methodName,
                 ops[i].methodSignature);
+            return false;
         }
+
+        table[tableIndex].method = method;
+        table[tableIndex].inlineIdx = i;
+        tableIndex++;
     }
 
     /* mark end of table */
     table[tableIndex].method = NULL;
-    LOGV("DexOpt: inline table has %d entries\n", tableIndex);
 
-    return table;
+    gDvm.inlineSubs = table;
+    return true;
 }
 
 /*
  * Release inline sub data structure.
  */
-void dvmFreeInlineSubsTable(InlineSub* inlineSubs)
+void dvmFreeInlineSubsTable(void)
 {
-    free(inlineSubs);
+    free(gDvm.inlineSubs);
+    gDvm.inlineSubs = NULL;
 }
 
 
@@ -161,7 +169,22 @@ static void optimizeMethod(Method* method, bool essentialOnly)
 
         inst = *insns & 0xff;
 
-        /* "essential" substitutions, always checked */
+        /*
+         * essential substitutions:
+         *  {iget,iput,sget,sput}-wide --> *-wide-volatile
+         *  invoke-{virtual,direct,static}[/range] --> execute-inline
+         *  invoke-direct --> invoke-direct-empty
+         *
+         * essential-on-SMP substitutions:
+         *  iget-* --> iget-*-volatile
+         *  iput-* --> iput-*-volatile
+         *
+         * non-essential substitutions:
+         *  iget-* --> iget-*-quick
+         *  iput-* --> iput-*-quick
+         *
+         * TODO: might be time to merge this with the other two switches
+         */
         switch (inst) {
         case OP_IGET:
         case OP_IGET_BOOLEAN:
@@ -200,7 +223,7 @@ static void optimizeMethod(Method* method, bool essentialOnly)
                 volatileOpc = OP_IPUT_OBJECT_VOLATILE;
 rewrite_inst_field:
             if (essentialOnly)
-                quickOpc = OP_NOP;
+                quickOpc = OP_NOP;      /* if not essential, no "-quick" sub */
             if (quickOpc != OP_NOP || volatileOpc != OP_NOP)
                 rewriteInstField(method, insns, quickOpc, volatileOpc);
             break;
@@ -213,13 +236,45 @@ rewrite_inst_field:
 rewrite_static_field:
             rewriteStaticField(method, insns, volatileOpc);
             break;
+
+        case OP_INVOKE_VIRTUAL:
+            if (!rewriteExecuteInline(method, insns, METHOD_VIRTUAL)) {
+                /* may want to try -quick, below */
+                notMatched = true;
+            }
+            break;
+        case OP_INVOKE_VIRTUAL_RANGE:
+            if (!rewriteExecuteInlineRange(method, insns, METHOD_VIRTUAL)) {
+                /* may want to try -quick, below */
+                notMatched = true;
+            }
+            break;
+        case OP_INVOKE_DIRECT:
+            if (!rewriteExecuteInline(method, insns, METHOD_DIRECT)) {
+                rewriteEmptyDirectInvoke(method, insns);
+            }
+            break;
+        case OP_INVOKE_DIRECT_RANGE:
+            rewriteExecuteInlineRange(method, insns, METHOD_DIRECT);
+            break;
+        case OP_INVOKE_STATIC:
+            rewriteExecuteInline(method, insns, METHOD_STATIC);
+            break;
+        case OP_INVOKE_STATIC_RANGE:
+            rewriteExecuteInlineRange(method, insns, METHOD_STATIC);
+            break;
+
         default:
             notMatched = true;
             break;
         }
 
+        /*
+         * essential-on-SMP substitutions:
+         *  {sget,sput}-* --> {sget,sput}-*-volatile
+         *  return-void --> return-void-barrier
+         */
         if (notMatched && gDvm.dexOptForSmp) {
-            /* additional "essential" substitutions for an SMP device */
             switch (inst) {
             case OP_SGET:
             case OP_SGET_BOOLEAN:
@@ -255,42 +310,24 @@ rewrite_static_field2:
             }
         }
 
-        /* non-essential substitutions */
+        /*
+         * non-essential substitutions:
+         *  invoke-{virtual,super}[/range] --> invoke-*-quick
+         */
         if (notMatched && !essentialOnly) {
             switch (inst) {
             case OP_INVOKE_VIRTUAL:
-                if (!rewriteExecuteInline(method, insns, METHOD_VIRTUAL)) {
-                    rewriteVirtualInvoke(method, insns,
-                            OP_INVOKE_VIRTUAL_QUICK);
-                }
+                rewriteVirtualInvoke(method, insns, OP_INVOKE_VIRTUAL_QUICK);
                 break;
             case OP_INVOKE_VIRTUAL_RANGE:
-                if (!rewriteExecuteInlineRange(method, insns, METHOD_VIRTUAL)) {
-                    rewriteVirtualInvoke(method, insns,
-                            OP_INVOKE_VIRTUAL_QUICK_RANGE);
-                }
+                rewriteVirtualInvoke(method, insns,
+                    OP_INVOKE_VIRTUAL_QUICK_RANGE);
                 break;
             case OP_INVOKE_SUPER:
                 rewriteVirtualInvoke(method, insns, OP_INVOKE_SUPER_QUICK);
                 break;
             case OP_INVOKE_SUPER_RANGE:
                 rewriteVirtualInvoke(method, insns, OP_INVOKE_SUPER_QUICK_RANGE);
-                break;
-
-            case OP_INVOKE_DIRECT:
-                if (!rewriteExecuteInline(method, insns, METHOD_DIRECT)) {
-                    rewriteEmptyDirectInvoke(method, insns);
-                }
-                break;
-            case OP_INVOKE_DIRECT_RANGE:
-                rewriteExecuteInlineRange(method, insns, METHOD_DIRECT);
-                break;
-
-            case OP_INVOKE_STATIC:
-                rewriteExecuteInline(method, insns, METHOD_STATIC);
-                break;
-            case OP_INVOKE_STATIC_RANGE:
-                rewriteExecuteInlineRange(method, insns, METHOD_STATIC);
                 break;
 
             default:
@@ -1103,7 +1140,7 @@ static bool needsReturnBarrier(Method* method)
     /*
      * In theory, we only need to do this if the method actually modifies
      * a final field.  In practice, non-constructor methods are allowed
-     * to modify final fields by the VM, and there are tools that rely on
+     * by the VM to modify final fields, and there are tools that rely on
      * this behavior.  (The compiler does not allow it.)
      *
      * If we alter the verifier to restrict final-field updates to

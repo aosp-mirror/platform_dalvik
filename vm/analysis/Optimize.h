@@ -21,12 +21,6 @@
 #define _DALVIK_OPTIMIZE
 
 /*
- * Prep data structures.
- */
-InlineSub* dvmCreateInlineSubsTable(void);
-void dvmFreeInlineSubsTable(InlineSub* inlineSubs);
-
-/*
  * Entry point from DEX preparation.
  */
 void dvmOptimizeClass(ClassObject* clazz, bool essentialOnly);

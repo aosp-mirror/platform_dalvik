@@ -898,17 +898,3 @@ bool dvmPerformInlineOp4Dbg(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
     TRACE_METHOD_EXIT(self, method);
     return result;
 }
-
-/*
- * Check that we can resolve every inline native.
- */
-bool dvmInlineNativeCheck(void)
-{
-    int op;
-    for (op = 0; op < NELEM(gDvmInlineOpsTable); ++op) {
-        if (resolveInlineNative(op) == NULL) {
-            dvmAbort();
-        }
-    }
-    return true;
-}

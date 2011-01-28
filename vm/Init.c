@@ -1285,6 +1285,13 @@ int dvmStartup(int argc, const char* const argv[], bool ignoreUnrecognized,
     }
 
     /*
+     * Create a table of methods for which we will substitute an "inline"
+     * version for performance.
+     */
+    if (!dvmCreateInlineSubsTable())
+        goto fail;
+
+    /*
      * Miscellaneous class library validation.
      */
     if (!dvmValidateBoxClasses())
@@ -1341,9 +1348,6 @@ int dvmStartup(int argc, const char* const argv[], bool ignoreUnrecognized,
 
     /* general debugging setup */
     if (!dvmDebuggerStartup())
-        goto fail;
-
-    if (!dvmInlineNativeCheck())
         goto fail;
 
     /*
@@ -1701,6 +1705,8 @@ void dvmShutdown(void)
     /* these must happen AFTER dvmClassShutdown has walked through class data */
     dvmNativeShutdown();
     dvmInternalNativeShutdown();
+
+    dvmFreeInlineSubsTable();
 
     free(gDvm.bootClassPathStr);
     free(gDvm.classPathStr);
