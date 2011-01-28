@@ -302,7 +302,7 @@ void dvmCollectGarbage(bool clearSoftReferences)
     }
     dvmLockHeap();
     dvmWaitForConcurrentGcToComplete();
-    dvmCollectGarbageInternal(clearSoftReferences, GC_EXPLICIT);
+    dvmCollectGarbageInternal(GC_EXPLICIT);
     dvmUnlockHeap();
 }
 

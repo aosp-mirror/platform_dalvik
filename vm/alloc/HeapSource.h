@@ -202,7 +202,7 @@ void dvmMarkImmuneObjects(const char *immuneLimit);
  * heap.  Addresses at or above this pointer are threatened, addresses
  * below this pointer are immune.
  */
-void *dvmHeapSourceGetImmuneLimit(GcMode mode);
+void *dvmHeapSourceGetImmuneLimit(bool isPartial);
 
 /*
  * Returns the maximum size of the heap.  This value will be either

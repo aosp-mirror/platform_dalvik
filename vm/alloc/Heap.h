@@ -19,6 +19,29 @@
 #ifndef _DALVIK_ALLOC_HEAP
 #define _DALVIK_ALLOC_HEAP
 
+typedef struct {
+  /* If true, only the application heap is threatened. */
+  bool isPartial;
+  /* If true, the trace is run concurrently with the mutator. */
+  bool isConcurrent;
+  /* Toggles for the soft reference clearing policy. */
+  enum { CLEAR, PRESERVE } softReferencePolicy;
+  /* A name for this garbage collection mode. */
+  const char *reason;
+} GcSpec;
+
+/* Not enough space for an "ordinary" Object to be allocated. */
+extern const GcSpec *GC_FOR_MALLOC;
+
+/* Automatic GC triggered by exceeding a heap occupancy threshold. */
+extern const GcSpec *GC_CONCURRENT;
+
+/* Explicit GC via Runtime.gc(), VMRuntime.gc(), or SIGUSR1. */
+extern const GcSpec *GC_EXPLICIT;
+
+/* Final attempt to reclaim memory before throwing an OOM. */
+extern const GcSpec *GC_BEFORE_OOM;
+
 /*
  * Initialize the GC heap.
  *
@@ -58,26 +81,10 @@ void dvmHeapThreadShutdown(void);
 size_t dvmObjectSizeInHeap(const Object *obj);
 #endif
 
-typedef enum {
-    /* GC all heaps. */
-    GC_FULL,
-    /* GC just the first heap. */
-    GC_PARTIAL
-} GcMode;
-
-typedef enum {
-    /* Not enough space for an "ordinary" Object to be allocated. */
-    GC_FOR_MALLOC,
-    /* Automatic GC triggered by exceeding a heap occupancy threshold. */
-    GC_CONCURRENT,
-    /* Explicit GC via Runtime.gc(), VMRuntime.gc(), or SIGUSR1. */
-    GC_EXPLICIT,
-} GcReason;
-
 /*
  * Run the garbage collector without doing any locking.
  */
-void dvmCollectGarbageInternal(bool clearSoftRefs, GcReason reason);
+void dvmCollectGarbageInternal(const GcSpec *spec);
 
 /*
  * Blocks the calling thread until the garbage collector is inactive.
