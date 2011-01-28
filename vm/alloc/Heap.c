@@ -36,8 +36,8 @@
 #include <errno.h>
 
 static const GcSpec kGcForMallocSpec = {
-    false,
-    true,
+    true,  /* isPartial */
+    false,  /* isConcurrent */
     PRESERVE,
     "GC_FOR_ALLOC"
 };
@@ -45,8 +45,8 @@ static const GcSpec kGcForMallocSpec = {
 const GcSpec *GC_FOR_MALLOC = &kGcForMallocSpec;
 
 static const GcSpec kGcConcurrentSpec  = {
-    true,
-    true,
+    true,  /* isPartial */
+    true,  /* isConcurrent */
     PRESERVE,
     "GC_CONCURRENT"
 };
@@ -54,8 +54,8 @@ static const GcSpec kGcConcurrentSpec  = {
 const GcSpec *GC_CONCURRENT = &kGcConcurrentSpec;
 
 static const GcSpec kGcExplicitSpec = {
-    false,
-    true,
+    false,  /* isPartial */
+    true,  /* isConcurrent */
     PRESERVE,
     "GC_EXPLICIT"
 };
@@ -63,8 +63,8 @@ static const GcSpec kGcExplicitSpec = {
 const GcSpec *GC_EXPLICIT = &kGcExplicitSpec;
 
 static const GcSpec kGcBeforeOomSpec = {
-    false,
-    false,
+    false,  /* isPartial */
+    false,  /* isConcurrent */
     CLEAR,
     "GC_BEFORE_OOM"
 };
