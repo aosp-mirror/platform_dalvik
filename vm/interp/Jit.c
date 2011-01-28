@@ -1010,7 +1010,8 @@ void* getCodeAddrCommon(const u2* dPC, bool methodEntry)
 #if defined(WITH_JIT_TUNING)
             gDvmJit.addrLookupsFound++;
 #endif
-            return hideTranslation ?  NULL : (void *)(codeAddress + offset);
+            return hideTranslation || !codeAddress ?  NULL :
+                  (void *)(codeAddress + offset);
         } else {
             int chainEndMarker = gDvmJit.jitTableSize;
             while (gDvmJit.pJitEntryTable[idx].u.info.chain != chainEndMarker) {
@@ -1026,7 +1027,7 @@ void* getCodeAddrCommon(const u2* dPC, bool methodEntry)
 #if defined(WITH_JIT_TUNING)
                     gDvmJit.addrLookupsFound++;
 #endif
-                    return hideTranslation ? NULL :
+                    return hideTranslation || !codeAddress ? NULL :
                         (void *)(codeAddress + offset);
                 }
             }
@@ -1081,12 +1082,11 @@ void dvmJitSetCodeAddr(const u2* dPC, void *nPC, JitInstructionSetType set,
         newValue = oldValue;
         newValue.info.isMethodEntry = isMethodEntry;
         newValue.info.instructionSet = set;
+        newValue.info.profileOffset = profilePrefixSize;
     } while (android_atomic_release_cas(
              oldValue.infoWord, newValue.infoWord,
              &jitEntry->u.infoWord) != 0);
     jitEntry->codeAddress = nPC;
-    newValue.info.profileOffset = profilePrefixSize;
-    jitEntry->u = newValue;
 }
 
 /*
