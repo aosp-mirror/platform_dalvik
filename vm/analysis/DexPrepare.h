@@ -119,4 +119,10 @@ bool dvmOptimizeDexFile(int fd, off_t dexOffset, long dexLen,
 bool dvmContinueOptimization(int fd, off_t dexOffset, long dexLength,
     const char* fileName, u4 modWhen, u4 crc, bool isBootstrap);
 
+/*
+ * Prep data structures.
+ */
+bool dvmCreateInlineSubsTable(void);
+void dvmFreeInlineSubsTable(void);
+
 #endif /*_DALVIK_DEXPREPARE*/

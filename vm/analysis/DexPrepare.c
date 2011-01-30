@@ -758,6 +758,16 @@ static bool rewriteDex(u1* addr, int len, u4* pHeaderFlags,
     loadWhen = dvmGetRelativeTimeUsec();
 
     /*
+     * Create a data structure for use by the bytecode optimizer.
+     * We need to look up methods in a few classes, so this may cause
+     * a bit of class loading.  We usually do this during VM init, but
+     * for dexopt on core.jar the order of operations gets a bit tricky,
+     * so we defer it to here.
+     */
+    if (!dvmCreateInlineSubsTable())
+        goto bail;
+
+    /*
      * Verify and optimize all classes in the DEX file (command-line
      * options permitting).
      *
@@ -874,21 +884,6 @@ static void verifyAndOptimizeClasses(DexFile* pDexFile, bool doVerify,
     u4 count = pDexFile->pHeader->classDefsSize;
     u4 idx;
 
-    /*
-     * Create a data structure for use by the bytecode optimizer.  We
-     * stuff it into a global so we don't have to pass it around as
-     * a function argument.
-     *
-     * We could create this at VM startup, but there's no need to do so
-     * unless we're optimizing, which means we're in dexopt, and we're
-     * only going to call here once.
-     */
-    if (doOpt) {
-        gDvm.inlineSubs = dvmCreateInlineSubsTable();
-        if (gDvm.inlineSubs == NULL)
-            return;
-    }
-
     for (idx = 0; idx < count; idx++) {
         const DexClassDef* pClassDef;
         const char* classDescriptor;
@@ -907,11 +902,6 @@ static void verifyAndOptimizeClasses(DexFile* pDexFile, bool doVerify,
             LOGV("DexOpt: not optimizing unavailable class '%s'\n",
                 classDescriptor);
         }
-    }
-
-    if (gDvm.inlineSubs != NULL) {
-        dvmFreeInlineSubsTable(gDvm.inlineSubs);
-        gDvm.inlineSubs = NULL;
     }
 
 #ifdef VERIFIER_STATS

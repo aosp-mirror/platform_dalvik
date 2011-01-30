@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 /*
  * Inlined native functions.
  */
@@ -21,7 +22,6 @@
 
 /* startup/shutdown */
 bool dvmInlineNativeStartup(void);
-bool dvmInlineNativeCheck(void);
 void dvmInlineNativeShutdown(void);
 
 Method* dvmFindInlinableMethod(const char* classDescriptor,
