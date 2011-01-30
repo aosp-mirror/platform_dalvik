@@ -336,6 +336,21 @@ static bool javaLangString_equals(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
         return true;
     }
 
+    /*
+     * You may, at this point, be tempted to pull out the hashCode fields
+     * and compare them.  If both fields have been initialized, and they
+     * are not equal, we can return false immediately.
+     *
+     * However, the hashCode field is often not set.  If it is set,
+     * there's an excellent chance that the String is being used as a key
+     * in a hashed data structure (e.g. HashMap).  That data structure has
+     * already made the comparison and determined that the hashes are equal,
+     * making a check here redundant.
+     *
+     * It's not clear that checking the hashes will be a win in "typical"
+     * use cases.  We err on the side of simplicity and ignore them.
+     */
+
     thisOffset = dvmGetFieldInt((Object*) arg0, STRING_FIELDOFF_OFFSET);
     compOffset = dvmGetFieldInt((Object*) arg1, STRING_FIELDOFF_OFFSET);
     thisArray = (ArrayObject*)
