@@ -16,6 +16,7 @@
 
 package com.android.dx.dex.code;
 
+import com.android.dx.io.Opcodes;
 import com.android.dx.rop.code.LocalItem;
 import com.android.dx.rop.code.RegisterSpec;
 import com.android.dx.rop.code.RegisterSpecList;
@@ -681,7 +682,7 @@ public final class OutputFinisher {
                 continue;
             }
 
-            if (opcode.getFamily() == DalvOps.GOTO) {
+            if (opcode.getFamily() == Opcodes.GOTO) {
                 // It is a goto; widen it if possible.
                 opcode = findOpcodeForInsn(insn, opcode);
                 if (opcode == null) {

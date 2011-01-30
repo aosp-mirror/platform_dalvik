@@ -16,9 +16,6 @@
 
 package com.android.dx.io;
 
-// TODO: DalvOps should migrate to this package (and get a better name).
-import com.android.dx.dex.code.DalvOps;
-
 /**
  * A decoded Dalvik instruction. This consists of a format codec, a
  * numeric opcode, an optional index type, and any additional
@@ -88,7 +85,7 @@ public final class DecodedInstruction {
             throw new NullPointerException("format == null");
         }
 
-        if (!DalvOps.isValidShape(opcode)) {
+        if (!Opcodes.isValidShape(opcode)) {
             throw new IllegalArgumentException("invalid opcode");
         }
 

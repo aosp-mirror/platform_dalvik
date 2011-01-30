@@ -16,6 +16,7 @@
 
 package com.android.dx.dex.code;
 
+import com.android.dx.io.Opcodes;
 import com.android.dx.rop.code.RegisterSpecList;
 import com.android.dx.rop.code.SourcePosition;
 import com.android.dx.util.AnnotatedOutput;
@@ -108,7 +109,7 @@ public final class SwitchData extends VariableSizeInsn {
             int lastCase = (sz == 0) ? 0 : cases.get(sz - 1);
             int outSz = lastCase - firstCase + 1;
 
-            out.writeShort(0x100 | DalvOps.NOP);
+            out.writeShort(Opcodes.PACKED_SWITCH_PAYLOAD);
             out.writeShort(outSz);
             out.writeInt(firstCase);
 
@@ -128,7 +129,7 @@ public final class SwitchData extends VariableSizeInsn {
                 out.writeInt(relTarget);
             }
         } else {
-            out.writeShort(0x200 | DalvOps.NOP);
+            out.writeShort(Opcodes.SPARSE_SWITCH_PAYLOAD);
             out.writeShort(sz);
 
             for (int i = 0; i < sz; i++) {
@@ -181,7 +182,7 @@ public final class SwitchData extends VariableSizeInsn {
         int sz = targets.length;
 
         sb.append(packed ? "packed" : "sparse");
-        sb.append("-switch-data // for switch @ ");
+        sb.append("-switch-payload // for switch @ ");
         sb.append(Hex.u2(baseAddress));
 
         for (int i = 0; i < sz; i++) {

@@ -14,17 +14,20 @@
  * limitations under the License.
  */
 
-package com.android.dx.dex.code;
+package com.android.dx.io;
 
 /**
  * All the Dalvik opcode value constants. See the related spec
  * document for the meaning and instruction format of each opcode.
  */
-public final class DalvOps {
+public final class Opcodes {
     /** pseudo-opcode used for nonstandard format "instructions" */
     public static final int SPECIAL_FORMAT = -1;
 
-    /** pseudo-opcode used to indicate there is no next opcode */
+    /**
+     * pseudo-opcode used to indicate there is no next opcode; used
+     * in opcode chaining lists
+     */
     public static final int NO_NEXT = -1;
 
     /** minimum valid opcode value */
@@ -294,9 +297,25 @@ public final class DalvOps {
     // END(opcodes)
 
     /**
+     * special pseudo-opcode value for packed-switch data payload
+     * instructions
+     */
+    public static final int PACKED_SWITCH_PAYLOAD = 0x100;
+
+    /** special pseudo-opcode value for packed-switch data payload
+     * instructions
+     */
+    public static final int SPARSE_SWITCH_PAYLOAD = 0x200;
+
+    /** special pseudo-opcode value for fill-array-data data payload
+     * instructions
+     */
+    public static final int FILL_ARRAY_DATA_PAYLOAD = 0x300;
+
+    /**
      * This class is uninstantiable.
      */
-    private DalvOps() {
+    private Opcodes() {
         // This space intentionally left blank.
     }
 

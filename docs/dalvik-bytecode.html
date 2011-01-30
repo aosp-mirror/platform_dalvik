@@ -68,7 +68,8 @@
   (after the operation).
 </li>
 <li>There are several "pseudo-instructions" that are used to hold
-  variable-length data referred to by regular instructions (for example,
+  variable-length data payloads, which are referred to by regular
+  instructions (for example,
   <code>fill-array-data</code>). Such instructions must never be
   encountered during the normal flow of execution. In addition, the
   instructions must be located on even-numbered bytecode offsets (that is,
@@ -164,9 +165,9 @@
     <p><b>Note:</b>
     Data-bearing pseudo-instructions are tagged with this opcode, in which
     case the high-order byte of the opcode unit indicates the nature of
-    the data. See "<code>packed-switch</code> Format",
-    "<code>sparse-switch</code> Format", and
-    "<code>fill-array-data</code> Format" below.</p>
+    the data. See "<code>packed-switch-payload</code> Format",
+    "<code>sparse-switch-payload</code> Format", and
+    "<code>fill-array-data-payload</code> Format" below.</p>
   </td>
 </tr>
 <tr>
@@ -509,7 +510,7 @@
 <tr>
   <td>26 31t</td>
   <td>fill-array-data vAA, +BBBBBBBB <i>(with supplemental data as specified
-    below in "<code>fill-array-data</code> Format")</i></td>
+    below in "<code>fill-array-data-payload</code> Format")</i></td>
   <td><code>A:</code> array reference (8 bits)<br/>
     <code>B:</code> signed "branch" offset to table data pseudo-instruction
     (32 bits)
@@ -558,7 +559,7 @@
 <tr>
   <td>2b 31t</td>
   <td>packed-switch vAA, +BBBBBBBB <i>(with supplemental data as
-    specified below in "<code>packed-switch</code> Format")</i></td>
+    specified below in "<code>packed-switch-payload</code> Format")</i></td>
   <td><code>A:</code> register to test<br/>
     <code>B:</code> signed "branch" offset to table data pseudo-instruction
     (32 bits)
@@ -572,7 +573,7 @@
 <tr>
   <td>2c 31t</td>
   <td>sparse-switch vAA, +BBBBBBBB <i>(with supplemental data as
-    specified below in "<code>sparse-switch</code> Format")</i></td>
+    specified below in "<code>sparse-switch-payload</code> Format")</i></td>
   <td><code>A:</code> register to test<br/>
     <code>B:</code> signed "branch" offset to table data pseudo-instruction
     (32 bits)
@@ -1134,7 +1135,7 @@
 </tbody>
 </table>
 
-<h2><code>packed-switch</code> Format</h2>
+<h2><code>packed-switch-payload</code> Format</h2>
 
 <table class="supplement">
 <thead>
@@ -1173,7 +1174,7 @@
 <p><b>Note:</b> The total number of code units for an instance of this
 table is <code>(size * 2) + 4</code>.</p>
 
-<h2><code>sparse-switch</code> Format</h2>
+<h2><code>sparse-switch-payload</code> Format</h2>
 
 <table class="supplement">
 <thead>
@@ -1213,7 +1214,7 @@ table is <code>(size * 2) + 4</code>.</p>
 <p><b>Note:</b> The total number of code units for an instance of this
 table is <code>(size * 4) + 2</code>.</p>
 
-<h2><code>fill-array-data</code> Format</h2>
+<h2><code>fill-array-data-payload</code> Format</h2>
 
 <table class="supplement">
 <thead>
