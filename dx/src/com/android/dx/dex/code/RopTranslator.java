@@ -16,6 +16,7 @@
 
 package com.android.dx.dex.code;
 
+import com.android.dx.io.Opcodes;
 import com.android.dx.rop.code.BasicBlock;
 import com.android.dx.rop.code.BasicBlockList;
 import com.android.dx.rop.code.FillArrayDataInsn;
@@ -710,7 +711,7 @@ public final class RopTranslator {
                 }
 
                 if ((rop.getOpcode() == RegOps.NEW_ARRAY) &&
-                    (opcode.getOpcode() != DalvOps.NEW_ARRAY)) {
+                    (opcode.getOpcode() != Opcodes.NEW_ARRAY)) {
                     /*
                      * It's a type-specific new-array-<primitive>, and
                      * so it should be turned into a SimpleInsn (no

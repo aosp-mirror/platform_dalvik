@@ -80,7 +80,7 @@ emission == "first-opcodes" {
     for (i = 0; i <= MAX_OPCODE; i++) {
         if (isUnused(i) || isOptimized(i)) continue;
         if (isFirst[i] == "true") {
-            printf("    //     DalvOps.%s\n", constName[i]);
+            printf("    //     Opcodes.%s\n", constName[i]);
         }
     }
 }
@@ -95,8 +95,8 @@ emission == "dops" {
         nextOp = (nextOp == -1) ? "NO_NEXT" : constName[nextOp];
 
         printf("    public static final Dop %s =\n" \
-               "        new Dop(DalvOps.%s, DalvOps.%s,\n" \
-               "            DalvOps.%s, Form%s.THE_ONE, %s,\n" \
+               "        new Dop(Opcodes.%s, Opcodes.%s,\n" \
+               "            Opcodes.%s, Form%s.THE_ONE, %s,\n" \
                "            \"%s\");\n\n",
                constName[i], constName[i], family[i], nextOp, format[i],
                hasResult[i], name[i]);
@@ -119,7 +119,7 @@ emission == "opcode-info-defs" {
         }
 
         printf("    public static final Info %s =\n" \
-               "        new Info(DalvOps.%s,\n" \
+               "        new Info(Opcodes.%s,\n" \
                "            InstructionCodec.FORMAT_%s, %s);\n\n", \
                 constName[i], constName[i], toupper(format[i]), itype);
     }

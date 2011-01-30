@@ -16,7 +16,6 @@
 
 package com.android.dx.io;
 
-import com.android.dx.dex.code.DalvOps;
 import com.android.dx.util.Hex;
 
 /**
@@ -33,1038 +32,1038 @@ public final class OpcodeInfo {
 
     // BEGIN(opcode-info-defs); GENERATED AUTOMATICALLY BY opcode-gen
     public static final Info NOP =
-        new Info(DalvOps.NOP,
+        new Info(Opcodes.NOP,
             InstructionCodec.FORMAT_10X, null);
 
     public static final Info MOVE =
-        new Info(DalvOps.MOVE,
+        new Info(Opcodes.MOVE,
             InstructionCodec.FORMAT_12X, null);
 
     public static final Info MOVE_FROM16 =
-        new Info(DalvOps.MOVE_FROM16,
+        new Info(Opcodes.MOVE_FROM16,
             InstructionCodec.FORMAT_22X, null);
 
     public static final Info MOVE_16 =
-        new Info(DalvOps.MOVE_16,
+        new Info(Opcodes.MOVE_16,
             InstructionCodec.FORMAT_32X, null);
 
     public static final Info MOVE_WIDE =
-        new Info(DalvOps.MOVE_WIDE,
+        new Info(Opcodes.MOVE_WIDE,
             InstructionCodec.FORMAT_12X, null);
 
     public static final Info MOVE_WIDE_FROM16 =
-        new Info(DalvOps.MOVE_WIDE_FROM16,
+        new Info(Opcodes.MOVE_WIDE_FROM16,
             InstructionCodec.FORMAT_22X, null);
 
     public static final Info MOVE_WIDE_16 =
-        new Info(DalvOps.MOVE_WIDE_16,
+        new Info(Opcodes.MOVE_WIDE_16,
             InstructionCodec.FORMAT_32X, null);
 
     public static final Info MOVE_OBJECT =
-        new Info(DalvOps.MOVE_OBJECT,
+        new Info(Opcodes.MOVE_OBJECT,
             InstructionCodec.FORMAT_12X, null);
 
     public static final Info MOVE_OBJECT_FROM16 =
-        new Info(DalvOps.MOVE_OBJECT_FROM16,
+        new Info(Opcodes.MOVE_OBJECT_FROM16,
             InstructionCodec.FORMAT_22X, null);
 
     public static final Info MOVE_OBJECT_16 =
-        new Info(DalvOps.MOVE_OBJECT_16,
+        new Info(Opcodes.MOVE_OBJECT_16,
             InstructionCodec.FORMAT_32X, null);
 
     public static final Info MOVE_RESULT =
-        new Info(DalvOps.MOVE_RESULT,
+        new Info(Opcodes.MOVE_RESULT,
             InstructionCodec.FORMAT_11X, null);
 
     public static final Info MOVE_RESULT_WIDE =
-        new Info(DalvOps.MOVE_RESULT_WIDE,
+        new Info(Opcodes.MOVE_RESULT_WIDE,
             InstructionCodec.FORMAT_11X, null);
 
     public static final Info MOVE_RESULT_OBJECT =
-        new Info(DalvOps.MOVE_RESULT_OBJECT,
+        new Info(Opcodes.MOVE_RESULT_OBJECT,
             InstructionCodec.FORMAT_11X, null);
 
     public static final Info MOVE_EXCEPTION =
-        new Info(DalvOps.MOVE_EXCEPTION,
+        new Info(Opcodes.MOVE_EXCEPTION,
             InstructionCodec.FORMAT_11X, null);
 
     public static final Info RETURN_VOID =
-        new Info(DalvOps.RETURN_VOID,
+        new Info(Opcodes.RETURN_VOID,
             InstructionCodec.FORMAT_10X, null);
 
     public static final Info RETURN =
-        new Info(DalvOps.RETURN,
+        new Info(Opcodes.RETURN,
             InstructionCodec.FORMAT_11X, null);
 
     public static final Info RETURN_WIDE =
-        new Info(DalvOps.RETURN_WIDE,
+        new Info(Opcodes.RETURN_WIDE,
             InstructionCodec.FORMAT_11X, null);
 
     public static final Info RETURN_OBJECT =
-        new Info(DalvOps.RETURN_OBJECT,
+        new Info(Opcodes.RETURN_OBJECT,
             InstructionCodec.FORMAT_11X, null);
 
     public static final Info CONST_4 =
-        new Info(DalvOps.CONST_4,
+        new Info(Opcodes.CONST_4,
             InstructionCodec.FORMAT_11N, null);
 
     public static final Info CONST_16 =
-        new Info(DalvOps.CONST_16,
+        new Info(Opcodes.CONST_16,
             InstructionCodec.FORMAT_21S, null);
 
     public static final Info CONST =
-        new Info(DalvOps.CONST,
+        new Info(Opcodes.CONST,
             InstructionCodec.FORMAT_31I, null);
 
     public static final Info CONST_HIGH16 =
-        new Info(DalvOps.CONST_HIGH16,
+        new Info(Opcodes.CONST_HIGH16,
             InstructionCodec.FORMAT_21H, null);
 
     public static final Info CONST_WIDE_16 =
-        new Info(DalvOps.CONST_WIDE_16,
+        new Info(Opcodes.CONST_WIDE_16,
             InstructionCodec.FORMAT_21S, null);
 
     public static final Info CONST_WIDE_32 =
-        new Info(DalvOps.CONST_WIDE_32,
+        new Info(Opcodes.CONST_WIDE_32,
             InstructionCodec.FORMAT_31I, null);
 
     public static final Info CONST_WIDE =
-        new Info(DalvOps.CONST_WIDE,
+        new Info(Opcodes.CONST_WIDE,
             InstructionCodec.FORMAT_51L, null);
 
     public static final Info CONST_WIDE_HIGH16 =
-        new Info(DalvOps.CONST_WIDE_HIGH16,
+        new Info(Opcodes.CONST_WIDE_HIGH16,
             InstructionCodec.FORMAT_21H, null);
 
     public static final Info CONST_STRING =
-        new Info(DalvOps.CONST_STRING,
+        new Info(Opcodes.CONST_STRING,
             InstructionCodec.FORMAT_21C, IndexType.STRING_REF);
 
     public static final Info CONST_STRING_JUMBO =
-        new Info(DalvOps.CONST_STRING_JUMBO,
+        new Info(Opcodes.CONST_STRING_JUMBO,
             InstructionCodec.FORMAT_31C, IndexType.STRING_REF);
 
     public static final Info CONST_CLASS =
-        new Info(DalvOps.CONST_CLASS,
+        new Info(Opcodes.CONST_CLASS,
             InstructionCodec.FORMAT_21C, IndexType.TYPE_REF);
 
     public static final Info MONITOR_ENTER =
-        new Info(DalvOps.MONITOR_ENTER,
+        new Info(Opcodes.MONITOR_ENTER,
             InstructionCodec.FORMAT_11X, null);
 
     public static final Info MONITOR_EXIT =
-        new Info(DalvOps.MONITOR_EXIT,
+        new Info(Opcodes.MONITOR_EXIT,
             InstructionCodec.FORMAT_11X, null);
 
     public static final Info CHECK_CAST =
-        new Info(DalvOps.CHECK_CAST,
+        new Info(Opcodes.CHECK_CAST,
             InstructionCodec.FORMAT_21C, IndexType.TYPE_REF);
 
     public static final Info INSTANCE_OF =
-        new Info(DalvOps.INSTANCE_OF,
+        new Info(Opcodes.INSTANCE_OF,
             InstructionCodec.FORMAT_22C, IndexType.TYPE_REF);
 
     public static final Info ARRAY_LENGTH =
-        new Info(DalvOps.ARRAY_LENGTH,
+        new Info(Opcodes.ARRAY_LENGTH,
             InstructionCodec.FORMAT_12X, null);
 
     public static final Info NEW_INSTANCE =
-        new Info(DalvOps.NEW_INSTANCE,
+        new Info(Opcodes.NEW_INSTANCE,
             InstructionCodec.FORMAT_21C, IndexType.TYPE_REF);
 
     public static final Info NEW_ARRAY =
-        new Info(DalvOps.NEW_ARRAY,
+        new Info(Opcodes.NEW_ARRAY,
             InstructionCodec.FORMAT_22C, IndexType.TYPE_REF);
 
     public static final Info FILLED_NEW_ARRAY =
-        new Info(DalvOps.FILLED_NEW_ARRAY,
+        new Info(Opcodes.FILLED_NEW_ARRAY,
             InstructionCodec.FORMAT_35C, IndexType.TYPE_REF);
 
     public static final Info FILLED_NEW_ARRAY_RANGE =
-        new Info(DalvOps.FILLED_NEW_ARRAY_RANGE,
+        new Info(Opcodes.FILLED_NEW_ARRAY_RANGE,
             InstructionCodec.FORMAT_3RC, IndexType.TYPE_REF);
 
     public static final Info FILL_ARRAY_DATA =
-        new Info(DalvOps.FILL_ARRAY_DATA,
+        new Info(Opcodes.FILL_ARRAY_DATA,
             InstructionCodec.FORMAT_31T, null);
 
     public static final Info THROW =
-        new Info(DalvOps.THROW,
+        new Info(Opcodes.THROW,
             InstructionCodec.FORMAT_11X, null);
 
     public static final Info GOTO =
-        new Info(DalvOps.GOTO,
+        new Info(Opcodes.GOTO,
             InstructionCodec.FORMAT_10T, null);
 
     public static final Info GOTO_16 =
-        new Info(DalvOps.GOTO_16,
+        new Info(Opcodes.GOTO_16,
             InstructionCodec.FORMAT_20T, null);
 
     public static final Info GOTO_32 =
-        new Info(DalvOps.GOTO_32,
+        new Info(Opcodes.GOTO_32,
             InstructionCodec.FORMAT_30T, null);
 
     public static final Info PACKED_SWITCH =
-        new Info(DalvOps.PACKED_SWITCH,
+        new Info(Opcodes.PACKED_SWITCH,
             InstructionCodec.FORMAT_31T, null);
 
     public static final Info SPARSE_SWITCH =
-        new Info(DalvOps.SPARSE_SWITCH,
+        new Info(Opcodes.SPARSE_SWITCH,
             InstructionCodec.FORMAT_31T, null);
 
     public static final Info CMPL_FLOAT =
-        new Info(DalvOps.CMPL_FLOAT,
+        new Info(Opcodes.CMPL_FLOAT,
             InstructionCodec.FORMAT_23X, null);
 
     public static final Info CMPG_FLOAT =
-        new Info(DalvOps.CMPG_FLOAT,
+        new Info(Opcodes.CMPG_FLOAT,
             InstructionCodec.FORMAT_23X, null);
 
     public static final Info CMPL_DOUBLE =
-        new Info(DalvOps.CMPL_DOUBLE,
+        new Info(Opcodes.CMPL_DOUBLE,
             InstructionCodec.FORMAT_23X, null);
 
     public static final Info CMPG_DOUBLE =
-        new Info(DalvOps.CMPG_DOUBLE,
+        new Info(Opcodes.CMPG_DOUBLE,
             InstructionCodec.FORMAT_23X, null);
 
     public static final Info CMP_LONG =
-        new Info(DalvOps.CMP_LONG,
+        new Info(Opcodes.CMP_LONG,
             InstructionCodec.FORMAT_23X, null);
 
     public static final Info IF_EQ =
-        new Info(DalvOps.IF_EQ,
+        new Info(Opcodes.IF_EQ,
             InstructionCodec.FORMAT_22T, null);
 
     public static final Info IF_NE =
-        new Info(DalvOps.IF_NE,
+        new Info(Opcodes.IF_NE,
             InstructionCodec.FORMAT_22T, null);
 
     public static final Info IF_LT =
-        new Info(DalvOps.IF_LT,
+        new Info(Opcodes.IF_LT,
             InstructionCodec.FORMAT_22T, null);
 
     public static final Info IF_GE =
-        new Info(DalvOps.IF_GE,
+        new Info(Opcodes.IF_GE,
             InstructionCodec.FORMAT_22T, null);
 
     public static final Info IF_GT =
-        new Info(DalvOps.IF_GT,
+        new Info(Opcodes.IF_GT,
             InstructionCodec.FORMAT_22T, null);
 
     public static final Info IF_LE =
-        new Info(DalvOps.IF_LE,
+        new Info(Opcodes.IF_LE,
             InstructionCodec.FORMAT_22T, null);
 
     public static final Info IF_EQZ =
-        new Info(DalvOps.IF_EQZ,
+        new Info(Opcodes.IF_EQZ,
             InstructionCodec.FORMAT_21T, null);
 
     public static final Info IF_NEZ =
-        new Info(DalvOps.IF_NEZ,
+        new Info(Opcodes.IF_NEZ,
             InstructionCodec.FORMAT_21T, null);
 
     public static final Info IF_LTZ =
-        new Info(DalvOps.IF_LTZ,
+        new Info(Opcodes.IF_LTZ,
             InstructionCodec.FORMAT_21T, null);
 
     public static final Info IF_GEZ =
-        new Info(DalvOps.IF_GEZ,
+        new Info(Opcodes.IF_GEZ,
             InstructionCodec.FORMAT_21T, null);
 
     public static final Info IF_GTZ =
-        new Info(DalvOps.IF_GTZ,
+        new Info(Opcodes.IF_GTZ,
             InstructionCodec.FORMAT_21T, null);
 
     public static final Info IF_LEZ =
-        new Info(DalvOps.IF_LEZ,
+        new Info(Opcodes.IF_LEZ,
             InstructionCodec.FORMAT_21T, null);
 
     public static final Info AGET =
-        new Info(DalvOps.AGET,
+        new Info(Opcodes.AGET,
             InstructionCodec.FORMAT_23X, null);
 
     public static final Info AGET_WIDE =
-        new Info(DalvOps.AGET_WIDE,
+        new Info(Opcodes.AGET_WIDE,
             InstructionCodec.FORMAT_23X, null);
 
     public static final Info AGET_OBJECT =
-        new Info(DalvOps.AGET_OBJECT,
+        new Info(Opcodes.AGET_OBJECT,
             InstructionCodec.FORMAT_23X, null);
 
     public static final Info AGET_BOOLEAN =
-        new Info(DalvOps.AGET_BOOLEAN,
+        new Info(Opcodes.AGET_BOOLEAN,
             InstructionCodec.FORMAT_23X, null);
 
     public static final Info AGET_BYTE =
-        new Info(DalvOps.AGET_BYTE,
+        new Info(Opcodes.AGET_BYTE,
             InstructionCodec.FORMAT_23X, null);
 
     public static final Info AGET_CHAR =
-        new Info(DalvOps.AGET_CHAR,
+        new Info(Opcodes.AGET_CHAR,
             InstructionCodec.FORMAT_23X, null);
 
     public static final Info AGET_SHORT =
-        new Info(DalvOps.AGET_SHORT,
+        new Info(Opcodes.AGET_SHORT,
             InstructionCodec.FORMAT_23X, null);
 
     public static final Info APUT =
-        new Info(DalvOps.APUT,
+        new Info(Opcodes.APUT,
             InstructionCodec.FORMAT_23X, null);
 
     public static final Info APUT_WIDE =
-        new Info(DalvOps.APUT_WIDE,
+        new Info(Opcodes.APUT_WIDE,
             InstructionCodec.FORMAT_23X, null);
 
     public static final Info APUT_OBJECT =
-        new Info(DalvOps.APUT_OBJECT,
+        new Info(Opcodes.APUT_OBJECT,
             InstructionCodec.FORMAT_23X, null);
 
     public static final Info APUT_BOOLEAN =
-        new Info(DalvOps.APUT_BOOLEAN,
+        new Info(Opcodes.APUT_BOOLEAN,
             InstructionCodec.FORMAT_23X, null);
 
     public static final Info APUT_BYTE =
-        new Info(DalvOps.APUT_BYTE,
+        new Info(Opcodes.APUT_BYTE,
             InstructionCodec.FORMAT_23X, null);
 
     public static final Info APUT_CHAR =
-        new Info(DalvOps.APUT_CHAR,
+        new Info(Opcodes.APUT_CHAR,
             InstructionCodec.FORMAT_23X, null);
 
     public static final Info APUT_SHORT =
-        new Info(DalvOps.APUT_SHORT,
+        new Info(Opcodes.APUT_SHORT,
             InstructionCodec.FORMAT_23X, null);
 
     public static final Info IGET =
-        new Info(DalvOps.IGET,
+        new Info(Opcodes.IGET,
             InstructionCodec.FORMAT_22C, IndexType.FIELD_REF);
 
     public static final Info IGET_WIDE =
-        new Info(DalvOps.IGET_WIDE,
+        new Info(Opcodes.IGET_WIDE,
             InstructionCodec.FORMAT_22C, IndexType.FIELD_REF);
 
     public static final Info IGET_OBJECT =
-        new Info(DalvOps.IGET_OBJECT,
+        new Info(Opcodes.IGET_OBJECT,
             InstructionCodec.FORMAT_22C, IndexType.FIELD_REF);
 
     public static final Info IGET_BOOLEAN =
-        new Info(DalvOps.IGET_BOOLEAN,
+        new Info(Opcodes.IGET_BOOLEAN,
             InstructionCodec.FORMAT_22C, IndexType.FIELD_REF);
 
     public static final Info IGET_BYTE =
-        new Info(DalvOps.IGET_BYTE,
+        new Info(Opcodes.IGET_BYTE,
             InstructionCodec.FORMAT_22C, IndexType.FIELD_REF);
 
     public static final Info IGET_CHAR =
-        new Info(DalvOps.IGET_CHAR,
+        new Info(Opcodes.IGET_CHAR,
             InstructionCodec.FORMAT_22C, IndexType.FIELD_REF);
 
     public static final Info IGET_SHORT =
-        new Info(DalvOps.IGET_SHORT,
+        new Info(Opcodes.IGET_SHORT,
             InstructionCodec.FORMAT_22C, IndexType.FIELD_REF);
 
     public static final Info IPUT =
-        new Info(DalvOps.IPUT,
+        new Info(Opcodes.IPUT,
             InstructionCodec.FORMAT_22C, IndexType.FIELD_REF);
 
     public static final Info IPUT_WIDE =
-        new Info(DalvOps.IPUT_WIDE,
+        new Info(Opcodes.IPUT_WIDE,
             InstructionCodec.FORMAT_22C, IndexType.FIELD_REF);
 
     public static final Info IPUT_OBJECT =
-        new Info(DalvOps.IPUT_OBJECT,
+        new Info(Opcodes.IPUT_OBJECT,
             InstructionCodec.FORMAT_22C, IndexType.FIELD_REF);
 
     public static final Info IPUT_BOOLEAN =
-        new Info(DalvOps.IPUT_BOOLEAN,
+        new Info(Opcodes.IPUT_BOOLEAN,
             InstructionCodec.FORMAT_22C, IndexType.FIELD_REF);
 
     public static final Info IPUT_BYTE =
-        new Info(DalvOps.IPUT_BYTE,
+        new Info(Opcodes.IPUT_BYTE,
             InstructionCodec.FORMAT_22C, IndexType.FIELD_REF);
 
     public static final Info IPUT_CHAR =
-        new Info(DalvOps.IPUT_CHAR,
+        new Info(Opcodes.IPUT_CHAR,
             InstructionCodec.FORMAT_22C, IndexType.FIELD_REF);
 
     public static final Info IPUT_SHORT =
-        new Info(DalvOps.IPUT_SHORT,
+        new Info(Opcodes.IPUT_SHORT,
             InstructionCodec.FORMAT_22C, IndexType.FIELD_REF);
 
     public static final Info SGET =
-        new Info(DalvOps.SGET,
+        new Info(Opcodes.SGET,
             InstructionCodec.FORMAT_21C, IndexType.FIELD_REF);
 
     public static final Info SGET_WIDE =
-        new Info(DalvOps.SGET_WIDE,
+        new Info(Opcodes.SGET_WIDE,
             InstructionCodec.FORMAT_21C, IndexType.FIELD_REF);
 
     public static final Info SGET_OBJECT =
-        new Info(DalvOps.SGET_OBJECT,
+        new Info(Opcodes.SGET_OBJECT,
             InstructionCodec.FORMAT_21C, IndexType.FIELD_REF);
 
     public static final Info SGET_BOOLEAN =
-        new Info(DalvOps.SGET_BOOLEAN,
+        new Info(Opcodes.SGET_BOOLEAN,
             InstructionCodec.FORMAT_21C, IndexType.FIELD_REF);
 
     public static final Info SGET_BYTE =
-        new Info(DalvOps.SGET_BYTE,
+        new Info(Opcodes.SGET_BYTE,
             InstructionCodec.FORMAT_21C, IndexType.FIELD_REF);
 
     public static final Info SGET_CHAR =
-        new Info(DalvOps.SGET_CHAR,
+        new Info(Opcodes.SGET_CHAR,
             InstructionCodec.FORMAT_21C, IndexType.FIELD_REF);
 
     public static final Info SGET_SHORT =
-        new Info(DalvOps.SGET_SHORT,
+        new Info(Opcodes.SGET_SHORT,
             InstructionCodec.FORMAT_21C, IndexType.FIELD_REF);
 
     public static final Info SPUT =
-        new Info(DalvOps.SPUT,
+        new Info(Opcodes.SPUT,
             InstructionCodec.FORMAT_21C, IndexType.FIELD_REF);
 
     public static final Info SPUT_WIDE =
-        new Info(DalvOps.SPUT_WIDE,
+        new Info(Opcodes.SPUT_WIDE,
             InstructionCodec.FORMAT_21C, IndexType.FIELD_REF);
 
     public static final Info SPUT_OBJECT =
-        new Info(DalvOps.SPUT_OBJECT,
+        new Info(Opcodes.SPUT_OBJECT,
             InstructionCodec.FORMAT_21C, IndexType.FIELD_REF);
 
     public static final Info SPUT_BOOLEAN =
-        new Info(DalvOps.SPUT_BOOLEAN,
+        new Info(Opcodes.SPUT_BOOLEAN,
             InstructionCodec.FORMAT_21C, IndexType.FIELD_REF);
 
     public static final Info SPUT_BYTE =
-        new Info(DalvOps.SPUT_BYTE,
+        new Info(Opcodes.SPUT_BYTE,
             InstructionCodec.FORMAT_21C, IndexType.FIELD_REF);
 
     public static final Info SPUT_CHAR =
-        new Info(DalvOps.SPUT_CHAR,
+        new Info(Opcodes.SPUT_CHAR,
             InstructionCodec.FORMAT_21C, IndexType.FIELD_REF);
 
     public static final Info SPUT_SHORT =
-        new Info(DalvOps.SPUT_SHORT,
+        new Info(Opcodes.SPUT_SHORT,
             InstructionCodec.FORMAT_21C, IndexType.FIELD_REF);
 
     public static final Info INVOKE_VIRTUAL =
-        new Info(DalvOps.INVOKE_VIRTUAL,
+        new Info(Opcodes.INVOKE_VIRTUAL,
             InstructionCodec.FORMAT_35C, IndexType.METHOD_REF);
 
     public static final Info INVOKE_SUPER =
-        new Info(DalvOps.INVOKE_SUPER,
+        new Info(Opcodes.INVOKE_SUPER,
             InstructionCodec.FORMAT_35C, IndexType.METHOD_REF);
 
     public static final Info INVOKE_DIRECT =
-        new Info(DalvOps.INVOKE_DIRECT,
+        new Info(Opcodes.INVOKE_DIRECT,
             InstructionCodec.FORMAT_35C, IndexType.METHOD_REF);
 
     public static final Info INVOKE_STATIC =
-        new Info(DalvOps.INVOKE_STATIC,
+        new Info(Opcodes.INVOKE_STATIC,
             InstructionCodec.FORMAT_35C, IndexType.METHOD_REF);
 
     public static final Info INVOKE_INTERFACE =
-        new Info(DalvOps.INVOKE_INTERFACE,
+        new Info(Opcodes.INVOKE_INTERFACE,
             InstructionCodec.FORMAT_35C, IndexType.METHOD_REF);
 
     public static final Info INVOKE_VIRTUAL_RANGE =
-        new Info(DalvOps.INVOKE_VIRTUAL_RANGE,
+        new Info(Opcodes.INVOKE_VIRTUAL_RANGE,
             InstructionCodec.FORMAT_3RC, IndexType.METHOD_REF);
 
     public static final Info INVOKE_SUPER_RANGE =
-        new Info(DalvOps.INVOKE_SUPER_RANGE,
+        new Info(Opcodes.INVOKE_SUPER_RANGE,
             InstructionCodec.FORMAT_3RC, IndexType.METHOD_REF);
 
     public static final Info INVOKE_DIRECT_RANGE =
-        new Info(DalvOps.INVOKE_DIRECT_RANGE,
+        new Info(Opcodes.INVOKE_DIRECT_RANGE,
             InstructionCodec.FORMAT_3RC, IndexType.METHOD_REF);
 
     public static final Info INVOKE_STATIC_RANGE =
-        new Info(DalvOps.INVOKE_STATIC_RANGE,
+        new Info(Opcodes.INVOKE_STATIC_RANGE,
             InstructionCodec.FORMAT_3RC, IndexType.METHOD_REF);
 
     public static final Info INVOKE_INTERFACE_RANGE =
-        new Info(DalvOps.INVOKE_INTERFACE_RANGE,
+        new Info(Opcodes.INVOKE_INTERFACE_RANGE,
             InstructionCodec.FORMAT_3RC, IndexType.METHOD_REF);
 
     public static final Info NEG_INT =
-        new Info(DalvOps.NEG_INT,
+        new Info(Opcodes.NEG_INT,
             InstructionCodec.FORMAT_12X, null);
 
     public static final Info NOT_INT =
-        new Info(DalvOps.NOT_INT,
+        new Info(Opcodes.NOT_INT,
             InstructionCodec.FORMAT_12X, null);
 
     public static final Info NEG_LONG =
-        new Info(DalvOps.NEG_LONG,
+        new Info(Opcodes.NEG_LONG,
             InstructionCodec.FORMAT_12X, null);
 
     public static final Info NOT_LONG =
-        new Info(DalvOps.NOT_LONG,
+        new Info(Opcodes.NOT_LONG,
             InstructionCodec.FORMAT_12X, null);
 
     public static final Info NEG_FLOAT =
-        new Info(DalvOps.NEG_FLOAT,
+        new Info(Opcodes.NEG_FLOAT,
             InstructionCodec.FORMAT_12X, null);
 
     public static final Info NEG_DOUBLE =
-        new Info(DalvOps.NEG_DOUBLE,
+        new Info(Opcodes.NEG_DOUBLE,
             InstructionCodec.FORMAT_12X, null);
 
     public static final Info INT_TO_LONG =
-        new Info(DalvOps.INT_TO_LONG,
+        new Info(Opcodes.INT_TO_LONG,
             InstructionCodec.FORMAT_12X, null);
 
     public static final Info INT_TO_FLOAT =
-        new Info(DalvOps.INT_TO_FLOAT,
+        new Info(Opcodes.INT_TO_FLOAT,
             InstructionCodec.FORMAT_12X, null);
 
     public static final Info INT_TO_DOUBLE =
-        new Info(DalvOps.INT_TO_DOUBLE,
+        new Info(Opcodes.INT_TO_DOUBLE,
             InstructionCodec.FORMAT_12X, null);
 
     public static final Info LONG_TO_INT =
-        new Info(DalvOps.LONG_TO_INT,
+        new Info(Opcodes.LONG_TO_INT,
             InstructionCodec.FORMAT_12X, null);
 
     public static final Info LONG_TO_FLOAT =
-        new Info(DalvOps.LONG_TO_FLOAT,
+        new Info(Opcodes.LONG_TO_FLOAT,
             InstructionCodec.FORMAT_12X, null);
 
     public static final Info LONG_TO_DOUBLE =
-        new Info(DalvOps.LONG_TO_DOUBLE,
+        new Info(Opcodes.LONG_TO_DOUBLE,
             InstructionCodec.FORMAT_12X, null);
 
     public static final Info FLOAT_TO_INT =
-        new Info(DalvOps.FLOAT_TO_INT,
+        new Info(Opcodes.FLOAT_TO_INT,
             InstructionCodec.FORMAT_12X, null);
 
     public static final Info FLOAT_TO_LONG =
-        new Info(DalvOps.FLOAT_TO_LONG,
+        new Info(Opcodes.FLOAT_TO_LONG,
             InstructionCodec.FORMAT_12X, null);
 
     public static final Info FLOAT_TO_DOUBLE =
-        new Info(DalvOps.FLOAT_TO_DOUBLE,
+        new Info(Opcodes.FLOAT_TO_DOUBLE,
             InstructionCodec.FORMAT_12X, null);
 
     public static final Info DOUBLE_TO_INT =
-        new Info(DalvOps.DOUBLE_TO_INT,
+        new Info(Opcodes.DOUBLE_TO_INT,
             InstructionCodec.FORMAT_12X, null);
 
     public static final Info DOUBLE_TO_LONG =
-        new Info(DalvOps.DOUBLE_TO_LONG,
+        new Info(Opcodes.DOUBLE_TO_LONG,
             InstructionCodec.FORMAT_12X, null);
 
     public static final Info DOUBLE_TO_FLOAT =
-        new Info(DalvOps.DOUBLE_TO_FLOAT,
+        new Info(Opcodes.DOUBLE_TO_FLOAT,
             InstructionCodec.FORMAT_12X, null);
 
     public static final Info INT_TO_BYTE =
-        new Info(DalvOps.INT_TO_BYTE,
+        new Info(Opcodes.INT_TO_BYTE,
             InstructionCodec.FORMAT_12X, null);
 
     public static final Info INT_TO_CHAR =
-        new Info(DalvOps.INT_TO_CHAR,
+        new Info(Opcodes.INT_TO_CHAR,
             InstructionCodec.FORMAT_12X, null);
 
     public static final Info INT_TO_SHORT =
-        new Info(DalvOps.INT_TO_SHORT,
+        new Info(Opcodes.INT_TO_SHORT,
             InstructionCodec.FORMAT_12X, null);
 
     public static final Info ADD_INT =
-        new Info(DalvOps.ADD_INT,
+        new Info(Opcodes.ADD_INT,
             InstructionCodec.FORMAT_23X, null);
 
     public static final Info SUB_INT =
-        new Info(DalvOps.SUB_INT,
+        new Info(Opcodes.SUB_INT,
             InstructionCodec.FORMAT_23X, null);
 
     public static final Info MUL_INT =
-        new Info(DalvOps.MUL_INT,
+        new Info(Opcodes.MUL_INT,
             InstructionCodec.FORMAT_23X, null);
 
     public static final Info DIV_INT =
-        new Info(DalvOps.DIV_INT,
+        new Info(Opcodes.DIV_INT,
             InstructionCodec.FORMAT_23X, null);
 
     public static final Info REM_INT =
-        new Info(DalvOps.REM_INT,
+        new Info(Opcodes.REM_INT,
             InstructionCodec.FORMAT_23X, null);
 
     public static final Info AND_INT =
-        new Info(DalvOps.AND_INT,
+        new Info(Opcodes.AND_INT,
             InstructionCodec.FORMAT_23X, null);
 
     public static final Info OR_INT =
-        new Info(DalvOps.OR_INT,
+        new Info(Opcodes.OR_INT,
             InstructionCodec.FORMAT_23X, null);
 
     public static final Info XOR_INT =
-        new Info(DalvOps.XOR_INT,
+        new Info(Opcodes.XOR_INT,
             InstructionCodec.FORMAT_23X, null);
 
     public static final Info SHL_INT =
-        new Info(DalvOps.SHL_INT,
+        new Info(Opcodes.SHL_INT,
             InstructionCodec.FORMAT_23X, null);
 
     public static final Info SHR_INT =
-        new Info(DalvOps.SHR_INT,
+        new Info(Opcodes.SHR_INT,
             InstructionCodec.FORMAT_23X, null);
 
     public static final Info USHR_INT =
-        new Info(DalvOps.USHR_INT,
+        new Info(Opcodes.USHR_INT,
             InstructionCodec.FORMAT_23X, null);
 
     public static final Info ADD_LONG =
-        new Info(DalvOps.ADD_LONG,
+        new Info(Opcodes.ADD_LONG,
             InstructionCodec.FORMAT_23X, null);
 
     public static final Info SUB_LONG =
-        new Info(DalvOps.SUB_LONG,
+        new Info(Opcodes.SUB_LONG,
             InstructionCodec.FORMAT_23X, null);
 
     public static final Info MUL_LONG =
-        new Info(DalvOps.MUL_LONG,
+        new Info(Opcodes.MUL_LONG,
             InstructionCodec.FORMAT_23X, null);
 
     public static final Info DIV_LONG =
-        new Info(DalvOps.DIV_LONG,
+        new Info(Opcodes.DIV_LONG,
             InstructionCodec.FORMAT_23X, null);
 
     public static final Info REM_LONG =
-        new Info(DalvOps.REM_LONG,
+        new Info(Opcodes.REM_LONG,
             InstructionCodec.FORMAT_23X, null);
 
     public static final Info AND_LONG =
-        new Info(DalvOps.AND_LONG,
+        new Info(Opcodes.AND_LONG,
             InstructionCodec.FORMAT_23X, null);
 
     public static final Info OR_LONG =
-        new Info(DalvOps.OR_LONG,
+        new Info(Opcodes.OR_LONG,
             InstructionCodec.FORMAT_23X, null);
 
     public static final Info XOR_LONG =
-        new Info(DalvOps.XOR_LONG,
+        new Info(Opcodes.XOR_LONG,
             InstructionCodec.FORMAT_23X, null);
 
     public static final Info SHL_LONG =
-        new Info(DalvOps.SHL_LONG,
+        new Info(Opcodes.SHL_LONG,
             InstructionCodec.FORMAT_23X, null);
 
     public static final Info SHR_LONG =
-        new Info(DalvOps.SHR_LONG,
+        new Info(Opcodes.SHR_LONG,
             InstructionCodec.FORMAT_23X, null);
 
     public static final Info USHR_LONG =
-        new Info(DalvOps.USHR_LONG,
+        new Info(Opcodes.USHR_LONG,
             InstructionCodec.FORMAT_23X, null);
 
     public static final Info ADD_FLOAT =
-        new Info(DalvOps.ADD_FLOAT,
+        new Info(Opcodes.ADD_FLOAT,
             InstructionCodec.FORMAT_23X, null);
 
     public static final Info SUB_FLOAT =
-        new Info(DalvOps.SUB_FLOAT,
+        new Info(Opcodes.SUB_FLOAT,
             InstructionCodec.FORMAT_23X, null);
 
     public static final Info MUL_FLOAT =
-        new Info(DalvOps.MUL_FLOAT,
+        new Info(Opcodes.MUL_FLOAT,
             InstructionCodec.FORMAT_23X, null);
 
     public static final Info DIV_FLOAT =
-        new Info(DalvOps.DIV_FLOAT,
+        new Info(Opcodes.DIV_FLOAT,
             InstructionCodec.FORMAT_23X, null);
 
     public static final Info REM_FLOAT =
-        new Info(DalvOps.REM_FLOAT,
+        new Info(Opcodes.REM_FLOAT,
             InstructionCodec.FORMAT_23X, null);
 
     public static final Info ADD_DOUBLE =
-        new Info(DalvOps.ADD_DOUBLE,
+        new Info(Opcodes.ADD_DOUBLE,
             InstructionCodec.FORMAT_23X, null);
 
     public static final Info SUB_DOUBLE =
-        new Info(DalvOps.SUB_DOUBLE,
+        new Info(Opcodes.SUB_DOUBLE,
             InstructionCodec.FORMAT_23X, null);
 
     public static final Info MUL_DOUBLE =
-        new Info(DalvOps.MUL_DOUBLE,
+        new Info(Opcodes.MUL_DOUBLE,
             InstructionCodec.FORMAT_23X, null);
 
     public static final Info DIV_DOUBLE =
-        new Info(DalvOps.DIV_DOUBLE,
+        new Info(Opcodes.DIV_DOUBLE,
             InstructionCodec.FORMAT_23X, null);
 
     public static final Info REM_DOUBLE =
-        new Info(DalvOps.REM_DOUBLE,
+        new Info(Opcodes.REM_DOUBLE,
             InstructionCodec.FORMAT_23X, null);
 
     public static final Info ADD_INT_2ADDR =
-        new Info(DalvOps.ADD_INT_2ADDR,
+        new Info(Opcodes.ADD_INT_2ADDR,
             InstructionCodec.FORMAT_12X, null);
 
     public static final Info SUB_INT_2ADDR =
-        new Info(DalvOps.SUB_INT_2ADDR,
+        new Info(Opcodes.SUB_INT_2ADDR,
             InstructionCodec.FORMAT_12X, null);
 
     public static final Info MUL_INT_2ADDR =
-        new Info(DalvOps.MUL_INT_2ADDR,
+        new Info(Opcodes.MUL_INT_2ADDR,
             InstructionCodec.FORMAT_12X, null);
 
     public static final Info DIV_INT_2ADDR =
-        new Info(DalvOps.DIV_INT_2ADDR,
+        new Info(Opcodes.DIV_INT_2ADDR,
             InstructionCodec.FORMAT_12X, null);
 
     public static final Info REM_INT_2ADDR =
-        new Info(DalvOps.REM_INT_2ADDR,
+        new Info(Opcodes.REM_INT_2ADDR,
             InstructionCodec.FORMAT_12X, null);
 
     public static final Info AND_INT_2ADDR =
-        new Info(DalvOps.AND_INT_2ADDR,
+        new Info(Opcodes.AND_INT_2ADDR,
             InstructionCodec.FORMAT_12X, null);
 
     public static final Info OR_INT_2ADDR =
-        new Info(DalvOps.OR_INT_2ADDR,
+        new Info(Opcodes.OR_INT_2ADDR,
             InstructionCodec.FORMAT_12X, null);
 
     public static final Info XOR_INT_2ADDR =
-        new Info(DalvOps.XOR_INT_2ADDR,
+        new Info(Opcodes.XOR_INT_2ADDR,
             InstructionCodec.FORMAT_12X, null);
 
     public static final Info SHL_INT_2ADDR =
-        new Info(DalvOps.SHL_INT_2ADDR,
+        new Info(Opcodes.SHL_INT_2ADDR,
             InstructionCodec.FORMAT_12X, null);
 
     public static final Info SHR_INT_2ADDR =
-        new Info(DalvOps.SHR_INT_2ADDR,
+        new Info(Opcodes.SHR_INT_2ADDR,
             InstructionCodec.FORMAT_12X, null);
 
     public static final Info USHR_INT_2ADDR =
-        new Info(DalvOps.USHR_INT_2ADDR,
+        new Info(Opcodes.USHR_INT_2ADDR,
             InstructionCodec.FORMAT_12X, null);
 
     public static final Info ADD_LONG_2ADDR =
-        new Info(DalvOps.ADD_LONG_2ADDR,
+        new Info(Opcodes.ADD_LONG_2ADDR,
             InstructionCodec.FORMAT_12X, null);
 
     public static final Info SUB_LONG_2ADDR =
-        new Info(DalvOps.SUB_LONG_2ADDR,
+        new Info(Opcodes.SUB_LONG_2ADDR,
             InstructionCodec.FORMAT_12X, null);
 
     public static final Info MUL_LONG_2ADDR =
-        new Info(DalvOps.MUL_LONG_2ADDR,
+        new Info(Opcodes.MUL_LONG_2ADDR,
             InstructionCodec.FORMAT_12X, null);
 
     public static final Info DIV_LONG_2ADDR =
-        new Info(DalvOps.DIV_LONG_2ADDR,
+        new Info(Opcodes.DIV_LONG_2ADDR,
             InstructionCodec.FORMAT_12X, null);
 
     public static final Info REM_LONG_2ADDR =
-        new Info(DalvOps.REM_LONG_2ADDR,
+        new Info(Opcodes.REM_LONG_2ADDR,
             InstructionCodec.FORMAT_12X, null);
 
     public static final Info AND_LONG_2ADDR =
-        new Info(DalvOps.AND_LONG_2ADDR,
+        new Info(Opcodes.AND_LONG_2ADDR,
             InstructionCodec.FORMAT_12X, null);
 
     public static final Info OR_LONG_2ADDR =
-        new Info(DalvOps.OR_LONG_2ADDR,
+        new Info(Opcodes.OR_LONG_2ADDR,
             InstructionCodec.FORMAT_12X, null);
 
     public static final Info XOR_LONG_2ADDR =
-        new Info(DalvOps.XOR_LONG_2ADDR,
+        new Info(Opcodes.XOR_LONG_2ADDR,
             InstructionCodec.FORMAT_12X, null);
 
     public static final Info SHL_LONG_2ADDR =
-        new Info(DalvOps.SHL_LONG_2ADDR,
+        new Info(Opcodes.SHL_LONG_2ADDR,
             InstructionCodec.FORMAT_12X, null);
 
     public static final Info SHR_LONG_2ADDR =
-        new Info(DalvOps.SHR_LONG_2ADDR,
+        new Info(Opcodes.SHR_LONG_2ADDR,
             InstructionCodec.FORMAT_12X, null);
 
     public static final Info USHR_LONG_2ADDR =
-        new Info(DalvOps.USHR_LONG_2ADDR,
+        new Info(Opcodes.USHR_LONG_2ADDR,
             InstructionCodec.FORMAT_12X, null);
 
     public static final Info ADD_FLOAT_2ADDR =
-        new Info(DalvOps.ADD_FLOAT_2ADDR,
+        new Info(Opcodes.ADD_FLOAT_2ADDR,
             InstructionCodec.FORMAT_12X, null);
 
     public static final Info SUB_FLOAT_2ADDR =
-        new Info(DalvOps.SUB_FLOAT_2ADDR,
+        new Info(Opcodes.SUB_FLOAT_2ADDR,
             InstructionCodec.FORMAT_12X, null);
 
     public static final Info MUL_FLOAT_2ADDR =
-        new Info(DalvOps.MUL_FLOAT_2ADDR,
+        new Info(Opcodes.MUL_FLOAT_2ADDR,
             InstructionCodec.FORMAT_12X, null);
 
     public static final Info DIV_FLOAT_2ADDR =
-        new Info(DalvOps.DIV_FLOAT_2ADDR,
+        new Info(Opcodes.DIV_FLOAT_2ADDR,
             InstructionCodec.FORMAT_12X, null);
 
     public static final Info REM_FLOAT_2ADDR =
-        new Info(DalvOps.REM_FLOAT_2ADDR,
+        new Info(Opcodes.REM_FLOAT_2ADDR,
             InstructionCodec.FORMAT_12X, null);
 
     public static final Info ADD_DOUBLE_2ADDR =
-        new Info(DalvOps.ADD_DOUBLE_2ADDR,
+        new Info(Opcodes.ADD_DOUBLE_2ADDR,
             InstructionCodec.FORMAT_12X, null);
 
     public static final Info SUB_DOUBLE_2ADDR =
-        new Info(DalvOps.SUB_DOUBLE_2ADDR,
+        new Info(Opcodes.SUB_DOUBLE_2ADDR,
             InstructionCodec.FORMAT_12X, null);
 
     public static final Info MUL_DOUBLE_2ADDR =
-        new Info(DalvOps.MUL_DOUBLE_2ADDR,
+        new Info(Opcodes.MUL_DOUBLE_2ADDR,
             InstructionCodec.FORMAT_12X, null);
 
     public static final Info DIV_DOUBLE_2ADDR =
-        new Info(DalvOps.DIV_DOUBLE_2ADDR,
+        new Info(Opcodes.DIV_DOUBLE_2ADDR,
             InstructionCodec.FORMAT_12X, null);
 
     public static final Info REM_DOUBLE_2ADDR =
-        new Info(DalvOps.REM_DOUBLE_2ADDR,
+        new Info(Opcodes.REM_DOUBLE_2ADDR,
             InstructionCodec.FORMAT_12X, null);
 
     public static final Info ADD_INT_LIT16 =
-        new Info(DalvOps.ADD_INT_LIT16,
+        new Info(Opcodes.ADD_INT_LIT16,
             InstructionCodec.FORMAT_22S, null);
 
     public static final Info RSUB_INT =
-        new Info(DalvOps.RSUB_INT,
+        new Info(Opcodes.RSUB_INT,
             InstructionCodec.FORMAT_22S, null);
 
     public static final Info MUL_INT_LIT16 =
-        new Info(DalvOps.MUL_INT_LIT16,
+        new Info(Opcodes.MUL_INT_LIT16,
             InstructionCodec.FORMAT_22S, null);
 
     public static final Info DIV_INT_LIT16 =
-        new Info(DalvOps.DIV_INT_LIT16,
+        new Info(Opcodes.DIV_INT_LIT16,
             InstructionCodec.FORMAT_22S, null);
 
     public static final Info REM_INT_LIT16 =
-        new Info(DalvOps.REM_INT_LIT16,
+        new Info(Opcodes.REM_INT_LIT16,
             InstructionCodec.FORMAT_22S, null);
 
     public static final Info AND_INT_LIT16 =
-        new Info(DalvOps.AND_INT_LIT16,
+        new Info(Opcodes.AND_INT_LIT16,
             InstructionCodec.FORMAT_22S, null);
 
     public static final Info OR_INT_LIT16 =
-        new Info(DalvOps.OR_INT_LIT16,
+        new Info(Opcodes.OR_INT_LIT16,
             InstructionCodec.FORMAT_22S, null);
 
     public static final Info XOR_INT_LIT16 =
-        new Info(DalvOps.XOR_INT_LIT16,
+        new Info(Opcodes.XOR_INT_LIT16,
             InstructionCodec.FORMAT_22S, null);
 
     public static final Info ADD_INT_LIT8 =
-        new Info(DalvOps.ADD_INT_LIT8,
+        new Info(Opcodes.ADD_INT_LIT8,
             InstructionCodec.FORMAT_22B, null);
 
     public static final Info RSUB_INT_LIT8 =
-        new Info(DalvOps.RSUB_INT_LIT8,
+        new Info(Opcodes.RSUB_INT_LIT8,
             InstructionCodec.FORMAT_22B, null);
 
     public static final Info MUL_INT_LIT8 =
-        new Info(DalvOps.MUL_INT_LIT8,
+        new Info(Opcodes.MUL_INT_LIT8,
             InstructionCodec.FORMAT_22B, null);
 
     public static final Info DIV_INT_LIT8 =
-        new Info(DalvOps.DIV_INT_LIT8,
+        new Info(Opcodes.DIV_INT_LIT8,
             InstructionCodec.FORMAT_22B, null);
 
     public static final Info REM_INT_LIT8 =
-        new Info(DalvOps.REM_INT_LIT8,
+        new Info(Opcodes.REM_INT_LIT8,
             InstructionCodec.FORMAT_22B, null);
 
     public static final Info AND_INT_LIT8 =
-        new Info(DalvOps.AND_INT_LIT8,
+        new Info(Opcodes.AND_INT_LIT8,
             InstructionCodec.FORMAT_22B, null);
 
     public static final Info OR_INT_LIT8 =
-        new Info(DalvOps.OR_INT_LIT8,
+        new Info(Opcodes.OR_INT_LIT8,
             InstructionCodec.FORMAT_22B, null);
 
     public static final Info XOR_INT_LIT8 =
-        new Info(DalvOps.XOR_INT_LIT8,
+        new Info(Opcodes.XOR_INT_LIT8,
             InstructionCodec.FORMAT_22B, null);
 
     public static final Info SHL_INT_LIT8 =
-        new Info(DalvOps.SHL_INT_LIT8,
+        new Info(Opcodes.SHL_INT_LIT8,
             InstructionCodec.FORMAT_22B, null);
 
     public static final Info SHR_INT_LIT8 =
-        new Info(DalvOps.SHR_INT_LIT8,
+        new Info(Opcodes.SHR_INT_LIT8,
             InstructionCodec.FORMAT_22B, null);
 
     public static final Info USHR_INT_LIT8 =
-        new Info(DalvOps.USHR_INT_LIT8,
+        new Info(Opcodes.USHR_INT_LIT8,
             InstructionCodec.FORMAT_22B, null);
 
     public static final Info CONST_CLASS_JUMBO =
-        new Info(DalvOps.CONST_CLASS_JUMBO,
+        new Info(Opcodes.CONST_CLASS_JUMBO,
             InstructionCodec.FORMAT_41C, IndexType.TYPE_REF);
 
     public static final Info CHECK_CAST_JUMBO =
-        new Info(DalvOps.CHECK_CAST_JUMBO,
+        new Info(Opcodes.CHECK_CAST_JUMBO,
             InstructionCodec.FORMAT_41C, IndexType.TYPE_REF);
 
     public static final Info INSTANCE_OF_JUMBO =
-        new Info(DalvOps.INSTANCE_OF_JUMBO,
+        new Info(Opcodes.INSTANCE_OF_JUMBO,
             InstructionCodec.FORMAT_52C, IndexType.TYPE_REF);
 
     public static final Info NEW_INSTANCE_JUMBO =
-        new Info(DalvOps.NEW_INSTANCE_JUMBO,
+        new Info(Opcodes.NEW_INSTANCE_JUMBO,
             InstructionCodec.FORMAT_41C, IndexType.TYPE_REF);
 
     public static final Info NEW_ARRAY_JUMBO =
-        new Info(DalvOps.NEW_ARRAY_JUMBO,
+        new Info(Opcodes.NEW_ARRAY_JUMBO,
             InstructionCodec.FORMAT_52C, IndexType.TYPE_REF);
 
     public static final Info FILLED_NEW_ARRAY_JUMBO =
-        new Info(DalvOps.FILLED_NEW_ARRAY_JUMBO,
+        new Info(Opcodes.FILLED_NEW_ARRAY_JUMBO,
             InstructionCodec.FORMAT_5RC, IndexType.TYPE_REF);
 
     public static final Info IGET_JUMBO =
-        new Info(DalvOps.IGET_JUMBO,
+        new Info(Opcodes.IGET_JUMBO,
             InstructionCodec.FORMAT_52C, IndexType.FIELD_REF);
 
     public static final Info IGET_WIDE_JUMBO =
-        new Info(DalvOps.IGET_WIDE_JUMBO,
+        new Info(Opcodes.IGET_WIDE_JUMBO,
             InstructionCodec.FORMAT_52C, IndexType.FIELD_REF);
 
     public static final Info IGET_OBJECT_JUMBO =
-        new Info(DalvOps.IGET_OBJECT_JUMBO,
+        new Info(Opcodes.IGET_OBJECT_JUMBO,
             InstructionCodec.FORMAT_52C, IndexType.FIELD_REF);
 
     public static final Info IGET_BOOLEAN_JUMBO =
-        new Info(DalvOps.IGET_BOOLEAN_JUMBO,
+        new Info(Opcodes.IGET_BOOLEAN_JUMBO,
             InstructionCodec.FORMAT_52C, IndexType.FIELD_REF);
 
     public static final Info IGET_BYTE_JUMBO =
-        new Info(DalvOps.IGET_BYTE_JUMBO,
+        new Info(Opcodes.IGET_BYTE_JUMBO,
             InstructionCodec.FORMAT_52C, IndexType.FIELD_REF);
 
     public static final Info IGET_CHAR_JUMBO =
-        new Info(DalvOps.IGET_CHAR_JUMBO,
+        new Info(Opcodes.IGET_CHAR_JUMBO,
             InstructionCodec.FORMAT_52C, IndexType.FIELD_REF);
 
     public static final Info IGET_SHORT_JUMBO =
-        new Info(DalvOps.IGET_SHORT_JUMBO,
+        new Info(Opcodes.IGET_SHORT_JUMBO,
             InstructionCodec.FORMAT_52C, IndexType.FIELD_REF);
 
     public static final Info IPUT_JUMBO =
-        new Info(DalvOps.IPUT_JUMBO,
+        new Info(Opcodes.IPUT_JUMBO,
             InstructionCodec.FORMAT_52C, IndexType.FIELD_REF);
 
     public static final Info IPUT_WIDE_JUMBO =
-        new Info(DalvOps.IPUT_WIDE_JUMBO,
+        new Info(Opcodes.IPUT_WIDE_JUMBO,
             InstructionCodec.FORMAT_52C, IndexType.FIELD_REF);
 
     public static final Info IPUT_OBJECT_JUMBO =
-        new Info(DalvOps.IPUT_OBJECT_JUMBO,
+        new Info(Opcodes.IPUT_OBJECT_JUMBO,
             InstructionCodec.FORMAT_52C, IndexType.FIELD_REF);
 
     public static final Info IPUT_BOOLEAN_JUMBO =
-        new Info(DalvOps.IPUT_BOOLEAN_JUMBO,
+        new Info(Opcodes.IPUT_BOOLEAN_JUMBO,
             InstructionCodec.FORMAT_52C, IndexType.FIELD_REF);
 
     public static final Info IPUT_BYTE_JUMBO =
-        new Info(DalvOps.IPUT_BYTE_JUMBO,
+        new Info(Opcodes.IPUT_BYTE_JUMBO,
             InstructionCodec.FORMAT_52C, IndexType.FIELD_REF);
 
     public static final Info IPUT_CHAR_JUMBO =
-        new Info(DalvOps.IPUT_CHAR_JUMBO,
+        new Info(Opcodes.IPUT_CHAR_JUMBO,
             InstructionCodec.FORMAT_52C, IndexType.FIELD_REF);
 
     public static final Info IPUT_SHORT_JUMBO =
-        new Info(DalvOps.IPUT_SHORT_JUMBO,
+        new Info(Opcodes.IPUT_SHORT_JUMBO,
             InstructionCodec.FORMAT_52C, IndexType.FIELD_REF);
 
     public static final Info SGET_JUMBO =
-        new Info(DalvOps.SGET_JUMBO,
+        new Info(Opcodes.SGET_JUMBO,
             InstructionCodec.FORMAT_41C, IndexType.FIELD_REF);
 
     public static final Info SGET_WIDE_JUMBO =
-        new Info(DalvOps.SGET_WIDE_JUMBO,
+        new Info(Opcodes.SGET_WIDE_JUMBO,
             InstructionCodec.FORMAT_41C, IndexType.FIELD_REF);
 
     public static final Info SGET_OBJECT_JUMBO =
-        new Info(DalvOps.SGET_OBJECT_JUMBO,
+        new Info(Opcodes.SGET_OBJECT_JUMBO,
             InstructionCodec.FORMAT_41C, IndexType.FIELD_REF);
 
     public static final Info SGET_BOOLEAN_JUMBO =
-        new Info(DalvOps.SGET_BOOLEAN_JUMBO,
+        new Info(Opcodes.SGET_BOOLEAN_JUMBO,
             InstructionCodec.FORMAT_41C, IndexType.FIELD_REF);
 
     public static final Info SGET_BYTE_JUMBO =
-        new Info(DalvOps.SGET_BYTE_JUMBO,
+        new Info(Opcodes.SGET_BYTE_JUMBO,
             InstructionCodec.FORMAT_41C, IndexType.FIELD_REF);
 
     public static final Info SGET_CHAR_JUMBO =
-        new Info(DalvOps.SGET_CHAR_JUMBO,
+        new Info(Opcodes.SGET_CHAR_JUMBO,
             InstructionCodec.FORMAT_41C, IndexType.FIELD_REF);
 
     public static final Info SGET_SHORT_JUMBO =
-        new Info(DalvOps.SGET_SHORT_JUMBO,
+        new Info(Opcodes.SGET_SHORT_JUMBO,
             InstructionCodec.FORMAT_41C, IndexType.FIELD_REF);
 
     public static final Info SPUT_JUMBO =
-        new Info(DalvOps.SPUT_JUMBO,
+        new Info(Opcodes.SPUT_JUMBO,
             InstructionCodec.FORMAT_41C, IndexType.FIELD_REF);
 
     public static final Info SPUT_WIDE_JUMBO =
-        new Info(DalvOps.SPUT_WIDE_JUMBO,
+        new Info(Opcodes.SPUT_WIDE_JUMBO,
             InstructionCodec.FORMAT_41C, IndexType.FIELD_REF);
 
     public static final Info SPUT_OBJECT_JUMBO =
-        new Info(DalvOps.SPUT_OBJECT_JUMBO,
+        new Info(Opcodes.SPUT_OBJECT_JUMBO,
             InstructionCodec.FORMAT_41C, IndexType.FIELD_REF);
 
     public static final Info SPUT_BOOLEAN_JUMBO =
-        new Info(DalvOps.SPUT_BOOLEAN_JUMBO,
+        new Info(Opcodes.SPUT_BOOLEAN_JUMBO,
             InstructionCodec.FORMAT_41C, IndexType.FIELD_REF);
 
     public static final Info SPUT_BYTE_JUMBO =
-        new Info(DalvOps.SPUT_BYTE_JUMBO,
+        new Info(Opcodes.SPUT_BYTE_JUMBO,
             InstructionCodec.FORMAT_41C, IndexType.FIELD_REF);
 
     public static final Info SPUT_CHAR_JUMBO =
-        new Info(DalvOps.SPUT_CHAR_JUMBO,
+        new Info(Opcodes.SPUT_CHAR_JUMBO,
             InstructionCodec.FORMAT_41C, IndexType.FIELD_REF);
 
     public static final Info SPUT_SHORT_JUMBO =
-        new Info(DalvOps.SPUT_SHORT_JUMBO,
+        new Info(Opcodes.SPUT_SHORT_JUMBO,
             InstructionCodec.FORMAT_41C, IndexType.FIELD_REF);
 
     public static final Info INVOKE_VIRTUAL_JUMBO =
-        new Info(DalvOps.INVOKE_VIRTUAL_JUMBO,
+        new Info(Opcodes.INVOKE_VIRTUAL_JUMBO,
             InstructionCodec.FORMAT_5RC, IndexType.METHOD_REF);
 
     public static final Info INVOKE_SUPER_JUMBO =
-        new Info(DalvOps.INVOKE_SUPER_JUMBO,
+        new Info(Opcodes.INVOKE_SUPER_JUMBO,
             InstructionCodec.FORMAT_5RC, IndexType.METHOD_REF);
 
     public static final Info INVOKE_DIRECT_JUMBO =
-        new Info(DalvOps.INVOKE_DIRECT_JUMBO,
+        new Info(Opcodes.INVOKE_DIRECT_JUMBO,
             InstructionCodec.FORMAT_5RC, IndexType.METHOD_REF);
 
     public static final Info INVOKE_STATIC_JUMBO =
-        new Info(DalvOps.INVOKE_STATIC_JUMBO,
+        new Info(Opcodes.INVOKE_STATIC_JUMBO,
             InstructionCodec.FORMAT_5RC, IndexType.METHOD_REF);
 
     public static final Info INVOKE_INTERFACE_JUMBO =
-        new Info(DalvOps.INVOKE_INTERFACE_JUMBO,
+        new Info(Opcodes.INVOKE_INTERFACE_JUMBO,
             InstructionCodec.FORMAT_5RC, IndexType.METHOD_REF);
 
     // END(opcode-info-defs)
 
     // Static initialization.
     static {
-        INFO = new Info[DalvOps.MAX_VALUE - DalvOps.MIN_VALUE + 1];
+        INFO = new Info[Opcodes.MAX_VALUE - Opcodes.MIN_VALUE + 1];
 
         // BEGIN(opcode-info-init); GENERATED AUTOMATICALLY BY opcode-gen
         set(NOP);
@@ -1337,12 +1336,12 @@ public final class OpcodeInfo {
     /**
      * Gets the {@link @Info} for the given opcode value.
      *
-     * @param opcode {@code DalvOps.MIN_VALUE..DalvOps.MAX_VALUE;} the
+     * @param opcode {@code Opcodes.MIN_VALUE..Opcodes.MAX_VALUE;} the
      * opcode value
      * @return non-null; the associated opcode information instance
      */
     public static Info get(int opcode) {
-        int idx = opcode - DalvOps.MIN_VALUE;
+        int idx = opcode - Opcodes.MIN_VALUE;
 
         try {
             Info result = INFO[idx];
@@ -1370,7 +1369,7 @@ public final class OpcodeInfo {
      * @param opcode non-null; the opcode
      */
     private static void set(Info opcode) {
-        int idx = opcode.getOpcode() - DalvOps.MIN_VALUE;
+        int idx = opcode.getOpcode() - Opcodes.MIN_VALUE;
         INFO[idx] = opcode;
     }
 

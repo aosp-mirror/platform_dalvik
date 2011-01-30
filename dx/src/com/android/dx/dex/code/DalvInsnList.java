@@ -16,6 +16,7 @@
 
 package com.android.dx.dex.code;
 
+import com.android.dx.io.Opcodes;
 import com.android.dx.rop.cst.Constant;
 import com.android.dx.rop.cst.CstBaseMethodRef;
 import com.android.dx.util.AnnotatedOutput;
@@ -201,7 +202,7 @@ public final class DalvInsnList extends FixedSizeList {
             }
 
             boolean isStatic =
-                (insn.getOpcode().getFamily() == DalvOps.INVOKE_STATIC);
+                (insn.getOpcode().getFamily() == Opcodes.INVOKE_STATIC);
             int count =
                 ((CstBaseMethodRef) cst).getParameterWordCount(isStatic);
 

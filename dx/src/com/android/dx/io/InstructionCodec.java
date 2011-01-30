@@ -16,8 +16,6 @@
 
 package com.android.dx.io;
 
-import com.android.dx.dex.code.DalvOps;
-
 /**
  * Representation of an instruction format, which knows how to decode into
  * and encode from instances of {@link DecodedInstruction}.
@@ -219,7 +217,7 @@ public enum InstructionCodec {
              * because the "signed hat" might represent either a 32-
              * or 64- bit value.
              */
-            literal <<= (opcode == DalvOps.CONST_HIGH16) ? 16 : 48;
+            literal <<= (opcode == Opcodes.CONST_HIGH16) ? 16 : 48;
 
             return new DecodedInstruction(this, opcode, 0, null,
                     0, literal, null,
@@ -229,7 +227,7 @@ public enum InstructionCodec {
         @Override public void encode(DecodedInstruction insn, CodeOutput out) {
             // See above.
             int opcode = insn.getOpcode();
-            int shift = (opcode == DalvOps.CONST_HIGH16) ? 16 : 48;
+            int shift = (opcode == Opcodes.CONST_HIGH16) ? 16 : 48;
             short literal = (short) (insn.getLiteral() >> shift);
 
             out.write(codeUnit(opcode, insn.getA()), literal);
