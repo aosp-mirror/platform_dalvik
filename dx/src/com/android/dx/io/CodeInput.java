@@ -23,9 +23,9 @@ import java.io.EOFException;
  */
 public interface CodeInput {
     /**
-     * Gets the cursor. This is the offset of the next code unit to
-     * be read from the start of the input (which is generally the
-     * start of a method).
+     * Gets the cursor. The cursor is the offset in code units from
+     * the start of the input of the next code unit to be read, where
+     * the input generally consists of the code for a single method.
      */
     public int cursor();
 
