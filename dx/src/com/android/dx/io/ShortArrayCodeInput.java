@@ -41,6 +41,11 @@ public final class ShortArrayCodeInput {
     }
 
     /** @inheritDoc */
+    public int cursor() {
+        return cursor;
+    }
+
+    /** @inheritDoc */
     public int read() throws EOFException {
         try {
             return array[cursor++];
