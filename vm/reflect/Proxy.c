@@ -195,9 +195,6 @@ ClassObject* dvmGenerateProxyClass(StringObject* str, ArrayObject* interfaces,
     dvmSetFieldObject((Object *)newClass,
                       offsetof(ClassObject, classLoader),
                       (Object *)loader);
-#if WITH_HPROF_STACK
-    hprofFillInStackTrace(newClass);
-#endif
 
     /*
      * Add direct method definitions.  We have one (the constructor).

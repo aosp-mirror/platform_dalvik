@@ -231,13 +231,6 @@ ifeq ($(WITH_JIT),true)
 	interp/Jit.c
 endif
 
-ifeq ($(strip $(WITH_HPROF_STACK)),true)
-  LOCAL_SRC_FILES += \
-	hprof/HprofStack.c \
-	hprof/HprofStackFrame.c
-  LOCAL_CFLAGS += -DWITH_HPROF_STACK=1
-endif # WITH_HPROF_STACK
-
 LOCAL_C_INCLUDES += \
 	$(JNI_H_INCLUDE) \
 	dalvik \

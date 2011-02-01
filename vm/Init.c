@@ -142,9 +142,6 @@ static void usage(const char* progName)
         " debugger"
         " profiler"
         " hprof"
-#ifdef WITH_HPROF_STACK
-        " hprof_stack"
-#endif
 #ifdef WITH_MONITOR_TRACKING
         " monitor_tracking"
 #endif

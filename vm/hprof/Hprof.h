@@ -31,9 +31,6 @@ typedef u4 hprof_id;
 typedef hprof_id hprof_string_id;
 typedef hprof_id hprof_object_id;
 typedef hprof_id hprof_class_object_id;
-#if WITH_HPROF_STACK
-typedef hprof_id hprof_stack_frame_id;
-#endif
 
 typedef enum hprof_basic_type {
     hprof_basic_object = 2,
@@ -216,30 +213,6 @@ int hprofAddU8ListToRecord(hprof_record_t *rec,
 #define hprofAddIdToRecord(rec, id) hprofAddU4ToRecord((rec), (u4)(id))
 #define hprofAddIdListToRecord(rec, values, numValues) \
             hprofAddU4ListToRecord((rec), (const u4 *)(values), (numValues))
-
-#if WITH_HPROF_STACK
-
-/*
- * HprofStack.c functions
- */
-
-void hprofFillInStackTrace(void *objectPtr);
-
-int hprofDumpStacks(hprof_context_t *ctx);
-
-int hprofStartup_Stack(void);
-int hprofShutdown_Stack(void);
-
-/*
- * HprofStackFrame.c functions
- */
-
-int hprofDumpStackFrames(hprof_context_t *ctx);
-
-int hprofStartup_StackFrame(void);
-int hprofShutdown_StackFrame(void);
-
-#endif
 
 /*
  * Hprof.c functions
