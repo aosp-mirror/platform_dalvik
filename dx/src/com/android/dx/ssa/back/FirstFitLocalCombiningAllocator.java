@@ -52,6 +52,9 @@ public class FirstFitLocalCombiningAllocator extends RegisterAllocator {
     /** list of invoke-range instructions seen in this method */
     private final ArrayList<NormalSsaInsn> invokeRangeInsns;
 
+    /** list of phi instructions seen in this method */
+    private final ArrayList<PhiInsn> phiInsns;
+
     /** indexed by SSA reg; the set of SSA regs we've mapped */
     private final BitSet ssaRegsMapped;
 
@@ -104,6 +107,7 @@ public class FirstFitLocalCombiningAllocator extends RegisterAllocator {
         localVariables = new TreeMap<LocalItem, ArrayList<RegisterSpec>>();
         moveResultPseudoInsns = new ArrayList<NormalSsaInsn>();
         invokeRangeInsns = new ArrayList<NormalSsaInsn>();
+        phiInsns = new ArrayList<PhiInsn>();
     }
 
     /** {@inheritDoc} */
@@ -138,6 +142,9 @@ public class FirstFitLocalCombiningAllocator extends RegisterAllocator {
 
         if (DEBUG) System.out.println("--->Mapping check-cast results");
         handleCheckCastResults();
+
+        if (DEBUG) System.out.println("--->Mapping phis");
+        handlePhiInsns();
 
         if (DEBUG) System.out.println("--->Mapping others");
         handleNormalUnassociated();
@@ -505,6 +512,15 @@ public class FirstFitLocalCombiningAllocator extends RegisterAllocator {
     }
 
     /**
+    * Handles all phi instructions, trying to map them to a common register.
+    */
+    private void handlePhiInsns() {
+        for (PhiInsn insn : phiInsns) {
+            processPhiInsn(insn);
+        }
+    }
+
+    /**
      * Maps all non-parameter, non-local variable registers.
      */
     private void handleNormalUnassociated() {
@@ -623,6 +639,8 @@ public class FirstFitLocalCombiningAllocator extends RegisterAllocator {
                             insn.getSources())) {
                         invokeRangeInsns.add((NormalSsaInsn) insn);
                     }
+                } else if (insn instanceof PhiInsn) {
+                    phiInsns.add((PhiInsn) insn);
                 }
 
             }
@@ -954,5 +972,48 @@ public class FirstFitLocalCombiningAllocator extends RegisterAllocator {
         }
 
         return null;
+    }
+
+    /**
+     * Attempts to map the sources and result of a phi to a common register.
+     * Will only try if a mapping already exists for one of the registers,
+     * and if this mapping is compatible with all the other registers.
+     */
+    private void processPhiInsn(PhiInsn insn) {
+        RegisterSpec result = insn.getResult();
+        int resultReg = result.getReg();
+        int category = result.getCategory();
+        ArrayList<RegisterSpec> ssaRegs = new ArrayList<RegisterSpec>();
+        ssaRegs.add(result);
+
+        // If the result of the phi has an existing mapping, get it
+        int mapReg = -1;
+        if (ssaRegsMapped.get(resultReg)) {
+            mapReg = mapper.oldToNew(resultReg);
+        }
+
+        RegisterSpecList sources = insn.getSources();
+        for (int i = 0; i < sources.size(); i++) {
+            RegisterSpec source = sources.get(i);
+            int sourceReg = source.getReg();
+            ssaRegs.add(source);
+
+            // If a source of the phi has an existing mapping, get it
+            if (ssaRegsMapped.get(sourceReg)) {
+                int mapSourceReg = mapper.oldToNew(sourceReg);
+
+                // If the source mapping differs from an existing one, give up
+                if (mapReg != -1 && mapReg != mapSourceReg) {
+                    return;
+                }
+
+                mapReg = mapSourceReg;
+            }
+        }
+
+        // If a common mapping exists, try to map it to all regs in the phi
+        if (mapReg != -1) {
+            tryMapRegs(ssaRegs, mapReg, category, false);
+        }
     }
 }
