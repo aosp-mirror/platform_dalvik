@@ -21,7 +21,11 @@ package com.android.dx.io;
  * document for the meaning and instruction format of each opcode.
  */
 public final class Opcodes {
-    /** pseudo-opcode used for nonstandard format "instructions" */
+    /**
+     * pseudo-opcode used for nonstandard format payload "instructions". TODO:
+     * Retire this concept, and start treating the payload instructions
+     * more like the rest.
+     */
     public static final int SPECIAL_FORMAT = -1;
 
     /**
@@ -296,6 +300,8 @@ public final class Opcodes {
     public static final int INVOKE_INTERFACE_JUMBO = 0x26ff;
     // END(opcodes)
 
+    // TODO: Generate these payload opcodes with opcode-gen.
+
     /**
      * special pseudo-opcode value for packed-switch data payload
      * instructions
@@ -336,21 +342,23 @@ public final class Opcodes {
     public static boolean isValidShape(int opcode) {
         /*
          * Note: This method bakes in knowledge that all opcodes are
-         * either single-byte or of the form ((byteValue << 8) |
-         * 0xff).
+         * either single-byte or of the forms (byteValue << 8) or
+         * ((byteValue << 8) 0xff).
          */
 
         // Note: SPECIAL_FORMAT == NO_NEXT.
-        if ((opcode >= SPECIAL_FORMAT) && (opcode <= 0xff)) {
+        if (opcode < SPECIAL_FORMAT) {
+            return false;
+        } else if (opcode == SPECIAL_FORMAT) {
             return true;
         }
 
-        if ((opcode >= 0xff) && (opcode <= 0xffff)
-                && ((opcode & 0xff) == 0xff)) {
+        int lowByte = opcode & 0xff;
+        if ((lowByte == 0) || (lowByte == 0xff)) {
             return true;
         }
 
-        return false;
+        return (opcode & 0xff00) == 0;
     }
 
     /**
@@ -360,11 +368,11 @@ public final class Opcodes {
     public static int extractOpcodeFromUnit(int opcodeUnit) {
         /*
          * Note: This method bakes in knowledge that all opcodes are
-         * either single-byte or of the form ((byteValue << 8) |
-         * 0xff).
+         * either single-byte or of the forms (byteValue << 8) or
+         * ((byteValue << 8) 0xff).
          */
 
         int lowByte = opcodeUnit & 0xff;
-        return (lowByte == 0xff) ? opcodeUnit : lowByte;
+        return ((lowByte == 0) || (lowByte == 0xff)) ? opcodeUnit : lowByte;
     }
 }

@@ -44,4 +44,9 @@ public interface CodeOutput {
      * Writes five code units.
      */
     public void write(short u0, short u1, short u2, short u3, short u4);
+
+    /**
+     * Writes the contents of the given array.
+     */
+    public void write(short[] data);
 }

@@ -44,7 +44,10 @@ public final class DecodedInstruction {
     /** null-ok; index type */
     private final IndexType indexType;
 
-    /** target address offset argument */
+    /**
+     * target address argument. This is an absolute address, not just a
+     * signed offset.
+     */
     private final int target;
 
     /**

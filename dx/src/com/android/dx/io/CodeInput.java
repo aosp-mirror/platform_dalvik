@@ -23,6 +23,13 @@ import java.io.EOFException;
  */
 public interface CodeInput {
     /**
+     * Gets the cursor. This is the offset of the next code unit to
+     * be read from the start of the input (which is generally the
+     * start of a method).
+     */
+    public int cursor();
+
+    /**
      * Reads a code unit.
      */
     public int read() throws EOFException;

@@ -105,10 +105,11 @@ public enum InstructionCodec {
     FORMAT_10T() {
         @Override public DecodedInstruction decode(int opcodeUnit,
                 CodeInput in) throws EOFException {
+            int baseOffset = in.cursor() - 1;
             int opcode = byte0(opcodeUnit);
-            int a = (byte) byte1(opcodeUnit); // sign-extend
+            int target = (byte) byte1(opcodeUnit); // sign-extend
             return new DecodedInstruction(this, opcode, 0, null,
-                    a, 0L, null,
+                    baseOffset + target, 0L, null,
                     0, 0, 0, 0, 0, 0);
         }
 
@@ -120,11 +121,12 @@ public enum InstructionCodec {
     FORMAT_20T() {
         @Override public DecodedInstruction decode(int opcodeUnit,
                 CodeInput in) throws EOFException {
+            int baseOffset = in.cursor() - 1;
             int opcode = byte0(opcodeUnit);
             int literal = byte1(opcodeUnit); // should be zero
             int target = (short) in.read(); // sign-extend
             return new DecodedInstruction(this, opcode, 0, null,
-                    target, literal, null,
+                    baseOffset + target, literal, null,
                     0, 0, 0, 0, 0, 0);
         }
 
@@ -174,11 +176,12 @@ public enum InstructionCodec {
     FORMAT_21T() {
         @Override public DecodedInstruction decode(int opcodeUnit,
                 CodeInput in) throws EOFException {
+            int baseOffset = in.cursor() - 1;
             int opcode = byte0(opcodeUnit);
             int a = byte1(opcodeUnit);
             int target = (short) in.read(); // sign-extend
             return new DecodedInstruction(this, opcode, 0, null,
-                    target, 0L, null,
+                    baseOffset + target, 0L, null,
                     1, a, 0, 0, 0, 0);
         }
 
@@ -299,12 +302,13 @@ public enum InstructionCodec {
     FORMAT_22T() {
         @Override public DecodedInstruction decode(int opcodeUnit,
                 CodeInput in) throws EOFException {
+            int baseOffset = in.cursor() - 1;
             int opcode = byte0(opcodeUnit);
             int a = nibble2(opcodeUnit);
             int b = nibble3(opcodeUnit);
             int target = (short) in.read(); // sign-extend
             return new DecodedInstruction(this, opcode, 0, null,
-                    target, 0L, null,
+                    baseOffset + target, 0L, null,
                     2, a, b, 0, 0, 0);
         }
 
@@ -381,11 +385,12 @@ public enum InstructionCodec {
     FORMAT_30T() {
         @Override public DecodedInstruction decode(int opcodeUnit,
                 CodeInput in) throws EOFException {
+            int baseOffset = in.cursor() - 1;
             int opcode = byte0(opcodeUnit);
             int literal = byte1(opcodeUnit); // should be zero
             int target = in.readInt();
             return new DecodedInstruction(this, opcode, 0, null,
-                    target, literal, null,
+                    baseOffset + target, literal, null,
                     0, 0, 0, 0, 0, 0);
         }
 
@@ -435,11 +440,12 @@ public enum InstructionCodec {
     FORMAT_31T() {
         @Override public DecodedInstruction decode(int opcodeUnit,
                 CodeInput in) throws EOFException {
+            int baseOffset = in.cursor() - 1;
             int opcode = byte0(opcodeUnit);
             int a = byte1(opcodeUnit);
             int target = in.readInt();
             return new DecodedInstruction(this, opcode, 0, null,
-                    target, 0L, null,
+                    baseOffset + target, 0L, null,
                     1, a, 0, 0, 0, 0);
         }
 
@@ -687,6 +693,84 @@ public enum InstructionCodec {
                     unit1(index),
                     insn.getRegisterCountUnit(),
                     insn.getAUnit());
+        }
+    },
+
+    FORMAT_PACKED_SWITCH_PAYLOAD() {
+        @Override public DecodedInstruction decode(int opcodeUnit,
+                CodeInput in) throws EOFException {
+            int size = in.read();
+            int unitCount = (size * 2) + 3; // Doesn't count the opcode unit.
+            short[] data = new short[unitCount];
+
+            data[0] = (short) size;
+
+            for (int i = 1; i < unitCount; i++) {
+                data[i] = (short) in.read();
+            }
+
+            return new DecodedInstruction(this, opcodeUnit, 0, null,
+                    0, 0L, data,
+                    0, 0, 0, 0, 0, 0);
+        }
+
+        @Override public void encode(DecodedInstruction insn, CodeOutput out) {
+            out.write(insn.getOpcodeUnit());
+            out.write(insn.getData());
+        }
+    },
+
+    FORMAT_SPARSE_SWITCH_PAYLOAD() {
+        @Override public DecodedInstruction decode(int opcodeUnit,
+                CodeInput in) throws EOFException {
+            int size = in.read();
+            int unitCount = (size * 4) + 1; // Doesn't count the opcode unit.
+            short[] data = new short[unitCount];
+
+            data[0] = (short) size;
+
+            for (int i = 1; i < unitCount; i++) {
+                data[i] = (short) in.read();
+            }
+
+            return new DecodedInstruction(this, opcodeUnit, 0, null,
+                    0, 0L, data,
+                    0, 0, 0, 0, 0, 0);
+        }
+
+        @Override public void encode(DecodedInstruction insn, CodeOutput out) {
+            out.write(insn.getOpcodeUnit());
+            out.write(insn.getData());
+        }
+    },
+
+    FORMAT_FILL_ARRAY_DATA_PAYLOAD() {
+        @Override public DecodedInstruction decode(int opcodeUnit,
+                CodeInput in) throws EOFException {
+            int elementWidth = in.read();
+            int size = in.readInt();
+
+            // Doesn't count the opcode unit.
+            int unitCount = (size * elementWidth + 1) / 2 + 3;
+
+            short[] data = new short[unitCount];
+
+            data[0] = unit0(size);
+            data[1] = unit1(size);
+            data[2] = (short) elementWidth;
+
+            for (int i = 3; i < unitCount; i++) {
+                data[i] = (short) in.read();
+            }
+
+            return new DecodedInstruction(this, opcodeUnit, 0, null,
+                    0, 0L, data,
+                    0, 0, 0, 0, 0, 0);
+        }
+
+        @Override public void encode(DecodedInstruction insn, CodeOutput out) {
+            out.write(insn.getOpcodeUnit());
+            out.write(insn.getData());
         }
     };
 
