@@ -40,10 +40,6 @@ hprofStartup(const char *outputFileName, int fd, bool directToDdms)
 {
     hprofStartup_String();
     hprofStartup_Class();
-#if WITH_HPROF_STACK
-    hprofStartup_StackFrame();
-    hprofStartup_Stack();
-#endif
 
     hprof_context_t *ctx = (hprof_context_t *)malloc(sizeof(*ctx));
     if (ctx == NULL) {
@@ -93,19 +89,10 @@ hprofShutdown(hprof_context_t *tailCtx)
     hprofAddU4ToRecord(&headCtx->curRec, HPROF_NULL_THREAD);
     hprofAddU4ToRecord(&headCtx->curRec, 0);    // no frames
 
-#if WITH_HPROF_STACK
-    hprofDumpStackFrames(headCtx);
-    hprofDumpStacks(headCtx);
-#endif
-
     hprofFlushCurrentRecord(headCtx);
 
     hprofShutdown_Class();
     hprofShutdown_String();
-#if WITH_HPROF_STACK
-    hprofShutdown_Stack();
-    hprofShutdown_StackFrame();
-#endif
 
     /* flush to ensure memstream pointer and size are updated */
     fflush(headCtx->memFp);
