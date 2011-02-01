@@ -16,22 +16,24 @@
 
 package com.android.dx.io;
 
+import java.io.EOFException;
+
 /**
  * Input stream of code units, for reading in Dalvik bytecode.
  */
 public interface CodeInput {
     /**
-     * Read a code unit.
+     * Reads a code unit.
      */
-    public int read();
+    public int read() throws EOFException;
 
     /**
-     * Read two code units, treating them as a little-endian {@code int}.
+     * Reads two code units, treating them as a little-endian {@code int}.
      */
-    public int readInt();
+    public int readInt() throws EOFException;
 
     /**
-     * Read four code units, treating them as a little-endian {@code long}.
+     * Reads four code units, treating them as a little-endian {@code long}.
      */
-    public long readLong();
+    public long readLong() throws EOFException;
 }

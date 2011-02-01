@@ -1340,8 +1340,8 @@ public final class BytecodeArray {
     }
 
     /**
-     * Base implementation of {@link Visitor}, which has empty method
-     * bodies for all methods.
+     * Implementation of {@link Visitor}, which just pays attention
+     * to constant values.
      */
     class ConstantParserVisitor extends BaseVisitor {
         Constant cst;

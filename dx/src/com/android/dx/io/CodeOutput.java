@@ -21,27 +21,27 @@ package com.android.dx.io;
  */
 public interface CodeOutput {
     /**
-     * Write a code unit.
+     * Writes a code unit.
      */
     public void write(short codeUnit);
 
     /**
-     * Write two code units.
+     * Writes two code units.
      */
     public void write(short u0, short u1);
 
     /**
-     * Write three code units.
+     * Writes three code units.
      */
     public void write(short u0, short u1, short u2);
 
     /**
-     * Write four code units.
+     * Writes four code units.
      */
     public void write(short u0, short u1, short u2, short u3);
 
     /**
-     * Write five code units.
+     * Writes five code units.
      */
     public void write(short u0, short u1, short u2, short u3, short u4);
 }
