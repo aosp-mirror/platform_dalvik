@@ -1275,8 +1275,7 @@ static void genInterpSingleStep(CompilationUnit *cUnit, MIR *mir)
     opReg(cUnit, kOpBlx, r2);
 }
 
-#if defined(WITH_DEADLOCK_PREDICTION) || defined(WITH_MONITOR_TRACKING) || \
-    defined(_ARMV5TE) || defined(_ARMV5TE_VFP)
+#if defined(_ARMV5TE) || defined(_ARMV5TE_VFP)
 /*
  * To prevent a thread in a monitor wait from blocking the Jit from
  * resetting the code cache, heavyweight monitor lock will not
@@ -1301,11 +1300,7 @@ static void genMonitorPortable(CompilationUnit *cUnit, MIR *mir)
         /* Get dPC of next insn */
         loadConstant(cUnit, r4PC, (int)(cUnit->method->insns + mir->offset +
                  dexGetWidthFromOpcode(OP_MONITOR_ENTER)));
-#if defined(WITH_DEADLOCK_PREDICTION)
-        genDispatchToHandler(cUnit, TEMPLATE_MONITOR_ENTER_DEBUG);
-#else
         genDispatchToHandler(cUnit, TEMPLATE_MONITOR_ENTER);
-#endif
     } else {
         LOAD_FUNC_ADDR(cUnit, r2, (int)dvmUnlockObject);
         /* Do the call */
@@ -1810,11 +1805,7 @@ static bool handleFmt11x(CompilationUnit *cUnit, MIR *mir)
         }
         case OP_MONITOR_EXIT:
         case OP_MONITOR_ENTER:
-#if defined(WITH_DEADLOCK_PREDICTION) || defined(WITH_MONITOR_TRACKING)
-            genMonitorPortable(cUnit, mir);
-#else
             genMonitor(cUnit, mir);
-#endif
             break;
         case OP_THROW: {
             genInterpSingleStep(cUnit, mir);

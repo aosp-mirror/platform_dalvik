@@ -608,13 +608,6 @@ struct DvmGlobals {
     int             allocRecordHead;        /* most-recently-added entry */
     int             allocRecordCount;       /* #of valid entries */
 
-#ifdef WITH_DEADLOCK_PREDICTION
-    /* global lock on history tree accesses */
-    pthread_mutex_t deadlockHistoryLock;
-
-    enum { kDPOff=0, kDPWarn, kDPErr, kDPAbort } deadlockPredictMode;
-#endif
-
     /*
      * When normal control flow needs to be interrupted because
      * of an attached debugger, profiler, thread stop request, etc.,

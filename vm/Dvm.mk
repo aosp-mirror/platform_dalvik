@@ -33,14 +33,6 @@ LOCAL_CFLAGS += -DARCH_VARIANT=\"$(dvm_arch_variant)\"
 # Optional features.  These may impact the size or performance of the VM.
 #
 
-ifeq ($(WITH_DEADLOCK_PREDICTION),true)
-  LOCAL_CFLAGS += -DWITH_DEADLOCK_PREDICTION
-  WITH_MONITOR_TRACKING := true
-endif
-ifeq ($(WITH_MONITOR_TRACKING),true)
-  LOCAL_CFLAGS += -DWITH_MONITOR_TRACKING
-endif
-
 # Make a debugging version when building the simulator (if not told
 # otherwise) and when explicitly asked.
 dvm_make_debug_vm := false
