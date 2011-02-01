@@ -32,10 +32,6 @@ int pthread_mutexattr_settype(pthread_mutexattr_t *attr, int type);
 enum { PTHREAD_MUTEX_ERRORCHECK = PTHREAD_MUTEX_ERRORCHECK_NP };
 #endif
 
-#ifdef WITH_MONITOR_TRACKING
-struct LockedObjectData;
-#endif
-
 /*
  * Current status; these map to JDWP constants, so don't rearrange them.
  * (If you do alter this, update the strings in dvmDumpThread and the
@@ -213,11 +209,6 @@ typedef struct Thread {
 
     /* JDWP invoke-during-breakpoint support */
     DebugInvokeReq  invokeReq;
-
-#ifdef WITH_MONITOR_TRACKING
-    /* objects locked by this thread; most recent is at head of list */
-    struct LockedObjectData* pLockedObjects;
-#endif
 
     /* base time for per-thread CPU timing (used by method profiling) */
     bool        cpuClockBaseSet;
@@ -526,36 +517,5 @@ void dvmDumpAllThreadsEx(const DebugOutputTarget* target, bool grabLock);
  * in an uncertain state.
  */
 void dvmNukeThread(Thread* thread);
-
-#ifdef WITH_MONITOR_TRACKING
-/*
- * Track locks held by the current thread, along with the stack trace at
- * the point the lock was acquired.
- *
- * At any given time the number of locks held across the VM should be
- * fairly small, so there's no reason not to generate and store the entire
- * stack trace.
- */
-typedef struct LockedObjectData {
-    /* the locked object */
-    struct Object*  obj;
-
-    /* number of times it has been locked recursively (zero-based ref count) */
-    int             recursionCount;
-
-    /* stack trace at point of initial acquire */
-    u4              stackDepth;
-    int*            rawStackTrace;
-
-    struct LockedObjectData* next;
-} LockedObjectData;
-
-/*
- * Add/remove/find objects from the thread's monitor list.
- */
-void dvmAddToMonitorList(Thread* self, Object* obj, bool withTrace);
-void dvmRemoveFromMonitorList(Thread* self, Object* obj);
-LockedObjectData* dvmFindInMonitorList(const Thread* self, const Object* obj);
-#endif
 
 #endif /*_DALVIK_THREAD*/

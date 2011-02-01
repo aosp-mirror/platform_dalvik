@@ -13,7 +13,6 @@
     <li><a href="#assertions">Assertions</a>
     <li><a href="#verifier">Bytecode Verification and Optimization</a>
     <li><a href="#execmode">Execution Mode</a>
-    <li><a href="#dp">Deadlock Prediction</a>
     <li><a href="#stackdump">Stack Dumps</a>
     <li><a href="#dexcheck">DEX File Checksums</a>
     <li><a href="#general">General Flags</a>
@@ -205,40 +204,6 @@ profiling data.)
 tag in <code>AndroidManifest.xml</code>.  This can be useful if you
 suspect that JIT compilation is causing your application to behave
 incorrectly.
-
-
-<h2><a name="dp">Deadlock Prediction</a></h2>
-
-<p>If the VM is built with <code>WITH_DEADLOCK_PREDICTION</code>, the deadlock
-predictor can be enabled with the <code>-Xdeadlockpredict</code> argument.
-(The output from <code>dalvikvm -help</code> will tell you if the VM was
-built appropriately -- look for <code>deadlock_prediction</code> on the
-<code>Configured with:</code> line.)
-This feature tells the VM to keep track of the order in which object
-monitor locks are acquired.  If the program attempts to acquire a set
-of locks in a different order from what was seen earlier, the VM logs
-a warning and optionally throws an exception.
-
-<p>Valid values for the command-line argument are
-<code>off</code> to disable it (default), <code>warn</code> to log the
-problem but continue executing, <code>err</code> to cause a
-<code>dalvik.system.PotentialDeadlockError</code> to be thrown from the
-<code>monitor-enter</code> instruction, and <code>abort</code> to have
-the entire VM abort.
-
-<p>You will usually want to use:
-<pre>adb shell setprop dalvik.vm.extra-opts -Xdeadlockpredict:err</pre>
-unless you are keeping an eye on the logs as they scroll by.
-
-<p>Please note that this feature is deadlock prediction, not deadlock
-detection -- in the current implementation, the computations are performed
-after the lock is acquired (this simplifies the code, reducing the
-overhead added to every mutex operation).  You can spot a deadlock in a
-hung process by sending a <code>kill -3</code> and examining the stack
-trace written to the log.
-
-<p>This only takes monitors into account.  Native mutexes and other resources
-can also be the cause of deadlocks, but will not be detected by this.
 
 
 <h2><a name="stackdump">Stack Dumps</a></h2>

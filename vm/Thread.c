@@ -284,9 +284,6 @@ bool dvmThreadStartup(void)
     dvmInitMutex(&gDvm._threadSuspendLock);
     dvmInitMutex(&gDvm.threadSuspendCountLock);
     pthread_cond_init(&gDvm.threadSuspendCountCond, NULL);
-#ifdef WITH_DEADLOCK_PREDICTION
-    dvmInitMutex(&gDvm.deadlockHistoryLock);
-#endif
 
     /*
      * Dedicated monitor for Thread.sleep().
@@ -3622,29 +3619,6 @@ void dvmDumpThreadEx(const DebugOutputTarget* target, Thread* thread,
         schedstatBuf, procStatData.utime, procStatData.stime,
         procStatData.processor);
 
-#ifdef WITH_MONITOR_TRACKING
-    if (!isRunning) {
-        LockedObjectData* lod = thread->pLockedObjects;
-        if (lod != NULL)
-            dvmPrintDebugMessage(target, "  | monitors held:\n");
-        else
-            dvmPrintDebugMessage(target, "  | monitors held: <none>\n");
-        while (lod != NULL) {
-            Object* obj = lod->obj;
-            if (obj->clazz == gDvm.classJavaLangClass) {
-                ClassObject* clazz = (ClassObject*) obj;
-                dvmPrintDebugMessage(target, "  >  %p[%d] (%s object for class %s)\n",
-                    obj, lod->recursionCount, obj->clazz->descriptor,
-                    clazz->descriptor);
-            } else {
-                dvmPrintDebugMessage(target, "  >  %p[%d] (%s)\n",
-                    obj, lod->recursionCount, obj->clazz->descriptor);
-            }
-            lod = lod->next;
-        }
-    }
-#endif
-
     if (isRunning)
         dvmDumpRunningThreadStack(target, thread);
     else
@@ -3786,130 +3760,3 @@ void dvmNukeThread(Thread* thread)
     signal(SIGSEGV, SIG_IGN);
     LOGD("Continuing\n");
 }
-
-#ifdef WITH_MONITOR_TRACKING
-/*
- * Count up the #of locked objects in the current thread.
- */
-static int getThreadObjectCount(const Thread* self)
-{
-    LockedObjectData* lod;
-    int count = 0;
-
-    lod = self->pLockedObjects;
-    while (lod != NULL) {
-        count++;
-        lod = lod->next;
-    }
-    return count;
-}
-
-/*
- * Add the object to the thread's locked object list if it doesn't already
- * exist.  The most recently added object is the most likely to be released
- * next, so we insert at the head of the list.
- *
- * If it already exists, we increase the recursive lock count.
- *
- * The object's lock may be thin or fat.
- */
-void dvmAddToMonitorList(Thread* self, Object* obj, bool withTrace)
-{
-    LockedObjectData* newLod;
-    LockedObjectData* lod;
-    int* trace;
-    int depth;
-
-    lod = self->pLockedObjects;
-    while (lod != NULL) {
-        if (lod->obj == obj) {
-            lod->recursionCount++;
-            LOGV("+++ +recursive lock %p -> %d\n", obj, lod->recursionCount);
-            return;
-        }
-        lod = lod->next;
-    }
-
-    newLod = (LockedObjectData*) calloc(1, sizeof(LockedObjectData));
-    if (newLod == NULL) {
-        LOGE("malloc failed on %d bytes\n", sizeof(LockedObjectData));
-        return;
-    }
-    newLod->obj = obj;
-    newLod->recursionCount = 0;
-
-    if (withTrace) {
-        trace = dvmFillInStackTraceRaw(self, &depth);
-        newLod->rawStackTrace = trace;
-        newLod->stackDepth = depth;
-    }
-
-    newLod->next = self->pLockedObjects;
-    self->pLockedObjects = newLod;
-
-    LOGV("+++ threadid=%d: added %p, now %d\n",
-        self->threadId, newLod, getThreadObjectCount(self));
-}
-
-/*
- * Remove the object from the thread's locked object list.  If the entry
- * has a nonzero recursion count, we just decrement the count instead.
- */
-void dvmRemoveFromMonitorList(Thread* self, Object* obj)
-{
-    LockedObjectData* lod;
-    LockedObjectData* prevLod;
-
-    lod = self->pLockedObjects;
-    prevLod = NULL;
-    while (lod != NULL) {
-        if (lod->obj == obj) {
-            if (lod->recursionCount > 0) {
-                lod->recursionCount--;
-                LOGV("+++ -recursive lock %p -> %d\n",
-                    obj, lod->recursionCount);
-                return;
-            } else {
-                break;
-            }
-        }
-        prevLod = lod;
-        lod = lod->next;
-    }
-
-    if (lod == NULL) {
-        LOGW("BUG: object %p not found in thread's lock list\n", obj);
-        return;
-    }
-    if (prevLod == NULL) {
-        /* first item in list */
-        assert(self->pLockedObjects == lod);
-        self->pLockedObjects = lod->next;
-    } else {
-        /* middle/end of list */
-        prevLod->next = lod->next;
-    }
-
-    LOGV("+++ threadid=%d: removed %p, now %d\n",
-        self->threadId, lod, getThreadObjectCount(self));
-    free(lod->rawStackTrace);
-    free(lod);
-}
-
-/*
- * If the specified object is already in the thread's locked object list,
- * return the LockedObjectData struct.  Otherwise return NULL.
- */
-LockedObjectData* dvmFindInMonitorList(const Thread* self, const Object* obj)
-{
-    LockedObjectData* lod;
-
-    lod = self->pLockedObjects;
-    while (lod != NULL) {
-        if (lod->obj == obj)
-            return lod;
-        lod = lod->next;
-    }
-    return NULL;
-}
-#endif /*WITH_MONITOR_TRACKING*/

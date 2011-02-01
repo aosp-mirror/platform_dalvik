@@ -142,12 +142,6 @@ static void usage(const char* progName)
         " debugger"
         " profiler"
         " hprof"
-#ifdef WITH_MONITOR_TRACKING
-        " monitor_tracking"
-#endif
-#ifdef WITH_DEADLOCK_PREDICTION
-        " deadlock_prediction"
-#endif
 #ifdef WITH_TRACKREF_CHECKS
         " trackref_checks"
 #endif
@@ -963,24 +957,6 @@ static int processOptions(int argc, const char* const argv[],
           } else {
               gDvmJit.disableOpt = -1;
           }
-#endif
-
-        } else if (strncmp(argv[i], "-Xdeadlockpredict:", 18) == 0) {
-#ifdef WITH_DEADLOCK_PREDICTION
-            if (strcmp(argv[i] + 18, "off") == 0)
-                gDvm.deadlockPredictMode = kDPOff;
-            else if (strcmp(argv[i] + 18, "warn") == 0)
-                gDvm.deadlockPredictMode = kDPWarn;
-            else if (strcmp(argv[i] + 18, "err") == 0)
-                gDvm.deadlockPredictMode = kDPErr;
-            else if (strcmp(argv[i] + 18, "abort") == 0)
-                gDvm.deadlockPredictMode = kDPAbort;
-            else {
-                dvmFprintf(stderr, "Bad value for -Xdeadlockpredict");
-                return -1;
-            }
-            if (gDvm.deadlockPredictMode != kDPOff)
-                LOGD("Deadlock prediction enabled (%s)\n", argv[i]+18);
 #endif
 
         } else if (strncmp(argv[i], "-Xstacktracefile:", 17) == 0) {

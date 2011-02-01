@@ -1845,9 +1845,7 @@ dalvik_inst:
     GET_VREG    rINST                   # rINST<- vAA
     cmp         $0, rINST              # check for null object
     movl        offGlue_self(%eax), %eax # %eax<- glue->self
-#ifdef WITH_MONITOR_TRACKING
-    EXPORT_PC   # export PC so we can grab stack trace
-#endif
+    EXPORT_PC   # need for precise GC
     je          common_errNullObject    # handle null object
 #    jmp         .LOP_MONITOR_ENTER_finish
 #%break
@@ -1860,13 +1858,6 @@ dalvik_inst:
                                         # return: void
     FFETCH_ADV  1, %edx                 # %edx<- next instruction hi; fetch, advance
     lea         8(%esp), %esp
-#ifdef WITH_DEADLOCK_PREDICTION
-    movl        rGLUE, %eax             # %eax<- pMterpGlue
-    movl        offGlue_self(%eax), %eax # %eax<- glue->self
-    movl        offThread_exception(%eax), %eax # %eax<- glue->self->exception
-    cmp         $0, %eax               # check for exception
-    jne         common_exceptionThrown  # handle exception
-#endif
     FGETOP_JMP  1, %edx                 # jump to next instruction; getop, jmp
 
 /* ------------------------------ */

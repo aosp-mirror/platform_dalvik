@@ -1765,12 +1765,8 @@ HANDLE_OPCODE(OP_MONITOR_ENTER /*vAA*/)
         if (!checkForNullExportPC(obj, fp, pc))
             GOTO_exceptionThrown();
         ILOGV("+ locking %p %s\n", obj, obj->clazz->descriptor);
-        EXPORT_PC();    /* need for precise GC, also WITH_MONITOR_TRACKING */
+        EXPORT_PC();    /* need for precise GC */
         dvmLockObject(self, obj);
-#ifdef WITH_DEADLOCK_PREDICTION
-        if (dvmCheckException(self))
-            GOTO_exceptionThrown();
-#endif
     }
     FINISH(1);
 OP_END
