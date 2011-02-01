@@ -1364,6 +1364,14 @@ public final class OpcodeInfo {
     }
 
     /**
+     * Gets the format (an {@link InstructionCodec}) for the given opcode
+     * value.
+     */
+    public static InstructionCodec getFormat(int opcode) {
+        return get(opcode).getFormat();
+    }
+
+    /**
      * Puts the given opcode into the table of all ops.
      *
      * @param opcode non-null; the opcode

@@ -16,6 +16,8 @@
 
 package com.android.dx.io;
 
+import java.io.EOFException;
+
 /**
  * A decoded Dalvik instruction. This consists of a format codec, a
  * numeric opcode, an optional index type, and any additional
@@ -72,6 +74,17 @@ public final class DecodedInstruction {
 
     /** argument "E"; always a register number */
     private final int e;
+
+    /**
+     * Decodes an instruction from the given input source.
+     */
+    public static DecodedInstruction decode(CodeInput in) throws EOFException {
+        int opcodeUnit = in.read();
+        int opcode = Opcodes.extractOpcodeFromUnit(opcodeUnit);
+        InstructionCodec format = OpcodeInfo.getFormat(opcode);
+
+        return format.decode(opcodeUnit, in);
+    }
 
     /**
      * Constructs an instance. This is the base constructor that takes
@@ -232,7 +245,14 @@ public final class DecodedInstruction {
     }
 
     /**
-     * Return an instance just like this one, except with the index replaced
+     * Encodes this instance to the given output.
+     */
+    public void encode(CodeOutput out) {
+        format.encode(this, out);
+    }
+
+    /**
+     * Returns an instance just like this one, except with the index replaced
      * with the given one.
      */
     public DecodedInstruction withIndex(int newIndex) {

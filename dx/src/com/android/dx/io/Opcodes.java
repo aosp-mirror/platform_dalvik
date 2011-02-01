@@ -334,6 +334,12 @@ public final class Opcodes {
      * possibly valid
      */
     public static boolean isValidShape(int opcode) {
+        /*
+         * Note: This method bakes in knowledge that all opcodes are
+         * either single-byte or of the form ((byteValue << 8) |
+         * 0xff).
+         */
+
         // Note: SPECIAL_FORMAT == NO_NEXT.
         if ((opcode >= SPECIAL_FORMAT) && (opcode <= 0xff)) {
             return true;
@@ -345,5 +351,20 @@ public final class Opcodes {
         }
 
         return false;
+    }
+
+    /**
+     * Gets the opcode out of an opcode unit, the latter of which may also
+     * include one or more argument values.
+     */
+    public static int extractOpcodeFromUnit(int opcodeUnit) {
+        /*
+         * Note: This method bakes in knowledge that all opcodes are
+         * either single-byte or of the form ((byteValue << 8) |
+         * 0xff).
+         */
+
+        int lowByte = opcodeUnit & 0xff;
+        return (lowByte == 0xff) ? opcodeUnit : lowByte;
     }
 }
