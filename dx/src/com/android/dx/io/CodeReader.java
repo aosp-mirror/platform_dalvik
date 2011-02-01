@@ -434,7 +434,7 @@ public final class CodeReader {
             int offset = (instructions[i + 1] & 0xFFFF)
                     + ((instructions[i + 2] & 0xFFFF) << 16);
             if (instructions[i + offset] != 0x100) {
-                throw new DexException("Expected packed-switch pseudo-opcode but was 0x"
+                throw new DexException("Expected packed-switch-payload opcode but was 0x"
                         + Integer.toHexString(instructions[i + offset]));
             }
             short size = instructions[i + offset + 1];
@@ -450,7 +450,7 @@ public final class CodeReader {
             int offset = (instructions[i + 1] & 0xFFFF)
                     + ((instructions[i + 2] & 0xFFFF) << 16);
             if (instructions[i + offset] != 0x200) {
-                throw new DexException("Expected sparse-switch pseudo-opcode but was 0x"
+                throw new DexException("Expected sparse-switch-payload opcode but was 0x"
                         + Integer.toHexString(instructions[i + offset]));
             }
             short size = instructions[i + offset + 1];
@@ -466,7 +466,7 @@ public final class CodeReader {
             int offset = (instructions[i + 1] & 0xFFFF)
                     + ((instructions[i + 2] & 0xFFFF) << 16);
             if (instructions[i + offset] != 0x300) {
-                throw new DexException("Expected fill-array-data pseudo-opcode but was 0x"
+                throw new DexException("Expected fill-array-data-payload opcode but was 0x"
                         + Integer.toHexString(instructions[i + offset]));
             }
             int bytesPerElement = instructions[i + offset + 1];
