@@ -32,7 +32,6 @@ final class InstructionTransformer {
         this.indexMap = indexMap;
         this.reader = new CodeReader();
         this.reader.setAllVisitors(new GenericVisitor());
-        this.reader.setJumboStringVisitor(new JumboStringVisitor());
         this.reader.setStringVisitor(new StringVisitor());
         this.reader.setTypeVisitor(new TypeVisitor());
         this.reader.setFieldVisitor(new FieldVisitor());
@@ -68,19 +67,8 @@ final class InstructionTransformer {
         public void visit(DecodedInstruction[] all, DecodedInstruction one) {
             int stringId = one.getIndex();
             int mappedId = indexMap.adjustString(stringId);
-            if (mappedId > 0xFFFF) {
-                throw new DexException("Cannot convert string to jumbo string!");
-            }
-
+            jumboCheck(stringId, mappedId);
             mappedInstructions[mappedAt++] = one.withIndex(mappedId);
-        }
-    }
-
-    private class JumboStringVisitor implements CodeReader.Visitor {
-        public void visit(DecodedInstruction[] all, DecodedInstruction one) {
-            throw new UnsupportedOperationException("Jumbo strings not implemented. "
-                    + "Due to a lack of dex files requiring jumbo strings, this class doesn't "
-                    + "bother to support jumbo strings!");
         }
     }
 
@@ -88,6 +76,7 @@ final class InstructionTransformer {
         public void visit(DecodedInstruction[] all, DecodedInstruction one) {
             int fieldId = one.getIndex();
             int mappedId = indexMap.adjustField(fieldId);
+            jumboCheck(fieldId, mappedId);
             mappedInstructions[mappedAt++] = one.withIndex(mappedId);
         }
     }
@@ -96,6 +85,7 @@ final class InstructionTransformer {
         public void visit(DecodedInstruction[] all, DecodedInstruction one) {
             int typeId = one.getIndex();
             int mappedId = indexMap.adjustType(typeId);
+            jumboCheck(typeId, mappedId);
             mappedInstructions[mappedAt++] = one.withIndex(mappedId);
         }
     }
@@ -104,7 +94,15 @@ final class InstructionTransformer {
         public void visit(DecodedInstruction[] all, DecodedInstruction one) {
             int methodId = one.getIndex();
             int mappedId = indexMap.adjustMethod(methodId);
+            jumboCheck(methodId, mappedId);
             mappedInstructions[mappedAt++] = one.withIndex(mappedId);
         }
     }
+
+    private static void jumboCheck(int oldIndex, int newIndex) {
+        if ((oldIndex <= 0xffff) && (newIndex > 0xffff)) {
+            throw new DexException("Cannot handle conversion to jumbo index!");
+        }
+    }
+
 }

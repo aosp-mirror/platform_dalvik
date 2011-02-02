@@ -297,12 +297,6 @@ public final class CodeReader {
      */
     public void setStringVisitor(Visitor visitor) {
         instructions[0x1a].setVisitor("const-string vAA, string@BBBB", visitor);
-    }
-
-    /**
-     * Sets {@code visitor} as the visitor for all jumbo string instructions.
-     */
-    public void setJumboStringVisitor(Visitor visitor) {
         instructions[0x1b].setVisitor("const-string/jumbo vAA, string@BBBBBBBB", visitor);
     }
 
