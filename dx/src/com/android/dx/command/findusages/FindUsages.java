@@ -19,6 +19,7 @@ package com.android.dx.command.findusages;
 import com.android.dx.io.ClassData;
 import com.android.dx.io.ClassDef;
 import com.android.dx.io.CodeReader;
+import com.android.dx.io.DecodedInstruction;
 import com.android.dx.io.DexBuffer;
 import com.android.dx.io.FieldId;
 import com.android.dx.io.MethodId;
@@ -60,19 +61,19 @@ public final class FindUsages {
         fieldIds = getFieldIds(dex, memberNameIndex, typeIndex);
 
         codeReader.setFieldVisitor(new CodeReader.Visitor() {
-            public void visit(
-                    CodeReader.Instruction instruction, short[] instructions, int offset) {
-                int field = instructions[offset + 1];
-                if (fieldIds.contains(field)) {
+            public void visit(CodeReader.Instruction instruction,
+                    DecodedInstruction[] all, DecodedInstruction one) {
+                int fieldId = one.getIndex();
+                if (fieldIds.contains(fieldId)) {
                     out.println(location() + ": field reference (" + instruction + ")");
                 }
             }
         });
 
         codeReader.setMethodVisitor(new CodeReader.Visitor() {
-            public void visit(
-                    CodeReader.Instruction instruction, short[] instructions, int offset) {
-                int methodId = instructions[offset + 1];
+            public void visit(CodeReader.Instruction instruction,
+                    DecodedInstruction[] all, DecodedInstruction one) {
+                int methodId = one.getIndex();
                 if (methodIds.contains(methodId)) {
                     out.println(location() + ": method reference (" + instruction + ")");
                 }

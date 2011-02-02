@@ -17,7 +17,7 @@
 package com.android.dx.io;
 
 import com.android.dx.dex.DexException;
-import java.util.BitSet;
+import com.android.dx.util.Hex;
 
 /**
  * Walks through a block of code and calls visitor call backs.
@@ -26,74 +26,74 @@ public final class CodeReader {
 
     private final Instruction[] instructions = new Instruction[] {
             // 0x00...0x0f
-            new Instruction(1, "nop"),
-            new Instruction(1, "move vA, vB"),
-            new Instruction(2, "move/from vAA, vBBBB"),
-            new Instruction(3, "move/16 vAAAA, vBBBB"),
-            new Instruction(1, "move-wide, vA, vB"),
-            new Instruction(2, "move-wide/from16 vAA, vBBBB"),
-            new Instruction(3, "move-wide/from16 vAAAA, vBBBB"),
-            new Instruction(1, "move-object vA, vB"),
-            new Instruction(2, "move-object/from16 vAA, vBBBB"),
-            new Instruction(3, "move-object/16 vAAAA, vBBBB"),
-            new Instruction(1, "move-result vAA"),
-            new Instruction(1, "move-result-wide vAA"),
-            new Instruction(1, "move-result-object vAA"),
-            new Instruction(1, "move-exception vAA"),
-            new Instruction(1, "return void"),
-            new Instruction(1, "return vAA"),
+            new Instruction("nop"),
+            new Instruction("move vA, vB"),
+            new Instruction("move/from vAA, vBBBB"),
+            new Instruction("move/16 vAAAA, vBBBB"),
+            new Instruction("move-wide, vA, vB"),
+            new Instruction("move-wide/from16 vAA, vBBBB"),
+            new Instruction("move-wide/from16 vAAAA, vBBBB"),
+            new Instruction("move-object vA, vB"),
+            new Instruction("move-object/from16 vAA, vBBBB"),
+            new Instruction("move-object/16 vAAAA, vBBBB"),
+            new Instruction("move-result vAA"),
+            new Instruction("move-result-wide vAA"),
+            new Instruction("move-result-object vAA"),
+            new Instruction("move-exception vAA"),
+            new Instruction("return void"),
+            new Instruction("return vAA"),
 
             // 0x10...0x1f
-            new Instruction(1, "return-wide vAA"),
-            new Instruction(1, "return-object vAA"),
-            new Instruction(1, "const/4 vA, #+B"),
-            new Instruction(2, "const/16 vAA, #+BBBB"),
-            new Instruction(3, "const vAA, #+BBBBBBBB"),
-            new Instruction(2, "const/high16 vAA, #+BBBB0000"),
-            new Instruction(2, "const-wide/16 vAA, #+BBBB"),
-            new Instruction(3, "const-wide/32 vAA, #+BBBBBBBB"),
-            new Instruction(5, "const-wide vAA, #+BBBBBBBBBBBBBBBB"),
-            new Instruction(2, "const-wide/high16 vAA, #+BBBB000000000000"),
-            new Instruction(2, "const-string vAA, string@BBBB"),
-            new Instruction(3, "const-string/jumbo vAA, string@BBBBBBBB"),
-            new Instruction(2, "const-class vAA, type@BBBB"),
-            new Instruction(1, "monitor-enter vAA"),
-            new Instruction(1, "monitor-exit vAA"),
-            new Instruction(2, "check-cast vAA type@BBBB"),
+            new Instruction("return-wide vAA"),
+            new Instruction("return-object vAA"),
+            new Instruction("const/4 vA, #+B"),
+            new Instruction("const/16 vAA, #+BBBB"),
+            new Instruction("const vAA, #+BBBBBBBB"),
+            new Instruction("const/high16 vAA, #+BBBB0000"),
+            new Instruction("const-wide/16 vAA, #+BBBB"),
+            new Instruction("const-wide/32 vAA, #+BBBBBBBB"),
+            new Instruction("const-wide vAA, #+BBBBBBBBBBBBBBBB"),
+            new Instruction("const-wide/high16 vAA, #+BBBB000000000000"),
+            new Instruction("const-string vAA, string@BBBB"),
+            new Instruction("const-string/jumbo vAA, string@BBBBBBBB"),
+            new Instruction("const-class vAA, type@BBBB"),
+            new Instruction("monitor-enter vAA"),
+            new Instruction("monitor-exit vAA"),
+            new Instruction("check-cast vAA type@BBBB"),
 
             // 0x20...0x2f
-            new Instruction(2, "instance-of vA, vB, type@CCCC"),
-            new Instruction(1, "array-length vA, vB"),
-            new Instruction(2, "new-instance vAA, type@BBBB"),
-            new Instruction(2, "new-array vA, vB, type@CCCC"),
-            new Instruction(3, "filled-new-array {vD, vE, vF, vG, vA}, type@CCCC"),
-            new Instruction(3, "filled-new-array/range {vCCCC..vNNNN}, type@BBBB"),
-            new FillArrayInstruction(3, "fill-array-data vAA, +BBBBBBBB"),
-            new Instruction(1, "throw vAA"),
-            new Instruction(1, "goto +AA"),
-            new Instruction(2, "goto/16 +AAAA"),
-            new Instruction(3, "goto/32 +AAAAAAAA"),
-            new PackedSwitchInstruction(3, "packed-switch vAA, +BBBBBBBB"),
-            new SparseSwitchInstruction(3, "sparse-switch vAA, +BBBBBBBB"),
-            new Instruction(2, "cmpl-float vAA, vBB, vCC"),
-            new Instruction(2, "cmpg-float vAA, vBB, vCC"),
-            new Instruction(2, "cmpl-double vAA, vBB, vCC"),
+            new Instruction("instance-of vA, vB, type@CCCC"),
+            new Instruction("array-length vA, vB"),
+            new Instruction("new-instance vAA, type@BBBB"),
+            new Instruction("new-array vA, vB, type@CCCC"),
+            new Instruction("filled-new-array {vD, vE, vF, vG, vA}, type@CCCC"),
+            new Instruction("filled-new-array/range {vCCCC..vNNNN}, type@BBBB"),
+            new Instruction("fill-array-data vAA, +BBBBBBBB"),
+            new Instruction("throw vAA"),
+            new Instruction("goto +AA"),
+            new Instruction("goto/16 +AAAA"),
+            new Instruction("goto/32 +AAAAAAAA"),
+            new Instruction("packed-switch vAA, +BBBBBBBB"),
+            new Instruction("sparse-switch vAA, +BBBBBBBB"),
+            new Instruction("cmpl-float vAA, vBB, vCC"),
+            new Instruction("cmpg-float vAA, vBB, vCC"),
+            new Instruction("cmpl-double vAA, vBB, vCC"),
 
             // 0x30...0x3f
-            new Instruction(2, "cmpg-double vAA, vBB, vCC"),
-            new Instruction(2, "cmp-long vAA, vBB, vCC"),
-            new Instruction(2, "if-eq vA, vB, +CCCC"),
-            new Instruction(2, "if-ne vA, vB, +CCCC"),
-            new Instruction(2, "if-lt vA, vB, +CCCC"),
-            new Instruction(2, "if-ge vA, vB, +CCCC"),
-            new Instruction(2, "if-gt vA, vB, +CCCC"),
-            new Instruction(2, "if-le vA, vB, +CCCC"),
-            new Instruction(2, "if-eqz vAA, +BBBB"),
-            new Instruction(2, "if-nez vAA, +BBBB"),
-            new Instruction(2, "if-ltz vAA, +BBBB"),
-            new Instruction(2, "if-gez vAA, +BBBB"),
-            new Instruction(2, "if-gtz vAA, +BBBB"),
-            new Instruction(2, "if-lez vAA, +BBBB"),
+            new Instruction("cmpg-double vAA, vBB, vCC"),
+            new Instruction("cmp-long vAA, vBB, vCC"),
+            new Instruction("if-eq vA, vB, +CCCC"),
+            new Instruction("if-ne vA, vB, +CCCC"),
+            new Instruction("if-lt vA, vB, +CCCC"),
+            new Instruction("if-ge vA, vB, +CCCC"),
+            new Instruction("if-gt vA, vB, +CCCC"),
+            new Instruction("if-le vA, vB, +CCCC"),
+            new Instruction("if-eqz vAA, +BBBB"),
+            new Instruction("if-nez vAA, +BBBB"),
+            new Instruction("if-ltz vAA, +BBBB"),
+            new Instruction("if-gez vAA, +BBBB"),
+            new Instruction("if-gtz vAA, +BBBB"),
+            new Instruction("if-lez vAA, +BBBB"),
             new UnusedInstruction(),
             new UnusedInstruction(),
 
@@ -102,186 +102,195 @@ public final class CodeReader {
             new UnusedInstruction(),
             new UnusedInstruction(),
             new UnusedInstruction(),
-            new Instruction(2, "aget vAA, vBB, vCC"),
-            new Instruction(2, "aget-wide vAA, vBB, vCC"),
-            new Instruction(2, "aget-object vAA, vBB, vCC"),
-            new Instruction(2, "aget-boolean vAA, vBB, vCC"),
-            new Instruction(2, "aget-byte vAA, vBB, vCC"),
-            new Instruction(2, "aget-char vAA, vBB, vCC"),
-            new Instruction(2, "aget-short vAA, vBB, vCC"),
-            new Instruction(2, "aput vAA, vBB, vCC"),
-            new Instruction(2, "aput-wide vAA, vBB, vCC"),
-            new Instruction(2, "aput-object vAA, vBB, vCC"),
-            new Instruction(2, "aput-boolean vAA, vBB, vCC"),
-            new Instruction(2, "aput-byte vAA, vBB, vCC"),
+            new Instruction("aget vAA, vBB, vCC"),
+            new Instruction("aget-wide vAA, vBB, vCC"),
+            new Instruction("aget-object vAA, vBB, vCC"),
+            new Instruction("aget-boolean vAA, vBB, vCC"),
+            new Instruction("aget-byte vAA, vBB, vCC"),
+            new Instruction("aget-char vAA, vBB, vCC"),
+            new Instruction("aget-short vAA, vBB, vCC"),
+            new Instruction("aput vAA, vBB, vCC"),
+            new Instruction("aput-wide vAA, vBB, vCC"),
+            new Instruction("aput-object vAA, vBB, vCC"),
+            new Instruction("aput-boolean vAA, vBB, vCC"),
+            new Instruction("aput-byte vAA, vBB, vCC"),
 
             // 0x50...0x5f
-            new Instruction(2, "aput-char vAA, vBB, vCC"),
-            new Instruction(2, "aput-short vAA, vBB, vCC"),
-            new Instruction(2, "iget vA, vB, field@CCCC"),
-            new Instruction(2, "iget-wide vA, vB, field@CCCC"),
-            new Instruction(2, "iget-object vA, vB, field@CCCC"),
-            new Instruction(2, "iget-boolean vA, vB, field@CCCC"),
-            new Instruction(2, "iget-byte vA, vB, field@CCCC"),
-            new Instruction(2, "iget-char vA, vB, field@CCCC"),
-            new Instruction(2, "iget-short vA, vB, field@CCCC"),
-            new Instruction(2, "iput vA, vB, field@CCCC"),
-            new Instruction(2, "iput-wide vA, vB, field@CCCC"),
-            new Instruction(2, "iput-object vA, vB, field@CCCC"),
-            new Instruction(2, "iput-boolean vA, vB, field@CCCC"),
-            new Instruction(2, "iput-byte vA, vB, field@CCCC"),
-            new Instruction(2, "iput-char vA, vB, field@CCCC"),
-            new Instruction(2, "iput-short vA, vB, field@CCCC"),
+            new Instruction("aput-char vAA, vBB, vCC"),
+            new Instruction("aput-short vAA, vBB, vCC"),
+            new Instruction("iget vA, vB, field@CCCC"),
+            new Instruction("iget-wide vA, vB, field@CCCC"),
+            new Instruction("iget-object vA, vB, field@CCCC"),
+            new Instruction("iget-boolean vA, vB, field@CCCC"),
+            new Instruction("iget-byte vA, vB, field@CCCC"),
+            new Instruction("iget-char vA, vB, field@CCCC"),
+            new Instruction("iget-short vA, vB, field@CCCC"),
+            new Instruction("iput vA, vB, field@CCCC"),
+            new Instruction("iput-wide vA, vB, field@CCCC"),
+            new Instruction("iput-object vA, vB, field@CCCC"),
+            new Instruction("iput-boolean vA, vB, field@CCCC"),
+            new Instruction("iput-byte vA, vB, field@CCCC"),
+            new Instruction("iput-char vA, vB, field@CCCC"),
+            new Instruction("iput-short vA, vB, field@CCCC"),
 
             // 0x60...0x6f
-            new Instruction(2, "sget vAA, field@BBBB"),
-            new Instruction(2, "sget-wide vAA, field@BBBB"),
-            new Instruction(2, "sget-object vAA, field@BBBB"),
-            new Instruction(2, "sget-boolean vAA, field@BBBB"),
-            new Instruction(2, "sget-byte vAA, field@BBBB"),
-            new Instruction(2, "sget-char vAA, field@BBBB"),
-            new Instruction(2, "sget-short vAA, field@BBBB"),
-            new Instruction(2, "sput vAA, field@BBBB"),
-            new Instruction(2, "sput-wide vAA, field@BBBB"),
-            new Instruction(2, "sput-object vAA, field@BBBB"),
-            new Instruction(2, "sput-boolean vAA, field@BBBB"),
-            new Instruction(2, "sput-byte vAA, field@BBBB"),
-            new Instruction(2, "sput-char vAA, field@BBBB"),
-            new Instruction(2, "sput-short vAA, field@BBBB"),
-            new Instruction(3, "invoke-virtual {vD, vE, vF, vG, vA}, meth@CCCC"),
-            new Instruction(3, "invoke-super {vD, vE, vF, vG, vA}, meth@CCCC"),
+            new Instruction("sget vAA, field@BBBB"),
+            new Instruction("sget-wide vAA, field@BBBB"),
+            new Instruction("sget-object vAA, field@BBBB"),
+            new Instruction("sget-boolean vAA, field@BBBB"),
+            new Instruction("sget-byte vAA, field@BBBB"),
+            new Instruction("sget-char vAA, field@BBBB"),
+            new Instruction("sget-short vAA, field@BBBB"),
+            new Instruction("sput vAA, field@BBBB"),
+            new Instruction("sput-wide vAA, field@BBBB"),
+            new Instruction("sput-object vAA, field@BBBB"),
+            new Instruction("sput-boolean vAA, field@BBBB"),
+            new Instruction("sput-byte vAA, field@BBBB"),
+            new Instruction("sput-char vAA, field@BBBB"),
+            new Instruction("sput-short vAA, field@BBBB"),
+            new Instruction("invoke-virtual {vD, vE, vF, vG, vA}, meth@CCCC"),
+            new Instruction("invoke-super {vD, vE, vF, vG, vA}, meth@CCCC"),
 
             // 0x70...0x7f
-            new Instruction(3, "invoke-direct {vD, vE, vF, vG, vA}, meth@CCCC"),
-            new Instruction(3, "invoke-static {vD, vE, vF, vG, vA}, meth@CCCC"),
-            new Instruction(3, "invoke-interface {vD, vE, vF, vG, vA}, meth@CCCC"),
+            new Instruction("invoke-direct {vD, vE, vF, vG, vA}, meth@CCCC"),
+            new Instruction("invoke-static {vD, vE, vF, vG, vA}, meth@CCCC"),
+            new Instruction("invoke-interface {vD, vE, vF, vG, vA}, meth@CCCC"),
             new UnusedInstruction(),
-            new Instruction(3, "invoke-virtual/range {vCCCC..vNNNN}, meth@BBBB"),
-            new Instruction(3, "invoke-super/range {vCCCC..vNNNN}, meth@BBBB"),
-            new Instruction(3, "invoke-direct/range {vCCCC..vNNNN}, meth@BBBB"),
-            new Instruction(3, "invoke-static/range {vCCCC..vNNNN}, meth@BBBB"),
-            new Instruction(3, "invoke-interface/range {vCCCC..vNNNN}, meth@BBBB"),
+            new Instruction("invoke-virtual/range {vCCCC..vNNNN}, meth@BBBB"),
+            new Instruction("invoke-super/range {vCCCC..vNNNN}, meth@BBBB"),
+            new Instruction("invoke-direct/range {vCCCC..vNNNN}, meth@BBBB"),
+            new Instruction("invoke-static/range {vCCCC..vNNNN}, meth@BBBB"),
+            new Instruction("invoke-interface/range {vCCCC..vNNNN}, meth@BBBB"),
             new UnusedInstruction(),
             new UnusedInstruction(),
-            new Instruction(1, "neg-int vA, vB"),
-            new Instruction(1, "not-int vA, vB"),
-            new Instruction(1, "neg-long vA, vB"),
-            new Instruction(1, "not-long vA, vB"),
-            new Instruction(1, "neg-float vA, vB"),
+            new Instruction("neg-int vA, vB"),
+            new Instruction("not-int vA, vB"),
+            new Instruction("neg-long vA, vB"),
+            new Instruction("not-long vA, vB"),
+            new Instruction("neg-float vA, vB"),
 
             // 0x80...0x8f
-            new Instruction(1, "neg-double vA, vB"),
-            new Instruction(1, "int-to-long vA, vB"),
-            new Instruction(1, "int-to-float vA, vB"),
-            new Instruction(1, "int-to-double vA, vB"),
-            new Instruction(1, "long-to-int vA, vB"),
-            new Instruction(1, "long-to-float vA, vB"),
-            new Instruction(1, "long-to-double vA, vB"),
-            new Instruction(1, "float-to-int vA, vB"),
-            new Instruction(1, "float-to-long vA, vB"),
-            new Instruction(1, "float-to-double vA, vB"),
-            new Instruction(1, "double-to-int vA, vB"),
-            new Instruction(1, "double-to-long vA, vB"),
-            new Instruction(1, "double-to-float vA, vB"),
-            new Instruction(1, "int-to-byte vA, vB"),
-            new Instruction(1, "int-to-char vA, vB"),
-            new Instruction(1, "int-to-short vA, vB"),
+            new Instruction("neg-double vA, vB"),
+            new Instruction("int-to-long vA, vB"),
+            new Instruction("int-to-float vA, vB"),
+            new Instruction("int-to-double vA, vB"),
+            new Instruction("long-to-int vA, vB"),
+            new Instruction("long-to-float vA, vB"),
+            new Instruction("long-to-double vA, vB"),
+            new Instruction("float-to-int vA, vB"),
+            new Instruction("float-to-long vA, vB"),
+            new Instruction("float-to-double vA, vB"),
+            new Instruction("double-to-int vA, vB"),
+            new Instruction("double-to-long vA, vB"),
+            new Instruction("double-to-float vA, vB"),
+            new Instruction("int-to-byte vA, vB"),
+            new Instruction("int-to-char vA, vB"),
+            new Instruction("int-to-short vA, vB"),
 
             // 0x90...0x9f
-            new Instruction(2, "add-int vAA, vBB, vCC"),
-            new Instruction(2, "sub-int vAA, vBB, vCC"),
-            new Instruction(2, "mul-int vAA, vBB, vCC"),
-            new Instruction(2, "div-int vAA, vBB, vCC"),
-            new Instruction(2, "rem-int vAA, vBB, vCC"),
-            new Instruction(2, "and-int vAA, vBB, vCC"),
-            new Instruction(2, "or-int vAA, vBB, vCC"),
-            new Instruction(2, "xor-int vAA, vBB, vCC"),
-            new Instruction(2, "shl-int vAA, vBB, vCC"),
-            new Instruction(2, "shr-int vAA, vBB, vCC"),
-            new Instruction(2, "ushr-int vAA, vBB, vCC"),
-            new Instruction(2, "add-long vAA, vBB, vCC"),
-            new Instruction(2, "sub-long vAA, vBB, vCC"),
-            new Instruction(2, "mul-long vAA, vBB, vCC"),
-            new Instruction(2, "div-long vAA, vBB, vCC"),
-            new Instruction(2, "rem-long vAA, vBB, vCC"),
+            new Instruction("add-int vAA, vBB, vCC"),
+            new Instruction("sub-int vAA, vBB, vCC"),
+            new Instruction("mul-int vAA, vBB, vCC"),
+            new Instruction("div-int vAA, vBB, vCC"),
+            new Instruction("rem-int vAA, vBB, vCC"),
+            new Instruction("and-int vAA, vBB, vCC"),
+            new Instruction("or-int vAA, vBB, vCC"),
+            new Instruction("xor-int vAA, vBB, vCC"),
+            new Instruction("shl-int vAA, vBB, vCC"),
+            new Instruction("shr-int vAA, vBB, vCC"),
+            new Instruction("ushr-int vAA, vBB, vCC"),
+            new Instruction("add-long vAA, vBB, vCC"),
+            new Instruction("sub-long vAA, vBB, vCC"),
+            new Instruction("mul-long vAA, vBB, vCC"),
+            new Instruction("div-long vAA, vBB, vCC"),
+            new Instruction("rem-long vAA, vBB, vCC"),
 
             // 0xa0...0xaf
-            new Instruction(2, "and-long vAA, vBB, vCC"),
-            new Instruction(2, "or-long vAA, vBB, vCC"),
-            new Instruction(2, "xor-long vAA, vBB, vCC"),
-            new Instruction(2, "shl-long vAA, vBB, vCC"),
-            new Instruction(2, "shr-long vAA, vBB, vCC"),
-            new Instruction(2, "ushr-long vAA, vBB, vCC"),
-            new Instruction(2, "add-float vAA, vBB, vCC"),
-            new Instruction(2, "sub-float vAA, vBB, vCC"),
-            new Instruction(2, "mul-float vAA, vBB, vCC"),
-            new Instruction(2, "div-float vAA, vBB, vCC"),
-            new Instruction(2, "rem-float vAA, vBB, vCC"),
-            new Instruction(2, "add-double vAA, vBB, vCC"),
-            new Instruction(2, "sub-double vAA, vBB, vCC"),
-            new Instruction(2, "mul-double vAA, vBB, vCC"),
-            new Instruction(2, "div-double vAA, vBB, vCC"),
-            new Instruction(2, "rem-double vAA, vBB, vCC"),
+            new Instruction("and-long vAA, vBB, vCC"),
+            new Instruction("or-long vAA, vBB, vCC"),
+            new Instruction("xor-long vAA, vBB, vCC"),
+            new Instruction("shl-long vAA, vBB, vCC"),
+            new Instruction("shr-long vAA, vBB, vCC"),
+            new Instruction("ushr-long vAA, vBB, vCC"),
+            new Instruction("add-float vAA, vBB, vCC"),
+            new Instruction("sub-float vAA, vBB, vCC"),
+            new Instruction("mul-float vAA, vBB, vCC"),
+            new Instruction("div-float vAA, vBB, vCC"),
+            new Instruction("rem-float vAA, vBB, vCC"),
+            new Instruction("add-double vAA, vBB, vCC"),
+            new Instruction("sub-double vAA, vBB, vCC"),
+            new Instruction("mul-double vAA, vBB, vCC"),
+            new Instruction("div-double vAA, vBB, vCC"),
+            new Instruction("rem-double vAA, vBB, vCC"),
 
             // 0xb0..0xbf
-            new Instruction(1, "add-int/2addr vA, vB"),
-            new Instruction(1, "sub-int/2addr vA, vB"),
-            new Instruction(1, "mul-int/2addr vA, vB"),
-            new Instruction(1, "div-int/2addr vA, vB"),
-            new Instruction(1, "rem-int/2addr vA, vB"),
-            new Instruction(1, "and-int/2addr vA, vB"),
-            new Instruction(1, "or-int/2addr vA, vB"),
-            new Instruction(1, "xor-int/2addr vA, vB"),
-            new Instruction(1, "shl-int/2addr vA, vB"),
-            new Instruction(1, "shr-int/2addr vA, vB"),
-            new Instruction(1, "ushr-int/2addr vA, vB"),
-            new Instruction(1, "add-long/2addr vA, vB"),
-            new Instruction(1, "sub-long/2addr vA, vB"),
-            new Instruction(1, "mul-long/2addr vA, vB"),
-            new Instruction(1, "div-long/2addr vA, vB"),
-            new Instruction(1, "rem-long/2addr vA, vB"),
+            new Instruction("add-int/2addr vA, vB"),
+            new Instruction("sub-int/2addr vA, vB"),
+            new Instruction("mul-int/2addr vA, vB"),
+            new Instruction("div-int/2addr vA, vB"),
+            new Instruction("rem-int/2addr vA, vB"),
+            new Instruction("and-int/2addr vA, vB"),
+            new Instruction("or-int/2addr vA, vB"),
+            new Instruction("xor-int/2addr vA, vB"),
+            new Instruction("shl-int/2addr vA, vB"),
+            new Instruction("shr-int/2addr vA, vB"),
+            new Instruction("ushr-int/2addr vA, vB"),
+            new Instruction("add-long/2addr vA, vB"),
+            new Instruction("sub-long/2addr vA, vB"),
+            new Instruction("mul-long/2addr vA, vB"),
+            new Instruction("div-long/2addr vA, vB"),
+            new Instruction("rem-long/2addr vA, vB"),
 
             // 0xc0...0xcf
-            new Instruction(1, "and-long/2addr vA, vB"),
-            new Instruction(1, "or-long/2addr vA, vB"),
-            new Instruction(1, "xor-long/2addr vA, vB"),
-            new Instruction(1, "shl-long/2addr vA, vB"),
-            new Instruction(1, "shr-long/2addr vA, vB"),
-            new Instruction(1, "ushr-long/2addr vA, vB"),
-            new Instruction(1, "add-float/2addr vA, vB"),
-            new Instruction(1, "sub-float/2addr vA, vB"),
-            new Instruction(1, "mul-float/2addr vA, vB"),
-            new Instruction(1, "div-float/2addr vA, vB"),
-            new Instruction(1, "rem-float/2addr vA, vB"),
-            new Instruction(1, "add-double/2addr vA, vB"),
-            new Instruction(1, "sub-double/2addr vA, vB"),
-            new Instruction(1, "mul-double/2addr vA, vB"),
-            new Instruction(1, "div-double/2addr vA, vB"),
-            new Instruction(1, "rem-double/2addr vA, vB"),
+            new Instruction("and-long/2addr vA, vB"),
+            new Instruction("or-long/2addr vA, vB"),
+            new Instruction("xor-long/2addr vA, vB"),
+            new Instruction("shl-long/2addr vA, vB"),
+            new Instruction("shr-long/2addr vA, vB"),
+            new Instruction("ushr-long/2addr vA, vB"),
+            new Instruction("add-float/2addr vA, vB"),
+            new Instruction("sub-float/2addr vA, vB"),
+            new Instruction("mul-float/2addr vA, vB"),
+            new Instruction("div-float/2addr vA, vB"),
+            new Instruction("rem-float/2addr vA, vB"),
+            new Instruction("add-double/2addr vA, vB"),
+            new Instruction("sub-double/2addr vA, vB"),
+            new Instruction("mul-double/2addr vA, vB"),
+            new Instruction("div-double/2addr vA, vB"),
+            new Instruction("rem-double/2addr vA, vB"),
 
             // 0xd0...0xdf
-            new Instruction(2, "add-int/lit16 vA, vB, #+CCCC"),
-            new Instruction(2, "rsub-int (reverse subtract) vA, vB, #+CCCC"),
-            new Instruction(2, "mul-int/lit16 vA, vB, #+CCCC"),
-            new Instruction(2, "div-int/lit16 vA, vB, #+CCCC"),
-            new Instruction(2, "rem-int/lit16 vA, vB, #+CCCC"),
-            new Instruction(2, "and-int/lit16 vA, vB, #+CCCC"),
-            new Instruction(2, "or-int/lit16 vA, vB, #+CCCC"),
-            new Instruction(2, "xor-int/lit16 vA, vB, #+CCCC"),
-            new Instruction(2, "add-int/lit8 vAA, vBB, #+CC"),
-            new Instruction(2, "rsub-int/lit8 vAA, vBB, #+CC"),
-            new Instruction(2, "mul-int/lit8 vAA, vBB, #+CC"),
-            new Instruction(2, "div-int/lit8 vAA, vBB, #+CC"),
-            new Instruction(2, "rem-int/lit8 vAA, vBB, #+CC"),
-            new Instruction(2, "and-int/lit8 vAA, vBB, #+CC"),
-            new Instruction(2, "or-int/lit8 vAA, vBB, #+CC"),
-            new Instruction(2, "xor-int/lit8 vAA, vBB, #+CC"),
+            new Instruction("add-int/lit16 vA, vB, #+CCCC"),
+            new Instruction("rsub-int (reverse subtract) vA, vB, #+CCCC"),
+            new Instruction("mul-int/lit16 vA, vB, #+CCCC"),
+            new Instruction("div-int/lit16 vA, vB, #+CCCC"),
+            new Instruction("rem-int/lit16 vA, vB, #+CCCC"),
+            new Instruction("and-int/lit16 vA, vB, #+CCCC"),
+            new Instruction("or-int/lit16 vA, vB, #+CCCC"),
+            new Instruction("xor-int/lit16 vA, vB, #+CCCC"),
+            new Instruction("add-int/lit8 vAA, vBB, #+CC"),
+            new Instruction("rsub-int/lit8 vAA, vBB, #+CC"),
+            new Instruction("mul-int/lit8 vAA, vBB, #+CC"),
+            new Instruction("div-int/lit8 vAA, vBB, #+CC"),
+            new Instruction("rem-int/lit8 vAA, vBB, #+CC"),
+            new Instruction("and-int/lit8 vAA, vBB, #+CC"),
+            new Instruction("or-int/lit8 vAA, vBB, #+CC"),
+            new Instruction("xor-int/lit8 vAA, vBB, #+CC"),
 
             // 0xe0...0xef
-            new Instruction(2, "shl-int/lit8 vAA, vBB, #+CC"),
-            new Instruction(2, "shr-int/lit8 vAA, vBB, #+CC"),
-            new Instruction(2, "ushr-int/lit8 vAA, vBB, #+CC"),
+            new Instruction("shl-int/lit8 vAA, vBB, #+CC"),
+            new Instruction("shr-int/lit8 vAA, vBB, #+CC"),
+            new Instruction("ushr-int/lit8 vAA, vBB, #+CC"),
     };
+
+    /**
+     * Sets {@code visitor} as the visitor for all instructions.
+     */
+    public void setAllVisitors(Visitor visitor) {
+        for (Instruction instruction : instructions) {
+            instruction.setVisitor(null, visitor);
+        }
+    }
 
     /**
      * Sets {@code visitor} as the visitor for all string instructions.
@@ -360,38 +369,36 @@ public final class CodeReader {
         instructions[0x78].setVisitor("invoke-interface/range {vCCCC..vNNNN}, meth@BBBB", visitor);
     }
 
-    public void visitAll(short[] instructions) throws DexException {
-        BitSet skippedInstructions = new BitSet();
+    public void visitAll(DecodedInstruction[] decodedInstructions)
+            throws DexException {
+        int size = decodedInstructions.length;
 
-        for (int i = 0; i < instructions.length; ) {
-            if (skippedInstructions.get(i)) {
-                i++;
+        for (int i = 0; i < size; i++) {
+            DecodedInstruction di = decodedInstructions[i];
+            if (di == null) {
                 continue;
             }
 
-            int index = instructions[i] & 0xFF;
-            if (index < 0 || index >= this.instructions.length) {
-                throw new DexException("Unhandled instruction at " + i
-                        + ": " + Integer.toHexString(index));
+            Instruction instruction = instructions[di.getOpcode()];
+            Visitor visitor = instruction.visitor;
+            if (visitor != null) {
+                visitor.visit(instruction, decodedInstructions, di);
             }
-
-            Instruction instruction = this.instructions[index];
-            instruction.mask(instructions, i, skippedInstructions);
-            if (instruction.visitor != null) {
-                instruction.visitor.visit(instruction, instructions, i);
-            }
-            i += instruction.codeUnits;
         }
+    }
+
+    public void visitAll(short[] encodedInstructions) throws DexException {
+        DecodedInstruction[] decodedInstructions =
+            DecodedInstruction.decodeAll(encodedInstructions);
+        visitAll(decodedInstructions);
     }
 
     public static class Instruction {
         private final String name;
-        private final int codeUnits;
         private Visitor visitor;
 
-        private Instruction(int codeUnits, String name) {
+        private Instruction(String name) {
             this.name = name;
-            this.codeUnits = codeUnits;
         }
 
         public String getName() {
@@ -403,13 +410,11 @@ public final class CodeReader {
          * or null if this instruction has no visitor.
          */
         public void setVisitor(String name, Visitor visitor) {
-            if (!this.name.equals(name)) {
+            if ((name != null) && !this.name.equals(name)) {
                 throw new IllegalArgumentException("Expected " + this.name + " but was " + name);
             }
             this.visitor = visitor;
         }
-
-        protected void mask(short[] instructions, int offset, BitSet skippedInstructions) {}
 
         @Override public String toString() {
             return name;
@@ -417,64 +422,13 @@ public final class CodeReader {
     }
 
     public interface Visitor {
-        void visit(Instruction instruction, short[] instructions, int offset);
+        void visit(Instruction instruction, DecodedInstruction[] all,
+                DecodedInstruction one);
     }
 
     private static class UnusedInstruction extends Instruction {
         UnusedInstruction() {
-            super(1, "unused");
-        }
-    }
-
-    private static class PackedSwitchInstruction extends Instruction {
-        public PackedSwitchInstruction(int codeUnits, String name) {
-            super(codeUnits, name);
-        }
-        @Override protected void mask(short[] instructions, int i, BitSet skippedInstructions) {
-            int offset = (instructions[i + 1] & 0xFFFF)
-                    + ((instructions[i + 2] & 0xFFFF) << 16);
-            if (instructions[i + offset] != 0x100) {
-                throw new DexException("Expected packed-switch-payload opcode but was 0x"
-                        + Integer.toHexString(instructions[i + offset]));
-            }
-            short size = instructions[i + offset + 1];
-            skippedInstructions.set(i + offset, i + offset + 4 + (size * 2));
-        }
-    }
-
-    private static class SparseSwitchInstruction extends Instruction {
-        public SparseSwitchInstruction(int codeUnits, String name) {
-            super(codeUnits, name);
-        }
-        @Override protected void mask(short[] instructions, int i, BitSet skippedInstructions) {
-            int offset = (instructions[i + 1] & 0xFFFF)
-                    + ((instructions[i + 2] & 0xFFFF) << 16);
-            if (instructions[i + offset] != 0x200) {
-                throw new DexException("Expected sparse-switch-payload opcode but was 0x"
-                        + Integer.toHexString(instructions[i + offset]));
-            }
-            short size = instructions[i + offset + 1];
-            skippedInstructions.set(i + offset, i + offset + 2 + (size * 4));
-        }
-    }
-
-    private static class FillArrayInstruction extends Instruction {
-        public FillArrayInstruction(int codeUnits, String name) {
-            super(codeUnits, name);
-        }
-        @Override protected void mask(short[] instructions, int i, BitSet skippedInstructions) {
-            int offset = (instructions[i + 1] & 0xFFFF)
-                    + ((instructions[i + 2] & 0xFFFF) << 16);
-            if (instructions[i + offset] != 0x300) {
-                throw new DexException("Expected fill-array-data-payload opcode but was 0x"
-                        + Integer.toHexString(instructions[i + offset]));
-            }
-            int bytesPerElement = instructions[i + offset + 1];
-            int size = (instructions[i + offset + 2] & 0xFFFF)
-                    + ((instructions[i + offset + 3] & 0xFFFF) << 4);
-            int totalBytes = size * bytesPerElement;
-            int totalShorts = (totalBytes + 1) / 2; // round up!
-            skippedInstructions.set(i + offset, i + offset + 4 + totalShorts);
+            super("unused");
         }
     }
 }

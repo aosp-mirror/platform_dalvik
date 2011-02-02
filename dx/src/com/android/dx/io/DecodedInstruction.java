@@ -90,6 +90,27 @@ public final class DecodedInstruction {
     }
 
     /**
+     * Decodes an array of instructions. The result has non-null
+     * elements at each offset that represents the start of an
+     * instruction.
+     */
+    public static DecodedInstruction[] decodeAll(short[] encodedInstructions) {
+        int size = encodedInstructions.length;
+        DecodedInstruction[] decoded = new DecodedInstruction[size];
+        ShortArrayCodeInput in = new ShortArrayCodeInput(encodedInstructions);
+
+        try {
+            while (in.hasMore()) {
+                decoded[in.cursor()] = DecodedInstruction.decode(in);
+            }
+        } catch (EOFException ex) {
+            throw new AssertionError("shouldn't happen");
+        }
+
+        return decoded;
+    }
+
+    /**
      * Constructs an instance. This is the base constructor that takes
      * all arguments.
      */

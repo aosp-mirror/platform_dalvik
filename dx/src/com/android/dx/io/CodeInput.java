@@ -30,6 +30,12 @@ public interface CodeInput {
     public int cursor();
 
     /**
+     * Returns whether there are any more code units to read. This
+     * is analogous to {@code hasNext()} on an interator.
+     */
+    public boolean hasMore();
+
+    /**
      * Reads a code unit.
      */
     public int read() throws EOFException;

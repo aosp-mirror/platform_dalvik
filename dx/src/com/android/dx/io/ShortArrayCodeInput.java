@@ -21,7 +21,7 @@ import java.io.EOFException;
 /**
  * Implementation of {@code CodeInput} that reads from a {@code short[]}.
  */
-public final class ShortArrayCodeInput {
+public final class ShortArrayCodeInput implements CodeInput {
     /** source array to read from */
     private final short[] array;
 
@@ -43,6 +43,11 @@ public final class ShortArrayCodeInput {
     /** @inheritDoc */
     public int cursor() {
         return cursor;
+    }
+
+    /** @inheritDoc */
+    public boolean hasMore() {
+        return cursor < array.length;
     }
 
     /** @inheritDoc */
