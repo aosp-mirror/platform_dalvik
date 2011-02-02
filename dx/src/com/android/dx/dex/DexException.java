@@ -16,8 +16,10 @@
 
 package com.android.dx.dex;
 
+// TODO: Move this class to dx.util.
+
 /**
- * Thrown when there's a format problem reading a dex file.
+ * Thrown when there's a format problem reading or writing a dex file.
  */
 public final class DexException extends RuntimeException {
     public DexException(String message) {
