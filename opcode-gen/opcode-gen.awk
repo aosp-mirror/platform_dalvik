@@ -96,10 +96,9 @@ emission == "dops" {
 
         printf("    public static final Dop %s =\n" \
                "        new Dop(Opcodes.%s, Opcodes.%s,\n" \
-               "            Opcodes.%s, Form%s.THE_ONE, %s,\n" \
-               "            \"%s\");\n\n",
+               "            Opcodes.%s, Form%s.THE_ONE, %s);\n\n",
                constName[i], constName[i], family[i], nextOp, format[i],
-               hasResult[i], name[i]);
+               hasResult[i]);
     }
 }
 
@@ -119,9 +118,9 @@ emission == "opcode-info-defs" {
         }
 
         printf("    public static final Info %s =\n" \
-               "        new Info(Opcodes.%s,\n" \
+               "        new Info(Opcodes.%s, \"%s\",\n" \
                "            InstructionCodec.FORMAT_%s, %s);\n\n", \
-                constName[i], constName[i], toupper(format[i]), itype);
+               constName[i], constName[i], name[i], toupper(format[i]), itype);
     }
 }
 

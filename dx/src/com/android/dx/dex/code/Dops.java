@@ -57,1297 +57,1041 @@ public final class Dops {
     /**
      * pseudo-opcode used for nonstandard formatted "instructions"
      * (which are mostly not actually instructions, though they do
-     * appear in instruction lists)
+     * appear in instruction lists). TODO: Retire the usage of this
+     * constant.
      */
     public static final Dop SPECIAL_FORMAT =
         new Dop(Opcodes.SPECIAL_FORMAT, Opcodes.SPECIAL_FORMAT,
-                Opcodes.NO_NEXT, SpecialFormat.THE_ONE, false, "<special>");
+                Opcodes.NO_NEXT, SpecialFormat.THE_ONE, false);
 
     // BEGIN(dops); GENERATED AUTOMATICALLY BY opcode-gen
     public static final Dop NOP =
         new Dop(Opcodes.NOP, Opcodes.NOP,
-            Opcodes.NO_NEXT, Form10x.THE_ONE, false,
-            "nop");
+            Opcodes.NO_NEXT, Form10x.THE_ONE, false);
 
     public static final Dop MOVE =
         new Dop(Opcodes.MOVE, Opcodes.MOVE,
-            Opcodes.MOVE_FROM16, Form12x.THE_ONE, true,
-            "move");
+            Opcodes.MOVE_FROM16, Form12x.THE_ONE, true);
 
     public static final Dop MOVE_FROM16 =
         new Dop(Opcodes.MOVE_FROM16, Opcodes.MOVE,
-            Opcodes.MOVE_16, Form22x.THE_ONE, true,
-            "move/from16");
+            Opcodes.MOVE_16, Form22x.THE_ONE, true);
 
     public static final Dop MOVE_16 =
         new Dop(Opcodes.MOVE_16, Opcodes.MOVE,
-            Opcodes.NO_NEXT, Form32x.THE_ONE, true,
-            "move/16");
+            Opcodes.NO_NEXT, Form32x.THE_ONE, true);
 
     public static final Dop MOVE_WIDE =
         new Dop(Opcodes.MOVE_WIDE, Opcodes.MOVE_WIDE,
-            Opcodes.MOVE_WIDE_FROM16, Form12x.THE_ONE, true,
-            "move-wide");
+            Opcodes.MOVE_WIDE_FROM16, Form12x.THE_ONE, true);
 
     public static final Dop MOVE_WIDE_FROM16 =
         new Dop(Opcodes.MOVE_WIDE_FROM16, Opcodes.MOVE_WIDE,
-            Opcodes.MOVE_WIDE_16, Form22x.THE_ONE, true,
-            "move-wide/from16");
+            Opcodes.MOVE_WIDE_16, Form22x.THE_ONE, true);
 
     public static final Dop MOVE_WIDE_16 =
         new Dop(Opcodes.MOVE_WIDE_16, Opcodes.MOVE_WIDE,
-            Opcodes.NO_NEXT, Form32x.THE_ONE, true,
-            "move-wide/16");
+            Opcodes.NO_NEXT, Form32x.THE_ONE, true);
 
     public static final Dop MOVE_OBJECT =
         new Dop(Opcodes.MOVE_OBJECT, Opcodes.MOVE_OBJECT,
-            Opcodes.MOVE_OBJECT_FROM16, Form12x.THE_ONE, true,
-            "move-object");
+            Opcodes.MOVE_OBJECT_FROM16, Form12x.THE_ONE, true);
 
     public static final Dop MOVE_OBJECT_FROM16 =
         new Dop(Opcodes.MOVE_OBJECT_FROM16, Opcodes.MOVE_OBJECT,
-            Opcodes.MOVE_OBJECT_16, Form22x.THE_ONE, true,
-            "move-object/from16");
+            Opcodes.MOVE_OBJECT_16, Form22x.THE_ONE, true);
 
     public static final Dop MOVE_OBJECT_16 =
         new Dop(Opcodes.MOVE_OBJECT_16, Opcodes.MOVE_OBJECT,
-            Opcodes.NO_NEXT, Form32x.THE_ONE, true,
-            "move-object/16");
+            Opcodes.NO_NEXT, Form32x.THE_ONE, true);
 
     public static final Dop MOVE_RESULT =
         new Dop(Opcodes.MOVE_RESULT, Opcodes.MOVE_RESULT,
-            Opcodes.NO_NEXT, Form11x.THE_ONE, true,
-            "move-result");
+            Opcodes.NO_NEXT, Form11x.THE_ONE, true);
 
     public static final Dop MOVE_RESULT_WIDE =
         new Dop(Opcodes.MOVE_RESULT_WIDE, Opcodes.MOVE_RESULT_WIDE,
-            Opcodes.NO_NEXT, Form11x.THE_ONE, true,
-            "move-result-wide");
+            Opcodes.NO_NEXT, Form11x.THE_ONE, true);
 
     public static final Dop MOVE_RESULT_OBJECT =
         new Dop(Opcodes.MOVE_RESULT_OBJECT, Opcodes.MOVE_RESULT_OBJECT,
-            Opcodes.NO_NEXT, Form11x.THE_ONE, true,
-            "move-result-object");
+            Opcodes.NO_NEXT, Form11x.THE_ONE, true);
 
     public static final Dop MOVE_EXCEPTION =
         new Dop(Opcodes.MOVE_EXCEPTION, Opcodes.MOVE_EXCEPTION,
-            Opcodes.NO_NEXT, Form11x.THE_ONE, true,
-            "move-exception");
+            Opcodes.NO_NEXT, Form11x.THE_ONE, true);
 
     public static final Dop RETURN_VOID =
         new Dop(Opcodes.RETURN_VOID, Opcodes.RETURN_VOID,
-            Opcodes.NO_NEXT, Form10x.THE_ONE, false,
-            "return-void");
+            Opcodes.NO_NEXT, Form10x.THE_ONE, false);
 
     public static final Dop RETURN =
         new Dop(Opcodes.RETURN, Opcodes.RETURN,
-            Opcodes.NO_NEXT, Form11x.THE_ONE, false,
-            "return");
+            Opcodes.NO_NEXT, Form11x.THE_ONE, false);
 
     public static final Dop RETURN_WIDE =
         new Dop(Opcodes.RETURN_WIDE, Opcodes.RETURN_WIDE,
-            Opcodes.NO_NEXT, Form11x.THE_ONE, false,
-            "return-wide");
+            Opcodes.NO_NEXT, Form11x.THE_ONE, false);
 
     public static final Dop RETURN_OBJECT =
         new Dop(Opcodes.RETURN_OBJECT, Opcodes.RETURN_OBJECT,
-            Opcodes.NO_NEXT, Form11x.THE_ONE, false,
-            "return-object");
+            Opcodes.NO_NEXT, Form11x.THE_ONE, false);
 
     public static final Dop CONST_4 =
         new Dop(Opcodes.CONST_4, Opcodes.CONST,
-            Opcodes.CONST_16, Form11n.THE_ONE, true,
-            "const/4");
+            Opcodes.CONST_16, Form11n.THE_ONE, true);
 
     public static final Dop CONST_16 =
         new Dop(Opcodes.CONST_16, Opcodes.CONST,
-            Opcodes.CONST_HIGH16, Form21s.THE_ONE, true,
-            "const/16");
+            Opcodes.CONST_HIGH16, Form21s.THE_ONE, true);
 
     public static final Dop CONST =
         new Dop(Opcodes.CONST, Opcodes.CONST,
-            Opcodes.NO_NEXT, Form31i.THE_ONE, true,
-            "const");
+            Opcodes.NO_NEXT, Form31i.THE_ONE, true);
 
     public static final Dop CONST_HIGH16 =
         new Dop(Opcodes.CONST_HIGH16, Opcodes.CONST,
-            Opcodes.CONST, Form21h.THE_ONE, true,
-            "const/high16");
+            Opcodes.CONST, Form21h.THE_ONE, true);
 
     public static final Dop CONST_WIDE_16 =
         new Dop(Opcodes.CONST_WIDE_16, Opcodes.CONST_WIDE,
-            Opcodes.CONST_WIDE_HIGH16, Form21s.THE_ONE, true,
-            "const-wide/16");
+            Opcodes.CONST_WIDE_HIGH16, Form21s.THE_ONE, true);
 
     public static final Dop CONST_WIDE_32 =
         new Dop(Opcodes.CONST_WIDE_32, Opcodes.CONST_WIDE,
-            Opcodes.CONST_WIDE, Form31i.THE_ONE, true,
-            "const-wide/32");
+            Opcodes.CONST_WIDE, Form31i.THE_ONE, true);
 
     public static final Dop CONST_WIDE =
         new Dop(Opcodes.CONST_WIDE, Opcodes.CONST_WIDE,
-            Opcodes.NO_NEXT, Form51l.THE_ONE, true,
-            "const-wide");
+            Opcodes.NO_NEXT, Form51l.THE_ONE, true);
 
     public static final Dop CONST_WIDE_HIGH16 =
         new Dop(Opcodes.CONST_WIDE_HIGH16, Opcodes.CONST_WIDE,
-            Opcodes.CONST_WIDE_32, Form21h.THE_ONE, true,
-            "const-wide/high16");
+            Opcodes.CONST_WIDE_32, Form21h.THE_ONE, true);
 
     public static final Dop CONST_STRING =
         new Dop(Opcodes.CONST_STRING, Opcodes.CONST_STRING,
-            Opcodes.CONST_STRING_JUMBO, Form21c.THE_ONE, true,
-            "const-string");
+            Opcodes.CONST_STRING_JUMBO, Form21c.THE_ONE, true);
 
     public static final Dop CONST_STRING_JUMBO =
         new Dop(Opcodes.CONST_STRING_JUMBO, Opcodes.CONST_STRING,
-            Opcodes.NO_NEXT, Form31c.THE_ONE, true,
-            "const-string/jumbo");
+            Opcodes.NO_NEXT, Form31c.THE_ONE, true);
 
     public static final Dop CONST_CLASS =
         new Dop(Opcodes.CONST_CLASS, Opcodes.CONST_CLASS,
-            Opcodes.CONST_CLASS_JUMBO, Form21c.THE_ONE, true,
-            "const-class");
+            Opcodes.CONST_CLASS_JUMBO, Form21c.THE_ONE, true);
 
     public static final Dop MONITOR_ENTER =
         new Dop(Opcodes.MONITOR_ENTER, Opcodes.MONITOR_ENTER,
-            Opcodes.NO_NEXT, Form11x.THE_ONE, false,
-            "monitor-enter");
+            Opcodes.NO_NEXT, Form11x.THE_ONE, false);
 
     public static final Dop MONITOR_EXIT =
         new Dop(Opcodes.MONITOR_EXIT, Opcodes.MONITOR_EXIT,
-            Opcodes.NO_NEXT, Form11x.THE_ONE, false,
-            "monitor-exit");
+            Opcodes.NO_NEXT, Form11x.THE_ONE, false);
 
     public static final Dop CHECK_CAST =
         new Dop(Opcodes.CHECK_CAST, Opcodes.CHECK_CAST,
-            Opcodes.CHECK_CAST_JUMBO, Form21c.THE_ONE, true,
-            "check-cast");
+            Opcodes.CHECK_CAST_JUMBO, Form21c.THE_ONE, true);
 
     public static final Dop INSTANCE_OF =
         new Dop(Opcodes.INSTANCE_OF, Opcodes.INSTANCE_OF,
-            Opcodes.INSTANCE_OF_JUMBO, Form22c.THE_ONE, true,
-            "instance-of");
+            Opcodes.INSTANCE_OF_JUMBO, Form22c.THE_ONE, true);
 
     public static final Dop ARRAY_LENGTH =
         new Dop(Opcodes.ARRAY_LENGTH, Opcodes.ARRAY_LENGTH,
-            Opcodes.NO_NEXT, Form12x.THE_ONE, true,
-            "array-length");
+            Opcodes.NO_NEXT, Form12x.THE_ONE, true);
 
     public static final Dop NEW_INSTANCE =
         new Dop(Opcodes.NEW_INSTANCE, Opcodes.NEW_INSTANCE,
-            Opcodes.NEW_INSTANCE_JUMBO, Form21c.THE_ONE, true,
-            "new-instance");
+            Opcodes.NEW_INSTANCE_JUMBO, Form21c.THE_ONE, true);
 
     public static final Dop NEW_ARRAY =
         new Dop(Opcodes.NEW_ARRAY, Opcodes.NEW_ARRAY,
-            Opcodes.NEW_ARRAY_JUMBO, Form22c.THE_ONE, true,
-            "new-array");
+            Opcodes.NEW_ARRAY_JUMBO, Form22c.THE_ONE, true);
 
     public static final Dop FILLED_NEW_ARRAY =
         new Dop(Opcodes.FILLED_NEW_ARRAY, Opcodes.FILLED_NEW_ARRAY,
-            Opcodes.FILLED_NEW_ARRAY_RANGE, Form35c.THE_ONE, false,
-            "filled-new-array");
+            Opcodes.FILLED_NEW_ARRAY_RANGE, Form35c.THE_ONE, false);
 
     public static final Dop FILLED_NEW_ARRAY_RANGE =
         new Dop(Opcodes.FILLED_NEW_ARRAY_RANGE, Opcodes.FILLED_NEW_ARRAY,
-            Opcodes.FILLED_NEW_ARRAY_JUMBO, Form3rc.THE_ONE, false,
-            "filled-new-array/range");
+            Opcodes.FILLED_NEW_ARRAY_JUMBO, Form3rc.THE_ONE, false);
 
     public static final Dop FILL_ARRAY_DATA =
         new Dop(Opcodes.FILL_ARRAY_DATA, Opcodes.FILL_ARRAY_DATA,
-            Opcodes.NO_NEXT, Form31t.THE_ONE, false,
-            "fill-array-data");
+            Opcodes.NO_NEXT, Form31t.THE_ONE, false);
 
     public static final Dop THROW =
         new Dop(Opcodes.THROW, Opcodes.THROW,
-            Opcodes.NO_NEXT, Form11x.THE_ONE, false,
-            "throw");
+            Opcodes.NO_NEXT, Form11x.THE_ONE, false);
 
     public static final Dop GOTO =
         new Dop(Opcodes.GOTO, Opcodes.GOTO,
-            Opcodes.GOTO_16, Form10t.THE_ONE, false,
-            "goto");
+            Opcodes.GOTO_16, Form10t.THE_ONE, false);
 
     public static final Dop GOTO_16 =
         new Dop(Opcodes.GOTO_16, Opcodes.GOTO,
-            Opcodes.GOTO_32, Form20t.THE_ONE, false,
-            "goto/16");
+            Opcodes.GOTO_32, Form20t.THE_ONE, false);
 
     public static final Dop GOTO_32 =
         new Dop(Opcodes.GOTO_32, Opcodes.GOTO,
-            Opcodes.NO_NEXT, Form30t.THE_ONE, false,
-            "goto/32");
+            Opcodes.NO_NEXT, Form30t.THE_ONE, false);
 
     public static final Dop PACKED_SWITCH =
         new Dop(Opcodes.PACKED_SWITCH, Opcodes.PACKED_SWITCH,
-            Opcodes.NO_NEXT, Form31t.THE_ONE, false,
-            "packed-switch");
+            Opcodes.NO_NEXT, Form31t.THE_ONE, false);
 
     public static final Dop SPARSE_SWITCH =
         new Dop(Opcodes.SPARSE_SWITCH, Opcodes.SPARSE_SWITCH,
-            Opcodes.NO_NEXT, Form31t.THE_ONE, false,
-            "sparse-switch");
+            Opcodes.NO_NEXT, Form31t.THE_ONE, false);
 
     public static final Dop CMPL_FLOAT =
         new Dop(Opcodes.CMPL_FLOAT, Opcodes.CMPL_FLOAT,
-            Opcodes.NO_NEXT, Form23x.THE_ONE, true,
-            "cmpl-float");
+            Opcodes.NO_NEXT, Form23x.THE_ONE, true);
 
     public static final Dop CMPG_FLOAT =
         new Dop(Opcodes.CMPG_FLOAT, Opcodes.CMPG_FLOAT,
-            Opcodes.NO_NEXT, Form23x.THE_ONE, true,
-            "cmpg-float");
+            Opcodes.NO_NEXT, Form23x.THE_ONE, true);
 
     public static final Dop CMPL_DOUBLE =
         new Dop(Opcodes.CMPL_DOUBLE, Opcodes.CMPL_DOUBLE,
-            Opcodes.NO_NEXT, Form23x.THE_ONE, true,
-            "cmpl-double");
+            Opcodes.NO_NEXT, Form23x.THE_ONE, true);
 
     public static final Dop CMPG_DOUBLE =
         new Dop(Opcodes.CMPG_DOUBLE, Opcodes.CMPG_DOUBLE,
-            Opcodes.NO_NEXT, Form23x.THE_ONE, true,
-            "cmpg-double");
+            Opcodes.NO_NEXT, Form23x.THE_ONE, true);
 
     public static final Dop CMP_LONG =
         new Dop(Opcodes.CMP_LONG, Opcodes.CMP_LONG,
-            Opcodes.NO_NEXT, Form23x.THE_ONE, true,
-            "cmp-long");
+            Opcodes.NO_NEXT, Form23x.THE_ONE, true);
 
     public static final Dop IF_EQ =
         new Dop(Opcodes.IF_EQ, Opcodes.IF_EQ,
-            Opcodes.NO_NEXT, Form22t.THE_ONE, false,
-            "if-eq");
+            Opcodes.NO_NEXT, Form22t.THE_ONE, false);
 
     public static final Dop IF_NE =
         new Dop(Opcodes.IF_NE, Opcodes.IF_NE,
-            Opcodes.NO_NEXT, Form22t.THE_ONE, false,
-            "if-ne");
+            Opcodes.NO_NEXT, Form22t.THE_ONE, false);
 
     public static final Dop IF_LT =
         new Dop(Opcodes.IF_LT, Opcodes.IF_LT,
-            Opcodes.NO_NEXT, Form22t.THE_ONE, false,
-            "if-lt");
+            Opcodes.NO_NEXT, Form22t.THE_ONE, false);
 
     public static final Dop IF_GE =
         new Dop(Opcodes.IF_GE, Opcodes.IF_GE,
-            Opcodes.NO_NEXT, Form22t.THE_ONE, false,
-            "if-ge");
+            Opcodes.NO_NEXT, Form22t.THE_ONE, false);
 
     public static final Dop IF_GT =
         new Dop(Opcodes.IF_GT, Opcodes.IF_GT,
-            Opcodes.NO_NEXT, Form22t.THE_ONE, false,
-            "if-gt");
+            Opcodes.NO_NEXT, Form22t.THE_ONE, false);
 
     public static final Dop IF_LE =
         new Dop(Opcodes.IF_LE, Opcodes.IF_LE,
-            Opcodes.NO_NEXT, Form22t.THE_ONE, false,
-            "if-le");
+            Opcodes.NO_NEXT, Form22t.THE_ONE, false);
 
     public static final Dop IF_EQZ =
         new Dop(Opcodes.IF_EQZ, Opcodes.IF_EQZ,
-            Opcodes.NO_NEXT, Form21t.THE_ONE, false,
-            "if-eqz");
+            Opcodes.NO_NEXT, Form21t.THE_ONE, false);
 
     public static final Dop IF_NEZ =
         new Dop(Opcodes.IF_NEZ, Opcodes.IF_NEZ,
-            Opcodes.NO_NEXT, Form21t.THE_ONE, false,
-            "if-nez");
+            Opcodes.NO_NEXT, Form21t.THE_ONE, false);
 
     public static final Dop IF_LTZ =
         new Dop(Opcodes.IF_LTZ, Opcodes.IF_LTZ,
-            Opcodes.NO_NEXT, Form21t.THE_ONE, false,
-            "if-ltz");
+            Opcodes.NO_NEXT, Form21t.THE_ONE, false);
 
     public static final Dop IF_GEZ =
         new Dop(Opcodes.IF_GEZ, Opcodes.IF_GEZ,
-            Opcodes.NO_NEXT, Form21t.THE_ONE, false,
-            "if-gez");
+            Opcodes.NO_NEXT, Form21t.THE_ONE, false);
 
     public static final Dop IF_GTZ =
         new Dop(Opcodes.IF_GTZ, Opcodes.IF_GTZ,
-            Opcodes.NO_NEXT, Form21t.THE_ONE, false,
-            "if-gtz");
+            Opcodes.NO_NEXT, Form21t.THE_ONE, false);
 
     public static final Dop IF_LEZ =
         new Dop(Opcodes.IF_LEZ, Opcodes.IF_LEZ,
-            Opcodes.NO_NEXT, Form21t.THE_ONE, false,
-            "if-lez");
+            Opcodes.NO_NEXT, Form21t.THE_ONE, false);
 
     public static final Dop AGET =
         new Dop(Opcodes.AGET, Opcodes.AGET,
-            Opcodes.NO_NEXT, Form23x.THE_ONE, true,
-            "aget");
+            Opcodes.NO_NEXT, Form23x.THE_ONE, true);
 
     public static final Dop AGET_WIDE =
         new Dop(Opcodes.AGET_WIDE, Opcodes.AGET_WIDE,
-            Opcodes.NO_NEXT, Form23x.THE_ONE, true,
-            "aget-wide");
+            Opcodes.NO_NEXT, Form23x.THE_ONE, true);
 
     public static final Dop AGET_OBJECT =
         new Dop(Opcodes.AGET_OBJECT, Opcodes.AGET_OBJECT,
-            Opcodes.NO_NEXT, Form23x.THE_ONE, true,
-            "aget-object");
+            Opcodes.NO_NEXT, Form23x.THE_ONE, true);
 
     public static final Dop AGET_BOOLEAN =
         new Dop(Opcodes.AGET_BOOLEAN, Opcodes.AGET_BOOLEAN,
-            Opcodes.NO_NEXT, Form23x.THE_ONE, true,
-            "aget-boolean");
+            Opcodes.NO_NEXT, Form23x.THE_ONE, true);
 
     public static final Dop AGET_BYTE =
         new Dop(Opcodes.AGET_BYTE, Opcodes.AGET_BYTE,
-            Opcodes.NO_NEXT, Form23x.THE_ONE, true,
-            "aget-byte");
+            Opcodes.NO_NEXT, Form23x.THE_ONE, true);
 
     public static final Dop AGET_CHAR =
         new Dop(Opcodes.AGET_CHAR, Opcodes.AGET_CHAR,
-            Opcodes.NO_NEXT, Form23x.THE_ONE, true,
-            "aget-char");
+            Opcodes.NO_NEXT, Form23x.THE_ONE, true);
 
     public static final Dop AGET_SHORT =
         new Dop(Opcodes.AGET_SHORT, Opcodes.AGET_SHORT,
-            Opcodes.NO_NEXT, Form23x.THE_ONE, true,
-            "aget-short");
+            Opcodes.NO_NEXT, Form23x.THE_ONE, true);
 
     public static final Dop APUT =
         new Dop(Opcodes.APUT, Opcodes.APUT,
-            Opcodes.NO_NEXT, Form23x.THE_ONE, false,
-            "aput");
+            Opcodes.NO_NEXT, Form23x.THE_ONE, false);
 
     public static final Dop APUT_WIDE =
         new Dop(Opcodes.APUT_WIDE, Opcodes.APUT_WIDE,
-            Opcodes.NO_NEXT, Form23x.THE_ONE, false,
-            "aput-wide");
+            Opcodes.NO_NEXT, Form23x.THE_ONE, false);
 
     public static final Dop APUT_OBJECT =
         new Dop(Opcodes.APUT_OBJECT, Opcodes.APUT_OBJECT,
-            Opcodes.NO_NEXT, Form23x.THE_ONE, false,
-            "aput-object");
+            Opcodes.NO_NEXT, Form23x.THE_ONE, false);
 
     public static final Dop APUT_BOOLEAN =
         new Dop(Opcodes.APUT_BOOLEAN, Opcodes.APUT_BOOLEAN,
-            Opcodes.NO_NEXT, Form23x.THE_ONE, false,
-            "aput-boolean");
+            Opcodes.NO_NEXT, Form23x.THE_ONE, false);
 
     public static final Dop APUT_BYTE =
         new Dop(Opcodes.APUT_BYTE, Opcodes.APUT_BYTE,
-            Opcodes.NO_NEXT, Form23x.THE_ONE, false,
-            "aput-byte");
+            Opcodes.NO_NEXT, Form23x.THE_ONE, false);
 
     public static final Dop APUT_CHAR =
         new Dop(Opcodes.APUT_CHAR, Opcodes.APUT_CHAR,
-            Opcodes.NO_NEXT, Form23x.THE_ONE, false,
-            "aput-char");
+            Opcodes.NO_NEXT, Form23x.THE_ONE, false);
 
     public static final Dop APUT_SHORT =
         new Dop(Opcodes.APUT_SHORT, Opcodes.APUT_SHORT,
-            Opcodes.NO_NEXT, Form23x.THE_ONE, false,
-            "aput-short");
+            Opcodes.NO_NEXT, Form23x.THE_ONE, false);
 
     public static final Dop IGET =
         new Dop(Opcodes.IGET, Opcodes.IGET,
-            Opcodes.IGET_JUMBO, Form22c.THE_ONE, true,
-            "iget");
+            Opcodes.IGET_JUMBO, Form22c.THE_ONE, true);
 
     public static final Dop IGET_WIDE =
         new Dop(Opcodes.IGET_WIDE, Opcodes.IGET_WIDE,
-            Opcodes.IGET_WIDE_JUMBO, Form22c.THE_ONE, true,
-            "iget-wide");
+            Opcodes.IGET_WIDE_JUMBO, Form22c.THE_ONE, true);
 
     public static final Dop IGET_OBJECT =
         new Dop(Opcodes.IGET_OBJECT, Opcodes.IGET_OBJECT,
-            Opcodes.IGET_OBJECT_JUMBO, Form22c.THE_ONE, true,
-            "iget-object");
+            Opcodes.IGET_OBJECT_JUMBO, Form22c.THE_ONE, true);
 
     public static final Dop IGET_BOOLEAN =
         new Dop(Opcodes.IGET_BOOLEAN, Opcodes.IGET_BOOLEAN,
-            Opcodes.IGET_BOOLEAN_JUMBO, Form22c.THE_ONE, true,
-            "iget-boolean");
+            Opcodes.IGET_BOOLEAN_JUMBO, Form22c.THE_ONE, true);
 
     public static final Dop IGET_BYTE =
         new Dop(Opcodes.IGET_BYTE, Opcodes.IGET_BYTE,
-            Opcodes.IGET_BYTE_JUMBO, Form22c.THE_ONE, true,
-            "iget-byte");
+            Opcodes.IGET_BYTE_JUMBO, Form22c.THE_ONE, true);
 
     public static final Dop IGET_CHAR =
         new Dop(Opcodes.IGET_CHAR, Opcodes.IGET_CHAR,
-            Opcodes.IGET_CHAR_JUMBO, Form22c.THE_ONE, true,
-            "iget-char");
+            Opcodes.IGET_CHAR_JUMBO, Form22c.THE_ONE, true);
 
     public static final Dop IGET_SHORT =
         new Dop(Opcodes.IGET_SHORT, Opcodes.IGET_SHORT,
-            Opcodes.IGET_SHORT_JUMBO, Form22c.THE_ONE, true,
-            "iget-short");
+            Opcodes.IGET_SHORT_JUMBO, Form22c.THE_ONE, true);
 
     public static final Dop IPUT =
         new Dop(Opcodes.IPUT, Opcodes.IPUT,
-            Opcodes.IPUT_JUMBO, Form22c.THE_ONE, false,
-            "iput");
+            Opcodes.IPUT_JUMBO, Form22c.THE_ONE, false);
 
     public static final Dop IPUT_WIDE =
         new Dop(Opcodes.IPUT_WIDE, Opcodes.IPUT_WIDE,
-            Opcodes.IPUT_WIDE_JUMBO, Form22c.THE_ONE, false,
-            "iput-wide");
+            Opcodes.IPUT_WIDE_JUMBO, Form22c.THE_ONE, false);
 
     public static final Dop IPUT_OBJECT =
         new Dop(Opcodes.IPUT_OBJECT, Opcodes.IPUT_OBJECT,
-            Opcodes.IPUT_OBJECT_JUMBO, Form22c.THE_ONE, false,
-            "iput-object");
+            Opcodes.IPUT_OBJECT_JUMBO, Form22c.THE_ONE, false);
 
     public static final Dop IPUT_BOOLEAN =
         new Dop(Opcodes.IPUT_BOOLEAN, Opcodes.IPUT_BOOLEAN,
-            Opcodes.IPUT_BOOLEAN_JUMBO, Form22c.THE_ONE, false,
-            "iput-boolean");
+            Opcodes.IPUT_BOOLEAN_JUMBO, Form22c.THE_ONE, false);
 
     public static final Dop IPUT_BYTE =
         new Dop(Opcodes.IPUT_BYTE, Opcodes.IPUT_BYTE,
-            Opcodes.IPUT_BYTE_JUMBO, Form22c.THE_ONE, false,
-            "iput-byte");
+            Opcodes.IPUT_BYTE_JUMBO, Form22c.THE_ONE, false);
 
     public static final Dop IPUT_CHAR =
         new Dop(Opcodes.IPUT_CHAR, Opcodes.IPUT_CHAR,
-            Opcodes.IPUT_CHAR_JUMBO, Form22c.THE_ONE, false,
-            "iput-char");
+            Opcodes.IPUT_CHAR_JUMBO, Form22c.THE_ONE, false);
 
     public static final Dop IPUT_SHORT =
         new Dop(Opcodes.IPUT_SHORT, Opcodes.IPUT_SHORT,
-            Opcodes.IPUT_SHORT_JUMBO, Form22c.THE_ONE, false,
-            "iput-short");
+            Opcodes.IPUT_SHORT_JUMBO, Form22c.THE_ONE, false);
 
     public static final Dop SGET =
         new Dop(Opcodes.SGET, Opcodes.SGET,
-            Opcodes.SGET_JUMBO, Form21c.THE_ONE, true,
-            "sget");
+            Opcodes.SGET_JUMBO, Form21c.THE_ONE, true);
 
     public static final Dop SGET_WIDE =
         new Dop(Opcodes.SGET_WIDE, Opcodes.SGET_WIDE,
-            Opcodes.SGET_WIDE_JUMBO, Form21c.THE_ONE, true,
-            "sget-wide");
+            Opcodes.SGET_WIDE_JUMBO, Form21c.THE_ONE, true);
 
     public static final Dop SGET_OBJECT =
         new Dop(Opcodes.SGET_OBJECT, Opcodes.SGET_OBJECT,
-            Opcodes.SGET_OBJECT_JUMBO, Form21c.THE_ONE, true,
-            "sget-object");
+            Opcodes.SGET_OBJECT_JUMBO, Form21c.THE_ONE, true);
 
     public static final Dop SGET_BOOLEAN =
         new Dop(Opcodes.SGET_BOOLEAN, Opcodes.SGET_BOOLEAN,
-            Opcodes.SGET_BOOLEAN_JUMBO, Form21c.THE_ONE, true,
-            "sget-boolean");
+            Opcodes.SGET_BOOLEAN_JUMBO, Form21c.THE_ONE, true);
 
     public static final Dop SGET_BYTE =
         new Dop(Opcodes.SGET_BYTE, Opcodes.SGET_BYTE,
-            Opcodes.SGET_BYTE_JUMBO, Form21c.THE_ONE, true,
-            "sget-byte");
+            Opcodes.SGET_BYTE_JUMBO, Form21c.THE_ONE, true);
 
     public static final Dop SGET_CHAR =
         new Dop(Opcodes.SGET_CHAR, Opcodes.SGET_CHAR,
-            Opcodes.SGET_CHAR_JUMBO, Form21c.THE_ONE, true,
-            "sget-char");
+            Opcodes.SGET_CHAR_JUMBO, Form21c.THE_ONE, true);
 
     public static final Dop SGET_SHORT =
         new Dop(Opcodes.SGET_SHORT, Opcodes.SGET_SHORT,
-            Opcodes.SGET_SHORT_JUMBO, Form21c.THE_ONE, true,
-            "sget-short");
+            Opcodes.SGET_SHORT_JUMBO, Form21c.THE_ONE, true);
 
     public static final Dop SPUT =
         new Dop(Opcodes.SPUT, Opcodes.SPUT,
-            Opcodes.SPUT_JUMBO, Form21c.THE_ONE, false,
-            "sput");
+            Opcodes.SPUT_JUMBO, Form21c.THE_ONE, false);
 
     public static final Dop SPUT_WIDE =
         new Dop(Opcodes.SPUT_WIDE, Opcodes.SPUT_WIDE,
-            Opcodes.SPUT_WIDE_JUMBO, Form21c.THE_ONE, false,
-            "sput-wide");
+            Opcodes.SPUT_WIDE_JUMBO, Form21c.THE_ONE, false);
 
     public static final Dop SPUT_OBJECT =
         new Dop(Opcodes.SPUT_OBJECT, Opcodes.SPUT_OBJECT,
-            Opcodes.SPUT_OBJECT_JUMBO, Form21c.THE_ONE, false,
-            "sput-object");
+            Opcodes.SPUT_OBJECT_JUMBO, Form21c.THE_ONE, false);
 
     public static final Dop SPUT_BOOLEAN =
         new Dop(Opcodes.SPUT_BOOLEAN, Opcodes.SPUT_BOOLEAN,
-            Opcodes.SPUT_BOOLEAN_JUMBO, Form21c.THE_ONE, false,
-            "sput-boolean");
+            Opcodes.SPUT_BOOLEAN_JUMBO, Form21c.THE_ONE, false);
 
     public static final Dop SPUT_BYTE =
         new Dop(Opcodes.SPUT_BYTE, Opcodes.SPUT_BYTE,
-            Opcodes.SPUT_BYTE_JUMBO, Form21c.THE_ONE, false,
-            "sput-byte");
+            Opcodes.SPUT_BYTE_JUMBO, Form21c.THE_ONE, false);
 
     public static final Dop SPUT_CHAR =
         new Dop(Opcodes.SPUT_CHAR, Opcodes.SPUT_CHAR,
-            Opcodes.SPUT_CHAR_JUMBO, Form21c.THE_ONE, false,
-            "sput-char");
+            Opcodes.SPUT_CHAR_JUMBO, Form21c.THE_ONE, false);
 
     public static final Dop SPUT_SHORT =
         new Dop(Opcodes.SPUT_SHORT, Opcodes.SPUT_SHORT,
-            Opcodes.SPUT_SHORT_JUMBO, Form21c.THE_ONE, false,
-            "sput-short");
+            Opcodes.SPUT_SHORT_JUMBO, Form21c.THE_ONE, false);
 
     public static final Dop INVOKE_VIRTUAL =
         new Dop(Opcodes.INVOKE_VIRTUAL, Opcodes.INVOKE_VIRTUAL,
-            Opcodes.INVOKE_VIRTUAL_RANGE, Form35c.THE_ONE, false,
-            "invoke-virtual");
+            Opcodes.INVOKE_VIRTUAL_RANGE, Form35c.THE_ONE, false);
 
     public static final Dop INVOKE_SUPER =
         new Dop(Opcodes.INVOKE_SUPER, Opcodes.INVOKE_SUPER,
-            Opcodes.INVOKE_SUPER_RANGE, Form35c.THE_ONE, false,
-            "invoke-super");
+            Opcodes.INVOKE_SUPER_RANGE, Form35c.THE_ONE, false);
 
     public static final Dop INVOKE_DIRECT =
         new Dop(Opcodes.INVOKE_DIRECT, Opcodes.INVOKE_DIRECT,
-            Opcodes.INVOKE_DIRECT_RANGE, Form35c.THE_ONE, false,
-            "invoke-direct");
+            Opcodes.INVOKE_DIRECT_RANGE, Form35c.THE_ONE, false);
 
     public static final Dop INVOKE_STATIC =
         new Dop(Opcodes.INVOKE_STATIC, Opcodes.INVOKE_STATIC,
-            Opcodes.INVOKE_STATIC_RANGE, Form35c.THE_ONE, false,
-            "invoke-static");
+            Opcodes.INVOKE_STATIC_RANGE, Form35c.THE_ONE, false);
 
     public static final Dop INVOKE_INTERFACE =
         new Dop(Opcodes.INVOKE_INTERFACE, Opcodes.INVOKE_INTERFACE,
-            Opcodes.INVOKE_INTERFACE_RANGE, Form35c.THE_ONE, false,
-            "invoke-interface");
+            Opcodes.INVOKE_INTERFACE_RANGE, Form35c.THE_ONE, false);
 
     public static final Dop INVOKE_VIRTUAL_RANGE =
         new Dop(Opcodes.INVOKE_VIRTUAL_RANGE, Opcodes.INVOKE_VIRTUAL,
-            Opcodes.INVOKE_VIRTUAL_JUMBO, Form3rc.THE_ONE, false,
-            "invoke-virtual/range");
+            Opcodes.INVOKE_VIRTUAL_JUMBO, Form3rc.THE_ONE, false);
 
     public static final Dop INVOKE_SUPER_RANGE =
         new Dop(Opcodes.INVOKE_SUPER_RANGE, Opcodes.INVOKE_SUPER,
-            Opcodes.INVOKE_SUPER_JUMBO, Form3rc.THE_ONE, false,
-            "invoke-super/range");
+            Opcodes.INVOKE_SUPER_JUMBO, Form3rc.THE_ONE, false);
 
     public static final Dop INVOKE_DIRECT_RANGE =
         new Dop(Opcodes.INVOKE_DIRECT_RANGE, Opcodes.INVOKE_DIRECT,
-            Opcodes.INVOKE_DIRECT_JUMBO, Form3rc.THE_ONE, false,
-            "invoke-direct/range");
+            Opcodes.INVOKE_DIRECT_JUMBO, Form3rc.THE_ONE, false);
 
     public static final Dop INVOKE_STATIC_RANGE =
         new Dop(Opcodes.INVOKE_STATIC_RANGE, Opcodes.INVOKE_STATIC,
-            Opcodes.INVOKE_STATIC_JUMBO, Form3rc.THE_ONE, false,
-            "invoke-static/range");
+            Opcodes.INVOKE_STATIC_JUMBO, Form3rc.THE_ONE, false);
 
     public static final Dop INVOKE_INTERFACE_RANGE =
         new Dop(Opcodes.INVOKE_INTERFACE_RANGE, Opcodes.INVOKE_INTERFACE,
-            Opcodes.INVOKE_INTERFACE_JUMBO, Form3rc.THE_ONE, false,
-            "invoke-interface/range");
+            Opcodes.INVOKE_INTERFACE_JUMBO, Form3rc.THE_ONE, false);
 
     public static final Dop NEG_INT =
         new Dop(Opcodes.NEG_INT, Opcodes.NEG_INT,
-            Opcodes.NO_NEXT, Form12x.THE_ONE, true,
-            "neg-int");
+            Opcodes.NO_NEXT, Form12x.THE_ONE, true);
 
     public static final Dop NOT_INT =
         new Dop(Opcodes.NOT_INT, Opcodes.NOT_INT,
-            Opcodes.NO_NEXT, Form12x.THE_ONE, true,
-            "not-int");
+            Opcodes.NO_NEXT, Form12x.THE_ONE, true);
 
     public static final Dop NEG_LONG =
         new Dop(Opcodes.NEG_LONG, Opcodes.NEG_LONG,
-            Opcodes.NO_NEXT, Form12x.THE_ONE, true,
-            "neg-long");
+            Opcodes.NO_NEXT, Form12x.THE_ONE, true);
 
     public static final Dop NOT_LONG =
         new Dop(Opcodes.NOT_LONG, Opcodes.NOT_LONG,
-            Opcodes.NO_NEXT, Form12x.THE_ONE, true,
-            "not-long");
+            Opcodes.NO_NEXT, Form12x.THE_ONE, true);
 
     public static final Dop NEG_FLOAT =
         new Dop(Opcodes.NEG_FLOAT, Opcodes.NEG_FLOAT,
-            Opcodes.NO_NEXT, Form12x.THE_ONE, true,
-            "neg-float");
+            Opcodes.NO_NEXT, Form12x.THE_ONE, true);
 
     public static final Dop NEG_DOUBLE =
         new Dop(Opcodes.NEG_DOUBLE, Opcodes.NEG_DOUBLE,
-            Opcodes.NO_NEXT, Form12x.THE_ONE, true,
-            "neg-double");
+            Opcodes.NO_NEXT, Form12x.THE_ONE, true);
 
     public static final Dop INT_TO_LONG =
         new Dop(Opcodes.INT_TO_LONG, Opcodes.INT_TO_LONG,
-            Opcodes.NO_NEXT, Form12x.THE_ONE, true,
-            "int-to-long");
+            Opcodes.NO_NEXT, Form12x.THE_ONE, true);
 
     public static final Dop INT_TO_FLOAT =
         new Dop(Opcodes.INT_TO_FLOAT, Opcodes.INT_TO_FLOAT,
-            Opcodes.NO_NEXT, Form12x.THE_ONE, true,
-            "int-to-float");
+            Opcodes.NO_NEXT, Form12x.THE_ONE, true);
 
     public static final Dop INT_TO_DOUBLE =
         new Dop(Opcodes.INT_TO_DOUBLE, Opcodes.INT_TO_DOUBLE,
-            Opcodes.NO_NEXT, Form12x.THE_ONE, true,
-            "int-to-double");
+            Opcodes.NO_NEXT, Form12x.THE_ONE, true);
 
     public static final Dop LONG_TO_INT =
         new Dop(Opcodes.LONG_TO_INT, Opcodes.LONG_TO_INT,
-            Opcodes.NO_NEXT, Form12x.THE_ONE, true,
-            "long-to-int");
+            Opcodes.NO_NEXT, Form12x.THE_ONE, true);
 
     public static final Dop LONG_TO_FLOAT =
         new Dop(Opcodes.LONG_TO_FLOAT, Opcodes.LONG_TO_FLOAT,
-            Opcodes.NO_NEXT, Form12x.THE_ONE, true,
-            "long-to-float");
+            Opcodes.NO_NEXT, Form12x.THE_ONE, true);
 
     public static final Dop LONG_TO_DOUBLE =
         new Dop(Opcodes.LONG_TO_DOUBLE, Opcodes.LONG_TO_DOUBLE,
-            Opcodes.NO_NEXT, Form12x.THE_ONE, true,
-            "long-to-double");
+            Opcodes.NO_NEXT, Form12x.THE_ONE, true);
 
     public static final Dop FLOAT_TO_INT =
         new Dop(Opcodes.FLOAT_TO_INT, Opcodes.FLOAT_TO_INT,
-            Opcodes.NO_NEXT, Form12x.THE_ONE, true,
-            "float-to-int");
+            Opcodes.NO_NEXT, Form12x.THE_ONE, true);
 
     public static final Dop FLOAT_TO_LONG =
         new Dop(Opcodes.FLOAT_TO_LONG, Opcodes.FLOAT_TO_LONG,
-            Opcodes.NO_NEXT, Form12x.THE_ONE, true,
-            "float-to-long");
+            Opcodes.NO_NEXT, Form12x.THE_ONE, true);
 
     public static final Dop FLOAT_TO_DOUBLE =
         new Dop(Opcodes.FLOAT_TO_DOUBLE, Opcodes.FLOAT_TO_DOUBLE,
-            Opcodes.NO_NEXT, Form12x.THE_ONE, true,
-            "float-to-double");
+            Opcodes.NO_NEXT, Form12x.THE_ONE, true);
 
     public static final Dop DOUBLE_TO_INT =
         new Dop(Opcodes.DOUBLE_TO_INT, Opcodes.DOUBLE_TO_INT,
-            Opcodes.NO_NEXT, Form12x.THE_ONE, true,
-            "double-to-int");
+            Opcodes.NO_NEXT, Form12x.THE_ONE, true);
 
     public static final Dop DOUBLE_TO_LONG =
         new Dop(Opcodes.DOUBLE_TO_LONG, Opcodes.DOUBLE_TO_LONG,
-            Opcodes.NO_NEXT, Form12x.THE_ONE, true,
-            "double-to-long");
+            Opcodes.NO_NEXT, Form12x.THE_ONE, true);
 
     public static final Dop DOUBLE_TO_FLOAT =
         new Dop(Opcodes.DOUBLE_TO_FLOAT, Opcodes.DOUBLE_TO_FLOAT,
-            Opcodes.NO_NEXT, Form12x.THE_ONE, true,
-            "double-to-float");
+            Opcodes.NO_NEXT, Form12x.THE_ONE, true);
 
     public static final Dop INT_TO_BYTE =
         new Dop(Opcodes.INT_TO_BYTE, Opcodes.INT_TO_BYTE,
-            Opcodes.NO_NEXT, Form12x.THE_ONE, true,
-            "int-to-byte");
+            Opcodes.NO_NEXT, Form12x.THE_ONE, true);
 
     public static final Dop INT_TO_CHAR =
         new Dop(Opcodes.INT_TO_CHAR, Opcodes.INT_TO_CHAR,
-            Opcodes.NO_NEXT, Form12x.THE_ONE, true,
-            "int-to-char");
+            Opcodes.NO_NEXT, Form12x.THE_ONE, true);
 
     public static final Dop INT_TO_SHORT =
         new Dop(Opcodes.INT_TO_SHORT, Opcodes.INT_TO_SHORT,
-            Opcodes.NO_NEXT, Form12x.THE_ONE, true,
-            "int-to-short");
+            Opcodes.NO_NEXT, Form12x.THE_ONE, true);
 
     public static final Dop ADD_INT =
         new Dop(Opcodes.ADD_INT, Opcodes.ADD_INT,
-            Opcodes.NO_NEXT, Form23x.THE_ONE, true,
-            "add-int");
+            Opcodes.NO_NEXT, Form23x.THE_ONE, true);
 
     public static final Dop SUB_INT =
         new Dop(Opcodes.SUB_INT, Opcodes.SUB_INT,
-            Opcodes.NO_NEXT, Form23x.THE_ONE, true,
-            "sub-int");
+            Opcodes.NO_NEXT, Form23x.THE_ONE, true);
 
     public static final Dop MUL_INT =
         new Dop(Opcodes.MUL_INT, Opcodes.MUL_INT,
-            Opcodes.NO_NEXT, Form23x.THE_ONE, true,
-            "mul-int");
+            Opcodes.NO_NEXT, Form23x.THE_ONE, true);
 
     public static final Dop DIV_INT =
         new Dop(Opcodes.DIV_INT, Opcodes.DIV_INT,
-            Opcodes.NO_NEXT, Form23x.THE_ONE, true,
-            "div-int");
+            Opcodes.NO_NEXT, Form23x.THE_ONE, true);
 
     public static final Dop REM_INT =
         new Dop(Opcodes.REM_INT, Opcodes.REM_INT,
-            Opcodes.NO_NEXT, Form23x.THE_ONE, true,
-            "rem-int");
+            Opcodes.NO_NEXT, Form23x.THE_ONE, true);
 
     public static final Dop AND_INT =
         new Dop(Opcodes.AND_INT, Opcodes.AND_INT,
-            Opcodes.NO_NEXT, Form23x.THE_ONE, true,
-            "and-int");
+            Opcodes.NO_NEXT, Form23x.THE_ONE, true);
 
     public static final Dop OR_INT =
         new Dop(Opcodes.OR_INT, Opcodes.OR_INT,
-            Opcodes.NO_NEXT, Form23x.THE_ONE, true,
-            "or-int");
+            Opcodes.NO_NEXT, Form23x.THE_ONE, true);
 
     public static final Dop XOR_INT =
         new Dop(Opcodes.XOR_INT, Opcodes.XOR_INT,
-            Opcodes.NO_NEXT, Form23x.THE_ONE, true,
-            "xor-int");
+            Opcodes.NO_NEXT, Form23x.THE_ONE, true);
 
     public static final Dop SHL_INT =
         new Dop(Opcodes.SHL_INT, Opcodes.SHL_INT,
-            Opcodes.NO_NEXT, Form23x.THE_ONE, true,
-            "shl-int");
+            Opcodes.NO_NEXT, Form23x.THE_ONE, true);
 
     public static final Dop SHR_INT =
         new Dop(Opcodes.SHR_INT, Opcodes.SHR_INT,
-            Opcodes.NO_NEXT, Form23x.THE_ONE, true,
-            "shr-int");
+            Opcodes.NO_NEXT, Form23x.THE_ONE, true);
 
     public static final Dop USHR_INT =
         new Dop(Opcodes.USHR_INT, Opcodes.USHR_INT,
-            Opcodes.NO_NEXT, Form23x.THE_ONE, true,
-            "ushr-int");
+            Opcodes.NO_NEXT, Form23x.THE_ONE, true);
 
     public static final Dop ADD_LONG =
         new Dop(Opcodes.ADD_LONG, Opcodes.ADD_LONG,
-            Opcodes.NO_NEXT, Form23x.THE_ONE, true,
-            "add-long");
+            Opcodes.NO_NEXT, Form23x.THE_ONE, true);
 
     public static final Dop SUB_LONG =
         new Dop(Opcodes.SUB_LONG, Opcodes.SUB_LONG,
-            Opcodes.NO_NEXT, Form23x.THE_ONE, true,
-            "sub-long");
+            Opcodes.NO_NEXT, Form23x.THE_ONE, true);
 
     public static final Dop MUL_LONG =
         new Dop(Opcodes.MUL_LONG, Opcodes.MUL_LONG,
-            Opcodes.NO_NEXT, Form23x.THE_ONE, true,
-            "mul-long");
+            Opcodes.NO_NEXT, Form23x.THE_ONE, true);
 
     public static final Dop DIV_LONG =
         new Dop(Opcodes.DIV_LONG, Opcodes.DIV_LONG,
-            Opcodes.NO_NEXT, Form23x.THE_ONE, true,
-            "div-long");
+            Opcodes.NO_NEXT, Form23x.THE_ONE, true);
 
     public static final Dop REM_LONG =
         new Dop(Opcodes.REM_LONG, Opcodes.REM_LONG,
-            Opcodes.NO_NEXT, Form23x.THE_ONE, true,
-            "rem-long");
+            Opcodes.NO_NEXT, Form23x.THE_ONE, true);
 
     public static final Dop AND_LONG =
         new Dop(Opcodes.AND_LONG, Opcodes.AND_LONG,
-            Opcodes.NO_NEXT, Form23x.THE_ONE, true,
-            "and-long");
+            Opcodes.NO_NEXT, Form23x.THE_ONE, true);
 
     public static final Dop OR_LONG =
         new Dop(Opcodes.OR_LONG, Opcodes.OR_LONG,
-            Opcodes.NO_NEXT, Form23x.THE_ONE, true,
-            "or-long");
+            Opcodes.NO_NEXT, Form23x.THE_ONE, true);
 
     public static final Dop XOR_LONG =
         new Dop(Opcodes.XOR_LONG, Opcodes.XOR_LONG,
-            Opcodes.NO_NEXT, Form23x.THE_ONE, true,
-            "xor-long");
+            Opcodes.NO_NEXT, Form23x.THE_ONE, true);
 
     public static final Dop SHL_LONG =
         new Dop(Opcodes.SHL_LONG, Opcodes.SHL_LONG,
-            Opcodes.NO_NEXT, Form23x.THE_ONE, true,
-            "shl-long");
+            Opcodes.NO_NEXT, Form23x.THE_ONE, true);
 
     public static final Dop SHR_LONG =
         new Dop(Opcodes.SHR_LONG, Opcodes.SHR_LONG,
-            Opcodes.NO_NEXT, Form23x.THE_ONE, true,
-            "shr-long");
+            Opcodes.NO_NEXT, Form23x.THE_ONE, true);
 
     public static final Dop USHR_LONG =
         new Dop(Opcodes.USHR_LONG, Opcodes.USHR_LONG,
-            Opcodes.NO_NEXT, Form23x.THE_ONE, true,
-            "ushr-long");
+            Opcodes.NO_NEXT, Form23x.THE_ONE, true);
 
     public static final Dop ADD_FLOAT =
         new Dop(Opcodes.ADD_FLOAT, Opcodes.ADD_FLOAT,
-            Opcodes.NO_NEXT, Form23x.THE_ONE, true,
-            "add-float");
+            Opcodes.NO_NEXT, Form23x.THE_ONE, true);
 
     public static final Dop SUB_FLOAT =
         new Dop(Opcodes.SUB_FLOAT, Opcodes.SUB_FLOAT,
-            Opcodes.NO_NEXT, Form23x.THE_ONE, true,
-            "sub-float");
+            Opcodes.NO_NEXT, Form23x.THE_ONE, true);
 
     public static final Dop MUL_FLOAT =
         new Dop(Opcodes.MUL_FLOAT, Opcodes.MUL_FLOAT,
-            Opcodes.NO_NEXT, Form23x.THE_ONE, true,
-            "mul-float");
+            Opcodes.NO_NEXT, Form23x.THE_ONE, true);
 
     public static final Dop DIV_FLOAT =
         new Dop(Opcodes.DIV_FLOAT, Opcodes.DIV_FLOAT,
-            Opcodes.NO_NEXT, Form23x.THE_ONE, true,
-            "div-float");
+            Opcodes.NO_NEXT, Form23x.THE_ONE, true);
 
     public static final Dop REM_FLOAT =
         new Dop(Opcodes.REM_FLOAT, Opcodes.REM_FLOAT,
-            Opcodes.NO_NEXT, Form23x.THE_ONE, true,
-            "rem-float");
+            Opcodes.NO_NEXT, Form23x.THE_ONE, true);
 
     public static final Dop ADD_DOUBLE =
         new Dop(Opcodes.ADD_DOUBLE, Opcodes.ADD_DOUBLE,
-            Opcodes.NO_NEXT, Form23x.THE_ONE, true,
-            "add-double");
+            Opcodes.NO_NEXT, Form23x.THE_ONE, true);
 
     public static final Dop SUB_DOUBLE =
         new Dop(Opcodes.SUB_DOUBLE, Opcodes.SUB_DOUBLE,
-            Opcodes.NO_NEXT, Form23x.THE_ONE, true,
-            "sub-double");
+            Opcodes.NO_NEXT, Form23x.THE_ONE, true);
 
     public static final Dop MUL_DOUBLE =
         new Dop(Opcodes.MUL_DOUBLE, Opcodes.MUL_DOUBLE,
-            Opcodes.NO_NEXT, Form23x.THE_ONE, true,
-            "mul-double");
+            Opcodes.NO_NEXT, Form23x.THE_ONE, true);
 
     public static final Dop DIV_DOUBLE =
         new Dop(Opcodes.DIV_DOUBLE, Opcodes.DIV_DOUBLE,
-            Opcodes.NO_NEXT, Form23x.THE_ONE, true,
-            "div-double");
+            Opcodes.NO_NEXT, Form23x.THE_ONE, true);
 
     public static final Dop REM_DOUBLE =
         new Dop(Opcodes.REM_DOUBLE, Opcodes.REM_DOUBLE,
-            Opcodes.NO_NEXT, Form23x.THE_ONE, true,
-            "rem-double");
+            Opcodes.NO_NEXT, Form23x.THE_ONE, true);
 
     public static final Dop ADD_INT_2ADDR =
         new Dop(Opcodes.ADD_INT_2ADDR, Opcodes.ADD_INT,
-            Opcodes.ADD_INT, Form12x.THE_ONE, true,
-            "add-int/2addr");
+            Opcodes.ADD_INT, Form12x.THE_ONE, true);
 
     public static final Dop SUB_INT_2ADDR =
         new Dop(Opcodes.SUB_INT_2ADDR, Opcodes.SUB_INT,
-            Opcodes.SUB_INT, Form12x.THE_ONE, true,
-            "sub-int/2addr");
+            Opcodes.SUB_INT, Form12x.THE_ONE, true);
 
     public static final Dop MUL_INT_2ADDR =
         new Dop(Opcodes.MUL_INT_2ADDR, Opcodes.MUL_INT,
-            Opcodes.MUL_INT, Form12x.THE_ONE, true,
-            "mul-int/2addr");
+            Opcodes.MUL_INT, Form12x.THE_ONE, true);
 
     public static final Dop DIV_INT_2ADDR =
         new Dop(Opcodes.DIV_INT_2ADDR, Opcodes.DIV_INT,
-            Opcodes.DIV_INT, Form12x.THE_ONE, true,
-            "div-int/2addr");
+            Opcodes.DIV_INT, Form12x.THE_ONE, true);
 
     public static final Dop REM_INT_2ADDR =
         new Dop(Opcodes.REM_INT_2ADDR, Opcodes.REM_INT,
-            Opcodes.REM_INT, Form12x.THE_ONE, true,
-            "rem-int/2addr");
+            Opcodes.REM_INT, Form12x.THE_ONE, true);
 
     public static final Dop AND_INT_2ADDR =
         new Dop(Opcodes.AND_INT_2ADDR, Opcodes.AND_INT,
-            Opcodes.AND_INT, Form12x.THE_ONE, true,
-            "and-int/2addr");
+            Opcodes.AND_INT, Form12x.THE_ONE, true);
 
     public static final Dop OR_INT_2ADDR =
         new Dop(Opcodes.OR_INT_2ADDR, Opcodes.OR_INT,
-            Opcodes.OR_INT, Form12x.THE_ONE, true,
-            "or-int/2addr");
+            Opcodes.OR_INT, Form12x.THE_ONE, true);
 
     public static final Dop XOR_INT_2ADDR =
         new Dop(Opcodes.XOR_INT_2ADDR, Opcodes.XOR_INT,
-            Opcodes.XOR_INT, Form12x.THE_ONE, true,
-            "xor-int/2addr");
+            Opcodes.XOR_INT, Form12x.THE_ONE, true);
 
     public static final Dop SHL_INT_2ADDR =
         new Dop(Opcodes.SHL_INT_2ADDR, Opcodes.SHL_INT,
-            Opcodes.SHL_INT, Form12x.THE_ONE, true,
-            "shl-int/2addr");
+            Opcodes.SHL_INT, Form12x.THE_ONE, true);
 
     public static final Dop SHR_INT_2ADDR =
         new Dop(Opcodes.SHR_INT_2ADDR, Opcodes.SHR_INT,
-            Opcodes.SHR_INT, Form12x.THE_ONE, true,
-            "shr-int/2addr");
+            Opcodes.SHR_INT, Form12x.THE_ONE, true);
 
     public static final Dop USHR_INT_2ADDR =
         new Dop(Opcodes.USHR_INT_2ADDR, Opcodes.USHR_INT,
-            Opcodes.USHR_INT, Form12x.THE_ONE, true,
-            "ushr-int/2addr");
+            Opcodes.USHR_INT, Form12x.THE_ONE, true);
 
     public static final Dop ADD_LONG_2ADDR =
         new Dop(Opcodes.ADD_LONG_2ADDR, Opcodes.ADD_LONG,
-            Opcodes.ADD_LONG, Form12x.THE_ONE, true,
-            "add-long/2addr");
+            Opcodes.ADD_LONG, Form12x.THE_ONE, true);
 
     public static final Dop SUB_LONG_2ADDR =
         new Dop(Opcodes.SUB_LONG_2ADDR, Opcodes.SUB_LONG,
-            Opcodes.SUB_LONG, Form12x.THE_ONE, true,
-            "sub-long/2addr");
+            Opcodes.SUB_LONG, Form12x.THE_ONE, true);
 
     public static final Dop MUL_LONG_2ADDR =
         new Dop(Opcodes.MUL_LONG_2ADDR, Opcodes.MUL_LONG,
-            Opcodes.MUL_LONG, Form12x.THE_ONE, true,
-            "mul-long/2addr");
+            Opcodes.MUL_LONG, Form12x.THE_ONE, true);
 
     public static final Dop DIV_LONG_2ADDR =
         new Dop(Opcodes.DIV_LONG_2ADDR, Opcodes.DIV_LONG,
-            Opcodes.DIV_LONG, Form12x.THE_ONE, true,
-            "div-long/2addr");
+            Opcodes.DIV_LONG, Form12x.THE_ONE, true);
 
     public static final Dop REM_LONG_2ADDR =
         new Dop(Opcodes.REM_LONG_2ADDR, Opcodes.REM_LONG,
-            Opcodes.REM_LONG, Form12x.THE_ONE, true,
-            "rem-long/2addr");
+            Opcodes.REM_LONG, Form12x.THE_ONE, true);
 
     public static final Dop AND_LONG_2ADDR =
         new Dop(Opcodes.AND_LONG_2ADDR, Opcodes.AND_LONG,
-            Opcodes.AND_LONG, Form12x.THE_ONE, true,
-            "and-long/2addr");
+            Opcodes.AND_LONG, Form12x.THE_ONE, true);
 
     public static final Dop OR_LONG_2ADDR =
         new Dop(Opcodes.OR_LONG_2ADDR, Opcodes.OR_LONG,
-            Opcodes.OR_LONG, Form12x.THE_ONE, true,
-            "or-long/2addr");
+            Opcodes.OR_LONG, Form12x.THE_ONE, true);
 
     public static final Dop XOR_LONG_2ADDR =
         new Dop(Opcodes.XOR_LONG_2ADDR, Opcodes.XOR_LONG,
-            Opcodes.XOR_LONG, Form12x.THE_ONE, true,
-            "xor-long/2addr");
+            Opcodes.XOR_LONG, Form12x.THE_ONE, true);
 
     public static final Dop SHL_LONG_2ADDR =
         new Dop(Opcodes.SHL_LONG_2ADDR, Opcodes.SHL_LONG,
-            Opcodes.SHL_LONG, Form12x.THE_ONE, true,
-            "shl-long/2addr");
+            Opcodes.SHL_LONG, Form12x.THE_ONE, true);
 
     public static final Dop SHR_LONG_2ADDR =
         new Dop(Opcodes.SHR_LONG_2ADDR, Opcodes.SHR_LONG,
-            Opcodes.SHR_LONG, Form12x.THE_ONE, true,
-            "shr-long/2addr");
+            Opcodes.SHR_LONG, Form12x.THE_ONE, true);
 
     public static final Dop USHR_LONG_2ADDR =
         new Dop(Opcodes.USHR_LONG_2ADDR, Opcodes.USHR_LONG,
-            Opcodes.USHR_LONG, Form12x.THE_ONE, true,
-            "ushr-long/2addr");
+            Opcodes.USHR_LONG, Form12x.THE_ONE, true);
 
     public static final Dop ADD_FLOAT_2ADDR =
         new Dop(Opcodes.ADD_FLOAT_2ADDR, Opcodes.ADD_FLOAT,
-            Opcodes.ADD_FLOAT, Form12x.THE_ONE, true,
-            "add-float/2addr");
+            Opcodes.ADD_FLOAT, Form12x.THE_ONE, true);
 
     public static final Dop SUB_FLOAT_2ADDR =
         new Dop(Opcodes.SUB_FLOAT_2ADDR, Opcodes.SUB_FLOAT,
-            Opcodes.SUB_FLOAT, Form12x.THE_ONE, true,
-            "sub-float/2addr");
+            Opcodes.SUB_FLOAT, Form12x.THE_ONE, true);
 
     public static final Dop MUL_FLOAT_2ADDR =
         new Dop(Opcodes.MUL_FLOAT_2ADDR, Opcodes.MUL_FLOAT,
-            Opcodes.MUL_FLOAT, Form12x.THE_ONE, true,
-            "mul-float/2addr");
+            Opcodes.MUL_FLOAT, Form12x.THE_ONE, true);
 
     public static final Dop DIV_FLOAT_2ADDR =
         new Dop(Opcodes.DIV_FLOAT_2ADDR, Opcodes.DIV_FLOAT,
-            Opcodes.DIV_FLOAT, Form12x.THE_ONE, true,
-            "div-float/2addr");
+            Opcodes.DIV_FLOAT, Form12x.THE_ONE, true);
 
     public static final Dop REM_FLOAT_2ADDR =
         new Dop(Opcodes.REM_FLOAT_2ADDR, Opcodes.REM_FLOAT,
-            Opcodes.REM_FLOAT, Form12x.THE_ONE, true,
-            "rem-float/2addr");
+            Opcodes.REM_FLOAT, Form12x.THE_ONE, true);
 
     public static final Dop ADD_DOUBLE_2ADDR =
         new Dop(Opcodes.ADD_DOUBLE_2ADDR, Opcodes.ADD_DOUBLE,
-            Opcodes.ADD_DOUBLE, Form12x.THE_ONE, true,
-            "add-double/2addr");
+            Opcodes.ADD_DOUBLE, Form12x.THE_ONE, true);
 
     public static final Dop SUB_DOUBLE_2ADDR =
         new Dop(Opcodes.SUB_DOUBLE_2ADDR, Opcodes.SUB_DOUBLE,
-            Opcodes.SUB_DOUBLE, Form12x.THE_ONE, true,
-            "sub-double/2addr");
+            Opcodes.SUB_DOUBLE, Form12x.THE_ONE, true);
 
     public static final Dop MUL_DOUBLE_2ADDR =
         new Dop(Opcodes.MUL_DOUBLE_2ADDR, Opcodes.MUL_DOUBLE,
-            Opcodes.MUL_DOUBLE, Form12x.THE_ONE, true,
-            "mul-double/2addr");
+            Opcodes.MUL_DOUBLE, Form12x.THE_ONE, true);
 
     public static final Dop DIV_DOUBLE_2ADDR =
         new Dop(Opcodes.DIV_DOUBLE_2ADDR, Opcodes.DIV_DOUBLE,
-            Opcodes.DIV_DOUBLE, Form12x.THE_ONE, true,
-            "div-double/2addr");
+            Opcodes.DIV_DOUBLE, Form12x.THE_ONE, true);
 
     public static final Dop REM_DOUBLE_2ADDR =
         new Dop(Opcodes.REM_DOUBLE_2ADDR, Opcodes.REM_DOUBLE,
-            Opcodes.REM_DOUBLE, Form12x.THE_ONE, true,
-            "rem-double/2addr");
+            Opcodes.REM_DOUBLE, Form12x.THE_ONE, true);
 
     public static final Dop ADD_INT_LIT16 =
         new Dop(Opcodes.ADD_INT_LIT16, Opcodes.ADD_INT,
-            Opcodes.NO_NEXT, Form22s.THE_ONE, true,
-            "add-int/lit16");
+            Opcodes.NO_NEXT, Form22s.THE_ONE, true);
 
     public static final Dop RSUB_INT =
         new Dop(Opcodes.RSUB_INT, Opcodes.RSUB_INT,
-            Opcodes.NO_NEXT, Form22s.THE_ONE, true,
-            "rsub-int");
+            Opcodes.NO_NEXT, Form22s.THE_ONE, true);
 
     public static final Dop MUL_INT_LIT16 =
         new Dop(Opcodes.MUL_INT_LIT16, Opcodes.MUL_INT,
-            Opcodes.NO_NEXT, Form22s.THE_ONE, true,
-            "mul-int/lit16");
+            Opcodes.NO_NEXT, Form22s.THE_ONE, true);
 
     public static final Dop DIV_INT_LIT16 =
         new Dop(Opcodes.DIV_INT_LIT16, Opcodes.DIV_INT,
-            Opcodes.NO_NEXT, Form22s.THE_ONE, true,
-            "div-int/lit16");
+            Opcodes.NO_NEXT, Form22s.THE_ONE, true);
 
     public static final Dop REM_INT_LIT16 =
         new Dop(Opcodes.REM_INT_LIT16, Opcodes.REM_INT,
-            Opcodes.NO_NEXT, Form22s.THE_ONE, true,
-            "rem-int/lit16");
+            Opcodes.NO_NEXT, Form22s.THE_ONE, true);
 
     public static final Dop AND_INT_LIT16 =
         new Dop(Opcodes.AND_INT_LIT16, Opcodes.AND_INT,
-            Opcodes.NO_NEXT, Form22s.THE_ONE, true,
-            "and-int/lit16");
+            Opcodes.NO_NEXT, Form22s.THE_ONE, true);
 
     public static final Dop OR_INT_LIT16 =
         new Dop(Opcodes.OR_INT_LIT16, Opcodes.OR_INT,
-            Opcodes.NO_NEXT, Form22s.THE_ONE, true,
-            "or-int/lit16");
+            Opcodes.NO_NEXT, Form22s.THE_ONE, true);
 
     public static final Dop XOR_INT_LIT16 =
         new Dop(Opcodes.XOR_INT_LIT16, Opcodes.XOR_INT,
-            Opcodes.NO_NEXT, Form22s.THE_ONE, true,
-            "xor-int/lit16");
+            Opcodes.NO_NEXT, Form22s.THE_ONE, true);
 
     public static final Dop ADD_INT_LIT8 =
         new Dop(Opcodes.ADD_INT_LIT8, Opcodes.ADD_INT,
-            Opcodes.ADD_INT_LIT16, Form22b.THE_ONE, true,
-            "add-int/lit8");
+            Opcodes.ADD_INT_LIT16, Form22b.THE_ONE, true);
 
     public static final Dop RSUB_INT_LIT8 =
         new Dop(Opcodes.RSUB_INT_LIT8, Opcodes.RSUB_INT,
-            Opcodes.RSUB_INT, Form22b.THE_ONE, true,
-            "rsub-int/lit8");
+            Opcodes.RSUB_INT, Form22b.THE_ONE, true);
 
     public static final Dop MUL_INT_LIT8 =
         new Dop(Opcodes.MUL_INT_LIT8, Opcodes.MUL_INT,
-            Opcodes.MUL_INT_LIT16, Form22b.THE_ONE, true,
-            "mul-int/lit8");
+            Opcodes.MUL_INT_LIT16, Form22b.THE_ONE, true);
 
     public static final Dop DIV_INT_LIT8 =
         new Dop(Opcodes.DIV_INT_LIT8, Opcodes.DIV_INT,
-            Opcodes.DIV_INT_LIT16, Form22b.THE_ONE, true,
-            "div-int/lit8");
+            Opcodes.DIV_INT_LIT16, Form22b.THE_ONE, true);
 
     public static final Dop REM_INT_LIT8 =
         new Dop(Opcodes.REM_INT_LIT8, Opcodes.REM_INT,
-            Opcodes.REM_INT_LIT16, Form22b.THE_ONE, true,
-            "rem-int/lit8");
+            Opcodes.REM_INT_LIT16, Form22b.THE_ONE, true);
 
     public static final Dop AND_INT_LIT8 =
         new Dop(Opcodes.AND_INT_LIT8, Opcodes.AND_INT,
-            Opcodes.AND_INT_LIT16, Form22b.THE_ONE, true,
-            "and-int/lit8");
+            Opcodes.AND_INT_LIT16, Form22b.THE_ONE, true);
 
     public static final Dop OR_INT_LIT8 =
         new Dop(Opcodes.OR_INT_LIT8, Opcodes.OR_INT,
-            Opcodes.OR_INT_LIT16, Form22b.THE_ONE, true,
-            "or-int/lit8");
+            Opcodes.OR_INT_LIT16, Form22b.THE_ONE, true);
 
     public static final Dop XOR_INT_LIT8 =
         new Dop(Opcodes.XOR_INT_LIT8, Opcodes.XOR_INT,
-            Opcodes.XOR_INT_LIT16, Form22b.THE_ONE, true,
-            "xor-int/lit8");
+            Opcodes.XOR_INT_LIT16, Form22b.THE_ONE, true);
 
     public static final Dop SHL_INT_LIT8 =
         new Dop(Opcodes.SHL_INT_LIT8, Opcodes.SHL_INT,
-            Opcodes.NO_NEXT, Form22b.THE_ONE, true,
-            "shl-int/lit8");
+            Opcodes.NO_NEXT, Form22b.THE_ONE, true);
 
     public static final Dop SHR_INT_LIT8 =
         new Dop(Opcodes.SHR_INT_LIT8, Opcodes.SHR_INT,
-            Opcodes.NO_NEXT, Form22b.THE_ONE, true,
-            "shr-int/lit8");
+            Opcodes.NO_NEXT, Form22b.THE_ONE, true);
 
     public static final Dop USHR_INT_LIT8 =
         new Dop(Opcodes.USHR_INT_LIT8, Opcodes.USHR_INT,
-            Opcodes.NO_NEXT, Form22b.THE_ONE, true,
-            "ushr-int/lit8");
+            Opcodes.NO_NEXT, Form22b.THE_ONE, true);
 
     public static final Dop CONST_CLASS_JUMBO =
         new Dop(Opcodes.CONST_CLASS_JUMBO, Opcodes.CONST_CLASS,
-            Opcodes.NO_NEXT, Form41c.THE_ONE, true,
-            "const-class/jumbo");
+            Opcodes.NO_NEXT, Form41c.THE_ONE, true);
 
     public static final Dop CHECK_CAST_JUMBO =
         new Dop(Opcodes.CHECK_CAST_JUMBO, Opcodes.CHECK_CAST,
-            Opcodes.NO_NEXT, Form41c.THE_ONE, false,
-            "check-cast/jumbo");
+            Opcodes.NO_NEXT, Form41c.THE_ONE, false);
 
     public static final Dop INSTANCE_OF_JUMBO =
         new Dop(Opcodes.INSTANCE_OF_JUMBO, Opcodes.INSTANCE_OF,
-            Opcodes.NO_NEXT, Form52c.THE_ONE, true,
-            "instance-of/jumbo");
+            Opcodes.NO_NEXT, Form52c.THE_ONE, true);
 
     public static final Dop NEW_INSTANCE_JUMBO =
         new Dop(Opcodes.NEW_INSTANCE_JUMBO, Opcodes.NEW_INSTANCE,
-            Opcodes.NO_NEXT, Form41c.THE_ONE, true,
-            "new-instance/jumbo");
+            Opcodes.NO_NEXT, Form41c.THE_ONE, true);
 
     public static final Dop NEW_ARRAY_JUMBO =
         new Dop(Opcodes.NEW_ARRAY_JUMBO, Opcodes.NEW_ARRAY,
-            Opcodes.NO_NEXT, Form52c.THE_ONE, true,
-            "new-array/jumbo");
+            Opcodes.NO_NEXT, Form52c.THE_ONE, true);
 
     public static final Dop FILLED_NEW_ARRAY_JUMBO =
         new Dop(Opcodes.FILLED_NEW_ARRAY_JUMBO, Opcodes.FILLED_NEW_ARRAY,
-            Opcodes.NO_NEXT, Form5rc.THE_ONE, false,
-            "filled-new-array/jumbo");
+            Opcodes.NO_NEXT, Form5rc.THE_ONE, false);
 
     public static final Dop IGET_JUMBO =
         new Dop(Opcodes.IGET_JUMBO, Opcodes.IGET,
-            Opcodes.NO_NEXT, Form52c.THE_ONE, true,
-            "iget/jumbo");
+            Opcodes.NO_NEXT, Form52c.THE_ONE, true);
 
     public static final Dop IGET_WIDE_JUMBO =
         new Dop(Opcodes.IGET_WIDE_JUMBO, Opcodes.IGET_WIDE,
-            Opcodes.NO_NEXT, Form52c.THE_ONE, true,
-            "iget-wide/jumbo");
+            Opcodes.NO_NEXT, Form52c.THE_ONE, true);
 
     public static final Dop IGET_OBJECT_JUMBO =
         new Dop(Opcodes.IGET_OBJECT_JUMBO, Opcodes.IGET_OBJECT,
-            Opcodes.NO_NEXT, Form52c.THE_ONE, true,
-            "iget-object/jumbo");
+            Opcodes.NO_NEXT, Form52c.THE_ONE, true);
 
     public static final Dop IGET_BOOLEAN_JUMBO =
         new Dop(Opcodes.IGET_BOOLEAN_JUMBO, Opcodes.IGET_BOOLEAN,
-            Opcodes.NO_NEXT, Form52c.THE_ONE, true,
-            "iget-boolean/jumbo");
+            Opcodes.NO_NEXT, Form52c.THE_ONE, true);
 
     public static final Dop IGET_BYTE_JUMBO =
         new Dop(Opcodes.IGET_BYTE_JUMBO, Opcodes.IGET_BYTE,
-            Opcodes.NO_NEXT, Form52c.THE_ONE, true,
-            "iget-byte/jumbo");
+            Opcodes.NO_NEXT, Form52c.THE_ONE, true);
 
     public static final Dop IGET_CHAR_JUMBO =
         new Dop(Opcodes.IGET_CHAR_JUMBO, Opcodes.IGET_CHAR,
-            Opcodes.NO_NEXT, Form52c.THE_ONE, true,
-            "iget-char/jumbo");
+            Opcodes.NO_NEXT, Form52c.THE_ONE, true);
 
     public static final Dop IGET_SHORT_JUMBO =
         new Dop(Opcodes.IGET_SHORT_JUMBO, Opcodes.IGET_SHORT,
-            Opcodes.NO_NEXT, Form52c.THE_ONE, true,
-            "iget-short/jumbo");
+            Opcodes.NO_NEXT, Form52c.THE_ONE, true);
 
     public static final Dop IPUT_JUMBO =
         new Dop(Opcodes.IPUT_JUMBO, Opcodes.IPUT,
-            Opcodes.NO_NEXT, Form52c.THE_ONE, false,
-            "iput/jumbo");
+            Opcodes.NO_NEXT, Form52c.THE_ONE, false);
 
     public static final Dop IPUT_WIDE_JUMBO =
         new Dop(Opcodes.IPUT_WIDE_JUMBO, Opcodes.IPUT_WIDE,
-            Opcodes.NO_NEXT, Form52c.THE_ONE, false,
-            "iput-wide/jumbo");
+            Opcodes.NO_NEXT, Form52c.THE_ONE, false);
 
     public static final Dop IPUT_OBJECT_JUMBO =
         new Dop(Opcodes.IPUT_OBJECT_JUMBO, Opcodes.IPUT_OBJECT,
-            Opcodes.NO_NEXT, Form52c.THE_ONE, false,
-            "iput-object/jumbo");
+            Opcodes.NO_NEXT, Form52c.THE_ONE, false);
 
     public static final Dop IPUT_BOOLEAN_JUMBO =
         new Dop(Opcodes.IPUT_BOOLEAN_JUMBO, Opcodes.IPUT_BOOLEAN,
-            Opcodes.NO_NEXT, Form52c.THE_ONE, false,
-            "iput-boolean/jumbo");
+            Opcodes.NO_NEXT, Form52c.THE_ONE, false);
 
     public static final Dop IPUT_BYTE_JUMBO =
         new Dop(Opcodes.IPUT_BYTE_JUMBO, Opcodes.IPUT_BYTE,
-            Opcodes.NO_NEXT, Form52c.THE_ONE, false,
-            "iput-byte/jumbo");
+            Opcodes.NO_NEXT, Form52c.THE_ONE, false);
 
     public static final Dop IPUT_CHAR_JUMBO =
         new Dop(Opcodes.IPUT_CHAR_JUMBO, Opcodes.IPUT_CHAR,
-            Opcodes.NO_NEXT, Form52c.THE_ONE, false,
-            "iput-char/jumbo");
+            Opcodes.NO_NEXT, Form52c.THE_ONE, false);
 
     public static final Dop IPUT_SHORT_JUMBO =
         new Dop(Opcodes.IPUT_SHORT_JUMBO, Opcodes.IPUT_SHORT,
-            Opcodes.NO_NEXT, Form52c.THE_ONE, false,
-            "iput-short/jumbo");
+            Opcodes.NO_NEXT, Form52c.THE_ONE, false);
 
     public static final Dop SGET_JUMBO =
         new Dop(Opcodes.SGET_JUMBO, Opcodes.SGET,
-            Opcodes.NO_NEXT, Form41c.THE_ONE, true,
-            "sget/jumbo");
+            Opcodes.NO_NEXT, Form41c.THE_ONE, true);
 
     public static final Dop SGET_WIDE_JUMBO =
         new Dop(Opcodes.SGET_WIDE_JUMBO, Opcodes.SGET_WIDE,
-            Opcodes.NO_NEXT, Form41c.THE_ONE, true,
-            "sget-wide/jumbo");
+            Opcodes.NO_NEXT, Form41c.THE_ONE, true);
 
     public static final Dop SGET_OBJECT_JUMBO =
         new Dop(Opcodes.SGET_OBJECT_JUMBO, Opcodes.SGET_OBJECT,
-            Opcodes.NO_NEXT, Form41c.THE_ONE, true,
-            "sget-object/jumbo");
+            Opcodes.NO_NEXT, Form41c.THE_ONE, true);
 
     public static final Dop SGET_BOOLEAN_JUMBO =
         new Dop(Opcodes.SGET_BOOLEAN_JUMBO, Opcodes.SGET_BOOLEAN,
-            Opcodes.NO_NEXT, Form41c.THE_ONE, true,
-            "sget-boolean/jumbo");
+            Opcodes.NO_NEXT, Form41c.THE_ONE, true);
 
     public static final Dop SGET_BYTE_JUMBO =
         new Dop(Opcodes.SGET_BYTE_JUMBO, Opcodes.SGET_BYTE,
-            Opcodes.NO_NEXT, Form41c.THE_ONE, true,
-            "sget-byte/jumbo");
+            Opcodes.NO_NEXT, Form41c.THE_ONE, true);
 
     public static final Dop SGET_CHAR_JUMBO =
         new Dop(Opcodes.SGET_CHAR_JUMBO, Opcodes.SGET_CHAR,
-            Opcodes.NO_NEXT, Form41c.THE_ONE, true,
-            "sget-char/jumbo");
+            Opcodes.NO_NEXT, Form41c.THE_ONE, true);
 
     public static final Dop SGET_SHORT_JUMBO =
         new Dop(Opcodes.SGET_SHORT_JUMBO, Opcodes.SGET_SHORT,
-            Opcodes.NO_NEXT, Form41c.THE_ONE, true,
-            "sget-short/jumbo");
+            Opcodes.NO_NEXT, Form41c.THE_ONE, true);
 
     public static final Dop SPUT_JUMBO =
         new Dop(Opcodes.SPUT_JUMBO, Opcodes.SPUT,
-            Opcodes.NO_NEXT, Form41c.THE_ONE, false,
-            "sput/jumbo");
+            Opcodes.NO_NEXT, Form41c.THE_ONE, false);
 
     public static final Dop SPUT_WIDE_JUMBO =
         new Dop(Opcodes.SPUT_WIDE_JUMBO, Opcodes.SPUT_WIDE,
-            Opcodes.NO_NEXT, Form41c.THE_ONE, false,
-            "sput-wide/jumbo");
+            Opcodes.NO_NEXT, Form41c.THE_ONE, false);
 
     public static final Dop SPUT_OBJECT_JUMBO =
         new Dop(Opcodes.SPUT_OBJECT_JUMBO, Opcodes.SPUT_OBJECT,
-            Opcodes.NO_NEXT, Form41c.THE_ONE, false,
-            "sput-object/jumbo");
+            Opcodes.NO_NEXT, Form41c.THE_ONE, false);
 
     public static final Dop SPUT_BOOLEAN_JUMBO =
         new Dop(Opcodes.SPUT_BOOLEAN_JUMBO, Opcodes.SPUT_BOOLEAN,
-            Opcodes.NO_NEXT, Form41c.THE_ONE, false,
-            "sput-boolean/jumbo");
+            Opcodes.NO_NEXT, Form41c.THE_ONE, false);
 
     public static final Dop SPUT_BYTE_JUMBO =
         new Dop(Opcodes.SPUT_BYTE_JUMBO, Opcodes.SPUT_BYTE,
-            Opcodes.NO_NEXT, Form41c.THE_ONE, false,
-            "sput-byte/jumbo");
+            Opcodes.NO_NEXT, Form41c.THE_ONE, false);
 
     public static final Dop SPUT_CHAR_JUMBO =
         new Dop(Opcodes.SPUT_CHAR_JUMBO, Opcodes.SPUT_CHAR,
-            Opcodes.NO_NEXT, Form41c.THE_ONE, false,
-            "sput-char/jumbo");
+            Opcodes.NO_NEXT, Form41c.THE_ONE, false);
 
     public static final Dop SPUT_SHORT_JUMBO =
         new Dop(Opcodes.SPUT_SHORT_JUMBO, Opcodes.SPUT_SHORT,
-            Opcodes.NO_NEXT, Form41c.THE_ONE, false,
-            "sput-short/jumbo");
+            Opcodes.NO_NEXT, Form41c.THE_ONE, false);
 
     public static final Dop INVOKE_VIRTUAL_JUMBO =
         new Dop(Opcodes.INVOKE_VIRTUAL_JUMBO, Opcodes.INVOKE_VIRTUAL,
-            Opcodes.NO_NEXT, Form5rc.THE_ONE, false,
-            "invoke-virtual/jumbo");
+            Opcodes.NO_NEXT, Form5rc.THE_ONE, false);
 
     public static final Dop INVOKE_SUPER_JUMBO =
         new Dop(Opcodes.INVOKE_SUPER_JUMBO, Opcodes.INVOKE_SUPER,
-            Opcodes.NO_NEXT, Form5rc.THE_ONE, false,
-            "invoke-super/jumbo");
+            Opcodes.NO_NEXT, Form5rc.THE_ONE, false);
 
     public static final Dop INVOKE_DIRECT_JUMBO =
         new Dop(Opcodes.INVOKE_DIRECT_JUMBO, Opcodes.INVOKE_DIRECT,
-            Opcodes.NO_NEXT, Form5rc.THE_ONE, false,
-            "invoke-direct/jumbo");
+            Opcodes.NO_NEXT, Form5rc.THE_ONE, false);
 
     public static final Dop INVOKE_STATIC_JUMBO =
         new Dop(Opcodes.INVOKE_STATIC_JUMBO, Opcodes.INVOKE_STATIC,
-            Opcodes.NO_NEXT, Form5rc.THE_ONE, false,
-            "invoke-static/jumbo");
+            Opcodes.NO_NEXT, Form5rc.THE_ONE, false);
 
     public static final Dop INVOKE_INTERFACE_JUMBO =
         new Dop(Opcodes.INVOKE_INTERFACE_JUMBO, Opcodes.INVOKE_INTERFACE,
-            Opcodes.NO_NEXT, Form5rc.THE_ONE, false,
-            "invoke-interface/jumbo");
+            Opcodes.NO_NEXT, Form5rc.THE_ONE, false);
 
     // END(dops)
 

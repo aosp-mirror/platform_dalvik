@@ -16,6 +16,7 @@
 
 package com.android.dx.dex.code;
 
+import com.android.dx.io.OpcodeInfo;
 import com.android.dx.io.Opcodes;
 
 /**
@@ -42,9 +43,6 @@ public final class Dop {
     /** whether this opcode uses a result register */
     private final boolean hasResult;
 
-    /** {@code non-null;} the name */
-    private final String name;
-
     /**
      * Constructs an instance.
      *
@@ -58,10 +56,9 @@ public final class Dop {
      * @param format {@code non-null;} the instruction format
      * @param hasResult whether the opcode has a result register; if so it
      * is always the first register
-     * @param name {@code non-null;} the name
      */
     public Dop(int opcode, int family, int nextOpcode, InsnFormat format,
-            boolean hasResult, String name) {
+            boolean hasResult) {
         if (!Opcodes.isValidShape(opcode)) {
             throw new IllegalArgumentException("bogus opcode");
         }
@@ -78,22 +75,17 @@ public final class Dop {
             throw new NullPointerException("format == null");
         }
 
-        if (name == null) {
-            throw new NullPointerException("name == null");
-        }
-
         this.opcode = opcode;
         this.family = family;
         this.nextOpcode = nextOpcode;
         this.format = format;
         this.hasResult = hasResult;
-        this.name = name;
     }
 
     /** {@inheritDoc} */
     @Override
     public String toString() {
-        return name;
+        return getName();
     }
 
     /**
@@ -139,7 +131,7 @@ public final class Dop {
      * @return {@code non-null;} the opcode name
      */
     public String getName() {
-        return name;
+        return OpcodeInfo.getName(opcode);
     }
 
     /**

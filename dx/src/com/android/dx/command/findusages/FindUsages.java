@@ -23,6 +23,7 @@ import com.android.dx.io.DecodedInstruction;
 import com.android.dx.io.DexBuffer;
 import com.android.dx.io.FieldId;
 import com.android.dx.io.MethodId;
+import com.android.dx.io.OpcodeInfo;
 import java.io.PrintStream;
 import java.util.Collections;
 import java.util.HashSet;
@@ -61,21 +62,23 @@ public final class FindUsages {
         fieldIds = getFieldIds(dex, memberNameIndex, typeIndex);
 
         codeReader.setFieldVisitor(new CodeReader.Visitor() {
-            public void visit(CodeReader.Instruction instruction,
-                    DecodedInstruction[] all, DecodedInstruction one) {
+            public void visit(DecodedInstruction[] all,
+                    DecodedInstruction one) {
                 int fieldId = one.getIndex();
                 if (fieldIds.contains(fieldId)) {
-                    out.println(location() + ": field reference (" + instruction + ")");
+                    out.println(location() + ": field reference ("
+                            + OpcodeInfo.getName(one.getOpcode()) + ")");
                 }
             }
         });
 
         codeReader.setMethodVisitor(new CodeReader.Visitor() {
-            public void visit(CodeReader.Instruction instruction,
-                    DecodedInstruction[] all, DecodedInstruction one) {
+            public void visit(DecodedInstruction[] all,
+                    DecodedInstruction one) {
                 int methodId = one.getIndex();
                 if (methodIds.contains(methodId)) {
-                    out.println(location() + ": method reference (" + instruction + ")");
+                    out.println(location() + ": method reference ("
+                            + OpcodeInfo.getName(one.getOpcode()) + ")");
                 }
             }
         });

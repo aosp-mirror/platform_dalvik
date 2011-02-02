@@ -382,7 +382,7 @@ public final class CodeReader {
             Instruction instruction = instructions[di.getOpcode()];
             Visitor visitor = instruction.visitor;
             if (visitor != null) {
-                visitor.visit(instruction, decodedInstructions, di);
+                visitor.visit(decodedInstructions, di);
             }
         }
     }
@@ -422,8 +422,7 @@ public final class CodeReader {
     }
 
     public interface Visitor {
-        void visit(Instruction instruction, DecodedInstruction[] all,
-                DecodedInstruction one);
+        void visit(DecodedInstruction[] all, DecodedInstruction one);
     }
 
     private static class UnusedInstruction extends Instruction {

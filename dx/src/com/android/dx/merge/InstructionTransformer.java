@@ -19,6 +19,7 @@ package com.android.dx.merge;
 import com.android.dx.dex.DexException;
 import com.android.dx.io.CodeReader;
 import com.android.dx.io.DecodedInstruction;
+import com.android.dx.io.OpcodeInfo;
 import com.android.dx.io.ShortArrayCodeOutput;
 
 final class InstructionTransformer {
@@ -58,15 +59,13 @@ final class InstructionTransformer {
     }
 
     private class GenericVisitor implements CodeReader.Visitor {
-        public void visit(CodeReader.Instruction instruction,
-                DecodedInstruction[] all, DecodedInstruction one) {
+        public void visit(DecodedInstruction[] all, DecodedInstruction one) {
             mappedInstructions[mappedAt++] = one;
         }
     }
 
     private class StringVisitor implements CodeReader.Visitor {
-        public void visit(CodeReader.Instruction instruction,
-                DecodedInstruction[] all, DecodedInstruction one) {
+        public void visit(DecodedInstruction[] all, DecodedInstruction one) {
             int stringId = one.getIndex();
             int mappedId = indexMap.adjustString(stringId);
             if (mappedId > 0xFFFF) {
@@ -78,8 +77,7 @@ final class InstructionTransformer {
     }
 
     private class JumboStringVisitor implements CodeReader.Visitor {
-        public void visit(CodeReader.Instruction instruction,
-                DecodedInstruction[] all, DecodedInstruction one) {
+        public void visit(DecodedInstruction[] all, DecodedInstruction one) {
             throw new UnsupportedOperationException("Jumbo strings not implemented. "
                     + "Due to a lack of dex files requiring jumbo strings, this class doesn't "
                     + "bother to support jumbo strings!");
@@ -87,8 +85,7 @@ final class InstructionTransformer {
     }
 
     private class FieldVisitor implements CodeReader.Visitor {
-        public void visit(CodeReader.Instruction instruction,
-                DecodedInstruction[] all, DecodedInstruction one) {
+        public void visit(DecodedInstruction[] all, DecodedInstruction one) {
             int fieldId = one.getIndex();
             int mappedId = indexMap.adjustField(fieldId);
             mappedInstructions[mappedAt++] = one.withIndex(mappedId);
@@ -96,8 +93,7 @@ final class InstructionTransformer {
     }
 
     private class TypeVisitor implements CodeReader.Visitor {
-        public void visit(CodeReader.Instruction instruction,
-                DecodedInstruction[] all, DecodedInstruction one) {
+        public void visit(DecodedInstruction[] all, DecodedInstruction one) {
             int typeId = one.getIndex();
             int mappedId = indexMap.adjustType(typeId);
             mappedInstructions[mappedAt++] = one.withIndex(mappedId);
@@ -105,8 +101,7 @@ final class InstructionTransformer {
     }
 
     private class MethodVisitor implements CodeReader.Visitor {
-        public void visit(CodeReader.Instruction instruction,
-                DecodedInstruction[] all, DecodedInstruction one) {
+        public void visit(DecodedInstruction[] all, DecodedInstruction one) {
             int methodId = one.getIndex();
             int mappedId = indexMap.adjustMethod(methodId);
             mappedInstructions[mappedAt++] = one.withIndex(mappedId);
