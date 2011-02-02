@@ -20,6 +20,12 @@ package com.android.dx.io;
  * The various types that an index in a Dalvik instruction might refer to.
  */
 public enum IndexType {
+    /** "Unknown." Used for undefined opcodes. */
+    UNKNOWN,
+
+    /** no index used */
+    NONE,
+
     /** "It depends." Used for {@code throw-verification-error}. */
     VARIES,
 

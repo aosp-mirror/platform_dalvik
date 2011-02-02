@@ -108,18 +108,12 @@ emission == "opcode-info-defs" {
     for (i = 0; i <= MAX_OPCODE; i++) {
         if (isUnused(i) || isOptimized(i)) continue;
 
-        itype = indexType[i];
-        if ((itype == "none") || (itype == "unknown")) {
-            itype = "null";
-        } else {
-            itype = toupper(itype);
-            gsub(/-/, "_", itype);
-            itype = "IndexType." itype;
-        }
+        itype = toupper(indexType[i]);
+        gsub(/-/, "_", itype);
 
         printf("    public static final Info %s =\n" \
                "        new Info(Opcodes.%s, \"%s\",\n" \
-               "            InstructionCodec.FORMAT_%s, %s);\n\n", \
+               "            InstructionCodec.FORMAT_%s, IndexType.%s);\n\n", \
                constName[i], constName[i], name[i], toupper(format[i]), itype);
     }
 }
