@@ -366,7 +366,7 @@ addNewHeap(HeapSource *hs, mspace msp, size_t maximumSize)
         hs->heaps[0].maximumSize = overhead;
         hs->heaps[0].limit = base;
         heap.maximumSize = hs->growthLimit - overhead;
-        heap.msp = createMspace(base, HEAP_MIN_FREE, heap.maximumSize);
+        heap.msp = createMspace(base, HEAP_MIN_FREE, hs->maximumSize - overhead);
         heap.concurrentStartBytes = HEAP_MIN_FREE - CONCURRENT_START;
         heap.base = base;
         heap.limit = heap.base + heap.maximumSize;
