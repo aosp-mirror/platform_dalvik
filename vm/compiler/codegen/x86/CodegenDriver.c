@@ -303,6 +303,11 @@ void *dvmCompilerGetInterpretTemplate()
                       templateEntryOffsets[TEMPLATE_INTERPRET]);
 }
 
+JitInstructionSetType dvmCompilerGetInterpretTemplateSet()
+{
+    return DALVIK_JIT_X86;
+}
+
 void dvmCompilerInitializeRegAlloc(CompilationUnit *cUnit)
 {
 }

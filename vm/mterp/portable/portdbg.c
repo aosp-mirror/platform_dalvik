@@ -9,9 +9,9 @@
                           methodToCall))
 #define CHECK_JIT_VOID() (dvmCheckJit(pc, self, interpState, callsiteClass,\
                           methodToCall))
-#define ABORT_JIT_TSELECT() (dvmJitAbortTraceSelect(interpState))
+#define END_JIT_TSELECT() (dvmJitEndTraceSelect(interpState))
 #else
 #define CHECK_JIT_BOOL() (false)
 #define CHECK_JIT_VOID()
-#define ABORT_JIT_TSELECT(x) ((void)0)
+#define END_JIT_TSELECT(x) ((void)0)
 #endif

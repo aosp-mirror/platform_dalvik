@@ -518,30 +518,11 @@ void dvmJitStats()
 }
 
 
-static void setTraceConstruction(JitEntry *slot, bool value)
-{
-
-    JitEntryInfoUnion oldValue;
-    JitEntryInfoUnion newValue;
-    do {
-        oldValue = slot->u;
-        newValue = oldValue;
-        newValue.info.traceConstruction = value;
-    } while (android_atomic_release_cas(oldValue.infoWord, newValue.infoWord,
-            &slot->u.infoWord) != 0);
-}
-
-static void resetTracehead(InterpState* interpState, JitEntry *slot)
-{
-    slot->codeAddress = dvmCompilerGetInterpretTemplate();
-    setTraceConstruction(slot, false);
-}
-
-/* Clean up any pending trace builds */
-void dvmJitAbortTraceSelect(InterpState* interpState)
+/* End current trace after last successful instruction */
+void dvmJitEndTraceSelect(InterpState* interpState)
 {
     if (interpState->jitState == kJitTSelect)
-        interpState->jitState = kJitDone;
+        interpState->jitState = kJitTSelectEnd;
 }
 
 /*
@@ -848,9 +829,12 @@ int dvmCheckJit(const u2* pc, Thread* self, InterpState* interpState,
             /* NOTE: intentional fallthrough for returns */
         case kJitTSelectEnd:
             {
-                /* Bad trace */
+                /* Empty trace - set to bail to interpreter */
                 if (interpState->totalTraceLen == 0) {
-                    /* Bad trace - mark as untranslatable */
+                    dvmJitSetCodeAddr(interpState->currTraceHead,
+                                      dvmCompilerGetInterpretTemplate(),
+                                      dvmCompilerGetInterpretTemplateSet(),
+                                      false /* Not method entry */, 0);
                     interpState->jitState = kJitDone;
                     switchInterp = true;
                     break;
@@ -901,17 +885,6 @@ int dvmCheckJit(const u2* pc, Thread* self, InterpState* interpState,
                      * freed.
                      */
                     free(desc);
-                }
-                /*
-                 * Reset "trace in progress" flag whether or not we
-                 * successfully entered a work order.
-                 */
-                JitEntry *jitEntry =
-                    lookupAndAdd(interpState->currTraceHead,
-                                 false /* lock */,
-                                 false /* method entry */);
-                if (jitEntry) {
-                    setTraceConstruction(jitEntry, false);
                 }
                 interpState->jitState = kJitDone;
                 switchInterp = true;
@@ -973,18 +946,21 @@ int dvmCheckJit(const u2* pc, Thread* self, InterpState* interpState,
             !dvmJitStayInPortableInterpreter();
 }
 
-JitEntry *dvmFindJitEntry(const u2* pc)
+JitEntry *dvmJitFindEntry(const u2* pc, bool isMethodEntry)
 {
     int idx = dvmJitHash(pc);
 
     /* Expect a high hit rate on 1st shot */
-    if (gDvmJit.pJitEntryTable[idx].dPC == pc)
+    if ((gDvmJit.pJitEntryTable[idx].dPC == pc) &&
+        (gDvmJit.pJitEntryTable[idx].u.info.isMethodEntry == isMethodEntry))
         return &gDvmJit.pJitEntryTable[idx];
     else {
         int chainEndMarker = gDvmJit.jitTableSize;
         while (gDvmJit.pJitEntryTable[idx].u.info.chain != chainEndMarker) {
             idx = gDvmJit.pJitEntryTable[idx].u.info.chain;
-            if (gDvmJit.pJitEntryTable[idx].dPC == pc)
+            if ((gDvmJit.pJitEntryTable[idx].dPC == pc) &&
+                (gDvmJit.pJitEntryTable[idx].u.info.isMethodEntry ==
+                isMethodEntry))
                 return &gDvmJit.pJitEntryTable[idx];
         }
     }
@@ -1074,7 +1050,7 @@ void dvmJitSetCodeAddr(const u2* dPC, void *nPC, JitInstructionSetType set,
 {
     JitEntryInfoUnion oldValue;
     JitEntryInfoUnion newValue;
-    JitEntry *jitEntry = lookupAndAdd(dPC, false, isMethodEntry);
+    JitEntry *jitEntry = dvmJitFindEntry(dPC, isMethodEntry);
     assert(jitEntry);
     /* Note: order of update is important */
     do {
@@ -1188,45 +1164,24 @@ bool dvmJitCheckTraceRequest(Thread* self, InterpState* interpState)
          */
         if (interpState->jitState == kJitTSelectRequest ||
             interpState->jitState == kJitTSelectRequestHot) {
-            JitEntry *slot = lookupAndAdd(interpState->pc,
-                                          false /* lock */,
-                                          false /* method entry */);
-            if (slot == NULL) {
-                /*
-                 * Table is full.  This should have been
-                 * detected by the compiler thread and the table
-                 * resized before we run into it here.  Assume bad things
-                 * are afoot and disable profiling.
-                 */
-                interpState->jitState = kJitDone;
-                LOGD("JIT: JitTable full, disabling profiling");
-                dvmJitStopTranslationRequests();
-            } else if (slot->u.info.traceConstruction) {
-                /*
-                 * Trace request already in progress, but most likely it
-                 * aborted without cleaning up.  Assume the worst and
-                 * mark trace head as untranslatable.  If we're wrong,
-                 * the compiler thread will correct the entry when the
-                 * translation is completed.  The downside here is that
-                 * some existing translation may chain to the interpret-only
-                 * template instead of the real translation during this
-                 * window.  Performance, but not correctness, issue.
-                 */
-                interpState->jitState = kJitDone;
-                resetTracehead(interpState, slot);
-            } else if (slot->codeAddress) {
-                 /* Nothing to do here - just return */
-                interpState->jitState = kJitDone;
+            if (dvmJitFindEntry(interpState->pc, false)) {
+                /* In progress - nothing do do */
+               interpState->jitState = kJitDone;
             } else {
-                /*
-                 * Mark request.  Note, we are not guaranteed exclusivity
-                 * here.  A window exists for another thread to be
-                 * attempting to build this same trace.  Rather than
-                 * bear the cost of locking, we'll just allow that to
-                 * happen.  The compiler thread, if it chooses, can
-                 * discard redundant requests.
-                 */
-                setTraceConstruction(slot, true);
+                JitEntry *slot = lookupAndAdd(interpState->pc,
+                                              false /* lock */,
+                                              false /* method entry */);
+                if (slot == NULL) {
+                    /*
+                     * Table is full.  This should have been
+                     * detected by the compiler thread and the table
+                     * resized before we run into it here.  Assume bad things
+                     * are afoot and disable profiling.
+                     */
+                    interpState->jitState = kJitDone;
+                    LOGD("JIT: JitTable full, disabling profiling");
+                    dvmJitStopTranslationRequests();
+                }
             }
         }
 
@@ -1450,21 +1405,21 @@ void dvmJitChangeProfileMode(TraceProfilingModes newState)
 void dvmJitTraceProfilingOn()
 {
     if (gDvmJit.profileMode == kTraceProfilingPeriodicOff)
-        dvmCompilerWorkEnqueue(NULL, kWorkOrderProfileMode,
-                               (void*) kTraceProfilingPeriodicOn);
+        dvmCompilerForceWorkEnqueue(NULL, kWorkOrderProfileMode,
+                                    (void*) kTraceProfilingPeriodicOn);
     else if (gDvmJit.profileMode == kTraceProfilingDisabled)
-        dvmCompilerWorkEnqueue(NULL, kWorkOrderProfileMode,
-                               (void*) kTraceProfilingContinuous);
+        dvmCompilerForceWorkEnqueue(NULL, kWorkOrderProfileMode,
+                                    (void*) kTraceProfilingContinuous);
 }
 
 void dvmJitTraceProfilingOff()
 {
     if (gDvmJit.profileMode == kTraceProfilingPeriodicOn)
-        dvmCompilerWorkEnqueue(NULL, kWorkOrderProfileMode,
-                               (void*) kTraceProfilingPeriodicOff);
+        dvmCompilerForceWorkEnqueue(NULL, kWorkOrderProfileMode,
+                                    (void*) kTraceProfilingPeriodicOff);
     else if (gDvmJit.profileMode == kTraceProfilingContinuous)
-        dvmCompilerWorkEnqueue(NULL, kWorkOrderProfileMode,
-                               (void*) kTraceProfilingDisabled);
+        dvmCompilerForceWorkEnqueue(NULL, kWorkOrderProfileMode,
+                                    (void*) kTraceProfilingDisabled);
 }
 
 #endif /* WITH_JIT */

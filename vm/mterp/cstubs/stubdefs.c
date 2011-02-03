@@ -4,7 +4,7 @@
 # define CHECK_TRACKED_REFS() ((void)0)
 #define CHECK_JIT_BOOL() (false)
 #define CHECK_JIT_VOID()
-#define ABORT_JIT_TSELECT() ((void)0)
+#define END_JIT_TSELECT() ((void)0)
 
 /*
  * In the C mterp stubs, "goto" is a function call followed immediately

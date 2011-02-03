@@ -457,7 +457,7 @@ GOTO_TARGET(invokeStatic, bool methodCallRange, bool jumboFormat)
          */
         if (dvmDexGetResolvedMethod(methodClassDex, ref) == NULL) {
             /* Class initialization is still ongoing */
-            ABORT_JIT_TSELECT();
+            END_JIT_TSELECT();
         }
     }
     GOTO_invokeMethod(methodCallRange, methodToCall, vsrc1, vdst);
@@ -670,8 +670,8 @@ GOTO_TARGET(exceptionThrown)
         PERIODIC_CHECKS(kInterpEntryThrow, 0);
 
 #if defined(WITH_JIT)
-        // Something threw during trace selection - abort the current trace
-        ABORT_JIT_TSELECT();
+        // Something threw during trace selection - end the current trace
+        END_JIT_TSELECT();
 #endif
         /*
          * We save off the exception and clear the exception status.  While

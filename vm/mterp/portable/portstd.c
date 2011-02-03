@@ -5,4 +5,4 @@
 
 #define CHECK_JIT_BOOL() (false)
 #define CHECK_JIT_VOID()
-#define ABORT_JIT_TSELECT() ((void)0)
+#define END_JIT_TSELECT() ((void)0)

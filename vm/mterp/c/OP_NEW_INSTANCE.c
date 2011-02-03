@@ -24,8 +24,8 @@ HANDLE_OPCODE(OP_NEW_INSTANCE /*vAA, class@BBBB*/)
          * check is not needed for mterp.
          */
         if (!dvmDexGetResolvedClass(methodClassDex, ref)) {
-            /* Class initialization is still ongoing - abandon the trace */
-            ABORT_JIT_TSELECT();
+            /* Class initialization is still ongoing - end the trace */
+            END_JIT_TSELECT();
         }
 
         /*

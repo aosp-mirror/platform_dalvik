@@ -418,7 +418,7 @@ static inline bool checkForNullExportPC(Object* obj, u4* fp, const u2* pc)
 # define CHECK_TRACKED_REFS() ((void)0)
 #define CHECK_JIT_BOOL() (false)
 #define CHECK_JIT_VOID()
-#define ABORT_JIT_TSELECT() ((void)0)
+#define END_JIT_TSELECT() ((void)0)
 
 /*
  * In the C mterp stubs, "goto" is a function call followed immediately
@@ -1218,7 +1218,7 @@ GOTO_TARGET_DECL(exceptionThrown);
             if (sfield == NULL)                                             \
                 GOTO_exceptionThrown();                                     \
             if (dvmDexGetResolvedField(methodClassDex, ref) == NULL) {      \
-                ABORT_JIT_TSELECT();                                        \
+                END_JIT_TSELECT();                                        \
             }                                                               \
         }                                                                   \
         SET_REGISTER##_regsize(vdst, dvmGetStaticField##_ftype(sfield));    \
@@ -1242,7 +1242,7 @@ GOTO_TARGET_DECL(exceptionThrown);
             if (sfield == NULL)                                             \
                 GOTO_exceptionThrown();                                     \
             if (dvmDexGetResolvedField(methodClassDex, ref) == NULL) {      \
-                ABORT_JIT_TSELECT();                                        \
+                END_JIT_TSELECT();                                        \
             }                                                               \
         }                                                                   \
         SET_REGISTER##_regsize(vdst, dvmGetStaticField##_ftype(sfield));    \
@@ -1266,7 +1266,7 @@ GOTO_TARGET_DECL(exceptionThrown);
             if (sfield == NULL)                                             \
                 GOTO_exceptionThrown();                                     \
             if (dvmDexGetResolvedField(methodClassDex, ref) == NULL) {      \
-                ABORT_JIT_TSELECT();                                        \
+                END_JIT_TSELECT();                                        \
             }                                                               \
         }                                                                   \
         dvmSetStaticField##_ftype(sfield, GET_REGISTER##_regsize(vdst));    \
@@ -1290,7 +1290,7 @@ GOTO_TARGET_DECL(exceptionThrown);
             if (sfield == NULL)                                             \
                 GOTO_exceptionThrown();                                     \
             if (dvmDexGetResolvedField(methodClassDex, ref) == NULL) {      \
-                ABORT_JIT_TSELECT();                                        \
+                END_JIT_TSELECT();                                        \
             }                                                               \
         }                                                                   \
         dvmSetStaticField##_ftype(sfield, GET_REGISTER##_regsize(vdst));    \

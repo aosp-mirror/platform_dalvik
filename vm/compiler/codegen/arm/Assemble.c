@@ -1989,7 +1989,8 @@ static int dumpTraceProfile(JitEntry *p, bool silent, bool reset,
 JitTraceDescription *dvmCopyTraceDescriptor(const u2 *pc,
                                             const JitEntry *knownEntry)
 {
-    const JitEntry *jitEntry = knownEntry ? knownEntry : dvmFindJitEntry(pc);
+    const JitEntry *jitEntry = knownEntry ? knownEntry
+                                          : dvmJitFindEntry(pc, false);
     if (jitEntry == NULL) return NULL;
 
     /* Find out the startint point */

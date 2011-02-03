@@ -75,7 +75,6 @@ typedef enum JitInstructionSetType {
     DALVIK_JIT_ARM,
     DALVIK_JIT_THUMB,
     DALVIK_JIT_THUMB2,
-    DALVIK_JIT_THUMB2EE,
     DALVIK_JIT_IA32
 } JitInstructionSetType;
 
@@ -263,6 +262,7 @@ bool dvmCompilerArchInit(void);
 void dvmCompilerArchDump(void);
 bool dvmCompilerStartup(void);
 void dvmCompilerShutdown(void);
+void dvmCompilerForceWorkEnqueue(const u2* pc, WorkOrderKind kind, void* info);
 bool dvmCompilerWorkEnqueue(const u2* pc, WorkOrderKind kind, void* info);
 void *dvmCheckCodeCache(void *method);
 CompilerMethodStats *dvmCompilerAnalyzeMethodBody(const Method *method,
@@ -309,4 +309,5 @@ void dvmCompilerStateRefresh(void);
 JitTraceDescription *dvmCopyTraceDescriptor(const u2 *pc,
                                             const struct JitEntry *desc);
 void *dvmCompilerGetInterpretTemplate();
+JitInstructionSetType dvmCompilerGetInterpretTemplateSet();
 #endif /* _DALVIK_VM_COMPILER */
