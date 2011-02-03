@@ -129,12 +129,12 @@ typedef enum ResourceEncodingPos {
     kFPReg0     = 16,
     kRegEnd     = 48,
     kCCode      = kRegEnd,
-    kFPStatus,
-    kDalvikReg,
-    kLiteral,
-    kFrameRef,
-    kHeapRef,
-    kLitPoolRef
+    kFPStatus,          // FP status word
+    // The following four bits are for memory disambiguation
+    kDalvikReg,         // 1 Dalvik Frame (can be fully disambiguated)
+    kLiteral,           // 2 Literal pool (can be fully disambiguated)
+    kHeapRef,           // 3 Somewhere on the heap (alias with any other heap)
+    kMustNotAlias,      // 4 Guaranteed to be non-alias (eg *(r6+x))
 } ResourceEncodingPos;
 
 #define ENCODE_REG_LIST(N)      ((u8) N)
@@ -144,19 +144,15 @@ typedef enum ResourceEncodingPos {
 #define ENCODE_CCODE            (1ULL << kCCode)
 #define ENCODE_FP_STATUS        (1ULL << kFPStatus)
 
-    /* Must alias */
+/* Abstract memory locations */
 #define ENCODE_DALVIK_REG       (1ULL << kDalvikReg)
 #define ENCODE_LITERAL          (1ULL << kLiteral)
-
-    /* May alias */
-#define ENCODE_FRAME_REF        (1ULL << kFrameRef)
 #define ENCODE_HEAP_REF         (1ULL << kHeapRef)
-#define ENCODE_LITPOOL_REF      (1ULL << kLitPoolRef)
+#define ENCODE_MUST_NOT_ALIAS   (1ULL << kMustNotAlias)
 
 #define ENCODE_ALL              (~0ULL)
-#define ENCODE_MEM_DEF          (ENCODE_FRAME_REF | ENCODE_HEAP_REF)
-#define ENCODE_MEM_USE          (ENCODE_FRAME_REF | ENCODE_HEAP_REF \
-                                 | ENCODE_LITPOOL_REF)
+#define ENCODE_MEM              (ENCODE_DALVIK_REG | ENCODE_LITERAL | \
+                                 ENCODE_HEAP_REF | ENCODE_MUST_NOT_ALIAS)
 
 #define DECODE_ALIAS_INFO_REG(X)        (X & 0xffff)
 #define DECODE_ALIAS_INFO_WIDE(X)       ((X & 0x80000000) ? 1 : 0)

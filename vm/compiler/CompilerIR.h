@@ -251,6 +251,7 @@ typedef struct CompilationUnit {
     BasicBlock *entryBlock;
     BasicBlock *exitBlock;
     BasicBlock *curBlock;
+    BasicBlock *nextCodegenBlock;       // for extended trace codegen
     GrowableList dfsOrder;
     GrowableList domPostOrderTraversal;
     BitVector *tryBlockAddr;

@@ -761,6 +761,7 @@ struct DvmJitGlobals {
     bool               haltCompilerThread;
     bool               blockingMode;
     bool               methodTraceSupport;
+    bool               genSuspendPoll;
     pthread_t          compilerHandle;
     pthread_mutex_t    compilerLock;
     pthread_mutex_t    compilerICPatchLock;

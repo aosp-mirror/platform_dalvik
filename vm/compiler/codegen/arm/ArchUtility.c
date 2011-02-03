@@ -263,9 +263,21 @@ void dvmDumpResourceMask(LIR *lir, u8 mask, const char *prefix)
         if (mask & ENCODE_FP_STATUS) {
             strcat(buf, "fpcc ");
         }
+
+        /* Memory bits */
         if (armLIR && (mask & ENCODE_DALVIK_REG)) {
             sprintf(buf + strlen(buf), "dr%d%s", armLIR->aliasInfo & 0xffff,
                     (armLIR->aliasInfo & 0x80000000) ? "(+1)" : "");
+        }
+        if (mask & ENCODE_LITERAL) {
+            strcat(buf, "lit ");
+        }
+
+        if (mask & ENCODE_HEAP_REF) {
+            strcat(buf, "heap ");
+        }
+        if (mask & ENCODE_MUST_NOT_ALIAS) {
+            strcat(buf, "noalias ");
         }
     }
     if (buf[0]) {

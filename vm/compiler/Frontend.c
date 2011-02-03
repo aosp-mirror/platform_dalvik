@@ -674,9 +674,11 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
                                                                 searchBlockId);
             if (targetOffset == searchBB->startOffset) {
                 curBB->taken = searchBB;
+                dvmCompilerSetBit(searchBB->predecessors, curBB->id);
             }
             if (fallThroughOffset == searchBB->startOffset) {
                 curBB->fallThrough = searchBB;
+                dvmCompilerSetBit(searchBB->predecessors, curBB->id);
 
                 /*
                  * Fallthrough block of an invoke instruction needs to be
@@ -718,11 +720,13 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
             exitBB->needFallThroughBranch = true;
 
             loopBranch->taken = exitBB;
+            dvmCompilerSetBit(exitBB->predecessors, loopBranch->id);
             backwardCell =
                 dvmCompilerNewBB(kChainingCellBackwardBranch, numBlocks++);
             dvmInsertGrowableList(blockList, (intptr_t) backwardCell);
             backwardCell->startOffset = entryCodeBB->startOffset;
             loopBranch->fallThrough = backwardCell;
+            dvmCompilerSetBit(backwardCell->predecessors, loopBranch->id);
 
             /* Create the chaining cell as the fallthrough of the exit block */
             exitChainingCell = dvmCompilerNewBB(kChainingCellNormal,
@@ -731,6 +735,7 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
             exitChainingCell->startOffset = targetOffset;
 
             exitBB->fallThrough = exitChainingCell;
+            dvmCompilerSetBit(exitChainingCell->predecessors, exitBB->id);
 
             cUnit.hasLoop = true;
         }
@@ -788,6 +793,7 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
             dvmInsertGrowableList(blockList, (intptr_t) fallThroughBB);
             fallThroughBB->startOffset = fallThroughOffset;
             curBB->fallThrough = fallThroughBB;
+            dvmCompilerSetBit(fallThroughBB->predecessors, curBB->id);
         }
         /* Target block not included in the trace */
         if (curBB->taken == NULL &&
@@ -835,6 +841,7 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
             }
             if (newBB) {
                 curBB->taken = newBB;
+                dvmCompilerSetBit(newBB->predecessors, curBB->id);
                 dvmInsertGrowableList(blockList, (intptr_t) newBB);
             }
         }
