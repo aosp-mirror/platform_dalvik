@@ -112,12 +112,12 @@ typedef struct JitTraceProfCounters {
  */
 
 typedef struct JitEntryInfo {
-    unsigned int           traceConstruction:1;   /* build underway? */
     unsigned int           isMethodEntry:1;
     unsigned int           inlineCandidate:1;
     unsigned int           profileEnabled:1;
-    JitInstructionSetType  instructionSet:4;
-    unsigned int           profileOffset:8;
+    JitInstructionSetType  instructionSet:3;
+    unsigned int           profileOffset:5;
+    unsigned int           unused:5;
     u2                     chain;                 /* Index of next in chain */
 } JitEntryInfo;
 
@@ -141,12 +141,12 @@ void dvmJitStopTranslationRequests(void);
 void dvmJitStats(void);
 bool dvmJitResizeJitTable(unsigned int size);
 void dvmJitResetTable(void);
-struct JitEntry *dvmFindJitEntry(const u2* pc);
+struct JitEntry *dvmJitFindEntry(const u2* pc, bool isMethodEntry);
 s8 dvmJitd2l(double d);
 s8 dvmJitf2l(float f);
 void dvmJitSetCodeAddr(const u2* dPC, void *nPC, JitInstructionSetType set,
                        bool isMethodEntry, int profilePrefixSize);
-void dvmJitAbortTraceSelect(InterpState* interpState);
+void dvmJitEndTraceSelect(InterpState* interpState);
 JitTraceCounter_t *dvmJitNextTraceCounter(void);
 void dvmJitTraceProfilingOff(void);
 void dvmJitTraceProfilingOn(void);

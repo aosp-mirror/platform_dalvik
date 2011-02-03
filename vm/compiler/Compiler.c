@@ -50,10 +50,38 @@ static CompilerWorkOrder workDequeue(void)
     return work;
 }
 
+
+/*
+ * Enqueue a work order - retrying until successful.  If attempt to enqueue
+ * is repeatedly unsuccessful, assume the JIT is in a bad state and force a
+ * code cache reset.
+ */
+#define ENQUEUE_MAX_RETRIES 20
+void dvmCompilerForceWorkEnqueue(const u2 *pc, WorkOrderKind kind, void* info)
+{
+    bool success;
+    int retries = 0;
+    do {
+        success = dvmCompilerWorkEnqueue(pc, kind, info);
+        if (!success) {
+            retries++;
+            if (retries > ENQUEUE_MAX_RETRIES) {
+                LOGE("JIT: compiler queue wedged - forcing reset");
+                gDvmJit.codeCacheFull = true;  // Force reset
+                success = true;  // Because we'll drop the order now anyway
+            } else {
+                dvmLockMutex(&gDvmJit.compilerLock);
+                pthread_cond_wait(&gDvmJit.compilerQueueActivity,
+                                  &gDvmJit.compilerLock);
+                dvmUnlockMutex(&gDvmJit.compilerLock);
+
+            }
+        }
+    } while (!success);
+}
+
 /*
  * Attempt to enqueue a work order, returning true if successful.
- * This routine will not block, but simply return if it couldn't
- * aquire the lock or if the queue is full.
  *
  * NOTE: Make sure that the caller frees the info pointer if the return value
  * is false.
@@ -65,9 +93,7 @@ bool dvmCompilerWorkEnqueue(const u2 *pc, WorkOrderKind kind, void* info)
     int numWork;
     bool result = true;
 
-    if (dvmTryLockMutex(&gDvmJit.compilerLock)) {
-        return false;  // Couldn't acquire the lock
-    }
+    dvmLockMutex(&gDvmJit.compilerLock);
 
     /*
      * Return if queue or code cache is full.

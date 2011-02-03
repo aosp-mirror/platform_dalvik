@@ -4549,6 +4549,11 @@ void *dvmCompilerGetInterpretTemplate()
                       templateEntryOffsets[TEMPLATE_INTERPRET]);
 }
 
+JitInstructionSetType dvmCompilerGetInterpretTemplateSet()
+{
+    return DALVIK_JIT_ARM;
+}
+
 /* Needed by the Assembler */
 void dvmCompilerSetupResourceMasks(ArmLIR *lir)
 {

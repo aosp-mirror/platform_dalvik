@@ -419,7 +419,7 @@ static inline bool checkForNullExportPC(Object* obj, u4* fp, const u2* pc)
 
 #define CHECK_JIT_BOOL() (false)
 #define CHECK_JIT_VOID()
-#define ABORT_JIT_TSELECT() ((void)0)
+#define END_JIT_TSELECT() ((void)0)
 
 /* File: portable/stubdefs.c */
 /*
@@ -1200,7 +1200,7 @@ GOTO_TARGET_DECL(exceptionThrown);
             if (sfield == NULL)                                             \
                 GOTO_exceptionThrown();                                     \
             if (dvmDexGetResolvedField(methodClassDex, ref) == NULL) {      \
-                ABORT_JIT_TSELECT();                                        \
+                END_JIT_TSELECT();                                        \
             }                                                               \
         }                                                                   \
         SET_REGISTER##_regsize(vdst, dvmGetStaticField##_ftype(sfield));    \
@@ -1224,7 +1224,7 @@ GOTO_TARGET_DECL(exceptionThrown);
             if (sfield == NULL)                                             \
                 GOTO_exceptionThrown();                                     \
             if (dvmDexGetResolvedField(methodClassDex, ref) == NULL) {      \
-                ABORT_JIT_TSELECT();                                        \
+                END_JIT_TSELECT();                                        \
             }                                                               \
         }                                                                   \
         SET_REGISTER##_regsize(vdst, dvmGetStaticField##_ftype(sfield));    \
@@ -1248,7 +1248,7 @@ GOTO_TARGET_DECL(exceptionThrown);
             if (sfield == NULL)                                             \
                 GOTO_exceptionThrown();                                     \
             if (dvmDexGetResolvedField(methodClassDex, ref) == NULL) {      \
-                ABORT_JIT_TSELECT();                                        \
+                END_JIT_TSELECT();                                        \
             }                                                               \
         }                                                                   \
         dvmSetStaticField##_ftype(sfield, GET_REGISTER##_regsize(vdst));    \
@@ -1272,7 +1272,7 @@ GOTO_TARGET_DECL(exceptionThrown);
             if (sfield == NULL)                                             \
                 GOTO_exceptionThrown();                                     \
             if (dvmDexGetResolvedField(methodClassDex, ref) == NULL) {      \
-                ABORT_JIT_TSELECT();                                        \
+                END_JIT_TSELECT();                                        \
             }                                                               \
         }                                                                   \
         dvmSetStaticField##_ftype(sfield, GET_REGISTER##_regsize(vdst));    \
@@ -1916,8 +1916,8 @@ HANDLE_OPCODE(OP_NEW_INSTANCE /*vAA, class@BBBB*/)
          * check is not needed for mterp.
          */
         if (!dvmDexGetResolvedClass(methodClassDex, ref)) {
-            /* Class initialization is still ongoing - abandon the trace */
-            ABORT_JIT_TSELECT();
+            /* Class initialization is still ongoing - end the trace */
+            END_JIT_TSELECT();
         }
 
         /*
@@ -3372,8 +3372,8 @@ HANDLE_OPCODE(OP_NEW_INSTANCE_JUMBO /*vBBBB, class@AAAAAAAA*/)
          * check is not needed for mterp.
          */
         if (!dvmDexGetResolvedClass(methodClassDex, ref)) {
-            /* Class initialization is still ongoing - abandon the trace */
-            ABORT_JIT_TSELECT();
+            /* Class initialization is still ongoing - end the trace */
+            END_JIT_TSELECT();
         }
 
         /*
@@ -4921,7 +4921,7 @@ GOTO_TARGET(invokeStatic, bool methodCallRange, bool jumboFormat)
          */
         if (dvmDexGetResolvedMethod(methodClassDex, ref) == NULL) {
             /* Class initialization is still ongoing */
-            ABORT_JIT_TSELECT();
+            END_JIT_TSELECT();
         }
     }
     GOTO_invokeMethod(methodCallRange, methodToCall, vsrc1, vdst);
@@ -5134,8 +5134,8 @@ GOTO_TARGET(exceptionThrown)
         PERIODIC_CHECKS(kInterpEntryThrow, 0);
 
 #if defined(WITH_JIT)
-        // Something threw during trace selection - abort the current trace
-        ABORT_JIT_TSELECT();
+        // Something threw during trace selection - end the current trace
+        END_JIT_TSELECT();
 #endif
         /*
          * We save off the exception and clear the exception status.  While
