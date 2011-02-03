@@ -268,7 +268,12 @@ public class SCCP {
                         vR = vA + vB;
                         break;
                     case RegOps.SUB:
-                        vR = vA - vB;
+                        // 1 source for reverse sub, 2 sources for regular sub
+                        if (sources.size() == 1) {
+                            vR = vB - vA;
+                        } else {
+                            vR = vA - vB;
+                        }
                         break;
                     case RegOps.MUL:
                         vR = vA * vB;
