@@ -242,14 +242,11 @@ bool dvmHoldsLock(Thread* thread, Object* obj)
  * Free the monitor associated with an object and make the object's lock
  * thin again.  This is called during garbage collection.
  */
-static void freeObjectMonitor(Object* obj)
+static void freeMonitor(Monitor *mon)
 {
-    Monitor *mon;
-
-    assert(LW_SHAPE(obj->lock) == LW_SHAPE_FAT);
-
-    mon = LW_MONITOR(obj->lock);
-    obj->lock = DVM_LOCK_INITIAL_THIN_VALUE;
+    assert(mon != NULL);
+    assert(mon->obj != NULL);
+    assert(LW_SHAPE(mon->obj->lock) == LW_SHAPE_FAT);
 
     /* This lock is associated with an object
      * that's being swept.  The only possible way
@@ -280,8 +277,9 @@ void dvmSweepMonitorList(Monitor** mon, int (*isUnmarkedObject)(void*))
     while (curr != NULL) {
         obj = curr->obj;
         if (obj != NULL && (*isUnmarkedObject)(obj) != 0) {
-            prev->next = curr = curr->next;
-            freeObjectMonitor(obj);
+            prev->next = curr->next;
+            freeMonitor(curr);
+            curr = prev->next;
         } else {
             prev = curr;
             curr = curr->next;
