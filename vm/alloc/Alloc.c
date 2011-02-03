@@ -326,7 +326,7 @@ static void countAssignableInstancesOfClassCallback(void *ptr, void *arg)
     const Object *obj = (const Object *)ptr;
 
     assert(ctx != NULL);
-    if (dvmInstanceof(obj->clazz, ctx->clazz)) {
+    if (obj->clazz != NULL && dvmInstanceof(obj->clazz, ctx->clazz)) {
         ctx->count += 1;
     }
 }
