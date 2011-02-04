@@ -18,9 +18,9 @@ package com.android.dx.merge;
 
 import com.android.dx.dex.DexException;
 import com.android.dx.io.CodeReader;
-import com.android.dx.io.DecodedInstruction;
 import com.android.dx.io.OpcodeInfo;
-import com.android.dx.io.ShortArrayCodeOutput;
+import com.android.dx.io.instructions.DecodedInstruction;
+import com.android.dx.io.instructions.ShortArrayCodeOutput;
 
 final class InstructionTransformer {
     private final IndexMap indexMap;

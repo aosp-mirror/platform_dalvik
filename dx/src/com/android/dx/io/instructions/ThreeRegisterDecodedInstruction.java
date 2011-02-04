@@ -14,12 +14,14 @@
  * limitations under the License.
  */
 
-package com.android.dx.io;
+package com.android.dx.io.instructions;
+
+import com.android.dx.io.IndexType;
 
 /**
- * A decoded Dalvik instruction which has five register arguments.
+ * A decoded Dalvik instruction which has three register arguments.
  */
-public final class FiveRegisterDecodedInstruction extends DecodedInstruction {
+public final class ThreeRegisterDecodedInstruction extends DecodedInstruction {
     /** register argument "A" */
     private final int a;
 
@@ -29,30 +31,22 @@ public final class FiveRegisterDecodedInstruction extends DecodedInstruction {
     /** register argument "C" */
     private final int c;
 
-    /** register argument "D" */
-    private final int d;
-
-    /** register argument "E" */
-    private final int e;
-
     /**
      * Constructs an instance.
      */
-    public FiveRegisterDecodedInstruction(InstructionCodec format, int opcode,
+    public ThreeRegisterDecodedInstruction(InstructionCodec format, int opcode,
             int index, IndexType indexType, int target, long literal,
-            int a, int b, int c, int d, int e) {
+            int a, int b, int c) {
         super(format, opcode, index, indexType, target, literal);
 
         this.a = a;
         this.b = b;
         this.c = c;
-        this.d = d;
-        this.e = e;
     }
 
     /** @inheritDoc */
     public int getRegisterCount() {
-        return 5;
+        return 3;
     }
 
     /** @inheritDoc */
@@ -71,19 +65,9 @@ public final class FiveRegisterDecodedInstruction extends DecodedInstruction {
     }
 
     /** @inheritDoc */
-    public int getD() {
-        return d;
-    }
-
-    /** @inheritDoc */
-    public int getE() {
-        return e;
-    }
-
-    /** @inheritDoc */
     public DecodedInstruction withIndex(int newIndex) {
-        return new FiveRegisterDecodedInstruction(
+        return new ThreeRegisterDecodedInstruction(
                 getFormat(), getOpcode(), newIndex, getIndexType(),
-                getTarget(), getLiteral(), a, b, c, d, e);
+                getTarget(), getLiteral(), a, b, c);
     }
 }

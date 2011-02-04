@@ -14,9 +14,12 @@
  * limitations under the License.
  */
 
-package com.android.dx.io;
+package com.android.dx.io.instructions;
 
 import com.android.dx.dex.DexException;
+import com.android.dx.io.IndexType;
+import com.android.dx.io.OpcodeInfo;
+import com.android.dx.io.Opcodes;
 import com.android.dx.util.Hex;
 
 import java.io.EOFException;

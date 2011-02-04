@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.dx.io;
+package com.android.dx.io.instructions;
 
 /**
  * Cursor over code units, for reading or writing out Dalvik bytecode.

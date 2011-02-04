@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.dx.io;
+package com.android.dx.io.instructions;
 
 /**
  * Output stream of code units, for writing out Dalvik bytecode.

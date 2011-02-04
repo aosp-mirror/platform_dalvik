@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.dx.io;
+package com.android.dx.io.instructions;
 
 /**
  * A decoded Dalvik instruction which contains the payload for

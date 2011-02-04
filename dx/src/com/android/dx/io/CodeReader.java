@@ -17,6 +17,7 @@
 package com.android.dx.io;
 
 import com.android.dx.dex.DexException;
+import com.android.dx.io.instructions.DecodedInstruction;
 
 /**
  * Walks through a block of code and calls visitor call backs.

@@ -14,45 +14,31 @@
  * limitations under the License.
  */
 
-package com.android.dx.io;
+package com.android.dx.io.instructions;
+
+import com.android.dx.io.IndexType;
 
 /**
- * A decoded Dalvik instruction which has register range arguments (an
- * "A" start register and a register count).
+ * A decoded Dalvik instruction which has no register arguments.
  */
-public final class RegisterRangeDecodedInstruction extends DecodedInstruction {
-    /** register argument "A" */
-    private final int a;
-
-    /** register count */
-    private final int registerCount;
-
+public final class ZeroRegisterDecodedInstruction extends DecodedInstruction {
     /**
      * Constructs an instance.
      */
-    public RegisterRangeDecodedInstruction(InstructionCodec format, int opcode,
-            int index, IndexType indexType, int target, long literal,
-            int a, int registerCount) {
+    public ZeroRegisterDecodedInstruction(InstructionCodec format, int opcode,
+            int index, IndexType indexType, int target, long literal) {
         super(format, opcode, index, indexType, target, literal);
-
-        this.a = a;
-        this.registerCount = registerCount;
     }
 
     /** @inheritDoc */
     public int getRegisterCount() {
-        return registerCount;
-    }
-
-    /** @inheritDoc */
-    public int getA() {
-        return a;
+        return 0;
     }
 
     /** @inheritDoc */
     public DecodedInstruction withIndex(int newIndex) {
-        return new RegisterRangeDecodedInstruction(
+        return new ZeroRegisterDecodedInstruction(
                 getFormat(), getOpcode(), newIndex, getIndexType(),
-                getTarget(), getLiteral(), a, registerCount);
+                getTarget(), getLiteral());
     }
 }

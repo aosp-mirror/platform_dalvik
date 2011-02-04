@@ -14,7 +14,9 @@
  * limitations under the License.
  */
 
-package com.android.dx.io;
+package com.android.dx.io.instructions;
+
+import com.android.dx.io.IndexType;
 
 /**
  * A decoded Dalvik instruction which has five register arguments.

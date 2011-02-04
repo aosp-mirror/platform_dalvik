@@ -16,6 +16,7 @@
 
 package com.android.dx.io;
 
+import com.android.dx.io.instructions.InstructionCodec;
 import com.android.dx.util.Hex;
 
 /**

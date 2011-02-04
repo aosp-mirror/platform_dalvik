@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.dx.io;
+package com.android.dx.io.instructions;
 
 /**
  * Implementation of {@code CodeOutput} that writes to a {@code short[]}.

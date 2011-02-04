@@ -14,37 +14,31 @@
  * limitations under the License.
  */
 
-package com.android.dx.io;
+package com.android.dx.io.instructions;
+
+import com.android.dx.io.IndexType;
 
 /**
- * A decoded Dalvik instruction which has three register arguments.
+ * A decoded Dalvik instruction which has one register argument.
  */
-public final class ThreeRegisterDecodedInstruction extends DecodedInstruction {
+public final class OneRegisterDecodedInstruction extends DecodedInstruction {
     /** register argument "A" */
     private final int a;
-
-    /** register argument "B" */
-    private final int b;
-
-    /** register argument "C" */
-    private final int c;
 
     /**
      * Constructs an instance.
      */
-    public ThreeRegisterDecodedInstruction(InstructionCodec format, int opcode,
+    public OneRegisterDecodedInstruction(InstructionCodec format, int opcode,
             int index, IndexType indexType, int target, long literal,
-            int a, int b, int c) {
+            int a) {
         super(format, opcode, index, indexType, target, literal);
 
         this.a = a;
-        this.b = b;
-        this.c = c;
     }
 
     /** @inheritDoc */
     public int getRegisterCount() {
-        return 3;
+        return 1;
     }
 
     /** @inheritDoc */
@@ -53,19 +47,9 @@ public final class ThreeRegisterDecodedInstruction extends DecodedInstruction {
     }
 
     /** @inheritDoc */
-    public int getB() {
-        return b;
-    }
-
-    /** @inheritDoc */
-    public int getC() {
-        return c;
-    }
-
-    /** @inheritDoc */
     public DecodedInstruction withIndex(int newIndex) {
-        return new ThreeRegisterDecodedInstruction(
+        return new OneRegisterDecodedInstruction(
                 getFormat(), getOpcode(), newIndex, getIndexType(),
-                getTarget(), getLiteral(), a, b, c);
+                getTarget(), getLiteral(), a);
     }
 }
