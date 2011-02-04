@@ -31,8 +31,8 @@ public final class TwoRegisterDecodedInstruction extends DecodedInstruction {
      */
     public TwoRegisterDecodedInstruction(InstructionCodec format, int opcode,
             int index, IndexType indexType, int target, long literal,
-            short[] data, int a, int b) {
-        super(format, opcode, index, indexType, target, literal, data);
+            int a, int b) {
+        super(format, opcode, index, indexType, target, literal);
 
         this.a = a;
         this.b = b;
@@ -57,6 +57,6 @@ public final class TwoRegisterDecodedInstruction extends DecodedInstruction {
     public DecodedInstruction withIndex(int newIndex) {
         return new TwoRegisterDecodedInstruction(
                 getFormat(), getOpcode(), newIndex, getIndexType(),
-                getTarget(), getLiteral(), getData(), a, b);
+                getTarget(), getLiteral(), a, b);
     }
 }

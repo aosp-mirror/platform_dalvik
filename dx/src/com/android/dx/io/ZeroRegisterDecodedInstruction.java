@@ -24,9 +24,8 @@ public final class ZeroRegisterDecodedInstruction extends DecodedInstruction {
      * Constructs an instance.
      */
     public ZeroRegisterDecodedInstruction(InstructionCodec format, int opcode,
-            int index, IndexType indexType, int target, long literal,
-            short[] data) {
-        super(format, opcode, index, indexType, target, literal, data);
+            int index, IndexType indexType, int target, long literal) {
+        super(format, opcode, index, indexType, target, literal);
     }
 
     /** @inheritDoc */
@@ -38,6 +37,6 @@ public final class ZeroRegisterDecodedInstruction extends DecodedInstruction {
     public DecodedInstruction withIndex(int newIndex) {
         return new ZeroRegisterDecodedInstruction(
                 getFormat(), getOpcode(), newIndex, getIndexType(),
-                getTarget(), getLiteral(), getData());
+                getTarget(), getLiteral());
     }
 }

@@ -19,7 +19,7 @@ package com.android.dx.io;
 /**
  * Output stream of code units, for writing out Dalvik bytecode.
  */
-public interface CodeOutput {
+public interface CodeOutput extends CodeCursor {
     /**
      * Writes a code unit.
      */
@@ -46,7 +46,32 @@ public interface CodeOutput {
     public void write(short u0, short u1, short u2, short u3, short u4);
 
     /**
+     * Writes an {@code int}, little-endian.
+     */
+    public void writeInt(int value);
+
+    /**
+     * Writes a {@code long}, little-endian.
+     */
+    public void writeLong(long value);
+
+    /**
+     * Writes the contents of the given array.
+     */
+    public void write(byte[] data);
+
+    /**
      * Writes the contents of the given array.
      */
     public void write(short[] data);
+
+    /**
+     * Writes the contents of the given array.
+     */
+    public void write(int[] data);
+
+    /**
+     * Writes the contents of the given array.
+     */
+    public void write(long[] data);
 }

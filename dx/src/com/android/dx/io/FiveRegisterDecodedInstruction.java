@@ -40,8 +40,8 @@ public final class FiveRegisterDecodedInstruction extends DecodedInstruction {
      */
     public FiveRegisterDecodedInstruction(InstructionCodec format, int opcode,
             int index, IndexType indexType, int target, long literal,
-            short[] data, int a, int b, int c, int d, int e) {
-        super(format, opcode, index, indexType, target, literal, data);
+            int a, int b, int c, int d, int e) {
+        super(format, opcode, index, indexType, target, literal);
 
         this.a = a;
         this.b = b;
@@ -84,6 +84,6 @@ public final class FiveRegisterDecodedInstruction extends DecodedInstruction {
     public DecodedInstruction withIndex(int newIndex) {
         return new FiveRegisterDecodedInstruction(
                 getFormat(), getOpcode(), newIndex, getIndexType(),
-                getTarget(), getLiteral(), getData(), a, b, c, d, e);
+                getTarget(), getLiteral(), a, b, c, d, e);
     }
 }

@@ -37,8 +37,8 @@ public final class FourRegisterDecodedInstruction extends DecodedInstruction {
      */
     public FourRegisterDecodedInstruction(InstructionCodec format, int opcode,
             int index, IndexType indexType, int target, long literal,
-            short[] data, int a, int b, int c, int d) {
-        super(format, opcode, index, indexType, target, literal, data);
+            int a, int b, int c, int d) {
+        super(format, opcode, index, indexType, target, literal);
 
         this.a = a;
         this.b = b;
@@ -75,6 +75,6 @@ public final class FourRegisterDecodedInstruction extends DecodedInstruction {
     public DecodedInstruction withIndex(int newIndex) {
         return new FourRegisterDecodedInstruction(
                 getFormat(), getOpcode(), newIndex, getIndexType(),
-                getTarget(), getLiteral(), getData(), a, b, c, d);
+                getTarget(), getLiteral(), a, b, c, d);
     }
 }

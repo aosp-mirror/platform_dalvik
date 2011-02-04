@@ -48,8 +48,9 @@ public abstract class DecodedInstruction {
     private final IndexType indexType;
 
     /**
-     * target address argument. This is an absolute address, not just a
-     * signed offset.
+     * target address argument. This is an absolute address, not just
+     * a signed offset. <b>Note:</b> The address is unsigned, even
+     * though it is stored in an {@code int}.
      */
     private final int target;
 
@@ -59,9 +60,6 @@ public abstract class DecodedInstruction {
      * (formats 10x, 20t, 30t, and 32x)
      */
     private final long literal;
-
-    /** null-ok; literal data */
-    private final short[] data;
 
     /**
      * Decodes an instruction from the given input source.
@@ -99,8 +97,7 @@ public abstract class DecodedInstruction {
      * Constructs an instance.
      */
     public DecodedInstruction(InstructionCodec format, int opcode,
-            int index, IndexType indexType, int target, long literal,
-            short[] data) {
+            int index, IndexType indexType, int target, long literal) {
         if (format == null) {
             throw new NullPointerException("format == null");
         }
@@ -115,7 +112,6 @@ public abstract class DecodedInstruction {
         this.indexType = indexType;
         this.target = target;
         this.literal = literal;
-        this.data = data;
     }
 
     public final InstructionCodec getFormat() {
@@ -148,32 +144,50 @@ public abstract class DecodedInstruction {
         return indexType;
     }
 
+    /**
+     * Gets the raw target.
+     */
     public final int getTarget() {
         return target;
     }
 
     /**
-     * Gets the target, as a code unit. This will throw if the value is
-     * out of the range of a signed code unit.
+     * Gets the target as a relative offset from the given address.
      */
-    public final short getTargetUnit() {
-        if (target != (short) target) {
-            throw new DexException("Target out of range: " + Hex.s4(target));
-        }
-
-        return (short) target;
+    public final int getTarget(int baseAddress) {
+        return target - baseAddress;
     }
 
     /**
-     * Gets the target, masked to be a byte in size. This will throw
-     * if the value is out of the range of a signed byte.
+     * Gets the target as a relative offset from the given base
+     * address, as a code unit. This will throw if the value is out of
+     * the range of a signed code unit.
      */
-    public final int getTargetByte() {
-        if (target != (byte) target) {
-            throw new DexException("Target out of range: " + Hex.s4(target));
+    public final short getTargetUnit(int baseAddress) {
+        int relativeTarget = getTarget(baseAddress);
+
+        if (relativeTarget != (short) relativeTarget) {
+            throw new DexException("Target out of range: "
+                    + Hex.s4(relativeTarget));
         }
 
-        return target & 0xff;
+        return (short) relativeTarget;
+    }
+
+    /**
+     * Gets the target as a relative offset from the given base
+     * address, masked to be a byte in size. This will throw if the
+     * value is out of the range of a signed byte.
+     */
+    public final int getTargetByte(int baseAddress) {
+        int relativeTarget = getTarget(baseAddress);
+
+        if (relativeTarget != (byte) relativeTarget) {
+            throw new DexException("Target out of range: "
+                    + Hex.s4(relativeTarget));
+        }
+
+        return relativeTarget & 0xff;
     }
 
     public final long getLiteral() {
@@ -226,10 +240,6 @@ public abstract class DecodedInstruction {
         }
 
         return (int) literal & 0xf;
-    }
-
-    public final short[] getData() {
-        return data;
     }
 
     public abstract int getRegisterCount();

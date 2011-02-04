@@ -32,8 +32,8 @@ public final class RegisterRangeDecodedInstruction extends DecodedInstruction {
      */
     public RegisterRangeDecodedInstruction(InstructionCodec format, int opcode,
             int index, IndexType indexType, int target, long literal,
-            short[] data, int a, int registerCount) {
-        super(format, opcode, index, indexType, target, literal, data);
+            int a, int registerCount) {
+        super(format, opcode, index, indexType, target, literal);
 
         this.a = a;
         this.registerCount = registerCount;
@@ -53,6 +53,6 @@ public final class RegisterRangeDecodedInstruction extends DecodedInstruction {
     public DecodedInstruction withIndex(int newIndex) {
         return new RegisterRangeDecodedInstruction(
                 getFormat(), getOpcode(), newIndex, getIndexType(),
-                getTarget(), getLiteral(), getData(), a, registerCount);
+                getTarget(), getLiteral(), a, registerCount);
     }
 }

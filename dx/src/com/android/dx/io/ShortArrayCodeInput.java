@@ -21,12 +21,10 @@ import java.io.EOFException;
 /**
  * Implementation of {@code CodeInput} that reads from a {@code short[]}.
  */
-public final class ShortArrayCodeInput implements CodeInput {
+public final class ShortArrayCodeInput extends BaseCodeCursor
+        implements CodeInput {
     /** source array to read from */
     private final short[] array;
-
-    /** next index within {@link #array} to read from */
-    private int cursor;
 
     /**
      * Constructs an instance.
@@ -37,23 +35,19 @@ public final class ShortArrayCodeInput implements CodeInput {
         }
 
         this.array = array;
-        this.cursor = 0;
-    }
-
-    /** @inheritDoc */
-    public int cursor() {
-        return cursor;
     }
 
     /** @inheritDoc */
     public boolean hasMore() {
-        return cursor < array.length;
+        return cursor() < array.length;
     }
 
     /** @inheritDoc */
     public int read() throws EOFException {
         try {
-            return array[cursor++];
+            int value = array[cursor()];
+            advance(1);
+            return value;
         } catch (ArrayIndexOutOfBoundsException ex) {
             throw new EOFException();
         }

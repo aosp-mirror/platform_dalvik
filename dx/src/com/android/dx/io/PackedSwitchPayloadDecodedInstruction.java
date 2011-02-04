@@ -17,37 +17,46 @@
 package com.android.dx.io;
 
 /**
- * A decoded Dalvik instruction which has one register argument.
+ * A decoded Dalvik instruction which contains the payload for
+ * a {@code packed-switch} instruction.
  */
-public final class OneRegisterDecodedInstruction extends DecodedInstruction {
-    /** register argument "A" */
-    private final int a;
+public final class PackedSwitchPayloadDecodedInstruction
+        extends DecodedInstruction {
+    /** first key value */
+    private final int firstKey;
+
+    /**
+     * array of target addresses. These are absolute, not relative,
+     * addresses.
+     */
+    private final int[] targets;
 
     /**
      * Constructs an instance.
      */
-    public OneRegisterDecodedInstruction(InstructionCodec format, int opcode,
-            int index, IndexType indexType, int target, long literal,
-            int a) {
-        super(format, opcode, index, indexType, target, literal);
+    public PackedSwitchPayloadDecodedInstruction(InstructionCodec format,
+            int opcode, int firstKey, int[] targets) {
+        super(format, opcode, 0, null, 0, 0L);
 
-        this.a = a;
+        this.firstKey = firstKey;
+        this.targets = targets;
     }
 
     /** @inheritDoc */
     public int getRegisterCount() {
-        return 1;
+        return 0;
     }
 
-    /** @inheritDoc */
-    public int getA() {
-        return a;
+    public int getFirstKey() {
+        return firstKey;
+    }
+
+    public int[] getTargets() {
+        return targets;
     }
 
     /** @inheritDoc */
     public DecodedInstruction withIndex(int newIndex) {
-        return new OneRegisterDecodedInstruction(
-                getFormat(), getOpcode(), newIndex, getIndexType(),
-                getTarget(), getLiteral(), a);
+        throw new UnsupportedOperationException("no index in instruction");
     }
 }

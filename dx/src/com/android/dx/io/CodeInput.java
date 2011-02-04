@@ -21,14 +21,7 @@ import java.io.EOFException;
 /**
  * Input stream of code units, for reading in Dalvik bytecode.
  */
-public interface CodeInput {
-    /**
-     * Gets the cursor. The cursor is the offset in code units from
-     * the start of the input of the next code unit to be read, where
-     * the input generally consists of the code for a single method.
-     */
-    public int cursor();
-
+public interface CodeInput extends CodeCursor {
     /**
      * Returns whether there are any more code units to read. This
      * is analogous to {@code hasNext()} on an interator.
