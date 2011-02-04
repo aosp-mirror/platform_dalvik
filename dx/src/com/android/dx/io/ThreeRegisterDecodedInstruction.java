@@ -34,8 +34,8 @@ public final class ThreeRegisterDecodedInstruction extends DecodedInstruction {
      */
     public ThreeRegisterDecodedInstruction(InstructionCodec format, int opcode,
             int index, IndexType indexType, int target, long literal,
-            short[] data, int a, int b, int c) {
-        super(format, opcode, index, indexType, target, literal, data);
+            int a, int b, int c) {
+        super(format, opcode, index, indexType, target, literal);
 
         this.a = a;
         this.b = b;
@@ -66,6 +66,6 @@ public final class ThreeRegisterDecodedInstruction extends DecodedInstruction {
     public DecodedInstruction withIndex(int newIndex) {
         return new ThreeRegisterDecodedInstruction(
                 getFormat(), getOpcode(), newIndex, getIndexType(),
-                getTarget(), getLiteral(), getData(), a, b, c);
+                getTarget(), getLiteral(), a, b, c);
     }
 }

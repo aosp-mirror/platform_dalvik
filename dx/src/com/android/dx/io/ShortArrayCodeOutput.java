@@ -19,15 +19,15 @@ package com.android.dx.io;
 /**
  * Implementation of {@code CodeOutput} that writes to a {@code short[]}.
  */
-public final class ShortArrayCodeOutput implements CodeOutput {
+public final class ShortArrayCodeOutput extends BaseCodeCursor
+        implements CodeOutput {
     /** array to write to */
     private final short[] array;
 
-    /** next index within {@link #array} to write */
-    private int cursor;
-
     /**
      * Constructs an instance.
+     *
+     * @param maxSize the maximum number of code units that will be written
      */
     public ShortArrayCodeOutput(int maxSize) {
         if (maxSize < 0) {
@@ -35,7 +35,6 @@ public final class ShortArrayCodeOutput implements CodeOutput {
         }
 
         this.array = new short[maxSize];
-        this.cursor = 0;
     }
 
     /**
@@ -43,6 +42,8 @@ public final class ShortArrayCodeOutput implements CodeOutput {
      * written (e.g. no leftover space at the end).
      */
     public short[] getArray() {
+        int cursor = cursor();
+
         if (cursor == array.length) {
             return array;
         }
@@ -54,7 +55,8 @@ public final class ShortArrayCodeOutput implements CodeOutput {
 
     /** @inheritDoc */
     public void write(short codeUnit) {
-        array[cursor++] = codeUnit;
+        array[cursor()] = codeUnit;
+        advance(1);
     }
 
     /** @inheritDoc */
@@ -88,9 +90,57 @@ public final class ShortArrayCodeOutput implements CodeOutput {
     }
 
     /** @inheritDoc */
+    public void writeInt(int value) {
+        write((short) value);
+        write((short) (value >> 16));
+    }
+
+    /** @inheritDoc */
+    public void writeLong(long value) {
+        write((short) value);
+        write((short) (value >> 16));
+        write((short) (value >> 32));
+        write((short) (value >> 48));
+    }
+
+    /** @inheritDoc */
+    public void write(byte[] data) {
+        int value = 0;
+        boolean even = true;
+        for (byte b : data) {
+            if (even) {
+                value = b & 0xff;
+                even = false;
+            } else {
+                value |= b << 8;
+                write((short) value);
+                even = true;
+            }
+        }
+
+        if (!even) {
+            write((short) value);
+        }
+    }
+
+    /** @inheritDoc */
     public void write(short[] data) {
         for (short unit : data) {
             write(unit);
+        }
+    }
+
+    /** @inheritDoc */
+    public void write(int[] data) {
+        for (int i : data) {
+            writeInt(i);
+        }
+    }
+
+    /** @inheritDoc */
+    public void write(long[] data) {
+        for (long l : data) {
+            writeLong(l);
         }
     }
 }
