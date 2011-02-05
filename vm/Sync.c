@@ -14,23 +14,6 @@
  * limitations under the License.
  */
 
-/*
- * Fundamental synchronization mechanisms.
- *
- * The top part of the file has operations on "monitor" structs; the
- * next part has the native calls on objects.
- *
- * The current implementation uses "thin locking" to avoid allocating
- * an Object's full Monitor struct until absolutely necessary (i.e.,
- * during contention or a call to wait()).
- *
- * TODO: make improvements to thin locking
- * We may be able to improve performance and reduce memory requirements by:
- *  - reverting to a thin lock once the Monitor is no longer necessary
- *  - using a pool of monitor objects, with some sort of recycling scheme
- *
- * TODO: recycle native-level monitors when objects are garbage collected.
- */
 #include "Dalvik.h"
 
 #include <fcntl.h>
@@ -39,8 +22,6 @@
 #include <pthread.h>
 #include <time.h>
 #include <errno.h>
-
-#define LOG_THIN    LOGV
 
 /*
  * Every Object has a monitor associated with it, but not every Object is
@@ -947,8 +928,8 @@ retry:
                 goto retry;
             }
         } else {
-            LOG_THIN("(%d) spin on lock %p: %#x (%#x) %#x",
-                     threadId, &obj->lock, 0, *thinp, thin);
+            LOGV("(%d) spin on lock %p: %#x (%#x) %#x",
+                 threadId, &obj->lock, 0, *thinp, thin);
             /*
              * The lock is owned by another thread.  Notify the VM
              * that we are about to wait.
@@ -1009,14 +990,14 @@ retry:
                      * Let the VM know we are no longer waiting and
                      * try again.
                      */
-                    LOG_THIN("(%d) lock %p surprise-fattened",
+                    LOGV("(%d) lock %p surprise-fattened",
                              threadId, &obj->lock);
                     dvmChangeStatus(self, oldStatus);
                     goto retry;
                 }
             }
-            LOG_THIN("(%d) spin on lock done %p: %#x (%#x) %#x",
-                     threadId, &obj->lock, 0, *thinp, thin);
+            LOGV("(%d) spin on lock done %p: %#x (%#x) %#x",
+                 threadId, &obj->lock, 0, *thinp, thin);
             /*
              * We have acquired the thin lock.  Let the VM know that
              * we are no longer waiting.
@@ -1026,7 +1007,7 @@ retry:
              * Fatten the lock.
              */
             inflateMonitor(self, obj);
-            LOG_THIN("(%d) lock %p fattened", threadId, &obj->lock);
+            LOGV("(%d) lock %p fattened", threadId, &obj->lock);
         }
     } else {
         /*
@@ -1129,7 +1110,7 @@ void dvmObjectWait(Thread* self, Object *obj, s8 msec, s4 nsec,
          * any other thread gets a chance.
          */
         inflateMonitor(self, obj);
-        LOG_THIN("(%d) lock %p fattened by wait()", self->threadId, &obj->lock);
+        LOGV("(%d) lock %p fattened by wait()", self->threadId, &obj->lock);
     }
     mon = LW_MONITOR(obj->lock);
     waitMonitor(self, mon, msec, nsec, interruptShouldThrow);
