@@ -134,31 +134,6 @@ void dvmFreeMonitorList(void)
 }
 
 /*
- * Log some info about our monitors.
- */
-void dvmDumpMonitorInfo(const char* msg)
-{
-    if (gDvm.zygote) {
-        return;
-    }
-
-    int totalCount;
-    int liveCount;
-
-    totalCount = liveCount = 0;
-    Monitor* mon = gDvm.monitorList;
-    while (mon != NULL) {
-        totalCount++;
-        if (mon->obj != NULL)
-            liveCount++;
-        mon = mon->next;
-    }
-
-    LOGD("%s: monitor list has %d entries (%d live)\n",
-        msg, totalCount, liveCount);
-}
-
-/*
  * Get the object that a monitor is part of.
  */
 Object* dvmGetMonitorObject(Monitor* mon)
