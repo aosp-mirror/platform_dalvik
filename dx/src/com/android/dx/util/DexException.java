@@ -14,18 +14,18 @@
  * limitations under the License.
  */
 
-package com.android.dx.dex;
-
-// TODO: Move this class to dx.util.
+package com.android.dx.util;
 
 /**
- * Thrown when there's a format problem reading or writing a dex file.
+ * Thrown when there's a format problem reading, writing, or generally
+ * processing a dex file.
  */
-public final class DexException extends RuntimeException {
+public final class DexException extends ExceptionWithContext {
     public DexException(String message) {
         super(message);
     }
-    public DexException(Exception cause) {
+
+    public DexException(Throwable cause) {
         super(cause);
     }
 }

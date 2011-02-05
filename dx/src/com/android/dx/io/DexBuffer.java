@@ -16,9 +16,9 @@
 
 package com.android.dx.io;
 
-import com.android.dx.dex.DexException;
 import com.android.dx.dex.SizeOf;
 import com.android.dx.dex.TableOfContents;
+import com.android.dx.util.DexException;
 import com.android.dx.util.Leb128Utils;
 import com.android.dx.util.Mutf8;
 import java.io.ByteArrayOutputStream;
