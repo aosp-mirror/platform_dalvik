@@ -15,39 +15,94 @@
  */
 
 /*
- * java.lang.Class
+ * java.lang.Class native methods
  */
 #include "Dalvik.h"
 #include "native/InternalNativePriv.h"
 
 /*
- * Call the appropriate copy function given the circumstances.
+ * The VM makes guarantees about the atomicity of accesses to primitive
+ * variables.  These guarantees also apply to elements of arrays.
+ * In particular, 8-bit, 16-bit, and 32-bit accesses must be atomic and
+ * must not cause "word tearing".  Accesses to 64-bit array elements must
+ * either be atomic or treated as two 32-bit operations.  References are
+ * always read and written atomically, regardless of the number of bits
+ * used to represent them.
+ *
+ * We can't rely on standard libc functions like memcpy() and memmove()
+ * in our implementation of System.arraycopy(), because they may copy
+ * byte-by-byte (either for the full run or for "unaligned" parts at the
+ * start or end).  We need to use functions that guarantee 16-bit or 32-bit
+ * atomicity as appropriate.
+ *
+ * System.arraycopy() is heavily used, so having an efficient implementation
+ * is important.  The bionic libc provides a platform-optimized memory move
+ * function that should be used when possible.  If it's not available,
+ * the trivial "reference implementation" versions below can be used until
+ * a proper version can be written.
+ *
+ * For these functions, The caller must guarantee that dest/src are aligned
+ * appropriately for the element type, and that n is a multiple of the
+ * element size.
  */
-static void copy(void *dest, const void *src, size_t n, bool sameArray,
-        size_t elemSize)
+#ifdef __BIONIC__
+/* always present in bionic libc */
+#define HAVE_MEMMOVE_WORDS
+#endif
+
+#ifdef HAVE_MEMMOVE_WORDS
+extern void _memmove_words(void* dest, const void* src, size_t n);
+#define move16 _memmove_words
+#define move32 _memmove_words
+#else
+static void move16(void* dest, const void* src, size_t n)
 {
-    if (sameArray) {
-        /* Might overlap. */
-        if (elemSize == sizeof(Object*)) {
-            /*
-             * In addition to handling overlap properly, on Bionic
-             * bcopy() guarantees atomic treatment of words, whereas
-             * Bionic memmove() does not (as of this writing).
-             * Atomicity is needed so that concurrent threads never
-             * see half-formed pointers or ints. The former is
-             * required for proper gc behavior, and the latter is also
-             * required for proper high-level language support.
-             *
-             * Note: bcopy()'s argument order is different than memcpy().
-             */
-            bcopy(src, dest, n);
-        } else {
-            memmove(dest, src, n);
+    assert((((uintptr_t) dest | (uintptr_t) src | n) & 0x01) == 0);
+
+    uint16_t* d = (uint16_t*) dest;
+    const uint16_t* s = (uint16_t*) src;
+
+    n /= sizeof(uint16_t);
+
+    if (d < s) {
+        /* copy forward */
+        while (n--) {
+            *d++ = *s++;
         }
     } else {
-        memcpy(dest, src, n); /* Can't overlap; use faster function. */
+        /* copy backward */
+        d += n;
+        s += n;
+        while (n--) {
+            *--d = *--s;
+        }
     }
 }
+
+static void move32(void* dest, const void* src, size_t n)
+{
+    assert((((uintptr_t) dest | (uintptr_t) src | n) & 0x03) == 0);
+
+    uint32_t* d = (uint32_t*) dest;
+    const uint32_t* s = (uint32_t*) src;
+
+    n /= sizeof(uint32_t);
+
+    if (d < s) {
+        /* copy forward */
+        while (n--) {
+            *d++ = *s++;
+        }
+    } else {
+        /* copy backward */
+        d += n;
+        s += n;
+        while (n--) {
+            *--d = *--s;
+        }
+    }
+}
+#endif /*HAVE_MEMMOVE_WORDS*/
 
 /*
  * public static void arraycopy(Object src, int srcPos, Object dest,
@@ -65,15 +120,12 @@ static void Dalvik_java_lang_System_arraycopy(const u4* args, JValue* pResult)
     int srcPos, dstPos, length;
     char srcType, dstType;
     bool srcPrim, dstPrim;
-    bool sameArray;
 
     srcArray = (ArrayObject*) args[0];
     srcPos = args[1];
     dstArray = (ArrayObject*) args[2];
     dstPos = args[3];
     length = args[4];
-
-    sameArray = (srcArray == dstArray);
 
     /* check for null or bad pointer */
     if (!dvmValidateObject((Object*)srcArray) ||
@@ -82,6 +134,7 @@ static void Dalvik_java_lang_System_arraycopy(const u4* args, JValue* pResult)
         assert(dvmCheckException(dvmThreadSelf()));
         RETURN_VOID();
     }
+
     /* make sure it's an array */
     if (!dvmIsArray(srcArray) || !dvmIsArray(dstArray)) {
         dvmThrowExceptionFmt("Ljava/lang/ArrayStoreException;",
@@ -91,7 +144,7 @@ static void Dalvik_java_lang_System_arraycopy(const u4* args, JValue* pResult)
         RETURN_VOID();
     }
 
-    // avoid int overflow
+    /* avoid int overflow */
     if (srcPos < 0 || dstPos < 0 || length < 0 ||
         srcPos > (int) srcArray->length - length ||
         dstPos > (int) dstArray->length - length)
@@ -114,8 +167,6 @@ static void Dalvik_java_lang_System_arraycopy(const u4* args, JValue* pResult)
     srcPrim = (srcType != '[' && srcType != 'L');
     dstPrim = (dstType != '[' && dstType != 'L');
     if (srcPrim || dstPrim) {
-        int width;
-
         if (srcPrim != dstPrim || srcType != dstType) {
             dvmThrowExceptionFmt("Ljava/lang/ArrayStoreException;",
                 "source and destination arrays are incompatible: %s and %s",
@@ -123,45 +174,53 @@ static void Dalvik_java_lang_System_arraycopy(const u4* args, JValue* pResult)
             RETURN_VOID();
         }
 
-        switch (srcClass->descriptor[1]) {
+        if (false) LOGD("arraycopy prim[%c] dst=%p %d src=%p %d len=%d\n",
+            srcType, dstArray->contents, dstPos,
+            srcArray->contents, srcPos, length);
+
+        switch (srcType) {
         case 'B':
         case 'Z':
-            width = 1;
+            /* 1 byte per element */
+            memmove((u1*) dstArray->contents + dstPos,
+                (const u1*) srcArray->contents + srcPos,
+                length);
             break;
         case 'C':
         case 'S':
-            width = 2;
+            /* 2 bytes per element */
+            move16((u1*) dstArray->contents + dstPos * 2,
+                (const u1*) srcArray->contents + srcPos * 2,
+                length * 2);
             break;
         case 'F':
         case 'I':
-            width = 4;
+            /* 4 bytes per element */
+            move32((u1*) dstArray->contents + dstPos * 4,
+                (const u1*) srcArray->contents + srcPos * 4,
+                length * 4);
             break;
         case 'D':
         case 'J':
-            width = 8;
+            /*
+             * 8 bytes per element.  We don't need to guarantee atomicity
+             * of the entire 64-bit word, so we can use the 32-bit copier.
+             */
+            move32((u1*) dstArray->contents + dstPos * 8,
+                (const u1*) srcArray->contents + srcPos * 8,
+                length * 8);
             break;
-        default:        /* 'V' or something weird */
+        default:        /* illegal array type */
             LOGE("Weird array type '%s'\n", srcClass->descriptor);
-            assert(false);
-            width = 0;
-            break;
+            dvmAbort();
         }
-
-        if (false) LOGVV("arraycopy prim dst=%p %d src=%p %d len=%d\n",
-                dstArray->contents, dstPos * width,
-                srcArray->contents, srcPos * width,
-                length * width);
-        copy((u1*)dstArray->contents + dstPos * width,
-                (const u1*)srcArray->contents + srcPos * width,
-                length * width,
-                sameArray, width);
     } else {
         /*
          * Neither class is primitive.  See if elements in "src" are instances
          * of elements in "dst" (e.g. copy String to String or String to
          * Object).
          */
-        int width = sizeof(Object*);
+        const int width = sizeof(Object*);
 
         if (srcClass->arrayDim == dstClass->arrayDim &&
             dvmInstanceof(srcClass, dstClass))
@@ -169,27 +228,26 @@ static void Dalvik_java_lang_System_arraycopy(const u4* args, JValue* pResult)
             /*
              * "dst" can hold "src"; copy the whole thing.
              */
-            if (false) LOGVV("arraycopy ref dst=%p %d src=%p %d len=%d\n",
+            if (false) LOGD("arraycopy ref dst=%p %d src=%p %d len=%d\n",
                 dstArray->contents, dstPos * width,
                 srcArray->contents, srcPos * width,
                 length * width);
-            copy((u1*)dstArray->contents + dstPos * width,
-                    (const u1*)srcArray->contents + srcPos * width,
-                    length * width,
-                    sameArray, width);
+            move32((u1*)dstArray->contents + dstPos * width,
+                (const u1*)srcArray->contents + srcPos * width,
+                length * width);
             dvmWriteBarrierArray(dstArray, dstPos, dstPos+length);
         } else {
             /*
-             * The arrays are not fundamentally compatible.  However, we may
-             * still be able to do this if the destination object is compatible
-             * (e.g. copy Object to String, but the Object being copied is
-             * actually a String).  We need to copy elements one by one until
-             * something goes wrong.
+             * The arrays are not fundamentally compatible.  However, we
+             * may still be able to do this if the destination object is
+             * compatible (e.g. copy Object[] to String[], but the Object
+             * being copied is actually a String).  We need to copy elements
+             * one by one until something goes wrong.
              *
-             * Because of overlapping moves, what we really want to do is
-             * compare the types and count up how many we can move, then call
-             * memmove() to shift the actual data.  If we just start from the
-             * front we could do a smear rather than a move.
+             * Because of overlapping moves, what we really want to do
+             * is compare the types and count up how many we can move,
+             * then call move32() to shift the actual data.  If we just
+             * start from the front we could do a smear rather than a move.
              */
             Object** srcObj;
             Object** dstObj;
@@ -217,14 +275,13 @@ static void Dalvik_java_lang_System_arraycopy(const u4* args, JValue* pResult)
                 }
             }
 
-            if (false) LOGVV("arraycopy iref dst=%p %d src=%p %d count=%d of %d\n",
+            if (false) LOGD("arraycopy iref dst=%p %d src=%p %d count=%d of %d\n",
                 dstArray->contents, dstPos * width,
                 srcArray->contents, srcPos * width,
                 copyCount, length);
-            copy((u1*)dstArray->contents + dstPos * width,
-                    (const u1*)srcArray->contents + srcPos * width,
-                    copyCount * width,
-                    sameArray, width);
+            move32((u1*)dstArray->contents + dstPos * width,
+                (const u1*)srcArray->contents + srcPos * width,
+                copyCount * width);
             dvmWriteBarrierArray(dstArray, 0, copyCount);
             if (copyCount != length) {
                 dvmThrowExceptionFmt("Ljava/lang/ArrayStoreException;",

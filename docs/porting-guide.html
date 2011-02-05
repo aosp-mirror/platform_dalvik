@@ -26,8 +26,7 @@ build system is assumed.
 <p>
 The native code in the core libraries (chiefly <code>libcore</code>,
 but also <code>dalvik/vm/native</code>) is written in C/C++ and is expected
-to work without modification in a Linux environment.  Much of the code
-comes directly from the Apache Harmony project.
+to work without modification in a Linux environment.
 </p><p>
 The core libraries pull in code from many other projects, including
 OpenSSL, zlib, and ICU.  These will also need to be ported before the VM
@@ -347,6 +346,22 @@ At some point you need to ensure that debuggers and profiling work with
 your interpreter.  The easiest way to do this is to simply connect a
 debugger or toggle profiling.  (A future test suite may include some
 tests for this.)
+</p>
+
+
+<h2>Other Performance Issues</h2>
+
+<p>
+The <code>System.arraycopy()</code> function is heavily used.  The
+implementation relies on the bionic C library to provide a fast,
+platform-optimized data copy function for arrays with elements wider
+than one byte.  If you're not using bionic, or your platform does not
+have an implementation of this method, Dalvik will use correct but
+sub-optimal algorithms instead.  For best performance you will want
+to provide your own version.
+</p><p>
+See the comments in <code>dalvik/vm/native/java_lang_System.c</code>
+for details.
 </p>
 
 <p>
