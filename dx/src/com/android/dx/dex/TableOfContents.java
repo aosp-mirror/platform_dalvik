@@ -17,6 +17,7 @@
 package com.android.dx.dex;
 
 import com.android.dx.io.DexBuffer;
+import com.android.dx.util.DexException;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
