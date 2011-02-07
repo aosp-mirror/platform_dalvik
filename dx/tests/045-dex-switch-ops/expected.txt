@@ -20,7 +20,7 @@ regs: 0005; ins: 0002; outs: 0000
   0013: move v0, v2
   0014: goto 0008 // -000c
   0015: nop // spacer
-  0016: packed-switch-data // for switch @ 0003
+  0016: packed-switch-payload // for switch @ 0003
           1: 00000009 // +00000006
           2: 0000000c // +00000009
           3: 0000000f // +0000000c
@@ -46,7 +46,7 @@ regs: 0005; ins: 0002; outs: 0000
   0012: const/16 v2, #int 50 // #0032
   0014: move v0, v2
   0015: goto 0008 // -000d
-  0016: sparse-switch-data // for switch @ 0003
+  0016: sparse-switch-payload // for switch @ 0003
           1: 00000009 // +00000006
           10: 0000000c // +00000009
           100: 0000000f // +0000000c

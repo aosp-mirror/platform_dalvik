@@ -14,7 +14,7 @@ regs: 0006; ins: 0002; outs: 0000
   000f: move v1, v3
   0010: goto 0006 // -000a
   0011: nop // spacer
-  0012: packed-switch-data // for switch @ 0003
+  0012: packed-switch-payload // for switch @ 0003
           1: 00000009 // +00000006
           2: 0000000d // +0000000a
 Blort.test2:(I)I:
@@ -37,7 +37,7 @@ regs: 0006; ins: 0002; outs: 0000
   0015: move-object v2, v3
   0016: goto 0006 // -0010
   0017: nop // spacer
-  0018: packed-switch-data // for switch @ 0003
+  0018: packed-switch-payload // for switch @ 0003
           1: 00000009 // +00000006
           2: 00000010 // +0000000d
   catches
@@ -64,7 +64,7 @@ regs: 0006; ins: 0002; outs: 0000
   0015: move v1, v3
   0016: goto 0006 // -0010
   0017: nop // spacer
-  0018: packed-switch-data // for switch @ 0003
+  0018: packed-switch-payload // for switch @ 0003
           1: 00000009 // +00000006
           2: 00000013 // +00000010
   catches
@@ -91,7 +91,7 @@ regs: 0006; ins: 0002; outs: 0000
   0015: move v1, v3
   0016: goto 0006 // -0010
   0017: nop // spacer
-  0018: packed-switch-data // for switch @ 0003
+  0018: packed-switch-payload // for switch @ 0003
           1: 00000009 // +00000006
           2: 00000013 // +00000010
   catches

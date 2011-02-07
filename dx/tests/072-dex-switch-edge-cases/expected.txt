@@ -18,7 +18,7 @@ regs: 0005; ins: 0002; outs: 0000
   0009: const/4 v2, #int 0 // #0
   000a: move v0, v2
   000b: goto 0008 // -0003
-  000c: packed-switch-data // for switch @ 0003
+  000c: packed-switch-payload // for switch @ 0003
           0: 00000009 // +00000006
 Blort.test3:(I)I:
 regs: 0005; ins: 0002; outs: 0000
@@ -32,7 +32,7 @@ regs: 0005; ins: 0002; outs: 0000
   0009: const/4 v2, #int 0 // #0
   000a: move v0, v2
   000b: goto 0008 // -0003
-  000c: packed-switch-data // for switch @ 0003
+  000c: packed-switch-payload // for switch @ 0003
           -2147483648: 00000009 // +00000006
 Blort.test4:(I)I:
 regs: 0005; ins: 0002; outs: 0000
@@ -46,7 +46,7 @@ regs: 0005; ins: 0002; outs: 0000
   0009: const/4 v2, #int 0 // #0
   000a: move v0, v2
   000b: goto 0008 // -0003
-  000c: packed-switch-data // for switch @ 0003
+  000c: packed-switch-payload // for switch @ 0003
           2147483647: 00000009 // +00000006
 Blort.test5:(I)I:
 regs: 0005; ins: 0002; outs: 0000
@@ -64,7 +64,7 @@ regs: 0005; ins: 0002; outs: 0000
   000d: move v0, v2
   000e: goto 0008 // -0006
   000f: nop // spacer
-  0010: sparse-switch-data // for switch @ 0003
+  0010: sparse-switch-payload // for switch @ 0003
           -2147483648: 0000000c // +00000009
           0: 00000009 // +00000006
 Blort.test6:(I)I:
@@ -83,7 +83,7 @@ regs: 0005; ins: 0002; outs: 0000
   000d: move v0, v2
   000e: goto 0008 // -0006
   000f: nop // spacer
-  0010: sparse-switch-data // for switch @ 0003
+  0010: sparse-switch-payload // for switch @ 0003
           0: 00000009 // +00000006
           2147483647: 0000000c // +00000009
 Blort.test7:(I)I:
@@ -102,7 +102,7 @@ regs: 0005; ins: 0002; outs: 0000
   000d: move v0, v2
   000e: goto 0008 // -0006
   000f: nop // spacer
-  0010: sparse-switch-data // for switch @ 0003
+  0010: sparse-switch-payload // for switch @ 0003
           -2147483648: 00000009 // +00000006
           2147483647: 0000000c // +00000009
 Blort.test8:(I)I:
@@ -121,6 +121,6 @@ regs: 0005; ins: 0002; outs: 0000
   000d: move v0, v2
   000e: goto 0008 // -0006
   000f: nop // spacer
-  0010: sparse-switch-data // for switch @ 0003
+  0010: sparse-switch-payload // for switch @ 0003
           0: 00000009 // +00000006
           1288490184: 0000000c // +00000009
