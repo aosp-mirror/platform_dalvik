@@ -221,6 +221,7 @@ int dvmJarFileOpen(const char* fileName, const char* odexOutputName,
         if (!dvmCheckOptHeaderAndDependencies(fd, false, 0, 0, true, true)) {
             LOGE("%s odex has stale dependencies\n", fileName);
             free(cachedName);
+            cachedName = NULL;
             close(fd);
             fd = -1;
             goto tryArchive;
