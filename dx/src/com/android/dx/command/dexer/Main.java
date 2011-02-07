@@ -187,9 +187,17 @@ public class Main {
         args = arguments;
         args.makeCfOptions();
 
-        File outFile = new File(args.outName);
-        if (args.incremental && outFile.exists()) {
-            minimumFileAge = outFile.lastModified();
+        File incrementalOutFile = null;
+        if (args.incremental) {
+            if (args.outName == null) {
+                System.err.println(
+                        "error: no incremental output name specified");
+                return -1;
+            }
+            incrementalOutFile = new File(args.outName);
+            if (incrementalOutFile.exists()) {
+                minimumFileAge = incrementalOutFile.lastModified();
+            }
         }
 
         if (!processAllFiles()) {
@@ -206,8 +214,8 @@ public class Main {
             return 2;
         }
 
-        if (args.incremental && outFile.exists()) {
-            outArray = merge(outArray, outFile);
+        if (args.incremental && incrementalOutFile.exists()) {
+            outArray = merge(outArray, incrementalOutFile);
         }
 
         if (args.jarOutput) {
