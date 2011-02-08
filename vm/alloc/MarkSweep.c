@@ -969,10 +969,11 @@ void dvmHeapProcessReferences(Object **softReferences, bool clearSoftRefs,
     assert(weakReferences != NULL);
     assert(phantomReferences != NULL);
     /*
-     * Unless we are required to clear soft references with white
-     * references, preserve some white referents.
+     * Unless we are in the zygote or required to clear soft
+     * references with white references, preserve some white
+     * referents.
      */
-    if (!clearSoftRefs) {
+    if (!gDvm.zygote && !clearSoftRefs) {
         preserveSomeSoftReferences(softReferences);
     }
     /*
