@@ -197,6 +197,7 @@ static void Dalvik_dalvik_system_DexFile_openDexFile(const u4* args,
         dvmThrowException("Ljava/io/IOException;",
             "Re-opening BOOTCLASSPATH DEX files is not allowed");
         free(sourceName);
+        free(outputName);
         RETURN_VOID();
     }
 

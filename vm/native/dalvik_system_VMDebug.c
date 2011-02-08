@@ -594,8 +594,10 @@ static void Dalvik_dalvik_system_VMDebug_dumpHprofData(const u4* args,
     int fd = -1;
     if (fileDescriptor != NULL) {
         fd = getFileDescriptor(fileDescriptor);
-        if (fd < 0)
+        if (fd < 0) {
+            free(fileName);
             RETURN_VOID();
+        }
     }
 
     result = hprofDumpHeap(fileName, fd, false);
