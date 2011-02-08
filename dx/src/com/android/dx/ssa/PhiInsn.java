@@ -73,6 +73,7 @@ public final class PhiInsn extends SsaInsn {
     }
 
     /** {@inheritDoc} */
+    @Override
     public PhiInsn clone() {
         throw new UnsupportedOperationException("can't clone phi");
     }
@@ -134,6 +135,25 @@ public final class PhiInsn extends SsaInsn {
     }
 
     /**
+     * Removes all operand uses of a register from this phi instruction.
+     *
+     * @param registerSpec register spec, including type and reg of operand
+     */
+    public void removePhiRegister(RegisterSpec registerSpec) {
+        ArrayList<Operand> operandsToRemove = new ArrayList<Operand>();
+        for (Operand o : operands) {
+            if (o.regSpec.getReg() == registerSpec.getReg()) {
+                operandsToRemove.add(o);
+            }
+        }
+
+        operands.removeAll(operandsToRemove);
+
+        // Un-cache sources, in case someone has already called getSources().
+        sources = null;
+    }
+
+    /**
      * Gets the index of the pred block associated with the RegisterSpec
      * at the particular getSources() index.
      *
@@ -180,6 +200,7 @@ public final class PhiInsn extends SsaInsn {
      *
      * @return {@code non-null;} sources list
      */
+    @Override
     public RegisterSpecList getSources() {
         if (sources != null) {
             return sources;

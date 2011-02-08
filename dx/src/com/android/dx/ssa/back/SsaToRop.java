@@ -248,8 +248,8 @@ public class SsaToRop {
         ssaMeth.computeReachability();
         int ropBlockCount = ssaMeth.getCountReachableBlocks();
 
-        // Don't count the exit block, if it exists.
-        ropBlockCount -= (exitBlock == null) ? 0 : 1;
+        // Don't count the exit block, if it exists and is reachable.
+        ropBlockCount -= (exitBlock != null && exitBlock.isReachable()) ? 1 : 0;
 
         BasicBlockList result = new BasicBlockList(ropBlockCount);
 
