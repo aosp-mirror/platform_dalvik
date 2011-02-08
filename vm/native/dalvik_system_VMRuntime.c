@@ -54,20 +54,6 @@ static void Dalvik_dalvik_system_VMRuntime_nativeSetTargetHeapUtilization(
 }
 
 /*
- * public native void gcSoftReferences()
- *
- * Does a GC and forces collection of SoftReferences that are
- * not strongly-reachable.
- */
-static void Dalvik_dalvik_system_VMRuntime_gcSoftReferences(const u4* args,
-    JValue* pResult)
-{
-    dvmCollectGarbage(true);
-
-    RETURN_VOID();
-}
-
-/*
  * public native void runFinalizationSync()
  *
  * Does not return until any pending finalizers have been called.
@@ -177,9 +163,7 @@ const DalvikNativeMethod dvm_dalvik_system_VMRuntime[] = {
         Dalvik_dalvik_system_VMRuntime_getTargetHeapUtilization },
     { "nativeSetTargetHeapUtilization", "(F)V",
         Dalvik_dalvik_system_VMRuntime_nativeSetTargetHeapUtilization },
-    { "gcSoftReferences", "()V",
-        Dalvik_dalvik_system_VMRuntime_gcSoftReferences },
-    { "runFinalizationSync", "()V",
+     { "runFinalizationSync", "()V",
         Dalvik_dalvik_system_VMRuntime_runFinalizationSync },
     { "startJitCompilation", "()V",
         Dalvik_dalvik_system_VMRuntime_startJitCompilation },
