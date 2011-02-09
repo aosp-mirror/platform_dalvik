@@ -115,7 +115,11 @@ public final class LocalVariableInfo
         }
 
         RegisterSpecSet newStart = start.mutableCopy();
-        newStart.intersect(specs, true);
+        if (start.size() != 0) {
+            newStart.intersect(specs, true);
+        } else {
+            newStart = specs.mutableCopy();
+        }
 
         if (start.equals(newStart)) {
             return false;

@@ -16,6 +16,7 @@
 
 package com.android.dx.ssa;
 
+import com.android.dx.rop.code.PlainCstInsn;
 import com.android.dx.rop.code.TranslationAdvice;
 import com.android.dx.rop.code.RegisterSpecList;
 import com.android.dx.rop.code.Insn;
@@ -24,7 +25,9 @@ import com.android.dx.rop.code.RegisterSpec;
 import com.android.dx.rop.code.PlainInsn;
 import com.android.dx.rop.code.Rops;
 import com.android.dx.rop.code.RegOps;
+import com.android.dx.rop.cst.Constant;
 import com.android.dx.rop.cst.CstLiteralBits;
+import com.android.dx.rop.type.Type;
 import com.android.dx.rop.type.TypeBearer;
 
 import java.util.List;
@@ -93,6 +96,18 @@ public class LiteralOpUpgrader {
                 Rop opcode = originalRopInsn.getOpcode();
                 RegisterSpecList sources = insn.getSources();
 
+                // Replace insns with constant results with const insns
+                if (insn.getResult() != null &&
+                        opcode.getOpcode() != RegOps.CONST) {
+                    TypeBearer type = insn.getResult().getTypeBearer();
+                    if (type.isConstant() &&
+                            type.getBasicType() == Type.BT_INT) {
+                        replacePlainInsn(insn, RegisterSpecList.EMPTY,
+                                RegOps.CONST, (Constant) type);
+                        return;
+                    }
+                }
+
                 if (sources.size() != 2 ) {
                     // We're only dealing with two-source insns here.
                     return;
@@ -104,10 +119,10 @@ public class LiteralOpUpgrader {
                      */
                     if (isConstIntZeroOrKnownNull(sources.get(0))) {
                         replacePlainInsn(insn, sources.withoutFirst(),
-                                RegOps.flippedIfOpcode(opcode.getOpcode()));
+                              RegOps.flippedIfOpcode(opcode.getOpcode()), null);
                     } else if (isConstIntZeroOrKnownNull(sources.get(1))) {
                         replacePlainInsn(insn, sources.withoutLast(),
-                                opcode.getOpcode());
+                              opcode.getOpcode(), null);
                     }
                 } else if (advice.hasConstantOperation(
                         opcode, sources.get(0), sources.get(1))) {
@@ -131,25 +146,29 @@ public class LiteralOpUpgrader {
 
     /**
      * Replaces an SsaInsn containing a PlainInsn with a new PlainInsn. The
-     * new PlainInsn is contructed with a new RegOp and new sources.
+     * new PlainInsn is constructed with a new RegOp and new sources.
      *
      * TODO move this somewhere else.
      *
      * @param insn {@code non-null;} an SsaInsn containing a PlainInsn
      * @param newSources {@code non-null;} new sources list for new insn
      * @param newOpcode A RegOp from {@link RegOps}
+     * @param cst {@code null-ok;} constant for new instruction, if any
      */
     private void replacePlainInsn(NormalSsaInsn insn,
-            RegisterSpecList newSources, int newOpcode) {
+            RegisterSpecList newSources, int newOpcode, Constant cst) {
 
         Insn originalRopInsn = insn.getOriginalRopInsn();
-        Rop newRop = Rops.ropFor(newOpcode,
-                insn.getResult(), newSources, null);
-        Insn newRopInsn = new PlainInsn(newRop,
-                originalRopInsn.getPosition(), insn.getResult(),
-                newSources);
-        NormalSsaInsn newInsn
-                = new NormalSsaInsn(newRopInsn, insn.getBlock());
+        Rop newRop = Rops.ropFor(newOpcode, insn.getResult(), newSources, cst);
+        Insn newRopInsn;
+        if (cst == null) {
+            newRopInsn = new PlainInsn(newRop, originalRopInsn.getPosition(),
+                    insn.getResult(), newSources);
+        } else {
+            newRopInsn = new PlainCstInsn(newRop, originalRopInsn.getPosition(),
+                    insn.getResult(), newSources, cst);
+        }
+        NormalSsaInsn newInsn = new NormalSsaInsn(newRopInsn, insn.getBlock());
 
         List<SsaInsn> insns = insn.getBlock().getInsns();
 

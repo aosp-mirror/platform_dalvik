@@ -158,6 +158,8 @@ public class Optimizer {
 
         if (steps.contains(OptionalStep.SCCP)) {
             SCCP.process(ssaMeth);
+            DeadCodeRemover.process(ssaMeth);
+            needsDeadCodeRemover = false;
         }
 
         if (steps.contains(OptionalStep.LITERAL_UPGRADE)) {
