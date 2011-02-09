@@ -31,7 +31,7 @@ static void Dalvik_java_lang_Runtime_gc(const u4* args, JValue* pResult)
 {
     UNUSED_PARAMETER(args);
 
-    dvmCollectGarbage(false);
+    dvmCollectGarbage();
     RETURN_VOID();
 }
 

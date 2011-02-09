@@ -216,7 +216,7 @@ static void handleSigQuit(void)
 static void handleSigUsr1(void)
 {
     LOGI("SIGUSR1 forcing GC (no HPROF)\n");
-    dvmCollectGarbage(false);
+    dvmCollectGarbage();
 }
 
 #if defined(WITH_JIT) && defined(WITH_JIT_TUNING)
