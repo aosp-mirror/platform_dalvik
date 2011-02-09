@@ -63,12 +63,6 @@ enum {
 };
 
 /*
- * Call when a request is so far off that we can't call dvmMalloc().  Throws
- * an exception with the specified message.
- */
-void dvmThrowBadAllocException(const char* msg);
-
-/*
  * Track an object reference that is currently only visible internally.
  * This is called automatically by dvmMalloc() unless ALLOC_DONT_TRACK
  * is set.

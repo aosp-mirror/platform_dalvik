@@ -41,14 +41,6 @@ ArrayObject* dvmAllocArray(ClassObject* arrayClass, size_t length,
     size_t size;
 
     assert(arrayClass->descriptor[0] == '[');
-
-    if (length > 0x0fffffff) {
-        /* too large and (length * elemWidth) will overflow 32 bits */
-        LOGE("Rejecting allocation of %u-element array\n", length);
-        dvmThrowBadAllocException("array size too large");
-        return NULL;
-    }
-
     size = offsetof(ArrayObject, contents);
     size += length * elemWidth;
 
