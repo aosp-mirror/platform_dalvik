@@ -34,11 +34,6 @@ static void snapIdealFootprint(void);
 static void setIdealFootprint(size_t max);
 static size_t getMaximumSize(const HeapSource *hs);
 
-#define ALIGN_UP_TO_PAGE_SIZE(p) \
-    (((size_t)(p) + (SYSTEM_PAGE_SIZE - 1)) & ~(SYSTEM_PAGE_SIZE - 1))
-#define ALIGN_DOWN_TO_PAGE_SIZE(p) \
-    ((size_t)(p) & ~(SYSTEM_PAGE_SIZE - 1))
-
 #define HEAP_UTILIZATION_MAX        1024
 #define DEFAULT_HEAP_UTILIZATION    512     // Range 1..HEAP_UTILIZATION_MAX
 #define HEAP_IDEAL_FREE             (2 * 1024 * 1024)

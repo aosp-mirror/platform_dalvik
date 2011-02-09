@@ -30,9 +30,6 @@
 #include <cutils/ashmem.h>
 #include <sys/mman.h>
 
-#define ALIGN_UP_TO_PAGE_SIZE(p) \
-    (((size_t)(p) + (SYSTEM_PAGE_SIZE - 1)) & ~(SYSTEM_PAGE_SIZE - 1))
-
 /*
  * Print a hex dump in this format:
  *
