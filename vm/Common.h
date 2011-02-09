@@ -45,6 +45,8 @@
 #define ALIGN_UP_TO_PAGE_SIZE(p) ALIGN_UP(p, SYSTEM_PAGE_SIZE)
 #define ALIGN_DOWN_TO_PAGE_SIZE(p) ALIGN_DOWN(p, SYSTEM_PAGE_SIZE)
 
+#define CLZ(x) __builtin_clz(x)
+
 /*
  * If "very verbose" logging is enabled, make it equivalent to LOGV.
  * Otherwise, make it disappear.

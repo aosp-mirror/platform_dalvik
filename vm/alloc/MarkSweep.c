@@ -15,7 +15,6 @@
  */
 
 #include "Dalvik.h"
-#include "alloc/clz.h"
 #include "alloc/CardTable.h"
 #include "alloc/HeapBitmap.h"
 #include "alloc/HeapBitmapInlines.h"

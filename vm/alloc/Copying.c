@@ -24,7 +24,6 @@
 #include "alloc/HeapInternal.h"
 #include "alloc/HeapSource.h"
 #include "alloc/Verify.h"
-#include "alloc/clz.h"
 
 /*
  * A "mostly copying", generational, garbage collector.

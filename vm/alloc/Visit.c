@@ -15,7 +15,6 @@
  */
 
 #include "Dalvik.h"
-#include "alloc/clz.h"
 #include "alloc/HeapInternal.h"
 #include "alloc/Visit.h"
 #include "alloc/VisitInlines.h"

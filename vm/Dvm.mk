@@ -117,7 +117,6 @@ LOCAL_SRC_FILES := \
 	TestCompability.c \
 	Thread.c \
 	UtfString.c \
-	alloc/clz.c.arm \
 	alloc/Alloc.c \
 	alloc/CardTable.c \
 	alloc/HeapBitmap.c.arm \

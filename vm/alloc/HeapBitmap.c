@@ -16,7 +16,6 @@
 
 #include "Dalvik.h"
 #include "HeapBitmap.h"
-#include "clz.h"
 #include <sys/mman.h>   /* for PROT_* */
 
 /*
