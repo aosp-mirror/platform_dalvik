@@ -37,10 +37,6 @@
 
 #define LOGE_GC(...)    LOG(LOG_ERROR, GC_LOG_TAG, __VA_ARGS__)
 
-#define ALIGN_DOWN(x, n) ((size_t)(x) & -(n))
-#define ALIGN_UP(x, n) (((size_t)(x) + (n) - 1) & ~((n) - 1))
-#define ALIGN_UP_TO_PAGE_SIZE(p) ALIGN_UP(p, SYSTEM_PAGE_SIZE)
-
 typedef unsigned long Word;
 const size_t kWordSize = sizeof(Word);
 

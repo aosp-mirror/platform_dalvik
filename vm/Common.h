@@ -40,6 +40,11 @@
 #define LIKELY(exp) (__builtin_expect((exp) != 0, true))
 #define UNLIKELY(exp) (__builtin_expect((exp) != 0, false))
 
+#define ALIGN_UP(x, n) (((size_t)(x) + (n) - 1) & ~((n) - 1))
+#define ALIGN_DOWN(x, n) ((size_t)(x) & -(n))
+#define ALIGN_UP_TO_PAGE_SIZE(p) ALIGN_UP(p, SYSTEM_PAGE_SIZE)
+#define ALIGN_DOWN_TO_PAGE_SIZE(p) ALIGN_DOWN(p, SYSTEM_PAGE_SIZE)
+
 /*
  * If "very verbose" logging is enabled, make it equivalent to LOGV.
  * Otherwise, make it disappear.
