@@ -283,7 +283,7 @@ void dvmReleaseTrackedAlloc(Object* obj, Thread* self)
 /*
  * Explicitly initiate garbage collection.
  */
-void dvmCollectGarbage(bool clearSoftReferences)
+void dvmCollectGarbage(void)
 {
     if (gDvm.disableExplicitGc) {
         return;
