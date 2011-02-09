@@ -757,15 +757,17 @@ extern ArmEncodingMap EncodingMap[kArmLast];
 typedef struct ArmLIR {
     LIR generic;
     ArmOpcode opcode;
-    int operands[4];    // [0..3] = [dest, src1, src2, extra]
-    bool isNop;         // LIR is optimized away
-    bool branchInsertSV;// mark for insertion of branch before this instruction,
-                        // used to identify mem ops for self verification mode
-    int age;            // default is 0, set lazily by the optimizer
-    int size;           // 16-bit unit size (1 for thumb, 1 or 2 for thumb2)
-    int aliasInfo;      // For Dalvik register access & litpool disambiguation
-    u8 useMask;         // Resource mask for use
-    u8 defMask;         // Resource mask for def
+    int operands[4];            // [0..3] = [dest, src1, src2, extra]
+    struct {
+        bool isNop:1;           // LIR is optimized away
+        bool insertWrapper:1;   // insert branch to emulate memory accesses
+        unsigned int age:4;     // default is 0, set lazily by the optimizer
+        unsigned int size:3;    // bytes (2 for thumb, 2/4 for thumb2)
+        unsigned int unused:23;
+    } flags;
+    int aliasInfo;              // For Dalvik register & litpool disambiguation
+    u8 useMask;                 // Resource mask for use
+    u8 defMask;                 // Resource mask for def
 } ArmLIR;
 
 /* Init values when a predicted chain is initially assembled */

@@ -211,6 +211,7 @@ typedef struct CompilationUnit {
     bool hasLoop;                       // Contains a loop
     bool hasInvoke;                     // Contains an invoke instruction
     bool heapMemOp;                     // Mark mem ops for self verification
+    bool usesLinkRegister;              // For self-verification only
     int profileCodeSize;                // Size of the profile prefix in bytes
     int numChainingCells[kChainingCellGap];
     LIR *firstChainingLIR[kChainingCellGap];

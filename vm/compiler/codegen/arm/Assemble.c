@@ -943,7 +943,7 @@ static AssemblerStatus assembleInstructions(CompilationUnit *cUnit,
             continue;
         }
 
-        if (lir->isNop) {
+        if (lir->flags.isNop) {
             continue;
         }
 
@@ -1234,9 +1234,9 @@ void dvmCompilerAssembleLIR(CompilationUnit *cUnit, JitTranslationInfo *info)
          armLIR;
          armLIR = NEXT_LIR(armLIR)) {
         armLIR->generic.offset = offset;
-        if (armLIR->opcode >= 0 && !armLIR->isNop) {
-            armLIR->size = EncodingMap[armLIR->opcode].size * 2;
-            offset += armLIR->size;
+        if (armLIR->opcode >= 0 && !armLIR->flags.isNop) {
+            armLIR->flags.size = EncodingMap[armLIR->opcode].size * 2;
+            offset += armLIR->flags.size;
         } else if (armLIR->opcode == kArmPseudoPseudoAlign4) {
             if (offset & 0x2) {
                 offset += 2;

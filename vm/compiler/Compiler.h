@@ -310,4 +310,5 @@ JitTraceDescription *dvmCopyTraceDescriptor(const u2 *pc,
                                             const struct JitEntry *desc);
 void *dvmCompilerGetInterpretTemplate();
 JitInstructionSetType dvmCompilerGetInterpretTemplateSet();
+u8 dvmGetRegResourceMask(int reg);
 #endif /* _DALVIK_VM_COMPILER */

@@ -448,7 +448,7 @@ static void nullifyRange(CompilationUnit *cUnit, LIR *start, LIR *finish,
         LIR *p;
         assert(sReg1 == sReg2);
         for (p = start; ;p = p->next) {
-            ((ArmLIR *)p)->isNop = true;
+            ((ArmLIR *)p)->flags.isNop = true;
             if (p == finish)
                 break;
         }

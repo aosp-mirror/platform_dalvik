@@ -78,16 +78,7 @@ static ArmLIR *loadConstantNoClobber(CompilationUnit *cUnit, int rDest,
     loadPcRel->generic.target = (LIR *) dataTarget;
     loadPcRel->operands[0] = tDest;
     setupResourceMasks(loadPcRel);
-    /*
-     * Special case for literal loads with a link register target.
-     * Self-cosim mode will insert calls prior to heap references
-     * after optimization, and those will destroy r14.  The easy
-     * workaround is to treat literal loads into r14 as heap references
-     * to prevent them from being hoisted.  Use of r14 in this manner
-     * is currently rare.  Revist if that changes.
-     */
-    if (rDest != rlr)
-        setMemRefType(loadPcRel, true, kLiteral);
+    setMemRefType(loadPcRel, true, kLiteral);
     loadPcRel->aliasInfo = dataTarget->operands[0];
     res = loadPcRel;
     dvmCompilerAppendLIR(cUnit, (LIR *) loadPcRel);
@@ -480,7 +471,7 @@ static ArmLIR *loadBaseIndexed(CompilationUnit *cUnit, int rBase,
     res = newLIR3(cUnit, opcode, rDest, rBase, rNewIndex);
 #if defined(WITH_SELF_VERIFICATION)
     if (cUnit->heapMemOp)
-        res->branchInsertSV = true;
+        res->flags.insertWrapper = true;
 #endif
     if (scale)
         dvmCompilerFreeTemp(cUnit, rNewIndex);
@@ -518,7 +509,7 @@ static ArmLIR *storeBaseIndexed(CompilationUnit *cUnit, int rBase,
     res = newLIR3(cUnit, opcode, rSrc, rBase, rNewIndex);
 #if defined(WITH_SELF_VERIFICATION)
     if (cUnit->heapMemOp)
-        res->branchInsertSV = true;
+        res->flags.insertWrapper = true;
 #endif
     if (scale)
         dvmCompilerFreeTemp(cUnit, rNewIndex);
@@ -532,7 +523,7 @@ static ArmLIR *loadMultiple(CompilationUnit *cUnit, int rBase, int rMask)
     res = newLIR2(cUnit, kThumbLdmia, rBase, rMask);
 #if defined(WITH_SELF_VERIFICATION)
     if (cUnit->heapMemOp)
-        res->branchInsertSV = true;
+        res->flags.insertWrapper = true;
 #endif
     genBarrier(cUnit);
     return res;
@@ -545,7 +536,7 @@ static ArmLIR *storeMultiple(CompilationUnit *cUnit, int rBase, int rMask)
     res = newLIR2(cUnit, kThumbStmia, rBase, rMask);
 #if defined(WITH_SELF_VERIFICATION)
     if (cUnit->heapMemOp)
-        res->branchInsertSV = true;
+        res->flags.insertWrapper = true;
 #endif
     genBarrier(cUnit);
     return res;
@@ -666,9 +657,9 @@ static ArmLIR *loadBaseDispBody(CompilationUnit *cUnit, MIR *mir, int rBase,
     }
 #if defined(WITH_SELF_VERIFICATION)
     if (load != NULL && cUnit->heapMemOp)
-        load->branchInsertSV = true;
+        load->flags.insertWrapper = true;
     if (load2 != NULL && cUnit->heapMemOp)
-        load2->branchInsertSV = true;
+        load2->flags.insertWrapper = true;
 #endif
     return res;
 }
@@ -776,9 +767,9 @@ static ArmLIR *storeBaseDispBody(CompilationUnit *cUnit, int rBase,
     }
 #if defined(WITH_SELF_VERIFICATION)
     if (store != NULL && cUnit->heapMemOp)
-        store->branchInsertSV = true;
+        store->flags.insertWrapper = true;
     if (store2 != NULL && cUnit->heapMemOp)
-        store2->branchInsertSV = true;
+        store2->flags.insertWrapper = true;
 #endif
     return res;
 }
@@ -834,7 +825,7 @@ static ArmLIR* genRegCopyNoInsert(CompilationUnit *cUnit, int rDest, int rSrc)
     res->opcode = opcode;
     setupResourceMasks(res);
     if (rDest == rSrc) {
-        res->isNop = true;
+        res->flags.isNop = true;
     }
     return res;
 }
@@ -874,3 +865,50 @@ static ArmLIR *genCmpImmBranch(CompilationUnit *cUnit,
     ArmLIR *branch = newLIR2(cUnit, kThumbBCond, 0, cond);
     return branch;
 }
+
+#if defined(WITH_SELF_VERIFICATION)
+static void genSelfVerificationPreBranch(CompilationUnit *cUnit,
+                                         ArmLIR *origLIR) {
+    /*
+     * We need two separate pushes, since we want r5 to be pushed first.
+     * Store multiple will push LR first.
+     */
+    ArmLIR *pushFP = (ArmLIR *) dvmCompilerNew(sizeof(ArmLIR), true);
+    pushFP->opcode = kThumbPush;
+    pushFP->operands[0] = 1 << rFP;
+    setupResourceMasks(pushFP);
+    dvmCompilerInsertLIRBefore((LIR *) origLIR, (LIR *) pushFP);
+
+    ArmLIR *pushLR = (ArmLIR *) dvmCompilerNew(sizeof(ArmLIR), true);
+    pushLR->opcode = kThumbPush;
+    /* Thumb push can handle LR, but is encoded differently at bit 8 */
+    pushLR->operands[0] = 1 << 8;
+    setupResourceMasks(pushLR);
+    dvmCompilerInsertLIRBefore((LIR *) origLIR, (LIR *) pushLR);
+}
+
+static void genSelfVerificationPostBranch(CompilationUnit *cUnit,
+                                         ArmLIR *origLIR) {
+    /*
+     * Since Thumb cannot pop memory content into LR, we have to pop LR
+     * to a temp first (r5 in this case). Then we move r5 to LR, then pop the
+     * original r5 from stack.
+     */
+    /* Pop memory content(LR) into r5 first */
+    ArmLIR *popForLR = (ArmLIR *) dvmCompilerNew(sizeof(ArmLIR), true);
+    popForLR->opcode = kThumbPop;
+    popForLR->operands[0] = 1 << rFP;
+    setupResourceMasks(popForLR);
+    dvmCompilerInsertLIRAfter((LIR *) origLIR, (LIR *) popForLR);
+
+    ArmLIR *copy = genRegCopyNoInsert(cUnit, rlr, rFP);
+    dvmCompilerInsertLIRAfter((LIR *) popForLR, (LIR *) copy);
+
+    /* Now restore the original r5 */
+    ArmLIR *popFP = (ArmLIR *) dvmCompilerNew(sizeof(ArmLIR), true);
+    popFP->opcode = kThumbPop;
+    popFP->operands[0] = 1 << rFP;
+    setupResourceMasks(popFP);
+    dvmCompilerInsertLIRAfter((LIR *) copy, (LIR *) popFP);
+}
+#endif

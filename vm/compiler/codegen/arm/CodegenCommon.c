@@ -84,9 +84,9 @@ static void annotateDalvikRegAccess(ArmLIR *lir, int regId, bool isLoad)
 }
 
 /*
- * Decode the register id and mark the corresponding bit(s).
+ * Decode the register id.
  */
-static inline void setupRegMask(u8 *mask, int reg)
+static inline u8 getRegMaskCommon(int reg)
 {
     u8 seed;
     int shift;
@@ -100,7 +100,21 @@ static inline void setupRegMask(u8 *mask, int reg)
     shift = FPREG(reg) ? kFPReg0 : 0;
     /* Expand the double register id into single offset */
     shift += regId;
-    *mask |= seed << shift;
+    return (seed << shift);
+}
+
+/* External version of getRegMaskCommon */
+u8 dvmGetRegResourceMask(int reg)
+{
+    return getRegMaskCommon(reg);
+}
+
+/*
+ * Mark the corresponding bit(s).
+ */
+static inline void setupRegMask(u8 *mask, int reg)
+{
+    *mask |= getRegMaskCommon(reg);
 }
 
 /*
@@ -195,6 +209,18 @@ static void setupResourceMasks(ArmLIR *lir)
 
     if (flags & USES_CCODES) {
         lir->useMask |= ENCODE_CCODE;
+    }
+
+    /* Fixup for kThumbPush/lr and kThumbPop/pc */
+    if (opcode == kThumbPush || opcode == kThumbPop) {
+        u8 r8Mask = getRegMaskCommon(r8);
+        if ((opcode == kThumbPush) && (lir->useMask & r8Mask)) {
+            lir->useMask &= ~r8Mask;
+            lir->useMask |= ENCODE_REG_LR;
+        } else if ((opcode == kThumbPop) && (lir->defMask & r8Mask)) {
+            lir->defMask &= ~r8Mask;
+            lir->defMask |= ENCODE_REG_PC;
+        }
     }
 }
 

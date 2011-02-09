@@ -41,7 +41,7 @@ static void applyRedundantBranchElimination(CompilationUnit *cUnit)
                  * Is the branch target the next instruction?
                  */
                 if (nextLIR == (ArmLIR *) thisLIR->generic.target) {
-                    thisLIR->isNop = true;
+                    thisLIR->flags.isNop = true;
                     break;
                 }
 
