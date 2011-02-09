@@ -834,9 +834,9 @@ dvmCompiler_TEMPLATE_MEM_OP_DECODE:
      * skip the memory op so it never gets executed.
      */
     push    {r0-r12,lr}                 @ save out all registers
+    ldr     r2, .LdvmSelfVerificationMemOpDecode @ defined in footer.S
     mov     r0, lr                      @ arg0 <- link register
     mov     r1, sp                      @ arg1 <- stack pointer
-    ldr     r2, .LdvmSelfVerificationMemOpDecode @ defined in footer.S
     blx     r2                          @ decode and handle the mem op
     pop     {r0-r12,lr}                 @ restore all registers
     bx      lr                          @ return to compiled code

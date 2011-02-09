@@ -77,7 +77,7 @@ static void applyLoadStoreElimination(CompilationUnit *cUnit,
          thisLIR != tailLIR;
          thisLIR = NEXT_LIR(thisLIR)) {
         /* Skip newly added instructions */
-        if (thisLIR->age >= cUnit->optRound) {
+        if (thisLIR->flags.age >= cUnit->optRound) {
             continue;
         }
         if (isDalvikStore(thisLIR)) {
@@ -114,7 +114,7 @@ static void applyLoadStoreElimination(CompilationUnit *cUnit,
                         dvmCompilerInsertLIRAfter((LIR *) checkLIR,
                                                   (LIR *) moveLIR);
                     }
-                    checkLIR->isNop = true;
+                    checkLIR->flags.isNop = true;
                     continue;
 
                 /*
@@ -123,7 +123,7 @@ static void applyLoadStoreElimination(CompilationUnit *cUnit,
                  */
                 } else if (isDalvikStore(checkLIR) &&
                            (checkLIR->aliasInfo == thisLIR->aliasInfo)) {
-                    thisLIR->isNop = true;
+                    thisLIR->flags.isNop = true;
                     break;
                 /* Find out the latest slot that the store can be sunk into */
                 } else {
@@ -149,7 +149,7 @@ static void applyLoadStoreElimination(CompilationUnit *cUnit,
                             ArmLIR *newStoreLIR =
                                 (ArmLIR *)dvmCompilerNew(sizeof(ArmLIR), true);
                             *newStoreLIR = *thisLIR;
-                            newStoreLIR->age = cUnit->optRound;
+                            newStoreLIR->flags.age = cUnit->optRound;
                             /*
                              * Stop point found - insert *before* the checkLIR
                              * since the instruction list is scanned in the
@@ -157,7 +157,7 @@ static void applyLoadStoreElimination(CompilationUnit *cUnit,
                              */
                             dvmCompilerInsertLIRBefore((LIR *) checkLIR,
                                                        (LIR *) newStoreLIR);
-                            thisLIR->isNop = true;
+                            thisLIR->flags.isNop = true;
                         }
                         break;
                     }
@@ -191,8 +191,8 @@ static void applyLoadHoisting(CompilationUnit *cUnit,
          thisLIR != tailLIR;
          thisLIR = NEXT_LIR(thisLIR)) {
         /* Skip newly added instructions */
-        if (thisLIR->age >= cUnit->optRound ||
-            thisLIR->isNop == true) {
+        if (thisLIR->flags.age >= cUnit->optRound ||
+            thisLIR->flags.isNop == true) {
             continue;
         }
 
@@ -221,7 +221,7 @@ static void applyLoadHoisting(CompilationUnit *cUnit,
                  checkLIR != headLIR;
                  checkLIR = PREV_LIR(checkLIR)) {
 
-                if (checkLIR->isNop) continue;
+                if (checkLIR->flags.isNop) continue;
 
                 /*
                  * Check if the Dalvik register is previously accessed
@@ -235,7 +235,7 @@ static void applyLoadHoisting(CompilationUnit *cUnit,
                      * the search will terminate later at the point checking
                      * for partially overlapping stores.
                      */
-                    thisLIR->isNop = true;
+                    thisLIR->flags.isNop = true;
                     break;
                 }
 
@@ -274,7 +274,7 @@ static void applyLoadHoisting(CompilationUnit *cUnit,
             }
 
             /* The load has been eliminated */
-            if (thisLIR->isNop) continue;
+            if (thisLIR->flags.isNop) continue;
 
             /*
              * The load cannot be eliminated. See if it can be hoisted to an
@@ -284,7 +284,7 @@ static void applyLoadHoisting(CompilationUnit *cUnit,
                  /* empty by intention */;
                  checkLIR = PREV_LIR(checkLIR)) {
 
-                if (checkLIR->isNop) continue;
+                if (checkLIR->flags.isNop) continue;
 
                 /*
                  * Check if the "thisLIR" load is redundant
@@ -308,7 +308,7 @@ static void applyLoadHoisting(CompilationUnit *cUnit,
                         dvmCompilerInsertLIRAfter((LIR *) checkLIR,
                                                   (LIR *) moveLIR);
                     }
-                    thisLIR->isNop = true;
+                    thisLIR->flags.isNop = true;
                     break;
 
                 /* Find out if the load can be yanked past the checkLIR */
@@ -371,7 +371,7 @@ static void applyLoadHoisting(CompilationUnit *cUnit,
                             ArmLIR *newLoadLIR =
                                 (ArmLIR *)dvmCompilerNew(sizeof(ArmLIR), true);
                             *newLoadLIR = *thisLIR;
-                            newLoadLIR->age = cUnit->optRound;
+                            newLoadLIR->flags.age = cUnit->optRound;
                             /*
                              * Stop point found - insert *after* the checkLIR
                              * since the instruction list is scanned in the
@@ -379,7 +379,7 @@ static void applyLoadHoisting(CompilationUnit *cUnit,
                              */
                             dvmCompilerInsertLIRAfter((LIR *) checkLIR,
                                                       (LIR *) newLoadLIR);
-                            thisLIR->isNop = true;
+                            thisLIR->flags.isNop = true;
                         }
                         break;
                     }
@@ -407,13 +407,13 @@ static void applyLoadHoisting(CompilationUnit *cUnit,
                  checkLIR != headLIR;
                  checkLIR = PREV_LIR(checkLIR)) {
 
-                if (checkLIR->isNop) continue;
+                if (checkLIR->flags.isNop) continue;
 
                 /* Reloading same literal into same tgt reg? Eliminate if so */
                 if (isLiteralLoad(checkLIR) &&
                     (checkLIR->aliasInfo == litVal) &&
                     (checkLIR->operands[0] == nativeRegId)) {
-                    thisLIR->isNop = true;
+                    thisLIR->flags.isNop = true;
                     break;
                 }
 
@@ -430,7 +430,7 @@ static void applyLoadHoisting(CompilationUnit *cUnit,
             }
 
             /* The load has been eliminated */
-            if (thisLIR->isNop) continue;
+            if (thisLIR->flags.isNop) continue;
 
             /*
              * The load cannot be eliminated. See if it can be hoisted to an
@@ -440,7 +440,7 @@ static void applyLoadHoisting(CompilationUnit *cUnit,
                  /* empty by intention */;
                  checkLIR = PREV_LIR(checkLIR)) {
 
-                if (checkLIR->isNop) continue;
+                if (checkLIR->flags.isNop) continue;
 
                 /*
                  * TUNING: once a full scheduler exists, check here
@@ -475,14 +475,14 @@ static void applyLoadHoisting(CompilationUnit *cUnit,
                         ArmLIR *newLoadLIR =
                             (ArmLIR *)dvmCompilerNew(sizeof(ArmLIR), true);
                         *newLoadLIR = *thisLIR;
-                        newLoadLIR->age = cUnit->optRound;
+                        newLoadLIR->flags.age = cUnit->optRound;
                         /*
                          * Insertion is guaranteed to succeed since checkLIR
                          * is never the first LIR on the list
                          */
                         dvmCompilerInsertLIRAfter((LIR *) checkLIR,
                                                   (LIR *) newLoadLIR);
-                        thisLIR->isNop = true;
+                        thisLIR->flags.isNop = true;
                     }
                     break;
                 }

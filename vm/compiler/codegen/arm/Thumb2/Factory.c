@@ -66,9 +66,7 @@ static ArmLIR *loadFPConstantValue(CompilationUnit *cUnit, int rDest,
     loadPcRel->operands[0] = rDest;
     loadPcRel->operands[1] = rpc;
     setupResourceMasks(loadPcRel);
-    // Self-cosim workaround.
-    if (rDest != rlr)
-        setMemRefType(loadPcRel, true, kLiteral);
+    setMemRefType(loadPcRel, true, kLiteral);
     loadPcRel->aliasInfo = dataTarget->operands[0];
     dvmCompilerAppendLIR(cUnit, (LIR *) loadPcRel);
     return loadPcRel;
@@ -175,16 +173,7 @@ static ArmLIR *loadConstantNoClobber(CompilationUnit *cUnit, int rDest,
     loadPcRel->generic.target = (LIR *) dataTarget;
     loadPcRel->operands[0] = rDest;
     setupResourceMasks(loadPcRel);
-    /*
-     * Special case for literal loads with a link register target.
-     * Self-cosim mode will insert calls prior to heap references
-     * after optimization, and those will destroy r14.  The easy
-     * workaround is to treat literal loads into r14 as heap references
-     * to prevent them from being hoisted.  Use of r14 in this manner
-     * is currently rare.  Revisit if that changes.
-     */
-    if (rDest != rlr)
-        setMemRefType(loadPcRel, true, kLiteral);
+    setMemRefType(loadPcRel, true, kLiteral);
     loadPcRel->aliasInfo = dataTarget->operands[0];
     res = loadPcRel;
     dvmCompilerAppendLIR(cUnit, (LIR *) loadPcRel);
@@ -722,7 +711,7 @@ static ArmLIR *loadBaseIndexed(CompilationUnit *cUnit, int rBase,
             load = newLIR3(cUnit, opcode, rDest, regPtr, 0);
 #if defined(WITH_SELF_VERIFICATION)
             if (cUnit->heapMemOp)
-                load->branchInsertSV = true;
+                load->flags.insertWrapper = true;
 #endif
             return load;
         case kWord:
@@ -750,7 +739,7 @@ static ArmLIR *loadBaseIndexed(CompilationUnit *cUnit, int rBase,
 
 #if defined(WITH_SELF_VERIFICATION)
     if (cUnit->heapMemOp)
-        load->branchInsertSV = true;
+        load->flags.insertWrapper = true;
 #endif
     return load;
 }
@@ -786,7 +775,7 @@ static ArmLIR *storeBaseIndexed(CompilationUnit *cUnit, int rBase,
             store = newLIR3(cUnit, opcode, rSrc, regPtr, 0);
 #if defined(WITH_SELF_VERIFICATION)
             if (cUnit->heapMemOp)
-                store->branchInsertSV = true;
+                store->flags.insertWrapper = true;
 #endif
             return store;
         case kWord:
@@ -810,7 +799,7 @@ static ArmLIR *storeBaseIndexed(CompilationUnit *cUnit, int rBase,
 
 #if defined(WITH_SELF_VERIFICATION)
     if (cUnit->heapMemOp)
-        store->branchInsertSV = true;
+        store->flags.insertWrapper = true;
 #endif
     return store;
 }
@@ -932,7 +921,7 @@ static ArmLIR *loadBaseDispBody(CompilationUnit *cUnit, MIR *mir, int rBase,
     }
 #if defined(WITH_SELF_VERIFICATION)
     if (cUnit->heapMemOp)
-        load->branchInsertSV = true;
+        load->flags.insertWrapper = true;
 #endif
     return res;
 }
@@ -1045,7 +1034,7 @@ static ArmLIR *storeBaseDispBody(CompilationUnit *cUnit, int rBase,
     }
 #if defined(WITH_SELF_VERIFICATION)
     if (cUnit->heapMemOp)
-        store->branchInsertSV = true;
+        store->flags.insertWrapper = true;
 #endif
     return res;
 }
@@ -1073,7 +1062,7 @@ static ArmLIR *loadMultiple(CompilationUnit *cUnit, int rBase, int rMask)
     }
 #if defined(WITH_SELF_VERIFICATION)
     if (cUnit->heapMemOp)
-        res->branchInsertSV = true;
+        res->flags.insertWrapper = true;
 #endif
     genBarrier(cUnit);
     return res;
@@ -1090,7 +1079,7 @@ static ArmLIR *storeMultiple(CompilationUnit *cUnit, int rBase, int rMask)
     }
 #if defined(WITH_SELF_VERIFICATION)
     if (cUnit->heapMemOp)
-        res->branchInsertSV = true;
+        res->flags.insertWrapper = true;
 #endif
     genBarrier(cUnit);
     return res;
@@ -1143,7 +1132,7 @@ static ArmLIR *fpRegCopy(CompilationUnit *cUnit, int rDest, int rSrc)
     res->operands[0] = rDest;
     res->operands[1] = rSrc;
     if (rDest == rSrc) {
-        res->isNop = true;
+        res->flags.isNop = true;
     } else {
         assert(DOUBLEREG(rDest) == DOUBLEREG(rSrc));
         if (DOUBLEREG(rDest)) {
@@ -1184,7 +1173,7 @@ static ArmLIR* genRegCopyNoInsert(CompilationUnit *cUnit, int rDest, int rSrc)
     res->opcode = opcode;
     setupResourceMasks(res);
     if (rDest == rSrc) {
-        res->isNop = true;
+        res->flags.isNop = true;
     }
     return res;
 }
@@ -1224,3 +1213,25 @@ static void genRegCopyWide(CompilationUnit *cUnit, int destLo, int destHi,
         }
     }
 }
+
+#if defined(WITH_SELF_VERIFICATION)
+static void genSelfVerificationPreBranch(CompilationUnit *cUnit,
+                                         ArmLIR *origLIR) {
+    ArmLIR *push = (ArmLIR *) dvmCompilerNew(sizeof(ArmLIR), true);
+    push->opcode = kThumbPush;
+    /* Thumb push can handle LR (encoded at bit 8) */
+    push->operands[0] = (1 << rFP | 1 << 8);
+    setupResourceMasks(push);
+    dvmCompilerInsertLIRBefore((LIR *) origLIR, (LIR *) push);
+}
+
+static void genSelfVerificationPostBranch(CompilationUnit *cUnit,
+                                         ArmLIR *origLIR) {
+    ArmLIR *pop = (ArmLIR *) dvmCompilerNew(sizeof(ArmLIR), true);
+    /* Thumb pop cannot store into LR - use Thumb2 here */
+    pop->opcode = kThumb2Pop;
+    pop->operands[0] = (1 << rFP | 1 << rlr);
+    setupResourceMasks(pop);
+    dvmCompilerInsertLIRAfter((LIR *) origLIR, (LIR *) pop);
+}
+#endif

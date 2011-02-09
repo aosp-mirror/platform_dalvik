@@ -167,6 +167,9 @@ static bool genArithOpDoublePortable(CompilationUnit *cUnit, MIR *mir,
     dvmCompilerClobberCallRegs(cUnit);
     rlResult = dvmCompilerGetReturnWide(cUnit);
     storeValueWide(cUnit, rlDest, rlResult);
+#if defined(WITH_SELF_VERIFICATION)
+    cUnit->usesLinkRegister = true;
+#endif
     return false;
 }
 
@@ -213,6 +216,31 @@ static void selfVerificationBranchInsert(LIR *currentLIR, ArmOpcode opcode,
      dvmCompilerInsertLIRBefore(currentLIR, (LIR *) insn);
 }
 
+/*
+ * Example where r14 (LR) is preserved around a heap access under
+ * self-verification mode in Thumb2:
+ *
+ * D/dalvikvm( 1538): 0x59414c5e (0026): ldr     r14, [rpc, #220] <-hoisted
+ * D/dalvikvm( 1538): 0x59414c62 (002a): mla     r4, r0, r8, r4
+ * D/dalvikvm( 1538): 0x59414c66 (002e): adds    r3, r4, r3
+ * D/dalvikvm( 1538): 0x59414c6a (0032): push    <r5, r14>    ---+
+ * D/dalvikvm( 1538): 0x59414c6c (0034): blx_1   0x5940f494      |
+ * D/dalvikvm( 1538): 0x59414c6e (0036): blx_2   see above       <-MEM_OP_DECODE
+ * D/dalvikvm( 1538): 0x59414c70 (0038): ldr     r10, [r9, #0]   |
+ * D/dalvikvm( 1538): 0x59414c74 (003c): pop     <r5, r14>    ---+
+ * D/dalvikvm( 1538): 0x59414c78 (0040): mov     r11, r10
+ * D/dalvikvm( 1538): 0x59414c7a (0042): asr     r12, r11, #31
+ * D/dalvikvm( 1538): 0x59414c7e (0046): movs    r0, r2
+ * D/dalvikvm( 1538): 0x59414c80 (0048): movs    r1, r3
+ * D/dalvikvm( 1538): 0x59414c82 (004a): str     r2, [r5, #16]
+ * D/dalvikvm( 1538): 0x59414c84 (004c): mov     r2, r11
+ * D/dalvikvm( 1538): 0x59414c86 (004e): str     r3, [r5, #20]
+ * D/dalvikvm( 1538): 0x59414c88 (0050): mov     r3, r12
+ * D/dalvikvm( 1538): 0x59414c8a (0052): str     r11, [r5, #24]
+ * D/dalvikvm( 1538): 0x59414c8e (0056): str     r12, [r5, #28]
+ * D/dalvikvm( 1538): 0x59414c92 (005a): blx     r14             <-use of LR
+ *
+ */
 static void selfVerificationBranchInsertPass(CompilationUnit *cUnit)
 {
     ArmLIR *thisLIR;
@@ -221,7 +249,19 @@ static void selfVerificationBranchInsertPass(CompilationUnit *cUnit)
     for (thisLIR = (ArmLIR *) cUnit->firstLIRInsn;
          thisLIR != (ArmLIR *) cUnit->lastLIRInsn;
          thisLIR = NEXT_LIR(thisLIR)) {
-        if (thisLIR->branchInsertSV) {
+        if (!thisLIR->flags.isNop && thisLIR->flags.insertWrapper) {
+            /*
+             * Push r5(FP) and r14(LR) onto stack. We need to make sure that
+             * SP is 8-byte aligned, and we use r5 as a temp to restore LR
+             * for Thumb-only target since LR cannot be directly accessed in
+             * Thumb mode. Another reason to choose r5 here is it is the Dalvik
+             * frame pointer and cannot be the target of the emulated heap
+             * load.
+             */
+            if (cUnit->usesLinkRegister) {
+                genSelfVerificationPreBranch(cUnit, thisLIR);
+            }
+
             /* Branch to mem op decode template */
             selfVerificationBranchInsert((LIR *) thisLIR, kThumbBlx1,
                        (int) gDvmJit.codeCache + templateEntryOffsets[opcode],
@@ -229,6 +269,11 @@ static void selfVerificationBranchInsertPass(CompilationUnit *cUnit)
             selfVerificationBranchInsert((LIR *) thisLIR, kThumbBlx2,
                        (int) gDvmJit.codeCache + templateEntryOffsets[opcode],
                        (int) gDvmJit.codeCache + templateEntryOffsets[opcode]);
+
+            /* Restore LR */
+            if (cUnit->usesLinkRegister) {
+                genSelfVerificationPostBranch(cUnit, thisLIR);
+            }
         }
     }
 }
@@ -708,6 +753,9 @@ static bool genArithOpLong(CompilationUnit *cUnit, MIR *mir,
         else
             rlResult = dvmCompilerGetReturnWideAlt(cUnit);
         storeValueWide(cUnit, rlDest, rlResult);
+#if defined(WITH_SELF_VERIFICATION)
+        cUnit->usesLinkRegister = true;
+#endif
     }
     return false;
 }

@@ -348,7 +348,7 @@ void dvmDumpLIRInsn(LIR *arg, unsigned char *baseAddr)
             LOGD("L%p:\n", lir);
             break;
         default:
-            if (lir->isNop && !dumpNop) {
+            if (lir->flags.isNop && !dumpNop) {
                 break;
             }
             buildInsnString(EncodingMap[lir->opcode].name, lir, opName,
@@ -357,15 +357,15 @@ void dvmDumpLIRInsn(LIR *arg, unsigned char *baseAddr)
                             256);
             LOGD("%p (%04x): %-8s%s%s\n",
                  baseAddr + offset, offset, opName, buf,
-                 lir->isNop ? "(nop)" : "");
+                 lir->flags.isNop ? "(nop)" : "");
             break;
     }
 
-    if (lir->useMask && (!lir->isNop || dumpNop)) {
+    if (lir->useMask && (!lir->flags.isNop || dumpNop)) {
         DUMP_RESOURCE_MASK(dvmDumpResourceMask((LIR *) lir,
                                                lir->useMask, "use"));
     }
-    if (lir->defMask && (!lir->isNop || dumpNop)) {
+    if (lir->defMask && (!lir->flags.isNop || dumpNop)) {
         DUMP_RESOURCE_MASK(dvmDumpResourceMask((LIR *) lir,
                                                lir->defMask, "def"));
     }
