@@ -3208,13 +3208,13 @@ NEW_PRIMITIVE_ARRAY(jdoubleArray, Double, 'D');
         _ctype##Array jarr, _ctype* elems, jint mode)                       \
     {                                                                       \
         UNUSED_PARAMETER(elems);                                            \
-        JNI_ENTER();                                                        \
         if (mode != JNI_COMMIT) {                                           \
+            JNI_ENTER();                                                    \
             ArrayObject* arrayObj =                                         \
                 (ArrayObject*) dvmDecodeIndirectRef(env, jarr);             \
             unpinPrimitiveArray(arrayObj);                                  \
+            JNI_EXIT();                                                     \
         }                                                                   \
-        JNI_EXIT();                                                         \
     }
 
 static void throwArrayRegionOutOfBounds(ArrayObject* arrayObj, jsize start,
@@ -3469,12 +3469,12 @@ static void* GetPrimitiveArrayCritical(JNIEnv* env, jarray jarr,
 static void ReleasePrimitiveArrayCritical(JNIEnv* env, jarray jarr,
     void* carray, jint mode)
 {
-    JNI_ENTER();
     if (mode != JNI_COMMIT) {
+        JNI_ENTER();
         ArrayObject* arrayObj = (ArrayObject*) dvmDecodeIndirectRef(env, jarr);
         unpinPrimitiveArray(arrayObj);
+        JNI_EXIT();
     }
-    JNI_EXIT();
 }
 
 /*
