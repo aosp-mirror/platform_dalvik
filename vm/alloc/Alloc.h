@@ -93,42 +93,6 @@ bool dvmIsValidObject(const Object* obj);
 Object* dvmCloneObject(Object* obj);
 
 /*
- * Validate the object pointer.  Returns "false" and throws an exception if
- * "obj" is null or invalid.
- *
- * This may be used in performance critical areas as a null-pointer check;
- * anything else here should be for debug builds only.  In particular, for
- * "release" builds we want to skip the call to dvmIsValidObject() -- the
- * classfile validation will screen out code that puts invalid data into
- * object reference registers.
- */
-INLINE int dvmValidateObject(Object* obj)
-{
-    if (obj == NULL) {
-        dvmThrowException("Ljava/lang/NullPointerException;", NULL);
-        return false;
-    }
-#ifdef WITH_EXTRA_OBJECT_VALIDATION
-    if (!dvmIsValidObject(obj)) {
-        dvmAbort();
-        dvmThrowException("Ljava/lang/InternalError;",
-            "VM detected invalid object ptr");
-        return false;
-    }
-#endif
-#ifndef NDEBUG
-    /* check for heap corruption */
-    if (obj->clazz == NULL || ((u4) obj->clazz) <= 65536) {
-        dvmAbort();
-        dvmThrowException("Ljava/lang/InternalError;",
-            "VM detected invalid object class ptr");
-        return false;
-    }
-#endif
-    return true;
-}
-
-/*
  * Determine the exact number of GC heap bytes used by an object.  (Internal
  * to heap code except for debugging.)
  */

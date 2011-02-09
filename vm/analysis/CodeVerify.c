@@ -6367,7 +6367,7 @@ static void dumpRegTypes(const VerifierData* vdata,
                 ClassObject* clazz;
 
                 clazz = regTypeReferenceToClass(addrRegs[i], uninitMap);
-                assert(dvmValidateObject((Object*)clazz));
+                assert(dvmIsValidObject((Object*)clazz));
                 if (i < regCount) {
                     LOGI("        %2d: 0x%08x %s%s\n",
                         i, addrRegs[i],

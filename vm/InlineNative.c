@@ -131,8 +131,10 @@ static bool javaLangString_charAt(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
     ArrayObject* chars;
 
     /* null reference check on "this" */
-    if (!dvmValidateObject((Object*) arg0))
+    if ((Object*) arg0 == NULL) {
+        dvmThrowException("Ljava/lang/NullPointerException;", NULL);
         return false;
+    }
 
     //LOGI("String.charAt this=0x%08x index=%d\n", arg0, arg1);
     count = dvmGetFieldInt((Object*) arg0, STRING_FIELDOFF_COUNT);
@@ -204,9 +206,8 @@ static bool javaLangString_compareTo(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
      * anything else.  While we're at it, check out the other string,
      * which must also be non-null.
      */
-    if (!dvmValidateObject((Object*) arg0) ||
-        !dvmValidateObject((Object*) arg1))
-    {
+    if ((Object*) arg0 == NULL || (Object*) arg1 == NULL) {
+        dvmThrowException("Ljava/lang/NullPointerException;", NULL);
         return false;
     }
 
@@ -297,8 +298,10 @@ static bool javaLangString_equals(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
     /*
      * Null reference check on "this".
      */
-    if (!dvmValidateObject((Object*) arg0))
+    if ((Object*) arg0 == NULL) {
+        dvmThrowException("Ljava/lang/NullPointerException;", NULL);
         return false;
+    }
 
     /* quick test for comparison with itself */
     if (arg0 == arg1) {
@@ -404,8 +407,10 @@ static bool javaLangString_length(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
     //LOGI("String.length this=0x%08x pResult=%p\n", arg0, pResult);
 
     /* null reference check on "this" */
-    if (!dvmValidateObject((Object*) arg0))
+    if ((Object*) arg0 == NULL) {
+        dvmThrowException("Ljava/lang/NullPointerException;", NULL);
         return false;
+    }
 
     pResult->i = dvmGetFieldInt((Object*) arg0, STRING_FIELDOFF_COUNT);
     return true;
@@ -420,8 +425,10 @@ static bool javaLangString_isEmpty(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
     //LOGI("String.isEmpty this=0x%08x pResult=%p\n", arg0, pResult);
 
     /* null reference check on "this" */
-    if (!dvmValidateObject((Object*) arg0))
+    if ((Object*) arg0 == NULL) {
+        dvmThrowException("Ljava/lang/NullPointerException;", NULL);
         return false;
+    }
 
     pResult->i = (dvmGetFieldInt((Object*) arg0, STRING_FIELDOFF_COUNT) == 0);
     return true;
@@ -489,8 +496,10 @@ static bool javaLangString_fastIndexOf_II(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
     JValue* pResult)
 {
     /* null reference check on "this" */
-    if (!dvmValidateObject((Object*) arg0))
+    if ((Object*) arg0 == NULL) {
+        dvmThrowException("Ljava/lang/NullPointerException;", NULL);
         return false;
+    }
 
     pResult->i = indexOfCommon((Object*) arg0, arg1, arg2);
     return true;
