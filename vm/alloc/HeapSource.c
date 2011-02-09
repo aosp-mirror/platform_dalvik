@@ -24,6 +24,7 @@
 #include "alloc/HeapInternal.h"
 #include "alloc/HeapSource.h"
 #include "alloc/HeapBitmap.h"
+#include "alloc/HeapBitmapInlines.h"
 
 // TODO: find a real header file for these.
 extern int dlmalloc_trim(size_t);

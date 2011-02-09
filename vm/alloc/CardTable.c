@@ -17,6 +17,8 @@
 #include <sys/mman.h>  /* for PROT_* */
 
 #include "Dalvik.h"
+#include "alloc/HeapBitmap.h"
+#include "alloc/HeapBitmapInlines.h"
 #include "alloc/HeapSource.h"
 #include "alloc/Visit.h"
 

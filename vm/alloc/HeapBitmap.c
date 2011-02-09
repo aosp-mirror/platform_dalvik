@@ -79,6 +79,88 @@ dvmHeapBitmapZero(HeapBitmap *hb)
 }
 
 /*
+ * Return true iff <obj> is within the range of pointers that this
+ * bitmap could potentially cover, even if a bit has not been set
+ * for it.
+ */
+bool dvmHeapBitmapCoversAddress(const HeapBitmap *hb, const void *obj)
+{
+    assert(hb != NULL);
+    if (obj != NULL) {
+        const uintptr_t offset = (uintptr_t)obj - hb->base;
+        const size_t index = HB_OFFSET_TO_INDEX(offset);
+        return index < hb->bitsLen / sizeof(*hb->bits);
+    }
+    return false;
+}
+
+/*
+ * Visits set bits in address order.  The callback is not permitted to
+ * change the bitmap bits or max during the traversal.
+ */
+void dvmHeapBitmapWalk(const HeapBitmap *bitmap, BitmapCallback *callback,
+                       void *arg)
+{
+    uintptr_t end;
+    uintptr_t i;
+
+    assert(bitmap != NULL);
+    assert(bitmap->bits != NULL);
+    assert(callback != NULL);
+    end = HB_OFFSET_TO_INDEX(bitmap->max - bitmap->base);
+    for (i = 0; i <= end; ++i) {
+        unsigned long word = bitmap->bits[i];
+        if (UNLIKELY(word != 0)) {
+            unsigned long highBit = 1 << (HB_BITS_PER_WORD - 1);
+            uintptr_t ptrBase = HB_INDEX_TO_OFFSET(i) + bitmap->base;
+            while (word != 0) {
+                const int shift = CLZ(word);
+                void *addr = (void *)(ptrBase + shift * HB_OBJECT_ALIGNMENT);
+                (*callback)(addr, arg);
+                word &= ~(highBit >> shift);
+            }
+        }
+    }
+}
+
+/*
+ * Similar to dvmHeapBitmapWalk but the callback routine is permitted
+ * to change the bitmap bits and max during traversal.  Used by the
+ * the root marking scan exclusively.
+ *
+ * The callback is invoked with a finger argument.  The finger is a
+ * pointer to an address not yet visited by the traversal.  If the
+ * callback sets a bit for an address at or above the finger, this
+ * address will be visited by the traversal.  If the callback sets a
+ * bit for an address below the finger, this address will not be
+ * visited.
+ */
+void dvmHeapBitmapScanWalk(HeapBitmap *bitmap,
+                           BitmapScanCallback *callback, void *arg)
+{
+    assert(bitmap != NULL);
+    assert(bitmap->bits != NULL);
+    assert(callback != NULL);
+    uintptr_t end = HB_OFFSET_TO_INDEX(bitmap->max - bitmap->base);
+    uintptr_t i;
+    for (i = 0; i <= end; ++i) {
+        unsigned long word = bitmap->bits[i];
+        if (UNLIKELY(word != 0)) {
+            unsigned long highBit = 1 << (HB_BITS_PER_WORD - 1);
+            uintptr_t ptrBase = HB_INDEX_TO_OFFSET(i) + bitmap->base;
+            void *finger = (void *)(HB_INDEX_TO_OFFSET(i + 1) + bitmap->base);
+            while (word != 0) {
+                const int shift = CLZ(word);
+                void *addr = (void *)(ptrBase + shift * HB_OBJECT_ALIGNMENT);
+                (*callback)(addr, finger, arg);
+                word &= ~(highBit >> shift);
+            }
+            end = HB_OFFSET_TO_INDEX(bitmap->max - bitmap->base);
+        }
+    }
+}
+
+/*
  * Walk through the bitmaps in increasing address order, and find the
  * object pointers that correspond to garbage objects.  Call
  * <callback> zero or more times with lists of these object pointers.

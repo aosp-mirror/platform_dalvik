@@ -18,6 +18,7 @@
 #include "alloc/clz.h"
 #include "alloc/CardTable.h"
 #include "alloc/HeapBitmap.h"
+#include "alloc/HeapBitmapInlines.h"
 #include "alloc/HeapInternal.h"
 #include "alloc/HeapSource.h"
 #include "alloc/MarkSweep.h"
