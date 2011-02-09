@@ -2121,6 +2121,14 @@ NEW_PRIMITIVE_ARRAY(jfloatArray, Float);
 NEW_PRIMITIVE_ARRAY(jdoubleArray, Double);
 
 
+/*
+ * Hack to allow forcecopy to work with jniGetNonMovableArrayElements.
+ * The code deliberately uses an invalid sequence of operations, so we
+ * need to pass it through unmodified.  Review that code before making
+ * any changes here.
+ */
+#define kNoCopyMagic    0xd5aab57f
+
 #define GET_PRIMITIVE_ARRAY_ELEMENTS(_ctype, _jname)                        \
     static _ctype* Check_Get##_jname##ArrayElements(JNIEnv* env,            \
         _ctype##Array array, jboolean* isCopy)                              \
@@ -2128,10 +2136,19 @@ NEW_PRIMITIVE_ARRAY(jdoubleArray, Double);
         CHECK_ENTER(env, kFlag_Default);                                    \
         CHECK_ARRAY(env, array);                                            \
         _ctype* result;                                                     \
+        u4 noCopy = 0;                                                      \
+        if (((JNIEnvExt*)env)->forceDataCopy && isCopy != NULL) {           \
+            /* capture this before the base call tramples on it */          \
+            noCopy = *(u4*) isCopy;                                         \
+        }                                                                   \
         result = BASE_ENV(env)->Get##_jname##ArrayElements(env,             \
             array, isCopy);                                                 \
         if (((JNIEnvExt*)env)->forceDataCopy && result != NULL) {           \
-            result = (_ctype*) createGuardedPACopy(env, array, isCopy);     \
+            if (noCopy == kNoCopyMagic) {                                   \
+                LOGV("FC: not copying %p %x\n", array, noCopy);             \
+            } else {                                                        \
+                result = (_ctype*) createGuardedPACopy(env, array, isCopy); \
+            }                                                               \
         }                                                                   \
         CHECK_EXIT(env);                                                    \
         return result;                                                      \
@@ -2146,7 +2163,13 @@ NEW_PRIMITIVE_ARRAY(jdoubleArray, Double);
         CHECK_NON_NULL(env, elems);                                         \
         CHECK_RELEASE_MODE(env, mode);                                      \
         if (((JNIEnvExt*)env)->forceDataCopy) {                             \
-            elems = (_ctype*) releaseGuardedPACopy(env, array, elems, mode);\
+            if ((uintptr_t)elems == kNoCopyMagic) {                         \
+                LOGV("FC: not freeing %p\n", array);                        \
+                elems = NULL;   /* base JNI call doesn't currently need */  \
+            } else {                                                        \
+                elems = (_ctype*) releaseGuardedPACopy(env, array, elems,   \
+                        mode);                                              \
+            }                                                               \
         }                                                                   \
         BASE_ENV(env)->Release##_jname##ArrayElements(env,                  \
             array, elems, mode);                                            \

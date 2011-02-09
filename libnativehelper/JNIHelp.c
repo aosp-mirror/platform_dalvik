@@ -21,6 +21,7 @@
 #include "JNIHelp.h"
 #include "utils/Log.h"
 
+#include <stdlib.h>
 #include <string.h>
 #include <assert.h>
 
@@ -336,4 +337,39 @@ int jniGetFDFromFileDescriptor(JNIEnv* env, jobject fileDescriptor) {
  */
 void jniSetFileDescriptorOfFD(JNIEnv* env, jobject fileDescriptor, int value) {
     (*env)->SetIntField(env, fileDescriptor, gCachedFields.descriptorField, value);
+}
+
+/*
+ * DO NOT USE THIS FUNCTION
+ *
+ * Get a pointer to the elements of a non-movable array.
+ *
+ * The semantics are similar to GetDirectBufferAddress.  Specifically, the VM
+ * guarantees that the array will not move, and the caller must ensure that
+ * it does not continue to use the pointer after the object is collected.
+ *
+ * We currently use an illegal sequence that trips up CheckJNI when
+ * the "forcecopy" mode is enabled.  We pass in a magic value to work
+ * around the problem.
+ *
+ * Returns NULL if the array is movable.
+ */
+jbyte* jniGetNonMovableArrayElements(JNIEnv* env, jarray arrayObj)
+{
+#define kNoCopyMagic 0xd5aab57f     /* also in CheckJni.c */
+
+    /*
+     * Normally the "isCopy" parameter is for a return value only, so the
+     * non-CheckJNI VM will ignore whatever we pass in.
+     */
+    uint32_t noCopy = kNoCopyMagic;
+    jbyte *addr = (*env)->GetByteArrayElements(env, arrayObj,
+            (jboolean*)&noCopy);
+
+    /*
+     * The non-CheckJNI implementation only cares about the array object,
+     * so we can replace the element pointer with the magic value.
+     */
+    (*env)->ReleaseByteArrayElements(env, arrayObj, (jbyte*) kNoCopyMagic, 0);
+    return addr;
 }
