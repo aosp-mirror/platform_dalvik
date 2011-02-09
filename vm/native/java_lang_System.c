@@ -127,10 +127,9 @@ static void Dalvik_java_lang_System_arraycopy(const u4* args, JValue* pResult)
     dstPos = args[3];
     length = args[4];
 
-    /* check for null or bad pointer */
-    if (!dvmValidateObject((Object*)srcArray) ||
-        !dvmValidateObject((Object*)dstArray))
-    {
+    /* check for null pointer */
+    if ((Object*)srcArray == NULL || (Object*)dstArray == NULL) {
+        dvmThrowException("Ljava/lang/NullPointerException;", NULL);
         assert(dvmCheckException(dvmThreadSelf()));
         RETURN_VOID();
     }
