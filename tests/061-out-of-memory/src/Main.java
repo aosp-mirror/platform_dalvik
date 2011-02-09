@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import java.util.Arrays;
 import java.util.LinkedList;
 
 /**
@@ -22,9 +23,21 @@ import java.util.LinkedList;
 public class Main {
     public static void main(String args[]) {
         System.out.println("tests beginning");
+        testHugeArray();
         testOomeLarge();
         testOomeSmall();
         System.out.println("tests succeeded");
+    }
+
+    private static void testHugeArray() {
+        try {
+            final int COUNT = 32768*32768 + 4;
+            int[] tooBig = new int[COUNT];
+
+            Arrays.fill(tooBig, 0xdd);
+        } catch (OutOfMemoryError oom) {
+            System.out.println("Got expected huge-array OOM");
+        }
     }
 
     private static void testOomeLarge() {
@@ -32,6 +45,8 @@ public class Main {
 
         /* Just shy of the typical max heap size so that it will actually
          * try to allocate it instead of short-circuiting.
+         *
+         * TODO: stop assuming the VM defaults to 16MB max
          */
         final int SIXTEEN_MB = (16 * 1024 * 1024 - 32);
 
@@ -56,6 +71,8 @@ public class Main {
     /* Do this in another method so that the GC has a chance of freeing the
      * list afterwards.  Even if we null out list when we're done, the conservative
      * GC may see a stale pointer to it in a register.
+     *
+     * TODO: stop assuming the VM defaults to 16MB max
      */
     private static boolean testOomeSmallInternal() {
         final int SIXTEEN_MB = (16 * 1024 * 1024);
