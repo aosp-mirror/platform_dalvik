@@ -33,7 +33,7 @@ bool dvmPropertiesStartup(void)
 
     /*
      * TODO: these are currently awkward to do in Java so we sneak them in
-     * here. Only java.vm.version really needs to be in Dalvik.
+     * here.
      */
     struct utsname info;
     uname(&info);
