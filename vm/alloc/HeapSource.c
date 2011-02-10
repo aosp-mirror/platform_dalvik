@@ -327,11 +327,35 @@ createMspace(void *base, size_t startSize, size_t maximumSize)
     return msp;
 }
 
-static bool
-addNewHeap(HeapSource *hs, mspace msp, size_t maximumSize)
+/*
+ * Add the initial heap.  Returns false if the initial heap was
+ * already added to the heap source.
+ */
+static bool addInitialHeap(HeapSource *hs, mspace msp, size_t maximumSize)
+{
+    assert(hs != NULL);
+    assert(msp != NULL);
+    if (hs->numHeaps != 0) {
+        return false;
+    }
+    hs->heaps[0].msp = msp;
+    hs->heaps[0].maximumSize = maximumSize;
+    hs->heaps[0].concurrentStartBytes = SIZE_MAX;
+    hs->heaps[0].base = hs->heapBase;
+    hs->heaps[0].limit = hs->heapBase + hs->heaps[0].maximumSize;
+    hs->numHeaps = 1;
+    return true;
+}
+
+/*
+ * Adds an additional heap to the heap source.  Returns false if there
+ * are too many heaps or insufficient free space to add another heap.
+ */
+static bool addNewHeap(HeapSource *hs)
 {
     Heap heap;
 
+    assert(hs != NULL);
     if (hs->numHeaps >= HEAP_SOURCE_MAX_HEAP_COUNT) {
         LOGE("Attempt to create too many heaps (%zd >= %zd)\n",
                 hs->numHeaps, HEAP_SOURCE_MAX_HEAP_COUNT);
@@ -341,42 +365,37 @@ addNewHeap(HeapSource *hs, mspace msp, size_t maximumSize)
 
     memset(&heap, 0, sizeof(heap));
 
-    if (msp != NULL) {
-        heap.msp = msp;
-        heap.maximumSize = maximumSize;
-        heap.concurrentStartBytes = SIZE_MAX;
-        heap.base = hs->heapBase;
-        heap.limit = hs->heapBase + heap.maximumSize;
-    } else {
-        void *sbrk0 = contiguous_mspace_sbrk0(hs->heaps[0].msp);
-        char *base = (char *)ALIGN_UP_TO_PAGE_SIZE(sbrk0);
-        size_t overhead = base - hs->heaps[0].base;
+    /*
+     * Heap storage comes from a common virtual memory reservation.
+     * The new heap will start on the page after the old heap.
+     */
+    void *sbrk0 = contiguous_mspace_sbrk0(hs->heaps[0].msp);
+    char *base = (char *)ALIGN_UP_TO_PAGE_SIZE(sbrk0);
+    size_t overhead = base - hs->heaps[0].base;
+    assert(((size_t)hs->heaps[0].base & (SYSTEM_PAGE_SIZE - 1)) == 0);
 
-        assert(((size_t)hs->heaps[0].base & (SYSTEM_PAGE_SIZE - 1)) == 0);
-        if (overhead + HEAP_MIN_FREE >= hs->maximumSize) {
-            LOGE_HEAP("No room to create any more heaps "
-                    "(%zd overhead, %zd max)\n",
-                    overhead, hs->maximumSize);
-            return false;
-        }
-        hs->heaps[0].maximumSize = overhead;
-        hs->heaps[0].limit = base;
-        heap.maximumSize = hs->growthLimit - overhead;
-        heap.msp = createMspace(base, HEAP_MIN_FREE, hs->maximumSize - overhead);
-        heap.concurrentStartBytes = HEAP_MIN_FREE - CONCURRENT_START;
-        heap.base = base;
-        heap.limit = heap.base + heap.maximumSize;
-        if (heap.msp == NULL) {
-            return false;
-        }
+    if (overhead + HEAP_MIN_FREE >= hs->maximumSize) {
+        LOGE_HEAP("No room to create any more heaps "
+                  "(%zd overhead, %zd max)",
+                  overhead, hs->maximumSize);
+        return false;
+    }
+
+    heap.maximumSize = hs->growthLimit - overhead;
+    heap.concurrentStartBytes = HEAP_MIN_FREE - CONCURRENT_START;
+    heap.base = base;
+    heap.limit = heap.base + heap.maximumSize;
+    heap.msp = createMspace(base, HEAP_MIN_FREE, hs->maximumSize - overhead);
+    if (heap.msp == NULL) {
+        return false;
     }
 
     /* Don't let the soon-to-be-old heap grow any further.
      */
-    if (hs->numHeaps > 0) {
-        mspace msp = hs->heaps[0].msp;
-        mspace_set_max_allowed_footprint(msp, mspace_footprint(msp));
-    }
+    hs->heaps[0].maximumSize = overhead;
+    hs->heaps[0].limit = base;
+    mspace msp = hs->heaps[0].msp;
+    mspace_set_max_allowed_footprint(msp, mspace_footprint(msp));
 
     /* Put the new heap in the list, at heaps[0].
      * Shift existing heaps down.
@@ -528,7 +547,7 @@ dvmHeapSourceStartup(size_t startSize, size_t maximumSize, size_t growthLimit)
     hs->hasGcThread = false;
     hs->heapBase = (char *)base;
     hs->heapLength = length;
-    if (!addNewHeap(hs, msp, growthLimit)) {
+    if (!addInitialHeap(hs, msp, growthLimit)) {
         LOGE_HEAP("Can't add initial heap\n");
         goto fail;
     }
@@ -588,7 +607,7 @@ dvmHeapSourceStartupBeforeFork()
          */
         LOGV("Splitting out new zygote heap\n");
         gDvm.newZygoteHeapAllocated = true;
-        return addNewHeap(hs, NULL, 0);
+        return addNewHeap(hs);
     }
     return true;
 }
