@@ -30,6 +30,7 @@ import com.android.dx.rop.cst.CstLiteralBits;
 import com.android.dx.rop.type.Type;
 import com.android.dx.rop.type.TypeBearer;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -97,16 +98,7 @@ public class LiteralOpUpgrader {
                 RegisterSpecList sources = insn.getSources();
 
                 // Replace insns with constant results with const insns
-                if (insn.getResult() != null &&
-                        opcode.getOpcode() != RegOps.CONST) {
-                    TypeBearer type = insn.getResult().getTypeBearer();
-                    if (type.isConstant() &&
-                            type.getBasicType() == Type.BT_INT) {
-                        replacePlainInsn(insn, RegisterSpecList.EMPTY,
-                                RegOps.CONST, (Constant) type);
-                        return;
-                    }
-                }
+                if (tryReplacingWithConstant(insn)) return;
 
                 if (sources.size() != 2 ) {
                     // We're only dealing with two-source insns here.
@@ -142,6 +134,40 @@ public class LiteralOpUpgrader {
                 }
             }
         });
+    }
+
+    /**
+     * Tries to replace an instruction with a const instruction. The given
+     * instruction must have a constant result for it to be replaced.
+     *
+     * @param insn {@code non-null;} instruction to try to replace
+     * @return true if the instruction was replaced
+     */
+    private boolean tryReplacingWithConstant(NormalSsaInsn insn) {
+        Insn originalRopInsn = insn.getOriginalRopInsn();
+        Rop opcode = originalRopInsn.getOpcode();
+
+        if (insn.getResult() != null && opcode.getOpcode() != RegOps.CONST) {
+            TypeBearer type = insn.getResult().getTypeBearer();
+            if (type.isConstant() && type.getBasicType() == Type.BT_INT) {
+                // Replace the instruction with a constant
+                replacePlainInsn(insn, RegisterSpecList.EMPTY,
+                        RegOps.CONST, (Constant) type);
+
+                // Remove the source as well if this is a move-result-pseudo
+                if (opcode.getOpcode() == RegOps.MOVE_RESULT_PSEUDO) {
+                    int pred = insn.getBlock().getPredecessors().nextSetBit(0);
+                    ArrayList<SsaInsn> predInsns =
+                            ssaMeth.getBlocks().get(pred).getInsns();
+                    NormalSsaInsn sourceInsn =
+                            (NormalSsaInsn) predInsns.get(predInsns.size()-1);
+                    replacePlainInsn(sourceInsn, RegisterSpecList.EMPTY,
+                            RegOps.GOTO, null);
+                }
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
