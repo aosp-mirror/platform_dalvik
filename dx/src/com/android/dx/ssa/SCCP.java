@@ -358,9 +358,10 @@ public class SCCP {
      * Simulates math insns, if possible.
      *
      * @param insn non-null insn to simulate
+     * @param resultType basic type of the result
      * @return constant result or null if not simulatable.
      */
-    private Constant simulateMath(SsaInsn insn) {
+    private Constant simulateMath(SsaInsn insn, int resultType) {
         Insn ropInsn = insn.getOriginalRopInsn();
         int opcode = insn.getOpcode().getOpcode();
         RegisterSpecList sources = insn.getSources();
@@ -391,7 +392,7 @@ public class SCCP {
             return null;
         }
 
-        switch (insn.getResult().getBasicType()) {
+        switch (resultType) {
             case Type.BT_INT:
                 int vR;
                 boolean skip=false;
@@ -470,11 +471,26 @@ public class SCCP {
             return;
         }
 
-        /* TODO: Simplify statements when possible using the constants. */
         int resultReg = insn.getResult().getReg();
+        int resultType = insn.getResult().getBasicType();
         int resultValue = VARYING;
         Constant resultConstant = null;
         int opcode = insn.getOpcode().getOpcode();
+
+        // TODO: Handle non-int arithmetic.
+        if (resultType != Type.BT_INT) {
+            return;
+        }
+
+        // Find defining instruction for move-result-pseudo instructions
+        if (opcode == RegOps.MOVE_RESULT_PSEUDO) {
+            int pred = insn.getBlock().getPredecessors().nextSetBit(0);
+            ArrayList<SsaInsn> predInsns;
+            predInsns = ssaMeth.getBlocks().get(pred).getInsns();
+            insn = predInsns.get(predInsns.size()-1);
+            opcode = insn.getOpcode().getOpcode();
+        }
+
         switch (opcode) {
             case RegOps.CONST: {
                 CstInsn cstInsn = (CstInsn)ropInsn;
@@ -503,7 +519,7 @@ public class SCCP {
             case RegOps.USHR:
             case RegOps.REM:
 
-                resultConstant = simulateMath(insn);
+                resultConstant = simulateMath(insn, resultType);
 
                 if (resultConstant == null) {
                     resultValue = VARYING;
@@ -511,8 +527,7 @@ public class SCCP {
                     resultValue = CONSTANT;
                 }
             break;
-            /* TODO: Handle non-int arithmetic.
-               TODO: Eliminate check casts that we can prove the type of. */
+            // TODO: Eliminate check casts that we can prove the type of.
             default: {}
         }
         if (setLatticeValueTo(resultReg, resultValue, resultConstant)) {
