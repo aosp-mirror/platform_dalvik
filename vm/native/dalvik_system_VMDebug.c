@@ -21,6 +21,7 @@
 #include "native/InternalNativePriv.h"
 #include "hprof/Hprof.h"
 
+#include <cutils/array.h>
 #include <string.h>
 #include <unistd.h>
 #include <errno.h>
@@ -55,57 +56,6 @@ static int getFileDescriptor(Object* obj)
 }
 
 /*
- * Convert an array of char* into a String[].
- *
- * Returns NULL on failure, with an exception raised.
- */
-static ArrayObject* convertStringArray(char** strings, size_t count)
-{
-    Thread* self = dvmThreadSelf();
-
-    /*
-     * Allocate an array to hold the String objects.
-     */
-    ClassObject* stringArrayClass =
-        dvmFindArrayClass("[Ljava/lang/String;", NULL);
-    if (stringArrayClass == NULL) {
-        /* shouldn't happen */
-        LOGE("Unable to find [Ljava/lang/String;\n");
-        dvmAbort();
-    }
-
-    ArrayObject* stringArray =
-        dvmAllocArrayByClass(stringArrayClass, count, ALLOC_DEFAULT);
-    if (stringArray == NULL) {
-        /* probably OOM */
-        LOGD("Failed allocating array of %d strings\n", count);
-        assert(dvmCheckException(self));
-        return NULL;
-    }
-
-    /*
-     * Create the individual String objects and add them to the array.
-     */
-    size_t i;
-    for (i = 0; i < count; i++) {
-        Object *str =
-            (Object *)dvmCreateStringFromCstr(strings[i]);
-        if (str == NULL) {
-            /* probably OOM; drop out now */
-            assert(dvmCheckException(self));
-            dvmReleaseTrackedAlloc((Object*)stringArray, self);
-            return NULL;
-        }
-        dvmSetObjectArrayElement(stringArray, i, str);
-        /* stored in tracked array, okay to release */
-        dvmReleaseTrackedAlloc(str, self);
-    }
-
-    dvmReleaseTrackedAlloc((Object*)stringArray, self);
-    return stringArray;
-}
-
-/*
  * static String[] getVmFeatureList()
  *
  * Return a set of strings describing available VM features (this is chiefly
@@ -115,22 +65,21 @@ static ArrayObject* convertStringArray(char** strings, size_t count)
 static void Dalvik_dalvik_system_VMDebug_getVmFeatureList(const u4* args,
     JValue* pResult)
 {
-    static const int MAX_FEATURE_COUNT = 10;
-    char* features[MAX_FEATURE_COUNT];
-    int idx = 0;
+    Array* features = arrayCreate();
 
     /* VM responds to DDMS method profiling requests */
-    features[idx++] = "method-trace-profiling";
-    features[idx++] = "method-trace-profiling-streaming";
+    arrayAdd(features, "method-trace-profiling");
+    arrayAdd(features, "method-trace-profiling-streaming");
     /* VM responds to DDMS heap dump requests */
-    features[idx++] = "hprof-heap-dump";
-    features[idx++] = "hprof-heap-dump-streaming";
+    arrayAdd(features, "hprof-heap-dump");
+    arrayAdd(features, "hprof-heap-dump-streaming");
 
-    assert(idx <= MAX_FEATURE_COUNT);
-
-    LOGV("+++ sending up %d features\n", idx);
-    ArrayObject* arrayObj = convertStringArray(features, idx);
-    RETURN_PTR(arrayObj);       /* will be null on OOM */
+    char** strings = (char**) arrayUnwrap(features);
+    int count = arraySize(features);
+    ArrayObject* result = dvmCreateStringArray(strings, count);
+    dvmReleaseTrackedAlloc((Object*) result, dvmThreadSelf());
+    arrayFree(features);
+    RETURN_PTR(result);
 }
 
 

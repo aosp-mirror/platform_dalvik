@@ -20,6 +20,7 @@
 #include "Dalvik.h"
 #include "native/InternalNativePriv.h"
 
+#include <cutils/array.h>
 #include <limits.h>
 
 
@@ -158,22 +159,68 @@ static void Dalvik_dalvik_system_VMRuntime_clearGrowthLimit(const u4* args,
     RETURN_VOID();
 }
 
+static void Dalvik_dalvik_system_VMRuntime_properties(const u4* args,
+    JValue* pResult)
+{
+    char** strings = (char**) arrayUnwrap(gDvm.properties);
+    int count = arraySize(gDvm.properties);
+    ArrayObject* result = dvmCreateStringArray(strings, count);
+    dvmReleaseTrackedAlloc((Object*) result, dvmThreadSelf());
+    RETURN_PTR(result);
+}
+
+static void returnCString(JValue* pResult, const char* s)
+{
+    Object* result = (Object*) dvmCreateStringFromCstr(s);
+    dvmReleaseTrackedAlloc(result, dvmThreadSelf());
+    RETURN_PTR(result);
+}
+
+static void Dalvik_dalvik_system_VMRuntime_bootClassPath(const u4* args,
+    JValue* pResult)
+{
+    returnCString(pResult, gDvm.bootClassPathStr);
+}
+
+static void Dalvik_dalvik_system_VMRuntime_classPath(const u4* args,
+    JValue* pResult)
+{
+    returnCString(pResult, gDvm.classPathStr);
+}
+
+static void Dalvik_dalvik_system_VMRuntime_vmVersion(const u4* args,
+    JValue* pResult)
+{
+    char buf[64];
+    sprintf(buf, "%d.%d.%d",
+            DALVIK_MAJOR_VERSION, DALVIK_MINOR_VERSION, DALVIK_BUG_VERSION);
+    returnCString(pResult, buf);
+}
+
 const DalvikNativeMethod dvm_dalvik_system_VMRuntime[] = {
+    { "addressOf", "(Ljava/lang/Object;)J",
+        Dalvik_dalvik_system_VMRuntime_addressOf },
+    { "bootClassPath", "()Ljava/lang/String;",
+        Dalvik_dalvik_system_VMRuntime_bootClassPath },
+    { "classPath", "()Ljava/lang/String;",
+        Dalvik_dalvik_system_VMRuntime_classPath },
+    { "clearGrowthLimit", "()V",
+        Dalvik_dalvik_system_VMRuntime_clearGrowthLimit },
+    { "disableJitCompilation", "()V",
+        Dalvik_dalvik_system_VMRuntime_disableJitCompilation },
     { "getTargetHeapUtilization", "()F",
         Dalvik_dalvik_system_VMRuntime_getTargetHeapUtilization },
     { "nativeSetTargetHeapUtilization", "(F)V",
         Dalvik_dalvik_system_VMRuntime_nativeSetTargetHeapUtilization },
-     { "runFinalizationSync", "()V",
+    { "newNonMovableArray", "(Ljava/lang/Class;I)Ljava/lang/Object;",
+        Dalvik_dalvik_system_VMRuntime_newNonMovableArray },
+    { "properties", "()[Ljava/lang/String;",
+        Dalvik_dalvik_system_VMRuntime_properties },
+    { "runFinalizationSync", "()V",
         Dalvik_dalvik_system_VMRuntime_runFinalizationSync },
     { "startJitCompilation", "()V",
         Dalvik_dalvik_system_VMRuntime_startJitCompilation },
-    { "disableJitCompilation", "()V",
-        Dalvik_dalvik_system_VMRuntime_disableJitCompilation },
-    { "newNonMovableArray", "(Ljava/lang/Class;I)Ljava/lang/Object;",
-        Dalvik_dalvik_system_VMRuntime_newNonMovableArray },
-    { "addressOf", "(Ljava/lang/Object;)J",
-        Dalvik_dalvik_system_VMRuntime_addressOf },
-    { "clearGrowthLimit", "()V",
-        Dalvik_dalvik_system_VMRuntime_clearGrowthLimit },
+    { "vmVersion", "()Ljava/lang/String;",
+        Dalvik_dalvik_system_VMRuntime_vmVersion },
     { NULL, NULL, NULL },
 };

@@ -18,154 +18,44 @@
  */
 #include "Dalvik.h"
 
+#include <cutils/array.h>
 #include <stdlib.h>
 #include <sys/utsname.h>
 #include <limits.h>
 #include <unistd.h>
 
-/*
- * Create some storage for properties read from the command line.
- */
-bool dvmPropertiesStartup(int maxProps)
+bool dvmPropertiesStartup(void)
 {
-    gDvm.maxProps = maxProps;
-    if (maxProps > 0) {
-        gDvm.propList = (char**) malloc(maxProps * sizeof(char*));
-        if (gDvm.propList == NULL)
-            return false;
-    }
-    gDvm.numProps = 0;
-
-    return true;
-}
-
-/*
- * Clean up.
- */
-void dvmPropertiesShutdown(void)
-{
-    int i;
-
-    for (i = 0; i < gDvm.numProps; i++)
-        free(gDvm.propList[i]);
-    free(gDvm.propList);
-    gDvm.propList = NULL;
-}
-
-/*
- * Add a property specified on the command line.  "argStr" has the form
- * "name=value".  "name" must have nonzero length.
- *
- * Returns "true" if argStr appears valid.
- */
-bool dvmAddCommandLineProperty(const char* argStr)
-{
-    char* mangle;
-    char* equals;
-
-    mangle = strdup(argStr);
-    if (mangle == NULL) {
+    gDvm.properties = arrayCreate();
+    if (gDvm.properties == NULL) {
         return false;
     }
-    equals = strchr(mangle, '=');
-    if (equals == NULL || equals == mangle) {
-        free(mangle);
-        return false;
-    }
-    *equals = '\0';
-
-    assert(gDvm.numProps < gDvm.maxProps);
-    gDvm.propList[gDvm.numProps++] = mangle;
-
-    return true;
-}
-
-
-/*
- * Find the "System.setProperty" method.
- *
- * Returns NULL and throws an exception if not found.
- */
-static Method* findSetProperty(ClassObject* clazz)
-{
-    Method* put = dvmFindVirtualMethodHierByDescriptor(clazz, "setProperty",
-            "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/Object;");
-    if (put == NULL) {
-        dvmThrowException("Ljava/lang/RuntimeException;",
-            "could not find setProperty(String,String) in Properties");
-        /* fall through to return */
-    }
-    return put;
-}
-
-/*
- * Set the value of the property.
- */
-static void setProperty(Object* propObj, Method* put, const char* key,
-    const char* value)
-{
-    StringObject* keyStr;
-    StringObject* valueStr;
-
-    if (value == NULL) {
-        /* unclear what to do; probably want to create prop w/ empty string */
-        value = "";
-    }
-
-    keyStr = dvmCreateStringFromCstr(key);
-    valueStr = dvmCreateStringFromCstr(value);
-    if (keyStr == NULL || valueStr == NULL) {
-        LOGW("setProperty string creation failed\n");
-        goto bail;
-    }
-
-    JValue unused;
-    dvmCallMethod(dvmThreadSelf(), put, propObj, &unused, keyStr, valueStr);
-
-bail:
-    dvmReleaseTrackedAlloc((Object*) keyStr, NULL);
-    dvmReleaseTrackedAlloc((Object*) valueStr, NULL);
-}
-
-/*
- * Fills the passed-in java.util.Properties with stuff only the VM knows, such
- * as the VM's exact version and properties set on the command-line with -D.
- */
-void dvmInitVmSystemProperties(Object* propObj)
-{
-    Method* put = findSetProperty(propObj->clazz);
-    int i;
-    struct utsname info;
-    char tmpBuf[64];
-    char path[PATH_MAX];
-
-    if (put == NULL)
-        return;
 
     /*
      * TODO: these are currently awkward to do in Java so we sneak them in
      * here. Only java.vm.version really needs to be in Dalvik.
      */
-    setProperty(propObj, put, "java.boot.class.path", gDvm.bootClassPathStr);
-    setProperty(propObj, put, "java.class.path", gDvm.classPathStr);
-    sprintf(tmpBuf, "%d.%d.%d",
-            DALVIK_MAJOR_VERSION, DALVIK_MINOR_VERSION, DALVIK_BUG_VERSION);
-    setProperty(propObj, put, "java.vm.version", tmpBuf);
+    struct utsname info;
     uname(&info);
-    setProperty(propObj, put, "os.arch", info.machine);
-    setProperty(propObj, put, "os.name", info.sysname);
-    setProperty(propObj, put, "os.version", info.release);
-    setProperty(propObj, put, "user.dir", getcwd(path, sizeof(path)));
+    char* s;
+    asprintf(&s, "os.arch=%s", info.machine);
+    arrayAdd(gDvm.properties, s);
+    asprintf(&s, "os.name=%s", info.sysname);
+    arrayAdd(gDvm.properties, s);
+    asprintf(&s, "os.version=%s", info.release);
+    arrayAdd(gDvm.properties, s);
 
-    /*
-     * Properties set on the command-line with -D.
-     */
-    for (i = 0; i < gDvm.numProps; i++) {
-        const char* value;
+    char path[PATH_MAX];
+    asprintf(&s, "user.dir=%s", getcwd(path, sizeof(path)));
+    arrayAdd(gDvm.properties, s);
 
-        /* value starts after the end of the key string */
-        for (value = gDvm.propList[i]; *value != '\0'; value++)
-            ;
-        setProperty(propObj, put, gDvm.propList[i], value+1);
+    return true;
+}
+
+void dvmPropertiesShutdown(void) {
+    int i = arraySize(gDvm.properties);
+    for (; i >= 0; --i) {
+        free(arrayGet(gDvm.properties, i));
     }
+    arrayFree(gDvm.properties);
 }

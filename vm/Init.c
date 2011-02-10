@@ -746,8 +746,17 @@ static int processOptions(int argc, const char* const argv[],
             gDvm.bootClassPathStr = allPath;
 
         } else if (strncmp(argv[i], "-D", 2) == 0) {
-            /* set property */
-            dvmAddCommandLineProperty(argv[i] + 2);
+            /* Properties are handled in managed code. We just check syntax. */
+            if (strchr(argv[i], '=') == NULL) {
+                dvmFprintf(stderr, "Bad system property setting: \"%s\"\n",
+                    argv[i]);
+                return -1;
+            }
+            if (arrayAdd(gDvm.properties, strdup(argv[i] + 2)) == -1) {
+                dvmFprintf(stderr, "Can't set system property: \"%s\"\n",
+                    argv[i]);
+                return -1;
+            }
 
         } else if (strcmp(argv[i], "-jar") == 0) {
             // TODO: handle this; name of jar should be in argv[i+1]
@@ -1147,11 +1156,11 @@ int dvmStartup(int argc, const char* const argv[], bool ignoreUnrecognized,
     for (i = 0; i < argc; i++)
         LOGV("  %d: '%s'\n", i, argv[i]);
 
-    setCommandLineDefaults();
-
     /* prep properties storage */
-    if (!dvmPropertiesStartup(argc))
+    if (!dvmPropertiesStartup())
         goto fail;
+
+    setCommandLineDefaults();
 
     /*
      * Process the option flags (if any).
