@@ -521,3 +521,40 @@ int dvmHashcmpStrings(const void* vstrObj1, const void* vstrObj2)
                   (const u2*) chars2->contents + offset2,
                   len1 * sizeof(u2));
 }
+
+ArrayObject* dvmCreateStringArray(char** strings, size_t count)
+{
+    Thread* self = dvmThreadSelf();
+
+    /*
+     * Allocate an array to hold the String objects.
+     */
+    ArrayObject* stringArray =
+        dvmAllocObjectArray(gDvm.classJavaLangString, count, ALLOC_DEFAULT);
+    if (stringArray == NULL) {
+        /* probably OOM */
+        LOGD("Failed allocating array of %d strings\n", count);
+        assert(dvmCheckException(self));
+        return NULL;
+    }
+
+    /*
+     * Create the individual String objects and add them to the array.
+     */
+    size_t i;
+    for (i = 0; i < count; i++) {
+        Object* str =
+            (Object*) dvmCreateStringFromCstr(strings[i]);
+        if (str == NULL) {
+            /* probably OOM; drop out now */
+            assert(dvmCheckException(self));
+            dvmReleaseTrackedAlloc((Object*) stringArray, self);
+            return NULL;
+        }
+        dvmSetObjectArrayElement(stringArray, i, str);
+        /* stored in tracked array, okay to release */
+        dvmReleaseTrackedAlloc(str, self);
+    }
+
+    return stringArray;
+}

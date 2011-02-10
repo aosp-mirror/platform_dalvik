@@ -29,6 +29,7 @@
 #ifndef _DALVIK_GLOBALS
 #define _DALVIK_GLOBALS
 
+#include <cutils/array.h>
 #include <stdarg.h>
 #include <pthread.h>
 
@@ -181,11 +182,11 @@ struct DvmGlobals {
     bool        optimizing;
 
     /*
-     * java.lang.System properties set from the command line.
+     * java.lang.System properties set from the command line with -D.
+     * This is effectively a set, where later entries override earlier
+     * ones.
      */
-    int         numProps;
-    int         maxProps;
-    char**      propList;
+    Array*      properties;
 
     /*
      * Where the VM goes to find system classes.
