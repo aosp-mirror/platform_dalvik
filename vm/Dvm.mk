@@ -165,7 +165,6 @@ LOCAL_SRC_FILES := \
 	native/java_lang_Runtime.c \
 	native/java_lang_String.c \
 	native/java_lang_System.c \
-	native/java_lang_SystemProperties.c \
 	native/java_lang_Throwable.c \
 	native/java_lang_VMClassLoader.c \
 	native/java_lang_VMThread.c \

@@ -64,6 +64,9 @@ bool dvmAddCommandLineProperty(const char* argStr)
     char* equals;
 
     mangle = strdup(argStr);
+    if (mangle == NULL) {
+        return false;
+    }
     equals = strchr(mangle, '=');
     if (equals == NULL || equals == mangle) {
         free(mangle);
@@ -79,15 +82,13 @@ bool dvmAddCommandLineProperty(const char* argStr)
 
 
 /*
- * Find the "put" method for this class.
+ * Find the "System.setProperty" method.
  *
  * Returns NULL and throws an exception if not found.
  */
-static Method* getPut(ClassObject* clazz)
+static Method* findSetProperty(ClassObject* clazz)
 {
-    Method* put;
-
-    put = dvmFindVirtualMethodHierByDescriptor(clazz, "setProperty",
+    Method* put = dvmFindVirtualMethodHierByDescriptor(clazz, "setProperty",
             "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/Object;");
     if (put == NULL) {
         dvmThrowException("Ljava/lang/RuntimeException;",
@@ -127,107 +128,38 @@ bail:
 }
 
 /*
- * Create the VM-default system properties.
- *
- * We can do them here, or do them in interpreted code with lots of native
- * methods to get bits and pieces.  This is a bit smaller.
+ * Fills the passed-in java.util.Properties with stuff only the VM knows, such
+ * as the VM's exact version and properties set on the command-line with -D.
  */
-void dvmCreateDefaultProperties(Object* propObj)
+void dvmInitVmSystemProperties(Object* propObj)
 {
-    Method* put = getPut(propObj->clazz);
+    Method* put = findSetProperty(propObj->clazz);
+    int i;
+    struct utsname info;
+    char tmpBuf[64];
+    char path[PATH_MAX];
 
     if (put == NULL)
         return;
 
-    struct utsname info;
-    uname(&info);
-
-    /* constant strings that are used multiple times below */
-    const char *projectUrl = "http://www.android.com/";
-    const char *projectName = "The Android Project";
-
     /*
-     * These are listed in the docs.
+     * TODO: these are currently awkward to do in Java so we sneak them in
+     * here. Only java.vm.version really needs to be in Dalvik.
      */
-
     setProperty(propObj, put, "java.boot.class.path", gDvm.bootClassPathStr);
     setProperty(propObj, put, "java.class.path", gDvm.classPathStr);
-    setProperty(propObj, put, "java.class.version", "46.0");
-    setProperty(propObj, put, "java.compiler", "");
-    setProperty(propObj, put, "java.ext.dirs", "");
-
-    if (getenv("JAVA_HOME") != NULL) {
-        setProperty(propObj, put, "java.home", getenv("JAVA_HOME"));
-    } else {
-        setProperty(propObj, put, "java.home", "/system");
-    }
-
-    setProperty(propObj, put, "java.io.tmpdir", "/tmp");
-    setProperty(propObj, put, "java.library.path", getenv("LD_LIBRARY_PATH"));
-
-    setProperty(propObj, put, "java.net.preferIPv6Addresses", "true");
-
-    setProperty(propObj, put, "java.vendor", projectName);
-    setProperty(propObj, put, "java.vendor.url", projectUrl);
-    setProperty(propObj, put, "java.version", "0");
-    setProperty(propObj, put, "java.vm.name", "Dalvik");
-    setProperty(propObj, put, "java.vm.specification.name",
-            "Dalvik Virtual Machine Specification");
-    setProperty(propObj, put, "java.vm.specification.vendor", projectName);
-    setProperty(propObj, put, "java.vm.specification.version", "0.9");
-    setProperty(propObj, put, "java.vm.vendor", projectName);
-
-    char tmpBuf[64];
     sprintf(tmpBuf, "%d.%d.%d",
-        DALVIK_MAJOR_VERSION, DALVIK_MINOR_VERSION, DALVIK_BUG_VERSION);
+            DALVIK_MAJOR_VERSION, DALVIK_MINOR_VERSION, DALVIK_BUG_VERSION);
     setProperty(propObj, put, "java.vm.version", tmpBuf);
-
-    setProperty(propObj, put, "java.specification.name",
-            "Dalvik Core Library");
-    setProperty(propObj, put, "java.specification.vendor", projectName);
-    setProperty(propObj, put, "java.specification.version", "0.9");
-
+    uname(&info);
     setProperty(propObj, put, "os.arch", info.machine);
     setProperty(propObj, put, "os.name", info.sysname);
     setProperty(propObj, put, "os.version", info.release);
-    setProperty(propObj, put, "user.home", getenv("HOME"));
-    setProperty(propObj, put, "user.name", getenv("USER"));
-
-    char path[PATH_MAX];
     setProperty(propObj, put, "user.dir", getcwd(path, sizeof(path)));
 
-    setProperty(propObj, put, "file.separator", "/");
-    setProperty(propObj, put, "line.separator", "\n");
-    setProperty(propObj, put, "path.separator", ":");
-
     /*
-     * These show up elsewhere, so do them here too.
+     * Properties set on the command-line with -D.
      */
-    setProperty(propObj, put, "java.runtime.name", "Android Runtime");
-    setProperty(propObj, put, "java.runtime.version", "0.9");
-    setProperty(propObj, put, "java.vm.vendor.url", projectUrl);
-
-    setProperty(propObj, put, "file.encoding", "UTF-8");
-    setProperty(propObj, put, "user.language", "en");
-    setProperty(propObj, put, "user.region", "US");
-
-    /*
-     * These are unique to Android/Dalvik.
-     */
-    setProperty(propObj, put, "android.vm.dexfile", "true");
-}
-
-/*
- * Add anything specified on the command line.
- */
-void dvmSetCommandLineProperties(Object* propObj)
-{
-    Method* put = getPut(propObj->clazz);
-    int i;
-
-    if (put == NULL)
-        return;
-
     for (i = 0; i < gDvm.numProps; i++) {
         const char* value;
 
@@ -236,52 +168,4 @@ void dvmSetCommandLineProperties(Object* propObj)
             ;
         setProperty(propObj, put, gDvm.propList[i], value+1);
     }
-}
-
-/*
- * Get a property by calling System.getProperty(key).
- *
- * Returns a newly-allocated string, or NULL on failure or key not found.
- * (Unexpected failures will also raise an exception.)
- */
-char* dvmGetProperty(const char* key)
-{
-    Thread* self = dvmThreadSelf();
-    ClassObject* system;
-    Method* getProp;
-    StringObject* keyObj = NULL;
-    StringObject* valueObj;
-    char* result = NULL;
-
-    assert(key != NULL);
-
-    system = dvmFindSystemClass("Ljava/lang/System;");
-    if (system == NULL)
-        goto bail;
-
-    getProp = dvmFindDirectMethodByDescriptor(system, "getProperty",
-        "(Ljava/lang/String;)Ljava/lang/String;");
-    if (getProp == NULL) {
-        LOGW("Could not find getProperty(String) in java.lang.System\n");
-        goto bail;
-    }
-
-    keyObj = dvmCreateStringFromCstr(key);
-    if (keyObj == NULL)
-        goto bail;
-
-    JValue val;
-    dvmCallMethod(self, getProp, NULL, &val, keyObj);
-    valueObj = (StringObject*) val.l;
-    if (valueObj == NULL)
-        goto bail;
-
-    /* don't need to call dvmAddTrackedAlloc on result; conv to C string safe */
-
-    result = dvmCreateCstrFromString(valueObj);
-    /* fall through with result */
-
-bail:
-    dvmReleaseTrackedAlloc((Object*)keyObj, self);
-    return result;
 }
