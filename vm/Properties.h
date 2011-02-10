@@ -29,9 +29,6 @@ void dvmPropertiesShutdown(void);
 bool dvmAddCommandLineProperty(const char* argStr);
 
 /* called during property initialization */
-void dvmCreateDefaultProperties(Object* propObj);
-void dvmSetCommandLineProperties(Object* propObj);
-
-char* dvmGetProperty(const char* key);
+void dvmInitVmSystemProperties(Object* propObj);
 
 #endif /*_DALVIK_PROPERTIES*/

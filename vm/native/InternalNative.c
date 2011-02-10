@@ -31,7 +31,6 @@ static DalvikNativeClass gDvmNativeMethodSet[] = {
     { "Ljava/lang/Runtime;",              dvm_java_lang_Runtime, 0 },
     { "Ljava/lang/String;",               dvm_java_lang_String, 0 },
     { "Ljava/lang/System;",               dvm_java_lang_System, 0 },
-    { "Ljava/lang/SystemProperties;",     dvm_java_lang_SystemProperties, 0 },
     { "Ljava/lang/Throwable;",            dvm_java_lang_Throwable, 0 },
     { "Ljava/lang/VMClassLoader;",        dvm_java_lang_VMClassLoader, 0 },
     { "Ljava/lang/VMThread;",             dvm_java_lang_VMThread, 0 },

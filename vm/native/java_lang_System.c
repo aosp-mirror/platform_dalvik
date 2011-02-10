@@ -343,6 +343,14 @@ static void Dalvik_java_lang_System_identityHashCode(const u4* args,
     RETURN_INT(dvmIdentityHashCode(thisPtr));
 }
 
+static void Dalvik_java_lang_System_initVmSystemProperties(const u4* args,
+    JValue* pResult)
+{
+    Object* propObj = (Object*) args[0];
+    dvmInitVmSystemProperties(propObj);
+    RETURN_VOID();
+}
+
 /*
  * public static String mapLibraryName(String libname)
  */
@@ -376,11 +384,13 @@ const DalvikNativeMethod dvm_java_lang_System[] = {
         Dalvik_java_lang_System_arraycopy },
     { "currentTimeMillis",  "()J",
         Dalvik_java_lang_System_currentTimeMillis },
-    { "nanoTime",  "()J",
-        Dalvik_java_lang_System_nanoTime },
     { "identityHashCode",  "(Ljava/lang/Object;)I",
         Dalvik_java_lang_System_identityHashCode },
+    { "initVmSystemProperties",  "(Ljava/util/Properties;)V",
+        Dalvik_java_lang_System_initVmSystemProperties },
     { "mapLibraryName",     "(Ljava/lang/String;)Ljava/lang/String;",
         Dalvik_java_lang_System_mapLibraryName },
+    { "nanoTime",  "()J",
+        Dalvik_java_lang_System_nanoTime },
     { NULL, NULL, NULL },
 };

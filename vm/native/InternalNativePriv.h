@@ -86,7 +86,6 @@ extern const DalvikNativeMethod dvm_java_lang_Class[];
 extern const DalvikNativeMethod dvm_java_lang_Runtime[];
 extern const DalvikNativeMethod dvm_java_lang_String[];
 extern const DalvikNativeMethod dvm_java_lang_System[];
-extern const DalvikNativeMethod dvm_java_lang_SystemProperties[];
 extern const DalvikNativeMethod dvm_java_lang_Throwable[];
 extern const DalvikNativeMethod dvm_java_lang_VMClassLoader[];
 extern const DalvikNativeMethod dvm_java_lang_VMThread[];
