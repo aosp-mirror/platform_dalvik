@@ -478,6 +478,7 @@ public class SCCP {
         int opcode = insn.getOpcode().getOpcode();
 
         // TODO: Handle non-int arithmetic.
+        /*
         if (resultType != Type.BT_INT) {
             return;
         }
@@ -490,6 +491,7 @@ public class SCCP {
             insn = predInsns.get(predInsns.size()-1);
             opcode = insn.getOpcode().getOpcode();
         }
+        */
 
         switch (opcode) {
             case RegOps.CONST: {
