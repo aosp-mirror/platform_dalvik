@@ -407,7 +407,7 @@ block 0000
   @????: mark-local-int . <- v1:"b"I
   Blort.java:54@0011: const-int(10) v2:I=10 <- .
   @????: mark-local-int . <- v2:"c"I
-  Blort.java:56@0018: mul-const-int(10) v3:I <- v3:I
+  Blort.java:56@0018: const-int(100) v3:I=100 <- .
   @????: mark-local-int . <- v3:"i"I=100
   Blort.java:57@001a: goto . <- .
   next 0003

@@ -442,7 +442,12 @@ public class SCCP {
                         vR = vA >>> vB;
                         break;
                     case RegOps.REM:
-                        vR = vA % vB;
+                        if (vB == 0) {
+                            skip = true;
+                            vR = 0; // just to hide a warning
+                        } else {
+                            vR = vA % vB;
+                        }
                         break;
                     default:
                         throw new RuntimeException("Unexpected op");
@@ -467,31 +472,20 @@ public class SCCP {
             simulateBranch(insn);
         }
 
-        if (insn.getResult() == null) {
-            return;
+        int opcode = insn.getOpcode().getOpcode();
+        RegisterSpec result = insn.getResult();
+
+        // Find corresponding move-result-pseudo result for div and rem
+        if (opcode == RegOps.DIV || opcode == RegOps.REM) {
+            SsaBasicBlock succ = insn.getBlock().getPrimarySuccessor();
+            result = succ.getInsns().get(0).getResult();
         }
 
-        int resultReg = insn.getResult().getReg();
-        int resultType = insn.getResult().getBasicType();
+        if (result == null) return;
+
+        int resultReg = result.getReg();
         int resultValue = VARYING;
         Constant resultConstant = null;
-        int opcode = insn.getOpcode().getOpcode();
-
-        // TODO: Handle non-int arithmetic.
-        /*
-        if (resultType != Type.BT_INT) {
-            return;
-        }
-
-        // Find defining instruction for move-result-pseudo instructions
-        if (opcode == RegOps.MOVE_RESULT_PSEUDO) {
-            int pred = insn.getBlock().getPredecessors().nextSetBit(0);
-            ArrayList<SsaInsn> predInsns;
-            predInsns = ssaMeth.getBlocks().get(pred).getInsns();
-            insn = predInsns.get(predInsns.size()-1);
-            opcode = insn.getOpcode().getOpcode();
-        }
-        */
 
         switch (opcode) {
             case RegOps.CONST: {
@@ -508,7 +502,6 @@ public class SCCP {
                 }
                 break;
             }
-
             case RegOps.ADD:
             case RegOps.SUB:
             case RegOps.MUL:
@@ -519,16 +512,21 @@ public class SCCP {
             case RegOps.SHL:
             case RegOps.SHR:
             case RegOps.USHR:
-            case RegOps.REM:
-
-                resultConstant = simulateMath(insn, resultType);
-
-                if (resultConstant == null) {
-                    resultValue = VARYING;
-                } else {
+            case RegOps.REM: {
+                resultConstant = simulateMath(insn, result.getBasicType());
+                if (resultConstant != null) {
                     resultValue = CONSTANT;
                 }
-            break;
+                break;
+            }
+            case RegOps.MOVE_RESULT_PSEUDO: {
+                if (latticeValues[resultReg] == CONSTANT) {
+                    resultValue = latticeValues[resultReg];
+                    resultConstant = latticeConstants[resultReg];
+                }
+                break;
+            }
+            // TODO: Handle non-int arithmetic.
             // TODO: Eliminate check casts that we can prove the type of.
             default: {}
         }
