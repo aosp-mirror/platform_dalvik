@@ -20,6 +20,7 @@
 
 #include <stdlib.h>
 #include <stddef.h>
+#include <limits.h>
 
 static ClassObject* createArrayClass(const char* descriptor, Object* loader);
 static ClassObject* createPrimitiveClass(int idx);
@@ -37,25 +38,31 @@ static const char gPrimLetter[] = PRIM_TYPE_TO_LETTER;
 ArrayObject* dvmAllocArray(ClassObject* arrayClass, size_t length,
     size_t elemWidth, int allocFlags)
 {
-    ArrayObject* newArray;
-    size_t size;
-
+    assert(arrayClass != NULL);
+    assert(arrayClass->descriptor != NULL);
     assert(arrayClass->descriptor[0] == '[');
-    size = offsetof(ArrayObject, contents);
-    size += length * elemWidth;
-
-    /* Note that we assume that the Array class does not
-     * override finalize().
-     */
-    newArray = (ArrayObject*)dvmMalloc(size, allocFlags);
+    assert(length <= 0x7fffffff);
+    assert(elemWidth > 0);
+    assert(elemWidth <= 8);
+    assert((elemWidth & (elemWidth - 1)) == 0);
+    size_t elementShift = sizeof(size_t) * CHAR_BIT - 1 - CLZ(elemWidth);
+    size_t elementSize = length << elementShift;
+    size_t headerSize = offsetof(ArrayObject, contents);
+    size_t totalSize = elementSize + headerSize;
+    if (elementSize >> elementShift != length || totalSize < elementSize) {
+        char *descriptor = dvmHumanReadableDescriptor(arrayClass->descriptor);
+        dvmThrowExceptionFmt("Ljava/lang/OutOfMemoryError;",
+                             "%s of length %zd exceeds the VM limit",
+                             descriptor, length);
+        free(descriptor);
+        return NULL;
+    }
+    ArrayObject* newArray = (ArrayObject*)dvmMalloc(totalSize, allocFlags);
     if (newArray != NULL) {
         DVM_OBJECT_INIT(&newArray->obj, arrayClass);
         newArray->length = length;
-        LOGVV("AllocArray: %s [%d] (%d)\n",
-            arrayClass->descriptor, (int) length, (int) size);
-        dvmTrackAllocation(arrayClass, size);
+        dvmTrackAllocation(arrayClass, totalSize);
     }
-    /* the caller must call dvmReleaseTrackedAlloc */
     return newArray;
 }
 
