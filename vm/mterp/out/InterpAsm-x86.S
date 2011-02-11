@@ -6124,10 +6124,10 @@ dvmAsmInstructionStart = .L_OP_NOP
     GOTO_NEXT
 /* ------------------------------ */
     .balign 64
-.L_OP_INVOKE_DIRECT_EMPTY: /* 0xf0 */
-/* File: x86/OP_INVOKE_DIRECT_EMPTY.S */
+.L_OP_INVOKE_OBJECT_INIT: /* 0xf0 */
+/* File: x86/OP_INVOKE_OBJECT_INIT.S */
     /*
-     * invoke-direct-empty is a no-op in a "standard" interpreter.
+     * invoke-object-init is a no-op in a "standard" interpreter.
      */
     FETCH_INST_WORD 3
     ADVANCE_PC 3
@@ -12963,7 +12963,7 @@ dvmAsmInstructionJmpTable = .LdvmAsmInstructionJmpTable
 .long .L_OP_THROW_VERIFICATION_ERROR
 .long .L_OP_EXECUTE_INLINE
 .long .L_OP_EXECUTE_INLINE_RANGE
-.long .L_OP_INVOKE_DIRECT_EMPTY
+.long .L_OP_INVOKE_OBJECT_INIT
 .long .L_OP_RETURN_VOID_BARRIER
 .long .L_OP_IGET_QUICK
 .long .L_OP_IGET_WIDE_QUICK

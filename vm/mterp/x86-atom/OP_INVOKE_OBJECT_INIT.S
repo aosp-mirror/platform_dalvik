@@ -14,11 +14,11 @@
     */
 
    /*
-    * File: OP_INVOKE_DIRECT_EMPTY.S
+    * File: OP_INVOKE_OBJECT_INIT.S
     *
     * Code: Used as a no-op. Uses no substitutions.
     *
-    * For: invoke-direct-empty
+    * For: invoke-object-init
     *
     * Format: B|A|op CCCC G|F|E|D (35c)
     */

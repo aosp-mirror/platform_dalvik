@@ -14663,8 +14663,8 @@ OP_IF_LEZ_2f:
 
 /* ------------------------------ */
     .balign 64
-.L_OP_INVOKE_DIRECT_EMPTY: /* 0xf0 */
-/* File: x86-atom/OP_INVOKE_DIRECT_EMPTY.S */
+.L_OP_INVOKE_OBJECT_INIT: /* 0xf0 */
+/* File: x86-atom/OP_INVOKE_OBJECT_INIT.S */
    /* Copyright (C) 2008 The Android Open Source Project
     *
     * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14681,16 +14681,17 @@ OP_IF_LEZ_2f:
     */
 
    /*
-    * File: OP_INVOKE_DIRECT_EMPTY.S
+    * File: OP_INVOKE_OBJECT_INIT.S
     *
     * Code: Used as a no-op. Uses no substitutions.
     *
-    * For: invoke-direct-empty
+    * For: invoke-object-init
     *
     * Format: B|A|op CCCC G|F|E|D (35c)
     */
 
     FINISH 3
+
 /* ------------------------------ */
     .balign 64
 .L_OP_RETURN_VOID_BARRIER: /* 0xf1 */
@@ -27320,7 +27321,7 @@ dvmAsmInstructionJmpTable = .LdvmAsmInstructionJmpTable
 .long .L_OP_THROW_VERIFICATION_ERROR
 .long .L_OP_EXECUTE_INLINE
 .long .L_OP_EXECUTE_INLINE_RANGE
-.long .L_OP_INVOKE_DIRECT_EMPTY
+.long .L_OP_INVOKE_OBJECT_INIT
 .long .L_OP_UNUSED_F1
 .long .L_OP_IGET_QUICK
 .long .L_OP_IGET_WIDE_QUICK
