@@ -7730,10 +7730,10 @@ d2i_doconv:
 
 /* ------------------------------ */
     .balign 64
-.L_OP_INVOKE_DIRECT_EMPTY: /* 0xf0 */
-/* File: armv5te/OP_INVOKE_DIRECT_EMPTY.S */
+.L_OP_INVOKE_OBJECT_INIT: /* 0xf0 */
+/* File: armv5te/OP_INVOKE_OBJECT_INIT.S */
     /*
-     * invoke-direct-empty is a no-op in a "standard" interpreter.
+     * invoke-object-init is a no-op in a "standard" interpreter.
      */
     FETCH_ADVANCE_INST(3)               @ advance to next instr, load rINST
     GET_INST_OPCODE(ip)                 @ ip<- opcode from rINST

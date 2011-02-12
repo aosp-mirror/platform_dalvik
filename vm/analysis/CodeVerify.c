@@ -5761,7 +5761,7 @@ sput_1nr_common:
      */
     case OP_EXECUTE_INLINE:
     case OP_EXECUTE_INLINE_RANGE:
-    case OP_INVOKE_DIRECT_EMPTY:
+    case OP_INVOKE_OBJECT_INIT:
     case OP_IGET_QUICK:
     case OP_IGET_WIDE_QUICK:
     case OP_IGET_OBJECT_QUICK:

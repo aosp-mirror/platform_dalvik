@@ -173,7 +173,7 @@ static void optimizeMethod(Method* method, bool essentialOnly)
          * essential substitutions:
          *  {iget,iput,sget,sput}-wide --> *-wide-volatile
          *  invoke-{virtual,direct,static}[/range] --> execute-inline
-         *  invoke-direct --> invoke-direct-empty
+         *  invoke-direct --> invoke-object-init
          *
          * essential-on-SMP substitutions:
          *  iget-* --> iget-*-volatile
@@ -938,7 +938,7 @@ static bool rewriteEmptyDirectInvoke(Method* method, u2* insns)
          * OP_INVOKE_DIRECT when debugging is enabled.
          */
         assert((insns[0] & 0xff) == OP_INVOKE_DIRECT);
-        updateOpcode(method, insns, OP_INVOKE_DIRECT_EMPTY);
+        updateOpcode(method, insns, OP_INVOKE_OBJECT_INIT);
 
         //LOGI("DexOpt: marked-empty call to %s.%s --> %s.%s\n",
         //    method->clazz->descriptor, method->name,

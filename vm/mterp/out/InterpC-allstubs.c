@@ -3052,8 +3052,8 @@ HANDLE_OPCODE(OP_EXECUTE_INLINE_RANGE /*{vCCCC..v(CCCC+AA-1)}, inline@BBBB*/)
     FINISH(3);
 OP_END
 
-/* File: c/OP_INVOKE_DIRECT_EMPTY.c */
-HANDLE_OPCODE(OP_INVOKE_DIRECT_EMPTY /*vB, {vD, vE, vF, vG, vA}, meth@CCCC*/)
+/* File: c/OP_INVOKE_OBJECT_INIT.c */
+HANDLE_OPCODE(OP_INVOKE_OBJECT_INIT /*vB, {vD, vE, vF, vG, vA}, meth@CCCC*/)
 #if INTERP_TYPE != INTERP_DBG
     //LOGI("Ignoring empty\n");
     FINISH(3);

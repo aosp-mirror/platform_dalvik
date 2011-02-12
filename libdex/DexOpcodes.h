@@ -308,7 +308,7 @@ typedef enum Opcode {
     OP_THROW_VERIFICATION_ERROR     = 0xed,
     OP_EXECUTE_INLINE               = 0xee,
     OP_EXECUTE_INLINE_RANGE         = 0xef,
-    OP_INVOKE_DIRECT_EMPTY          = 0xf0,
+    OP_INVOKE_OBJECT_INIT           = 0xf0,
     OP_RETURN_VOID_BARRIER          = 0xf1,
     OP_IGET_QUICK                   = 0xf2,
     OP_IGET_WIDE_QUICK              = 0xf3,
@@ -830,7 +830,7 @@ typedef enum Opcode {
         H(OP_THROW_VERIFICATION_ERROR),                                       \
         H(OP_EXECUTE_INLINE),                                                 \
         H(OP_EXECUTE_INLINE_RANGE),                                           \
-        H(OP_INVOKE_DIRECT_EMPTY),                                            \
+        H(OP_INVOKE_OBJECT_INIT),                                             \
         H(OP_RETURN_VOID_BARRIER),                                            \
         H(OP_IGET_QUICK),                                                     \
         H(OP_IGET_WIDE_QUICK),                                                \

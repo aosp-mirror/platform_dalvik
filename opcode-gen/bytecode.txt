@@ -328,12 +328,11 @@ op   ed ^throw-verification-error   20bc n varies        optimized|throw
 op   ee +execute-inline             35mi n inline-method optimized|continue|throw
 op   ef +execute-inline/range       3rmi n inline-method optimized|continue|throw
 
-# This opcode is marked neither as "invoke" nor "throw" since it is
-# executed as a nop except if a debugger is attached. And given that
-# dexopt would have been the thing that inserted this instruction,
-# having already verified the method and the one it (would have)
-# called, we know that it couldn't possibly throw.
-op   f0 +invoke-direct-empty        35c  n method-ref    optimized|continue
+# This opcode is marked neither as "invoke" nor "throw" since it
+# doesn't invoke the method unless a debugger is attached. The verifier
+# will ensure that Object.<init> is present and empty, so there is no
+# opportunity for an exception to be thrown.
+op   f0 +invoke-object-init         35c  n method-ref    optimized|continue
 
 op   f1 +return-void-barrier        10x  n none          optimized|return
 op   f2 +iget-quick                 22cs y field-offset  optimized|continue|throw

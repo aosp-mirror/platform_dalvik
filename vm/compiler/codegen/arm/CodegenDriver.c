@@ -3222,7 +3222,7 @@ static bool handleFmt35c_3rc_5rc(CompilationUnit *cUnit, MIR *mir,
             break;
         }
         /* NOP */
-        case OP_INVOKE_DIRECT_EMPTY: {
+        case OP_INVOKE_OBJECT_INIT: {
             if (gDvmJit.methodTraceSupport)
                 genInterpSingleStep(cUnit, mir);
             break;

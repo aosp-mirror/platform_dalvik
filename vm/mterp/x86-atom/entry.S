@@ -373,7 +373,7 @@ dvmAsmInstructionJmpTable = .LdvmAsmInstructionJmpTable
 .long .L_OP_THROW_VERIFICATION_ERROR
 .long .L_OP_EXECUTE_INLINE
 .long .L_OP_EXECUTE_INLINE_RANGE
-.long .L_OP_INVOKE_DIRECT_EMPTY
+.long .L_OP_INVOKE_OBJECT_INIT
 .long .L_OP_UNUSED_F1
 .long .L_OP_IGET_QUICK
 .long .L_OP_IGET_WIDE_QUICK
