@@ -11,10 +11,10 @@
      *
      */
     /* [opt] execute-inline vAA, {vC, vD, vE, vF}, inline@BBBB */
-    movl      rGLUE,%ecx
+    movl      rSELF,%ecx
     EXPORT_PC
     movzwl    2(rPC),%eax               # eax<- BBBB
-    leal      offGlue_retval(%ecx),%ecx # ecx<- & glue->retval
+    leal      offThread_retval(%ecx),%ecx # ecx<- & self->retval
     movl      %ecx,OUT_ARG4(%esp)
     call      .L${opcode}_continue      # make call; will return after
     testl     %eax,%eax                 # successful?

@@ -8,9 +8,9 @@
      *
      */
     /* op vA, vB, field@CCCC */
-    movl    rGLUE,%ecx
+    movl    rSELF,%ecx
     movzwl  2(rPC),%edx                         # edx<- 0000CCCC
-    movl    offGlue_methodClassDex(%ecx),%eax   # eax<- DvmDex
+    movl    offThread_methodClassDex(%ecx),%eax   # eax<- DvmDex
     movzbl  rINSTbl,%ecx                        # ecx<- BA
     sarl    $$4,%ecx                            # ecx<- B
     movl    offDvmDex_pResFields(%eax),%eax     # eax<- pDvmDex->pResFields
@@ -20,14 +20,14 @@
     testl   %eax,%eax                           # is resolved entry null?
     jne     .L${opcode}_finish                  # no, already resolved
     movl    %edx,OUT_ARG1(%esp)                 # for dvmResolveInstField
-    movl    rGLUE,%edx
+    movl    rSELF,%edx
     jmp     .L${opcode}_resolve
 %break
 
 
 .L${opcode}_resolve:
     EXPORT_PC
-    movl    offGlue_method(%edx),%edx           # edx<- current method
+    movl    offThread_method(%edx),%edx           # edx<- current method
     movl    offMethod_clazz(%edx),%edx          # edx<- method->clazz
     SPILL_TMP1(%ecx)                            # save objpointer across call
     movl    rPC,OUT_ARG0(%esp)                  # pass in method->clazz

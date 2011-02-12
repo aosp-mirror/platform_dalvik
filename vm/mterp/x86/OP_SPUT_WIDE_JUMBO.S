@@ -6,8 +6,8 @@
      * Jumbo 64-bit SPUT handler.
      */
     /* sput-wide/jumbo vBBBB, field@AAAAAAAA */
-    movl      rGLUE,%ecx
-    movl      offGlue_methodClassDex(%ecx),%ecx  # ecx<- DvmDex
+    movl      rSELF,%ecx
+    movl      offThread_methodClassDex(%ecx),%ecx  # ecx<- DvmDex
     movl      2(rPC),%eax                        # eax<- field ref AAAAAAAA
     movl      offDvmDex_pResFields(%ecx),%ecx    # ecx<- dvmDex->pResFields
     movl      (%ecx,%eax,4),%eax                 # eax<- resolved StaticField ptr
@@ -27,9 +27,9 @@
      * Go resolve the field
      */
 .L${opcode}_resolve:
-    movl     rGLUE,%ecx
+    movl     rSELF,%ecx
     movl     2(rPC),%eax                        # eax<- field ref AAAAAAAA
-    movl     offGlue_method(%ecx),%ecx          # ecx<- current method
+    movl     offThread_method(%ecx),%ecx          # ecx<- current method
     EXPORT_PC                                   # could throw, need to export
     movl     offMethod_clazz(%ecx),%ecx         # ecx<- method->clazz
     movl     %eax,OUT_ARG1(%esp)

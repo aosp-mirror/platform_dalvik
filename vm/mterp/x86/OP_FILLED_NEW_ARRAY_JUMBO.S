@@ -4,8 +4,8 @@
      * Create a new array with elements filled from registers.
      */
     /* filled-new-array/jumbo {vCCCC..v(CCCC+BBBB-1)}, type@AAAAAAAA */
-    movl    rGLUE,%eax
-    movl    offGlue_methodClassDex(%eax),%eax # eax<- pDvmDex
+    movl    rSELF,%eax
+    movl    offThread_methodClassDex(%eax),%eax # eax<- pDvmDex
     movl    2(rPC),%ecx                       # ecx<- AAAAAAAA
     movl    offDvmDex_pResClasses(%eax),%eax  # eax<- pDvmDex->pResClasses
     movl    (%eax,%ecx,4),%eax                # eax<- resolved class
@@ -13,10 +13,10 @@
     testl   %eax,%eax                         # already resolved?
     jne     .L${opcode}_continue              # yes, continue
     # less frequent path, so we'll redo some work
-    movl    rGLUE,%eax
+    movl    rSELF,%eax
     movl    $$0,OUT_ARG2(%esp)                # arg2<- false
     movl    %ecx,OUT_ARG1(%esp)               # arg1<- AAAAAAAA
-    movl    offGlue_method(%eax),%eax         # eax<- glue->method
+    movl    offThread_method(%eax),%eax         # eax<- self->method
     jmp     .L${opcode}_more
 %break
 
@@ -39,7 +39,7 @@
     movl    $$ALLOC_DONT_TRACK,OUT_ARG2(%esp)     # arg2<- flags
     movzbl  1(%ecx),%ecx                          # ecx<- descriptor[1]
     movl    %eax,OUT_ARG0(%esp)                   # arg0<- arrayClass
-    movl    rGLUE,%eax
+    movl    rSELF,%eax
     cmpb    $$'I',%cl                             # supported?
     je      1f
     cmpb    $$'L',%cl
@@ -47,13 +47,13 @@
     cmpb    $$'[',%cl
     jne      .L${opcode}_notimpl                  # no, not handled yet
 1:
-    movl    %ecx,offGlue_retval+4(%eax)           # save type
+    movl    %ecx,offThread_retval+4(%eax)           # save type
     movl    rINST,OUT_ARG1(%esp)                  # arg1<- BBBB (length)
     call    dvmAllocArrayByClass     # eax<- call(arrayClass, length, flags)
-    movl    rGLUE,%ecx
+    movl    rSELF,%ecx
     testl   %eax,%eax                             # alloc successful?
     je      common_exceptionThrown                # no, handle exception
-    movl    %eax,offGlue_retval(%ecx)             # retval.l<- new array
+    movl    %eax,offThread_retval(%ecx)             # retval.l<- new array
     movzwl  8(rPC),%ecx                           # ecx<- CCCC
     leal    offArrayObject_contents(%eax),%eax    # eax<- newArray->contents
 
@@ -74,14 +74,14 @@
     movsd
     UNSPILL_TMP2(%esi)
     UNSPILL_TMP3(%edi)
-    movl    rGLUE,%ecx
-    movl    offGlue_retval+4(%ecx),%eax      # eax<- type
+    movl    rSELF,%ecx
+    movl    offThread_retval+4(%ecx),%eax      # eax<- type
     FETCH_INST_OPCODE 5 %edx
 
     cmpb    $$'I',%al                        # Int array?
     je      5f                               # skip card mark if so
-    movl    offGlue_retval(%ecx),%eax        # eax<- object head
-    movl    offGlue_cardTable(%ecx),%ecx     # card table base
+    movl    offThread_retval(%ecx),%eax        # eax<- object head
+    movl    offThread_cardTable(%ecx),%ecx     # card table base
     shrl    $$GC_CARD_SHIFT,%eax             # convert to card num
     movb    %cl,(%ecx,%eax)                  # mark card based on object head
 5:

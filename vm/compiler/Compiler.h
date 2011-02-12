@@ -25,7 +25,6 @@
  * #define SIGNATURE_BREAKPOINT
  */
 
-#define MAX_JIT_RUN_LEN                 64
 #define COMPILER_WORK_QUEUE_SIZE        100
 #define COMPILER_IC_PATCH_QUEUE_SIZE    64
 
@@ -118,82 +117,6 @@ typedef struct ICPatchWorkOrder {
     PredictedChainingCell *cellAddr;    /* Address to be patched */
     PredictedChainingCell cellContent;  /* content of the new cell */
 } ICPatchWorkOrder;
-
-/* States of the dbg interpreter when serving a JIT-related request */
-typedef enum JitState {
-    /* Entering states in the debug interpreter */
-    kJitNot = 0,               // Non-JIT related reasons */
-    kJitTSelectRequest = 1,    // Request a trace (subject to filtering)
-    kJitTSelectRequestHot = 2, // Request a hot trace (bypass the filter)
-    kJitSelfVerification = 3,  // Self Verification Mode
-
-    /* Operational states in the debug interpreter */
-    kJitTSelect = 4,           // Actively selecting a trace
-    kJitTSelectEnd = 5,        // Done with the trace - wrap it up
-    kJitSingleStep = 6,        // Single step interpretation
-    kJitSingleStepEnd = 7,     // Done with single step, ready return to mterp
-    kJitDone = 8,              // Ready to leave the debug interpreter
-} JitState;
-
-#if defined(WITH_SELF_VERIFICATION)
-typedef enum SelfVerificationState {
-    kSVSIdle = 0,           // Idle
-    kSVSStart = 1,          // Shadow space set up, running compiled code
-    kSVSPunt = 2,           // Exiting compiled code by punting
-    kSVSSingleStep = 3,     // Exiting compiled code by single stepping
-    kSVSNoProfile = 4,      // Exiting compiled code and don't collect profiles
-    kSVSTraceSelect = 5,    // Exiting compiled code and compile the next pc
-    kSVSNormal = 6,         // Exiting compiled code normally
-    kSVSNoChain = 7,        // Exiting compiled code by no chain
-    kSVSBackwardBranch = 8, // Exiting compiled code with backward branch trace
-    kSVSDebugInterp = 9,    // Normal state restored, running debug interpreter
-} SelfVerificationState;
-#endif
-
-typedef enum JitHint {
-   kJitHintNone = 0,
-   kJitHintTaken = 1,         // Last inst in run was taken branch
-   kJitHintNotTaken = 2,      // Last inst in run was not taken branch
-   kJitHintNoBias = 3,        // Last inst in run was unbiased branch
-} jitHint;
-
-/*
- * Element of a Jit trace description. If the isCode bit is set, it describes
- * a contiguous sequence of Dalvik byte codes.
- */
-typedef struct {
-    unsigned isCode:1;       // If set denotes code fragments
-    unsigned numInsts:8;     // Number of Byte codes in run
-    unsigned runEnd:1;       // Run ends with last byte code
-    jitHint  hint:6;         // Hint to apply to final code of run
-    u2    startOffset;       // Starting offset for trace run
-} JitCodeDesc;
-
-/*
- * A complete list of trace runs passed to the compiler looks like the
- * following:
- *   frag1
- *   frag2
- *   frag3
- *   meta1
- *   meta2
- *   frag4
- *
- * frags 1-4 have the "isCode" field set, and metas 1-2 are plain pointers or
- * pointers to auxiliary data structures as long as the LSB is null.
- * The meaning of the meta content is loosely defined. It is usually the code
- * fragment right before the first meta field (frag3 in this case) to
- * understand and parse them. Frag4 could be a dummy one with 0 "numInsts" but
- * the "runEnd" field set.
- *
- * For example, if a trace run contains a method inlining target, the class
- * type of "this" and the currently resolved method pointer are two instances
- * of meta information stored there.
- */
-typedef union {
-    JitCodeDesc frag;
-    void*       meta;
-} JitTraceRun;
 
 /*
  * Trace description as will appear in the translation cache.  Note

@@ -12,6 +12,8 @@ Items requiring attention:
 (hi) Implement OP_DISPATCH_FF for real. (Right now it's treated as
      an unused instruction.)
 (hi) Rename dvmJitGetCodeAddr to dvmJitGetTraceAddr.
+(hi) Remove references to rGLUE and replace with rSELF
+(hi) Rework footer.s's suspend check to reflect suspendCount change
 
 (md) Correct OP_MONITOR_EXIT (need to adjust PC before throw)
 (md) OP_THROW needs to export the PC

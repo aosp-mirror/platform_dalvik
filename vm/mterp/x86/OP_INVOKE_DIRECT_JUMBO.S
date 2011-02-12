@@ -9,9 +9,9 @@
      * out we could avoiding loading the first arg twice.)
      */
     /* invoke-direct/jumbo {vCCCC..v(CCCC+BBBB-1)}, meth@AAAAAAAA */
-    movl      rGLUE,%ecx
+    movl      rSELF,%ecx
     movl      2(rPC),%eax              # eax<- AAAAAAAA
-    movl      offGlue_methodClassDex(%ecx),%ecx # ecx<- pDvmDex
+    movl      offThread_methodClassDex(%ecx),%ecx # ecx<- pDvmDex
     EXPORT_PC
     movl      offDvmDex_pResMethods(%ecx),%ecx  # ecx<- pDvmDex->pResMethods
     movzwl    8(rPC),%edx              # edx<- CCCC
@@ -33,8 +33,8 @@
      */
 .L${opcode}_resolve:
      SPILL_TMP1(%ecx)
-     movl     rGLUE,%ecx
-     movl     offGlue_method(%ecx),%ecx  # ecx<- glue->method
+     movl     rSELF,%ecx
+     movl     offThread_method(%ecx),%ecx  # ecx<- self->method
      movl     2(rPC),%eax      # reference AAAAAAAA
      movl     offMethod_clazz(%ecx),%ecx # ecx<- method->clazz
      movl     $$METHOD_DIRECT,OUT_ARG2(%esp)

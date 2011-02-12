@@ -10,7 +10,7 @@
      * Create a new instance of a class.
      */
     /* new-instance vAA, class@BBBB */
-    ldr     r3, [rGLUE, #offGlue_methodClassDex]    @ r3<- pDvmDex
+    ldr     r3, [rSELF, #offThread_methodClassDex]    @ r3<- pDvmDex
     FETCH(r1, 1)                        @ r1<- BBBB
     ldr     r3, [r3, #offDvmDex_pResClasses]    @ r3<- pDvmDex->pResClasses
     ldr     r0, [r3, r1, lsl #2]        @ r0<- resolved class
@@ -56,7 +56,7 @@
      *  r1 holds BBBB
      */
 .L${opcode}_resolve:
-    ldr     r3, [rGLUE, #offGlue_method] @ r3<- glue->method
+    ldr     r3, [rSELF, #offThread_method] @ r3<- self->method
     mov     r2, #0                      @ r2<- false
     ldr     r0, [r3, #offMethod_clazz]  @ r0<- method->clazz
     bl      dvmResolveClass             @ r0<- resolved ClassObject ptr

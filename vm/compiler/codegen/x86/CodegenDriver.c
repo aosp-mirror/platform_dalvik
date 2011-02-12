@@ -46,7 +46,7 @@ static void genPuntToInterp(CompilationUnit *cUnit, unsigned int offset)
     loadConstant(cUnit, rPC, (int)(cUnit->method->insns + offset));
     loadWordDisp(cUnit, rEBP, 0, rECX);  // Get glue
     loadWordDisp(cUnit, rECX,
-                 offsetof(InterpState, jitToInterpEntries.dvmJitToInterpPunt),
+                 offsetof(Thread, jitToInterpEntries.dvmJitToInterpPunt),
                  rEAX);
     opReg(cUnit, kOpUncondBr, rEAX);
 }
@@ -68,7 +68,7 @@ static void genInterpSingleStep(CompilationUnit *cUnit, MIR *mir)
        genPuntToInterp(cUnit, mir->offset);
        return;
     }
-    int entryAddr = offsetof(InterpState,
+    int entryAddr = offsetof(Thread,
                              jitToInterpEntries.dvmJitToInterpSingleStep);
     loadWordDisp(cUnit, rEBP, 0, rECX);  // Get glue
     loadWordDisp(cUnit, rECX, entryAddr, rEAX); // rEAX<- entry address

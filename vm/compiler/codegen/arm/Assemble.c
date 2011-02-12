@@ -1606,7 +1606,7 @@ static void inlineCachePatchEnqueue(PredictedChainingCell *cellAddr,
  *      next safe point.
  */
 const Method *dvmJitToPatchPredictedChain(const Method *method,
-                                          InterpState *interpState,
+                                          Thread *self,
                                           PredictedChainingCell *cell,
                                           const ClassObject *clazz)
 {
@@ -1646,7 +1646,7 @@ const Method *dvmJitToPatchPredictedChain(const Method *method,
     PredictedChainingCell newCell;
 
     if (cell->clazz == NULL) {
-        newRechainCount = interpState->icRechainCount;
+        newRechainCount = self->icRechainCount;
     }
 
     int baseAddr = (int) cell + 4;   // PC is cur_addr + 4
@@ -1667,7 +1667,7 @@ const Method *dvmJitToPatchPredictedChain(const Method *method,
     inlineCachePatchEnqueue(cell, &newCell);
 #endif
 done:
-    interpState->icRechainCount = newRechainCount;
+    self->icRechainCount = newRechainCount;
     return method;
 }
 

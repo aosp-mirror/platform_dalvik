@@ -4,13 +4,13 @@
      * Handle a jumbo "super" method call.
      */
     /* invoke-super/jumbo {vCCCC..v(CCCC+BBBB-1)}, meth@AAAAAAAA */
-    movl      rGLUE,rINST
+    movl      rSELF,rINST
     movl      2(rPC),%eax               # eax<- AAAAAAAA
-    movl      offGlue_methodClassDex(rINST),%ecx # ecx<- pDvmDex
+    movl      offThread_methodClassDex(rINST),%ecx # ecx<- pDvmDex
     EXPORT_PC
     movl      offDvmDex_pResMethods(%ecx),%ecx # ecx<- pDvmDex->pResMethods
     movl      (%ecx,%eax,4),%ecx        # ecx<- resolved baseMethod
-    movl      offGlue_method(rINST),%eax # eax<- method
+    movl      offThread_method(rINST),%eax # eax<- method
     movzwl    8(rPC),rINST              # rINST<- CCCC
     GET_VREG_R  rINST rINST             # rINST<- "this" ptr
     testl     rINST,rINST               # null "this"?

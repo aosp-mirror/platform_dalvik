@@ -7,9 +7,9 @@
      *
      */
     /* sget-wide vAA, field@BBBB */
-    movl      rGLUE,%ecx
+    movl      rSELF,%ecx
     movzwl    2(rPC),%eax                        # eax<- field ref BBBB
-    movl      offGlue_methodClassDex(%ecx),%ecx  # ecx<- DvmDex
+    movl      offThread_methodClassDex(%ecx),%ecx  # ecx<- DvmDex
     movl      offDvmDex_pResFields(%ecx),%ecx    # ecx<- dvmDex->pResFields
     movl      (%ecx,%eax,4),%eax                 # eax<- resolved StaticField ptr
     testl     %eax,%eax                          # resolved entry null?
@@ -28,9 +28,9 @@
      * Go resolve the field
      */
 .L${opcode}_resolve:
-    movl     rGLUE,%ecx
+    movl     rSELF,%ecx
     movzwl   2(rPC),%eax                        # eax<- field ref BBBB
-    movl     offGlue_method(%ecx),%ecx          # ecx<- current method
+    movl     offThread_method(%ecx),%ecx          # ecx<- current method
     EXPORT_PC                                   # could throw, need to export
     movl     offMethod_clazz(%ecx),%ecx         # ecx<- method->clazz
     movl     %eax,OUT_ARG1(%esp)

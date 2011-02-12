@@ -10,9 +10,9 @@
      * Create a new instance of a class.
      */
     /* new-instance vAA, class@BBBB */
-    movl      rGLUE,%ecx
+    movl      rSELF,%ecx
     movzwl    2(rPC),%eax               # eax<- BBBB
-    movl      offGlue_methodClassDex(%ecx),%ecx  # ecx<- pDvmDex
+    movl      offThread_methodClassDex(%ecx),%ecx  # ecx<- pDvmDex
     movl      offDvmDex_pResClasses(%ecx),%ecx # ecx<- pDvmDex->pResClasses
     EXPORT_PC
     movl      (%ecx,%eax,4),%ecx        # ecx<- resolved class
@@ -58,9 +58,9 @@
      *
      */
 .L${opcode}_resolve:
-    movl    rGLUE,%ecx
+    movl    rSELF,%ecx
     movzwl  2(rPC),%eax
-    movl    offGlue_method(%ecx),%ecx   # ecx<- glue->method
+    movl    offThread_method(%ecx),%ecx   # ecx<- self->method
     movl    %eax,OUT_ARG1(%esp)
     movl    offMethod_clazz(%ecx),%ecx  # ecx<- method->clazz
     movl    $$0,OUT_ARG2(%esp)

@@ -24,7 +24,7 @@
  * r0, r1, r2, r3 are always scratch
  * r4 (rPC) is scratch for Jit, but most be restored when resuming interp
  * r5 (rFP) is reserved [holds Dalvik frame pointer]
- * r6 (rGLUE) is reserved [holds current &interpState]
+ * r6 (rSELF) is reserved [holds current &Thread]
  * r7 (rINST) is scratch for Jit
  * r8 (rIBASE) is scratch for Jit, but must be restored when resuming interp
  * r9 is reserved
@@ -210,7 +210,7 @@ typedef enum NativeRegisterPool {
     r3 = 3,
     r4PC = 4,
     rFP = 5,
-    rGLUE = 6,
+    rSELF = 6,
     r7 = 7,
     r8 = 8,
     r9 = 9,

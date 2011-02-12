@@ -35,7 +35,7 @@
     beq     .L${opcode}_throw           @ no
     mov     r1, rINST                   @ r1<- arrayObj
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
-    ldr     r2, [rGLUE, #offGlue_cardTable]     @ get biased CT base
+    ldr     r2, [rSELF, #offThread_cardTable]     @ get biased CT base
     add     r10, #offArrayObject_contents   @ r0<- pointer to slot
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     str     r9, [r10]                   @ vBB[vCC]<- vAA

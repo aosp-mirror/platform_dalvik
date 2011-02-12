@@ -214,14 +214,14 @@ static void genCmpLong(CompilationUnit *cUnit, MIR *mir, RegLocation rlDest,
 
 static bool genInlinedAbsFloat(CompilationUnit *cUnit, MIR *mir)
 {
-    int offset = offsetof(InterpState, retval);
+    int offset = offsetof(Thread, retval);
     RegLocation rlSrc = dvmCompilerGetSrc(cUnit, mir, 0);
     int reg0 = loadValue(cUnit, rlSrc, kCoreReg).lowReg;
     int signMask = dvmCompilerAllocTemp(cUnit);
     loadConstant(cUnit, signMask, 0x7fffffff);
     newLIR2(cUnit, kThumbAndRR, reg0, signMask);
     dvmCompilerFreeTemp(cUnit, signMask);
-    storeWordDisp(cUnit, rGLUE, offset, reg0);
+    storeWordDisp(cUnit, rSELF, offset, reg0);
     //TUNING: rewrite this to not clobber
     dvmCompilerClobber(cUnit, reg0);
     return false;
@@ -229,17 +229,17 @@ static bool genInlinedAbsFloat(CompilationUnit *cUnit, MIR *mir)
 
 static bool genInlinedAbsDouble(CompilationUnit *cUnit, MIR *mir)
 {
-    int offset = offsetof(InterpState, retval);
+    int offset = offsetof(Thread, retval);
     RegLocation rlSrc = dvmCompilerGetSrcWide(cUnit, mir, 0, 1);
     RegLocation regSrc = loadValueWide(cUnit, rlSrc, kCoreReg);
     int reglo = regSrc.lowReg;
     int reghi = regSrc.highReg;
     int signMask = dvmCompilerAllocTemp(cUnit);
     loadConstant(cUnit, signMask, 0x7fffffff);
-    storeWordDisp(cUnit, rGLUE, offset, reglo);
+    storeWordDisp(cUnit, rSELF, offset, reglo);
     newLIR2(cUnit, kThumbAndRR, reghi, signMask);
     dvmCompilerFreeTemp(cUnit, signMask);
-    storeWordDisp(cUnit, rGLUE, offset + 4, reghi);
+    storeWordDisp(cUnit, rSELF, offset + 4, reghi);
     //TUNING: rewrite this to not clobber
     dvmCompilerClobber(cUnit, reghi);
     return false;
@@ -248,7 +248,7 @@ static bool genInlinedAbsDouble(CompilationUnit *cUnit, MIR *mir)
 /* No select in thumb, so we need to branch.  Thumb2 will do better */
 static bool genInlinedMinMaxInt(CompilationUnit *cUnit, MIR *mir, bool isMin)
 {
-    int offset = offsetof(InterpState, retval);
+    int offset = offsetof(Thread, retval);
     RegLocation rlSrc1 = dvmCompilerGetSrc(cUnit, mir, 0);
     RegLocation rlSrc2 = dvmCompilerGetSrc(cUnit, mir, 1);
     int reg0 = loadValue(cUnit, rlSrc1, kCoreReg).lowReg;
@@ -259,7 +259,7 @@ static bool genInlinedMinMaxInt(CompilationUnit *cUnit, MIR *mir, bool isMin)
     newLIR2(cUnit, kThumbMovRR, reg0, reg1);
     ArmLIR *target = newLIR0(cUnit, kArmPseudoTargetLabel);
     target->defMask = ENCODE_ALL;
-    newLIR3(cUnit, kThumbStrRRI5, reg0, rGLUE, offset >> 2);
+    newLIR3(cUnit, kThumbStrRRI5, reg0, rSELF, offset >> 2);
     branch1->generic.target = (LIR *)target;
     //TUNING: rewrite this to not clobber
     dvmCompilerClobber(cUnit,reg0);

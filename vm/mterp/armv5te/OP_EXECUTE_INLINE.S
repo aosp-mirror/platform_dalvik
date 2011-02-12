@@ -12,11 +12,11 @@
      */
     /* [opt] execute-inline vAA, {vC, vD, vE, vF}, inline@BBBB */
     FETCH(r10, 1)                       @ r10<- BBBB
-    add     r1, rGLUE, #offGlue_retval  @ r1<- &glue->retval
+    add     r1, rSELF, #offThread_retval  @ r1<- &self->retval
     EXPORT_PC()                         @ can throw
     sub     sp, sp, #8                  @ make room for arg, +64 bit align
     mov     r0, rINST, lsr #12          @ r0<- B
-    str     r1, [sp]                    @ push &glue->retval
+    str     r1, [sp]                    @ push &self->retval
     bl      .L${opcode}_continue        @ make call; will return after
     add     sp, sp, #8                  @ pop stack
     cmp     r0, #0                      @ test boolean result of inline

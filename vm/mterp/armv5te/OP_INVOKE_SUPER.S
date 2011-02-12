@@ -9,7 +9,7 @@
     /* op vB, {vD, vE, vF, vG, vA}, class@CCCC */
     /* op vAA, {vCCCC..v(CCCC+AA-1)}, meth@BBBB */
     FETCH(r10, 2)                       @ r10<- GFED or CCCC
-    ldr     r3, [rGLUE, #offGlue_methodClassDex]    @ r3<- pDvmDex
+    ldr     r3, [rSELF, #offThread_methodClassDex]    @ r3<- pDvmDex
     .if     (!$isrange)
     and     r10, r10, #15               @ r10<- D (or stays CCCC)
     .endif
@@ -18,7 +18,7 @@
     GET_VREG(r2, r10)                   @ r2<- "this" ptr
     ldr     r0, [r3, r1, lsl #2]        @ r0<- resolved baseMethod
     cmp     r2, #0                      @ null "this"?
-    ldr     r9, [rGLUE, #offGlue_method] @ r9<- current method
+    ldr     r9, [rSELF, #offThread_method] @ r9<- current method
     beq     common_errNullObject        @ null "this", throw exception
     cmp     r0, #0                      @ already resolved?
     ldr     r9, [r9, #offMethod_clazz]  @ r9<- method->clazz

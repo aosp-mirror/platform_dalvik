@@ -4,16 +4,16 @@
      * Handle a jumbo static method call.
      */
     /* invoke-static/jumbo {vCCCC..v(CCCC+BBBB-1)}, meth@AAAAAAAA */
-    movl      rGLUE,%ecx
+    movl      rSELF,%ecx
     movl      2(rPC),%eax               # eax<- AAAAAAAA
-    movl      offGlue_methodClassDex(%ecx),%ecx # ecx<- pDvmDex
+    movl      offThread_methodClassDex(%ecx),%ecx # ecx<- pDvmDex
     EXPORT_PC
     movl      offDvmDex_pResMethods(%ecx),%ecx  # ecx<- pDvmDex->pResMethods
     movl      (%ecx,%eax,4),%eax        # eax<- resolved methodToCall
     testl     %eax,%eax
     jne       common_invokeMethodJumbo
-    movl      rGLUE,%ecx
-    movl      offGlue_method(%ecx),%ecx # ecx<- glue->method
+    movl      rSELF,%ecx
+    movl      offThread_method(%ecx),%ecx # ecx<- self->method
     movl      2(rPC),%eax               # eax<- AAAAAAAA
     movl      offMethod_clazz(%ecx),%ecx# ecx<- method->clazz
     movl      %eax,OUT_ARG1(%esp)       # arg1<- AAAAAAAA

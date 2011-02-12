@@ -24,56 +24,7 @@
 #ifndef _DALVIK_INTERP_DEFS
 #define _DALVIK_INTERP_DEFS
 
-
-/*
- * Specify the starting point when switching between interpreters.
- */
-typedef enum InterpEntry {
-    kInterpEntryInstr = 0,      // continue to next instruction
-    kInterpEntryReturn = 1,     // jump to method return
-    kInterpEntryThrow = 2,      // jump to exception throw
 #if defined(WITH_JIT)
-    kInterpEntryResume = 3,     // Resume after single-step
-#endif
-} InterpEntry;
-
-#if defined(WITH_JIT)
-/*
- * NOTE: Only entry points dispatched via [&InterpState + #offset] are put
- * in this struct, and there are six of them:
- * 1) dvmJitToInterpNormal: find if there is a corresponding compilation for
- *    the new dalvik PC. If so, chain the originating compilation with the
- *    target then jump to it. If the destination trace doesn't exist, update
- *    the profile count for that Dalvik PC.
- * 2) dvmJitToInterpNoChain: similar to dvmJitToInterpNormal but chaining is
- *    not performed.
- * 3) dvmJitToInterpPunt: use the fast interpreter to execute the next
- *    instruction(s) and stay there as long as it is appropriate to return
- *    to the compiled land. This is used when the jit'ed code is about to
- *    throw an exception.
- * 4) dvmJitToInterpSingleStep: use the portable interpreter to execute the
- *    next instruction only and return to pre-specified location in the
- *    compiled code to resume execution. This is mainly used as debugging
- *    feature to bypass problematic opcode implementations without
- *    disturbing the trace formation.
- * 5) dvmJitToTraceSelect: Similar to dvmJitToInterpNormal except for the
- *    profiling operation. If the new Dalvik PC is dominated by an already
- *    translated trace, directly request a new translation if the destinaion
- *    trace doesn't exist.
- * 6) dvmJitToBackwardBranch: special case for SELF_VERIFICATION when the
- *    destination Dalvik PC is included by the trace itself.
- */
-struct JitToInterpEntries {
-    void *dvmJitToInterpNormal;
-    void *dvmJitToInterpNoChain;
-    void *dvmJitToInterpPunt;
-    void *dvmJitToInterpSingleStep;
-    void *dvmJitToInterpTraceSelect;
-#if defined(WITH_SELF_VERIFICATION)
-    void *dvmJitToInterpBackwardBranch;
-#endif
-};
-
 /*
  * Size of save area for callee-save FP regs, which are not automatically
  * saved by interpreter main because it doesn't use them (but Jit'd code
@@ -82,115 +33,20 @@ struct JitToInterpEntries {
  */
 #define JIT_CALLEE_SAVE_DOUBLE_COUNT 8
 
-/* Number of entries in the 2nd level JIT profiler filter cache */
-#define JIT_TRACE_THRESH_FILTER_SIZE 32
-/* Number of low dalvik pc address bits to include in 2nd level filter key */
-#define JIT_TRACE_THRESH_FILTER_PC_BITS 4
 #endif
 
 /*
- * Interpreter context, used when switching from one interpreter to
- * another.  We also tuck "mterp" state in here.
+ * Portable interpreter.
  */
-typedef struct InterpState {
-    /*
-     * To make some mterp state updates easier, "pc" and "fp" MUST come
-     * first and MUST appear in this order.
-     */
-    const u2*   pc;                     // program counter
-    u4*         fp;                     // frame pointer
-
-    JValue      retval;                 // return value -- "out" only
-    const Method* method;               // method being executed
-
-
-    /* ----------------------------------------------------------------------
-     * Mterp-only state
-     */
-    DvmDex*         methodClassDex;
-    Thread*         self;
-
-    /* housekeeping */
-    void*           bailPtr;
-
-    /*
-     * These are available globally, from gDvm, or from another glue field
-     * (self/method).  They're copied in here for speed.
-     */
-    /* copy of self->interpStackEnd */
-    const u1*       interpStackEnd;
-    /* points at self->suspendCount */
-    volatile int*   pSelfSuspendCount;
-    /* Biased base of GC's card table */
-    u1*             cardTable;
-    /* points at gDvm.interpBreak */
-    volatile int* pInterpBreak;
-    /* ----------------------------------------------------------------------
-     */
-
-    /*
-     * Interpreter switching.
-     */
-    InterpEntry entryPoint;             // what to do when we start
-    int         nextMode;               // INTERP_STD, INTERP_DBG
-
-#if defined(WITH_JIT)
-    /*
-     * Local copies of field from gDvm placed here for fast access
-     */
-    unsigned char*     pJitProfTable;
-    JitState           jitState;
-    const void*        jitResumeNPC;    // Native PC of compiled code
-    const u2*          jitResumeDPC;    // Dalvik PC corresponding to NPC
-    int                jitThreshold;
-    /*
-     * ppJitProfTable holds the address of gDvmJit.pJitProfTable, which
-     * doubles as an on/off switch for the Jit.  Because a change in
-     * the value of gDvmJit.pJitProfTable isn't reflected in the cached
-     * copy above (pJitProfTable), we need to periodically refresh it.
-     * ppJitProfTable is used for that purpose.
-     */
-    unsigned char**    ppJitProfTable; // Used to refresh pJitProfTable
-    int                icRechainCount; // Count down to next rechain request
-    const void*        pProfileCountdown; // Address of profile countdown timer
-
-    struct JitToInterpEntries jitToInterpEntries;
-
-    const void*        jitCacheStart;  // Code cache boundaries
-    const void*        jitCacheEnd;
-
-    int currTraceRun;
-    int totalTraceLen;        // Number of Dalvik insts in trace
-    const u2* currTraceHead;  // Start of the trace we're building
-    const u2* currRunHead;    // Start of run we're building
-    int currRunLen;           // Length of run in 16-bit words
-    int lastThreshFilter;
-    const u2* lastPC;         // Stage the PC first for the threaded interpreter
-    intptr_t threshFilter[JIT_TRACE_THRESH_FILTER_SIZE];
-    JitTraceRun trace[MAX_JIT_RUN_LEN];
-    double calleeSave[JIT_CALLEE_SAVE_DOUBLE_COUNT];
-#endif
-
-    bool        debugIsMethodEntry;     // used for method entry event triggers
-#if defined(WITH_TRACKREF_CHECKS)
-    int         debugTrackedRefStart;   // tracked refs from prior invocations
-#endif
-
-
-} InterpState;
-
-/*
- * These are generated from InterpCore.h.
- */
-extern bool dvmInterpretDbg(Thread* self, InterpState* interpState);
-extern bool dvmInterpretStd(Thread* self, InterpState* interpState);
+extern bool dvmInterpretDbg(Thread* self);
+extern bool dvmInterpretStd(Thread* self);
 #define INTERP_STD 0
 #define INTERP_DBG 1
 
 /*
  * "mterp" interpreter.
  */
-extern bool dvmMterpStd(Thread* self, InterpState* interpState);
+extern bool dvmMterpStd(Thread* self);
 
 /*
  * Get the "this" pointer from the current frame.

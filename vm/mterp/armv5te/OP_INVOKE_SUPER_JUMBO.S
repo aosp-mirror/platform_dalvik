@@ -5,7 +5,7 @@
      */
     /* invoke-super/jumbo {vCCCC..v(CCCC+BBBB-1)}, meth@AAAAAAAA */
     FETCH(r10, 4)                       @ r10<- CCCC
-    ldr     r3, [rGLUE, #offGlue_methodClassDex]    @ r3<- pDvmDex
+    ldr     r3, [rSELF, #offThread_methodClassDex]    @ r3<- pDvmDex
     FETCH(r0, 1)                        @ r1<- aaaa (lo)
     FETCH(r1, 2)                        @ r1<- AAAA (hi)
     ldr     r3, [r3, #offDvmDex_pResMethods]    @ r3<- pDvmDex->pResMethods
@@ -13,7 +13,7 @@
     GET_VREG(r2, r10)                   @ r2<- "this" ptr
     ldr     r0, [r3, r1, lsl #2]        @ r0<- resolved baseMethod
     cmp     r2, #0                      @ null "this"?
-    ldr     r9, [rGLUE, #offGlue_method] @ r9<- current method
+    ldr     r9, [rSELF, #offThread_method] @ r9<- current method
     beq     common_errNullObject        @ null "this", throw exception
     cmp     r0, #0                      @ already resolved?
     ldr     r9, [r9, #offMethod_clazz]  @ r9<- method->clazz

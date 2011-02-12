@@ -3,9 +3,9 @@
 %verify "String not yet resolved"
 %verify "String cannot be resolved"
     /* const/string vAA, String@BBBBBBBB */
-    movl      rGLUE,%ecx
+    movl      rSELF,%ecx
     movl      2(rPC),%eax              # eax<- BBBBBBBB
-    movl      offGlue_methodClassDex(%ecx),%ecx# ecx<- glue->methodClassDex
+    movl      offThread_methodClassDex(%ecx),%ecx# ecx<- self->methodClassDex
     movl      offDvmDex_pResStrings(%ecx),%ecx # ecx<- dvmDex->pResStrings
     movl      (%ecx,%eax,4),%eax       # eax<- rResString[BBBB]
     movl      rINST,%ecx
@@ -20,10 +20,10 @@
 /* This is the less common path, so we'll redo some work
    here rather than force spills on the common path */
 .L${opcode}_resolve:
-    movl     rGLUE,%eax
+    movl     rSELF,%eax
     movl     %ecx,rINST                # rINST<- AA
     EXPORT_PC
-    movl     offGlue_method(%eax),%eax # eax<- glue->method
+    movl     offThread_method(%eax),%eax # eax<- self->method
     movl     2(rPC),%ecx               # ecx<- BBBBBBBB
     movl     offMethod_clazz(%eax),%eax
     movl     %ecx,OUT_ARG1(%esp)

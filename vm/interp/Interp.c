@@ -1232,24 +1232,12 @@ void dvmUpdateInterpBreak(int newMode, bool enable)
 }
 
 /*
- * Main interpreter loop entry point.  Select "standard" or "debug"
- * interpreter and switch between them as required.
- *
- * This begins executing code at the start of "method".  On exit, "pResult"
- * holds the return value of the method (or, if "method" returns NULL, it
- * holds an undefined value).
- *
- * The interpreted stack frame, which holds the method arguments, has
- * already been set up.
+ * One-time initialization at thread creation.  Here we initialize
+ * useful constants.
  */
-void dvmInterpret(Thread* self, const Method* method, JValue* pResult)
+void dvmInitInterpreterState(Thread* self)
 {
-    InterpState interpState;
-    bool change;
 #if defined(WITH_JIT)
-    /* Target-specific save/restore */
-    extern void dvmJitCalleeSave(double *saveArea);
-    extern void dvmJitCalleeRestore(double *saveArea);
     /* Interpreter entry points from compiled code */
     extern void dvmJitToInterpNormal();
     extern void dvmJitToInterpNoChain();
@@ -1259,7 +1247,6 @@ void dvmInterpret(Thread* self, const Method* method, JValue* pResult)
 #if defined(WITH_SELF_VERIFICATION)
     extern void dvmJitToInterpBackwardBranch();
 #endif
-
     /*
      * Reserve a static entity here to quickly setup runtime contents as
      * gcc will issue block copy instructions.
@@ -1272,9 +1259,47 @@ void dvmInterpret(Thread* self, const Method* method, JValue* pResult)
         dvmJitToInterpTraceSelect,
 #if defined(WITH_SELF_VERIFICATION)
         dvmJitToInterpBackwardBranch,
+#else
+        NULL,
 #endif
     };
+#endif
 
+    // Begin initialization
+    self->cardTable = gDvm.biasedCardTableBase;
+    self->interpSave.pInterpBreak = &gDvm.interpBreak;
+#if defined(WITH_JIT)
+    self->jitToInterpEntries = jitToInterpEntries;
+    self->icRechainCount = PREDICTED_CHAIN_COUNTER_RECHAIN;
+    self->pJitProfTable = gDvmJit.pProfTable;
+    self->ppJitProfTable = &gDvmJit.pProfTable;
+    self->jitThreshold = gDvmJit.threshold;
+    self->pProfileCountdown = &gDvmJit.profileCountdown;
+#endif
+
+}
+
+
+/*
+ * Main interpreter loop entry point.  Select "standard" or "debug"
+ * interpreter and switch between them as required.
+ *
+ * This begins executing code at the start of "method".  On exit, "pResult"
+ * holds the return value of the method (or, if "method" returns NULL, it
+ * holds an undefined value).
+ *
+ * The interpreted stack frame, which holds the method arguments, has
+ * already been set up.
+ */
+void dvmInterpret(Thread* self, const Method* method, JValue* pResult)
+{
+    bool change;
+    InterpSaveState interpSaveState;
+#if defined(WITH_JIT)
+    /* Target-specific save/restore */
+    extern void dvmJitCalleeSave(double *saveArea);
+    extern void dvmJitCalleeRestore(double *saveArea);
+    double calleeSave[JIT_CALLEE_SAVE_DOUBLE_COUNT];
     /*
      * If the previous VM left the code cache through single-stepping the
      * inJitCodeCache flag will be set when the VM is re-entered (for example,
@@ -1284,28 +1309,26 @@ void dvmInterpret(Thread* self, const Method* method, JValue* pResult)
      */
 #endif
 
+    /*
+     * Save interpreter state from previous activation, linking
+     * new to last.
+     */
+    interpSaveState = self->interpSave;
+    self->interpSave.prev = &interpSaveState;
+#if defined(WITH_JIT)
+    dvmJitCalleeSave(calleeSave);
+#endif
+
 
 #if defined(WITH_TRACKREF_CHECKS)
-    interpState.debugTrackedRefStart =
+    self->debugTrackedRefStart =
         dvmReferenceTableEntries(&self->internalLocalRefTable);
 #endif
-    interpState.debugIsMethodEntry = true;
+    self->debugIsMethodEntry = true;
 #if defined(WITH_JIT)
-    dvmJitCalleeSave(interpState.calleeSave);
+    dvmJitCalleeSave(calleeSave);
     /* Initialize the state to kJitNot */
-    interpState.jitState = kJitNot;
-
-    /* Setup the Jit-to-interpreter entry points */
-    interpState.jitToInterpEntries = jitToInterpEntries;
-
-    /*
-     * Initialize the threshold filter [don't bother to zero out the
-     * actual table.  We're looking for matches, and an occasional
-     * false positive is acceptible.
-     */
-    interpState.lastThreshFilter = 0;
-
-    interpState.icRechainCount = PREDICTED_CHAIN_COUNTER_RECHAIN;
+    self->jitState = kJitNot;
 #endif
 
     /*
@@ -1313,15 +1336,15 @@ void dvmInterpret(Thread* self, const Method* method, JValue* pResult)
      *
      * No need to initialize "retval".
      */
-    interpState.method = method;
-    interpState.fp = (u4*) self->curFrame;
-    interpState.pc = method->insns;
-    interpState.entryPoint = kInterpEntryInstr;
+    self->interpSave.method = method;
+    self->interpSave.fp = (u4*) self->curFrame;
+    self->interpSave.pc = method->insns;
+    self->entryPoint = kInterpEntryInstr;
 
     if (dvmDebuggerOrProfilerActive())
-        interpState.nextMode = INTERP_DBG;
+        self->nextMode = INTERP_DBG;
     else
-        interpState.nextMode = INTERP_STD;
+        self->nextMode = INTERP_STD;
 
     assert(!dvmIsNativeMethod(method));
 
@@ -1338,7 +1361,7 @@ void dvmInterpret(Thread* self, const Method* method, JValue* pResult)
         dvmAbort();
     }
 
-    typedef bool (*Interpreter)(Thread*, InterpState*);
+    typedef bool (*Interpreter)(Thread*);
     Interpreter stdInterp;
     if (gDvm.executionMode == kExecutionModeInterpFast)
         stdInterp = dvmMterpStd;
@@ -1355,22 +1378,25 @@ void dvmInterpret(Thread* self, const Method* method, JValue* pResult)
 
     change = true;
     while (change) {
-        switch (interpState.nextMode) {
+        switch (self->nextMode) {
         case INTERP_STD:
             LOGVV("threadid=%d: interp STD\n", self->threadId);
-            change = (*stdInterp)(self, &interpState);
+            change = (*stdInterp)(self);
             break;
         case INTERP_DBG:
             LOGVV("threadid=%d: interp DBG\n", self->threadId);
-            change = dvmInterpretDbg(self, &interpState);
+            change = dvmInterpretDbg(self);
             break;
         default:
             dvmAbort();
         }
     }
 
-    *pResult = interpState.retval;
+    *pResult = self->retval;
+
+    /* Restore interpreter state from previous activation */
+    self->interpSave = interpSaveState;
 #if defined(WITH_JIT)
-    dvmJitCalleeRestore(interpState.calleeSave);
+    dvmJitCalleeRestore(calleeSave);
 #endif
 }

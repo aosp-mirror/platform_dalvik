@@ -41,13 +41,15 @@ typedef struct InstructionTrace {
 
 typedef struct ShadowSpace {
     const u2* startPC;          /* starting pc of jitted region */
-    const void* fp;             /* starting fp of jitted region */
-    void* glue;                 /* starting glue of jitted region */
+    u4* fp;                     /* starting fp of jitted region */
+    const Method *method;
+    DvmDex* methodClassDex;
+    JValue retval;
+    const u1* interpStackEnd;
     SelfVerificationState jitExitState;  /* exit point for JIT'ed code */
     SelfVerificationState selfVerificationState;  /* current SV running state */
     const u2* endPC;            /* ending pc of jitted region */
     void* shadowFP;       /* pointer to fp in shadow space */
-    InterpState interpState;    /* copy of interpState */
     int* registerSpace;         /* copy of register state */
     int registerSpaceSize;      /* current size of register space */
     ShadowHeap heapSpace[HEAP_SPACE]; /* copy of heap space */
@@ -55,7 +57,6 @@ typedef struct ShadowSpace {
     const void* endShadowFP;    /* ending fp in shadow space */
     InstructionTrace trace[JIT_MAX_TRACE_LEN]; /* opcode trace for debugging */
     int traceLength;            /* counter for current trace length */
-    const Method* method;       /* starting method of jitted region */
 } ShadowSpace;
 
 /*
@@ -63,11 +64,12 @@ typedef struct ShadowSpace {
  */
 void* dvmSelfVerificationShadowSpaceAlloc(Thread* self);
 void dvmSelfVerificationShadowSpaceFree(Thread* self);
-void* dvmSelfVerificationSaveState(const u2* pc, const void* fp,
-                                   InterpState* interpState,
+void* dvmSelfVerificationSaveState(const u2* pc, u4* fp,
+                                   Thread* self,
                                    int targetTrace);
-void* dvmSelfVerificationRestoreState(const u2* pc, const void* fp,
-                                      SelfVerificationState exitPoint);
+void* dvmSelfVerificationRestoreState(const u2* pc, u4* fp,
+                                      SelfVerificationState exitPoint,
+                                      Thread *self);
 #endif
 
 /*
@@ -132,11 +134,11 @@ typedef struct JitEntry {
     void*               codeAddress;    /* Code address of native translation */
 } JitEntry;
 
-int dvmCheckJit(const u2* pc, Thread* self, InterpState* interpState,
-                const ClassObject *callsiteClass, const Method* curMethod);
+int dvmCheckJit(const u2* pc, Thread* self, const ClassObject *callsiteClass,
+                const Method* curMethod);
 void* dvmJitGetTraceAddr(const u2* dPC);
 void* dvmJitGetMethodAddr(const u2* dPC);
-bool dvmJitCheckTraceRequest(Thread* self, InterpState* interpState);
+bool dvmJitCheckTraceRequest(Thread* self);
 void dvmJitStopTranslationRequests(void);
 void dvmJitStats(void);
 bool dvmJitResizeJitTable(unsigned int size);
@@ -146,7 +148,7 @@ s8 dvmJitd2l(double d);
 s8 dvmJitf2l(float f);
 void dvmJitSetCodeAddr(const u2* dPC, void *nPC, JitInstructionSetType set,
                        bool isMethodEntry, int profilePrefixSize);
-void dvmJitEndTraceSelect(InterpState* interpState);
+void dvmJitEndTraceSelect(Thread* self);
 JitTraceCounter_t *dvmJitNextTraceCounter(void);
 void dvmJitTraceProfilingOff(void);
 void dvmJitTraceProfilingOn(void);

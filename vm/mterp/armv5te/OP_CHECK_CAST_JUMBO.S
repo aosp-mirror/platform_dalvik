@@ -14,7 +14,7 @@
     FETCH(r3, 3)                        @ r3<- BBBB
     orr     r2, r0, r2, lsl #16         @ r2<- AAAAaaaa
     GET_VREG(r9, r3)                    @ r9<- object
-    ldr     r0, [rGLUE, #offGlue_methodClassDex]    @ r0<- pDvmDex
+    ldr     r0, [rSELF, #offThread_methodClassDex]    @ r0<- pDvmDex
     cmp     r9, #0                      @ is object null?
     ldr     r0, [r0, #offDvmDex_pResClasses]    @ r0<- pDvmDex->pResClasses
     beq     .L${opcode}_okay            @ null obj, cast always succeeds
@@ -63,7 +63,7 @@
      */
 .L${opcode}_resolve:
     EXPORT_PC()                         @ resolve() could throw
-    ldr     r3, [rGLUE, #offGlue_method] @ r3<- glue->method
+    ldr     r3, [rSELF, #offThread_method] @ r3<- self->method
     mov     r1, r2                      @ r1<- AAAAAAAA
     mov     r2, #0                      @ r2<- false
     ldr     r0, [r3, #offMethod_clazz]  @ r0<- method->clazz

@@ -9,10 +9,10 @@
      * Check to see if a cast from one class to another is allowed.
      */
     /* check-cast vAA, class@BBBB */
-    movl      rGLUE,%ecx
+    movl      rSELF,%ecx
     GET_VREG_R  rINST,rINST             # rINST<- vAA (object)
     movzwl    2(rPC),%eax               # eax<- BBBB
-    movl      offGlue_methodClassDex(%ecx),%ecx # ecx<- pDvmDex
+    movl      offThread_methodClassDex(%ecx),%ecx # ecx<- pDvmDex
     testl     rINST,rINST               # is oject null?
     movl      offDvmDex_pResClasses(%ecx),%ecx # ecx<- pDvmDex->pResClasses
     je        .L${opcode}_okay          # null obj, cast always succeeds
@@ -59,10 +59,10 @@
      *  rINST holds object
      */
 .L${opcode}_resolve:
-    movl    rGLUE,%ecx
+    movl    rSELF,%ecx
     EXPORT_PC
     movzwl  2(rPC),%eax                # eax<- BBBB
-    movl    offGlue_method(%ecx),%ecx  # ecx<- glue->method
+    movl    offThread_method(%ecx),%ecx  # ecx<- self->method
     movl    %eax,OUT_ARG1(%esp)        # arg1<- BBBB
     movl    offMethod_clazz(%ecx),%ecx # ecx<- metho->clazz
     movl    $$0,OUT_ARG2(%esp)         # arg2<- false

@@ -9,7 +9,7 @@
      *    we are arriving from thumb mode, lr will have its low bit set.
      */
      ldr    r0, [lr,#-11]
-     ldr    r1, [rGLUE, #offGlue_pProfileCountdown]
+     ldr    r1, [rSELF, #offThread_pProfileCountdown]
      ldr    r2, [r0]                    @ get counter
      ldr    r3, [r1]                    @ get countdown timer
      add    r2, #1

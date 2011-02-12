@@ -6,14 +6,13 @@
     @ r0 = methodToCall, r1 = returnCell, rPC = dalvikCallsite
     ldrh    r7, [r0, #offMethod_registersSize]  @ r7<- methodToCall->regsSize
     ldrh    r2, [r0, #offMethod_outsSize]  @ r2<- methodToCall->outsSize
-    ldr     r9, [rGLUE, #offGlue_interpStackEnd]    @ r9<- interpStackEnd
-    ldr     r8, [rGLUE, #offGlue_pSelfSuspendCount] @ r8<- &suspendCount
+    ldr     r9, [rSELF, #offThread_interpStackEnd]    @ r9<- interpStackEnd
+    ldr     r8, [rSELF, #offThread_suspendCount] @ r8<- suspendCount
     add     r3, r1, #1  @ Thumb addr is odd
     SAVEAREA_FROM_FP(r1, rFP)           @ r1<- stack save area
     sub     r1, r1, r7, lsl #2          @ r1<- newFp (old savearea - regsSize)
     SAVEAREA_FROM_FP(r10, r1)           @ r10<- stack save area
     sub     r10, r10, r2, lsl #2        @ r10<- bottom (newsave - outsSize)
-    ldr     r8, [r8]                    @ r8<- suspendCount (int)
     cmp     r10, r9                     @ bottom < interpStackEnd?
     bxlo    lr                          @ return to raise stack overflow excep.
     @ r1 = newFP, r0 = methodToCall, r3 = returnCell, rPC = dalvikCallsite
@@ -39,17 +38,16 @@
 
     ldr     r10, .LdvmJitToInterpTraceSelectNoChain
     ldr     r3, [r9, #offClassObject_pDvmDex] @ r3<- method->clazz->pDvmDex
-    ldr     r2, [rGLUE, #offGlue_self]      @ r2<- glue->self
 
-    @ Update "glue" values for the new method
-    str     r0, [rGLUE, #offGlue_method]    @ glue->method = methodToCall
-    str     r3, [rGLUE, #offGlue_methodClassDex] @ glue->methodClassDex = ...
+    @ Update "thread" values for the new method
+    str     r0, [rSELF, #offThread_method]    @ self->method = methodToCall
+    str     r3, [rSELF, #offThread_methodClassDex] @ self->methodClassDex = ...
     mov     rFP, r1                         @ fp = newFp
-    str     rFP, [r2, #offThread_curFrame]  @ self->curFrame = newFp
+    str     rFP, [rSELF, #offThread_curFrame]  @ self->curFrame = newFp
 #if defined(TEMPLATE_INLINE_PROFILING)
     stmfd   sp!, {r0-r3}                    @ preserve r0-r3
     mov     r1, r6
-    @ r0=methodToCall, r1=rGlue
+    @ r0=methodToCall, r1=rSELF
     mov     lr, pc
     ldr     pc, .LdvmFastMethodTraceEnter
     ldmfd   sp!, {r0-r3}                    @ restore r0-r3

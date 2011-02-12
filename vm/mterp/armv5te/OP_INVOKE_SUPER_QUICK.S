@@ -9,7 +9,7 @@
     /* op vB, {vD, vE, vF, vG, vA}, class@CCCC */
     /* op vAA, {vCCCC..v(CCCC+AA-1)}, meth@BBBB */
     FETCH(r10, 2)                       @ r10<- GFED or CCCC
-    ldr     r2, [rGLUE, #offGlue_method]    @ r2<- current method
+    ldr     r2, [rSELF, #offThread_method]    @ r2<- current method
     .if     (!$isrange)
     and     r10, r10, #15               @ r10<- D (or stays CCCC)
     .endif

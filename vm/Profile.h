@@ -141,12 +141,9 @@ void dvmMethodTraceGCEnd(void);
 void dvmMethodTraceClassPrepBegin(void);
 void dvmMethodTraceClassPrepEnd(void);
 
-struct InterpState;     // extern
-void dvmFastMethodTraceEnter(const Method* method,
-                             const struct InterpState* interpState);
-void dvmFastJavaMethodTraceExit(const struct InterpState* interpState);
-void dvmFastNativeMethodTraceExit(const Method*method,
-                                  const struct InterpState* interpState);
+void dvmFastMethodTraceEnter(const Method* method, struct Thread* self);
+void dvmFastJavaMethodTraceExit(struct Thread* self);
+void dvmFastNativeMethodTraceExit(const Method* method, struct Thread* self);
 
 /*
  * Start/stop alloc counting.

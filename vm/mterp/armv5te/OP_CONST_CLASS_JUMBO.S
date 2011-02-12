@@ -4,7 +4,7 @@
 %verify "Class cannot be resolved"
     /* const-class/jumbo vBBBB, Class@AAAAAAAA */
     FETCH(r0, 1)                        @ r0<- aaaa (lo)
-    ldr     r2, [rGLUE, #offGlue_methodClassDex]    @ r2<- glue->methodClassDex
+    ldr     r2, [rSELF, #offThread_methodClassDex]    @ r2<-self>methodClassDex
     FETCH(r1, 2)                        @ r1<- AAAA (hi)
     ldr     r2, [r2, #offDvmDex_pResClasses]   @ r2<- dvmDex->pResClasses
     orr     r1, r0, r1, lsl #16         @ r1<- AAAAaaaa
@@ -25,7 +25,7 @@
      */
 .L${opcode}_resolve:
     EXPORT_PC()
-    ldr     r0, [rGLUE, #offGlue_method] @ r0<- glue->method
+    ldr     r0, [rSELF, #offThread_method] @ r0<- self->method
     mov     r2, #1                      @ r2<- true
     ldr     r0, [r0, #offMethod_clazz]  @ r0<- method->clazz
     bl      dvmResolveClass             @ r0<- Class reference

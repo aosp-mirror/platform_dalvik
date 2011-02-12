@@ -74,7 +74,7 @@ bool dvmCompilerArchVariantInit(void)
      * EA is calculated by doing "Rn + imm5 << 2", make sure that the last
      * offset from the struct is less than 128.
      */
-    assert((offsetof(InterpState, jitToInterpEntries) +
+    assert((offsetof(Thread, jitToInterpEntries) +
             sizeof(struct JitToInterpEntries)) <= 128);
     return true;
 }

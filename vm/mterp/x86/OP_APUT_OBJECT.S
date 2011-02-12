@@ -39,7 +39,7 @@
     call      dvmCanPutArrayElement          # test object type vs. array type
     UNSPILL_TMP1(%ecx)                       # recover target address
     testl     %eax,%eax
-    movl      rGLUE,%eax
+    movl      rSELF,%eax
     jne       .L${opcode}_types_okay
 
     # The types don't match.  We need to throw an ArrayStoreException.
@@ -52,7 +52,7 @@
     jmp       common_exceptionThrown
 
 .L${opcode}_types_okay:
-    movl      offGlue_cardTable(%eax),%eax   # get card table base
+    movl      offThread_cardTable(%eax),%eax   # get card table base
     movl      rINST,(%ecx)                   # store into array
     UNSPILL_TMP2(%ecx)                       # recover object head
     FETCH_INST_OPCODE 2 %edx

@@ -7,7 +7,7 @@
      *       OP_FILLED_NEW_ARRAY.S.
      */
     /* filled-new-array/jumbo {vCCCC..v(CCCC+BBBB-1)}, type@AAAAAAAA */
-    ldr     r3, [rGLUE, #offGlue_methodClassDex]    @ r3<- pDvmDex
+    ldr     r3, [rSELF, #offThread_methodClassDex]    @ r3<- pDvmDex
     FETCH(r0, 1)                        @ r0<- aaaa (lo)
     FETCH(r1, 2)                        @ r1<- AAAA (hi)
     ldr     r3, [r3, #offDvmDex_pResClasses]    @ r3<- pDvmDex->pResClasses
@@ -16,7 +16,7 @@
     EXPORT_PC()                         @ need for resolve and alloc
     cmp     r0, #0                      @ already resolved?
     bne     .L${opcode}_continue        @ yes, continue on
-8:  ldr     r3, [rGLUE, #offGlue_method] @ r3<- glue->method
+8:  ldr     r3, [rSELF, #offThread_method] @ r3<- self->method
     mov     r2, #0                      @ r2<- false
     ldr     r0, [r3, #offMethod_clazz]  @ r0<- method->clazz
     bl      dvmResolveClass             @ r0<- call(clazz, ref)
@@ -44,8 +44,8 @@
     beq     common_exceptionThrown      @ alloc failed, handle exception
 
     FETCH(r1, 4)                        @ r1<- CCCC
-    str     r0, [rGLUE, #offGlue_retval]      @ retval.l <- new array
-    str     rINST, [rGLUE, #offGlue_retval+4] @ retval.h <- type
+    str     r0, [rSELF, #offThread_retval]      @ retval.l <- new array
+    str     rINST, [rSELF, #offThread_retval+4] @ retval.h <- type
     add     r0, r0, #offArrayObject_contents @ r0<- newArray->contents
     subs    r9, r9, #1                  @ length--, check for neg
     FETCH_ADVANCE_INST(5)               @ advance to next instr, load rINST
@@ -59,9 +59,9 @@
     str     r3, [r0], #4                @ *contents++ = vX
     bpl     1b
 
-2:  ldr     r0, [rGLUE, #offGlue_retval]     @ r0<- object
-    ldr     r1, [rGLUE, #offGlue_retval+4]   @ r1<- type
-    ldr     r2, [rGLUE, #offGlue_cardTable]  @ r2<- card table base
+2:  ldr     r0, [rSELF, #offThread_retval]     @ r0<- object
+    ldr     r1, [rSELF, #offThread_retval+4]   @ r1<- type
+    ldr     r2, [rSELF, #offThread_cardTable]  @ r2<- card table base
     GET_INST_OPCODE(ip)                      @ ip<- opcode from rINST
     cmp     r1, #'I'                         @ Is int array?
     strneb  r2, [r2, r0, lsr #GC_CARD_SHIFT] @ Mark card based on object head
