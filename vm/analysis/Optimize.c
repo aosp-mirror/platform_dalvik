@@ -1125,29 +1125,32 @@ static bool needsReturnBarrier(Method* method)
         return false;
 
     /*
-     * Check to see if the class has any final fields.  If not, we don't
-     * need to generate a barrier instruction.
+     * Check to see if the class is finalizable.  The loader sets a flag
+     * if the class or one of its superclasses overrides finalize().
      */
     const ClassObject* clazz = method->clazz;
-    int idx = clazz->ifieldCount;
-    while (--idx >= 0) {
-        if (dvmIsFinalField(&clazz->ifields[idx].field))
-            break;
-    }
-    if (idx < 0)
-        return false;
+    if (IS_CLASS_FLAG_SET(clazz, CLASS_ISFINALIZABLE))
+        return true;
 
     /*
+     * Check to see if the class has any final fields.  If not, we don't
+     * need to generate a barrier instruction.
+     *
      * In theory, we only need to do this if the method actually modifies
      * a final field.  In practice, non-constructor methods are allowed
-     * by the VM to modify final fields, and there are tools that rely on
-     * this behavior.  (The compiler does not allow it.)
+     * to modify final fields, and there are 3rd-party tools that rely on
+     * this behavior.  (The compiler does not allow it, but the VM does.)
      *
      * If we alter the verifier to restrict final-field updates to
      * constructors, we can tighten this up as well.
      */
+    int idx = clazz->ifieldCount;
+    while (--idx >= 0) {
+        if (dvmIsFinalField(&clazz->ifields[idx].field))
+            return true;
+    }
 
-    return true;
+    return false;
 }
 
 /*

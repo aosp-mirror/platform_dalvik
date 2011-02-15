@@ -2077,7 +2077,20 @@ static void loadMethodFromDex(ClassObject* clazz, const DexMethod* pDexMethod,
     meth->jniArgInfo = 0;
 
     if (dvmCompareNameDescriptorAndMethod("finalize", "()V", meth) == 0) {
-        SET_CLASS_FLAG(clazz, CLASS_ISFINALIZABLE);
+        /*
+         * The Enum class declares a "final" finalize() method to
+         * prevent subclasses from introducing a finalizer.  We don't
+         * want to set the finalizable flag for Enum or its subclasses,
+         * so we check for it here.
+         *
+         * We also want to avoid setting it on Object, but it's easier
+         * to just strip that out later.
+         */
+        if (clazz->classLoader != NULL ||
+            strcmp(clazz->descriptor, "Ljava/lang/Enum;") != 0)
+        {
+            SET_CLASS_FLAG(clazz, CLASS_ISFINALIZABLE);
+        }
     }
 
     pDexCode = dexGetCode(pDexFile, pDexMethod);
