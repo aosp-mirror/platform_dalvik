@@ -22,6 +22,7 @@ import com.android.dx.io.DexBuffer;
 import com.android.dx.io.FieldId;
 import com.android.dx.io.MethodId;
 import com.android.dx.io.ProtoId;
+import java.util.HashMap;
 
 /**
  * Maps the index offsets from one dex file to those in another. For example, if
@@ -35,6 +36,7 @@ public final class IndexMap {
     public final short[] protoIds;
     public final short[] fieldIds;
     public final short[] methodIds;
+    public final HashMap<Integer, Integer> typeListOffsets;
 
     public IndexMap(DexBuffer target, TableOfContents tableOfContents) {
         this.target = target;
@@ -43,6 +45,13 @@ public final class IndexMap {
         this.protoIds = new short[tableOfContents.protoIds.size];
         this.fieldIds = new short[tableOfContents.fieldIds.size];
         this.methodIds = new short[tableOfContents.methodIds.size];
+        this.typeListOffsets = new HashMap<Integer, Integer>();
+
+        /*
+         * A type list at offset 0 is always the empty type list. Always map
+         * this to itself.
+         */
+        this.typeListOffsets.put(0, 0);
     }
 
     public int adjustString(int stringIndex) {
@@ -53,12 +62,15 @@ public final class IndexMap {
         return (typeIndex == ClassDef.NO_INDEX) ? ClassDef.NO_INDEX : typeIds[typeIndex];
     }
 
-    public short[] adjustTypeList(short[] typeList) {
-        short[] result = new short[typeList.length];
-        for (int i = 0; i < typeList.length; i++) {
-            result[i] = adjustType(typeList[i]);
+    public TypeList adjustTypeList(TypeList typeList) {
+        if (typeList == TypeList.EMPTY) {
+            return typeList;
         }
-        return result;
+        short[] types = typeList.getTypes().clone();
+        for (int i = 0; i < types.length; i++) {
+            types[i] = adjustType(types[i]);
+        }
+        return new TypeList(target, types);
     }
 
     public short adjustProto(int protoIndex) {
@@ -71,6 +83,10 @@ public final class IndexMap {
 
     public short adjustMethod(int methodIndex) {
         return methodIds[methodIndex];
+    }
+
+    public int adjustTypeListOffset(int typeListOffset) {
+        return typeListOffsets.get(typeListOffset);
     }
 
     public MethodId adjust(MethodId methodId) {
@@ -92,15 +108,15 @@ public final class IndexMap {
         return new ProtoId(target,
                 adjustString(protoId.getShortyIndex()),
                 adjustType(protoId.getReturnTypeIndex()),
-                adjustTypeList(protoId.getParameters()));
+                adjustTypeListOffset(protoId.getParametersOffset()));
     }
 
     public ClassDef adjust(ClassDef classDef) {
         return new ClassDef(target, classDef.getOffset(), adjustType(classDef.getTypeIndex()),
                 classDef.getAccessFlags(), adjustType(classDef.getSupertypeIndex()),
-                classDef.getInterfacesOffset(), adjustTypeList(classDef.getInterfaces()),
-                classDef.getSourceFileIndex(), classDef.getAnnotationsOffset(),
-                classDef.getClassDataOffset(), classDef.getStaticValuesOffset());
+                adjustTypeListOffset(classDef.getInterfacesOffset()), classDef.getSourceFileIndex(),
+                classDef.getAnnotationsOffset(), classDef.getClassDataOffset(),
+                classDef.getStaticValuesOffset());
     }
 
     public SortableType adjust(SortableType sortableType) {

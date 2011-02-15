@@ -27,14 +27,13 @@ public final class ClassDef {
     private final int accessFlags;
     private final int supertypeIndex;
     private final int interfacesOffset;
-    private final short[] interfaces;
     private final int sourceFileIndex;
     private final int annotationsOffset;
     private final int classDataOffset;
     private final int staticValuesOffset;
 
     public ClassDef(DexBuffer buffer, int offset, int typeIndex, int accessFlags,
-            int supertypeIndex, int interfacesOffset, short[] interfaces, int sourceFileIndex,
+            int supertypeIndex, int interfacesOffset, int sourceFileIndex,
             int annotationsOffset, int classDataOffset, int staticValuesOffset) {
         this.buffer = buffer;
         this.offset = offset;
@@ -42,7 +41,6 @@ public final class ClassDef {
         this.accessFlags = accessFlags;
         this.supertypeIndex = supertypeIndex;
         this.interfacesOffset = interfacesOffset;
-        this.interfaces = interfaces;
         this.sourceFileIndex = sourceFileIndex;
         this.annotationsOffset = annotationsOffset;
         this.classDataOffset = classDataOffset;
@@ -66,7 +64,7 @@ public final class ClassDef {
     }
 
     public short[] getInterfaces() {
-        return interfaces;
+        return buffer.readTypeList(interfacesOffset).getTypes();
     }
 
     public int getAccessFlags() {

@@ -17,31 +17,25 @@
 package com.android.dx.io;
 
 import com.android.dx.util.Unsigned;
-import java.util.Arrays;
 
 public final class ProtoId implements Comparable<ProtoId> {
     private final DexBuffer buffer;
     private final int shortyIndex;
     private final int returnTypeIndex;
-    private final short[] parameters;
+    private final int parametersOffset;
 
-    public ProtoId(DexBuffer buffer, int shortyIndex, int returnTypeIndex, short[] parameters) {
+    public ProtoId(DexBuffer buffer, int shortyIndex, int returnTypeIndex, int parametersOffset) {
         this.buffer = buffer;
         this.shortyIndex = shortyIndex;
         this.returnTypeIndex = returnTypeIndex;
-        this.parameters = parameters;
+        this.parametersOffset = parametersOffset;
     }
 
     public int compareTo(ProtoId other) {
         if (returnTypeIndex != other.returnTypeIndex) {
             return Unsigned.compare(returnTypeIndex, other.returnTypeIndex);
         }
-        for (int i = 0; i < parameters.length && i < other.parameters.length; i++) {
-            if (parameters[i] != other.parameters[i]) {
-                return Unsigned.compare(parameters[i], other.parameters[i]);
-            }
-        }
-        return Unsigned.compare(parameters.length, other.parameters.length);
+        return Unsigned.compare(parametersOffset, other.parametersOffset);
     }
 
     public int getShortyIndex() {
@@ -52,35 +46,23 @@ public final class ProtoId implements Comparable<ProtoId> {
         return returnTypeIndex;
     }
 
-    public short[] getParameters() {
-        return parameters;
+    public int getParametersOffset() {
+        return parametersOffset;
     }
 
-    public void writeTo(DexBuffer.Section out, int typeListOffset) {
+    public void writeTo(DexBuffer.Section out) {
         out.writeInt(shortyIndex);
         out.writeInt(returnTypeIndex);
-        out.writeInt(typeListOffset);
+        out.writeInt(parametersOffset);
     }
 
     @Override public String toString() {
         if (buffer == null) {
-            return shortyIndex + " " + returnTypeIndex + " " + Arrays.toString(parameters);
+            return shortyIndex + " " + returnTypeIndex + " " + parametersOffset;
         }
 
-        StringBuilder result = new StringBuilder()
-                .append(buffer.strings().get(shortyIndex))
-                .append(": ")
-                .append(buffer.typeNames().get(returnTypeIndex))
-                .append(" (");
-        int j = 0;
-        for (short parameter : parameters) {
-            if (j > 0) {
-                result.append(", ");
-            }
-            result.append(buffer.typeNames().get(parameter));
-            j++;
-        }
-        result.append(")");
-        return result.toString();
+        return buffer.strings().get(shortyIndex)
+                + ": " + buffer.typeNames().get(returnTypeIndex)
+                + " " + buffer.readTypeList(parametersOffset);
     }
 }

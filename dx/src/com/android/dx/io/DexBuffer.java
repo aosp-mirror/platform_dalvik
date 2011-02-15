@@ -18,6 +18,7 @@ package com.android.dx.io;
 
 import com.android.dx.dex.SizeOf;
 import com.android.dx.dex.TableOfContents;
+import com.android.dx.merge.TypeList;
 import com.android.dx.util.DexException;
 import com.android.dx.util.Leb128Utils;
 import com.android.dx.util.Mutf8;
@@ -47,9 +48,8 @@ public final class DexBuffer {
     private final List<String> strings = new AbstractList<String>() {
         @Override public String get(int index) {
             checkBounds(index, tableOfContents.stringIds.size);
-            int offset = open(tableOfContents.stringIds.off + (index * SizeOf.STRING_ID_ITEM))
-                    .readInt();
-            return open(offset).readStringDataItem();
+            return open(tableOfContents.stringIds.off + (index * SizeOf.STRING_ID_ITEM))
+                    .readString();
         }
         @Override public int size() {
             return tableOfContents.stringIds.size;
@@ -224,6 +224,13 @@ public final class DexBuffer {
         };
     }
 
+    public TypeList readTypeList(int offset) {
+        if (offset == 0) {
+            return TypeList.EMPTY;
+        }
+        return open(offset).readTypeList();
+    }
+
     public ClassData readClassData(ClassDef classDef) {
         int offset = classDef.getClassDataOffset();
         if (offset == 0) {
@@ -315,22 +322,20 @@ public final class DexBuffer {
             }
         }
 
-        public short[] readTypeList(int offset) {
-            if (offset == 0) {
-                return new short[0];
-            }
-            int savedPosition = position;
-            position = offset;
+        public TypeList readTypeList() {
             int size = readInt();
-            short[] parameters = new short[size];
+            short[] types = new short[size];
             for (int i = 0; i < size; i++) {
-                parameters[i] = readShort();
+                types[i] = readShort();
             }
-            position = savedPosition;
-            return parameters;
+            alignToFourBytes();
+            return new TypeList(DexBuffer.this, types);
         }
 
-        public String readStringDataItem() {
+        public String readString() {
+            int offset = readInt();
+            int savedPosition = position;
+            position = offset;
             try {
                 int expectedLength = readUleb128();
                 String result = Mutf8.decode(asDataInput, new char[expectedLength]);
@@ -341,6 +346,8 @@ public final class DexBuffer {
                 return result;
             } catch (IOException e) {
                 throw new DexException(e);
+            } finally {
+                position = savedPosition;
             }
         }
 
@@ -361,9 +368,8 @@ public final class DexBuffer {
         public ProtoId readProtoId() {
             int shortyIndex = readInt();
             int returnTypeIndex = readInt();
-            int parametersOff = readInt();
-            short[] parameters = readTypeList(parametersOff);
-            return new ProtoId(DexBuffer.this, shortyIndex, returnTypeIndex, parameters);
+            int parametersOffset = readInt();
+            return new ProtoId(DexBuffer.this, shortyIndex, returnTypeIndex, parametersOffset);
         }
 
         public ClassDef readClassDef() {
@@ -372,14 +378,13 @@ public final class DexBuffer {
             int accessFlags = readInt();
             int supertype = readInt();
             int interfacesOffset = readInt();
-            short[] interfaces = readTypeList(interfacesOffset);
             int sourceFileIndex = readInt();
             int annotationsOffset = readInt();
             int classDataOffset = readInt();
             int staticValuesOffset = readInt();
             return new ClassDef(DexBuffer.this, offset, type, accessFlags, supertype,
-                    interfacesOffset, interfaces, sourceFileIndex, annotationsOffset,
-                    classDataOffset, staticValuesOffset);
+                    interfacesOffset, sourceFileIndex, annotationsOffset, classDataOffset,
+                    staticValuesOffset);
         }
 
         private Code readCode() {
@@ -537,6 +542,15 @@ public final class DexBuffer {
             } catch (IOException e) {
                 throw new AssertionError();
             }
+        }
+
+        public void writeTypeList(TypeList typeList) {
+            short[] types = typeList.getTypes();
+            writeInt(types.length);
+            for (short type : types) {
+                writeShort(type);
+            }
+            alignToFourBytes();
         }
     }
 
