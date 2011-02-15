@@ -725,8 +725,6 @@ dalvik_mterp:
     @ r0=JNIMethod, r1=rGLUE
     ldmfd   sp!, {r0-r1}
     bl      dvmFastNativeMethodTraceExit
-    @ r2=JNIMethod, r6=rGLUE
-    stmfd   sp!, {r2,r6}
     b       220f
 110:
     mov     lr, pc                      @ set return addr
