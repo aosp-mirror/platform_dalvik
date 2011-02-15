@@ -538,81 +538,6 @@ static Object *nextGrayObject(const u1 *base, const u1 *limit,
 }
 
 /*
- * Scans each byte from start below end returning the address of the
- * first dirty card.  Returns NULL if no dirty card is found.
- */
-static const u1 *scanBytesForDirtyCard(const u1 *start, const u1 *end)
-{
-    const u1 *ptr;
-
-    assert(start <= end);
-    for (ptr = start; ptr < end; ++ptr) {
-        if (*ptr == GC_CARD_DIRTY) {
-            return ptr;
-        }
-    }
-    return NULL;
-}
-
-/*
- * Like scanBytesForDirtyCard but scans the range from start below end
- * by words.  Assumes start and end are word aligned.
- */
-static const u1 *scanWordsForDirtyCard(const u1 *start, const u1 *end)
-{
-    const u1 *ptr;
-
-    assert((uintptr_t)start % kWordSize == 0);
-    assert((uintptr_t)end % kWordSize == 0);
-    assert(start <= end);
-    for (ptr = start; ptr < end; ptr += kWordSize) {
-        if (*(const Word *)ptr != 0) {
-            const u1 *dirty = scanBytesForDirtyCard(ptr, ptr + kWordSize);
-            if (dirty != NULL) {
-                return dirty;
-            }
-        }
-    }
-    return NULL;
-}
-
-/*
- * Scans the card table as quickly as possible looking for a dirty
- * card.  Returns the address of the first dirty card found or NULL if
- * no dirty cards were found.
- */
-static const u1 *nextDirtyCard(const u1 *start, const u1 *end)
-{
-    const u1 *wstart = (u1 *)ALIGN_UP(start, kWordSize);
-    const u1 *wend = (u1 *)ALIGN_DOWN(end, kWordSize);
-    const u1 *ptr, *dirty;
-
-    assert(start <= end);
-    assert(start <= wstart);
-    assert(end >= wend);
-    ptr = start;
-    if (wstart < end) {
-        /* Scan the leading unaligned bytes. */
-        dirty = scanBytesForDirtyCard(ptr, wstart);
-        if (dirty != NULL) {
-            return dirty;
-        }
-        /* Scan the range of aligned words. */
-        dirty = scanWordsForDirtyCard(wstart, wend);
-        if (dirty != NULL) {
-            return dirty;
-        }
-        ptr = wend;
-    }
-    /* Scan trailing unaligned bytes. */
-    dirty = scanBytesForDirtyCard(ptr, end);
-    if (dirty != NULL) {
-        return dirty;
-    }
-    return NULL;
-}
-
-/*
  * Scans range of dirty cards between start and end.  A range of dirty
  * cards is composed consecutively dirty cards or dirty cards spanned
  * by a gray object.  Returns the address of a clean card if the scan
@@ -666,7 +591,7 @@ static void scanGrayObjects(GcMarkContext *ctx)
 
     ptr = base;
     for (;;) {
-        dirty = nextDirtyCard(ptr, limit);
+        dirty = (const u1 *)memchr(ptr, GC_CARD_DIRTY, limit - ptr);
         if (dirty == NULL) {
             break;
         }
