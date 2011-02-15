@@ -55,18 +55,18 @@ public final class ShortArrayCodeInput extends BaseCodeCursor
 
     /** @inheritDoc */
     public int readInt() throws EOFException {
-        int short0 = read();
-        int short1 = read();
+        int short0 = read() & 0xffff;
+        int short1 = read() & 0xffff;
 
         return short0 | (short1 << 16);
     }
 
     /** @inheritDoc */
     public long readLong() throws EOFException {
-        long short0 = read();
-        long short1 = read();
-        long short2 = read();
-        long short3 = read();
+        long short0 = read() & 0xffff;
+        long short1 = read() & 0xffff;
+        long short2 = read() & 0xffff;
+        long short3 = read() & 0xffff;
 
         return short0 | (short1 << 16) | (short2 << 32) | (short3 << 48);
     }
