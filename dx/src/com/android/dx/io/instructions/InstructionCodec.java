@@ -268,7 +268,7 @@ public enum InstructionCodec {
         @Override public void encode(DecodedInstruction insn, CodeOutput out) {
             out.write(
                     codeUnit(insn.getOpcode(), insn.getA()),
-                    insn.getLiteralUnit());
+                    insn.getIndexUnit());
         }
     },
 
@@ -595,7 +595,7 @@ public enum InstructionCodec {
         }
 
         @Override public void encode(DecodedInstruction insn, CodeOutput out) {
-            int literal = insn.getLiteralInt();
+            long literal = insn.getLiteral();
             out.write(
                     codeUnit(insn.getOpcode(), insn.getA()),
                     unit0(literal),

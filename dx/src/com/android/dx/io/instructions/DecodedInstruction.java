@@ -202,7 +202,7 @@ public abstract class DecodedInstruction {
      * throw if the value is out of the range of a signed int.
      */
     public final int getLiteralInt() {
-        if (literal != (int) target) {
+        if (literal != (int) literal) {
             throw new DexException("Literal out of range: " + Hex.u8(literal));
         }
 
@@ -214,7 +214,7 @@ public abstract class DecodedInstruction {
      * value is out of the range of a signed code unit.
      */
     public final short getLiteralUnit() {
-        if (literal != (short) target) {
+        if (literal != (short) literal) {
             throw new DexException("Literal out of range: " + Hex.u8(literal));
         }
 
@@ -226,7 +226,7 @@ public abstract class DecodedInstruction {
      * throw if the value is out of the range of a signed byte.
      */
     public final int getLiteralByte() {
-        if (literal != (byte) target) {
+        if (literal != (byte) literal) {
             throw new DexException("Literal out of range: " + Hex.u8(literal));
         }
 
