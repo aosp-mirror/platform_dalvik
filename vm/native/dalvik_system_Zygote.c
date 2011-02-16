@@ -299,7 +299,7 @@ static void enableDebugFeatures(u4 debugFlags)
 #endif
     }
 
-#if HAVE_ANDROID_OS
+#ifdef HAVE_ANDROID_OS
     if ((debugFlags & DEBUG_ENABLE_DEBUGGER) != 0) {
         /* To let a non-privileged gdbserver attach to this
          * process, we must set its dumpable bit flag. However
