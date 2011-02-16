@@ -467,8 +467,8 @@ public final class DexBuffer {
             return result;
         }
 
-        private void checkPosition() {
-            if (position > limit) {
+        private void ensureCapacity(int size) {
+            if (position + size > limit) {
                 throw new DexException("Section limit " + limit + " exceeded by " + name);
             }
         }
@@ -491,21 +491,21 @@ public final class DexBuffer {
         }
 
         public void write(byte[] bytes) {
+            ensureCapacity(bytes.length);
             System.arraycopy(bytes, 0, data, position, bytes.length);
             position += bytes.length;
-            checkPosition();
         }
 
         public void writeByte(int b) {
+            ensureCapacity(1);
             data[position++] = (byte) b;
-            checkPosition();
         }
 
         public void writeShort(short i) {
+            ensureCapacity(2);
             data[position    ] = (byte) i;
             data[position + 1] = (byte) (i >>> 8);
             position += 2;
-            checkPosition();
         }
 
         public void write(short[] shorts) {
@@ -515,22 +515,22 @@ public final class DexBuffer {
         }
 
         public void writeInt(int i) {
+            ensureCapacity(4);
             data[position    ] = (byte) i;
             data[position + 1] = (byte) (i >>>  8);
             data[position + 2] = (byte) (i >>> 16);
             data[position + 3] = (byte) (i >>> 24);
             position += 4;
-            checkPosition();
         }
 
         public void writeUleb128(int i) {
             position += Leb128Utils.writeUnsignedLeb128(data, position, i);
-            checkPosition();
+            ensureCapacity(0);
         }
 
         public void writeSleb128(int i) {
             position += Leb128Utils.writeSignedLeb128(data, position, i);
-            checkPosition();
+            ensureCapacity(0);
         }
 
         public void writeStringData(String value) {
@@ -551,6 +551,13 @@ public final class DexBuffer {
                 writeShort(type);
             }
             alignToFourBytes();
+        }
+
+        /**
+         * Returns the number of bytes remaining in this section.
+         */
+        public int remaining() {
+            return limit - position;
         }
     }
 

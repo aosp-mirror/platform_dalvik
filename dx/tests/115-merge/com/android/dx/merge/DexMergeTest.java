@@ -91,6 +91,39 @@ public final class DexMergeTest extends TestCase {
         assertEquals(false, staticValues.getField("m").get(null));
     }
 
+    /**
+     * Merging dex files uses pessimistic sizes that naturally leave gaps in the
+     * output files. If those gaps grow too large, the merger is supposed to
+     * compact the result. This exercises that by repeatedly merging a dex with
+     * itself.
+     */
+    public void testMergedOutputSizeIsBounded() throws Exception {
+        /*
+         * At the time this test was written, the output would grow ~25% with
+         * each merge. Setting a low 1KiB ceiling on the maximum size caused
+         * the file to be compacted every four merges.
+         */
+        int steps = 100;
+        int compactWasteThreshold = 1024;
+
+        DexBuffer dexA = new DexBuffer();
+        DexBuffer dexB = new DexBuffer();
+        dexA.loadFrom(resourceToFile("/testdata/Basic.dex"));
+        dexB.loadFrom(resourceToFile("/testdata/TryCatchFinally.dex"));
+        DexBuffer merged = new DexMerger(dexA, dexB).merge();
+
+        int maxLength = 0;
+        for (int i = 0; i < steps; i++) {
+            DexMerger dexMerger = new DexMerger(dexA, merged);
+            dexMerger.setCompactWasteThreshold(compactWasteThreshold);
+            merged = dexMerger.merge();
+            maxLength = Math.max(maxLength, merged.getLength());
+        }
+
+        int maxExpectedLength = dexA.getLength() + dexB.getLength() + compactWasteThreshold;
+        assertTrue(maxLength + " < " + maxExpectedLength, maxLength < maxExpectedLength);
+    }
+
     public ClassLoader mergeAndLoad(String dexAResource, String dexBResource) throws IOException {
         DexBuffer dexA = new DexBuffer();
         DexBuffer dexB = new DexBuffer();
