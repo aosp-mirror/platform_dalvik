@@ -52,7 +52,11 @@ typedef struct InlineOperation {
     const char*     methodSignature;
 } InlineOperation;
 
-/* Must be kept in sync w/ gDvmInlineOpsTable in InlineNative.c */
+/*
+ * Must be kept in sync w/ gDvmInlineOpsTable in InlineNative.c
+ *
+ * You should also add a test to libcore's IntrinsicTest.
+ */
 typedef enum NativeInlineOps {
     INLINE_EMPTYINLINEMETHOD = 0,
     INLINE_STRING_CHARAT = 1,

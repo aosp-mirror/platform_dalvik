@@ -20,23 +20,50 @@
 #include "Dalvik.h"
 #include "native/InternalNativePriv.h"
 
+static void String_charAt(const u4* args, JValue* pResult)
+{
+    MAKE_INTRINSIC_TRAMPOLINE(javaLangString_charAt);
+}
 
-/*
- * public String intern()
- *
- * Intern a string in the VM string table.
- */
-static void Dalvik_java_lang_String_intern(const u4* args, JValue* pResult)
+static void String_compareTo(const u4* args, JValue* pResult)
+{
+    MAKE_INTRINSIC_TRAMPOLINE(javaLangString_compareTo);
+}
+
+static void String_equals(const u4* args, JValue* pResult)
+{
+    MAKE_INTRINSIC_TRAMPOLINE(javaLangString_equals);
+}
+
+static void String_fastIndexOf(const u4* args, JValue* pResult)
+{
+    MAKE_INTRINSIC_TRAMPOLINE(javaLangString_fastIndexOf_II);
+}
+
+static void String_intern(const u4* args, JValue* pResult)
 {
     StringObject* str = (StringObject*) args[0];
-    StringObject* interned;
-
-    interned = dvmLookupInternedString(str);
+    StringObject* interned = dvmLookupInternedString(str);
     RETURN_PTR(interned);
 }
 
+static void String_isEmpty(const u4* args, JValue* pResult)
+{
+    MAKE_INTRINSIC_TRAMPOLINE(javaLangString_isEmpty);
+}
+
+static void String_length(const u4* args, JValue* pResult)
+{
+    MAKE_INTRINSIC_TRAMPOLINE(javaLangString_length);
+}
+
 const DalvikNativeMethod dvm_java_lang_String[] = {
-    { "intern",             "()Ljava/lang/String;",
-        Dalvik_java_lang_String_intern },
+    { "charAt",      "(I)C",                  String_charAt },
+    { "compareTo",   "(Ljava/lang/String;)I", String_compareTo },
+    { "equals",      "(Ljava/lang/Object;)Z", String_equals },
+    { "fastIndexOf", "(II)I",                 String_fastIndexOf },
+    { "intern",      "()Ljava/lang/String;",  String_intern },
+    { "isEmpty",     "()Z",                   String_isEmpty },
+    { "length",      "()I",                   String_length },
     { NULL, NULL, NULL },
 };

@@ -160,6 +160,9 @@ LOCAL_SRC_FILES := \
 	native/dalvik_system_VMStack.c \
 	native/dalvik_system_Zygote.c \
 	native/java_lang_Class.c \
+	native/java_lang_Double.c \
+	native/java_lang_Float.c \
+	native/java_lang_Math.c \
 	native/java_lang_Object.c \
 	native/java_lang_Runtime.c \
 	native/java_lang_String.c \

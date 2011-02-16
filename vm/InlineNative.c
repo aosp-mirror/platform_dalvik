@@ -124,7 +124,7 @@ static bool org_apache_harmony_dalvik_NativeTestTarget_emptyInlineMethod(
 /*
  * public char charAt(int index)
  */
-static bool javaLangString_charAt(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
+bool javaLangString_charAt(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
     JValue* pResult)
 {
     int count, offset;
@@ -197,7 +197,7 @@ static void badMatch(StringObject* thisStrObj, StringObject* compStrObj,
 /*
  * public int compareTo(String s)
  */
-static bool javaLangString_compareTo(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
+bool javaLangString_compareTo(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
     JValue* pResult)
 {
     /*
@@ -292,7 +292,7 @@ static bool javaLangString_compareTo(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
 /*
  * public boolean equals(Object anObject)
  */
-static bool javaLangString_equals(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
+bool javaLangString_equals(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
     JValue* pResult)
 {
     /*
@@ -401,7 +401,7 @@ static bool javaLangString_equals(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
 /*
  * public int length()
  */
-static bool javaLangString_length(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
+bool javaLangString_length(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
     JValue* pResult)
 {
     //LOGI("String.length this=0x%08x pResult=%p\n", arg0, pResult);
@@ -419,7 +419,7 @@ static bool javaLangString_length(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
 /*
  * public boolean isEmpty()
  */
-static bool javaLangString_isEmpty(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
+bool javaLangString_isEmpty(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
     JValue* pResult)
 {
     //LOGI("String.isEmpty this=0x%08x pResult=%p\n", arg0, pResult);
@@ -492,7 +492,7 @@ static inline int indexOfCommon(Object* strObj, int ch, int start)
  * The character must be <= 0xffff; this method does not handle supplementary
  * characters.
  */
-static bool javaLangString_fastIndexOf_II(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
+bool javaLangString_fastIndexOf_II(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
     JValue* pResult)
 {
     /* null reference check on "this" */
@@ -526,7 +526,7 @@ typedef union {
 /*
  * public static int abs(int)
  */
-static bool javaLangMath_abs_int(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
+bool javaLangMath_abs_int(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
     JValue* pResult)
 {
     s4 val = (s4) arg0;
@@ -537,7 +537,7 @@ static bool javaLangMath_abs_int(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
 /*
  * public static long abs(long)
  */
-static bool javaLangMath_abs_long(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
+bool javaLangMath_abs_long(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
     JValue* pResult)
 {
     Convert64 convert;
@@ -551,7 +551,7 @@ static bool javaLangMath_abs_long(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
 /*
  * public static float abs(float)
  */
-static bool javaLangMath_abs_float(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
+bool javaLangMath_abs_float(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
     JValue* pResult)
 {
     Convert32 convert;
@@ -564,7 +564,7 @@ static bool javaLangMath_abs_float(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
 /*
  * public static double abs(double)
  */
-static bool javaLangMath_abs_double(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
+bool javaLangMath_abs_double(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
     JValue* pResult)
 {
     Convert64 convert;
@@ -579,7 +579,7 @@ static bool javaLangMath_abs_double(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
 /*
  * public static int min(int)
  */
-static bool javaLangMath_min_int(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
+bool javaLangMath_min_int(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
     JValue* pResult)
 {
     pResult->i = ((s4) arg0 < (s4) arg1) ? arg0 : arg1;
@@ -589,7 +589,7 @@ static bool javaLangMath_min_int(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
 /*
  * public static int max(int)
  */
-static bool javaLangMath_max_int(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
+bool javaLangMath_max_int(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
     JValue* pResult)
 {
     pResult->i = ((s4) arg0 > (s4) arg1) ? arg0 : arg1;
@@ -603,7 +603,7 @@ static bool javaLangMath_max_int(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
  * by an fcmpd of the result against itself.  If it doesn't match (i.e.
  * it's NaN), the libm sqrt() is invoked.
  */
-static bool javaLangMath_sqrt(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
+bool javaLangMath_sqrt(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
     JValue* pResult)
 {
     Convert64 convert;
@@ -616,7 +616,7 @@ static bool javaLangMath_sqrt(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
 /*
  * public static double cos(double)
  */
-static bool javaLangMath_cos(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
+bool javaLangMath_cos(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
     JValue* pResult)
 {
     Convert64 convert;
@@ -629,7 +629,7 @@ static bool javaLangMath_cos(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
 /*
  * public static double sin(double)
  */
-static bool javaLangMath_sin(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
+bool javaLangMath_sin(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
     JValue* pResult)
 {
     Convert64 convert;
@@ -645,7 +645,7 @@ static bool javaLangMath_sin(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
  * ===========================================================================
  */
 
-static bool javaLangFloat_floatToIntBits(u4 arg0, u4 arg1, u4 arg2, u4 arg,
+bool javaLangFloat_floatToIntBits(u4 arg0, u4 arg1, u4 arg2, u4 arg,
     JValue* pResult)
 {
     Convert32 convert;
@@ -654,14 +654,14 @@ static bool javaLangFloat_floatToIntBits(u4 arg0, u4 arg1, u4 arg2, u4 arg,
     return true;
 }
 
-static bool javaLangFloat_floatToRawIntBits(u4 arg0, u4 arg1, u4 arg2, u4 arg,
+bool javaLangFloat_floatToRawIntBits(u4 arg0, u4 arg1, u4 arg2, u4 arg,
     JValue* pResult)
 {
     pResult->i = arg0;
     return true;
 }
 
-static bool javaLangFloat_intBitsToFloat(u4 arg0, u4 arg1, u4 arg2, u4 arg,
+bool javaLangFloat_intBitsToFloat(u4 arg0, u4 arg1, u4 arg2, u4 arg,
     JValue* pResult)
 {
     Convert32 convert;
@@ -676,7 +676,7 @@ static bool javaLangFloat_intBitsToFloat(u4 arg0, u4 arg1, u4 arg2, u4 arg,
  * ===========================================================================
  */
 
-static bool javaLangDouble_doubleToLongBits(u4 arg0, u4 arg1, u4 arg2, u4 arg,
+bool javaLangDouble_doubleToLongBits(u4 arg0, u4 arg1, u4 arg2, u4 arg,
     JValue* pResult)
 {
     Convert64 convert;
@@ -686,7 +686,7 @@ static bool javaLangDouble_doubleToLongBits(u4 arg0, u4 arg1, u4 arg2, u4 arg,
     return true;
 }
 
-static bool javaLangDouble_doubleToRawLongBits(u4 arg0, u4 arg1, u4 arg2,
+bool javaLangDouble_doubleToRawLongBits(u4 arg0, u4 arg1, u4 arg2,
     u4 arg, JValue* pResult)
 {
     Convert64 convert;
@@ -696,7 +696,7 @@ static bool javaLangDouble_doubleToRawLongBits(u4 arg0, u4 arg1, u4 arg2,
     return true;
 }
 
-static bool javaLangDouble_longBitsToDouble(u4 arg0, u4 arg1, u4 arg2, u4 arg,
+bool javaLangDouble_longBitsToDouble(u4 arg0, u4 arg1, u4 arg2, u4 arg,
     JValue* pResult)
 {
     Convert64 convert;
