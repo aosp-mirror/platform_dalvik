@@ -408,7 +408,7 @@ DBG bne     dvmAbort                    @ DEBUG
     str     r2, [r8], #4
     b       .Lstack_copy_loop
 
-
+    .size   dvmPlatformInvoke, .-dvmPlatformInvoke
 
 #if 0
 

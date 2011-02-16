@@ -760,6 +760,7 @@ dalvik_mterp:
     b       common_exceptionThrown
 #ifdef ASSIST_DEBUGGER
     .fnend
+    .size   dalvik_mterp, .-dalvik_mterp
 #endif
 
 

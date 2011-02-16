@@ -359,6 +359,7 @@ dvmMterpStdRun:
     bl      printf
     bl      dvmAbort
     .fnend
+    .size   dvmMterpStdRun, .-dvmMterpStdRun
 
 
     .global dvmMterpStdBail
@@ -10890,7 +10891,7 @@ d2i_doconv:
 
 
     .balign 64
-    .size   dvmAsmInstructionStart, .-dvmAsmInstructionStart
+    .size   .L_OP_NOP, .-.L_OP_NOP
     .global dvmAsmInstructionEnd
 dvmAsmInstructionEnd:
 
@@ -14368,6 +14369,7 @@ dalvik_mterp:
     b       common_exceptionThrown
 #ifdef ASSIST_DEBUGGER
     .fnend
+    .size   dalvik_mterp, .-dalvik_mterp
 #endif
 
 

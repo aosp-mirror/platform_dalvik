@@ -206,12 +206,15 @@ def loadAndEmitOpcodes():
     # need to have the dvmAsmInstructionStart label point at OP_NOP, and it's
     # too annoying to try to slide it in after the alignment psuedo-op, so
     # we take the low road and just emit a dummy OP_NOP here.
+    #
+    # The dvmAsmInstructionStart will also use the size for OP_NOP, so
+    # we want to generate a .size directive that spans all handlers.
     if need_dummy_start:
         asm_fp.write("    .balign %d\n" % handler_size_bytes)
         asm_fp.write(label_prefix + "_OP_NOP:   /* dummy */\n");
 
     asm_fp.write("\n    .balign %d\n" % handler_size_bytes)
-    asm_fp.write("    .size   dvmAsmInstructionStart, .-dvmAsmInstructionStart\n")
+    asm_fp.write("    .size   .L_OP_NOP, .-.L_OP_NOP\n")
     asm_fp.write("    .global dvmAsmInstructionEnd\n")
     asm_fp.write("dvmAsmInstructionEnd:\n")
 

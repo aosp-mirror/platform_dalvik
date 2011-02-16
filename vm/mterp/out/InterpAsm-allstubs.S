@@ -14,7 +14,7 @@ dvmAsmInstructionStart = .L_OP_NOP
 .L_OP_NOP:   /* dummy */
 
     .balign 64
-    .size   dvmAsmInstructionStart, .-dvmAsmInstructionStart
+    .size   .L_OP_NOP, .-.L_OP_NOP
     .global dvmAsmInstructionEnd
 dvmAsmInstructionEnd:
 
