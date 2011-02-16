@@ -70,6 +70,7 @@ public final class TableOfContents {
     public void readFrom(DexBuffer buffer) throws IOException {
         readHeader(buffer.open(0));
         readMap(buffer.open(mapList.off));
+        computeSizesFromOffsets();
     }
 
     private void readHeader(DexBuffer.Section headerIn) throws UnsupportedEncodingException {
@@ -113,7 +114,6 @@ public final class TableOfContents {
 
     private void readMap(DexBuffer.Section in) throws IOException {
         int mapSize = in.readInt();
-
         Section previous = null;
         for (int i = 0; i < mapSize; i++) {
             short type = in.readShort();
@@ -130,22 +130,27 @@ public final class TableOfContents {
             section.size = size;
             section.off = offset;
 
-            if (previous != null) {
-                if (previous.off > offset) {
-                    throw new DexException("Map is unsorted at 0x" + Integer.toHexString(type));
-                }
-                previous.byteCount = offset - previous.off;
+            if (previous != null && previous.off > section.off) {
+                throw new DexException("Map is unsorted at " + previous + ", " + section);
             }
 
             previous = section;
         }
+        Arrays.sort(sections);
+    }
 
-        if (previous != null) {
-            int endOfData = dataOff + dataSize;
-            if (previous.off > endOfData) {
-                throw new DexException("Map disagrees with data section offset and size");
+    public void computeSizesFromOffsets() {
+        int end = dataOff + dataSize;
+        for (int i = sections.length - 1; i >= 0; i--) {
+            Section section = sections[i];
+            if (section.off == -1) {
+                continue;
             }
-            previous.byteCount = endOfData - previous.off;
+            if (section.off > end) {
+                throw new DexException("Map is unsorted at " + section);
+            }
+            section.byteCount = end - section.off;
+            end = section.off;
         }
     }
 
@@ -186,32 +191,24 @@ public final class TableOfContents {
 
     public void writeMap(DexBuffer.Section out) throws IOException {
         int count = 0;
-        for (Section s : sections) {
-            if (s.size > 0) {
+        for (Section section : sections) {
+            if (section.size > 0) {
                 count++;
             }
         }
 
         out.writeInt(count);
-        for (Section s : sections) {
-            if (s.size > 0) {
-                if (false) {
-                    System.out.println("Writing section " + s
-                            + " type=0x" + Integer.toHexString(s.type)
-                            + " offset=0x" + Integer.toHexString(s.off)
-                            + " size=0x" + Integer.toHexString(s.size)
-                    );
-                }
-
-                out.writeShort(s.type);
+        for (Section section : sections) {
+            if (section.size > 0) {
+                out.writeShort(section.type);
                 out.writeShort((short) 0);
-                out.writeInt(s.size);
-                out.writeInt(s.off);
+                out.writeInt(section.size);
+                out.writeInt(section.off);
             }
         }
     }
 
-    public static class Section {
+    public static class Section implements Comparable<Section> {
         public final short type;
         public int size = -1;
         public int off = -1;
@@ -219,6 +216,17 @@ public final class TableOfContents {
 
         public Section(int type) {
             this.type = (short) type;
+        }
+
+        public int compareTo(Section section) {
+            if (off != section.off) {
+                return off < section.off ? -1 : 1;
+            }
+            return 0;
+        }
+
+        @Override public String toString() {
+            return String.format("Section[type=%#x,off=%#x,size=%#x]", type, off, size);
         }
     }
 }

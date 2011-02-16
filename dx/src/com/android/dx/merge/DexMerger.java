@@ -29,16 +29,15 @@ import com.android.dx.io.ProtoId;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.logging.Logger;
 
 /**
  * Combine two dex files into one.
  */
 public final class DexMerger {
-    private static final Logger logger = Logger.getLogger(DexMerger.class.getName());
-
+    private final WriterSizes writerSizes;
     private final DexBuffer dexWriter = new DexBuffer();
     private final DexBuffer.Section headerWriter;
+    /** All IDs and definitions sections */
     private final DexBuffer.Section idsDefsWriter;
     private final DexBuffer.Section mapListWriter;
     private final DexBuffer.Section typeListWriter;
@@ -60,9 +59,19 @@ public final class DexMerger {
     private final InstructionTransformer aInstructionTransformer;
     private final InstructionTransformer bInstructionTransformer;
 
+    /** minimum number of wasted bytes before it's worthwhile to compact the result */
+    private int compactWasteThreshold = 1024 * 1024; // 1MiB
+    /** minimum number of wasted bytes before it's worthwhile to emit a warning. */
+    private final int warnWasteThreshold = 100 * 1024; // 100KiB
+
     public DexMerger(DexBuffer dexA, DexBuffer dexB) throws IOException {
+        this(dexA, dexB, new WriterSizes(dexA, dexB));
+    }
+
+    private DexMerger(DexBuffer dexA, DexBuffer dexB, WriterSizes writerSizes) throws IOException {
         this.dexA = dexA;
         this.dexB = dexB;
+        this.writerSizes = writerSizes;
 
         TableOfContents aContents = dexA.getTableOfContents();
         TableOfContents bContents = dexB.getTableOfContents();
@@ -71,100 +80,67 @@ public final class DexMerger {
         aInstructionTransformer = new InstructionTransformer(aIndexMap);
         bInstructionTransformer = new InstructionTransformer(bIndexMap);
 
-        headerWriter = dexWriter.appendSection(SizeOf.HEADER_ITEM, "header");
+        headerWriter = dexWriter.appendSection(writerSizes.header, "header");
+        idsDefsWriter = dexWriter.appendSection(writerSizes.idsDefs, "ids defs");
 
-        // All IDs and definitions sections
-        int idsDefsMaxSize
-                = (aContents.stringIds.size + bContents.stringIds.size) * SizeOf.STRING_ID_ITEM
-                + (aContents.typeIds.size + bContents.typeIds.size) * SizeOf.TYPE_ID_ITEM
-                + (aContents.protoIds.size + bContents.protoIds.size) * SizeOf.PROTO_ID_ITEM
-                + (aContents.fieldIds.size + bContents.fieldIds.size) * SizeOf.MEMBER_ID_ITEM
-                + (aContents.methodIds.size + bContents.methodIds.size) * SizeOf.MEMBER_ID_ITEM
-                + (aContents.classDefs.size + bContents.classDefs.size) * SizeOf.CLASS_DEF_ITEM;
-        idsDefsWriter = dexWriter.appendSection(idsDefsMaxSize, "ids defs");
-
-        // data section
         contentsOut = dexWriter.getTableOfContents();
         contentsOut.dataOff = dexWriter.getLength();
 
         contentsOut.mapList.off = dexWriter.getLength();
         contentsOut.mapList.size = 1;
-        mapListWriter = dexWriter.appendSection(SizeOf.UINT
-                + (contentsOut.sections.length * SizeOf.MAP_ITEM), "map list");
-
-        /*
-         * TODO: several of these sections are far too large than they need to be.
-         *
-         * classDataWriter: uleb references to code items are larger than
-         *     expected. We should use old & new code_item section offsets to
-         *     pick an appropriate blow up size
-         *
-         * stringDataWriter: this shouldn't have to be larger, but it is
-         *
-         * encodedArrayWriter: this shouldn't have to be larger, but it is
-         */
+        mapListWriter = dexWriter.appendSection(writerSizes.mapList, "map list");
 
         contentsOut.typeLists.off = dexWriter.getLength();
         contentsOut.typeLists.size = 0;
-        int maxTypeListBytes = aContents.typeLists.byteCount + bContents.typeLists.byteCount;
-        typeListWriter = dexWriter.appendSection(maxTypeListBytes, "type list");
+        typeListWriter = dexWriter.appendSection(writerSizes.typeList, "type list");
 
         contentsOut.annotationSetRefLists.off = dexWriter.getLength();
         contentsOut.annotationSetRefLists.size = 0;
-        annotationSetRefListWriter = dexWriter.appendSection(SizeOf.UINT, "annotation set ref list");
+        annotationSetRefListWriter = dexWriter.appendSection(
+                writerSizes.annotationSetRefList, "annotation set ref list");
 
         contentsOut.annotationSets.off = dexWriter.getLength();
         contentsOut.annotationSets.size = 0;
-        annotationSetWriter = dexWriter.appendSection(SizeOf.UINT, "annotation set");
+        annotationSetWriter = dexWriter.appendSection(writerSizes.annotationSet, "annotation set");
 
         contentsOut.classDatas.off = dexWriter.getLength();
         contentsOut.classDatas.size = 0;
-        int maxClassDataBytes = aContents.classDatas.byteCount + bContents.classDatas.byteCount;
-        classDataWriter = dexWriter.appendSection(maxClassDataBytes * 2, "class data");
+        classDataWriter = dexWriter.appendSection(writerSizes.classData, "class data");
 
         contentsOut.codes.off = dexWriter.getLength();
         contentsOut.codes.size = 0;
-        int maxCodeBytes = aContents.codes.byteCount + bContents.codes.byteCount;
-        codeWriter = dexWriter.appendSection(maxCodeBytes, "code");
+        codeWriter = dexWriter.appendSection(writerSizes.code, "code");
 
         contentsOut.stringDatas.off = dexWriter.getLength();
         contentsOut.stringDatas.size = 0;
-        int maxStringDataBytes = aContents.stringDatas.byteCount
-                + bContents.stringDatas.byteCount;
-        stringDataWriter = dexWriter.appendSection(maxStringDataBytes * 2, "string data");
+        stringDataWriter = dexWriter.appendSection(writerSizes.stringData, "string data");
 
         contentsOut.debugInfos.off = dexWriter.getLength();
         contentsOut.debugInfos.size = 0;
-        int maxDebugInfoBytes = aContents.debugInfos.byteCount + bContents.debugInfos.byteCount;
-        debugInfoWriter = dexWriter.appendSection(maxDebugInfoBytes, "debug info");
+        debugInfoWriter = dexWriter.appendSection(writerSizes.debugInfo, "debug info");
 
         contentsOut.annotations.off = dexWriter.getLength();
         contentsOut.annotations.size = 0;
-        int maxAnnotationBytes = aContents.annotations.byteCount
-                + bContents.annotations.byteCount;
-        annotationWriter = dexWriter.appendSection(maxAnnotationBytes, "annotation");
+        annotationWriter = dexWriter.appendSection(writerSizes.annotation, "annotation");
 
         contentsOut.encodedArrays.off = dexWriter.getLength();
         contentsOut.encodedArrays.size = 0;
-        int maxEncodedArrayBytes = aContents.encodedArrays.byteCount
-                + bContents.encodedArrays.byteCount;
-        encodedArrayWriter = dexWriter.appendSection(
-                maxEncodedArrayBytes * 2, "encoded array");
+        encodedArrayWriter = dexWriter.appendSection(writerSizes.encodedArray, "encoded array");
 
         contentsOut.annotationsDirectories.off = dexWriter.getLength();
         contentsOut.annotationsDirectories.size = 0;
-        int maxAnnotationsDirectoryBytes = aContents.annotationsDirectories.byteCount
-                + bContents.annotationsDirectories.byteCount;
         annotationsDirectoryWriter = dexWriter.appendSection(
-                maxAnnotationsDirectoryBytes, "annotations");
+                writerSizes.annotationsDirectory, "annotations directory");
 
         dexWriter.noMoreSections();
         contentsOut.dataSize = dexWriter.getLength() - contentsOut.dataOff;
     }
 
-    public DexBuffer merge() throws IOException {
-        long start = System.nanoTime();
+    public void setCompactWasteThreshold(int compactWasteThreshold) {
+        this.compactWasteThreshold = compactWasteThreshold;
+    }
 
+    private DexBuffer mergeDexBuffers() throws IOException {
         mergeStringIds();
         mergeTypeIds();
         mergeTypeLists();
@@ -177,24 +153,52 @@ public final class DexMerger {
         contentsOut.header.off = 0;
         contentsOut.header.size = 1;
         contentsOut.fileSize = dexWriter.getLength();
+        contentsOut.computeSizesFromOffsets();
         contentsOut.writeHeader(headerWriter);
         contentsOut.writeMap(mapListWriter);
 
-        // close (and flush) the result, then reopen to generate and write the hashes
+        // generate and write the hashes
         new DexHasher().writeHashes(dexWriter);
 
+        return dexWriter;
+    }
+
+    public DexBuffer merge() throws IOException {
+        long start = System.nanoTime();
+        DexBuffer result = mergeDexBuffers();
+
+        /*
+         * We use pessimistic sizes when merging dex files. If those sizes
+         * result in too many bytes wasted, compact the result. To compact,
+         * simply merge the result with itself.
+         */
+        WriterSizes compactedSizes = writerSizes.clone();
+        compactedSizes.minusWaste(this);
+        int wastedByteCount = writerSizes.size() - compactedSizes.size();
+        if (wastedByteCount >  + compactWasteThreshold) {
+            DexMerger compacter = new DexMerger(dexWriter, dexWriter, compactedSizes);
+            result = compacter.mergeDexBuffers();
+            System.out.printf("Result compacted from %.1fKiB to %.1fKiB to save %.1fKiB%n",
+                    dexWriter.getLength() / 1024f,
+                    result.getLength() / 1024f,
+                    wastedByteCount / 1024f);
+        } else if (wastedByteCount >= warnWasteThreshold) {
+            System.out.printf("Result includes %.1fKiB of wasted space",
+                    wastedByteCount / 1024f);
+        }
+
         long elapsed = System.nanoTime() - start;
-        logger.info(String.format("Merged dex A (%d defs/%.1fKiB) with dex B "
-                + "(%d defs/%.1fKiB). Result is %d defs/%.1fKiB. Took %.1fs",
+        System.out.printf("Merged dex A (%d defs/%.1fKiB) with dex B "
+                + "(%d defs/%.1fKiB). Result is %d defs/%.1fKiB. Took %.1fs%n",
                 dexA.getTableOfContents().classDefs.size,
                 dexA.getLength() / 1024f,
                 dexB.getTableOfContents().classDefs.size,
                 dexB.getLength() / 1024f,
-                contentsOut.classDefs.size,
-                dexWriter.getLength() / 1024f,
-                elapsed / 1000000000f));
+                result.getTableOfContents().classDefs.size,
+                result.getLength() / 1024f,
+                elapsed / 1000000000f);
 
-        return dexWriter;
+        return result;
     }
 
     /**
@@ -202,10 +206,16 @@ public final class DexMerger {
      * merged dex file. Populates maps from old to new indices in the process.
      */
     abstract class IdMerger<T extends Comparable<T>> {
+        private final DexBuffer.Section out;
+
+        protected IdMerger(DexBuffer.Section out) {
+            this.out = out;
+        }
+
         public final void merge() {
             TableOfContents.Section aSection = getSection(dexA.getTableOfContents());
             TableOfContents.Section bSection = getSection(dexB.getTableOfContents());
-            getSection(contentsOut).off = idsDefsWriter.getPosition();
+            getSection(contentsOut).off = out.getPosition();
 
             DexBuffer.Section inA = dexA.open(aSection.off);
             DexBuffer.Section inB = dexB.open(bSection.off);
@@ -265,7 +275,7 @@ public final class DexMerger {
     }
 
     private void mergeStringIds() {
-        new IdMerger<String>() {
+        new IdMerger<String>(idsDefsWriter) {
             @Override TableOfContents.Section getSection(TableOfContents tableOfContents) {
                 return tableOfContents.stringIds;
             }
@@ -287,7 +297,7 @@ public final class DexMerger {
     }
 
     private void mergeTypeIds() {
-        new IdMerger<Integer>() {
+        new IdMerger<Integer>(idsDefsWriter) {
             @Override TableOfContents.Section getSection(TableOfContents tableOfContents) {
                 return tableOfContents.typeIds;
             }
@@ -308,7 +318,7 @@ public final class DexMerger {
     }
 
     private void mergeProtoIds() {
-        new IdMerger<ProtoId>() {
+        new IdMerger<ProtoId>(idsDefsWriter) {
             @Override TableOfContents.Section getSection(TableOfContents tableOfContents) {
                 return tableOfContents.protoIds;
             }
@@ -328,7 +338,7 @@ public final class DexMerger {
     }
 
     private void mergeFieldIds() {
-        new IdMerger<FieldId>() {
+        new IdMerger<FieldId>(idsDefsWriter) {
             @Override TableOfContents.Section getSection(TableOfContents tableOfContents) {
                 return tableOfContents.fieldIds;
             }
@@ -348,7 +358,7 @@ public final class DexMerger {
     }
 
     private void mergeMethodIds() {
-        new IdMerger<MethodId>() {
+        new IdMerger<MethodId>(idsDefsWriter) {
             @Override TableOfContents.Section getSection(TableOfContents tableOfContents) {
                 return tableOfContents.methodIds;
             }
@@ -368,7 +378,7 @@ public final class DexMerger {
     }
 
     private void mergeTypeLists() {
-        new IdMerger<TypeList>() {
+        new IdMerger<TypeList>(typeListWriter) {
             @Override TableOfContents.Section getSection(TableOfContents tableOfContents) {
                 return tableOfContents.typeLists;
             }
@@ -624,6 +634,95 @@ public final class DexMerger {
     private void transformStaticValues(DexBuffer.Section in, IndexMap indexMap) {
         contentsOut.encodedArrays.size++;
         new EncodedValueTransformer(indexMap, in, encodedArrayWriter).transformArray();
+    }
+
+    /**
+     * Byte counts for the sections written when creating a dex. Target sizes
+     * are defined in one of two ways:
+     * <ul>
+     * <li>By pessimistically guessing how large the union of dex files will be.
+     *     We're pessimistic because we can't predict the amount of duplication
+     *     between dex files, nor can we predict the length of ULEB-encoded
+     *     offsets or indices.
+     * <li>By exactly measuring an existing dex.
+     * </ul>
+     */
+    private static class WriterSizes implements Cloneable {
+        private int header = SizeOf.HEADER_ITEM;
+        private int idsDefs;
+        private int mapList;
+        private int typeList;
+        private int annotationSetRefList = SizeOf.UINT;
+        private int annotationSet = SizeOf.UINT;
+        private int classData;
+        private int code;
+        private int stringData;
+        private int debugInfo;
+        private int annotation;
+        private int encodedArray;
+        private int annotationsDirectory;
+
+        /**
+         * Compute sizes for merging a and b.
+         */
+        public WriterSizes(DexBuffer a, DexBuffer b) {
+            plus(a.getTableOfContents(), false);
+            plus(b.getTableOfContents(), false);
+        }
+
+        @Override public WriterSizes clone() {
+            try {
+                return (WriterSizes) super.clone();
+            } catch (CloneNotSupportedException e) {
+                throw new AssertionError();
+            }
+        }
+
+        public void plus(TableOfContents contents, boolean exact) {
+            idsDefs += contents.stringIds.size * SizeOf.STRING_ID_ITEM
+                    + contents.typeIds.size * SizeOf.TYPE_ID_ITEM
+                    + contents.protoIds.size * SizeOf.PROTO_ID_ITEM
+                    + contents.fieldIds.size * SizeOf.MEMBER_ID_ITEM
+                    + contents.methodIds.size * SizeOf.MEMBER_ID_ITEM
+                    + contents.classDefs.size * SizeOf.CLASS_DEF_ITEM;
+            mapList = SizeOf.UINT + (contents.sections.length * SizeOf.MAP_ITEM);
+            typeList += contents.typeLists.byteCount;
+            code += contents.codes.byteCount;
+            stringData += contents.stringDatas.byteCount;
+            debugInfo += contents.debugInfos.byteCount;
+            annotation += contents.annotations.byteCount;
+            annotationsDirectory += contents.annotationsDirectories.byteCount;
+
+            if (exact) {
+                classData += contents.classDatas.byteCount;
+                encodedArray += contents.encodedArrays.byteCount;
+            } else {
+                classData += (int) Math.ceil(contents.classDatas.byteCount * 1.34);
+                encodedArray += (contents.encodedArrays.byteCount * 2);
+            }
+        }
+
+        public void minusWaste(DexMerger dexMerger) {
+            header -= dexMerger.headerWriter.remaining();
+            idsDefs -= dexMerger.idsDefsWriter.remaining();
+            mapList -= dexMerger.mapListWriter.remaining();
+            typeList -= dexMerger.typeListWriter.remaining();
+            annotationSetRefList -= dexMerger.annotationSetRefListWriter.remaining();
+            annotationSet -= dexMerger.annotationSetWriter.remaining();
+            classData -= dexMerger.classDataWriter.remaining();
+            code -= dexMerger.codeWriter.remaining();
+            stringData -= dexMerger.stringDataWriter.remaining();
+            debugInfo -= dexMerger.debugInfoWriter.remaining();
+            annotation -= dexMerger.annotationWriter.remaining();
+            encodedArray -= dexMerger.encodedArrayWriter.remaining();
+            annotationsDirectory -= dexMerger.annotationsDirectoryWriter.remaining();
+        }
+
+        public int size() {
+            return header + idsDefs + mapList + typeList + annotationSetRefList + annotationSet
+                    + classData + code + stringData + debugInfo + annotation + encodedArray
+                    + annotationsDirectory;
+        }
     }
 
     public static void main(String[] args) throws IOException {
