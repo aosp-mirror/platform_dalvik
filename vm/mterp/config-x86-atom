@@ -298,6 +298,7 @@ op OP_IPUT_WIDE_VOLATILE c
 op OP_SGET_WIDE_VOLATILE c
 op OP_SPUT_WIDE_VOLATILE c
 op OP_RETURN_VOID_BARRIER c
+op OP_INVOKE_OBJECT_INIT c
 op-end
 
 # arch-specific entry point to interpreter

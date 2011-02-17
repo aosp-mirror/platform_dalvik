@@ -880,6 +880,24 @@ static void scheduleFinalizations(void)
 }
 
 /*
+ * This object is an instance of a class that overrides finalize().  Mark
+ * it as finalizable.
+ *
+ * This is called when Object.<init> completes normally.  It's also
+ * called for clones of finalizable objects.
+ */
+void dvmSetFinalizable(Object* obj)
+{
+    dvmLockHeap();
+    GcHeap* gcHeap = gDvm.gcHeap;
+    if (!dvmHeapAddRefToLargeTable(&gcHeap->finalizableRefs, obj)) {
+        LOGE_HEAP("No room for any more finalizable objects");
+        dvmAbort();
+    }
+    dvmUnlockHeap();
+}
+
+/*
  * Process reference class instances and schedule finalizations.
  */
 void dvmHeapProcessReferences(Object **softReferences, bool clearSoftRefs,

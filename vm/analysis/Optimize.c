@@ -41,7 +41,7 @@ static bool rewriteInstField(Method* method, u2* insns, Opcode quickOpc,
     Opcode volatileOpc);
 static bool rewriteStaticField(Method* method, u2* insns, Opcode volatileOpc);
 static bool rewriteVirtualInvoke(Method* method, u2* insns, Opcode newOpc);
-static bool rewriteEmptyDirectInvoke(Method* method, u2* insns);
+static bool rewriteInvokeObjectInit(Method* method, u2* insns);
 static bool rewriteExecuteInline(Method* method, u2* insns,
     MethodType methodType);
 static bool rewriteExecuteInlineRange(Method* method, u2* insns,
@@ -251,7 +251,7 @@ rewrite_static_field:
             break;
         case OP_INVOKE_DIRECT:
             if (!rewriteExecuteInline(method, insns, METHOD_DIRECT)) {
-                rewriteEmptyDirectInvoke(method, insns);
+                rewriteInvokeObjectInit(method, insns);
             }
             break;
         case OP_INVOKE_DIRECT_RANGE:
@@ -904,16 +904,18 @@ static bool rewriteVirtualInvoke(Method* method, u2* insns, Opcode newOpc)
 }
 
 /*
- * Rewrite invoke-direct, which has the form:
+ * Rewrite invoke-direct of Object.<init>, which has the form:
  *   op vAA, meth@BBBB, reg stuff @CCCC
  *
- * There isn't a lot we can do to make this faster, but in some situations
- * we can make it go away entirely.
+ * This is useful as an optimization, because otherwise every object
+ * instantiation will cause us to call a method that does nothing.
+ * It also allows us to inexpensively mark objects as finalizable at the
+ * correct time.
  *
- * This must only be used when the invoked method does nothing and has
- * no return value (the latter being very important for verification).
+ * TODO: verifier should ensure Object.<init> contains only return-void,
+ * and issue a warning if not.
  */
-static bool rewriteEmptyDirectInvoke(Method* method, u2* insns)
+static bool rewriteInvokeObjectInit(Method* method, u2* insns)
 {
     ClassObject* clazz = method->clazz;
     Method* calledMethod;
@@ -922,27 +924,24 @@ static bool rewriteEmptyDirectInvoke(Method* method, u2* insns)
     calledMethod = dvmOptResolveMethod(clazz, methodIdx, METHOD_DIRECT, NULL);
     if (calledMethod == NULL) {
         LOGD("DexOpt: unable to opt direct call 0x%04x at 0x%02x in %s.%s\n",
-            methodIdx,
-            (int) (insns - method->insns), clazz->descriptor,
-            method->name);
+            methodIdx, (int) (insns - method->insns),
+            clazz->descriptor, method->name);
         return false;
     }
 
-    /* TODO: verify that java.lang.Object() is actually empty! */
     if (calledMethod->clazz == gDvm.classJavaLangObject &&
         dvmCompareNameDescriptorAndMethod("<init>", "()V", calledMethod) == 0)
     {
         /*
-         * Replace with "empty" instruction.  DO NOT disturb anything
-         * else about it, as we want it to function the same as
-         * OP_INVOKE_DIRECT when debugging is enabled.
+         * Replace the instruction.  We want to modify as little as possible
+         * because, if the debugger is attached, the interpreter will
+         * forward execution to the invoke-direct handler.
          */
         assert((insns[0] & 0xff) == OP_INVOKE_DIRECT);
         updateOpcode(method, insns, OP_INVOKE_OBJECT_INIT);
 
-        //LOGI("DexOpt: marked-empty call to %s.%s --> %s.%s\n",
-        //    method->clazz->descriptor, method->name,
-        //    calledMethod->clazz->descriptor, calledMethod->name);
+        LOGVV("DexOpt: replaced Object.<init> in %s.%s\n",
+            method->clazz->descriptor, method->name);
     }
 
     return true;

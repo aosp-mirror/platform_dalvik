@@ -14664,7 +14664,6 @@ OP_IF_LEZ_2f:
 /* ------------------------------ */
     .balign 64
 .L_OP_INVOKE_OBJECT_INIT: /* 0xf0 */
-/* File: x86-atom/OP_INVOKE_OBJECT_INIT.S */
    /* Copyright (C) 2008 The Android Open Source Project
     *
     * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14681,17 +14680,15 @@ OP_IF_LEZ_2f:
     */
 
    /*
-    * File: OP_INVOKE_OBJECT_INIT.S
-    *
-    * Code: Used as a no-op. Uses no substitutions.
-    *
-    * For: invoke-object-init
-    *
-    * Format: B|A|op CCCC G|F|E|D (35c)
+    * File: stub.S
     */
 
-    FINISH 3
-
+    SAVE_PC_FP_TO_GLUE %edx             # save program counter and frame pointer
+    pushl       rGLUE                   # push parameter glue
+    call        dvmMterp_OP_INVOKE_OBJECT_INIT      # call c-based implementation
+    lea         4(%esp), %esp
+    LOAD_PC_FP_FROM_GLUE                # restore program counter and frame pointer
+    FINISH_A                            # jump to next instruction
 /* ------------------------------ */
     .balign 64
 .L_OP_RETURN_VOID_BARRIER: /* 0xf1 */

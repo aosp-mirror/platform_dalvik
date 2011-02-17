@@ -416,7 +416,6 @@ static void throwOOME()
  */
 void* dvmMalloc(size_t size, int flags)
 {
-    GcHeap *gcHeap = gDvm.gcHeap;
     void *ptr;
 
     dvmLockHeap();
@@ -427,19 +426,6 @@ void* dvmMalloc(size_t size, int flags)
     if (ptr != NULL) {
         /* We've got the memory.
          */
-        if ((flags & ALLOC_FINALIZABLE) != 0) {
-            /* This object is an instance of a class that
-             * overrides finalize().  Add it to the finalizable list.
-             */
-            if (!dvmHeapAddRefToLargeTable(&gcHeap->finalizableRefs,
-                                    (Object *)ptr))
-            {
-                LOGE_HEAP("dvmMalloc(): no room for any more "
-                        "finalizable objects\n");
-                dvmAbort();
-            }
-        }
-
         if (gDvm.allocProf.enabled) {
             Thread* self = dvmThreadSelf();
             gDvm.allocProf.allocCount++;

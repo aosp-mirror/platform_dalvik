@@ -156,6 +156,8 @@ op-end
 
 # "helper" code for C; include if you use any of the C stubs (this generates
 # object code, so it's normally excluded)
+#
+# Add this if you see linker failures for stuff like "dvmMterp_exceptionThrown".
 ##import c/gotoTargets.c
 
 # end of defs; include this when cstubs/stubdefs.c is included

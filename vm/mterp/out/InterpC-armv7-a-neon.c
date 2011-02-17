@@ -499,9 +499,9 @@ static inline bool checkForNullExportPC(Object* obj, u4* fp, const u2* pc)
         return;                                                             \
     } while(false)
 
-#define GOTO_invoke(_target, _methodCallRange)                              \
+#define GOTO_invoke(_target, _methodCallRange, _jumboFormat)                \
     do {                                                                    \
-        dvmMterp_##_target(glue, _methodCallRange);                         \
+        dvmMterp_##_target(glue, _methodCallRange, _jumboFormat);           \
         return;                                                             \
     } while(false)
 

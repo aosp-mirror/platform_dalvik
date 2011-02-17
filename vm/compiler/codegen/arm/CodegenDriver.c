@@ -3271,10 +3271,8 @@ static bool handleFmt35c_3rc_5rc(CompilationUnit *cUnit, MIR *mir,
             genTrap(cUnit, mir->offset, pcrLabel);
             break;
         }
-        /* NOP */
         case OP_INVOKE_OBJECT_INIT: {
-            if (gDvmJit.methodTraceSupport)
-                genInterpSingleStep(cUnit, mir);
+            genInterpSingleStep(cUnit, mir);
             break;
         }
         case OP_FILLED_NEW_ARRAY:

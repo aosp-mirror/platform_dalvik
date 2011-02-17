@@ -16,11 +16,10 @@
    /*
     * File: OP_INVOKE_OBJECT_INIT.S
     *
-    * Code: Used as a no-op. Uses no substitutions.
+    * Code: TODO
     *
     * For: invoke-object-init
     *
     * Format: B|A|op CCCC G|F|E|D (35c)
     */
 
-    FINISH 3
