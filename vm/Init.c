@@ -136,6 +136,7 @@ static void usage(const char* progName)
     dvmFprintf(stderr, "  -Xjitverbose\n");
     dvmFprintf(stderr, "  -Xjitprofile\n");
     dvmFprintf(stderr, "  -Xjitdisableopt\n");
+    dvmFprintf(stderr, "  -Xjitsuspendpoll\n");
 #endif
     dvmFprintf(stderr, "\n");
     dvmFprintf(stderr, "Configured with:"
@@ -966,6 +967,8 @@ static int processOptions(int argc, const char* const argv[],
           } else {
               gDvmJit.disableOpt = -1;
           }
+        } else if (strncmp(argv[i], "-Xjitsuspendpoll", 16) == 0) {
+          gDvmJit.genSuspendPoll = true;
 #endif
 
         } else if (strncmp(argv[i], "-Xstacktracefile:", 17) == 0) {

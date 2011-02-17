@@ -1368,6 +1368,22 @@ static void genMonitorPortable(CompilationUnit *cUnit, MIR *mir)
 #endif
 
 /*
+ * Fetch *InterpState->pSelfSuspendCount. If the suspend count is non-zero,
+ * punt to the interpreter.
+ */
+static void genSuspendPoll(CompilationUnit *cUnit, MIR *mir)
+{
+    int rTemp = dvmCompilerAllocTemp(cUnit);
+    ArmLIR *ld;
+    ld = loadWordDisp(cUnit, rGLUE, offsetof(InterpState, pSelfSuspendCount),
+                      rTemp);
+    setMemRefType(ld, true /* isLoad */, kMustNotAlias);
+    ld = loadWordDisp(cUnit, rTemp, 0, rTemp);
+    setMemRefType(ld, true /* isLoad */, kMustNotAlias);
+    genRegImmCheck(cUnit, kArmCondNe, rTemp, 0, mir->offset, NULL);
+}
+
+/*
  * The following are the first-level codegen routines that analyze the format
  * of each bytecode then either dispatch special purpose codegen routines
  * or produce corresponding Thumb instructions directly.
@@ -1376,8 +1392,26 @@ static void genMonitorPortable(CompilationUnit *cUnit, MIR *mir)
 static bool handleFmt10t_Fmt20t_Fmt30t(CompilationUnit *cUnit, MIR *mir,
                                        BasicBlock *bb, ArmLIR *labelList)
 {
-    /* For OP_GOTO, OP_GOTO_16, and OP_GOTO_32 */
-    genUnconditionalBranch(cUnit, &labelList[bb->taken->id]);
+    /* backward branch? */
+    bool backwardBranch = (bb->taken->startOffset <= mir->offset);
+
+    if (backwardBranch && gDvmJit.genSuspendPoll) {
+        genSuspendPoll(cUnit, mir);
+    }
+
+    int numPredecessors = dvmCountSetBits(bb->taken->predecessors);
+    /*
+     * Things could be hoisted out of the taken block into the predecessor, so
+     * make sure it is dominated by the predecessor.
+     */
+    if (numPredecessors == 1 && bb->taken->visited == false &&
+        bb->taken->blockType == kDalvikByteCode &&
+        cUnit->methodJitMode == false ) {
+        cUnit->nextCodegenBlock = bb->taken;
+    } else {
+        /* For OP_GOTO, OP_GOTO_16, and OP_GOTO_32 */
+        genUnconditionalBranch(cUnit, &labelList[bb->taken->id]);
+    }
     return false;
 }
 
@@ -1995,8 +2029,16 @@ static bool handleFmt21t(CompilationUnit *cUnit, MIR *mir, BasicBlock *bb,
 {
     Opcode dalvikOpcode = mir->dalvikInsn.opcode;
     ArmConditionCode cond;
+    /* backward branch? */
+    bool backwardBranch = (bb->taken->startOffset <= mir->offset);
+
+    if (backwardBranch && gDvmJit.genSuspendPoll) {
+        genSuspendPoll(cUnit, mir);
+    }
+
     RegLocation rlSrc = dvmCompilerGetSrc(cUnit, mir, 0);
     rlSrc = loadValue(cUnit, rlSrc, kCoreReg);
+
     opRegImm(cUnit, kOpCmp, rlSrc.lowReg, 0);
 
 //TUNING: break this out to allow use of Thumb2 CB[N]Z
@@ -2509,11 +2551,19 @@ static bool handleFmt22t(CompilationUnit *cUnit, MIR *mir, BasicBlock *bb,
 {
     Opcode dalvikOpcode = mir->dalvikInsn.opcode;
     ArmConditionCode cond;
+    /* backward branch? */
+    bool backwardBranch = (bb->taken->startOffset <= mir->offset);
+
+    if (backwardBranch && gDvmJit.genSuspendPoll) {
+        genSuspendPoll(cUnit, mir);
+    }
+
     RegLocation rlSrc1 = dvmCompilerGetSrc(cUnit, mir, 0);
     RegLocation rlSrc2 = dvmCompilerGetSrc(cUnit, mir, 1);
 
     rlSrc1 = loadValue(cUnit, rlSrc1, kCoreReg);
     rlSrc2 = loadValue(cUnit, rlSrc2, kCoreReg);
+
     opRegReg(cUnit, kOpCmp, rlSrc1.lowReg, rlSrc2.lowReg);
 
     switch (dalvikOpcode) {
@@ -4094,6 +4144,10 @@ void dvmCompilerMIR2LIR(CompilationUnit *cUnit)
         dvmInitGrowableList(&chainingListByType[i], 2);
     }
 
+    /* Clear the visited flag for each block */
+    dvmCompilerDataFlowAnalysisDispatcher(cUnit, dvmCompilerClearVisitedFlag,
+                                          kAllNodes, false /* isIterative */);
+
     GrowableListIterator iterator;
     dvmGrowableListIteratorInit(&cUnit->blockList, &iterator);
 
@@ -4105,6 +4159,7 @@ void dvmCompilerMIR2LIR(CompilationUnit *cUnit)
         MIR *mir;
         BasicBlock *bb = (BasicBlock *) dvmGrowableListIteratorNext(&iterator);
         if (bb == NULL) break;
+        if (bb->visited == true) continue;
 
         labelList[i].operands[0] = bb->startOffset;
 
@@ -4199,171 +4254,189 @@ void dvmCompilerMIR2LIR(CompilationUnit *cUnit)
         }
 
         ArmLIR *headLIR = NULL;
+        BasicBlock *nextBB = bb;
 
-        for (mir = bb->firstMIRInsn; mir; mir = mir->next) {
+        /*
+         * Try to build a longer optimization unit. Currently if the previous
+         * block ends with a goto, we continue adding instructions and don't
+         * reset the register allocation pool.
+         */
+        for (; nextBB != NULL; nextBB = cUnit->nextCodegenBlock) {
+            bb = nextBB;
+            bb->visited = true;
+            cUnit->nextCodegenBlock = NULL;
 
-            dvmCompilerResetRegPool(cUnit);
-            if (gDvmJit.disableOpt & (1 << kTrackLiveTemps)) {
-                dvmCompilerClobberAllRegs(cUnit);
-            }
+            for (mir = bb->firstMIRInsn; mir; mir = mir->next) {
 
-            if (gDvmJit.disableOpt & (1 << kSuppressLoads)) {
-                dvmCompilerResetDefTracking(cUnit);
-            }
-
-            if (mir->dalvikInsn.opcode >= kMirOpFirst) {
-                handleExtendedMIR(cUnit, mir);
-                continue;
-            }
-
-
-            Opcode dalvikOpcode = mir->dalvikInsn.opcode;
-            InstructionFormat dalvikFormat = dexGetFormatFromOpcode(dalvikOpcode);
-            char *note;
-            if (mir->OptimizationFlags & MIR_INLINED) {
-                note = " (I)";
-            } else if (mir->OptimizationFlags & MIR_INLINED_PRED) {
-                note = " (PI)";
-            } else if (mir->OptimizationFlags & MIR_CALLEE) {
-                note = " (C)";
-            } else {
-                note = NULL;
-            }
-
-            ArmLIR *boundaryLIR;
-
-            /*
-             * Don't generate the boundary LIR unless we are debugging this
-             * trace or we need a scheduling barrier.
-             */
-            if (headLIR == NULL || cUnit->printMe == true) {
-                boundaryLIR =
-                    newLIR2(cUnit, kArmPseudoDalvikByteCodeBoundary,
-                            mir->offset,
-                            (int) dvmCompilerGetDalvikDisassembly(
-                                &mir->dalvikInsn, note));
-                /* Remember the first LIR for this block */
-                if (headLIR == NULL) {
-                    headLIR = boundaryLIR;
-                    /* Set the first boundaryLIR as a scheduling barrier */
-                    headLIR->defMask = ENCODE_ALL;
+                dvmCompilerResetRegPool(cUnit);
+                if (gDvmJit.disableOpt & (1 << kTrackLiveTemps)) {
+                    dvmCompilerClobberAllRegs(cUnit);
                 }
-            }
 
-            /* Don't generate the SSA annotation unless verbose mode is on */
-            if (cUnit->printMe && mir->ssaRep) {
-                char *ssaString = dvmCompilerGetSSAString(cUnit, mir->ssaRep);
-                newLIR1(cUnit, kArmPseudoSSARep, (int) ssaString);
-            }
+                if (gDvmJit.disableOpt & (1 << kSuppressLoads)) {
+                    dvmCompilerResetDefTracking(cUnit);
+                }
 
-            bool notHandled;
-            /*
-             * Debugging: screen the opcode first to see if it is in the
-             * do[-not]-compile list
-             */
-            bool singleStepMe = SINGLE_STEP_OP(dalvikOpcode);
+                if (mir->dalvikInsn.opcode >= kMirOpFirst) {
+                    handleExtendedMIR(cUnit, mir);
+                    continue;
+                }
+
+
+                Opcode dalvikOpcode = mir->dalvikInsn.opcode;
+                InstructionFormat dalvikFormat =
+                    dexGetFormatFromOpcode(dalvikOpcode);
+                char *note;
+                if (mir->OptimizationFlags & MIR_INLINED) {
+                    note = " (I)";
+                } else if (mir->OptimizationFlags & MIR_INLINED_PRED) {
+                    note = " (PI)";
+                } else if (mir->OptimizationFlags & MIR_CALLEE) {
+                    note = " (C)";
+                } else {
+                    note = NULL;
+                }
+
+                ArmLIR *boundaryLIR;
+
+                /*
+                 * Don't generate the boundary LIR unless we are debugging this
+                 * trace or we need a scheduling barrier.
+                 */
+                if (headLIR == NULL || cUnit->printMe == true) {
+                    boundaryLIR =
+                        newLIR2(cUnit, kArmPseudoDalvikByteCodeBoundary,
+                                mir->offset,
+                                (int) dvmCompilerGetDalvikDisassembly(
+                                    &mir->dalvikInsn, note));
+                    /* Remember the first LIR for this block */
+                    if (headLIR == NULL) {
+                        headLIR = boundaryLIR;
+                        /* Set the first boundaryLIR as a scheduling barrier */
+                        headLIR->defMask = ENCODE_ALL;
+                    }
+                }
+
+                /*
+                 * Don't generate the SSA annotation unless verbose mode is on
+                 */
+                if (cUnit->printMe && mir->ssaRep) {
+                    char *ssaString = dvmCompilerGetSSAString(cUnit,
+                                                              mir->ssaRep);
+                    newLIR1(cUnit, kArmPseudoSSARep, (int) ssaString);
+                }
+
+                bool notHandled;
+                /*
+                 * Debugging: screen the opcode first to see if it is in the
+                 * do[-not]-compile list
+                 */
+                bool singleStepMe = SINGLE_STEP_OP(dalvikOpcode);
 #if defined(WITH_SELF_VERIFICATION)
-          if (singleStepMe == false) {
-              singleStepMe = selfVerificationPuntOps(mir);
-          }
+              if (singleStepMe == false) {
+                  singleStepMe = selfVerificationPuntOps(mir);
+              }
 #endif
-            if (singleStepMe || cUnit->allSingleStep) {
-                notHandled = false;
-                genInterpSingleStep(cUnit, mir);
-            } else {
-                opcodeCoverage[dalvikOpcode]++;
-                switch (dalvikFormat) {
-                    case kFmt10t:
-                    case kFmt20t:
-                    case kFmt30t:
-                        notHandled = handleFmt10t_Fmt20t_Fmt30t(cUnit,
-                                  mir, bb, labelList);
-                        break;
-                    case kFmt10x:
-                        notHandled = handleFmt10x(cUnit, mir);
-                        break;
-                    case kFmt11n:
-                    case kFmt31i:
-                        notHandled = handleFmt11n_Fmt31i(cUnit, mir);
-                        break;
-                    case kFmt11x:
-                        notHandled = handleFmt11x(cUnit, mir);
-                        break;
-                    case kFmt12x:
-                        notHandled = handleFmt12x(cUnit, mir);
-                        break;
-                    case kFmt20bc:
-                    case kFmt40sc:
-                        notHandled = handleFmt20bc_Fmt40sc(cUnit, mir);
-                        break;
-                    case kFmt21c:
-                    case kFmt31c:
-                    case kFmt41c:
-                        notHandled = handleFmt21c_Fmt31c_Fmt41c(cUnit, mir);
-                        break;
-                    case kFmt21h:
-                        notHandled = handleFmt21h(cUnit, mir);
-                        break;
-                    case kFmt21s:
-                        notHandled = handleFmt21s(cUnit, mir);
-                        break;
-                    case kFmt21t:
-                        notHandled = handleFmt21t(cUnit, mir, bb, labelList);
-                        break;
-                    case kFmt22b:
-                    case kFmt22s:
-                        notHandled = handleFmt22b_Fmt22s(cUnit, mir);
-                        break;
-                    case kFmt22c:
-                    case kFmt52c:
-                        notHandled = handleFmt22c_Fmt52c(cUnit, mir);
-                        break;
-                    case kFmt22cs:
-                        notHandled = handleFmt22cs(cUnit, mir);
-                        break;
-                    case kFmt22t:
-                        notHandled = handleFmt22t(cUnit, mir, bb, labelList);
-                        break;
-                    case kFmt22x:
-                    case kFmt32x:
-                        notHandled = handleFmt22x_Fmt32x(cUnit, mir);
-                        break;
-                    case kFmt23x:
-                        notHandled = handleFmt23x(cUnit, mir);
-                        break;
-                    case kFmt31t:
-                        notHandled = handleFmt31t(cUnit, mir);
-                        break;
-                    case kFmt3rc:
-                    case kFmt35c:
-                    case kFmt5rc:
-                        notHandled = handleFmt35c_3rc_5rc(cUnit, mir, bb,
+                if (singleStepMe || cUnit->allSingleStep) {
+                    notHandled = false;
+                    genInterpSingleStep(cUnit, mir);
+                } else {
+                    opcodeCoverage[dalvikOpcode]++;
+                    switch (dalvikFormat) {
+                        case kFmt10t:
+                        case kFmt20t:
+                        case kFmt30t:
+                            notHandled = handleFmt10t_Fmt20t_Fmt30t(cUnit,
+                                      mir, bb, labelList);
+                            break;
+                        case kFmt10x:
+                            notHandled = handleFmt10x(cUnit, mir);
+                            break;
+                        case kFmt11n:
+                        case kFmt31i:
+                            notHandled = handleFmt11n_Fmt31i(cUnit, mir);
+                            break;
+                        case kFmt11x:
+                            notHandled = handleFmt11x(cUnit, mir);
+                            break;
+                        case kFmt12x:
+                            notHandled = handleFmt12x(cUnit, mir);
+                            break;
+                        case kFmt20bc:
+                        case kFmt40sc:
+                            notHandled = handleFmt20bc_Fmt40sc(cUnit, mir);
+                            break;
+                        case kFmt21c:
+                        case kFmt31c:
+                        case kFmt41c:
+                            notHandled = handleFmt21c_Fmt31c_Fmt41c(cUnit, mir);
+                            break;
+                        case kFmt21h:
+                            notHandled = handleFmt21h(cUnit, mir);
+                            break;
+                        case kFmt21s:
+                            notHandled = handleFmt21s(cUnit, mir);
+                            break;
+                        case kFmt21t:
+                            notHandled = handleFmt21t(cUnit, mir, bb,
                                                       labelList);
-                        break;
-                    case kFmt3rms:
-                    case kFmt35ms:
-                        notHandled = handleFmt35ms_3rms(cUnit, mir, bb,
-                                                        labelList);
-                        break;
-                    case kFmt35mi:
-                    case kFmt3rmi:
-                        notHandled = handleExecuteInline(cUnit, mir);
-                        break;
-                    case kFmt51l:
-                        notHandled = handleFmt51l(cUnit, mir);
-                        break;
-                    default:
-                        notHandled = true;
-                        break;
+                            break;
+                        case kFmt22b:
+                        case kFmt22s:
+                            notHandled = handleFmt22b_Fmt22s(cUnit, mir);
+                            break;
+                        case kFmt22c:
+                        case kFmt52c:
+                            notHandled = handleFmt22c_Fmt52c(cUnit, mir);
+                            break;
+                        case kFmt22cs:
+                            notHandled = handleFmt22cs(cUnit, mir);
+                            break;
+                        case kFmt22t:
+                            notHandled = handleFmt22t(cUnit, mir, bb,
+                                                      labelList);
+                            break;
+                        case kFmt22x:
+                        case kFmt32x:
+                            notHandled = handleFmt22x_Fmt32x(cUnit, mir);
+                            break;
+                        case kFmt23x:
+                            notHandled = handleFmt23x(cUnit, mir);
+                            break;
+                        case kFmt31t:
+                            notHandled = handleFmt31t(cUnit, mir);
+                            break;
+                        case kFmt3rc:
+                        case kFmt35c:
+                        case kFmt5rc:
+                            notHandled = handleFmt35c_3rc_5rc(cUnit, mir, bb,
+                                                          labelList);
+                            break;
+                        case kFmt3rms:
+                        case kFmt35ms:
+                            notHandled = handleFmt35ms_3rms(cUnit, mir, bb,
+                                                            labelList);
+                            break;
+                        case kFmt35mi:
+                        case kFmt3rmi:
+                            notHandled = handleExecuteInline(cUnit, mir);
+                            break;
+                        case kFmt51l:
+                            notHandled = handleFmt51l(cUnit, mir);
+                            break;
+                        default:
+                            notHandled = true;
+                            break;
+                    }
                 }
-            }
-            if (notHandled) {
-                LOGE("%#06x: Opcode 0x%x (%s) / Fmt %d not handled\n",
-                     mir->offset,
-                     dalvikOpcode, dexGetOpcodeName(dalvikOpcode),
-                     dalvikFormat);
-                dvmCompilerAbort(cUnit);
-                break;
+                if (notHandled) {
+                    LOGE("%#06x: Opcode 0x%x (%s) / Fmt %d not handled\n",
+                         mir->offset,
+                         dalvikOpcode, dexGetOpcodeName(dalvikOpcode),
+                         dalvikFormat);
+                    dvmCompilerAbort(cUnit);
+                    break;
+                }
             }
         }
 
@@ -4389,10 +4462,8 @@ gen_fallthrough:
          * insert an unconditional branch to the chaining cell.
          */
         if (bb->needFallThroughBranch) {
-            genUnconditionalBranch(cUnit,
-                                   &labelList[bb->fallThrough->id]);
+            genUnconditionalBranch(cUnit, &labelList[bb->fallThrough->id]);
         }
-
     }
 
     /* Handle the chaining cells in predefined order */
