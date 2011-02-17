@@ -36,6 +36,18 @@
 #define RETURN_DOUBLE(_val)     do { pResult->d = (_val); return; } while(0)
 #define RETURN_PTR(_val)        do { pResult->l = (_val); return; } while(0)
 
+/*
+ * Normally a method that has an "inline native" will be invoked using
+ * execute-inline. If the method is invoked via reflection, JNI, or by
+ * virtual dispatch (in the case of String.equals, which we may arrive
+ * at via Object.equals), we need a non-"inline native" implementation.
+ *
+ * This macro is used to implement the native methods that bridge this gap.
+ */
+#define MAKE_INTRINSIC_TRAMPOLINE(INTRINSIC_FN) \
+    extern bool INTRINSIC_FN(u4 arg0, u4 arg1, u4 arg2, u4 arg3, \
+            JValue* pResult); \
+    INTRINSIC_FN(args[0], args[1], args[2], args[3], pResult);
 
 /*
  * Verify that "obj" is non-null and is an instance of "clazz".
@@ -83,6 +95,9 @@ bool dvmIsPrivilegedMethod(const Method* method);
  */
 extern const DalvikNativeMethod dvm_java_lang_Object[];
 extern const DalvikNativeMethod dvm_java_lang_Class[];
+extern const DalvikNativeMethod dvm_java_lang_Double[];
+extern const DalvikNativeMethod dvm_java_lang_Float[];
+extern const DalvikNativeMethod dvm_java_lang_Math[];
 extern const DalvikNativeMethod dvm_java_lang_Runtime[];
 extern const DalvikNativeMethod dvm_java_lang_String[];
 extern const DalvikNativeMethod dvm_java_lang_System[];

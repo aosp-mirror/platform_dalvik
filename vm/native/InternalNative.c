@@ -28,6 +28,9 @@
 static DalvikNativeClass gDvmNativeMethodSet[] = {
     { "Ljava/lang/Object;",               dvm_java_lang_Object, 0 },
     { "Ljava/lang/Class;",                dvm_java_lang_Class, 0 },
+    { "Ljava/lang/Double;",               dvm_java_lang_Double, 0 },
+    { "Ljava/lang/Float;",                dvm_java_lang_Float, 0 },
+    { "Ljava/lang/Math;",                 dvm_java_lang_Math, 0 },
     { "Ljava/lang/Runtime;",              dvm_java_lang_Runtime, 0 },
     { "Ljava/lang/String;",               dvm_java_lang_String, 0 },
     { "Ljava/lang/System;",               dvm_java_lang_System, 0 },
