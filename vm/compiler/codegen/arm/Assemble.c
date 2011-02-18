@@ -1991,7 +1991,8 @@ JitTraceDescription *dvmCopyTraceDescriptor(const u2 *pc,
 {
     const JitEntry *jitEntry = knownEntry ? knownEntry
                                           : dvmJitFindEntry(pc, false);
-    if (jitEntry == NULL) return NULL;
+    if ((jitEntry == NULL) || (jitEntry->codeAddress == 0))
+        return NULL;
 
     /* Find out the startint point */
     char *traceBase = getTraceBase(jitEntry);
@@ -2078,8 +2079,10 @@ void dvmCompilerSortAndPrintTraceProfiles()
         }
         JitTraceDescription* desc =
             dvmCopyTraceDescriptor(NULL, &sortedEntries[i]);
-        dvmCompilerWorkEnqueue(sortedEntries[i].dPC,
-                               kWorkOrderTraceDebug, desc);
+        if (desc) {
+            dvmCompilerWorkEnqueue(sortedEntries[i].dPC,
+                                   kWorkOrderTraceDebug, desc);
+        }
     }
 
     free(sortedEntries);
