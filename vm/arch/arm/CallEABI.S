@@ -101,7 +101,7 @@ padded, and fix them up appropriately.
  *   SRRRLLLL FFFFFFFF FFFFFFFF FFFFFFFF
  *
  *   S - if set, do things the hard way (scan the signature)
- *   R - return type enumeration, really only important for hardware FP
+ *   R - return-type enumeration, really only important for "hard" FP ABI
  *   L - number of double-words of storage required on stack (0-30 words)
  *   F - pad flag -- if set, write a pad word to the stack
  *
@@ -113,53 +113,63 @@ padded, and fix them up appropriately.
  * in a row, and the first word can never be a pad -- but there's really
  * no need for it.)
  *
- * TODO: could reduce register-saving overhead for "fast" case, since we
- * don't use a couple of registers.  Another thought is to rearrange the
- * arguments such that r0/r1 get passed in on the stack, allowing us to
- * use r0/r1 freely here and then load them with a single ldm.  Might be
- * faster than saving/restoring other registers so that we can leave r0/r1
- * undisturbed.
- *
  * NOTE: if the called function has more than 4 words of arguments, gdb
  * will not be able to unwind the stack past this method.  The only way
  * around this is to convince gdb to respect an explicit frame pointer.
+ * The stack unwinder in debuggerd *does* pay attention to fp if we set it
+ * up appropriately, so at least that will work.
  */
 dvmPlatformInvoke:
     .fnstart
-    @ Save regs.  Same style as gcc with "-fomit-frame-pointer" -- we don't
-    @ disturb "fp" in case somebody else wants it.  Copy "sp" to r4 and use
-    @ that to access local vars.
-    @
-    @ On entry to a function, "sp" must be 64-bit aligned.  This means
-    @ we have to adjust sp manually if we push an odd number of regs here
-    @ (both here and when exiting).  Easier to just push an even number
-    @ of registers.
-    mov     ip, sp                      @ ip<- original stack pointer
-    .save {r4, r5, r6, r7, r8, r9, ip, lr}
-    stmfd   sp!, {r4, r5, r6, r7, r8, r9, ip, lr}
 
-    mov     r4, ip                      @ r4<- original stack pointer
+    /*
+     * Save regs.
+     *
+     * On entry to a function, "sp" must be 64-bit aligned.  This means
+     * we have to adjust sp manually if we push an odd number of regs here
+     * (both here and when exiting).
+     *
+     * The ARM spec doesn't specify anything about the frame pointer.  gcc
+     * points fp at the first saved argument, so our "full descending"
+     * stack looks like:
+     *
+     *  pReturn
+     *  func
+     *  shorty
+     *  argv        <-- sp on entry
+     *  lr          <-- fp
+     *  fp
+     *  r9...r7
+     *  r6          <-- sp after reg save
+     *
+     * Any arguments that need to be pushed on for the target method
+     * come after this.  The last argument is pushed first.
+     */
+SAVED_REG_COUNT = 6                     @ push 6 regs
+FP_STACK_OFFSET = (SAVED_REG_COUNT-1) * 4 @ offset between fp and post-save sp
+FP_ADJ = 4                              @ fp is initial sp +4
+
+    .save        {r6, r7, r8, r9, fp, lr}
+    stmfd   sp!, {r6, r7, r8, r9, fp, lr}
+
+    .setfp  fp, sp, #FP_STACK_OFFSET    @ point fp at first saved reg
+    add     fp, sp, #FP_STACK_OFFSET
+
+    @.pad    #4                          @ adjust for 64-bit align
+    @sub     sp, sp, #4                  @ (if we save odd number of regs)
 
     @ Ensure 64-bit alignment.  EABI guarantees sp is aligned on entry, make
     @ sure we're aligned properly now.
 DBG tst     sp, #4                      @ 64-bit aligned?
-DBG bne     dvmAbort
+DBG bne     dvmAbort                    @ no, fail
 
-    cmp     r1, #0                      @ Is this a static method?
-    ldr     r9, [r4]                    @ r9<- argv
+    ldr     r9, [fp, #0+FP_ADJ]         @ r9<- argv
+    cmp     r1, #0                      @ calling a static method?
 
-    @ Not static: set r1 to *argv++ ("this"), and set argc--.
-    @
-    @ Note the "this" pointer is not included in the method signature.
-#ifdef WORKAROUND_CORTEX_A9_745320
-    bne     1f
-    ldr     r1, [r9], #4
-    sub     r3, r3, #1
-1:
-#else
-    ldreq   r1, [r9], #4
-    subeq   r3, r3, #1
-#endif
+    @ Not static, grab the "this" pointer.  Note "this" is not explicitly
+    @ described by the method signature.
+    subeq   r3, r3, #1                  @ argc--
+    ldreq   r1, [r9], #4                @ r1<- *argv++
 
     @ Do we have arg padding flags in "argInfo"? (just need to check hi bit)
     teq     r2, #0
@@ -172,20 +182,21 @@ DBG bne     dvmAbort
      * inserting pad words when appropriate.
      *
      * Currently:
-     *   r0  don't touch
-     *   r1  don't touch
-     *   r2  arg info
-     *   r3  argc
-     *   r4  original stack pointer
-     *   r5-r8 (available)
-     *   r9  argv
+     *  r0  don't touch
+     *  r1  don't touch
+     *  r2  arg info
+     *  r3  argc
+     *  r4-r5  don't touch (not saved)
+     *  r6-r8 (available)
+     *  r9  argv
+     *  fp  frame pointer
      */
 .Lhave_arg_info:
     @ Expand the stack by the specified amount.  We want to extract the
     @ count of double-words from r2, multiply it by 8, and subtract that
     @ from the stack pointer.
     and     ip, r2, #0x0f000000         @ ip<- double-words required
-    mov     r5, r2, lsr #28             @ r5<- return type
+    mov     r6, r2, lsr #28             @ r6<- return type
     sub     sp, sp, ip, lsr #21         @ shift right 24, then left 3
     mov     r8, sp                      @ r8<- sp  (arg copy dest)
 
@@ -212,18 +223,9 @@ DBG bne     dvmAbort
     @ Get pad flag into carry bit.  If it's set, we don't pull a value
     @ out of argv.
     movs    r2, r2, lsr #1
-
-#ifdef WORKAROUND_CORTEX_A9_745320
-    bcs     1f
-    ldr     ip, [r7], #4                @ ip = *r7++ (pull from argv)
-    str     ip, [r8], #4                @ *r8++ = ip (write to stack)
-    b       .Lfast_copy_loop
-1:
-#else
     ldrcc   ip, [r7], #4                @ ip = *r7++ (pull from argv)
     strcc   ip, [r8], #4                @ *r8++ = ip (write to stack)
     bcc     .Lfast_copy_loop
-#endif
 
 DBG movcs   ip, #-3                     @ DEBUG DEBUG - make pad word obvious
 DBG strcs   ip, [r8]                    @ DEBUG DEBUG
@@ -231,14 +233,13 @@ DBG strcs   ip, [r8]                    @ DEBUG DEBUG
     b       .Lfast_copy_loop2           @ don't adjust argc after writing pad
 
 
-
 .Lcopy_done:
     /*
      * Currently:
      *  r0-r3  args (JNIEnv*, thisOrClass, arg0, arg1)
-     *  r4  original saved sp
-     *  r5  return type (enum DalvikJniReturnType)
+     *  r6  return type (enum DalvikJniReturnType)
      *  r9  original argv
+     *  fp  frame pointer
      *
      * The stack copy is complete.  Grab the first two words off of argv
      * and tuck them into r2/r3.  If the first arg is 32-bit and the second
@@ -249,16 +250,14 @@ DBG strcs   ip, [r8]                    @ DEBUG DEBUG
      * data into the registers, but since nothing tries to use it it's also
      * harmless (assuming argv[0] and argv[1] point to valid memory, which
      * is a reasonable assumption for Dalvik's interpreted stacks).
-     *
      */
     ldmia   r9, {r2-r3}                 @ r2/r3<- argv[0]/argv[1]
 
-    @ call the method
-    ldr     ip, [r4, #8]                @ func
+    ldr     ip, [fp, #8+FP_ADJ]         @ ip<- func
 #ifdef __ARM_HAVE_BLX
-    blx     ip
+    blx     ip                          @ call func
 #else
-    mov     lr, pc
+    mov     lr, pc                      @ call func the old-fashioned way
     bx      ip
 #endif
 
@@ -273,26 +272,19 @@ DBG strcs   ip, [r8]                    @ DEBUG DEBUG
     @ and double-word values occupy different ranges; simple comparison
     @ allows us to choose between str and stm.  Probably not worthwhile.
     @
-    cmp     r5, #0                      @ DALVIK_JNI_RETURN_VOID?
-#ifdef WORKAROUND_CORTEX_A9_745320
-    beq     1f
-    ldr     ip, [r4, #12]               @ pReturn
-    stmia   ip, {r0-r1}                 @ pReturn->j <- r0/r1
-1:
-#else
-    ldrne   ip, [r4, #12]               @ pReturn
+    cmp     r6, #0                      @ DALVIK_JNI_RETURN_VOID?
+    ldrne   ip, [fp, #12+FP_ADJ]        @ pReturn
+    sub     sp, fp, #FP_STACK_OFFSET    @ restore sp to post-reg-save offset
     stmneia ip, {r0-r1}                 @ pReturn->j <- r0/r1
-#endif
 
-    @ Restore the registers we saved and return (restores lr into pc, and
-    @ the initial stack pointer into sp).
+    @ Restore the registers we saved and return.  On >= ARMv5TE we can
+    @ restore PC directly from the saved LR.
 #ifdef __ARM_HAVE_PC_INTERWORK
-    ldmdb   r4, {r4, r5, r6, r7, r8, r9, sp, pc}
+    ldmfd   sp!, {r6, r7, r8, r9, fp, pc}
 #else
-    ldmdb   r4, {r4, r5, r6, r7, r8, r9, sp, lr}
+    ldmfd   sp!, {r6, r7, r8, r9, fp, lr}
     bx      lr
 #endif
-    .fnend
 
 
 
@@ -308,17 +300,18 @@ DBG strcs   ip, [r8]                    @ DEBUG DEBUG
      * the class file format allows up to 64K words (need to verify that).
      *
      * Currently:
-     *   r0  don't touch
-     *   r1  don't touch
-     *   r2  (available)
-     *   r3  argc
-     *   r4  original stack pointer
-     *   r5-r8 (available)
-     *   r9  argv
+     *  r0  don't touch
+     *  r1  don't touch
+     *  r2  (available)
+     *  r3  argc
+     *  r4-r5 don't touch (not saved)
+     *  r6-r8 (available)
+     *  r9  argv
+     *  fp  frame pointer
      */
 .Lno_arg_info:
-    mov     r5, r2, lsr #28             @ r5<- return type
-    ldr     r6, [r4, #4]                @ r6<- short signature
+    mov     ip, r2, lsr #28             @ ip<- return type
+    ldr     r6, [fp, #4+FP_ADJ]         @ r6<- short signature
     add     r6, r6, #1                  @ advance past return type
     mov     r2, #0                      @ r2<- word count, init to zero
 
@@ -359,7 +352,7 @@ DBG bne     dvmAbort                    @ DEBUG
     @ We need to copy words from [r7] to [r8].  We walk forward through
     @ the signature again, "copying" pad words when appropriate, storing
     @ upward into the stack.
-    ldr     r6, [r4, #4]                @ r6<- signature
+    ldr     r6, [fp, #4+FP_ADJ]         @ r6<- signature
     add     r6, r6, #1                  @ advance past return type
     add     r7, r7, #8                  @ r7<- r7+8 (assume argv 0/1 in r2/r3)
 
@@ -408,6 +401,7 @@ DBG bne     dvmAbort                    @ DEBUG
     str     r2, [r8], #4
     b       .Lstack_copy_loop
 
+    .fnend
     .size   dvmPlatformInvoke, .-dvmPlatformInvoke
 
 #if 0
