@@ -20,9 +20,6 @@
 
 #include <cutils/array.h>
 #include <stdlib.h>
-#include <sys/utsname.h>
-#include <limits.h>
-#include <unistd.h>
 
 bool dvmPropertiesStartup(void)
 {
@@ -30,25 +27,6 @@ bool dvmPropertiesStartup(void)
     if (gDvm.properties == NULL) {
         return false;
     }
-
-    /*
-     * TODO: these are currently awkward to do in Java so we sneak them in
-     * here.
-     */
-    struct utsname info;
-    uname(&info);
-    char* s;
-    asprintf(&s, "os.arch=%s", info.machine);
-    arrayAdd(gDvm.properties, s);
-    asprintf(&s, "os.name=%s", info.sysname);
-    arrayAdd(gDvm.properties, s);
-    asprintf(&s, "os.version=%s", info.release);
-    arrayAdd(gDvm.properties, s);
-
-    char path[PATH_MAX];
-    asprintf(&s, "user.dir=%s", getcwd(path, sizeof(path)));
-    arrayAdd(gDvm.properties, s);
-
     return true;
 }
 
