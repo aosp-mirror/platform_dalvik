@@ -6125,14 +6125,14 @@ dvmAsmInstructionStart = .L_OP_NOP
 /* ------------------------------ */
     .balign 64
 .L_OP_INVOKE_OBJECT_INIT: /* 0xf0 */
-/* File: x86/OP_INVOKE_OBJECT_INIT.S */
-    /*
-     * invoke-object-init is a no-op in a "standard" interpreter.
-     */
-    FETCH_INST_WORD 3
-    ADVANCE_PC 3
+    /* (stub) */
+    SAVE_PC_FP_TO_GLUE %ecx          # leaves rGLUE in %ecx
+    movl %ecx,OUT_ARG0(%esp)         # glue is first arg to function
+    call      dvmMterp_OP_INVOKE_OBJECT_INIT     # do the real work
+    mov       rGLUE,%ecx
+    LOAD_PC_FP_FROM_GLUE             # retrieve updated values
+    FETCH_INST
     GOTO_NEXT
-
 /* ------------------------------ */
     .balign 64
 .L_OP_RETURN_VOID_BARRIER: /* 0xf1 */

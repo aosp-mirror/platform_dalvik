@@ -59,7 +59,6 @@ Object* dvmAllocObject(ClassObject* clazz, int flags);
 enum {
     ALLOC_DEFAULT       = 0x00,
     ALLOC_DONT_TRACK    = 0x01,     /* don't add to internal tracking list */
-    ALLOC_FINALIZABLE   = 0x02,     /* call finalize() before freeing */
 };
 
 /*
@@ -91,6 +90,11 @@ bool dvmIsValidObject(const Object* obj);
  * The new object will be added to the "tracked alloc" table.
  */
 Object* dvmCloneObject(Object* obj);
+
+/*
+ * Make the object finalizable.
+ */
+void dvmSetFinalizable(Object* obj);
 
 /*
  * Determine the exact number of GC heap bytes used by an object.  (Internal
