@@ -30,9 +30,11 @@ bool dvmPropertiesStartup(void)
     return true;
 }
 
-void dvmPropertiesShutdown(void) {
-    int i = arraySize(gDvm.properties);
-    for (; i >= 0; --i) {
+void dvmPropertiesShutdown(void)
+{
+    size_t size = arraySize(gDvm.properties);
+    size_t i;
+    for (i = 0; i < size; ++i) {
         free(arrayGet(gDvm.properties, i));
     }
     arrayFree(gDvm.properties);
