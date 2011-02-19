@@ -150,6 +150,9 @@ public final class DexBuffer {
     }
 
     public Section open(int position) {
+        if (position < 0 || position > length) {
+            throw new IllegalArgumentException("position=" + position + " length=" + length);
+        }
         return new Section(position);
     }
 

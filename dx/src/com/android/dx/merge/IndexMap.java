@@ -37,6 +37,8 @@ public final class IndexMap {
     public final short[] fieldIds;
     public final short[] methodIds;
     public final HashMap<Integer, Integer> typeListOffsets;
+    public final HashMap<Integer, Integer> annotationSetOffsets;
+    public final HashMap<Integer, Integer> annotationDirectoryOffsets;
 
     public IndexMap(DexBuffer target, TableOfContents tableOfContents) {
         this.target = target;
@@ -46,12 +48,16 @@ public final class IndexMap {
         this.fieldIds = new short[tableOfContents.fieldIds.size];
         this.methodIds = new short[tableOfContents.methodIds.size];
         this.typeListOffsets = new HashMap<Integer, Integer>();
+        this.annotationSetOffsets = new HashMap<Integer, Integer>();
+        this.annotationDirectoryOffsets = new HashMap<Integer, Integer>();
 
         /*
-         * A type list at offset 0 is always the empty type list. Always map
-         * this to itself.
+         * A type list, annotation set, or annotation directory at offset 0 is
+         * always empty. Always map offset 0 to 0.
          */
         this.typeListOffsets.put(0, 0);
+        this.annotationSetOffsets.put(0, 0);
+        this.annotationDirectoryOffsets.put(0, 0);
     }
 
     public int adjustString(int stringIndex) {
@@ -87,6 +93,14 @@ public final class IndexMap {
 
     public int adjustTypeListOffset(int typeListOffset) {
         return typeListOffsets.get(typeListOffset);
+    }
+
+    public int adjustAnnotationSet(int annotationSetOffset) {
+        return annotationSetOffsets.get(annotationSetOffset);
+    }
+
+    public int adjustAnnotationDirectory(int annotationDirectoryOffset) {
+        return annotationDirectoryOffsets.get(annotationDirectoryOffset);
     }
 
     public MethodId adjust(MethodId methodId) {
