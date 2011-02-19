@@ -170,7 +170,7 @@ static ArmLIR *opRegImm(CompilationUnit *cUnit, OpKind op, int rDestSrc1,
     ArmOpcode opcode = kThumbBkpt;
     switch (op) {
         case kOpAdd:
-            if ( !neg && (rDestSrc1 == 13) && (value <= 508)) { /* sp */
+            if ( !neg && (rDestSrc1 == r13sp) && (value <= 508)) { /* sp */
                 assert((value & 0x3) == 0);
                 return newLIR1(cUnit, kThumbAddSpI7, value >> 2);
             } else if (shortForm) {
@@ -179,7 +179,7 @@ static ArmLIR *opRegImm(CompilationUnit *cUnit, OpKind op, int rDestSrc1,
                 opcode = kThumbAddRRR;
             break;
         case kOpSub:
-            if (!neg && (rDestSrc1 == 13) && (value <= 508)) { /* sp */
+            if (!neg && (rDestSrc1 == r13sp) && (value <= 508)) { /* sp */
                 assert((value & 0x3) == 0);
                 return newLIR1(cUnit, kThumbSubSpI7, value >> 2);
             } else if (shortForm) {
@@ -257,12 +257,12 @@ static ArmLIR *opRegRegImm(CompilationUnit *cUnit, OpKind op, int rDest,
         case kOpAdd:
             if (rDest == rSrc1)
                 return opRegImm(cUnit, op, rDest, value);
-            if ((rSrc1 == 13) && (value <= 1020)) { /* sp */
+            if ((rSrc1 == r13sp) && (value <= 1020)) { /* sp */
                 assert((value & 0x3) == 0);
                 shortForm = true;
                 opcode = kThumbAddSpRel;
                 value >>= 2;
-            } else if ((rSrc1 == 15) && (value <= 1020)) { /* pc */
+            } else if ((rSrc1 == r15pc) && (value <= 1020)) { /* pc */
                 assert((value & 0x3) == 0);
                 shortForm = true;
                 opcode = kThumbAddPcRel;
@@ -576,12 +576,12 @@ static ArmLIR *loadBaseDispBody(CompilationUnit *cUnit, MIR *mir, int rBase,
             }
             break;
         case kWord:
-            if (LOWREG(rDest) && (rBase == rpc) &&
+            if (LOWREG(rDest) && (rBase == r15pc) &&
                 (displacement <= 1020) && (displacement >= 0)) {
                 shortForm = true;
                 encodedDisp >>= 2;
                 opcode = kThumbLdrPcRel;
-            } else if (LOWREG(rDest) && (rBase == r13) &&
+            } else if (LOWREG(rDest) && (rBase == r13sp) &&
                       (displacement <= 1020) && (displacement >= 0)) {
                 shortForm = true;
                 encodedDisp >>= 2;
@@ -640,14 +640,14 @@ static ArmLIR *loadBaseDispBody(CompilationUnit *cUnit, MIR *mir, int rBase,
                                         : rDest;
             res = loadConstant(cUnit, rTmp, displacement);
             load = newLIR3(cUnit, opcode, rDest, rBase, rTmp);
-            if (rBase == rFP)
+            if (rBase == r5FP)
                 annotateDalvikRegAccess(load, displacement >> 2,
                                         true /* isLoad */);
             if (rTmp != rDest)
                 dvmCompilerFreeTemp(cUnit, rTmp);
         }
     }
-    if (rBase == rFP) {
+    if (rBase == r5FP) {
         if (load != NULL)
             annotateDalvikRegAccess(load, displacement >> 2,
                                     true /* isLoad */);
@@ -757,7 +757,7 @@ static ArmLIR *storeBaseDispBody(CompilationUnit *cUnit, int rBase,
         }
         dvmCompilerFreeTemp(cUnit, rScratch);
     }
-    if (rBase == rFP) {
+    if (rBase == r5FP) {
         if (store != NULL)
             annotateDalvikRegAccess(store, displacement >> 2,
                                     false /* isLoad */);
@@ -875,7 +875,7 @@ static void genSelfVerificationPreBranch(CompilationUnit *cUnit,
      */
     ArmLIR *pushFP = (ArmLIR *) dvmCompilerNew(sizeof(ArmLIR), true);
     pushFP->opcode = kThumbPush;
-    pushFP->operands[0] = 1 << rFP;
+    pushFP->operands[0] = 1 << r5FP;
     setupResourceMasks(pushFP);
     dvmCompilerInsertLIRBefore((LIR *) origLIR, (LIR *) pushFP);
 
@@ -897,17 +897,17 @@ static void genSelfVerificationPostBranch(CompilationUnit *cUnit,
     /* Pop memory content(LR) into r5 first */
     ArmLIR *popForLR = (ArmLIR *) dvmCompilerNew(sizeof(ArmLIR), true);
     popForLR->opcode = kThumbPop;
-    popForLR->operands[0] = 1 << rFP;
+    popForLR->operands[0] = 1 << r5FP;
     setupResourceMasks(popForLR);
     dvmCompilerInsertLIRAfter((LIR *) origLIR, (LIR *) popForLR);
 
-    ArmLIR *copy = genRegCopyNoInsert(cUnit, rlr, rFP);
+    ArmLIR *copy = genRegCopyNoInsert(cUnit, r14lr, r5FP);
     dvmCompilerInsertLIRAfter((LIR *) popForLR, (LIR *) copy);
 
     /* Now restore the original r5 */
     ArmLIR *popFP = (ArmLIR *) dvmCompilerNew(sizeof(ArmLIR), true);
     popFP->opcode = kThumbPop;
-    popFP->operands[0] = 1 << rFP;
+    popFP->operands[0] = 1 << r5FP;
     setupResourceMasks(popFP);
     dvmCompilerInsertLIRAfter((LIR *) copy, (LIR *) popFP);
 }

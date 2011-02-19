@@ -69,7 +69,7 @@ static void setMemRefType(ArmLIR *lir, bool isLoad, int memType)
 }
 
 /*
- * Mark load/store instructions that access Dalvik registers through rFP +
+ * Mark load/store instructions that access Dalvik registers through r5FP +
  * offset.
  */
 static void annotateDalvikRegAccess(ArmLIR *lir, int regId, bool isLoad)

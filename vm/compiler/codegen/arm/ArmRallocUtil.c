@@ -58,7 +58,7 @@ extern void dvmCompilerClobberCallRegs(CompilationUnit *cUnit)
     dvmCompilerClobber(cUnit, r9); // Need to do this?, be conservative
     dvmCompilerClobber(cUnit, r11);
     dvmCompilerClobber(cUnit, r12);
-    dvmCompilerClobber(cUnit, rlr);
+    dvmCompilerClobber(cUnit, r14lr);
 }
 
 /* Clobber all of the temps that might be used by a handler. */

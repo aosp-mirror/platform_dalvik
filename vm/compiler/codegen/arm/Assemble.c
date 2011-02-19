@@ -788,7 +788,7 @@ ArmEncodingMap EncodingMap[kArmLast] = {
                  kFmtBitBlt, 15, 12, kFmtBitBlt, 11, 0, kFmtUnused, -1, -1,
                  kFmtUnused, -1, -1,
                  IS_TERTIARY_OP | REG_DEF0 | REG_USE_PC | IS_LOAD,
-                 "ldr", "r!0d, [rpc, #!1d]", 2),
+                 "ldr", "r!0d, [r15pc, #!1d]", 2),
     ENCODING_MAP(kThumb2BCond,        0xf0008000,
                  kFmtBrOffset, -1, -1, kFmtBitBlt, 25, 22, kFmtUnused, -1, -1,
                  kFmtUnused, -1, -1,
@@ -880,12 +880,12 @@ ArmEncodingMap EncodingMap[kArmLast] = {
                  kFmtBitBlt, 15, 12, kFmtBitBlt, 11, 0, kFmtUnused, -1, -1,
                  kFmtUnused, -1, -1,
                  IS_BINARY_OP | REG_DEF0 | REG_USE_PC | IS_LOAD,
-                 "ldr", "r!0d, [rpc, -#!1d]", 2),
+                 "ldr", "r!0d, [r15pc, -#!1d]", 2),
 };
 
 /*
  * The fake NOP of moving r0 to r0 actually will incur data stalls if r0 is
- * not ready. Since r5 (rFP) is not updated often, it is less likely to
+ * not ready. Since r5FP is not updated often, it is less likely to
  * generate unnecessary stall cycles.
  */
 #define PADDING_MOV_R5_R5               0x1C2D
@@ -950,7 +950,7 @@ static AssemblerStatus assembleInstructions(CompilationUnit *cUnit,
         if (lir->opcode == kThumbLdrPcRel ||
             lir->opcode == kThumb2LdrPcRel12 ||
             lir->opcode == kThumbAddPcRel ||
-            ((lir->opcode == kThumb2Vldrs) && (lir->operands[1] == rpc))) {
+            ((lir->opcode == kThumb2Vldrs) && (lir->operands[1] == r15pc))) {
             ArmLIR *lirTarget = (ArmLIR *) lir->generic.target;
             intptr_t pc = (lir->generic.offset + 4) & ~3;
             intptr_t target = lirTarget->generic.offset;

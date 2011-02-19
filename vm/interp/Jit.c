@@ -1056,7 +1056,13 @@ void dvmJitSetCodeAddr(const u2* dPC, void *nPC, JitInstructionSetType set,
 {
     JitEntryInfoUnion oldValue;
     JitEntryInfoUnion newValue;
-    JitEntry *jitEntry = dvmJitFindEntry(dPC, isMethodEntry);
+    /*
+     * Method-based JIT doesn't go through the normal profiling phase, so use
+     * lookupAndAdd here to request a new entry in the table.
+     */
+    JitEntry *jitEntry = isMethodEntry ?
+        lookupAndAdd(dPC, false /* caller locked */, true) :
+        dvmJitFindEntry(dPC, isMethodEntry);
     assert(jitEntry);
     /* Note: order of update is important */
     do {

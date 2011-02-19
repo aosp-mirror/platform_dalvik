@@ -38,7 +38,7 @@ static void loadValueAddressDirect(CompilationUnit *cUnit, RegLocation rlSrc,
      }
      dvmCompilerClobber(cUnit, rDest);
      dvmCompilerLockTemp(cUnit, rDest);
-     opRegRegImm(cUnit, kOpAdd, rDest, rFP,
+     opRegRegImm(cUnit, kOpAdd, rDest, r5FP,
                  dvmCompilerS2VReg(cUnit, rlSrc.sRegLow) << 2);
 }
 

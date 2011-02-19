@@ -32,7 +32,7 @@ static void markCard(CompilationUnit *cUnit, int valReg, int tgtAddrReg)
     int regCardBase = dvmCompilerAllocTemp(cUnit);
     int regCardNo = dvmCompilerAllocTemp(cUnit);
     ArmLIR *branchOver = genCmpImmBranch(cUnit, kArmCondEq, valReg, 0);
-    loadWordDisp(cUnit, rSELF, offsetof(Thread, cardTable),
+    loadWordDisp(cUnit, r6SELF, offsetof(Thread, cardTable),
                  regCardBase);
     opRegRegImm(cUnit, kOpLsr, regCardNo, tgtAddrReg, GC_CARD_SHIFT);
     storeBaseIndexed(cUnit, regCardBase, regCardNo, regCardBase, 0,
@@ -160,10 +160,10 @@ static bool genArithOpDoublePortable(CompilationUnit *cUnit, MIR *mir,
             return true;
     }
     dvmCompilerFlushAllRegs(cUnit);   /* Send everything to home location */
-    LOAD_FUNC_ADDR(cUnit, rlr, (int)funct);
+    LOAD_FUNC_ADDR(cUnit, r14lr, (int)funct);
     loadValueDirectWideFixed(cUnit, rlSrc1, r0, r1);
     loadValueDirectWideFixed(cUnit, rlSrc2, r2, r3);
-    opReg(cUnit, kOpBlx, rlr);
+    opReg(cUnit, kOpBlx, r14lr);
     dvmCompilerClobberCallRegs(cUnit);
     rlResult = dvmCompilerGetReturnWide(cUnit);
     storeValueWide(cUnit, rlDest, rlResult);
@@ -220,7 +220,7 @@ static void selfVerificationBranchInsert(LIR *currentLIR, ArmOpcode opcode,
  * Example where r14 (LR) is preserved around a heap access under
  * self-verification mode in Thumb2:
  *
- * D/dalvikvm( 1538): 0x59414c5e (0026): ldr     r14, [rpc, #220] <-hoisted
+ * D/dalvikvm( 1538): 0x59414c5e (0026): ldr     r14, [r15pc, #220] <-hoisted
  * D/dalvikvm( 1538): 0x59414c62 (002a): mla     r4, r0, r8, r4
  * D/dalvikvm( 1538): 0x59414c66 (002e): adds    r3, r4, r3
  * D/dalvikvm( 1538): 0x59414c6a (0032): push    <r5, r14>    ---+
@@ -744,9 +744,9 @@ static bool genArithOpLong(CompilationUnit *cUnit, MIR *mir,
         // Adjust return regs in to handle case of rem returning r2/r3
         dvmCompilerFlushAllRegs(cUnit);   /* Send everything to home location */
         loadValueDirectWideFixed(cUnit, rlSrc1, r0, r1);
-        LOAD_FUNC_ADDR(cUnit, rlr, (int) callTgt);
+        LOAD_FUNC_ADDR(cUnit, r14lr, (int) callTgt);
         loadValueDirectWideFixed(cUnit, rlSrc2, r2, r3);
-        opReg(cUnit, kOpBlx, rlr);
+        opReg(cUnit, kOpBlx, r14lr);
         dvmCompilerClobberCallRegs(cUnit);
         if (retReg == r0)
             rlResult = dvmCompilerGetReturnWide(cUnit);
@@ -952,28 +952,23 @@ static ArmLIR *genUnconditionalBranch(CompilationUnit *cUnit, ArmLIR *target)
 /* Perform the actual operation for OP_RETURN_* */
 static void genReturnCommon(CompilationUnit *cUnit, MIR *mir)
 {
-    if (!cUnit->methodJitMode) {
-        genDispatchToHandler(cUnit, gDvmJit.methodTraceSupport ?
-            TEMPLATE_RETURN_PROF :
-            TEMPLATE_RETURN);
+    genDispatchToHandler(cUnit, gDvmJit.methodTraceSupport ?
+                         TEMPLATE_RETURN_PROF : TEMPLATE_RETURN);
 #if defined(WITH_JIT_TUNING)
-        gDvmJit.returnOp++;
+    gDvmJit.returnOp++;
 #endif
-        int dPC = (int) (cUnit->method->insns + mir->offset);
-        /* Insert branch, but defer setting of target */
-        ArmLIR *branch = genUnconditionalBranch(cUnit, NULL);
-        /* Set up the place holder to reconstruct this Dalvik PC */
-        ArmLIR *pcrLabel = (ArmLIR *) dvmCompilerNew(sizeof(ArmLIR), true);
-        pcrLabel->opcode = kArmPseudoPCReconstructionCell;
-        pcrLabel->operands[0] = dPC;
-        pcrLabel->operands[1] = mir->offset;
-        /* Insert the place holder to the growable list */
-        dvmInsertGrowableList(&cUnit->pcReconstructionList,
-                              (intptr_t) pcrLabel);
-        /* Branch to the PC reconstruction code */
-        branch->generic.target = (LIR *) pcrLabel;
-    }
-    /* TODO: Move result to Thread for non-void returns */
+    int dPC = (int) (cUnit->method->insns + mir->offset);
+    /* Insert branch, but defer setting of target */
+    ArmLIR *branch = genUnconditionalBranch(cUnit, NULL);
+    /* Set up the place holder to reconstruct this Dalvik PC */
+    ArmLIR *pcrLabel = (ArmLIR *) dvmCompilerNew(sizeof(ArmLIR), true);
+    pcrLabel->opcode = kArmPseudoPCReconstructionCell;
+    pcrLabel->operands[0] = dPC;
+    pcrLabel->operands[1] = mir->offset;
+    /* Insert the place holder to the growable list */
+    dvmInsertGrowableList(&cUnit->pcReconstructionList, (intptr_t) pcrLabel);
+    /* Branch to the PC reconstruction code */
+    branch->generic.target = (LIR *) pcrLabel;
 }
 
 static void genProcessArgsNoRange(CompilationUnit *cUnit, MIR *mir,
@@ -998,7 +993,7 @@ static void genProcessArgsNoRange(CompilationUnit *cUnit, MIR *mir,
     }
     if (regMask) {
         /* Up to 5 args are pushed on top of FP - sizeofStackSaveArea */
-        opRegRegImm(cUnit, kOpSub, r7, rFP,
+        opRegRegImm(cUnit, kOpSub, r7, r5FP,
                     sizeof(StackSaveArea) + (dInsn->vA << 2));
         /* generate null check */
         if (pcrLabel) {
@@ -1027,10 +1022,10 @@ static void genProcessArgsRange(CompilationUnit *cUnit, MIR *mir,
     dvmCompilerLockAllTemps(cUnit);
 
     /*
-     * r4PC     : &rFP[vC]
+     * r4PC     : &r5FP[vC]
      * r7: &newFP[0]
      */
-    opRegRegImm(cUnit, kOpAdd, r4PC, rFP, srcOffset);
+    opRegRegImm(cUnit, kOpAdd, r4PC, r5FP, srcOffset);
     /* load [r0 .. min(numArgs,4)] */
     regMask = (1 << ((numArgs < 4) ? numArgs : 4)) - 1;
     /*
@@ -1042,7 +1037,7 @@ static void genProcessArgsRange(CompilationUnit *cUnit, MIR *mir,
      */
     if (numArgs != 0) loadMultiple(cUnit, r4PC, regMask);
 
-    opRegRegImm(cUnit, kOpSub, r7, rFP,
+    opRegRegImm(cUnit, kOpSub, r7, r5FP,
                 sizeof(StackSaveArea) + (numArgs << 2));
     /* generate null check */
     if (pcrLabel) {
@@ -1058,9 +1053,9 @@ static void genProcessArgsRange(CompilationUnit *cUnit, MIR *mir,
         ArmLIR *loopLabel = NULL;
         /*
          * r0 contains "this" and it will be used later, so push it to the stack
-         * first. Pushing r5 (rFP) is just for stack alignment purposes.
+         * first. Pushing r5FP is just for stack alignment purposes.
          */
-        opImm(cUnit, kOpPush, (1 << r0 | 1 << rFP));
+        opImm(cUnit, kOpPush, (1 << r0 | 1 << r5FP));
         /* No need to generate the loop structure if numArgs <= 11 */
         if (numArgs > 11) {
             loadConstant(cUnit, 5, ((numArgs - 4) >> 2) << 2);
@@ -1075,7 +1070,7 @@ static void genProcessArgsRange(CompilationUnit *cUnit, MIR *mir,
         loadMultiple(cUnit, r4PC, regMask);
         /* No need to generate the loop structure if numArgs <= 11 */
         if (numArgs > 11) {
-            opRegImm(cUnit, kOpSub, rFP, 4);
+            opRegImm(cUnit, kOpSub, r5FP, 4);
             genConditionalBranch(cUnit, kArmCondNe, loopLabel);
         }
     }
@@ -1093,7 +1088,7 @@ static void genProcessArgsRange(CompilationUnit *cUnit, MIR *mir,
         loadMultiple(cUnit, r4PC, regMask);
     }
     if (numArgs >= 8)
-        opImm(cUnit, kOpPop, (1 << r0 | 1 << rFP));
+        opImm(cUnit, kOpPop, (1 << r0 | 1 << r5FP));
 
     /* Save the modulo 4 arguments */
     if ((numArgs > 4) && (numArgs % 4)) {
@@ -1119,7 +1114,7 @@ static void genInvokeSingletonCommon(CompilationUnit *cUnit, MIR *mir,
     ArmLIR *retChainingCell = &labelList[bb->fallThrough->id];
 
     /* r1 = &retChainingCell */
-    ArmLIR *addrRetChain = opRegRegImm(cUnit, kOpAdd, r1, rpc, 0);
+    ArmLIR *addrRetChain = opRegRegImm(cUnit, kOpAdd, r1, r15pc, 0);
 
     /* r4PC = dalvikCallsite */
     loadConstant(cUnit, r4PC,
@@ -1199,11 +1194,11 @@ static void genInvokeVirtualCommon(CompilationUnit *cUnit, MIR *mir,
                  (int) (cUnit->method->insns + mir->offset));
 
     /* r1 = &retChainingCell */
-    ArmLIR *addrRetChain = opRegRegImm(cUnit, kOpAdd, r1, rpc, 0);
+    ArmLIR *addrRetChain = opRegRegImm(cUnit, kOpAdd, r1, r15pc, 0);
     addrRetChain->generic.target = (LIR *) retChainingCell;
 
     /* r2 = &predictedChainingCell */
-    ArmLIR *predictedChainingCell = opRegRegImm(cUnit, kOpAdd, r2, rpc, 0);
+    ArmLIR *predictedChainingCell = opRegRegImm(cUnit, kOpAdd, r2, r15pc, 0);
     predictedChainingCell->generic.target = (LIR *) predChainingCell;
 
     genDispatchToHandler(cUnit, gDvmJit.methodTraceSupport ?
@@ -1248,7 +1243,7 @@ static void genInvokeVirtualCommon(CompilationUnit *cUnit, MIR *mir,
 
     LOAD_FUNC_ADDR(cUnit, r7, (int) dvmJitToPatchPredictedChain);
 
-    genRegCopy(cUnit, r1, rSELF);
+    genRegCopy(cUnit, r1, r6SELF);
 
     /*
      * r0 = calleeMethod
@@ -1262,7 +1257,7 @@ static void genInvokeVirtualCommon(CompilationUnit *cUnit, MIR *mir,
     opReg(cUnit, kOpBlx, r7);
 
     /* r1 = &retChainingCell */
-    addrRetChain = opRegRegImm(cUnit, kOpAdd, r1, rpc, 0);
+    addrRetChain = opRegRegImm(cUnit, kOpAdd, r1, r15pc, 0);
     addrRetChain->generic.target = (LIR *) retChainingCell;
 
     bypassRechaining->generic.target = (LIR *) addrRetChain;
@@ -1281,13 +1276,66 @@ static void genInvokeVirtualCommon(CompilationUnit *cUnit, MIR *mir,
     genTrap(cUnit, mir->offset, pcrLabel);
 }
 
+/* "this" pointer is already in r0 */
+static void genInvokeVirtualWholeMethod(CompilationUnit *cUnit,
+                                        MIR *mir,
+                                        void *calleeAddr,
+                                        ArmLIR *retChainingCell)
+{
+    CallsiteInfo *callsiteInfo = mir->meta.callsiteInfo;
+    dvmCompilerLockAllTemps(cUnit);
+
+    loadConstant(cUnit, r1, (int) callsiteInfo->clazz);
+
+    loadWordDisp(cUnit, r0, offsetof(Object, clazz), r2);
+    /* Branch to the slow path if classes are not equal */
+    opRegReg(cUnit, kOpCmp, r1, r2);
+    /*
+     * Set the misPredBranchOver target so that it will be generated when the
+     * code for the non-optimized invoke is generated.
+     */
+    ArmLIR *classCheck = opCondBranch(cUnit, kArmCondNe);
+
+    /* r0 = the Dalvik PC of the callsite */
+    loadConstant(cUnit, r0, (int) (cUnit->method->insns + mir->offset));
+
+    newLIR2(cUnit, kThumbBl1, (int) calleeAddr, (int) calleeAddr);
+    newLIR2(cUnit, kThumbBl2, (int) calleeAddr, (int) calleeAddr);
+    genUnconditionalBranch(cUnit, retChainingCell);
+
+    /* Target of slow path */
+    ArmLIR *slowPathLabel = newLIR0(cUnit, kArmPseudoTargetLabel);
+
+    slowPathLabel->defMask = ENCODE_ALL;
+    classCheck->generic.target = (LIR *) slowPathLabel;
+
+    // FIXME
+    cUnit->printMe = true;
+}
+
+static void genInvokeSingletonWholeMethod(CompilationUnit *cUnit,
+                                          MIR *mir,
+                                          void *calleeAddr,
+                                          ArmLIR *retChainingCell)
+{
+    /* r0 = the Dalvik PC of the callsite */
+    loadConstant(cUnit, r0, (int) (cUnit->method->insns + mir->offset));
+
+    newLIR2(cUnit, kThumbBl1, (int) calleeAddr, (int) calleeAddr);
+    newLIR2(cUnit, kThumbBl2, (int) calleeAddr, (int) calleeAddr);
+    genUnconditionalBranch(cUnit, retChainingCell);
+
+    // FIXME
+    cUnit->printMe = true;
+}
+
 /* Geneate a branch to go back to the interpreter */
 static void genPuntToInterp(CompilationUnit *cUnit, unsigned int offset)
 {
     /* r0 = dalvik pc */
     dvmCompilerFlushAllRegs(cUnit);
     loadConstant(cUnit, r0, (int) (cUnit->method->insns + offset));
-    loadWordDisp(cUnit, rSELF, offsetof(Thread,
+    loadWordDisp(cUnit, r6SELF, offsetof(Thread,
                  jitToInterpEntries.dvmJitToInterpPunt), r1);
     opReg(cUnit, kOpBlx, r1);
 }
@@ -1315,7 +1363,7 @@ static void genInterpSingleStep(CompilationUnit *cUnit, MIR *mir)
     }
     int entryAddr = offsetof(Thread,
                              jitToInterpEntries.dvmJitToInterpSingleStep);
-    loadWordDisp(cUnit, rSELF, entryAddr, r2);
+    loadWordDisp(cUnit, r6SELF, entryAddr, r2);
     /* r0 = dalvik pc */
     loadConstant(cUnit, r0, (int) (cUnit->method->insns + mir->offset));
     /* r1 = dalvik pc of following instruction */
@@ -1342,7 +1390,7 @@ static void genMonitorPortable(CompilationUnit *cUnit, MIR *mir)
     dvmCompilerFlushAllRegs(cUnit);   /* Send everything to home location */
     RegLocation rlSrc = dvmCompilerGetSrc(cUnit, mir, 0);
     loadValueDirectFixed(cUnit, rlSrc, r1);
-    genRegCopy(cUnit, r0, rSELF);
+    genRegCopy(cUnit, r0, r6SELF);
     genNullCheck(cUnit, rlSrc.sRegLow, r1, mir->offset, NULL);
     if (isEnter) {
         /* Get dPC of next insn */
@@ -1375,7 +1423,7 @@ static void genSuspendPoll(CompilationUnit *cUnit, MIR *mir)
 {
     int rTemp = dvmCompilerAllocTemp(cUnit);
     ArmLIR *ld;
-    ld = loadWordDisp(cUnit, rSELF, offsetof(Thread, suspendCount),
+    ld = loadWordDisp(cUnit, r6SELF, offsetof(Thread, suspendCount),
                       rTemp);
     setMemRefType(ld, true /* isLoad */, kMustNotAlias);
     genRegImmCheck(cUnit, kArmCondNe, rTemp, 0, mir->offset, NULL);
@@ -1403,8 +1451,7 @@ static bool handleFmt10t_Fmt20t_Fmt30t(CompilationUnit *cUnit, MIR *mir,
      * make sure it is dominated by the predecessor.
      */
     if (numPredecessors == 1 && bb->taken->visited == false &&
-        bb->taken->blockType == kDalvikByteCode &&
-        cUnit->methodJitMode == false ) {
+        bb->taken->blockType == kDalvikByteCode) {
         cUnit->nextCodegenBlock = bb->taken;
     } else {
         /* For OP_GOTO, OP_GOTO_16, and OP_GOTO_32 */
@@ -1836,9 +1883,9 @@ static bool handleFmt11x(CompilationUnit *cUnit, MIR *mir)
             int resetReg = dvmCompilerAllocTemp(cUnit);
             RegLocation rlDest = dvmCompilerGetDest(cUnit, mir, 0);
             rlResult = dvmCompilerEvalLoc(cUnit, rlDest, kCoreReg, true);
-            loadWordDisp(cUnit, rSELF, exOffset, rlResult.lowReg);
+            loadWordDisp(cUnit, r6SELF, exOffset, rlResult.lowReg);
             loadConstant(cUnit, resetReg, 0);
-            storeWordDisp(cUnit, rSELF, exOffset, resetReg);
+            storeWordDisp(cUnit, r6SELF, exOffset, resetReg);
             storeValue(cUnit, rlDest, rlResult);
            break;
         }
@@ -1877,17 +1924,16 @@ static bool handleFmt11x(CompilationUnit *cUnit, MIR *mir)
             RegLocation rlDest = LOC_DALVIK_RETURN_VAL;
             rlDest.fp = rlSrc.fp;
             storeValue(cUnit, rlDest, rlSrc);
-            genReturnCommon(cUnit,mir);
+            genReturnCommon(cUnit, mir);
             break;
         }
         case OP_MONITOR_EXIT:
         case OP_MONITOR_ENTER:
             genMonitor(cUnit, mir);
             break;
-        case OP_THROW: {
+        case OP_THROW:
             genInterpSingleStep(cUnit, mir);
             break;
-        }
         default:
             return true;
     }
@@ -2884,11 +2930,11 @@ static bool handleFmt31t(CompilationUnit *cUnit, MIR *mir)
             loadConstant(cUnit, r0,
                (int) (cUnit->method->insns + mir->offset + mir->dalvikInsn.vB));
             /* r2 <- pc of the instruction following the blx */
-            opRegReg(cUnit, kOpMov, r2, rpc);
+            opRegReg(cUnit, kOpMov, r2, r15pc);
             opReg(cUnit, kOpBlx, r4PC);
             dvmCompilerClobberCallRegs(cUnit);
             /* pc <- computed goto target */
-            opRegReg(cUnit, kOpMov, rpc, r0);
+            opRegReg(cUnit, kOpMov, r15pc, r0);
             break;
         }
         default:
@@ -2994,11 +3040,19 @@ static bool handleFmt35c_3rc_5rc(CompilationUnit *cUnit, MIR *mir,
             else
                 genProcessArgsRange(cUnit, mir, dInsn, &pcrLabel);
 
-            /* r0 = calleeMethod */
-            loadConstant(cUnit, r0, (int) calleeMethod);
+            if (mir->OptimizationFlags & MIR_INVOKE_METHOD_JIT) {
+                const Method *calleeMethod = mir->meta.callsiteInfo->method;
+                void *calleeAddr = dvmJitGetMethodAddr(calleeMethod->insns);
+                assert(calleeAddr);
+                genInvokeSingletonWholeMethod(cUnit, mir, calleeAddr,
+                                              retChainingCell);
+            } else {
+                /* r0 = calleeMethod */
+                loadConstant(cUnit, r0, (int) calleeMethod);
 
-            genInvokeSingletonCommon(cUnit, mir, bb, labelList, pcrLabel,
-                                     calleeMethod);
+                genInvokeSingletonCommon(cUnit, mir, bb, labelList, pcrLabel,
+                                         calleeMethod);
+            }
             break;
         }
         /* calleeMethod = method->clazz->pDvmDex->pResMethods[BBBB] */
@@ -3038,11 +3092,19 @@ static bool handleFmt35c_3rc_5rc(CompilationUnit *cUnit, MIR *mir,
                 genProcessArgsRange(cUnit, mir, dInsn,
                                     NULL /* no null check */);
 
-            /* r0 = calleeMethod */
-            loadConstant(cUnit, r0, (int) calleeMethod);
+            if (mir->OptimizationFlags & MIR_INVOKE_METHOD_JIT) {
+                const Method *calleeMethod = mir->meta.callsiteInfo->method;
+                void *calleeAddr = dvmJitGetMethodAddr(calleeMethod->insns);
+                assert(calleeAddr);
+                genInvokeSingletonWholeMethod(cUnit, mir, calleeAddr,
+                                              retChainingCell);
+            } else {
+                /* r0 = calleeMethod */
+                loadConstant(cUnit, r0, (int) calleeMethod);
 
-            genInvokeSingletonCommon(cUnit, mir, bb, labelList, pcrLabel,
-                                     calleeMethod);
+                genInvokeSingletonCommon(cUnit, mir, bb, labelList, pcrLabel,
+                                         calleeMethod);
+            }
             break;
         }
         /*
@@ -3143,12 +3205,12 @@ static bool handleFmt35c_3rc_5rc(CompilationUnit *cUnit, MIR *mir,
 
             /* r1 = &retChainingCell */
             ArmLIR *addrRetChain =
-                opRegRegImm(cUnit, kOpAdd, r1, rpc, 0);
+                opRegRegImm(cUnit, kOpAdd, r1, r15pc, 0);
             addrRetChain->generic.target = (LIR *) retChainingCell;
 
             /* r2 = &predictedChainingCell */
             ArmLIR *predictedChainingCell =
-                opRegRegImm(cUnit, kOpAdd, r2, rpc, 0);
+                opRegRegImm(cUnit, kOpAdd, r2, r15pc, 0);
             predictedChainingCell->generic.target = (LIR *) predChainingCell;
 
             genDispatchToHandler(cUnit, gDvmJit.methodTraceSupport ?
@@ -3230,7 +3292,7 @@ static bool handleFmt35c_3rc_5rc(CompilationUnit *cUnit, MIR *mir,
 
             LOAD_FUNC_ADDR(cUnit, r7, (int) dvmJitToPatchPredictedChain);
 
-            genRegCopy(cUnit, r1, rSELF);
+            genRegCopy(cUnit, r1, r6SELF);
             genRegCopy(cUnit, r2, r9);
             genRegCopy(cUnit, r3, r10);
 
@@ -3246,7 +3308,7 @@ static bool handleFmt35c_3rc_5rc(CompilationUnit *cUnit, MIR *mir,
             opReg(cUnit, kOpBlx, r7);
 
             /* r1 = &retChainingCell */
-            addrRetChain = opRegRegImm(cUnit, kOpAdd, r1, rpc, 0);
+            addrRetChain = opRegRegImm(cUnit, kOpAdd, r1, r15pc, 0);
             addrRetChain->generic.target = (LIR *) retChainingCell;
 
             bypassRechaining->generic.target = (LIR *) addrRetChain;
@@ -3281,25 +3343,6 @@ static bool handleFmt35c_3rc_5rc(CompilationUnit *cUnit, MIR *mir,
             return true;
     }
     return false;
-}
-
-/* "this" pointer is already in r0 */
-static void genValidationForMethodCallee(CompilationUnit *cUnit, MIR *mir,
-                                            ArmLIR **classCheck)
-{
-    CallsiteInfo *callsiteInfo = mir->meta.callsiteInfo;
-    dvmCompilerLockAllTemps(cUnit);
-
-    loadConstant(cUnit, r1, (int) callsiteInfo->clazz);
-
-    loadWordDisp(cUnit, r0, offsetof(Object, clazz), r2);
-    /* Branch to the slow path if classes are not equal */
-    opRegReg(cUnit, kOpCmp, r1, r2);
-    /*
-     * Set the misPredBranchOver target so that it will be generated when the
-     * code for the non-optimized invoke is generated.
-     */
-    *classCheck = opCondBranch(cUnit, kArmCondNe);
 }
 
 static bool handleFmt35ms_3rms(CompilationUnit *cUnit, MIR *mir,
@@ -3338,23 +3381,9 @@ static bool handleFmt35ms_3rms(CompilationUnit *cUnit, MIR *mir,
             if (mir->OptimizationFlags & MIR_INVOKE_METHOD_JIT) {
                 const Method *calleeMethod = mir->meta.callsiteInfo->method;
                 void *calleeAddr = dvmJitGetMethodAddr(calleeMethod->insns);
-                if (calleeAddr) {
-                    ArmLIR *classCheck;
-                    cUnit->printMe = true;
-                    genValidationForMethodCallee(cUnit, mir, &classCheck);
-                    newLIR2(cUnit, kThumbBl1, (int) calleeAddr,
-                            (int) calleeAddr);
-                    newLIR2(cUnit, kThumbBl2, (int) calleeAddr,
-                            (int) calleeAddr);
-                    genUnconditionalBranch(cUnit, retChainingCell);
-
-                    /* Target of slow path */
-                    ArmLIR *slowPathLabel = newLIR0(cUnit,
-                                                    kArmPseudoTargetLabel);
-
-                    slowPathLabel->defMask = ENCODE_ALL;
-                    classCheck->generic.target = (LIR *) slowPathLabel;
-                }
+                assert(calleeAddr);
+                genInvokeVirtualWholeMethod(cUnit, mir, calleeAddr,
+                                            retChainingCell);
             }
 
             genInvokeVirtualCommon(cUnit, mir, methodIndex,
@@ -3580,7 +3609,7 @@ static bool handleExecuteInlineC(CompilationUnit *cUnit, MIR *mir)
     dvmCompilerClobber(cUnit, r4PC);
     dvmCompilerClobber(cUnit, r7);
     int offset = offsetof(Thread, retval);
-    opRegRegImm(cUnit, kOpAdd, r4PC, rSELF, offset);
+    opRegRegImm(cUnit, kOpAdd, r4PC, r6SELF, offset);
     opImm(cUnit, kOpPush, (1<<r4PC) | (1<<r7));
     LOAD_FUNC_ADDR(cUnit, r4PC, fn);
     genExportPC(cUnit, mir);
@@ -3588,7 +3617,7 @@ static bool handleExecuteInlineC(CompilationUnit *cUnit, MIR *mir)
         loadValueDirect(cUnit, dvmCompilerGetSrc(cUnit, mir, i), i);
     }
     opReg(cUnit, kOpBlx, r4PC);
-    opRegImm(cUnit, kOpAdd, r13, 8);
+    opRegImm(cUnit, kOpAdd, r13sp, 8);
     /* NULL? */
     ArmLIR *branchOver = genCmpImmBranch(cUnit, kArmCondNe, r0, 0);
     loadConstant(cUnit, r0, (int) (cUnit->method->insns + mir->offset));
@@ -3708,7 +3737,7 @@ static void handleNormalChainingCell(CompilationUnit *cUnit,
      * instructions fit the predefined cell size.
      */
     insertChainingSwitch(cUnit);
-    newLIR3(cUnit, kThumbLdrRRI5, r0, rSELF,
+    newLIR3(cUnit, kThumbLdrRRI5, r0, r6SELF,
             offsetof(Thread,
                      jitToInterpEntries.dvmJitToInterpNormal) >> 2);
     newLIR1(cUnit, kThumbBlxR, r0);
@@ -3727,7 +3756,7 @@ static void handleHotChainingCell(CompilationUnit *cUnit,
      * instructions fit the predefined cell size.
      */
     insertChainingSwitch(cUnit);
-    newLIR3(cUnit, kThumbLdrRRI5, r0, rSELF,
+    newLIR3(cUnit, kThumbLdrRRI5, r0, r6SELF,
             offsetof(Thread,
                      jitToInterpEntries.dvmJitToInterpTraceSelect) >> 2);
     newLIR1(cUnit, kThumbBlxR, r0);
@@ -3744,11 +3773,11 @@ static void handleBackwardBranchChainingCell(CompilationUnit *cUnit,
      */
     insertChainingSwitch(cUnit);
 #if defined(WITH_SELF_VERIFICATION)
-    newLIR3(cUnit, kThumbLdrRRI5, r0, rSELF,
+    newLIR3(cUnit, kThumbLdrRRI5, r0, r6SELF,
         offsetof(Thread,
                  jitToInterpEntries.dvmJitToInterpBackwardBranch) >> 2);
 #else
-    newLIR3(cUnit, kThumbLdrRRI5, r0, rSELF,
+    newLIR3(cUnit, kThumbLdrRRI5, r0, r6SELF,
         offsetof(Thread, jitToInterpEntries.dvmJitToInterpNormal) >> 2);
 #endif
     newLIR1(cUnit, kThumbBlxR, r0);
@@ -3764,7 +3793,7 @@ static void handleInvokeSingletonChainingCell(CompilationUnit *cUnit,
      * instructions fit the predefined cell size.
      */
     insertChainingSwitch(cUnit);
-    newLIR3(cUnit, kThumbLdrRRI5, r0, rSELF,
+    newLIR3(cUnit, kThumbLdrRRI5, r0, r6SELF,
             offsetof(Thread,
                      jitToInterpEntries.dvmJitToInterpTraceSelect) >> 2);
     newLIR1(cUnit, kThumbBlxR, r0);
@@ -4226,7 +4255,7 @@ void dvmCompilerMIR2LIR(CompilationUnit *cUnit)
                 case kExceptionHandling:
                     labelList[i].opcode = kArmPseudoEHBlockLabel;
                     if (cUnit->pcReconstructionList.numUsed) {
-                        loadWordDisp(cUnit, rSELF, offsetof(Thread,
+                        loadWordDisp(cUnit, r6SELF, offsetof(Thread,
                                      jitToInterpEntries.dvmJitToInterpPunt),
                                      r1);
                         opReg(cUnit, kOpBlx, r1);
@@ -4520,7 +4549,7 @@ gen_fallthrough:
      */
     if (cUnit->switchOverflowPad) {
         loadConstant(cUnit, r0, (int) cUnit->switchOverflowPad);
-        loadWordDisp(cUnit, rSELF, offsetof(Thread,
+        loadWordDisp(cUnit, r6SELF, offsetof(Thread,
                      jitToInterpEntries.dvmJitToInterpNoChain), r2);
         opRegReg(cUnit, kOpAdd, r1, r1);
         opRegRegReg(cUnit, kOpAdd, r4PC, r0, r1);

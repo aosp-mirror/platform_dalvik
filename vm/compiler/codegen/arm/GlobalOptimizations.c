@@ -46,9 +46,13 @@ static void applyRedundantBranchElimination(CompilationUnit *cUnit)
                 }
 
                 /*
-                 * Found real useful stuff between the branch and the target
+                 * Found real useful stuff between the branch and the target.
+                 * Need to explicitly check the lastLIRInsn here since with
+                 * method-based JIT the branch might be the last real
+                 * instruction.
                  */
-                if (!isPseudoOpcode(nextLIR->opcode))
+                if (!isPseudoOpcode(nextLIR->opcode) ||
+                    (nextLIR = (ArmLIR *) cUnit->lastLIRInsn))
                     break;
             }
         }

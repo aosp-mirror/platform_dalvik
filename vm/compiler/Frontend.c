@@ -1797,8 +1797,7 @@ bool dvmCompileMethod(const Method *method, JitTranslationInfo *info)
                    curBlock->fallThrough == exitBlock);
 
             if ((curBlock->fallThrough == NULL) &&
-                !dexIsGoto(flags) &&
-                !(flags & kInstrCanReturn)) {
+                (flags & kInstrCanContinue)) {
                 curBlock->fallThrough = nextBlock;
                 dvmCompilerSetBit(nextBlock->predecessors, curBlock->id);
             }

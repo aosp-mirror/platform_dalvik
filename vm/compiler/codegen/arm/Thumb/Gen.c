@@ -59,7 +59,7 @@ static int genTraceProfileEntry(CompilationUnit *cUnit)
     if ((gDvmJit.profileMode == kTraceProfilingContinuous) ||
         (gDvmJit.profileMode == kTraceProfilingDisabled)) {
         /* Thumb instruction used directly here to ensure correct size */
-        newLIR2(cUnit, kThumbMovRR_H2L, r0, rpc);
+        newLIR2(cUnit, kThumbMovRR_H2L, r0, r15pc);
         newLIR2(cUnit, kThumbSubRI8, r0, 10);
         newLIR3(cUnit, kThumbLdrRRI5, r0, r0, 0);
         newLIR3(cUnit, kThumbLdrRRI5, r1, r0, 0);
@@ -190,7 +190,7 @@ static ArmLIR *genExportPC(CompilationUnit *cUnit, MIR *mir)
     int rAddr = dvmCompilerAllocTemp(cUnit);
     int offset = offsetof(StackSaveArea, xtra.currentPc);
     res = loadConstant(cUnit, rDPC, (int) (cUnit->method->insns + mir->offset));
-    newLIR2(cUnit, kThumbMovRR, rAddr, rFP);
+    newLIR2(cUnit, kThumbMovRR, rAddr, r5FP);
     newLIR2(cUnit, kThumbSubRI8, rAddr, sizeof(StackSaveArea) - offset);
     storeWordDisp( cUnit, rAddr, 0, rDPC);
     return res;
@@ -221,7 +221,7 @@ static bool genInlinedAbsFloat(CompilationUnit *cUnit, MIR *mir)
     loadConstant(cUnit, signMask, 0x7fffffff);
     newLIR2(cUnit, kThumbAndRR, reg0, signMask);
     dvmCompilerFreeTemp(cUnit, signMask);
-    storeWordDisp(cUnit, rSELF, offset, reg0);
+    storeWordDisp(cUnit, r6SELF, offset, reg0);
     //TUNING: rewrite this to not clobber
     dvmCompilerClobber(cUnit, reg0);
     return false;
@@ -236,10 +236,10 @@ static bool genInlinedAbsDouble(CompilationUnit *cUnit, MIR *mir)
     int reghi = regSrc.highReg;
     int signMask = dvmCompilerAllocTemp(cUnit);
     loadConstant(cUnit, signMask, 0x7fffffff);
-    storeWordDisp(cUnit, rSELF, offset, reglo);
+    storeWordDisp(cUnit, r6SELF, offset, reglo);
     newLIR2(cUnit, kThumbAndRR, reghi, signMask);
     dvmCompilerFreeTemp(cUnit, signMask);
-    storeWordDisp(cUnit, rSELF, offset + 4, reghi);
+    storeWordDisp(cUnit, r6SELF, offset + 4, reghi);
     //TUNING: rewrite this to not clobber
     dvmCompilerClobber(cUnit, reghi);
     return false;
@@ -259,7 +259,7 @@ static bool genInlinedMinMaxInt(CompilationUnit *cUnit, MIR *mir, bool isMin)
     newLIR2(cUnit, kThumbMovRR, reg0, reg1);
     ArmLIR *target = newLIR0(cUnit, kArmPseudoTargetLabel);
     target->defMask = ENCODE_ALL;
-    newLIR3(cUnit, kThumbStrRRI5, reg0, rSELF, offset >> 2);
+    newLIR3(cUnit, kThumbStrRRI5, reg0, r6SELF, offset >> 2);
     branch1->generic.target = (LIR *)target;
     //TUNING: rewrite this to not clobber
     dvmCompilerClobber(cUnit,reg0);

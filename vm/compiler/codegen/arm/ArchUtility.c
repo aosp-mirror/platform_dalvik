@@ -34,9 +34,9 @@ static char * decodeRegList(ArmOpcode opcode, int vector, char *buf)
         if (vector & 0x1) {
             int regId = i;
             if (opcode == kThumbPush && i == 8) {
-                regId = rlr;
+                regId = r14lr;
             } else if (opcode == kThumbPop && i == 8) {
-                regId = rpc;
+                regId = r15pc;
             }
             if (printed) {
                 sprintf(buf + strlen(buf), ", r%d", regId);

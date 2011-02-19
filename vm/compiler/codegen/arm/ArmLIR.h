@@ -203,23 +203,33 @@ typedef enum OpKind {
     kOpUncondBr,
 } OpKind;
 
+/*
+ * Annotate special-purpose core registers:
+ *   - VM: r4PC, r5FP, and r6SELF
+ *   - ARM architecture: r13sp, r14lr, and r15pc
+ *
+ * rPC, rFP, and rSELF are for architecture-independent code to use.
+ */
 typedef enum NativeRegisterPool {
-    r0 = 0,
-    r1 = 1,
-    r2 = 2,
-    r3 = 3,
-    r4PC = 4,
-    rFP = 5,
-    rSELF = 6,
-    r7 = 7,
-    r8 = 8,
-    r9 = 9,
-    r10 = 10,
-    r11 = 11,
-    r12 = 12,
-    r13 = 13,
-    rlr = 14,
-    rpc = 15,
+    r0     = 0,
+    r1     = 1,
+    r2     = 2,
+    r3     = 3,
+    rPC    = 4,
+    r4PC   = rPC,
+    rFP    = 5,
+    r5FP   = rFP,
+    rSELF  = 6,
+    r6SELF = rSELF,
+    r7     = 7,
+    r8     = 8,
+    r9     = 9,
+    r10    = 10,
+    r11    = 11,
+    r12    = 12,
+    r13sp  = 13,
+    r14lr  = 14,
+    r15pc  = 15,
     fr0  =  0 + FP_REG_OFFSET,
     fr1  =  1 + FP_REG_OFFSET,
     fr2  =  2 + FP_REG_OFFSET,
