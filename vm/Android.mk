@@ -44,7 +44,7 @@ include $(LOCAL_PATH)/ReconfigureDvm.mk
 
 # Overwrite default settings
 ifneq ($(TARGET_ARCH),x86)
-ifeq ($(TARGET_SIMULATOR),false)
+ifneq ($(TARGET_SIMULATOR),true)
     LOCAL_PRELINK_MODULE := true
 endif
 endif
