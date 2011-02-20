@@ -10,7 +10,7 @@
      *      sput-short/jumbo
      */
     /* exop vBBBB, field@AAAAAAAA */
-    ldr     r2, [rGLUE, #offGlue_methodClassDex]    @ r2<- DvmDex
+    ldr     r2, [rSELF, #offThread_methodClassDex]    @ r2<- DvmDex
     FETCH(r0, 1)                        @ r0<- aaaa (lo)
     FETCH(r1, 2)                        @ r1<- AAAA (hi)
     ldr     r2, [r2, #offDvmDex_pResFields] @ r2<- dvmDex->pResFields
@@ -33,7 +33,7 @@
      *  r1: AAAAAAAA field ref
      */
 .L${opcode}_resolve:
-    ldr     r2, [rGLUE, #offGlue_method]    @ r2<- current method
+    ldr     r2, [rSELF, #offThread_method]    @ r2<- current method
     EXPORT_PC()                         @ resolve() could throw, so export now
     ldr     r0, [r2, #offMethod_clazz]  @ r0<- method->clazz
     bl      dvmResolveStaticField       @ r0<- resolved StaticField ptr

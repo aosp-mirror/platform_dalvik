@@ -10,11 +10,10 @@
      */
     /* monitor-exit vAA */
     GET_VREG_R %eax rINST
-    movl    rGLUE,%ecx
+    movl    rSELF,%ecx
     EXPORT_PC
     testl   %eax,%eax                   # null object?
     je      .L${opcode}_errNullObject   # go if so
-    movl    offGlue_self(%ecx),%ecx     # ecx<- glue->self
     movl    %eax,OUT_ARG1(%esp)
     movl    %ecx,OUT_ARG0(%esp)
     jmp     .L${opcode}_continue

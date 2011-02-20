@@ -14,9 +14,9 @@
     /* instance-of/jumbo vBBBB, vCCCC, class@AAAAAAAA */
     movzwl  8(rPC),%eax                 # eax<- CCCC
     GET_VREG_R %eax %eax                # eax<- vCCCC (obj)
-    movl    rGLUE,%ecx
+    movl    rSELF,%ecx
     testl   %eax,%eax                   # object null?
-    movl    offGlue_methodClassDex(%ecx),%ecx  # ecx<- pDvmDex
+    movl    offThread_methodClassDex(%ecx),%ecx  # ecx<- pDvmDex
     je      .L${opcode}_store           # null obj, not instance, store it
     movl    2(rPC),%edx                 # edx<- AAAAAAAA
     movl    offDvmDex_pResClasses(%ecx),%ecx # ecx<- pDvmDex->pResClasses
@@ -70,8 +70,8 @@
      */
 .L${opcode}_resolve:
     movl    %edx,OUT_ARG1(%esp)         # arg1<- AAAAAAAA
-    movl    rGLUE,%ecx
-    movl    offGlue_method(%ecx),%ecx
+    movl    rSELF,%ecx
+    movl    offThread_method(%ecx),%ecx
     movl    $$1,OUT_ARG2(%esp)          # arg2<- true
     movl    offMethod_clazz(%ecx),%ecx  # ecx<- method->clazz
     EXPORT_PC

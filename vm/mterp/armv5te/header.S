@@ -56,7 +56,7 @@ The following registers have fixed assignments:
   reg nick      purpose
   r4  rPC       interpreted program counter, used for fetching instructions
   r5  rFP       interpreted frame pointer, used for accessing locals and args
-  r6  rGLUE     MterpGlue pointer
+  r6  rSELF     self (Thread) pointer
   r7  rINST     first 16-bit code unit of current instruction
   r8  rIBASE    interpreted instruction base pointer, used for computed goto
 
@@ -68,17 +68,17 @@ unspecified registers or condition codes.
 /* single-purpose registers, given names for clarity */
 #define rPC     r4
 #define rFP     r5
-#define rGLUE   r6
+#define rSELF   r6
 #define rINST   r7
 #define rIBASE  r8
 
-/* save/restore the PC and/or FP from the glue struct */
-#define LOAD_PC_FROM_GLUE()     ldr     rPC, [rGLUE, #offGlue_pc]
-#define SAVE_PC_TO_GLUE()       str     rPC, [rGLUE, #offGlue_pc]
-#define LOAD_FP_FROM_GLUE()     ldr     rFP, [rGLUE, #offGlue_fp]
-#define SAVE_FP_TO_GLUE()       str     rFP, [rGLUE, #offGlue_fp]
-#define LOAD_PC_FP_FROM_GLUE()  ldmia   rGLUE, {rPC, rFP}
-#define SAVE_PC_FP_TO_GLUE()    stmia   rGLUE, {rPC, rFP}
+/* save/restore the PC and/or FP from the thread struct */
+#define LOAD_PC_FROM_SELF()     ldr     rPC, [rSELF, #offThread_pc]
+#define SAVE_PC_TO_SELF()       str     rPC, [rSELF, #offThread_pc]
+#define LOAD_FP_FROM_SELF()     ldr     rFP, [rSELF, #offThread_fp]
+#define SAVE_FP_TO_SELF()       str     rFP, [rSELF, #offThread_fp]
+#define LOAD_PC_FP_FROM_SELF()  ldmia   rSELF, {rPC, rFP}
+#define SAVE_PC_FP_TO_SELF()    stmia   rSELF, {rPC, rFP}
 
 /*
  * "export" the PC to the stack frame, f/b/o future exception objects.  Must
@@ -179,8 +179,8 @@ unspecified registers or condition codes.
 #define SET_VREG(_reg, _vreg)   str     _reg, [rFP, _vreg, lsl #2]
 
 #if defined(WITH_JIT)
-#define GET_JIT_PROF_TABLE(_reg)    ldr     _reg,[rGLUE,#offGlue_pJitProfTable]
-#define GET_JIT_THRESHOLD(_reg)     ldr     _reg,[rGLUE,#offGlue_jitThreshold]
+#define GET_JIT_PROF_TABLE(_reg)    ldr _reg,[rSELF,#offThread_pJitProfTable]
+#define GET_JIT_THRESHOLD(_reg)     ldr _reg,[rSELF,#offThread_jitThreshold]
 #endif
 
 /*

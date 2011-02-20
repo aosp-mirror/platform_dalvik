@@ -3,9 +3,9 @@
 %verify "Class not yet resolved"
 %verify "Class cannot be resolved"
     /* const/class vAA, Class@BBBB */
-    movl      rGLUE,%ecx
+    movl      rSELF,%ecx
     movzwl    2(rPC),%eax              # eax<- BBBB
-    movl      offGlue_methodClassDex(%ecx),%ecx# ecx<- glue->methodClassDex
+    movl      offThread_methodClassDex(%ecx),%ecx# ecx<- self->methodClassDex
     movl      offDvmDex_pResClasses(%ecx),%ecx # ecx<- dvmDex->pResClasses
     movl      (%ecx,%eax,4),%eax       # eax<- rResClasses[BBBB]
     movl      rINST,%ecx
@@ -20,10 +20,10 @@
 /* This is the less common path, so we'll redo some work
    here rather than force spills on the common path */
 .L${opcode}_resolve:
-    movl     rGLUE,%eax
+    movl     rSELF,%eax
     movl     %ecx,rINST                # rINST<- AA
     EXPORT_PC
-    movl     offGlue_method(%eax),%eax # eax<- glue->method
+    movl     offThread_method(%eax),%eax # eax<- self->method
     movl     $$1,OUT_ARG2(%esp)        # true
     movzwl   2(rPC),%ecx               # ecx<- BBBB
     movl     offMethod_clazz(%eax),%eax

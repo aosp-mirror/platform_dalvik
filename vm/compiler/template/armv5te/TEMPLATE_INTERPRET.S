@@ -9,7 +9,7 @@
      *        r1 - the Dalvik PC to begin interpretation.
      *    else
      *        [lr, #3] contains Dalvik PC to begin interpretation
-     *    rGLUE - pointer to interpState
+     *    rSELF - pointer to thread
      *    rFP - Dalvik frame pointer
      */
     cmp     lr, #0

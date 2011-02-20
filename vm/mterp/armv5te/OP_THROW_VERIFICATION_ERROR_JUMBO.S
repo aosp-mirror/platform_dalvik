@@ -7,7 +7,7 @@
     /* exop BBBB, Class@AAAAAAAA */
     FETCH(r1, 1)                        @ r1<- aaaa (lo)
     FETCH(r2, 2)                        @ r2<- AAAA (hi)
-    ldr     r0, [rGLUE, #offGlue_method]    @ r0<- glue->method
+    ldr     r0, [rSELF, #offThread_method]    @ r0<- self->method
     orr     r2, r1, r2, lsl #16         @ r2<- AAAAaaaa
     EXPORT_PC()                         @ export the PC
     FETCH(r1, 3)                        @ r1<- BBBB

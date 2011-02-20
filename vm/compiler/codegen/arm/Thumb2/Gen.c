@@ -246,9 +246,8 @@ static void genMonitorEnter(CompilationUnit *cUnit, MIR *mir)
     loadValueDirectFixed(cUnit, rlSrc, r1);  // Get obj
     dvmCompilerLockAllTemps(cUnit);  // Prepare for explicit register usage
     dvmCompilerFreeTemp(cUnit, r4PC);  // Free up r4 for general use
-    loadWordDisp(cUnit, rGLUE, offsetof(InterpState, self), r0); // Get self
     genNullCheck(cUnit, rlSrc.sRegLow, r1, mir->offset, NULL);
-    loadWordDisp(cUnit, r0, offsetof(Thread, threadId), r3); // Get threadId
+    loadWordDisp(cUnit, rSELF, offsetof(Thread, threadId), r3); // Get threadId
     newLIR3(cUnit, kThumb2Ldrex, r2, r1,
             offsetof(Object, lock) >> 2); // Get object->lock
     opRegImm(cUnit, kOpLsl, r3, LW_LOCK_OWNER_SHIFT); // Align owner
@@ -276,6 +275,7 @@ static void genMonitorEnter(CompilationUnit *cUnit, MIR *mir)
             sizeof(StackSaveArea) -
             offsetof(StackSaveArea, xtra.currentPc));
     /* Call template, and don't return */
+    genRegCopy(cUnit, r0, rSELF);
     genDispatchToHandler(cUnit, TEMPLATE_MONITOR_ENTER);
     // Resume here
     target = newLIR0(cUnit, kArmPseudoTargetLabel);
@@ -301,10 +301,9 @@ static void genMonitorExit(CompilationUnit *cUnit, MIR *mir)
     loadValueDirectFixed(cUnit, rlSrc, r1);  // Get obj
     dvmCompilerLockAllTemps(cUnit);  // Prepare for explicit register usage
     dvmCompilerFreeTemp(cUnit, r4PC);  // Free up r4 for general use
-    loadWordDisp(cUnit, rGLUE, offsetof(InterpState, self), r0); // Get self
     genNullCheck(cUnit, rlSrc.sRegLow, r1, mir->offset, NULL);
     loadWordDisp(cUnit, r1, offsetof(Object, lock), r2); // Get object->lock
-    loadWordDisp(cUnit, r0, offsetof(Thread, threadId), r3); // Get threadId
+    loadWordDisp(cUnit, rSELF, offsetof(Thread, threadId), r3); // Get threadId
     // Is lock unheld on lock or held by us (==threadId) on unlock?
     opRegRegImm(cUnit, kOpAnd, r7, r2,
                 (LW_HASH_STATE_MASK << LW_HASH_STATE_SHIFT));
@@ -325,6 +324,7 @@ static void genMonitorExit(CompilationUnit *cUnit, MIR *mir)
     loadConstant(cUnit, r3, (int) (cUnit->method->insns + mir->offset));
 
     LOAD_FUNC_ADDR(cUnit, r7, (int)dvmUnlockObject);
+    genRegCopy(cUnit, r0, rSELF);
     // Export PC (part 2)
     newLIR3(cUnit, kThumb2StrRRI8Predec, r3, rFP,
             sizeof(StackSaveArea) -

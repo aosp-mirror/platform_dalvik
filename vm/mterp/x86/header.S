@@ -65,7 +65,7 @@ Notes:
 
 */
 
-#define rGLUE    (%ebp)
+#define rSELF    (%ebp)
 #define rPC      %esi
 #define rFP      %edi
 #define rINST    %ebx
@@ -78,7 +78,7 @@ Notes:
 #define IN_ARG0        ( 12)
 #define CALLER_RP      (  8)
 #define PREV_FP        (  4)
-#define rGLUE_SPILL    (  0) /* <- dvmMterpStdRun ebp */
+#define rSELF_SPILL    (  0) /* <- dvmMterpStdRun ebp */
 /* Spill offsets relative to %ebp */
 #define EDI_SPILL      ( -4)
 #define ESI_SPILL      ( -8)
@@ -111,25 +111,25 @@ Notes:
 #define UNSPILL_TMP3(reg) movl TMP_SPILL3(%ebp),reg
 
 #if defined(WITH_JIT)
-.macro GET_JIT_PROF_TABLE _glue _reg
-    movl    offGlue_pJitProfTable(\_glue),\_reg
+.macro GET_JIT_PROF_TABLE _self _reg
+    movl    offThread_pJitProfTable(\_self),\_reg
 .endm
-.macro GET_JIT_THRESHOLD _glue _reg
-    movl    offGlue_jitThreshold(\_glue),\_reg
+.macro GET_JIT_THRESHOLD _self _reg
+    movl    offThread_jitThreshold(\_self),\_reg
 .endm
 #endif
 
-/* save/restore the PC and/or FP from the glue struct */
-.macro SAVE_PC_FP_TO_GLUE _reg
-    movl     rGLUE,\_reg
-    movl     rPC,offGlue_pc(\_reg)
-    movl     rFP,offGlue_fp(\_reg)
+/* save/restore the PC and/or FP from the self struct */
+.macro SAVE_PC_FP_TO_SELF _reg
+    movl     rSELF,\_reg
+    movl     rPC,offThread_pc(\_reg)
+    movl     rFP,offThread_fp(\_reg)
 .endm
 
-.macro LOAD_PC_FP_FROM_GLUE
-    movl    rGLUE,rFP
-    movl    offGlue_pc(rFP),rPC
-    movl    offGlue_fp(rFP),rFP
+.macro LOAD_PC_FP_FROM_SELF
+    movl    rSELF,rFP
+    movl    offThread_pc(rFP),rPC
+    movl    offThread_fp(rFP),rFP
 .endm
 
 /* The interpreter assumes a properly aligned stack on entry, and

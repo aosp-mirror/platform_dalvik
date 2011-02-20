@@ -418,11 +418,11 @@ static inline bool checkForNullExportPC(Object* obj, u4* fp, const u2* pc)
     checkDebugAndProf(pc, fp, self, curMethod, &debugIsMethodEntry)
 
 #if defined(WITH_JIT)
-#define CHECK_JIT_BOOL() (dvmCheckJit(pc, self, interpState, callsiteClass,\
+#define CHECK_JIT_BOOL() (dvmCheckJit(pc, self, callsiteClass,\
                           methodToCall))
-#define CHECK_JIT_VOID() (dvmCheckJit(pc, self, interpState, callsiteClass,\
+#define CHECK_JIT_VOID() (dvmCheckJit(pc, self, callsiteClass,\
                           methodToCall))
-#define END_JIT_TSELECT() (dvmJitEndTraceSelect(interpState))
+#define END_JIT_TSELECT() (dvmJitEndTraceSelect(self))
 #else
 #define CHECK_JIT_BOOL() (false)
 #define CHECK_JIT_VOID()
@@ -523,10 +523,10 @@ static inline bool checkForNullExportPC(Object* obj, u4* fp, const u2* pc)
         }                                                                   \
         if (NEED_INTERP_SWITCH(INTERP_TYPE)) {                              \
             ADJUST_PC(_pcadj);                                              \
-            interpState->entryPoint = _entryPoint;                          \
+            self->entryPoint = _entryPoint;                          \
             LOGVV("threadid=%d: switch to %s ep=%d adj=%d\n",               \
                 self->threadId,                                             \
-                (interpState->nextMode == INTERP_STD) ? "STD" : "DBG",      \
+                (self->nextMode == INTERP_STD) ? "STD" : "DBG",      \
                 (_entryPoint), (_pcadj));                                   \
             GOTO_bail_switch();                                             \
         }                                                                   \
@@ -1537,17 +1537,17 @@ static void checkDebugAndProf(const u2* pc, const u4* fp, Thread* self,
  *
  * This was written with an ARM implementation in mind.
  */
-bool INTERP_FUNC_NAME(Thread* self, InterpState* interpState)
+bool INTERP_FUNC_NAME(Thread* self)
 {
 #if defined(EASY_GDB)
     StackSaveArea* debugSaveArea = SAVEAREA_FROM_FP(self->curFrame);
 #endif
 #if INTERP_TYPE == INTERP_DBG
     bool debugIsMethodEntry = false;
-    debugIsMethodEntry = interpState->debugIsMethodEntry;
+    debugIsMethodEntry = self->debugIsMethodEntry;
 #endif
 #if defined(WITH_TRACKREF_CHECKS)
-    int debugTrackedRefStart = interpState->debugTrackedRefStart;
+    int debugTrackedRefStart = self->debugTrackedRefStart;
 #endif
     DvmDex* methodClassDex;     // curMethod->clazz->pDvmDex
     JValue retval;
@@ -1574,16 +1574,16 @@ bool INTERP_FUNC_NAME(Thread* self, InterpState* interpState)
 #if defined(WITH_JIT)
 #if 0
     LOGD("*DebugInterp - entrypoint is %d, tgt is 0x%x, %s\n",
-         interpState->entryPoint,
-         interpState->pc,
-         interpState->method->name);
+         self->entryPoint,
+         self->interpSave.pc,
+         self->interpSave.method->name);
 #endif
 #if INTERP_TYPE == INTERP_DBG
     const ClassObject* callsiteClass = NULL;
 
 #if defined(WITH_SELF_VERIFICATION)
-    if (interpState->jitState != kJitSelfVerification) {
-        interpState->self->shadowSpace->jitExitState = kSVSIdle;
+    if (self->jitState != kJitSelfVerification) {
+        self->shadowSpace->jitExitState = kSVSIdle;
     }
 #endif
 
@@ -1596,11 +1596,11 @@ bool INTERP_FUNC_NAME(Thread* self, InterpState* interpState)
           * dvmJitCheckTraceRequest will change the jitState to kJitDone but
           * but stay in the dbg interpreter.
           */
-         (interpState->entryPoint == kInterpEntryInstr) &&
-         (interpState->jitState == kJitTSelectRequest ||
-          interpState->jitState == kJitTSelectRequestHot) &&
-         dvmJitCheckTraceRequest(self, interpState)) {
-        interpState->nextMode = INTERP_STD;
+         (self->entryPoint == kInterpEntryInstr) &&
+         (self->jitState == kJitTSelectRequest ||
+          self->jitState == kJitTSelectRequestHot) &&
+         dvmJitCheckTraceRequest(self)) {
+        self->nextMode = INTERP_STD;
         //LOGD("Invalid trace request, exiting\n");
         return true;
     }
@@ -1608,17 +1608,17 @@ bool INTERP_FUNC_NAME(Thread* self, InterpState* interpState)
 #endif /* WITH_JIT */
 
     /* copy state in */
-    curMethod = interpState->method;
-    pc = interpState->pc;
-    fp = interpState->fp;
-    retval = interpState->retval;   /* only need for kInterpEntryReturn? */
+    curMethod = self->interpSave.method;
+    pc = self->interpSave.pc;
+    fp = self->interpSave.fp;
+    retval = self->retval;   /* only need for kInterpEntryReturn? */
 
     methodClassDex = curMethod->clazz->pDvmDex;
 
     LOGVV("threadid=%d: entry(%s) %s.%s pc=0x%x fp=%p ep=%d\n",
-        self->threadId, (interpState->nextMode == INTERP_STD) ? "STD" : "DBG",
+        self->threadId, (self->nextMode == INTERP_STD) ? "STD" : "DBG",
         curMethod->clazz->descriptor, curMethod->name, pc - curMethod->insns,
-        fp, interpState->entryPoint);
+        fp, self->entryPoint);
 
     /*
      * DEBUG: scramble this to ensure we're not relying on it.
@@ -1629,11 +1629,11 @@ bool INTERP_FUNC_NAME(Thread* self, InterpState* interpState)
     if (debugIsMethodEntry) {
         ILOGD("|-- Now interpreting %s.%s", curMethod->clazz->descriptor,
                 curMethod->name);
-        DUMP_REGS(curMethod, interpState->fp, false);
+        DUMP_REGS(curMethod, self->interpSave.fp, false);
     }
 #endif
 
-    switch (interpState->entryPoint) {
+    switch (self->entryPoint) {
     case kInterpEntryInstr:
         /* just fall through to instruction loop or threaded kickstart */
         break;
@@ -5794,7 +5794,7 @@ GOTO_TARGET_END
 bail:
     ILOGD("|-- Leaving interpreter loop");      // note "curMethod" may be NULL
 
-    interpState->retval = retval;
+    self->retval = retval;
     return false;
 
 bail_switch:
@@ -5806,18 +5806,18 @@ bail_switch:
      * TODO: figure out if preserving this makes any sense.
      */
 #if INTERP_TYPE == INTERP_DBG
-    interpState->debugIsMethodEntry = debugIsMethodEntry;
+    self->debugIsMethodEntry = debugIsMethodEntry;
 #else
-    interpState->debugIsMethodEntry = false;
+    self->debugIsMethodEntry = false;
 #endif
 
     /* export state changes */
-    interpState->method = curMethod;
-    interpState->pc = pc;
-    interpState->fp = fp;
+    self->interpSave.method = curMethod;
+    self->interpSave.pc = pc;
+    self->interpSave.fp = fp;
     /* debugTrackedRefStart doesn't change */
-    interpState->retval = retval;   /* need for _entryPoint=ret */
-    interpState->nextMode =
+    self->retval = retval;   /* need for _entryPoint=ret */
+    self->nextMode =
         (INTERP_TYPE == INTERP_STD) ? INTERP_DBG : INTERP_STD;
     LOGVV(" meth='%s.%s' pc=0x%x fp=%p\n",
         curMethod->clazz->descriptor, curMethod->name,

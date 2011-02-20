@@ -61,56 +61,51 @@ bool dvmCheckAsmConstants(void)
 
 
 /*
- * "Standard" mterp entry point.  This sets up a "glue" structure and then
- * calls into the assembly interpreter implementation.
- *
+ * "Standard" mterp entry point.
  * (There is presently no "debug" entry point.)
  */
-bool dvmMterpStd(Thread* self, InterpState* glue)
+bool dvmMterpStd(Thread* self)
 {
     int changeInterp;
 
     /* configure mterp items */
-    glue->self = self;
-    glue->methodClassDex = glue->method->clazz->pDvmDex;
+    self->interpSave.methodClassDex = self->interpSave.method->clazz->pDvmDex;
 
-    glue->interpStackEnd = self->interpStackEnd;
-    glue->pSelfSuspendCount = &self->suspendCount;
-    glue->cardTable = gDvm.biasedCardTableBase;
 #if defined(WITH_JIT)
-    glue->pJitProfTable = gDvmJit.pProfTable;
-    glue->ppJitProfTable = &gDvmJit.pProfTable;
-    glue->jitThreshold = gDvmJit.threshold;
-    glue->jitCacheStart = gDvmJit.codeCache;
-    glue->jitCacheEnd = (char*)gDvmJit.codeCache + gDvmJit.codeCacheSize;
-    glue->pProfileCountdown = &gDvmJit.profileCountdown;
+    /*
+     * FIXME: temporary workaround.  When we have the ability to
+     * walk through the thread list to initialize mterp & JIT state,
+     * elminate this line.
+    */
+    self->jitThreshold = gDvmJit.threshold;
 #endif
-    glue->pInterpBreak = &gDvm.interpBreak;
 
     /* Handle method entry bookkeeping */
-    if (glue->debugIsMethodEntry) {
-        glue->debugIsMethodEntry = false;
-        TRACE_METHOD_ENTER(self, glue->method);
+    if (self->debugIsMethodEntry) {
+        self->debugIsMethodEntry = false;
+        TRACE_METHOD_ENTER(self, self->interpSave.method);
     }
 
     IF_LOGVV() {
-        char* desc = dexProtoCopyMethodDescriptor(&glue->method->prototype);
+        char* desc = dexProtoCopyMethodDescriptor(
+                         &self->interpSave.method->prototype);
         LOGVV("mterp threadid=%d entry %d: %s.%s %s\n",
             dvmThreadSelf()->threadId,
-            glue->entryPoint,
-            glue->method->clazz->descriptor,
-            glue->method->name,
+            self->entryPoint,
+            self->method->clazz->descriptor,
+            self->method->name,
             desc);
         free(desc);
     }
-    //LOGI("glue is %p, pc=%p, fp=%p\n", glue, glue->pc, glue->fp);
-    //LOGI("first instruction is 0x%04x\n", glue->pc[0]);
+    //LOGI("self is %p, pc=%p, fp=%p\n", self, self->interpSave.pc,
+    //      self->interpSave.fp);
+    //LOGI("first instruction is 0x%04x\n", self->interpSave.pc[0]);
 
-    changeInterp = dvmMterpStdRun(glue);
+    changeInterp = dvmMterpStdRun(self);
 
 #if defined(WITH_JIT)
-    if (glue->jitState != kJitSingleStep) {
-        glue->self->inJitCodeCache = NULL;
+    if (self->jitState != kJitSingleStep) {
+        self->inJitCodeCache = NULL;
     }
 #endif
 
@@ -123,7 +118,7 @@ bool dvmMterpStd(Thread* self, InterpState* glue)
     } else {
         /* we're "standard", so switch to "debug" */
         LOGVV("  mterp returned, changeInterp=%d\n", changeInterp);
-        glue->nextMode = INTERP_DBG;
+        self->nextMode = INTERP_DBG;
         return true;
     }
 }

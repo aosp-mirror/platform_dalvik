@@ -8,13 +8,13 @@
      */
     /* op vB, {vD, vE, vF, vG, vA}, class@CCCC */
     /* op vAA, {vCCCC..v(CCCC+AA-1)}, meth@BBBB */
-    movl      rGLUE,rINST
+    movl      rSELF,rINST
     movzwl    2(rPC),%eax               # eax<- BBBB
-    movl      offGlue_methodClassDex(rINST),%ecx # ecx<- pDvmDex
+    movl      offThread_methodClassDex(rINST),%ecx # ecx<- pDvmDex
     EXPORT_PC
     movl      offDvmDex_pResMethods(%ecx),%ecx # ecx<- pDvmDex->pResMethods
     movl      (%ecx,%eax,4),%ecx        # ecx<- resolved baseMethod
-    movl      offGlue_method(rINST),%eax # eax<- method
+    movl      offThread_method(rINST),%eax # eax<- method
     movzwl    4(rPC),rINST              # rINST<- GFED or CCCC
     .if       (!$isrange)
     andl      $$0xf,rINST               # rINST<- D (or stays CCCC)

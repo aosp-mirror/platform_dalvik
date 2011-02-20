@@ -9,9 +9,9 @@
      * check for it here.
      */
     /* new-array/jumbo vBBBB, vCCCC, class@AAAAAAAA */
-    movl    rGLUE,%ecx
+    movl    rSELF,%ecx
     EXPORT_PC
-    movl    offGlue_methodClassDex(%ecx),%ecx # ecx<- pDvmDex
+    movl    offThread_methodClassDex(%ecx),%ecx # ecx<- pDvmDex
     movl    2(rPC),%eax                       # eax<- AAAAAAAA
     movl    offDvmDex_pResClasses(%ecx),%ecx  # ecx<- pDvmDex->pResClasses
     movl    (%ecx,%eax,4),%ecx                # ecx<- resolved class
@@ -30,9 +30,9 @@
      *  eax holds array length (vCCCC)
      */
 .L${opcode}_resolve:
-    movl    rGLUE,%ecx
+    movl    rSELF,%ecx
     SPILL_TMP1(%eax)                   # save array length
-    movl    offGlue_method(%ecx),%ecx  # ecx<- glue->method
+    movl    offThread_method(%ecx),%ecx  # ecx<- self->method
     movl    2(rPC),%eax                # eax<- AAAAAAAA
     movl    offMethod_clazz(%ecx),%ecx # ecx<- method->clazz
     movl    %eax,OUT_ARG1(%esp)

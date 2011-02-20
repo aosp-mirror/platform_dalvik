@@ -11,9 +11,9 @@
             iput-char/jumbo, iput-short/jumbo
      */
     /* exop vBBBB, vCCCC, field@AAAAAAAA */
-    movl    rGLUE,%ecx
+    movl    rSELF,%ecx
     movl    2(rPC),%edx                         # edx<- AAAAAAAA
-    movl    offGlue_methodClassDex(%ecx),%eax   # eax<- DvmDex
+    movl    offThread_methodClassDex(%ecx),%eax   # eax<- DvmDex
     movzwl  8(rPC),%ecx                         # ecx<- CCCC
     movl    offDvmDex_pResFields(%eax),%eax     # eax<- pDvmDex->pResFields
     GET_VREG_R %ecx %ecx                        # ecx<- fp[CCCC], the object ptr
@@ -21,14 +21,14 @@
     testl   %eax,%eax                           # is resolved entry null?
     jne     .L${opcode}_finish                  # no, already resolved
     movl    %edx,OUT_ARG1(%esp)
-    movl    rGLUE,%edx
+    movl    rSELF,%edx
     jmp     .L${opcode}_resolve
 %break
 
 
 .L${opcode}_resolve:
     EXPORT_PC
-    movl    offGlue_method(%edx),%edx           # edx<- current method
+    movl    offThread_method(%edx),%edx           # edx<- current method
     movl    offMethod_clazz(%edx),%edx          # edx<- method->clazz
     SPILL_TMP1(%ecx)                            # save obj pointer across call
     movl    %edx,OUT_ARG0(%esp)                 # pass in method->clazz

@@ -16,9 +16,9 @@
     .endif
     EXPORT_PC()                         @ must export for invoke
     GET_VREG(r0, r2)                    @ r0<- first arg ("this")
-    ldr     r3, [rGLUE, #offGlue_methodClassDex]    @ r3<- methodClassDex
+    ldr     r3, [rSELF, #offThread_methodClassDex]    @ r3<- methodClassDex
     cmp     r0, #0                      @ null obj?
-    ldr     r2, [rGLUE, #offGlue_method]  @ r2<- method
+    ldr     r2, [rSELF, #offThread_method]  @ r2<- method
     beq     common_errNullObject        @ yes, fail
     ldr     r0, [r0, #offObject_clazz]  @ r0<- thisPtr->clazz
     bl      dvmFindInterfaceMethodInCache @ r0<- call(class, ref, method, dex)

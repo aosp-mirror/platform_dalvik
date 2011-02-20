@@ -18,7 +18,7 @@
     FETCH(r3, 4)                        @ r3<- vCCCC
     FETCH(r9, 3)                        @ r9<- vBBBB
     GET_VREG(r0, r3)                    @ r0<- vCCCC (object)
-    ldr     r2, [rGLUE, #offGlue_methodClassDex]    @ r2<- pDvmDex
+    ldr     r2, [rSELF, #offThread_methodClassDex]    @ r2<- pDvmDex
     cmp     r0, #0                      @ is object null?
     beq     .L${opcode}_store           @ null obj, not an instance, store r0
     FETCH(r1, 1)                        @ r1<- aaaa (lo)
@@ -84,7 +84,7 @@
 
 .L${opcode}_resolve:
     EXPORT_PC()                         @ resolve() could throw
-    ldr     r0, [rGLUE, #offGlue_method]    @ r0<- glue->method
+    ldr     r0, [rSELF, #offThread_method]    @ r0<- self->method
     mov     r1, r3                      @ r1<- AAAAAAAA
     mov     r2, #1                      @ r2<- true
     ldr     r0, [r0, #offMethod_clazz]  @ r0<- method->clazz

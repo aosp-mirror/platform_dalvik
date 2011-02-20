@@ -425,11 +425,11 @@ static inline bool checkForNullExportPC(Object* obj, u4* fp, const u2* pc)
  */
 
 #define GOTO_TARGET_DECL(_target, ...)                                      \
-    void dvmMterp_##_target(MterpGlue* glue, ## __VA_ARGS__);
+    void dvmMterp_##_target(Thread* self, ## __VA_ARGS__);
 
 /* (void)xxx to quiet unused variable compiler warnings. */
 #define GOTO_TARGET(_target, ...)                                           \
-    void dvmMterp_##_target(MterpGlue* glue, ## __VA_ARGS__) {              \
+    void dvmMterp_##_target(Thread* self, ## __VA_ARGS__) {                 \
         u2 ref, vsrc1, vsrc2, vdst;                                         \
         u2 inst = FETCH(0);                                                 \
         const Method* methodToCall;                                         \
@@ -440,16 +440,15 @@ static inline bool checkForNullExportPC(Object* obj, u4* fp, const u2* pc)
 #define GOTO_TARGET_END }
 
 /*
- * Redefine what used to be local variable accesses into MterpGlue struct
+ * Redefine what used to be local variable accesses into Thread struct
  * references.  (These are undefined down in "footer.c".)
  */
-#define retval                  glue->retval
-#define pc                      glue->pc
-#define fp                      glue->fp
-#define curMethod               glue->method
-#define methodClassDex          glue->methodClassDex
-#define self                    glue->self
-#define debugTrackedRefStart    glue->debugTrackedRefStart
+#define retval                  self->retval
+#define pc                      self->interpSave.pc
+#define fp                      self->interpSave.fp
+#define curMethod               self->interpSave.method
+#define methodClassDex          self->interpSave.methodClassDex
+#define debugTrackedRefStart    self->interpSave.debugTrackedRefStart
 
 /* ugh */
 #define STUB_HACK(x) x
@@ -457,12 +456,12 @@ static inline bool checkForNullExportPC(Object* obj, u4* fp, const u2* pc)
 
 /*
  * Opcode handler framing macros.  Here, each opcode is a separate function
- * that takes a "glue" argument and returns void.  We can't declare
+ * that takes a "self" argument and returns void.  We can't declare
  * these "static" because they may be called from an assembly stub.
  * (void)xxx to quiet unused variable compiler warnings.
  */
 #define HANDLE_OPCODE(_op)                                                  \
-    void dvmMterp_##_op(MterpGlue* glue) {                                  \
+    void dvmMterp_##_op(Thread* self) {                                     \
         u2 ref, vsrc1, vsrc2, vdst;                                         \
         u2 inst = FETCH(0);                                                 \
         (void)ref; (void)vsrc1; (void)vsrc2; (void)vdst; (void)inst;
@@ -489,25 +488,25 @@ static inline bool checkForNullExportPC(Object* obj, u4* fp, const u2* pc)
 
 #define GOTO_exceptionThrown()                                              \
     do {                                                                    \
-        dvmMterp_exceptionThrown(glue);                                     \
+        dvmMterp_exceptionThrown(self);                                     \
         return;                                                             \
     } while(false)
 
 #define GOTO_returnFromMethod()                                             \
     do {                                                                    \
-        dvmMterp_returnFromMethod(glue);                                    \
+        dvmMterp_returnFromMethod(self);                                    \
         return;                                                             \
     } while(false)
 
 #define GOTO_invoke(_target, _methodCallRange, _jumboFormat)                \
     do {                                                                    \
-        dvmMterp_##_target(glue, _methodCallRange, _jumboFormat);           \
+        dvmMterp_##_target(self, _methodCallRange, _jumboFormat);           \
         return;                                                             \
     } while(false)
 
 #define GOTO_invokeMethod(_methodCallRange, _methodToCall, _vsrc1, _vdst)   \
     do {                                                                    \
-        dvmMterp_invokeMethod(glue, _methodCallRange, _methodToCall,        \
+        dvmMterp_invokeMethod(self, _methodCallRange, _methodToCall,        \
             _vsrc1, _vdst);                                                 \
         return;                                                             \
     } while(false)
@@ -517,9 +516,9 @@ static inline bool checkForNullExportPC(Object* obj, u4* fp, const u2* pc)
  * if we need to switch to the other interpreter upon our return.
  */
 #define GOTO_bail()                                                         \
-    dvmMterpStdBail(glue, false);
+    dvmMterpStdBail(self, false);
 #define GOTO_bail_switch()                                                  \
-    dvmMterpStdBail(glue, true);
+    dvmMterpStdBail(self, true);
 
 /*
  * Periodically check for thread suspension.
@@ -534,7 +533,7 @@ static inline bool checkForNullExportPC(Object* obj, u4* fp, const u2* pc)
         }                                                                   \
         if (NEED_INTERP_SWITCH(INTERP_TYPE)) {                              \
             ADJUST_PC(_pcadj);                                              \
-            glue->entryPoint = _entryPoint;                                 \
+            self->entryPoint = _entryPoint;                                 \
             LOGVV("threadid=%d: switch to STD ep=%d adj=%d\n",              \
                 self->threadId, (_entryPoint), (_pcadj));                   \
             GOTO_bail_switch();                                             \
@@ -1325,7 +1324,7 @@ void dvmMterpDumpArmRegs(uint32_t r0, uint32_t r1, uint32_t r2, uint32_t r3)
 {
     register uint32_t rPC       asm("r4");
     register uint32_t rFP       asm("r5");
-    register uint32_t rGLUE     asm("r6");
+    register uint32_t rSELF     asm("r6");
     register uint32_t rINST     asm("r7");
     register uint32_t rIBASE    asm("r8");
     register uint32_t r9        asm("r9");
@@ -1334,12 +1333,12 @@ void dvmMterpDumpArmRegs(uint32_t r0, uint32_t r1, uint32_t r2, uint32_t r3)
     //extern char dvmAsmInstructionStart[];
 
     printf("REGS: r0=%08x r1=%08x r2=%08x r3=%08x\n", r0, r1, r2, r3);
-    printf("    : rPC=%08x rFP=%08x rGLUE=%08x rINST=%08x\n",
-        rPC, rFP, rGLUE, rINST);
+    printf("    : rPC=%08x rFP=%08x rSELF=%08x rINST=%08x\n",
+        rPC, rFP, rSELF, rINST);
     printf("    : rIBASE=%08x r9=%08x r10=%08x\n", rIBASE, r9, r10);
 
-    //MterpGlue* glue = (MterpGlue*) rGLUE;
-    //const Method* method = glue->method;
+    //Thread* self = (Thread*) rSELF;
+    //const Method* method = self->method;
     printf("    + self is %p\n", dvmThreadSelf());
     //printf("    + currently in %s.%s %s\n",
     //    method->clazz->descriptor, method->name, method->shorty);

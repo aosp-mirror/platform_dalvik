@@ -8,9 +8,9 @@
      * Jumbo object field put.
      */
     /* iput-object/jumbo vBBBB, vCCCC, field@AAAAAAAA */
-    movl    rGLUE,%ecx
+    movl    rSELF,%ecx
     movl    2(rPC),%edx                         # edx<- AAAAAAAA
-    movl    offGlue_methodClassDex(%ecx),%eax   # eax<- DvmDex
+    movl    offThread_methodClassDex(%ecx),%eax   # eax<- DvmDex
     movzwl  8(rPC),%ecx                         # ecx<- CCCC
     movl    offDvmDex_pResFields(%eax),%eax     # eax<- pDvmDex->pResFields
     GET_VREG_R %ecx %ecx                        # ecx<- fp[CCCC], the object ptr
@@ -18,14 +18,14 @@
     testl   %eax,%eax                           # is resolved entry null?
     jne     .L${opcode}_finish                  # no, already resolved
     movl    %edx,OUT_ARG1(%esp)
-    movl    rGLUE,%edx
+    movl    rSELF,%edx
     jmp     .L${opcode}_resolve
 %break
 
 
 .L${opcode}_resolve:
     EXPORT_PC
-    movl    offGlue_method(%edx),%edx           # edx<- current method
+    movl    offThread_method(%edx),%edx           # edx<- current method
     movl    offMethod_clazz(%edx),%edx          # edx<- method->clazz
     SPILL_TMP1(%ecx)                            # save obj pointer across call
     movl    %edx,OUT_ARG0(%esp)                 # pass in method->clazz
@@ -48,9 +48,9 @@
     testl   %ecx,%ecx                           # object null?
     je      common_errNullObject                # object was null
     movl    rINST,(%ecx,%eax)      # obj.field <- v[BBBB](8/16/32 bits)
-    movl    rGLUE,%eax
+    movl    rSELF,%eax
     testl   rINST,rINST                         # stored a NULL?
-    movl    offGlue_cardTable(%eax),%eax        # get card table base
+    movl    offThread_cardTable(%eax),%eax        # get card table base
     FETCH_INST_OPCODE 5 %edx
     je      1f                                  # skip card mark if null store
     shrl    $$GC_CARD_SHIFT,%ecx                # object head to card number

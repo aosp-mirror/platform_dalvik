@@ -53,11 +53,11 @@ dvmJitToInterpPunt:
  */
 dvmJitToInterpSingleStep:
     pop    %eax
-    movl   rGLUE, %ecx
+    movl   rSELF, %ecx
     movl   OUT_ARG0(%esp), %edx
-    movl   %eax,offGlue_jitResumeNPC(%ecx)
-    movl   %edx,offGlue_jitResumeDPC(%ecx)
-    movl   $$kInterpEntryInstr,offGlue_entryPoint(%ecx)
+    movl   %eax,offThread_jitResumeNPC(%ecx)
+    movl   %edx,offThread_jitResumeDPC(%ecx)
+    movl   $$kInterpEntryInstr,offThread_entryPoint(%ecx)
     movl   $$1,rINST     # changeInterp <= true
     jmp    common_gotoBail
 
@@ -73,8 +73,7 @@ dvmJitToInterpNoChainNoProfile:
 #endif
     movl   rPC,OUT_ARG0(%esp)
     call   dvmJitGetTraceAddr        # is there a translation?
-    movl   rGLUE,%ecx
-    movl   offGlue_self(%ecx), %ecx  # ecx <- glue->self
+    movl   rSELF,%ecx                # ecx <- self
     movl   %eax,offThread_inJitCodeCache(%ecx)  # set inJitCodeCache flag
     cmpl   $$0, %eax
     jz     1f
@@ -96,8 +95,7 @@ dvmJitToInterpTraceSelectNoChain:
 #endif
     movl   rPC,OUT_ARG0(%esp)
     call   dvmJitGetTraceAddr # is there a translation?
-    movl   rGLUE,%ecx
-    movl   offGlue_self(%ecx),%ecx
+    movl   rSELF,%ecx
     cmpl   $$0,%eax
     movl   %eax,offThread_inJitCodeCache(%ecx)  # set inJitCodeCache flag
     jz     1f
@@ -157,8 +155,8 @@ toInterpreter:
  *   ebx (a.k.a. rINST) -> PC adjustment in 16-bit words
  */
 common_backwardBranch:
-    movl    rGLUE,%ecx
-    call   common_periodicChecks  # rPC and ecx/rGLUE preserved
+    movl    rSELF,%ecx
+    call   common_periodicChecks  # rPC and ecx/rSELF preserved
 #if defined(WITH_JIT)
     GET_JIT_PROF_TABLE %ecx %edx
     ADVANCE_PC_INDEXED rINST
@@ -184,10 +182,10 @@ common_updateProfile:
  * is already a native translation in place (and, if so,
  * jump to it now.
  */
-    GET_JIT_THRESHOLD %ecx rINST
+    GET_JIT_THRESHOLD %ecx rINST  # leaves rSELF in %ecx
     EXPORT_PC
     movb   rINSTbl,(%edx,%eax)   # reset counter
-    movl   offGlue_self(%ecx),rINST
+    movl   %ecx,rINST            # preserve rSELF
     movl   rPC,OUT_ARG0(%esp)
     call   dvmJitGetTraceAddr  # already have one?
     movl   %eax,offThread_inJitCodeCache(rINST)   # set the inJitCodeCache flag
@@ -198,9 +196,10 @@ common_updateProfile:
     movl   $$kJitTSelectRequest,%eax
     # On entry, eax<- jitState, rPC valid
 common_selectTrace:
-    movl   rGLUE,%ecx
-    movl   %eax,offGlue_jitState(%ecx)
-    movl   $$kInterpEntryInstr,offGlue_entryPoint(%ecx)
+
+    movl   rSELF,%ecx
+    movl   %eax,offThread_jitState(%ecx)
+    movl   $$kInterpEntryInstr,offThread_entryPoint(%ecx)
     movl   $$1,rINST
     jmp    common_gotoBail
 #else
@@ -348,11 +347,11 @@ common_invokeMethodNoRange:
     shl         $$2, %edx               # %edx<- update offset
     SAVEAREA_FROM_FP %eax               # %eax<- &StackSaveArea
     subl        %edx, %eax              # %eax<- newFP; (old savearea - regsSize)
-    movl        rGLUE,%edx              # %edx<- pMterpGlue
+    movl        rSELF,%edx              # %edx<- pthread
     movl        %eax, LOCAL1_OFFSET(%ebp)       # LOCAL1_OFFSET(%ebp)<- &outs
     subl        $$sizeofStackSaveArea, %eax # %eax<- newSaveArea (stack save area using newFP)
-    movl        offGlue_interpStackEnd(%edx), %edx # %edx<- glue->interpStackEnd
-    movl        %edx, LOCAL2_OFFSET(%ebp)       # LOCAL2_OFFSET<- glue->interpStackEnd
+    movl        offThread_interpStackEnd(%edx), %edx # %edx<- self->interpStackEnd
+    movl        %edx, LOCAL2_OFFSET(%ebp)       # LOCAL2_OFFSET<- self->interpStackEnd
     shl         $$2, %ecx               # %ecx<- update offset for outsSize
     movl        %eax, %edx              # %edx<- newSaveArea
     sub         %ecx, %eax              # %eax<- bottom; (newSaveArea - outsSize)
@@ -375,19 +374,18 @@ common_invokeMethodNoRange:
     jne         .LinvokeNative          # handle native call
 
    /*
-    * Update "glue" values for the new method
+    * Update "self" values for the new method
     * %eax=methodToCall, LOCAL1_OFFSET(%ebp)=newFp
     */
 
     movl        offMethod_clazz(%eax), %edx # %edx<- method->clazz
-    movl        rGLUE,%ecx                  # %ecx<- pMterpGlue
+    movl        rSELF,%ecx                  # %ecx<- pthread
     movl        offClassObject_pDvmDex(%edx), %edx # %edx<- method->clazz->pDvmDex
-    movl        %eax, offGlue_method(%ecx) # glue->method<- methodToCall
-    movl        %edx, offGlue_methodClassDex(%ecx) # glue->methodClassDex<- method->clazz->pDvmDex
+    movl        %eax, offThread_method(%ecx) # self->method<- methodToCall
+    movl        %edx, offThread_methodClassDex(%ecx) # self->methodClassDex<- method->clazz->pDvmDex
     movl        offMethod_insns(%eax), rPC # rPC<- methodToCall->insns
-    movl        offGlue_self(%ecx), %eax # %eax<- glue->self
     movl        LOCAL1_OFFSET(%ebp), rFP # rFP<- newFP
-    movl        rFP, offThread_curFrame(%eax) # glue->self->curFrame<- newFP
+    movl        rFP, offThread_curFrame(%ecx) # self->curFrame<- newFP
     FETCH_INST
     GOTO_NEXT                           # jump to methodToCall->insns
 
@@ -397,29 +395,28 @@ common_invokeMethodNoRange:
     */
 
 .LinvokeNative:
-    movl        rGLUE,%ecx              # %ecx<- pMterpGlue
+    movl        rSELF,%ecx              # %ecx<- pthread
     movl        %eax, OUT_ARG1(%esp)    # push parameter methodToCall
-    movl        offGlue_self(%ecx), %ecx        # %ecx<- glue->self
     movl        offThread_jniLocal_topCookie(%ecx), %eax # %eax<- self->localRef->...
     movl        %eax, offStackSaveArea_localRefCookie(%edx) # newSaveArea->localRefCookie<- top
     movl        %edx, OUT_ARG4(%esp)    # save newSaveArea
     movl        LOCAL1_OFFSET(%ebp), %edx # %edx<- newFP
-    movl        %edx, offThread_curFrame(%ecx)  # glue->self->curFrame<- newFP
-    movl        %ecx, OUT_ARG3(%esp)    # save glue->self
-    movl        %ecx, OUT_ARG2(%esp)    # push parameter glue->self
-    movl        rGLUE,%ecx              # %ecx<- pMterpGlue
+    movl        %edx, offThread_curFrame(%ecx)  # self->self->curFrame<- newFP
+    movl        %ecx, OUT_ARG3(%esp)    # save self->self
+    movl        %ecx, OUT_ARG2(%esp)    # push parameter self->self
+    movl        rSELF,%ecx              # %ecx<- pthread
     movl        OUT_ARG1(%esp), %eax    # %eax<- methodToCall
-    lea         offGlue_retval(%ecx), %ecx # %ecx<- &retval
-    movl        %ecx, OUT_ARG0(%esp)    # push parameter pMterpGlue
+    lea         offThread_retval(%ecx), %ecx # %ecx<- &retval
+    movl        %ecx, OUT_ARG0(%esp)    # push parameter pthread
     push        %edx                    # push parameter newFP
 
     call        *offMethod_nativeFunc(%eax) # call methodToCall->nativeFunc
     lea         4(%esp), %esp
     movl        OUT_ARG4(%esp), %ecx    # %ecx<- newSaveArea
-    movl        OUT_ARG3(%esp), %eax    # %eax<- glue->self
+    movl        OUT_ARG3(%esp), %eax    # %eax<- self->self
     movl        offStackSaveArea_localRefCookie(%ecx), %edx # %edx<- old top
     cmp         $$0, offThread_exception(%eax) # check for exception
-    movl        rFP, offThread_curFrame(%eax) # glue->self->curFrame<- rFP
+    movl        rFP, offThread_curFrame(%eax) # self->self->curFrame<- rFP
     movl        %edx, offThread_jniLocal_topCookie(%eax) # new top <- old top
     jne         common_exceptionThrown  # handle exception
     FETCH_INST_OPCODE 3 %edx
@@ -428,8 +425,7 @@ common_invokeMethodNoRange:
 
 .LstackOverflow:    # eax=methodToCall
     movl        %eax, OUT_ARG1(%esp)    # push parameter methodToCall
-    movl        rGLUE,%eax              # %eax<- pMterpGlue
-    movl        offGlue_self(%eax), %eax # %eax<- glue->self
+    movl        rSELF,%eax              # %eax<- self
     movl        %eax, OUT_ARG0(%esp)    # push parameter self
     call        dvmHandleStackOverflow  # call: (Thread* self, Method* meth)
     jmp         common_exceptionThrown  # handle exception
@@ -440,8 +436,8 @@ common_invokeMethodNoRange:
  *
  * On entry:
  *   ebx  -> PC adjustment in 16-bit words (must be preserved)
- *   ecx  -> GLUE pointer
- *   reentry type, e.g. kInterpEntryInstr stored in rGLUE->entryPoint
+ *   ecx  -> SELF pointer
+ *   reentry type, e.g. kInterpEntryInstr stored in rSELF->entryPoint
  *
  * Note: A call will normally kill %eax and %ecx.  To
  *       streamline the normal case, this routine will preserve
@@ -452,12 +448,11 @@ common_invokeMethodNoRange:
  * TUNING: Improve scheduling here & do initial single test for all.
  */
 common_periodicChecks:
-    movl    offGlue_pSelfSuspendCount(%ecx),%eax    # eax <- &suspendCount
-    cmpl    $$0,(%eax)
+    cmpl    $$0,offThread_suspendCount(%ecx)     # non-zero suspendCount?
     jne     1f
 
 6:
-    movl   offGlue_pInterpBreak(%ecx),%eax    # eax <- &interpBreak
+    movl   offThread_pInterpBreak(%ecx),%eax    # eax <- &interpBreak
     cmpl   $$0,(%eax)              # something interesting happening?
     jne    3f                      # yes - switch interpreters
     ret
@@ -466,13 +461,13 @@ common_periodicChecks:
 1:
     /*  At this point, the return pointer to the caller of
      *  common_periodicChecks is on the top of stack.  We need to preserve
-     *  GLUE(ecx).
+     *  SELF(ecx).
      *  The outgoing profile is:
      *      bool dvmCheckSuspendPending(Thread* self)
      *  Because we reached here via a call, go ahead and build a new frame.
      */
     EXPORT_PC                         # need for precise GC
-    movl    offGlue_self(%ecx),%eax      # eax<- glue->self
+    movl    %ecx,%eax                 # eax<- self
     push    %ebp
     movl    %esp,%ebp
     subl    $$24,%esp
@@ -480,7 +475,7 @@ common_periodicChecks:
     call    dvmCheckSuspendPending
     addl    $$24,%esp
     pop     %ebp
-    movl    rGLUE,%ecx
+    movl    rSELF,%ecx
 
     /*
      * Need to check to see if debugger or profiler flags got set
@@ -500,7 +495,7 @@ common_periodicChecks:
      */
 3:
     leal    (rPC,%ebx,2),rPC       # adjust pc to show target
-    movl    rGLUE,%ecx             # bail expect GLUE already loaded
+    movl    rSELF,%ecx             # bail expect SELF already loaded
     movl    $$1,rINST              # set changeInterp to true
     jmp     common_gotoBail
 
@@ -509,9 +504,9 @@ common_periodicChecks:
  * Common code for handling a return instruction
  */
 common_returnFromMethod:
-    movl    rGLUE,%ecx
+    movl    rSELF,%ecx
     /* Set entry mode in case we bail */
-    movb    $$kInterpEntryReturn,offGlue_entryPoint(%ecx)
+    movb    $$kInterpEntryReturn,offThread_entryPoint(%ecx)
     xorl    rINST,rINST   # zero offset in case we switch interps
     call    common_periodicChecks   # Note: expects %ecx to be preserved
 
@@ -522,16 +517,15 @@ common_returnFromMethod:
     je      common_gotoBail    # break frame, bail out completely
 
     movl    offStackSaveArea_savedPc(%eax),rPC    # pc<- saveArea->savedPC
-    movl    offGlue_self(%ecx),%eax               # eax<- self
-    movl    rINST,offGlue_method(%ecx)  # glue->method = newSave->meethod
-    movl    rFP,offThread_curFrame(%eax)     # self->curFrame = fp
+    movl    rINST,offThread_method(%ecx)  # self->method = newSave->meethod
+    movl    rFP,offThread_curFrame(%ecx)     # self->curFrame = fp
     movl    offMethod_clazz(rINST),%eax      # eax<- method->clazz
     FETCH_INST_OPCODE 3 %edx
     movl    offClassObject_pDvmDex(%eax),%eax # eax<- method->clazz->pDvmDex
     ADVANCE_PC 3
-    movl    %eax,offGlue_methodClassDex(%ecx)
+    movl    %eax,offThread_methodClassDex(%ecx)
     /* not bailing - restore entry mode to default */
-    movb    $$kInterpEntryInstr,offGlue_entryPoint(%ecx)
+    movb    $$kInterpEntryInstr,offThread_entryPoint(%ecx)
     GOTO_NEXT_R %edx
 
 /*
@@ -540,24 +534,24 @@ common_returnFromMethod:
  *
  * on entry:
  *    rINST holds changeInterp
- *    ecx holds glue pointer
+ *    ecx holds self pointer
  *
- * expected profile: dvmMterpStdBail(MterpGlue *glue, bool changeInterp)
+ * expected profile: dvmMterpStdBail(Thread *self, bool changeInterp)
  */
 common_gotoBail:
-    movl   rPC,offGlue_pc(%ecx)     # export state to glue
-    movl   rFP,offGlue_fp(%ecx)
-    movl   %ecx,OUT_ARG0(%esp)      # glue in arg0
+    movl   rPC,offThread_pc(%ecx)     # export state to self
+    movl   rFP,offThread_fp(%ecx)
+    movl   %ecx,OUT_ARG0(%esp)      # self in arg0
     movl   rINST,OUT_ARG1(%esp)     # changeInterp in arg1
     call   dvmMterpStdBail          # bail out....
 
 
 /*
- * After returning from a "glued" function, pull out the updated values
+ * After returning from a "selfd" function, pull out the updated values
  * and start executing at the next instruction.
  */
  common_resumeAfterGlueCall:
-     LOAD_PC_FP_FROM_GLUE
+     LOAD_PC_FP_FROM_SELF
      FETCH_INST
      GOTO_NEXT
 
@@ -635,9 +629,9 @@ common_errArrayIndex:
  * This does not return.
  */
 common_exceptionThrown:
-    movl    rGLUE,%ecx
-    movl    rPC,offGlue_pc(%ecx)
-    movl    rFP,offGlue_fp(%ecx)
+    movl    rSELF,%ecx
+    movl    rPC,offThread_pc(%ecx)
+    movl    rFP,offThread_fp(%ecx)
     movl    %ecx,OUT_ARG0(%esp)
     call    dvmMterp_exceptionThrown
     jmp     common_resumeAfterGlueCall

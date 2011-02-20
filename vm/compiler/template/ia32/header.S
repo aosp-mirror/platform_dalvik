@@ -17,7 +17,7 @@
 #if defined(WITH_JIT)
 
 /* Subset of defines from mterp/x86/header.S */
-#define rGLUE (%ebp)
+#define rSELF (%ebp)
 #define rPC   %esi
 #define rFP   %edi
 #define rINST %ebx

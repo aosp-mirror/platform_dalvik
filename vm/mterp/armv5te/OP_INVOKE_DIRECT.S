@@ -13,7 +13,7 @@
      */
     /* op vB, {vD, vE, vF, vG, vA}, class@CCCC */
     /* op {vCCCC..v(CCCC+AA-1)}, meth@BBBB */
-    ldr     r3, [rGLUE, #offGlue_methodClassDex]    @ r3<- pDvmDex
+    ldr     r3, [rSELF, #offThread_methodClassDex]    @ r3<- pDvmDex
     FETCH(r1, 1)                        @ r1<- BBBB
     ldr     r3, [r3, #offDvmDex_pResMethods]    @ r3<- pDvmDex->pResMethods
     FETCH(r10, 2)                       @ r10<- GFED or CCCC
@@ -37,7 +37,7 @@
      *  r10 = "this" register
      */
 .L${opcode}_resolve:
-    ldr     r3, [rGLUE, #offGlue_method] @ r3<- glue->method
+    ldr     r3, [rSELF, #offThread_method] @ r3<- self->method
     ldr     r0, [r3, #offMethod_clazz]  @ r0<- method->clazz
     mov     r2, #METHOD_DIRECT          @ resolver method type
     bl      dvmResolveMethod            @ r0<- call(clazz, ref, flags)

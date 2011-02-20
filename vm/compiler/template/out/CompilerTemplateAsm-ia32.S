@@ -24,7 +24,7 @@
 #if defined(WITH_JIT)
 
 /* Subset of defines from mterp/x86/header.S */
-#define rGLUE (%ebp)
+#define rSELF (%ebp)
 #define rPC   %esi
 #define rFP   %edi
 #define rINST %ebx
@@ -73,12 +73,20 @@ dvmCompiler_TEMPLATE_INTERPRET:
      * On entry:
      *    (TOS)<- return pointer or pointer to dPC
      */
-     movl   rGLUE,%ecx
+
+/*
+ * FIXME - this won't work as-is.  The cache boundaries are not
+ * set up until later.  Perhaps rething this whole thing.  Do we
+ * really need an interpret teplate?
+ */
+
+
+     movl   rSELF,%ecx
      movl   $.LinterpPunt,%edx
      pop    %eax
-     cmpl   %eax,offGlue_jitCacheEnd(%ecx)
+     /*cmpl   %eax,offThread_jitCacheEnd(%ecx)*/
      ja     1f
-     cmpl   %eax,offGlue_jitCacheStart(%ecx)
+     /*cmpl   %eax,offThread_jitCacheStart(%ecx)*/
      jb     1f
      movl   %eax,rPC
 1:

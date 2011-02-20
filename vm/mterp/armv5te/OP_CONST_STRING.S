@@ -4,7 +4,7 @@
 %verify "String cannot be resolved"
     /* const/string vAA, String@BBBB */
     FETCH(r1, 1)                        @ r1<- BBBB
-    ldr     r2, [rGLUE, #offGlue_methodClassDex]    @ r2<- glue->methodClassDex
+    ldr     r2, [rSELF, #offThread_methodClassDex]  @ r2<- self->methodClassDex
     mov     r9, rINST, lsr #8           @ r9<- AA
     ldr     r2, [r2, #offDvmDex_pResStrings]   @ r2<- dvmDex->pResStrings
     ldr     r0, [r2, r1, lsl #2]        @ r0<- pResStrings[BBBB]
@@ -23,7 +23,7 @@
      */
 .L${opcode}_resolve:
     EXPORT_PC()
-    ldr     r0, [rGLUE, #offGlue_method] @ r0<- glue->method
+    ldr     r0, [rSELF, #offThread_method] @ r0<- self->method
     ldr     r0, [r0, #offMethod_clazz]  @ r0<- method->clazz
     bl      dvmResolveString            @ r0<- String reference
     cmp     r0, #0                      @ failed?

@@ -39,6 +39,7 @@ void dvmThrowVerificationError(const Method* method, int kind, int ref);
  */
 bool dvmBreakpointStartup(void);
 void dvmBreakpointShutdown(void);
+void dvmInitInterpreterState(Thread* self);
 
 /*
  * Breakpoint implementation.

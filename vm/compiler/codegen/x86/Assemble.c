@@ -99,7 +99,7 @@ void* dvmJitChain(void* tgtAddr, u4* branchAddr)
  *      next safe point.
  */
 const Method *dvmJitToPatchPredictedChain(const Method *method,
-                                          InterpState *interpState,
+                                          Thread *self,
                                           PredictedChainingCell *cell,
                                           const ClassObject *clazz)
 {

@@ -6,7 +6,7 @@
     /* monitor-enter vAA */
     mov     r2, rINST, lsr #8           @ r2<- AA
     GET_VREG(r1, r2)                    @ r1<- vAA (object)
-    ldr     r0, [rGLUE, #offGlue_self]  @ r0<- glue->self
+    mov     r0, rSELF                   @ r0<- self
     cmp     r1, #0                      @ null object?
     EXPORT_PC()                         @ need for precise GC
     beq     common_errNullObject        @ null object, throw an exception

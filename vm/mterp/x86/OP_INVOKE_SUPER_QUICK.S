@@ -8,9 +8,9 @@
      */
     /* op vB, {vD, vE, vF, vG, vA}, class@CCCC */
     /* op vAA, {vCCCC..v(CCCC+AA-1)}, meth@BBBB */
-    movl      rGLUE,%ecx
+    movl      rSELF,%ecx
     movzwl    4(rPC),%eax               # eax<- GFED or CCCC
-    movl      offGlue_method(%ecx),%ecx # ecx<- current method
+    movl      offThread_method(%ecx),%ecx # ecx<- current method
     .if       (!$isrange)
     andl      $$0xf,%eax                # eax<- D (or stays CCCC)
     .endif

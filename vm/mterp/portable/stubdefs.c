@@ -91,10 +91,10 @@
         }                                                                   \
         if (NEED_INTERP_SWITCH(INTERP_TYPE)) {                              \
             ADJUST_PC(_pcadj);                                              \
-            interpState->entryPoint = _entryPoint;                          \
+            self->entryPoint = _entryPoint;                          \
             LOGVV("threadid=%d: switch to %s ep=%d adj=%d\n",               \
                 self->threadId,                                             \
-                (interpState->nextMode == INTERP_STD) ? "STD" : "DBG",      \
+                (self->nextMode == INTERP_STD) ? "STD" : "DBG",      \
                 (_entryPoint), (_pcadj));                                   \
             GOTO_bail_switch();                                             \
         }                                                                   \

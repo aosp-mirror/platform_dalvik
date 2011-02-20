@@ -718,23 +718,22 @@ void dvmMethodTraceAdd(Thread* self, const Method* method, int action)
  * Register the METHOD_TRACE_ENTER action for the fast interpreter and
  * JIT'ed code.
  */
-void dvmFastMethodTraceEnter(const Method* method,
-                             const struct InterpState* interpState)
+void dvmFastMethodTraceEnter(const Method* method, Thread* self)
 {
     if (gDvm.interpBreak & kSubModeMethodTrace) {
-        dvmMethodTraceAdd(interpState->self, method, METHOD_TRACE_ENTER);
+        dvmMethodTraceAdd(self, method, METHOD_TRACE_ENTER);
     }
 }
 
 /*
  * Register the METHOD_TRACE_EXIT action for the fast interpreter and
  * JIT'ed code for Java methods. The about-to-return callee method can be
- * retrieved from interpState->method.
+ * retrieved from self->interpSave.method.
  */
-void dvmFastJavaMethodTraceExit(const struct InterpState* interpState)
+void dvmFastJavaMethodTraceExit(Thread* self)
 {
     if (gDvm.interpBreak & kSubModeMethodTrace) {
-        dvmMethodTraceAdd(interpState->self, interpState->method,
+        dvmMethodTraceAdd(self, self->interpSave.method,
                           METHOD_TRACE_EXIT);
     }
 }
@@ -744,11 +743,10 @@ void dvmFastJavaMethodTraceExit(const struct InterpState* interpState)
  * JIT'ed code for JNI methods. The about-to-return JNI callee method is passed
  * in explicitly.
  */
-void dvmFastNativeMethodTraceExit(const Method* method,
-                                  const struct InterpState* interpState)
+void dvmFastNativeMethodTraceExit(const Method* method, Thread* self)
 {
     if (gDvm.interpBreak & kSubModeMethodTrace) {
-        dvmMethodTraceAdd(interpState->self, method, METHOD_TRACE_EXIT);
+        dvmMethodTraceAdd(self, method, METHOD_TRACE_EXIT);
     }
 }
 

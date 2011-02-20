@@ -82,7 +82,7 @@ bool dvmInterpHandleFillArrayData(ArrayObject* arrayObject,// OP_FILL_ARRAY_DATA
 
 /* Originally declared in compiler/codegen/arm/Assemble.c */
 const Method *dvmJitToPatchPredictedChain(const Method *method,
-                                          InterpState *interpState,
+                                          Thread *self,
                                           PredictedChainingCell *cell,
                                           const ClassObject *clazz);
 

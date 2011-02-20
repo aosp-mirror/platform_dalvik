@@ -13,9 +13,9 @@
      */
     /* op vB, {vD, vE, vF, vG, vA}, class@CCCC */
     /* op {vCCCC..v(CCCC+AA-1)}, meth@BBBB */
-    movl      rGLUE,%ecx
+    movl      rSELF,%ecx
     movzwl    2(rPC),%eax              # eax<- BBBB
-    movl      offGlue_methodClassDex(%ecx),%ecx # ecx<- pDvmDex
+    movl      offThread_methodClassDex(%ecx),%ecx # ecx<- pDvmDex
     EXPORT_PC
     movl      offDvmDex_pResMethods(%ecx),%ecx  # ecx<- pDvmDex->pResMethods
     movzwl    4(rPC),%edx              # edx<- GFED or CCCC
@@ -40,8 +40,8 @@
      */
 .L${opcode}_resolve:
      SPILL_TMP1(%ecx)
-     movl     rGLUE,%ecx
-     movl     offGlue_method(%ecx),%ecx  # ecx<- glue->method
+     movl     rSELF,%ecx
+     movl     offThread_method(%ecx),%ecx  # ecx<- self->method
      movzwl   2(rPC),%eax      # reference (BBBB or CCCC)
      movl     offMethod_clazz(%ecx),%ecx # ecx<- method->clazz
      movl     $$METHOD_DIRECT,OUT_ARG2(%esp)

@@ -19,15 +19,15 @@
     .global dvmMterpStdRun
     .type   dvmMterpStdRun, %function
 /*
- * bool dvmMterpStdRun(MterpGlue* glue)
+ * bool dvmMterpStdRun(Thread* self)
  *
  * Interpreter entry point.  Returns changeInterp.
  *
  */
 dvmMterpStdRun:
-    movl    4(%esp), %ecx        # get incoming rGLUE
+    movl    4(%esp), %ecx        # get incoming rSELF
     push    %ebp                 # save caller base pointer
-    push    %ecx                 # save rGLUE at (%ebp)
+    push    %ecx                 # save rSELF at (%ebp)
     movl    %esp, %ebp           # set our %ebp
 /*
  * At this point we've allocated two slots on the stack
@@ -43,14 +43,14 @@ dvmMterpStdRun:
     movl    %ebx,EBX_SPILL(%ebp)
 
 /* Set up "named" registers */
-    movl    offGlue_pc(%ecx),rPC
-    movl    offGlue_fp(%ecx),rFP
+    movl    offThread_pc(%ecx),rPC
+    movl    offThread_fp(%ecx),rFP
 
 /* Remember %esp for future "longjmp" */
-    movl    %esp,offGlue_bailPtr(%ecx)
+    movl    %esp,offThread_bailPtr(%ecx)
 
 /* How to start? */
-    movb    offGlue_entryPoint(%ecx),%al
+    movb    offThread_entryPoint(%ecx),%al
 
 /* Normal start? */
     cmpb    $$kInterpEntryInstr,%al
@@ -62,7 +62,7 @@ dvmMterpStdRun:
 
 .Lnot_instr:
     /* Reset to normal case */
-    movb   $$kInterpEntryInstr,offGlue_entryPoint(%ecx)
+    movb   $$kInterpEntryInstr,offThread_entryPoint(%ecx)
     cmpb   $$kInterpEntryReturn,%al
     je     common_returnFromMethod
     cmpb   $$kInterpEntryThrow,%al
@@ -78,7 +78,7 @@ dvmMterpStdRun:
     .global dvmMterpStdBail
     .type   dvmMterpStdBail, %function
 /*
- * void dvmMterpStdBail(MterpGlue* glue, bool changeInterp)
+ * void dvmMterpStdBail(Thread* self, bool changeInterp)
  *
  * Restore the stack pointer and PC from the save point established on entry.
  * This is essentially the same as a longjmp, but should be cheaper.  The
@@ -88,13 +88,13 @@ dvmMterpStdRun:
  * look a little strange.
  *
  * On entry:
- *  esp+4 (arg0)  MterpGlue* glue
+ *  esp+4 (arg0)  Thread* self
  *  esp+8 (arg1)  bool changeInterp
  */
 dvmMterpStdBail:
-    movl    4(%esp),%ecx                 # grab glue
+    movl    4(%esp),%ecx                 # grab self
     movl    8(%esp),%eax                 # changeInterp to return reg
-    movl    offGlue_bailPtr(%ecx),%esp   # Restore "setjmp" esp
+    movl    offThread_bailPtr(%ecx),%esp   # Restore "setjmp" esp
     movl    %esp,%ebp
     addl    $$(FRAME_SIZE-8), %ebp       # Restore %ebp at point of setjmp
     movl    EDI_SPILL(%ebp),%edi

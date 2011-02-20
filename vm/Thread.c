@@ -974,6 +974,9 @@ static Thread* allocThread(int interpStackSize)
     /* give the thread code a chance to set things up */
     dvmInitInterpStack(thread, interpStackSize);
 
+    /* One-time setup for interpreter/JIT state */
+    dvmInitInterpreterState(thread);
+
     return thread;
 }
 

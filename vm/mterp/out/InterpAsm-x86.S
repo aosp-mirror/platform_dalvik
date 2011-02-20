@@ -72,7 +72,7 @@ Notes:
 
 */
 
-#define rGLUE    (%ebp)
+#define rSELF    (%ebp)
 #define rPC      %esi
 #define rFP      %edi
 #define rINST    %ebx
@@ -85,7 +85,7 @@ Notes:
 #define IN_ARG0        ( 12)
 #define CALLER_RP      (  8)
 #define PREV_FP        (  4)
-#define rGLUE_SPILL    (  0) /* <- dvmMterpStdRun ebp */
+#define rSELF_SPILL    (  0) /* <- dvmMterpStdRun ebp */
 /* Spill offsets relative to %ebp */
 #define EDI_SPILL      ( -4)
 #define ESI_SPILL      ( -8)
@@ -118,25 +118,25 @@ Notes:
 #define UNSPILL_TMP3(reg) movl TMP_SPILL3(%ebp),reg
 
 #if defined(WITH_JIT)
-.macro GET_JIT_PROF_TABLE _glue _reg
-    movl    offGlue_pJitProfTable(\_glue),\_reg
+.macro GET_JIT_PROF_TABLE _self _reg
+    movl    offThread_pJitProfTable(\_self),\_reg
 .endm
-.macro GET_JIT_THRESHOLD _glue _reg
-    movl    offGlue_jitThreshold(\_glue),\_reg
+.macro GET_JIT_THRESHOLD _self _reg
+    movl    offThread_jitThreshold(\_self),\_reg
 .endm
 #endif
 
-/* save/restore the PC and/or FP from the glue struct */
-.macro SAVE_PC_FP_TO_GLUE _reg
-    movl     rGLUE,\_reg
-    movl     rPC,offGlue_pc(\_reg)
-    movl     rFP,offGlue_fp(\_reg)
+/* save/restore the PC and/or FP from the self struct */
+.macro SAVE_PC_FP_TO_SELF _reg
+    movl     rSELF,\_reg
+    movl     rPC,offThread_pc(\_reg)
+    movl     rFP,offThread_fp(\_reg)
 .endm
 
-.macro LOAD_PC_FP_FROM_GLUE
-    movl    rGLUE,rFP
-    movl    offGlue_pc(rFP),rPC
-    movl    offGlue_fp(rFP),rFP
+.macro LOAD_PC_FP_FROM_SELF
+    movl    rSELF,rFP
+    movl    offThread_pc(rFP),rPC
+    movl    offThread_fp(rFP),rFP
 .endm
 
 /* The interpreter assumes a properly aligned stack on entry, and
@@ -775,9 +775,9 @@ dvmAsmInstructionStart = .L_OP_NOP
 /* File: x86/OP_MOVE_RESULT.S */
     /* for: move-result, move-result-object */
     /* op vAA */
-    movl     rGLUE,%eax                    # eax<- rGLUE
+    movl     rSELF,%eax                    # eax<- rSELF
     movzx    rINSTbl,%ecx                  # ecx<- AA
-    movl     offGlue_retval(%eax),%eax     # eax<- glue->retval.l
+    movl     offThread_retval(%eax),%eax     # eax<- self->retval.l
     FETCH_INST_OPCODE 1 %edx
     ADVANCE_PC 1
     SET_VREG  %eax %ecx                    # fp[AA]<- retval.l
@@ -788,9 +788,9 @@ dvmAsmInstructionStart = .L_OP_NOP
 .L_OP_MOVE_RESULT_WIDE: /* 0x0b */
 /* File: x86/OP_MOVE_RESULT_WIDE.S */
     /* move-result-wide vAA */
-    movl    rGLUE,%ecx
-    movl    offGlue_retval(%ecx),%eax
-    movl    4+offGlue_retval(%ecx),%ecx
+    movl    rSELF,%ecx
+    movl    offThread_retval(%ecx),%eax
+    movl    4+offThread_retval(%ecx),%ecx
     FETCH_INST_OPCODE 1 %edx
     SET_VREG_WORD %eax rINST 0     # v[AA+0] <- eax
     SET_VREG_WORD %ecx rINST 1     # v[AA+1] <- ecx
@@ -804,9 +804,9 @@ dvmAsmInstructionStart = .L_OP_NOP
 /* File: x86/OP_MOVE_RESULT.S */
     /* for: move-result, move-result-object */
     /* op vAA */
-    movl     rGLUE,%eax                    # eax<- rGLUE
+    movl     rSELF,%eax                    # eax<- rSELF
     movzx    rINSTbl,%ecx                  # ecx<- AA
-    movl     offGlue_retval(%eax),%eax     # eax<- glue->retval.l
+    movl     offThread_retval(%eax),%eax     # eax<- self->retval.l
     FETCH_INST_OPCODE 1 %edx
     ADVANCE_PC 1
     SET_VREG  %eax %ecx                    # fp[AA]<- retval.l
@@ -818,8 +818,7 @@ dvmAsmInstructionStart = .L_OP_NOP
 .L_OP_MOVE_EXCEPTION: /* 0x0d */
 /* File: x86/OP_MOVE_EXCEPTION.S */
     /* move-exception vAA */
-    movl    rGLUE,%ecx
-    movl    offGlue_self(%ecx),%ecx    # ecx<- glue->self
+    movl    rSELF,%ecx
     movl    offThread_exception(%ecx),%eax # eax<- dvmGetException bypass
     SET_VREG %eax rINST                # fp[AA]<- exception object
     FETCH_INST_OPCODE 1 %edx
@@ -838,15 +837,15 @@ dvmAsmInstructionStart = .L_OP_NOP
 .L_OP_RETURN: /* 0x0f */
 /* File: x86/OP_RETURN.S */
     /*
-     * Return a 32-bit value.  Copies the return value into the "glue"
+     * Return a 32-bit value.  Copies the return value into the "self"
      * structure, then jumps to the return handler.
      *
      * for: return, return-object
      */
     /* op vAA */
-    movl    rGLUE,%ecx
+    movl    rSELF,%ecx
     GET_VREG_R %eax rINST               # eax<- vAA
-    movl    %eax,offGlue_retval(%ecx)   # retval.i <- AA
+    movl    %eax,offThread_retval(%ecx)   # retval.i <- AA
     jmp     common_returnFromMethod
 
 /* ------------------------------ */
@@ -854,15 +853,15 @@ dvmAsmInstructionStart = .L_OP_NOP
 .L_OP_RETURN_WIDE: /* 0x10 */
 /* File: x86/OP_RETURN_WIDE.S */
     /*
-     * Return a 64-bit value.  Copies the return value into the "glue"
+     * Return a 64-bit value.  Copies the return value into the "self"
      * structure, then jumps to the return handler.
      */
     /* return-wide vAA */
-    movl    rGLUE,%ecx
+    movl    rSELF,%ecx
     GET_VREG_WORD %eax rINST 0       # eax<- v[AA+0]
     GET_VREG_WORD rINST rINST 1      # rINST<- v[AA+1]
-    movl    %eax,offGlue_retval(%ecx)
-    movl    rINST,4+offGlue_retval(%ecx)
+    movl    %eax,offThread_retval(%ecx)
+    movl    rINST,4+offThread_retval(%ecx)
     jmp     common_returnFromMethod
 
 /* ------------------------------ */
@@ -871,15 +870,15 @@ dvmAsmInstructionStart = .L_OP_NOP
 /* File: x86/OP_RETURN_OBJECT.S */
 /* File: x86/OP_RETURN.S */
     /*
-     * Return a 32-bit value.  Copies the return value into the "glue"
+     * Return a 32-bit value.  Copies the return value into the "self"
      * structure, then jumps to the return handler.
      *
      * for: return, return-object
      */
     /* op vAA */
-    movl    rGLUE,%ecx
+    movl    rSELF,%ecx
     GET_VREG_R %eax rINST               # eax<- vAA
-    movl    %eax,offGlue_retval(%ecx)   # retval.i <- AA
+    movl    %eax,offThread_retval(%ecx)   # retval.i <- AA
     jmp     common_returnFromMethod
 
 
@@ -995,9 +994,9 @@ dvmAsmInstructionStart = .L_OP_NOP
 /* File: x86/OP_CONST_STRING.S */
 
     /* const/string vAA, String@BBBB */
-    movl      rGLUE,%ecx
+    movl      rSELF,%ecx
     movzwl    2(rPC),%eax              # eax<- BBBB
-    movl      offGlue_methodClassDex(%ecx),%ecx# ecx<- glue->methodClassDex
+    movl      offThread_methodClassDex(%ecx),%ecx# ecx<- self->methodClassDex
     movl      offDvmDex_pResStrings(%ecx),%ecx # ecx<- dvmDex->pResStrings
     movl      (%ecx,%eax,4),%eax       # eax<- rResString[BBBB]
     movl      rINST,%ecx
@@ -1014,9 +1013,9 @@ dvmAsmInstructionStart = .L_OP_NOP
 /* File: x86/OP_CONST_STRING_JUMBO.S */
 
     /* const/string vAA, String@BBBBBBBB */
-    movl      rGLUE,%ecx
+    movl      rSELF,%ecx
     movl      2(rPC),%eax              # eax<- BBBBBBBB
-    movl      offGlue_methodClassDex(%ecx),%ecx# ecx<- glue->methodClassDex
+    movl      offThread_methodClassDex(%ecx),%ecx# ecx<- self->methodClassDex
     movl      offDvmDex_pResStrings(%ecx),%ecx # ecx<- dvmDex->pResStrings
     movl      (%ecx,%eax,4),%eax       # eax<- rResString[BBBB]
     movl      rINST,%ecx
@@ -1033,9 +1032,9 @@ dvmAsmInstructionStart = .L_OP_NOP
 /* File: x86/OP_CONST_CLASS.S */
 
     /* const/class vAA, Class@BBBB */
-    movl      rGLUE,%ecx
+    movl      rSELF,%ecx
     movzwl    2(rPC),%eax              # eax<- BBBB
-    movl      offGlue_methodClassDex(%ecx),%ecx# ecx<- glue->methodClassDex
+    movl      offThread_methodClassDex(%ecx),%ecx# ecx<- self->methodClassDex
     movl      offDvmDex_pResClasses(%ecx),%ecx # ecx<- dvmDex->pResClasses
     movl      (%ecx,%eax,4),%eax       # eax<- rResClasses[BBBB]
     movl      rINST,%ecx
@@ -1054,9 +1053,8 @@ dvmAsmInstructionStart = .L_OP_NOP
      * Synchronize on an object.
      */
     /* monitor-enter vAA */
-    movl    rGLUE,%ecx
+    movl    rSELF,%ecx
     GET_VREG_R %eax rINST               # eax<- vAA
-    movl    offGlue_self(%ecx),%ecx     # ecx<- glue->self
     FETCH_INST_WORD 1
     testl   %eax,%eax                   # null object?
     EXPORT_PC                           # need for precise GC
@@ -1076,11 +1074,10 @@ dvmAsmInstructionStart = .L_OP_NOP
      */
     /* monitor-exit vAA */
     GET_VREG_R %eax rINST
-    movl    rGLUE,%ecx
+    movl    rSELF,%ecx
     EXPORT_PC
     testl   %eax,%eax                   # null object?
     je      .LOP_MONITOR_EXIT_errNullObject   # go if so
-    movl    offGlue_self(%ecx),%ecx     # ecx<- glue->self
     movl    %eax,OUT_ARG1(%esp)
     movl    %ecx,OUT_ARG0(%esp)
     jmp     .LOP_MONITOR_EXIT_continue
@@ -1093,10 +1090,10 @@ dvmAsmInstructionStart = .L_OP_NOP
      * Check to see if a cast from one class to another is allowed.
      */
     /* check-cast vAA, class@BBBB */
-    movl      rGLUE,%ecx
+    movl      rSELF,%ecx
     GET_VREG_R  rINST,rINST             # rINST<- vAA (object)
     movzwl    2(rPC),%eax               # eax<- BBBB
-    movl      offGlue_methodClassDex(%ecx),%ecx # ecx<- pDvmDex
+    movl      offThread_methodClassDex(%ecx),%ecx # ecx<- pDvmDex
     testl     rINST,rINST               # is oject null?
     movl      offDvmDex_pResClasses(%ecx),%ecx # ecx<- pDvmDex->pResClasses
     je        .LOP_CHECK_CAST_okay          # null obj, cast always succeeds
@@ -1126,9 +1123,9 @@ dvmAsmInstructionStart = .L_OP_NOP
     movl    rINST,%eax                # eax<- BA
     sarl    $4,%eax                    # eax<- B
     GET_VREG_R %eax %eax                # eax<- vB (obj)
-    movl    rGLUE,%ecx
+    movl    rSELF,%ecx
     testl   %eax,%eax                   # object null?
-    movl    offGlue_methodClassDex(%ecx),%ecx  # ecx<- pDvmDex
+    movl    offThread_methodClassDex(%ecx),%ecx  # ecx<- pDvmDex
     je      .LOP_INSTANCE_OF_store           # null obj, not instance, store it
     movzwl  2(rPC),%edx                 # edx<- CCCC
     movl    offDvmDex_pResClasses(%ecx),%ecx # ecx<- pDvmDex->pResClasses
@@ -1168,9 +1165,9 @@ dvmAsmInstructionStart = .L_OP_NOP
      * Create a new instance of a class.
      */
     /* new-instance vAA, class@BBBB */
-    movl      rGLUE,%ecx
+    movl      rSELF,%ecx
     movzwl    2(rPC),%eax               # eax<- BBBB
-    movl      offGlue_methodClassDex(%ecx),%ecx  # ecx<- pDvmDex
+    movl      offThread_methodClassDex(%ecx),%ecx  # ecx<- pDvmDex
     movl      offDvmDex_pResClasses(%ecx),%ecx # ecx<- pDvmDex->pResClasses
     EXPORT_PC
     movl      (%ecx,%eax,4),%ecx        # ecx<- resolved class
@@ -1193,9 +1190,9 @@ dvmAsmInstructionStart = .L_OP_NOP
      * check for it here.
      */
     /* new-array vA, vB, class@CCCC */
-    movl    rGLUE,%ecx
+    movl    rSELF,%ecx
     EXPORT_PC
-    movl    offGlue_methodClassDex(%ecx),%ecx # ecx<- pDvmDex
+    movl    offThread_methodClassDex(%ecx),%ecx # ecx<- pDvmDex
     movzwl  2(rPC),%eax                       # eax<- CCCC
     movl    offDvmDex_pResClasses(%ecx),%ecx  # ecx<- pDvmDex->pResClasses
     movl    (%ecx,%eax,4),%ecx                # ecx<- resolved class
@@ -1220,8 +1217,8 @@ dvmAsmInstructionStart = .L_OP_NOP
      */
     /* op vB, {vD, vE, vF, vG, vA}, class@CCCC */
     /* op {vCCCC..v(CCCC+AA-1)}, type@BBBB */
-    movl    rGLUE,%eax
-    movl    offGlue_methodClassDex(%eax),%eax # eax<- pDvmDex
+    movl    rSELF,%eax
+    movl    offThread_methodClassDex(%eax),%eax # eax<- pDvmDex
     movzwl  2(rPC),%ecx                       # ecx<- BBBB
     movl    offDvmDex_pResClasses(%eax),%eax  # eax<- pDvmDex->pResClasses
     movl    (%eax,%ecx,4),%eax                # eax<- resolved class
@@ -1229,10 +1226,10 @@ dvmAsmInstructionStart = .L_OP_NOP
     testl   %eax,%eax                         # already resolved?
     jne     .LOP_FILLED_NEW_ARRAY_continue              # yes, continue
     # less frequent path, so we'll redo some work
-    movl    rGLUE,%eax
+    movl    rSELF,%eax
     movl    $0,OUT_ARG2(%esp)                # arg2<- false
     movl    %ecx,OUT_ARG1(%esp)               # arg1<- BBBB
-    movl    offGlue_method(%eax),%eax         # eax<- glue->method
+    movl    offThread_method(%eax),%eax         # eax<- self->method
     jmp     .LOP_FILLED_NEW_ARRAY_more
 
 /* ------------------------------ */
@@ -1247,8 +1244,8 @@ dvmAsmInstructionStart = .L_OP_NOP
      */
     /* op vB, {vD, vE, vF, vG, vA}, class@CCCC */
     /* op {vCCCC..v(CCCC+AA-1)}, type@BBBB */
-    movl    rGLUE,%eax
-    movl    offGlue_methodClassDex(%eax),%eax # eax<- pDvmDex
+    movl    rSELF,%eax
+    movl    offThread_methodClassDex(%eax),%eax # eax<- pDvmDex
     movzwl  2(rPC),%ecx                       # ecx<- BBBB
     movl    offDvmDex_pResClasses(%eax),%eax  # eax<- pDvmDex->pResClasses
     movl    (%eax,%ecx,4),%eax                # eax<- resolved class
@@ -1256,10 +1253,10 @@ dvmAsmInstructionStart = .L_OP_NOP
     testl   %eax,%eax                         # already resolved?
     jne     .LOP_FILLED_NEW_ARRAY_RANGE_continue              # yes, continue
     # less frequent path, so we'll redo some work
-    movl    rGLUE,%eax
+    movl    rSELF,%eax
     movl    $0,OUT_ARG2(%esp)                # arg2<- false
     movl    %ecx,OUT_ARG1(%esp)               # arg1<- BBBB
-    movl    offGlue_method(%eax),%eax         # eax<- glue->method
+    movl    offThread_method(%eax),%eax         # eax<- self->method
     jmp     .LOP_FILLED_NEW_ARRAY_RANGE_more
 
 
@@ -1289,10 +1286,9 @@ dvmAsmInstructionStart = .L_OP_NOP
      * Throw an exception object in the current thread.
      */
     /* throw vAA */
-    movl     rGLUE,%ecx
     EXPORT_PC
     GET_VREG_R %eax rINST              # eax<- exception object
-    movl     offGlue_self(%ecx),%ecx   # ecx<- glue->self
+    movl     rSELF,%ecx                # ecx<- self
     testl    %eax,%eax                 # null object?
     je       common_errNullObject
     movl     %eax,offThread_exception(%ecx) # thread->exception<- obj
@@ -2338,9 +2334,9 @@ dvmAsmInstructionStart = .L_OP_NOP
      * for: iget, iget-object, iget-boolean, iget-byte, iget-char, iget-short
      */
     /* op vA, vB, field@CCCC */
-    movl    rGLUE,%ecx
+    movl    rSELF,%ecx
     movzwl  2(rPC),%edx                         # edx<- 0000CCCC
-    movl    offGlue_methodClassDex(%ecx),%eax   # eax<- DvmDex
+    movl    offThread_methodClassDex(%ecx),%eax   # eax<- DvmDex
     movzbl  rINSTbl,%ecx                        # ecx<- BA
     sarl    $4,%ecx                            # ecx<- B
     movl    offDvmDex_pResFields(%eax),%eax     # eax<- pDvmDex->pResFields
@@ -2350,7 +2346,7 @@ dvmAsmInstructionStart = .L_OP_NOP
     testl   %eax,%eax                           # is resolved entry null?
     jne     .LOP_IGET_finish                  # no, already resolved
     movl    %edx,OUT_ARG1(%esp)                 # needed by dvmResolveInstField
-    movl    rGLUE,%edx
+    movl    rSELF,%edx
     jmp     .LOP_IGET_resolve
 
 /* ------------------------------ */
@@ -2362,9 +2358,9 @@ dvmAsmInstructionStart = .L_OP_NOP
      *
      */
     /* op vA, vB, field@CCCC */
-    movl    rGLUE,%ecx
+    movl    rSELF,%ecx
     movzwl  2(rPC),%edx                         # edx<- 0000CCCC
-    movl    offGlue_methodClassDex(%ecx),%eax   # eax<- DvmDex
+    movl    offThread_methodClassDex(%ecx),%eax   # eax<- DvmDex
     movzbl  rINSTbl,%ecx                        # ecx<- BA
     sarl    $4,%ecx                            # ecx<- B
     movl    offDvmDex_pResFields(%eax),%eax     # eax<- pDvmDex->pResFields
@@ -2374,7 +2370,7 @@ dvmAsmInstructionStart = .L_OP_NOP
     testl   %eax,%eax                           # is resolved entry null?
     jne     .LOP_IGET_WIDE_finish                  # no, already resolved
     movl    %edx,OUT_ARG1(%esp)                 # for dvmResolveInstField
-    movl    rGLUE,%edx
+    movl    rSELF,%edx
     jmp     .LOP_IGET_WIDE_resolve
 
 /* ------------------------------ */
@@ -2388,9 +2384,9 @@ dvmAsmInstructionStart = .L_OP_NOP
      * for: iget, iget-object, iget-boolean, iget-byte, iget-char, iget-short
      */
     /* op vA, vB, field@CCCC */
-    movl    rGLUE,%ecx
+    movl    rSELF,%ecx
     movzwl  2(rPC),%edx                         # edx<- 0000CCCC
-    movl    offGlue_methodClassDex(%ecx),%eax   # eax<- DvmDex
+    movl    offThread_methodClassDex(%ecx),%eax   # eax<- DvmDex
     movzbl  rINSTbl,%ecx                        # ecx<- BA
     sarl    $4,%ecx                            # ecx<- B
     movl    offDvmDex_pResFields(%eax),%eax     # eax<- pDvmDex->pResFields
@@ -2400,7 +2396,7 @@ dvmAsmInstructionStart = .L_OP_NOP
     testl   %eax,%eax                           # is resolved entry null?
     jne     .LOP_IGET_OBJECT_finish                  # no, already resolved
     movl    %edx,OUT_ARG1(%esp)                 # needed by dvmResolveInstField
-    movl    rGLUE,%edx
+    movl    rSELF,%edx
     jmp     .LOP_IGET_OBJECT_resolve
 
 
@@ -2415,9 +2411,9 @@ dvmAsmInstructionStart = .L_OP_NOP
      * for: iget, iget-object, iget-boolean, iget-byte, iget-char, iget-short
      */
     /* op vA, vB, field@CCCC */
-    movl    rGLUE,%ecx
+    movl    rSELF,%ecx
     movzwl  2(rPC),%edx                         # edx<- 0000CCCC
-    movl    offGlue_methodClassDex(%ecx),%eax   # eax<- DvmDex
+    movl    offThread_methodClassDex(%ecx),%eax   # eax<- DvmDex
     movzbl  rINSTbl,%ecx                        # ecx<- BA
     sarl    $4,%ecx                            # ecx<- B
     movl    offDvmDex_pResFields(%eax),%eax     # eax<- pDvmDex->pResFields
@@ -2427,7 +2423,7 @@ dvmAsmInstructionStart = .L_OP_NOP
     testl   %eax,%eax                           # is resolved entry null?
     jne     .LOP_IGET_BOOLEAN_finish                  # no, already resolved
     movl    %edx,OUT_ARG1(%esp)                 # needed by dvmResolveInstField
-    movl    rGLUE,%edx
+    movl    rSELF,%edx
     jmp     .LOP_IGET_BOOLEAN_resolve
 
 
@@ -2442,9 +2438,9 @@ dvmAsmInstructionStart = .L_OP_NOP
      * for: iget, iget-object, iget-boolean, iget-byte, iget-char, iget-short
      */
     /* op vA, vB, field@CCCC */
-    movl    rGLUE,%ecx
+    movl    rSELF,%ecx
     movzwl  2(rPC),%edx                         # edx<- 0000CCCC
-    movl    offGlue_methodClassDex(%ecx),%eax   # eax<- DvmDex
+    movl    offThread_methodClassDex(%ecx),%eax   # eax<- DvmDex
     movzbl  rINSTbl,%ecx                        # ecx<- BA
     sarl    $4,%ecx                            # ecx<- B
     movl    offDvmDex_pResFields(%eax),%eax     # eax<- pDvmDex->pResFields
@@ -2454,7 +2450,7 @@ dvmAsmInstructionStart = .L_OP_NOP
     testl   %eax,%eax                           # is resolved entry null?
     jne     .LOP_IGET_BYTE_finish                  # no, already resolved
     movl    %edx,OUT_ARG1(%esp)                 # needed by dvmResolveInstField
-    movl    rGLUE,%edx
+    movl    rSELF,%edx
     jmp     .LOP_IGET_BYTE_resolve
 
 
@@ -2469,9 +2465,9 @@ dvmAsmInstructionStart = .L_OP_NOP
      * for: iget, iget-object, iget-boolean, iget-byte, iget-char, iget-short
      */
     /* op vA, vB, field@CCCC */
-    movl    rGLUE,%ecx
+    movl    rSELF,%ecx
     movzwl  2(rPC),%edx                         # edx<- 0000CCCC
-    movl    offGlue_methodClassDex(%ecx),%eax   # eax<- DvmDex
+    movl    offThread_methodClassDex(%ecx),%eax   # eax<- DvmDex
     movzbl  rINSTbl,%ecx                        # ecx<- BA
     sarl    $4,%ecx                            # ecx<- B
     movl    offDvmDex_pResFields(%eax),%eax     # eax<- pDvmDex->pResFields
@@ -2481,7 +2477,7 @@ dvmAsmInstructionStart = .L_OP_NOP
     testl   %eax,%eax                           # is resolved entry null?
     jne     .LOP_IGET_CHAR_finish                  # no, already resolved
     movl    %edx,OUT_ARG1(%esp)                 # needed by dvmResolveInstField
-    movl    rGLUE,%edx
+    movl    rSELF,%edx
     jmp     .LOP_IGET_CHAR_resolve
 
 
@@ -2496,9 +2492,9 @@ dvmAsmInstructionStart = .L_OP_NOP
      * for: iget, iget-object, iget-boolean, iget-byte, iget-char, iget-short
      */
     /* op vA, vB, field@CCCC */
-    movl    rGLUE,%ecx
+    movl    rSELF,%ecx
     movzwl  2(rPC),%edx                         # edx<- 0000CCCC
-    movl    offGlue_methodClassDex(%ecx),%eax   # eax<- DvmDex
+    movl    offThread_methodClassDex(%ecx),%eax   # eax<- DvmDex
     movzbl  rINSTbl,%ecx                        # ecx<- BA
     sarl    $4,%ecx                            # ecx<- B
     movl    offDvmDex_pResFields(%eax),%eax     # eax<- pDvmDex->pResFields
@@ -2508,7 +2504,7 @@ dvmAsmInstructionStart = .L_OP_NOP
     testl   %eax,%eax                           # is resolved entry null?
     jne     .LOP_IGET_SHORT_finish                  # no, already resolved
     movl    %edx,OUT_ARG1(%esp)                 # needed by dvmResolveInstField
-    movl    rGLUE,%edx
+    movl    rSELF,%edx
     jmp     .LOP_IGET_SHORT_resolve
 
 
@@ -2523,9 +2519,9 @@ dvmAsmInstructionStart = .L_OP_NOP
      * for: iput, iput-object, iput-boolean, iput-byte, iput-char, iput-short
      */
     /* op vA, vB, field@CCCC */
-    movl    rGLUE,%ecx
+    movl    rSELF,%ecx
     movzwl  2(rPC),%edx                         # %edx<- 0000CCCC
-    movl    offGlue_methodClassDex(%ecx),%eax   # eax<- DvmDex
+    movl    offThread_methodClassDex(%ecx),%eax   # eax<- DvmDex
     movzbl  rINSTbl,%ecx                        # ecx<- BA
     sarl    $4,%ecx                            # ecx<- B
     movl    offDvmDex_pResFields(%eax),%eax     # eax<- pDvmDex->pResFields
@@ -2535,7 +2531,7 @@ dvmAsmInstructionStart = .L_OP_NOP
     testl   %eax,%eax                           # is resolved entry null?
     jne     .LOP_IPUT_finish                  # no, already resolved
     movl    %edx,OUT_ARG1(%esp)
-    movl    rGLUE,%edx
+    movl    rSELF,%edx
     jmp     .LOP_IPUT_resolve
 
 /* ------------------------------ */
@@ -2547,9 +2543,9 @@ dvmAsmInstructionStart = .L_OP_NOP
      *
      */
     /* op vA, vB, field@CCCC */
-    movl    rGLUE,%ecx
+    movl    rSELF,%ecx
     movzwl  2(rPC),%edx                         # edx<- 0000CCCC
-    movl    offGlue_methodClassDex(%ecx),%eax   # eax<- DvmDex
+    movl    offThread_methodClassDex(%ecx),%eax   # eax<- DvmDex
     movzbl  rINSTbl,%ecx                        # ecx<- BA
     sarl    $4,%ecx                            # ecx<- B
     movl    offDvmDex_pResFields(%eax),%eax     # eax<- pDvmDex->pResFields
@@ -2559,7 +2555,7 @@ dvmAsmInstructionStart = .L_OP_NOP
     testl   %eax,%eax                           # is resolved entry null?
     jne     .LOP_IPUT_WIDE_finish                  # no, already resolved
     movl    %edx,OUT_ARG1(%esp)
-    movl    rGLUE,%edx
+    movl    rSELF,%edx
     jmp     .LOP_IPUT_WIDE_resolve
 
 /* ------------------------------ */
@@ -2572,9 +2568,9 @@ dvmAsmInstructionStart = .L_OP_NOP
      * for: iput-object
      */
     /* op vA, vB, field@CCCC */
-    movl    rGLUE,%ecx
+    movl    rSELF,%ecx
     movzwl  2(rPC),%edx                         # edx<- 0000CCCC
-    movl    offGlue_methodClassDex(%ecx),%eax   # eax<- DvmDex
+    movl    offThread_methodClassDex(%ecx),%eax   # eax<- DvmDex
     movzbl  rINSTbl,%ecx                        # ecx<- BA
     sarl    $4,%ecx                            # ecx<- B
     movl    offDvmDex_pResFields(%eax),%eax     # eax<- pDvmDex->pResFields
@@ -2584,7 +2580,7 @@ dvmAsmInstructionStart = .L_OP_NOP
     testl   %eax,%eax                           # is resolved entry null?
     jne     .LOP_IPUT_OBJECT_finish                  # no, already resolved
     movl    %edx,OUT_ARG1(%esp)
-    movl    rGLUE,%edx
+    movl    rSELF,%edx
     jmp     .LOP_IPUT_OBJECT_resolve
 
 /* ------------------------------ */
@@ -2599,9 +2595,9 @@ dvmAsmInstructionStart = .L_OP_NOP
      * for: iput, iput-object, iput-boolean, iput-byte, iput-char, iput-short
      */
     /* op vA, vB, field@CCCC */
-    movl    rGLUE,%ecx
+    movl    rSELF,%ecx
     movzwl  2(rPC),%edx                         # %edx<- 0000CCCC
-    movl    offGlue_methodClassDex(%ecx),%eax   # eax<- DvmDex
+    movl    offThread_methodClassDex(%ecx),%eax   # eax<- DvmDex
     movzbl  rINSTbl,%ecx                        # ecx<- BA
     sarl    $4,%ecx                            # ecx<- B
     movl    offDvmDex_pResFields(%eax),%eax     # eax<- pDvmDex->pResFields
@@ -2611,7 +2607,7 @@ dvmAsmInstructionStart = .L_OP_NOP
     testl   %eax,%eax                           # is resolved entry null?
     jne     .LOP_IPUT_BOOLEAN_finish                  # no, already resolved
     movl    %edx,OUT_ARG1(%esp)
-    movl    rGLUE,%edx
+    movl    rSELF,%edx
     jmp     .LOP_IPUT_BOOLEAN_resolve
 
 
@@ -2627,9 +2623,9 @@ dvmAsmInstructionStart = .L_OP_NOP
      * for: iput, iput-object, iput-boolean, iput-byte, iput-char, iput-short
      */
     /* op vA, vB, field@CCCC */
-    movl    rGLUE,%ecx
+    movl    rSELF,%ecx
     movzwl  2(rPC),%edx                         # %edx<- 0000CCCC
-    movl    offGlue_methodClassDex(%ecx),%eax   # eax<- DvmDex
+    movl    offThread_methodClassDex(%ecx),%eax   # eax<- DvmDex
     movzbl  rINSTbl,%ecx                        # ecx<- BA
     sarl    $4,%ecx                            # ecx<- B
     movl    offDvmDex_pResFields(%eax),%eax     # eax<- pDvmDex->pResFields
@@ -2639,7 +2635,7 @@ dvmAsmInstructionStart = .L_OP_NOP
     testl   %eax,%eax                           # is resolved entry null?
     jne     .LOP_IPUT_BYTE_finish                  # no, already resolved
     movl    %edx,OUT_ARG1(%esp)
-    movl    rGLUE,%edx
+    movl    rSELF,%edx
     jmp     .LOP_IPUT_BYTE_resolve
 
 
@@ -2655,9 +2651,9 @@ dvmAsmInstructionStart = .L_OP_NOP
      * for: iput, iput-object, iput-boolean, iput-byte, iput-char, iput-short
      */
     /* op vA, vB, field@CCCC */
-    movl    rGLUE,%ecx
+    movl    rSELF,%ecx
     movzwl  2(rPC),%edx                         # %edx<- 0000CCCC
-    movl    offGlue_methodClassDex(%ecx),%eax   # eax<- DvmDex
+    movl    offThread_methodClassDex(%ecx),%eax   # eax<- DvmDex
     movzbl  rINSTbl,%ecx                        # ecx<- BA
     sarl    $4,%ecx                            # ecx<- B
     movl    offDvmDex_pResFields(%eax),%eax     # eax<- pDvmDex->pResFields
@@ -2667,7 +2663,7 @@ dvmAsmInstructionStart = .L_OP_NOP
     testl   %eax,%eax                           # is resolved entry null?
     jne     .LOP_IPUT_CHAR_finish                  # no, already resolved
     movl    %edx,OUT_ARG1(%esp)
-    movl    rGLUE,%edx
+    movl    rSELF,%edx
     jmp     .LOP_IPUT_CHAR_resolve
 
 
@@ -2683,9 +2679,9 @@ dvmAsmInstructionStart = .L_OP_NOP
      * for: iput, iput-object, iput-boolean, iput-byte, iput-char, iput-short
      */
     /* op vA, vB, field@CCCC */
-    movl    rGLUE,%ecx
+    movl    rSELF,%ecx
     movzwl  2(rPC),%edx                         # %edx<- 0000CCCC
-    movl    offGlue_methodClassDex(%ecx),%eax   # eax<- DvmDex
+    movl    offThread_methodClassDex(%ecx),%eax   # eax<- DvmDex
     movzbl  rINSTbl,%ecx                        # ecx<- BA
     sarl    $4,%ecx                            # ecx<- B
     movl    offDvmDex_pResFields(%eax),%eax     # eax<- pDvmDex->pResFields
@@ -2695,7 +2691,7 @@ dvmAsmInstructionStart = .L_OP_NOP
     testl   %eax,%eax                           # is resolved entry null?
     jne     .LOP_IPUT_SHORT_finish                  # no, already resolved
     movl    %edx,OUT_ARG1(%esp)
-    movl    rGLUE,%edx
+    movl    rSELF,%edx
     jmp     .LOP_IPUT_SHORT_resolve
 
 
@@ -2709,9 +2705,9 @@ dvmAsmInstructionStart = .L_OP_NOP
      * for: sget, sget-object, sget-boolean, sget-byte, sget-char, sget-short
      */
     /* op vAA, field@BBBB */
-    movl      rGLUE,%ecx
+    movl      rSELF,%ecx
     movzwl    2(rPC),%eax                        # eax<- field ref BBBB
-    movl      offGlue_methodClassDex(%ecx),%ecx  # ecx<- DvmDex
+    movl      offThread_methodClassDex(%ecx),%ecx  # ecx<- DvmDex
     movl      offDvmDex_pResFields(%ecx),%ecx    # ecx<- dvmDex->pResFields
     movl      (%ecx,%eax,4),%eax                 # eax<- resolved StaticField ptr
     testl     %eax,%eax                          # resolved entry null?
@@ -2732,9 +2728,9 @@ dvmAsmInstructionStart = .L_OP_NOP
      *
      */
     /* sget-wide vAA, field@BBBB */
-    movl      rGLUE,%ecx
+    movl      rSELF,%ecx
     movzwl    2(rPC),%eax                        # eax<- field ref BBBB
-    movl      offGlue_methodClassDex(%ecx),%ecx  # ecx<- DvmDex
+    movl      offThread_methodClassDex(%ecx),%ecx  # ecx<- DvmDex
     movl      offDvmDex_pResFields(%ecx),%ecx    # ecx<- dvmDex->pResFields
     movl      (%ecx,%eax,4),%eax                 # eax<- resolved StaticField ptr
     testl     %eax,%eax                          # resolved entry null?
@@ -2759,9 +2755,9 @@ dvmAsmInstructionStart = .L_OP_NOP
      * for: sget, sget-object, sget-boolean, sget-byte, sget-char, sget-short
      */
     /* op vAA, field@BBBB */
-    movl      rGLUE,%ecx
+    movl      rSELF,%ecx
     movzwl    2(rPC),%eax                        # eax<- field ref BBBB
-    movl      offGlue_methodClassDex(%ecx),%ecx  # ecx<- DvmDex
+    movl      offThread_methodClassDex(%ecx),%ecx  # ecx<- DvmDex
     movl      offDvmDex_pResFields(%ecx),%ecx    # ecx<- dvmDex->pResFields
     movl      (%ecx,%eax,4),%eax                 # eax<- resolved StaticField ptr
     testl     %eax,%eax                          # resolved entry null?
@@ -2785,9 +2781,9 @@ dvmAsmInstructionStart = .L_OP_NOP
      * for: sget, sget-object, sget-boolean, sget-byte, sget-char, sget-short
      */
     /* op vAA, field@BBBB */
-    movl      rGLUE,%ecx
+    movl      rSELF,%ecx
     movzwl    2(rPC),%eax                        # eax<- field ref BBBB
-    movl      offGlue_methodClassDex(%ecx),%ecx  # ecx<- DvmDex
+    movl      offThread_methodClassDex(%ecx),%ecx  # ecx<- DvmDex
     movl      offDvmDex_pResFields(%ecx),%ecx    # ecx<- dvmDex->pResFields
     movl      (%ecx,%eax,4),%eax                 # eax<- resolved StaticField ptr
     testl     %eax,%eax                          # resolved entry null?
@@ -2811,9 +2807,9 @@ dvmAsmInstructionStart = .L_OP_NOP
      * for: sget, sget-object, sget-boolean, sget-byte, sget-char, sget-short
      */
     /* op vAA, field@BBBB */
-    movl      rGLUE,%ecx
+    movl      rSELF,%ecx
     movzwl    2(rPC),%eax                        # eax<- field ref BBBB
-    movl      offGlue_methodClassDex(%ecx),%ecx  # ecx<- DvmDex
+    movl      offThread_methodClassDex(%ecx),%ecx  # ecx<- DvmDex
     movl      offDvmDex_pResFields(%ecx),%ecx    # ecx<- dvmDex->pResFields
     movl      (%ecx,%eax,4),%eax                 # eax<- resolved StaticField ptr
     testl     %eax,%eax                          # resolved entry null?
@@ -2837,9 +2833,9 @@ dvmAsmInstructionStart = .L_OP_NOP
      * for: sget, sget-object, sget-boolean, sget-byte, sget-char, sget-short
      */
     /* op vAA, field@BBBB */
-    movl      rGLUE,%ecx
+    movl      rSELF,%ecx
     movzwl    2(rPC),%eax                        # eax<- field ref BBBB
-    movl      offGlue_methodClassDex(%ecx),%ecx  # ecx<- DvmDex
+    movl      offThread_methodClassDex(%ecx),%ecx  # ecx<- DvmDex
     movl      offDvmDex_pResFields(%ecx),%ecx    # ecx<- dvmDex->pResFields
     movl      (%ecx,%eax,4),%eax                 # eax<- resolved StaticField ptr
     testl     %eax,%eax                          # resolved entry null?
@@ -2863,9 +2859,9 @@ dvmAsmInstructionStart = .L_OP_NOP
      * for: sget, sget-object, sget-boolean, sget-byte, sget-char, sget-short
      */
     /* op vAA, field@BBBB */
-    movl      rGLUE,%ecx
+    movl      rSELF,%ecx
     movzwl    2(rPC),%eax                        # eax<- field ref BBBB
-    movl      offGlue_methodClassDex(%ecx),%ecx  # ecx<- DvmDex
+    movl      offThread_methodClassDex(%ecx),%ecx  # ecx<- DvmDex
     movl      offDvmDex_pResFields(%ecx),%ecx    # ecx<- dvmDex->pResFields
     movl      (%ecx,%eax,4),%eax                 # eax<- resolved StaticField ptr
     testl     %eax,%eax                          # resolved entry null?
@@ -2888,9 +2884,9 @@ dvmAsmInstructionStart = .L_OP_NOP
      * for: sput, sput-boolean, sput-byte, sput-char, sput-short
      */
     /* op vAA, field@BBBB */
-    movl      rGLUE,%ecx
+    movl      rSELF,%ecx
     movzwl    2(rPC),%eax                        # eax<- field ref BBBB
-    movl      offGlue_methodClassDex(%ecx),%ecx  # ecx<- DvmDex
+    movl      offThread_methodClassDex(%ecx),%ecx  # ecx<- DvmDex
     movl      offDvmDex_pResFields(%ecx),%ecx    # ecx<- dvmDex->pResFields
     movl      (%ecx,%eax,4),%eax                 # eax<- resolved StaticField ptr
     testl     %eax,%eax                          # resolved entry null?
@@ -2912,9 +2908,9 @@ dvmAsmInstructionStart = .L_OP_NOP
      * for: sput, sput-object, sput-boolean, sput-byte, sput-char, sput-short
      */
     /* op vAA, field@BBBB */
-    movl      rGLUE,%ecx
+    movl      rSELF,%ecx
     movzwl    2(rPC),%eax                        # eax<- field ref BBBB
-    movl      offGlue_methodClassDex(%ecx),%ecx  # ecx<- DvmDex
+    movl      offThread_methodClassDex(%ecx),%ecx  # ecx<- DvmDex
     movl      offDvmDex_pResFields(%ecx),%ecx    # ecx<- dvmDex->pResFields
     movl      (%ecx,%eax,4),%eax                 # eax<- resolved StaticField ptr
     testl     %eax,%eax                          # resolved entry null?
@@ -2936,9 +2932,9 @@ dvmAsmInstructionStart = .L_OP_NOP
      * SPUT object handler.
      */
     /* op vAA, field@BBBB */
-    movl      rGLUE,%ecx
+    movl      rSELF,%ecx
     movzwl    2(rPC),%eax                        # eax<- field ref BBBB
-    movl      offGlue_methodClassDex(%ecx),%ecx  # ecx<- DvmDex
+    movl      offThread_methodClassDex(%ecx),%ecx  # ecx<- DvmDex
     movl      offDvmDex_pResFields(%ecx),%ecx    # ecx<- dvmDex->pResFields
     movl      (%ecx,%eax,4),%eax                 # eax<- resolved StaticField
     testl     %eax,%eax                          # resolved entry null?
@@ -2959,9 +2955,9 @@ dvmAsmInstructionStart = .L_OP_NOP
      * for: sput, sput-boolean, sput-byte, sput-char, sput-short
      */
     /* op vAA, field@BBBB */
-    movl      rGLUE,%ecx
+    movl      rSELF,%ecx
     movzwl    2(rPC),%eax                        # eax<- field ref BBBB
-    movl      offGlue_methodClassDex(%ecx),%ecx  # ecx<- DvmDex
+    movl      offThread_methodClassDex(%ecx),%ecx  # ecx<- DvmDex
     movl      offDvmDex_pResFields(%ecx),%ecx    # ecx<- dvmDex->pResFields
     movl      (%ecx,%eax,4),%eax                 # eax<- resolved StaticField ptr
     testl     %eax,%eax                          # resolved entry null?
@@ -2985,9 +2981,9 @@ dvmAsmInstructionStart = .L_OP_NOP
      * for: sput, sput-boolean, sput-byte, sput-char, sput-short
      */
     /* op vAA, field@BBBB */
-    movl      rGLUE,%ecx
+    movl      rSELF,%ecx
     movzwl    2(rPC),%eax                        # eax<- field ref BBBB
-    movl      offGlue_methodClassDex(%ecx),%ecx  # ecx<- DvmDex
+    movl      offThread_methodClassDex(%ecx),%ecx  # ecx<- DvmDex
     movl      offDvmDex_pResFields(%ecx),%ecx    # ecx<- dvmDex->pResFields
     movl      (%ecx,%eax,4),%eax                 # eax<- resolved StaticField ptr
     testl     %eax,%eax                          # resolved entry null?
@@ -3011,9 +3007,9 @@ dvmAsmInstructionStart = .L_OP_NOP
      * for: sput, sput-boolean, sput-byte, sput-char, sput-short
      */
     /* op vAA, field@BBBB */
-    movl      rGLUE,%ecx
+    movl      rSELF,%ecx
     movzwl    2(rPC),%eax                        # eax<- field ref BBBB
-    movl      offGlue_methodClassDex(%ecx),%ecx  # ecx<- DvmDex
+    movl      offThread_methodClassDex(%ecx),%ecx  # ecx<- DvmDex
     movl      offDvmDex_pResFields(%ecx),%ecx    # ecx<- dvmDex->pResFields
     movl      (%ecx,%eax,4),%eax                 # eax<- resolved StaticField ptr
     testl     %eax,%eax                          # resolved entry null?
@@ -3037,9 +3033,9 @@ dvmAsmInstructionStart = .L_OP_NOP
      * for: sput, sput-boolean, sput-byte, sput-char, sput-short
      */
     /* op vAA, field@BBBB */
-    movl      rGLUE,%ecx
+    movl      rSELF,%ecx
     movzwl    2(rPC),%eax                        # eax<- field ref BBBB
-    movl      offGlue_methodClassDex(%ecx),%ecx  # ecx<- DvmDex
+    movl      offThread_methodClassDex(%ecx),%ecx  # ecx<- DvmDex
     movl      offDvmDex_pResFields(%ecx),%ecx    # ecx<- dvmDex->pResFields
     movl      (%ecx,%eax,4),%eax                 # eax<- resolved StaticField ptr
     testl     %eax,%eax                          # resolved entry null?
@@ -3064,17 +3060,17 @@ dvmAsmInstructionStart = .L_OP_NOP
      */
     /* op vB, {vD, vE, vF, vG, vA}, class@CCCC */
     /* op vAA, {vCCCC..v(CCCC+AA-1)}, meth@BBBB */
-    movl      rGLUE,%eax
+    movl      rSELF,%eax
     movzwl    2(rPC),%ecx                 # ecx<- BBBB
-    movl      offGlue_methodClassDex(%eax),%eax  # eax<- pDvmDex
+    movl      offThread_methodClassDex(%eax),%eax  # eax<- pDvmDex
     EXPORT_PC
     movl      offDvmDex_pResMethods(%eax),%eax   # eax<- pDvmDex->pResMethods
     movl      (%eax,%ecx,4),%eax          # eax<- resolved baseMethod
     testl     %eax,%eax                   # already resolved?
     jne       .LOP_INVOKE_VIRTUAL_continue        # yes, continue
-    movl      rGLUE,%eax
+    movl      rSELF,%eax
     movl      %ecx,OUT_ARG1(%esp)         # arg1<- ref
-    movl      offGlue_method(%eax),%eax   # eax<- glue->method
+    movl      offThread_method(%eax),%eax   # eax<- self->method
     jmp       .LOP_INVOKE_VIRTUAL_more
 
 /* ------------------------------ */
@@ -3088,13 +3084,13 @@ dvmAsmInstructionStart = .L_OP_NOP
      */
     /* op vB, {vD, vE, vF, vG, vA}, class@CCCC */
     /* op vAA, {vCCCC..v(CCCC+AA-1)}, meth@BBBB */
-    movl      rGLUE,rINST
+    movl      rSELF,rINST
     movzwl    2(rPC),%eax               # eax<- BBBB
-    movl      offGlue_methodClassDex(rINST),%ecx # ecx<- pDvmDex
+    movl      offThread_methodClassDex(rINST),%ecx # ecx<- pDvmDex
     EXPORT_PC
     movl      offDvmDex_pResMethods(%ecx),%ecx # ecx<- pDvmDex->pResMethods
     movl      (%ecx,%eax,4),%ecx        # ecx<- resolved baseMethod
-    movl      offGlue_method(rINST),%eax # eax<- method
+    movl      offThread_method(rINST),%eax # eax<- method
     movzwl    4(rPC),rINST              # rINST<- GFED or CCCC
     .if       (!0)
     andl      $0xf,rINST               # rINST<- D (or stays CCCC)
@@ -3123,9 +3119,9 @@ dvmAsmInstructionStart = .L_OP_NOP
      */
     /* op vB, {vD, vE, vF, vG, vA}, class@CCCC */
     /* op {vCCCC..v(CCCC+AA-1)}, meth@BBBB */
-    movl      rGLUE,%ecx
+    movl      rSELF,%ecx
     movzwl    2(rPC),%eax              # eax<- BBBB
-    movl      offGlue_methodClassDex(%ecx),%ecx # ecx<- pDvmDex
+    movl      offThread_methodClassDex(%ecx),%ecx # ecx<- pDvmDex
     EXPORT_PC
     movl      offDvmDex_pResMethods(%ecx),%ecx  # ecx<- pDvmDex->pResMethods
     movzwl    4(rPC),%edx              # edx<- GFED or CCCC
@@ -3152,16 +3148,16 @@ dvmAsmInstructionStart = .L_OP_NOP
      */
     /* op vB, {vD, vE, vF, vG, vA}, class@CCCC */
     /* op {vCCCC..v(CCCC+AA-1)}, meth@BBBB */
-    movl      rGLUE,%ecx
+    movl      rSELF,%ecx
     movzwl    2(rPC),%eax               # eax<- BBBB
-    movl      offGlue_methodClassDex(%ecx),%ecx # ecx<- pDvmDex
+    movl      offThread_methodClassDex(%ecx),%ecx # ecx<- pDvmDex
     EXPORT_PC
     movl      offDvmDex_pResMethods(%ecx),%ecx  # ecx<- pDvmDex->pResMethods
     movl      (%ecx,%eax,4),%eax        # eax<- resolved methodToCall
     testl     %eax,%eax
     jne       common_invokeMethodNoRange
-    movl      rGLUE,%ecx
-    movl      offGlue_method(%ecx),%ecx # ecx<- glue->method
+    movl      rSELF,%ecx
+    movl      offThread_method(%ecx),%ecx # ecx<- self->method
     movzwl    2(rPC),%eax
     movl      offMethod_clazz(%ecx),%ecx# ecx<- method->clazz
     movl      %eax,OUT_ARG1(%esp)       # arg1<- BBBB
@@ -3180,7 +3176,7 @@ dvmAsmInstructionStart = .L_OP_NOP
     /* op vB, {vD, vE, vF, vG, vA}, class@CCCC */
     /* op {vCCCC..v(CCCC+AA-1)}, meth@BBBB */
     movzwl     4(rPC),%eax              # eax<- FEDC or CCCC
-    movl       rGLUE,%ecx
+    movl       rSELF,%ecx
     .if        (!0)
     andl       $0xf,%eax               # eax<- C (or stays CCCC)
     .endif
@@ -3190,8 +3186,8 @@ dvmAsmInstructionStart = .L_OP_NOP
     je         common_errNullObject     # yes, fail
     movl       offObject_clazz(%eax),%eax# eax<- thisPtr->clazz
     movl       %eax,OUT_ARG0(%esp)                 # arg0<- class
-    movl       offGlue_methodClassDex(%ecx),%eax   # eax<- methodClassDex
-    movl       offGlue_method(%ecx),%ecx           # ecx<- method
+    movl       offThread_methodClassDex(%ecx),%eax   # eax<- methodClassDex
+    movl       offThread_method(%ecx),%ecx           # ecx<- method
     movl       %eax,OUT_ARG3(%esp)                 # arg3<- dex
     movzwl     2(rPC),%eax                         # eax<- BBBB
     movl       %ecx,OUT_ARG2(%esp)                 # arg2<- method
@@ -3219,17 +3215,17 @@ dvmAsmInstructionStart = .L_OP_NOP
      */
     /* op vB, {vD, vE, vF, vG, vA}, class@CCCC */
     /* op vAA, {vCCCC..v(CCCC+AA-1)}, meth@BBBB */
-    movl      rGLUE,%eax
+    movl      rSELF,%eax
     movzwl    2(rPC),%ecx                 # ecx<- BBBB
-    movl      offGlue_methodClassDex(%eax),%eax  # eax<- pDvmDex
+    movl      offThread_methodClassDex(%eax),%eax  # eax<- pDvmDex
     EXPORT_PC
     movl      offDvmDex_pResMethods(%eax),%eax   # eax<- pDvmDex->pResMethods
     movl      (%eax,%ecx,4),%eax          # eax<- resolved baseMethod
     testl     %eax,%eax                   # already resolved?
     jne       .LOP_INVOKE_VIRTUAL_RANGE_continue        # yes, continue
-    movl      rGLUE,%eax
+    movl      rSELF,%eax
     movl      %ecx,OUT_ARG1(%esp)         # arg1<- ref
-    movl      offGlue_method(%eax),%eax   # eax<- glue->method
+    movl      offThread_method(%eax),%eax   # eax<- self->method
     jmp       .LOP_INVOKE_VIRTUAL_RANGE_more
 
 
@@ -3245,13 +3241,13 @@ dvmAsmInstructionStart = .L_OP_NOP
      */
     /* op vB, {vD, vE, vF, vG, vA}, class@CCCC */
     /* op vAA, {vCCCC..v(CCCC+AA-1)}, meth@BBBB */
-    movl      rGLUE,rINST
+    movl      rSELF,rINST
     movzwl    2(rPC),%eax               # eax<- BBBB
-    movl      offGlue_methodClassDex(rINST),%ecx # ecx<- pDvmDex
+    movl      offThread_methodClassDex(rINST),%ecx # ecx<- pDvmDex
     EXPORT_PC
     movl      offDvmDex_pResMethods(%ecx),%ecx # ecx<- pDvmDex->pResMethods
     movl      (%ecx,%eax,4),%ecx        # ecx<- resolved baseMethod
-    movl      offGlue_method(rINST),%eax # eax<- method
+    movl      offThread_method(rINST),%eax # eax<- method
     movzwl    4(rPC),rINST              # rINST<- GFED or CCCC
     .if       (!1)
     andl      $0xf,rINST               # rINST<- D (or stays CCCC)
@@ -3282,9 +3278,9 @@ dvmAsmInstructionStart = .L_OP_NOP
      */
     /* op vB, {vD, vE, vF, vG, vA}, class@CCCC */
     /* op {vCCCC..v(CCCC+AA-1)}, meth@BBBB */
-    movl      rGLUE,%ecx
+    movl      rSELF,%ecx
     movzwl    2(rPC),%eax              # eax<- BBBB
-    movl      offGlue_methodClassDex(%ecx),%ecx # ecx<- pDvmDex
+    movl      offThread_methodClassDex(%ecx),%ecx # ecx<- pDvmDex
     EXPORT_PC
     movl      offDvmDex_pResMethods(%ecx),%ecx  # ecx<- pDvmDex->pResMethods
     movzwl    4(rPC),%edx              # edx<- GFED or CCCC
@@ -3313,16 +3309,16 @@ dvmAsmInstructionStart = .L_OP_NOP
      */
     /* op vB, {vD, vE, vF, vG, vA}, class@CCCC */
     /* op {vCCCC..v(CCCC+AA-1)}, meth@BBBB */
-    movl      rGLUE,%ecx
+    movl      rSELF,%ecx
     movzwl    2(rPC),%eax               # eax<- BBBB
-    movl      offGlue_methodClassDex(%ecx),%ecx # ecx<- pDvmDex
+    movl      offThread_methodClassDex(%ecx),%ecx # ecx<- pDvmDex
     EXPORT_PC
     movl      offDvmDex_pResMethods(%ecx),%ecx  # ecx<- pDvmDex->pResMethods
     movl      (%ecx,%eax,4),%eax        # eax<- resolved methodToCall
     testl     %eax,%eax
     jne       common_invokeMethodRange
-    movl      rGLUE,%ecx
-    movl      offGlue_method(%ecx),%ecx # ecx<- glue->method
+    movl      rSELF,%ecx
+    movl      offThread_method(%ecx),%ecx # ecx<- self->method
     movzwl    2(rPC),%eax
     movl      offMethod_clazz(%ecx),%ecx# ecx<- method->clazz
     movl      %eax,OUT_ARG1(%esp)       # arg1<- BBBB
@@ -3343,7 +3339,7 @@ dvmAsmInstructionStart = .L_OP_NOP
     /* op vB, {vD, vE, vF, vG, vA}, class@CCCC */
     /* op {vCCCC..v(CCCC+AA-1)}, meth@BBBB */
     movzwl     4(rPC),%eax              # eax<- FEDC or CCCC
-    movl       rGLUE,%ecx
+    movl       rSELF,%ecx
     .if        (!1)
     andl       $0xf,%eax               # eax<- C (or stays CCCC)
     .endif
@@ -3353,8 +3349,8 @@ dvmAsmInstructionStart = .L_OP_NOP
     je         common_errNullObject     # yes, fail
     movl       offObject_clazz(%eax),%eax# eax<- thisPtr->clazz
     movl       %eax,OUT_ARG0(%esp)                 # arg0<- class
-    movl       offGlue_methodClassDex(%ecx),%eax   # eax<- methodClassDex
-    movl       offGlue_method(%ecx),%ecx           # ecx<- method
+    movl       offThread_methodClassDex(%ecx),%eax   # eax<- methodClassDex
+    movl       offThread_method(%ecx),%ecx           # ecx<- method
     movl       %eax,OUT_ARG3(%esp)                 # arg3<- dex
     movzwl     2(rPC),%eax                         # eax<- BBBB
     movl       %ecx,OUT_ARG2(%esp)                 # arg2<- method
@@ -5889,9 +5885,9 @@ dvmAsmInstructionStart = .L_OP_NOP
      * for: iget, iget-object, iget-boolean, iget-byte, iget-char, iget-short
      */
     /* op vA, vB, field@CCCC */
-    movl    rGLUE,%ecx
+    movl    rSELF,%ecx
     movzwl  2(rPC),%edx                         # edx<- 0000CCCC
-    movl    offGlue_methodClassDex(%ecx),%eax   # eax<- DvmDex
+    movl    offThread_methodClassDex(%ecx),%eax   # eax<- DvmDex
     movzbl  rINSTbl,%ecx                        # ecx<- BA
     sarl    $4,%ecx                            # ecx<- B
     movl    offDvmDex_pResFields(%eax),%eax     # eax<- pDvmDex->pResFields
@@ -5901,7 +5897,7 @@ dvmAsmInstructionStart = .L_OP_NOP
     testl   %eax,%eax                           # is resolved entry null?
     jne     .LOP_IGET_VOLATILE_finish                  # no, already resolved
     movl    %edx,OUT_ARG1(%esp)                 # needed by dvmResolveInstField
-    movl    rGLUE,%edx
+    movl    rSELF,%edx
     jmp     .LOP_IGET_VOLATILE_resolve
 
 
@@ -5917,9 +5913,9 @@ dvmAsmInstructionStart = .L_OP_NOP
      * for: iput, iput-object, iput-boolean, iput-byte, iput-char, iput-short
      */
     /* op vA, vB, field@CCCC */
-    movl    rGLUE,%ecx
+    movl    rSELF,%ecx
     movzwl  2(rPC),%edx                         # %edx<- 0000CCCC
-    movl    offGlue_methodClassDex(%ecx),%eax   # eax<- DvmDex
+    movl    offThread_methodClassDex(%ecx),%eax   # eax<- DvmDex
     movzbl  rINSTbl,%ecx                        # ecx<- BA
     sarl    $4,%ecx                            # ecx<- B
     movl    offDvmDex_pResFields(%eax),%eax     # eax<- pDvmDex->pResFields
@@ -5929,7 +5925,7 @@ dvmAsmInstructionStart = .L_OP_NOP
     testl   %eax,%eax                           # is resolved entry null?
     jne     .LOP_IPUT_VOLATILE_finish                  # no, already resolved
     movl    %edx,OUT_ARG1(%esp)
-    movl    rGLUE,%edx
+    movl    rSELF,%edx
     jmp     .LOP_IPUT_VOLATILE_resolve
 
 
@@ -5944,9 +5940,9 @@ dvmAsmInstructionStart = .L_OP_NOP
      * for: sget, sget-object, sget-boolean, sget-byte, sget-char, sget-short
      */
     /* op vAA, field@BBBB */
-    movl      rGLUE,%ecx
+    movl      rSELF,%ecx
     movzwl    2(rPC),%eax                        # eax<- field ref BBBB
-    movl      offGlue_methodClassDex(%ecx),%ecx  # ecx<- DvmDex
+    movl      offThread_methodClassDex(%ecx),%ecx  # ecx<- DvmDex
     movl      offDvmDex_pResFields(%ecx),%ecx    # ecx<- dvmDex->pResFields
     movl      (%ecx,%eax,4),%eax                 # eax<- resolved StaticField ptr
     testl     %eax,%eax                          # resolved entry null?
@@ -5970,9 +5966,9 @@ dvmAsmInstructionStart = .L_OP_NOP
      * for: sput, sput-boolean, sput-byte, sput-char, sput-short
      */
     /* op vAA, field@BBBB */
-    movl      rGLUE,%ecx
+    movl      rSELF,%ecx
     movzwl    2(rPC),%eax                        # eax<- field ref BBBB
-    movl      offGlue_methodClassDex(%ecx),%ecx  # ecx<- DvmDex
+    movl      offThread_methodClassDex(%ecx),%ecx  # ecx<- DvmDex
     movl      offDvmDex_pResFields(%ecx),%ecx    # ecx<- dvmDex->pResFields
     movl      (%ecx,%eax,4),%eax                 # eax<- resolved StaticField ptr
     testl     %eax,%eax                          # resolved entry null?
@@ -5996,9 +5992,9 @@ dvmAsmInstructionStart = .L_OP_NOP
      * for: iget, iget-object, iget-boolean, iget-byte, iget-char, iget-short
      */
     /* op vA, vB, field@CCCC */
-    movl    rGLUE,%ecx
+    movl    rSELF,%ecx
     movzwl  2(rPC),%edx                         # edx<- 0000CCCC
-    movl    offGlue_methodClassDex(%ecx),%eax   # eax<- DvmDex
+    movl    offThread_methodClassDex(%ecx),%eax   # eax<- DvmDex
     movzbl  rINSTbl,%ecx                        # ecx<- BA
     sarl    $4,%ecx                            # ecx<- B
     movl    offDvmDex_pResFields(%eax),%eax     # eax<- pDvmDex->pResFields
@@ -6008,7 +6004,7 @@ dvmAsmInstructionStart = .L_OP_NOP
     testl   %eax,%eax                           # is resolved entry null?
     jne     .LOP_IGET_OBJECT_VOLATILE_finish                  # no, already resolved
     movl    %edx,OUT_ARG1(%esp)                 # needed by dvmResolveInstField
-    movl    rGLUE,%edx
+    movl    rSELF,%edx
     jmp     .LOP_IGET_OBJECT_VOLATILE_resolve
 
 
@@ -6016,44 +6012,44 @@ dvmAsmInstructionStart = .L_OP_NOP
     .balign 64
 .L_OP_IGET_WIDE_VOLATILE: /* 0xe8 */
     /* (stub) */
-    SAVE_PC_FP_TO_GLUE %ecx          # leaves rGLUE in %ecx
-    movl %ecx,OUT_ARG0(%esp)         # glue is first arg to function
+    SAVE_PC_FP_TO_SELF %ecx          # leaves rSELF in %ecx
+    movl %ecx,OUT_ARG0(%esp)         # self is first arg to function
     call      dvmMterp_OP_IGET_WIDE_VOLATILE     # do the real work
-    mov       rGLUE,%ecx
-    LOAD_PC_FP_FROM_GLUE             # retrieve updated values
+    mov       rSELF,%ecx
+    LOAD_PC_FP_FROM_SELF             # retrieve updated values
     FETCH_INST
     GOTO_NEXT
 /* ------------------------------ */
     .balign 64
 .L_OP_IPUT_WIDE_VOLATILE: /* 0xe9 */
     /* (stub) */
-    SAVE_PC_FP_TO_GLUE %ecx          # leaves rGLUE in %ecx
-    movl %ecx,OUT_ARG0(%esp)         # glue is first arg to function
+    SAVE_PC_FP_TO_SELF %ecx          # leaves rSELF in %ecx
+    movl %ecx,OUT_ARG0(%esp)         # self is first arg to function
     call      dvmMterp_OP_IPUT_WIDE_VOLATILE     # do the real work
-    mov       rGLUE,%ecx
-    LOAD_PC_FP_FROM_GLUE             # retrieve updated values
+    mov       rSELF,%ecx
+    LOAD_PC_FP_FROM_SELF             # retrieve updated values
     FETCH_INST
     GOTO_NEXT
 /* ------------------------------ */
     .balign 64
 .L_OP_SGET_WIDE_VOLATILE: /* 0xea */
     /* (stub) */
-    SAVE_PC_FP_TO_GLUE %ecx          # leaves rGLUE in %ecx
-    movl %ecx,OUT_ARG0(%esp)         # glue is first arg to function
+    SAVE_PC_FP_TO_SELF %ecx          # leaves rSELF in %ecx
+    movl %ecx,OUT_ARG0(%esp)         # self is first arg to function
     call      dvmMterp_OP_SGET_WIDE_VOLATILE     # do the real work
-    mov       rGLUE,%ecx
-    LOAD_PC_FP_FROM_GLUE             # retrieve updated values
+    mov       rSELF,%ecx
+    LOAD_PC_FP_FROM_SELF             # retrieve updated values
     FETCH_INST
     GOTO_NEXT
 /* ------------------------------ */
     .balign 64
 .L_OP_SPUT_WIDE_VOLATILE: /* 0xeb */
     /* (stub) */
-    SAVE_PC_FP_TO_GLUE %ecx          # leaves rGLUE in %ecx
-    movl %ecx,OUT_ARG0(%esp)         # glue is first arg to function
+    SAVE_PC_FP_TO_SELF %ecx          # leaves rSELF in %ecx
+    movl %ecx,OUT_ARG0(%esp)         # self is first arg to function
     call      dvmMterp_OP_SPUT_WIDE_VOLATILE     # do the real work
-    mov       rGLUE,%ecx
-    LOAD_PC_FP_FROM_GLUE             # retrieve updated values
+    mov       rSELF,%ecx
+    LOAD_PC_FP_FROM_SELF             # retrieve updated values
     FETCH_INST
     GOTO_NEXT
 /* ------------------------------ */
@@ -6074,9 +6070,9 @@ dvmAsmInstructionStart = .L_OP_NOP
      * exception is indicated by AA, with some detail provided by BBBB.
      */
     /* op AA, ref@BBBB */
-    movl     rGLUE,%ecx
+    movl     rSELF,%ecx
     movzwl   2(rPC),%eax                     # eax<- BBBB
-    movl     offGlue_method(%ecx),%ecx       # ecx<- glue->method
+    movl     offThread_method(%ecx),%ecx       # ecx<- self->method
     EXPORT_PC
     movl     %eax,OUT_ARG2(%esp)             # arg2<- BBBB
     movl     rINST,OUT_ARG1(%esp)            # arg1<- AA
@@ -6099,10 +6095,10 @@ dvmAsmInstructionStart = .L_OP_NOP
      *
      */
     /* [opt] execute-inline vAA, {vC, vD, vE, vF}, inline@BBBB */
-    movl      rGLUE,%ecx
+    movl      rSELF,%ecx
     EXPORT_PC
     movzwl    2(rPC),%eax               # eax<- BBBB
-    leal      offGlue_retval(%ecx),%ecx # ecx<- & glue->retval
+    leal      offThread_retval(%ecx),%ecx # ecx<- & self->retval
     movl      %ecx,OUT_ARG4(%esp)
     call      .LOP_EXECUTE_INLINE_continue      # make call; will return after
     testl     %eax,%eax                 # successful?
@@ -6115,33 +6111,33 @@ dvmAsmInstructionStart = .L_OP_NOP
     .balign 64
 .L_OP_EXECUTE_INLINE_RANGE: /* 0xef */
     /* (stub) */
-    SAVE_PC_FP_TO_GLUE %ecx          # leaves rGLUE in %ecx
-    movl %ecx,OUT_ARG0(%esp)         # glue is first arg to function
+    SAVE_PC_FP_TO_SELF %ecx          # leaves rSELF in %ecx
+    movl %ecx,OUT_ARG0(%esp)         # self is first arg to function
     call      dvmMterp_OP_EXECUTE_INLINE_RANGE     # do the real work
-    mov       rGLUE,%ecx
-    LOAD_PC_FP_FROM_GLUE             # retrieve updated values
+    mov       rSELF,%ecx
+    LOAD_PC_FP_FROM_SELF             # retrieve updated values
     FETCH_INST
     GOTO_NEXT
 /* ------------------------------ */
     .balign 64
 .L_OP_INVOKE_OBJECT_INIT: /* 0xf0 */
     /* (stub) */
-    SAVE_PC_FP_TO_GLUE %ecx          # leaves rGLUE in %ecx
-    movl %ecx,OUT_ARG0(%esp)         # glue is first arg to function
+    SAVE_PC_FP_TO_SELF %ecx          # leaves rSELF in %ecx
+    movl %ecx,OUT_ARG0(%esp)         # self is first arg to function
     call      dvmMterp_OP_INVOKE_OBJECT_INIT     # do the real work
-    mov       rGLUE,%ecx
-    LOAD_PC_FP_FROM_GLUE             # retrieve updated values
+    mov       rSELF,%ecx
+    LOAD_PC_FP_FROM_SELF             # retrieve updated values
     FETCH_INST
     GOTO_NEXT
 /* ------------------------------ */
     .balign 64
 .L_OP_RETURN_VOID_BARRIER: /* 0xf1 */
     /* (stub) */
-    SAVE_PC_FP_TO_GLUE %ecx          # leaves rGLUE in %ecx
-    movl %ecx,OUT_ARG0(%esp)         # glue is first arg to function
+    SAVE_PC_FP_TO_SELF %ecx          # leaves rSELF in %ecx
+    movl %ecx,OUT_ARG0(%esp)         # self is first arg to function
     call      dvmMterp_OP_RETURN_VOID_BARRIER     # do the real work
-    mov       rGLUE,%ecx
-    LOAD_PC_FP_FROM_GLUE             # retrieve updated values
+    mov       rSELF,%ecx
+    LOAD_PC_FP_FROM_SELF             # retrieve updated values
     FETCH_INST
     GOTO_NEXT
 /* ------------------------------ */
@@ -6262,7 +6258,7 @@ dvmAsmInstructionStart = .L_OP_NOP
     testl     %ecx,%ecx                 # is object null?
     je        common_errNullObject
     movl      rINST,(%ecx,%eax,1)
-    movl      rGLUE,%eax
+    movl      rSELF,%eax
     jmp       .LOP_IPUT_OBJECT_QUICK_finish
 
 /* ------------------------------ */
@@ -6328,9 +6324,9 @@ dvmAsmInstructionStart = .L_OP_NOP
      */
     /* op vB, {vD, vE, vF, vG, vA}, class@CCCC */
     /* op vAA, {vCCCC..v(CCCC+AA-1)}, meth@BBBB */
-    movl      rGLUE,%ecx
+    movl      rSELF,%ecx
     movzwl    4(rPC),%eax               # eax<- GFED or CCCC
-    movl      offGlue_method(%ecx),%ecx # ecx<- current method
+    movl      offThread_method(%ecx),%ecx # ecx<- current method
     .if       (!0)
     andl      $0xf,%eax                # eax<- D (or stays CCCC)
     .endif
@@ -6357,9 +6353,9 @@ dvmAsmInstructionStart = .L_OP_NOP
      */
     /* op vB, {vD, vE, vF, vG, vA}, class@CCCC */
     /* op vAA, {vCCCC..v(CCCC+AA-1)}, meth@BBBB */
-    movl      rGLUE,%ecx
+    movl      rSELF,%ecx
     movzwl    4(rPC),%eax               # eax<- GFED or CCCC
-    movl      offGlue_method(%ecx),%ecx # ecx<- current method
+    movl      offThread_method(%ecx),%ecx # ecx<- current method
     .if       (!1)
     andl      $0xf,%eax                # eax<- D (or stays CCCC)
     .endif
@@ -6386,9 +6382,9 @@ dvmAsmInstructionStart = .L_OP_NOP
      * for: iput-object
      */
     /* op vA, vB, field@CCCC */
-    movl    rGLUE,%ecx
+    movl    rSELF,%ecx
     movzwl  2(rPC),%edx                         # edx<- 0000CCCC
-    movl    offGlue_methodClassDex(%ecx),%eax   # eax<- DvmDex
+    movl    offThread_methodClassDex(%ecx),%eax   # eax<- DvmDex
     movzbl  rINSTbl,%ecx                        # ecx<- BA
     sarl    $4,%ecx                            # ecx<- B
     movl    offDvmDex_pResFields(%eax),%eax     # eax<- pDvmDex->pResFields
@@ -6398,7 +6394,7 @@ dvmAsmInstructionStart = .L_OP_NOP
     testl   %eax,%eax                           # is resolved entry null?
     jne     .LOP_IPUT_OBJECT_VOLATILE_finish                  # no, already resolved
     movl    %edx,OUT_ARG1(%esp)
-    movl    rGLUE,%edx
+    movl    rSELF,%edx
     jmp     .LOP_IPUT_OBJECT_VOLATILE_resolve
 
 
@@ -6413,9 +6409,9 @@ dvmAsmInstructionStart = .L_OP_NOP
      * for: sget, sget-object, sget-boolean, sget-byte, sget-char, sget-short
      */
     /* op vAA, field@BBBB */
-    movl      rGLUE,%ecx
+    movl      rSELF,%ecx
     movzwl    2(rPC),%eax                        # eax<- field ref BBBB
-    movl      offGlue_methodClassDex(%ecx),%ecx  # ecx<- DvmDex
+    movl      offThread_methodClassDex(%ecx),%ecx  # ecx<- DvmDex
     movl      offDvmDex_pResFields(%ecx),%ecx    # ecx<- dvmDex->pResFields
     movl      (%ecx,%eax,4),%eax                 # eax<- resolved StaticField ptr
     testl     %eax,%eax                          # resolved entry null?
@@ -6437,9 +6433,9 @@ dvmAsmInstructionStart = .L_OP_NOP
      * SPUT object handler.
      */
     /* op vAA, field@BBBB */
-    movl      rGLUE,%ecx
+    movl      rSELF,%ecx
     movzwl    2(rPC),%eax                        # eax<- field ref BBBB
-    movl      offGlue_methodClassDex(%ecx),%ecx  # ecx<- DvmDex
+    movl      offThread_methodClassDex(%ecx),%ecx  # ecx<- DvmDex
     movl      offDvmDex_pResFields(%ecx),%ecx    # ecx<- dvmDex->pResFields
     movl      (%ecx,%eax,4),%eax                 # eax<- resolved StaticField
     testl     %eax,%eax                          # resolved entry null?
@@ -6462,9 +6458,9 @@ dvmAsmInstructionStart = .L_OP_NOP
 .L_OP_CONST_CLASS_JUMBO: /* 0x100 */
 /* File: x86/OP_CONST_CLASS_JUMBO.S */
     /* const-class/jumbo vBBBB, Class@AAAAAAAA */
-    movl      rGLUE,%ecx
+    movl      rSELF,%ecx
     movl      2(rPC),%eax              # eax<- AAAAAAAA
-    movl      offGlue_methodClassDex(%ecx),%ecx# ecx<- glue->methodClassDex
+    movl      offThread_methodClassDex(%ecx),%ecx# ecx<- self->methodClassDex
     movl      offDvmDex_pResClasses(%ecx),%ecx # ecx<- dvmDex->pResClasses
     movl      (%ecx,%eax,4),%eax       # eax<- rResClasses[AAAAAAAA]
     FETCH_INST_OPCODE 4 %edx
@@ -6482,10 +6478,10 @@ dvmAsmInstructionStart = .L_OP_NOP
      * Check to see if a cast from one class to another is allowed.
      */
     /* check-cast/jumbo vBBBB, class@AAAAAAAA */
-    movl      rGLUE,%ecx
+    movl      rSELF,%ecx
     GET_VREG_R  rINST,rINST             # rINST<- vBBBB (object)
     movl      2(rPC),%eax               # eax<- AAAAAAAA
-    movl      offGlue_methodClassDex(%ecx),%ecx # ecx<- pDvmDex
+    movl      offThread_methodClassDex(%ecx),%ecx # ecx<- pDvmDex
     testl     rINST,rINST               # is oject null?
     movl      offDvmDex_pResClasses(%ecx),%ecx # ecx<- pDvmDex->pResClasses
     je        .LOP_CHECK_CAST_JUMBO_okay          # null obj, cast always succeeds
@@ -6514,9 +6510,9 @@ dvmAsmInstructionStart = .L_OP_NOP
     /* instance-of/jumbo vBBBB, vCCCC, class@AAAAAAAA */
     movzwl  8(rPC),%eax                 # eax<- CCCC
     GET_VREG_R %eax %eax                # eax<- vCCCC (obj)
-    movl    rGLUE,%ecx
+    movl    rSELF,%ecx
     testl   %eax,%eax                   # object null?
-    movl    offGlue_methodClassDex(%ecx),%ecx  # ecx<- pDvmDex
+    movl    offThread_methodClassDex(%ecx),%ecx  # ecx<- pDvmDex
     je      .LOP_INSTANCE_OF_JUMBO_store           # null obj, not instance, store it
     movl    2(rPC),%edx                 # edx<- AAAAAAAA
     movl    offDvmDex_pResClasses(%ecx),%ecx # ecx<- pDvmDex->pResClasses
@@ -6537,9 +6533,9 @@ dvmAsmInstructionStart = .L_OP_NOP
      * Create a new instance of a class.
      */
     /* new-instance/jumbo vBBBB, class@AAAAAAAA */
-    movl      rGLUE,%ecx
+    movl      rSELF,%ecx
     movl      2(rPC),%eax               # eax<- AAAAAAAA
-    movl      offGlue_methodClassDex(%ecx),%ecx  # ecx<- pDvmDex
+    movl      offThread_methodClassDex(%ecx),%ecx  # ecx<- pDvmDex
     movl      offDvmDex_pResClasses(%ecx),%ecx # ecx<- pDvmDex->pResClasses
     EXPORT_PC
     movl      (%ecx,%eax,4),%ecx        # ecx<- resolved class
@@ -6562,9 +6558,9 @@ dvmAsmInstructionStart = .L_OP_NOP
      * check for it here.
      */
     /* new-array/jumbo vBBBB, vCCCC, class@AAAAAAAA */
-    movl    rGLUE,%ecx
+    movl    rSELF,%ecx
     EXPORT_PC
-    movl    offGlue_methodClassDex(%ecx),%ecx # ecx<- pDvmDex
+    movl    offThread_methodClassDex(%ecx),%ecx # ecx<- pDvmDex
     movl    2(rPC),%eax                       # eax<- AAAAAAAA
     movl    offDvmDex_pResClasses(%ecx),%ecx  # ecx<- pDvmDex->pResClasses
     movl    (%ecx,%eax,4),%ecx                # ecx<- resolved class
@@ -6584,8 +6580,8 @@ dvmAsmInstructionStart = .L_OP_NOP
      * Create a new array with elements filled from registers.
      */
     /* filled-new-array/jumbo {vCCCC..v(CCCC+BBBB-1)}, type@AAAAAAAA */
-    movl    rGLUE,%eax
-    movl    offGlue_methodClassDex(%eax),%eax # eax<- pDvmDex
+    movl    rSELF,%eax
+    movl    offThread_methodClassDex(%eax),%eax # eax<- pDvmDex
     movl    2(rPC),%ecx                       # ecx<- AAAAAAAA
     movl    offDvmDex_pResClasses(%eax),%eax  # eax<- pDvmDex->pResClasses
     movl    (%eax,%ecx,4),%eax                # eax<- resolved class
@@ -6593,10 +6589,10 @@ dvmAsmInstructionStart = .L_OP_NOP
     testl   %eax,%eax                         # already resolved?
     jne     .LOP_FILLED_NEW_ARRAY_JUMBO_continue              # yes, continue
     # less frequent path, so we'll redo some work
-    movl    rGLUE,%eax
+    movl    rSELF,%eax
     movl    $0,OUT_ARG2(%esp)                # arg2<- false
     movl    %ecx,OUT_ARG1(%esp)               # arg1<- AAAAAAAA
-    movl    offGlue_method(%eax),%eax         # eax<- glue->method
+    movl    offThread_method(%eax),%eax         # eax<- self->method
     jmp     .LOP_FILLED_NEW_ARRAY_JUMBO_more
 
 /* ------------------------------ */
@@ -6610,9 +6606,9 @@ dvmAsmInstructionStart = .L_OP_NOP
      *      iget-char/jumbo, iget-short/jumbo
      */
     /* exop vBBBB, vCCCC, field@AAAAAAAA */
-    movl    rGLUE,%ecx
+    movl    rSELF,%ecx
     movl    2(rPC),%edx                         # edx<- AAAAAAAA
-    movl    offGlue_methodClassDex(%ecx),%eax   # eax<- DvmDex
+    movl    offThread_methodClassDex(%ecx),%eax   # eax<- DvmDex
     movzwl  8(rPC),%ecx                         # ecx<- CCCC
     movl    offDvmDex_pResFields(%eax),%eax     # eax<- pDvmDex->pResFields
     GET_VREG_R %ecx %ecx                        # ecx<- fp[CCCC], the object ptr
@@ -6620,7 +6616,7 @@ dvmAsmInstructionStart = .L_OP_NOP
     testl   %eax,%eax                           # is resolved entry null?
     jne     .LOP_IGET_JUMBO_finish                  # no, already resolved
     movl    %edx,OUT_ARG1(%esp)                 # needed by dvmResolveInstField
-    movl    rGLUE,%edx
+    movl    rSELF,%edx
     jmp     .LOP_IGET_JUMBO_resolve
 
 /* ------------------------------ */
@@ -6631,9 +6627,9 @@ dvmAsmInstructionStart = .L_OP_NOP
      * Jumbo 64-bit instance field get.
      */
     /* iget-wide/jumbo vBBBB, vCCCC, field@AAAA */
-    movl    rGLUE,%ecx
+    movl    rSELF,%ecx
     movl    2(rPC),%edx                         # edx<- AAAAAAAA
-    movl    offGlue_methodClassDex(%ecx),%eax   # eax<- DvmDex
+    movl    offThread_methodClassDex(%ecx),%eax   # eax<- DvmDex
     movzwl  8(rPC),%ecx                         # ecx<- CCCC
     movl    offDvmDex_pResFields(%eax),%eax     # eax<- pDvmDex->pResFields
     GET_VREG_R %ecx %ecx                        # ecx<- fp[CCCC], the object ptr
@@ -6641,7 +6637,7 @@ dvmAsmInstructionStart = .L_OP_NOP
     testl   %eax,%eax                           # is resolved entry null?
     jne     .LOP_IGET_WIDE_JUMBO_finish                  # no, already resolved
     movl    %edx,OUT_ARG1(%esp)                 # for dvmResolveInstField
-    movl    rGLUE,%edx
+    movl    rSELF,%edx
     jmp     .LOP_IGET_WIDE_JUMBO_resolve
 
 /* ------------------------------ */
@@ -6656,9 +6652,9 @@ dvmAsmInstructionStart = .L_OP_NOP
      *      iget-char/jumbo, iget-short/jumbo
      */
     /* exop vBBBB, vCCCC, field@AAAAAAAA */
-    movl    rGLUE,%ecx
+    movl    rSELF,%ecx
     movl    2(rPC),%edx                         # edx<- AAAAAAAA
-    movl    offGlue_methodClassDex(%ecx),%eax   # eax<- DvmDex
+    movl    offThread_methodClassDex(%ecx),%eax   # eax<- DvmDex
     movzwl  8(rPC),%ecx                         # ecx<- CCCC
     movl    offDvmDex_pResFields(%eax),%eax     # eax<- pDvmDex->pResFields
     GET_VREG_R %ecx %ecx                        # ecx<- fp[CCCC], the object ptr
@@ -6666,7 +6662,7 @@ dvmAsmInstructionStart = .L_OP_NOP
     testl   %eax,%eax                           # is resolved entry null?
     jne     .LOP_IGET_OBJECT_JUMBO_finish                  # no, already resolved
     movl    %edx,OUT_ARG1(%esp)                 # needed by dvmResolveInstField
-    movl    rGLUE,%edx
+    movl    rSELF,%edx
     jmp     .LOP_IGET_OBJECT_JUMBO_resolve
 
 
@@ -6682,9 +6678,9 @@ dvmAsmInstructionStart = .L_OP_NOP
      *      iget-char/jumbo, iget-short/jumbo
      */
     /* exop vBBBB, vCCCC, field@AAAAAAAA */
-    movl    rGLUE,%ecx
+    movl    rSELF,%ecx
     movl    2(rPC),%edx                         # edx<- AAAAAAAA
-    movl    offGlue_methodClassDex(%ecx),%eax   # eax<- DvmDex
+    movl    offThread_methodClassDex(%ecx),%eax   # eax<- DvmDex
     movzwl  8(rPC),%ecx                         # ecx<- CCCC
     movl    offDvmDex_pResFields(%eax),%eax     # eax<- pDvmDex->pResFields
     GET_VREG_R %ecx %ecx                        # ecx<- fp[CCCC], the object ptr
@@ -6692,7 +6688,7 @@ dvmAsmInstructionStart = .L_OP_NOP
     testl   %eax,%eax                           # is resolved entry null?
     jne     .LOP_IGET_BOOLEAN_JUMBO_finish                  # no, already resolved
     movl    %edx,OUT_ARG1(%esp)                 # needed by dvmResolveInstField
-    movl    rGLUE,%edx
+    movl    rSELF,%edx
     jmp     .LOP_IGET_BOOLEAN_JUMBO_resolve
 
 
@@ -6708,9 +6704,9 @@ dvmAsmInstructionStart = .L_OP_NOP
      *      iget-char/jumbo, iget-short/jumbo
      */
     /* exop vBBBB, vCCCC, field@AAAAAAAA */
-    movl    rGLUE,%ecx
+    movl    rSELF,%ecx
     movl    2(rPC),%edx                         # edx<- AAAAAAAA
-    movl    offGlue_methodClassDex(%ecx),%eax   # eax<- DvmDex
+    movl    offThread_methodClassDex(%ecx),%eax   # eax<- DvmDex
     movzwl  8(rPC),%ecx                         # ecx<- CCCC
     movl    offDvmDex_pResFields(%eax),%eax     # eax<- pDvmDex->pResFields
     GET_VREG_R %ecx %ecx                        # ecx<- fp[CCCC], the object ptr
@@ -6718,7 +6714,7 @@ dvmAsmInstructionStart = .L_OP_NOP
     testl   %eax,%eax                           # is resolved entry null?
     jne     .LOP_IGET_BYTE_JUMBO_finish                  # no, already resolved
     movl    %edx,OUT_ARG1(%esp)                 # needed by dvmResolveInstField
-    movl    rGLUE,%edx
+    movl    rSELF,%edx
     jmp     .LOP_IGET_BYTE_JUMBO_resolve
 
 
@@ -6734,9 +6730,9 @@ dvmAsmInstructionStart = .L_OP_NOP
      *      iget-char/jumbo, iget-short/jumbo
      */
     /* exop vBBBB, vCCCC, field@AAAAAAAA */
-    movl    rGLUE,%ecx
+    movl    rSELF,%ecx
     movl    2(rPC),%edx                         # edx<- AAAAAAAA
-    movl    offGlue_methodClassDex(%ecx),%eax   # eax<- DvmDex
+    movl    offThread_methodClassDex(%ecx),%eax   # eax<- DvmDex
     movzwl  8(rPC),%ecx                         # ecx<- CCCC
     movl    offDvmDex_pResFields(%eax),%eax     # eax<- pDvmDex->pResFields
     GET_VREG_R %ecx %ecx                        # ecx<- fp[CCCC], the object ptr
@@ -6744,7 +6740,7 @@ dvmAsmInstructionStart = .L_OP_NOP
     testl   %eax,%eax                           # is resolved entry null?
     jne     .LOP_IGET_CHAR_JUMBO_finish                  # no, already resolved
     movl    %edx,OUT_ARG1(%esp)                 # needed by dvmResolveInstField
-    movl    rGLUE,%edx
+    movl    rSELF,%edx
     jmp     .LOP_IGET_CHAR_JUMBO_resolve
 
 
@@ -6760,9 +6756,9 @@ dvmAsmInstructionStart = .L_OP_NOP
      *      iget-char/jumbo, iget-short/jumbo
      */
     /* exop vBBBB, vCCCC, field@AAAAAAAA */
-    movl    rGLUE,%ecx
+    movl    rSELF,%ecx
     movl    2(rPC),%edx                         # edx<- AAAAAAAA
-    movl    offGlue_methodClassDex(%ecx),%eax   # eax<- DvmDex
+    movl    offThread_methodClassDex(%ecx),%eax   # eax<- DvmDex
     movzwl  8(rPC),%ecx                         # ecx<- CCCC
     movl    offDvmDex_pResFields(%eax),%eax     # eax<- pDvmDex->pResFields
     GET_VREG_R %ecx %ecx                        # ecx<- fp[CCCC], the object ptr
@@ -6770,7 +6766,7 @@ dvmAsmInstructionStart = .L_OP_NOP
     testl   %eax,%eax                           # is resolved entry null?
     jne     .LOP_IGET_SHORT_JUMBO_finish                  # no, already resolved
     movl    %edx,OUT_ARG1(%esp)                 # needed by dvmResolveInstField
-    movl    rGLUE,%edx
+    movl    rSELF,%edx
     jmp     .LOP_IGET_SHORT_JUMBO_resolve
 
 
@@ -6785,9 +6781,9 @@ dvmAsmInstructionStart = .L_OP_NOP
             iput-char/jumbo, iput-short/jumbo
      */
     /* exop vBBBB, vCCCC, field@AAAAAAAA */
-    movl    rGLUE,%ecx
+    movl    rSELF,%ecx
     movl    2(rPC),%edx                         # edx<- AAAAAAAA
-    movl    offGlue_methodClassDex(%ecx),%eax   # eax<- DvmDex
+    movl    offThread_methodClassDex(%ecx),%eax   # eax<- DvmDex
     movzwl  8(rPC),%ecx                         # ecx<- CCCC
     movl    offDvmDex_pResFields(%eax),%eax     # eax<- pDvmDex->pResFields
     GET_VREG_R %ecx %ecx                        # ecx<- fp[CCCC], the object ptr
@@ -6795,7 +6791,7 @@ dvmAsmInstructionStart = .L_OP_NOP
     testl   %eax,%eax                           # is resolved entry null?
     jne     .LOP_IPUT_JUMBO_finish                  # no, already resolved
     movl    %edx,OUT_ARG1(%esp)
-    movl    rGLUE,%edx
+    movl    rSELF,%edx
     jmp     .LOP_IPUT_JUMBO_resolve
 
 /* ------------------------------ */
@@ -6806,9 +6802,9 @@ dvmAsmInstructionStart = .L_OP_NOP
      * Jumbo 64-bit instance field put.
      */
     /* iput-wide/jumbo vBBBB, vCCCC, field@AAAAAAAA */
-    movl    rGLUE,%ecx
+    movl    rSELF,%ecx
     movl    2(rPC),%edx                         # edx<- AAAAAAAA
-    movl    offGlue_methodClassDex(%ecx),%eax   # eax<- DvmDex
+    movl    offThread_methodClassDex(%ecx),%eax   # eax<- DvmDex
     movzwl  8(rPC),%ecx                         # ecx<- CCCC
     movl    offDvmDex_pResFields(%eax),%eax     # eax<- pDvmDex->pResFields
     GET_VREG_R %ecx %ecx                        # ecx<- fp[CCCC], the object ptr
@@ -6816,7 +6812,7 @@ dvmAsmInstructionStart = .L_OP_NOP
     testl   %eax,%eax                           # is resolved entry null?
     jne     .LOP_IPUT_WIDE_JUMBO_finish                  # no, already resolved
     movl    %edx,OUT_ARG1(%esp)
-    movl    rGLUE,%edx
+    movl    rSELF,%edx
     jmp     .LOP_IPUT_WIDE_JUMBO_resolve
 
 /* ------------------------------ */
@@ -6827,9 +6823,9 @@ dvmAsmInstructionStart = .L_OP_NOP
      * Jumbo object field put.
      */
     /* iput-object/jumbo vBBBB, vCCCC, field@AAAAAAAA */
-    movl    rGLUE,%ecx
+    movl    rSELF,%ecx
     movl    2(rPC),%edx                         # edx<- AAAAAAAA
-    movl    offGlue_methodClassDex(%ecx),%eax   # eax<- DvmDex
+    movl    offThread_methodClassDex(%ecx),%eax   # eax<- DvmDex
     movzwl  8(rPC),%ecx                         # ecx<- CCCC
     movl    offDvmDex_pResFields(%eax),%eax     # eax<- pDvmDex->pResFields
     GET_VREG_R %ecx %ecx                        # ecx<- fp[CCCC], the object ptr
@@ -6837,7 +6833,7 @@ dvmAsmInstructionStart = .L_OP_NOP
     testl   %eax,%eax                           # is resolved entry null?
     jne     .LOP_IPUT_OBJECT_JUMBO_finish                  # no, already resolved
     movl    %edx,OUT_ARG1(%esp)
-    movl    rGLUE,%edx
+    movl    rSELF,%edx
     jmp     .LOP_IPUT_OBJECT_JUMBO_resolve
 
 /* ------------------------------ */
@@ -6852,9 +6848,9 @@ dvmAsmInstructionStart = .L_OP_NOP
             iput-char/jumbo, iput-short/jumbo
      */
     /* exop vBBBB, vCCCC, field@AAAAAAAA */
-    movl    rGLUE,%ecx
+    movl    rSELF,%ecx
     movl    2(rPC),%edx                         # edx<- AAAAAAAA
-    movl    offGlue_methodClassDex(%ecx),%eax   # eax<- DvmDex
+    movl    offThread_methodClassDex(%ecx),%eax   # eax<- DvmDex
     movzwl  8(rPC),%ecx                         # ecx<- CCCC
     movl    offDvmDex_pResFields(%eax),%eax     # eax<- pDvmDex->pResFields
     GET_VREG_R %ecx %ecx                        # ecx<- fp[CCCC], the object ptr
@@ -6862,7 +6858,7 @@ dvmAsmInstructionStart = .L_OP_NOP
     testl   %eax,%eax                           # is resolved entry null?
     jne     .LOP_IPUT_BOOLEAN_JUMBO_finish                  # no, already resolved
     movl    %edx,OUT_ARG1(%esp)
-    movl    rGLUE,%edx
+    movl    rSELF,%edx
     jmp     .LOP_IPUT_BOOLEAN_JUMBO_resolve
 
 
@@ -6878,9 +6874,9 @@ dvmAsmInstructionStart = .L_OP_NOP
             iput-char/jumbo, iput-short/jumbo
      */
     /* exop vBBBB, vCCCC, field@AAAAAAAA */
-    movl    rGLUE,%ecx
+    movl    rSELF,%ecx
     movl    2(rPC),%edx                         # edx<- AAAAAAAA
-    movl    offGlue_methodClassDex(%ecx),%eax   # eax<- DvmDex
+    movl    offThread_methodClassDex(%ecx),%eax   # eax<- DvmDex
     movzwl  8(rPC),%ecx                         # ecx<- CCCC
     movl    offDvmDex_pResFields(%eax),%eax     # eax<- pDvmDex->pResFields
     GET_VREG_R %ecx %ecx                        # ecx<- fp[CCCC], the object ptr
@@ -6888,7 +6884,7 @@ dvmAsmInstructionStart = .L_OP_NOP
     testl   %eax,%eax                           # is resolved entry null?
     jne     .LOP_IPUT_BYTE_JUMBO_finish                  # no, already resolved
     movl    %edx,OUT_ARG1(%esp)
-    movl    rGLUE,%edx
+    movl    rSELF,%edx
     jmp     .LOP_IPUT_BYTE_JUMBO_resolve
 
 
@@ -6904,9 +6900,9 @@ dvmAsmInstructionStart = .L_OP_NOP
             iput-char/jumbo, iput-short/jumbo
      */
     /* exop vBBBB, vCCCC, field@AAAAAAAA */
-    movl    rGLUE,%ecx
+    movl    rSELF,%ecx
     movl    2(rPC),%edx                         # edx<- AAAAAAAA
-    movl    offGlue_methodClassDex(%ecx),%eax   # eax<- DvmDex
+    movl    offThread_methodClassDex(%ecx),%eax   # eax<- DvmDex
     movzwl  8(rPC),%ecx                         # ecx<- CCCC
     movl    offDvmDex_pResFields(%eax),%eax     # eax<- pDvmDex->pResFields
     GET_VREG_R %ecx %ecx                        # ecx<- fp[CCCC], the object ptr
@@ -6914,7 +6910,7 @@ dvmAsmInstructionStart = .L_OP_NOP
     testl   %eax,%eax                           # is resolved entry null?
     jne     .LOP_IPUT_CHAR_JUMBO_finish                  # no, already resolved
     movl    %edx,OUT_ARG1(%esp)
-    movl    rGLUE,%edx
+    movl    rSELF,%edx
     jmp     .LOP_IPUT_CHAR_JUMBO_resolve
 
 
@@ -6930,9 +6926,9 @@ dvmAsmInstructionStart = .L_OP_NOP
             iput-char/jumbo, iput-short/jumbo
      */
     /* exop vBBBB, vCCCC, field@AAAAAAAA */
-    movl    rGLUE,%ecx
+    movl    rSELF,%ecx
     movl    2(rPC),%edx                         # edx<- AAAAAAAA
-    movl    offGlue_methodClassDex(%ecx),%eax   # eax<- DvmDex
+    movl    offThread_methodClassDex(%ecx),%eax   # eax<- DvmDex
     movzwl  8(rPC),%ecx                         # ecx<- CCCC
     movl    offDvmDex_pResFields(%eax),%eax     # eax<- pDvmDex->pResFields
     GET_VREG_R %ecx %ecx                        # ecx<- fp[CCCC], the object ptr
@@ -6940,7 +6936,7 @@ dvmAsmInstructionStart = .L_OP_NOP
     testl   %eax,%eax                           # is resolved entry null?
     jne     .LOP_IPUT_SHORT_JUMBO_finish                  # no, already resolved
     movl    %edx,OUT_ARG1(%esp)
-    movl    rGLUE,%edx
+    movl    rSELF,%edx
     jmp     .LOP_IPUT_SHORT_JUMBO_resolve
 
 
@@ -6955,8 +6951,8 @@ dvmAsmInstructionStart = .L_OP_NOP
      *      sget-char/jumbo, sget-short/jumbo
      */
     /* exop vBBBB, field@AAAAAAAA */
-    movl      rGLUE,%ecx
-    movl      offGlue_methodClassDex(%ecx),%ecx  # ecx<- DvmDex
+    movl      rSELF,%ecx
+    movl      offThread_methodClassDex(%ecx),%ecx  # ecx<- DvmDex
     movl      2(rPC),%eax                        # eax<- field ref AAAAAAAA
     movl      offDvmDex_pResFields(%ecx),%ecx    # ecx<- dvmDex->pResFields
     movl      (%ecx,%eax,4),%eax                 # eax<- resolved StaticField ptr
@@ -6978,8 +6974,8 @@ dvmAsmInstructionStart = .L_OP_NOP
      *
      */
     /* sget-wide/jumbo vBBBB, field@AAAAAAAA */
-    movl      rGLUE,%ecx
-    movl      offGlue_methodClassDex(%ecx),%ecx  # ecx<- DvmDex
+    movl      rSELF,%ecx
+    movl      offThread_methodClassDex(%ecx),%ecx  # ecx<- DvmDex
     movl      2(rPC),%eax                        # eax<- field ref AAAAAAAA
     movl      offDvmDex_pResFields(%ecx),%ecx    # ecx<- dvmDex->pResFields
     movl      (%ecx,%eax,4),%eax                 # eax<- resolved StaticField ptr
@@ -7006,8 +7002,8 @@ dvmAsmInstructionStart = .L_OP_NOP
      *      sget-char/jumbo, sget-short/jumbo
      */
     /* exop vBBBB, field@AAAAAAAA */
-    movl      rGLUE,%ecx
-    movl      offGlue_methodClassDex(%ecx),%ecx  # ecx<- DvmDex
+    movl      rSELF,%ecx
+    movl      offThread_methodClassDex(%ecx),%ecx  # ecx<- DvmDex
     movl      2(rPC),%eax                        # eax<- field ref AAAAAAAA
     movl      offDvmDex_pResFields(%ecx),%ecx    # ecx<- dvmDex->pResFields
     movl      (%ecx,%eax,4),%eax                 # eax<- resolved StaticField ptr
@@ -7033,8 +7029,8 @@ dvmAsmInstructionStart = .L_OP_NOP
      *      sget-char/jumbo, sget-short/jumbo
      */
     /* exop vBBBB, field@AAAAAAAA */
-    movl      rGLUE,%ecx
-    movl      offGlue_methodClassDex(%ecx),%ecx  # ecx<- DvmDex
+    movl      rSELF,%ecx
+    movl      offThread_methodClassDex(%ecx),%ecx  # ecx<- DvmDex
     movl      2(rPC),%eax                        # eax<- field ref AAAAAAAA
     movl      offDvmDex_pResFields(%ecx),%ecx    # ecx<- dvmDex->pResFields
     movl      (%ecx,%eax,4),%eax                 # eax<- resolved StaticField ptr
@@ -7060,8 +7056,8 @@ dvmAsmInstructionStart = .L_OP_NOP
      *      sget-char/jumbo, sget-short/jumbo
      */
     /* exop vBBBB, field@AAAAAAAA */
-    movl      rGLUE,%ecx
-    movl      offGlue_methodClassDex(%ecx),%ecx  # ecx<- DvmDex
+    movl      rSELF,%ecx
+    movl      offThread_methodClassDex(%ecx),%ecx  # ecx<- DvmDex
     movl      2(rPC),%eax                        # eax<- field ref AAAAAAAA
     movl      offDvmDex_pResFields(%ecx),%ecx    # ecx<- dvmDex->pResFields
     movl      (%ecx,%eax,4),%eax                 # eax<- resolved StaticField ptr
@@ -7087,8 +7083,8 @@ dvmAsmInstructionStart = .L_OP_NOP
      *      sget-char/jumbo, sget-short/jumbo
      */
     /* exop vBBBB, field@AAAAAAAA */
-    movl      rGLUE,%ecx
-    movl      offGlue_methodClassDex(%ecx),%ecx  # ecx<- DvmDex
+    movl      rSELF,%ecx
+    movl      offThread_methodClassDex(%ecx),%ecx  # ecx<- DvmDex
     movl      2(rPC),%eax                        # eax<- field ref AAAAAAAA
     movl      offDvmDex_pResFields(%ecx),%ecx    # ecx<- dvmDex->pResFields
     movl      (%ecx,%eax,4),%eax                 # eax<- resolved StaticField ptr
@@ -7114,8 +7110,8 @@ dvmAsmInstructionStart = .L_OP_NOP
      *      sget-char/jumbo, sget-short/jumbo
      */
     /* exop vBBBB, field@AAAAAAAA */
-    movl      rGLUE,%ecx
-    movl      offGlue_methodClassDex(%ecx),%ecx  # ecx<- DvmDex
+    movl      rSELF,%ecx
+    movl      offThread_methodClassDex(%ecx),%ecx  # ecx<- DvmDex
     movl      2(rPC),%eax                        # eax<- field ref AAAAAAAA
     movl      offDvmDex_pResFields(%ecx),%ecx    # ecx<- dvmDex->pResFields
     movl      (%ecx,%eax,4),%eax                 # eax<- resolved StaticField ptr
@@ -7140,8 +7136,8 @@ dvmAsmInstructionStart = .L_OP_NOP
      *      sput-short/jumbo
      */
     /* exop vBBBB, field@AAAAAAAA */
-    movl      rGLUE,%ecx
-    movl      offGlue_methodClassDex(%ecx),%ecx  # ecx<- DvmDex
+    movl      rSELF,%ecx
+    movl      offThread_methodClassDex(%ecx),%ecx  # ecx<- DvmDex
     movl      2(rPC),%eax                        # eax<- field ref AAAAAAAA
     movl      offDvmDex_pResFields(%ecx),%ecx    # ecx<- dvmDex->pResFields
     movl      (%ecx,%eax,4),%eax                 # eax<- resolved StaticField ptr
@@ -7162,8 +7158,8 @@ dvmAsmInstructionStart = .L_OP_NOP
      * Jumbo 64-bit SPUT handler.
      */
     /* sput-wide/jumbo vBBBB, field@AAAAAAAA */
-    movl      rGLUE,%ecx
-    movl      offGlue_methodClassDex(%ecx),%ecx  # ecx<- DvmDex
+    movl      rSELF,%ecx
+    movl      offThread_methodClassDex(%ecx),%ecx  # ecx<- DvmDex
     movl      2(rPC),%eax                        # eax<- field ref AAAAAAAA
     movl      offDvmDex_pResFields(%ecx),%ecx    # ecx<- dvmDex->pResFields
     movl      (%ecx,%eax,4),%eax                 # eax<- resolved StaticField ptr
@@ -7186,9 +7182,9 @@ dvmAsmInstructionStart = .L_OP_NOP
      * Jumbo SPUT object handler.
      */
     /* sput-object/jumbo vBBBB, field@AAAAAAAA */
-    movl      rGLUE,%ecx
+    movl      rSELF,%ecx
     movl      2(rPC),%eax                        # eax<- field ref AAAAAAAA
-    movl      offGlue_methodClassDex(%ecx),%ecx  # ecx<- DvmDex
+    movl      offThread_methodClassDex(%ecx),%ecx  # ecx<- DvmDex
     movl      offDvmDex_pResFields(%ecx),%ecx    # ecx<- dvmDex->pResFields
     movl      (%ecx,%eax,4),%eax                 # eax<- resolved StaticField
     testl     %eax,%eax                          # resolved entry null?
@@ -7209,8 +7205,8 @@ dvmAsmInstructionStart = .L_OP_NOP
      *      sput-short/jumbo
      */
     /* exop vBBBB, field@AAAAAAAA */
-    movl      rGLUE,%ecx
-    movl      offGlue_methodClassDex(%ecx),%ecx  # ecx<- DvmDex
+    movl      rSELF,%ecx
+    movl      offThread_methodClassDex(%ecx),%ecx  # ecx<- DvmDex
     movl      2(rPC),%eax                        # eax<- field ref AAAAAAAA
     movl      offDvmDex_pResFields(%ecx),%ecx    # ecx<- dvmDex->pResFields
     movl      (%ecx,%eax,4),%eax                 # eax<- resolved StaticField ptr
@@ -7236,8 +7232,8 @@ dvmAsmInstructionStart = .L_OP_NOP
      *      sput-short/jumbo
      */
     /* exop vBBBB, field@AAAAAAAA */
-    movl      rGLUE,%ecx
-    movl      offGlue_methodClassDex(%ecx),%ecx  # ecx<- DvmDex
+    movl      rSELF,%ecx
+    movl      offThread_methodClassDex(%ecx),%ecx  # ecx<- DvmDex
     movl      2(rPC),%eax                        # eax<- field ref AAAAAAAA
     movl      offDvmDex_pResFields(%ecx),%ecx    # ecx<- dvmDex->pResFields
     movl      (%ecx,%eax,4),%eax                 # eax<- resolved StaticField ptr
@@ -7263,8 +7259,8 @@ dvmAsmInstructionStart = .L_OP_NOP
      *      sput-short/jumbo
      */
     /* exop vBBBB, field@AAAAAAAA */
-    movl      rGLUE,%ecx
-    movl      offGlue_methodClassDex(%ecx),%ecx  # ecx<- DvmDex
+    movl      rSELF,%ecx
+    movl      offThread_methodClassDex(%ecx),%ecx  # ecx<- DvmDex
     movl      2(rPC),%eax                        # eax<- field ref AAAAAAAA
     movl      offDvmDex_pResFields(%ecx),%ecx    # ecx<- dvmDex->pResFields
     movl      (%ecx,%eax,4),%eax                 # eax<- resolved StaticField ptr
@@ -7290,8 +7286,8 @@ dvmAsmInstructionStart = .L_OP_NOP
      *      sput-short/jumbo
      */
     /* exop vBBBB, field@AAAAAAAA */
-    movl      rGLUE,%ecx
-    movl      offGlue_methodClassDex(%ecx),%ecx  # ecx<- DvmDex
+    movl      rSELF,%ecx
+    movl      offThread_methodClassDex(%ecx),%ecx  # ecx<- DvmDex
     movl      2(rPC),%eax                        # eax<- field ref AAAAAAAA
     movl      offDvmDex_pResFields(%ecx),%ecx    # ecx<- dvmDex->pResFields
     movl      (%ecx,%eax,4),%eax                 # eax<- resolved StaticField ptr
@@ -7313,17 +7309,17 @@ dvmAsmInstructionStart = .L_OP_NOP
      * Handle a jumbo virtual method call.
      */
     /* invoke-virtual/jumbo vBBBB, {vCCCC..v(CCCC+BBBB-1)}, meth@AAAAAAAA */
-    movl      rGLUE,%eax
+    movl      rSELF,%eax
     movl      2(rPC),%ecx                 # ecx<- AAAAAAAA
-    movl      offGlue_methodClassDex(%eax),%eax  # eax<- pDvmDex
+    movl      offThread_methodClassDex(%eax),%eax  # eax<- pDvmDex
     EXPORT_PC
     movl      offDvmDex_pResMethods(%eax),%eax   # eax<- pDvmDex->pResMethods
     movl      (%eax,%ecx,4),%eax          # eax<- resolved baseMethod
     testl     %eax,%eax                   # already resolved?
     jne       .LOP_INVOKE_VIRTUAL_JUMBO_continue        # yes, continue
-    movl      rGLUE,%eax
+    movl      rSELF,%eax
     movl      %ecx,OUT_ARG1(%esp)         # arg1<- ref
-    movl      offGlue_method(%eax),%eax   # eax<- glue->method
+    movl      offThread_method(%eax),%eax   # eax<- self->method
     jmp       .LOP_INVOKE_VIRTUAL_JUMBO_more
 
 /* ------------------------------ */
@@ -7334,13 +7330,13 @@ dvmAsmInstructionStart = .L_OP_NOP
      * Handle a jumbo "super" method call.
      */
     /* invoke-super/jumbo {vCCCC..v(CCCC+BBBB-1)}, meth@AAAAAAAA */
-    movl      rGLUE,rINST
+    movl      rSELF,rINST
     movl      2(rPC),%eax               # eax<- AAAAAAAA
-    movl      offGlue_methodClassDex(rINST),%ecx # ecx<- pDvmDex
+    movl      offThread_methodClassDex(rINST),%ecx # ecx<- pDvmDex
     EXPORT_PC
     movl      offDvmDex_pResMethods(%ecx),%ecx # ecx<- pDvmDex->pResMethods
     movl      (%ecx,%eax,4),%ecx        # ecx<- resolved baseMethod
-    movl      offGlue_method(rINST),%eax # eax<- method
+    movl      offThread_method(rINST),%eax # eax<- method
     movzwl    8(rPC),rINST              # rINST<- CCCC
     GET_VREG_R  rINST rINST             # rINST<- "this" ptr
     testl     rINST,rINST               # null "this"?
@@ -7363,9 +7359,9 @@ dvmAsmInstructionStart = .L_OP_NOP
      * out we could avoiding loading the first arg twice.)
      */
     /* invoke-direct/jumbo {vCCCC..v(CCCC+BBBB-1)}, meth@AAAAAAAA */
-    movl      rGLUE,%ecx
+    movl      rSELF,%ecx
     movl      2(rPC),%eax              # eax<- AAAAAAAA
-    movl      offGlue_methodClassDex(%ecx),%ecx # ecx<- pDvmDex
+    movl      offThread_methodClassDex(%ecx),%ecx # ecx<- pDvmDex
     EXPORT_PC
     movl      offDvmDex_pResMethods(%ecx),%ecx  # ecx<- pDvmDex->pResMethods
     movzwl    8(rPC),%edx              # edx<- CCCC
@@ -7386,16 +7382,16 @@ dvmAsmInstructionStart = .L_OP_NOP
      * Handle a jumbo static method call.
      */
     /* invoke-static/jumbo {vCCCC..v(CCCC+BBBB-1)}, meth@AAAAAAAA */
-    movl      rGLUE,%ecx
+    movl      rSELF,%ecx
     movl      2(rPC),%eax               # eax<- AAAAAAAA
-    movl      offGlue_methodClassDex(%ecx),%ecx # ecx<- pDvmDex
+    movl      offThread_methodClassDex(%ecx),%ecx # ecx<- pDvmDex
     EXPORT_PC
     movl      offDvmDex_pResMethods(%ecx),%ecx  # ecx<- pDvmDex->pResMethods
     movl      (%ecx,%eax,4),%eax        # eax<- resolved methodToCall
     testl     %eax,%eax
     jne       common_invokeMethodJumbo
-    movl      rGLUE,%ecx
-    movl      offGlue_method(%ecx),%ecx # ecx<- glue->method
+    movl      rSELF,%ecx
+    movl      offThread_method(%ecx),%ecx # ecx<- self->method
     movl      2(rPC),%eax               # eax<- AAAAAAAA
     movl      offMethod_clazz(%ecx),%ecx# ecx<- method->clazz
     movl      %eax,OUT_ARG1(%esp)       # arg1<- AAAAAAAA
@@ -7411,15 +7407,15 @@ dvmAsmInstructionStart = .L_OP_NOP
      */
     /* invoke-interface/jumbo {vCCCC..v(CCCC+BBBB-1)}, meth@AAAAAAAA */
     movzwl     8(rPC),%eax              # eax<- CCCC
-    movl       rGLUE,%ecx
+    movl       rSELF,%ecx
     GET_VREG_R   %eax %eax              # eax<- "this"
     EXPORT_PC
     testl      %eax,%eax                # null this?
     je         common_errNullObject     # yes, fail
     movl       offObject_clazz(%eax),%eax# eax<- thisPtr->clazz
     movl       %eax,OUT_ARG0(%esp)                 # arg0<- class
-    movl       offGlue_methodClassDex(%ecx),%eax   # eax<- methodClassDex
-    movl       offGlue_method(%ecx),%ecx           # ecx<- method
+    movl       offThread_methodClassDex(%ecx),%eax   # eax<- methodClassDex
+    movl       offThread_method(%ecx),%ecx           # ecx<- method
     movl       %eax,OUT_ARG3(%esp)                 # arg3<- dex
     movl       2(rPC),%eax                         # eax<- AAAAAAAA
     movl       %ecx,OUT_ARG2(%esp)                 # arg2<- method
@@ -9164,9 +9160,9 @@ dvmAsmInstructionStart = .L_OP_NOP
      * exception is indicated by BBBB, with some detail provided by AAAAAAAA.
      */
     /* exop BBBB, ref@AAAAAAAA */
-    movl     rGLUE,%ecx
+    movl     rSELF,%ecx
     movl     2(rPC),%eax                     # eax<- AAAAAAAA
-    movl     offGlue_method(%ecx),%ecx       # ecx<- glue->method
+    movl     offThread_method(%ecx),%ecx       # ecx<- self->method
     EXPORT_PC
     movl     %eax,OUT_ARG2(%esp)             # arg2<- AAAAAAAA
     movl     rINST,OUT_ARG1(%esp)            # arg1<- BBBB
@@ -9196,10 +9192,10 @@ dvmAsmSisterStart:
 /* This is the less common path, so we'll redo some work
    here rather than force spills on the common path */
 .LOP_CONST_STRING_resolve:
-    movl     rGLUE,%eax
+    movl     rSELF,%eax
     movl     %ecx,rINST                # rINST<- AA
     EXPORT_PC
-    movl     offGlue_method(%eax),%eax # eax<- glue->method
+    movl     offThread_method(%eax),%eax # eax<- self->method
     movzwl   2(rPC),%ecx               # ecx<- BBBB
     movl     offMethod_clazz(%eax),%eax
     movl     %ecx,OUT_ARG1(%esp)
@@ -9217,10 +9213,10 @@ dvmAsmSisterStart:
 /* This is the less common path, so we'll redo some work
    here rather than force spills on the common path */
 .LOP_CONST_STRING_JUMBO_resolve:
-    movl     rGLUE,%eax
+    movl     rSELF,%eax
     movl     %ecx,rINST                # rINST<- AA
     EXPORT_PC
-    movl     offGlue_method(%eax),%eax # eax<- glue->method
+    movl     offThread_method(%eax),%eax # eax<- self->method
     movl     2(rPC),%ecx               # ecx<- BBBBBBBB
     movl     offMethod_clazz(%eax),%eax
     movl     %ecx,OUT_ARG1(%esp)
@@ -9238,10 +9234,10 @@ dvmAsmSisterStart:
 /* This is the less common path, so we'll redo some work
    here rather than force spills on the common path */
 .LOP_CONST_CLASS_resolve:
-    movl     rGLUE,%eax
+    movl     rSELF,%eax
     movl     %ecx,rINST                # rINST<- AA
     EXPORT_PC
-    movl     offGlue_method(%eax),%eax # eax<- glue->method
+    movl     offThread_method(%eax),%eax # eax<- self->method
     movl     $1,OUT_ARG2(%esp)        # true
     movzwl   2(rPC),%ecx               # ecx<- BBBB
     movl     offMethod_clazz(%eax),%eax
@@ -9309,10 +9305,10 @@ dvmAsmSisterStart:
      *  rINST holds object
      */
 .LOP_CHECK_CAST_resolve:
-    movl    rGLUE,%ecx
+    movl    rSELF,%ecx
     EXPORT_PC
     movzwl  2(rPC),%eax                # eax<- BBBB
-    movl    offGlue_method(%ecx),%ecx  # ecx<- glue->method
+    movl    offThread_method(%ecx),%ecx  # ecx<- self->method
     movl    %eax,OUT_ARG1(%esp)        # arg1<- BBBB
     movl    offMethod_clazz(%ecx),%ecx # ecx<- metho->clazz
     movl    $0,OUT_ARG2(%esp)         # arg2<- false
@@ -9368,8 +9364,8 @@ dvmAsmSisterStart:
      */
 .LOP_INSTANCE_OF_resolve:
     movl    %edx,OUT_ARG1(%esp)         # arg1<- BBBB
-    movl    rGLUE,%ecx
-    movl    offGlue_method(%ecx),%ecx
+    movl    rSELF,%ecx
+    movl    offThread_method(%ecx),%ecx
     movl    $1,OUT_ARG2(%esp)          # arg2<- true
     movl    offMethod_clazz(%ecx),%ecx  # ecx<- method->clazz
     EXPORT_PC
@@ -9423,9 +9419,9 @@ dvmAsmSisterStart:
      *
      */
 .LOP_NEW_INSTANCE_resolve:
-    movl    rGLUE,%ecx
+    movl    rSELF,%ecx
     movzwl  2(rPC),%eax
-    movl    offGlue_method(%ecx),%ecx   # ecx<- glue->method
+    movl    offThread_method(%ecx),%ecx   # ecx<- self->method
     movl    %eax,OUT_ARG1(%esp)
     movl    offMethod_clazz(%ecx),%ecx  # ecx<- method->clazz
     movl    $0,OUT_ARG2(%esp)
@@ -9458,9 +9454,9 @@ dvmAsmSisterStart:
      *  eax holds array length (vB)
      */
 .LOP_NEW_ARRAY_resolve:
-    movl    rGLUE,%ecx
+    movl    rSELF,%ecx
     SPILL_TMP1(%eax)                   # save array length
-    movl    offGlue_method(%ecx),%ecx  # ecx<- glue->method
+    movl    offThread_method(%ecx),%ecx  # ecx<- self->method
     movzwl  2(rPC),%eax                # eax<- CCCC
     movl    offMethod_clazz(%ecx),%ecx # ecx<- method->clazz
     movl    %eax,OUT_ARG1(%esp)
@@ -9513,7 +9509,7 @@ dvmAsmSisterStart:
     movl    $ALLOC_DONT_TRACK,OUT_ARG2(%esp)     # arg2<- flags
     movzbl  1(%ecx),%ecx                          # ecx<- descriptor[1]
     movl    %eax,OUT_ARG0(%esp)                   # arg0<- arrayClass
-    movl    rGLUE,%eax
+    movl    rSELF,%eax
     cmpb    $'I',%cl                             # supported?
     je      1f
     cmpb    $'L',%cl
@@ -9521,17 +9517,17 @@ dvmAsmSisterStart:
     cmpb    $'[',%cl
     jne      .LOP_FILLED_NEW_ARRAY_notimpl                  # no, not handled yet
 1:
-    movl    %ecx,offGlue_retval+4(%eax)           # save type
+    movl    %ecx,offThread_retval+4(%eax)           # save type
     .if      (!0)
     SPILL_TMP1(rINST)                              # save copy, need "B" later
     sarl    $4,rINST
     .endif
     movl    rINST,OUT_ARG1(%esp)                  # arg1<- A or AA (length)
     call    dvmAllocArrayByClass     # eax<- call(arrayClass, length, flags)
-    movl    rGLUE,%ecx
+    movl    rSELF,%ecx
     testl   %eax,%eax                             # alloc successful?
     je      common_exceptionThrown                # no, handle exception
-    movl    %eax,offGlue_retval(%ecx)             # retval.l<- new array
+    movl    %eax,offThread_retval(%ecx)             # retval.l<- new array
     movzwl  4(rPC),%ecx                           # ecx<- FEDC or CCCC
     leal    offArrayObject_contents(%eax),%eax    # eax<- newArray->contents
 
@@ -9554,8 +9550,8 @@ dvmAsmSisterStart:
     movsd
     UNSPILL_TMP2(%esi)
     UNSPILL_TMP3(%edi)
-    movl    rGLUE,%ecx
-    movl    offGlue_retval+4(%ecx),%eax      # eax<- type
+    movl    rSELF,%ecx
+    movl    offThread_retval+4(%ecx),%eax      # eax<- type
     FETCH_INST_OPCODE 3 %edx
     .else
     testl  rINST,rINST
@@ -9574,15 +9570,15 @@ dvmAsmSisterStart:
     sub    $1,rINST
     jne    3b
 4:
-    movl   rGLUE,%ecx
-    movl    offGlue_retval+4(%ecx),%eax      # eax<- type
+    movl   rSELF,%ecx
+    movl    offThread_retval+4(%ecx),%eax      # eax<- type
     FETCH_INST_OPCODE 3 %edx
     .endif
 
     cmpb    $'I',%al                        # Int array?
     je      5f                               # skip card mark if so
-    movl    offGlue_retval(%ecx),%eax        # eax<- object head
-    movl    offGlue_cardTable(%ecx),%ecx     # card table base
+    movl    offThread_retval(%ecx),%eax        # eax<- object head
+    movl    offThread_cardTable(%ecx),%ecx     # card table base
     shrl    $GC_CARD_SHIFT,%eax             # convert to card num
     movb    %cl,(%ecx,%eax)                  # mark card based on object head
 5:
@@ -9624,7 +9620,7 @@ dvmAsmSisterStart:
     movl    $ALLOC_DONT_TRACK,OUT_ARG2(%esp)     # arg2<- flags
     movzbl  1(%ecx),%ecx                          # ecx<- descriptor[1]
     movl    %eax,OUT_ARG0(%esp)                   # arg0<- arrayClass
-    movl    rGLUE,%eax
+    movl    rSELF,%eax
     cmpb    $'I',%cl                             # supported?
     je      1f
     cmpb    $'L',%cl
@@ -9632,17 +9628,17 @@ dvmAsmSisterStart:
     cmpb    $'[',%cl
     jne      .LOP_FILLED_NEW_ARRAY_RANGE_notimpl                  # no, not handled yet
 1:
-    movl    %ecx,offGlue_retval+4(%eax)           # save type
+    movl    %ecx,offThread_retval+4(%eax)           # save type
     .if      (!1)
     SPILL_TMP1(rINST)                              # save copy, need "B" later
     sarl    $4,rINST
     .endif
     movl    rINST,OUT_ARG1(%esp)                  # arg1<- A or AA (length)
     call    dvmAllocArrayByClass     # eax<- call(arrayClass, length, flags)
-    movl    rGLUE,%ecx
+    movl    rSELF,%ecx
     testl   %eax,%eax                             # alloc successful?
     je      common_exceptionThrown                # no, handle exception
-    movl    %eax,offGlue_retval(%ecx)             # retval.l<- new array
+    movl    %eax,offThread_retval(%ecx)             # retval.l<- new array
     movzwl  4(rPC),%ecx                           # ecx<- FEDC or CCCC
     leal    offArrayObject_contents(%eax),%eax    # eax<- newArray->contents
 
@@ -9665,8 +9661,8 @@ dvmAsmSisterStart:
     movsd
     UNSPILL_TMP2(%esi)
     UNSPILL_TMP3(%edi)
-    movl    rGLUE,%ecx
-    movl    offGlue_retval+4(%ecx),%eax      # eax<- type
+    movl    rSELF,%ecx
+    movl    offThread_retval+4(%ecx),%eax      # eax<- type
     FETCH_INST_OPCODE 3 %edx
     .else
     testl  rINST,rINST
@@ -9685,15 +9681,15 @@ dvmAsmSisterStart:
     sub    $1,rINST
     jne    3b
 4:
-    movl   rGLUE,%ecx
-    movl    offGlue_retval+4(%ecx),%eax      # eax<- type
+    movl   rSELF,%ecx
+    movl    offThread_retval+4(%ecx),%eax      # eax<- type
     FETCH_INST_OPCODE 3 %edx
     .endif
 
     cmpb    $'I',%al                        # Int array?
     je      5f                               # skip card mark if so
-    movl    offGlue_retval(%ecx),%eax        # eax<- object head
-    movl    offGlue_cardTable(%ecx),%ecx     # card table base
+    movl    offThread_retval(%ecx),%eax        # eax<- object head
+    movl    offThread_cardTable(%ecx),%ecx     # card table base
     shrl    $GC_CARD_SHIFT,%eax             # convert to card num
     movb    %cl,(%ecx,%eax)                  # mark card based on object head
 5:
@@ -9796,7 +9792,7 @@ dvmAsmSisterStart:
     call      dvmCanPutArrayElement          # test object type vs. array type
     UNSPILL_TMP1(%ecx)                       # recover target address
     testl     %eax,%eax
-    movl      rGLUE,%eax
+    movl      rSELF,%eax
     jne       .LOP_APUT_OBJECT_types_okay
 
     # The types don't match.  We need to throw an ArrayStoreException.
@@ -9809,7 +9805,7 @@ dvmAsmSisterStart:
     jmp       common_exceptionThrown
 
 .LOP_APUT_OBJECT_types_okay:
-    movl      offGlue_cardTable(%eax),%eax   # get card table base
+    movl      offThread_cardTable(%eax),%eax   # get card table base
     movl      rINST,(%ecx)                   # store into array
     UNSPILL_TMP2(%ecx)                       # recover object head
     FETCH_INST_OPCODE 2 %edx
@@ -9829,7 +9825,7 @@ dvmAsmSisterStart:
 
 .LOP_IGET_resolve:
     EXPORT_PC
-    movl    offGlue_method(%edx),%edx           # edx<- current method
+    movl    offThread_method(%edx),%edx           # edx<- current method
     movl    offMethod_clazz(%edx),%edx          # edx<- method->clazz
     SPILL_TMP1(%ecx)                            # save obj pointer across call
     movl    %edx,OUT_ARG0(%esp)                  # pass in method->clazz
@@ -9861,7 +9857,7 @@ dvmAsmSisterStart:
 
 .LOP_IGET_WIDE_resolve:
     EXPORT_PC
-    movl    offGlue_method(%edx),%edx           # edx<- current method
+    movl    offThread_method(%edx),%edx           # edx<- current method
     movl    offMethod_clazz(%edx),%edx          # edx<- method->clazz
     SPILL_TMP1(%ecx)                            # save objpointer across call
     movl    rPC,OUT_ARG0(%esp)                  # pass in method->clazz
@@ -9895,7 +9891,7 @@ dvmAsmSisterStart:
 
 .LOP_IGET_OBJECT_resolve:
     EXPORT_PC
-    movl    offGlue_method(%edx),%edx           # edx<- current method
+    movl    offThread_method(%edx),%edx           # edx<- current method
     movl    offMethod_clazz(%edx),%edx          # edx<- method->clazz
     SPILL_TMP1(%ecx)                            # save obj pointer across call
     movl    %edx,OUT_ARG0(%esp)                  # pass in method->clazz
@@ -9927,7 +9923,7 @@ dvmAsmSisterStart:
 
 .LOP_IGET_BOOLEAN_resolve:
     EXPORT_PC
-    movl    offGlue_method(%edx),%edx           # edx<- current method
+    movl    offThread_method(%edx),%edx           # edx<- current method
     movl    offMethod_clazz(%edx),%edx          # edx<- method->clazz
     SPILL_TMP1(%ecx)                            # save obj pointer across call
     movl    %edx,OUT_ARG0(%esp)                  # pass in method->clazz
@@ -9959,7 +9955,7 @@ dvmAsmSisterStart:
 
 .LOP_IGET_BYTE_resolve:
     EXPORT_PC
-    movl    offGlue_method(%edx),%edx           # edx<- current method
+    movl    offThread_method(%edx),%edx           # edx<- current method
     movl    offMethod_clazz(%edx),%edx          # edx<- method->clazz
     SPILL_TMP1(%ecx)                            # save obj pointer across call
     movl    %edx,OUT_ARG0(%esp)                  # pass in method->clazz
@@ -9991,7 +9987,7 @@ dvmAsmSisterStart:
 
 .LOP_IGET_CHAR_resolve:
     EXPORT_PC
-    movl    offGlue_method(%edx),%edx           # edx<- current method
+    movl    offThread_method(%edx),%edx           # edx<- current method
     movl    offMethod_clazz(%edx),%edx          # edx<- method->clazz
     SPILL_TMP1(%ecx)                            # save obj pointer across call
     movl    %edx,OUT_ARG0(%esp)                  # pass in method->clazz
@@ -10023,7 +10019,7 @@ dvmAsmSisterStart:
 
 .LOP_IGET_SHORT_resolve:
     EXPORT_PC
-    movl    offGlue_method(%edx),%edx           # edx<- current method
+    movl    offThread_method(%edx),%edx           # edx<- current method
     movl    offMethod_clazz(%edx),%edx          # edx<- method->clazz
     SPILL_TMP1(%ecx)                            # save obj pointer across call
     movl    %edx,OUT_ARG0(%esp)                  # pass in method->clazz
@@ -10055,7 +10051,7 @@ dvmAsmSisterStart:
 
 .LOP_IPUT_resolve:
     EXPORT_PC
-    movl    offGlue_method(%edx),%edx           # edx<- current method
+    movl    offThread_method(%edx),%edx           # edx<- current method
     movl    offMethod_clazz(%edx),%edx          # edx<- method->clazz
     SPILL_TMP1(%ecx)                            # save obj pointer across call
     movl    %edx,OUT_ARG0(%esp)                 # pass in method->clazz
@@ -10086,7 +10082,7 @@ dvmAsmSisterStart:
 
 .LOP_IPUT_WIDE_resolve:
     EXPORT_PC
-    movl    offGlue_method(%edx),%edx           # edx<- current method
+    movl    offThread_method(%edx),%edx           # edx<- current method
     movl    offMethod_clazz(%edx),%edx          # edx<- method->clazz
     SPILL_TMP1(%ecx)                            # save obj pointer across call
     movl    %edx,OUT_ARG0(%esp)                 # pass in method->clazz
@@ -10121,7 +10117,7 @@ dvmAsmSisterStart:
 
 .LOP_IPUT_OBJECT_resolve:
     EXPORT_PC
-    movl    offGlue_method(%edx),%edx           # edx<- current method
+    movl    offThread_method(%edx),%edx           # edx<- current method
     movl    offMethod_clazz(%edx),%edx          # edx<- method->clazz
     SPILL_TMP1(%ecx)                            # save obj pointer across call
     movl    %edx,OUT_ARG0(%esp)                 # pass in method->clazz
@@ -10144,9 +10140,9 @@ dvmAsmSisterStart:
     testl   %ecx,%ecx                           # object null?
     je      common_errNullObject                # object was null
     movl    rINST,(%ecx,%eax)      # obj.field <- v[A](8/16/32 bits)
-    movl    rGLUE,%eax
+    movl    rSELF,%eax
     testl   rINST,rINST                         # stored a NULL?
-    movl    offGlue_cardTable(%eax),%eax        # get card table base
+    movl    offThread_cardTable(%eax),%eax        # get card table base
     FETCH_INST_OPCODE 2 %edx
     je      1f                                  # skip card mark if null store
     shrl    $GC_CARD_SHIFT,%ecx                # object head to card number
@@ -10160,7 +10156,7 @@ dvmAsmSisterStart:
 
 .LOP_IPUT_BOOLEAN_resolve:
     EXPORT_PC
-    movl    offGlue_method(%edx),%edx           # edx<- current method
+    movl    offThread_method(%edx),%edx           # edx<- current method
     movl    offMethod_clazz(%edx),%edx          # edx<- method->clazz
     SPILL_TMP1(%ecx)                            # save obj pointer across call
     movl    %edx,OUT_ARG0(%esp)                 # pass in method->clazz
@@ -10191,7 +10187,7 @@ dvmAsmSisterStart:
 
 .LOP_IPUT_BYTE_resolve:
     EXPORT_PC
-    movl    offGlue_method(%edx),%edx           # edx<- current method
+    movl    offThread_method(%edx),%edx           # edx<- current method
     movl    offMethod_clazz(%edx),%edx          # edx<- method->clazz
     SPILL_TMP1(%ecx)                            # save obj pointer across call
     movl    %edx,OUT_ARG0(%esp)                 # pass in method->clazz
@@ -10222,7 +10218,7 @@ dvmAsmSisterStart:
 
 .LOP_IPUT_CHAR_resolve:
     EXPORT_PC
-    movl    offGlue_method(%edx),%edx           # edx<- current method
+    movl    offThread_method(%edx),%edx           # edx<- current method
     movl    offMethod_clazz(%edx),%edx          # edx<- method->clazz
     SPILL_TMP1(%ecx)                            # save obj pointer across call
     movl    %edx,OUT_ARG0(%esp)                 # pass in method->clazz
@@ -10253,7 +10249,7 @@ dvmAsmSisterStart:
 
 .LOP_IPUT_SHORT_resolve:
     EXPORT_PC
-    movl    offGlue_method(%edx),%edx           # edx<- current method
+    movl    offThread_method(%edx),%edx           # edx<- current method
     movl    offMethod_clazz(%edx),%edx          # edx<- method->clazz
     SPILL_TMP1(%ecx)                            # save obj pointer across call
     movl    %edx,OUT_ARG0(%esp)                 # pass in method->clazz
@@ -10285,9 +10281,9 @@ dvmAsmSisterStart:
      * Go resolve the field
      */
 .LOP_SGET_resolve:
-    movl     rGLUE,%ecx
+    movl     rSELF,%ecx
     movzwl   2(rPC),%eax                        # eax<- field ref BBBB
-    movl     offGlue_method(%ecx),%ecx          # ecx<- current method
+    movl     offThread_method(%ecx),%ecx          # ecx<- current method
     EXPORT_PC                                   # could throw, need to export
     movl     offMethod_clazz(%ecx),%ecx         # ecx<- method->clazz
     movl     %eax,OUT_ARG1(%esp)
@@ -10303,9 +10299,9 @@ dvmAsmSisterStart:
      * Go resolve the field
      */
 .LOP_SGET_WIDE_resolve:
-    movl     rGLUE,%ecx
+    movl     rSELF,%ecx
     movzwl   2(rPC),%eax                        # eax<- field ref BBBB
-    movl     offGlue_method(%ecx),%ecx          # ecx<- current method
+    movl     offThread_method(%ecx),%ecx          # ecx<- current method
     EXPORT_PC                                   # could throw, need to export
     movl     offMethod_clazz(%ecx),%ecx         # ecx<- method->clazz
     movl     %eax,OUT_ARG1(%esp)
@@ -10321,9 +10317,9 @@ dvmAsmSisterStart:
      * Go resolve the field
      */
 .LOP_SGET_OBJECT_resolve:
-    movl     rGLUE,%ecx
+    movl     rSELF,%ecx
     movzwl   2(rPC),%eax                        # eax<- field ref BBBB
-    movl     offGlue_method(%ecx),%ecx          # ecx<- current method
+    movl     offThread_method(%ecx),%ecx          # ecx<- current method
     EXPORT_PC                                   # could throw, need to export
     movl     offMethod_clazz(%ecx),%ecx         # ecx<- method->clazz
     movl     %eax,OUT_ARG1(%esp)
@@ -10339,9 +10335,9 @@ dvmAsmSisterStart:
      * Go resolve the field
      */
 .LOP_SGET_BOOLEAN_resolve:
-    movl     rGLUE,%ecx
+    movl     rSELF,%ecx
     movzwl   2(rPC),%eax                        # eax<- field ref BBBB
-    movl     offGlue_method(%ecx),%ecx          # ecx<- current method
+    movl     offThread_method(%ecx),%ecx          # ecx<- current method
     EXPORT_PC                                   # could throw, need to export
     movl     offMethod_clazz(%ecx),%ecx         # ecx<- method->clazz
     movl     %eax,OUT_ARG1(%esp)
@@ -10357,9 +10353,9 @@ dvmAsmSisterStart:
      * Go resolve the field
      */
 .LOP_SGET_BYTE_resolve:
-    movl     rGLUE,%ecx
+    movl     rSELF,%ecx
     movzwl   2(rPC),%eax                        # eax<- field ref BBBB
-    movl     offGlue_method(%ecx),%ecx          # ecx<- current method
+    movl     offThread_method(%ecx),%ecx          # ecx<- current method
     EXPORT_PC                                   # could throw, need to export
     movl     offMethod_clazz(%ecx),%ecx         # ecx<- method->clazz
     movl     %eax,OUT_ARG1(%esp)
@@ -10375,9 +10371,9 @@ dvmAsmSisterStart:
      * Go resolve the field
      */
 .LOP_SGET_CHAR_resolve:
-    movl     rGLUE,%ecx
+    movl     rSELF,%ecx
     movzwl   2(rPC),%eax                        # eax<- field ref BBBB
-    movl     offGlue_method(%ecx),%ecx          # ecx<- current method
+    movl     offThread_method(%ecx),%ecx          # ecx<- current method
     EXPORT_PC                                   # could throw, need to export
     movl     offMethod_clazz(%ecx),%ecx         # ecx<- method->clazz
     movl     %eax,OUT_ARG1(%esp)
@@ -10393,9 +10389,9 @@ dvmAsmSisterStart:
      * Go resolve the field
      */
 .LOP_SGET_SHORT_resolve:
-    movl     rGLUE,%ecx
+    movl     rSELF,%ecx
     movzwl   2(rPC),%eax                        # eax<- field ref BBBB
-    movl     offGlue_method(%ecx),%ecx          # ecx<- current method
+    movl     offThread_method(%ecx),%ecx          # ecx<- current method
     EXPORT_PC                                   # could throw, need to export
     movl     offMethod_clazz(%ecx),%ecx         # ecx<- method->clazz
     movl     %eax,OUT_ARG1(%esp)
@@ -10411,9 +10407,9 @@ dvmAsmSisterStart:
      * Go resolve the field
      */
 .LOP_SPUT_resolve:
-    movl     rGLUE,%ecx
+    movl     rSELF,%ecx
     movzwl   2(rPC),%eax                        # eax<- field ref BBBB
-    movl     offGlue_method(%ecx),%ecx          # ecx<- current method
+    movl     offThread_method(%ecx),%ecx          # ecx<- current method
     EXPORT_PC                                   # could throw, need to export
     movl     offMethod_clazz(%ecx),%ecx         # ecx<- method->clazz
     movl     %eax,OUT_ARG1(%esp)
@@ -10429,9 +10425,9 @@ dvmAsmSisterStart:
      * Go resolve the field
      */
 .LOP_SPUT_WIDE_resolve:
-    movl     rGLUE,%ecx
+    movl     rSELF,%ecx
     movzwl   2(rPC),%eax                        # eax<- field ref BBBB
-    movl     offGlue_method(%ecx),%ecx          # ecx<- current method
+    movl     offThread_method(%ecx),%ecx          # ecx<- current method
     EXPORT_PC                                   # could throw, need to export
     movl     offMethod_clazz(%ecx),%ecx         # ecx<- method->clazz
     movl     %eax,OUT_ARG1(%esp)
@@ -10449,9 +10445,9 @@ dvmAsmSisterStart:
     testl     %ecx,%ecx                          # stored null object ptr?
     FETCH_INST_OPCODE 2 %edx
     je        1f                                 # skip card mark if null
-    movl      rGLUE,%ecx
+    movl      rSELF,%ecx
     movl      offField_clazz(%eax),%eax          # eax<- method->clazz
-    movl      offGlue_cardTable(%ecx),%ecx       # get card table base
+    movl      offThread_cardTable(%ecx),%ecx       # get card table base
     shrl      $GC_CARD_SHIFT,%eax               # head to card number
     movb      %cl,(%ecx,%eax)                    # mark card
 1:
@@ -10459,9 +10455,9 @@ dvmAsmSisterStart:
     GOTO_NEXT_R %edx
 
 .LOP_SPUT_OBJECT_resolve:
-    movl     rGLUE,%ecx
+    movl     rSELF,%ecx
     movzwl   2(rPC),%eax                        # eax<- field ref BBBB
-    movl     offGlue_method(%ecx),%ecx          # ecx<- current method
+    movl     offThread_method(%ecx),%ecx          # ecx<- current method
     EXPORT_PC                                   # could throw, need to export
     movl     offMethod_clazz(%ecx),%ecx         # ecx<- method->clazz
     movl     %eax,OUT_ARG1(%esp)
@@ -10477,9 +10473,9 @@ dvmAsmSisterStart:
      * Go resolve the field
      */
 .LOP_SPUT_BOOLEAN_resolve:
-    movl     rGLUE,%ecx
+    movl     rSELF,%ecx
     movzwl   2(rPC),%eax                        # eax<- field ref BBBB
-    movl     offGlue_method(%ecx),%ecx          # ecx<- current method
+    movl     offThread_method(%ecx),%ecx          # ecx<- current method
     EXPORT_PC                                   # could throw, need to export
     movl     offMethod_clazz(%ecx),%ecx         # ecx<- method->clazz
     movl     %eax,OUT_ARG1(%esp)
@@ -10495,9 +10491,9 @@ dvmAsmSisterStart:
      * Go resolve the field
      */
 .LOP_SPUT_BYTE_resolve:
-    movl     rGLUE,%ecx
+    movl     rSELF,%ecx
     movzwl   2(rPC),%eax                        # eax<- field ref BBBB
-    movl     offGlue_method(%ecx),%ecx          # ecx<- current method
+    movl     offThread_method(%ecx),%ecx          # ecx<- current method
     EXPORT_PC                                   # could throw, need to export
     movl     offMethod_clazz(%ecx),%ecx         # ecx<- method->clazz
     movl     %eax,OUT_ARG1(%esp)
@@ -10513,9 +10509,9 @@ dvmAsmSisterStart:
      * Go resolve the field
      */
 .LOP_SPUT_CHAR_resolve:
-    movl     rGLUE,%ecx
+    movl     rSELF,%ecx
     movzwl   2(rPC),%eax                        # eax<- field ref BBBB
-    movl     offGlue_method(%ecx),%ecx          # ecx<- current method
+    movl     offThread_method(%ecx),%ecx          # ecx<- current method
     EXPORT_PC                                   # could throw, need to export
     movl     offMethod_clazz(%ecx),%ecx         # ecx<- method->clazz
     movl     %eax,OUT_ARG1(%esp)
@@ -10531,9 +10527,9 @@ dvmAsmSisterStart:
      * Go resolve the field
      */
 .LOP_SPUT_SHORT_resolve:
-    movl     rGLUE,%ecx
+    movl     rSELF,%ecx
     movzwl   2(rPC),%eax                        # eax<- field ref BBBB
-    movl     offGlue_method(%ecx),%ecx          # ecx<- current method
+    movl     offThread_method(%ecx),%ecx          # ecx<- current method
     EXPORT_PC                                   # could throw, need to export
     movl     offMethod_clazz(%ecx),%ecx         # ecx<- method->clazz
     movl     %eax,OUT_ARG1(%esp)
@@ -10626,8 +10622,8 @@ dvmAsmSisterStart:
      */
 .LOP_INVOKE_DIRECT_resolve:
      SPILL_TMP1(%ecx)
-     movl     rGLUE,%ecx
-     movl     offGlue_method(%ecx),%ecx  # ecx<- glue->method
+     movl     rSELF,%ecx
+     movl     offThread_method(%ecx),%ecx  # ecx<- self->method
      movzwl   2(rPC),%eax      # reference (BBBB or CCCC)
      movl     offMethod_clazz(%ecx),%ecx # ecx<- method->clazz
      movl     $METHOD_DIRECT,OUT_ARG2(%esp)
@@ -10740,8 +10736,8 @@ dvmAsmSisterStart:
      */
 .LOP_INVOKE_DIRECT_RANGE_resolve:
      SPILL_TMP1(%ecx)
-     movl     rGLUE,%ecx
-     movl     offGlue_method(%ecx),%ecx  # ecx<- glue->method
+     movl     rSELF,%ecx
+     movl     offThread_method(%ecx),%ecx  # ecx<- self->method
      movzwl   2(rPC),%eax      # reference (BBBB or CCCC)
      movl     offMethod_clazz(%ecx),%ecx # ecx<- method->clazz
      movl     $METHOD_DIRECT,OUT_ARG2(%esp)
@@ -11183,7 +11179,7 @@ dvmAsmSisterStart:
 
 .LOP_IGET_VOLATILE_resolve:
     EXPORT_PC
-    movl    offGlue_method(%edx),%edx           # edx<- current method
+    movl    offThread_method(%edx),%edx           # edx<- current method
     movl    offMethod_clazz(%edx),%edx          # edx<- method->clazz
     SPILL_TMP1(%ecx)                            # save obj pointer across call
     movl    %edx,OUT_ARG0(%esp)                  # pass in method->clazz
@@ -11215,7 +11211,7 @@ dvmAsmSisterStart:
 
 .LOP_IPUT_VOLATILE_resolve:
     EXPORT_PC
-    movl    offGlue_method(%edx),%edx           # edx<- current method
+    movl    offThread_method(%edx),%edx           # edx<- current method
     movl    offMethod_clazz(%edx),%edx          # edx<- method->clazz
     SPILL_TMP1(%ecx)                            # save obj pointer across call
     movl    %edx,OUT_ARG0(%esp)                 # pass in method->clazz
@@ -11247,9 +11243,9 @@ dvmAsmSisterStart:
      * Go resolve the field
      */
 .LOP_SGET_VOLATILE_resolve:
-    movl     rGLUE,%ecx
+    movl     rSELF,%ecx
     movzwl   2(rPC),%eax                        # eax<- field ref BBBB
-    movl     offGlue_method(%ecx),%ecx          # ecx<- current method
+    movl     offThread_method(%ecx),%ecx          # ecx<- current method
     EXPORT_PC                                   # could throw, need to export
     movl     offMethod_clazz(%ecx),%ecx         # ecx<- method->clazz
     movl     %eax,OUT_ARG1(%esp)
@@ -11265,9 +11261,9 @@ dvmAsmSisterStart:
      * Go resolve the field
      */
 .LOP_SPUT_VOLATILE_resolve:
-    movl     rGLUE,%ecx
+    movl     rSELF,%ecx
     movzwl   2(rPC),%eax                        # eax<- field ref BBBB
-    movl     offGlue_method(%ecx),%ecx          # ecx<- current method
+    movl     offThread_method(%ecx),%ecx          # ecx<- current method
     EXPORT_PC                                   # could throw, need to export
     movl     offMethod_clazz(%ecx),%ecx         # ecx<- method->clazz
     movl     %eax,OUT_ARG1(%esp)
@@ -11282,7 +11278,7 @@ dvmAsmSisterStart:
 
 .LOP_IGET_OBJECT_VOLATILE_resolve:
     EXPORT_PC
-    movl    offGlue_method(%edx),%edx           # edx<- current method
+    movl    offThread_method(%edx),%edx           # edx<- current method
     movl    offMethod_clazz(%edx),%edx          # edx<- method->clazz
     SPILL_TMP1(%ecx)                            # save obj pointer across call
     movl    %edx,OUT_ARG0(%esp)                  # pass in method->clazz
@@ -11356,7 +11352,7 @@ dvmAsmSisterStart:
 .LOP_IPUT_OBJECT_QUICK_finish:
     testl     rINST,rINST               # did we store null?
     FETCH_INST_OPCODE 2 %edx
-    movl      offGlue_cardTable(%eax),%eax  # get card table base
+    movl      offThread_cardTable(%eax),%eax  # get card table base
     je        1f                            # skip card mark if null store
     shrl      $GC_CARD_SHIFT,%ecx          # object head to card number
     movb      %al,(%eax,%ecx)               # mark card based on object head
@@ -11369,7 +11365,7 @@ dvmAsmSisterStart:
 
 .LOP_IPUT_OBJECT_VOLATILE_resolve:
     EXPORT_PC
-    movl    offGlue_method(%edx),%edx           # edx<- current method
+    movl    offThread_method(%edx),%edx           # edx<- current method
     movl    offMethod_clazz(%edx),%edx          # edx<- method->clazz
     SPILL_TMP1(%ecx)                            # save obj pointer across call
     movl    %edx,OUT_ARG0(%esp)                 # pass in method->clazz
@@ -11392,9 +11388,9 @@ dvmAsmSisterStart:
     testl   %ecx,%ecx                           # object null?
     je      common_errNullObject                # object was null
     movl    rINST,(%ecx,%eax)      # obj.field <- v[A](8/16/32 bits)
-    movl    rGLUE,%eax
+    movl    rSELF,%eax
     testl   rINST,rINST                         # stored a NULL?
-    movl    offGlue_cardTable(%eax),%eax        # get card table base
+    movl    offThread_cardTable(%eax),%eax        # get card table base
     FETCH_INST_OPCODE 2 %edx
     je      1f                                  # skip card mark if null store
     shrl    $GC_CARD_SHIFT,%ecx                # object head to card number
@@ -11409,9 +11405,9 @@ dvmAsmSisterStart:
      * Go resolve the field
      */
 .LOP_SGET_OBJECT_VOLATILE_resolve:
-    movl     rGLUE,%ecx
+    movl     rSELF,%ecx
     movzwl   2(rPC),%eax                        # eax<- field ref BBBB
-    movl     offGlue_method(%ecx),%ecx          # ecx<- current method
+    movl     offThread_method(%ecx),%ecx          # ecx<- current method
     EXPORT_PC                                   # could throw, need to export
     movl     offMethod_clazz(%ecx),%ecx         # ecx<- method->clazz
     movl     %eax,OUT_ARG1(%esp)
@@ -11429,9 +11425,9 @@ dvmAsmSisterStart:
     testl     %ecx,%ecx                          # stored null object ptr?
     FETCH_INST_OPCODE 2 %edx
     je        1f                                 # skip card mark if null
-    movl      rGLUE,%ecx
+    movl      rSELF,%ecx
     movl      offField_clazz(%eax),%eax          # eax<- method->clazz
-    movl      offGlue_cardTable(%ecx),%ecx       # get card table base
+    movl      offThread_cardTable(%ecx),%ecx       # get card table base
     shrl      $GC_CARD_SHIFT,%eax               # head to card number
     movb      %cl,(%ecx,%eax)                    # mark card
 1:
@@ -11439,9 +11435,9 @@ dvmAsmSisterStart:
     GOTO_NEXT_R %edx
 
 .LOP_SPUT_OBJECT_VOLATILE_resolve:
-    movl     rGLUE,%ecx
+    movl     rSELF,%ecx
     movzwl   2(rPC),%eax                        # eax<- field ref BBBB
-    movl     offGlue_method(%ecx),%ecx          # ecx<- current method
+    movl     offThread_method(%ecx),%ecx          # ecx<- current method
     EXPORT_PC                                   # could throw, need to export
     movl     offMethod_clazz(%ecx),%ecx         # ecx<- method->clazz
     movl     %eax,OUT_ARG1(%esp)
@@ -11456,9 +11452,9 @@ dvmAsmSisterStart:
 /* This is the less common path, so we'll redo some work
    here rather than force spills on the common path */
 .LOP_CONST_CLASS_JUMBO_resolve:
-    movl     rGLUE,%eax
+    movl     rSELF,%eax
     EXPORT_PC
-    movl     offGlue_method(%eax),%eax # eax<- glue->method
+    movl     offThread_method(%eax),%eax # eax<- self->method
     movl     $1,OUT_ARG2(%esp)        # true
     movl     2(rPC),%ecx               # ecx<- AAAAAAAA
     movl     offMethod_clazz(%eax),%eax
@@ -11504,10 +11500,10 @@ dvmAsmSisterStart:
      *  rINST holds object
      */
 .LOP_CHECK_CAST_JUMBO_resolve:
-    movl    rGLUE,%ecx
+    movl    rSELF,%ecx
     EXPORT_PC
     movl    2(rPC),%eax                # eax<- AAAAAAAA
-    movl    offGlue_method(%ecx),%ecx  # ecx<- glue->method
+    movl    offThread_method(%ecx),%ecx  # ecx<- self->method
     movl    %eax,OUT_ARG1(%esp)        # arg1<- AAAAAAAA
     movl    offMethod_clazz(%ecx),%ecx # ecx<- metho->clazz
     movl    $0,OUT_ARG2(%esp)         # arg2<- false
@@ -11560,8 +11556,8 @@ dvmAsmSisterStart:
      */
 .LOP_INSTANCE_OF_JUMBO_resolve:
     movl    %edx,OUT_ARG1(%esp)         # arg1<- AAAAAAAA
-    movl    rGLUE,%ecx
-    movl    offGlue_method(%ecx),%ecx
+    movl    rSELF,%ecx
+    movl    offThread_method(%ecx),%ecx
     movl    $1,OUT_ARG2(%esp)          # arg2<- true
     movl    offMethod_clazz(%ecx),%ecx  # ecx<- method->clazz
     EXPORT_PC
@@ -11614,9 +11610,9 @@ dvmAsmSisterStart:
      *
      */
 .LOP_NEW_INSTANCE_JUMBO_resolve:
-    movl    rGLUE,%ecx
+    movl    rSELF,%ecx
     movl    2(rPC),%eax                 # eax<- AAAAAAAA
-    movl    offGlue_method(%ecx),%ecx   # ecx<- glue->method
+    movl    offThread_method(%ecx),%ecx   # ecx<- self->method
     movl    %eax,OUT_ARG1(%esp)
     movl    offMethod_clazz(%ecx),%ecx  # ecx<- method->clazz
     movl    $0,OUT_ARG2(%esp)
@@ -11649,9 +11645,9 @@ dvmAsmSisterStart:
      *  eax holds array length (vCCCC)
      */
 .LOP_NEW_ARRAY_JUMBO_resolve:
-    movl    rGLUE,%ecx
+    movl    rSELF,%ecx
     SPILL_TMP1(%eax)                   # save array length
-    movl    offGlue_method(%ecx),%ecx  # ecx<- glue->method
+    movl    offThread_method(%ecx),%ecx  # ecx<- self->method
     movl    2(rPC),%eax                # eax<- AAAAAAAA
     movl    offMethod_clazz(%ecx),%ecx # ecx<- method->clazz
     movl    %eax,OUT_ARG1(%esp)
@@ -11703,7 +11699,7 @@ dvmAsmSisterStart:
     movl    $ALLOC_DONT_TRACK,OUT_ARG2(%esp)     # arg2<- flags
     movzbl  1(%ecx),%ecx                          # ecx<- descriptor[1]
     movl    %eax,OUT_ARG0(%esp)                   # arg0<- arrayClass
-    movl    rGLUE,%eax
+    movl    rSELF,%eax
     cmpb    $'I',%cl                             # supported?
     je      1f
     cmpb    $'L',%cl
@@ -11711,13 +11707,13 @@ dvmAsmSisterStart:
     cmpb    $'[',%cl
     jne      .LOP_FILLED_NEW_ARRAY_JUMBO_notimpl                  # no, not handled yet
 1:
-    movl    %ecx,offGlue_retval+4(%eax)           # save type
+    movl    %ecx,offThread_retval+4(%eax)           # save type
     movl    rINST,OUT_ARG1(%esp)                  # arg1<- BBBB (length)
     call    dvmAllocArrayByClass     # eax<- call(arrayClass, length, flags)
-    movl    rGLUE,%ecx
+    movl    rSELF,%ecx
     testl   %eax,%eax                             # alloc successful?
     je      common_exceptionThrown                # no, handle exception
-    movl    %eax,offGlue_retval(%ecx)             # retval.l<- new array
+    movl    %eax,offThread_retval(%ecx)             # retval.l<- new array
     movzwl  8(rPC),%ecx                           # ecx<- CCCC
     leal    offArrayObject_contents(%eax),%eax    # eax<- newArray->contents
 
@@ -11738,14 +11734,14 @@ dvmAsmSisterStart:
     movsd
     UNSPILL_TMP2(%esi)
     UNSPILL_TMP3(%edi)
-    movl    rGLUE,%ecx
-    movl    offGlue_retval+4(%ecx),%eax      # eax<- type
+    movl    rSELF,%ecx
+    movl    offThread_retval+4(%ecx),%eax      # eax<- type
     FETCH_INST_OPCODE 5 %edx
 
     cmpb    $'I',%al                        # Int array?
     je      5f                               # skip card mark if so
-    movl    offGlue_retval(%ecx),%eax        # eax<- object head
-    movl    offGlue_cardTable(%ecx),%ecx     # card table base
+    movl    offThread_retval(%ecx),%eax        # eax<- object head
+    movl    offThread_cardTable(%ecx),%ecx     # card table base
     shrl    $GC_CARD_SHIFT,%eax             # convert to card num
     movb    %cl,(%ecx,%eax)                  # mark card based on object head
 5:
@@ -11770,7 +11766,7 @@ dvmAsmSisterStart:
 
 .LOP_IGET_JUMBO_resolve:
     EXPORT_PC
-    movl    offGlue_method(%edx),%edx           # edx<- current method
+    movl    offThread_method(%edx),%edx           # edx<- current method
     movl    offMethod_clazz(%edx),%edx          # edx<- method->clazz
     SPILL_TMP1(%ecx)                            # save obj pointer across call
     movl    %edx,OUT_ARG0(%esp)                  # pass in method->clazz
@@ -11802,7 +11798,7 @@ dvmAsmSisterStart:
 
 .LOP_IGET_WIDE_JUMBO_resolve:
     EXPORT_PC
-    movl    offGlue_method(%edx),%edx           # edx<- current method
+    movl    offThread_method(%edx),%edx           # edx<- current method
     movl    offMethod_clazz(%edx),%edx          # edx<- method->clazz
     SPILL_TMP1(%ecx)                            # save objpointer across call
     movl    rPC,OUT_ARG0(%esp)                  # pass in method->clazz
@@ -11836,7 +11832,7 @@ dvmAsmSisterStart:
 
 .LOP_IGET_OBJECT_JUMBO_resolve:
     EXPORT_PC
-    movl    offGlue_method(%edx),%edx           # edx<- current method
+    movl    offThread_method(%edx),%edx           # edx<- current method
     movl    offMethod_clazz(%edx),%edx          # edx<- method->clazz
     SPILL_TMP1(%ecx)                            # save obj pointer across call
     movl    %edx,OUT_ARG0(%esp)                  # pass in method->clazz
@@ -11868,7 +11864,7 @@ dvmAsmSisterStart:
 
 .LOP_IGET_BOOLEAN_JUMBO_resolve:
     EXPORT_PC
-    movl    offGlue_method(%edx),%edx           # edx<- current method
+    movl    offThread_method(%edx),%edx           # edx<- current method
     movl    offMethod_clazz(%edx),%edx          # edx<- method->clazz
     SPILL_TMP1(%ecx)                            # save obj pointer across call
     movl    %edx,OUT_ARG0(%esp)                  # pass in method->clazz
@@ -11900,7 +11896,7 @@ dvmAsmSisterStart:
 
 .LOP_IGET_BYTE_JUMBO_resolve:
     EXPORT_PC
-    movl    offGlue_method(%edx),%edx           # edx<- current method
+    movl    offThread_method(%edx),%edx           # edx<- current method
     movl    offMethod_clazz(%edx),%edx          # edx<- method->clazz
     SPILL_TMP1(%ecx)                            # save obj pointer across call
     movl    %edx,OUT_ARG0(%esp)                  # pass in method->clazz
@@ -11932,7 +11928,7 @@ dvmAsmSisterStart:
 
 .LOP_IGET_CHAR_JUMBO_resolve:
     EXPORT_PC
-    movl    offGlue_method(%edx),%edx           # edx<- current method
+    movl    offThread_method(%edx),%edx           # edx<- current method
     movl    offMethod_clazz(%edx),%edx          # edx<- method->clazz
     SPILL_TMP1(%ecx)                            # save obj pointer across call
     movl    %edx,OUT_ARG0(%esp)                  # pass in method->clazz
@@ -11964,7 +11960,7 @@ dvmAsmSisterStart:
 
 .LOP_IGET_SHORT_JUMBO_resolve:
     EXPORT_PC
-    movl    offGlue_method(%edx),%edx           # edx<- current method
+    movl    offThread_method(%edx),%edx           # edx<- current method
     movl    offMethod_clazz(%edx),%edx          # edx<- method->clazz
     SPILL_TMP1(%ecx)                            # save obj pointer across call
     movl    %edx,OUT_ARG0(%esp)                  # pass in method->clazz
@@ -11996,7 +11992,7 @@ dvmAsmSisterStart:
 
 .LOP_IPUT_JUMBO_resolve:
     EXPORT_PC
-    movl    offGlue_method(%edx),%edx           # edx<- current method
+    movl    offThread_method(%edx),%edx           # edx<- current method
     movl    offMethod_clazz(%edx),%edx          # edx<- method->clazz
     SPILL_TMP1(%ecx)                            # save obj pointer across call
     movl    %edx,OUT_ARG0(%esp)                 # pass in method->clazz
@@ -12027,7 +12023,7 @@ dvmAsmSisterStart:
 
 .LOP_IPUT_WIDE_JUMBO_resolve:
     EXPORT_PC
-    movl    offGlue_method(%edx),%edx           # edx<- current method
+    movl    offThread_method(%edx),%edx           # edx<- current method
     movl    offMethod_clazz(%edx),%edx          # edx<- method->clazz
     SPILL_TMP1(%ecx)                            # save obj pointer across call
     movl    %edx,OUT_ARG0(%esp)                 # pass in method->clazz
@@ -12062,7 +12058,7 @@ dvmAsmSisterStart:
 
 .LOP_IPUT_OBJECT_JUMBO_resolve:
     EXPORT_PC
-    movl    offGlue_method(%edx),%edx           # edx<- current method
+    movl    offThread_method(%edx),%edx           # edx<- current method
     movl    offMethod_clazz(%edx),%edx          # edx<- method->clazz
     SPILL_TMP1(%ecx)                            # save obj pointer across call
     movl    %edx,OUT_ARG0(%esp)                 # pass in method->clazz
@@ -12085,9 +12081,9 @@ dvmAsmSisterStart:
     testl   %ecx,%ecx                           # object null?
     je      common_errNullObject                # object was null
     movl    rINST,(%ecx,%eax)      # obj.field <- v[BBBB](8/16/32 bits)
-    movl    rGLUE,%eax
+    movl    rSELF,%eax
     testl   rINST,rINST                         # stored a NULL?
-    movl    offGlue_cardTable(%eax),%eax        # get card table base
+    movl    offThread_cardTable(%eax),%eax        # get card table base
     FETCH_INST_OPCODE 5 %edx
     je      1f                                  # skip card mark if null store
     shrl    $GC_CARD_SHIFT,%ecx                # object head to card number
@@ -12101,7 +12097,7 @@ dvmAsmSisterStart:
 
 .LOP_IPUT_BOOLEAN_JUMBO_resolve:
     EXPORT_PC
-    movl    offGlue_method(%edx),%edx           # edx<- current method
+    movl    offThread_method(%edx),%edx           # edx<- current method
     movl    offMethod_clazz(%edx),%edx          # edx<- method->clazz
     SPILL_TMP1(%ecx)                            # save obj pointer across call
     movl    %edx,OUT_ARG0(%esp)                 # pass in method->clazz
@@ -12132,7 +12128,7 @@ dvmAsmSisterStart:
 
 .LOP_IPUT_BYTE_JUMBO_resolve:
     EXPORT_PC
-    movl    offGlue_method(%edx),%edx           # edx<- current method
+    movl    offThread_method(%edx),%edx           # edx<- current method
     movl    offMethod_clazz(%edx),%edx          # edx<- method->clazz
     SPILL_TMP1(%ecx)                            # save obj pointer across call
     movl    %edx,OUT_ARG0(%esp)                 # pass in method->clazz
@@ -12163,7 +12159,7 @@ dvmAsmSisterStart:
 
 .LOP_IPUT_CHAR_JUMBO_resolve:
     EXPORT_PC
-    movl    offGlue_method(%edx),%edx           # edx<- current method
+    movl    offThread_method(%edx),%edx           # edx<- current method
     movl    offMethod_clazz(%edx),%edx          # edx<- method->clazz
     SPILL_TMP1(%ecx)                            # save obj pointer across call
     movl    %edx,OUT_ARG0(%esp)                 # pass in method->clazz
@@ -12194,7 +12190,7 @@ dvmAsmSisterStart:
 
 .LOP_IPUT_SHORT_JUMBO_resolve:
     EXPORT_PC
-    movl    offGlue_method(%edx),%edx           # edx<- current method
+    movl    offThread_method(%edx),%edx           # edx<- current method
     movl    offMethod_clazz(%edx),%edx          # edx<- method->clazz
     SPILL_TMP1(%ecx)                            # save obj pointer across call
     movl    %edx,OUT_ARG0(%esp)                 # pass in method->clazz
@@ -12226,9 +12222,9 @@ dvmAsmSisterStart:
      * Go resolve the field
      */
 .LOP_SGET_JUMBO_resolve:
-    movl     rGLUE,%ecx
+    movl     rSELF,%ecx
     movl     2(rPC),%eax                        # eax<- field ref AAAAAAAA
-    movl     offGlue_method(%ecx),%ecx          # ecx<- current method
+    movl     offThread_method(%ecx),%ecx          # ecx<- current method
     EXPORT_PC                                   # could throw, need to export
     movl     offMethod_clazz(%ecx),%ecx         # ecx<- method->clazz
     movl     %eax,OUT_ARG1(%esp)
@@ -12244,9 +12240,9 @@ dvmAsmSisterStart:
      * Go resolve the field
      */
 .LOP_SGET_WIDE_JUMBO_resolve:
-    movl     rGLUE,%ecx
+    movl     rSELF,%ecx
     movl     2(rPC),%eax                        # eax<- field ref AAAAAAAA
-    movl     offGlue_method(%ecx),%ecx          # ecx<- current method
+    movl     offThread_method(%ecx),%ecx          # ecx<- current method
     EXPORT_PC                                   # could throw, need to export
     movl     offMethod_clazz(%ecx),%ecx         # ecx<- method->clazz
     movl     %eax,OUT_ARG1(%esp)
@@ -12262,9 +12258,9 @@ dvmAsmSisterStart:
      * Go resolve the field
      */
 .LOP_SGET_OBJECT_JUMBO_resolve:
-    movl     rGLUE,%ecx
+    movl     rSELF,%ecx
     movl     2(rPC),%eax                        # eax<- field ref AAAAAAAA
-    movl     offGlue_method(%ecx),%ecx          # ecx<- current method
+    movl     offThread_method(%ecx),%ecx          # ecx<- current method
     EXPORT_PC                                   # could throw, need to export
     movl     offMethod_clazz(%ecx),%ecx         # ecx<- method->clazz
     movl     %eax,OUT_ARG1(%esp)
@@ -12280,9 +12276,9 @@ dvmAsmSisterStart:
      * Go resolve the field
      */
 .LOP_SGET_BOOLEAN_JUMBO_resolve:
-    movl     rGLUE,%ecx
+    movl     rSELF,%ecx
     movl     2(rPC),%eax                        # eax<- field ref AAAAAAAA
-    movl     offGlue_method(%ecx),%ecx          # ecx<- current method
+    movl     offThread_method(%ecx),%ecx          # ecx<- current method
     EXPORT_PC                                   # could throw, need to export
     movl     offMethod_clazz(%ecx),%ecx         # ecx<- method->clazz
     movl     %eax,OUT_ARG1(%esp)
@@ -12298,9 +12294,9 @@ dvmAsmSisterStart:
      * Go resolve the field
      */
 .LOP_SGET_BYTE_JUMBO_resolve:
-    movl     rGLUE,%ecx
+    movl     rSELF,%ecx
     movl     2(rPC),%eax                        # eax<- field ref AAAAAAAA
-    movl     offGlue_method(%ecx),%ecx          # ecx<- current method
+    movl     offThread_method(%ecx),%ecx          # ecx<- current method
     EXPORT_PC                                   # could throw, need to export
     movl     offMethod_clazz(%ecx),%ecx         # ecx<- method->clazz
     movl     %eax,OUT_ARG1(%esp)
@@ -12316,9 +12312,9 @@ dvmAsmSisterStart:
      * Go resolve the field
      */
 .LOP_SGET_CHAR_JUMBO_resolve:
-    movl     rGLUE,%ecx
+    movl     rSELF,%ecx
     movl     2(rPC),%eax                        # eax<- field ref AAAAAAAA
-    movl     offGlue_method(%ecx),%ecx          # ecx<- current method
+    movl     offThread_method(%ecx),%ecx          # ecx<- current method
     EXPORT_PC                                   # could throw, need to export
     movl     offMethod_clazz(%ecx),%ecx         # ecx<- method->clazz
     movl     %eax,OUT_ARG1(%esp)
@@ -12334,9 +12330,9 @@ dvmAsmSisterStart:
      * Go resolve the field
      */
 .LOP_SGET_SHORT_JUMBO_resolve:
-    movl     rGLUE,%ecx
+    movl     rSELF,%ecx
     movl     2(rPC),%eax                        # eax<- field ref AAAAAAAA
-    movl     offGlue_method(%ecx),%ecx          # ecx<- current method
+    movl     offThread_method(%ecx),%ecx          # ecx<- current method
     EXPORT_PC                                   # could throw, need to export
     movl     offMethod_clazz(%ecx),%ecx         # ecx<- method->clazz
     movl     %eax,OUT_ARG1(%esp)
@@ -12352,9 +12348,9 @@ dvmAsmSisterStart:
      * Go resolve the field
      */
 .LOP_SPUT_JUMBO_resolve:
-    movl     rGLUE,%ecx
+    movl     rSELF,%ecx
     movl     2(rPC),%eax                        # eax<- field ref AAAAAAAA
-    movl     offGlue_method(%ecx),%ecx          # ecx<- current method
+    movl     offThread_method(%ecx),%ecx          # ecx<- current method
     EXPORT_PC                                   # could throw, need to export
     movl     offMethod_clazz(%ecx),%ecx         # ecx<- method->clazz
     movl     %eax,OUT_ARG1(%esp)
@@ -12370,9 +12366,9 @@ dvmAsmSisterStart:
      * Go resolve the field
      */
 .LOP_SPUT_WIDE_JUMBO_resolve:
-    movl     rGLUE,%ecx
+    movl     rSELF,%ecx
     movl     2(rPC),%eax                        # eax<- field ref AAAAAAAA
-    movl     offGlue_method(%ecx),%ecx          # ecx<- current method
+    movl     offThread_method(%ecx),%ecx          # ecx<- current method
     EXPORT_PC                                   # could throw, need to export
     movl     offMethod_clazz(%ecx),%ecx         # ecx<- method->clazz
     movl     %eax,OUT_ARG1(%esp)
@@ -12390,9 +12386,9 @@ dvmAsmSisterStart:
     testl     %ecx,%ecx                          # stored null object ptr?
     FETCH_INST_OPCODE 4 %edx
     je        1f                                 # skip card mark if null
-    movl      rGLUE,%ecx
+    movl      rSELF,%ecx
     movl      offField_clazz(%eax),%eax          # eax<- method->clazz
-    movl      offGlue_cardTable(%ecx),%ecx       # get card table base
+    movl      offThread_cardTable(%ecx),%ecx       # get card table base
     shrl      $GC_CARD_SHIFT,%eax               # head to card number
     movb      %cl,(%ecx,%eax)                    # mark card
 1:
@@ -12400,9 +12396,9 @@ dvmAsmSisterStart:
     GOTO_NEXT_R %edx
 
 .LOP_SPUT_OBJECT_JUMBO_resolve:
-    movl     rGLUE,%ecx
+    movl     rSELF,%ecx
     movl     2(rPC),%eax                        # eax<- field ref AAAAAAAA
-    movl     offGlue_method(%ecx),%ecx          # ecx<- current method
+    movl     offThread_method(%ecx),%ecx          # ecx<- current method
     EXPORT_PC                                   # could throw, need to export
     movl     offMethod_clazz(%ecx),%ecx         # ecx<- method->clazz
     movl     %eax,OUT_ARG1(%esp)
@@ -12418,9 +12414,9 @@ dvmAsmSisterStart:
      * Go resolve the field
      */
 .LOP_SPUT_BOOLEAN_JUMBO_resolve:
-    movl     rGLUE,%ecx
+    movl     rSELF,%ecx
     movl     2(rPC),%eax                        # eax<- field ref AAAAAAAA
-    movl     offGlue_method(%ecx),%ecx          # ecx<- current method
+    movl     offThread_method(%ecx),%ecx          # ecx<- current method
     EXPORT_PC                                   # could throw, need to export
     movl     offMethod_clazz(%ecx),%ecx         # ecx<- method->clazz
     movl     %eax,OUT_ARG1(%esp)
@@ -12436,9 +12432,9 @@ dvmAsmSisterStart:
      * Go resolve the field
      */
 .LOP_SPUT_BYTE_JUMBO_resolve:
-    movl     rGLUE,%ecx
+    movl     rSELF,%ecx
     movl     2(rPC),%eax                        # eax<- field ref AAAAAAAA
-    movl     offGlue_method(%ecx),%ecx          # ecx<- current method
+    movl     offThread_method(%ecx),%ecx          # ecx<- current method
     EXPORT_PC                                   # could throw, need to export
     movl     offMethod_clazz(%ecx),%ecx         # ecx<- method->clazz
     movl     %eax,OUT_ARG1(%esp)
@@ -12454,9 +12450,9 @@ dvmAsmSisterStart:
      * Go resolve the field
      */
 .LOP_SPUT_CHAR_JUMBO_resolve:
-    movl     rGLUE,%ecx
+    movl     rSELF,%ecx
     movl     2(rPC),%eax                        # eax<- field ref AAAAAAAA
-    movl     offGlue_method(%ecx),%ecx          # ecx<- current method
+    movl     offThread_method(%ecx),%ecx          # ecx<- current method
     EXPORT_PC                                   # could throw, need to export
     movl     offMethod_clazz(%ecx),%ecx         # ecx<- method->clazz
     movl     %eax,OUT_ARG1(%esp)
@@ -12472,9 +12468,9 @@ dvmAsmSisterStart:
      * Go resolve the field
      */
 .LOP_SPUT_SHORT_JUMBO_resolve:
-    movl     rGLUE,%ecx
+    movl     rSELF,%ecx
     movl     2(rPC),%eax                        # eax<- field ref AAAAAAAA
-    movl     offGlue_method(%ecx),%ecx          # ecx<- current method
+    movl     offThread_method(%ecx),%ecx          # ecx<- current method
     EXPORT_PC                                   # could throw, need to export
     movl     offMethod_clazz(%ecx),%ecx         # ecx<- method->clazz
     movl     %eax,OUT_ARG1(%esp)
@@ -12564,8 +12560,8 @@ dvmAsmSisterStart:
      */
 .LOP_INVOKE_DIRECT_JUMBO_resolve:
      SPILL_TMP1(%ecx)
-     movl     rGLUE,%ecx
-     movl     offGlue_method(%ecx),%ecx  # ecx<- glue->method
+     movl     rSELF,%ecx
+     movl     offThread_method(%ecx),%ecx  # ecx<- self->method
      movl     2(rPC),%eax      # reference AAAAAAAA
      movl     offMethod_clazz(%ecx),%ecx # ecx<- method->clazz
      movl     $METHOD_DIRECT,OUT_ARG2(%esp)
@@ -12621,15 +12617,15 @@ dvmAsmSisterEnd:
     .global dvmMterpStdRun
     .type   dvmMterpStdRun, %function
 /*
- * bool dvmMterpStdRun(MterpGlue* glue)
+ * bool dvmMterpStdRun(Thread* self)
  *
  * Interpreter entry point.  Returns changeInterp.
  *
  */
 dvmMterpStdRun:
-    movl    4(%esp), %ecx        # get incoming rGLUE
+    movl    4(%esp), %ecx        # get incoming rSELF
     push    %ebp                 # save caller base pointer
-    push    %ecx                 # save rGLUE at (%ebp)
+    push    %ecx                 # save rSELF at (%ebp)
     movl    %esp, %ebp           # set our %ebp
 /*
  * At this point we've allocated two slots on the stack
@@ -12645,14 +12641,14 @@ dvmMterpStdRun:
     movl    %ebx,EBX_SPILL(%ebp)
 
 /* Set up "named" registers */
-    movl    offGlue_pc(%ecx),rPC
-    movl    offGlue_fp(%ecx),rFP
+    movl    offThread_pc(%ecx),rPC
+    movl    offThread_fp(%ecx),rFP
 
 /* Remember %esp for future "longjmp" */
-    movl    %esp,offGlue_bailPtr(%ecx)
+    movl    %esp,offThread_bailPtr(%ecx)
 
 /* How to start? */
-    movb    offGlue_entryPoint(%ecx),%al
+    movb    offThread_entryPoint(%ecx),%al
 
 /* Normal start? */
     cmpb    $kInterpEntryInstr,%al
@@ -12664,7 +12660,7 @@ dvmMterpStdRun:
 
 .Lnot_instr:
     /* Reset to normal case */
-    movb   $kInterpEntryInstr,offGlue_entryPoint(%ecx)
+    movb   $kInterpEntryInstr,offThread_entryPoint(%ecx)
     cmpb   $kInterpEntryReturn,%al
     je     common_returnFromMethod
     cmpb   $kInterpEntryThrow,%al
@@ -12680,7 +12676,7 @@ dvmMterpStdRun:
     .global dvmMterpStdBail
     .type   dvmMterpStdBail, %function
 /*
- * void dvmMterpStdBail(MterpGlue* glue, bool changeInterp)
+ * void dvmMterpStdBail(Thread* self, bool changeInterp)
  *
  * Restore the stack pointer and PC from the save point established on entry.
  * This is essentially the same as a longjmp, but should be cheaper.  The
@@ -12690,13 +12686,13 @@ dvmMterpStdRun:
  * look a little strange.
  *
  * On entry:
- *  esp+4 (arg0)  MterpGlue* glue
+ *  esp+4 (arg0)  Thread* self
  *  esp+8 (arg1)  bool changeInterp
  */
 dvmMterpStdBail:
-    movl    4(%esp),%ecx                 # grab glue
+    movl    4(%esp),%ecx                 # grab self
     movl    8(%esp),%eax                 # changeInterp to return reg
-    movl    offGlue_bailPtr(%ecx),%esp   # Restore "setjmp" esp
+    movl    offThread_bailPtr(%ecx),%esp   # Restore "setjmp" esp
     movl    %esp,%ebp
     addl    $(FRAME_SIZE-8), %ebp       # Restore %ebp at point of setjmp
     movl    EDI_SPILL(%ebp),%edi
@@ -13292,11 +13288,11 @@ dvmJitToInterpPunt:
  */
 dvmJitToInterpSingleStep:
     pop    %eax
-    movl   rGLUE, %ecx
+    movl   rSELF, %ecx
     movl   OUT_ARG0(%esp), %edx
-    movl   %eax,offGlue_jitResumeNPC(%ecx)
-    movl   %edx,offGlue_jitResumeDPC(%ecx)
-    movl   $kInterpEntryInstr,offGlue_entryPoint(%ecx)
+    movl   %eax,offThread_jitResumeNPC(%ecx)
+    movl   %edx,offThread_jitResumeDPC(%ecx)
+    movl   $kInterpEntryInstr,offThread_entryPoint(%ecx)
     movl   $1,rINST     # changeInterp <= true
     jmp    common_gotoBail
 
@@ -13312,8 +13308,7 @@ dvmJitToInterpNoChainNoProfile:
 #endif
     movl   rPC,OUT_ARG0(%esp)
     call   dvmJitGetTraceAddr        # is there a translation?
-    movl   rGLUE,%ecx
-    movl   offGlue_self(%ecx), %ecx  # ecx <- glue->self
+    movl   rSELF,%ecx                # ecx <- self
     movl   %eax,offThread_inJitCodeCache(%ecx)  # set inJitCodeCache flag
     cmpl   $0, %eax
     jz     1f
@@ -13335,8 +13330,7 @@ dvmJitToInterpTraceSelectNoChain:
 #endif
     movl   rPC,OUT_ARG0(%esp)
     call   dvmJitGetTraceAddr # is there a translation?
-    movl   rGLUE,%ecx
-    movl   offGlue_self(%ecx),%ecx
+    movl   rSELF,%ecx
     cmpl   $0,%eax
     movl   %eax,offThread_inJitCodeCache(%ecx)  # set inJitCodeCache flag
     jz     1f
@@ -13396,8 +13390,8 @@ toInterpreter:
  *   ebx (a.k.a. rINST) -> PC adjustment in 16-bit words
  */
 common_backwardBranch:
-    movl    rGLUE,%ecx
-    call   common_periodicChecks  # rPC and ecx/rGLUE preserved
+    movl    rSELF,%ecx
+    call   common_periodicChecks  # rPC and ecx/rSELF preserved
 #if defined(WITH_JIT)
     GET_JIT_PROF_TABLE %ecx %edx
     ADVANCE_PC_INDEXED rINST
@@ -13423,10 +13417,10 @@ common_updateProfile:
  * is already a native translation in place (and, if so,
  * jump to it now.
  */
-    GET_JIT_THRESHOLD %ecx rINST
+    GET_JIT_THRESHOLD %ecx rINST  # leaves rSELF in %ecx
     EXPORT_PC
     movb   rINSTbl,(%edx,%eax)   # reset counter
-    movl   offGlue_self(%ecx),rINST
+    movl   %ecx,rINST            # preserve rSELF
     movl   rPC,OUT_ARG0(%esp)
     call   dvmJitGetTraceAddr  # already have one?
     movl   %eax,offThread_inJitCodeCache(rINST)   # set the inJitCodeCache flag
@@ -13437,9 +13431,10 @@ common_updateProfile:
     movl   $kJitTSelectRequest,%eax
     # On entry, eax<- jitState, rPC valid
 common_selectTrace:
-    movl   rGLUE,%ecx
-    movl   %eax,offGlue_jitState(%ecx)
-    movl   $kInterpEntryInstr,offGlue_entryPoint(%ecx)
+
+    movl   rSELF,%ecx
+    movl   %eax,offThread_jitState(%ecx)
+    movl   $kInterpEntryInstr,offThread_entryPoint(%ecx)
     movl   $1,rINST
     jmp    common_gotoBail
 #else
@@ -13587,11 +13582,11 @@ common_invokeMethodNoRange:
     shl         $2, %edx               # %edx<- update offset
     SAVEAREA_FROM_FP %eax               # %eax<- &StackSaveArea
     subl        %edx, %eax              # %eax<- newFP; (old savearea - regsSize)
-    movl        rGLUE,%edx              # %edx<- pMterpGlue
+    movl        rSELF,%edx              # %edx<- pthread
     movl        %eax, LOCAL1_OFFSET(%ebp)       # LOCAL1_OFFSET(%ebp)<- &outs
     subl        $sizeofStackSaveArea, %eax # %eax<- newSaveArea (stack save area using newFP)
-    movl        offGlue_interpStackEnd(%edx), %edx # %edx<- glue->interpStackEnd
-    movl        %edx, LOCAL2_OFFSET(%ebp)       # LOCAL2_OFFSET<- glue->interpStackEnd
+    movl        offThread_interpStackEnd(%edx), %edx # %edx<- self->interpStackEnd
+    movl        %edx, LOCAL2_OFFSET(%ebp)       # LOCAL2_OFFSET<- self->interpStackEnd
     shl         $2, %ecx               # %ecx<- update offset for outsSize
     movl        %eax, %edx              # %edx<- newSaveArea
     sub         %ecx, %eax              # %eax<- bottom; (newSaveArea - outsSize)
@@ -13614,19 +13609,18 @@ common_invokeMethodNoRange:
     jne         .LinvokeNative          # handle native call
 
    /*
-    * Update "glue" values for the new method
+    * Update "self" values for the new method
     * %eax=methodToCall, LOCAL1_OFFSET(%ebp)=newFp
     */
 
     movl        offMethod_clazz(%eax), %edx # %edx<- method->clazz
-    movl        rGLUE,%ecx                  # %ecx<- pMterpGlue
+    movl        rSELF,%ecx                  # %ecx<- pthread
     movl        offClassObject_pDvmDex(%edx), %edx # %edx<- method->clazz->pDvmDex
-    movl        %eax, offGlue_method(%ecx) # glue->method<- methodToCall
-    movl        %edx, offGlue_methodClassDex(%ecx) # glue->methodClassDex<- method->clazz->pDvmDex
+    movl        %eax, offThread_method(%ecx) # self->method<- methodToCall
+    movl        %edx, offThread_methodClassDex(%ecx) # self->methodClassDex<- method->clazz->pDvmDex
     movl        offMethod_insns(%eax), rPC # rPC<- methodToCall->insns
-    movl        offGlue_self(%ecx), %eax # %eax<- glue->self
     movl        LOCAL1_OFFSET(%ebp), rFP # rFP<- newFP
-    movl        rFP, offThread_curFrame(%eax) # glue->self->curFrame<- newFP
+    movl        rFP, offThread_curFrame(%ecx) # self->curFrame<- newFP
     FETCH_INST
     GOTO_NEXT                           # jump to methodToCall->insns
 
@@ -13636,29 +13630,28 @@ common_invokeMethodNoRange:
     */
 
 .LinvokeNative:
-    movl        rGLUE,%ecx              # %ecx<- pMterpGlue
+    movl        rSELF,%ecx              # %ecx<- pthread
     movl        %eax, OUT_ARG1(%esp)    # push parameter methodToCall
-    movl        offGlue_self(%ecx), %ecx        # %ecx<- glue->self
     movl        offThread_jniLocal_topCookie(%ecx), %eax # %eax<- self->localRef->...
     movl        %eax, offStackSaveArea_localRefCookie(%edx) # newSaveArea->localRefCookie<- top
     movl        %edx, OUT_ARG4(%esp)    # save newSaveArea
     movl        LOCAL1_OFFSET(%ebp), %edx # %edx<- newFP
-    movl        %edx, offThread_curFrame(%ecx)  # glue->self->curFrame<- newFP
-    movl        %ecx, OUT_ARG3(%esp)    # save glue->self
-    movl        %ecx, OUT_ARG2(%esp)    # push parameter glue->self
-    movl        rGLUE,%ecx              # %ecx<- pMterpGlue
+    movl        %edx, offThread_curFrame(%ecx)  # self->self->curFrame<- newFP
+    movl        %ecx, OUT_ARG3(%esp)    # save self->self
+    movl        %ecx, OUT_ARG2(%esp)    # push parameter self->self
+    movl        rSELF,%ecx              # %ecx<- pthread
     movl        OUT_ARG1(%esp), %eax    # %eax<- methodToCall
-    lea         offGlue_retval(%ecx), %ecx # %ecx<- &retval
-    movl        %ecx, OUT_ARG0(%esp)    # push parameter pMterpGlue
+    lea         offThread_retval(%ecx), %ecx # %ecx<- &retval
+    movl        %ecx, OUT_ARG0(%esp)    # push parameter pthread
     push        %edx                    # push parameter newFP
 
     call        *offMethod_nativeFunc(%eax) # call methodToCall->nativeFunc
     lea         4(%esp), %esp
     movl        OUT_ARG4(%esp), %ecx    # %ecx<- newSaveArea
-    movl        OUT_ARG3(%esp), %eax    # %eax<- glue->self
+    movl        OUT_ARG3(%esp), %eax    # %eax<- self->self
     movl        offStackSaveArea_localRefCookie(%ecx), %edx # %edx<- old top
     cmp         $0, offThread_exception(%eax) # check for exception
-    movl        rFP, offThread_curFrame(%eax) # glue->self->curFrame<- rFP
+    movl        rFP, offThread_curFrame(%eax) # self->self->curFrame<- rFP
     movl        %edx, offThread_jniLocal_topCookie(%eax) # new top <- old top
     jne         common_exceptionThrown  # handle exception
     FETCH_INST_OPCODE 3 %edx
@@ -13667,8 +13660,7 @@ common_invokeMethodNoRange:
 
 .LstackOverflow:    # eax=methodToCall
     movl        %eax, OUT_ARG1(%esp)    # push parameter methodToCall
-    movl        rGLUE,%eax              # %eax<- pMterpGlue
-    movl        offGlue_self(%eax), %eax # %eax<- glue->self
+    movl        rSELF,%eax              # %eax<- self
     movl        %eax, OUT_ARG0(%esp)    # push parameter self
     call        dvmHandleStackOverflow  # call: (Thread* self, Method* meth)
     jmp         common_exceptionThrown  # handle exception
@@ -13679,8 +13671,8 @@ common_invokeMethodNoRange:
  *
  * On entry:
  *   ebx  -> PC adjustment in 16-bit words (must be preserved)
- *   ecx  -> GLUE pointer
- *   reentry type, e.g. kInterpEntryInstr stored in rGLUE->entryPoint
+ *   ecx  -> SELF pointer
+ *   reentry type, e.g. kInterpEntryInstr stored in rSELF->entryPoint
  *
  * Note: A call will normally kill %eax and %ecx.  To
  *       streamline the normal case, this routine will preserve
@@ -13691,12 +13683,11 @@ common_invokeMethodNoRange:
  * TUNING: Improve scheduling here & do initial single test for all.
  */
 common_periodicChecks:
-    movl    offGlue_pSelfSuspendCount(%ecx),%eax    # eax <- &suspendCount
-    cmpl    $0,(%eax)
+    cmpl    $0,offThread_suspendCount(%ecx)     # non-zero suspendCount?
     jne     1f
 
 6:
-    movl   offGlue_pInterpBreak(%ecx),%eax    # eax <- &interpBreak
+    movl   offThread_pInterpBreak(%ecx),%eax    # eax <- &interpBreak
     cmpl   $0,(%eax)              # something interesting happening?
     jne    3f                      # yes - switch interpreters
     ret
@@ -13705,13 +13696,13 @@ common_periodicChecks:
 1:
     /*  At this point, the return pointer to the caller of
      *  common_periodicChecks is on the top of stack.  We need to preserve
-     *  GLUE(ecx).
+     *  SELF(ecx).
      *  The outgoing profile is:
      *      bool dvmCheckSuspendPending(Thread* self)
      *  Because we reached here via a call, go ahead and build a new frame.
      */
     EXPORT_PC                         # need for precise GC
-    movl    offGlue_self(%ecx),%eax      # eax<- glue->self
+    movl    %ecx,%eax                 # eax<- self
     push    %ebp
     movl    %esp,%ebp
     subl    $24,%esp
@@ -13719,7 +13710,7 @@ common_periodicChecks:
     call    dvmCheckSuspendPending
     addl    $24,%esp
     pop     %ebp
-    movl    rGLUE,%ecx
+    movl    rSELF,%ecx
 
     /*
      * Need to check to see if debugger or profiler flags got set
@@ -13739,7 +13730,7 @@ common_periodicChecks:
      */
 3:
     leal    (rPC,%ebx,2),rPC       # adjust pc to show target
-    movl    rGLUE,%ecx             # bail expect GLUE already loaded
+    movl    rSELF,%ecx             # bail expect SELF already loaded
     movl    $1,rINST              # set changeInterp to true
     jmp     common_gotoBail
 
@@ -13748,9 +13739,9 @@ common_periodicChecks:
  * Common code for handling a return instruction
  */
 common_returnFromMethod:
-    movl    rGLUE,%ecx
+    movl    rSELF,%ecx
     /* Set entry mode in case we bail */
-    movb    $kInterpEntryReturn,offGlue_entryPoint(%ecx)
+    movb    $kInterpEntryReturn,offThread_entryPoint(%ecx)
     xorl    rINST,rINST   # zero offset in case we switch interps
     call    common_periodicChecks   # Note: expects %ecx to be preserved
 
@@ -13761,16 +13752,15 @@ common_returnFromMethod:
     je      common_gotoBail    # break frame, bail out completely
 
     movl    offStackSaveArea_savedPc(%eax),rPC    # pc<- saveArea->savedPC
-    movl    offGlue_self(%ecx),%eax               # eax<- self
-    movl    rINST,offGlue_method(%ecx)  # glue->method = newSave->meethod
-    movl    rFP,offThread_curFrame(%eax)     # self->curFrame = fp
+    movl    rINST,offThread_method(%ecx)  # self->method = newSave->meethod
+    movl    rFP,offThread_curFrame(%ecx)     # self->curFrame = fp
     movl    offMethod_clazz(rINST),%eax      # eax<- method->clazz
     FETCH_INST_OPCODE 3 %edx
     movl    offClassObject_pDvmDex(%eax),%eax # eax<- method->clazz->pDvmDex
     ADVANCE_PC 3
-    movl    %eax,offGlue_methodClassDex(%ecx)
+    movl    %eax,offThread_methodClassDex(%ecx)
     /* not bailing - restore entry mode to default */
-    movb    $kInterpEntryInstr,offGlue_entryPoint(%ecx)
+    movb    $kInterpEntryInstr,offThread_entryPoint(%ecx)
     GOTO_NEXT_R %edx
 
 /*
@@ -13779,24 +13769,24 @@ common_returnFromMethod:
  *
  * on entry:
  *    rINST holds changeInterp
- *    ecx holds glue pointer
+ *    ecx holds self pointer
  *
- * expected profile: dvmMterpStdBail(MterpGlue *glue, bool changeInterp)
+ * expected profile: dvmMterpStdBail(Thread *self, bool changeInterp)
  */
 common_gotoBail:
-    movl   rPC,offGlue_pc(%ecx)     # export state to glue
-    movl   rFP,offGlue_fp(%ecx)
-    movl   %ecx,OUT_ARG0(%esp)      # glue in arg0
+    movl   rPC,offThread_pc(%ecx)     # export state to self
+    movl   rFP,offThread_fp(%ecx)
+    movl   %ecx,OUT_ARG0(%esp)      # self in arg0
     movl   rINST,OUT_ARG1(%esp)     # changeInterp in arg1
     call   dvmMterpStdBail          # bail out....
 
 
 /*
- * After returning from a "glued" function, pull out the updated values
+ * After returning from a "selfd" function, pull out the updated values
  * and start executing at the next instruction.
  */
  common_resumeAfterGlueCall:
-     LOAD_PC_FP_FROM_GLUE
+     LOAD_PC_FP_FROM_SELF
      FETCH_INST
      GOTO_NEXT
 
@@ -13874,9 +13864,9 @@ common_errArrayIndex:
  * This does not return.
  */
 common_exceptionThrown:
-    movl    rGLUE,%ecx
-    movl    rPC,offGlue_pc(%ecx)
-    movl    rFP,offGlue_fp(%ecx)
+    movl    rSELF,%ecx
+    movl    rPC,offThread_pc(%ecx)
+    movl    rFP,offThread_fp(%ecx)
     movl    %ecx,OUT_ARG0(%esp)
     call    dvmMterp_exceptionThrown
     jmp     common_resumeAfterGlueCall

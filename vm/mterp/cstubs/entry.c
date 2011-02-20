@@ -17,12 +17,12 @@ DEFINE_GOTO_TABLE(gDvmMterpHandlerNames)
  *
  * This is only used for the "allstubs" variant.
  */
-bool dvmMterpStdRun(MterpGlue* glue)
+bool dvmMterpStdRun(Thread* self)
 {
     jmp_buf jmpBuf;
     int changeInterp;
 
-    glue->bailPtr = &jmpBuf;
+    self->bailPtr = &jmpBuf;
 
     /*
      * We want to return "changeInterp" as a boolean, but we can't return
@@ -40,18 +40,18 @@ bool dvmMterpStdRun(MterpGlue* glue)
      * We need to pick up where the other interpreter left off.
      *
      * In some cases we need to call into a throw/return handler which
-     * will do some processing and then either return to us (updating "glue")
+     * will do some processing and then either return to us (updating "self")
      * or longjmp back out.
      */
-    switch (glue->entryPoint) {
+    switch (self->entryPoint) {
     case kInterpEntryInstr:
         /* just start at the start */
         break;
     case kInterpEntryReturn:
-        dvmMterp_returnFromMethod(glue);
+        dvmMterp_returnFromMethod(self);
         break;
     case kInterpEntryThrow:
-        dvmMterp_exceptionThrown(glue);
+        dvmMterp_exceptionThrown(self);
         break;
     default:
         dvmAbort();
@@ -59,22 +59,22 @@ bool dvmMterpStdRun(MterpGlue* glue)
 
     /* run until somebody longjmp()s out */
     while (true) {
-        typedef void (*Handler)(MterpGlue* glue);
+        typedef void (*Handler)(Thread* self);
 
-        u2 inst = /*glue->*/pc[0];
+        u2 inst = /*self->*/pc[0];
         Handler handler = (Handler) gDvmMterpHandlers[inst & 0xff];
         (void) gDvmMterpHandlerNames;   /* avoid gcc "defined but not used" */
         LOGVV("handler %p %s\n",
             handler, (const char*) gDvmMterpHandlerNames[inst & 0xff]);
-        (*handler)(glue);
+        (*handler)(self);
     }
 }
 
 /*
  * C mterp exit point.  Call here to bail out of the interpreter.
  */
-void dvmMterpStdBail(MterpGlue* glue, bool changeInterp)
+void dvmMterpStdBail(Thread* self, bool changeInterp)
 {
-    jmp_buf* pJmpBuf = glue->bailPtr;
+    jmp_buf* pJmpBuf = self->bailPtr;
     longjmp(*pJmpBuf, ((int)changeInterp)+1);
 }

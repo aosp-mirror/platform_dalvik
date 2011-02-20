@@ -2,9 +2,9 @@
 %verify "Class not yet resolved"
 %verify "Class cannot be resolved"
     /* const-class/jumbo vBBBB, Class@AAAAAAAA */
-    movl      rGLUE,%ecx
+    movl      rSELF,%ecx
     movl      2(rPC),%eax              # eax<- AAAAAAAA
-    movl      offGlue_methodClassDex(%ecx),%ecx# ecx<- glue->methodClassDex
+    movl      offThread_methodClassDex(%ecx),%ecx# ecx<- self->methodClassDex
     movl      offDvmDex_pResClasses(%ecx),%ecx # ecx<- dvmDex->pResClasses
     movl      (%ecx,%eax,4),%eax       # eax<- rResClasses[AAAAAAAA]
     FETCH_INST_OPCODE 4 %edx
@@ -18,9 +18,9 @@
 /* This is the less common path, so we'll redo some work
    here rather than force spills on the common path */
 .L${opcode}_resolve:
-    movl     rGLUE,%eax
+    movl     rSELF,%eax
     EXPORT_PC
-    movl     offGlue_method(%eax),%eax # eax<- glue->method
+    movl     offThread_method(%eax),%eax # eax<- self->method
     movl     $$1,OUT_ARG2(%esp)        # true
     movl     2(rPC),%ecx               # ecx<- AAAAAAAA
     movl     offMethod_clazz(%eax),%eax

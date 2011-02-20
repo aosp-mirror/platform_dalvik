@@ -32,7 +32,7 @@ static void markCard(CompilationUnit *cUnit, int valReg, int tgtAddrReg)
     int regCardBase = dvmCompilerAllocTemp(cUnit);
     int regCardNo = dvmCompilerAllocTemp(cUnit);
     ArmLIR *branchOver = genCmpImmBranch(cUnit, kArmCondEq, valReg, 0);
-    loadWordDisp(cUnit, rGLUE, offsetof(InterpState, cardTable),
+    loadWordDisp(cUnit, rSELF, offsetof(Thread, cardTable),
                  regCardBase);
     opRegRegImm(cUnit, kOpLsr, regCardNo, tgtAddrReg, GC_CARD_SHIFT);
     storeBaseIndexed(cUnit, regCardBase, regCardNo, regCardBase, 0,
@@ -973,7 +973,7 @@ static void genReturnCommon(CompilationUnit *cUnit, MIR *mir)
         /* Branch to the PC reconstruction code */
         branch->generic.target = (LIR *) pcrLabel;
     }
-    /* TODO: Move result to InterpState for non-void returns */
+    /* TODO: Move result to Thread for non-void returns */
 }
 
 static void genProcessArgsNoRange(CompilationUnit *cUnit, MIR *mir,
@@ -1248,7 +1248,7 @@ static void genInvokeVirtualCommon(CompilationUnit *cUnit, MIR *mir,
 
     LOAD_FUNC_ADDR(cUnit, r7, (int) dvmJitToPatchPredictedChain);
 
-    genRegCopy(cUnit, r1, rGLUE);
+    genRegCopy(cUnit, r1, rSELF);
 
     /*
      * r0 = calleeMethod
@@ -1287,7 +1287,7 @@ static void genPuntToInterp(CompilationUnit *cUnit, unsigned int offset)
     /* r0 = dalvik pc */
     dvmCompilerFlushAllRegs(cUnit);
     loadConstant(cUnit, r0, (int) (cUnit->method->insns + offset));
-    loadWordDisp(cUnit, rGLUE, offsetof(InterpState,
+    loadWordDisp(cUnit, rSELF, offsetof(Thread,
                  jitToInterpEntries.dvmJitToInterpPunt), r1);
     opReg(cUnit, kOpBlx, r1);
 }
@@ -1313,9 +1313,9 @@ static void genInterpSingleStep(CompilationUnit *cUnit, MIR *mir)
        genPuntToInterp(cUnit, mir->offset);
        return;
     }
-    int entryAddr = offsetof(InterpState,
+    int entryAddr = offsetof(Thread,
                              jitToInterpEntries.dvmJitToInterpSingleStep);
-    loadWordDisp(cUnit, rGLUE, entryAddr, r2);
+    loadWordDisp(cUnit, rSELF, entryAddr, r2);
     /* r0 = dalvik pc */
     loadConstant(cUnit, r0, (int) (cUnit->method->insns + mir->offset));
     /* r1 = dalvik pc of following instruction */
@@ -1342,7 +1342,7 @@ static void genMonitorPortable(CompilationUnit *cUnit, MIR *mir)
     dvmCompilerFlushAllRegs(cUnit);   /* Send everything to home location */
     RegLocation rlSrc = dvmCompilerGetSrc(cUnit, mir, 0);
     loadValueDirectFixed(cUnit, rlSrc, r1);
-    loadWordDisp(cUnit, rGLUE, offsetof(InterpState, self), r0);
+    genRegCopy(cUnit, r0, rSELF);
     genNullCheck(cUnit, rlSrc.sRegLow, r1, mir->offset, NULL);
     if (isEnter) {
         /* Get dPC of next insn */
@@ -1368,17 +1368,15 @@ static void genMonitorPortable(CompilationUnit *cUnit, MIR *mir)
 #endif
 
 /*
- * Fetch *InterpState->pSelfSuspendCount. If the suspend count is non-zero,
+ * Fetch *self->suspendCount. If the suspend count is non-zero,
  * punt to the interpreter.
  */
 static void genSuspendPoll(CompilationUnit *cUnit, MIR *mir)
 {
     int rTemp = dvmCompilerAllocTemp(cUnit);
     ArmLIR *ld;
-    ld = loadWordDisp(cUnit, rGLUE, offsetof(InterpState, pSelfSuspendCount),
+    ld = loadWordDisp(cUnit, rSELF, offsetof(Thread, suspendCount),
                       rTemp);
-    setMemRefType(ld, true /* isLoad */, kMustNotAlias);
-    ld = loadWordDisp(cUnit, rTemp, 0, rTemp);
     setMemRefType(ld, true /* isLoad */, kMustNotAlias);
     genRegImmCheck(cUnit, kArmCondNe, rTemp, 0, mir->offset, NULL);
 }
@@ -1834,16 +1832,13 @@ static bool handleFmt11x(CompilationUnit *cUnit, MIR *mir)
     RegLocation rlResult;
     switch (dalvikOpcode) {
         case OP_MOVE_EXCEPTION: {
-            int offset = offsetof(InterpState, self);
             int exOffset = offsetof(Thread, exception);
-            int selfReg = dvmCompilerAllocTemp(cUnit);
             int resetReg = dvmCompilerAllocTemp(cUnit);
             RegLocation rlDest = dvmCompilerGetDest(cUnit, mir, 0);
             rlResult = dvmCompilerEvalLoc(cUnit, rlDest, kCoreReg, true);
-            loadWordDisp(cUnit, rGLUE, offset, selfReg);
+            loadWordDisp(cUnit, rSELF, exOffset, rlResult.lowReg);
             loadConstant(cUnit, resetReg, 0);
-            loadWordDisp(cUnit, selfReg, exOffset, rlResult.lowReg);
-            storeWordDisp(cUnit, selfReg, exOffset, resetReg);
+            storeWordDisp(cUnit, rSELF, exOffset, resetReg);
             storeValue(cUnit, rlDest, rlResult);
            break;
         }
@@ -3235,7 +3230,7 @@ static bool handleFmt35c_3rc_5rc(CompilationUnit *cUnit, MIR *mir,
 
             LOAD_FUNC_ADDR(cUnit, r7, (int) dvmJitToPatchPredictedChain);
 
-            genRegCopy(cUnit, r1, rGLUE);
+            genRegCopy(cUnit, r1, rSELF);
             genRegCopy(cUnit, r2, r9);
             genRegCopy(cUnit, r3, r10);
 
@@ -3584,8 +3579,8 @@ static bool handleExecuteInlineC(CompilationUnit *cUnit, MIR *mir)
     dvmCompilerClobberCallRegs(cUnit);
     dvmCompilerClobber(cUnit, r4PC);
     dvmCompilerClobber(cUnit, r7);
-    int offset = offsetof(InterpState, retval);
-    opRegRegImm(cUnit, kOpAdd, r4PC, rGLUE, offset);
+    int offset = offsetof(Thread, retval);
+    opRegRegImm(cUnit, kOpAdd, r4PC, rSELF, offset);
     opImm(cUnit, kOpPush, (1<<r4PC) | (1<<r7));
     LOAD_FUNC_ADDR(cUnit, r4PC, fn);
     genExportPC(cUnit, mir);
@@ -3713,8 +3708,8 @@ static void handleNormalChainingCell(CompilationUnit *cUnit,
      * instructions fit the predefined cell size.
      */
     insertChainingSwitch(cUnit);
-    newLIR3(cUnit, kThumbLdrRRI5, r0, rGLUE,
-            offsetof(InterpState,
+    newLIR3(cUnit, kThumbLdrRRI5, r0, rSELF,
+            offsetof(Thread,
                      jitToInterpEntries.dvmJitToInterpNormal) >> 2);
     newLIR1(cUnit, kThumbBlxR, r0);
     addWordData(cUnit, (int) (cUnit->method->insns + offset), true);
@@ -3732,8 +3727,8 @@ static void handleHotChainingCell(CompilationUnit *cUnit,
      * instructions fit the predefined cell size.
      */
     insertChainingSwitch(cUnit);
-    newLIR3(cUnit, kThumbLdrRRI5, r0, rGLUE,
-            offsetof(InterpState,
+    newLIR3(cUnit, kThumbLdrRRI5, r0, rSELF,
+            offsetof(Thread,
                      jitToInterpEntries.dvmJitToInterpTraceSelect) >> 2);
     newLIR1(cUnit, kThumbBlxR, r0);
     addWordData(cUnit, (int) (cUnit->method->insns + offset), true);
@@ -3749,12 +3744,12 @@ static void handleBackwardBranchChainingCell(CompilationUnit *cUnit,
      */
     insertChainingSwitch(cUnit);
 #if defined(WITH_SELF_VERIFICATION)
-    newLIR3(cUnit, kThumbLdrRRI5, r0, rGLUE,
-        offsetof(InterpState,
+    newLIR3(cUnit, kThumbLdrRRI5, r0, rSELF,
+        offsetof(Thread,
                  jitToInterpEntries.dvmJitToInterpBackwardBranch) >> 2);
 #else
-    newLIR3(cUnit, kThumbLdrRRI5, r0, rGLUE,
-        offsetof(InterpState, jitToInterpEntries.dvmJitToInterpNormal) >> 2);
+    newLIR3(cUnit, kThumbLdrRRI5, r0, rSELF,
+        offsetof(Thread, jitToInterpEntries.dvmJitToInterpNormal) >> 2);
 #endif
     newLIR1(cUnit, kThumbBlxR, r0);
     addWordData(cUnit, (int) (cUnit->method->insns + offset), true);
@@ -3769,8 +3764,8 @@ static void handleInvokeSingletonChainingCell(CompilationUnit *cUnit,
      * instructions fit the predefined cell size.
      */
     insertChainingSwitch(cUnit);
-    newLIR3(cUnit, kThumbLdrRRI5, r0, rGLUE,
-            offsetof(InterpState,
+    newLIR3(cUnit, kThumbLdrRRI5, r0, rSELF,
+            offsetof(Thread,
                      jitToInterpEntries.dvmJitToInterpTraceSelect) >> 2);
     newLIR1(cUnit, kThumbBlxR, r0);
     addWordData(cUnit, (int) (callee->insns), true);
@@ -4231,7 +4226,7 @@ void dvmCompilerMIR2LIR(CompilationUnit *cUnit)
                 case kExceptionHandling:
                     labelList[i].opcode = kArmPseudoEHBlockLabel;
                     if (cUnit->pcReconstructionList.numUsed) {
-                        loadWordDisp(cUnit, rGLUE, offsetof(InterpState,
+                        loadWordDisp(cUnit, rSELF, offsetof(Thread,
                                      jitToInterpEntries.dvmJitToInterpPunt),
                                      r1);
                         opReg(cUnit, kOpBlx, r1);
@@ -4525,7 +4520,7 @@ gen_fallthrough:
      */
     if (cUnit->switchOverflowPad) {
         loadConstant(cUnit, r0, (int) cUnit->switchOverflowPad);
-        loadWordDisp(cUnit, rGLUE, offsetof(InterpState,
+        loadWordDisp(cUnit, rSELF, offsetof(Thread,
                      jitToInterpEntries.dvmJitToInterpNoChain), r2);
         opRegReg(cUnit, kOpAdd, r1, r1);
         opRegRegReg(cUnit, kOpAdd, r4PC, r0, r1);

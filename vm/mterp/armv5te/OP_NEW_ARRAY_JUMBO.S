@@ -13,7 +13,7 @@
     FETCH(r3, 2)                        @ r3<- AAAA (hi)
     FETCH(r0, 4)                        @ r0<- vCCCC
     orr     r2, r2, r3, lsl #16         @ r2<- AAAAaaaa
-    ldr     r3, [rGLUE, #offGlue_methodClassDex]    @ r3<- pDvmDex
+    ldr     r3, [rSELF, #offThread_methodClassDex]    @ r3<- pDvmDex
     GET_VREG(r1, r0)                    @ r1<- vCCCC (array length)
     ldr     r3, [r3, #offDvmDex_pResClasses]    @ r3<- pDvmDex->pResClasses
     cmp     r1, #0                      @ check length
@@ -33,7 +33,7 @@
      *  r2 holds class ref AAAAAAAA
      */
 .L${opcode}_resolve:
-    ldr     r3, [rGLUE, #offGlue_method] @ r3<- glue->method
+    ldr     r3, [rSELF, #offThread_method] @ r3<- self->method
     mov     r9, r1                      @ r9<- length (save)
     mov     r1, r2                      @ r1<- AAAAAAAA
     mov     r2, #0                      @ r2<- false

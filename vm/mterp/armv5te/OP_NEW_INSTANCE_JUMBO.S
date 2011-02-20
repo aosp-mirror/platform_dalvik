@@ -12,7 +12,7 @@
     /* new-instance/jumbo vBBBB, class@AAAAAAAA */
     FETCH(r0, 1)                        @ r0<- aaaa (lo)
     FETCH(r1, 2)                        @ r1<- AAAA (hi)
-    ldr     r3, [rGLUE, #offGlue_methodClassDex]    @ r3<- pDvmDex
+    ldr     r3, [rSELF, #offThread_methodClassDex]    @ r3<- pDvmDex
     orr     r1, r0, r1, lsl #16         @ r1<- AAAAaaaa
     ldr     r3, [r3, #offDvmDex_pResClasses]    @ r3<- pDvmDex->pResClasses
     ldr     r0, [r3, r1, lsl #2]        @ r0<- resolved class
@@ -58,7 +58,7 @@
      *  r1 holds AAAAAAAA
      */
 .L${opcode}_resolve:
-    ldr     r3, [rGLUE, #offGlue_method] @ r3<- glue->method
+    ldr     r3, [rSELF, #offThread_method] @ r3<- self->method
     mov     r2, #0                      @ r2<- false
     ldr     r0, [r3, #offMethod_clazz]  @ r0<- method->clazz
     bl      dvmResolveClass             @ r0<- resolved ClassObject ptr

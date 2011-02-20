@@ -5,11 +5,11 @@
     checkDebugAndProf(pc, fp, self, curMethod, &debugIsMethodEntry)
 
 #if defined(WITH_JIT)
-#define CHECK_JIT_BOOL() (dvmCheckJit(pc, self, interpState, callsiteClass,\
+#define CHECK_JIT_BOOL() (dvmCheckJit(pc, self, callsiteClass,\
                           methodToCall))
-#define CHECK_JIT_VOID() (dvmCheckJit(pc, self, interpState, callsiteClass,\
+#define CHECK_JIT_VOID() (dvmCheckJit(pc, self, callsiteClass,\
                           methodToCall))
-#define END_JIT_TSELECT() (dvmJitEndTraceSelect(interpState))
+#define END_JIT_TSELECT() (dvmJitEndTraceSelect(self))
 #else
 #define CHECK_JIT_BOOL() (false)
 #define CHECK_JIT_VOID()

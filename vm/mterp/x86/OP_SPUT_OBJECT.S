@@ -6,9 +6,9 @@
      * SPUT object handler.
      */
     /* op vAA, field@BBBB */
-    movl      rGLUE,%ecx
+    movl      rSELF,%ecx
     movzwl    2(rPC),%eax                        # eax<- field ref BBBB
-    movl      offGlue_methodClassDex(%ecx),%ecx  # ecx<- DvmDex
+    movl      offThread_methodClassDex(%ecx),%ecx  # ecx<- DvmDex
     movl      offDvmDex_pResFields(%ecx),%ecx    # ecx<- dvmDex->pResFields
     movl      (%ecx,%eax,4),%eax                 # eax<- resolved StaticField
     testl     %eax,%eax                          # resolved entry null?
@@ -25,9 +25,9 @@
     testl     %ecx,%ecx                          # stored null object ptr?
     FETCH_INST_OPCODE 2 %edx
     je        1f                                 # skip card mark if null
-    movl      rGLUE,%ecx
+    movl      rSELF,%ecx
     movl      offField_clazz(%eax),%eax          # eax<- method->clazz
-    movl      offGlue_cardTable(%ecx),%ecx       # get card table base
+    movl      offThread_cardTable(%ecx),%ecx       # get card table base
     shrl      $$GC_CARD_SHIFT,%eax               # head to card number
     movb      %cl,(%ecx,%eax)                    # mark card
 1:
@@ -35,9 +35,9 @@
     GOTO_NEXT_R %edx
 
 .L${opcode}_resolve:
-    movl     rGLUE,%ecx
+    movl     rSELF,%ecx
     movzwl   2(rPC),%eax                        # eax<- field ref BBBB
-    movl     offGlue_method(%ecx),%ecx          # ecx<- current method
+    movl     offThread_method(%ecx),%ecx          # ecx<- current method
     EXPORT_PC                                   # could throw, need to export
     movl     offMethod_clazz(%ecx),%ecx         # ecx<- method->clazz
     movl     %eax,OUT_ARG1(%esp)

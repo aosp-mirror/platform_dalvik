@@ -7,7 +7,7 @@
      * 64-bit SPUT handler.
      */
     /* sput-wide vAA, field@BBBB */
-    ldr     r0, [rGLUE, #offGlue_methodClassDex]  @ r0<- DvmDex
+    ldr     r0, [rSELF, #offThread_methodClassDex]  @ r0<- DvmDex
     FETCH(r1, 1)                        @ r1<- field ref BBBB
     ldr     r0, [r0, #offDvmDex_pResFields] @ r0<- dvmDex->pResFields
     mov     r9, rINST, lsr #8           @ r9<- AA
@@ -36,7 +36,7 @@
      * Returns StaticField pointer in r2.
      */
 .L${opcode}_resolve:
-    ldr     r2, [rGLUE, #offGlue_method]    @ r2<- current method
+    ldr     r2, [rSELF, #offThread_method]    @ r2<- current method
     EXPORT_PC()                         @ resolve() could throw, so export now
     ldr     r0, [r2, #offMethod_clazz]  @ r0<- method->clazz
     bl      dvmResolveStaticField       @ r0<- resolved StaticField ptr

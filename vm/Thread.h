@@ -21,6 +21,7 @@
 #define _DALVIK_THREAD
 
 #include "jni.h"
+#include "interp/InterpState.h"
 
 #include <errno.h>
 #include <cutils/sched_policy.h>
@@ -86,15 +87,18 @@ void dvmSlayDaemons(void);
  * These are allocated on the system heap.
  */
 typedef struct Thread {
-    /* small unique integer; useful for "thin" locks and debug messages */
-    u4          threadId;
-
     /*
-     * Thread's current status.  Can only be changed by the thread itself
-     * (i.e. don't mess with this from other threads).
+     * Interpreter state which must be preserved across nested
+     * interpreter invocations (via JNI callbacks).  Must be the first
+     * element in Thread.
      */
-    volatile ThreadStatus status;
-
+    InterpSaveState interpSave;
+    /*
+     * Begin interpreter state which does not need to be preserved, but should
+     * be located towards the beginning of the Thread structure for
+     * efficiency.
+     */
+    JValue      retval;
     /*
      * This is the number of times the thread has been suspended.  When the
      * count drops to zero, the thread resumes.
@@ -118,6 +122,70 @@ typedef struct Thread {
     int         suspendCount;
     int         dbgSuspendCount;
 
+    u1*         cardTable;
+
+    /* current limit of stack; flexes for StackOverflowError */
+    const u1*   interpStackEnd;
+
+    /* FP of bottom-most (currently executing) stack frame on interp stack */
+    void*       curFrame;
+    /* current exception, or NULL if nothing pending */
+    Object*     exception;
+
+    /* small unique integer; useful for "thin" locks and debug messages */
+    u4          threadId;
+
+    bool        debugIsMethodEntry;
+    /* interpreter stack size; our stacks are fixed-length */
+    int         interpStackSize;
+    bool        stackOverflowed;
+
+    InterpEntry entryPoint;      // What to do when we start the interpreter
+
+    /* JNI local reference tracking */
+#ifdef USE_INDIRECT_REF
+    IndirectRefTable jniLocalRefTable;
+#else
+    ReferenceTable  jniLocalRefTable;
+#endif
+
+#ifdef WITH_JIT
+    struct JitToInterpEntries jitToInterpEntries;
+    /*
+     * Whether the current top VM frame is in the interpreter or JIT cache:
+     *   NULL    : in the interpreter
+     *   non-NULL: entry address of the JIT'ed code (the actual value doesn't
+     *             matter)
+     */
+    void*             inJitCodeCache;
+    unsigned char*    pJitProfTable;
+    unsigned char**   ppJitProfTable;   // Used to refresh pJitProfTable
+    int               jitThreshold;
+    const void*       jitResumeNPC;
+    const u2*         jitResumeDPC;
+    JitState    jitState;
+    int         icRechainCount;
+    const void* pProfileCountdown;
+#if defined(WITH_SELF_VERIFICATION)
+    /* Buffer for register state during self verification */
+    struct ShadowSpace* shadowSpace;
+#endif
+    int         currTraceRun;
+    int         totalTraceLen;  // Number of Dalvik insts in trace
+    const u2*   currTraceHead;  // Start of the trace we're building
+    const u2*   currRunHead;    // Start of run we're building
+    int         currRunLen;     // Length of run in 16-bit words
+    const u2*   lastPC;         // Stage the PC for the threaded interpreter
+    intptr_t    threshFilter[JIT_TRACE_THRESH_FILTER_SIZE];
+    JitTraceRun trace[MAX_JIT_RUN_LEN];
+#endif
+
+    /*
+     * Thread's current status.  Can only be changed by the thread itself
+     * (i.e. don't mess with this from other threads).
+     */
+    volatile ThreadStatus status;
+
     /* thread handle, as reported by pthread_self() */
     pthread_t   handle;
 
@@ -126,19 +194,6 @@ typedef struct Thread {
 
     /* start (high addr) of interp stack (subtract size to get malloc addr) */
     u1*         interpStackStart;
-
-    /* current limit of stack; flexes for StackOverflowError */
-    const u1*   interpStackEnd;
-
-    /* interpreter stack size; our stacks are fixed-length */
-    int         interpStackSize;
-    bool        stackOverflowed;
-
-    /* FP of bottom-most (currently executing) stack frame on interp stack */
-    void*       curFrame;
-
-    /* current exception, or NULL if nothing pending */
-    Object*     exception;
 
     /* the java/lang/Thread that we are associated with */
     Object*     threadObj;
@@ -149,26 +204,6 @@ typedef struct Thread {
     /* internal reference tracking */
     ReferenceTable  internalLocalRefTable;
 
-#if defined(WITH_JIT)
-    /*
-     * Whether the current top VM frame is in the interpreter or JIT cache:
-     *   NULL    : in the interpreter
-     *   non-NULL: entry address of the JIT'ed code (the actual value doesn't
-     *             matter)
-     */
-    void*       inJitCodeCache;
-#if defined(WITH_SELF_VERIFICATION)
-    /* Buffer for register state during self verification */
-    struct ShadowSpace* shadowSpace;
-#endif
-#endif
-
-    /* JNI local reference tracking */
-#ifdef USE_INDIRECT_REF
-    IndirectRefTable jniLocalRefTable;
-#else
-    ReferenceTable  jniLocalRefTable;
-#endif
 
     /* JNI native monitor reference tracking (initialized on first use) */
     ReferenceTable  jniMonitorRefTable;
@@ -209,6 +244,9 @@ typedef struct Thread {
 
     /* JDWP invoke-during-breakpoint support */
     DebugInvokeReq  invokeReq;
+
+    /* Interpreter switching */
+    int         nextMode;
 
     /* base time for per-thread CPU timing (used by method profiling) */
     bool        cpuClockBaseSet;
