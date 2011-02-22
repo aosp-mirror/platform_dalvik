@@ -24,6 +24,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
@@ -89,6 +92,37 @@ public final class DexMergeTest extends TestCase {
         assertEquals(null, staticValues.getField("k").get(null));
         assertEquals(true, staticValues.getField("l").get(null));
         assertEquals(false, staticValues.getField("m").get(null));
+    }
+
+    public void testAnnotations() throws Exception {
+        ClassLoader loader = mergeAndLoad(
+                "/testdata/Basic.dex",
+                "/testdata/Annotated.dex");
+
+        Class<?> basic = loader.loadClass("testdata.Basic");
+        assertEquals(1, basic.getDeclaredMethods().length);
+
+        Class<?> annotated = loader.loadClass("testdata.Annotated");
+        Method method = annotated.getMethod("method", String.class, String.class);
+        Field field = annotated.getField("field");
+
+        @SuppressWarnings("unchecked")
+        Class<? extends Annotation> marker
+                = (Class<? extends Annotation>) loader.loadClass("testdata.Annotated$Marker");
+
+        assertEquals("@testdata.Annotated$Marker(a=on class, b=[A, B, C], "
+                + "c=@testdata.Annotated$Nested(e=E1, f=1695938256, g=7264081114510713000), "
+                + "d=[@testdata.Annotated$Nested(e=E2, f=1695938256, g=7264081114510713000)])",
+                annotated.getAnnotation(marker).toString());
+        assertEquals("@testdata.Annotated$Marker(a=on method, b=[], "
+                + "c=@testdata.Annotated$Nested(e=, f=0, g=0), d=[])",
+                method.getAnnotation(marker).toString());
+        assertEquals("@testdata.Annotated$Marker(a=on field, b=[], "
+                + "c=@testdata.Annotated$Nested(e=, f=0, g=0), d=[])",
+                field.getAnnotation(marker).toString());
+        assertEquals("@testdata.Annotated$Marker(a=on parameter, b=[], "
+                + "c=@testdata.Annotated$Nested(e=, f=0, g=0), d=[])",
+                method.getParameterAnnotations()[1][0].toString());
     }
 
     /**

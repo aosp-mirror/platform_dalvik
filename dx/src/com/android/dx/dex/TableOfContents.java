@@ -218,6 +218,10 @@ public final class TableOfContents {
             this.type = (short) type;
         }
 
+        public boolean exists() {
+            return size != -1;
+        }
+
         public int compareTo(Section section) {
             if (off != section.off) {
                 return off < section.off ? -1 : 1;
