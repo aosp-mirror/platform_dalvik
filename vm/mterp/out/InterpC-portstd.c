@@ -1297,7 +1297,7 @@ bool INTERP_FUNC_NAME(Thread* self)
     debugIsMethodEntry = self->debugIsMethodEntry;
 #endif
 #if defined(WITH_TRACKREF_CHECKS)
-    int debugTrackedRefStart = self->debugTrackedRefStart;
+    int debugTrackedRefStart = self->interpSave.debugTrackedRefStart;
 #endif
     DvmDex* methodClassDex;     // curMethod->clazz->pDvmDex
     JValue retval;

@@ -1321,7 +1321,7 @@ void dvmInterpret(Thread* self, const Method* method, JValue* pResult)
 
 
 #if defined(WITH_TRACKREF_CHECKS)
-    self->debugTrackedRefStart =
+    self->interpSave.debugTrackedRefStart =
         dvmReferenceTableEntries(&self->internalLocalRefTable);
 #endif
     self->debugIsMethodEntry = true;
