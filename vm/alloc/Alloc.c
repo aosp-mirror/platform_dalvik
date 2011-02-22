@@ -187,7 +187,7 @@ Object* dvmAllocObject(ClassObject* clazz, int flags)
  * We use the size actually allocated, rather than obj->clazz->objectSize,
  * because the latter doesn't work for array objects.
  */
-Object* dvmCloneObject(Object* obj)
+Object* dvmCloneObject(Object* obj, int flags)
 {
     ClassObject* clazz;
     Object* copy;
@@ -208,7 +208,7 @@ Object* dvmCloneObject(Object* obj)
         size = clazz->objectSize;
     }
 
-    copy = (Object*)dvmMalloc(size, ALLOC_DEFAULT);
+    copy = (Object*)dvmMalloc(size, flags);
     if (copy == NULL)
         return NULL;
 

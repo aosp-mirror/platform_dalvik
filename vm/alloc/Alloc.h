@@ -87,9 +87,9 @@ bool dvmIsValidObject(const Object* obj);
 /*
  * Create a copy of an object.
  *
- * The new object will be added to the "tracked alloc" table.
+ * Returns NULL and throws an exception on failure.
  */
-Object* dvmCloneObject(Object* obj);
+Object* dvmCloneObject(Object* obj, int flags);
 
 /*
  * Make the object finalizable.

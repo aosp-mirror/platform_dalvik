@@ -30,9 +30,8 @@ static void Dalvik_java_lang_Object_internalClone(const u4* args,
     JValue* pResult)
 {
     Object* thisPtr = (Object*) args[0];
-    Object* clone = dvmCloneObject(thisPtr);
+    Object* clone = dvmCloneObject(thisPtr, ALLOC_DONT_TRACK);
 
-    dvmReleaseTrackedAlloc(clone, NULL);
     RETURN_PTR(clone);
 }
 
