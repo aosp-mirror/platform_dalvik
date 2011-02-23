@@ -710,6 +710,9 @@ INLINE bool dvmIsNativeMethod(const Method* method) {
 INLINE bool dvmIsAbstractMethod(const Method* method) {
     return (method->accessFlags & ACC_ABSTRACT) != 0;
 }
+INLINE bool dvmIsSyntheticMethod(const Method* method) {
+    return (method->accessFlags & ACC_SYNTHETIC) != 0;
+}
 INLINE bool dvmIsMirandaMethod(const Method* method) {
     return (method->accessFlags & ACC_MIRANDA) != 0;
 }

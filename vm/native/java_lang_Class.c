@@ -275,6 +275,25 @@ static void Dalvik_java_lang_Class_getDeclaredMethods(const u4* args,
 }
 
 /*
+ * static native Member getDeclaredConstructorOrMethod(
+ *     Class clazz, String name, Class[] args);
+ */
+static void Dalvik_java_lang_Class_getDeclaredConstructorOrMethod(
+    const u4* args, JValue* pResult)
+{
+    ClassObject* clazz = (ClassObject*) args[0];
+    StringObject* nameObj = (StringObject*) args[1];
+    ArrayObject* methodArgs = (ArrayObject*) args[2];
+
+    Object* methodObj;
+
+    methodObj = dvmGetDeclaredConstructorOrMethod(clazz, nameObj, methodArgs);
+    dvmReleaseTrackedAlloc(methodObj, NULL);
+
+    RETURN_PTR(methodObj);
+}
+
+/*
  * Class[] getInterfaces()
  */
 static void Dalvik_java_lang_Class_getInterfaces(const u4* args,
@@ -741,6 +760,8 @@ const DalvikNativeMethod dvm_java_lang_Class[] = {
         Dalvik_java_lang_Class_getDeclaredFields },
     { "getDeclaredMethods",     "(Ljava/lang/Class;Z)[Ljava/lang/reflect/Method;",
         Dalvik_java_lang_Class_getDeclaredMethods },
+    { "getDeclaredConstructorOrMethod", "(Ljava/lang/Class;Ljava/lang/String;[Ljava/lang/Class;)Ljava/lang/reflect/Member;",
+        Dalvik_java_lang_Class_getDeclaredConstructorOrMethod },
     { "getInterfaces",          "()[Ljava/lang/Class;",
         Dalvik_java_lang_Class_getInterfaces },
     { "getModifiers",           "(Ljava/lang/Class;Z)I",
