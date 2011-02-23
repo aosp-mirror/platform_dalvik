@@ -37,6 +37,12 @@ typedef struct DexStringCache {
 } DexStringCache;
 
 /*
+ * Make sure that the given cache can hold a string of the given length,
+ * including the final '\0' byte.
+ */
+void dexStringCacheAlloc(DexStringCache* pCache, size_t length);
+
+/*
  * Initialize the given DexStringCache. Use this function before passing
  * one into any other function.
  */

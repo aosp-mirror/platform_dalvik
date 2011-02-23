@@ -51,6 +51,12 @@ ArrayObject* dvmGetDeclaredConstructors(ClassObject* clazz, bool publicOnly);
 ArrayObject* dvmGetDeclaredMethods(ClassObject* clazz, bool publicOnly);
 
 /*
+ * Get the named method.
+ */
+Object* dvmGetDeclaredConstructorOrMethod(ClassObject* clazz,
+    StringObject* nameObj, ArrayObject* args);
+
+/*
  * Get all interfaces a class implements. If this is unable to allocate
  * the result array, this raises an OutOfMemoryError and returns NULL.
  */
