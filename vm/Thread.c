@@ -3204,7 +3204,7 @@ static Object* getStaticThreadGroup(const char* fieldName)
         fieldName, "Ljava/lang/ThreadGroup;");
     if (groupField == NULL) {
         LOGE("java.lang.ThreadGroup does not have an '%s' field\n", fieldName);
-        dvmThrowException("Ljava/lang/IncompatibleClassChangeError;", NULL);
+        dvmThrowInternalError("bad definition for ThreadGroup");
         return NULL;
     }
     groupObj = dvmGetStaticFieldObject(groupField);

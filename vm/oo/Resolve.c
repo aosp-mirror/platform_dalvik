@@ -195,9 +195,8 @@ Method* dvmResolveMethod(const ClassObject* referrer, u4 methodIdx,
     }
     if (dvmIsInterfaceClass(resClass)) {
         /* method is part of an interface */
-        dvmThrowExceptionWithClassMessage(
-            "Ljava/lang/IncompatibleClassChangeError;",
-            resClass->descriptor);
+        dvmThrowIncompatibleClassChangeErrorWithClassMessage(
+                resClass->descriptor);
         return NULL;
     }
 
@@ -300,9 +299,8 @@ Method* dvmResolveInterfaceMethod(const ClassObject* referrer, u4 methodIdx)
     }
     if (!dvmIsInterfaceClass(resClass)) {
         /* whoops */
-        dvmThrowExceptionWithClassMessage(
-            "Ljava/lang/IncompatibleClassChangeError;",
-            resClass->descriptor);
+        dvmThrowIncompatibleClassChangeErrorWithClassMessage(
+                resClass->descriptor);
         return NULL;
     }
 

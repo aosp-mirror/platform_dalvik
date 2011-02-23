@@ -124,7 +124,7 @@ void dvmResolveNativeMethod(const u4* args, JValue* pResult,
         free(desc);
     }
 
-    dvmThrowException("Ljava/lang/UnsatisfiedLinkError;", method->name);
+    dvmThrowUnsatisfiedLinkError(method->name);
 }
 
 
