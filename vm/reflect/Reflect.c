@@ -817,6 +817,106 @@ fail:
 }
 
 /*
+ * Fills targetDescriptorCache with the descriptors of the classes in args.
+ * This is the concatenation of the descriptors with no other adornment,
+ * consistent with dexProtoGetParameterDescriptors.
+ */
+static void createTargetDescriptor(ArrayObject* args,
+    DexStringCache* targetDescriptorCache)
+{
+    size_t i;
+    ClassObject** argsArray = NULL;
+    size_t length;
+    char* at;
+    const char* descriptor;
+
+    argsArray = (ClassObject**) args->contents;
+
+    length = 1; /* +1 for the terminating '\0' */
+    for (i = 0; i < args->length; ++i) {
+        length += strlen(argsArray[i]->descriptor);
+    }
+
+    dexStringCacheAlloc(targetDescriptorCache, length);
+
+    at = (char*) targetDescriptorCache->value;
+    for (i = 0; i < args->length; ++i) {
+        descriptor = argsArray[i]->descriptor;
+        strcpy(at, descriptor);
+        at += strlen(descriptor);
+    }
+}
+
+static Object* findConstructorOrMethodInArray(int methodsCount, Method* methods,
+    const char* name, const char* parameterDescriptors,
+    DexStringCache* stringCache)
+{
+    Method* method = NULL;
+    Method* result = NULL;
+    int i;
+
+    for (i = 0; i < methodsCount; ++i) {
+        method = &methods[i];
+        if (strcmp(name, method->name) != 0
+            || dvmIsMirandaMethod(method)
+            || strcmp(parameterDescriptors, dexProtoGetParameterDescriptors(
+                &method->prototype, stringCache)) != 0) {
+            continue;
+        }
+
+        result = method;
+
+        /*
+         * Covariant return types permit the class to define multiple
+         * methods with the same name and parameter types. Prefer to return
+         * a non-synthetic method in such situations. We may still return
+         * a synthetic method to handle situations like escalated visibility.
+         */
+        if (!dvmIsSyntheticMethod(method)) {
+            break;
+        }
+    }
+
+    if (result != NULL) {
+        return dvmCreateReflectObjForMethod(result->clazz, result);
+    }
+
+    return NULL;
+}
+
+/*
+ * Get the named method.
+ */
+Object* dvmGetDeclaredConstructorOrMethod(ClassObject* clazz,
+    StringObject* nameObj, ArrayObject* args)
+{
+    Object* result = NULL;
+    DexStringCache stringCache;
+    DexStringCache targetDescriptorCache;
+    char* name;
+    const char* targetDescriptor;
+
+    dexStringCacheInit(&stringCache);
+    dexStringCacheInit(&targetDescriptorCache);
+
+    name = dvmCreateCstrFromString(nameObj);
+    createTargetDescriptor(args, &targetDescriptorCache);
+    targetDescriptor = targetDescriptorCache.value;
+
+    result = findConstructorOrMethodInArray(clazz->directMethodCount,
+        clazz->directMethods, name, targetDescriptor, &stringCache);
+    if (result == NULL) {
+        result = findConstructorOrMethodInArray(clazz->virtualMethodCount,
+            clazz->virtualMethods, name, targetDescriptor, &stringCache);
+    }
+
+    free(name);
+    dexStringCacheRelease(&stringCache);
+    dexStringCacheRelease(&targetDescriptorCache);
+    return result;
+}
+
+/*
  * Get all interfaces a class implements. If this is unable to allocate
  * the result array, this raises an OutOfMemoryError and returns NULL.
  */
