@@ -217,14 +217,7 @@ Object* dvmCloneObject(Object* obj, int flags)
     DVM_LOCK_INIT(&copy->lock);
     dvmWriteBarrierObject(copy);
 
-    /*
-     * Mark the clone as finalizable if appropriate.
-     *
-     * TODO: this is wrong if the source object hasn't finished construction
-     * through Object.<init>.  We need to make "copy" finalizable iff
-     * "obj" is finalizable, i.e. it's present in gcHeap->finalizableRefs.
-     * Currently no quick way to do that.  See also b/2645458.
-     */
+    /* Mark the clone as finalizable if appropriate. */
     if (IS_CLASS_FLAG_SET(clazz, CLASS_ISFINALIZABLE)) {
         dvmSetFinalizable(copy);
     }
