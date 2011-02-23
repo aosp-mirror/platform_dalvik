@@ -171,13 +171,14 @@ int dexProtoComputeArgsSize(const DexProto* pProto);
 int dexProtoCompare(const DexProto* pProto1, const DexProto* pProto2);
 
 /*
- * Compare the two prototypes. The two prototypes are compared
- * with the first argument as the major order, then second, etc. If two
- * prototypes are identical except that one has extra arguments, then the
- * shorter argument is considered the earlier one in sort order (similar
- * to strcmp()).
+ * Compare the two prototypes, ignoring return type. The two
+ * prototypes are compared with the first argument as the major order,
+ * then second, etc. If two prototypes are identical except that one
+ * has extra arguments, then the shorter argument is considered the
+ * earlier one in sort order (similar to strcmp()).
  */
-int dexProtoCompareParameters(const DexProto* pProto1, const DexProto* pProto2);
+int dexProtoCompareParameters(const DexProto* pProto1,
+        const DexProto* pProto2);
 
 /*
  * Compare a prototype and a string method descriptor. The comparison
@@ -185,6 +186,14 @@ int dexProtoCompareParameters(const DexProto* pProto1, const DexProto* pProto2);
  * with dexProtoCompare().
  */
 int dexProtoCompareToDescriptor(const DexProto* proto, const char* descriptor);
+
+/*
+ * Compare a prototype and a concatenation of type descriptors. The
+ * comparison is done as if the descriptors were converted to a
+ * prototype and compared with dexProtoCompareParameters().
+ */
+int dexProtoCompareToParameterDescriptors(const DexProto* proto,
+        const char* descriptors);
 
 /*
  * Single-thread prototype parameter iterator. This structure holds a

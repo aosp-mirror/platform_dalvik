@@ -848,8 +848,7 @@ static void createTargetDescriptor(ArrayObject* args,
 }
 
 static Object* findConstructorOrMethodInArray(int methodsCount, Method* methods,
-    const char* name, const char* parameterDescriptors,
-    DexStringCache* stringCache)
+    const char* name, const char* parameterDescriptors)
 {
     Method* method = NULL;
     Method* result = NULL;
@@ -859,8 +858,8 @@ static Object* findConstructorOrMethodInArray(int methodsCount, Method* methods,
         method = &methods[i];
         if (strcmp(name, method->name) != 0
             || dvmIsMirandaMethod(method)
-            || strcmp(parameterDescriptors, dexProtoGetParameterDescriptors(
-                &method->prototype, stringCache)) != 0) {
+            || dexProtoCompareToParameterDescriptors(&method->prototype,
+                    parameterDescriptors) != 0) {
             continue;
         }
 
@@ -891,12 +890,10 @@ Object* dvmGetDeclaredConstructorOrMethod(ClassObject* clazz,
     StringObject* nameObj, ArrayObject* args)
 {
     Object* result = NULL;
-    DexStringCache stringCache;
     DexStringCache targetDescriptorCache;
     char* name;
     const char* targetDescriptor;
 
-    dexStringCacheInit(&stringCache);
     dexStringCacheInit(&targetDescriptorCache);
 
     name = dvmCreateCstrFromString(nameObj);
@@ -904,14 +901,13 @@ Object* dvmGetDeclaredConstructorOrMethod(ClassObject* clazz,
     targetDescriptor = targetDescriptorCache.value;
 
     result = findConstructorOrMethodInArray(clazz->directMethodCount,
-        clazz->directMethods, name, targetDescriptor, &stringCache);
+        clazz->directMethods, name, targetDescriptor);
     if (result == NULL) {
         result = findConstructorOrMethodInArray(clazz->virtualMethodCount,
-            clazz->virtualMethods, name, targetDescriptor, &stringCache);
+            clazz->virtualMethods, name, targetDescriptor);
     }
 
     free(name);
-    dexStringCacheRelease(&stringCache);
     dexStringCacheRelease(&targetDescriptorCache);
     return result;
 }
