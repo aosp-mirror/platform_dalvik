@@ -85,7 +85,7 @@ static void Dalvik_java_lang_VMThread_holdsLock(const u4* args, JValue* pResult)
     Thread* thread;
 
     if (object == NULL) {
-        dvmThrowException("Ljava/lang/NullPointerException;", NULL);
+        dvmThrowNullPointerException(NULL);
         RETURN_VOID();
     }
 

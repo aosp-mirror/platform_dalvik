@@ -129,7 +129,7 @@ static void Dalvik_java_lang_System_arraycopy(const u4* args, JValue* pResult)
 
     /* check for null pointer */
     if ((Object*)srcArray == NULL || (Object*)dstArray == NULL) {
-        dvmThrowException("Ljava/lang/NullPointerException;", NULL);
+        dvmThrowNullPointerException(NULL);
         assert(dvmCheckException(dvmThreadSelf()));
         RETURN_VOID();
     }
@@ -355,7 +355,7 @@ static void Dalvik_java_lang_System_mapLibraryName(const u4* args,
     char* mappedName;
 
     if (nameObj == NULL) {
-        dvmThrowException("Ljava/lang/NullPointerException;", NULL);
+        dvmThrowNullPointerException(NULL);
         RETURN_VOID();
     }
 

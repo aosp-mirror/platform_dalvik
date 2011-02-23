@@ -139,8 +139,7 @@ ClassObject* dvmGenerateProxyClass(StringObject* str, ArrayObject* interfaces,
 
     nameStr = dvmCreateCstrFromString(str);
     if (nameStr == NULL) {
-        dvmThrowException("Ljava/lang/IllegalArgumentException;",
-            "missing name");
+        dvmThrowIllegalArgumentException("missing name");
         goto bail;
     }
 
@@ -274,7 +273,7 @@ bail:
         newClass = NULL;
         if (!dvmCheckException(dvmThreadSelf())) {
             /* throw something */
-            dvmThrowException("Ljava/lang/RuntimeException;", NULL);
+            dvmThrowRuntimeException(NULL);
         }
     }
 
@@ -603,7 +602,7 @@ static int copyWithoutDuplicates(Method** allMethods, int allCount,
         if (allMethods[i] != NULL) {
             LOGV("BAD DUPE: %d %s.%s\n", i,
                 allMethods[i]->clazz->descriptor, allMethods[i]->name);
-            dvmThrowException("Ljava/lang/IllegalArgumentException;",
+            dvmThrowIllegalArgumentException(
                 "incompatible return types in proxied interfaces");
             return -1;
         }
@@ -1035,7 +1034,7 @@ static void proxyInvoker(const u4* args, JValue* pResult,
         LOGVV("+++ ignoring return to void\n");
     } else if (invokeResult.l == NULL) {
         if (dvmIsPrimitiveClass(returnType)) {
-            dvmThrowException("Ljava/lang/NullPointerException;",
+            dvmThrowNullPointerException(
                 "null result when primitive expected");
             goto bail;
         }

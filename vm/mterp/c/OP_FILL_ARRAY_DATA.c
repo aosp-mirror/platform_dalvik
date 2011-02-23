@@ -14,8 +14,7 @@ HANDLE_OPCODE(OP_FILL_ARRAY_DATA)   /*vAA, +BBBBBBBB*/
             arrayData >= curMethod->insns + dvmGetMethodInsnsSize(curMethod))
         {
             /* should have been caught in verifier */
-            dvmThrowException("Ljava/lang/InternalError;",
-                              "bad fill array data");
+            dvmThrowInternalError("bad fill array data");
             GOTO_exceptionThrown();
         }
 #endif

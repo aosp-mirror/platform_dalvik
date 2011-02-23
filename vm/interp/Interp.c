@@ -749,8 +749,7 @@ s4 dvmInterpHandlePackedSwitch(const u2* switchData, s4 testVal)
      */
     if (*switchData++ != kPackedSwitchSignature) {
         /* should have been caught by verifier */
-        dvmThrowException("Ljava/lang/InternalError;",
-            "bad packed switch magic");
+        dvmThrowInternalError("bad packed switch magic");
         return kInstrLen;
     }
 
@@ -804,8 +803,7 @@ s4 dvmInterpHandleSparseSwitch(const u2* switchData, s4 testVal)
 
     if (*switchData++ != kSparseSwitchSignature) {
         /* should have been caught by verifier */
-        dvmThrowException("Ljava/lang/InternalError;",
-            "bad sparse switch magic");
+        dvmThrowInternalError("bad sparse switch magic");
         return kInstrLen;
     }
 
@@ -917,7 +915,7 @@ bool dvmInterpHandleFillArrayData(ArrayObject* arrayObj, const u2* arrayData)
     u4 size;
 
     if (arrayObj == NULL) {
-        dvmThrowException("Ljava/lang/NullPointerException;", NULL);
+        dvmThrowNullPointerException(NULL);
         return false;
     }
     assert (!IS_CLASS_FLAG_SET(((Object *)arrayObj)->clazz,
@@ -934,7 +932,7 @@ bool dvmInterpHandleFillArrayData(ArrayObject* arrayObj, const u2* arrayData)
      * Total size is 4+(width * size + 1)/2 16-bit code units.
      */
     if (arrayData[0] != kArrayDataSignature) {
-        dvmThrowException("Ljava/lang/InternalError;", "bad array data magic");
+        dvmThrowInternalError("bad array data magic");
         return false;
     }
 
@@ -1010,8 +1008,7 @@ Method* dvmInterpFindInterfaceMethod(ClassObject* thisClass, u4 methodIdx,
 #if 0
     /* this can happen when there's a stale class file */
     if (dvmIsAbstractMethod(methodToCall)) {
-        dvmThrowException("Ljava/lang/AbstractMethodError;",
-            "interface method not implemented");
+        dvmThrowAbstractMethodError("interface method not implemented");
         return NULL;
     }
 #else

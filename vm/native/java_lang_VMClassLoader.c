@@ -42,7 +42,7 @@ static void Dalvik_java_lang_VMClassLoader_defineClass(const u4* args,
     name = dvmCreateCstrFromString(nameObj);
     LOGE("ERROR: defineClass(%p, %s, %p, %d, %d, %p)\n",
         loader, name, data, offset, len, pd);
-    dvmThrowException("Ljava/lang/UnsupportedOperationException;",
+    dvmThrowUnsupportedOperationException(
         "can't load this type of class file");
 
     free(name);
@@ -68,7 +68,7 @@ static void Dalvik_java_lang_VMClassLoader_defineClass2(const u4* args,
 
     LOGE("ERROR: defineClass(%p, %p, %d, %d, %p)\n",
         loader, data, offset, len, pd);
-    dvmThrowException("Ljava/lang/UnsupportedOperationException;",
+    dvmThrowUnsupportedOperationException(
         "can't load this type of class file");
 
     RETURN_VOID();
@@ -87,7 +87,7 @@ static void Dalvik_java_lang_VMClassLoader_findLoadedClass(const u4* args,
     char* descriptor = NULL;
 
     if (nameObj == NULL) {
-        dvmThrowException("Ljava/lang/NullPointerException;", NULL);
+        dvmThrowNullPointerException(NULL);
         goto bail;
     }
 

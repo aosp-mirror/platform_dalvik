@@ -42,7 +42,7 @@ static void Dalvik_java_security_AccessController_getStackDomains(
     if (!dvmCreateStackTraceArray(dvmThreadSelf()->curFrame, &methods, &length))
     {
         LOGE("Failed to create stack trace array\n");
-        dvmThrowException("Ljava/lang/InternalError;", NULL);
+        dvmThrowInternalError(NULL);
         RETURN_VOID();
     }
 
@@ -70,7 +70,7 @@ static void Dalvik_java_security_AccessController_getStackDomains(
     if (subSet == NULL) {
         LOGE("Failed to allocate subSet (length=%d)\n", length);
         free(methods);
-        dvmThrowException("Ljava/lang/InternalError;", NULL);
+        dvmThrowInternalError(NULL);
         RETURN_VOID();
     }
     int idx, subIdx = 0;

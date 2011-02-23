@@ -330,8 +330,8 @@ void dvmThrowChainedExceptionWithClassMessage(const char* exceptionDescriptor,
 }
 
 /*
- * Like dvmThrowExceptionWithMessageFromDescriptor, but take a
- * class object instead of a name.
+ * Like dvmThrowException, but take a class object instead of a name
+ * and turn the given message into the human-readable form for a descriptor.
  */
 void dvmThrowExceptionByClassWithClassMessage(ClassObject* exceptionClass,
     const char* messageDescriptor)
@@ -1360,6 +1360,14 @@ void dvmThrowAIOOBE(int index, int length)
         "index=%d length=%d", index, length);
 }
 
+void dvmThrowAbstractMethodError(const char* msg) {
+    dvmThrowException("Ljava/lang/AbstractMethodError;", msg);
+}
+
+void dvmThrowArithmeticException(const char* msg) {
+    dvmThrowException("Ljava/lang/ArithmeticException;", msg);
+}
+
 static void dvmThrowTypeError(const char* exceptionClassName, const char* fmt,
     ClassObject* actual, ClassObject* desired)
 {
@@ -1382,4 +1390,89 @@ void dvmThrowClassCastException(ClassObject* actual, ClassObject* desired)
 {
     dvmThrowTypeError("Ljava/lang/ClassCastException;",
         "%s cannot be cast to %s", actual, desired);
+}
+
+void dvmThrowClassNotFoundException(const char* msg) {
+    dvmThrowException("Ljava/lang/ClassNotFoundException;", msg);
+}
+
+void dvmThrowFileNotFoundException(const char* msg) {
+    dvmThrowException("Ljava/io/FileNotFoundException;", msg);
+}
+
+void dvmThrowIOException(const char* msg) {
+    dvmThrowException("Ljava/io/IOException;", msg);
+}
+
+void dvmThrowIllegalAccessException(const char* msg) {
+    dvmThrowException("Ljava/lang/IllegalAccessException;", msg);
+}
+
+void dvmThrowIllegalAccessError(const char* msg) {
+    dvmThrowException("Ljava/lang/IllegalAccessError;", msg);
+}
+
+void dvmThrowIllegalArgumentException(const char* msg) {
+    dvmThrowException("Ljava/lang/IllegalArgumentException;", msg);
+}
+
+void dvmThrowIllegalMonitorStateException(const char* msg) {
+    dvmThrowException("Ljava/lang/IllegalMonitorStateException;", msg);
+}
+
+void dvmThrowIllegalStateException(const char* msg) {
+    dvmThrowException("Ljava/lang/IllegalStateException;", msg);
+}
+
+void dvmThrowIllegalThreadStateException(const char* msg) {
+    dvmThrowException("Ljava/lang/IllegalThreadStateException;", msg);
+}
+
+void dvmThrowInternalError(const char* msg) {
+    dvmThrowException("Ljava/lang/InternalError;", msg);
+}
+
+void dvmThrowInterruptedException(const char* msg) {
+    dvmThrowException("Ljava/lang/InterruptedException;", msg);
+}
+
+void dvmThrowNegativeArraySizeException(const char* msg) {
+    dvmThrowException("Ljava/lang/NegativeArraySizeException;", msg);
+}
+
+void dvmThrowNoClassDefFoundError(const char* descriptor) {
+    dvmThrowExceptionWithClassMessage("Ljava/lang/NoClassDefFoundError;",
+            descriptor);
+}
+
+void dvmThrowNoSuchFieldError(const char* msg) {
+    dvmThrowException("Ljava/lang/NoSuchFieldError;", msg);
+}
+
+void dvmThrowNoSuchFieldException(const char* msg) {
+    dvmThrowException("Ljava/lang/NoSuchFieldException;", msg);
+}
+
+void dvmThrowNoSuchMethodError(const char* msg) {
+    dvmThrowException("Ljava/lang/NoSuchMethodError;", msg);
+}
+
+void dvmThrowNullPointerException(const char* msg) {
+    dvmThrowException("Ljava/lang/NullPointerException;", msg);
+}
+
+void dvmThrowOutOfMemoryError(const char* msg) {
+    dvmThrowException("Ljava/lang/OutOfMemoryError;", msg);
+}
+
+void dvmThrowRuntimeException(const char* msg) {
+    dvmThrowException("Ljava/lang/RuntimeException;", msg);
+}
+
+void dvmThrowStringIndexOutOfBoundsException(const char* msg) {
+    dvmThrowException("Ljava/lang/StringIndexOutOfBoundsException;", msg);
+}
+
+void dvmThrowUnsupportedOperationException(const char* msg) {
+    dvmThrowException("Ljava/lang/UnsupportedOperationException;", msg);
 }

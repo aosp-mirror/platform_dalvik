@@ -352,7 +352,7 @@ static inline void putDoubleToArray(u4* ptr, int idx, double dval)
 static inline bool checkForNull(Object* obj)
 {
     if (obj == NULL) {
-        dvmThrowException("Ljava/lang/NullPointerException;", NULL);
+        dvmThrowNullPointerException(NULL);
         return false;
     }
 #ifdef WITH_EXTRA_OBJECT_VALIDATION
@@ -384,7 +384,7 @@ static inline bool checkForNullExportPC(Object* obj, u4* fp, const u2* pc)
 {
     if (obj == NULL) {
         EXPORT_PC();
-        dvmThrowException("Ljava/lang/NullPointerException;", NULL);
+        dvmThrowNullPointerException(NULL);
         return false;
     }
 #ifdef WITH_EXTRA_OBJECT_VALIDATION

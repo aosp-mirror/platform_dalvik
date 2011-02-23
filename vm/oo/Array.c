@@ -462,7 +462,7 @@ static ClassObject* createArrayClass(const char* descriptor, Object* loader)
         LOGE("Unable to create array class '%s': missing interfaces\n",
             descriptor);
         dvmFreeClassInnards(newClass);
-        dvmThrowException("Ljava/lang/InternalError;", "missing array ifaces");
+        dvmThrowInternalError("missing array ifaces");
         dvmReleaseTrackedAlloc((Object*) newClass, NULL);
         return NULL;
     }

@@ -132,7 +132,7 @@ bool javaLangString_charAt(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
 
     /* null reference check on "this" */
     if ((Object*) arg0 == NULL) {
-        dvmThrowException("Ljava/lang/NullPointerException;", NULL);
+        dvmThrowNullPointerException(NULL);
         return false;
     }
 
@@ -207,7 +207,7 @@ bool javaLangString_compareTo(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
      * which must also be non-null.
      */
     if ((Object*) arg0 == NULL || (Object*) arg1 == NULL) {
-        dvmThrowException("Ljava/lang/NullPointerException;", NULL);
+        dvmThrowNullPointerException(NULL);
         return false;
     }
 
@@ -299,7 +299,7 @@ bool javaLangString_equals(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
      * Null reference check on "this".
      */
     if ((Object*) arg0 == NULL) {
-        dvmThrowException("Ljava/lang/NullPointerException;", NULL);
+        dvmThrowNullPointerException(NULL);
         return false;
     }
 
@@ -408,7 +408,7 @@ bool javaLangString_length(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
 
     /* null reference check on "this" */
     if ((Object*) arg0 == NULL) {
-        dvmThrowException("Ljava/lang/NullPointerException;", NULL);
+        dvmThrowNullPointerException(NULL);
         return false;
     }
 
@@ -426,7 +426,7 @@ bool javaLangString_isEmpty(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
 
     /* null reference check on "this" */
     if ((Object*) arg0 == NULL) {
-        dvmThrowException("Ljava/lang/NullPointerException;", NULL);
+        dvmThrowNullPointerException(NULL);
         return false;
     }
 
@@ -497,7 +497,7 @@ bool javaLangString_fastIndexOf_II(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
 {
     /* null reference check on "this" */
     if ((Object*) arg0 == NULL) {
-        dvmThrowException("Ljava/lang/NullPointerException;", NULL);
+        dvmThrowNullPointerException(NULL);
         return false;
     }
 

@@ -2069,8 +2069,7 @@ static jint PushLocalFrame(JNIEnv* env, jint capacity)
     {
         /* yes, OutOfMemoryError, not StackOverflowError */
         dvmClearException(_self);
-        dvmThrowException("Ljava/lang/OutOfMemoryError;",
-            "out of stack in JNI PushLocalFrame");
+        dvmThrowOutOfMemoryError("out of stack in JNI PushLocalFrame");
         result = JNI_ERR;
     }
     JNI_EXIT();
@@ -2088,8 +2087,7 @@ static jobject PopLocalFrame(JNIEnv* env, jobject jresult)
     if (!dvmPopLocalFrame(_self /*dvmThreadSelf()*/)) {
         LOGW("JNI WARNING: too many PopLocalFrame calls\n");
         dvmClearException(_self);
-        dvmThrowException("Ljava/lang/RuntimeException;",
-            "too many PopLocalFrame calls");
+        dvmThrowRuntimeException("too many PopLocalFrame calls");
     }
     jresult = addLocalReference(env, result);
     JNI_EXIT();
@@ -2160,8 +2158,7 @@ static jint EnsureLocalCapacity(JNIEnv* env, jint capacity)
     JNI_ENTER();
     bool okay = ensureLocalCapacity(env, capacity);
     if (!okay) {
-        dvmThrowException("Ljava/lang/OutOfMemoryError;",
-            "can't ensure local reference capacity");
+        dvmThrowOutOfMemoryError("can't ensure local reference capacity");
     }
     JNI_EXIT();
     if (okay)
@@ -3010,8 +3007,7 @@ static const char* GetStringUTFChars(JNIEnv* env, jstring jstr,
         newStr = dvmCreateCstrFromString(strObj);
         if (newStr == NULL) {
             /* assume memory failure */
-            dvmThrowException("Ljava/lang/OutOfMemoryError;",
-                "native heap string alloc failed");
+            dvmThrowOutOfMemoryError("native heap string alloc failed");
         }
     }
 
@@ -3056,8 +3052,7 @@ static jobjectArray NewObjectArray(JNIEnv* env, jsize length,
         (ClassObject*) dvmDecodeIndirectRef(env, jelementClass);
 
     if (elemClassObj == NULL) {
-        dvmThrowException("Ljava/lang/NullPointerException;",
-            "JNI NewObjectArray");
+        dvmThrowNullPointerException("JNI NewObjectArray");
         goto bail;
     }
 
@@ -3419,7 +3414,7 @@ static void GetStringRegion(JNIEnv* env, jstring jstr, jsize start, jsize len,
     JNI_ENTER();
     StringObject* strObj = (StringObject*) dvmDecodeIndirectRef(env, jstr);
     if (start + len > dvmStringLen(strObj))
-        dvmThrowException("Ljava/lang/StringIndexOutOfBoundsException;", NULL);
+        dvmThrowStringIndexOutOfBoundsException(NULL);
     else
         memcpy(buf, dvmStringChars(strObj) + start, len * sizeof(u2));
     JNI_EXIT();
@@ -3435,7 +3430,7 @@ static void GetStringUTFRegion(JNIEnv* env, jstring jstr, jsize start,
     JNI_ENTER();
     StringObject* strObj = (StringObject*) dvmDecodeIndirectRef(env, jstr);
     if (start + len > dvmStringLen(strObj))
-        dvmThrowException("Ljava/lang/StringIndexOutOfBoundsException;", NULL);
+        dvmThrowStringIndexOutOfBoundsException(NULL);
     else
         dvmCreateCstrFromStringRegion(strObj, start, len, buf);
     JNI_EXIT();

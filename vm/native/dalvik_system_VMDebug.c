@@ -40,15 +40,13 @@ static int getFileDescriptor(Object* obj)
 
     InstField* field = dvmFindInstanceField(obj->clazz, "descriptor", "I");
     if (field == NULL) {
-        dvmThrowException("Ljava/lang/NoSuchFieldException;",
-            "No FileDescriptor.descriptor field");
+        dvmThrowNoSuchFieldException("No FileDescriptor.descriptor field");
         return -1;
     }
 
     int fd = dvmGetFieldInt(obj, field->byteOffset);
     if (fd < 0) {
-        dvmThrowExceptionFmt("Ljava/lang/RuntimeException;",
-            "Invalid file descriptor");
+        dvmThrowRuntimeException("Invalid file descriptor");
         return -1;
     }
 
@@ -266,7 +264,7 @@ static void Dalvik_dalvik_system_VMDebug_startMethodTracingNative(const u4* args
     }
 
     if (bufferSize < 1024) {
-        dvmThrowException("Ljava/lang/IllegalArgumentException;", NULL);
+        dvmThrowIllegalArgumentException(NULL);
         RETURN_VOID();
     }
 
@@ -525,7 +523,7 @@ static void Dalvik_dalvik_system_VMDebug_dumpHprofData(const u4* args,
      * Only one of these may be NULL.
      */
     if (fileNameStr == NULL && fileDescriptor == NULL) {
-        dvmThrowException("Ljava/lang/NullPointerException;", NULL);
+        dvmThrowNullPointerException(NULL);
         RETURN_VOID();
     }
 
@@ -533,7 +531,7 @@ static void Dalvik_dalvik_system_VMDebug_dumpHprofData(const u4* args,
         fileName = dvmCreateCstrFromString(fileNameStr);
         if (fileName == NULL) {
             /* unexpected -- malloc failure? */
-            dvmThrowException("Ljava/lang/RuntimeException;", "malloc failure?");
+            dvmThrowRuntimeException("malloc failure?");
             RETURN_VOID();
         }
     } else {
@@ -554,8 +552,8 @@ static void Dalvik_dalvik_system_VMDebug_dumpHprofData(const u4* args,
 
     if (result != 0) {
         /* ideally we'd throw something more specific based on actual failure */
-        dvmThrowException("Ljava/lang/RuntimeException;",
-            "Failure during heap dump -- check log output for details");
+        dvmThrowRuntimeException(
+            "Failure during heap dump; check log output for details");
         RETURN_VOID();
     }
 
@@ -576,8 +574,8 @@ static void Dalvik_dalvik_system_VMDebug_dumpHprofDataDdms(const u4* args,
 
     if (result != 0) {
         /* ideally we'd throw something more specific based on actual failure */
-        dvmThrowException("Ljava/lang/RuntimeException;",
-            "Failure during heap dump -- check log output for details");
+        dvmThrowRuntimeException(
+            "Failure during heap dump; check log output for details");
         RETURN_VOID();
     }
 
@@ -608,7 +606,7 @@ static void Dalvik_dalvik_system_VMDebug_cacheRegisterMap(const u4* args,
     bool result = false;
 
     if (classAndMethodDescStr == NULL) {
-        dvmThrowException("Ljava/lang/NullPointerException;", NULL);
+        dvmThrowNullPointerException(NULL);
         RETURN_VOID();
     }
 
@@ -622,16 +620,14 @@ static void Dalvik_dalvik_system_VMDebug_cacheRegisterMap(const u4* args,
 
     char* methodName = strchr(classAndMethodDesc, '.');
     if (methodName == NULL) {
-        dvmThrowException("Ljava/lang/RuntimeException;",
-            "method name not found in string");
+        dvmThrowRuntimeException("method name not found in string");
         RETURN_VOID();
     }
     *methodName++ = '\0';
 
     char* methodDescr = strchr(methodName, ':');
     if (methodDescr == NULL) {
-        dvmThrowException("Ljava/lang/RuntimeException;",
-            "method descriptor not found in string");
+        dvmThrowRuntimeException("method descriptor not found in string");
         RETURN_VOID();
     }
     *methodDescr++ = '\0';

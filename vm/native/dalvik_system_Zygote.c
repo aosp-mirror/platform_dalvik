@@ -227,7 +227,7 @@ static void Dalvik_dalvik_system_Zygote_fork(const u4* args, JValue* pResult)
     pid_t pid;
 
     if (!gDvm.zygote) {
-        dvmThrowException("Ljava/lang/IllegalStateException;",
+        dvmThrowIllegalStateException(
             "VM instance not started with -Xzygote");
 
         RETURN_VOID();
@@ -380,7 +380,7 @@ static pid_t forkAndSpecializeCommon(const u4* args, bool isSystemServer)
     }
 
     if (!gDvm.zygote) {
-        dvmThrowException("Ljava/lang/IllegalStateException;",
+        dvmThrowIllegalStateException(
             "VM instance not started with -Xzygote");
 
         return -1;

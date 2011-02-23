@@ -95,7 +95,7 @@ static void Dalvik_dalvik_system_VMStack_getClasses(const u4* args,
             &methodCount))
     {
         LOGE("Failed to create stack trace array\n");
-        dvmThrowException("Ljava/lang/InternalError;", NULL);
+        dvmThrowInternalError(NULL);
         RETURN_VOID();
     }
 

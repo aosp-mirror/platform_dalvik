@@ -93,8 +93,7 @@ static bool validateCookie(int cookie)
                 hashcmpDexOrJar, false);
     dvmHashTableUnlock(gDvm.userDexFiles);
     if (result == NULL) {
-        dvmThrowException("Ljava/lang/RuntimeException;",
-            "invalid DexFile cookie");
+        dvmThrowRuntimeException("invalid DexFile cookie");
         return false;
     }
 
@@ -161,7 +160,7 @@ static void Dalvik_dalvik_system_DexFile_openDexFile(const u4* args,
     char* outputName;
 
     if (sourceNameObj == NULL) {
-        dvmThrowException("Ljava/lang/NullPointerException;", NULL);
+        dvmThrowNullPointerException(NULL);
         RETURN_VOID();
     }
 
@@ -194,7 +193,7 @@ static void Dalvik_dalvik_system_DexFile_openDexFile(const u4* args,
      */
     if (dvmClassPathContains(gDvm.bootClassPath, sourceName)) {
         LOGW("Refusing to reopen boot DEX '%s'\n", sourceName);
-        dvmThrowException("Ljava/io/IOException;",
+        dvmThrowIOException(
             "Re-opening BOOTCLASSPATH DEX files is not allowed");
         free(sourceName);
         free(outputName);
@@ -223,7 +222,7 @@ static void Dalvik_dalvik_system_DexFile_openDexFile(const u4* args,
         pDexOrJar->pDexMemory = NULL;
     } else {
         LOGV("Unable to open DEX file '%s'\n", sourceName);
-        dvmThrowException("Ljava/io/IOException;", "unable to open DEX file");
+        dvmThrowIOException("unable to open DEX file");
     }
 
     if (pDexOrJar != NULL) {
@@ -256,7 +255,7 @@ static void Dalvik_dalvik_system_DexFile_openDexFile_bytearray(const u4* args,
     DexOrJar* pDexOrJar = NULL;
 
     if (fileContentsObj == NULL) {
-        dvmThrowException("Ljava/lang/NullPointerException;", NULL);
+        dvmThrowNullPointerException(NULL);
         RETURN_VOID();
     }
 
@@ -265,8 +264,7 @@ static void Dalvik_dalvik_system_DexFile_openDexFile_bytearray(const u4* args,
     pBytes = (u1*) malloc(length);
 
     if (pBytes == NULL) {
-        dvmThrowException("Ljava/lang/RuntimeException;",
-                "unable to allocate DEX memory");
+        dvmThrowRuntimeException("unable to allocate DEX memory");
         RETURN_VOID();
     }
 
@@ -275,8 +273,7 @@ static void Dalvik_dalvik_system_DexFile_openDexFile_bytearray(const u4* args,
     if (dvmRawDexFileOpenArray(pBytes, length, &pRawDexFile) != 0) {
         LOGV("Unable to open in-memory DEX file\n");
         free(pBytes);
-        dvmThrowException("Ljava/io/RuntimeException;",
-                "unable to open in-memory DEX file");
+        dvmThrowRuntimeException("unable to open in-memory DEX file");
         RETURN_VOID();
     }
 
@@ -491,11 +488,11 @@ static void Dalvik_dalvik_system_DexFile_isDexOptNeeded(const u4* args,
 
     name = dvmCreateCstrFromString(nameObj);
     if (name == NULL) {
-        dvmThrowException("Ljava/lang/NullPointerException;", NULL);
+        dvmThrowNullPointerException(NULL);
         RETURN_VOID();
     }
     if (access(name, R_OK) != 0) {
-        dvmThrowException("Ljava/io/FileNotFoundException;", name);
+        dvmThrowFileNotFoundException(name);
         free(name);
         RETURN_VOID();
     }
@@ -506,7 +503,7 @@ static void Dalvik_dalvik_system_DexFile_isDexOptNeeded(const u4* args,
     switch (status) {
     default: //FALLTHROUGH
     case DEX_CACHE_BAD_ARCHIVE:
-        dvmThrowException("Ljava/io/IOException;", name);
+        dvmThrowIOException(name);
         result = -1;
         break;
     case DEX_CACHE_OK:

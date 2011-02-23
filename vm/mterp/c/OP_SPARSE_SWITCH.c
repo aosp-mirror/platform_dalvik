@@ -14,7 +14,7 @@ HANDLE_OPCODE(OP_SPARSE_SWITCH /*vAA, +BBBB*/)
         {
             /* should have been caught in verifier */
             EXPORT_PC();
-            dvmThrowException("Ljava/lang/InternalError;", "bad sparse switch");
+            dvmThrowInternalError("bad sparse switch");
             GOTO_exceptionThrown();
         }
 #endif

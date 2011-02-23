@@ -346,7 +346,7 @@ void dvmMethodTraceStart(const char* traceFileName, int traceFd, int bufferSize,
      */
     state->buf = (u1*) malloc(bufferSize);
     if (state->buf == NULL) {
-        dvmThrowException("Ljava/lang/InternalError;", "buffer alloc failed");
+        dvmThrowInternalError("buffer alloc failed");
         goto fail;
     }
     if (!directToDdms) {

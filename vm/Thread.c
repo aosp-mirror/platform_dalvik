@@ -1470,7 +1470,7 @@ bool dvmCreateInterpThread(Object* threadObj, int reqStackSize)
 
     if (dvmGetFieldObject(threadObj, gDvm.offJavaLangThread_vmThread) != NULL) {
         dvmUnlockThreadList();
-        dvmThrowException("Ljava/lang/IllegalThreadStateException;",
+        dvmThrowIllegalThreadStateException(
             "thread has already been started");
         goto fail;
     }
@@ -1506,8 +1506,7 @@ bool dvmCreateInterpThread(Object* threadObj, int reqStackSize)
 
         dvmSetFieldObject(threadObj, gDvm.offJavaLangThread_vmThread, NULL);
 
-        dvmThrowException("Ljava/lang/OutOfMemoryError;",
-            "thread creation failed");
+        dvmThrowOutOfMemoryError("thread creation failed");
         goto fail;
     }
 
@@ -2100,7 +2099,7 @@ bool dvmAttachCurrentThread(const JavaVMAttachArgs* pArgs, bool isDaemon)
      */
     if (dvmGetFieldObject(threadObj, gDvm.offJavaLangThread_vmThread) != NULL) {
         LOGW("WOW: thread start hijack\n");
-        dvmThrowException("Ljava/lang/IllegalThreadStateException;",
+        dvmThrowIllegalThreadStateException(
             "thread has already been started");
         /* We don't want to free anything associated with the thread
          * because someone is obviously interested in it.  Just let
@@ -3211,7 +3210,7 @@ static Object* getStaticThreadGroup(const char* fieldName)
     groupObj = dvmGetStaticFieldObject(groupField);
     if (groupObj == NULL) {
         LOGE("java.lang.ThreadGroup.%s not initialized\n", fieldName);
-        dvmThrowException("Ljava/lang/InternalError;", NULL);
+        dvmThrowInternalError(NULL);
         return NULL;
     }
 
