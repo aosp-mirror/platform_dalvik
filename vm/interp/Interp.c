@@ -992,8 +992,7 @@ Method* dvmInterpFindInterfaceMethod(ClassObject* thisClass, u4 methodIdx,
     }
     if (i == thisClass->iftableCount) {
         /* impossible in verified DEX, need to check for it in unverified */
-        dvmThrowException("Ljava/lang/IncompatibleClassChangeError;",
-            "interface not implemented");
+        dvmThrowIncompatibleClassChangeError("interface not implemented");
         return NULL;
     }
 

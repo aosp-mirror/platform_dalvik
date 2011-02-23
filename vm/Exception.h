@@ -66,6 +66,18 @@ void dvmThrowArrayStoreException(ClassObject* actual, ClassObject* desired);
 void dvmThrowClassCastException(ClassObject* actual, ClassObject* desired);
 
 /**
+ * Throw a ClassCircularityError in the current thread, with the
+ * human-readable form of the given descriptor as the detail message.
+ */
+void dvmThrowClassCircularityError(const char* descriptor);
+
+/**
+ * Throw a ClassFormatError in the current thread, with the given
+ * detail message.
+ */
+void dvmThrowClassFormatError(const char* msg);
+
+/**
  * Throw a ClassNotFoundException in the current thread, with the given
  * detail message.
  */
@@ -120,6 +132,19 @@ void dvmThrowIllegalStateException(const char* msg);
 void dvmThrowIllegalThreadStateException(const char* msg);
 
 /**
+ * Throw an IncompatibleClassChangeError in the current thread,
+ * the given detail message.
+ */
+void dvmThrowIncompatibleClassChangeError(const char* msg);
+
+/**
+ * Throw an IncompatibleClassChangeError in the current thread, with the
+ * human-readable form of the given descriptor as the detail message.
+ */
+void dvmThrowIncompatibleClassChangeErrorWithClassMessage(
+        const char* descriptor);
+
+/**
  * Throw an InternalError in the current thread, with the given
  * detail message.
  */
@@ -130,6 +155,12 @@ void dvmThrowInternalError(const char* msg);
  * detail message.
  */
 void dvmThrowInterruptedException(const char* msg);
+
+/**
+ * Throw a LinkageError in the current thread, with the
+ * given detail message.
+ */
+void dvmThrowLinkageError(const char* msg);
 
 /**
  * Throw a NegativeArraySizeException in the current thread, with the
@@ -186,10 +217,22 @@ void dvmThrowRuntimeException(const char* msg);
 void dvmThrowStringIndexOutOfBoundsException(const char* msg);
 
 /**
+ * Throw an UnsatisfiedLinkError in the current thread, with
+ * the given detail message.
+ */
+void dvmThrowUnsatisfiedLinkError(const char* msg);
+
+/**
  * Throw an UnsupportedOperationException in the current thread, with
  * the given detail message.
  */
 void dvmThrowUnsupportedOperationException(const char* msg);
+
+/**
+ * Throw a VirtualMachineError in the current thread, with
+ * the given detail message.
+ */
+void dvmThrowVirtualMachineError(const char* msg);
 
 /*
  * Like dvmThrowChainedException, but takes printf-style args for the message.

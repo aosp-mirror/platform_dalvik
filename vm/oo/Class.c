@@ -1592,8 +1592,7 @@ got_class:
             {
                 LOGW("Recursive link on class %s\n", clazz->descriptor);
                 dvmUnlockObject(self, (Object*) clazz);
-                dvmThrowExceptionWithClassMessage(
-                    "Ljava/lang/ClassCircularityError;", clazz->descriptor);
+                dvmThrowClassCircularityError(clazz->descriptor);
                 clazz = NULL;
                 goto bail;
             }
@@ -2588,8 +2587,7 @@ bool dvmLinkClass(ClassObject* clazz)
             /* TODO: is this invariant true for all java/lang/Objects,
              * regardless of the class loader?  For now, assume it is.
              */
-            dvmThrowException("Ljava/lang/ClassFormatError;",
-                "java.lang.Object has a superclass");
+            dvmThrowClassFormatError("java.lang.Object has a superclass");
             goto bail;
         }
 
@@ -2599,22 +2597,19 @@ bool dvmLinkClass(ClassObject* clazz)
         CLEAR_CLASS_FLAG(clazz, CLASS_ISFINALIZABLE);
     } else {
         if (clazz->super == NULL) {
-            dvmThrowException("Ljava/lang/LinkageError;",
-                              "no superclass defined");
+            dvmThrowLinkageError("no superclass defined");
             goto bail;
         }
         /* verify */
         if (dvmIsFinalClass(clazz->super)) {
             LOGW("Superclass of '%s' is final '%s'\n",
                 clazz->descriptor, clazz->super->descriptor);
-            dvmThrowException("Ljava/lang/IncompatibleClassChangeError;",
-                "superclass is final");
+            dvmThrowIncompatibleClassChangeError("superclass is final");
             goto bail;
         } else if (dvmIsInterfaceClass(clazz->super)) {
             LOGW("Superclass of '%s' is interface '%s'\n",
                 clazz->descriptor, clazz->super->descriptor);
-            dvmThrowException("Ljava/lang/IncompatibleClassChangeError;",
-                "superclass is an interface");
+            dvmThrowIncompatibleClassChangeError("superclass is an interface");
             goto bail;
         } else if (!dvmCheckClassAccess(clazz, clazz->super)) {
             LOGW("Superclass of '%s' (%s) is not accessible\n",
@@ -2674,8 +2669,7 @@ bool dvmLinkClass(ClassObject* clazz)
                  * from Reference.
                  */
 //xxx is this the right exception?  better than an assertion.
-                dvmThrowException("Ljava/lang/LinkageError;",
-                    "illegal inheritance from Reference");
+                dvmThrowLinkageError("illegal inheritance from Reference");
                 goto bail;
             }
 
@@ -2792,7 +2786,7 @@ bail:
     if (!okay) {
         clazz->status = CLASS_ERROR;
         if (!dvmCheckException(dvmThreadSelf())) {
-            dvmThrowException("Ljava/lang/VirtualMachineError;", NULL);
+            dvmThrowVirtualMachineError(NULL);
         }
     }
     if (interfaceIdxArray != NULL) {
@@ -3010,8 +3004,7 @@ static bool createIftable(ClassObject* clazz)
         if (!dvmIsInterfaceClass(interf)) {
             LOGW("Class '%s' implements non-interface '%s'\n",
                 clazz->descriptor, interf->descriptor);
-            dvmThrowExceptionWithClassMessage(
-                "Ljava/lang/IncompatibleClassChangeError;",
+            dvmThrowIncompatibleClassChangeErrorWithClassMessage(
                 clazz->descriptor);
             goto bail;
         }
@@ -4109,7 +4102,7 @@ static bool validateSuperDescriptors(const ClassObject* clazz)
                 LOGW("Method mismatch: %s in %s (cl=%p) and super %s (cl=%p)\n",
                     meth->name, clazz->descriptor, clazz->classLoader,
                     clazz->super->descriptor, clazz->super->classLoader);
-                dvmThrowException("Ljava/lang/LinkageError;",
+                dvmThrowLinkageError(
                     "Classes resolve differently in superclass");
                 return false;
             }
@@ -4143,7 +4136,7 @@ static bool validateSuperDescriptors(const ClassObject* clazz)
                             "iface %s (cl=%p)\n",
                         meth->name, clazz->descriptor, clazz->classLoader,
                         iface->descriptor, iface->classLoader);
-                    dvmThrowException("Ljava/lang/LinkageError;",
+                    dvmThrowLinkageError(
                         "Classes resolve differently in interface");
                     return false;
                 }
@@ -4396,7 +4389,7 @@ noverify:
              * The caller wants an exception, but it was thrown in a
              * different thread.  Synthesize one here.
              */
-            dvmThrowException("Ljava/lang/UnsatisfiedLinkError;",
+            dvmThrowUnsatisfiedLinkError(
                 "(<clinit> failed, see exception in other thread)");
         }
         goto bail_unlock;

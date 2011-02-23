@@ -1463,7 +1463,7 @@ GOTO_TARGET(filledNewArray, bool methodCallRange, bool jumboFormat)
         } else if (typeCh != 'L' && typeCh != '[' && typeCh != 'I') {
             /* TODO: requires multiple "fill in" loops with different widths */
             LOGE("non-int primitives not implemented\n");
-            dvmThrowException("Ljava/lang/InternalError;",
+            dvmThrowInternalError(
                 "filled-new-array not implemented for anything but 'int'");
             GOTO_exceptionThrown();
         }

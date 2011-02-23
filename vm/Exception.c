@@ -1392,6 +1392,15 @@ void dvmThrowClassCastException(ClassObject* actual, ClassObject* desired)
         "%s cannot be cast to %s", actual, desired);
 }
 
+void dvmThrowClassCircularityError(const char* descriptor) {
+    dvmThrowExceptionWithClassMessage("Ljava/lang/ClassCircularityError;",
+            descriptor);
+}
+
+void dvmThrowClassFormatError(const char* msg) {
+    dvmThrowException("Ljava/lang/ClassFormatError;", msg);
+}
+
 void dvmThrowClassNotFoundException(const char* msg) {
     dvmThrowException("Ljava/lang/ClassNotFoundException;", msg);
 }
@@ -1428,12 +1437,27 @@ void dvmThrowIllegalThreadStateException(const char* msg) {
     dvmThrowException("Ljava/lang/IllegalThreadStateException;", msg);
 }
 
+void dvmThrowIncompatibleClassChangeError(const char* msg) {
+    dvmThrowException("Ljava/lang/IncompatibleClassChangeError;", msg);
+}
+
+void dvmThrowIncompatibleClassChangeErrorWithClassMessage(
+        const char* descriptor)
+{
+    dvmThrowExceptionWithClassMessage(
+            "Ljava/lang/IncompatibleClassChangeError;", descriptor);
+}
+
 void dvmThrowInternalError(const char* msg) {
     dvmThrowException("Ljava/lang/InternalError;", msg);
 }
 
 void dvmThrowInterruptedException(const char* msg) {
     dvmThrowException("Ljava/lang/InterruptedException;", msg);
+}
+
+void dvmThrowLinkageError(const char* msg) {
+    dvmThrowException("Ljava/lang/LinkageError;", msg);
 }
 
 void dvmThrowNegativeArraySizeException(const char* msg) {
@@ -1473,6 +1497,14 @@ void dvmThrowStringIndexOutOfBoundsException(const char* msg) {
     dvmThrowException("Ljava/lang/StringIndexOutOfBoundsException;", msg);
 }
 
+void dvmThrowUnsatisfiedLinkError(const char* msg) {
+    dvmThrowException("Ljava/lang/UnsatisfiedLinkError;", msg);
+}
+
 void dvmThrowUnsupportedOperationException(const char* msg) {
     dvmThrowException("Ljava/lang/UnsupportedOperationException;", msg);
+}
+
+void dvmThrowVirtualMachineError(const char* msg) {
+    dvmThrowException("Ljava/lang/VirtualMachineError;", msg);
 }

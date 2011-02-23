@@ -696,7 +696,7 @@ const Method* dvmGetVirtualizedMethod(const ClassObject* clazz,
                 break;
         }
         if (i == clazz->iftableCount) {
-            dvmThrowException("Ljava/lang/IncompatibleClassChangeError;",
+            dvmThrowIncompatibleClassChangeError(
                 "invoking method from interface not implemented by class");
             return NULL;
         }
