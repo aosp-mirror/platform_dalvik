@@ -25,7 +25,7 @@
  */
 #define DALVIK_MAJOR_VERSION    1
 #define DALVIK_MINOR_VERSION    5
-#define DALVIK_BUG_VERSION      0
+#define DALVIK_BUG_VERSION      1
 
 /*
  * VM build number.  This must change whenever something that affects the
