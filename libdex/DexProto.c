@@ -122,19 +122,14 @@ static inline const DexProtoId* getProtoId(const DexProto* pProto) {
     return dexGetProtoId(pProto->dexFile, pProto->protoIdx);
 }
 
-/*
- * Get the short-form method descriptor for the given prototype. The
- * prototype must be protoIdx-based.
- */
+/* (documented in header file) */
 const char* dexProtoGetShorty(const DexProto* pProto) {
     const DexProtoId* protoId = getProtoId(pProto);
 
     return dexStringById(pProto->dexFile, protoId->shortyIdx);
 }
 
-/*
- * Get the full method descriptor for the given prototype.
- */
+/* (documented in header file) */
 const char* dexProtoGetMethodDescriptor(const DexProto* pProto,
         DexStringCache* pCache) {
     const DexFile* dexFile = pProto->dexFile;
@@ -169,10 +164,7 @@ const char* dexProtoGetMethodDescriptor(const DexProto* pProto,
     return pCache->value;
 }
 
-/*
- * Get a copy of the descriptor string associated with the given prototype.
- * The returned pointer must be free()ed by the caller.
- */
+/* (documented in header file) */
 char* dexProtoCopyMethodDescriptor(const DexProto* pProto) {
     DexStringCache cache;
 
@@ -181,11 +173,7 @@ char* dexProtoCopyMethodDescriptor(const DexProto* pProto) {
             dexProtoGetMethodDescriptor(pProto, &cache));
 }
 
-/*
- * Get the parameter descriptors for the given prototype. This is the
- * concatenation of all the descriptors for all the parameters, in
- * order, with no other adornment.
- */
+/* (documented in header file) */
 const char* dexProtoGetParameterDescriptors(const DexProto* pProto,
         DexStringCache* pCache) {
     DexParameterIterator iterator;
@@ -220,17 +208,13 @@ const char* dexProtoGetParameterDescriptors(const DexProto* pProto,
     return pCache->value;
 }
 
-/*
- * Get the type descriptor for the return type of the given prototype.
- */
+/* (documented in header file) */
 const char* dexProtoGetReturnType(const DexProto* pProto) {
     const DexProtoId* protoId = getProtoId(pProto);
     return dexStringByTypeIdx(pProto->dexFile, protoId->returnTypeIdx);
 }
 
-/*
- * Get the parameter count of the given prototype.
- */
+/* (documented in header file) */
 size_t dexProtoGetParameterCount(const DexProto* pProto) {
     const DexProtoId* protoId = getProtoId(pProto);
     const DexTypeList* typeList =
@@ -238,12 +222,7 @@ size_t dexProtoGetParameterCount(const DexProto* pProto) {
     return (typeList == NULL) ? 0 : typeList->size;
 }
 
-/*
- * Compute the number of parameter words (u4 units) required by the
- * given prototype. For example, if the method takes (int, long) and
- * returns double, this would return 3 (one for the int, two for the
- * long, and the return type isn't relevant).
- */
+/* (documented in header file) */
 int dexProtoComputeArgsSize(const DexProto* pProto) {
     const char* shorty = dexProtoGetShorty(pProto);
     int count = 0;
@@ -335,24 +314,12 @@ static int protoCompare(const DexProto* pProto1, const DexProto* pProto2,
     }
 }
 
-/*
- * Compare the two prototypes. The two prototypes are compared
- * with the return type as the major order, then the first arguments,
- * then second, etc. If two prototypes are identical except that one
- * has extra arguments, then the shorter argument is considered the
- * earlier one in sort order (similar to strcmp()).
- */
+/* (documented in header file) */
 int dexProtoCompare(const DexProto* pProto1, const DexProto* pProto2) {
     return protoCompare(pProto1, pProto2, true);
 }
 
-/*
- * Compare the two prototypes. The two prototypes are compared
- * with the first argument as the major order, then second, etc. If two
- * prototypes are identical except that one has extra arguments, then the
- * shorter argument is considered the earlier one in sort order (similar
- * to strcmp()).
- */
+/* (documented in header file) */
 int dexProtoCompareParameters(const DexProto* pProto1, const DexProto* pProto2){
     return protoCompare(pProto1, pProto2, false);
 }
@@ -404,34 +371,28 @@ static const char* methodDescriptorNextType(const char* descriptor) {
 }
 
 /*
- * Compare a prototype and a string method descriptor. The comparison
- * is done as if the descriptor were converted to a prototype and compared
- * with dexProtoCompare().
+ * Common implementation for dexProtoCompareToDescriptor() and
+ * dexProtoCompareToParameterDescriptors(). The descriptor argument
+ * can be either a full method descriptor (with parens and a return
+ * type) or an unadorned concatenation of types (e.g. a list of
+ * argument types).
  */
-int dexProtoCompareToDescriptor(const DexProto* proto,
-        const char* descriptor) {
-    // First compare the return types.
-
-    int result = strcmp(dexProtoGetReturnType(proto),
-            methodDescriptorReturnType(descriptor));
-
-    if (result != 0) {
-        return result;
-    }
-
-    // The return types match, so we have to check arguments.
-
+static int protoCompareToParameterDescriptors(const DexProto* proto,
+        const char* descriptor, bool expectParens) {
+    char expectedEndChar = expectParens ? ')' : '\0';
     DexParameterIterator iterator;
     dexParameterIteratorInit(&iterator, proto);
 
-    // Skip the '('.
-    assert (*descriptor == '(');
-    descriptor++;
+    if (expectParens) {
+        // Skip the '('.
+        assert (*descriptor == '(');
+        descriptor++;
+    }
 
     for (;;) {
         const char* protoDesc = dexParameterIteratorNextDescriptor(&iterator);
 
-        if (*descriptor == ')') {
+        if (*descriptor == expectedEndChar) {
             // It's the end of the descriptor string.
             if (protoDesc == NULL) {
                 // It's also the end of the prototype's arguments.
@@ -453,6 +414,7 @@ int dexProtoCompareToDescriptor(const DexProto* proto,
         // Both prototype and descriptor have arguments. Compare them.
 
         const char* nextDesc = methodDescriptorNextType(descriptor);
+        assert(nextDesc != NULL);
 
         for (;;) {
             char c1 = *(protoDesc++);
@@ -476,6 +438,34 @@ int dexProtoCompareToDescriptor(const DexProto* proto,
          */
     }
 }
+
+/* (documented in header file) */
+int dexProtoCompareToDescriptor(const DexProto* proto,
+        const char* descriptor) {
+    // First compare the return types.
+
+    const char *returnType = methodDescriptorReturnType(descriptor);
+    assert(returnType != NULL);
+
+    int result = strcmp(dexProtoGetReturnType(proto), returnType);
+
+    if (result != 0) {
+        return result;
+    }
+
+    // The return types match, so we have to check arguments.
+    return protoCompareToParameterDescriptors(proto, descriptor, true);
+}
+
+/* (documented in header file) */
+int dexProtoCompareToParameterDescriptors(const DexProto* proto,
+        const char* descriptors) {
+    return protoCompareToParameterDescriptors(proto, descriptors, false);
+}
+
+
+
+
 
 
 /*
