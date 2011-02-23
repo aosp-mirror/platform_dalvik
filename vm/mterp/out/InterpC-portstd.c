@@ -359,7 +359,7 @@ static inline void putDoubleToArray(u4* ptr, int idx, double dval)
 static inline bool checkForNull(Object* obj)
 {
     if (obj == NULL) {
-        dvmThrowException("Ljava/lang/NullPointerException;", NULL);
+        dvmThrowNullPointerException(NULL);
         return false;
     }
 #ifdef WITH_EXTRA_OBJECT_VALIDATION
@@ -391,7 +391,7 @@ static inline bool checkForNullExportPC(Object* obj, u4* fp, const u2* pc)
 {
     if (obj == NULL) {
         EXPORT_PC();
-        dvmThrowException("Ljava/lang/NullPointerException;", NULL);
+        dvmThrowNullPointerException(NULL);
         return false;
     }
 #ifdef WITH_EXTRA_OBJECT_VALIDATION
@@ -675,8 +675,7 @@ GOTO_TARGET_DECL(exceptionThrown);
             secondVal = GET_REGISTER(vsrc2);                                \
             if (secondVal == 0) {                                           \
                 EXPORT_PC();                                                \
-                dvmThrowException("Ljava/lang/ArithmeticException;",        \
-                    "divide by zero");                                      \
+                dvmThrowArithmeticException("divide by zero");              \
                 GOTO_exceptionThrown();                                     \
             }                                                               \
             if ((u4)firstVal == 0x80000000 && secondVal == -1) {            \
@@ -722,9 +721,8 @@ GOTO_TARGET_DECL(exceptionThrown);
             firstVal = GET_REGISTER(vsrc1);                                 \
             if ((s2) vsrc2 == 0) {                                          \
                 EXPORT_PC();                                                \
-                dvmThrowException("Ljava/lang/ArithmeticException;",        \
-                    "divide by zero");                                      \
-                GOTO_exceptionThrown();                                      \
+                dvmThrowArithmeticException("divide by zero");              \
+                GOTO_exceptionThrown();                                     \
             }                                                               \
             if ((u4)firstVal == 0x80000000 && ((s2) vsrc2) == -1) {         \
                 /* won't generate /lit16 instr for this; check anyway */    \
@@ -757,8 +755,7 @@ GOTO_TARGET_DECL(exceptionThrown);
             firstVal = GET_REGISTER(vsrc1);                                 \
             if ((s1) vsrc2 == 0) {                                          \
                 EXPORT_PC();                                                \
-                dvmThrowException("Ljava/lang/ArithmeticException;",        \
-                    "divide by zero");                                      \
+                dvmThrowArithmeticException("divide by zero");              \
                 GOTO_exceptionThrown();                                     \
             }                                                               \
             if ((u4)firstVal == 0x80000000 && ((s1) vsrc2) == -1) {         \
@@ -803,8 +800,7 @@ GOTO_TARGET_DECL(exceptionThrown);
             secondVal = GET_REGISTER(vsrc1);                                \
             if (secondVal == 0) {                                           \
                 EXPORT_PC();                                                \
-                dvmThrowException("Ljava/lang/ArithmeticException;",        \
-                    "divide by zero");                                      \
+                dvmThrowArithmeticException("divide by zero");              \
                 GOTO_exceptionThrown();                                     \
             }                                                               \
             if ((u4)firstVal == 0x80000000 && secondVal == -1) {            \
@@ -846,8 +842,7 @@ GOTO_TARGET_DECL(exceptionThrown);
             secondVal = GET_REGISTER_WIDE(vsrc2);                           \
             if (secondVal == 0LL) {                                         \
                 EXPORT_PC();                                                \
-                dvmThrowException("Ljava/lang/ArithmeticException;",        \
-                    "divide by zero");                                      \
+                dvmThrowArithmeticException("divide by zero");              \
                 GOTO_exceptionThrown();                                     \
             }                                                               \
             if ((u8)firstVal == 0x8000000000000000ULL &&                    \
@@ -893,8 +888,7 @@ GOTO_TARGET_DECL(exceptionThrown);
             secondVal = GET_REGISTER_WIDE(vsrc1);                           \
             if (secondVal == 0LL) {                                         \
                 EXPORT_PC();                                                \
-                dvmThrowException("Ljava/lang/ArithmeticException;",        \
-                    "divide by zero");                                      \
+                dvmThrowArithmeticException("divide by zero");              \
                 GOTO_exceptionThrown();                                     \
             }                                                               \
             if ((u8)firstVal == 0x8000000000000000ULL &&                    \
@@ -1947,7 +1941,7 @@ HANDLE_OPCODE(OP_NEW_ARRAY /*vA, vB, class@CCCC*/)
             vdst, vsrc1, ref, (s4) GET_REGISTER(vsrc1));
         length = (s4) GET_REGISTER(vsrc1);
         if (length < 0) {
-            dvmThrowException("Ljava/lang/NegativeArraySizeException;", NULL);
+            dvmThrowNegativeArraySizeException(NULL);
             GOTO_exceptionThrown();
         }
         arrayClass = dvmDexGetResolvedClass(methodClassDex, ref);
@@ -1995,8 +1989,7 @@ HANDLE_OPCODE(OP_FILL_ARRAY_DATA)   /*vAA, +BBBBBBBB*/
             arrayData >= curMethod->insns + dvmGetMethodInsnsSize(curMethod))
         {
             /* should have been caught in verifier */
-            dvmThrowException("Ljava/lang/InternalError;",
-                              "bad fill array data");
+            dvmThrowInternalError("bad fill array data");
             GOTO_exceptionThrown();
         }
 #endif
@@ -2097,7 +2090,7 @@ HANDLE_OPCODE(OP_PACKED_SWITCH /*vAA, +BBBB*/)
         {
             /* should have been caught in verifier */
             EXPORT_PC();
-            dvmThrowException("Ljava/lang/InternalError;", "bad packed switch");
+            dvmThrowInternalError("bad packed switch");
             GOTO_exceptionThrown();
         }
 #endif
@@ -2128,7 +2121,7 @@ HANDLE_OPCODE(OP_SPARSE_SWITCH /*vAA, +BBBB*/)
         {
             /* should have been caught in verifier */
             EXPORT_PC();
-            dvmThrowException("Ljava/lang/InternalError;", "bad sparse switch");
+            dvmThrowInternalError("bad sparse switch");
             GOTO_exceptionThrown();
         }
 #endif
@@ -3421,7 +3414,7 @@ HANDLE_OPCODE(OP_NEW_ARRAY_JUMBO /*vBBBB, vCCCC, class@AAAAAAAA*/)
             vdst, vsrc1, ref, (s4) GET_REGISTER(vsrc1));
         length = (s4) GET_REGISTER(vsrc1);
         if (length < 0) {
-            dvmThrowException("Ljava/lang/NegativeArraySizeException;", NULL);
+            dvmThrowNegativeArraySizeException(NULL);
             GOTO_exceptionThrown();
         }
         arrayClass = dvmDexGetResolvedClass(methodClassDex, ref);
@@ -4531,7 +4524,7 @@ GOTO_TARGET(filledNewArray, bool methodCallRange, bool jumboFormat)
         }
         /*
         if (!dvmIsArrayClass(arrayClass)) {
-            dvmThrowException("Ljava/lang/RuntimeError;",
+            dvmThrowRuntimeException(
                 "filled-new-array needs array class");
             GOTO_exceptionThrown();
         }
@@ -4547,8 +4540,7 @@ GOTO_TARGET(filledNewArray, bool methodCallRange, bool jumboFormat)
         typeCh = arrayClass->descriptor[1];
         if (typeCh == 'D' || typeCh == 'J') {
             /* category 2 primitives not allowed */
-            dvmThrowException("Ljava/lang/RuntimeError;",
-                "bad filled array req");
+            dvmThrowRuntimeException("bad filled array req");
             GOTO_exceptionThrown();
         } else if (typeCh != 'L' && typeCh != '[' && typeCh != 'I') {
             /* TODO: requires multiple "fill in" loops with different widths */
@@ -4669,8 +4661,7 @@ GOTO_TARGET(invokeVirtual, bool methodCallRange, bool jumboFormat)
              * Works fine unless Sub stops providing an implementation of
              * the method.
              */
-            dvmThrowException("Ljava/lang/AbstractMethodError;",
-                "abstract method not implemented");
+            dvmThrowAbstractMethodError("abstract method not implemented");
             GOTO_exceptionThrown();
         }
 #else
@@ -4765,15 +4756,13 @@ GOTO_TARGET(invokeSuper, bool methodCallRange, bool jumboFormat)
              * Method does not exist in the superclass.  Could happen if
              * superclass gets updated.
              */
-            dvmThrowException("Ljava/lang/NoSuchMethodError;",
-                baseMethod->name);
+            dvmThrowNoSuchMethodError(baseMethod->name);
             GOTO_exceptionThrown();
         }
         methodToCall = curMethod->clazz->super->vtable[baseMethod->methodIndex];
 #if 0
         if (dvmIsAbstractMethod(methodToCall)) {
-            dvmThrowException("Ljava/lang/AbstractMethodError;",
-                "abstract method not implemented");
+            dvmThrowAbstractMethodError("abstract method not implemented");
             GOTO_exceptionThrown();
         }
 #else
@@ -4982,8 +4971,7 @@ GOTO_TARGET(invokeVirtualQuick, bool methodCallRange, bool jumboFormat)
 
 #if 0
         if (dvmIsAbstractMethod(methodToCall)) {
-            dvmThrowException("Ljava/lang/AbstractMethodError;",
-                "abstract method not implemented");
+            dvmThrowAbstractMethodError("abstract method not implemented");
             GOTO_exceptionThrown();
         }
 #else
@@ -5024,7 +5012,7 @@ GOTO_TARGET(invokeSuperQuick, bool methodCallRange, bool jumboFormat)
 
 #if 0   /* impossible in optimized + verified code */
         if (ref >= curMethod->clazz->super->vtableCount) {
-            dvmThrowException("Ljava/lang/NoSuchMethodError;", NULL);
+            dvmThrowNoSuchMethodError(NULL);
             GOTO_exceptionThrown();
         }
 #else
@@ -5044,8 +5032,7 @@ GOTO_TARGET(invokeSuperQuick, bool methodCallRange, bool jumboFormat)
 
 #if 0
         if (dvmIsAbstractMethod(methodToCall)) {
-            dvmThrowException("Ljava/lang/AbstractMethodError;",
-                "abstract method not implemented");
+            dvmThrowAbstractMethodError("abstract method not implemented");
             GOTO_exceptionThrown();
         }
 #else

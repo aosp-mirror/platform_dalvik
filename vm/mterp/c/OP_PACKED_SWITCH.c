@@ -14,7 +14,7 @@ HANDLE_OPCODE(OP_PACKED_SWITCH /*vAA, +BBBB*/)
         {
             /* should have been caught in verifier */
             EXPORT_PC();
-            dvmThrowException("Ljava/lang/InternalError;", "bad packed switch");
+            dvmThrowInternalError("bad packed switch");
             GOTO_exceptionThrown();
         }
 #endif

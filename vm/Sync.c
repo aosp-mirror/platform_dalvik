@@ -455,8 +455,7 @@ static bool unlockMonitor(Thread* self, Monitor* mon)
          * The JNI spec says that we should throw IllegalMonitorStateException
          * in this case.
          */
-        dvmThrowException("Ljava/lang/IllegalMonitorStateException;",
-                          "unlock of unowned monitor");
+        dvmThrowIllegalMonitorStateException("unlock of unowned monitor");
         return false;
     }
     return true;
@@ -626,7 +625,7 @@ static void waitMonitor(Thread* self, Monitor* mon, s8 msec, s4 nsec,
 
     /* Make sure that we hold the lock. */
     if (mon->owner != self) {
-        dvmThrowException("Ljava/lang/IllegalMonitorStateException;",
+        dvmThrowIllegalMonitorStateException(
             "object not locked by thread before wait()");
         return;
     }
@@ -635,8 +634,7 @@ static void waitMonitor(Thread* self, Monitor* mon, s8 msec, s4 nsec,
      * Enforce the timeout range.
      */
     if (msec < 0 || nsec < 0 || nsec > 999999) {
-        dvmThrowException("Ljava/lang/IllegalArgumentException;",
-            "timeout arguments out of range");
+        dvmThrowIllegalArgumentException("timeout arguments out of range");
         return;
     }
 
@@ -754,8 +752,9 @@ done:
          * cleared when this exception is thrown."
          */
         self->interrupted = false;
-        if (interruptShouldThrow)
-            dvmThrowException("Ljava/lang/InterruptedException;", NULL);
+        if (interruptShouldThrow) {
+            dvmThrowInterruptedException(NULL);
+        }
     }
 }
 
@@ -771,7 +770,7 @@ static void notifyMonitor(Thread* self, Monitor* mon)
 
     /* Make sure that we hold the lock. */
     if (mon->owner != self) {
-        dvmThrowException("Ljava/lang/IllegalMonitorStateException;",
+        dvmThrowIllegalMonitorStateException(
             "object not locked by thread before notify()");
         return;
     }
@@ -803,7 +802,7 @@ static void notifyAllMonitor(Thread* self, Monitor* mon)
 
     /* Make sure that we hold the lock. */
     if (mon->owner != self) {
-        dvmThrowException("Ljava/lang/IllegalMonitorStateException;",
+        dvmThrowIllegalMonitorStateException(
             "object not locked by thread before notifyAll()");
         return;
     }
@@ -1039,8 +1038,7 @@ bool dvmUnlockObject(Thread* self, Object *obj)
              * We do not own the lock.  The JVM spec requires that we
              * throw an exception in this case.
              */
-            dvmThrowException("Ljava/lang/IllegalMonitorStateException;",
-                              "unlock of unowned monitor");
+            dvmThrowIllegalMonitorStateException("unlock of unowned monitor");
             return false;
         }
     } else {
@@ -1074,7 +1072,7 @@ void dvmObjectWait(Thread* self, Object *obj, s8 msec, s4 nsec,
         /* Make sure that 'self' holds the lock.
          */
         if (LW_LOCK_OWNER(thin) != self->threadId) {
-            dvmThrowException("Ljava/lang/IllegalMonitorStateException;",
+            dvmThrowIllegalMonitorStateException(
                 "object not locked by thread before wait()");
             return;
         }
@@ -1105,7 +1103,7 @@ void dvmObjectNotify(Thread* self, Object *obj)
         /* Make sure that 'self' holds the lock.
          */
         if (LW_LOCK_OWNER(thin) != self->threadId) {
-            dvmThrowException("Ljava/lang/IllegalMonitorStateException;",
+            dvmThrowIllegalMonitorStateException(
                 "object not locked by thread before notify()");
             return;
         }
@@ -1133,7 +1131,7 @@ void dvmObjectNotifyAll(Thread* self, Object *obj)
         /* Make sure that 'self' holds the lock.
          */
         if (LW_LOCK_OWNER(thin) != self->threadId) {
-            dvmThrowException("Ljava/lang/IllegalMonitorStateException;",
+            dvmThrowIllegalMonitorStateException(
                 "object not locked by thread before notifyAll()");
             return;
         }

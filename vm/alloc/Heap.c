@@ -369,7 +369,7 @@ static void throwOOME()
             /* Don't include a description string;
              * one fewer allocation.
              */
-            dvmThrowException("Ljava/lang/OutOfMemoryError;", NULL);
+            dvmThrowOutOfMemoryError(NULL);
         } else {
             /*
              * This thread has already tried to throw an OutOfMemoryError,

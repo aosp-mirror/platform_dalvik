@@ -149,8 +149,7 @@ GOTO_TARGET_DECL(exceptionThrown);
             secondVal = GET_REGISTER(vsrc2);                                \
             if (secondVal == 0) {                                           \
                 EXPORT_PC();                                                \
-                dvmThrowException("Ljava/lang/ArithmeticException;",        \
-                    "divide by zero");                                      \
+                dvmThrowArithmeticException("divide by zero");              \
                 GOTO_exceptionThrown();                                     \
             }                                                               \
             if ((u4)firstVal == 0x80000000 && secondVal == -1) {            \
@@ -196,9 +195,8 @@ GOTO_TARGET_DECL(exceptionThrown);
             firstVal = GET_REGISTER(vsrc1);                                 \
             if ((s2) vsrc2 == 0) {                                          \
                 EXPORT_PC();                                                \
-                dvmThrowException("Ljava/lang/ArithmeticException;",        \
-                    "divide by zero");                                      \
-                GOTO_exceptionThrown();                                      \
+                dvmThrowArithmeticException("divide by zero");              \
+                GOTO_exceptionThrown();                                     \
             }                                                               \
             if ((u4)firstVal == 0x80000000 && ((s2) vsrc2) == -1) {         \
                 /* won't generate /lit16 instr for this; check anyway */    \
@@ -231,8 +229,7 @@ GOTO_TARGET_DECL(exceptionThrown);
             firstVal = GET_REGISTER(vsrc1);                                 \
             if ((s1) vsrc2 == 0) {                                          \
                 EXPORT_PC();                                                \
-                dvmThrowException("Ljava/lang/ArithmeticException;",        \
-                    "divide by zero");                                      \
+                dvmThrowArithmeticException("divide by zero");              \
                 GOTO_exceptionThrown();                                     \
             }                                                               \
             if ((u4)firstVal == 0x80000000 && ((s1) vsrc2) == -1) {         \
@@ -277,8 +274,7 @@ GOTO_TARGET_DECL(exceptionThrown);
             secondVal = GET_REGISTER(vsrc1);                                \
             if (secondVal == 0) {                                           \
                 EXPORT_PC();                                                \
-                dvmThrowException("Ljava/lang/ArithmeticException;",        \
-                    "divide by zero");                                      \
+                dvmThrowArithmeticException("divide by zero");              \
                 GOTO_exceptionThrown();                                     \
             }                                                               \
             if ((u4)firstVal == 0x80000000 && secondVal == -1) {            \
@@ -320,8 +316,7 @@ GOTO_TARGET_DECL(exceptionThrown);
             secondVal = GET_REGISTER_WIDE(vsrc2);                           \
             if (secondVal == 0LL) {                                         \
                 EXPORT_PC();                                                \
-                dvmThrowException("Ljava/lang/ArithmeticException;",        \
-                    "divide by zero");                                      \
+                dvmThrowArithmeticException("divide by zero");              \
                 GOTO_exceptionThrown();                                     \
             }                                                               \
             if ((u8)firstVal == 0x8000000000000000ULL &&                    \
@@ -367,8 +362,7 @@ GOTO_TARGET_DECL(exceptionThrown);
             secondVal = GET_REGISTER_WIDE(vsrc1);                           \
             if (secondVal == 0LL) {                                         \
                 EXPORT_PC();                                                \
-                dvmThrowException("Ljava/lang/ArithmeticException;",        \
-                    "divide by zero");                                      \
+                dvmThrowArithmeticException("divide by zero");              \
                 GOTO_exceptionThrown();                                     \
             }                                                               \
             if ((u8)firstVal == 0x8000000000000000ULL &&                    \

@@ -54,7 +54,7 @@ GOTO_TARGET(filledNewArray, bool methodCallRange, bool jumboFormat)
         }
         /*
         if (!dvmIsArrayClass(arrayClass)) {
-            dvmThrowException("Ljava/lang/RuntimeError;",
+            dvmThrowRuntimeException(
                 "filled-new-array needs array class");
             GOTO_exceptionThrown();
         }
@@ -70,8 +70,7 @@ GOTO_TARGET(filledNewArray, bool methodCallRange, bool jumboFormat)
         typeCh = arrayClass->descriptor[1];
         if (typeCh == 'D' || typeCh == 'J') {
             /* category 2 primitives not allowed */
-            dvmThrowException("Ljava/lang/RuntimeError;",
-                "bad filled array req");
+            dvmThrowRuntimeException("bad filled array req");
             GOTO_exceptionThrown();
         } else if (typeCh != 'L' && typeCh != '[' && typeCh != 'I') {
             /* TODO: requires multiple "fill in" loops with different widths */
@@ -192,8 +191,7 @@ GOTO_TARGET(invokeVirtual, bool methodCallRange, bool jumboFormat)
              * Works fine unless Sub stops providing an implementation of
              * the method.
              */
-            dvmThrowException("Ljava/lang/AbstractMethodError;",
-                "abstract method not implemented");
+            dvmThrowAbstractMethodError("abstract method not implemented");
             GOTO_exceptionThrown();
         }
 #else
@@ -288,15 +286,13 @@ GOTO_TARGET(invokeSuper, bool methodCallRange, bool jumboFormat)
              * Method does not exist in the superclass.  Could happen if
              * superclass gets updated.
              */
-            dvmThrowException("Ljava/lang/NoSuchMethodError;",
-                baseMethod->name);
+            dvmThrowNoSuchMethodError(baseMethod->name);
             GOTO_exceptionThrown();
         }
         methodToCall = curMethod->clazz->super->vtable[baseMethod->methodIndex];
 #if 0
         if (dvmIsAbstractMethod(methodToCall)) {
-            dvmThrowException("Ljava/lang/AbstractMethodError;",
-                "abstract method not implemented");
+            dvmThrowAbstractMethodError("abstract method not implemented");
             GOTO_exceptionThrown();
         }
 #else
@@ -505,8 +501,7 @@ GOTO_TARGET(invokeVirtualQuick, bool methodCallRange, bool jumboFormat)
 
 #if 0
         if (dvmIsAbstractMethod(methodToCall)) {
-            dvmThrowException("Ljava/lang/AbstractMethodError;",
-                "abstract method not implemented");
+            dvmThrowAbstractMethodError("abstract method not implemented");
             GOTO_exceptionThrown();
         }
 #else
@@ -547,7 +542,7 @@ GOTO_TARGET(invokeSuperQuick, bool methodCallRange, bool jumboFormat)
 
 #if 0   /* impossible in optimized + verified code */
         if (ref >= curMethod->clazz->super->vtableCount) {
-            dvmThrowException("Ljava/lang/NoSuchMethodError;", NULL);
+            dvmThrowNoSuchMethodError(NULL);
             GOTO_exceptionThrown();
         }
 #else
@@ -567,8 +562,7 @@ GOTO_TARGET(invokeSuperQuick, bool methodCallRange, bool jumboFormat)
 
 #if 0
         if (dvmIsAbstractMethod(methodToCall)) {
-            dvmThrowException("Ljava/lang/AbstractMethodError;",
-                "abstract method not implemented");
+            dvmThrowAbstractMethodError("abstract method not implemented");
             GOTO_exceptionThrown();
         }
 #else

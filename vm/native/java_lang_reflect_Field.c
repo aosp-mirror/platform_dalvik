@@ -66,8 +66,7 @@ static Field* validateFieldAccess(Object* obj, ClassObject* declaringClass,
     /* verify access */
     if (!noAccessCheck) {
         if (isSetOperation && dvmIsFinalField(field)) {
-            dvmThrowException("Ljava/lang/IllegalAccessException;",
-                "field is marked 'final'");
+            dvmThrowIllegalAccessException("field is marked 'final'");
             return NULL;
         }
 
@@ -86,8 +85,7 @@ static Field* validateFieldAccess(Object* obj, ClassObject* declaringClass,
          * in arbitrary Foo objects from other packages.
          */
         if (!dvmCheckFieldAccess(callerClass, field)) {
-            dvmThrowException("Ljava/lang/IllegalAccessException;",
-                "access to field not allowed");
+            dvmThrowIllegalAccessException("access to field not allowed");
             return NULL;
         }
         if (dvmIsProtectedField(field)) {
@@ -100,7 +98,7 @@ static Field* validateFieldAccess(Object* obj, ClassObject* declaringClass,
             samePackage = dvmInSamePackage(declaringClass, callerClass);
 
             if (!isInstance && !samePackage) {
-                dvmThrowException("Ljava/lang/IllegalAccessException;",
+                dvmThrowIllegalAccessException(
                     "access to protected field not allowed");
                 return NULL;
             }
@@ -503,8 +501,7 @@ static void Dalvik_java_lang_reflect_Field_setField(const u4* args,
 
     /* unbox primitive, or verify object type */
     if (!dvmUnboxPrimitive(valueObj, fieldType, &value)) {
-        dvmThrowException("Ljava/lang/IllegalArgumentException;",
-            "invalid value for field");
+        dvmThrowIllegalArgumentException("invalid value for field");
         RETURN_VOID();
     }
 
@@ -554,8 +551,7 @@ static void Dalvik_java_lang_reflect_Field_getPrimitiveField(const u4* args,
     JValue value;
 
     if (!dvmIsPrimitiveClass(fieldType)) {
-        dvmThrowException("Ljava/lang/IllegalArgumentException;",
-            "not a primitive field");
+        dvmThrowIllegalArgumentException("not a primitive field");
         RETURN_VOID();
     }
 
@@ -570,8 +566,7 @@ static void Dalvik_java_lang_reflect_Field_getPrimitiveField(const u4* args,
     if (dvmConvertPrimitiveValue(fieldType->primitiveType, targetType,
         &(value.i), &(pResult->i)) < 0)
     {
-        dvmThrowException("Ljava/lang/IllegalArgumentException;",
-            "invalid primitive conversion");
+        dvmThrowIllegalArgumentException("invalid primitive conversion");
         RETURN_VOID();
     }
 }
@@ -599,8 +594,7 @@ static void Dalvik_java_lang_reflect_Field_setPrimitiveField(const u4* args,
     JValue value;
 
     if (!dvmIsPrimitiveClass(fieldType)) {
-        dvmThrowException("Ljava/lang/IllegalArgumentException;",
-            "not a primitive field");
+        dvmThrowIllegalArgumentException("not a primitive field");
         RETURN_VOID();
     }
 
@@ -608,8 +602,7 @@ static void Dalvik_java_lang_reflect_Field_setPrimitiveField(const u4* args,
     if (dvmConvertPrimitiveValue(srcType, fieldType->primitiveType,
         valuePtr, &(value.i)) < 0)
     {
-        dvmThrowException("Ljava/lang/IllegalArgumentException;",
-            "invalid primitive conversion");
+        dvmThrowIllegalArgumentException("invalid primitive conversion");
         RETURN_VOID();
     }
 

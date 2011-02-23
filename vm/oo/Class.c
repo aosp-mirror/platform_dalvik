@@ -1262,7 +1262,7 @@ static ClassObject* findClassFromLoaderNoInit(const char* descriptor,
     /* convert "Landroid/debug/Stuff;" to "android.debug.Stuff" */
     dotName = dvmDescriptorToDot(descriptor);
     if (dotName == NULL) {
-        dvmThrowException("Ljava/lang/OutOfMemoryError;", NULL);
+        dvmThrowOutOfMemoryError(NULL);
         goto bail;
     }
     nameObj = dvmCreateStringFromCstr(dotName);
@@ -1303,8 +1303,7 @@ static ClassObject* findClassFromLoaderNoInit(const char* descriptor,
         goto bail;
     } else if (clazz == NULL) {
         LOGW("ClassLoader returned NULL w/o exception pending\n");
-        dvmThrowException("Ljava/lang/NullPointerException;",
-            "ClassLoader returned null");
+        dvmThrowNullPointerException("ClassLoader returned null");
         goto bail;
     }
 
@@ -1441,8 +1440,7 @@ static ClassObject* findClassNoInit(const char* descriptor, Object* loader,
                 dvmSetException(self, gDvm.noClassDefFoundErrorObj);
             } else {
                 /* dexopt case -- can't guarantee prefab (core.jar) */
-                dvmThrowExceptionWithClassMessage(
-                    "Ljava/lang/NoClassDefFoundError;", descriptor);
+                dvmThrowNoClassDefFoundError(descriptor);
             }
             goto bail;
         }
@@ -2565,8 +2563,7 @@ bool dvmLinkClass(ClassObject* clazz)
                     dvmLinearReadOnly(clazz->classLoader, clazz->interfaces);
                     LOGW("Interface '%s' is not accessible to '%s'\n",
                          clazz->interfaces[i]->descriptor, clazz->descriptor);
-                    dvmThrowException("Ljava/lang/IllegalAccessError;",
-                                      "interface not accessible");
+                    dvmThrowIllegalAccessError("interface not accessible");
                     goto bail;
                 }
                 LOGVV("+++  found interface '%s'\n",
@@ -2622,8 +2619,7 @@ bool dvmLinkClass(ClassObject* clazz)
         } else if (!dvmCheckClassAccess(clazz, clazz->super)) {
             LOGW("Superclass of '%s' (%s) is not accessible\n",
                 clazz->descriptor, clazz->super->descriptor);
-            dvmThrowException("Ljava/lang/IllegalAccessError;",
-                "superclass not accessible");
+            dvmThrowIllegalAccessError("superclass not accessible");
             goto bail;
         }
 
@@ -2746,7 +2742,7 @@ bool dvmLinkClass(ClassObject* clazz)
         if (strcmp(clazz->descriptor, "Ljava/lang/ref/Reference;") == 0) {
             if (!precacheReferenceOffsets(clazz)) {
                 LOGE("failed pre-caching Reference offsets\n");
-                dvmThrowException("Ljava/lang/InternalError;", NULL);
+                dvmThrowInternalError(NULL);
                 goto bail;
             }
         } else if (clazz == gDvm.classJavaLangClass) {
@@ -3191,7 +3187,7 @@ static bool createIftable(ClassObject* clazz)
                     if (!dvmIsPublicMethod(clazz->vtable[j])) {
                         LOGW("Implementation of %s.%s is not public\n",
                             clazz->descriptor, clazz->vtable[j]->name);
-                        dvmThrowException("Ljava/lang/IllegalAccessError;",
+                        dvmThrowIllegalAccessError(
                             "interface implementation not public");
                         goto bail;
                     }
@@ -3207,7 +3203,7 @@ static bool createIftable(ClassObject* clazz)
                             imeth->name, desc, clazz->descriptor);
                     free(desc);
                 }
-                //dvmThrowException("Ljava/lang/RuntimeException;", "Miranda!");
+                //dvmThrowRuntimeException("Miranda!");
                 //return false;
 
                 if (mirandaCount == mirandaAlloc) {
@@ -3785,8 +3781,7 @@ static void throwEarlierClassFailure(ClassObject* clazz)
         clazz->descriptor, clazz->verifyErrorClass);
 
     if (clazz->verifyErrorClass == NULL) {
-        dvmThrowExceptionWithClassMessage("Ljava/lang/NoClassDefFoundError;",
-            clazz->descriptor);
+        dvmThrowNoClassDefFoundError(clazz->descriptor);
     } else {
         dvmThrowExceptionByClassWithClassMessage(clazz->verifyErrorClass,
             clazz->descriptor);

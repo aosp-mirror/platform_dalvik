@@ -1152,7 +1152,7 @@ ClassObject* dvmGetBoxedReturnType(const Method* meth)
         char* desc = dexProtoCopyMethodDescriptor(&meth->prototype);
         LOGE("Bad return type in signature '%s'\n", desc);
         free(desc);
-        dvmThrowException("Ljava/lang/InternalError;", NULL);
+        dvmThrowInternalError(NULL);
         return NULL;
     }
     }

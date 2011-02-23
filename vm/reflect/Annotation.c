@@ -875,8 +875,7 @@ bail:
     *pPtr = ptr;
     if (newAnno == NULL && !dvmCheckException(self)) {
         /* make sure an exception is raised */
-        dvmThrowException("Ljava/lang/RuntimeException;",
-            "failure in processEncodedAnnotation");
+        dvmThrowRuntimeException("failure in processEncodedAnnotation");
     }
     return newAnno;
 }

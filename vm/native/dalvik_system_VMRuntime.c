@@ -118,11 +118,11 @@ static void Dalvik_dalvik_system_VMRuntime_newNonMovableArray(const u4* args,
     ArrayObject* newArray;
 
     if (elementClass == NULL) {
-        dvmThrowException("Ljava/lang/NullPointerException;", NULL);
+        dvmThrowNullPointerException(NULL);
         RETURN_VOID();
     }
     if (length < 0) {
-        dvmThrowException("Ljava/lang/NegativeArraySizeException;", NULL);
+        dvmThrowNegativeArraySizeException(NULL);
         RETURN_VOID();
     }
 
@@ -144,7 +144,7 @@ static void Dalvik_dalvik_system_VMRuntime_addressOf(const u4* args,
 {
     ArrayObject* array = (ArrayObject*) args[1];
     if (!dvmIsArray(array)) {
-        dvmThrowException("Ljava/lang/IllegalArgumentException;", NULL);
+        dvmThrowIllegalArgumentException(NULL);
         RETURN_VOID();
     }
     // TODO: we should also check that this is a non-movable array.

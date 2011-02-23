@@ -509,7 +509,7 @@ ArrayObject* dvmDdmGetRecentAllocations(void)
 
     if (!dvmGenerateTrackedAllocationReport(&data, &len)) {
         /* assume OOM */
-        dvmThrowException("Ljava/lang/OutOfMemoryError;","recent alloc native");
+        dvmThrowOutOfMemoryError("recent alloc native");
         return NULL;
     }
 

@@ -144,8 +144,7 @@ DalvikNativeFunc dvmLookupInternalNativeMethod(const Method* method)
 void dvmAbstractMethodStub(const u4* args, JValue* pResult)
 {
     LOGD("--- called into dvmAbstractMethodStub\n");
-    dvmThrowException("Ljava/lang/AbstractMethodError;",
-        "abstract method not implemented");
+    dvmThrowAbstractMethodError("abstract method not implemented");
 }
 
 
@@ -223,7 +222,7 @@ ClassObject* dvmFindClassByName(StringObject* nameObj, Object* loader,
     char* descriptor = NULL;
 
     if (nameObj == NULL) {
-        dvmThrowException("Ljava/lang/NullPointerException;", NULL);
+        dvmThrowNullPointerException(NULL);
         goto bail;
     }
     name = dvmCreateCstrFromString(nameObj);
@@ -235,7 +234,7 @@ ClassObject* dvmFindClassByName(StringObject* nameObj, Object* loader,
      */
     if (!validateClassName(name)) {
         LOGW("dvmFindClassByName rejecting '%s'\n", name);
-        dvmThrowException("Ljava/lang/ClassNotFoundException;", name);
+        dvmThrowClassNotFoundException(name);
         goto bail;
     }
 

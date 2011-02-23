@@ -409,7 +409,7 @@ static void Dalvik_java_lang_Class_isAssignableFrom(const u4* args,
     ClassObject* testClass = (ClassObject*) args[1];
 
     if (testClass == NULL) {
-        dvmThrowException("Ljava/lang/NullPointerException;", NULL);
+        dvmThrowNullPointerException(NULL);
         RETURN_INT(false);
     }
     RETURN_INT(dvmInstanceof(testClass, thisPtr));
@@ -512,15 +512,13 @@ static void Dalvik_java_lang_Class_newInstance(const u4* args, JValue* pResult)
     if (!dvmCheckClassAccess(callerClass, clazz)) {
         LOGD("newInstance failed: %s not accessible to %s\n",
             clazz->descriptor, callerClass->descriptor);
-        dvmThrowException("Ljava/lang/IllegalAccessException;",
-            "access to class not allowed");
+        dvmThrowIllegalAccessException("access to class not allowed");
         RETURN_VOID();
     }
     if (!dvmCheckMethodAccess(callerClass, init)) {
         LOGD("newInstance failed: %s.<init>() not accessible to %s\n",
             clazz->descriptor, callerClass->descriptor);
-        dvmThrowException("Ljava/lang/IllegalAccessException;",
-            "access to constructor not allowed");
+        dvmThrowIllegalAccessException("access to constructor not allowed");
         RETURN_VOID();
     }
 
@@ -625,8 +623,7 @@ static void Dalvik_java_lang_Class_getEnclosingMethod(const u4* args,
 static void Dalvik_java_lang_Class_getGenericInterfaces(const u4* args,
     JValue* pResult)
 {
-    dvmThrowException("Ljava/lang/UnsupportedOperationException;",
-        "native method not implemented");
+    dvmThrowUnsupportedOperationException("native method not implemented");
 
     RETURN_PTR(NULL);
 }
@@ -634,8 +631,7 @@ static void Dalvik_java_lang_Class_getGenericInterfaces(const u4* args,
 static void Dalvik_java_lang_Class_getGenericSuperclass(const u4* args,
     JValue* pResult)
 {
-    dvmThrowException("Ljava/lang/UnsupportedOperationException;",
-        "native method not implemented");
+    dvmThrowUnsupportedOperationException("native method not implemented");
 
     RETURN_PTR(NULL);
 }
@@ -643,8 +639,7 @@ static void Dalvik_java_lang_Class_getGenericSuperclass(const u4* args,
 static void Dalvik_java_lang_Class_getTypeParameters(const u4* args,
     JValue* pResult)
 {
-    dvmThrowException("Ljava/lang/UnsupportedOperationException;",
-        "native method not implemented");
+    dvmThrowUnsupportedOperationException("native method not implemented");
 
     RETURN_PTR(NULL);
 }

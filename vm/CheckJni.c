@@ -350,8 +350,7 @@ static void checkThread(JNIEnv* env, int flags, const char* func)
         printWarn = true;
 
         /* this is a bad idea -- need to throw as we exit, or abort func */
-        //dvmThrowException("Ljava/lang/RuntimeException;",
-        //    "invalid use of JNI env ptr");
+        //dvmThrowRuntimeException("invalid use of JNI env ptr");
     } else if (((JNIEnvExt*) env)->self != dvmThreadSelf()) {
         /* correct JNIEnv*; make sure the "self" pointer is correct */
         LOGE("JNI ERROR: env->self != thread-self (%p vs. %p)",

@@ -392,8 +392,7 @@ static ClassObject* callPrep(Thread* self, const Method* method, Object* obj,
                 method))
         {
             /* note this throws IAException, not IAError */
-            dvmThrowException("Ljava/lang/IllegalAccessException;",
-                "access to method denied");
+            dvmThrowIllegalAccessException("access to method denied");
             return NULL;
         }
     }

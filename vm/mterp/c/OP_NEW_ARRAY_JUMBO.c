@@ -13,7 +13,7 @@ HANDLE_OPCODE(OP_NEW_ARRAY_JUMBO /*vBBBB, vCCCC, class@AAAAAAAA*/)
             vdst, vsrc1, ref, (s4) GET_REGISTER(vsrc1));
         length = (s4) GET_REGISTER(vsrc1);
         if (length < 0) {
-            dvmThrowException("Ljava/lang/NegativeArraySizeException;", NULL);
+            dvmThrowNegativeArraySizeException(NULL);
             GOTO_exceptionThrown();
         }
         arrayClass = dvmDexGetResolvedClass(methodClassDex, ref);
