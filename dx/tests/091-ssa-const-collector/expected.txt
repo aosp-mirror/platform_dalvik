@@ -310,11 +310,11 @@ block 003b
   pred 0093
   Blort.java:43@003b: Rop{invoke-virtual . <- Ljava/io/PrintStream; Ljava/lang/
   String; call throws <any>}(java.io.PrintStream.println:(Ljava/lang/String;)V 
-  catch) . <- v2:Ljava/io/PrintStream; v3:Ljava/lang/String;="foo"
+  catch) . <- v0:Ljava/io/PrintStream; v2:Ljava/lang/String;="foo"
   next 007f
 block 007e
   pred 0094
-  Blort.java:33@0000: move-param-object(0) v4:"this"LBlort; <- .
+  Blort.java:33@0000: move-param-object(0) v3:"this"LBlort; <- .
   Blort.java:33@0000: goto . <- .
   next 0000
 block 007f
@@ -367,12 +367,12 @@ block 0090
 block 0092
   pred 0035
   Blort.java:43@0036: Rop{move-result-pseudo Ljava/io/PrintStream; <- . flows} 
-  v2:Ljava/io/PrintStream; <- .
+  v0:Ljava/io/PrintStream; <- .
   Blort.java:43@0036: goto . <- .
   next 0039
 block 0093
   pred 0039
-  Blort.java:43@0039: Rop{move-result-pseudo Ljava/lang/String; <- . flows} v3:
+  Blort.java:43@0039: Rop{move-result-pseudo Ljava/lang/String; <- . flows} v2:
   Ljava/lang/String;="foo" <- .
   Blort.java:43@0039: goto . <- .
   next 003b
