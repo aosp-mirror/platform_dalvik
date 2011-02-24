@@ -538,7 +538,7 @@ public class FirstFitLocalCombiningAllocator extends RegisterAllocator {
 
             int category = ssaSpec.getCategory();
             // Find a rop reg that does not interfere
-            int ropReg = findNextUnreservedRopReg(0, category);
+            int ropReg = paramRangeEnd;
             while (!canMapReg(ssaSpec, ropReg)) {
                 ropReg = findNextUnreservedRopReg(ropReg + 1, category);
             }
@@ -976,44 +976,128 @@ public class FirstFitLocalCombiningAllocator extends RegisterAllocator {
 
     /**
      * Attempts to map the sources and result of a phi to a common register.
-     * Will only try if a mapping already exists for one of the registers,
-     * and if this mapping is compatible with all the other registers.
+     * Will try existing mappings first, from most to least common. If none
+     * of the registers have mappings yet, a new mapping is created.
      */
     private void processPhiInsn(PhiInsn insn) {
         RegisterSpec result = insn.getResult();
         int resultReg = result.getReg();
         int category = result.getCategory();
-        ArrayList<RegisterSpec> ssaRegs = new ArrayList<RegisterSpec>();
-        ssaRegs.add(result);
-
-        // If the result of the phi has an existing mapping, get it
-        int mapReg = -1;
-        if (ssaRegsMapped.get(resultReg)) {
-            mapReg = mapper.oldToNew(resultReg);
-        }
 
         RegisterSpecList sources = insn.getSources();
-        for (int i = 0; i < sources.size(); i++) {
+        int sourcesSize = sources.size();
+
+        // List of phi sources / result that need mapping
+        ArrayList<RegisterSpec> ssaRegs = new ArrayList<RegisterSpec>();
+
+        // Track how many times a particular mapping is found
+        Multiset mapSet = new Multiset(sourcesSize + 1);
+
+        /*
+         * If the result of the phi has an existing mapping, get it.
+         * Otherwise, add it to the list of regs that need mapping.
+         */
+        if (ssaRegsMapped.get(resultReg)) {
+            mapSet.add(mapper.oldToNew(resultReg));
+        } else {
+            ssaRegs.add(result);
+        }
+
+        for (int i = 0; i < sourcesSize; i++) {
             RegisterSpec source = sources.get(i);
             int sourceReg = source.getReg();
-            ssaRegs.add(source);
 
-            // If a source of the phi has an existing mapping, get it
+            /*
+             * If a source of the phi has an existing mapping, get it.
+             * Otherwise, add it to the list of regs that need mapping.
+             */
             if (ssaRegsMapped.get(sourceReg)) {
-                int mapSourceReg = mapper.oldToNew(sourceReg);
-
-                // If the source mapping differs from an existing one, give up
-                if (mapReg != -1 && mapReg != mapSourceReg) {
-                    return;
-                }
-
-                mapReg = mapSourceReg;
+                mapSet.add(mapper.oldToNew(sourceReg));
+            } else {
+                ssaRegs.add(source);
             }
         }
 
-        // If a common mapping exists, try to map it to all regs in the phi
-        if (mapReg != -1) {
-            tryMapRegs(ssaRegs, mapReg, category, false);
+        // Try all existing mappings, with the most common ones first
+        for (int i = 0; i < mapSet.getSize(); i++) {
+            int maxReg = mapSet.getAndRemoveHighestCount();
+            tryMapRegs(ssaRegs, maxReg, category, false);
+        }
+
+        // Map any remaining unmapped regs with whatever fits
+        int mapReg = findNextUnreservedRopReg(0, category);
+        while (!tryMapRegs(ssaRegs, mapReg, category, false)) {
+            mapReg = findNextUnreservedRopReg(mapReg + 1, category);
+        }
+    }
+
+    // A set that tracks how often elements are added to it.
+    private static class Multiset {
+        private final int[] reg;
+        private final int[] count;
+        private int size;
+
+        /**
+         * Constructs an instance.
+         *
+         * @param maxSize the maximum distinct elements the set may have
+         */
+        public Multiset(int maxSize) {
+            reg = new int[maxSize];
+            count = new int[maxSize];
+            size = 0;
+        }
+
+        /**
+         * Adds an element to the set.
+         *
+         * @param element element to add
+         */
+        public void add(int element) {
+            for (int i = 0; i < size; i++) {
+                if (reg[i] == element) {
+                    count[i]++;
+                    return;
+                }
+            }
+
+            reg[size] = element;
+            count[size] = 1;
+            size++;
+        }
+
+        /**
+         * Searches the set for the element that has been added the most.
+         * In the case of a tie, the element that was added first is returned.
+         * Then, it clears the count on that element. The size of the set
+         * remains unchanged.
+         *
+         * @return element with the highest count
+         */
+        public int getAndRemoveHighestCount() {
+            int maxIndex = -1;
+            int maxReg = -1;
+            int maxCount = 0;
+
+            for (int i = 0; i < size; i++) {
+                if (maxCount < count[i]) {
+                    maxIndex = i;
+                    maxReg = reg[i];
+                    maxCount = count[i];
+                }
+            }
+
+            count[maxIndex] = 0;
+            return maxReg;
+        }
+
+        /**
+         * Gets the number of distinct elements in the set.
+         *
+         * @return size of the set
+         */
+        public int getSize() {
+            return size;
         }
     }
 }
