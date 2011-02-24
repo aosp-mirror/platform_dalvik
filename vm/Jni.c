@@ -3085,9 +3085,7 @@ bail:
 static bool checkArrayElementBounds(ArrayObject* arrayObj, jsize index) {
     assert(arrayObj != NULL);
     if (index < 0 || index >= (int) arrayObj->length) {
-        dvmThrowExceptionFmt("Ljava/lang/ArrayIndexOutOfBoundsException;",
-            "%s index=%d length=%d", arrayObj->obj.clazz->descriptor, index,
-            arrayObj->length);
+        dvmThrowArrayIndexOutOfBoundsException(index, arrayObj->length);
         return false;
     }
     return true;

@@ -13851,7 +13851,7 @@ common_errArrayIndex:
     movl    offArrayObject_length(%eax), %eax
     movl    %ecx,OUT_ARG0(%esp)
     movl    %eax,OUT_ARG1(%esp)
-    call    dvmThrowAIOOBE        # dvmThrowAIOO(index, length)
+    call    dvmThrowArrayIndexOutOfBoundsException   # args (index, length)
     jmp     common_exceptionThrown
 
 /*

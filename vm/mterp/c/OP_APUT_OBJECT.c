@@ -13,7 +13,8 @@ HANDLE_OPCODE(OP_APUT_OBJECT /*vAA, vBB, vCC*/)
         if (!checkForNull((Object*) arrayObj))
             GOTO_exceptionThrown();
         if (GET_REGISTER(vsrc2) >= arrayObj->length) {
-            dvmThrowAIOOBE(GET_REGISTER(vsrc2), arrayObj->length);
+            dvmThrowArrayIndexOutOfBoundsException(
+                GET_REGISTER(vsrc2), arrayObj->length);
             GOTO_exceptionThrown();
         }
         obj = (Object*) GET_REGISTER(vdst);

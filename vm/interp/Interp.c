@@ -940,7 +940,7 @@ bool dvmInterpHandleFillArrayData(ArrayObject* arrayObj, const u2* arrayData)
     size = arrayData[2] | (((u4)arrayData[3]) << 16);
 
     if (size > arrayObj->length) {
-        dvmThrowAIOOBE(size, arrayObj->length);
+        dvmThrowArrayIndexOutOfBoundsException(size, arrayObj->length);
         return false;
     }
     copySwappedArrayData(arrayObj->contents, &arrayData[4], size, width);

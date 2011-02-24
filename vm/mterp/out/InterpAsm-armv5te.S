@@ -14616,7 +14616,7 @@ common_errArrayIndex:
     EXPORT_PC()
     mov     r0, r1
     mov     r1, r3
-    bl      dvmThrowAIOOBE
+    bl      dvmThrowArrayIndexOutOfBoundsException
     b       common_exceptionThrown
 
 /*

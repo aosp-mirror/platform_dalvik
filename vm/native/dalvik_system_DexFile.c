@@ -513,7 +513,7 @@ static void Dalvik_dalvik_system_DexFile_isDexOptNeeded(const u4* args,
         result = true;
         break;
     case DEX_CACHE_STALE_ODEX:
-        dvmThrowException("Ldalvik/system/StaleDexCacheError;", name);
+        dvmThrowStaleDexCacheError(name);
         result = -1;
         break;
     }

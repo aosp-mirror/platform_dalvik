@@ -1354,18 +1354,18 @@ void dvmLogExceptionStackTrace(void)
     }
 }
 
-void dvmThrowAIOOBE(int index, int length)
-{
-    dvmThrowExceptionFmt("Ljava/lang/ArrayIndexOutOfBoundsException;",
-        "index=%d length=%d", index, length);
-}
-
 void dvmThrowAbstractMethodError(const char* msg) {
     dvmThrowException("Ljava/lang/AbstractMethodError;", msg);
 }
 
 void dvmThrowArithmeticException(const char* msg) {
     dvmThrowException("Ljava/lang/ArithmeticException;", msg);
+}
+
+void dvmThrowArrayIndexOutOfBoundsException(int index, int length)
+{
+    dvmThrowExceptionFmt("Ljava/lang/ArrayIndexOutOfBoundsException;",
+        "index=%d length=%d", index, length);
 }
 
 static void dvmThrowTypeError(const char* exceptionClassName, const char* fmt,
@@ -1491,6 +1491,10 @@ void dvmThrowOutOfMemoryError(const char* msg) {
 
 void dvmThrowRuntimeException(const char* msg) {
     dvmThrowException("Ljava/lang/RuntimeException;", msg);
+}
+
+void dvmThrowStaleDexCacheError(const char* msg) {
+    dvmThrowException("Ldalvik/system/StaleDexCacheError;", msg);
 }
 
 void dvmThrowStringIndexOutOfBoundsException(const char* msg) {
