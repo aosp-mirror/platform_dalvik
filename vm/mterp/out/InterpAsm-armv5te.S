@@ -290,7 +290,7 @@ dvmMterpStdRun:
     mov     rSELF, r0                   @ set rSELF
     ldr     r1, [r0, #offThread_entryPoint]   @ enum is 4 bytes in aapcs-EABI
     LOAD_PC_FP_FROM_SELF()              @ load rPC and rFP from "thread"
-    adr     rIBASE, dvmAsmInstructionStart  @ set rIBASE
+    ldr     rIBASE, [rSELF, #offThread_curHandlerTable] @ set rIBASE
     cmp     r1, #kInterpEntryInstr      @ usual case?
     bne     .Lnot_instr                 @ no, handle it
 
@@ -8069,7 +8069,7 @@ d2i_doconv:
     .balign 64
 .L_OP_DISPATCH_FF: /* 0xff */
 /* File: armv5te/OP_DISPATCH_FF.S */
-    mov     ip, rINST, lsr #8           @ r9<- extended opcode
+    mov     ip, rINST, lsr #8           @ ip<- extended opcode
     add     ip, ip, #256                @ add offset for extended opcodes
     GOTO_OPCODE(ip)                     @ go to proper extended handler
 
@@ -10898,9 +10898,8 @@ d2i_doconv:
     bl      dvmThrowVerificationError   @ always throws
     b       common_exceptionThrown      @ handle exception
 
-
     .balign 64
-    .size   .L_OP_NOP, .-.L_OP_NOP
+    .size   dvmAsmInstructionStart, .-dvmAsmInstructionStart
     .global dvmAsmInstructionEnd
 dvmAsmInstructionEnd:
 
@@ -13615,6 +13614,7179 @@ d2l_doconv:
     .global dvmAsmSisterEnd
 dvmAsmSisterEnd:
 
+
+    .global dvmAsmAltInstructionStart
+    .type   dvmAsmAltInstructionStart, %function
+dvmAsmAltInstructionStart:
+    .text
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_NOP: /* 0x00 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (0 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_MOVE: /* 0x01 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (1 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_MOVE_FROM16: /* 0x02 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (2 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_MOVE_16: /* 0x03 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (3 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_MOVE_WIDE: /* 0x04 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (4 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_MOVE_WIDE_FROM16: /* 0x05 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (5 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_MOVE_WIDE_16: /* 0x06 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (6 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_MOVE_OBJECT: /* 0x07 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (7 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_MOVE_OBJECT_FROM16: /* 0x08 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (8 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_MOVE_OBJECT_16: /* 0x09 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (9 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_MOVE_RESULT: /* 0x0a */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (10 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_MOVE_RESULT_WIDE: /* 0x0b */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (11 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_MOVE_RESULT_OBJECT: /* 0x0c */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (12 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_MOVE_EXCEPTION: /* 0x0d */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (13 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_RETURN_VOID: /* 0x0e */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (14 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_RETURN: /* 0x0f */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (15 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_RETURN_WIDE: /* 0x10 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (16 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_RETURN_OBJECT: /* 0x11 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (17 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_CONST_4: /* 0x12 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (18 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_CONST_16: /* 0x13 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (19 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_CONST: /* 0x14 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (20 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_CONST_HIGH16: /* 0x15 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (21 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_CONST_WIDE_16: /* 0x16 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (22 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_CONST_WIDE_32: /* 0x17 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (23 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_CONST_WIDE: /* 0x18 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (24 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_CONST_WIDE_HIGH16: /* 0x19 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (25 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_CONST_STRING: /* 0x1a */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (26 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_CONST_STRING_JUMBO: /* 0x1b */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (27 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_CONST_CLASS: /* 0x1c */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (28 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_MONITOR_ENTER: /* 0x1d */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (29 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_MONITOR_EXIT: /* 0x1e */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (30 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_CHECK_CAST: /* 0x1f */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (31 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_INSTANCE_OF: /* 0x20 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (32 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_ARRAY_LENGTH: /* 0x21 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (33 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_NEW_INSTANCE: /* 0x22 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (34 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_NEW_ARRAY: /* 0x23 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (35 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_FILLED_NEW_ARRAY: /* 0x24 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (36 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_FILLED_NEW_ARRAY_RANGE: /* 0x25 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (37 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_FILL_ARRAY_DATA: /* 0x26 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (38 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_THROW: /* 0x27 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (39 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_GOTO: /* 0x28 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (40 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_GOTO_16: /* 0x29 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (41 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_GOTO_32: /* 0x2a */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (42 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_PACKED_SWITCH: /* 0x2b */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (43 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_SPARSE_SWITCH: /* 0x2c */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (44 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_CMPL_FLOAT: /* 0x2d */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (45 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_CMPG_FLOAT: /* 0x2e */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (46 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_CMPL_DOUBLE: /* 0x2f */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (47 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_CMPG_DOUBLE: /* 0x30 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (48 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_CMP_LONG: /* 0x31 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (49 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_IF_EQ: /* 0x32 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (50 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_IF_NE: /* 0x33 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (51 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_IF_LT: /* 0x34 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (52 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_IF_GE: /* 0x35 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (53 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_IF_GT: /* 0x36 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (54 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_IF_LE: /* 0x37 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (55 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_IF_EQZ: /* 0x38 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (56 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_IF_NEZ: /* 0x39 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (57 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_IF_LTZ: /* 0x3a */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (58 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_IF_GEZ: /* 0x3b */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (59 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_IF_GTZ: /* 0x3c */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (60 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_IF_LEZ: /* 0x3d */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (61 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_3E: /* 0x3e */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (62 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_3F: /* 0x3f */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (63 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_40: /* 0x40 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (64 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_41: /* 0x41 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (65 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_42: /* 0x42 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (66 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_43: /* 0x43 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (67 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_AGET: /* 0x44 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (68 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_AGET_WIDE: /* 0x45 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (69 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_AGET_OBJECT: /* 0x46 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (70 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_AGET_BOOLEAN: /* 0x47 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (71 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_AGET_BYTE: /* 0x48 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (72 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_AGET_CHAR: /* 0x49 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (73 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_AGET_SHORT: /* 0x4a */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (74 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_APUT: /* 0x4b */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (75 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_APUT_WIDE: /* 0x4c */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (76 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_APUT_OBJECT: /* 0x4d */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (77 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_APUT_BOOLEAN: /* 0x4e */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (78 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_APUT_BYTE: /* 0x4f */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (79 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_APUT_CHAR: /* 0x50 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (80 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_APUT_SHORT: /* 0x51 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (81 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_IGET: /* 0x52 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (82 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_IGET_WIDE: /* 0x53 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (83 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_IGET_OBJECT: /* 0x54 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (84 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_IGET_BOOLEAN: /* 0x55 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (85 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_IGET_BYTE: /* 0x56 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (86 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_IGET_CHAR: /* 0x57 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (87 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_IGET_SHORT: /* 0x58 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (88 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_IPUT: /* 0x59 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (89 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_IPUT_WIDE: /* 0x5a */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (90 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_IPUT_OBJECT: /* 0x5b */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (91 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_IPUT_BOOLEAN: /* 0x5c */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (92 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_IPUT_BYTE: /* 0x5d */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (93 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_IPUT_CHAR: /* 0x5e */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (94 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_IPUT_SHORT: /* 0x5f */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (95 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_SGET: /* 0x60 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (96 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_SGET_WIDE: /* 0x61 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (97 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_SGET_OBJECT: /* 0x62 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (98 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_SGET_BOOLEAN: /* 0x63 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (99 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_SGET_BYTE: /* 0x64 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (100 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_SGET_CHAR: /* 0x65 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (101 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_SGET_SHORT: /* 0x66 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (102 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_SPUT: /* 0x67 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (103 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_SPUT_WIDE: /* 0x68 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (104 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_SPUT_OBJECT: /* 0x69 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (105 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_SPUT_BOOLEAN: /* 0x6a */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (106 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_SPUT_BYTE: /* 0x6b */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (107 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_SPUT_CHAR: /* 0x6c */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (108 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_SPUT_SHORT: /* 0x6d */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (109 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_INVOKE_VIRTUAL: /* 0x6e */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (110 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_INVOKE_SUPER: /* 0x6f */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (111 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_INVOKE_DIRECT: /* 0x70 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (112 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_INVOKE_STATIC: /* 0x71 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (113 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_INVOKE_INTERFACE: /* 0x72 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (114 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_73: /* 0x73 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (115 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_INVOKE_VIRTUAL_RANGE: /* 0x74 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (116 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_INVOKE_SUPER_RANGE: /* 0x75 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (117 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_INVOKE_DIRECT_RANGE: /* 0x76 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (118 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_INVOKE_STATIC_RANGE: /* 0x77 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (119 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_INVOKE_INTERFACE_RANGE: /* 0x78 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (120 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_79: /* 0x79 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (121 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_7A: /* 0x7a */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (122 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_NEG_INT: /* 0x7b */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (123 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_NOT_INT: /* 0x7c */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (124 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_NEG_LONG: /* 0x7d */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (125 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_NOT_LONG: /* 0x7e */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (126 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_NEG_FLOAT: /* 0x7f */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (127 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_NEG_DOUBLE: /* 0x80 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (128 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_INT_TO_LONG: /* 0x81 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (129 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_INT_TO_FLOAT: /* 0x82 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (130 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_INT_TO_DOUBLE: /* 0x83 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (131 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_LONG_TO_INT: /* 0x84 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (132 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_LONG_TO_FLOAT: /* 0x85 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (133 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_LONG_TO_DOUBLE: /* 0x86 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (134 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_FLOAT_TO_INT: /* 0x87 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (135 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_FLOAT_TO_LONG: /* 0x88 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (136 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_FLOAT_TO_DOUBLE: /* 0x89 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (137 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_DOUBLE_TO_INT: /* 0x8a */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (138 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_DOUBLE_TO_LONG: /* 0x8b */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (139 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_DOUBLE_TO_FLOAT: /* 0x8c */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (140 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_INT_TO_BYTE: /* 0x8d */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (141 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_INT_TO_CHAR: /* 0x8e */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (142 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_INT_TO_SHORT: /* 0x8f */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (143 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_ADD_INT: /* 0x90 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (144 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_SUB_INT: /* 0x91 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (145 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_MUL_INT: /* 0x92 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (146 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_DIV_INT: /* 0x93 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (147 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_REM_INT: /* 0x94 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (148 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_AND_INT: /* 0x95 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (149 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_OR_INT: /* 0x96 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (150 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_XOR_INT: /* 0x97 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (151 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_SHL_INT: /* 0x98 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (152 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_SHR_INT: /* 0x99 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (153 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_USHR_INT: /* 0x9a */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (154 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_ADD_LONG: /* 0x9b */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (155 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_SUB_LONG: /* 0x9c */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (156 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_MUL_LONG: /* 0x9d */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (157 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_DIV_LONG: /* 0x9e */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (158 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_REM_LONG: /* 0x9f */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (159 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_AND_LONG: /* 0xa0 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (160 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_OR_LONG: /* 0xa1 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (161 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_XOR_LONG: /* 0xa2 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (162 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_SHL_LONG: /* 0xa3 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (163 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_SHR_LONG: /* 0xa4 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (164 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_USHR_LONG: /* 0xa5 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (165 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_ADD_FLOAT: /* 0xa6 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (166 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_SUB_FLOAT: /* 0xa7 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (167 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_MUL_FLOAT: /* 0xa8 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (168 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_DIV_FLOAT: /* 0xa9 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (169 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_REM_FLOAT: /* 0xaa */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (170 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_ADD_DOUBLE: /* 0xab */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (171 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_SUB_DOUBLE: /* 0xac */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (172 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_MUL_DOUBLE: /* 0xad */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (173 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_DIV_DOUBLE: /* 0xae */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (174 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_REM_DOUBLE: /* 0xaf */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (175 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_ADD_INT_2ADDR: /* 0xb0 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (176 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_SUB_INT_2ADDR: /* 0xb1 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (177 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_MUL_INT_2ADDR: /* 0xb2 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (178 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_DIV_INT_2ADDR: /* 0xb3 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (179 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_REM_INT_2ADDR: /* 0xb4 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (180 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_AND_INT_2ADDR: /* 0xb5 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (181 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_OR_INT_2ADDR: /* 0xb6 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (182 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_XOR_INT_2ADDR: /* 0xb7 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (183 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_SHL_INT_2ADDR: /* 0xb8 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (184 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_SHR_INT_2ADDR: /* 0xb9 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (185 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_USHR_INT_2ADDR: /* 0xba */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (186 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_ADD_LONG_2ADDR: /* 0xbb */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (187 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_SUB_LONG_2ADDR: /* 0xbc */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (188 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_MUL_LONG_2ADDR: /* 0xbd */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (189 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_DIV_LONG_2ADDR: /* 0xbe */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (190 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_REM_LONG_2ADDR: /* 0xbf */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (191 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_AND_LONG_2ADDR: /* 0xc0 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (192 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_OR_LONG_2ADDR: /* 0xc1 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (193 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_XOR_LONG_2ADDR: /* 0xc2 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (194 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_SHL_LONG_2ADDR: /* 0xc3 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (195 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_SHR_LONG_2ADDR: /* 0xc4 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (196 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_USHR_LONG_2ADDR: /* 0xc5 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (197 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_ADD_FLOAT_2ADDR: /* 0xc6 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (198 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_SUB_FLOAT_2ADDR: /* 0xc7 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (199 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_MUL_FLOAT_2ADDR: /* 0xc8 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (200 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_DIV_FLOAT_2ADDR: /* 0xc9 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (201 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_REM_FLOAT_2ADDR: /* 0xca */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (202 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_ADD_DOUBLE_2ADDR: /* 0xcb */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (203 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_SUB_DOUBLE_2ADDR: /* 0xcc */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (204 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_MUL_DOUBLE_2ADDR: /* 0xcd */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (205 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_DIV_DOUBLE_2ADDR: /* 0xce */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (206 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_REM_DOUBLE_2ADDR: /* 0xcf */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (207 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_ADD_INT_LIT16: /* 0xd0 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (208 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_RSUB_INT: /* 0xd1 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (209 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_MUL_INT_LIT16: /* 0xd2 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (210 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_DIV_INT_LIT16: /* 0xd3 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (211 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_REM_INT_LIT16: /* 0xd4 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (212 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_AND_INT_LIT16: /* 0xd5 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (213 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_OR_INT_LIT16: /* 0xd6 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (214 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_XOR_INT_LIT16: /* 0xd7 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (215 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_ADD_INT_LIT8: /* 0xd8 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (216 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_RSUB_INT_LIT8: /* 0xd9 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (217 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_MUL_INT_LIT8: /* 0xda */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (218 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_DIV_INT_LIT8: /* 0xdb */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (219 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_REM_INT_LIT8: /* 0xdc */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (220 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_AND_INT_LIT8: /* 0xdd */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (221 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_OR_INT_LIT8: /* 0xde */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (222 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_XOR_INT_LIT8: /* 0xdf */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (223 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_SHL_INT_LIT8: /* 0xe0 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (224 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_SHR_INT_LIT8: /* 0xe1 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (225 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_USHR_INT_LIT8: /* 0xe2 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (226 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_IGET_VOLATILE: /* 0xe3 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (227 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_IPUT_VOLATILE: /* 0xe4 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (228 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_SGET_VOLATILE: /* 0xe5 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (229 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_SPUT_VOLATILE: /* 0xe6 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (230 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_IGET_OBJECT_VOLATILE: /* 0xe7 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (231 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_IGET_WIDE_VOLATILE: /* 0xe8 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (232 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_IPUT_WIDE_VOLATILE: /* 0xe9 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (233 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_SGET_WIDE_VOLATILE: /* 0xea */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (234 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_SPUT_WIDE_VOLATILE: /* 0xeb */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (235 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_BREAKPOINT: /* 0xec */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (236 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_THROW_VERIFICATION_ERROR: /* 0xed */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (237 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_EXECUTE_INLINE: /* 0xee */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (238 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_EXECUTE_INLINE_RANGE: /* 0xef */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (239 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_INVOKE_OBJECT_INIT: /* 0xf0 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (240 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_RETURN_VOID_BARRIER: /* 0xf1 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (241 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_IGET_QUICK: /* 0xf2 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (242 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_IGET_WIDE_QUICK: /* 0xf3 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (243 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_IGET_OBJECT_QUICK: /* 0xf4 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (244 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_IPUT_QUICK: /* 0xf5 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (245 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_IPUT_WIDE_QUICK: /* 0xf6 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (246 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_IPUT_OBJECT_QUICK: /* 0xf7 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (247 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_INVOKE_VIRTUAL_QUICK: /* 0xf8 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (248 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_INVOKE_VIRTUAL_QUICK_RANGE: /* 0xf9 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (249 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_INVOKE_SUPER_QUICK: /* 0xfa */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (250 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_INVOKE_SUPER_QUICK_RANGE: /* 0xfb */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (251 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_IPUT_OBJECT_VOLATILE: /* 0xfc */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (252 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_SGET_OBJECT_VOLATILE: /* 0xfd */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (253 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_SPUT_OBJECT_VOLATILE: /* 0xfe */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (254 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_DISPATCH_FF: /* 0xff */
+/* File: armv5te/ALT_OP_DISPATCH_FF.S */
+    mov     ip, rINST, lsr #8            @ ip<- extended opcode
+    add     ip, ip, #256                 @ add offset for extended opcodes
+    GOTO_OPCODE(ip)                      @ go to proper extended handler
+
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_CONST_CLASS_JUMBO: /* 0x100 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (256 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_CHECK_CAST_JUMBO: /* 0x101 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (257 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_INSTANCE_OF_JUMBO: /* 0x102 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (258 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_NEW_INSTANCE_JUMBO: /* 0x103 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (259 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_NEW_ARRAY_JUMBO: /* 0x104 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (260 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_FILLED_NEW_ARRAY_JUMBO: /* 0x105 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (261 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_IGET_JUMBO: /* 0x106 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (262 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_IGET_WIDE_JUMBO: /* 0x107 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (263 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_IGET_OBJECT_JUMBO: /* 0x108 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (264 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_IGET_BOOLEAN_JUMBO: /* 0x109 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (265 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_IGET_BYTE_JUMBO: /* 0x10a */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (266 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_IGET_CHAR_JUMBO: /* 0x10b */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (267 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_IGET_SHORT_JUMBO: /* 0x10c */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (268 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_IPUT_JUMBO: /* 0x10d */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (269 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_IPUT_WIDE_JUMBO: /* 0x10e */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (270 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_IPUT_OBJECT_JUMBO: /* 0x10f */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (271 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_IPUT_BOOLEAN_JUMBO: /* 0x110 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (272 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_IPUT_BYTE_JUMBO: /* 0x111 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (273 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_IPUT_CHAR_JUMBO: /* 0x112 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (274 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_IPUT_SHORT_JUMBO: /* 0x113 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (275 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_SGET_JUMBO: /* 0x114 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (276 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_SGET_WIDE_JUMBO: /* 0x115 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (277 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_SGET_OBJECT_JUMBO: /* 0x116 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (278 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_SGET_BOOLEAN_JUMBO: /* 0x117 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (279 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_SGET_BYTE_JUMBO: /* 0x118 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (280 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_SGET_CHAR_JUMBO: /* 0x119 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (281 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_SGET_SHORT_JUMBO: /* 0x11a */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (282 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_SPUT_JUMBO: /* 0x11b */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (283 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_SPUT_WIDE_JUMBO: /* 0x11c */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (284 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_SPUT_OBJECT_JUMBO: /* 0x11d */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (285 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_SPUT_BOOLEAN_JUMBO: /* 0x11e */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (286 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_SPUT_BYTE_JUMBO: /* 0x11f */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (287 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_SPUT_CHAR_JUMBO: /* 0x120 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (288 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_SPUT_SHORT_JUMBO: /* 0x121 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (289 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_INVOKE_VIRTUAL_JUMBO: /* 0x122 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (290 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_INVOKE_SUPER_JUMBO: /* 0x123 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (291 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_INVOKE_DIRECT_JUMBO: /* 0x124 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (292 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_INVOKE_STATIC_JUMBO: /* 0x125 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (293 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_INVOKE_INTERFACE_JUMBO: /* 0x126 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (294 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_27FF: /* 0x127 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (295 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_28FF: /* 0x128 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (296 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_29FF: /* 0x129 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (297 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_2AFF: /* 0x12a */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (298 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_2BFF: /* 0x12b */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (299 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_2CFF: /* 0x12c */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (300 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_2DFF: /* 0x12d */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (301 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_2EFF: /* 0x12e */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (302 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_2FFF: /* 0x12f */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (303 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_30FF: /* 0x130 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (304 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_31FF: /* 0x131 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (305 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_32FF: /* 0x132 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (306 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_33FF: /* 0x133 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (307 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_34FF: /* 0x134 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (308 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_35FF: /* 0x135 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (309 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_36FF: /* 0x136 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (310 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_37FF: /* 0x137 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (311 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_38FF: /* 0x138 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (312 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_39FF: /* 0x139 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (313 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_3AFF: /* 0x13a */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (314 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_3BFF: /* 0x13b */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (315 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_3CFF: /* 0x13c */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (316 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_3DFF: /* 0x13d */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (317 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_3EFF: /* 0x13e */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (318 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_3FFF: /* 0x13f */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (319 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_40FF: /* 0x140 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (320 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_41FF: /* 0x141 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (321 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_42FF: /* 0x142 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (322 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_43FF: /* 0x143 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (323 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_44FF: /* 0x144 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (324 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_45FF: /* 0x145 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (325 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_46FF: /* 0x146 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (326 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_47FF: /* 0x147 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (327 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_48FF: /* 0x148 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (328 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_49FF: /* 0x149 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (329 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_4AFF: /* 0x14a */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (330 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_4BFF: /* 0x14b */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (331 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_4CFF: /* 0x14c */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (332 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_4DFF: /* 0x14d */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (333 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_4EFF: /* 0x14e */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (334 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_4FFF: /* 0x14f */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (335 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_50FF: /* 0x150 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (336 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_51FF: /* 0x151 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (337 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_52FF: /* 0x152 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (338 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_53FF: /* 0x153 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (339 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_54FF: /* 0x154 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (340 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_55FF: /* 0x155 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (341 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_56FF: /* 0x156 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (342 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_57FF: /* 0x157 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (343 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_58FF: /* 0x158 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (344 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_59FF: /* 0x159 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (345 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_5AFF: /* 0x15a */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (346 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_5BFF: /* 0x15b */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (347 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_5CFF: /* 0x15c */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (348 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_5DFF: /* 0x15d */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (349 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_5EFF: /* 0x15e */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (350 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_5FFF: /* 0x15f */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (351 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_60FF: /* 0x160 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (352 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_61FF: /* 0x161 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (353 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_62FF: /* 0x162 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (354 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_63FF: /* 0x163 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (355 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_64FF: /* 0x164 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (356 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_65FF: /* 0x165 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (357 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_66FF: /* 0x166 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (358 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_67FF: /* 0x167 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (359 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_68FF: /* 0x168 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (360 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_69FF: /* 0x169 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (361 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_6AFF: /* 0x16a */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (362 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_6BFF: /* 0x16b */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (363 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_6CFF: /* 0x16c */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (364 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_6DFF: /* 0x16d */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (365 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_6EFF: /* 0x16e */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (366 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_6FFF: /* 0x16f */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (367 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_70FF: /* 0x170 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (368 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_71FF: /* 0x171 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (369 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_72FF: /* 0x172 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (370 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_73FF: /* 0x173 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (371 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_74FF: /* 0x174 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (372 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_75FF: /* 0x175 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (373 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_76FF: /* 0x176 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (374 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_77FF: /* 0x177 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (375 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_78FF: /* 0x178 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (376 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_79FF: /* 0x179 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (377 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_7AFF: /* 0x17a */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (378 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_7BFF: /* 0x17b */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (379 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_7CFF: /* 0x17c */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (380 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_7DFF: /* 0x17d */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (381 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_7EFF: /* 0x17e */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (382 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_7FFF: /* 0x17f */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (383 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_80FF: /* 0x180 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (384 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_81FF: /* 0x181 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (385 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_82FF: /* 0x182 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (386 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_83FF: /* 0x183 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (387 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_84FF: /* 0x184 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (388 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_85FF: /* 0x185 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (389 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_86FF: /* 0x186 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (390 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_87FF: /* 0x187 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (391 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_88FF: /* 0x188 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (392 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_89FF: /* 0x189 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (393 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_8AFF: /* 0x18a */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (394 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_8BFF: /* 0x18b */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (395 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_8CFF: /* 0x18c */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (396 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_8DFF: /* 0x18d */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (397 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_8EFF: /* 0x18e */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (398 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_8FFF: /* 0x18f */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (399 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_90FF: /* 0x190 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (400 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_91FF: /* 0x191 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (401 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_92FF: /* 0x192 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (402 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_93FF: /* 0x193 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (403 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_94FF: /* 0x194 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (404 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_95FF: /* 0x195 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (405 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_96FF: /* 0x196 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (406 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_97FF: /* 0x197 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (407 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_98FF: /* 0x198 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (408 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_99FF: /* 0x199 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (409 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_9AFF: /* 0x19a */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (410 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_9BFF: /* 0x19b */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (411 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_9CFF: /* 0x19c */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (412 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_9DFF: /* 0x19d */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (413 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_9EFF: /* 0x19e */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (414 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_9FFF: /* 0x19f */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (415 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_A0FF: /* 0x1a0 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (416 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_A1FF: /* 0x1a1 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (417 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_A2FF: /* 0x1a2 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (418 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_A3FF: /* 0x1a3 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (419 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_A4FF: /* 0x1a4 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (420 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_A5FF: /* 0x1a5 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (421 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_A6FF: /* 0x1a6 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (422 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_A7FF: /* 0x1a7 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (423 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_A8FF: /* 0x1a8 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (424 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_A9FF: /* 0x1a9 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (425 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_AAFF: /* 0x1aa */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (426 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_ABFF: /* 0x1ab */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (427 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_ACFF: /* 0x1ac */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (428 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_ADFF: /* 0x1ad */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (429 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_AEFF: /* 0x1ae */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (430 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_AFFF: /* 0x1af */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (431 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_B0FF: /* 0x1b0 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (432 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_B1FF: /* 0x1b1 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (433 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_B2FF: /* 0x1b2 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (434 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_B3FF: /* 0x1b3 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (435 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_B4FF: /* 0x1b4 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (436 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_B5FF: /* 0x1b5 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (437 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_B6FF: /* 0x1b6 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (438 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_B7FF: /* 0x1b7 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (439 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_B8FF: /* 0x1b8 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (440 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_B9FF: /* 0x1b9 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (441 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_BAFF: /* 0x1ba */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (442 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_BBFF: /* 0x1bb */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (443 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_BCFF: /* 0x1bc */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (444 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_BDFF: /* 0x1bd */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (445 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_BEFF: /* 0x1be */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (446 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_BFFF: /* 0x1bf */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (447 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_C0FF: /* 0x1c0 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (448 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_C1FF: /* 0x1c1 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (449 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_C2FF: /* 0x1c2 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (450 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_C3FF: /* 0x1c3 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (451 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_C4FF: /* 0x1c4 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (452 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_C5FF: /* 0x1c5 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (453 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_C6FF: /* 0x1c6 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (454 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_C7FF: /* 0x1c7 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (455 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_C8FF: /* 0x1c8 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (456 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_C9FF: /* 0x1c9 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (457 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_CAFF: /* 0x1ca */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (458 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_CBFF: /* 0x1cb */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (459 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_CCFF: /* 0x1cc */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (460 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_CDFF: /* 0x1cd */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (461 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_CEFF: /* 0x1ce */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (462 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_CFFF: /* 0x1cf */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (463 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_D0FF: /* 0x1d0 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (464 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_D1FF: /* 0x1d1 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (465 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_D2FF: /* 0x1d2 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (466 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_D3FF: /* 0x1d3 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (467 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_D4FF: /* 0x1d4 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (468 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_D5FF: /* 0x1d5 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (469 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_D6FF: /* 0x1d6 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (470 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_D7FF: /* 0x1d7 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (471 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_D8FF: /* 0x1d8 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (472 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_D9FF: /* 0x1d9 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (473 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_DAFF: /* 0x1da */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (474 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_DBFF: /* 0x1db */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (475 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_DCFF: /* 0x1dc */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (476 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_DDFF: /* 0x1dd */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (477 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_DEFF: /* 0x1de */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (478 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_DFFF: /* 0x1df */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (479 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_E0FF: /* 0x1e0 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (480 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_E1FF: /* 0x1e1 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (481 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_E2FF: /* 0x1e2 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (482 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_E3FF: /* 0x1e3 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (483 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_E4FF: /* 0x1e4 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (484 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_E5FF: /* 0x1e5 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (485 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_E6FF: /* 0x1e6 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (486 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_E7FF: /* 0x1e7 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (487 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_E8FF: /* 0x1e8 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (488 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_E9FF: /* 0x1e9 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (489 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_EAFF: /* 0x1ea */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (490 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_EBFF: /* 0x1eb */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (491 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_ECFF: /* 0x1ec */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (492 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_EDFF: /* 0x1ed */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (493 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_EEFF: /* 0x1ee */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (494 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_EFFF: /* 0x1ef */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (495 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_F0FF: /* 0x1f0 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (496 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_F1FF: /* 0x1f1 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (497 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_F2FF: /* 0x1f2 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (498 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_F3FF: /* 0x1f3 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (499 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_F4FF: /* 0x1f4 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (500 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_F5FF: /* 0x1f5 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (501 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_F6FF: /* 0x1f6 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (502 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_F7FF: /* 0x1f7 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (503 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_F8FF: /* 0x1f8 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (504 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_F9FF: /* 0x1f9 */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (505 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_FAFF: /* 0x1fa */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (506 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_FBFF: /* 0x1fb */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (507 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_FCFF: /* 0x1fc */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (508 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_FDFF: /* 0x1fd */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (509 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_UNUSED_FEFF: /* 0x1fe */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (510 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+/* ------------------------------ */
+    .balign 64
+.L_ALT_OP_THROW_VERIFICATION_ERROR_JUMBO: /* 0x1ff */
+/* File: armv5te/ALT_STUB.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Note that the call to dvmCheckInst is done as a tail call.
+ */
+    adrl   lr, dvmAsmInstructionStart + (511 * 64)
+    mov    r0, rPC              @ arg0
+    mov    r1, rSELF            @ arg1
+    b      dvmCheckInst         @ (dPC,self) tail call to instruction checker
+
+    .balign 64
+    .size   dvmAsmAltInstructionStart, .-dvmAsmAltInstructionStart
+    .global dvmAsmAltInstructionEnd
+dvmAsmAltInstructionEnd:
 /* File: armv5te/footer.S */
 
 /*
@@ -13709,7 +20881,7 @@ dvmJitToInterpPunt:
     EXPORT_PC()
     mov    r0, #0
     str    r0, [rSELF, #offThread_inJitCodeCache] @ Back to the interp land
-    adrl   rIBASE, dvmAsmInstructionStart
+    ldr    rIBASE, [rSELF, #offThread_curHandlerTable]
     FETCH_INST()
     GET_INST_OPCODE(ip)
     GOTO_OPCODE(ip)
@@ -13731,7 +20903,7 @@ dvmJitToInterpSingleStep:
     mov    rPC,r0
     EXPORT_PC()
 
-    adrl   rIBASE, dvmAsmInstructionStart
+    ldr    rIBASE, [rSELF, #offThread_curHandlerTable]
     mov    r2,#kJitSingleStep     @ Ask for single step and then revert
     str    r2,[rSELF,#offThread_jitState]
     mov    r1,#1                  @ set changeInterp to bail to debug interp
@@ -13780,7 +20952,7 @@ dvmJitToInterpTraceSelect:
 
 /* No translation, so request one if profiling isn't disabled*/
 2:
-    adrl   rIBASE, dvmAsmInstructionStart
+    ldr    rIBASE, [rSELF, #offThread_curHandlerTable]
     GET_JIT_PROF_TABLE(r0)
     FETCH_INST()
     cmp    r0, #0
@@ -13841,7 +21013,7 @@ dvmJitToInterpNoChainNoProfile:
     cmp    r0,#0
     bxne   r0                       @ continue native execution if so
     EXPORT_PC()
-    adrl   rIBASE, dvmAsmInstructionStart
+    ldr    rIBASE, [rSELF, #offThread_curHandlerTable]
     FETCH_INST()
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     GOTO_OPCODE(ip)                     @ jump to next instruction
@@ -13872,7 +21044,7 @@ dvmJitToInterpNoChain:
  */
 toInterpreter:
     EXPORT_PC()
-    adrl   rIBASE, dvmAsmInstructionStart
+    ldr    rIBASE, [rSELF, #offThread_curHandlerTable]
     FETCH_INST()
     GET_JIT_PROF_TABLE(r0)
     @ NOTE: intended fallthrough
@@ -13989,7 +21161,7 @@ jitSVShadowRunEnd:
 
 1:                                       @ exit to interpreter without check
     EXPORT_PC()
-    adrl   rIBASE, dvmAsmInstructionStart
+    ldr    rIBASE, [rSELF, #offThread_curHandlerTable]
     FETCH_INST()
     GET_INST_OPCODE(ip)
     GOTO_OPCODE(ip)

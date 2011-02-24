@@ -18,19 +18,18 @@
     movl      offThread_methodClassDex(%ecx),%ecx # ecx<- pDvmDex
     EXPORT_PC
     movl      offDvmDex_pResMethods(%ecx),%ecx  # ecx<- pDvmDex->pResMethods
-    movzwl    4(rPC),%edx              # edx<- GFED or CCCC
+    movzwl    4(rPC),rIBASE            # rIBASE<- GFED or CCCC
     movl      (%ecx,%eax,4),%eax       # eax<- resolved methodToCall
     .if       (!$isrange)
-    andl      $$0xf,%edx               # edx<- D (or stays CCCC)
+    andl      $$0xf,rIBASE             # rIBASE<- D (or stays CCCC)
     .endif
     testl     %eax,%eax                # already resolved?
-    GET_VREG_R  %ecx %edx              # ecx<- "this" ptr
+    GET_VREG_R  %ecx rIBASE            # ecx<- "this" ptr
     je        .L${opcode}_resolve      # not resolved, do it now
 .L${opcode}_finish:
     testl     %ecx,%ecx                # null "this"?
     jne       common_invokeMethod${routine}  # no, continue on
     jmp       common_errNullObject
-%break
 
     /*
      * On entry:

@@ -1275,6 +1275,15 @@ void dvmInitInterpreterState(Thread* self)
 
 }
 
+/*
+ * Inter-instruction handler invoked in between instruction interpretations
+ * to handle exceptional events such as debugging housekeeping, instruction
+ * count profiling, JIT trace building, etc.
+ */
+void dvmCheckInst(u2 *dPC, Thread* self)
+{
+    //TODO add debugger, profiler, JIT, etc. checks here
+}
 
 /*
  * Main interpreter loop entry point.  Select "standard" or "debug"

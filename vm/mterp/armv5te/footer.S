@@ -91,7 +91,7 @@ dvmJitToInterpPunt:
     EXPORT_PC()
     mov    r0, #0
     str    r0, [rSELF, #offThread_inJitCodeCache] @ Back to the interp land
-    adrl   rIBASE, dvmAsmInstructionStart
+    ldr    rIBASE, [rSELF, #offThread_curHandlerTable]
     FETCH_INST()
     GET_INST_OPCODE(ip)
     GOTO_OPCODE(ip)
@@ -113,7 +113,7 @@ dvmJitToInterpSingleStep:
     mov    rPC,r0
     EXPORT_PC()
 
-    adrl   rIBASE, dvmAsmInstructionStart
+    ldr    rIBASE, [rSELF, #offThread_curHandlerTable]
     mov    r2,#kJitSingleStep     @ Ask for single step and then revert
     str    r2,[rSELF,#offThread_jitState]
     mov    r1,#1                  @ set changeInterp to bail to debug interp
@@ -162,7 +162,7 @@ dvmJitToInterpTraceSelect:
 
 /* No translation, so request one if profiling isn't disabled*/
 2:
-    adrl   rIBASE, dvmAsmInstructionStart
+    ldr    rIBASE, [rSELF, #offThread_curHandlerTable]
     GET_JIT_PROF_TABLE(r0)
     FETCH_INST()
     cmp    r0, #0
@@ -223,7 +223,7 @@ dvmJitToInterpNoChainNoProfile:
     cmp    r0,#0
     bxne   r0                       @ continue native execution if so
     EXPORT_PC()
-    adrl   rIBASE, dvmAsmInstructionStart
+    ldr    rIBASE, [rSELF, #offThread_curHandlerTable]
     FETCH_INST()
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     GOTO_OPCODE(ip)                     @ jump to next instruction
@@ -254,7 +254,7 @@ dvmJitToInterpNoChain:
  */
 toInterpreter:
     EXPORT_PC()
-    adrl   rIBASE, dvmAsmInstructionStart
+    ldr    rIBASE, [rSELF, #offThread_curHandlerTable]
     FETCH_INST()
     GET_JIT_PROF_TABLE(r0)
     @ NOTE: intended fallthrough
@@ -371,7 +371,7 @@ jitSVShadowRunEnd:
 
 1:                                       @ exit to interpreter without check
     EXPORT_PC()
-    adrl   rIBASE, dvmAsmInstructionStart
+    ldr    rIBASE, [rSELF, #offThread_curHandlerTable]
     FETCH_INST()
     GET_INST_OPCODE(ip)
     GOTO_OPCODE(ip)

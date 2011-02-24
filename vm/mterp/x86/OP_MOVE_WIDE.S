@@ -6,8 +6,8 @@
     GET_VREG_WORD %eax rINST 0            # eax<- v[B+0]
     GET_VREG_WORD rINST rINST 1           # rINST<- v[B+1]
     andb      $$0xf,%cl                   # ecx <- A
-    FETCH_INST_OPCODE 1 %edx
     SET_VREG_WORD rINST %ecx 1            # v[A+1]<- rINST
-    ADVANCE_PC 1
     SET_VREG_WORD %eax %ecx 0             # v[A+0]<- eax
-    GOTO_NEXT_R %edx
+    FETCH_INST_OPCODE 1 %ecx
+    ADVANCE_PC 1
+    GOTO_NEXT_R %ecx

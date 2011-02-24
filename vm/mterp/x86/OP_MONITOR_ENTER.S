@@ -9,13 +9,12 @@
     FETCH_INST_WORD 1
     testl   %eax,%eax                   # null object?
     EXPORT_PC                           # need for precise GC
-    jne     .L${opcode}_continue
-    jmp     common_errNullObject
-%break
-
-.L${opcode}_continue:
+    je     common_errNullObject
     movl    %ecx,OUT_ARG0(%esp)
     movl    %eax,OUT_ARG1(%esp)
+    SPILL(rIBASE)
     call    dvmLockObject               # dvmLockObject(self,object)
+    UNSPILL(rIBASE)
+    FETCH_INST_OPCODE 1 %ecx
     ADVANCE_PC 1
-    GOTO_NEXT
+    GOTO_NEXT_R %ecx

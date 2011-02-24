@@ -18,12 +18,11 @@
 .L${opcode}_finish:     # field ptr in eax
     GET_VREG_WORD %ecx rINST 0                  # rINST<- lsw
     GET_VREG_WORD rINST rINST 1                 # ecx<- msw
-    FETCH_INST_OPCODE 2 %edx
-    ADVANCE_PC 2
     movl      %ecx,offStaticField_value(%eax)
+    FETCH_INST_OPCODE 2 %ecx
     movl      rINST,4+offStaticField_value(%eax)
-    GOTO_NEXT_R %edx
-%break
+    ADVANCE_PC 2
+    GOTO_NEXT_R %ecx
 
     /*
      * Go resolve the field
@@ -36,7 +35,9 @@
     movl     offMethod_clazz(%ecx),%ecx         # ecx<- method->clazz
     movl     %eax,OUT_ARG1(%esp)
     movl     %ecx,OUT_ARG0(%esp)
+    SPILL(rIBASE)
     call     dvmResolveStaticField              # eax<- resolved StaticField ptr
+    UNSPILL(rIBASE)
     testl    %eax,%eax
     jne      .L${opcode}_finish                 # success, continue
     jmp      common_exceptionThrown             # no, handle exception

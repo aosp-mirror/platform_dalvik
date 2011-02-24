@@ -39,8 +39,10 @@ dvmJitToInterpPunt:
     movl   rPC, OUT_ARG0(%esp)
     call   dvmBumpPunt
 #endif
-    FETCH_INST_R %edx
-    GOTO_NEXT_R %edx
+    movl   rSELF, %ecx
+    movl   offThread_curHandlerTable(%ecx),rIBASE
+    FETCH_INST_R %ecx
+    GOTO_NEXT_R %ecx
 
     .global dvmJitToInterpSingleStep
 /*
@@ -80,8 +82,10 @@ dvmJitToInterpNoChainNoProfile:
     call   *%eax                     # exec translation if we've got one
     # won't return
 1:
-    FETCH_INST_R %edx
-    GOTO_NEXT_R %edx
+    movl   rSELF, %ecx
+    movl   offThread_curHandlerTable(%ecx),rIBASE
+    FETCH_INST_R %ecx
+    GOTO_NEXT_R %ecx
 
 /*
  * Return from the translation cache and immediately request a
@@ -107,8 +111,10 @@ dvmJitToInterpTraceSelectNoChain:
     GET_JIT_PROF_TABLE %ecx %eax
     cmpl   $$0, %eax          # JIT enabled?
     jnz    2f                 # Request one if so
-    FETCH_INST_R %edx         # Continue interpreting if not
-    GOTO_NEXT_R %edx
+    movl   rSELF, %ecx
+    movl   offThread_curHandlerTable(%ecx),rIBASE
+    FETCH_INST_R %ecx         # Continue interpreting if not
+    GOTO_NEXT_R %ecx
 2:
     movl   $$kJitTSelectRequestHot,rINST  # ask for trace select
     jmp    common_selectTrace
@@ -158,9 +164,10 @@ common_backwardBranch:
     movl    rSELF,%ecx
     call   common_periodicChecks  # rPC and ecx/rSELF preserved
 #if defined(WITH_JIT)
-    GET_JIT_PROF_TABLE %ecx %edx
+    GET_JIT_PROF_TABLE %ecx rIBASE
     ADVANCE_PC_INDEXED rINST
-    cmpl   $$0,%edx
+    cmpl   $$0,rIBASE
+    movl   offThread_curHandlerTable(%ecx),rIBASE
     FETCH_INST
     jz    1f                    # Profiling off - continue
     .global updateProfile
@@ -203,6 +210,7 @@ common_selectTrace:
     movl   $$1,rINST
     jmp    common_gotoBail
 #else
+    movl   offThread_curHandlerTable(%ecx),rIBASE
     ADVANCE_PC_INDEXED rINST
     FETCH_INST
     GOTO_NEXT
@@ -216,6 +224,7 @@ common_selectTrace:
  * On entry:
  *   eax = Method* methodToCall
  *   rINSTw trashed, must reload
+ *   rIBASE trashed, must reload before resuming interpreter
  */
 
 common_invokeMethodJumbo:
@@ -239,6 +248,7 @@ common_invokeMethodJumbo:
  * On entry:
  *   eax = Method* methodToCall
  *   rINSTw trashed, must reload
+ *   rIBASE trashed, must reload before resuming interpreter
  */
 
 common_invokeMethodRange:
@@ -280,6 +290,7 @@ common_invokeMethodRange:
    /*
     * %eax is "Method* methodToCall", the method we're trying to call
     * prepare to copy args to "outs" area of current frame
+    * rIBASE trashed, must reload before resuming interpreter
     */
 
 common_invokeMethodNoRange:
@@ -386,6 +397,7 @@ common_invokeMethodNoRange:
     movl        offMethod_insns(%eax), rPC # rPC<- methodToCall->insns
     movl        LOCAL1_OFFSET(%ebp), rFP # rFP<- newFP
     movl        rFP, offThread_curFrame(%ecx) # self->curFrame<- newFP
+    movl        offThread_curHandlerTable(%ecx),rIBASE
     FETCH_INST
     GOTO_NEXT                           # jump to methodToCall->insns
 
@@ -401,9 +413,9 @@ common_invokeMethodNoRange:
     movl        %eax, offStackSaveArea_localRefCookie(%edx) # newSaveArea->localRefCookie<- top
     movl        %edx, OUT_ARG4(%esp)    # save newSaveArea
     movl        LOCAL1_OFFSET(%ebp), %edx # %edx<- newFP
-    movl        %edx, offThread_curFrame(%ecx)  # self->self->curFrame<- newFP
-    movl        %ecx, OUT_ARG3(%esp)    # save self->self
-    movl        %ecx, OUT_ARG2(%esp)    # push parameter self->self
+    movl        %edx, offThread_curFrame(%ecx)  # self->curFrame<- newFP
+    movl        %ecx, OUT_ARG3(%esp)    # save self
+    movl        %ecx, OUT_ARG2(%esp)    # push parameter self
     movl        rSELF,%ecx              # %ecx<- pthread
     movl        OUT_ARG1(%esp), %eax    # %eax<- methodToCall
     lea         offThread_retval(%ecx), %ecx # %ecx<- &retval
@@ -413,15 +425,16 @@ common_invokeMethodNoRange:
     call        *offMethod_nativeFunc(%eax) # call methodToCall->nativeFunc
     lea         4(%esp), %esp
     movl        OUT_ARG4(%esp), %ecx    # %ecx<- newSaveArea
-    movl        OUT_ARG3(%esp), %eax    # %eax<- self->self
+    movl        OUT_ARG3(%esp), %eax    # %eax<- self
     movl        offStackSaveArea_localRefCookie(%ecx), %edx # %edx<- old top
     cmp         $$0, offThread_exception(%eax) # check for exception
-    movl        rFP, offThread_curFrame(%eax) # self->self->curFrame<- rFP
+    movl        rFP, offThread_curFrame(%eax) # self->curFrame<- rFP
     movl        %edx, offThread_jniLocal_topCookie(%eax) # new top <- old top
     jne         common_exceptionThrown  # handle exception
-    FETCH_INST_OPCODE 3 %edx
+    movl        offThread_curHandlerTable(%eax),rIBASE
+    FETCH_INST_OPCODE 3 %ecx
     ADVANCE_PC 3
-    GOTO_NEXT_R %edx                    # jump to next instruction
+    GOTO_NEXT_R %ecx                    # jump to next instruction
 
 .LstackOverflow:    # eax=methodToCall
     movl        %eax, OUT_ARG1(%esp)    # push parameter methodToCall
@@ -517,16 +530,17 @@ common_returnFromMethod:
     je      common_gotoBail    # break frame, bail out completely
 
     movl    offStackSaveArea_savedPc(%eax),rPC    # pc<- saveArea->savedPC
-    movl    rINST,offThread_method(%ecx)  # self->method = newSave->meethod
-    movl    rFP,offThread_curFrame(%ecx)     # self->curFrame = fp
-    movl    offMethod_clazz(rINST),%eax      # eax<- method->clazz
-    FETCH_INST_OPCODE 3 %edx
-    movl    offClassObject_pDvmDex(%eax),%eax # eax<- method->clazz->pDvmDex
+    movl    rINST,offThread_method(%ecx)          # self->method = newSave->meethod
+    movl    rFP,offThread_curFrame(%ecx)          # self->curFrame = fp
+    movl    offMethod_clazz(rINST),%eax           # eax<- method->clazz
+    movl    offThread_curHandlerTable(%ecx),rIBASE
+    movl    offClassObject_pDvmDex(%eax),rINST    # rINST<- method->clazz->pDvmDex
+    FETCH_INST_OPCODE 3 %eax
+    movl    rINST,offThread_methodClassDex(%ecx)
     ADVANCE_PC 3
-    movl    %eax,offThread_methodClassDex(%ecx)
     /* not bailing - restore entry mode to default */
     movb    $$kInterpEntryInstr,offThread_entryPoint(%ecx)
-    GOTO_NEXT_R %edx
+    GOTO_NEXT_R %eax
 
 /*
  * Prepare to strip the current frame and "longjump" back to caller of
@@ -551,7 +565,10 @@ common_gotoBail:
  * and start executing at the next instruction.
  */
  common_resumeAfterGlueCall:
-     LOAD_PC_FP_FROM_SELF
+     movl  rSELF, %eax
+     movl  offThread_pc(%eax),rPC
+     movl  offThread_fp(%eax),rFP
+     movl  offThread_curHandlerTable(%eax),rIBASE
      FETCH_INST
      GOTO_NEXT
 

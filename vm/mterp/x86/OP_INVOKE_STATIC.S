@@ -22,10 +22,6 @@
     movl      offMethod_clazz(%ecx),%ecx# ecx<- method->clazz
     movl      %eax,OUT_ARG1(%esp)       # arg1<- BBBB
     movl      %ecx,OUT_ARG0(%esp)       # arg0<- clazz
-    jmp       .L${opcode}_continue
-%break
-
-.L${opcode}_continue:
     movl      $$METHOD_STATIC,%eax
     movl      %eax,OUT_ARG2(%esp)       # arg2<- flags
     call      dvmResolveMethod          # call(clazz,ref,flags)

@@ -14,6 +14,8 @@ Items requiring attention:
 (hi) Rename dvmJitGetCodeAddr to dvmJitGetTraceAddr.
 (hi) Remove references to rGLUE and replace with rSELF
 (hi) Rework footer.s's suspend check to reflect suspendCount change
+(hi) Rework interpreter to co-exist the new switching model which
+     elminiates a separate debug interpreter.
 
 (md) Correct OP_MONITOR_EXIT (need to adjust PC before throw)
 (md) OP_THROW needs to export the PC

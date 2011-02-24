@@ -9,8 +9,8 @@
     GET_VREG_R  rINST,rINST             # rINST<- v[A]
     movzwl    2(rPC),%eax               # eax<- field byte offset
     testl     %ecx,%ecx                 # is object null?
-    FETCH_INST_OPCODE 2 %edx
     je        common_errNullObject
     movl      rINST,(%ecx,%eax,1)
+    FETCH_INST_OPCODE 2 %ecx
     ADVANCE_PC 2
-    GOTO_NEXT_R %edx
+    GOTO_NEXT_R %ecx

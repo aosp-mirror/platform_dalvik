@@ -19,10 +19,6 @@
     movl       2(rPC),%eax                         # eax<- AAAAAAAA
     movl       %ecx,OUT_ARG2(%esp)                 # arg2<- method
     movl       %eax,OUT_ARG1(%esp)                 # arg1<- AAAAAAAA
-    jmp        .L${opcode}_continue
-%break
-
-.L${opcode}_continue:
     call       dvmFindInterfaceMethodInCache # eax<- call(class, ref, method, dex)
     testl      %eax,%eax
     je         common_exceptionThrown

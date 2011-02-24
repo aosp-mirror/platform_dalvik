@@ -14,16 +14,15 @@
     movl      offThread_methodClassDex(%ecx),%ecx # ecx<- pDvmDex
     EXPORT_PC
     movl      offDvmDex_pResMethods(%ecx),%ecx  # ecx<- pDvmDex->pResMethods
-    movzwl    8(rPC),%edx              # edx<- CCCC
+    movzwl    8(rPC),rIBASE            # rIBASE<- CCCC
     movl      (%ecx,%eax,4),%eax       # eax<- resolved methodToCall
     testl     %eax,%eax                # already resolved?
-    GET_VREG_R  %ecx %edx              # ecx<- "this" ptr
+    GET_VREG_R  %ecx rIBASE            # ecx<- "this" ptr
     je        .L${opcode}_resolve      # not resolved, do it now
 .L${opcode}_finish:
     testl     %ecx,%ecx                # null "this"?
     jne       common_invokeMethodJumbo # no, continue on
     jmp       common_errNullObject
-%break
 
     /*
      * On entry:

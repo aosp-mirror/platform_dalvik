@@ -13,18 +13,14 @@
     testl     %eax,%eax                 # null array object?
     je        common_errNullObject      # bail if so
     cmpl      offArrayObject_length(%eax),%ecx
-    jb        .L${opcode}_continue
-    jmp       common_errArrayIndex      # index >= length, bail.  Expects
+    jae       common_errArrayIndex      # index >= length, bail.  Expects
                                         #    arrayObj in eax
                                         #    index in ecx
-%break
-
     /* On entry:
      *   eax<- array object
      *   ecx<- index
      *   rINST<- vAA
      */
-.L${opcode}_continue:
     leal      offArrayObject_contents(%eax,%ecx,4),%ecx
     testl     rINST,rINST                    # storing null reference?
     je        .L${opcode}_skip_check
@@ -36,7 +32,9 @@
     movl      %ecx,OUT_ARG0(%esp)
     movl      %ecx,sReg0                     # store the two classes for later
     movl      %eax,sReg1
+    SPILL(rIBASE)
     call      dvmCanPutArrayElement          # test object type vs. array type
+    UNSPILL(rIBASE)
     UNSPILL_TMP1(%ecx)                       # recover target address
     testl     %eax,%eax
     movl      rSELF,%eax
@@ -54,15 +52,15 @@
 .L${opcode}_types_okay:
     movl      offThread_cardTable(%eax),%eax   # get card table base
     movl      rINST,(%ecx)                   # store into array
-    UNSPILL_TMP2(%ecx)                       # recover object head
-    FETCH_INST_OPCODE 2 %edx
-    shrl      $$GC_CARD_SHIFT,%ecx           # object head to card number
-    movb      %al,(%eax,%ecx)                # mark card using object head
+    UNSPILL_TMP2(rINST)                      # recover object head
+    FETCH_INST_OPCODE 2 %ecx
+    shrl      $$GC_CARD_SHIFT,rINST          # object head to card number
+    movb      %al,(%eax,rINST)               # mark card using object head
     ADVANCE_PC 2
-    GOTO_NEXT_R %edx
+    GOTO_NEXT_R %ecx
 
 .L${opcode}_skip_check:
     movl      rINST,(%ecx)
-    FETCH_INST_OPCODE 2 %edx
+    FETCH_INST_OPCODE 2 %ecx
     ADVANCE_PC 2
-    GOTO_NEXT_R %edx
+    GOTO_NEXT_R %ecx

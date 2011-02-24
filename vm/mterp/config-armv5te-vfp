@@ -92,6 +92,11 @@ op-start armv5te
     #op OP_INT_TO_SHORT armv6
 op-end
 
+# alternate opcode entry points (used to redirect control)
+op-alt-start armv5te
+    alt OP_DISPATCH_FF armv5te
+op-alt-end
+
 # "helper" code for C; include if you use any of the C stubs (this generates
 # object code, so it's normally excluded)
 ##import c/gotoTargets.c

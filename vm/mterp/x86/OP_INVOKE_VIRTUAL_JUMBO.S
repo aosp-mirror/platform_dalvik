@@ -16,11 +16,6 @@
     movl      rSELF,%eax
     movl      %ecx,OUT_ARG1(%esp)         # arg1<- ref
     movl      offThread_method(%eax),%eax   # eax<- self->method
-    jmp       .L${opcode}_more
-%break
-
-
-.L${opcode}_more:
     movl      offMethod_clazz(%eax),%eax  # ecx<- method->clazz
     movl      %eax,OUT_ARG0(%esp)         # arg0<- clazz
     movl      $$METHOD_VIRTUAL,OUT_ARG2(%esp) # arg2<- flags

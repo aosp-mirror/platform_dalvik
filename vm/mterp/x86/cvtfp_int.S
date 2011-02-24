@@ -20,7 +20,6 @@
     movb     $$0xc,%ah
     movw     %ax,LOCAL0_OFFSET+2(%ebp)
     fldcw    LOCAL0_OFFSET+2(%ebp)    # set "to zero" rounding mode
-    FETCH_INST_OPCODE 1 %edx
     andb     $$0xf,%cl                # ecx<- A
     .if $tgtlong
     fistpll  (rFP,%ecx,4)             # convert and store
@@ -28,11 +27,6 @@
     fistpl   (rFP,%ecx,4)             # convert and store
     .endif
     fldcw    LOCAL0_OFFSET(%ebp)      # restore previous rounding mode
-    jmp      .L${opcode}_continue
-%break
-
-
-.L${opcode}_continue:
     .if $tgtlong
     movl     $$0x80000000,%eax
     xorl     4(rFP,%ecx,4),%eax
@@ -43,8 +37,9 @@
     je       .L${opcode}_special_case # fix up result
 
 .L${opcode}_finish:
+    FETCH_INST_OPCODE 1 %ecx
     ADVANCE_PC 1
-    GOTO_NEXT_R %edx
+    GOTO_NEXT_R %ecx
 
 .L${opcode}_special_case:
     fnstsw   %ax

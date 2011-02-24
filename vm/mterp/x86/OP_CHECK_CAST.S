@@ -24,10 +24,9 @@
     cmpl      %eax,%ecx                 # same class (trivial success)?
     jne       .L${opcode}_fullcheck     # no, do full check
 .L${opcode}_okay:
-    FETCH_INST_OPCODE 2 %edx
+    FETCH_INST_OPCODE 2 %ecx
     ADVANCE_PC 2
-    GOTO_NEXT_R %edx
-%break
+    GOTO_NEXT_R %ecx
 
     /*
      * Trivial test failed, need to perform full check.  This is common.
@@ -39,7 +38,9 @@
     movl    %eax,sReg0                 # we'll need the desired class on failure
     movl    %eax,OUT_ARG1(%esp)
     movl    %ecx,OUT_ARG0(%esp)
+    SPILL(rIBASE)
     call    dvmInstanceofNonTrivial    # eax<- boolean result
+    UNSPILL(rIBASE)
     testl   %eax,%eax                  # failed?
     jne     .L${opcode}_okay           # no, success
 
@@ -67,7 +68,9 @@
     movl    offMethod_clazz(%ecx),%ecx # ecx<- metho->clazz
     movl    $$0,OUT_ARG2(%esp)         # arg2<- false
     movl    %ecx,OUT_ARG0(%esp)        # arg0<- method->clazz
+    SPILL(rIBASE)
     call    dvmResolveClass            # eax<- resolved ClassObject ptr
+    UNSPILL(rIBASE)
     testl   %eax,%eax                  # got null?
     je      common_exceptionThrown     # yes, handle exception
     movl    offObject_clazz(rINST),%ecx  # ecx<- obj->clazz

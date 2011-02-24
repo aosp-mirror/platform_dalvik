@@ -17,13 +17,11 @@
     movl    $$0,OUT_ARG2(%esp)                # arg2<- false
     movl    %ecx,OUT_ARG1(%esp)               # arg1<- AAAAAAAA
     movl    offThread_method(%eax),%eax         # eax<- self->method
-    jmp     .L${opcode}_more
-%break
-
-.L${opcode}_more:
     movl    offMethod_clazz(%eax),%eax        # eax<- method->clazz
     movl    %eax,OUT_ARG0(%esp)               # arg0<- clazz
+    SPILL(rIBASE)
     call    dvmResolveClass                   # eax<- call(clazz,ref,flag)
+    UNSPILL(rIBASE)
     testl   %eax,%eax                         # null?
     je      common_exceptionThrown            # yes, handle it
 
@@ -49,7 +47,9 @@
 1:
     movl    %ecx,offThread_retval+4(%eax)           # save type
     movl    rINST,OUT_ARG1(%esp)                  # arg1<- BBBB (length)
+    SPILL(rIBASE)
     call    dvmAllocArrayByClass     # eax<- call(arrayClass, length, flags)
+    UNSPILL(rIBASE)
     movl    rSELF,%ecx
     testl   %eax,%eax                             # alloc successful?
     je      common_exceptionThrown                # no, handle exception
@@ -76,7 +76,6 @@
     UNSPILL_TMP3(%edi)
     movl    rSELF,%ecx
     movl    offThread_retval+4(%ecx),%eax      # eax<- type
-    FETCH_INST_OPCODE 5 %edx
 
     cmpb    $$'I',%al                        # Int array?
     je      5f                               # skip card mark if so
@@ -85,8 +84,9 @@
     shrl    $$GC_CARD_SHIFT,%eax             # convert to card num
     movb    %cl,(%ecx,%eax)                  # mark card based on object head
 5:
+    FETCH_INST_OPCODE 5 %ecx
     ADVANCE_PC 5
-    GOTO_NEXT_R %edx
+    GOTO_NEXT_R %ecx
 
 
     /*

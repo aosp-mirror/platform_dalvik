@@ -12,6 +12,7 @@
     movl    offThread_methodClassDex(%eax),%eax # eax<- pDvmDex
     movzwl  2(rPC),%ecx                       # ecx<- BBBB
     movl    offDvmDex_pResClasses(%eax),%eax  # eax<- pDvmDex->pResClasses
+    SPILL(rIBASE)                             # preserve rIBASE
     movl    (%eax,%ecx,4),%eax                # eax<- resolved class
     EXPORT_PC
     testl   %eax,%eax                         # already resolved?
@@ -21,10 +22,6 @@
     movl    $$0,OUT_ARG2(%esp)                # arg2<- false
     movl    %ecx,OUT_ARG1(%esp)               # arg1<- BBBB
     movl    offThread_method(%eax),%eax         # eax<- self->method
-    jmp     .L${opcode}_more
-%break
-
-.L${opcode}_more:
     movl    offMethod_clazz(%eax),%eax        # eax<- method->clazz
     movl    %eax,OUT_ARG0(%esp)               # arg0<- clazz
     call    dvmResolveClass                   # eax<- call(clazz,ref,flag)
@@ -87,19 +84,18 @@
     UNSPILL_TMP3(%edi)
     movl    rSELF,%ecx
     movl    offThread_retval+4(%ecx),%eax      # eax<- type
-    FETCH_INST_OPCODE 3 %edx
     .else
     testl  rINST,rINST
     je     4f
-    UNSPILL_TMP1(%edx)        # restore "BA"
-    andl   $$0x0f,%edx        # edx<- 0000000A
-    sall   $$16,%edx          # edx<- 000A0000
-    orl    %ecx,%edx          # edx<- 000AFEDC
+    UNSPILL_TMP1(rIBASE)      # restore "BA"
+    andl   $$0x0f,rIBASE      # rIBASE<- 0000000A
+    sall   $$16,rIBASE        # rIBASE<- 000A0000
+    orl    %ecx,rIBASE        # rIBASE<- 000AFEDC
 3:
     movl   $$0xf,%ecx
-    andl   %edx,%ecx          # ecx<- next reg to load
+    andl   rIBASE,%ecx        # ecx<- next reg to load
     GET_VREG_R %ecx %ecx
-    shrl   $$4,%edx
+    shrl   $$4,rIBASE
     leal   4(%eax),%eax
     movl   %ecx,-4(%eax)
     sub    $$1,rINST
@@ -107,7 +103,6 @@
 4:
     movl   rSELF,%ecx
     movl    offThread_retval+4(%ecx),%eax      # eax<- type
-    FETCH_INST_OPCODE 3 %edx
     .endif
 
     cmpb    $$'I',%al                        # Int array?
@@ -117,8 +112,10 @@
     shrl    $$GC_CARD_SHIFT,%eax             # convert to card num
     movb    %cl,(%ecx,%eax)                  # mark card based on object head
 5:
+    UNSPILL(rIBASE)                          # restore rIBASE
+    FETCH_INST_OPCODE 3 %ecx
     ADVANCE_PC 3
-    GOTO_NEXT_R %edx
+    GOTO_NEXT_R %ecx
 
 
     /*

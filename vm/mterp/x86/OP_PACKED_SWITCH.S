@@ -15,7 +15,9 @@
     leal    (rPC,%ecx,2),%ecx     # ecx<- PC + BBBBbbbb*2
     movl    %eax,OUT_ARG1(%esp)   # ARG1<- vAA
     movl    %ecx,OUT_ARG0(%esp)   # ARG0<- switchData
+    SPILL(rIBASE)
     call    $func
+    UNSPILL(rIBASE)
     testl   %eax,%eax
     movl    %eax,rINST            # set up word offset
     jle     common_backwardBranch # check on special actions

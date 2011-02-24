@@ -9,7 +9,7 @@
     andb     $$0xf,rINSTbl          # rINST<- A
     GET_VREG_R %eax rINST           # eax<- vAA
     $instr                          # ex: sarl %cl,%eax
-    FETCH_INST_OPCODE 1 %edx
+    FETCH_INST_OPCODE 1 %ecx
     SET_VREG $result rINST
     ADVANCE_PC 1
-    GOTO_NEXT_R %edx
+    GOTO_NEXT_R %ecx

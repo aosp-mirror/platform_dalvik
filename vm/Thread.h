@@ -142,11 +142,15 @@ typedef struct Thread {
 
     InterpEntry entryPoint;      // What to do when we start the interpreter
 
-    /* JNI local reference tracking */
-#ifdef USE_INDIRECT_REF
-    IndirectRefTable jniLocalRefTable;
+    /* Assembly interpreter handler tables */
+#ifndef DVM_NO_ASM_INTERP
+    void*       curHandlerTable;    // Either main or alt table
+    void*       mainHandlerTable;   // Table of actual instruction handler
+    void*       altHandlerTable;    // Table of breakout handlers
 #else
-    ReferenceTable  jniLocalRefTable;
+    void*       unused0;            // Consume space to keep offsets
+    void*       unused1;            //   the same between builds with
+    void*       unused2;            //   and without assembly interpreters
 #endif
 
 #ifdef WITH_JIT
@@ -166,6 +170,17 @@ typedef struct Thread {
     JitState    jitState;
     int         icRechainCount;
     const void* pProfileCountdown;
+#endif
+
+    /* JNI local reference tracking */
+#ifdef USE_INDIRECT_REF
+    IndirectRefTable jniLocalRefTable;
+#else
+    ReferenceTable  jniLocalRefTable;
+#endif
+
+
+#if defined(WITH_JIT)
 #if defined(WITH_SELF_VERIFICATION)
     /* Buffer for register state during self verification */
     struct ShadowSpace* shadowSpace;

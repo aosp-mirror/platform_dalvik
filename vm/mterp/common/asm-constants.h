@@ -178,27 +178,36 @@ MTERP_OFFSET(offThread_debugIsMethodEntry, Thread, debugIsMethodEntry, 68)
 MTERP_OFFSET(offThread_interpStackSize,   Thread, interpStackSize, 72)
 MTERP_OFFSET(offThread_stackOverflowed,   Thread, stackOverflowed, 76)
 MTERP_OFFSET(offThread_entryPoint,        Thread, entryPoint, 80)
-#ifdef USE_INDIRECT_REF
-MTERP_OFFSET(offThread_jniLocal_topCookie, \
-                                Thread, jniLocalRefTable.segmentState.all, 84)
-#else
-MTERP_OFFSET(offThread_jniLocal_topCookie, \
-                                Thread, jniLocalRefTable.nextEntry, 84)
-#endif
+MTERP_OFFSET(offThread_curHandlerTable,   Thread, curHandlerTable, 84)
 
 #ifdef WITH_JIT
-MTERP_OFFSET(offThread_jitToInterpEntries,Thread, jitToInterpEntries, 100)
-MTERP_OFFSET(offThread_inJitCodeCache,    Thread, inJitCodeCache, 124)
-MTERP_OFFSET(offThread_pJitProfTable,     Thread, pJitProfTable, 128)
-MTERP_OFFSET(offThread_ppJitProfTable,    Thread, ppJitProfTable, 132)
-MTERP_OFFSET(offThread_jitThreshold,      Thread, jitThreshold, 136)
-MTERP_OFFSET(offThread_jitResumeNPC,      Thread, jitResumeNPC, 140)
-MTERP_OFFSET(offThread_jitResumeDPC,      Thread, jitResumeDPC, 144)
-MTERP_OFFSET(offThread_jitState,          Thread, jitState, 148)
-MTERP_OFFSET(offThread_icRechainCount,    Thread, icRechainCount, 152)
-MTERP_OFFSET(offThread_pProfileCountdown, Thread, pProfileCountdown, 156)
+MTERP_OFFSET(offThread_jitToInterpEntries,Thread, jitToInterpEntries, 96)
+MTERP_OFFSET(offThread_inJitCodeCache,    Thread, inJitCodeCache, 120)
+MTERP_OFFSET(offThread_pJitProfTable,     Thread, pJitProfTable, 124)
+MTERP_OFFSET(offThread_ppJitProfTable,    Thread, ppJitProfTable, 128)
+MTERP_OFFSET(offThread_jitThreshold,      Thread, jitThreshold, 132)
+MTERP_OFFSET(offThread_jitResumeNPC,      Thread, jitResumeNPC, 136)
+MTERP_OFFSET(offThread_jitResumeDPC,      Thread, jitResumeDPC, 140)
+MTERP_OFFSET(offThread_jitState,          Thread, jitState, 144)
+MTERP_OFFSET(offThread_icRechainCount,    Thread, icRechainCount, 148)
+MTERP_OFFSET(offThread_pProfileCountdown, Thread, pProfileCountdown, 152)
+#ifdef USE_INDIRECT_REF
+MTERP_OFFSET(offThread_jniLocal_topCookie, \
+                                Thread, jniLocalRefTable.segmentState.all, 156)
+#else
+MTERP_OFFSET(offThread_jniLocal_topCookie, \
+                                Thread, jniLocalRefTable.nextEntry, 156)
+#endif
 #if defined(WITH_SELF_VERIFICATION)
-MTERP_OFFSET(offThread_shadowSpace,       Thread, shadowSpace, 160)
+MTERP_OFFSET(offThread_shadowSpace,       Thread, shadowSpace, 172)
+#endif
+#else
+#ifdef USE_INDIRECT_REF
+MTERP_OFFSET(offThread_jniLocal_topCookie, \
+                                Thread, jniLocalRefTable.segmentState.all, 96)
+#else
+MTERP_OFFSET(offThread_jniLocal_topCookie, \
+                                Thread, jniLocalRefTable.nextEntry, 96)
 #endif
 #endif
 

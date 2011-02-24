@@ -272,6 +272,7 @@ endif
 ifeq ($(dvm_arch),x86)
   ifeq ($(dvm_os),linux)
     MTERP_ARCH_KNOWN := true
+    LOCAL_CFLAGS += -DDVM_JMP_TABLE_MTERP=1
     LOCAL_SRC_FILES += \
 		arch/$(dvm_arch_variant)/Call386ABI.S \
 		arch/$(dvm_arch_variant)/Hints386ABI.c \

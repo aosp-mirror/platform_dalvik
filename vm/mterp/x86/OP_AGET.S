@@ -18,7 +18,7 @@
                                         #    index in ecx
     $load     offArrayObject_contents(%eax,%ecx,$shift),%eax
 .L${opcode}_finish:
-    FETCH_INST_OPCODE 2 %edx
+    FETCH_INST_OPCODE 2 %ecx
     SET_VREG  %eax rINST
     ADVANCE_PC 2
-    GOTO_NEXT_R %edx
+    GOTO_NEXT_R %ecx
