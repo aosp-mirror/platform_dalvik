@@ -101,6 +101,30 @@ static bool initException(Object* exception, const char* msg, Object* cause,
 
 
 /*
+ * Helper for dvmExceptionStartup(), which looks up classes and stores
+ * them to the indicated pointer, returning a failure code (false ==
+ * failure).
+ */
+static bool initRef(ClassObject** pClass, const char* name)
+{
+    ClassObject* result;
+
+    if (name[0] == '[') {
+        result = dvmFindArrayClass(name, NULL);
+    } else {
+        result = dvmFindSystemClassNoInit(name);
+    }
+
+    if (result == NULL) {
+        LOGE("Could not find exception class %s\n", name);
+        return false;
+    }
+
+    *pClass = result;
+    return true;
+}
+
+/*
  * Cache pointers to some of the exception classes we use locally.
  *
  * Note this is NOT called during dexopt optimization.  Some of the fields
@@ -108,23 +132,21 @@ static bool initException(Object* exception, const char* msg, Object* cause,
  */
 bool dvmExceptionStartup(void)
 {
-    gDvm.classJavaLangThrowable =
-        dvmFindSystemClassNoInit("Ljava/lang/Throwable;");
-    gDvm.classJavaLangRuntimeException =
-        dvmFindSystemClassNoInit("Ljava/lang/RuntimeException;");
-    gDvm.classJavaLangStackOverflowError =
-        dvmFindSystemClassNoInit("Ljava/lang/StackOverflowError;");
-    gDvm.classJavaLangError =
-        dvmFindSystemClassNoInit("Ljava/lang/Error;");
-    gDvm.classJavaLangStackTraceElement =
-        dvmFindSystemClassNoInit("Ljava/lang/StackTraceElement;");
-    gDvm.classJavaLangStackTraceElementArray =
-        dvmFindArrayClass("[Ljava/lang/StackTraceElement;", NULL);
-    if (gDvm.classJavaLangThrowable == NULL ||
-        gDvm.classJavaLangStackTraceElement == NULL ||
-        gDvm.classJavaLangStackTraceElementArray == NULL)
-    {
-        LOGE("Could not find one or more essential exception classes\n");
+    bool ok = true;
+
+    ok &= initRef(&gDvm.exError, "Ljava/lang/Error;");
+    ok &= initRef(&gDvm.exExceptionInInitializerError,
+            "Ljava/lang/ExceptionInInitializerError;");
+    ok &= initRef(&gDvm.exRuntimeException, "Ljava/lang/RuntimeException;");
+    ok &= initRef(&gDvm.exStackOverflowError,
+            "Ljava/lang/StackOverflowError;");
+    ok &= initRef(&gDvm.exThrowable, "Ljava/lang/Throwable;");
+    ok &= initRef(&gDvm.classJavaLangStackTraceElement,
+            "Ljava/lang/StackTraceElement;");
+    ok &= initRef(&gDvm.classJavaLangStackTraceElementArray,
+            "[Ljava/lang/StackTraceElement;");
+
+    if (!ok) {
         return false;
     }
 
@@ -145,7 +167,7 @@ bool dvmExceptionStartup(void)
 
     /* grab an offset for the stackData field */
     gDvm.offJavaLangThrowable_stackState =
-        dvmFindFieldOffset(gDvm.classJavaLangThrowable,
+        dvmFindFieldOffset(gDvm.exThrowable,
             "stackState", "Ljava/lang/Object;");
     if (gDvm.offJavaLangThrowable_stackState < 0) {
         LOGE("Unable to find Throwable.stackState\n");
@@ -154,10 +176,23 @@ bool dvmExceptionStartup(void)
 
     /* and one for the cause field, just 'cause */
     gDvm.offJavaLangThrowable_cause =
-        dvmFindFieldOffset(gDvm.classJavaLangThrowable,
+        dvmFindFieldOffset(gDvm.exThrowable,
             "cause", "Ljava/lang/Throwable;");
     if (gDvm.offJavaLangThrowable_cause < 0) {
         LOGE("Unable to find Throwable.cause\n");
+        return false;
+    }
+
+    /*
+     * ExceptionInInitializerError is used in the guts of Class.c; it
+     * wants to call the constructor more directly, so look that up
+     * explicitly, here.
+     */
+    gDvm.methJavaLangExceptionInInitializerError_init =
+        dvmFindDirectMethodByDescriptor(gDvm.exExceptionInInitializerError,
+            "<init>", "(Ljava/lang/Throwable;)V");
+    if (gDvm.methJavaLangExceptionInInitializerError_init == NULL) {
+        LOGE("Unable to prep java/lang/ExceptionInInitializerError\n");
         return false;
     }
 
@@ -425,7 +460,7 @@ static bool initException(Object* exception, const char* msg, Object* cause,
     }
 
     if (cause != NULL) {
-        if (!dvmInstanceof(cause->clazz, gDvm.classJavaLangThrowable)) {
+        if (!dvmInstanceof(cause->clazz, gDvm.exThrowable)) {
             LOGE("Tried to init exception with cause '%s'\n",
                 cause->clazz->descriptor);
             dvmAbort();
@@ -519,7 +554,7 @@ static bool initException(Object* exception, const char* msg, Object* cause,
             excepClass->descriptor, msg, initKind);
         assert(strcmp(excepClass->descriptor,
                       "Ljava/lang/RuntimeException;") != 0);
-        dvmThrowChainedException("Ljava/lang/RuntimeException;",
+        dvmThrowChainedExceptionByClass(gDvm.exRuntimeException,
             "re-throw on exception class missing constructor", NULL);
         goto bail;
     }
@@ -620,8 +655,8 @@ void dvmClearOptException(Thread* self)
  */
 bool dvmIsCheckedException(const Object* exception)
 {
-    if (dvmInstanceof(exception->clazz, gDvm.classJavaLangError) ||
-        dvmInstanceof(exception->clazz, gDvm.classJavaLangRuntimeException))
+    if (dvmInstanceof(exception->clazz, gDvm.exError) ||
+        dvmInstanceof(exception->clazz, gDvm.exRuntimeException))
     {
         return false;
     } else {
@@ -690,7 +725,7 @@ void dvmWrapException(const char* newExcepStr)
  */
 Object* dvmGetExceptionCause(const Object* exception)
 {
-    if (!dvmInstanceof(exception->clazz, gDvm.classJavaLangThrowable)) {
+    if (!dvmInstanceof(exception->clazz, gDvm.exThrowable)) {
         LOGE("Tried to get cause from object of type '%s'\n",
             exception->clazz->descriptor);
         dvmAbort();
@@ -1003,7 +1038,7 @@ void* dvmFillInStackTraceInternal(Thread* thread, bool wantObject, int* pCount)
 
         if (dvmIsBreakFrame((u4*)fp))
             break;
-        if (!dvmInstanceof(method->clazz, gDvm.classJavaLangThrowable))
+        if (!dvmInstanceof(method->clazz, gDvm.exThrowable))
             break;
         //LOGD("EXCEP: ignoring %s.%s\n",
         //         method->clazz->descriptor, method->name);
@@ -1490,7 +1525,7 @@ void dvmThrowOutOfMemoryError(const char* msg) {
 }
 
 void dvmThrowRuntimeException(const char* msg) {
-    dvmThrowException("Ljava/lang/RuntimeException;", msg);
+    dvmThrowExceptionByClass(gDvm.exRuntimeException, msg);
 }
 
 void dvmThrowStaleDexCacheError(const char* msg) {

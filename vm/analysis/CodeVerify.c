@@ -2887,7 +2887,7 @@ static ClassObject* getCaughtExceptionType(const Method* meth, int insnIdx,
                 foundPossibleHandler = true;
 
                 if (handler->typeIdx == kDexNoIndex)
-                    clazz = gDvm.classJavaLangThrowable;
+                    clazz = gDvm.exThrowable;
                 else
                     clazz = dvmOptResolveClass(meth->clazz, handler->typeIdx,
                                 &localFailure);
@@ -3449,11 +3449,11 @@ static void verifyPrep(void)
     if (gDvm.classJavaLangString == NULL)
         gDvm.classJavaLangString =
             dvmFindSystemClassNoInit("Ljava/lang/String;");
-    if (gDvm.classJavaLangThrowable == NULL) {
-        gDvm.classJavaLangThrowable =
+    if (gDvm.exThrowable == NULL) {
+        gDvm.exThrowable =
             dvmFindSystemClassNoInit("Ljava/lang/Throwable;");
         gDvm.offJavaLangThrowable_cause =
-            dvmFindFieldOffset(gDvm.classJavaLangThrowable,
+            dvmFindFieldOffset(gDvm.exThrowable,
                 "cause", "Ljava/lang/Throwable;");
     }
     if (gDvm.classJavaLangObject == NULL)
@@ -4285,7 +4285,7 @@ static bool verifyInstruction(const Method* meth, InsnFlags* insnFlags,
     case OP_THROW:
         resClass = getClassFromRegister(workLine, decInsn.vA, &failure);
         if (VERIFY_OK(failure) && resClass != NULL) {
-            if (!dvmInstanceof(resClass, gDvm.classJavaLangThrowable)) {
+            if (!dvmInstanceof(resClass, gDvm.exThrowable)) {
                 LOG_VFY("VFY: thrown class %s not instanceof Throwable\n",
                         resClass->descriptor);
                 failure = VERIFY_ERROR_GENERIC;

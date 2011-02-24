@@ -236,16 +236,12 @@ struct DvmGlobals {
      */
     ClassObject* classJavaLangClass;
     ClassObject* classJavaLangClassArray;
-    ClassObject* classJavaLangError;
     ClassObject* classJavaLangObject;
     ClassObject* classJavaLangObjectArray;
-    ClassObject* classJavaLangRuntimeException;
     ClassObject* classJavaLangString;
     ClassObject* classJavaLangThread;
     ClassObject* classJavaLangVMThread;
     ClassObject* classJavaLangThreadGroup;
-    ClassObject* classJavaLangThrowable;
-    ClassObject* classJavaLangStackOverflowError;
     ClassObject* classJavaLangStackTraceElement;
     ClassObject* classJavaLangStackTraceElementArray;
     ClassObject* classJavaLangAnnotationAnnotationArray;
@@ -258,7 +254,6 @@ struct DvmGlobals {
     ClassObject* classJavaLangReflectMethod;
     ClassObject* classJavaLangReflectMethodArray;
     ClassObject* classJavaLangReflectProxy;
-    ClassObject* classJavaLangExceptionInInitializerError;
     ClassObject* classJavaLangRefPhantomReference;
     ClassObject* classJavaLangRefReference;
     ClassObject* classJavaNioReadWriteDirectByteBuffer;
@@ -266,6 +261,17 @@ struct DvmGlobals {
     ClassObject* classOrgApacheHarmonyLangAnnotationAnnotationFactory;
     ClassObject* classOrgApacheHarmonyLangAnnotationAnnotationMember;
     ClassObject* classOrgApacheHarmonyLangAnnotationAnnotationMemberArray;
+
+    /*
+     * classes representing exception types. The names here don't include
+     * packages, just to keep the use sites a bit less verbose. All are
+     * in java.lang, except where noted.
+     */
+    ClassObject* exError;
+    ClassObject* exExceptionInInitializerError;
+    ClassObject* exRuntimeException;
+    ClassObject* exStackOverflowError;
+    ClassObject* exThrowable;
 
     /* synthetic classes for arrays of primitives */
     ClassObject* classArrayBoolean;
