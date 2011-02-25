@@ -142,9 +142,17 @@ bool dvmExceptionStartup(void)
             "Ljava/lang/ArrayStoreException;");
     ok &= initRef(&gDvm.exClassCastException,
             "Ljava/lang/ClassCastException;");
+    ok &= initRef(&gDvm.exClassFormatError, "Ljava/lang/ClassFormatError;");
     ok &= initRef(&gDvm.exError, "Ljava/lang/Error;");
     ok &= initRef(&gDvm.exExceptionInInitializerError,
             "Ljava/lang/ExceptionInInitializerError;");
+    ok &= initRef(&gDvm.exFileNotFoundException,
+            "Ljava/io/FileNotFoundException;");
+    ok &= initRef(&gDvm.exIOException, "Ljava/io/IOException;");
+    ok &= initRef(&gDvm.exNegativeArraySizeException,
+            "Ljava/lang/NegativeArraySizeException;");
+    ok &= initRef(&gDvm.exNullPointerException,
+            "Ljava/lang/NullPointerException;");
     ok &= initRef(&gDvm.exRuntimeException, "Ljava/lang/RuntimeException;");
     ok &= initRef(&gDvm.exStackOverflowError,
             "Ljava/lang/StackOverflowError;");
@@ -307,6 +315,16 @@ void dvmThrowChainedExceptionByClass(ClassObject* excepClass, const char* msg,
 {
     Thread* self = dvmThreadSelf();
     Object* exception;
+
+    if (excepClass == NULL) {
+        /*
+         * The exception class was passed in as NULL. This might happen
+         * early on in VM initialization. There's nothing better to do
+         * than just log the message as an error and abort.
+         */
+        LOGE("Fatal error: %s\n", msg);
+        dvmAbort();
+    }
 
     /* make sure the exception is initialized */
     if (!dvmIsClassInitialized(excepClass) && !dvmInitClass(excepClass)) {
@@ -1455,7 +1473,7 @@ void dvmThrowClassCircularityError(const char* descriptor) {
 }
 
 void dvmThrowClassFormatError(const char* msg) {
-    dvmThrowException("Ljava/lang/ClassFormatError;", msg);
+    dvmThrowExceptionByClass(gDvm.exClassFormatError, msg);
 }
 
 void dvmThrowClassNotFoundException(const char* msg) {
@@ -1463,11 +1481,11 @@ void dvmThrowClassNotFoundException(const char* msg) {
 }
 
 void dvmThrowFileNotFoundException(const char* msg) {
-    dvmThrowException("Ljava/io/FileNotFoundException;", msg);
+    dvmThrowExceptionByClass(gDvm.exFileNotFoundException, msg);
 }
 
 void dvmThrowIOException(const char* msg) {
-    dvmThrowException("Ljava/io/IOException;", msg);
+    dvmThrowExceptionByClass(gDvm.exIOException, msg);
 }
 
 void dvmThrowIllegalAccessException(const char* msg) {
@@ -1517,8 +1535,8 @@ void dvmThrowLinkageError(const char* msg) {
     dvmThrowException("Ljava/lang/LinkageError;", msg);
 }
 
-void dvmThrowNegativeArraySizeException(const char* msg) {
-    dvmThrowException("Ljava/lang/NegativeArraySizeException;", msg);
+void dvmThrowNegativeArraySizeException(s4 size) {
+    dvmThrowExceptionFmtByClass(gDvm.exNegativeArraySizeException, "%d", size);
 }
 
 void dvmThrowNoClassDefFoundError(const char* descriptor) {
@@ -1539,7 +1557,7 @@ void dvmThrowNoSuchMethodError(const char* msg) {
 }
 
 void dvmThrowNullPointerException(const char* msg) {
-    dvmThrowException("Ljava/lang/NullPointerException;", msg);
+    dvmThrowExceptionByClass(gDvm.exNullPointerException, msg);
 }
 
 void dvmThrowOutOfMemoryError(const char* msg) {

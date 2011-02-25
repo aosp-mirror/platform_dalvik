@@ -350,9 +350,9 @@ void dvmThrowLinkageError(const char* msg);
 
 /**
  * Throw a NegativeArraySizeException in the current thread, with the
- * given detail message.
+ * given number as the detail message.
  */
-void dvmThrowNegativeArraySizeException(const char* msg);
+void dvmThrowNegativeArraySizeException(s4 size);
 
 /**
  * Throw a NoClassDefFoundError in the current thread, with the

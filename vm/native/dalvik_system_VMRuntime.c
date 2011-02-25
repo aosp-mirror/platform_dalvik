@@ -122,7 +122,7 @@ static void Dalvik_dalvik_system_VMRuntime_newNonMovableArray(const u4* args,
         RETURN_VOID();
     }
     if (length < 0) {
-        dvmThrowNegativeArraySizeException(NULL);
+        dvmThrowNegativeArraySizeException(length);
         RETURN_VOID();
     }
 
