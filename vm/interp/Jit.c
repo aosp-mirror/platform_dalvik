@@ -511,6 +511,7 @@ void dvmJitStats()
              gDvmJit.invokePolyGetterInlined, gDvmJit.invokePolySetterInlined);
         LOGD("JIT: Total compilation time: %llu ms", gDvmJit.jitTime / 1000);
         LOGD("JIT: Avg unit compilation time: %llu us",
+             gDvmJit.numCompilations == 0 ? 0 :
              gDvmJit.jitTime / gDvmJit.numCompilations);
 #endif
 
