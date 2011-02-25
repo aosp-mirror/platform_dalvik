@@ -173,19 +173,22 @@ retry:
     } else {
         bool expectVerify, expectOpt;
 
-        if (gDvm.classVerifyMode == VERIFY_MODE_NONE)
+        if (gDvm.classVerifyMode == VERIFY_MODE_NONE) {
             expectVerify = false;
-        else if (gDvm.classVerifyMode == VERIFY_MODE_REMOTE)
+        } else if (gDvm.classVerifyMode == VERIFY_MODE_REMOTE) {
             expectVerify = !isBootstrap;
-        else /*if (gDvm.classVerifyMode == VERIFY_MODE_ALL)*/
+        } else /*if (gDvm.classVerifyMode == VERIFY_MODE_ALL)*/ {
             expectVerify = true;
+        }
 
-        if (gDvm.dexOptMode == OPTIMIZE_MODE_NONE)
+        if (gDvm.dexOptMode == OPTIMIZE_MODE_NONE) {
             expectOpt = false;
-        else if (gDvm.dexOptMode == OPTIMIZE_MODE_VERIFIED)
+        } else if (gDvm.dexOptMode == OPTIMIZE_MODE_VERIFIED ||
+                   gDvm.dexOptMode == OPTIMIZE_MODE_FULL) {
             expectOpt = expectVerify;
-        else /*if (gDvm.dexOptMode == OPTIMIZE_MODE_ALL)*/
+        } else /*if (gDvm.dexOptMode == OPTIMIZE_MODE_ALL)*/ {
             expectOpt = true;
+        }
 
         LOGV("checking deps, expecting vfy=%d opt=%d\n",
             expectVerify, expectOpt);
@@ -698,19 +701,22 @@ static bool rewriteDex(u1* addr, int len, u4* pHeaderFlags,
     *pHeaderFlags |= DEX_OPT_FLAG_BIG;
 #endif
 
-    if (gDvm.classVerifyMode == VERIFY_MODE_NONE)
+    if (gDvm.classVerifyMode == VERIFY_MODE_NONE) {
         doVerify = false;
-    else if (gDvm.classVerifyMode == VERIFY_MODE_REMOTE)
+    } else if (gDvm.classVerifyMode == VERIFY_MODE_REMOTE) {
         doVerify = !gDvm.optimizingBootstrapClass;
-    else /*if (gDvm.classVerifyMode == VERIFY_MODE_ALL)*/
+    } else /*if (gDvm.classVerifyMode == VERIFY_MODE_ALL)*/ {
         doVerify = true;
+    }
 
-    if (gDvm.dexOptMode == OPTIMIZE_MODE_NONE)
+    if (gDvm.dexOptMode == OPTIMIZE_MODE_NONE) {
         doOpt = false;
-    else if (gDvm.dexOptMode == OPTIMIZE_MODE_VERIFIED)
+    } else if (gDvm.dexOptMode == OPTIMIZE_MODE_VERIFIED ||
+               gDvm.dexOptMode == OPTIMIZE_MODE_FULL) {
         doOpt = doVerify;
-    else /*if (gDvm.dexOptMode == OPTIMIZE_MODE_ALL)*/
+    } else /*if (gDvm.dexOptMode == OPTIMIZE_MODE_ALL)*/ {
         doOpt = true;
+    }
 
     /* TODO: decide if this is actually useful */
     if (doVerify)
@@ -963,7 +969,9 @@ static void verifyAndOptimizeClass(DexFile* pDexFile, ClassObject* clazz,
     }
 
     if (doOpt) {
-        if (!verified && gDvm.dexOptMode == OPTIMIZE_MODE_VERIFIED) {
+        bool needVerify = (gDvm.dexOptMode == OPTIMIZE_MODE_VERIFIED ||
+                           gDvm.dexOptMode == OPTIMIZE_MODE_FULL);
+        if (!verified && needVerify) {
             LOGV("DexOpt: not optimizing '%s': not verified\n",
                 classDescriptor);
         } else {

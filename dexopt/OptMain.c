@@ -151,6 +151,7 @@ static int extractAndProcessZip(int zipFd, int cacheFd,
             case 'n':   dexOptMode = OPTIMIZE_MODE_NONE;        break;
             case 'v':   dexOptMode = OPTIMIZE_MODE_VERIFIED;    break;
             case 'a':   dexOptMode = OPTIMIZE_MODE_ALL;         break;
+            case 'f':   dexOptMode = OPTIMIZE_MODE_FULL;        break;
             default:                                            break;
             }
         }

@@ -147,11 +147,6 @@ static void optimizeMethod(Method* method, bool essentialOnly)
     u2* insns;
     u2 inst;
 
-    if (!gDvm.optimizing && !essentialOnly) {
-        /* unexpected; will force copy-on-write of a lot of pages */
-        LOGD("NOTE: doing full bytecode optimization outside dexopt\n");
-    }
-
     if (dvmIsNativeMethod(method) || dvmIsAbstractMethod(method))
         return;
 
@@ -172,7 +167,6 @@ static void optimizeMethod(Method* method, bool essentialOnly)
         /*
          * essential substitutions:
          *  {iget,iput,sget,sput}-wide --> *-wide-volatile
-         *  invoke-{virtual,direct,static}[/range] --> execute-inline
          *  invoke-direct --> invoke-object-init
          *
          * essential-on-SMP substitutions:
@@ -237,33 +231,13 @@ rewrite_static_field:
             rewriteStaticField(method, insns, volatileOpc);
             break;
 
-        case OP_INVOKE_VIRTUAL:
-            if (!rewriteExecuteInline(method, insns, METHOD_VIRTUAL)) {
-                /* may want to try -quick, below */
-                notMatched = true;
-            }
-            break;
-        case OP_INVOKE_VIRTUAL_RANGE:
-            if (!rewriteExecuteInlineRange(method, insns, METHOD_VIRTUAL)) {
-                /* may want to try -quick, below */
-                notMatched = true;
-            }
-            break;
         case OP_INVOKE_DIRECT:
-            if (!rewriteExecuteInline(method, insns, METHOD_DIRECT)) {
-                rewriteInvokeObjectInit(method, insns);
+            /* TODO: also handle invoke-direct/range */
+            if (!rewriteInvokeObjectInit(method, insns)) {
+                /* may want to try execute-inline, below */
+                notMatched = true;
             }
             break;
-        case OP_INVOKE_DIRECT_RANGE:
-            rewriteExecuteInlineRange(method, insns, METHOD_DIRECT);
-            break;
-        case OP_INVOKE_STATIC:
-            rewriteExecuteInline(method, insns, METHOD_STATIC);
-            break;
-        case OP_INVOKE_STATIC_RANGE:
-            rewriteExecuteInlineRange(method, insns, METHOD_STATIC);
-            break;
-
         default:
             notMatched = true;
             break;
@@ -312,16 +286,22 @@ rewrite_static_field2:
 
         /*
          * non-essential substitutions:
+         *  invoke-{virtual,direct,static}[/range] --> execute-inline
          *  invoke-{virtual,super}[/range] --> invoke-*-quick
          */
         if (notMatched && !essentialOnly) {
             switch (inst) {
             case OP_INVOKE_VIRTUAL:
-                rewriteVirtualInvoke(method, insns, OP_INVOKE_VIRTUAL_QUICK);
+                if (!rewriteExecuteInline(method, insns, METHOD_VIRTUAL)) {
+                    rewriteVirtualInvoke(method, insns,
+                        OP_INVOKE_VIRTUAL_QUICK);
+                }
                 break;
             case OP_INVOKE_VIRTUAL_RANGE:
-                rewriteVirtualInvoke(method, insns,
-                    OP_INVOKE_VIRTUAL_QUICK_RANGE);
+                if (!rewriteExecuteInlineRange(method, insns, METHOD_VIRTUAL)) {
+                    rewriteVirtualInvoke(method, insns,
+                        OP_INVOKE_VIRTUAL_QUICK_RANGE);
+                }
                 break;
             case OP_INVOKE_SUPER:
                 rewriteVirtualInvoke(method, insns, OP_INVOKE_SUPER_QUICK);
@@ -329,7 +309,18 @@ rewrite_static_field2:
             case OP_INVOKE_SUPER_RANGE:
                 rewriteVirtualInvoke(method, insns, OP_INVOKE_SUPER_QUICK_RANGE);
                 break;
-
+            case OP_INVOKE_DIRECT:
+                rewriteExecuteInline(method, insns, METHOD_DIRECT);
+                break;
+            case OP_INVOKE_DIRECT_RANGE:
+                rewriteExecuteInlineRange(method, insns, METHOD_DIRECT);
+                break;
+            case OP_INVOKE_STATIC:
+                rewriteExecuteInline(method, insns, METHOD_STATIC);
+                break;
+            case OP_INVOKE_STATIC_RANGE:
+                rewriteExecuteInlineRange(method, insns, METHOD_STATIC);
+                break;
             default:
                 /* nothing to do for this instruction */
                 ;

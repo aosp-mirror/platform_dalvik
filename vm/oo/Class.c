@@ -4324,7 +4324,8 @@ noverify:
     if (!IS_CLASS_FLAG_SET(clazz, CLASS_ISOPTIMIZED) && !gDvm.optimizing) {
         LOGV("+++ late optimize on %s (pv=%d)\n",
             clazz->descriptor, IS_CLASS_FLAG_SET(clazz, CLASS_ISPREVERIFIED));
-        dvmOptimizeClass(clazz, true);
+        bool essentialOnly = (gDvm.dexOptMode != OPTIMIZE_MODE_FULL);
+        dvmOptimizeClass(clazz, essentialOnly);
         SET_CLASS_FLAG(clazz, CLASS_ISOPTIMIZED);
     }
 

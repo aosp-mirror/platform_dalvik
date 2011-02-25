@@ -106,7 +106,7 @@ static void usage(const char* progName)
     dvmFprintf(stderr, "\n");
     dvmFprintf(stderr, "These are unique to Dalvik:\n");
     dvmFprintf(stderr, "  -Xzygote\n");
-    dvmFprintf(stderr, "  -Xdexopt:{none,verified,all}\n");
+    dvmFprintf(stderr, "  -Xdexopt:{none,verified,all,full}\n");
     dvmFprintf(stderr, "  -Xnoquithandler\n");
     dvmFprintf(stderr,
                 "  -Xjnigreflimit:N  (must be multiple of 100, >= 200)\n");
@@ -887,6 +887,8 @@ static int processOptions(int argc, const char* const argv[],
                 gDvm.dexOptMode = OPTIMIZE_MODE_VERIFIED;
             else if (strcmp(argv[i] + 9, "all") == 0)
                 gDvm.dexOptMode = OPTIMIZE_MODE_ALL;
+            else if (strcmp(argv[i] + 9, "full") == 0)
+                gDvm.dexOptMode = OPTIMIZE_MODE_FULL;
             else {
                 dvmFprintf(stderr, "Unrecognized dexopt option '%s'\n",argv[i]);
                 return -1;
