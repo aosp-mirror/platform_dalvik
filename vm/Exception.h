@@ -36,7 +36,7 @@ INLINE void dvmThrowException(const char* exceptionDescriptor,
 }
 
 /*
- * Like dvmThrowChainedException, but takes printf-style args for the message.
+ * Like dvmThrowException, but takes printf-style args for the message.
  */
 void dvmThrowExceptionFmtV(const char* exceptionDescriptor, const char* fmt,
     va_list args);
@@ -63,6 +63,27 @@ INLINE void dvmThrowExceptionByClass(ClassObject* exceptionClass,
     const char* msg)
 {
     dvmThrowChainedExceptionByClass(exceptionClass, msg, NULL);
+}
+
+/*
+ * Like dvmThrowExceptionFmt, but takes an exception class object instead
+ * of a descriptor string.
+ */
+void dvmThrowExceptionFmtByClassV(ClassObject* exceptionClass,
+    const char* fmt, va_list args);
+void dvmThrowExceptionFmtByClass(ClassObject* exceptionClass,
+    const char* fmt, ...)
+#if defined(__GNUC__)
+    __attribute__ ((format(printf, 2, 3)))
+#endif
+    ;
+INLINE void dvmThrowExceptionFmtByClass(ClassObject* exceptionClass,
+    const char* fmt, ...)
+{
+    va_list args;
+    va_start(args, fmt);
+    dvmThrowExceptionFmtByClassV(exceptionClass, fmt, args);
+    va_end(args);
 }
 
 /*

@@ -134,6 +134,14 @@ bool dvmExceptionStartup(void)
 {
     bool ok = true;
 
+    ok &= initRef(&gDvm.exArithmeticException,
+            "Ljava/lang/ArithmeticException;");
+    ok &= initRef(&gDvm.exArrayIndexOutOfBoundsException,
+            "Ljava/lang/ArrayIndexOutOfBoundsException;");
+    ok &= initRef(&gDvm.exArrayStoreException,
+            "Ljava/lang/ArrayStoreException;");
+    ok &= initRef(&gDvm.exClassCastException,
+            "Ljava/lang/ClassCastException;");
     ok &= initRef(&gDvm.exError, "Ljava/lang/Error;");
     ok &= initRef(&gDvm.exExceptionInInitializerError,
             "Ljava/lang/ExceptionInInitializerError;");
@@ -218,6 +226,15 @@ void dvmThrowExceptionFmtV(const char* exceptionDescriptor, const char* fmt,
 
     vsnprintf(msgBuf, sizeof(msgBuf), fmt, args);
     dvmThrowChainedException(exceptionDescriptor, msgBuf, NULL);
+}
+
+void dvmThrowExceptionFmtByClassV(ClassObject* exceptionClass,
+    const char* fmt, va_list args)
+{
+    char msgBuf[512];
+
+    vsnprintf(msgBuf, sizeof(msgBuf), fmt, args);
+    dvmThrowChainedExceptionByClass(exceptionClass, msgBuf, NULL);
 }
 
 /*
@@ -1394,7 +1411,7 @@ void dvmThrowAbstractMethodError(const char* msg) {
 }
 
 void dvmThrowArithmeticException(const char* msg) {
-    dvmThrowException("Ljava/lang/ArithmeticException;", msg);
+    dvmThrowExceptionByClass(gDvm.exArithmeticException, msg);
 }
 
 void dvmThrowArrayIndexOutOfBoundsException(int index, int length)
@@ -1403,12 +1420,17 @@ void dvmThrowArrayIndexOutOfBoundsException(int index, int length)
         "index=%d length=%d", index, length);
 }
 
-static void dvmThrowTypeError(const char* exceptionClassName, const char* fmt,
+/*
+ * Throw the indicated exception, with a message based on a format
+ * in which "%s" is used exactly twice, first for a received class and
+ * second for the expected class.
+ */
+static void throwTypeError(ClassObject* exceptionClass, const char* fmt,
     ClassObject* actual, ClassObject* desired)
 {
     char* actualClassName = dvmHumanReadableDescriptor(actual->descriptor);
     char* desiredClassName = dvmHumanReadableDescriptor(desired->descriptor);
-    dvmThrowExceptionFmt(exceptionClassName, fmt,
+    dvmThrowExceptionFmtByClass(exceptionClass, fmt,
         actualClassName, desiredClassName);
     free(desiredClassName);
     free(actualClassName);
@@ -1416,14 +1438,14 @@ static void dvmThrowTypeError(const char* exceptionClassName, const char* fmt,
 
 void dvmThrowArrayStoreException(ClassObject* actual, ClassObject* desired)
 {
-    dvmThrowTypeError("Ljava/lang/ArrayStoreException;",
+    throwTypeError(gDvm.exArrayStoreException,
         "%s cannot be stored in an array of type %s",
         actual, desired);
 }
 
 void dvmThrowClassCastException(ClassObject* actual, ClassObject* desired)
 {
-    dvmThrowTypeError("Ljava/lang/ClassCastException;",
+    throwTypeError(gDvm.exClassCastException,
         "%s cannot be cast to %s", actual, desired);
 }
 

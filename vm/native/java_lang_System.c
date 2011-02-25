@@ -136,7 +136,7 @@ static void Dalvik_java_lang_System_arraycopy(const u4* args, JValue* pResult)
 
     /* make sure it's an array */
     if (!dvmIsArray(srcArray) || !dvmIsArray(dstArray)) {
-        dvmThrowExceptionFmt("Ljava/lang/ArrayStoreException;",
+        dvmThrowExceptionFmtByClass(gDvm.exArrayStoreException,
             "source and destination must be arrays, but were %s and %s",
             ((Object*)srcArray)->clazz->descriptor,
             ((Object*)dstArray)->clazz->descriptor);
@@ -148,7 +148,7 @@ static void Dalvik_java_lang_System_arraycopy(const u4* args, JValue* pResult)
         srcPos > (int) srcArray->length - length ||
         dstPos > (int) dstArray->length - length)
     {
-        dvmThrowExceptionFmt("Ljava/lang/ArrayIndexOutOfBoundsException;",
+        dvmThrowExceptionFmtByClass(gDvm.exArrayIndexOutOfBoundsException,
             "src.length=%d srcPos=%d dst.length=%d dstPos=%d length=%d",
             srcArray->length, srcPos, dstArray->length, dstPos, length);
         RETURN_VOID();
@@ -167,7 +167,7 @@ static void Dalvik_java_lang_System_arraycopy(const u4* args, JValue* pResult)
     dstPrim = (dstType != '[' && dstType != 'L');
     if (srcPrim || dstPrim) {
         if (srcPrim != dstPrim || srcType != dstType) {
-            dvmThrowExceptionFmt("Ljava/lang/ArrayStoreException;",
+            dvmThrowExceptionFmtByClass(gDvm.exArrayStoreException,
                 "source and destination arrays are incompatible: %s and %s",
                 srcClass->descriptor, dstClass->descriptor);
             RETURN_VOID();
@@ -283,7 +283,7 @@ static void Dalvik_java_lang_System_arraycopy(const u4* args, JValue* pResult)
                 copyCount * width);
             dvmWriteBarrierArray(dstArray, 0, copyCount);
             if (copyCount != length) {
-                dvmThrowExceptionFmt("Ljava/lang/ArrayStoreException;",
+                dvmThrowExceptionFmtByClass(gDvm.exArrayStoreException,
                     "source[%d] of type %s cannot be stored in destination array of type %s",
                     copyCount, srcObj[copyCount]->clazz->descriptor,
                     dstClass->descriptor);

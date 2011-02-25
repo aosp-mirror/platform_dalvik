@@ -267,6 +267,10 @@ struct DvmGlobals {
      * packages, just to keep the use sites a bit less verbose. All are
      * in java.lang, except where noted.
      */
+    ClassObject* exArithmeticException;
+    ClassObject* exArrayIndexOutOfBoundsException;
+    ClassObject* exArrayStoreException;
+    ClassObject* exClassCastException;
     ClassObject* exError;
     ClassObject* exExceptionInInitializerError;
     ClassObject* exRuntimeException;

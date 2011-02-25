@@ -1041,8 +1041,8 @@ static void proxyInvoker(const u4* args, JValue* pResult,
         pResult->l = NULL;
     } else {
         if (!dvmUnboxPrimitive((Object*)invokeResult.l, returnType, pResult)) {
-            dvmThrowExceptionWithClassMessage("Ljava/lang/ClassCastException;",
-                ((Object*)invokeResult.l)->clazz->descriptor);
+            dvmThrowClassCastException(((Object*)invokeResult.l)->clazz,
+                    returnType);
             goto bail;
         }
     }

@@ -24966,6 +24966,13 @@ dvmAsmSisterStart:
     */
 
     EXPORT_PC                           # we will throw an exception
+#error BIT ROT!!!
+    /*
+     * TODO: Code here needs to call dvmThrowClassCastException with two
+     * arguments.
+     */
+#if 0
+    /* old obsolete code that called dvmThrowExceptionWithClassMessage */
     movl        $.LstrClassCastExceptionPtr, -8(%esp) # push parameter message
     movl        offObject_clazz(rINST), rINST # rINST<- obj->clazz
     movl        offClassObject_descriptor(rINST), rINST # rINST<- obj->clazz->descriptor
@@ -24974,6 +24981,7 @@ dvmAsmSisterStart:
     call        dvmThrowExceptionWithClassMessage # call: (const char* exceptionDescriptor,
                                                   #       const char* messageDescriptor, Object* cause)
                                                   # return: void
+#endif
     lea         8(%esp), %esp
     jmp         common_exceptionThrown
 
@@ -25001,9 +25009,6 @@ dvmAsmSisterStart:
     je          common_exceptionThrown  # handle excpetion
     movl        %eax, %ecx              # %ecx<- resolved class
     jmp         .LOP_CHECK_CAST_resolved
-
-.LstrClassCastExceptionPtr:
-.asciz      "Ljava/lang/ClassCastException;"
 
 /* continuation for OP_INSTANCE_OF */
 
@@ -28000,8 +28005,6 @@ common_errNullObject:
     .asciz "Ljava/lang/ArrayIndexOutOfBoundsException;"
 .LstrArrayStoreException:
     .asciz "Ljava/lang/ArrayStoreException;"
-.LstrClassCastException:
-    .asciz "Ljava/lang/ClassCastException;"
 .LstrDivideByZero:
     .asciz "divide by zero"
 .LstrInstantiationError:

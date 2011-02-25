@@ -3213,7 +3213,7 @@ NEW_PRIMITIVE_ARRAY(jdoubleArray, Double, 'D');
 static void throwArrayRegionOutOfBounds(ArrayObject* arrayObj, jsize start,
     jsize len, const char* arrayIdentifier)
 {
-    dvmThrowExceptionFmt("Ljava/lang/ArrayIndexOutOfBoundsException;",
+    dvmThrowExceptionFmtByClass(gDvm.exArrayIndexOutOfBoundsException,
         "%s offset=%d length=%d %s.length=%d",
         arrayObj->obj.clazz->descriptor, start, len, arrayIdentifier,
         arrayObj->length);
