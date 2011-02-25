@@ -3711,37 +3711,28 @@ static bool computeFieldOffsets(ClassObject* clazz)
  */
 static void throwClinitError(void)
 {
-    Thread* self = dvmThreadSelf();
-    Object* exception;
-    Object* eiie;
+    if (gDvm.exExceptionInInitializerError == NULL) {
+        /*
+         * ExceptionInInitializerError isn't itself initialized. This
+         * can happen very early during VM startup if there is a
+         * problem with one of the corest-of-the-core classes, and it
+         * can possibly happen during a dexopt run. Rather than do
+         * anything fancier, we just abort here with a blatant
+         * message.
+         */
+        LOGE("Fatal error during early class initialization:\n");
+        dvmLogExceptionStackTrace();
+        dvmAbort();
+    }
 
-    exception = dvmGetException(self);
+    Thread* self = dvmThreadSelf();
+    Object* exception = dvmGetException(self);
+
     dvmAddTrackedAlloc(exception, self);
     dvmClearException(self);
 
-    if (gDvm.classJavaLangExceptionInInitializerError == NULL) {
-        /*
-         * Always resolves to same thing -- no race condition.
-         */
-        gDvm.classJavaLangExceptionInInitializerError =
-            dvmFindSystemClass(
-                    "Ljava/lang/ExceptionInInitializerError;");
-        if (gDvm.classJavaLangExceptionInInitializerError == NULL) {
-            LOGE("Unable to prep java/lang/ExceptionInInitializerError\n");
-            goto fail;
-        }
-
-        gDvm.methJavaLangExceptionInInitializerError_init =
-            dvmFindDirectMethodByDescriptor(gDvm.classJavaLangExceptionInInitializerError,
-            "<init>", "(Ljava/lang/Throwable;)V");
-        if (gDvm.methJavaLangExceptionInInitializerError_init == NULL) {
-            LOGE("Unable to prep java/lang/ExceptionInInitializerError\n");
-            goto fail;
-        }
-    }
-
-    eiie = dvmAllocObject(gDvm.classJavaLangExceptionInInitializerError,
-                ALLOC_DEFAULT);
+    Object* eiie =
+        dvmAllocObject(gDvm.exExceptionInInitializerError, ALLOC_DEFAULT);
     if (eiie == NULL)
         goto fail;
 

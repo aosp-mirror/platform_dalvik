@@ -1064,8 +1064,7 @@ void dvmHandleStackOverflow(Thread* self, const Method* method)
         LOGW("Stack overflow while throwing exception\n");
         dvmClearException(self);
     }
-    dvmThrowChainedExceptionByClass(gDvm.classJavaLangStackOverflowError,
-        NULL, excep);
+    dvmThrowChainedExceptionByClass(gDvm.exStackOverflowError, NULL, excep);
 }
 
 /*
@@ -1078,7 +1077,7 @@ void dvmCleanupStackOverflow(Thread* self, const Object* exception)
 
     assert(self->stackOverflowed);
 
-    if (exception->clazz != gDvm.classJavaLangStackOverflowError) {
+    if (exception->clazz != gDvm.exStackOverflowError) {
         /* exception caused during SOE, not the SOE itself */
         return;
     }
