@@ -26,16 +26,6 @@
 #include <sys/mman.h>   // for madvise(), mmap()
 #include <errno.h>
 
-#define GC_LOG_TAG      LOG_TAG "-gc"
-
-#if LOG_NDEBUG
-#define LOGD_GC(...)    ((void)0)
-#else
-#define LOGD_GC(...)    LOG(LOG_DEBUG, GC_LOG_TAG, __VA_ARGS__)
-#endif
-
-#define LOGE_GC(...)    LOG(LOG_ERROR, GC_LOG_TAG, __VA_ARGS__)
-
 typedef unsigned long Word;
 const size_t kWordSize = sizeof(Word);
 
@@ -796,8 +786,7 @@ static void scheduleFinalizations(void)
         //      we can schedule them next time.  Watch out,
         //      because we may be expecting to free up space
         //      by calling finalizers.
-        LOGE_GC("scheduleFinalizations(): no room for "
-                "pending finalizations");
+        LOGE("scheduleFinalizations(): no room for pending finalizations");
         dvmAbort();
     }
 
@@ -816,9 +805,9 @@ static void scheduleFinalizations(void)
                 if (!dvmAddToReferenceTable(&newPendingRefs, *ref)) {
                     //TODO: add the current table and allocate
                     //      a new, smaller one.
-                    LOGE_GC("scheduleFinalizations(): "
-                            "no room for any more pending finalizations: %zd",
-                            dvmReferenceTableEntries(&newPendingRefs));
+                    LOGE("scheduleFinalizations(): "
+                         "no room for any more pending finalizations: %zd",
+                         dvmReferenceTableEntries(&newPendingRefs));
                     dvmAbort();
                 }
                 newPendCount++;
@@ -842,8 +831,7 @@ static void scheduleFinalizations(void)
         totalPendCount += newPendCount;
         finRefs = finRefs->next;
     }
-    LOGD_GC("scheduleFinalizations(): %zd finalizers triggered.",
-            totalPendCount);
+    LOGD("scheduleFinalizations(): %zd finalizers triggered.", totalPendCount);
     if (totalPendCount == 0) {
         /* No objects required finalization.
          * Free the empty temporary table.
@@ -857,8 +845,7 @@ static void scheduleFinalizations(void)
     if (!dvmHeapAddTableToLargeTable(&gDvm.gcHeap->pendingFinalizationRefs,
                 &newPendingRefs))
     {
-        LOGE_GC("scheduleFinalizations(): can't insert new "
-                "pending finalizations");
+        LOGE("scheduleFinalizations(): can't insert new pending finalizations");
         dvmAbort();
     }
 
