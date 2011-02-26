@@ -478,6 +478,7 @@ static void scanObject(const Object *obj, GcMarkContext *ctx)
 {
     assert(obj != NULL);
     assert(ctx != NULL);
+    assert(isMarked(obj, ctx));
     assert(obj->clazz != NULL);
     if (obj->clazz == gDvm.classJavaLangClass) {
         scanClassObject(obj, ctx);
