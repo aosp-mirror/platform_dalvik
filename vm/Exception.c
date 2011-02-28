@@ -1582,7 +1582,7 @@ void dvmThrowStaleDexCacheError(const char* msg) {
 void dvmThrowStringIndexOutOfBoundsExceptionWithIndex(jsize stringLength,
         jsize requestIndex) {
     dvmThrowExceptionFmtByClass(gDvm.exStringIndexOutOfBoundsException,
-            "length=%d; index==%d", stringLength, requestIndex);
+            "length=%d; index=%d", stringLength, requestIndex);
 }
 
 void dvmThrowStringIndexOutOfBoundsExceptionWithRegion(jsize stringLength,
