@@ -21,6 +21,7 @@ Items requiring attention:
      array bounds errors.
 (md) Use dvmThrowClassCastException(actual, desired) for class cast errors.
 (md) Use dvmThrowArrayStoreException(actual, desired) for array store errors.
+(md) Use dvmThrowNegativeArraySizeException(len) forarray alloc errors
 
 (lo) Implement OP_BREAKPOINT
 (lo) Implement OP_EXECUTE_INLINE_RANGE

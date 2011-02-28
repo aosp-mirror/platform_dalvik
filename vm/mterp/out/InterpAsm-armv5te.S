@@ -1001,7 +1001,7 @@ dalvik_inst:
     ldr     r3, [r3, #offDvmDex_pResClasses]    @ r3<- pDvmDex->pResClasses
     cmp     r1, #0                      @ check length
     ldr     r0, [r3, r2, lsl #2]        @ r0<- resolved class
-    bmi     common_errNegativeArraySize @ negative length, bail
+    bmi     common_errNegativeArraySize @ negative length, bail - len in r1
     cmp     r0, #0                      @ already resolved?
     EXPORT_PC()                         @ req'd for resolve, alloc
     bne     .LOP_NEW_ARRAY_finish          @ resolved, continue
@@ -8196,7 +8196,7 @@ d2i_doconv:
     ldr     r3, [r3, #offDvmDex_pResClasses]    @ r3<- pDvmDex->pResClasses
     cmp     r1, #0                      @ check length
     ldr     r0, [r3, r2, lsl #2]        @ r0<- resolved class
-    bmi     common_errNegativeArraySize @ negative length, bail
+    bmi     common_errNegativeArraySize @ negative length, bail - len in r1
     cmp     r0, #0                      @ already resolved?
     EXPORT_PC()                         @ req'd for resolve, alloc
     bne     .LOP_NEW_ARRAY_JUMBO_finish          @ resolved, continue
@@ -14631,12 +14631,12 @@ common_errDivideByZero:
 
 /*
  * Attempt to allocate an array with a negative size.
+ * On entry: length in r1
  */
 common_errNegativeArraySize:
     EXPORT_PC()
-    ldr     r0, strNegativeArraySizeException
-    mov     r1, #0
-    bl      dvmThrowException
+    mov     r0, r1                                @ arg0 <- len
+    bl      dvmThrowNegativeArraySizeException    @ (len)
     b       common_exceptionThrown
 
 /*
@@ -14798,8 +14798,6 @@ strArithmeticException:
     .word   .LstrArithmeticException
 strDivideByZero:
     .word   .LstrDivideByZero
-strNegativeArraySizeException:
-    .word   .LstrNegativeArraySizeException
 strNoSuchMethodError:
     .word   .LstrNoSuchMethodError
 strNullPointerException:
@@ -14842,8 +14840,6 @@ strPrintLong:
     .asciz  "Ljava/lang/InternalError;"
 .LstrInstantiationError:
     .asciz  "Ljava/lang/InstantiationError;"
-.LstrNegativeArraySizeException:
-    .asciz  "Ljava/lang/NegativeArraySizeException;"
 .LstrNoSuchMethodError:
     .asciz  "Ljava/lang/NoSuchMethodError;"
 .LstrNullPointerException:

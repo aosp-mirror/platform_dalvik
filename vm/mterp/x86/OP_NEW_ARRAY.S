@@ -20,7 +20,7 @@
     GET_VREG_R %eax %eax                      # eax<- vB (array length)
     andb    $$0xf,rINSTbl                     # rINST<- A
     testl   %eax,%eax
-    js      common_errNegativeArraySize       # bail
+    js      common_errNegativeArraySize       # bail, passing len in eax
     testl   %ecx,%ecx                         # already resolved?
     jne     .L${opcode}_finish                # yes, fast path
     jmp     .L${opcode}_resolve               # resolve now

@@ -18,7 +18,7 @@
     movzwl  8(rPC),%eax                       # eax<- CCCC
     GET_VREG_R %eax %eax                      # eax<- vCCCC (array length)
     testl   %eax,%eax
-    js      common_errNegativeArraySize       # bail
+    js      common_errNegativeArraySize       # bail, passing len in eax
     testl   %ecx,%ecx                         # already resolved?
     jne     .L${opcode}_finish                # yes, fast path
     jmp     .L${opcode}_resolve               # resolve now

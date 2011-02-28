@@ -1013,12 +1013,12 @@ common_errDivideByZero:
 
 /*
  * Attempt to allocate an array with a negative size.
+ * On entry: length in r1
  */
 common_errNegativeArraySize:
     EXPORT_PC()
-    ldr     r0, strNegativeArraySizeException
-    mov     r1, #0
-    bl      dvmThrowException
+    mov     r0, r1                                @ arg0 <- len
+    bl      dvmThrowNegativeArraySizeException    @ (len)
     b       common_exceptionThrown
 
 /*
@@ -1180,8 +1180,6 @@ strArithmeticException:
     .word   .LstrArithmeticException
 strDivideByZero:
     .word   .LstrDivideByZero
-strNegativeArraySizeException:
-    .word   .LstrNegativeArraySizeException
 strNoSuchMethodError:
     .word   .LstrNoSuchMethodError
 strNullPointerException:
@@ -1224,8 +1222,6 @@ strPrintLong:
     .asciz  "Ljava/lang/InternalError;"
 .LstrInstantiationError:
     .asciz  "Ljava/lang/InstantiationError;"
-.LstrNegativeArraySizeException:
-    .asciz  "Ljava/lang/NegativeArraySizeException;"
 .LstrNoSuchMethodError:
     .asciz  "Ljava/lang/NoSuchMethodError;"
 .LstrNullPointerException:

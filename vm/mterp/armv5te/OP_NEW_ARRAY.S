@@ -16,7 +16,7 @@
     ldr     r3, [r3, #offDvmDex_pResClasses]    @ r3<- pDvmDex->pResClasses
     cmp     r1, #0                      @ check length
     ldr     r0, [r3, r2, lsl #2]        @ r0<- resolved class
-    bmi     common_errNegativeArraySize @ negative length, bail
+    bmi     common_errNegativeArraySize @ negative length, bail - len in r1
     cmp     r0, #0                      @ already resolved?
     EXPORT_PC()                         @ req'd for resolve, alloc
     bne     .L${opcode}_finish          @ resolved, continue
