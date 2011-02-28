@@ -1830,7 +1830,7 @@ HANDLE_OPCODE(OP_NEW_ARRAY /*vA, vB, class@CCCC*/)
             vdst, vsrc1, ref, (s4) GET_REGISTER(vsrc1));
         length = (s4) GET_REGISTER(vsrc1);
         if (length < 0) {
-            dvmThrowNegativeArraySizeException(NULL);
+            dvmThrowNegativeArraySizeException(length);
             GOTO_exceptionThrown();
         }
         arrayClass = dvmDexGetResolvedClass(methodClassDex, ref);
@@ -3304,7 +3304,7 @@ HANDLE_OPCODE(OP_NEW_ARRAY_JUMBO /*vBBBB, vCCCC, class@AAAAAAAA*/)
             vdst, vsrc1, ref, (s4) GET_REGISTER(vsrc1));
         length = (s4) GET_REGISTER(vsrc1);
         if (length < 0) {
-            dvmThrowNegativeArraySizeException(NULL);
+            dvmThrowNegativeArraySizeException(length);
             GOTO_exceptionThrown();
         }
         arrayClass = dvmDexGetResolvedClass(methodClassDex, ref);

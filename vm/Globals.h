@@ -271,8 +271,13 @@ struct DvmGlobals {
     ClassObject* exArrayIndexOutOfBoundsException;
     ClassObject* exArrayStoreException;
     ClassObject* exClassCastException;
+    ClassObject* exClassFormatError;
     ClassObject* exError;
     ClassObject* exExceptionInInitializerError;
+    ClassObject* exFileNotFoundException; /* in java.io */
+    ClassObject* exIOException;           /* in java.io */
+    ClassObject* exNegativeArraySizeException;
+    ClassObject* exNullPointerException;
     ClassObject* exRuntimeException;
     ClassObject* exStackOverflowError;
     ClassObject* exThrowable;

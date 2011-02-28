@@ -36,7 +36,7 @@ static void Dalvik_java_lang_reflect_Array_createObjectArray(const u4* args,
 
     assert(elementClass != NULL);       // tested by caller
     if (length < 0) {
-        dvmThrowNegativeArraySizeException(NULL);
+        dvmThrowNegativeArraySizeException(length);
         RETURN_VOID();
     }
 
@@ -91,7 +91,7 @@ static void Dalvik_java_lang_reflect_Array_createMultiArray(const u4* args,
     dimensions = (int*) dimArray->contents;
     for (i = 0; i < numDim; i++) {
         if (dimensions[i] < 0) {
-            dvmThrowNegativeArraySizeException(NULL);
+            dvmThrowNegativeArraySizeException(dimensions[i]);
             RETURN_VOID();
         }
         LOGVV("DIM %d: %d\n", i, dimensions[i]);
