@@ -456,8 +456,9 @@ public class FirstFitLocalCombiningAllocator extends RegisterAllocator {
     }
 
     /**
-     * Handles check cast results to reuse the same source register if
-     * possible.
+     * Handles check cast results to reuse the same source register.
+     * Inserts a move if it can't map the same register to both and the
+     * check cast is not caught.
      */
     private void handleCheckCastResults() {
         for (NormalSsaInsn insn : moveResultPseudoInsns) {
@@ -486,27 +487,49 @@ public class FirstFitLocalCombiningAllocator extends RegisterAllocator {
             RegisterSpec checkRegSpec = checkCastInsn.getSources().get(0);
             int checkReg = checkRegSpec.getReg();
 
-            // Assume none of the register is mapped yet
-            int ropReg = 0;
-
             /**
              * See if either register is already mapped. Most likely the move
              * result will be mapped already since the cast result is stored
              * in a local variable.
              */
-            if (ssaRegsMapped.get(moveReg)) {
-                ropReg = mapper.oldToNew(moveReg);
-            } else if (ssaRegsMapped.get(checkReg)) {
-                ropReg = mapper.oldToNew(checkReg);
+            int category = checkRegSpec.getCategory();
+            boolean moveMapped = ssaRegsMapped.get(moveReg);
+            boolean checkMapped = ssaRegsMapped.get(checkReg);
+            if (moveMapped & !checkMapped) {
+                int moveRopReg = mapper.oldToNew(moveReg);
+                checkMapped = tryMapReg(checkRegSpec, moveRopReg, category);
+            }
+            if (checkMapped & !moveMapped) {
+                int checkRopReg = mapper.oldToNew(checkReg);
+                moveMapped = tryMapReg(moveRegSpec, checkRopReg, category);
             }
 
-            ArrayList<RegisterSpec> ssaRegs = new ArrayList<RegisterSpec>(2);
-            ssaRegs.add(moveRegSpec);
-            ssaRegs.add(checkRegSpec);
-            int category = checkRegSpec.getCategory();
+            // Map any unmapped registers to anything available
+            if (!moveMapped || !checkMapped) {
+                int ropReg = paramRangeEnd;
+                ArrayList<RegisterSpec> ssaRegs =
+                    new ArrayList<RegisterSpec>(2);
+                ssaRegs.add(moveRegSpec);
+                ssaRegs.add(checkRegSpec);
 
-            while (!tryMapRegs(ssaRegs, ropReg, category, false)) {
-                ropReg = findNextUnreservedRopReg(ropReg + 1, category);
+                while (!tryMapRegs(ssaRegs, ropReg, category, false)) {
+                    ropReg = findNextUnreservedRopReg(ropReg + 1, category);
+                }
+            }
+
+            /*
+             * If source and result have a different mapping, insert a move so
+             * they can have the same mapping. Don't do this if the check cast
+             * is caught, since it will overwrite a potentially live value.
+             */
+            boolean hasExceptionHandlers =
+                checkCastInsn.getOriginalRopInsn().getCatches().size() != 0;
+            int moveRopReg = mapper.oldToNew(moveReg);
+            int checkRopReg = mapper.oldToNew(checkReg);
+            if (moveRopReg != checkRopReg && !hasExceptionHandlers) {
+                ((NormalSsaInsn) checkCastInsn).changeOneSource(0,
+                        insertMoveBefore(checkCastInsn, checkRegSpec));
+                addMapping(checkCastInsn.getSources().get(0), moveRopReg);
             }
         }
     }
