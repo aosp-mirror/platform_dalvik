@@ -29,10 +29,10 @@
 typedef unsigned long Word;
 const size_t kWordSize = sizeof(Word);
 
-/* Do not cast the result of this to a boolean; the only set bit
- * may be > 1<<8.
+/*
+ * Returns true if the given object is marked.
  */
-static long isMarked(const void *obj, const GcMarkContext *ctx)
+static bool isMarked(const Object *obj, const GcMarkContext *ctx)
 {
     return dvmHeapBitmapIsObjectBitSet(ctx->bitmap, obj);
 }
@@ -973,10 +973,9 @@ static void sweepBitmapCallback(size_t numPtrs, void **ptrs, void *arg)
  * Returns true if the given object is unmarked.  This assumes that
  * the bitmaps have not yet been swapped.
  */
-static int isUnmarkedObject(void *object)
+static int isUnmarkedObject(void *obj)
 {
-    return !isMarked((void *)((uintptr_t)object & ~(HB_OBJECT_ALIGNMENT-1)),
-            &gDvm.gcHeap->markContext);
+    return !isMarked((Object *)obj, &gDvm.gcHeap->markContext);
 }
 
 /*
