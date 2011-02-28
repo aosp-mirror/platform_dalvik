@@ -404,9 +404,19 @@ void dvmThrowStaleDexCacheError(const char* msg);
 
 /**
  * Throw a StringIndexOutOfBoundsException in the current thread, with
- * the given detail message.
+ * a detail message specifying an actual length as well as a requested
+ * index.
  */
-void dvmThrowStringIndexOutOfBoundsException(const char* msg);
+void dvmThrowStringIndexOutOfBoundsExceptionWithIndex(jsize stringLength,
+        jsize requestIndex);
+
+/**
+ * Throw a StringIndexOutOfBoundsException in the current thread, with
+ * a detail message specifying an actual length as well as a requested
+ * region.
+ */
+void dvmThrowStringIndexOutOfBoundsExceptionWithRegion(jsize stringLength,
+        jsize requestStart, jsize requestLength);
 
 /**
  * Throw an UnsatisfiedLinkError in the current thread, with

@@ -280,7 +280,10 @@ struct DvmGlobals {
     ClassObject* exNullPointerException;
     ClassObject* exRuntimeException;
     ClassObject* exStackOverflowError;
+    ClassObject* exStringIndexOutOfBoundsException;
     ClassObject* exThrowable;
+    ClassObject* exUnsupportedOperationException;
+    ClassObject* exVirtualMachineError;
 
     /* synthetic classes for arrays of primitives */
     ClassObject* classArrayBoolean;
