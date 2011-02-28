@@ -569,14 +569,12 @@ common_errDivideByZero:
 
 /*
  * Attempt to allocate an array with a negative size.
+ * On entry, len in eax
  */
 common_errNegativeArraySize:
     EXPORT_PC
-    movl    $$.LstrNegativeArraySizeException,%eax
-    movl    %eax,OUT_ARG0(%esp)
-    xorl    %eax,%eax
-    movl    %eax,OUT_ARG1(%esp)
-    call    dvmThrowException
+    movl    %eax,OUT_ARG0(%esp)                  # arg0<- len
+    call    dvmThrowNegativeArraySizeException   # (len)
     jmp     common_exceptionThrown
 
 /*
@@ -652,8 +650,6 @@ common_abort:
     .asciz  "Ljava/lang/ArithmeticException;"
 .LstrDivideByZero:
     .asciz  "divide by zero"
-.LstrNegativeArraySizeException:
-    .asciz  "Ljava/lang/NegativeArraySizeException;"
 .LstrInstantiationError:
     .asciz  "Ljava/lang/InstantiationError;"
 .LstrNoSuchMethodError:
