@@ -156,7 +156,14 @@ bool dvmExceptionStartup(void)
     ok &= initRef(&gDvm.exRuntimeException, "Ljava/lang/RuntimeException;");
     ok &= initRef(&gDvm.exStackOverflowError,
             "Ljava/lang/StackOverflowError;");
+    ok &= initRef(&gDvm.exStringIndexOutOfBoundsException,
+            "Ljava/lang/StringIndexOutOfBoundsException;");
     ok &= initRef(&gDvm.exThrowable, "Ljava/lang/Throwable;");
+    ok &= initRef(&gDvm.exUnsupportedOperationException,
+            "Ljava/lang/UnsupportedOperationException;");
+    ok &= initRef(&gDvm.exVirtualMachineError,
+            "Ljava/lang/VirtualMachineError;");
+
     ok &= initRef(&gDvm.classJavaLangStackTraceElement,
             "Ljava/lang/StackTraceElement;");
     ok &= initRef(&gDvm.classJavaLangStackTraceElementArray,
@@ -1572,8 +1579,17 @@ void dvmThrowStaleDexCacheError(const char* msg) {
     dvmThrowException("Ldalvik/system/StaleDexCacheError;", msg);
 }
 
-void dvmThrowStringIndexOutOfBoundsException(const char* msg) {
-    dvmThrowException("Ljava/lang/StringIndexOutOfBoundsException;", msg);
+void dvmThrowStringIndexOutOfBoundsExceptionWithIndex(jsize stringLength,
+        jsize requestIndex) {
+    dvmThrowExceptionFmtByClass(gDvm.exStringIndexOutOfBoundsException,
+            "length=%d; index==%d", stringLength, requestIndex);
+}
+
+void dvmThrowStringIndexOutOfBoundsExceptionWithRegion(jsize stringLength,
+        jsize requestStart, jsize requestLength) {
+    dvmThrowExceptionFmtByClass(gDvm.exStringIndexOutOfBoundsException,
+            "length=%d; regionStart=%d regionLength=%d",
+            stringLength, requestStart, requestLength);
 }
 
 void dvmThrowUnsatisfiedLinkError(const char* msg) {
@@ -1581,9 +1597,9 @@ void dvmThrowUnsatisfiedLinkError(const char* msg) {
 }
 
 void dvmThrowUnsupportedOperationException(const char* msg) {
-    dvmThrowException("Ljava/lang/UnsupportedOperationException;", msg);
+    dvmThrowExceptionByClass(gDvm.exUnsupportedOperationException, msg);
 }
 
 void dvmThrowVirtualMachineError(const char* msg) {
-    dvmThrowException("Ljava/lang/VirtualMachineError;", msg);
+    dvmThrowExceptionByClass(gDvm.exVirtualMachineError, msg);
 }

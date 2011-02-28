@@ -3411,8 +3411,9 @@ static void GetStringRegion(JNIEnv* env, jstring jstr, jsize start, jsize len,
 {
     JNI_ENTER();
     StringObject* strObj = (StringObject*) dvmDecodeIndirectRef(env, jstr);
-    if (start + len > dvmStringLen(strObj))
-        dvmThrowStringIndexOutOfBoundsException(NULL);
+    int strLen = dvmStringLen(strObj);
+    if (((start|len) < 0) || (start + len > dvmStringLen(strObj)))
+        dvmThrowStringIndexOutOfBoundsExceptionWithRegion(strLen, start, len);
     else
         memcpy(buf, dvmStringChars(strObj) + start, len * sizeof(u2));
     JNI_EXIT();
@@ -3427,8 +3428,9 @@ static void GetStringUTFRegion(JNIEnv* env, jstring jstr, jsize start,
 {
     JNI_ENTER();
     StringObject* strObj = (StringObject*) dvmDecodeIndirectRef(env, jstr);
-    if (start + len > dvmStringLen(strObj))
-        dvmThrowStringIndexOutOfBoundsException(NULL);
+    int strLen = dvmStringLen(strObj);
+    if (((start|len) < 0) || (start + len > dvmStringLen(strObj)))
+        dvmThrowStringIndexOutOfBoundsExceptionWithRegion(strLen, start, len);
     else
         dvmCreateCstrFromStringRegion(strObj, start, len, buf);
     JNI_EXIT();
