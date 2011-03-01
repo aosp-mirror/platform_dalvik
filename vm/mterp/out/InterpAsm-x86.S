@@ -11448,7 +11448,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_NOP: /* 0x00 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -11465,7 +11465,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_MOVE: /* 0x01 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -11482,7 +11482,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_MOVE_FROM16: /* 0x02 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -11499,7 +11499,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_MOVE_16: /* 0x03 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -11516,7 +11516,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_MOVE_WIDE: /* 0x04 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -11533,7 +11533,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_MOVE_WIDE_FROM16: /* 0x05 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -11550,7 +11550,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_MOVE_WIDE_16: /* 0x06 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -11567,7 +11567,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_MOVE_OBJECT: /* 0x07 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -11584,7 +11584,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_MOVE_OBJECT_FROM16: /* 0x08 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -11601,7 +11601,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_MOVE_OBJECT_16: /* 0x09 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -11618,7 +11618,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_MOVE_RESULT: /* 0x0a */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -11635,7 +11635,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_MOVE_RESULT_WIDE: /* 0x0b */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -11652,7 +11652,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_MOVE_RESULT_OBJECT: /* 0x0c */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -11669,7 +11669,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_MOVE_EXCEPTION: /* 0x0d */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -11686,7 +11686,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_RETURN_VOID: /* 0x0e */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -11703,7 +11703,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_RETURN: /* 0x0f */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -11720,7 +11720,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_RETURN_WIDE: /* 0x10 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -11737,7 +11737,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_RETURN_OBJECT: /* 0x11 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -11754,7 +11754,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_CONST_4: /* 0x12 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -11771,7 +11771,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_CONST_16: /* 0x13 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -11788,7 +11788,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_CONST: /* 0x14 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -11805,7 +11805,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_CONST_HIGH16: /* 0x15 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -11822,7 +11822,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_CONST_WIDE_16: /* 0x16 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -11839,7 +11839,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_CONST_WIDE_32: /* 0x17 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -11856,7 +11856,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_CONST_WIDE: /* 0x18 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -11873,7 +11873,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_CONST_WIDE_HIGH16: /* 0x19 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -11890,7 +11890,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_CONST_STRING: /* 0x1a */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -11907,7 +11907,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_CONST_STRING_JUMBO: /* 0x1b */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -11924,7 +11924,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_CONST_CLASS: /* 0x1c */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -11941,7 +11941,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_MONITOR_ENTER: /* 0x1d */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -11958,7 +11958,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_MONITOR_EXIT: /* 0x1e */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -11975,7 +11975,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_CHECK_CAST: /* 0x1f */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -11992,7 +11992,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_INSTANCE_OF: /* 0x20 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -12009,7 +12009,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_ARRAY_LENGTH: /* 0x21 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -12026,7 +12026,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_NEW_INSTANCE: /* 0x22 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -12043,7 +12043,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_NEW_ARRAY: /* 0x23 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -12060,7 +12060,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_FILLED_NEW_ARRAY: /* 0x24 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -12077,7 +12077,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_FILLED_NEW_ARRAY_RANGE: /* 0x25 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -12094,7 +12094,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_FILL_ARRAY_DATA: /* 0x26 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -12111,7 +12111,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_THROW: /* 0x27 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -12128,7 +12128,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_GOTO: /* 0x28 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -12145,7 +12145,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_GOTO_16: /* 0x29 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -12162,7 +12162,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_GOTO_32: /* 0x2a */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -12179,7 +12179,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_PACKED_SWITCH: /* 0x2b */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -12196,7 +12196,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_SPARSE_SWITCH: /* 0x2c */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -12213,7 +12213,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_CMPL_FLOAT: /* 0x2d */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -12230,7 +12230,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_CMPG_FLOAT: /* 0x2e */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -12247,7 +12247,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_CMPL_DOUBLE: /* 0x2f */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -12264,7 +12264,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_CMPG_DOUBLE: /* 0x30 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -12281,7 +12281,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_CMP_LONG: /* 0x31 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -12298,7 +12298,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_IF_EQ: /* 0x32 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -12315,7 +12315,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_IF_NE: /* 0x33 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -12332,7 +12332,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_IF_LT: /* 0x34 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -12349,7 +12349,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_IF_GE: /* 0x35 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -12366,7 +12366,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_IF_GT: /* 0x36 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -12383,7 +12383,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_IF_LE: /* 0x37 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -12400,7 +12400,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_IF_EQZ: /* 0x38 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -12417,7 +12417,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_IF_NEZ: /* 0x39 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -12434,7 +12434,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_IF_LTZ: /* 0x3a */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -12451,7 +12451,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_IF_GEZ: /* 0x3b */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -12468,7 +12468,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_IF_GTZ: /* 0x3c */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -12485,7 +12485,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_IF_LEZ: /* 0x3d */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -12502,7 +12502,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_3E: /* 0x3e */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -12519,7 +12519,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_3F: /* 0x3f */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -12536,7 +12536,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_40: /* 0x40 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -12553,7 +12553,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_41: /* 0x41 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -12570,7 +12570,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_42: /* 0x42 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -12587,7 +12587,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_43: /* 0x43 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -12604,7 +12604,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_AGET: /* 0x44 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -12621,7 +12621,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_AGET_WIDE: /* 0x45 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -12638,7 +12638,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_AGET_OBJECT: /* 0x46 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -12655,7 +12655,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_AGET_BOOLEAN: /* 0x47 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -12672,7 +12672,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_AGET_BYTE: /* 0x48 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -12689,7 +12689,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_AGET_CHAR: /* 0x49 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -12706,7 +12706,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_AGET_SHORT: /* 0x4a */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -12723,7 +12723,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_APUT: /* 0x4b */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -12740,7 +12740,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_APUT_WIDE: /* 0x4c */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -12757,7 +12757,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_APUT_OBJECT: /* 0x4d */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -12774,7 +12774,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_APUT_BOOLEAN: /* 0x4e */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -12791,7 +12791,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_APUT_BYTE: /* 0x4f */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -12808,7 +12808,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_APUT_CHAR: /* 0x50 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -12825,7 +12825,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_APUT_SHORT: /* 0x51 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -12842,7 +12842,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_IGET: /* 0x52 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -12859,7 +12859,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_IGET_WIDE: /* 0x53 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -12876,7 +12876,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_IGET_OBJECT: /* 0x54 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -12893,7 +12893,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_IGET_BOOLEAN: /* 0x55 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -12910,7 +12910,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_IGET_BYTE: /* 0x56 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -12927,7 +12927,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_IGET_CHAR: /* 0x57 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -12944,7 +12944,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_IGET_SHORT: /* 0x58 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -12961,7 +12961,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_IPUT: /* 0x59 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -12978,7 +12978,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_IPUT_WIDE: /* 0x5a */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -12995,7 +12995,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_IPUT_OBJECT: /* 0x5b */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -13012,7 +13012,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_IPUT_BOOLEAN: /* 0x5c */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -13029,7 +13029,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_IPUT_BYTE: /* 0x5d */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -13046,7 +13046,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_IPUT_CHAR: /* 0x5e */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -13063,7 +13063,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_IPUT_SHORT: /* 0x5f */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -13080,7 +13080,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_SGET: /* 0x60 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -13097,7 +13097,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_SGET_WIDE: /* 0x61 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -13114,7 +13114,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_SGET_OBJECT: /* 0x62 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -13131,7 +13131,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_SGET_BOOLEAN: /* 0x63 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -13148,7 +13148,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_SGET_BYTE: /* 0x64 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -13165,7 +13165,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_SGET_CHAR: /* 0x65 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -13182,7 +13182,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_SGET_SHORT: /* 0x66 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -13199,7 +13199,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_SPUT: /* 0x67 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -13216,7 +13216,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_SPUT_WIDE: /* 0x68 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -13233,7 +13233,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_SPUT_OBJECT: /* 0x69 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -13250,7 +13250,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_SPUT_BOOLEAN: /* 0x6a */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -13267,7 +13267,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_SPUT_BYTE: /* 0x6b */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -13284,7 +13284,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_SPUT_CHAR: /* 0x6c */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -13301,7 +13301,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_SPUT_SHORT: /* 0x6d */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -13318,7 +13318,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_INVOKE_VIRTUAL: /* 0x6e */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -13335,7 +13335,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_INVOKE_SUPER: /* 0x6f */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -13352,7 +13352,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_INVOKE_DIRECT: /* 0x70 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -13369,7 +13369,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_INVOKE_STATIC: /* 0x71 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -13386,7 +13386,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_INVOKE_INTERFACE: /* 0x72 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -13403,7 +13403,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_73: /* 0x73 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -13420,7 +13420,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_INVOKE_VIRTUAL_RANGE: /* 0x74 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -13437,7 +13437,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_INVOKE_SUPER_RANGE: /* 0x75 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -13454,7 +13454,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_INVOKE_DIRECT_RANGE: /* 0x76 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -13471,7 +13471,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_INVOKE_STATIC_RANGE: /* 0x77 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -13488,7 +13488,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_INVOKE_INTERFACE_RANGE: /* 0x78 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -13505,7 +13505,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_79: /* 0x79 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -13522,7 +13522,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_7A: /* 0x7a */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -13539,7 +13539,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_NEG_INT: /* 0x7b */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -13556,7 +13556,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_NOT_INT: /* 0x7c */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -13573,7 +13573,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_NEG_LONG: /* 0x7d */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -13590,7 +13590,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_NOT_LONG: /* 0x7e */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -13607,7 +13607,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_NEG_FLOAT: /* 0x7f */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -13624,7 +13624,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_NEG_DOUBLE: /* 0x80 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -13641,7 +13641,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_INT_TO_LONG: /* 0x81 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -13658,7 +13658,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_INT_TO_FLOAT: /* 0x82 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -13675,7 +13675,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_INT_TO_DOUBLE: /* 0x83 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -13692,7 +13692,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_LONG_TO_INT: /* 0x84 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -13709,7 +13709,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_LONG_TO_FLOAT: /* 0x85 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -13726,7 +13726,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_LONG_TO_DOUBLE: /* 0x86 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -13743,7 +13743,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_FLOAT_TO_INT: /* 0x87 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -13760,7 +13760,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_FLOAT_TO_LONG: /* 0x88 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -13777,7 +13777,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_FLOAT_TO_DOUBLE: /* 0x89 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -13794,7 +13794,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_DOUBLE_TO_INT: /* 0x8a */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -13811,7 +13811,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_DOUBLE_TO_LONG: /* 0x8b */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -13828,7 +13828,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_DOUBLE_TO_FLOAT: /* 0x8c */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -13845,7 +13845,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_INT_TO_BYTE: /* 0x8d */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -13862,7 +13862,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_INT_TO_CHAR: /* 0x8e */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -13879,7 +13879,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_INT_TO_SHORT: /* 0x8f */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -13896,7 +13896,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_ADD_INT: /* 0x90 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -13913,7 +13913,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_SUB_INT: /* 0x91 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -13930,7 +13930,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_MUL_INT: /* 0x92 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -13947,7 +13947,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_DIV_INT: /* 0x93 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -13964,7 +13964,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_REM_INT: /* 0x94 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -13981,7 +13981,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_AND_INT: /* 0x95 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -13998,7 +13998,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_OR_INT: /* 0x96 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -14015,7 +14015,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_XOR_INT: /* 0x97 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -14032,7 +14032,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_SHL_INT: /* 0x98 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -14049,7 +14049,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_SHR_INT: /* 0x99 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -14066,7 +14066,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_USHR_INT: /* 0x9a */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -14083,7 +14083,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_ADD_LONG: /* 0x9b */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -14100,7 +14100,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_SUB_LONG: /* 0x9c */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -14117,7 +14117,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_MUL_LONG: /* 0x9d */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -14134,7 +14134,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_DIV_LONG: /* 0x9e */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -14151,7 +14151,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_REM_LONG: /* 0x9f */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -14168,7 +14168,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_AND_LONG: /* 0xa0 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -14185,7 +14185,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_OR_LONG: /* 0xa1 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -14202,7 +14202,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_XOR_LONG: /* 0xa2 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -14219,7 +14219,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_SHL_LONG: /* 0xa3 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -14236,7 +14236,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_SHR_LONG: /* 0xa4 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -14253,7 +14253,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_USHR_LONG: /* 0xa5 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -14270,7 +14270,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_ADD_FLOAT: /* 0xa6 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -14287,7 +14287,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_SUB_FLOAT: /* 0xa7 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -14304,7 +14304,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_MUL_FLOAT: /* 0xa8 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -14321,7 +14321,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_DIV_FLOAT: /* 0xa9 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -14338,7 +14338,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_REM_FLOAT: /* 0xaa */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -14355,7 +14355,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_ADD_DOUBLE: /* 0xab */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -14372,7 +14372,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_SUB_DOUBLE: /* 0xac */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -14389,7 +14389,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_MUL_DOUBLE: /* 0xad */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -14406,7 +14406,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_DIV_DOUBLE: /* 0xae */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -14423,7 +14423,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_REM_DOUBLE: /* 0xaf */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -14440,7 +14440,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_ADD_INT_2ADDR: /* 0xb0 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -14457,7 +14457,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_SUB_INT_2ADDR: /* 0xb1 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -14474,7 +14474,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_MUL_INT_2ADDR: /* 0xb2 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -14491,7 +14491,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_DIV_INT_2ADDR: /* 0xb3 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -14508,7 +14508,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_REM_INT_2ADDR: /* 0xb4 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -14525,7 +14525,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_AND_INT_2ADDR: /* 0xb5 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -14542,7 +14542,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_OR_INT_2ADDR: /* 0xb6 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -14559,7 +14559,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_XOR_INT_2ADDR: /* 0xb7 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -14576,7 +14576,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_SHL_INT_2ADDR: /* 0xb8 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -14593,7 +14593,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_SHR_INT_2ADDR: /* 0xb9 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -14610,7 +14610,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_USHR_INT_2ADDR: /* 0xba */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -14627,7 +14627,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_ADD_LONG_2ADDR: /* 0xbb */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -14644,7 +14644,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_SUB_LONG_2ADDR: /* 0xbc */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -14661,7 +14661,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_MUL_LONG_2ADDR: /* 0xbd */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -14678,7 +14678,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_DIV_LONG_2ADDR: /* 0xbe */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -14695,7 +14695,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_REM_LONG_2ADDR: /* 0xbf */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -14712,7 +14712,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_AND_LONG_2ADDR: /* 0xc0 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -14729,7 +14729,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_OR_LONG_2ADDR: /* 0xc1 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -14746,7 +14746,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_XOR_LONG_2ADDR: /* 0xc2 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -14763,7 +14763,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_SHL_LONG_2ADDR: /* 0xc3 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -14780,7 +14780,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_SHR_LONG_2ADDR: /* 0xc4 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -14797,7 +14797,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_USHR_LONG_2ADDR: /* 0xc5 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -14814,7 +14814,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_ADD_FLOAT_2ADDR: /* 0xc6 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -14831,7 +14831,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_SUB_FLOAT_2ADDR: /* 0xc7 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -14848,7 +14848,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_MUL_FLOAT_2ADDR: /* 0xc8 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -14865,7 +14865,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_DIV_FLOAT_2ADDR: /* 0xc9 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -14882,7 +14882,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_REM_FLOAT_2ADDR: /* 0xca */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -14899,7 +14899,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_ADD_DOUBLE_2ADDR: /* 0xcb */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -14916,7 +14916,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_SUB_DOUBLE_2ADDR: /* 0xcc */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -14933,7 +14933,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_MUL_DOUBLE_2ADDR: /* 0xcd */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -14950,7 +14950,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_DIV_DOUBLE_2ADDR: /* 0xce */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -14967,7 +14967,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_REM_DOUBLE_2ADDR: /* 0xcf */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -14984,7 +14984,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_ADD_INT_LIT16: /* 0xd0 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -15001,7 +15001,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_RSUB_INT: /* 0xd1 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -15018,7 +15018,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_MUL_INT_LIT16: /* 0xd2 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -15035,7 +15035,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_DIV_INT_LIT16: /* 0xd3 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -15052,7 +15052,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_REM_INT_LIT16: /* 0xd4 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -15069,7 +15069,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_AND_INT_LIT16: /* 0xd5 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -15086,7 +15086,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_OR_INT_LIT16: /* 0xd6 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -15103,7 +15103,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_XOR_INT_LIT16: /* 0xd7 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -15120,7 +15120,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_ADD_INT_LIT8: /* 0xd8 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -15137,7 +15137,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_RSUB_INT_LIT8: /* 0xd9 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -15154,7 +15154,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_MUL_INT_LIT8: /* 0xda */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -15171,7 +15171,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_DIV_INT_LIT8: /* 0xdb */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -15188,7 +15188,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_REM_INT_LIT8: /* 0xdc */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -15205,7 +15205,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_AND_INT_LIT8: /* 0xdd */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -15222,7 +15222,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_OR_INT_LIT8: /* 0xde */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -15239,7 +15239,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_XOR_INT_LIT8: /* 0xdf */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -15256,7 +15256,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_SHL_INT_LIT8: /* 0xe0 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -15273,7 +15273,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_SHR_INT_LIT8: /* 0xe1 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -15290,7 +15290,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_USHR_INT_LIT8: /* 0xe2 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -15307,7 +15307,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_IGET_VOLATILE: /* 0xe3 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -15324,7 +15324,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_IPUT_VOLATILE: /* 0xe4 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -15341,7 +15341,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_SGET_VOLATILE: /* 0xe5 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -15358,7 +15358,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_SPUT_VOLATILE: /* 0xe6 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -15375,7 +15375,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_IGET_OBJECT_VOLATILE: /* 0xe7 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -15392,7 +15392,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_IGET_WIDE_VOLATILE: /* 0xe8 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -15409,7 +15409,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_IPUT_WIDE_VOLATILE: /* 0xe9 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -15426,7 +15426,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_SGET_WIDE_VOLATILE: /* 0xea */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -15443,7 +15443,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_SPUT_WIDE_VOLATILE: /* 0xeb */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -15460,7 +15460,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_BREAKPOINT: /* 0xec */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -15477,7 +15477,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_THROW_VERIFICATION_ERROR: /* 0xed */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -15494,7 +15494,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_EXECUTE_INLINE: /* 0xee */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -15511,7 +15511,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_EXECUTE_INLINE_RANGE: /* 0xef */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -15528,7 +15528,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_INVOKE_OBJECT_INIT: /* 0xf0 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -15545,7 +15545,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_RETURN_VOID_BARRIER: /* 0xf1 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -15562,7 +15562,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_IGET_QUICK: /* 0xf2 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -15579,7 +15579,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_IGET_WIDE_QUICK: /* 0xf3 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -15596,7 +15596,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_IGET_OBJECT_QUICK: /* 0xf4 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -15613,7 +15613,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_IPUT_QUICK: /* 0xf5 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -15630,7 +15630,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_IPUT_WIDE_QUICK: /* 0xf6 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -15647,7 +15647,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_IPUT_OBJECT_QUICK: /* 0xf7 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -15664,7 +15664,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_INVOKE_VIRTUAL_QUICK: /* 0xf8 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -15681,7 +15681,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_INVOKE_VIRTUAL_QUICK_RANGE: /* 0xf9 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -15698,7 +15698,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_INVOKE_SUPER_QUICK: /* 0xfa */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -15715,7 +15715,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_INVOKE_SUPER_QUICK_RANGE: /* 0xfb */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -15732,7 +15732,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_IPUT_OBJECT_VOLATILE: /* 0xfc */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -15749,7 +15749,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_SGET_OBJECT_VOLATILE: /* 0xfd */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -15766,7 +15766,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_SPUT_OBJECT_VOLATILE: /* 0xfe */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -15783,13 +15783,24 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_DISPATCH_FF: /* 0xff */
-/* File: x86/ALT_OP_DISPATCH_FF.S */
-    leal      256(rINST),%ecx
-    GOTO_NEXT_JUMBO_R %ecx
+/* File: x86/alt_stub.S */
+/*
+ * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
+ * any interesting requests and then jump to the real instruction
+ * handler.  Unlike the Arm handler, we can't do this as a tail call
+ * because rIBASE is caller save and we need to reload it.
+ */
+    movl   rSELF, %eax
+    movl   rPC, OUT_ARG0(%esp)
+    movl   %eax, OUT_ARG1(%esp)
+    call   dvmCheckInst                            # (dPC, self)
+    movl   rSELF, %ecx
+    movl   offThread_curHandlerTable(%ecx), rIBASE # reload rIBASE
+    jmp    *dvmAsmInstructionStart+(255*4)
 
 /* ------------------------------ */
 .L_ALT_OP_CONST_CLASS_JUMBO: /* 0x100 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -15806,7 +15817,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_CHECK_CAST_JUMBO: /* 0x101 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -15823,7 +15834,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_INSTANCE_OF_JUMBO: /* 0x102 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -15840,7 +15851,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_NEW_INSTANCE_JUMBO: /* 0x103 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -15857,7 +15868,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_NEW_ARRAY_JUMBO: /* 0x104 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -15874,7 +15885,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_FILLED_NEW_ARRAY_JUMBO: /* 0x105 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -15891,7 +15902,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_IGET_JUMBO: /* 0x106 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -15908,7 +15919,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_IGET_WIDE_JUMBO: /* 0x107 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -15925,7 +15936,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_IGET_OBJECT_JUMBO: /* 0x108 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -15942,7 +15953,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_IGET_BOOLEAN_JUMBO: /* 0x109 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -15959,7 +15970,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_IGET_BYTE_JUMBO: /* 0x10a */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -15976,7 +15987,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_IGET_CHAR_JUMBO: /* 0x10b */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -15993,7 +16004,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_IGET_SHORT_JUMBO: /* 0x10c */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -16010,7 +16021,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_IPUT_JUMBO: /* 0x10d */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -16027,7 +16038,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_IPUT_WIDE_JUMBO: /* 0x10e */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -16044,7 +16055,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_IPUT_OBJECT_JUMBO: /* 0x10f */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -16061,7 +16072,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_IPUT_BOOLEAN_JUMBO: /* 0x110 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -16078,7 +16089,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_IPUT_BYTE_JUMBO: /* 0x111 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -16095,7 +16106,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_IPUT_CHAR_JUMBO: /* 0x112 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -16112,7 +16123,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_IPUT_SHORT_JUMBO: /* 0x113 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -16129,7 +16140,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_SGET_JUMBO: /* 0x114 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -16146,7 +16157,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_SGET_WIDE_JUMBO: /* 0x115 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -16163,7 +16174,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_SGET_OBJECT_JUMBO: /* 0x116 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -16180,7 +16191,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_SGET_BOOLEAN_JUMBO: /* 0x117 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -16197,7 +16208,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_SGET_BYTE_JUMBO: /* 0x118 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -16214,7 +16225,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_SGET_CHAR_JUMBO: /* 0x119 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -16231,7 +16242,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_SGET_SHORT_JUMBO: /* 0x11a */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -16248,7 +16259,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_SPUT_JUMBO: /* 0x11b */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -16265,7 +16276,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_SPUT_WIDE_JUMBO: /* 0x11c */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -16282,7 +16293,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_SPUT_OBJECT_JUMBO: /* 0x11d */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -16299,7 +16310,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_SPUT_BOOLEAN_JUMBO: /* 0x11e */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -16316,7 +16327,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_SPUT_BYTE_JUMBO: /* 0x11f */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -16333,7 +16344,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_SPUT_CHAR_JUMBO: /* 0x120 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -16350,7 +16361,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_SPUT_SHORT_JUMBO: /* 0x121 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -16367,7 +16378,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_INVOKE_VIRTUAL_JUMBO: /* 0x122 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -16384,7 +16395,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_INVOKE_SUPER_JUMBO: /* 0x123 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -16401,7 +16412,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_INVOKE_DIRECT_JUMBO: /* 0x124 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -16418,7 +16429,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_INVOKE_STATIC_JUMBO: /* 0x125 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -16435,7 +16446,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_INVOKE_INTERFACE_JUMBO: /* 0x126 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -16452,7 +16463,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_27FF: /* 0x127 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -16469,7 +16480,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_28FF: /* 0x128 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -16486,7 +16497,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_29FF: /* 0x129 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -16503,7 +16514,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_2AFF: /* 0x12a */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -16520,7 +16531,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_2BFF: /* 0x12b */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -16537,7 +16548,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_2CFF: /* 0x12c */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -16554,7 +16565,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_2DFF: /* 0x12d */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -16571,7 +16582,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_2EFF: /* 0x12e */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -16588,7 +16599,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_2FFF: /* 0x12f */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -16605,7 +16616,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_30FF: /* 0x130 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -16622,7 +16633,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_31FF: /* 0x131 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -16639,7 +16650,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_32FF: /* 0x132 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -16656,7 +16667,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_33FF: /* 0x133 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -16673,7 +16684,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_34FF: /* 0x134 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -16690,7 +16701,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_35FF: /* 0x135 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -16707,7 +16718,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_36FF: /* 0x136 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -16724,7 +16735,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_37FF: /* 0x137 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -16741,7 +16752,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_38FF: /* 0x138 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -16758,7 +16769,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_39FF: /* 0x139 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -16775,7 +16786,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_3AFF: /* 0x13a */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -16792,7 +16803,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_3BFF: /* 0x13b */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -16809,7 +16820,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_3CFF: /* 0x13c */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -16826,7 +16837,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_3DFF: /* 0x13d */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -16843,7 +16854,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_3EFF: /* 0x13e */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -16860,7 +16871,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_3FFF: /* 0x13f */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -16877,7 +16888,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_40FF: /* 0x140 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -16894,7 +16905,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_41FF: /* 0x141 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -16911,7 +16922,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_42FF: /* 0x142 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -16928,7 +16939,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_43FF: /* 0x143 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -16945,7 +16956,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_44FF: /* 0x144 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -16962,7 +16973,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_45FF: /* 0x145 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -16979,7 +16990,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_46FF: /* 0x146 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -16996,7 +17007,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_47FF: /* 0x147 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -17013,7 +17024,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_48FF: /* 0x148 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -17030,7 +17041,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_49FF: /* 0x149 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -17047,7 +17058,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_4AFF: /* 0x14a */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -17064,7 +17075,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_4BFF: /* 0x14b */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -17081,7 +17092,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_4CFF: /* 0x14c */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -17098,7 +17109,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_4DFF: /* 0x14d */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -17115,7 +17126,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_4EFF: /* 0x14e */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -17132,7 +17143,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_4FFF: /* 0x14f */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -17149,7 +17160,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_50FF: /* 0x150 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -17166,7 +17177,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_51FF: /* 0x151 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -17183,7 +17194,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_52FF: /* 0x152 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -17200,7 +17211,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_53FF: /* 0x153 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -17217,7 +17228,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_54FF: /* 0x154 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -17234,7 +17245,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_55FF: /* 0x155 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -17251,7 +17262,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_56FF: /* 0x156 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -17268,7 +17279,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_57FF: /* 0x157 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -17285,7 +17296,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_58FF: /* 0x158 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -17302,7 +17313,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_59FF: /* 0x159 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -17319,7 +17330,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_5AFF: /* 0x15a */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -17336,7 +17347,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_5BFF: /* 0x15b */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -17353,7 +17364,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_5CFF: /* 0x15c */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -17370,7 +17381,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_5DFF: /* 0x15d */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -17387,7 +17398,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_5EFF: /* 0x15e */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -17404,7 +17415,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_5FFF: /* 0x15f */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -17421,7 +17432,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_60FF: /* 0x160 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -17438,7 +17449,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_61FF: /* 0x161 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -17455,7 +17466,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_62FF: /* 0x162 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -17472,7 +17483,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_63FF: /* 0x163 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -17489,7 +17500,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_64FF: /* 0x164 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -17506,7 +17517,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_65FF: /* 0x165 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -17523,7 +17534,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_66FF: /* 0x166 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -17540,7 +17551,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_67FF: /* 0x167 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -17557,7 +17568,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_68FF: /* 0x168 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -17574,7 +17585,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_69FF: /* 0x169 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -17591,7 +17602,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_6AFF: /* 0x16a */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -17608,7 +17619,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_6BFF: /* 0x16b */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -17625,7 +17636,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_6CFF: /* 0x16c */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -17642,7 +17653,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_6DFF: /* 0x16d */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -17659,7 +17670,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_6EFF: /* 0x16e */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -17676,7 +17687,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_6FFF: /* 0x16f */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -17693,7 +17704,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_70FF: /* 0x170 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -17710,7 +17721,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_71FF: /* 0x171 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -17727,7 +17738,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_72FF: /* 0x172 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -17744,7 +17755,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_73FF: /* 0x173 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -17761,7 +17772,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_74FF: /* 0x174 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -17778,7 +17789,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_75FF: /* 0x175 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -17795,7 +17806,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_76FF: /* 0x176 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -17812,7 +17823,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_77FF: /* 0x177 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -17829,7 +17840,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_78FF: /* 0x178 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -17846,7 +17857,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_79FF: /* 0x179 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -17863,7 +17874,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_7AFF: /* 0x17a */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -17880,7 +17891,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_7BFF: /* 0x17b */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -17897,7 +17908,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_7CFF: /* 0x17c */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -17914,7 +17925,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_7DFF: /* 0x17d */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -17931,7 +17942,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_7EFF: /* 0x17e */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -17948,7 +17959,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_7FFF: /* 0x17f */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -17965,7 +17976,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_80FF: /* 0x180 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -17982,7 +17993,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_81FF: /* 0x181 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -17999,7 +18010,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_82FF: /* 0x182 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -18016,7 +18027,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_83FF: /* 0x183 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -18033,7 +18044,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_84FF: /* 0x184 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -18050,7 +18061,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_85FF: /* 0x185 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -18067,7 +18078,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_86FF: /* 0x186 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -18084,7 +18095,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_87FF: /* 0x187 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -18101,7 +18112,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_88FF: /* 0x188 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -18118,7 +18129,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_89FF: /* 0x189 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -18135,7 +18146,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_8AFF: /* 0x18a */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -18152,7 +18163,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_8BFF: /* 0x18b */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -18169,7 +18180,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_8CFF: /* 0x18c */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -18186,7 +18197,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_8DFF: /* 0x18d */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -18203,7 +18214,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_8EFF: /* 0x18e */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -18220,7 +18231,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_8FFF: /* 0x18f */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -18237,7 +18248,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_90FF: /* 0x190 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -18254,7 +18265,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_91FF: /* 0x191 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -18271,7 +18282,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_92FF: /* 0x192 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -18288,7 +18299,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_93FF: /* 0x193 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -18305,7 +18316,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_94FF: /* 0x194 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -18322,7 +18333,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_95FF: /* 0x195 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -18339,7 +18350,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_96FF: /* 0x196 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -18356,7 +18367,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_97FF: /* 0x197 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -18373,7 +18384,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_98FF: /* 0x198 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -18390,7 +18401,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_99FF: /* 0x199 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -18407,7 +18418,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_9AFF: /* 0x19a */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -18424,7 +18435,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_9BFF: /* 0x19b */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -18441,7 +18452,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_9CFF: /* 0x19c */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -18458,7 +18469,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_9DFF: /* 0x19d */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -18475,7 +18486,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_9EFF: /* 0x19e */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -18492,7 +18503,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_9FFF: /* 0x19f */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -18509,7 +18520,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_A0FF: /* 0x1a0 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -18526,7 +18537,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_A1FF: /* 0x1a1 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -18543,7 +18554,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_A2FF: /* 0x1a2 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -18560,7 +18571,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_A3FF: /* 0x1a3 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -18577,7 +18588,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_A4FF: /* 0x1a4 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -18594,7 +18605,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_A5FF: /* 0x1a5 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -18611,7 +18622,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_A6FF: /* 0x1a6 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -18628,7 +18639,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_A7FF: /* 0x1a7 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -18645,7 +18656,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_A8FF: /* 0x1a8 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -18662,7 +18673,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_A9FF: /* 0x1a9 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -18679,7 +18690,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_AAFF: /* 0x1aa */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -18696,7 +18707,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_ABFF: /* 0x1ab */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -18713,7 +18724,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_ACFF: /* 0x1ac */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -18730,7 +18741,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_ADFF: /* 0x1ad */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -18747,7 +18758,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_AEFF: /* 0x1ae */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -18764,7 +18775,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_AFFF: /* 0x1af */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -18781,7 +18792,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_B0FF: /* 0x1b0 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -18798,7 +18809,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_B1FF: /* 0x1b1 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -18815,7 +18826,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_B2FF: /* 0x1b2 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -18832,7 +18843,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_B3FF: /* 0x1b3 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -18849,7 +18860,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_B4FF: /* 0x1b4 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -18866,7 +18877,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_B5FF: /* 0x1b5 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -18883,7 +18894,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_B6FF: /* 0x1b6 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -18900,7 +18911,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_B7FF: /* 0x1b7 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -18917,7 +18928,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_B8FF: /* 0x1b8 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -18934,7 +18945,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_B9FF: /* 0x1b9 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -18951,7 +18962,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_BAFF: /* 0x1ba */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -18968,7 +18979,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_BBFF: /* 0x1bb */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -18985,7 +18996,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_BCFF: /* 0x1bc */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -19002,7 +19013,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_BDFF: /* 0x1bd */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -19019,7 +19030,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_BEFF: /* 0x1be */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -19036,7 +19047,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_BFFF: /* 0x1bf */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -19053,7 +19064,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_C0FF: /* 0x1c0 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -19070,7 +19081,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_C1FF: /* 0x1c1 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -19087,7 +19098,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_C2FF: /* 0x1c2 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -19104,7 +19115,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_C3FF: /* 0x1c3 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -19121,7 +19132,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_C4FF: /* 0x1c4 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -19138,7 +19149,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_C5FF: /* 0x1c5 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -19155,7 +19166,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_C6FF: /* 0x1c6 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -19172,7 +19183,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_C7FF: /* 0x1c7 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -19189,7 +19200,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_C8FF: /* 0x1c8 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -19206,7 +19217,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_C9FF: /* 0x1c9 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -19223,7 +19234,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_CAFF: /* 0x1ca */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -19240,7 +19251,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_CBFF: /* 0x1cb */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -19257,7 +19268,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_CCFF: /* 0x1cc */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -19274,7 +19285,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_CDFF: /* 0x1cd */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -19291,7 +19302,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_CEFF: /* 0x1ce */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -19308,7 +19319,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_CFFF: /* 0x1cf */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -19325,7 +19336,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_D0FF: /* 0x1d0 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -19342,7 +19353,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_D1FF: /* 0x1d1 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -19359,7 +19370,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_D2FF: /* 0x1d2 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -19376,7 +19387,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_D3FF: /* 0x1d3 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -19393,7 +19404,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_D4FF: /* 0x1d4 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -19410,7 +19421,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_D5FF: /* 0x1d5 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -19427,7 +19438,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_D6FF: /* 0x1d6 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -19444,7 +19455,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_D7FF: /* 0x1d7 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -19461,7 +19472,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_D8FF: /* 0x1d8 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -19478,7 +19489,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_D9FF: /* 0x1d9 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -19495,7 +19506,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_DAFF: /* 0x1da */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -19512,7 +19523,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_DBFF: /* 0x1db */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -19529,7 +19540,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_DCFF: /* 0x1dc */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -19546,7 +19557,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_DDFF: /* 0x1dd */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -19563,7 +19574,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_DEFF: /* 0x1de */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -19580,7 +19591,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_DFFF: /* 0x1df */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -19597,7 +19608,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_E0FF: /* 0x1e0 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -19614,7 +19625,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_E1FF: /* 0x1e1 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -19631,7 +19642,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_E2FF: /* 0x1e2 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -19648,7 +19659,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_E3FF: /* 0x1e3 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -19665,7 +19676,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_E4FF: /* 0x1e4 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -19682,7 +19693,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_E5FF: /* 0x1e5 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -19699,7 +19710,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_E6FF: /* 0x1e6 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -19716,7 +19727,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_E7FF: /* 0x1e7 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -19733,7 +19744,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_E8FF: /* 0x1e8 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -19750,7 +19761,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_E9FF: /* 0x1e9 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -19767,7 +19778,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_EAFF: /* 0x1ea */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -19784,7 +19795,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_EBFF: /* 0x1eb */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -19801,7 +19812,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_ECFF: /* 0x1ec */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -19818,7 +19829,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_EDFF: /* 0x1ed */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -19835,7 +19846,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_EEFF: /* 0x1ee */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -19852,7 +19863,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_EFFF: /* 0x1ef */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -19869,7 +19880,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_F0FF: /* 0x1f0 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -19886,7 +19897,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_F1FF: /* 0x1f1 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -19903,7 +19914,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_F2FF: /* 0x1f2 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -19920,7 +19931,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_F3FF: /* 0x1f3 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -19937,7 +19948,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_F4FF: /* 0x1f4 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -19954,7 +19965,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_F5FF: /* 0x1f5 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -19971,7 +19982,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_F6FF: /* 0x1f6 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -19988,7 +19999,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_F7FF: /* 0x1f7 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -20005,7 +20016,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_F8FF: /* 0x1f8 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -20022,7 +20033,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_F9FF: /* 0x1f9 */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -20039,7 +20050,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_FAFF: /* 0x1fa */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -20056,7 +20067,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_FBFF: /* 0x1fb */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -20073,7 +20084,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_FCFF: /* 0x1fc */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -20090,7 +20101,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_FDFF: /* 0x1fd */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -20107,7 +20118,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_UNUSED_FEFF: /* 0x1fe */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction
@@ -20124,7 +20135,7 @@ dvmAsmAltInstructionStartCode:
 
 /* ------------------------------ */
 .L_ALT_OP_THROW_VERIFICATION_ERROR_JUMBO: /* 0x1ff */
-/* File: x86/ALT_STUB.S */
+/* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
  * any interesting requests and then jump to the real instruction

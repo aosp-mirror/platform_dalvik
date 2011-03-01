@@ -31,13 +31,14 @@ handler_size_bytes = -1000
 in_op_start = 0             # 0=not started, 1=started, 2=ended
 in_alt_op_start = 0         # 0=not started, 1=started, 2=ended
 default_op_dir = None
-default_alt_op_dir = None
+default_alt_stub = None
 opcode_locations = {}
 alt_opcode_locations = {}
 asm_stub_text = []
 label_prefix = ".L"         # use ".L" to hide labels from gdb
 alt_label_prefix = ".L_ALT" # use ".L" to hide labels from gdb
-jmp_table = False           # jump table vs. computed goto style
+style = None                # interpreter style
+generate_alt_table = False
 
 # Exception class.
 class DataParseError(SyntaxError):
@@ -52,12 +53,26 @@ def getGlobalSubDict():
 
 #
 # Parse arch config file --
+# Set interpreter style.
+#
+def setHandlerStyle(tokens):
+    global style
+    if len(tokens) != 2:
+        raise DataParseError("handler-style requires one argument")
+    style = tokens[1]
+    if style != "computed-goto" and style != "jump-table" and style != "all-c":
+        raise DataParseError("handler-style (%s) invalid" % style)
+
+#
+# Parse arch config file --
 # Set handler_size_bytes to the value of tokens[1], and handler_size_bits to
 # log2(handler_size_bytes).  Throws an exception if "bytes" is not 0 or
 # a power of two.
 #
 def setHandlerSize(tokens):
-    global handler_size_bits, handler_size_bytes, jmp_table
+    global handler_size_bits, handler_size_bytes
+    if style != "computed-goto":
+        print "Warning: handler-size valid only for computed-goto interpreters"
     if len(tokens) != 2:
         raise DataParseError("handler-size requires one argument")
     if handler_size_bits != -1000:
@@ -65,19 +80,15 @@ def setHandlerSize(tokens):
 
     # compute log2(n), and make sure n is 0 or a power of 2
     handler_size_bytes = bytes = int(tokens[1])
-    if handler_size_bytes == 0:
-        jmp_table = True
-        handler_size_bits = 0;
-    else:
-        bits = -1
-        while bytes > 0:
-            bytes //= 2     # halve with truncating division
-            bits += 1
+    bits = -1
+    while bytes > 0:
+        bytes //= 2     # halve with truncating division
+        bits += 1
 
-        if handler_size_bytes == 0 or handler_size_bytes != (1 << bits):
-            raise DataParseError("handler-size (%d) must be power of 2" \
-                    % orig_bytes)
-        handler_size_bits = bits
+    if handler_size_bytes == 0 or handler_size_bytes != (1 << bits):
+        raise DataParseError("handler-size (%d) must be power of 2" \
+                % orig_bytes)
+    handler_size_bits = bits
 
 #
 # Parse arch config file --
@@ -101,6 +112,8 @@ def importFile(tokens):
 #
 def setAsmStub(tokens):
     global asm_stub_text
+    if style == "all-c":
+        print "Warning: asm-stub ignored for all-c interpreter"
     if len(tokens) != 2:
         raise DataParseError("import requires one argument")
     try:
@@ -110,6 +123,19 @@ def setAsmStub(tokens):
         stub_fp.close()
         raise DataParseError("unable to load asm-stub: %s" % str(err))
     stub_fp.close()
+
+#
+# Parse arch config file --
+# Record location of default alt stub
+#
+def setAsmAltStub(tokens):
+    global default_alt_stub, generate_alt_table
+    if style == "all-c":
+        print "Warning: asm-alt-stub ingored for all-c interpreter"
+    if len(tokens) != 2:
+        raise DataParseError("import requires one argument")
+    default_alt_stub = tokens[1]
+    generate_alt_table = True
 
 #
 # Parse arch config file --
@@ -126,28 +152,14 @@ def opStart(tokens):
     in_op_start = 1
 
 #
-# Parse arch config file
-# Start of optional alternate opcode list.
-#
-def altOpStart(tokens):
-    global in_alt_op_start
-    global default_alt_op_dir
-    if len(tokens) != 2:
-        raise DataParseError("altOpStart takes a directory name argument")
-    if in_alt_op_start != 0:
-        raise DataParseError("altOpStart can only be specified once")
-    default_alt_op_dir = tokens[1]
-    in_alt_op_start = 1
-
-#
 # Parse arch config file --
 # Set location of a single alt opcode's source file.
 #
 def altEntry(tokens):
-    #global alt_opcode_locations
+    global generate_alt_table
     if len(tokens) != 3:
         raise DataParseError("alt requires exactly two arguments")
-    if in_alt_op_start != 1:
+    if in_op_start != 1:
         raise DataParseError("alt statements must be between opStart/opEnd")
     try:
         index = opcodes.index(tokens[1])
@@ -157,6 +169,7 @@ def altEntry(tokens):
         print "Warning: alt overrides earlier %s (%s -> %s)" \
                 % (tokens[1], alt_opcode_locations[tokens[1]], tokens[2])
     alt_opcode_locations[tokens[1]] = tokens[2]
+    generate_alt_table = True
 
 #
 # Parse arch config file --
@@ -178,20 +191,6 @@ def opEntry(tokens):
     opcode_locations[tokens[1]] = tokens[2]
 
 #
-# Parse arch config file --
-# End of opcode list; emit instruction blocks.
-#
-def opEnd(tokens):
-    global in_op_start
-    if len(tokens) != 1:
-        raise DataParseError("opEnd takes no arguments")
-    if in_op_start != 1:
-        raise DataParseError("opEnd must follow opStart, and only appear once")
-    in_op_start = 2
-
-    loadAndEmitOpcodes()
-
-#
 # Emit jump table
 #
 def emitJmpTable(start_label, prefix):
@@ -207,22 +206,24 @@ def emitJmpTable(start_label, prefix):
 
 #
 # Parse arch config file --
-# End of alternate opcode list; emit instruction blocks.
-# If jump table style, emit tables following
+# End of opcode list; emit instruction blocks.
 #
-def altOpEnd(tokens):
-    global in_alt_op_start
+def opEnd(tokens):
+    global in_op_start
     if len(tokens) != 1:
-        raise DataParseError("altOpEnd takes no arguments")
-    if in_alt_op_start != 1:
-        raise DataParseError("altOpEnd follows altOStart, once")
-    in_alt_op_start = 2
+        raise DataParseError("opEnd takes no arguments")
+    if in_op_start != 1:
+        raise DataParseError("opEnd must follow opStart, and only appear once")
+    in_op_start = 2
 
-    loadAndEmitAltOpcodes()
+    loadAndEmitOpcodes()
 
-    if jmp_table:
-        emitJmpTable("dvmAsmInstructionStart", label_prefix);
-        emitJmpTable("dvmAsmAltInstructionStart", alt_label_prefix);
+    if generate_alt_table:
+        loadAndEmitAltOpcodes()
+        if style == "jump-table":
+            emitJmpTable("dvmAsmInstructionStart", label_prefix);
+            emitJmpTable("dvmAsmAltInstructionStart", alt_label_prefix);
+
 
 #
 # Extract an ordered list of instructions from the VM sources.  We use the
@@ -247,7 +248,7 @@ def getOpcodeList():
     return opcodes
 
 def emitAlign():
-    if not jmp_table:
+    if style == "computed-goto":
         asm_fp.write("    .balign %d\n" % handler_size_bytes)
 
 #
@@ -257,7 +258,7 @@ def loadAndEmitOpcodes():
     sister_list = []
     assert len(opcodes) == kNumPackedOpcodes
     need_dummy_start = False
-    if jmp_table:
+    if style == "jump-table":
         start_label = "dvmAsmInstructionStartCode"
         end_label = "dvmAsmInstructionEndCode"
     else:
@@ -298,7 +299,7 @@ def loadAndEmitOpcodes():
     asm_fp.write("    .global %s\n" % end_label)
     asm_fp.write("%s:\n" % end_label)
 
-    if not jmp_table:
+    if style == "computed-goto":
         emitSectionComment("Sister implementations", asm_fp)
         asm_fp.write("    .global dvmAsmSisterStart\n")
         asm_fp.write("    .type   dvmAsmSisterStart, %function\n")
@@ -329,7 +330,7 @@ def loadAndEmitAltStub(source, opindex):
 #
 def loadAndEmitAltOpcodes():
     assert len(opcodes) == kNumPackedOpcodes
-    if jmp_table:
+    if style == "jump-table":
         start_label = "dvmAsmAltInstructionStartCode"
         end_label = "dvmAsmAltInstructionEndCode"
     else:
@@ -347,7 +348,7 @@ def loadAndEmitAltOpcodes():
         if alt_opcode_locations.has_key(op):
             source = "%s/ALT_%s.S" % (alt_opcode_locations[op], op)
         else:
-            source = "%s/ALT_STUB.S" % default_alt_op_dir
+            source = default_alt_stub
         loadAndEmitAltStub(source, i)
 
     emitAlign()
@@ -462,7 +463,7 @@ def appendSourceFile(source, dict, outfp, sister_list):
 
         elif line.startswith("%break") and sister_list != None:
             # allow more than one %break, ignoring all following the first
-            if not jmp_table and not in_sister:
+            if style == "computed-goto" and not in_sister:
                 in_sister = True
                 sister_list.append("\n/* continuation for %(opcode)s */\n"%dict)
             continue
@@ -580,20 +581,23 @@ try:
                 importFile(tokens)
             elif tokens[0] == "asm-stub":
                 setAsmStub(tokens)
+            elif tokens[0] == "asm-alt-stub":
+                setAsmAltStub(tokens)
             elif tokens[0] == "op-start":
                 opStart(tokens)
             elif tokens[0] == "op-end":
                 opEnd(tokens)
-            elif tokens[0] == "op-alt-start":
-                altOpStart(tokens)
-            elif tokens[0] == "op-alt-end":
-                altOpEnd(tokens)
             elif tokens[0] == "alt":
                 altEntry(tokens)
             elif tokens[0] == "op":
                 opEntry(tokens)
+            elif tokens[0] == "handler-style":
+                setHandlerStyle(tokens)
             else:
                 raise DataParseError, "unrecognized command '%s'" % tokens[0]
+            if style == None:
+                print "tokens[0] = %s" % tokens[0]
+                raise DataParseError, "handler-style must be first command"
 except DataParseError, err:
     print "Failed: " + str(err)
     # TODO: remove output files so "make" doesn't get confused

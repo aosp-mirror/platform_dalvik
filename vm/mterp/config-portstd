@@ -19,7 +19,7 @@
 # here because it's convenient.
 #
 
-#handler-size 64
+handler-style all-c
 
 # C file header and basic definitions
 import c/header.c

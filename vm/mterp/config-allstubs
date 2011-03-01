@@ -15,9 +15,12 @@
 #
 # Configuration for "allstubs" target.  This is structured like the
 # assembly interpreters, but consists entirely of C stubs, making it
-# a handy if inefficient way to exercise all of the C handlers.
+# a handy if inefficient way to exercise all of the C handlers.  The
+# handler-style command should match the target assembly interpreter.
 #
 
+#handler-style jump-table
+handler-style computed-goto
 handler-size 64
 
 # C file header and basic definitions
