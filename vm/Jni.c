@@ -2077,7 +2077,7 @@ static jint PushLocalFrame(JNIEnv* env, jint capacity)
 }
 
 /*
- * Pop the local frame off.  If "result" is not null, add it as a
+ * Pop the local frame off.  If "jresult" is not null, add it as a
  * local reference on the now-current frame.
  */
 static jobject PopLocalFrame(JNIEnv* env, jobject jresult)
@@ -2091,7 +2091,7 @@ static jobject PopLocalFrame(JNIEnv* env, jobject jresult)
     }
     jresult = addLocalReference(env, result);
     JNI_EXIT();
-    return result;
+    return jresult;
 }
 
 /*
