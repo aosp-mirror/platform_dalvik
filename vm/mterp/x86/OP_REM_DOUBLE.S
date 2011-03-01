@@ -4,8 +4,7 @@
     movzbl   2(rPC),%eax            # eax<- CC
     fldl     (rFP,%ecx,4)           # vCC to fp stack
     fldl     (rFP,%eax,4)           # vCC to fp stack
-    movzbl   rINSTbl,%ecx           # ecx<- AA
-    FETCH_INST_OPCODE 2 %edx
+    FETCH_INST_OPCODE 2 %ecx
 1:
     fprem
     fstsw     %ax
@@ -13,5 +12,5 @@
     jp        1b
     fstp      %st(1)
     ADVANCE_PC 2
-    fstpl    (rFP,%ecx,4)           # %st to vAA
-    GOTO_NEXT_R %edx
+    fstpl    (rFP,rINST,4)           # %st to vAA
+    GOTO_NEXT_R %ecx

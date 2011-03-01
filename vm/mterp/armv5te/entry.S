@@ -62,7 +62,7 @@ dvmMterpStdRun:
     mov     rSELF, r0                   @ set rSELF
     ldr     r1, [r0, #offThread_entryPoint]   @ enum is 4 bytes in aapcs-EABI
     LOAD_PC_FP_FROM_SELF()              @ load rPC and rFP from "thread"
-    adr     rIBASE, dvmAsmInstructionStart  @ set rIBASE
+    ldr     rIBASE, [rSELF, #offThread_curHandlerTable] @ set rIBASE
     cmp     r1, #kInterpEntryInstr      @ usual case?
     bne     .Lnot_instr                 @ no, handle it
 

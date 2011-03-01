@@ -16,16 +16,14 @@
     je      .L${opcode}_errNullObject   # go if so
     movl    %eax,OUT_ARG1(%esp)
     movl    %ecx,OUT_ARG0(%esp)
-    jmp     .L${opcode}_continue
-%break
-
-.L${opcode}_continue:
+    SPILL(rIBASE)
     call    dvmUnlockObject             # unlock(self,obj)
-    FETCH_INST_OPCODE 1 %edx
+    UNSPILL(rIBASE)
+    FETCH_INST_OPCODE 1 %ecx
     testl   %eax,%eax                   # success?
     ADVANCE_PC 1
     je      common_exceptionThrown      # no, exception pending
-    GOTO_NEXT_R %edx
+    GOTO_NEXT_R %ecx
 .L${opcode}_errNullObject:
     ADVANCE_PC 1                        # advance before throw
     jmp     common_errNullObject

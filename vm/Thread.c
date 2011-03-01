@@ -971,6 +971,12 @@ static Thread* allocThread(int interpStackSize)
     thread->interpStackStart = stackBottom + interpStackSize;
     thread->interpStackEnd = stackBottom + STACK_OVERFLOW_RESERVE;
 
+#ifndef DVM_NO_ASM_INTERP
+    thread->mainHandlerTable = dvmAsmInstructionStart;
+    thread->altHandlerTable = dvmAsmAltInstructionStart;
+    thread->curHandlerTable = thread->mainHandlerTable;
+#endif
+
     /* give the thread code a chance to set things up */
     dvmInitInterpStack(thread, interpStackSize);
 

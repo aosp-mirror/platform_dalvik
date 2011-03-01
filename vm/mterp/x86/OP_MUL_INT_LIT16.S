@@ -6,8 +6,10 @@
     GET_VREG_R %eax %eax                # eax<- vB
     movswl   2(rPC),%ecx                # ecx<- ssssCCCC
     andb     $$0xf,rINSTbl              # rINST<- A
-    imull     %ecx,%eax                 # trashes edx
-    FETCH_INST_OPCODE 2 %edx
+    SPILL(rIBASE)
+    imull     %ecx,%eax                 # trashes rIBASE/edx
+    UNSPILL(rIBASE)
+    FETCH_INST_OPCODE 2 %ecx
     ADVANCE_PC 2
     SET_VREG %eax rINST
-    GOTO_NEXT_R %edx
+    GOTO_NEXT_R %ecx

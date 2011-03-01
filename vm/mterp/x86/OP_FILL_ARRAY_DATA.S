@@ -6,9 +6,11 @@
     EXPORT_PC
     movl    %eax,OUT_ARG0(%esp)
     movl    %ecx,OUT_ARG1(%esp)
+    SPILL(rIBASE)
     call    dvmInterpHandleFillArrayData
-    FETCH_INST_OPCODE 3 %edx
+    UNSPILL(rIBASE)
+    FETCH_INST_OPCODE 3 %ecx
     testl   %eax,%eax                   # exception thrown?
     je      common_exceptionThrown
     ADVANCE_PC 3
-    GOTO_NEXT_R %edx
+    GOTO_NEXT_R %ecx

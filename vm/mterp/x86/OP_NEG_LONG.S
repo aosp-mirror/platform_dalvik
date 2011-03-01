@@ -8,8 +8,8 @@
     negl      %eax
     adcl      $$0,%ecx
     negl      %ecx
-    FETCH_INST_OPCODE 1 %edx
     SET_VREG_WORD %eax rINST 0    # v[A+0]<- eax
+    FETCH_INST_OPCODE 1 %eax
     SET_VREG_WORD %ecx rINST 1    # v[A+1]<- ecx
     ADVANCE_PC 1
-    GOTO_NEXT_R %edx
+    GOTO_NEXT_R %eax

@@ -17,10 +17,7 @@
     je        common_errNullObject      # yes, throw
     movl      offMethod_clazz(%eax),%eax # eax<- method->clazz
     testl     %ecx,%ecx                 # already resolved?
-    jne       .L${opcode}_continue      # yes - go on
-    jmp       .L${opcode}_resolve
-%break
-
+    je       .L${opcode}_resolve
     /*
      * At this point:
      *  ecx = resolved base method [r0]

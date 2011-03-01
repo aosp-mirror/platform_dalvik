@@ -11,18 +11,14 @@
     testl     %eax,%eax                 # null array object?
     je        common_errNullObject      # bail if so
     cmpl      offArrayObject_length(%eax),%ecx
-    jb        .L${opcode}_finish        # index < length, OK
-    jmp       common_errArrayIndex      # index >= length, bail.  Expects:
+    jae       common_errArrayIndex      # index >= length, bail.  Expects:
                                         #   arrayObj in eax
                                         #   index in ecx
-%break
-
-.L${opcode}_finish:
     leal      offArrayObject_contents(%eax,%ecx,8),%eax
     GET_VREG_WORD %ecx rINST 0
     GET_VREG_WORD rINST rINST 1
-    movl      rINST,4(%eax)
-    FETCH_INST_OPCODE 2 %edx
     movl      %ecx,(%eax)
+    FETCH_INST_OPCODE 2 %ecx
+    movl      rINST,4(%eax)
     ADVANCE_PC 2
-    GOTO_NEXT_R %edx
+    GOTO_NEXT_R %ecx

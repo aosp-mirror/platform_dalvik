@@ -1,2 +1,2 @@
 %verify "executed"
-%include "x86/bindiv2addr.S" {"result":"%edx","special":"$0"}
+%include "x86/bindiv2addr.S" {"result":"rIBASE","special":"$0"}

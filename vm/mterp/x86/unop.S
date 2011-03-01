@@ -8,10 +8,10 @@
     sarl     $$4,rINST             # rINST<- B
     GET_VREG_R %eax rINST           # eax<- vB
     andb     $$0xf,%cl              # ecx<- A
-    FETCH_INST_OPCODE 1 %edx
-    ADVANCE_PC 1
     $pre0
     $pre1
     $instr
     SET_VREG %eax %ecx
-    GOTO_NEXT_R %edx
+    FETCH_INST_OPCODE 1 %ecx
+    ADVANCE_PC 1
+    GOTO_NEXT_R %ecx

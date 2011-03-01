@@ -24841,9 +24841,8 @@ OP_IF_LEZ_2f:
     call        common_abort
 
 
-
     .balign 64
-    .size   .L_OP_NOP, .-.L_OP_NOP
+    .size   dvmAsmInstructionStart, .-dvmAsmInstructionStart
     .global dvmAsmInstructionEnd
 dvmAsmInstructionEnd:
 

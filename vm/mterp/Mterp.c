@@ -31,8 +31,8 @@ bool dvmCheckAsmConstants(void)
 
 #ifndef DVM_NO_ASM_INTERP
 
-    extern char dvmAsmInstructionStart[];
-    extern char dvmAsmInstructionEnd[];
+    extern void* dvmAsmInstructionStart[];
+    extern void* dvmAsmInstructionEnd[];
 
 #define ASM_DEF_VERIFY
 #include "mterp/common/asm-constants.h"
@@ -42,17 +42,22 @@ bool dvmCheckAsmConstants(void)
         dvmAbort();
     }
 
+#ifndef DVM_JMP_TABLE_MTERP
     /*
-     * If an instruction overflows the 64-byte handler size limit, it will
-     * push everything up and alter the total size.  Check it here.
+     * If we're using computed goto instruction transitions, make sure
+     * none of the handlers overflows the 64-byte limit.  This won't tell
+     * which one did, but if any one is too big the total size will
+     * overflow.
      */
     const int width = 64;
-    int interpSize = dvmAsmInstructionEnd - dvmAsmInstructionStart;
+    int interpSize = (uintptr_t) dvmAsmInstructionEnd -
+                     (uintptr_t) dvmAsmInstructionStart;
     if (interpSize != 0 && interpSize != kNumPackedOpcodes*width) {
         LOGE("ERROR: unexpected asm interp size %d\n", interpSize);
         LOGE("(did an instruction handler exceed %d bytes?)\n", width);
         dvmAbort();
     }
+#endif
 
 #endif // ndef DVM_NO_ASM_INTERP
 

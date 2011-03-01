@@ -65,4 +65,9 @@ void dvmFlushBreakpoints(ClassObject* clazz);
  */
 void dvmUpdateInterpBreak(int newMode, bool enable);
 
+#ifndef DVM_NO_ASM_INTERP
+extern void* dvmAsmInstructionStart[];
+extern void* dvmAsmAltInstructionStart[];
+#endif
+
 #endif /*_DALVIK_INTERP_INTERP*/

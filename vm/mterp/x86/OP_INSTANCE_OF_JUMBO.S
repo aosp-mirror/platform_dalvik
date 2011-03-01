@@ -17,26 +17,23 @@
     movl    rSELF,%ecx
     testl   %eax,%eax                   # object null?
     movl    offThread_methodClassDex(%ecx),%ecx  # ecx<- pDvmDex
+    SPILL(rIBASE)                       # preserve rIBASE
     je      .L${opcode}_store           # null obj, not instance, store it
-    movl    2(rPC),%edx                 # edx<- AAAAAAAA
+    movl    2(rPC),rIBASE               # edx<- AAAAAAAA
     movl    offDvmDex_pResClasses(%ecx),%ecx # ecx<- pDvmDex->pResClasses
-    movl    (%ecx,%edx,4),%ecx          # ecx<- resolved class
+    movl    (%ecx,rIBASE,4),%ecx        # ecx<- resolved class
     movl    offObject_clazz(%eax),%eax  # eax<- obj->clazz
     testl   %ecx,%ecx                   # have we resolved this before?
     je      .L${opcode}_resolve         # not resolved, do it now
 .L${opcode}_resolved:  # eax<- obj->clazz, ecx<- resolved class
     cmpl    %eax,%ecx                   # same class (trivial success)?
     je      .L${opcode}_trivial         # yes, trivial finish
-    jmp     .L${opcode}_fullcheck       # no, do full check
-%break
-
     /*
      * Trivial test failed, need to perform full check.  This is common.
      *  eax holds obj->clazz
      *  ecx holds class resolved from BBBB
      *  rINST has BA
      */
-.L${opcode}_fullcheck:
     movl    %eax,OUT_ARG0(%esp)
     movl    %ecx,OUT_ARG1(%esp)
     call    dvmInstanceofNonTrivial     # eax<- boolean result
@@ -47,21 +44,23 @@
      * rINST holds BBBB
      */
 .L${opcode}_store:
-    FETCH_INST_OPCODE 5 %edx
+    FETCH_INST_OPCODE 5 %ecx
+    UNSPILL(rIBASE)
     ADVANCE_PC 5
     SET_VREG %eax rINST                 # vBBBB<- eax
-    GOTO_NEXT_R %edx
+    GOTO_NEXT_R %ecx
 
     /*
      * Trivial test succeeded, save and bail.
      *  r9 holds BBBB
      */
 .L${opcode}_trivial:
-    FETCH_INST_OPCODE 5 %edx
+    FETCH_INST_OPCODE 5 %ecx
+    UNSPILL(rIBASE)
     ADVANCE_PC 5
     movl    $$1,%eax
     SET_VREG %eax rINST                 # vBBBB<- true
-    GOTO_NEXT_R %edx
+    GOTO_NEXT_R %ecx
 
     /*
      * Resolution required.  This is the least-likely path.
@@ -69,7 +68,7 @@
      *  edx holds AAAAAAAA
      */
 .L${opcode}_resolve:
-    movl    %edx,OUT_ARG1(%esp)         # arg1<- AAAAAAAA
+    movl    rIBASE,OUT_ARG1(%esp)       # arg1<- AAAAAAAA
     movl    rSELF,%ecx
     movl    offThread_method(%ecx),%ecx
     movl    $$1,OUT_ARG2(%esp)          # arg2<- true

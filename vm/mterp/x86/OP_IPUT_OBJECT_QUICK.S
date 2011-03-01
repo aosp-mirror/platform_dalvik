@@ -12,16 +12,12 @@
     je        common_errNullObject
     movl      rINST,(%ecx,%eax,1)
     movl      rSELF,%eax
-    jmp       .L${opcode}_finish
-%break
-
-.L${opcode}_finish:
     testl     rINST,rINST               # did we store null?
-    FETCH_INST_OPCODE 2 %edx
     movl      offThread_cardTable(%eax),%eax  # get card table base
     je        1f                            # skip card mark if null store
     shrl      $$GC_CARD_SHIFT,%ecx          # object head to card number
     movb      %al,(%eax,%ecx)               # mark card based on object head
 1:
+    FETCH_INST_OPCODE 2 %ecx
     ADVANCE_PC 2
-    GOTO_NEXT_R %edx
+    GOTO_NEXT_R %ecx

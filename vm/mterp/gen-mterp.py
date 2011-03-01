@@ -29,10 +29,15 @@ verbose = False
 handler_size_bits = -1000
 handler_size_bytes = -1000
 in_op_start = 0             # 0=not started, 1=started, 2=ended
+in_alt_op_start = 0         # 0=not started, 1=started, 2=ended
 default_op_dir = None
+default_alt_op_dir = None
 opcode_locations = {}
+alt_opcode_locations = {}
 asm_stub_text = []
 label_prefix = ".L"         # use ".L" to hide labels from gdb
+alt_label_prefix = ".L_ALT" # use ".L" to hide labels from gdb
+jmp_table = False           # jump table vs. computed goto style
 
 # Exception class.
 class DataParseError(SyntaxError):
@@ -48,27 +53,31 @@ def getGlobalSubDict():
 #
 # Parse arch config file --
 # Set handler_size_bytes to the value of tokens[1], and handler_size_bits to
-# log2(handler_size_bytes).  Throws an exception if "bytes" is not a power
-# of two.
+# log2(handler_size_bytes).  Throws an exception if "bytes" is not 0 or
+# a power of two.
 #
 def setHandlerSize(tokens):
-    global handler_size_bits, handler_size_bytes
+    global handler_size_bits, handler_size_bytes, jmp_table
     if len(tokens) != 2:
         raise DataParseError("handler-size requires one argument")
     if handler_size_bits != -1000:
         raise DataParseError("handler-size may only be set once")
 
-    # compute log2(n), and make sure n is a power of 2
+    # compute log2(n), and make sure n is 0 or a power of 2
     handler_size_bytes = bytes = int(tokens[1])
-    bits = -1
-    while bytes > 0:
-        bytes //= 2     # halve with truncating division
-        bits += 1
+    if handler_size_bytes == 0:
+        jmp_table = True
+        handler_size_bits = 0;
+    else:
+        bits = -1
+        while bytes > 0:
+            bytes //= 2     # halve with truncating division
+            bits += 1
 
-    if handler_size_bytes == 0 or handler_size_bytes != (1 << bits):
-        raise DataParseError("handler-size (%d) must be power of 2 and > 0" \
-                % orig_bytes)
-    handler_size_bits = bits
+        if handler_size_bytes == 0 or handler_size_bytes != (1 << bits):
+            raise DataParseError("handler-size (%d) must be power of 2" \
+                    % orig_bytes)
+        handler_size_bits = bits
 
 #
 # Parse arch config file --
@@ -117,6 +126,39 @@ def opStart(tokens):
     in_op_start = 1
 
 #
+# Parse arch config file
+# Start of optional alternate opcode list.
+#
+def altOpStart(tokens):
+    global in_alt_op_start
+    global default_alt_op_dir
+    if len(tokens) != 2:
+        raise DataParseError("altOpStart takes a directory name argument")
+    if in_alt_op_start != 0:
+        raise DataParseError("altOpStart can only be specified once")
+    default_alt_op_dir = tokens[1]
+    in_alt_op_start = 1
+
+#
+# Parse arch config file --
+# Set location of a single alt opcode's source file.
+#
+def altEntry(tokens):
+    #global alt_opcode_locations
+    if len(tokens) != 3:
+        raise DataParseError("alt requires exactly two arguments")
+    if in_alt_op_start != 1:
+        raise DataParseError("alt statements must be between opStart/opEnd")
+    try:
+        index = opcodes.index(tokens[1])
+    except ValueError:
+        raise DataParseError("unknown opcode %s" % tokens[1])
+    if alt_opcode_locations.has_key(tokens[1]):
+        print "Warning: alt overrides earlier %s (%s -> %s)" \
+                % (tokens[1], alt_opcode_locations[tokens[1]], tokens[2])
+    alt_opcode_locations[tokens[1]] = tokens[2]
+
+#
 # Parse arch config file --
 # Set location of a single opcode's source file.
 #
@@ -149,6 +191,38 @@ def opEnd(tokens):
 
     loadAndEmitOpcodes()
 
+#
+# Emit jump table
+#
+def emitJmpTable(start_label, prefix):
+    asm_fp.write("\n    .global %s\n" % start_label)
+    asm_fp.write("    .text\n")
+    asm_fp.write("%s:\n" % start_label)
+    for i in xrange(kNumPackedOpcodes):
+        op = opcodes[i]
+        dict = getGlobalSubDict()
+        dict.update({ "opcode":op, "opnum":i })
+        asm_fp.write("    .long " + prefix + \
+                     "_%(opcode)s /* 0x%(opnum)02x */\n" % dict)
+
+#
+# Parse arch config file --
+# End of alternate opcode list; emit instruction blocks.
+# If jump table style, emit tables following
+#
+def altOpEnd(tokens):
+    global in_alt_op_start
+    if len(tokens) != 1:
+        raise DataParseError("altOpEnd takes no arguments")
+    if in_alt_op_start != 1:
+        raise DataParseError("altOpEnd follows altOStart, once")
+    in_alt_op_start = 2
+
+    loadAndEmitAltOpcodes()
+
+    if jmp_table:
+        emitJmpTable("dvmAsmInstructionStart", label_prefix);
+        emitJmpTable("dvmAsmAltInstructionStart", alt_label_prefix);
 
 #
 # Extract an ordered list of instructions from the VM sources.  We use the
@@ -172,6 +246,9 @@ def getOpcodeList():
         raise SyntaxError, "bad opcode count"
     return opcodes
 
+def emitAlign():
+    if not jmp_table:
+        asm_fp.write("    .balign %d\n" % handler_size_bytes)
 
 #
 # Load and emit opcodes for all kNumPackedOpcodes instructions.
@@ -180,11 +257,17 @@ def loadAndEmitOpcodes():
     sister_list = []
     assert len(opcodes) == kNumPackedOpcodes
     need_dummy_start = False
+    if jmp_table:
+        start_label = "dvmAsmInstructionStartCode"
+        end_label = "dvmAsmInstructionEndCode"
+    else:
+        start_label = "dvmAsmInstructionStart"
+        end_label = "dvmAsmInstructionEnd"
 
     # point dvmAsmInstructionStart at the first handler or stub
-    asm_fp.write("\n    .global dvmAsmInstructionStart\n")
-    asm_fp.write("    .type   dvmAsmInstructionStart, %function\n")
-    asm_fp.write("dvmAsmInstructionStart = " + label_prefix + "_OP_NOP\n")
+    asm_fp.write("\n    .global %s\n" % start_label)
+    asm_fp.write("    .type   %s, %%function\n" % start_label)
+    asm_fp.write("%s = " % start_label + label_prefix + "_OP_NOP\n")
     asm_fp.write("    .text\n\n")
 
     for i in xrange(kNumPackedOpcodes):
@@ -206,29 +289,71 @@ def loadAndEmitOpcodes():
     # need to have the dvmAsmInstructionStart label point at OP_NOP, and it's
     # too annoying to try to slide it in after the alignment psuedo-op, so
     # we take the low road and just emit a dummy OP_NOP here.
-    #
-    # The dvmAsmInstructionStart will also use the size for OP_NOP, so
-    # we want to generate a .size directive that spans all handlers.
     if need_dummy_start:
-        asm_fp.write("    .balign %d\n" % handler_size_bytes)
+        emitAlign()
         asm_fp.write(label_prefix + "_OP_NOP:   /* dummy */\n");
 
-    asm_fp.write("\n    .balign %d\n" % handler_size_bytes)
-    asm_fp.write("    .size   .L_OP_NOP, .-.L_OP_NOP\n")
-    asm_fp.write("    .global dvmAsmInstructionEnd\n")
-    asm_fp.write("dvmAsmInstructionEnd:\n")
+    emitAlign()
+    asm_fp.write("    .size   %s, .-%s\n" % (start_label, start_label))
+    asm_fp.write("    .global %s\n" % end_label)
+    asm_fp.write("%s:\n" % end_label)
 
-    emitSectionComment("Sister implementations", asm_fp)
-    asm_fp.write("    .global dvmAsmSisterStart\n")
-    asm_fp.write("    .type   dvmAsmSisterStart, %function\n")
-    asm_fp.write("    .text\n")
-    asm_fp.write("    .balign 4\n")
-    asm_fp.write("dvmAsmSisterStart:\n")
-    asm_fp.writelines(sister_list)
+    if not jmp_table:
+        emitSectionComment("Sister implementations", asm_fp)
+        asm_fp.write("    .global dvmAsmSisterStart\n")
+        asm_fp.write("    .type   dvmAsmSisterStart, %function\n")
+        asm_fp.write("    .text\n")
+        asm_fp.write("    .balign 4\n")
+        asm_fp.write("dvmAsmSisterStart:\n")
+        asm_fp.writelines(sister_list)
 
-    asm_fp.write("\n    .size   dvmAsmSisterStart, .-dvmAsmSisterStart\n")
-    asm_fp.write("    .global dvmAsmSisterEnd\n")
-    asm_fp.write("dvmAsmSisterEnd:\n\n")
+        asm_fp.write("\n    .size   dvmAsmSisterStart, .-dvmAsmSisterStart\n")
+        asm_fp.write("    .global dvmAsmSisterEnd\n")
+        asm_fp.write("dvmAsmSisterEnd:\n\n")
+
+#
+# Load an alternate entry stub
+#
+def loadAndEmitAltStub(source, opindex):
+    op = opcodes[opindex]
+    if verbose:
+        print " alt emit %s --> stub" % source
+    dict = getGlobalSubDict()
+    dict.update({ "opcode":op, "opnum":opindex })
+
+    emitAsmHeader(asm_fp, dict, alt_label_prefix)
+    appendSourceFile(source, dict, asm_fp, None)
+
+#
+# Load and emit alternate opcodes for all kNumPackedOpcodes instructions.
+#
+def loadAndEmitAltOpcodes():
+    assert len(opcodes) == kNumPackedOpcodes
+    if jmp_table:
+        start_label = "dvmAsmAltInstructionStartCode"
+        end_label = "dvmAsmAltInstructionEndCode"
+    else:
+        start_label = "dvmAsmAltInstructionStart"
+        end_label = "dvmAsmAltInstructionEnd"
+
+    # point dvmAsmInstructionStart at the first handler or stub
+    asm_fp.write("\n    .global %s\n" % start_label)
+    asm_fp.write("    .type   %s, %%function\n" % start_label)
+    asm_fp.write("%s:\n" % start_label)
+    asm_fp.write("    .text\n\n")
+
+    for i in xrange(kNumPackedOpcodes):
+        op = opcodes[i]
+        if alt_opcode_locations.has_key(op):
+            source = "%s/ALT_%s.S" % (alt_opcode_locations[op], op)
+        else:
+            source = "%s/ALT_STUB.S" % default_alt_op_dir
+        loadAndEmitAltStub(source, i)
+
+    emitAlign()
+    asm_fp.write("    .size   %s, .-%s\n" % (start_label, start_label))
+    asm_fp.write("    .global %s\n" % end_label)
+    asm_fp.write("%s:\n" % end_label)
 
 #
 # Load a C fragment and emit it, then output an assembly stub.
@@ -257,28 +382,28 @@ def loadAndEmitAsm(location, opindex, sister_list):
     if verbose:
         print " emit %s --> asm" % source
 
-    emitAsmHeader(asm_fp, dict)
+    emitAsmHeader(asm_fp, dict, label_prefix)
     appendSourceFile(source, dict, asm_fp, sister_list)
 
 #
 # Output the alignment directive and label for an assembly piece.
 #
-def emitAsmHeader(outfp, dict):
+def emitAsmHeader(outfp, dict, prefix):
     outfp.write("/* ------------------------------ */\n")
     # The alignment directive ensures that the handler occupies
     # at least the correct amount of space.  We don't try to deal
     # with overflow here.
-    outfp.write("    .balign %d\n" % handler_size_bytes)
+    emitAlign()
     # Emit a label so that gdb will say the right thing.  We prepend an
     # underscore so the symbol name doesn't clash with the Opcode enum.
-    outfp.write(label_prefix + "_%(opcode)s: /* 0x%(opnum)02x */\n" % dict)
+    outfp.write(prefix + "_%(opcode)s: /* 0x%(opnum)02x */\n" % dict)
 
 #
 # Output a generic instruction stub that updates the "glue" struct and
 # calls the C implementation.
 #
 def emitAsmStub(outfp, dict):
-    emitAsmHeader(outfp, dict)
+    emitAsmHeader(outfp, dict, label_prefix)
     for line in asm_stub_text:
         templ = Template(line)
         outfp.write(templ.substitute(dict))
@@ -337,7 +462,7 @@ def appendSourceFile(source, dict, outfp, sister_list):
 
         elif line.startswith("%break") and sister_list != None:
             # allow more than one %break, ignoring all following the first
-            if not in_sister:
+            if not jmp_table and not in_sister:
                 in_sister = True
                 sister_list.append("\n/* continuation for %(opcode)s */\n"%dict)
             continue
@@ -459,6 +584,12 @@ try:
                 opStart(tokens)
             elif tokens[0] == "op-end":
                 opEnd(tokens)
+            elif tokens[0] == "op-alt-start":
+                altOpStart(tokens)
+            elif tokens[0] == "op-alt-end":
+                altOpEnd(tokens)
+            elif tokens[0] == "alt":
+                altEntry(tokens)
             elif tokens[0] == "op":
                 opEntry(tokens)
             else:

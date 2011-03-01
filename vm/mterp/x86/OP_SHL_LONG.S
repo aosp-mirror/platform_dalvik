@@ -9,26 +9,24 @@
      */
     /* shl-long vAA, vBB, vCC */
     /* ecx gets shift count */
-    /* Need to spill edx */
+    /* Need to spill rINST */
     /* rINSTw gets AA */
     movzbl    2(rPC),%eax               # eax<- BB
     movzbl    3(rPC),%ecx               # ecx<- CC
-    GET_VREG_WORD %edx %eax 1           # ecx<- v[BB+1]
+    SPILL(rIBASE)
+    GET_VREG_WORD rIBASE %eax 1         # ecx<- v[BB+1]
     GET_VREG_R   %ecx %ecx              # ecx<- vCC
     GET_VREG_WORD %eax %eax 0           # eax<- v[BB+0]
-    shldl     %eax,%edx
+    shldl     %eax,rIBASE
     sall      %cl,%eax
     testb     $$32,%cl
     je        2f
-    movl      %eax,%edx
+    movl      %eax,rIBASE
     xorl      %eax,%eax
 2:
-    SET_VREG_WORD %edx rINST 1          # v[AA+1]<- %edx
-    FETCH_INST_OPCODE 2 %edx
-    jmp       .L${opcode}_finish
-%break
-
-.L${opcode}_finish:
+    SET_VREG_WORD rIBASE rINST 1        # v[AA+1]<- rIBASE
+    FETCH_INST_OPCODE 2 %ecx
+    UNSPILL(rIBASE)
     SET_VREG_WORD %eax rINST 0          # v[AA+0]<- %eax
     ADVANCE_PC 2
-    GOTO_NEXT_R %edx
+    GOTO_NEXT_R %ecx

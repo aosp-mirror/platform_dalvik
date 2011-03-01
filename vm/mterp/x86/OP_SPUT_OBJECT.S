@@ -16,14 +16,8 @@
 .L${opcode}_finish:                              # field ptr in eax
     movzbl    rINSTbl,%ecx                       # ecx<- AA
     GET_VREG_R  %ecx %ecx
-    jmp       .L${opcode}_continue
-%break
-
-
-.L${opcode}_continue:
     movl      %ecx,offStaticField_value(%eax)    # do the store
     testl     %ecx,%ecx                          # stored null object ptr?
-    FETCH_INST_OPCODE 2 %edx
     je        1f                                 # skip card mark if null
     movl      rSELF,%ecx
     movl      offField_clazz(%eax),%eax          # eax<- method->clazz
@@ -31,8 +25,9 @@
     shrl      $$GC_CARD_SHIFT,%eax               # head to card number
     movb      %cl,(%ecx,%eax)                    # mark card
 1:
+    FETCH_INST_OPCODE 2 %ecx
     ADVANCE_PC 2
-    GOTO_NEXT_R %edx
+    GOTO_NEXT_R %ecx
 
 .L${opcode}_resolve:
     movl     rSELF,%ecx
@@ -42,7 +37,9 @@
     movl     offMethod_clazz(%ecx),%ecx         # ecx<- method->clazz
     movl     %eax,OUT_ARG1(%esp)
     movl     %ecx,OUT_ARG0(%esp)
+    SPILL(rIBASE)
     call     dvmResolveStaticField              # eax<- resolved StaticField ptr
+    UNSPILL(rIBASE)
     testl    %eax,%eax
     jne      .L${opcode}_finish                 # success, continue
     jmp      common_exceptionThrown             # no, handle exception

@@ -8,8 +8,8 @@
    andb     $$0xf,%al                 # eax<- A
    testl    %ecx,%ecx                 # is null?
    je       common_errNullObject
-   FETCH_INST_OPCODE 1 %edx
-   movl     offArrayObject_length(%ecx),%ecx
+   movl     offArrayObject_length(%ecx),rINST
+   FETCH_INST_OPCODE 1 %ecx
    ADVANCE_PC 1
-   SET_VREG %ecx %eax
-   GOTO_NEXT_R %edx
+   SET_VREG rINST %eax
+   GOTO_NEXT_R %ecx

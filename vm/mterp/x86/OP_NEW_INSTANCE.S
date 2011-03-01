@@ -13,6 +13,7 @@
     movl      rSELF,%ecx
     movzwl    2(rPC),%eax               # eax<- BBBB
     movl      offThread_methodClassDex(%ecx),%ecx  # ecx<- pDvmDex
+    SPILL(rIBASE)
     movl      offDvmDex_pResClasses(%ecx),%ecx # ecx<- pDvmDex->pResClasses
     EXPORT_PC
     movl      (%ecx,%eax,4),%ecx        # ecx<- resolved class
@@ -20,10 +21,7 @@
     je        .L${opcode}_resolve       # no, go do it
 .L${opcode}_resolved:  # on entry, ecx<- class
     cmpb      $$CLASS_INITIALIZED,offClassObject_status(%ecx)
-    je        .L${opcode}_initialized
-    jmp       .L${opcode}_needinit
-%break
-
+    jne       .L${opcode}_needinit
 .L${opcode}_initialized:  # on entry, ecx<- class
     /* TODO: remove test for interface/abstract, now done in verifier */
     testl     $$(ACC_INTERFACE|ACC_ABSTRACT),offClassObject_accessFlags(%ecx)
@@ -32,12 +30,13 @@
 .L${opcode}_finish: # ecx=class
     movl     %ecx,OUT_ARG0(%esp)
     call     dvmAllocObject             # eax<- new object
-    FETCH_INST_OPCODE 2 %edx
+    FETCH_INST_OPCODE 2 %ecx
+    UNSPILL(rIBASE)
     testl    %eax,%eax                  # success?
     je       common_exceptionThrown     # no, bail out
     SET_VREG %eax rINST
     ADVANCE_PC 2
-    GOTO_NEXT_R %edx
+    GOTO_NEXT_R %ecx
 
     /*
      * Class initialization required.

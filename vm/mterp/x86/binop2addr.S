@@ -17,8 +17,8 @@
     movzx   rINSTbl,%ecx               # ecx<- A+
     sarl    $$4,rINST                 # rINST<- B
     GET_VREG_R %eax rINST              # eax<- vB
-    FETCH_INST_OPCODE 1 %edx
     andb    $$0xf,%cl                  # ecx<- A
     $instr                             # for ex: addl   %eax,(rFP,%ecx,4)
+    FETCH_INST_OPCODE 1 %ecx
     ADVANCE_PC 1
-    GOTO_NEXT_R %edx
+    GOTO_NEXT_R %ecx

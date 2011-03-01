@@ -12,32 +12,29 @@
      * an already-resolved class.
      */
     /* instance-of vA, vB, class@CCCC */
-    movl    rINST,%eax                # eax<- BA
+    movl    rINST,%eax                  # eax<- BA
     sarl    $$4,%eax                    # eax<- B
     GET_VREG_R %eax %eax                # eax<- vB (obj)
     movl    rSELF,%ecx
     testl   %eax,%eax                   # object null?
     movl    offThread_methodClassDex(%ecx),%ecx  # ecx<- pDvmDex
+    SPILL(rIBASE)                       # preserve rIBASE
     je      .L${opcode}_store           # null obj, not instance, store it
-    movzwl  2(rPC),%edx                 # edx<- CCCC
+    movzwl  2(rPC),rIBASE               # rIBASE<- CCCC
     movl    offDvmDex_pResClasses(%ecx),%ecx # ecx<- pDvmDex->pResClasses
-    movl    (%ecx,%edx,4),%ecx          # ecx<- resolved class
+    movl    (%ecx,rIBASE,4),%ecx        # ecx<- resolved class
     movl    offObject_clazz(%eax),%eax  # eax<- obj->clazz
     testl   %ecx,%ecx                   # have we resolved this before?
     je      .L${opcode}_resolve         # not resolved, do it now
 .L${opcode}_resolved:  # eax<- obj->clazz, ecx<- resolved class
     cmpl    %eax,%ecx                   # same class (trivial success)?
     je      .L${opcode}_trivial         # yes, trivial finish
-    jmp     .L${opcode}_fullcheck       # no, do full check
-%break
-
     /*
      * Trivial test failed, need to perform full check.  This is common.
      *  eax holds obj->clazz
      *  ecx holds class resolved from BBBB
      *  rINST has BA
      */
-.L${opcode}_fullcheck:
     movl    %eax,OUT_ARG0(%esp)
     movl    %ecx,OUT_ARG1(%esp)
     call    dvmInstanceofNonTrivial     # eax<- boolean result
@@ -48,32 +45,34 @@
      * rINST holds BA
      */
 .L${opcode}_store:
-    FETCH_INST_OPCODE 2 %edx
+    FETCH_INST_OPCODE 2 %ecx
+    UNSPILL(rIBASE)
     andb    $$0xf,rINSTbl               # <- A
     ADVANCE_PC 2
     SET_VREG %eax rINST                 # vA<- eax
-    GOTO_NEXT_R %edx
+    GOTO_NEXT_R %ecx
 
     /*
      * Trivial test succeeded, save and bail.
      *  r9 holds A
      */
 .L${opcode}_trivial:
-    FETCH_INST_OPCODE 2 %edx
+    FETCH_INST_OPCODE 2 %ecx
+    UNSPILL(rIBASE)
     andb    $$0xf,rINSTbl               # <- A
     ADVANCE_PC 2
     movl    $$1,%eax
     SET_VREG %eax rINST                 # vA<- true
-    GOTO_NEXT_R %edx
+    GOTO_NEXT_R %ecx
 
     /*
      * Resolution required.  This is the least-likely path.
      *
-     *  edx holds BBBB
+     *  rIBASE holds BBBB
      *  rINST holds BA
      */
 .L${opcode}_resolve:
-    movl    %edx,OUT_ARG1(%esp)         # arg1<- BBBB
+    movl    rIBASE,OUT_ARG1(%esp)         # arg1<- BBBB
     movl    rSELF,%ecx
     movl    offThread_method(%ecx),%ecx
     movl    $$1,OUT_ARG2(%esp)          # arg2<- true
@@ -87,7 +86,7 @@
  * hold the obj->clazz, and ecx to hold the resolved class
  */
     movl    %eax,%ecx                   # ecx<- resolved class
-    movl    rINST,%eax                # eax<- BA
+    movl    rINST,%eax                  # eax<- BA
     sarl    $$4,%eax                    # eax<- B
     GET_VREG_R %eax %eax                # eax<- vB (obj)
     movl    offObject_clazz(%eax),%eax  # eax<- obj->clazz

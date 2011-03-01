@@ -14,7 +14,7 @@
     movsbl    3(rPC),%ecx              # ecx<- ssssssCC
     GET_VREG_R   %eax %eax             # eax<- rBB
     $instr                             # ex: addl %ecx,%eax
-    FETCH_INST_OPCODE 2 %edx
     SET_VREG   $result rINST
+    FETCH_INST_OPCODE 2 %ecx
     ADVANCE_PC 2
-    GOTO_NEXT_R %edx
+    GOTO_NEXT_R %ecx

@@ -17,12 +17,11 @@
     testl     %eax,%eax                          # resolved entry null?
     je        .L${opcode}_resolve                # if not, make it so
 .L${opcode}_finish:     # field ptr in eax
-    GET_VREG_R  %ecx rINST
-    FETCH_INST_OPCODE 4 %edx
+    GET_VREG_R  rINST rINST
+    FETCH_INST_OPCODE 4 %ecx
     ADVANCE_PC 4
-    movl      %ecx,offStaticField_value(%eax)
-    GOTO_NEXT_R %edx
-%break
+    movl      rINST,offStaticField_value(%eax)
+    GOTO_NEXT_R %ecx
 
     /*
      * Go resolve the field
@@ -35,7 +34,9 @@
     movl     offMethod_clazz(%ecx),%ecx         # ecx<- method->clazz
     movl     %eax,OUT_ARG1(%esp)
     movl     %ecx,OUT_ARG0(%esp)
+    SPILL(rIBASE)
     call     dvmResolveStaticField              # eax<- resolved StaticField ptr
+    UNSPILL(rIBASE)
     testl    %eax,%eax
     jne      .L${opcode}_finish                 # success, continue
     jmp      common_exceptionThrown             # no, handle exception
