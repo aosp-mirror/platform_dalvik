@@ -23,11 +23,7 @@
     cmpb      $$CLASS_INITIALIZED,offClassObject_status(%ecx)
     jne       .L${opcode}_needinit
 .L${opcode}_initialized:  # on entry, ecx<- class
-    /* TODO: remove test for interface/abstract, now done in verifier */
-    testl     $$(ACC_INTERFACE|ACC_ABSTRACT),offClassObject_accessFlags(%ecx)
     movl      $$ALLOC_DONT_TRACK,OUT_ARG1(%esp)
-    jne       .L${opcode}_abstract
-.L${opcode}_finish: # ecx=class
     movl     %ecx,OUT_ARG0(%esp)
     call     dvmAllocObject             # eax<- new object
     FETCH_INST_OPCODE 2 %ecx
@@ -69,17 +65,3 @@
     testl   %ecx,%ecx                   # success?
     jne     .L${opcode}_resolved        # good to go
     jmp     common_exceptionThrown      # no, handle exception
-
-    /*
-     * TODO: remove this
-     * We can't instantiate an abstract class or interface, so throw an
-     * InstantiationError with the class descriptor as the message.
-     *
-     *  ecx holds class object
-     */
-.L${opcode}_abstract:
-    movl    offClassObject_descriptor(%ecx),%eax
-    movl    $$.LstrInstantiationError,OUT_ARG0(%esp)
-    movl    %eax,OUT_ARG1(%esp)
-    call    dvmThrowExceptionWithClassMessage
-    jmp     common_exceptionThrown

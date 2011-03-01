@@ -89,7 +89,7 @@ unspecified registers or condition codes.
 
 /*
  * "export" the PC to the stack frame, f/b/o future exception objects.  Must
- * be done *before* something calls dvmThrowException.
+ * be done *before* something throws.
  *
  * In C this is "SAVEAREA_FROM_FP(fp)->xtra.currentPc = pc", i.e.
  * fp - sizeof(StackSaveArea) + offsetof(SaveArea, xtra.currentPc)
@@ -10784,9 +10784,6 @@ dvmAsmSisterStart:
     bne     .LOP_NEW_INSTANCE_resolved        @ no, continue
     b       common_exceptionThrown      @ yes, handle exception
 
-.LstrInstantiationErrorPtr:
-    .word   .LstrInstantiationError
-
 /* continuation for OP_NEW_ARRAY */
 
 
@@ -10898,16 +10895,13 @@ dvmAsmSisterStart:
      * mode of filled-new-array.
      */
 .LOP_FILLED_NEW_ARRAY_notimpl:
-    ldr     r0, .L_strInternalError
-    ldr     r1, .L_strFilledNewArrayNotImpl
-    bl      dvmThrowException
+    ldr     r0, .L_strFilledNewArrayNotImpl
+    bl      dvmThrowInternalError
     b       common_exceptionThrown
 
     .if     (!0)                 @ define in one or the other, not both
 .L_strFilledNewArrayNotImpl:
     .word   .LstrFilledNewArrayNotImpl
-.L_strInternalError:
-    .word   .LstrInternalError
     .endif
 
 /* continuation for OP_FILLED_NEW_ARRAY_RANGE */
@@ -10982,16 +10976,13 @@ dvmAsmSisterStart:
      * mode of filled-new-array.
      */
 .LOP_FILLED_NEW_ARRAY_RANGE_notimpl:
-    ldr     r0, .L_strInternalError
-    ldr     r1, .L_strFilledNewArrayNotImpl
-    bl      dvmThrowException
+    ldr     r0, .L_strFilledNewArrayNotImpl
+    bl      dvmThrowInternalError
     b       common_exceptionThrown
 
     .if     (!1)                 @ define in one or the other, not both
 .L_strFilledNewArrayNotImpl:
     .word   .LstrFilledNewArrayNotImpl
-.L_strInternalError:
-    .word   .LstrInternalError
     .endif
 
 /* continuation for OP_CMPL_FLOAT */
@@ -12442,9 +12433,8 @@ d2l_doconv:
      * mode of filled-new-array.
      */
 .LOP_FILLED_NEW_ARRAY_JUMBO_notimpl:
-    ldr     r0, .L_strInternalError
-    ldr     r1, .L_strFilledNewArrayNotImpl
-    bl      dvmThrowException
+    ldr     r0, .L_strFilledNewArrayNotImpl
+    bl      dvmThrowInternalError
     b       common_exceptionThrown
 
 /* continuation for OP_IGET_JUMBO */
@@ -21338,9 +21328,8 @@ common_errArrayIndex:
  */
 common_errDivideByZero:
     EXPORT_PC()
-    ldr     r0, strArithmeticException
-    ldr     r1, strDivideByZero
-    bl      dvmThrowException
+    ldr     r0, strDivideByZero
+    bl      dvmThrowArithmeticException
     b       common_exceptionThrown
 
 /*
@@ -21355,12 +21344,12 @@ common_errNegativeArraySize:
 
 /*
  * Invocation of a non-existent method.
+ * On entry: method name in r1
  */
 common_errNoSuchMethod:
     EXPORT_PC()
-    ldr     r0, strNoSuchMethodError
-    mov     r1, #0
-    bl      dvmThrowException
+    mov     r0, r1
+    bl      dvmThrowNoSuchMethodError
     b       common_exceptionThrown
 
 /*
@@ -21370,9 +21359,8 @@ common_errNoSuchMethod:
  */
 common_errNullObject:
     EXPORT_PC()
-    ldr     r0, strNullPointerException
-    mov     r1, #0
-    bl      dvmThrowException
+    mov     r0, #0
+    bl      dvmThrowNullPointerException
     b       common_exceptionThrown
 
 /*
@@ -21508,15 +21496,8 @@ dvmConfigureFP:
  * String references, must be close to the code that uses them.
  */
     .align  2
-strArithmeticException:
-    .word   .LstrArithmeticException
 strDivideByZero:
     .word   .LstrDivideByZero
-strNoSuchMethodError:
-    .word   .LstrNoSuchMethodError
-strNullPointerException:
-    .word   .LstrNullPointerException
-
 strLogTag:
     .word   .LstrLogTag
 strExceptionNotCaughtLocally:
@@ -21544,21 +21525,10 @@ strPrintLong:
 
 .LstrBadEntryPoint:
     .asciz  "Bad entry point %d\n"
-.LstrArithmeticException:
-    .asciz  "Ljava/lang/ArithmeticException;"
-.LstrDivideByZero:
-    .asciz  "divide by zero"
 .LstrFilledNewArrayNotImpl:
     .asciz  "filled-new-array only implemented for objects and 'int'"
-.LstrInternalError:
-    .asciz  "Ljava/lang/InternalError;"
-.LstrInstantiationError:
-    .asciz  "Ljava/lang/InstantiationError;"
-.LstrNoSuchMethodError:
-    .asciz  "Ljava/lang/NoSuchMethodError;"
-.LstrNullPointerException:
-    .asciz  "Ljava/lang/NullPointerException;"
-
+.LstrDivideByZero:
+    .asciz  "divide by zero"
 .LstrLogTag:
     .asciz  "mterp"
 .LstrExceptionNotCaughtLocally:

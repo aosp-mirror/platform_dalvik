@@ -24,6 +24,7 @@ Items requiring attention:
 (md) Use dvmThrowClassCastException(actual, desired) for class cast errors.
 (md) Use dvmThrowArrayStoreException(actual, desired) for array store errors.
 (md) Use dvmThrowNegativeArraySizeException(len) forarray alloc errors
+(md) Replace any remaining use of dvmThrowException with proper helper function
 
 (lo) Implement OP_BREAKPOINT
 (lo) Implement OP_EXECUTE_INLINE_RANGE

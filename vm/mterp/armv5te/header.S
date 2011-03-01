@@ -82,7 +82,7 @@ unspecified registers or condition codes.
 
 /*
  * "export" the PC to the stack frame, f/b/o future exception objects.  Must
- * be done *before* something calls dvmThrowException.
+ * be done *before* something throws.
  *
  * In C this is "SAVEAREA_FROM_FP(fp)->xtra.currentPc = pc", i.e.
  * fp - sizeof(StackSaveArea) + offsetof(SaveArea, xtra.currentPc)

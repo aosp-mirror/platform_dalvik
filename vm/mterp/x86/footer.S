@@ -577,11 +577,9 @@ common_gotoBail:
  */
 common_errDivideByZero:
     EXPORT_PC
-    movl    $$.LstrArithmeticException,%eax
-    movl    %eax,OUT_ARG0(%esp)
     movl    $$.LstrDivideByZero,%eax
-    movl    %eax,OUT_ARG1(%esp)
-    call    dvmThrowException
+    movl    %eax,OUT_ARG0(%esp)
+    call    dvmThrowArithmeticException
     jmp     common_exceptionThrown
 
 /*
@@ -596,15 +594,13 @@ common_errNegativeArraySize:
 
 /*
  * Attempt to allocate an array with a negative size.
+ * On entry, method name in eax
  */
 common_errNoSuchMethod:
 
     EXPORT_PC
-    movl    $$.LstrNoSuchMethodError,%eax
     movl    %eax,OUT_ARG0(%esp)
-    xorl    %eax,%eax
-    movl    %eax,OUT_ARG1(%esp)
-    call    dvmThrowException
+    call    dvmThrowNoSuchMethodError
     jmp     common_exceptionThrown
 
 /*
@@ -613,11 +609,9 @@ common_errNoSuchMethod:
  */
 common_errNullObject:
     EXPORT_PC
-    movl    $$.LstrNullPointerException,%eax
-    movl    %eax,OUT_ARG0(%esp)
     xorl    %eax,%eax
-    movl    %eax,OUT_ARG1(%esp)
-    call    dvmThrowException
+    movl    %eax,OUT_ARG0(%esp)
+    call    dvmThrowNullPointerException
     jmp     common_exceptionThrown
 
 /*
@@ -661,17 +655,7 @@ common_abort:
  */
 
     .section     .rodata
-.LstrNullPointerException:
-    .asciz    "Ljava/lang/NullPointerException;"
-.LstrArithmeticException:
-    .asciz  "Ljava/lang/ArithmeticException;"
 .LstrDivideByZero:
     .asciz  "divide by zero"
-.LstrInstantiationError:
-    .asciz  "Ljava/lang/InstantiationError;"
-.LstrNoSuchMethodError:
-    .asciz  "Ljava/lang/NoSuchMethodError;"
-.LstrInternalErrorA:
-    .asciz  "Ljava/lang/InternalError;"
 .LstrFilledNewArrayNotImplA:
     .asciz  "filled-new-array only implemented for 'int'"

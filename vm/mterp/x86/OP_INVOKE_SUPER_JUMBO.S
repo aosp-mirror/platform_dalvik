@@ -56,5 +56,4 @@
      */
 .L${opcode}_nsm:
     movl    offMethod_name(%ecx),%eax
-    mov     %eax,OUT_ARG1(%esp)
     jmp     common_errNoSuchMethod

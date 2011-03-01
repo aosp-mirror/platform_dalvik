@@ -1006,9 +1006,8 @@ common_errArrayIndex:
  */
 common_errDivideByZero:
     EXPORT_PC()
-    ldr     r0, strArithmeticException
-    ldr     r1, strDivideByZero
-    bl      dvmThrowException
+    ldr     r0, strDivideByZero
+    bl      dvmThrowArithmeticException
     b       common_exceptionThrown
 
 /*
@@ -1023,12 +1022,12 @@ common_errNegativeArraySize:
 
 /*
  * Invocation of a non-existent method.
+ * On entry: method name in r1
  */
 common_errNoSuchMethod:
     EXPORT_PC()
-    ldr     r0, strNoSuchMethodError
-    mov     r1, #0
-    bl      dvmThrowException
+    mov     r0, r1
+    bl      dvmThrowNoSuchMethodError
     b       common_exceptionThrown
 
 /*
@@ -1038,9 +1037,8 @@ common_errNoSuchMethod:
  */
 common_errNullObject:
     EXPORT_PC()
-    ldr     r0, strNullPointerException
-    mov     r1, #0
-    bl      dvmThrowException
+    mov     r0, #0
+    bl      dvmThrowNullPointerException
     b       common_exceptionThrown
 
 /*
@@ -1176,15 +1174,8 @@ dvmConfigureFP:
  * String references, must be close to the code that uses them.
  */
     .align  2
-strArithmeticException:
-    .word   .LstrArithmeticException
 strDivideByZero:
     .word   .LstrDivideByZero
-strNoSuchMethodError:
-    .word   .LstrNoSuchMethodError
-strNullPointerException:
-    .word   .LstrNullPointerException
-
 strLogTag:
     .word   .LstrLogTag
 strExceptionNotCaughtLocally:
@@ -1212,21 +1203,10 @@ strPrintLong:
 
 .LstrBadEntryPoint:
     .asciz  "Bad entry point %d\n"
-.LstrArithmeticException:
-    .asciz  "Ljava/lang/ArithmeticException;"
-.LstrDivideByZero:
-    .asciz  "divide by zero"
 .LstrFilledNewArrayNotImpl:
     .asciz  "filled-new-array only implemented for objects and 'int'"
-.LstrInternalError:
-    .asciz  "Ljava/lang/InternalError;"
-.LstrInstantiationError:
-    .asciz  "Ljava/lang/InstantiationError;"
-.LstrNoSuchMethodError:
-    .asciz  "Ljava/lang/NoSuchMethodError;"
-.LstrNullPointerException:
-    .asciz  "Ljava/lang/NullPointerException;"
-
+.LstrDivideByZero:
+    .asciz  "divide by zero"
 .LstrLogTag:
     .asciz  "mterp"
 .LstrExceptionNotCaughtLocally:

@@ -140,7 +140,7 @@ Notes:
 
 /*
  * "export" the PC to the interpreted stack frame, f/b/o future exception
- * objects.  Must * be done *before* something calls dvmThrowException.
+ * objects.  Must be done *before* something throws.
  *
  * In C this is "SAVEAREA_FROM_FP(fp)->xtra.currentPc = pc", i.e.
  * fp - sizeof(StackSaveArea) + offsetof(SaveArea, xtra.currentPc)

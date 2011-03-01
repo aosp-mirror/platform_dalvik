@@ -63,6 +63,3 @@
     cmp     r0, #0                      @ got null?
     bne     .L${opcode}_resolved        @ no, continue
     b       common_exceptionThrown      @ yes, handle exception
-
-.LstrInstantiationErrorPtr:
-    .word   .LstrInstantiationError

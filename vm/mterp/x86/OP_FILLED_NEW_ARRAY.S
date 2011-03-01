@@ -123,9 +123,7 @@
      * mode of filled-new-array.
      */
 .L${opcode}_notimpl:
-    movl    $$.LstrInternalErrorA,%eax
-    movl    %eax,OUT_ARG0(%esp)
     movl    $$.LstrFilledNewArrayNotImplA,%eax
-    movl    %eax,OUT_ARG1(%esp)
-    call    dvmThrowException
+    movl    %eax,OUT_ARG0(%esp)
+    call    dvmThrowInternalError
     jmp     common_exceptionThrown

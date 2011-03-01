@@ -147,7 +147,7 @@ Notes:
 
 /*
  * "export" the PC to the interpreted stack frame, f/b/o future exception
- * objects.  Must * be done *before* something calls dvmThrowException.
+ * objects.  Must be done *before* something throws.
  *
  * In C this is "SAVEAREA_FROM_FP(fp)->xtra.currentPc = pc", i.e.
  * fp - sizeof(StackSaveArea) + offsetof(SaveArea, xtra.currentPc)
@@ -1028,11 +1028,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     cmpb      $CLASS_INITIALIZED,offClassObject_status(%ecx)
     jne       .LOP_NEW_INSTANCE_needinit
 .LOP_NEW_INSTANCE_initialized:  # on entry, ecx<- class
-    /* TODO: remove test for interface/abstract, now done in verifier */
-    testl     $(ACC_INTERFACE|ACC_ABSTRACT),offClassObject_accessFlags(%ecx)
     movl      $ALLOC_DONT_TRACK,OUT_ARG1(%esp)
-    jne       .LOP_NEW_INSTANCE_abstract
-.LOP_NEW_INSTANCE_finish: # ecx=class
     movl     %ecx,OUT_ARG0(%esp)
     call     dvmAllocObject             # eax<- new object
     FETCH_INST_OPCODE 2 %ecx
@@ -1074,20 +1070,6 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     testl   %ecx,%ecx                   # success?
     jne     .LOP_NEW_INSTANCE_resolved        # good to go
     jmp     common_exceptionThrown      # no, handle exception
-
-    /*
-     * TODO: remove this
-     * We can't instantiate an abstract class or interface, so throw an
-     * InstantiationError with the class descriptor as the message.
-     *
-     *  ecx holds class object
-     */
-.LOP_NEW_INSTANCE_abstract:
-    movl    offClassObject_descriptor(%ecx),%eax
-    movl    $.LstrInstantiationError,OUT_ARG0(%esp)
-    movl    %eax,OUT_ARG1(%esp)
-    call    dvmThrowExceptionWithClassMessage
-    jmp     common_exceptionThrown
 
 /* ------------------------------ */
 .L_OP_NEW_ARRAY: /* 0x23 */
@@ -1279,11 +1261,9 @@ dvmAsmInstructionStartCode = .L_OP_NOP
      * mode of filled-new-array.
      */
 .LOP_FILLED_NEW_ARRAY_notimpl:
-    movl    $.LstrInternalErrorA,%eax
-    movl    %eax,OUT_ARG0(%esp)
     movl    $.LstrFilledNewArrayNotImplA,%eax
-    movl    %eax,OUT_ARG1(%esp)
-    call    dvmThrowException
+    movl    %eax,OUT_ARG0(%esp)
+    call    dvmThrowInternalError
     jmp     common_exceptionThrown
 
 /* ------------------------------ */
@@ -1412,11 +1392,9 @@ dvmAsmInstructionStartCode = .L_OP_NOP
      * mode of filled-new-array.
      */
 .LOP_FILLED_NEW_ARRAY_RANGE_notimpl:
-    movl    $.LstrInternalErrorA,%eax
-    movl    %eax,OUT_ARG0(%esp)
     movl    $.LstrFilledNewArrayNotImplA,%eax
-    movl    %eax,OUT_ARG1(%esp)
-    call    dvmThrowException
+    movl    %eax,OUT_ARG0(%esp)
+    call    dvmThrowInternalError
     jmp     common_exceptionThrown
 
 
@@ -4003,7 +3981,6 @@ dvmAsmInstructionStartCode = .L_OP_NOP
      */
 .LOP_INVOKE_SUPER_nsm:
     movl    offMethod_name(%ecx),%eax
-    mov     %eax,OUT_ARG1(%esp)
     jmp     common_errNoSuchMethod
 
 /* ------------------------------ */
@@ -4246,7 +4223,6 @@ dvmAsmInstructionStartCode = .L_OP_NOP
      */
 .LOP_INVOKE_SUPER_RANGE_nsm:
     movl    offMethod_name(%ecx),%eax
-    mov     %eax,OUT_ARG1(%esp)
     jmp     common_errNoSuchMethod
 
 
@@ -8187,11 +8163,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     cmpb      $CLASS_INITIALIZED,offClassObject_status(%ecx)
     jne       .LOP_NEW_INSTANCE_JUMBO_needinit
 .LOP_NEW_INSTANCE_JUMBO_initialized:  # on entry, ecx<- class
-    /* TODO: remove test for interface/abstract, now done in verifier */
-    testl     $(ACC_INTERFACE|ACC_ABSTRACT),offClassObject_accessFlags(%ecx)
     movl      $ALLOC_DONT_TRACK,OUT_ARG1(%esp)
-    jne       .LOP_NEW_INSTANCE_JUMBO_abstract
-.LOP_NEW_INSTANCE_JUMBO_finish: # ecx=class
     movl     %ecx,OUT_ARG0(%esp)
     call     dvmAllocObject             # eax<- new object
     UNSPILL(rIBASE)
@@ -8233,20 +8205,6 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     testl   %ecx,%ecx                   # success?
     jne     .LOP_NEW_INSTANCE_JUMBO_resolved        # good to go
     jmp     common_exceptionThrown      # no, handle exception
-
-    /*
-     * TODO: remove this
-     * We can't instantiate an abstract class or interface, so throw an
-     * InstantiationError with the class descriptor as the message.
-     *
-     *  ecx holds class object
-     */
-.LOP_NEW_INSTANCE_JUMBO_abstract:
-    movl    offClassObject_descriptor(%ecx),%eax
-    movl    $.LstrInstantiationError,OUT_ARG0(%esp)
-    movl    %eax,OUT_ARG1(%esp)
-    call    dvmThrowExceptionWithClassMessage
-    jmp     common_exceptionThrown
 
 /* ------------------------------ */
 .L_OP_NEW_ARRAY_JUMBO: /* 0x104 */
@@ -8408,11 +8366,9 @@ dvmAsmInstructionStartCode = .L_OP_NOP
      * mode of filled-new-array.
      */
 .LOP_FILLED_NEW_ARRAY_JUMBO_notimpl:
-    movl    $.LstrInternalErrorA,%eax
-    movl    %eax,OUT_ARG0(%esp)
     movl    $.LstrFilledNewArrayNotImplA,%eax
-    movl    %eax,OUT_ARG1(%esp)
-    call    dvmThrowException
+    movl    %eax,OUT_ARG0(%esp)
+    call    dvmThrowInternalError
     jmp     common_exceptionThrown
 
 /* ------------------------------ */
@@ -9846,7 +9802,6 @@ dvmAsmInstructionStartCode = .L_OP_NOP
      */
 .LOP_INVOKE_SUPER_JUMBO_nsm:
     movl    offMethod_name(%ecx),%eax
-    mov     %eax,OUT_ARG1(%esp)
     jmp     common_errNoSuchMethod
 
 /* ------------------------------ */
@@ -21916,11 +21871,9 @@ common_gotoBail:
  */
 common_errDivideByZero:
     EXPORT_PC
-    movl    $.LstrArithmeticException,%eax
-    movl    %eax,OUT_ARG0(%esp)
     movl    $.LstrDivideByZero,%eax
-    movl    %eax,OUT_ARG1(%esp)
-    call    dvmThrowException
+    movl    %eax,OUT_ARG0(%esp)
+    call    dvmThrowArithmeticException
     jmp     common_exceptionThrown
 
 /*
@@ -21935,15 +21888,13 @@ common_errNegativeArraySize:
 
 /*
  * Attempt to allocate an array with a negative size.
+ * On entry, method name in eax
  */
 common_errNoSuchMethod:
 
     EXPORT_PC
-    movl    $.LstrNoSuchMethodError,%eax
     movl    %eax,OUT_ARG0(%esp)
-    xorl    %eax,%eax
-    movl    %eax,OUT_ARG1(%esp)
-    call    dvmThrowException
+    call    dvmThrowNoSuchMethodError
     jmp     common_exceptionThrown
 
 /*
@@ -21952,11 +21903,9 @@ common_errNoSuchMethod:
  */
 common_errNullObject:
     EXPORT_PC
-    movl    $.LstrNullPointerException,%eax
-    movl    %eax,OUT_ARG0(%esp)
     xorl    %eax,%eax
-    movl    %eax,OUT_ARG1(%esp)
-    call    dvmThrowException
+    movl    %eax,OUT_ARG0(%esp)
+    call    dvmThrowNullPointerException
     jmp     common_exceptionThrown
 
 /*
@@ -22000,18 +21949,8 @@ common_abort:
  */
 
     .section     .rodata
-.LstrNullPointerException:
-    .asciz    "Ljava/lang/NullPointerException;"
-.LstrArithmeticException:
-    .asciz  "Ljava/lang/ArithmeticException;"
 .LstrDivideByZero:
     .asciz  "divide by zero"
-.LstrInstantiationError:
-    .asciz  "Ljava/lang/InstantiationError;"
-.LstrNoSuchMethodError:
-    .asciz  "Ljava/lang/NoSuchMethodError;"
-.LstrInternalErrorA:
-    .asciz  "Ljava/lang/InternalError;"
 .LstrFilledNewArrayNotImplA:
     .asciz  "filled-new-array only implemented for 'int'"
 

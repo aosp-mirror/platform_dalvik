@@ -310,10 +310,10 @@ static inline void putDoubleToArray(u4* ptr, int idx, double dval)
 
 /*
  * The current PC must be available to Throwable constructors, e.g.
- * those created by dvmThrowException(), so that the exception stack
- * trace can be generated correctly.  If we don't do this, the offset
- * within the current method won't be shown correctly.  See the notes
- * in Exception.c.
+ * those created by the various exception throw routines, so that the
+ * exception stack trace can be generated correctly.  If we don't do this,
+ * the offset within the current method won't be shown correctly.  See the
+ * notes in Exception.c.
  *
  * This is also used to determine the address for precise GC.
  *
