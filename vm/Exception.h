@@ -265,9 +265,22 @@ void dvmThrowClassFormatError(const char* msg);
 
 /**
  * Throw a ClassNotFoundException in the current thread, with the given
- * detail message.
+ * class name as the detail message.
  */
-void dvmThrowClassNotFoundException(const char* msg);
+void dvmThrowClassNotFoundException(const char* name);
+
+/**
+ * Throw a ClassNotFoundException in the current thread, with the given
+ * cause, and the given class name as the detail message.
+ */
+void dvmThrowChainedClassNotFoundException(const char* name, Object* cause);
+
+/*
+ * Throw the VM-spec-mandated error when an exception is thrown during
+ * class initialization. Unlike other helper functions, this automatically
+ * wraps the current thread's pending exception.
+ */
+void dvmThrowExceptionInInitializerError(void);
 
 /**
  * Throw a FileNotFoundException in the current thread, with the given
