@@ -20,6 +20,11 @@
 #include "alloc/Verify.h"
 #include "alloc/Visit.h"
 
+/*
+ * Visitor applied to each reference field when searching for things
+ * that point to an object.  Sets the argument to NULL when a match is
+ * found.
+ */
 static void dumpReferencesVisitor(void *pObj, void *arg)
 {
     Object *obj = *(Object **)pObj;
@@ -29,6 +34,10 @@ static void dumpReferencesVisitor(void *pObj, void *arg)
     }
 }
 
+/*
+ * Visitor applied to each bitmap element to search for things that
+ * point to an object.  Logs a message when a match is found.
+ */
 static void dumpReferencesCallback(void *ptr, void *arg)
 {
     Object *obj = (Object *)arg;
@@ -42,6 +51,10 @@ static void dumpReferencesCallback(void *ptr, void *arg)
     }
 }
 
+/*
+ * Visitor applied to each root to search for things that point to an
+ * object.  Logs a message when a match is found.
+ */
 static void dumpReferencesRootVisitor(void *ptr, u4 threadId,
                                       RootType type, void *arg)
 {
