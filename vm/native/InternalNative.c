@@ -254,8 +254,7 @@ ClassObject* dvmFindClassByName(StringObject* nameObj, Object* loader,
         Object* oldExcep = dvmGetException(self);
         dvmAddTrackedAlloc(oldExcep, self);     /* don't let this be GCed */
         dvmClearException(self);
-        dvmThrowChainedException("Ljava/lang/ClassNotFoundException;",
-            name, oldExcep);
+        dvmThrowChainedClassNotFoundException(name, oldExcep);
         dvmReleaseTrackedAlloc(oldExcep, self);
     } else {
         LOGVV("GOOD: load %s (%d) --> %p ldr=%p\n",

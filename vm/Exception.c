@@ -142,6 +142,8 @@ bool dvmExceptionStartup(void)
             "Ljava/lang/ArrayStoreException;");
     ok &= initRef(&gDvm.exClassCastException,
             "Ljava/lang/ClassCastException;");
+    ok &= initRef(&gDvm.exClassNotFoundException,
+            "Ljava/lang/ClassNotFoundException;");
     ok &= initRef(&gDvm.exClassFormatError, "Ljava/lang/ClassFormatError;");
     ok &= initRef(&gDvm.exError, "Ljava/lang/Error;");
     ok &= initRef(&gDvm.exExceptionInInitializerError,
@@ -149,13 +151,21 @@ bool dvmExceptionStartup(void)
     ok &= initRef(&gDvm.exFileNotFoundException,
             "Ljava/io/FileNotFoundException;");
     ok &= initRef(&gDvm.exIOException, "Ljava/io/IOException;");
+    ok &= initRef(&gDvm.exIllegalAccessException,
+            "Ljava/lang/IllegalAccessException;");
+    ok &= initRef(&gDvm.exInterruptedException,
+            "Ljava/lang/InterruptedException;");
     ok &= initRef(&gDvm.exNegativeArraySizeException,
             "Ljava/lang/NegativeArraySizeException;");
+    ok &= initRef(&gDvm.exNoSuchFieldException,
+            "Ljava/lang/NoSuchFieldException;");
     ok &= initRef(&gDvm.exNullPointerException,
             "Ljava/lang/NullPointerException;");
     ok &= initRef(&gDvm.exRuntimeException, "Ljava/lang/RuntimeException;");
     ok &= initRef(&gDvm.exStackOverflowError,
             "Ljava/lang/StackOverflowError;");
+    ok &= initRef(&gDvm.exStaleDexCacheError,
+            "Ldalvik/system/StaleDexCacheError;");
     ok &= initRef(&gDvm.exStringIndexOutOfBoundsException,
             "Ljava/lang/StringIndexOutOfBoundsException;");
     ok &= initRef(&gDvm.exThrowable, "Ljava/lang/Throwable;");
@@ -1441,8 +1451,8 @@ void dvmThrowArithmeticException(const char* msg) {
 
 void dvmThrowArrayIndexOutOfBoundsException(int index, int length)
 {
-    dvmThrowExceptionFmt("Ljava/lang/ArrayIndexOutOfBoundsException;",
-        "index=%d length=%d", index, length);
+    dvmThrowExceptionFmtByClass(gDvm.exArrayIndexOutOfBoundsException,
+        "length=%d; index=%d", length, index);
 }
 
 /*
@@ -1483,8 +1493,49 @@ void dvmThrowClassFormatError(const char* msg) {
     dvmThrowExceptionByClass(gDvm.exClassFormatError, msg);
 }
 
-void dvmThrowClassNotFoundException(const char* msg) {
-    dvmThrowException("Ljava/lang/ClassNotFoundException;", msg);
+void dvmThrowClassNotFoundException(const char* name) {
+    // TODO: Should the name be converted into human-readable form?
+    dvmThrowExceptionByClass(gDvm.exClassNotFoundException, name);
+}
+
+void dvmThrowChainedClassNotFoundException(const char* name, Object* cause) {
+    // TODO: Should the name be converted into human-readable form?
+    dvmThrowChainedExceptionByClass(gDvm.exClassNotFoundException, name,
+            cause);
+}
+
+void dvmThrowExceptionInInitializerError(void)
+{
+    /*
+     * TODO: Do we want to wrap it if the original is an Error rather than
+     * an Exception?
+     *
+     * TODO: Should this just use dvmWrapException()?
+     */
+
+    if (gDvm.exExceptionInInitializerError == NULL) {
+        /*
+         * ExceptionInInitializerError isn't itself initialized. This
+         * can happen very early during VM startup if there is a
+         * problem with one of the corest-of-the-core classes, and it
+         * can possibly happen during a dexopt run. Rather than do
+         * anything fancier, we just abort here with a blatant
+         * message.
+         */
+        LOGE("Fatal error during early class initialization:\n");
+        dvmLogExceptionStackTrace();
+        dvmAbort();
+    }
+
+    Thread* self = dvmThreadSelf();
+    Object* exception = dvmGetException(self);
+
+    dvmAddTrackedAlloc(exception, self);
+    dvmClearException(self);
+
+    dvmThrowChainedExceptionByClass(gDvm.exExceptionInInitializerError,
+            NULL, exception);
+    dvmReleaseTrackedAlloc(exception, self);
 }
 
 void dvmThrowFileNotFoundException(const char* msg) {
@@ -1496,7 +1547,7 @@ void dvmThrowIOException(const char* msg) {
 }
 
 void dvmThrowIllegalAccessException(const char* msg) {
-    dvmThrowException("Ljava/lang/IllegalAccessException;", msg);
+    dvmThrowExceptionByClass(gDvm.exIllegalAccessException, msg);
 }
 
 void dvmThrowIllegalAccessError(const char* msg) {
@@ -1535,7 +1586,7 @@ void dvmThrowInternalError(const char* msg) {
 }
 
 void dvmThrowInterruptedException(const char* msg) {
-    dvmThrowException("Ljava/lang/InterruptedException;", msg);
+    dvmThrowExceptionByClass(gDvm.exInterruptedException, msg);
 }
 
 void dvmThrowLinkageError(const char* msg) {
@@ -1556,7 +1607,7 @@ void dvmThrowNoSuchFieldError(const char* msg) {
 }
 
 void dvmThrowNoSuchFieldException(const char* msg) {
-    dvmThrowException("Ljava/lang/NoSuchFieldException;", msg);
+    dvmThrowExceptionByClass(gDvm.exNoSuchFieldException, msg);
 }
 
 void dvmThrowNoSuchMethodError(const char* msg) {
@@ -1576,7 +1627,7 @@ void dvmThrowRuntimeException(const char* msg) {
 }
 
 void dvmThrowStaleDexCacheError(const char* msg) {
-    dvmThrowException("Ldalvik/system/StaleDexCacheError;", msg);
+    dvmThrowExceptionByClass(gDvm.exStaleDexCacheError, msg);
 }
 
 void dvmThrowStringIndexOutOfBoundsExceptionWithIndex(jsize stringLength,

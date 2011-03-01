@@ -3700,60 +3700,6 @@ static bool computeFieldOffsets(ClassObject* clazz)
 }
 
 /*
- * Throw the VM-spec-mandated error when an exception is thrown during
- * class initialization.
- *
- * The safest way to do this is to call the ExceptionInInitializerError
- * constructor that takes a Throwable.
- *
- * [Do we want to wrap it if the original is an Error rather than
- * an Exception?]
- */
-static void throwClinitError(void)
-{
-    if (gDvm.exExceptionInInitializerError == NULL) {
-        /*
-         * ExceptionInInitializerError isn't itself initialized. This
-         * can happen very early during VM startup if there is a
-         * problem with one of the corest-of-the-core classes, and it
-         * can possibly happen during a dexopt run. Rather than do
-         * anything fancier, we just abort here with a blatant
-         * message.
-         */
-        LOGE("Fatal error during early class initialization:\n");
-        dvmLogExceptionStackTrace();
-        dvmAbort();
-    }
-
-    Thread* self = dvmThreadSelf();
-    Object* exception = dvmGetException(self);
-
-    dvmAddTrackedAlloc(exception, self);
-    dvmClearException(self);
-
-    Object* eiie =
-        dvmAllocObject(gDvm.exExceptionInInitializerError, ALLOC_DEFAULT);
-    if (eiie == NULL)
-        goto fail;
-
-    /*
-     * Construct the new object, and replace the exception with it.
-     */
-    JValue unused;
-    dvmCallMethod(self, gDvm.methJavaLangExceptionInInitializerError_init,
-        eiie, &unused, exception);
-    dvmSetException(self, eiie);
-    dvmReleaseTrackedAlloc(eiie, NULL);
-    dvmReleaseTrackedAlloc(exception, self);
-    return;
-
-fail:       /* restore original exception */
-    dvmSetException(self, exception);
-    dvmReleaseTrackedAlloc(exception, self);
-    return;
-}
-
-/*
  * The class failed to initialize on a previous attempt, so we want to throw
  * a NoClassDefFoundError (v2 2.17.5).  The exception to this rule is if we
  * failed in verification, in which case v2 5.4.1 says we need to re-throw
@@ -4366,7 +4312,7 @@ noverify:
              * never happen and we don't need to fix this.
              */
             assert(false);
-            throwClinitError();
+            dvmThrowExceptionInInitializerError();
             clazz->status = CLASS_ERROR;
             goto bail_unlock;
         }
@@ -4483,7 +4429,7 @@ noverify:
          */
         LOGW("Exception %s thrown while initializing %s\n",
             (dvmGetException(self)->clazz)->descriptor, clazz->descriptor);
-        throwClinitError();
+        dvmThrowExceptionInInitializerError();
         //LOGW("+++ replaced\n");
 
         dvmLockObject(self, (Object*) clazz);

@@ -272,14 +272,19 @@ struct DvmGlobals {
     ClassObject* exArrayStoreException;
     ClassObject* exClassCastException;
     ClassObject* exClassFormatError;
+    ClassObject* exClassNotFoundException;
     ClassObject* exError;
     ClassObject* exExceptionInInitializerError;
     ClassObject* exFileNotFoundException; /* in java.io */
     ClassObject* exIOException;           /* in java.io */
+    ClassObject* exIllegalAccessException;
+    ClassObject* exInterruptedException;
     ClassObject* exNegativeArraySizeException;
+    ClassObject* exNoSuchFieldException;
     ClassObject* exNullPointerException;
     ClassObject* exRuntimeException;
     ClassObject* exStackOverflowError;
+    ClassObject* exStaleDexCacheError;    /* in dalvik.system */
     ClassObject* exStringIndexOutOfBoundsException;
     ClassObject* exThrowable;
     ClassObject* exUnsupportedOperationException;
