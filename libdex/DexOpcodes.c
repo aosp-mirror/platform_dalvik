@@ -270,7 +270,7 @@ static const char* gOpNames[kNumPackedOpcodes] = {
     "^throw-verification-error",
     "+execute-inline",
     "+execute-inline/range",
-    "+invoke-object-init",
+    "+invoke-object-init/range",
     "+return-void-barrier",
     "+iget-quick",
     "+iget-wide-quick",

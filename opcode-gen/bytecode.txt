@@ -332,7 +332,7 @@ op   ef +execute-inline/range       3rmi n inline-method optimized|continue|thro
 # doesn't invoke the method unless a debugger is attached. The verifier
 # will ensure that Object.<init> is present and empty, so there is no
 # opportunity for an exception to be thrown.
-op   f0 +invoke-object-init         35c  n method-ref    optimized|continue
+op   f0 +invoke-object-init/range   35c  n method-ref    optimized|continue
 
 op   f1 +return-void-barrier        10x  n none          optimized|return
 op   f2 +iget-quick                 22cs y field-offset  optimized|continue|throw

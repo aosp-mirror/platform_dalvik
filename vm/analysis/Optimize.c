@@ -167,7 +167,7 @@ static void optimizeMethod(Method* method, bool essentialOnly)
         /*
          * essential substitutions:
          *  {iget,iput,sget,sput}-wide --> *-wide-volatile
-         *  invoke-direct --> invoke-object-init
+         *  invoke-direct[/range] --> invoke-object-init/range
          *
          * essential-on-SMP substitutions:
          *  iget-* --> iget-*-volatile
@@ -924,12 +924,21 @@ static bool rewriteInvokeObjectInit(Method* method, u2* insns)
         dvmCompareNameDescriptorAndMethod("<init>", "()V", calledMethod) == 0)
     {
         /*
-         * Replace the instruction.  We want to modify as little as possible
-         * because, if the debugger is attached, the interpreter will
-         * forward execution to the invoke-direct handler.
+         * Replace the instruction.  If the debugger is attached, the
+         * interpreter will forward execution to the invoke-direct/range
+         * handler.  If this was an invoke-direct/range instruction we can
+         * just replace the opcode, but if it was an invoke-direct we
+         * have to set the argument count (high 8 bits of first code unit)
+         * to 1.
          */
-        assert((insns[0] & 0xff) == OP_INVOKE_DIRECT);
-        updateOpcode(method, insns, OP_INVOKE_OBJECT_INIT);
+        u1 origOp = insns[0] & 0xff;
+        if (origOp == OP_INVOKE_DIRECT) {
+            updateCodeUnit(method, insns, OP_INVOKE_OBJECT_INIT_RANGE | 0x100);
+        } else {
+            assert(origOp == OP_INVOKE_DIRECT_RANGE);
+            assert((insns[0] >> 8) == 1);
+            updateOpcode(method, insns, OP_INVOKE_OBJECT_INIT_RANGE);
+        }
 
         LOGVV("DexOpt: replaced Object.<init> in %s.%s\n",
             method->clazz->descriptor, method->name);

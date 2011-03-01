@@ -739,7 +739,7 @@ static bool processInstruction(VerifierData* vdata, u4 insnIdx,
     /* quickened instructions, not expected to appear */
     case OP_EXECUTE_INLINE:
     case OP_EXECUTE_INLINE_RANGE:
-    case OP_INVOKE_OBJECT_INIT:
+    case OP_INVOKE_OBJECT_INIT_RANGE:
     case OP_IGET_QUICK:
     case OP_IGET_WIDE_QUICK:
     case OP_IGET_OBJECT_QUICK:

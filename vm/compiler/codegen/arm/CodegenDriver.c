@@ -3266,7 +3266,7 @@ static bool handleFmt35c_3rc_5rc(CompilationUnit *cUnit, MIR *mir,
             genTrap(cUnit, mir->offset, pcrLabel);
             break;
         }
-        case OP_INVOKE_OBJECT_INIT: {
+        case OP_INVOKE_OBJECT_INIT_RANGE: {
             genInterpSingleStep(cUnit, mir);
             break;
         }

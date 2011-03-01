@@ -14663,7 +14663,7 @@ OP_IF_LEZ_2f:
 
 /* ------------------------------ */
     .balign 64
-.L_OP_INVOKE_OBJECT_INIT: /* 0xf0 */
+.L_OP_INVOKE_OBJECT_INIT_RANGE: /* 0xf0 */
    /* Copyright (C) 2008 The Android Open Source Project
     *
     * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14685,7 +14685,7 @@ OP_IF_LEZ_2f:
 
     SAVE_PC_FP_TO_GLUE %edx             # save program counter and frame pointer
     pushl       rGLUE                   # push parameter glue
-    call        dvmMterp_OP_INVOKE_OBJECT_INIT      # call c-based implementation
+    call        dvmMterp_OP_INVOKE_OBJECT_INIT_RANGE      # call c-based implementation
     lea         4(%esp), %esp
     LOAD_PC_FP_FROM_GLUE                # restore program counter and frame pointer
     FINISH_A                            # jump to next instruction
@@ -27322,7 +27322,7 @@ dvmAsmInstructionJmpTable = .LdvmAsmInstructionJmpTable
 .long .L_OP_THROW_VERIFICATION_ERROR
 .long .L_OP_EXECUTE_INLINE
 .long .L_OP_EXECUTE_INLINE_RANGE
-.long .L_OP_INVOKE_OBJECT_INIT
+.long .L_OP_INVOKE_OBJECT_INIT_RANGE
 .long .L_OP_UNUSED_F1
 .long .L_OP_IGET_QUICK
 .long .L_OP_IGET_WIDE_QUICK
