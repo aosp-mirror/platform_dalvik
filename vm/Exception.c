@@ -153,6 +153,16 @@ bool dvmExceptionStartup(void)
     ok &= initRef(&gDvm.exIOException, "Ljava/io/IOException;");
     ok &= initRef(&gDvm.exIllegalAccessException,
             "Ljava/lang/IllegalAccessException;");
+    ok &= initRef(&gDvm.exIllegalArgumentException,
+            "Ljava/lang/IllegalArgumentException;");
+    ok &= initRef(&gDvm.exIllegalMonitorStateException,
+            "Ljava/lang/IllegalMonitorStateException;");
+    ok &= initRef(&gDvm.exIllegalStateException,
+            "Ljava/lang/IllegalStateException;");
+    ok &= initRef(&gDvm.exIllegalThreadStateException,
+            "Ljava/lang/IllegalThreadStateException;");
+    ok &= initRef(&gDvm.exInstantiationException,
+            "Ljava/lang/InstantiationException;");
     ok &= initRef(&gDvm.exInterruptedException,
             "Ljava/lang/InterruptedException;");
     ok &= initRef(&gDvm.exNegativeArraySizeException,
@@ -1555,19 +1565,19 @@ void dvmThrowIllegalAccessError(const char* msg) {
 }
 
 void dvmThrowIllegalArgumentException(const char* msg) {
-    dvmThrowException("Ljava/lang/IllegalArgumentException;", msg);
+    dvmThrowExceptionByClass(gDvm.exIllegalArgumentException, msg);
 }
 
 void dvmThrowIllegalMonitorStateException(const char* msg) {
-    dvmThrowException("Ljava/lang/IllegalMonitorStateException;", msg);
+    dvmThrowExceptionByClass(gDvm.exIllegalMonitorStateException, msg);
 }
 
 void dvmThrowIllegalStateException(const char* msg) {
-    dvmThrowException("Ljava/lang/IllegalStateException;", msg);
+    dvmThrowExceptionByClass(gDvm.exIllegalStateException, msg);
 }
 
 void dvmThrowIllegalThreadStateException(const char* msg) {
-    dvmThrowException("Ljava/lang/IllegalThreadStateException;", msg);
+    dvmThrowExceptionByClass(gDvm.exIllegalThreadStateException, msg);
 }
 
 void dvmThrowIncompatibleClassChangeError(const char* msg) {
@@ -1579,6 +1589,16 @@ void dvmThrowIncompatibleClassChangeErrorWithClassMessage(
 {
     dvmThrowExceptionWithClassMessage(
             "Ljava/lang/IncompatibleClassChangeError;", descriptor);
+}
+
+void dvmThrowInstantiationException(ClassObject* clazz,
+        const char* extraDetail) {
+    char* className = dvmHumanReadableDescriptor(clazz->descriptor);
+    dvmThrowExceptionFmtByClass(gDvm.exInstantiationException,
+            "can't instantiate class %s%s%s", className,
+            (extraDetail == NULL) ? "" : "; ",
+            (extraDetail == NULL) ? "" : extraDetail);
+    free(className);
 }
 
 void dvmThrowInternalError(const char* msg) {

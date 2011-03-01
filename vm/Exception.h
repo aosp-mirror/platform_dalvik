@@ -344,6 +344,14 @@ void dvmThrowIncompatibleClassChangeErrorWithClassMessage(
         const char* descriptor);
 
 /**
+ * Throw an InstantiationException in the current thread, with
+ * the human-readable form of the given class as the detail message,
+ * with optional extra detail appended to the message.
+ */
+void dvmThrowInstantiationException(ClassObject* clazz,
+        const char* extraDetail);
+
+/**
  * Throw an InternalError in the current thread, with the given
  * detail message.
  */

@@ -491,8 +491,7 @@ static void Dalvik_java_lang_Class_newInstance(const u4* args, JValue* pResult)
         LOGD("newInstance failed: p%d i%d [%d a%d\n",
             dvmIsPrimitiveClass(clazz), dvmIsInterfaceClass(clazz),
             dvmIsArrayClass(clazz), dvmIsAbstractClass(clazz));
-        dvmThrowExceptionWithClassMessage("Ljava/lang/InstantiationException;",
-            clazz->descriptor);
+        dvmThrowInstantiationException(clazz, NULL);
         RETURN_VOID();
     }
 
@@ -511,8 +510,7 @@ static void Dalvik_java_lang_Class_newInstance(const u4* args, JValue* pResult)
     if (init == NULL) {
         /* common cause: secret "this" arg on non-static inner class ctor */
         LOGD("newInstance failed: no <init>()\n");
-        dvmThrowExceptionWithClassMessage("Ljava/lang/InstantiationException;",
-            clazz->descriptor);
+        dvmThrowInstantiationException(clazz, "no empty constructor");
         RETURN_VOID();
     }
 

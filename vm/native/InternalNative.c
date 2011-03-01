@@ -156,19 +156,21 @@ void dvmAbstractMethodStub(const u4* args, JValue* pResult)
  */
 bool dvmVerifyObjectInClass(Object* obj, ClassObject* clazz)
 {
-    const char* exceptionClass = NULL;
+    ClassObject* exceptionClass = NULL;
+
     if (obj == NULL) {
-        exceptionClass = "Ljava/lang/NullPointerException;";
+        exceptionClass = gDvm.exNullPointerException;
     } else if (!dvmInstanceof(obj->clazz, clazz)) {
-        exceptionClass = "Ljava/lang/IllegalArgumentException;";
+        exceptionClass = gDvm.exIllegalArgumentException;
     }
+
     if (exceptionClass != NULL) {
         char* expectedClassName = dvmHumanReadableDescriptor(clazz->descriptor);
         char* actualClassName = (obj != NULL)
             ? dvmHumanReadableDescriptor(obj->clazz->descriptor)
             : strdup("null");
-        dvmThrowExceptionFmt(exceptionClass,
-            "expected receiver of type %s, not %s",
+        dvmThrowExceptionFmtByClass(exceptionClass,
+            "expected receiver of type %s, but got %s",
             expectedClassName, actualClassName);
         free(expectedClassName);
         free(actualClassName);

@@ -1430,14 +1430,11 @@ static bool canAllocClass(ClassObject* clazz)
 {
     if (dvmIsAbstractClass(clazz) || dvmIsInterfaceClass(clazz)) {
         /* JNI spec defines what this throws */
-        dvmThrowExceptionFmt("Ljava/lang/InstantiationException;",
-            "Can't instantiate %s (abstract or interface)", clazz->descriptor);
+        dvmThrowInstantiationException(clazz, "abstract class or interface");
         return false;
     } else if (dvmIsArrayClass(clazz) || clazz == gDvm.classJavaLangClass) {
         /* spec says "must not" for arrays, ignores Class */
-        dvmThrowExceptionFmt("Ljava/lang/IllegalArgumentException;",
-            "Can't instantiate %s (array or Class) with this JNI function",
-            clazz->descriptor);
+        dvmThrowInstantiationException(clazz, "wrong JNI function");
         return false;
     }
 

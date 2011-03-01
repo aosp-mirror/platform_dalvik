@@ -645,7 +645,7 @@ static void throwArgumentTypeMismatch(int argIndex, ClassObject* expected,
     char* actualClassName = (arg != NULL)
         ? dvmHumanReadableDescriptor(arg->obj.clazz->descriptor)
         : strdup("null");
-    dvmThrowExceptionFmt("Ljava/lang/IllegalArgumentException;",
+    dvmThrowExceptionFmtByClass(gDvm.exIllegalArgumentException,
         "argument %d should have type %s, got %s",
         argIndex + 1, expectedClassName, actualClassName);
     free(expectedClassName);
@@ -681,7 +681,7 @@ Object* dvmInvokeMethod(Object* obj, const Method* method,
     else
         argListLength = 0;
     if (argListLength != (int) params->length) {
-        dvmThrowExceptionFmt("Ljava/lang/IllegalArgumentException;",
+        dvmThrowExceptionFmtByClass(gDvm.exIllegalArgumentException,
             "wrong number of arguments; expected %d, got %d",
             params->length, argListLength);
         return NULL;

@@ -59,8 +59,7 @@ static void Dalvik_java_lang_reflect_Constructor_constructNative(
     Method* meth;
 
     if (dvmIsAbstractClass(declaringClass)) {
-        dvmThrowExceptionWithClassMessage("Ljava/lang/InstantiationException;",
-            declaringClass->descriptor);
+        dvmThrowInstantiationException(declaringClass, NULL);
         RETURN_VOID();
     }
 
