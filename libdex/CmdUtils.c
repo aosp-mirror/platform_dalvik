@@ -25,6 +25,9 @@
 #include <fcntl.h>
 #include <errno.h>
 
+#ifndef O_BINARY
+#define O_BINARY 0
+#endif
 
 /*
  * Extract "classes.dex" from archive file.
