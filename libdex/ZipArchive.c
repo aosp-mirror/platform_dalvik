@@ -29,6 +29,9 @@
 
 #include <JNIHelp.h>        // TEMP_FAILURE_RETRY may or may not be in unistd
 
+#ifndef O_BINARY
+#define O_BINARY 0
+#endif
 
 /*
  * Zip file constants.
