@@ -76,6 +76,9 @@ bool dvmCompilerArchVariantInit(void)
      */
     assert((offsetof(Thread, jitToInterpEntries) +
             sizeof(struct JitToInterpEntries)) <= 128);
+
+    // Make sure all threads have current values
+    dvmJitUpdateState();
     return true;
 }
 

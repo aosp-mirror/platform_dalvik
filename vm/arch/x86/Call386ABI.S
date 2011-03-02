@@ -97,7 +97,8 @@ dvmPlatformInvoke:
     movl     16(%ebp),%ebx
     testl    %ebx,%ebx
     js       dvmAbort
-/* Get the size of the variable region, add two more slots for the first
+/*
+ * Get the size of the variable region, add two more slots for the first
  * two arguments and grow (preserving alignment)
  */
     movl     %ebx,%ecx

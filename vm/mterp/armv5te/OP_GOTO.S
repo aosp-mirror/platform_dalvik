@@ -7,19 +7,16 @@
      * double to get a byte offset.
      */
     /* goto +AA */
+    /* tuning: use sbfx for 6t2+ targets */
     mov     r0, rINST, lsl #16          @ r0<- AAxx0000
-    movs    r9, r0, asr #24             @ r9<- ssssssAA (sign-extended)
-    mov     r9, r9, lsl #1              @ r9<- byte offset
-    bmi     common_backwardBranch       @ backward branch, do periodic checks
+    movs    r1, r0, asr #24             @ r1<- ssssssAA (sign-extended)
+    add     r2, r1, r1                  @ r2<- byte offset, set flags
+       @ If backwards branch refresh rIBASE
+    ldrmi   rIBASE, [rSELF, #offThread_curHandlerTable] @ refresh handler base
+    FETCH_ADVANCE_INST_RB(r2)           @ update rPC, load rINST
 #if defined(WITH_JIT)
-    GET_JIT_PROF_TABLE(r0)
-    FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
-    cmp     r0,#0
-    bne     common_updateProfile
-    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
-    GOTO_OPCODE(ip)                     @ jump to next instruction
-#else
-    FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
-    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
-    GOTO_OPCODE(ip)                     @ jump to next instruction
+    ldr     r0, [rSELF, #offThread_pJitProfTable]
+    bmi     common_testUpdateProfile    @ (r0) check for trace hotness
 #endif
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    GOTO_OPCODE(ip)                     @ jump to next instruction

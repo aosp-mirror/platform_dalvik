@@ -38,15 +38,12 @@
 /*
  * Portable interpreter.
  */
-extern bool dvmInterpretDbg(Thread* self);
-extern bool dvmInterpretStd(Thread* self);
-#define INTERP_STD 0
-#define INTERP_DBG 1
+extern void dvmInterpretPortable(Thread* self);
 
 /*
  * "mterp" interpreter.
  */
-extern bool dvmMterpStd(Thread* self);
+extern void dvmMterpStd(Thread* self);
 
 /*
  * Get the "this" pointer from the current frame.
@@ -78,14 +75,11 @@ Method* dvmInterpFindInterfaceMethod(ClassObject* thisClass, u4 methodIdx,
     const Method* method, DvmDex* methodClassDex);
 
 /*
- * Determine if the debugger or profiler is currently active.  Used when
- * selecting which interpreter to start or switch to.
+ * Determine if the debugger or profiler is currently active.
  */
-static inline bool dvmDebuggerOrProfilerActive(void)
+static inline bool dvmDebuggerOrProfilerActive()
 {
-    return gDvm.interpBreak & (kSubModeDebuggerActive |
-                               kSubModeEmulatorTrace |
-                               kSubModeInstCounting);
+    return gDvm.debuggerActive || gDvm.activeProfilers != 0;
 }
 
 #if defined(WITH_JIT)
@@ -107,20 +101,6 @@ static inline bool dvmJitHideTranslation()
     return (gDvm.sumThreadSuspendCount != 0) ||
            (gDvmJit.codeCacheFull == true) ||
            (gDvmJit.pProfTable == NULL);
-}
-
-/*
- * The fast and debug interpreter may be doing ping-pong without making forward
- * progress if the same trace building request sent upon entering the fast
- * interpreter is rejected immediately by the debug interpreter. Use the
- * following function to poll the rejection reasons and stay in the debug
- * interpreter until they are cleared. This will guarantee forward progress
- * in the extreme corner cases (eg set compiler threashold to 1).
- */
-static inline bool dvmJitStayInPortableInterpreter()
-{
-    return dvmJitHideTranslation() ||
-           (gDvmJit.compilerQueueLength >= gDvmJit.compilerHighWater);
 }
 
 #endif

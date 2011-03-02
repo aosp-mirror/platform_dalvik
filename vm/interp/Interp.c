@@ -25,6 +25,9 @@
  */
 #include "Dalvik.h"
 #include "interp/InterpDefs.h"
+#if defined(WITH_JIT)
+#include "interp/Jit.h"
+#endif
 
 
 /*
@@ -198,7 +201,7 @@ static bool dvmBreakpointSetOriginalOpcode(const BreakpointSet* pSet,
 static bool instructionIsMagicNop(const u2* addr)
 {
     u2 curVal = *addr;
-    return ((curVal & 0xff) == OP_NOP && (curVal >> 8) != 0);
+    return ((GET_OPCODE(curVal)) == OP_NOP && (curVal >> 8) != 0);
 }
 
 /*
@@ -591,6 +594,267 @@ void dvmClearSingleStep(Thread* thread)
     gDvm.stepControl.active = false;
 }
 
+/*
+ * The interpreter just threw.  Handle any special subMode requirements.
+ */
+void dvmReportExceptionThrow(Thread* self, const Method* curMethod,
+                             const u2* pc, void* fp)
+{
+#if defined(WITH_JIT)
+    if (self->interpBreak.ctl.subMode & kSubModeJitTraceBuild) {
+        dvmJitEndTraceSelect(self, pc);
+    }
+    if (self->interpBreak.ctl.breakFlags & kInterpSingleStep) {
+        /* Discard any single-step native returns to translation */
+        self->jitResumeNPC = NULL;
+    }
+#endif
+    if (self->interpBreak.ctl.subMode & kSubModeDebuggerActive) {
+        void *catchFrame;
+        int offset = pc - curMethod->insns;
+        int catchRelPc = dvmFindCatchBlock(self, offset, self->exception,
+                                           true, &catchFrame);
+        dvmDbgPostException(fp, offset, catchFrame, catchRelPc,
+                            self->exception);
+    }
+}
+
+/*
+ * The interpreter is preparing to do an invoke (both native & normal).
+ * Handle any special subMode requirements.
+ */
+void dvmReportInvoke(Thread* self, const Method* methodToCall)
+{
+    TRACE_METHOD_ENTER(self, methodToCall);
+}
+
+/*
+ * The interpreter is preparing to do a native invoke. Handle any
+ * special subMode requirements.  NOTE: for a native invoke,
+ * dvmReportInvoke() and dvmReportPreNativeInvoke() will both
+ * be called prior to the invoke.
+ */
+void dvmReportPreNativeInvoke(const u2* pc, Thread* self,
+                              const Method* methodToCall)
+{
+#if defined(WITH_JIT)
+    /*
+     * Actively building a trace?  If so, end it now.   The trace
+     * builder can't follow into or through a native method.
+     */
+    if (self->interpBreak.ctl.subMode & kSubModeJitTraceBuild) {
+        dvmCheckJit(pc, self);
+    }
+#endif
+    if (self->interpBreak.ctl.subMode & kSubModeDebuggerActive) {
+        Object* thisPtr = dvmGetThisPtr(self->interpSave.method,
+                                        self->interpSave.fp);
+        assert(thisPtr != NULL && !dvmIsValidObject(thisPtr));
+        dvmDbgPostLocationEvent(methodToCall, -1, thisPtr, DBG_METHOD_ENTRY);
+    }
+}
+
+/*
+ * The interpreter has returned from a native invoke. Handle any
+ * special subMode requirements.
+ */
+void dvmReportPostNativeInvoke(const u2* pc, Thread* self,
+                               const Method* methodToCall)
+{
+    if (self->interpBreak.ctl.subMode & kSubModeDebuggerActive) {
+        Object* thisPtr = dvmGetThisPtr(self->interpSave.method,
+                                        self->interpSave.fp);
+        assert(thisPtr != NULL && !dvmIsValidObject(thisPtr));
+        dvmDbgPostLocationEvent(methodToCall, -1, thisPtr, DBG_METHOD_EXIT);
+    }
+    if (self->interpBreak.ctl.subMode & kSubModeMethodTrace) {
+        dvmFastNativeMethodTraceExit(methodToCall, self);
+    }
+}
+
+/*
+ * The interpreter has returned from a normal method.  Handle any special
+ * subMode requirements.
+ */
+void dvmReportReturn(Thread* self, const u2* pc, const u4* prevFP)
+{
+    TRACE_METHOD_EXIT(self, self->interpSave.method);
+#if defined(WITH_JIT)
+    if (dvmIsBreakFrame(prevFP) &&
+        (self->interpBreak.ctl.subMode & kSubModeJitTraceBuild)) {
+        dvmCheckJit(pc, self);
+    }
+#endif
+}
+
+/*
+ * Update the debugger on interesting events, such as hitting a breakpoint
+ * or a single-step point.  This is called from the top of the interpreter
+ * loop, before the current instruction is processed.
+ *
+ * Set "methodEntry" if we've just entered the method.  This detects
+ * method exit by checking to see if the next instruction is "return".
+ *
+ * This can't catch native method entry/exit, so we have to handle that
+ * at the point of invocation.  We also need to catch it in dvmCallMethod
+ * if we want to capture native->native calls made through JNI.
+ *
+ * Notes to self:
+ * - Don't want to switch to VMWAIT while posting events to the debugger.
+ *   Let the debugger code decide if we need to change state.
+ * - We may want to check for debugger-induced thread suspensions on
+ *   every instruction.  That would make a "suspend all" more responsive
+ *   and reduce the chances of multiple simultaneous events occurring.
+ *   However, it could change the behavior some.
+ *
+ * TODO: method entry/exit events are probably less common than location
+ * breakpoints.  We may be able to speed things up a bit if we don't query
+ * the event list unless we know there's at least one lurking within.
+ */
+void dvmUpdateDebugger(const Method* method, const u2* pc, const u4* fp,
+    bool methodEntry, Thread* self)
+{
+    int eventFlags = 0;
+
+    /*
+     * Update xtra.currentPc on every instruction.  We need to do this if
+     * there's a chance that we could get suspended.  This can happen if
+     * eventFlags != 0 here, or somebody manually requests a suspend
+     * (which gets handled at PERIOD_CHECKS time).  One place where this
+     * needs to be correct is in dvmAddSingleStep().
+     */
+    dvmExportPC(pc, fp);
+
+    if (methodEntry)
+        eventFlags |= DBG_METHOD_ENTRY;
+
+    /*
+     * See if we have a breakpoint here.
+     *
+     * Depending on the "mods" associated with event(s) on this address,
+     * we may or may not actually send a message to the debugger.
+     */
+    if (GET_OPCODE(*pc) == OP_BREAKPOINT) {
+        LOGV("+++ breakpoint hit at %p\n", pc);
+        eventFlags |= DBG_BREAKPOINT;
+    }
+
+    /*
+     * If the debugger is single-stepping one of our threads, check to
+     * see if we're that thread and we've reached a step point.
+     */
+    const StepControl* pCtrl = &gDvm.stepControl;
+    if (pCtrl->active && pCtrl->thread == self) {
+        int frameDepth;
+        bool doStop = false;
+        const char* msg = NULL;
+
+        assert(!dvmIsNativeMethod(method));
+
+        if (pCtrl->depth == SD_INTO) {
+            /*
+             * Step into method calls.  We break when the line number
+             * or method pointer changes.  If we're in SS_MIN mode, we
+             * always stop.
+             */
+            if (pCtrl->method != method) {
+                doStop = true;
+                msg = "new method";
+            } else if (pCtrl->size == SS_MIN) {
+                doStop = true;
+                msg = "new instruction";
+            } else if (!dvmAddressSetGet(
+                    pCtrl->pAddressSet, pc - method->insns)) {
+                doStop = true;
+                msg = "new line";
+            }
+        } else if (pCtrl->depth == SD_OVER) {
+            /*
+             * Step over method calls.  We break when the line number is
+             * different and the frame depth is <= the original frame
+             * depth.  (We can't just compare on the method, because we
+             * might get unrolled past it by an exception, and it's tricky
+             * to identify recursion.)
+             */
+            frameDepth = dvmComputeVagueFrameDepth(self, fp);
+            if (frameDepth < pCtrl->frameDepth) {
+                /* popped up one or more frames, always trigger */
+                doStop = true;
+                msg = "method pop";
+            } else if (frameDepth == pCtrl->frameDepth) {
+                /* same depth, see if we moved */
+                if (pCtrl->size == SS_MIN) {
+                    doStop = true;
+                    msg = "new instruction";
+                } else if (!dvmAddressSetGet(pCtrl->pAddressSet,
+                            pc - method->insns)) {
+                    doStop = true;
+                    msg = "new line";
+                }
+            }
+        } else {
+            assert(pCtrl->depth == SD_OUT);
+            /*
+             * Return from the current method.  We break when the frame
+             * depth pops up.
+             *
+             * This differs from the "method exit" break in that it stops
+             * with the PC at the next instruction in the returned-to
+             * function, rather than the end of the returning function.
+             */
+            frameDepth = dvmComputeVagueFrameDepth(self, fp);
+            if (frameDepth < pCtrl->frameDepth) {
+                doStop = true;
+                msg = "method pop";
+            }
+        }
+
+        if (doStop) {
+            LOGV("#####S %s\n", msg);
+            eventFlags |= DBG_SINGLE_STEP;
+        }
+    }
+
+    /*
+     * Check to see if this is a "return" instruction.  JDWP says we should
+     * send the event *after* the code has been executed, but it also says
+     * the location we provide is the last instruction.  Since the "return"
+     * instruction has no interesting side effects, we should be safe.
+     * (We can't just move this down to the returnFromMethod label because
+     * we potentially need to combine it with other events.)
+     *
+     * We're also not supposed to generate a method exit event if the method
+     * terminates "with a thrown exception".
+     */
+    u2 opcode = GET_OPCODE(*pc);
+    if (opcode == OP_RETURN_VOID || opcode == OP_RETURN ||
+        opcode == OP_RETURN_WIDE ||opcode == OP_RETURN_OBJECT)
+    {
+        eventFlags |= DBG_METHOD_EXIT;
+    }
+
+    /*
+     * If there's something interesting going on, see if it matches one
+     * of the debugger filters.
+     */
+    if (eventFlags != 0) {
+        Object* thisPtr = dvmGetThisPtr(method, fp);
+        if (thisPtr != NULL && !dvmIsValidObject(thisPtr)) {
+            /*
+             * TODO: remove this check if we're confident that the "this"
+             * pointer is where it should be -- slows us down, especially
+             * during single-step.
+             */
+            char* desc = dexProtoCopyMethodDescriptor(&method->prototype);
+            LOGE("HEY: invalid 'this' ptr %p (%s.%s %s)\n", thisPtr,
+                method->clazz->descriptor, method->name, desc);
+            free(desc);
+            dvmAbort();
+        }
+        dvmDbgPostLocationEvent(method, pc - method->insns, thisPtr,
+            eventFlags);
+    }
+}
 
 /*
  * Recover the "this" pointer from the current interpreted method.  "this"
@@ -1211,20 +1475,80 @@ void dvmThrowVerificationError(const Method* method, int kind, int ref)
 }
 
 /*
- * Update interpBreak
+ * Update interpBreak.  If there is an active break when
+ * we're done, set altHandlerTable.  Otherwise, revert to
+ * the non-breaking table base.
  */
-void dvmUpdateInterpBreak(int newMode, bool enable)
+void dvmUpdateInterpBreak(Thread* thread, int newBreak, int newMode,
+                          bool enable)
 {
-    ExecutionSubModes oldValue, newValue;
+    InterpBreak oldValue, newValue;
+
+    // Do not use this routine for suspend updates.  See below.
+    assert((newBreak & kInterpSuspendBreak) == 0);
 
     do {
-        oldValue = gDvm.interpBreak;
-        newValue = enable ? oldValue | newMode : oldValue & ~newMode;
-    } while (android_atomic_release_cas(oldValue, newValue,
-            &gDvm.interpBreak) != 0);
-#if defined(WITH_JIT)
-    dvmCompilerStateRefresh();
-#endif
+        oldValue = newValue = thread->interpBreak;
+        if (enable) {
+            newValue.ctl.breakFlags |= newBreak;
+            newValue.ctl.subMode |= newMode;
+        } else {
+            newValue.ctl.breakFlags &= ~newBreak;
+            newValue.ctl.subMode &= ~newMode;
+        }
+        newValue.ctl.curHandlerTable = (newValue.ctl.breakFlags) ?
+            thread->altHandlerTable : thread->mainHandlerTable;
+    } while (dvmQuasiAtomicCas64(oldValue.all, newValue.all,
+             &thread->interpBreak.all) != 0);
+}
+
+/*
+ * Update the normal and debugger suspend counts for a thread.
+ * threadSuspendCount must be acquired before calling this to
+ * ensure a clean update of suspendCount, dbgSuspendCount and
+ * sumThreadSuspendCount.  suspendCount & dbgSuspendCount must
+ * use the atomic update to avoid conflict with writes to the
+ * other fields in interpBreak.
+ *
+ * CLEANUP TODO: Currently only the JIT is using sumThreadSuspendCount.
+ * Move under WITH_JIT ifdefs.
+*/
+void dvmAddToSuspendCounts(Thread* thread, int delta, int dbgDelta)
+{
+    InterpBreak oldValue, newValue;
+
+    do {
+        oldValue = newValue = thread->interpBreak;
+        newValue.ctl.suspendCount += delta;
+        newValue.ctl.dbgSuspendCount += dbgDelta;
+        assert(newValue.ctl.suspendCount >= newValue.ctl.dbgSuspendCount);
+        if (newValue.ctl.suspendCount > 0) {
+            newValue.ctl.breakFlags |= kInterpSuspendBreak;
+        } else {
+            newValue.ctl.breakFlags &= ~kInterpSuspendBreak;
+        }
+        newValue.ctl.curHandlerTable = (newValue.ctl.breakFlags) ?
+            thread->altHandlerTable : thread->mainHandlerTable;
+    } while (dvmQuasiAtomicCas64(oldValue.all, newValue.all,
+             &thread->interpBreak.all) != 0);
+
+    // Update the global suspend count total
+    gDvm.sumThreadSuspendCount += delta;
+}
+
+/*
+ * Update interpBreak for all threads.
+ */
+void dvmUpdateAllInterpBreak(int newBreak, int newMode, bool enable)
+{
+    Thread* self = dvmThreadSelf();
+    Thread* thread;
+
+    dvmLockThreadList(self);
+    for (thread = gDvm.threadList; thread != NULL; thread = thread->next) {
+        dvmUpdateInterpBreak(thread, newBreak, newMode, enable);
+    }
+    dvmUnlockThreadList();
 }
 
 /*
@@ -1263,14 +1587,13 @@ void dvmInitInterpreterState(Thread* self)
 
     // Begin initialization
     self->cardTable = gDvm.biasedCardTableBase;
-    self->interpSave.pInterpBreak = &gDvm.interpBreak;
 #if defined(WITH_JIT)
+    // One-time initializations
     self->jitToInterpEntries = jitToInterpEntries;
     self->icRechainCount = PREDICTED_CHAIN_COUNTER_RECHAIN;
-    self->pJitProfTable = gDvmJit.pProfTable;
-    self->ppJitProfTable = &gDvmJit.pProfTable;
-    self->jitThreshold = gDvmJit.threshold;
     self->pProfileCountdown = &gDvmJit.profileCountdown;
+    // Jit state that can change
+    dvmJitUpdateState();
 #endif
 
 }
@@ -1278,16 +1601,149 @@ void dvmInitInterpreterState(Thread* self)
 /*
  * Inter-instruction handler invoked in between instruction interpretations
  * to handle exceptional events such as debugging housekeeping, instruction
- * count profiling, JIT trace building, etc.
+ * count profiling, JIT trace building, etc.  Dalvik PC has been exported
+ * prior to call, but Thread copy of dPC & fp are not current.
  */
-void dvmCheckInst(u2 *dPC, Thread* self)
+void dvmCheckBefore(const u2 *pc, const u4 *fp, Thread* self)
 {
-    //TODO add debugger, profiler, JIT, etc. checks here
+    const Method* method = self->interpSave.method;
+    assert(self->interpBreak.ctl.breakFlags != 0);
+    assert(pc >= method->insns && pc <
+           method->insns + dvmGetMethodInsnsSize(method));
+
+#if 0
+    /*
+     * When we hit a specific method, enable verbose instruction logging.
+     * Sometimes it's helpful to use the debugger attach as a trigger too.
+     */
+    if (*pIsMethodEntry) {
+        static const char* cd = "Landroid/test/Arithmetic;";
+        static const char* mn = "shiftTest2";
+        static const char* sg = "()V";
+
+        if (/*self->interpBreak.ctl.subMode & kSubModeDebuggerActive &&*/
+            strcmp(method->clazz->descriptor, cd) == 0 &&
+            strcmp(method->name, mn) == 0 &&
+            strcmp(method->shorty, sg) == 0)
+        {
+            LOGW("Reached %s.%s, enabling verbose mode\n",
+                method->clazz->descriptor, method->name);
+            android_setMinPriority(LOG_TAG"i", ANDROID_LOG_VERBOSE);
+            dumpRegs(method, fp, true);
+        }
+
+        if (!gDvm.debuggerActive)
+            *pIsMethodEntry = false;
+    }
+#endif
+
+    /* Suspend pending? */
+    if (self->interpBreak.ctl.suspendCount) {
+        // Neeeded for precise GC
+        dvmExportPC(pc, fp);
+        dvmCheckSuspendPending(self);
+    }
+
+    if (self->interpBreak.ctl.subMode & kSubModeDebuggerActive) {
+        dvmUpdateDebugger(method, pc, fp,
+                          self->debugIsMethodEntry, self);
+    }
+    if (gDvm.instructionCountEnableCount != 0) {
+        /*
+         * Count up the #of executed instructions.  This isn't synchronized
+         * for thread-safety; if we need that we should make this
+         * thread-local and merge counts into the global area when threads
+         * exit (perhaps suspending all other threads GC-style and pulling
+         * the data out of them).
+         */
+        gDvm.executedInstrCounts[GET_OPCODE(*pc)]++;
+    }
+
+
+#if defined(WITH_TRACKREF_CHECKS)
+    dvmInterpCheckTrackedRefs(self, method,
+                              self->interpSave.debugTrackedRefStart);
+#endif
+
+#if defined(WITH_JIT)
+    // Does the JIT need anything done now?
+    if (self->interpBreak.ctl.breakFlags & kInterpJitBreak) {
+        // Are we building a trace?
+        if (self->interpBreak.ctl.subMode & kSubModeJitTraceBuild) {
+            dvmCheckJit(pc, self);
+        }
+
+#if defined(WITH_SELF_VERIFICATION)
+        // Are we replaying a trace?
+        if (self->interpBreak.ctl.subMode & kSubModeJitSV) {
+            dvmCheckSelfVerification(pc, self);
+        }
+#endif
+    }
+#endif
+
+    /*
+     * SingleStep processing.  NOTE: must be the last here to allow
+     * preceeding special case handler to manipulate single-step count.
+     */
+    if (self->interpBreak.ctl.breakFlags & kInterpSingleStep) {
+        if (self->singleStepCount == 0) {
+            // We've exhausted our single step count
+            dvmUpdateInterpBreak(self, kInterpSingleStep, kSubModeNormal,
+                                 false /* remove */);
+#if defined(WITH_JIT)
+#if 0
+            /*
+             * For debugging.  If jitResumeDPC is non-zero, then
+             * we expect to return to a trace in progress.   There
+             * are valid reasons why we wouldn't (such as an exception
+             * throw), but here we can keep track.
+             */
+            if (self->jitResumeDPC != NULL) {
+                if (self->jitResumeDPC == pc) {
+                    if (self->jitResumeNPC != NULL) {
+                        LOGD("SS return to trace - pc:0x%x to 0x:%x",
+                             (int)pc, (int)self->jitResumeNPC);
+                    } else {
+                        LOGD("SS return to interp - pc:0x%x",(int)pc);
+                    }
+                } else {
+                    LOGD("SS failed to return.  Expected 0x%x, now at 0x%x",
+                         (int)self->jitResumeDPC, (int)pc);
+                }
+            }
+#endif
+            // If we've got a native return and no other reasons to
+            // remain in singlestep/break mode, do a long jump
+            if (self->jitResumeNPC != NULL &&
+                self->interpBreak.ctl.breakFlags == 0) {
+                assert(self->jitResumeDPC == pc);
+                self->jitResumeDPC = NULL;
+                dvmJitResumeTranslation(self, pc, fp);
+                // Doesn't return
+                dvmAbort();
+            }
+            self->jitResumeDPC = NULL;
+#endif
+        } else {
+            self->singleStepCount--;
+#if defined(WITH_JIT)
+            if ((self->singleStepCount > 0) && (self->jitResumeNPC != NULL)) {
+                /*
+                 * Direct return to an existing translation following a
+                 * single step is valid only if we step once.  If we're
+                 * here, an additional step was added so we need to invalidate
+                 * the return to translation.
+                 */
+                self->jitResumeNPC = NULL;
+            }
+#endif
+        }
+    }
 }
 
 /*
- * Main interpreter loop entry point.  Select "standard" or "debug"
- * interpreter and switch between them as required.
+ * Main interpreter loop entry point.
  *
  * This begins executing code at the start of "method".  On exit, "pResult"
  * holds the return value of the method (or, if "method" returns NULL, it
@@ -1298,8 +1754,10 @@ void dvmCheckInst(u2 *dPC, Thread* self)
  */
 void dvmInterpret(Thread* self, const Method* method, JValue* pResult)
 {
-    bool change;
     InterpSaveState interpSaveState;
+    int savedBreakFlags;
+    int savedSubModes;
+
 #if defined(WITH_JIT)
     /* Target-specific save/restore */
     extern void dvmJitCalleeSave(double *saveArea);
@@ -1320,6 +1778,16 @@ void dvmInterpret(Thread* self, const Method* method, JValue* pResult)
      */
     interpSaveState = self->interpSave;
     self->interpSave.prev = &interpSaveState;
+    /*
+     * Strip out and save any flags that should not be inherited by
+     * nested interpreter activation.
+     */
+    savedBreakFlags = self->interpBreak.ctl.breakFlags & LOCAL_BREAKFLAGS;
+    savedSubModes = self->interpBreak.ctl.subMode & LOCAL_SUBMODE;
+    if (savedBreakFlags | savedSubModes) {
+        dvmUpdateInterpBreak(self, savedBreakFlags, savedSubModes,
+                             false /*disable*/);
+    }
 #if defined(WITH_JIT)
     dvmJitCalleeSave(calleeSave);
 #endif
@@ -1344,12 +1812,6 @@ void dvmInterpret(Thread* self, const Method* method, JValue* pResult)
     self->interpSave.method = method;
     self->interpSave.fp = (u4*) self->curFrame;
     self->interpSave.pc = method->insns;
-    self->entryPoint = kInterpEntryInstr;
-
-    if (dvmDebuggerOrProfilerActive())
-        self->nextMode = INTERP_DBG;
-    else
-        self->nextMode = INTERP_STD;
 
     assert(!dvmIsNativeMethod(method));
 
@@ -1366,36 +1828,19 @@ void dvmInterpret(Thread* self, const Method* method, JValue* pResult)
         dvmAbort();
     }
 
-    typedef bool (*Interpreter)(Thread*);
+    typedef void (*Interpreter)(Thread*);
     Interpreter stdInterp;
     if (gDvm.executionMode == kExecutionModeInterpFast)
         stdInterp = dvmMterpStd;
 #if defined(WITH_JIT)
     else if (gDvm.executionMode == kExecutionModeJit)
-/* If profiling overhead can be kept low enough, we can use a profiling
- * mterp fast for both Jit and "fast" modes.  If overhead is too high,
- * create a specialized profiling interpreter.
- */
         stdInterp = dvmMterpStd;
 #endif
     else
-        stdInterp = dvmInterpretStd;
+        stdInterp = dvmInterpretPortable;
 
-    change = true;
-    while (change) {
-        switch (self->nextMode) {
-        case INTERP_STD:
-            LOGVV("threadid=%d: interp STD\n", self->threadId);
-            change = (*stdInterp)(self);
-            break;
-        case INTERP_DBG:
-            LOGVV("threadid=%d: interp DBG\n", self->threadId);
-            change = dvmInterpretDbg(self);
-            break;
-        default:
-            dvmAbort();
-        }
-    }
+    // Call the interpreter
+    (*stdInterp)(self);
 
     *pResult = self->retval;
 
@@ -1404,4 +1849,8 @@ void dvmInterpret(Thread* self, const Method* method, JValue* pResult)
 #if defined(WITH_JIT)
     dvmJitCalleeRestore(calleeSave);
 #endif
+    if (savedBreakFlags | savedSubModes) {
+        dvmUpdateInterpBreak(self, savedBreakFlags, savedSubModes,
+                             true /*enable*/);
+    }
 }

@@ -10,13 +10,13 @@
     FETCH(r1, 2)                        @ r1<- AAAA (hi)
     ldr     r3, [r3, #offDvmDex_pResMethods]    @ r3<- pDvmDex->pResMethods
     orr     r1, r0, r1, lsl #16         @ r1<- AAAAaaaa
-    GET_VREG(r2, r10)                   @ r2<- "this" ptr
+    GET_VREG(r9, r10)                   @ r9<- "this" ptr
     ldr     r0, [r3, r1, lsl #2]        @ r0<- resolved baseMethod
-    cmp     r2, #0                      @ null "this"?
-    ldr     r9, [rSELF, #offThread_method] @ r9<- current method
+    cmp     r9, #0                      @ null "this"?
+    ldr     r10, [rSELF, #offThread_method] @ r10<- current method
     beq     common_errNullObject        @ null "this", throw exception
     cmp     r0, #0                      @ already resolved?
-    ldr     r9, [r9, #offMethod_clazz]  @ r9<- method->clazz
+    ldr     r10, [r10, #offMethod_clazz]  @ r10<- method->clazz
     EXPORT_PC()                         @ must export for invoke
     bne     .L${opcode}_continue        @ resolved, continue on
     b       .L${opcode}_resolve         @ do resolve now
@@ -25,10 +25,10 @@
     /*
      * At this point:
      *  r0 = resolved base method
-     *  r9 = method->clazz
+     *  r10 = method->clazz
      */
 .L${opcode}_continue:
-    ldr     r1, [r9, #offClassObject_super]     @ r1<- method->clazz->super
+    ldr     r1, [r10, #offClassObject_super]    @ r1<- method->clazz->super
     ldrh    r2, [r0, #offMethod_methodIndex]    @ r2<- baseMethod->methodIndex
     ldr     r3, [r1, #offClassObject_vtableCount]   @ r3<- super->vtableCount
     EXPORT_PC()                         @ must export for invoke
@@ -36,10 +36,10 @@
     bcs     .L${opcode}_nsm             @ method not present in superclass
     ldr     r1, [r1, #offClassObject_vtable]    @ r1<- ...clazz->super->vtable
     ldr     r0, [r1, r2, lsl #2]        @ r3<- vtable[methodIndex]
-    bl      common_invokeMethodJumbo    @ continue on
+    bl      common_invokeMethodJumbo    @ (r0=method, r9="this")
 
 .L${opcode}_resolve:
-    mov     r0, r9                      @ r0<- method->clazz
+    mov     r0, r10                     @ r0<- method->clazz
     mov     r2, #METHOD_VIRTUAL         @ resolver method type
     bl      dvmResolveMethod            @ r0<- call(clazz, ref, flags)
     cmp     r0, #0                      @ got null?

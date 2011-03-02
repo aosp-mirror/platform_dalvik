@@ -8,7 +8,7 @@ HANDLE_OPCODE(OP_GOTO_16 /*+AAAA*/)
             ILOGV("|goto/16 +0x%04x", offset);
         ILOGV("> branch taken");
         if (offset < 0)
-            PERIODIC_CHECKS(kInterpEntryInstr, offset);
+            PERIODIC_CHECKS(offset);
         FINISH(offset);
     }
 OP_END

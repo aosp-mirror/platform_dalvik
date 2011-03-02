@@ -40,8 +40,7 @@
  * On entry:
  *  r0  Thread* self
  *
- * This function returns a boolean "changeInterp" value.  The return comes
- * via a call to dvmMterpStdBail().
+ * The return comes via a call to dvmMterpStdBail().
  */
 dvmMterpStdRun:
 #define MTERP_ENTRY1 \
@@ -60,16 +59,13 @@ dvmMterpStdRun:
 
     /* set up "named" registers, figure out entry point */
     mov     rSELF, r0                   @ set rSELF
-    ldr     r1, [r0, #offThread_entryPoint]   @ enum is 4 bytes in aapcs-EABI
     LOAD_PC_FP_FROM_SELF()              @ load rPC and rFP from "thread"
     ldr     rIBASE, [rSELF, #offThread_curHandlerTable] @ set rIBASE
-    cmp     r1, #kInterpEntryInstr      @ usual case?
-    bne     .Lnot_instr                 @ no, handle it
 
 #if defined(WITH_JIT)
 .LentryInstr:
     /* Entry is always a possible trace start */
-    GET_JIT_PROF_TABLE(r0)
+    ldr     r0, [rSELF, #offThread_pJitProfTable]
     FETCH_INST()
     mov     r1, #0                      @ prepare the value for the new state
     str     r1, [rSELF, #offThread_inJitCodeCache] @ back to the interp land
@@ -97,33 +93,6 @@ dvmMterpStdRun:
     GOTO_OPCODE(ip)                     @ jump to next instruction
 #endif
 
-.Lnot_instr:
-    cmp     r1, #kInterpEntryReturn     @ were we returning from a method?
-    beq     common_returnFromMethod
-
-.Lnot_return:
-    cmp     r1, #kInterpEntryThrow      @ were we throwing an exception?
-    beq     common_exceptionThrown
-
-#if defined(WITH_JIT)
-.Lnot_throw:
-    ldr     r10,[rSELF, #offThread_jitResumeNPC]
-    ldr     r2,[rSELF, #offThread_jitResumeDPC]
-    cmp     r1, #kInterpEntryResume     @ resuming after Jit single-step?
-    bne     .Lbad_arg
-    cmp     rPC,r2
-    bne     .LentryInstr                @ must have branched, don't resume
-#if defined(WITH_SELF_VERIFICATION)
-    @ self->entryPoint will be set in dvmSelfVerificationSaveState
-    b       jitSVShadowRunStart         @ re-enter the translation after the
-                                        @ single-stepped instruction
-    @noreturn
-#endif
-    mov     r1, #kInterpEntryInstr
-    str     r1, [rSELF, #offThread_entryPoint]
-    bx      r10                         @ re-enter the translation
-#endif
-
 .Lbad_arg:
     ldr     r0, strBadEntryPoint
     @ r1 holds value of entryPoint
@@ -147,11 +116,9 @@ dvmMterpStdRun:
  *
  * On entry:
  *  r0  Thread* self
- *  r1  bool changeInterp
  */
 dvmMterpStdBail:
-    ldr     sp, [r0, #offThread_bailPtr]      @ sp<- saved SP
-    mov     r0, r1                          @ return the changeInterp value
+    ldr     sp, [r0, #offThread_bailPtr]    @ sp<- saved SP
     add     sp, sp, #4                      @ un-align 64
     ldmfd   sp!, {r4-r10,fp,pc}             @ restore 9 regs and return
 

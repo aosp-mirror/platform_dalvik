@@ -116,4 +116,9 @@ INLINE bool dvmPerformInlineOp4Std(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
 bool dvmPerformInlineOp4Dbg(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
     JValue* pResult, int opIndex);
 
+/*
+ * Return method & populate the table on first use.
+ */
+Method* dvmResolveInlineNative(int opIndex);
+
 #endif /*_DALVIK_INLINENATIVE*/

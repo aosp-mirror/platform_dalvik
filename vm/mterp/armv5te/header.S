@@ -131,7 +131,7 @@ unspecified registers or condition codes.
  * rPC to point to the next instruction.  "_reg" must specify the distance
  * in bytes, *not* 16-bit code units, and may be a signed value.
  *
- * We want to write "ldrh rINST, [rPC, _reg, lsl #2]!", but some of the
+ * We want to write "ldrh rINST, [rPC, _reg, lsl #1]!", but some of the
  * bits that hold the shift distance are used for the half/byte/sign flags.
  * In some cases we can pre-double _reg for free, so we require a byte offset
  * here.
@@ -169,6 +169,7 @@ unspecified registers or condition codes.
  * interpreter, we don't have to worry about pre-ARMv5 THUMB interwork.
  */
 #define GOTO_OPCODE(_reg)       add     pc, rIBASE, _reg, lsl #${handler_size_bits}
+#define GOTO_OPCODE_BASE(_base,_reg)  add     pc, _base, _reg, lsl #${handler_size_bits}
 #define GOTO_OPCODE_IFEQ(_reg)  addeq   pc, rIBASE, _reg, lsl #${handler_size_bits}
 #define GOTO_OPCODE_IFNE(_reg)  addne   pc, rIBASE, _reg, lsl #${handler_size_bits}
 
@@ -177,11 +178,6 @@ unspecified registers or condition codes.
  */
 #define GET_VREG(_reg, _vreg)   ldr     _reg, [rFP, _vreg, lsl #2]
 #define SET_VREG(_reg, _vreg)   str     _reg, [rFP, _vreg, lsl #2]
-
-#if defined(WITH_JIT)
-#define GET_JIT_PROF_TABLE(_reg)    ldr _reg,[rSELF,#offThread_pJitProfTable]
-#define GET_JIT_THRESHOLD(_reg)     ldr _reg,[rSELF,#offThread_jitThreshold]
-#endif
 
 /*
  * Convert a virtual register index into an address.

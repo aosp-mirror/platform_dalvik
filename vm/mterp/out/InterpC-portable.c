@@ -1,5 +1,5 @@
 /*
- * This file was generated automatically by gen-mterp.py for 'portdbg'.
+ * This file was generated automatically by gen-mterp.py for 'portable'.
  *
  * --> DO NOT EDIT <--
  */
@@ -37,20 +37,7 @@
  *   WITH_TRACKREF_CHECKS
  *   EASY_GDB
  *   NDEBUG
- *
- * If THREADED_INTERP is not defined, we use a classic "while true / switch"
- * interpreter.  If it is defined, then the tail end of each instruction
- * handler fetches the next instruction and jumps directly to the handler.
- * This increases the size of the "Std" interpreter by about 10%, but
- * provides a speedup of about the same magnitude.
- *
- * There's a "hybrid" approach that uses a goto table instead of a switch
- * statement, avoiding the "is the opcode in range" tests required for switch.
- * The performance is close to the threaded version, and without the 10%
- * size increase, but the benchmark results are off enough that it's not
- * worth adding as a third option.
  */
-#define THREADED_INTERP             /* threaded vs. while-loop interpreter */
 
 #ifdef WITH_INSTR_CHECKS            /* instruction-level paranoia (slow!) */
 # define CHECK_BRANCH_OFFSETS
@@ -329,24 +316,6 @@ static inline void putDoubleToArray(u4* ptr, int idx, double dval)
 #define EXPORT_PC()         (SAVEAREA_FROM_FP(fp)->xtra.currentPc = pc)
 
 /*
- * Determine if we need to switch to a different interpreter.  "_current"
- * is either INTERP_STD or INTERP_DBG.  It should be fixed for a given
- * interpreter generation file, which should remove the outer conditional
- * from the following.
- *
- * If we're building without debug and profiling support, we never switch.
- */
-#if defined(WITH_JIT)
-# define NEED_INTERP_SWITCH(_current) (                                     \
-    (_current == INTERP_STD) ?                                              \
-        dvmJitDebuggerOrProfilerActive() : !dvmJitDebuggerOrProfilerActive() )
-#else
-# define NEED_INTERP_SWITCH(_current) (                                     \
-    (_current == INTERP_STD) ?                                              \
-        dvmDebuggerOrProfilerActive() : !dvmDebuggerOrProfilerActive() )
-#endif
-
-/*
  * Check to see if "obj" is NULL.  If so, throw an exception.  Assumes the
  * pc has already been exported to the stack.
  *
@@ -410,25 +379,6 @@ static inline bool checkForNullExportPC(Object* obj, u4* fp, const u2* pc)
     return true;
 }
 
-/* File: portable/portdbg.c */
-#define INTERP_FUNC_NAME dvmInterpretDbg
-#define INTERP_TYPE INTERP_DBG
-
-#define CHECK_DEBUG_AND_PROF() \
-    checkDebugAndProf(pc, fp, self, curMethod, &debugIsMethodEntry)
-
-#if defined(WITH_JIT)
-#define CHECK_JIT_BOOL() (dvmCheckJit(pc, self, callsiteClass,\
-                          methodToCall))
-#define CHECK_JIT_VOID() (dvmCheckJit(pc, self, callsiteClass,\
-                          methodToCall))
-#define END_JIT_TSELECT() (dvmJitEndTraceSelect(self))
-#else
-#define CHECK_JIT_BOOL() (false)
-#define CHECK_JIT_VOID()
-#define END_JIT_TSELECT(x) ((void)0)
-#endif
-
 /* File: portable/stubdefs.c */
 /*
  * In the C mterp stubs, "goto" is a function call followed immediately
@@ -443,6 +393,7 @@ static inline bool checkForNullExportPC(Object* obj, u4* fp, const u2* pc)
 
 /* ugh */
 #define STUB_HACK(x)
+#define JIT_STUB_HACK(x)
 
 /*
  * Instruction framing.  For a switch-oriented implementation this is
@@ -451,18 +402,15 @@ static inline bool checkForNullExportPC(Object* obj, u4* fp, const u2* pc)
  *
  * Assumes the existence of "const u2* pc" and (for threaded operation)
  * "u2 inst".
- *
- * TODO: remove "switch" version.
  */
-#ifdef THREADED_INTERP
 # define H(_op)             &&op_##_op
 # define HANDLE_OPCODE(_op) op_##_op:
 # define FINISH(_offset) {                                                  \
         ADJUST_PC(_offset);                                                 \
         inst = FETCH(0);                                                    \
-        CHECK_DEBUG_AND_PROF();                                             \
-        CHECK_TRACKED_REFS();                                               \
-        if (CHECK_JIT_BOOL()) GOTO_bail_switch();                           \
+        if (self->interpBreak.ctl.subMode) {                                \
+            dvmCheckBefore(pc, fp, self);                                   \
+        }                                                                   \
         goto *handlerTable[INST_INST(inst)];                                \
     }
 # define FINISH_BKPT(_opcode) {                                             \
@@ -471,22 +419,8 @@ static inline bool checkForNullExportPC(Object* obj, u4* fp, const u2* pc)
 # define DISPATCH_EXTENDED(_opcode) {                                       \
         goto *handlerTable[0x100 + _opcode];                                \
     }
-#else
-# define HANDLE_OPCODE(_op) case _op:
-# define FINISH(_offset)    { ADJUST_PC(_offset); break; }
-# define FINISH_BKPT(opcode) { > not implemented < }
-# define DISPATCH_EXTENDED(opcode) goto case (0x100 + opcode);
-#endif
 
 #define OP_END
-
-#if defined(WITH_TRACKREF_CHECKS)
-# define CHECK_TRACKED_REFS() \
-    dvmInterpCheckTrackedRefs(self, curMethod, debugTrackedRefStart)
-#else
-# define CHECK_TRACKED_REFS() ((void)0)
-#endif
-
 
 /*
  * The "goto" targets just turn into goto statements.  The "arguments" are
@@ -508,7 +442,6 @@ static inline bool checkForNullExportPC(Object* obj, u4* fp, const u2* pc)
 #define GOTO_invokeMethod(_methodCallRange, _methodToCall, _vsrc1, _vdst) goto invokeMethod;
 
 #define GOTO_bail() goto bail;
-#define GOTO_bail_switch() goto bail_switch;
 
 /*
  * Periodically check for thread suspension.
@@ -516,19 +449,10 @@ static inline bool checkForNullExportPC(Object* obj, u4* fp, const u2* pc)
  * While we're at it, see if a debugger has attached or the profiler has
  * started.  If so, switch to a different "goto" table.
  */
-#define PERIODIC_CHECKS(_entryPoint, _pcadj) {                              \
+#define PERIODIC_CHECKS(_pcadj) {                              \
         if (dvmCheckSuspendQuick(self)) {                                   \
             EXPORT_PC();  /* need for precise GC */                         \
             dvmCheckSuspendPending(self);                                   \
-        }                                                                   \
-        if (NEED_INTERP_SWITCH(INTERP_TYPE)) {                              \
-            ADJUST_PC(_pcadj);                                              \
-            self->entryPoint = _entryPoint;                          \
-            LOGVV("threadid=%d: switch to %s ep=%d adj=%d\n",               \
-                self->threadId,                                             \
-                (self->nextMode == INTERP_STD) ? "STD" : "DBG",      \
-                (_entryPoint), (_pcadj));                                   \
-            GOTO_bail_switch();                                             \
         }                                                                   \
     }
 
@@ -639,7 +563,7 @@ GOTO_TARGET_DECL(exceptionThrown);
                 branchOffset);                                              \
             ILOGV("> branch taken");                                        \
             if (branchOffset < 0)                                           \
-                PERIODIC_CHECKS(kInterpEntryInstr, branchOffset);           \
+                PERIODIC_CHECKS(branchOffset);                              \
             FINISH(branchOffset);                                           \
         } else {                                                            \
             ILOGV("|if-%s v%d,v%d,-", (_opname), vsrc1, vsrc2);             \
@@ -654,7 +578,7 @@ GOTO_TARGET_DECL(exceptionThrown);
             ILOGV("|if-%s v%d,+0x%04x", (_opname), vsrc1, branchOffset);    \
             ILOGV("> branch taken");                                        \
             if (branchOffset < 0)                                           \
-                PERIODIC_CHECKS(kInterpEntryInstr, branchOffset);           \
+                PERIODIC_CHECKS(branchOffset);                              \
             FINISH(branchOffset);                                           \
         } else {                                                            \
             ILOGV("|if-%s v%d,-", (_opname), vsrc1);                        \
@@ -1187,9 +1111,12 @@ GOTO_TARGET_DECL(exceptionThrown);
 
 /*
  * The JIT needs dvmDexGetResolvedField() to return non-null.
- * Since we use the portable interpreter to build the trace, the extra
- * checks in HANDLE_SGET_X and HANDLE_SPUT_X are not needed for mterp.
+ * Because the portable interpreter is not involved with the JIT
+ * and trace building, we only need the extra check here when this
+ * code is massaged into a stub called from an assembly interpreter.
+ * This is controlled by the JIT_STUB_HACK maco.
  */
+
 #define HANDLE_SGET_X(_opcode, _opname, _ftype, _regsize)                   \
     HANDLE_OPCODE(_opcode /*vAA, field@BBBB*/)                              \
     {                                                                       \
@@ -1204,7 +1131,7 @@ GOTO_TARGET_DECL(exceptionThrown);
             if (sfield == NULL)                                             \
                 GOTO_exceptionThrown();                                     \
             if (dvmDexGetResolvedField(methodClassDex, ref) == NULL) {      \
-                END_JIT_TSELECT();                                          \
+                JIT_STUB_HACK(dvmJitEndTraceSelect(self,pc));                  \
             }                                                               \
         }                                                                   \
         SET_REGISTER##_regsize(vdst, dvmGetStaticField##_ftype(sfield));    \
@@ -1228,7 +1155,7 @@ GOTO_TARGET_DECL(exceptionThrown);
             if (sfield == NULL)                                             \
                 GOTO_exceptionThrown();                                     \
             if (dvmDexGetResolvedField(methodClassDex, ref) == NULL) {      \
-                END_JIT_TSELECT();                                          \
+                JIT_STUB_HACK(dvmJitEndTraceSelect(self,pc));                  \
             }                                                               \
         }                                                                   \
         SET_REGISTER##_regsize(vdst, dvmGetStaticField##_ftype(sfield));    \
@@ -1252,7 +1179,7 @@ GOTO_TARGET_DECL(exceptionThrown);
             if (sfield == NULL)                                             \
                 GOTO_exceptionThrown();                                     \
             if (dvmDexGetResolvedField(methodClassDex, ref) == NULL) {      \
-                END_JIT_TSELECT();                                          \
+                JIT_STUB_HACK(dvmJitEndTraceSelect(self,pc));                  \
             }                                                               \
         }                                                                   \
         dvmSetStaticField##_ftype(sfield, GET_REGISTER##_regsize(vdst));    \
@@ -1276,7 +1203,7 @@ GOTO_TARGET_DECL(exceptionThrown);
             if (sfield == NULL)                                             \
                 GOTO_exceptionThrown();                                     \
             if (dvmDexGetResolvedField(methodClassDex, ref) == NULL) {      \
-                END_JIT_TSELECT();                                          \
+                JIT_STUB_HACK(dvmJitEndTraceSelect(self,pc));                  \
             }                                                               \
         }                                                                   \
         dvmSetStaticField##_ftype(sfield, GET_REGISTER##_regsize(vdst));    \
@@ -1286,261 +1213,16 @@ GOTO_TARGET_DECL(exceptionThrown);
     }                                                                       \
     FINISH(4);
 
-/* File: portable/debug.c */
-/* code in here is only included in portable-debug interpreter */
-
-/*
- * Update the debugger on interesting events, such as hitting a breakpoint
- * or a single-step point.  This is called from the top of the interpreter
- * loop, before the current instruction is processed.
- *
- * Set "methodEntry" if we've just entered the method.  This detects
- * method exit by checking to see if the next instruction is "return".
- *
- * This can't catch native method entry/exit, so we have to handle that
- * at the point of invocation.  We also need to catch it in dvmCallMethod
- * if we want to capture native->native calls made through JNI.
- *
- * Notes to self:
- * - Don't want to switch to VMWAIT while posting events to the debugger.
- *   Let the debugger code decide if we need to change state.
- * - We may want to check for debugger-induced thread suspensions on
- *   every instruction.  That would make a "suspend all" more responsive
- *   and reduce the chances of multiple simultaneous events occurring.
- *   However, it could change the behavior some.
- *
- * TODO: method entry/exit events are probably less common than location
- * breakpoints.  We may be able to speed things up a bit if we don't query
- * the event list unless we know there's at least one lurking within.
- */
-static void updateDebugger(const Method* method, const u2* pc, const u4* fp,
-    bool methodEntry, Thread* self)
-{
-    int eventFlags = 0;
-
-    /*
-     * Update xtra.currentPc on every instruction.  We need to do this if
-     * there's a chance that we could get suspended.  This can happen if
-     * eventFlags != 0 here, or somebody manually requests a suspend
-     * (which gets handled at PERIOD_CHECKS time).  One place where this
-     * needs to be correct is in dvmAddSingleStep().
-     */
-    EXPORT_PC();
-
-    if (methodEntry)
-        eventFlags |= DBG_METHOD_ENTRY;
-
-    /*
-     * See if we have a breakpoint here.
-     *
-     * Depending on the "mods" associated with event(s) on this address,
-     * we may or may not actually send a message to the debugger.
-     */
-    if (INST_INST(*pc) == OP_BREAKPOINT) {
-        LOGV("+++ breakpoint hit at %p\n", pc);
-        eventFlags |= DBG_BREAKPOINT;
-    }
-
-    /*
-     * If the debugger is single-stepping one of our threads, check to
-     * see if we're that thread and we've reached a step point.
-     */
-    const StepControl* pCtrl = &gDvm.stepControl;
-    if (pCtrl->active && pCtrl->thread == self) {
-        int frameDepth;
-        bool doStop = false;
-        const char* msg = NULL;
-
-        assert(!dvmIsNativeMethod(method));
-
-        if (pCtrl->depth == SD_INTO) {
-            /*
-             * Step into method calls.  We break when the line number
-             * or method pointer changes.  If we're in SS_MIN mode, we
-             * always stop.
-             */
-            if (pCtrl->method != method) {
-                doStop = true;
-                msg = "new method";
-            } else if (pCtrl->size == SS_MIN) {
-                doStop = true;
-                msg = "new instruction";
-            } else if (!dvmAddressSetGet(
-                    pCtrl->pAddressSet, pc - method->insns)) {
-                doStop = true;
-                msg = "new line";
-            }
-        } else if (pCtrl->depth == SD_OVER) {
-            /*
-             * Step over method calls.  We break when the line number is
-             * different and the frame depth is <= the original frame
-             * depth.  (We can't just compare on the method, because we
-             * might get unrolled past it by an exception, and it's tricky
-             * to identify recursion.)
-             */
-            frameDepth = dvmComputeVagueFrameDepth(self, fp);
-            if (frameDepth < pCtrl->frameDepth) {
-                /* popped up one or more frames, always trigger */
-                doStop = true;
-                msg = "method pop";
-            } else if (frameDepth == pCtrl->frameDepth) {
-                /* same depth, see if we moved */
-                if (pCtrl->size == SS_MIN) {
-                    doStop = true;
-                    msg = "new instruction";
-                } else if (!dvmAddressSetGet(pCtrl->pAddressSet,
-                            pc - method->insns)) {
-                    doStop = true;
-                    msg = "new line";
-                }
-            }
-        } else {
-            assert(pCtrl->depth == SD_OUT);
-            /*
-             * Return from the current method.  We break when the frame
-             * depth pops up.
-             *
-             * This differs from the "method exit" break in that it stops
-             * with the PC at the next instruction in the returned-to
-             * function, rather than the end of the returning function.
-             */
-            frameDepth = dvmComputeVagueFrameDepth(self, fp);
-            if (frameDepth < pCtrl->frameDepth) {
-                doStop = true;
-                msg = "method pop";
-            }
-        }
-
-        if (doStop) {
-            LOGV("#####S %s\n", msg);
-            eventFlags |= DBG_SINGLE_STEP;
-        }
-    }
-
-    /*
-     * Check to see if this is a "return" instruction.  JDWP says we should
-     * send the event *after* the code has been executed, but it also says
-     * the location we provide is the last instruction.  Since the "return"
-     * instruction has no interesting side effects, we should be safe.
-     * (We can't just move this down to the returnFromMethod label because
-     * we potentially need to combine it with other events.)
-     *
-     * We're also not supposed to generate a method exit event if the method
-     * terminates "with a thrown exception".
-     */
-    u2 inst = INST_INST(FETCH(0));
-    if (inst == OP_RETURN_VOID || inst == OP_RETURN || inst == OP_RETURN_WIDE ||
-        inst == OP_RETURN_OBJECT)
-    {
-        eventFlags |= DBG_METHOD_EXIT;
-    }
-
-    /*
-     * If there's something interesting going on, see if it matches one
-     * of the debugger filters.
-     */
-    if (eventFlags != 0) {
-        Object* thisPtr = dvmGetThisPtr(method, fp);
-        if (thisPtr != NULL && !dvmIsValidObject(thisPtr)) {
-            /*
-             * TODO: remove this check if we're confident that the "this"
-             * pointer is where it should be -- slows us down, especially
-             * during single-step.
-             */
-            char* desc = dexProtoCopyMethodDescriptor(&method->prototype);
-            LOGE("HEY: invalid 'this' ptr %p (%s.%s %s)\n", thisPtr,
-                method->clazz->descriptor, method->name, desc);
-            free(desc);
-            dvmAbort();
-        }
-        dvmDbgPostLocationEvent(method, pc - method->insns, thisPtr,
-            eventFlags);
-    }
-}
-
-/*
- * Perform some operations at the "top" of the interpreter loop.
- * This stuff is required to support debugging and profiling.
- *
- * Using" __attribute__((noinline))" seems to do more harm than good.  This
- * is best when inlined due to the large number of parameters, most of
- * which are local vars in the main interp loop.
- */
-static void checkDebugAndProf(const u2* pc, const u4* fp, Thread* self,
-    const Method* method, bool* pIsMethodEntry)
-{
-    /* check to see if we've run off end of method */
-    assert(pc >= method->insns && pc <
-            method->insns + dvmGetMethodInsnsSize(method));
-
-#if 0
-    /*
-     * When we hit a specific method, enable verbose instruction logging.
-     * Sometimes it's helpful to use the debugger attach as a trigger too.
-     */
-    if (*pIsMethodEntry) {
-        static const char* cd = "Landroid/test/Arithmetic;";
-        static const char* mn = "shiftTest2";
-        static const char* sg = "()V";
-
-        if (/*DEBUGGER_ACTIVE &&*/
-            strcmp(method->clazz->descriptor, cd) == 0 &&
-            strcmp(method->name, mn) == 0 &&
-            strcmp(method->shorty, sg) == 0)
-        {
-            LOGW("Reached %s.%s, enabling verbose mode\n",
-                method->clazz->descriptor, method->name);
-            android_setMinPriority(LOG_TAG"i", ANDROID_LOG_VERBOSE);
-            dumpRegs(method, fp, true);
-        }
-
-        if (!DEBUGGER_ACTIVE)
-            *pIsMethodEntry = false;
-    }
-#endif
-
-    /*
-     * If the debugger is attached, check for events.  If the profiler is
-     * enabled, update that too.
-     *
-     * This code is executed for every instruction we interpret, so for
-     * performance we use a couple of #ifdef blocks instead of runtime tests.
-     */
-    bool isEntry = *pIsMethodEntry;
-    if (isEntry) {
-        *pIsMethodEntry = false;
-        TRACE_METHOD_ENTER(self, method);
-    }
-    if (DEBUGGER_ACTIVE) {
-        updateDebugger(method, pc, fp, isEntry, self);
-    }
-    if (gDvm.instructionCountEnableCount != 0) {
-        /*
-         * Count up the #of executed instructions.  This isn't synchronized
-         * for thread-safety; if we need that we should make this
-         * thread-local and merge counts into the global area when threads
-         * exit (perhaps suspending all other threads GC-style and pulling
-         * the data out of them).
-         */
-        int inst = *pc & 0xff;
-        gDvm.executedInstrCounts[inst]++;
-    }
-}
-
 /* File: portable/entry.c */
 /*
  * Main interpreter loop.
  *
  * This was written with an ARM implementation in mind.
  */
-bool INTERP_FUNC_NAME(Thread* self)
+void dvmInterpretPortable(Thread* self)
 {
 #if defined(EASY_GDB)
     StackSaveArea* debugSaveArea = SAVEAREA_FROM_FP(self->curFrame);
-#endif
-#if INTERP_TYPE == INTERP_DBG
-    bool debugIsMethodEntry = false;
-    debugIsMethodEntry = self->debugIsMethodEntry;
 #endif
 #if defined(WITH_TRACKREF_CHECKS)
     int debugTrackedRefStart = self->interpSave.debugTrackedRefStart;
@@ -1562,46 +1244,8 @@ bool INTERP_FUNC_NAME(Thread* self)
     bool jumboFormat;
 
 
-#if defined(THREADED_INTERP)
     /* static computed goto table */
     DEFINE_GOTO_TABLE(handlerTable);
-#endif
-
-#if defined(WITH_JIT)
-#if 0
-    LOGD("*DebugInterp - entrypoint is %d, tgt is 0x%x, %s\n",
-         self->entryPoint,
-         self->interpSave.pc,
-         self->interpSave.method->name);
-#endif
-#if INTERP_TYPE == INTERP_DBG
-    const ClassObject* callsiteClass = NULL;
-
-#if defined(WITH_SELF_VERIFICATION)
-    if (self->jitState != kJitSelfVerification) {
-        self->shadowSpace->jitExitState = kSVSIdle;
-    }
-#endif
-
-    /* Check to see if we've got a trace selection request. */
-    if (
-         /*
-          * Only perform dvmJitCheckTraceRequest if the entry point is
-          * EntryInstr and the jit state is either kJitTSelectRequest or
-          * kJitTSelectRequestHot. If debugger/profiler happens to be attached,
-          * dvmJitCheckTraceRequest will change the jitState to kJitDone but
-          * but stay in the dbg interpreter.
-          */
-         (self->entryPoint == kInterpEntryInstr) &&
-         (self->jitState == kJitTSelectRequest ||
-          self->jitState == kJitTSelectRequestHot) &&
-         dvmJitCheckTraceRequest(self)) {
-        self->nextMode = INTERP_STD;
-        //LOGD("Invalid trace request, exiting\n");
-        return true;
-    }
-#endif /* INTERP_TYPE == INTERP_DBG */
-#endif /* WITH_JIT */
 
     /* copy state in */
     curMethod = self->interpSave.method;
@@ -1611,49 +1255,24 @@ bool INTERP_FUNC_NAME(Thread* self)
 
     methodClassDex = curMethod->clazz->pDvmDex;
 
-    LOGVV("threadid=%d: entry(%s) %s.%s pc=0x%x fp=%p ep=%d\n",
-        self->threadId, (self->nextMode == INTERP_STD) ? "STD" : "DBG",
-        curMethod->clazz->descriptor, curMethod->name, pc - curMethod->insns,
-        fp, self->entryPoint);
+    LOGVV("threadid=%d: %s.%s pc=0x%x fp=%p\n",
+        self->threadId, curMethod->clazz->descriptor, curMethod->name,
+        pc - curMethod->insns, fp);
 
     /*
      * DEBUG: scramble this to ensure we're not relying on it.
      */
     methodToCall = (const Method*) -1;
 
-#if INTERP_TYPE == INTERP_DBG
-    if (debugIsMethodEntry) {
+#if 0
+    if (self->debugIsMethodEntry) {
         ILOGD("|-- Now interpreting %s.%s", curMethod->clazz->descriptor,
                 curMethod->name);
         DUMP_REGS(curMethod, self->interpSave.fp, false);
     }
 #endif
 
-    switch (self->entryPoint) {
-    case kInterpEntryInstr:
-        /* just fall through to instruction loop or threaded kickstart */
-        break;
-    case kInterpEntryReturn:
-        CHECK_JIT_VOID();
-        goto returnFromMethod;
-    case kInterpEntryThrow:
-        goto exceptionThrown;
-    default:
-        dvmAbort();
-    }
-
-#ifdef THREADED_INTERP
     FINISH(0);                  /* fetch and execute first instruction */
-#else
-    while (1) {
-        CHECK_DEBUG_AND_PROF(); /* service debugger and profiling */
-        CHECK_TRACKED_REFS();   /* check local reference tracking */
-
-        /* fetch the next 16 bits from the instruction stream */
-        inst = FETCH(0);
-
-        switch (INST_INST(inst)) {
-#endif
 
 /*--- start of opcodes ---*/
 
@@ -2151,15 +1770,18 @@ HANDLE_OPCODE(OP_NEW_INSTANCE /*vAA, class@BBBB*/)
         if (!dvmIsClassInitialized(clazz) && !dvmInitClass(clazz))
             GOTO_exceptionThrown();
 
+#if defined(WITH_JIT)
         /*
          * The JIT needs dvmDexGetResolvedClass() to return non-null.
          * Since we use the portable interpreter to build the trace, this extra
          * check is not needed for mterp.
          */
-        if (!dvmDexGetResolvedClass(methodClassDex, ref)) {
+        if ((self->interpBreak.ctl.subMode & kSubModeJitTraceBuild) &&
+            (!dvmDexGetResolvedClass(methodClassDex, ref))) {
             /* Class initialization is still ongoing - end the trace */
-            END_JIT_TSELECT();
+            dvmJitEndTraceSelect(self,pc);
         }
+#endif
 
         /*
          * Verifier now tests for interface/abstract class.
@@ -2288,7 +1910,7 @@ HANDLE_OPCODE(OP_GOTO /*+AA*/)
         ILOGV("|goto +0x%02x", ((s1)vdst));
     ILOGV("> branch taken");
     if ((s1)vdst < 0)
-        PERIODIC_CHECKS(kInterpEntryInstr, (s1)vdst);
+        PERIODIC_CHECKS((s1)vdst);
     FINISH((s1)vdst);
 OP_END
 
@@ -2303,7 +1925,7 @@ HANDLE_OPCODE(OP_GOTO_16 /*+AAAA*/)
             ILOGV("|goto/16 +0x%04x", offset);
         ILOGV("> branch taken");
         if (offset < 0)
-            PERIODIC_CHECKS(kInterpEntryInstr, offset);
+            PERIODIC_CHECKS(offset);
         FINISH(offset);
     }
 OP_END
@@ -2320,7 +1942,7 @@ HANDLE_OPCODE(OP_GOTO_32 /*+AAAAAAAA*/)
             ILOGV("|goto/32 +0x%08x", offset);
         ILOGV("> branch taken");
         if (offset <= 0)    /* allowed to branch to self */
-            PERIODIC_CHECKS(kInterpEntryInstr, offset);
+            PERIODIC_CHECKS(offset);
         FINISH(offset);
     }
 OP_END
@@ -2351,7 +1973,7 @@ HANDLE_OPCODE(OP_PACKED_SWITCH /*vAA, +BBBB*/)
         offset = dvmInterpHandlePackedSwitch(switchData, testVal);
         ILOGV("> branch taken (0x%04x)\n", offset);
         if (offset <= 0)  /* uncommon */
-            PERIODIC_CHECKS(kInterpEntryInstr, offset);
+            PERIODIC_CHECKS(offset);
         FINISH(offset);
     }
 OP_END
@@ -2382,7 +2004,7 @@ HANDLE_OPCODE(OP_SPARSE_SWITCH /*vAA, +BBBB*/)
         offset = dvmInterpHandleSparseSwitch(switchData, testVal);
         ILOGV("> branch taken (0x%04x)\n", offset);
         if (offset <= 0)  /* uncommon */
-            PERIODIC_CHECKS(kInterpEntryInstr, offset);
+            PERIODIC_CHECKS(offset);
         FINISH(offset);
     }
 OP_END
@@ -3266,7 +2888,6 @@ OP_END
 
 /* File: c/OP_BREAKPOINT.c */
 HANDLE_OPCODE(OP_BREAKPOINT)
-#if (INTERP_TYPE == INTERP_DBG)
     {
         /*
          * Restart this instruction with the original opcode.  We do
@@ -3276,7 +2897,7 @@ HANDLE_OPCODE(OP_BREAKPOINT)
          * for the sake of anything that needs to do disambiguation in a
          * common handler with INST_INST.
          *
-         * The breakpoint itself is handled over in updateDebugger(),
+         * The breakpoint itself is handled over in dvmUpdateDebugger(),
          * because we need to detect other events (method entry, single
          * step) and report them in the same event packet, and we're not
          * yet handling those through breakpoint instructions.  By the
@@ -3289,10 +2910,6 @@ HANDLE_OPCODE(OP_BREAKPOINT)
         inst = INST_REPLACE_OP(inst, originalOpcode);
         FINISH_BKPT(originalOpcode);
     }
-#else
-    LOGE("Breakpoint hit in non-debug interpreter\n");
-    dvmAbort();
-#endif
 OP_END
 
 /* File: c/OP_THROW_VERIFICATION_ERROR.c */
@@ -3354,13 +2971,13 @@ HANDLE_OPCODE(OP_EXECUTE_INLINE /*vB, {vD, vE, vF, vG}, inline@CCCC*/)
             ;
         }
 
-#if INTERP_TYPE == INTERP_DBG
-        if (!dvmPerformInlineOp4Dbg(arg0, arg1, arg2, arg3, &retval, ref))
-            GOTO_exceptionThrown();
-#else
-        if (!dvmPerformInlineOp4Std(arg0, arg1, arg2, arg3, &retval, ref))
-            GOTO_exceptionThrown();
-#endif
+        if (self->interpBreak.ctl.subMode & kSubModeDebuggerActive) {
+            if (!dvmPerformInlineOp4Dbg(arg0, arg1, arg2, arg3, &retval, ref))
+                GOTO_exceptionThrown();
+        } else {
+            if (!dvmPerformInlineOp4Std(arg0, arg1, arg2, arg3, &retval, ref))
+                GOTO_exceptionThrown();
+        }
     }
     FINISH(3);
 OP_END
@@ -3399,13 +3016,13 @@ HANDLE_OPCODE(OP_EXECUTE_INLINE_RANGE /*{vCCCC..v(CCCC+AA-1)}, inline@BBBB*/)
             ;
         }
 
-#if INTERP_TYPE == INTERP_DBG
-        if (!dvmPerformInlineOp4Dbg(arg0, arg1, arg2, arg3, &retval, ref))
-            GOTO_exceptionThrown();
-#else
-        if (!dvmPerformInlineOp4Std(arg0, arg1, arg2, arg3, &retval, ref))
-            GOTO_exceptionThrown();
-#endif
+        if (self->interpBreak.ctl.subMode & kSubModeDebuggerActive) {
+            if (!dvmPerformInlineOp4Dbg(arg0, arg1, arg2, arg3, &retval, ref))
+                GOTO_exceptionThrown();
+        } else {
+            if (!dvmPerformInlineOp4Std(arg0, arg1, arg2, arg3, &retval, ref))
+                GOTO_exceptionThrown();
+        }
     }
     FINISH(3);
 OP_END
@@ -3433,12 +3050,10 @@ HANDLE_OPCODE(OP_INVOKE_OBJECT_INIT_RANGE /*{vCCCC..v(CCCC+AA-1)}, meth@BBBB*/)
                 GOTO_exceptionThrown();
         }
 
-#if INTERP_TYPE == INTERP_DBG
-        if (DEBUGGER_ACTIVE) {
+        if (self->interpBreak.ctl.subMode & kSubModeDebuggerActive) {
             /* behave like OP_INVOKE_DIRECT_RANGE */
             GOTO_invoke(invokeDirect, true, false);
         }
-#endif
         FINISH(3);
     }
 OP_END
@@ -3623,15 +3238,18 @@ HANDLE_OPCODE(OP_NEW_INSTANCE_JUMBO /*vBBBB, class@AAAAAAAA*/)
         if (!dvmIsClassInitialized(clazz) && !dvmInitClass(clazz))
             GOTO_exceptionThrown();
 
+#if defined(WITH_JIT)
         /*
          * The JIT needs dvmDexGetResolvedClass() to return non-null.
          * Since we use the portable interpreter to build the trace, this extra
          * check is not needed for mterp.
          */
-        if (!dvmDexGetResolvedClass(methodClassDex, ref)) {
+        if ((self->interpBreak.ctl.subMode & kSubModeJitTraceBuild) &&
+            (!dvmDexGetResolvedClass(methodClassDex, ref))) {
             /* Class initialization is still ongoing - end the trace */
-            END_JIT_TSELECT();
+            dvmJitEndTraceSelect(self,pc);
         }
+#endif
 
         /*
          * Verifier now tests for interface/abstract class.
@@ -4680,12 +4298,10 @@ HANDLE_OPCODE(OP_INVOKE_OBJECT_INIT_JUMBO /*{vCCCC..vNNNN}, meth@AAAAAAAA*/)
                 GOTO_exceptionThrown();
         }
 
-#if INTERP_TYPE == INTERP_DBG
-        if (DEBUGGER_ACTIVE) {
+        if (self->interpBreak.ctl.subMode & kSubModeDebuggerActive) {
             /* behave like OP_INVOKE_DIRECT_RANGE */
             GOTO_invoke(invokeDirect, true, true);
         }
-#endif
         FINISH(5);
     }
 OP_END
@@ -4926,8 +4542,9 @@ GOTO_TARGET(invokeVirtual, bool methodCallRange, bool jumboFormat)
         assert(baseMethod->methodIndex < thisPtr->clazz->vtableCount);
         methodToCall = thisPtr->clazz->vtable[baseMethod->methodIndex];
 
-#if defined(WITH_JIT) && (INTERP_TYPE == INTERP_DBG)
-        callsiteClass = thisPtr->clazz;
+#if defined(WITH_JIT) && defined(MTERP_STUB)
+        self->methodToCall = methodToCall;
+        self->callsiteClass = thisPtr->clazz;
 #endif
 
 #if 0
@@ -5040,6 +4657,7 @@ GOTO_TARGET(invokeSuper, bool methodCallRange, bool jumboFormat)
             GOTO_exceptionThrown();
         }
         methodToCall = curMethod->clazz->super->vtable[baseMethod->methodIndex];
+
 #if 0
         if (dvmIsAbstractMethod(methodToCall)) {
             dvmThrowAbstractMethodError("abstract method not implemented");
@@ -5100,9 +4718,6 @@ GOTO_TARGET(invokeInterface, bool methodCallRange, bool jumboFormat)
 
         thisClass = thisPtr->clazz;
 
-#if defined(WITH_JIT) && (INTERP_TYPE == INTERP_DBG)
-        callsiteClass = thisClass;
-#endif
 
         /*
          * Given a class and a method index, find the Method* with the
@@ -5110,6 +4725,10 @@ GOTO_TARGET(invokeInterface, bool methodCallRange, bool jumboFormat)
          */
         methodToCall = dvmFindInterfaceMethodInCache(thisClass, ref, curMethod,
                         methodClassDex);
+#if defined(WITH_JIT) && defined(MTERP_STUB)
+        self->callsiteClass = thisClass;
+        self->methodToCall = methodToCall;
+#endif
         if (methodToCall == NULL) {
             assert(dvmCheckException(self));
             GOTO_exceptionThrown();
@@ -5196,15 +4815,18 @@ GOTO_TARGET(invokeStatic, bool methodCallRange, bool jumboFormat)
             GOTO_exceptionThrown();
         }
 
+#if defined(WITH_JIT) && defined(MTERP_STUB)
         /*
          * The JIT needs dvmDexGetResolvedMethod() to return non-null.
-         * Since we use the portable interpreter to build the trace, this extra
-         * check is not needed for mterp.
+         * Include the check if this code is being used as a stub
+         * called from the assembly interpreter.
          */
-        if (dvmDexGetResolvedMethod(methodClassDex, ref) == NULL) {
+        if ((self->interpBreak.ctl.subMode & kSubModeJitTraceBuild) &&
+            (dvmDexGetResolvedMethod(methodClassDex, ref) == NULL)) {
             /* Class initialization is still ongoing */
-            END_JIT_TSELECT();
+            dvmJitEndTraceSelect(self,pc);
         }
+#endif
     }
     GOTO_invokeMethod(methodCallRange, methodToCall, vsrc1, vdst);
 GOTO_TARGET_END
@@ -5238,9 +4860,6 @@ GOTO_TARGET(invokeVirtualQuick, bool methodCallRange, bool jumboFormat)
         if (!checkForNull(thisPtr))
             GOTO_exceptionThrown();
 
-#if defined(WITH_JIT) && (INTERP_TYPE == INTERP_DBG)
-        callsiteClass = thisPtr->clazz;
-#endif
 
         /*
          * Combine the object we found with the vtable offset in the
@@ -5248,6 +4867,10 @@ GOTO_TARGET(invokeVirtualQuick, bool methodCallRange, bool jumboFormat)
          */
         assert(ref < (unsigned int) thisPtr->clazz->vtableCount);
         methodToCall = thisPtr->clazz->vtable[ref];
+#if defined(WITH_JIT) && defined(MTERP_STUB)
+        self->callsiteClass = thisPtr->clazz;
+        self->methodToCall = methodToCall;
+#endif
 
 #if 0
         if (dvmIsAbstractMethod(methodToCall)) {
@@ -5322,7 +4945,6 @@ GOTO_TARGET(invokeSuperQuick, bool methodCallRange, bool jumboFormat)
         LOGVV("+++ super-virtual[%d]=%s.%s\n",
             ref, methodToCall->clazz->descriptor, methodToCall->name);
         assert(methodToCall != NULL);
-
         GOTO_invokeMethod(methodCallRange, methodToCall, vsrc1, vdst);
     }
 GOTO_TARGET_END
@@ -5343,7 +4965,7 @@ GOTO_TARGET(returnFromMethod)
          * Since this is now an interpreter switch point, we must do it before
          * we do anything at all.
          */
-        PERIODIC_CHECKS(kInterpEntryReturn, 0);
+        PERIODIC_CHECKS(0);
 
         ILOGV("> retval=0x%llx (leaving %s.%s %s)",
             retval.j, curMethod->clazz->descriptor, curMethod->name,
@@ -5355,20 +4977,19 @@ GOTO_TARGET(returnFromMethod)
 #ifdef EASY_GDB
         debugSaveArea = saveArea;
 #endif
-#if (INTERP_TYPE == INTERP_DBG)
-        TRACE_METHOD_EXIT(self, curMethod);
-#endif
 
         /* back up to previous frame and see if we hit a break */
         fp = (u4*)saveArea->prevFrame;
         assert(fp != NULL);
+
+        /* Handle any special subMode requirements */
+        if (self->interpBreak.ctl.subMode != 0) {
+            dvmReportReturn(self, pc, fp);
+        }
+
         if (dvmIsBreakFrame(fp)) {
             /* bail without popping the method frame from stack */
             LOGVV("+++ returned into break frame\n");
-#if defined(WITH_JIT)
-            /* Let the Jit know the return is terminating normally */
-            CHECK_JIT_VOID();
-#endif
             GOTO_bail();
         }
 
@@ -5407,16 +5028,8 @@ GOTO_TARGET(exceptionThrown)
         Object* exception;
         int catchRelPc;
 
-        /*
-         * Since this is now an interpreter switch point, we must do it before
-         * we do anything at all.
-         */
-        PERIODIC_CHECKS(kInterpEntryThrow, 0);
+        PERIODIC_CHECKS(0);
 
-#if defined(WITH_JIT)
-        // Something threw during trace selection - end the current trace
-        END_JIT_TSELECT();
-#endif
         /*
          * We save off the exception and clear the exception status.  While
          * processing the exception we might need to load some Throwable
@@ -5432,9 +5045,8 @@ GOTO_TARGET(exceptionThrown)
             exception->clazz->descriptor, curMethod->name,
             dvmLineNumFromPC(curMethod, pc - curMethod->insns));
 
-#if (INTERP_TYPE == INTERP_DBG)
         /*
-         * Tell the debugger about it.
+         * Report the exception throw to any "subMode" watchers.
          *
          * TODO: if the exception was thrown by interpreted code, control
          * fell through native, and then back to us, we will report the
@@ -5447,14 +5059,9 @@ GOTO_TARGET(exceptionThrown)
          * here, and have the JNI exception code do the reporting to the
          * debugger.
          */
-        if (DEBUGGER_ACTIVE) {
-            void* catchFrame;
-            catchRelPc = dvmFindCatchBlock(self, pc - curMethod->insns,
-                        exception, true, &catchFrame);
-            dvmDbgPostException(fp, pc - curMethod->insns, catchFrame,
-                catchRelPc, exception);
+        if (self->interpBreak.ctl.subMode != 0) {
+            dvmReportExceptionThrow(self, curMethod, pc, fp);
         }
-#endif
 
         /*
          * We need to unroll to the catch block or the nearest "break"
@@ -5692,10 +5299,19 @@ GOTO_TARGET(invokeMethod, bool methodCallRange, const Method* _methodToCall,
 #endif
         newSaveArea->prevFrame = fp;
         newSaveArea->savedPc = pc;
-#if defined(WITH_JIT)
+#if defined(WITH_JIT) && defined(MTERP_STUB)
         newSaveArea->returnAddr = 0;
 #endif
         newSaveArea->method = methodToCall;
+
+        if (self->interpBreak.ctl.subMode != 0) {
+            /*
+             * We mark ENTER here for both native and non-native
+             * calls.  For native calls, we'll mark EXIT on return.
+             * For non-native calls, EXIT is marked in the RETURN op.
+             */
+            dvmReportInvoke(self, methodToCall);
+        }
 
         if (!dvmIsNativeMethod(methodToCall)) {
             /*
@@ -5709,9 +5325,7 @@ GOTO_TARGET(invokeMethod, bool methodCallRange, const Method* _methodToCall,
 #ifdef EASY_GDB
             debugSaveArea = SAVEAREA_FROM_FP(newFp);
 #endif
-#if INTERP_TYPE == INTERP_DBG
-            debugIsMethodEntry = true;              // profiling, debugging
-#endif
+            self->debugIsMethodEntry = true;        // profiling, debugging
             ILOGD("> pc <-- %s.%s %s", curMethod->clazz->descriptor,
                 curMethod->name, curMethod->shorty);
             DUMP_REGS(curMethod, fp, true);         // show input args
@@ -5724,25 +5338,12 @@ GOTO_TARGET(invokeMethod, bool methodCallRange, const Method* _methodToCall,
 
             DUMP_REGS(methodToCall, newFp, true);   // show input args
 
-#if (INTERP_TYPE == INTERP_DBG)
-            if (DEBUGGER_ACTIVE) {
-                dvmDbgPostLocationEvent(methodToCall, -1,
-                    dvmGetThisPtr(curMethod, fp), DBG_METHOD_ENTRY);
-            }
-#endif
-#if (INTERP_TYPE == INTERP_DBG)
-            TRACE_METHOD_ENTER(self, methodToCall);
-#endif
-
-            {
-                ILOGD("> native <-- %s.%s %s", methodToCall->clazz->descriptor,
-                        methodToCall->name, methodToCall->shorty);
+            if (self->interpBreak.ctl.subMode != 0) {
+                dvmReportPreNativeInvoke(pc, self, methodToCall);
             }
 
-#if defined(WITH_JIT)
-            /* Allow the Jit to end any pending trace building */
-            CHECK_JIT_VOID();
-#endif
+            ILOGD("> native <-- %s.%s %s", methodToCall->clazz->descriptor,
+                  methodToCall->name, methodToCall->shorty);
 
             /*
              * Jump through native call bridge.  Because we leave no
@@ -5751,15 +5352,9 @@ GOTO_TARGET(invokeMethod, bool methodCallRange, const Method* _methodToCall,
              */
             (*methodToCall->nativeFunc)(newFp, &retval, methodToCall, self);
 
-#if (INTERP_TYPE == INTERP_DBG)
-            if (DEBUGGER_ACTIVE) {
-                dvmDbgPostLocationEvent(methodToCall, -1,
-                    dvmGetThisPtr(curMethod, fp), DBG_METHOD_EXIT);
+            if (self->interpBreak.ctl.subMode != 0) {
+                dvmReportPostNativeInvoke(pc, self, methodToCall);
             }
-#endif
-#if (INTERP_TYPE == INTERP_DBG)
-            TRACE_METHOD_EXIT(self, methodToCall);
-#endif
 
             /* pop frame off */
             dvmPopJniLocals(self, newSaveArea);
@@ -5799,42 +5394,9 @@ GOTO_TARGET_END
 /* File: portable/enddefs.c */
 /*--- end of opcodes ---*/
 
-#ifndef THREADED_INTERP
-        } // end of "switch"
-    } // end of "while"
-#endif
-
 bail:
     ILOGD("|-- Leaving interpreter loop");      // note "curMethod" may be NULL
 
     self->retval = retval;
-    return false;
-
-bail_switch:
-    /*
-     * The standard interpreter currently doesn't set or care about the
-     * "debugIsMethodEntry" value, so setting this is only of use if we're
-     * switching between two "debug" interpreters, which we never do.
-     *
-     * TODO: figure out if preserving this makes any sense.
-     */
-#if INTERP_TYPE == INTERP_DBG
-    self->debugIsMethodEntry = debugIsMethodEntry;
-#else
-    self->debugIsMethodEntry = false;
-#endif
-
-    /* export state changes */
-    self->interpSave.method = curMethod;
-    self->interpSave.pc = pc;
-    self->interpSave.fp = fp;
-    /* debugTrackedRefStart doesn't change */
-    self->retval = retval;   /* need for _entryPoint=ret */
-    self->nextMode =
-        (INTERP_TYPE == INTERP_STD) ? INTERP_DBG : INTERP_STD;
-    LOGVV(" meth='%s.%s' pc=0x%x fp=%p\n",
-        curMethod->clazz->descriptor, curMethod->name,
-        pc - curMethod->insns, fp);
-    return true;
 }
 

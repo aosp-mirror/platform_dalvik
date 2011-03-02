@@ -18,15 +18,18 @@ HANDLE_OPCODE(OP_NEW_INSTANCE /*vAA, class@BBBB*/)
         if (!dvmIsClassInitialized(clazz) && !dvmInitClass(clazz))
             GOTO_exceptionThrown();
 
+#if defined(WITH_JIT)
         /*
          * The JIT needs dvmDexGetResolvedClass() to return non-null.
          * Since we use the portable interpreter to build the trace, this extra
          * check is not needed for mterp.
          */
-        if (!dvmDexGetResolvedClass(methodClassDex, ref)) {
+        if ((self->interpBreak.ctl.subMode & kSubModeJitTraceBuild) &&
+            (!dvmDexGetResolvedClass(methodClassDex, ref))) {
             /* Class initialization is still ongoing - end the trace */
-            END_JIT_TSELECT();
+            dvmJitEndTraceSelect(self,pc);
         }
+#endif
 
         /*
          * Verifier now tests for interface/abstract class.

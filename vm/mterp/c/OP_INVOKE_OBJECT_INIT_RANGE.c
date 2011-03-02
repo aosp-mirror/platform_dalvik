@@ -20,12 +20,10 @@ HANDLE_OPCODE(OP_INVOKE_OBJECT_INIT_RANGE /*{vCCCC..v(CCCC+AA-1)}, meth@BBBB*/)
                 GOTO_exceptionThrown();
         }
 
-#if INTERP_TYPE == INTERP_DBG
-        if (DEBUGGER_ACTIVE) {
+        if (self->interpBreak.ctl.subMode & kSubModeDebuggerActive) {
             /* behave like OP_INVOKE_DIRECT_RANGE */
             GOTO_invoke(invokeDirect, true, false);
         }
-#endif
         FINISH(3);
     }
 OP_END

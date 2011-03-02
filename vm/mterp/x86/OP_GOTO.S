@@ -7,10 +7,9 @@
      * double to get a byte offset.
      */
     /* goto +AA */
-    movsbl  rINSTbl,rINST         # ebx<- ssssssAA
-    testl   rINST,rINST           # test for <0
-    js      common_backwardBranch
-    movl    rINST,%eax
+    movl    rSELF,%ecx
+    movsbl  rINSTbl,%eax          # eax<- ssssssAA
+    movl    offThread_curHandlerTable(%ecx),rIBASE
     FETCH_INST_INDEXED %eax
     ADVANCE_PC_INDEXED %eax
     GOTO_NEXT

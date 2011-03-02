@@ -27,8 +27,7 @@
 dvmMterpStdRun:
     push    %ebp                 # save caller base pointer
     movl    %esp, %ebp           # set our %ebp
-    movl    rSELF, %ecx          # get incoming rGLUE
-
+    movl    rSELF, %ecx          # get incoming rSELF
 /*
  * At this point we've allocated one slot on the stack
  * via push and stack is 8-byte aligned.  Allocate space
@@ -50,31 +49,9 @@ dvmMterpStdRun:
 /* Remember %esp for future "longjmp" */
     movl    %esp,offThread_bailPtr(%ecx)
 
-/* How to start? */
-    movb    offThread_entryPoint(%ecx),%al
-
-/* Normal start? */
-    cmpb    $$kInterpEntryInstr,%al
-    jne     .Lnot_instr
-
    /* Normal case: start executing the instruction at rPC */
     FETCH_INST
     GOTO_NEXT
-
-.Lnot_instr:
-    /* Reset to normal case */
-    movb   $$kInterpEntryInstr,offThread_entryPoint(%ecx)
-    cmpb   $$kInterpEntryReturn,%al
-    je     common_returnFromMethod
-    cmpb   $$kInterpEntryThrow,%al
-    je     common_exceptionThrown
-    movzx  %al,%eax
-    movl   %eax,OUT_ARG1(%esp)
-    movl   $$.LstrBadEntryPoint,OUT_ARG0(%esp)
-    call   printf
-    call   dvmAbort
-    /* Not reached */
-
 
     .global dvmMterpStdBail
     .type   dvmMterpStdBail, %function
@@ -97,7 +74,7 @@ dvmMterpStdBail:
     movl    8(%esp),%eax                 # changeInterp to return reg
     movl    offThread_bailPtr(%ecx),%esp   # Restore "setjmp" esp
     movl    %esp,%ebp
-    addl    $$(FRAME_SIZE-4), %ebp        # Restore %ebp at point of setjmp
+    addl    $$(FRAME_SIZE-4), %ebp       # Restore %ebp at point of setjmp
     movl    EDI_SPILL(%ebp),%edi
     movl    ESI_SPILL(%ebp),%esi
     movl    EBX_SPILL(%ebp),%ebx

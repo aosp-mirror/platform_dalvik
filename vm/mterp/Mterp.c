@@ -31,8 +31,10 @@ bool dvmCheckAsmConstants(void)
 
 #ifndef DVM_NO_ASM_INTERP
 
+#ifndef DVM_JMP_TABLE_MTERP
     extern void* dvmAsmInstructionStart[];
     extern void* dvmAsmInstructionEnd[];
+#endif
 
 #define ASM_DEF_VERIFY
 #include "mterp/common/asm-constants.h"
@@ -66,39 +68,20 @@ bool dvmCheckAsmConstants(void)
 
 
 /*
- * "Standard" mterp entry point.
- * (There is presently no "debug" entry point.)
+ * "Mterp entry point.
  */
-bool dvmMterpStd(Thread* self)
+void dvmMterpStd(Thread* self)
 {
-    int changeInterp;
-
     /* configure mterp items */
     self->interpSave.methodClassDex = self->interpSave.method->clazz->pDvmDex;
-
-#if defined(WITH_JIT)
-    /*
-     * FIXME: temporary workaround.  When we have the ability to
-     * walk through the thread list to initialize mterp & JIT state,
-     * elminate this line.
-    */
-    self->jitThreshold = gDvmJit.threshold;
-#endif
-
-    /* Handle method entry bookkeeping */
-    if (self->debugIsMethodEntry) {
-        self->debugIsMethodEntry = false;
-        TRACE_METHOD_ENTER(self, self->interpSave.method);
-    }
 
     IF_LOGVV() {
         char* desc = dexProtoCopyMethodDescriptor(
                          &self->interpSave.method->prototype);
-        LOGVV("mterp threadid=%d entry %d: %s.%s %s\n",
+        LOGVV("mterp threadid=%d : %s.%s %s\n",
             dvmThreadSelf()->threadId,
-            self->entryPoint,
-            self->method->clazz->descriptor,
-            self->method->name,
+            self->interpSave.method->clazz->descriptor,
+            self->interpSave.method->name,
             desc);
         free(desc);
     }
@@ -106,24 +89,9 @@ bool dvmMterpStd(Thread* self)
     //      self->interpSave.fp);
     //LOGI("first instruction is 0x%04x\n", self->interpSave.pc[0]);
 
-    changeInterp = dvmMterpStdRun(self);
+    dvmMterpStdRun(self);
 
-#if defined(WITH_JIT)
-    if (self->jitState != kJitSingleStep) {
-        self->inJitCodeCache = NULL;
-    }
-#endif
-
-    if (!changeInterp) {
-        /* this is a "normal" exit; we're not coming back */
 #ifdef LOG_INSTR
-        LOGD("|-- Leaving interpreter loop");
+    LOGD("|-- Leaving interpreter loop");
 #endif
-        return false;
-    } else {
-        /* we're "standard", so switch to "debug" */
-        LOGVV("  mterp returned, changeInterp=%d\n", changeInterp);
-        self->nextMode = INTERP_DBG;
-        return true;
-    }
 }

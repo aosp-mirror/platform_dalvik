@@ -10,10 +10,10 @@
     ldr     r0, [rSELF, #offThread_methodClassDex]  @ r0<- DvmDex
     FETCH(r1, 1)                        @ r1<- aaaa (lo)
     FETCH(r2, 2)                        @ r2<- AAAA (hi)
-    ldr     r0, [r0, #offDvmDex_pResFields] @ r0<- dvmDex->pResFields
+    ldr     r10, [r0, #offDvmDex_pResFields] @ r10<- dvmDex->pResFields
     orr     r1, r1, r2, lsl #16         @ r1<- AAAAaaaa
     FETCH(r9, 3)                        @ r9<- BBBB
-    ldr     r2, [r0, r1, lsl #2]        @ r2<- resolved StaticField ptr
+    ldr     r2, [r10, r1, lsl #2]       @ r2<- resolved StaticField ptr
     add     r9, rFP, r9, lsl #2         @ r9<- &fp[BBBB]
     cmp     r2, #0                      @ is resolved entry null?
     beq     .L${opcode}_resolve         @ yes, do resolve
@@ -32,17 +32,28 @@
 
     /*
      * Continuation if the field has not yet been resolved.
-     *  r1: AAAAAAAA field ref
-     *  r9: &fp[BBBB]
+     *  r1:  AAAAAAAA field ref
+     *  r9:  &fp[BBBB]
+     *  r10: dvmDex->pResFields
      *
      * Returns StaticField pointer in r2.
      */
 .L${opcode}_resolve:
     ldr     r2, [rSELF, #offThread_method]    @ r2<- current method
+#if defined(WITH_JIT)
+    add     r10, r10, r1, lsl #2        @ r10<- &dvmDex->pResFields[field]
+#endif
     EXPORT_PC()                         @ resolve() could throw, so export now
     ldr     r0, [r2, #offMethod_clazz]  @ r0<- method->clazz
     bl      dvmResolveStaticField       @ r0<- resolved StaticField ptr
     cmp     r0, #0                      @ success?
     mov     r2, r0                      @ copy to r2
-    bne     .L${opcode}_finish          @ yes, finish
-    b       common_exceptionThrown      @ no, handle exception
+    beq     common_exceptionThrown      @ no, handle exception
+#if defined(WITH_JIT)
+    /*
+     * If the JIT is actively building a trace we need to make sure
+     * that the field is fully resolved before including this instruction.
+     */
+    bl      common_verifyField
+#endif
+    b       .L${opcode}_finish          @ resume

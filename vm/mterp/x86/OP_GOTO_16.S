@@ -6,10 +6,9 @@
      * The branch distance is a signed code-unit offset
      */
     /* goto/16 +AAAA */
-    movswl  2(rPC),rINST           # rINST<- ssssAAAA
-    testl   rINST,rINST            # test for <0
-    js      common_backwardBranch
-    movl    rINST,%eax
+    movl    rSELF,%ecx
+    movswl  2(rPC),%eax            # eax<- ssssAAAA
+    movl    offThread_curHandlerTable(%ecx),rIBASE
     FETCH_INST_INDEXED %eax
     ADVANCE_PC_INDEXED %eax
     GOTO_NEXT

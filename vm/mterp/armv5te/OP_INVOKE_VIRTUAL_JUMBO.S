@@ -29,11 +29,11 @@
      */
 .L${opcode}_continue:
     FETCH(r10, 4)                       @ r10<- CCCC
-    GET_VREG(r1, r10)                   @ r1<- "this" ptr
+    GET_VREG(r9, r10)                   @ r9<- "this" ptr
     ldrh    r2, [r0, #offMethod_methodIndex]    @ r2<- baseMethod->methodIndex
-    cmp     r1, #0                      @ is "this" null?
+    cmp     r9, #0                      @ is "this" null?
     beq     common_errNullObject        @ null "this", throw exception
-    ldr     r3, [r1, #offObject_clazz]  @ r1<- thisPtr->clazz
+    ldr     r3, [r9, #offObject_clazz]  @ r3<- thisPtr->clazz
     ldr     r3, [r3, #offClassObject_vtable]    @ r3<- thisPtr->clazz->vtable
     ldr     r0, [r3, r2, lsl #2]        @ r3<- vtable[methodIndex]
-    bl      common_invokeMethodJumbo    @ continue on
+    bl      common_invokeMethodJumbo    @ (r0=method, r9="this")

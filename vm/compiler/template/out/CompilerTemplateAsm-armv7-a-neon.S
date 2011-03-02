@@ -171,12 +171,12 @@ dvmCompiler_TEMPLATE_RETURN:
     mov     r0, r6
     @ r0=rSELF
     mov     lr, pc
-    ldr     pc, .LdvmFastJavaMethodTraceExit
+    ldr     pc, .LdvmFastMethodTraceExit
     ldmfd   sp!, {r0-r2,lr}             @ restore live registers
 #endif
     SAVEAREA_FROM_FP(r0, rFP)           @ r0<- saveArea (old)
     ldr     r10, [r0, #offStackSaveArea_prevFrame] @ r10<- saveArea->prevFrame
-    ldr     r8, [rSELF, #offThread_suspendCount] @ r8<- suspendCount
+    ldrb    r8, [rSELF, #offThread_breakFlags] @ r8<- breakFlags
     ldr     rPC, [r0, #offStackSaveArea_savedPc] @ rPC<- saveArea->savedPc
 #if !defined(WITH_SELF_VERIFICATION)
     ldr     r9,  [r0, #offStackSaveArea_returnAddr] @ r9<- chaining cell ret
@@ -200,7 +200,7 @@ dvmCompiler_TEMPLATE_RETURN:
     str     rFP, [rSELF, #offThread_curFrame] @ self->curFrame = fp
     add     rPC, rPC, #6                @ publish new rPC (advance 6 bytes)
     str     r0, [rSELF, #offThread_methodClassDex]
-    cmp     r8, #0                      @ check the suspendCount
+    cmp     r8, #0                      @ check the break flags
     movne   r9, #0                      @ clear the chaining cell address
     str     r9, [rSELF, #offThread_inJitCodeCache] @ in code cache or not
     cmp     r9, #0                      @ chaining cell exists?
@@ -212,7 +212,6 @@ dvmCompiler_TEMPLATE_RETURN:
 1:
     stmia   rSELF, {rPC, rFP}           @ SAVE_PC_FP_TO_SELF()
     ldr     r2, .LdvmMterpStdBail       @ defined in footer.S
-    mov     r1, #0                      @ changeInterp = false
     mov     r0, rSELF                   @ Expecting rSELF in r0
     blx     r2                          @ exit the interpreter
 
@@ -230,7 +229,7 @@ dvmCompiler_TEMPLATE_INVOKE_METHOD_NO_OPT:
     ldrh    r7, [r0, #offMethod_registersSize]  @ r7<- methodToCall->regsSize
     ldrh    r2, [r0, #offMethod_outsSize]  @ r2<- methodToCall->outsSize
     ldr     r9, [rSELF, #offThread_interpStackEnd]    @ r9<- interpStackEnd
-    ldr     r8, [rSELF, #offThread_suspendCount] @ r8<- suspendCount
+    ldrb    r8, [rSELF, #offThread_breakFlags] @ r8<- breakFlags
     add     r3, r1, #1  @ Thumb addr is odd
     SAVEAREA_FROM_FP(r1, rFP)           @ r1<- stack save area
     sub     r1, r1, r7, lsl #2          @ r1<- newFp (old savearea - regsSize)
@@ -250,7 +249,7 @@ dvmCompiler_TEMPLATE_INVOKE_METHOD_NO_OPT:
     str     rFP, [r1, #(offStackSaveArea_prevFrame - sizeofStackSaveArea)]
     str     r3, [r1, #(offStackSaveArea_returnAddr - sizeofStackSaveArea)]
     str     r0, [r1, #(offStackSaveArea_method - sizeofStackSaveArea)]
-    cmp     r8, #0                      @ suspendCount != 0
+    cmp     r8, #0                      @ breakFlags != 0
     bxne    lr                          @ bail to the interpreter
     tst     r10, #ACC_NATIVE
 #if !defined(WITH_SELF_VERIFICATION)
@@ -297,7 +296,7 @@ dvmCompiler_TEMPLATE_INVOKE_METHOD_CHAIN:
     @ methodToCall is guaranteed to be non-native
 .LinvokeChain:
     ldr     r9, [rSELF, #offThread_interpStackEnd]    @ r9<- interpStackEnd
-    ldr     r8, [rSELF, #offThread_suspendCount]      @ r8<- suspendCount
+    ldrb    r8, [rSELF, #offThread_breakFlags]        @ r8<- breakFlags
     add     r3, r1, #1  @ Thumb addr is odd
     SAVEAREA_FROM_FP(r1, rFP)           @ r1<- stack save area
     sub     r1, r1, r7, lsl #2          @ r1<- newFp (old savearea - regsSize)
@@ -315,7 +314,7 @@ dvmCompiler_TEMPLATE_INVOKE_METHOD_CHAIN:
     str     rFP, [r1, #(offStackSaveArea_prevFrame - sizeofStackSaveArea)]
     str     r3, [r1, #(offStackSaveArea_returnAddr - sizeofStackSaveArea)]
     str     r0, [r1, #(offStackSaveArea_method - sizeofStackSaveArea)]
-    cmp     r8, #0                      @ suspendCount != 0
+    cmp     r8, #0                      @ breakFlags != 0
     bxne    r12                         @ bail to the interpreter
 
     ldr     r3, [r9, #offClassObject_pDvmDex] @ r3<- method->clazz->pDvmDex
@@ -409,7 +408,7 @@ dvmCompiler_TEMPLATE_INVOKE_METHOD_NATIVE:
     @ r0 = methodToCall, r1 = returnCell, rPC = dalvikCallsite
     @ r7 = methodToCall->registersSize
     ldr     r9, [rSELF, #offThread_interpStackEnd]    @ r9<- interpStackEnd
-    ldr     r8, [rSELF, #offThread_suspendCount]      @ r8<- suspendCount
+    ldrb    r8, [rSELF, #offThread_breakFlags]        @ r8<- breakFlags
     add     r3, r1, #1  @ Thumb addr is odd
     SAVEAREA_FROM_FP(r1, rFP)           @ r1<- stack save area
     sub     r1, r1, r7, lsl #2          @ r1<- newFp (old savearea - regsSize)
@@ -424,7 +423,7 @@ dvmCompiler_TEMPLATE_INVOKE_METHOD_NATIVE:
     str     rFP, [r1, #(offStackSaveArea_prevFrame - sizeofStackSaveArea)]
     str     r3, [r1, #(offStackSaveArea_returnAddr - sizeofStackSaveArea)]
     str     r0, [r1, #(offStackSaveArea_method - sizeofStackSaveArea)]
-    cmp     r8, #0                      @ suspendCount != 0
+    cmp     r8, #0                      @ breakFlags != 0
     ldr     r8, [r0, #offMethod_nativeFunc] @ r8<- method->nativeFunc
 #if !defined(WITH_SELF_VERIFICATION)
     bxne    lr                          @ bail to the interpreter
@@ -1416,11 +1415,7 @@ dvmCompiler_TEMPLATE_MONITOR_ENTER:
     mov     r3, #0                       @ Record that we're not returning
     str     r3, [r0, #offThread_inJitCodeCache]
     blx     r2                           @ dvmLockObject(self, obj)
-    @ refresh Jit's on/off status
-    ldr     r3, [rSELF, #offThread_ppJitProfTable]
-    ldr     r3, [r3]
     ldr     r2, .LdvmJitToInterpNoChain
-    str     r3, [rSELF, #offThread_pJitProfTable]
     @ Bail to interpreter - no chain [note - r4 still contains rPC]
 #if defined(WITH_JIT_TUNING)
     mov     r0, #kHeavyweightMonitor
@@ -1448,10 +1443,7 @@ dvmCompiler_TEMPLATE_MONITOR_ENTER_DEBUG:
     str     r3, [r0, #offThread_inJitCodeCache]
     blx     r2             @ dvmLockObject(self, obj)
     @ refresh Jit's on/off status & test for exception
-    ldr     r3, [rSELF, #offThread_ppJitProfTable]
-    ldr     r3, [r3]
     ldr     r1, [rSELF, #offThread_exception]
-    str     r3, [rSELF, #offThread_pJitProfTable]
     cmp     r1, #0
     beq     1f
     ldr     r2, .LhandleException
@@ -1515,12 +1507,12 @@ dvmCompiler_TEMPLATE_RETURN_PROF:
     mov     r0, r6
     @ r0=rSELF
     mov     lr, pc
-    ldr     pc, .LdvmFastJavaMethodTraceExit
+    ldr     pc, .LdvmFastMethodTraceExit
     ldmfd   sp!, {r0-r2,lr}             @ restore live registers
 #endif
     SAVEAREA_FROM_FP(r0, rFP)           @ r0<- saveArea (old)
     ldr     r10, [r0, #offStackSaveArea_prevFrame] @ r10<- saveArea->prevFrame
-    ldr     r8, [rSELF, #offThread_suspendCount] @ r8<- suspendCount
+    ldrb    r8, [rSELF, #offThread_breakFlags] @ r8<- breakFlags
     ldr     rPC, [r0, #offStackSaveArea_savedPc] @ rPC<- saveArea->savedPc
 #if !defined(WITH_SELF_VERIFICATION)
     ldr     r9,  [r0, #offStackSaveArea_returnAddr] @ r9<- chaining cell ret
@@ -1544,7 +1536,7 @@ dvmCompiler_TEMPLATE_RETURN_PROF:
     str     rFP, [rSELF, #offThread_curFrame] @ self->curFrame = fp
     add     rPC, rPC, #6                @ publish new rPC (advance 6 bytes)
     str     r0, [rSELF, #offThread_methodClassDex]
-    cmp     r8, #0                      @ check the suspendCount
+    cmp     r8, #0                      @ check the break flags
     movne   r9, #0                      @ clear the chaining cell address
     str     r9, [rSELF, #offThread_inJitCodeCache] @ in code cache or not
     cmp     r9, #0                      @ chaining cell exists?
@@ -1556,7 +1548,6 @@ dvmCompiler_TEMPLATE_RETURN_PROF:
 1:
     stmia   rSELF, {rPC, rFP}           @ SAVE_PC_FP_TO_SELF()
     ldr     r2, .LdvmMterpStdBail       @ defined in footer.S
-    mov     r1, #0                      @ changeInterp = false
     mov     r0, rSELF                   @ Expecting rSELF in r0
     blx     r2                          @ exit the interpreter
 
@@ -1578,7 +1569,7 @@ dvmCompiler_TEMPLATE_INVOKE_METHOD_NO_OPT_PROF:
     ldrh    r7, [r0, #offMethod_registersSize]  @ r7<- methodToCall->regsSize
     ldrh    r2, [r0, #offMethod_outsSize]  @ r2<- methodToCall->outsSize
     ldr     r9, [rSELF, #offThread_interpStackEnd]    @ r9<- interpStackEnd
-    ldr     r8, [rSELF, #offThread_suspendCount] @ r8<- suspendCount
+    ldrb    r8, [rSELF, #offThread_breakFlags] @ r8<- breakFlags
     add     r3, r1, #1  @ Thumb addr is odd
     SAVEAREA_FROM_FP(r1, rFP)           @ r1<- stack save area
     sub     r1, r1, r7, lsl #2          @ r1<- newFp (old savearea - regsSize)
@@ -1598,7 +1589,7 @@ dvmCompiler_TEMPLATE_INVOKE_METHOD_NO_OPT_PROF:
     str     rFP, [r1, #(offStackSaveArea_prevFrame - sizeofStackSaveArea)]
     str     r3, [r1, #(offStackSaveArea_returnAddr - sizeofStackSaveArea)]
     str     r0, [r1, #(offStackSaveArea_method - sizeofStackSaveArea)]
-    cmp     r8, #0                      @ suspendCount != 0
+    cmp     r8, #0                      @ breakFlags != 0
     bxne    lr                          @ bail to the interpreter
     tst     r10, #ACC_NATIVE
 #if !defined(WITH_SELF_VERIFICATION)
@@ -1649,7 +1640,7 @@ dvmCompiler_TEMPLATE_INVOKE_METHOD_CHAIN_PROF:
     @ methodToCall is guaranteed to be non-native
 .LinvokeChainProf:
     ldr     r9, [rSELF, #offThread_interpStackEnd]    @ r9<- interpStackEnd
-    ldr     r8, [rSELF, #offThread_suspendCount]      @ r8<- suspendCount
+    ldrb    r8, [rSELF, #offThread_breakFlags]        @ r8<- breakFlags
     add     r3, r1, #1  @ Thumb addr is odd
     SAVEAREA_FROM_FP(r1, rFP)           @ r1<- stack save area
     sub     r1, r1, r7, lsl #2          @ r1<- newFp (old savearea - regsSize)
@@ -1667,7 +1658,7 @@ dvmCompiler_TEMPLATE_INVOKE_METHOD_CHAIN_PROF:
     str     rFP, [r1, #(offStackSaveArea_prevFrame - sizeofStackSaveArea)]
     str     r3, [r1, #(offStackSaveArea_returnAddr - sizeofStackSaveArea)]
     str     r0, [r1, #(offStackSaveArea_method - sizeofStackSaveArea)]
-    cmp     r8, #0                      @ suspendCount != 0
+    cmp     r8, #0                      @ breakFlags != 0
     bxne    r12                         @ bail to the interpreter
 
     ldr     r3, [r9, #offClassObject_pDvmDex] @ r3<- method->clazz->pDvmDex
@@ -1769,7 +1760,7 @@ dvmCompiler_TEMPLATE_INVOKE_METHOD_NATIVE_PROF:
     @ r0 = methodToCall, r1 = returnCell, rPC = dalvikCallsite
     @ r7 = methodToCall->registersSize
     ldr     r9, [rSELF, #offThread_interpStackEnd]    @ r9<- interpStackEnd
-    ldr     r8, [rSELF, #offThread_suspendCount]      @ r8<- suspendCount
+    ldrb    r8, [rSELF, #offThread_breakFlags]        @ r8<- breakFlags
     add     r3, r1, #1  @ Thumb addr is odd
     SAVEAREA_FROM_FP(r1, rFP)           @ r1<- stack save area
     sub     r1, r1, r7, lsl #2          @ r1<- newFp (old savearea - regsSize)
@@ -1784,7 +1775,7 @@ dvmCompiler_TEMPLATE_INVOKE_METHOD_NATIVE_PROF:
     str     rFP, [r1, #(offStackSaveArea_prevFrame - sizeofStackSaveArea)]
     str     r3, [r1, #(offStackSaveArea_returnAddr - sizeofStackSaveArea)]
     str     r0, [r1, #(offStackSaveArea_method - sizeofStackSaveArea)]
-    cmp     r8, #0                      @ suspendCount != 0
+    cmp     r8, #0                      @ breakFlags != 0
     ldr     r8, [r0, #offMethod_nativeFunc] @ r8<- method->nativeFunc
 #if !defined(WITH_SELF_VERIFICATION)
     bxne    lr                          @ bail to the interpreter
@@ -1871,11 +1862,10 @@ dvmCompiler_TEMPLATE_INVOKE_METHOD_NATIVE_PROF:
     str     r1, [rSELF, #offThread_curFrame]   @ self->curFrame = newFp
     str     r9, [r1, #(offStackSaveArea_localRefCookie - sizeofStackSaveArea)]
                                         @ newFp->localRefCookie=top
-    ldr     lr, [rSELF, #offThread_pInterpBreak]
+    ldrb    lr, [rSELF, #offThread_subMode]
     SAVEAREA_FROM_FP(r10, r1)           @ r10<- new stack save area
 
     mov     r2, r0                      @ r2<- methodToCall
-    ldr     lr, [lr]                    @ lr<- set of active profilers
     mov     r0, r1                      @ r0<- newFP
     add     r1, rSELF, #offThread_retval  @ r1<- &retval
     mov     r3, rSELF                   @ arg3<- self
@@ -1901,19 +1891,15 @@ dvmCompiler_TEMPLATE_INVOKE_METHOD_NATIVE_PROF:
     mov     lr, pc
     ldr     pc, [r2, #offMethod_nativeFunc]
 212:
-    @ Refresh Jit's on/off status
-    ldr     r3, [rSELF, #offThread_ppJitProfTable]
 
     @ native return; r10=newSaveArea
     @ equivalent to dvmPopJniLocals
     ldr     r2, [r10, #offStackSaveArea_returnAddr] @ r2 = chaining cell ret
     ldr     r0, [r10, #offStackSaveArea_localRefCookie] @ r0<- saved->top
     ldr     r1, [rSELF, #offThread_exception] @ check for exception
-    ldr     r3, [r3]    @ r1 <- pointer to Jit profile table
     str     rFP, [rSELF, #offThread_curFrame]  @ self->curFrame = fp
     cmp     r1, #0                      @ null?
     str     r0, [rSELF, #offThread_jniLocal_topCookie] @ new top <- old top
-    str     r3, [rSELF, #offThread_pJitProfTable]  @ cache current JitProfTable
     ldr     r0, [r10, #offStackSaveArea_savedPc] @ reload rPC
 
     @ r0 = dalvikCallsitePC
@@ -1977,8 +1963,8 @@ dvmCompiler_TEMPLATE_INVOKE_METHOD_NATIVE_PROF:
     .word   dvmFastMethodTraceEnter
 .LdvmFastNativeMethodTraceExit:
     .word   dvmFastNativeMethodTraceExit
-.LdvmFastJavaMethodTraceExit:
-    .word   dvmFastJavaMethodTraceExit
+.LdvmFastMethodTraceExit:
+    .word   dvmFastMethodTraceExit
 .L__aeabi_cdcmple:
     .word   __aeabi_cdcmple
 .L__aeabi_cfcmple:

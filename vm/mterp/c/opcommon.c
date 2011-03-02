@@ -104,7 +104,7 @@ GOTO_TARGET_DECL(exceptionThrown);
                 branchOffset);                                              \
             ILOGV("> branch taken");                                        \
             if (branchOffset < 0)                                           \
-                PERIODIC_CHECKS(kInterpEntryInstr, branchOffset);           \
+                PERIODIC_CHECKS(branchOffset);                              \
             FINISH(branchOffset);                                           \
         } else {                                                            \
             ILOGV("|if-%s v%d,v%d,-", (_opname), vsrc1, vsrc2);             \
@@ -119,7 +119,7 @@ GOTO_TARGET_DECL(exceptionThrown);
             ILOGV("|if-%s v%d,+0x%04x", (_opname), vsrc1, branchOffset);    \
             ILOGV("> branch taken");                                        \
             if (branchOffset < 0)                                           \
-                PERIODIC_CHECKS(kInterpEntryInstr, branchOffset);           \
+                PERIODIC_CHECKS(branchOffset);                              \
             FINISH(branchOffset);                                           \
         } else {                                                            \
             ILOGV("|if-%s v%d,-", (_opname), vsrc1);                        \
@@ -652,9 +652,12 @@ GOTO_TARGET_DECL(exceptionThrown);
 
 /*
  * The JIT needs dvmDexGetResolvedField() to return non-null.
- * Since we use the portable interpreter to build the trace, the extra
- * checks in HANDLE_SGET_X and HANDLE_SPUT_X are not needed for mterp.
+ * Because the portable interpreter is not involved with the JIT
+ * and trace building, we only need the extra check here when this
+ * code is massaged into a stub called from an assembly interpreter.
+ * This is controlled by the JIT_STUB_HACK maco.
  */
+
 #define HANDLE_SGET_X(_opcode, _opname, _ftype, _regsize)                   \
     HANDLE_OPCODE(_opcode /*vAA, field@BBBB*/)                              \
     {                                                                       \
@@ -669,7 +672,7 @@ GOTO_TARGET_DECL(exceptionThrown);
             if (sfield == NULL)                                             \
                 GOTO_exceptionThrown();                                     \
             if (dvmDexGetResolvedField(methodClassDex, ref) == NULL) {      \
-                END_JIT_TSELECT();                                          \
+                JIT_STUB_HACK(dvmJitEndTraceSelect(self,pc));                  \
             }                                                               \
         }                                                                   \
         SET_REGISTER##_regsize(vdst, dvmGetStaticField##_ftype(sfield));    \
@@ -693,7 +696,7 @@ GOTO_TARGET_DECL(exceptionThrown);
             if (sfield == NULL)                                             \
                 GOTO_exceptionThrown();                                     \
             if (dvmDexGetResolvedField(methodClassDex, ref) == NULL) {      \
-                END_JIT_TSELECT();                                          \
+                JIT_STUB_HACK(dvmJitEndTraceSelect(self,pc));                  \
             }                                                               \
         }                                                                   \
         SET_REGISTER##_regsize(vdst, dvmGetStaticField##_ftype(sfield));    \
@@ -717,7 +720,7 @@ GOTO_TARGET_DECL(exceptionThrown);
             if (sfield == NULL)                                             \
                 GOTO_exceptionThrown();                                     \
             if (dvmDexGetResolvedField(methodClassDex, ref) == NULL) {      \
-                END_JIT_TSELECT();                                          \
+                JIT_STUB_HACK(dvmJitEndTraceSelect(self,pc));                  \
             }                                                               \
         }                                                                   \
         dvmSetStaticField##_ftype(sfield, GET_REGISTER##_regsize(vdst));    \
@@ -741,7 +744,7 @@ GOTO_TARGET_DECL(exceptionThrown);
             if (sfield == NULL)                                             \
                 GOTO_exceptionThrown();                                     \
             if (dvmDexGetResolvedField(methodClassDex, ref) == NULL) {      \
-                END_JIT_TSELECT();                                          \
+                JIT_STUB_HACK(dvmJitEndTraceSelect(self,pc));                  \
             }                                                               \
         }                                                                   \
         dvmSetStaticField##_ftype(sfield, GET_REGISTER##_regsize(vdst));    \

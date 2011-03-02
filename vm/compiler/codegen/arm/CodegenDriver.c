@@ -1422,15 +1422,16 @@ static void genMonitorPortable(CompilationUnit *cUnit, MIR *mir)
 #endif
 
 /*
- * Fetch *self->suspendCount. If the suspend count is non-zero,
+ * Fetch *self->info.breakFlags. If the breakFlags are non-zero,
  * punt to the interpreter.
  */
 static void genSuspendPoll(CompilationUnit *cUnit, MIR *mir)
 {
     int rTemp = dvmCompilerAllocTemp(cUnit);
     ArmLIR *ld;
-    ld = loadWordDisp(cUnit, r6SELF, offsetof(Thread, suspendCount),
-                      rTemp);
+    ld = loadBaseDisp(cUnit, NULL, r6SELF,
+                      offsetof(Thread, interpBreak.ctl.breakFlags),
+                      rTemp, kUnsignedByte, INVALID_SREG);
     setMemRefType(ld, true /* isLoad */, kMustNotAlias);
     genRegImmCheck(cUnit, kArmCondNe, rTemp, 0, mir->offset, NULL);
 }

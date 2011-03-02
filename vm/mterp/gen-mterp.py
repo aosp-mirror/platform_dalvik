@@ -166,7 +166,7 @@ def altEntry(tokens):
     except ValueError:
         raise DataParseError("unknown opcode %s" % tokens[1])
     if alt_opcode_locations.has_key(tokens[1]):
-        print "Warning: alt overrides earlier %s (%s -> %s)" \
+        print "Note: alt overrides earlier %s (%s -> %s)" \
                 % (tokens[1], alt_opcode_locations[tokens[1]], tokens[2])
     alt_opcode_locations[tokens[1]] = tokens[2]
     generate_alt_table = True
@@ -186,7 +186,7 @@ def opEntry(tokens):
     except ValueError:
         raise DataParseError("unknown opcode %s" % tokens[1])
     if opcode_locations.has_key(tokens[1]):
-        print "Warning: op overrides earlier %s (%s -> %s)" \
+        print "Note: op overrides earlier %s (%s -> %s)" \
                 % (tokens[1], opcode_locations[tokens[1]], tokens[2])
     opcode_locations[tokens[1]] = tokens[2]
 
@@ -340,8 +340,8 @@ def loadAndEmitAltOpcodes():
     # point dvmAsmInstructionStart at the first handler or stub
     asm_fp.write("\n    .global %s\n" % start_label)
     asm_fp.write("    .type   %s, %%function\n" % start_label)
-    asm_fp.write("%s:\n" % start_label)
     asm_fp.write("    .text\n\n")
+    asm_fp.write("%s = " % start_label + label_prefix + "_ALT_OP_NOP\n")
 
     for i in xrange(kNumPackedOpcodes):
         op = opcodes[i]

@@ -146,7 +146,7 @@ void dvmCompilerDrainQueue(void)
 
     dvmLockMutex(&gDvmJit.compilerLock);
     while (workQueueLength() != 0 && !gDvmJit.haltCompilerThread &&
-           self->suspendCount == 0) {
+           self->interpBreak.ctl.suspendCount == 0) {
         /*
          * Use timed wait here - more than one mutator threads may be blocked
          * but the compiler thread will only signal once when the queue is
@@ -420,7 +420,7 @@ static bool compilerThreadStartup(void)
      * NOTE: the profile table must only be allocated once, globally.
      * Profiling is turned on and off by nulling out gDvm.pJitProfTable
      * and then restoring its original value.  However, this action
-     * is not syncronized for speed so threads may continue to hold
+     * is not synchronized for speed so threads may continue to hold
      * and update the profile table after profiling has been turned
      * off by null'ng the global pointer.  Be aware.
      */
@@ -458,6 +458,7 @@ static bool compilerThreadStartup(void)
     gDvmJit.pProfTable = dvmDebuggerOrProfilerActive() ? NULL : pJitProfTable;
     gDvmJit.pProfTableCopy = pJitProfTable;
     gDvmJit.pJitTraceProfCounters = pJitTraceProfCounters;
+    dvmJitUpdateState();
     dvmUnlockMutex(&gDvmJit.tableLock);
 
     /* Signal running threads to refresh their cached pJitTable pointers */
@@ -738,6 +739,7 @@ void dvmCompilerShutdown(void)
     /* Disable new translation requests */
     gDvmJit.pProfTable = NULL;
     gDvmJit.pProfTableCopy = NULL;
+    dvmJitUpdateState();
 
     if (gDvm.verboseShutdown ||
             gDvmJit.profileMode == kTraceProfilingContinuous) {
@@ -796,7 +798,7 @@ void dvmCompilerStateRefresh()
      * may be executed before the compiler thread has finished
      * initialization.
      */
-    if ((gDvm.interpBreak & kSubModeMethodTrace) &&
+    if ((gDvm.activeProfilers != 0) &&
         !gDvmJit.methodTraceSupport) {
         bool resetRequired;
         /*
@@ -828,4 +830,6 @@ void dvmCompilerStateRefresh()
     dvmUnlockMutex(&gDvmJit.tableLock);
     if (needUnchain)
         dvmJitUnchainAll();
+    // Make sure all threads have current values
+    dvmJitUpdateState();
 }

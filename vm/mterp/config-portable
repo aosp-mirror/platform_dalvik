@@ -13,19 +13,13 @@
 # limitations under the License.
 
 #
-# Configuration for "portstd" target, a/k/a the portable interpreter.  This
-# differs from other "mterp" targets in that it doesn't use the usual
-# stub/glue mechanism, and defines different entry points.  We generate it
-# here because it's convenient.
+# Configuration for the portable interpreter.
 #
 
 handler-style all-c
 
 # C file header and basic definitions
 import c/header.c
-
-# simple def to specify the "standard" interp
-import portable/portstd.c
 
 # C pre-processor defines for stub C instructions
 import portable/stubdefs.c

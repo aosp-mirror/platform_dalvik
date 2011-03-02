@@ -13,11 +13,7 @@
     mov     r3, #0                       @ Record that we're not returning
     str     r3, [r0, #offThread_inJitCodeCache]
     blx     r2                           @ dvmLockObject(self, obj)
-    @ refresh Jit's on/off status
-    ldr     r3, [rSELF, #offThread_ppJitProfTable]
-    ldr     r3, [r3]
     ldr     r2, .LdvmJitToInterpNoChain
-    str     r3, [rSELF, #offThread_pJitProfTable]
     @ Bail to interpreter - no chain [note - r4 still contains rPC]
 #if defined(WITH_JIT_TUNING)
     mov     r0, #kHeavyweightMonitor

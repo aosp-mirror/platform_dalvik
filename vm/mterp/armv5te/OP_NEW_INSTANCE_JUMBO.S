@@ -16,6 +16,9 @@
     orr     r1, r0, r1, lsl #16         @ r1<- AAAAaaaa
     ldr     r3, [r3, #offDvmDex_pResClasses]    @ r3<- pDvmDex->pResClasses
     ldr     r0, [r3, r1, lsl #2]        @ r0<- resolved class
+#if defined(WITH_JIT)
+    add     r10, r3, r1, lsl #2         @ r10<- &resolved_class
+#endif
     EXPORT_PC()                         @ req'd for init, resolve, alloc
     cmp     r0, #0                      @ already resolved?
     beq     .L${opcode}_resolve         @ no, resolve it now
@@ -33,11 +36,44 @@
 .L${opcode}_finish: @ r0=new object
     FETCH(r3, 3)                        @ r3<- BBBB
     cmp     r0, #0                      @ failed?
+#if defined(WITH_JIT)
+    /*
+     * The JIT needs the class to be fully resolved before it can
+     * include this instruction in a trace.
+     */
+    ldrb    r1, [rSELF, #offThread_subMode]
     beq     common_exceptionThrown      @ yes, handle the exception
+    ands    r1, #kSubModeJitTraceBuild  @ under construction?
+    bne     .L${opcode}_jitCheck
+#else
+    beq     common_exceptionThrown      @ yes, handle the exception
+#endif
+.L${opcode}_end:
     FETCH_ADVANCE_INST(4)               @ advance rPC, load rINST
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     SET_VREG(r0, r3)                    @ vBBBB<- r0
     GOTO_OPCODE(ip)                     @ jump to next instruction
+
+#if defined(WITH_JIT)
+    /*
+     * Check to see if we need to stop the trace building early.
+     * r0: new object
+     * r3: vAA
+     */
+.L${opcode}_jitCheck:
+    ldr     r1, [r10]                   @ reload resolved class
+    cmp     r1, #0                      @ okay?
+    bne     .L${opcode}_end             @ yes, finish
+    mov     r9, r0                      @ preserve new object
+    mov     r10, r3                     @ preserve vAA
+    mov     r0, rSELF
+    mov     r1, rPC
+    bl      dvmJitEndTraceSelect        @ (self, pc)
+    FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    SET_VREG(r9, r10)                   @ vAA<- new object
+    GOTO_OPCODE(ip)                     @ jump to next instruction
+#endif
 
     /*
      * Class initialization required.

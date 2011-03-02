@@ -11,15 +11,14 @@
     movzx    rINSTbl,%ecx          # ecx <- A+
     andb     $$0xf,%cl             # ecx <- A
     GET_VREG_R %eax %ecx           # eax <- vA
-    sarl     $$4,rINST            # rINST<- B
+    sarl     $$4,rINST             # rINST<- B
+    movl     rSELF,%ecx
     cmpl     (rFP,rINST,4),%eax    # compare (vA, vB)
-    movswl   2(rPC),rINST          # Get signed branch offset
     movl     $$2,%eax              # assume not taken
     j${revcmp}   1f
-    testl    rINST,rINST
-    js       common_backwardBranch
-    movl     rINST,%eax
+    movswl   2(rPC),%eax           # Get signed branch offset
 1:
+    movl     offThread_curHandlerTable(%ecx),rIBASE
     FETCH_INST_INDEXED %eax
     ADVANCE_PC_INDEXED %eax
     GOTO_NEXT

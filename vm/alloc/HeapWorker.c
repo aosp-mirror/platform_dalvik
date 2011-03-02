@@ -129,7 +129,7 @@ void dvmAssertHeapWorkerThreadRunning()
         u8 delta = now - heapWorkerInterpStartTime;
 
         if (delta > HEAP_WORKER_WATCHDOG_TIMEOUT &&
-            (DEBUGGER_ACTIVE || gDvm.nativeDebuggerActive))
+            (gDvm.debuggerActive || gDvm.nativeDebuggerActive))
         {
             /*
              * Debugger suspension can block the thread indefinitely.  For

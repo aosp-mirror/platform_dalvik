@@ -83,6 +83,9 @@ bool dvmCompilerArchVariantInit(void)
     /* No method JIT for Thumb backend */
     gDvmJit.disableOpt |= (1 << kMethodJit);
 
+    // Make sure all threads have current values
+    dvmJitUpdateState();
+
     return true;
 }
 

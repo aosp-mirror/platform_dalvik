@@ -70,6 +70,7 @@ void* dvmSelfVerificationSaveState(const u2* pc, u4* fp,
 void* dvmSelfVerificationRestoreState(const u2* pc, u4* fp,
                                       SelfVerificationState exitPoint,
                                       Thread *self);
+void dvmCheckSelfVerification(const u2* pc, Thread* self);
 #endif
 
 /*
@@ -142,11 +143,10 @@ typedef struct JitEntry {
     void*               codeAddress;    /* Code address of native translation */
 } JitEntry;
 
-int dvmCheckJit(const u2* pc, Thread* self, const ClassObject *callsiteClass,
-                const Method* curMethod);
+void dvmCheckJit(const u2* pc, Thread* self);
 void* dvmJitGetTraceAddr(const u2* dPC);
 void* dvmJitGetMethodAddr(const u2* dPC);
-bool dvmJitCheckTraceRequest(Thread* self);
+void dvmJitCheckTraceRequest(Thread* self);
 void dvmJitStopTranslationRequests(void);
 void dvmJitStats(void);
 bool dvmJitResizeJitTable(unsigned int size);
@@ -156,11 +156,13 @@ s8 dvmJitd2l(double d);
 s8 dvmJitf2l(float f);
 void dvmJitSetCodeAddr(const u2* dPC, void *nPC, JitInstructionSetType set,
                        bool isMethodEntry, int profilePrefixSize);
-void dvmJitEndTraceSelect(Thread* self);
+void dvmJitEndTraceSelect(Thread* self, const u2* dPC);
 JitTraceCounter_t *dvmJitNextTraceCounter(void);
 void dvmJitTraceProfilingOff(void);
 void dvmJitTraceProfilingOn(void);
 void dvmJitChangeProfileMode(TraceProfilingModes newState);
 void dvmJitDumpTraceDesc(JitTraceDescription *trace);
+void dvmJitUpdateState(void);
+void dvmJitResumeTranslation(Thread* self, const u2* pc, const u4* fp);
 
 #endif /*_DALVIK_INTERP_JIT*/

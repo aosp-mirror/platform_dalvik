@@ -23,11 +23,11 @@
     .endif
     cmp     r0, #0                      @ already resolved?
     EXPORT_PC()                         @ must export for invoke
-    GET_VREG(r2, r10)                   @ r2<- "this" ptr
+    GET_VREG(r9, r10)                   @ r9<- "this" ptr
     beq     .L${opcode}_resolve         @ not resolved, do it now
 .L${opcode}_finish:
-    cmp     r2, #0                      @ null "this" ref?
-    bne     common_invokeMethod${routine}   @ no, continue on
+    cmp     r9, #0                      @ null "this" ref?
+    bne     common_invokeMethod${routine}   @ r0=method, r9="this"
     b       common_errNullObject        @ yes, throw exception
 %break
 
@@ -42,6 +42,5 @@
     mov     r2, #METHOD_DIRECT          @ resolver method type
     bl      dvmResolveMethod            @ r0<- call(clazz, ref, flags)
     cmp     r0, #0                      @ got null?
-    GET_VREG(r2, r10)                   @ r2<- "this" ptr (reload)
     bne     .L${opcode}_finish          @ no, continue
     b       common_exceptionThrown      @ yes, handle exception

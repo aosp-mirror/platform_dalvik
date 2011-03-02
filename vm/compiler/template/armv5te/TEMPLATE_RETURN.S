@@ -10,12 +10,12 @@
     mov     r0, r6
     @ r0=rSELF
     mov     lr, pc
-    ldr     pc, .LdvmFastJavaMethodTraceExit
+    ldr     pc, .LdvmFastMethodTraceExit
     ldmfd   sp!, {r0-r2,lr}             @ restore live registers
 #endif
     SAVEAREA_FROM_FP(r0, rFP)           @ r0<- saveArea (old)
     ldr     r10, [r0, #offStackSaveArea_prevFrame] @ r10<- saveArea->prevFrame
-    ldr     r8, [rSELF, #offThread_suspendCount] @ r8<- suspendCount
+    ldrb    r8, [rSELF, #offThread_breakFlags] @ r8<- breakFlags
     ldr     rPC, [r0, #offStackSaveArea_savedPc] @ rPC<- saveArea->savedPc
 #if !defined(WITH_SELF_VERIFICATION)
     ldr     r9,  [r0, #offStackSaveArea_returnAddr] @ r9<- chaining cell ret
@@ -39,7 +39,7 @@
     str     rFP, [rSELF, #offThread_curFrame] @ self->curFrame = fp
     add     rPC, rPC, #6                @ publish new rPC (advance 6 bytes)
     str     r0, [rSELF, #offThread_methodClassDex]
-    cmp     r8, #0                      @ check the suspendCount
+    cmp     r8, #0                      @ check the break flags
     movne   r9, #0                      @ clear the chaining cell address
     str     r9, [rSELF, #offThread_inJitCodeCache] @ in code cache or not
     cmp     r9, #0                      @ chaining cell exists?
@@ -51,6 +51,5 @@
 1:
     stmia   rSELF, {rPC, rFP}           @ SAVE_PC_FP_TO_SELF()
     ldr     r2, .LdvmMterpStdBail       @ defined in footer.S
-    mov     r1, #0                      @ changeInterp = false
     mov     r0, rSELF                   @ Expecting rSELF in r0
     blx     r2                          @ exit the interpreter

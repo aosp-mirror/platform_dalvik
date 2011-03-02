@@ -37,20 +37,7 @@
  *   WITH_TRACKREF_CHECKS
  *   EASY_GDB
  *   NDEBUG
- *
- * If THREADED_INTERP is not defined, we use a classic "while true / switch"
- * interpreter.  If it is defined, then the tail end of each instruction
- * handler fetches the next instruction and jumps directly to the handler.
- * This increases the size of the "Std" interpreter by about 10%, but
- * provides a speedup of about the same magnitude.
- *
- * There's a "hybrid" approach that uses a goto table instead of a switch
- * statement, avoiding the "is the opcode in range" tests required for switch.
- * The performance is close to the threaded version, and without the 10%
- * size increase, but the benchmark results are off enough that it's not
- * worth adding as a third option.
  */
-#define THREADED_INTERP             /* threaded vs. while-loop interpreter */
 
 #ifdef WITH_INSTR_CHECKS            /* instruction-level paranoia (slow!) */
 # define CHECK_BRANCH_OFFSETS
@@ -329,24 +316,6 @@ static inline void putDoubleToArray(u4* ptr, int idx, double dval)
 #define EXPORT_PC()         (SAVEAREA_FROM_FP(fp)->xtra.currentPc = pc)
 
 /*
- * Determine if we need to switch to a different interpreter.  "_current"
- * is either INTERP_STD or INTERP_DBG.  It should be fixed for a given
- * interpreter generation file, which should remove the outer conditional
- * from the following.
- *
- * If we're building without debug and profiling support, we never switch.
- */
-#if defined(WITH_JIT)
-# define NEED_INTERP_SWITCH(_current) (                                     \
-    (_current == INTERP_STD) ?                                              \
-        dvmJitDebuggerOrProfilerActive() : !dvmJitDebuggerOrProfilerActive() )
-#else
-# define NEED_INTERP_SWITCH(_current) (                                     \
-    (_current == INTERP_STD) ?                                              \
-        dvmDebuggerOrProfilerActive() : !dvmDebuggerOrProfilerActive() )
-#endif
-
-/*
  * Check to see if "obj" is NULL.  If so, throw an exception.  Assumes the
  * pc has already been exported to the stack.
  *
@@ -411,14 +380,6 @@ static inline bool checkForNullExportPC(Object* obj, u4* fp, const u2* pc)
 }
 
 /* File: cstubs/stubdefs.c */
-/* this is a standard (no debug support) interpreter */
-#define INTERP_TYPE INTERP_STD
-#define CHECK_DEBUG_AND_PROF() ((void)0)
-# define CHECK_TRACKED_REFS() ((void)0)
-#define CHECK_JIT_BOOL() (false)
-#define CHECK_JIT_VOID()
-#define END_JIT_TSELECT() ((void)0)
-
 /*
  * In the C mterp stubs, "goto" is a function call followed immediately
  * by a return.
@@ -452,6 +413,11 @@ static inline bool checkForNullExportPC(Object* obj, u4* fp, const u2* pc)
 
 /* ugh */
 #define STUB_HACK(x) x
+#if defined(WITH_JIT)
+#define JIT_STUB_HACK(x) x
+#else
+#define JIT_STUB_HACK(x)
+#endif
 
 
 /*
@@ -471,14 +437,23 @@ static inline bool checkForNullExportPC(Object* obj, u4* fp, const u2* pc)
 
 /*
  * Like the "portable" FINISH, but don't reload "inst", and return to caller
- * when done.
+ * when done.  Further, debugger/profiler checks are handled
+ * before handler execution in mterp, so we don't do them here either.
  */
+#if defined(WITH_JIT)
 #define FINISH(_offset) {                                                   \
         ADJUST_PC(_offset);                                                 \
-        CHECK_DEBUG_AND_PROF();                                             \
-        CHECK_TRACKED_REFS();                                               \
+        if (self->interpBreak.ctl.subMode & kSubModeJitTraceBuild) {        \
+            dvmCheckJit(pc, self);                                          \
+        }                                                                   \
         return;                                                             \
     }
+#else
+#define FINISH(_offset) {                                                   \
+        ADJUST_PC(_offset);                                                 \
+        return;                                                             \
+    }
+#endif
 
 
 /*
@@ -513,31 +488,21 @@ static inline bool checkForNullExportPC(Object* obj, u4* fp, const u2* pc)
     } while(false)
 
 /*
- * As a special case, "goto bail" turns into a longjmp.  Use "bail_switch"
- * if we need to switch to the other interpreter upon our return.
+ * As a special case, "goto bail" turns into a longjmp.
  */
 #define GOTO_bail()                                                         \
     dvmMterpStdBail(self, false);
-#define GOTO_bail_switch()                                                  \
-    dvmMterpStdBail(self, true);
 
 /*
  * Periodically check for thread suspension.
  *
  * While we're at it, see if a debugger has attached or the profiler has
- * started.  If so, switch to a different "goto" table.
+ * started.
  */
-#define PERIODIC_CHECKS(_entryPoint, _pcadj) {                              \
+#define PERIODIC_CHECKS(_pcadj) {                              \
         if (dvmCheckSuspendQuick(self)) {                                   \
             EXPORT_PC();  /* need for precise GC */                         \
             dvmCheckSuspendPending(self);                                   \
-        }                                                                   \
-        if (NEED_INTERP_SWITCH(INTERP_TYPE)) {                              \
-            ADJUST_PC(_pcadj);                                              \
-            self->entryPoint = _entryPoint;                                 \
-            LOGVV("threadid=%d: switch to STD ep=%d adj=%d\n",              \
-                self->threadId, (_entryPoint), (_pcadj));                   \
-            GOTO_bail_switch();                                             \
         }                                                                   \
     }
 
@@ -648,7 +613,7 @@ GOTO_TARGET_DECL(exceptionThrown);
                 branchOffset);                                              \
             ILOGV("> branch taken");                                        \
             if (branchOffset < 0)                                           \
-                PERIODIC_CHECKS(kInterpEntryInstr, branchOffset);           \
+                PERIODIC_CHECKS(branchOffset);                              \
             FINISH(branchOffset);                                           \
         } else {                                                            \
             ILOGV("|if-%s v%d,v%d,-", (_opname), vsrc1, vsrc2);             \
@@ -663,7 +628,7 @@ GOTO_TARGET_DECL(exceptionThrown);
             ILOGV("|if-%s v%d,+0x%04x", (_opname), vsrc1, branchOffset);    \
             ILOGV("> branch taken");                                        \
             if (branchOffset < 0)                                           \
-                PERIODIC_CHECKS(kInterpEntryInstr, branchOffset);           \
+                PERIODIC_CHECKS(branchOffset);                              \
             FINISH(branchOffset);                                           \
         } else {                                                            \
             ILOGV("|if-%s v%d,-", (_opname), vsrc1);                        \
@@ -1196,9 +1161,12 @@ GOTO_TARGET_DECL(exceptionThrown);
 
 /*
  * The JIT needs dvmDexGetResolvedField() to return non-null.
- * Since we use the portable interpreter to build the trace, the extra
- * checks in HANDLE_SGET_X and HANDLE_SPUT_X are not needed for mterp.
+ * Because the portable interpreter is not involved with the JIT
+ * and trace building, we only need the extra check here when this
+ * code is massaged into a stub called from an assembly interpreter.
+ * This is controlled by the JIT_STUB_HACK maco.
  */
+
 #define HANDLE_SGET_X(_opcode, _opname, _ftype, _regsize)                   \
     HANDLE_OPCODE(_opcode /*vAA, field@BBBB*/)                              \
     {                                                                       \
@@ -1213,7 +1181,7 @@ GOTO_TARGET_DECL(exceptionThrown);
             if (sfield == NULL)                                             \
                 GOTO_exceptionThrown();                                     \
             if (dvmDexGetResolvedField(methodClassDex, ref) == NULL) {      \
-                END_JIT_TSELECT();                                          \
+                JIT_STUB_HACK(dvmJitEndTraceSelect(self,pc));                  \
             }                                                               \
         }                                                                   \
         SET_REGISTER##_regsize(vdst, dvmGetStaticField##_ftype(sfield));    \
@@ -1237,7 +1205,7 @@ GOTO_TARGET_DECL(exceptionThrown);
             if (sfield == NULL)                                             \
                 GOTO_exceptionThrown();                                     \
             if (dvmDexGetResolvedField(methodClassDex, ref) == NULL) {      \
-                END_JIT_TSELECT();                                          \
+                JIT_STUB_HACK(dvmJitEndTraceSelect(self,pc));                  \
             }                                                               \
         }                                                                   \
         SET_REGISTER##_regsize(vdst, dvmGetStaticField##_ftype(sfield));    \
@@ -1261,7 +1229,7 @@ GOTO_TARGET_DECL(exceptionThrown);
             if (sfield == NULL)                                             \
                 GOTO_exceptionThrown();                                     \
             if (dvmDexGetResolvedField(methodClassDex, ref) == NULL) {      \
-                END_JIT_TSELECT();                                          \
+                JIT_STUB_HACK(dvmJitEndTraceSelect(self,pc));                  \
             }                                                               \
         }                                                                   \
         dvmSetStaticField##_ftype(sfield, GET_REGISTER##_regsize(vdst));    \
@@ -1285,7 +1253,7 @@ GOTO_TARGET_DECL(exceptionThrown);
             if (sfield == NULL)                                             \
                 GOTO_exceptionThrown();                                     \
             if (dvmDexGetResolvedField(methodClassDex, ref) == NULL) {      \
-                END_JIT_TSELECT();                                          \
+                JIT_STUB_HACK(dvmJitEndTraceSelect(self,pc));                  \
             }                                                               \
         }                                                                   \
         dvmSetStaticField##_ftype(sfield, GET_REGISTER##_regsize(vdst));    \

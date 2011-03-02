@@ -30,20 +30,7 @@
  *   WITH_TRACKREF_CHECKS
  *   EASY_GDB
  *   NDEBUG
- *
- * If THREADED_INTERP is not defined, we use a classic "while true / switch"
- * interpreter.  If it is defined, then the tail end of each instruction
- * handler fetches the next instruction and jumps directly to the handler.
- * This increases the size of the "Std" interpreter by about 10%, but
- * provides a speedup of about the same magnitude.
- *
- * There's a "hybrid" approach that uses a goto table instead of a switch
- * statement, avoiding the "is the opcode in range" tests required for switch.
- * The performance is close to the threaded version, and without the 10%
- * size increase, but the benchmark results are off enough that it's not
- * worth adding as a third option.
  */
-#define THREADED_INTERP             /* threaded vs. while-loop interpreter */
 
 #ifdef WITH_INSTR_CHECKS            /* instruction-level paranoia (slow!) */
 # define CHECK_BRANCH_OFFSETS
@@ -320,24 +307,6 @@ static inline void putDoubleToArray(u4* ptr, int idx, double dval)
  * Assumes existence of "u4* fp" and "const u2* pc".
  */
 #define EXPORT_PC()         (SAVEAREA_FROM_FP(fp)->xtra.currentPc = pc)
-
-/*
- * Determine if we need to switch to a different interpreter.  "_current"
- * is either INTERP_STD or INTERP_DBG.  It should be fixed for a given
- * interpreter generation file, which should remove the outer conditional
- * from the following.
- *
- * If we're building without debug and profiling support, we never switch.
- */
-#if defined(WITH_JIT)
-# define NEED_INTERP_SWITCH(_current) (                                     \
-    (_current == INTERP_STD) ?                                              \
-        dvmJitDebuggerOrProfilerActive() : !dvmJitDebuggerOrProfilerActive() )
-#else
-# define NEED_INTERP_SWITCH(_current) (                                     \
-    (_current == INTERP_STD) ?                                              \
-        dvmDebuggerOrProfilerActive() : !dvmDebuggerOrProfilerActive() )
-#endif
 
 /*
  * Check to see if "obj" is NULL.  If so, throw an exception.  Assumes the

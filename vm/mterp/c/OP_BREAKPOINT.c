@@ -1,5 +1,4 @@
 HANDLE_OPCODE(OP_BREAKPOINT)
-#if (INTERP_TYPE == INTERP_DBG)
     {
         /*
          * Restart this instruction with the original opcode.  We do
@@ -9,7 +8,7 @@ HANDLE_OPCODE(OP_BREAKPOINT)
          * for the sake of anything that needs to do disambiguation in a
          * common handler with INST_INST.
          *
-         * The breakpoint itself is handled over in updateDebugger(),
+         * The breakpoint itself is handled over in dvmUpdateDebugger(),
          * because we need to detect other events (method entry, single
          * step) and report them in the same event packet, and we're not
          * yet handling those through breakpoint instructions.  By the
@@ -22,8 +21,4 @@ HANDLE_OPCODE(OP_BREAKPOINT)
         inst = INST_REPLACE_OP(inst, originalOpcode);
         FINISH_BKPT(originalOpcode);
     }
-#else
-    LOGE("Breakpoint hit in non-debug interpreter\n");
-    dvmAbort();
-#endif
 OP_END

@@ -176,8 +176,9 @@ GOTO_TARGET(invokeVirtual, bool methodCallRange, bool jumboFormat)
         assert(baseMethod->methodIndex < thisPtr->clazz->vtableCount);
         methodToCall = thisPtr->clazz->vtable[baseMethod->methodIndex];
 
-#if defined(WITH_JIT) && (INTERP_TYPE == INTERP_DBG)
-        callsiteClass = thisPtr->clazz;
+#if defined(WITH_JIT) && defined(MTERP_STUB)
+        self->methodToCall = methodToCall;
+        self->callsiteClass = thisPtr->clazz;
 #endif
 
 #if 0
@@ -290,6 +291,7 @@ GOTO_TARGET(invokeSuper, bool methodCallRange, bool jumboFormat)
             GOTO_exceptionThrown();
         }
         methodToCall = curMethod->clazz->super->vtable[baseMethod->methodIndex];
+
 #if 0
         if (dvmIsAbstractMethod(methodToCall)) {
             dvmThrowAbstractMethodError("abstract method not implemented");
@@ -350,9 +352,6 @@ GOTO_TARGET(invokeInterface, bool methodCallRange, bool jumboFormat)
 
         thisClass = thisPtr->clazz;
 
-#if defined(WITH_JIT) && (INTERP_TYPE == INTERP_DBG)
-        callsiteClass = thisClass;
-#endif
 
         /*
          * Given a class and a method index, find the Method* with the
@@ -360,6 +359,10 @@ GOTO_TARGET(invokeInterface, bool methodCallRange, bool jumboFormat)
          */
         methodToCall = dvmFindInterfaceMethodInCache(thisClass, ref, curMethod,
                         methodClassDex);
+#if defined(WITH_JIT) && defined(MTERP_STUB)
+        self->callsiteClass = thisClass;
+        self->methodToCall = methodToCall;
+#endif
         if (methodToCall == NULL) {
             assert(dvmCheckException(self));
             GOTO_exceptionThrown();
@@ -446,15 +449,18 @@ GOTO_TARGET(invokeStatic, bool methodCallRange, bool jumboFormat)
             GOTO_exceptionThrown();
         }
 
+#if defined(WITH_JIT) && defined(MTERP_STUB)
         /*
          * The JIT needs dvmDexGetResolvedMethod() to return non-null.
-         * Since we use the portable interpreter to build the trace, this extra
-         * check is not needed for mterp.
+         * Include the check if this code is being used as a stub
+         * called from the assembly interpreter.
          */
-        if (dvmDexGetResolvedMethod(methodClassDex, ref) == NULL) {
+        if ((self->interpBreak.ctl.subMode & kSubModeJitTraceBuild) &&
+            (dvmDexGetResolvedMethod(methodClassDex, ref) == NULL)) {
             /* Class initialization is still ongoing */
-            END_JIT_TSELECT();
+            dvmJitEndTraceSelect(self,pc);
         }
+#endif
     }
     GOTO_invokeMethod(methodCallRange, methodToCall, vsrc1, vdst);
 GOTO_TARGET_END
@@ -488,9 +494,6 @@ GOTO_TARGET(invokeVirtualQuick, bool methodCallRange, bool jumboFormat)
         if (!checkForNull(thisPtr))
             GOTO_exceptionThrown();
 
-#if defined(WITH_JIT) && (INTERP_TYPE == INTERP_DBG)
-        callsiteClass = thisPtr->clazz;
-#endif
 
         /*
          * Combine the object we found with the vtable offset in the
@@ -498,6 +501,10 @@ GOTO_TARGET(invokeVirtualQuick, bool methodCallRange, bool jumboFormat)
          */
         assert(ref < (unsigned int) thisPtr->clazz->vtableCount);
         methodToCall = thisPtr->clazz->vtable[ref];
+#if defined(WITH_JIT) && defined(MTERP_STUB)
+        self->callsiteClass = thisPtr->clazz;
+        self->methodToCall = methodToCall;
+#endif
 
 #if 0
         if (dvmIsAbstractMethod(methodToCall)) {
@@ -572,7 +579,6 @@ GOTO_TARGET(invokeSuperQuick, bool methodCallRange, bool jumboFormat)
         LOGVV("+++ super-virtual[%d]=%s.%s\n",
             ref, methodToCall->clazz->descriptor, methodToCall->name);
         assert(methodToCall != NULL);
-
         GOTO_invokeMethod(methodCallRange, methodToCall, vsrc1, vdst);
     }
 GOTO_TARGET_END
@@ -593,7 +599,7 @@ GOTO_TARGET(returnFromMethod)
          * Since this is now an interpreter switch point, we must do it before
          * we do anything at all.
          */
-        PERIODIC_CHECKS(kInterpEntryReturn, 0);
+        PERIODIC_CHECKS(0);
 
         ILOGV("> retval=0x%llx (leaving %s.%s %s)",
             retval.j, curMethod->clazz->descriptor, curMethod->name,
@@ -605,20 +611,19 @@ GOTO_TARGET(returnFromMethod)
 #ifdef EASY_GDB
         debugSaveArea = saveArea;
 #endif
-#if (INTERP_TYPE == INTERP_DBG)
-        TRACE_METHOD_EXIT(self, curMethod);
-#endif
 
         /* back up to previous frame and see if we hit a break */
         fp = (u4*)saveArea->prevFrame;
         assert(fp != NULL);
+
+        /* Handle any special subMode requirements */
+        if (self->interpBreak.ctl.subMode != 0) {
+            dvmReportReturn(self, pc, fp);
+        }
+
         if (dvmIsBreakFrame(fp)) {
             /* bail without popping the method frame from stack */
             LOGVV("+++ returned into break frame\n");
-#if defined(WITH_JIT)
-            /* Let the Jit know the return is terminating normally */
-            CHECK_JIT_VOID();
-#endif
             GOTO_bail();
         }
 
@@ -657,16 +662,8 @@ GOTO_TARGET(exceptionThrown)
         Object* exception;
         int catchRelPc;
 
-        /*
-         * Since this is now an interpreter switch point, we must do it before
-         * we do anything at all.
-         */
-        PERIODIC_CHECKS(kInterpEntryThrow, 0);
+        PERIODIC_CHECKS(0);
 
-#if defined(WITH_JIT)
-        // Something threw during trace selection - end the current trace
-        END_JIT_TSELECT();
-#endif
         /*
          * We save off the exception and clear the exception status.  While
          * processing the exception we might need to load some Throwable
@@ -682,9 +679,8 @@ GOTO_TARGET(exceptionThrown)
             exception->clazz->descriptor, curMethod->name,
             dvmLineNumFromPC(curMethod, pc - curMethod->insns));
 
-#if (INTERP_TYPE == INTERP_DBG)
         /*
-         * Tell the debugger about it.
+         * Report the exception throw to any "subMode" watchers.
          *
          * TODO: if the exception was thrown by interpreted code, control
          * fell through native, and then back to us, we will report the
@@ -697,14 +693,9 @@ GOTO_TARGET(exceptionThrown)
          * here, and have the JNI exception code do the reporting to the
          * debugger.
          */
-        if (DEBUGGER_ACTIVE) {
-            void* catchFrame;
-            catchRelPc = dvmFindCatchBlock(self, pc - curMethod->insns,
-                        exception, true, &catchFrame);
-            dvmDbgPostException(fp, pc - curMethod->insns, catchFrame,
-                catchRelPc, exception);
+        if (self->interpBreak.ctl.subMode != 0) {
+            dvmReportExceptionThrow(self, curMethod, pc, fp);
         }
-#endif
 
         /*
          * We need to unroll to the catch block or the nearest "break"
@@ -942,10 +933,19 @@ GOTO_TARGET(invokeMethod, bool methodCallRange, const Method* _methodToCall,
 #endif
         newSaveArea->prevFrame = fp;
         newSaveArea->savedPc = pc;
-#if defined(WITH_JIT)
+#if defined(WITH_JIT) && defined(MTERP_STUB)
         newSaveArea->returnAddr = 0;
 #endif
         newSaveArea->method = methodToCall;
+
+        if (self->interpBreak.ctl.subMode != 0) {
+            /*
+             * We mark ENTER here for both native and non-native
+             * calls.  For native calls, we'll mark EXIT on return.
+             * For non-native calls, EXIT is marked in the RETURN op.
+             */
+            dvmReportInvoke(self, methodToCall);
+        }
 
         if (!dvmIsNativeMethod(methodToCall)) {
             /*
@@ -959,9 +959,7 @@ GOTO_TARGET(invokeMethod, bool methodCallRange, const Method* _methodToCall,
 #ifdef EASY_GDB
             debugSaveArea = SAVEAREA_FROM_FP(newFp);
 #endif
-#if INTERP_TYPE == INTERP_DBG
-            debugIsMethodEntry = true;              // profiling, debugging
-#endif
+            self->debugIsMethodEntry = true;        // profiling, debugging
             ILOGD("> pc <-- %s.%s %s", curMethod->clazz->descriptor,
                 curMethod->name, curMethod->shorty);
             DUMP_REGS(curMethod, fp, true);         // show input args
@@ -974,25 +972,12 @@ GOTO_TARGET(invokeMethod, bool methodCallRange, const Method* _methodToCall,
 
             DUMP_REGS(methodToCall, newFp, true);   // show input args
 
-#if (INTERP_TYPE == INTERP_DBG)
-            if (DEBUGGER_ACTIVE) {
-                dvmDbgPostLocationEvent(methodToCall, -1,
-                    dvmGetThisPtr(curMethod, fp), DBG_METHOD_ENTRY);
-            }
-#endif
-#if (INTERP_TYPE == INTERP_DBG)
-            TRACE_METHOD_ENTER(self, methodToCall);
-#endif
-
-            {
-                ILOGD("> native <-- %s.%s %s", methodToCall->clazz->descriptor,
-                        methodToCall->name, methodToCall->shorty);
+            if (self->interpBreak.ctl.subMode != 0) {
+                dvmReportPreNativeInvoke(pc, self, methodToCall);
             }
 
-#if defined(WITH_JIT)
-            /* Allow the Jit to end any pending trace building */
-            CHECK_JIT_VOID();
-#endif
+            ILOGD("> native <-- %s.%s %s", methodToCall->clazz->descriptor,
+                  methodToCall->name, methodToCall->shorty);
 
             /*
              * Jump through native call bridge.  Because we leave no
@@ -1001,15 +986,9 @@ GOTO_TARGET(invokeMethod, bool methodCallRange, const Method* _methodToCall,
              */
             (*methodToCall->nativeFunc)(newFp, &retval, methodToCall, self);
 
-#if (INTERP_TYPE == INTERP_DBG)
-            if (DEBUGGER_ACTIVE) {
-                dvmDbgPostLocationEvent(methodToCall, -1,
-                    dvmGetThisPtr(curMethod, fp), DBG_METHOD_EXIT);
+            if (self->interpBreak.ctl.subMode != 0) {
+                dvmReportPostNativeInvoke(pc, self, methodToCall);
             }
-#endif
-#if (INTERP_TYPE == INTERP_DBG)
-            TRACE_METHOD_EXIT(self, methodToCall);
-#endif
 
             /* pop frame off */
             dvmPopJniLocals(self, newSaveArea);

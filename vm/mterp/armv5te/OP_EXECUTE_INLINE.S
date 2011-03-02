@@ -9,11 +9,18 @@
      * The first four args are in r0-r3, pointer to return value storage
      * is on the stack.  The function's return value is a flag that tells
      * us if an exception was thrown.
+     *
+     * TUNING: could maintain two tables, pointer in Thread and
+     * swap if profiler/debuggger active.
      */
     /* [opt] execute-inline vAA, {vC, vD, vE, vF}, inline@BBBB */
+    ldrb    r2, [rSELF, #offThread_subMode]
     FETCH(r10, 1)                       @ r10<- BBBB
-    add     r1, rSELF, #offThread_retval  @ r1<- &self->retval
     EXPORT_PC()                         @ can throw
+    ands    r2, #kSubModeDebugProfile   @ Any going on?
+    bne     .L${opcode}_debugmode       @ yes - take slow path
+.L${opcode}_resume:
+    add     r1, rSELF, #offThread_retval  @ r1<- &self->retval
     sub     sp, sp, #8                  @ make room for arg, +64 bit align
     mov     r0, rINST, lsr #12          @ r0<- B
     str     r1, [sp]                    @ push &self->retval
@@ -55,6 +62,36 @@
     ldr     r9, .L${opcode}_table       @ table of InlineOperation
     ldr     pc, [r9, r10, lsl #4]       @ sizeof=16, "func" is first entry
     @ (not reached)
+
+    /*
+     * We're debugging or profiling.
+     * r10: opIndex
+     */
+.L${opcode}_debugmode:
+    mov     r0, r10
+    bl      dvmResolveInlineNative
+    cmp     r0, #0                      @ did it resolve?
+    beq     .L${opcode}_resume          @ no, just move on
+    mov     r1, rSELF
+    bl      dvmFastMethodTraceEnter     @ (method, self)
+    add     r1, rSELF, #offThread_retval@ r1<- &self->retval
+    sub     sp, sp, #8                  @ make room for arg, +64 bit align
+    mov     r0, rINST, lsr #12          @ r0<- B
+    str     r1, [sp]                    @ push &self->retval
+    bl      .L${opcode}_continue        @ make call; will return after
+    add     sp, sp, #8                  @ pop stack
+    cmp     r0, #0                      @ test boolean result of inline
+    beq     common_exceptionThrown      @ returned false, handle exception
+    mov     r0, r10
+    bl      dvmResolveInlineNative      @ reload method
+    mov     r1, rSELF
+    bl      dvmFastMethodTraceExit      @ (method, self)
+    FETCH_ADVANCE_INST(3)               @ advance rPC, load rINST
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    GOTO_OPCODE(ip)                     @ jump to next instruction
+
+
+
 
 .L${opcode}_table:
     .word   gDvmInlineOpsTable

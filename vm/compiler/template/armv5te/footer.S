@@ -15,11 +15,10 @@
     str     r1, [rSELF, #offThread_curFrame]   @ self->curFrame = newFp
     str     r9, [r1, #(offStackSaveArea_localRefCookie - sizeofStackSaveArea)]
                                         @ newFp->localRefCookie=top
-    ldr     lr, [rSELF, #offThread_pInterpBreak]
+    ldrb    lr, [rSELF, #offThread_subMode]
     SAVEAREA_FROM_FP(r10, r1)           @ r10<- new stack save area
 
     mov     r2, r0                      @ r2<- methodToCall
-    ldr     lr, [lr]                    @ lr<- set of active profilers
     mov     r0, r1                      @ r0<- newFP
     add     r1, rSELF, #offThread_retval  @ r1<- &retval
     mov     r3, rSELF                   @ arg3<- self
@@ -45,19 +44,15 @@
     mov     lr, pc
     ldr     pc, [r2, #offMethod_nativeFunc]
 212:
-    @ Refresh Jit's on/off status
-    ldr     r3, [rSELF, #offThread_ppJitProfTable]
 
     @ native return; r10=newSaveArea
     @ equivalent to dvmPopJniLocals
     ldr     r2, [r10, #offStackSaveArea_returnAddr] @ r2 = chaining cell ret
     ldr     r0, [r10, #offStackSaveArea_localRefCookie] @ r0<- saved->top
     ldr     r1, [rSELF, #offThread_exception] @ check for exception
-    ldr     r3, [r3]    @ r1 <- pointer to Jit profile table
     str     rFP, [rSELF, #offThread_curFrame]  @ self->curFrame = fp
     cmp     r1, #0                      @ null?
     str     r0, [rSELF, #offThread_jniLocal_topCookie] @ new top <- old top
-    str     r3, [rSELF, #offThread_pJitProfTable]  @ cache current JitProfTable
     ldr     r0, [r10, #offStackSaveArea_savedPc] @ reload rPC
 
     @ r0 = dalvikCallsitePC
@@ -121,8 +116,8 @@
     .word   dvmFastMethodTraceEnter
 .LdvmFastNativeMethodTraceExit:
     .word   dvmFastNativeMethodTraceExit
-.LdvmFastJavaMethodTraceExit:
-    .word   dvmFastJavaMethodTraceExit
+.LdvmFastMethodTraceExit:
+    .word   dvmFastMethodTraceExit
 .L__aeabi_cdcmple:
     .word   __aeabi_cdcmple
 .L__aeabi_cfcmple:

@@ -95,11 +95,14 @@
      * mode of filled-new-array.
      */
 .L${opcode}_notimpl:
-    ldr     r0, .L_strFilledNewArrayNotImpl
+    ldr     r0, .L_strFilledNewArrayNotImpl_${opcode}
     bl      dvmThrowInternalError
     b       common_exceptionThrown
 
-    .if     (!$isrange)                 @ define in one or the other, not both
-.L_strFilledNewArrayNotImpl:
+    /*
+     * Ideally we'd only define this once, but depending on layout we can
+     * exceed the range of the load above.
+     */
+
+.L_strFilledNewArrayNotImpl_${opcode}:
     .word   .LstrFilledNewArrayNotImpl
-    .endif

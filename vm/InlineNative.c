@@ -872,7 +872,7 @@ Method* dvmFindInlinableMethod(const char* classDescriptor,
  * Currently assuming that we're only inlining stuff loaded by the
  * bootstrap class loader.  This is a safe assumption for many reasons.
  */
-static Method* resolveInlineNative(int opIndex)
+Method* dvmResolveInlineNative(int opIndex)
 {
     assert(opIndex >= 0 && opIndex < NELEM(gDvmInlineOpsTable));
     Method* method = gDvm.inlinedMethods[opIndex];
@@ -908,7 +908,7 @@ static Method* resolveInlineNative(int opIndex)
 bool dvmPerformInlineOp4Dbg(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
     JValue* pResult, int opIndex)
 {
-    Method* method = resolveInlineNative(opIndex);
+    Method* method = dvmResolveInlineNative(opIndex);
     if (method == NULL) {
         return (*gDvmInlineOpsTable[opIndex].func)(arg0, arg1, arg2, arg3,
             pResult);

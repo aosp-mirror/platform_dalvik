@@ -3,18 +3,19 @@ Items requiring attention:
 (hi) Add gc card marking to aput/iput/sput/new_filled_array
 (hi) Correct stack overflow handling (dvmCleanupStackOverflow takes an
      additional argument now)
-(hi) "debugger active" test in common_periodicChecks must handle
-     the case where glue->pDebuggerActive is a NULL pointer (used to
-     skip a memory load when debugger support is completely disabled)
 (hi) WITH_DEBUGGER and WITH_PROFILER are no longer defined (but are
      assumed to be enabled)
 (hi) Implement OP_DISPATCH_FF for real. (Right now it's treated as
      an unused instruction.)
 (hi) Rename dvmJitGetCodeAddr to dvmJitGetTraceAddr.
 (hi) Remove references to rGLUE and replace with rSELF
-(hi) Rework footer.s's suspend check to reflect suspendCount change
 (hi) Rework interpreter to co-exist the new switching model which
-     elminiates a separate debug interpreter.
+     elminiates a separate debug interpreter.  Needs a dedicated
+     rIBASE register (or alternate switching model with variable
+     handler base).
+(hi) Add dvmReportXXXX()" calls in footer.c to support profilers &
+     debuggers.
+(hi) Set self->debugIsMethodEntry in invoke code.
 
 (md) Add implementations for jumbo opcodes (40 instructions) and
      their volatile variants (13 instructions)

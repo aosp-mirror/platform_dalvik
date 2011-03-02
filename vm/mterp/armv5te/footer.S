@@ -1,17 +1,31 @@
-
 /*
  * ===========================================================================
  *  Common subroutines and data
  * ===========================================================================
  */
 
-
-
     .text
     .align  2
 
 #if defined(WITH_JIT)
+
 #if defined(WITH_SELF_VERIFICATION)
+/*
+ * "longjmp" to a translation after single-stepping.  Before returning
+ * to translation, must save state for self-verification.
+ */
+    .global dvmJitResumeTranslation              @ (Thread* self, u4* dFP)
+dvmJitResumeTranslation:
+    mov    rSELF, r0                             @ restore self
+    mov    rPC, r1                               @ restore Dalvik pc
+    mov    rFP, r2                               @ restore Dalvik fp
+    ldr    r10, [rSELF,#offThread_jitResumeNPC]  @ resume address
+    mov    r2, #0
+    str    r2, [rSELF,#offThread_jitResumeNPC]   @ reset resume address
+    ldr    sp, [rSELF,#offThread_jitResumeNSP]   @ cut back native stack
+    b      jitSVShadowRunStart                   @ resume as if cache hit
+                                                 @ expects resume addr in r10
+
     .global dvmJitToInterpPunt
 dvmJitToInterpPunt:
     mov    r2,#kSVSPunt                 @ r2<- interpreter entry point
@@ -21,10 +35,14 @@ dvmJitToInterpPunt:
 
     .global dvmJitToInterpSingleStep
 dvmJitToInterpSingleStep:
-    str    lr,[rSELF,#offThread_jitResumeNPC]
-    str    r1,[rSELF,#offThread_jitResumeDPC]
+    mov    rPC, r0              @ set up dalvik pc
+    EXPORT_PC()
+    str    lr, [rSELF,#offThread_jitResumeNPC]
+    str    sp, [rSELF,#offThread_jitResumeNSP]
+    str    r1, [rSELF,#offThread_jitResumeDPC]
     mov    r2,#kSVSSingleStep           @ r2<- interpreter entry point
     b      jitSVShadowRunEnd            @ doesn't return
+
 
     .global dvmJitToInterpNoChainNoProfile
 dvmJitToInterpNoChainNoProfile:
@@ -74,6 +92,21 @@ dvmJitToInterpNoChain:
     str    r3, [rSELF, #offThread_inJitCodeCache] @ Back to the interp land
     b      jitSVShadowRunEnd            @ doesn't return
 #else
+
+/*
+ * "longjmp" to a translation after single-stepping.
+ */
+    .global dvmJitResumeTranslation              @ (Thread* self, u4* dFP)
+dvmJitResumeTranslation:
+    mov    rSELF, r0                             @ restore self
+    mov    rPC, r1                               @ restore Dalvik pc
+    mov    rFP, r2                               @ restore Dalvik fp
+    ldr    r0, [rSELF,#offThread_jitResumeNPC]
+    mov    r2, #0
+    str    r2, [rSELF,#offThread_jitResumeNPC]   @ reset resume address
+    ldr    sp, [rSELF,#offThread_jitResumeNSP]   @ cut back native stack
+    bx     r0                                    @ resume translation
+
 /*
  * Return from the translation cache to the interpreter when the compiler is
  * having issues translating/executing a Dalvik instruction. We have to skip
@@ -98,26 +131,33 @@ dvmJitToInterpPunt:
 
 /*
  * Return to the interpreter to handle a single instruction.
+ * We'll use the normal single-stepping mechanism via interpBreak,
+ * but also save the native pc of the resume point in the translation
+ * and the native sp so that we can later do the equivalent of a
+ * longjmp() to resume.
  * On entry:
- *    r0 <= PC
- *    r1 <= PC of resume instruction
+ *    dPC <= Dalvik PC of instrucion to interpret
  *    lr <= resume point in translation
+ *    r1 <= Dalvik PC of next instruction
  */
     .global dvmJitToInterpSingleStep
 dvmJitToInterpSingleStep:
-    str    lr,[rSELF,#offThread_jitResumeNPC]
-    str    r1,[rSELF,#offThread_jitResumeDPC]
-    mov    r1,#kInterpEntryInstr
-    @ enum is 4 byte in aapcs-EABI
-    str    r1, [rSELF, #offThread_entryPoint]
-    mov    rPC,r0
+    mov    rPC, r0              @ set up dalvik pc
     EXPORT_PC()
-
-    ldr    rIBASE, [rSELF, #offThread_curHandlerTable]
-    mov    r2,#kJitSingleStep     @ Ask for single step and then revert
-    str    r2,[rSELF,#offThread_jitState]
-    mov    r1,#1                  @ set changeInterp to bail to debug interp
-    b      common_gotoBail
+    str    lr, [rSELF,#offThread_jitResumeNPC]
+    str    sp, [rSELF,#offThread_jitResumeNSP]
+    str    r1, [rSELF,#offThread_jitResumeDPC]
+    mov    r1, #1
+    str    r1, [rSELF,#offThread_singleStepCount]  @ just step once
+    mov    r0, rSELF
+    mov    r1, #kInterpSingleStep
+    mov    r2, #kSubModeNormal
+    mov    r3, #1                @ true
+    bl     dvmUpdateInterpBreak  @ (self, newBreak, newMode, enable)
+    ldr    rIBASE, [rSELF,#offThread_curHandlerTable]
+    FETCH_INST()
+    GET_INST_OPCODE(ip)
+    GOTO_OPCODE(ip)
 
 /*
  * Return from the translation cache and immediately request
@@ -129,7 +169,8 @@ dvmJitToInterpTraceSelectNoChain:
     bl     dvmBumpNoChain
 #endif
     mov    r0,rPC
-    bl     dvmJitGetTraceAddr       @ Is there a translation?
+    mov    r1,rSELF
+    bl     dvmJitGetTraceAddrThread @ (pc, self)
     str    r0, [rSELF, #offThread_inJitCodeCache] @ set the inJitCodeCache flag
     mov    r1, rPC                  @ arg1 of translation may need this
     mov    lr, #0                   @  in case target is HANDLER_INTERPRET
@@ -148,7 +189,8 @@ dvmJitToInterpTraceSelect:
     add    rINST,lr,#-5            @ save start of chain branch
     add    rINST, #-4              @  .. which is 9 bytes back
     mov    r0,rPC
-    bl     dvmJitGetTraceAddr      @ Is there a translation?
+    mov    r1,rSELF
+    bl     dvmJitGetTraceAddrThread @ (pc, self)
     str    r0, [rSELF, #offThread_inJitCodeCache] @ set the inJitCodeCache flag
     cmp    r0,#0
     beq    2f
@@ -163,7 +205,7 @@ dvmJitToInterpTraceSelect:
 /* No translation, so request one if profiling isn't disabled*/
 2:
     ldr    rIBASE, [rSELF, #offThread_curHandlerTable]
-    GET_JIT_PROF_TABLE(r0)
+    ldr    r0, [rSELF, #offThread_pJitProfTable]
     FETCH_INST()
     cmp    r0, #0
     movne  r2,#kJitTSelectRequestHot   @ ask for trace selection
@@ -194,7 +236,8 @@ dvmJitToInterpNormal:
     bl     dvmBumpNormal
 #endif
     mov    r0,rPC
-    bl     dvmJitGetTraceAddr      @ Is there a translation?
+    mov    r1,rSELF
+    bl     dvmJitGetTraceAddrThread @ (pc, self)
     str    r0, [rSELF, #offThread_inJitCodeCache] @ set the inJitCodeCache flag
     cmp    r0,#0
     beq    toInterpreter            @ go if not, otherwise do chain
@@ -216,7 +259,8 @@ dvmJitToInterpNoChainNoProfile:
     bl     dvmBumpNoChain
 #endif
     mov    r0,rPC
-    bl     dvmJitGetTraceAddr       @ Is there a translation?
+    mov    r1,rSELF
+    bl     dvmJitGetTraceAddrThread @ (pc, self)
     str    r0, [rSELF, #offThread_inJitCodeCache] @ set the inJitCodeCache flag
     mov    r1, rPC                  @ arg1 of translation may need this
     mov    lr, #0                   @  in case target is HANDLER_INTERPRET
@@ -238,7 +282,8 @@ dvmJitToInterpNoChain:
     bl     dvmBumpNoChain
 #endif
     mov    r0,rPC
-    bl     dvmJitGetTraceAddr       @ Is there a translation?
+    mov    r1,rSELF
+    bl     dvmJitGetTraceAddrThread @ (pc, self)
     str    r0, [rSELF, #offThread_inJitCodeCache] @ set the inJitCodeCache flag
     mov    r1, rPC                  @ arg1 of translation may need this
     mov    lr, #0                   @  in case target is HANDLER_INTERPRET
@@ -256,21 +301,27 @@ toInterpreter:
     EXPORT_PC()
     ldr    rIBASE, [rSELF, #offThread_curHandlerTable]
     FETCH_INST()
-    GET_JIT_PROF_TABLE(r0)
+    ldr    r0, [rSELF, #offThread_pJitProfTable]
+    ldr    rIBASE, [rSELF, #offThread_curHandlerTable]
     @ NOTE: intended fallthrough
 
 /*
- * Common code to update potential trace start counter, and initiate
- * a trace-build if appropriate.  On entry, rPC should point to the
- * next instruction to execute, and rINST should be already loaded with
- * the next opcode word, and r0 holds a pointer to the jit profile
- * table (pJitProfTable).
+ * Similar to common_updateProfile, but tests for null pJitProfTable
+ * r0 holds pJifProfTAble, rINST is loaded, rPC is current and
+ * rIBASE has been recently refreshed.
  */
 common_testUpdateProfile:
-    cmp     r0,#0
-    GET_INST_OPCODE(ip)
-    GOTO_OPCODE_IFEQ(ip)       @ if not profiling, fallthrough otherwise */
+    cmp     r0, #0               @ JIT switched off?
+    beq     4f                   @ return to interp if so
 
+/*
+ * Common code to update potential trace start counter, and initiate
+ * a trace-build if appropriate.
+ * On entry here:
+ *    r0    <= pJitProfTable (verified non-NULL)
+ *    rPC   <= Dalvik PC
+ *    rINST <= next instruction
+ */
 common_updateProfile:
     eor     r3,rPC,rPC,lsr #12 @ cheap, but fast hash function
     lsl     r3,r3,#(32 - JIT_PROF_SIZE_LOG_2)          @ shift out excess bits
@@ -280,18 +331,13 @@ common_updateProfile:
     strb    r1,[r0,r3,lsr #(32 - JIT_PROF_SIZE_LOG_2)] @ and store it
     GOTO_OPCODE_IFNE(ip)       @ if not threshold, fallthrough otherwise */
 
-/*
- * Here, we switch to the debug interpreter to request
- * trace selection.  First, though, check to see if there
- * is already a native translation in place (and, if so,
- * jump to it now).
- */
-
-    GET_JIT_THRESHOLD(r1)
+    /* Looks good, reset the counter */
+    ldr     r1, [rSELF, #offThread_jitThreshold]
     strb    r1,[r0,r3,lsr #(32 - JIT_PROF_SIZE_LOG_2)] @ reset counter
     EXPORT_PC()
     mov     r0,rPC
-    bl      dvmJitGetTraceAddr          @ r0<- dvmJitGetTraceAddr(rPC)
+    mov     r1,rSELF
+    bl      dvmJitGetTraceAddrThread    @ (pc, self)
     str     r0, [rSELF, #offThread_inJitCodeCache] @ set the inJitCodeCache flag
     mov     r1, rPC                     @ arg1 of translation may need this
     mov     lr, #0                      @  in case target is HANDLER_INTERPRET
@@ -322,15 +368,30 @@ common_updateProfile:
 
 /*
  * On entry:
- *  r2 is jit state, e.g. kJitTSelectRequest or kJitTSelectRequestHot
+ *  r2 is jit state.
  */
 common_selectTrace:
-
+    ldrb    r0,[rSELF,#offThread_breakFlags]
+    ands    r0,#kInterpJitBreak
+    bne     3f                         @ already doing JIT work, continue
     str     r2,[rSELF,#offThread_jitState]
-    mov     r2,#kInterpEntryInstr       @ normal entry reason
-    str     r2,[rSELF,#offThread_entryPoint]
-    mov     r1,#1                       @ set changeInterp
-    b       common_gotoBail
+    mov     r0, rSELF
+/*
+ * Call out to validate trace-building request.  If successful,
+ * rIBASE will be swapped to to send us into single-stepping trace
+ * building mode, so we need to refresh before we continue.
+ */
+    EXPORT_PC()
+    SAVE_PC_FP_TO_SELF()                 @ copy of pc/fp to Thread
+    bl      dvmJitCheckTraceRequest
+3:
+    FETCH_INST()
+    ldr    rIBASE, [rSELF, #offThread_curHandlerTable]
+4:
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    GOTO_OPCODE(ip)
+    /* no return */
+#endif
 
 #if defined(WITH_SELF_VERIFICATION)
 /*
@@ -352,23 +413,27 @@ jitSVShadowRunStart:
 /*
  * Restore PC, registers, and interpreter state to original values
  * before jumping back to the interpreter.
+ * On entry:
+ *   r0:  dPC
+ *   r2:  self verification state
  */
 jitSVShadowRunEnd:
     mov    r1,rFP                        @ pass ending fp
     mov    r3,rSELF                      @ pass self ptr for convenience
     bl     dvmSelfVerificationRestoreState @ restore pc and fp values
-    ldr    rPC,[rSELF,#offThread_pc]     @ restore PC
-    ldr    rFP,[rSELF,#offThread_fp]     @ restore FP
+    LOAD_PC_FP_FROM_SELF()               @ restore pc, fp
     ldr    r1,[r0,#offShadowSpace_svState] @ get self verification state
     cmp    r1,#0                         @ check for punt condition
     beq    1f
+    @ Set up SV single-stepping
+    mov    r0, rSELF
+    mov    r1, #kInterpJitBreak
+    mov    r2, #kSubModeJitSV
+    mov    r3, #1                @ true
+    bl     dvmUpdateInterpBreak  @ (self, newBreak, newMode, enable)
     mov    r2,#kJitSelfVerification      @ ask for self verification
     str    r2,[rSELF,#offThread_jitState]
-    mov    r2,#kInterpEntryInstr         @ normal entry reason
-    str    r2,[rSELF,#offThread_entryPoint]
-    mov    r1,#1                         @ set changeInterp
-    b      common_gotoBail
-
+    @ intentional fallthrough
 1:                                       @ exit to interpreter without check
     EXPORT_PC()
     ldr    rIBASE, [rSELF, #offThread_curHandlerTable]
@@ -377,133 +442,32 @@ jitSVShadowRunEnd:
     GOTO_OPCODE(ip)
 #endif
 
-#endif
-
-/*
- * Common code when a backward branch is taken.
- *
- * TODO: we could avoid a branch by just setting r0 and falling through
- * into the common_periodicChecks code, and having a test on r0 at the
- * end determine if we should return to the caller or update & branch to
- * the next instr.
- *
- * On entry:
- *  r9 is PC adjustment *in bytes*
- */
-common_backwardBranch:
-    mov     r0, #kInterpEntryInstr
-    bl      common_periodicChecks
-#if defined(WITH_JIT)
-    GET_JIT_PROF_TABLE(r0)
-    FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
-    cmp     r0,#0
-    bne     common_updateProfile
-    GET_INST_OPCODE(ip)
-    GOTO_OPCODE(ip)
-#else
-    FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
-    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
-    GOTO_OPCODE(ip)                     @ jump to next instruction
-#endif
-
-
-/*
- * Need to see if the thread needs to be suspended or debugger/profiler
- * activity has begun.  If so, we suspend the thread or side-exit to
- * the debug interpreter as appropriate.
- *
- * The common case is no activity on any of these, so we want to figure
- * that out quickly.  If something is up, we can then sort out what.
- *
- * We want to be fast if the VM was built without debugger or profiler
- * support, but we also need to recognize that the system is usually
- * shipped with both of these enabled.
- *
- * TODO: reduce this so we're just checking a single location.
- *
- * On entry:
- *  r0 is reentry type, e.g. kInterpEntryInstr (for debugger/profiling)
- *  r9 is trampoline PC adjustment *in bytes*
- */
-common_periodicChecks:
-/* TUNING - make this a direct load when interpBreak moved to Thread */
-    ldr     r1, [rSELF, #offThread_pInterpBreak] @ r3<- &interpBreak
-    /* speculatively thread-specific suspend count */
-    ldr     ip, [rSELF, #offThread_suspendCount]
-    ldr     r1, [r1]                                @ r1<- interpBreak
-    cmp     r1, #0                                  @ anything unusual?
-    bxeq    lr                                      @ return if not
-    /*
-     * One or more interesting events have happened.  Figure out what.
-     *
-     * r0 still holds the reentry type.
-     */
-    cmp     ip, #0                      @ want suspend?
-    beq     3f                          @ no, must be something else
-
-    stmfd   sp!, {r0, lr}               @ preserve r0 and lr
-#if defined(WITH_JIT)
-    /*
-     * Refresh the Jit's cached copy of profile table pointer.  This pointer
-     * doubles as the Jit's on/off switch.
-     */
-    ldr     r3, [rSELF, #offThread_ppJitProfTable] @ r3<-&gDvmJit.pJitProfTable
-    mov     r0, rSELF                  @ r0<- self
-    ldr     r3, [r3] @ r3 <- pJitProfTable
-    EXPORT_PC()                         @ need for precise GC
-    str     r3, [rSELF, #offThread_pJitProfTable] @ refresh Jit's on/off switch
-#else
-    mov     r0, rSELF                   @ r0<- self
-    EXPORT_PC()                         @ need for precise GC
-#endif
-    bl      dvmCheckSuspendPending      @ do full check, suspend if necessary
-    ldmfd   sp!, {r0, lr}               @ restore r0 and lr
-
-    /*
-     * Reload the interpBreak flags - they may have changed while we
-     * were suspended.
-     */
-/* TUNING - direct load when InterpBreak moved to Thread */
-    ldr     r1, [rSELF, #offThread_pInterpBreak]   @ r1<- &interpBreak
-    ldr     r1, [r1]                    @ r1<- interpBreak
-3:
-    /*
-     * TODO: this code is too fragile.  Need a general mechanism
-     * to identify what actions to take by submode.  Some profiling modes
-     * (instruction count) need to single-step, while method tracing
-     * may not.  Debugging with breakpoints can run unfettered, but
-     * source-level single-stepping requires Dalvik singlestepping.
-     * GC may require a one-shot action and then full-speed resumption.
-     */
-    ands    r1, #(kSubModeDebuggerActive | kSubModeEmulatorTrace | kSubModeInstCounting)
-    bxeq    lr                          @ nothing to do, return
-
-    @ debugger/profiler enabled, bail out; self->entryPoint was set above
-    str     r0, [rSELF, #offThread_entryPoint]  @ store r0, need for debug/prof
-    add     rPC, rPC, r9                @ update rPC
-    mov     r1, #1                      @ "want switch" = true
-    b       common_gotoBail             @ side exit
-
-
 /*
  * The equivalent of "goto bail", this calls through the "bail handler".
+ * It will end this interpreter activation, and return to the caller
+ * of dvmMterpStdRun.
  *
- * State registers will be saved to the "thread" area before bailing.
- *
- * On entry:
- *  r1 is "bool changeInterp", indicating if we want to switch to the
- *     other interpreter or just bail all the way out
+ * State registers will be saved to the "thread" area before bailing
+ * debugging purposes
  */
 common_gotoBail:
     SAVE_PC_FP_TO_SELF()                @ export state to "thread"
     mov     r0, rSELF                   @ r0<- self ptr
     b       dvmMterpStdBail             @ call(self, changeInterp)
 
-    @add     r1, r1, #1                  @ using (boolean+1)
-    @add     r0, rSELF, #offThread_jmpBuf @ r0<- &self->jmpBuf
-    @bl      _longjmp                    @ does not return
-    @bl      common_abort
-
+/*
+ * The JIT's invoke method needs to remember the callsite class and
+ * target pair.  Save them here so that they are available to
+ * dvmCheckJit following the interpretation of this invoke.
+ */
+#if defined(WITH_JIT)
+save_callsiteinfo:
+    cmp     r9, #0
+    ldrne   r9, [r9, #offObject_clazz]
+    str     r0, [rSELF, #offThread_methodToCall]
+    str     r9, [rSELF, #offThread_callsiteClass]
+    bx      lr
+#endif
 
 /*
  * Common code for jumbo method invocation.
@@ -511,12 +475,20 @@ common_gotoBail:
  * As a result, the savedPc in the stack frame will not be wholly accurate. So
  * long as that is only used for source file line number calculations, we're
  * okay.
- *
- * On entry:
- *  r0 is "Method* methodToCall", the method we're trying to call
  */
+common_invokeMethodJumboNoThis:
+#if defined(WITH_JIT)
+ /* On entry: r0 is "Method* methodToCall */
+    mov     r9, #0                      @ clear "this"
+#endif
 common_invokeMethodJumbo:
+ /* On entry: r0 is "Method* methodToCall, r9 is "this" */
 .LinvokeNewJumbo:
+#if defined(WITH_JIT)
+    ldrb    r1, [rSELF, #offThread_subMode]
+    ands    r1, #kSubModeJitTraceBuild
+    blne    save_callsiteinfo
+#endif
     @ prepare to copy args to "outs" area of current frame
     add     rPC, rPC, #4                @ adjust pc to make return consistent
     FETCH(r2, 1)                        @ r2<- BBBB (arg count)
@@ -530,10 +502,15 @@ common_invokeMethodJumbo:
  * Common code for method invocation with range.
  *
  * On entry:
- *  r0 is "Method* methodToCall", the method we're trying to call
+ *  r0 is "Method* methodToCall", r9 is "this"
  */
 common_invokeMethodRange:
 .LinvokeNewRange:
+#if defined(WITH_JIT)
+    ldrb    r1, [rSELF, #offThread_subMode]
+    ands    r1, #kSubModeJitTraceBuild
+    blne    save_callsiteinfo
+#endif
     @ prepare to copy args to "outs" area of current frame
     movs    r2, rINST, lsr #8           @ r2<- AA (arg count) -- test for zero
     SAVEAREA_FROM_FP(r10, rFP)          @ r10<- stack save area
@@ -555,10 +532,15 @@ common_invokeMethodRange:
  * Common code for method invocation without range.
  *
  * On entry:
- *  r0 is "Method* methodToCall", the method we're trying to call
+ *  r0 is "Method* methodToCall", r9 is "this"
  */
 common_invokeMethodNoRange:
 .LinvokeNewNoRange:
+#if defined(WITH_JIT)
+    ldrb    r1, [rSELF, #offThread_subMode]
+    ands    r1, #kSubModeJitTraceBuild
+    blne    save_callsiteinfo
+#endif
     @ prepare to copy args to "outs" area of current frame
     movs    r2, rINST, lsr #12          @ r2<- B (arg count) -- test for zero
     SAVEAREA_FROM_FP(r10, rFP)          @ r10<- stack save area
@@ -605,12 +587,11 @@ common_invokeMethodNoRange:
     ldr     r9, [rSELF, #offThread_interpStackEnd]    @ r9<- interpStackEnd
     sub     r3, r10, r3, lsl #2         @ r3<- bottom (newsave - outsSize)
     cmp     r3, r9                      @ bottom < interpStackEnd?
-    ldr     lr, [rSELF, #offThread_pInterpBreak]
+    ldrb    lr, [rSELF, #offThread_subMode]
     ldr     r3, [r0, #offMethod_accessFlags] @ r3<- methodToCall->accessFlags
     blo     .LstackOverflow             @ yes, this frame will overflow stack
 
     @ set up newSaveArea
-    ldr     lr, [lr]                    @ lr<- active submodes
 #ifdef EASY_GDB
     SAVEAREA_FROM_FP(ip, rFP)           @ ip<- stack save area
     str     ip, [r10, #offStackSaveArea_prevSave]
@@ -621,15 +602,12 @@ common_invokeMethodNoRange:
     mov     r9, #0
     str     r9, [r10, #offStackSaveArea_returnAddr]
 #endif
-    ands    lr, #kSubModeMethodTrace    @ method tracing?
-    beq     1f                          @ skip if not
-    stmfd   sp!, {r0-r3}                @ preserve r0-r3
-    mov     r1, rSELF
-    @ r0=methodToCall, r1=rSELF
-    bl      dvmFastMethodTraceEnter
-    ldmfd   sp!, {r0-r3}                @ restore r0-r3
-1:
     str     r0, [r10, #offStackSaveArea_method]
+
+    @ Profiling?
+    cmp     lr, #0                      @ any special modes happening?
+    bne     2f                          @ go if so
+1:
     tst     r3, #ACC_NATIVE
     bne     .LinvokeNative
 
@@ -656,8 +634,10 @@ common_invokeMethodNoRange:
     @ r0=methodToCall, r1=newFp, r3=newMethodClass, r9=newINST
     str     r0, [rSELF, #offThread_method]    @ self->method = methodToCall
     str     r3, [rSELF, #offThread_methodClassDex] @ self->methodClassDex = ...
+    mov     r2, #1
+    str     r2, [rSELF, #offThread_debugIsMethodEntry]
 #if defined(WITH_JIT)
-    GET_JIT_PROF_TABLE(r0)
+    ldr     r0, [rSELF, #offThread_pJitProfTable]
     mov     rFP, r1                         @ fp = newFp
     GET_PREFETCHED_OPCODE(ip, r9)           @ extract prefetched opcode from r9
     mov     rINST, r9                       @ publish new rINST
@@ -673,15 +653,22 @@ common_invokeMethodNoRange:
     GOTO_OPCODE(ip)                         @ jump to next instruction
 #endif
 
+2:
+    @ Profiling - record method entry.  r0: methodToCall
+    stmfd   sp!, {r0-r3}                @ preserve r0-r3
+    mov     r1, r0
+    mov     r0, rSELF
+    bl      dvmReportInvoke             @ (self, method)
+    ldmfd   sp!, {r0-r3}                @ restore r0-r3
+    b       1b
+
 .LinvokeNative:
     @ Prep for the native call
     @ r0=methodToCall, r1=newFp, r10=newSaveArea
-    ldr     lr, [rSELF, #offThread_pInterpBreak]
+    ldrb    lr, [rSELF, #offThread_subMode]
     ldr     r9, [rSELF, #offThread_jniLocal_topCookie]@r9<-thread->localRef->...
     str     r1, [rSELF, #offThread_curFrame]   @ self->curFrame = newFp
     str     r9, [r10, #offStackSaveArea_localRefCookie] @newFp->localRefCookie=top
-    ldr     lr, [lr]                    @ lr<- active submodes
-
     mov     r2, r0                      @ r2<- methodToCall
     mov     r0, r1                      @ r0<- newFp (points to args)
     add     r1, rSELF, #offThread_retval  @ r1<- &retval
@@ -698,45 +685,45 @@ dalvik_mterp:
 .Lskip:
 #endif
 
-    ands    lr, #kSubModeMethodTrace    @ method tracing?
-    bne     330f                        @ hop if so
+    cmp     lr, #0                      @ any special SubModes active?
+    bne     11f                         @ go handle them if so
     mov     lr, pc                      @ set return addr
     ldr     pc, [r2, #offMethod_nativeFunc] @ pc<- methodToCall->nativeFunc
-220:
-#if defined(WITH_JIT)
-    ldr     r3, [rSELF, #offThread_ppJitProfTable] @ Refresh Jit's on/off status
-#endif
+7:
 
     @ native return; r10=newSaveArea
     @ equivalent to dvmPopJniLocals
     ldr     r0, [r10, #offStackSaveArea_localRefCookie] @ r0<- saved top
     ldr     r1, [rSELF, #offThread_exception] @ check for exception
-#if defined(WITH_JIT)
-    ldr     r3, [r3]                    @ r3 <- gDvmJit.pProfTable
-#endif
     str     rFP, [rSELF, #offThread_curFrame]  @ self->curFrame = fp
     cmp     r1, #0                      @ null?
     str     r0, [rSELF, #offThread_jniLocal_topCookie] @ new top <- old top
-#if defined(WITH_JIT)
-    str     r3, [rSELF, #offThread_pJitProfTable] @ refresh cached on/off switch
-#endif
     bne     common_exceptionThrown      @ no, handle exception
 
     FETCH_ADVANCE_INST(3)               @ advance rPC, load rINST
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     GOTO_OPCODE(ip)                     @ jump to next instruction
 
-330:
-    @ r2=JNIMethod, r6=rSELF
-    stmfd   sp!, {r2,r6}
+11:
+    @ r0=newFp, r1=&retval, r2=methodToCall, r3=self, lr=subModes
+    stmfd   sp!, {r0-r3}                @ save all but subModes
+    mov     r0, rPC
+    mov     r1, rSELF
+    bl      dvmReportPreNativeInvoke    @ (pc, self, methodToCall)
+    ldmfd   sp, {r0-r3}                 @ refresh.  NOTE: no sp autoincrement
 
+    @ Call the native method
     mov     lr, pc                      @ set return addr
     ldr     pc, [r2, #offMethod_nativeFunc] @ pc<- methodToCall->nativeFunc
 
-    @ r0=JNIMethod, r1=rSELF
-    ldmfd   sp!, {r0-r1}
-    bl      dvmFastNativeMethodTraceExit
-    b       220b
+    @ Restore the pre-call arguments
+    ldmfd   sp!, {r0-r3}                @ r2<- methodToCall (others unneeded)
+
+    @ Finish up any post-invoke subMode requirements
+    mov     r0, rPC
+    mov     r1, rSELF
+    bl      dvmReportPostNativeInvoke   @ (pc, self, methodToCall)
+    b       7b                          @ resume
 
 .LstackOverflow:    @ r0=methodToCall
     mov     r1, r0                      @ r1<- methodToCall
@@ -784,37 +771,27 @@ dalvik_mterp:
  */
 common_returnFromMethod:
 .LreturnNew:
-    mov     r0, #kInterpEntryReturn
-    mov     r9, #0
-    bl      common_periodicChecks
-
-    ldr     lr, [rSELF, #offThread_pInterpBreak]
+    ldrb    lr, [rSELF, #offThread_subMode]
     SAVEAREA_FROM_FP(r0, rFP)
-    ldr     lr, [lr]                    @ lr<- active submodes
     ldr     r9, [r0, #offStackSaveArea_savedPc] @ r9 = saveArea->savedPc
-    ands    lr, #kSubModeMethodTrace    @ method tracing?
-    beq     333f
-    stmfd   sp!, {r0-r3}                @ preserve r0-r3
-    mov     r0, rSELF
-    @ r0=rSELF
-    bl      dvmFastJavaMethodTraceExit
-    ldmfd   sp!, {r0-r3}                @ restore r0-r3
-333:
+    cmp     lr, #0                      @ any special subMode handling needed?
+    bne     19f
+14:
     ldr     rFP, [r0, #offStackSaveArea_prevFrame] @ fp = saveArea->prevFrame
     ldr     r2, [rFP, #(offStackSaveArea_method - sizeofStackSaveArea)]
                                         @ r2<- method we're returning to
     cmp     r2, #0                      @ is this a break frame?
 #if defined(WORKAROUND_CORTEX_A9_745320)
     /* Don't use conditional loads if the HW defect exists */
-    beq     101f
+    beq     15f
     ldr     r10, [r2, #offMethod_clazz] @ r10<- method->clazz
-101:
+15:
 #else
     ldrne   r10, [r2, #offMethod_clazz] @ r10<- method->clazz
 #endif
-    mov     r1, #0                      @ "want switch" = false
     beq     common_gotoBail             @ break frame, bail out completely
 
+    ldr     rIBASE, [rSELF, #offThread_curHandlerTable]  @ refresh rIBASE
     PREFETCH_ADVANCE_INST(rINST, r9, 3) @ advance r9, update new rINST
     str     r2, [rSELF, #offThread_method]@ self->method = newSave->method
     ldr     r1, [r10, #offClassObject_pDvmDex]   @ r1<- method->clazz->pDvmDex
@@ -834,6 +811,16 @@ common_returnFromMethod:
     str     r1, [rSELF, #offThread_methodClassDex]
     GOTO_OPCODE(ip)                     @ jump to next instruction
 #endif
+
+19:
+    @ Handle special actions
+    @ On entry, r0: StackSaveArea
+    ldr     r2, [r0, #offStackSaveArea_prevFrame]  @ r2<- prevFP
+    mov     r1, rPC
+    mov     r0, rSELF
+    bl      dvmReportReturn             @ (self, pc, prevFP)
+    SAVEAREA_FROM_FP(r0, rFP)           @ restore StackSaveArea
+    b       14b                         @ continue
 
     /*
      * Return handling, calls through "glue code".
@@ -860,17 +847,24 @@ common_returnFromMethod:
 dvmMterpCommonExceptionThrown:
 common_exceptionThrown:
 .LexceptionNew:
-    mov     r0, #kInterpEntryThrow
-    mov     r9, #0
-    bl      common_periodicChecks
+
+    EXPORT_PC()
+
+    mov     r0, rSELF
+    bl      dvmCheckSuspendPending
 
     ldr     r9, [rSELF, #offThread_exception] @ r9<- self->exception
     mov     r1, rSELF                   @ r1<- self
     mov     r0, r9                      @ r0<- exception
     bl      dvmAddTrackedAlloc          @ don't let the exception be GCed
+    ldrb    r2, [rSELF, #offThread_subMode]  @ get subMode flags
     mov     r3, #0                      @ r3<- NULL
     str     r3, [rSELF, #offThread_exception] @ self->exception = NULL
 
+    @ Special subMode?
+    cmp     r2, #0                      @ any special subMode handling needed?
+    bne     7f                          @ go if so
+8:
     /* set up args and a local for "&fp" */
     /* (str sp, [sp, #-4]!  would be perfect here, but is discouraged) */
     str     rFP, [sp, #-4]!             @ *--sp = fp
@@ -880,6 +874,7 @@ common_exceptionThrown:
     ldr     r1, [rSELF, #offThread_method] @ r1<- self->method
     mov     r0, rSELF                   @ r0<- self
     ldr     r1, [r1, #offMethod_insns]  @ r1<- method->insns
+    ldrb    lr, [rSELF, #offThread_subMode]  @ lr<- subMode flags
     mov     r2, r9                      @ r2<- exception
     sub     r1, rPC, r1                 @ r1<- pc - method->insns
     mov     r1, r1, asr #1              @ r1<- offset in code units
@@ -920,11 +915,21 @@ common_exceptionThrown:
     bl      dvmReleaseTrackedAlloc      @ release the exception
 
     /* restore the exception if the handler wants it */
+    ldr    rIBASE, [rSELF, #offThread_curHandlerTable]  @ refresh rIBASE
     FETCH_INST()                        @ load rINST from rPC
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     cmp     ip, #OP_MOVE_EXCEPTION      @ is it "move-exception"?
     streq   r9, [rSELF, #offThread_exception] @ yes, restore the exception
     GOTO_OPCODE(ip)                     @ jump to next instruction
+
+    @ Manage debugger bookkeeping
+7:
+    mov     r0, rSELF                       @ arg0<- self
+    ldr     r1, [rSELF, #offThread_method]  @ arg1<- curMethod
+    mov     r2, rPC                         @ arg2<- pc
+    mov     r3, rFP                         @ arg3<- fp
+    bl      dvmReportExceptionThrow         @ (self, method, pc, fp)
+    b       8b                              @ resume with normal handling
 
 .LnotCaughtLocally: @ r9=exception
     /* fix stack overflow if necessary */
@@ -962,7 +967,6 @@ common_exceptionThrown:
     mov     r0, r9                      @ r0<- exception
     mov     r1, rSELF                   @ r1<- self
     bl      dvmReleaseTrackedAlloc      @ release the exception
-    mov     r1, #0                      @ "want switch" = false
     b       common_gotoBail             @ bail out
 
 
@@ -977,6 +981,30 @@ common_exceptionThrown:
     b       common_resumeAfterGlueCall
     .endif
 
+#if defined(WITH_JIT)
+    /*
+     * If the JIT is actively building a trace we need to make sure
+     * that the field is fully resolved before including the current
+     * instruction.
+     *
+     * On entry:
+     *     r10: &dvmDex->pResFields[field]
+     *     r0:  field pointer (must preserve)
+     */
+common_verifyField:
+    ldrb    r3, [rSELF, #offThread_subMode]  @ r3 <- submode byte
+    ands    r3, #kSubModeJitTraceBuild
+    bxeq    lr                          @ Not building trace, continue
+    ldr     r1, [r10]                   @ r1<- reload resolved StaticField ptr
+    cmp     r1, #0                      @ resolution complete?
+    bxne    lr                          @ yes, continue
+    stmfd   sp!, {r0-r2,lr}             @ save regs
+    mov     r0, rSELF
+    mov     r1, rPC
+    bl      dvmJitEndTraceSelect        @ (self,pc) end trace before this inst
+    ldmfd   sp!, {r0-r2, lr}
+    bx      lr                          @ return
+#endif
 
 /*
  * After returning from a "glued" function, pull out the updated
@@ -984,6 +1012,7 @@ common_exceptionThrown:
  */
 common_resumeAfterGlueCall:
     LOAD_PC_FP_FROM_SELF()              @ pull rPC and rFP out of thread
+    ldr     rIBASE, [rSELF, #offThread_curHandlerTable]  @ refresh
     FETCH_INST()                        @ load rINST from rPC
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     GOTO_OPCODE(ip)                     @ jump to next instruction

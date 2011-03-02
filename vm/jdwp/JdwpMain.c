@@ -393,7 +393,7 @@ s8 dvmJdwpGetNowMsec(void)
  */
 s8 dvmJdwpLastDebuggerActivity(JdwpState* state)
 {
-    if (!DEBUGGER_ACTIVE) {
+    if (!gDvm.debuggerActive) {
         LOGD("dvmJdwpLastDebuggerActivity: no active debugger\n");
         return -1;
     }

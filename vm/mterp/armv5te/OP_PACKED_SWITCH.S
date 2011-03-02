@@ -7,6 +7,9 @@
      * We don't really expect backward branches in a switch statement, but
      * they're perfectly legal, so we check for them here.
      *
+     * When the JIT is present, all targets are considered treated as
+     * a potential trace heads regardless of branch direction.
+     *
      * for: packed-switch, sparse-switch
      */
     /* op vAA, +BBBB */
@@ -17,18 +20,16 @@
     GET_VREG(r1, r3)                    @ r1<- vAA
     add     r0, rPC, r0, lsl #1         @ r0<- PC + BBBBbbbb*2
     bl      $func                       @ r0<- code-unit branch offset
-    movs    r9, r0, asl #1              @ r9<- branch byte offset, check sign
-    bmi     common_backwardBranch       @ backward branch, do periodic checks
-    beq     common_backwardBranch       @ (want to use BLE but V is unknown)
+    adds    r1, r0, r0                  @ r1<- byte offset; clear V
 #if defined(WITH_JIT)
-    GET_JIT_PROF_TABLE(r0)
-    FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
-    cmp     r0,#0
+    ldr     r0, [rSELF, #offThread_pJitProfTable]
+    ldrle   rIBASE, [rSELF, #offThread_curHandlerTable] @ refresh handler base
+    FETCH_ADVANCE_INST_RB(r1)           @ update rPC, load rINST
+    cmp     r0, #0
     bne     common_updateProfile
-    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
-    GOTO_OPCODE(ip)                     @ jump to next instruction
 #else
-    FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
+    ldrle   rIBASE, [rSELF, #offThread_curHandlerTable] @ refresh handler base
+    FETCH_ADVANCE_INST_RB(r1)           @ update rPC, load rINST
+#endif
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     GOTO_OPCODE(ip)                     @ jump to next instruction
-#endif

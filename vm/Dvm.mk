@@ -149,8 +149,7 @@ LOCAL_SRC_FILES := \
 	jdwp/JdwpMain.c \
 	jdwp/JdwpSocket.c \
 	mterp/Mterp.c.arm \
-	mterp/out/InterpC-portstd.c.arm \
-	mterp/out/InterpC-portdbg.c.arm \
+	mterp/out/InterpC-portable.c.arm \
 	native/InternalNative.c \
 	native/dalvik_bytecode_OpcodeInfo.c \
 	native/dalvik_system_DexFile.c \

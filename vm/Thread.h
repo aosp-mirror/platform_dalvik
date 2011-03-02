@@ -81,6 +81,25 @@ void dvmSlayDaemons(void);
 #define kMaxStackSize       (256*1024 + STACK_OVERFLOW_RESERVE)
 
 /*
+ * Interpreter control struction.  Packed into a long long to enable
+ * atomic updates.
+ */
+typedef union InterpBreak {
+    volatile int64_t   all;
+    struct {
+        uint8_t    breakFlags;
+        uint8_t    subMode;
+        int8_t     suspendCount;
+        int8_t     dbgSuspendCount;
+#ifndef DVM_NO_ASM_INTERP
+        void* curHandlerTable;
+#else
+        void* unused;
+#endif
+    } ctl;
+} InterpBreak;
+
+/*
  * Our per-thread data.
  *
  * These are allocated on the system heap.
@@ -92,34 +111,16 @@ typedef struct Thread {
      * element in Thread.
      */
     InterpSaveState interpSave;
+
+    /* small unique integer; useful for "thin" locks and debug messages */
+    u4          threadId;
+
     /*
      * Begin interpreter state which does not need to be preserved, but should
      * be located towards the beginning of the Thread structure for
      * efficiency.
      */
     JValue      retval;
-    /*
-     * This is the number of times the thread has been suspended.  When the
-     * count drops to zero, the thread resumes.
-     *
-     * "dbgSuspendCount" is the portion of the suspend count that the
-     * debugger is responsible for.  This has to be tracked separately so
-     * that we can recover correctly if the debugger abruptly disconnects
-     * (suspendCount -= dbgSuspendCount).  The debugger should not be able
-     * to resume GC-suspended threads, because we ignore the debugger while
-     * a GC is in progress.
-     *
-     * Both of these are guarded by gDvm.threadSuspendCountLock.
-     *
-     * (We could store both of these in the same 32-bit, using 16-bit
-     * halves, to make atomic ops possible.  In practice, you only need
-     * to read suspendCount, and we need to hold a mutex when making
-     * changes, so there's no need to merge them.  Note the non-debug
-     * component will rarely be other than 1 or 0 -- not sure it's even
-     * possible with the way mutexes are currently used.)
-     */
-    int         suspendCount;
-    int         dbgSuspendCount;
 
     u1*         cardTable;
 
@@ -131,26 +132,53 @@ typedef struct Thread {
     /* current exception, or NULL if nothing pending */
     Object*     exception;
 
-    /* small unique integer; useful for "thin" locks and debug messages */
-    u4          threadId;
-
     bool        debugIsMethodEntry;
     /* interpreter stack size; our stacks are fixed-length */
     int         interpStackSize;
     bool        stackOverflowed;
 
-    InterpEntry entryPoint;      // What to do when we start the interpreter
+    /* thread handle, as reported by pthread_self() */
+    pthread_t   handle;
+
+    /*
+     * interpBreak contains info about the interpreter mode, as well as
+     * a count of the number of times the thread has been suspended.  When
+     * the count drops to zero, the thread resumes.
+     *
+     * "dbgSuspendCount" is the portion of the suspend count that the
+     * debugger is responsible for.  This has to be tracked separately so
+     * that we can recover correctly if the debugger abruptly disconnects
+     * (suspendCount -= dbgSuspendCount).  The debugger should not be able
+     * to resume GC-suspended threads, because we ignore the debugger while
+     * a GC is in progress.
+     *
+     * Both of these are guarded by gDvm.threadSuspendCountLock.
+     *
+     * Note the non-debug component will rarely be other than 1 or 0 -- (not
+     * sure it's even possible with the way mutexes are currently used.)
+     */
+    InterpBreak interpBreak;
+
 
     /* Assembly interpreter handler tables */
 #ifndef DVM_NO_ASM_INTERP
-    void*       curHandlerTable;    // Either main or alt table
     void*       mainHandlerTable;   // Table of actual instruction handler
     void*       altHandlerTable;    // Table of breakout handlers
 #else
     void*       unused0;            // Consume space to keep offsets
     void*       unused1;            //   the same between builds with
-    void*       unused2;            //   and without assembly interpreters
 #endif
+
+    /*
+     * singleStepCount is a countdown timer used with the breakFlag
+     * kInterpSingleStep.  If kInterpSingleStep is set in breakFlags,
+     * singleStepCount will decremented each instruction execution.
+     * Once it reaches zero, the kInterpSingleStep flag in breakFlags
+     * will be cleared.  This can be used to temporarily prevent
+     * execution from re-entering JIT'd code or force inter-instruction
+     * checks by delaying the reset of curHandlerTable to mainHandlerTable.
+     */
+    int         singleStepCount;
 
 #ifdef WITH_JIT
     struct JitToInterpEntries jitToInterpEntries;
@@ -162,13 +190,15 @@ typedef struct Thread {
      */
     void*             inJitCodeCache;
     unsigned char*    pJitProfTable;
-    unsigned char**   ppJitProfTable;   // Used to refresh pJitProfTable
     int               jitThreshold;
-    const void*       jitResumeNPC;
-    const u2*         jitResumeDPC;
+    const void*       jitResumeNPC;     // Translation return point
+    const u4*         jitResumeNSP;     // Native SP at return point
+    const u2*         jitResumeDPC;     // Dalvik inst following single-step
     JitState    jitState;
     int         icRechainCount;
     const void* pProfileCountdown;
+    const ClassObject* callsiteClass;
+    const Method*     methodToCall;
 #endif
 
     /* JNI local reference tracking */
@@ -185,6 +215,7 @@ typedef struct Thread {
     const u2*   currRunHead;    // Start of run we're building
     int         currRunLen;     // Length of run in 16-bit words
     const u2*   lastPC;         // Stage the PC for the threaded interpreter
+    const Method*  traceMethod; // Starting method of current trace
     intptr_t    threshFilter[JIT_TRACE_THRESH_FILTER_SIZE];
     JitTraceRun trace[MAX_JIT_RUN_LEN];
 #endif
@@ -194,9 +225,6 @@ typedef struct Thread {
      * (i.e. don't mess with this from other threads).
      */
     volatile ThreadStatus status;
-
-    /* thread handle, as reported by pthread_self() */
-    pthread_t   handle;
 
     /* thread ID, only useful under Linux */
     pid_t       systemTid;
@@ -253,9 +281,6 @@ typedef struct Thread {
 
     /* JDWP invoke-during-breakpoint support */
     DebugInvokeReq  invokeReq;
-
-    /* Interpreter switching */
-    int         nextMode;
 
     /* base time for per-thread CPU timing (used by method profiling) */
     bool        cpuClockBaseSet;
@@ -358,7 +383,7 @@ bool dvmCheckSuspendPending(Thread* self);
  * count is nonzero.
  */
 INLINE bool dvmCheckSuspendQuick(Thread* self) {
-    return (self->suspendCount != 0);
+    return (self->interpBreak.ctl.breakFlags & kInterpSuspendBreak);
 }
 
 /*

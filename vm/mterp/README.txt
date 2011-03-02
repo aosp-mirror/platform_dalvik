@@ -13,9 +13,7 @@ development of platform-specific code one opcode at a time.
 
 The original all-in-one-function C version still exists as the "portable"
 interpreter, and is generated using the same sources and tools that
-generate the platform-specific versions.  One form of the portable
-interpreter includes support for profiling and debugging features, and
-is included even if we have a platform-optimized implementation.
+generate the platform-specific versions.
 
 Every configuration has a "config-*" file that controls how the sources
 are generated.  The sources are written into the "out" directory, where
@@ -250,3 +248,21 @@ of Python installed.
 The ultimate goal is to have the build system generate the necessary
 output files without requiring this separate step, but we're not yet
 ready to require Python in the build.
+
+==== Interpreter Control ====
+
+To handle thread suspension, debugging, profiling, JIT compilation, etc.,
+there needs to be a way to break out of interpreter execution.  To support
+this, there is an "interpBreak" record in each thread's private storage.
+If interpBreak.ctl.breakFlags is non-zero, the interpreter main loop must
+be interrupted and control sent to dvmCheckBefore(), which will figure out
+what actions are needed and carry them out.
+
+In the portable interpreter, this requirement is implemented as a simple
+polling test in the main loop.  breakFlags is checked before the interpretation
+of each instruction.  Though simple, this is costly.  For mterp interpreters,
+we use a mechanism that swaps out the handler base register with a pointer
+to an alternate, or break-out, set of handlers.  Note that interpretation
+interruption may be slightly delayed.  Each thread has its own copy of the
+handler base (register rIBASE), which it will refresh on taken backards
+branches, exception throws and returns.

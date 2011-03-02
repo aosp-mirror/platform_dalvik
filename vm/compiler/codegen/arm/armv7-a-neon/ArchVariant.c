@@ -78,6 +78,9 @@ bool dvmCompilerArchVariantInit(void)
     /* FIXME - comment out the following to enable method-based JIT */
     gDvmJit.disableOpt |= (1 << kMethodJit);
 
+    // Make sure all threads have current values
+    dvmJitUpdateState();
+
     return true;
 }
 

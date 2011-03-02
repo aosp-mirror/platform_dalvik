@@ -21,6 +21,20 @@
 #define _DALVIK_INTERP_INTERP
 
 /*
+ * Stash the dalvik PC in the frame.  Called  during interpretation.
+ */
+INLINE void dvmExportPC(const u2* pc, const u4* fp)
+{
+    SAVEAREA_FROM_FP(fp)->xtra.currentPc = pc;
+}
+
+/*
+ * Extract the Dalvik opcode
+ */
+#define GET_OPCODE(_inst) (((_inst & 0xff) == OP_DISPATCH_FF) ? \
+                           (0x100 + ((_inst >> 8) & 0xff)) : (_inst & 0xff))
+
+/*
  * Interpreter entry point.  Call here after setting up the interpreted
  * stack (most code will want to get here via dvmCallMethod().)
  */
@@ -61,9 +75,31 @@ u1 dvmGetOriginalOpcode(const u2* addr);
 void dvmFlushBreakpoints(ClassObject* clazz);
 
 /*
+ * Debugger support
+ */
+void dvmUpdateDebugger(const Method* method, const u2* pc, const u4* fp,
+                       bool methodEntry, Thread* self);
+void dvmCheckBefore(const u2 *dPC, const u4 *fp, Thread* self);
+void dvmReportExceptionThrow(Thread* self, const Method* curMethod,
+                             const u2* pc, void* fp);
+void dvmReportPreNativeInvoke(const u2* pc, Thread* self,
+                              const Method* methodToCall);
+void dvmReportPostNativeInvoke(const u2* pc, Thread* self,
+                               const Method* methodToCall);
+void dvmReportInvoke(Thread* self, const Method* methodToCall);
+void dvmReportReturn(Thread* self, const u2* pc, const u4* prevFP);
+
+/*
  * Update interpBreak
  */
-void dvmUpdateInterpBreak(int newMode, bool enable);
+void dvmUpdateInterpBreak(Thread* thread, int newBreak, int newMode,
+                          bool enable);
+void dvmAddToSuspendCounts(Thread* thread, int delta, int dbgDelta);
+
+/*
+ * Update interpBreak for all threads
+ */
+void dvmUpdateAllInterpBreak(int newBreak, int newMode, bool enable);
 
 #ifndef DVM_NO_ASM_INTERP
 extern void* dvmAsmInstructionStart[];

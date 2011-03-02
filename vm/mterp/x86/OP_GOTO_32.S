@@ -4,15 +4,11 @@
      * Unconditional branch, 32-bit offset.
      *
      * The branch distance is a signed code-unit offset.
-     *
-     * Unlike most opcodes, this one is allowed to branch to itself, so
-     * our "backward branch" test must be "<=0" instead of "<0".
      */
     /* goto/32 AAAAAAAA */
-    movl    2(rPC),rINST           # rINST<- AAAAAAAA
-    cmpl    $$0,rINST              # test for <= 0
-    jle     common_backwardBranch
-    movl    rINST,%eax
+    movl    rSELF,%ecx
+    movl    2(rPC),%eax            # eax<- AAAAAAAA
+    movl    offThread_curHandlerTable(%ecx),rIBASE
     FETCH_INST_INDEXED %eax
     ADVANCE_PC_INDEXED %eax
     GOTO_NEXT

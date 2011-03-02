@@ -1,11 +1,3 @@
-/* this is a standard (no debug support) interpreter */
-#define INTERP_TYPE INTERP_STD
-#define CHECK_DEBUG_AND_PROF() ((void)0)
-# define CHECK_TRACKED_REFS() ((void)0)
-#define CHECK_JIT_BOOL() (false)
-#define CHECK_JIT_VOID()
-#define END_JIT_TSELECT() ((void)0)
-
 /*
  * In the C mterp stubs, "goto" is a function call followed immediately
  * by a return.
@@ -39,6 +31,11 @@
 
 /* ugh */
 #define STUB_HACK(x) x
+#if defined(WITH_JIT)
+#define JIT_STUB_HACK(x) x
+#else
+#define JIT_STUB_HACK(x)
+#endif
 
 
 /*
@@ -58,14 +55,23 @@
 
 /*
  * Like the "portable" FINISH, but don't reload "inst", and return to caller
- * when done.
+ * when done.  Further, debugger/profiler checks are handled
+ * before handler execution in mterp, so we don't do them here either.
  */
+#if defined(WITH_JIT)
 #define FINISH(_offset) {                                                   \
         ADJUST_PC(_offset);                                                 \
-        CHECK_DEBUG_AND_PROF();                                             \
-        CHECK_TRACKED_REFS();                                               \
+        if (self->interpBreak.ctl.subMode & kSubModeJitTraceBuild) {        \
+            dvmCheckJit(pc, self);                                          \
+        }                                                                   \
         return;                                                             \
     }
+#else
+#define FINISH(_offset) {                                                   \
+        ADJUST_PC(_offset);                                                 \
+        return;                                                             \
+    }
+#endif
 
 
 /*
@@ -100,30 +106,20 @@
     } while(false)
 
 /*
- * As a special case, "goto bail" turns into a longjmp.  Use "bail_switch"
- * if we need to switch to the other interpreter upon our return.
+ * As a special case, "goto bail" turns into a longjmp.
  */
 #define GOTO_bail()                                                         \
     dvmMterpStdBail(self, false);
-#define GOTO_bail_switch()                                                  \
-    dvmMterpStdBail(self, true);
 
 /*
  * Periodically check for thread suspension.
  *
  * While we're at it, see if a debugger has attached or the profiler has
- * started.  If so, switch to a different "goto" table.
+ * started.
  */
-#define PERIODIC_CHECKS(_entryPoint, _pcadj) {                              \
+#define PERIODIC_CHECKS(_pcadj) {                              \
         if (dvmCheckSuspendQuick(self)) {                                   \
             EXPORT_PC();  /* need for precise GC */                         \
             dvmCheckSuspendPending(self);                                   \
-        }                                                                   \
-        if (NEED_INTERP_SWITCH(INTERP_TYPE)) {                              \
-            ADJUST_PC(_pcadj);                                              \
-            self->entryPoint = _entryPoint;                                 \
-            LOGVV("threadid=%d: switch to STD ep=%d adj=%d\n",              \
-                self->threadId, (_entryPoint), (_pcadj));                   \
-            GOTO_bail_switch();                                             \
         }                                                                   \
     }

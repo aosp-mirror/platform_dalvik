@@ -9,7 +9,7 @@
     @ methodToCall is guaranteed to be non-native
 $chaintgt:
     ldr     r9, [rSELF, #offThread_interpStackEnd]    @ r9<- interpStackEnd
-    ldr     r8, [rSELF, #offThread_suspendCount]      @ r8<- suspendCount
+    ldrb    r8, [rSELF, #offThread_breakFlags]        @ r8<- breakFlags
     add     r3, r1, #1  @ Thumb addr is odd
     SAVEAREA_FROM_FP(r1, rFP)           @ r1<- stack save area
     sub     r1, r1, r7, lsl #2          @ r1<- newFp (old savearea - regsSize)
@@ -27,7 +27,7 @@ $chaintgt:
     str     rFP, [r1, #(offStackSaveArea_prevFrame - sizeofStackSaveArea)]
     str     r3, [r1, #(offStackSaveArea_returnAddr - sizeofStackSaveArea)]
     str     r0, [r1, #(offStackSaveArea_method - sizeofStackSaveArea)]
-    cmp     r8, #0                      @ suspendCount != 0
+    cmp     r8, #0                      @ breakFlags != 0
     bxne    r12                         @ bail to the interpreter
 
     ldr     r3, [r9, #offClassObject_pDvmDex] @ r3<- method->clazz->pDvmDex

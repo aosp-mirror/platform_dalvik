@@ -392,12 +392,13 @@ void dvmDbgConnected(void)
  */
 void dvmDbgActive(void)
 {
-    if (DEBUGGER_ACTIVE)
+    if (gDvm.debuggerActive)
         return;
 
     LOGI("Debugger is active\n");
     dvmInitBreakpoints();
-    dvmUpdateInterpBreak(kSubModeDebuggerActive, true);
+    gDvm.debuggerActive = true;
+    dvmUpdateAllInterpBreak(kInterpDebugBreak, kSubModeDebuggerActive, true);
 }
 
 /*
@@ -412,7 +413,8 @@ void dvmDbgDisconnected(void)
 {
     assert(gDvm.debuggerConnected);
 
-    dvmUpdateInterpBreak(kSubModeDebuggerActive, false);
+    gDvm.debuggerActive = false;
+    dvmUpdateAllInterpBreak(kInterpDebugBreak, kSubModeDebuggerActive, false);
 
     dvmHashTableLock(gDvm.dbgRegistry);
     gDvm.debuggerConnected = false;
@@ -434,7 +436,7 @@ void dvmDbgDisconnected(void)
  */
 bool dvmDbgIsDebuggerConnected(void)
 {
-    return DEBUGGER_ACTIVE;
+    return gDvm.debuggerActive;
 }
 
 /*
@@ -1781,7 +1783,7 @@ u4 dvmDbgGetThreadSuspendCount(ObjectId threadId)
     if (thread == NULL)
         goto bail;
 
-    result = thread->suspendCount;
+    result = thread->interpBreak.ctl.suspendCount;
 
 bail:
     dvmUnlockThreadList();
@@ -2543,7 +2545,7 @@ void dvmDbgPostException(void* throwFp, int throwRelPc, void* catchFp,
  */
 void dvmDbgPostThreadStart(Thread* thread)
 {
-    if (DEBUGGER_ACTIVE) {
+    if (gDvm.debuggerActive) {
         dvmJdwpPostThreadChange(gDvm.jdwpState,
             objectToObjectId(thread->threadObj), true);
     }
@@ -2556,7 +2558,7 @@ void dvmDbgPostThreadStart(Thread* thread)
  */
 void dvmDbgPostThreadDeath(Thread* thread)
 {
-    if (DEBUGGER_ACTIVE) {
+    if (gDvm.debuggerActive) {
         dvmJdwpPostThreadChange(gDvm.jdwpState,
             objectToObjectId(thread->threadObj), false);
     }
@@ -2704,11 +2706,11 @@ JdwpError dvmDbgInvokeMethod(ObjectId threadId, ObjectId objectId,
      * by rejecting the method invocation request.  Without this, we will
      * be stuck waiting on a suspended thread.
      */
-    if (targetThread->suspendCount > 1) {
+    if (targetThread->interpBreak.ctl.suspendCount > 1) {
         LOGW("threadid=%d: suspend count on threadid=%d is %d, too deep "
              "for method exec\n",
             dvmThreadSelf()->threadId, targetThread->threadId,
-            targetThread->suspendCount);
+            targetThread->interpBreak.ctl.suspendCount);
         err = ERR_THREAD_SUSPENDED;     /* probably not expected here */
         dvmUnlockThreadList();
         goto bail;
