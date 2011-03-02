@@ -1145,6 +1145,165 @@ static void blockSignals()
 }
 
 /*
+ * Helper for dvmInitRequiredClassesAndMembers(), which looks up
+ * classes and stores them to the indicated pointer, returning a
+ * failure code (false == failure).
+ */
+static bool initRef(ClassObject** pClass, const char* name)
+{
+    ClassObject* result;
+
+    if (*pClass != NULL) {
+        /*
+         * There are a couple cases where it's legit to call this
+         * function with an already-initialized reference, so just
+         * silently tolerate this instead of complaining loudly.
+         */
+        return true;
+    }
+
+    if (name[0] == '[') {
+        result = dvmFindArrayClass(name, NULL);
+    } else {
+        result = dvmFindSystemClassNoInit(name);
+    }
+
+    if (result == NULL) {
+        LOGE("Could not find essential class %s\n", name);
+        return false;
+    }
+
+    *pClass = result;
+    return true;
+}
+
+/* (documented in header) */
+int dvmInitRequiredClassesAndMembers(void) {
+    /*
+     * Note: Under normal VM use, this is called by dvmStartup()
+     * below. For dex optimization, this is called as well, but in
+     * that case, the call is made from DexPrepare.c.
+     */
+
+    bool ok = true;
+
+    /* The corest of the core classes */
+
+    ok &= initRef(&gDvm.classJavaLangClass, "Ljava/lang/Class;");
+    ok &= initRef(&gDvm.classJavaLangObject, "Ljava/lang/Object;");
+
+    ok &= initRef(&gDvm.classJavaLangString, "Ljava/lang/String;");
+    ok &= initRef(&gDvm.classJavaLangThread, "Ljava/lang/Thread;");
+    ok &= initRef(&gDvm.classJavaLangThreadGroup, "Ljava/lang/ThreadGroup;");
+    ok &= initRef(&gDvm.exThrowable, "Ljava/lang/Throwable;");
+    ok &= initRef(&gDvm.classJavaLangVMThread, "Ljava/lang/VMThread;");
+
+    /* Exception classes and related support classes */
+
+    ok &= initRef(&gDvm.exArithmeticException,
+            "Ljava/lang/ArithmeticException;");
+    ok &= initRef(&gDvm.exArrayIndexOutOfBoundsException,
+            "Ljava/lang/ArrayIndexOutOfBoundsException;");
+    ok &= initRef(&gDvm.exArrayStoreException,
+            "Ljava/lang/ArrayStoreException;");
+    ok &= initRef(&gDvm.exClassCastException,
+            "Ljava/lang/ClassCastException;");
+    ok &= initRef(&gDvm.exClassNotFoundException,
+            "Ljava/lang/ClassNotFoundException;");
+    ok &= initRef(&gDvm.exClassFormatError, "Ljava/lang/ClassFormatError;");
+    ok &= initRef(&gDvm.exError, "Ljava/lang/Error;");
+    ok &= initRef(&gDvm.exExceptionInInitializerError,
+            "Ljava/lang/ExceptionInInitializerError;");
+    ok &= initRef(&gDvm.exFileNotFoundException,
+            "Ljava/io/FileNotFoundException;");
+    ok &= initRef(&gDvm.exIOException, "Ljava/io/IOException;");
+    ok &= initRef(&gDvm.exIllegalAccessException,
+            "Ljava/lang/IllegalAccessException;");
+    ok &= initRef(&gDvm.exIllegalArgumentException,
+            "Ljava/lang/IllegalArgumentException;");
+    ok &= initRef(&gDvm.exIllegalMonitorStateException,
+            "Ljava/lang/IllegalMonitorStateException;");
+    ok &= initRef(&gDvm.exIllegalStateException,
+            "Ljava/lang/IllegalStateException;");
+    ok &= initRef(&gDvm.exIllegalThreadStateException,
+            "Ljava/lang/IllegalThreadStateException;");
+    ok &= initRef(&gDvm.exInstantiationException,
+            "Ljava/lang/InstantiationException;");
+    ok &= initRef(&gDvm.exInternalError,
+            "Ljava/lang/InternalError;");
+    ok &= initRef(&gDvm.exInterruptedException,
+            "Ljava/lang/InterruptedException;");
+    ok &= initRef(&gDvm.exNegativeArraySizeException,
+            "Ljava/lang/NegativeArraySizeException;");
+    ok &= initRef(&gDvm.exNoClassDefFoundError,
+            "Ljava/lang/NoClassDefFoundError;");
+    ok &= initRef(&gDvm.exNoSuchFieldException,
+            "Ljava/lang/NoSuchFieldException;");
+    ok &= initRef(&gDvm.exNullPointerException,
+            "Ljava/lang/NullPointerException;");
+    ok &= initRef(&gDvm.exRuntimeException, "Ljava/lang/RuntimeException;");
+    ok &= initRef(&gDvm.exStackOverflowError,
+            "Ljava/lang/StackOverflowError;");
+    ok &= initRef(&gDvm.exStaleDexCacheError,
+            "Ldalvik/system/StaleDexCacheError;");
+    ok &= initRef(&gDvm.exStringIndexOutOfBoundsException,
+            "Ljava/lang/StringIndexOutOfBoundsException;");
+    ok &= initRef(&gDvm.exThrowable, "Ljava/lang/Throwable;");
+    ok &= initRef(&gDvm.exUnsatisfiedLinkError,
+            "Ljava/lang/UnsatisfiedLinkError;");
+    ok &= initRef(&gDvm.exUnsupportedOperationException,
+            "Ljava/lang/UnsupportedOperationException;");
+    ok &= initRef(&gDvm.exVirtualMachineError,
+            "Ljava/lang/VirtualMachineError;");
+
+    ok &= initRef(&gDvm.classJavaLangStackTraceElement,
+            "Ljava/lang/StackTraceElement;");
+    ok &= initRef(&gDvm.classJavaLangStackTraceElementArray,
+            "[Ljava/lang/StackTraceElement;");
+
+    if (!ok) {
+        return false;
+    }
+
+    /*
+     * Find the StackTraceElement constructor. Note that, unlike other
+     * saved method lookups, we're using a Method* instead of a vtable
+     * offset. This is because constructors don't have vtable offsets.
+     * (Also, since we're creating the object in question, it's
+     * impossible for anyone to sub-class it.)
+     */
+    Method* meth;
+    meth = dvmFindDirectMethodByDescriptor(gDvm.classJavaLangStackTraceElement,
+        "<init>",
+        "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;I)V");
+    if (meth == NULL) {
+        LOGE("Unable to find constructor for StackTraceElement\n");
+        return false;
+    }
+    gDvm.methJavaLangStackTraceElement_init = meth;
+
+    /* grab an offset for the field Throwable.stackState */
+    gDvm.offJavaLangThrowable_stackState =
+        dvmFindFieldOffset(gDvm.exThrowable,
+            "stackState", "Ljava/lang/Object;");
+    if (gDvm.offJavaLangThrowable_stackState < 0) {
+        LOGE("Unable to find Throwable.stackState\n");
+        return false;
+    }
+
+    /* and one for the field Throwable.cause, just 'cause */
+    gDvm.offJavaLangThrowable_cause =
+        dvmFindFieldOffset(gDvm.exThrowable,
+            "cause", "Ljava/lang/Throwable;");
+    if (gDvm.offJavaLangThrowable_cause < 0) {
+        LOGE("Unable to find Throwable.cause\n");
+        return false;
+    }
+
+    return true;
+}
+
+/*
  * VM initialization.  Pass in any options provided on the command line.
  * Do not pass in the class name or the options for the class.
  *
@@ -1227,11 +1386,19 @@ int dvmStartup(int argc, const char* const argv[], bool ignoreUnrecognized,
         goto fail;
     if (!dvmClassStartup())
         goto fail;
+
+    /*
+     * At this point, the system is guaranteed to be sufficiently
+     * initialized that we can look up classes and class members. This
+     * call populates the gDvm instance with all the class and member
+     * references that the VM wants to use directly.
+     */
+    if (!dvmInitRequiredClassesAndMembers())
+        goto fail;
+
     if (!dvmBaseClassStartup())
         goto fail;
     if (!dvmThreadObjStartup())
-        goto fail;
-    if (!dvmExceptionStartup())
         goto fail;
     if (!dvmStringInternStartup())
         goto fail;
@@ -1245,31 +1412,6 @@ int dvmStartup(int argc, const char* const argv[], bool ignoreUnrecognized,
         goto fail;
     if (!dvmProfilingStartup())
         goto fail;
-
-    /* make sure we got these [can this go away?] */
-    assert(gDvm.classJavaLangClass != NULL);
-    assert(gDvm.classJavaLangObject != NULL);
-    //assert(gDvm.classJavaLangString != NULL);
-    assert(gDvm.classJavaLangThread != NULL);
-    assert(gDvm.classJavaLangVMThread != NULL);
-    assert(gDvm.classJavaLangThreadGroup != NULL);
-
-    /*
-     * Make sure these exist.  If they don't, we can return a failure out
-     * of main and nip the whole thing in the bud.
-     */
-    static const char* earlyClasses[] = {
-        "Ljava/lang/InternalError;",
-        "Ljava/lang/StackOverflowError;",
-        "Ljava/lang/UnsatisfiedLinkError;",
-        "Ljava/lang/NoClassDefFoundError;",
-        NULL
-    };
-    const char** pClassName;
-    for (pClassName = earlyClasses; *pClassName != NULL; pClassName++) {
-        if (dvmFindSystemClassNoInit(*pClassName) == NULL)
-            goto fail;
-    }
 
     /*
      * Create a table of methods for which we will substitute an "inline"
@@ -1679,7 +1821,6 @@ void dvmShutdown(void)
     dvmProfilingShutdown();
     dvmJniShutdown();
     dvmStringInternShutdown();
-    dvmExceptionShutdown();
     dvmThreadShutdown();
     dvmClassShutdown();
     dvmRegisterMapShutdown();

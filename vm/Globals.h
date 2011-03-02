@@ -283,8 +283,10 @@ struct DvmGlobals {
     ClassObject* exIllegalStateException;
     ClassObject* exIllegalThreadStateException;
     ClassObject* exInstantiationException;
+    ClassObject* exInternalError;
     ClassObject* exInterruptedException;
     ClassObject* exNegativeArraySizeException;
+    ClassObject* exNoClassDefFoundError;
     ClassObject* exNoSuchFieldException;
     ClassObject* exNullPointerException;
     ClassObject* exRuntimeException;
@@ -292,6 +294,7 @@ struct DvmGlobals {
     ClassObject* exStaleDexCacheError;    /* in dalvik.system */
     ClassObject* exStringIndexOutOfBoundsException;
     ClassObject* exThrowable;
+    ClassObject* exUnsatisfiedLinkError;
     ClassObject* exUnsupportedOperationException;
     ClassObject* exVirtualMachineError;
 
@@ -369,7 +372,6 @@ struct DvmGlobals {
 
     /* constructor method pointers; no vtable involved, so use Method* */
     Method*     methJavaLangStackTraceElement_init;
-    Method*     methJavaLangExceptionInInitializerError_init;
     Method*     methJavaLangRefPhantomReference_init;
     Method*     methJavaLangReflectConstructor_init;
     Method*     methJavaLangReflectField_init;
