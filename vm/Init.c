@@ -1178,7 +1178,7 @@ static bool initRef(ClassObject** pClass, const char* name)
 }
 
 /* (documented in header) */
-int dvmInitRequiredClassesAndMembers(void) {
+int dvmFindRequiredClassesAndMembers(void) {
     /*
      * Note: Under normal VM use, this is called by dvmStartup()
      * below. For dex optimization, this is called as well, but in
@@ -1393,7 +1393,7 @@ int dvmStartup(int argc, const char* const argv[], bool ignoreUnrecognized,
      * call populates the gDvm instance with all the class and member
      * references that the VM wants to use directly.
      */
-    if (!dvmInitRequiredClassesAndMembers())
+    if (!dvmFindRequiredClassesAndMembers())
         goto fail;
 
     if (!dvmBaseClassStartup())
