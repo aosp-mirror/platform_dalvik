@@ -16,10 +16,14 @@
 # Configuration for ARMv5TE architecture targets.
 #
 
+handler-style computed-goto
 handler-size 64
 
 # source for the instruction table stub
 asm-stub armv5te/stub.S
+
+# source for alternate entry stub
+asm-alt-stub armv5te/alt_stub.S
 
 # file header and basic definitions
 import c/header.c
@@ -41,11 +45,6 @@ import armv5te/entry.S
 op-start armv5te
     #op OP_FILL_ARRAY_DATA c
 op-end
-
-# alternate opcode entry points (used to redirect control)
-op-alt-start armv5te
-    alt OP_DISPATCH_FF armv5te
-op-alt-end
 
 # "helper" code for C; include if you use any of the C stubs (this generates
 # object code, so it's normally excluded)

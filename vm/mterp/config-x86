@@ -16,10 +16,13 @@
 # Configuration for "desktop" targets.
 #
 
-handler-size 0
+handler-style jump-table
 
 # source for the instruction table stub
 asm-stub x86/stub.S
+
+# source for alternate entry stub
+asm-alt-stub x86/alt_stub.S
 
 # C file header and basic definitions
 import c/header.c
@@ -42,11 +45,6 @@ op-start x86
     op OP_RETURN_VOID_BARRIER c
     op OP_INVOKE_OBJECT_INIT c
 op-end
-
-# alternate opcode entry points (used to redirect control)
-op-alt-start x86
-    alt OP_DISPATCH_FF x86
-op-alt-end
 
 # arch-specific entry point to interpreter
 import x86/entry.S

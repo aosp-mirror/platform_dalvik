@@ -13,6 +13,7 @@
 # limitations under the License.
 
 # Specifies the size of the assembly region in bytes
+handler-style computed-goto
 handler-size 64
 
 # source for the instruction table stub

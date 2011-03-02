@@ -20,10 +20,14 @@
 # operations except for "remainder" and conversions to/from 64-bit ints.
 #
 
+handler-style computed-goto
 handler-size 64
 
 # source for the instruction table stub
 asm-stub armv5te/stub.S
+
+# source for alternate entry stub
+asm-alt-stub armv5te/alt_stub.S
 
 # file header and basic definitions
 import c/header.c
@@ -91,11 +95,6 @@ op-start armv5te
     #op OP_INT_TO_CHAR armv6
     #op OP_INT_TO_SHORT armv6
 op-end
-
-# alternate opcode entry points (used to redirect control)
-op-alt-start armv5te
-    alt OP_DISPATCH_FF armv5te
-op-alt-end
 
 # "helper" code for C; include if you use any of the C stubs (this generates
 # object code, so it's normally excluded)
