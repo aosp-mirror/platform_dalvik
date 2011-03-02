@@ -113,6 +113,7 @@ void dvmHeapBitmapWalk(const HeapBitmap *bitmap,
  * address.
  */
 void dvmHeapBitmapScanWalk(HeapBitmap *bitmap,
+                           uintptr_t base, uintptr_t max,
                            BitmapScanCallback *callback, void *arg);
 
 /*

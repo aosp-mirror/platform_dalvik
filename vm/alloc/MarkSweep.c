@@ -22,6 +22,7 @@
 #include "alloc/HeapSource.h"
 #include "alloc/MarkSweep.h"
 #include "alloc/Visit.h"
+#include "alloc/VisitInlines.h"
 #include <limits.h>     // for ULONG_MAX
 #include <sys/mman.h>   // for madvise(), mmap()
 #include <errno.h>
@@ -158,6 +159,170 @@ static void rootMarkObjectVisitor(void *addr, RootType type, u4 thread,
     }
 }
 
+/*
+ * Visits all objects that start on the given card.
+ */
+static void visitCard(Visitor *visitor, u1 *card, void *arg)
+{
+    assert(visitor != NULL);
+    assert(card != NULL);
+    assert(dvmIsValidCard(card));
+    u1 *addr= (u1*)dvmAddrFromCard(card);
+    u1 *limit = addr + GC_CARD_SIZE;
+    for (; addr < limit; addr += HB_OBJECT_ALIGNMENT) {
+        Object *obj = (Object *)addr;
+        GcMarkContext *ctx = &gDvm.gcHeap->markContext;
+        if (isMarked(obj, ctx)) {
+            (*visitor)(obj, arg);
+        }
+    }
+}
+
+/*
+ * Visits objects on dirty cards marked the mod union table.
+ */
+static void visitModUnionTable(Visitor *visitor, u1 *base, u1 *limit, void *arg)
+{
+    assert(visitor != NULL);
+    assert(base != NULL);
+    assert(limit != NULL);
+    assert(base <= limit);
+    u1 *heapBase = (u1*)dvmHeapSourceGetBase();
+    /* compute the start address in the bit table */
+    assert(base >= heapBase);
+    u4 *bits = (u4*)gDvm.gcHeap->modUnionTableBase;
+    /* compute the end address in the bit table */
+    size_t length = (limit - base) / GC_CARD_SIZE;
+    assert(length % sizeof(*bits) == 0);
+    length /= 4;
+    size_t i;
+    for (i = 0; i < length; ++i) {
+        if (bits[i] == 0) {
+            continue;
+        }
+        u4 word = bits[i];
+        bits[i] = 0;
+        size_t j = 0;
+        for (j = 0; j < sizeof(u4)*CHAR_BIT; ++j) {
+            if (word & (1 << j)) {
+                /* compute the base of the card */
+                size_t offset = (i*sizeof(u4)*CHAR_BIT + j) * GC_CARD_SIZE;
+                u1* addr = heapBase + offset;
+                u1* card = dvmCardFromAddr(addr);
+                /* visit all objects on the card */
+                visitCard(visitor, card, arg);
+            }
+        }
+    }
+}
+
+/*
+ * Visits objects on dirty cards marked in the card table.
+ */
+static void visitCardTable(Visitor *visitor, u1 *base, u1 *limit, void *arg)
+{
+    assert(visitor != NULL);
+    assert(base != NULL);
+    assert(limit != NULL);
+    u1 *start = dvmCardFromAddr(base);
+    u1 *end = dvmCardFromAddr(limit);
+    while (start < end) {
+        u1 *dirty = (u1 *)memchr(start, GC_CARD_DIRTY, end - start);
+        if (dirty == NULL) {
+            break;
+        }
+        assert(dirty >= start);
+        assert(dirty <= end);
+        assert(dvmIsValidCard(dirty));
+        visitCard(visitor, dirty, arg);
+        start = dirty + 1;
+    }
+}
+
+typedef struct {
+    Object *threatenBoundary;
+    Object *currObject;
+} ScanImmuneObjectContext;
+
+/*
+ * Marks the referent of an immune object it is threatened.
+ */
+static void scanImmuneObjectReferent(void *addr, void *arg)
+{
+    assert(addr != NULL);
+    assert(arg != NULL);
+    Object *obj = *(Object **)addr;
+    ScanImmuneObjectContext *ctx = (ScanImmuneObjectContext *)arg;
+    if (obj == NULL) {
+        return;
+    }
+    if (obj >= ctx->threatenBoundary) {
+        /* TODO: set a bit in the mod union table instead. */
+        dvmMarkCard(ctx->currObject);
+        markObjectNonNull(obj, &gDvm.gcHeap->markContext, false);
+   }
+}
+
+/*
+ * This function is poorly named, as is its callee.
+ */
+static void scanImmuneObject(void *addr, void *arg)
+{
+    ScanImmuneObjectContext *ctx = (ScanImmuneObjectContext *)arg;
+    Object *obj = (Object *)addr;
+    ctx->currObject = obj;
+    visitObject(scanImmuneObjectReferent, obj, arg);
+}
+
+/*
+ * Verifies that immune objects have their referents marked.
+ */
+static void verifyImmuneObjectsVisitor(void *addr, void *arg)
+{
+    assert(addr != NULL);
+    assert(arg != NULL);
+    Object *obj = *(Object **)addr;
+    GcMarkContext *ctx = (GcMarkContext *)arg;
+    if (obj == NULL || obj < (Object *)ctx->immuneLimit) {
+        return;
+    }
+    assert(dvmIsValidObject(obj));
+    if (!isMarked(obj, ctx)) {
+        LOGE("Immune reference %p points to a white threatened object %p",
+             addr, obj);
+        dvmAbort();
+    }
+}
+
+/*
+ * Visitor that searches for immune objects and verifies that all
+ * threatened referents are marked.
+ */
+static void verifyImmuneObjectsCallback(void *addr, void *arg)
+{
+    assert(addr != NULL);
+    assert(arg != NULL);
+    Object *obj = (Object *)addr;
+    GcMarkContext *ctx = (GcMarkContext *)arg;
+    if (obj->clazz == NULL) {
+        LOGI("uninitialized object @ %p (has null clazz pointer)", obj);
+        return;
+    }
+    if (obj < (Object *)ctx->immuneLimit) {
+        visitObject(verifyImmuneObjectsVisitor, obj, ctx);
+    }
+}
+
+/*
+ * Verify that immune objects refer to marked objects.
+ */
+static void verifyImmuneObjects()
+{
+    const HeapBitmap *bitmap = dvmHeapSourceGetLiveBits();
+    GcMarkContext *ctx = &gDvm.gcHeap->markContext;
+    dvmHeapBitmapWalk(bitmap, verifyImmuneObjectsCallback, ctx);
+}
+
 /* Mark the set of root objects.
  *
  * Things we need to scan:
@@ -183,6 +348,10 @@ static void rootMarkObjectVisitor(void *addr, RootType type, u4 thread,
  * Don't need:
  * - Native stack (for in-progress stuff in the VM)
  *   - The TrackedAlloc stuff watches all native VM references.
+ */
+
+/*
+ * Blackens the root set.
  */
 void dvmHeapMarkRootSet()
 {
@@ -470,6 +639,7 @@ static void scanObject(const Object *obj, GcMarkContext *ctx)
     assert(ctx != NULL);
     assert(isMarked(obj, ctx));
     assert(obj->clazz != NULL);
+    assert(isMarked(obj, ctx));
     if (obj->clazz == gDvm.classJavaLangClass) {
         scanClassObject(obj, ctx);
     } else if (IS_CLASS_FLAG_SET(obj->clazz, CLASS_ISARRAY)) {
@@ -497,101 +667,31 @@ static void processMarkStack(GcMarkContext *ctx)
     }
 }
 
-static size_t objectSize(const Object *obj)
-{
-    assert(dvmIsValidObject(obj));
-    assert(dvmIsValidObject((Object *)obj->clazz));
-    if (IS_CLASS_FLAG_SET(obj->clazz, CLASS_ISARRAY)) {
-        return dvmArrayObjectSize((ArrayObject *)obj);
-    } else if (obj->clazz == gDvm.classJavaLangClass) {
-        return dvmClassObjectSize((ClassObject *)obj);
-    } else {
-        return obj->clazz->objectSize;
-    }
-}
-
-/*
- * Scans forward to the header of the next marked object between start
- * and limit.  Returns NULL if no marked objects are in that region.
- */
-static Object *nextGrayObject(const u1 *base, const u1 *limit,
-                              const HeapBitmap *markBits)
-{
-    const u1 *ptr;
-
-    assert(base < limit);
-    assert(limit - base <= GC_CARD_SIZE);
-    for (ptr = base; ptr < limit; ptr += HB_OBJECT_ALIGNMENT) {
-        if (dvmHeapBitmapIsObjectBitSet(markBits, ptr))
-            return (Object *)ptr;
-    }
-    return NULL;
-}
-
-/*
- * Scans range of dirty cards between start and end.  A range of dirty
- * cards is composed consecutively dirty cards or dirty cards spanned
- * by a gray object.  Returns the address of a clean card if the scan
- * reached a clean card or NULL if the scan reached the end.
- */
-const u1 *scanDirtyCards(const u1 *start, const u1 *end,
-                         GcMarkContext *ctx)
-{
-    const HeapBitmap *markBits = ctx->bitmap;
-    const u1 *card = start, *prevAddr = NULL;
-    while (card < end) {
-        if (*card != GC_CARD_DIRTY) {
-            return card;
-        }
-        const u1 *ptr = prevAddr ? prevAddr : (u1*)dvmAddrFromCard(card);
-        const u1 *limit = ptr + GC_CARD_SIZE;
-        while (ptr < limit) {
-            Object *obj = nextGrayObject(ptr, limit, markBits);
-            if (obj == NULL) {
-                break;
-            }
-            scanObject(obj, ctx);
-            ptr = (u1*)obj + ALIGN_UP(objectSize(obj), HB_OBJECT_ALIGNMENT);
-        }
-        if (ptr < limit) {
-            /* Ended within the current card, advance to the next card. */
-            ++card;
-            prevAddr = NULL;
-        } else {
-            /* Ended past the current card, skip ahead. */
-            card = dvmCardFromAddr(ptr);
-            prevAddr = ptr;
-        }
-    }
-    return NULL;
-}
-
 /*
  * Blackens gray objects found on dirty cards.
  */
 static void scanGrayObjects(GcMarkContext *ctx)
 {
-    GcHeap *h = gDvm.gcHeap;
-    const u1 *base, *limit, *ptr, *dirty;
-    size_t footprint;
+    HeapBitmap *bitmap = ctx->bitmap;
+    u1 *base = (u1 *)bitmap->base;
+    u1 *limit = (u1 *)ALIGN_UP(bitmap->max, GC_CARD_SIZE);
+    visitCardTable((Visitor *)scanObject, base, limit, ctx);
+}
 
-    footprint = dvmHeapSourceGetValue(HS_FOOTPRINT, NULL, 0);
-    base = &h->cardTableBase[0];
-    limit = dvmCardFromAddr((u1 *)dvmHeapSourceGetBase() + footprint);
-    assert(limit <= &h->cardTableBase[h->cardTableLength]);
-
-    ptr = base;
-    for (;;) {
-        dirty = (const u1 *)memchr(ptr, GC_CARD_DIRTY, limit - ptr);
-        if (dirty == NULL) {
-            break;
-        }
-        assert((dirty > ptr) && (dirty < limit));
-        ptr = scanDirtyCards(dirty, limit, ctx);
-        if (ptr == NULL) {
-            break;
-        }
-        assert((ptr > dirty) && (ptr < limit));
+/*
+ * Iterate through the immune objects and mark their referents.  Uses
+ * the mod union table to save scanning time.
+ */
+void dvmHeapScanImmuneObjects(const GcMarkContext *ctx)
+{
+    ScanImmuneObjectContext ctx2;
+    memset(&ctx2, 0, sizeof(ctx2));
+    ctx2.threatenBoundary = (Object*)ctx->immuneLimit;
+    visitModUnionTable(scanImmuneObject,
+                       (u1*)ctx->bitmap->base, (u1*)ctx->immuneLimit,
+                       (void *)&ctx2);
+    if (gDvm.verifyCardTable) {
+        verifyImmuneObjects();
     }
 }
 
@@ -611,22 +711,32 @@ static void scanBitmapCallback(void *addr, void *finger, void *arg)
  * reachable objects.  When this returns, the entire set of
  * live objects will be marked and the mark stack will be empty.
  */
-void dvmHeapScanMarkedObjects(void)
+void dvmHeapScanMarkedObjects(bool isPartial)
 {
     GcMarkContext *ctx = &gDvm.gcHeap->markContext;
 
+    assert(ctx != NULL);
     assert(ctx->finger == NULL);
 
-    /* The bitmaps currently have bits set for the root set.
-     * Walk across the bitmaps and scan each object.
+    u1 *start;
+    if (isPartial && dvmHeapSourceGetNumHeaps() > 1) {
+        dvmHeapScanImmuneObjects(ctx);
+        start = (u1 *)ctx->immuneLimit;
+    } else {
+        start = (u1*)ctx->bitmap->base;
+    }
+    /*
+     * All objects reachable from the root set have a bit set in the
+     * mark bitmap.  Walk the mark bitmap and blacken these objects.
      */
-    dvmHeapBitmapScanWalk(ctx->bitmap, scanBitmapCallback, ctx);
+    dvmHeapBitmapScanWalk(ctx->bitmap,
+                          (uintptr_t)start, ctx->bitmap->max,
+                          scanBitmapCallback,
+                          ctx);
 
     ctx->finger = (void *)ULONG_MAX;
 
-    /* We've walked the mark bitmaps.  Scan anything that's
-     * left on the mark stack.
-     */
+    /* Process gray objects until the mark stack it is empty. */
     processMarkStack(ctx);
 }
 
@@ -832,7 +942,7 @@ static void scheduleFinalizations(void)
         totalPendCount += newPendCount;
         finRefs = finRefs->next;
     }
-    LOGD("scheduleFinalizations(): %zd finalizers triggered.", totalPendCount);
+    LOGV("scheduleFinalizations(): %zd finalizers triggered.", totalPendCount);
     if (totalPendCount == 0) {
         /* No objects required finalization.
          * Free the empty temporary table.
@@ -1003,7 +1113,7 @@ void dvmHeapSweepUnmarkedObjects(bool isPartial, bool isConcurrent,
     size_t i;
 
     numHeaps = dvmHeapSourceGetNumHeaps();
-    dvmHeapSourceGetRegions(base, max, numHeaps);
+    dvmHeapSourceGetRegions(base, max, NULL, numHeaps);
     if (isPartial) {
         assert((uintptr_t)gDvm.gcHeap->markContext.immuneLimit == base[0]);
         numSweepHeaps = 1;

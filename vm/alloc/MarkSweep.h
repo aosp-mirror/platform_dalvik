@@ -49,7 +49,7 @@ typedef struct {
 bool dvmHeapBeginMarkStep(bool isPartial);
 void dvmHeapMarkRootSet(void);
 void dvmHeapReMarkRootSet(void);
-void dvmHeapScanMarkedObjects(void);
+void dvmHeapScanMarkedObjects(bool isPartial);
 void dvmHeapReScanMarkedObjects(void);
 void dvmHeapProcessReferences(Object **softReferences, bool clearSoftRefs,
                               Object **weakReferences,
