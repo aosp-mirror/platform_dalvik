@@ -3438,27 +3438,6 @@ static void verifyPrep(void)
     /* only need to do this if the table was updated */
     checkMergeTab();
 #endif
-
-    /*
-     * We rely on these for verification of const-class, const-string,
-     * and throw instructions.  Make sure we have them loaded.
-     */
-    if (gDvm.classJavaLangClass == NULL)
-        gDvm.classJavaLangClass =
-            dvmFindSystemClassNoInit("Ljava/lang/Class;");
-    if (gDvm.classJavaLangString == NULL)
-        gDvm.classJavaLangString =
-            dvmFindSystemClassNoInit("Ljava/lang/String;");
-    if (gDvm.exThrowable == NULL) {
-        gDvm.exThrowable =
-            dvmFindSystemClassNoInit("Ljava/lang/Throwable;");
-        gDvm.offJavaLangThrowable_cause =
-            dvmFindFieldOffset(gDvm.exThrowable,
-                "cause", "Ljava/lang/Throwable;");
-    }
-    if (gDvm.classJavaLangObject == NULL)
-        gDvm.classJavaLangObject =
-            dvmFindSystemClassNoInit("Ljava/lang/Object;");
 }
 
 /*

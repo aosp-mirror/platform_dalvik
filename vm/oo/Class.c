@@ -340,6 +340,10 @@ bool dvmClassStartup(void)
     gDvm.initiatingLoaderList = (InitiatingLoaderList*)
         calloc(ZYGOTE_CLASS_CUTOFF, sizeof(InitiatingLoaderList));
 
+    /*
+     * Initialize the class Class. This has to be done specially, particularly
+     * because it is an instance of itself.
+     */
     gDvm.classJavaLangClass = (ClassObject*) dvmMalloc(
         classObjectSize(CLASS_SFIELD_SLOTS), ALLOC_DEFAULT);
     DVM_OBJECT_INIT(&gDvm.classJavaLangClass->obj, gDvm.classJavaLangClass);

@@ -327,22 +327,13 @@ bool dvmThreadStartup(void)
 bool dvmThreadObjStartup(void)
 {
     /*
-     * Cache the locations of these classes.  It's likely that we're the
-     * first to reference them, so they're being loaded now.
+     * TODO: Pull this function's guts into dvmInitRequiredClassesAndMembers()
+     * in Init.c
      */
-    gDvm.classJavaLangThread =
-        dvmFindSystemClassNoInit("Ljava/lang/Thread;");
-    gDvm.classJavaLangVMThread =
-        dvmFindSystemClassNoInit("Ljava/lang/VMThread;");
-    gDvm.classJavaLangThreadGroup =
-        dvmFindSystemClassNoInit("Ljava/lang/ThreadGroup;");
-    if (gDvm.classJavaLangThread == NULL ||
-        gDvm.classJavaLangThreadGroup == NULL ||
-        gDvm.classJavaLangThreadGroup == NULL)
-    {
-        LOGE("Could not find one or more essential thread classes\n");
-        return false;
-    }
+
+    assert(gDvm.classJavaLangThread != NULL);
+    assert(gDvm.classJavaLangThreadGroup != NULL);
+    assert(gDvm.classJavaLangVMThread != NULL);
 
     /*
      * Cache field offsets.  This makes things a little faster, at the

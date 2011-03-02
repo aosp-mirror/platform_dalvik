@@ -833,12 +833,23 @@ static bool loadAllClasses(DvmDex* pDvmDex)
     dvmSetBootPathExtraDex(pDvmDex);
 
     /*
-     * We have some circularity issues with Class and Object that are most
-     * easily avoided by ensuring that Object is never the first thing we
-     * try to find.  Take care of that here.  (We only need to do this when
-     * loading classes from the DEX file that contains Object, and only
-     * when Object comes first in the list, but it costs very little to
-     * do it in all cases.)
+     * At this point, it is safe -- and necessary! -- to look up the
+     * VM's required classes and members, even when what we are in the
+     * process of processing is the core library that defines these
+     * classes itself.
+     */
+    if (!dvmInitRequiredClassesAndMembers()) {
+        return false;
+    }
+
+    /*
+     * We have some circularity issues with Class and Object that are
+     * most easily avoided by ensuring that Object is never the first
+     * thing we try to find-and-initialize. The call to
+     * dvmFindSystemClass() here takes care of that situation. (We
+     * only need to do this when loading classes from the DEX file
+     * that contains Object, and only when Object comes first in the
+     * list, but it costs very little to do it in all cases.)
      */
     if (dvmFindSystemClass("Ljava/lang/Class;") == NULL) {
         LOGE("ERROR: java.lang.Class does not exist!\n");

@@ -20,10 +20,6 @@
 #ifndef _DALVIK_EXCEPTION
 #define _DALVIK_EXCEPTION
 
-/* initialization */
-bool dvmExceptionStartup(void);
-void dvmExceptionShutdown(void);
-
 /*
  * Throw an exception in the current thread, by class descriptor.
  */
