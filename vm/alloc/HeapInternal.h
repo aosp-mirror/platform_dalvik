@@ -99,6 +99,10 @@ struct GcHeap {
     u1*             cardTableBase;
     size_t          cardTableLength;
 
+    /* GC's modified union table. */
+    u1*             modUnionTableBase;
+    size_t          modUnionTableLength;
+
     /* Is the GC running?  Used to avoid recursive calls to GC.
      */
     bool            gcRunning;

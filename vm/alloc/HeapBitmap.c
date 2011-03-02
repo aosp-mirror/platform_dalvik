@@ -135,12 +135,16 @@ void dvmHeapBitmapWalk(const HeapBitmap *bitmap, BitmapCallback *callback,
  * visited.
  */
 void dvmHeapBitmapScanWalk(HeapBitmap *bitmap,
+                           uintptr_t base, uintptr_t max,
                            BitmapScanCallback *callback, void *arg)
 {
     assert(bitmap != NULL);
     assert(bitmap->bits != NULL);
     assert(callback != NULL);
-    uintptr_t end = HB_OFFSET_TO_INDEX(bitmap->max - bitmap->base);
+    assert(base <= max);
+    assert(base >= bitmap->base);
+    assert(max <= bitmap->max);
+    uintptr_t end = HB_OFFSET_TO_INDEX(max - base);
     uintptr_t i;
     for (i = 0; i <= end; ++i) {
         unsigned long word = bitmap->bits[i];

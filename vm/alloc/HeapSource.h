@@ -68,7 +68,8 @@ void dvmHeapSourceShutdown(GcHeap **gcHeap);
  * heaps.  The base and max values are suitable for passing directly
  * to the bitmap sweeping routine.
  */
-void dvmHeapSourceGetRegions(uintptr_t *base, uintptr_t *max, size_t numHeaps);
+void dvmHeapSourceGetRegions(uintptr_t *base, uintptr_t *max, uintptr_t *limit,
+                             size_t numHeaps);
 
 /*
  * Get the bitmap representing all live objects.
