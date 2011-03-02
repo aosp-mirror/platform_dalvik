@@ -7540,11 +7540,11 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     FETCH_INST
     GOTO_NEXT
 /* ------------------------------ */
-.L_OP_INVOKE_OBJECT_INIT: /* 0xf0 */
+.L_OP_INVOKE_OBJECT_INIT_RANGE: /* 0xf0 */
     /* (stub) */
     SAVE_PC_FP_TO_SELF %ecx          # leaves rSELF in %ecx
     movl %ecx,OUT_ARG0(%esp)         # self is first arg to function
-    call      dvmMterp_OP_INVOKE_OBJECT_INIT     # do the real work
+    call      dvmMterp_OP_INVOKE_OBJECT_INIT_RANGE     # do the real work
     movl      rSELF,%ecx
     LOAD_PC_FP_FROM_SELF             # retrieve updated values
     movl      offThread_curHandlerTable(%ecx),rIBASE  # set up rIBASE
@@ -15527,7 +15527,7 @@ dvmAsmAltInstructionStartCode:
     jmp    *dvmAsmInstructionStart+(239*4)
 
 /* ------------------------------ */
-.L_ALT_OP_INVOKE_OBJECT_INIT: /* 0xf0 */
+.L_ALT_OP_INVOKE_OBJECT_INIT_RANGE: /* 0xf0 */
 /* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
@@ -20397,7 +20397,7 @@ dvmAsmInstructionStart:
     .long .L_OP_THROW_VERIFICATION_ERROR /* 0xed */
     .long .L_OP_EXECUTE_INLINE /* 0xee */
     .long .L_OP_EXECUTE_INLINE_RANGE /* 0xef */
-    .long .L_OP_INVOKE_OBJECT_INIT /* 0xf0 */
+    .long .L_OP_INVOKE_OBJECT_INIT_RANGE /* 0xf0 */
     .long .L_OP_RETURN_VOID_BARRIER /* 0xf1 */
     .long .L_OP_IGET_QUICK /* 0xf2 */
     .long .L_OP_IGET_WIDE_QUICK /* 0xf3 */
@@ -20913,7 +20913,7 @@ dvmAsmAltInstructionStart:
     .long .L_ALT_OP_THROW_VERIFICATION_ERROR /* 0xed */
     .long .L_ALT_OP_EXECUTE_INLINE /* 0xee */
     .long .L_ALT_OP_EXECUTE_INLINE_RANGE /* 0xef */
-    .long .L_ALT_OP_INVOKE_OBJECT_INIT /* 0xf0 */
+    .long .L_ALT_OP_INVOKE_OBJECT_INIT_RANGE /* 0xf0 */
     .long .L_ALT_OP_RETURN_VOID_BARRIER /* 0xf1 */
     .long .L_ALT_OP_IGET_QUICK /* 0xf2 */
     .long .L_ALT_OP_IGET_WIDE_QUICK /* 0xf3 */

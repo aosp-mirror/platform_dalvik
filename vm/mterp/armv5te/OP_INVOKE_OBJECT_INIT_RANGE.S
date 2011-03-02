@@ -5,8 +5,7 @@
      * Object's nullary constructor doesn't do anything, so we just
      * skip it (we know a debugger isn't active).
      */
-    FETCH(r0, 2)                        @ r0<- GFED
-    and     r1, r0, #15                 @ r1<- D
+    FETCH(r1, 2)                        @ r1<- CCCC
     GET_VREG(r0, r1)                    @ r0<- "this" ptr
     cmp     r0, #0                      @ check for NULL
     beq     common_errNullObject        @ export PC and throw NPE

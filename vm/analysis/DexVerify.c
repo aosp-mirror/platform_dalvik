@@ -1197,7 +1197,7 @@ static bool verifyInstructions(VerifierData* vdata)
         case OP_THROW_VERIFICATION_ERROR_JUMBO:
         case OP_EXECUTE_INLINE:
         case OP_EXECUTE_INLINE_RANGE:
-        case OP_INVOKE_OBJECT_INIT:
+        case OP_INVOKE_OBJECT_INIT_RANGE:
         case OP_RETURN_VOID_BARRIER:
         case OP_IGET_QUICK:
         case OP_IGET_WIDE_QUICK:

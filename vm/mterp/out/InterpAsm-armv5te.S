@@ -7728,15 +7728,14 @@ d2i_doconv:
 
 /* ------------------------------ */
     .balign 64
-.L_OP_INVOKE_OBJECT_INIT: /* 0xf0 */
-/* File: armv5te/OP_INVOKE_OBJECT_INIT.S */
+.L_OP_INVOKE_OBJECT_INIT_RANGE: /* 0xf0 */
+/* File: armv5te/OP_INVOKE_OBJECT_INIT_RANGE.S */
     /*
      * Invoke Object.<init> on an object.  In practice we know that
      * Object's nullary constructor doesn't do anything, so we just
      * skip it (we know a debugger isn't active).
      */
-    FETCH(r0, 2)                        @ r0<- GFED
-    and     r1, r0, #15                 @ r1<- D
+    FETCH(r1, 2)                        @ r1<- CCCC
     GET_VREG(r0, r1)                    @ r0<- "this" ptr
     cmp     r0, #0                      @ check for NULL
     beq     common_errNullObject        @ export PC and throw NPE
@@ -16972,7 +16971,7 @@ dvmAsmAltInstructionStart:
 
 /* ------------------------------ */
     .balign 64
-.L_ALT_OP_INVOKE_OBJECT_INIT: /* 0xf0 */
+.L_ALT_OP_INVOKE_OBJECT_INIT_RANGE: /* 0xf0 */
 /* File: armv5te/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
