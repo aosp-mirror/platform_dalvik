@@ -436,6 +436,12 @@ void dvmThrowStringIndexOutOfBoundsExceptionWithRegion(jsize stringLength,
         jsize requestStart, jsize requestLength);
 
 /**
+ * Throw a TypeNotPresentException in the current thread, with the
+ * human-readable form of the given descriptor as the detail message.
+ */
+void dvmThrowTypeNotPresentException(const char* descriptor);
+
+/**
  * Throw an UnsatisfiedLinkError in the current thread, with
  * the given detail message.
  */
@@ -446,6 +452,12 @@ void dvmThrowUnsatisfiedLinkError(const char* msg);
  * the given detail message.
  */
 void dvmThrowUnsupportedOperationException(const char* msg);
+
+/**
+ * Throw a VerifyError in the current thread, with the
+ * human-readable form of the given descriptor as the detail message.
+ */
+void dvmThrowVerifyError(const char* descriptor);
 
 /**
  * Throw a VirtualMachineError in the current thread, with
