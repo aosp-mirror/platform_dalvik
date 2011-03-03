@@ -488,8 +488,7 @@ static bool processAnnotationValue(const ClassObject* clazz,
                 DexFile* pDexFile = clazz->pDvmDex->pDexFile;
                 const char* desc = dexStringByTypeIdx(pDexFile, idx);
                 dvmClearException(self);
-                dvmThrowExceptionWithClassMessage(
-                        "Ljava/lang/TypeNotPresentException;", desc);
+                dvmThrowTypeNotPresentException(desc);
                 return false;
             } else {
                 dvmAddTrackedAlloc(elemObj, self);      // balance the Release

@@ -1300,7 +1300,7 @@ void dvmLogExceptionStackTrace(void)
 }
 
 void dvmThrowAbstractMethodError(const char* msg) {
-    dvmThrowException("Ljava/lang/AbstractMethodError;", msg);
+    dvmThrowExceptionByClass(gDvm.exAbstractMethodError, msg);
 }
 
 void dvmThrowArithmeticException(const char* msg) {
@@ -1343,7 +1343,7 @@ void dvmThrowClassCastException(ClassObject* actual, ClassObject* desired)
 }
 
 void dvmThrowClassCircularityError(const char* descriptor) {
-    dvmThrowExceptionWithClassMessage("Ljava/lang/ClassCircularityError;",
+    dvmThrowExceptionByClassWithClassMessage(gDvm.exClassCircularityError,
             descriptor);
 }
 
@@ -1435,8 +1435,8 @@ void dvmThrowIncompatibleClassChangeError(const char* msg) {
 void dvmThrowIncompatibleClassChangeErrorWithClassMessage(
         const char* descriptor)
 {
-    dvmThrowExceptionWithClassMessage(
-            "Ljava/lang/IncompatibleClassChangeError;", descriptor);
+    dvmThrowExceptionByClassWithClassMessage(
+            gDvm.exIncompatibleClassChangeError, descriptor);
 }
 
 void dvmThrowInstantiationException(ClassObject* clazz,
@@ -1466,7 +1466,7 @@ void dvmThrowNegativeArraySizeException(s4 size) {
 }
 
 void dvmThrowNoClassDefFoundError(const char* descriptor) {
-    dvmThrowExceptionWithClassMessage("Ljava/lang/NoClassDefFoundError;",
+    dvmThrowExceptionByClassWithClassMessage(gDvm.exNoClassDefFoundError,
             descriptor);
 }
 
@@ -1487,7 +1487,7 @@ void dvmThrowNullPointerException(const char* msg) {
 }
 
 void dvmThrowOutOfMemoryError(const char* msg) {
-    dvmThrowException("Ljava/lang/OutOfMemoryError;", msg);
+    dvmThrowExceptionByClass(gDvm.exOutOfMemoryError, msg);
 }
 
 void dvmThrowRuntimeException(const char* msg) {
@@ -1511,12 +1511,21 @@ void dvmThrowStringIndexOutOfBoundsExceptionWithRegion(jsize stringLength,
             stringLength, requestStart, requestLength);
 }
 
+void dvmThrowTypeNotPresentException(const char* descriptor) {
+    dvmThrowExceptionByClassWithClassMessage(gDvm.exTypeNotPresentException,
+            descriptor);
+}
+
 void dvmThrowUnsatisfiedLinkError(const char* msg) {
     dvmThrowExceptionByClass(gDvm.exUnsatisfiedLinkError, msg);
 }
 
 void dvmThrowUnsupportedOperationException(const char* msg) {
     dvmThrowExceptionByClass(gDvm.exUnsupportedOperationException, msg);
+}
+
+void dvmThrowVerifyError(const char* descriptor) {
+    dvmThrowExceptionByClassWithClassMessage(gDvm.exVerifyError, descriptor);
 }
 
 void dvmThrowVirtualMachineError(const char* msg) {

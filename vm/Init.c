@@ -1200,6 +1200,8 @@ int dvmFindRequiredClassesAndMembers(void) {
 
     /* Exception classes and related support classes */
 
+    ok &= initRef(&gDvm.exAbstractMethodError,
+            "Ljava/lang/AbstractMethodError;");
     ok &= initRef(&gDvm.exArithmeticException,
             "Ljava/lang/ArithmeticException;");
     ok &= initRef(&gDvm.exArrayIndexOutOfBoundsException,
@@ -1208,6 +1210,8 @@ int dvmFindRequiredClassesAndMembers(void) {
             "Ljava/lang/ArrayStoreException;");
     ok &= initRef(&gDvm.exClassCastException,
             "Ljava/lang/ClassCastException;");
+    ok &= initRef(&gDvm.exClassCircularityError,
+            "Ljava/lang/ClassCircularityError;");
     ok &= initRef(&gDvm.exClassNotFoundException,
             "Ljava/lang/ClassNotFoundException;");
     ok &= initRef(&gDvm.exClassFormatError, "Ljava/lang/ClassFormatError;");
@@ -1251,6 +1255,8 @@ int dvmFindRequiredClassesAndMembers(void) {
             "Ljava/lang/NoSuchMethodError;");
     ok &= initRef(&gDvm.exNullPointerException,
             "Ljava/lang/NullPointerException;");
+    ok &= initRef(&gDvm.exOutOfMemoryError,
+            "Ljava/lang/OutOfMemoryError;");
     ok &= initRef(&gDvm.exRuntimeException, "Ljava/lang/RuntimeException;");
     ok &= initRef(&gDvm.exStackOverflowError,
             "Ljava/lang/StackOverflowError;");
@@ -1259,10 +1265,14 @@ int dvmFindRequiredClassesAndMembers(void) {
     ok &= initRef(&gDvm.exStringIndexOutOfBoundsException,
             "Ljava/lang/StringIndexOutOfBoundsException;");
     ok &= initRef(&gDvm.exThrowable, "Ljava/lang/Throwable;");
+    ok &= initRef(&gDvm.exTypeNotPresentException,
+            "Ljava/lang/TypeNotPresentException;");
     ok &= initRef(&gDvm.exUnsatisfiedLinkError,
             "Ljava/lang/UnsatisfiedLinkError;");
     ok &= initRef(&gDvm.exUnsupportedOperationException,
             "Ljava/lang/UnsupportedOperationException;");
+    ok &= initRef(&gDvm.exVerifyError,
+            "Ljava/lang/VerifyError;");
     ok &= initRef(&gDvm.exVirtualMachineError,
             "Ljava/lang/VirtualMachineError;");
 

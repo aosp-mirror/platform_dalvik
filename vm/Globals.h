@@ -267,10 +267,12 @@ struct DvmGlobals {
      * packages, just to keep the use sites a bit less verbose. All are
      * in java.lang, except where noted.
      */
+    ClassObject* exAbstractMethodError;
     ClassObject* exArithmeticException;
     ClassObject* exArrayIndexOutOfBoundsException;
     ClassObject* exArrayStoreException;
     ClassObject* exClassCastException;
+    ClassObject* exClassCircularityError;
     ClassObject* exClassFormatError;
     ClassObject* exClassNotFoundException;
     ClassObject* exError;
@@ -294,13 +296,16 @@ struct DvmGlobals {
     ClassObject* exNoSuchFieldException;
     ClassObject* exNoSuchMethodError;
     ClassObject* exNullPointerException;
+    ClassObject* exOutOfMemoryError;
     ClassObject* exRuntimeException;
     ClassObject* exStackOverflowError;
     ClassObject* exStaleDexCacheError;    /* in dalvik.system */
     ClassObject* exStringIndexOutOfBoundsException;
     ClassObject* exThrowable;
+    ClassObject* exTypeNotPresentException;
     ClassObject* exUnsatisfiedLinkError;
     ClassObject* exUnsupportedOperationException;
+    ClassObject* exVerifyError;
     ClassObject* exVirtualMachineError;
 
     /* synthetic classes for arrays of primitives */

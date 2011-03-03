@@ -4235,8 +4235,7 @@ bool dvmInitClass(ClassObject* clazz)
         clazz->status = CLASS_VERIFYING;
         if (!dvmVerifyClass(clazz)) {
 verify_failed:
-            dvmThrowExceptionWithClassMessage("Ljava/lang/VerifyError;",
-                clazz->descriptor);
+            dvmThrowVerifyError(clazz->descriptor);
             dvmSetFieldObject((Object*) clazz,
                 offsetof(ClassObject, verifyErrorClass),
                 (Object*) dvmGetException(self)->clazz);
