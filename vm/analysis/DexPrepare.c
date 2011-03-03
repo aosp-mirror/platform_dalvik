@@ -836,9 +836,12 @@ static bool loadAllClasses(DvmDex* pDvmDex)
      * At this point, it is safe -- and necessary! -- to look up the
      * VM's required classes and members, even when what we are in the
      * process of processing is the core library that defines these
-     * classes itself.
+     * classes itself. (The reason it is necessary is that in the act
+     * of initializing the class Class, below, the system will end up
+     * referring to many of the class references that got set up by
+     * this call.)
      */
-    if (!dvmInitRequiredClassesAndMembers()) {
+    if (!dvmFindRequiredClassesAndMembers()) {
         return false;
     }
 
