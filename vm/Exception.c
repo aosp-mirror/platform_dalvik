@@ -207,7 +207,7 @@ void dvmThrowChainedExceptionByClass(ClassObject* excepClass, const char* msg,
             excepClass->descriptor);
         if (strcmp(excepClass->descriptor, "Ljava/lang/InternalError;") == 0)
             dvmAbort();
-        dvmThrowChainedException("Ljava/lang/InternalError;",
+        dvmThrowChainedExceptionByClass(gDvm.exInternalError,
             "failed to init original exception class", cause);
         return;
     }
@@ -1409,7 +1409,7 @@ void dvmThrowIllegalAccessException(const char* msg) {
 }
 
 void dvmThrowIllegalAccessError(const char* msg) {
-    dvmThrowException("Ljava/lang/IllegalAccessError;", msg);
+    dvmThrowExceptionByClass(gDvm.exIllegalAccessError, msg);
 }
 
 void dvmThrowIllegalArgumentException(const char* msg) {
@@ -1429,7 +1429,7 @@ void dvmThrowIllegalThreadStateException(const char* msg) {
 }
 
 void dvmThrowIncompatibleClassChangeError(const char* msg) {
-    dvmThrowException("Ljava/lang/IncompatibleClassChangeError;", msg);
+    dvmThrowExceptionByClass(gDvm.exIncompatibleClassChangeError, msg);
 }
 
 void dvmThrowIncompatibleClassChangeErrorWithClassMessage(
@@ -1450,7 +1450,7 @@ void dvmThrowInstantiationException(ClassObject* clazz,
 }
 
 void dvmThrowInternalError(const char* msg) {
-    dvmThrowException("Ljava/lang/InternalError;", msg);
+    dvmThrowExceptionByClass(gDvm.exInternalError, msg);
 }
 
 void dvmThrowInterruptedException(const char* msg) {
@@ -1458,7 +1458,7 @@ void dvmThrowInterruptedException(const char* msg) {
 }
 
 void dvmThrowLinkageError(const char* msg) {
-    dvmThrowException("Ljava/lang/LinkageError;", msg);
+    dvmThrowExceptionByClass(gDvm.exLinkageError, msg);
 }
 
 void dvmThrowNegativeArraySizeException(s4 size) {
@@ -1471,7 +1471,7 @@ void dvmThrowNoClassDefFoundError(const char* descriptor) {
 }
 
 void dvmThrowNoSuchFieldError(const char* msg) {
-    dvmThrowException("Ljava/lang/NoSuchFieldError;", msg);
+    dvmThrowExceptionByClass(gDvm.exNoSuchFieldError, msg);
 }
 
 void dvmThrowNoSuchFieldException(const char* msg) {
@@ -1479,7 +1479,7 @@ void dvmThrowNoSuchFieldException(const char* msg) {
 }
 
 void dvmThrowNoSuchMethodError(const char* msg) {
-    dvmThrowException("Ljava/lang/NoSuchMethodError;", msg);
+    dvmThrowExceptionByClass(gDvm.exNoSuchMethodError, msg);
 }
 
 void dvmThrowNullPointerException(const char* msg) {
@@ -1512,7 +1512,7 @@ void dvmThrowStringIndexOutOfBoundsExceptionWithRegion(jsize stringLength,
 }
 
 void dvmThrowUnsatisfiedLinkError(const char* msg) {
-    dvmThrowException("Ljava/lang/UnsatisfiedLinkError;", msg);
+    dvmThrowExceptionByClass(gDvm.exUnsatisfiedLinkError, msg);
 }
 
 void dvmThrowUnsupportedOperationException(const char* msg) {

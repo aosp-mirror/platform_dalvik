@@ -277,17 +277,22 @@ struct DvmGlobals {
     ClassObject* exExceptionInInitializerError;
     ClassObject* exFileNotFoundException; /* in java.io */
     ClassObject* exIOException;           /* in java.io */
+    ClassObject* exIllegalAccessError;
     ClassObject* exIllegalAccessException;
     ClassObject* exIllegalArgumentException;
     ClassObject* exIllegalMonitorStateException;
     ClassObject* exIllegalStateException;
     ClassObject* exIllegalThreadStateException;
+    ClassObject* exIncompatibleClassChangeError;
     ClassObject* exInstantiationException;
     ClassObject* exInternalError;
     ClassObject* exInterruptedException;
+    ClassObject* exLinkageError;
     ClassObject* exNegativeArraySizeException;
     ClassObject* exNoClassDefFoundError;
+    ClassObject* exNoSuchFieldError;
     ClassObject* exNoSuchFieldException;
+    ClassObject* exNoSuchMethodError;
     ClassObject* exNullPointerException;
     ClassObject* exRuntimeException;
     ClassObject* exStackOverflowError;
