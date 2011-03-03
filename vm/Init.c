@@ -1217,6 +1217,8 @@ int dvmFindRequiredClassesAndMembers(void) {
     ok &= initRef(&gDvm.exFileNotFoundException,
             "Ljava/io/FileNotFoundException;");
     ok &= initRef(&gDvm.exIOException, "Ljava/io/IOException;");
+    ok &= initRef(&gDvm.exIllegalAccessError,
+            "Ljava/lang/IllegalAccessError;");
     ok &= initRef(&gDvm.exIllegalAccessException,
             "Ljava/lang/IllegalAccessException;");
     ok &= initRef(&gDvm.exIllegalArgumentException,
@@ -1227,18 +1229,26 @@ int dvmFindRequiredClassesAndMembers(void) {
             "Ljava/lang/IllegalStateException;");
     ok &= initRef(&gDvm.exIllegalThreadStateException,
             "Ljava/lang/IllegalThreadStateException;");
+    ok &= initRef(&gDvm.exIncompatibleClassChangeError,
+            "Ljava/lang/IncompatibleClassChangeError;");
     ok &= initRef(&gDvm.exInstantiationException,
             "Ljava/lang/InstantiationException;");
     ok &= initRef(&gDvm.exInternalError,
             "Ljava/lang/InternalError;");
     ok &= initRef(&gDvm.exInterruptedException,
             "Ljava/lang/InterruptedException;");
+    ok &= initRef(&gDvm.exLinkageError,
+            "Ljava/lang/LinkageError;");
     ok &= initRef(&gDvm.exNegativeArraySizeException,
             "Ljava/lang/NegativeArraySizeException;");
     ok &= initRef(&gDvm.exNoClassDefFoundError,
             "Ljava/lang/NoClassDefFoundError;");
+    ok &= initRef(&gDvm.exNoSuchFieldError,
+            "Ljava/lang/NoSuchFieldError;");
     ok &= initRef(&gDvm.exNoSuchFieldException,
             "Ljava/lang/NoSuchFieldException;");
+    ok &= initRef(&gDvm.exNoSuchMethodError,
+            "Ljava/lang/NoSuchMethodError;");
     ok &= initRef(&gDvm.exNullPointerException,
             "Ljava/lang/NullPointerException;");
     ok &= initRef(&gDvm.exRuntimeException, "Ljava/lang/RuntimeException;");
