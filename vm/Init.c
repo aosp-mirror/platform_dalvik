@@ -1191,11 +1191,11 @@ int dvmFindRequiredClassesAndMembers(void) {
 
     ok &= initRef(&gDvm.classJavaLangClass, "Ljava/lang/Class;");
     ok &= initRef(&gDvm.classJavaLangObject, "Ljava/lang/Object;");
+    ok &= initRef(&gDvm.exThrowable, "Ljava/lang/Throwable;");
 
     ok &= initRef(&gDvm.classJavaLangString, "Ljava/lang/String;");
     ok &= initRef(&gDvm.classJavaLangThread, "Ljava/lang/Thread;");
     ok &= initRef(&gDvm.classJavaLangThreadGroup, "Ljava/lang/ThreadGroup;");
-    ok &= initRef(&gDvm.exThrowable, "Ljava/lang/Throwable;");
     ok &= initRef(&gDvm.classJavaLangVMThread, "Ljava/lang/VMThread;");
 
     /* Exception classes and related support classes */
@@ -1235,6 +1235,8 @@ int dvmFindRequiredClassesAndMembers(void) {
             "Ljava/lang/IllegalThreadStateException;");
     ok &= initRef(&gDvm.exIncompatibleClassChangeError,
             "Ljava/lang/IncompatibleClassChangeError;");
+    ok &= initRef(&gDvm.exInstantiationError,
+            "Ljava/lang/InstantiationError;");
     ok &= initRef(&gDvm.exInstantiationException,
             "Ljava/lang/InstantiationException;");
     ok &= initRef(&gDvm.exInternalError,
@@ -1264,7 +1266,6 @@ int dvmFindRequiredClassesAndMembers(void) {
             "Ldalvik/system/StaleDexCacheError;");
     ok &= initRef(&gDvm.exStringIndexOutOfBoundsException,
             "Ljava/lang/StringIndexOutOfBoundsException;");
-    ok &= initRef(&gDvm.exThrowable, "Ljava/lang/Throwable;");
     ok &= initRef(&gDvm.exTypeNotPresentException,
             "Ljava/lang/TypeNotPresentException;");
     ok &= initRef(&gDvm.exUnsatisfiedLinkError,

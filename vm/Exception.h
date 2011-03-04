@@ -83,24 +83,23 @@ INLINE void dvmThrowExceptionFmtByClass(ClassObject* exceptionClass,
 }
 
 /*
- * Throw the named exception using the human-readable form of the class
- * descriptor as the exception message, and with the specified cause.
+ * Like dvmThrowChainedException, but take a class object instead of a name
+ * and turn the given message into the human-readable form for a descriptor.
  */
-void dvmThrowChainedExceptionWithClassMessage(const char* exceptionDescriptor,
-    const char* messageDescriptor, Object* cause);
-INLINE void dvmThrowExceptionWithClassMessage(const char* exceptionDescriptor,
-    const char* messageDescriptor)
-{
-    dvmThrowChainedExceptionWithClassMessage(exceptionDescriptor,
-        messageDescriptor, NULL);
-}
+void dvmThrowChainedExceptionByClassWithClassMessage(
+    ClassObject* exceptionClass, const char* messageDescriptor,
+    Object* cause);
 
 /*
  * Like dvmThrowException, but take a class object instead of a name
  * and turn the given message into the human-readable form for a descriptor.
  */
-void dvmThrowExceptionByClassWithClassMessage(ClassObject* exceptionClass,
-    const char* messageDescriptor);
+INLINE void dvmThrowExceptionByClassWithClassMessage(
+    ClassObject* exceptionClass, const char* messageDescriptor)
+{
+    dvmThrowChainedExceptionByClassWithClassMessage(exceptionClass,
+            messageDescriptor, NULL);
+}
 
 /*
  * Return the exception being thrown in the current thread, or NULL if
@@ -376,6 +375,14 @@ void dvmThrowNegativeArraySizeException(s4 size);
  * human-readable form of the given descriptor as the detail message.
  */
 void dvmThrowNoClassDefFoundError(const char* descriptor);
+
+/**
+ * Throw a NoClassDefFoundError in the current thread, with the given
+ * cause, and the human-readable form of the given descriptor as the
+ * detail message.
+ */
+void dvmThrowChainedNoClassDefFoundError(const char* descriptor,
+        Object* cause);
 
 /**
  * Throw a NoSuchFieldError in the current thread, with the given

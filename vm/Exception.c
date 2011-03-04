@@ -261,29 +261,13 @@ bail:
     dvmReleaseTrackedAlloc(exception, self);
 }
 
-/*
- * Throw the named exception using the human-readable form of the class
- * descriptor as the exception message, and with the specified cause.
- */
-void dvmThrowChainedExceptionWithClassMessage(const char* exceptionDescriptor,
-    const char* messageDescriptor, Object* cause)
-{
-    char* message = dvmHumanReadableDescriptor(messageDescriptor);
-
-    dvmThrowChainedException(exceptionDescriptor, message, cause);
-    free(message);
-}
-
-/*
- * Like dvmThrowException, but take a class object instead of a name
- * and turn the given message into the human-readable form for a descriptor.
- */
-void dvmThrowExceptionByClassWithClassMessage(ClassObject* exceptionClass,
-    const char* messageDescriptor)
+void dvmThrowChainedExceptionByClassWithClassMessage(
+    ClassObject* exceptionClass, const char* messageDescriptor,
+    Object* cause)
 {
     char* message = dvmDescriptorToName(messageDescriptor);
 
-    dvmThrowExceptionByClass(exceptionClass, message);
+    dvmThrowChainedExceptionByClass(exceptionClass, message, cause);
     free(message);
 }
 
@@ -1468,6 +1452,12 @@ void dvmThrowNegativeArraySizeException(s4 size) {
 void dvmThrowNoClassDefFoundError(const char* descriptor) {
     dvmThrowExceptionByClassWithClassMessage(gDvm.exNoClassDefFoundError,
             descriptor);
+}
+
+void dvmThrowChainedNoClassDefFoundError(const char* descriptor,
+        Object* cause) {
+    dvmThrowChainedExceptionByClassWithClassMessage(
+            gDvm.exNoClassDefFoundError, descriptor, cause);
 }
 
 void dvmThrowNoSuchFieldError(const char* msg) {

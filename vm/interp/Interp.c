@@ -1154,43 +1154,43 @@ void dvmThrowVerificationError(const Method* method, int kind, int ref)
     const int typeMask = 0xff << kVerifyErrorRefTypeShift;
     VerifyError errorKind = kind & ~typeMask;
     VerifyErrorRefType refType = kind >> kVerifyErrorRefTypeShift;
-    const char* exceptionName = "Ljava/lang/VerifyError;";
+    ClassObject* exceptionClass = gDvm.exVerifyError;
     char* msg = NULL;
 
     switch ((VerifyError) errorKind) {
     case VERIFY_ERROR_NO_CLASS:
-        exceptionName = "Ljava/lang/NoClassDefFoundError;";
+        exceptionClass = gDvm.exNoClassDefFoundError;
         msg = classNameFromIndex(method, ref, refType, 0);
         break;
     case VERIFY_ERROR_NO_FIELD:
-        exceptionName = "Ljava/lang/NoSuchFieldError;";
+        exceptionClass = gDvm.exNoSuchFieldError;
         msg = fieldNameFromIndex(method, ref, refType, 0);
         break;
     case VERIFY_ERROR_NO_METHOD:
-        exceptionName = "Ljava/lang/NoSuchMethodError;";
+        exceptionClass = gDvm.exNoSuchMethodError;
         msg = methodNameFromIndex(method, ref, refType, 0);
         break;
     case VERIFY_ERROR_ACCESS_CLASS:
-        exceptionName = "Ljava/lang/IllegalAccessError;";
+        exceptionClass = gDvm.exIllegalAccessError;
         msg = classNameFromIndex(method, ref, refType,
             kThrowShow_accessFromClass);
         break;
     case VERIFY_ERROR_ACCESS_FIELD:
-        exceptionName = "Ljava/lang/IllegalAccessError;";
+        exceptionClass = gDvm.exIllegalAccessError;
         msg = fieldNameFromIndex(method, ref, refType,
             kThrowShow_accessFromClass);
         break;
     case VERIFY_ERROR_ACCESS_METHOD:
-        exceptionName = "Ljava/lang/IllegalAccessError;";
+        exceptionClass = gDvm.exIllegalAccessError;
         msg = methodNameFromIndex(method, ref, refType,
             kThrowShow_accessFromClass);
         break;
     case VERIFY_ERROR_CLASS_CHANGE:
-        exceptionName = "Ljava/lang/IncompatibleClassChangeError;";
+        exceptionClass = gDvm.exIncompatibleClassChangeError;
         msg = classNameFromIndex(method, ref, refType, 0);
         break;
     case VERIFY_ERROR_INSTANTIATION:
-        exceptionName = "Ljava/lang/InstantiationError;";
+        exceptionClass = gDvm.exInstantiationError;
         msg = classNameFromIndex(method, ref, refType, 0);
         break;
 
@@ -1206,7 +1206,7 @@ void dvmThrowVerificationError(const Method* method, int kind, int ref)
     /* no default clause -- want warning if enum updated */
     }
 
-    dvmThrowException(exceptionName, msg);
+    dvmThrowExceptionByClass(exceptionClass, msg);
     free(msg);
 }
 

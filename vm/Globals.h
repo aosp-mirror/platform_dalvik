@@ -286,6 +286,7 @@ struct DvmGlobals {
     ClassObject* exIllegalStateException;
     ClassObject* exIllegalThreadStateException;
     ClassObject* exIncompatibleClassChangeError;
+    ClassObject* exInstantiationError;
     ClassObject* exInstantiationException;
     ClassObject* exInternalError;
     ClassObject* exInterruptedException;

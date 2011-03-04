@@ -1300,8 +1300,7 @@ static ClassObject* findClassFromLoaderNoInit(const char* descriptor,
 #endif
         dvmAddTrackedAlloc(excep, self);
         dvmClearException(self);
-        dvmThrowChainedExceptionWithClassMessage(
-            "Ljava/lang/NoClassDefFoundError;", descriptor, excep);
+        dvmThrowChainedNoClassDefFoundError(descriptor, excep);
         dvmReleaseTrackedAlloc(excep, self);
         clazz = NULL;
         goto bail;
