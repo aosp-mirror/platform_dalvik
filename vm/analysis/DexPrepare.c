@@ -42,8 +42,8 @@
 
 
 /* fwd */
-static bool rewriteDex(u1* addr, int len, u4* pHeaderFlags,
-    DexClassLookup** ppClassLookup);
+static bool rewriteDex(u1* addr, int len, bool doVerify, bool doOpt,
+    DexClassLookup** ppClassLookup, DvmDex** ppDvmDex);
 static bool loadAllClasses(DvmDex* pDvmDex);
 static void verifyAndOptimizeClasses(DexFile* pDexFile, bool doVerify,
     bool doOpt);
@@ -479,7 +479,6 @@ bool dvmContinueOptimization(int fd, off_t dexOffset, long dexLength,
 {
     DexClassLookup* pClassLookup = NULL;
     RegisterMapBuilder* pRegMapBuilder = NULL;
-    u4 headerFlags = 0;
 
     assert(gDvm.optimizing);
 
@@ -521,6 +520,24 @@ bool dvmContinueOptimization(int fd, off_t dexOffset, long dexLength,
             goto bail;
         }
 
+        bool doVerify, doOpt;
+        if (gDvm.classVerifyMode == VERIFY_MODE_NONE) {
+            doVerify = false;
+        } else if (gDvm.classVerifyMode == VERIFY_MODE_REMOTE) {
+            doVerify = !gDvm.optimizingBootstrapClass;
+        } else /*if (gDvm.classVerifyMode == VERIFY_MODE_ALL)*/ {
+            doVerify = true;
+        }
+
+        if (gDvm.dexOptMode == OPTIMIZE_MODE_NONE) {
+            doOpt = false;
+        } else if (gDvm.dexOptMode == OPTIMIZE_MODE_VERIFIED ||
+                   gDvm.dexOptMode == OPTIMIZE_MODE_FULL) {
+            doOpt = doVerify;
+        } else /*if (gDvm.dexOptMode == OPTIMIZE_MODE_ALL)*/ {
+            doOpt = true;
+        }
+
         /*
          * Rewrite the file.  Byte reordering, structure realigning,
          * class verification, and bytecode optimization are all performed
@@ -530,11 +547,10 @@ bool dvmContinueOptimization(int fd, off_t dexOffset, long dexLength,
          * In practice this would be annoying to deal with, so the file
          * layout is designed so that it can always be rewritten in place.
          *
-         * This sets "headerFlags" and creates the class lookup table as
-         * part of doing the processing.
+         * This creates the class lookup table as part of doing the processing.
          */
         success = rewriteDex(((u1*) mapAddr) + dexOffset, dexLength,
-                    &headerFlags, &pClassLookup);
+                    doVerify, doOpt, &pClassLookup, NULL);
 
         if (success) {
             DvmDex* pDvmDex = NULL;
@@ -656,8 +672,11 @@ bool dvmContinueOptimization(int fd, off_t dexOffset, long dexLength,
     optHdr.depsLength = (u4) depsLength;
     optHdr.optOffset = (u4) optOffset;
     optHdr.optLength = (u4) optLength;
-
-    optHdr.flags = headerFlags;
+#if __BYTE_ORDER != __LITTLE_ENDIAN
+    optHdr.flags = DEX_OPT_FLAG_BIG;
+#else
+    optHdr.flags = 0;
+#endif
     optHdr.checksum = optChecksum;
 
     fsync(fd);      /* ensure previous writes go before header is written */
@@ -677,52 +696,62 @@ bail:
     return result;
 }
 
+/*
+ * Prepare an in-memory DEX file.
+ *
+ * The data was presented to the VM as a byte array rather than a file.
+ * We want to do the same basic set of operations, but we can just leave
+ * them in memory instead of writing them out to a cached optimized DEX file.
+ */
+bool dvmPrepareDexInMemory(u1* addr, size_t len, DvmDex** ppDvmDex)
+{
+    DexClassLookup* pClassLookup = NULL;
+
+    /*
+     * Byte-swap, realign, verify basic DEX file structure.
+     *
+     * We could load + verify + optimize here as well, but that's probably
+     * not desirable.
+     *
+     * (The bulk-verification code is currently only setting the DEX
+     * file's "verified" flag, not updating the ClassObject.  This would
+     * also need to be changed, or we will try to verify the class twice,
+     * and possibly reject it when optimized opcodes are encountered.)
+     */
+    if (!rewriteDex(addr, len, false, false, &pClassLookup, ppDvmDex)) {
+        return false;
+    }
+
+    (*ppDvmDex)->pDexFile->pClassLookup = pClassLookup;
+
+    return true;
+}
 
 /*
  * Perform in-place rewrites on a memory-mapped DEX file.
  *
- * This happens in a short-lived child process, so we can go nutty with
- * loading classes and allocating memory.
+ * If this is called from a short-lived child process (dexopt), we can
+ * go nutty with loading classes and allocating memory.  When it's
+ * called to prepare classes provided in a byte array, we may want to
+ * be more conservative.
+ *
+ * If "ppClassLookup" is non-NULL, a pointer to a newly-allocated
+ * DexClassLookup will be returned on success.
+ *
+ * If "ppDvmDex" is non-NULL, a newly-allocated DvmDex struct will be
+ * returned on success.
  */
-static bool rewriteDex(u1* addr, int len, u4* pHeaderFlags,
-    DexClassLookup** ppClassLookup)
+static bool rewriteDex(u1* addr, int len, bool doVerify, bool doOpt,
+    DexClassLookup** ppClassLookup, DvmDex** ppDvmDex)
 {
+    DexClassLookup* pClassLookup = NULL;
     u8 prepWhen, loadWhen, verifyOptWhen;
     DvmDex* pDvmDex = NULL;
-    bool doVerify, doOpt;
     bool result = false;
-
-    *pHeaderFlags = 0;
 
     /* if the DEX is in the wrong byte order, swap it now */
     if (dexSwapAndVerify(addr, len) != 0)
         goto bail;
-#if __BYTE_ORDER != __LITTLE_ENDIAN
-    *pHeaderFlags |= DEX_OPT_FLAG_BIG;
-#endif
-
-    if (gDvm.classVerifyMode == VERIFY_MODE_NONE) {
-        doVerify = false;
-    } else if (gDvm.classVerifyMode == VERIFY_MODE_REMOTE) {
-        doVerify = !gDvm.optimizingBootstrapClass;
-    } else /*if (gDvm.classVerifyMode == VERIFY_MODE_ALL)*/ {
-        doVerify = true;
-    }
-
-    if (gDvm.dexOptMode == OPTIMIZE_MODE_NONE) {
-        doOpt = false;
-    } else if (gDvm.dexOptMode == OPTIMIZE_MODE_VERIFIED ||
-               gDvm.dexOptMode == OPTIMIZE_MODE_FULL) {
-        doOpt = doVerify;
-    } else /*if (gDvm.dexOptMode == OPTIMIZE_MODE_ALL)*/ {
-        doOpt = true;
-    }
-
-    /* TODO: decide if this is actually useful */
-    if (doVerify)
-        *pHeaderFlags |= DEX_FLAG_VERIFIED;
-    if (doOpt)
-        *pHeaderFlags |= DEX_OPT_FLAG_FIELDS | DEX_OPT_FLAG_INVOCATIONS;
 
     /*
      * Now that the DEX file can be read directly, create a DexFile struct
@@ -736,10 +765,14 @@ static bool rewriteDex(u1* addr, int len, u4* pHeaderFlags,
     /*
      * Create the class lookup table.  This will eventually be appended
      * to the end of the .odex.
+     *
+     * We create a temporary link from the DexFile for the benefit of
+     * class loading, below.
      */
-    *ppClassLookup = dexCreateClassLookup(pDvmDex->pDexFile);
-    if (*ppClassLookup == NULL)
+    pClassLookup = dexCreateClassLookup(pDvmDex->pDexFile);
+    if (pClassLookup == NULL)
         goto bail;
+    pDvmDex->pDexFile->pClassLookup = pClassLookup;
 
     /*
      * If we're not going to attempt to verify or optimize the classes,
@@ -749,9 +782,6 @@ static bool rewriteDex(u1* addr, int len, u4* pHeaderFlags,
         result = true;
         goto bail;
     }
-
-    /* this is needed for the next part */
-    pDvmDex->pDexFile->pClassLookup = *ppClassLookup;
 
     prepWhen = dvmGetRelativeTimeUsec();
 
@@ -798,8 +828,23 @@ static bool rewriteDex(u1* addr, int len, u4* pHeaderFlags,
     result = true;
 
 bail:
-    /* free up storage */
-    dvmDexFileFree(pDvmDex);
+    /*
+     * On success, return the pieces that the caller asked for.
+     */
+    if (ppDvmDex == NULL || !result) {
+        dvmDexFileFree(pDvmDex);
+    } else {
+        *ppDvmDex = pDvmDex;
+    }
+
+    if (ppClassLookup == NULL || !result) {
+        free(pClassLookup);
+    } else {
+        *ppClassLookup = pClassLookup;
+    }
+
+    /* break link between the two */
+    pDvmDex->pDexFile->pClassLookup = NULL;
 
     return result;
 }
@@ -1125,29 +1170,13 @@ bool dvmCheckOptHeaderAndDependencies(int fd, bool sourceAvail, u4 modWhen,
     /*
      * Do the header flags match up with what we want?
      *
-     * This is useful because it allows us to automatically regenerate
-     * a file when settings change (e.g. verification is now mandatory),
-     * but can cause difficulties if the bootstrap classes we depend upon
-     * were handled differently than the current options specify.  We get
-     * upset because they're not verified or optimized, but we're not able
-     * to regenerate them because the installer won't let us.
-     *
-     * (This is also of limited value when !sourceAvail.)
-     *
-     * So, for now, we essentially ignore "expectVerify" and "expectOpt"
-     * by limiting the match mask.
-     *
-     * The only thing we really can't handle is incorrect byte-ordering.
+     * The only thing we really can't handle is incorrect byte ordering.
      */
     const u4 matchMask = DEX_OPT_FLAG_BIG;
     u4 expectedFlags = 0;
 #if __BYTE_ORDER != __LITTLE_ENDIAN
     expectedFlags |= DEX_OPT_FLAG_BIG;
 #endif
-    if (expectVerify)
-        expectedFlags |= DEX_FLAG_VERIFIED;
-    if (expectOpt)
-        expectedFlags |= DEX_OPT_FLAG_FIELDS | DEX_OPT_FLAG_INVOCATIONS;
     if ((expectedFlags & matchMask) != (optHdr.flags & matchMask)) {
         LOGI("DexOpt: header flag mismatch (0x%02x vs 0x%02x, mask=0x%02x)\n",
             expectedFlags, optHdr.flags, matchMask);

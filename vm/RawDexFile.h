@@ -49,8 +49,7 @@ int dvmRawDexFileOpen(const char* fileName, const char* odexOutputName,
  * On success, returns 0 and sets "*ppDexFile" to a newly-allocated DexFile.
  * On failure, returns a meaningful error code [currently just -1].
  */
-int dvmRawDexFileOpenArray(const u1* pBytes, u4 length,
-    RawDexFile** ppDexFile);
+int dvmRawDexFileOpenArray(u1* pBytes, u4 length, RawDexFile** ppDexFile);
 
 /*
  * Free a RawDexFile structure, along with any associated structures.

@@ -58,6 +58,7 @@ typedef struct DvmDex {
     struct AtomicCache* pInterfaceCache;
 
     /* shared memory region with file contents */
+    bool                isMappedReadOnly;
     MemMapping          memMap;
 
     /* lock ensuring mutual exclusion during updates */

@@ -250,11 +250,20 @@ bail:
 }
 
 /* See documentation comment in header. */
-int dvmRawDexFileOpenArray(const u1* pBytes, u4 length,
-    RawDexFile** ppDexFile)
+int dvmRawDexFileOpenArray(u1* pBytes, u4 length, RawDexFile** ppRawDexFile)
 {
-    // TODO - should be very similar to what JarFile does.
-    return -1;
+    DvmDex* pDvmDex = NULL;
+
+    if (!dvmPrepareDexInMemory(pBytes, length, &pDvmDex)) {
+        LOGD("Unable to open raw DEX from array\n");
+        return -1;
+    }
+    assert(pDvmDex != NULL);
+
+    *ppRawDexFile = (RawDexFile*) calloc(1, sizeof(RawDexFile));
+    (*ppRawDexFile)->pDvmDex = pDvmDex;
+
+    return 0;
 }
 
 /*

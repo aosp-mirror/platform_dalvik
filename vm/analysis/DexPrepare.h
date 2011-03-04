@@ -124,6 +124,11 @@ bool dvmContinueOptimization(int fd, off_t dexOffset, long dexLength,
     const char* fileName, u4 modWhen, u4 crc, bool isBootstrap);
 
 /*
+ * Prepare DEX data that is only available to the VM as in-memory data.
+ */
+bool dvmPrepareDexInMemory(u1* addr, size_t len, DvmDex** ppDvmDex);
+
+/*
  * Prep data structures.
  */
 bool dvmCreateInlineSubsTable(void);

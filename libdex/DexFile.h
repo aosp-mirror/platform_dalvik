@@ -464,10 +464,7 @@ typedef struct DexOptHeader {
     /* pad for 64-bit alignment if necessary */
 } DexOptHeader;
 
-#define DEX_FLAG_VERIFIED           (1)     /* tried to verify all classes */
 #define DEX_OPT_FLAG_BIG            (1<<1)  /* swapped to big-endian */
-#define DEX_OPT_FLAG_FIELDS         (1<<2)  /* field access optimized */
-#define DEX_OPT_FLAG_INVOCATIONS    (1<<3)  /* method calls optimized */
 
 #define DEX_INTERFACE_CACHE_SIZE    128     /* must be power of 2 */
 
