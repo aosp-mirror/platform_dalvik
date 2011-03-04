@@ -26,6 +26,11 @@
 void dvmOptimizeClass(ClassObject* clazz, bool essentialOnly);
 
 /*
+ * Update a 16-bit code unit.
+ */
+void dvmUpdateCodeUnit(const Method* meth, u2* ptr, u2 newVal);
+
+/*
  * Abbreviated resolution functions, for use by optimization and verification
  * code.
  */

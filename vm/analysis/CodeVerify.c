@@ -3306,10 +3306,10 @@ static bool replaceFailingInstruction(const Method* meth, InsnFlags* insnFlags,
         /* nothing to do */
         break;
     case 3:
-        dvmDexChangeDex2(meth->clazz->pDvmDex, oldInsns+2, OP_NOP);
+        dvmUpdateCodeUnit(meth, oldInsns+2, OP_NOP);
         break;
     case 5:
-        dvmDexChangeDex2(meth->clazz->pDvmDex, oldInsns+4, OP_NOP);
+        dvmUpdateCodeUnit(meth, oldInsns+4, OP_NOP);
         break;
     default:
         /* whoops */
@@ -3324,15 +3324,15 @@ static bool replaceFailingInstruction(const Method* meth, InsnFlags* insnFlags,
         assert(width == 4 || width == 5);
         u2 newVal = (u2) ((OP_THROW_VERIFICATION_ERROR_JUMBO << 8) |
                            OP_DISPATCH_FF);
-        dvmDexChangeDex2(meth->clazz->pDvmDex, oldInsns, newVal);
+        dvmUpdateCodeUnit(meth, oldInsns, newVal);
         newVal = failure | (refType << kVerifyErrorRefTypeShift);
-        dvmDexChangeDex2(meth->clazz->pDvmDex, oldInsns+3, newVal);
+        dvmUpdateCodeUnit(meth, oldInsns+3, newVal);
     } else {
         /* encode the opcode, with the failure code in the high byte */
         assert(width == 2 || width == 3);
         u2 newVal = OP_THROW_VERIFICATION_ERROR |
             (failure << 8) | (refType << (8 + kVerifyErrorRefTypeShift));
-        dvmDexChangeDex2(meth->clazz->pDvmDex, oldInsns, newVal);
+        dvmUpdateCodeUnit(meth, oldInsns, newVal);
     }
 
     result = true;

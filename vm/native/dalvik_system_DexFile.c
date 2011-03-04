@@ -259,7 +259,7 @@ static void Dalvik_dalvik_system_DexFile_openDexFile_bytearray(const u4* args,
         RETURN_VOID();
     }
 
-    /* TODO: Avoid making a copy of the array. */
+    /* TODO: Avoid making a copy of the array. (note array *is* modified) */
     length = fileContentsObj->length;
     pBytes = (u1*) malloc(length);
 
@@ -360,7 +360,8 @@ static void Dalvik_dalvik_system_DexFile_defineClass(const u4* args,
 
     name = dvmCreateCstrFromString(nameObj);
     descriptor = dvmDotToDescriptor(name);
-    LOGV("--- Explicit class load '%s' 0x%08x\n", descriptor, cookie);
+    LOGV("--- Explicit class load '%s' l=%p c=0x%08x\n",
+        descriptor, loader, cookie);
     free(name);
 
     if (!validateCookie(cookie))

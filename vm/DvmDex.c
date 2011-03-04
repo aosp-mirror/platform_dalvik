@@ -137,6 +137,7 @@ int dvmDexFileOpenFromFd(int fd, DvmDex** ppDvmDex)
 
     /* tuck this into the DexFile so it gets released later */
     sysCopyMap(&pDvmDex->memMap, &memMap);
+    pDvmDex->isMappedReadOnly = true;
     *ppDvmDex = pDvmDex;
     result = 0;
 
@@ -175,6 +176,7 @@ int dvmDexFileOpenPartial(const void* addr, int len, DvmDex** ppDvmDex)
         goto bail;
     }
 
+    pDvmDex->isMappedReadOnly = false;
     *ppDvmDex = pDvmDex;
     result = 0;
 

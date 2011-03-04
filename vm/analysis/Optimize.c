@@ -338,16 +338,19 @@ rewrite_static_field2:
 }
 
 /*
- * Update a 16-bit code unit in "meth".
+ * Update a 16-bit code unit in "meth".  The way in which the DEX data was
+ * loaded determines how we go about the write.
  */
-static inline void updateCodeUnit(const Method* meth, u2* ptr, u2 newVal)
+void dvmUpdateCodeUnit(const Method* meth, u2* ptr, u2 newVal)
 {
-    if (gDvm.optimizing) {
-        /* dexopt time, alter the output directly */
+    DvmDex* pDvmDex = meth->clazz->pDvmDex;
+
+    if (!pDvmDex->isMappedReadOnly) {
+        /* in-memory DEX (dexopt or byte[]), alter the output directly */
         *ptr = newVal;
     } else {
-        /* runtime, toggle the page read/write status */
-        dvmDexChangeDex2(meth->clazz->pDvmDex, ptr, newVal);
+        /* memory-mapped file, toggle the page read/write status */
+        dvmDexChangeDex2(pDvmDex, ptr, newVal);
     }
 }
 
@@ -356,7 +359,7 @@ static inline void updateCodeUnit(const Method* meth, u2* ptr, u2 newVal)
  */
 static inline void updateOpcode(const Method* meth, u2* ptr, Opcode opcode)
 {
-    updateCodeUnit(meth, ptr, (ptr[0] & 0xff00) | (u2) opcode);
+    dvmUpdateCodeUnit(meth, ptr, (ptr[0] & 0xff00) | (u2) opcode);
 }
 
 /*
@@ -671,7 +674,7 @@ static bool rewriteInstField(Method* method, u2* insns, Opcode quickOpc,
             instField->field.clazz->descriptor, instField->field.name);
     } else if (quickOpc != OP_NOP) {
         updateOpcode(method, insns, quickOpc);
-        updateCodeUnit(method, insns+1, (u2) instField->byteOffset);
+        dvmUpdateCodeUnit(method, insns+1, (u2) instField->byteOffset);
         LOGV("DexOpt: rewrote ifield access %s.%s --> %d\n",
             instField->field.clazz->descriptor, instField->field.name,
             instField->byteOffset);
@@ -885,7 +888,7 @@ static bool rewriteVirtualInvoke(Method* method, u2* insns, Opcode newOpc)
      * initial load.
      */
     updateOpcode(method, insns, newOpc);
-    updateCodeUnit(method, insns+1, baseMethod->methodIndex);
+    dvmUpdateCodeUnit(method, insns+1, baseMethod->methodIndex);
 
     //LOGI("DexOpt: rewrote call to %s.%s --> %s.%s\n",
     //    method->clazz->descriptor, method->name,
@@ -933,7 +936,8 @@ static bool rewriteInvokeObjectInit(Method* method, u2* insns)
          */
         u1 origOp = insns[0] & 0xff;
         if (origOp == OP_INVOKE_DIRECT) {
-            updateCodeUnit(method, insns, OP_INVOKE_OBJECT_INIT_RANGE | 0x100);
+            dvmUpdateCodeUnit(method, insns,
+                OP_INVOKE_OBJECT_INIT_RANGE | 0x100);
         } else {
             assert(origOp == OP_INVOKE_DIRECT_RANGE);
             assert((insns[0] >> 8) == 1);
@@ -1053,7 +1057,7 @@ static bool rewriteExecuteInline(Method* method, u2* insns,
                    (insns[0] & 0xff) == OP_INVOKE_STATIC ||
                    (insns[0] & 0xff) == OP_INVOKE_VIRTUAL);
             updateOpcode(method, insns, OP_EXECUTE_INLINE);
-            updateCodeUnit(method, insns+1, (u2) inlineSubs->inlineIdx);
+            dvmUpdateCodeUnit(method, insns+1, (u2) inlineSubs->inlineIdx);
 
             //LOGI("DexOpt: execute-inline %s.%s --> %s.%s\n",
             //    method->clazz->descriptor, method->name,
@@ -1093,7 +1097,7 @@ static bool rewriteExecuteInlineRange(Method* method, u2* insns,
                    (insns[0] & 0xff) == OP_INVOKE_STATIC_RANGE ||
                    (insns[0] & 0xff) == OP_INVOKE_VIRTUAL_RANGE);
             updateOpcode(method, insns, OP_EXECUTE_INLINE_RANGE);
-            updateCodeUnit(method, insns+1, (u2) inlineSubs->inlineIdx);
+            dvmUpdateCodeUnit(method, insns+1, (u2) inlineSubs->inlineIdx);
 
             //LOGI("DexOpt: execute-inline/range %s.%s --> %s.%s\n",
             //    method->clazz->descriptor, method->name,
