@@ -21,37 +21,22 @@
 #define _DALVIK_EXCEPTION
 
 /*
- * Throw an exception in the current thread, by class descriptor.
- */
-void dvmThrowChainedException(const char* exceptionDescriptor, const char* msg,
-    Object* cause);
-INLINE void dvmThrowException(const char* exceptionDescriptor,
-    const char* msg)
-{
-    dvmThrowChainedException(exceptionDescriptor, msg, NULL);
-}
-
-/*
- * Like dvmThrowException, but takes printf-style args for the message.
- */
-void dvmThrowExceptionFmtV(const char* exceptionDescriptor, const char* fmt,
-    va_list args);
-void dvmThrowExceptionFmt(const char* exceptionDescriptor, const char* fmt, ...)
-#if defined(__GNUC__)
-    __attribute__ ((format(printf, 2, 3)))
-#endif
-    ;
-INLINE void dvmThrowExceptionFmt(const char* exceptionDescriptor,
-    const char* fmt, ...)
-{
-    va_list args;
-    va_start(args, fmt);
-    dvmThrowExceptionFmtV(exceptionDescriptor, fmt, args);
-    va_end(args);
-}
-
-/*
- * Throw an exception in the current thread, by class object.
+ * Create a Throwable and throw an exception in the current thread (where
+ * "throwing" just means "set the thread's exception pointer").
+ *
+ * "msg" and/or "cause" may be NULL.
+ *
+ * If we have a bad exception hierarchy -- something in Throwable.<init>
+ * is missing -- then every attempt to throw an exception will result
+ * in another exception.  Exceptions are generally allowed to "chain"
+ * to other exceptions, so it's hard to auto-detect this problem.  It can
+ * only happen if the system classes are broken, so it's probably not
+ * worth spending cycles to detect it.
+ *
+ * We do have one case to worry about: if the classpath is completely
+ * wrong, we'll go into a death spin during startup because we can't find
+ * the initial class and then we can't find NoClassDefFoundError.  We have
+ * to handle this case.
  */
 void dvmThrowChainedExceptionByClass(ClassObject* exceptionClass,
     const char* msg, Object* cause);
@@ -62,8 +47,7 @@ INLINE void dvmThrowExceptionByClass(ClassObject* exceptionClass,
 }
 
 /*
- * Like dvmThrowExceptionFmt, but takes an exception class object instead
- * of a descriptor string.
+ * Like dvmThrowExceptionByClass, but takes printf-style args for the message.
  */
 void dvmThrowExceptionFmtByClassV(ClassObject* exceptionClass,
     const char* fmt, va_list args);
@@ -83,15 +67,16 @@ INLINE void dvmThrowExceptionFmtByClass(ClassObject* exceptionClass,
 }
 
 /*
- * Like dvmThrowChainedException, but take a class object instead of a name
- * and turn the given message into the human-readable form for a descriptor.
+ * Like dvmThrowChainedExceptionByClass, but take a class object
+ * instead of a name and turn the given message into the
+ * human-readable form for a descriptor.
  */
 void dvmThrowChainedExceptionByClassWithClassMessage(
     ClassObject* exceptionClass, const char* messageDescriptor,
     Object* cause);
 
 /*
- * Like dvmThrowException, but take a class object instead of a name
+ * Like dvmThrowExceptionByClass, but take a class object instead of a name
  * and turn the given message into the human-readable form for a descriptor.
  */
 INLINE void dvmThrowExceptionByClassWithClassMessage(

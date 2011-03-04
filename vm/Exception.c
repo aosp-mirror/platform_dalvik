@@ -99,18 +99,6 @@ the way the stack works.
 static bool initException(Object* exception, const char* msg, Object* cause,
     Thread* self);
 
-/*
- * Format the message into a small buffer and pass it along.
- */
-void dvmThrowExceptionFmtV(const char* exceptionDescriptor, const char* fmt,
-    va_list args)
-{
-    char msgBuf[512];
-
-    vsnprintf(msgBuf, sizeof(msgBuf), fmt, args);
-    dvmThrowChainedException(exceptionDescriptor, msgBuf, NULL);
-}
-
 void dvmThrowExceptionFmtByClassV(ClassObject* exceptionClass,
     const char* fmt, va_list args)
 {
@@ -120,71 +108,6 @@ void dvmThrowExceptionFmtByClassV(ClassObject* exceptionClass,
     dvmThrowChainedExceptionByClass(exceptionClass, msgBuf, NULL);
 }
 
-/*
- * Create a Throwable and throw an exception in the current thread (where
- * "throwing" just means "set the thread's exception pointer").
- *
- * "msg" and/or "cause" may be NULL.
- *
- * If we have a bad exception hierarchy -- something in Throwable.<init>
- * is missing -- then every attempt to throw an exception will result
- * in another exception.  Exceptions are generally allowed to "chain"
- * to other exceptions, so it's hard to auto-detect this problem.  It can
- * only happen if the system classes are broken, so it's probably not
- * worth spending cycles to detect it.
- *
- * We do have one case to worry about: if the classpath is completely
- * wrong, we'll go into a death spin during startup because we can't find
- * the initial class and then we can't find NoClassDefFoundError.  We have
- * to handle this case.
- *
- * [Do we want to cache pointers to common exception classes?]
- */
-void dvmThrowChainedException(const char* exceptionDescriptor, const char* msg,
-    Object* cause)
-{
-    ClassObject* excepClass;
-
-    LOGV("THROW '%s' msg='%s' cause=%s\n",
-        exceptionDescriptor, msg,
-        (cause != NULL) ? cause->clazz->descriptor : "(none)");
-
-    if (gDvm.initializing) {
-        if (++gDvm.initExceptionCount >= 2) {
-            LOGE("Too many exceptions during init (failed on '%s' '%s')\n",
-                exceptionDescriptor, msg);
-            dvmAbort();
-        }
-    }
-
-    excepClass = dvmFindSystemClass(exceptionDescriptor);
-    if (excepClass == NULL) {
-        /*
-         * We couldn't find the exception class.  The attempt to find a
-         * nonexistent class should have raised an exception.  If no
-         * exception is currently raised, then we're pretty clearly unable
-         * to throw ANY sort of exception, and we need to pack it in.
-         *
-         * If we were able to throw the "class load failed" exception,
-         * stick with that.  Ideally we'd stuff the original exception
-         * into the "cause" field, but since we can't find it we can't
-         * do that.  The exception class name should be in the "message"
-         * field.
-         */
-        if (!dvmCheckException(dvmThreadSelf())) {
-            LOGE("FATAL: unable to throw exception (failed on '%s' '%s')\n",
-                exceptionDescriptor, msg);
-            dvmAbort();
-        }
-        return;
-    }
-
-    dvmThrowChainedExceptionByClass(excepClass, msg, cause);
-}
-
-/*
- * Start/continue throwing process now that we have a class reference.
- */
 void dvmThrowChainedExceptionByClass(ClassObject* excepClass, const char* msg,
     Object* cause)
 {
@@ -528,19 +451,15 @@ bail:
 
 
 /*
- * Clear the pending exception and the "initExceptionCount" counter.  This
- * is used by the optimization and verification code, which has to run with
- * "initializing" set to avoid going into a death-spin if the "class not
- * found" exception can't be found.
+ * Clear the pending exception. This is used by the optimization and
+ * verification code, which mostly happens during runs of dexopt.
  *
  * This can also be called when the VM is in a "normal" state, e.g. when
- * verifying classes that couldn't be verified at optimization time.  The
- * reset of initExceptionCount should be harmless in that case.
+ * verifying classes that couldn't be verified at optimization time.
  */
 void dvmClearOptException(Thread* self)
 {
     self->exception = NULL;
-    gDvm.initExceptionCount = 0;
 }
 
 /*

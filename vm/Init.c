@@ -1521,7 +1521,6 @@ int dvmStartup(int argc, const char* const argv[], bool ignoreUnrecognized,
 #endif
 
     assert(!dvmCheckException(dvmThreadSelf()));
-    gDvm.initExceptionCount = 0;
 
     return 0;
 

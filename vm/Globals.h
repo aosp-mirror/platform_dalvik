@@ -178,7 +178,6 @@ struct DvmGlobals {
      * VM init management.
      */
     bool        initializing;
-    int         initExceptionCount;
     bool        optimizing;
 
     /*
