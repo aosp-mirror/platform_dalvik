@@ -1915,7 +1915,7 @@ HANDLE_OPCODE(OP_NEW_INSTANCE /*vAA, class@BBBB*/)
          * Verifier now tests for interface/abstract class.
          */
         //if (dvmIsInterfaceClass(clazz) || dvmIsAbstractClass(clazz)) {
-        //    dvmThrowExceptionByClassWithClassMessage(gDvm.exInstantiationError,
+        //    dvmThrowExceptionWithClassMessage(gDvm.exInstantiationError,
         //        clazz->descriptor);
         //    GOTO_exceptionThrown();
         //}
@@ -3389,7 +3389,7 @@ HANDLE_OPCODE(OP_NEW_INSTANCE_JUMBO /*vBBBB, class@AAAAAAAA*/)
          * Verifier now tests for interface/abstract class.
          */
         //if (dvmIsInterfaceClass(clazz) || dvmIsAbstractClass(clazz)) {
-        //    dvmThrowExceptionByClassWithClassMessage(gDvm.exInstantiationError,
+        //    dvmThrowExceptionWithClassMessage(gDvm.exInstantiationError,
         //        clazz->descriptor);
         //    GOTO_exceptionThrown();
         //}

@@ -38,51 +38,51 @@
  * the initial class and then we can't find NoClassDefFoundError.  We have
  * to handle this case.
  */
-void dvmThrowChainedExceptionByClass(ClassObject* exceptionClass,
+void dvmThrowChainedException(ClassObject* exceptionClass,
     const char* msg, Object* cause);
-INLINE void dvmThrowExceptionByClass(ClassObject* exceptionClass,
+INLINE void dvmThrowException(ClassObject* exceptionClass,
     const char* msg)
 {
-    dvmThrowChainedExceptionByClass(exceptionClass, msg, NULL);
+    dvmThrowChainedException(exceptionClass, msg, NULL);
 }
 
 /*
- * Like dvmThrowExceptionByClass, but takes printf-style args for the message.
+ * Like dvmThrowException, but takes printf-style args for the message.
  */
-void dvmThrowExceptionFmtByClassV(ClassObject* exceptionClass,
+void dvmThrowExceptionFmtV(ClassObject* exceptionClass,
     const char* fmt, va_list args);
-void dvmThrowExceptionFmtByClass(ClassObject* exceptionClass,
+void dvmThrowExceptionFmt(ClassObject* exceptionClass,
     const char* fmt, ...)
 #if defined(__GNUC__)
     __attribute__ ((format(printf, 2, 3)))
 #endif
     ;
-INLINE void dvmThrowExceptionFmtByClass(ClassObject* exceptionClass,
+INLINE void dvmThrowExceptionFmt(ClassObject* exceptionClass,
     const char* fmt, ...)
 {
     va_list args;
     va_start(args, fmt);
-    dvmThrowExceptionFmtByClassV(exceptionClass, fmt, args);
+    dvmThrowExceptionFmtV(exceptionClass, fmt, args);
     va_end(args);
 }
 
 /*
- * Like dvmThrowChainedExceptionByClass, but take a class object
+ * Like dvmThrowChainedException, but take a class object
  * instead of a name and turn the given message into the
  * human-readable form for a descriptor.
  */
-void dvmThrowChainedExceptionByClassWithClassMessage(
+void dvmThrowChainedExceptionWithClassMessage(
     ClassObject* exceptionClass, const char* messageDescriptor,
     Object* cause);
 
 /*
- * Like dvmThrowExceptionByClass, but take a class object instead of a name
+ * Like dvmThrowException, but take a class object instead of a name
  * and turn the given message into the human-readable form for a descriptor.
  */
-INLINE void dvmThrowExceptionByClassWithClassMessage(
+INLINE void dvmThrowExceptionWithClassMessage(
     ClassObject* exceptionClass, const char* messageDescriptor)
 {
-    dvmThrowChainedExceptionByClassWithClassMessage(exceptionClass,
+    dvmThrowChainedExceptionWithClassMessage(exceptionClass,
             messageDescriptor, NULL);
 }
 

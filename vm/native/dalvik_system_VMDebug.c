@@ -280,7 +280,7 @@ static void Dalvik_dalvik_system_VMDebug_startMethodTracingNative(const u4* args
 
         fd = dup(origFd);
         if (fd < 0) {
-            dvmThrowExceptionFmtByClass(gDvm.exRuntimeException,
+            dvmThrowExceptionFmt(gDvm.exRuntimeException,
                 "dup(%d) failed: %s", origFd, strerror(errno));
             RETURN_VOID();
         }

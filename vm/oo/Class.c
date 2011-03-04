@@ -3716,7 +3716,7 @@ static void throwEarlierClassFailure(ClassObject* clazz)
     if (clazz->verifyErrorClass == NULL) {
         dvmThrowNoClassDefFoundError(clazz->descriptor);
     } else {
-        dvmThrowExceptionByClassWithClassMessage(clazz->verifyErrorClass,
+        dvmThrowExceptionWithClassMessage(clazz->verifyErrorClass,
             clazz->descriptor);
     }
 }

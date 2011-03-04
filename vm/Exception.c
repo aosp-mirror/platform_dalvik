@@ -99,16 +99,16 @@ the way the stack works.
 static bool initException(Object* exception, const char* msg, Object* cause,
     Thread* self);
 
-void dvmThrowExceptionFmtByClassV(ClassObject* exceptionClass,
+void dvmThrowExceptionFmtV(ClassObject* exceptionClass,
     const char* fmt, va_list args)
 {
     char msgBuf[512];
 
     vsnprintf(msgBuf, sizeof(msgBuf), fmt, args);
-    dvmThrowChainedExceptionByClass(exceptionClass, msgBuf, NULL);
+    dvmThrowChainedException(exceptionClass, msgBuf, NULL);
 }
 
-void dvmThrowChainedExceptionByClass(ClassObject* excepClass, const char* msg,
+void dvmThrowChainedException(ClassObject* excepClass, const char* msg,
     Object* cause)
 {
     Thread* self = dvmThreadSelf();
@@ -130,7 +130,7 @@ void dvmThrowChainedExceptionByClass(ClassObject* excepClass, const char* msg,
             excepClass->descriptor);
         if (strcmp(excepClass->descriptor, "Ljava/lang/InternalError;") == 0)
             dvmAbort();
-        dvmThrowChainedExceptionByClass(gDvm.exInternalError,
+        dvmThrowChainedException(gDvm.exInternalError,
             "failed to init original exception class", cause);
         return;
     }
@@ -184,13 +184,13 @@ bail:
     dvmReleaseTrackedAlloc(exception, self);
 }
 
-void dvmThrowChainedExceptionByClassWithClassMessage(
+void dvmThrowChainedExceptionWithClassMessage(
     ClassObject* exceptionClass, const char* messageDescriptor,
     Object* cause)
 {
     char* message = dvmDescriptorToName(messageDescriptor);
 
-    dvmThrowChainedExceptionByClass(exceptionClass, message, cause);
+    dvmThrowChainedException(exceptionClass, message, cause);
     free(message);
 }
 
@@ -371,7 +371,7 @@ static bool initException(Object* exception, const char* msg, Object* cause,
             excepClass->descriptor, msg, initKind);
         assert(strcmp(excepClass->descriptor,
                       "Ljava/lang/RuntimeException;") != 0);
-        dvmThrowChainedExceptionByClass(gDvm.exRuntimeException,
+        dvmThrowChainedException(gDvm.exRuntimeException,
             "re-throw on exception class missing constructor", NULL);
         goto bail;
     }
@@ -1203,16 +1203,16 @@ void dvmLogExceptionStackTrace(void)
 }
 
 void dvmThrowAbstractMethodError(const char* msg) {
-    dvmThrowExceptionByClass(gDvm.exAbstractMethodError, msg);
+    dvmThrowException(gDvm.exAbstractMethodError, msg);
 }
 
 void dvmThrowArithmeticException(const char* msg) {
-    dvmThrowExceptionByClass(gDvm.exArithmeticException, msg);
+    dvmThrowException(gDvm.exArithmeticException, msg);
 }
 
 void dvmThrowArrayIndexOutOfBoundsException(int index, int length)
 {
-    dvmThrowExceptionFmtByClass(gDvm.exArrayIndexOutOfBoundsException,
+    dvmThrowExceptionFmt(gDvm.exArrayIndexOutOfBoundsException,
         "length=%d; index=%d", length, index);
 }
 
@@ -1226,7 +1226,7 @@ static void throwTypeError(ClassObject* exceptionClass, const char* fmt,
 {
     char* actualClassName = dvmHumanReadableDescriptor(actual->descriptor);
     char* desiredClassName = dvmHumanReadableDescriptor(desired->descriptor);
-    dvmThrowExceptionFmtByClass(exceptionClass, fmt,
+    dvmThrowExceptionFmt(exceptionClass, fmt,
         actualClassName, desiredClassName);
     free(desiredClassName);
     free(actualClassName);
@@ -1246,22 +1246,22 @@ void dvmThrowClassCastException(ClassObject* actual, ClassObject* desired)
 }
 
 void dvmThrowClassCircularityError(const char* descriptor) {
-    dvmThrowExceptionByClassWithClassMessage(gDvm.exClassCircularityError,
+    dvmThrowExceptionWithClassMessage(gDvm.exClassCircularityError,
             descriptor);
 }
 
 void dvmThrowClassFormatError(const char* msg) {
-    dvmThrowExceptionByClass(gDvm.exClassFormatError, msg);
+    dvmThrowException(gDvm.exClassFormatError, msg);
 }
 
 void dvmThrowClassNotFoundException(const char* name) {
     // TODO: Should the name be converted into human-readable form?
-    dvmThrowExceptionByClass(gDvm.exClassNotFoundException, name);
+    dvmThrowException(gDvm.exClassNotFoundException, name);
 }
 
 void dvmThrowChainedClassNotFoundException(const char* name, Object* cause) {
     // TODO: Should the name be converted into human-readable form?
-    dvmThrowChainedExceptionByClass(gDvm.exClassNotFoundException, name,
+    dvmThrowChainedException(gDvm.exClassNotFoundException, name,
             cause);
 }
 
@@ -1294,58 +1294,58 @@ void dvmThrowExceptionInInitializerError(void)
     dvmAddTrackedAlloc(exception, self);
     dvmClearException(self);
 
-    dvmThrowChainedExceptionByClass(gDvm.exExceptionInInitializerError,
+    dvmThrowChainedException(gDvm.exExceptionInInitializerError,
             NULL, exception);
     dvmReleaseTrackedAlloc(exception, self);
 }
 
 void dvmThrowFileNotFoundException(const char* msg) {
-    dvmThrowExceptionByClass(gDvm.exFileNotFoundException, msg);
+    dvmThrowException(gDvm.exFileNotFoundException, msg);
 }
 
 void dvmThrowIOException(const char* msg) {
-    dvmThrowExceptionByClass(gDvm.exIOException, msg);
+    dvmThrowException(gDvm.exIOException, msg);
 }
 
 void dvmThrowIllegalAccessException(const char* msg) {
-    dvmThrowExceptionByClass(gDvm.exIllegalAccessException, msg);
+    dvmThrowException(gDvm.exIllegalAccessException, msg);
 }
 
 void dvmThrowIllegalAccessError(const char* msg) {
-    dvmThrowExceptionByClass(gDvm.exIllegalAccessError, msg);
+    dvmThrowException(gDvm.exIllegalAccessError, msg);
 }
 
 void dvmThrowIllegalArgumentException(const char* msg) {
-    dvmThrowExceptionByClass(gDvm.exIllegalArgumentException, msg);
+    dvmThrowException(gDvm.exIllegalArgumentException, msg);
 }
 
 void dvmThrowIllegalMonitorStateException(const char* msg) {
-    dvmThrowExceptionByClass(gDvm.exIllegalMonitorStateException, msg);
+    dvmThrowException(gDvm.exIllegalMonitorStateException, msg);
 }
 
 void dvmThrowIllegalStateException(const char* msg) {
-    dvmThrowExceptionByClass(gDvm.exIllegalStateException, msg);
+    dvmThrowException(gDvm.exIllegalStateException, msg);
 }
 
 void dvmThrowIllegalThreadStateException(const char* msg) {
-    dvmThrowExceptionByClass(gDvm.exIllegalThreadStateException, msg);
+    dvmThrowException(gDvm.exIllegalThreadStateException, msg);
 }
 
 void dvmThrowIncompatibleClassChangeError(const char* msg) {
-    dvmThrowExceptionByClass(gDvm.exIncompatibleClassChangeError, msg);
+    dvmThrowException(gDvm.exIncompatibleClassChangeError, msg);
 }
 
 void dvmThrowIncompatibleClassChangeErrorWithClassMessage(
         const char* descriptor)
 {
-    dvmThrowExceptionByClassWithClassMessage(
+    dvmThrowExceptionWithClassMessage(
             gDvm.exIncompatibleClassChangeError, descriptor);
 }
 
 void dvmThrowInstantiationException(ClassObject* clazz,
         const char* extraDetail) {
     char* className = dvmHumanReadableDescriptor(clazz->descriptor);
-    dvmThrowExceptionFmtByClass(gDvm.exInstantiationException,
+    dvmThrowExceptionFmt(gDvm.exInstantiationException,
             "can't instantiate class %s%s%s", className,
             (extraDetail == NULL) ? "" : "; ",
             (extraDetail == NULL) ? "" : extraDetail);
@@ -1353,90 +1353,90 @@ void dvmThrowInstantiationException(ClassObject* clazz,
 }
 
 void dvmThrowInternalError(const char* msg) {
-    dvmThrowExceptionByClass(gDvm.exInternalError, msg);
+    dvmThrowException(gDvm.exInternalError, msg);
 }
 
 void dvmThrowInterruptedException(const char* msg) {
-    dvmThrowExceptionByClass(gDvm.exInterruptedException, msg);
+    dvmThrowException(gDvm.exInterruptedException, msg);
 }
 
 void dvmThrowLinkageError(const char* msg) {
-    dvmThrowExceptionByClass(gDvm.exLinkageError, msg);
+    dvmThrowException(gDvm.exLinkageError, msg);
 }
 
 void dvmThrowNegativeArraySizeException(s4 size) {
-    dvmThrowExceptionFmtByClass(gDvm.exNegativeArraySizeException, "%d", size);
+    dvmThrowExceptionFmt(gDvm.exNegativeArraySizeException, "%d", size);
 }
 
 void dvmThrowNoClassDefFoundError(const char* descriptor) {
-    dvmThrowExceptionByClassWithClassMessage(gDvm.exNoClassDefFoundError,
+    dvmThrowExceptionWithClassMessage(gDvm.exNoClassDefFoundError,
             descriptor);
 }
 
 void dvmThrowChainedNoClassDefFoundError(const char* descriptor,
         Object* cause) {
-    dvmThrowChainedExceptionByClassWithClassMessage(
+    dvmThrowChainedExceptionWithClassMessage(
             gDvm.exNoClassDefFoundError, descriptor, cause);
 }
 
 void dvmThrowNoSuchFieldError(const char* msg) {
-    dvmThrowExceptionByClass(gDvm.exNoSuchFieldError, msg);
+    dvmThrowException(gDvm.exNoSuchFieldError, msg);
 }
 
 void dvmThrowNoSuchFieldException(const char* msg) {
-    dvmThrowExceptionByClass(gDvm.exNoSuchFieldException, msg);
+    dvmThrowException(gDvm.exNoSuchFieldException, msg);
 }
 
 void dvmThrowNoSuchMethodError(const char* msg) {
-    dvmThrowExceptionByClass(gDvm.exNoSuchMethodError, msg);
+    dvmThrowException(gDvm.exNoSuchMethodError, msg);
 }
 
 void dvmThrowNullPointerException(const char* msg) {
-    dvmThrowExceptionByClass(gDvm.exNullPointerException, msg);
+    dvmThrowException(gDvm.exNullPointerException, msg);
 }
 
 void dvmThrowOutOfMemoryError(const char* msg) {
-    dvmThrowExceptionByClass(gDvm.exOutOfMemoryError, msg);
+    dvmThrowException(gDvm.exOutOfMemoryError, msg);
 }
 
 void dvmThrowRuntimeException(const char* msg) {
-    dvmThrowExceptionByClass(gDvm.exRuntimeException, msg);
+    dvmThrowException(gDvm.exRuntimeException, msg);
 }
 
 void dvmThrowStaleDexCacheError(const char* msg) {
-    dvmThrowExceptionByClass(gDvm.exStaleDexCacheError, msg);
+    dvmThrowException(gDvm.exStaleDexCacheError, msg);
 }
 
 void dvmThrowStringIndexOutOfBoundsExceptionWithIndex(jsize stringLength,
         jsize requestIndex) {
-    dvmThrowExceptionFmtByClass(gDvm.exStringIndexOutOfBoundsException,
+    dvmThrowExceptionFmt(gDvm.exStringIndexOutOfBoundsException,
             "length=%d; index=%d", stringLength, requestIndex);
 }
 
 void dvmThrowStringIndexOutOfBoundsExceptionWithRegion(jsize stringLength,
         jsize requestStart, jsize requestLength) {
-    dvmThrowExceptionFmtByClass(gDvm.exStringIndexOutOfBoundsException,
+    dvmThrowExceptionFmt(gDvm.exStringIndexOutOfBoundsException,
             "length=%d; regionStart=%d regionLength=%d",
             stringLength, requestStart, requestLength);
 }
 
 void dvmThrowTypeNotPresentException(const char* descriptor) {
-    dvmThrowExceptionByClassWithClassMessage(gDvm.exTypeNotPresentException,
+    dvmThrowExceptionWithClassMessage(gDvm.exTypeNotPresentException,
             descriptor);
 }
 
 void dvmThrowUnsatisfiedLinkError(const char* msg) {
-    dvmThrowExceptionByClass(gDvm.exUnsatisfiedLinkError, msg);
+    dvmThrowException(gDvm.exUnsatisfiedLinkError, msg);
 }
 
 void dvmThrowUnsupportedOperationException(const char* msg) {
-    dvmThrowExceptionByClass(gDvm.exUnsupportedOperationException, msg);
+    dvmThrowException(gDvm.exUnsupportedOperationException, msg);
 }
 
 void dvmThrowVerifyError(const char* descriptor) {
-    dvmThrowExceptionByClassWithClassMessage(gDvm.exVerifyError, descriptor);
+    dvmThrowExceptionWithClassMessage(gDvm.exVerifyError, descriptor);
 }
 
 void dvmThrowVirtualMachineError(const char* msg) {
-    dvmThrowExceptionByClass(gDvm.exVirtualMachineError, msg);
+    dvmThrowException(gDvm.exVirtualMachineError, msg);
 }

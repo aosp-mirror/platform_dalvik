@@ -1206,7 +1206,7 @@ void dvmThrowVerificationError(const Method* method, int kind, int ref)
     /* no default clause -- want warning if enum updated */
     }
 
-    dvmThrowExceptionByClass(exceptionClass, msg);
+    dvmThrowException(exceptionClass, msg);
     free(msg);
 }
 

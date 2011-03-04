@@ -1973,7 +1973,7 @@ static jint ThrowNew(JNIEnv* env, jclass jclazz, const char* message)
     JNI_ENTER();
 
     ClassObject* clazz = (ClassObject*) dvmDecodeIndirectRef(env, jclazz);
-    dvmThrowExceptionByClass(clazz, message);
+    dvmThrowException(clazz, message);
     // TODO: should return failure if this didn't work (e.g. OOM)
 
     JNI_EXIT();
@@ -2351,7 +2351,7 @@ static jmethodID GetMethodID(JNIEnv* env, jclass jclazz, const char* name,
     } else if (dvmIsInterfaceClass(clazz)) {
         Method* meth = dvmFindInterfaceMethodHierByDescriptor(clazz, name, sig);
         if (meth == NULL) {
-            dvmThrowExceptionFmtByClass(gDvm.exNoSuchMethodError,
+            dvmThrowExceptionFmt(gDvm.exNoSuchMethodError,
                 "no method with name='%s' signature='%s' in interface %s",
                 name, sig, clazz->descriptor);
         }
@@ -2372,7 +2372,7 @@ static jmethodID GetMethodID(JNIEnv* env, jclass jclazz, const char* name,
             meth = NULL;
         }
         if (meth == NULL) {
-            dvmThrowExceptionFmtByClass(gDvm.exNoSuchMethodError,
+            dvmThrowExceptionFmt(gDvm.exNoSuchMethodError,
                 "no method with name='%s' signature='%s' in class %s",
                 name, sig, clazz->descriptor);
         } else {
@@ -2407,7 +2407,7 @@ static jfieldID GetFieldID(JNIEnv* env, jclass jclazz, const char* name,
     } else {
         id = (jfieldID) dvmFindInstanceFieldHier(clazz, name, sig);
         if (id == NULL) {
-            dvmThrowExceptionFmtByClass(gDvm.exNoSuchFieldError,
+            dvmThrowExceptionFmt(gDvm.exNoSuchFieldError,
                 "no field with name='%s' signature='%s' in class %s",
                 name, sig, clazz->descriptor);
         }
@@ -2449,7 +2449,7 @@ static jmethodID GetStaticMethodID(JNIEnv* env, jclass jclazz,
 
         id = (jmethodID) meth;
         if (id == NULL) {
-            dvmThrowExceptionFmtByClass(gDvm.exNoSuchMethodError,
+            dvmThrowExceptionFmt(gDvm.exNoSuchMethodError,
                 "no static method with name='%s' signature='%s' in class %s",
                 name, sig, clazz->descriptor);
         }
@@ -2476,7 +2476,7 @@ static jfieldID GetStaticFieldID(JNIEnv* env, jclass jclazz,
     } else {
         id = (jfieldID) dvmFindStaticField(clazz, name, sig);
         if (id == NULL) {
-            dvmThrowExceptionFmtByClass(gDvm.exNoSuchFieldError,
+            dvmThrowExceptionFmt(gDvm.exNoSuchFieldError,
                 "no static field with name='%s' signature='%s' in class %s",
                 name, sig, clazz->descriptor);
         }
@@ -3210,7 +3210,7 @@ NEW_PRIMITIVE_ARRAY(jdoubleArray, Double, 'D');
 static void throwArrayRegionOutOfBounds(ArrayObject* arrayObj, jsize start,
     jsize len, const char* arrayIdentifier)
 {
-    dvmThrowExceptionFmtByClass(gDvm.exArrayIndexOutOfBoundsException,
+    dvmThrowExceptionFmt(gDvm.exArrayIndexOutOfBoundsException,
         "%s offset=%d length=%d %s.length=%d",
         arrayObj->obj.clazz->descriptor, start, len, arrayIdentifier,
         arrayObj->length);

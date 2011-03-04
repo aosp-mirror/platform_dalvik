@@ -1418,7 +1418,7 @@ bool dvmCreateInterpThread(Object* threadObj, int reqStackSize)
         char* threadName = dvmCreateCstrFromString(nameStr);
         bool profilerThread = strcmp(threadName, "SamplingProfiler") == 0;
         if (!profilerThread) {
-            dvmThrowExceptionFmtByClass(gDvm.exIllegalStateException,
+            dvmThrowExceptionFmt(gDvm.exIllegalStateException,
                 "No new threads in -Xzygote mode. "
                 "Found thread named '%s'", threadName);
 

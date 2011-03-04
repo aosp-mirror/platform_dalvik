@@ -645,7 +645,7 @@ static void throwArgumentTypeMismatch(int argIndex, ClassObject* expected,
     char* actualClassName = (arg != NULL)
         ? dvmHumanReadableDescriptor(arg->obj.clazz->descriptor)
         : strdup("null");
-    dvmThrowExceptionFmtByClass(gDvm.exIllegalArgumentException,
+    dvmThrowExceptionFmt(gDvm.exIllegalArgumentException,
         "argument %d should have type %s, got %s",
         argIndex + 1, expectedClassName, actualClassName);
     free(expectedClassName);
@@ -681,7 +681,7 @@ Object* dvmInvokeMethod(Object* obj, const Method* method,
     else
         argListLength = 0;
     if (argListLength != (int) params->length) {
-        dvmThrowExceptionFmtByClass(gDvm.exIllegalArgumentException,
+        dvmThrowExceptionFmt(gDvm.exIllegalArgumentException,
             "wrong number of arguments; expected %d, got %d",
             params->length, argListLength);
         return NULL;
@@ -1064,7 +1064,7 @@ void dvmHandleStackOverflow(Thread* self, const Method* method)
         LOGW("Stack overflow while throwing exception\n");
         dvmClearException(self);
     }
-    dvmThrowChainedExceptionByClass(gDvm.exStackOverflowError, NULL, excep);
+    dvmThrowChainedException(gDvm.exStackOverflowError, NULL, excep);
 }
 
 /*

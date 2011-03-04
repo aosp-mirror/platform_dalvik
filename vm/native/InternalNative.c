@@ -169,7 +169,7 @@ bool dvmVerifyObjectInClass(Object* obj, ClassObject* clazz)
         char* actualClassName = (obj != NULL)
             ? dvmHumanReadableDescriptor(obj->clazz->descriptor)
             : strdup("null");
-        dvmThrowExceptionFmtByClass(exceptionClass,
+        dvmThrowExceptionFmt(exceptionClass,
             "expected receiver of type %s, but got %s",
             expectedClassName, actualClassName);
         free(expectedClassName);
