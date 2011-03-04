@@ -359,7 +359,7 @@ void dvmMethodTraceStart(const char* traceFileName, int traceFd, int bufferSize,
             int err = errno;
             LOGE("Unable to open trace file '%s': %s\n",
                 traceFileName, strerror(err));
-            dvmThrowExceptionFmt("Ljava/lang/RuntimeException;",
+            dvmThrowExceptionFmtByClass(gDvm.exRuntimeException,
                 "Unable to open trace file '%s': %s",
                 traceFileName, strerror(err));
             goto fail;
@@ -636,7 +636,7 @@ void dvmMethodTraceStop(void)
             int err = errno;
             LOGE("trace fwrite(%d) failed: %s\n",
                 finalCurOffset, strerror(err));
-            dvmThrowExceptionFmt("Ljava/lang/RuntimeException;",
+            dvmThrowExceptionFmtByClass(gDvm.exRuntimeException,
                 "Trace data write failed: %s", strerror(err));
         }
     }

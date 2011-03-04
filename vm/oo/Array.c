@@ -51,7 +51,7 @@ ArrayObject* dvmAllocArray(ClassObject* arrayClass, size_t length,
     size_t totalSize = elementSize + headerSize;
     if (elementSize >> elementShift != length || totalSize < elementSize) {
         char *descriptor = dvmHumanReadableDescriptor(arrayClass->descriptor);
-        dvmThrowExceptionFmt("Ljava/lang/OutOfMemoryError;",
+        dvmThrowExceptionFmtByClass(gDvm.exOutOfMemoryError,
                              "%s of length %zd exceeds the VM limit",
                              descriptor, length);
         free(descriptor);
