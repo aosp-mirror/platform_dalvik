@@ -2351,7 +2351,7 @@ static jmethodID GetMethodID(JNIEnv* env, jclass jclazz, const char* name,
     } else if (dvmIsInterfaceClass(clazz)) {
         Method* meth = dvmFindInterfaceMethodHierByDescriptor(clazz, name, sig);
         if (meth == NULL) {
-            dvmThrowExceptionFmt("Ljava/lang/NoSuchMethodError;",
+            dvmThrowExceptionFmtByClass(gDvm.exNoSuchMethodError,
                 "no method with name='%s' signature='%s' in interface %s",
                 name, sig, clazz->descriptor);
         }
@@ -2372,7 +2372,7 @@ static jmethodID GetMethodID(JNIEnv* env, jclass jclazz, const char* name,
             meth = NULL;
         }
         if (meth == NULL) {
-            dvmThrowExceptionFmt("Ljava/lang/NoSuchMethodError;",
+            dvmThrowExceptionFmtByClass(gDvm.exNoSuchMethodError,
                 "no method with name='%s' signature='%s' in class %s",
                 name, sig, clazz->descriptor);
         } else {
@@ -2407,7 +2407,7 @@ static jfieldID GetFieldID(JNIEnv* env, jclass jclazz, const char* name,
     } else {
         id = (jfieldID) dvmFindInstanceFieldHier(clazz, name, sig);
         if (id == NULL) {
-            dvmThrowExceptionFmt("Ljava/lang/NoSuchFieldError;",
+            dvmThrowExceptionFmtByClass(gDvm.exNoSuchFieldError,
                 "no field with name='%s' signature='%s' in class %s",
                 name, sig, clazz->descriptor);
         }
@@ -2449,7 +2449,7 @@ static jmethodID GetStaticMethodID(JNIEnv* env, jclass jclazz,
 
         id = (jmethodID) meth;
         if (id == NULL) {
-            dvmThrowExceptionFmt("Ljava/lang/NoSuchMethodError;",
+            dvmThrowExceptionFmtByClass(gDvm.exNoSuchMethodError,
                 "no static method with name='%s' signature='%s' in class %s",
                 name, sig, clazz->descriptor);
         }
@@ -2476,7 +2476,7 @@ static jfieldID GetStaticFieldID(JNIEnv* env, jclass jclazz,
     } else {
         id = (jfieldID) dvmFindStaticField(clazz, name, sig);
         if (id == NULL) {
-            dvmThrowExceptionFmt("Ljava/lang/NoSuchFieldError;",
+            dvmThrowExceptionFmtByClass(gDvm.exNoSuchFieldError,
                 "no static field with name='%s' signature='%s' in class %s",
                 name, sig, clazz->descriptor);
         }
