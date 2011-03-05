@@ -139,10 +139,9 @@ typedef enum JitHint {
  * a contiguous sequence of Dalvik byte codes.
  */
 typedef struct {
-    unsigned isCode:1;       // If set denotes code fragments
     unsigned numInsts:8;     // Number of Byte codes in run
     unsigned runEnd:1;       // Run ends with last byte code
-    jitHint  hint:6;         // Hint to apply to final code of run
+    jitHint  hint:7;         // Hint to apply to final code of run
     u2    startOffset;       // Starting offset for trace run
 } JitCodeDesc;
 
@@ -153,23 +152,28 @@ typedef struct {
  *   frag2
  *   frag3
  *   meta1
- *   meta2
+ *     :
+ *   metan
  *   frag4
  *
- * frags 1-4 have the "isCode" field set, and metas 1-2 are plain pointers or
- * pointers to auxiliary data structures as long as the LSB is null.
+ * frags 1-4 have the "isCode" field set and describe the location/length of
+ * real code traces, while metas 1-n are misc information.
  * The meaning of the meta content is loosely defined. It is usually the code
  * fragment right before the first meta field (frag3 in this case) to
  * understand and parse them. Frag4 could be a dummy one with 0 "numInsts" but
  * the "runEnd" field set.
  *
  * For example, if a trace run contains a method inlining target, the class
- * type of "this" and the currently resolved method pointer are two instances
- * of meta information stored there.
+ * descriptor/loader of "this" and the currently resolved method pointer are
+ * three instances of meta information stored there.
  */
-typedef union {
-    JitCodeDesc frag;
-    void*       meta;
+typedef struct {
+    union {
+        JitCodeDesc frag;
+        void*       meta;
+    } info;
+    u4 isCode:1;
+    u4 unused:31;
 } JitTraceRun;
 
 #endif

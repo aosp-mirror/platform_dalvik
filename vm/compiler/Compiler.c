@@ -50,7 +50,6 @@ static CompilerWorkOrder workDequeue(void)
     return work;
 }
 
-
 /*
  * Enqueue a work order - retrying until successful.  If attempt to enqueue
  * is repeatedly unsuccessful, assume the JIT is in a bad state and force a
@@ -332,6 +331,12 @@ static void resetCodeCache(void)
     gDvmJit.compilerICPatchIndex = 0;
     dvmUnlockMutex(&gDvmJit.compilerICPatchLock);
 
+    /*
+     * Reset the inflight compilation address (can only be done in safe points
+     * or by the compiler thread when its thread state is RUNNING).
+     */
+    gDvmJit.inflightBaseAddr = NULL;
+
     /* All clear now */
     gDvmJit.codeCacheFull = false;
 
@@ -381,6 +386,9 @@ static bool compilerThreadStartup(void)
     if (dvmCompilerHeapInit() == false) {
         goto fail;
     }
+
+    /* Cache the thread pointer */
+    gDvmJit.compilerThread = dvmThreadSelf();
 
     dvmLockMutex(&gDvmJit.compilerLock);
 

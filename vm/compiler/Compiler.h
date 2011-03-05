@@ -116,6 +116,9 @@ typedef struct PredictedChainingCell {
 typedef struct ICPatchWorkOrder {
     PredictedChainingCell *cellAddr;    /* Address to be patched */
     PredictedChainingCell cellContent;  /* content of the new cell */
+    const char *classDescriptor;        /* Descriptor of the class object */
+    Object *classLoader;                /* Class loader */
+    u4 serialNumber;                    /* Serial # (for verification only) */
 } ICPatchWorkOrder;
 
 /*
@@ -198,6 +201,7 @@ bool dvmCompileTrace(JitTraceDescription *trace, int numMaxInsts,
 void dvmCompilerDumpStats(void);
 void dvmCompilerDrainQueue(void);
 void dvmJitUnchainAll(void);
+void dvmJitScanAllClassPointers(void (*callback)(void *ptr));
 void dvmCompilerSortAndPrintTraceProfiles(void);
 void dvmCompilerPerformSafePointChecks(void);
 void dvmCompilerInlineMIR(struct CompilationUnit *cUnit,

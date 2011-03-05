@@ -897,28 +897,26 @@ ArmEncodingMap EncodingMap[kArmLast] = {
 #define UPDATE_CODE_CACHE_PATCHES()
 #endif
 
-/* Write the numbers in the literal pool to the codegen stream */
-static void installDataContent(CompilationUnit *cUnit)
+/* Write the numbers in the constant and class pool to the output stream */
+static void installLiteralPools(CompilationUnit *cUnit)
 {
     int *dataPtr = (int *) ((char *) cUnit->baseAddr + cUnit->dataOffset);
-    ArmLIR *dataLIR = (ArmLIR *) cUnit->wordList;
+    /* Install number of class pointer literals */
+    *dataPtr++ = cUnit->numClassPointers;
+    ArmLIR *dataLIR = (ArmLIR *) cUnit->classPointerList;
+    while (dataLIR) {
+        /*
+         * Install the callsiteinfo pointers into the cells for now. They will
+         * be converted into real pointers in dvmJitInstallClassObjectPointers.
+         */
+        *dataPtr++ = dataLIR->operands[0];
+        dataLIR = NEXT_LIR(dataLIR);
+    }
+    dataLIR = (ArmLIR *) cUnit->literalList;
     while (dataLIR) {
         *dataPtr++ = dataLIR->operands[0];
         dataLIR = NEXT_LIR(dataLIR);
     }
-}
-
-/* Returns the size of a Jit trace description */
-static int jitTraceDescriptionSize(const JitTraceDescription *desc)
-{
-    int runCount;
-    /* Trace end is always of non-meta type (ie isCode == true) */
-    for (runCount = 0; ; runCount++) {
-        if (desc->trace[runCount].frag.isCode &&
-            desc->trace[runCount].frag.runEnd)
-           break;
-    }
-    return sizeof(JitTraceDescription) + ((runCount+1) * sizeof(JitTraceRun));
 }
 
 /*
@@ -1146,35 +1144,24 @@ static AssemblerStatus assembleInstructions(CompilationUnit *cUnit,
     return kSuccess;
 }
 
-#if defined(SIGNATURE_BREAKPOINT)
-/* Inspect the assembled instruction stream to find potential matches */
-static void matchSignatureBreakpoint(const CompilationUnit *cUnit,
-                                     unsigned int size)
+static int assignLiteralOffsetCommon(LIR *lir, int offset)
 {
-    unsigned int i, j;
-    u4 *ptr = (u4 *) cUnit->codeBuffer;
-
-    for (i = 0; i < size - gDvmJit.signatureBreakpointSize + 1; i++) {
-        if (ptr[i] == gDvmJit.signatureBreakpoint[0]) {
-            for (j = 1; j < gDvmJit.signatureBreakpointSize; j++) {
-                if (ptr[i+j] != gDvmJit.signatureBreakpoint[j]) {
-                    break;
-                }
-            }
-            if (j == gDvmJit.signatureBreakpointSize) {
-                LOGD("Signature match starting from offset %#x (%d words)",
-                     i*4, gDvmJit.signatureBreakpointSize);
-                int descSize = jitTraceDescriptionSize(cUnit->traceDesc);
-                JitTraceDescription *newCopy =
-                    (JitTraceDescription *) malloc(descSize);
-                memcpy(newCopy, cUnit->traceDesc, descSize);
-                dvmCompilerWorkEnqueue(NULL, kWorkOrderTraceDebug, newCopy);
-                break;
-            }
-        }
+    for (;lir != NULL; lir = lir->next) {
+        lir->offset = offset;
+        offset += 4;
     }
+    return offset;
 }
-#endif
+
+/* Determine the offset of each literal field */
+static int assignLiteralOffset(CompilationUnit *cUnit, int offset)
+{
+    /* Reserved for the size field of class pointer pool */
+    offset += 4;
+    offset = assignLiteralOffsetCommon(cUnit->classPointerList, offset);
+    offset = assignLiteralOffsetCommon(cUnit->literalList, offset);
+    return offset;
+}
 
 /*
  * Translation layout in the code cache.  Note that the codeAddress pointer
@@ -1183,9 +1170,9 @@ static void matchSignatureBreakpoint(const CompilationUnit *cUnit,
  * counter is at codeAddress - 6.
  *
  *      +----------------------------+
- *      | Trace Profile Counter addr |  -> 4 bytes
+ *      | Trace Profile Counter addr |  -> 4 bytes (PROF_COUNTER_ADDR_SIZE)
  *      +----------------------------+
- *   +--| Offset to chain cell counts|  -> 2 bytes
+ *   +--| Offset to chain cell counts|  -> 2 bytes (CHAIN_CELL_OFFSET_SIZE)
  *   |  +----------------------------+
  *   |  | Trace profile code         |  <- entry point when profiling
  *   |  .  -   -   -   -   -   -   - .
@@ -1206,25 +1193,151 @@ static void matchSignatureBreakpoint(const CompilationUnit *cUnit,
  *      .                            .
  *      |                            |
  *      +----------------------------+
+ *      | # Class pointer pool size  |  -> 4 bytes
+ *      +----------------------------+
+ *      | Class pointer pool         |  -> 4-byte aligned, variable size
+ *      .                            .
+ *      .                            .
+ *      |                            |
+ *      +----------------------------+
  *      | Literal pool               |  -> 4-byte aligned, variable size
  *      .                            .
  *      .                            .
  *      |                            |
  *      +----------------------------+
  *
+ */
+
+#define PROF_COUNTER_ADDR_SIZE 4
+#define CHAIN_CELL_OFFSET_SIZE 2
+
+/*
+ * Utility functions to navigate various parts in a trace. If we change the
+ * layout/offset in the future, we just modify these functions and we don't need
+ * to propagate the changes to all the use cases.
+ */
+static inline char *getTraceBase(const JitEntry *p)
+{
+    return (char*)p->codeAddress -
+        (PROF_COUNTER_ADDR_SIZE + CHAIN_CELL_OFFSET_SIZE +
+         (p->u.info.instructionSet == DALVIK_JIT_ARM ? 0 : 1));
+}
+
+/* Handy function to retrieve the profile count */
+static inline JitTraceCounter_t getProfileCount(const JitEntry *entry)
+{
+    if (entry->dPC == 0 || entry->codeAddress == 0 ||
+        entry->codeAddress == dvmCompilerGetInterpretTemplate())
+        return 0;
+
+    JitTraceCounter_t **p = (JitTraceCounter_t **) getTraceBase(entry);
+
+    return **p;
+}
+
+/* Handy function to reset the profile count */
+static inline void resetProfileCount(const JitEntry *entry)
+{
+    if (entry->dPC == 0 || entry->codeAddress == 0 ||
+        entry->codeAddress == dvmCompilerGetInterpretTemplate())
+        return;
+
+    JitTraceCounter_t **p = (JitTraceCounter_t **) getTraceBase(entry);
+
+    **p = 0;
+}
+
+/* Get the pointer of the chain cell count */
+static inline ChainCellCounts* getChainCellCountsPointer(const char *base)
+{
+    /* 4 is the size of the profile count */
+    u2 *chainCellOffsetP = (u2 *) (base + PROF_COUNTER_ADDR_SIZE);
+    u2 chainCellOffset = *chainCellOffsetP;
+    return (ChainCellCounts *) ((char *) chainCellOffsetP + chainCellOffset);
+}
+
+/* Get the size of all chaining cells */
+static inline u4 getChainCellSize(const ChainCellCounts* pChainCellCounts)
+{
+    int cellSize = 0;
+    int i;
+
+    /* Get total count of chain cells */
+    for (i = 0; i < kChainingCellGap; i++) {
+        if (i != kChainingCellInvokePredicted) {
+            cellSize += pChainCellCounts->u.count[i] *
+                        (CHAIN_CELL_NORMAL_SIZE >> 2);
+        } else {
+            cellSize += pChainCellCounts->u.count[i] *
+                (CHAIN_CELL_PREDICTED_SIZE >> 2);
+        }
+    }
+    return cellSize;
+}
+
+/* Get the starting pointer of the trace description section */
+static JitTraceDescription* getTraceDescriptionPointer(const char *base)
+{
+    ChainCellCounts* pCellCounts = getChainCellCountsPointer(base);
+    return (JitTraceDescription*) ((char*)pCellCounts + sizeof(*pCellCounts));
+}
+
+/* Get the size of a trace description */
+static int getTraceDescriptionSize(const JitTraceDescription *desc)
+{
+    int runCount;
+    /* Trace end is always of non-meta type (ie isCode == true) */
+    for (runCount = 0; ; runCount++) {
+        if (desc->trace[runCount].isCode &&
+            desc->trace[runCount].info.frag.runEnd)
+           break;
+    }
+    return sizeof(JitTraceDescription) + ((runCount+1) * sizeof(JitTraceRun));
+}
+
+#if defined(SIGNATURE_BREAKPOINT)
+/* Inspect the assembled instruction stream to find potential matches */
+static void matchSignatureBreakpoint(const CompilationUnit *cUnit,
+                                     unsigned int size)
+{
+    unsigned int i, j;
+    u4 *ptr = (u4 *) cUnit->codeBuffer;
+
+    for (i = 0; i < size - gDvmJit.signatureBreakpointSize + 1; i++) {
+        if (ptr[i] == gDvmJit.signatureBreakpoint[0]) {
+            for (j = 1; j < gDvmJit.signatureBreakpointSize; j++) {
+                if (ptr[i+j] != gDvmJit.signatureBreakpoint[j]) {
+                    break;
+                }
+            }
+            if (j == gDvmJit.signatureBreakpointSize) {
+                LOGD("Signature match starting from offset %#x (%d words)",
+                     i*4, gDvmJit.signatureBreakpointSize);
+                int descSize = getTraceDescriptionSize(cUnit->traceDesc);
+                JitTraceDescription *newCopy =
+                    (JitTraceDescription *) malloc(descSize);
+                memcpy(newCopy, cUnit->traceDesc, descSize);
+                dvmCompilerWorkEnqueue(NULL, kWorkOrderTraceDebug, newCopy);
+                break;
+            }
+        }
+    }
+}
+#endif
+
+/*
  * Go over each instruction in the list and calculate the offset from the top
  * before sending them off to the assembler. If out-of-range branch distance is
  * seen rearrange the instructions a bit to correct it.
  */
 void dvmCompilerAssembleLIR(CompilationUnit *cUnit, JitTranslationInfo *info)
 {
-    LIR *lir;
     ArmLIR *armLIR;
     int offset = 0;
     int i;
     ChainCellCounts chainCellCounts;
     int descSize =
-        cUnit->methodJitMode ? 0 : jitTraceDescriptionSize(cUnit->traceDesc);
+        cUnit->methodJitMode ? 0 : getTraceDescriptionSize(cUnit->traceDesc);
     int chainingCellGap = 0;
 
     info->instructionSet = cUnit->instructionSet;
@@ -1283,10 +1396,11 @@ void dvmCompilerAssembleLIR(CompilationUnit *cUnit, JitTranslationInfo *info)
     /* Set up offsets for literals */
     cUnit->dataOffset = offset;
 
-    for (lir = cUnit->wordList; lir; lir = lir->next) {
-        lir->offset = offset;
-        offset += 4;
-    }
+    /*
+     * Assign each class pointer/constant an offset from the beginning of the
+     * compilation unit.
+     */
+    offset = assignLiteralOffset(cUnit, offset);
 
     cUnit->totalSize = offset;
 
@@ -1387,8 +1501,7 @@ void dvmCompilerAssembleLIR(CompilationUnit *cUnit, JitTranslationInfo *info)
     }
 
     /* Write the literals directly into the code cache */
-    installDataContent(cUnit);
-
+    installLiteralPools(cUnit);
 
     /* Flush dcache and invalidate the icache to maintain coherence */
     dvmCompilerCacheFlush((long)cUnit->baseAddr,
@@ -1575,8 +1688,14 @@ static void inlineCachePatchEnqueue(PredictedChainingCell *cellAddr,
      */
     } else if (gDvmJit.compilerICPatchIndex < COMPILER_IC_PATCH_QUEUE_SIZE) {
         int index = gDvmJit.compilerICPatchIndex++;
+        const ClassObject *clazz = newContent->clazz;
+
         gDvmJit.compilerICPatchQueue[index].cellAddr = cellAddr;
         gDvmJit.compilerICPatchQueue[index].cellContent = *newContent;
+        gDvmJit.compilerICPatchQueue[index].classDescriptor = clazz->descriptor;
+        gDvmJit.compilerICPatchQueue[index].classLoader = clazz->classLoader;
+        /* For verification purpose only */
+        gDvmJit.compilerICPatchQueue[index].serialNumber = clazz->serialNumber;
 #if defined(WITH_JIT_TUNING)
         gDvmJit.icPatchQueued++;
 #endif
@@ -1700,10 +1819,16 @@ void dvmCompilerPatchInlineCache(void)
     maxAddr = (PredictedChainingCell *) gDvmJit.codeCache;
 
     for (i = 0; i < gDvmJit.compilerICPatchIndex; i++) {
-        PredictedChainingCell *cellAddr =
-            gDvmJit.compilerICPatchQueue[i].cellAddr;
-        PredictedChainingCell *cellContent =
-            &gDvmJit.compilerICPatchQueue[i].cellContent;
+        ICPatchWorkOrder *workOrder = &gDvmJit.compilerICPatchQueue[i];
+        PredictedChainingCell *cellAddr = workOrder->cellAddr;
+        PredictedChainingCell *cellContent = &workOrder->cellContent;
+        ClassObject *clazz = dvmFindClassNoInit(workOrder->classDescriptor,
+                                                workOrder->classLoader);
+
+        assert(clazz->serialNumber == workOrder->serialNumber);
+
+        /* Use the newly resolved clazz pointer */
+        cellContent->clazz = clazz;
 
         COMPILER_TRACE_CHAINING(
             LOGD("Jit Runtime: predicted chain %p from %s to %s (%s) "
@@ -1736,35 +1861,22 @@ void dvmCompilerPatchInlineCache(void)
  * the incoming codeAddr is a thumb code address, and therefore has
  * the low bit set.
  */
-u4* dvmJitUnchain(void* codeAddr)
+static u4* unchainSingle(JitEntry *trace)
 {
-    u2* pChainCellOffset = (u2*)((char*)codeAddr - 3);
-    u2 chainCellOffset = *pChainCellOffset;
-    ChainCellCounts *pChainCellCounts =
-          (ChainCellCounts*)((char*)codeAddr + chainCellOffset - 3);
-    int cellSize;
+    const char *base = getTraceBase(trace);
+    ChainCellCounts *pChainCellCounts = getChainCellCountsPointer(base);
+    int cellSize = getChainCellSize(pChainCellCounts);
     u4* pChainCells;
-    u4* pStart;
     u4 newInst;
     int i,j;
     PredictedChainingCell *predChainCell;
-
-    /* Get total count of chain cells */
-    for (i = 0, cellSize = 0; i < kChainingCellGap; i++) {
-        if (i != kChainingCellInvokePredicted) {
-            cellSize += pChainCellCounts->u.count[i] * (CHAIN_CELL_NORMAL_SIZE >> 2);
-        } else {
-            cellSize += pChainCellCounts->u.count[i] *
-                (CHAIN_CELL_PREDICTED_SIZE >> 2);
-        }
-    }
 
     if (cellSize == 0)
         return (u4 *) pChainCellCounts;
 
     /* Locate the beginning of the chain cell region */
-    pStart = pChainCells = ((u4 *) pChainCellCounts) - cellSize -
-             pChainCellCounts->u.count[kChainingCellGap];
+    pChainCells = ((u4 *) pChainCellCounts) - cellSize -
+                  pChainCellCounts->u.count[kChainingCellGap];
 
     /* The cells are sorted in order - walk through them and reset */
     for (i = 0; i < kChainingCellGap; i++) {
@@ -1833,8 +1945,7 @@ void dvmJitUnchainAll()
                 (gDvmJit.pJitEntryTable[i].codeAddress !=
                  dvmCompilerGetInterpretTemplate())) {
                 u4* lastAddress;
-                lastAddress =
-                      dvmJitUnchain(gDvmJit.pJitEntryTable[i].codeAddress);
+                lastAddress = unchainSingle(&gDvmJit.pJitEntryTable[i]);
                 if (lowAddress == NULL ||
                       (u4*)gDvmJit.pJitEntryTable[i].codeAddress <
                       lowAddress)
@@ -1872,73 +1983,33 @@ static int addrToLineCb (void *cnxt, u4 bytecodeOffset, u4 lineNum)
     return 0;
 }
 
-static char *getTraceBase(const JitEntry *p)
-{
-    return (char*)p->codeAddress -
-        (6 + (p->u.info.instructionSet == DALVIK_JIT_ARM ? 0 : 1));
-}
-
-/* Handy function to retrieve the profile count */
-static inline JitTraceCounter_t getProfileCount(const JitEntry *entry)
-{
-    if (entry->dPC == 0 || entry->codeAddress == 0 ||
-        entry->codeAddress == dvmCompilerGetInterpretTemplate())
-        return 0;
-
-    JitTraceCounter_t **p = (JitTraceCounter_t **) getTraceBase(entry);
-
-    return **p;
-}
-
-/* Handy function to reset the profile count */
-static inline void resetProfileCount(const JitEntry *entry)
-{
-    if (entry->dPC == 0 || entry->codeAddress == 0 ||
-        entry->codeAddress == dvmCompilerGetInterpretTemplate())
-        return;
-
-    JitTraceCounter_t **p = (JitTraceCounter_t **) getTraceBase(entry);
-
-    **p = 0;
-}
-
 /* Dumps profile info for a single trace */
 static int dumpTraceProfile(JitEntry *p, bool silent, bool reset,
                             unsigned long sum)
 {
-    ChainCellCounts* pCellCounts;
-    char* traceBase;
-    JitTraceCounter_t count;
-    u2* pCellOffset;
-    JitTraceDescription *desc;
-    const Method* method;
     int idx;
-
-    traceBase = getTraceBase(p);
 
     if (p->codeAddress == NULL) {
         if (!silent)
-            LOGD("TRACEPROFILE 0x%08x 0 NULL 0 0", (int)traceBase);
+            LOGD("TRACEPROFILE NULL");
         return 0;
     }
     if (p->codeAddress == dvmCompilerGetInterpretTemplate()) {
         if (!silent)
-            LOGD("TRACEPROFILE 0x%08x 0 INTERPRET_ONLY  0 0", (int)traceBase);
+            LOGD("TRACEPROFILE INTERPRET_ONLY");
         return 0;
     }
-    count = getProfileCount(p);
+    JitTraceCounter_t count = getProfileCount(p);
     if (reset) {
         resetProfileCount(p);
     }
     if (silent) {
         return count;
     }
-    pCellOffset = (u2*) (traceBase + 4);
-    pCellCounts = (ChainCellCounts*) ((char *)pCellOffset + *pCellOffset);
-    desc = (JitTraceDescription*) ((char*)pCellCounts + sizeof(*pCellCounts));
-    method = desc->method;
+    JitTraceDescription *desc = getTraceDescriptionPointer(getTraceBase(p));
+    const Method *method = desc->method;
     char *methodDesc = dexProtoCopyMethodDescriptor(&method->prototype);
-    jitProfileAddrToLine addrToLine = {0, desc->trace[0].frag.startOffset};
+    jitProfileAddrToLine addrToLine = {0, desc->trace[0].info.frag.startOffset};
 
     /*
      * We may end up decoding the debug information for the same method
@@ -1955,18 +2026,18 @@ static int dumpTraceProfile(JitEntry *p, bool silent, bool reset,
                        addrToLineCb, NULL, &addrToLine);
 
     LOGD("TRACEPROFILE 0x%08x % 10d %5.2f%% [%#x(+%d), %d] %s%s;%s",
-         (int)traceBase,
+         (int) getTraceBase(p),
          count,
          ((float ) count) / sum * 100.0,
-         desc->trace[0].frag.startOffset,
-         desc->trace[0].frag.numInsts,
+         desc->trace[0].info.frag.startOffset,
+         desc->trace[0].info.frag.numInsts,
          addrToLine.lineNum,
          method->clazz->descriptor, method->name, methodDesc);
     free(methodDesc);
 
     /* Find the last fragment (ie runEnd is set) */
     for (idx = 0;
-         desc->trace[idx].frag.isCode && !desc->trace[idx].frag.runEnd;
+         desc->trace[idx].isCode && !desc->trace[idx].info.frag.runEnd;
          idx++) {
     }
 
@@ -1974,8 +2045,9 @@ static int dumpTraceProfile(JitEntry *p, bool silent, bool reset,
      * runEnd must comes with a JitCodeDesc frag. If isCode is false it must
      * be a meta info field (only used by callsite info for now).
      */
-    if (!desc->trace[idx].frag.isCode) {
-        const Method *method = (const Method *)desc->trace[idx+1].meta;
+    if (!desc->trace[idx].isCode) {
+        const Method *method = (const Method *)
+            desc->trace[idx+JIT_TRACE_CUR_METHOD-1].info.meta;
         char *methodDesc = dexProtoCopyMethodDescriptor(&method->prototype);
         /* Print the callee info in the trace */
         LOGD("    -> %s%s;%s", method->clazz->descriptor, method->name,
@@ -1994,20 +2066,11 @@ JitTraceDescription *dvmCopyTraceDescriptor(const u2 *pc,
     if ((jitEntry == NULL) || (jitEntry->codeAddress == 0))
         return NULL;
 
-    /* Find out the startint point */
-    char *traceBase = getTraceBase(jitEntry);
-
-    /* Then find out the starting point of the chaining cell */
-    u2 *pCellOffset = (u2*) (traceBase + 4);
-    ChainCellCounts *pCellCounts =
-        (ChainCellCounts*) ((char *)pCellOffset + *pCellOffset);
-
-    /* From there we can find out the starting point of the trace descriptor */
     JitTraceDescription *desc =
-        (JitTraceDescription*) ((char*)pCellCounts + sizeof(*pCellCounts));
+        getTraceDescriptionPointer(getTraceBase(jitEntry));
 
     /* Now make a copy and return */
-    int descSize = jitTraceDescriptionSize(desc);
+    int descSize = getTraceDescriptionSize(desc);
     JitTraceDescription *newCopy = (JitTraceDescription *) malloc(descSize);
     memcpy(newCopy, desc, descSize);
     return newCopy;
@@ -2089,6 +2152,145 @@ void dvmCompilerSortAndPrintTraceProfiles()
 done:
     dvmUnlockMutex(&gDvmJit.tableLock);
     return;
+}
+
+static void findClassPointersSingleTrace(char *base, void (*callback)(void *))
+{
+    unsigned int chainTypeIdx, chainIdx;
+    ChainCellCounts *pChainCellCounts = getChainCellCountsPointer(base);
+    int cellSize = getChainCellSize(pChainCellCounts);
+    /* Scan the chaining cells */
+    if (cellSize) {
+        /* Locate the beginning of the chain cell region */
+        u4 *pChainCells = ((u4 *) pChainCellCounts) - cellSize -
+            pChainCellCounts->u.count[kChainingCellGap];
+        /* The cells are sorted in order - walk through them */
+        for (chainTypeIdx = 0; chainTypeIdx < kChainingCellGap;
+             chainTypeIdx++) {
+            if (chainTypeIdx != kChainingCellInvokePredicted) {
+                /* In 32-bit words */
+                pChainCells += (CHAIN_CELL_NORMAL_SIZE >> 2) *
+                    pChainCellCounts->u.count[chainTypeIdx];
+                continue;
+            }
+            for (chainIdx = 0;
+                 chainIdx < pChainCellCounts->u.count[chainTypeIdx];
+                 chainIdx++) {
+                PredictedChainingCell *cell =
+                    (PredictedChainingCell *) pChainCells;
+                /*
+                 * Report the cell if it contains a sane class
+                 * pointer.
+                 */
+                if (cell->clazz != NULL &&
+                    cell->clazz !=
+                      (ClassObject *) PREDICTED_CHAIN_FAKE_CLAZZ) {
+                    callback(&cell->clazz);
+                }
+                pChainCells += CHAIN_CELL_PREDICTED_SIZE >> 2;
+            }
+        }
+    }
+
+    /* Scan the class pointer pool */
+    JitTraceDescription *desc = getTraceDescriptionPointer(base);
+    int descSize = getTraceDescriptionSize(desc);
+    int *classPointerP = (int *) ((char *) desc + descSize);
+    int numClassPointers = *classPointerP++;
+    for (; numClassPointers; numClassPointers--, classPointerP++) {
+        callback(classPointerP);
+    }
+}
+
+/*
+ * Scan class pointers in each translation and pass its address to the callback
+ * function. Currently such a pointers can be found in the pointer pool and the
+ * clazz field in the predicted chaining cells.
+ */
+void dvmJitScanAllClassPointers(void (*callback)(void *))
+{
+    UNPROTECT_CODE_CACHE(gDvmJit.codeCache, gDvmJit.codeCacheByteUsed);
+
+    /* Handle the inflight compilation first */
+    if (gDvmJit.inflightBaseAddr)
+        findClassPointersSingleTrace((char *) gDvmJit.inflightBaseAddr,
+                                     callback);
+
+    if (gDvmJit.pJitEntryTable != NULL) {
+        unsigned int traceIdx;
+        dvmLockMutex(&gDvmJit.tableLock);
+        for (traceIdx = 0; traceIdx < gDvmJit.jitTableSize; traceIdx++) {
+            const JitEntry *entry = &gDvmJit.pJitEntryTable[traceIdx];
+            if (entry->dPC &&
+                !entry->u.info.isMethodEntry &&
+                entry->codeAddress &&
+                (entry->codeAddress != dvmCompilerGetInterpretTemplate())) {
+                char *base = getTraceBase(entry);
+                findClassPointersSingleTrace(base, callback);
+            }
+        }
+        dvmUnlockMutex(&gDvmJit.tableLock);
+    }
+    UPDATE_CODE_CACHE_PATCHES();
+
+    PROTECT_CODE_CACHE(gDvmJit.codeCache, gDvmJit.codeCacheByteUsed);
+}
+
+/*
+ * Provide the final touch on the class object pointer pool to install the
+ * actual pointers. The thread has to be in the running state.
+ */
+void dvmJitInstallClassObjectPointers(CompilationUnit *cUnit, char *codeAddress)
+{
+    char *base = codeAddress - cUnit->headerSize -
+                 (cUnit->instructionSet == DALVIK_JIT_ARM ? 0 : 1);
+
+    /* Scan the class pointer pool */
+    JitTraceDescription *desc = getTraceDescriptionPointer(base);
+    int descSize = getTraceDescriptionSize(desc);
+    intptr_t *classPointerP = (int *) ((char *) desc + descSize);
+    int numClassPointers = *(int *)classPointerP++;
+    intptr_t *startClassPointerP = classPointerP;
+
+    UNPROTECT_CODE_CACHE(startClassPointerP,
+                         numClassPointers * sizeof(intptr_t));
+    /*
+     * Change the thread state to VM_RUNNING so that GC won't be happening
+     * when the assembler looks up the class pointers.
+     */
+    dvmChangeStatus(gDvmJit.compilerThread, THREAD_RUNNING);
+#if defined(WITH_JIT_TUNING)
+    u8 startTime = dvmGetRelativeTimeUsec();
+#endif
+    for (;numClassPointers; numClassPointers--) {
+        CallsiteInfo *callsiteInfo = (CallsiteInfo *) *classPointerP;
+        ClassObject *clazz = dvmFindClassNoInit(
+            callsiteInfo->classDescriptor, callsiteInfo->classLoader);
+        assert(!strcmp(clazz->descriptor, callsiteInfo->classDescriptor));
+        *classPointerP++ = (intptr_t) clazz;
+    }
+
+    /*
+     * Register the base address so that if GC kicks in after the thread state
+     * has been changed to VMWAIT and before the compiled code is registered
+     * in the JIT table, its content can be patched if class objects are
+     * moved.
+     */
+    gDvmJit.inflightBaseAddr = base;
+
+#if defined(WITH_JIT_TUNING)
+    u8 blockTime = dvmGetRelativeTimeUsec() - startTime;
+    gDvmJit.compilerThreadBlockGCTime += blockTime;
+    if (blockTime > gDvmJit.maxCompilerThreadBlockGCTime)
+        gDvmJit.maxCompilerThreadBlockGCTime = blockTime;
+    gDvmJit.numCompilerThreadBlockGC++;
+#endif
+    /* Change the thread state back to VMWAIT */
+    dvmChangeStatus(gDvmJit.compilerThread, THREAD_VMWAIT);
+
+    UPDATE_CODE_CACHE_PATCHES();
+
+    PROTECT_CODE_CACHE(startClassPointerP, numClassPointers * sizeof(intptr_t));
 }
 
 #if defined(WITH_SELF_VERIFICATION)

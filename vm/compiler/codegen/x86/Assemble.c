@@ -142,3 +142,7 @@ JitTraceDescription *dvmCopyTraceDescriptor(const u2 *pc,
 void dvmCompilerSortAndPrintTraceProfiles()
 {
 }
+
+void dvmJitScanAllClassPointers(void (*callback)(void *))
+{
+}

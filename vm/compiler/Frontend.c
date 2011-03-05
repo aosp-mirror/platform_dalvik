@@ -426,8 +426,8 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
 {
     const DexCode *dexCode = dvmGetMethodCode(desc->method);
     const JitTraceRun* currRun = &desc->trace[0];
-    unsigned int curOffset = currRun->frag.startOffset;
-    unsigned int numInsts = currRun->frag.numInsts;
+    unsigned int curOffset = currRun->info.frag.startOffset;
+    unsigned int numInsts = currRun->info.frag.numInsts;
     const u2 *codePtr = dexCode->insns + curOffset;
     int traceSize = 0;  // # of half-words
     const u2 *startCodePtr = codePtr;
@@ -589,11 +589,15 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
         int flags = dexGetFlagsFromOpcode(insn->dalvikInsn.opcode);
 
         if (flags & kInstrInvoke) {
-            const Method *calleeMethod = (const Method *) currRun[2].meta;
+            const Method *calleeMethod = (const Method *)
+                currRun[JIT_TRACE_CUR_METHOD].info.meta;
             assert(numInsts == 1);
             CallsiteInfo *callsiteInfo =
                 (CallsiteInfo *)dvmCompilerNew(sizeof(CallsiteInfo), true);
-            callsiteInfo->clazz = (ClassObject *)currRun[1].meta;
+            callsiteInfo->classDescriptor = (const char *)
+                currRun[JIT_TRACE_CLASS_DESC].info.meta;
+            callsiteInfo->classLoader = (Object *)
+                currRun[JIT_TRACE_CLASS_LOADER].info.meta;
             callsiteInfo->method = calleeMethod;
             insn->meta.callsiteInfo = callsiteInfo;
         }
@@ -603,23 +607,23 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
             break;
         }
         if (--numInsts == 0) {
-            if (currRun->frag.runEnd) {
+            if (currRun->info.frag.runEnd) {
                 break;
             } else {
                 /* Advance to the next trace description (ie non-meta info) */
                 do {
                     currRun++;
-                } while (!currRun->frag.isCode);
+                } while (!currRun->isCode);
 
                 /* Dummy end-of-run marker seen */
-                if (currRun->frag.numInsts == 0) {
+                if (currRun->info.frag.numInsts == 0) {
                     break;
                 }
 
                 curBB = dvmCompilerNewBB(kDalvikByteCode, numBlocks++);
                 dvmInsertGrowableList(blockList, (intptr_t) curBB);
-                curOffset = currRun->frag.startOffset;
-                numInsts = currRun->frag.numInsts;
+                curOffset = currRun->info.frag.startOffset;
+                numInsts = currRun->info.frag.numInsts;
                 curBB->startOffset = curOffset;
                 codePtr = dexCode->insns + curOffset;
             }
@@ -864,7 +868,7 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
             desc->method->clazz->descriptor,
             desc->method->name,
             signature,
-            desc->trace[0].frag.startOffset,
+            desc->trace[0].info.frag.startOffset,
             traceSize,
             dexCode->insnsSize,
             numBlocks);
@@ -937,14 +941,31 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
              cUnit.numInsts);
     }
 
-    /* Reset the compiler resource pool */
-    dvmCompilerArenaReset();
-
     if (cUnit.assemblerStatus == kRetryHalve) {
+        /* Reset the compiler resource pool before retry */
+        dvmCompilerArenaReset();
+
         /* Halve the instruction count and start from the top */
         return dvmCompileTrace(desc, cUnit.numInsts / 2, info, bailPtr,
                                optHints);
     }
+
+    /*
+     * If this trace uses class objects as constants,
+     * dvmJitInstallClassObjectPointers will switch the thread state
+     * to running and look up the class pointers using the descriptor/loader
+     * tuple stored in the callsite info structure. We need to make this window
+     * as short as possible since it is blocking GC.
+     */
+    if (cUnit.hasClassLiterals && info->codeAddress) {
+        dvmJitInstallClassObjectPointers(&cUnit, (char *) info->codeAddress);
+    }
+
+    /*
+     * Since callsiteinfo is allocated from the arena, delay the reset until
+     * class pointers are resolved.
+     */
+    dvmCompilerArenaReset();
 
     assert(cUnit.assemblerStatus == kSuccess);
 #if defined(WITH_JIT_TUNING)
