@@ -7955,8 +7955,8 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     movl      2(rPC),%eax              # eax<- AAAAAAAA
     movl      offThread_methodClassDex(%ecx),%ecx# ecx<- self->methodClassDex
     movl      offDvmDex_pResClasses(%ecx),%ecx # ecx<- dvmDex->pResClasses
-    FETCH_INST_OPCODE 4 %ecx
     movl      (%ecx,%eax,4),%eax       # eax<- rResClasses[AAAAAAAA]
+    FETCH_INST_OPCODE 4 %ecx
     testl     %eax,%eax                # resolved yet?
     je        .LOP_CONST_CLASS_JUMBO_resolve
     SET_VREG  %eax rINST               # vBBBB<- rResClasses[AAAAAAAA]
