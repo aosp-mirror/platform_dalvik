@@ -1210,7 +1210,7 @@ void dvmThrowArithmeticException(const char* msg) {
     dvmThrowException(gDvm.exArithmeticException, msg);
 }
 
-void dvmThrowArrayIndexOutOfBoundsException(int index, int length)
+void dvmThrowArrayIndexOutOfBoundsException(int length, int index)
 {
     dvmThrowExceptionFmt(gDvm.exArrayIndexOutOfBoundsException,
         "length=%d; index=%d", length, index);
@@ -1416,7 +1416,7 @@ void dvmThrowStringIndexOutOfBoundsExceptionWithIndex(jsize stringLength,
 void dvmThrowStringIndexOutOfBoundsExceptionWithRegion(jsize stringLength,
         jsize requestStart, jsize requestLength) {
     dvmThrowExceptionFmt(gDvm.exStringIndexOutOfBoundsException,
-            "length=%d; regionStart=%d regionLength=%d",
+            "length=%d; regionStart=%d; regionLength=%d",
             stringLength, requestStart, requestLength);
 }
 

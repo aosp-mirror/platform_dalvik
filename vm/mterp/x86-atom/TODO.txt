@@ -19,7 +19,7 @@ Items requiring attention:
 
 (md) Correct OP_MONITOR_EXIT (need to adjust PC before throw)
 (md) OP_THROW needs to export the PC
-(md) Use dvmThrowArrayIndexOutOfBoundsException(index, length) for
+(md) Use dvmThrowArrayIndexOutOfBoundsException(length, index) for
      array bounds errors.
 (md) Use dvmThrowClassCastException(actual, desired) for class cast errors.
 (md) Use dvmThrowArrayStoreException(actual, desired) for array store errors.

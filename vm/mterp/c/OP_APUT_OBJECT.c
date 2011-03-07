@@ -14,7 +14,7 @@ HANDLE_OPCODE(OP_APUT_OBJECT /*vAA, vBB, vCC*/)
             GOTO_exceptionThrown();
         if (GET_REGISTER(vsrc2) >= arrayObj->length) {
             dvmThrowArrayIndexOutOfBoundsException(
-                GET_REGISTER(vsrc2), arrayObj->length);
+                arrayObj->length, GET_REGISTER(vsrc2));
             GOTO_exceptionThrown();
         }
         obj = (Object*) GET_REGISTER(vdst);

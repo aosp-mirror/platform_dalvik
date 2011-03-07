@@ -21928,9 +21928,9 @@ common_errNullObject:
 common_errArrayIndex:
     EXPORT_PC
     movl    offArrayObject_length(%eax), %eax
-    movl    %ecx,OUT_ARG0(%esp)
-    movl    %eax,OUT_ARG1(%esp)
-    call    dvmThrowArrayIndexOutOfBoundsException   # args (index, length)
+    movl    %eax,OUT_ARG0(%esp)
+    movl    %ecx,OUT_ARG1(%esp)
+    call    dvmThrowArrayIndexOutOfBoundsException   # args (length, index)
     jmp     common_exceptionThrown
 
 /*

@@ -21774,14 +21774,13 @@ common_resumeAfterGlueCall:
 /*
  * Invalid array index. Note that our calling convention is strange; we use r1
  * and r3 because those just happen to be the registers all our callers are
- * using. We shuffle them here before calling the C function.
+ * using. We move r3 before calling the C function, but r1 happens to match.
  * r1: index
  * r3: size
  */
 common_errArrayIndex:
     EXPORT_PC()
-    mov     r0, r1
-    mov     r1, r3
+    mov     r0, r3
     bl      dvmThrowArrayIndexOutOfBoundsException
     b       common_exceptionThrown
 

@@ -996,7 +996,7 @@ GOTO_TARGET_DECL(exceptionThrown);
             GOTO_exceptionThrown();                                         \
         if (GET_REGISTER(vsrc2) >= arrayObj->length) {                      \
             dvmThrowArrayIndexOutOfBoundsException(                         \
-                GET_REGISTER(vsrc2), arrayObj->length);                     \
+                arrayObj->length, GET_REGISTER(vsrc2));                     \
             GOTO_exceptionThrown();                                         \
         }                                                                   \
         SET_REGISTER##_regsize(vdst,                                        \
@@ -1021,7 +1021,7 @@ GOTO_TARGET_DECL(exceptionThrown);
             GOTO_exceptionThrown();                                         \
         if (GET_REGISTER(vsrc2) >= arrayObj->length) {                      \
             dvmThrowArrayIndexOutOfBoundsException(                         \
-                GET_REGISTER(vsrc2), arrayObj->length);                     \
+                arrayObj->length, GET_REGISTER(vsrc2));                     \
             GOTO_exceptionThrown();                                         \
         }                                                                   \
         ILOGV("+ APUT[%d]=0x%08x", GET_REGISTER(vsrc2), GET_REGISTER(vdst));\

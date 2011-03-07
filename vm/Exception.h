@@ -215,9 +215,9 @@ void dvmThrowArithmeticException(const char* msg);
 
 /*
  * Throw an ArrayIndexOutOfBoundsException in the current thread,
- * using the given index and array length in the detail message.
+ * using the given array length and index in the detail message.
  */
-void dvmThrowArrayIndexOutOfBoundsException(int index, int length);
+void dvmThrowArrayIndexOutOfBoundsException(int length, int index);
 
 /*
  * Throw an ArrayStoreException in the current thread, using the given classes'

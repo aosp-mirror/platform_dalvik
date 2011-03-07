@@ -3024,7 +3024,7 @@ bail:
 static bool checkArrayElementBounds(ArrayObject* arrayObj, jsize index) {
     assert(arrayObj != NULL);
     if (index < 0 || index >= (int) arrayObj->length) {
-        dvmThrowArrayIndexOutOfBoundsException(index, arrayObj->length);
+        dvmThrowArrayIndexOutOfBoundsException(arrayObj->length, index);
         return false;
     }
     return true;
