@@ -146,20 +146,6 @@ bool dvmProfilingStartup(void)
     dvmInitMutex(&gDvm.methodTrace.startStopLock);
     pthread_cond_init(&gDvm.methodTrace.threadExitCond, NULL);
 
-    ClassObject* clazz =
-        dvmFindClassNoInit("Ldalvik/system/VMDebug;", NULL);
-    assert(clazz != NULL);
-    gDvm.methodTrace.gcMethod =
-        dvmFindDirectMethodByDescriptor(clazz, "startGC", "()V");
-    gDvm.methodTrace.classPrepMethod =
-        dvmFindDirectMethodByDescriptor(clazz, "startClassPrep", "()V");
-    if (gDvm.methodTrace.gcMethod == NULL ||
-        gDvm.methodTrace.classPrepMethod == NULL)
-    {
-        LOGE("Unable to find startGC or startClassPrep\n");
-        return false;
-    }
-
     assert(!dvmCheckException(dvmThreadSelf()));
 
     /*

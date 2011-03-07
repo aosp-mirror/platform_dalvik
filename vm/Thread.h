@@ -67,7 +67,6 @@ enum {
 
 /* initialization */
 bool dvmThreadStartup(void);
-bool dvmThreadObjStartup(void);
 void dvmThreadShutdown(void);
 void dvmSlayDaemons(void);
 

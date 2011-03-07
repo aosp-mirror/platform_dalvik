@@ -899,8 +899,8 @@ static bool loadAllClasses(DvmDex* pDvmDex)
      * that contains Object, and only when Object comes first in the
      * list, but it costs very little to do it in all cases.)
      */
-    if (dvmFindSystemClass("Ljava/lang/Class;") == NULL) {
-        LOGE("ERROR: java.lang.Class does not exist!\n");
+    if (!dvmInitClass(gDvm.classJavaLangClass)) {
+        LOGE("ERROR: failed to initialize the class Class!\n");
         return false;
     }
 

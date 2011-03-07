@@ -98,6 +98,7 @@ LOCAL_SRC_FILES := \
 	Hash.c \
 	IndirectRefTable.c.arm \
 	Init.c \
+	InitRefs.c \
 	InlineNative.c.arm \
 	Inlines.c \
 	Intern.c \

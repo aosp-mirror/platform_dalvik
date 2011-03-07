@@ -19,11 +19,6 @@
 #ifndef _DALVIK_REFLECT_REFLECT
 #define _DALVIK_REFLECT_REFLECT
 
-bool dvmReflectStartup(void);
-bool dvmReflectProxyStartup(void);
-bool dvmReflectAnnotationStartup(void);
-void dvmReflectShutdown(void);
-
 /*
  * During startup, validate the "box" classes, e.g. java/lang/Integer.
  */

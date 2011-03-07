@@ -45,8 +45,10 @@ int dvmPrepForDexOpt(const char* bootClassPath, DexOptimizerMode dexOptMode,
  * storing references to them into the globals instance. See
  * Globals.h. This function is exposed so that dex optimization may
  * call it (while avoiding doing other unnecessary VM initialization).
+ *
+ * The function returns a success flag (true == success).
  */
-int dvmFindRequiredClassesAndMembers(void);
+bool dvmFindRequiredClassesAndMembers(void);
 
 /*
  * Replacement for fprintf() when we want to send a message to the console.

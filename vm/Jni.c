@@ -318,64 +318,6 @@ bool dvmJniStartup(void)
 
     dvmInitMutex(&gDvm.jniPinRefLock);
 
-    Method* meth;
-
-    /*
-     * Grab the PhantomReference constructor.
-     */
-    gDvm.classJavaLangRefPhantomReference =
-        dvmFindSystemClassNoInit("Ljava/lang/ref/PhantomReference;");
-    if (gDvm.classJavaLangRefPhantomReference == NULL) {
-        LOGE("Unable to find PhantomReference class\n");
-        return false;
-    }
-    meth= dvmFindDirectMethodByDescriptor(gDvm.classJavaLangRefPhantomReference,
-        "<init>", "(Ljava/lang/Object;Ljava/lang/ref/ReferenceQueue;)V");
-    if (meth == NULL) {
-        LOGE("Unable to find constructor for PhantomReference\n");
-        return false;
-    }
-    gDvm.methJavaLangRefPhantomReference_init = meth;
-
-
-    /*
-     * Look up and cache pointers to some direct buffer classes, fields,
-     * and methods.
-     */
-    ClassObject* readWriteBufferClass =
-        dvmFindSystemClassNoInit("Ljava/nio/ReadWriteDirectByteBuffer;");
-    ClassObject* bufferClass =
-        dvmFindSystemClassNoInit("Ljava/nio/Buffer;");
-
-    if (readWriteBufferClass == NULL || bufferClass == NULL) {
-        LOGE("Unable to find internal direct buffer classes\n");
-        return false;
-    }
-    gDvm.classJavaNioReadWriteDirectByteBuffer = readWriteBufferClass;
-
-    meth = dvmFindDirectMethodByDescriptor(readWriteBufferClass,
-                "<init>",
-                "(II)V");
-    if (meth == NULL) {
-        LOGE("Unable to find ReadWriteDirectByteBuffer.<init>\n");
-        return false;
-    }
-    gDvm.methJavaNioReadWriteDirectByteBuffer_init = meth;
-
-    gDvm.offJavaNioBuffer_capacity =
-        dvmFindFieldOffset(bufferClass, "capacity", "I");
-    if (gDvm.offJavaNioBuffer_capacity < 0) {
-        LOGE("Unable to find Buffer.capacity\n");
-        return false;
-    }
-
-    gDvm.offJavaNioBuffer_effectiveDirectAddress =
-        dvmFindFieldOffset(bufferClass, "effectiveDirectAddress", "I");
-    if (gDvm.offJavaNioBuffer_effectiveDirectAddress < 0) {
-        LOGE("Unable to find Buffer.effectiveDirectAddress\n");
-        return false;
-    }
-
     return true;
 }
 

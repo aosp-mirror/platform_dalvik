@@ -363,27 +363,6 @@ bool dvmClassStartup(void)
 }
 
 /*
- * We should be able to find classes now.  Get the vtable index for
- * the class loader loadClass() method.
- *
- * This doesn't work in dexopt when operating on core.jar, because
- * there aren't any classes to load.
- */
-bool dvmBaseClassStartup(void)
-{
-    ClassObject* clClass = dvmFindSystemClassNoInit("Ljava/lang/ClassLoader;");
-    Method* meth = dvmFindVirtualMethodByDescriptor(clClass, "loadClass",
-            "(Ljava/lang/String;)Ljava/lang/Class;");
-    if (meth == NULL) {
-        LOGE("Unable to find loadClass() in java.lang.ClassLoader\n");
-        return false;
-    }
-    gDvm.voffJavaLangClassLoader_loadClass = meth->methodIndex;
-
-    return true;
-}
-
-/*
  * Clean up.
  */
 void dvmClassShutdown(void)

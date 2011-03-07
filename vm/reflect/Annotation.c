@@ -54,67 +54,6 @@ static const char* kDescrMemberClasses
 static const char* kDescrSignature  = "Ldalvik/annotation/Signature;";
 static const char* kDescrThrows     = "Ldalvik/annotation/Throws;";
 
-
-/*
- * Perform Annotation setup.
- */
-bool dvmReflectAnnotationStartup(void)
-{
-    Method* meth;
-
-    /*
-     * Find some standard Annotation classes.
-     */
-    gDvm.classJavaLangAnnotationAnnotationArray =
-        dvmFindArrayClass("[Ljava/lang/annotation/Annotation;", NULL);
-    gDvm.classJavaLangAnnotationAnnotationArrayArray =
-        dvmFindArrayClass("[[Ljava/lang/annotation/Annotation;", NULL);
-    if (gDvm.classJavaLangAnnotationAnnotationArray == NULL ||
-        gDvm.classJavaLangAnnotationAnnotationArrayArray == NULL)
-    {
-        LOGE("Could not find Annotation-array classes\n");
-        return false;
-    }
-
-    /*
-     * VM-specific annotation classes.
-     */
-    gDvm.classOrgApacheHarmonyLangAnnotationAnnotationFactory =
-        dvmFindSystemClassNoInit("Lorg/apache/harmony/lang/annotation/AnnotationFactory;");
-    gDvm.classOrgApacheHarmonyLangAnnotationAnnotationMember =
-        dvmFindSystemClassNoInit("Lorg/apache/harmony/lang/annotation/AnnotationMember;");
-    gDvm.classOrgApacheHarmonyLangAnnotationAnnotationMemberArray =
-        dvmFindArrayClass("[Lorg/apache/harmony/lang/annotation/AnnotationMember;", NULL);
-    if (gDvm.classOrgApacheHarmonyLangAnnotationAnnotationFactory == NULL ||
-        gDvm.classOrgApacheHarmonyLangAnnotationAnnotationMember == NULL ||
-        gDvm.classOrgApacheHarmonyLangAnnotationAnnotationMemberArray == NULL)
-    {
-        LOGE("Could not find android.lang annotation classes\n");
-        return false;
-    }
-
-    meth = dvmFindDirectMethodByDescriptor(gDvm.classOrgApacheHarmonyLangAnnotationAnnotationFactory,
-            "createAnnotation",
-            "(Ljava/lang/Class;[Lorg/apache/harmony/lang/annotation/AnnotationMember;)Ljava/lang/annotation/Annotation;");
-    if (meth == NULL) {
-        LOGE("Unable to find createAnnotation() in android AnnotationFactory\n");
-        return false;
-    }
-    gDvm.methOrgApacheHarmonyLangAnnotationAnnotationFactory_createAnnotation = meth;
-
-    meth = dvmFindDirectMethodByDescriptor(gDvm.classOrgApacheHarmonyLangAnnotationAnnotationMember,
-            "<init>",
-            "(Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Class;Ljava/lang/reflect/Method;)V");
-    if (meth == NULL) {
-        LOGE("Unable to find 4-arg constructor in android AnnotationMember\n");
-        return false;
-    }
-
-    gDvm.methOrgApacheHarmonyLangAnnotationAnnotationMember_init = meth;
-
-    return true;
-}
-
 /*
  * Read an unsigned LEB128 value from a buffer.  Advances "pBuf".
  */
