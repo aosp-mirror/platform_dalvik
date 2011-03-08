@@ -3119,7 +3119,6 @@ bool dvmMterpStdRun(MterpGlue* glue)
     }
 }
 
-
 /*
  * C mterp exit point.  Call here to bail out of the interpreter.
  */
