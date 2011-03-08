@@ -17,121 +17,67 @@
 package com.android.dx.merge;
 
 import com.android.dx.io.DexBuffer;
+import com.android.dx.io.EncodedValueReader;
 import com.android.dx.util.Unsigned;
 
-final class EncodedValueTransformer {
-    private static final int ENCODED_BYTE = 0x00;
-    private static final int ENCODED_SHORT = 0x02;
-    private static final int ENCODED_CHAR = 0x03;
-    private static final int ENCODED_INT = 0x04;
-    private static final int ENCODED_LONG = 0x06;
-    private static final int ENCODED_FLOAT = 0x10;
-    private static final int ENCODED_DOUBLE = 0x11;
-    private static final int ENCODED_STRING = 0x17;
-    private static final int ENCODED_TYPE = 0x18;
-    private static final int ENCODED_FIELD = 0x19;
-    private static final int ENCODED_ENUM = 0x1b;
-    private static final int ENCODED_METHOD = 0x1a;
-    private static final int ENCODED_ARRAY = 0x1c;
-    private static final int ENCODED_ANNOTATION = 0x1d;
-    private static final int ENCODED_NULL = 0x1e;
-    private static final int ENCODED_BOOLEAN = 0x1f;
-
+public final class EncodedValueTransformer extends EncodedValueReader {
     private final IndexMap indexMap;
-    private final DexBuffer.Section in;
     private final DexBuffer.Section out;
 
-    public EncodedValueTransformer(IndexMap indexMap, DexBuffer.Section in, DexBuffer.Section out) {
+    public EncodedValueTransformer(DexBuffer.Section in, IndexMap indexMap, DexBuffer.Section out) {
+        super(in);
         this.indexMap = indexMap;
-        this.in = in;
         this.out = out;
     }
 
-    public void transformArray() {
-        int size = in.readUleb128(); // size
+    protected void visitArray(int size) {
         out.writeUleb128(size);
-        for (int i = 0; i < size; i++) {
-            transformValue();
-        }
     }
 
-    public void transformAnnotation() {
-        out.writeUleb128(indexMap.adjustType(in.readUleb128())); // type idx
-
-        int size = in.readUleb128(); // size
+    protected void visitAnnotation(int typeIndex, int size) {
+        out.writeUleb128(indexMap.adjustType(typeIndex));
         out.writeUleb128(size);
-
-        for (int i = 0; i < size; i++) {
-            out.writeUleb128(indexMap.adjustString(in.readUleb128())); // name idx
-            transformValue();
-        }
     }
 
-    public void transformValue() {
-        int argAndType = in.readByte() & 0xff;
-        int type = argAndType & 0x1f;
-        int arg = (argAndType & 0xe0) >> 5;
-        int size = arg + 1;
-
-        switch (type) {
-        case ENCODED_BYTE:
-        case ENCODED_SHORT:
-        case ENCODED_CHAR:
-        case ENCODED_INT:
-        case ENCODED_LONG:
-        case ENCODED_FLOAT:
-        case ENCODED_DOUBLE:
-            out.writeByte(argAndType);
-            copyBytes(in, out, size);
-            break;
-
-        case ENCODED_STRING:
-            int indexIn = readIndex(in, size);
-            int indexOut = indexMap.adjustString(indexIn);
-            writeTypeAndSizeAndIndex(type, indexOut, out);
-            break;
-        case ENCODED_TYPE:
-            indexIn = readIndex(in, size);
-            indexOut = indexMap.adjustType(indexIn);
-            writeTypeAndSizeAndIndex(type, indexOut, out);
-            break;
-        case ENCODED_FIELD:
-        case ENCODED_ENUM:
-            indexIn = readIndex(in, size);
-            indexOut = indexMap.adjustField(indexIn);
-            writeTypeAndSizeAndIndex(type, indexOut, out);
-            break;
-        case ENCODED_METHOD:
-            indexIn = readIndex(in, size);
-            indexOut = indexMap.adjustMethod(indexIn);
-            writeTypeAndSizeAndIndex(type, indexOut, out);
-            break;
-
-        case ENCODED_ARRAY:
-            out.writeByte(argAndType);
-            transformArray();
-            break;
-
-        case ENCODED_ANNOTATION:
-            out.writeByte(argAndType);
-            transformAnnotation();
-            break;
-
-        case ENCODED_NULL:
-        case ENCODED_BOOLEAN:
-            out.writeByte(argAndType);
-            break;
-        }
+    protected void visitAnnotationName(int index) {
+        out.writeUleb128(indexMap.adjustString(index));
     }
 
-    private int readIndex(DexBuffer.Section in, int byteCount) {
-        int result = 0;
-        int shift = 0;
-        for (int i = 0; i < byteCount; i++) {
-            result += (in.readByte() & 0xff) << shift;
-            shift += 8;
-        }
-        return result;
+    protected void visitPrimitive(int argAndType, int type, int arg, int size) {
+        out.writeByte(argAndType);
+        copyBytes(in, out, size);
+    }
+
+    protected void visitString(int type, int index) {
+        writeTypeAndSizeAndIndex(type, indexMap.adjustString(index), out);
+    }
+
+    protected void visitType(int type, int index) {
+        writeTypeAndSizeAndIndex(type, indexMap.adjustType(index), out);
+    }
+
+    protected void visitField(int type, int index) {
+        writeTypeAndSizeAndIndex(type, indexMap.adjustField(index), out);
+    }
+
+    protected void visitMethod(int type, int index) {
+        writeTypeAndSizeAndIndex(type, indexMap.adjustMethod(index), out);
+    }
+
+    protected void visitArrayValue(int argAndType) {
+        out.writeByte(argAndType);
+    }
+
+    protected void visitAnnotationValue(int argAndType) {
+        out.writeByte(argAndType);
+    }
+
+    protected void visitEncodedBoolean(int argAndType) {
+        out.writeByte(argAndType);
+    }
+
+    protected void visitEncodedNull(int argAndType) {
+        out.writeByte(argAndType);
     }
 
     private void writeTypeAndSizeAndIndex(int type, int index, DexBuffer.Section out) {

@@ -636,7 +636,7 @@ public final class DexMerger {
         // elements
         for (int i = 0; i < size; i++) {
             annotationOut.writeUleb128(indexMap.adjustString(in.readUleb128())); // name
-            new EncodedValueTransformer(indexMap, in, annotationOut).transformValue(); // value
+            new EncodedValueTransformer(in, indexMap, annotationOut).readValue(); // value
         }
     }
 
@@ -751,7 +751,7 @@ public final class DexMerger {
 
     private void transformStaticValues(DexBuffer.Section in, IndexMap indexMap) {
         contentsOut.encodedArrays.size++;
-        new EncodedValueTransformer(indexMap, in, encodedArrayOut).transformArray();
+        new EncodedValueTransformer(in, indexMap, encodedArrayOut).readArray();
     }
 
     /**
