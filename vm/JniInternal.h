@@ -225,14 +225,22 @@ void dvmDumpJniReferenceTables(void);
  * "Obfuscate" a weak global reference pointer.
  */
 INLINE jweak dvmObfuscateWeakGlobalRef(jobject jobj) {
+#ifndef USE_INDIRECT_REF
     return (jweak) ((u4) jobj ^ WEAK_GLOBAL_XOR);
+#else
+    return jobj;
+#endif
 }
 
 /*
  * Undo the obfuscation.
  */
 INLINE jobject dvmNormalizeWeakGlobalRef(jweak ref) {
+#ifndef USE_INDIRECT_REF
     return (jobject) ((u4) ref ^ WEAK_GLOBAL_XOR);
+#else
+    return ref;
+#endif
 }
 
 /*
@@ -242,7 +250,11 @@ INLINE jobject dvmNormalizeWeakGlobalRef(jweak ref) {
  * guaranteed by 64-bit alignment of objects).
  */
 INLINE bool dvmIsWeakGlobalRef(jobject jobj) {
+#ifndef USE_INDIRECT_REF
     return (((u4) jobj & 0x07) == 0x07);
+#else
+    return (((u4) jobj & 0x03) == 0x03);
+#endif
 }
 
 #endif /*_DALVIK_JNIINTERNAL*/
