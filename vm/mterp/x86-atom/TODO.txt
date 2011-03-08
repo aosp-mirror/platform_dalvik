@@ -27,7 +27,6 @@ Items requiring attention:
 (md) Replace any remaining use of dvmThrowException with proper helper function
 
 (lo) Implement OP_BREAKPOINT
-(lo) Implement OP_EXECUTE_INLINE_RANGE
 (lo) Implement OP_*_VOLATILE (12 instructions)
 (lo) Implement OP_RETURN_VOID_BARRIER
 (lo) Implement OP_INVOKE_OBJECT_INIT

@@ -23,3 +23,7 @@
     * Format: B|A|op CCCC G|F|E|D (35c)
     */
 
+<<<<<<< HEAD:vm/mterp/x86-atom/OP_INVOKE_OBJECT_INIT_RANGE.S
+=======
+    FINISH 3
+>>>>>>> 10185db0:vm/mterp/x86-atom/OP_INVOKE_DIRECT_EMPTY.S
