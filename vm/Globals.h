@@ -665,6 +665,8 @@ struct DvmGlobals {
      * State for method-trace profiling.
      */
     MethodTraceState methodTrace;
+    Method*     methodTraceGcMethod;
+    Method*     methodTraceClassPrepMethod;
 
     /*
      * State for emulator tracing.

@@ -651,6 +651,8 @@ void dvmMethodTraceAdd(Thread* self, const Method* method, int action)
     int oldOffset, newOffset;
     u1* ptr;
 
+    assert(method != NULL);
+
     /*
      * We can only access the per-thread CPU clock from within the
      * thread, so we have to initialize the base time on the first use.
@@ -808,11 +810,11 @@ void dvmEmitEmulatorTrace(const Method* method, int action)
  */
 void dvmMethodTraceGCBegin(void)
 {
-    TRACE_METHOD_ENTER(dvmThreadSelf(), gDvm.methodTrace.gcMethod);
+    TRACE_METHOD_ENTER(dvmThreadSelf(), gDvm.methodTraceGcMethod);
 }
 void dvmMethodTraceGCEnd(void)
 {
-    TRACE_METHOD_EXIT(dvmThreadSelf(), gDvm.methodTrace.gcMethod);
+    TRACE_METHOD_EXIT(dvmThreadSelf(), gDvm.methodTraceGcMethod);
 }
 
 /*
@@ -820,11 +822,11 @@ void dvmMethodTraceGCEnd(void)
  */
 void dvmMethodTraceClassPrepBegin(void)
 {
-    TRACE_METHOD_ENTER(dvmThreadSelf(), gDvm.methodTrace.classPrepMethod);
+    TRACE_METHOD_ENTER(dvmThreadSelf(), gDvm.methodTraceClassPrepMethod);
 }
 void dvmMethodTraceClassPrepEnd(void)
 {
-    TRACE_METHOD_EXIT(dvmThreadSelf(), gDvm.methodTrace.classPrepMethod);
+    TRACE_METHOD_EXIT(dvmThreadSelf(), gDvm.methodTraceClassPrepMethod);
 }
 
 

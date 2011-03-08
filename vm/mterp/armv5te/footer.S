@@ -624,7 +624,7 @@ common_invokeMethodNoRange:
     ands    lr, #kSubModeMethodTrace    @ method tracing?
     beq     1f                          @ skip if not
     stmfd   sp!, {r0-r3}                @ preserve r0-r3
-    mov     r1, r6
+    mov     r1, rSELF
     @ r0=methodToCall, r1=rSELF
     bl      dvmFastMethodTraceEnter
     ldmfd   sp!, {r0-r3}                @ restore r0-r3
@@ -699,18 +699,7 @@ dalvik_mterp:
 #endif
 
     ands    lr, #kSubModeMethodTrace    @ method tracing?
-    beq     110f                        @ hop if not
-    @ r2=JNIMethod, r6=rSELF
-    stmfd   sp!, {r2,r6}
-
-    mov     lr, pc                      @ set return addr
-    ldr     pc, [r2, #offMethod_nativeFunc] @ pc<- methodToCall->nativeFunc
-
-    @ r0=JNIMethod, r1=rSELF
-    ldmfd   sp!, {r0-r1}
-    bl      dvmFastNativeMethodTraceExit
-    b       220f
-110:
+    bne     330f                        @ hop if so
     mov     lr, pc                      @ set return addr
     ldr     pc, [r2, #offMethod_nativeFunc] @ pc<- methodToCall->nativeFunc
 220:
@@ -736,6 +725,18 @@ dalvik_mterp:
     FETCH_ADVANCE_INST(3)               @ advance rPC, load rINST
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     GOTO_OPCODE(ip)                     @ jump to next instruction
+
+330:
+    @ r2=JNIMethod, r6=rSELF
+    stmfd   sp!, {r2,r6}
+
+    mov     lr, pc                      @ set return addr
+    ldr     pc, [r2, #offMethod_nativeFunc] @ pc<- methodToCall->nativeFunc
+
+    @ r0=JNIMethod, r1=rSELF
+    ldmfd   sp!, {r0-r1}
+    bl      dvmFastNativeMethodTraceExit
+    b       220b
 
 .LstackOverflow:    @ r0=methodToCall
     mov     r1, r0                      @ r1<- methodToCall
@@ -794,7 +795,7 @@ common_returnFromMethod:
     ands    lr, #kSubModeMethodTrace    @ method tracing?
     beq     333f
     stmfd   sp!, {r0-r3}                @ preserve r0-r3
-    mov     r0, r6
+    mov     r0, rSELF
     @ r0=rSELF
     bl      dvmFastJavaMethodTraceExit
     ldmfd   sp!, {r0-r3}                @ restore r0-r3

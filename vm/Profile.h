@@ -36,10 +36,6 @@ void dvmProfilingShutdown(void);
  * most of this per-thread.
  */
 typedef struct MethodTraceState {
-    /* these are set during VM init */
-    Method* gcMethod;
-    Method* classPrepMethod;
-
     /* active state */
     pthread_mutex_t startStopLock;
     pthread_cond_t  threadExitCond;

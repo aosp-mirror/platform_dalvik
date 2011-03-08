@@ -566,12 +566,12 @@ static bool find8(void) {
     ClassObject* clazz =
         dvmFindClassNoInit("Ldalvik/system/VMDebug;", NULL);
     assert(clazz != NULL);
-    gDvm.methodTrace.gcMethod =
+    gDvm.methodTraceGcMethod =
         dvmFindDirectMethodByDescriptor(clazz, "startGC", "()V");
-    gDvm.methodTrace.classPrepMethod =
+    gDvm.methodTraceClassPrepMethod =
         dvmFindDirectMethodByDescriptor(clazz, "startClassPrep", "()V");
-    if (gDvm.methodTrace.gcMethod == NULL ||
-        gDvm.methodTrace.classPrepMethod == NULL)
+    if (gDvm.methodTraceGcMethod == NULL ||
+        gDvm.methodTraceClassPrepMethod == NULL)
     {
         LOGE("Unable to find startGC or startClassPrep\n");
         return false;
