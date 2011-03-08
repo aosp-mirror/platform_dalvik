@@ -179,8 +179,8 @@ void dvmClearCardTable(void)
             moveCardsToModUnion((u1*)base[i], (u1*)limit[i]);
         } else {
             u1 *baseCard = dvmCardFromAddr((u1*)base[i]);
-            u1 *limitCard = dvmCardFromAddr((u1*)limit[i]);
-            memset(baseCard, GC_CARD_CLEAN, limitCard - baseCard);
+            size_t length = (limit[i] - base[i]) >> GC_CARD_SHIFT;
+            memset(baseCard, GC_CARD_CLEAN, length);
         }
     }
 }
