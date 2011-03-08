@@ -134,6 +134,13 @@ public final class DexFile {
     }
 
     /**
+     * Returns true if this dex doesn't contain any class defs.
+     */
+    public boolean isEmpty() {
+        return classDefs.items().isEmpty();
+    }
+
+    /**
      * Adds a class to this instance. It is illegal to attempt to add more
      * than one class with the same name.
      *

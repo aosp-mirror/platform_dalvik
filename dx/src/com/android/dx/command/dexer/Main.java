@@ -59,6 +59,7 @@ import java.util.jar.Attributes;
 import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
+import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 /**
@@ -208,13 +209,18 @@ public class Main {
             return 0; // this was a no-op incremental build
         }
 
-        byte[] outArray = writeDex();
+        // this array is null if no classes were defined
+        byte[] outArray = null;
 
-        if (outArray == null) {
-            return 2;
+        if (!outputDex.isEmpty()) {
+            outArray = writeDex();
+
+            if (outArray == null) {
+                return 2;
+            }
         }
 
-        if (args.incremental && incrementalOutFile.exists()) {
+        if (args.incremental) {
             outArray = merge(outArray, incrementalOutFile);
         }
 
@@ -225,7 +231,7 @@ public class Main {
             if (!createJar(args.outName, outArray)) {
                 return 3;
             }
-        } else if (args.outName != null) {
+        } else if (outArray != null && args.outName != null) {
             OutputStream out = openOutput(args.outName);
             out.write(outArray);
             closeOutput(out);
@@ -236,27 +242,50 @@ public class Main {
 
     /**
      * Merges the dex files {@code update} and {@code base}, preferring
-     * {@code update}'s definition for types defined in both dex files. Returns
-     * the bytes of the merged dex file.
+     * {@code update}'s definition for types defined in both dex files.
+     *
+     * @return the bytes of the merged dex file, or null if both the update
+     *     and the base dex do not exist.
      */
     private static byte[] merge(byte[] update, File base) throws IOException {
-        DexBuffer dexA = new DexBuffer();
-        dexA.loadFrom(new ByteArrayInputStream(update));
+        DexBuffer dexA = null;
+        DexBuffer dexB = null;
 
-        DexBuffer dexB = new DexBuffer();
-        if (args.jarOutput) {
-            ZipFile zipFile = new ZipFile(base);
-            dexB.loadFrom(zipFile.getInputStream(zipFile.getEntry(DexFormat.DEX_IN_JAR_NAME)));
-            zipFile.close();
-        } else {
-            InputStream in = new FileInputStream(base);
-            dexB.loadFrom(in);
-            in.close();
+        if (update != null) {
+            dexA = new DexBuffer();
+            dexA.loadFrom(new ByteArrayInputStream(update));
         }
 
-        DexBuffer merged = new DexMerger(dexA, dexB).merge();
+        if (base.exists()) {
+            if (args.jarOutput) {
+                ZipFile zipFile = new ZipFile(base);
+                ZipEntry entry = zipFile.getEntry(DexFormat.DEX_IN_JAR_NAME);
+                if (entry != null) {
+                    dexB = new DexBuffer();
+                    dexB.loadFrom(zipFile.getInputStream(entry));
+                    zipFile.close();
+                }
+            } else {
+                InputStream in = new FileInputStream(base);
+                dexB = new DexBuffer();
+                dexB.loadFrom(in);
+                in.close();
+            }
+        }
+
+        DexBuffer result;
+        if (dexA == null && dexB == null) {
+            return null;
+        } else if (dexA == null) {
+            result = dexB;
+        } else if (dexB == null) {
+            result = dexA;
+        } else {
+            result = new DexMerger(dexA, dexB).merge();
+        }
+
         ByteArrayOutputStream bytesOut = new ByteArrayOutputStream();
-        merged.writeTo(bytesOut);
+        result.writeTo(bytesOut);
         return bytesOut.toByteArray();
     }
 
@@ -555,8 +584,8 @@ public class Main {
      * Creates a jar file from the resources and given dex file array.
      *
      * @param fileName {@code non-null;} name of the file
-     * @param dexArray {@code non-null;} array containing the dex file
-     * to include
+     * @param dexArray array containing the dex file to include, or null if the
+     *     output contains no class defs.
      * @return whether the creation was successful
      */
     private static boolean createJar(String fileName, byte[] dexArray) {
@@ -571,7 +600,9 @@ public class Main {
             OutputStream out = openOutput(fileName);
             JarOutputStream jarOut = new JarOutputStream(out, manifest);
 
-            outputResources.put(DexFormat.DEX_IN_JAR_NAME, dexArray);
+            if (dexArray != null) {
+                outputResources.put(DexFormat.DEX_IN_JAR_NAME, dexArray);
+            }
 
             try {
                 for (Map.Entry<String, byte[]> e :
