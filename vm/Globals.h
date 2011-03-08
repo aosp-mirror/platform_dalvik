@@ -506,10 +506,14 @@ struct DvmGlobals {
      */
 #ifdef USE_INDIRECT_REF
     IndirectRefTable jniGlobalRefTable;
+    IndirectRefTable jniWeakGlobalRefTable;
 #else
     ReferenceTable  jniGlobalRefTable;
 #endif
     pthread_mutex_t jniGlobalRefLock;
+#ifdef USE_INDIRECT_REF
+    pthread_mutex_t jniWeakGlobalRefLock;
+#endif
     int         jniGlobalRefHiMark;
     int         jniGlobalRefLoMark;
 

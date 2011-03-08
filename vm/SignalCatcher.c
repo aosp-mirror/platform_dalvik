@@ -169,11 +169,6 @@ static void handleSigQuit(void)
     dvmCompilerDumpStats();
 #endif
 
-    if (false) {
-        dvmLockMutex(&gDvm.jniGlobalRefLock);
-        dvmDumpReferenceTable(&gDvm.jniGlobalRefTable, "JNI global");
-        dvmUnlockMutex(&gDvm.jniGlobalRefLock);
-    }
     if (false) dvmDumpTrackedAllocations(true);
 
     dvmResumeAllThreads(SUSPEND_FOR_STACK_DUMP);

@@ -81,6 +81,24 @@ static void visitReferenceTable(RootVisitor *visitor, ReferenceTable *table,
     }
 }
 
+#ifdef USE_INDIRECT_REF
+/*
+ * Visits all entries in the indirect reference table.
+ */
+static void visitIndirectRefTable(RootVisitor *visitor, IndirectRefTable *table,
+                                  u4 threadId, RootType type, void *arg)
+{
+    assert(visitor != NULL);
+    assert(table != NULL);
+    Object **entry = table->table;
+    int numEntries = dvmIndirectRefTableEntries(table);
+    int i;
+    for (i = 0; i < numEntries; ++i) {
+        (*visitor)(&entry[i], threadId, type, arg);
+    }
+}
+#endif
+
 /*
  * Visits a large heap reference table.  These objects are list heads.
  * As such, it is valid for table to be NULL.
@@ -192,7 +210,11 @@ static void visitThread(RootVisitor *visitor, Thread *thread, void *arg)
     (*visitor)(&thread->threadObj, threadId, ROOT_THREAD_OBJECT, arg);
     (*visitor)(&thread->exception, threadId, ROOT_NATIVE_STACK, arg);
     visitReferenceTable(visitor, &thread->internalLocalRefTable, threadId, ROOT_NATIVE_STACK, arg);
+#ifdef USE_INDIRECT_REF
+    visitIndirectRefTable(visitor, &thread->jniLocalRefTable, threadId, ROOT_JNI_LOCAL, arg);
+#else
     visitReferenceTable(visitor, &thread->jniLocalRefTable, threadId, ROOT_JNI_LOCAL, arg);
+#endif
     if (thread->jniMonitorRefTable.table != NULL) {
         visitReferenceTable(visitor, &thread->jniMonitorRefTable, threadId, ROOT_JNI_MONITOR, arg);
     }
@@ -231,7 +253,11 @@ void dvmVisitRoots(RootVisitor *visitor, void *arg)
         visitHashTable(visitor, gDvm.literalStrings, ROOT_INTERNED_STRING, arg);
     }
     dvmLockMutex(&gDvm.jniGlobalRefLock);
+#ifdef USE_INDIRECT_REF
+    visitIndirectRefTable(visitor, &gDvm.jniGlobalRefTable, 0, ROOT_JNI_GLOBAL, arg);
+#else
     visitReferenceTable(visitor, &gDvm.jniGlobalRefTable, 0, ROOT_JNI_GLOBAL, arg);
+#endif
     dvmUnlockMutex(&gDvm.jniGlobalRefLock);
     dvmLockMutex(&gDvm.jniPinRefLock);
     visitReferenceTable(visitor, &gDvm.jniPinRefTable, 0, ROOT_VM_INTERNAL, arg);

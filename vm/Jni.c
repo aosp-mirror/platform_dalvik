@@ -236,7 +236,6 @@ Compared to #1, approach #2:
 
 /* fwd */
 static const struct JNINativeInterface gNativeInterface;
-static jobject addGlobalReference(Object* obj);
 
 #ifdef WITH_JNI_STACK_CHECK
 # define COMPUTE_STACK_SUM(_self)   computeStackSum(_self);
@@ -287,6 +286,8 @@ static jobject addGlobalReference(Object* obj);
 #define kGrefWaterInterval          100
 #define kTrackGrefUsage             true
 
+#define kWeakGlobalRefsTableInitialSize 16
+
 #define kPinTableInitialSize        16
 #define kPinTableMaxSize            1024
 #define kPinComplainThreshold       10
@@ -299,8 +300,14 @@ bool dvmJniStartup(void)
 {
 #ifdef USE_INDIRECT_REF
     if (!dvmInitIndirectRefTable(&gDvm.jniGlobalRefTable,
-            kGlobalRefsTableInitialSize, kGlobalRefsTableMaxSize,
-            kIndirectKindGlobal))
+                                 kGlobalRefsTableInitialSize,
+                                 kGlobalRefsTableMaxSize,
+                                 kIndirectKindGlobal))
+        return false;
+    if (!dvmInitIndirectRefTable(&gDvm.jniWeakGlobalRefTable,
+                                 kWeakGlobalRefsTableInitialSize,
+                                 kGlobalRefsTableMaxSize,
+                                 kIndirectKindWeakGlobal))
         return false;
 #else
     if (!dvmInitReferenceTable(&gDvm.jniGlobalRefTable,
@@ -309,6 +316,9 @@ bool dvmJniStartup(void)
 #endif
 
     dvmInitMutex(&gDvm.jniGlobalRefLock);
+#ifdef USE_INDIRECT_REF
+    dvmInitMutex(&gDvm.jniWeakGlobalRefLock);
+#endif
     gDvm.jniGlobalRefLoMark = 0;
     gDvm.jniGlobalRefHiMark = kGrefWaterInterval * 2;
 
@@ -482,10 +492,11 @@ Object* dvmDecodeIndirectRef(JNIEnv* env, jobject jobj)
         break;
     case kIndirectKindWeakGlobal:
         {
-            // TODO: implement
-            LOGE("weak-global not yet supported\n");
-            result = NULL;
-            dvmAbort();
+            // TODO: find a way to avoid the mutex activity here
+            IndirectRefTable* pRefTable = &gDvm.jniWeakGlobalRefTable;
+            dvmLockMutex(&gDvm.jniWeakGlobalRefLock);
+            result = dvmGetFromIndirectRefTable(pRefTable, jobj);
+            dvmUnlockMutex(&gDvm.jniWeakGlobalRefLock);
         }
         break;
     case kIndirectKindInvalid:
@@ -753,6 +764,36 @@ static jobject addGlobalReference(Object* obj)
     return jobj;
 }
 
+#ifdef USE_INDIRECT_REF
+static jobject addWeakGlobalReference(Object* obj)
+{
+    if (obj == NULL)
+        return NULL;
+    dvmLockMutex(&gDvm.jniWeakGlobalRefLock);
+    IndirectRefTable *table = &gDvm.jniWeakGlobalRefTable;
+    jobject jobj = dvmAddToIndirectRefTable(table, IRT_FIRST_SEGMENT, obj);
+    if (jobj == NULL) {
+        dvmDumpIndirectRefTable(table, "JNI weak global");
+        LOGE("Failed adding to JNI weak global ref table (%zd entries)",
+             dvmIndirectRefTableEntries(table));
+    }
+    dvmUnlockMutex(&gDvm.jniWeakGlobalRefLock);
+    return jobj;
+}
+
+static void deleteWeakGlobalReference(jobject jobj)
+{
+    if (jobj == NULL)
+        return;
+    dvmLockMutex(&gDvm.jniWeakGlobalRefLock);
+    IndirectRefTable *table = &gDvm.jniWeakGlobalRefTable;
+    if (!dvmRemoveFromIndirectRefTable(table, IRT_FIRST_SEGMENT, jobj)) {
+        LOGW("JNI: DeleteWeakGlobalRef(%p) failed to find entry", jobj);
+    }
+    dvmUnlockMutex(&gDvm.jniWeakGlobalRefLock);
+}
+#endif
+
 /*
  * Remove a global reference.  In most cases it's the entry most recently
  * added, which makes this pretty quick.
@@ -807,6 +848,7 @@ bail:
     dvmUnlockMutex(&gDvm.jniGlobalRefLock);
 }
 
+#ifndef USE_INDIRECT_REF
 /*
  * We create a PhantomReference that references the object, add a
  * global reference to it, and then flip some bits before returning it.
@@ -859,7 +901,9 @@ static jweak createWeakGlobalRef(JNIEnv* env, jobject jobj)
      * Add it to the global reference table, and mangle the pointer.
      */
     phantomRef = addGlobalReference(phantomObj);
-    return dvmObfuscateWeakGlobalRef(phantomRef);
+    jweak wref = dvmObfuscateWeakGlobalRef(phantomRef);
+    assert(wref == NULL || dvmIsWeakGlobalRef(wref));
+    return wref;
 }
 
 /*
@@ -870,7 +914,7 @@ static void deleteWeakGlobalRef(JNIEnv* env, jweak wref)
 {
     if (wref == NULL)
         return;
-
+    assert(dvmIsWeakGlobalRef(wref));
     jobject phantomRef = dvmNormalizeWeakGlobalRef(wref);
     deleteGlobalReference(phantomRef);
 }
@@ -894,7 +938,7 @@ static Object* getPhantomReferent(JNIEnv* env, jweak jwobj)
 
     return dvmGetFieldObject(obj, gDvm.offJavaLangRefReference_referent);
 }
-
+#endif
 
 /*
  * Objects don't currently move, so we just need to create a reference
@@ -911,7 +955,7 @@ static void pinPrimitiveArray(ArrayObject* arrayObj)
     if (!dvmAddToReferenceTable(&gDvm.jniPinRefTable, (Object*)arrayObj)) {
         dvmDumpReferenceTable(&gDvm.jniPinRefTable, "JNI pinned array");
         LOGE("Failed adding to JNI pinned array ref table (%d entries)\n",
-            (int) dvmReferenceTableEntries(&gDvm.jniPinRefTable));
+           (int) dvmReferenceTableEntries(&gDvm.jniPinRefTable));
         dvmDumpThread(dvmThreadSelf(), false);
         dvmAbort();
     }
@@ -973,12 +1017,12 @@ void dvmDumpJniReferenceTables(void)
 {
     Thread* self = dvmThreadSelf();
     JNIEnv* env = self->jniEnv;
-    ReferenceTable* pLocalRefs = getLocalRefTable(env);
-
 #ifdef USE_INDIRECT_REF
+    IndirectRefTable* pLocalRefs = getLocalRefTable(env);
     dvmDumpIndirectRefTable(pLocalRefs, "JNI local");
     dvmDumpIndirectRefTable(&gDvm.jniGlobalRefTable, "JNI global");
 #else
+    ReferenceTable* pLocalRefs = getLocalRefTable(env);
     dvmDumpReferenceTable(pLocalRefs, "JNI local");
     dvmDumpReferenceTable(&gDvm.jniGlobalRefTable, "JNI global");
 #endif
@@ -2041,10 +2085,14 @@ static jobject NewGlobalRef(JNIEnv* env, jobject jobj)
     Object* obj;
 
     JNI_ENTER();
+#ifdef USE_INDIRECT_REF
+    obj = dvmDecodeIndirectRef(env, jobj);
+#else
     if (dvmIsWeakGlobalRef(jobj))
         obj = getPhantomReferent(env, (jweak) jobj);
     else
         obj = dvmDecodeIndirectRef(env, jobj);
+#endif
     jobject retval = addGlobalReference(obj);
     JNI_EXIT();
     return retval;
@@ -2069,10 +2117,14 @@ static jobject NewLocalRef(JNIEnv* env, jobject jobj)
     Object* obj;
 
     JNI_ENTER();
+#ifdef USE_INDIRECT_REF
+    obj = dvmDecodeIndirectRef(env, jobj);
+#else
     if (dvmIsWeakGlobalRef(jobj))
         obj = getPhantomReferent(env, (jweak) jobj);
     else
         obj = dvmDecodeIndirectRef(env, jobj);
+#endif
     jobject retval = addLocalReference(env, obj);
     JNI_EXIT();
     return retval;
@@ -3447,10 +3499,16 @@ static void ReleaseStringCritical(JNIEnv* env, jstring jstr,
 /*
  * Create a new weak global reference.
  */
-static jweak NewWeakGlobalRef(JNIEnv* env, jobject obj)
+static jweak NewWeakGlobalRef(JNIEnv* env, jobject jobj)
 {
     JNI_ENTER();
-    jweak wref = createWeakGlobalRef(env, obj);
+#ifdef USE_INDIRECT_REF
+    Object *obj = dvmDecodeIndirectRef(env, jobj);
+    jweak wref = addWeakGlobalReference(obj);
+#else
+    jweak wref = createWeakGlobalRef(env, jobj);
+#endif
+    assert(wref == NULL || dvmIsWeakGlobalRef(wref));
     JNI_EXIT();
     return wref;
 }
@@ -3461,7 +3519,11 @@ static jweak NewWeakGlobalRef(JNIEnv* env, jobject obj)
 static void DeleteWeakGlobalRef(JNIEnv* env, jweak wref)
 {
     JNI_ENTER();
+#ifdef USE_INDIRECT_REF
+    deleteWeakGlobalReference(wref);
+#else
     deleteWeakGlobalRef(env, wref);
+#endif
     JNI_EXIT();
 }
 

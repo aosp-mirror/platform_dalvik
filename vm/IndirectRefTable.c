@@ -27,7 +27,7 @@ bool dvmInitIndirectRefTable(IndirectRefTable* pRef, int initialCount,
 {
     assert(initialCount > 0);
     assert(initialCount <= maxCount);
-    assert(kind == kIndirectKindLocal || kind == kIndirectKindGlobal);
+    assert(kind != kIndirectKindInvalid);
 
     pRef->table = (Object**) malloc(initialCount * sizeof(Object*));
     if (pRef->table == NULL)
