@@ -1255,14 +1255,17 @@ void dvmThrowClassFormatError(const char* msg) {
 }
 
 void dvmThrowClassNotFoundException(const char* name) {
-    // TODO: Should the name be converted into human-readable form?
-    dvmThrowException(gDvm.exClassNotFoundException, name);
+    dvmThrowChainedClassNotFoundException(name, NULL);
 }
 
 void dvmThrowChainedClassNotFoundException(const char* name, Object* cause) {
-    // TODO: Should the name be converted into human-readable form?
-    dvmThrowChainedException(gDvm.exClassNotFoundException, name,
-            cause);
+    /*
+     * Note: This exception is thrown in response to a request coming
+     * from client code for the name as given, so it is preferable to
+     * make the exception message be that string, per se, instead of
+     * trying to prettify it.
+     */
+    dvmThrowChainedException(gDvm.exClassNotFoundException, name, cause);
 }
 
 void dvmThrowExceptionInInitializerError(void)

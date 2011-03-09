@@ -187,27 +187,67 @@ static bool validateClassName(const char* name)
     int len = strlen(name);
     int i = 0;
 
+    /*
+     * TODO: This doesn't currently check for all possible name
+     * problems, per the dex spec. Note: dexIsValidTypeDescriptor()
+     * *almost* does the right thing, except it always wants a type
+     * descriptor per se ("L" and ";" around even non-array class
+     * names) and it wants slashes not dots between name components.
+     */
+
     /* check for reasonable array types */
     if (name[0] == '[') {
         while (name[i] == '[')
             i++;
 
+        if (i > 255) {
+            /* Arrays are allowed no more than 255 dimensions. */
+            return false;
+        }
+
         if (name[i] == 'L') {
-            /* array of objects, make sure it ends well */
-            if (name[len-1] != ';')
+            /*
+             * It's an array of objects; make sure it's non-empty and
+             * ends properly.
+             */
+            if ((i >= (len-2)) || (name[len-1] != ';')) {
                 return false;
+            }
+        } else if (name[i] == 'V') {
+            /* There is no such thing as array of void. */
+            return false;
         } else if (strchr(PRIM_TYPE_TO_LETTER, name[i]) != NULL) {
-            if (i != len-1)
+            if (i != len-1) {
                 return false;
+            }
+            /* It is a valid array of primitives. */
+            return true;
         } else {
             return false;
         }
+
+        /*
+         * At this point, we are looking at an array of objects: Skip
+         * the initial "L" (i++) and the final ";" (len--), and fall
+         * through to the illegal character check.
+         */
+
+        i++;
+        len--;
     }
 
-    /* quick check for illegal chars */
+    /* Check for (some) illegal characters. */
     for ( ; i < len; i++) {
-        if (name[i] == '/')
+        char c = name[i];
+        switch (c) {
+            case '.':
+            case '-':
+            case '$':
+                continue;
+        }
+        if (c <= ' ') {
             return false;
+        }
     }
 
     return true;
