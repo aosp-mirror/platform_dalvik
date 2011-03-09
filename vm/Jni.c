@@ -338,6 +338,7 @@ void dvmJniShutdown(void)
 {
 #ifdef USE_INDIRECT_REF
     dvmClearIndirectRefTable(&gDvm.jniGlobalRefTable);
+    dvmClearIndirectRefTable(&gDvm.jniWeakGlobalRefTable);
 #else
     dvmClearReferenceTable(&gDvm.jniGlobalRefTable);
 #endif
