@@ -104,11 +104,7 @@ typedef enum DalvikJniReturnType {
  */
 INLINE void dvmPopJniLocals(Thread* self, StackSaveArea* saveArea)
 {
-#ifdef USE_INDIRECT_REF
     self->jniLocalRefTable.segmentState.all = saveArea->xtra.localRefCookie;
-#else
-    self->jniLocalRefTable.nextEntry = saveArea->xtra.localRefCookie;
-#endif
 }
 
 /*
@@ -158,14 +154,7 @@ void dvmLateEnableCheckedJni(void);
 /*
  * Decode a local, global, or weak-global reference.
  */
-#ifdef USE_INDIRECT_REF
 Object* dvmDecodeIndirectRef(JNIEnv* env, jobject jobj);
-#else
-/* use an inline to ensure this is a no-op */
-INLINE Object* dvmDecodeIndirectRef(JNIEnv* env, jobject jobj) {
-    return (Object*) jobj;
-}
-#endif
 
 /*
  * Verify that a reference passed in from native code is valid.  Returns
@@ -207,54 +196,5 @@ void dvmReleaseJniMonitors(Thread* self);
  * The local ref tables associated with other threads are not included.
  */
 void dvmDumpJniReferenceTables(void);
-
-/*
- * This mask is applied to weak global reference values returned to
- * native code.  The goal is to create an invalid pointer that will cause
- * a crash if misused.  The mmap region for the virtual heap is typically
- * around 0x40xxxxxx.
- *
- * To make weak global references easily distinguishable from other kinds
- * of references when !USE_INDIRECT_REF, we XOR the low bits.  Assuming >=
- * 64-bit alignment of objects, this changes the low 3 bits from all clear
- * to all set.
- */
-#define WEAK_GLOBAL_XOR 0x9e0fffff
-
-/*
- * "Obfuscate" a weak global reference pointer.
- */
-INLINE jweak dvmObfuscateWeakGlobalRef(jobject jobj) {
-#ifndef USE_INDIRECT_REF
-    return (jweak) ((u4) jobj ^ WEAK_GLOBAL_XOR);
-#else
-    return jobj;
-#endif
-}
-
-/*
- * Undo the obfuscation.
- */
-INLINE jobject dvmNormalizeWeakGlobalRef(jweak ref) {
-#ifndef USE_INDIRECT_REF
-    return (jobject) ((u4) ref ^ WEAK_GLOBAL_XOR);
-#else
-    return ref;
-#endif
-}
-
-/*
- * Returns "true" if this looks like a weak global reference.
- *
- * Relies on the low 3 bits being set instead of clear (the latter is
- * guaranteed by 64-bit alignment of objects).
- */
-INLINE bool dvmIsWeakGlobalRef(jobject jobj) {
-#ifndef USE_INDIRECT_REF
-    return (((u4) jobj & 0x07) == 0x07);
-#else
-    return (((u4) jobj & 0x03) == 0x03);
-#endif
-}
 
 #endif /*_DALVIK_JNIINTERNAL*/

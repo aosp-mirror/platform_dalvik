@@ -140,11 +140,7 @@ struct StackSaveArea {
 
     union {
         /* for JNI native methods: bottom of local reference segment */
-#ifdef USE_INDIRECT_REF
         u4          localRefCookie;
-#else
-        Object**    localRefCookie;
-#endif
 
         /* for interpreted methods: saved current PC, for exception stack
          * traces and debugger traces */

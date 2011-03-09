@@ -289,24 +289,6 @@ static bool find4(void) {
     Method* meth;
 
     /*
-     * Grab the PhantomReference constructor.
-     */
-    gDvm.classJavaLangRefPhantomReference =
-        dvmFindSystemClassNoInit("Ljava/lang/ref/PhantomReference;");
-    if (gDvm.classJavaLangRefPhantomReference == NULL) {
-        LOGE("Unable to find PhantomReference class\n");
-        return false;
-    }
-    meth= dvmFindDirectMethodByDescriptor(gDvm.classJavaLangRefPhantomReference,
-        "<init>", "(Ljava/lang/Object;Ljava/lang/ref/ReferenceQueue;)V");
-    if (meth == NULL) {
-        LOGE("Unable to find constructor for PhantomReference\n");
-        return false;
-    }
-    gDvm.methJavaLangRefPhantomReference_init = meth;
-
-
-    /*
      * Look up and cache pointers to some direct buffer classes, fields,
      * and methods.
      */

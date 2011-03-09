@@ -189,11 +189,7 @@ bool dvmPushJNIFrame(Thread* self, const Method* method)
     breakSaveBlock->method = NULL;
     saveBlock->prevFrame = FP_FROM_SAVEAREA(breakSaveBlock);
     saveBlock->savedPc = NULL;                  // not required
-#ifdef USE_INDIRECT_REF
     saveBlock->xtra.localRefCookie = self->jniLocalRefTable.segmentState.all;
-#else
-    saveBlock->xtra.localRefCookie = self->jniLocalRefTable.nextEntry;
-#endif
     saveBlock->method = method;
 
     LOGVV("PUSH JNI frame: old=%p new=%p (size=%d)\n",
@@ -252,11 +248,7 @@ bool dvmPushLocalFrame(Thread* self, const Method* method)
 
     saveBlock->prevFrame = self->curFrame;
     saveBlock->savedPc = NULL;                  // not required
-#ifdef USE_INDIRECT_REF
     saveBlock->xtra.localRefCookie = self->jniLocalRefTable.segmentState.all;
-#else
-    saveBlock->xtra.localRefCookie = self->jniLocalRefTable.nextEntry;
-#endif
     saveBlock->method = method;
 
     LOGVV("PUSH JNI local frame: old=%p new=%p (size=%d)\n",

@@ -191,24 +191,14 @@ MTERP_OFFSET(offThread_jitResumeDPC,      Thread, jitResumeDPC, 140)
 MTERP_OFFSET(offThread_jitState,          Thread, jitState, 144)
 MTERP_OFFSET(offThread_icRechainCount,    Thread, icRechainCount, 148)
 MTERP_OFFSET(offThread_pProfileCountdown, Thread, pProfileCountdown, 152)
-#ifdef USE_INDIRECT_REF
 MTERP_OFFSET(offThread_jniLocal_topCookie, \
                                 Thread, jniLocalRefTable.segmentState.all, 156)
-#else
-MTERP_OFFSET(offThread_jniLocal_topCookie, \
-                                Thread, jniLocalRefTable.nextEntry, 156)
-#endif
 #if defined(WITH_SELF_VERIFICATION)
 MTERP_OFFSET(offThread_shadowSpace,       Thread, shadowSpace, 172)
 #endif
 #else
-#ifdef USE_INDIRECT_REF
 MTERP_OFFSET(offThread_jniLocal_topCookie, \
                                 Thread, jniLocalRefTable.segmentState.all, 96)
-#else
-MTERP_OFFSET(offThread_jniLocal_topCookie, \
-                                Thread, jniLocalRefTable.nextEntry, 96)
-#endif
 #endif
 
 /* Object fields */

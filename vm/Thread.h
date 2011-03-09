@@ -172,12 +172,7 @@ typedef struct Thread {
 #endif
 
     /* JNI local reference tracking */
-#ifdef USE_INDIRECT_REF
     IndirectRefTable jniLocalRefTable;
-#else
-    ReferenceTable  jniLocalRefTable;
-#endif
-
 
 #if defined(WITH_JIT)
 #if defined(WITH_SELF_VERIFICATION)

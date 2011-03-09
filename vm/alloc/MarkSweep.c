@@ -1088,7 +1088,6 @@ static int isUnmarkedObject(void *obj)
     return !isMarked((Object *)obj, &gDvm.gcHeap->markContext);
 }
 
-#ifdef USE_INDIRECT_REF
 void sweepWeakJniGlobals(void)
 {
     IndirectRefTable *table = &gDvm.jniWeakGlobalRefTable;
@@ -1102,7 +1101,6 @@ void sweepWeakJniGlobals(void)
         }
     }
 }
-#endif
 
 /*
  * Process all the internal system structures that behave like
@@ -1112,9 +1110,7 @@ void dvmHeapSweepSystemWeaks(void)
 {
     dvmGcDetachDeadInternedStrings(isUnmarkedObject);
     dvmSweepMonitorList(&gDvm.monitorList, isUnmarkedObject);
-#ifdef USE_INDIRECT_REF
     sweepWeakJniGlobals();
-#endif
 }
 
 /*

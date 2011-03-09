@@ -298,7 +298,6 @@ static const struct JNINativeInterface gNativeInterface;
  */
 bool dvmJniStartup(void)
 {
-#ifdef USE_INDIRECT_REF
     if (!dvmInitIndirectRefTable(&gDvm.jniGlobalRefTable,
                                  kGlobalRefsTableInitialSize,
                                  kGlobalRefsTableMaxSize,
@@ -309,16 +308,9 @@ bool dvmJniStartup(void)
                                  kGlobalRefsTableMaxSize,
                                  kIndirectKindWeakGlobal))
         return false;
-#else
-    if (!dvmInitReferenceTable(&gDvm.jniGlobalRefTable,
-            kGlobalRefsTableInitialSize, kGlobalRefsTableMaxSize))
-        return false;
-#endif
 
     dvmInitMutex(&gDvm.jniGlobalRefLock);
-#ifdef USE_INDIRECT_REF
     dvmInitMutex(&gDvm.jniWeakGlobalRefLock);
-#endif
     gDvm.jniGlobalRefLoMark = 0;
     gDvm.jniGlobalRefHiMark = kGrefWaterInterval * 2;
 
@@ -336,12 +328,8 @@ bool dvmJniStartup(void)
  */
 void dvmJniShutdown(void)
 {
-#ifdef USE_INDIRECT_REF
     dvmClearIndirectRefTable(&gDvm.jniGlobalRefTable);
     dvmClearIndirectRefTable(&gDvm.jniWeakGlobalRefTable);
-#else
-    dvmClearReferenceTable(&gDvm.jniGlobalRefTable);
-#endif
     dvmClearReferenceTable(&gDvm.jniPinRefTable);
 }
 
@@ -451,17 +439,11 @@ void dvmDestroyJNIEnv(JNIEnv* env)
  * Going through "env" rather than dvmThreadSelf() is faster but will
  * get weird if the JNI code is passing the wrong JNIEnv around.
  */
-#ifdef USE_INDIRECT_REF
 static inline IndirectRefTable* getLocalRefTable(JNIEnv* env)
-#else
-static inline ReferenceTable* getLocalRefTable(JNIEnv* env)
-#endif
 {
-    //return &dvmThreadSelf()->jniLocalRefTable;
     return &((JNIEnvExt*)env)->self->jniLocalRefTable;
 }
 
-#ifdef USE_INDIRECT_REF
 /*
  * Convert an indirect reference to an Object reference.  The indirect
  * reference may be local, global, or weak-global.
@@ -510,9 +492,6 @@ Object* dvmDecodeIndirectRef(JNIEnv* env, jobject jobj)
 
     return result;
 }
-#else
-    /* use trivial inline in JniInternal.h for performance */
-#endif
 
 /*
  * Add a local reference for an object to the current stack frame.  When
@@ -531,14 +510,10 @@ static jobject addLocalReference(JNIEnv* env, Object* obj)
     if (obj == NULL)
         return NULL;
 
-    jobject jobj;
-
-#ifdef USE_INDIRECT_REF
     IndirectRefTable* pRefTable = getLocalRefTable(env);
     void* curFrame = ((JNIEnvExt*)env)->self->curFrame;
     u4 cookie = SAVEAREA_FROM_FP(curFrame)->xtra.localRefCookie;
-
-    jobj = (jobject) dvmAddToIndirectRefTable(pRefTable, cookie, obj);
+    jobject jobj = (jobject) dvmAddToIndirectRefTable(pRefTable, cookie, obj);
     if (jobj == NULL) {
         dvmDumpIndirectRefTable(pRefTable, "JNI local");
         LOGE("Failed adding to JNI local ref table (has %d entries)\n",
@@ -551,25 +526,6 @@ static jobject addLocalReference(JNIEnv* env, Object* obj)
             dvmGetCurrentJNIMethod()->name,
             (int) dvmReferenceTableEntries(pRefTable));
     }
-#else
-    ReferenceTable* pRefTable = getLocalRefTable(env);
-
-    if (!dvmAddToReferenceTable(pRefTable, obj)) {
-        dvmDumpReferenceTable(pRefTable, "JNI local");
-        LOGE("Failed adding to JNI local ref table (has %d entries)\n",
-            (int) dvmReferenceTableEntries(pRefTable));
-        dvmDumpThread(dvmThreadSelf(), false);
-        dvmAbort();     // spec says call FatalError; this is equivalent
-    } else {
-        LOGVV("LREF add %p  (%s.%s) (ent=%d)\n", obj,
-            dvmGetCurrentJNIMethod()->clazz->descriptor,
-            dvmGetCurrentJNIMethod()->name,
-            (int) dvmReferenceTableEntries(pRefTable));
-    }
-
-    jobj = (jobject) obj;
-#endif
-
     return jobj;
 }
 
@@ -579,16 +535,10 @@ static jobject addLocalReference(JNIEnv* env, Object* obj)
  */
 static bool ensureLocalCapacity(JNIEnv* env, int capacity)
 {
-#ifdef USE_INDIRECT_REF
     IndirectRefTable* pRefTable = getLocalRefTable(env);
     int numEntries = dvmIndirectRefTableEntries(pRefTable);
     // TODO: this isn't quite right, since "numEntries" includes holes
     return ((kJniLocalRefMax - numEntries) >= capacity);
-#else
-    ReferenceTable* pRefTable = getLocalRefTable(env);
-
-    return (kJniLocalRefMax - (pRefTable->nextEntry - pRefTable->table) >= capacity);
-#endif
 }
 
 /*
@@ -599,7 +549,6 @@ static void deleteLocalReference(JNIEnv* env, jobject jobj)
     if (jobj == NULL)
         return;
 
-#ifdef USE_INDIRECT_REF
     IndirectRefTable* pRefTable = getLocalRefTable(env);
     Thread* self = ((JNIEnvExt*)env)->self;
     u4 cookie = SAVEAREA_FROM_FP(self->curFrame)->xtra.localRefCookie;
@@ -614,23 +563,6 @@ static void deleteLocalReference(JNIEnv* env, jobject jobj)
          */
         LOGW("JNI WARNING: DeleteLocalRef(%p) failed to find entry\n", jobj);
     }
-#else
-    ReferenceTable* pRefTable = getLocalRefTable(env);
-    Thread* self = ((JNIEnvExt*)env)->self;
-    Object** bottom = SAVEAREA_FROM_FP(self->curFrame)->xtra.localRefCookie;
-
-    if (!dvmRemoveFromReferenceTable(pRefTable, bottom, (Object*) jobj)) {
-        /*
-         * Attempting to delete a local reference that is not in the
-         * topmost local reference frame is a no-op.  DeleteLocalRef returns
-         * void and doesn't throw any exceptions, but we should probably
-         * complain about it so the user will notice that things aren't
-         * going quite the way they expect.
-         */
-        LOGW("JNI WARNING: DeleteLocalRef(%p) failed to find entry (valid=%d)\n",
-            jobj, dvmIsValidObject((Object*) jobj));
-    }
-#endif
 }
 
 /*
@@ -688,7 +620,6 @@ static jobject addGlobalReference(Object* obj)
      * we're either leaking global ref table entries or we're going to
      * run out of space in the GC heap.
      */
-#ifdef USE_INDIRECT_REF
     jobj = dvmAddToIndirectRefTable(&gDvm.jniGlobalRefTable, IRT_FIRST_SEGMENT,
             obj);
     if (jobj == NULL) {
@@ -725,47 +656,10 @@ static jobject addGlobalReference(Object* obj)
             }
         }
     }
-#else
-    if (!dvmAddToReferenceTable(&gDvm.jniGlobalRefTable, obj)) {
-        dvmDumpReferenceTable(&gDvm.jniGlobalRefTable, "JNI global");
-        LOGE("Failed adding to JNI global ref table (%d entries)\n",
-            (int) dvmReferenceTableEntries(&gDvm.jniGlobalRefTable));
-        dvmAbort();
-    }
-    jobj = (jobject) obj;
-
-    LOGVV("GREF add %p  (%s.%s)\n", obj,
-        dvmGetCurrentJNIMethod()->clazz->descriptor,
-        dvmGetCurrentJNIMethod()->name);
-
-    /* GREF usage tracking; should probably be disabled for production env */
-    if (kTrackGrefUsage && gDvm.jniGrefLimit != 0) {
-        int count = dvmReferenceTableEntries(&gDvm.jniGlobalRefTable);
-        if (count > gDvm.jniGlobalRefHiMark) {
-            LOGD("GREF has increased to %d\n", count);
-            gDvm.jniGlobalRefHiMark += kGrefWaterInterval;
-            gDvm.jniGlobalRefLoMark += kGrefWaterInterval;
-
-            /* watch for "excessive" use; not generally appropriate */
-            if (count >= gDvm.jniGrefLimit) {
-                JavaVMExt* vm = (JavaVMExt*) gDvm.vmList;
-                if (vm->warnError) {
-                    dvmDumpReferenceTable(&gDvm.jniGlobalRefTable,"JNI global");
-                    LOGE("Excessive JNI global references (%d)\n", count);
-                    dvmAbort();
-                } else {
-                    LOGW("Excessive JNI global references (%d)\n", count);
-                }
-            }
-        }
-    }
-#endif
-
     dvmUnlockMutex(&gDvm.jniGlobalRefLock);
     return jobj;
 }
 
-#ifdef USE_INDIRECT_REF
 static jobject addWeakGlobalReference(Object* obj)
 {
     if (obj == NULL)
@@ -793,7 +687,6 @@ static void deleteWeakGlobalReference(jobject jobj)
     }
     dvmUnlockMutex(&gDvm.jniWeakGlobalRefLock);
 }
-#endif
 
 /*
  * Remove a global reference.  In most cases it's the entry most recently
@@ -808,8 +701,6 @@ static void deleteGlobalReference(jobject jobj)
         return;
 
     dvmLockMutex(&gDvm.jniGlobalRefLock);
-
-#ifdef USE_INDIRECT_REF
     if (!dvmRemoveFromIndirectRefTable(&gDvm.jniGlobalRefTable,
             IRT_FIRST_SEGMENT, jobj))
     {
@@ -826,120 +717,9 @@ static void deleteGlobalReference(jobject jobj)
             gDvm.jniGlobalRefLoMark -= kGrefWaterInterval;
         }
     }
-#else
-    if (!dvmRemoveFromReferenceTable(&gDvm.jniGlobalRefTable,
-            gDvm.jniGlobalRefTable.table, (Object*)jobj))
-    {
-        LOGW("JNI: DeleteGlobalRef(%p) failed to find entry (valid=%d)\n",
-            jobj, dvmIsValidObject((Object*) jobj));
-        goto bail;
-    }
-
-    if (kTrackGrefUsage && gDvm.jniGrefLimit != 0) {
-        int count = dvmReferenceTableEntries(&gDvm.jniGlobalRefTable);
-        if (count < gDvm.jniGlobalRefLoMark) {
-            LOGD("GREF has decreased to %d\n", count);
-            gDvm.jniGlobalRefHiMark -= kGrefWaterInterval;
-            gDvm.jniGlobalRefLoMark -= kGrefWaterInterval;
-        }
-    }
-#endif
-
 bail:
     dvmUnlockMutex(&gDvm.jniGlobalRefLock);
 }
-
-#ifndef USE_INDIRECT_REF
-/*
- * We create a PhantomReference that references the object, add a
- * global reference to it, and then flip some bits before returning it.
- * The last step ensures that we detect it as special and that only
- * appropriate calls will accept it.
- *
- * On failure, returns NULL with an exception pending.
- */
-static jweak createWeakGlobalRef(JNIEnv* env, jobject jobj)
-{
-    if (jobj == NULL)
-        return NULL;
-
-    Thread* self = ((JNIEnvExt*)env)->self;
-    Object* obj = dvmDecodeIndirectRef(env, jobj);
-    Object* phantomObj;
-    jobject phantomRef;
-
-    /*
-     * Allocate a PhantomReference, then call the constructor to set
-     * the referent and the reference queue.
-     *
-     * We use a "magic" reference queue that the GC knows about; it behaves
-     * more like a queueless WeakReference, clearing the referent and
-     * not calling enqueue().
-     */
-    if (!dvmIsClassInitialized(gDvm.classJavaLangRefPhantomReference))
-        dvmInitClass(gDvm.classJavaLangRefPhantomReference);
-    phantomObj = dvmAllocObject(gDvm.classJavaLangRefPhantomReference,
-            ALLOC_DEFAULT);
-    if (phantomObj == NULL) {
-        assert(dvmCheckException(self));
-        LOGW("Failed on WeakGlobalRef alloc\n");
-        return NULL;
-    }
-
-    JValue unused;
-    dvmCallMethod(self, gDvm.methJavaLangRefPhantomReference_init, phantomObj,
-        &unused, obj, NULL);
-    dvmReleaseTrackedAlloc(phantomObj, self);
-
-    if (dvmCheckException(self)) {
-        LOGW("PhantomReference init failed\n");
-        return NULL;
-    }
-
-    LOGV("+++ WGR: created phantom ref %p for object %p\n", phantomObj, obj);
-
-    /*
-     * Add it to the global reference table, and mangle the pointer.
-     */
-    phantomRef = addGlobalReference(phantomObj);
-    jweak wref = dvmObfuscateWeakGlobalRef(phantomRef);
-    assert(wref == NULL || dvmIsWeakGlobalRef(wref));
-    return wref;
-}
-
-/*
- * Delete the global reference that's keeping the PhantomReference around.
- * The PhantomReference will eventually be discarded by the GC.
- */
-static void deleteWeakGlobalRef(JNIEnv* env, jweak wref)
-{
-    if (wref == NULL)
-        return;
-    assert(dvmIsWeakGlobalRef(wref));
-    jobject phantomRef = dvmNormalizeWeakGlobalRef(wref);
-    deleteGlobalReference(phantomRef);
-}
-
-/*
- * Extract the referent from a PhantomReference.  Used for weak global
- * references.
- *
- * "jwobj" is a "mangled" WGR pointer.
- */
-static Object* getPhantomReferent(JNIEnv* env, jweak jwobj)
-{
-    jobject jobj = dvmNormalizeWeakGlobalRef(jwobj);
-    Object* obj = dvmDecodeIndirectRef(env, jobj);
-
-    if (obj->clazz != gDvm.classJavaLangRefPhantomReference) {
-        LOGE("%p is not a phantom reference (%s)\n",
-            jwobj, obj->clazz->descriptor);
-        return NULL;
-    }
-
-    return dvmGetFieldObject(obj, gDvm.offJavaLangRefReference_referent);
-}
-#endif
 
 /*
  * Objects don't currently move, so we just need to create a reference
@@ -1018,90 +798,11 @@ void dvmDumpJniReferenceTables(void)
 {
     Thread* self = dvmThreadSelf();
     JNIEnv* env = self->jniEnv;
-#ifdef USE_INDIRECT_REF
     IndirectRefTable* pLocalRefs = getLocalRefTable(env);
     dvmDumpIndirectRefTable(pLocalRefs, "JNI local");
     dvmDumpIndirectRefTable(&gDvm.jniGlobalRefTable, "JNI global");
-#else
-    ReferenceTable* pLocalRefs = getLocalRefTable(env);
-    dvmDumpReferenceTable(pLocalRefs, "JNI local");
-    dvmDumpReferenceTable(&gDvm.jniGlobalRefTable, "JNI global");
-#endif
     dvmDumpReferenceTable(&gDvm.jniPinRefTable, "JNI pinned array");
 }
-
-#ifndef USE_INDIRECT_REF
-/*
- * Determine if "obj" appears in the argument list for the native method.
- *
- * We use the "shorty" signature to determine which argument slots hold
- * reference types.
- */
-static bool findInArgList(Thread* self, Object* obj)
-{
-    const Method* meth;
-    u4* fp;
-    int i;
-
-    fp = (u4*)self->curFrame;
-    while (1) {
-        /*
-         * Back up over JNI PushLocalFrame frames.  This works because the
-         * previous frame on the interpreted stack is either a break frame
-         * (if we called here via native code) or an interpreted method (if
-         * we called here via the interpreter).  In both cases the method
-         * pointer won't match.
-         */
-        StackSaveArea* saveArea = SAVEAREA_FROM_FP(fp);
-        meth = saveArea->method;
-        if (meth != SAVEAREA_FROM_FP(saveArea->prevFrame)->method)
-            break;
-        fp = (u4*)saveArea->prevFrame;
-    }
-
-    LOGVV("+++ scanning %d args in %s (%s)\n",
-        meth->insSize, meth->name, meth->shorty);
-    const char* shorty = meth->shorty +1;       /* skip return type char */
-    for (i = 0; i < meth->insSize; i++) {
-        if (i == 0 && !dvmIsStaticMethod(meth)) {
-            /* first arg is "this" ref, not represented in "shorty" */
-            if (fp[i] == (u4) obj)
-                return true;
-        } else {
-            /* if this is a reference type, see if it matches */
-            switch (*shorty) {
-            case 'L':
-                if (fp[i] == (u4) obj)
-                    return true;
-                break;
-            case 'D':
-            case 'J':
-                i++;
-                break;
-            case '\0':
-                LOGE("Whoops! ran off the end of %s (%d)\n",
-                    meth->shorty, meth->insSize);
-                break;
-            default:
-                if (fp[i] == (u4) obj)
-                    LOGI("NOTE: ref %p match on arg type %c\n", obj, *shorty);
-                break;
-            }
-            shorty++;
-        }
-    }
-
-    /*
-     * For static methods, we also pass a class pointer in.
-     */
-    if (dvmIsStaticMethod(meth)) {
-        //LOGI("+++ checking class pointer in %s\n", meth->name);
-        if ((void*)obj == (void*)meth->clazz)
-            return true;
-    }
-    return false;
-}
-#endif
 
 /*
  * Verify that a reference passed in from native code is one that the
@@ -1121,7 +822,6 @@ static bool findInArgList(Thread* self, Object* obj)
  */
 jobjectRefType dvmGetJNIRefType(JNIEnv* env, jobject jobj)
 {
-#ifdef USE_INDIRECT_REF
     /*
      * IndirectRefKind is currently defined as an exact match of
      * jobjectRefType, so this is easy.  We have to decode it to determine
@@ -1135,42 +835,6 @@ jobjectRefType dvmGetJNIRefType(JNIEnv* env, jobject jobj)
     } else {
         return (jobjectRefType) dvmGetIndirectRefType(jobj);
     }
-#else
-    Object* obj = dvmDecodeIndirectRef(env, jobj);
-    ReferenceTable* pRefTable = getLocalRefTable(env);
-    Thread* self = dvmThreadSelf();
-
-    if (dvmIsWeakGlobalRef(jobj)) {
-        return JNIWeakGlobalRefType;
-    }
-
-    /* check args */
-    if (findInArgList(self, obj)) {
-        //LOGI("--- REF found %p on stack", obj);
-        return JNILocalRefType;
-    }
-
-    /* check locals */
-    if (dvmFindInReferenceTable(pRefTable, pRefTable->table,
-            obj) != NULL) {
-        //LOGI("--- REF found %p in locals", obj);
-        return JNILocalRefType;
-    }
-
-    /* check globals */
-    dvmLockMutex(&gDvm.jniGlobalRefLock);
-    if (dvmFindInReferenceTable(&gDvm.jniGlobalRefTable,
-            gDvm.jniGlobalRefTable.table, obj))
-    {
-        //LOGI("--- REF found %p in globals", obj);
-        dvmUnlockMutex(&gDvm.jniGlobalRefLock);
-        return JNIGlobalRefType;
-    }
-    dvmUnlockMutex(&gDvm.jniGlobalRefLock);
-
-    /* not found! */
-    return JNIInvalidRefType;
-#endif
 }
 
 /*
@@ -1530,13 +1194,11 @@ static void checkStackSum(Thread* self)
 static inline void convertReferenceResult(JNIEnv* env, JValue* pResult,
     const Method* method, Thread* self)
 {
-#ifdef USE_INDIRECT_REF
     if (method->shorty[0] == 'L' && !dvmCheckException(self) &&
             pResult->l != NULL)
     {
         pResult->l = dvmDecodeIndirectRef(env, pResult->l);
     }
-#endif
 }
 
 /*
@@ -1553,7 +1215,6 @@ void dvmCallJNIMethod_general(const u4* args, JValue* pResult,
     //LOGI("JNI calling %p (%s.%s:%s):\n", method->insns,
     //    method->clazz->descriptor, method->name, method->shorty);
 
-#ifdef USE_INDIRECT_REF
     /*
      * Walk the argument list, creating local references for appropriate
      * arguments.
@@ -1605,10 +1266,6 @@ void dvmCallJNIMethod_general(const u4* args, JValue* pResult,
 
         idx++;
     }
-#else
-    staticMethodClass = dvmIsStaticMethod(method) ?
-        (jclass) method->clazz : NULL;
-#endif
 
     oldStatus = dvmChangeStatus(self, THREAD_NATIVE);
 
@@ -1663,14 +1320,12 @@ void dvmCallJNIMethod_virtualNoRef(const u4* args, JValue* pResult,
     u4* modArgs = (u4*) args;
     int oldStatus;
 
-#ifdef USE_INDIRECT_REF
     jobject thisObj = addLocalReference(self->jniEnv, (Object*) args[0]);
     if (thisObj == NULL) {
         assert(dvmCheckException(self));
         return;
     }
     modArgs[0] = (u4) thisObj;
-#endif
 
     oldStatus = dvmChangeStatus(self, THREAD_NATIVE);
 
@@ -1698,15 +1353,11 @@ void dvmCallJNIMethod_staticNoRef(const u4* args, JValue* pResult,
     jclass staticMethodClass;
     int oldStatus;
 
-#ifdef USE_INDIRECT_REF
     staticMethodClass = addLocalReference(self->jniEnv, (Object*)method->clazz);
     if (staticMethodClass == NULL) {
         assert(dvmCheckException(self));
         return;
     }
-#else
-    staticMethodClass = (jobject) method->clazz;
-#endif
 
     oldStatus = dvmChangeStatus(self, THREAD_NATIVE);
 
@@ -2083,17 +1734,8 @@ static jobject PopLocalFrame(JNIEnv* env, jobject jresult)
  */
 static jobject NewGlobalRef(JNIEnv* env, jobject jobj)
 {
-    Object* obj;
-
     JNI_ENTER();
-#ifdef USE_INDIRECT_REF
-    obj = dvmDecodeIndirectRef(env, jobj);
-#else
-    if (dvmIsWeakGlobalRef(jobj))
-        obj = getPhantomReferent(env, (jweak) jobj);
-    else
-        obj = dvmDecodeIndirectRef(env, jobj);
-#endif
+    Object* obj = dvmDecodeIndirectRef(env, jobj);
     jobject retval = addGlobalReference(obj);
     JNI_EXIT();
     return retval;
@@ -2115,17 +1757,8 @@ static void DeleteGlobalRef(JNIEnv* env, jobject jglobalRef)
  */
 static jobject NewLocalRef(JNIEnv* env, jobject jobj)
 {
-    Object* obj;
-
     JNI_ENTER();
-#ifdef USE_INDIRECT_REF
-    obj = dvmDecodeIndirectRef(env, jobj);
-#else
-    if (dvmIsWeakGlobalRef(jobj))
-        obj = getPhantomReferent(env, (jweak) jobj);
-    else
-        obj = dvmDecodeIndirectRef(env, jobj);
-#endif
+    Object* obj = dvmDecodeIndirectRef(env, jobj);
     jobject retval = addLocalReference(env, obj);
     JNI_EXIT();
     return retval;
@@ -3503,15 +3136,10 @@ static void ReleaseStringCritical(JNIEnv* env, jstring jstr,
 static jweak NewWeakGlobalRef(JNIEnv* env, jobject jobj)
 {
     JNI_ENTER();
-#ifdef USE_INDIRECT_REF
     Object *obj = dvmDecodeIndirectRef(env, jobj);
-    jweak wref = addWeakGlobalReference(obj);
-#else
-    jweak wref = createWeakGlobalRef(env, jobj);
-#endif
-    assert(wref == NULL || dvmIsWeakGlobalRef(wref));
+    jweak retval = addWeakGlobalReference(obj);
     JNI_EXIT();
-    return wref;
+    return retval;
 }
 
 /*
@@ -3520,11 +3148,7 @@ static jweak NewWeakGlobalRef(JNIEnv* env, jobject jobj)
 static void DeleteWeakGlobalRef(JNIEnv* env, jweak wref)
 {
     JNI_ENTER();
-#ifdef USE_INDIRECT_REF
     deleteWeakGlobalReference(wref);
-#else
-    deleteWeakGlobalRef(env, wref);
-#endif
     JNI_EXIT();
 }
 
