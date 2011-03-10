@@ -679,26 +679,12 @@ fail:
  */
 static void checkClassName(JNIEnv* env, const char* className, const char* func)
 {
-    const char* cp;
-
-    /* quick check for illegal chars */
-    cp = className;
-    while (*cp != '\0') {
-        if (*cp == '.')     /* catch "java.lang.String" */
-            goto fail;
-        cp++;
+    if (!dexIsValidClassName(className, false)) {
+        LOGW("JNI WARNING: illegal class name '%s' (%s)", className, func);
+        LOGW("             (should be formed like 'dalvik/system/DexFile')");
+        LOGW("             or '[Ldalvik/system/DexFile;' or '[[B')");
+        abortMaybe();
     }
-    if (*(cp-1) == ';' && *className == 'L')
-        goto fail;         /* catch "Ljava/lang/String;" */
-
-    // TODO: need a more rigorous check here
-
-    return;
-
-fail:
-    LOGW("JNI WARNING: illegal class name '%s' (%s)", className, func);
-    LOGW("             (should be formed like 'java/lang/String')");
-    abortMaybe();
 }
 
 /*

@@ -86,7 +86,8 @@ bool dexIsValidMemberNameUtf8_0(const char** pUtf8Ptr) {
      * (b) an improper surrogate pair, (c) an encoded '\0', (d) a high
      * control character, or (e) a high space, layout, or special
      * character (U+00a0, U+2000..U+200f, U+2028..U+202f,
-     * U+fff0..U+ffff).
+     * U+fff0..U+ffff). This is all specified in the dex format
+     * document.
      */
 
     u2 utf16 = dexGetUtf16FromUtf8(pUtf8Ptr);
@@ -169,8 +170,10 @@ bool dexIsValidMemberName(const char* s) {
     }
 }
 
-/* Return whether the given string is a valid type descriptor. */
-bool dexIsValidTypeDescriptor(const char* s) {
+/* Helper for validating type descriptors and class names, which is parametric
+ * with respect to type vs. class and dot vs. slash. */
+static bool isValidTypeDescriptorOrClassName(const char* s, bool isClassName,
+        bool dotSeparator) {
     int arrayCount = 0;
 
     while (*s == '[') {
@@ -183,56 +186,89 @@ bool dexIsValidTypeDescriptor(const char* s) {
         return false;
     }
 
-    switch (*(s++)) {
-        case 'B':
-        case 'C':
-        case 'D':
-        case 'F':
-        case 'I':
-        case 'J':
-        case 'S':
-        case 'Z': {
-            // These are all single-character descriptors for primitive types.
-            return (*s == '\0');
-        }
-        case 'V': {
-            // You can't have an array of void.
-            return (arrayCount == 0) && (*s == '\0');
-        }
-        case 'L': {
-            // Break out and continue below.
-            break;
-        }
-        default: {
-            // Oddball descriptor character.
-            return false;
+    if (arrayCount != 0) {
+        /*
+         * If we're looking at an array of some sort, then it doesn't
+         * matter if what is being asked for is a class name; the
+         * format looks the same as a type descriptor in that case, so
+         * treat it as such.
+         */
+        isClassName = false;
+    }
+
+    if (!isClassName) {
+        /*
+         * We are looking for a descriptor. Either validate it as a
+         * single-character primitive type, or continue on to check the
+         * embedded class name (bracketed by "L" and ";").
+         */
+        switch (*(s++)) {
+            case 'B':
+            case 'C':
+            case 'D':
+            case 'F':
+            case 'I':
+            case 'J':
+            case 'S':
+            case 'Z': {
+                // These are all single-character descriptors for primitive types.
+                return (*s == '\0');
+            }
+            case 'V': {
+                // Non-array void is valid, but you can't have an array of void.
+                return (arrayCount == 0) && (*s == '\0');
+            }
+            case 'L': {
+                // Class name: Break out and continue below.
+                break;
+            }
+            default: {
+                // Oddball descriptor character.
+                return false;
+            }
         }
     }
 
-    // We just consumed the 'L' that introduces a class name.
+    /*
+     * We just consumed the 'L' that introduces a class name as part
+     * of a type descriptor, or we are looking for an unadorned class
+     * name.
+     */
 
-    bool slashOrFirst = true; // first character or just encountered a slash
+    bool sepOrFirst = true; // first character or just encountered a separator.
     for (;;) {
         u1 c = (u1) *s;
         switch (c) {
             case '\0': {
-                // Premature end.
-                return false;
+                /*
+                 * Premature end for a type descriptor, but valid for
+                 * a class name as long as we haven't encountered an
+                 * empty component (including the degenerate case of
+                 * the empty string "").
+                 */
+                return isClassName && !sepOrFirst;
             }
             case ';': {
                 /*
-                 * Make sure that this is the end of the string and that
-                 * it doesn't end with an empty component (including the
-                 * degenerate case of "L;").
+                 * Invalid character for a class name, but the
+                 * legitimate end of a type descriptor. In the latter
+                 * case, make sure that this is the end of the string
+                 * and that it doesn't end with an empty component
+                 * (including the degenerate case of "L;").
                  */
-                return (s[1] == '\0') && !slashOrFirst;
+                return !isClassName && !sepOrFirst && (s[1] == '\0');
             }
-            case '/': {
-                if (slashOrFirst) {
-                    // Slash at start or two slashes in a row.
+            case '/':
+            case '.': {
+                if (dotSeparator != (c == '.')) {
+                    // The wrong separator character.
                     return false;
                 }
-                slashOrFirst = true;
+                if (sepOrFirst) {
+                    // Separator at start or two separators in a row.
+                    return false;
+                }
+                sepOrFirst = true;
                 s++;
                 break;
             }
@@ -240,11 +276,21 @@ bool dexIsValidTypeDescriptor(const char* s) {
                 if (!dexIsValidMemberNameUtf8(&s)) {
                     return false;
                 }
-                slashOrFirst = false;
+                sepOrFirst = false;
                 break;
             }
         }
     }
+}
+
+/* Return whether the given string is a valid type descriptor. */
+bool dexIsValidTypeDescriptor(const char* s) {
+    return isValidTypeDescriptorOrClassName(s, false, false);
+}
+
+/* (documented in header) */
+bool dexIsValidClassName(const char* s, bool dotSeparator) {
+    return isValidTypeDescriptorOrClassName(s, true, dotSeparator);
 }
 
 /* Return whether the given string is a valid reference descriptor. This

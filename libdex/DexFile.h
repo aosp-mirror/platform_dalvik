@@ -1035,6 +1035,15 @@ bool dexIsValidMemberName(const char* s);
 /* Return whether the given string is a valid type descriptor. */
 bool dexIsValidTypeDescriptor(const char* s);
 
+/* Return whether the given string is a valid internal-form class
+ * name, with components separated either by dots or slashes as
+ * specified. A class name is like a type descriptor, except that it
+ * can't name a primitive type (including void). In terms of syntax,
+ * the form is either (a) the name of the class without adornment
+ * (that is, not bracketed by "L" and ";"); or (b) identical to the
+ * type descriptor syntax for array types. */
+bool dexIsValidClassName(const char* s, bool dotSeparator);
+
 /* Return whether the given string is a valid reference descriptor. This
  * is true if dexIsValidTypeDescriptor() returns true and the descriptor
  * is for a class or array and not a primitive type. */
