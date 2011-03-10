@@ -562,6 +562,52 @@ static bool find8(void) {
     return true;
 }
 
+static bool find9(void) {
+    gDvm.offJavaLangString_value =
+        dvmFindFieldOffset(gDvm.classJavaLangString, "value", "[C");
+    gDvm.offJavaLangString_count =
+        dvmFindFieldOffset(gDvm.classJavaLangString, "count", "I");
+    gDvm.offJavaLangString_offset =
+        dvmFindFieldOffset(gDvm.classJavaLangString, "offset", "I");
+    gDvm.offJavaLangString_hashCode =
+        dvmFindFieldOffset(gDvm.classJavaLangString, "hashCode", "I");
+
+    if (gDvm.offJavaLangString_value < 0 ||
+        gDvm.offJavaLangString_count < 0 ||
+        gDvm.offJavaLangString_offset < 0 ||
+        gDvm.offJavaLangString_hashCode < 0)
+    {
+        LOGE("VM-required field missing from java/lang/String\n");
+        return false;
+    }
+
+    bool badValue = false;
+    if (gDvm.offJavaLangString_value != STRING_FIELDOFF_VALUE) {
+        LOGE("InlineNative: String.value offset = %d, expected %d\n",
+            gDvm.offJavaLangString_value, STRING_FIELDOFF_VALUE);
+        badValue = true;
+    }
+    if (gDvm.offJavaLangString_count != STRING_FIELDOFF_COUNT) {
+        LOGE("InlineNative: String.count offset = %d, expected %d\n",
+            gDvm.offJavaLangString_count, STRING_FIELDOFF_COUNT);
+        badValue = true;
+    }
+    if (gDvm.offJavaLangString_offset != STRING_FIELDOFF_OFFSET) {
+        LOGE("InlineNative: String.offset offset = %d, expected %d\n",
+            gDvm.offJavaLangString_offset, STRING_FIELDOFF_OFFSET);
+        badValue = true;
+    }
+    if (gDvm.offJavaLangString_hashCode != STRING_FIELDOFF_HASHCODE) {
+        LOGE("InlineNative: String.hashCode offset = %d, expected %d\n",
+            gDvm.offJavaLangString_hashCode, STRING_FIELDOFF_HASHCODE);
+        badValue = true;
+    }
+    if (badValue)
+        return false;
+
+    return true;
+}
+
 /* (documented in header) */
 bool dvmFindRequiredClassesAndMembers(void) {
     bool ok = true;
@@ -574,6 +620,7 @@ bool dvmFindRequiredClassesAndMembers(void) {
     ok &= find6();
     ok &= find7();
     ok &= find8();
+    ok &= find9();
 
     return ok;
 }

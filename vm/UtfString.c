@@ -25,93 +25,52 @@
 #include <stdlib.h>
 
 /*
- * Initialize string globals.
- *
- * This isn't part of the VM init sequence because it's hard to get the
- * timing right -- we need it to happen after java/lang/String has been
- * loaded, but before anybody wants to use a string.  It's easiest to
- * just initialize it on first use.
- *
- * In some unusual circumstances (e.g. trying to throw an exception because
- * String implements java/lang/CharSequence, but CharSequence doesn't exist)
- * we can try to create an exception string internally before anything has
- * really tried to use String.  In that case we basically self-destruct.
- *
- * We're expecting to be essentially single-threaded at this point.
- * We employ atomics to ensure everything is observed correctly, and also
- * to guarantee that we do detect a problem if our assumption is wrong.
+ * Allocate a new instance of the class String, performing first-use
+ * initialization of the class if necessary. Upon success, the
+ * returned value will have all its fields except hashCode already
+ * filled in, including a reference to a newly-allocated char[] for
+ * the contents, sized as given. Additionally, a reference to the
+ * chars array is stored to the pChars pointer. Callers must
+ * subsequently call dvmReleaseTrackedAlloc() on the result pointer.
+ * This function returns NULL on failure.
  */
-static bool stringStartup()
+static StringObject* makeStringObject(u4 charsLength, ArrayObject** pChars)
 {
-    if (gDvm.javaLangStringReady < 0) {
-        LOGE("ERROR: reentrant string initialization\n");
-        assert(false);
-        return false;
+    /*
+     * The String class should have already gotten found (but not
+     * necessarily initialized) before making it here. We assert it
+     * explicitly, since historically speaking, we have had bugs with
+     * regard to when the class String gets set up. The assert helps
+     * make any regressions easier to diagnose.
+     */
+    assert(gDvm.classJavaLangString != NULL);
+
+    if (!dvmIsClassInitialized(gDvm.classJavaLangString)) {
+        /* Perform first-time use initialization of the class. */
+        if (!dvmInitClass(gDvm.classJavaLangString)) {
+            LOGE("FATAL: Could not initialize class String\n");
+            dvmAbort();
+        }
     }
 
-    if (android_atomic_acquire_cas(0, -1, &gDvm.javaLangStringReady) != 0) {
-        LOGE("ERROR: initial string-ready state not 0 (%d)\n",
-            gDvm.javaLangStringReady);
-        return false;
+    Object* result = dvmAllocObject(gDvm.classJavaLangString, ALLOC_DEFAULT);
+    if (result == NULL) {
+        return NULL;
     }
 
-    if (gDvm.classJavaLangString == NULL)
-        gDvm.classJavaLangString =
-            dvmFindSystemClassNoInit("Ljava/lang/String;");
-
-    gDvm.offJavaLangString_value =
-        dvmFindFieldOffset(gDvm.classJavaLangString, "value", "[C");
-    gDvm.offJavaLangString_count =
-        dvmFindFieldOffset(gDvm.classJavaLangString, "count", "I");
-    gDvm.offJavaLangString_offset =
-        dvmFindFieldOffset(gDvm.classJavaLangString, "offset", "I");
-    gDvm.offJavaLangString_hashCode =
-        dvmFindFieldOffset(gDvm.classJavaLangString, "hashCode", "I");
-
-    if (gDvm.offJavaLangString_value < 0 ||
-        gDvm.offJavaLangString_count < 0 ||
-        gDvm.offJavaLangString_offset < 0 ||
-        gDvm.offJavaLangString_hashCode < 0)
-    {
-        LOGE("VM-required field missing from java/lang/String\n");
-        return false;
+    ArrayObject* chars = dvmAllocPrimitiveArray('C', charsLength, ALLOC_DEFAULT);
+    if (chars == NULL) {
+        dvmReleaseTrackedAlloc(result, NULL);
+        return NULL;
     }
 
-    bool badValue = false;
-    if (gDvm.offJavaLangString_value != STRING_FIELDOFF_VALUE) {
-        LOGE("InlineNative: String.value offset = %d, expected %d\n",
-            gDvm.offJavaLangString_value, STRING_FIELDOFF_VALUE);
-        badValue = true;
-    }
-    if (gDvm.offJavaLangString_count != STRING_FIELDOFF_COUNT) {
-        LOGE("InlineNative: String.count offset = %d, expected %d\n",
-            gDvm.offJavaLangString_count, STRING_FIELDOFF_COUNT);
-        badValue = true;
-    }
-    if (gDvm.offJavaLangString_offset != STRING_FIELDOFF_OFFSET) {
-        LOGE("InlineNative: String.offset offset = %d, expected %d\n",
-            gDvm.offJavaLangString_offset, STRING_FIELDOFF_OFFSET);
-        badValue = true;
-    }
-    if (gDvm.offJavaLangString_hashCode != STRING_FIELDOFF_HASHCODE) {
-        LOGE("InlineNative: String.hashCode offset = %d, expected %d\n",
-            gDvm.offJavaLangString_hashCode, STRING_FIELDOFF_HASHCODE);
-        badValue = true;
-    }
-    if (badValue)
-        return false;
+    dvmSetFieldInt(result, STRING_FIELDOFF_COUNT, charsLength);
+    dvmSetFieldObject(result, STRING_FIELDOFF_VALUE, (Object*) chars);
+    dvmReleaseTrackedAlloc((Object*) chars, NULL);
+    /* Leave offset and hashCode set to zero. */
 
-    android_atomic_release_store(1, &gDvm.javaLangStringReady);
-
-    return true;
-}
-
-/*
- * Discard heap-allocated storage.
- */
-void dvmStringShutdown()
-{
-    // currently unused
+    *pChars = chars;
+    return (StringObject*) result;
 }
 
 /*
@@ -278,104 +237,41 @@ StringObject* dvmCreateStringFromCstr(const char* utf8Str)
 StringObject* dvmCreateStringFromCstrAndLength(const char* utf8Str,
     u4 utf16Length)
 {
-    StringObject* newObj;
-    ArrayObject* chars;
-    u4 hashCode = 0;
-
-    //LOGV("Creating String from '%s'\n", utf8Str);
     assert(utf8Str != NULL);
 
-    if (gDvm.javaLangStringReady <= 0) {
-        if (!stringStartup())
-            return NULL;
-    }
-
-    /* init before alloc */
-    if (!dvmIsClassInitialized(gDvm.classJavaLangString) &&
-        !dvmInitClass(gDvm.classJavaLangString))
-    {
+    ArrayObject* chars;
+    StringObject* newObj = makeStringObject(utf16Length, &chars);
+    if (newObj == NULL) {
         return NULL;
     }
 
-    newObj = (StringObject*) dvmAllocObject(gDvm.classJavaLangString,
-                ALLOC_DEFAULT);
-    if (newObj == NULL)
-        return NULL;
+    dvmConvertUtf8ToUtf16((u2*) chars->contents, utf8Str);
 
-    chars = dvmAllocPrimitiveArray('C', utf16Length, ALLOC_DEFAULT);
-    if (chars == NULL) {
-        dvmReleaseTrackedAlloc((Object*) newObj, NULL);
-        return NULL;
-    }
-    dvmConvertUtf8ToUtf16((u2*)chars->contents, utf8Str);
-    hashCode = dvmComputeUtf16Hash((u2*) chars->contents, utf16Length);
+    u4 hashCode = dvmComputeUtf16Hash((u2*) chars->contents, utf16Length);
+    dvmSetFieldInt((Object*) newObj, STRING_FIELDOFF_HASHCODE, hashCode);
 
-    dvmSetFieldObject((Object*)newObj, STRING_FIELDOFF_VALUE,
-        (Object*)chars);
-    dvmReleaseTrackedAlloc((Object*) chars, NULL);
-    dvmSetFieldInt((Object*)newObj, STRING_FIELDOFF_COUNT, utf16Length);
-    dvmSetFieldInt((Object*)newObj, STRING_FIELDOFF_HASHCODE, hashCode);
-    /* leave offset set to zero */
-
-    /* debugging stuff */
-    //dvmDumpObject((Object*)newObj);
-    //printHexDumpEx(ANDROID_LOG_DEBUG, chars->contents, utf16Length * 2,
-    //    kHexDumpMem);
-
-    /* caller may need to dvmReleaseTrackedAlloc(newObj) */
     return newObj;
 }
 
 /*
- * Create a new java/lang/String object, using the Unicode data.
+ * Create a new java/lang/String object, using the given Unicode data.
  */
 StringObject* dvmCreateStringFromUnicode(const u2* unichars, int len)
 {
-    StringObject* newObj;
-    ArrayObject* chars;
-    u4 hashCode = 0;
-
-    /* we allow a null pointer if the length is zero */
+    /* We allow a NULL pointer if the length is zero. */
     assert(len == 0 || unichars != NULL);
 
-    if (gDvm.javaLangStringReady <= 0) {
-        if (!stringStartup())
-            return NULL;
-    }
-
-    /* init before alloc */
-    if (!dvmIsClassInitialized(gDvm.classJavaLangString) &&
-        !dvmInitClass(gDvm.classJavaLangString))
-    {
+    ArrayObject* chars;
+    StringObject* newObj = makeStringObject(len, &chars);
+    if (newObj == NULL) {
         return NULL;
     }
 
-    newObj = (StringObject*) dvmAllocObject(gDvm.classJavaLangString,
-        ALLOC_DEFAULT);
-    if (newObj == NULL)
-        return NULL;
+    if (len > 0) memcpy(chars->contents, unichars, len * sizeof(u2));
 
-    chars = dvmAllocPrimitiveArray('C', len, ALLOC_DEFAULT);
-    if (chars == NULL) {
-        dvmReleaseTrackedAlloc((Object*) newObj, NULL);
-        return NULL;
-    }
-    if (len > 0)
-        memcpy(chars->contents, unichars, len * sizeof(u2));
-    hashCode = dvmComputeUtf16Hash((u2*) chars->contents, len);
-
-    dvmSetFieldObject((Object*)newObj, STRING_FIELDOFF_VALUE,
-        (Object*)chars);
-    dvmReleaseTrackedAlloc((Object*) chars, NULL);
-    dvmSetFieldInt((Object*)newObj, STRING_FIELDOFF_COUNT, len);
+    u4 hashCode = dvmComputeUtf16Hash((u2*) chars->contents, len);
     dvmSetFieldInt((Object*)newObj, STRING_FIELDOFF_HASHCODE, hashCode);
-    /* leave offset set to zero */
 
-    /* debugging stuff */
-    //dvmDumpObject((Object*)newObj);
-    //printHexDumpEx(ANDROID_LOG_DEBUG, chars->contents, len*2, kHexDumpMem);
-
-    /* caller must dvmReleaseTrackedAlloc(newObj) */
     return newObj;
 }
 
@@ -391,7 +287,7 @@ char* dvmCreateCstrFromString(StringObject* jstr)
     int len, byteLen, offset;
     const u2* data;
 
-    assert(gDvm.javaLangStringReady > 0);
+    assert(gDvm.classJavaLangString != NULL);
 
     if (jstr == NULL)
         return NULL;
@@ -436,7 +332,7 @@ int dvmStringUtf8ByteLen(StringObject* jstr)
     int len, offset;
     const u2* data;
 
-    assert(gDvm.javaLangStringReady > 0);
+    assert(gDvm.classJavaLangString != NULL);
 
     if (jstr == NULL)
         return 0;       // should we throw something?  assert?
@@ -498,7 +394,7 @@ int dvmHashcmpStrings(const void* vstrObj1, const void* vstrObj2)
     ArrayObject* chars2;
     int len1, len2, offset1, offset2;
 
-    assert(gDvm.javaLangStringReady > 0);
+    assert(gDvm.classJavaLangString != NULL);
 
     /* get offset and length into char array; all values are in 16-bit units */
     len1 = dvmGetFieldInt((Object*) strObj1, STRING_FIELDOFF_COUNT);
