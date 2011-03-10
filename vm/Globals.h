@@ -327,7 +327,6 @@ struct DvmGlobals {
     int         offJavaLangClass_pd;
 
     /* field offsets - String */
-    int         javaLangStringReady;    /* 0=not init, 1=ready, -1=initing */
     int         offJavaLangString_value;
     int         offJavaLangString_count;
     int         offJavaLangString_offset;
