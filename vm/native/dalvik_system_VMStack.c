@@ -82,7 +82,7 @@ static void Dalvik_dalvik_system_VMStack_getClasses(const u4* args,
 {
     /* note "maxSize" is unsigned, so -1 turns into a very large value */
     unsigned int maxSize = args[0];
-    bool stopAtPrivileged = args[1];
+    //bool stopAtPrivileged = args[1]; // This argument is ignored.
     unsigned int size = 0;
     const unsigned int kSkip = 2;
     const Method** methods = NULL;
@@ -115,16 +115,6 @@ static void Dalvik_dalvik_system_VMStack_getClasses(const u4* args,
 
         if (dvmIsReflectionMethod(meth))
             continue;
-
-        if (stopAtPrivileged && dvmIsPrivilegedMethod(meth)) {
-            /*
-             * We want the last element of the array to be the caller of
-             * the privileged method, so we want to include the privileged
-             * method and the next one.
-             */
-            if (maxSize > size + 2)
-                maxSize = size + 2;
-        }
 
         size++;
     }

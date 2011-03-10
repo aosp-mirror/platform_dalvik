@@ -373,10 +373,6 @@ struct DvmGlobals {
     /* method pointers - java.lang.ref.Reference */
     Method*     methJavaLangRefReference_enqueueInternal;
 
-    /* method pointers - java.security.AccessController */
-    volatile int javaSecurityAccessControllerReady;
-    Method*     methJavaSecurityAccessController_doPrivileged[4];
-
     /* constructor method pointers; no vtable involved, so use Method* */
     Method*     methJavaLangStackTraceElement_init;
     Method*     methJavaLangReflectConstructor_init;

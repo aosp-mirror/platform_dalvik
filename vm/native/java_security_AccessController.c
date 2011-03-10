@@ -81,15 +81,6 @@ static void Dalvik_java_security_AccessController_getStackDomains(
         if (dvmIsReflectionMethod(meth))
             continue;
 
-        if (dvmIsPrivilegedMethod(meth)) {
-            /* find nearest non-reflection frame; note we skip priv frame */
-            //LOGI("GSD priv frame at %s.%s\n", meth->clazz->name, meth->name);
-            while (++idx < length && dvmIsReflectionMethod(methods[idx]))
-                ;
-            length = idx;       // stomp length to end loop
-            meth = methods[idx];
-        }
-
         /* get the pd object from the method's class */
         assert(gDvm.offJavaLangClass_pd != 0);
         pd = dvmGetFieldObject((Object*) meth->clazz,

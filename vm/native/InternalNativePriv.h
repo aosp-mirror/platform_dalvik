@@ -80,17 +80,6 @@ u4 dvmFixMethodFlags(u4 flags);
 void dvmFreeDexOrJar(void* vptr);
 
 /*
- * Determine if "method" is a "privileged" invocation, i.e. is it one
- * of the variations of AccessController.doPrivileged().
- *
- * Because the security stuff pulls in a pile of stuff that we may not
- * want or need, we don't do the class/method lookups at init time, but
- * instead on first use.
- */
-bool dvmIsPrivilegedMethod(const Method* method);
-
-
-/*
  * Tables of methods.
  */
 extern const DalvikNativeMethod dvm_java_lang_Object[];
