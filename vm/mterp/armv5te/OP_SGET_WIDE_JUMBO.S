@@ -1,3 +1,4 @@
+%default {"volatile":"0"}
 %verify "executed"
 %verify "field already resolved"
 %verify "field not yet resolved"
@@ -16,7 +17,12 @@
     beq     .L${opcode}_resolve         @ yes, do resolve
 .L${opcode}_finish:
     FETCH(r9, 3)                        @ r9<- BBBB
+    .if $volatile
+    add     r0, r0, #offStaticField_value @ r0<- pointer to data
+    bl      dvmQuasiAtomicRead64        @ r0/r1<- contents of field
+    .else
     ldrd    r0, [r0, #offStaticField_value] @ r0/r1<- field value (aligned)
+    .endif
     add     r9, rFP, r9, lsl #2         @ r9<- &fp[BBBB]
     FETCH_ADVANCE_INST(4)               @ advance rPC, load rINST
     stmia   r9, {r0-r1}                 @ vBBBB/vBBBB+1<- r0/r1
@@ -26,7 +32,7 @@
 
     /*
      * Continuation if the field has not yet been resolved.
-     *  r1: BBBB field ref
+     *  r1: AAAAAAAA field ref
      *
      * Returns StaticField pointer in r0.
      */

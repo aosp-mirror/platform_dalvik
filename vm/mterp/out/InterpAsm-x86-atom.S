@@ -24281,9 +24281,7 @@ OP_IF_LEZ_2f:
 
 /* ------------------------------ */
     .balign 64
-.L_OP_UNUSED_F2FF: /* 0x1f2 */
-/* File: x86-atom/OP_UNUSED_F2FF.S */
-/* File: x86-atom/unused.S */
+.L_OP_INVOKE_OBJECT_INIT_JUMBO: /* 0x1f2 */
    /* Copyright (C) 2008 The Android Open Source Project
     *
     * Licensed under the Apache License, Version 2.0 (the "License");
@@ -24300,27 +24298,18 @@ OP_IF_LEZ_2f:
     */
 
    /*
-    * File: unused.S
-    *
-    * Code: Common code for unused bytecodes. Uses no subtitutions.
-    *
-    * For: all unused bytecodes
-    *
-    * Description: aborts if executed.
-    *
-    * Format: ØØ|op (10x)
-    *
-    * Syntax: op
+    * File: stub.S
     */
 
-    call        common_abort
-
-
+    SAVE_PC_FP_TO_GLUE %edx             # save program counter and frame pointer
+    pushl       rGLUE                   # push parameter glue
+    call        dvmMterp_OP_INVOKE_OBJECT_INIT_JUMBO      # call c-based implementation
+    lea         4(%esp), %esp
+    LOAD_PC_FP_FROM_GLUE                # restore program counter and frame pointer
+    FINISH_A                            # jump to next instruction
 /* ------------------------------ */
     .balign 64
-.L_OP_UNUSED_F3FF: /* 0x1f3 */
-/* File: x86-atom/OP_UNUSED_F3FF.S */
-/* File: x86-atom/unused.S */
+.L_OP_IGET_VOLATILE_JUMBO: /* 0x1f3 */
    /* Copyright (C) 2008 The Android Open Source Project
     *
     * Licensed under the Apache License, Version 2.0 (the "License");
@@ -24337,27 +24326,18 @@ OP_IF_LEZ_2f:
     */
 
    /*
-    * File: unused.S
-    *
-    * Code: Common code for unused bytecodes. Uses no subtitutions.
-    *
-    * For: all unused bytecodes
-    *
-    * Description: aborts if executed.
-    *
-    * Format: ØØ|op (10x)
-    *
-    * Syntax: op
+    * File: stub.S
     */
 
-    call        common_abort
-
-
+    SAVE_PC_FP_TO_GLUE %edx             # save program counter and frame pointer
+    pushl       rGLUE                   # push parameter glue
+    call        dvmMterp_OP_IGET_VOLATILE_JUMBO      # call c-based implementation
+    lea         4(%esp), %esp
+    LOAD_PC_FP_FROM_GLUE                # restore program counter and frame pointer
+    FINISH_A                            # jump to next instruction
 /* ------------------------------ */
     .balign 64
-.L_OP_UNUSED_F4FF: /* 0x1f4 */
-/* File: x86-atom/OP_UNUSED_F4FF.S */
-/* File: x86-atom/unused.S */
+.L_OP_IGET_WIDE_VOLATILE_JUMBO: /* 0x1f4 */
    /* Copyright (C) 2008 The Android Open Source Project
     *
     * Licensed under the Apache License, Version 2.0 (the "License");
@@ -24374,27 +24354,18 @@ OP_IF_LEZ_2f:
     */
 
    /*
-    * File: unused.S
-    *
-    * Code: Common code for unused bytecodes. Uses no subtitutions.
-    *
-    * For: all unused bytecodes
-    *
-    * Description: aborts if executed.
-    *
-    * Format: ØØ|op (10x)
-    *
-    * Syntax: op
+    * File: stub.S
     */
 
-    call        common_abort
-
-
+    SAVE_PC_FP_TO_GLUE %edx             # save program counter and frame pointer
+    pushl       rGLUE                   # push parameter glue
+    call        dvmMterp_OP_IGET_WIDE_VOLATILE_JUMBO      # call c-based implementation
+    lea         4(%esp), %esp
+    LOAD_PC_FP_FROM_GLUE                # restore program counter and frame pointer
+    FINISH_A                            # jump to next instruction
 /* ------------------------------ */
     .balign 64
-.L_OP_UNUSED_F5FF: /* 0x1f5 */
-/* File: x86-atom/OP_UNUSED_F5FF.S */
-/* File: x86-atom/unused.S */
+.L_OP_IGET_OBJECT_VOLATILE_JUMBO: /* 0x1f5 */
    /* Copyright (C) 2008 The Android Open Source Project
     *
     * Licensed under the Apache License, Version 2.0 (the "License");
@@ -24411,27 +24382,18 @@ OP_IF_LEZ_2f:
     */
 
    /*
-    * File: unused.S
-    *
-    * Code: Common code for unused bytecodes. Uses no subtitutions.
-    *
-    * For: all unused bytecodes
-    *
-    * Description: aborts if executed.
-    *
-    * Format: ØØ|op (10x)
-    *
-    * Syntax: op
+    * File: stub.S
     */
 
-    call        common_abort
-
-
+    SAVE_PC_FP_TO_GLUE %edx             # save program counter and frame pointer
+    pushl       rGLUE                   # push parameter glue
+    call        dvmMterp_OP_IGET_OBJECT_VOLATILE_JUMBO      # call c-based implementation
+    lea         4(%esp), %esp
+    LOAD_PC_FP_FROM_GLUE                # restore program counter and frame pointer
+    FINISH_A                            # jump to next instruction
 /* ------------------------------ */
     .balign 64
-.L_OP_UNUSED_F6FF: /* 0x1f6 */
-/* File: x86-atom/OP_UNUSED_F6FF.S */
-/* File: x86-atom/unused.S */
+.L_OP_IPUT_VOLATILE_JUMBO: /* 0x1f6 */
    /* Copyright (C) 2008 The Android Open Source Project
     *
     * Licensed under the Apache License, Version 2.0 (the "License");
@@ -24448,27 +24410,18 @@ OP_IF_LEZ_2f:
     */
 
    /*
-    * File: unused.S
-    *
-    * Code: Common code for unused bytecodes. Uses no subtitutions.
-    *
-    * For: all unused bytecodes
-    *
-    * Description: aborts if executed.
-    *
-    * Format: ØØ|op (10x)
-    *
-    * Syntax: op
+    * File: stub.S
     */
 
-    call        common_abort
-
-
+    SAVE_PC_FP_TO_GLUE %edx             # save program counter and frame pointer
+    pushl       rGLUE                   # push parameter glue
+    call        dvmMterp_OP_IPUT_VOLATILE_JUMBO      # call c-based implementation
+    lea         4(%esp), %esp
+    LOAD_PC_FP_FROM_GLUE                # restore program counter and frame pointer
+    FINISH_A                            # jump to next instruction
 /* ------------------------------ */
     .balign 64
-.L_OP_UNUSED_F7FF: /* 0x1f7 */
-/* File: x86-atom/OP_UNUSED_F7FF.S */
-/* File: x86-atom/unused.S */
+.L_OP_IPUT_WIDE_VOLATILE_JUMBO: /* 0x1f7 */
    /* Copyright (C) 2008 The Android Open Source Project
     *
     * Licensed under the Apache License, Version 2.0 (the "License");
@@ -24485,27 +24438,18 @@ OP_IF_LEZ_2f:
     */
 
    /*
-    * File: unused.S
-    *
-    * Code: Common code for unused bytecodes. Uses no subtitutions.
-    *
-    * For: all unused bytecodes
-    *
-    * Description: aborts if executed.
-    *
-    * Format: ØØ|op (10x)
-    *
-    * Syntax: op
+    * File: stub.S
     */
 
-    call        common_abort
-
-
+    SAVE_PC_FP_TO_GLUE %edx             # save program counter and frame pointer
+    pushl       rGLUE                   # push parameter glue
+    call        dvmMterp_OP_IPUT_WIDE_VOLATILE_JUMBO      # call c-based implementation
+    lea         4(%esp), %esp
+    LOAD_PC_FP_FROM_GLUE                # restore program counter and frame pointer
+    FINISH_A                            # jump to next instruction
 /* ------------------------------ */
     .balign 64
-.L_OP_UNUSED_F8FF: /* 0x1f8 */
-/* File: x86-atom/OP_UNUSED_F8FF.S */
-/* File: x86-atom/unused.S */
+.L_OP_IPUT_OBJECT_VOLATILE_JUMBO: /* 0x1f8 */
    /* Copyright (C) 2008 The Android Open Source Project
     *
     * Licensed under the Apache License, Version 2.0 (the "License");
@@ -24522,27 +24466,18 @@ OP_IF_LEZ_2f:
     */
 
    /*
-    * File: unused.S
-    *
-    * Code: Common code for unused bytecodes. Uses no subtitutions.
-    *
-    * For: all unused bytecodes
-    *
-    * Description: aborts if executed.
-    *
-    * Format: ØØ|op (10x)
-    *
-    * Syntax: op
+    * File: stub.S
     */
 
-    call        common_abort
-
-
+    SAVE_PC_FP_TO_GLUE %edx             # save program counter and frame pointer
+    pushl       rGLUE                   # push parameter glue
+    call        dvmMterp_OP_IPUT_OBJECT_VOLATILE_JUMBO      # call c-based implementation
+    lea         4(%esp), %esp
+    LOAD_PC_FP_FROM_GLUE                # restore program counter and frame pointer
+    FINISH_A                            # jump to next instruction
 /* ------------------------------ */
     .balign 64
-.L_OP_UNUSED_F9FF: /* 0x1f9 */
-/* File: x86-atom/OP_UNUSED_F9FF.S */
-/* File: x86-atom/unused.S */
+.L_OP_SGET_VOLATILE_JUMBO: /* 0x1f9 */
    /* Copyright (C) 2008 The Android Open Source Project
     *
     * Licensed under the Apache License, Version 2.0 (the "License");
@@ -24559,27 +24494,18 @@ OP_IF_LEZ_2f:
     */
 
    /*
-    * File: unused.S
-    *
-    * Code: Common code for unused bytecodes. Uses no subtitutions.
-    *
-    * For: all unused bytecodes
-    *
-    * Description: aborts if executed.
-    *
-    * Format: ØØ|op (10x)
-    *
-    * Syntax: op
+    * File: stub.S
     */
 
-    call        common_abort
-
-
+    SAVE_PC_FP_TO_GLUE %edx             # save program counter and frame pointer
+    pushl       rGLUE                   # push parameter glue
+    call        dvmMterp_OP_SGET_VOLATILE_JUMBO      # call c-based implementation
+    lea         4(%esp), %esp
+    LOAD_PC_FP_FROM_GLUE                # restore program counter and frame pointer
+    FINISH_A                            # jump to next instruction
 /* ------------------------------ */
     .balign 64
-.L_OP_UNUSED_FAFF: /* 0x1fa */
-/* File: x86-atom/OP_UNUSED_FAFF.S */
-/* File: x86-atom/unused.S */
+.L_OP_SGET_WIDE_VOLATILE_JUMBO: /* 0x1fa */
    /* Copyright (C) 2008 The Android Open Source Project
     *
     * Licensed under the Apache License, Version 2.0 (the "License");
@@ -24596,27 +24522,18 @@ OP_IF_LEZ_2f:
     */
 
    /*
-    * File: unused.S
-    *
-    * Code: Common code for unused bytecodes. Uses no subtitutions.
-    *
-    * For: all unused bytecodes
-    *
-    * Description: aborts if executed.
-    *
-    * Format: ØØ|op (10x)
-    *
-    * Syntax: op
+    * File: stub.S
     */
 
-    call        common_abort
-
-
+    SAVE_PC_FP_TO_GLUE %edx             # save program counter and frame pointer
+    pushl       rGLUE                   # push parameter glue
+    call        dvmMterp_OP_SGET_WIDE_VOLATILE_JUMBO      # call c-based implementation
+    lea         4(%esp), %esp
+    LOAD_PC_FP_FROM_GLUE                # restore program counter and frame pointer
+    FINISH_A                            # jump to next instruction
 /* ------------------------------ */
     .balign 64
-.L_OP_UNUSED_FBFF: /* 0x1fb */
-/* File: x86-atom/OP_UNUSED_FBFF.S */
-/* File: x86-atom/unused.S */
+.L_OP_SGET_OBJECT_VOLATILE_JUMBO: /* 0x1fb */
    /* Copyright (C) 2008 The Android Open Source Project
     *
     * Licensed under the Apache License, Version 2.0 (the "License");
@@ -24633,27 +24550,18 @@ OP_IF_LEZ_2f:
     */
 
    /*
-    * File: unused.S
-    *
-    * Code: Common code for unused bytecodes. Uses no subtitutions.
-    *
-    * For: all unused bytecodes
-    *
-    * Description: aborts if executed.
-    *
-    * Format: ØØ|op (10x)
-    *
-    * Syntax: op
+    * File: stub.S
     */
 
-    call        common_abort
-
-
+    SAVE_PC_FP_TO_GLUE %edx             # save program counter and frame pointer
+    pushl       rGLUE                   # push parameter glue
+    call        dvmMterp_OP_SGET_OBJECT_VOLATILE_JUMBO      # call c-based implementation
+    lea         4(%esp), %esp
+    LOAD_PC_FP_FROM_GLUE                # restore program counter and frame pointer
+    FINISH_A                            # jump to next instruction
 /* ------------------------------ */
     .balign 64
-.L_OP_UNUSED_FCFF: /* 0x1fc */
-/* File: x86-atom/OP_UNUSED_FCFF.S */
-/* File: x86-atom/unused.S */
+.L_OP_SPUT_VOLATILE_JUMBO: /* 0x1fc */
    /* Copyright (C) 2008 The Android Open Source Project
     *
     * Licensed under the Apache License, Version 2.0 (the "License");
@@ -24670,27 +24578,18 @@ OP_IF_LEZ_2f:
     */
 
    /*
-    * File: unused.S
-    *
-    * Code: Common code for unused bytecodes. Uses no subtitutions.
-    *
-    * For: all unused bytecodes
-    *
-    * Description: aborts if executed.
-    *
-    * Format: ØØ|op (10x)
-    *
-    * Syntax: op
+    * File: stub.S
     */
 
-    call        common_abort
-
-
+    SAVE_PC_FP_TO_GLUE %edx             # save program counter and frame pointer
+    pushl       rGLUE                   # push parameter glue
+    call        dvmMterp_OP_SPUT_VOLATILE_JUMBO      # call c-based implementation
+    lea         4(%esp), %esp
+    LOAD_PC_FP_FROM_GLUE                # restore program counter and frame pointer
+    FINISH_A                            # jump to next instruction
 /* ------------------------------ */
     .balign 64
-.L_OP_UNUSED_FDFF: /* 0x1fd */
-/* File: x86-atom/OP_UNUSED_FDFF.S */
-/* File: x86-atom/unused.S */
+.L_OP_SPUT_WIDE_VOLATILE_JUMBO: /* 0x1fd */
    /* Copyright (C) 2008 The Android Open Source Project
     *
     * Licensed under the Apache License, Version 2.0 (the "License");
@@ -24707,27 +24606,18 @@ OP_IF_LEZ_2f:
     */
 
    /*
-    * File: unused.S
-    *
-    * Code: Common code for unused bytecodes. Uses no subtitutions.
-    *
-    * For: all unused bytecodes
-    *
-    * Description: aborts if executed.
-    *
-    * Format: ØØ|op (10x)
-    *
-    * Syntax: op
+    * File: stub.S
     */
 
-    call        common_abort
-
-
+    SAVE_PC_FP_TO_GLUE %edx             # save program counter and frame pointer
+    pushl       rGLUE                   # push parameter glue
+    call        dvmMterp_OP_SPUT_WIDE_VOLATILE_JUMBO      # call c-based implementation
+    lea         4(%esp), %esp
+    LOAD_PC_FP_FROM_GLUE                # restore program counter and frame pointer
+    FINISH_A                            # jump to next instruction
 /* ------------------------------ */
     .balign 64
-.L_OP_UNUSED_FEFF: /* 0x1fe */
-/* File: x86-atom/OP_UNUSED_FEFF.S */
-/* File: x86-atom/unused.S */
+.L_OP_SPUT_OBJECT_VOLATILE_JUMBO: /* 0x1fe */
    /* Copyright (C) 2008 The Android Open Source Project
     *
     * Licensed under the Apache License, Version 2.0 (the "License");
@@ -24744,22 +24634,15 @@ OP_IF_LEZ_2f:
     */
 
    /*
-    * File: unused.S
-    *
-    * Code: Common code for unused bytecodes. Uses no subtitutions.
-    *
-    * For: all unused bytecodes
-    *
-    * Description: aborts if executed.
-    *
-    * Format: ØØ|op (10x)
-    *
-    * Syntax: op
+    * File: stub.S
     */
 
-    call        common_abort
-
-
+    SAVE_PC_FP_TO_GLUE %edx             # save program counter and frame pointer
+    pushl       rGLUE                   # push parameter glue
+    call        dvmMterp_OP_SPUT_OBJECT_VOLATILE_JUMBO      # call c-based implementation
+    lea         4(%esp), %esp
+    LOAD_PC_FP_FROM_GLUE                # restore program counter and frame pointer
+    FINISH_A                            # jump to next instruction
 /* ------------------------------ */
     .balign 64
 .L_OP_THROW_VERIFICATION_ERROR_JUMBO: /* 0x1ff */

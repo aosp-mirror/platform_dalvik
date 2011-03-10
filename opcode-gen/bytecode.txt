@@ -393,10 +393,25 @@ op 24ff invoke-direct/jumbo         5rc  n method-ref    continue|throw|invoke
 op 25ff invoke-static/jumbo         5rc  n method-ref    continue|throw|invoke
 op 26ff invoke-interface/jumbo      5rc  n method-ref    continue|throw|invoke
 
-# unused: op 27ff..feff
+# unused: op 27ff..f1ff
 
 #
 # Optimized opcodes (not valid in an unoptimized dex file)
 #
 
-op ffff ^throw-verification-error/jumbo 40sc n varies        optimized|throw
+# See notes above invoke-object-init re: no "throw" or "invoke"
+op f2ff +invoke-object-init/jumbo   5rc  n method-ref    optimized|continue
+
+op f3ff +iget-volatile/jumbo        52c  y field-ref     optimized|continue|throw
+op f4ff +iget-wide-volatile/jumbo   52c  y field-ref     optimized|continue|throw
+op f5ff +iget-object-volatile/jumbo 52c  y field-ref     optimized|continue|throw
+op f6ff +iput-volatile/jumbo        52c  n field-ref     optimized|continue|throw
+op f7ff +iput-wide-volatile/jumbo   52c  n field-ref     optimized|continue|throw
+op f8ff +iput-object-volatile/jumbo 52c  n field-ref     optimized|continue|throw
+op f9ff +sget-volatile/jumbo        41c  y field-ref     optimized|continue|throw
+op faff +sget-wide-volatile/jumbo   41c  y field-ref     optimized|continue|throw
+op fbff +sget-object-volatile/jumbo 41c  y field-ref     optimized|continue|throw
+op fcff +sput-volatile/jumbo        41c  n field-ref     optimized|continue|throw
+op fdff +sput-wide-volatile/jumbo   41c  n field-ref     optimized|continue|throw
+op feff +sput-object-volatile/jumbo 41c  n field-ref     optimized|continue|throw
+op ffff ^throw-verification-error/jumbo 40sc n varies    optimized|throw

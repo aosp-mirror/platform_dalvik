@@ -124,14 +124,14 @@ unspecified registers or condition codes.
  * exception catch may miss.  (This also implies that it must come after
  * EXPORT_PC().)
  */
-#define FETCH_ADVANCE_INST(_count) ldrh    rINST, [rPC, #(_count*2)]!
+#define FETCH_ADVANCE_INST(_count) ldrh    rINST, [rPC, #((_count)*2)]!
 
 /*
  * The operation performed here is similar to FETCH_ADVANCE_INST, except the
  * src and dest registers are parameterized (not hard-wired to rPC and rINST).
  */
 #define PREFETCH_ADVANCE_INST(_dreg, _sreg, _count) \
-        ldrh    _dreg, [_sreg, #(_count*2)]!
+        ldrh    _dreg, [_sreg, #((_count)*2)]!
 
 /*
  * Fetch the next instruction from an offset specified by _reg.  Updates
@@ -151,15 +151,15 @@ unspecified registers or condition codes.
  *
  * The "_S" variant works the same but treats the value as signed.
  */
-#define FETCH(_reg, _count)     ldrh    _reg, [rPC, #(_count*2)]
-#define FETCH_S(_reg, _count)   ldrsh   _reg, [rPC, #(_count*2)]
+#define FETCH(_reg, _count)     ldrh    _reg, [rPC, #((_count)*2)]
+#define FETCH_S(_reg, _count)   ldrsh   _reg, [rPC, #((_count)*2)]
 
 /*
  * Fetch one byte from an offset past the current PC.  Pass in the same
  * "_count" as you would for FETCH, and an additional 0/1 indicating which
  * byte of the halfword you want (lo/hi).
  */
-#define FETCH_B(_reg, _count, _byte) ldrb     _reg, [rPC, #(_count*2+_byte)]
+#define FETCH_B(_reg, _count, _byte) ldrb     _reg, [rPC, #((_count)*2+(_byte))]
 
 /*
  * Put the instruction's opcode field into the specified register.
@@ -7413,7 +7413,7 @@ dalvik_inst:
      * Object's nullary constructor doesn't do anything, so we just
      * skip it (we know a debugger isn't active).
      */
-    FETCH(r1, 2)                        @ r1<- CCCC
+    FETCH(r1, 2)                  @ r1<- CCCC
     GET_VREG(r0, r1)                    @ r0<- "this" ptr
     cmp     r0, #0                      @ check for NULL
     beq     common_errNullObject        @ export PC and throw NPE
@@ -7422,7 +7422,7 @@ dalvik_inst:
     tst     r2, #CLASS_ISFINALIZABLE    @ is this class finalizable?
     beq     1f                          @ nope, done
     bl      dvmSetFinalizable           @ call dvmSetFinalizable(obj)
-1:  FETCH_ADVANCE_INST(3)               @ advance to next instr, load rINST
+1:  FETCH_ADVANCE_INST(2+1)       @ advance to next instr, load rINST
     GET_INST_OPCODE(ip)                 @ ip<- opcode from rINST
     GOTO_OPCODE(ip)                     @ execute it
 
@@ -7952,7 +7952,7 @@ dalvik_inst:
     ldr     r0, [r2, r1, lsl #2]        @ r0<- resolved InstField ptr
     cmp     r0, #0                      @ is resolved entry null?
     bne     .LOP_IGET_WIDE_JUMBO_finish          @ no, already resolved
-8:  ldr     r2, [rSELF, #offThread_method] @ r2<- current method
+    ldr     r2, [rSELF, #offThread_method] @ r2<- current method
     EXPORT_PC()                         @ resolve() could throw
     ldr     r0, [r2, #offMethod_clazz]  @ r0<- method->clazz
     bl      dvmResolveInstField         @ r0<- resolved InstField ptr
@@ -8345,7 +8345,12 @@ dalvik_inst:
     beq     .LOP_SGET_WIDE_JUMBO_resolve         @ yes, do resolve
 .LOP_SGET_WIDE_JUMBO_finish:
     FETCH(r9, 3)                        @ r9<- BBBB
+    .if 0
+    add     r0, r0, #offStaticField_value @ r0<- pointer to data
+    bl      dvmQuasiAtomicRead64        @ r0/r1<- contents of field
+    .else
     ldrd    r0, [r0, #offStaticField_value] @ r0/r1<- field value (aligned)
+    .endif
     add     r9, rFP, r9, lsl #2         @ r9<- &fp[BBBB]
     FETCH_ADVANCE_INST(4)               @ advance rPC, load rINST
     stmia   r9, {r0-r1}                 @ vBBBB/vBBBB+1<- r0/r1
@@ -8552,7 +8557,12 @@ dalvik_inst:
     FETCH_ADVANCE_INST(4)               @ advance rPC, load rINST
     ldmia   r9, {r0-r1}                 @ r0/r1<- vBBBB/vBBBB+1
     GET_INST_OPCODE(r10)                @ extract opcode from rINST
+    .if 0
+    add     r2, r2, #offStaticField_value @ r2<- pointer to data
+    bl      dvmQuasiAtomicSwap64        @ stores r0/r1 into addr r2
+    .else
     strd    r0, [r2, #offStaticField_value] @ field<- vBBBB/vBBBB+1
+    .endif
     GOTO_OPCODE(r10)                    @ jump to next instruction
 
 /* ------------------------------ */
@@ -10454,106 +10464,372 @@ dalvik_inst:
 
 /* ------------------------------ */
     .balign 64
-.L_OP_UNUSED_F2FF: /* 0x1f2 */
-/* File: armv5te/OP_UNUSED_F2FF.S */
-/* File: armv5te/unused.S */
-    bl      common_abort
+.L_OP_INVOKE_OBJECT_INIT_JUMBO: /* 0x1f2 */
+/* File: armv5te/OP_INVOKE_OBJECT_INIT_JUMBO.S */
+/* File: armv5te/OP_INVOKE_OBJECT_INIT_RANGE.S */
+    /*
+     * Invoke Object.<init> on an object.  In practice we know that
+     * Object's nullary constructor doesn't do anything, so we just
+     * skip it (we know a debugger isn't active).
+     */
+    FETCH(r1, 4)                  @ r1<- CCCC
+    GET_VREG(r0, r1)                    @ r0<- "this" ptr
+    cmp     r0, #0                      @ check for NULL
+    beq     common_errNullObject        @ export PC and throw NPE
+    ldr     r1, [r0, #offObject_clazz]  @ r1<- obj->clazz
+    ldr     r2, [r1, #offClassObject_accessFlags] @ r2<- clazz->accessFlags
+    tst     r2, #CLASS_ISFINALIZABLE    @ is this class finalizable?
+    beq     1f                          @ nope, done
+    bl      dvmSetFinalizable           @ call dvmSetFinalizable(obj)
+1:  FETCH_ADVANCE_INST(4+1)       @ advance to next instr, load rINST
+    GET_INST_OPCODE(ip)                 @ ip<- opcode from rINST
+    GOTO_OPCODE(ip)                     @ execute it
 
 
 /* ------------------------------ */
     .balign 64
-.L_OP_UNUSED_F3FF: /* 0x1f3 */
-/* File: armv5te/OP_UNUSED_F3FF.S */
-/* File: armv5te/unused.S */
-    bl      common_abort
+.L_OP_IGET_VOLATILE_JUMBO: /* 0x1f3 */
+/* File: armv5te/OP_IGET_VOLATILE_JUMBO.S */
+/* File: armv5te/OP_IGET_JUMBO.S */
+    /*
+     * Jumbo 32-bit instance field get.
+     *
+     * for: iget/jumbo, iget-object/jumbo, iget-boolean/jumbo, iget-byte/jumbo,
+     *      iget-char/jumbo, iget-short/jumbo
+     */
+    /* exop vBBBB, vCCCC, field@AAAAAAAA */
+    FETCH(r1, 1)                        @ r1<- aaaa (lo)
+    FETCH(r2, 2)                        @ r2<- AAAA (hi)
+    FETCH(r0, 4)                        @ r0<- CCCC
+    ldr     r3, [rSELF, #offThread_methodClassDex]    @ r3<- DvmDex
+    orr     r1, r1, r2, lsl #16         @ r1<- AAAAaaaa
+    ldr     r2, [r3, #offDvmDex_pResFields] @ r2<- pDvmDex->pResFields
+    GET_VREG(r9, r0)                    @ r9<- fp[CCCC], the object pointer
+    ldr     r0, [r2, r1, lsl #2]        @ r0<- resolved InstField ptr
+    cmp     r0, #0                      @ is resolved entry null?
+    bne     .LOP_IGET_VOLATILE_JUMBO_finish          @ no, already resolved
+8:  ldr     r2, [rSELF, #offThread_method]    @ r2<- current method
+    EXPORT_PC()                         @ resolve() could throw
+    ldr     r0, [r2, #offMethod_clazz]  @ r0<- method->clazz
+    bl      dvmResolveInstField         @ r0<- resolved InstField ptr
+    b       .LOP_IGET_VOLATILE_JUMBO_resolved        @ resolved, continue
 
 
 /* ------------------------------ */
     .balign 64
-.L_OP_UNUSED_F4FF: /* 0x1f4 */
-/* File: armv5te/OP_UNUSED_F4FF.S */
-/* File: armv5te/unused.S */
-    bl      common_abort
+.L_OP_IGET_WIDE_VOLATILE_JUMBO: /* 0x1f4 */
+/* File: armv5te/OP_IGET_WIDE_VOLATILE_JUMBO.S */
+/* File: armv5te/OP_IGET_WIDE_JUMBO.S */
+    /*
+     * Jumbo 64-bit instance field get.
+     */
+    /* iget-wide/jumbo vBBBB, vCCCC, field@AAAAAAAA */
+    FETCH(r1, 1)                        @ r1<- aaaa (lo)
+    FETCH(r2, 2)                        @ r2<- AAAA (hi)
+    FETCH(r0, 4)                        @ r0<- CCCC
+    ldr     r3, [rSELF, #offThread_methodClassDex]    @ r3<- DvmDex
+    orr     r1, r1, r2, lsl #16         @ r1<- AAAAaaaa
+    ldr     r2, [r3, #offDvmDex_pResFields] @ r2<- pResFields
+    GET_VREG(r9, r0)                    @ r9<- fp[CCCC], the object pointer
+    ldr     r0, [r2, r1, lsl #2]        @ r0<- resolved InstField ptr
+    cmp     r0, #0                      @ is resolved entry null?
+    bne     .LOP_IGET_WIDE_VOLATILE_JUMBO_finish          @ no, already resolved
+    ldr     r2, [rSELF, #offThread_method] @ r2<- current method
+    EXPORT_PC()                         @ resolve() could throw
+    ldr     r0, [r2, #offMethod_clazz]  @ r0<- method->clazz
+    bl      dvmResolveInstField         @ r0<- resolved InstField ptr
+    b       .LOP_IGET_WIDE_VOLATILE_JUMBO_resolved        @ resolved, continue
 
 
 /* ------------------------------ */
     .balign 64
-.L_OP_UNUSED_F5FF: /* 0x1f5 */
-/* File: armv5te/OP_UNUSED_F5FF.S */
-/* File: armv5te/unused.S */
-    bl      common_abort
+.L_OP_IGET_OBJECT_VOLATILE_JUMBO: /* 0x1f5 */
+/* File: armv5te/OP_IGET_OBJECT_VOLATILE_JUMBO.S */
+/* File: armv5te/OP_IGET_OBJECT_JUMBO.S */
+/* File: armv5te/OP_IGET_JUMBO.S */
+    /*
+     * Jumbo 32-bit instance field get.
+     *
+     * for: iget/jumbo, iget-object/jumbo, iget-boolean/jumbo, iget-byte/jumbo,
+     *      iget-char/jumbo, iget-short/jumbo
+     */
+    /* exop vBBBB, vCCCC, field@AAAAAAAA */
+    FETCH(r1, 1)                        @ r1<- aaaa (lo)
+    FETCH(r2, 2)                        @ r2<- AAAA (hi)
+    FETCH(r0, 4)                        @ r0<- CCCC
+    ldr     r3, [rSELF, #offThread_methodClassDex]    @ r3<- DvmDex
+    orr     r1, r1, r2, lsl #16         @ r1<- AAAAaaaa
+    ldr     r2, [r3, #offDvmDex_pResFields] @ r2<- pDvmDex->pResFields
+    GET_VREG(r9, r0)                    @ r9<- fp[CCCC], the object pointer
+    ldr     r0, [r2, r1, lsl #2]        @ r0<- resolved InstField ptr
+    cmp     r0, #0                      @ is resolved entry null?
+    bne     .LOP_IGET_OBJECT_VOLATILE_JUMBO_finish          @ no, already resolved
+8:  ldr     r2, [rSELF, #offThread_method]    @ r2<- current method
+    EXPORT_PC()                         @ resolve() could throw
+    ldr     r0, [r2, #offMethod_clazz]  @ r0<- method->clazz
+    bl      dvmResolveInstField         @ r0<- resolved InstField ptr
+    b       .LOP_IGET_OBJECT_VOLATILE_JUMBO_resolved        @ resolved, continue
 
-
-/* ------------------------------ */
-    .balign 64
-.L_OP_UNUSED_F6FF: /* 0x1f6 */
-/* File: armv5te/OP_UNUSED_F6FF.S */
-/* File: armv5te/unused.S */
-    bl      common_abort
-
-
-/* ------------------------------ */
-    .balign 64
-.L_OP_UNUSED_F7FF: /* 0x1f7 */
-/* File: armv5te/OP_UNUSED_F7FF.S */
-/* File: armv5te/unused.S */
-    bl      common_abort
-
-
-/* ------------------------------ */
-    .balign 64
-.L_OP_UNUSED_F8FF: /* 0x1f8 */
-/* File: armv5te/OP_UNUSED_F8FF.S */
-/* File: armv5te/unused.S */
-    bl      common_abort
-
-
-/* ------------------------------ */
-    .balign 64
-.L_OP_UNUSED_F9FF: /* 0x1f9 */
-/* File: armv5te/OP_UNUSED_F9FF.S */
-/* File: armv5te/unused.S */
-    bl      common_abort
 
 
 /* ------------------------------ */
     .balign 64
-.L_OP_UNUSED_FAFF: /* 0x1fa */
-/* File: armv5te/OP_UNUSED_FAFF.S */
-/* File: armv5te/unused.S */
-    bl      common_abort
+.L_OP_IPUT_VOLATILE_JUMBO: /* 0x1f6 */
+/* File: armv5te/OP_IPUT_VOLATILE_JUMBO.S */
+/* File: armv5te/OP_IPUT_JUMBO.S */
+    /*
+     * Jumbo 32-bit instance field put.
+     *
+     * for: iput/jumbo, iput-boolean/jumbo, iput-byte/jumbo, iput-char/jumbo,
+     *      iput-short/jumbo
+     */
+    /* exop vBBBB, vCCCC, field@AAAAAAAA */
+    FETCH(r1, 1)                        @ r1<- aaaa (lo)
+    FETCH(r2, 2)                        @ r2<- AAAA (hi)
+    FETCH(r0, 4)                        @ r0<- CCCC
+    ldr     r3, [rSELF, #offThread_methodClassDex]    @ r3<- DvmDex
+    orr     r1, r1, r2, lsl #16         @ r1<- AAAAaaaa
+    ldr     r2, [r3, #offDvmDex_pResFields] @ r2<- pDvmDex->pResFields
+    GET_VREG(r9, r0)                    @ r9<- fp[CCCC], the object pointer
+    ldr     r0, [r2, r1, lsl #2]        @ r0<- resolved InstField ptr
+    cmp     r0, #0                      @ is resolved entry null?
+    bne     .LOP_IPUT_VOLATILE_JUMBO_finish          @ no, already resolved
+8:  ldr     r2, [rSELF, #offThread_method]    @ r2<- current method
+    EXPORT_PC()                         @ resolve() could throw
+    ldr     r0, [r2, #offMethod_clazz]  @ r0<- method->clazz
+    bl      dvmResolveInstField         @ r0<- resolved InstField ptr
+    b       .LOP_IPUT_VOLATILE_JUMBO_resolved        @ resolved, continue
 
 
 /* ------------------------------ */
     .balign 64
-.L_OP_UNUSED_FBFF: /* 0x1fb */
-/* File: armv5te/OP_UNUSED_FBFF.S */
-/* File: armv5te/unused.S */
-    bl      common_abort
+.L_OP_IPUT_WIDE_VOLATILE_JUMBO: /* 0x1f7 */
+/* File: armv5te/OP_IPUT_WIDE_VOLATILE_JUMBO.S */
+/* File: armv5te/OP_IPUT_WIDE_JUMBO.S */
+    /* iput-wide/jumbo vBBBB, vCCCC, field@AAAAAAAA */
+    FETCH(r1, 1)                        @ r1<- aaaa (lo)
+    FETCH(r2, 2)                        @ r2<- AAAA (hi)
+    FETCH(r0, 4)                        @ r0<- CCCC
+    ldr     r3, [rSELF, #offThread_methodClassDex]    @ r3<- DvmDex
+    orr     r1, r1, r2, lsl #16         @ r1<- AAAAaaaa
+    ldr     r2, [r3, #offDvmDex_pResFields] @ r2<- pResFields
+    GET_VREG(r9, r0)                    @ r9<- fp[B], the object pointer
+    ldr     r0, [r2, r1, lsl #2]        @ r0<- resolved InstField ptr
+    cmp     r0, #0                      @ is resolved entry null?
+    bne     .LOP_IPUT_WIDE_VOLATILE_JUMBO_finish          @ no, already resolved
+8:  ldr     r2, [rSELF, #offThread_method] @ r2<- current method
+    EXPORT_PC()                         @ resolve() could throw
+    ldr     r0, [r2, #offMethod_clazz]  @ r0<- method->clazz
+    bl      dvmResolveInstField         @ r0<- resolved InstField ptr
+    b       .LOP_IPUT_WIDE_VOLATILE_JUMBO_resolved        @ resolved, continue
 
 
 /* ------------------------------ */
     .balign 64
-.L_OP_UNUSED_FCFF: /* 0x1fc */
-/* File: armv5te/OP_UNUSED_FCFF.S */
-/* File: armv5te/unused.S */
-    bl      common_abort
+.L_OP_IPUT_OBJECT_VOLATILE_JUMBO: /* 0x1f8 */
+/* File: armv5te/OP_IPUT_OBJECT_VOLATILE_JUMBO.S */
+/* File: armv5te/OP_IPUT_OBJECT_JUMBO.S */
+    /*
+     * Jumbo 32-bit instance field put.
+     */
+    /* iput-object/jumbo vBBBB, vCCCC, field@AAAAAAAA */
+    FETCH(r1, 1)                        @ r1<- aaaa (lo)
+    FETCH(r2, 2)                        @ r2<- AAAA (hi)
+    FETCH(r0, 4)                        @ r0<- CCCC
+    ldr     r3, [rSELF, #offThread_methodClassDex]    @ r3<- DvmDex
+    orr     r1, r1, r2, lsl #16         @ r1<- AAAAaaaa
+    ldr     r2, [r3, #offDvmDex_pResFields] @ r2<- pDvmDex->pResFields
+    GET_VREG(r9, r0)                    @ r9<- fp[CCCC], the object pointer
+    ldr     r0, [r2, r1, lsl #2]        @ r0<- resolved InstField ptr
+    cmp     r0, #0                      @ is resolved entry null?
+    bne     .LOP_IPUT_OBJECT_VOLATILE_JUMBO_finish          @ no, already resolved
+8:  ldr     r2, [rSELF, #offThread_method]    @ r2<- current method
+    EXPORT_PC()                         @ resolve() could throw
+    ldr     r0, [r2, #offMethod_clazz]  @ r0<- method->clazz
+    bl      dvmResolveInstField         @ r0<- resolved InstField ptr
+    b       .LOP_IPUT_OBJECT_VOLATILE_JUMBO_resolved        @ resolved, continue
 
 
 /* ------------------------------ */
     .balign 64
-.L_OP_UNUSED_FDFF: /* 0x1fd */
-/* File: armv5te/OP_UNUSED_FDFF.S */
-/* File: armv5te/unused.S */
-    bl      common_abort
+.L_OP_SGET_VOLATILE_JUMBO: /* 0x1f9 */
+/* File: armv5te/OP_SGET_VOLATILE_JUMBO.S */
+/* File: armv5te/OP_SGET_JUMBO.S */
+    /*
+     * Jumbo 32-bit SGET handler.
+     *
+     * for: sget/jumbo, sget-object/jumbo, sget-boolean/jumbo, sget-byte/jumbo,
+     *      sget-char/jumbo, sget-short/jumbo
+     */
+    /* exop vBBBB, field@AAAAAAAA */
+    ldr     r2, [rSELF, #offThread_methodClassDex]    @ r2<- DvmDex
+    FETCH(r0, 1)                        @ r0<- aaaa (lo)
+    FETCH(r1, 2)                        @ r1<- AAAA (hi)
+    ldr     r2, [r2, #offDvmDex_pResFields] @ r2<- dvmDex->pResFields
+    orr     r1, r0, r1, lsl #16         @ r1<- AAAAaaaa
+    ldr     r0, [r2, r1, lsl #2]        @ r0<- resolved StaticField ptr
+    cmp     r0, #0                      @ is resolved entry null?
+    beq     .LOP_SGET_VOLATILE_JUMBO_resolve         @ yes, do resolve
+.LOP_SGET_VOLATILE_JUMBO_finish: @ field ptr in r0
+    ldr     r1, [r0, #offStaticField_value] @ r1<- field value
+    SMP_DMB                            @ acquiring load
+    FETCH(r2, 3)                        @ r2<- BBBB
+    FETCH_ADVANCE_INST(4)               @ advance rPC, load rINST
+    SET_VREG(r1, r2)                    @ fp[BBBB]<- r1
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    GOTO_OPCODE(ip)                     @ jump to next instruction
 
 
 /* ------------------------------ */
     .balign 64
-.L_OP_UNUSED_FEFF: /* 0x1fe */
-/* File: armv5te/OP_UNUSED_FEFF.S */
-/* File: armv5te/unused.S */
-    bl      common_abort
+.L_OP_SGET_WIDE_VOLATILE_JUMBO: /* 0x1fa */
+/* File: armv5te/OP_SGET_WIDE_VOLATILE_JUMBO.S */
+/* File: armv5te/OP_SGET_WIDE_JUMBO.S */
+    /*
+     * Jumbo 64-bit SGET handler.
+     */
+    /* sget-wide/jumbo vBBBB, field@AAAAAAAA */
+    ldr     r2, [rSELF, #offThread_methodClassDex]    @ r2<- DvmDex
+    FETCH(r0, 1)                        @ r0<- aaaa (lo)
+    FETCH(r1, 2)                        @ r1<- AAAA (hi)
+    ldr     r2, [r2, #offDvmDex_pResFields] @ r2<- dvmDex->pResFields
+    orr     r1, r0, r1, lsl #16         @ r1<- AAAAaaaa
+    ldr     r0, [r2, r1, lsl #2]        @ r0<- resolved StaticField ptr
+    cmp     r0, #0                      @ is resolved entry null?
+    beq     .LOP_SGET_WIDE_VOLATILE_JUMBO_resolve         @ yes, do resolve
+.LOP_SGET_WIDE_VOLATILE_JUMBO_finish:
+    FETCH(r9, 3)                        @ r9<- BBBB
+    .if 1
+    add     r0, r0, #offStaticField_value @ r0<- pointer to data
+    bl      dvmQuasiAtomicRead64        @ r0/r1<- contents of field
+    .else
+    ldrd    r0, [r0, #offStaticField_value] @ r0/r1<- field value (aligned)
+    .endif
+    add     r9, rFP, r9, lsl #2         @ r9<- &fp[BBBB]
+    FETCH_ADVANCE_INST(4)               @ advance rPC, load rINST
+    stmia   r9, {r0-r1}                 @ vBBBB/vBBBB+1<- r0/r1
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    GOTO_OPCODE(ip)                     @ jump to next instruction
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_SGET_OBJECT_VOLATILE_JUMBO: /* 0x1fb */
+/* File: armv5te/OP_SGET_OBJECT_VOLATILE_JUMBO.S */
+/* File: armv5te/OP_SGET_OBJECT_JUMBO.S */
+/* File: armv5te/OP_SGET_JUMBO.S */
+    /*
+     * Jumbo 32-bit SGET handler.
+     *
+     * for: sget/jumbo, sget-object/jumbo, sget-boolean/jumbo, sget-byte/jumbo,
+     *      sget-char/jumbo, sget-short/jumbo
+     */
+    /* exop vBBBB, field@AAAAAAAA */
+    ldr     r2, [rSELF, #offThread_methodClassDex]    @ r2<- DvmDex
+    FETCH(r0, 1)                        @ r0<- aaaa (lo)
+    FETCH(r1, 2)                        @ r1<- AAAA (hi)
+    ldr     r2, [r2, #offDvmDex_pResFields] @ r2<- dvmDex->pResFields
+    orr     r1, r0, r1, lsl #16         @ r1<- AAAAaaaa
+    ldr     r0, [r2, r1, lsl #2]        @ r0<- resolved StaticField ptr
+    cmp     r0, #0                      @ is resolved entry null?
+    beq     .LOP_SGET_OBJECT_VOLATILE_JUMBO_resolve         @ yes, do resolve
+.LOP_SGET_OBJECT_VOLATILE_JUMBO_finish: @ field ptr in r0
+    ldr     r1, [r0, #offStaticField_value] @ r1<- field value
+    SMP_DMB                            @ acquiring load
+    FETCH(r2, 3)                        @ r2<- BBBB
+    FETCH_ADVANCE_INST(4)               @ advance rPC, load rINST
+    SET_VREG(r1, r2)                    @ fp[BBBB]<- r1
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    GOTO_OPCODE(ip)                     @ jump to next instruction
+
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_SPUT_VOLATILE_JUMBO: /* 0x1fc */
+/* File: armv5te/OP_SPUT_VOLATILE_JUMBO.S */
+/* File: armv5te/OP_SPUT_JUMBO.S */
+    /*
+     * Jumbo 32-bit SPUT handler.
+     *
+     * for: sput/jumbo, sput-boolean/jumbo, sput-byte/jumbo, sput-char/jumbo,
+     *      sput-short/jumbo
+     */
+    /* exop vBBBB, field@AAAAAAAA */
+    ldr     r2, [rSELF, #offThread_methodClassDex]    @ r2<- DvmDex
+    FETCH(r0, 1)                        @ r0<- aaaa (lo)
+    FETCH(r1, 2)                        @ r1<- AAAA (hi)
+    ldr     r2, [r2, #offDvmDex_pResFields] @ r2<- dvmDex->pResFields
+    orr     r1, r0, r1, lsl #16         @ r1<- AAAAaaaa
+    ldr     r0, [r2, r1, lsl #2]        @ r0<- resolved StaticField ptr
+    cmp     r0, #0                      @ is resolved entry null?
+    beq     .LOP_SPUT_VOLATILE_JUMBO_resolve         @ yes, do resolve
+.LOP_SPUT_VOLATILE_JUMBO_finish:   @ field ptr in r0
+    FETCH(r2, 3)                        @ r2<- BBBB
+    FETCH_ADVANCE_INST(4)               @ advance rPC, load rINST
+    GET_VREG(r1, r2)                    @ r1<- fp[BBBB]
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    SMP_DMB                            @ releasing store
+    str     r1, [r0, #offStaticField_value] @ field<- vBBBB
+    GOTO_OPCODE(ip)                     @ jump to next instruction
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_SPUT_WIDE_VOLATILE_JUMBO: /* 0x1fd */
+/* File: armv5te/OP_SPUT_WIDE_VOLATILE_JUMBO.S */
+/* File: armv5te/OP_SPUT_WIDE_JUMBO.S */
+    /*
+     * Jumbo 64-bit SPUT handler.
+     */
+    /* sput-wide/jumbo vBBBB, field@AAAAAAAA */
+    ldr     r0, [rSELF, #offThread_methodClassDex]  @ r0<- DvmDex
+    FETCH(r1, 1)                        @ r1<- aaaa (lo)
+    FETCH(r2, 2)                        @ r2<- AAAA (hi)
+    ldr     r0, [r0, #offDvmDex_pResFields] @ r0<- dvmDex->pResFields
+    orr     r1, r1, r2, lsl #16         @ r1<- AAAAaaaa
+    FETCH(r9, 3)                        @ r9<- BBBB
+    ldr     r2, [r0, r1, lsl #2]        @ r2<- resolved StaticField ptr
+    add     r9, rFP, r9, lsl #2         @ r9<- &fp[BBBB]
+    cmp     r2, #0                      @ is resolved entry null?
+    beq     .LOP_SPUT_WIDE_VOLATILE_JUMBO_resolve         @ yes, do resolve
+.LOP_SPUT_WIDE_VOLATILE_JUMBO_finish: @ field ptr in r2, BBBB in r9
+    FETCH_ADVANCE_INST(4)               @ advance rPC, load rINST
+    ldmia   r9, {r0-r1}                 @ r0/r1<- vBBBB/vBBBB+1
+    GET_INST_OPCODE(r10)                @ extract opcode from rINST
+    .if 1
+    add     r2, r2, #offStaticField_value @ r2<- pointer to data
+    bl      dvmQuasiAtomicSwap64        @ stores r0/r1 into addr r2
+    .else
+    strd    r0, [r2, #offStaticField_value] @ field<- vBBBB/vBBBB+1
+    .endif
+    GOTO_OPCODE(r10)                    @ jump to next instruction
+
+
+/* ------------------------------ */
+    .balign 64
+.L_OP_SPUT_OBJECT_VOLATILE_JUMBO: /* 0x1fe */
+/* File: armv5te/OP_SPUT_OBJECT_VOLATILE_JUMBO.S */
+/* File: armv5te/OP_SPUT_OBJECT_JUMBO.S */
+    /*
+     * Jumbo 32-bit SPUT handler for objects
+     */
+    /* sput-object/jumbo vBBBB, field@AAAAAAAA */
+    ldr     r2, [rSELF, #offThread_methodClassDex]    @ r2<- DvmDex
+    FETCH(r0, 1)                        @ r0<- aaaa (lo)
+    FETCH(r1, 2)                        @ r1<- AAAA (hi)
+    ldr     r2, [r2, #offDvmDex_pResFields] @ r2<- dvmDex->pResFields
+    orr     r1, r0, r1, lsl #16         @ r1<- AAAAaaaa
+    ldr     r0, [r2, r1, lsl #2]        @ r0<- resolved StaticField ptr
+    cmp     r0, #0                      @ is resolved entry null?
+    bne     .LOP_SPUT_OBJECT_VOLATILE_JUMBO_finish          @ no, continue
+    ldr     r9, [rSELF, #offThread_method]    @ r9<- current method
+    EXPORT_PC()                         @ resolve() could throw, so export now
+    ldr     r0, [r9, #offMethod_clazz]  @ r0<- method->clazz
+    bl      dvmResolveStaticField       @ r0<- resolved StaticField ptr
+    cmp     r0, #0                      @ success?
+    bne     .LOP_SPUT_OBJECT_VOLATILE_JUMBO_finish          @ yes, finish
+    b       common_exceptionThrown      @ no, handle exception
 
 
 /* ------------------------------ */
@@ -12487,7 +12763,12 @@ d2l_doconv:
     cmp     r9, #0                      @ check object for null
     ldr     r3, [r0, #offInstField_byteOffset]  @ r3<- byte offset of field
     beq     common_errNullObject        @ object was null
+    .if     0
+    add     r0, r9, r3                  @ r0<- address of field
+    bl      dvmQuasiAtomicRead64        @ r0/r1<- contents of field
+    .else
     ldrd    r0, [r9, r3]                @ r0/r1<- obj.field (64-bit align ok)
+    .endif
     FETCH(r2, 3)                        @ r2<- BBBB
     FETCH_ADVANCE_INST(5)               @ advance rPC, load rINST
     add     r3, rFP, r2, lsl #2         @ r3<- &fp[BBBB]
@@ -12701,7 +12982,12 @@ d2l_doconv:
     FETCH_ADVANCE_INST(5)               @ advance rPC, load rINST
     ldmia   r2, {r0-r1}                 @ r0/r1<- fp[BBBB]
     GET_INST_OPCODE(r10)                @ extract opcode from rINST
+    .if     0
+    add     r2, r9, r3                  @ r2<- target address
+    bl      dvmQuasiAtomicSwap64        @ stores r0/r1 into addr r2
+    .else
     strd    r0, [r9, r3]                @ obj.field (64 bits, aligned)<- r0/r1
+    .endif
     GOTO_OPCODE(r10)                    @ jump to next instruction
 
 /* continuation for OP_IPUT_OBJECT_JUMBO */
@@ -12876,7 +13162,7 @@ d2l_doconv:
 
     /*
      * Continuation if the field has not yet been resolved.
-     *  r1: BBBB field ref
+     *  r1: AAAAAAAA field ref
      *
      * Returns StaticField pointer in r0.
      */
@@ -12983,8 +13269,8 @@ d2l_doconv:
 
     /*
      * Continuation if the field has not yet been resolved.
-     *  r1: BBBB field ref
-     *  r9: &fp[AA]
+     *  r1: AAAAAAAA field ref
+     *  r9: &fp[BBBB]
      *
      * Returns StaticField pointer in r2.
      */
@@ -13140,6 +13426,293 @@ d2l_doconv:
     GET_VREG(r2, r10)                   @ r2<- "this" ptr (reload)
     bne     .LOP_INVOKE_DIRECT_JUMBO_finish          @ no, continue
     b       common_exceptionThrown      @ yes, handle exception
+
+/* continuation for OP_IGET_VOLATILE_JUMBO */
+
+    /*
+     * Currently:
+     *  r0 holds resolved field
+     *  r9 holds object
+     */
+.LOP_IGET_VOLATILE_JUMBO_resolved:
+    cmp     r0, #0                      @ resolution unsuccessful?
+    beq     common_exceptionThrown      @ yes, throw exception
+    @ fall through to OP_IGET_VOLATILE_JUMBO_finish
+
+    /*
+     * Currently:
+     *  r0 holds resolved field
+     *  r9 holds object
+     */
+.LOP_IGET_VOLATILE_JUMBO_finish:
+    @bl      common_squeak0
+    cmp     r9, #0                      @ check object for null
+    ldr     r3, [r0, #offInstField_byteOffset]  @ r3<- byte offset of field
+    beq     common_errNullObject        @ object was null
+    ldr   r0, [r9, r3]                @ r0<- obj.field (8/16/32 bits)
+    SMP_DMB                            @ acquiring load
+    FETCH(r2, 3)                        @ r2<- BBBB
+    FETCH_ADVANCE_INST(5)               @ advance rPC, load rINST
+    SET_VREG(r0, r2)                    @ fp[BBBB]<- r0
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    GOTO_OPCODE(ip)                     @ jump to next instruction
+
+/* continuation for OP_IGET_WIDE_VOLATILE_JUMBO */
+
+    /*
+     * Currently:
+     *  r0 holds resolved field
+     *  r9 holds object
+     */
+.LOP_IGET_WIDE_VOLATILE_JUMBO_resolved:
+    cmp     r0, #0                      @ resolution unsuccessful?
+    beq     common_exceptionThrown      @ yes, throw exception
+    @ fall through to OP_IGET_WIDE_VOLATILE_JUMBO_finish
+
+    /*
+     * Currently:
+     *  r0 holds resolved field
+     *  r9 holds object
+     */
+.LOP_IGET_WIDE_VOLATILE_JUMBO_finish:
+    cmp     r9, #0                      @ check object for null
+    ldr     r3, [r0, #offInstField_byteOffset]  @ r3<- byte offset of field
+    beq     common_errNullObject        @ object was null
+    .if     1
+    add     r0, r9, r3                  @ r0<- address of field
+    bl      dvmQuasiAtomicRead64        @ r0/r1<- contents of field
+    .else
+    ldrd    r0, [r9, r3]                @ r0/r1<- obj.field (64-bit align ok)
+    .endif
+    FETCH(r2, 3)                        @ r2<- BBBB
+    FETCH_ADVANCE_INST(5)               @ advance rPC, load rINST
+    add     r3, rFP, r2, lsl #2         @ r3<- &fp[BBBB]
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    stmia   r3, {r0-r1}                 @ fp[BBBB]<- r0/r1
+    GOTO_OPCODE(ip)                     @ jump to next instruction
+
+/* continuation for OP_IGET_OBJECT_VOLATILE_JUMBO */
+
+    /*
+     * Currently:
+     *  r0 holds resolved field
+     *  r9 holds object
+     */
+.LOP_IGET_OBJECT_VOLATILE_JUMBO_resolved:
+    cmp     r0, #0                      @ resolution unsuccessful?
+    beq     common_exceptionThrown      @ yes, throw exception
+    @ fall through to OP_IGET_OBJECT_VOLATILE_JUMBO_finish
+
+    /*
+     * Currently:
+     *  r0 holds resolved field
+     *  r9 holds object
+     */
+.LOP_IGET_OBJECT_VOLATILE_JUMBO_finish:
+    @bl      common_squeak0
+    cmp     r9, #0                      @ check object for null
+    ldr     r3, [r0, #offInstField_byteOffset]  @ r3<- byte offset of field
+    beq     common_errNullObject        @ object was null
+    ldr   r0, [r9, r3]                @ r0<- obj.field (8/16/32 bits)
+    SMP_DMB                            @ acquiring load
+    FETCH(r2, 3)                        @ r2<- BBBB
+    FETCH_ADVANCE_INST(5)               @ advance rPC, load rINST
+    SET_VREG(r0, r2)                    @ fp[BBBB]<- r0
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    GOTO_OPCODE(ip)                     @ jump to next instruction
+
+/* continuation for OP_IPUT_VOLATILE_JUMBO */
+
+    /*
+     * Currently:
+     *  r0 holds resolved field
+     *  r9 holds object
+     */
+.LOP_IPUT_VOLATILE_JUMBO_resolved:
+     cmp     r0, #0                     @ resolution unsuccessful?
+     beq     common_exceptionThrown     @ yes, throw exception
+     @ fall through to OP_IPUT_VOLATILE_JUMBO_finish
+
+    /*
+     * Currently:
+     *  r0 holds resolved field
+     *  r9 holds object
+     */
+.LOP_IPUT_VOLATILE_JUMBO_finish:
+    @bl      common_squeak0
+    ldr     r3, [r0, #offInstField_byteOffset]  @ r3<- byte offset of field
+    FETCH(r1, 3)                        @ r1<- BBBB
+    cmp     r9, #0                      @ check object for null
+    GET_VREG(r0, r1)                    @ r0<- fp[BBBB]
+    beq     common_errNullObject        @ object was null
+    FETCH_ADVANCE_INST(5)               @ advance rPC, load rINST
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    SMP_DMB                            @ releasing store
+    str  r0, [r9, r3]                @ obj.field (8/16/32 bits)<- r0
+    GOTO_OPCODE(ip)                     @ jump to next instruction
+
+/* continuation for OP_IPUT_WIDE_VOLATILE_JUMBO */
+
+    /*
+     * Currently:
+     *  r0 holds resolved field
+     *  r9 holds object
+     */
+.LOP_IPUT_WIDE_VOLATILE_JUMBO_resolved:
+     cmp     r0, #0                     @ resolution unsuccessful?
+     beq     common_exceptionThrown     @ yes, throw exception
+     @ fall through to OP_IPUT_WIDE_VOLATILE_JUMBO_finish
+
+    /*
+     * Currently:
+     *  r0 holds resolved field
+     *  r9 holds object
+     */
+.LOP_IPUT_WIDE_VOLATILE_JUMBO_finish:
+    cmp     r9, #0                      @ check object for null
+    FETCH(r2, 3)                        @ r1<- BBBB
+    ldr     r3, [r0, #offInstField_byteOffset]  @ r3<- byte offset of field
+    add     r2, rFP, r2, lsl #2         @ r3<- &fp[BBBB]
+    beq     common_errNullObject        @ object was null
+    FETCH_ADVANCE_INST(5)               @ advance rPC, load rINST
+    ldmia   r2, {r0-r1}                 @ r0/r1<- fp[BBBB]
+    GET_INST_OPCODE(r10)                @ extract opcode from rINST
+    .if     1
+    add     r2, r9, r3                  @ r2<- target address
+    bl      dvmQuasiAtomicSwap64        @ stores r0/r1 into addr r2
+    .else
+    strd    r0, [r9, r3]                @ obj.field (64 bits, aligned)<- r0/r1
+    .endif
+    GOTO_OPCODE(r10)                    @ jump to next instruction
+
+/* continuation for OP_IPUT_OBJECT_VOLATILE_JUMBO */
+
+    /*
+     * Currently:
+     *  r0 holds resolved field
+     *  r9 holds object
+     */
+.LOP_IPUT_OBJECT_VOLATILE_JUMBO_resolved:
+     cmp     r0, #0                     @ resolution unsuccessful?
+     beq     common_exceptionThrown     @ yes, throw exception
+     @ fall through to OP_IPUT_OBJECT_VOLATILE_JUMBO_finish
+
+    /*
+     * Currently:
+     *  r0 holds resolved field
+     *  r9 holds object
+     */
+.LOP_IPUT_OBJECT_VOLATILE_JUMBO_finish:
+    @bl      common_squeak0
+    ldr     r3, [r0, #offInstField_byteOffset]  @ r3<- byte offset of field
+    FETCH(r1, 3)                        @ r1<- BBBB
+    cmp     r9, #0                      @ check object for null
+    GET_VREG(r0, r1)                    @ r0<- fp[BBBB]
+    ldr     r2, [rSELF, #offThread_cardTable]  @ r2<- card table base
+    beq     common_errNullObject        @ object was null
+    FETCH_ADVANCE_INST(5)               @ advance rPC, load rINST
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    SMP_DMB                            @ releasing store
+    str     r0, [r9, r3]                @ obj.field (32 bits)<- r0
+    cmp     r0, #0                      @ stored a null reference?
+    strneb  r2, [r2, r9, lsr #GC_CARD_SHIFT]  @ mark card if not
+    GOTO_OPCODE(ip)                     @ jump to next instruction
+
+/* continuation for OP_SGET_VOLATILE_JUMBO */
+
+    /*
+     * Continuation if the field has not yet been resolved.
+     *  r1: AAAAAAAA field ref
+     */
+.LOP_SGET_VOLATILE_JUMBO_resolve:
+    ldr     r2, [rSELF, #offThread_method]    @ r2<- current method
+    EXPORT_PC()                         @ resolve() could throw, so export now
+    ldr     r0, [r2, #offMethod_clazz]  @ r0<- method->clazz
+    bl      dvmResolveStaticField       @ r0<- resolved StaticField ptr
+    cmp     r0, #0                      @ success?
+    bne     .LOP_SGET_VOLATILE_JUMBO_finish          @ yes, finish
+    b       common_exceptionThrown      @ no, handle exception
+
+/* continuation for OP_SGET_WIDE_VOLATILE_JUMBO */
+
+    /*
+     * Continuation if the field has not yet been resolved.
+     *  r1: AAAAAAAA field ref
+     *
+     * Returns StaticField pointer in r0.
+     */
+.LOP_SGET_WIDE_VOLATILE_JUMBO_resolve:
+    ldr     r2, [rSELF, #offThread_method]    @ r2<- current method
+    EXPORT_PC()                         @ resolve() could throw, so export now
+    ldr     r0, [r2, #offMethod_clazz]  @ r0<- method->clazz
+    bl      dvmResolveStaticField       @ r0<- resolved StaticField ptr
+    cmp     r0, #0                      @ success?
+    bne     .LOP_SGET_WIDE_VOLATILE_JUMBO_finish          @ yes, finish
+    b       common_exceptionThrown      @ no, handle exception
+
+/* continuation for OP_SGET_OBJECT_VOLATILE_JUMBO */
+
+    /*
+     * Continuation if the field has not yet been resolved.
+     *  r1: AAAAAAAA field ref
+     */
+.LOP_SGET_OBJECT_VOLATILE_JUMBO_resolve:
+    ldr     r2, [rSELF, #offThread_method]    @ r2<- current method
+    EXPORT_PC()                         @ resolve() could throw, so export now
+    ldr     r0, [r2, #offMethod_clazz]  @ r0<- method->clazz
+    bl      dvmResolveStaticField       @ r0<- resolved StaticField ptr
+    cmp     r0, #0                      @ success?
+    bne     .LOP_SGET_OBJECT_VOLATILE_JUMBO_finish          @ yes, finish
+    b       common_exceptionThrown      @ no, handle exception
+
+/* continuation for OP_SPUT_VOLATILE_JUMBO */
+
+    /*
+     * Continuation if the field has not yet been resolved.
+     *  r1: AAAAAAAA field ref
+     */
+.LOP_SPUT_VOLATILE_JUMBO_resolve:
+    ldr     r2, [rSELF, #offThread_method]    @ r2<- current method
+    EXPORT_PC()                         @ resolve() could throw, so export now
+    ldr     r0, [r2, #offMethod_clazz]  @ r0<- method->clazz
+    bl      dvmResolveStaticField       @ r0<- resolved StaticField ptr
+    cmp     r0, #0                      @ success?
+    bne     .LOP_SPUT_VOLATILE_JUMBO_finish          @ yes, finish
+    b       common_exceptionThrown      @ no, handle exception
+
+/* continuation for OP_SPUT_WIDE_VOLATILE_JUMBO */
+
+    /*
+     * Continuation if the field has not yet been resolved.
+     *  r1: AAAAAAAA field ref
+     *  r9: &fp[BBBB]
+     *
+     * Returns StaticField pointer in r2.
+     */
+.LOP_SPUT_WIDE_VOLATILE_JUMBO_resolve:
+    ldr     r2, [rSELF, #offThread_method]    @ r2<- current method
+    EXPORT_PC()                         @ resolve() could throw, so export now
+    ldr     r0, [r2, #offMethod_clazz]  @ r0<- method->clazz
+    bl      dvmResolveStaticField       @ r0<- resolved StaticField ptr
+    cmp     r0, #0                      @ success?
+    mov     r2, r0                      @ copy to r2
+    bne     .LOP_SPUT_WIDE_VOLATILE_JUMBO_finish          @ yes, finish
+    b       common_exceptionThrown      @ no, handle exception
+
+/* continuation for OP_SPUT_OBJECT_VOLATILE_JUMBO */
+
+.LOP_SPUT_OBJECT_VOLATILE_JUMBO_finish:   @ field ptr in r0
+    FETCH(r2, 3)                        @ r2<- BBBB
+    FETCH_ADVANCE_INST(4)               @ advance rPC, load rINST
+    GET_VREG(r1, r2)                    @ r1<- fp[BBBB]
+    ldr     r2, [rSELF, #offThread_cardTable]  @ r2<- card table base
+    ldr     r9, [r0, #offField_clazz]   @ r9<- field->clazz
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    SMP_DMB                            @ releasing store
+    str     r1, [r0, #offStaticField_value]  @ field<- vBBBB
+    cmp     r1, #0                      @ stored a null object?
+    strneb  r2, [r2, r9, lsr #GC_CARD_SHIFT]  @ mark card based on obj head
+    GOTO_OPCODE(ip)                     @ jump to next instruction
 
     .size   dvmAsmSisterStart, .-dvmAsmSisterStart
     .global dvmAsmSisterEnd
@@ -20125,7 +20698,7 @@ dvmAsmAltInstructionStart:
 
 /* ------------------------------ */
     .balign 64
-.L_ALT_OP_UNUSED_F2FF: /* 0x1f2 */
+.L_ALT_OP_INVOKE_OBJECT_INIT_JUMBO: /* 0x1f2 */
 /* File: armv5te/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
@@ -20139,7 +20712,7 @@ dvmAsmAltInstructionStart:
 
 /* ------------------------------ */
     .balign 64
-.L_ALT_OP_UNUSED_F3FF: /* 0x1f3 */
+.L_ALT_OP_IGET_VOLATILE_JUMBO: /* 0x1f3 */
 /* File: armv5te/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
@@ -20153,7 +20726,7 @@ dvmAsmAltInstructionStart:
 
 /* ------------------------------ */
     .balign 64
-.L_ALT_OP_UNUSED_F4FF: /* 0x1f4 */
+.L_ALT_OP_IGET_WIDE_VOLATILE_JUMBO: /* 0x1f4 */
 /* File: armv5te/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
@@ -20167,7 +20740,7 @@ dvmAsmAltInstructionStart:
 
 /* ------------------------------ */
     .balign 64
-.L_ALT_OP_UNUSED_F5FF: /* 0x1f5 */
+.L_ALT_OP_IGET_OBJECT_VOLATILE_JUMBO: /* 0x1f5 */
 /* File: armv5te/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
@@ -20181,7 +20754,7 @@ dvmAsmAltInstructionStart:
 
 /* ------------------------------ */
     .balign 64
-.L_ALT_OP_UNUSED_F6FF: /* 0x1f6 */
+.L_ALT_OP_IPUT_VOLATILE_JUMBO: /* 0x1f6 */
 /* File: armv5te/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
@@ -20195,7 +20768,7 @@ dvmAsmAltInstructionStart:
 
 /* ------------------------------ */
     .balign 64
-.L_ALT_OP_UNUSED_F7FF: /* 0x1f7 */
+.L_ALT_OP_IPUT_WIDE_VOLATILE_JUMBO: /* 0x1f7 */
 /* File: armv5te/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
@@ -20209,7 +20782,7 @@ dvmAsmAltInstructionStart:
 
 /* ------------------------------ */
     .balign 64
-.L_ALT_OP_UNUSED_F8FF: /* 0x1f8 */
+.L_ALT_OP_IPUT_OBJECT_VOLATILE_JUMBO: /* 0x1f8 */
 /* File: armv5te/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
@@ -20223,7 +20796,7 @@ dvmAsmAltInstructionStart:
 
 /* ------------------------------ */
     .balign 64
-.L_ALT_OP_UNUSED_F9FF: /* 0x1f9 */
+.L_ALT_OP_SGET_VOLATILE_JUMBO: /* 0x1f9 */
 /* File: armv5te/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
@@ -20237,7 +20810,7 @@ dvmAsmAltInstructionStart:
 
 /* ------------------------------ */
     .balign 64
-.L_ALT_OP_UNUSED_FAFF: /* 0x1fa */
+.L_ALT_OP_SGET_WIDE_VOLATILE_JUMBO: /* 0x1fa */
 /* File: armv5te/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
@@ -20251,7 +20824,7 @@ dvmAsmAltInstructionStart:
 
 /* ------------------------------ */
     .balign 64
-.L_ALT_OP_UNUSED_FBFF: /* 0x1fb */
+.L_ALT_OP_SGET_OBJECT_VOLATILE_JUMBO: /* 0x1fb */
 /* File: armv5te/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
@@ -20265,7 +20838,7 @@ dvmAsmAltInstructionStart:
 
 /* ------------------------------ */
     .balign 64
-.L_ALT_OP_UNUSED_FCFF: /* 0x1fc */
+.L_ALT_OP_SPUT_VOLATILE_JUMBO: /* 0x1fc */
 /* File: armv5te/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
@@ -20279,7 +20852,7 @@ dvmAsmAltInstructionStart:
 
 /* ------------------------------ */
     .balign 64
-.L_ALT_OP_UNUSED_FDFF: /* 0x1fd */
+.L_ALT_OP_SPUT_WIDE_VOLATILE_JUMBO: /* 0x1fd */
 /* File: armv5te/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
@@ -20293,7 +20866,7 @@ dvmAsmAltInstructionStart:
 
 /* ------------------------------ */
     .balign 64
-.L_ALT_OP_UNUSED_FEFF: /* 0x1fe */
+.L_ALT_OP_SPUT_OBJECT_VOLATILE_JUMBO: /* 0x1fe */
 /* File: armv5te/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle

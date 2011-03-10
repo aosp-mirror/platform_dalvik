@@ -1212,7 +1212,7 @@ GOTO_TARGET_DECL(exceptionThrown);
             if (sfield == NULL)                                             \
                 GOTO_exceptionThrown();                                     \
             if (dvmDexGetResolvedField(methodClassDex, ref) == NULL) {      \
-                END_JIT_TSELECT();                                        \
+                END_JIT_TSELECT();                                          \
             }                                                               \
         }                                                                   \
         SET_REGISTER##_regsize(vdst, dvmGetStaticField##_ftype(sfield));    \
@@ -1236,7 +1236,7 @@ GOTO_TARGET_DECL(exceptionThrown);
             if (sfield == NULL)                                             \
                 GOTO_exceptionThrown();                                     \
             if (dvmDexGetResolvedField(methodClassDex, ref) == NULL) {      \
-                END_JIT_TSELECT();                                        \
+                END_JIT_TSELECT();                                          \
             }                                                               \
         }                                                                   \
         SET_REGISTER##_regsize(vdst, dvmGetStaticField##_ftype(sfield));    \
@@ -1260,7 +1260,7 @@ GOTO_TARGET_DECL(exceptionThrown);
             if (sfield == NULL)                                             \
                 GOTO_exceptionThrown();                                     \
             if (dvmDexGetResolvedField(methodClassDex, ref) == NULL) {      \
-                END_JIT_TSELECT();                                        \
+                END_JIT_TSELECT();                                          \
             }                                                               \
         }                                                                   \
         dvmSetStaticField##_ftype(sfield, GET_REGISTER##_regsize(vdst));    \
@@ -1284,7 +1284,7 @@ GOTO_TARGET_DECL(exceptionThrown);
             if (sfield == NULL)                                             \
                 GOTO_exceptionThrown();                                     \
             if (dvmDexGetResolvedField(methodClassDex, ref) == NULL) {      \
-                END_JIT_TSELECT();                                        \
+                END_JIT_TSELECT();                                          \
             }                                                               \
         }                                                                   \
         dvmSetStaticField##_ftype(sfield, GET_REGISTER##_regsize(vdst));    \
@@ -3068,17 +3068,12 @@ HANDLE_OPCODE(OP_INVOKE_OBJECT_INIT_RANGE /*{vCCCC..v(CCCC+AA-1)}, meth@BBBB*/)
         }
 
 #if INTERP_TYPE == INTERP_DBG
-        if (!DEBUGGER_ACTIVE) {
-            /* skip method invocation */
-            FINISH(3);
-        } else {
+        if (DEBUGGER_ACTIVE) {
             /* behave like OP_INVOKE_DIRECT_RANGE */
             GOTO_invoke(invokeDirect, true, false);
         }
-#else
-        /* debugger can't be attached, skip method invocation */
-        FINISH(3);
 #endif
+        FINISH(3);
     }
 OP_END
 
@@ -4288,64 +4283,90 @@ OP_END
 
 /* File: c/OP_UNUSED_F1FF.c */
 HANDLE_OPCODE(OP_UNUSED_F1FF)
+    /*
+     * In portable interp, most unused opcodes will fall through to here.
+     */
+    LOGE("unknown opcode 0x%04x\n", inst);
+    dvmAbort();
+    FINISH(1);
 OP_END
 
-/* File: c/OP_UNUSED_F2FF.c */
-HANDLE_OPCODE(OP_UNUSED_F2FF)
+/* File: c/OP_INVOKE_OBJECT_INIT_JUMBO.c */
+HANDLE_OPCODE(OP_INVOKE_OBJECT_INIT_JUMBO /*{vCCCC..vNNNN}, meth@AAAAAAAA*/)
+    {
+        Object* obj;
+
+        vsrc1 = FETCH(4);               /* reg number of "this" pointer */
+        obj = GET_REGISTER_AS_OBJECT(vsrc1);
+
+        if (!checkForNullExportPC(obj, fp, pc))
+            GOTO_exceptionThrown();
+
+        /*
+         * The object should be marked "finalizable" when Object.<init>
+         * completes normally.  We're going to assume it does complete
+         * (by virtue of being nothing but a return-void) and set it now.
+         */
+        if (IS_CLASS_FLAG_SET(obj->clazz, CLASS_ISFINALIZABLE)) {
+            dvmSetFinalizable(obj);
+        }
+
+#if INTERP_TYPE == INTERP_DBG
+        if (DEBUGGER_ACTIVE) {
+            /* behave like OP_INVOKE_DIRECT_RANGE */
+            GOTO_invoke(invokeDirect, true, true);
+        }
+#endif
+        FINISH(5);
+    }
 OP_END
 
-/* File: c/OP_UNUSED_F3FF.c */
-HANDLE_OPCODE(OP_UNUSED_F3FF)
+/* File: c/OP_IGET_VOLATILE_JUMBO.c */
+HANDLE_IGET_X_JUMBO(OP_IGET_VOLATILE_JUMBO, "-volatile/jumbo", IntVolatile, )
 OP_END
 
-/* File: c/OP_UNUSED_F4FF.c */
-HANDLE_OPCODE(OP_UNUSED_F4FF)
+/* File: c/OP_IGET_WIDE_VOLATILE_JUMBO.c */
+HANDLE_IGET_X_JUMBO(OP_IGET_WIDE_VOLATILE_JUMBO, "-wide-volatile/jumbo", LongVolatile, _WIDE)
 OP_END
 
-/* File: c/OP_UNUSED_F5FF.c */
-HANDLE_OPCODE(OP_UNUSED_F5FF)
+/* File: c/OP_IGET_OBJECT_VOLATILE_JUMBO.c */
+HANDLE_IGET_X_JUMBO(OP_IGET_OBJECT_VOLATILE_JUMBO, "-object-volatile/jumbo", ObjectVolatile, _AS_OBJECT)
 OP_END
 
-/* File: c/OP_UNUSED_F6FF.c */
-HANDLE_OPCODE(OP_UNUSED_F6FF)
+/* File: c/OP_IPUT_VOLATILE_JUMBO.c */
+HANDLE_IPUT_X_JUMBO(OP_IPUT_VOLATILE_JUMBO, "-volatile/jumbo", IntVolatile, )
 OP_END
 
-/* File: c/OP_UNUSED_F7FF.c */
-HANDLE_OPCODE(OP_UNUSED_F7FF)
+/* File: c/OP_IPUT_WIDE_VOLATILE_JUMBO.c */
+HANDLE_IPUT_X_JUMBO(OP_IPUT_WIDE_VOLATILE_JUMBO, "-wide-volatile/jumbo", LongVolatile, _WIDE)
 OP_END
 
-/* File: c/OP_UNUSED_F8FF.c */
-HANDLE_OPCODE(OP_UNUSED_F8FF)
+/* File: c/OP_IPUT_OBJECT_VOLATILE_JUMBO.c */
+HANDLE_IPUT_X_JUMBO(OP_IPUT_OBJECT_VOLATILE_JUMBO, "-object-volatile/jumbo", ObjectVolatile, _AS_OBJECT)
 OP_END
 
-/* File: c/OP_UNUSED_F9FF.c */
-HANDLE_OPCODE(OP_UNUSED_F9FF)
+/* File: c/OP_SGET_VOLATILE_JUMBO.c */
+HANDLE_SGET_X_JUMBO(OP_SGET_VOLATILE_JUMBO, "-volatile/jumbo", IntVolatile, )
 OP_END
 
-/* File: c/OP_UNUSED_FAFF.c */
-HANDLE_OPCODE(OP_UNUSED_FAFF)
+/* File: c/OP_SGET_WIDE_VOLATILE_JUMBO.c */
+HANDLE_SGET_X_JUMBO(OP_SGET_WIDE_VOLATILE_JUMBO, "-wide-volatile/jumbo", LongVolatile, _WIDE)
 OP_END
 
-/* File: c/OP_UNUSED_FBFF.c */
-HANDLE_OPCODE(OP_UNUSED_FBFF)
+/* File: c/OP_SGET_OBJECT_VOLATILE_JUMBO.c */
+HANDLE_SGET_X_JUMBO(OP_SGET_OBJECT_VOLATILE_JUMBO, "-object-volatile/jumbo", ObjectVolatile, _AS_OBJECT)
 OP_END
 
-/* File: c/OP_UNUSED_FCFF.c */
-HANDLE_OPCODE(OP_UNUSED_FCFF)
+/* File: c/OP_SPUT_VOLATILE_JUMBO.c */
+HANDLE_SPUT_X_JUMBO(OP_SPUT_VOLATILE_JUMBO, "-volatile", IntVolatile, )
 OP_END
 
-/* File: c/OP_UNUSED_FDFF.c */
-HANDLE_OPCODE(OP_UNUSED_FDFF)
+/* File: c/OP_SPUT_WIDE_VOLATILE_JUMBO.c */
+HANDLE_SPUT_X_JUMBO(OP_SPUT_WIDE_VOLATILE_JUMBO, "-wide-volatile/jumbo", LongVolatile, _WIDE)
 OP_END
 
-/* File: c/OP_UNUSED_FEFF.c */
-HANDLE_OPCODE(OP_UNUSED_FEFF)
-  /*
-   * In portable interp, most unused opcodes will fall through to here.
-   */
-  LOGE("unknown opcode 0x%04x\n", INST_INST(inst));
-  dvmAbort();
-  FINISH(1);
+/* File: c/OP_SPUT_OBJECT_VOLATILE_JUMBO.c */
+HANDLE_SPUT_X_JUMBO(OP_SPUT_OBJECT_VOLATILE_JUMBO, "-object-volatile/jumbo", ObjectVolatile, _AS_OBJECT)
 OP_END
 
 /* File: c/OP_THROW_VERIFICATION_ERROR_JUMBO.c */
