@@ -25,6 +25,7 @@
 #include "DexCatch.h"
 #include "DexClass.h"
 #include "DexDataMap.h"
+#include "DexUtf.h"
 #include "DexOpcodes.h"
 #include "DexProto.h"
 #include "InstrUtils.h"

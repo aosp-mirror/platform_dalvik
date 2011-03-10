@@ -17,11 +17,14 @@
 /*
  * List all methods in all concrete classes in one or more DEX files.
  */
+
 #include "libdex/DexFile.h"
+
+#include "libdex/CmdUtils.h"
 #include "libdex/DexClass.h"
+#include "libdex/DexDebugInfo.h"
 #include "libdex/DexProto.h"
 #include "libdex/SysUtil.h"
-#include "libdex/CmdUtils.h"
 
 #include <stdlib.h>
 #include <stdio.h>

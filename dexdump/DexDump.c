@@ -29,14 +29,17 @@
  * - no generic signatures on parameters, e.g. type="java.lang.Class&lt;?&gt;"
  * - class shows declared fields and methods; does not show inherited fields
  */
+
 #include "libdex/DexFile.h"
+
+#include "libdex/CmdUtils.h"
 #include "libdex/DexCatch.h"
 #include "libdex/DexClass.h"
+#include "libdex/DexDebugInfo.h"
 #include "libdex/DexOpcodes.h"
 #include "libdex/DexProto.h"
 #include "libdex/InstrUtils.h"
 #include "libdex/SysUtil.h"
-#include "libdex/CmdUtils.h"
 
 #include <stdlib.h>
 #include <stdio.h>
