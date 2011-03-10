@@ -357,10 +357,8 @@ static RegLocation inlinedTarget(CompilationUnit *cUnit, MIR *mir,
  * Search the existing constants in the literal pool for an exact or close match
  * within specified delta (greater or equal to 0).
  */
-static ArmLIR *scanLiteralPool(CompilationUnit *cUnit, int value,
-                                   unsigned int delta)
+static ArmLIR *scanLiteralPool(LIR *dataTarget, int value, unsigned int delta)
 {
-    LIR *dataTarget = cUnit->wordList;
     while (dataTarget) {
         if (((unsigned) (value - ((ArmLIR *) dataTarget)->operands[0])) <=
             delta)
@@ -376,14 +374,15 @@ static ArmLIR *scanLiteralPool(CompilationUnit *cUnit, int value,
  */
 
 /* Add a 32-bit constant either in the constant pool or mixed with code */
-static ArmLIR *addWordData(CompilationUnit *cUnit, int value, bool inPlace)
+static ArmLIR *addWordData(CompilationUnit *cUnit, LIR **constantListP,
+                           int value)
 {
     /* Add the constant to the literal pool */
-    if (!inPlace) {
+    if (constantListP) {
         ArmLIR *newValue = (ArmLIR *) dvmCompilerNew(sizeof(ArmLIR), true);
         newValue->operands[0] = value;
-        newValue->generic.next = cUnit->wordList;
-        cUnit->wordList = (LIR *) newValue;
+        newValue->generic.next = *constantListP;
+        *constantListP = (LIR *) newValue;
         return newValue;
     } else {
         /* Add the constant in the middle of code stream */

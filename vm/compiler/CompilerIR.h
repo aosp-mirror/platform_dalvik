@@ -112,7 +112,8 @@ typedef enum {
 #define MIR_INVOKE_METHOD_JIT           (1 << kMIRInvokeMethodJIT)
 
 typedef struct CallsiteInfo {
-    const ClassObject *clazz;
+    const char *classDescriptor;
+    Object *classLoader;
     const Method *method;
     LIR *misPredBranchOver;
 } CallsiteInfo;
@@ -196,7 +197,9 @@ typedef struct CompilationUnit {
     const JitTraceDescription *traceDesc;
     LIR *firstLIRInsn;
     LIR *lastLIRInsn;
-    LIR *wordList;
+    LIR *literalList;                   // Constants
+    LIR *classPointerList;              // Relocatable
+    int numClassPointers;
     LIR *chainCellOffsetLIR;
     GrowableList pcReconstructionList;
     int headerSize;                     // bytes before the first code ptr
@@ -208,6 +211,7 @@ typedef struct CompilationUnit {
     void *baseAddr;
     bool printMe;
     bool allSingleStep;
+    bool hasClassLiterals;              // Contains class ptrs used as literals
     bool hasLoop;                       // Contains a loop
     bool hasInvoke;                     // Contains an invoke instruction
     bool heapMemOp;                     // Mark mem ops for self verification

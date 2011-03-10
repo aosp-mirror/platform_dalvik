@@ -395,7 +395,14 @@ void dvmCompilerCodegenDump(CompilationUnit *cUnit)
     for (lirInsn = cUnit->firstLIRInsn; lirInsn; lirInsn = lirInsn->next) {
         dvmDumpLIRInsn(lirInsn, (unsigned char *) cUnit->baseAddr);
     }
-    for (lirInsn = cUnit->wordList; lirInsn; lirInsn = lirInsn->next) {
+    for (lirInsn = cUnit->classPointerList; lirInsn; lirInsn = lirInsn->next) {
+        armLIR = (ArmLIR *) lirInsn;
+        LOGD("%p (%04x): .class (%s)\n",
+             (char*)cUnit->baseAddr + armLIR->generic.offset,
+             armLIR->generic.offset,
+             ((CallsiteInfo *) armLIR->operands[0])->classDescriptor);
+    }
+    for (lirInsn = cUnit->literalList; lirInsn; lirInsn = lirInsn->next) {
         armLIR = (ArmLIR *) lirInsn;
         LOGD("%p (%04x): .word (0x%x)\n",
              (char*)cUnit->baseAddr + armLIR->generic.offset,

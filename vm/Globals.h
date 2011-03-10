@@ -800,6 +800,7 @@ struct DvmJitGlobals {
     bool               blockingMode;
     bool               methodTraceSupport;
     bool               genSuspendPoll;
+    Thread*            compilerThread;
     pthread_t          compilerHandle;
     pthread_mutex_t    compilerLock;
     pthread_mutex_t    compilerICPatchLock;
@@ -817,6 +818,17 @@ struct DvmJitGlobals {
 
     /* Compiled code cache */
     void* codeCache;
+
+    /*
+     * This is used to store the base address of an in-flight compilation whose
+     * class object pointers have been calculated to populate literal pool.
+     * Once the compiler thread has changed its status to VM_WAIT, we cannot
+     * guarantee whether GC has happened before the code address has been
+     * installed to the JIT table. Because of that, this field can only
+     * been cleared/overwritten by the compiler thread if it is in the
+     * THREAD_RUNNING state or in a safe point.
+     */
+    void *inflightBaseAddr;
 
     /* Translation cache version (protected by compilerLock */
     int cacheVersion;
@@ -918,8 +930,12 @@ struct DvmJitGlobals {
     int                icPatchQueued;
     int                icPatchRejected;
     int                icPatchDropped;
-    u8                 jitTime;
     int                codeCachePatches;
+    int                numCompilerThreadBlockGC;
+    u8                 jitTime;
+    u8                 compilerThreadBlockGCStart;
+    u8                 compilerThreadBlockGCTime;
+    u8                 maxCompilerThreadBlockGCTime;
 #endif
 
     /* Place arrays at the end to ease the display in gdb sessions */

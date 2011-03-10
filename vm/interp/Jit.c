@@ -513,6 +513,13 @@ void dvmJitStats()
         LOGD("JIT: Avg unit compilation time: %llu us",
              gDvmJit.numCompilations == 0 ? 0 :
              gDvmJit.jitTime / gDvmJit.numCompilations);
+        LOGD("JIT: Potential GC blocked by compiler: max %llu us / "
+             "avg %llu us (%d)",
+             gDvmJit.maxCompilerThreadBlockGCTime,
+             gDvmJit.numCompilerThreadBlockGC == 0 ?
+                 0 : gDvmJit.compilerThreadBlockGCTime /
+                     gDvmJit.numCompilerThreadBlockGC,
+             gDvmJit.numCompilerThreadBlockGC);
 #endif
 
         LOGD("JIT: %d Translation chains, %d interp stubs",
@@ -645,9 +652,18 @@ static void insertClassMethodInfo(Thread* self,
                                   const DecodedInstruction* insn)
 {
     int currTraceRun = ++self->currTraceRun;
-    self->trace[currTraceRun].meta = (void *) thisClass;
+    self->trace[currTraceRun].info.meta = thisClass ?
+                                    (void *) thisClass->descriptor : NULL;
+    self->trace[currTraceRun].isCode = false;
+
     currTraceRun = ++self->currTraceRun;
-    self->trace[currTraceRun].meta = (void *) calleeMethod;
+    self->trace[currTraceRun].info.meta = thisClass ?
+                                    (void *) thisClass->classLoader : NULL;
+    self->trace[currTraceRun].isCode = false;
+
+    currTraceRun = ++self->currTraceRun;
+    self->trace[currTraceRun].info.meta = (void *) calleeMethod;
+    self->trace[currTraceRun].isCode = false;
 }
 
 /*
@@ -677,11 +693,11 @@ static void insertMoveResult(const u2 *lastPC, int len, int offset,
     /* We need to start a new trace run */
     int currTraceRun = ++self->currTraceRun;
     self->currRunHead = moveResultPC;
-    self->trace[currTraceRun].frag.startOffset = offset + len;
-    self->trace[currTraceRun].frag.numInsts = 1;
-    self->trace[currTraceRun].frag.runEnd = false;
-    self->trace[currTraceRun].frag.hint = kJitHintNone;
-    self->trace[currTraceRun].frag.isCode = true;
+    self->trace[currTraceRun].info.frag.startOffset = offset + len;
+    self->trace[currTraceRun].info.frag.numInsts = 1;
+    self->trace[currTraceRun].info.frag.runEnd = false;
+    self->trace[currTraceRun].info.frag.hint = kJitHintNone;
+    self->trace[currTraceRun].isCode = true;
     self->totalTraceLen++;
 
     self->currRunLen = dexGetWidthFromInstruction(moveResultPC);
@@ -760,13 +776,13 @@ int dvmCheckJit(const u2* pc, Thread* self, const ClassObject* thisClass,
                 currTraceRun = ++self->currTraceRun;
                 self->currRunLen = 0;
                 self->currRunHead = (u2*)lastPC;
-                self->trace[currTraceRun].frag.startOffset = offset;
-                self->trace[currTraceRun].frag.numInsts = 0;
-                self->trace[currTraceRun].frag.runEnd = false;
-                self->trace[currTraceRun].frag.hint = kJitHintNone;
-                self->trace[currTraceRun].frag.isCode = true;
+                self->trace[currTraceRun].info.frag.startOffset = offset;
+                self->trace[currTraceRun].info.frag.numInsts = 0;
+                self->trace[currTraceRun].info.frag.runEnd = false;
+                self->trace[currTraceRun].info.frag.hint = kJitHintNone;
+                self->trace[currTraceRun].isCode = true;
             }
-            self->trace[self->currTraceRun].frag.numInsts++;
+            self->trace[self->currTraceRun].info.frag.numInsts++;
             self->totalTraceLen++;
             self->currRunLen += len;
 
@@ -849,16 +865,16 @@ int dvmCheckJit(const u2* pc, Thread* self, const ClassObject* thisClass,
                 int lastTraceDesc = self->currTraceRun;
 
                 /* Extend a new empty desc if the last slot is meta info */
-                if (!self->trace[lastTraceDesc].frag.isCode) {
+                if (!self->trace[lastTraceDesc].isCode) {
                     lastTraceDesc = ++self->currTraceRun;
-                    self->trace[lastTraceDesc].frag.startOffset = 0;
-                    self->trace[lastTraceDesc].frag.numInsts = 0;
-                    self->trace[lastTraceDesc].frag.hint = kJitHintNone;
-                    self->trace[lastTraceDesc].frag.isCode = true;
+                    self->trace[lastTraceDesc].info.frag.startOffset = 0;
+                    self->trace[lastTraceDesc].info.frag.numInsts = 0;
+                    self->trace[lastTraceDesc].info.frag.hint = kJitHintNone;
+                    self->trace[lastTraceDesc].isCode = true;
                 }
 
                 /* Mark the end of the trace runs */
-                self->trace[lastTraceDesc].frag.runEnd = true;
+                self->trace[lastTraceDesc].info.frag.runEnd = true;
 
                 JitTraceDescription* desc =
                    (JitTraceDescription*)malloc(sizeof(JitTraceDescription) +
@@ -1206,12 +1222,12 @@ bool dvmJitCheckTraceRequest(Thread* self)
                 self->totalTraceLen = 0;
                 self->currRunHead = self->interpSave.pc;
                 self->currRunLen = 0;
-                self->trace[0].frag.startOffset =
+                self->trace[0].info.frag.startOffset =
                      self->interpSave.pc - self->interpSave.method->insns;
-                self->trace[0].frag.numInsts = 0;
-                self->trace[0].frag.runEnd = false;
-                self->trace[0].frag.hint = kJitHintNone;
-                self->trace[0].frag.isCode = true;
+                self->trace[0].info.frag.numInsts = 0;
+                self->trace[0].info.frag.runEnd = false;
+                self->trace[0].info.frag.hint = kJitHintNone;
+                self->trace[0].isCode = true;
                 self->lastPC = 0;
                 break;
             /*

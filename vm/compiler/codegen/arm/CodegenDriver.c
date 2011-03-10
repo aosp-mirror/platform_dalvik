@@ -1285,7 +1285,7 @@ static void genInvokeVirtualWholeMethod(CompilationUnit *cUnit,
     CallsiteInfo *callsiteInfo = mir->meta.callsiteInfo;
     dvmCompilerLockAllTemps(cUnit);
 
-    loadConstant(cUnit, r1, (int) callsiteInfo->clazz);
+    loadClassPointer(cUnit, r1, (int) callsiteInfo);
 
     loadWordDisp(cUnit, r0, offsetof(Object, clazz), r2);
     /* Branch to the slow path if classes are not equal */
@@ -3741,7 +3741,7 @@ static void handleNormalChainingCell(CompilationUnit *cUnit,
             offsetof(Thread,
                      jitToInterpEntries.dvmJitToInterpNormal) >> 2);
     newLIR1(cUnit, kThumbBlxR, r0);
-    addWordData(cUnit, (int) (cUnit->method->insns + offset), true);
+    addWordData(cUnit, NULL, (int) (cUnit->method->insns + offset));
 }
 
 /*
@@ -3760,7 +3760,7 @@ static void handleHotChainingCell(CompilationUnit *cUnit,
             offsetof(Thread,
                      jitToInterpEntries.dvmJitToInterpTraceSelect) >> 2);
     newLIR1(cUnit, kThumbBlxR, r0);
-    addWordData(cUnit, (int) (cUnit->method->insns + offset), true);
+    addWordData(cUnit, NULL, (int) (cUnit->method->insns + offset));
 }
 
 /* Chaining cell for branches that branch back into the same basic block */
@@ -3781,7 +3781,7 @@ static void handleBackwardBranchChainingCell(CompilationUnit *cUnit,
         offsetof(Thread, jitToInterpEntries.dvmJitToInterpNormal) >> 2);
 #endif
     newLIR1(cUnit, kThumbBlxR, r0);
-    addWordData(cUnit, (int) (cUnit->method->insns + offset), true);
+    addWordData(cUnit, NULL, (int) (cUnit->method->insns + offset));
 }
 
 /* Chaining cell for monomorphic method invocations. */
@@ -3797,7 +3797,7 @@ static void handleInvokeSingletonChainingCell(CompilationUnit *cUnit,
             offsetof(Thread,
                      jitToInterpEntries.dvmJitToInterpTraceSelect) >> 2);
     newLIR1(cUnit, kThumbBlxR, r0);
-    addWordData(cUnit, (int) (callee->insns), true);
+    addWordData(cUnit, NULL, (int) (callee->insns));
 }
 
 /* Chaining cell for monomorphic method invocations. */
@@ -3805,16 +3805,16 @@ static void handleInvokePredictedChainingCell(CompilationUnit *cUnit)
 {
 
     /* Should not be executed in the initial state */
-    addWordData(cUnit, PREDICTED_CHAIN_BX_PAIR_INIT, true);
+    addWordData(cUnit, NULL, PREDICTED_CHAIN_BX_PAIR_INIT);
     /* To be filled: class */
-    addWordData(cUnit, PREDICTED_CHAIN_CLAZZ_INIT, true);
+    addWordData(cUnit, NULL, PREDICTED_CHAIN_CLAZZ_INIT);
     /* To be filled: method */
-    addWordData(cUnit, PREDICTED_CHAIN_METHOD_INIT, true);
+    addWordData(cUnit, NULL, PREDICTED_CHAIN_METHOD_INIT);
     /*
      * Rechain count. The initial value of 0 here will trigger chaining upon
      * the first invocation of this callsite.
      */
-    addWordData(cUnit, PREDICTED_CHAIN_COUNTER_INIT, true);
+    addWordData(cUnit, NULL, PREDICTED_CHAIN_COUNTER_INIT);
 }
 
 /* Load the Dalvik PC into r0 and jump to the specified target */
@@ -4042,7 +4042,7 @@ static void genValidationForPredictedInline(CompilationUnit *cUnit, MIR *mir)
 
     rlThis = loadValue(cUnit, rlThis, kCoreReg);
     int regPredictedClass = dvmCompilerAllocTemp(cUnit);
-    loadConstant(cUnit, regPredictedClass, (int) callsiteInfo->clazz);
+    loadClassPointer(cUnit, regPredictedClass, (int) callsiteInfo);
     genNullCheck(cUnit, rlThis.sRegLow, rlThis.lowReg, mir->offset,
                  NULL);/* null object? */
     int regActualClass = dvmCompilerAllocTemp(cUnit);

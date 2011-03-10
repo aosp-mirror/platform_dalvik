@@ -73,6 +73,14 @@ void* dvmSelfVerificationRestoreState(const u2* pc, u4* fp,
 #endif
 
 /*
+ * Offsets for metadata in the trace run array from the trace that ends with
+ * invoke instructions.
+ */
+#define JIT_TRACE_CLASS_DESC    1
+#define JIT_TRACE_CLASS_LOADER  2
+#define JIT_TRACE_CUR_METHOD    3
+
+/*
  * JitTable hash function.
  */
 

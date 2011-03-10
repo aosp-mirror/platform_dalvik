@@ -69,9 +69,9 @@ static ArmLIR *loadConstantNoClobber(CompilationUnit *cUnit, int rDest,
         return res;
     }
     /* No shortcut - go ahead and use literal pool */
-    ArmLIR *dataTarget = scanLiteralPool(cUnit, value, 255);
+    ArmLIR *dataTarget = scanLiteralPool(cUnit->literalList, value, 255);
     if (dataTarget == NULL) {
-        dataTarget = addWordData(cUnit, value, false);
+        dataTarget = addWordData(cUnit, &cUnit->literalList, value);
     }
     ArmLIR *loadPcRel = (ArmLIR *) dvmCompilerNew(sizeof(ArmLIR), true);
     loadPcRel->opcode = kThumbLdrPcRel;

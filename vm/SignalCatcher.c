@@ -215,6 +215,14 @@ static void handleSigUsr1(void)
 }
 
 #if defined(WITH_JIT) && defined(WITH_JIT_TUNING)
+/* Sample callback function for dvmJitScanAllClassPointers */
+void printAllClass(void *ptr)
+{
+    ClassObject **classPP = (ClassObject **) ptr;
+    LOGE("class %s", (*classPP)->descriptor);
+
+}
+
 /*
  * Respond to a SIGUSR2 by dumping some JIT stats and possibly resetting
  * the code cache.
@@ -223,6 +231,8 @@ static void handleSigUsr2(void)
 {
     static int codeCacheResetCount = 0;
     if ((--codeCacheResetCount & 7) == 0) {
+        /* Dump all class pointers in the traces */
+        dvmJitScanAllClassPointers(printAllClass);
         gDvmJit.codeCacheFull = true;
     } else {
         dvmCompilerDumpStats();
