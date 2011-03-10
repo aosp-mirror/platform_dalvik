@@ -624,3 +624,41 @@ bool dvmFindRequiredClassesAndMembers(void) {
 
     return ok;
 }
+
+/* (documented in header) */
+bool dvmFindReferenceMembers(ClassObject* classReference) {
+    if (gDvm.methJavaLangRefReference_enqueueInternal != NULL) {
+        LOGE("Attempt to set up class Reference more than once\n");
+        return false;
+    }
+
+    if (strcmp(classReference->descriptor, "Ljava/lang/ref/Reference;") != 0) {
+        LOGE("Attempt to set up the wrong class as Reference\n");
+        return false;
+    }
+
+    bool ok = true;
+
+    gDvm.offJavaLangRefReference_referent =
+        dvmFindFieldOffset(classReference, "referent", "Ljava/lang/Object;");
+    ok &= (gDvm.offJavaLangRefReference_referent >= 0);
+
+    gDvm.offJavaLangRefReference_queue =
+        dvmFindFieldOffset(classReference, "queue", "Ljava/lang/ref/ReferenceQueue;");
+    ok &= (gDvm.offJavaLangRefReference_queue >= 0);
+
+    gDvm.offJavaLangRefReference_queueNext =
+        dvmFindFieldOffset(classReference, "queueNext", "Ljava/lang/ref/Reference;");
+    ok &= (gDvm.offJavaLangRefReference_queueNext >= 0);
+
+    gDvm.offJavaLangRefReference_pendingNext =
+        dvmFindFieldOffset(classReference, "pendingNext", "Ljava/lang/ref/Reference;");
+    ok &= (gDvm.offJavaLangRefReference_pendingNext >= 0);
+
+    /* enqueueInternal() is private and thus a direct method. */
+    Method *meth = dvmFindDirectMethodByDescriptor(classReference, "enqueueInternal", "()Z");
+    ok &= (meth != NULL);
+    gDvm.methJavaLangRefReference_enqueueInternal = meth;
+
+    return ok;
+}

@@ -51,6 +51,14 @@ int dvmPrepForDexOpt(const char* bootClassPath, DexOptimizerMode dexOptMode,
 bool dvmFindRequiredClassesAndMembers(void);
 
 /*
+ * Look up required members of the class Reference, and set the global
+ * reference to Reference itself too. This needs to be done separately
+ * from dvmFindRequiredClassesAndMembers(), during the course of
+ * linking the class Reference (which is done specially).
+ */
+bool dvmFindReferenceMembers(ClassObject* classReference);
+
+/*
  * Replacement for fprintf() when we want to send a message to the console.
  * This defaults to fprintf(), but will use the JNI fprintf callback if
  * one was provided.

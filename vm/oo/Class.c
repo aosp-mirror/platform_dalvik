@@ -2281,7 +2281,6 @@ static void loadIFieldFromDex(ClassObject* clazz,
  */
 static bool precacheReferenceOffsets(ClassObject* clazz)
 {
-    Method *meth;
     int i;
 
     /* We trick the GC object scanner by not counting
@@ -2332,36 +2331,14 @@ static bool precacheReferenceOffsets(ClassObject* clazz)
         return false;
     }
 
-    /* Cache pretty much everything about Reference so that
-     * we don't need to call interpreted code when clearing/enqueueing
-     * references.  This is fragile, so we'll be paranoid.
+    /*
+     * Now that the above has been done, it is safe to cache
+     * info about the class.
      */
-    gDvm.classJavaLangRefReference = clazz;
-
-    gDvm.offJavaLangRefReference_referent =
-        dvmFindFieldOffset(gDvm.classJavaLangRefReference,
-                "referent", "Ljava/lang/Object;");
-    assert(gDvm.offJavaLangRefReference_referent >= 0);
-
-    gDvm.offJavaLangRefReference_queue =
-        dvmFindFieldOffset(gDvm.classJavaLangRefReference,
-                "queue", "Ljava/lang/ref/ReferenceQueue;");
-    assert(gDvm.offJavaLangRefReference_queue >= 0);
-
-    gDvm.offJavaLangRefReference_queueNext =
-        dvmFindFieldOffset(gDvm.classJavaLangRefReference,
-                "queueNext", "Ljava/lang/ref/Reference;");
-    assert(gDvm.offJavaLangRefReference_queueNext >= 0);
-
-    gDvm.offJavaLangRefReference_pendingNext =
-        dvmFindFieldOffset(gDvm.classJavaLangRefReference,
-                "pendingNext", "Ljava/lang/ref/Reference;");
-    assert(gDvm.offJavaLangRefReference_pendingNext >= 0);
-
-    /* enqueueInternal() is private and thus a direct method. */
-    meth = dvmFindDirectMethodByDescriptor(clazz, "enqueueInternal", "()Z");
-    assert(meth != NULL);
-    gDvm.methJavaLangRefReference_enqueueInternal = meth;
+    if (!dvmFindReferenceMembers(clazz)) {
+        LOGE("Trouble with Reference setup\n");
+        return false;
+    }
 
     return true;
 }

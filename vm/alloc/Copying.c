@@ -2136,7 +2136,6 @@ static void scavengeGlobals(void)
     scavengeReference((Object **)(void *)&gDvm.classJavaLangReflectMethodArray);
     scavengeReference((Object **)(void *)&gDvm.classJavaLangReflectProxy);
     scavengeReference((Object **)(void *)&gDvm.classJavaLangExceptionInInitializerError);
-    scavengeReference((Object **)(void *)&gDvm.classJavaLangRefReference);
     scavengeReference((Object **)(void *)&gDvm.classJavaNioReadWriteDirectByteBuffer);
     scavengeReference((Object **)(void *)&gDvm.classJavaSecurityAccessController);
     scavengeReference((Object **)(void *)&gDvm.classOrgApacheHarmonyLangAnnotationAnnotationFactory);
