@@ -399,7 +399,7 @@ struct DvmGlobals {
     int         offJavaNioBuffer_effectiveDirectAddress;
 
     /*
-     * VM-synthesized primitive classes, for arrays.
+     * VM-synthesized primitive classes, for arrays and reflection
      */
     ClassObject* volatile primitiveClass[PRIM_MAX];
 

@@ -140,67 +140,53 @@ ArrayObject* dvmAllocObjectArray(ClassObject* elemClassObj, size_t length,
  * Create a new array that holds primitive types.
  *
  * "type" is the primitive type letter, e.g. 'I' for int or 'J' for long.
- * If the array class doesn't exist, it will be created.
  */
 ArrayObject* dvmAllocPrimitiveArray(char type, size_t length, int allocFlags)
 {
     ArrayObject* newArray;
-    ClassObject** pTypeClass;
+    ClassObject* arrayClass;
     int width;
 
     switch (type) {
     case 'I':
-        pTypeClass = &gDvm.classArrayInt;
+        arrayClass = gDvm.classArrayInt;
         width = 4;
         break;
     case 'C':
-        pTypeClass = &gDvm.classArrayChar;
+        arrayClass = gDvm.classArrayChar;
         width = 2;
         break;
     case 'B':
-        pTypeClass = &gDvm.classArrayByte;
+        arrayClass = gDvm.classArrayByte;
         width = 1;
         break;
     case 'Z':
-        pTypeClass = &gDvm.classArrayBoolean;
+        arrayClass = gDvm.classArrayBoolean;
         width = 1; /* special-case this? */
         break;
     case 'F':
-        pTypeClass = &gDvm.classArrayFloat;
+        arrayClass = gDvm.classArrayFloat;
         width = 4;
         break;
     case 'D':
-        pTypeClass = &gDvm.classArrayDouble;
+        arrayClass = gDvm.classArrayDouble;
         width = 8;
         break;
     case 'S':
-        pTypeClass = &gDvm.classArrayShort;
+        arrayClass = gDvm.classArrayShort;
         width = 2;
         break;
     case 'J':
-        pTypeClass = &gDvm.classArrayLong;
+        arrayClass = gDvm.classArrayLong;
         width = 8;
         break;
     default:
-        LOGE("Unknown type '%c'\n", type);
-        assert(false);
-        return NULL;
+        LOGE("Unknown primitive type '%c'\n", type);
+        dvmAbort();
+        return NULL; // Keeps the compiler happy.
     }
 
-    if (*pTypeClass == NULL) {
-        char typeClassName[3] = "[x";
-
-        typeClassName[1] = type;
-
-        *pTypeClass = dvmFindArrayClass(typeClassName, NULL);
-        if (*pTypeClass == NULL) {
-            LOGE("ERROR: failed to generate array class for '%s'\n",
-                typeClassName);
-            return NULL;
-        }
-    }
-
-    newArray = dvmAllocArray(*pTypeClass, length, width, allocFlags);
+    newArray = dvmAllocArray(arrayClass, length, width, allocFlags);
 
     /* the caller must dvmReleaseTrackedAlloc if allocFlags==ALLOC_DEFAULT */
     return newArray;
