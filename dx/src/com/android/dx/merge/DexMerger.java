@@ -66,8 +66,6 @@ public final class DexMerger {
 
     /** minimum number of wasted bytes before it's worthwhile to compact the result */
     private int compactWasteThreshold = 1024 * 1024; // 1MiB
-    /** minimum number of wasted bytes before it's worthwhile to emit a warning. */
-    private final int warnWasteThreshold = 100 * 1024; // 100KiB
 
     public DexMerger(DexBuffer dexA, DexBuffer dexB) throws IOException {
         this(dexA, dexB, new WriterSizes(dexA, dexB));
@@ -96,45 +94,35 @@ public final class DexMerger {
         mapListOut = dexOut.appendSection(writerSizes.mapList, "map list");
 
         contentsOut.typeLists.off = dexOut.getLength();
-        contentsOut.typeLists.size = 0;
         typeListOut = dexOut.appendSection(writerSizes.typeList, "type list");
 
         contentsOut.annotationSetRefLists.off = dexOut.getLength();
-        contentsOut.annotationSetRefLists.size = 0;
         annotationSetRefListOut = dexOut.appendSection(
                 writerSizes.annotationsSetRefList, "annotation set ref list");
 
         contentsOut.annotationSets.off = dexOut.getLength();
-        contentsOut.annotationSets.size = 0;
         annotationSetOut = dexOut.appendSection(
                 writerSizes.annotationsSet, "annotation sets");
 
         contentsOut.classDatas.off = dexOut.getLength();
-        contentsOut.classDatas.size = 0;
         classDataOut = dexOut.appendSection(writerSizes.classData, "class data");
 
         contentsOut.codes.off = dexOut.getLength();
-        contentsOut.codes.size = 0;
         codeOut = dexOut.appendSection(writerSizes.code, "code");
 
         contentsOut.stringDatas.off = dexOut.getLength();
-        contentsOut.stringDatas.size = 0;
         stringDataOut = dexOut.appendSection(writerSizes.stringData, "string data");
 
         contentsOut.debugInfos.off = dexOut.getLength();
-        contentsOut.debugInfos.size = 0;
         debugInfoOut = dexOut.appendSection(writerSizes.debugInfo, "debug info");
 
         contentsOut.annotations.off = dexOut.getLength();
-        contentsOut.annotations.size = 0;
         annotationOut = dexOut.appendSection(writerSizes.annotation, "annotation");
 
         contentsOut.encodedArrays.off = dexOut.getLength();
-        contentsOut.encodedArrays.size = 0;
         encodedArrayOut = dexOut.appendSection(writerSizes.encodedArray, "encoded array");
 
         contentsOut.annotationsDirectories.off = dexOut.getLength();
-        contentsOut.annotationsDirectories.size = 0;
         annotationsDirectoryOut = dexOut.appendSection(
                 writerSizes.annotationsDirectory, "annotations directory");
 
@@ -183,14 +171,11 @@ public final class DexMerger {
         compactedSizes.minusWaste(this);
         int wastedByteCount = writerSizes.size() - compactedSizes.size();
         if (wastedByteCount >  + compactWasteThreshold) {
-            DexMerger compacter = new DexMerger(dexOut, dexOut, compactedSizes);
+            DexMerger compacter = new DexMerger(dexOut, new DexBuffer(), compactedSizes);
             result = compacter.mergeDexBuffers();
             System.out.printf("Result compacted from %.1fKiB to %.1fKiB to save %.1fKiB%n",
                     dexOut.getLength() / 1024f,
                     result.getLength() / 1024f,
-                    wastedByteCount / 1024f);
-        } else if (wastedByteCount >= warnWasteThreshold) {
-            System.out.printf("Result includes %.1fKiB of wasted space",
                     wastedByteCount / 1024f);
         }
 
@@ -226,6 +211,8 @@ public final class DexMerger {
 
             DexBuffer.Section inA = aSection.exists() ? dexA.open(aSection.off) : null;
             DexBuffer.Section inB = bSection.exists() ? dexB.open(bSection.off) : null;
+            int aOffset = -1;
+            int bOffset = -1;
             int aIndex = 0;
             int bIndex = 0;
             int outCount = 0;
@@ -233,12 +220,10 @@ public final class DexMerger {
             T b = null;
 
             while (true) {
-                int aOffset = -1;
                 if (a == null && aIndex < aSection.size) {
                     aOffset = inA.getPosition();
                     a = read(inA, aIndexMap, aIndex);
                 }
-                int bOffset = -1;
                 if (b == null && bIndex < bSection.size) {
                     bOffset = inB.getPosition();
                     b = read(inB, bIndexMap, bIndex);
@@ -261,11 +246,13 @@ public final class DexMerger {
                     toWrite = a;
                     updateIndex(aOffset, aIndexMap, aIndex++, outCount);
                     a = null;
+                    aOffset = -1;
                 }
                 if (advanceB) {
                     toWrite = b;
                     updateIndex(bOffset, bIndexMap, bIndex++, outCount);
                     b = null;
+                    bOffset = -1;
                 }
                 if (toWrite == null) {
                     break; // advanceA == false && advanceB == false
@@ -337,7 +324,7 @@ public final class DexMerger {
             }
 
             @Override void updateIndex(int offset, IndexMap indexMap, int oldIndex, int newIndex) {
-                indexMap.typeListOffsets.put(offset, typeListOut.getPosition());
+                indexMap.putTypeListOffset(offset, typeListOut.getPosition());
             }
 
             @Override void write(TypeList value) {
@@ -547,7 +534,7 @@ public final class DexMerger {
             DexBuffer in, DexBuffer.Section directoryIn, IndexMap indexMap) {
         contentsOut.annotationsDirectories.size++;
         annotationsDirectoryOut.assertFourByteAligned();
-        indexMap.annotationDirectoryOffsets.put(
+        indexMap.putAnnotationDirectoryOffset(
                 directoryIn.getPosition(), annotationsDirectoryOut.getPosition());
 
         int classAnnotationsOffset = indexMap.adjustAnnotationSet(directoryIn.readInt());
@@ -605,7 +592,7 @@ public final class DexMerger {
     private void transformAnnotationSet(DexBuffer in, IndexMap indexMap, DexBuffer.Section setIn) {
         contentsOut.annotationSets.size++;
         annotationSetOut.assertFourByteAligned();
-        indexMap.annotationSetOffsets.put(setIn.getPosition(), annotationSetOut.getPosition());
+        indexMap.putAnnotationSetOffset(setIn.getPosition(), annotationSetOut.getPosition());
 
         int size = setIn.readInt();
         annotationSetOut.writeInt(size);

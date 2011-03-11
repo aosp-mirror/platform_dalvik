@@ -36,9 +36,9 @@ public final class IndexMap {
     public final short[] protoIds;
     public final short[] fieldIds;
     public final short[] methodIds;
-    public final HashMap<Integer, Integer> typeListOffsets;
-    public final HashMap<Integer, Integer> annotationSetOffsets;
-    public final HashMap<Integer, Integer> annotationDirectoryOffsets;
+    private final HashMap<Integer, Integer> typeListOffsets;
+    private final HashMap<Integer, Integer> annotationSetOffsets;
+    private final HashMap<Integer, Integer> annotationDirectoryOffsets;
 
     public IndexMap(DexBuffer target, TableOfContents tableOfContents) {
         this.target = target;
@@ -58,6 +58,33 @@ public final class IndexMap {
         this.typeListOffsets.put(0, 0);
         this.annotationSetOffsets.put(0, 0);
         this.annotationDirectoryOffsets.put(0, 0);
+    }
+
+    private int[] createIntMap(TableOfContents.Section section) {
+        return section.exists()
+                ? new int[section.size]
+                : new int[0];
+    }
+
+    public void putTypeListOffset(int oldOffset, int newOffset) {
+        if (oldOffset <= 0 || newOffset <= 0) {
+            throw new IllegalArgumentException();
+        }
+        typeListOffsets.put(oldOffset, newOffset);
+    }
+
+    public void putAnnotationSetOffset(int oldOffset, int newOffset) {
+        if (oldOffset <= 0 || newOffset <= 0) {
+            throw new IllegalArgumentException();
+        }
+        annotationSetOffsets.put(oldOffset, newOffset);
+    }
+
+    public void putAnnotationDirectoryOffset(int oldOffset, int newOffset) {
+        if (oldOffset <= 0 || newOffset <= 0) {
+            throw new IllegalArgumentException();
+        }
+        annotationDirectoryOffsets.put(oldOffset, newOffset);
     }
 
     public int adjustString(int stringIndex) {

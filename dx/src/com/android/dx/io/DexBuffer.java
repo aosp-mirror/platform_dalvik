@@ -32,6 +32,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.AbstractList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -41,9 +42,9 @@ import java.util.NoSuchElementException;
  * are unsigned.
  */
 public final class DexBuffer {
-    private byte[] data;
+    private byte[] data = new byte[0];
+    private int length = 0;
     private final TableOfContents tableOfContents = new TableOfContents();
-    private int length;
 
     private final List<String> strings = new AbstractList<String>() {
         @Override public String get(int index) {
@@ -205,6 +206,9 @@ public final class DexBuffer {
     public Iterable<ClassDef> classDefs() {
         return new Iterable<ClassDef>() {
             public Iterator<ClassDef> iterator() {
+                if (!tableOfContents.classDefs.exists()) {
+                    return Collections.<ClassDef>emptySet().iterator();
+                }
                 return new Iterator<ClassDef>() {
                     private DexBuffer.Section in = open(tableOfContents.classDefs.off);
                     private int count = 0;

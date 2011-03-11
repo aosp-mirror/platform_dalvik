@@ -122,7 +122,7 @@ public final class TableOfContents {
             int size = in.readInt();
             int offset = in.readInt();
 
-            if ((section.size != -1 && section.size != size)
+            if ((section.size != 0 && section.size != size)
                     || (section.off != -1 && section.off != offset)) {
                 throw new DexException("Unexpected map value for 0x" + Integer.toHexString(type));
             }
@@ -192,14 +192,14 @@ public final class TableOfContents {
     public void writeMap(DexBuffer.Section out) throws IOException {
         int count = 0;
         for (Section section : sections) {
-            if (section.size > 0) {
+            if (section.exists()) {
                 count++;
             }
         }
 
         out.writeInt(count);
         for (Section section : sections) {
-            if (section.size > 0) {
+            if (section.exists()) {
                 out.writeShort(section.type);
                 out.writeShort((short) 0);
                 out.writeInt(section.size);
@@ -210,7 +210,7 @@ public final class TableOfContents {
 
     public static class Section implements Comparable<Section> {
         public final short type;
-        public int size = -1;
+        public int size = 0;
         public int off = -1;
         public int byteCount = 0;
 
@@ -219,7 +219,7 @@ public final class TableOfContents {
         }
 
         public boolean exists() {
-            return size != -1;
+            return size > 0;
         }
 
         public int compareTo(Section section) {
