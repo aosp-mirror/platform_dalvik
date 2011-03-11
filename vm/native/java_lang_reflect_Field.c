@@ -515,26 +515,9 @@ static void Dalvik_java_lang_reflect_Field_setField(const u4* args,
 }
 
 /*
- * Convert a reflection primitive type ordinal (inherited from the previous
- * VM's reflection classes) to our value.
- */
-static PrimitiveType convPrimType(int typeNum)
-{
-    static const PrimitiveType conv[PRIM_MAX] = {
-        PRIM_NOT, PRIM_BOOLEAN, PRIM_BYTE, PRIM_CHAR, PRIM_SHORT,
-        PRIM_INT, PRIM_FLOAT, PRIM_LONG, PRIM_DOUBLE
-    };
-    if (typeNum <= 0 || typeNum > 8)
-        return PRIM_NOT;
-    return conv[typeNum];
-}
-
-/*
  * Primitive field getters, e.g.:
  * private double getIField(Object o, Class declaringClass,
- *     Class type, int slot, boolean noAccessCheck, int type_no)
- *
- * The "type_no" is defined by the java.lang.reflect.Field class.
+ *     Class type, int slot, boolean noAccessCheck, char descriptor)
  */
 static void Dalvik_java_lang_reflect_Field_getPrimitiveField(const u4* args,
     JValue* pResult)
@@ -545,8 +528,8 @@ static void Dalvik_java_lang_reflect_Field_getPrimitiveField(const u4* args,
     ClassObject* fieldType = (ClassObject*) args[3];
     int slot = args[4];
     bool noAccessCheck = (args[5] != 0);
-    int typeNum = args[6];
-    PrimitiveType targetType = convPrimType(typeNum);
+    jchar descriptor = args[6];
+    PrimitiveType targetType = dexGetPrimitiveTypeFromDescriptorChar(descriptor);
     const Field* field;
     JValue value;
 
@@ -574,9 +557,7 @@ static void Dalvik_java_lang_reflect_Field_getPrimitiveField(const u4* args,
 /*
  * Primitive field setters, e.g.:
  * private void setIField(Object o, Class declaringClass,
- *     Class type, int slot, boolean noAccessCheck, int type_no, int value)
- *
- * The "type_no" is defined by the java.lang.reflect.Field class.
+ *     Class type, int slot, boolean noAccessCheck, char descriptor, int value)
  */
 static void Dalvik_java_lang_reflect_Field_setPrimitiveField(const u4* args,
     JValue* pResult)
@@ -587,9 +568,9 @@ static void Dalvik_java_lang_reflect_Field_setPrimitiveField(const u4* args,
     ClassObject* fieldType = (ClassObject*) args[3];
     int slot = args[4];
     bool noAccessCheck = (args[5] != 0);
-    int typeNum = args[6];
+    jchar descriptor = args[6];
     const s4* valuePtr = (s4*) &args[7];    /* 64-bit vars spill into args[8] */
-    PrimitiveType srcType = convPrimType(typeNum);
+    PrimitiveType srcType = dexGetPrimitiveTypeFromDescriptorChar(descriptor);
     Field* field;
     JValue value;
 
@@ -662,39 +643,39 @@ const DalvikNativeMethod dvm_java_lang_reflect_Field[] = {
         Dalvik_java_lang_reflect_Field_getFieldModifiers },
     { "getField",           "(Ljava/lang/Object;Ljava/lang/Class;Ljava/lang/Class;IZ)Ljava/lang/Object;",
         Dalvik_java_lang_reflect_Field_getField },
-    { "getBField",          "(Ljava/lang/Object;Ljava/lang/Class;Ljava/lang/Class;IZI)B",
+    { "getBField",          "(Ljava/lang/Object;Ljava/lang/Class;Ljava/lang/Class;IZC)B",
         Dalvik_java_lang_reflect_Field_getPrimitiveField },
-    { "getCField",          "(Ljava/lang/Object;Ljava/lang/Class;Ljava/lang/Class;IZI)C",
+    { "getCField",          "(Ljava/lang/Object;Ljava/lang/Class;Ljava/lang/Class;IZC)C",
         Dalvik_java_lang_reflect_Field_getPrimitiveField },
-    { "getDField",          "(Ljava/lang/Object;Ljava/lang/Class;Ljava/lang/Class;IZI)D",
+    { "getDField",          "(Ljava/lang/Object;Ljava/lang/Class;Ljava/lang/Class;IZC)D",
         Dalvik_java_lang_reflect_Field_getPrimitiveField },
-    { "getFField",          "(Ljava/lang/Object;Ljava/lang/Class;Ljava/lang/Class;IZI)F",
+    { "getFField",          "(Ljava/lang/Object;Ljava/lang/Class;Ljava/lang/Class;IZC)F",
         Dalvik_java_lang_reflect_Field_getPrimitiveField },
-    { "getIField",          "(Ljava/lang/Object;Ljava/lang/Class;Ljava/lang/Class;IZI)I",
+    { "getIField",          "(Ljava/lang/Object;Ljava/lang/Class;Ljava/lang/Class;IZC)I",
         Dalvik_java_lang_reflect_Field_getPrimitiveField },
-    { "getJField",          "(Ljava/lang/Object;Ljava/lang/Class;Ljava/lang/Class;IZI)J",
+    { "getJField",          "(Ljava/lang/Object;Ljava/lang/Class;Ljava/lang/Class;IZC)J",
         Dalvik_java_lang_reflect_Field_getPrimitiveField },
-    { "getSField",          "(Ljava/lang/Object;Ljava/lang/Class;Ljava/lang/Class;IZI)S",
+    { "getSField",          "(Ljava/lang/Object;Ljava/lang/Class;Ljava/lang/Class;IZC)S",
         Dalvik_java_lang_reflect_Field_getPrimitiveField },
-    { "getZField",          "(Ljava/lang/Object;Ljava/lang/Class;Ljava/lang/Class;IZI)Z",
+    { "getZField",          "(Ljava/lang/Object;Ljava/lang/Class;Ljava/lang/Class;IZC)Z",
         Dalvik_java_lang_reflect_Field_getPrimitiveField },
     { "setField",           "(Ljava/lang/Object;Ljava/lang/Class;Ljava/lang/Class;IZLjava/lang/Object;)V",
         Dalvik_java_lang_reflect_Field_setField },
-    { "setBField",          "(Ljava/lang/Object;Ljava/lang/Class;Ljava/lang/Class;IZIB)V",
+    { "setBField",          "(Ljava/lang/Object;Ljava/lang/Class;Ljava/lang/Class;IZCB)V",
         Dalvik_java_lang_reflect_Field_setPrimitiveField },
-    { "setCField",          "(Ljava/lang/Object;Ljava/lang/Class;Ljava/lang/Class;IZIC)V",
+    { "setCField",          "(Ljava/lang/Object;Ljava/lang/Class;Ljava/lang/Class;IZCC)V",
         Dalvik_java_lang_reflect_Field_setPrimitiveField },
-    { "setDField",          "(Ljava/lang/Object;Ljava/lang/Class;Ljava/lang/Class;IZID)V",
+    { "setDField",          "(Ljava/lang/Object;Ljava/lang/Class;Ljava/lang/Class;IZCD)V",
         Dalvik_java_lang_reflect_Field_setPrimitiveField },
-    { "setFField",          "(Ljava/lang/Object;Ljava/lang/Class;Ljava/lang/Class;IZIF)V",
+    { "setFField",          "(Ljava/lang/Object;Ljava/lang/Class;Ljava/lang/Class;IZCF)V",
         Dalvik_java_lang_reflect_Field_setPrimitiveField },
-    { "setIField",          "(Ljava/lang/Object;Ljava/lang/Class;Ljava/lang/Class;IZII)V",
+    { "setIField",          "(Ljava/lang/Object;Ljava/lang/Class;Ljava/lang/Class;IZCI)V",
         Dalvik_java_lang_reflect_Field_setPrimitiveField },
-    { "setJField",          "(Ljava/lang/Object;Ljava/lang/Class;Ljava/lang/Class;IZIJ)V",
+    { "setJField",          "(Ljava/lang/Object;Ljava/lang/Class;Ljava/lang/Class;IZCJ)V",
         Dalvik_java_lang_reflect_Field_setPrimitiveField },
-    { "setSField",          "(Ljava/lang/Object;Ljava/lang/Class;Ljava/lang/Class;IZIS)V",
+    { "setSField",          "(Ljava/lang/Object;Ljava/lang/Class;Ljava/lang/Class;IZCS)V",
         Dalvik_java_lang_reflect_Field_setPrimitiveField },
-    { "setZField",          "(Ljava/lang/Object;Ljava/lang/Class;Ljava/lang/Class;IZIZ)V",
+    { "setZField",          "(Ljava/lang/Object;Ljava/lang/Class;Ljava/lang/Class;IZCZ)V",
         Dalvik_java_lang_reflect_Field_setPrimitiveField },
     { "getDeclaredAnnotations", "(Ljava/lang/Class;I)[Ljava/lang/annotation/Annotation;",
         Dalvik_java_lang_reflect_Field_getDeclaredAnnotations },

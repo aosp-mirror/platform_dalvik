@@ -885,72 +885,111 @@ static PrimitiveType getBoxedType(DataObject* arg)
  *  float to double
  * Values of types byte, char, and short are "internally" widened to int.
  *
- * Returns the width in bytes of the destination primitive, or -1 if the
- * conversion is not allowed.
+ * Returns the width in 32-bit words of the destination primitive, or
+ * -1 if the conversion is not allowed.
  *
  * TODO? use JValue rather than u4 pointers
  */
 int dvmConvertPrimitiveValue(PrimitiveType srcType,
     PrimitiveType dstType, const s4* srcPtr, s4* dstPtr)
 {
-    enum {
-        OK4, OK8, ItoJ,
-        ItoD, JtoD, FtoD,
-        ItoF, JtoF,
-        bad, kMax
+    enum Conversion {
+        OK4, OK8, ItoJ, ItoD, JtoD, FtoD, ItoF, JtoF, bad
     };
-    /* [src][dst] */
-    static const int kConvMode[kMax][kMax] = {
-    /*FROM *TO: bool    char    float   double  byte    short   int     long */
-    /*bool */ { OK4,    bad,    bad,    bad,    bad,    bad,    bad,    bad  },
-    /*char */ { bad,    OK4,    ItoF,   ItoD,   bad,    bad,    OK4,    ItoJ },
-    /*float*/ { bad,    bad,    OK4,    FtoD,   bad,    bad,    bad,    bad  },
-    /*doubl*/ { bad,    bad,    bad,    OK8,    bad,    bad,    bad,    bad  },
-    /*byte */ { bad,    bad,    ItoF,   ItoD,   OK4,    OK4,    OK4,    ItoJ },
-    /*short*/ { bad,    bad,    ItoF,   ItoD,   bad,    OK4,    OK4,    ItoJ },
-    /*int  */ { bad,    bad,    ItoF,   ItoD,   bad,    bad,    OK4,    ItoJ },
-    /*long */ { bad,    bad,    JtoF,   JtoD,   bad,    bad,    bad,    OK8  },
-    };
-    int result;
 
-    assert(srcType != PRIM_NOT && dstType != PRIM_NOT &&
-           srcType != PRIM_VOID && dstType != PRIM_VOID);
-    result = kConvMode[srcType][dstType];
+    enum Conversion conv;
 
-    //LOGV("+++ convprim: src=%d dst=%d result=%d\n", srcType, dstType, result);
+    assert((srcType != PRIM_VOID) && (srcType != PRIM_NOT));
+    assert((dstType != PRIM_VOID) && (dstType != PRIM_NOT));
 
-    switch (result) {
-    case OK4:
-        *dstPtr = *srcPtr;
-        return 1;
-    case OK8:
-        *(s8*)dstPtr = *(s8*)srcPtr;
-        return 2;
-    case ItoJ:
-        *(s8*)dstPtr = (s8) (*(s4*) srcPtr);
-        return 2;
-    case ItoD:
-        *(double*)dstPtr = (double) (*(s4*) srcPtr);
-        return 2;
-    case JtoD:
-        *(double*)dstPtr = (double) (*(long long*) srcPtr);
-        return 2;
-    case FtoD:
-        *(double*)dstPtr = (double) (*(float*) srcPtr);
-        return 2;
-    case ItoF:
-        *(float*)dstPtr = (float) (*(int*) srcPtr);
-        return 1;
-    case JtoF:
-        *(float*)dstPtr = (float) (*(long long*) srcPtr);
-        return 1;
-    case bad:
-        LOGV("convert primitive: prim %d to %d not allowed\n",
-            srcType, dstType);
-        return -1;
-    default:
-        assert(false);
-        return -1;
+    switch (dstType) {
+        case PRIM_BOOLEAN:
+        case PRIM_CHAR:
+        case PRIM_BYTE: {
+            conv = (srcType == dstType) ? OK4 : bad;
+            break;
+        }
+        case PRIM_SHORT: {
+            switch (srcType) {
+                case PRIM_BYTE:
+                case PRIM_SHORT: conv = OK4; break;
+                default:         conv = bad; break;
+            }
+            break;
+        }
+        case PRIM_INT: {
+            switch (srcType) {
+                case PRIM_BYTE:
+                case PRIM_CHAR:
+                case PRIM_SHORT:
+                case PRIM_INT:   conv = OK4; break;
+                default:         conv = bad; break;
+            }
+            break;
+        }
+        case PRIM_LONG: {
+            switch (srcType) {
+                case PRIM_BYTE:
+                case PRIM_CHAR:
+                case PRIM_SHORT:
+                case PRIM_INT:   conv = ItoJ; break;
+                case PRIM_LONG:  conv = OK8;  break;
+                default:         conv = bad;  break;
+            }
+            break;
+        }
+        case PRIM_FLOAT: {
+            switch (srcType) {
+                case PRIM_BYTE:
+                case PRIM_CHAR:
+                case PRIM_SHORT:
+                case PRIM_INT:   conv = ItoF; break;
+                case PRIM_LONG:  conv = JtoF; break;
+                case PRIM_FLOAT: conv = OK4;  break;
+                default:         conv = bad;  break;
+            }
+            break;
+        }
+        case PRIM_DOUBLE: {
+            switch (srcType) {
+                case PRIM_BYTE:
+                case PRIM_CHAR:
+                case PRIM_SHORT:
+                case PRIM_INT:    conv = ItoD; break;
+                case PRIM_LONG:   conv = JtoD; break;
+                case PRIM_FLOAT:  conv = FtoD; break;
+                case PRIM_DOUBLE: conv = OK8;  break;
+                default:          conv = bad;  break;
+            }
+            break;
+        }
+        case PRIM_VOID:
+        case PRIM_NOT:
+        default: {
+            conv = bad;
+            break;
+        }
+    }
+
+    switch (conv) {
+        case OK4:  *dstPtr = *srcPtr;                                   return 1;
+        case OK8:  *(s8*) dstPtr = *(s8*)srcPtr;                        return 2;
+        case ItoJ: *(s8*) dstPtr = (s8) (*(s4*) srcPtr);                return 2;
+        case ItoD: *(double*) dstPtr = (double) (*(s4*) srcPtr);        return 2;
+        case JtoD: *(double*) dstPtr = (double) (*(long long*) srcPtr); return 2;
+        case FtoD: *(double*) dstPtr = (double) (*(float*) srcPtr);     return 2;
+        case ItoF: *(float*) dstPtr = (float) (*(int*) srcPtr);         return 1;
+        case JtoF: *(float*) dstPtr = (float) (*(long long*) srcPtr);   return 1;
+        case bad: {
+            LOGV("illegal primitive conversion: '%s' to '%s'\n",
+                    dexGetPrimitiveTypeDescriptor(srcType),
+                    dexGetPrimitiveTypeDescriptor(dstType));
+            return -1;
+        }
+        default: {
+            dvmAbort();
+            return -1; // Keep the compiler happy.
+        }
     }
 }
 
@@ -970,7 +1009,7 @@ int dvmConvertArgument(DataObject* arg, ClassObject* type, s4* destPtr)
         s4* valuePtr;
 
         srcType = getBoxedType(arg);
-        if (srcType < 0) {     // didn't pass a boxed primitive in
+        if (srcType == PRIM_NOT) {     // didn't pass a boxed primitive in
             LOGVV("conv arg: type '%s' not boxed primitive\n",
                 arg->obj.clazz->descriptor);
             return -1;
@@ -1008,16 +1047,6 @@ int dvmConvertArgument(DataObject* arg, ClassObject* type, s4* destPtr)
  */
 DataObject* dvmBoxPrimitive(JValue value, ClassObject* returnType)
 {
-    static const char* boxTypes[] = {       // order from enum PrimitiveType
-        "Ljava/lang/Boolean;",
-        "Ljava/lang/Character;",
-        "Ljava/lang/Float;",
-        "Ljava/lang/Double;",
-        "Ljava/lang/Byte;",
-        "Ljava/lang/Short;",
-        "Ljava/lang/Integer;",
-        "Ljava/lang/Long;"
-    };
     ClassObject* wrapperClass;
     DataObject* wrapperObj;
     s4* dataPtr;
@@ -1031,11 +1060,10 @@ DataObject* dvmBoxPrimitive(JValue value, ClassObject* returnType)
         return (DataObject*) value.l;
     }
 
-    assert(typeIndex >= 0 && typeIndex < PRIM_MAX);
-    if (typeIndex == PRIM_VOID)
+    classDescriptor = dexGetBoxedTypeDescriptor(typeIndex);
+    if (classDescriptor == NULL) {
         return NULL;
-
-    classDescriptor = boxTypes[typeIndex];
+    }
 
     wrapperClass = dvmFindSystemClass(classDescriptor);
     if (wrapperClass == NULL) {

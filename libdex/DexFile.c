@@ -43,6 +43,62 @@
 static const bool kVerifyChecksum = false;
 static const bool kVerifySignature = false;
 
+/* (documented in header) */
+char dexGetPrimitiveTypeDescriptorChar(PrimitiveType type) {
+    const char* string = dexGetPrimitiveTypeDescriptor(type);
+
+    return (string == NULL) ? '\0' : string[0];
+}
+
+/* (documented in header) */
+const char* dexGetPrimitiveTypeDescriptor(PrimitiveType type) {
+    switch (type) {
+        case PRIM_VOID:    return "V";
+        case PRIM_BOOLEAN: return "Z";
+        case PRIM_BYTE:    return "B";
+        case PRIM_SHORT:   return "S";
+        case PRIM_CHAR:    return "C";
+        case PRIM_INT:     return "I";
+        case PRIM_LONG:    return "J";
+        case PRIM_FLOAT:   return "F";
+        case PRIM_DOUBLE:  return "D";
+        default:           return NULL;
+    }
+
+    return NULL;
+}
+
+const char* dexGetBoxedTypeDescriptor(PrimitiveType type) {
+    switch (type) {
+        case PRIM_VOID:    return NULL;
+        case PRIM_BOOLEAN: return "Ljava/lang/Boolean;";
+        case PRIM_BYTE:    return "Ljava/lang/Byte;";
+        case PRIM_SHORT:   return "Ljava/lang/Short;";
+        case PRIM_CHAR:    return "Ljava/lang/Character;";
+        case PRIM_INT:     return "Ljava/lang/Integer;";
+        case PRIM_LONG:    return "Ljava/lang/Long;";
+        case PRIM_FLOAT:   return "Ljava/lang/Float;";
+        case PRIM_DOUBLE:  return "Ljava/lang/Double;";
+        default:           return NULL;
+    }
+}
+
+/* (documented in header) */
+PrimitiveType dexGetPrimitiveTypeFromDescriptorChar(char descriptorChar) {
+    switch (descriptorChar) {
+        case 'V': return PRIM_VOID;
+        case 'Z': return PRIM_BOOLEAN;
+        case 'B': return PRIM_BYTE;
+        case 'S': return PRIM_SHORT;
+        case 'C': return PRIM_CHAR;
+        case 'I': return PRIM_INT;
+        case 'J': return PRIM_LONG;
+        case 'F': return PRIM_FLOAT;
+        case 'D': return PRIM_DOUBLE;
+        default:  return PRIM_NOT;
+    }
+}
+
 /* Return the UTF-8 encoded string with the specified string_id index,
  * also filling in the UTF-16 size (number of 16-bit code points).*/
 const char* dexStringAndSizeById(const DexFile* pDexFile, u4 idx,

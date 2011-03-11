@@ -306,6 +306,17 @@ struct DvmGlobals {
     ClassObject* exVerifyError;
     ClassObject* exVirtualMachineError;
 
+    /* synthetic classes representing primitive types */
+    ClassObject* typeVoid;
+    ClassObject* typeBoolean;
+    ClassObject* typeByte;
+    ClassObject* typeShort;
+    ClassObject* typeChar;
+    ClassObject* typeInt;
+    ClassObject* typeLong;
+    ClassObject* typeFloat;
+    ClassObject* typeDouble;
+
     /* synthetic classes for arrays of primitives */
     ClassObject* classArrayBoolean;
     ClassObject* classArrayChar;
@@ -397,11 +408,6 @@ struct DvmGlobals {
     Method*     methJavaNioReadWriteDirectByteBuffer_init;
     int         offJavaNioBuffer_capacity;
     int         offJavaNioBuffer_effectiveDirectAddress;
-
-    /*
-     * VM-synthesized primitive classes, for arrays and reflection
-     */
-    ClassObject* volatile primitiveClass[PRIM_MAX];
 
     /*
      * Thread list.  This always has at least one element in it (main),

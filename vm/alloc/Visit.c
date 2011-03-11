@@ -51,21 +51,6 @@ static void visitHashTable(RootVisitor *visitor, HashTable *table,
 }
 
 /*
- * Applies a verification function to all elements in the array.
- */
-static void visitArray(RootVisitor *visitor, Object **array, size_t length,
-                       RootType type, void *arg)
-{
-    size_t i;
-
-    assert(visitor != NULL);
-    assert(array != NULL);
-    for (i = 0; i < length; ++i) {
-        (*visitor)(&array[i], 0, type, arg);
-    }
-}
-
-/*
  * Visits all entries in the reference table.
  */
 static void visitReferenceTable(RootVisitor *visitor, ReferenceTable *table,
@@ -232,6 +217,19 @@ static void visitThreads(RootVisitor *visitor, void *arg)
     dvmUnlockThreadList();
 }
 
+static void visitPrimitiveTypes(RootVisitor *visitor, void *arg)
+{
+    (*visitor)(&gDvm.typeVoid,    0, ROOT_STICKY_CLASS, arg);
+    (*visitor)(&gDvm.typeBoolean, 0, ROOT_STICKY_CLASS, arg);
+    (*visitor)(&gDvm.typeByte,    0, ROOT_STICKY_CLASS, arg);
+    (*visitor)(&gDvm.typeShort,   0, ROOT_STICKY_CLASS, arg);
+    (*visitor)(&gDvm.typeChar,    0, ROOT_STICKY_CLASS, arg);
+    (*visitor)(&gDvm.typeInt,     0, ROOT_STICKY_CLASS, arg);
+    (*visitor)(&gDvm.typeLong,    0, ROOT_STICKY_CLASS, arg);
+    (*visitor)(&gDvm.typeFloat,   0, ROOT_STICKY_CLASS, arg);
+    (*visitor)(&gDvm.typeDouble,  0, ROOT_STICKY_CLASS, arg);
+}
+
 /*
  * Visits roots.  TODO: visit cached global references.
  */
@@ -239,7 +237,7 @@ void dvmVisitRoots(RootVisitor *visitor, void *arg)
 {
     assert(visitor != NULL);
     visitHashTable(visitor, gDvm.loadedClasses, ROOT_STICKY_CLASS, arg);
-    visitArray(visitor, (Object **)gDvm.primitiveClass, NELEM(gDvm.primitiveClass), ROOT_STICKY_CLASS, arg);
+    visitPrimitiveTypes(visitor, arg);
     if (gDvm.dbgRegistry != NULL) {
         visitHashTable(visitor, gDvm.dbgRegistry, ROOT_DEBUGGER, arg);
     }
