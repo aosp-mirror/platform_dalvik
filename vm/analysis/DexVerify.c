@@ -1435,7 +1435,7 @@ static bool verifyInstructions(VerifierData* vdata)
         case OP_UNUSED_EFFF:
         case OP_UNUSED_F0FF:
         case OP_UNUSED_F1FF:
-            LOGE("VFY: unexpected opcode %02x\n", decInsn.opcode);
+            LOGE("VFY: unexpected opcode %04x\n", decInsn.opcode);
             okay = false;
             break;
 

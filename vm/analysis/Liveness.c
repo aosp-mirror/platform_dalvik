@@ -359,9 +359,7 @@ static bool processInstruction(VerifierData* vdata, u4 insnIdx,
     case OP_IF_GTZ:
     case OP_IF_LEZ:
     case OP_SPUT:
-    case OP_SPUT_VOLATILE:
     case OP_SPUT_JUMBO:
-    case OP_SPUT_VOLATILE_JUMBO:
     case OP_SPUT_BOOLEAN:
     case OP_SPUT_BOOLEAN_JUMBO:
     case OP_SPUT_BYTE:
@@ -371,18 +369,14 @@ static bool processInstruction(VerifierData* vdata, u4 insnIdx,
     case OP_SPUT_SHORT:
     case OP_SPUT_SHORT_JUMBO:
     case OP_SPUT_OBJECT:
-    case OP_SPUT_OBJECT_VOLATILE:
     case OP_SPUT_OBJECT_JUMBO:
-    case OP_SPUT_OBJECT_VOLATILE_JUMBO:
         /* action <- vA */
         GEN(workBits, decInsn.vA);
         break;
 
     case OP_RETURN_WIDE:
     case OP_SPUT_WIDE:
-    case OP_SPUT_WIDE_VOLATILE:
     case OP_SPUT_WIDE_JUMBO:
-    case OP_SPUT_WIDE_VOLATILE_JUMBO:
         /* action <- vA(wide) */
         GENW(workBits, decInsn.vA);
         break;
@@ -394,9 +388,7 @@ static bool processInstruction(VerifierData* vdata, u4 insnIdx,
     case OP_IF_GT:
     case OP_IF_LE:
     case OP_IPUT:
-    case OP_IPUT_VOLATILE:
     case OP_IPUT_JUMBO:
-    case OP_IPUT_VOLATILE_JUMBO:
     case OP_IPUT_BOOLEAN:
     case OP_IPUT_BOOLEAN_JUMBO:
     case OP_IPUT_BYTE:
@@ -406,18 +398,14 @@ static bool processInstruction(VerifierData* vdata, u4 insnIdx,
     case OP_IPUT_SHORT:
     case OP_IPUT_SHORT_JUMBO:
     case OP_IPUT_OBJECT:
-    case OP_IPUT_OBJECT_VOLATILE:
     case OP_IPUT_OBJECT_JUMBO:
-    case OP_IPUT_OBJECT_VOLATILE_JUMBO:
         /* action <- vA, vB */
         GEN(workBits, decInsn.vA);
         GEN(workBits, decInsn.vB);
         break;
 
     case OP_IPUT_WIDE:
-    case OP_IPUT_WIDE_VOLATILE:
     case OP_IPUT_WIDE_JUMBO:
-    case OP_IPUT_WIDE_VOLATILE_JUMBO:
         /* action <- vA(wide), vB */
         GENW(workBits, decInsn.vA);
         GEN(workBits, decInsn.vB);
@@ -493,9 +481,7 @@ static bool processInstruction(VerifierData* vdata, u4 insnIdx,
     case OP_NEW_INSTANCE:
     case OP_NEW_INSTANCE_JUMBO:
     case OP_SGET:
-    case OP_SGET_VOLATILE:
     case OP_SGET_JUMBO:
-    case OP_SGET_VOLATILE_JUMBO:
     case OP_SGET_BOOLEAN:
     case OP_SGET_BOOLEAN_JUMBO:
     case OP_SGET_BYTE:
@@ -505,9 +491,7 @@ static bool processInstruction(VerifierData* vdata, u4 insnIdx,
     case OP_SGET_SHORT:
     case OP_SGET_SHORT_JUMBO:
     case OP_SGET_OBJECT:
-    case OP_SGET_OBJECT_VOLATILE:
     case OP_SGET_OBJECT_JUMBO:
-    case OP_SGET_OBJECT_VOLATILE_JUMBO:
         /* vA <- value */
         KILL(workBits, decInsn.vA);
         break;
@@ -517,9 +501,7 @@ static bool processInstruction(VerifierData* vdata, u4 insnIdx,
     case OP_CONST_WIDE:
     case OP_CONST_WIDE_HIGH16:
     case OP_SGET_WIDE:
-    case OP_SGET_WIDE_VOLATILE:
     case OP_SGET_WIDE_JUMBO:
-    case OP_SGET_WIDE_VOLATILE_JUMBO:
         /* vA(wide) <- value */
         KILLW(workBits, decInsn.vA);
         break;
@@ -536,9 +518,7 @@ static bool processInstruction(VerifierData* vdata, u4 insnIdx,
     case OP_NEW_ARRAY:
     case OP_NEW_ARRAY_JUMBO:
     case OP_IGET:
-    case OP_IGET_VOLATILE:
     case OP_IGET_JUMBO:
-    case OP_IGET_VOLATILE_JUMBO:
     case OP_IGET_BOOLEAN:
     case OP_IGET_BOOLEAN_JUMBO:
     case OP_IGET_BYTE:
@@ -548,9 +528,7 @@ static bool processInstruction(VerifierData* vdata, u4 insnIdx,
     case OP_IGET_SHORT:
     case OP_IGET_SHORT_JUMBO:
     case OP_IGET_OBJECT:
-    case OP_IGET_OBJECT_VOLATILE:
     case OP_IGET_OBJECT_JUMBO:
-    case OP_IGET_OBJECT_VOLATILE_JUMBO:
     case OP_NEG_INT:
     case OP_NOT_INT:
     case OP_NEG_FLOAT:
@@ -584,9 +562,7 @@ static bool processInstruction(VerifierData* vdata, u4 insnIdx,
         break;
 
     case OP_IGET_WIDE:
-    case OP_IGET_WIDE_VOLATILE:
     case OP_IGET_WIDE_JUMBO:
-    case OP_IGET_WIDE_VOLATILE_JUMBO:
     case OP_INT_TO_LONG:
     case OP_INT_TO_DOUBLE:
     case OP_FLOAT_TO_LONG:
@@ -751,8 +727,6 @@ static bool processInstruction(VerifierData* vdata, u4 insnIdx,
     /* quickened instructions, not expected to appear */
     case OP_EXECUTE_INLINE:
     case OP_EXECUTE_INLINE_RANGE:
-    case OP_INVOKE_OBJECT_INIT_RANGE:
-    case OP_INVOKE_OBJECT_INIT_JUMBO:
     case OP_IGET_QUICK:
     case OP_IGET_WIDE_QUICK:
     case OP_IGET_OBJECT_QUICK:
@@ -763,8 +737,37 @@ static bool processInstruction(VerifierData* vdata, u4 insnIdx,
     case OP_INVOKE_VIRTUAL_QUICK_RANGE:
     case OP_INVOKE_SUPER_QUICK:
     case OP_INVOKE_SUPER_QUICK_RANGE:
+        /* fall through to failure */
+
+    /* correctness fixes, not expected to appear */
+    case OP_INVOKE_OBJECT_INIT_RANGE:
+    case OP_INVOKE_OBJECT_INIT_JUMBO:
     case OP_RETURN_VOID_BARRIER:
-        return false;
+    case OP_SPUT_VOLATILE:
+    case OP_SPUT_VOLATILE_JUMBO:
+    case OP_SPUT_OBJECT_VOLATILE:
+    case OP_SPUT_OBJECT_VOLATILE_JUMBO:
+    case OP_SPUT_WIDE_VOLATILE:
+    case OP_SPUT_WIDE_VOLATILE_JUMBO:
+    case OP_IPUT_VOLATILE:
+    case OP_IPUT_VOLATILE_JUMBO:
+    case OP_IPUT_OBJECT_VOLATILE:
+    case OP_IPUT_OBJECT_VOLATILE_JUMBO:
+    case OP_IPUT_WIDE_VOLATILE:
+    case OP_IPUT_WIDE_VOLATILE_JUMBO:
+    case OP_SGET_VOLATILE:
+    case OP_SGET_VOLATILE_JUMBO:
+    case OP_SGET_OBJECT_VOLATILE:
+    case OP_SGET_OBJECT_VOLATILE_JUMBO:
+    case OP_SGET_WIDE_VOLATILE:
+    case OP_SGET_WIDE_VOLATILE_JUMBO:
+    case OP_IGET_VOLATILE:
+    case OP_IGET_VOLATILE_JUMBO:
+    case OP_IGET_OBJECT_VOLATILE:
+    case OP_IGET_OBJECT_VOLATILE_JUMBO:
+    case OP_IGET_WIDE_VOLATILE:
+    case OP_IGET_WIDE_VOLATILE_JUMBO:
+        /* fall through to failure */
 
     /* these should never appear during verification */
     case OP_UNUSED_3E:

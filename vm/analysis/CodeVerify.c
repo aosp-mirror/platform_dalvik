@@ -4742,9 +4742,7 @@ aput_1nr_common:
         break;
 
     case OP_IGET:
-    case OP_IGET_VOLATILE:
     case OP_IGET_JUMBO:
-    case OP_IGET_VOLATILE_JUMBO:
         tmpType = kRegTypeInteger;
         goto iget_1nr_common;
     case OP_IGET_BOOLEAN:
@@ -4790,9 +4788,7 @@ iget_1nr_common:
         }
         break;
     case OP_IGET_WIDE:
-    case OP_IGET_WIDE_VOLATILE:
     case OP_IGET_WIDE_JUMBO:
-    case OP_IGET_WIDE_VOLATILE_JUMBO:
         {
             RegType dstType;
             InstField* instField;
@@ -4825,9 +4821,7 @@ iget_1nr_common:
         }
         break;
     case OP_IGET_OBJECT:
-    case OP_IGET_OBJECT_VOLATILE:
     case OP_IGET_OBJECT_JUMBO:
-    case OP_IGET_OBJECT_VOLATILE_JUMBO:
         {
             ClassObject* fieldClass;
             InstField* instField;
@@ -4854,9 +4848,7 @@ iget_1nr_common:
         }
         break;
     case OP_IPUT:
-    case OP_IPUT_VOLATILE:
     case OP_IPUT_JUMBO:
-    case OP_IPUT_VOLATILE_JUMBO:
         tmpType = kRegTypeInteger;
         goto iput_1nr_common;
     case OP_IPUT_BOOLEAN:
@@ -4920,9 +4912,7 @@ iput_1nr_common:
         }
         break;
     case OP_IPUT_WIDE:
-    case OP_IPUT_WIDE_VOLATILE:
     case OP_IPUT_WIDE_JUMBO:
-    case OP_IPUT_WIDE_VOLATILE_JUMBO:
         tmpType = getRegisterType(workLine, decInsn.vA);
         {
             RegType typeHi = getRegisterType(workLine, decInsn.vA+1);
@@ -4958,9 +4948,7 @@ iput_1nr_common:
         }
         break;
     case OP_IPUT_OBJECT:
-    case OP_IPUT_OBJECT_VOLATILE:
     case OP_IPUT_OBJECT_JUMBO:
-    case OP_IPUT_OBJECT_VOLATILE_JUMBO:
         {
             ClassObject* fieldClass;
             ClassObject* valueClass;
@@ -5016,9 +5004,7 @@ iput_1nr_common:
         break;
 
     case OP_SGET:
-    case OP_SGET_VOLATILE:
     case OP_SGET_JUMBO:
-    case OP_SGET_VOLATILE_JUMBO:
         tmpType = kRegTypeInteger;
         goto sget_1nr_common;
     case OP_SGET_BOOLEAN:
@@ -5067,9 +5053,7 @@ sget_1nr_common:
         }
         break;
     case OP_SGET_WIDE:
-    case OP_SGET_WIDE_VOLATILE:
     case OP_SGET_WIDE_JUMBO:
-    case OP_SGET_WIDE_VOLATILE_JUMBO:
         {
             StaticField* staticField;
             RegType dstType;
@@ -5099,9 +5083,7 @@ sget_1nr_common:
         }
         break;
     case OP_SGET_OBJECT:
-    case OP_SGET_OBJECT_VOLATILE:
     case OP_SGET_OBJECT_JUMBO:
-    case OP_SGET_OBJECT_VOLATILE_JUMBO:
         {
             StaticField* staticField;
             ClassObject* fieldClass;
@@ -5125,9 +5107,7 @@ sget_1nr_common:
         }
         break;
     case OP_SPUT:
-    case OP_SPUT_VOLATILE:
     case OP_SPUT_JUMBO:
-    case OP_SPUT_VOLATILE_JUMBO:
         tmpType = kRegTypeInteger;
         goto sput_1nr_common;
     case OP_SPUT_BOOLEAN:
@@ -5193,9 +5173,7 @@ sput_1nr_common:
         }
         break;
     case OP_SPUT_WIDE:
-    case OP_SPUT_WIDE_VOLATILE:
     case OP_SPUT_WIDE_JUMBO:
-    case OP_SPUT_WIDE_VOLATILE_JUMBO:
         tmpType = getRegisterType(workLine, decInsn.vA);
         {
             RegType typeHi = getRegisterType(workLine, decInsn.vA+1);
@@ -5228,9 +5206,7 @@ sput_1nr_common:
         }
         break;
     case OP_SPUT_OBJECT:
-    case OP_SPUT_OBJECT_VOLATILE:
     case OP_SPUT_OBJECT_JUMBO:
-    case OP_SPUT_OBJECT_VOLATILE_JUMBO:
         {
             ClassObject* fieldClass;
             ClassObject* valueClass;
@@ -5752,8 +5728,6 @@ sput_1nr_common:
      */
     case OP_EXECUTE_INLINE:
     case OP_EXECUTE_INLINE_RANGE:
-    case OP_INVOKE_OBJECT_INIT_RANGE:
-    case OP_INVOKE_OBJECT_INIT_JUMBO:
     case OP_IGET_QUICK:
     case OP_IGET_WIDE_QUICK:
     case OP_IGET_OBJECT_QUICK:
@@ -5764,9 +5738,43 @@ sput_1nr_common:
     case OP_INVOKE_VIRTUAL_QUICK_RANGE:
     case OP_INVOKE_SUPER_QUICK:
     case OP_INVOKE_SUPER_QUICK_RANGE:
+        /* fall through to failure */
+
+    /*
+     * These instructions are equivalent (from the verifier's point of view)
+     * to the original form.  The change was made for correctness rather
+     * than improved performance (except for invoke-object-init, which
+     * provides both).  The substitution takes place after verification
+     * completes, though, so we don't expect to see them here.
+     */
+    case OP_INVOKE_OBJECT_INIT_RANGE:
+    case OP_INVOKE_OBJECT_INIT_JUMBO:
     case OP_RETURN_VOID_BARRIER:
-        failure = VERIFY_ERROR_GENERIC;
-        break;
+    case OP_IGET_VOLATILE:
+    case OP_IGET_VOLATILE_JUMBO:
+    case OP_IGET_WIDE_VOLATILE:
+    case OP_IGET_WIDE_VOLATILE_JUMBO:
+    case OP_IGET_OBJECT_VOLATILE:
+    case OP_IGET_OBJECT_VOLATILE_JUMBO:
+    case OP_IPUT_VOLATILE:
+    case OP_IPUT_VOLATILE_JUMBO:
+    case OP_IPUT_WIDE_VOLATILE:
+    case OP_IPUT_WIDE_VOLATILE_JUMBO:
+    case OP_IPUT_OBJECT_VOLATILE:
+    case OP_IPUT_OBJECT_VOLATILE_JUMBO:
+    case OP_SGET_VOLATILE:
+    case OP_SGET_VOLATILE_JUMBO:
+    case OP_SGET_WIDE_VOLATILE:
+    case OP_SGET_WIDE_VOLATILE_JUMBO:
+    case OP_SGET_OBJECT_VOLATILE:
+    case OP_SGET_OBJECT_VOLATILE_JUMBO:
+    case OP_SPUT_VOLATILE:
+    case OP_SPUT_VOLATILE_JUMBO:
+    case OP_SPUT_WIDE_VOLATILE:
+    case OP_SPUT_WIDE_VOLATILE_JUMBO:
+    case OP_SPUT_OBJECT_VOLATILE:
+    case OP_SPUT_OBJECT_VOLATILE_JUMBO:
+        /* fall through to failure */
 
     /* these should never appear during verification */
     case OP_UNUSED_3E:
