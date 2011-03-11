@@ -47,6 +47,14 @@ LOCAL_MODULE_TAGS := optional
 LOCAL_LDLIBS +=
 include $(BUILD_EXECUTABLE)
 
+include $(CLEAR_VARS)
+LOCAL_MODULE := libdexdump_static
+LOCAL_SRC_FILES := $(dexdump_src_files)
+LOCAL_C_INCLUDES := $(dexdump_c_includes)
+LOCAL_STATIC_LIBRARIES := $(dexdump_static_libraries)
+LOCAL_MODULE_TAGS := optional
+include $(BUILD_STATIC_LIBRARY)
+
 endif # !SDK_ONLY
 
 
