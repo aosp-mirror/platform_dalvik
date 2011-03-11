@@ -1,3 +1,4 @@
+%default {"volatile":"0"}
 %verify "executed"
 %verify "field already resolved"
 %verify "field not yet resolved"
@@ -20,14 +21,19 @@
     FETCH_ADVANCE_INST(4)               @ advance rPC, load rINST
     ldmia   r9, {r0-r1}                 @ r0/r1<- vBBBB/vBBBB+1
     GET_INST_OPCODE(r10)                @ extract opcode from rINST
+    .if $volatile
+    add     r2, r2, #offStaticField_value @ r2<- pointer to data
+    bl      dvmQuasiAtomicSwap64        @ stores r0/r1 into addr r2
+    .else
     strd    r0, [r2, #offStaticField_value] @ field<- vBBBB/vBBBB+1
+    .endif
     GOTO_OPCODE(r10)                    @ jump to next instruction
 %break
 
     /*
      * Continuation if the field has not yet been resolved.
-     *  r1: BBBB field ref
-     *  r9: &fp[AA]
+     *  r1: AAAAAAAA field ref
+     *  r9: &fp[BBBB]
      *
      * Returns StaticField pointer in r2.
      */

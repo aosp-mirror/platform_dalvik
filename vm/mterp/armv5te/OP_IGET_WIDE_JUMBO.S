@@ -1,3 +1,4 @@
+%default {"volatile":"0"}
 %verify "executed"
 %verify "null object"
 %verify "field already resolved"
@@ -17,7 +18,7 @@
     ldr     r0, [r2, r1, lsl #2]        @ r0<- resolved InstField ptr
     cmp     r0, #0                      @ is resolved entry null?
     bne     .L${opcode}_finish          @ no, already resolved
-8:  ldr     r2, [rSELF, #offThread_method] @ r2<- current method
+    ldr     r2, [rSELF, #offThread_method] @ r2<- current method
     EXPORT_PC()                         @ resolve() could throw
     ldr     r0, [r2, #offMethod_clazz]  @ r0<- method->clazz
     bl      dvmResolveInstField         @ r0<- resolved InstField ptr
@@ -43,7 +44,12 @@
     cmp     r9, #0                      @ check object for null
     ldr     r3, [r0, #offInstField_byteOffset]  @ r3<- byte offset of field
     beq     common_errNullObject        @ object was null
+    .if     $volatile
+    add     r0, r9, r3                  @ r0<- address of field
+    bl      dvmQuasiAtomicRead64        @ r0/r1<- contents of field
+    .else
     ldrd    r0, [r9, r3]                @ r0/r1<- obj.field (64-bit align ok)
+    .endif
     FETCH(r2, 3)                        @ r2<- BBBB
     FETCH_ADVANCE_INST(5)               @ advance rPC, load rINST
     add     r3, rFP, r2, lsl #2         @ r3<- &fp[BBBB]

@@ -1192,12 +1192,25 @@ static bool verifyInstructions(VerifierData* vdata)
         case OP_IPUT_WIDE_VOLATILE:
         case OP_SGET_WIDE_VOLATILE:
         case OP_SPUT_WIDE_VOLATILE:
+        case OP_IGET_VOLATILE_JUMBO:
+        case OP_IPUT_VOLATILE_JUMBO:
+        case OP_SGET_VOLATILE_JUMBO:
+        case OP_SPUT_VOLATILE_JUMBO:
+        case OP_IGET_OBJECT_VOLATILE_JUMBO:
+        case OP_IPUT_OBJECT_VOLATILE_JUMBO:
+        case OP_SGET_OBJECT_VOLATILE_JUMBO:
+        case OP_SPUT_OBJECT_VOLATILE_JUMBO:
+        case OP_IGET_WIDE_VOLATILE_JUMBO:
+        case OP_IPUT_WIDE_VOLATILE_JUMBO:
+        case OP_SGET_WIDE_VOLATILE_JUMBO:
+        case OP_SPUT_WIDE_VOLATILE_JUMBO:
         case OP_BREAKPOINT:
         case OP_THROW_VERIFICATION_ERROR:
         case OP_THROW_VERIFICATION_ERROR_JUMBO:
         case OP_EXECUTE_INLINE:
         case OP_EXECUTE_INLINE_RANGE:
         case OP_INVOKE_OBJECT_INIT_RANGE:
+        case OP_INVOKE_OBJECT_INIT_JUMBO:
         case OP_RETURN_VOID_BARRIER:
         case OP_IGET_QUICK:
         case OP_IGET_WIDE_QUICK:
@@ -1422,19 +1435,6 @@ static bool verifyInstructions(VerifierData* vdata)
         case OP_UNUSED_EFFF:
         case OP_UNUSED_F0FF:
         case OP_UNUSED_F1FF:
-        case OP_UNUSED_F2FF:
-        case OP_UNUSED_F3FF:
-        case OP_UNUSED_F4FF:
-        case OP_UNUSED_F5FF:
-        case OP_UNUSED_F6FF:
-        case OP_UNUSED_F7FF:
-        case OP_UNUSED_F8FF:
-        case OP_UNUSED_F9FF:
-        case OP_UNUSED_FAFF:
-        case OP_UNUSED_FBFF:
-        case OP_UNUSED_FCFF:
-        case OP_UNUSED_FDFF:
-        case OP_UNUSED_FEFF:
             LOGE("VFY: unexpected opcode %02x\n", decInsn.opcode);
             okay = false;
             break;

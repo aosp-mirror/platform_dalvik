@@ -566,19 +566,19 @@ typedef enum Opcode {
     OP_UNUSED_EFFF                  = 0x1ef,
     OP_UNUSED_F0FF                  = 0x1f0,
     OP_UNUSED_F1FF                  = 0x1f1,
-    OP_UNUSED_F2FF                  = 0x1f2,
-    OP_UNUSED_F3FF                  = 0x1f3,
-    OP_UNUSED_F4FF                  = 0x1f4,
-    OP_UNUSED_F5FF                  = 0x1f5,
-    OP_UNUSED_F6FF                  = 0x1f6,
-    OP_UNUSED_F7FF                  = 0x1f7,
-    OP_UNUSED_F8FF                  = 0x1f8,
-    OP_UNUSED_F9FF                  = 0x1f9,
-    OP_UNUSED_FAFF                  = 0x1fa,
-    OP_UNUSED_FBFF                  = 0x1fb,
-    OP_UNUSED_FCFF                  = 0x1fc,
-    OP_UNUSED_FDFF                  = 0x1fd,
-    OP_UNUSED_FEFF                  = 0x1fe,
+    OP_INVOKE_OBJECT_INIT_JUMBO     = 0x1f2,
+    OP_IGET_VOLATILE_JUMBO          = 0x1f3,
+    OP_IGET_WIDE_VOLATILE_JUMBO     = 0x1f4,
+    OP_IGET_OBJECT_VOLATILE_JUMBO   = 0x1f5,
+    OP_IPUT_VOLATILE_JUMBO          = 0x1f6,
+    OP_IPUT_WIDE_VOLATILE_JUMBO     = 0x1f7,
+    OP_IPUT_OBJECT_VOLATILE_JUMBO   = 0x1f8,
+    OP_SGET_VOLATILE_JUMBO          = 0x1f9,
+    OP_SGET_WIDE_VOLATILE_JUMBO     = 0x1fa,
+    OP_SGET_OBJECT_VOLATILE_JUMBO   = 0x1fb,
+    OP_SPUT_VOLATILE_JUMBO          = 0x1fc,
+    OP_SPUT_WIDE_VOLATILE_JUMBO     = 0x1fd,
+    OP_SPUT_OBJECT_VOLATILE_JUMBO   = 0x1fe,
     OP_THROW_VERIFICATION_ERROR_JUMBO = 0x1ff,
     // END(libdex-opcode-enum)
 } Opcode;
@@ -1088,19 +1088,19 @@ typedef enum Opcode {
         H(OP_UNUSED_EFFF),                                                    \
         H(OP_UNUSED_F0FF),                                                    \
         H(OP_UNUSED_F1FF),                                                    \
-        H(OP_UNUSED_F2FF),                                                    \
-        H(OP_UNUSED_F3FF),                                                    \
-        H(OP_UNUSED_F4FF),                                                    \
-        H(OP_UNUSED_F5FF),                                                    \
-        H(OP_UNUSED_F6FF),                                                    \
-        H(OP_UNUSED_F7FF),                                                    \
-        H(OP_UNUSED_F8FF),                                                    \
-        H(OP_UNUSED_F9FF),                                                    \
-        H(OP_UNUSED_FAFF),                                                    \
-        H(OP_UNUSED_FBFF),                                                    \
-        H(OP_UNUSED_FCFF),                                                    \
-        H(OP_UNUSED_FDFF),                                                    \
-        H(OP_UNUSED_FEFF),                                                    \
+        H(OP_INVOKE_OBJECT_INIT_JUMBO),                                       \
+        H(OP_IGET_VOLATILE_JUMBO),                                            \
+        H(OP_IGET_WIDE_VOLATILE_JUMBO),                                       \
+        H(OP_IGET_OBJECT_VOLATILE_JUMBO),                                     \
+        H(OP_IPUT_VOLATILE_JUMBO),                                            \
+        H(OP_IPUT_WIDE_VOLATILE_JUMBO),                                       \
+        H(OP_IPUT_OBJECT_VOLATILE_JUMBO),                                     \
+        H(OP_SGET_VOLATILE_JUMBO),                                            \
+        H(OP_SGET_WIDE_VOLATILE_JUMBO),                                       \
+        H(OP_SGET_OBJECT_VOLATILE_JUMBO),                                     \
+        H(OP_SPUT_VOLATILE_JUMBO),                                            \
+        H(OP_SPUT_WIDE_VOLATILE_JUMBO),                                       \
+        H(OP_SPUT_OBJECT_VOLATILE_JUMBO),                                     \
         H(OP_THROW_VERIFICATION_ERROR_JUMBO),                                 \
         /* END(libdex-goto-table) */                                          \
     };

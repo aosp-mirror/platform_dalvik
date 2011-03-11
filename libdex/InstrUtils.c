@@ -63,7 +63,7 @@ static InstructionWidth gInstructionWidthTable[kNumPackedOpcodes] = {
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4,
+    0, 0, 5, 5, 5, 5, 5, 5, 5, 4, 4, 4, 4, 4, 4, 4,
     // END(libdex-widths)
 };
 
@@ -571,19 +571,19 @@ static u1 gOpcodeFlagsTable[kNumPackedOpcodes] = {
     0,
     0,
     0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
+    kInstrCanContinue,
+    kInstrCanContinue|kInstrCanThrow,
+    kInstrCanContinue|kInstrCanThrow,
+    kInstrCanContinue|kInstrCanThrow,
+    kInstrCanContinue|kInstrCanThrow,
+    kInstrCanContinue|kInstrCanThrow,
+    kInstrCanContinue|kInstrCanThrow,
+    kInstrCanContinue|kInstrCanThrow,
+    kInstrCanContinue|kInstrCanThrow,
+    kInstrCanContinue|kInstrCanThrow,
+    kInstrCanContinue|kInstrCanThrow,
+    kInstrCanContinue|kInstrCanThrow,
+    kInstrCanContinue|kInstrCanThrow,
     kInstrCanThrow,
     // END(libdex-flags)
 };
@@ -665,8 +665,8 @@ static u1 gInstructionFormatTable[kNumPackedOpcodes] = {
     kFmt00x,  kFmt00x,  kFmt00x,  kFmt00x,  kFmt00x,  kFmt00x,  kFmt00x,
     kFmt00x,  kFmt00x,  kFmt00x,  kFmt00x,  kFmt00x,  kFmt00x,  kFmt00x,
     kFmt00x,  kFmt00x,  kFmt00x,  kFmt00x,  kFmt00x,  kFmt00x,  kFmt00x,
-    kFmt00x,  kFmt00x,  kFmt00x,  kFmt00x,  kFmt00x,  kFmt00x,  kFmt00x,
-    kFmt00x,  kFmt00x,  kFmt00x,  kFmt00x,  kFmt00x,  kFmt00x,  kFmt00x,
+    kFmt00x,  kFmt5rc,  kFmt52c,  kFmt52c,  kFmt52c,  kFmt52c,  kFmt52c,
+    kFmt52c,  kFmt41c,  kFmt41c,  kFmt41c,  kFmt41c,  kFmt41c,  kFmt41c,
     kFmt40sc,
     // END(libdex-formats)
 };
@@ -843,11 +843,11 @@ static u1 gInstructionIndexTypeTable[kNumPackedOpcodes] = {
     kIndexUnknown,      kIndexUnknown,      kIndexUnknown,
     kIndexUnknown,      kIndexUnknown,      kIndexUnknown,
     kIndexUnknown,      kIndexUnknown,      kIndexUnknown,
-    kIndexUnknown,      kIndexUnknown,      kIndexUnknown,
-    kIndexUnknown,      kIndexUnknown,      kIndexUnknown,
-    kIndexUnknown,      kIndexUnknown,      kIndexUnknown,
-    kIndexUnknown,      kIndexUnknown,      kIndexUnknown,
-    kIndexUnknown,      kIndexVaries,
+    kIndexMethodRef,    kIndexFieldRef,     kIndexFieldRef,
+    kIndexFieldRef,     kIndexFieldRef,     kIndexFieldRef,
+    kIndexFieldRef,     kIndexFieldRef,     kIndexFieldRef,
+    kIndexFieldRef,     kIndexFieldRef,     kIndexFieldRef,
+    kIndexFieldRef,     kIndexVaries,
     // END(libdex-index-types)
 };
 

@@ -117,14 +117,14 @@ unspecified registers or condition codes.
  * exception catch may miss.  (This also implies that it must come after
  * EXPORT_PC().)
  */
-#define FETCH_ADVANCE_INST(_count) ldrh    rINST, [rPC, #(_count*2)]!
+#define FETCH_ADVANCE_INST(_count) ldrh    rINST, [rPC, #((_count)*2)]!
 
 /*
  * The operation performed here is similar to FETCH_ADVANCE_INST, except the
  * src and dest registers are parameterized (not hard-wired to rPC and rINST).
  */
 #define PREFETCH_ADVANCE_INST(_dreg, _sreg, _count) \
-        ldrh    _dreg, [_sreg, #(_count*2)]!
+        ldrh    _dreg, [_sreg, #((_count)*2)]!
 
 /*
  * Fetch the next instruction from an offset specified by _reg.  Updates
@@ -144,15 +144,15 @@ unspecified registers or condition codes.
  *
  * The "_S" variant works the same but treats the value as signed.
  */
-#define FETCH(_reg, _count)     ldrh    _reg, [rPC, #(_count*2)]
-#define FETCH_S(_reg, _count)   ldrsh   _reg, [rPC, #(_count*2)]
+#define FETCH(_reg, _count)     ldrh    _reg, [rPC, #((_count)*2)]
+#define FETCH_S(_reg, _count)   ldrsh   _reg, [rPC, #((_count)*2)]
 
 /*
  * Fetch one byte from an offset past the current PC.  Pass in the same
  * "_count" as you would for FETCH, and an additional 0/1 indicating which
  * byte of the halfword you want (lo/hi).
  */
-#define FETCH_B(_reg, _count, _byte) ldrb     _reg, [rPC, #(_count*2+_byte)]
+#define FETCH_B(_reg, _count, _byte) ldrb     _reg, [rPC, #((_count)*2+(_byte))]
 
 /*
  * Put the instruction's opcode field into the specified register.

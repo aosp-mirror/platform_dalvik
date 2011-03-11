@@ -11328,96 +11328,148 @@ dvmAsmInstructionStartCode = .L_OP_NOP
 
 
 /* ------------------------------ */
-.L_OP_UNUSED_F2FF: /* 0x1f2 */
-/* File: x86/OP_UNUSED_F2FF.S */
-/* File: x86/unused.S */
-    jmp     common_abort
-
-
+.L_OP_INVOKE_OBJECT_INIT_JUMBO: /* 0x1f2 */
+    /* (stub) */
+    SAVE_PC_FP_TO_SELF %ecx          # leaves rSELF in %ecx
+    movl %ecx,OUT_ARG0(%esp)         # self is first arg to function
+    call      dvmMterp_OP_INVOKE_OBJECT_INIT_JUMBO     # do the real work
+    movl      rSELF,%ecx
+    LOAD_PC_FP_FROM_SELF             # retrieve updated values
+    movl      offThread_curHandlerTable(%ecx),rIBASE  # set up rIBASE
+    FETCH_INST
+    GOTO_NEXT
 /* ------------------------------ */
-.L_OP_UNUSED_F3FF: /* 0x1f3 */
-/* File: x86/OP_UNUSED_F3FF.S */
-/* File: x86/unused.S */
-    jmp     common_abort
-
-
+.L_OP_IGET_VOLATILE_JUMBO: /* 0x1f3 */
+    /* (stub) */
+    SAVE_PC_FP_TO_SELF %ecx          # leaves rSELF in %ecx
+    movl %ecx,OUT_ARG0(%esp)         # self is first arg to function
+    call      dvmMterp_OP_IGET_VOLATILE_JUMBO     # do the real work
+    movl      rSELF,%ecx
+    LOAD_PC_FP_FROM_SELF             # retrieve updated values
+    movl      offThread_curHandlerTable(%ecx),rIBASE  # set up rIBASE
+    FETCH_INST
+    GOTO_NEXT
 /* ------------------------------ */
-.L_OP_UNUSED_F4FF: /* 0x1f4 */
-/* File: x86/OP_UNUSED_F4FF.S */
-/* File: x86/unused.S */
-    jmp     common_abort
-
-
+.L_OP_IGET_WIDE_VOLATILE_JUMBO: /* 0x1f4 */
+    /* (stub) */
+    SAVE_PC_FP_TO_SELF %ecx          # leaves rSELF in %ecx
+    movl %ecx,OUT_ARG0(%esp)         # self is first arg to function
+    call      dvmMterp_OP_IGET_WIDE_VOLATILE_JUMBO     # do the real work
+    movl      rSELF,%ecx
+    LOAD_PC_FP_FROM_SELF             # retrieve updated values
+    movl      offThread_curHandlerTable(%ecx),rIBASE  # set up rIBASE
+    FETCH_INST
+    GOTO_NEXT
 /* ------------------------------ */
-.L_OP_UNUSED_F5FF: /* 0x1f5 */
-/* File: x86/OP_UNUSED_F5FF.S */
-/* File: x86/unused.S */
-    jmp     common_abort
-
-
+.L_OP_IGET_OBJECT_VOLATILE_JUMBO: /* 0x1f5 */
+    /* (stub) */
+    SAVE_PC_FP_TO_SELF %ecx          # leaves rSELF in %ecx
+    movl %ecx,OUT_ARG0(%esp)         # self is first arg to function
+    call      dvmMterp_OP_IGET_OBJECT_VOLATILE_JUMBO     # do the real work
+    movl      rSELF,%ecx
+    LOAD_PC_FP_FROM_SELF             # retrieve updated values
+    movl      offThread_curHandlerTable(%ecx),rIBASE  # set up rIBASE
+    FETCH_INST
+    GOTO_NEXT
 /* ------------------------------ */
-.L_OP_UNUSED_F6FF: /* 0x1f6 */
-/* File: x86/OP_UNUSED_F6FF.S */
-/* File: x86/unused.S */
-    jmp     common_abort
-
-
+.L_OP_IPUT_VOLATILE_JUMBO: /* 0x1f6 */
+    /* (stub) */
+    SAVE_PC_FP_TO_SELF %ecx          # leaves rSELF in %ecx
+    movl %ecx,OUT_ARG0(%esp)         # self is first arg to function
+    call      dvmMterp_OP_IPUT_VOLATILE_JUMBO     # do the real work
+    movl      rSELF,%ecx
+    LOAD_PC_FP_FROM_SELF             # retrieve updated values
+    movl      offThread_curHandlerTable(%ecx),rIBASE  # set up rIBASE
+    FETCH_INST
+    GOTO_NEXT
 /* ------------------------------ */
-.L_OP_UNUSED_F7FF: /* 0x1f7 */
-/* File: x86/OP_UNUSED_F7FF.S */
-/* File: x86/unused.S */
-    jmp     common_abort
-
-
+.L_OP_IPUT_WIDE_VOLATILE_JUMBO: /* 0x1f7 */
+    /* (stub) */
+    SAVE_PC_FP_TO_SELF %ecx          # leaves rSELF in %ecx
+    movl %ecx,OUT_ARG0(%esp)         # self is first arg to function
+    call      dvmMterp_OP_IPUT_WIDE_VOLATILE_JUMBO     # do the real work
+    movl      rSELF,%ecx
+    LOAD_PC_FP_FROM_SELF             # retrieve updated values
+    movl      offThread_curHandlerTable(%ecx),rIBASE  # set up rIBASE
+    FETCH_INST
+    GOTO_NEXT
 /* ------------------------------ */
-.L_OP_UNUSED_F8FF: /* 0x1f8 */
-/* File: x86/OP_UNUSED_F8FF.S */
-/* File: x86/unused.S */
-    jmp     common_abort
-
-
+.L_OP_IPUT_OBJECT_VOLATILE_JUMBO: /* 0x1f8 */
+    /* (stub) */
+    SAVE_PC_FP_TO_SELF %ecx          # leaves rSELF in %ecx
+    movl %ecx,OUT_ARG0(%esp)         # self is first arg to function
+    call      dvmMterp_OP_IPUT_OBJECT_VOLATILE_JUMBO     # do the real work
+    movl      rSELF,%ecx
+    LOAD_PC_FP_FROM_SELF             # retrieve updated values
+    movl      offThread_curHandlerTable(%ecx),rIBASE  # set up rIBASE
+    FETCH_INST
+    GOTO_NEXT
 /* ------------------------------ */
-.L_OP_UNUSED_F9FF: /* 0x1f9 */
-/* File: x86/OP_UNUSED_F9FF.S */
-/* File: x86/unused.S */
-    jmp     common_abort
-
-
+.L_OP_SGET_VOLATILE_JUMBO: /* 0x1f9 */
+    /* (stub) */
+    SAVE_PC_FP_TO_SELF %ecx          # leaves rSELF in %ecx
+    movl %ecx,OUT_ARG0(%esp)         # self is first arg to function
+    call      dvmMterp_OP_SGET_VOLATILE_JUMBO     # do the real work
+    movl      rSELF,%ecx
+    LOAD_PC_FP_FROM_SELF             # retrieve updated values
+    movl      offThread_curHandlerTable(%ecx),rIBASE  # set up rIBASE
+    FETCH_INST
+    GOTO_NEXT
 /* ------------------------------ */
-.L_OP_UNUSED_FAFF: /* 0x1fa */
-/* File: x86/OP_UNUSED_FAFF.S */
-/* File: x86/unused.S */
-    jmp     common_abort
-
-
+.L_OP_SGET_WIDE_VOLATILE_JUMBO: /* 0x1fa */
+    /* (stub) */
+    SAVE_PC_FP_TO_SELF %ecx          # leaves rSELF in %ecx
+    movl %ecx,OUT_ARG0(%esp)         # self is first arg to function
+    call      dvmMterp_OP_SGET_WIDE_VOLATILE_JUMBO     # do the real work
+    movl      rSELF,%ecx
+    LOAD_PC_FP_FROM_SELF             # retrieve updated values
+    movl      offThread_curHandlerTable(%ecx),rIBASE  # set up rIBASE
+    FETCH_INST
+    GOTO_NEXT
 /* ------------------------------ */
-.L_OP_UNUSED_FBFF: /* 0x1fb */
-/* File: x86/OP_UNUSED_FBFF.S */
-/* File: x86/unused.S */
-    jmp     common_abort
-
-
+.L_OP_SGET_OBJECT_VOLATILE_JUMBO: /* 0x1fb */
+    /* (stub) */
+    SAVE_PC_FP_TO_SELF %ecx          # leaves rSELF in %ecx
+    movl %ecx,OUT_ARG0(%esp)         # self is first arg to function
+    call      dvmMterp_OP_SGET_OBJECT_VOLATILE_JUMBO     # do the real work
+    movl      rSELF,%ecx
+    LOAD_PC_FP_FROM_SELF             # retrieve updated values
+    movl      offThread_curHandlerTable(%ecx),rIBASE  # set up rIBASE
+    FETCH_INST
+    GOTO_NEXT
 /* ------------------------------ */
-.L_OP_UNUSED_FCFF: /* 0x1fc */
-/* File: x86/OP_UNUSED_FCFF.S */
-/* File: x86/unused.S */
-    jmp     common_abort
-
-
+.L_OP_SPUT_VOLATILE_JUMBO: /* 0x1fc */
+    /* (stub) */
+    SAVE_PC_FP_TO_SELF %ecx          # leaves rSELF in %ecx
+    movl %ecx,OUT_ARG0(%esp)         # self is first arg to function
+    call      dvmMterp_OP_SPUT_VOLATILE_JUMBO     # do the real work
+    movl      rSELF,%ecx
+    LOAD_PC_FP_FROM_SELF             # retrieve updated values
+    movl      offThread_curHandlerTable(%ecx),rIBASE  # set up rIBASE
+    FETCH_INST
+    GOTO_NEXT
 /* ------------------------------ */
-.L_OP_UNUSED_FDFF: /* 0x1fd */
-/* File: x86/OP_UNUSED_FDFF.S */
-/* File: x86/unused.S */
-    jmp     common_abort
-
-
+.L_OP_SPUT_WIDE_VOLATILE_JUMBO: /* 0x1fd */
+    /* (stub) */
+    SAVE_PC_FP_TO_SELF %ecx          # leaves rSELF in %ecx
+    movl %ecx,OUT_ARG0(%esp)         # self is first arg to function
+    call      dvmMterp_OP_SPUT_WIDE_VOLATILE_JUMBO     # do the real work
+    movl      rSELF,%ecx
+    LOAD_PC_FP_FROM_SELF             # retrieve updated values
+    movl      offThread_curHandlerTable(%ecx),rIBASE  # set up rIBASE
+    FETCH_INST
+    GOTO_NEXT
 /* ------------------------------ */
-.L_OP_UNUSED_FEFF: /* 0x1fe */
-/* File: x86/OP_UNUSED_FEFF.S */
-/* File: x86/unused.S */
-    jmp     common_abort
-
-
+.L_OP_SPUT_OBJECT_VOLATILE_JUMBO: /* 0x1fe */
+    /* (stub) */
+    SAVE_PC_FP_TO_SELF %ecx          # leaves rSELF in %ecx
+    movl %ecx,OUT_ARG0(%esp)         # self is first arg to function
+    call      dvmMterp_OP_SPUT_OBJECT_VOLATILE_JUMBO     # do the real work
+    movl      rSELF,%ecx
+    LOAD_PC_FP_FROM_SELF             # retrieve updated values
+    movl      offThread_curHandlerTable(%ecx),rIBASE  # set up rIBASE
+    FETCH_INST
+    GOTO_NEXT
 /* ------------------------------ */
 .L_OP_THROW_VERIFICATION_ERROR_JUMBO: /* 0x1ff */
 /* File: x86/OP_THROW_VERIFICATION_ERROR_JUMBO.S */
@@ -19913,7 +19965,7 @@ dvmAsmAltInstructionStartCode:
     jmp    *dvmAsmInstructionStart+(497*4)
 
 /* ------------------------------ */
-.L_ALT_OP_UNUSED_F2FF: /* 0x1f2 */
+.L_ALT_OP_INVOKE_OBJECT_INIT_JUMBO: /* 0x1f2 */
 /* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
@@ -19930,7 +19982,7 @@ dvmAsmAltInstructionStartCode:
     jmp    *dvmAsmInstructionStart+(498*4)
 
 /* ------------------------------ */
-.L_ALT_OP_UNUSED_F3FF: /* 0x1f3 */
+.L_ALT_OP_IGET_VOLATILE_JUMBO: /* 0x1f3 */
 /* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
@@ -19947,7 +19999,7 @@ dvmAsmAltInstructionStartCode:
     jmp    *dvmAsmInstructionStart+(499*4)
 
 /* ------------------------------ */
-.L_ALT_OP_UNUSED_F4FF: /* 0x1f4 */
+.L_ALT_OP_IGET_WIDE_VOLATILE_JUMBO: /* 0x1f4 */
 /* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
@@ -19964,7 +20016,7 @@ dvmAsmAltInstructionStartCode:
     jmp    *dvmAsmInstructionStart+(500*4)
 
 /* ------------------------------ */
-.L_ALT_OP_UNUSED_F5FF: /* 0x1f5 */
+.L_ALT_OP_IGET_OBJECT_VOLATILE_JUMBO: /* 0x1f5 */
 /* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
@@ -19981,7 +20033,7 @@ dvmAsmAltInstructionStartCode:
     jmp    *dvmAsmInstructionStart+(501*4)
 
 /* ------------------------------ */
-.L_ALT_OP_UNUSED_F6FF: /* 0x1f6 */
+.L_ALT_OP_IPUT_VOLATILE_JUMBO: /* 0x1f6 */
 /* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
@@ -19998,7 +20050,7 @@ dvmAsmAltInstructionStartCode:
     jmp    *dvmAsmInstructionStart+(502*4)
 
 /* ------------------------------ */
-.L_ALT_OP_UNUSED_F7FF: /* 0x1f7 */
+.L_ALT_OP_IPUT_WIDE_VOLATILE_JUMBO: /* 0x1f7 */
 /* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
@@ -20015,7 +20067,7 @@ dvmAsmAltInstructionStartCode:
     jmp    *dvmAsmInstructionStart+(503*4)
 
 /* ------------------------------ */
-.L_ALT_OP_UNUSED_F8FF: /* 0x1f8 */
+.L_ALT_OP_IPUT_OBJECT_VOLATILE_JUMBO: /* 0x1f8 */
 /* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
@@ -20032,7 +20084,7 @@ dvmAsmAltInstructionStartCode:
     jmp    *dvmAsmInstructionStart+(504*4)
 
 /* ------------------------------ */
-.L_ALT_OP_UNUSED_F9FF: /* 0x1f9 */
+.L_ALT_OP_SGET_VOLATILE_JUMBO: /* 0x1f9 */
 /* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
@@ -20049,7 +20101,7 @@ dvmAsmAltInstructionStartCode:
     jmp    *dvmAsmInstructionStart+(505*4)
 
 /* ------------------------------ */
-.L_ALT_OP_UNUSED_FAFF: /* 0x1fa */
+.L_ALT_OP_SGET_WIDE_VOLATILE_JUMBO: /* 0x1fa */
 /* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
@@ -20066,7 +20118,7 @@ dvmAsmAltInstructionStartCode:
     jmp    *dvmAsmInstructionStart+(506*4)
 
 /* ------------------------------ */
-.L_ALT_OP_UNUSED_FBFF: /* 0x1fb */
+.L_ALT_OP_SGET_OBJECT_VOLATILE_JUMBO: /* 0x1fb */
 /* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
@@ -20083,7 +20135,7 @@ dvmAsmAltInstructionStartCode:
     jmp    *dvmAsmInstructionStart+(507*4)
 
 /* ------------------------------ */
-.L_ALT_OP_UNUSED_FCFF: /* 0x1fc */
+.L_ALT_OP_SPUT_VOLATILE_JUMBO: /* 0x1fc */
 /* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
@@ -20100,7 +20152,7 @@ dvmAsmAltInstructionStartCode:
     jmp    *dvmAsmInstructionStart+(508*4)
 
 /* ------------------------------ */
-.L_ALT_OP_UNUSED_FDFF: /* 0x1fd */
+.L_ALT_OP_SPUT_WIDE_VOLATILE_JUMBO: /* 0x1fd */
 /* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
@@ -20117,7 +20169,7 @@ dvmAsmAltInstructionStartCode:
     jmp    *dvmAsmInstructionStart+(509*4)
 
 /* ------------------------------ */
-.L_ALT_OP_UNUSED_FEFF: /* 0x1fe */
+.L_ALT_OP_SPUT_OBJECT_VOLATILE_JUMBO: /* 0x1fe */
 /* File: x86/alt_stub.S */
 /*
  * Inter-instruction transfer stub.  Call out to dvmCheckInst to handle
@@ -20655,19 +20707,19 @@ dvmAsmInstructionStart:
     .long .L_OP_UNUSED_EFFF /* 0x1ef */
     .long .L_OP_UNUSED_F0FF /* 0x1f0 */
     .long .L_OP_UNUSED_F1FF /* 0x1f1 */
-    .long .L_OP_UNUSED_F2FF /* 0x1f2 */
-    .long .L_OP_UNUSED_F3FF /* 0x1f3 */
-    .long .L_OP_UNUSED_F4FF /* 0x1f4 */
-    .long .L_OP_UNUSED_F5FF /* 0x1f5 */
-    .long .L_OP_UNUSED_F6FF /* 0x1f6 */
-    .long .L_OP_UNUSED_F7FF /* 0x1f7 */
-    .long .L_OP_UNUSED_F8FF /* 0x1f8 */
-    .long .L_OP_UNUSED_F9FF /* 0x1f9 */
-    .long .L_OP_UNUSED_FAFF /* 0x1fa */
-    .long .L_OP_UNUSED_FBFF /* 0x1fb */
-    .long .L_OP_UNUSED_FCFF /* 0x1fc */
-    .long .L_OP_UNUSED_FDFF /* 0x1fd */
-    .long .L_OP_UNUSED_FEFF /* 0x1fe */
+    .long .L_OP_INVOKE_OBJECT_INIT_JUMBO /* 0x1f2 */
+    .long .L_OP_IGET_VOLATILE_JUMBO /* 0x1f3 */
+    .long .L_OP_IGET_WIDE_VOLATILE_JUMBO /* 0x1f4 */
+    .long .L_OP_IGET_OBJECT_VOLATILE_JUMBO /* 0x1f5 */
+    .long .L_OP_IPUT_VOLATILE_JUMBO /* 0x1f6 */
+    .long .L_OP_IPUT_WIDE_VOLATILE_JUMBO /* 0x1f7 */
+    .long .L_OP_IPUT_OBJECT_VOLATILE_JUMBO /* 0x1f8 */
+    .long .L_OP_SGET_VOLATILE_JUMBO /* 0x1f9 */
+    .long .L_OP_SGET_WIDE_VOLATILE_JUMBO /* 0x1fa */
+    .long .L_OP_SGET_OBJECT_VOLATILE_JUMBO /* 0x1fb */
+    .long .L_OP_SPUT_VOLATILE_JUMBO /* 0x1fc */
+    .long .L_OP_SPUT_WIDE_VOLATILE_JUMBO /* 0x1fd */
+    .long .L_OP_SPUT_OBJECT_VOLATILE_JUMBO /* 0x1fe */
     .long .L_OP_THROW_VERIFICATION_ERROR_JUMBO /* 0x1ff */
 
     .global dvmAsmAltInstructionStart
@@ -21171,19 +21223,19 @@ dvmAsmAltInstructionStart:
     .long .L_ALT_OP_UNUSED_EFFF /* 0x1ef */
     .long .L_ALT_OP_UNUSED_F0FF /* 0x1f0 */
     .long .L_ALT_OP_UNUSED_F1FF /* 0x1f1 */
-    .long .L_ALT_OP_UNUSED_F2FF /* 0x1f2 */
-    .long .L_ALT_OP_UNUSED_F3FF /* 0x1f3 */
-    .long .L_ALT_OP_UNUSED_F4FF /* 0x1f4 */
-    .long .L_ALT_OP_UNUSED_F5FF /* 0x1f5 */
-    .long .L_ALT_OP_UNUSED_F6FF /* 0x1f6 */
-    .long .L_ALT_OP_UNUSED_F7FF /* 0x1f7 */
-    .long .L_ALT_OP_UNUSED_F8FF /* 0x1f8 */
-    .long .L_ALT_OP_UNUSED_F9FF /* 0x1f9 */
-    .long .L_ALT_OP_UNUSED_FAFF /* 0x1fa */
-    .long .L_ALT_OP_UNUSED_FBFF /* 0x1fb */
-    .long .L_ALT_OP_UNUSED_FCFF /* 0x1fc */
-    .long .L_ALT_OP_UNUSED_FDFF /* 0x1fd */
-    .long .L_ALT_OP_UNUSED_FEFF /* 0x1fe */
+    .long .L_ALT_OP_INVOKE_OBJECT_INIT_JUMBO /* 0x1f2 */
+    .long .L_ALT_OP_IGET_VOLATILE_JUMBO /* 0x1f3 */
+    .long .L_ALT_OP_IGET_WIDE_VOLATILE_JUMBO /* 0x1f4 */
+    .long .L_ALT_OP_IGET_OBJECT_VOLATILE_JUMBO /* 0x1f5 */
+    .long .L_ALT_OP_IPUT_VOLATILE_JUMBO /* 0x1f6 */
+    .long .L_ALT_OP_IPUT_WIDE_VOLATILE_JUMBO /* 0x1f7 */
+    .long .L_ALT_OP_IPUT_OBJECT_VOLATILE_JUMBO /* 0x1f8 */
+    .long .L_ALT_OP_SGET_VOLATILE_JUMBO /* 0x1f9 */
+    .long .L_ALT_OP_SGET_WIDE_VOLATILE_JUMBO /* 0x1fa */
+    .long .L_ALT_OP_SGET_OBJECT_VOLATILE_JUMBO /* 0x1fb */
+    .long .L_ALT_OP_SPUT_VOLATILE_JUMBO /* 0x1fc */
+    .long .L_ALT_OP_SPUT_WIDE_VOLATILE_JUMBO /* 0x1fd */
+    .long .L_ALT_OP_SPUT_OBJECT_VOLATILE_JUMBO /* 0x1fe */
     .long .L_ALT_OP_THROW_VERIFICATION_ERROR_JUMBO /* 0x1ff */
 /* File: x86/entry.S */
 /*

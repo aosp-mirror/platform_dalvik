@@ -669,7 +669,7 @@ GOTO_TARGET_DECL(exceptionThrown);
             if (sfield == NULL)                                             \
                 GOTO_exceptionThrown();                                     \
             if (dvmDexGetResolvedField(methodClassDex, ref) == NULL) {      \
-                END_JIT_TSELECT();                                        \
+                END_JIT_TSELECT();                                          \
             }                                                               \
         }                                                                   \
         SET_REGISTER##_regsize(vdst, dvmGetStaticField##_ftype(sfield));    \
@@ -693,7 +693,7 @@ GOTO_TARGET_DECL(exceptionThrown);
             if (sfield == NULL)                                             \
                 GOTO_exceptionThrown();                                     \
             if (dvmDexGetResolvedField(methodClassDex, ref) == NULL) {      \
-                END_JIT_TSELECT();                                        \
+                END_JIT_TSELECT();                                          \
             }                                                               \
         }                                                                   \
         SET_REGISTER##_regsize(vdst, dvmGetStaticField##_ftype(sfield));    \
@@ -717,7 +717,7 @@ GOTO_TARGET_DECL(exceptionThrown);
             if (sfield == NULL)                                             \
                 GOTO_exceptionThrown();                                     \
             if (dvmDexGetResolvedField(methodClassDex, ref) == NULL) {      \
-                END_JIT_TSELECT();                                        \
+                END_JIT_TSELECT();                                          \
             }                                                               \
         }                                                                   \
         dvmSetStaticField##_ftype(sfield, GET_REGISTER##_regsize(vdst));    \
@@ -741,7 +741,7 @@ GOTO_TARGET_DECL(exceptionThrown);
             if (sfield == NULL)                                             \
                 GOTO_exceptionThrown();                                     \
             if (dvmDexGetResolvedField(methodClassDex, ref) == NULL) {      \
-                END_JIT_TSELECT();                                        \
+                END_JIT_TSELECT();                                          \
             }                                                               \
         }                                                                   \
         dvmSetStaticField##_ftype(sfield, GET_REGISTER##_regsize(vdst));    \
