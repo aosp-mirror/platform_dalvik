@@ -73,6 +73,17 @@ static bool find1(void) {
     ok &= initRef(&gDvm.classJavaLangThreadGroup, "Ljava/lang/ThreadGroup;");
     ok &= initRef(&gDvm.classJavaLangVMThread, "Ljava/lang/VMThread;");
 
+    /* Arrays of primitive types */
+
+    ok &= initRef(&gDvm.classArrayBoolean, "[Z");
+    ok &= initRef(&gDvm.classArrayByte, "[B");
+    ok &= initRef(&gDvm.classArrayShort, "[S");
+    ok &= initRef(&gDvm.classArrayChar, "[C");
+    ok &= initRef(&gDvm.classArrayInt, "[I");
+    ok &= initRef(&gDvm.classArrayLong, "[J");
+    ok &= initRef(&gDvm.classArrayFloat, "[F");
+    ok &= initRef(&gDvm.classArrayDouble, "[D");
+
     /* Exception classes and related support classes */
 
     ok &= initRef(&gDvm.exAbstractMethodError,
