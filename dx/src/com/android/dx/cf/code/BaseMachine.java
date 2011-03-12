@@ -63,6 +63,9 @@ public abstract class BaseMachine implements Machine {
     /** {@code >= -1;} last local accessed */
     private int localIndex;
 
+    /** specifies if local has info in the local variable table */
+    private boolean localInfo;
+
     /** {@code null-ok;} local target spec, if salient and calculated */
     private RegisterSpec localTarget;
 
@@ -107,6 +110,7 @@ public abstract class BaseMachine implements Machine {
         auxCases = null;
         auxInitValues = null;
         localIndex = -1;
+        localInfo = false;
         localTarget = null;
         resultCount = -1;
     }
@@ -196,7 +200,7 @@ public abstract class BaseMachine implements Machine {
         }
 
         if (! Merger.isPossiblyAssignableFrom(type3, args[2])) {
-            throw new SimException("expected type " + type2.toHuman() +
+            throw new SimException("expected type " + type3.toHuman() +
                     " but found " + args[2].getType().toHuman());
         }
     }
@@ -207,6 +211,11 @@ public abstract class BaseMachine implements Machine {
         args[0] = frame.getLocals().get(idx);
         argCount = 1;
         localIndex = idx;
+    }
+
+    /** {@inheritDoc} */
+    public final void localInfo(boolean local) {
+        localInfo = local;
     }
 
     /** {@inheritDoc} */
@@ -357,6 +366,15 @@ public abstract class BaseMachine implements Machine {
      */
     protected final int getLocalIndex() {
         return localIndex;
+    }
+
+    /**
+     * Gets whether the loaded local has info in the local variable table.
+     *
+     * @return {@code true} if local arg has info in the local variable table
+     */
+    protected final boolean getLocalInfo() {
+        return localInfo;
     }
 
     /**
@@ -533,6 +551,9 @@ public abstract class BaseMachine implements Machine {
         } else {
             ExecutionStack stack = frame.getStack();
             for (int i = 0; i < resultCount; i++) {
+                if (localInfo) {
+                    stack.setLocal();
+                }
                 stack.push(results[i]);
             }
         }
