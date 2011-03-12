@@ -28,8 +28,11 @@ public class Main {
 
         // Test static put/get
         testStaticInt();
+        testStaticVolatileInt();
         testStaticWide();
+        testStaticVolatileWide();
         testStaticObject();
+        testStaticVolatileObject();
         testStaticBoolean();
         testStaticByte();
         testStaticChar();
@@ -38,8 +41,11 @@ public class Main {
         // Test field put/get
         JumboField fieldTest = new JumboField();
         testFieldInt(fieldTest);
+        testFieldVolatileInt(fieldTest);
         testFieldWide(fieldTest);
+        testFieldVolatileWide(fieldTest);
         testFieldObject(fieldTest);
+        testFieldVolatileObject(fieldTest);
         testFieldBoolean(fieldTest);
         testFieldByte(fieldTest);
         testFieldChar(fieldTest);
@@ -84,6 +90,39 @@ public class Main {
         Object putObject = new Object();
         JumboStatic.testObject = putObject;
         Object getObject = JumboStatic.testObject;
+        if (putObject != getObject) {
+            System.out.println("Static put object: " + putObject +
+                " does not match static get object: " + getObject);
+        }
+    }
+
+    // Test sput-volatile/jumbo & sget-volatile/jumbo
+    public static void testStaticVolatileInt() {
+        int putInt = 0x12345678;
+        JumboStatic.testVolatileInt = putInt;
+        int getInt = JumboStatic.testVolatileInt;
+        if (putInt != getInt) {
+            System.out.println("Static put int: " + putInt +
+                " does not match static get int: " + getInt);
+        }
+    }
+
+    // Test sput-wide-volatile/jumbo & sget-wide-volatile/jumbo
+    public static void testStaticVolatileWide() {
+        long putWide = 0xfedcba9876543210l;
+        JumboStatic.testVolatileWide = putWide;
+        long getWide = JumboStatic.testVolatileWide;
+        if (putWide != getWide) {
+            System.out.println("Static put wide: " + putWide +
+                " does not match static get wide: " + getWide);
+        }
+    }
+
+    // Test sput-object-volatile/jumbo & sget-object-volatile/jumbo
+    public static void testStaticVolatileObject() {
+        Object putObject = new Object();
+        JumboStatic.testVolatileObject = putObject;
+        Object getObject = JumboStatic.testVolatileObject;
         if (putObject != getObject) {
             System.out.println("Static put object: " + putObject +
                 " does not match static get object: " + getObject);
@@ -161,6 +200,39 @@ public class Main {
         Object putObject = new Object();
         fieldTest.testObject = putObject;
         Object getObject = fieldTest.testObject;
+        if (putObject != getObject) {
+            System.out.println("Field put object: " + putObject +
+                " does not match field get object: " + getObject);
+        }
+    }
+
+    // Test iput-volatile/jumbo & iget-volatile/jumbo
+    public static void testFieldVolatileInt(JumboField fieldTest) {
+        int putInt = 0x12345678;
+        fieldTest.testVolatileInt = putInt;
+        int getInt = fieldTest.testVolatileInt;
+        if (putInt != getInt) {
+            System.out.println("Field put int: " + putInt +
+                " does not match field get int: " + getInt);
+        }
+    }
+
+    // Test iput-wide-volatile/jumbo & iget-wide-volatile/jumbo
+    public static void testFieldVolatileWide(JumboField fieldTest) {
+        long putWide = 0xfedcba9876543210l;
+        fieldTest.testVolatileWide = putWide;
+        long getWide = fieldTest.testVolatileWide;
+        if (putWide != getWide) {
+            System.out.println("Field put wide: " + putWide +
+                " does not match field get wide: " + getWide);
+        }
+    }
+
+    // Test iput-object-volatile/jumbo & iget-object-volatile/jumbo
+    public static void testFieldVolatileObject(JumboField fieldTest) {
+        Object putObject = new Object();
+        fieldTest.testVolatileObject = putObject;
+        Object getObject = fieldTest.testVolatileObject;
         if (putObject != getObject) {
             System.out.println("Field put object: " + putObject +
                 " does not match field get object: " + getObject);
@@ -271,6 +343,9 @@ class JumboStatic {
     static byte    testByte;
     static char    testChar;
     static short   testShort;
+    static volatile int     testVolatileInt;
+    static volatile long    testVolatileWide;
+    static volatile Object  testVolatileObject;
 }
 
 class JumboField {
@@ -332,6 +407,9 @@ class JumboField {
     byte    testByte;
     char    testChar;
     short   testShort;
+    volatile int     testVolatileInt;
+    volatile long    testVolatileWide;
+    volatile Object  testVolatileObject;
 }
 
 class JumboMethodSuper {
