@@ -97,12 +97,6 @@ ArrayObject* dvmAllocMultiArray(ClassObject* arrayClass, int curDim,
     const int* dimensions);
 
 /*
- * Find the synthesized object for the primitive class, generating it
- * if this is the first reference.
- */
-ClassObject* dvmFindPrimitiveClass(char type);
-
-/*
  * Verify that the object is actually an array.
  *
  * Does not verify that the object is actually a non-NULL object.

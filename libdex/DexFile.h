@@ -71,6 +71,22 @@ enum {
 };
 
 /*
+ * Enumeration of all the primitive types.
+ */
+typedef enum PrimitiveType {
+    PRIM_NOT        = 0,       /* value is a reference type, not a primitive type */
+    PRIM_VOID       = 1,
+    PRIM_BOOLEAN    = 2,
+    PRIM_BYTE       = 3,
+    PRIM_SHORT      = 4,
+    PRIM_CHAR       = 5,
+    PRIM_INT        = 6,
+    PRIM_LONG       = 7,
+    PRIM_FLOAT      = 8,
+    PRIM_DOUBLE     = 9,
+} PrimitiveType;
+
+/*
  * access flags and masks; the "standard" ones are all <= 0x4000
  *
  * Note: There are related declarations in vm/oo/Object.h in the ClassFlags
@@ -916,5 +932,31 @@ DEX_INLINE const DexAnnotationItem* dexGetAnnotationItem(
     return (const DexAnnotationItem*)
         (pDexFile->baseAddr + dexGetAnnotationOff(pAnnoSet, idx));
 }
+
+/*
+ * Get the type descriptor character associated with a given primitive
+ * type. This returns '\0' if the type is invalid.
+ */
+char dexGetPrimitiveTypeDescriptorChar(PrimitiveType type);
+
+/*
+ * Get the type descriptor string associated with a given primitive
+ * type.
+ */
+const char* dexGetPrimitiveTypeDescriptor(PrimitiveType type);
+
+/*
+ * Get the boxed type descriptor string associated with a given
+ * primitive type. This returns NULL for an invalid type, including
+ * particularly for type "void".
+ */
+const char* dexGetBoxedTypeDescriptor(PrimitiveType type);
+
+/*
+ * Get the primitive type constant from the given descriptor character.
+ * This returns PRIM_NOT (note: this is a 0) if the character is invalid
+ * as a primitive type descriptor.
+ */
+PrimitiveType dexGetPrimitiveTypeFromDescriptorChar(char descriptorChar);
 
 #endif /*_LIBDEX_DEXFILE*/

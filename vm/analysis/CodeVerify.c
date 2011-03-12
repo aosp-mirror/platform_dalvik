@@ -320,30 +320,21 @@ static bool checkFieldArrayStore1nr(RegType instrType, RegType targetType)
  */
 static RegType primitiveTypeToRegType(PrimitiveType primType)
 {
-    static const struct {
-        RegType         regType;        /* type equivalent */
-        PrimitiveType   primType;       /* verification */
-    } convTab[] = {
-        /* must match order of enum in Object.h */
-        { kRegTypeBoolean,      PRIM_BOOLEAN },
-        { kRegTypeChar,         PRIM_CHAR },
-        { kRegTypeFloat,        PRIM_FLOAT },
-        { kRegTypeDoubleLo,     PRIM_DOUBLE },
-        { kRegTypeByte,         PRIM_BYTE },
-        { kRegTypeShort,        PRIM_SHORT },
-        { kRegTypeInteger,      PRIM_INT },
-        { kRegTypeLongLo,       PRIM_LONG },
-        // PRIM_VOID
-    };
-
-    if (primType < 0 || primType > (int) (sizeof(convTab) / sizeof(convTab[0])))
-    {
-        assert(false);
-        return kRegTypeUnknown;
+    switch (primType) {
+        case PRIM_BOOLEAN: return kRegTypeBoolean;
+        case PRIM_BYTE:    return kRegTypeByte;
+        case PRIM_SHORT:   return kRegTypeShort;
+        case PRIM_CHAR:    return kRegTypeChar;
+        case PRIM_INT:     return kRegTypeInteger;
+        case PRIM_LONG:    return kRegTypeLongLo;
+        case PRIM_FLOAT:   return kRegTypeFloat;
+        case PRIM_DOUBLE:  return kRegTypeDoubleLo;
+        case PRIM_VOID:
+        default: {
+            assert(false);
+            return kRegTypeUnknown;
+        }
     }
-
-    assert(convTab[primType].primType == primType);
-    return convTab[primType].regType;
 }
 
 /*

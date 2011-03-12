@@ -149,31 +149,6 @@ typedef enum ClassStatus {
 } ClassStatus;
 
 /*
- * Primitive type identifiers.  We use these values as indexes into an
- * array of synthesized classes, so these start at zero and count up.
- * The order is arbitrary (mimics table in doc for newarray opcode),
- * but can't be changed without shuffling some reflection tables.
- *
- * PRIM_VOID can't be used as an array type, but we include it here for
- * other uses (e.g. Void.TYPE).
- */
-typedef enum PrimitiveType {
-    PRIM_NOT        = -1,       /* value is not a primitive type */
-    PRIM_BOOLEAN    = 0,
-    PRIM_CHAR       = 1,
-    PRIM_FLOAT      = 2,
-    PRIM_DOUBLE     = 3,
-    PRIM_BYTE       = 4,
-    PRIM_SHORT      = 5,
-    PRIM_INT        = 6,
-    PRIM_LONG       = 7,
-    PRIM_VOID       = 8,
-
-    PRIM_MAX
-} PrimitiveType;
-#define PRIM_TYPE_TO_LETTER "ZCFDBSIJV"     /* must match order in enum */
-
-/*
  * Definitions for packing refOffsets in ClassObject.
  */
 /*

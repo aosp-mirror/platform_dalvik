@@ -301,6 +301,89 @@ size_t dvmClassObjectSize(const ClassObject *clazz)
     return classObjectSize(clazz->sfieldCount);
 }
 
+/* (documented in header) */
+ClassObject* dvmFindPrimitiveClass(char type)
+{
+    PrimitiveType primitiveType = dexGetPrimitiveTypeFromDescriptorChar(type);
+
+    switch (primitiveType) {
+        case PRIM_VOID:    return gDvm.typeVoid;
+        case PRIM_BOOLEAN: return gDvm.typeBoolean;
+        case PRIM_BYTE:    return gDvm.typeByte;
+        case PRIM_SHORT:   return gDvm.typeShort;
+        case PRIM_CHAR:    return gDvm.typeChar;
+        case PRIM_INT:     return gDvm.typeInt;
+        case PRIM_LONG:    return gDvm.typeLong;
+        case PRIM_FLOAT:   return gDvm.typeFloat;
+        case PRIM_DOUBLE:  return gDvm.typeDouble;
+        default: {
+            LOGW("Unknown primitive type '%c'\n", type);
+            return NULL;
+        }
+    }
+}
+
+/*
+ * Synthesize a primitive class.
+ *
+ * Just creates the class and returns it (does not add it to the class list).
+ */
+static bool createPrimitiveType(PrimitiveType primitiveType, ClassObject** pClass)
+{
+    /*
+     * Fill out a few fields in the ClassObject.
+     *
+     * Note that primitive classes do not sub-class the class Object.
+     * This matters for "instanceof" checks. Also, we assume that the
+     * primitive class does not override finalize().
+     */
+
+    const char* descriptor = dexGetPrimitiveTypeDescriptor(primitiveType);
+    assert(descriptor != NULL);
+
+    ClassObject* newClass = (ClassObject*) dvmMalloc(sizeof(*newClass), ALLOC_DEFAULT);
+    if (newClass == NULL) {
+        return false;
+    }
+
+    DVM_OBJECT_INIT(&newClass->obj, gDvm.classJavaLangClass);
+    dvmSetClassSerialNumber(newClass);
+    newClass->accessFlags = ACC_PUBLIC | ACC_FINAL | ACC_ABSTRACT;
+    newClass->primitiveType = primitiveType;
+    newClass->descriptorAlloc = NULL;
+    newClass->descriptor = descriptor;
+    newClass->super = NULL;
+    newClass->status = CLASS_INITIALIZED;
+
+    /* don't need to set newClass->objectSize */
+
+    LOGVV("Created class for primitive type '%s'\n", newClass->descriptor);
+
+    *pClass = newClass;
+    dvmReleaseTrackedAlloc((Object*) newClass, NULL);
+
+    return true;
+}
+
+/*
+ * Create the classes representing primitive types.
+ */
+static bool createPrimitiveTypes(void) {
+    bool ok = true;
+
+    ok &= createPrimitiveType(PRIM_VOID,    &gDvm.typeVoid);
+    ok &= createPrimitiveType(PRIM_BOOLEAN, &gDvm.typeBoolean);
+    ok &= createPrimitiveType(PRIM_BYTE,    &gDvm.typeByte);
+    ok &= createPrimitiveType(PRIM_SHORT,   &gDvm.typeShort);
+    ok &= createPrimitiveType(PRIM_CHAR,    &gDvm.typeChar);
+    ok &= createPrimitiveType(PRIM_INT,     &gDvm.typeInt);
+    ok &= createPrimitiveType(PRIM_LONG,    &gDvm.typeLong);
+    ok &= createPrimitiveType(PRIM_FLOAT,   &gDvm.typeFloat);
+    ok &= createPrimitiveType(PRIM_DOUBLE,  &gDvm.typeDouble);
+
+    return ok;
+}
+
 /*
  * Initialize the bootstrap class loader.
  *
@@ -350,6 +433,15 @@ bool dvmClassStartup(void)
     gDvm.classJavaLangClass->descriptor = "Ljava/lang/Class;";
 
     /*
+     * Initialize the classes representing primitive types. These are
+     * instances of the class Class, but other than that they're fairly
+     * different from regular classes.
+     */
+    if (!createPrimitiveTypes()) {
+        return false;
+    }
+
+    /*
      * Process the bootstrap class path.  This means opening the specified
      * DEX or Jar files and possibly running them through the optimizer.
      */
@@ -367,15 +459,20 @@ bool dvmClassStartup(void)
  */
 void dvmClassShutdown(void)
 {
-    int i;
-
     /* discard all system-loaded classes */
     dvmHashTableFree(gDvm.loadedClasses);
     gDvm.loadedClasses = NULL;
 
     /* discard primitive classes created for arrays */
-    for (i = 0; i < PRIM_MAX; i++)
-        dvmFreeClassInnards(gDvm.primitiveClass[i]);
+    dvmFreeClassInnards(gDvm.typeVoid);
+    dvmFreeClassInnards(gDvm.typeBoolean);
+    dvmFreeClassInnards(gDvm.typeByte);
+    dvmFreeClassInnards(gDvm.typeShort);
+    dvmFreeClassInnards(gDvm.typeChar);
+    dvmFreeClassInnards(gDvm.typeInt);
+    dvmFreeClassInnards(gDvm.typeLong);
+    dvmFreeClassInnards(gDvm.typeFloat);
+    dvmFreeClassInnards(gDvm.typeDouble);
 
     /* this closes DEX files, JAR files, etc. */
     freeCpeArray(gDvm.bootClassPath);

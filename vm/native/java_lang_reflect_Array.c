@@ -64,7 +64,6 @@ static void Dalvik_java_lang_reflect_Array_createObjectArray(const u4* args,
 static void Dalvik_java_lang_reflect_Array_createMultiArray(const u4* args,
     JValue* pResult)
 {
-    static const char kPrimLetter[] = PRIM_TYPE_TO_LETTER;
     ClassObject* elementClass = (ClassObject*) args[0];
     ArrayObject* dimArray = (ArrayObject*) args[1];
     ClassObject* arrayClass;
@@ -106,8 +105,8 @@ static void Dalvik_java_lang_reflect_Array_createMultiArray(const u4* args,
 
     LOGVV("#### element name = '%s'\n", elementClass->descriptor);
     if (dvmIsPrimitiveClass(elementClass)) {
-        assert(elementClass->primitiveType >= 0);
-        acDescriptor[numDim] = kPrimLetter[elementClass->primitiveType];
+        assert(elementClass->primitiveType != PRIM_NOT);
+        acDescriptor[numDim] = dexGetPrimitiveTypeDescriptorChar(elementClass->primitiveType);
         acDescriptor[numDim+1] = '\0';
     } else {
         strcpy(acDescriptor+numDim, elementClass->descriptor);

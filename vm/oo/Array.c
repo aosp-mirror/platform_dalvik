@@ -23,9 +23,6 @@
 #include <limits.h>
 
 static ClassObject* createArrayClass(const char* descriptor, Object* loader);
-static ClassObject* createPrimitiveClass(int idx);
-
-static const char gPrimLetter[] = PRIM_TYPE_TO_LETTER;
 
 /*
  * Allocate space for a new array object.  This is the lowest-level array
@@ -218,7 +215,7 @@ ArrayObject* dvmAllocMultiArray(ClassObject* arrayClass, int curDim,
             LOGVV("  end: array class (prim) is '%s'\n",
                 arrayClass->descriptor);
             newArray = dvmAllocPrimitiveArray(
-                    gPrimLetter[arrayClass->elementClass->primitiveType],
+                    dexGetPrimitiveTypeDescriptorChar(arrayClass->elementClass->primitiveType),
                     *dimensions, ALLOC_DEFAULT);
         }
     } else {
@@ -512,116 +509,6 @@ static ClassObject* createArrayClass(const char* descriptor, Object* loader)
         descriptor, newClass->classLoader,
         newClass->accessFlags >> 16,
         newClass->accessFlags & JAVA_FLAGS_MASK);
-
-    return newClass;
-}
-
-/*
- * Get a class we generated for the primitive types.
- *
- * These correspond to e.g. Integer.TYPE, and are used as the element
- * class in arrays of primitives.
- *
- * "type" should be 'I', 'J', 'Z', etc.
- *
- * Returns NULL if the type doesn't correspond to a known primitive type.
- */
-ClassObject* dvmFindPrimitiveClass(char type)
-{
-    int idx;
-
-    switch (type) {
-    case 'Z':
-        idx = PRIM_BOOLEAN;
-        break;
-    case 'C':
-        idx = PRIM_CHAR;
-        break;
-    case 'F':
-        idx = PRIM_FLOAT;
-        break;
-    case 'D':
-        idx = PRIM_DOUBLE;
-        break;
-    case 'B':
-        idx = PRIM_BYTE;
-        break;
-    case 'S':
-        idx = PRIM_SHORT;
-        break;
-    case 'I':
-        idx = PRIM_INT;
-        break;
-    case 'J':
-        idx = PRIM_LONG;
-        break;
-    case 'V':
-        idx = PRIM_VOID;
-        break;
-    default:
-        LOGW("Unknown primitive type '%c'\n", type);
-        return NULL;
-    }
-
-    /*
-     * Create the primitive class if it hasn't already been, and add it
-     * to the table.
-     */
-    if (gDvm.primitiveClass[idx] == NULL) {
-        ClassObject* primClass = createPrimitiveClass(idx);
-        dvmReleaseTrackedAlloc((Object*) primClass, NULL);
-
-        if (android_atomic_release_cas(0, (int) primClass,
-                (int*) &gDvm.primitiveClass[idx]) != 0)
-        {
-            /*
-             * Looks like somebody beat us to it.  Free up the one we
-             * just created and use the other one.
-             */
-            dvmFreeClassInnards(primClass);
-        }
-    }
-
-    return gDvm.primitiveClass[idx];
-}
-
-/*
- * Synthesize a primitive class.
- *
- * Just creates the class and returns it (does not add it to the class list).
- */
-static ClassObject* createPrimitiveClass(int idx)
-{
-    ClassObject* newClass;
-    static const char* kClassDescriptors[PRIM_MAX] = {
-        "Z", "C", "F", "D", "B", "S", "I", "J", "V"
-    };
-
-    assert(gDvm.classJavaLangClass != NULL);
-    assert(idx >= 0 && idx < PRIM_MAX);
-
-    /*
-     * Fill out a few fields in the ClassObject.
-     *
-     * Note that primitive classes do not sub-class java/lang/Object.  This
-     * matters for "instanceof" checks.  Also, we assume that the primitive
-     * class does not override finalize().
-     */
-    newClass = (ClassObject*) dvmMalloc(sizeof(*newClass), ALLOC_DEFAULT);
-    if (newClass == NULL)
-        return NULL;
-    DVM_OBJECT_INIT(&newClass->obj, gDvm.classJavaLangClass);
-    dvmSetClassSerialNumber(newClass);
-    newClass->accessFlags = ACC_PUBLIC | ACC_FINAL | ACC_ABSTRACT;
-    newClass->primitiveType = idx;
-    newClass->descriptorAlloc = NULL;
-    newClass->descriptor = kClassDescriptors[idx];
-    //newClass->super = gDvm.classJavaLangObject;
-    newClass->status = CLASS_INITIALIZED;
-
-    /* don't need to set newClass->objectSize */
-
-    LOGVV("Created primitive class '%s'\n", kClassDescriptors[idx]);
 
     return newClass;
 }

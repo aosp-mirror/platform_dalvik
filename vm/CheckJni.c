@@ -403,6 +403,25 @@ static void checkThread(JNIEnv* env, int flags, const char* func)
 }
 
 /*
+ * Get a human-oriented name for a given primitive type.
+ */
+static const char* primitiveTypeToName(PrimitiveType primType) {
+    switch (primType) {
+        case PRIM_VOID:    return "void";
+        case PRIM_BOOLEAN: return "boolean";
+        case PRIM_BYTE:    return "byte";
+        case PRIM_SHORT:   return "short";
+        case PRIM_CHAR:    return "char";
+        case PRIM_INT:     return "int";
+        case PRIM_LONG:    return "long";
+        case PRIM_FLOAT:   return "float";
+        case PRIM_DOUBLE:  return "double";
+        case PRIM_NOT:     return "Object/Array";
+        default:           return "???";
+    }
+}
+
+/*
  * Verify that the field is of the appropriate type.  If the field has an
  * object type, "obj" is the object we're trying to assign into it.
  *
@@ -411,11 +430,6 @@ static void checkThread(JNIEnv* env, int flags, const char* func)
 static void checkFieldType(JNIEnv* env, jobject jobj, jfieldID fieldID,
     PrimitiveType prim, bool isStatic, const char* func)
 {
-    static const char* primNameList[] = {
-        "Object/Array", "boolean", "char", "float", "double",
-        "byte", "short", "int", "long", "void"
-    };
-    const char** primNames = &primNameList[1];      // shift up for PRIM_NOT
     Field* field = (Field*) fieldID;
     bool printWarn = false;
 
@@ -440,9 +454,9 @@ static void checkFieldType(JNIEnv* env, jobject jobj, jfieldID fieldID,
                 printWarn = true;
             }
         }
-    } else if (field->signature[0] != PRIM_TYPE_TO_LETTER[prim]) {
+    } else if (dexGetPrimitiveTypeFromDescriptorChar(field->signature[0]) != prim) {
         LOGW("JNI WARNING: field '%s' with type '%s' set with wrong type (%s)",
-            field->name, field->signature, primNames[prim]);
+            field->name, field->signature, primitiveTypeToName(prim));
         printWarn = true;
     } else if (isStatic && !dvmIsStaticField(field)) {
         if (isStatic)
@@ -1087,19 +1101,21 @@ static size_t getGuardedCopyOriginalLen(const void* dataBuf)
  */
 static int dvmPrimitiveTypeWidth(PrimitiveType primType)
 {
-    static const int lengths[PRIM_MAX] = {
-        1,      // boolean
-        2,      // char
-        4,      // float
-        8,      // double
-        1,      // byte
-        2,      // short
-        4,      // int
-        8,      // long
-        -1,     // void
-    };
-    assert(primType >= 0 && primType < PRIM_MAX);
-    return lengths[primType];
+    switch (primType) {
+        case PRIM_BOOLEAN: return 1;
+        case PRIM_BYTE:    return 1;
+        case PRIM_SHORT:   return 2;
+        case PRIM_CHAR:    return 2;
+        case PRIM_INT:     return 4;
+        case PRIM_LONG:    return 8;
+        case PRIM_FLOAT:   return 4;
+        case PRIM_DOUBLE:  return 8;
+        case PRIM_VOID:
+        default: {
+            assert(false);
+            return -1;
+        }
+    }
 }
 
 /*
