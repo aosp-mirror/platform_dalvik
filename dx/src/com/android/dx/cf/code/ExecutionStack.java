@@ -34,6 +34,11 @@ public final class ExecutionStack extends MutabilityControl {
     private final TypeBearer[] stack;
 
     /**
+     * {@code non-null;} array specifying whether stack contents have entries
+     * in the local variable table
+     */
+    private final boolean[] local;
+    /**
      * {@code >= 0;} stack pointer (points one past the end) / current stack
      * size
      */
@@ -48,6 +53,7 @@ public final class ExecutionStack extends MutabilityControl {
     public ExecutionStack(int maxStack) {
         super(maxStack != 0);
         stack = new TypeBearer[maxStack];
+        local = new boolean[maxStack];
         stackPtr = 0;
     }
 
@@ -60,6 +66,7 @@ public final class ExecutionStack extends MutabilityControl {
         ExecutionStack result = new ExecutionStack(stack.length);
 
         System.arraycopy(stack, 0, result.stack, 0, stack.length);
+        System.arraycopy(local, 0, result.local, 0, local.length);
         result.stackPtr = stackPtr;
 
         return result;
@@ -131,6 +138,7 @@ public final class ExecutionStack extends MutabilityControl {
 
         for (int i = 0; i < stackPtr; i++) {
             stack[i] = null;
+            local[i] = false;
         }
 
         stackPtr = 0;
@@ -171,6 +179,15 @@ public final class ExecutionStack extends MutabilityControl {
     }
 
     /**
+     * Flags the next value pushed onto the stack as having local info.
+     */
+    public void setLocal() {
+        throwIfImmutable();
+
+        local[stackPtr] = true;
+    }
+
+    /**
      * Peeks at the {@code n}th element down from the top of the stack.
      * {@code n == 0} means to peek at the top of the stack. Note that
      * this will return {@code null} if the indicated element is the
@@ -190,6 +207,26 @@ public final class ExecutionStack extends MutabilityControl {
         }
 
         return stack[stackPtr - n - 1];
+    }
+
+    /**
+     * Peeks at the {@code n}th element down from the top of the
+     * stack, returning whether or not it has local info.
+     *
+     * @param n {@code >= 0;} which element to peek at
+     * @return {@code true} if the value has local info, {@code false} otherwise
+     * @throws SimException thrown if {@code n >= size()}
+     */
+    public boolean peekLocal(int n) {
+        if (n < 0) {
+            throw new IllegalArgumentException("n < 0");
+        }
+
+        if (n >= stackPtr) {
+            throw new SimException("stack: underflow");
+        }
+
+        return local[stackPtr - n - 1];
     }
 
     /**
@@ -216,6 +253,7 @@ public final class ExecutionStack extends MutabilityControl {
         TypeBearer result = peek(0);
 
         stack[stackPtr - 1] = null;
+        local[stackPtr - 1] = false;
         stackPtr -= result.getType().getCategory();
 
         return result;

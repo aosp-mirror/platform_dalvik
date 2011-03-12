@@ -113,6 +113,14 @@ public interface Machine {
     public void localArg(Frame frame, int idx);
 
     /**
+     * Used to specify if a loaded local variable has info in the local
+     * variable table.
+     *
+     * @param local {@code true} if local arg has info in local variable table
+     */
+    public void localInfo(boolean local);
+
+    /**
      * Indicates that the salient type of this operation is as
      * given. This differentiates between, for example, the various
      * arithmetic opcodes, which, by the time they hit a

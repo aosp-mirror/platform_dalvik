@@ -367,13 +367,21 @@ public class Simulator {
                      * element type is category 2, we have to skip
                      * over one extra stack slot to find the array.
                      */
-                    Type foundArrayType =
-                        frame.getStack().peekType(type.isCategory1() ? 2 : 3);
+                    ExecutionStack stack = frame.getStack();
+                    int peekDepth = type.isCategory1() ? 2 : 3;
+                    Type foundArrayType = stack.peekType(peekDepth);
+                    boolean foundArrayLocal = stack.peekLocal(peekDepth);
+
                     Type requiredArrayType =
                         requiredArrayTypeFor(type, foundArrayType);
 
-                    // Make type agree with the discovered requiredArrayType.
-                    type = requiredArrayType.getComponentType();
+                    /*
+                     * Make type agree with the discovered requiredArrayType
+                     * if it has local info.
+                     */
+                    if (foundArrayLocal) {
+                        type = requiredArrayType.getComponentType();
+                    }
 
                     machine.popArgs(frame, requiredArrayType, Type.INT, type);
                     break;
@@ -578,6 +586,7 @@ public class Simulator {
                 case ByteOps.ILOAD:
                 case ByteOps.RET: {
                     machine.localArg(frame, idx);
+                    machine.localInfo(local != null);
                     machine.auxType(type);
                     break;
                 }
