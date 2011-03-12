@@ -55,6 +55,7 @@ bool dvmInitIndirectRefTable(IndirectRefTable* pRef, int initialCount,
 void dvmClearIndirectRefTable(IndirectRefTable* pRef)
 {
     free(pRef->table);
+    free(pRef->slotData);
     pRef->table = NULL;
     pRef->allocEntries = pRef->maxEntries = -1;
 }
