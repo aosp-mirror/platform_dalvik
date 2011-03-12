@@ -68,6 +68,7 @@ const char* dexGetPrimitiveTypeDescriptor(PrimitiveType type) {
     return NULL;
 }
 
+/* (documented in header) */
 const char* dexGetBoxedTypeDescriptor(PrimitiveType type) {
     switch (type) {
         case PRIM_VOID:    return NULL;

@@ -948,7 +948,8 @@ const char* dexGetPrimitiveTypeDescriptor(PrimitiveType type);
 /*
  * Get the boxed type descriptor string associated with a given
  * primitive type. This returns NULL for an invalid type, including
- * particularly for type "void".
+ * particularly for type "void". In the latter case, even though there
+ * is a class Void, there's no such thing as a boxed instance of it.
  */
 const char* dexGetBoxedTypeDescriptor(PrimitiveType type);
 
