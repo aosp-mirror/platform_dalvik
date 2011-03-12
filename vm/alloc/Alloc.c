@@ -340,3 +340,8 @@ size_t dvmCountAssignableInstancesOfClass(const ClassObject *clazz)
     dvmUnlockHeap();
     return ctx.count;
 }
+
+bool dvmIsHeapAddress(void *address)
+{
+    return dvmHeapSourceContainsAddress(address);
+}

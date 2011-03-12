@@ -137,4 +137,9 @@ size_t dvmCountAssignableInstancesOfClass(const ClassObject *clazz);
  */
 void dvmClearGrowthLimit(void);
 
+/*
+ * Returns true if the address is within the bounds of the heap.
+ */
+bool dvmIsHeapAddress(void *address);
+
 #endif /*_DALVIK_ALLOC_ALLOC*/
