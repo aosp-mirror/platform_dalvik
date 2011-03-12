@@ -255,7 +255,7 @@ static Heap *ptr2heap(const HeapSource *hs, const void *ptr)
  *
  * These aren't exact, and should not be treated as such.
  */
-static void countAllocation(Heap *heap, const void *ptr, bool isObj)
+static void countAllocation(Heap *heap, const void *ptr)
 {
     HeapSource *hs;
 
@@ -263,11 +263,9 @@ static void countAllocation(Heap *heap, const void *ptr, bool isObj)
 
     heap->bytesAllocated += mspace_usable_size(heap->msp, ptr) +
             HEAP_SOURCE_CHUNK_OVERHEAD;
-    if (isObj) {
-        heap->objectsAllocated++;
-        hs = gDvm.gcHeap->heapSource;
-        dvmHeapBitmapSetObjectBit(&hs->liveBits, ptr);
-    }
+    heap->objectsAllocated++;
+    hs = gDvm.gcHeap->heapSource;
+    dvmHeapBitmapSetObjectBit(&hs->liveBits, ptr);
 
     assert(heap->bytesAllocated < mspace_footprint(heap->msp));
 }
@@ -520,18 +518,17 @@ dvmHeapSourceStartup(size_t startSize, size_t maximumSize, size_t growthLimit)
         goto fail;
     }
 
-    /* Allocate a descriptor from the heap we just created.
-     */
-    gcHeap = (GcHeap *)mspace_malloc(msp, sizeof(*gcHeap));
+    gcHeap = (GcHeap *)malloc(sizeof(*gcHeap));
     if (gcHeap == NULL) {
         LOGE_HEAP("Can't allocate heap descriptor\n");
         goto fail;
     }
     memset(gcHeap, 0, sizeof(*gcHeap));
 
-    hs = (HeapSource *)mspace_malloc(msp, sizeof(*hs));
+    hs = (HeapSource *)malloc(sizeof(*hs));
     if (hs == NULL) {
         LOGE_HEAP("Can't allocate heap source\n");
+        free(gcHeap);
         goto fail;
     }
     memset(hs, 0, sizeof(*hs));
@@ -568,9 +565,6 @@ dvmHeapSourceStartup(size_t startSize, size_t maximumSize, size_t growthLimit)
     }
     gcHeap->markContext.bitmap = &hs->markBits;
     gcHeap->heapSource = hs;
-
-    countAllocation(hs2heap(hs), gcHeap, false);
-    countAllocation(hs2heap(hs), hs, false);
 
     gHs = hs;
     return gcHeap;
@@ -636,7 +630,9 @@ dvmHeapSourceShutdown(GcHeap **gcHeap)
         dvmHeapBitmapDelete(&hs->markBits);
         freeMarkStack(&(*gcHeap)->markContext.stack);
         munmap(hs->heapBase, hs->heapLength);
+        free(hs);
         gHs = NULL;
+        free(*gcHeap);
         *gcHeap = NULL;
     }
 }
@@ -816,7 +812,7 @@ dvmHeapSourceAlloc(size_t n)
     if (ptr == NULL) {
         return NULL;
     }
-    countAllocation(heap, ptr, true);
+    countAllocation(heap, ptr);
     /*
      * Check to see if a concurrent GC should be initiated.
      */
