@@ -1187,6 +1187,12 @@ static void genInvokeVirtualCommon(CompilationUnit *cUnit, MIR *mir,
      */
     dvmCompilerLockAllTemps(cUnit);
 
+    /*
+     * For verbose printing, store the method pointer in operands[1] first as
+     * operands[0] will be clobbered in dvmCompilerMIR2LIR.
+     */
+    predChainingCell->operands[1] = (int) mir->meta.callsiteInfo->method;
+
     /* "this" is already left in r0 by genProcessArgs* */
 
     /* r4PC = dalvikCallsite */
@@ -4234,6 +4240,13 @@ void dvmCompilerMIR2LIR(CompilationUnit *cUnit)
                 case kChainingCellInvokePredicted:
                     labelList[i].opcode =
                         kArmPseudoChainingCellInvokePredicted;
+                    /*
+                     * Move the cached method pointer from operand 1 to 0.
+                     * Operand 0 was clobbered earlier in this routine to store
+                     * the block starting offset, which is not applicable to
+                     * predicted chaining cell.
+                     */
+                    labelList[i].operands[0] = labelList[i].operands[1];
                     /* handle the codegen later */
                     dvmInsertGrowableList(
                         &chainingListByType[kChainingCellInvokePredicted], i);

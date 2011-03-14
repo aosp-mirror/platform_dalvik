@@ -325,10 +325,13 @@ void dvmDumpLIRInsn(LIR *arg, unsigned char *baseAddr)
             LOGD("-------- chaining cell (hot): 0x%04x\n", dest);
             break;
         case kArmPseudoChainingCellInvokePredicted:
-            LOGD("-------- chaining cell (predicted)\n");
+            LOGD("-------- chaining cell (predicted): %s%s\n",
+                 dest ? ((Method *) dest)->clazz->descriptor : "",
+                 dest ? ((Method *) dest)->name : "N/A");
             break;
         case kArmPseudoChainingCellInvokeSingleton:
-            LOGD("-------- chaining cell (invoke singleton): %s/%p\n",
+            LOGD("-------- chaining cell (invoke singleton): %s%s/%p\n",
+                 ((Method *)dest)->clazz->descriptor,
                  ((Method *)dest)->name,
                  ((Method *)dest)->insns);
             break;
