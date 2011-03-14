@@ -639,6 +639,45 @@ static JitEntry *lookupAndAdd(const u2* dPC, bool callerLocked,
     return (idx == chainEndMarker) ? NULL : &gDvmJit.pJitEntryTable[idx];
 }
 
+/* Dump a trace description */
+void dvmJitDumpTraceDesc(JitTraceDescription *trace)
+{
+    int i;
+    bool done = false;
+    const u2* dpc;
+    const u2* dpcBase;
+    int curFrag = 0;
+    LOGD("===========================================");
+    LOGD("Trace dump 0x%x, Method %s starting offset 0x%x",(int)trace,
+         trace->method->name,trace->trace[curFrag].info.frag.startOffset);
+    dpcBase = trace->method->insns;
+    while (!done) {
+        DecodedInstruction decInsn;
+        if (trace->trace[curFrag].isCode) {
+            LOGD("Frag[%d]- Insts: %d, start: 0x%x, hint: 0x%x, end: %d",
+                 curFrag, trace->trace[curFrag].info.frag.numInsts,
+                 trace->trace[curFrag].info.frag.startOffset,
+                 trace->trace[curFrag].info.frag.hint,
+                 trace->trace[curFrag].info.frag.runEnd);
+            dpc = dpcBase + trace->trace[curFrag].info.frag.startOffset;
+            for (i=0; i<trace->trace[curFrag].info.frag.numInsts; i++) {
+                dexDecodeInstruction(dpc, &decInsn);
+                LOGD("    0x%04x - %s",(dpc-dpcBase),
+                     dexGetOpcodeName(decInsn.opcode));
+                dpc += dexGetWidthFromOpcode(decInsn.opcode);
+            }
+            if (trace->trace[curFrag].info.frag.runEnd) {
+                done = true;
+            }
+        } else {
+            LOGD("Frag[%d]- META info: 0x%08x", curFrag,
+                 (int)trace->trace[curFrag].info.meta);
+        }
+        curFrag++;
+    }
+    LOGD("-------------------------------------------");
+}
+
 /*
  * Append the class ptr of "this" and the current method ptr to the current
  * trace. That is, the trace runs will contain the following components:
@@ -898,6 +937,9 @@ int dvmCheckJit(const u2* pc, Thread* self, const ClassObject* thisClass,
                 if (dvmCompilerWorkEnqueue(
                        self->currTraceHead,kWorkOrderTrace,desc)) {
                     /* Work order successfully enqueued */
+#if defined(SHOW_TRACE)
+                    dvmJitDumpTraceDesc(desc);
+#endif
                     if (gDvmJit.blockingMode) {
                         dvmCompilerDrainQueue();
                     }
