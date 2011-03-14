@@ -622,10 +622,9 @@ void dvmHeapSourceThreadShutdown(void)
 void
 dvmHeapSourceShutdown(GcHeap **gcHeap)
 {
+    assert(gcHeap != NULL);
     if (*gcHeap != NULL && (*gcHeap)->heapSource != NULL) {
         HeapSource *hs = (*gcHeap)->heapSource;
-        assert((char *)*gcHeap >= hs->heapBase);
-        assert((char *)*gcHeap < hs->heapBase + hs->heapLength);
         dvmHeapBitmapDelete(&hs->liveBits);
         dvmHeapBitmapDelete(&hs->markBits);
         freeMarkStack(&(*gcHeap)->markContext.stack);
