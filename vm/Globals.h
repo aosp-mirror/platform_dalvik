@@ -231,9 +231,36 @@ struct DvmGlobals {
     HashTable*  literalStrings;
 
     /*
+     * Classes constructed directly by the vm.
+     */
+
+    /* the class Class */
+    ClassObject* classJavaLangClass;
+
+    /* synthetic classes representing primitive types */
+    ClassObject* typeVoid;
+    ClassObject* typeBoolean;
+    ClassObject* typeByte;
+    ClassObject* typeShort;
+    ClassObject* typeChar;
+    ClassObject* typeInt;
+    ClassObject* typeLong;
+    ClassObject* typeFloat;
+    ClassObject* typeDouble;
+
+    /* synthetic classes for arrays of primitives */
+    ClassObject* classArrayBoolean;
+    ClassObject* classArrayByte;
+    ClassObject* classArrayShort;
+    ClassObject* classArrayChar;
+    ClassObject* classArrayInt;
+    ClassObject* classArrayLong;
+    ClassObject* classArrayFloat;
+    ClassObject* classArrayDouble;
+
+    /*
      * Quick lookups for popular classes used internally.
      */
-    ClassObject* classJavaLangClass;
     ClassObject* classJavaLangClassArray;
     ClassObject* classJavaLangObject;
     ClassObject* classJavaLangObjectArray;
@@ -305,27 +332,6 @@ struct DvmGlobals {
     ClassObject* exUnsupportedOperationException;
     ClassObject* exVerifyError;
     ClassObject* exVirtualMachineError;
-
-    /* synthetic classes representing primitive types */
-    ClassObject* typeVoid;
-    ClassObject* typeBoolean;
-    ClassObject* typeByte;
-    ClassObject* typeShort;
-    ClassObject* typeChar;
-    ClassObject* typeInt;
-    ClassObject* typeLong;
-    ClassObject* typeFloat;
-    ClassObject* typeDouble;
-
-    /* synthetic classes for arrays of primitives */
-    ClassObject* classArrayBoolean;
-    ClassObject* classArrayChar;
-    ClassObject* classArrayFloat;
-    ClassObject* classArrayDouble;
-    ClassObject* classArrayByte;
-    ClassObject* classArrayShort;
-    ClassObject* classArrayInt;
-    ClassObject* classArrayLong;
 
     /* method offsets - Object */
     int         voffJavaLangObject_equals;

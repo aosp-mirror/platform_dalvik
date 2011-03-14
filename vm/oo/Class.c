@@ -357,7 +357,7 @@ static bool createPrimitiveType(PrimitiveType primitiveType, ClassObject** pClas
 
     /* don't need to set newClass->objectSize */
 
-    LOGVV("Created class for primitive type '%s'\n", newClass->descriptor);
+    LOGVV("Constructed class for primitive type '%s'\n", newClass->descriptor);
 
     *pClass = newClass;
     dvmReleaseTrackedAlloc((Object*) newClass, NULL);
@@ -366,11 +366,30 @@ static bool createPrimitiveType(PrimitiveType primitiveType, ClassObject** pClas
 }
 
 /*
- * Create the classes representing primitive types.
+ * Create the initial class instances. These consist of the class
+ * Class and all of the classes representing primitive types.
  */
-static bool createPrimitiveTypes(void) {
-    bool ok = true;
+static bool createInitialClasses(void) {
+    /*
+     * Initialize the class Class. This has to be done specially, particularly
+     * because it is an instance of itself.
+     */
+    ClassObject* clazz = (ClassObject*)
+        dvmMalloc(classObjectSize(CLASS_SFIELD_SLOTS), ALLOC_DEFAULT);
+    if (clazz == NULL) {
+        return false;
+    }
+    DVM_OBJECT_INIT(&clazz->obj, clazz);
+    clazz->descriptor = "Ljava/lang/Class;";
+    gDvm.classJavaLangClass = clazz;
+    LOGVV("Constructed the class Class.\n");
 
+    /*
+     * Initialize the classes representing primitive types. These are
+     * instances of the class Class, but other than that they're fairly
+     * different from regular classes.
+     */
+    bool ok = true;
     ok &= createPrimitiveType(PRIM_VOID,    &gDvm.typeVoid);
     ok &= createPrimitiveType(PRIM_BOOLEAN, &gDvm.typeBoolean);
     ok &= createPrimitiveType(PRIM_BYTE,    &gDvm.typeByte);
@@ -415,7 +434,8 @@ bool dvmClassStartup(void)
      */
     gDvm.classSerialNumber = INITIAL_CLASS_SERIAL_NUMBER;
 
-    /* Set up the table we'll use for tracking initiating loaders for
+    /*
+     * Set up the table we'll use for tracking initiating loaders for
      * early classes.
      * If it's NULL, we just fall back to the InitiatingLoaderList in the
      * ClassObject, so it's not fatal to fail this allocation.
@@ -424,20 +444,10 @@ bool dvmClassStartup(void)
         calloc(ZYGOTE_CLASS_CUTOFF, sizeof(InitiatingLoaderList));
 
     /*
-     * Initialize the class Class. This has to be done specially, particularly
-     * because it is an instance of itself.
+     * Create the initial classes. These are the first objects constructed
+     * within the nascent VM.
      */
-    gDvm.classJavaLangClass = (ClassObject*) dvmMalloc(
-        classObjectSize(CLASS_SFIELD_SLOTS), ALLOC_DEFAULT);
-    DVM_OBJECT_INIT(&gDvm.classJavaLangClass->obj, gDvm.classJavaLangClass);
-    gDvm.classJavaLangClass->descriptor = "Ljava/lang/Class;";
-
-    /*
-     * Initialize the classes representing primitive types. These are
-     * instances of the class Class, but other than that they're fairly
-     * different from regular classes.
-     */
-    if (!createPrimitiveTypes()) {
+    if (!createInitialClasses()) {
         return false;
     }
 
