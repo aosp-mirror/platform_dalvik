@@ -161,5 +161,6 @@ JitTraceCounter_t *dvmJitNextTraceCounter(void);
 void dvmJitTraceProfilingOff(void);
 void dvmJitTraceProfilingOn(void);
 void dvmJitChangeProfileMode(TraceProfilingModes newState);
+void dvmJitDumpTraceDesc(JitTraceDescription *trace);
 
 #endif /*_DALVIK_INTERP_JIT*/
