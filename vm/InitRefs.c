@@ -53,125 +53,110 @@ static bool initRef(ClassObject** pClass, const char* name) {
     return true;
 }
 
-static bool find1(void) {
-    /*
-     * Note: Under normal VM use, this is called by dvmStartup()
-     * in Init.c. For dex optimization, this is called as well, but in
-     * that case, the call is made from DexPrepare.c.
-     */
+static bool initClassReferences(void) {
+    static struct { ClassObject** ref; const char* name; } classes[] = {
+
+        /* The corest of the core classes */
+        { &gDvm.classJavaLangClass,  "Ljava/lang/Class;" },
+        { &gDvm.classJavaLangObject, "Ljava/lang/Object;" },
+        { &gDvm.exThrowable,         "Ljava/lang/Throwable;" },
+
+        /* Slightly less core, but still down there, classes */
+        { &gDvm.classJavaLangClassArray,             "[Ljava/lang/Class;" },
+        { &gDvm.classJavaLangObjectArray,            "[Ljava/lang/Object;"},
+        { &gDvm.classJavaLangStackTraceElement,      "Ljava/lang/StackTraceElement;" },
+        { &gDvm.classJavaLangStackTraceElementArray, "[Ljava/lang/StackTraceElement;" },
+        { &gDvm.classJavaLangString,                 "Ljava/lang/String;" },
+        { &gDvm.classJavaLangThread,                 "Ljava/lang/Thread;" },
+        { &gDvm.classJavaLangThreadGroup,            "Ljava/lang/ThreadGroup;" },
+        { &gDvm.classJavaLangVMThread,               "Ljava/lang/VMThread;" },
+
+        /* Arrays of primitive types */
+        { &gDvm.classArrayBoolean, "[Z" },
+        { &gDvm.classArrayByte,    "[B" },
+        { &gDvm.classArrayShort,   "[S" },
+        { &gDvm.classArrayChar,    "[C" },
+        { &gDvm.classArrayInt,     "[I" },
+        { &gDvm.classArrayLong,    "[J" },
+        { &gDvm.classArrayFloat,   "[F" },
+        { &gDvm.classArrayDouble,  "[D" },
+
+        /* Exception classes */
+        { &gDvm.exAbstractMethodError,             "Ljava/lang/AbstractMethodError;" },
+        { &gDvm.exArithmeticException,             "Ljava/lang/ArithmeticException;" },
+        { &gDvm.exArrayIndexOutOfBoundsException,  "Ljava/lang/ArrayIndexOutOfBoundsException;" },
+        { &gDvm.exArrayStoreException,             "Ljava/lang/ArrayStoreException;" },
+        { &gDvm.exClassCastException,              "Ljava/lang/ClassCastException;" },
+        { &gDvm.exClassCircularityError,           "Ljava/lang/ClassCircularityError;" },
+        { &gDvm.exClassNotFoundException,          "Ljava/lang/ClassNotFoundException;" },
+        { &gDvm.exClassFormatError,                "Ljava/lang/ClassFormatError;" },
+        { &gDvm.exError,                           "Ljava/lang/Error;" },
+        { &gDvm.exExceptionInInitializerError,     "Ljava/lang/ExceptionInInitializerError;" },
+        { &gDvm.exFileNotFoundException,           "Ljava/io/FileNotFoundException;" },
+        { &gDvm.exIOException,                     "Ljava/io/IOException;" },
+        { &gDvm.exIllegalAccessError,              "Ljava/lang/IllegalAccessError;" },
+        { &gDvm.exIllegalAccessException,          "Ljava/lang/IllegalAccessException;" },
+        { &gDvm.exIllegalArgumentException,        "Ljava/lang/IllegalArgumentException;" },
+        { &gDvm.exIllegalMonitorStateException,    "Ljava/lang/IllegalMonitorStateException;" },
+        { &gDvm.exIllegalStateException,           "Ljava/lang/IllegalStateException;" },
+        { &gDvm.exIllegalThreadStateException,     "Ljava/lang/IllegalThreadStateException;" },
+        { &gDvm.exIncompatibleClassChangeError,    "Ljava/lang/IncompatibleClassChangeError;" },
+        { &gDvm.exInstantiationError,              "Ljava/lang/InstantiationError;" },
+        { &gDvm.exInstantiationException,          "Ljava/lang/InstantiationException;" },
+        { &gDvm.exInternalError,                   "Ljava/lang/InternalError;" },
+        { &gDvm.exInterruptedException,            "Ljava/lang/InterruptedException;" },
+        { &gDvm.exLinkageError,                    "Ljava/lang/LinkageError;" },
+        { &gDvm.exNegativeArraySizeException,      "Ljava/lang/NegativeArraySizeException;" },
+        { &gDvm.exNoClassDefFoundError,            "Ljava/lang/NoClassDefFoundError;" },
+        { &gDvm.exNoSuchFieldError,                "Ljava/lang/NoSuchFieldError;" },
+        { &gDvm.exNoSuchFieldException,            "Ljava/lang/NoSuchFieldException;" },
+        { &gDvm.exNoSuchMethodError,               "Ljava/lang/NoSuchMethodError;" },
+        { &gDvm.exNullPointerException,            "Ljava/lang/NullPointerException;" },
+        { &gDvm.exOutOfMemoryError,                "Ljava/lang/OutOfMemoryError;" },
+        { &gDvm.exRuntimeException,                "Ljava/lang/RuntimeException;" },
+        { &gDvm.exStackOverflowError,              "Ljava/lang/StackOverflowError;" },
+        { &gDvm.exStaleDexCacheError,              "Ldalvik/system/StaleDexCacheError;" },
+        { &gDvm.exStringIndexOutOfBoundsException, "Ljava/lang/StringIndexOutOfBoundsException;" },
+        { &gDvm.exTypeNotPresentException,         "Ljava/lang/TypeNotPresentException;" },
+        { &gDvm.exUnsatisfiedLinkError,            "Ljava/lang/UnsatisfiedLinkError;" },
+        { &gDvm.exUnsupportedOperationException,   "Ljava/lang/UnsupportedOperationException;" },
+        { &gDvm.exVerifyError,                     "Ljava/lang/VerifyError;" },
+        { &gDvm.exVirtualMachineError,             "Ljava/lang/VirtualMachineError;" },
+
+        /* Other classes */
+        { &gDvm.classJavaLangAnnotationAnnotationArray, "[Ljava/lang/annotation/Annotation;" },
+        { &gDvm.classJavaLangAnnotationAnnotationArrayArray,
+          "[[Ljava/lang/annotation/Annotation;" },
+        { &gDvm.classJavaLangReflectAccessibleObject, "Ljava/lang/reflect/AccessibleObject;" },
+        { &gDvm.classJavaLangReflectConstructor, "Ljava/lang/reflect/Constructor;" },
+        { &gDvm.classJavaLangReflectConstructorArray, "[Ljava/lang/reflect/Constructor;" },
+        { &gDvm.classJavaLangReflectField, "Ljava/lang/reflect/Field;" },
+        { &gDvm.classJavaLangReflectFieldArray, "[Ljava/lang/reflect/Field;" },
+        { &gDvm.classJavaLangReflectMethod, "Ljava/lang/reflect/Method;" },
+        { &gDvm.classJavaLangReflectMethodArray, "[Ljava/lang/reflect/Method;"},
+        { &gDvm.classJavaLangReflectProxy, "Ljava/lang/reflect/Proxy;" },
+        { &gDvm.classJavaNioReadWriteDirectByteBuffer, "Ljava/nio/ReadWriteDirectByteBuffer;" },
+        { &gDvm.classOrgApacheHarmonyLangAnnotationAnnotationFactory,
+          "Lorg/apache/harmony/lang/annotation/AnnotationFactory;" },
+        { &gDvm.classOrgApacheHarmonyLangAnnotationAnnotationMember,
+          "Lorg/apache/harmony/lang/annotation/AnnotationMember;" },
+        { &gDvm.classOrgApacheHarmonyLangAnnotationAnnotationMemberArray,
+          "[Lorg/apache/harmony/lang/annotation/AnnotationMember;" },
+
+        { NULL, NULL }
+    };
 
     bool ok = true;
+    int i;
 
-    /* The corest of the core classes */
-
-    ok &= initRef(&gDvm.classJavaLangClass, "Ljava/lang/Class;");
-    ok &= initRef(&gDvm.classJavaLangObject, "Ljava/lang/Object;");
-    ok &= initRef(&gDvm.exThrowable, "Ljava/lang/Throwable;");
-
-    ok &= initRef(&gDvm.classJavaLangString, "Ljava/lang/String;");
-    ok &= initRef(&gDvm.classJavaLangThread, "Ljava/lang/Thread;");
-    ok &= initRef(&gDvm.classJavaLangThreadGroup, "Ljava/lang/ThreadGroup;");
-    ok &= initRef(&gDvm.classJavaLangVMThread, "Ljava/lang/VMThread;");
-
-    /* Arrays of primitive types */
-
-    ok &= initRef(&gDvm.classArrayBoolean, "[Z");
-    ok &= initRef(&gDvm.classArrayByte, "[B");
-    ok &= initRef(&gDvm.classArrayShort, "[S");
-    ok &= initRef(&gDvm.classArrayChar, "[C");
-    ok &= initRef(&gDvm.classArrayInt, "[I");
-    ok &= initRef(&gDvm.classArrayLong, "[J");
-    ok &= initRef(&gDvm.classArrayFloat, "[F");
-    ok &= initRef(&gDvm.classArrayDouble, "[D");
-
-    /* Exception classes and related support classes */
-
-    ok &= initRef(&gDvm.exAbstractMethodError,
-            "Ljava/lang/AbstractMethodError;");
-    ok &= initRef(&gDvm.exArithmeticException,
-            "Ljava/lang/ArithmeticException;");
-    ok &= initRef(&gDvm.exArrayIndexOutOfBoundsException,
-            "Ljava/lang/ArrayIndexOutOfBoundsException;");
-    ok &= initRef(&gDvm.exArrayStoreException,
-            "Ljava/lang/ArrayStoreException;");
-    ok &= initRef(&gDvm.exClassCastException,
-            "Ljava/lang/ClassCastException;");
-    ok &= initRef(&gDvm.exClassCircularityError,
-            "Ljava/lang/ClassCircularityError;");
-    ok &= initRef(&gDvm.exClassNotFoundException,
-            "Ljava/lang/ClassNotFoundException;");
-    ok &= initRef(&gDvm.exClassFormatError, "Ljava/lang/ClassFormatError;");
-    ok &= initRef(&gDvm.exError, "Ljava/lang/Error;");
-    ok &= initRef(&gDvm.exExceptionInInitializerError,
-            "Ljava/lang/ExceptionInInitializerError;");
-    ok &= initRef(&gDvm.exFileNotFoundException,
-            "Ljava/io/FileNotFoundException;");
-    ok &= initRef(&gDvm.exIOException, "Ljava/io/IOException;");
-    ok &= initRef(&gDvm.exIllegalAccessError,
-            "Ljava/lang/IllegalAccessError;");
-    ok &= initRef(&gDvm.exIllegalAccessException,
-            "Ljava/lang/IllegalAccessException;");
-    ok &= initRef(&gDvm.exIllegalArgumentException,
-            "Ljava/lang/IllegalArgumentException;");
-    ok &= initRef(&gDvm.exIllegalMonitorStateException,
-            "Ljava/lang/IllegalMonitorStateException;");
-    ok &= initRef(&gDvm.exIllegalStateException,
-            "Ljava/lang/IllegalStateException;");
-    ok &= initRef(&gDvm.exIllegalThreadStateException,
-            "Ljava/lang/IllegalThreadStateException;");
-    ok &= initRef(&gDvm.exIncompatibleClassChangeError,
-            "Ljava/lang/IncompatibleClassChangeError;");
-    ok &= initRef(&gDvm.exInstantiationError,
-            "Ljava/lang/InstantiationError;");
-    ok &= initRef(&gDvm.exInstantiationException,
-            "Ljava/lang/InstantiationException;");
-    ok &= initRef(&gDvm.exInternalError,
-            "Ljava/lang/InternalError;");
-    ok &= initRef(&gDvm.exInterruptedException,
-            "Ljava/lang/InterruptedException;");
-    ok &= initRef(&gDvm.exLinkageError,
-            "Ljava/lang/LinkageError;");
-    ok &= initRef(&gDvm.exNegativeArraySizeException,
-            "Ljava/lang/NegativeArraySizeException;");
-    ok &= initRef(&gDvm.exNoClassDefFoundError,
-            "Ljava/lang/NoClassDefFoundError;");
-    ok &= initRef(&gDvm.exNoSuchFieldError,
-            "Ljava/lang/NoSuchFieldError;");
-    ok &= initRef(&gDvm.exNoSuchFieldException,
-            "Ljava/lang/NoSuchFieldException;");
-    ok &= initRef(&gDvm.exNoSuchMethodError,
-            "Ljava/lang/NoSuchMethodError;");
-    ok &= initRef(&gDvm.exNullPointerException,
-            "Ljava/lang/NullPointerException;");
-    ok &= initRef(&gDvm.exOutOfMemoryError,
-            "Ljava/lang/OutOfMemoryError;");
-    ok &= initRef(&gDvm.exRuntimeException, "Ljava/lang/RuntimeException;");
-    ok &= initRef(&gDvm.exStackOverflowError,
-            "Ljava/lang/StackOverflowError;");
-    ok &= initRef(&gDvm.exStaleDexCacheError,
-            "Ldalvik/system/StaleDexCacheError;");
-    ok &= initRef(&gDvm.exStringIndexOutOfBoundsException,
-            "Ljava/lang/StringIndexOutOfBoundsException;");
-    ok &= initRef(&gDvm.exTypeNotPresentException,
-            "Ljava/lang/TypeNotPresentException;");
-    ok &= initRef(&gDvm.exUnsatisfiedLinkError,
-            "Ljava/lang/UnsatisfiedLinkError;");
-    ok &= initRef(&gDvm.exUnsupportedOperationException,
-            "Ljava/lang/UnsupportedOperationException;");
-    ok &= initRef(&gDvm.exVerifyError,
-            "Ljava/lang/VerifyError;");
-    ok &= initRef(&gDvm.exVirtualMachineError,
-            "Ljava/lang/VirtualMachineError;");
-
-    ok &= initRef(&gDvm.classJavaLangStackTraceElement,
-            "Ljava/lang/StackTraceElement;");
-    ok &= initRef(&gDvm.classJavaLangStackTraceElementArray,
-            "[Ljava/lang/StackTraceElement;");
-
-    if (!ok) {
-        return false;
+    for (i = 0; classes[i].ref != NULL; i++) {
+        ok &= initRef(classes[i].ref, classes[i].name);
     }
 
+    return ok;
+}
+
+static bool find1(void) {
     /*
      * Find the StackTraceElement constructor. Note that, unlike other
      * saved method lookups, we're using a Method* instead of a vtable
@@ -303,18 +288,15 @@ static bool find4(void) {
      * Look up and cache pointers to some direct buffer classes, fields,
      * and methods.
      */
-    ClassObject* readWriteBufferClass =
-        dvmFindSystemClassNoInit("Ljava/nio/ReadWriteDirectByteBuffer;");
     ClassObject* bufferClass =
         dvmFindSystemClassNoInit("Ljava/nio/Buffer;");
 
-    if (readWriteBufferClass == NULL || bufferClass == NULL) {
+    if (bufferClass == NULL) {
         LOGE("Unable to find internal direct buffer classes\n");
         return false;
     }
-    gDvm.classJavaNioReadWriteDirectByteBuffer = readWriteBufferClass;
 
-    meth = dvmFindDirectMethodByDescriptor(readWriteBufferClass,
+    meth = dvmFindDirectMethodByDescriptor(gDvm.classJavaNioReadWriteDirectByteBuffer,
                 "<init>",
                 "(II)V");
     if (meth == NULL) {
@@ -342,35 +324,6 @@ static bool find4(void) {
 
 static bool find5(void)
 {
-    gDvm.classJavaLangReflectAccessibleObject =
-        dvmFindSystemClassNoInit("Ljava/lang/reflect/AccessibleObject;");
-    gDvm.classJavaLangReflectConstructor =
-        dvmFindSystemClassNoInit("Ljava/lang/reflect/Constructor;");
-    gDvm.classJavaLangReflectConstructorArray =
-        dvmFindArrayClass("[Ljava/lang/reflect/Constructor;", NULL);
-    gDvm.classJavaLangReflectField =
-        dvmFindSystemClassNoInit("Ljava/lang/reflect/Field;");
-    gDvm.classJavaLangReflectFieldArray =
-        dvmFindArrayClass("[Ljava/lang/reflect/Field;", NULL);
-    gDvm.classJavaLangReflectMethod =
-        dvmFindSystemClassNoInit("Ljava/lang/reflect/Method;");
-    gDvm.classJavaLangReflectMethodArray =
-        dvmFindArrayClass("[Ljava/lang/reflect/Method;", NULL);
-    gDvm.classJavaLangReflectProxy =
-        dvmFindSystemClassNoInit("Ljava/lang/reflect/Proxy;");
-    if (gDvm.classJavaLangReflectAccessibleObject == NULL ||
-        gDvm.classJavaLangReflectConstructor == NULL ||
-        gDvm.classJavaLangReflectConstructorArray == NULL ||
-        gDvm.classJavaLangReflectField == NULL ||
-        gDvm.classJavaLangReflectFieldArray == NULL ||
-        gDvm.classJavaLangReflectMethod == NULL ||
-        gDvm.classJavaLangReflectMethodArray == NULL ||
-        gDvm.classJavaLangReflectProxy == NULL)
-    {
-        LOGE("Could not find one or more reflection classes\n");
-        return false;
-    }
-
     gDvm.methJavaLangReflectConstructor_init =
         dvmFindDirectMethodByDescriptor(gDvm.classJavaLangReflectConstructor, "<init>",
         "(Ljava/lang/Class;[Ljava/lang/Class;[Ljava/lang/Class;I)V");
@@ -385,17 +338,6 @@ static bool find5(void)
         gDvm.methJavaLangReflectMethod_init == NULL)
     {
         LOGE("Could not find reflection constructors\n");
-        return false;
-    }
-
-    gDvm.classJavaLangClassArray =
-        dvmFindArrayClass("[Ljava/lang/Class;", NULL);
-    gDvm.classJavaLangObjectArray =
-        dvmFindArrayClass("[Ljava/lang/Object;", NULL);
-    if (gDvm.classJavaLangClassArray == NULL ||
-        gDvm.classJavaLangObjectArray == NULL)
-    {
-        LOGE("Could not find class-array or object-array class\n");
         return false;
     }
 
@@ -467,14 +409,9 @@ static bool find6()
      * "real" DEX file.  We declared this otherwise unused method just
      * for this purpose.
      */
-    ClassObject* proxyClass;
     Method* meth;
-    proxyClass = dvmFindSystemClassNoInit("Ljava/lang/reflect/Proxy;");
-    if (proxyClass == NULL) {
-        LOGE("No java.lang.reflect.Proxy\n");
-        return false;
-    }
-    meth = dvmFindDirectMethodByDescriptor(proxyClass, "constructorPrototype",
+
+    meth = dvmFindDirectMethodByDescriptor(gDvm.classJavaLangReflectProxy, "constructorPrototype",
                 "(Ljava/lang/reflect/InvocationHandler;)V");
     if (meth == NULL) {
         LOGE("Could not find java.lang.Proxy.constructorPrototype()\n");
@@ -485,7 +422,7 @@ static bool find6()
     /*
      * Get the offset of the "h" field in Proxy.
      */
-    gDvm.offJavaLangReflectProxy_h = dvmFindFieldOffset(proxyClass, "h",
+    gDvm.offJavaLangReflectProxy_h = dvmFindFieldOffset(gDvm.classJavaLangReflectProxy, "h",
         "Ljava/lang/reflect/InvocationHandler;");
     if (gDvm.offJavaLangReflectProxy_h < 0) {
         LOGE("Unable to find 'h' field in java.lang.Proxy\n");
@@ -501,37 +438,6 @@ static bool find6()
 static bool find7(void)
 {
     Method* meth;
-
-    /*
-     * Find some standard Annotation classes.
-     */
-    gDvm.classJavaLangAnnotationAnnotationArray =
-        dvmFindArrayClass("[Ljava/lang/annotation/Annotation;", NULL);
-    gDvm.classJavaLangAnnotationAnnotationArrayArray =
-        dvmFindArrayClass("[[Ljava/lang/annotation/Annotation;", NULL);
-    if (gDvm.classJavaLangAnnotationAnnotationArray == NULL ||
-        gDvm.classJavaLangAnnotationAnnotationArrayArray == NULL)
-    {
-        LOGE("Could not find Annotation-array classes\n");
-        return false;
-    }
-
-    /*
-     * VM-specific annotation classes.
-     */
-    gDvm.classOrgApacheHarmonyLangAnnotationAnnotationFactory =
-        dvmFindSystemClassNoInit("Lorg/apache/harmony/lang/annotation/AnnotationFactory;");
-    gDvm.classOrgApacheHarmonyLangAnnotationAnnotationMember =
-        dvmFindSystemClassNoInit("Lorg/apache/harmony/lang/annotation/AnnotationMember;");
-    gDvm.classOrgApacheHarmonyLangAnnotationAnnotationMemberArray =
-        dvmFindArrayClass("[Lorg/apache/harmony/lang/annotation/AnnotationMember;", NULL);
-    if (gDvm.classOrgApacheHarmonyLangAnnotationAnnotationFactory == NULL ||
-        gDvm.classOrgApacheHarmonyLangAnnotationAnnotationMember == NULL ||
-        gDvm.classOrgApacheHarmonyLangAnnotationAnnotationMemberArray == NULL)
-    {
-        LOGE("Could not find android.lang annotation classes\n");
-        return false;
-    }
 
     meth = dvmFindDirectMethodByDescriptor(gDvm.classOrgApacheHarmonyLangAnnotationAnnotationFactory,
             "createAnnotation",
@@ -621,8 +527,15 @@ static bool find9(void) {
 
 /* (documented in header) */
 bool dvmFindRequiredClassesAndMembers(void) {
+    /*
+     * Note: Under normal VM use, this is called by dvmStartup()
+     * in Init.c. For dex optimization, this is called as well, but in
+     * that case, the call is made from DexPrepare.c.
+     */
+
     bool ok = true;
 
+    ok &= initClassReferences();
     ok &= find1();
     ok &= find2();
     ok &= find3();
