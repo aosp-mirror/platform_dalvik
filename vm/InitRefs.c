@@ -146,14 +146,14 @@ static bool initClassReferences(void) {
         { NULL, NULL }
     };
 
-    bool ok = true;
     int i;
-
     for (i = 0; classes[i].ref != NULL; i++) {
-        ok &= initClassReference(classes[i].ref, classes[i].name);
+        if (!initClassReference(classes[i].ref, classes[i].name)) {
+            return false;
+        }
     }
 
-    return ok;
+    return true;
 }
 
 static bool initFieldOffset(ClassObject* clazz, int *pOffset,
@@ -252,9 +252,7 @@ static bool initFieldOffsets(void) {
         { NULL, NULL }
     };
 
-    bool ok = true;
     int i;
-
     for (i = 0; classes[i].name != NULL; i++) {
         const char* className = classes[i].name;
         ClassObject* clazz = dvmFindSystemClassNoInit(className);
@@ -262,16 +260,18 @@ static bool initFieldOffsets(void) {
 
         if (clazz == NULL) {
             LOGE("Could not find essential class %s for field lookup\n", className);
-            continue;
+            return false;
         }
 
         int j;
         for (j = 0; fields[j].offset != NULL; j++) {
-            ok &= initFieldOffset(clazz, fields[j].offset, fields[j].name, fields[j].type);
+            if (!initFieldOffset(clazz, fields[j].offset, fields[j].name, fields[j].type)) {
+                return false;
+            }
         }
     }
 
-    return ok;
+    return true;
 }
 
 static bool initDirectMethodReference(Method** pMethod, const char* className,
@@ -314,15 +314,15 @@ static bool initConstructorReferences(void) {
         { NULL, NULL, NULL }
     };
 
-    bool ok = true;
     int i;
-
     for (i = 0; constructors[i].method != NULL; i++) {
-        ok &= initDirectMethodReference(constructors[i].method, constructors[i].name,
-                "<init>", constructors[i].descriptor);
+        if (!initDirectMethodReference(constructors[i].method, constructors[i].name,
+                "<init>", constructors[i].descriptor)) {
+            return false;
+        }
     }
 
-    return ok;
+    return true;
 }
 
 static bool initDirectMethodReferences(void) {
@@ -343,15 +343,15 @@ static bool initDirectMethodReferences(void) {
         { NULL, NULL, NULL, NULL }
     };
 
-    bool ok = true;
     int i;
-
     for (i = 0; methods[i].method != NULL; i++) {
-        ok &= initDirectMethodReference(methods[i].method, methods[i].className,
-                methods[i].name, methods[i].descriptor);
+        if (!initDirectMethodReference(methods[i].method, methods[i].className,
+                methods[i].name, methods[i].descriptor)) {
+            return false;
+        }
     }
 
-    return ok;
+    return true;
 }
 
 static bool initVirtualMethodOffset(int* pOffset, const char* className,
@@ -396,43 +396,42 @@ static bool initVirtualMethodOffsets(void) {
         { NULL, NULL, NULL, NULL }
     };
 
-    bool ok = true;
     int i;
-
     for (i = 0; methods[i].offset != NULL; i++) {
-        ok &= initVirtualMethodOffset(methods[i].offset, methods[i].className,
-                methods[i].name, methods[i].descriptor);
+        if (!initVirtualMethodOffset(methods[i].offset, methods[i].className,
+                methods[i].name, methods[i].descriptor)) {
+            return false;
+        }
     }
-
-    return ok;
-}
-
-static bool find9(void) {
-    bool badValue = false;
-    if (gDvm.offJavaLangString_value != STRING_FIELDOFF_VALUE) {
-        LOGE("InlineNative: String.value offset = %d, expected %d\n",
-            gDvm.offJavaLangString_value, STRING_FIELDOFF_VALUE);
-        badValue = true;
-    }
-    if (gDvm.offJavaLangString_count != STRING_FIELDOFF_COUNT) {
-        LOGE("InlineNative: String.count offset = %d, expected %d\n",
-            gDvm.offJavaLangString_count, STRING_FIELDOFF_COUNT);
-        badValue = true;
-    }
-    if (gDvm.offJavaLangString_offset != STRING_FIELDOFF_OFFSET) {
-        LOGE("InlineNative: String.offset offset = %d, expected %d\n",
-            gDvm.offJavaLangString_offset, STRING_FIELDOFF_OFFSET);
-        badValue = true;
-    }
-    if (gDvm.offJavaLangString_hashCode != STRING_FIELDOFF_HASHCODE) {
-        LOGE("InlineNative: String.hashCode offset = %d, expected %d\n",
-            gDvm.offJavaLangString_hashCode, STRING_FIELDOFF_HASHCODE);
-        badValue = true;
-    }
-    if (badValue)
-        return false;
 
     return true;
+}
+
+static bool verifyStringOffset(const char* name, int actual, int expected) {
+    if (actual != expected) {
+        LOGE("InitRefs: String.%s offset = %d; expected %d\n", name, actual, expected);
+        return false;
+    }
+
+    return true;
+}
+
+static bool verifyStringOffsets(void) {
+    /*
+     * Various parts of the system use predefined constants for the
+     * offsets to a few fields of the class String. This code verifies
+     * that the predefined offsets match what is actually defined by
+     * the class.
+     */
+
+    bool ok = true;
+    ok &= verifyStringOffset("value",    gDvm.offJavaLangString_value,  STRING_FIELDOFF_VALUE);
+    ok &= verifyStringOffset("count",    gDvm.offJavaLangString_count,  STRING_FIELDOFF_COUNT);
+    ok &= verifyStringOffset("offset",   gDvm.offJavaLangString_offset, STRING_FIELDOFF_OFFSET);
+    ok &= verifyStringOffset("hashCode", gDvm.offJavaLangString_hashCode,
+            STRING_FIELDOFF_HASHCODE);
+
+    return ok;
 }
 
 /* (documented in header) */
@@ -443,16 +442,12 @@ bool dvmFindRequiredClassesAndMembers(void) {
      * that case, the call is made from DexPrepare.c.
      */
 
-    bool ok = true;
-
-    ok &= initClassReferences();
-    ok &= initFieldOffsets();
-    ok &= initConstructorReferences();
-    ok &= initDirectMethodReferences();
-    ok &= initVirtualMethodOffsets();
-    ok &= find9();
-
-    return ok;
+    return initClassReferences()
+        && initFieldOffsets()
+        && initConstructorReferences()
+        && initDirectMethodReferences()
+        && initVirtualMethodOffsets()
+        && verifyStringOffsets();
 }
 
 /* (documented in header) */
