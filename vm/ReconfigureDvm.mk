@@ -29,8 +29,5 @@ endif  # !TARGET_SIMULATOR
 
 LOCAL_STATIC_LIBRARIES += libdex
 
-# Don't prelink by default
-LOCAL_PRELINK_MODULE := false
-
 # Don't install on any build by default
 LOCAL_MODULE_TAGS := optional
