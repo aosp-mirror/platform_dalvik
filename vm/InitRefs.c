@@ -26,7 +26,7 @@
  * classes and stores them to the indicated pointer, returning a
  * failure code (false == failure).
  */
-static bool initRef(ClassObject** pClass, const char* name) {
+static bool initClassReference(ClassObject** pClass, const char* name) {
     ClassObject* result;
 
     if (*pClass != NULL) {
@@ -150,7 +150,124 @@ static bool initClassReferences(void) {
     int i;
 
     for (i = 0; classes[i].ref != NULL; i++) {
-        ok &= initRef(classes[i].ref, classes[i].name);
+        ok &= initClassReference(classes[i].ref, classes[i].name);
+    }
+
+    return ok;
+}
+
+static bool initFieldOffset(ClassObject* clazz, int *pOffset,
+        const char* name, const char* type) {
+    int offset = dvmFindFieldOffset(clazz, name, type);
+    if (offset < 0) {
+        LOGE("Could not find essential field %s.%s of type %s\n", clazz->descriptor, name, type);
+        return false;
+    }
+
+    *pOffset = offset;
+    return true;
+}
+
+static bool initFieldOffsets(void) {
+    struct FieldInfo {
+        int* offset;
+        const char* name;
+        const char* type;
+    };
+
+    static struct FieldInfo infoString[] = {
+        { &gDvm.offJavaLangString_value,    "value",    "[C" },
+        { &gDvm.offJavaLangString_count,    "count",    "I" },
+        { &gDvm.offJavaLangString_offset,   "offset",   "I" },
+        { &gDvm.offJavaLangString_hashCode, "hashCode", "I" },
+        { NULL, NULL, NULL }
+    };
+
+    static struct FieldInfo infoThread[] = {
+        { &gDvm.offJavaLangThread_vmThread, "vmThread", "Ljava/lang/VMThread;" },
+        { &gDvm.offJavaLangThread_group,    "group",    "Ljava/lang/ThreadGroup;" },
+        { &gDvm.offJavaLangThread_daemon,   "daemon",   "Z" },
+        { &gDvm.offJavaLangThread_name,     "name",     "Ljava/lang/String;" },
+        { &gDvm.offJavaLangThread_priority, "priority", "I" },
+        { NULL, NULL, NULL }
+    };
+
+    static struct FieldInfo infoThrowable[] = {
+        { &gDvm.offJavaLangThrowable_stackState, "stackState", "Ljava/lang/Object;" },
+        { &gDvm.offJavaLangThrowable_cause,      "cause",      "Ljava/lang/Throwable;" },
+        { NULL, NULL, NULL }
+    };
+
+    static struct FieldInfo infoVMThread[] = {
+        { &gDvm.offJavaLangVMThread_thread, "thread", "Ljava/lang/Thread;" },
+        { &gDvm.offJavaLangVMThread_vmData, "vmData", "I" },
+        { NULL, NULL, NULL }
+    };
+
+    static struct FieldInfo infoAccessibleObject[] = {
+        { &gDvm.offJavaLangReflectAccessibleObject_flag, "flag", "Z" },
+        { NULL, NULL, NULL }
+    };
+
+    static struct FieldInfo infoConstructor[] = {
+        { &gDvm.offJavaLangReflectConstructor_slot,      "slot",           "I" },
+        { &gDvm.offJavaLangReflectConstructor_declClass, "declaringClass", "Ljava/lang/Class;" },
+        { NULL, NULL, NULL }
+    };
+
+    static struct FieldInfo infoField[] = {
+        { &gDvm.offJavaLangReflectField_slot,      "slot",           "I" },
+        { &gDvm.offJavaLangReflectField_declClass, "declaringClass", "Ljava/lang/Class;" },
+        { NULL, NULL, NULL }
+    };
+
+    static struct FieldInfo infoMethod[] = {
+        { &gDvm.offJavaLangReflectMethod_slot,      "slot",           "I" },
+        { &gDvm.offJavaLangReflectMethod_declClass, "declaringClass", "Ljava/lang/Class;" },
+        { NULL, NULL, NULL }
+    };
+
+    static struct FieldInfo infoProxy[] = {
+        { &gDvm.offJavaLangReflectProxy_h, "h", "Ljava/lang/reflect/InvocationHandler;" },
+        { NULL, NULL, NULL }
+    };
+
+    static struct FieldInfo infoBuffer[] = {
+        { &gDvm.offJavaNioBuffer_capacity,               "capacity",               "I" },
+        { &gDvm.offJavaNioBuffer_effectiveDirectAddress, "effectiveDirectAddress", "I" },
+        { NULL, NULL, NULL }
+    };
+
+    static struct { const char* name; const struct FieldInfo* fields; } classes[] = {
+        { "Ljava/lang/String;",                   infoString },
+        { "Ljava/lang/Thread;",                   infoThread },
+        { "Ljava/lang/Throwable;",                infoThrowable },
+        { "Ljava/lang/VMThread;",                 infoVMThread },
+        { "Ljava/lang/reflect/AccessibleObject;", infoAccessibleObject },
+        { "Ljava/lang/reflect/Constructor;",      infoConstructor },
+        { "Ljava/lang/reflect/Field;",            infoField },
+        { "Ljava/lang/reflect/Method;",           infoMethod },
+        { "Ljava/lang/reflect/Proxy;",            infoProxy },
+        { "Ljava/nio/Buffer;",                    infoBuffer },
+        { NULL, NULL }
+    };
+
+    bool ok = true;
+    int i;
+
+    for (i = 0; classes[i].name != NULL; i++) {
+        const char* className = classes[i].name;
+        ClassObject* clazz = dvmFindSystemClassNoInit(className);
+        const struct FieldInfo* fields = classes[i].fields;
+
+        if (clazz == NULL) {
+            LOGE("Could not find essential class %s for field lookup\n", className);
+        }
+
+        int j;
+        for (j = 0; fields[j].offset != NULL; j++) {
+            ok &= initFieldOffset(clazz, fields[j].offset, fields[j].name, fields[j].type);
+        }
     }
 
     return ok;
@@ -174,24 +291,6 @@ static bool find1(void) {
     }
     gDvm.methJavaLangStackTraceElement_init = meth;
 
-    /* grab an offset for the field Throwable.stackState */
-    gDvm.offJavaLangThrowable_stackState =
-        dvmFindFieldOffset(gDvm.exThrowable,
-            "stackState", "Ljava/lang/Object;");
-    if (gDvm.offJavaLangThrowable_stackState < 0) {
-        LOGE("Unable to find Throwable.stackState\n");
-        return false;
-    }
-
-    /* and one for the field Throwable.cause, just 'cause */
-    gDvm.offJavaLangThrowable_cause =
-        dvmFindFieldOffset(gDvm.exThrowable,
-            "cause", "Ljava/lang/Throwable;");
-    if (gDvm.offJavaLangThrowable_cause < 0) {
-        LOGE("Unable to find Throwable.cause\n");
-        return false;
-    }
-
     return true;
 }
 
@@ -212,46 +311,6 @@ static bool find3(void) {
     assert(gDvm.classJavaLangThread != NULL);
     assert(gDvm.classJavaLangThreadGroup != NULL);
     assert(gDvm.classJavaLangVMThread != NULL);
-
-    /*
-     * Cache field offsets.  This makes things a little faster, at the
-     * expense of hard-coding non-public field names into the VM.
-     */
-    gDvm.offJavaLangThread_vmThread =
-        dvmFindFieldOffset(gDvm.classJavaLangThread,
-            "vmThread", "Ljava/lang/VMThread;");
-    gDvm.offJavaLangThread_group =
-        dvmFindFieldOffset(gDvm.classJavaLangThread,
-            "group", "Ljava/lang/ThreadGroup;");
-    gDvm.offJavaLangThread_daemon =
-        dvmFindFieldOffset(gDvm.classJavaLangThread, "daemon", "Z");
-    gDvm.offJavaLangThread_name =
-        dvmFindFieldOffset(gDvm.classJavaLangThread,
-            "name", "Ljava/lang/String;");
-    gDvm.offJavaLangThread_priority =
-        dvmFindFieldOffset(gDvm.classJavaLangThread, "priority", "I");
-
-    if (gDvm.offJavaLangThread_vmThread < 0 ||
-        gDvm.offJavaLangThread_group < 0 ||
-        gDvm.offJavaLangThread_daemon < 0 ||
-        gDvm.offJavaLangThread_name < 0 ||
-        gDvm.offJavaLangThread_priority < 0)
-    {
-        LOGE("Unable to find all fields in java.lang.Thread\n");
-        return false;
-    }
-
-    gDvm.offJavaLangVMThread_thread =
-        dvmFindFieldOffset(gDvm.classJavaLangVMThread,
-            "thread", "Ljava/lang/Thread;");
-    gDvm.offJavaLangVMThread_vmData =
-        dvmFindFieldOffset(gDvm.classJavaLangVMThread, "vmData", "I");
-    if (gDvm.offJavaLangVMThread_thread < 0 ||
-        gDvm.offJavaLangVMThread_vmData < 0)
-    {
-        LOGE("Unable to find all fields in java.lang.VMThread\n");
-        return false;
-    }
 
     /*
      * Cache the vtable offset for "run()".
@@ -305,20 +364,6 @@ static bool find4(void) {
     }
     gDvm.methJavaNioReadWriteDirectByteBuffer_init = meth;
 
-    gDvm.offJavaNioBuffer_capacity =
-        dvmFindFieldOffset(bufferClass, "capacity", "I");
-    if (gDvm.offJavaNioBuffer_capacity < 0) {
-        LOGE("Unable to find Buffer.capacity\n");
-        return false;
-    }
-
-    gDvm.offJavaNioBuffer_effectiveDirectAddress =
-        dvmFindFieldOffset(bufferClass, "effectiveDirectAddress", "I");
-    if (gDvm.offJavaNioBuffer_effectiveDirectAddress < 0) {
-        LOGE("Unable to find Buffer.effectiveDirectAddress\n");
-        return false;
-    }
-
     return true;
 }
 
@@ -338,40 +383,6 @@ static bool find5(void)
         gDvm.methJavaLangReflectMethod_init == NULL)
     {
         LOGE("Could not find reflection constructors\n");
-        return false;
-    }
-
-    gDvm.offJavaLangReflectAccessibleObject_flag =
-        dvmFindFieldOffset(gDvm.classJavaLangReflectAccessibleObject, "flag",
-            "Z");
-
-    gDvm.offJavaLangReflectConstructor_slot =
-        dvmFindFieldOffset(gDvm.classJavaLangReflectConstructor, "slot", "I");
-    gDvm.offJavaLangReflectConstructor_declClass =
-        dvmFindFieldOffset(gDvm.classJavaLangReflectConstructor,
-            "declaringClass", "Ljava/lang/Class;");
-
-    gDvm.offJavaLangReflectField_slot =
-        dvmFindFieldOffset(gDvm.classJavaLangReflectField, "slot", "I");
-    gDvm.offJavaLangReflectField_declClass =
-        dvmFindFieldOffset(gDvm.classJavaLangReflectField,
-            "declaringClass", "Ljava/lang/Class;");
-
-    gDvm.offJavaLangReflectMethod_slot =
-        dvmFindFieldOffset(gDvm.classJavaLangReflectMethod, "slot", "I");
-    gDvm.offJavaLangReflectMethod_declClass =
-        dvmFindFieldOffset(gDvm.classJavaLangReflectMethod,
-            "declaringClass", "Ljava/lang/Class;");
-
-    if (gDvm.offJavaLangReflectAccessibleObject_flag < 0 ||
-        gDvm.offJavaLangReflectConstructor_slot < 0 ||
-        gDvm.offJavaLangReflectConstructor_declClass < 0 ||
-        gDvm.offJavaLangReflectField_slot < 0 ||
-        gDvm.offJavaLangReflectField_declClass < 0 ||
-        gDvm.offJavaLangReflectMethod_slot < 0 ||
-        gDvm.offJavaLangReflectMethod_declClass < 0)
-    {
-        LOGE("Could not find reflection fields\n");
         return false;
     }
 
@@ -418,16 +429,6 @@ static bool find6()
         return false;
     }
     gDvm.methJavaLangReflectProxy_constructorPrototype = meth;
-
-    /*
-     * Get the offset of the "h" field in Proxy.
-     */
-    gDvm.offJavaLangReflectProxy_h = dvmFindFieldOffset(gDvm.classJavaLangReflectProxy, "h",
-        "Ljava/lang/reflect/InvocationHandler;");
-    if (gDvm.offJavaLangReflectProxy_h < 0) {
-        LOGE("Unable to find 'h' field in java.lang.Proxy\n");
-        return false;
-    }
 
     return true;
 }
@@ -480,24 +481,6 @@ static bool find8(void) {
 }
 
 static bool find9(void) {
-    gDvm.offJavaLangString_value =
-        dvmFindFieldOffset(gDvm.classJavaLangString, "value", "[C");
-    gDvm.offJavaLangString_count =
-        dvmFindFieldOffset(gDvm.classJavaLangString, "count", "I");
-    gDvm.offJavaLangString_offset =
-        dvmFindFieldOffset(gDvm.classJavaLangString, "offset", "I");
-    gDvm.offJavaLangString_hashCode =
-        dvmFindFieldOffset(gDvm.classJavaLangString, "hashCode", "I");
-
-    if (gDvm.offJavaLangString_value < 0 ||
-        gDvm.offJavaLangString_count < 0 ||
-        gDvm.offJavaLangString_offset < 0 ||
-        gDvm.offJavaLangString_hashCode < 0)
-    {
-        LOGE("VM-required field missing from java/lang/String\n");
-        return false;
-    }
-
     bool badValue = false;
     if (gDvm.offJavaLangString_value != STRING_FIELDOFF_VALUE) {
         LOGE("InlineNative: String.value offset = %d, expected %d\n",
@@ -536,6 +519,7 @@ bool dvmFindRequiredClassesAndMembers(void) {
     bool ok = true;
 
     ok &= initClassReferences();
+    ok &= initFieldOffsets();
     ok &= find1();
     ok &= find2();
     ok &= find3();
