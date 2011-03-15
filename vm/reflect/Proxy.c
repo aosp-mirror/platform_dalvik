@@ -728,6 +728,13 @@ static bool returnTypesAreCompatible(Method* subMethod, Method* baseMethod)
  */
 static void createConstructor(ClassObject* clazz, Method* meth)
 {
+    /*
+     * The constructor signatures (->prototype and ->shorty) need to
+     * be cloned from a method in a "real" DEX file. We declared the
+     * otherwise unused method Proxy.constructorPrototype() just for
+     * this purpose.
+     */
+
     meth->clazz = clazz;
     meth->accessFlags = ACC_PUBLIC | ACC_NATIVE;
     meth->name = "<init>";

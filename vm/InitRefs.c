@@ -262,6 +262,7 @@ static bool initFieldOffsets(void) {
 
         if (clazz == NULL) {
             LOGE("Could not find essential class %s for field lookup\n", className);
+            continue;
         }
 
         int j;
@@ -273,23 +274,20 @@ static bool initFieldOffsets(void) {
     return ok;
 }
 
-static bool initConstructorReference(Method** pMethod, const char* name, const char* descriptor) {
-    ClassObject* clazz = dvmFindSystemClassNoInit(name);
+static bool initDirectMethodReference(Method** pMethod, const char* className,
+        const char* name, const char* descriptor) {
+    ClassObject* clazz = dvmFindSystemClassNoInit(className);
 
     if (clazz == NULL) {
-        LOGE("Could not find essential class %s for constructor lookup\n", name);
+        LOGE("Could not find essential class %s for direct method lookup\n", className);
+        return false;
     }
 
-    /*
-     * Constructors are direct methods and don't have vtable offsets, which
-     * is why we resolve constructors to a Method*.
-     */
-
-    Method* method = dvmFindDirectMethodByDescriptor(clazz, "<init>", descriptor);
+    Method* method = dvmFindDirectMethodByDescriptor(clazz, name, descriptor);
 
     if (method == NULL) {
-        LOGE("Could not find essential constructor for class %s with descriptor %s\n",
-                clazz->descriptor, descriptor);
+        LOGE("Could not find essential direct method %s.%s with descriptor %s\n",
+                clazz->descriptor, name, descriptor);
         return false;
     }
 
@@ -313,7 +311,6 @@ static bool initConstructorReferences(void) {
         { &gDvm.methOrgApacheHarmonyLangAnnotationAnnotationMember_init,
           "Lorg/apache/harmony/lang/annotation/AnnotationMember;",
           "(Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Class;Ljava/lang/reflect/Method;)V" },
-
         { NULL, NULL, NULL }
     };
 
@@ -321,139 +318,93 @@ static bool initConstructorReferences(void) {
     int i;
 
     for (i = 0; constructors[i].method != NULL; i++) {
-        ok &= initConstructorReference(constructors[i].method, constructors[i].name,
-                constructors[i].descriptor);
+        ok &= initDirectMethodReference(constructors[i].method, constructors[i].name,
+                "<init>", constructors[i].descriptor);
     }
 
     return ok;
 }
 
-static bool find2(void) {
-    ClassObject* clClass = dvmFindSystemClassNoInit("Ljava/lang/ClassLoader;");
-    Method* meth = dvmFindVirtualMethodByDescriptor(clClass, "loadClass",
-            "(Ljava/lang/String;)Ljava/lang/Class;");
-    if (meth == NULL) {
-        LOGE("Unable to find loadClass() in java.lang.ClassLoader\n");
+static bool initDirectMethodReferences(void) {
+    static struct {
+        Method** method;
+        const char* className;
+        const char* name;
+        const char* descriptor;
+    } methods[] = {
+        { &gDvm.methJavaLangReflectProxy_constructorPrototype, "Ljava/lang/reflect/Proxy;",
+          "constructorPrototype", "(Ljava/lang/reflect/InvocationHandler;)V" },
+        { &gDvm.methodTraceGcMethod, "Ldalvik/system/VMDebug;", "startGC", "()V" },
+        { &gDvm.methodTraceClassPrepMethod, "Ldalvik/system/VMDebug;", "startClassPrep", "()V" },
+        { &gDvm.methOrgApacheHarmonyLangAnnotationAnnotationFactory_createAnnotation,
+          "Lorg/apache/harmony/lang/annotation/AnnotationFactory;", "createAnnotation",
+          "(Ljava/lang/Class;[Lorg/apache/harmony/lang/annotation/AnnotationMember;)"
+          "Ljava/lang/annotation/Annotation;" },
+        { NULL, NULL, NULL, NULL }
+    };
+
+    bool ok = true;
+    int i;
+
+    for (i = 0; methods[i].method != NULL; i++) {
+        ok &= initDirectMethodReference(methods[i].method, methods[i].className,
+                methods[i].name, methods[i].descriptor);
+    }
+
+    return ok;
+}
+
+static bool initVirtualMethodOffset(int* pOffset, const char* className,
+        const char* name, const char* descriptor) {
+    ClassObject* clazz = dvmFindSystemClassNoInit(className);
+
+    if (clazz == NULL) {
+        LOGE("Could not find essential class %s for virtual method lookup\n", className);
         return false;
     }
-    gDvm.voffJavaLangClassLoader_loadClass = meth->methodIndex;
 
+    Method* method = dvmFindVirtualMethodByDescriptor(clazz, name, descriptor);
+
+    if (method == NULL) {
+        LOGE("Could not find essential virtual method %s.%s with descriptor %s\n",
+                clazz->descriptor, name, descriptor);
+        return false;
+    }
+
+    *pOffset = method->methodIndex;
     return true;
 }
 
-static bool find3(void) {
-    assert(gDvm.classJavaLangThread != NULL);
-    assert(gDvm.classJavaLangThreadGroup != NULL);
-    assert(gDvm.classJavaLangVMThread != NULL);
+static bool initVirtualMethodOffsets(void) {
+    static struct {
+        int* offset;
+        const char* className;
+        const char* name;
+        const char* descriptor;
+    } methods[] = {
+        { &gDvm.voffJavaLangClassLoader_loadClass, "Ljava/lang/ClassLoader;", "loadClass",
+          "(Ljava/lang/String;)Ljava/lang/Class;" },
+        { &gDvm.voffJavaLangObject_equals, "Ljava/lang/Object;", "equals",
+          "(Ljava/lang/Object;)Z" },
+        { &gDvm.voffJavaLangObject_finalize, "Ljava/lang/Object;", "finalize", "()V" },
+        { &gDvm.voffJavaLangObject_hashCode, "Ljava/lang/Object;", "hashCode", "()I" },
+        { &gDvm.voffJavaLangObject_toString, "Ljava/lang/Object;", "toString",
+          "()Ljava/lang/String;" },
+        { &gDvm.voffJavaLangThread_run, "Ljava/lang/Thread;", "run", "()V" },
+        { &gDvm.voffJavaLangThreadGroup_removeThread, "Ljava/lang/ThreadGroup;",
+          "removeThread", "(Ljava/lang/Thread;)V" },
+        { NULL, NULL, NULL, NULL }
+    };
 
-    /*
-     * Cache the vtable offset for "run()".
-     *
-     * We don't want to keep the Method* because then we won't find see
-     * methods defined in subclasses.
-     */
-    Method* meth;
-    meth = dvmFindVirtualMethodByDescriptor(gDvm.classJavaLangThread, "run", "()V");
-    if (meth == NULL) {
-        LOGE("Unable to find run() in java.lang.Thread\n");
-        return false;
-    }
-    gDvm.voffJavaLangThread_run = meth->methodIndex;
+    bool ok = true;
+    int i;
 
-    /*
-     * Cache vtable offsets for ThreadGroup methods.
-     */
-    meth = dvmFindVirtualMethodByDescriptor(gDvm.classJavaLangThreadGroup,
-        "removeThread", "(Ljava/lang/Thread;)V");
-    if (meth == NULL) {
-        LOGE("Unable to find removeThread(Thread) in java.lang.ThreadGroup\n");
-        return false;
-    }
-    gDvm.voffJavaLangThreadGroup_removeThread = meth->methodIndex;
-
-    return true;
-}
-
-static bool find6()
-{
-    /*
-     * Standard methods we must provide in our proxy.
-     */
-    Method* methE;
-    Method* methH;
-    Method* methT;
-    Method* methF;
-    methE = dvmFindVirtualMethodByDescriptor(gDvm.classJavaLangObject,
-                "equals", "(Ljava/lang/Object;)Z");
-    methH = dvmFindVirtualMethodByDescriptor(gDvm.classJavaLangObject,
-                "hashCode", "()I");
-    methT = dvmFindVirtualMethodByDescriptor(gDvm.classJavaLangObject,
-                "toString", "()Ljava/lang/String;");
-    methF = dvmFindVirtualMethodByDescriptor(gDvm.classJavaLangObject,
-                "finalize", "()V");
-    if (methE == NULL || methH == NULL || methT == NULL || methF == NULL) {
-        LOGE("Could not find equals/hashCode/toString/finalize in Object\n");
-        return false;
-    }
-    gDvm.voffJavaLangObject_equals = methE->methodIndex;
-    gDvm.voffJavaLangObject_hashCode = methH->methodIndex;
-    gDvm.voffJavaLangObject_toString = methT->methodIndex;
-    gDvm.voffJavaLangObject_finalize = methF->methodIndex;
-
-    /*
-     * The prototype signature needs to be cloned from a method in a
-     * "real" DEX file.  We declared this otherwise unused method just
-     * for this purpose.
-     */
-    Method* meth;
-
-    meth = dvmFindDirectMethodByDescriptor(gDvm.classJavaLangReflectProxy, "constructorPrototype",
-                "(Ljava/lang/reflect/InvocationHandler;)V");
-    if (meth == NULL) {
-        LOGE("Could not find java.lang.Proxy.constructorPrototype()\n");
-        return false;
-    }
-    gDvm.methJavaLangReflectProxy_constructorPrototype = meth;
-
-    return true;
-}
-
-/*
- * Perform Annotation setup.
- */
-static bool find7(void)
-{
-    Method* meth;
-
-    meth = dvmFindDirectMethodByDescriptor(gDvm.classOrgApacheHarmonyLangAnnotationAnnotationFactory,
-            "createAnnotation",
-            "(Ljava/lang/Class;[Lorg/apache/harmony/lang/annotation/AnnotationMember;)Ljava/lang/annotation/Annotation;");
-    if (meth == NULL) {
-        LOGE("Unable to find createAnnotation() in android AnnotationFactory\n");
-        return false;
-    }
-    gDvm.methOrgApacheHarmonyLangAnnotationAnnotationFactory_createAnnotation = meth;
-
-
-    return true;
-}
-
-static bool find8(void) {
-    ClassObject* clazz =
-        dvmFindClassNoInit("Ldalvik/system/VMDebug;", NULL);
-    assert(clazz != NULL);
-    gDvm.methodTraceGcMethod =
-        dvmFindDirectMethodByDescriptor(clazz, "startGC", "()V");
-    gDvm.methodTraceClassPrepMethod =
-        dvmFindDirectMethodByDescriptor(clazz, "startClassPrep", "()V");
-    if (gDvm.methodTraceGcMethod == NULL ||
-        gDvm.methodTraceClassPrepMethod == NULL)
-    {
-        LOGE("Unable to find startGC or startClassPrep\n");
-        return false;
+    for (i = 0; methods[i].offset != NULL; i++) {
+        ok &= initVirtualMethodOffset(methods[i].offset, methods[i].className,
+                methods[i].name, methods[i].descriptor);
     }
 
-    return true;
+    return ok;
 }
 
 static bool find9(void) {
@@ -497,11 +448,8 @@ bool dvmFindRequiredClassesAndMembers(void) {
     ok &= initClassReferences();
     ok &= initFieldOffsets();
     ok &= initConstructorReferences();
-    ok &= find2();
-    ok &= find3();
-    ok &= find6();
-    ok &= find7();
-    ok &= find8();
+    ok &= initDirectMethodReferences();
+    ok &= initVirtualMethodOffsets();
     ok &= find9();
 
     return ok;
@@ -521,21 +469,14 @@ bool dvmFindReferenceMembers(ClassObject* classReference) {
 
     bool ok = true;
 
-    gDvm.offJavaLangRefReference_referent =
-        dvmFindFieldOffset(classReference, "referent", "Ljava/lang/Object;");
-    ok &= (gDvm.offJavaLangRefReference_referent >= 0);
-
-    gDvm.offJavaLangRefReference_queue =
-        dvmFindFieldOffset(classReference, "queue", "Ljava/lang/ref/ReferenceQueue;");
-    ok &= (gDvm.offJavaLangRefReference_queue >= 0);
-
-    gDvm.offJavaLangRefReference_queueNext =
-        dvmFindFieldOffset(classReference, "queueNext", "Ljava/lang/ref/Reference;");
-    ok &= (gDvm.offJavaLangRefReference_queueNext >= 0);
-
-    gDvm.offJavaLangRefReference_pendingNext =
-        dvmFindFieldOffset(classReference, "pendingNext", "Ljava/lang/ref/Reference;");
-    ok &= (gDvm.offJavaLangRefReference_pendingNext >= 0);
+    ok &= initFieldOffset(classReference, &gDvm.offJavaLangRefReference_pendingNext,
+            "pendingNext", "Ljava/lang/ref/Reference;");
+    ok &= initFieldOffset(classReference, &gDvm.offJavaLangRefReference_queue,
+            "queue", "Ljava/lang/ref/ReferenceQueue;");
+    ok &= initFieldOffset(classReference, &gDvm.offJavaLangRefReference_queueNext,
+            "queueNext", "Ljava/lang/ref/Reference;");
+    ok &= initFieldOffset(classReference, &gDvm.offJavaLangRefReference_referent,
+            "referent", "Ljava/lang/Object;");
 
     /* enqueueInternal() is private and thus a direct method. */
     Method *meth = dvmFindDirectMethodByDescriptor(classReference, "enqueueInternal", "()Z");
