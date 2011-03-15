@@ -127,15 +127,15 @@ static bool initClassReferences(void) {
         { &gDvm.classJavaLangAnnotationAnnotationArray, "[Ljava/lang/annotation/Annotation;" },
         { &gDvm.classJavaLangAnnotationAnnotationArrayArray,
           "[[Ljava/lang/annotation/Annotation;" },
-        { &gDvm.classJavaLangReflectAccessibleObject, "Ljava/lang/reflect/AccessibleObject;" },
-        { &gDvm.classJavaLangReflectConstructor, "Ljava/lang/reflect/Constructor;" },
-        { &gDvm.classJavaLangReflectConstructorArray, "[Ljava/lang/reflect/Constructor;" },
-        { &gDvm.classJavaLangReflectField, "Ljava/lang/reflect/Field;" },
-        { &gDvm.classJavaLangReflectFieldArray, "[Ljava/lang/reflect/Field;" },
-        { &gDvm.classJavaLangReflectMethod, "Ljava/lang/reflect/Method;" },
-        { &gDvm.classJavaLangReflectMethodArray, "[Ljava/lang/reflect/Method;"},
-        { &gDvm.classJavaLangReflectProxy, "Ljava/lang/reflect/Proxy;" },
-        { &gDvm.classJavaNioReadWriteDirectByteBuffer, "Ljava/nio/ReadWriteDirectByteBuffer;" },
+        { &gDvm.classJavaLangReflectAccessibleObject,   "Ljava/lang/reflect/AccessibleObject;" },
+        { &gDvm.classJavaLangReflectConstructor,        "Ljava/lang/reflect/Constructor;" },
+        { &gDvm.classJavaLangReflectConstructorArray,   "[Ljava/lang/reflect/Constructor;" },
+        { &gDvm.classJavaLangReflectField,              "Ljava/lang/reflect/Field;" },
+        { &gDvm.classJavaLangReflectFieldArray,         "[Ljava/lang/reflect/Field;" },
+        { &gDvm.classJavaLangReflectMethod,             "Ljava/lang/reflect/Method;" },
+        { &gDvm.classJavaLangReflectMethodArray,        "[Ljava/lang/reflect/Method;"},
+        { &gDvm.classJavaLangReflectProxy,              "Ljava/lang/reflect/Proxy;" },
+        { &gDvm.classJavaNioReadWriteDirectByteBuffer,  "Ljava/nio/ReadWriteDirectByteBuffer;" },
         { &gDvm.classOrgApacheHarmonyLangAnnotationAnnotationFactory,
           "Lorg/apache/harmony/lang/annotation/AnnotationFactory;" },
         { &gDvm.classOrgApacheHarmonyLangAnnotationAnnotationMember,
@@ -273,25 +273,59 @@ static bool initFieldOffsets(void) {
     return ok;
 }
 
-static bool find1(void) {
+static bool initConstructorReference(Method** pMethod, const char* name, const char* descriptor) {
+    ClassObject* clazz = dvmFindSystemClassNoInit(name);
+
+    if (clazz == NULL) {
+        LOGE("Could not find essential class %s for constructor lookup\n", name);
+    }
+
     /*
-     * Find the StackTraceElement constructor. Note that, unlike other
-     * saved method lookups, we're using a Method* instead of a vtable
-     * offset. This is because constructors don't have vtable offsets.
-     * (Also, since we're creating the object in question, it's
-     * impossible for anyone to sub-class it.)
+     * Constructors are direct methods and don't have vtable offsets, which
+     * is why we resolve constructors to a Method*.
      */
-    Method* meth;
-    meth = dvmFindDirectMethodByDescriptor(gDvm.classJavaLangStackTraceElement,
-        "<init>",
-        "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;I)V");
-    if (meth == NULL) {
-        LOGE("Unable to find constructor for StackTraceElement\n");
+
+    Method* method = dvmFindDirectMethodByDescriptor(clazz, "<init>", descriptor);
+
+    if (method == NULL) {
+        LOGE("Could not find essential constructor for class %s with descriptor %s\n",
+                clazz->descriptor, descriptor);
         return false;
     }
-    gDvm.methJavaLangStackTraceElement_init = meth;
 
+    *pMethod = method;
     return true;
+}
+
+static bool initConstructorReferences(void) {
+    static struct { Method** method; const char* name; const char* descriptor; } constructors[] = {
+        { &gDvm.methJavaLangStackTraceElement_init, "Ljava/lang/StackTraceElement;",
+          "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;I)V" },
+        { &gDvm.methJavaLangReflectConstructor_init, "Ljava/lang/reflect/Constructor;",
+          "(Ljava/lang/Class;[Ljava/lang/Class;[Ljava/lang/Class;I)V" },
+        { &gDvm.methJavaLangReflectField_init, "Ljava/lang/reflect/Field;",
+          "(Ljava/lang/Class;Ljava/lang/Class;Ljava/lang/String;I)V" },
+        { &gDvm.methJavaLangReflectMethod_init, "Ljava/lang/reflect/Method;",
+          "(Ljava/lang/Class;[Ljava/lang/Class;[Ljava/lang/Class;Ljava/lang/Class;"
+          "Ljava/lang/String;I)V" },
+        { &gDvm.methJavaNioReadWriteDirectByteBuffer_init, "Ljava/nio/ReadWriteDirectByteBuffer;",
+          "(II)V" },
+        { &gDvm.methOrgApacheHarmonyLangAnnotationAnnotationMember_init,
+          "Lorg/apache/harmony/lang/annotation/AnnotationMember;",
+          "(Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Class;Ljava/lang/reflect/Method;)V" },
+
+        { NULL, NULL, NULL }
+    };
+
+    bool ok = true;
+    int i;
+
+    for (i = 0; constructors[i].method != NULL; i++) {
+        ok &= initConstructorReference(constructors[i].method, constructors[i].name,
+                constructors[i].descriptor);
+    }
+
+    return ok;
 }
 
 static bool find2(void) {
@@ -336,55 +370,6 @@ static bool find3(void) {
         return false;
     }
     gDvm.voffJavaLangThreadGroup_removeThread = meth->methodIndex;
-
-    return true;
-}
-
-static bool find4(void) {
-    Method* meth;
-
-    /*
-     * Look up and cache pointers to some direct buffer classes, fields,
-     * and methods.
-     */
-    ClassObject* bufferClass =
-        dvmFindSystemClassNoInit("Ljava/nio/Buffer;");
-
-    if (bufferClass == NULL) {
-        LOGE("Unable to find internal direct buffer classes\n");
-        return false;
-    }
-
-    meth = dvmFindDirectMethodByDescriptor(gDvm.classJavaNioReadWriteDirectByteBuffer,
-                "<init>",
-                "(II)V");
-    if (meth == NULL) {
-        LOGE("Unable to find ReadWriteDirectByteBuffer.<init>\n");
-        return false;
-    }
-    gDvm.methJavaNioReadWriteDirectByteBuffer_init = meth;
-
-    return true;
-}
-
-static bool find5(void)
-{
-    gDvm.methJavaLangReflectConstructor_init =
-        dvmFindDirectMethodByDescriptor(gDvm.classJavaLangReflectConstructor, "<init>",
-        "(Ljava/lang/Class;[Ljava/lang/Class;[Ljava/lang/Class;I)V");
-    gDvm.methJavaLangReflectField_init =
-        dvmFindDirectMethodByDescriptor(gDvm.classJavaLangReflectField, "<init>",
-        "(Ljava/lang/Class;Ljava/lang/Class;Ljava/lang/String;I)V");
-    gDvm.methJavaLangReflectMethod_init =
-        dvmFindDirectMethodByDescriptor(gDvm.classJavaLangReflectMethod, "<init>",
-        "(Ljava/lang/Class;[Ljava/lang/Class;[Ljava/lang/Class;Ljava/lang/Class;Ljava/lang/String;I)V");
-    if (gDvm.methJavaLangReflectConstructor_init == NULL ||
-        gDvm.methJavaLangReflectField_init == NULL ||
-        gDvm.methJavaLangReflectMethod_init == NULL)
-    {
-        LOGE("Could not find reflection constructors\n");
-        return false;
-    }
 
     return true;
 }
@@ -449,15 +434,6 @@ static bool find7(void)
     }
     gDvm.methOrgApacheHarmonyLangAnnotationAnnotationFactory_createAnnotation = meth;
 
-    meth = dvmFindDirectMethodByDescriptor(gDvm.classOrgApacheHarmonyLangAnnotationAnnotationMember,
-            "<init>",
-            "(Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Class;Ljava/lang/reflect/Method;)V");
-    if (meth == NULL) {
-        LOGE("Unable to find 4-arg constructor in android AnnotationMember\n");
-        return false;
-    }
-
-    gDvm.methOrgApacheHarmonyLangAnnotationAnnotationMember_init = meth;
 
     return true;
 }
@@ -520,11 +496,9 @@ bool dvmFindRequiredClassesAndMembers(void) {
 
     ok &= initClassReferences();
     ok &= initFieldOffsets();
-    ok &= find1();
+    ok &= initConstructorReferences();
     ok &= find2();
     ok &= find3();
-    ok &= find4();
-    ok &= find5();
     ok &= find6();
     ok &= find7();
     ok &= find8();
