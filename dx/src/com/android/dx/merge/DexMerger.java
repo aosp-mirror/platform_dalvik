@@ -28,7 +28,10 @@ import com.android.dx.io.MethodId;
 import com.android.dx.io.ProtoId;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Combine two dex files into one.
@@ -204,7 +207,11 @@ public final class DexMerger {
             this.out = out;
         }
 
-        public final void merge() {
+        /**
+         * Merges already-sorted sections, reading only two values into memory
+         * at a time.
+         */
+        public final void mergeSorted() {
             TableOfContents.Section aSection = getSection(dexA.getTableOfContents());
             TableOfContents.Section bSection = getSection(dexB.getTableOfContents());
             getSection(contentsOut).off = out.getPosition();
@@ -264,10 +271,85 @@ public final class DexMerger {
             getSection(contentsOut).size = outCount;
         }
 
+        /**
+         * Merges unsorted sections by reading them completely into memory and
+         * sorting in memory.
+         */
+        public final void mergeUnsorted() {
+            getSection(contentsOut).off = out.getPosition();
+
+            List<UnsortedValue> all = new ArrayList<UnsortedValue>();
+            all.addAll(readUnsortedValues(dexA, aIndexMap));
+            all.addAll(readUnsortedValues(dexB, bIndexMap));
+            Collections.sort(all);
+
+            int outCount = 0;
+            for (int i = 0; i < all.size(); ) {
+                UnsortedValue e1 = all.get(i++);
+                updateIndex(e1.offset, getIndexMap(e1.source), e1.index, outCount - 1);
+
+                while (i < all.size() && e1.compareTo(all.get(i)) == 0) {
+                    UnsortedValue e2 = all.get(i++);
+                    updateIndex(e2.offset, getIndexMap(e2.source), e2.index, outCount - 1);
+                }
+
+                write(e1.value);
+                outCount++;
+            }
+
+            getSection(contentsOut).size = outCount;
+        }
+
+        private List<UnsortedValue> readUnsortedValues(DexBuffer source, IndexMap indexMap) {
+            TableOfContents.Section section = getSection(source.getTableOfContents());
+            if (!section.exists()) {
+                return Collections.emptyList();
+            }
+
+            List<UnsortedValue> result = new ArrayList<UnsortedValue>();
+            DexBuffer.Section in = source.open(section.off);
+            for (int i = 0; i < section.size; i++) {
+                int offset = in.getPosition();
+                T value = read(in, indexMap, 0);
+                result.add(new UnsortedValue(source, indexMap, value, i, offset));
+            }
+            return result;
+        }
+
         abstract TableOfContents.Section getSection(TableOfContents tableOfContents);
         abstract T read(DexBuffer.Section in, IndexMap indexMap, int index);
         abstract void updateIndex(int offset, IndexMap indexMap, int oldIndex, int newIndex);
         abstract void write(T value);
+
+        class UnsortedValue implements Comparable<UnsortedValue> {
+            final DexBuffer source;
+            final IndexMap indexMap;
+            final T value;
+            final int index;
+            final int offset;
+
+            UnsortedValue(DexBuffer source, IndexMap indexMap, T value, int index, int offset) {
+                this.source = source;
+                this.indexMap = indexMap;
+                this.value = value;
+                this.index = index;
+                this.offset = offset;
+            }
+
+            public int compareTo(UnsortedValue unsortedValue) {
+                return value.compareTo(unsortedValue.value);
+            }
+        }
+    }
+
+    private IndexMap getIndexMap(DexBuffer dexBuffer) {
+        if (dexBuffer == dexA) {
+            return aIndexMap;
+        } else if (dexBuffer == dexB) {
+            return bIndexMap;
+        } else {
+            throw new IllegalArgumentException();
+        }
     }
 
     private void mergeStringIds() {
@@ -289,7 +371,7 @@ public final class DexMerger {
                 idsDefsOut.writeInt(stringDataOut.getPosition());
                 stringDataOut.writeStringData(value);
             }
-        }.merge();
+        }.mergeSorted();
     }
 
     private void mergeTypeIds() {
@@ -310,7 +392,7 @@ public final class DexMerger {
             @Override void write(Integer value) {
                 idsDefsOut.writeInt(value);
             }
-        }.merge();
+        }.mergeSorted();
     }
 
     private void mergeTypeLists() {
@@ -330,7 +412,7 @@ public final class DexMerger {
             @Override void write(TypeList value) {
                 typeListOut.writeTypeList(value);
             }
-        }.merge();
+        }.mergeUnsorted();
     }
 
     private void mergeProtoIds() {
@@ -350,7 +432,7 @@ public final class DexMerger {
             @Override void write(ProtoId value) {
                 value.writeTo(idsDefsOut);
             }
-        }.merge();
+        }.mergeSorted();
     }
 
     private void mergeFieldIds() {
@@ -370,7 +452,7 @@ public final class DexMerger {
             @Override void write(FieldId value) {
                 value.writeTo(idsDefsOut);
             }
-        }.merge();
+        }.mergeSorted();
     }
 
     private void mergeMethodIds() {
@@ -390,7 +472,7 @@ public final class DexMerger {
             @Override void write(MethodId methodId) {
                 methodId.writeTo(idsDefsOut);
             }
-        }.merge();
+        }.mergeSorted();
     }
 
     private void mergeClassDefs() {
