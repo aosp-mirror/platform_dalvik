@@ -376,6 +376,8 @@ bool dvmRemoveFromIndirectRefTable(IndirectRefTable* pRef, u4 cookie,
 
 /*
  * Dump the contents of a reference table to the log file.
+ *
+ * The caller should lock any external sync before calling.
  */
 void dvmDumpIndirectRefTable(const IndirectRefTable* pRef, const char* descr);
 

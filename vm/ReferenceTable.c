@@ -156,11 +156,19 @@ bool dvmRemoveFromReferenceTable(ReferenceTable* pRef, Object** bottom,
  */
 static int compareObject(const void* vobj1, const void* vobj2)
 {
-    Object* obj1 = *((Object**) vobj1);
-    Object* obj2 = *((Object**) vobj2);
+    const Object* obj1 = *((Object* const*) vobj1);
+    const Object* obj2 = *((Object* const*) vobj2);
 
-    if (obj1 == NULL || obj2 == NULL)
-        return (u1*)obj1 - (u1*)obj2;
+    /* ensure null references appear at the end */
+    if (obj1 == NULL) {
+        if (obj2 == NULL) {
+            return 0;
+        } else {
+            return 1;
+        }
+    } else if (obj2 == NULL) {
+        return -1;
+    }
 
     if (obj1->clazz != obj2->clazz) {
         return (u1*)obj1->clazz - (u1*)obj2->clazz;
@@ -181,7 +189,7 @@ static int compareObject(const void* vobj1, const void* vobj2)
  * Pass in the number of additional elements that are identical to or
  * equivalent to the original.
  */
-static void logObject(Object* obj, int size, int identical, int equiv)
+static void logObject(const Object* obj, int size, int identical, int equiv)
 {
     if (obj == NULL) {
         LOGW("  NULL reference (count=%d)\n", equiv);
@@ -201,19 +209,15 @@ static void logObject(Object* obj, int size, int identical, int equiv)
 }
 
 /*
- * Dump the contents of a ReferenceTable to the log.
+ * Dump a summary of an array of references to the log file.
  *
- * The caller should lock any external sync before calling.
- *
- * (This was originally written to be tolerant of null entries in the table.
- * I don't think that can happen anymore.)
+ * This is used to dump the contents of ReferenceTable and IndirectRefTable
+ * structs.
  */
-void dvmDumpReferenceTable(const ReferenceTable* pRef, const char* descr)
+void dvmDumpReferenceTableContents(Object* const* refs, size_t count,
+    const char* descr)
 {
-    const int kLast = 10;
-    int count = dvmReferenceTableEntries(pRef);
-    Object** refs;
-    int i;
+    const size_t kLast = 10;
 
     if (count == 0) {
         LOGW("%s reference table has no entries\n", descr);
@@ -225,26 +229,27 @@ void dvmDumpReferenceTable(const ReferenceTable* pRef, const char* descr)
      * Dump the most recent N entries.
      */
     LOGW("Last %d entries in %s reference table:\n", kLast, descr);
-    refs = pRef->table;         // use unsorted list
-    int size;
+    size_t size, idx;
     int start = count - kLast;
     if (start < 0)
         start = 0;
 
-    for (i = start; i < count; i++) {
-        size = (refs[i] == NULL) ? 0 : dvmObjectSizeInHeap(refs[i]);
-        Object* ref = refs[i];
+    for (idx = start; idx < count; idx++) {
+        if (refs[idx] == NULL)
+            continue;
+        size = dvmObjectSizeInHeap(refs[idx]);
+        const Object* ref = refs[idx];
         if (ref->clazz == gDvm.classJavaLangClass) {
             ClassObject* clazz = (ClassObject*) ref;
-            LOGW("%5d: %p cls=%s '%s' (%d bytes)\n", i, ref,
-                (refs[i] == NULL) ? "-" : ref->clazz->descriptor,
+            LOGW("%5d: %p cls=%s '%s' (%d bytes)\n", idx, ref,
+                (refs[idx] == NULL) ? "-" : ref->clazz->descriptor,
                 clazz->descriptor, size);
         } else if (ref->clazz == NULL) {
             /* should only be possible right after a plain dvmMalloc() */
-            LOGW("%5d: %p cls=(raw) (%d bytes)\n", i, ref, size);
+            LOGW("%5d: %p cls=(raw) (%d bytes)\n", idx, ref, size);
         } else {
-            LOGW("%5d: %p cls=%s (%d bytes)\n", i, ref,
-                (refs[i] == NULL) ? "-" : ref->clazz->descriptor, size);
+            LOGW("%5d: %p cls=%s (%d bytes)\n", idx, ref,
+                (refs[idx] == NULL) ? "-" : ref->clazz->descriptor, size);
         }
     }
 
@@ -252,25 +257,43 @@ void dvmDumpReferenceTable(const ReferenceTable* pRef, const char* descr)
      * Make a copy of the table, and sort it.
      */
     Object** tableCopy = (Object**)malloc(sizeof(Object*) * count);
-    memcpy(tableCopy, pRef->table, sizeof(Object*) * count);
+    if (tableCopy == NULL) {
+        LOGE("Unable to copy table with %d elements\n", count);
+        return;
+    }
+    memcpy(tableCopy, refs, sizeof(Object*) * count);
     qsort(tableCopy, count, sizeof(Object*), compareObject);
     refs = tableCopy;       // use sorted list
 
     /*
+     * Find and remove any "holes" in the list.  The sort moved them all
+     * to the end.
+     *
+     * A table with nothing but NULL entries should have count==0, which
+     * was handled above, so this operation should not leave us with an
+     * empty list.
+     */
+    while (refs[count-1] == NULL) {
+        count--;
+    }
+    assert(count > 0);
+
+    /*
      * Dump uniquified table summary.  While we're at it, generate a
-     * cumulative total amount of pinned memory based on the unique entries.
+     * cumulative total amount of referenced memory based on the unique
+     * entries.
      */
     LOGW("%s reference table summary (%d entries):\n", descr, count);
-    int equiv, identical, total;
+    size_t equiv, identical, total;
     total = equiv = identical = 0;
-    for (i = 1; i < count; i++) {
-        size = (refs[i-1] == NULL) ? 0 : dvmObjectSizeInHeap(refs[i-1]);
+    for (idx = 1; idx < count; idx++) {
+        size = dvmObjectSizeInHeap(refs[idx-1]);
 
-        if (refs[i] == refs[i-1]) {
+        if (refs[idx] == refs[idx-1]) {
             /* same reference, added more than once */
             identical++;
-        } else if (refs[i]->clazz == refs[i-1]->clazz &&
-            (int) dvmObjectSizeInHeap(refs[i]) == size)
+        } else if (refs[idx]->clazz == refs[idx-1]->clazz &&
+            dvmObjectSizeInHeap(refs[idx]) == size)
         {
             /* same class / size, different object */
             total += size;
@@ -278,16 +301,25 @@ void dvmDumpReferenceTable(const ReferenceTable* pRef, const char* descr)
         } else {
             /* different class */
             total += size;
-            logObject(refs[i-1], size, identical, equiv);
+            logObject(refs[idx-1], size, identical, equiv);
             equiv = identical = 0;
         }
     }
 
     /* handle the last entry (everything above outputs refs[i-1]) */
-    size = (refs[count-1] == NULL) ? 0 : dvmObjectSizeInHeap(refs[count-1]);
+    size = dvmObjectSizeInHeap(refs[count-1]);
     total += size;
     logObject(refs[count-1], size, identical, equiv);
 
     LOGW("Memory held directly by tracked refs is %d bytes\n", total);
     free(tableCopy);
+}
+
+/*
+ * Dump the contents of a ReferenceTable to the log.
+ */
+void dvmDumpReferenceTable(const ReferenceTable* pRef, const char* descr)
+{
+    dvmDumpReferenceTableContents(pRef->table, dvmReferenceTableEntries(pRef),
+        descr);
 }
