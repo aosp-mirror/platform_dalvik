@@ -111,7 +111,15 @@ bool dvmRemoveFromReferenceTable(ReferenceTable* pRef, Object** bottom,
 
 /*
  * Dump the contents of a reference table to the log file.
+ *
+ * The caller should lock any external sync before calling.
  */
 void dvmDumpReferenceTable(const ReferenceTable* pRef, const char* descr);
+
+/*
+ * Internal function, shared with IndirectRefTable.
+ */
+void dvmDumpReferenceTableContents(Object* const* refs, size_t count,
+    const char* descr);
 
 #endif /*_DALVIK_REFERENCETABLE*/
