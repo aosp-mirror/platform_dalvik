@@ -227,7 +227,7 @@ public enum InstructionCodec {
                 CodeInput in) throws EOFException {
             int opcode = byte0(opcodeUnit);
             int a = byte1(opcodeUnit);
-            int literal = (short) in.read(); // sign-extend
+            long literal = (short) in.read(); // sign-extend
 
             /*
              * Format 21h decodes differently depending on the opcode,
@@ -741,7 +741,7 @@ public enum InstructionCodec {
     FORMAT_PACKED_SWITCH_PAYLOAD() {
         @Override public DecodedInstruction decode(int opcodeUnit,
                 CodeInput in) throws EOFException {
-            int baseAddress = in.baseAddressForCursor();
+            int baseAddress = in.baseAddressForCursor() - 1; // already read opcode
             int size = in.read();
             int firstKey = in.readInt();
             int[] targets = new int[size];
@@ -773,7 +773,7 @@ public enum InstructionCodec {
     FORMAT_SPARSE_SWITCH_PAYLOAD() {
         @Override public DecodedInstruction decode(int opcodeUnit,
                 CodeInput in) throws EOFException {
-            int baseAddress = in.baseAddressForCursor();
+            int baseAddress = in.baseAddressForCursor() - 1; // already read opcode
             int size = in.read();
             int[] keys = new int[size];
             int[] targets = new int[size];
