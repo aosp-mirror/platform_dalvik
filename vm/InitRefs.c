@@ -21,11 +21,6 @@
 
 #include "Dalvik.h"
 
-/*
- * Helper for dvmInitRequiredClassesAndMembers(), which looks up
- * classes and stores them to the indicated pointer, returning a
- * failure code (false == failure).
- */
 static bool initClassReference(ClassObject** pClass, const char* name) {
     ClassObject* result;
 
@@ -274,15 +269,8 @@ static bool initFieldOffsets(void) {
     return true;
 }
 
-static bool initDirectMethodReference(Method** pMethod, const char* className,
+static bool initDirectMethodReferenceByClass(Method** pMethod, ClassObject* clazz,
         const char* name, const char* descriptor) {
-    ClassObject* clazz = dvmFindSystemClassNoInit(className);
-
-    if (clazz == NULL) {
-        LOGE("Could not find essential class %s for direct method lookup\n", className);
-        return false;
-    }
-
     Method* method = dvmFindDirectMethodByDescriptor(clazz, name, descriptor);
 
     if (method == NULL) {
@@ -293,6 +281,18 @@ static bool initDirectMethodReference(Method** pMethod, const char* className,
 
     *pMethod = method;
     return true;
+}
+
+static bool initDirectMethodReference(Method** pMethod, const char* className,
+        const char* name, const char* descriptor) {
+    ClassObject* clazz = dvmFindSystemClassNoInit(className);
+
+    if (clazz == NULL) {
+        LOGE("Could not find essential class %s for direct method lookup\n", className);
+        return false;
+    }
+
+    return initDirectMethodReferenceByClass(pMethod, clazz, name, descriptor);
 }
 
 static bool initConstructorReferences(void) {
@@ -462,21 +462,16 @@ bool dvmFindReferenceMembers(ClassObject* classReference) {
         return false;
     }
 
-    bool ok = true;
+    /* Note: enqueueInternal() is private and thus a direct method. */
 
-    ok &= initFieldOffset(classReference, &gDvm.offJavaLangRefReference_pendingNext,
-            "pendingNext", "Ljava/lang/ref/Reference;");
-    ok &= initFieldOffset(classReference, &gDvm.offJavaLangRefReference_queue,
-            "queue", "Ljava/lang/ref/ReferenceQueue;");
-    ok &= initFieldOffset(classReference, &gDvm.offJavaLangRefReference_queueNext,
-            "queueNext", "Ljava/lang/ref/Reference;");
-    ok &= initFieldOffset(classReference, &gDvm.offJavaLangRefReference_referent,
-            "referent", "Ljava/lang/Object;");
-
-    /* enqueueInternal() is private and thus a direct method. */
-    Method *meth = dvmFindDirectMethodByDescriptor(classReference, "enqueueInternal", "()Z");
-    ok &= (meth != NULL);
-    gDvm.methJavaLangRefReference_enqueueInternal = meth;
-
-    return ok;
+    return initFieldOffset(classReference, &gDvm.offJavaLangRefReference_pendingNext,
+                "pendingNext", "Ljava/lang/ref/Reference;")
+        && initFieldOffset(classReference, &gDvm.offJavaLangRefReference_queue,
+                "queue", "Ljava/lang/ref/ReferenceQueue;")
+        && initFieldOffset(classReference, &gDvm.offJavaLangRefReference_queueNext,
+                "queueNext", "Ljava/lang/ref/Reference;")
+        && initFieldOffset(classReference, &gDvm.offJavaLangRefReference_referent,
+                "referent", "Ljava/lang/Object;")
+        && initDirectMethodReferenceByClass(&gDvm.methJavaLangRefReference_enqueueInternal,
+                classReference, "enqueueInternal", "()Z");
 }
