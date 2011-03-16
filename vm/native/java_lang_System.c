@@ -134,12 +134,13 @@ static void Dalvik_java_lang_System_arraycopy(const u4* args, JValue* pResult)
         RETURN_VOID();
     }
 
-    /* make sure it's an array */
-    if (!dvmIsArray(srcArray) || !dvmIsArray(dstArray)) {
-        dvmThrowExceptionFmt(gDvm.exArrayStoreException,
-            "source and destination must be arrays, but were %s and %s",
-            ((Object*)srcArray)->clazz->descriptor,
-            ((Object*)dstArray)->clazz->descriptor);
+    /* Make sure source and destination are arrays. */
+    if (!dvmIsArray(srcArray)) {
+        dvmThrowArrayStoreExceptionNotArray(((Object*)srcArray)->clazz, "source");
+        RETURN_VOID();
+    }
+    if (!dvmIsArray(dstArray)) {
+        dvmThrowArrayStoreExceptionNotArray(((Object*)dstArray)->clazz, "destination");
         RETURN_VOID();
     }
 
@@ -167,9 +168,7 @@ static void Dalvik_java_lang_System_arraycopy(const u4* args, JValue* pResult)
     dstPrim = (dstType != '[' && dstType != 'L');
     if (srcPrim || dstPrim) {
         if (srcPrim != dstPrim || srcType != dstType) {
-            dvmThrowExceptionFmt(gDvm.exArrayStoreException,
-                "source and destination arrays are incompatible: %s and %s",
-                srcClass->descriptor, dstClass->descriptor);
+            dvmThrowArrayStoreExceptionIncompatibleArrays(srcClass, dstClass);
             RETURN_VOID();
         }
 
@@ -283,10 +282,8 @@ static void Dalvik_java_lang_System_arraycopy(const u4* args, JValue* pResult)
                 copyCount * width);
             dvmWriteBarrierArray(dstArray, 0, copyCount);
             if (copyCount != length) {
-                dvmThrowExceptionFmt(gDvm.exArrayStoreException,
-                    "source[%d] of type %s cannot be stored in destination array of type %s",
-                    srcPos + copyCount, srcObj[copyCount]->clazz->descriptor,
-                    dstClass->descriptor);
+                dvmThrowArrayStoreExceptionIncompatibleArrayElement(srcPos + copyCount,
+                        srcObj[copyCount]->clazz, dstClass);
                 RETURN_VOID();
             }
         }

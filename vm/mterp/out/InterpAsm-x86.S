@@ -2384,7 +2384,7 @@ dvmAsmInstructionStartCode = .L_OP_NOP
     movl      %eax,OUT_ARG0(%esp)
     movl      sReg1,%ecx
     movl      %ecx,OUT_ARG1(%esp)
-    call      dvmThrowArrayStoreException    # ...and throw
+    call      dvmThrowArrayStoreExceptionIncompatibleElement # ...and throw
     jmp       common_exceptionThrown
 
 .LOP_APUT_OBJECT_types_okay:

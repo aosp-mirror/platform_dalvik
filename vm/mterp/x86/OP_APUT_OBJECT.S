@@ -46,7 +46,7 @@
     movl      %eax,OUT_ARG0(%esp)
     movl      sReg1,%ecx
     movl      %ecx,OUT_ARG1(%esp)
-    call      dvmThrowArrayStoreException    # ...and throw
+    call      dvmThrowArrayStoreExceptionIncompatibleElement # ...and throw
     jmp       common_exceptionThrown
 
 .L${opcode}_types_okay:
