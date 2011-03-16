@@ -51,5 +51,5 @@
     ldr     r0, [r9, #offObject_clazz]
     ldr     r1, [rINST, #offObject_clazz]
     EXPORT_PC()
-    bl      dvmThrowArrayStoreException
+    bl      dvmThrowArrayStoreExceptionIncompatibleElement
     b       common_exceptionThrown

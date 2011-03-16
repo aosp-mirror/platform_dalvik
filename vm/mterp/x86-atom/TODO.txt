@@ -23,7 +23,8 @@ Items requiring attention:
 (md) Use dvmThrowArrayIndexOutOfBoundsException(length, index) for
      array bounds errors.
 (md) Use dvmThrowClassCastException(actual, desired) for class cast errors.
-(md) Use dvmThrowArrayStoreException(actual, desired) for array store errors.
+(md) Use dvmThrowArrayStoreExceptionIncompatibleElement(actual, desired)
+     for array store errors.
 (md) Use dvmThrowNegativeArraySizeException(len) forarray alloc errors
 (md) Replace any remaining use of dvmThrowException with proper helper function
 

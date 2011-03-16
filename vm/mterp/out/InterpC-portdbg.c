@@ -2543,7 +2543,7 @@ HANDLE_OPCODE(OP_APUT_OBJECT /*vAA, vBB, vCC*/)
                 LOGV("Can't put a '%s'(%p) into array type='%s'(%p)\n",
                     obj->clazz->descriptor, obj,
                     arrayObj->obj.clazz->descriptor, arrayObj);
-                dvmThrowArrayStoreException(obj->clazz, arrayObj->obj.clazz);
+                dvmThrowArrayStoreExceptionIncompatibleElement(obj->clazz, arrayObj->obj.clazz);
                 GOTO_exceptionThrown();
             }
         }

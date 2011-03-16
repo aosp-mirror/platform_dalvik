@@ -1202,6 +1202,23 @@ void dvmLogExceptionStackTrace(void)
     }
 }
 
+/*
+ * Helper for a few of the throw functions defined below. This throws
+ * the indicated exception, with a message based on a format in which
+ * "%s" is used exactly twice, first for a received class and second
+ * for the expected class.
+ */
+static void throwTypeError(ClassObject* exceptionClass, const char* fmt,
+    ClassObject* actual, ClassObject* desired)
+{
+    char* actualClassName = dvmHumanReadableDescriptor(actual->descriptor);
+    char* desiredClassName = dvmHumanReadableDescriptor(desired->descriptor);
+    dvmThrowExceptionFmt(exceptionClass, fmt,
+        actualClassName, desiredClassName);
+    free(desiredClassName);
+    free(actualClassName);
+}
+
 void dvmThrowAbstractMethodError(const char* msg) {
     dvmThrowException(gDvm.exAbstractMethodError, msg);
 }
@@ -1216,27 +1233,40 @@ void dvmThrowArrayIndexOutOfBoundsException(int length, int index)
         "length=%d; index=%d", length, index);
 }
 
-/*
- * Throw the indicated exception, with a message based on a format
- * in which "%s" is used exactly twice, first for a received class and
- * second for the expected class.
- */
-static void throwTypeError(ClassObject* exceptionClass, const char* fmt,
-    ClassObject* actual, ClassObject* desired)
-{
-    char* actualClassName = dvmHumanReadableDescriptor(actual->descriptor);
-    char* desiredClassName = dvmHumanReadableDescriptor(desired->descriptor);
-    dvmThrowExceptionFmt(exceptionClass, fmt,
-        actualClassName, desiredClassName);
-    free(desiredClassName);
-    free(actualClassName);
-}
-
-void dvmThrowArrayStoreException(ClassObject* actual, ClassObject* desired)
+void dvmThrowArrayStoreExceptionIncompatibleElement(ClassObject* objectType,
+        ClassObject* arrayType)
 {
     throwTypeError(gDvm.exArrayStoreException,
         "%s cannot be stored in an array of type %s",
-        actual, desired);
+        objectType, arrayType);
+}
+
+void dvmThrowArrayStoreExceptionNotArray(ClassObject* actual, const char* label)
+{
+    char* actualClassName = dvmHumanReadableDescriptor(actual->descriptor);
+    dvmThrowExceptionFmt(gDvm.exArrayStoreException,
+            "%s of type %s is not an array",
+            label, actualClassName);
+    free(actualClassName);
+}
+
+void dvmThrowArrayStoreExceptionIncompatibleArrays(ClassObject* source, ClassObject* destination)
+{
+    throwTypeError(gDvm.exArrayStoreException,
+        "%s and %s are incompatible array types",
+        source, destination);
+}
+
+void dvmThrowArrayStoreExceptionIncompatibleArrayElement(s4 index, ClassObject* objectType,
+        ClassObject* arrayType)
+{
+    char* objectClassName = dvmHumanReadableDescriptor(objectType->descriptor);
+    char* arrayClassName = dvmHumanReadableDescriptor(arrayType->descriptor);
+    dvmThrowExceptionFmt(gDvm.exArrayStoreException,
+        "source[%d] of type %s cannot be stored in destination array of type %s",
+        index, objectClassName, arrayClassName);
+    free(objectClassName);
+    free(arrayClassName);
 }
 
 void dvmThrowClassCastException(ClassObject* actual, ClassObject* desired)

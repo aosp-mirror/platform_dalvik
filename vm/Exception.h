@@ -221,9 +221,34 @@ void dvmThrowArrayIndexOutOfBoundsException(int length, int index);
 
 /*
  * Throw an ArrayStoreException in the current thread, using the given classes'
- * names in the detail message.
+ * names in the detail message, indicating that an object of the given type
+ * can't be stored into an array of the given type.
  */
-void dvmThrowArrayStoreException(ClassObject* actual, ClassObject* desired);
+void dvmThrowArrayStoreExceptionIncompatibleElement(ClassObject* objectType,
+        ClassObject* arrayType);
+
+/*
+ * Throw an ArrayStoreException in the current thread, using the given
+ * class name and argument label in the detail message, indicating
+ * that it is not an array.
+ */
+void dvmThrowArrayStoreExceptionNotArray(ClassObject* actual, const char* label);
+
+/*
+ * Throw an ArrayStoreException in the current thread, using the given
+ * classes' names in the detail message, indicating that the arrays
+ * aren't compatible (for copying contents).
+ */
+void dvmThrowArrayStoreExceptionIncompatibleArrays(ClassObject* source, ClassObject* destination);
+
+/*
+ * Throw an ArrayStoreException in the current thread, using the given
+ * index and classes' names in the detail message, indicating that the
+ * object at the given index and of the given type cannot be stored
+ * into an array of the given type.
+ */
+void dvmThrowArrayStoreExceptionIncompatibleArrayElement(s4 index, ClassObject* objectType,
+        ClassObject* arrayType);
 
 /**
  * Throw a ClassCastException in the current thread, using the given classes'
