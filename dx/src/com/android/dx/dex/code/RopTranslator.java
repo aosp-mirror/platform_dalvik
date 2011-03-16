@@ -16,6 +16,7 @@
 
 package com.android.dx.dex.code;
 
+import com.android.dx.dex.DexOptions;
 import com.android.dx.io.Opcodes;
 import com.android.dx.rop.code.BasicBlock;
 import com.android.dx.rop.code.BasicBlockList;
@@ -46,6 +47,9 @@ import java.util.ArrayList;
  * #translate} method is the thing to call on this class.
  */
 public final class RopTranslator {
+    /** {@code non-null;} options for dex output */
+    private final DexOptions dexOptions;
+
     /** {@code non-null;} method to translate */
     private final RopMethod method;
 
@@ -92,13 +96,13 @@ public final class RopTranslator {
      * @param locals {@code null-ok;} local variable information to use
      * @param paramSize size, in register units, of all the parameters to
      * this method
+     * @param dexOptions {@code non-null;} options for dex output
      * @return {@code non-null;} the translated version
      */
     public static DalvCode translate(RopMethod method, int positionInfo,
-                                     LocalVariableInfo locals, int paramSize) {
+            LocalVariableInfo locals, int paramSize, DexOptions dexOptions) {
         RopTranslator translator =
-            new RopTranslator(method, positionInfo, locals,
-                    paramSize);
+            new RopTranslator(method, positionInfo, locals, paramSize, dexOptions);
         return translator.translateAndGetResult();
     }
 
@@ -111,9 +115,11 @@ public final class RopTranslator {
      * @param locals {@code null-ok;} local variable information to use
      * @param paramSize size, in register units, of all the parameters to
      * this method
+     * @param dexOptions {@code non-null;} options for dex output
      */
-    private RopTranslator(RopMethod method, int positionInfo,
-                          LocalVariableInfo locals, int paramSize) {
+    private RopTranslator(RopMethod method, int positionInfo, LocalVariableInfo locals,
+            int paramSize, DexOptions dexOptions) {
+        this.dexOptions = dexOptions;
         this.method = method;
         this.positionInfo = positionInfo;
         this.locals = locals;
@@ -150,7 +156,7 @@ public final class RopTranslator {
         this.regCount = blocks.getRegCount()
                 + (paramsAreInOrder ? 0 : this.paramSize);
 
-        this.output = new OutputCollector(maxInsns, bsz * 3, regCount);
+        this.output = new OutputCollector(dexOptions, maxInsns, bsz * 3, regCount);
 
         if (locals != null) {
             this.translationVisitor =

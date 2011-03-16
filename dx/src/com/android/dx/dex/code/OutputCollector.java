@@ -16,6 +16,8 @@
 
 package com.android.dx.dex.code;
 
+import com.android.dx.dex.DexOptions;
+
 import java.util.ArrayList;
 
 /**
@@ -42,14 +44,15 @@ public final class OutputCollector {
     /**
      * Constructs an instance.
      *
+     * @param dexOptions {@code non-null;} options for dex output
      * @param initialCapacity {@code >= 0;} initial capacity of the output list
      * @param suffixInitialCapacity {@code >= 0;} initial capacity of the output
      * suffix
      * @param regCount {@code >= 0;} register count for the method
      */
-    public OutputCollector(int initialCapacity, int suffixInitialCapacity,
+    public OutputCollector(DexOptions dexOptions, int initialCapacity, int suffixInitialCapacity,
             int regCount) {
-        this.finisher = new OutputFinisher(initialCapacity, regCount);
+        this.finisher = new OutputFinisher(dexOptions, initialCapacity, regCount);
         this.suffix = new ArrayList<DalvInsn>(suffixInitialCapacity);
     }
 

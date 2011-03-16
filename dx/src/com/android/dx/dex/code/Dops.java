@@ -16,6 +16,7 @@
 
 package com.android.dx.dex.code;
 
+import com.android.dx.dex.DexOptions;
 import com.android.dx.dex.code.form.Form10t;
 import com.android.dx.dex.code.form.Form10x;
 import com.android.dx.dex.code.form.Form11n;
@@ -1396,11 +1397,13 @@ public final class Dops {
      * given instance, if any.
      *
      * @param opcode {@code non-null;} the opcode
+     * @param options {@code non-null;} options, used to determine
+     * which opcodes are potentially off-limits
      * @return {@code null-ok;} the next opcode in the same family, in the
      * chain of opcodes to try, or {@code null} if the given opcode is
      * the last in its chain
      */
-    public static Dop getNextOrNull(Dop opcode) {
+    public static Dop getNextOrNull(Dop opcode, DexOptions options) {
         int nextOpcode = opcode.getNextOpcode();
 
         if (nextOpcode == Opcodes.NO_NEXT) {
