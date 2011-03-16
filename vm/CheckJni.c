@@ -439,6 +439,7 @@ static void checkFieldType(JNIEnv* env, jobject jobj, jfieldID fieldID,
     }
 
     if (field->signature[0] == 'L' || field->signature[0] == '[') {
+        JNI_ENTER();
         Object* obj = dvmDecodeIndirectRef(env, jobj);
         if (obj != NULL) {
             ClassObject* fieldClass =
@@ -454,6 +455,7 @@ static void checkFieldType(JNIEnv* env, jobject jobj, jfieldID fieldID,
                 printWarn = true;
             }
         }
+        JNI_EXIT();
     } else if (dexGetPrimitiveTypeFromDescriptorChar(field->signature[0]) != prim) {
         LOGW("JNI WARNING: field '%s' with type '%s' set with wrong type (%s)",
             field->name, field->signature, primitiveTypeToName(prim));
@@ -804,6 +806,7 @@ static void checkSig(JNIEnv* env, jmethodID methodID, char expectedSigByte,
  */
 static void checkStaticFieldID(JNIEnv* env, jclass jclazz, jfieldID fieldID)
 {
+    JNI_ENTER();
     ClassObject* clazz = (ClassObject*) dvmDecodeIndirectRef(env, jclazz);
     StaticField* base = &clazz->sfields[0];
     int fieldCount = clazz->sfieldCount;
@@ -816,6 +819,7 @@ static void checkStaticFieldID(JNIEnv* env, jclass jclazz, jfieldID fieldID)
         LOGW("             base=%p count=%d", base, fieldCount);
         abortMaybe();
     }
+    JNI_EXIT();
 }
 
 /*
@@ -1125,6 +1129,7 @@ static int dvmPrimitiveTypeWidth(PrimitiveType primType)
 static void* createGuardedPACopy(JNIEnv* env, const jarray jarr,
     jboolean* isCopy)
 {
+    JNI_ENTER();
     ArrayObject* arrObj = (ArrayObject*) dvmDecodeIndirectRef(env, jarr);
     PrimitiveType primType = arrObj->obj.clazz->elementClass->primitiveType;
     int len = arrObj->length * dvmPrimitiveTypeWidth(primType);
@@ -1135,6 +1140,7 @@ static void* createGuardedPACopy(JNIEnv* env, const jarray jarr,
     if (isCopy != NULL)
         *isCopy = JNI_TRUE;
 
+    JNI_EXIT();
     return result;
 }
 
@@ -1145,14 +1151,15 @@ static void* createGuardedPACopy(JNIEnv* env, const jarray jarr,
 static void* releaseGuardedPACopy(JNIEnv* env, jarray jarr, void* dataBuf,
     int mode)
 {
+    JNI_ENTER();
     ArrayObject* arrObj = (ArrayObject*) dvmDecodeIndirectRef(env, jarr);
     bool release, copyBack;
-    u1* result;
+    u1* result = NULL;
 
     if (!checkGuardedCopy(dataBuf, true)) {
         LOGE("JNI: failed guarded copy check in releaseGuardedPACopy");
         abortMaybe();
-        return NULL;
+        goto bail;
     }
 
     switch (mode) {
@@ -1170,7 +1177,7 @@ static void* releaseGuardedPACopy(JNIEnv* env, jarray jarr, void* dataBuf,
     default:
         LOGE("JNI: bad release mode %d", mode);
         dvmAbort();
-        return NULL;
+        goto bail;
     }
 
     if (copyBack) {
@@ -1187,6 +1194,8 @@ static void* releaseGuardedPACopy(JNIEnv* env, jarray jarr, void* dataBuf,
     /* pointer is to the array contents; back up to the array object */
     result -= offsetof(ArrayObject, contents);
 
+bail:
+    JNI_EXIT();
     return result;
 }
 
@@ -1845,9 +1854,11 @@ static const jchar* Check_GetStringChars(JNIEnv* env, jstring string,
     const jchar* result;
     result = BASE_ENV(env)->GetStringChars(env, string, isCopy);
     if (((JNIEnvExt*)env)->forceDataCopy && result != NULL) {
-        // TODO: fix for indirect
-        int len = dvmStringLen((StringObject*) string) * 2;
-        result = (const jchar*) createGuardedCopy(result, len, false);
+        JNI_ENTER();
+        StringObject* strObj = (StringObject*) dvmDecodeIndirectRef(env, string);
+        int byteCount = dvmStringLen(strObj) * 2;
+        JNI_EXIT();
+        result = (const jchar*) createGuardedCopy(result, byteCount, false);
         if (isCopy != NULL)
             *isCopy = JNI_TRUE;
     }
@@ -1901,9 +1912,7 @@ static const char* Check_GetStringUTFChars(JNIEnv* env, jstring string,
     const char* result;
     result = BASE_ENV(env)->GetStringUTFChars(env, string, isCopy);
     if (((JNIEnvExt*)env)->forceDataCopy && result != NULL) {
-        // TODO: fix for indirect
-        int len = dvmStringUtf8ByteLen((StringObject*) string) + 1;
-        result = (const char*) createGuardedCopy(result, len, false);
+        result = (const char*) createGuardedCopy(result, strlen(result)+1, false);
         if (isCopy != NULL)
             *isCopy = JNI_TRUE;
     }
@@ -2191,9 +2200,11 @@ static const jchar* Check_GetStringCritical(JNIEnv* env, jstring string,
     const jchar* result;
     result = BASE_ENV(env)->GetStringCritical(env, string, isCopy);
     if (((JNIEnvExt*)env)->forceDataCopy && result != NULL) {
-        // TODO: fix for indirect
-        int len = dvmStringLen((StringObject*) string) * 2;
-        result = (const jchar*) createGuardedCopy(result, len, false);
+        JNI_ENTER();
+        StringObject* strObj = (StringObject*) dvmDecodeIndirectRef(env, string);
+        int byteCount = dvmStringLen(strObj) * 2;
+        JNI_EXIT();
+        result = (const jchar*) createGuardedCopy(result, byteCount, false);
         if (isCopy != NULL)
             *isCopy = JNI_TRUE;
     }
