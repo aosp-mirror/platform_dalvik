@@ -285,7 +285,7 @@ static void Dalvik_java_lang_System_arraycopy(const u4* args, JValue* pResult)
             if (copyCount != length) {
                 dvmThrowExceptionFmt(gDvm.exArrayStoreException,
                     "source[%d] of type %s cannot be stored in destination array of type %s",
-                    copyCount, srcObj[copyCount]->clazz->descriptor,
+                    srcPos + copyCount, srcObj[copyCount]->clazz->descriptor,
                     dstClass->descriptor);
                 RETURN_VOID();
             }
