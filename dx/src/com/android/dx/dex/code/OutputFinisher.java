@@ -16,6 +16,7 @@
 
 package com.android.dx.dex.code;
 
+import com.android.dx.dex.DexOptions;
 import com.android.dx.io.Opcodes;
 import com.android.dx.rop.code.LocalItem;
 import com.android.dx.rop.code.RegisterSpec;
@@ -38,6 +39,9 @@ import java.util.HashSet;
  * form of a {@link DalvInsnList} instance.
  */
 public final class OutputFinisher {
+    /** {@code non-null;} options for dex output */
+    private final DexOptions dexOptions;
+
     /**
      * {@code >= 0;} register count for the method, not including any extra
      * "reserved" registers needed to translate "difficult" instructions
@@ -64,11 +68,13 @@ public final class OutputFinisher {
     /**
      * Constructs an instance. It initially contains no instructions.
      *
+     * @param dexOptions {@code non-null;} options for dex output
      * @param regCount {@code >= 0;} register count for the method
      * @param initialCapacity {@code >= 0;} initial capacity of the
      * instructions list
      */
-    public OutputFinisher(int initialCapacity, int regCount) {
+    public OutputFinisher(DexOptions dexOptions, int initialCapacity, int regCount) {
+        this.dexOptions = dexOptions;
         this.unreservedRegCount = regCount;
         this.insns = new ArrayList<DalvInsn>(initialCapacity);
         this.reservedCount = -1;
@@ -500,7 +506,7 @@ public final class OutputFinisher {
                 break;
             }
 
-            guess = Dops.getNextOrNull(guess);
+            guess = Dops.getNextOrNull(guess, dexOptions);
         }
 
         return guess;

@@ -24,6 +24,7 @@ import com.android.dx.cf.iface.Field;
 import com.android.dx.cf.iface.FieldList;
 import com.android.dx.cf.iface.Method;
 import com.android.dx.cf.iface.MethodList;
+import com.android.dx.dex.DexOptions;
 import com.android.dx.dex.code.DalvCode;
 import com.android.dx.dex.code.PositionList;
 import com.android.dx.dex.code.RopTranslator;
@@ -76,13 +77,14 @@ public class CfTranslator {
      * @param filePath {@code non-null;} the file path for the class,
      * excluding any base directory specification
      * @param bytes {@code non-null;} contents of the file
-     * @param args command-line arguments
+     * @param cfOptions options for class translation
+     * @param dexOptions options for dex output
      * @return {@code non-null;} the translated class
      */
     public static ClassDefItem translate(String filePath, byte[] bytes,
-            CfOptions args) {
+            CfOptions cfOptions, DexOptions dexOptions) {
         try {
-            return translate0(filePath, bytes, args);
+            return translate0(filePath, bytes, cfOptions, dexOptions);
         } catch (RuntimeException ex) {
             String msg = "...while processing " + filePath;
             throw ExceptionWithContext.withContext(ex, msg);
@@ -97,38 +99,39 @@ public class CfTranslator {
      * @param filePath {@code non-null;} the file path for the class,
      * excluding any base directory specification
      * @param bytes {@code non-null;} contents of the file
-     * @param args command-line arguments
+     * @param cfOptions options for class translation
+     * @param dexOptions options for dex output
      * @return {@code non-null;} the translated class
      */
     private static ClassDefItem translate0(String filePath, byte[] bytes,
-            CfOptions args) {
+            CfOptions cfOptions, DexOptions dexOptions) {
         DirectClassFile cf =
-            new DirectClassFile(bytes, filePath, args.strictNameCheck);
+            new DirectClassFile(bytes, filePath, cfOptions.strictNameCheck);
 
         cf.setAttributeFactory(StdAttributeFactory.THE_ONE);
         cf.getMagic();
 
-        OptimizerOptions.loadOptimizeLists(args.optimizeListFile,
-                args.dontOptimizeListFile);
+        OptimizerOptions.loadOptimizeLists(cfOptions.optimizeListFile,
+                cfOptions.dontOptimizeListFile);
 
         // Build up a class to output.
 
         CstType thisClass = cf.getThisClass();
         int classAccessFlags = cf.getAccessFlags() & ~AccessFlags.ACC_SUPER;
-        CstUtf8 sourceFile = (args.positionInfo == PositionList.NONE) ? null :
+        CstUtf8 sourceFile = (cfOptions.positionInfo == PositionList.NONE) ? null :
             cf.getSourceFile();
         ClassDefItem out =
             new ClassDefItem(thisClass, classAccessFlags,
                     cf.getSuperclass(), cf.getInterfaces(), sourceFile);
 
         Annotations classAnnotations =
-            AttributeTranslator.getClassAnnotations(cf, args);
+            AttributeTranslator.getClassAnnotations(cf, cfOptions);
         if (classAnnotations.size() != 0) {
             out.setClassAnnotations(classAnnotations);
         }
 
         processFields(cf, out);
-        processMethods(cf, args, out);
+        processMethods(cf, cfOptions, dexOptions, out);
 
         return out;
     }
@@ -214,11 +217,12 @@ public class CfTranslator {
      * Processes the methods of the given class.
      *
      * @param cf {@code non-null;} class being translated
-     * @param args {@code non-null;} command-line args
+     * @param cfOptions {@code non-null;} options for class translation
+     * @param dexOptions {@code non-null;} options for dex output
      * @param out {@code non-null;} output class
      */
-    private static void processMethods(DirectClassFile cf,
-            CfOptions args, ClassDefItem out) {
+    private static void processMethods(DirectClassFile cf, CfOptions cfOptions,
+            DexOptions dexOptions, ClassDefItem out) {
         CstType thisClass = cf.getThisClass();
         MethodList methods = cf.getMethods();
         int sz = methods.size();
@@ -242,8 +246,8 @@ public class CfTranslator {
                 } else {
                     ConcreteMethod concrete =
                         new ConcreteMethod(one, cf,
-                                (args.positionInfo != PositionList.NONE),
-                                args.localInfo);
+                                (cfOptions.positionInfo != PositionList.NONE),
+                                cfOptions.localInfo);
 
                     TranslationAdvice advice;
 
@@ -259,7 +263,7 @@ public class CfTranslator {
                             = thisClass.getClassType().getDescriptor()
                                 + "." + one.getName().getString();
 
-                    if (args.optimize &&
+                    if (cfOptions.optimize &&
                             OptimizerOptions.shouldOptimize(canonicalName)) {
                         if (DEBUG) {
                             System.err.println("Optimizing " + canonicalName);
@@ -267,14 +271,14 @@ public class CfTranslator {
 
                         nonOptRmeth = rmeth;
                         rmeth = Optimizer.optimize(rmeth,
-                                paramSize, isStatic, args.localInfo, advice);
+                                paramSize, isStatic, cfOptions.localInfo, advice);
 
                         if (DEBUG) {
                             OptimizerOptions.compareOptimizerStep(nonOptRmeth,
-                                    paramSize, isStatic, args, advice, rmeth);
+                                    paramSize, isStatic, cfOptions, advice, rmeth);
                         }
 
-                        if (args.statistics) {
+                        if (cfOptions.statistics) {
                             CodeStatistics.updateRopStatistics(
                                     nonOptRmeth, rmeth);
                         }
@@ -282,15 +286,15 @@ public class CfTranslator {
 
                     LocalVariableInfo locals = null;
 
-                    if (args.localInfo) {
+                    if (cfOptions.localInfo) {
                         locals = LocalVariableExtractor.extract(rmeth);
                     }
 
-                    code = RopTranslator.translate(rmeth, args.positionInfo,
-                            locals, paramSize);
+                    code = RopTranslator.translate(rmeth, cfOptions.positionInfo,
+                            locals, paramSize, dexOptions);
 
-                    if (args.statistics && nonOptRmeth != null) {
-                        updateDexStatistics(args, rmeth, nonOptRmeth, locals,
+                    if (cfOptions.statistics && nonOptRmeth != null) {
+                        updateDexStatistics(cfOptions, dexOptions, rmeth, nonOptRmeth, locals,
                                 paramSize, concrete.getCode().size());
                     }
                 }
@@ -345,7 +349,7 @@ public class CfTranslator {
     /**
      * Helper that updates the dex statistics.
      */
-    private static void updateDexStatistics(CfOptions args,
+    private static void updateDexStatistics(CfOptions cfOptions, DexOptions dexOptions,
             RopMethod optRmeth, RopMethod nonOptRmeth,
             LocalVariableInfo locals, int paramSize, int originalByteCount) {
         /*
@@ -357,9 +361,9 @@ public class CfTranslator {
          */
 
         DalvCode optCode = RopTranslator.translate(optRmeth,
-                args.positionInfo, locals, paramSize);
+                cfOptions.positionInfo, locals, paramSize, dexOptions);
         DalvCode nonOptCode = RopTranslator.translate(nonOptRmeth,
-                args.positionInfo, locals, paramSize);
+                cfOptions.positionInfo, locals, paramSize, dexOptions);
 
         /*
          * Fake out the indices, so code.getInsns() can work well enough

@@ -23,6 +23,7 @@ import com.android.dx.cf.iface.ParseException;
 import com.android.dx.command.DxConsole;
 import com.android.dx.command.UsageException;
 import com.android.dx.dex.DexFormat;
+import com.android.dx.dex.DexOptions;
 import com.android.dx.dex.cf.CfOptions;
 import com.android.dx.dex.cf.CfTranslator;
 import com.android.dx.dex.cf.CodeStatistics;
@@ -464,7 +465,7 @@ public class Main {
 
         try {
             ClassDefItem clazz =
-                CfTranslator.translate(name, bytes, args.cfOptions);
+                CfTranslator.translate(name, bytes, args.cfOptions, args.dexOptions);
             synchronized (outputDex) {
                 outputDex.add(clazz);
             }
@@ -901,6 +902,9 @@ public class Main {
          */
         public boolean keepClassesInJar = false;
 
+        /** what API level to target */
+        public int targetApiLevel = Integer.MAX_VALUE;
+
         /** how much source position info to preserve */
         public int positionInfo = PositionList.LINES;
 
@@ -910,7 +914,7 @@ public class Main {
         /** whether to merge with the output dex file if it exists. */
         public boolean incremental = false;
 
-        /** {@code non-null after {@link #parse};} file name arguments */
+        /** {@code non-null} after {@link #parse}; file name arguments */
         public String[] fileNames;
 
         /** whether to do SSA/register optimization */
@@ -925,8 +929,11 @@ public class Main {
         /** Whether to print statistics to stdout at end of compile cycle */
         public boolean statistics;
 
-        /** Options for dex.cf.* */
+        /** Options for class file transformation */
         public CfOptions cfOptions;
+
+        /** Options for dex file output */
+        public DexOptions dexOptions;
 
         /** number of threads to run with */
         public int numThreads = 1;
@@ -997,6 +1004,19 @@ public class Main {
                 } else if (arg.startsWith("--dump-method=")) {
                     methodToDump = arg.substring(arg.indexOf('=') + 1);
                     jarOutput = false;
+                } else if (arg.startsWith("--target-api=")) {
+                    arg = arg.substring(arg.indexOf('=') + 1);
+                    int value;
+                    try {
+                        value = Integer.parseInt(arg);
+                    } catch (NumberFormatException ex) {
+                        value = -1;
+                    }
+                    if (value < 1) {
+                        System.err.println("improper target-api option: " + arg);
+                        throw new UsageException();
+                    }
+                    targetApiLevel = value;
                 } else if (arg.startsWith("--positions=")) {
                     String pstr = arg.substring(arg.indexOf('=') + 1).intern();
                     if (pstr == "none") {
@@ -1044,6 +1064,7 @@ public class Main {
             }
 
             makeCfOptions();
+            makeDexOptions();
         }
 
         /**
@@ -1060,6 +1081,15 @@ public class Main {
             cfOptions.dontOptimizeListFile = dontOptimizeListFile;
             cfOptions.statistics = statistics;
             cfOptions.warn = DxConsole.err;
+        }
+
+        /**
+         * Copies relevent arguments over into a DexOptions instance.
+         */
+        private void makeDexOptions() {
+            dexOptions = new DexOptions();
+
+            dexOptions.enableExtendedOpcodes = targetApiLevel >= 12;
         }
     }
 
