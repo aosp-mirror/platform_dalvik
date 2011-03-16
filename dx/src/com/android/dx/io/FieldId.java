@@ -20,22 +20,22 @@ import com.android.dx.util.Unsigned;
 
 public final class FieldId implements Comparable<FieldId> {
     private final DexBuffer buffer;
-    private final short declaringClassIndex;
-    private final short typeIndex;
+    private final int declaringClassIndex;
+    private final int typeIndex;
     private final int nameIndex;
 
-    public FieldId(DexBuffer buffer, short declaringClassIndex, short typeIndex, int nameIndex) {
+    public FieldId(DexBuffer buffer, int declaringClassIndex, int typeIndex, int nameIndex) {
         this.buffer = buffer;
         this.declaringClassIndex = declaringClassIndex;
         this.typeIndex = typeIndex;
         this.nameIndex = nameIndex;
     }
 
-    public short getDeclaringClassIndex() {
+    public int getDeclaringClassIndex() {
         return declaringClassIndex;
     }
 
-    public short getTypeIndex() {
+    public int getTypeIndex() {
         return typeIndex;
     }
 
@@ -54,8 +54,8 @@ public final class FieldId implements Comparable<FieldId> {
     }
 
     public void writeTo(DexBuffer.Section out) {
-        out.writeShort(declaringClassIndex);
-        out.writeShort(typeIndex);
+        out.writeUnsignedShort(declaringClassIndex);
+        out.writeUnsignedShort(typeIndex);
         out.writeInt(nameIndex);
     }
 

@@ -19,17 +19,19 @@ package com.android.dx.io;
 import com.android.dx.dex.SizeOf;
 import com.android.dx.dex.TableOfContents;
 import com.android.dx.merge.TypeList;
+import com.android.dx.util.ByteInput;
+import com.android.dx.util.ByteOutput;
 import com.android.dx.util.DexException;
 import com.android.dx.util.Leb128Utils;
 import com.android.dx.util.Mutf8;
 import java.io.ByteArrayOutputStream;
-import java.io.DataInput;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.UTFDataFormatException;
 import java.util.AbstractList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -159,7 +161,7 @@ public final class DexBuffer {
 
     public Section appendSection(int maxByteCount, String name) {
         Section result = new Section(name, length, length + maxByteCount);
-        length = fourByteAlign(length + maxByteCount);
+        length += fourByteAlign(maxByteCount);
         return result;
     }
 
@@ -254,16 +256,10 @@ public final class DexBuffer {
         return open(offset).readCode();
     }
 
-    public final class Section {
+    public final class Section implements ByteInput, ByteOutput {
         private final String name;
         private int position;
         private final int limit;
-
-        private final DataInput asDataInput = new DataInputStub() {
-            public byte readByte() {
-                return Section.this.readByte();
-            }
-        };
 
         private Section(String name, int position, int limit) {
             this.name = name;
@@ -295,6 +291,10 @@ public final class DexBuffer {
             return (short) result;
         }
 
+        public int readUnsignedShort() {
+            return readShort() & 0xffff;
+        }
+
         public byte readByte() {
             return (byte) (data[position++] & 0xff);
         }
@@ -314,19 +314,11 @@ public final class DexBuffer {
         }
 
         public int readUleb128() {
-            try {
-                return Leb128Utils.readUnsignedLeb128(asDataInput);
-            } catch (IOException e) {
-                throw new DexException(e);
-            }
+            return Leb128Utils.readUnsignedLeb128(this);
         }
 
         public int readSleb128() {
-            try {
-                return Leb128Utils.readSignedLeb128(asDataInput);
-            } catch (IOException e) {
-                throw new DexException(e);
-            }
+            return Leb128Utils.readSignedLeb128(this);
         }
 
         public TypeList readTypeList() {
@@ -345,13 +337,13 @@ public final class DexBuffer {
             position = offset;
             try {
                 int expectedLength = readUleb128();
-                String result = Mutf8.decode(asDataInput, new char[expectedLength]);
+                String result = Mutf8.decode(this, new char[expectedLength]);
                 if (result.length() != expectedLength) {
                     throw new DexException("Declared length " + expectedLength
                             + " doesn't match decoded length of " + result.length());
                 }
                 return result;
-            } catch (IOException e) {
+            } catch (UTFDataFormatException e) {
                 throw new DexException(e);
             } finally {
                 position = savedPosition;
@@ -359,15 +351,15 @@ public final class DexBuffer {
         }
 
         public FieldId readFieldId() {
-            short declaringClassIndex = readShort();
-            short typeIndex = readShort();
+            int declaringClassIndex = readUnsignedShort();
+            int typeIndex = readUnsignedShort();
             int nameIndex = readInt();
             return new FieldId(DexBuffer.this, declaringClassIndex, typeIndex, nameIndex);
         }
 
         public MethodId readMethodId() {
-            short declaringClassIndex = readShort();
-            short protoIndex = readShort();
+            int declaringClassIndex = readUnsignedShort();
+            int protoIndex = readUnsignedShort();
             int nameIndex = readInt();
             return new MethodId(DexBuffer.this, declaringClassIndex, protoIndex, nameIndex);
         }
@@ -395,10 +387,10 @@ public final class DexBuffer {
         }
 
         private Code readCode() {
-            short registersSize = readShort();
-            short insSize = readShort();
-            short outsSize = readShort();
-            short triesSize = readShort();
+            int registersSize = readUnsignedShort();
+            int insSize = readUnsignedShort();
+            int outsSize = readUnsignedShort();
+            int triesSize = readUnsignedShort();
             int debugInfoOffset = readInt();
             int instructionsSize = readInt();
             short[] instructions = readShortArray(instructionsSize);
@@ -411,8 +403,8 @@ public final class DexBuffer {
 
                 for (int i = 0; i < triesSize; i++) {
                     int startAddress = readInt();
-                    short instructionCount = readShort();
-                    short handlerOffset = readShort();
+                    int instructionCount = readUnsignedShort();
+                    int handlerOffset = readUnsignedShort();
                     tries[i] = new Code.Try(startAddress, instructionCount, handlerOffset);
                 }
 
@@ -474,6 +466,33 @@ public final class DexBuffer {
             return result;
         }
 
+        public Annotation readAnnotation() {
+            byte visibility = readByte();
+            int typeIndex = readUleb128();
+            int size = readUleb128();
+            int[] names = new int[size];
+            EncodedValue[] values = new EncodedValue[size];
+            for (int i = 0; i < size; i++) {
+                names[i] = readUleb128();
+                values[i] = readEncodedValue();
+            }
+            return new Annotation(DexBuffer.this, visibility, typeIndex, names, values);
+        }
+
+        public EncodedValue readEncodedValue() {
+            int start = position;
+            new EncodedValueReader(this).readValue();
+            int end = position;
+            return new EncodedValue(Arrays.copyOfRange(data, start, end));
+        }
+
+        public EncodedValue readEncodedArray() {
+            int start = position;
+            new EncodedValueReader(this).readArray();
+            int end = position;
+            return new EncodedValue(Arrays.copyOfRange(data, start, end));
+        }
+
         private void ensureCapacity(int size) {
             if (position + size > limit) {
                 throw new DexException("Section limit " + limit + " exceeded by " + name);
@@ -515,6 +534,14 @@ public final class DexBuffer {
             position += 2;
         }
 
+        public void writeUnsignedShort(int i) {
+            short s = (short) i;
+            if (i != (s & 0xffff)) {
+                throw new IllegalArgumentException("Expected an unsigned short: " + i);
+            }
+            writeShort(s);
+        }
+
         public void write(short[] shorts) {
             for (short s : shorts) {
                 writeShort(s);
@@ -531,13 +558,21 @@ public final class DexBuffer {
         }
 
         public void writeUleb128(int i) {
-            position += Leb128Utils.writeUnsignedLeb128(data, position, i);
-            ensureCapacity(0);
+            try {
+                Leb128Utils.writeUnsignedLeb128(this, i);
+                ensureCapacity(0);
+            } catch (ArrayIndexOutOfBoundsException e) {
+                throw new DexException("Section limit " + limit + " exceeded by " + name);
+            }
         }
 
         public void writeSleb128(int i) {
-            position += Leb128Utils.writeSignedLeb128(data, position, i);
-            ensureCapacity(0);
+            try {
+                Leb128Utils.writeSignedLeb128(this, i);
+                ensureCapacity(0);
+            } catch (ArrayIndexOutOfBoundsException e) {
+                throw new DexException("Section limit " + limit + " exceeded by " + name);
+            }
         }
 
         public void writeStringData(String value) {
@@ -546,7 +581,7 @@ public final class DexBuffer {
                 writeUleb128(length);
                 write(Mutf8.encode(value));
                 writeByte(0);
-            } catch (IOException e) {
+            } catch (UTFDataFormatException e) {
                 throw new AssertionError();
             }
         }
@@ -565,54 +600,6 @@ public final class DexBuffer {
          */
         public int remaining() {
             return limit - position;
-        }
-    }
-
-    private static class DataInputStub implements DataInput {
-        public byte readByte() throws IOException {
-            throw new UnsupportedOperationException();
-        }
-        public void readFully(byte[] buffer) throws IOException {
-            throw new UnsupportedOperationException();
-        }
-        public void readFully(byte[] buffer, int offset, int count) throws IOException {
-            throw new UnsupportedOperationException();
-        }
-        public int skipBytes(int i) throws IOException {
-            throw new UnsupportedOperationException();
-        }
-        public boolean readBoolean() throws IOException {
-            throw new UnsupportedOperationException();
-        }
-        public int readUnsignedByte() throws IOException {
-            throw new UnsupportedOperationException();
-        }
-        public short readShort() throws IOException {
-            throw new UnsupportedOperationException();
-        }
-        public int readUnsignedShort() throws IOException {
-            throw new UnsupportedOperationException();
-        }
-        public char readChar() throws IOException {
-            throw new UnsupportedOperationException();
-        }
-        public int readInt() throws IOException {
-            throw new UnsupportedOperationException();
-        }
-        public long readLong() throws IOException {
-            throw new UnsupportedOperationException();
-        }
-        public float readFloat() throws IOException {
-            throw new UnsupportedOperationException();
-        }
-        public double readDouble() throws IOException {
-            throw new UnsupportedOperationException();
-        }
-        public String readLine() throws IOException {
-            throw new UnsupportedOperationException();
-        }
-        public String readUTF() throws IOException {
-            throw new UnsupportedOperationException();
         }
     }
 }

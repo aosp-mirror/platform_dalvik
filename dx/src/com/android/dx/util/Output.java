@@ -21,7 +21,7 @@ package com.android.dx.util;
  * {@code java.util.DataOutput}, but no {@code IOExceptions}
  * are declared, and multibyte output is defined to be little-endian.
  */
-public interface Output {
+public interface Output extends ByteOutput {
     /**
      * Gets the current cursor position. This is the same as the number of
      * bytes written to this instance.

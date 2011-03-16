@@ -16,22 +16,16 @@
 
 package com.android.dx.util;
 
-import java.io.IOException;
-import java.util.Arrays;
-import junit.framework.TestCase;
+public final class ByteArrayByteInput implements ByteInput {
 
-public final class Mutf8Test extends TestCase {
+    private final byte[] bytes;
+    private int position;
 
-    public void testDecode() throws IOException {
-        ByteInput in = new ByteArrayByteInput(
-                new byte[] { 'A', 'B', 'C', (byte) 0xc0, (byte) 0x80, 0, 'E' });
-        assertEquals('A', in.readByte());
-        assertEquals("BC\u0000", Mutf8.decode(in, new char[3]));
-        assertEquals('E', in.readByte());
+    public ByteArrayByteInput(byte... bytes) {
+        this.bytes = bytes;
     }
 
-    public void testEncode() throws IOException {
-        assertEquals(Arrays.toString(new byte[] { 'B', 'C', (byte) 0xc0, (byte) 0x80 }),
-                Arrays.toString(Mutf8.encode("BC\u0000")));
+    @Override public byte readByte() {
+        return bytes[position++];
     }
 }
