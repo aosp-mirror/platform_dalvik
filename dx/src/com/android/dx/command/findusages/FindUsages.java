@@ -141,7 +141,7 @@ public final class FindUsages {
         int fieldIndex = 0;
         for (FieldId fieldId : dex.fieldIds()) {
             if (fieldId.getNameIndex() == memberNameIndex
-                    && declaringType == (int) fieldId.getDeclaringClassIndex()) {
+                    && declaringType == fieldId.getDeclaringClassIndex()) {
                 fields.add(fieldIndex);
             }
             fieldIndex++;
@@ -160,7 +160,7 @@ public final class FindUsages {
         int methodIndex = 0;
         for (MethodId method : dex.methodIds()) {
             if (method.getNameIndex() == memberNameIndex
-                    && subtypes.contains((int) method.getDeclaringClassIndex())) {
+                    && subtypes.contains(method.getDeclaringClassIndex())) {
                 methods.add(methodIndex);
             }
             methodIndex++;

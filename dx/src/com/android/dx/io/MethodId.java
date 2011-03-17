@@ -20,22 +20,22 @@ import com.android.dx.util.Unsigned;
 
 public final class MethodId implements Comparable<MethodId> {
     private final DexBuffer buffer;
-    private final short declaringClassIndex;
-    private final short protoIndex;
+    private final int declaringClassIndex;
+    private final int protoIndex;
     private final int nameIndex;
 
-    public MethodId(DexBuffer buffer, short declaringClassIndex, short protoIndex, int nameIndex) {
+    public MethodId(DexBuffer buffer, int declaringClassIndex, int protoIndex, int nameIndex) {
         this.buffer = buffer;
         this.declaringClassIndex = declaringClassIndex;
         this.protoIndex = protoIndex;
         this.nameIndex = nameIndex;
     }
 
-    public short getDeclaringClassIndex() {
+    public int getDeclaringClassIndex() {
         return declaringClassIndex;
     }
 
-    public short getProtoIndex() {
+    public int getProtoIndex() {
         return protoIndex;
     }
 
@@ -54,8 +54,8 @@ public final class MethodId implements Comparable<MethodId> {
     }
 
     public void writeTo(DexBuffer.Section out) {
-        out.writeShort(declaringClassIndex);
-        out.writeShort(protoIndex);
+        out.writeUnsignedShort(declaringClassIndex);
+        out.writeUnsignedShort(protoIndex);
         out.writeInt(nameIndex);
     }
 

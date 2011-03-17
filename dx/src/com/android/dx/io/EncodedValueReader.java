@@ -16,6 +16,9 @@
 
 package com.android.dx.io;
 
+import com.android.dx.util.ByteInput;
+import com.android.dx.util.Leb128Utils;
+
 /**
  * SAX-style reader for encoded values.
  * TODO: convert this to a pull-style reader
@@ -38,14 +41,18 @@ public class EncodedValueReader {
     public static final int ENCODED_NULL = 0x1e;
     public static final int ENCODED_BOOLEAN = 0x1f;
 
-    protected final DexBuffer.Section in;
+    protected final ByteInput in;
 
-    public EncodedValueReader(DexBuffer.Section in) {
+    public EncodedValueReader(ByteInput in) {
         this.in = in;
     }
 
+    public EncodedValueReader(EncodedValue in) {
+        this(in.asByteInput());
+    }
+
     public final void readArray() {
-        int size = in.readUleb128();
+        int size = Leb128Utils.readUnsignedLeb128(in);
         visitArray(size);
 
         for (int i = 0; i < size; i++) {
@@ -54,12 +61,12 @@ public class EncodedValueReader {
     }
 
     public final void readAnnotation() {
-        int typeIndex = in.readUleb128();
-        int size = in.readUleb128();
+        int typeIndex = Leb128Utils.readUnsignedLeb128(in);
+        int size = Leb128Utils.readUnsignedLeb128(in);
         visitAnnotation(typeIndex, size);
 
         for (int i = 0; i < size; i++) {
-            visitAnnotationName(in.readUleb128());
+            visitAnnotationName(Leb128Utils.readUnsignedLeb128(in));
             readValue();
         }
     }
@@ -127,7 +134,7 @@ public class EncodedValueReader {
     protected void visitEncodedBoolean(int argAndType) {}
     protected void visitEncodedNull(int argAndType) {}
 
-    private int readIndex(DexBuffer.Section in, int byteCount) {
+    private int readIndex(ByteInput in, int byteCount) {
         int result = 0;
         int shift = 0;
         for (int i = 0; i < byteCount; i++) {

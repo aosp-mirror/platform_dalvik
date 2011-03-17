@@ -25,12 +25,11 @@ import com.android.dx.rop.cst.CstUtf8;
 import com.android.dx.rop.type.Prototype;
 import com.android.dx.rop.type.StdTypeList;
 import com.android.dx.rop.type.Type;
+import com.android.dx.util.ByteArrayByteInput;
+import com.android.dx.util.ByteInput;
 import com.android.dx.util.ExceptionWithContext;
 
 import com.android.dx.util.Leb128Utils;
-import java.io.ByteArrayInputStream;
-import java.io.DataInput;
-import java.io.DataInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -216,11 +215,10 @@ public class DebugInfoDecoder {
      * Reads a string index. String indicies are offset by 1, and a 0 value
      * in the stream (-1 as returned by this method) means "null"
      *
-     * @param bs
      * @return index into file's string ids table, -1 means null
      * @throws IOException
      */
-    private int readStringIndex(DataInput bs) throws IOException {
+    private int readStringIndex(ByteInput bs) throws IOException {
         int offsetIndex = Leb128Utils.readUnsignedLeb128(bs);
 
         return offsetIndex - 1;
@@ -239,7 +237,7 @@ public class DebugInfoDecoder {
     }
 
     private void decode0() throws IOException {
-        DataInput bs = new DataInputStream(new ByteArrayInputStream(encoded));
+        ByteInput bs = new ByteArrayByteInput(encoded);
 
         line = Leb128Utils.readUnsignedLeb128(bs);
         int szParams = Leb128Utils.readUnsignedLeb128(bs);

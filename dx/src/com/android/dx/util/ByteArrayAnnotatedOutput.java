@@ -28,7 +28,7 @@ import java.util.ArrayList;
  * writes all use little-endian order.</p>
  */
 public final class ByteArrayAnnotatedOutput
-        implements AnnotatedOutput {
+        implements AnnotatedOutput, ByteOutput {
     /** default size for stretchy instances */
     private static final int DEFAULT_SIZE = 1000;
 
@@ -81,7 +81,16 @@ public final class ByteArrayAnnotatedOutput
      * by default.
      */
     public ByteArrayAnnotatedOutput() {
-        this(new byte[DEFAULT_SIZE], true);
+        this(DEFAULT_SIZE);
+    }
+
+    /**
+     * Constructs a "stretchy" instance with initial size {@code size}. The
+     * underlying array may be reallocated. The constructed instance does not
+     * keep annotations by default.
+     */
+    public ByteArrayAnnotatedOutput(int size) {
+        this(new byte[size], true);
     }
 
     /**
@@ -228,9 +237,9 @@ public final class ByteArrayAnnotatedOutput
         if (stretchy) {
             ensureCapacity(cursor + 5); // pessimistic
         }
-        int byteCount = Leb128Utils.writeUnsignedLeb128(data, cursor, value);
-        cursor += byteCount;
-        return byteCount;
+        int cursorBefore = cursor;
+        Leb128Utils.writeUnsignedLeb128(this, value);
+        return (cursor - cursorBefore);
     }
 
     /** {@inheritDoc} */
@@ -238,9 +247,9 @@ public final class ByteArrayAnnotatedOutput
         if (stretchy) {
             ensureCapacity(cursor + 5); // pessimistic
         }
-        int byteCount = Leb128Utils.writeSignedLeb128(data, cursor, value);
-        cursor += byteCount;
-        return byteCount;
+        int cursorBefore = cursor;
+        Leb128Utils.writeSignedLeb128(this, value);
+        return (cursor - cursorBefore);
     }
 
     /** {@inheritDoc} */

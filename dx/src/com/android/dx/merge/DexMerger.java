@@ -18,6 +18,7 @@ package com.android.dx.merge;
 
 import com.android.dx.dex.SizeOf;
 import com.android.dx.dex.TableOfContents;
+import com.android.dx.io.Annotation;
 import com.android.dx.io.ClassData;
 import com.android.dx.io.ClassDef;
 import com.android.dx.io.Code;
@@ -26,6 +27,7 @@ import com.android.dx.io.DexHasher;
 import com.android.dx.io.FieldId;
 import com.android.dx.io.MethodId;
 import com.android.dx.io.ProtoId;
+import com.android.dx.util.DexException;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -104,8 +106,7 @@ public final class DexMerger {
                 writerSizes.annotationsSetRefList, "annotation set ref list");
 
         contentsOut.annotationSets.off = dexOut.getLength();
-        annotationSetOut = dexOut.appendSection(
-                writerSizes.annotationsSet, "annotation sets");
+        annotationSetOut = dexOut.appendSection(writerSizes.annotationsSet, "annotation sets");
 
         contentsOut.classDatas.off = dexOut.getLength();
         classDataOut = dexOut.appendSection(writerSizes.classData, "class data");
@@ -144,7 +145,8 @@ public final class DexMerger {
         mergeProtoIds();
         mergeFieldIds();
         mergeMethodIds();
-        unionAnnotations();
+        mergeAnnotations();
+        unionAnnotationSetsAndDirectories();
         mergeClassDefs();
 
         // write the header
@@ -475,6 +477,26 @@ public final class DexMerger {
         }.mergeSorted();
     }
 
+    private void mergeAnnotations() {
+        new IdMerger<Annotation>(annotationOut) {
+            @Override TableOfContents.Section getSection(TableOfContents tableOfContents) {
+                return tableOfContents.annotations;
+            }
+
+            @Override Annotation read(DexBuffer.Section in, IndexMap indexMap, int index) {
+                return indexMap.adjust(in.readAnnotation());
+            }
+
+            @Override void updateIndex(int offset, IndexMap indexMap, int oldIndex, int newIndex) {
+                indexMap.putAnnotationOffset(offset, annotationOut.getPosition());
+            }
+
+            @Override void write(Annotation value) {
+                value.writeTo(annotationOut);
+            }
+        }.mergeUnsorted();
+    }
+
     private void mergeClassDefs() {
         SortableType[] types = getSortedTypes();
         contentsOut.classDefs.off = idsDefsOut.getPosition();
@@ -543,10 +565,10 @@ public final class DexMerger {
     /**
      * Copy annotation sets from each input to the output.
      *
-     * TODO: this may write multiple copies of the same annotation.
-     * This should shrink the output by merging rather than unioning
+     * TODO: this may write multiple copies of the same annotation set.
+     * We should shrink the output by merging rather than unioning
      */
-    private void unionAnnotations() {
+    private void unionAnnotationSetsAndDirectories() {
         transformAnnotationSets(dexA, aIndexMap);
         transformAnnotationSets(dexB, bIndexMap);
         transformAnnotationDirectories(dexA, aIndexMap);
@@ -558,7 +580,7 @@ public final class DexMerger {
         if (section.exists()) {
             DexBuffer.Section setIn = in.open(section.off);
             for (int i = 0; i < section.size; i++) {
-                transformAnnotationSet(in, indexMap, setIn);
+                transformAnnotationSet(indexMap, setIn);
             }
         }
     }
@@ -671,7 +693,7 @@ public final class DexMerger {
     /**
      * Transform all annotations on a single type, member or parameter.
      */
-    private void transformAnnotationSet(DexBuffer in, IndexMap indexMap, DexBuffer.Section setIn) {
+    private void transformAnnotationSet(IndexMap indexMap, DexBuffer.Section setIn) {
         contentsOut.annotationSets.size++;
         annotationSetOut.assertFourByteAligned();
         indexMap.putAnnotationSetOffset(setIn.getPosition(), annotationSetOut.getPosition());
@@ -680,32 +702,7 @@ public final class DexMerger {
         annotationSetOut.writeInt(size);
 
         for (int j = 0; j < size; j++) {
-            // annotation offset
-            annotationSetOut.writeInt(annotationOut.getPosition());
-            transformAnnotation(in.open(setIn.readInt()), indexMap);
-        }
-    }
-
-    /**
-     * Transform one annotation, which may have multiple fields.
-     */
-    private void transformAnnotation(DexBuffer.Section in, IndexMap indexMap) {
-        contentsOut.annotations.size++;
-
-        // visibility
-        annotationOut.writeByte(in.readByte());
-
-        // type index
-        annotationOut.writeUleb128((int) indexMap.adjustType(in.readUleb128()));
-
-        // size
-        int size = in.readUleb128();
-        annotationOut.writeUleb128(size);
-
-        // elements
-        for (int i = 0; i < size; i++) {
-            annotationOut.writeUleb128(indexMap.adjustString(in.readUleb128())); // name
-            new EncodedValueTransformer(in, indexMap, annotationOut).readValue(); // value
+            annotationSetOut.writeInt(indexMap.adjustAnnotation(setIn.readInt()));
         }
     }
 
@@ -761,12 +758,12 @@ public final class DexMerger {
         contentsOut.codes.size++;
         codeOut.assertFourByteAligned();
 
-        codeOut.writeShort(code.getRegistersSize());
-        codeOut.writeShort(code.getInsSize());
-        codeOut.writeShort(code.getOutsSize());
+        codeOut.writeUnsignedShort(code.getRegistersSize());
+        codeOut.writeUnsignedShort(code.getInsSize());
+        codeOut.writeUnsignedShort(code.getOutsSize());
 
         Code.Try[] tries = code.getTries();
-        codeOut.writeShort((short) tries.length);
+        codeOut.writeUnsignedShort(tries.length);
 
         // TODO: retain debug info
         // code.getDebugInfoOffset();
@@ -786,8 +783,8 @@ public final class DexMerger {
             }
             for (Code.Try tryItem : tries) {
                 codeOut.writeInt(tryItem.getStartAddress());
-                codeOut.writeShort(tryItem.getInstructionCount());
-                codeOut.writeShort(tryItem.getHandlerOffset());
+                codeOut.writeUnsignedShort(tryItem.getInstructionCount());
+                codeOut.writeUnsignedShort(tryItem.getHandlerOffset());
             }
             Code.CatchHandler[] catchHandlers = code.getCatchHandlers();
             codeOut.writeUleb128(catchHandlers.length);
@@ -820,7 +817,7 @@ public final class DexMerger {
 
     private void transformStaticValues(DexBuffer.Section in, IndexMap indexMap) {
         contentsOut.encodedArrays.size++;
-        new EncodedValueTransformer(in, indexMap, encodedArrayOut).readArray();
+        indexMap.adjustEncodedArray(in.readEncodedArray()).writeTo(encodedArrayOut);
     }
 
     /**
@@ -888,7 +885,7 @@ public final class DexMerger {
             } else {
                 classData += (int) Math.ceil(contents.classDatas.byteCount * 1.34);
                 encodedArray += contents.encodedArrays.byteCount * 2;
-                annotation += contents.annotations.byteCount * 2;
+                annotation += (int) Math.ceil(contents.annotations.byteCount * 1.34);
             }
         }
 

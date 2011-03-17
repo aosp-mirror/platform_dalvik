@@ -16,8 +16,6 @@
 
 package com.android.dx.util;
 
-import java.io.DataInput;
-import java.io.IOException;
 import java.io.UTFDataFormatException;
 
 /**
@@ -32,7 +30,7 @@ public final class Mutf8 {
      * Decodes bytes from {@code in} into {@code out} until a delimiter 0x00 is
      * encountered. Returns a new string containing the decoded characters.
      */
-    public static String decode(DataInput in, char[] out) throws IOException {
+    public static String decode(ByteInput in, char[] out) throws UTFDataFormatException {
         int s = 0;
         while (true) {
             char a = (char) (in.readByte() & 0xff);

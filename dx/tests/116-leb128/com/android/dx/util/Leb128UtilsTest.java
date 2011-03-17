@@ -16,8 +16,6 @@
 
 package com.android.dx.util;
 
-import java.io.ByteArrayInputStream;
-import java.io.DataInputStream;
 import java.io.IOException;
 import java.util.Arrays;
 import junit.framework.TestCase;
@@ -25,53 +23,53 @@ import junit.framework.TestCase;
 public final class Leb128UtilsTest extends TestCase {
 
     public void testDecodeUnsignedLeb() throws IOException {
-        assertEquals(0, Leb128Utils.readUnsignedLeb128(newDataInput((byte) 0)));
-        assertEquals(1, Leb128Utils.readUnsignedLeb128(newDataInput((byte) 1)));
-        assertEquals(127, Leb128Utils.readUnsignedLeb128(newDataInput((byte) 0x7F)));
-        assertEquals(16256, Leb128Utils.readUnsignedLeb128(newDataInput((byte) 0x80, (byte) 0x7F)));
+        assertEquals(0, Leb128Utils.readUnsignedLeb128(new ByteArrayByteInput((byte) 0)));
+        assertEquals(1, Leb128Utils.readUnsignedLeb128(new ByteArrayByteInput((byte) 1)));
+        assertEquals(127, Leb128Utils.readUnsignedLeb128(new ByteArrayByteInput((byte) 0x7f)));
+        assertEquals(16256, Leb128Utils.readUnsignedLeb128(
+                new ByteArrayByteInput((byte) 0x80, (byte) 0x7f)));
     }
 
     public void testEncodeUnsignedLeb() throws IOException {
         assertEquals(new byte[] { 0 }, encodeUnsignedLeb(0));
         assertEquals(new byte[] { 1 }, encodeUnsignedLeb(1));
-        assertEquals(new byte[] { 0x7F }, encodeUnsignedLeb(127));
-        assertEquals(new byte[] { (byte) 0x80, 0x7F }, encodeUnsignedLeb(16256));
+        assertEquals(new byte[] { 0x7f }, encodeUnsignedLeb(127));
+        assertEquals(new byte[] { (byte) 0x80, 0x7f }, encodeUnsignedLeb(16256));
         assertEquals(new byte[] { (byte) 0xb4, 0x07 }, encodeUnsignedLeb(0x3b4));
         assertEquals(new byte[] { (byte) 0x8c, 0x08 }, encodeUnsignedLeb(0x40c));
+        assertEquals(new byte[] { (byte) 0xff, (byte) 0xff, (byte) 0xff, (byte) 0xff, 0xf },
+                encodeUnsignedLeb(0xffffffff));
     }
 
     public void testDecodeSignedLeb() throws IOException {
-        assertEquals(0, Leb128Utils.readSignedLeb128(newDataInput((byte) 0)));
-        assertEquals(1, Leb128Utils.readSignedLeb128(newDataInput((byte) 1)));
-        assertEquals(-1, Leb128Utils.readSignedLeb128(newDataInput((byte) 0x7F)));
-        assertEquals(0x3C, Leb128Utils.readSignedLeb128(newDataInput((byte) 0x3C)));
-        assertEquals(-128, Leb128Utils.readSignedLeb128(newDataInput((byte) 0x80, (byte) 0x7F)));
+        assertEquals(0, Leb128Utils.readSignedLeb128(new ByteArrayByteInput((byte) 0)));
+        assertEquals(1, Leb128Utils.readSignedLeb128(new ByteArrayByteInput((byte) 1)));
+        assertEquals(-1, Leb128Utils.readSignedLeb128(new ByteArrayByteInput((byte) 0x7f)));
+        assertEquals(0x3c, Leb128Utils.readSignedLeb128(new ByteArrayByteInput((byte) 0x3c)));
+        assertEquals(-128, Leb128Utils.readSignedLeb128(
+                new ByteArrayByteInput((byte) 0x80, (byte) 0x7f)));
     }
 
     public void testEncodeSignedLeb() throws IOException {
         assertEquals(new byte[] { 0 }, encodeSignedLeb(0));
         assertEquals(new byte[] { 1 }, encodeSignedLeb(1));
-        assertEquals(new byte[] { 0x7F }, encodeSignedLeb(-1));
-        assertEquals(new byte[] { (byte) 0x80, 0x7F }, encodeSignedLeb(-128));
+        assertEquals(new byte[] { 0x7f }, encodeSignedLeb(-1));
+        assertEquals(new byte[] { (byte) 0x80, 0x7f }, encodeSignedLeb(-128));
     }
 
     private byte[] encodeSignedLeb(int value) {
-        byte[] buffer = new byte[5];
-        int length = Leb128Utils.writeSignedLeb128(buffer, 0, value);
-        return Arrays.copyOfRange(buffer, 0, length);
+        ByteArrayAnnotatedOutput out = new ByteArrayAnnotatedOutput(5);
+        Leb128Utils.writeSignedLeb128(out, value);
+        return out.toByteArray();
     }
 
     private byte[] encodeUnsignedLeb(int value) {
-        byte[] buffer = new byte[5];
-        int length = Leb128Utils.writeUnsignedLeb128(buffer, 0, value);
-        return Arrays.copyOfRange(buffer, 0, length);
-    }
-
-    public DataInputStream newDataInput(byte... bytes) {
-        return new DataInputStream(new ByteArrayInputStream(bytes));
+        ByteArrayAnnotatedOutput out = new ByteArrayAnnotatedOutput(5);
+        Leb128Utils.writeUnsignedLeb128(out, value);
+        return out.toByteArray();
     }
 
     private void assertEquals(byte[] expected, byte[] actual) {
-        assertTrue(Arrays.equals(expected, actual));
+        assertTrue(Arrays.toString(actual), Arrays.equals(expected, actual));
     }
 }

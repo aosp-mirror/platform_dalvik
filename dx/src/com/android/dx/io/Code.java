@@ -17,15 +17,15 @@
 package com.android.dx.io;
 
 public final class Code {
-    private final short registersSize;
-    private final short insSize;
-    private final short outsSize;
+    private final int registersSize;
+    private final int insSize;
+    private final int outsSize;
     private final int debugInfoOffset;
     private final short[] instructions;
     private final Try[] tries;
     private final CatchHandler[] catchHandlers;
 
-    public Code(short registersSize, short insSize, short outsSize, int debugInfoOffset,
+    public Code(int registersSize, int insSize, int outsSize, int debugInfoOffset,
             short[] instructions, Try[] tries, CatchHandler[] catchHandlers) {
         this.registersSize = registersSize;
         this.insSize = insSize;
@@ -36,15 +36,15 @@ public final class Code {
         this.catchHandlers = catchHandlers;
     }
 
-    public short getRegistersSize() {
+    public int getRegistersSize() {
         return registersSize;
     }
 
-    public short getInsSize() {
+    public int getInsSize() {
         return insSize;
     }
 
-    public short getOutsSize() {
+    public int getOutsSize() {
         return outsSize;
     }
 
@@ -66,10 +66,10 @@ public final class Code {
 
     public static class Try {
         final int startAddress;
-        final short instructionCount;
-        final short handlerOffset;
+        final int instructionCount;
+        final int handlerOffset;
 
-        Try(int startAddress, short instructionCount, short handlerOffset) {
+        Try(int startAddress, int instructionCount, int handlerOffset) {
             this.startAddress = startAddress;
             this.instructionCount = instructionCount;
             this.handlerOffset = handlerOffset;
@@ -79,11 +79,11 @@ public final class Code {
             return startAddress;
         }
 
-        public short getInstructionCount() {
+        public int getInstructionCount() {
             return instructionCount;
         }
 
-        public short getHandlerOffset() {
+        public int getHandlerOffset() {
             return handlerOffset;
         }
     }
