@@ -16,12 +16,14 @@
 
 package com.android.dx.io;
 
+import com.android.dx.dex.DexFormat;
 import com.android.dx.dex.SizeOf;
 import com.android.dx.dex.TableOfContents;
 import com.android.dx.merge.TypeList;
 import com.android.dx.util.ByteInput;
 import com.android.dx.util.ByteOutput;
 import com.android.dx.util.DexException;
+import com.android.dx.util.FileUtils;
 import com.android.dx.util.Leb128Utils;
 import com.android.dx.util.Mutf8;
 import java.io.ByteArrayOutputStream;
@@ -38,15 +40,17 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 /**
  * The bytes of a dex file in memory for reading and writing. All int offsets
  * are unsigned.
  */
 public final class DexBuffer {
-    private byte[] data = new byte[0];
-    private int length = 0;
+    private byte[] data;
     private final TableOfContents tableOfContents = new TableOfContents();
+    private int length = 0;
 
     private final List<String> strings = new AbstractList<String>() {
         @Override public String get(int index) {
@@ -112,13 +116,51 @@ public final class DexBuffer {
         }
     };
 
-    private static void checkBounds(int index, int length) {
-        if (index < 0 || index >= length) {
-            throw new IndexOutOfBoundsException("index:" + index + ", length=" + length);
+    /**
+     * Creates a new dex buffer defining no classes.
+     */
+    public DexBuffer() {
+        this.data = new byte[0];
+    }
+
+    /**
+     * Creates a new dex buffer that reads from {@code data}. It is an error to
+     * modify {@code data} after using it to create a dex buffer.
+     */
+    public DexBuffer(byte[] data) throws IOException {
+        this.data = data;
+        this.length = data.length;
+        this.tableOfContents.readFrom(this);
+    }
+
+    /**
+     * Creates a new dex buffer of the dex in {@code in}, and closes {@code in}.
+     */
+    public DexBuffer(InputStream in) throws IOException {
+        loadFrom(in);
+    }
+
+    /**
+     * Creates a new dex buffer from the dex file {@code file}.
+     */
+    public DexBuffer(File file) throws IOException {
+        if (FileUtils.hasArchiveSuffix(file.getName())) {
+            ZipFile zipFile = new ZipFile(file);
+            ZipEntry entry = zipFile.getEntry(DexFormat.DEX_IN_JAR_NAME);
+            if (entry != null) {
+                loadFrom(zipFile.getInputStream(entry));
+                zipFile.close();
+            } else {
+                throw new DexException("Expected " + DexFormat.DEX_IN_JAR_NAME + " in " + file);
+            }
+        } else if (file.getName().endsWith(".dex")) {
+            loadFrom(new FileInputStream(file));
+        } else {
+            throw new DexException("unknown output extension: " + file);
         }
     }
 
-    public void loadFrom(InputStream in) throws IOException {
+    private void loadFrom(InputStream in) throws IOException {
         ByteArrayOutputStream bytesOut = new ByteArrayOutputStream();
         byte[] buffer = new byte[8192];
 
@@ -126,16 +168,17 @@ public final class DexBuffer {
         while ((count = in.read(buffer)) != -1) {
             bytesOut.write(buffer, 0, count);
         }
+        in.close();
 
         this.data = bytesOut.toByteArray();
         this.length = data.length;
         this.tableOfContents.readFrom(this);
     }
 
-    public void loadFrom(File file) throws IOException {
-        InputStream in = new FileInputStream(file);
-        loadFrom(in);
-        in.close();
+    private static void checkBounds(int index, int length) {
+        if (index < 0 || index >= length) {
+            throw new IndexOutOfBoundsException("index:" + index + ", length=" + length);
+        }
     }
 
     public void writeTo(OutputStream out) throws IOException {

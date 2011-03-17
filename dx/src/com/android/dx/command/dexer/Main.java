@@ -32,6 +32,7 @@ import com.android.dx.dex.file.ClassDefItem;
 import com.android.dx.dex.file.DexFile;
 import com.android.dx.dex.file.EncodedMethod;
 import com.android.dx.io.DexBuffer;
+import com.android.dx.merge.CollisionPolicy;
 import com.android.dx.merge.DexMerger;
 import com.android.dx.rop.annotation.Annotation;
 import com.android.dx.rop.annotation.Annotations;
@@ -42,15 +43,14 @@ import com.android.dx.util.FileUtils;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.ExecutorService;
@@ -60,8 +60,6 @@ import java.util.jar.Attributes;
 import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
 
 /**
  * Main class for the class file translator.
@@ -146,6 +144,9 @@ public class Main {
      */
     private static TreeMap<String, byte[]> outputResources;
 
+    /** Library .dex files to merge into the output .dex. */
+    private static final List<byte[]> libraryDexBuffers = new ArrayList<byte[]>();
+
     /** thread pool object used for multi-threaded file processing */
     private static ExecutorService threadPool;
 
@@ -222,8 +223,10 @@ public class Main {
         }
 
         if (args.incremental) {
-            outArray = merge(outArray, incrementalOutFile);
+            outArray = mergeIncremental(outArray, incrementalOutFile);
         }
+
+        outArray = mergeLibraryDexBuffers(outArray);
 
         if (args.jarOutput) {
             // Effectively free up the (often massive) DexFile memory.
@@ -245,33 +248,21 @@ public class Main {
      * Merges the dex files {@code update} and {@code base}, preferring
      * {@code update}'s definition for types defined in both dex files.
      *
+     * @param base a file to find the previous dex file. May be a .dex file, a
+     *     jar file possibly containing a .dex file, or null.
      * @return the bytes of the merged dex file, or null if both the update
      *     and the base dex do not exist.
      */
-    private static byte[] merge(byte[] update, File base) throws IOException {
+    private static byte[] mergeIncremental(byte[] update, File base) throws IOException {
         DexBuffer dexA = null;
         DexBuffer dexB = null;
 
         if (update != null) {
-            dexA = new DexBuffer();
-            dexA.loadFrom(new ByteArrayInputStream(update));
+            dexA = new DexBuffer(update);
         }
 
         if (base.exists()) {
-            if (args.jarOutput) {
-                ZipFile zipFile = new ZipFile(base);
-                ZipEntry entry = zipFile.getEntry(DexFormat.DEX_IN_JAR_NAME);
-                if (entry != null) {
-                    dexB = new DexBuffer();
-                    dexB.loadFrom(zipFile.getInputStream(entry));
-                    zipFile.close();
-                }
-            } else {
-                InputStream in = new FileInputStream(base);
-                dexB = new DexBuffer();
-                dexB.loadFrom(in);
-                in.close();
-            }
+            dexB = new DexBuffer(base);
         }
 
         DexBuffer result;
@@ -282,12 +273,31 @@ public class Main {
         } else if (dexB == null) {
             result = dexA;
         } else {
-            result = new DexMerger(dexA, dexB).merge();
+            result = new DexMerger(dexA, dexB, CollisionPolicy.KEEP_FIRST).merge();
         }
 
         ByteArrayOutputStream bytesOut = new ByteArrayOutputStream();
         result.writeTo(bytesOut);
         return bytesOut.toByteArray();
+    }
+
+    /**
+     * Merges the dex files in library jars. If multiple dex files define the
+     * same type, this fails with an exception.
+     */
+    private static byte[] mergeLibraryDexBuffers(byte[] outArray) throws IOException {
+        for (byte[] libraryDexBuffer : libraryDexBuffers) {
+            if (outArray == null) {
+                outArray = libraryDexBuffer;
+                continue;
+            }
+
+            DexBuffer a = new DexBuffer(outArray);
+            DexBuffer b = new DexBuffer(libraryDexBuffer);
+            DexBuffer ab = new DexMerger(a, b, CollisionPolicy.FAIL).merge();
+            outArray = ab.getBytes();
+        }
+        return outArray;
     }
 
     /**
@@ -417,9 +427,10 @@ public class Main {
      */
     private static boolean processFileBytes(String name, long lastModified, byte[] bytes) {
         boolean isClass = name.endsWith(".class");
+        boolean isClassesDex = name.equals(DexFormat.DEX_IN_JAR_NAME);
         boolean keepResources = (outputResources != null);
 
-        if (!isClass && !keepResources) {
+        if (!isClass && !isClassesDex && !keepResources) {
             if (args.verbose) {
                 DxConsole.out.println("ignored resource " + name);
             }
@@ -442,6 +453,11 @@ public class Main {
                 return true;
             }
             return processClass(fixedName, bytes);
+        } else if (isClassesDex) {
+            synchronized (libraryDexBuffers) {
+                libraryDexBuffers.add(bytes);
+            }
+            return true;
         } else {
             synchronized (outputResources) {
                 outputResources.put(fixedName, bytes);

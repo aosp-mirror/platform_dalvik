@@ -28,8 +28,7 @@ public final class DexIndexPrinter {
     private final TableOfContents tableOfContents;
 
     public DexIndexPrinter(File file) throws IOException {
-        this.dexBuffer = new DexBuffer();
-        this.dexBuffer.loadFrom(file);
+        this.dexBuffer = new DexBuffer(file);
         this.tableOfContents = dexBuffer.getTableOfContents();
     }
 

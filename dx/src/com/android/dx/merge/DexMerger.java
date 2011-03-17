@@ -39,31 +39,46 @@ import java.util.List;
  * Combine two dex files into one.
  */
 public final class DexMerger {
+    private final DexBuffer dexA;
+    private final DexBuffer dexB;
+    private final CollisionPolicy collisionPolicy;
     private final WriterSizes writerSizes;
+
     private final DexBuffer dexOut = new DexBuffer();
+
     private final DexBuffer.Section headerOut;
+
     /** All IDs and definitions sections */
     private final DexBuffer.Section idsDefsOut;
+
     private final DexBuffer.Section mapListOut;
+
     private final DexBuffer.Section typeListOut;
+
     private final DexBuffer.Section classDataOut;
+
     private final DexBuffer.Section codeOut;
+
     private final DexBuffer.Section stringDataOut;
+
     private final DexBuffer.Section debugInfoOut;
+
     private final DexBuffer.Section encodedArrayOut;
 
     /** annotations directory on a type */
     private final DexBuffer.Section annotationsDirectoryOut;
+
     /** sets of annotations on a member, parameter or type */
     private final DexBuffer.Section annotationSetOut;
+
     /** parameter lists */
     private final DexBuffer.Section annotationSetRefListOut;
+
     /** individual annotations, each containing zero or more fields */
     private final DexBuffer.Section annotationOut;
 
     private final TableOfContents contentsOut;
-    private final DexBuffer dexA;
-    private final DexBuffer dexB;
+
     private final IndexMap aIndexMap;
     private final IndexMap bIndexMap;
     private final InstructionTransformer aInstructionTransformer;
@@ -72,13 +87,16 @@ public final class DexMerger {
     /** minimum number of wasted bytes before it's worthwhile to compact the result */
     private int compactWasteThreshold = 1024 * 1024; // 1MiB
 
-    public DexMerger(DexBuffer dexA, DexBuffer dexB) throws IOException {
-        this(dexA, dexB, new WriterSizes(dexA, dexB));
+    public DexMerger(DexBuffer dexA, DexBuffer dexB, CollisionPolicy collisionPolicy)
+            throws IOException {
+        this(dexA, dexB, collisionPolicy, new WriterSizes(dexA, dexB));
     }
 
-    private DexMerger(DexBuffer dexA, DexBuffer dexB, WriterSizes writerSizes) throws IOException {
+    private DexMerger(DexBuffer dexA, DexBuffer dexB, CollisionPolicy collisionPolicy,
+            WriterSizes writerSizes) throws IOException {
         this.dexA = dexA;
         this.dexB = dexB;
+        this.collisionPolicy = collisionPolicy;
         this.writerSizes = writerSizes;
 
         TableOfContents aContents = dexA.getTableOfContents();
@@ -176,7 +194,8 @@ public final class DexMerger {
         compactedSizes.minusWaste(this);
         int wastedByteCount = writerSizes.size() - compactedSizes.size();
         if (wastedByteCount >  + compactWasteThreshold) {
-            DexMerger compacter = new DexMerger(dexOut, new DexBuffer(), compactedSizes);
+            DexMerger compacter = new DexMerger(
+                    dexOut, new DexBuffer(), CollisionPolicy.FAIL, compactedSizes);
             result = compacter.mergeDexBuffers();
             System.out.printf("Result compacted from %.1fKiB to %.1fKiB to save %.1fKiB%n",
                     dexOut.getLength() / 1024f,
@@ -558,6 +577,9 @@ public final class DexMerger {
             int t = sortableType.getTypeIndex();
             if (sortableTypes[t] == null) {
                 sortableTypes[t] = sortableType;
+            } else if (collisionPolicy != CollisionPolicy.KEEP_FIRST) {
+                throw new DexException("Multiple dex files define "
+                        + buffer.typeNames().get(classDef.getTypeIndex()));
             }
         }
     }
@@ -918,12 +940,9 @@ public final class DexMerger {
             return;
         }
 
-        DexBuffer dexA = new DexBuffer();
-        dexA.loadFrom(new File(args[1]));
-        DexBuffer dexB = new DexBuffer();
-        dexB.loadFrom(new File(args[2]));
-
-        DexBuffer merged = new DexMerger(dexA, dexB).merge();
+        DexBuffer dexA = new DexBuffer(new File(args[1]));
+        DexBuffer dexB = new DexBuffer(new File(args[2]));
+        DexBuffer merged = new DexMerger(dexA, dexB, CollisionPolicy.KEEP_FIRST).merge();
         merged.writeTo(new File(args[0]));
     }
 

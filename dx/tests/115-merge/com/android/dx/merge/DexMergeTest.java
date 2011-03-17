@@ -140,15 +140,13 @@ public final class DexMergeTest extends TestCase {
         int steps = 100;
         int compactWasteThreshold = 1024;
 
-        DexBuffer dexA = new DexBuffer();
-        DexBuffer dexB = new DexBuffer();
-        dexA.loadFrom(resourceToFile("/testdata/Basic.dex"));
-        dexB.loadFrom(resourceToFile("/testdata/TryCatchFinally.dex"));
-        DexBuffer merged = new DexMerger(dexA, dexB).merge();
+        DexBuffer dexA = resourceToDexBuffer("/testdata/Basic.dex");
+        DexBuffer dexB = resourceToDexBuffer("/testdata/TryCatchFinally.dex");
+        DexBuffer merged = new DexMerger(dexA, dexB, CollisionPolicy.KEEP_FIRST).merge();
 
         int maxLength = 0;
         for (int i = 0; i < steps; i++) {
-            DexMerger dexMerger = new DexMerger(dexA, merged);
+            DexMerger dexMerger = new DexMerger(dexA, merged, CollisionPolicy.KEEP_FIRST);
             dexMerger.setCompactWasteThreshold(compactWasteThreshold);
             merged = dexMerger.merge();
             maxLength = Math.max(maxLength, merged.getLength());
@@ -159,28 +157,17 @@ public final class DexMergeTest extends TestCase {
     }
 
     public ClassLoader mergeAndLoad(String dexAResource, String dexBResource) throws IOException {
-        DexBuffer dexA = new DexBuffer();
-        DexBuffer dexB = new DexBuffer();
-        dexA.loadFrom(resourceToFile(dexAResource));
-        dexB.loadFrom(resourceToFile(dexBResource));
-        DexBuffer merged = new DexMerger(dexA, dexB).merge();
+        DexBuffer dexA = resourceToDexBuffer(dexAResource);
+        DexBuffer dexB = resourceToDexBuffer(dexBResource);
+        DexBuffer merged = new DexMerger(dexA, dexB, CollisionPolicy.KEEP_FIRST).merge();
         File mergedDex = File.createTempFile("DexMergeTest", ".classes.dex");
         merged.writeTo(mergedDex);
         File mergedJar = dexToJar(mergedDex);
         return new PathClassLoader(mergedJar.getPath(), getClass().getClassLoader());
     }
 
-    private File resourceToFile(String resource) throws IOException {
-        File result = File.createTempFile("DexMergeTest", ".resource");
-        result.deleteOnExit();
-        FileOutputStream out = new FileOutputStream(result);
-        InputStream in = getClass().getResourceAsStream(resource);
-        if (in == null) {
-            throw new IllegalArgumentException("No such resource: " + resource);
-        }
-        copy(in, out);
-        out.close();
-        return result;
+    private DexBuffer resourceToDexBuffer(String resource) throws IOException {
+        return new DexBuffer(getClass().getResourceAsStream(resource));
     }
 
     private File dexToJar(File dex) throws IOException {

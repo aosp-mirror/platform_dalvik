@@ -16,30 +16,17 @@
 
 package com.android.dx.command.grep;
 
-import com.android.dx.dex.DexFormat;
 import com.android.dx.io.DexBuffer;
-import com.android.dx.util.FileUtils;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.regex.Pattern;
-import java.util.zip.ZipFile;
 
 public final class Main {
     public static void main(String[] args) throws IOException {
         String dexFile = args[0];
         String pattern = args[1];
 
-        DexBuffer dex = new DexBuffer();
-        if (FileUtils.hasArchiveSuffix(dexFile)) {
-            ZipFile zip = new ZipFile(dexFile);
-            InputStream in = zip.getInputStream(zip.getEntry(DexFormat.DEX_IN_JAR_NAME));
-            dex.loadFrom(in);
-            zip.close();
-        } else {
-            dex.loadFrom(new File(dexFile));
-        }
-
+        DexBuffer dex = new DexBuffer(new File(dexFile));
         int count = new Grep(dex, Pattern.compile(pattern), System.out).grep();
         System.exit((count > 0) ? 0 : 1);
     }

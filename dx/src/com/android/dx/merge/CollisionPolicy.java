@@ -14,19 +14,21 @@
  * limitations under the License.
  */
 
-package com.android.dx.command.findusages;
+package com.android.dx.merge;
 
-import com.android.dx.io.DexBuffer;
-import java.io.File;
-import java.io.IOException;
+/**
+ * What to do when two dex files define the same class.
+ */
+public enum CollisionPolicy {
 
-public final class Main {
-    public static void main(String[] args) throws IOException {
-        String dexFile = args[0];
-        String declaredBy = args[1];
-        String memberName = args[2];
+    /**
+     * Keep the class def from the first dex file and discard the def from the
+     * second dex file. This policy is appropriate for incremental builds.
+     */
+    KEEP_FIRST,
 
-        DexBuffer dex = new DexBuffer(new File(dexFile));
-        new FindUsages(dex, declaredBy, memberName, System.out).findUsages();
-    }
+    /**
+     * Forbid collisions. This policy is appropriate for merging libraries.
+     */
+    FAIL
 }
