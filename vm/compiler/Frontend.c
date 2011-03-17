@@ -416,6 +416,1072 @@ static bool filterMethodByCallGraph(Thread *thread, const char *curMethodName)
 }
 
 /*
+ * Since we are including instructions from possibly a cold method into the
+ * current trace, we need to make sure that all the associated information
+ * with the callee is properly initialized. If not, we punt on this inline
+ * target.
+ *
+ * TODO: volatile instructions will be handled later.
+ */
+bool dvmCompilerCanIncludeThisInstruction(const Method *method,
+                                          const DecodedInstruction *insn)
+{
+    switch (insn->opcode) {
+        case OP_NEW_INSTANCE:
+        case OP_NEW_INSTANCE_JUMBO:
+        case OP_CHECK_CAST:
+        case OP_CHECK_CAST_JUMBO: {
+            ClassObject *classPtr = (ClassObject *)(void*)
+              (method->clazz->pDvmDex->pResClasses[insn->vB]);
+
+            /* Class hasn't been initialized yet */
+            if (classPtr == NULL) {
+                return false;
+            }
+            return true;
+        }
+        case OP_SGET:
+        case OP_SGET_JUMBO:
+        case OP_SGET_WIDE:
+        case OP_SGET_WIDE_JUMBO:
+        case OP_SGET_OBJECT:
+        case OP_SGET_OBJECT_JUMBO:
+        case OP_SGET_BOOLEAN:
+        case OP_SGET_BOOLEAN_JUMBO:
+        case OP_SGET_BYTE:
+        case OP_SGET_BYTE_JUMBO:
+        case OP_SGET_CHAR:
+        case OP_SGET_CHAR_JUMBO:
+        case OP_SGET_SHORT:
+        case OP_SGET_SHORT_JUMBO:
+        case OP_SPUT:
+        case OP_SPUT_JUMBO:
+        case OP_SPUT_WIDE:
+        case OP_SPUT_WIDE_JUMBO:
+        case OP_SPUT_OBJECT:
+        case OP_SPUT_OBJECT_JUMBO:
+        case OP_SPUT_BOOLEAN:
+        case OP_SPUT_BOOLEAN_JUMBO:
+        case OP_SPUT_BYTE:
+        case OP_SPUT_BYTE_JUMBO:
+        case OP_SPUT_CHAR:
+        case OP_SPUT_CHAR_JUMBO:
+        case OP_SPUT_SHORT:
+        case OP_SPUT_SHORT_JUMBO: {
+            void *fieldPtr = (void*)
+              (method->clazz->pDvmDex->pResFields[insn->vB]);
+
+            if (fieldPtr == NULL) {
+                return false;
+            }
+            return true;
+        }
+        case OP_INVOKE_SUPER:
+        case OP_INVOKE_SUPER_RANGE:
+        case OP_INVOKE_SUPER_JUMBO: {
+            int mIndex = method->clazz->pDvmDex->
+                pResMethods[insn->vB]->methodIndex;
+            const Method *calleeMethod = method->clazz->super->vtable[mIndex];
+            if (calleeMethod == NULL) {
+                return false;
+            }
+            return true;
+        }
+        case OP_INVOKE_SUPER_QUICK:
+        case OP_INVOKE_SUPER_QUICK_RANGE: {
+            const Method *calleeMethod = method->clazz->super->vtable[insn->vB];
+            if (calleeMethod == NULL) {
+                return false;
+            }
+            return true;
+        }
+        case OP_INVOKE_STATIC:
+        case OP_INVOKE_STATIC_RANGE:
+        case OP_INVOKE_STATIC_JUMBO:
+        case OP_INVOKE_DIRECT:
+        case OP_INVOKE_DIRECT_RANGE:
+        case OP_INVOKE_DIRECT_JUMBO: {
+            const Method *calleeMethod =
+                method->clazz->pDvmDex->pResMethods[insn->vB];
+            if (calleeMethod == NULL) {
+                return false;
+            }
+            return true;
+        }
+        case OP_CONST_CLASS:
+        case OP_CONST_CLASS_JUMBO: {
+            void *classPtr = (void*)
+                (method->clazz->pDvmDex->pResClasses[insn->vB]);
+
+            if (classPtr == NULL) {
+                return false;
+            }
+            return true;
+        }
+        case OP_CONST_STRING_JUMBO:
+        case OP_CONST_STRING: {
+            void *strPtr = (void*)
+                (method->clazz->pDvmDex->pResStrings[insn->vB]);
+
+            if (strPtr == NULL) {
+                return false;
+            }
+            return true;
+        }
+        default:
+            return true;
+    }
+}
+
+/* Split an existing block from the specified code offset into two */
+static BasicBlock *splitBlock(CompilationUnit *cUnit,
+                              unsigned int codeOffset,
+                              BasicBlock *origBlock)
+{
+    MIR *insn = origBlock->firstMIRInsn;
+    while (insn) {
+        if (insn->offset == codeOffset) break;
+        insn = insn->next;
+    }
+    if (insn == NULL) {
+        LOGE("Break split failed");
+        dvmAbort();
+    }
+    BasicBlock *bottomBlock = dvmCompilerNewBB(kDalvikByteCode,
+                                               cUnit->numBlocks++);
+    dvmInsertGrowableList(&cUnit->blockList, (intptr_t) bottomBlock);
+
+    bottomBlock->startOffset = codeOffset;
+    bottomBlock->firstMIRInsn = insn;
+    bottomBlock->lastMIRInsn = origBlock->lastMIRInsn;
+
+    /* Handle the taken path */
+    bottomBlock->taken = origBlock->taken;
+    if (bottomBlock->taken) {
+        origBlock->taken = NULL;
+        dvmCompilerClearBit(bottomBlock->taken->predecessors, origBlock->id);
+        dvmCompilerSetBit(bottomBlock->taken->predecessors, bottomBlock->id);
+    }
+
+    /* Handle the fallthrough path */
+    bottomBlock->fallThrough = origBlock->fallThrough;
+    origBlock->fallThrough = bottomBlock;
+    dvmCompilerSetBit(bottomBlock->predecessors, origBlock->id);
+    if (bottomBlock->fallThrough) {
+        dvmCompilerClearBit(bottomBlock->fallThrough->predecessors,
+                            origBlock->id);
+        dvmCompilerSetBit(bottomBlock->fallThrough->predecessors,
+                          bottomBlock->id);
+    }
+
+    /* Handle the successor list */
+    if (origBlock->successorBlockList.blockListType != kNotUsed) {
+        bottomBlock->successorBlockList = origBlock->successorBlockList;
+        origBlock->successorBlockList.blockListType = kNotUsed;
+        GrowableListIterator iterator;
+
+        dvmGrowableListIteratorInit(&bottomBlock->successorBlockList.blocks,
+                                    &iterator);
+        while (true) {
+            SuccessorBlockInfo *successorBlockInfo =
+                (SuccessorBlockInfo *) dvmGrowableListIteratorNext(&iterator);
+            if (successorBlockInfo == NULL) break;
+            BasicBlock *bb = successorBlockInfo->block;
+            dvmCompilerClearBit(bb->predecessors, origBlock->id);
+            dvmCompilerSetBit(bb->predecessors, bottomBlock->id);
+        }
+    }
+
+    origBlock->lastMIRInsn = insn->prev;
+
+    insn->prev->next = NULL;
+    insn->prev = NULL;
+    return bottomBlock;
+}
+
+/*
+ * Given a code offset, find out the block that starts with it. If the offset
+ * is in the middle of an existing block, split it into two.
+ */
+static BasicBlock *findBlock(CompilationUnit *cUnit,
+                             unsigned int codeOffset,
+                             bool split, bool create)
+{
+    GrowableList *blockList = &cUnit->blockList;
+    BasicBlock *bb;
+    unsigned int i;
+
+    for (i = 0; i < blockList->numUsed; i++) {
+        bb = (BasicBlock *) blockList->elemList[i];
+        if (bb->blockType != kDalvikByteCode) continue;
+        if (bb->startOffset == codeOffset) return bb;
+        /* Check if a branch jumps into the middle of an existing block */
+        if ((split == true) && (codeOffset > bb->startOffset) &&
+            (bb->lastMIRInsn != NULL) &&
+            (codeOffset <= bb->lastMIRInsn->offset)) {
+            BasicBlock *newBB = splitBlock(cUnit, codeOffset, bb);
+            return newBB;
+        }
+    }
+    if (create) {
+          bb = dvmCompilerNewBB(kDalvikByteCode, cUnit->numBlocks++);
+          dvmInsertGrowableList(&cUnit->blockList, (intptr_t) bb);
+          bb->startOffset = codeOffset;
+          return bb;
+    }
+    return NULL;
+}
+
+/* Dump the CFG into a DOT graph */
+void dumpCFG(CompilationUnit *cUnit, const char *dirPrefix)
+{
+    const Method *method = cUnit->method;
+    FILE *file;
+    char *signature = dexProtoCopyMethodDescriptor(&method->prototype);
+    char startOffset[80];
+    sprintf(startOffset, "_%x", cUnit->entryBlock->fallThrough->startOffset);
+    char *fileName = (char *) dvmCompilerNew(
+                                  strlen(dirPrefix) +
+                                  strlen(method->clazz->descriptor) +
+                                  strlen(method->name) +
+                                  strlen(signature) +
+                                  strlen(startOffset) +
+                                  strlen(".dot") + 1, true);
+    sprintf(fileName, "%s%s%s%s%s.dot", dirPrefix,
+            method->clazz->descriptor, method->name, signature, startOffset);
+    free(signature);
+
+    /*
+     * Convert the special characters into a filesystem- and shell-friendly
+     * format.
+     */
+    int i;
+    for (i = strlen(dirPrefix); fileName[i]; i++) {
+        if (fileName[i] == '/') {
+            fileName[i] = '_';
+        } else if (fileName[i] == ';') {
+            fileName[i] = '#';
+        } else if (fileName[i] == '$') {
+            fileName[i] = '+';
+        } else if (fileName[i] == '(' || fileName[i] == ')') {
+            fileName[i] = '@';
+        } else if (fileName[i] == '<' || fileName[i] == '>') {
+            fileName[i] = '=';
+        }
+    }
+    file = fopen(fileName, "w");
+    if (file == NULL) {
+        return;
+    }
+    fprintf(file, "digraph G {\n");
+
+    fprintf(file, "  rankdir=TB\n");
+
+    int numReachableBlocks = cUnit->numReachableBlocks;
+    int idx;
+    const GrowableList *blockList = &cUnit->blockList;
+
+    for (idx = 0; idx < numReachableBlocks; idx++) {
+        int blockIdx = cUnit->dfsOrder.elemList[idx];
+        BasicBlock *bb = (BasicBlock *) dvmGrowableListGetElement(blockList,
+                                                                  blockIdx);
+        if (bb == NULL) break;
+        if (bb->blockType == kMethodEntryBlock) {
+            fprintf(file, "  entry [shape=Mdiamond];\n");
+        } else if (bb->blockType == kMethodExitBlock) {
+            fprintf(file, "  exit [shape=Mdiamond];\n");
+        } else if (bb->blockType == kDalvikByteCode) {
+            fprintf(file, "  block%04x [shape=record,label = \"{ \\\n",
+                    bb->startOffset);
+            const MIR *mir;
+            for (mir = bb->firstMIRInsn; mir; mir = mir->next) {
+                fprintf(file, "    {%04x %s\\l}%s\\\n", mir->offset,
+                        mir->ssaRep ?
+                            dvmCompilerFullDisassembler(cUnit, mir) :
+                            dexGetOpcodeName(mir->dalvikInsn.opcode),
+                        mir->next ? " | " : " ");
+            }
+            fprintf(file, "  }\"];\n\n");
+        } else if (bb->blockType == kExceptionHandling) {
+            char blockName[BLOCK_NAME_LEN];
+
+            dvmGetBlockName(bb, blockName);
+            fprintf(file, "  %s [shape=invhouse];\n", blockName);
+        }
+
+        char blockName1[BLOCK_NAME_LEN], blockName2[BLOCK_NAME_LEN];
+
+        if (bb->taken) {
+            dvmGetBlockName(bb, blockName1);
+            dvmGetBlockName(bb->taken, blockName2);
+            fprintf(file, "  %s:s -> %s:n [style=dotted]\n",
+                    blockName1, blockName2);
+        }
+        if (bb->fallThrough) {
+            dvmGetBlockName(bb, blockName1);
+            dvmGetBlockName(bb->fallThrough, blockName2);
+            fprintf(file, "  %s:s -> %s:n\n", blockName1, blockName2);
+        }
+
+        if (bb->successorBlockList.blockListType != kNotUsed) {
+            fprintf(file, "  succ%04x [shape=%s,label = \"{ \\\n",
+                    bb->startOffset,
+                    (bb->successorBlockList.blockListType == kCatch) ?
+                        "Mrecord" : "record");
+            GrowableListIterator iterator;
+            dvmGrowableListIteratorInit(&bb->successorBlockList.blocks,
+                                        &iterator);
+            SuccessorBlockInfo *successorBlockInfo =
+                (SuccessorBlockInfo *) dvmGrowableListIteratorNext(&iterator);
+
+            int succId = 0;
+            while (true) {
+                if (successorBlockInfo == NULL) break;
+
+                BasicBlock *destBlock = successorBlockInfo->block;
+                SuccessorBlockInfo *nextSuccessorBlockInfo =
+                  (SuccessorBlockInfo *) dvmGrowableListIteratorNext(&iterator);
+
+                fprintf(file, "    {<f%d> %04x: %04x\\l}%s\\\n",
+                        succId++,
+                        successorBlockInfo->key,
+                        destBlock->startOffset,
+                        (nextSuccessorBlockInfo != NULL) ? " | " : " ");
+
+                successorBlockInfo = nextSuccessorBlockInfo;
+            }
+            fprintf(file, "  }\"];\n\n");
+
+            dvmGetBlockName(bb, blockName1);
+            fprintf(file, "  %s:s -> succ%04x:n [style=dashed]\n",
+                    blockName1, bb->startOffset);
+
+            if (bb->successorBlockList.blockListType == kPackedSwitch ||
+                bb->successorBlockList.blockListType == kSparseSwitch) {
+
+                dvmGrowableListIteratorInit(&bb->successorBlockList.blocks,
+                                            &iterator);
+
+                succId = 0;
+                while (true) {
+                    SuccessorBlockInfo *successorBlockInfo =
+                        (SuccessorBlockInfo *)
+                            dvmGrowableListIteratorNext(&iterator);
+                    if (successorBlockInfo == NULL) break;
+
+                    BasicBlock *destBlock = successorBlockInfo->block;
+
+                    dvmGetBlockName(destBlock, blockName2);
+                    fprintf(file, "  succ%04x:f%d:e -> %s:n\n",
+                            bb->startOffset, succId++,
+                            blockName2);
+                }
+            }
+        }
+        fprintf(file, "\n");
+
+        /*
+         * If we need to debug the dominator tree, uncomment the following code
+         */
+#if 1
+        dvmGetBlockName(bb, blockName1);
+        fprintf(file, "  cfg%s [label=\"%s\", shape=none];\n",
+                blockName1, blockName1);
+        if (bb->iDom) {
+            dvmGetBlockName(bb->iDom, blockName2);
+            fprintf(file, "  cfg%s:s -> cfg%s:n\n\n",
+                    blockName2, blockName1);
+        }
+#endif
+    }
+    fprintf(file, "}\n");
+    fclose(file);
+}
+
+/* Verify if all the successor is connected with all the claimed predecessors */
+static bool verifyPredInfo(CompilationUnit *cUnit, BasicBlock *bb)
+{
+    BitVectorIterator bvIterator;
+
+    dvmBitVectorIteratorInit(bb->predecessors, &bvIterator);
+    while (true) {
+        int blockIdx = dvmBitVectorIteratorNext(&bvIterator);
+        if (blockIdx == -1) break;
+        BasicBlock *predBB = (BasicBlock *)
+            dvmGrowableListGetElement(&cUnit->blockList, blockIdx);
+        bool found = false;
+        if (predBB->taken == bb) {
+            found = true;
+        } else if (predBB->fallThrough == bb) {
+            found = true;
+        } else if (predBB->successorBlockList.blockListType != kNotUsed) {
+            GrowableListIterator iterator;
+            dvmGrowableListIteratorInit(&predBB->successorBlockList.blocks,
+                                        &iterator);
+            while (true) {
+                SuccessorBlockInfo *successorBlockInfo =
+                    (SuccessorBlockInfo *)
+                        dvmGrowableListIteratorNext(&iterator);
+                if (successorBlockInfo == NULL) break;
+                BasicBlock *succBB = successorBlockInfo->block;
+                if (succBB == bb) {
+                    found = true;
+                    break;
+                }
+            }
+        }
+        if (found == false) {
+            char blockName1[BLOCK_NAME_LEN], blockName2[BLOCK_NAME_LEN];
+            dvmGetBlockName(bb, blockName1);
+            dvmGetBlockName(predBB, blockName2);
+            dumpCFG(cUnit, "/sdcard/cfg/");
+            LOGE("Successor %s not found from %s",
+                 blockName1, blockName2);
+            dvmAbort();
+        }
+    }
+    return true;
+}
+
+/* Identify code range in try blocks and set up the empty catch blocks */
+static void processTryCatchBlocks(CompilationUnit *cUnit)
+{
+    const Method *meth = cUnit->method;
+    const DexCode *pCode = dvmGetMethodCode(meth);
+    int triesSize = pCode->triesSize;
+    int i;
+    int offset;
+
+    if (triesSize == 0) {
+        return;
+    }
+
+    const DexTry *pTries = dexGetTries(pCode);
+    BitVector *tryBlockAddr = cUnit->tryBlockAddr;
+
+    /* Mark all the insn offsets in Try blocks */
+    for (i = 0; i < triesSize; i++) {
+        const DexTry* pTry = &pTries[i];
+        /* all in 16-bit units */
+        int startOffset = pTry->startAddr;
+        int endOffset = startOffset + pTry->insnCount;
+
+        for (offset = startOffset; offset < endOffset; offset++) {
+            dvmCompilerSetBit(tryBlockAddr, offset);
+        }
+    }
+
+    /* Iterate over each of the handlers to enqueue the empty Catch blocks */
+    offset = dexGetFirstHandlerOffset(pCode);
+    int handlersSize = dexGetHandlersSize(pCode);
+
+    for (i = 0; i < handlersSize; i++) {
+        DexCatchIterator iterator;
+        dexCatchIteratorInit(&iterator, pCode, offset);
+
+        for (;;) {
+            DexCatchHandler* handler = dexCatchIteratorNext(&iterator);
+
+            if (handler == NULL) {
+                break;
+            }
+
+            /*
+             * Create dummy catch blocks first. Since these are created before
+             * other blocks are processed, "split" is specified as false.
+             */
+            findBlock(cUnit, handler->address,
+                      /* split */
+                      false,
+                      /* create */
+                      true);
+        }
+
+        offset = dexCatchIteratorGetEndOffset(&iterator, pCode);
+    }
+}
+
+/* Process instructions with the kInstrCanBranch flag */
+static void processCanBranch(CompilationUnit *cUnit, BasicBlock *curBlock,
+                             MIR *insn, int curOffset, int width, int flags,
+                             const u2* codePtr, const u2* codeEnd)
+{
+    int target = curOffset;
+    switch (insn->dalvikInsn.opcode) {
+        case OP_GOTO:
+        case OP_GOTO_16:
+        case OP_GOTO_32:
+            target += (int) insn->dalvikInsn.vA;
+            break;
+        case OP_IF_EQ:
+        case OP_IF_NE:
+        case OP_IF_LT:
+        case OP_IF_GE:
+        case OP_IF_GT:
+        case OP_IF_LE:
+            target += (int) insn->dalvikInsn.vC;
+            break;
+        case OP_IF_EQZ:
+        case OP_IF_NEZ:
+        case OP_IF_LTZ:
+        case OP_IF_GEZ:
+        case OP_IF_GTZ:
+        case OP_IF_LEZ:
+            target += (int) insn->dalvikInsn.vB;
+            break;
+        default:
+            LOGE("Unexpected opcode(%d) with kInstrCanBranch set",
+                 insn->dalvikInsn.opcode);
+            dvmAbort();
+    }
+    BasicBlock *takenBlock = findBlock(cUnit, target,
+                                       /* split */
+                                       true,
+                                       /* create */
+                                       true);
+    curBlock->taken = takenBlock;
+    dvmCompilerSetBit(takenBlock->predecessors, curBlock->id);
+
+    /* Always terminate the current block for conditional branches */
+    if (flags & kInstrCanContinue) {
+        BasicBlock *fallthroughBlock = findBlock(cUnit,
+                                                 curOffset +  width,
+                                                 /*
+                                                  * If the method is processed
+                                                  * in sequential order from the
+                                                  * beginning, we don't need to
+                                                  * specify split for continue
+                                                  * blocks. However, this
+                                                  * routine can be called by
+                                                  * compileLoop, which starts
+                                                  * parsing the method from an
+                                                  * arbitrary address in the
+                                                  * method body.
+                                                  */
+                                                 true,
+                                                 /* create */
+                                                 true);
+        curBlock->fallThrough = fallthroughBlock;
+        dvmCompilerSetBit(fallthroughBlock->predecessors, curBlock->id);
+    } else if (codePtr < codeEnd) {
+        /* Create a fallthrough block for real instructions (incl. OP_NOP) */
+        if (contentIsInsn(codePtr)) {
+            findBlock(cUnit, curOffset + width,
+                      /* split */
+                      false,
+                      /* create */
+                      true);
+        }
+    }
+}
+
+/* Process instructions with the kInstrCanSwitch flag */
+static void processCanSwitch(CompilationUnit *cUnit, BasicBlock *curBlock,
+                             MIR *insn, int curOffset, int width, int flags)
+{
+    u2 *switchData= (u2 *) (cUnit->method->insns + curOffset +
+                            insn->dalvikInsn.vB);
+    int size;
+    int *keyTable;
+    int *targetTable;
+    int i;
+    int firstKey;
+
+    /*
+     * Packed switch data format:
+     *  ushort ident = 0x0100   magic value
+     *  ushort size             number of entries in the table
+     *  int first_key           first (and lowest) switch case value
+     *  int targets[size]       branch targets, relative to switch opcode
+     *
+     * Total size is (4+size*2) 16-bit code units.
+     */
+    if (insn->dalvikInsn.opcode == OP_PACKED_SWITCH) {
+        assert(switchData[0] == kPackedSwitchSignature);
+        size = switchData[1];
+        firstKey = switchData[2] | (switchData[3] << 16);
+        targetTable = (int *) &switchData[4];
+        keyTable = NULL;        // Make the compiler happy
+    /*
+     * Sparse switch data format:
+     *  ushort ident = 0x0200   magic value
+     *  ushort size             number of entries in the table; > 0
+     *  int keys[size]          keys, sorted low-to-high; 32-bit aligned
+     *  int targets[size]       branch targets, relative to switch opcode
+     *
+     * Total size is (2+size*4) 16-bit code units.
+     */
+    } else {
+        assert(switchData[0] == kSparseSwitchSignature);
+        size = switchData[1];
+        keyTable = (int *) &switchData[2];
+        targetTable = (int *) &switchData[2 + size*2];
+        firstKey = 0;   // To make the compiler happy
+    }
+
+    if (curBlock->successorBlockList.blockListType != kNotUsed) {
+        LOGE("Successor block list already in use: %d",
+             curBlock->successorBlockList.blockListType);
+        dvmAbort();
+    }
+    curBlock->successorBlockList.blockListType =
+        (insn->dalvikInsn.opcode == OP_PACKED_SWITCH) ?
+        kPackedSwitch : kSparseSwitch;
+    dvmInitGrowableList(&curBlock->successorBlockList.blocks, size);
+
+    for (i = 0; i < size; i++) {
+        BasicBlock *caseBlock = findBlock(cUnit, curOffset + targetTable[i],
+                                          /* split */
+                                          true,
+                                          /* create */
+                                          true);
+        SuccessorBlockInfo *successorBlockInfo =
+            (SuccessorBlockInfo *) dvmCompilerNew(sizeof(SuccessorBlockInfo),
+                                                  false);
+        successorBlockInfo->block = caseBlock;
+        successorBlockInfo->key = (insn->dalvikInsn.opcode == OP_PACKED_SWITCH)?
+                                  firstKey + i : keyTable[i];
+        dvmInsertGrowableList(&curBlock->successorBlockList.blocks,
+                              (intptr_t) successorBlockInfo);
+        dvmCompilerSetBit(caseBlock->predecessors, curBlock->id);
+    }
+
+    /* Fall-through case */
+    BasicBlock *fallthroughBlock = findBlock(cUnit,
+                                             curOffset +  width,
+                                             /* split */
+                                             false,
+                                             /* create */
+                                             true);
+    curBlock->fallThrough = fallthroughBlock;
+    dvmCompilerSetBit(fallthroughBlock->predecessors, curBlock->id);
+}
+
+/* Process instructions with the kInstrCanThrow flag */
+static void processCanThrow(CompilationUnit *cUnit, BasicBlock *curBlock,
+                            MIR *insn, int curOffset, int width, int flags,
+                            BitVector *tryBlockAddr, const u2 *codePtr,
+                            const u2* codeEnd)
+{
+    const Method *method = cUnit->method;
+    const DexCode *dexCode = dvmGetMethodCode(method);
+
+    /* In try block */
+    if (dvmIsBitSet(tryBlockAddr, curOffset)) {
+        DexCatchIterator iterator;
+
+        if (!dexFindCatchHandler(&iterator, dexCode, curOffset)) {
+            LOGE("Catch block not found in dexfile for insn %x in %s",
+                 curOffset, method->name);
+            dvmAbort();
+
+        }
+        if (curBlock->successorBlockList.blockListType != kNotUsed) {
+            LOGE("Successor block list already in use: %d",
+                 curBlock->successorBlockList.blockListType);
+            dvmAbort();
+        }
+        curBlock->successorBlockList.blockListType = kCatch;
+        dvmInitGrowableList(&curBlock->successorBlockList.blocks, 2);
+
+        for (;;) {
+            DexCatchHandler* handler = dexCatchIteratorNext(&iterator);
+
+            if (handler == NULL) {
+                break;
+            }
+
+            BasicBlock *catchBlock = findBlock(cUnit, handler->address,
+                                               /* split */
+                                               false,
+                                               /* create */
+                                               false);
+
+            SuccessorBlockInfo *successorBlockInfo =
+              (SuccessorBlockInfo *) dvmCompilerNew(sizeof(SuccessorBlockInfo),
+                                                    false);
+            successorBlockInfo->block = catchBlock;
+            successorBlockInfo->key = handler->typeIdx;
+            dvmInsertGrowableList(&curBlock->successorBlockList.blocks,
+                                  (intptr_t) successorBlockInfo);
+            dvmCompilerSetBit(catchBlock->predecessors, curBlock->id);
+        }
+    } else {
+        BasicBlock *ehBlock = dvmCompilerNewBB(kExceptionHandling,
+                                               cUnit->numBlocks++);
+        curBlock->taken = ehBlock;
+        dvmInsertGrowableList(&cUnit->blockList, (intptr_t) ehBlock);
+        ehBlock->startOffset = curOffset;
+        dvmCompilerSetBit(ehBlock->predecessors, curBlock->id);
+    }
+
+    /*
+     * Force the current block to terminate.
+     *
+     * Data may be present before codeEnd, so we need to parse it to know
+     * whether it is code or data.
+     */
+    if (codePtr < codeEnd) {
+        /* Create a fallthrough block for real instructions (incl. OP_NOP) */
+        if (contentIsInsn(codePtr)) {
+            BasicBlock *fallthroughBlock = findBlock(cUnit,
+                                                     curOffset + width,
+                                                     /* split */
+                                                     false,
+                                                     /* create */
+                                                     true);
+            /*
+             * OP_THROW and OP_THROW_VERIFICATION_ERROR are unconditional
+             * branches.
+             */
+            if (insn->dalvikInsn.opcode != OP_THROW_VERIFICATION_ERROR &&
+                insn->dalvikInsn.opcode != OP_THROW) {
+                curBlock->fallThrough = fallthroughBlock;
+                dvmCompilerSetBit(fallthroughBlock->predecessors, curBlock->id);
+            }
+        }
+    }
+}
+
+/*
+ * Similar to dvmCompileTrace, but the entity processed here is the whole
+ * method.
+ *
+ * TODO: implementation will be revisited when the trace builder can provide
+ * whole-method traces.
+ */
+bool dvmCompileMethod(const Method *method, JitTranslationInfo *info)
+{
+    CompilationUnit cUnit;
+    const DexCode *dexCode = dvmGetMethodCode(method);
+    const u2 *codePtr = dexCode->insns;
+    const u2 *codeEnd = dexCode->insns + dexCode->insnsSize;
+    int numBlocks = 0;
+    unsigned int curOffset = 0;
+
+    /* Method already compiled */
+    if (dvmJitGetMethodAddr(codePtr)) {
+        info->codeAddress = NULL;
+        return false;
+    }
+
+    memset(&cUnit, 0, sizeof(cUnit));
+    cUnit.method = method;
+
+    cUnit.jitMode = kJitMethod;
+
+    /* Initialize the block list */
+    dvmInitGrowableList(&cUnit.blockList, 4);
+
+    /*
+     * FIXME - PC reconstruction list won't be needed after the codegen routines
+     * are enhanced to true method mode.
+     */
+    /* Initialize the PC reconstruction list */
+    dvmInitGrowableList(&cUnit.pcReconstructionList, 8);
+
+    /* Allocate the bit-vector to track the beginning of basic blocks */
+    BitVector *tryBlockAddr = dvmCompilerAllocBitVector(dexCode->insnsSize,
+                                                        true /* expandable */);
+    cUnit.tryBlockAddr = tryBlockAddr;
+
+    /* Create the default entry and exit blocks and enter them to the list */
+    BasicBlock *entryBlock = dvmCompilerNewBB(kMethodEntryBlock, numBlocks++);
+    BasicBlock *exitBlock = dvmCompilerNewBB(kMethodExitBlock, numBlocks++);
+
+    cUnit.entryBlock = entryBlock;
+    cUnit.exitBlock = exitBlock;
+
+    dvmInsertGrowableList(&cUnit.blockList, (intptr_t) entryBlock);
+    dvmInsertGrowableList(&cUnit.blockList, (intptr_t) exitBlock);
+
+    /* Current block to record parsed instructions */
+    BasicBlock *curBlock = dvmCompilerNewBB(kDalvikByteCode, numBlocks++);
+    curBlock->startOffset = 0;
+    dvmInsertGrowableList(&cUnit.blockList, (intptr_t) curBlock);
+    entryBlock->fallThrough = curBlock;
+    dvmCompilerSetBit(curBlock->predecessors, entryBlock->id);
+
+    /*
+     * Store back the number of blocks since new blocks may be created of
+     * accessing cUnit.
+     */
+    cUnit.numBlocks = numBlocks;
+
+    /* Identify code range in try blocks and set up the empty catch blocks */
+    processTryCatchBlocks(&cUnit);
+
+    /* Parse all instructions and put them into containing basic blocks */
+    while (codePtr < codeEnd) {
+        MIR *insn = (MIR *) dvmCompilerNew(sizeof(MIR), true);
+        insn->offset = curOffset;
+        int width = parseInsn(codePtr, &insn->dalvikInsn, false);
+        insn->width = width;
+
+        /* Terminate when the data section is seen */
+        if (width == 0)
+            break;
+
+        dvmCompilerAppendMIR(curBlock, insn);
+
+        codePtr += width;
+        int flags = dexGetFlagsFromOpcode(insn->dalvikInsn.opcode);
+
+        if (flags & kInstrCanBranch) {
+            processCanBranch(&cUnit, curBlock, insn, curOffset, width, flags,
+                             codePtr, codeEnd);
+        } else if (flags & kInstrCanReturn) {
+            curBlock->fallThrough = exitBlock;
+            dvmCompilerSetBit(exitBlock->predecessors, curBlock->id);
+            /*
+             * Terminate the current block if there are instructions
+             * afterwards.
+             */
+            if (codePtr < codeEnd) {
+                /*
+                 * Create a fallthrough block for real instructions
+                 * (incl. OP_NOP).
+                 */
+                if (contentIsInsn(codePtr)) {
+                    findBlock(&cUnit, curOffset + width,
+                              /* split */
+                              false,
+                              /* create */
+                              true);
+                }
+            }
+        } else if (flags & kInstrCanThrow) {
+            processCanThrow(&cUnit, curBlock, insn, curOffset, width, flags,
+                            tryBlockAddr, codePtr, codeEnd);
+        } else if (flags & kInstrCanSwitch) {
+            processCanSwitch(&cUnit, curBlock, insn, curOffset, width, flags);
+        }
+        curOffset += width;
+        BasicBlock *nextBlock = findBlock(&cUnit, curOffset,
+                                          /* split */
+                                          false,
+                                          /* create */
+                                          false);
+        if (nextBlock) {
+            /*
+             * The next instruction could be the target of a previously parsed
+             * forward branch so a block is already created. If the current
+             * instruction is not an unconditional branch, connect them through
+             * the fall-through link.
+             */
+            assert(curBlock->fallThrough == NULL ||
+                   curBlock->fallThrough == nextBlock ||
+                   curBlock->fallThrough == exitBlock);
+
+            if ((curBlock->fallThrough == NULL) &&
+                (flags & kInstrCanContinue)) {
+                curBlock->fallThrough = nextBlock;
+                dvmCompilerSetBit(nextBlock->predecessors, curBlock->id);
+            }
+            curBlock = nextBlock;
+        }
+    }
+
+    if (cUnit.printMe) {
+        dvmCompilerDumpCompilationUnit(&cUnit);
+    }
+
+    /* Adjust this value accordingly once inlining is performed */
+    cUnit.numDalvikRegisters = cUnit.method->registersSize;
+
+    /* Verify if all blocks are connected as claimed */
+    /* FIXME - to be disabled in the future */
+    dvmCompilerDataFlowAnalysisDispatcher(&cUnit, verifyPredInfo,
+                                          kAllNodes,
+                                          false /* isIterative */);
+
+
+    /* Perform SSA transformation for the whole method */
+    dvmCompilerMethodSSATransformation(&cUnit);
+
+    dvmCompilerInitializeRegAlloc(&cUnit);  // Needs to happen after SSA naming
+
+    /* Allocate Registers using simple local allocation scheme */
+    dvmCompilerLocalRegAlloc(&cUnit);
+
+    /* Convert MIR to LIR, etc. */
+    dvmCompilerMethodMIR2LIR(&cUnit);
+
+    // Debugging only
+    //dumpCFG(&cUnit, "/sdcard/cfg/");
+
+    /* Method is not empty */
+    if (cUnit.firstLIRInsn) {
+        /* Convert LIR into machine code. Loop for recoverable retries */
+        do {
+            dvmCompilerAssembleLIR(&cUnit, info);
+            cUnit.assemblerRetries++;
+            if (cUnit.printMe && cUnit.assemblerStatus != kSuccess)
+                LOGD("Assembler abort #%d on %d",cUnit.assemblerRetries,
+                      cUnit.assemblerStatus);
+        } while (cUnit.assemblerStatus == kRetryAll);
+
+        if (cUnit.printMe) {
+            dvmCompilerCodegenDump(&cUnit);
+        }
+
+        if (info->codeAddress) {
+            dvmJitSetCodeAddr(dexCode->insns, info->codeAddress,
+                              info->instructionSet, true, 0);
+            /*
+             * Clear the codeAddress for the enclosing trace to reuse the info
+             */
+            info->codeAddress = NULL;
+        }
+    }
+
+    return false;
+}
+
+/* Extending the trace by crawling the code from curBlock */
+static bool exhaustTrace(CompilationUnit *cUnit, BasicBlock *curBlock)
+{
+    unsigned int curOffset = curBlock->startOffset;
+    const u2 *codePtr = cUnit->method->insns + curOffset;
+
+    if (curBlock->visited == true) return false;
+
+    curBlock->visited = true;
+
+    if (curBlock->blockType == kMethodEntryBlock ||
+        curBlock->blockType == kMethodExitBlock) {
+        return false;
+    }
+
+    /*
+     * Block has been parsed - check the taken/fallThrough in case it is a split
+     * block.
+     */
+    if (curBlock->firstMIRInsn != NULL) {
+          bool changed = false;
+          if (curBlock->taken)
+              changed |= exhaustTrace(cUnit, curBlock->taken);
+          if (curBlock->fallThrough)
+              changed |= exhaustTrace(cUnit, curBlock->fallThrough);
+          return changed;
+    }
+    while (true) {
+        MIR *insn = (MIR *) dvmCompilerNew(sizeof(MIR), true);
+        insn->offset = curOffset;
+        int width = parseInsn(codePtr, &insn->dalvikInsn, false);
+        insn->width = width;
+
+        /* Terminate when the data section is seen */
+        if (width == 0)
+            break;
+
+        dvmCompilerAppendMIR(curBlock, insn);
+
+        codePtr += width;
+        int flags = dexGetFlagsFromOpcode(insn->dalvikInsn.opcode);
+
+        /* Stop extending the trace after seeing these instructions */
+        if (flags & (kInstrCanReturn | kInstrCanSwitch | kInstrInvoke)) {
+            curBlock->fallThrough = cUnit->exitBlock;
+            dvmCompilerSetBit(cUnit->exitBlock->predecessors, curBlock->id);
+            break;
+        } else if (flags & kInstrCanBranch) {
+            processCanBranch(cUnit, curBlock, insn, curOffset, width, flags,
+                             codePtr, NULL);
+            if (curBlock->taken) {
+                exhaustTrace(cUnit, curBlock->taken);
+            }
+            if (curBlock->fallThrough) {
+                exhaustTrace(cUnit, curBlock->fallThrough);
+            }
+            break;
+        }
+        curOffset += width;
+    }
+    return true;
+}
+
+/* Compile a loop */
+static bool compileLoop(CompilationUnit *cUnit, unsigned int startOffset,
+                        JitTraceDescription *desc, int numMaxInsts,
+                        JitTranslationInfo *info, jmp_buf *bailPtr,
+                        int optHints)
+{
+    int numBlocks = 0;
+    unsigned int curOffset = startOffset;
+    bool changed;
+
+    cUnit->jitMode = kJitLoop;
+
+    /* Initialize the block list */
+    dvmInitGrowableList(&cUnit->blockList, 4);
+
+    /* Initialize the PC reconstruction list */
+    dvmInitGrowableList(&cUnit->pcReconstructionList, 8);
+
+    /* Create the default entry and exit blocks and enter them to the list */
+    BasicBlock *entryBlock = dvmCompilerNewBB(kMethodEntryBlock, numBlocks++);
+    entryBlock->startOffset = curOffset;
+    BasicBlock *exitBlock = dvmCompilerNewBB(kMethodExitBlock, numBlocks++);
+
+    cUnit->entryBlock = entryBlock;
+    cUnit->exitBlock = exitBlock;
+
+    dvmInsertGrowableList(&cUnit->blockList, (intptr_t) entryBlock);
+    dvmInsertGrowableList(&cUnit->blockList, (intptr_t) exitBlock);
+
+    /* Current block to record parsed instructions */
+    BasicBlock *curBlock = dvmCompilerNewBB(kDalvikByteCode, numBlocks++);
+    curBlock->startOffset = curOffset;
+
+    dvmInsertGrowableList(&cUnit->blockList, (intptr_t) curBlock);
+    entryBlock->fallThrough = curBlock;
+    dvmCompilerSetBit(curBlock->predecessors, entryBlock->id);
+
+    /*
+     * Store back the number of blocks since new blocks may be created of
+     * accessing cUnit.
+     */
+    cUnit->numBlocks = numBlocks;
+
+    do {
+        dvmCompilerDataFlowAnalysisDispatcher(cUnit,
+                                              dvmCompilerClearVisitedFlag,
+                                              kAllNodes,
+                                              false /* isIterative */);
+        changed = exhaustTrace(cUnit, curBlock);
+    } while (changed);
+
+    cUnit->numDalvikRegisters = cUnit->method->registersSize;
+
+    /* Verify if all blocks are connected as claimed */
+    /* FIXME - to be disabled in the future */
+    dvmCompilerDataFlowAnalysisDispatcher(cUnit, verifyPredInfo,
+                                          kAllNodes,
+                                          false /* isIterative */);
+
+
+    /* Try to identify a loop */
+    if (!dvmCompilerBuildLoop(cUnit))
+        goto bail;
+
+    dvmCompilerInitializeRegAlloc(cUnit);
+
+    /* Allocate Registers using simple local allocation scheme */
+    dvmCompilerLocalRegAlloc(cUnit);
+
+    if (gDvmJit.receivedSIGUSR2) {
+        dumpCFG(cUnit, "/sdcard/cfg/");
+    }
+
+bail:
+    /* Retry the original trace with JIT_OPT_NO_LOOP disabled */
+    dvmCompilerArenaReset();
+    return dvmCompileTrace(desc, numMaxInsts, info, bailPtr,
+                           optHints | JIT_OPT_NO_LOOP);
+}
+
+/*
  * Main entry point to start trace compilation. Basic blocks are constructed
  * first and they will be passed to the codegen routines to convert Dalvik
  * bytecode into machine code.
@@ -427,6 +1493,7 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
     const DexCode *dexCode = dvmGetMethodCode(desc->method);
     const JitTraceRun* currRun = &desc->trace[0];
     unsigned int curOffset = currRun->info.frag.startOffset;
+    unsigned int startOffset = curOffset;
     unsigned int numInsts = currRun->info.frag.numInsts;
     const u2 *codePtr = dexCode->insns + curOffset;
     int traceSize = 0;  // # of half-words
@@ -668,6 +1735,17 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
 
         if (flags & kInstrInvoke) {
             cUnit.hasInvoke = true;
+        }
+
+        /* Backward branch seen */
+        if (isInvoke == false &&
+            (flags & kInstrCanBranch) != 0 &&
+            targetOffset < curOffset &&
+            (optHints & JIT_OPT_NO_LOOP) == 0) {
+            dvmCompilerArenaReset();
+            /* TODO - constructed loop is abandoned for now */
+            return compileLoop(&cUnit, startOffset, desc, numMaxInsts,
+                               info, bailPtr, optHints);
         }
 
         /* No backward branch in the trace - start searching the next BB */
@@ -973,911 +2051,4 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
 #endif
 
     return info->codeAddress != NULL;
-}
-
-/*
- * Since we are including instructions from possibly a cold method into the
- * current trace, we need to make sure that all the associated information
- * with the callee is properly initialized. If not, we punt on this inline
- * target.
- *
- * TODO: volatile instructions will be handled later.
- */
-bool dvmCompilerCanIncludeThisInstruction(const Method *method,
-                                          const DecodedInstruction *insn)
-{
-    switch (insn->opcode) {
-        case OP_NEW_INSTANCE:
-        case OP_NEW_INSTANCE_JUMBO:
-        case OP_CHECK_CAST:
-        case OP_CHECK_CAST_JUMBO: {
-            ClassObject *classPtr = (ClassObject *)(void*)
-              (method->clazz->pDvmDex->pResClasses[insn->vB]);
-
-            /* Class hasn't been initialized yet */
-            if (classPtr == NULL) {
-                return false;
-            }
-            return true;
-        }
-        case OP_SGET:
-        case OP_SGET_JUMBO:
-        case OP_SGET_WIDE:
-        case OP_SGET_WIDE_JUMBO:
-        case OP_SGET_OBJECT:
-        case OP_SGET_OBJECT_JUMBO:
-        case OP_SGET_BOOLEAN:
-        case OP_SGET_BOOLEAN_JUMBO:
-        case OP_SGET_BYTE:
-        case OP_SGET_BYTE_JUMBO:
-        case OP_SGET_CHAR:
-        case OP_SGET_CHAR_JUMBO:
-        case OP_SGET_SHORT:
-        case OP_SGET_SHORT_JUMBO:
-        case OP_SPUT:
-        case OP_SPUT_JUMBO:
-        case OP_SPUT_WIDE:
-        case OP_SPUT_WIDE_JUMBO:
-        case OP_SPUT_OBJECT:
-        case OP_SPUT_OBJECT_JUMBO:
-        case OP_SPUT_BOOLEAN:
-        case OP_SPUT_BOOLEAN_JUMBO:
-        case OP_SPUT_BYTE:
-        case OP_SPUT_BYTE_JUMBO:
-        case OP_SPUT_CHAR:
-        case OP_SPUT_CHAR_JUMBO:
-        case OP_SPUT_SHORT:
-        case OP_SPUT_SHORT_JUMBO: {
-            void *fieldPtr = (void*)
-              (method->clazz->pDvmDex->pResFields[insn->vB]);
-
-            if (fieldPtr == NULL) {
-                return false;
-            }
-            return true;
-        }
-        case OP_INVOKE_SUPER:
-        case OP_INVOKE_SUPER_RANGE:
-        case OP_INVOKE_SUPER_JUMBO: {
-            int mIndex = method->clazz->pDvmDex->
-                pResMethods[insn->vB]->methodIndex;
-            const Method *calleeMethod = method->clazz->super->vtable[mIndex];
-            if (calleeMethod == NULL) {
-                return false;
-            }
-            return true;
-        }
-        case OP_INVOKE_SUPER_QUICK:
-        case OP_INVOKE_SUPER_QUICK_RANGE: {
-            const Method *calleeMethod = method->clazz->super->vtable[insn->vB];
-            if (calleeMethod == NULL) {
-                return false;
-            }
-            return true;
-        }
-        case OP_INVOKE_STATIC:
-        case OP_INVOKE_STATIC_RANGE:
-        case OP_INVOKE_STATIC_JUMBO:
-        case OP_INVOKE_DIRECT:
-        case OP_INVOKE_DIRECT_RANGE:
-        case OP_INVOKE_DIRECT_JUMBO: {
-            const Method *calleeMethod =
-                method->clazz->pDvmDex->pResMethods[insn->vB];
-            if (calleeMethod == NULL) {
-                return false;
-            }
-            return true;
-        }
-        case OP_CONST_CLASS:
-        case OP_CONST_CLASS_JUMBO: {
-            void *classPtr = (void*)
-                (method->clazz->pDvmDex->pResClasses[insn->vB]);
-
-            if (classPtr == NULL) {
-                return false;
-            }
-            return true;
-        }
-        case OP_CONST_STRING_JUMBO:
-        case OP_CONST_STRING: {
-            void *strPtr = (void*)
-                (method->clazz->pDvmDex->pResStrings[insn->vB]);
-
-            if (strPtr == NULL) {
-                return false;
-            }
-            return true;
-        }
-        default:
-            return true;
-    }
-}
-
-/* Split an existing block from the specified code offset into two */
-static BasicBlock *splitBlock(CompilationUnit *cUnit,
-                              unsigned int codeOffset,
-                              BasicBlock *origBlock)
-{
-    MIR *insn = origBlock->firstMIRInsn;
-    while (insn) {
-        if (insn->offset == codeOffset) break;
-        insn = insn->next;
-    }
-    if (insn == NULL) {
-        LOGE("Break split failed");
-        dvmAbort();
-    }
-    BasicBlock *bottomBlock = dvmCompilerNewBB(kDalvikByteCode,
-                                               cUnit->numBlocks++);
-    dvmInsertGrowableList(&cUnit->blockList, (intptr_t) bottomBlock);
-
-    bottomBlock->startOffset = codeOffset;
-    bottomBlock->firstMIRInsn = insn;
-    bottomBlock->lastMIRInsn = origBlock->lastMIRInsn;
-
-    /* Handle the taken path */
-    bottomBlock->taken = origBlock->taken;
-    if (bottomBlock->taken) {
-        origBlock->taken = NULL;
-        dvmCompilerClearBit(bottomBlock->taken->predecessors, origBlock->id);
-        dvmCompilerSetBit(bottomBlock->taken->predecessors, bottomBlock->id);
-    }
-
-    /* Handle the fallthrough path */
-    bottomBlock->fallThrough = origBlock->fallThrough;
-    origBlock->fallThrough = bottomBlock;
-    dvmCompilerSetBit(bottomBlock->predecessors, origBlock->id);
-    if (bottomBlock->fallThrough) {
-        dvmCompilerClearBit(bottomBlock->fallThrough->predecessors,
-                            origBlock->id);
-        dvmCompilerSetBit(bottomBlock->fallThrough->predecessors,
-                          bottomBlock->id);
-    }
-
-    /* Handle the successor list */
-    if (origBlock->successorBlockList.blockListType != kNotUsed) {
-        bottomBlock->successorBlockList = origBlock->successorBlockList;
-        origBlock->successorBlockList.blockListType = kNotUsed;
-        GrowableListIterator iterator;
-
-        dvmGrowableListIteratorInit(&bottomBlock->successorBlockList.blocks,
-                                    &iterator);
-        while (true) {
-            SuccessorBlockInfo *successorBlockInfo =
-                (SuccessorBlockInfo *) dvmGrowableListIteratorNext(&iterator);
-            if (successorBlockInfo == NULL) break;
-            BasicBlock *bb = successorBlockInfo->block;
-            dvmCompilerClearBit(bb->predecessors, origBlock->id);
-            dvmCompilerSetBit(bb->predecessors, bottomBlock->id);
-        }
-    }
-
-    origBlock->lastMIRInsn = insn->prev;
-
-    insn->prev->next = NULL;
-    insn->prev = NULL;
-    return bottomBlock;
-}
-
-/*
- * Given a code offset, find out the block that starts with it. If the offset
- * is in the middle of an existing block, split it into two.
- */
-static BasicBlock *findBlock(CompilationUnit *cUnit,
-                             unsigned int codeOffset,
-                             bool split, bool create)
-{
-    GrowableList *blockList = &cUnit->blockList;
-    BasicBlock *bb;
-    unsigned int i;
-
-    for (i = 0; i < blockList->numUsed; i++) {
-        bb = (BasicBlock *) blockList->elemList[i];
-        if (bb->blockType != kDalvikByteCode) continue;
-        if (bb->startOffset == codeOffset) return bb;
-        /* Check if a branch jumps into the middle of an existing block */
-        if ((split == true) && (codeOffset > bb->startOffset) &&
-            (bb->lastMIRInsn != NULL) &&
-            (codeOffset <= bb->lastMIRInsn->offset)) {
-            BasicBlock *newBB = splitBlock(cUnit, codeOffset, bb);
-            return newBB;
-        }
-    }
-    if (create) {
-          bb = dvmCompilerNewBB(kDalvikByteCode, cUnit->numBlocks++);
-          dvmInsertGrowableList(&cUnit->blockList, (intptr_t) bb);
-          bb->startOffset = codeOffset;
-          return bb;
-    }
-    return NULL;
-}
-
-/* Dump the CFG into a DOT graph */
-void dumpCFG(CompilationUnit *cUnit, const char *dirPrefix)
-{
-    const Method *method = cUnit->method;
-    FILE *file;
-    char* signature = dexProtoCopyMethodDescriptor(&method->prototype);
-    char *fileName = (char *) dvmCompilerNew(
-                                  strlen(dirPrefix) +
-                                  strlen(method->clazz->descriptor) +
-                                  strlen(method->name) +
-                                  strlen(signature) +
-                                  strlen(".dot") + 1, true);
-    sprintf(fileName, "%s%s%s%s.dot", dirPrefix,
-            method->clazz->descriptor, method->name, signature);
-    free(signature);
-
-    /*
-     * Convert the special characters into a filesystem- and shell-friendly
-     * format.
-     */
-    int i;
-    for (i = strlen(dirPrefix); fileName[i]; i++) {
-        if (fileName[i] == '/') {
-            fileName[i] = '_';
-        } else if (fileName[i] == ';') {
-            fileName[i] = '#';
-        } else if (fileName[i] == '$') {
-            fileName[i] = '+';
-        } else if (fileName[i] == '(' || fileName[i] == ')') {
-            fileName[i] = '@';
-        } else if (fileName[i] == '<' || fileName[i] == '>') {
-            fileName[i] = '=';
-        }
-    }
-    file = fopen(fileName, "w");
-    if (file == NULL) {
-        return;
-    }
-    fprintf(file, "digraph G {\n");
-
-    fprintf(file, "  rankdir=TB\n");
-
-    int numReachableBlocks = cUnit->numReachableBlocks;
-    int idx;
-    const GrowableList *blockList = &cUnit->blockList;
-
-    for (idx = 0; idx < numReachableBlocks; idx++) {
-        int blockIdx = cUnit->dfsOrder.elemList[idx];
-        BasicBlock *bb = (BasicBlock *) dvmGrowableListGetElement(blockList,
-                                                                  blockIdx);
-        if (bb == NULL) break;
-        if (bb->blockType == kMethodEntryBlock) {
-            fprintf(file, "  entry [shape=Mdiamond];\n");
-        } else if (bb->blockType == kMethodExitBlock) {
-            fprintf(file, "  exit [shape=Mdiamond];\n");
-        } else if (bb->blockType == kDalvikByteCode) {
-            fprintf(file, "  block%04x [shape=record,label = \"{ \\\n",
-                    bb->startOffset);
-            const MIR *mir;
-            for (mir = bb->firstMIRInsn; mir; mir = mir->next) {
-                fprintf(file, "    {%04x %s\\l}%s\\\n", mir->offset,
-                        dvmCompilerFullDisassembler(cUnit, mir),
-                        mir->next ? " | " : " ");
-            }
-            fprintf(file, "  }\"];\n\n");
-        } else if (bb->blockType == kExceptionHandling) {
-            char blockName[BLOCK_NAME_LEN];
-
-            dvmGetBlockName(bb, blockName);
-            fprintf(file, "  %s [shape=invhouse];\n", blockName);
-        }
-
-        char blockName1[BLOCK_NAME_LEN], blockName2[BLOCK_NAME_LEN];
-
-        if (bb->taken) {
-            dvmGetBlockName(bb, blockName1);
-            dvmGetBlockName(bb->taken, blockName2);
-            fprintf(file, "  %s:s -> %s:n [style=dotted]\n",
-                    blockName1, blockName2);
-        }
-        if (bb->fallThrough) {
-            dvmGetBlockName(bb, blockName1);
-            dvmGetBlockName(bb->fallThrough, blockName2);
-            fprintf(file, "  %s:s -> %s:n\n", blockName1, blockName2);
-        }
-
-        if (bb->successorBlockList.blockListType != kNotUsed) {
-            fprintf(file, "  succ%04x [shape=%s,label = \"{ \\\n",
-                    bb->startOffset,
-                    (bb->successorBlockList.blockListType == kCatch) ?
-                        "Mrecord" : "record");
-            GrowableListIterator iterator;
-            dvmGrowableListIteratorInit(&bb->successorBlockList.blocks,
-                                        &iterator);
-            SuccessorBlockInfo *successorBlockInfo =
-                (SuccessorBlockInfo *) dvmGrowableListIteratorNext(&iterator);
-
-            int succId = 0;
-            while (true) {
-                if (successorBlockInfo == NULL) break;
-
-                BasicBlock *destBlock = successorBlockInfo->block;
-                SuccessorBlockInfo *nextSuccessorBlockInfo =
-                  (SuccessorBlockInfo *) dvmGrowableListIteratorNext(&iterator);
-
-                fprintf(file, "    {<f%d> %04x: %04x\\l}%s\\\n",
-                        succId++,
-                        successorBlockInfo->key,
-                        destBlock->startOffset,
-                        (nextSuccessorBlockInfo != NULL) ? " | " : " ");
-
-                successorBlockInfo = nextSuccessorBlockInfo;
-            }
-            fprintf(file, "  }\"];\n\n");
-
-            dvmGetBlockName(bb, blockName1);
-            fprintf(file, "  %s:s -> succ%04x:n [style=dashed]\n",
-                    blockName1, bb->startOffset);
-
-            if (bb->successorBlockList.blockListType == kPackedSwitch ||
-                bb->successorBlockList.blockListType == kSparseSwitch) {
-
-                dvmGrowableListIteratorInit(&bb->successorBlockList.blocks,
-                                            &iterator);
-
-                succId = 0;
-                while (true) {
-                    SuccessorBlockInfo *successorBlockInfo =
-                        (SuccessorBlockInfo *)
-                            dvmGrowableListIteratorNext(&iterator);
-                    if (successorBlockInfo == NULL) break;
-
-                    BasicBlock *destBlock = successorBlockInfo->block;
-
-                    dvmGetBlockName(destBlock, blockName2);
-                    fprintf(file, "  succ%04x:f%d:e -> %s:n\n",
-                            bb->startOffset, succId++,
-                            blockName2);
-                }
-            }
-        }
-        fprintf(file, "\n");
-
-        /*
-         * If we need to debug the dominator tree, uncomment the following code
-         */
-#if 0
-        dvmGetBlockName(bb, blockName1);
-        fprintf(file, "  cfg%s [label=\"%s\", shape=none];\n",
-                blockName1, blockName1);
-        if (bb->iDom) {
-            dvmGetBlockName(bb->iDom, blockName2);
-            fprintf(file, "  cfg%s:s -> cfg%s:n\n\n",
-                    blockName2, blockName1);
-        }
-#endif
-    }
-    fprintf(file, "}\n");
-    fclose(file);
-}
-
-/* Verify if all the successor is connected with all the claimed predecessors */
-static bool verifyPredInfo(CompilationUnit *cUnit, BasicBlock *bb)
-{
-    BitVectorIterator bvIterator;
-
-    dvmBitVectorIteratorInit(bb->predecessors, &bvIterator);
-    while (true) {
-        int blockIdx = dvmBitVectorIteratorNext(&bvIterator);
-        if (blockIdx == -1) break;
-        BasicBlock *predBB = (BasicBlock *)
-            dvmGrowableListGetElement(&cUnit->blockList, blockIdx);
-        bool found = false;
-        if (predBB->taken == bb) {
-            found = true;
-        } else if (predBB->fallThrough == bb) {
-            found = true;
-        } else if (predBB->successorBlockList.blockListType != kNotUsed) {
-            GrowableListIterator iterator;
-            dvmGrowableListIteratorInit(&predBB->successorBlockList.blocks,
-                                        &iterator);
-            while (true) {
-                SuccessorBlockInfo *successorBlockInfo =
-                    (SuccessorBlockInfo *)
-                        dvmGrowableListIteratorNext(&iterator);
-                if (successorBlockInfo == NULL) break;
-                BasicBlock *succBB = successorBlockInfo->block;
-                if (succBB == bb) {
-                    found = true;
-                    break;
-                }
-            }
-        }
-        if (found == false) {
-            char blockName1[BLOCK_NAME_LEN], blockName2[BLOCK_NAME_LEN];
-            dvmGetBlockName(bb, blockName1);
-            dvmGetBlockName(predBB, blockName2);
-            dumpCFG(cUnit, "/data/tombstones/");
-            LOGE("Successor %s not found from %s",
-                 blockName1, blockName2);
-            dvmAbort();
-        }
-    }
-    return true;
-}
-
-/* Identify code range in try blocks and set up the empty catch blocks */
-static void processTryCatchBlocks(CompilationUnit *cUnit)
-{
-    const Method *meth = cUnit->method;
-    const DexCode *pCode = dvmGetMethodCode(meth);
-    int triesSize = pCode->triesSize;
-    int i;
-    int offset;
-
-    if (triesSize == 0) {
-        return;
-    }
-
-    const DexTry *pTries = dexGetTries(pCode);
-    BitVector *tryBlockAddr = cUnit->tryBlockAddr;
-
-    /* Mark all the insn offsets in Try blocks */
-    for (i = 0; i < triesSize; i++) {
-        const DexTry* pTry = &pTries[i];
-        /* all in 16-bit units */
-        int startOffset = pTry->startAddr;
-        int endOffset = startOffset + pTry->insnCount;
-
-        for (offset = startOffset; offset < endOffset; offset++) {
-            dvmCompilerSetBit(tryBlockAddr, offset);
-        }
-    }
-
-    /* Iterate over each of the handlers to enqueue the empty Catch blocks */
-    offset = dexGetFirstHandlerOffset(pCode);
-    int handlersSize = dexGetHandlersSize(pCode);
-
-    for (i = 0; i < handlersSize; i++) {
-        DexCatchIterator iterator;
-        dexCatchIteratorInit(&iterator, pCode, offset);
-
-        for (;;) {
-            DexCatchHandler* handler = dexCatchIteratorNext(&iterator);
-
-            if (handler == NULL) {
-                break;
-            }
-
-            /*
-             * Create dummy catch blocks first. Since these are created before
-             * other blocks are processed, "split" is specified as false.
-             */
-            findBlock(cUnit, handler->address,
-                      /* split */
-                      false,
-                      /* create */
-                      true);
-        }
-
-        offset = dexCatchIteratorGetEndOffset(&iterator, pCode);
-    }
-}
-
-/* Process instructions with the kInstrCanBranch flag */
-static void processCanBranch(CompilationUnit *cUnit, BasicBlock *curBlock,
-                             MIR *insn, int curOffset, int width, int flags,
-                             const u2* codePtr, const u2* codeEnd)
-{
-    int target = curOffset;
-    switch (insn->dalvikInsn.opcode) {
-        case OP_GOTO:
-        case OP_GOTO_16:
-        case OP_GOTO_32:
-            target += (int) insn->dalvikInsn.vA;
-            break;
-        case OP_IF_EQ:
-        case OP_IF_NE:
-        case OP_IF_LT:
-        case OP_IF_GE:
-        case OP_IF_GT:
-        case OP_IF_LE:
-            target += (int) insn->dalvikInsn.vC;
-            break;
-        case OP_IF_EQZ:
-        case OP_IF_NEZ:
-        case OP_IF_LTZ:
-        case OP_IF_GEZ:
-        case OP_IF_GTZ:
-        case OP_IF_LEZ:
-            target += (int) insn->dalvikInsn.vB;
-            break;
-        default:
-            LOGE("Unexpected opcode(%d) with kInstrCanBranch set",
-                 insn->dalvikInsn.opcode);
-            dvmAbort();
-    }
-    BasicBlock *takenBlock = findBlock(cUnit, target,
-                                       /* split */
-                                       true,
-                                       /* create */
-                                       true);
-    curBlock->taken = takenBlock;
-    dvmCompilerSetBit(takenBlock->predecessors, curBlock->id);
-
-    /* Always terminate the current block for conditional branches */
-    if (flags & kInstrCanContinue) {
-        BasicBlock *fallthroughBlock = findBlock(cUnit,
-                                                 curOffset +  width,
-                                                 /* split */
-                                                 false,
-                                                 /* create */
-                                                 true);
-        curBlock->fallThrough = fallthroughBlock;
-        dvmCompilerSetBit(fallthroughBlock->predecessors, curBlock->id);
-    } else if (codePtr < codeEnd) {
-        /* Create a fallthrough block for real instructions (incl. OP_NOP) */
-        if (contentIsInsn(codePtr)) {
-            findBlock(cUnit, curOffset + width,
-                      /* split */
-                      false,
-                      /* create */
-                      true);
-        }
-    }
-}
-
-/* Process instructions with the kInstrCanSwitch flag */
-static void processCanSwitch(CompilationUnit *cUnit, BasicBlock *curBlock,
-                             MIR *insn, int curOffset, int width, int flags)
-{
-    u2 *switchData= (u2 *) (cUnit->method->insns + curOffset +
-                            insn->dalvikInsn.vB);
-    int size;
-    int *keyTable;
-    int *targetTable;
-    int i;
-    int firstKey;
-
-    /*
-     * Packed switch data format:
-     *  ushort ident = 0x0100   magic value
-     *  ushort size             number of entries in the table
-     *  int first_key           first (and lowest) switch case value
-     *  int targets[size]       branch targets, relative to switch opcode
-     *
-     * Total size is (4+size*2) 16-bit code units.
-     */
-    if (insn->dalvikInsn.opcode == OP_PACKED_SWITCH) {
-        assert(switchData[0] == kPackedSwitchSignature);
-        size = switchData[1];
-        firstKey = switchData[2] | (switchData[3] << 16);
-        targetTable = (int *) &switchData[4];
-        keyTable = NULL;        // Make the compiler happy
-    /*
-     * Sparse switch data format:
-     *  ushort ident = 0x0200   magic value
-     *  ushort size             number of entries in the table; > 0
-     *  int keys[size]          keys, sorted low-to-high; 32-bit aligned
-     *  int targets[size]       branch targets, relative to switch opcode
-     *
-     * Total size is (2+size*4) 16-bit code units.
-     */
-    } else {
-        assert(switchData[0] == kSparseSwitchSignature);
-        size = switchData[1];
-        keyTable = (int *) &switchData[2];
-        targetTable = (int *) &switchData[2 + size*2];
-        firstKey = 0;   // To make the compiler happy
-    }
-
-    if (curBlock->successorBlockList.blockListType != kNotUsed) {
-        LOGE("Successor block list already in use: %d",
-             curBlock->successorBlockList.blockListType);
-        dvmAbort();
-    }
-    curBlock->successorBlockList.blockListType =
-        (insn->dalvikInsn.opcode == OP_PACKED_SWITCH) ?
-        kPackedSwitch : kSparseSwitch;
-    dvmInitGrowableList(&curBlock->successorBlockList.blocks, size);
-
-    for (i = 0; i < size; i++) {
-        BasicBlock *caseBlock = findBlock(cUnit, curOffset + targetTable[i],
-                                          /* split */
-                                          true,
-                                          /* create */
-                                          true);
-        SuccessorBlockInfo *successorBlockInfo =
-            (SuccessorBlockInfo *) dvmCompilerNew(sizeof(SuccessorBlockInfo),
-                                                  false);
-        successorBlockInfo->block = caseBlock;
-        successorBlockInfo->key = (insn->dalvikInsn.opcode == OP_PACKED_SWITCH)?
-                                  firstKey + i : keyTable[i];
-        dvmInsertGrowableList(&curBlock->successorBlockList.blocks,
-                              (intptr_t) successorBlockInfo);
-        dvmCompilerSetBit(caseBlock->predecessors, curBlock->id);
-    }
-
-    /* Fall-through case */
-    BasicBlock *fallthroughBlock = findBlock(cUnit,
-                                             curOffset +  width,
-                                             /* split */
-                                             false,
-                                             /* create */
-                                             true);
-    curBlock->fallThrough = fallthroughBlock;
-    dvmCompilerSetBit(fallthroughBlock->predecessors, curBlock->id);
-}
-
-/* Process instructions with the kInstrCanThrow flag */
-static void processCanThrow(CompilationUnit *cUnit, BasicBlock *curBlock,
-                            MIR *insn, int curOffset, int width, int flags,
-                            BitVector *tryBlockAddr, const u2 *codePtr,
-                            const u2* codeEnd)
-{
-    const Method *method = cUnit->method;
-    const DexCode *dexCode = dvmGetMethodCode(method);
-
-    /* In try block */
-    if (dvmIsBitSet(tryBlockAddr, curOffset)) {
-        DexCatchIterator iterator;
-
-        if (!dexFindCatchHandler(&iterator, dexCode, curOffset)) {
-            LOGE("Catch block not found in dexfile for insn %x in %s",
-                 curOffset, method->name);
-            dvmAbort();
-
-        }
-        if (curBlock->successorBlockList.blockListType != kNotUsed) {
-            LOGE("Successor block list already in use: %d",
-                 curBlock->successorBlockList.blockListType);
-            dvmAbort();
-        }
-        curBlock->successorBlockList.blockListType = kCatch;
-        dvmInitGrowableList(&curBlock->successorBlockList.blocks, 2);
-
-        for (;;) {
-            DexCatchHandler* handler = dexCatchIteratorNext(&iterator);
-
-            if (handler == NULL) {
-                break;
-            }
-
-            BasicBlock *catchBlock = findBlock(cUnit, handler->address,
-                                               /* split */
-                                               false,
-                                               /* create */
-                                               false);
-
-            SuccessorBlockInfo *successorBlockInfo =
-              (SuccessorBlockInfo *) dvmCompilerNew(sizeof(SuccessorBlockInfo),
-                                                    false);
-            successorBlockInfo->block = catchBlock;
-            successorBlockInfo->key = handler->typeIdx;
-            dvmInsertGrowableList(&curBlock->successorBlockList.blocks,
-                                  (intptr_t) successorBlockInfo);
-            dvmCompilerSetBit(catchBlock->predecessors, curBlock->id);
-        }
-    } else {
-        BasicBlock *ehBlock = dvmCompilerNewBB(kExceptionHandling,
-                                               cUnit->numBlocks++);
-        curBlock->taken = ehBlock;
-        dvmInsertGrowableList(&cUnit->blockList, (intptr_t) ehBlock);
-        ehBlock->startOffset = curOffset;
-        dvmCompilerSetBit(ehBlock->predecessors, curBlock->id);
-    }
-
-    /*
-     * Force the current block to terminate.
-     *
-     * Data may be present before codeEnd, so we need to parse it to know
-     * whether it is code or data.
-     */
-    if (codePtr < codeEnd) {
-        /* Create a fallthrough block for real instructions (incl. OP_NOP) */
-        if (contentIsInsn(codePtr)) {
-            BasicBlock *fallthroughBlock = findBlock(cUnit,
-                                                     curOffset + width,
-                                                     /* split */
-                                                     false,
-                                                     /* create */
-                                                     true);
-            /*
-             * OP_THROW and OP_THROW_VERIFICATION_ERROR are unconditional
-             * branches.
-             */
-            if (insn->dalvikInsn.opcode != OP_THROW_VERIFICATION_ERROR &&
-                insn->dalvikInsn.opcode != OP_THROW) {
-                curBlock->fallThrough = fallthroughBlock;
-                dvmCompilerSetBit(fallthroughBlock->predecessors, curBlock->id);
-            }
-        }
-    }
-}
-
-/*
- * Similar to dvmCompileTrace, but the entity processed here is the whole
- * method.
- *
- * TODO: implementation will be revisited when the trace builder can provide
- * whole-method traces.
- */
-bool dvmCompileMethod(const Method *method, JitTranslationInfo *info)
-{
-    CompilationUnit cUnit;
-    const DexCode *dexCode = dvmGetMethodCode(method);
-    const u2 *codePtr = dexCode->insns;
-    const u2 *codeEnd = dexCode->insns + dexCode->insnsSize;
-    int numBlocks = 0;
-    unsigned int curOffset = 0;
-
-    /* Method already compiled */
-    if (dvmJitGetMethodAddr(codePtr)) {
-        info->codeAddress = NULL;
-        return false;
-    }
-
-    memset(&cUnit, 0, sizeof(cUnit));
-    cUnit.method = method;
-
-    cUnit.methodJitMode = true;
-
-    /* Initialize the block list */
-    dvmInitGrowableList(&cUnit.blockList, 4);
-
-    /*
-     * FIXME - PC reconstruction list won't be needed after the codegen routines
-     * are enhanced to true method mode.
-     */
-    /* Initialize the PC reconstruction list */
-    dvmInitGrowableList(&cUnit.pcReconstructionList, 8);
-
-    /* Allocate the bit-vector to track the beginning of basic blocks */
-    BitVector *tryBlockAddr = dvmCompilerAllocBitVector(dexCode->insnsSize,
-                                                        true /* expandable */);
-    cUnit.tryBlockAddr = tryBlockAddr;
-
-    /* Create the default entry and exit blocks and enter them to the list */
-    BasicBlock *entryBlock = dvmCompilerNewBB(kMethodEntryBlock, numBlocks++);
-    BasicBlock *exitBlock = dvmCompilerNewBB(kMethodExitBlock, numBlocks++);
-
-    cUnit.entryBlock = entryBlock;
-    cUnit.exitBlock = exitBlock;
-
-    dvmInsertGrowableList(&cUnit.blockList, (intptr_t) entryBlock);
-    dvmInsertGrowableList(&cUnit.blockList, (intptr_t) exitBlock);
-
-    /* Current block to record parsed instructions */
-    BasicBlock *curBlock = dvmCompilerNewBB(kDalvikByteCode, numBlocks++);
-    curBlock->startOffset = 0;
-    dvmInsertGrowableList(&cUnit.blockList, (intptr_t) curBlock);
-    entryBlock->fallThrough = curBlock;
-    dvmCompilerSetBit(curBlock->predecessors, entryBlock->id);
-
-    /*
-     * Store back the number of blocks since new blocks may be created of
-     * accessing cUnit.
-     */
-    cUnit.numBlocks = numBlocks;
-
-    /* Identify code range in try blocks and set up the empty catch blocks */
-    processTryCatchBlocks(&cUnit);
-
-    /* Parse all instructions and put them into containing basic blocks */
-    while (codePtr < codeEnd) {
-        MIR *insn = (MIR *) dvmCompilerNew(sizeof(MIR), true);
-        insn->offset = curOffset;
-        int width = parseInsn(codePtr, &insn->dalvikInsn, false);
-        insn->width = width;
-
-        /* Terminate when the data section is seen */
-        if (width == 0)
-            break;
-
-        dvmCompilerAppendMIR(curBlock, insn);
-
-        codePtr += width;
-        int flags = dexGetFlagsFromOpcode(insn->dalvikInsn.opcode);
-
-        if (flags & kInstrCanBranch) {
-            processCanBranch(&cUnit, curBlock, insn, curOffset, width, flags,
-                             codePtr, codeEnd);
-        } else if (flags & kInstrCanReturn) {
-            curBlock->fallThrough = exitBlock;
-            dvmCompilerSetBit(exitBlock->predecessors, curBlock->id);
-            /*
-             * Terminate the current block if there are instructions
-             * afterwards.
-             */
-            if (codePtr < codeEnd) {
-                /*
-                 * Create a fallthrough block for real instructions
-                 * (incl. OP_NOP).
-                 */
-                if (contentIsInsn(codePtr)) {
-                    findBlock(&cUnit, curOffset + width,
-                              /* split */
-                              false,
-                              /* create */
-                              true);
-                }
-            }
-        } else if (flags & kInstrCanThrow) {
-            processCanThrow(&cUnit, curBlock, insn, curOffset, width, flags,
-                            tryBlockAddr, codePtr, codeEnd);
-        } else if (flags & kInstrCanSwitch) {
-            processCanSwitch(&cUnit, curBlock, insn, curOffset, width, flags);
-        }
-        curOffset += width;
-        BasicBlock *nextBlock = findBlock(&cUnit, curOffset,
-                                          /* split */
-                                          false,
-                                          /* create */
-                                          false);
-        if (nextBlock) {
-            /*
-             * The next instruction could be the target of a previously parsed
-             * forward branch so a block is already created. If the current
-             * instruction is not an unconditional branch, connect them through
-             * the fall-through link.
-             */
-            assert(curBlock->fallThrough == NULL ||
-                   curBlock->fallThrough == nextBlock ||
-                   curBlock->fallThrough == exitBlock);
-
-            if ((curBlock->fallThrough == NULL) &&
-                (flags & kInstrCanContinue)) {
-                curBlock->fallThrough = nextBlock;
-                dvmCompilerSetBit(nextBlock->predecessors, curBlock->id);
-            }
-            curBlock = nextBlock;
-        }
-    }
-
-    if (cUnit.printMe) {
-        dvmCompilerDumpCompilationUnit(&cUnit);
-    }
-
-    /* Adjust this value accordingly once inlining is performed */
-    cUnit.numDalvikRegisters = cUnit.method->registersSize;
-
-    /* Verify if all blocks are connected as claimed */
-    /* FIXME - to be disabled in the future */
-    dvmCompilerDataFlowAnalysisDispatcher(&cUnit, verifyPredInfo,
-                                          kAllNodes,
-                                          false /* isIterative */);
-
-
-    /* Perform SSA transformation for the whole method */
-    dvmCompilerMethodSSATransformation(&cUnit);
-
-    dvmCompilerInitializeRegAlloc(&cUnit);  // Needs to happen after SSA naming
-
-    /* Allocate Registers using simple local allocation scheme */
-    dvmCompilerLocalRegAlloc(&cUnit);
-
-    /* Convert MIR to LIR, etc. */
-    dvmCompilerMethodMIR2LIR(&cUnit);
-
-    // Debugging only
-    //dumpCFG(&cUnit, "/data/tombstones/");
-
-    /* Method is not empty */
-    if (cUnit.firstLIRInsn) {
-        /* Convert LIR into machine code. Loop for recoverable retries */
-        do {
-            dvmCompilerAssembleLIR(&cUnit, info);
-            cUnit.assemblerRetries++;
-            if (cUnit.printMe && cUnit.assemblerStatus != kSuccess)
-                LOGD("Assembler abort #%d on %d",cUnit.assemblerRetries,
-                      cUnit.assemblerStatus);
-        } while (cUnit.assemblerStatus == kRetryAll);
-
-        if (cUnit.printMe) {
-            dvmCompilerCodegenDump(&cUnit);
-        }
-
-        if (info->codeAddress) {
-            dvmJitSetCodeAddr(dexCode->insns, info->codeAddress,
-                              info->instructionSet, true, 0);
-            /*
-             * Clear the codeAddress for the enclosing trace to reuse the info
-             */
-            info->codeAddress = NULL;
-        }
-    }
-
-    return false;
 }

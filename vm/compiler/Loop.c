@@ -552,3 +552,125 @@ bool dvmCompilerLoopOpt(CompilationUnit *cUnit)
     genHoistedChecks(cUnit);
     return true;
 }
+
+void resetBlockEdges(BasicBlock *bb)
+{
+    bb->taken = NULL;
+    bb->fallThrough = NULL;
+    bb->successorBlockList.blockListType = kNotUsed;
+}
+
+static bool clearPredecessorVector(struct CompilationUnit *cUnit,
+                                   struct BasicBlock *bb)
+{
+    dvmClearAllBits(bb->predecessors);
+    return false;
+}
+
+bool dvmCompilerFilterLoopBlocks(CompilationUnit *cUnit)
+{
+    BasicBlock *firstBB = cUnit->entryBlock->fallThrough;
+
+    int numPred = dvmCountSetBits(firstBB->predecessors);
+    /*
+     * A loop body should have at least two incoming edges. Here we go with the
+     * simple case and only form loops if numPred == 2.
+     */
+    if (numPred != 2) return false;
+
+    BitVectorIterator bvIterator;
+    GrowableList *blockList = &cUnit->blockList;
+    BasicBlock *predBB = NULL;
+
+    dvmBitVectorIteratorInit(firstBB->predecessors, &bvIterator);
+    while (true) {
+        int predIdx = dvmBitVectorIteratorNext(&bvIterator);
+        if (predIdx == -1) break;
+        predBB = (BasicBlock *) dvmGrowableListGetElement(blockList, predIdx);
+        if (predBB != cUnit->entryBlock) break;
+    }
+
+    /* Used to record which block is in the loop */
+    dvmClearAllBits(cUnit->tempBlockV);
+
+    dvmCompilerSetBit(cUnit->tempBlockV, predBB->id);
+
+    /* Form a loop by only including iDom block that is also a predecessor */
+    while (predBB != firstBB) {
+        BasicBlock *iDom = predBB->iDom;
+        if (!dvmIsBitSet(predBB->predecessors, iDom->id)) {
+            return false;
+        /*
+         * And don't form nested loops (ie by detecting if the branch target
+         * of iDom dominates iDom).
+         */
+        } else if (iDom->taken &&
+                   dvmIsBitSet(iDom->dominators, iDom->taken->id) &&
+                   iDom != firstBB) {
+            return false;
+        }
+        dvmCompilerSetBit(cUnit->tempBlockV, iDom->id);
+        predBB = iDom;
+    }
+
+    /* Add the entry block and first block */
+    dvmCompilerSetBit(cUnit->tempBlockV, firstBB->id);
+    dvmCompilerSetBit(cUnit->tempBlockV, cUnit->entryBlock->id);
+
+    /* Now mark blocks not included in the loop as hidden */
+    GrowableListIterator iterator;
+    dvmGrowableListIteratorInit(&cUnit->blockList, &iterator);
+    while (true) {
+        BasicBlock *bb = (BasicBlock *) dvmGrowableListIteratorNext(&iterator);
+        if (bb == NULL) break;
+        if (!dvmIsBitSet(cUnit->tempBlockV, bb->id)) {
+            bb->hidden = true;
+            /* Clear the insn list */
+            bb->firstMIRInsn = bb->lastMIRInsn = NULL;
+            resetBlockEdges(bb);
+        }
+    }
+
+    dvmCompilerDataFlowAnalysisDispatcher(cUnit, clearPredecessorVector,
+                                          kAllNodes, false /* isIterative */);
+
+    dvmGrowableListIteratorInit(&cUnit->blockList, &iterator);
+    while (true) {
+        BasicBlock *bb = (BasicBlock *) dvmGrowableListIteratorNext(&iterator);
+        if (bb == NULL) break;
+        if (dvmIsBitSet(cUnit->tempBlockV, bb->id)) {
+            if (bb->taken) {
+                /*
+                 * exit block means we run into control-flow that we don't want
+                 * to handle.
+                 */
+                if (bb->taken == cUnit->exitBlock) {
+                    return false;
+                }
+                if (bb->taken->hidden) {
+                    bb->taken->blockType = kChainingCellNormal;
+                    bb->taken->hidden = false;
+                }
+                dvmCompilerSetBit(bb->taken->predecessors, bb->id);
+            }
+            if (bb->fallThrough) {
+                /*
+                 * exit block means we run into control-flow that we don't want
+                 * to handle.
+                 */
+                if (bb->fallThrough == cUnit->exitBlock) {
+                    return false;
+                }
+                if (bb->fallThrough->hidden) {
+                    bb->fallThrough->blockType = kChainingCellNormal;
+                    bb->fallThrough->hidden = false;
+                }
+                dvmCompilerSetBit(bb->fallThrough->predecessors, bb->id);
+            }
+            /* Loop blocks shouldn't contain any successor blocks (yet) */
+            assert(bb->successorBlockList.blockListType == kNotUsed);
+        }
+    }
+
+    return true;
+}

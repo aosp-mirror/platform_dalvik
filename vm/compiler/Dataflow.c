@@ -1694,7 +1694,6 @@ char *dvmCompilerFullDisassembler(const CompilationUnit *cUnit,
     const DecodedInstruction *insn = &mir->dalvikInsn;
     int opcode = insn->opcode;
     int dfAttributes = dvmCompilerDataFlowAttributes[opcode];
-    int flags = dexGetFlagsFromOpcode(insn->opcode);
     char *ret;
     int length;
 
@@ -1719,6 +1718,7 @@ char *dvmCompilerFullDisassembler(const CompilationUnit *cUnit,
         strcpy(buffer, dexGetOpcodeName(opcode));
     }
 
+    int flags = dexGetFlagsFromOpcode(opcode);
     /* For branches, decode the instructions to print out the branch targets */
     if (flags & kInstrCanBranch) {
         InstructionFormat dalvikFormat = dexGetFormatFromOpcode(insn->opcode);
@@ -2393,6 +2393,7 @@ void dvmInitializeSSAConversion(CompilationUnit *cUnit)
     while (true) {
         BasicBlock *bb = (BasicBlock *) dvmGrowableListIteratorNext(&iterator);
         if (bb == NULL) break;
+        if (bb->hidden == true) continue;
         if (bb->blockType == kDalvikByteCode ||
             bb->blockType == kTraceEntryBlock ||
             bb->blockType == kMethodEntryBlock ||
@@ -2430,6 +2431,7 @@ void dvmCompilerDataFlowAnalysisDispatcher(CompilationUnit *cUnit,
                 BasicBlock *bb =
                     (BasicBlock *) dvmGrowableListIteratorNext(&iterator);
                 if (bb == NULL) break;
+                if (bb->hidden == true) continue;
                 change |= (*func)(cUnit, bb);
             }
         }

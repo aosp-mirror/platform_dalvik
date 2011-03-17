@@ -352,7 +352,7 @@ void dvmDebugBitVector(char *msg, const BitVector *bv, int length)
     LOGE("%s", msg);
     for (i = 0; i < length; i++) {
         if (dvmIsBitSet(bv, i)) {
-            LOGE("Bit %d is set", i);
+            LOGE("    Bit %d is set", i);
         }
     }
 }
@@ -397,6 +397,9 @@ void dvmGetBlockName(BasicBlock *bb, char *name)
             break;
         case kDalvikByteCode:
             snprintf(name, BLOCK_NAME_LEN, "block%04x", bb->startOffset);
+            break;
+        case kChainingCellNormal:
+            snprintf(name, BLOCK_NAME_LEN, "chain%04x", bb->startOffset);
             break;
         case kExceptionHandling:
             snprintf(name, BLOCK_NAME_LEN, "exception%04x", bb->startOffset);
