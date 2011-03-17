@@ -1404,13 +1404,27 @@ public final class Dops {
      * the last in its chain
      */
     public static Dop getNextOrNull(Dop opcode, DexOptions options) {
-        int nextOpcode = opcode.getNextOpcode();
+        for (;;) {
+            int nextOpcode = opcode.getNextOpcode();
 
-        if (nextOpcode == Opcodes.NO_NEXT) {
-            return null;
+            if (nextOpcode == Opcodes.NO_NEXT) {
+                return null;
+            }
+
+            opcode = get(nextOpcode);
+
+            if (!options.enableExtendedOpcodes && Opcodes.isExtended(nextOpcode)) {
+                /*
+                 * Continuing rather than just returning null here
+                 * protects against the possibility that an
+                 * instruction fitting chain might list non-extended
+                 * opcodes after extended ones.
+                 */
+                continue;
+            }
+
+            return opcode;
         }
-
-        return get(nextOpcode);
     }
 
     /**
