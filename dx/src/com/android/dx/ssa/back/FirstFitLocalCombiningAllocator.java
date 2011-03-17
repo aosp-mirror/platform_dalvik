@@ -239,9 +239,9 @@ public class FirstFitLocalCombiningAllocator extends RegisterAllocator {
      */
     private void handleLocalAssociatedOther() {
         for (ArrayList<RegisterSpec> specs : localVariables.values()) {
-            int ropReg = 0;
+            int ropReg = paramRangeEnd;
 
-            boolean done;
+            boolean done = false;
             do {
                 int maxCategory = 1;
 
@@ -257,10 +257,11 @@ public class FirstFitLocalCombiningAllocator extends RegisterAllocator {
                 }
 
                 ropReg = findRopRegForLocal(ropReg, maxCategory);
+                if (canMapRegs(specs, ropReg)) {
+                    done = tryMapRegs(specs, ropReg, maxCategory, true);
+                }
 
-                done = tryMapRegs(specs, ropReg, maxCategory, true);
-
-                // Increment for next call to findNext.
+                // Increment for next call to findRopRegForLocal.
                 ropReg++;
             } while (!done);
         }
@@ -568,6 +569,24 @@ public class FirstFitLocalCombiningAllocator extends RegisterAllocator {
 
             addMapping(ssaSpec, ropReg);
         }
+    }
+
+    /**
+     * Checks to see if a list of SSA registers can all be mapped into
+     * the same rop reg. Ignores registers that have already been mapped,
+     * and checks the interference graph and ensures the range does not
+     * cross the parameter range.
+     *
+     * @param specs {@code non-null;} SSA registers to check
+     * @param ropReg {@code >=0;} rop register to check mapping to
+     * @return {@code true} if all unmapped registers can be mapped
+     */
+    private boolean canMapRegs(ArrayList<RegisterSpec> specs, int ropReg) {
+        for (RegisterSpec spec : specs) {
+            if (ssaRegsMapped.get(spec.getReg())) continue;
+            if (!canMapReg(spec, ropReg)) return false;
+        }
+        return true;
     }
 
     /**
