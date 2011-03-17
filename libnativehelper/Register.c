@@ -28,6 +28,6 @@ extern int registerJniHelp(JNIEnv* env);
  */
 int jniRegisterSystemMethods(JNIEnv* env)
 {
-    // We initialize JNIHelp.c first so that the core libraries can safely rely on it.
-    return registerJniHelp(env) != -1 && registerCoreLibrariesJni(env) != -1;
+    // JniHelp depends on core library classes such as java.io.FileDescriptor.
+    return registerCoreLibrariesJni(env) != -1 && registerJniHelp(env) != -1;
 }
