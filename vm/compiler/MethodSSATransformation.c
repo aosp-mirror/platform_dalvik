@@ -143,11 +143,10 @@ static bool computeDominanceFrontier(CompilationUnit *cUnit, BasicBlock *bb)
     GrowableList *blockList = &cUnit->blockList;
 
     /* Calculate DF_local */
-    if (bb->taken && !dvmIsBitSet(bb->taken->dominators, bb->id)) {
+    if (bb->taken && (bb->taken->iDom != bb)) {
         dvmSetBit(bb->domFrontier, bb->taken->id);
     }
-    if (bb->fallThrough &&
-        !dvmIsBitSet(bb->fallThrough->dominators, bb->id)) {
+    if (bb->fallThrough && (bb->fallThrough->iDom != bb)) {
         dvmSetBit(bb->domFrontier, bb->fallThrough->id);
     }
     if (bb->successorBlockList.blockListType != kNotUsed) {
@@ -159,7 +158,7 @@ static bool computeDominanceFrontier(CompilationUnit *cUnit, BasicBlock *bb)
                 (SuccessorBlockInfo *) dvmGrowableListIteratorNext(&iterator);
             if (successorBlockInfo == NULL) break;
             BasicBlock *succBB = successorBlockInfo->block;
-            if (!dvmIsBitSet(succBB->dominators, bb->id)) {
+            if (succBB->iDom != bb) {
                 dvmSetBit(bb->domFrontier, succBB->id);
             }
         }
@@ -180,7 +179,7 @@ static bool computeDominanceFrontier(CompilationUnit *cUnit, BasicBlock *bb)
             if (dfUpIdx == -1) break;
             BasicBlock *dfUpBlock = (BasicBlock *)
                 dvmGrowableListGetElement(blockList, dfUpIdx);
-            if (!dvmIsBitSet(dfUpBlock->dominators, bb->id)) {
+            if (dfUpBlock->iDom != bb) {
                 dvmSetBit(bb->domFrontier, dfUpBlock->id);
             }
         }
