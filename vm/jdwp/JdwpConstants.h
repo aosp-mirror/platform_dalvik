@@ -137,6 +137,7 @@ enum JdwpModKind {
     MK_STEP                 = 10,
     MK_INSTANCE_ONLY        = 11,
 };
+const char* dvmJdwpModKindStr(enum JdwpModKind kind);
 
 /*
  * InvokeOptions constants (bit flags).

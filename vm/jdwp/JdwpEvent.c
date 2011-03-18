@@ -161,6 +161,26 @@ static void unlockEventMutex(JdwpState* state)
 }
 
 /*
+ * Dump an event to the log file.
+ */
+static void dumpEvent(const JdwpEvent* pEvent)
+{
+    LOGI("Event id=0x%4x %p (prev=%p next=%p):\n",
+        pEvent->requestId, pEvent, pEvent->prev, pEvent->next);
+    LOGI("  kind=%s susp=%s modCount=%d\n",
+        dvmJdwpEventKindStr(pEvent->eventKind),
+        dvmJdwpSuspendPolicyStr(pEvent->suspendPolicy),
+        pEvent->modCount);
+
+    int i;
+    for (i = 0; i < pEvent->modCount; i++) {
+        const JdwpEventMod* pMod = &pEvent->mods[i];
+        LOGI("  %s\n", dvmJdwpModKindStr(pMod->modKind));
+        /* TODO - show details */
+    }
+}
+
+/*
  * Add an event to the list.  Ordering is not important.
  *
  * If something prevents the event from being registered, e.g. it's a
@@ -180,19 +200,21 @@ JdwpError dvmJdwpRegisterEvent(JdwpState* state, JdwpEvent* pEvent)
     assert(pEvent->next == NULL);
 
     /*
-     * If one or more LocationOnly mods are used, register them with
+     * If one or more "break"-type mods are used, register them with
      * the interpreter.
      */
     for (i = 0; i < pEvent->modCount; i++) {
-        JdwpEventMod* pMod = &pEvent->mods[i];
+        const JdwpEventMod* pMod = &pEvent->mods[i];
         if (pMod->modKind == MK_LOCATION_ONLY) {
             /* should only be for Breakpoint, Step, and Exception */
             dvmDbgWatchLocation(&pMod->locationOnly.loc);
-        }
-        if (pMod->modKind == MK_STEP) {
+        } else if (pMod->modKind == MK_STEP) {
             /* should only be for EK_SINGLE_STEP; should only be one */
             dvmDbgConfigureStep(pMod->step.threadId, pMod->step.size,
                 pMod->step.depth);
+        } else if (pMod->modKind == MK_FIELD_ONLY) {
+            /* should be for EK_FIELD_ACCESS or EK_FIELD_MODIFICATION */
+            dumpEvent(pEvent);  /* TODO - need for field watches */
         }
     }
 
@@ -472,8 +494,7 @@ static bool modsMatch(JdwpState* state, JdwpEvent* pEvent, ModBasket* basket)
                 return false;
             break;
         case MK_CLASS_ONLY:
-            if (!dvmDbgMatchType(basket->classId,
-                    pMod->classOnly.referenceTypeId))
+            if (!dvmDbgMatchType(basket->classId, pMod->classOnly.refTypeId))
                 return false;
             break;
         case MK_CLASS_MATCH:
@@ -500,7 +521,9 @@ static bool modsMatch(JdwpState* state, JdwpEvent* pEvent, ModBasket* basket)
                 return false;
             break;
         case MK_FIELD_ONLY:
-            // TODO
+            if (!dvmDbgMatchType(basket->classId, pMod->fieldOnly.refTypeId) ||
+                    pMod->fieldOnly.fieldId != basket->field)
+                return false;
             break;
         case MK_STEP:
             if (pMod->step.threadId != basket->threadId)
@@ -1242,7 +1265,7 @@ bool dvmJdwpPostClassUnload(JdwpState* state, RefTypeId refTypeId)
  *    InstanceOnly
  */
 bool dvmJdwpPostFieldAccess(JdwpState* state, int STUFF, ObjectId thisPtr,
-    bool modified)
+    bool modified, JValue newValue)
 {
     assert(false);      // TODO
     return false;

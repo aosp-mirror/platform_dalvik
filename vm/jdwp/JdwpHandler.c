@@ -432,7 +432,7 @@ static JdwpError handleVM_Capabilities(JdwpState* state,
     expandBufAdd1(pReply, false);   /* canWatchFieldModification */
     expandBufAdd1(pReply, false);   /* canWatchFieldAccess */
     expandBufAdd1(pReply, false);   /* canGetBytecodes */
-    expandBufAdd1(pReply, false);   /* canGetSyntheticAttribute */
+    expandBufAdd1(pReply, true);    /* canGetSyntheticAttribute */
     expandBufAdd1(pReply, false);   /* canGetOwnedMonitorInfo */
     expandBufAdd1(pReply, false);   /* canGetCurrentContendedMonitor */
     expandBufAdd1(pReply, false);   /* canGetMonitorInfo */
@@ -493,7 +493,7 @@ static JdwpError handleVM_CapabilitiesNew(JdwpState* state,
     expandBufAdd1(pReply, false);   /* canWatchFieldModification */
     expandBufAdd1(pReply, false);   /* canWatchFieldAccess */
     expandBufAdd1(pReply, false);   /* canGetBytecodes */
-    expandBufAdd1(pReply, false);   /* canGetSyntheticAttribute */
+    expandBufAdd1(pReply, true);    /* canGetSyntheticAttribute */
     expandBufAdd1(pReply, false);   /* canGetOwnedMonitorInfo */
     expandBufAdd1(pReply, false);   /* canGetCurrentContendedMonitor */
     expandBufAdd1(pReply, false);   /* canGetMonitorInfo */
@@ -535,7 +535,7 @@ static JdwpError handleVM_AllClassesWithGeneric(JdwpState* state,
     for (i = 0; i < (int) numClasses; i++) {
         static const u1 genericSignature[1] = "";
         u1 refTypeTag;
-        char* signature;
+        const char* signature;
         u4 status;
 
         dvmDbgGetClassInfo(classRefBuf[i], &refTypeTag, &status, &signature);
@@ -545,8 +545,6 @@ static JdwpError handleVM_AllClassesWithGeneric(JdwpState* state,
         expandBufAddUtf8String(pReply, (const u1*) signature);
         expandBufAddUtf8String(pReply, genericSignature);
         expandBufAdd4BE(pReply, status);
-
-        free(signature);
     }
 
     free(classRefBuf);
@@ -561,7 +559,7 @@ static JdwpError handleVM_AllClassesWithGeneric(JdwpState* state,
 static JdwpError handleRT_Signature(JdwpState* state,
     const u1* buf, int dataLen, ExpandBuf* pReply)
 {
-    char* signature;
+    const char* signature;
     RefTypeId refTypeId;
 
     refTypeId = dvmReadRefTypeId(&buf);
@@ -569,7 +567,6 @@ static JdwpError handleRT_Signature(JdwpState* state,
     LOGV("  Req for signature of refTypeId=0x%llx\n", refTypeId);
     signature = dvmDbgGetSignature(refTypeId);
     expandBufAddUtf8String(pReply, (const u1*) signature);
-    free(signature);
 
     return ERR_NONE;
 }
@@ -604,20 +601,12 @@ static JdwpError handleRT_GetValues(JdwpState* state,
     refTypeId = dvmReadRefTypeId(&buf);
     numFields = read4BE(&buf);
 
+    LOGV("  RT_GetValues %u:\n", numFields);
+
     expandBufAdd4BE(pReply, numFields);
     for (i = 0; i < (int) numFields; i++) {
-        FieldId fieldId;
-        u1 fieldTag;
-        int width;
-        u1* ptr;
-
-        fieldId = dvmReadFieldId(&buf);
-        fieldTag = dvmDbgGetFieldTag(refTypeId, fieldId);
-        width = dvmDbgGetTagWidth(fieldTag);
-
-        expandBufAdd1(pReply, fieldTag);
-        ptr = expandBufAddSpace(pReply, width);
-        dvmDbgGetStaticFieldValue(refTypeId, fieldId, ptr, width);
+        FieldId fieldId = dvmReadFieldId(&buf);
+        dvmDbgGetStaticFieldValue(refTypeId, fieldId, pReply);
     }
 
     return ERR_NONE;
@@ -717,19 +706,20 @@ static JdwpError handleRT_SignatureWithGeneric(JdwpState* state,
     const u1* buf, int dataLen, ExpandBuf* pReply)
 {
     static const u1 genericSignature[1] = "";
-    char* signature;
+    const char* signature;
     RefTypeId refTypeId;
 
     refTypeId = dvmReadRefTypeId(&buf);
 
     LOGV("  Req for signature of refTypeId=0x%llx\n", refTypeId);
     signature = dvmDbgGetSignature(refTypeId);
-    if (signature != NULL)
+    if (signature != NULL) {
         expandBufAddUtf8String(pReply, (const u1*) signature);
-    else
-        expandBufAddUtf8String(pReply, (const u1*) "Lunknown;");  /* native? */
+    } else {
+        LOGW("No signature for refTypeId=0x%llx\n", refTypeId);
+        expandBufAddUtf8String(pReply, (const u1*) "Lunknown;");
+    }
     expandBufAddUtf8String(pReply, genericSignature);
-    free(signature);
 
     return ERR_NONE;
 }
@@ -761,11 +751,7 @@ static JdwpError handleRT_FieldsWithGeneric(JdwpState* state,
 
     refTypeId = dvmReadRefTypeId(&buf);
     LOGV("  Req for fields in refTypeId=0x%llx\n", refTypeId);
-    {
-        char* tmp = dvmDbgGetSignature(refTypeId);
-        LOGV("  --> '%s'\n", tmp);
-        free(tmp);
-    }
+    LOGV("  --> '%s'\n", dvmDbgGetSignature(refTypeId));
 
     dvmDbgOutputAllFields(refTypeId, true, pReply);
 
@@ -784,11 +770,7 @@ static JdwpError handleRT_MethodsWithGeneric(JdwpState* state,
     refTypeId = dvmReadRefTypeId(&buf);
 
     LOGV("  Req for methods in refTypeId=0x%llx\n", refTypeId);
-    {
-        char* tmp = dvmDbgGetSignature(refTypeId);
-        LOGV("  --> '%s'\n", tmp);
-        free(tmp);
-    }
+    LOGV("  --> '%s'\n", dvmDbgGetSignature(refTypeId));
 
     dvmDbgOutputAllMethods(refTypeId, true, pReply);
 
@@ -835,7 +817,7 @@ static JdwpError handleCT_SetValues(JdwpState* state,
         int width;
 
         fieldId = dvmReadFieldId(&buf);
-        fieldTag = dvmDbgGetStaticFieldTag(classId, fieldId);
+        fieldTag = dvmDbgGetStaticFieldBasicTag(classId, fieldId);
         width = dvmDbgGetTagWidth(fieldTag);
         value = jdwpReadValue(&buf, width);
 
@@ -1010,22 +992,8 @@ static JdwpError handleOR_GetValues(JdwpState* state,
     expandBufAdd4BE(pReply, numFields);
 
     for (i = 0; i < (int) numFields; i++) {
-        FieldId fieldId;
-        u1 fieldTag;
-        int width;
-        u1* ptr;
-
-        fieldId = dvmReadFieldId(&buf);
-
-        fieldTag = dvmDbgGetFieldTag(objectId, fieldId);
-        width = dvmDbgGetTagWidth(fieldTag);
-
-        LOGV("    --> fieldId %x --> tag '%c'(%d)\n",
-            fieldId, fieldTag, width);
-
-        expandBufAdd1(pReply, fieldTag);
-        ptr = expandBufAddSpace(pReply, width);
-        dvmDbgGetFieldValue(objectId, fieldId, ptr, width);
+        FieldId fieldId = dvmReadFieldId(&buf);
+        dvmDbgGetFieldValue(objectId, fieldId, pReply);
     }
 
     return ERR_NONE;
@@ -1054,7 +1022,7 @@ static JdwpError handleOR_SetValues(JdwpState* state,
 
         fieldId = dvmReadFieldId(&buf);
 
-        fieldTag = dvmDbgGetFieldTag(objectId, fieldId);
+        fieldTag = dvmDbgGetFieldBasicTag(objectId, fieldId);
         width = dvmDbgGetTagWidth(fieldTag);
         value = jdwpReadValue(&buf, width);
 
@@ -1642,7 +1610,7 @@ static JdwpError handleER_Set(JdwpState* state,
                 RefTypeId clazzId = dvmReadRefTypeId(&buf);
                 LOGVV("    ClassOnly: %llx (%s)\n",
                     clazzId, dvmDbgGetClassDescriptor(clazzId));
-                pEvent->mods[idx].classOnly.referenceTypeId = clazzId;
+                pEvent->mods[idx].classOnly.refTypeId = clazzId;
             }
             break;
         case MK_CLASS_MATCH:    /* restrict events to matching classes */
@@ -1704,7 +1672,7 @@ static JdwpError handleER_Set(JdwpState* state,
                 FieldId fieldId = dvmReadFieldId(&buf);
                 LOGVV("    FieldOnly: %llx %x\n", declaring, fieldId);
                 pEvent->mods[idx].fieldOnly.refTypeId = declaring;
-                pEvent->mods[idx].fieldOnly.fieldId = fieldId;;
+                pEvent->mods[idx].fieldOnly.fieldId = fieldId;
             }
             break;
         case MK_STEP:           /* for use with EK_SINGLE_STEP */
@@ -1870,7 +1838,6 @@ static JdwpError handleSF_ThisObject(JdwpState* state,
     FrameId frameId;
     u1 objectTag;
     ObjectId objectId;
-    char* typeName;
 
     threadId = dvmReadObjectId(&buf);
     frameId = dvmReadFrameId(&buf);
@@ -1878,16 +1845,10 @@ static JdwpError handleSF_ThisObject(JdwpState* state,
     if (!dvmDbgGetThisObject(threadId, frameId, &objectId))
         return ERR_INVALID_FRAMEID;
 
-    if (objectId == 0) {
-        typeName = strdup("null");
-        objectTag = 0;
-    } else {
-        typeName = dvmDbgGetObjectTypeName(objectId);
-        objectTag = dvmDbgGetObjectTag(objectId, typeName);
-    }
+    objectTag = dvmDbgGetObjectTag(objectId);
     LOGV("  Req for 'this' in thread=%llx frame=%llx --> %llx %s '%c'\n",
-        threadId, frameId, objectId, typeName, (char)objectTag);
-    free(typeName);
+        threadId, frameId, objectId, dvmDbgGetObjectTypeName(objectId),
+        (char)objectTag);
 
     expandBufAdd1(pReply, objectTag);
     expandBufAddObjectId(pReply, objectId);

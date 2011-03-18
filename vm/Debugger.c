@@ -634,17 +634,13 @@ void dvmDbgGetVisibleClassList(ObjectId classLoaderId, u4* pNumClasses,
 }
 
 /*
- * Generate the "JNI signature" for a class, e.g. "Ljava/lang/String;".
+ * Get the "JNI signature" for a class, e.g. "Ljava/lang/String;".
  *
- * Our class descriptors are in the correct format, so we just copy that.
- * TODO: figure out if we can avoid the copy now that we're using
- * descriptors instead of unadorned class names.
- *
- * Returns a newly-allocated string.
+ * Our class descriptors are in the correct format, so we just return that.
  */
-static char* generateJNISignature(ClassObject* clazz)
+static const char* jniSignature(ClassObject* clazz)
 {
-    return strdup(clazz->descriptor);
+    return clazz->descriptor;
 }
 
 /*
@@ -654,7 +650,7 @@ static char* generateJNISignature(ClassObject* clazz)
  * the class.
  */
 void dvmDbgGetClassInfo(RefTypeId classId, u1* pTypeTag, u4* pStatus,
-    char** pSignature)
+    const char** pSignature)
 {
     ClassObject* clazz = refTypeIdToClassObject(classId);
 
@@ -673,7 +669,7 @@ void dvmDbgGetClassInfo(RefTypeId classId, u1* pTypeTag, u4* pStatus,
             *pTypeTag = TT_CLASS;
     }
     if (pSignature != NULL)
-        *pSignature = generateJNISignature(clazz);
+        *pSignature = jniSignature(clazz);
 }
 
 /*
@@ -727,17 +723,15 @@ u1 dvmDbgGetClassObjectType(RefTypeId refTypeId)
 
 /*
  * Get a class' signature.
- *
- * Returns a newly-allocated string.
  */
-char* dvmDbgGetSignature(RefTypeId refTypeId)
+const char* dvmDbgGetSignature(RefTypeId refTypeId)
 {
     ClassObject* clazz;
 
     clazz = refTypeIdToClassObject(refTypeId);
     assert(clazz != NULL);
 
-    return generateJNISignature(clazz);
+    return jniSignature(clazz);
 }
 
 /*
@@ -756,111 +750,106 @@ const char* dvmDbgGetSourceFile(RefTypeId refTypeId)
 }
 
 /*
- * Get an object's type name.  Converted to a "JNI signature".
- *
- * Returns a newly-allocated string.
+ * Get an object's type name.  (For log message display only.)
  */
-char* dvmDbgGetObjectTypeName(ObjectId objectId)
+const char* dvmDbgGetObjectTypeName(ObjectId objectId)
 {
+    if (objectId == 0)
+        return "(null)";
+
     Object* obj = objectIdToObject(objectId);
-
-    assert(obj != NULL);
-
-    return generateJNISignature(obj->clazz);
+    return jniSignature(obj->clazz);
 }
 
 /*
- * Given a type signature (e.g. "Ljava/lang/String;"), return the JDWP
- * "type tag".
- *
- * In many cases this is necessary but not sufficient.  For example, if
- * we have a NULL String object, we want to return JT_STRING.  If we have
- * a java/lang/Object that holds a String reference, we also want to
- * return JT_STRING.  See dvmDbgGetObjectTag().
+ * Determine whether or not a tag represents a primitive type.
  */
-int dvmDbgGetSignatureTag(const char* type)
+static bool isTagPrimitive(u1 tag)
 {
-    /*
-     * We're not checking the class loader here (to guarantee that JT_STRING
-     * is truly the one and only String), but it probably doesn't matter
-     * for our purposes.
-     */
-    if (strcmp(type, "Ljava/lang/String;") == 0)
-        return JT_STRING;
-    else if (strcmp(type, "Ljava/lang/Class;") == 0)
-        return JT_CLASS_OBJECT;
-    else if (strcmp(type, "Ljava/lang/Thread;") == 0)
-        return JT_THREAD;
-    else if (strcmp(type, "Ljava/lang/ThreadGroup;") == 0)
-        return JT_THREAD_GROUP;
-    else if (strcmp(type, "Ljava/lang/ClassLoader;") == 0)
-        return JT_CLASS_LOADER;
-
-    switch (type[0]) {
-    case '[':       return JT_ARRAY;
-    case 'B':       return JT_BYTE;
-    case 'C':       return JT_CHAR;
-    case 'L':       return JT_OBJECT;
-    case 'F':       return JT_FLOAT;
-    case 'D':       return JT_DOUBLE;
-    case 'I':       return JT_INT;
-    case 'J':       return JT_LONG;
-    case 'S':       return JT_SHORT;
-    case 'V':       return JT_VOID;
-    case 'Z':       return JT_BOOLEAN;
+    switch (tag) {
+    case JT_BYTE:
+    case JT_CHAR:
+    case JT_FLOAT:
+    case JT_DOUBLE:
+    case JT_INT:
+    case JT_LONG:
+    case JT_SHORT:
+    case JT_VOID:
+    case JT_BOOLEAN:
+        return true;
+    case JT_ARRAY:
+    case JT_OBJECT:
+    case JT_STRING:
+    case JT_CLASS_OBJECT:
+    case JT_THREAD:
+    case JT_THREAD_GROUP:
+    case JT_CLASS_LOADER:
+        return false;
     default:
-        LOGE("ERROR: unhandled type '%s'\n", type);
+        LOGE("ERROR: unhandled tag '%c'\n", tag);
         assert(false);
-        return -1;
+        return false;
     }
 }
 
 /*
- * Methods declared to return Object might actually be returning one
- * of the "refined types".  We need to check the object explicitly.
+ * Determine the best tag type given an object's class.
  */
-static u1 resultTagFromObject(Object* obj)
+static u1 tagFromClass(ClassObject* clazz)
 {
-    ClassObject* clazz;
-
-    if (obj == NULL)
-        return JT_OBJECT;
-
-    clazz = obj->clazz;
-
-    /*
-     * Comparing against the known classes is faster than string
-     * comparisons.  It ensures that we only find the classes in the
-     * bootstrap class loader, which may or may not be what we want.
-     */
-    if (clazz == gDvm.classJavaLangString)
-        return JT_STRING;
-    else if (clazz == gDvm.classJavaLangClass)
-        return JT_CLASS_OBJECT;
-    else if (clazz == gDvm.classJavaLangThread)
-        return JT_THREAD;
-    else if (clazz == gDvm.classJavaLangThreadGroup)
-        return JT_THREAD_GROUP;
-    else if (strcmp(clazz->descriptor, "Ljava/lang/ClassLoader;") == 0)
-        return JT_CLASS_LOADER;
-    else if (clazz->descriptor[0] == '[')
+    if (dvmIsArrayClass(clazz))
         return JT_ARRAY;
-    else
+
+    if (clazz == gDvm.classJavaLangString) {
+        return JT_STRING;
+    } else if (clazz == gDvm.classJavaLangClass) {
+        return JT_CLASS_OBJECT;
+    } else if (dvmInstanceof(clazz, gDvm.classJavaLangThread)) {
+        return JT_THREAD;
+    } else if (dvmInstanceof(clazz, gDvm.classJavaLangThreadGroup)) {
+        return JT_THREAD_GROUP;
+    } else if (dvmInstanceof(clazz, gDvm.classJavaLangClassLoader)) {
+        return JT_CLASS_LOADER;
+    } else {
         return JT_OBJECT;
+    }
 }
 
 /*
- * Determine the tag for an object with a known type.
+ * Return a basic tag value based solely on a type descriptor.
+ *
+ * The ASCII value maps directly to the JDWP tag constants, so we don't
+ * need to do much here.  This does not return the fancier tags like
+ * JT_THREAD.
  */
-int dvmDbgGetObjectTag(ObjectId objectId, const char* type)
+static u1 basicTagFromDescriptor(const char* descriptor)
 {
-    u1 tag;
+    return descriptor[0];
+}
 
-    tag = dvmDbgGetSignatureTag(type);
-    if (tag == JT_OBJECT && objectId != 0)
-        tag = resultTagFromObject(objectIdToObject(objectId));
+/*
+ * Objects declared to hold Object might actually hold a more specific
+ * type.  The debugger may take a special interest in these (e.g. it
+ * wants to display the contents of Strings), so we want to return an
+ * appropriate tag.
+ *
+ * Null objects are tagged JT_OBJECT.
+ */
+static u1 tagFromObject(const Object* obj)
+{
+    if (obj == NULL)
+        return JT_OBJECT;
+    return tagFromClass(obj->clazz);
+}
 
-    return tag;
+/*
+ * Determine the tag for an object.
+ *
+ * "objectId" may be 0 (i.e. NULL reference).
+ */
+u1 dvmDbgGetObjectTag(ObjectId objectId)
+{
+    return tagFromObject(objectIdToObject(objectId));
 }
 
 /*
@@ -898,37 +887,6 @@ int dvmDbgGetTagWidth(int tag)
     }
 }
 
-/*
- * Determine whether or not a tag represents a primitive type.
- */
-static bool isTagPrimitive(u1 tag)
-{
-    switch (tag) {
-    case JT_BYTE:
-    case JT_CHAR:
-    case JT_FLOAT:
-    case JT_DOUBLE:
-    case JT_INT:
-    case JT_LONG:
-    case JT_SHORT:
-    case JT_VOID:
-    case JT_BOOLEAN:
-        return true;
-    case JT_ARRAY:
-    case JT_OBJECT:
-    case JT_STRING:
-    case JT_CLASS_OBJECT:
-    case JT_THREAD:
-    case JT_THREAD_GROUP:
-    case JT_CLASS_LOADER:
-        return false;
-    default:
-        LOGE("ERROR: unhandled tag '%c'\n", tag);
-        assert(false);
-        return false;
-    }
-}
-
 
 /*
  * Return the length of the specified array.
@@ -943,13 +901,18 @@ int dvmDbgGetArrayLength(ObjectId arrayId)
 /*
  * Return a tag indicating the general type of elements in the array.
  */
-int dvmDbgGetArrayElementTag(ObjectId arrayId)
+u1 dvmDbgGetArrayElementTag(ObjectId arrayId)
 {
     ArrayObject* arrayObj = (ArrayObject*) objectIdToObject(arrayId);
 
-    assert(dvmIsArray(arrayObj));
+    ClassObject* arrayClass = arrayObj->obj.clazz;
+    u1 tag = basicTagFromDescriptor(arrayClass->descriptor + 1);
+    if (!isTagPrimitive(tag)) {
+        /* try to refine it */
+        tag = tagFromClass(arrayClass->elementClass);
+    }
 
-    return dvmDbgGetSignatureTag(arrayObj->obj.clazz->descriptor + 1);
+    return tag;
 }
 
 /*
@@ -982,7 +945,7 @@ static void copyValuesToBE(u1* out, const u1* in, int count, int width)
 }
 
 /*
- * Copy a series of values with the specified with, changing the
+ * Copy a series of values with the specified width, changing the
  * byte order from big-endian.
  */
 static void copyValuesFromBE(u1* out, const u1* in, int count, int width)
@@ -1030,7 +993,7 @@ bool dvmDbgOutputArray(ObjectId arrayId, int firstIndex, int count,
         return false;
     }
 
-    tag = dvmDbgGetSignatureTag(arrayObj->obj.clazz->descriptor + 1);
+    tag = basicTagFromDescriptor(arrayObj->obj.clazz->descriptor + 1);
 
     if (isTagPrimitive(tag)) {
         int width = dvmDbgGetTagWidth(tag);
@@ -1052,7 +1015,7 @@ bool dvmDbgOutputArray(ObjectId arrayId, int firstIndex, int count,
         for (i = 0; i < count; i++, pObjects++) {
             u1 thisTag;
             if (*pObjects != NULL)
-                thisTag = resultTagFromObject(*pObjects);
+                thisTag = tagFromObject(*pObjects);
             else
                 thisTag = tag;
             expandBufAdd1(pReply, thisTag);
@@ -1081,7 +1044,7 @@ bool dvmDbgSetArrayElements(ObjectId arrayId, int firstIndex, int count,
         return false;
     }
 
-    tag = dvmDbgGetSignatureTag(arrayObj->obj.clazz->descriptor + 1);
+    tag = basicTagFromDescriptor(arrayObj->obj.clazz->descriptor + 1);
 
     if (isTagPrimitive(tag)) {
         int width = dvmDbgGetTagWidth(tag);
@@ -1179,8 +1142,21 @@ const char* dvmDbgGetMethodName(RefTypeId refTypeId, MethodId id)
 }
 
 /*
+ * Augment the access flags for synthetic methods and fields by setting
+ * the (as described by the spec) "0xf0000000 bit".
+ */
+static u4 augmentedAccessFlags(u4 accessFlags)
+{
+    if ((accessFlags & ACC_SYNTHETIC) != 0) {
+        return accessFlags | 0xf0000000;
+    } else {
+        return accessFlags;
+    }
+}
+
+/*
  * For ReferenceType.Fields and ReferenceType.FieldsWithGeneric:
- * output all fields declared by the class.  Inerhited fields are
+ * output all fields declared by the class.  Inherited fields are
  * not included.
  */
 void dvmDbgOutputAllFields(RefTypeId refTypeId, bool withGeneric,
@@ -1206,7 +1182,7 @@ void dvmDbgOutputAllFields(RefTypeId refTypeId, bool withGeneric,
         expandBufAddUtf8String(pReply, (const u1*) field->signature);
         if (withGeneric)
             expandBufAddUtf8String(pReply, genericSignature);
-        expandBufAdd4BE(pReply, field->accessFlags);
+        expandBufAdd4BE(pReply, augmentedAccessFlags(field->accessFlags));
     }
     for (i = 0; i < clazz->ifieldCount; i++) {
         field = (Field*) &clazz->ifields[i];
@@ -1216,7 +1192,7 @@ void dvmDbgOutputAllFields(RefTypeId refTypeId, bool withGeneric,
         expandBufAddUtf8String(pReply, (const u1*) field->signature);
         if (withGeneric)
             expandBufAddUtf8String(pReply, genericSignature);
-        expandBufAdd4BE(pReply, field->accessFlags);
+        expandBufAdd4BE(pReply, augmentedAccessFlags(field->accessFlags));
     }
 }
 
@@ -1255,7 +1231,7 @@ void dvmDbgOutputAllMethods(RefTypeId refTypeId, bool withGeneric,
 
         if (withGeneric)
             expandBufAddUtf8String(pReply, genericSignature);
-        expandBufAdd4BE(pReply, meth->accessFlags);
+        expandBufAdd4BE(pReply, augmentedAccessFlags(meth->accessFlags));
     }
     for (i = 0; i < clazz->virtualMethodCount; i++) {
         meth = &clazz->virtualMethods[i];
@@ -1269,7 +1245,7 @@ void dvmDbgOutputAllMethods(RefTypeId refTypeId, bool withGeneric,
 
         if (withGeneric)
             expandBufAddUtf8String(pReply, genericSignature);
-        expandBufAdd4BE(pReply, meth->accessFlags);
+        expandBufAdd4BE(pReply, augmentedAccessFlags(meth->accessFlags));
     }
 
     dexStringCacheRelease(&stringCache);
@@ -1457,78 +1433,82 @@ void dvmDbgOutputVariableTable(RefTypeId refTypeId, MethodId methodId,
 }
 
 /*
- * Get the type tag for the field's type.
+ * Get the basic tag for an instance field.
  */
-int dvmDbgGetFieldTag(ObjectId objId, FieldId fieldId)
+u1 dvmDbgGetFieldBasicTag(ObjectId objId, FieldId fieldId)
 {
     Object* obj = objectIdToObject(objId);
     RefTypeId classId = classObjectToRefTypeId(obj->clazz);
-    Field* field = fieldIdToField(classId, fieldId);
-
-    return dvmDbgGetSignatureTag(field->signature);
+    const Field* field = fieldIdToField(classId, fieldId);
+    return basicTagFromDescriptor(field->signature);
 }
 
 /*
- * Get the type tag for the static field's type.
+ * Get the basic tag for a static field.
  */
-int dvmDbgGetStaticFieldTag(RefTypeId refTypeId, FieldId fieldId)
+u1 dvmDbgGetStaticFieldBasicTag(RefTypeId refTypeId, FieldId fieldId)
 {
-    Field* field = fieldIdToField(refTypeId, fieldId);
-    return dvmDbgGetSignatureTag(field->signature);
+    const Field* field = fieldIdToField(refTypeId, fieldId);
+    return basicTagFromDescriptor(field->signature);
 }
 
+
 /*
- * Copy the value of a field into the specified buffer.
+ * Copy the value of a static field into the output buffer, preceded
+ * by an appropriate tag.  The tag is based on the value held by the
+ * field, not the field's type.
  */
-void dvmDbgGetFieldValue(ObjectId objectId, FieldId fieldId, u1* buf,
-    int expectedLen)
+void dvmDbgGetFieldValue(ObjectId objectId, FieldId fieldId, ExpandBuf* pReply)
 {
     Object* obj = objectIdToObject(objectId);
     RefTypeId classId = classObjectToRefTypeId(obj->clazz);
-    InstField* field = (InstField*) fieldIdToField(classId, fieldId);
-    Object* objVal;
-    u4 intVal;
-    u8 longVal;
+    InstField* ifield = (InstField*) fieldIdToField(classId, fieldId);
+    u1 tag = basicTagFromDescriptor(ifield->field.signature);
 
-    switch (field->field.signature[0]) {
-    case JT_BOOLEAN:
-        assert(expectedLen == 1);
-        intVal = dvmGetFieldBoolean(obj, field->byteOffset);
-        set1(buf, intVal != 0);
-        break;
-    case JT_BYTE:
-        assert(expectedLen == 1);
-        intVal = dvmGetFieldInt(obj, field->byteOffset);
-        set1(buf, intVal);
-        break;
-    case JT_SHORT:
-    case JT_CHAR:
-        assert(expectedLen == 2);
-        intVal = dvmGetFieldInt(obj, field->byteOffset);
-        set2BE(buf, intVal);
-        break;
-    case JT_INT:
-    case JT_FLOAT:
-        assert(expectedLen == 4);
-        intVal = dvmGetFieldInt(obj, field->byteOffset);
-        set4BE(buf, intVal);
-        break;
-    case JT_ARRAY:
-    case JT_OBJECT:
-        assert(expectedLen == sizeof(ObjectId));
-        objVal = dvmGetFieldObject(obj, field->byteOffset);
-        dvmSetObjectId(buf, objectToObjectId(objVal));
-        break;
-    case JT_DOUBLE:
-    case JT_LONG:
-        assert(expectedLen == 8);
-        longVal = dvmGetFieldLong(obj, field->byteOffset);
-        set8BE(buf, longVal);
-        break;
-    default:
-        LOGE("ERROR: unhandled class type '%s'\n", field->field.signature);
-        assert(false);
-        break;
+    if (tag == JT_ARRAY || tag == JT_OBJECT) {
+        Object* objVal = dvmGetFieldObject(obj, ifield->byteOffset);
+        tag = tagFromObject(objVal);
+        expandBufAdd1(pReply, tag);
+        expandBufAddObjectId(pReply, objectToObjectId(objVal));
+        LOGV("    --> ifieldId %x --> tag '%c' %p\n", fieldId, tag, objVal);
+    } else {
+        JValue value;
+
+        LOGV("    --> ifieldId %x --> tag '%c'\n", fieldId, tag);
+        expandBufAdd1(pReply, tag);
+
+        switch (tag) {
+        case JT_BOOLEAN:
+            expandBufAdd1(pReply, dvmGetFieldBoolean(obj, ifield->byteOffset));
+            break;
+        case JT_BYTE:
+            expandBufAdd1(pReply, dvmGetFieldByte(obj, ifield->byteOffset));
+            break;
+        case JT_SHORT:
+            expandBufAdd2BE(pReply, dvmGetFieldShort(obj, ifield->byteOffset));
+            break;
+        case JT_CHAR:
+            expandBufAdd2BE(pReply, dvmGetFieldChar(obj, ifield->byteOffset));
+            break;
+        case JT_INT:
+            expandBufAdd4BE(pReply, dvmGetFieldInt(obj, ifield->byteOffset));
+            break;
+        case JT_FLOAT:
+            value.f = dvmGetFieldInt(obj, ifield->byteOffset);
+            expandBufAdd4BE(pReply, value.i);
+            break;
+        case JT_LONG:
+            expandBufAdd8BE(pReply, dvmGetFieldLong(obj, ifield->byteOffset));
+            break;
+        case JT_DOUBLE:
+            value.d = dvmGetFieldInt(obj, ifield->byteOffset);
+            expandBufAdd8BE(pReply, value.j);
+            break;
+        default:
+            LOGE("ERROR: unhandled field type '%s'\n", ifield->field.signature);
+            assert(false);
+            break;
+        }
     }
 }
 
@@ -1579,60 +1559,60 @@ void dvmDbgSetFieldValue(ObjectId objectId, FieldId fieldId, u8 value,
 }
 
 /*
- * Copy the value of a static field into the specified buffer.
+ * Copy the value of a static field into the output buffer, preceded
+ * by an appropriate tag.  The tag is based on the value held by the
+ * field, not the field's type.
  */
-void dvmDbgGetStaticFieldValue(RefTypeId refTypeId, FieldId fieldId, u1* buf,
-    int expectedLen)
+void dvmDbgGetStaticFieldValue(RefTypeId refTypeId, FieldId fieldId,
+    ExpandBuf* pReply)
 {
     StaticField* sfield = (StaticField*) fieldIdToField(refTypeId, fieldId);
-    Object* objVal;
-    JValue value;
+    u1 tag = basicTagFromDescriptor(sfield->field.signature);
 
-    switch (sfield->field.signature[0]) {
-    case JT_BOOLEAN:
-        assert(expectedLen == 1);
-        set1(buf, dvmGetStaticFieldBoolean(sfield));
-        break;
-    case JT_BYTE:
-        assert(expectedLen == 1);
-        set1(buf, dvmGetStaticFieldByte(sfield));
-        break;
-    case JT_SHORT:
-        assert(expectedLen == 2);
-        set2BE(buf, dvmGetStaticFieldShort(sfield));
-        break;
-    case JT_CHAR:
-        assert(expectedLen == 2);
-        set2BE(buf, dvmGetStaticFieldChar(sfield));
-        break;
-    case JT_INT:
-        assert(expectedLen == 4);
-        set4BE(buf, dvmGetStaticFieldInt(sfield));
-        break;
-    case JT_FLOAT:
-        assert(expectedLen == 4);
-        value.f = dvmGetStaticFieldFloat(sfield);
-        set4BE(buf, value.i);
-        break;
-    case JT_ARRAY:
-    case JT_OBJECT:
-        assert(expectedLen == sizeof(ObjectId));
-        objVal = dvmGetStaticFieldObject(sfield);
-        dvmSetObjectId(buf, objectToObjectId(objVal));
-        break;
-    case JT_LONG:
-        assert(expectedLen == 8);
-        set8BE(buf, dvmGetStaticFieldLong(sfield));
-        break;
-    case JT_DOUBLE:
-        assert(expectedLen == 8);
-        value.d = dvmGetStaticFieldDouble(sfield);
-        set8BE(buf, value.j);
-        break;
-    default:
-        LOGE("ERROR: unhandled class type '%s'\n", sfield->field.signature);
-        assert(false);
-        break;
+    if (tag == JT_ARRAY || tag == JT_OBJECT) {
+        Object* objVal = dvmGetStaticFieldObject(sfield);
+        tag = tagFromObject(objVal);
+        expandBufAdd1(pReply, tag);
+        expandBufAddObjectId(pReply, objectToObjectId(objVal));
+        LOGV("    --> sfieldId %x --> tag '%c' %p\n", fieldId, tag, objVal);
+    } else {
+        JValue value;
+
+        LOGV("    --> sfieldId %x --> tag '%c'\n", fieldId, tag);
+        expandBufAdd1(pReply, tag);
+
+        switch (tag) {
+        case JT_BOOLEAN:
+            expandBufAdd1(pReply, dvmGetStaticFieldBoolean(sfield));
+            break;
+        case JT_BYTE:
+            expandBufAdd1(pReply, dvmGetStaticFieldByte(sfield));
+            break;
+        case JT_SHORT:
+            expandBufAdd2BE(pReply, dvmGetStaticFieldShort(sfield));
+            break;
+        case JT_CHAR:
+            expandBufAdd2BE(pReply, dvmGetStaticFieldChar(sfield));
+            break;
+        case JT_INT:
+            expandBufAdd4BE(pReply, dvmGetStaticFieldInt(sfield));
+            break;
+        case JT_FLOAT:
+            value.f = dvmGetStaticFieldFloat(sfield);
+            expandBufAdd4BE(pReply, value.i);
+            break;
+        case JT_LONG:
+            expandBufAdd8BE(pReply, dvmGetStaticFieldLong(sfield));
+            break;
+        case JT_DOUBLE:
+            value.d = dvmGetStaticFieldDouble(sfield);
+            expandBufAdd8BE(pReply, value.j);
+            break;
+        default:
+            LOGE("ERROR: unhandled field type '%s'\n", sfield->field.signature);
+            assert(false);
+            break;
+        }
     }
 }
 
@@ -2385,21 +2365,14 @@ void dvmDbgGetLocalValue(ObjectId threadId, FrameId frameId, int slot,
         {
             /* convert to "ObjectId" */
             objVal = (Object*)framePtr[slot];
-            //char* name;
 
-            if (objVal != NULL) {
-                if (!dvmIsValidObject(objVal)) {
-                    LOGW("JDWP: slot %d expected to hold object, %p invalid\n",
-                        slot, objVal);
-                    dvmAbort();         // DEBUG: make it obvious
-                    objVal = NULL;
-                }
-                //name = generateJNISignature(objVal->clazz);
-                tag = resultTagFromObject(objVal);
-                //free(name);
-            } else {
-                tag = JT_OBJECT;
+            if (objVal != NULL && !dvmIsValidObject(objVal)) {
+                LOGW("JDWP: slot %d expected to hold object, %p invalid\n",
+                    slot, objVal);
+                dvmAbort();         // DEBUG: make it obvious
+                objVal = NULL;
             }
+            tag = tagFromObject(objVal);
             dvmSetObjectId(buf+1, objectToObjectId(objVal));
         }
         break;
@@ -2596,8 +2569,8 @@ void dvmDbgPostThreadDeath(Thread* thread)
  */
 void dvmDbgPostClassPrepare(ClassObject* clazz)
 {
+    const char* signature;
     int tag;
-    char* signature;
 
     if (dvmIsInterfaceClass(clazz))
         tag = TT_INTERFACE;
@@ -2607,10 +2580,9 @@ void dvmDbgPostClassPrepare(ClassObject* clazz)
     // TODO - we currently always send both "verified" and "prepared" since
     // debuggers seem to like that.  There might be some advantage to honesty,
     // since the class may not yet be verified.
-    signature = generateJNISignature(clazz);
+    signature = jniSignature(clazz);
     dvmJdwpPostClassPrepare(gDvm.jdwpState, tag, classObjectToRefTypeId(clazz),
         signature, CS_VERIFIED | CS_PREPARED);
-    free(signature);
 }
 
 /*
@@ -2833,12 +2805,12 @@ bail:
 }
 
 /*
- * Determine the tag type for the return value for this method.
+ * Return a basic tag value for the return type.
  */
-static u1 resultTagFromSignature(const Method* method)
+static u1 getReturnTypeBasicTag(const Method* method)
 {
     const char* descriptor = dexProtoGetReturnType(&method->prototype);
-    return dvmDbgGetSignatureTag(descriptor);
+    return basicTagFromDescriptor(descriptor);
 }
 
 /*
@@ -2891,7 +2863,7 @@ void dvmDbgExecuteMethod(DebugInvokeReq* pReq)
     dvmCallMethodA(self, meth, pReq->obj, false, &pReq->resultValue,
         (jvalue*)pReq->argArray);
     pReq->exceptObj = objectToObjectId(dvmGetException(self));
-    pReq->resultTag = resultTagFromSignature(meth);
+    pReq->resultTag = getReturnTypeBasicTag(meth);
     if (pReq->exceptObj != 0) {
         Object* exc = dvmGetException(self);
         LOGD("  JDWP invocation returning with exceptObj=%p (%s)\n",
@@ -2905,7 +2877,7 @@ void dvmDbgExecuteMethod(DebugInvokeReq* pReq)
         pReq->resultValue.j = 0; /*0xadadadad;*/
     } else if (pReq->resultTag == JT_OBJECT) {
         /* if no exception thrown, examine object result more closely */
-        u1 newTag = resultTagFromObject((Object*)pReq->resultValue.l);
+        u1 newTag = tagFromObject((Object*)pReq->resultValue.l);
         if (newTag != pReq->resultTag) {
             LOGVV("  JDWP promoted result from %d to %d\n",
                 pReq->resultTag, newTag);
