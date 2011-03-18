@@ -17,7 +17,6 @@
 package com.android.dx.merge;
 
 import com.android.dx.io.DexBuffer;
-import dalvik.system.PathClassLoader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -156,14 +155,17 @@ public final class DexMergeTest extends TestCase {
         assertTrue(maxLength + " < " + maxExpectedLength, maxLength < maxExpectedLength);
     }
 
-    public ClassLoader mergeAndLoad(String dexAResource, String dexBResource) throws IOException {
+    public ClassLoader mergeAndLoad(String dexAResource, String dexBResource) throws Exception {
         DexBuffer dexA = resourceToDexBuffer(dexAResource);
         DexBuffer dexB = resourceToDexBuffer(dexBResource);
         DexBuffer merged = new DexMerger(dexA, dexB, CollisionPolicy.KEEP_FIRST).merge();
         File mergedDex = File.createTempFile("DexMergeTest", ".classes.dex");
         merged.writeTo(mergedDex);
         File mergedJar = dexToJar(mergedDex);
-        return new PathClassLoader(mergedJar.getPath(), getClass().getClassLoader());
+        // simplify the javac classpath by not depending directly on 'dalvik.system' classes
+        return (ClassLoader) Class.forName("dalvik.system.PathClassLoader")
+                .getConstructor(String.class, ClassLoader.class)
+                .newInstance(mergedJar.getPath(), getClass().getClassLoader());
     }
 
     private DexBuffer resourceToDexBuffer(String resource) throws IOException {

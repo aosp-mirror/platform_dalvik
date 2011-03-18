@@ -17,19 +17,18 @@
 # Find dx.jar from dx in the android dev tree
 prog=`which dx`
 progdir=`dirname "${prog}"`
+dxjar=$progdir/../framework/dx.jar
 
-# Find dx.jar from dx in the android dev tree
-prog=`which dx`
-progdir=`dirname "${prog}"`
+javac -cp $dxjar `find . -name "*.java"`
+dx --dex --output=test.jar com/android/dx/merge/* $dxjar
 
-javac testdata/*.java
+# Build a resource .jar containing the .dex files to merge
 dx --dex --output=testdata/A.dex testdata/A.class
 dx --dex --output=testdata/B.dex testdata/B.class
 jar cfM resources.jar testdata/*.dex
 
-vogar --classpath resources.jar \
-  --classpath $progdir/../framework/dx.jar \
-  com/android/dx/merge/MergeConflictTest.java > unit-out.txt
+dalvik -classpath test.jar:resources.jar \
+  junit.textui.TestRunner com.android.dx.merge.MergeConflictTest > unit-out.txt
 
 if [ "$?" = "0" ]; then
     echo "Yay!"
