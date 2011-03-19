@@ -25,17 +25,17 @@
  *
  */
 dvmMterpStdRun:
-    movl    4(%esp), %ecx        # get incoming rGLUE
     push    %ebp                 # save caller base pointer
-    push    %ecx                 # save rGLUE at (%ebp)
     movl    %esp, %ebp           # set our %ebp
+    movl    rGLUE, %ecx          # get incoming rGLUE
+
 /*
- * At this point we've allocated two slots on the stack
+ * At this point we've allocated one slot on the stack
  * via push and stack is 8-byte aligned.  Allocate space
- * for 8 spill slots, 3 local slots, 5 arg slots + 2 slots for
- * padding to bring us to 16-byte alignment
+ * for 9 spill slots, 4 local slots, 5 arg slots to bring
+ * us to 16-byte alignment
  */
-    subl    $$(FRAME_SIZE-8), %esp
+    subl    $$(FRAME_SIZE-4), %esp
 
 /* Spill callee save regs */
     movl    %edi,EDI_SPILL(%ebp)
@@ -96,12 +96,12 @@ dvmMterpStdBail:
     movl    8(%esp),%eax                 # changeInterp to return reg
     movl    offGlue_bailPtr(%ecx),%esp   # Restore "setjmp" esp
     movl    %esp,%ebp
-    addl    $$(FRAME_SIZE-8), %ebp       # Restore %ebp at point of setjmp
+    addl    $$(FRAME_SIZE-4), %ebp        # Restore %ebp at point of setjmp
     movl    EDI_SPILL(%ebp),%edi
     movl    ESI_SPILL(%ebp),%esi
     movl    EBX_SPILL(%ebp),%ebx
-    movl    PREV_FP(%ebp),%ebp           # restore caller's ebp
-    addl    $$FRAME_SIZE,%esp                    # strip frame
+    movl    %ebp, %esp                   # strip frame
+    pop     %ebp                         # restore caller's ebp
     ret                                  # return to dvmMterpStdRun's caller
 
 

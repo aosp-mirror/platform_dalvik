@@ -218,24 +218,23 @@ common_invokeMethodNoRange:
 
 .LinvokeNative:
     movl        rGLUE,%ecx              # %ecx<- pMterpGlue
-    movl        %eax, OUT_ARG1(%esp)    # push parameter methodToCall
+    movl        %eax, OUT_ARG2(%esp)    # push parameter methodToCall
     movl        offGlue_self(%ecx), %ecx        # %ecx<- glue->self
     movl        offThread_jniLocal_topCookie(%ecx), %eax # %eax<- self->localRef->...
     movl        %eax, offStackSaveArea_localRefCookie(%edx) # newSaveArea->localRefCookie<- top
-    movl        %edx, OUT_ARG4(%esp)    # save newSaveArea
+    movl        %edx, LOCAL3_OFFSET(%ebp)    # save newSaveArea
     movl        LOCAL1_OFFSET(%ebp), %edx # %edx<- newFP
     movl        %edx, offThread_curFrame(%ecx)  # glue->self->curFrame<- newFP
-    movl        %ecx, OUT_ARG3(%esp)    # save glue->self
-    movl        %ecx, OUT_ARG2(%esp)    # push parameter glue->self
+    movl        %ecx, OUT_ARG3(%esp)    # push parameter glue->self
     movl        rGLUE,%ecx              # %ecx<- pMterpGlue
-    movl        OUT_ARG1(%esp), %eax    # %eax<- methodToCall
+    movl        OUT_ARG2(%esp), %eax    # %eax<- methodToCall
     lea         offGlue_retval(%ecx), %ecx # %ecx<- &retval
-    movl        %ecx, OUT_ARG0(%esp)    # push parameter pMterpGlue
-    push        %edx                    # push parameter newFP
+    movl        %ecx, OUT_ARG1(%esp)    # push parameter &retval
+    movl        %edx, OUT_ARG0(%esp)    # push parameter newFP
 
     call        *offMethod_nativeFunc(%eax) # call methodToCall->nativeFunc
-    lea         4(%esp), %esp
-    movl        OUT_ARG4(%esp), %ecx    # %ecx<- newSaveArea
+
+    movl        LOCAL3_OFFSET(%ebp), %ecx    # %ecx<- newSaveArea
     movl        OUT_ARG3(%esp), %eax    # %eax<- glue->self
     movl        offStackSaveArea_localRefCookie(%ecx), %edx # %edx<- old top
     cmp         $$0, offThread_exception(%eax) # check for exception
