@@ -46,8 +46,7 @@ functEntry:
 
 Once past the prologue, arguments are referenced at ((argno + 2)*4)(%ebp)
 
-Alignment of stack not strictly required, but should be for performance.  We'll
-align frame sizes to 16-byte multiples.
+Stack must be 16-byte aligned to support SSE in native code.
 
 If we're not doing variable stack allocation (alloca), the frame pointer can be
 eliminated and all arg references adjusted to be esp relative.
@@ -73,7 +72,7 @@ Notes:
 
 */
 
-#define rSELF    (%ebp)
+#define rSELF    8(%ebp)
 #define rPC      %esi
 #define rFP      %edi
 #define rINST    %ebx
@@ -84,14 +83,13 @@ Notes:
 
 
 /* Frame diagram while executing dvmMterpStdRun, high to low addresses */
-#define IN_ARG0        ( 12)
-#define CALLER_RP      (  8)
-#define PREV_FP        (  4)
-#define rSELF_SPILL    (  0) /* <- dvmMterpStdRun ebp */
+#define IN_ARG0        (  8)
+#define CALLER_RP      (  4)
+#define PREV_FP        (  0)
 /* Spill offsets relative to %ebp */
 #define EDI_SPILL      ( -4)
 #define ESI_SPILL      ( -8)
-#define EBX_SPILL      (-12) /* <- esp following dmMterpStdRun header */
+#define EBX_SPILL      (-12)
 #define rPC_SPILL      (-16)
 #define rFP_SPILL      (-20)
 #define rINST_SPILL    (-24)
@@ -102,13 +100,13 @@ Notes:
 #define LOCAL0_OFFSET  (-44)
 #define LOCAL1_OFFSET  (-48)
 #define LOCAL2_OFFSET  (-52)
-/* Out Arg offsets, relative to %sp */
+/* Out Arg offsets, relative to %esp */
 #define OUT_ARG4       ( 16)
 #define OUT_ARG3       ( 12)
 #define OUT_ARG2       (  8)
 #define OUT_ARG1       (  4)
 #define OUT_ARG0       (  0)  /* <- dvmMterpStdRun esp */
-#define FRAME_SIZE     80
+#define FRAME_SIZE     76
 
 #define SPILL(reg) movl reg##,reg##_SPILL(%ebp)
 #define UNSPILL(reg) movl reg##_SPILL(%ebp),reg
@@ -21265,17 +21263,17 @@ dvmAsmAltInstructionStart:
  *
  */
 dvmMterpStdRun:
-    movl    4(%esp), %ecx        # get incoming rSELF
     push    %ebp                 # save caller base pointer
-    push    %ecx                 # save rSELF at (%ebp)
     movl    %esp, %ebp           # set our %ebp
+    movl    rSELF, %ecx          # get incoming rGLUE
+
 /*
- * At this point we've allocated two slots on the stack
+ * At this point we've allocated one slot on the stack
  * via push and stack is 8-byte aligned.  Allocate space
- * for 8 spill slots, 3 local slots, 5 arg slots + 2 slots for
- * padding to bring us to 16-byte alignment
+ * for 9 spill slots, 4 local slots, 5 arg slots to bring
+ * us to 16-byte alignment
  */
-    subl    $(FRAME_SIZE-8), %esp
+    subl    $(FRAME_SIZE-4), %esp
 
 /* Spill callee save regs */
     movl    %edi,EDI_SPILL(%ebp)
@@ -21337,12 +21335,12 @@ dvmMterpStdBail:
     movl    8(%esp),%eax                 # changeInterp to return reg
     movl    offThread_bailPtr(%ecx),%esp   # Restore "setjmp" esp
     movl    %esp,%ebp
-    addl    $(FRAME_SIZE-8), %ebp       # Restore %ebp at point of setjmp
+    addl    $(FRAME_SIZE-4), %ebp        # Restore %ebp at point of setjmp
     movl    EDI_SPILL(%ebp),%edi
     movl    ESI_SPILL(%ebp),%esi
     movl    EBX_SPILL(%ebp),%ebx
-    movl    PREV_FP(%ebp),%ebp           # restore caller's ebp
-    addl    $FRAME_SIZE,%esp                    # strip frame
+    movl    %ebp, %esp                   # strip frame
+    pop     %ebp                         # restore caller's ebp
     ret                                  # return to dvmMterpStdRun's caller
 
 
@@ -21735,6 +21733,7 @@ common_invokeMethodNoRange:
     SAVEAREA_FROM_FP %ecx               # %ecx<- &StackSaveArea
     movl        %ecx, offStackSaveArea_prevSave(%edx) # newSaveArea->prevSave<- &outs
 #endif
+    movl        rSELF,%ecx                  # %ecx<- pthread
     movl        rFP, offStackSaveArea_prevFrame(%edx) # newSaveArea->prevFrame<- rFP
     movl        rPC, offStackSaveArea_savedPc(%edx) # newSaveArea->savedPc<- rPC
     testl       $ACC_NATIVE, offMethod_accessFlags(%eax) # check for native call
@@ -21747,7 +21746,6 @@ common_invokeMethodNoRange:
     */
 
     movl        offMethod_clazz(%eax), %edx # %edx<- method->clazz
-    movl        rSELF,%ecx                  # %ecx<- pthread
     movl        offClassObject_pDvmDex(%edx), %edx # %edx<- method->clazz->pDvmDex
     movl        %eax, offThread_method(%ecx) # self->method<- methodToCall
     movl        %edx, offThread_methodClassDex(%ecx) # self->methodClassDex<- method->clazz->pDvmDex
@@ -21764,25 +21762,21 @@ common_invokeMethodNoRange:
     */
 
 .LinvokeNative:
-    movl        rSELF,%ecx              # %ecx<- pthread
-    movl        %eax, OUT_ARG1(%esp)    # push parameter methodToCall
-    movl        offThread_jniLocal_topCookie(%ecx), %eax # %eax<- self->localRef->...
-    movl        %eax, offStackSaveArea_localRefCookie(%edx) # newSaveArea->localRefCookie<- top
-    movl        %edx, OUT_ARG4(%esp)    # save newSaveArea
-    movl        LOCAL1_OFFSET(%ebp), %edx # %edx<- newFP
-    movl        %edx, offThread_curFrame(%ecx)  # self->curFrame<- newFP
-    movl        %ecx, OUT_ARG3(%esp)    # save self
-    movl        %ecx, OUT_ARG2(%esp)    # push parameter self
-    movl        rSELF,%ecx              # %ecx<- pthread
-    movl        OUT_ARG1(%esp), %eax    # %eax<- methodToCall
+    movl        rSELF, %ecx
+    movl        offThread_jniLocal_topCookie(%ecx), rINST # rINST<- self->localRef->...
+    movl        rINST, offStackSaveArea_localRefCookie(%edx) # newSaveArea->localRefCookie<- top
+    movl        %edx, LOCAL2_OFFSET(%ebp)  # save newSaveArea
+    movl        LOCAL1_OFFSET(%ebp), rINST # rINST<- newFP
+    movl        rINST, offThread_curFrame(%ecx)  # self->curFrame<- newFP
+    movl        %ecx, OUT_ARG3(%esp)    # push parameter self
+    movl        %eax, OUT_ARG2(%esp)    # push parameter methodToCall
     lea         offThread_retval(%ecx), %ecx # %ecx<- &retval
-    movl        %ecx, OUT_ARG0(%esp)    # push parameter pthread
-    push        %edx                    # push parameter newFP
-
+    movl        %ecx, OUT_ARG1(%esp)    # push parameter &retval
+    movl        rINST, OUT_ARG0(%esp)    # push parameter newFP
     call        *offMethod_nativeFunc(%eax) # call methodToCall->nativeFunc
-    lea         4(%esp), %esp
-    movl        OUT_ARG4(%esp), %ecx    # %ecx<- newSaveArea
-    movl        OUT_ARG3(%esp), %eax    # %eax<- self
+7:
+    movl        LOCAL2_OFFSET(%ebp), %ecx    # %ecx<- newSaveArea
+    movl        rSELF, %eax             # %eax<- self
     movl        offStackSaveArea_localRefCookie(%ecx), %edx # %edx<- old top
     cmp         $0, offThread_exception(%eax) # check for exception
     movl        rFP, offThread_curFrame(%eax) # self->curFrame<- rFP

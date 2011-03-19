@@ -97,9 +97,11 @@ dvmPlatformInvoke:
     movl     16(%ebp),%ebx
     testl    %ebx,%ebx
     js       dvmAbort
-/* Get the size of the variable region and grow (preserving alignment) */
+/* Get the size of the variable region, add two more slots for the first
+ * two arguments and grow (preserving alignment)
+ */
     movl     %ebx,%ecx
-    leal     12(,%ecx,4),%ecx
+    leal     20(,%ecx,4),%ecx
     andl     $0x0003FFF0,%ecx
     subl     %ecx,%esp
 /* Handle this/class */
@@ -111,8 +113,8 @@ dvmPlatformInvoke:
     movl     (%esi),%eax
     addl     $4,%esi
 isClass:
-    pushl    %eax
-    pushl    %ecx
+    movl     %eax,4(%esp)
+    movl     %ecx,0(%esp)
 /* Now, copy the variable arguments region */
     movl     %ebx,%ecx
     andl     $0x0000FFFF,%ecx

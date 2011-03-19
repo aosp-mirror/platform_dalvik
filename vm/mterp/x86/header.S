@@ -39,8 +39,7 @@ functEntry:
 
 Once past the prologue, arguments are referenced at ((argno + 2)*4)(%ebp)
 
-Alignment of stack not strictly required, but should be for performance.  We'll
-align frame sizes to 16-byte multiples.
+Stack must be 16-byte aligned to support SSE in native code.
 
 If we're not doing variable stack allocation (alloca), the frame pointer can be
 eliminated and all arg references adjusted to be esp relative.
@@ -66,7 +65,7 @@ Notes:
 
 */
 
-#define rSELF    (%ebp)
+#define rSELF    8(%ebp)
 #define rPC      %esi
 #define rFP      %edi
 #define rINST    %ebx
@@ -77,14 +76,13 @@ Notes:
 
 
 /* Frame diagram while executing dvmMterpStdRun, high to low addresses */
-#define IN_ARG0        ( 12)
-#define CALLER_RP      (  8)
-#define PREV_FP        (  4)
-#define rSELF_SPILL    (  0) /* <- dvmMterpStdRun ebp */
+#define IN_ARG0        (  8)
+#define CALLER_RP      (  4)
+#define PREV_FP        (  0)
 /* Spill offsets relative to %ebp */
 #define EDI_SPILL      ( -4)
 #define ESI_SPILL      ( -8)
-#define EBX_SPILL      (-12) /* <- esp following dmMterpStdRun header */
+#define EBX_SPILL      (-12)
 #define rPC_SPILL      (-16)
 #define rFP_SPILL      (-20)
 #define rINST_SPILL    (-24)
@@ -95,13 +93,13 @@ Notes:
 #define LOCAL0_OFFSET  (-44)
 #define LOCAL1_OFFSET  (-48)
 #define LOCAL2_OFFSET  (-52)
-/* Out Arg offsets, relative to %sp */
+/* Out Arg offsets, relative to %esp */
 #define OUT_ARG4       ( 16)
 #define OUT_ARG3       ( 12)
 #define OUT_ARG2       (  8)
 #define OUT_ARG1       (  4)
 #define OUT_ARG0       (  0)  /* <- dvmMterpStdRun esp */
-#define FRAME_SIZE     80
+#define FRAME_SIZE     76
 
 #define SPILL(reg) movl reg##,reg##_SPILL(%ebp)
 #define UNSPILL(reg) movl reg##_SPILL(%ebp),reg
