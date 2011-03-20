@@ -64,6 +64,12 @@ typedef enum BBType {
     kCatchEntry,
 } BBType;
 
+typedef enum JitMode {
+    kJitTrace = 0, // Acyclic - all instructions come from the trace descriptor
+    kJitLoop,      // Cycle - trace descriptor is used as a hint
+    kJitMethod,    // Whole method
+} JitMode;
+
 typedef struct ChainCellCounts {
     union {
         u1 count[kChainingCellLast]; /* include one more space for the gap # */
@@ -148,6 +154,7 @@ typedef enum BlockListType {
 typedef struct BasicBlock {
     int id;
     bool visited;
+    bool hidden;
     unsigned int startOffset;
     const Method *containingMethod;     // For blocks from the callee
     BBType blockType;
@@ -249,7 +256,7 @@ typedef struct CompilationUnit {
     const u2 *switchOverflowPad;
 
     /* New fields only for method-based compilation */
-    bool methodJitMode;
+    JitMode jitMode;
     int numReachableBlocks;
     int numDalvikRegisters;             // method->registersSize + inlined
     BasicBlock *entryBlock;

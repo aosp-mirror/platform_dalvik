@@ -23,7 +23,7 @@
 static void recordDFSPreOrder(CompilationUnit *cUnit, BasicBlock *block)
 {
 
-    if (block->visited) return;
+    if (block->visited || block->hidden) return;
     block->visited = true;
 
     /* Enqueue the block id */
@@ -49,9 +49,13 @@ static void recordDFSPreOrder(CompilationUnit *cUnit, BasicBlock *block)
 /* Sort the blocks by the Depth-First-Search pre-order */
 static void computeDFSOrder(CompilationUnit *cUnit)
 {
-    /* Initialize the DFS order list */
-    dvmInitGrowableList(&cUnit->dfsOrder, cUnit->numBlocks);
-
+    /* Initialize or reset the DFS order list */
+    if (cUnit->dfsOrder.elemList == NULL) {
+        dvmInitGrowableList(&cUnit->dfsOrder, cUnit->numBlocks);
+    } else {
+        /* Just reset the used length on the counter */
+        cUnit->dfsOrder.numUsed = 0;
+    }
 
     dvmCompilerDataFlowAnalysisDispatcher(cUnit, dvmCompilerClearVisitedFlag,
                                           kAllNodes,
@@ -101,14 +105,16 @@ static void computeDefBlockMatrix(CompilationUnit *cUnit)
                                           kAllNodes,
                                           false /* isIterative */);
 
-    /*
-     * Also set the incoming parameters as defs in the entry block.
-     * Only need to handle the parameters for the outer method.
-     */
-    int inReg = cUnit->method->registersSize - cUnit->method->insSize;
-    for (; inReg < cUnit->method->registersSize; inReg++) {
-        dvmCompilerSetBit(cUnit->defBlockMatrix[inReg],
-                          cUnit->entryBlock->id);
+    if (cUnit->jitMode == kJitMethod) {
+        /*
+         * Also set the incoming parameters as defs in the entry block.
+         * Only need to handle the parameters for the outer method.
+         */
+        int inReg = cUnit->method->registersSize - cUnit->method->insSize;
+        for (; inReg < cUnit->method->registersSize; inReg++) {
+            dvmCompilerSetBit(cUnit->defBlockMatrix[inReg],
+                              cUnit->entryBlock->id);
+        }
     }
 }
 
@@ -137,17 +143,31 @@ static void computeDomPostOrderTraversal(CompilationUnit *cUnit, BasicBlock *bb)
     }
 }
 
+static void checkForDominanceFrontier(BasicBlock *domBB,
+                                      const BasicBlock *succBB)
+{
+    /*
+     * TODO - evaluate whether phi will ever need to be inserted into exit
+     * blocks.
+     */
+    if (succBB->iDom != domBB &&
+        succBB->blockType == kDalvikByteCode &&
+        succBB->hidden == false) {
+        dvmSetBit(domBB->domFrontier, succBB->id);
+    }
+}
+
 /* Worker function to compute the dominance frontier */
 static bool computeDominanceFrontier(CompilationUnit *cUnit, BasicBlock *bb)
 {
     GrowableList *blockList = &cUnit->blockList;
 
     /* Calculate DF_local */
-    if (bb->taken && (bb->taken->iDom != bb)) {
-        dvmSetBit(bb->domFrontier, bb->taken->id);
+    if (bb->taken) {
+        checkForDominanceFrontier(bb, bb->taken);
     }
-    if (bb->fallThrough && (bb->fallThrough->iDom != bb)) {
-        dvmSetBit(bb->domFrontier, bb->fallThrough->id);
+    if (bb->fallThrough) {
+        checkForDominanceFrontier(bb, bb->fallThrough);
     }
     if (bb->successorBlockList.blockListType != kNotUsed) {
         GrowableListIterator iterator;
@@ -158,9 +178,7 @@ static bool computeDominanceFrontier(CompilationUnit *cUnit, BasicBlock *bb)
                 (SuccessorBlockInfo *) dvmGrowableListIteratorNext(&iterator);
             if (successorBlockInfo == NULL) break;
             BasicBlock *succBB = successorBlockInfo->block;
-            if (succBB->iDom != bb) {
-                dvmSetBit(bb->domFrontier, succBB->id);
-            }
+            checkForDominanceFrontier(bb, succBB);
         }
     }
 
@@ -179,11 +197,10 @@ static bool computeDominanceFrontier(CompilationUnit *cUnit, BasicBlock *bb)
             if (dfUpIdx == -1) break;
             BasicBlock *dfUpBlock = (BasicBlock *)
                 dvmGrowableListGetElement(blockList, dfUpIdx);
-            if (dfUpBlock->iDom != bb) {
-                dvmSetBit(bb->domFrontier, dfUpBlock->id);
-            }
+            checkForDominanceFrontier(bb, dfUpBlock);
         }
     }
+
     return true;
 }
 
@@ -192,12 +209,18 @@ static bool initializeDominationInfo(CompilationUnit *cUnit, BasicBlock *bb)
 {
     int numTotalBlocks = cUnit->blockList.numUsed;
 
-    bb->dominators = dvmCompilerAllocBitVector(numTotalBlocks,
-                                               false /* expandable */);
-    bb->iDominated = dvmCompilerAllocBitVector(numTotalBlocks,
-                                               false /* expandable */);
-    bb->domFrontier = dvmCompilerAllocBitVector(numTotalBlocks,
-                                               false /* expandable */);
+    if (bb->dominators == NULL ) {
+        bb->dominators = dvmCompilerAllocBitVector(numTotalBlocks,
+                                                   false /* expandable */);
+        bb->iDominated = dvmCompilerAllocBitVector(numTotalBlocks,
+                                                   false /* expandable */);
+        bb->domFrontier = dvmCompilerAllocBitVector(numTotalBlocks,
+                                                   false /* expandable */);
+    } else {
+        dvmClearAllBits(bb->dominators);
+        dvmClearAllBits(bb->iDominated);
+        dvmClearAllBits(bb->domFrontier);
+    }
     /* Set all bits in the dominator vector */
     dvmSetInitialBits(bb->dominators, numTotalBlocks);
 
@@ -296,8 +319,12 @@ static void computeDominators(CompilationUnit *cUnit)
     dvmClearAllBits(cUnit->entryBlock->dominators);
     dvmSetBit(cUnit->entryBlock->dominators, cUnit->entryBlock->id);
 
-    cUnit->tempBlockV = dvmCompilerAllocBitVector(numTotalBlocks,
-                                              false /* expandable */);
+    if (cUnit->tempBlockV == NULL) {
+        cUnit->tempBlockV = dvmCompilerAllocBitVector(numTotalBlocks,
+                                                  false /* expandable */);
+    } else {
+        dvmClearAllBits(cUnit->tempBlockV);
+    }
     dvmCompilerDataFlowAnalysisDispatcher(cUnit, computeBlockDominators,
                                           kPreOrderDFSTraversal,
                                           true /* isIterative */);
@@ -311,7 +338,12 @@ static void computeDominators(CompilationUnit *cUnit)
      * Now go ahead and compute the post order traversal based on the
      * iDominated sets.
      */
-    dvmInitGrowableList(&cUnit->domPostOrderTraversal, numReachableBlocks);
+    if (cUnit->domPostOrderTraversal.elemList == NULL) {
+        dvmInitGrowableList(&cUnit->domPostOrderTraversal, numReachableBlocks);
+    } else {
+        cUnit->domPostOrderTraversal.numUsed = 0;
+    }
+
     computeDomPostOrderTraversal(cUnit, cUnit->entryBlock);
     assert(cUnit->domPostOrderTraversal.numUsed ==
            (unsigned) cUnit->numReachableBlocks);
@@ -411,16 +443,19 @@ static void insertPhiNodes(CompilationUnit *cUnit)
 
         dvmCopyBitVector(inputBlocks, cUnit->defBlockMatrix[dalvikReg]);
         dvmClearAllBits(phiBlocks);
+
         /* Calculate the phi blocks for each Dalvik register */
         do {
             change = false;
             dvmClearAllBits(tmpBlocks);
             dvmBitVectorIteratorInit(inputBlocks, &iterator);
+
             while (true) {
                 int idx = dvmBitVectorIteratorNext(&iterator);
                 if (idx == -1) break;
                 BasicBlock *defBB =
                     (BasicBlock *) dvmGrowableListGetElement(blockList, idx);
+
                 /* Merge the dominance frontier to tmpBlocks */
                 dvmUnifyBitVectors(tmpBlocks, tmpBlocks, defBB->domFrontier);
             }
@@ -551,4 +586,52 @@ void dvmCompilerMethodSSATransformation(CompilationUnit *cUnit)
     dvmCompilerDataFlowAnalysisDispatcher(cUnit, insertPhiNodeOperands,
                                           kReachableNodes,
                                           false /* isIterative */);
+}
+
+/* Build a loop. Return true if a loop structure is successfully identified. */
+bool dvmCompilerBuildLoop(CompilationUnit *cUnit)
+{
+    /* Compute the DFS order */
+    computeDFSOrder(cUnit);
+
+    /* Compute the dominator info */
+    computeDominators(cUnit);
+
+    /* Loop structure not recognized/supported - return false */
+    if (dvmCompilerFilterLoopBlocks(cUnit) == false)
+        return false;
+
+    /* Re-compute the DFS order just for the loop */
+    computeDFSOrder(cUnit);
+
+    /* Re-compute the dominator info just for the loop */
+    computeDominators(cUnit);
+
+    /* Allocate data structures in preparation for SSA conversion */
+    dvmInitializeSSAConversion(cUnit);
+
+    /* Find out the "Dalvik reg def x block" relation */
+    computeDefBlockMatrix(cUnit);
+
+    /* Insert phi nodes to dominance frontiers for all variables */
+    insertPhiNodes(cUnit);
+
+    /* Rename register names by local defs and phi nodes */
+    dvmCompilerDataFlowAnalysisDispatcher(cUnit, dvmCompilerDoSSAConversion,
+                                          kPreOrderDFSTraversal,
+                                          false /* isIterative */);
+
+    /*
+     * Shared temp bit vector used by each block to count the number of defs
+     * from all the predecessor blocks.
+     */
+    cUnit->tempSSARegisterV = dvmCompilerAllocBitVector(cUnit->numSSARegs,
+                                                        false);
+
+    /* Insert phi-operands with latest SSA names from predecessor blocks */
+    dvmCompilerDataFlowAnalysisDispatcher(cUnit, insertPhiNodeOperands,
+                                          kReachableNodes,
+                                          false /* isIterative */);
+
+    return true;
 }

@@ -32,7 +32,7 @@ static TGT_LIR *genRegImmCheck(CompilationUnit *cUnit,
                                TGT_LIR *pcrLabel)
 {
     TGT_LIR *branch = genCmpImmBranch(cUnit, cond, reg, checkValue);
-    if (cUnit->methodJitMode) {
+    if (cUnit->jitMode == kJitMethod) {
         BasicBlock *bb = cUnit->curBlock;
         if (bb->taken) {
             ArmLIR  *exceptionLabel = (ArmLIR *) cUnit->blockLabelList;

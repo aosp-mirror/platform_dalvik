@@ -34,4 +34,6 @@ typedef struct LoopAnalysis {
     bool bodyIsClean;                   // loop body cannot throw any exceptions
 } LoopAnalysis;
 
+bool dvmCompilerFilterLoopBlocks(CompilationUnit *cUnit);
+
 #endif /* _DALVIK_VM_LOOP */

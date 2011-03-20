@@ -1336,8 +1336,8 @@ void dvmCompilerAssembleLIR(CompilationUnit *cUnit, JitTranslationInfo *info)
     int offset = 0;
     int i;
     ChainCellCounts chainCellCounts;
-    int descSize =
-        cUnit->methodJitMode ? 0 : getTraceDescriptionSize(cUnit->traceDesc);
+    int descSize = (cUnit->jitMode == kJitMethod) ?
+        0 : getTraceDescriptionSize(cUnit->traceDesc);
     int chainingCellGap = 0;
 
     info->instructionSet = cUnit->instructionSet;
@@ -1367,7 +1367,7 @@ void dvmCompilerAssembleLIR(CompilationUnit *cUnit, JitTranslationInfo *info)
     u4 chainCellOffset = offset;
     ArmLIR *chainCellOffsetLIR = NULL;
 
-    if (!cUnit->methodJitMode) {
+    if (cUnit->jitMode != kJitMethod) {
         /*
          * Get the gap (# of u4) between the offset of chaining cell count and
          * the bottom of real chaining cells. If the translation has chaining
@@ -1430,7 +1430,7 @@ void dvmCompilerAssembleLIR(CompilationUnit *cUnit, JitTranslationInfo *info)
             break;
         case kRetryAll:
             if (cUnit->assemblerRetries < MAX_ASSEMBLER_RETRIES) {
-                if (!cUnit->methodJitMode) {
+                if (cUnit->jitMode != kJitMethod) {
                     /* Restore pristine chain cell marker on retry */
                     chainCellOffsetLIR->operands[0] = CHAIN_CELL_OFFSET_TAG;
                 }
@@ -1482,7 +1482,7 @@ void dvmCompilerAssembleLIR(CompilationUnit *cUnit, JitTranslationInfo *info)
     memcpy((char*)cUnit->baseAddr, cUnit->codeBuffer, chainCellOffset);
     gDvmJit.numCompilations++;
 
-    if (!cUnit->methodJitMode) {
+    if (cUnit->jitMode != kJitMethod) {
         /* Install the chaining cell counts */
         for (i=0; i< kChainingCellGap; i++) {
             chainCellCounts.u.count[i] = cUnit->numChainingCells[i];

@@ -218,7 +218,7 @@ ifeq ($(WITH_JIT),true)
 	compiler/InlineTransformation.c \
 	compiler/IntermediateRep.c \
 	compiler/Dataflow.c \
-	compiler/MethodSSATransformation.c \
+	compiler/SSATransformation.c \
 	compiler/Loop.c \
 	compiler/Ralloc.c \
 	interp/Jit.c

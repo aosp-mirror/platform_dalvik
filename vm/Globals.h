@@ -878,6 +878,9 @@ struct DvmJitGlobals {
     /* Flag to dump all compiled code */
     bool printMe;
 
+    /* Per-process debug flag toggled when receiving a SIGUSR2 */
+    bool receivedSIGUSR2;
+
     /* Trace profiling mode */
     TraceProfilingModes profileMode;
 

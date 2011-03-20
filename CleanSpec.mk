@@ -50,6 +50,7 @@ $(call add-clean-step, rm -rf $(OUT)/obj/SHARED_LIBRARIES/libdvm*)
 $(call add-clean-step, rm -rf $(OUT)/obj/SHARED_LIBRARIES/libdvm*)
 $(call add-clean-step, rm -rf $(OUT)/obj/SHARED_LIBRARIES/libdvm*)
 $(call add-clean-step, rm -rf $(OUT)/obj/SHARED_LIBRARIES/libdvm*)
+$(call add-clean-step, rm -rf $(OUT)/obj/SHARED_LIBRARIES/libdvm*)
 # ************************************************
 # NEWER CLEAN STEPS MUST BE AT THE END OF THE LIST
 # ************************************************

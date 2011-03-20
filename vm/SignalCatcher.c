@@ -230,6 +230,7 @@ void printAllClass(void *ptr)
 static void handleSigUsr2(void)
 {
     static int codeCacheResetCount = 0;
+    gDvmJit.receivedSIGUSR2 ^= true;
     if ((--codeCacheResetCount & 7) == 0) {
         /* Dump all class pointers in the traces */
         dvmJitScanAllClassPointers(printAllClass);
