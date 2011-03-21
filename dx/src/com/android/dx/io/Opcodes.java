@@ -370,6 +370,10 @@ public final class Opcodes {
      * @return {@code true} iff the opcode is an "extended" opcode
      */
     public static boolean isExtended(int opcode) {
+        /*
+         * Note: Extended opcodes all have the form ((byteValue << 8)
+         * | 0xff).
+         */
         return (opcode >= 0x00ff);
     }
 
@@ -384,7 +388,7 @@ public final class Opcodes {
         /*
          * Note: This method bakes in knowledge that all opcodes are
          * either single-byte or of the forms (byteValue << 8) or
-         * ((byteValue << 8) 0xff).
+         * ((byteValue << 8) | 0xff).
          */
 
         int lowByte = opcodeUnit & 0xff;
