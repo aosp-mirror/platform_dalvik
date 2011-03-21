@@ -40,20 +40,6 @@ void dvmHeapWorkerShutdown(void);
 void dvmSignalHeapWorker(bool shouldLock);
 
 /*
- * Block until all pending heap worker work has finished.
- */
-void dvmWaitForHeapWorkerIdle(void);
-
-/*
- * Does not return until any pending finalizers have been called.
- * This may or may not happen in the context of the calling thread.
- * No exceptions will escape.
- *
- * Used by zygote, which doesn't have a HeapWorker thread.
- */
-void dvmRunFinalizationSync(void);
-
-/*
  * Requests that dvmHeapSourceTrim() be called no sooner
  * than timeoutSec seconds from now.  If timeoutSec
  * is zero, any pending trim is cancelled.
@@ -72,14 +58,6 @@ void dvmScheduleHeapSourceTrim(size_t timeoutSec);
 void dvmAssertHeapWorkerThreadRunning();
 
 /*
- * The type of operation for HeapWorker to perform on an object.
- */
-typedef enum HeapWorkerOperation {
-    WORKER_FINALIZE = 0,
-    WORKER_ENQUEUE = 1,
-} HeapWorkerOperation;
-
-/*
  * Called by the worker thread to get the next object
  * to finalize/enqueue/clear.  Implemented in Heap.c.
  *
@@ -87,6 +65,6 @@ typedef enum HeapWorkerOperation {
  *           Must be non-NULL.
  * @return The object to operate on, or NULL.
  */
-Object *dvmGetNextHeapWorkerObject(HeapWorkerOperation *op);
+Object *dvmGetNextHeapWorkerObject();
 
 #endif /*_DALVIK_ALLOC_HEAP_WORKER*/

@@ -1311,23 +1311,6 @@ bool dvmCreateInterpThread(Object* threadObj, int reqStackSize)
 
     assert(threadObj != NULL);
 
-    if(gDvm.zygote) {
-        // Allow the sampling profiler thread. We shut it down before forking.
-        StringObject* nameStr = (StringObject*) dvmGetFieldObject(threadObj,
-                    gDvm.offJavaLangThread_name);
-        char* threadName = dvmCreateCstrFromString(nameStr);
-        bool profilerThread = strcmp(threadName, "SamplingProfiler") == 0;
-        if (!profilerThread) {
-            dvmThrowExceptionFmt(gDvm.exIllegalStateException,
-                "No new threads in -Xzygote mode. "
-                "Found thread named '%s'", threadName);
-
-            free(threadName);
-            goto fail;
-        }
-        free(threadName);
-    }
-
     self = dvmThreadSelf();
     if (reqStackSize == 0)
         stackSize = gDvm.stackSize;

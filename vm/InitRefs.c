@@ -340,6 +340,9 @@ static bool initDirectMethodReferences(void) {
           "Lorg/apache/harmony/lang/annotation/AnnotationFactory;", "createAnnotation",
           "(Ljava/lang/Class;[Lorg/apache/harmony/lang/annotation/AnnotationMember;)"
           "Ljava/lang/annotation/Annotation;" },
+        { &gDvm.methodTraceClassPrepMethod, "Ldalvik/system/VMDebug;", "startClassPrep", "()V" },
+        { &gDvm.methJavaLangRefFinalizerReferenceAdd,
+          "Ljava/lang/ref/FinalizerReference;", "add", "(Ljava/lang/Object;)V" },
         { NULL, NULL, NULL, NULL }
     };
 
@@ -386,7 +389,6 @@ static bool initVirtualMethodOffsets(void) {
           "(Ljava/lang/String;)Ljava/lang/Class;" },
         { &gDvm.voffJavaLangObject_equals, "Ljava/lang/Object;", "equals",
           "(Ljava/lang/Object;)Z" },
-        { &gDvm.voffJavaLangObject_finalize, "Ljava/lang/Object;", "finalize", "()V" },
         { &gDvm.voffJavaLangObject_hashCode, "Ljava/lang/Object;", "hashCode", "()I" },
         { &gDvm.voffJavaLangObject_toString, "Ljava/lang/Object;", "toString",
           "()Ljava/lang/String;" },
@@ -405,6 +407,13 @@ static bool initVirtualMethodOffsets(void) {
     }
 
     return true;
+}
+
+static bool initFinalizerReference()
+{
+    gDvm.classJavaLangRefFinalizerReference =
+        dvmFindSystemClass("Ljava/lang/ref/FinalizerReference;");
+    return gDvm.classJavaLangRefFinalizerReference != NULL;
 }
 
 static bool verifyStringOffset(const char* name, int actual, int expected) {
@@ -447,6 +456,7 @@ bool dvmFindRequiredClassesAndMembers(void) {
         && initConstructorReferences()
         && initDirectMethodReferences()
         && initVirtualMethodOffsets()
+        && initFinalizerReference()
         && verifyStringOffsets();
 }
 
@@ -465,7 +475,7 @@ bool dvmFindReferenceMembers(ClassObject* classReference) {
     /* Note: enqueueInternal() is private and thus a direct method. */
 
     return initFieldOffset(classReference, &gDvm.offJavaLangRefReference_pendingNext,
-                "pendingNext", "Ljava/lang/ref/Reference;")
+                "pendingNext", "Ljava/lang/Object;")
         && initFieldOffset(classReference, &gDvm.offJavaLangRefReference_queue,
                 "queue", "Ljava/lang/ref/ReferenceQueue;")
         && initFieldOffset(classReference, &gDvm.offJavaLangRefReference_queueNext,

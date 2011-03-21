@@ -508,6 +508,7 @@ static int referenceClassFlags(const Object *obj)
 {
     int flags = CLASS_ISREFERENCE |
                 CLASS_ISWEAKREFERENCE |
+                CLASS_ISFINALIZERREFERENCE |
                 CLASS_ISPHANTOMREFERENCE;
     return GET_CLASS_FLAG_GROUP(obj->clazz, flags);
 }
@@ -526,6 +527,14 @@ static bool isSoftReference(const Object *obj)
 static bool isWeakReference(const Object *obj)
 {
     return referenceClassFlags(obj) & CLASS_ISWEAKREFERENCE;
+}
+
+/*
+ * Returns true if the object derives from FinalizerReference.
+ */
+static bool isFinalizerReference(const Object *obj)
+{
+    return referenceClassFlags(obj) & CLASS_ISFINALIZERREFERENCE;
 }
 
 /*
@@ -606,6 +615,8 @@ static void delayReferenceReferent(Object *obj, GcMarkContext *ctx)
             list = &gcHeap->softReferences;
         } else if (isWeakReference(obj)) {
             list = &gcHeap->weakReferences;
+        } else if (isFinalizerReference(obj)) {
+            list = &gcHeap->finalizerReferences;
         } else if (isPhantomReference(obj)) {
             list = &gcHeap->phantomReferences;
         }
@@ -872,109 +883,35 @@ static void clearWhiteReferences(Object **list)
     assert(*list == NULL);
 }
 
-/* Find unreachable objects that need to be finalized,
- * and schedule them for finalization.
+/*
+ * Enqueues finalizer references with white referents.  White
+ * referents are blackened, moved to the pendingNext field, and the
+ * referent field is cleared.
  */
-static void scheduleFinalizations(void)
+static void enqueueFinalizerReferences(Object **list)
 {
-    ReferenceTable newPendingRefs;
-    LargeHeapRefTable *finRefs = gDvm.gcHeap->finalizableRefs;
-    Object **ref;
-    Object **lastRef;
-    size_t totalPendCount;
     GcMarkContext *ctx = &gDvm.gcHeap->markContext;
-
-    /*
-     * All reachable objects have been marked.
-     * Any unmarked finalizable objects need to be finalized.
-     */
-
-    /* Create a table that the new pending refs will
-     * be added to.
-     */
-    if (!dvmHeapInitHeapRefTable(&newPendingRefs)) {
-        //TODO: mark all finalizable refs and hope that
-        //      we can schedule them next time.  Watch out,
-        //      because we may be expecting to free up space
-        //      by calling finalizers.
-        LOGE("scheduleFinalizations(): no room for pending finalizations");
-        dvmAbort();
-    }
-
-    /* Walk through finalizableRefs and move any unmarked references
-     * to the list of new pending refs.
-     */
-    totalPendCount = 0;
-    while (finRefs != NULL) {
-        Object **gapRef;
-        size_t newPendCount = 0;
-
-        gapRef = ref = finRefs->refs.table;
-        lastRef = finRefs->refs.nextEntry;
-        while (ref < lastRef) {
-            if (!isMarked(*ref, ctx)) {
-                if (!dvmAddToReferenceTable(&newPendingRefs, *ref)) {
-                    //TODO: add the current table and allocate
-                    //      a new, smaller one.
-                    LOGE("scheduleFinalizations(): "
-                         "no room for any more pending finalizations: %zd",
-                         dvmReferenceTableEntries(&newPendingRefs));
-                    dvmAbort();
-                }
-                newPendCount++;
-            } else {
-                /* This ref is marked, so will remain on finalizableRefs.
-                 */
-                if (newPendCount > 0) {
-                    /* Copy it up to fill the holes.
-                     */
-                    *gapRef++ = *ref;
-                } else {
-                    /* No holes yet; don't bother copying.
-                     */
-                    gapRef++;
-                }
-            }
-            ref++;
+    size_t referentOffset = gDvm.offJavaLangRefReference_referent;
+    size_t pendingNextOffset = gDvm.offJavaLangRefReference_pendingNext;
+    bool doSignal = false;
+    while (*list != NULL) {
+        Object *ref = dequeuePendingReference(list);
+        Object *referent = dvmGetFieldObject(ref, referentOffset);
+        if (referent != NULL && !isMarked(referent, ctx)) {
+            markObject(referent, ctx);
+            /* If the referent is non-null the reference must queuable. */
+            assert(isEnqueuable(ref));
+            dvmSetFieldObject(ref, pendingNextOffset, referent);
+            clearReference(ref);
+            enqueueReference(ref);
+            doSignal = true;
         }
-        finRefs->refs.nextEntry = gapRef;
-        //TODO: if the table is empty when we're done, free it.
-        totalPendCount += newPendCount;
-        finRefs = finRefs->next;
     }
-    LOGV("scheduleFinalizations(): %zd finalizers triggered.", totalPendCount);
-    if (totalPendCount == 0) {
-        /* No objects required finalization.
-         * Free the empty temporary table.
-         */
-        dvmClearReferenceTable(&newPendingRefs);
-        return;
+    if (doSignal) {
+        processMarkStack(ctx);
+        dvmSignalHeapWorker(false);
     }
-
-    /* Add the new pending refs to the main list.
-     */
-    if (!dvmHeapAddTableToLargeTable(&gDvm.gcHeap->pendingFinalizationRefs,
-                &newPendingRefs))
-    {
-        LOGE("scheduleFinalizations(): can't insert new pending finalizations");
-        dvmAbort();
-    }
-
-    //TODO: try compacting the main list with a memcpy loop
-
-    /* Mark the refs we just moved;  we don't want them or their
-     * children to get swept yet.
-     */
-    ref = newPendingRefs.table;
-    lastRef = newPendingRefs.nextEntry;
-    assert(ref < lastRef);
-    while (ref < lastRef) {
-        assert(*ref != NULL);
-        markObject(*ref, ctx);
-        ref++;
-    }
-    processMarkStack(ctx);
-    dvmSignalHeapWorker(false);
+    assert(*list == NULL);
 }
 
 /*
@@ -984,15 +921,14 @@ static void scheduleFinalizations(void)
  * This is called when Object.<init> completes normally.  It's also
  * called for clones of finalizable objects.
  */
-void dvmSetFinalizable(Object* obj)
+void dvmSetFinalizable(Object *obj)
 {
-    dvmLockHeap();
-    GcHeap* gcHeap = gDvm.gcHeap;
-    if (!dvmHeapAddRefToLargeTable(&gcHeap->finalizableRefs, obj)) {
-        LOGE_HEAP("No room for any more finalizable objects");
-        dvmAbort();
-    }
-    dvmUnlockHeap();
+    Thread *self = dvmThreadSelf();
+    assert(self != NULL);
+    Method *meth = gDvm.methJavaLangRefFinalizerReferenceAdd;
+    assert(meth != NULL);
+    JValue unused;
+    dvmCallMethod(self, meth, obj, &unused, obj);
 }
 
 /*
@@ -1000,10 +936,12 @@ void dvmSetFinalizable(Object* obj)
  */
 void dvmHeapProcessReferences(Object **softReferences, bool clearSoftRefs,
                               Object **weakReferences,
+                              Object **finalizerReferences,
                               Object **phantomReferences)
 {
     assert(softReferences != NULL);
     assert(weakReferences != NULL);
+    assert(finalizerReferences != NULL);
     assert(phantomReferences != NULL);
     /*
      * Unless we are in the zygote or required to clear soft
@@ -1023,7 +961,7 @@ void dvmHeapProcessReferences(Object **softReferences, bool clearSoftRefs,
      * Preserve all white objects with finalize methods and schedule
      * them for finalization.
      */
-    scheduleFinalizations();
+    enqueueFinalizerReferences(finalizerReferences);
     /*
      * Clear all f-reachable soft and weak references with white
      * referents.
@@ -1039,6 +977,7 @@ void dvmHeapProcessReferences(Object **softReferences, bool clearSoftRefs,
      */
     assert(*softReferences == NULL);
     assert(*weakReferences == NULL);
+    assert(*finalizerReferences == NULL);
     assert(*phantomReferences == NULL);
 }
 

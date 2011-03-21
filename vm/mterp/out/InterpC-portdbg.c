@@ -3427,6 +3427,7 @@ HANDLE_OPCODE(OP_INVOKE_OBJECT_INIT_RANGE /*{vCCCC..v(CCCC+AA-1)}, meth@BBBB*/)
          * (by virtue of being nothing but a return-void) and set it now.
          */
         if (IS_CLASS_FLAG_SET(obj->clazz, CLASS_ISFINALIZABLE)) {
+            EXPORT_PC();
             dvmSetFinalizable(obj);
         }
 

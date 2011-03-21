@@ -53,6 +53,7 @@ void dvmHeapScanMarkedObjects(bool isPartial);
 void dvmHeapReScanMarkedObjects(void);
 void dvmHeapProcessReferences(Object **softReferences, bool clearSoftRefs,
                               Object **weakReferences,
+                              Object **finalizerReferences,
                               Object **phantomReferences);
 void dvmHeapFinishMarkStep(void);
 void dvmHeapSweepSystemWeaks(void);

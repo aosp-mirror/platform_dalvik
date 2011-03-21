@@ -2704,6 +2704,7 @@ bool dvmLinkClass(ClassObject* clazz)
             superRefFlags = GET_CLASS_FLAG_GROUP(clazz->super,
                     CLASS_ISREFERENCE |
                     CLASS_ISWEAKREFERENCE |
+                    CLASS_ISFINALIZERREFERENCE |
                     CLASS_ISPHANTOMREFERENCE);
             SET_CLASS_FLAG(clazz, superRefFlags);
         } else if (clazz->classLoader == NULL &&
@@ -2727,6 +2728,10 @@ bool dvmLinkClass(ClassObject* clazz)
             {
                 refFlags |= CLASS_ISWEAKREFERENCE;
             } else if (strcmp(clazz->descriptor,
+                       "Ljava/lang/ref/FinalizerReference;") == 0)
+            {
+                refFlags |= CLASS_ISFINALIZERREFERENCE;
+            }  else if (strcmp(clazz->descriptor,
                        "Ljava/lang/ref/PhantomReference;") == 0)
             {
                 refFlags |= CLASS_ISPHANTOMREFERENCE;
@@ -2744,6 +2749,7 @@ bool dvmLinkClass(ClassObject* clazz)
             assert(GET_CLASS_FLAG_GROUP(clazz,
                     CLASS_ISREFERENCE |
                     CLASS_ISWEAKREFERENCE |
+                    CLASS_ISFINALIZERREFERENCE |
                     CLASS_ISPHANTOMREFERENCE) == 0);
 
             SET_CLASS_FLAG(clazz, refFlags);

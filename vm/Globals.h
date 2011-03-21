@@ -285,6 +285,7 @@ struct DvmGlobals {
     ClassObject* classOrgApacheHarmonyLangAnnotationAnnotationFactory;
     ClassObject* classOrgApacheHarmonyLangAnnotationAnnotationMember;
     ClassObject* classOrgApacheHarmonyLangAnnotationAnnotationMemberArray;
+    ClassObject* classJavaLangRefFinalizerReference;
 
     /*
      * classes representing exception types. The names here don't include
@@ -337,7 +338,6 @@ struct DvmGlobals {
     int         voffJavaLangObject_equals;
     int         voffJavaLangObject_hashCode;
     int         voffJavaLangObject_toString;
-    int         voffJavaLangObject_finalize;
 
     /* field offsets - Class */
     int         offJavaLangClass_pd;
@@ -389,6 +389,9 @@ struct DvmGlobals {
 
     /* method pointers - java.lang.ref.Reference */
     Method*     methJavaLangRefReference_enqueueInternal;
+
+    /* more method pointers - java.lang.ref.FinalizerReference */
+    Method* methJavaLangRefFinalizerReferenceAdd;
 
     /* constructor method pointers; no vtable involved, so use Method* */
     Method*     methJavaLangStackTraceElement_init;
