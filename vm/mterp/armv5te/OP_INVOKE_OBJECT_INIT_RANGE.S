@@ -14,6 +14,7 @@
     ldr     r2, [r1, #offClassObject_accessFlags] @ r2<- clazz->accessFlags
     tst     r2, #CLASS_ISFINALIZABLE    @ is this class finalizable?
     beq     1f                          @ nope, done
+    EXPORT_PC()                         @ can throw
     bl      dvmSetFinalizable           @ call dvmSetFinalizable(obj)
 1:  FETCH_ADVANCE_INST(${cccc}+1)       @ advance to next instr, load rINST
     GET_INST_OPCODE(ip)                 @ ip<- opcode from rINST

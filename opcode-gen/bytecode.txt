@@ -328,12 +328,7 @@ op   ed ^throw-verification-error   20bc n varies        optimized|throw
 op   ee +execute-inline             35mi n inline-method optimized|continue|throw
 op   ef +execute-inline/range       3rmi n inline-method optimized|continue|throw
 
-# This opcode is marked neither as "invoke" nor "throw" since it
-# doesn't invoke the method unless a debugger is attached. The verifier
-# will ensure that Object.<init> is present and empty, so there is no
-# opportunity for an exception to be thrown.
-op   f0 +invoke-object-init/range   35c  n method-ref    optimized|continue
-
+op   f0 +invoke-object-init/range   35c  n method-ref    optimized|continue|throw|invoke
 op   f1 +return-void-barrier        10x  n none          optimized|return
 op   f2 +iget-quick                 22cs y field-offset  optimized|continue|throw
 op   f3 +iget-wide-quick            22cs y field-offset  optimized|continue|throw
@@ -399,9 +394,7 @@ op 26ff invoke-interface/jumbo      5rc  n method-ref    continue|throw|invoke
 # Optimized opcodes (not valid in an unoptimized dex file)
 #
 
-# See notes above invoke-object-init re: no "throw" or "invoke"
-op f2ff +invoke-object-init/jumbo   5rc  n method-ref    optimized|continue
-
+op f2ff +invoke-object-init/jumbo   5rc  n method-ref    optimized|continue|throw|invoke
 op f3ff +iget-volatile/jumbo        52c  y field-ref     optimized|continue|throw
 op f4ff +iget-wide-volatile/jumbo   52c  y field-ref     optimized|continue|throw
 op f5ff +iget-object-volatile/jumbo 52c  y field-ref     optimized|continue|throw

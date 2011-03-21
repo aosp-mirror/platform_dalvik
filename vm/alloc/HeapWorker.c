@@ -272,17 +272,11 @@ static void callMethod(Thread *self, Object *obj, Method *method)
 static void doHeapWork(Thread *self)
 {
     Object *obj;
-    HeapWorkerOperation op;
-    int numFinalizersCalled, numReferencesEnqueued;
+    size_t numReferencesEnqueued;
 
-    assert(gDvm.voffJavaLangObject_finalize >= 0);
     assert(gDvm.methJavaLangRefReference_enqueueInternal != NULL);
-
-    numFinalizersCalled = 0;
     numReferencesEnqueued = 0;
-    while ((obj = dvmGetNextHeapWorkerObject(&op)) != NULL) {
-        Method *method = NULL;
-
+    while ((obj = dvmGetNextHeapWorkerObject()) != NULL) {
         /* Make sure the object hasn't been collected since
          * being scheduled.
          */
@@ -290,30 +284,18 @@ static void doHeapWork(Thread *self)
 
         /* Call the appropriate method(s).
          */
-        if (op == WORKER_FINALIZE) {
-            numFinalizersCalled++;
-            method = obj->clazz->vtable[gDvm.voffJavaLangObject_finalize];
-            assert(dvmCompareNameDescriptorAndMethod("finalize", "()V",
-                            method) == 0);
-            assert(method->clazz != gDvm.classJavaLangObject);
-            callMethod(self, obj, method);
-        } else {
-            assert(op == WORKER_ENQUEUE);
-            assert(dvmGetFieldObject(
-                       obj, gDvm.offJavaLangRefReference_queue) != NULL);
-            assert(dvmGetFieldObject(
-                       obj, gDvm.offJavaLangRefReference_queueNext) == NULL);
-            numReferencesEnqueued++;
-            callMethod(self, obj,
-                       gDvm.methJavaLangRefReference_enqueueInternal);
-        }
+        assert(dvmGetFieldObject(
+                   obj, gDvm.offJavaLangRefReference_queue) != NULL);
+        assert(dvmGetFieldObject(
+                   obj, gDvm.offJavaLangRefReference_queueNext) == NULL);
+        numReferencesEnqueued++;
+        callMethod(self, obj, gDvm.methJavaLangRefReference_enqueueInternal);
 
         /* Let the GC collect the object.
          */
         dvmReleaseTrackedAlloc(obj, self);
     }
-    LOGV("Called %d finalizers\n", numFinalizersCalled);
-    LOGV("Enqueued %d references\n", numReferencesEnqueued);
+    LOGV("Enqueued %zd references", numReferencesEnqueued);
 }
 
 /*
@@ -451,54 +433,6 @@ void dvmSignalHeapWorker(bool shouldLock)
 
     if (shouldLock) {
         dvmUnlockMutex(&gDvm.heapWorkerLock);
-    }
-}
-
-/*
- * Block until all pending heap worker work has finished.
- */
-void dvmWaitForHeapWorkerIdle()
-{
-    assert(gDvm.heapWorkerReady);
-
-    dvmChangeStatus(NULL, THREAD_VMWAIT);
-
-    dvmLockMutex(&gDvm.heapWorkerLock);
-
-    /* Wake up the heap worker and wait for it to finish. */
-    //TODO(http://b/issue?id=699704): This will deadlock if
-    //     called from finalize(), enqueue(), or clear().  We
-    //     need to detect when this is called from the HeapWorker
-    //     context and just give up.
-    dvmSignalHeapWorker(false);
-    dvmWaitCond(&gDvm.heapWorkerIdleCond, &gDvm.heapWorkerLock);
-
-    dvmUnlockMutex(&gDvm.heapWorkerLock);
-
-    dvmChangeStatus(NULL, THREAD_RUNNING);
-}
-
-/*
- * Do not return until any pending heap work has finished.  This may
- * or may not happen in the context of the calling thread.
- * No exceptions will escape.
- */
-void dvmRunFinalizationSync()
-{
-    if (gDvm.zygote) {
-        assert(!gDvm.heapWorkerReady);
-
-        /* When in zygote mode, there is no heap worker.
-         * Do the work in the current thread.
-         */
-        dvmLockMutex(&gDvm.heapWorkerLock);
-        doHeapWork(dvmThreadSelf());
-        dvmUnlockMutex(&gDvm.heapWorkerLock);
-    } else {
-        /* Outside of zygote mode, we can just ask the
-         * heap worker thread to do the work.
-         */
-        dvmWaitForHeapWorkerIdle();
     }
 }
 

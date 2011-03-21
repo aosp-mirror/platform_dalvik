@@ -29,37 +29,15 @@ typedef struct HeapSource HeapSource;
 struct GcHeap {
     HeapSource      *heapSource;
 
-    /* List of heap objects that will require finalization when
-     * collected.  I.e., instance objects
-     *
-     *     a) whose class definitions override java.lang.Object.finalize()
-     *
-     * *** AND ***
-     *
-     *     b) that have never been finalized.
-     *
-     * Note that this does not exclude non-garbage objects;  this
-     * is not the list of pending finalizations, but of objects that
-     * potentially have finalization in their futures.
-     */
-    LargeHeapRefTable  *finalizableRefs;
-
-    /* The list of objects that need to have finalize() called
-     * on themselves.  These references are part of the root set.
-     *
-     * This table is protected by gDvm.heapWorkerListLock, which must
-     * be acquired after the heap lock.
-     */
-    LargeHeapRefTable  *pendingFinalizationRefs;
-
     /* Linked lists of subclass instances of java/lang/ref/Reference
      * that we find while recursing.  The "next" pointers are hidden
      * in the objects' <code>int Reference.vmData</code> fields.
      * These lists are cleared and rebuilt each time the GC runs.
      */
-    Object         *softReferences;
-    Object         *weakReferences;
-    Object         *phantomReferences;
+    Object *softReferences;
+    Object *weakReferences;
+    Object *finalizerReferences;
+    Object *phantomReferences;
 
     /* The list of Reference objects that need to be cleared and/or
      * enqueued.  The bottom two bits of the object pointers indicate

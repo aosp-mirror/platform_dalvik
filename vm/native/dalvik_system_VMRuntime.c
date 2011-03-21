@@ -55,23 +55,6 @@ static void Dalvik_dalvik_system_VMRuntime_nativeSetTargetHeapUtilization(
 }
 
 /*
- * public native void runFinalizationSync()
- *
- * Does not return until any pending finalizers have been called.
- * This may or may not happen in the context of the calling thread.
- * No exceptions will escape.
- *
- * Used by zygote, which doesn't have a HeapWorker thread.
- */
-static void Dalvik_dalvik_system_VMRuntime_runFinalizationSync(const u4* args,
-    JValue* pResult)
-{
-    dvmRunFinalizationSync();
-
-    RETURN_VOID();
-}
-
-/*
  * public native void startJitCompilation()
  *
  * Callback function from the framework to indicate that an app has gone
@@ -216,8 +199,6 @@ const DalvikNativeMethod dvm_dalvik_system_VMRuntime[] = {
         Dalvik_dalvik_system_VMRuntime_newNonMovableArray },
     { "properties", "()[Ljava/lang/String;",
         Dalvik_dalvik_system_VMRuntime_properties },
-    { "runFinalizationSync", "()V",
-        Dalvik_dalvik_system_VMRuntime_runFinalizationSync },
     { "startJitCompilation", "()V",
         Dalvik_dalvik_system_VMRuntime_startJitCompilation },
     { "vmVersion", "()Ljava/lang/String;",

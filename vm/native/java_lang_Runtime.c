@@ -93,31 +93,6 @@ static void Dalvik_java_lang_Runtime_nativeLoad(const u4* args,
 }
 
 /*
- * public void runFinalization(boolean forced)
- *
- * Requests that the VM runs finalizers for objects on the heap. If the
- * parameter forced is true, then the VM needs to ensure finalization.
- * Otherwise this only inspires the VM to make a best-effort attempt to
- * run finalizers before returning, but it's not guaranteed to actually
- * do anything.
- */
-static void Dalvik_java_lang_Runtime_runFinalization(const u4* args,
-    JValue* pResult)
-{
-    bool forced = (args[0] != 0);
-
-    dvmWaitForHeapWorkerIdle();
-    if (forced) {
-        // TODO(Google) Need to explicitly implement this,
-        //              although dvmWaitForHeapWorkerIdle()
-        //              should usually provide the "forced"
-        //              behavior already.
-    }
-
-    RETURN_VOID();
-}
-
-/*
  * public long maxMemory()
  *
  * Returns GC heap max memory in bytes.
@@ -166,8 +141,6 @@ const DalvikNativeMethod dvm_java_lang_Runtime[] = {
         Dalvik_java_lang_Runtime_nativeExit },
     { "nativeLoad",         "(Ljava/lang/String;Ljava/lang/ClassLoader;)Ljava/lang/String;",
         Dalvik_java_lang_Runtime_nativeLoad },
-    { "runFinalization",    "(Z)V",
-        Dalvik_java_lang_Runtime_runFinalization },
     { "totalMemory",          "()J",
         Dalvik_java_lang_Runtime_totalMemory },
     { NULL, NULL, NULL },

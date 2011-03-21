@@ -104,8 +104,6 @@ bool dvmHeapStartup()
      * and reference objects.
      */
     dvmInitMutex(&gDvm.heapWorkerListLock);
-    gcHeap->finalizableRefs = NULL;
-    gcHeap->pendingFinalizationRefs = NULL;
     gcHeap->referenceOperations = NULL;
 
     if (!dvmCardTableStartup(gDvm.heapMaximumSize)) {
@@ -135,12 +133,6 @@ void dvmHeapShutdown()
          * cleaned up explicitly.  The process may stick around, so we
          * don't want to leak any native memory.
          */
-        dvmHeapFreeLargeTable(gDvm.gcHeap->finalizableRefs);
-        gDvm.gcHeap->finalizableRefs = NULL;
-
-        dvmHeapFreeLargeTable(gDvm.gcHeap->pendingFinalizationRefs);
-        gDvm.gcHeap->pendingFinalizationRefs = NULL;
-
         dvmHeapFreeLargeTable(gDvm.gcHeap->referenceOperations);
         gDvm.gcHeap->referenceOperations = NULL;
 
@@ -191,26 +183,14 @@ void dvmUnlockHeap()
  *
  * Typically only called by the heap worker thread.
  */
-Object *dvmGetNextHeapWorkerObject(HeapWorkerOperation *op)
+Object *dvmGetNextHeapWorkerObject()
 {
     Object *obj;
     GcHeap *gcHeap = gDvm.gcHeap;
 
-    assert(op != NULL);
-
     dvmLockMutex(&gDvm.heapWorkerListLock);
 
     obj = dvmHeapGetNextObjectFromLargeTable(&gcHeap->referenceOperations);
-    if (obj != NULL) {
-        *op = WORKER_ENQUEUE;
-    } else {
-        obj = dvmHeapGetNextObjectFromLargeTable(
-                &gcHeap->pendingFinalizationRefs);
-        if (obj != NULL) {
-            *op = WORKER_FINALIZE;
-        }
-    }
-
     if (obj != NULL) {
         /* Don't let the GC collect the object until the
          * worker thread is done with it.
@@ -709,6 +689,7 @@ void dvmCollectGarbageInternal(const GcSpec* spec)
     dvmHeapProcessReferences(&gcHeap->softReferences,
                              spec->softReferencePolicy == CLEAR,
                              &gcHeap->weakReferences,
+                             &gcHeap->finalizerReferences,
                              &gcHeap->phantomReferences);
 
 #if defined(WITH_JIT)

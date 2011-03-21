@@ -513,11 +513,11 @@ static void Dalvik_dalvik_system_Zygote_forkSystemServer(
 }
 
 const DalvikNativeMethod dvm_dalvik_system_Zygote[] = {
-    { "fork",            "()I",
-        Dalvik_dalvik_system_Zygote_fork },
-    { "forkAndSpecialize",            "(II[II[[I)I",
-        Dalvik_dalvik_system_Zygote_forkAndSpecialize },
-    { "forkSystemServer",            "(II[II[[IJJ)I",
-        Dalvik_dalvik_system_Zygote_forkSystemServer },
+    { "nativeFork", "()I",
+      Dalvik_dalvik_system_Zygote_fork },
+    { "nativeForkAndSpecialize", "(II[II[[I)I",
+      Dalvik_dalvik_system_Zygote_forkAndSpecialize },
+    { "nativeForkSystemServer", "(II[II[[IJJ)I",
+      Dalvik_dalvik_system_Zygote_forkSystemServer },
     { NULL, NULL, NULL },
 };

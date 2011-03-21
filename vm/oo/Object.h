@@ -80,12 +80,14 @@ typedef enum ClassFlags {
     CLASS_ISFINALIZABLE     = (1<<31),  // class/ancestor overrides finalize()
     CLASS_ISARRAY           = (1<<30),  // class is a "[*"
     CLASS_ISOBJECTARRAY     = (1<<29),  // class is a "[L*" or "[[*"
+
     CLASS_ISREFERENCE       = (1<<28),  // class is a soft/weak/phantom ref
                                         // only ISREFERENCE is set --> soft
     CLASS_ISWEAKREFERENCE   = (1<<27),  // class is a weak reference
-    CLASS_ISPHANTOMREFERENCE = (1<<26), // class is a phantom reference
+    CLASS_ISFINALIZERREFERENCE = (1<<26), // class is a phantom reference
+    CLASS_ISPHANTOMREFERENCE = (1<<25), // class is a phantom reference
 
-    CLASS_MULTIPLE_DEFS     = (1<<25),  // DEX verifier: defs in multiple DEXs
+    CLASS_MULTIPLE_DEFS     = (1<<24),  // DEX verifier: defs in multiple DEXs
 
     /* unlike the others, these can be present in the optimized DEX file */
     CLASS_ISOPTIMIZED       = (1<<17),  // class may contain opt instrs

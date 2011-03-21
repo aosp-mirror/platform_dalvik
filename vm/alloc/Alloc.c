@@ -169,6 +169,7 @@ Object* dvmAllocObject(ClassObject* clazz, int flags)
 {
     Object* newObj;
 
+    assert(clazz != NULL);
     assert(dvmIsClassInitialized(clazz) || dvmIsClassInitializing(clazz));
 
     /* allocate on GC heap; memory is zeroed out */

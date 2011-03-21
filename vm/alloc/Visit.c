@@ -251,7 +251,6 @@ void dvmVisitRoots(RootVisitor *visitor, void *arg)
     visitReferenceTable(visitor, &gDvm.jniPinRefTable, 0, ROOT_VM_INTERNAL, arg);
     dvmUnlockMutex(&gDvm.jniPinRefLock);
     visitLargeHeapRefTable(visitor, gDvm.gcHeap->referenceOperations, ROOT_REFERENCE_CLEANUP, arg);
-    visitLargeHeapRefTable(visitor, gDvm.gcHeap->pendingFinalizationRefs, ROOT_FINALIZING, arg);
     visitThreads(visitor, arg);
     (*visitor)(&gDvm.outOfMemoryObj, 0, ROOT_VM_INTERNAL, arg);
     (*visitor)(&gDvm.internalErrorObj, 0, ROOT_VM_INTERNAL, arg);
