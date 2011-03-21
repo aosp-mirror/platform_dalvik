@@ -24,6 +24,7 @@
 #include "alloc/HeapInternal.h"
 #include "alloc/DdmHeap.h"
 #include "alloc/HeapSource.h"
+#include "alloc/HeapWorker.h"
 #include "alloc/MarkSweep.h"
 
 #include "utils/threads.h"      // need Android thread priorities

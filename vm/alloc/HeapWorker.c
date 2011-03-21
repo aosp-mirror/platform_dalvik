@@ -21,7 +21,8 @@
  * The VM does all clearing.
  */
 #include "Dalvik.h"
-#include "HeapInternal.h"
+#include "alloc/HeapInternal.h"
+#include "alloc/HeapWorker.h"
 
 #include <sys/time.h>
 #include <stdlib.h>
