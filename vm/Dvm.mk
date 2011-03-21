@@ -114,7 +114,6 @@ LOCAL_SRC_FILES := \
 	SignalCatcher.c \
 	StdioConverter.c \
 	Sync.c \
-	TestCompability.c \
 	Thread.c \
 	UtfString.c \
 	alloc/Alloc.c \
@@ -320,8 +319,4 @@ ifeq ($(MTERP_ARCH_KNOWN),false)
   # measure, too.
   LOCAL_CFLAGS += -DdvmAsmInstructionStart=0 -DdvmAsmInstructionEnd=0 \
 	-DdvmAsmSisterStart=0 -DdvmAsmSisterEnd=0 -DDVM_NO_ASM_INTERP=1
-endif
-
-ifeq ($(TEST_VM_IN_ECLAIR),true)
-  LOCAL_CFLAGS += -DTEST_VM_IN_ECLAIR
 endif
