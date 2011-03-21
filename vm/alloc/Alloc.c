@@ -20,6 +20,7 @@
 #include "alloc/Heap.h"
 #include "alloc/HeapInternal.h"
 #include "alloc/HeapSource.h"
+#include "alloc/HeapWorker.h"
 
 /*
  * Initialize the GC universe.

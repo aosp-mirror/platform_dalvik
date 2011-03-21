@@ -20,6 +20,7 @@
 #include "alloc/HeapBitmapInlines.h"
 #include "alloc/HeapInternal.h"
 #include "alloc/HeapSource.h"
+#include "alloc/HeapWorker.h"
 #include "alloc/MarkSweep.h"
 #include "alloc/Visit.h"
 #include "alloc/VisitInlines.h"
