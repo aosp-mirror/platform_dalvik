@@ -327,13 +327,13 @@ public final class Opcodes {
 
     /**
      * Determines if the given opcode has the right "shape" to be
-     * valid. This includes the range {@code 0x00..0xfe}, the range
-     * {@code 0x00ff..0xffff} where the low-order byte is {@code
-     * 0xff}, and the special opcode values {@code SPECIAL_FORMAT} and
-     * {@code NO_NEXT}. Note that not all of the opcode values that
-     * pass this test are in fact used. This method is meant to
-     * perform a quick check to reject blatantly wrong values (e.g.
-     * when validating arguments).
+     * valid. This includes the range {@code 0x01..0xfe}, the range
+     * {@code 0x00ff..0xffff} where the low-order byte is either
+     * {@code 0} or {@code 0xff}, and the special opcode values {@code
+     * SPECIAL_FORMAT} and {@code NO_NEXT}. Note that not all of the
+     * opcode values that pass this test are in fact used. This method
+     * is meant to perform a quick check to reject blatantly wrong
+     * values (e.g. when validating arguments).
      *
      * @param opcode the opcode value
      * @return {@code true} iff the value has the right "shape" to be
@@ -342,8 +342,12 @@ public final class Opcodes {
     public static boolean isValidShape(int opcode) {
         /*
          * Note: This method bakes in knowledge that all opcodes are
-         * either single-byte or of the forms (byteValue << 8) or
-         * ((byteValue << 8) 0xff).
+         * one of the forms:
+         *
+         *   * single byte in range 0x01..0xfe -- normal opcodes
+         *   * (byteValue << 8) -- nop and data payload opcodes
+         *   * ((byteValue << 8) | 0xff) -- 16-bit extended opcodes
+         *   * SPECIAL_FORMAT or NO_NEXT -- pseudo-opcodes
          */
 
         // Note: SPECIAL_FORMAT == NO_NEXT.
@@ -362,9 +366,10 @@ public final class Opcodes {
     }
 
     /**
-     * Gets whether ({@code true}) or not ({@code false}) the given opcode value
-     * is an "extended" opcode. Extended opcodes require a full 16-bit code unit
-     * to represent (without leaving space for an argument byte).
+     * Gets whether ({@code true}) or not ({@code false}) the given
+     * opcode value is an "extended" opcode (not counting the nop-like
+     * payload opcodes). Extended opcodes require a full 16-bit code
+     * unit to represent, without leaving space for an argument byte.
      * 
      * @param opcode the opcode value
      * @return {@code true} iff the opcode is an "extended" opcode
