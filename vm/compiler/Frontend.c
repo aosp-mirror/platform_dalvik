@@ -566,6 +566,7 @@ static BasicBlock *splitBlock(CompilationUnit *cUnit,
     /* Handle the fallthrough path */
     bottomBlock->fallThrough = origBlock->fallThrough;
     origBlock->fallThrough = bottomBlock;
+    origBlock->needFallThroughBranch = true;
     dvmCompilerSetBit(bottomBlock->predecessors, origBlock->id);
     if (bottomBlock->fallThrough) {
         dvmCompilerClearBit(bottomBlock->fallThrough->predecessors,
@@ -633,7 +634,7 @@ static BasicBlock *findBlock(CompilationUnit *cUnit,
 }
 
 /* Dump the CFG into a DOT graph */
-void dumpCFG(CompilationUnit *cUnit, const char *dirPrefix)
+void dvmDumpCFG(CompilationUnit *cUnit, const char *dirPrefix)
 {
     const Method *method = cUnit->method;
     FILE *file;
@@ -686,14 +687,16 @@ void dumpCFG(CompilationUnit *cUnit, const char *dirPrefix)
         BasicBlock *bb = (BasicBlock *) dvmGrowableListGetElement(blockList,
                                                                   blockIdx);
         if (bb == NULL) break;
-        if (bb->blockType == kMethodEntryBlock) {
+        if (bb->blockType == kEntryBlock) {
             fprintf(file, "  entry [shape=Mdiamond];\n");
-        } else if (bb->blockType == kMethodExitBlock) {
+        } else if (bb->blockType == kExitBlock) {
             fprintf(file, "  exit [shape=Mdiamond];\n");
         } else if (bb->blockType == kDalvikByteCode) {
             fprintf(file, "  block%04x [shape=record,label = \"{ \\\n",
                     bb->startOffset);
             const MIR *mir;
+            fprintf(file, "    {block id %d\\l}%s\\\n", bb->id,
+                    bb->firstMIRInsn ? " | " : " ");
             for (mir = bb->firstMIRInsn; mir; mir = mir->next) {
                 fprintf(file, "    {%04x %s\\l}%s\\\n", mir->offset,
                         mir->ssaRep ?
@@ -834,7 +837,7 @@ static bool verifyPredInfo(CompilationUnit *cUnit, BasicBlock *bb)
             char blockName1[BLOCK_NAME_LEN], blockName2[BLOCK_NAME_LEN];
             dvmGetBlockName(bb, blockName1);
             dvmGetBlockName(predBB, blockName2);
-            dumpCFG(cUnit, "/sdcard/cfg/");
+            dvmDumpCFG(cUnit, "/sdcard/cfg/");
             LOGE("Successor %s not found from %s",
                  blockName1, blockName2);
             dvmAbort();
@@ -1186,8 +1189,8 @@ bool dvmCompileMethod(const Method *method, JitTranslationInfo *info)
     cUnit.tryBlockAddr = tryBlockAddr;
 
     /* Create the default entry and exit blocks and enter them to the list */
-    BasicBlock *entryBlock = dvmCompilerNewBB(kMethodEntryBlock, numBlocks++);
-    BasicBlock *exitBlock = dvmCompilerNewBB(kMethodExitBlock, numBlocks++);
+    BasicBlock *entryBlock = dvmCompilerNewBB(kEntryBlock, numBlocks++);
+    BasicBlock *exitBlock = dvmCompilerNewBB(kExitBlock, numBlocks++);
 
     cUnit.entryBlock = entryBlock;
     cUnit.exitBlock = exitBlock;
@@ -1308,7 +1311,7 @@ bool dvmCompileMethod(const Method *method, JitTranslationInfo *info)
     dvmCompilerMethodMIR2LIR(&cUnit);
 
     // Debugging only
-    //dumpCFG(&cUnit, "/sdcard/cfg/");
+    //dvmDumpCFG(&cUnit, "/sdcard/cfg/");
 
     /* Method is not empty */
     if (cUnit.firstLIRInsn) {
@@ -1348,8 +1351,8 @@ static bool exhaustTrace(CompilationUnit *cUnit, BasicBlock *curBlock)
 
     curBlock->visited = true;
 
-    if (curBlock->blockType == kMethodEntryBlock ||
-        curBlock->blockType == kMethodExitBlock) {
+    if (curBlock->blockType == kEntryBlock ||
+        curBlock->blockType == kExitBlock) {
         return false;
     }
 
@@ -1397,6 +1400,34 @@ static bool exhaustTrace(CompilationUnit *cUnit, BasicBlock *curBlock)
             break;
         }
         curOffset += width;
+        BasicBlock *nextBlock = findBlock(cUnit, curOffset,
+                                          /* split */
+                                          false,
+                                          /* create */
+                                          false);
+        if (nextBlock) {
+            /*
+             * The next instruction could be the target of a previously parsed
+             * forward branch so a block is already created. If the current
+             * instruction is not an unconditional branch, connect them through
+             * the fall-through link.
+             */
+            assert(curBlock->fallThrough == NULL ||
+                   curBlock->fallThrough == nextBlock ||
+                   curBlock->fallThrough == cUnit->exitBlock);
+
+            if ((curBlock->fallThrough == NULL) &&
+                (flags & kInstrCanContinue)) {
+                curBlock->needFallThroughBranch = true;
+                curBlock->fallThrough = nextBlock;
+                dvmCompilerSetBit(nextBlock->predecessors, curBlock->id);
+            }
+            /* Block has been visited - no more parsing needed */
+            if (nextBlock->visited == true) {
+                return true;
+            }
+            curBlock = nextBlock;
+        }
     }
     return true;
 }
@@ -1410,6 +1441,10 @@ static bool compileLoop(CompilationUnit *cUnit, unsigned int startOffset,
     int numBlocks = 0;
     unsigned int curOffset = startOffset;
     bool changed;
+    BasicBlock *bb;
+#if defined(WITH_JIT_TUNING)
+    CompilerMethodStats *methodStats;
+#endif
 
     cUnit->jitMode = kJitLoop;
 
@@ -1420,9 +1455,9 @@ static bool compileLoop(CompilationUnit *cUnit, unsigned int startOffset,
     dvmInitGrowableList(&cUnit->pcReconstructionList, 8);
 
     /* Create the default entry and exit blocks and enter them to the list */
-    BasicBlock *entryBlock = dvmCompilerNewBB(kMethodEntryBlock, numBlocks++);
+    BasicBlock *entryBlock = dvmCompilerNewBB(kEntryBlock, numBlocks++);
     entryBlock->startOffset = curOffset;
-    BasicBlock *exitBlock = dvmCompilerNewBB(kMethodExitBlock, numBlocks++);
+    BasicBlock *exitBlock = dvmCompilerNewBB(kExitBlock, numBlocks++);
 
     cUnit->entryBlock = entryBlock;
     cUnit->exitBlock = exitBlock;
@@ -1452,6 +1487,20 @@ static bool compileLoop(CompilationUnit *cUnit, unsigned int startOffset,
         changed = exhaustTrace(cUnit, curBlock);
     } while (changed);
 
+    /* Backward chaining block */
+    bb = dvmCompilerNewBB(kChainingCellBackwardBranch, cUnit->numBlocks++);
+    dvmInsertGrowableList(&cUnit->blockList, (intptr_t) bb);
+    cUnit->backChainBlock = bb;
+
+    /* A special block to host PC reconstruction code */
+    bb = dvmCompilerNewBB(kPCReconstruction, cUnit->numBlocks++);
+    dvmInsertGrowableList(&cUnit->blockList, (intptr_t) bb);
+
+    /* And one final block that publishes the PC and raises the exception */
+    bb = dvmCompilerNewBB(kExceptionHandling, cUnit->numBlocks++);
+    dvmInsertGrowableList(&cUnit->blockList, (intptr_t) bb);
+    cUnit->puntBlock = bb;
+
     cUnit->numDalvikRegisters = cUnit->method->registersSize;
 
     /* Verify if all blocks are connected as claimed */
@@ -1465,14 +1514,74 @@ static bool compileLoop(CompilationUnit *cUnit, unsigned int startOffset,
     if (!dvmCompilerBuildLoop(cUnit))
         goto bail;
 
+    dvmCompilerLoopOpt(cUnit);
+
+    /*
+     * Change the backward branch to the backward chaining cell after dataflow
+     * analsys/optimizations are done.
+     */
+    dvmCompilerInsertBackwardChaining(cUnit);
+
     dvmCompilerInitializeRegAlloc(cUnit);
 
     /* Allocate Registers using simple local allocation scheme */
     dvmCompilerLocalRegAlloc(cUnit);
 
-    if (gDvmJit.receivedSIGUSR2) {
-        dumpCFG(cUnit, "/sdcard/cfg/");
+    /* Convert MIR to LIR, etc. */
+    dvmCompilerMIR2LIR(cUnit);
+
+    /* Loop contains never executed blocks / heavy instructions */
+    if (cUnit->quitLoopMode) {
+        if (cUnit->printMe || gDvmJit.receivedSIGUSR2) {
+            LOGD("Loop trace @ offset %04x aborted due to unresolved code info",
+                 cUnit->entryBlock->startOffset);
+        }
+        goto bail;
     }
+
+    /* Convert LIR into machine code. Loop for recoverable retries */
+    do {
+        dvmCompilerAssembleLIR(cUnit, info);
+        cUnit->assemblerRetries++;
+        if (cUnit->printMe && cUnit->assemblerStatus != kSuccess)
+            LOGD("Assembler abort #%d on %d", cUnit->assemblerRetries,
+                  cUnit->assemblerStatus);
+    } while (cUnit->assemblerStatus == kRetryAll);
+
+    /* Loop is too big - bail out */
+    if (cUnit->assemblerStatus == kRetryHalve) {
+        goto bail;
+    }
+
+    if (cUnit->printMe || gDvmJit.receivedSIGUSR2) {
+        LOGD("Loop trace @ offset %04x", cUnit->entryBlock->startOffset);
+        dvmCompilerCodegenDump(cUnit);
+    }
+
+    /*
+     * If this trace uses class objects as constants,
+     * dvmJitInstallClassObjectPointers will switch the thread state
+     * to running and look up the class pointers using the descriptor/loader
+     * tuple stored in the callsite info structure. We need to make this window
+     * as short as possible since it is blocking GC.
+     */
+    if (cUnit->hasClassLiterals && info->codeAddress) {
+        dvmJitInstallClassObjectPointers(cUnit, (char *) info->codeAddress);
+    }
+
+    /*
+     * Since callsiteinfo is allocated from the arena, delay the reset until
+     * class pointers are resolved.
+     */
+    dvmCompilerArenaReset();
+
+    assert(cUnit->assemblerStatus == kSuccess);
+#if defined(WITH_JIT_TUNING)
+    /* Locate the entry to store compilation statistics for this method */
+    methodStats = dvmCompilerAnalyzeMethodBody(desc->method, false);
+    methodStats->nativeSize += cUnit->totalSize;
+#endif
+    return info->codeAddress != NULL;
 
 bail:
     /* Retry the original trace with JIT_OPT_NO_LOOP disabled */
@@ -1538,6 +1647,10 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
 
     /* Setup the method */
     cUnit.method = desc->method;
+
+    /* Store the trace descriptor and set the initial mode */
+    cUnit.traceDesc = desc;
+    cUnit.jitMode = kJitTrace;
 
     /* Initialize the PC reconstruction list */
     dvmInitGrowableList(&cUnit.pcReconstructionList, 8);
@@ -1620,7 +1733,7 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
     }
 
     /* Allocate the entry block */
-    curBB = dvmCompilerNewBB(kTraceEntryBlock, numBlocks++);
+    curBB = dvmCompilerNewBB(kEntryBlock, numBlocks++);
     dvmInsertGrowableList(blockList, (intptr_t) curBB);
     curBB->startOffset = curOffset;
 
@@ -1714,7 +1827,6 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
     for (blockId = 0; blockId < blockList->numUsed; blockId++) {
         curBB = (BasicBlock *) dvmGrowableListGetElement(blockList, blockId);
         MIR *lastInsn = curBB->lastMIRInsn;
-        BasicBlock *backwardCell;
         /* Skip empty blocks */
         if (lastInsn == NULL) {
             continue;
@@ -1743,7 +1855,6 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
             targetOffset < curOffset &&
             (optHints & JIT_OPT_NO_LOOP) == 0) {
             dvmCompilerArenaReset();
-            /* TODO - constructed loop is abandoned for now */
             return compileLoop(&cUnit, startOffset, desc, numMaxInsts,
                                info, bailPtr, optHints);
         }
@@ -1782,46 +1893,6 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
         curBB->needFallThroughBranch =
             ((flags & (kInstrCanBranch | kInstrCanSwitch | kInstrCanReturn |
                        kInstrInvoke)) == 0);
-
-        /* Only form a loop if JIT_OPT_NO_LOOP is not set */
-        if (curBB->taken == NULL &&
-            curBB->fallThrough == NULL &&
-            flags == (kInstrCanBranch | kInstrCanContinue) &&
-            fallThroughOffset == entryCodeBB->startOffset &&
-            JIT_OPT_NO_LOOP != (optHints & JIT_OPT_NO_LOOP)) {
-            BasicBlock *loopBranch = curBB;
-            BasicBlock *exitBB;
-            BasicBlock *exitChainingCell;
-
-            if (cUnit.printMe) {
-                LOGD("Natural loop detected!");
-            }
-            exitBB = dvmCompilerNewBB(kTraceExitBlock, numBlocks++);
-            dvmInsertGrowableList(blockList, (intptr_t) exitBB);
-            exitBB->startOffset = targetOffset;
-            exitBB->needFallThroughBranch = true;
-
-            loopBranch->taken = exitBB;
-            dvmCompilerSetBit(exitBB->predecessors, loopBranch->id);
-            backwardCell =
-                dvmCompilerNewBB(kChainingCellBackwardBranch, numBlocks++);
-            dvmInsertGrowableList(blockList, (intptr_t) backwardCell);
-            backwardCell->startOffset = entryCodeBB->startOffset;
-            loopBranch->fallThrough = backwardCell;
-            dvmCompilerSetBit(backwardCell->predecessors, loopBranch->id);
-
-            /* Create the chaining cell as the fallthrough of the exit block */
-            exitChainingCell = dvmCompilerNewBB(kChainingCellNormal,
-                                                numBlocks++);
-            dvmInsertGrowableList(blockList, (intptr_t) exitChainingCell);
-            exitChainingCell->startOffset = targetOffset;
-
-            exitBB->fallThrough = exitChainingCell;
-            dvmCompilerSetBit(exitChainingCell->predecessors, exitBB->id);
-
-            cUnit.hasLoop = true;
-        }
-
         if (lastInsn->dalvikInsn.opcode == OP_PACKED_SWITCH ||
             lastInsn->dalvikInsn.opcode == OP_SPARSE_SWITCH) {
             int i;
@@ -1936,6 +2007,7 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
     /* And one final block that publishes the PC and raise the exception */
     curBB = dvmCompilerNewBB(kExceptionHandling, numBlocks++);
     dvmInsertGrowableList(blockList, (intptr_t) curBB);
+    cUnit.puntBlock = curBB;
 
     if (cUnit.printMe) {
         char* signature =
@@ -1953,7 +2025,6 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
         free(signature);
     }
 
-    cUnit.traceDesc = desc;
     cUnit.numBlocks = numBlocks;
 
     /* Set the instruction set to use (NOTE: later components may change it) */
@@ -1969,26 +2040,7 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
     /* Preparation for SSA conversion */
     dvmInitializeSSAConversion(&cUnit);
 
-    if (cUnit.hasLoop) {
-        /*
-         * Loop is not optimizable (for example lack of a single induction
-         * variable), punt and recompile the trace with loop optimization
-         * disabled.
-         */
-        bool loopOpt = dvmCompilerLoopOpt(&cUnit);
-        if (loopOpt == false) {
-            if (cUnit.printMe) {
-                LOGD("Loop is not optimizable - retry codegen");
-            }
-            /* Reset the compiler resource pool */
-            dvmCompilerArenaReset();
-            return dvmCompileTrace(desc, cUnit.numInsts, info, bailPtr,
-                                   optHints | JIT_OPT_NO_LOOP);
-        }
-    }
-    else {
-        dvmCompilerNonLoopAnalysis(&cUnit);
-    }
+    dvmCompilerNonLoopAnalysis(&cUnit);
 
     dvmCompilerInitializeRegAlloc(&cUnit);  // Needs to happen after SSA naming
 

@@ -1001,6 +1001,11 @@ static AssemblerStatus assembleInstructions(CompilationUnit *cUnit,
                 lir->operands[1] = 0;
                 lir->generic.target = 0;
                 dvmCompilerSetupResourceMasks(lir);
+                if (cUnit->printMe) {
+                    LOGD("kThumb2Cbnz/kThumb2Cbz@%x: delta=%d",
+                         lir->generic.offset, delta);
+                    dvmCompilerCodegenDump(cUnit);
+                }
                 return kRetryAll;
             } else {
                 lir->operands[1] = delta >> 1;

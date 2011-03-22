@@ -209,6 +209,7 @@ void dvmCompilerInlineMIR(struct CompilationUnit *cUnit,
 void dvmInitializeSSAConversion(struct CompilationUnit *cUnit);
 int dvmConvertSSARegToDalvik(const struct CompilationUnit *cUnit, int ssaReg);
 bool dvmCompilerLoopOpt(struct CompilationUnit *cUnit);
+void dvmCompilerInsertBackwardChaining(struct CompilationUnit *cUnit);
 void dvmCompilerNonLoopAnalysis(struct CompilationUnit *cUnit);
 bool dvmCompilerFindLocalLiveIn(struct CompilationUnit *cUnit,
                                 struct BasicBlock *bb);
@@ -239,4 +240,5 @@ JitTraceDescription *dvmCopyTraceDescriptor(const u2 *pc,
 void *dvmCompilerGetInterpretTemplate();
 JitInstructionSetType dvmCompilerGetInterpretTemplateSet();
 u8 dvmGetRegResourceMask(int reg);
+void dvmDumpCFG(struct CompilationUnit *cUnit, const char *dirPrefix);
 #endif /* _DALVIK_VM_COMPILER */

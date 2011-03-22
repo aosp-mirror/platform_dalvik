@@ -21,89 +21,16 @@
 
 #define DEBUG_LOOP(X)
 
-/*
- * Given the current simple natural loops, the phi node placement can be
- * determined in the following fashion:
- *                    entry (B0)
- *              +---v   v
- *              |  loop body (B1)
- *              |       v
- *              |  loop back (B2)
- *              +---+   v
- *                     exit (B3)
- *
- *  1) Add live-ins of B1 to B0 as defs
- *  2) The intersect of defs(B0)/defs(B1) and defs(B2)/def(B0) are the variables
- *     that need PHI nodes in B1.
- */
-static void handlePhiPlacement(CompilationUnit *cUnit)
-{
-    BasicBlock *entry =
-        (BasicBlock *) dvmGrowableListGetElement(&cUnit->blockList, 0);
-    BasicBlock *loopBody =
-        (BasicBlock *) dvmGrowableListGetElement(&cUnit->blockList, 1);
-    BasicBlock *loopBranch =
-        (BasicBlock *) dvmGrowableListGetElement(&cUnit->blockList, 2);
-    dvmCopyBitVector(entry->dataFlowInfo->defV,
-                     loopBody->dataFlowInfo->liveInV);
-
-    BitVector *phiV = dvmCompilerAllocBitVector(cUnit->method->registersSize,
-                                                false);
-    BitVector *phi2V = dvmCompilerAllocBitVector(cUnit->method->registersSize,
-                                                 false);
-    dvmIntersectBitVectors(phiV, entry->dataFlowInfo->defV,
-                           loopBody->dataFlowInfo->defV);
-    dvmIntersectBitVectors(phi2V, entry->dataFlowInfo->defV,
-                           loopBranch->dataFlowInfo->defV);
-    dvmUnifyBitVectors(phiV, phiV, phi2V);
-
-    /* Insert the PHI MIRs */
-    int i;
-    for (i = 0; i < cUnit->method->registersSize; i++) {
-        if (!dvmIsBitSet(phiV, i)) {
-            continue;
-        }
-        MIR *phi = (MIR *)dvmCompilerNew(sizeof(MIR), true);
-        phi->dalvikInsn.opcode = kMirOpPhi;
-        phi->dalvikInsn.vA = i;
-        dvmCompilerPrependMIR(loopBody, phi);
-    }
-}
-
-static void fillPhiNodeContents(CompilationUnit *cUnit)
-{
-    BasicBlock *entry =
-        (BasicBlock *) dvmGrowableListGetElement(&cUnit->blockList, 0);
-    BasicBlock *loopBody =
-        (BasicBlock *) dvmGrowableListGetElement(&cUnit->blockList, 1);
-    BasicBlock *loopBranch =
-        (BasicBlock *) dvmGrowableListGetElement(&cUnit->blockList, 2);
-    MIR *mir;
-
-    for (mir = loopBody->firstMIRInsn; mir; mir = mir->next) {
-        if (mir->dalvikInsn.opcode != kMirOpPhi) break;
-        int dalvikReg = mir->dalvikInsn.vA;
-
-        mir->ssaRep->numUses = 2;
-        mir->ssaRep->uses = (int *)dvmCompilerNew(sizeof(int) * 2, false);
-        mir->ssaRep->uses[0] =
-            DECODE_REG(entry->dataFlowInfo->dalvikToSSAMap[dalvikReg]);
-        mir->ssaRep->uses[1] =
-            DECODE_REG(loopBranch->dataFlowInfo->dalvikToSSAMap[dalvikReg]);
-    }
-
-
-}
-
 #if 0
 /* Debugging routines */
 static void dumpConstants(CompilationUnit *cUnit)
 {
     int i;
+    LOGE("LOOP starting offset: %x", cUnit->entryBlock->startOffset);
     for (i = 0; i < cUnit->numSSARegs; i++) {
         if (dvmIsBitSet(cUnit->isConstantV, i)) {
             int subNReg = dvmConvertSSARegToDalvik(cUnit, i);
-            LOGE("s%d(v%d_%d) has %d", i,
+            LOGE("CONST: s%d(v%d_%d) has %d", i,
                  DECODE_REG(subNReg), DECODE_SUB(subNReg),
                  cUnit->constantValues[i]);
         }
@@ -114,24 +41,27 @@ static void dumpIVList(CompilationUnit *cUnit)
 {
     unsigned int i;
     GrowableList *ivList = cUnit->loopAnalysis->ivList;
-    int *ssaToDalvikMap = (int *) cUnit->ssaToDalvikMap->elemList;
 
     for (i = 0; i < ivList->numUsed; i++) {
-        InductionVariableInfo *ivInfo = ivList->elemList[i];
+        InductionVariableInfo *ivInfo =
+            (InductionVariableInfo *) ivList->elemList[i];
+        int iv = dvmConvertSSARegToDalvik(cUnit, ivInfo->ssaReg);
         /* Basic IV */
         if (ivInfo->ssaReg == ivInfo->basicSSAReg) {
-            LOGE("BIV %d: s%d(v%d) + %d", i,
+            LOGE("BIV %d: s%d(v%d_%d) + %d", i,
                  ivInfo->ssaReg,
-                 ssaToDalvikMap[ivInfo->ssaReg] & 0xffff,
+                 DECODE_REG(iv), DECODE_SUB(iv),
                  ivInfo->inc);
         /* Dependent IV */
         } else {
-            LOGE("DIV %d: s%d(v%d) = %d * s%d(v%d) + %d", i,
+            int biv = dvmConvertSSARegToDalvik(cUnit, ivInfo->basicSSAReg);
+
+            LOGE("DIV %d: s%d(v%d_%d) = %d * s%d(v%d_%d) + %d", i,
                  ivInfo->ssaReg,
-                 ssaToDalvikMap[ivInfo->ssaReg] & 0xffff,
+                 DECODE_REG(iv), DECODE_SUB(iv),
                  ivInfo->m,
                  ivInfo->basicSSAReg,
-                 ssaToDalvikMap[ivInfo->basicSSAReg] & 0xffff,
+                 DECODE_REG(biv), DECODE_SUB(biv),
                  ivInfo->c);
         }
     }
@@ -162,6 +92,32 @@ static void dumpHoistedChecks(CompilationUnit *cUnit)
 
 #endif
 
+static BasicBlock *findPredecessorBlock(const CompilationUnit *cUnit,
+                                        const BasicBlock *bb)
+{
+    int numPred = dvmCountSetBits(bb->predecessors);
+    BitVectorIterator bvIterator;
+    dvmBitVectorIteratorInit(bb->predecessors, &bvIterator);
+
+    if (numPred == 1) {
+        int predIdx = dvmBitVectorIteratorNext(&bvIterator);
+        return (BasicBlock *) dvmGrowableListGetElement(&cUnit->blockList,
+                                                        predIdx);
+    /* First loop block */
+    } else if ((numPred == 2) &&
+               dvmIsBitSet(bb->predecessors, cUnit->entryBlock->id)) {
+        while (true) {
+            int predIdx = dvmBitVectorIteratorNext(&bvIterator);
+            if (predIdx == cUnit->entryBlock->id) continue;
+            return (BasicBlock *) dvmGrowableListGetElement(&cUnit->blockList,
+                                                            predIdx);
+        }
+    /* Doesn't support other shape of control flow yet */
+    } else {
+        return NULL;
+    }
+}
+
 /*
  * A loop is considered optimizable if:
  * 1) It has one basic induction variable
@@ -171,11 +127,11 @@ static void dumpHoistedChecks(CompilationUnit *cUnit)
  *
  * Return false if the loop is not optimizable.
  */
-static bool isLoopOptimizable(CompilationUnit *cUnit)
+static bool isSimpleCountedLoop(CompilationUnit *cUnit)
 {
     unsigned int i;
-    BasicBlock *loopBranch =
-        (BasicBlock *) dvmGrowableListGetElement(&cUnit->blockList, 2);
+    BasicBlock *loopBranch = findPredecessorBlock(cUnit,
+                                  cUnit->entryBlock->fallThrough);
     LoopAnalysis *loopAnalysis = cUnit->loopAnalysis;
 
     if (loopAnalysis->numBasicIV != 1) return false;
@@ -310,8 +266,7 @@ static void updateRangeCheckInfo(CompilationUnit *cUnit, int arrayReg,
 /* Returns true if the loop body cannot throw any exceptions */
 static bool doLoopBodyCodeMotion(CompilationUnit *cUnit)
 {
-    BasicBlock *loopBody =
-        (BasicBlock *) dvmGrowableListGetElement(&cUnit->blockList, 1);
+    BasicBlock *loopBody = cUnit->entryBlock->fallThrough;
     MIR *mir;
     bool loopBodyCanThrow = false;
 
@@ -385,7 +340,7 @@ static bool doLoopBodyCodeMotion(CompilationUnit *cUnit)
             if (dvmIsBitSet(cUnit->loopAnalysis->isIndVarV,
                             mir->ssaRep->uses[useIdx])) {
                 mir->OptimizationFlags |=
-                    MIR_IGNORE_RANGE_CHECK |  MIR_IGNORE_NULL_CHECK;
+                    MIR_IGNORE_RANGE_CHECK | MIR_IGNORE_NULL_CHECK;
                 updateRangeCheckInfo(cUnit, mir->ssaRep->uses[refIdx],
                                      mir->ssaRep->uses[useIdx]);
             }
@@ -398,8 +353,7 @@ static bool doLoopBodyCodeMotion(CompilationUnit *cUnit)
 static void genHoistedChecks(CompilationUnit *cUnit)
 {
     unsigned int i;
-    BasicBlock *entry =
-        (BasicBlock *) dvmGrowableListGetElement(&cUnit->blockList, 0);
+    BasicBlock *entry = cUnit->entryBlock;
     LoopAnalysis *loopAnalysis = cUnit->loopAnalysis;
     int globalMaxC = 0;
     int globalMinC = 0;
@@ -460,14 +414,16 @@ static void genHoistedChecks(CompilationUnit *cUnit)
             } else if (loopAnalysis->loopBranchOpcode == OP_IF_LTZ) {
                 /* Array index will fall below 0 */
                 if (globalMinC < 0) {
-                    MIR *boundCheckMIR = (MIR *)dvmCompilerNew(sizeof(MIR), true);
+                    MIR *boundCheckMIR = (MIR *)dvmCompilerNew(sizeof(MIR),
+                                                               true);
                     boundCheckMIR->dalvikInsn.opcode = kMirOpPunt;
                     dvmCompilerAppendMIR(entry, boundCheckMIR);
                 }
             } else if (loopAnalysis->loopBranchOpcode == OP_IF_LEZ) {
                 /* Array index will fall below 0 */
                 if (globalMinC < -1) {
-                    MIR *boundCheckMIR = (MIR *)dvmCompilerNew(sizeof(MIR), true);
+                    MIR *boundCheckMIR = (MIR *)dvmCompilerNew(sizeof(MIR),
+                                                               true);
                     boundCheckMIR->dalvikInsn.opcode = kMirOpPunt;
                     dvmCompilerAppendMIR(entry, boundCheckMIR);
                 }
@@ -478,79 +434,6 @@ static void genHoistedChecks(CompilationUnit *cUnit)
         }
 
     }
-}
-
-/*
- * Main entry point to do loop optimization.
- * Return false if sanity checks for loop formation/optimization failed.
- */
-bool dvmCompilerLoopOpt(CompilationUnit *cUnit)
-{
-    LoopAnalysis *loopAnalysis =
-        (LoopAnalysis *)dvmCompilerNew(sizeof(LoopAnalysis), true);
-
-    assert(((BasicBlock *) dvmGrowableListGetElement(&cUnit->blockList, 0))
-                               ->blockType == kTraceEntryBlock);
-    assert(((BasicBlock *) dvmGrowableListGetElement(&cUnit->blockList, 2))
-                               ->blockType == kDalvikByteCode);
-    assert(((BasicBlock *) dvmGrowableListGetElement(&cUnit->blockList, 3))
-                               ->blockType == kTraceExitBlock);
-
-    cUnit->loopAnalysis = loopAnalysis;
-    /*
-     * Find live-in variables to the loop body so that we can fake their
-     * definitions in the entry block.
-     */
-    dvmCompilerDataFlowAnalysisDispatcher(cUnit, dvmCompilerFindLocalLiveIn,
-                                          kAllNodes,
-                                          false /* isIterative */);
-
-    /* Insert phi nodes to the loop body */
-    handlePhiPlacement(cUnit);
-
-    dvmCompilerDataFlowAnalysisDispatcher(cUnit, dvmCompilerDoSSAConversion,
-                                          kAllNodes,
-                                          false /* isIterative */);
-    fillPhiNodeContents(cUnit);
-
-    /* Constant propagation */
-    cUnit->isConstantV = dvmAllocBitVector(cUnit->numSSARegs, false);
-    cUnit->constantValues =
-        (int *)dvmCompilerNew(sizeof(int) * cUnit->numSSARegs,
-                              true);
-    dvmCompilerDataFlowAnalysisDispatcher(cUnit,
-                                          dvmCompilerDoConstantPropagation,
-                                          kAllNodes,
-                                          false /* isIterative */);
-    DEBUG_LOOP(dumpConstants(cUnit);)
-
-    /* Find induction variables - basic and dependent */
-    loopAnalysis->ivList =
-        (GrowableList *)dvmCompilerNew(sizeof(GrowableList), true);
-    dvmInitGrowableList(loopAnalysis->ivList, 4);
-    loopAnalysis->isIndVarV = dvmAllocBitVector(cUnit->numSSARegs, false);
-    dvmCompilerDataFlowAnalysisDispatcher(cUnit,
-                                          dvmCompilerFindInductionVariables,
-                                          kAllNodes,
-                                          false /* isIterative */);
-    DEBUG_LOOP(dumpIVList(cUnit);)
-
-    /* If the loop turns out to be non-optimizable, return early */
-    if (!isLoopOptimizable(cUnit))
-        return false;
-
-    loopAnalysis->arrayAccessInfo =
-        (GrowableList *)dvmCompilerNew(sizeof(GrowableList), true);
-    dvmInitGrowableList(loopAnalysis->arrayAccessInfo, 4);
-    loopAnalysis->bodyIsClean = doLoopBodyCodeMotion(cUnit);
-    DEBUG_LOOP(dumpHoistedChecks(cUnit);)
-
-    /*
-     * Convert the array access information into extended MIR code in the loop
-     * header.
-     */
-    genHoistedChecks(cUnit);
-    return true;
 }
 
 void resetBlockEdges(BasicBlock *bb)
@@ -573,53 +456,72 @@ bool dvmCompilerFilterLoopBlocks(CompilationUnit *cUnit)
 
     int numPred = dvmCountSetBits(firstBB->predecessors);
     /*
-     * A loop body should have at least two incoming edges. Here we go with the
-     * simple case and only form loops if numPred == 2.
+     * A loop body should have at least two incoming edges.
      */
-    if (numPred != 2) return false;
+    if (numPred < 2) return false;
 
-    BitVectorIterator bvIterator;
     GrowableList *blockList = &cUnit->blockList;
-    BasicBlock *predBB = NULL;
 
-    dvmBitVectorIteratorInit(firstBB->predecessors, &bvIterator);
-    while (true) {
-        int predIdx = dvmBitVectorIteratorNext(&bvIterator);
-        if (predIdx == -1) break;
-        predBB = (BasicBlock *) dvmGrowableListGetElement(blockList, predIdx);
-        if (predBB != cUnit->entryBlock) break;
-    }
-
-    /* Used to record which block is in the loop */
+    /* Record blocks included in the loop */
     dvmClearAllBits(cUnit->tempBlockV);
 
-    dvmCompilerSetBit(cUnit->tempBlockV, predBB->id);
+    dvmCompilerSetBit(cUnit->tempBlockV, cUnit->entryBlock->id);
+    dvmCompilerSetBit(cUnit->tempBlockV, firstBB->id);
 
-    /* Form a loop by only including iDom block that is also a predecessor */
-    while (predBB != firstBB) {
-        BasicBlock *iDom = predBB->iDom;
-        if (!dvmIsBitSet(predBB->predecessors, iDom->id)) {
-            return false;
-        /*
-         * And don't form nested loops (ie by detecting if the branch target
-         * of iDom dominates iDom).
-         */
-        } else if (iDom->taken &&
-                   dvmIsBitSet(iDom->dominators, iDom->taken->id) &&
-                   iDom != firstBB) {
+    BasicBlock *bodyBB = firstBB;
+
+    /*
+     * First try to include the fall-through block in the loop, then the taken
+     * block. Stop loop formation on the first backward branch that enters the
+     * first block (ie only include the inner-most loop).
+     */
+    while (true) {
+        /* Loop formed */
+        if (bodyBB->taken == firstBB || bodyBB->fallThrough == firstBB) break;
+
+        /* Inner loops formed first - quit */
+        if (bodyBB->fallThrough &&
+            dvmIsBitSet(cUnit->tempBlockV, bodyBB->fallThrough->id)) {
             return false;
         }
-        dvmCompilerSetBit(cUnit->tempBlockV, iDom->id);
-        predBB = iDom;
+        if (bodyBB->taken &&
+            dvmIsBitSet(cUnit->tempBlockV, bodyBB->taken->id)) {
+            return false;
+        }
+
+        if (bodyBB->fallThrough) {
+            if (bodyBB->fallThrough->iDom == bodyBB) {
+                bodyBB = bodyBB->fallThrough;
+                dvmCompilerSetBit(cUnit->tempBlockV, bodyBB->id);
+                /*
+                 * Loop formation to be detected at the beginning of next
+                 * iteration.
+                 */
+                continue;
+            }
+        }
+        if (bodyBB->taken) {
+            if (bodyBB->taken->iDom == bodyBB) {
+                bodyBB = bodyBB->taken;
+                dvmCompilerSetBit(cUnit->tempBlockV, bodyBB->id);
+                /*
+                 * Loop formation to be detected at the beginning of next
+                 * iteration.
+                 */
+                continue;
+            }
+        }
+        /*
+         * Current block is not the immediate dominator of either fallthrough
+         * nor taken block - bail out of loop formation.
+         */
+        return false;
     }
 
-    /* Add the entry block and first block */
-    dvmCompilerSetBit(cUnit->tempBlockV, firstBB->id);
-    dvmCompilerSetBit(cUnit->tempBlockV, cUnit->entryBlock->id);
 
     /* Now mark blocks not included in the loop as hidden */
     GrowableListIterator iterator;
-    dvmGrowableListIteratorInit(&cUnit->blockList, &iterator);
+    dvmGrowableListIteratorInit(blockList, &iterator);
     while (true) {
         BasicBlock *bb = (BasicBlock *) dvmGrowableListIteratorNext(&iterator);
         if (bb == NULL) break;
@@ -634,7 +536,7 @@ bool dvmCompilerFilterLoopBlocks(CompilationUnit *cUnit)
     dvmCompilerDataFlowAnalysisDispatcher(cUnit, clearPredecessorVector,
                                           kAllNodes, false /* isIterative */);
 
-    dvmGrowableListIteratorInit(&cUnit->blockList, &iterator);
+    dvmGrowableListIteratorInit(blockList, &iterator);
     while (true) {
         BasicBlock *bb = (BasicBlock *) dvmGrowableListIteratorNext(&iterator);
         if (bb == NULL) break;
@@ -671,6 +573,89 @@ bool dvmCompilerFilterLoopBlocks(CompilationUnit *cUnit)
             assert(bb->successorBlockList.blockListType == kNotUsed);
         }
     }
-
     return true;
+}
+
+/*
+ * Main entry point to do loop optimization.
+ * Return false if sanity checks for loop formation/optimization failed.
+ */
+bool dvmCompilerLoopOpt(CompilationUnit *cUnit)
+{
+    LoopAnalysis *loopAnalysis =
+        (LoopAnalysis *)dvmCompilerNew(sizeof(LoopAnalysis), true);
+    cUnit->loopAnalysis = loopAnalysis;
+
+    /* Constant propagation */
+    cUnit->isConstantV = dvmAllocBitVector(cUnit->numSSARegs, false);
+    cUnit->constantValues =
+        (int *)dvmCompilerNew(sizeof(int) * cUnit->numSSARegs,
+                              true);
+    dvmCompilerDataFlowAnalysisDispatcher(cUnit,
+                                          dvmCompilerDoConstantPropagation,
+                                          kAllNodes,
+                                          false /* isIterative */);
+    DEBUG_LOOP(dumpConstants(cUnit);)
+
+    /* Find induction variables - basic and dependent */
+    loopAnalysis->ivList =
+        (GrowableList *)dvmCompilerNew(sizeof(GrowableList), true);
+    dvmInitGrowableList(loopAnalysis->ivList, 4);
+    loopAnalysis->isIndVarV = dvmAllocBitVector(cUnit->numSSARegs, false);
+    dvmCompilerDataFlowAnalysisDispatcher(cUnit,
+                                          dvmCompilerFindInductionVariables,
+                                          kAllNodes,
+                                          false /* isIterative */);
+    DEBUG_LOOP(dumpIVList(cUnit);)
+
+    /* Only optimize array accesses for simple counted loop for now */
+    if (!isSimpleCountedLoop(cUnit))
+        return false;
+
+    loopAnalysis->arrayAccessInfo =
+        (GrowableList *)dvmCompilerNew(sizeof(GrowableList), true);
+    dvmInitGrowableList(loopAnalysis->arrayAccessInfo, 4);
+    loopAnalysis->bodyIsClean = doLoopBodyCodeMotion(cUnit);
+    DEBUG_LOOP(dumpHoistedChecks(cUnit);)
+
+    /*
+     * Convert the array access information into extended MIR code in the loop
+     * header.
+     */
+    genHoistedChecks(cUnit);
+    return true;
+}
+
+/*
+ * Select the target block of the backward branch.
+ */
+void dvmCompilerInsertBackwardChaining(CompilationUnit *cUnit)
+{
+    /*
+     * If we are not in self-verification or profiling mode, the backward
+     * branch can go to the entryBlock->fallThrough directly. Suspend polling
+     * code will be generated along the backward branch to honor the suspend
+     * requests.
+     */
+#if !defined(WITH_SELF_VERIFICATION)
+    if (gDvmJit.profileMode != kTraceProfilingContinuous &&
+        gDvmJit.profileMode != kTraceProfilingPeriodicOn) {
+        return;
+    }
+#endif
+    /*
+     * In self-verification or profiling mode, the backward branch is altered
+     * to go to the backward chaining cell. Without using the backward chaining
+     * cell we won't be able to do check-pointing on the target PC, or count the
+     * number of iterations accurately.
+     */
+    BasicBlock *firstBB = cUnit->entryBlock->fallThrough;
+    BasicBlock *backBranchBB = findPredecessorBlock(cUnit, firstBB);
+    if (backBranchBB->taken == firstBB) {
+        backBranchBB->taken = cUnit->backChainBlock;
+    } else {
+        assert(backBranchBB->fallThrough == firstBB);
+        backBranchBB->fallThrough = cUnit->backChainBlock;
+    }
+    cUnit->backChainBlock->startOffset = firstBB->startOffset;
 }

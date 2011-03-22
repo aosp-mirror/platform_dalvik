@@ -27,8 +27,7 @@
 static void inferTypes(CompilationUnit *cUnit, BasicBlock *bb)
 {
     MIR *mir;
-    if (bb->blockType != kDalvikByteCode &&
-        bb->blockType != kTraceEntryBlock)
+    if (bb->blockType != kDalvikByteCode && bb->blockType != kEntryBlock)
         return;
 
     for (mir = bb->firstMIRInsn; mir; mir = mir->next) {

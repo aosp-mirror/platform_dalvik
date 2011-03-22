@@ -316,20 +316,25 @@ void dvmDumpLIRInsn(LIR *arg, unsigned char *baseAddr)
             DUMP_SSA_REP(LOGD("-------- %s\n", (char *) dest));
             break;
         case kArmPseudoChainingCellBackwardBranch:
+            LOGD("L%p:\n", lir);
             LOGD("-------- chaining cell (backward branch): 0x%04x\n", dest);
             break;
         case kArmPseudoChainingCellNormal:
+            LOGD("L%p:\n", lir);
             LOGD("-------- chaining cell (normal): 0x%04x\n", dest);
             break;
         case kArmPseudoChainingCellHot:
+            LOGD("L%p:\n", lir);
             LOGD("-------- chaining cell (hot): 0x%04x\n", dest);
             break;
         case kArmPseudoChainingCellInvokePredicted:
+            LOGD("L%p:\n", lir);
             LOGD("-------- chaining cell (predicted): %s%s\n",
                  dest ? ((Method *) dest)->clazz->descriptor : "",
                  dest ? ((Method *) dest)->name : "N/A");
             break;
         case kArmPseudoChainingCellInvokeSingleton:
+            LOGD("L%p:\n", lir);
             LOGD("-------- chaining cell (invoke singleton): %s%s/%p\n",
                  ((Method *)dest)->clazz->descriptor,
                  ((Method *)dest)->name,

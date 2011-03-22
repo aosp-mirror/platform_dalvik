@@ -1356,6 +1356,12 @@ static void genInterpSingleStep(CompilationUnit *cUnit, MIR *mir)
     int flagsToCheck = kInstrCanBranch | kInstrCanSwitch | kInstrCanReturn |
                        kInstrCanThrow;
 
+    // Single stepping is considered loop mode breaker
+    if (cUnit->jitMode == kJitLoop) {
+        cUnit->quitLoopMode = true;
+        return;
+    }
+
     //If already optimized out, just ignore
     if (mir->dalvikInsn.opcode == OP_NOP)
         return;
@@ -1448,7 +1454,8 @@ static bool handleFmt10t_Fmt20t_Fmt30t(CompilationUnit *cUnit, MIR *mir,
     /* backward branch? */
     bool backwardBranch = (bb->taken->startOffset <= mir->offset);
 
-    if (backwardBranch && gDvmJit.genSuspendPoll) {
+    if (backwardBranch &&
+        (gDvmJit.genSuspendPoll || cUnit->jitMode == kJitLoop)) {
         genSuspendPoll(cUnit, mir);
     }
 
@@ -1579,6 +1586,7 @@ static bool handleFmt21c_Fmt31c_Fmt41c(CompilationUnit *cUnit, MIR *mir)
               (cUnit->method->clazz->pDvmDex->pResStrings[mir->dalvikInsn.vB]);
 
             if (strPtr == NULL) {
+                BAIL_LOOP_COMPILATION();
                 LOGE("Unexpected null string");
                 dvmAbort();
             }
@@ -1595,6 +1603,7 @@ static bool handleFmt21c_Fmt31c_Fmt41c(CompilationUnit *cUnit, MIR *mir)
               (cUnit->method->clazz->pDvmDex->pResClasses[mir->dalvikInsn.vB]);
 
             if (classPtr == NULL) {
+                BAIL_LOOP_COMPILATION();
                 LOGE("Unexpected null class");
                 dvmAbort();
             }
@@ -1631,6 +1640,7 @@ static bool handleFmt21c_Fmt31c_Fmt41c(CompilationUnit *cUnit, MIR *mir)
             Opcode opcode = mir->dalvikInsn.opcode;
 
             if (fieldPtr == NULL) {
+                BAIL_LOOP_COMPILATION();
                 LOGE("Unexpected null static field");
                 dvmAbort();
             }
@@ -1664,6 +1674,7 @@ static bool handleFmt21c_Fmt31c_Fmt41c(CompilationUnit *cUnit, MIR *mir)
               (method->clazz->pDvmDex->pResFields[mir->dalvikInsn.vB]);
 
             if (fieldPtr == NULL) {
+                BAIL_LOOP_COMPILATION();
                 LOGE("Unexpected null static field");
                 dvmAbort();
             }
@@ -1707,6 +1718,12 @@ static bool handleFmt21c_Fmt31c_Fmt41c(CompilationUnit *cUnit, MIR *mir)
               (method->clazz->pDvmDex->pResFields[mir->dalvikInsn.vB]);
             Opcode opcode = mir->dalvikInsn.opcode;
 
+            if (fieldPtr == NULL) {
+                BAIL_LOOP_COMPILATION();
+                LOGE("Unexpected null static field");
+                dvmAbort();
+            }
+
             isVolatile = (opcode == OP_SPUT_VOLATILE) ||
                          (opcode == OP_SPUT_VOLATILE_JUMBO) ||
                          (opcode == OP_SPUT_OBJECT_VOLATILE) ||
@@ -1717,11 +1734,6 @@ static bool handleFmt21c_Fmt31c_Fmt41c(CompilationUnit *cUnit, MIR *mir)
                            (opcode == OP_SPUT_OBJECT_JUMBO) ||
                            (opcode == OP_SPUT_OBJECT_VOLATILE) ||
                            (opcode == OP_SPUT_OBJECT_VOLATILE_JUMBO);
-
-            if (fieldPtr == NULL) {
-                LOGE("Unexpected null static field");
-                dvmAbort();
-            }
 
             rlSrc = dvmCompilerGetSrc(cUnit, mir, 0);
             rlSrc = loadValue(cUnit, rlSrc, kAnyReg);
@@ -1755,6 +1767,7 @@ static bool handleFmt21c_Fmt31c_Fmt41c(CompilationUnit *cUnit, MIR *mir)
               (method->clazz->pDvmDex->pResFields[mir->dalvikInsn.vB]);
 
             if (fieldPtr == NULL) {
+                BAIL_LOOP_COMPILATION();
                 LOGE("Unexpected null static field");
                 dvmAbort();
             }
@@ -1778,6 +1791,7 @@ static bool handleFmt21c_Fmt31c_Fmt41c(CompilationUnit *cUnit, MIR *mir)
               (cUnit->method->clazz->pDvmDex->pResClasses[mir->dalvikInsn.vB]);
 
             if (classPtr == NULL) {
+                BAIL_LOOP_COMPILATION();
                 LOGE("Unexpected null class");
                 dvmAbort();
             }
@@ -1829,9 +1843,10 @@ static bool handleFmt21c_Fmt31c_Fmt41c(CompilationUnit *cUnit, MIR *mir)
              * so that we can tell if it happens frequently.
              */
             if (classPtr == NULL) {
-                 LOGVV("null clazz in OP_CHECK_CAST, single-stepping");
-                 genInterpSingleStep(cUnit, mir);
-                 return false;
+                BAIL_LOOP_COMPILATION();
+                LOGVV("null clazz in OP_CHECK_CAST, single-stepping");
+                genInterpSingleStep(cUnit, mir);
+                return false;
             }
             dvmCompilerFlushAllRegs(cUnit);   /* Everything to home location */
             loadConstant(cUnit, r1, (int) classPtr );
@@ -2093,7 +2108,8 @@ static bool handleFmt21t(CompilationUnit *cUnit, MIR *mir, BasicBlock *bb,
     /* backward branch? */
     bool backwardBranch = (bb->taken->startOffset <= mir->offset);
 
-    if (backwardBranch && gDvmJit.genSuspendPoll) {
+    if (backwardBranch &&
+        (gDvmJit.genSuspendPoll || cUnit->jitMode == kJitLoop)) {
         genSuspendPoll(cUnit, mir);
     }
 
@@ -2426,6 +2442,7 @@ static bool handleFmt22c_Fmt52c(CompilationUnit *cUnit, MIR *mir)
                 method->clazz->pDvmDex->pResFields[mir->dalvikInsn.vC];
 
             if (fieldPtr == NULL) {
+                BAIL_LOOP_COMPILATION();
                 LOGE("Unexpected null instance field");
                 dvmAbort();
             }
@@ -2448,6 +2465,7 @@ static bool handleFmt22c_Fmt52c(CompilationUnit *cUnit, MIR *mir)
               (cUnit->method->clazz->pDvmDex->pResClasses[mir->dalvikInsn.vC]);
 
             if (classPtr == NULL) {
+                BAIL_LOOP_COMPILATION();
                 LOGE("Unexpected null class");
                 dvmAbort();
             }
@@ -2499,6 +2517,7 @@ static bool handleFmt22c_Fmt52c(CompilationUnit *cUnit, MIR *mir)
              * so that we can tell if it happens frequently.
              */
             if (classPtr == NULL) {
+                BAIL_LOOP_COMPILATION();
                 LOGD("null clazz in OP_INSTANCE_OF, single-stepping");
                 genInterpSingleStep(cUnit, mir);
                 break;
@@ -2627,7 +2646,8 @@ static bool handleFmt22t(CompilationUnit *cUnit, MIR *mir, BasicBlock *bb,
     /* backward branch? */
     bool backwardBranch = (bb->taken->startOffset <= mir->offset);
 
-    if (backwardBranch && gDvmJit.genSuspendPoll) {
+    if (backwardBranch &&
+        (gDvmJit.genSuspendPoll || cUnit->jitMode == kJitLoop)) {
         genSuspendPoll(cUnit, mir);
     }
 
@@ -4238,7 +4258,7 @@ void dvmCompilerMIR2LIR(CompilationUnit *cUnit)
             dvmCompilerAppendLIR(cUnit, (LIR *) &labelList[i]);
         }
 
-        if (bb->blockType == kTraceEntryBlock) {
+        if (bb->blockType == kEntryBlock) {
             labelList[i].opcode = kArmPseudoEntryBlock;
             if (bb->firstMIRInsn == NULL) {
                 continue;
@@ -4246,10 +4266,11 @@ void dvmCompilerMIR2LIR(CompilationUnit *cUnit)
               setupLoopEntryBlock(cUnit, bb,
                                   &labelList[bb->fallThrough->id]);
             }
-        } else if (bb->blockType == kTraceExitBlock) {
+        } else if (bb->blockType == kExitBlock) {
             labelList[i].opcode = kArmPseudoExitBlock;
             goto gen_fallthrough;
         } else if (bb->blockType == kDalvikByteCode) {
+            if (bb->hidden == true) continue;
             labelList[i].opcode = kArmPseudoNormalBlockLabel;
             /* Reset the register state */
             dvmCompilerResetRegPool(cUnit);
@@ -4297,8 +4318,8 @@ void dvmCompilerMIR2LIR(CompilationUnit *cUnit)
                     /* Make sure exception handling block is next */
                     labelList[i].opcode =
                         kArmPseudoPCReconstructionBlockLabel;
-                    assert (i == cUnit->numBlocks - 2);
-                    handlePCReconstruction(cUnit, &labelList[i+1]);
+                    handlePCReconstruction(cUnit,
+                                           &labelList[cUnit->puntBlock->id]);
                     break;
                 case kExceptionHandling:
                     labelList[i].opcode = kArmPseudoEHBlockLabel;
@@ -4510,7 +4531,7 @@ void dvmCompilerMIR2LIR(CompilationUnit *cUnit)
             }
         }
 
-        if (bb->blockType == kTraceEntryBlock) {
+        if (bb->blockType == kEntryBlock) {
             dvmCompilerAppendLIR(cUnit,
                                  (LIR *) cUnit->loopAnalysis->branchToBody);
             dvmCompilerAppendLIR(cUnit,

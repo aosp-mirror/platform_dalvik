@@ -2190,8 +2190,7 @@ bool dvmCompilerFindInductionVariables(struct CompilationUnit *cUnit,
     GrowableList *ivList = cUnit->loopAnalysis->ivList;
     MIR *mir;
 
-    if (bb->blockType != kDalvikByteCode &&
-        bb->blockType != kTraceEntryBlock) {
+    if (bb->blockType != kDalvikByteCode && bb->blockType != kEntryBlock) {
         return false;
     }
 
@@ -2395,9 +2394,8 @@ void dvmInitializeSSAConversion(CompilationUnit *cUnit)
         if (bb == NULL) break;
         if (bb->hidden == true) continue;
         if (bb->blockType == kDalvikByteCode ||
-            bb->blockType == kTraceEntryBlock ||
-            bb->blockType == kMethodEntryBlock ||
-            bb->blockType == kMethodExitBlock) {
+            bb->blockType == kEntryBlock ||
+            bb->blockType == kExitBlock) {
             bb->dataFlowInfo = (BasicBlockDataFlow *)
                 dvmCompilerNew(sizeof(BasicBlockDataFlow),
                                true);
