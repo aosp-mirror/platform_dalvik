@@ -2112,6 +2112,12 @@ static void verifyNewSpace(void)
 
 static void scavengeGlobals(void)
 {
+    /*
+     * Note: Should this code be revived, it would be a good idea to
+     * use dvmForEachRequiredReference() instead of coding in the name
+     * of each reference here.
+     */
+
     scavengeReference((Object **)(void *)&gDvm.classJavaLangClass);
     scavengeReference((Object **)(void *)&gDvm.classJavaLangClassArray);
     scavengeReference((Object **)(void *)&gDvm.classJavaLangError);
