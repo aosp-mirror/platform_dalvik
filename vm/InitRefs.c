@@ -58,6 +58,7 @@ static bool initClassReferences(void) {
 
         /* Slightly less core, but still down there, classes */
         { &gDvm.classJavaLangClassArray,             "[Ljava/lang/Class;" },
+        { &gDvm.classJavaLangClassLoader,            "Ljava/lang/ClassLoader;" },
         { &gDvm.classJavaLangObjectArray,            "[Ljava/lang/Object;"},
         { &gDvm.classJavaLangStackTraceElement,      "Ljava/lang/StackTraceElement;" },
         { &gDvm.classJavaLangStackTraceElementArray, "[Ljava/lang/StackTraceElement;" },

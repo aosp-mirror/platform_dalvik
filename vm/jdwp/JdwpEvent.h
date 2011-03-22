@@ -41,7 +41,7 @@ typedef union JdwpEventMod {
     } threadOnly;
     struct {
         u1          modKind;
-        RefTypeId   referenceTypeId;
+        RefTypeId   refTypeId;
     } classOnly;
     struct {
         u1          modKind;
