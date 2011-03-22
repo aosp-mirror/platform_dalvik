@@ -2801,16 +2801,16 @@ bool dvmLinkClass(ClassObject* clazz)
         goto bail;
 
     /*
-     * Cache fields and methods from java/lang/ref/Reference and
-     * java/lang/Class.  This has to happen after computeFieldOffsets().
+     * Cache field and method info for the class Reference (as loaded
+     * by the boot classloader). This has to happen after the call to
+     * computeFieldOffsets().
      */
-    if (clazz->classLoader == NULL) {
-        if (strcmp(clazz->descriptor, "Ljava/lang/ref/Reference;") == 0) {
-            if (!precacheReferenceOffsets(clazz)) {
-                LOGE("failed pre-caching Reference offsets\n");
-                dvmThrowInternalError(NULL);
-                goto bail;
-            }
+    if ((clazz->classLoader == NULL)
+            && (strcmp(clazz->descriptor, "Ljava/lang/ref/Reference;") == 0)) {
+        if (!precacheReferenceOffsets(clazz)) {
+            LOGE("failed pre-caching Reference offsets\n");
+            dvmThrowInternalError(NULL);
+            goto bail;
         }
     }
 
