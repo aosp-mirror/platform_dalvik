@@ -48,6 +48,6 @@ mkdir classes
 ${JAVAC} -d classes `find src -name '*.java'`
 ${JAVAC} -d classes `find src2 -name '*.java'`
 
-dx -JXmx1024m --debug --dex --no-optimize --positions=none --no-locals \
+dx -JXmx1024m --debug --dex --no-optimize \
     --dump-to=classes.lst --output=classes.dex classes
 zip test.jar classes.dex

@@ -462,7 +462,8 @@ static inline bool checkForNullExportPC(Object* obj, u4* fp, const u2* pc)
  */
 #define HANDLE_OPCODE(_op)                                                  \
     void dvmMterp_##_op(Thread* self) {                                     \
-        u2 ref, vsrc1, vsrc2, vdst;                                         \
+        u4 ref;                                                             \
+        u2 vsrc1, vsrc2, vdst;                                              \
         u2 inst = FETCH(0);                                                 \
         (void)ref; (void)vsrc1; (void)vsrc2; (void)vdst; (void)inst;
 
