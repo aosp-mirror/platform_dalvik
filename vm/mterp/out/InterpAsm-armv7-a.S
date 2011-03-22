@@ -7381,6 +7381,9 @@ dalvik_inst:
     beq     1f                          @ nope, done
     EXPORT_PC()                         @ can throw
     bl      dvmSetFinalizable           @ call dvmSetFinalizable(obj)
+    ldr     r0, [rSELF, #offThread_exception] @ r0<- self->exception
+    cmp     r0, #0                      @ exception pending?
+    bne     common_exceptionThrown      @ yes, handle it
 1:  FETCH_ADVANCE_INST(2+1)       @ advance to next instr, load rINST
     GET_INST_OPCODE(ip)                 @ ip<- opcode from rINST
     GOTO_OPCODE(ip)                     @ execute it
@@ -10437,6 +10440,9 @@ dalvik_inst:
     beq     1f                          @ nope, done
     EXPORT_PC()                         @ can throw
     bl      dvmSetFinalizable           @ call dvmSetFinalizable(obj)
+    ldr     r0, [rSELF, #offThread_exception] @ r0<- self->exception
+    cmp     r0, #0                      @ exception pending?
+    bne     common_exceptionThrown      @ yes, handle it
 1:  FETCH_ADVANCE_INST(4+1)       @ advance to next instr, load rINST
     GET_INST_OPCODE(ip)                 @ ip<- opcode from rINST
     GOTO_OPCODE(ip)                     @ execute it

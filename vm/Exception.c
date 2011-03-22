@@ -1098,10 +1098,17 @@ static StringObject* getExceptionMessage(Object* exception)
     Thread* self = dvmThreadSelf();
     Method* getMessageMethod;
     StringObject* messageStr = NULL;
+    Object* pendingException;
 
-    assert(exception == self->exception);
-    dvmAddTrackedAlloc(exception, self);
-    self->exception = NULL;
+    /*
+     * If an exception is pending, clear it while we work and restore
+     * it when we're done.
+     */
+    pendingException = dvmGetException(self);
+    if (pendingException != NULL) {
+        dvmAddTrackedAlloc(pendingException, self);
+        dvmClearException(self);
+    }
 
     getMessageMethod = dvmFindVirtualMethodHierByDescriptor(exception->clazz,
             "getMessage", "()Ljava/lang/String;");
@@ -1121,13 +1128,16 @@ static StringObject* getExceptionMessage(Object* exception)
             exception->clazz->descriptor);
     }
 
-    if (self->exception != NULL) {
+    if (dvmGetException(self) != NULL) {
         LOGW("NOTE: exception thrown while retrieving exception message: %s\n",
-            self->exception->clazz->descriptor);
+            dvmGetException(self)->clazz->descriptor);
+        /* will be overwritten below */
     }
 
-    self->exception = exception;
-    dvmReleaseTrackedAlloc(exception, self);
+    dvmSetException(self, pendingException);
+    if (pendingException != NULL) {
+        dvmReleaseTrackedAlloc(pendingException, self);
+    }
     return messageStr;
 }
 

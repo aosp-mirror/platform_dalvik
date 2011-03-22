@@ -16,6 +16,8 @@ HANDLE_OPCODE(OP_INVOKE_OBJECT_INIT_RANGE /*{vCCCC..v(CCCC+AA-1)}, meth@BBBB*/)
         if (IS_CLASS_FLAG_SET(obj->clazz, CLASS_ISFINALIZABLE)) {
             EXPORT_PC();
             dvmSetFinalizable(obj);
+            if (dvmGetException(self))
+                GOTO_exceptionThrown();
         }
 
 #if INTERP_TYPE == INTERP_DBG
