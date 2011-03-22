@@ -99,7 +99,6 @@ extern const DalvikNativeMethod dvm_java_lang_reflect_Constructor[];
 extern const DalvikNativeMethod dvm_java_lang_reflect_Field[];
 extern const DalvikNativeMethod dvm_java_lang_reflect_Method[];
 extern const DalvikNativeMethod dvm_java_lang_reflect_Proxy[];
-extern const DalvikNativeMethod dvm_java_security_AccessController[];
 extern const DalvikNativeMethod dvm_java_util_concurrent_atomic_AtomicLong[];
 extern const DalvikNativeMethod dvm_dalvik_bytecode_OpcodeInfo[];
 extern const DalvikNativeMethod dvm_dalvik_system_SamplingProfiler[];

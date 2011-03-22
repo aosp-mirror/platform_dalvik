@@ -282,7 +282,6 @@ struct DvmGlobals {
     ClassObject* classJavaLangReflectMethodArray;
     ClassObject* classJavaLangReflectProxy;
     ClassObject* classJavaNioReadWriteDirectByteBuffer;
-    ClassObject* classJavaSecurityAccessController;
     ClassObject* classOrgApacheHarmonyLangAnnotationAnnotationFactory;
     ClassObject* classOrgApacheHarmonyLangAnnotationAnnotationMember;
     ClassObject* classOrgApacheHarmonyLangAnnotationAnnotationMemberArray;
@@ -339,9 +338,6 @@ struct DvmGlobals {
     int         voffJavaLangObject_equals;
     int         voffJavaLangObject_hashCode;
     int         voffJavaLangObject_toString;
-
-    /* field offsets - Class */
-    int         offJavaLangClass_pd;
 
     /* field offsets - String */
     int         offJavaLangString_value;

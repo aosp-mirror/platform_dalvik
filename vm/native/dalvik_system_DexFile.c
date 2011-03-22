@@ -333,7 +333,7 @@ static void Dalvik_dalvik_system_DexFile_closeDexFile(const u4* args,
 
 /*
  * private static Class defineClass(String name, ClassLoader loader,
- *      int cookie, ProtectionDomain pd)
+ *      int cookie)
  *
  * Load a class from a DEX file.  This is roughly equivalent to defineClass()
  * in a regular VM -- it's invoked by the class loader to cause the
@@ -351,7 +351,6 @@ static void Dalvik_dalvik_system_DexFile_defineClass(const u4* args,
     StringObject* nameObj = (StringObject*) args[0];
     Object* loader = (Object*) args[1];
     int cookie = args[2];
-    Object* pd = (Object*) args[3];
     ClassObject* clazz = NULL;
     DexOrJar* pDexOrJar = (DexOrJar*) cookie;
     DvmDex* pDvmDex;
@@ -392,17 +391,6 @@ static void Dalvik_dalvik_system_DexFile_defineClass(const u4* args,
             dvmClearException(self);
         }
         clazz = NULL;
-    }
-
-    /*
-     * Set the ProtectionDomain -- do we need this to happen before we
-     * link the class and make it available? If so, we need to pass it
-     * through dvmDefineClass (and figure out some other
-     * stuff, like where it comes from for bootstrap classes).
-     */
-    if (clazz != NULL) {
-        //LOGI("SETTING pd '%s' to %p\n", clazz->descriptor, pd);
-        dvmSetFieldObject((Object*) clazz, gDvm.offJavaLangClass_pd, pd);
     }
 
     free(descriptor);
@@ -534,7 +522,7 @@ const DalvikNativeMethod dvm_dalvik_system_DexFile[] = {
         Dalvik_dalvik_system_DexFile_openDexFile_bytearray },
     { "closeDexFile",       "(I)V",
         Dalvik_dalvik_system_DexFile_closeDexFile },
-    { "defineClass",        "(Ljava/lang/String;Ljava/lang/ClassLoader;ILjava/security/ProtectionDomain;)Ljava/lang/Class;",
+    { "defineClass",        "(Ljava/lang/String;Ljava/lang/ClassLoader;I)Ljava/lang/Class;",
         Dalvik_dalvik_system_DexFile_defineClass },
     { "getClassNameList",   "(I)[Ljava/lang/String;",
         Dalvik_dalvik_system_DexFile_getClassNameList },

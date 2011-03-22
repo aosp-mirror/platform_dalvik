@@ -45,8 +45,6 @@ static DalvikNativeClass gDvmNativeMethodSet[] = {
     { "Ljava/lang/reflect/Field;",        dvm_java_lang_reflect_Field, 0 },
     { "Ljava/lang/reflect/Method;",       dvm_java_lang_reflect_Method, 0 },
     { "Ljava/lang/reflect/Proxy;",        dvm_java_lang_reflect_Proxy, 0 },
-    { "Ljava/security/AccessController;",
-            dvm_java_security_AccessController, 0 },
     { "Ljava/util/concurrent/atomic/AtomicLong;",
             dvm_java_util_concurrent_atomic_AtomicLong, 0 },
     { "Ldalvik/bytecode/OpcodeInfo;",     dvm_dalvik_bytecode_OpcodeInfo, 0 },

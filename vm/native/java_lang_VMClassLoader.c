@@ -23,7 +23,7 @@
 
 /*
  * static Class defineClass(ClassLoader cl, String name,
- *     byte[] data, int offset, int len, ProtectionDomain pd)
+ *     byte[] data, int offset, int len)
  *     throws ClassFormatError
  *
  * Convert an array of bytes to a Class object.
@@ -36,12 +36,11 @@ static void Dalvik_java_lang_VMClassLoader_defineClass(const u4* args,
     const u1* data = (const u1*) args[2];
     int offset = args[3];
     int len = args[4];
-    Object* pd = (Object*) args[5];
     char* name = NULL;
 
     name = dvmCreateCstrFromString(nameObj);
-    LOGE("ERROR: defineClass(%p, %s, %p, %d, %d, %p)\n",
-        loader, name, data, offset, len, pd);
+    LOGE("ERROR: defineClass(%p, %s, %p, %d, %d)\n",
+        loader, name, data, offset, len);
     dvmThrowUnsupportedOperationException(
         "can't load this type of class file");
 
@@ -51,7 +50,7 @@ static void Dalvik_java_lang_VMClassLoader_defineClass(const u4* args,
 
 /*
  * static Class defineClass(ClassLoader cl, byte[] data, int offset,
- *     int len, ProtectionDomain pd)
+ *     int len)
  *     throws ClassFormatError
  *
  * Convert an array of bytes to a Class object. Deprecated version of
@@ -64,10 +63,9 @@ static void Dalvik_java_lang_VMClassLoader_defineClass2(const u4* args,
     const u1* data = (const u1*) args[1];
     int offset = args[2];
     int len = args[3];
-    Object* pd = (Object*) args[4];
 
-    LOGE("ERROR: defineClass(%p, %p, %d, %d, %p)\n",
-        loader, data, offset, len, pd);
+    LOGE("ERROR: defineClass(%p, %p, %d, %d)\n",
+        loader, data, offset, len);
     dvmThrowUnsupportedOperationException(
         "can't load this type of class file");
 
@@ -183,9 +181,9 @@ static void Dalvik_java_lang_VMClassLoader_loadClass(const u4* args,
 }
 
 const DalvikNativeMethod dvm_java_lang_VMClassLoader[] = {
-    { "defineClass",        "(Ljava/lang/ClassLoader;Ljava/lang/String;[BIILjava/security/ProtectionDomain;)Ljava/lang/Class;",
+    { "defineClass",        "(Ljava/lang/ClassLoader;Ljava/lang/String;[BII)Ljava/lang/Class;",
         Dalvik_java_lang_VMClassLoader_defineClass },
-    { "defineClass",        "(Ljava/lang/ClassLoader;[BIILjava/security/ProtectionDomain;)Ljava/lang/Class;",
+    { "defineClass",        "(Ljava/lang/ClassLoader;[BII)Ljava/lang/Class;",
         Dalvik_java_lang_VMClassLoader_defineClass2 },
     { "findLoadedClass",    "(Ljava/lang/ClassLoader;Ljava/lang/String;)Ljava/lang/Class;",
         Dalvik_java_lang_VMClassLoader_findLoadedClass },

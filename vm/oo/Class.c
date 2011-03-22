@@ -2811,13 +2811,6 @@ bool dvmLinkClass(ClassObject* clazz)
                 dvmThrowInternalError(NULL);
                 goto bail;
             }
-        } else if (clazz == gDvm.classJavaLangClass) {
-            gDvm.offJavaLangClass_pd = dvmFindFieldOffset(clazz, "pd",
-                "Ljava/security/ProtectionDomain;");
-            if (gDvm.offJavaLangClass_pd <= 0) {
-                LOGE("ERROR: unable to find 'pd' field in Class\n");
-                dvmAbort();     /* we're not going to get much farther */
-            }
         }
     }
 
