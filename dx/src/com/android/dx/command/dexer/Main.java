@@ -188,7 +188,7 @@ public class Main {
         errors = 0;
 
         args = arguments;
-        args.makeCfOptions();
+        args.makeOptionsObjects();
 
         File incrementalOutFile = null;
         if (args.incremental) {
@@ -1079,16 +1079,15 @@ public class Main {
                 humanOutName = "-";
             }
 
-            makeCfOptions();
-            makeDexOptions();
+            makeOptionsObjects();
         }
 
         /**
-         * Copies relevent arguments over into a CfOptions instance.
+         * Copies relevent arguments over into CfOptions and
+         * DexOptions instances.
          */
-        private void makeCfOptions() {
+        private void makeOptionsObjects() {
             cfOptions = new CfOptions();
-
             cfOptions.positionInfo = positionInfo;
             cfOptions.localInfo = localInfo;
             cfOptions.strictNameCheck = strictNameCheck;
@@ -1097,14 +1096,8 @@ public class Main {
             cfOptions.dontOptimizeListFile = dontOptimizeListFile;
             cfOptions.statistics = statistics;
             cfOptions.warn = DxConsole.err;
-        }
 
-        /**
-         * Copies relevent arguments over into a DexOptions instance.
-         */
-        private void makeDexOptions() {
             dexOptions = new DexOptions();
-
             dexOptions.enableExtendedOpcodes = targetApiLevel >= 12;
         }
     }
