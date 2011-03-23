@@ -2110,52 +2110,6 @@ static void verifyNewSpace(void)
     }
 }
 
-static void scavengeGlobals(void)
-{
-    /*
-     * Note: Should this code be revived, it would be a good idea to
-     * use dvmForEachRequiredReference() instead of coding in the name
-     * of each reference here.
-     */
-
-    scavengeReference((Object **)(void *)&gDvm.classJavaLangClass);
-    scavengeReference((Object **)(void *)&gDvm.classJavaLangClassArray);
-    scavengeReference((Object **)(void *)&gDvm.classJavaLangError);
-    scavengeReference((Object **)(void *)&gDvm.classJavaLangObject);
-    scavengeReference((Object **)(void *)&gDvm.classJavaLangObjectArray);
-    scavengeReference((Object **)(void *)&gDvm.classJavaLangRuntimeException);
-    scavengeReference((Object **)(void *)&gDvm.classJavaLangString);
-    scavengeReference((Object **)(void *)&gDvm.classJavaLangThread);
-    scavengeReference((Object **)(void *)&gDvm.classJavaLangVMThread);
-    scavengeReference((Object **)(void *)&gDvm.classJavaLangThreadGroup);
-    scavengeReference((Object **)(void *)&gDvm.classJavaLangThrowable);
-    scavengeReference((Object **)(void *)&gDvm.classJavaLangStackTraceElement);
-    scavengeReference((Object **)(void *)&gDvm.classJavaLangStackTraceElementArray);
-    scavengeReference((Object **)(void *)&gDvm.classJavaLangAnnotationAnnotationArray);
-    scavengeReference((Object **)(void *)&gDvm.classJavaLangAnnotationAnnotationArrayArray);
-    scavengeReference((Object **)(void *)&gDvm.classJavaLangReflectAccessibleObject);
-    scavengeReference((Object **)(void *)&gDvm.classJavaLangReflectConstructor);
-    scavengeReference((Object **)(void *)&gDvm.classJavaLangReflectConstructorArray);
-    scavengeReference((Object **)(void *)&gDvm.classJavaLangReflectField);
-    scavengeReference((Object **)(void *)&gDvm.classJavaLangReflectFieldArray);
-    scavengeReference((Object **)(void *)&gDvm.classJavaLangReflectMethod);
-    scavengeReference((Object **)(void *)&gDvm.classJavaLangReflectMethodArray);
-    scavengeReference((Object **)(void *)&gDvm.classJavaLangReflectProxy);
-    scavengeReference((Object **)(void *)&gDvm.classJavaLangExceptionInInitializerError);
-    scavengeReference((Object **)(void *)&gDvm.classJavaNioReadWriteDirectByteBuffer);
-    scavengeReference((Object **)(void *)&gDvm.classOrgApacheHarmonyLangAnnotationAnnotationFactory);
-    scavengeReference((Object **)(void *)&gDvm.classOrgApacheHarmonyLangAnnotationAnnotationMember);
-    scavengeReference((Object **)(void *)&gDvm.classOrgApacheHarmonyLangAnnotationAnnotationMemberArray);
-    scavengeReference((Object **)(void *)&gDvm.classArrayBoolean);
-    scavengeReference((Object **)(void *)&gDvm.classArrayChar);
-    scavengeReference((Object **)(void *)&gDvm.classArrayFloat);
-    scavengeReference((Object **)(void *)&gDvm.classArrayDouble);
-    scavengeReference((Object **)(void *)&gDvm.classArrayByte);
-    scavengeReference((Object **)(void *)&gDvm.classArrayShort);
-    scavengeReference((Object **)(void *)&gDvm.classArrayInt);
-    scavengeReference((Object **)(void *)&gDvm.classArrayLong);
-}
-
 void describeHeap(void)
 {
     HeapSource *heapSource;
@@ -2240,8 +2194,8 @@ void dvmScavengeRoots(void)  /* Needs a new name badly */
 
     scavengeBlockQueue();
 
-    LOG_SCAV("Re-snap global class pointers.");
-    scavengeGlobals();
+    // LOG_SCAV("Re-snap global class pointers.");
+    // scavengeGlobals();
 
     LOG_SCAV("New space scavenge has completed.");
 
