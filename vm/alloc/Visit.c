@@ -219,15 +219,15 @@ static void visitThreads(RootVisitor *visitor, void *arg)
 
 static void visitPrimitiveTypes(RootVisitor *visitor, void *arg)
 {
-    (*visitor)(&gDvm.typeVoid,    0, ROOT_STICKY_CLASS, arg);
+    (*visitor)(&gDvm.typeVoid, 0, ROOT_STICKY_CLASS, arg);
     (*visitor)(&gDvm.typeBoolean, 0, ROOT_STICKY_CLASS, arg);
-    (*visitor)(&gDvm.typeByte,    0, ROOT_STICKY_CLASS, arg);
-    (*visitor)(&gDvm.typeShort,   0, ROOT_STICKY_CLASS, arg);
-    (*visitor)(&gDvm.typeChar,    0, ROOT_STICKY_CLASS, arg);
-    (*visitor)(&gDvm.typeInt,     0, ROOT_STICKY_CLASS, arg);
-    (*visitor)(&gDvm.typeLong,    0, ROOT_STICKY_CLASS, arg);
-    (*visitor)(&gDvm.typeFloat,   0, ROOT_STICKY_CLASS, arg);
-    (*visitor)(&gDvm.typeDouble,  0, ROOT_STICKY_CLASS, arg);
+    (*visitor)(&gDvm.typeByte, 0, ROOT_STICKY_CLASS, arg);
+    (*visitor)(&gDvm.typeShort, 0, ROOT_STICKY_CLASS, arg);
+    (*visitor)(&gDvm.typeChar, 0, ROOT_STICKY_CLASS, arg);
+    (*visitor)(&gDvm.typeInt, 0, ROOT_STICKY_CLASS, arg);
+    (*visitor)(&gDvm.typeLong, 0, ROOT_STICKY_CLASS, arg);
+    (*visitor)(&gDvm.typeFloat, 0, ROOT_STICKY_CLASS, arg);
+    (*visitor)(&gDvm.typeDouble, 0, ROOT_STICKY_CLASS, arg);
 }
 
 /*
