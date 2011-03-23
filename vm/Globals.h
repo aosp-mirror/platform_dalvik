@@ -355,6 +355,10 @@ struct DvmGlobals {
     /* method offsets - Thread */
     int         voffJavaLangThread_run;
 
+    /* field offsets - ThreadGroup */
+    int         offJavaLangThreadGroup_name;
+    int         offJavaLangThreadGroup_parent;
+
     /* field offsets - VMThread */
     int         offJavaLangVMThread_thread;
     int         offJavaLangVMThread_vmData;

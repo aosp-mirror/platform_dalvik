@@ -1143,10 +1143,13 @@ const char* dvmDbgGetMethodName(RefTypeId refTypeId, MethodId id)
 
 /*
  * Augment the access flags for synthetic methods and fields by setting
- * the (as described by the spec) "0xf0000000 bit".
+ * the (as described by the spec) "0xf0000000 bit".  Also, strip out any
+ * flags not specified by the Java programming language.
  */
 static u4 augmentedAccessFlags(u4 accessFlags)
 {
+    accessFlags &= JAVA_FLAGS_MASK;
+
     if ((accessFlags & ACC_SYNTHETIC) != 0) {
         return accessFlags | 0xf0000000;
     } else {
@@ -1843,32 +1846,6 @@ bail:
     return result;
 }
 
-#if 0
-/*
- * Wait until a thread suspends.
- *
- * We stray from the usual pattern here, and release the thread list lock
- * before we use the Thread.  This is necessary and should be safe in this
- * circumstance; see comments in dvmWaitForSuspend().
- */
-void dvmDbgWaitForSuspend(ObjectId threadId)
-{
-    Object* threadObj;
-    Thread* thread;
-
-    threadObj = objectIdToObject(threadId);
-    assert(threadObj != NULL);
-
-    dvmLockThreadList(NULL);
-    thread = threadObjToThread(threadObj);
-    dvmUnlockThreadList();
-
-    if (thread != NULL)
-        dvmWaitForSuspend(thread);
-}
-#endif
-
-
 /*
  * Return the ObjectId for the "system" thread group.
  */
@@ -1879,7 +1856,7 @@ ObjectId dvmDbgGetSystemThreadGroupId(void)
 }
 
 /*
- * Return the ObjectId for the "system" thread group.
+ * Return the ObjectId for the "main" thread group.
  */
 ObjectId dvmDbgGetMainThreadGroupId(void)
 {
@@ -1944,21 +1921,13 @@ ObjectId dvmDbgGetThreadGroup(ObjectId threadId)
 char* dvmDbgGetThreadGroupName(ObjectId threadGroupId)
 {
     Object* threadGroup;
-    InstField* nameField;
     StringObject* nameStr;
 
     threadGroup = objectIdToObject(threadGroupId);
     assert(threadGroup != NULL);
 
-    nameField = dvmFindInstanceField(gDvm.classJavaLangThreadGroup,
-                    "name", "Ljava/lang/String;");
-    if (nameField == NULL) {
-        LOGE("unable to find name field in ThreadGroup\n");
-        return NULL;
-    }
-
-    nameStr = (StringObject*) dvmGetFieldObject(threadGroup,
-                                                nameField->byteOffset);
+    nameStr = (StringObject*)
+        dvmGetFieldObject(threadGroup, gDvm.offJavaLangThreadGroup_name);
     return dvmCreateCstrFromString(nameStr);
 }
 
@@ -1970,20 +1939,12 @@ char* dvmDbgGetThreadGroupName(ObjectId threadGroupId)
 ObjectId dvmDbgGetThreadGroupParent(ObjectId threadGroupId)
 {
     Object* threadGroup;
-    InstField* parentField;
     Object* parent;
 
     threadGroup = objectIdToObject(threadGroupId);
     assert(threadGroup != NULL);
 
-    parentField = dvmFindInstanceField(gDvm.classJavaLangThreadGroup,
-                    "parent", "Ljava/lang/ThreadGroup;");
-    if (parentField == NULL) {
-        LOGE("unable to find parent field in ThreadGroup\n");
-        parent = NULL;
-    } else {
-        parent = dvmGetFieldObject(threadGroup, parentField->byteOffset);
-    }
+    parent = dvmGetFieldObject(threadGroup, gDvm.offJavaLangThreadGroup_parent);
     return objectToObjectId(parent);
 }
 
@@ -2002,7 +1963,6 @@ void dvmDbgGetThreadGroupThreads(ObjectId threadGroupId,
     ObjectId** ppThreadIds, u4* pThreadCount)
 {
     Object* targetThreadGroup = NULL;
-    InstField* groupField = NULL;
     Thread* thread;
     int count;
 
@@ -2010,9 +1970,6 @@ void dvmDbgGetThreadGroupThreads(ObjectId threadGroupId,
         targetThreadGroup = objectIdToObject(threadGroupId);
         assert(targetThreadGroup != NULL);
     }
-
-    groupField = dvmFindInstanceField(gDvm.classJavaLangThread,
-        "group", "Ljava/lang/ThreadGroup;");
 
     dvmLockThreadList(NULL);
 
@@ -2035,7 +1992,8 @@ void dvmDbgGetThreadGroupThreads(ObjectId threadGroupId,
         if (thread->threadObj == NULL)
             continue;
 
-        group = dvmGetFieldObject(thread->threadObj, groupField->byteOffset);
+        group = dvmGetFieldObject(thread->threadObj,
+                    gDvm.offJavaLangThread_group);
         if (threadGroupId == THREAD_GROUP_ALL || group == targetThreadGroup)
             count++;
     }
@@ -2065,7 +2023,8 @@ void dvmDbgGetThreadGroupThreads(ObjectId threadGroupId,
             if (thread->threadObj == NULL)
                 continue;
 
-            group = dvmGetFieldObject(thread->threadObj,groupField->byteOffset);
+            group = dvmGetFieldObject(thread->threadObj,
+                        gDvm.offJavaLangThread_group);
             if (threadGroupId == THREAD_GROUP_ALL || group == targetThreadGroup)
             {
                 *ptr++ = objectToObjectId(thread->threadObj);
@@ -2093,33 +2052,23 @@ void dvmDbgGetAllThreads(ObjectId** ppThreadIds, u4* pThreadCount)
 /*
  * Count up the #of frames on the thread's stack.
  *
- * Returns -1 on failure;
+ * Returns -1 on failure.
  */
 int dvmDbgGetThreadFrameCount(ObjectId threadId)
 {
     Object* threadObj;
     Thread* thread;
-    void* framePtr;
-    u4 count = 0;
+    int count = -1;
 
     threadObj = objectIdToObject(threadId);
 
     dvmLockThreadList(NULL);
-
     thread = threadObjToThread(threadObj);
-    if (thread == NULL)
-        goto bail;
-
-    framePtr = thread->curFrame;
-    while (framePtr != NULL) {
-        if (!dvmIsBreakFrame((u4*)framePtr))
-            count++;
-
-        framePtr = SAVEAREA_FROM_FP(framePtr)->prevFrame;
+    if (thread != NULL) {
+        count = dvmComputeExactFrameDepth(thread->curFrame);
     }
-
-bail:
     dvmUnlockThreadList();
+
     return count;
 }
 
@@ -2309,6 +2258,9 @@ bool dvmDbgGetThisObject(ObjectId threadId, FrameId frameId, ObjectId* pThisId)
 /*
  * Copy the value of a method argument or local variable into the
  * specified buffer.  The value will be preceeded with the tag.
+ *
+ * The debugger includes the tags in the request.  Object tags may
+ * be updated with a more refined type.
  */
 void dvmDbgGetLocalValue(ObjectId threadId, FrameId frameId, int slot,
     u1 tag, u1* buf, int expectedLen)
@@ -2346,7 +2298,7 @@ void dvmDbgGetLocalValue(ObjectId threadId, FrameId frameId, int slot,
         set4BE(buf+1, intVal);
         break;
     case JT_ARRAY:
-        assert(expectedLen == 8);
+        assert(expectedLen == sizeof(ObjectId));
         {
             /* convert to "ObjectId" */
             objVal = (Object*)framePtr[slot];
@@ -2361,7 +2313,7 @@ void dvmDbgGetLocalValue(ObjectId threadId, FrameId frameId, int slot,
         }
         break;
     case JT_OBJECT:
-        assert(expectedLen == 8);
+        assert(expectedLen == sizeof(ObjectId));
         {
             /* convert to "ObjectId" */
             objVal = (Object*)framePtr[slot];
@@ -2379,7 +2331,7 @@ void dvmDbgGetLocalValue(ObjectId threadId, FrameId frameId, int slot,
     case JT_DOUBLE:
     case JT_LONG:
         assert(expectedLen == 8);
-        longVal = *(u8*)(&framePtr[slot]);
+        memcpy(&longVal, &framePtr[slot], 8);
         set8BE(buf+1, longVal);
         break;
     default:
@@ -2388,6 +2340,7 @@ void dvmDbgGetLocalValue(ObjectId threadId, FrameId frameId, int slot,
         break;
     }
 
+    /* prepend tag, which may have been updated */
     set1(buf, tag);
 }
 
@@ -2434,13 +2387,14 @@ void dvmDbgSetLocalValue(ObjectId threadId, FrameId frameId, int slot, u1 tag,
     case JT_DOUBLE:
     case JT_LONG:
         assert(width == 8);
-        *(u8*)(&framePtr[slot]) = value;
+        memcpy(&framePtr[slot], &value, 8);
         break;
     case JT_VOID:
     case JT_CLASS_OBJECT:
     case JT_THREAD:
     case JT_THREAD_GROUP:
     case JT_CLASS_LOADER:
+        /* not expecting these from debugger; fall through to failure */
     default:
         LOGE("ERROR: unhandled tag '%c'\n", tag);
         assert(false);
