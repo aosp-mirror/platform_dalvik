@@ -349,6 +349,7 @@ void dvmDumpLIRInsn(LIR *arg, unsigned char *baseAddr)
             LOGD("%p (%04x): .align4\n", baseAddr + offset, offset);
             break;
         case kArmPseudoPCReconstructionCell:
+            LOGD("L%p:\n", lir);
             LOGD("-------- reconstruct dalvik PC : 0x%04x @ +0x%04x\n", dest,
                  lir->operands[1]);
             break;

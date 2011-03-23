@@ -958,8 +958,18 @@ static AssemblerStatus assembleInstructions(CompilationUnit *cUnit,
                 dvmCompilerAbort(cUnit);
             }
             if ((lir->opcode == kThumb2LdrPcRel12) && (delta > 4091)) {
+                if (cUnit->printMe) {
+                    LOGD("kThumb2LdrPcRel12@%x: delta=%d", lir->generic.offset,
+                         delta);
+                    dvmCompilerCodegenDump(cUnit);
+                }
                 return kRetryHalve;
             } else if (delta > 1020) {
+                if (cUnit->printMe) {
+                    LOGD("kThumbLdrPcRel@%x: delta=%d", lir->generic.offset,
+                         delta);
+                    dvmCompilerCodegenDump(cUnit);
+                }
                 return kRetryHalve;
             }
             if (lir->opcode == kThumb2Vldrs) {
@@ -1002,6 +1012,11 @@ static AssemblerStatus assembleInstructions(CompilationUnit *cUnit,
             intptr_t target = targetLIR->generic.offset;
             int delta = target - pc;
             if ((lir->opcode == kThumbBCond) && (delta > 254 || delta < -256)) {
+                if (cUnit->printMe) {
+                    LOGD("kThumbBCond@%x: delta=%d", lir->generic.offset,
+                         delta);
+                    dvmCompilerCodegenDump(cUnit);
+                }
                 return kRetryHalve;
             }
             lir->operands[0] = delta >> 1;
