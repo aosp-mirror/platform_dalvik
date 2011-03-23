@@ -19,6 +19,7 @@ package com.android.dx.command.findusages;
 import com.android.dx.io.DexBuffer;
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintWriter;
 
 public final class Main {
     public static void main(String[] args) throws IOException {
@@ -27,6 +28,6 @@ public final class Main {
         String memberName = args[2];
 
         DexBuffer dex = new DexBuffer(new File(dexFile));
-        new FindUsages(dex, declaredBy, memberName, System.out).findUsages();
+        new FindUsages(dex, declaredBy, memberName, new PrintWriter(System.out)).findUsages();
     }
 }

@@ -25,6 +25,7 @@ import com.android.dx.io.MethodId;
 import com.android.dx.io.OpcodeInfo;
 import com.android.dx.io.instructions.DecodedInstruction;
 import java.io.PrintStream;
+import java.io.PrintWriter;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
@@ -34,12 +35,12 @@ public final class FindUsages {
     private final Set<Integer> methodIds;
     private final Set<Integer> fieldIds;
     private final CodeReader codeReader = new CodeReader();
-    private final PrintStream out;
+    private final PrintWriter out;
 
     private ClassDef currentClass;
     private ClassData.Method currentMethod;
 
-    public FindUsages(DexBuffer dex, String declaredBy, String memberName, final PrintStream out) {
+    public FindUsages(DexBuffer dex, String declaredBy, String memberName, final PrintWriter out) {
         this.dex = dex;
         this.out = out;
 

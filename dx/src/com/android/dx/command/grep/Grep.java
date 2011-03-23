@@ -23,7 +23,7 @@ import com.android.dx.io.DexBuffer;
 import com.android.dx.io.EncodedValueReader;
 import com.android.dx.io.MethodId;
 import com.android.dx.io.instructions.DecodedInstruction;
-import java.io.PrintStream;
+import java.io.PrintWriter;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -33,13 +33,13 @@ public final class Grep {
     private final CodeReader codeReader = new CodeReader();
     private final Set<Integer> stringIds;
 
-    private final PrintStream out;
+    private final PrintWriter out;
     private int count = 0;
 
     private ClassDef currentClass;
     private ClassData.Method currentMethod;
 
-    public Grep(final DexBuffer dex, Pattern pattern, final PrintStream out) {
+    public Grep(final DexBuffer dex, Pattern pattern, final PrintWriter out) {
         this.dex = dex;
         this.out = out;
 
