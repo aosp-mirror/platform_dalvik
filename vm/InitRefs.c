@@ -22,6 +22,12 @@
 #include "Dalvik.h"
 
 void dvmForEachRequiredReference(ObjectReferenceCallback* callback) {
+    /*
+     * TODO: Check to see if this function is ever needed in practice
+     * (after letting it hang out in the codebase for a little while).
+     * Originally it looked like the GC might want it, but that was a
+     * mistaken impression.
+     */
     callback((Object**) (void*) &gDvm.classArrayBoolean);
     callback((Object**) (void*) &gDvm.classArrayByte);
     callback((Object**) (void*) &gDvm.classArrayChar);
