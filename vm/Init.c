@@ -1334,7 +1334,11 @@ int dvmStartup(int argc, const char* const argv[], bool ignoreUnrecognized,
         LOGE("dvmTestIndirectRefTable FAILED\n");
 #endif
 
-    assert(!dvmCheckException(dvmThreadSelf()));
+    if (dvmCheckException(dvmThreadSelf())) {
+        LOGE("Exception pending at end of VM initialization\n");
+        dvmLogExceptionStackTrace();
+        goto fail;
+    }
 
     return 0;
 
