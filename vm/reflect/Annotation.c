@@ -875,6 +875,67 @@ static ArrayObject* processAnnotationSet(const ClassObject* clazz,
     return annoArray;
 }
 
+/*
+ * Return the annotation item of the specified type in the annotation set, or
+ * NULL if the set contains no annotation of that type.
+ */
+static const DexAnnotationItem* getAnnotationItemFromAnnotationSet(
+        const ClassObject* clazz, const DexAnnotationSetItem* pAnnoSet,
+        int visibility, const ClassObject* annotationClazz)
+{
+    DexFile* pDexFile = clazz->pDvmDex->pDexFile;
+    const DexAnnotationItem* pAnnoItem;
+    int i;
+    const ClassObject* annoClass;
+    const u1* ptr;
+    u4 typeIdx;
+
+    /* we need these later; make sure they're initialized */
+    if (!dvmIsClassInitialized(gDvm.classOrgApacheHarmonyLangAnnotationAnnotationFactory))
+        dvmInitClass(gDvm.classOrgApacheHarmonyLangAnnotationAnnotationFactory);
+    if (!dvmIsClassInitialized(gDvm.classOrgApacheHarmonyLangAnnotationAnnotationMember))
+        dvmInitClass(gDvm.classOrgApacheHarmonyLangAnnotationAnnotationMember);
+
+    for (i = 0; i < (int) pAnnoSet->size; i++) {
+        pAnnoItem = dexGetAnnotationItem(pDexFile, pAnnoSet, i);
+        if (pAnnoItem->visibility != visibility)
+            continue;
+
+        ptr = pAnnoItem->annotation;
+        typeIdx = readUleb128(&ptr);
+
+        annoClass = dvmDexGetResolvedClass(clazz->pDvmDex, typeIdx);
+        if (annoClass == NULL) {
+            annoClass = dvmResolveClass(clazz, typeIdx, true);
+            if (annoClass == NULL) {
+                return NULL; // an exception is pending
+            }
+        }
+
+        if (annoClass == annotationClazz) {
+            return pAnnoItem;
+        }
+    }
+
+    return NULL;
+}
+
+/*
+ * Return the Annotation object of the specified type in the annotation set, or
+ * NULL if the set contains no annotation of that type.
+ */
+static Object* getAnnotationObjectFromAnnotationSet(const ClassObject* clazz,
+        const DexAnnotationSetItem* pAnnoSet, int visibility,
+        const ClassObject* annotationClazz)
+{
+    const DexAnnotationItem* pAnnoItem = getAnnotationItemFromAnnotationSet(
+            clazz, pAnnoSet, visibility, annotationClazz);
+    if (pAnnoItem == NULL) {
+        return NULL;
+    }
+    const u1* ptr = pAnnoItem->annotation;
+    return processEncodedAnnotation(clazz, &ptr);
+}
 
 /*
  * ===========================================================================
@@ -1185,6 +1246,35 @@ ArrayObject* dvmGetClassAnnotations(const ClassObject* clazz)
     }
 
     return annoArray;
+}
+
+/*
+ * Returns the annotation or NULL if it doesn't exist.
+ */
+Object* dvmGetClassAnnotation(const ClassObject* clazz,
+        const ClassObject* annotationClazz)
+{
+    const DexAnnotationSetItem* pAnnoSet = findAnnotationSetForClass(clazz);
+    if (pAnnoSet == NULL) {
+        return NULL;
+    }
+    return getAnnotationObjectFromAnnotationSet(clazz, pAnnoSet,
+            kDexVisibilityRuntime, annotationClazz);
+}
+
+/*
+ * Returns true if the annotation exists.
+ */
+bool dvmIsClassAnnotationPresent(const ClassObject* clazz,
+        const ClassObject* annotationClazz)
+{
+    const DexAnnotationSetItem* pAnnoSet = findAnnotationSetForClass(clazz);
+    if (pAnnoSet == NULL) {
+        return NULL;
+    }
+    const DexAnnotationItem* pAnnoItem = getAnnotationItemFromAnnotationSet(
+            clazz, pAnnoSet, kDexVisibilityRuntime, annotationClazz);
+    return (pAnnoItem != NULL);
 }
 
 /*

@@ -702,6 +702,30 @@ static void Dalvik_java_lang_Class_getDeclaredAnnotations(const u4* args,
 }
 
 /*
+ * private Annotation getDeclaredAnnotation(Class annotationClass)
+ */
+static void Dalvik_java_lang_Class_getDeclaredAnnotation(const u4* args,
+    JValue* pResult)
+{
+    ClassObject* clazz = (ClassObject*) args[0];
+    ClassObject* annotationClazz = (ClassObject*) args[1];
+
+    RETURN_PTR(dvmGetClassAnnotation(clazz, annotationClazz));
+}
+
+/*
+ * private boolean isDeclaredAnnotationPresent(Class annotationClass);
+ */
+static void Dalvik_java_lang_Class_isDeclaredAnnotationPresent(const u4* args,
+    JValue* pResult)
+{
+    ClassObject* clazz = (ClassObject*) args[0];
+    ClassObject* annotationClazz = (ClassObject*) args[1];
+
+    RETURN_BOOLEAN(dvmIsClassAnnotationPresent(clazz, annotationClazz));
+}
+
+/*
  * public String getInnerClassName()
  *
  * Returns the simple name of a member class or local class, or null otherwise.
@@ -793,6 +817,10 @@ const DalvikNativeMethod dvm_java_lang_Class[] = {
         Dalvik_java_lang_Class_isAnonymousClass },
     { "getDeclaredAnnotations", "()[Ljava/lang/annotation/Annotation;",
         Dalvik_java_lang_Class_getDeclaredAnnotations },
+    { "getDeclaredAnnotation", "(Ljava/lang/Class;)Ljava/lang/annotation/Annotation;",
+        Dalvik_java_lang_Class_getDeclaredAnnotation },
+    { "isDeclaredAnnotationPresent", "(Ljava/lang/Class;)Z",
+        Dalvik_java_lang_Class_isDeclaredAnnotationPresent },
     { "getInnerClassName",       "()Ljava/lang/String;",
         Dalvik_java_lang_Class_getInnerClassName },
     { "setAccessibleNoCheck",   "(Ljava/lang/reflect/AccessibleObject;Z)V",

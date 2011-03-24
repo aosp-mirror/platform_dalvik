@@ -411,7 +411,7 @@ typedef struct DexAnnotationSetRefList {
 } DexAnnotationSetRefList;
 
 /*
- * Direct-mapped "anotation_set_item".
+ * Direct-mapped "annotation_set_item".
  */
 typedef struct DexAnnotationSetItem {
     u4  size;
