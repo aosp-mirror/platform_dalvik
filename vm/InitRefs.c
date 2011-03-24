@@ -281,6 +281,12 @@ static bool initFieldOffsets(void) {
         { NULL, NULL, NULL }
     };
 
+    static struct FieldInfo infoThreadGroup[] = {
+        { &gDvm.offJavaLangThreadGroup_name,   "name",   "Ljava/lang/String;" },
+        { &gDvm.offJavaLangThreadGroup_parent, "parent", "Ljava/lang/ThreadGroup;" },
+        { NULL, NULL, NULL }
+    };
+
     static struct FieldInfo infoThrowable[] = {
         { &gDvm.offJavaLangThrowable_stackState, "stackState", "Ljava/lang/Object;" },
         { &gDvm.offJavaLangThrowable_cause,      "cause",      "Ljava/lang/Throwable;" },
@@ -330,6 +336,7 @@ static bool initFieldOffsets(void) {
     static struct { const char* name; const struct FieldInfo* fields; } classes[] = {
         { "Ljava/lang/String;",                   infoString },
         { "Ljava/lang/Thread;",                   infoThread },
+        { "Ljava/lang/ThreadGroup;",              infoThreadGroup },
         { "Ljava/lang/Throwable;",                infoThrowable },
         { "Ljava/lang/VMThread;",                 infoVMThread },
         { "Ljava/lang/reflect/AccessibleObject;", infoAccessibleObject },
