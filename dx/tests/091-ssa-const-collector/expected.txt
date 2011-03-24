@@ -310,11 +310,11 @@ block 003b
   pred 0093
   Blort.java:43@003b: Rop{invoke-virtual . <- Ljava/io/PrintStream; Ljava/lang/
   String; call throws <any>}(java.io.PrintStream.println:(Ljava/lang/String;)V 
-  catch) . <- v0:Ljava/io/PrintStream; v2:Ljava/lang/String;="foo"
+  catch) . <- v2:Ljava/io/PrintStream; v3:Ljava/lang/String;="foo"
   next 007f
 block 007e
   pred 0094
-  Blort.java:33@0000: move-param-object(0) v3:"this"LBlort; <- .
+  Blort.java:33@0000: move-param-object(0) v4:"this"LBlort; <- .
   Blort.java:33@0000: goto . <- .
   next 0000
 block 007f
@@ -367,12 +367,12 @@ block 0090
 block 0092
   pred 0035
   Blort.java:43@0036: Rop{move-result-pseudo Ljava/io/PrintStream; <- . flows} 
-  v0:Ljava/io/PrintStream; <- .
+  v2:Ljava/io/PrintStream; <- .
   Blort.java:43@0036: goto . <- .
   next 0039
 block 0093
   pred 0039
-  Blort.java:43@0039: Rop{move-result-pseudo Ljava/lang/String; <- . flows} v2:
+  Blort.java:43@0039: Rop{move-result-pseudo Ljava/lang/String; <- . flows} v3:
   Ljava/lang/String;="foo" <- .
   Blort.java:43@0039: goto . <- .
   next 003b
@@ -407,7 +407,7 @@ block 0000
   @????: mark-local-int . <- v1:"b"I
   Blort.java:54@0011: const-int(10) v2:I=10 <- .
   @????: mark-local-int . <- v2:"c"I
-  Blort.java:56@0018: const-int(100) v3:I=100 <- .
+  Blort.java:56@0018: mul-const-int(10) v3:I=100 <- v3:I
   @????: mark-local-int . <- v3:"i"I=100
   Blort.java:57@001a: goto . <- .
   next 0003

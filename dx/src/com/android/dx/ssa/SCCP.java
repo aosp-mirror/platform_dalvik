@@ -252,14 +252,18 @@ public class SCCP {
             Constant cA = null;
             Constant cB = null;
 
-            int regA = sources.get(0).getReg();
-            if (latticeValues[regA] == CONSTANT) {
+            RegisterSpec specA = sources.get(0);
+            int regA = specA.getReg();
+            if (!ssaMeth.isRegALocal(specA) &&
+                    latticeValues[regA] == CONSTANT) {
                 cA = latticeConstants[regA];
             }
 
             if (sources.size() == 2) {
-                int regB = sources.get(1).getReg();
-                if (latticeValues[regB] == CONSTANT) {
+                RegisterSpec specB = sources.get(1);
+                int regB = specB.getReg();
+                if (!ssaMeth.isRegALocal(specB) &&
+                        latticeValues[regB] == CONSTANT) {
                     cB = latticeConstants[regB];
                 }
             }

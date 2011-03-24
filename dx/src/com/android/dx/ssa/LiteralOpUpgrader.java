@@ -146,8 +146,10 @@ public class LiteralOpUpgrader {
     private boolean tryReplacingWithConstant(NormalSsaInsn insn) {
         Insn originalRopInsn = insn.getOriginalRopInsn();
         Rop opcode = originalRopInsn.getOpcode();
+        RegisterSpec result = insn.getResult();
 
-        if (insn.getResult() != null && opcode.getOpcode() != RegOps.CONST) {
+        if (result != null && !ssaMeth.isRegALocal(result) &&
+                opcode.getOpcode() != RegOps.CONST) {
             TypeBearer type = insn.getResult().getTypeBearer();
             if (type.isConstant() && type.getBasicType() == Type.BT_INT) {
                 // Replace the instruction with a constant
