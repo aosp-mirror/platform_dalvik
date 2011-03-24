@@ -264,6 +264,11 @@ static bool initFieldOffsets(void) {
         const char* type;
     };
 
+    static struct FieldInfo infoFileDescriptor[] = {
+        { &gDvm.offJavaIoFileDescriptor_descriptor, "descriptor", "I" },
+        { NULL, NULL, NULL }
+    };
+
     static struct FieldInfo infoString[] = {
         { &gDvm.offJavaLangString_value,    "value",    "[C" },
         { &gDvm.offJavaLangString_count,    "count",    "I" },
@@ -273,11 +278,12 @@ static bool initFieldOffsets(void) {
     };
 
     static struct FieldInfo infoThread[] = {
-        { &gDvm.offJavaLangThread_vmThread, "vmThread", "Ljava/lang/VMThread;" },
-        { &gDvm.offJavaLangThread_group,    "group",    "Ljava/lang/ThreadGroup;" },
-        { &gDvm.offJavaLangThread_daemon,   "daemon",   "Z" },
-        { &gDvm.offJavaLangThread_name,     "name",     "Ljava/lang/String;" },
-        { &gDvm.offJavaLangThread_priority, "priority", "I" },
+        { &gDvm.offJavaLangThread_vmThread,        "vmThread",        "Ljava/lang/VMThread;" },
+        { &gDvm.offJavaLangThread_group,           "group",           "Ljava/lang/ThreadGroup;" },
+        { &gDvm.offJavaLangThread_daemon,          "daemon",          "Z" },
+        { &gDvm.offJavaLangThread_name,            "name",            "Ljava/lang/String;" },
+        { &gDvm.offJavaLangThread_priority,        "priority",        "I" },
+        { &gDvm.offJavaLangThread_uncaughtHandler, "uncaughtHandler", "Ljava/lang/Thread$UncaughtExceptionHandler;" },
         { NULL, NULL, NULL }
     };
 
@@ -334,6 +340,7 @@ static bool initFieldOffsets(void) {
     };
 
     static struct { const char* name; const struct FieldInfo* fields; } classes[] = {
+        { "Ljava/io/FileDescriptor;",             infoFileDescriptor },
         { "Ljava/lang/String;",                   infoString },
         { "Ljava/lang/Thread;",                   infoThread },
         { "Ljava/lang/ThreadGroup;",              infoThreadGroup },

@@ -38,13 +38,7 @@ static int getFileDescriptor(Object* obj)
     assert(obj != NULL);
     assert(strcmp(obj->clazz->descriptor, "Ljava/io/FileDescriptor;") == 0);
 
-    InstField* field = dvmFindInstanceField(obj->clazz, "descriptor", "I");
-    if (field == NULL) {
-        dvmThrowNoSuchFieldException("No FileDescriptor.descriptor field");
-        return -1;
-    }
-
-    int fd = dvmGetFieldInt(obj, field->byteOffset);
+    int fd = dvmGetFieldInt(obj, gDvm.offJavaIoFileDescriptor_descriptor);
     if (fd < 0) {
         dvmThrowRuntimeException("Invalid file descriptor");
         return -1;
