@@ -1639,9 +1639,13 @@ void dvmCheckBefore(const u2 *pc, const u4 *fp, Thread* self)
 
     /* Suspend pending? */
     if (self->interpBreak.ctl.suspendCount) {
-        // Neeeded for precise GC
-        dvmExportPC(pc, fp);
-        dvmCheckSuspendPending(self);
+        // Are we are a safe point?
+        int flags;
+        flags = dexGetFlagsFromOpcode(dexOpcodeFromCodeUnit(*pc));
+        if (flags & VERIFY_GC_INST_MASK) {
+            dvmExportPC(pc, fp);
+            dvmCheckSuspendPending(self);
+        }
     }
 
     if (self->interpBreak.ctl.subMode & kSubModeDebuggerActive) {

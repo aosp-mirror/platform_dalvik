@@ -1451,49 +1451,18 @@ static bool verifyInstructions(VerifierData* vdata)
             return false;
         }
 
-        /*
-         * Certain types of instructions can be GC points.  To support precise
-         * GC, all such instructions must export the PC in the interpreter,
-         * or the GC won't be able to identify the current PC for the thread.
-         */
-        const int kGcMask = kInstrCanBranch | kInstrCanSwitch |
-            kInstrCanThrow | kInstrCanReturn;
-
         OpcodeFlags opFlags = dexGetFlagsFromOpcode(decInsn.opcode);
-        if ((opFlags & kGcMask) != 0) {
+        if ((opFlags & VERIFY_GC_INST_MASK) != 0) {
             /*
-             * This instruction is probably a GC point.  Branch instructions
-             * only qualify if they go backward, so for those we need to
-             * check the offset.
+             * This instruction is a GC point.  If space is a concern,
+             * the set of GC points could be reduced by eliminating
+             * foward branches.
              *
              * TODO: we could also scan the targets of a "switch" statement,
              * and if none of them branch backward we could ignore that
              * instruction as well.
              */
-            s4 offset;
-            bool unused;
-            if ((opFlags & kInstrCanBranch) != 0) {
-                /*
-                 * Get the target.  This is slightly redundant, since the
-                 * component was tagged with kVfyBranch, but it's easier
-                 * to just grab it again than cart the state around.
-                 */
-                if (!dvmGetBranchOffset(meth, insnFlags, codeOffset, &offset,
-                        &unused))
-                {
-                    /* should never happen */
-                    LOGE("VFY: opcode %02x flagged as can branch, no target\n",
-                        decInsn.opcode);
-                    dvmAbort();
-                }
-                if (offset <= 0) {
-                    /* backward branch, set GC flag */
-                    dvmInsnSetGcPoint(insnFlags, codeOffset, true);
-                }
-            } else {
-                /* not a branch instruction, always set GC flag */
-                dvmInsnSetGcPoint(insnFlags, codeOffset, true);
-            }
+            dvmInsnSetGcPoint(insnFlags, codeOffset, true);
         }
 
         assert(width > 0);
