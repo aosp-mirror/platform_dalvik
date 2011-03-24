@@ -71,10 +71,13 @@ typedef enum InterpBreakFlags {
     kInterpDebugBreak         = 0x04,
     kInterpEmulatorTraceBreak = 0x08,
     kInterpSingleStep         = 0x10,
+    kInterpSafePointCallback  = 0x20,
 #if defined(WITH_JIT)
-    kInterpJitBreak           = 0x20,
+    kInterpJitBreak           = 0x40,
 #endif
 } InterpBreakFlags;
+
+typedef bool (*SafePointCallback)(struct Thread* thread, void* arg);
 
 /*
  * Identify which break and submode flags should be local

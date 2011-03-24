@@ -337,7 +337,7 @@ MTERP_CONSTANT(kInterpDebugBreak,         0x04)
 MTERP_CONSTANT(kInterpEmulatorTraceBreak, 0x08)
 MTERP_CONSTANT(kInterpSingleStep,         0x10)
 #if defined(WITH_JIT)
-MTERP_CONSTANT(kInterpJitBreak,           0x20)
+MTERP_CONSTANT(kInterpJitBreak,           0x40)
 #endif
 MTERP_CONSTANT(kSubModeDebugProfile,      0x0f)
 

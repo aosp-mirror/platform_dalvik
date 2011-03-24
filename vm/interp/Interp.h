@@ -79,7 +79,7 @@ void dvmFlushBreakpoints(ClassObject* clazz);
  */
 void dvmUpdateDebugger(const Method* method, const u2* pc, const u4* fp,
                        bool methodEntry, Thread* self);
-void dvmCheckBefore(const u2 *dPC, const u4 *fp, Thread* self);
+void dvmCheckBefore(const u2 *dPC, u4 *fp, Thread* self);
 void dvmReportExceptionThrow(Thread* self, const Method* curMethod,
                              const u2* pc, void* fp);
 void dvmReportPreNativeInvoke(const u2* pc, Thread* self,
@@ -100,6 +100,20 @@ void dvmAddToSuspendCounts(Thread* thread, int delta, int dbgDelta);
  * Update interpBreak for all threads
  */
 void dvmUpdateAllInterpBreak(int newBreak, int newMode, bool enable);
+
+/*
+ * Register a callback to occur at the next safe point for a single thread.
+ * If funct is NULL, the previous registration is cancelled.
+ *
+ * The callback prototype is:
+ *        bool funct(Thread* thread, void* arg)
+ *
+ *  If funct returns false, the callback will be disarmed.  If true,
+ *  it will stay in effect.
+ */
+void dvmArmSafePointCallback(Thread* thread, SafePointCallback funct,
+                             void* arg);
+
 
 #ifndef DVM_NO_ASM_INTERP
 extern void* dvmAsmInstructionStart[];

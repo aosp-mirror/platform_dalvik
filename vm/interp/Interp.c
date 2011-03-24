@@ -1552,6 +1552,35 @@ void dvmUpdateAllInterpBreak(int newBreak, int newMode, bool enable)
 }
 
 /*
+ * Arm a safepoint callback for a thread.  If funct is null,
+ * clear any pending callback.
+ * TODO: only gc is currently using this feature, and will have
+ * at most a single outstanding callback request.  Until we need
+ * something more capable and flexible, enforce this limit.
+ */
+void dvmArmSafePointCallback(Thread* thread, SafePointCallback funct,
+                             void* arg)
+{
+    dvmLockMutex(&thread->callbackMutex);
+    if ((funct == NULL) || (thread->callback == NULL)) {
+        thread->callback = funct;
+        thread->callbackArg = arg;
+        dvmUpdateInterpBreak(thread, kInterpSafePointCallback,
+                             kSubModeNormal, (funct != NULL));
+    } else {
+        // Already armed.  Different?
+        if ((funct != thread->callback) ||
+            (arg != thread->callbackArg)) {
+            // Yes - report failure and die
+            LOGE("ArmSafePointCallback failed, thread %d", thread->threadId);
+            dvmUnlockMutex(&thread->callbackMutex);
+            dvmAbort();
+        }
+    }
+    dvmUnlockMutex(&thread->callbackMutex);
+}
+
+/*
  * One-time initialization at thread creation.  Here we initialize
  * useful constants.
  */
@@ -1604,7 +1633,7 @@ void dvmInitInterpreterState(Thread* self)
  * count profiling, JIT trace building, etc.  Dalvik PC has been exported
  * prior to call, but Thread copy of dPC & fp are not current.
  */
-void dvmCheckBefore(const u2 *pc, const u4 *fp, Thread* self)
+void dvmCheckBefore(const u2 *pc, u4 *fp, Thread* self)
 {
     const Method* method = self->interpSave.method;
     assert(self->interpBreak.ctl.breakFlags != 0);
@@ -1637,14 +1666,38 @@ void dvmCheckBefore(const u2 *pc, const u4 *fp, Thread* self)
     }
 #endif
 
-    /* Suspend pending? */
-    if (self->interpBreak.ctl.suspendCount) {
+    /* Safe point handling */
+    if (self->interpBreak.ctl.suspendCount ||
+        (self->interpBreak.ctl.breakFlags & kInterpSafePointCallback)) {
         // Are we are a safe point?
         int flags;
         flags = dexGetFlagsFromOpcode(dexOpcodeFromCodeUnit(*pc));
         if (flags & VERIFY_GC_INST_MASK) {
-            dvmExportPC(pc, fp);
-            dvmCheckSuspendPending(self);
+            // Yes, at a safe point.  Pending callback?
+            if (self->interpBreak.ctl.breakFlags & kInterpSafePointCallback) {
+                SafePointCallback callback;
+                void* arg;
+                // Get consistent funct/arg pair
+                dvmLockMutex(&self->callbackMutex);
+                callback = self->callback;
+                arg = self->callbackArg;
+                dvmUnlockMutex(&self->callbackMutex);
+                // Update Thread structure
+                self->interpSave.pc = pc;
+                self->interpSave.fp = fp;
+                if (callback != NULL) {
+                    // Do the callback
+                    if (!callback(self,arg)) {
+                        // disarm
+                        dvmArmSafePointCallback(self, NULL, NULL);
+                    }
+                }
+            }
+            // Need to suspend?
+            if (self->interpBreak.ctl.suspendCount) {
+                dvmExportPC(pc, fp);
+                dvmCheckSuspendPending(self);
+            }
         }
     }
 

@@ -297,6 +297,11 @@ typedef struct Thread {
     /* PC, saved on every instruction; redundant with StackSaveArea */
     const u2*   currentPc2;
 #endif
+
+    /* Safepoint callback state */
+    pthread_mutex_t   callbackMutex;
+    SafePointCallback callback;
+    void*             callbackArg;
 } Thread;
 
 /* start point for an internal thread; mimics pthread args */
