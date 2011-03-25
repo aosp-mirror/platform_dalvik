@@ -1614,13 +1614,15 @@ static void* interpThreadStart(void* arg)
  * Version 1.5 added the per-thread handler.  We need to call
  * "uncaughtException" in the handler object, which is either the
  * ThreadGroup object or the Thread-specific handler.
+ *
+ * This should only be called when an exception is pending.  Before
+ * returning, the exception will be cleared.
  */
 static void threadExitUncaughtException(Thread* self, Object* group)
 {
     Object* exception;
     Object* handlerObj;
-    Method* uncaughtHandler = NULL;
-    InstField* threadHandler;
+    Method* uncaughtHandler;
 
     LOGW("threadid=%d: thread exiting with uncaught exception (group=%p)\n",
         self->threadId, group);
@@ -1631,25 +1633,24 @@ static void threadExitUncaughtException(Thread* self, Object* group)
      * thread.  We don't want to have it set when executing interpreted code.
      */
     exception = dvmGetException(self);
+    assert(exception != NULL);
     dvmAddTrackedAlloc(exception, self);
     dvmClearException(self);
 
     /*
      * Get the Thread's "uncaughtHandler" object.  Use it if non-NULL;
      * else use "group" (which is an instance of UncaughtExceptionHandler).
+     * The ThreadGroup will handle it directly or call the default
+     * uncaught exception handler.
      */
-    threadHandler = dvmFindInstanceField(gDvm.classJavaLangThread,
-            "uncaughtHandler", "Ljava/lang/Thread$UncaughtExceptionHandler;");
-    if (threadHandler == NULL) {
-        LOGW("WARNING: no 'uncaughtHandler' field in java/lang/Thread\n");
-        goto bail;
-    }
-    handlerObj = dvmGetFieldObject(self->threadObj, threadHandler->byteOffset);
+    handlerObj = dvmGetFieldObject(self->threadObj,
+            gDvm.offJavaLangThread_uncaughtHandler);
     if (handlerObj == NULL)
         handlerObj = group;
 
     /*
-     * Find the "uncaughtHandler" field in this object.
+     * Find the "uncaughtException" method in this object.  The method
+     * was declared in the Thread.UncaughtExceptionHandler interface.
      */
     uncaughtHandler = dvmFindVirtualMethodHierByDescriptor(handlerObj->clazz,
             "uncaughtException", "(Ljava/lang/Thread;Ljava/lang/Throwable;)V");
@@ -1661,19 +1662,22 @@ static void threadExitUncaughtException(Thread* self, Object* group)
         dvmCallMethod(self, uncaughtHandler, handlerObj, &unused,
             self->threadObj, exception);
     } else {
-        /* restore it and dump a stack trace */
+        /* should be impossible, but handle it anyway */
         LOGW("WARNING: no 'uncaughtException' method in class %s\n",
             handlerObj->clazz->descriptor);
         dvmSetException(self, exception);
         dvmLogExceptionStackTrace();
     }
 
-bail:
+    /* if the uncaught handler threw, clear it */
+    dvmClearException(self);
+
+    dvmReleaseTrackedAlloc(exception, self);
+
     /* Remove this thread's suspendCount from global suspendCount sum */
     lockThreadSuspendCount();
     dvmAddToSuspendCounts(self, -self->interpBreak.ctl.suspendCount, 0);
     unlockThreadSuspendCount();
-    dvmReleaseTrackedAlloc(exception, self);
 }
 
 

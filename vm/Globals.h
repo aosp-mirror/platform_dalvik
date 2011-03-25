@@ -324,6 +324,7 @@ struct DvmGlobals {
     int         offJavaLangThread_daemon;
     int         offJavaLangThread_name;
     int         offJavaLangThread_priority;
+    int         offJavaLangThread_uncaughtHandler;
 
     /* method offsets - Thread */
     int         voffJavaLangThread_run;
@@ -383,6 +384,9 @@ struct DvmGlobals {
 
     /* field offsets - java.lang.reflect.Proxy */
     int         offJavaLangReflectProxy_h;
+
+    /* field offsets - java.io.FileDescriptor */
+    int         offJavaIoFileDescriptor_descriptor;
 
     /* fake native entry point method */
     Method*     methFakeNativeEntry;
