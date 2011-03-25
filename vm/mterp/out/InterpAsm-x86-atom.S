@@ -18237,7 +18237,10 @@ common_returnFromMethod:
     movl        rGLUE, rINST            # %ecx<- pMterpGlue
     movl        offGlue_pSelfSuspendCount(rINST), %edx # %ebx<- pSuspendCount (int)
     movl        offGlue_pDebuggerActive(rINST), %eax # %eax<- pDebuggerActive
+    testl       %eax, %eax
+    je          5f
     movl        (%eax), %eax            # %eax<- get debuggerActive (boolean)
+5:
     and         $7, %eax               # %eax<- mask for boolean (just how many bits does it take?)
     cmp         $0, (%edx)             # check if suspend is pending
     jne         2f                      # handle suspend
