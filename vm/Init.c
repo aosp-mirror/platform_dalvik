@@ -1734,7 +1734,7 @@ void dvmPrintNativeBackTrace(void)
 
     size_t i;
     for (i = 0; i < frameCount; ++i) {
-        LOGW("#%d  %s", i, strings[i]);
+        LOGW("#%-2d %s", i, strings[i]);
     }
     free(strings);
 }
