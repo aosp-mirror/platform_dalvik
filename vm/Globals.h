@@ -325,6 +325,7 @@ struct DvmGlobals {
     int         offJavaLangThread_name;
     int         offJavaLangThread_priority;
     int         offJavaLangThread_uncaughtHandler;
+    int         offJavaLangThread_contextClassLoader;
 
     /* method offsets - Thread */
     int         voffJavaLangThread_run;
@@ -347,6 +348,9 @@ struct DvmGlobals {
     /* method offsets - ClassLoader */
     int         voffJavaLangClassLoader_loadClass;
 
+    /* direct method pointers - ClassLoader */
+    Method*     methJavaLangClassLoader_getSystemClassLoader;
+
     /* field offsets - java.lang.reflect.* */
     int         offJavaLangReflectAccessibleObject_flag;
     int         offJavaLangReflectConstructor_slot;
@@ -366,7 +370,7 @@ struct DvmGlobals {
     Method*     methJavaLangRefReference_enqueueInternal;
 
     /* more method pointers - java.lang.ref.FinalizerReference */
-    Method* methJavaLangRefFinalizerReferenceAdd;
+    Method*     methJavaLangRefFinalizerReferenceAdd;
 
     /* constructor method pointers; no vtable involved, so use Method* */
     Method*     methJavaLangStackTraceElement_init;
@@ -388,8 +392,9 @@ struct DvmGlobals {
     /* field offsets - java.io.FileDescriptor */
     int         offJavaIoFileDescriptor_descriptor;
 
-    /* fake native entry point method */
-    Method*     methFakeNativeEntry;
+    /* direct method pointers - dalvik.system.NativeStart */
+    Method*     methDalvikSystemNativeStart_main;
+    Method*     methDalvikSystemNativeStart_run;
 
     /* assorted direct buffer helpers */
     Method*     methJavaNioReadWriteDirectByteBuffer_init;

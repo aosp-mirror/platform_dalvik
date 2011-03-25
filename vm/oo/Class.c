@@ -4656,22 +4656,15 @@ ClassObject* dvmFindLoadedClass(const char* descriptor)
 Object* dvmGetSystemClassLoader(void)
 {
     Thread* self = dvmThreadSelf();
-    ClassObject* clazz;
-    Method* getSysMeth;
-    Object* loader;
+    ClassObject* clClass = gDvm.classJavaLangClassLoader;
 
-    clazz = dvmFindSystemClass("Ljava/lang/ClassLoader;");
-    if (clazz == NULL)
-        return NULL;
-
-    getSysMeth = dvmFindDirectMethodByDescriptor(clazz, "getSystemClassLoader",
-        "()Ljava/lang/ClassLoader;");
-    if (getSysMeth == NULL)
+    if (!dvmIsClassInitialized(clClass) && !dvmInitClass(clClass))
         return NULL;
 
     JValue result;
-    dvmCallMethod(self, getSysMeth, NULL, &result);
-    loader = (Object*)result.l;
+    dvmCallMethod(self, gDvm.methJavaLangClassLoader_getSystemClassLoader,
+        NULL, &result);
+    Object* loader = (Object*)result.l;
     dvmAddTrackedAlloc(loader, self);
     return loader;
 }
