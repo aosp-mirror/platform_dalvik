@@ -597,16 +597,16 @@ static void Dalvik_java_lang_reflect_Field_setPrimitiveField(const u4* args,
 }
 
 /*
- * public Annotation[] getDeclaredAnnotations(Class declaringClass, int slot)
+ * private static Annotation[] getDeclaredAnnotations(
+ *         Class declaringClass, int slot)
  *
  * Return the annotations declared for this field.
  */
 static void Dalvik_java_lang_reflect_Field_getDeclaredAnnotations(
     const u4* args, JValue* pResult)
 {
-    /* ignore thisPtr in args[0] */
-    ClassObject* declaringClass = (ClassObject*) args[1];
-    int slot = args[2];
+    ClassObject* declaringClass = (ClassObject*) args[0];
+    int slot = args[1];
     Field* field;
 
     field = dvmSlotToField(declaringClass, slot);
@@ -615,6 +615,36 @@ static void Dalvik_java_lang_reflect_Field_getDeclaredAnnotations(
     ArrayObject* annos = dvmGetFieldAnnotations(field);
     dvmReleaseTrackedAlloc((Object*) annos, NULL);
     RETURN_PTR(annos);
+}
+
+/*
+ * static Annotation getAnnotation(
+ *         Class declaringClass, int slot, Class annotationType);
+ */
+static void Dalvik_java_lang_reflect_Field_getAnnotation(const u4* args,
+    JValue* pResult)
+{
+    ClassObject* clazz = (ClassObject*) args[0];
+    int slot = args[1];
+    ClassObject* annotationClazz = (ClassObject*) args[2];
+
+    Field* field = dvmSlotToField(clazz, slot);
+    RETURN_PTR(dvmGetFieldAnnotation(clazz, field, annotationClazz));
+}
+
+/*
+ * static boolean isAnnotationPresent(
+ *         Class declaringClass, int slot, Class annotationType);
+ */
+static void Dalvik_java_lang_reflect_Field_isAnnotationPresent(const u4* args,
+    JValue* pResult)
+{
+    ClassObject* clazz = (ClassObject*) args[0];
+    int slot = args[1];
+    ClassObject* annotationClazz = (ClassObject*) args[2];
+
+    Field* field = dvmSlotToField(clazz, slot);
+    RETURN_BOOLEAN(dvmIsFieldAnnotationPresent(clazz, field, annotationClazz));
 }
 
 /*
@@ -679,6 +709,10 @@ const DalvikNativeMethod dvm_java_lang_reflect_Field[] = {
         Dalvik_java_lang_reflect_Field_setPrimitiveField },
     { "getDeclaredAnnotations", "(Ljava/lang/Class;I)[Ljava/lang/annotation/Annotation;",
         Dalvik_java_lang_reflect_Field_getDeclaredAnnotations },
+    { "getAnnotation", "(Ljava/lang/Class;ILjava/lang/Class;)Ljava/lang/annotation/Annotation;",
+        Dalvik_java_lang_reflect_Field_getAnnotation },
+    { "isAnnotationPresent", "(Ljava/lang/Class;ILjava/lang/Class;)Z",
+        Dalvik_java_lang_reflect_Field_isAnnotationPresent },
     { "getSignatureAnnotation",  "(Ljava/lang/Class;I)[Ljava/lang/Object;",
         Dalvik_java_lang_reflect_Field_getSignatureAnnotation },
     { NULL, NULL, NULL },

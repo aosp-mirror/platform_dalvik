@@ -1702,6 +1702,35 @@ ArrayObject* dvmGetMethodAnnotations(const Method* method)
 }
 
 /*
+ * Returns the annotation or NULL if it doesn't exist.
+ */
+Object* dvmGetMethodAnnotation(const ClassObject* clazz, const Method* method,
+        const ClassObject* annotationClazz)
+{
+    const DexAnnotationSetItem* pAnnoSet = findAnnotationSetForMethod(method);
+    if (pAnnoSet == NULL) {
+        return NULL;
+    }
+    return getAnnotationObjectFromAnnotationSet(clazz, pAnnoSet,
+            kDexVisibilityRuntime, annotationClazz);
+}
+
+/*
+ * Returns true if the annotation exists.
+ */
+bool dvmIsMethodAnnotationPresent(const ClassObject* clazz,
+        const Method* method, const ClassObject* annotationClazz)
+{
+    const DexAnnotationSetItem* pAnnoSet = findAnnotationSetForMethod(method);
+    if (pAnnoSet == NULL) {
+        return NULL;
+    }
+    const DexAnnotationItem* pAnnoItem = getAnnotationItemFromAnnotationSet(
+            clazz, pAnnoSet, kDexVisibilityRuntime, annotationClazz);
+    return (pAnnoItem != NULL);
+}
+
+/*
  * Retrieve the Signature annotation, if any.  Returns NULL if no signature
  * exists.
  *
@@ -1973,6 +2002,35 @@ ArrayObject* dvmGetFieldAnnotations(const Field* field)
     }
 
     return annoArray;
+}
+
+/*
+ * Returns the annotation or NULL if it doesn't exist.
+ */
+Object* dvmGetFieldAnnotation(const ClassObject* clazz, const Field* field,
+        const ClassObject* annotationClazz)
+{
+    const DexAnnotationSetItem* pAnnoSet = findAnnotationSetForField(field);
+    if (pAnnoSet == NULL) {
+        return NULL;
+    }
+    return getAnnotationObjectFromAnnotationSet(clazz, pAnnoSet,
+            kDexVisibilityRuntime, annotationClazz);
+}
+
+/*
+ * Returns true if the annotation exists.
+ */
+bool dvmIsFieldAnnotationPresent(const ClassObject* clazz,
+        const Field* field, const ClassObject* annotationClazz)
+{
+    const DexAnnotationSetItem* pAnnoSet = findAnnotationSetForField(field);
+    if (pAnnoSet == NULL) {
+        return NULL;
+    }
+    const DexAnnotationItem* pAnnoItem = getAnnotationItemFromAnnotationSet(
+            clazz, pAnnoSet, kDexVisibilityRuntime, annotationClazz);
+    return (pAnnoItem != NULL);
 }
 
 /*

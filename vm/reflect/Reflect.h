@@ -140,11 +140,19 @@ ArrayObject* dvmGetParameterAnnotations(const Method* method);
  * Return the annotation if it exists.
  */
 Object* dvmGetClassAnnotation(const ClassObject* clazz, const ClassObject* annotationClazz);
+Object* dvmGetMethodAnnotation(const ClassObject* clazz, const Method* method,
+        const ClassObject* annotationClazz);
+Object* dvmGetFieldAnnotation(const ClassObject* clazz, const Field* method,
+        const ClassObject* annotationClazz);
 
 /*
  * Return true if the annotation exists.
  */
 bool dvmIsClassAnnotationPresent(const ClassObject* clazz, const ClassObject* annotationClazz);
+bool dvmIsMethodAnnotationPresent(const ClassObject* clazz, const Method* method,
+        const ClassObject* annotationClazz);
+bool dvmIsFieldAnnotationPresent(const ClassObject* clazz, const Field* method,
+        const ClassObject* annotationClazz);
 
 /*
  * Find the default value for an annotation member.

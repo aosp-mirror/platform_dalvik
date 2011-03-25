@@ -22,21 +22,6 @@
 
 
 /*
- * public int getConstructorModifiers(Class declaringClass, int slot)
- */
-static void Dalvik_java_lang_reflect_Constructor_getConstructorModifiers(
-    const u4* args, JValue* pResult)
-{
-    // ignore thisPtr in args[0]
-    ClassObject* declaringClass = (ClassObject*) args[1];
-    int slot = args[2];
-    Method* meth;
-
-    meth = dvmSlotToMethod(declaringClass, slot);
-    RETURN_INT(dvmFixMethodFlags(meth->accessFlags));
-}
-
-/*
  * public int constructNative(Object[] args, Class declaringClass,
  *     Class[] parameterTypes, int slot, boolean noAccessCheck)
  *
@@ -85,79 +70,8 @@ static void Dalvik_java_lang_reflect_Constructor_constructNative(
     RETURN_PTR(newObj);
 }
 
-/*
- * public Annotation[] getDeclaredAnnotations(Class declaringClass, int slot)
- *
- * Return the annotations declared for this constructor.
- */
-static void Dalvik_java_lang_reflect_Constructor_getDeclaredAnnotations(
-    const u4* args, JValue* pResult)
-{
-    // ignore thisPtr in args[0]
-    ClassObject* declaringClass = (ClassObject*) args[1];
-    int slot = args[2];
-    Method* meth;
-
-    meth = dvmSlotToMethod(declaringClass, slot);
-    assert(meth != NULL);
-
-    ArrayObject* annos = dvmGetMethodAnnotations(meth);
-    dvmReleaseTrackedAlloc((Object*)annos, NULL);
-    RETURN_PTR(annos);
-}
-
-/*
- * public Annotation[][] getParameterAnnotations(Class declaringClass, int slot)
- *
- * Return the annotations declared for this constructor's parameters.
- */
-static void Dalvik_java_lang_reflect_Constructor_getParameterAnnotations(
-    const u4* args, JValue* pResult)
-{
-    // ignore thisPtr in args[0]
-    ClassObject* declaringClass = (ClassObject*) args[1];
-    int slot = args[2];
-    Method* meth;
-
-    meth = dvmSlotToMethod(declaringClass, slot);
-    assert(meth != NULL);
-
-    ArrayObject* annos = dvmGetParameterAnnotations(meth);
-    dvmReleaseTrackedAlloc((Object*)annos, NULL);
-    RETURN_PTR(annos);
-}
-
-/*
- * private Object[] getSignatureAnnotation()
- *
- * Returns the signature annotation.
- */
-static void Dalvik_java_lang_reflect_Constructor_getSignatureAnnotation(
-    const u4* args, JValue* pResult)
-{
-    // ignore thisPtr in args[0]
-    ClassObject* declaringClass = (ClassObject*) args[1];
-    int slot = args[2];
-    Method* meth;
-
-    meth = dvmSlotToMethod(declaringClass, slot);
-    assert(meth != NULL);
-
-    ArrayObject* arr = dvmGetMethodSignatureAnnotation(meth);
-    dvmReleaseTrackedAlloc((Object*) arr, NULL);
-    RETURN_PTR(arr);
-}
-
 const DalvikNativeMethod dvm_java_lang_reflect_Constructor[] = {
     { "constructNative",    "([Ljava/lang/Object;Ljava/lang/Class;[Ljava/lang/Class;IZ)Ljava/lang/Object;",
         Dalvik_java_lang_reflect_Constructor_constructNative },
-    { "getConstructorModifiers", "(Ljava/lang/Class;I)I",
-        Dalvik_java_lang_reflect_Constructor_getConstructorModifiers },
-    { "getDeclaredAnnotations", "(Ljava/lang/Class;I)[Ljava/lang/annotation/Annotation;",
-        Dalvik_java_lang_reflect_Constructor_getDeclaredAnnotations },
-    { "getParameterAnnotations", "(Ljava/lang/Class;I)[[Ljava/lang/annotation/Annotation;",
-        Dalvik_java_lang_reflect_Constructor_getParameterAnnotations },
-    { "getSignatureAnnotation",  "(Ljava/lang/Class;I)[Ljava/lang/Object;",
-        Dalvik_java_lang_reflect_Constructor_getSignatureAnnotation },
     { NULL, NULL, NULL },
 };
