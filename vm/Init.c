@@ -1709,6 +1709,41 @@ int dvmFprintf(FILE* fp, const char* format, ...)
     return result;
 }
 
+#ifdef __GLIBC__
+#include <execinfo.h>
+/*
+ * glibc-only stack dump function.  Requires link with "--export-dynamic".
+ *
+ * TODO: move this into libs/cutils and make it work for all platforms.
+ */
+void dvmPrintNativeBackTrace(void)
+{
+    size_t MAX_STACK_FRAMES = 64;
+    void* stackFrames[MAX_STACK_FRAMES];
+    size_t frameCount = backtrace(stackFrames, MAX_STACK_FRAMES);
+
+    /*
+     * TODO: in practice, we may find that we should use backtrace_symbols_fd
+     * to avoid allocation, rather than use our own custom formatting.
+     */
+    char** strings = backtrace_symbols(stackFrames, frameCount);
+    if (strings == NULL) {
+        LOGE("backtrace_symbols failed: %s", strerror(errno));
+        return;
+    }
+
+    size_t i;
+    for (i = 0; i < frameCount; ++i) {
+        LOGW("#%d  %s", i, strings[i]);
+    }
+    free(strings);
+}
+#else
+void dvmPrintNativeBackTrace(void) {
+    /* Hopefully, you're on an Android device and debuggerd will do this. */
+}
+#endif
+
 /*
  * Abort the VM.  We get here on fatal errors.  Try very hard not to use
  * this; whenever possible, return an error to somebody responsible.
@@ -1722,6 +1757,12 @@ void dvmAbort(void)
     /* JNI-supplied abort hook gets right of first refusal */
     if (gDvm.abortHook != NULL)
         (*gDvm.abortHook)();
+
+    /*
+     * On the device, debuggerd will give us a stack trace.
+     * On the host, we have to help ourselves.
+     */
+    dvmPrintNativeBackTrace();
 
     /*
      * If we call abort(), all threads in the process receives a SIBABRT.
