@@ -757,19 +757,6 @@ static void Dalvik_java_lang_Class_getInnerClassName(const u4* args,
     }
 }
 
-/*
- * static native void setAccessibleNoCheck(AccessibleObject ao, boolean flag);
- */
-static void Dalvik_java_lang_Class_setAccessibleNoCheck(const u4* args,
-    JValue* pResult)
-{
-    Object* target = (Object*) args[0];
-    u4 flag = (u4) args[1];
-
-    dvmSetFieldBoolean(target, gDvm.offJavaLangReflectAccessibleObject_flag,
-            flag);
-}
-
 const DalvikNativeMethod dvm_java_lang_Class[] = {
     { "desiredAssertionStatus", "()Z",
         Dalvik_java_lang_Class_desiredAssertionStatus },
@@ -837,7 +824,5 @@ const DalvikNativeMethod dvm_java_lang_Class[] = {
         Dalvik_java_lang_Class_isDeclaredAnnotationPresent },
     { "getInnerClassName",       "()Ljava/lang/String;",
         Dalvik_java_lang_Class_getInnerClassName },
-    { "setAccessibleNoCheck",   "(Ljava/lang/reflect/AccessibleObject;Z)V",
-        Dalvik_java_lang_Class_setAccessibleNoCheck },
     { NULL, NULL, NULL },
 };

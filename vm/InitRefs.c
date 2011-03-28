@@ -314,11 +314,6 @@ static bool initFieldOffsets(void) {
         { NULL, NULL, NULL }
     };
 
-    static struct FieldInfo infoAccessibleObject[] = {
-        { &gDvm.offJavaLangReflectAccessibleObject_flag, "flag", "Z" },
-        { NULL, NULL, NULL }
-    };
-
     static struct FieldInfo infoConstructor[] = {
         { &gDvm.offJavaLangReflectConstructor_slot,      "slot",           "I" },
         { &gDvm.offJavaLangReflectConstructor_declClass, "declaringClass", "Ljava/lang/Class;" },
@@ -356,7 +351,6 @@ static bool initFieldOffsets(void) {
         { "Ljava/lang/ThreadGroup;",                infoThreadGroup },
         { "Ljava/lang/Throwable;",                  infoThrowable },
         { "Ljava/lang/VMThread;",                   infoVMThread },
-        { "Ljava/lang/reflect/AccessibleObject;",   infoAccessibleObject },
         { "Ljava/lang/reflect/Constructor;",        infoConstructor },
         { "Ljava/lang/reflect/Field;",              infoField },
         { "Ljava/lang/reflect/Method;",             infoMethod },

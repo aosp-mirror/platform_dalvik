@@ -352,7 +352,6 @@ struct DvmGlobals {
     Method*     methJavaLangClassLoader_getSystemClassLoader;
 
     /* field offsets - java.lang.reflect.* */
-    int         offJavaLangReflectAccessibleObject_flag;
     int         offJavaLangReflectConstructor_slot;
     int         offJavaLangReflectConstructor_declClass;
     int         offJavaLangReflectField_slot;
