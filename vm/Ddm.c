@@ -48,46 +48,6 @@ bool dvmDdmHandlePacket(const u1* buf, int dataLen, u1** pReplyBuf,
     assert(dataLen >= 0);
 
     /*
-     * Prep DdmServer.  We could throw this in gDvm.
-     */
-    ClassObject* ddmServerClass;
-    Method* dispatch;
-
-    ddmServerClass =
-        dvmFindClass("Lorg/apache/harmony/dalvik/ddmc/DdmServer;", NULL);
-    if (ddmServerClass == NULL) {
-        LOGW("Unable to find org.apache.harmony.dalvik.ddmc.DdmServer\n");
-        goto bail;
-    }
-    dispatch = dvmFindDirectMethodByDescriptor(ddmServerClass, "dispatch",
-                    "(I[BII)Lorg/apache/harmony/dalvik/ddmc/Chunk;");
-    if (dispatch == NULL) {
-        LOGW("Unable to find DdmServer.dispatch\n");
-        goto bail;
-    }
-
-    /*
-     * Prep Chunk.
-     */
-    int chunkTypeOff, chunkDataOff, chunkOffsetOff, chunkLengthOff;
-    ClassObject* chunkClass;
-    chunkClass = dvmFindClass("Lorg/apache/harmony/dalvik/ddmc/Chunk;", NULL);
-    if (chunkClass == NULL) {
-        LOGW("Unable to find org.apache.harmony.dalvik.ddmc.Chunk\n");
-        goto bail;
-    }
-    chunkTypeOff = dvmFindFieldOffset(chunkClass, "type", "I");
-    chunkDataOff = dvmFindFieldOffset(chunkClass, "data", "[B");
-    chunkOffsetOff = dvmFindFieldOffset(chunkClass, "offset", "I");
-    chunkLengthOff = dvmFindFieldOffset(chunkClass, "length", "I");
-    if (chunkTypeOff < 0 || chunkDataOff < 0 ||
-        chunkOffsetOff < 0 || chunkLengthOff < 0)
-    {
-        LOGW("Unable to find all chunk fields\n");
-        goto bail;
-    }
-
-    /*
      * The chunk handlers are written in the Java programming language, so
      * we need to convert the buffer to a byte array.
      */
@@ -115,8 +75,8 @@ bool dvmDdmHandlePacket(const u1* buf, int dataLen, u1** pReplyBuf,
      * Call the handler.
      */
     JValue callRes;
-    dvmCallMethod(self, dispatch, NULL, &callRes, type, dataArray, offset,
-        length);
+    dvmCallMethod(self, gDvm.methDalvikDdmcServer_dispatch, NULL, &callRes,
+        type, dataArray, offset, length);
     if (dvmCheckException(self)) {
         LOGI("Exception thrown by dispatcher for 0x%08x\n", type);
         dvmLogExceptionStackTrace();
@@ -144,10 +104,11 @@ bool dvmDdmHandlePacket(const u1* buf, int dataLen, u1** pReplyBuf,
      *
      * So we're pretty much stuck with copying data around multiple times.
      */
-    type = dvmGetFieldInt(chunk, chunkTypeOff);
-    replyData = (ArrayObject*) dvmGetFieldObject(chunk, chunkDataOff);
-    offset = dvmGetFieldInt(chunk, chunkOffsetOff);
-    length = dvmGetFieldInt(chunk, chunkLengthOff);
+    type = dvmGetFieldInt(chunk, gDvm.offDalvikDdmcChunk_type);
+    replyData =
+        (ArrayObject*) dvmGetFieldObject(chunk, gDvm.offDalvikDdmcChunk_data);
+    offset = dvmGetFieldInt(chunk, gDvm.offDalvikDdmcChunk_offset);
+    length = dvmGetFieldInt(chunk, gDvm.offDalvikDdmcChunk_length);
 
     LOGV("DDM reply: type=0x%08x data=%p offset=%d length=%d\n",
         type, replyData, offset, length);
@@ -192,21 +153,6 @@ bail:
  */
 static void broadcast(int event)
 {
-    ClassObject* ddmServerClass;
-    Method* bcast;
-
-    ddmServerClass =
-        dvmFindClass("Lorg/apache/harmony/dalvik/ddmc/DdmServer;", NULL);
-    if (ddmServerClass == NULL) {
-        LOGW("Unable to find org.apache.harmony.dalvik.ddmc.DdmServer\n");
-        goto bail;
-    }
-    bcast = dvmFindDirectMethodByDescriptor(ddmServerClass, "broadcast", "(I)V");
-    if (bcast == NULL) {
-        LOGW("Unable to find DdmServer.broadcast\n");
-        goto bail;
-    }
-
     Thread* self = dvmThreadSelf();
 
     if (self->status != THREAD_RUNNING) {
@@ -215,7 +161,8 @@ static void broadcast(int event)
     }
 
     JValue unused;
-    dvmCallMethod(self, bcast, NULL, &unused, event);
+    dvmCallMethod(self, gDvm.methDalvikDdmcServer_broadcast, NULL, &unused,
+        event);
     if (dvmCheckException(self)) {
         LOGI("Exception thrown by broadcast(%d)\n", event);
         dvmLogExceptionStackTrace();

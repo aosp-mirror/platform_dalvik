@@ -264,6 +264,14 @@ static bool initFieldOffsets(void) {
         const char* type;
     };
 
+    static struct FieldInfo infoDdmcChunk[] = {
+        { &gDvm.offDalvikDdmcChunk_type,   "type",   "I" },
+        { &gDvm.offDalvikDdmcChunk_data,   "data",   "[B" },
+        { &gDvm.offDalvikDdmcChunk_offset, "offset", "I" },
+        { &gDvm.offDalvikDdmcChunk_length, "length", "I" },
+        { NULL, NULL, NULL }
+    };
+
     static struct FieldInfo infoFileDescriptor[] = {
         { &gDvm.offJavaIoFileDescriptor_descriptor, "descriptor", "I" },
         { NULL, NULL, NULL }
@@ -341,18 +349,19 @@ static bool initFieldOffsets(void) {
     };
 
     static struct { const char* name; const struct FieldInfo* fields; } classes[] = {
-        { "Ljava/io/FileDescriptor;",             infoFileDescriptor },
-        { "Ljava/lang/String;",                   infoString },
-        { "Ljava/lang/Thread;",                   infoThread },
-        { "Ljava/lang/ThreadGroup;",              infoThreadGroup },
-        { "Ljava/lang/Throwable;",                infoThrowable },
-        { "Ljava/lang/VMThread;",                 infoVMThread },
-        { "Ljava/lang/reflect/AccessibleObject;", infoAccessibleObject },
-        { "Ljava/lang/reflect/Constructor;",      infoConstructor },
-        { "Ljava/lang/reflect/Field;",            infoField },
-        { "Ljava/lang/reflect/Method;",           infoMethod },
-        { "Ljava/lang/reflect/Proxy;",            infoProxy },
-        { "Ljava/nio/Buffer;",                    infoBuffer },
+        { "Lorg/apache/harmony/dalvik/ddmc/Chunk;", infoDdmcChunk },
+        { "Ljava/io/FileDescriptor;",               infoFileDescriptor },
+        { "Ljava/lang/String;",                     infoString },
+        { "Ljava/lang/Thread;",                     infoThread },
+        { "Ljava/lang/ThreadGroup;",                infoThreadGroup },
+        { "Ljava/lang/Throwable;",                  infoThrowable },
+        { "Ljava/lang/VMThread;",                   infoVMThread },
+        { "Ljava/lang/reflect/AccessibleObject;",   infoAccessibleObject },
+        { "Ljava/lang/reflect/Constructor;",        infoConstructor },
+        { "Ljava/lang/reflect/Field;",              infoField },
+        { "Ljava/lang/reflect/Method;",             infoMethod },
+        { "Ljava/lang/reflect/Proxy;",              infoProxy },
+        { "Ljava/nio/Buffer;",                      infoBuffer },
         { NULL, NULL }
     };
 
@@ -451,11 +460,14 @@ static bool initDirectMethodReferences(void) {
           "Lorg/apache/harmony/lang/annotation/AnnotationFactory;", "createAnnotation",
           "(Ljava/lang/Class;[Lorg/apache/harmony/lang/annotation/AnnotationMember;)"
           "Ljava/lang/annotation/Annotation;" },
-        { &gDvm.methodTraceClassPrepMethod, "Ldalvik/system/VMDebug;", "startClassPrep", "()V" },
         { &gDvm.methDalvikSystemNativeStart_main, "Ldalvik/system/NativeStart;", "main", "([Ljava/lang/String;)V" },
         { &gDvm.methDalvikSystemNativeStart_run, "Ldalvik/system/NativeStart;", "run", "()V" },
         { &gDvm.methJavaLangRefFinalizerReferenceAdd,
           "Ljava/lang/ref/FinalizerReference;", "add", "(Ljava/lang/Object;)V" },
+        { &gDvm.methDalvikDdmcServer_dispatch,
+          "Lorg/apache/harmony/dalvik/ddmc/DdmServer;", "dispatch", "(I[BII)Lorg/apache/harmony/dalvik/ddmc/Chunk;" },
+        { &gDvm.methDalvikDdmcServer_broadcast,
+          "Lorg/apache/harmony/dalvik/ddmc/DdmServer;", "broadcast", "(I)V" },
         { NULL, NULL, NULL, NULL }
     };
 

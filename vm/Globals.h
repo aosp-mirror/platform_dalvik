@@ -401,6 +401,16 @@ struct DvmGlobals {
     int         offJavaNioBuffer_capacity;
     int         offJavaNioBuffer_effectiveDirectAddress;
 
+    /* direct method pointers - org.apache.harmony.dalvik.ddmc.DdmServer */
+    Method*     methDalvikDdmcServer_dispatch;
+    Method*     methDalvikDdmcServer_broadcast;
+
+    /* field offsets - org.apache.harmony.dalvik.ddmc.Chunk */
+    int         offDalvikDdmcChunk_type;
+    int         offDalvikDdmcChunk_data;
+    int         offDalvikDdmcChunk_offset;
+    int         offDalvikDdmcChunk_length;
+
     /*
      * Thread list.  This always has at least one element in it (main),
      * and main is always the first entry.
