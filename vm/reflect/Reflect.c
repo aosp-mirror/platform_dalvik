@@ -801,6 +801,39 @@ Object* dvmGetDeclaredConstructorOrMethod(ClassObject* clazz,
 }
 
 /*
+ * Get the named field.
+ */
+Object* dvmGetDeclaredField(ClassObject* clazz, StringObject* nameObj)
+{
+    int i;
+    Object* fieldObj = NULL;
+    char* name = dvmCreateCstrFromString(nameObj);
+
+    if (!dvmIsClassInitialized(gDvm.classJavaLangReflectField))
+        dvmInitClass(gDvm.classJavaLangReflectField);
+
+    for (i = 0; i < clazz->sfieldCount; i++) {
+        Field* field = &clazz->sfields[i].field;
+        if (strcmp(name, field->name) == 0) {
+            fieldObj = createFieldObject(field, clazz);
+            break;
+        }
+    }
+    if (fieldObj == NULL) {
+        for (i = 0; i < clazz->ifieldCount; i++) {
+            Field* field = &clazz->ifields[i].field;
+            if (strcmp(name, field->name) == 0) {
+                fieldObj = createFieldObject(field, clazz);
+                break;
+            }
+        }
+    }
+
+    free(name);
+    return fieldObj;
+}
+
+/*
  * Get all interfaces a class implements. If this is unable to allocate
  * the result array, this raises an OutOfMemoryError and returns NULL.
  */

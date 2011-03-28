@@ -32,6 +32,11 @@ bool dvmValidateBoxClasses();
 ArrayObject* dvmGetDeclaredFields(ClassObject* clazz, bool publicOnly);
 
 /*
+ * Get the named field.
+ */
+Object* dvmGetDeclaredField(ClassObject* clazz, StringObject* nameObj);
+
+/*
  * Get all constructors declared by a class.
  */
 ArrayObject* dvmGetDeclaredConstructors(ClassObject* clazz, bool publicOnly);
