@@ -168,15 +168,13 @@ bail:
 }
 
 /*
- * public static StackTraceElement[] getThreadStackTrace(Thread t)
- *
- * Retrieve the stack trace of the specified thread and return it as an
- * array of StackTraceElement.  Returns NULL on failure.
+ * Return a trace buffer for the specified thread or NULL if the
+ * thread is not still alive. *depth is set to the length of a
+ * non-NULL trace buffer. Caller is responsible for freeing the trace
+ * buffer.
  */
-static void Dalvik_dalvik_system_VMStack_getThreadStackTrace(const u4* args,
-    JValue* pResult)
+static int* getTraceBuf(Object* targetThreadObj, size_t* pStackDepth)
 {
-    Object* targetThreadObj = (Object*) args[0];
     Thread* self = dvmThreadSelf();
     Thread* thread;
     int* traceBuf;
@@ -193,10 +191,10 @@ static void Dalvik_dalvik_system_VMStack_getThreadStackTrace(const u4* args,
             break;
     }
     if (thread == NULL) {
-        LOGI("VMStack.getThreadStackTrace: threadObj %p not active\n",
+        LOGI("VMStack.getTraceBuf: threadObj %p not active\n",
             targetThreadObj);
         dvmUnlockThreadList();
-        RETURN_PTR(NULL);
+        return NULL;
     }
 
     /*
@@ -204,13 +202,31 @@ static void Dalvik_dalvik_system_VMStack_getThreadStackTrace(const u4* args,
      * and release the thread list lock.  If we're being asked to examine
      * our own stack trace, skip the suspend/resume.
      */
-    int stackDepth = -1;
     if (thread != self)
         dvmSuspendThread(thread);
-    traceBuf = dvmFillInStackTraceRaw(thread, &stackDepth);
+    traceBuf = dvmFillInStackTraceRaw(thread, pStackDepth);
     if (thread != self)
         dvmResumeThread(thread);
     dvmUnlockThreadList();
+
+    return traceBuf;
+}
+
+/*
+ * public static StackTraceElement[] getThreadStackTrace(Thread t)
+ *
+ * Retrieve the stack trace of the specified thread and return it as an
+ * array of StackTraceElement.  Returns NULL on failure.
+ */
+static void Dalvik_dalvik_system_VMStack_getThreadStackTrace(const u4* args,
+    JValue* pResult)
+{
+    Object* targetThreadObj = (Object*) args[0];
+    size_t stackDepth;
+    int* traceBuf = getTraceBuf(targetThreadObj, &stackDepth);
+
+    if (traceBuf == NULL)
+        RETURN_PTR(NULL);
 
     /*
      * Convert the raw buffer into an array of StackTraceElement.
@@ -220,16 +236,46 @@ static void Dalvik_dalvik_system_VMStack_getThreadStackTrace(const u4* args,
     RETURN_PTR(trace);
 }
 
+/*
+ * public static int fillStackTraceElements(Thread t, StackTraceElement[] stackTraceElements)
+ *
+ * Retrieve a partial stack trace of the specified thread and return
+ * the number of frames filled.  Returns 0 on failure.
+ */
+static void Dalvik_dalvik_system_VMStack_fillStackTraceElements(const u4* args,
+    JValue* pResult)
+{
+    Object* targetThreadObj = (Object*) args[0];
+    ArrayObject* steArray = (ArrayObject*) args[1];
+    size_t stackDepth;
+    int* traceBuf = getTraceBuf(targetThreadObj, &stackDepth);
+
+    if (traceBuf == NULL)
+        RETURN_PTR(NULL);
+
+    /*
+     * Set the raw buffer into an array of StackTraceElement.
+     */
+    if (stackDepth > steArray->length) {
+        stackDepth = steArray->length;
+    }
+    dvmFillStackTraceElements(traceBuf, stackDepth, steArray);
+    free(traceBuf);
+    RETURN_INT(stackDepth);
+}
+
 const DalvikNativeMethod dvm_dalvik_system_VMStack[] = {
     { "getCallingClassLoader",  "()Ljava/lang/ClassLoader;",
         Dalvik_dalvik_system_VMStack_getCallingClassLoader },
     { "getCallingClassLoader2", "()Ljava/lang/ClassLoader;",
         Dalvik_dalvik_system_VMStack_getCallingClassLoader2 },
-    { "getStackClass2", "()Ljava/lang/Class;",
+    { "getStackClass2",         "()Ljava/lang/Class;",
         Dalvik_dalvik_system_VMStack_getStackClass2 },
     { "getClasses",             "(IZ)[Ljava/lang/Class;",
         Dalvik_dalvik_system_VMStack_getClasses },
     { "getThreadStackTrace",    "(Ljava/lang/Thread;)[Ljava/lang/StackTraceElement;",
         Dalvik_dalvik_system_VMStack_getThreadStackTrace },
+    { "fillStackTraceElements", "(Ljava/lang/Thread;[Ljava/lang/StackTraceElement;)I",
+        Dalvik_dalvik_system_VMStack_fillStackTraceElements },
     { NULL, NULL, NULL },
 };
