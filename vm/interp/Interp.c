@@ -649,7 +649,7 @@ void dvmReportPreNativeInvoke(const u2* pc, Thread* self,
     if (self->interpBreak.ctl.subMode & kSubModeDebuggerActive) {
         Object* thisPtr = dvmGetThisPtr(self->interpSave.method,
                                         self->interpSave.fp);
-        assert(thisPtr != NULL && !dvmIsValidObject(thisPtr));
+        assert(thisPtr == NULL || dvmIsValidObject(thisPtr));
         dvmDbgPostLocationEvent(methodToCall, -1, thisPtr, DBG_METHOD_ENTRY);
     }
 }
@@ -664,7 +664,7 @@ void dvmReportPostNativeInvoke(const u2* pc, Thread* self,
     if (self->interpBreak.ctl.subMode & kSubModeDebuggerActive) {
         Object* thisPtr = dvmGetThisPtr(self->interpSave.method,
                                         self->interpSave.fp);
-        assert(thisPtr != NULL && !dvmIsValidObject(thisPtr));
+        assert(thisPtr == NULL || dvmIsValidObject(thisPtr));
         dvmDbgPostLocationEvent(methodToCall, -1, thisPtr, DBG_METHOD_EXIT);
     }
     if (self->interpBreak.ctl.subMode & kSubModeMethodTrace) {
