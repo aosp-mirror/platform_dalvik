@@ -774,27 +774,22 @@ bool dvmPrepMainThread(void)
     thread->threadObj = threadObj;
 
     /*
-     * Set the context class loader.  This invokes a ClassLoader method,
-     * which could conceivably call Thread.currentThread(), so we want the
-     * Thread to be fully configured before we do this.
+     * Set the "context class loader" field in the system class loader.
+     *
+     * Retrieving the system class loader will cause invocation of
+     * ClassLoader.getSystemClassLoader(), which could conceivably call
+     * Thread.currentThread(), so we want the Thread to be fully configured
+     * before we do this.
      */
     Object* systemLoader = dvmGetSystemClassLoader();
     if (systemLoader == NULL) {
         LOGW("WARNING: system class loader is NULL (setting main ctxt)\n");
-        /* keep going */
+        /* keep going? */
+    } else {
+        dvmSetFieldObject(threadObj, gDvm.offJavaLangThread_contextClassLoader,
+            systemLoader);
+        dvmReleaseTrackedAlloc(systemLoader, NULL);
     }
-    int ctxtClassLoaderOffset = dvmFindFieldOffset(gDvm.classJavaLangThread,
-        "contextClassLoader", "Ljava/lang/ClassLoader;");
-    if (ctxtClassLoaderOffset < 0) {
-        LOGE("Unable to find contextClassLoader field in Thread\n");
-        return false;
-    }
-    dvmSetFieldObject(threadObj, ctxtClassLoaderOffset, systemLoader);
-    dvmReleaseTrackedAlloc(systemLoader, NULL);
-
-    /*
-     * Finish our thread prep.
-     */
 
     /* include self in non-daemon threads (mainly for AttachCurrentThread) */
     gDvm.nonDaemonThreadCount++;
@@ -1136,54 +1131,31 @@ static void releaseThreadId(Thread* thread)
  */
 static bool createFakeEntryFrame(Thread* thread)
 {
-    assert(thread->threadId == kMainThreadId);      // main thread only
+    /*
+     * Because we are creating a frame that represents application code, we
+     * want to stuff the application class loader into the method's class
+     * loader field, even though we're using the system class loader to
+     * load it.  This makes life easier over in JNI FindClass (though it
+     * could bite us in other ways).
+     *
+     * Unfortunately this is occurring too early in the initialization,
+     * of necessity coming before JNI is initialized, and we're not quite
+     * ready to set up the application class loader.  Also, overwriting
+     * the class' defining classloader pointer seems unwise.
+     *
+     * Instead, we save a pointer to the method and explicitly check for
+     * it in FindClass.  The method is private so nobody else can call it.
+     */
 
-    /* find the method on first use */
-    if (gDvm.methFakeNativeEntry == NULL) {
-        ClassObject* nativeStart;
-        Method* mainMeth;
+    assert(thread->threadId == kMainThreadId);      /* main thread only */
 
-        nativeStart = dvmFindSystemClassNoInit(
-                "Ldalvik/system/NativeStart;");
-        if (nativeStart == NULL) {
-            LOGE("Unable to find dalvik.system.NativeStart class\n");
-            return false;
-        }
-
-        /*
-         * Because we are creating a frame that represents application code, we
-         * want to stuff the application class loader into the method's class
-         * loader field, even though we're using the system class loader to
-         * load it.  This makes life easier over in JNI FindClass (though it
-         * could bite us in other ways).
-         *
-         * Unfortunately this is occurring too early in the initialization,
-         * of necessity coming before JNI is initialized, and we're not quite
-         * ready to set up the application class loader.
-         *
-         * So we save a pointer to the method in gDvm.methFakeNativeEntry
-         * and check it in FindClass.  The method is private so nobody else
-         * can call it.
-         */
-        //nativeStart->classLoader = dvmGetSystemClassLoader();
-
-        mainMeth = dvmFindDirectMethodByDescriptor(nativeStart,
-                    "main", "([Ljava/lang/String;)V");
-        if (mainMeth == NULL) {
-            LOGE("Unable to find 'main' in dalvik.system.NativeStart\n");
-            return false;
-        }
-
-        gDvm.methFakeNativeEntry = mainMeth;
-    }
-
-    if (!dvmPushJNIFrame(thread, gDvm.methFakeNativeEntry))
+    if (!dvmPushJNIFrame(thread, gDvm.methDalvikSystemNativeStart_main))
         return false;
 
     /*
      * Null out the "String[] args" argument.
      */
-    assert(gDvm.methFakeNativeEntry->registersSize == 1);
+    assert(gDvm.methDalvikSystemNativeStart_main->registersSize == 1);
     u4* framePtr = (u4*) thread->curFrame;
     framePtr[0] = 0;
 
@@ -1198,41 +1170,7 @@ static bool createFakeEntryFrame(Thread* thread)
  */
 static bool createFakeRunFrame(Thread* thread)
 {
-    ClassObject* nativeStart;
-    Method* runMeth;
-
-    /*
-     * TODO: cache this result so we don't have to dig for it every time
-     * somebody attaches a thread to the VM.  Also consider changing this
-     * to a static method so we don't have a null "this" pointer in the
-     * "ins" on the stack.  (Does it really need to look like a Runnable?)
-     */
-    nativeStart = dvmFindSystemClassNoInit("Ldalvik/system/NativeStart;");
-    if (nativeStart == NULL) {
-        LOGE("Unable to find dalvik.system.NativeStart class\n");
-        return false;
-    }
-
-    runMeth = dvmFindVirtualMethodByDescriptor(nativeStart, "run", "()V");
-    if (runMeth == NULL) {
-        LOGE("Unable to find 'run' in dalvik.system.NativeStart\n");
-        return false;
-    }
-
-    if (!dvmPushJNIFrame(thread, runMeth))
-        return false;
-
-    /*
-     * Provide a NULL 'this' argument.  The method we've put at the top of
-     * the stack looks like a virtual call to run() in a Runnable class.
-     * (If we declared the method static, it wouldn't take any arguments
-     * and we wouldn't have to do this.)
-     */
-    assert(runMeth->registersSize == 1);
-    u4* framePtr = (u4*) thread->curFrame;
-    framePtr[0] = 0;
-
-    return true;
+    return dvmPushJNIFrame(thread, gDvm.methDalvikSystemNativeStart_run);
 }
 
 /*
@@ -3411,14 +3349,9 @@ void dvmDumpThreadEx(const DebugOutputTarget* target, Thread* thread,
     groupObj = (Object*) dvmGetFieldObject(threadObj,
                 gDvm.offJavaLangThread_group);
     if (groupObj != NULL) {
-        int offset = dvmFindFieldOffset(gDvm.classJavaLangThreadGroup,
-            "name", "Ljava/lang/String;");
-        if (offset < 0) {
-            LOGW("Unable to find 'name' field in ThreadGroup\n");
-        } else {
-            nameStr = (StringObject*) dvmGetFieldObject(groupObj, offset);
-            groupName = dvmCreateCstrFromString(nameStr);
-        }
+        nameStr = (StringObject*)
+            dvmGetFieldObject(groupObj, gDvm.offJavaLangThreadGroup_name);
+        groupName = dvmCreateCstrFromString(nameStr);
     }
     if (groupName == NULL)
         groupName = strdup("(null; initializing?)");

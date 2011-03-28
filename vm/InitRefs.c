@@ -278,12 +278,13 @@ static bool initFieldOffsets(void) {
     };
 
     static struct FieldInfo infoThread[] = {
-        { &gDvm.offJavaLangThread_vmThread,        "vmThread",        "Ljava/lang/VMThread;" },
-        { &gDvm.offJavaLangThread_group,           "group",           "Ljava/lang/ThreadGroup;" },
-        { &gDvm.offJavaLangThread_daemon,          "daemon",          "Z" },
-        { &gDvm.offJavaLangThread_name,            "name",            "Ljava/lang/String;" },
-        { &gDvm.offJavaLangThread_priority,        "priority",        "I" },
-        { &gDvm.offJavaLangThread_uncaughtHandler, "uncaughtHandler", "Ljava/lang/Thread$UncaughtExceptionHandler;" },
+        { &gDvm.offJavaLangThread_vmThread,           "vmThread",           "Ljava/lang/VMThread;" },
+        { &gDvm.offJavaLangThread_group,              "group",              "Ljava/lang/ThreadGroup;" },
+        { &gDvm.offJavaLangThread_daemon,             "daemon",             "Z" },
+        { &gDvm.offJavaLangThread_name,               "name",               "Ljava/lang/String;" },
+        { &gDvm.offJavaLangThread_priority,           "priority",           "I" },
+        { &gDvm.offJavaLangThread_uncaughtHandler,    "uncaughtHandler",    "Ljava/lang/Thread$UncaughtExceptionHandler;" },
+        { &gDvm.offJavaLangThread_contextClassLoader, "contextClassLoader", "Ljava/lang/ClassLoader;" },
         { NULL, NULL, NULL }
     };
 
@@ -440,6 +441,8 @@ static bool initDirectMethodReferences(void) {
         const char* name;
         const char* descriptor;
     } methods[] = {
+        { &gDvm.methJavaLangClassLoader_getSystemClassLoader, "Ljava/lang/ClassLoader;",
+          "getSystemClassLoader", "()Ljava/lang/ClassLoader;" },
         { &gDvm.methJavaLangReflectProxy_constructorPrototype, "Ljava/lang/reflect/Proxy;",
           "constructorPrototype", "(Ljava/lang/reflect/InvocationHandler;)V" },
         { &gDvm.methodTraceGcMethod, "Ldalvik/system/VMDebug;", "startGC", "()V" },
@@ -449,6 +452,8 @@ static bool initDirectMethodReferences(void) {
           "(Ljava/lang/Class;[Lorg/apache/harmony/lang/annotation/AnnotationMember;)"
           "Ljava/lang/annotation/Annotation;" },
         { &gDvm.methodTraceClassPrepMethod, "Ldalvik/system/VMDebug;", "startClassPrep", "()V" },
+        { &gDvm.methDalvikSystemNativeStart_main, "Ldalvik/system/NativeStart;", "main", "([Ljava/lang/String;)V" },
+        { &gDvm.methDalvikSystemNativeStart_run, "Ldalvik/system/NativeStart;", "run", "()V" },
         { &gDvm.methJavaLangRefFinalizerReferenceAdd,
           "Ljava/lang/ref/FinalizerReference;", "add", "(Ljava/lang/Object;)V" },
         { NULL, NULL, NULL, NULL }
