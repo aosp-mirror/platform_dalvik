@@ -27184,7 +27184,7 @@ dvmAsmInstructionJmpTable = .LdvmAsmInstructionJmpTable
 .long .L_OP_EXECUTE_INLINE
 .long .L_OP_EXECUTE_INLINE_RANGE
 .long .L_OP_INVOKE_OBJECT_INIT_RANGE
-.long .L_OP_UNUSED_F1
+.long .L_OP_RETURN_VOID_BARRIER
 .long .L_OP_IGET_QUICK
 .long .L_OP_IGET_WIDE_QUICK
 .long .L_OP_IGET_OBJECT_QUICK
