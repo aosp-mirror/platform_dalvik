@@ -939,6 +939,9 @@ static bool prepareThread(Thread* thread)
     pthread_cond_init(&thread->waitCond, NULL);
     dvmInitMutex(&thread->waitMutex);
 
+    /* Initialize safepoint callback mechanism */
+    dvmInitMutex(&thread->callbackMutex);
+
     return true;
 }
 
