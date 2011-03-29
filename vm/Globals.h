@@ -258,6 +258,8 @@ struct DvmGlobals {
     ClassObject* classOrgApacheHarmonyLangAnnotationAnnotationFactory;
     ClassObject* classOrgApacheHarmonyLangAnnotationAnnotationMember;
     ClassObject* classOrgApacheHarmonyLangAnnotationAnnotationMemberArray;
+    ClassObject* classOrgApacheHarmonyDalvikDdmcChunk;
+    ClassObject* classOrgApacheHarmonyDalvikDdmcDdmServer;
     ClassObject* classJavaLangRefFinalizerReference;
 
     /*

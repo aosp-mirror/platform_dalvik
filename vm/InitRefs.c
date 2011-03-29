@@ -62,6 +62,8 @@ void dvmForEachRequiredReference(ObjectReferenceCallback* callback) {
     callback((Object**) (void*) &gDvm.classOrgApacheHarmonyLangAnnotationAnnotationFactory);
     callback((Object**) (void*) &gDvm.classOrgApacheHarmonyLangAnnotationAnnotationMember);
     callback((Object**) (void*) &gDvm.classOrgApacheHarmonyLangAnnotationAnnotationMemberArray);
+    callback((Object**) (void*) &gDvm.classOrgApacheHarmonyDalvikDdmcChunk);
+    callback((Object**) (void*) &gDvm.classOrgApacheHarmonyDalvikDdmcDdmServer);
     callback((Object**) (void*) &gDvm.exAbstractMethodError);
     callback((Object**) (void*) &gDvm.exArithmeticException);
     callback((Object**) (void*) &gDvm.exArrayIndexOutOfBoundsException);
@@ -225,6 +227,10 @@ static bool initClassReferences(void) {
         { &gDvm.classJavaLangReflectMethodArray,        "[Ljava/lang/reflect/Method;"},
         { &gDvm.classJavaLangReflectProxy,              "Ljava/lang/reflect/Proxy;" },
         { &gDvm.classJavaNioReadWriteDirectByteBuffer,  "Ljava/nio/ReadWriteDirectByteBuffer;" },
+        { &gDvm.classOrgApacheHarmonyDalvikDdmcChunk,
+          "Lorg/apache/harmony/dalvik/ddmc/Chunk;" },
+        { &gDvm.classOrgApacheHarmonyDalvikDdmcDdmServer,
+          "Lorg/apache/harmony/dalvik/ddmc/DdmServer;" },
         { &gDvm.classOrgApacheHarmonyLangAnnotationAnnotationFactory,
           "Lorg/apache/harmony/lang/annotation/AnnotationFactory;" },
         { &gDvm.classOrgApacheHarmonyLangAnnotationAnnotationMember,

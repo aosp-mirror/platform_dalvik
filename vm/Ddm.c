@@ -47,6 +47,14 @@ bool dvmDdmHandlePacket(const u1* buf, int dataLen, u1** pReplyBuf,
 
     assert(dataLen >= 0);
 
+    if (!dvmIsClassInitialized(gDvm.classOrgApacheHarmonyDalvikDdmcChunk)) {
+        if (!dvmInitClass(gDvm.classOrgApacheHarmonyDalvikDdmcChunk)) {
+            dvmLogExceptionStackTrace();
+            dvmClearException(self);
+            goto bail;
+        }
+    }
+
     /*
      * The chunk handlers are written in the Java programming language, so
      * we need to convert the buffer to a byte array.
@@ -160,6 +168,14 @@ static void broadcast(int event)
         /* try anyway? */
     }
 
+    if (!dvmIsClassInitialized(gDvm.classOrgApacheHarmonyDalvikDdmcDdmServer)) {
+        if (!dvmInitClass(gDvm.classOrgApacheHarmonyDalvikDdmcDdmServer)) {
+            dvmLogExceptionStackTrace();
+            dvmClearException(self);
+            return;
+        }
+    }
+
     JValue unused;
     dvmCallMethod(self, gDvm.methDalvikDdmcServer_broadcast, NULL, &unused,
         event);
@@ -167,11 +183,8 @@ static void broadcast(int event)
         LOGI("Exception thrown by broadcast(%d)\n", event);
         dvmLogExceptionStackTrace();
         dvmClearException(self);
-        goto bail;
+        return;
     }
-
-bail:
-    ;
 }
 
 /*
