@@ -656,6 +656,8 @@ common_invokeMethodNoRange:
 2:
     @ Profiling - record method entry.  r0: methodToCall
     stmfd   sp!, {r0-r3}                @ preserve r0-r3
+    str     rPC, [rSELF, #offThread_pc] @ update interpSave.pc
+    str     rFP, [rSELF, #offThread_fp] @ update interpSave.fp
     mov     r1, r0
     mov     r0, rSELF
     bl      dvmReportInvoke             @ (self, method)
@@ -707,9 +709,11 @@ dalvik_mterp:
 11:
     @ r0=newFp, r1=&retval, r2=methodToCall, r3=self, lr=subModes
     stmfd   sp!, {r0-r3}                @ save all but subModes
-    mov     r0, rPC
+    str     rPC, [rSELF, #offThread_pc] @ update interpSave.pc
+    str     rFP, [rSELF, #offThread_fp] @ update interpSave.fp
+    mov     r0, r2                      @ r0<- methodToCall
     mov     r1, rSELF
-    bl      dvmReportPreNativeInvoke    @ (pc, self, methodToCall)
+    bl      dvmReportPreNativeInvoke    @ (methodToCall, self)
     ldmfd   sp, {r0-r3}                 @ refresh.  NOTE: no sp autoincrement
 
     @ Call the native method
@@ -720,9 +724,10 @@ dalvik_mterp:
     ldmfd   sp!, {r0-r3}                @ r2<- methodToCall (others unneeded)
 
     @ Finish up any post-invoke subMode requirements
-    mov     r0, rPC
+    @ interpSave already up-to-date
+    mov     r0, r2                      @ r0<- methodToCall
     mov     r1, rSELF
-    bl      dvmReportPostNativeInvoke   @ (pc, self, methodToCall)
+    bl      dvmReportPostNativeInvoke   @ (methodToCall, self)
     b       7b                          @ resume
 
 .LstackOverflow:    @ r0=methodToCall
@@ -815,10 +820,11 @@ common_returnFromMethod:
 19:
     @ Handle special actions
     @ On entry, r0: StackSaveArea
-    ldr     r2, [r0, #offStackSaveArea_prevFrame]  @ r2<- prevFP
-    mov     r1, rPC
+    ldr     r1, [r0, #offStackSaveArea_prevFrame]  @ r2<- prevFP
+    str     rPC, [rSELF, #offThread_pc] @ update interpSave.pc
+    str     r1, [rSELF, #offThread_fp]   @ update interpSave.fp
     mov     r0, rSELF
-    bl      dvmReportReturn             @ (self, pc, prevFP)
+    bl      dvmReportReturn             @ (self)
     SAVEAREA_FROM_FP(r0, rFP)           @ restore StackSaveArea
     b       14b                         @ continue
 
@@ -924,11 +930,11 @@ common_exceptionThrown:
 
     @ Manage debugger bookkeeping
 7:
+    str     rPC, [rSELF, #offThread_pc]     @ update interpSave.pc
+    str     rFP, [rSELF, #offThread_fp]     @ update interpSave.fp
     mov     r0, rSELF                       @ arg0<- self
-    ldr     r1, [rSELF, #offThread_method]  @ arg1<- curMethod
-    mov     r2, rPC                         @ arg2<- pc
-    mov     r3, rFP                         @ arg3<- fp
-    bl      dvmReportExceptionThrow         @ (self, method, pc, fp)
+    mov     r1, r9                          @ arg1<- exception
+    bl      dvmReportExceptionThrow         @ (self, exception)
     b       8b                              @ resume with normal handling
 
 .LnotCaughtLocally: @ r9=exception

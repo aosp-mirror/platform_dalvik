@@ -8,7 +8,7 @@ HANDLE_OPCODE(OP_BREAKPOINT)
          * for the sake of anything that needs to do disambiguation in a
          * common handler with INST_INST.
          *
-         * The breakpoint itself is handled over in dvmUpdateDebugger(),
+         * The breakpoint itself is handled over in updateDebugger(),
          * because we need to detect other events (method entry, single
          * step) and report them in the same event packet, and we're not
          * yet handling those through breakpoint instructions.  By the

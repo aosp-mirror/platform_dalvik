@@ -399,6 +399,9 @@ void dvmDbgActive(void)
     dvmInitBreakpoints();
     gDvm.debuggerActive = true;
     dvmUpdateAllInterpBreak(kInterpDebugBreak, kSubModeDebuggerActive, true);
+#if defined(WITH_JIT)
+    dvmCompilerUpdateGlobalState();
+#endif
 }
 
 /*
@@ -415,6 +418,9 @@ void dvmDbgDisconnected(void)
 
     gDvm.debuggerActive = false;
     dvmUpdateAllInterpBreak(kInterpDebugBreak, kSubModeDebuggerActive, false);
+#if defined(WITH_JIT)
+    dvmCompilerUpdateGlobalState();
+#endif
 
     dvmHashTableLock(gDvm.dbgRegistry);
     gDvm.debuggerConnected = false;

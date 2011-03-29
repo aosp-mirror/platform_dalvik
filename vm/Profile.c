@@ -220,6 +220,10 @@ static void updateActiveProfilers(InterpBreakFlags newBreak,
     // Tell the threads
     dvmUpdateAllInterpBreak(newBreak, newMode, enable);
 
+#if defined(WITH_JIT)
+    dvmCompilerUpdateGlobalState();
+#endif
+
     LOGD("+++ active profiler count now %d\n", newValue);
 }
 
@@ -748,7 +752,7 @@ void dvmFastMethodTraceExit(Thread* self)
 /*
  * Register the METHOD_TRACE_EXIT action for the fast interpreter and
  * JIT'ed code for JNI methods. The about-to-return JNI callee method is passed
- * in explicitly.
+ * in explicitly.  Also used for inline-execute.
  */
 void dvmFastNativeMethodTraceExit(const Method* method, Thread* self)
 {

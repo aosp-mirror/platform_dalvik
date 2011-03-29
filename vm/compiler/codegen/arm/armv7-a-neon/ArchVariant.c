@@ -79,7 +79,7 @@ bool dvmCompilerArchVariantInit(void)
     gDvmJit.disableOpt |= (1 << kMethodJit);
 
     // Make sure all threads have current values
-    dvmJitUpdateState();
+    dvmJitUpdateThreadStateAll();
 
     return true;
 }

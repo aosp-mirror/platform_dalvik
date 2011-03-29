@@ -1442,7 +1442,7 @@ dvmCompiler_TEMPLATE_MONITOR_ENTER_DEBUG:
     mov     r3, #0                       @ Record that we're not returning
     str     r3, [r0, #offThread_inJitCodeCache]
     blx     r2             @ dvmLockObject(self, obj)
-    @ refresh Jit's on/off status & test for exception
+    @ test for exception
     ldr     r1, [rSELF, #offThread_exception]
     cmp     r1, #0
     beq     1f

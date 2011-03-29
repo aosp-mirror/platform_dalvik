@@ -26330,11 +26330,18 @@ common_invokeMethodNoRange:
     GOTO_NEXT                           # jump to methodToCall->insns
 
 2:
-    /* Live: %eax, %ecx, %edx - preserve */
+    /*
+     * On entry, preserve all:
+     *  %eax: method
+     *  %ecx: self
+     *  %edx: new save area
+     */
     SPILL_TMP1(%eax)                   # preserve methodToCall
     SPILL_TMP2(%edx)                   # preserve newSaveArea
+    movl        rPC, offThread_pc(%ecx) # update interpSave.pc
+    movl        rFP, offThread_fp(%ecx) # update interpSave.fp
     movl        %ecx, OUT_ARG0(%esp)
-    movl        %eax, OUT_ARG0(%esp)
+    movl        %eax, OUT_ARG1(%esp)
     call        dvmReportInvoke        # (self, method)
     UNSPILL_TMP1(%eax)
     UNSPILL_TMP2(%edx)
@@ -26379,10 +26386,11 @@ common_invokeMethodNoRange:
      * %eax=methodToCall, rINST=newFP, %ecx=self
      */
     SPILL_TMP1(%eax)                    # save methodTocall
-    movl        %eax, OUT_ARG2(%esp)
-    movl        %ecx, OUT_ARG1(%esp)
-    movl        rPC, OUT_ARG0(%esp)
-    call        dvmReportPreNativeInvoke # (pc, self, methodToCall)
+    movl        rPC, offThread_pc(%ecx)
+    movl        rFP, offThread_fp(%ecx)
+    movl        %ecx, OUT_ARG0(%esp)
+    movl        %eax, OUT_ARG1(%esp)
+    call        dvmReportPreNativeInvoke # (self, methodToCall)
     UNSPILL_TMP1(%eax)                  # restore methodToCall
     movl        rSELF,%ecx              # restore self
 
@@ -26396,10 +26404,9 @@ common_invokeMethodNoRange:
 
     UNSPILL_TMP1(%eax)                  # restore methodToCall
     movl        rSELF, %ecx
-    movl        %eax, OUT_ARG2(%esp)
-    movl        %ecx, OUT_ARG1(%esp)
-    movl        rPC, OUT_ARG0(%esp)
-    call        dvmReportPostNativeInvoke # (pc, self, methodToCall)
+    movl        %ecx, OUT_ARG0(%esp)
+    movl        %eax, OUT_ARG1(%esp)
+    call        dvmReportPostNativeInvoke # (self, methodToCall)
     jmp         7b                      # rejoin
 
 .LstackOverflow:    # eax=methodToCall
@@ -26440,10 +26447,10 @@ common_returnFromMethod:
      * Handle special subMode actions
      * On entry, rFP: prevFP, %ecx: self, %eax: saveArea
      */
-    movl     rFP, OUT_ARG2(%esp)              # parameter prevFP
-    movl     rPC, OUT_ARG1(%esp)              # parameter pc
-    movl     %ecx, OUT_ARG1(%esp)             # parameter self
-    call     dvmReportReturn                  # (self, pc, prevFP)
+    movl     rFP, offThread_fp(%ecx)          # update interpSave.fp
+    movl     rPC, offThread_pc(%ecx)          # update interpSave.pc
+    movl     %ecx, OUT_ARG0(%esp)             # parameter self
+    call     dvmReportReturn                  # (self)
     movl     rSELF, %ecx                      # restore self
     SAVEAREA_FROM_FP %eax                     # restore saveArea
     jmp      14b

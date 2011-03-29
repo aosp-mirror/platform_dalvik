@@ -14,6 +14,16 @@
 #define JIT_STUB_HACK(x)
 
 /*
+ * InterpSave's pc and fp must be valid when breaking out to a
+ * "Reportxxx" routine.  Because the portable interpreter uses local
+ * variables for these, we must flush prior.  Stubs, however, use
+ * the interpSave vars directly, so this is a nop for stubs.
+ */
+#define PC_FP_TO_SELF()                                                    \
+    self->interpSave.pc = pc;                                              \
+    self->interpSave.fp = fp;
+
+/*
  * Instruction framing.  For a switch-oriented implementation this is
  * case/break, for a threaded implementation it's a goto label and an
  * instruction fetch/computed goto.
