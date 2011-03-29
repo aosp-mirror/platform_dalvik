@@ -837,47 +837,62 @@ jobjectRefType dvmGetJNIRefType(JNIEnv* env, jobject jobj)
     }
 }
 
+static void dumpMethods(Method* methods, size_t methodCount, const char* name)
+{
+    size_t i;
+    for (i = 0; i < methodCount; ++i) {
+        Method* method = &methods[i];
+        if (strcmp(name, method->name) == 0) {
+            char* desc = dexProtoCopyMethodDescriptor(&method->prototype);
+            LOGE("Candidate: %s.%s:%s", method->clazz->descriptor, name, desc);
+            free(desc);
+        }
+    }
+}
+
+static void dumpCandidateMethods(ClassObject* clazz, const char* methodName,
+    const char* signature)
+{
+    LOGE("ERROR: couldn't find native method");
+    LOGE("Requested: %s.%s:%s", clazz->descriptor, methodName, signature);
+    dumpMethods(clazz->virtualMethods, clazz->virtualMethodCount, methodName);
+    dumpMethods(clazz->directMethods, clazz->directMethodCount, methodName);
+}
+
 /*
  * Register a method that uses JNI calling conventions.
  */
 static bool dvmRegisterJNIMethod(ClassObject* clazz, const char* methodName,
     const char* signature, void* fnPtr)
 {
-    Method* method;
-    bool result = false;
-
     if (fnPtr == NULL)
-        goto bail;
+        return false;
 
-    method = dvmFindDirectMethodByDescriptor(clazz, methodName, signature);
+    Method* method =
+        dvmFindDirectMethodByDescriptor(clazz, methodName, signature);
     if (method == NULL)
         method = dvmFindVirtualMethodByDescriptor(clazz, methodName, signature);
     if (method == NULL) {
-        LOGW("ERROR: Unable to find decl for native %s.%s:%s\n",
-            clazz->descriptor, methodName, signature);
-        goto bail;
+        dumpCandidateMethods(clazz, methodName, signature);
+        return false;
     }
 
     if (!dvmIsNativeMethod(method)) {
-        LOGW("Unable to register: not native: %s.%s:%s\n",
+        LOGW("Unable to register: not native: %s.%s:%s",
             clazz->descriptor, methodName, signature);
-        goto bail;
+        return false;
     }
 
     if (method->nativeFunc != dvmResolveNativeMethod) {
         /* this is allowed, but unusual */
-        LOGV("Note: %s.%s:%s was already registered\n",
+        LOGV("Note: %s.%s:%s was already registered",
             clazz->descriptor, methodName, signature);
     }
 
     dvmUseJNIBridge(method, fnPtr);
 
-    LOGV("JNI-registered %s.%s:%s\n", clazz->descriptor, methodName,
-        signature);
-    result = true;
-
-bail:
-    return result;
+    LOGV("JNI-registered %s.%s:%s", clazz->descriptor, methodName, signature);
+    return true;
 }
 
 /*
