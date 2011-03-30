@@ -481,7 +481,7 @@ ArrayObject* dvmDdmGetStackTraceById(u4 threadId)
      * and release the thread list lock.  If we're being asked to examine
      * our own stack trace, skip the suspend/resume.
      */
-    int stackDepth = -1;
+    size_t stackDepth;
     if (thread != self)
         dvmSuspendThread(thread);
     traceBuf = dvmFillInStackTraceRaw(thread, &stackDepth);
