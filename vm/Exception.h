@@ -184,17 +184,18 @@ int dvmFindCatchBlock(Thread* self, int relPc, Object* exception,
  *
  * Don't call the "Internal" form of the function directly.
  */
-void* dvmFillInStackTraceInternal(Thread* thread, bool wantObject, int* pCount);
+void* dvmFillInStackTraceInternal(Thread* thread, bool wantObject, size_t* pCount);
 /* return an [I for use by interpreted code */
 INLINE Object* dvmFillInStackTrace(Thread* thread) {
     return (Object*) dvmFillInStackTraceInternal(thread, true, NULL);
 }
 ArrayObject* dvmGetStackTrace(const Object* stackState);
 /* return an int* and array count; caller must free() the return value */
-INLINE int* dvmFillInStackTraceRaw(Thread* thread, int* pCount) {
+INLINE int* dvmFillInStackTraceRaw(Thread* thread, size_t* pCount) {
     return (int*) dvmFillInStackTraceInternal(thread, false, pCount);
 }
-ArrayObject* dvmGetStackTraceRaw(const int* intVals, int stackDepth);
+ArrayObject* dvmGetStackTraceRaw(const int* intVals, size_t stackDepth);
+void dvmFillStackTraceElements(const int* intVals, size_t stackDepth, ArrayObject* steArray);
 
 /*
  * Print a formatted version of a raw stack trace to the log file.

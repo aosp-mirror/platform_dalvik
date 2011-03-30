@@ -820,13 +820,13 @@ int dvmFindCatchBlock(Thread* self, int relPc, Object* exception,
  * NOTE: if we support class unloading, we will need to scan the class
  * object references out of these arrays.
  */
-void* dvmFillInStackTraceInternal(Thread* thread, bool wantObject, int* pCount)
+void* dvmFillInStackTraceInternal(Thread* thread, bool wantObject, size_t* pCount)
 {
     ArrayObject* stackData = NULL;
     int* simpleData = NULL;
     void* fp;
     void* startFp;
-    int stackDepth;
+    size_t stackDepth;
     int* intPtr;
 
     if (pCount != NULL)
@@ -949,11 +949,8 @@ bail:
 ArrayObject* dvmGetStackTrace(const Object* ostackData)
 {
     const ArrayObject* stackData = (const ArrayObject*) ostackData;
-    const int* intVals;
-    int stackSize;
-
-    stackSize = stackData->length / 2;
-    intVals = (const int*) stackData->contents;
+    size_t stackSize = stackData->length / 2;
+    const int* intVals = (const int*) stackData->contents;
     return dvmGetStackTraceRaw(intVals, stackSize);
 }
 
@@ -965,20 +962,36 @@ ArrayObject* dvmGetStackTrace(const Object* ostackData)
  *
  * The returned array is not added to the "local refs" list.
  */
-ArrayObject* dvmGetStackTraceRaw(const int* intVals, int stackDepth)
+ArrayObject* dvmGetStackTraceRaw(const int* intVals, size_t stackDepth)
 {
     ArrayObject* steArray = NULL;
-    int i;
-
-    /* init this if we haven't yet */
-    if (!dvmIsClassInitialized(gDvm.classJavaLangStackTraceElement))
-        dvmInitClass(gDvm.classJavaLangStackTraceElement);
 
     /* allocate a StackTraceElement array */
     steArray = dvmAllocArray(gDvm.classJavaLangStackTraceElementArray,
                     stackDepth, kObjectArrayRefWidth, ALLOC_DEFAULT);
     if (steArray == NULL)
         goto bail;
+
+    dvmFillStackTraceElements(intVals, stackDepth, steArray);
+
+bail:
+    dvmReleaseTrackedAlloc((Object*) steArray, NULL);
+    return steArray;
+}
+
+/*
+ * Fills the StackTraceElement array elements from the raw integer
+ * data encoded by dvmFillInStackTrace().
+ *
+ * "intVals" points to the first {method,pc} pair.
+ */
+void dvmFillStackTraceElements(const int* intVals, size_t stackDepth, ArrayObject* steArray)
+{
+    unsigned int i;
+
+    /* init this if we haven't yet */
+    if (!dvmIsClassInitialized(gDvm.classJavaLangStackTraceElement))
+        dvmInitClass(gDvm.classJavaLangStackTraceElement);
 
     /*
      * Allocate and initialize a StackTraceElement for each stack frame.
@@ -996,7 +1009,7 @@ ArrayObject* dvmGetStackTraceRaw(const int* intVals, int stackDepth)
 
         ste = dvmAllocObject(gDvm.classJavaLangStackTraceElement,ALLOC_DEFAULT);
         if (ste == NULL)
-            goto bail;
+            return;
 
         meth = (Method*) *intVals++;
         pc = *intVals++;
@@ -1033,14 +1046,10 @@ ArrayObject* dvmGetStackTraceRaw(const int* intVals, int stackDepth)
         dvmReleaseTrackedAlloc((Object*) fileName, NULL);
 
         if (dvmCheckException(dvmThreadSelf()))
-            goto bail;
+            return;
 
         dvmSetObjectArrayElement(steArray, i, ste);
     }
-
-bail:
-    dvmReleaseTrackedAlloc((Object*) steArray, NULL);
-    return steArray;
 }
 
 /*
