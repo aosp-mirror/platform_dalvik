@@ -78,7 +78,7 @@ bool dvmCompilerArchVariantInit(void)
             sizeof(struct JitToInterpEntries)) <= 128);
 
     // Make sure all threads have current values
-    dvmJitUpdateState();
+    dvmJitUpdateThreadStateAll();
     return true;
 }
 

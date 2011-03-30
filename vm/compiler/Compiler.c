@@ -458,7 +458,7 @@ static bool compilerThreadStartup(void)
     gDvmJit.pProfTable = dvmDebuggerOrProfilerActive() ? NULL : pJitProfTable;
     gDvmJit.pProfTableCopy = pJitProfTable;
     gDvmJit.pJitTraceProfCounters = pJitTraceProfCounters;
-    dvmJitUpdateState();
+    dvmJitUpdateThreadStateAll();
     dvmUnlockMutex(&gDvmJit.tableLock);
 
     /* Signal running threads to refresh their cached pJitTable pointers */
@@ -739,7 +739,7 @@ void dvmCompilerShutdown(void)
     /* Disable new translation requests */
     gDvmJit.pProfTable = NULL;
     gDvmJit.pProfTableCopy = NULL;
-    dvmJitUpdateState();
+    dvmJitUpdateThreadStateAll();
 
     if (gDvm.verboseShutdown ||
             gDvmJit.profileMode == kTraceProfilingContinuous) {
@@ -774,7 +774,7 @@ void dvmCompilerShutdown(void)
      */
 }
 
-void dvmCompilerStateRefresh()
+void dvmCompilerUpdateGlobalState()
 {
     bool jitActive;
     bool jitActivate;
@@ -831,5 +831,5 @@ void dvmCompilerStateRefresh()
     if (needUnchain)
         dvmJitUnchainAll();
     // Make sure all threads have current values
-    dvmJitUpdateState();
+    dvmJitUpdateThreadStateAll();
 }

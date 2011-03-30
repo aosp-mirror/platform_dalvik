@@ -65,20 +65,22 @@
     bl      dvmResolveInlineNative
     cmp     r0, #0                      @ did it resolve?
     beq     .L${opcode}_resume          @ no, just move on
+    mov     r9, r0                      @ remember method
     mov     r1, rSELF
     bl      dvmFastMethodTraceEnter     @ (method, self)
     add     r1, rSELF, #offThread_retval@ r1<- &self->retval
     sub     sp, sp, #8                  @ make room for arg, +64 bit align
-    mov     r0, rINST, lsr #12          @ r0<- B
+    mov     r0, rINST, lsr #8           @ r0<- B
+    mov     rINST, r9                   @ rINST<- method
     str     r1, [sp]                    @ push &self->retval
     bl      .L${opcode}_continue        @ make call; will return after
+    mov     r9, r0                      @ save result of inline
     add     sp, sp, #8                  @ pop stack
-    cmp     r0, #0                      @ test boolean result of inline
-    beq     common_exceptionThrown      @ returned false, handle exception
-    mov     r0, r10
-    bl      dvmResolveInlineNative      @ reload method
+    mov     r0, rINST                   @ r0<- method
     mov     r1, rSELF
-    bl      dvmFastMethodTraceExit      @ (method, self)
+    bl      dvmFastNativeMethodTraceExit  @ (method, self)
+    cmp     r9, #0                      @ test boolean result of inline
+    beq     common_exceptionThrown      @ returned false, handle exception
     FETCH_ADVANCE_INST(3)               @ advance rPC, load rINST
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     GOTO_OPCODE(ip)                     @ jump to next instruction

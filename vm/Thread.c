@@ -1412,6 +1412,9 @@ bool dvmCreateInterpThread(Object* threadObj, int reqStackSize)
     newThread->prev = gDvm.threadList;
     gDvm.threadList->next = newThread;
 
+    /* Add any existing global modes to the interpBreak control */
+    dvmInitializeInterpBreak(newThread);
+
     if (!dvmGetFieldBoolean(threadObj, gDvm.offJavaLangThread_daemon))
         gDvm.nonDaemonThreadCount++;        // guarded by thread list lock
 

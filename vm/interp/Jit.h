@@ -162,7 +162,8 @@ void dvmJitTraceProfilingOff(void);
 void dvmJitTraceProfilingOn(void);
 void dvmJitChangeProfileMode(TraceProfilingModes newState);
 void dvmJitDumpTraceDesc(JitTraceDescription *trace);
-void dvmJitUpdateState(void);
+void dvmJitUpdateThreadStateSingle(Thread* threead);
+void dvmJitUpdateThreadStateAll(void);
 void dvmJitResumeTranslation(Thread* self, const u2* pc, const u4* fp);
 
 #endif /*_DALVIK_INTERP_JIT*/

@@ -596,13 +596,14 @@ void dvmClearSingleStep(Thread* thread)
 
 /*
  * The interpreter just threw.  Handle any special subMode requirements.
+ * All interpSave state must be valid on entry.
  */
-void dvmReportExceptionThrow(Thread* self, const Method* curMethod,
-                             const u2* pc, void* fp)
+void dvmReportExceptionThrow(Thread* self, Object* exception)
 {
+    const Method* curMethod = self->interpSave.method;
 #if defined(WITH_JIT)
     if (self->interpBreak.ctl.subMode & kSubModeJitTraceBuild) {
-        dvmJitEndTraceSelect(self, pc);
+        dvmJitEndTraceSelect(self, self->interpSave.pc);
     }
     if (self->interpBreak.ctl.breakFlags & kInterpSingleStep) {
         /* Discard any single-step native returns to translation */
@@ -611,17 +612,18 @@ void dvmReportExceptionThrow(Thread* self, const Method* curMethod,
 #endif
     if (self->interpBreak.ctl.subMode & kSubModeDebuggerActive) {
         void *catchFrame;
-        int offset = pc - curMethod->insns;
-        int catchRelPc = dvmFindCatchBlock(self, offset, self->exception,
+        int offset = self->interpSave.pc - curMethod->insns;
+        int catchRelPc = dvmFindCatchBlock(self, offset, exception,
                                            true, &catchFrame);
-        dvmDbgPostException(fp, offset, catchFrame, catchRelPc,
-                            self->exception);
+        dvmDbgPostException(self->interpSave.fp, offset, catchFrame,
+                            catchRelPc, exception);
     }
 }
 
 /*
  * The interpreter is preparing to do an invoke (both native & normal).
- * Handle any special subMode requirements.
+ * Handle any special subMode requirements.  All interpSave state
+ * must be valid on entry.
  */
 void dvmReportInvoke(Thread* self, const Method* methodToCall)
 {
@@ -632,10 +634,10 @@ void dvmReportInvoke(Thread* self, const Method* methodToCall)
  * The interpreter is preparing to do a native invoke. Handle any
  * special subMode requirements.  NOTE: for a native invoke,
  * dvmReportInvoke() and dvmReportPreNativeInvoke() will both
- * be called prior to the invoke.
+ * be called prior to the invoke.  All interpSave state must
+ * be valid on entry.
  */
-void dvmReportPreNativeInvoke(const u2* pc, Thread* self,
-                              const Method* methodToCall)
+void dvmReportPreNativeInvoke(const Method* methodToCall, Thread* self)
 {
 #if defined(WITH_JIT)
     /*
@@ -643,7 +645,7 @@ void dvmReportPreNativeInvoke(const u2* pc, Thread* self,
      * builder can't follow into or through a native method.
      */
     if (self->interpBreak.ctl.subMode & kSubModeJitTraceBuild) {
-        dvmCheckJit(pc, self);
+        dvmCheckJit(self->interpSave.pc, self);
     }
 #endif
     if (self->interpBreak.ctl.subMode & kSubModeDebuggerActive) {
@@ -656,10 +658,10 @@ void dvmReportPreNativeInvoke(const u2* pc, Thread* self,
 
 /*
  * The interpreter has returned from a native invoke. Handle any
- * special subMode requirements.
+ * special subMode requirements.  All interpSave state must be
+ * valid on entry.
  */
-void dvmReportPostNativeInvoke(const u2* pc, Thread* self,
-                               const Method* methodToCall)
+void dvmReportPostNativeInvoke(const Method* methodToCall, Thread* self)
 {
     if (self->interpBreak.ctl.subMode & kSubModeDebuggerActive) {
         Object* thisPtr = dvmGetThisPtr(self->interpSave.method,
@@ -674,15 +676,15 @@ void dvmReportPostNativeInvoke(const u2* pc, Thread* self,
 
 /*
  * The interpreter has returned from a normal method.  Handle any special
- * subMode requirements.
+ * subMode requirements.  All interpSave state must be valid on entry.
  */
-void dvmReportReturn(Thread* self, const u2* pc, const u4* prevFP)
+void dvmReportReturn(Thread* self)
 {
     TRACE_METHOD_EXIT(self, self->interpSave.method);
 #if defined(WITH_JIT)
-    if (dvmIsBreakFrame(prevFP) &&
+    if (dvmIsBreakFrame(self->interpSave.fp) &&
         (self->interpBreak.ctl.subMode & kSubModeJitTraceBuild)) {
-        dvmCheckJit(pc, self);
+        dvmCheckJit(self->interpSave.pc, self);
     }
 #endif
 }
@@ -711,8 +713,8 @@ void dvmReportReturn(Thread* self, const u2* pc, const u4* prevFP)
  * breakpoints.  We may be able to speed things up a bit if we don't query
  * the event list unless we know there's at least one lurking within.
  */
-void dvmUpdateDebugger(const Method* method, const u2* pc, const u4* fp,
-    bool methodEntry, Thread* self)
+static void updateDebugger(const Method* method, const u2* pc, const u4* fp,
+                           bool methodEntry, Thread* self)
 {
     int eventFlags = 0;
 
@@ -1552,6 +1554,54 @@ void dvmUpdateAllInterpBreak(int newBreak, int newMode, bool enable)
 }
 
 /*
+ * Do a sanity check on interpreter state saved to Thread.
+ * A failure here doesn't necessarily mean that something is wrong,
+ * so this code should only be used during development to suggest
+ * a possible problem.
+ */
+void dvmCheckInterpStateConsistency()
+{
+    Thread* self = dvmThreadSelf();
+    Thread* thread;
+    uint8_t breakFlags;
+    uint8_t subMode;
+    void* handlerTable;
+
+    dvmLockThreadList(self);
+    breakFlags = self->interpBreak.ctl.breakFlags;
+    subMode = self->interpBreak.ctl.subMode;
+    handlerTable = self->interpBreak.ctl.curHandlerTable;
+    for (thread = gDvm.threadList; thread != NULL; thread = thread->next) {
+        if (subMode != thread->interpBreak.ctl.subMode) {
+            LOGD("Warning: subMode mismatch - 0x%x:0x%x, tid[%d]",
+                subMode,thread->interpBreak.ctl.subMode,thread->threadId);
+         }
+        if (breakFlags != thread->interpBreak.ctl.breakFlags) {
+            LOGD("Warning: breakFlags mismatch - 0x%x:0x%x, tid[%d]",
+                breakFlags,thread->interpBreak.ctl.breakFlags,thread->threadId);
+         }
+        if (handlerTable != thread->interpBreak.ctl.curHandlerTable) {
+            LOGD("Warning: curHandlerTable mismatch - 0x%x:0x%x, tid[%d]",
+                (int)handlerTable,(int)thread->interpBreak.ctl.curHandlerTable,
+                thread->threadId);
+         }
+#if defined(WITH_JIT)
+         if (thread->pJitProfTable != gDvmJit.pProfTable) {
+             LOGD("Warning: pJitProfTable mismatch - 0x%x:0x%x, tid[%d]",
+                  (int)thread->pJitProfTable,(int)gDvmJit.pProfTable,
+                  thread->threadId);
+         }
+         if (thread->jitThreshold != gDvmJit.threshold) {
+             LOGD("Warning: jitThreshold mismatch - 0x%x:0x%x, tid[%d]",
+                  (int)thread->jitThreshold,(int)gDvmJit.threshold,
+                  thread->threadId);
+         }
+#endif
+    }
+    dvmUnlockThreadList();
+}
+
+/*
  * Arm a safepoint callback for a thread.  If funct is null,
  * clear any pending callback.
  * TODO: only gc is currently using this feature, and will have
@@ -1622,9 +1672,32 @@ void dvmInitInterpreterState(Thread* self)
     self->icRechainCount = PREDICTED_CHAIN_COUNTER_RECHAIN;
     self->pProfileCountdown = &gDvmJit.profileCountdown;
     // Jit state that can change
-    dvmJitUpdateState();
+    dvmJitUpdateThreadStateSingle(self);
 #endif
+}
 
+/*
+ * For a newly-created thread, we need to start off with interpBreak
+ * set to any existing global modes.  The caller must hold the
+ * thread list lock.
+ */
+void dvmInitializeInterpBreak(Thread* thread)
+{
+    u1 flags = 0;
+    u1 subModes = 0;
+
+    if (gDvm.instructionCountEnableCount > 0) {
+        flags |= kInterpInstCountBreak;
+        subModes |= kSubModeInstCounting;
+    }
+    if (dvmIsMethodTraceActive()) {
+        subModes |= kSubModeMethodTrace;
+    }
+    if (gDvm.debuggerActive) {
+        flags |= kInterpDebugBreak;
+        subModes |= kSubModeDebuggerActive;
+    }
+    dvmUpdateInterpBreak(thread, flags, subModes, true);
 }
 
 /*
@@ -1702,8 +1775,8 @@ void dvmCheckBefore(const u2 *pc, u4 *fp, Thread* self)
     }
 
     if (self->interpBreak.ctl.subMode & kSubModeDebuggerActive) {
-        dvmUpdateDebugger(method, pc, fp,
-                          self->debugIsMethodEntry, self);
+        updateDebugger(method, pc, fp,
+                       self->debugIsMethodEntry, self);
     }
     if (gDvm.instructionCountEnableCount != 0) {
         /*

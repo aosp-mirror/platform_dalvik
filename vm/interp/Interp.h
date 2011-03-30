@@ -77,17 +77,12 @@ void dvmFlushBreakpoints(ClassObject* clazz);
 /*
  * Debugger support
  */
-void dvmUpdateDebugger(const Method* method, const u2* pc, const u4* fp,
-                       bool methodEntry, Thread* self);
 void dvmCheckBefore(const u2 *dPC, u4 *fp, Thread* self);
-void dvmReportExceptionThrow(Thread* self, const Method* curMethod,
-                             const u2* pc, void* fp);
-void dvmReportPreNativeInvoke(const u2* pc, Thread* self,
-                              const Method* methodToCall);
-void dvmReportPostNativeInvoke(const u2* pc, Thread* self,
-                               const Method* methodToCall);
+void dvmReportExceptionThrow(Thread* self, Object* exception);
+void dvmReportPreNativeInvoke(const Method* methodToCall, Thread* self);
+void dvmReportPostNativeInvoke(const Method* methodToCall, Thread* self);
 void dvmReportInvoke(Thread* self, const Method* methodToCall);
-void dvmReportReturn(Thread* self, const u2* pc, const u4* prevFP);
+void dvmReportReturn(Thread* self);
 
 /*
  * Update interpBreak
@@ -95,6 +90,8 @@ void dvmReportReturn(Thread* self, const u2* pc, const u4* prevFP);
 void dvmUpdateInterpBreak(Thread* thread, int newBreak, int newMode,
                           bool enable);
 void dvmAddToSuspendCounts(Thread* thread, int delta, int dbgDelta);
+void dvmCheckInterpStateConsistency();
+void dvmInitializeInterpBreak(Thread* thread);
 
 /*
  * Update interpBreak for all threads

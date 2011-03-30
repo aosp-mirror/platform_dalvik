@@ -12549,20 +12549,20 @@ d2l_doconv:
      */
 .LOP_EXECUTE_INLINE_continue:
     rsb     r0, r0, #4                  @ r0<- 4-r0
-    FETCH(r9, 2)                        @ r9<- FEDC
+    FETCH(rINST, 2)                     @ rINST<- FEDC
     add     pc, pc, r0, lsl #3          @ computed goto, 2 instrs each
     bl      common_abort                @ (skipped due to ARM prefetch)
-4:  and     ip, r9, #0xf000             @ isolate F
+4:  and     ip, rINST, #0xf000          @ isolate F
     ldr     r3, [rFP, ip, lsr #10]      @ r3<- vF (shift right 12, left 2)
-3:  and     ip, r9, #0x0f00             @ isolate E
+3:  and     ip, rINST, #0x0f00          @ isolate E
     ldr     r2, [rFP, ip, lsr #6]       @ r2<- vE
-2:  and     ip, r9, #0x00f0             @ isolate D
+2:  and     ip, rINST, #0x00f0          @ isolate D
     ldr     r1, [rFP, ip, lsr #2]       @ r1<- vD
-1:  and     ip, r9, #0x000f             @ isolate C
+1:  and     ip, rINST, #0x000f          @ isolate C
     ldr     r0, [rFP, ip, lsl #2]       @ r0<- vC
 0:
-    ldr     r9, .LOP_EXECUTE_INLINE_table       @ table of InlineOperation
-    ldr     pc, [r9, r10, lsl #4]       @ sizeof=16, "func" is first entry
+    ldr     rINST, .LOP_EXECUTE_INLINE_table    @ table of InlineOperation
+    ldr     pc, [rINST, r10, lsl #4]    @ sizeof=16, "func" is first entry
     @ (not reached)
 
     /*
@@ -12574,6 +12574,7 @@ d2l_doconv:
     bl      dvmResolveInlineNative
     cmp     r0, #0                      @ did it resolve?
     beq     .LOP_EXECUTE_INLINE_resume          @ no, just move on
+    mov     r9, r0                      @ remember method
     mov     r1, rSELF
     bl      dvmFastMethodTraceEnter     @ (method, self)
     add     r1, rSELF, #offThread_retval@ r1<- &self->retval
@@ -12581,13 +12582,13 @@ d2l_doconv:
     mov     r0, rINST, lsr #12          @ r0<- B
     str     r1, [sp]                    @ push &self->retval
     bl      .LOP_EXECUTE_INLINE_continue        @ make call; will return after
+    mov     rINST, r0                   @ save result of inline
     add     sp, sp, #8                  @ pop stack
-    cmp     r0, #0                      @ test boolean result of inline
-    beq     common_exceptionThrown      @ returned false, handle exception
-    mov     r0, r10
-    bl      dvmResolveInlineNative      @ reload method
+    mov     r0, r9                      @ r0<- method
     mov     r1, rSELF
-    bl      dvmFastMethodTraceExit      @ (method, self)
+    bl      dvmFastNativeMethodTraceExit @ (method, self)
+    cmp     rINST, #0                   @ test boolean result of inline
+    beq     common_exceptionThrown      @ returned false, handle exception
     FETCH_ADVANCE_INST(3)               @ advance rPC, load rINST
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     GOTO_OPCODE(ip)                     @ jump to next instruction
@@ -12634,20 +12635,22 @@ d2l_doconv:
     bl      dvmResolveInlineNative
     cmp     r0, #0                      @ did it resolve?
     beq     .LOP_EXECUTE_INLINE_RANGE_resume          @ no, just move on
+    mov     r9, r0                      @ remember method
     mov     r1, rSELF
     bl      dvmFastMethodTraceEnter     @ (method, self)
     add     r1, rSELF, #offThread_retval@ r1<- &self->retval
     sub     sp, sp, #8                  @ make room for arg, +64 bit align
-    mov     r0, rINST, lsr #12          @ r0<- B
+    mov     r0, rINST, lsr #8           @ r0<- B
+    mov     rINST, r9                   @ rINST<- method
     str     r1, [sp]                    @ push &self->retval
     bl      .LOP_EXECUTE_INLINE_RANGE_continue        @ make call; will return after
+    mov     r9, r0                      @ save result of inline
     add     sp, sp, #8                  @ pop stack
-    cmp     r0, #0                      @ test boolean result of inline
-    beq     common_exceptionThrown      @ returned false, handle exception
-    mov     r0, r10
-    bl      dvmResolveInlineNative      @ reload method
+    mov     r0, rINST                   @ r0<- method
     mov     r1, rSELF
-    bl      dvmFastMethodTraceExit      @ (method, self)
+    bl      dvmFastNativeMethodTraceExit  @ (method, self)
+    cmp     r9, #0                      @ test boolean result of inline
+    beq     common_exceptionThrown      @ returned false, handle exception
     FETCH_ADVANCE_INST(3)               @ advance rPC, load rINST
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     GOTO_OPCODE(ip)                     @ jump to next instruction
@@ -26795,6 +26798,8 @@ common_invokeMethodNoRange:
 2:
     @ Profiling - record method entry.  r0: methodToCall
     stmfd   sp!, {r0-r3}                @ preserve r0-r3
+    str     rPC, [rSELF, #offThread_pc] @ update interpSave.pc
+    str     rFP, [rSELF, #offThread_fp] @ update interpSave.fp
     mov     r1, r0
     mov     r0, rSELF
     bl      dvmReportInvoke             @ (self, method)
@@ -26846,9 +26851,11 @@ dalvik_mterp:
 11:
     @ r0=newFp, r1=&retval, r2=methodToCall, r3=self, lr=subModes
     stmfd   sp!, {r0-r3}                @ save all but subModes
-    mov     r0, rPC
+    str     rPC, [rSELF, #offThread_pc] @ update interpSave.pc
+    str     rFP, [rSELF, #offThread_fp] @ update interpSave.fp
+    mov     r0, r2                      @ r0<- methodToCall
     mov     r1, rSELF
-    bl      dvmReportPreNativeInvoke    @ (pc, self, methodToCall)
+    bl      dvmReportPreNativeInvoke    @ (methodToCall, self)
     ldmfd   sp, {r0-r3}                 @ refresh.  NOTE: no sp autoincrement
 
     @ Call the native method
@@ -26859,9 +26866,10 @@ dalvik_mterp:
     ldmfd   sp!, {r0-r3}                @ r2<- methodToCall (others unneeded)
 
     @ Finish up any post-invoke subMode requirements
-    mov     r0, rPC
+    @ interpSave already up-to-date
+    mov     r0, r2                      @ r0<- methodToCall
     mov     r1, rSELF
-    bl      dvmReportPostNativeInvoke   @ (pc, self, methodToCall)
+    bl      dvmReportPostNativeInvoke   @ (methodToCall, self)
     b       7b                          @ resume
 
 .LstackOverflow:    @ r0=methodToCall
@@ -26954,10 +26962,11 @@ common_returnFromMethod:
 19:
     @ Handle special actions
     @ On entry, r0: StackSaveArea
-    ldr     r2, [r0, #offStackSaveArea_prevFrame]  @ r2<- prevFP
-    mov     r1, rPC
+    ldr     r1, [r0, #offStackSaveArea_prevFrame]  @ r2<- prevFP
+    str     rPC, [rSELF, #offThread_pc] @ update interpSave.pc
+    str     r1, [rSELF, #offThread_fp]   @ update interpSave.fp
     mov     r0, rSELF
-    bl      dvmReportReturn             @ (self, pc, prevFP)
+    bl      dvmReportReturn             @ (self)
     SAVEAREA_FROM_FP(r0, rFP)           @ restore StackSaveArea
     b       14b                         @ continue
 
@@ -27063,11 +27072,11 @@ common_exceptionThrown:
 
     @ Manage debugger bookkeeping
 7:
+    str     rPC, [rSELF, #offThread_pc]     @ update interpSave.pc
+    str     rFP, [rSELF, #offThread_fp]     @ update interpSave.fp
     mov     r0, rSELF                       @ arg0<- self
-    ldr     r1, [rSELF, #offThread_method]  @ arg1<- curMethod
-    mov     r2, rPC                         @ arg2<- pc
-    mov     r3, rFP                         @ arg3<- fp
-    bl      dvmReportExceptionThrow         @ (self, method, pc, fp)
+    mov     r1, r9                          @ arg1<- exception
+    bl      dvmReportExceptionThrow         @ (self, exception)
     b       8b                              @ resume with normal handling
 
 .LnotCaughtLocally: @ r9=exception

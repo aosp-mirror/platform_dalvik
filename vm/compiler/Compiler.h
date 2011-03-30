@@ -233,7 +233,7 @@ void dvmCompilerDataFlowAnalysisDispatcher(struct CompilationUnit *cUnit,
                 bool isIterative);
 void dvmCompilerMethodSSATransformation(struct CompilationUnit *cUnit);
 bool dvmCompilerBuildLoop(struct CompilationUnit *cUnit);
-void dvmCompilerStateRefresh(void);
+void dvmCompilerUpdateGlobalState(void);
 JitTraceDescription *dvmCopyTraceDescriptor(const u2 *pc,
                                             const struct JitEntry *desc);
 void *dvmCompilerGetInterpretTemplate();

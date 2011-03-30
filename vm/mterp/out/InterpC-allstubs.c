@@ -419,6 +419,13 @@ static inline bool checkForNullExportPC(Object* obj, u4* fp, const u2* pc)
 #define JIT_STUB_HACK(x)
 #endif
 
+/*
+ * InterpSave's pc and fp must be valid when breaking out to a
+ * "Reportxxx" routine.  Because the portable interpreter uses local
+ * variables for these, we must flush prior.  Stubs, however, use
+ * the interpSave vars directly, so this is a nop for stubs.
+ */
+#define PC_FP_TO_SELF()
 
 /*
  * Opcode handler framing macros.  Here, each opcode is a separate function
@@ -2884,7 +2891,7 @@ HANDLE_OPCODE(OP_BREAKPOINT)
          * for the sake of anything that needs to do disambiguation in a
          * common handler with INST_INST.
          *
-         * The breakpoint itself is handled over in dvmUpdateDebugger(),
+         * The breakpoint itself is handled over in updateDebugger(),
          * because we need to detect other events (method entry, single
          * step) and report them in the same event packet, and we're not
          * yet handling those through breakpoint instructions.  By the
@@ -5034,7 +5041,8 @@ GOTO_TARGET(returnFromMethod)
 
         /* Handle any special subMode requirements */
         if (self->interpBreak.ctl.subMode != 0) {
-            dvmReportReturn(self, pc, fp);
+            PC_FP_TO_SELF();
+            dvmReportReturn(self);
         }
 
         if (dvmIsBreakFrame(fp)) {
@@ -5046,6 +5054,7 @@ GOTO_TARGET(returnFromMethod)
         /* update thread FP, and reset local variables */
         self->curFrame = fp;
         curMethod = SAVEAREA_FROM_FP(fp)->method;
+        self->interpSave.method = curMethod;
         //methodClass = curMethod->clazz;
         methodClassDex = curMethod->clazz->pDvmDex;
         pc = saveArea->savedPc;
@@ -5110,7 +5119,8 @@ GOTO_TARGET(exceptionThrown)
          * debugger.
          */
         if (self->interpBreak.ctl.subMode != 0) {
-            dvmReportExceptionThrow(self, curMethod, pc, fp);
+            PC_FP_TO_SELF();
+            dvmReportExceptionThrow(self, exception);
         }
 
         /*
@@ -5184,6 +5194,7 @@ GOTO_TARGET(exceptionThrown)
          */
         //fp = (u4*) self->curFrame;
         curMethod = SAVEAREA_FROM_FP(fp)->method;
+        self->interpSave.method = curMethod;
         //methodClass = curMethod->clazz;
         methodClassDex = curMethod->clazz->pDvmDex;
         pc = curMethod->insns + catchRelPc;
@@ -5360,6 +5371,7 @@ GOTO_TARGET(invokeMethod, bool methodCallRange, const Method* _methodToCall,
              * calls.  For native calls, we'll mark EXIT on return.
              * For non-native calls, EXIT is marked in the RETURN op.
              */
+            PC_FP_TO_SELF();
             dvmReportInvoke(self, methodToCall);
         }
 
@@ -5369,6 +5381,7 @@ GOTO_TARGET(invokeMethod, bool methodCallRange, const Method* _methodToCall,
              * frame pointer and other local state, and continue.
              */
             curMethod = methodToCall;
+            self->interpSave.method = curMethod;
             methodClassDex = curMethod->clazz->pDvmDex;
             pc = methodToCall->insns;
             self->curFrame = fp = newFp;
@@ -5389,7 +5402,8 @@ GOTO_TARGET(invokeMethod, bool methodCallRange, const Method* _methodToCall,
             DUMP_REGS(methodToCall, newFp, true);   // show input args
 
             if (self->interpBreak.ctl.subMode != 0) {
-                dvmReportPreNativeInvoke(pc, self, methodToCall);
+                PC_FP_TO_SELF();
+                dvmReportPreNativeInvoke(methodToCall, self);
             }
 
             ILOGD("> native <-- %s.%s %s", methodToCall->clazz->descriptor,
@@ -5403,7 +5417,8 @@ GOTO_TARGET(invokeMethod, bool methodCallRange, const Method* _methodToCall,
             (*methodToCall->nativeFunc)(newFp, &retval, methodToCall, self);
 
             if (self->interpBreak.ctl.subMode != 0) {
-                dvmReportPostNativeInvoke(pc, self, methodToCall);
+                PC_FP_TO_SELF();
+                dvmReportPostNativeInvoke(methodToCall, self);
             }
 
             /* pop frame off */

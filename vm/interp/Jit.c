@@ -440,7 +440,7 @@ void dvmJitStopTranslationRequests()
      * free it because some thread may be holding a reference.
      */
     gDvmJit.pProfTable = NULL;
-    dvmJitUpdateState();
+    dvmJitUpdateThreadStateAll();
 }
 
 #if defined(WITH_JIT_TUNING)
@@ -1479,18 +1479,26 @@ void dvmJitTraceProfilingOff()
 }
 
 /*
+ * Update JIT-specific info in Thread structure for a single thread
+ */
+void dvmJitUpdateThreadStateSingle(Thread* thread)
+{
+    thread->pJitProfTable = gDvmJit.pProfTable;
+    thread->jitThreshold = gDvmJit.threshold;
+}
+
+/*
  * Walk through the thread list and refresh all local copies of
  * JIT global state (which was placed there for fast access).
  */
-void dvmJitUpdateState()
+void dvmJitUpdateThreadStateAll()
 {
     Thread* self = dvmThreadSelf();
     Thread* thread;
 
     dvmLockThreadList(self);
     for (thread = gDvm.threadList; thread != NULL; thread = thread->next) {
-        thread->pJitProfTable = gDvmJit.pProfTable;
-        thread->jitThreshold = gDvmJit.threshold;
+        dvmJitUpdateThreadStateSingle(thread);
     }
     dvmUnlockThreadList();
 
