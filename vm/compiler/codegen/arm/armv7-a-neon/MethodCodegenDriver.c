@@ -255,13 +255,13 @@ static bool methodBlockCodeGen(CompilationUnit *cUnit, BasicBlock *bb)
 
     ArmLIR *headLIR = NULL;
 
-    if (bb->blockType == kMethodEntryBlock) {
+    if (bb->blockType == kEntryBlock) {
         /* r0 = callsitePC */
         opImm(cUnit, kOpPush, (1 << r0 | 1 << r1 | 1 << r5FP | 1 << r14lr));
         opRegImm(cUnit, kOpSub, r5FP,
                  sizeof(StackSaveArea) + cUnit->method->registersSize * 4);
 
-    } else if (bb->blockType == kMethodExitBlock) {
+    } else if (bb->blockType == kExitBlock) {
         /* No need to pop r0 and r1 */
         opRegImm(cUnit, kOpAdd, r13sp, 8);
         opImm(cUnit, kOpPop, (1 << r5FP | 1 << r15pc));

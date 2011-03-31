@@ -165,11 +165,9 @@ void dvmCompilerDumpCompilationUnit(CompilationUnit *cUnit)
         "Backward Branch",
         "Chaining Cell Gap",
         "N/A",
-        "Method Entry Block",
-        "Trace Entry Block",
+        "Entry Block",
         "Code Block",
-        "Trace Exit Block",
-        "Method Exit Block",
+        "Exit Block",
         "PC Reconstruction",
         "Exception Handling",
     };
@@ -389,10 +387,10 @@ void dvmDumpBlockBitVector(const GrowableList *blocks, char *msg,
 void dvmGetBlockName(BasicBlock *bb, char *name)
 {
     switch (bb->blockType) {
-        case kMethodEntryBlock:
+        case kEntryBlock:
             snprintf(name, BLOCK_NAME_LEN, "entry");
             break;
-        case kMethodExitBlock:
+        case kExitBlock:
             snprintf(name, BLOCK_NAME_LEN, "exit");
             break;
         case kDalvikByteCode:

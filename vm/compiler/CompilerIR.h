@@ -54,11 +54,9 @@ typedef enum BBType {
     kChainingCellGap,
     /* Don't insert new fields between Gap and Last */
     kChainingCellLast = kChainingCellGap + 1,
-    kMethodEntryBlock,
-    kTraceEntryBlock,
+    kEntryBlock,
     kDalvikByteCode,
-    kTraceExitBlock,
-    kMethodExitBlock,
+    kExitBlock,
     kPCReconstruction,
     kExceptionHandling,
     kCatchEntry,
@@ -255,12 +253,13 @@ typedef struct CompilationUnit {
      */
     const u2 *switchOverflowPad;
 
-    /* New fields only for method-based compilation */
     JitMode jitMode;
     int numReachableBlocks;
     int numDalvikRegisters;             // method->registersSize + inlined
     BasicBlock *entryBlock;
     BasicBlock *exitBlock;
+    BasicBlock *puntBlock;              // punting to interp for exceptions
+    BasicBlock *backChainBlock;         // for loop-trace
     BasicBlock *curBlock;
     BasicBlock *nextCodegenBlock;       // for extended trace codegen
     GrowableList dfsOrder;
@@ -272,6 +271,7 @@ typedef struct CompilationUnit {
     BitVector *tempSSARegisterV;        // numSSARegs
     bool printSSANames;
     void *blockLabelList;
+    bool quitLoopMode;                  // cold path/complex bytecode
 } CompilationUnit;
 
 #if defined(WITH_SELF_VERIFICATION)

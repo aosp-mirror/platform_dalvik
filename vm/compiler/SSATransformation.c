@@ -633,5 +633,9 @@ bool dvmCompilerBuildLoop(CompilationUnit *cUnit)
                                           kReachableNodes,
                                           false /* isIterative */);
 
+    if (gDvmJit.receivedSIGUSR2 || gDvmJit.printMe) {
+        dvmDumpCFG(cUnit, "/sdcard/cfg/");
+    }
+
     return true;
 }
