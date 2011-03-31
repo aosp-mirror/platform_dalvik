@@ -4143,18 +4143,29 @@ static void setupLoopEntryBlock(CompilationUnit *cUnit, BasicBlock *entry,
 static bool selfVerificationPuntOps(MIR *mir)
 {
     DecodedInstruction *decInsn = &mir->dalvikInsn;
-    Opcode op = decInsn->opcode;
 
     /*
      * All opcodes that can throw exceptions and use the
      * TEMPLATE_THROW_EXCEPTION_COMMON template should be excluded in the trace
      * under self-verification mode.
      */
-    return (op == OP_MONITOR_ENTER || op == OP_MONITOR_EXIT ||
-            op == OP_NEW_INSTANCE || op == OP_NEW_ARRAY ||
-            op == OP_CHECK_CAST || op == OP_MOVE_EXCEPTION ||
-            op == OP_FILL_ARRAY_DATA || op == OP_EXECUTE_INLINE ||
-            op == OP_EXECUTE_INLINE_RANGE);
+    switch (decInsn->opcode) {
+        case OP_MONITOR_ENTER:
+        case OP_MONITOR_EXIT:
+        case OP_NEW_INSTANCE:
+        case OP_NEW_INSTANCE_JUMBO:
+        case OP_NEW_ARRAY:
+        case OP_NEW_ARRAY_JUMBO:
+        case OP_CHECK_CAST:
+        case OP_CHECK_CAST_JUMBO:
+        case OP_MOVE_EXCEPTION:
+        case OP_FILL_ARRAY_DATA:
+        case OP_EXECUTE_INLINE:
+        case OP_EXECUTE_INLINE_RANGE:
+            return true;
+        default:
+            return false;
+    }
 }
 #endif
 
