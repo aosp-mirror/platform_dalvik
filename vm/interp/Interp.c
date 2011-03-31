@@ -1854,6 +1854,7 @@ void dvmCheckBefore(const u2 *pc, u4 *fp, Thread* self)
                 dvmAbort();
             }
             self->jitResumeDPC = NULL;
+            self->inJitCodeCache = NULL;
 #endif
         } else {
             self->singleStepCount--;
@@ -1866,6 +1867,7 @@ void dvmCheckBefore(const u2 *pc, u4 *fp, Thread* self)
                  * the return to translation.
                  */
                 self->jitResumeNPC = NULL;
+                self->inJitCodeCache = NULL;
             }
 #endif
         }
