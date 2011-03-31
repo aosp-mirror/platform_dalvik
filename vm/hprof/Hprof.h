@@ -84,12 +84,12 @@ typedef enum hprof_heap_tag_t {
     /* Android */
     HPROF_HEAP_DUMP_INFO = 0xfe,
     HPROF_ROOT_INTERNED_STRING = 0x89,
-    HPROF_ROOT_FINALIZING = 0x8a,
+    HPROF_ROOT_FINALIZING = 0x8a,  /* obsolete */
     HPROF_ROOT_DEBUGGER = 0x8b,
-    HPROF_ROOT_REFERENCE_CLEANUP = 0x8c,
+    HPROF_ROOT_REFERENCE_CLEANUP = 0x8c,  /* obsolete */
     HPROF_ROOT_VM_INTERNAL = 0x8d,
     HPROF_ROOT_JNI_MONITOR = 0x8e,
-    HPROF_UNREACHABLE = 0x90,  /* deprecated */
+    HPROF_UNREACHABLE = 0x90,  /* obsolete */
     HPROF_PRIMITIVE_ARRAY_NODATA_DUMP = 0xc3,
 } hprof_heap_tag_t;
 

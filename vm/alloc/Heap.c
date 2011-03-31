@@ -19,12 +19,10 @@
 #include "Dalvik.h"
 #include "alloc/HeapBitmap.h"
 #include "alloc/Verify.h"
-#include "alloc/HeapTable.h"
 #include "alloc/Heap.h"
 #include "alloc/HeapInternal.h"
 #include "alloc/DdmHeap.h"
 #include "alloc/HeapSource.h"
-#include "alloc/HeapWorker.h"
 #include "alloc/MarkSweep.h"
 
 #include "utils/threads.h"      // need Android thread priorities
@@ -91,9 +89,6 @@ bool dvmHeapStartup()
     if (gcHeap == NULL) {
         return false;
     }
-    gcHeap->heapWorkerCurrentObject = NULL;
-    gcHeap->heapWorkerCurrentMethod = NULL;
-    gcHeap->heapWorkerInterpStartTime = 0LL;
     gcHeap->ddmHpifWhen = 0;
     gcHeap->ddmHpsgWhen = 0;
     gcHeap->ddmHpsgWhat = 0;
@@ -101,21 +96,14 @@ bool dvmHeapStartup()
     gcHeap->ddmNhsgWhat = 0;
     gDvm.gcHeap = gcHeap;
 
-    /* Set up the lists and lock we'll use for finalizable
-     * and reference objects.
+    /* Set up the lists we'll use for cleared reference objects.
      */
-    dvmInitMutex(&gDvm.heapWorkerListLock);
-    gcHeap->referenceOperations = NULL;
+    gcHeap->clearedReferences = NULL;
 
     if (!dvmCardTableStartup(gDvm.heapMaximumSize)) {
         LOGE_HEAP("card table startup failed.");
         return false;
     }
-
-    /* Initialize the HeapWorker locks and other state
-     * that the GC uses.
-     */
-    dvmInitializeHeapWorkerState();
 
     return true;
 }
@@ -130,13 +118,6 @@ void dvmHeapShutdown()
 //TODO: make sure we're locked
     if (gDvm.gcHeap != NULL) {
         dvmCardTableShutdown();
-         /* Tables are allocated on the native heap; they need to be
-         * cleaned up explicitly.  The process may stick around, so we
-         * don't want to leak any native memory.
-         */
-        dvmHeapFreeLargeTable(gDvm.gcHeap->referenceOperations);
-        gDvm.gcHeap->referenceOperations = NULL;
-
         /* Destroy the heap.  Any outstanding pointers will point to
          * unmapped memory (unless/until someone else maps it).  This
          * frees gDvm.gcHeap as a side-effect.
@@ -175,33 +156,6 @@ bool dvmLockHeap()
 void dvmUnlockHeap()
 {
     dvmUnlockMutex(&gDvm.gcHeapLock);
-}
-
-/* Pop an object from the list of pending finalizations and
- * reference clears/enqueues, and return the object.
- * The caller must call dvmReleaseTrackedAlloc()
- * on the object when finished.
- *
- * Typically only called by the heap worker thread.
- */
-Object *dvmGetNextHeapWorkerObject()
-{
-    Object *obj;
-    GcHeap *gcHeap = gDvm.gcHeap;
-
-    dvmLockMutex(&gDvm.heapWorkerListLock);
-
-    obj = dvmHeapGetNextObjectFromLargeTable(&gcHeap->referenceOperations);
-    if (obj != NULL) {
-        /* Don't let the GC collect the object until the
-         * worker thread is done with it.
-         */
-        dvmAddTrackedAlloc(obj, NULL);
-    }
-
-    dvmUnlockMutex(&gDvm.heapWorkerListLock);
-
-    return obj;
 }
 
 /* Do a full garbage collection, which may grow the
@@ -577,13 +531,6 @@ void dvmCollectGarbageInternal(const GcSpec* spec)
 
     gcHeap->gcRunning = true;
 
-    /*
-     * Grab the heapWorkerLock to prevent the HeapWorker thread from
-     * doing work.  If it's executing a finalizer or an enqueue operation
-     * it won't be holding the lock, so this should return quickly.
-     */
-    dvmLockMutex(&gDvm.heapWorkerLock);
-
     rootSuspend = dvmGetRelativeTimeMsec();
     dvmSuspendAllThreads(SUSPEND_FOR_GC);
     rootStart = dvmGetRelativeTimeMsec();
@@ -596,21 +543,6 @@ void dvmCollectGarbageInternal(const GcSpec* spec)
     if (!spec->isConcurrent) {
         oldThreadPriority = raiseThreadPriority();
     }
-
-    /* Make sure that the HeapWorker thread hasn't become
-     * wedged inside interp code.  If it has, this call will
-     * print a message and abort the VM.
-     */
-    dvmAssertHeapWorkerThreadRunning();
-
-    /* Lock the pendingFinalizationRefs list.
-     *
-     * Acquire the lock after suspending so the finalizer
-     * thread can't block in the RUNNING state while
-     * we try to suspend.
-     */
-    dvmLockMutex(&gDvm.heapWorkerListLock);
-
     if (gDvm.preVerify) {
         LOGV_HEAP("Verifying roots and heap before GC");
         verifyRootsAndHeap();
@@ -634,9 +566,11 @@ void dvmCollectGarbageInternal(const GcSpec* spec)
     /* dvmHeapScanMarkedObjects() will build the lists of known
      * instances of the Reference classes.
      */
-    gcHeap->softReferences = NULL;
-    gcHeap->weakReferences = NULL;
-    gcHeap->phantomReferences = NULL;
+    assert(gcHeap->softReferences == NULL);
+    assert(gcHeap->weakReferences == NULL);
+    assert(gcHeap->finalizerReferences == NULL);
+    assert(gcHeap->phantomReferences == NULL);
+    assert(gcHeap->clearedReferences == NULL);
 
     if (spec->isConcurrent) {
         /*
@@ -747,25 +681,12 @@ void dvmCollectGarbageInternal(const GcSpec* spec)
     currAllocated = dvmHeapSourceGetValue(HS_BYTES_ALLOCATED, NULL, 0);
     currFootprint = dvmHeapSourceGetValue(HS_FOOTPRINT, NULL, 0);
 
-    /* Now that we've freed up the GC heap, return any large
-     * free chunks back to the system.  They'll get paged back
-     * in the next time they're used.  Don't do it immediately,
-     * though;  if the process is still allocating a bunch of
-     * memory, we'll be taking a ton of page faults that we don't
-     * necessarily need to.
-     *
-     * Cancel any old scheduled trims, and schedule a new one.
-     */
-    dvmScheduleHeapSourceTrim(5);  // in seconds
-
     dvmMethodTraceGCEnd();
     LOGV_HEAP("GC finished");
 
     gcHeap->gcRunning = false;
 
     LOGV_HEAP("Resuming threads");
-    dvmUnlockMutex(&gDvm.heapWorkerListLock);
-    dvmUnlockMutex(&gDvm.heapWorkerLock);
 
     if (spec->isConcurrent) {
         /*
@@ -786,6 +707,11 @@ void dvmCollectGarbageInternal(const GcSpec* spec)
             setThreadPriority(oldThreadPriority);
         }
     }
+
+    /*
+     * Move queue of pending references back into Java.
+     */
+    dvmEnqueueClearedReferences(&gDvm.gcHeap->clearedReferences);
 
     percentFree = 100 - (size_t)(100.0f * (float)currAllocated / currFootprint);
     if (!spec->isConcurrent) {

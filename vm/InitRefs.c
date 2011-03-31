@@ -320,6 +320,11 @@ static bool initFieldOffsets(void) {
         { NULL, NULL, NULL }
     };
 
+    static struct FieldInfo infoFinalizerReference[] = {
+        { &gDvm.offJavaLangRefFinalizerReference_zombie, "zombie", "Ljava/lang/Object;" },
+        { NULL, NULL, NULL }
+    };
+
     static struct FieldInfo infoConstructor[] = {
         { &gDvm.offJavaLangReflectConstructor_slot,      "slot",           "I" },
         { &gDvm.offJavaLangReflectConstructor_declClass, "declaringClass", "Ljava/lang/Class;" },
@@ -357,6 +362,7 @@ static bool initFieldOffsets(void) {
         { "Ljava/lang/ThreadGroup;",                infoThreadGroup },
         { "Ljava/lang/Throwable;",                  infoThrowable },
         { "Ljava/lang/VMThread;",                   infoVMThread },
+        { "Ljava/lang/ref/FinalizerReference;", infoFinalizerReference },
         { "Ljava/lang/reflect/Constructor;",        infoConstructor },
         { "Ljava/lang/reflect/Field;",              infoField },
         { "Ljava/lang/reflect/Method;",             infoMethod },
@@ -468,6 +474,8 @@ static bool initDirectMethodReferences(void) {
           "Lorg/apache/harmony/dalvik/ddmc/DdmServer;", "dispatch", "(I[BII)Lorg/apache/harmony/dalvik/ddmc/Chunk;" },
         { &gDvm.methDalvikDdmcServer_broadcast,
           "Lorg/apache/harmony/dalvik/ddmc/DdmServer;", "broadcast", "(I)V" },
+        { &gDvm.methJavaLangRefReferenceQueueAdd,
+          "Ljava/lang/ref/ReferenceQueue;", "add", "(Ljava/lang/ref/Reference;)V" },
         { NULL, NULL, NULL, NULL }
     };
 
@@ -587,26 +595,16 @@ bool dvmFindRequiredClassesAndMembers(void) {
 
 /* (documented in header) */
 bool dvmFindReferenceMembers(ClassObject* classReference) {
-    if (gDvm.methJavaLangRefReference_enqueueInternal != NULL) {
-        LOGE("Attempt to set up class Reference more than once\n");
-        return false;
-    }
-
     if (strcmp(classReference->descriptor, "Ljava/lang/ref/Reference;") != 0) {
         LOGE("Attempt to set up the wrong class as Reference\n");
         return false;
     }
-
-    /* Note: enqueueInternal() is private and thus a direct method. */
-
     return initFieldOffset(classReference, &gDvm.offJavaLangRefReference_pendingNext,
-                "pendingNext", "Ljava/lang/Object;")
+                "pendingNext", "Ljava/lang/ref/Reference;")
         && initFieldOffset(classReference, &gDvm.offJavaLangRefReference_queue,
                 "queue", "Ljava/lang/ref/ReferenceQueue;")
         && initFieldOffset(classReference, &gDvm.offJavaLangRefReference_queueNext,
                 "queueNext", "Ljava/lang/ref/Reference;")
         && initFieldOffset(classReference, &gDvm.offJavaLangRefReference_referent,
-                "referent", "Ljava/lang/Object;")
-        && initDirectMethodReferenceByClass(&gDvm.methJavaLangRefReference_enqueueInternal,
-                classReference, "enqueueInternal", "()Z");
+                "referent", "Ljava/lang/Object;");
 }

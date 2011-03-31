@@ -1314,6 +1314,9 @@ int dvmStartup(int argc, const char* const argv[], bool ignoreUnrecognized,
     if (!dvmDebuggerStartup())
         goto fail;
 
+    if (!dvmGcStartupClasses())
+        goto fail;
+
     /*
      * Init for either zygote mode or non-zygote mode.  The key difference
      * is that we don't start any additional threads in Zygote mode.

@@ -20,7 +20,6 @@
 #include "alloc/HeapBitmapInlines.h"
 #include "alloc/HeapInternal.h"
 #include "alloc/HeapSource.h"
-#include "alloc/HeapWorker.h"
 #include "alloc/MarkSweep.h"
 #include "alloc/Visit.h"
 #include "alloc/VisitInlines.h"
@@ -342,8 +341,6 @@ static void verifyImmuneObjects()
  * - Primitive classes
  * - Special objects
  *   - gDvm.outOfMemoryObj
- * - Objects allocated with ALLOC_NO_GC
- * - Objects pending finalization (but not yet finalized)
  * - Objects in debugger object registry
  *
  * Don't need:
@@ -795,11 +792,7 @@ static void enqueueReference(Object *ref)
     assert(ref != NULL);
     assert(dvmGetFieldObject(ref, gDvm.offJavaLangRefReference_queue) != NULL);
     assert(dvmGetFieldObject(ref, gDvm.offJavaLangRefReference_queueNext) == NULL);
-    if (!dvmHeapAddRefToLargeTable(&gDvm.gcHeap->referenceOperations, ref)) {
-        LOGE_HEAP("enqueueReference(): no room for any more "
-                  "reference operations\n");
-        dvmAbort();
-    }
+    enqueuePendingReference(ref, &gDvm.gcHeap->clearedReferences);
 }
 
 /*
@@ -857,11 +850,9 @@ static void clearWhiteReferences(Object **list)
     GcMarkContext *ctx;
     Object *ref, *referent;
     size_t referentOffset;
-    bool doSignal;
 
     ctx = &gDvm.gcHeap->markContext;
     referentOffset = gDvm.offJavaLangRefReference_referent;
-    doSignal = false;
     while (*list != NULL) {
         ref = dequeuePendingReference(list);
         referent = dvmGetFieldObject(ref, referentOffset);
@@ -870,31 +861,23 @@ static void clearWhiteReferences(Object **list)
             clearReference(ref);
             if (isEnqueuable(ref)) {
                 enqueueReference(ref);
-                doSignal = true;
             }
         }
-    }
-    /*
-     * If we cleared a reference with a reference queue we must notify
-     * the heap worker to append the reference.
-     */
-    if (doSignal) {
-        dvmSignalHeapWorker(false);
     }
     assert(*list == NULL);
 }
 
 /*
  * Enqueues finalizer references with white referents.  White
- * referents are blackened, moved to the pendingNext field, and the
+ * referents are blackened, moved to the zombie field, and the
  * referent field is cleared.
  */
 static void enqueueFinalizerReferences(Object **list)
 {
     GcMarkContext *ctx = &gDvm.gcHeap->markContext;
     size_t referentOffset = gDvm.offJavaLangRefReference_referent;
-    size_t pendingNextOffset = gDvm.offJavaLangRefReference_pendingNext;
-    bool doSignal = false;
+    size_t zombieOffset = gDvm.offJavaLangRefFinalizerReference_zombie;
+    bool hasEnqueued = false;
     while (*list != NULL) {
         Object *ref = dequeuePendingReference(list);
         Object *referent = dvmGetFieldObject(ref, referentOffset);
@@ -902,15 +885,14 @@ static void enqueueFinalizerReferences(Object **list)
             markObject(referent, ctx);
             /* If the referent is non-null the reference must queuable. */
             assert(isEnqueuable(ref));
-            dvmSetFieldObject(ref, pendingNextOffset, referent);
+            dvmSetFieldObject(ref, zombieOffset, referent);
             clearReference(ref);
             enqueueReference(ref);
-            doSignal = true;
+            hasEnqueued = true;
         }
     }
-    if (doSignal) {
+    if (hasEnqueued) {
         processMarkStack(ctx);
-        dvmSignalHeapWorker(false);
     }
     assert(*list == NULL);
 }
@@ -928,8 +910,8 @@ void dvmSetFinalizable(Object *obj)
     assert(self != NULL);
     Method *meth = gDvm.methJavaLangRefFinalizerReferenceAdd;
     assert(meth != NULL);
-    JValue unused;
-    dvmCallMethod(self, meth, obj, &unused, obj);
+    JValue unusedResult;
+    dvmCallMethod(self, meth, NULL, &unusedResult, obj);
 }
 
 /*
@@ -980,6 +962,24 @@ void dvmHeapProcessReferences(Object **softReferences, bool clearSoftRefs,
     assert(*weakReferences == NULL);
     assert(*finalizerReferences == NULL);
     assert(*phantomReferences == NULL);
+}
+
+/*
+ * Pushes a list of cleared references out to the managed heap.
+ */
+void dvmEnqueueClearedReferences(Object **cleared)
+{
+    assert(cleared != NULL);
+    if (*cleared != NULL) {
+        Thread *self = dvmThreadSelf();
+        assert(self != NULL);
+        Method *meth = gDvm.methJavaLangRefReferenceQueueAdd;
+        assert(meth != NULL);
+        JValue unused;
+        Object *reference = *cleared;
+        dvmCallMethod(self, meth, NULL, &unused, reference);
+        *cleared = NULL;
+    }
 }
 
 void dvmHeapFinishMarkStep()
