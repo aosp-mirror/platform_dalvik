@@ -583,8 +583,8 @@ static void checkString(JNIEnv* env, jstring jstr, const char* func)
          * we're doing it again over in checkObject().
          */
         if (dvmIsValidObject(obj))
-            LOGW("JNI WARNING: jstring %p points to non-string object (%s)",
-                jstr, func);
+            LOGW("JNI WARNING: jstring %p points to object of type %s (%s)",
+                jstr, obj->clazz->descriptor, func);
         else
             LOGW("JNI WARNING: jstring %p is not a valid object (%s)", jstr,
                 func);
