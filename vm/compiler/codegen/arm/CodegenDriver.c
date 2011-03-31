@@ -1636,7 +1636,7 @@ static bool handleFmt21c_Fmt31c_Fmt41c(CompilationUnit *cUnit, MIR *mir)
             }
 
             isVolatile = (opcode == OP_SGET_VOLATILE) ||
-                         (opcode == OP_SGET_VOLATILE_VOLATILE) ||
+                         (opcode == OP_SGET_VOLATILE_JUMBO) ||
                          (opcode == OP_SGET_OBJECT_VOLATILE) ||
                          (opcode == OP_SGET_OBJECT_VOLATILE_JUMBO) ||
                          dvmIsVolatileField((Field *) fieldPtr);
