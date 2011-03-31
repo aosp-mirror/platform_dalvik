@@ -20,7 +20,6 @@
 #include "alloc/Heap.h"
 #include "alloc/HeapInternal.h"
 #include "alloc/HeapSource.h"
-#include "alloc/HeapWorker.h"
 
 /*
  * Initialize the GC universe.
@@ -41,9 +40,6 @@ bool dvmGcStartup(void)
  */
 bool dvmGcStartupAfterZygote(void)
 {
-    if (!dvmHeapWorkerStartup()) {
-        return false;
-    }
     return dvmHeapStartupAfterZygote();
 }
 
@@ -52,7 +48,6 @@ bool dvmGcStartupAfterZygote(void)
  */
 void dvmGcThreadShutdown(void)
 {
-    dvmHeapWorkerShutdown();
     dvmHeapThreadShutdown();
 }
 
@@ -71,6 +66,44 @@ void dvmGcShutdown(void)
 bool dvmGcPreZygoteFork(void)
 {
     return dvmHeapSourceStartupBeforeFork();
+}
+
+bool dvmGcStartupClasses(void)
+{
+    {
+        const char *klassName = "Ljava/lang/ref/ReferenceQueueThread;";
+        ClassObject *klass = dvmFindSystemClass(klassName);
+        if (klass == NULL) {
+            return false;
+        }
+        const char *methodName = "startReferenceQueue";
+        Method *method = dvmFindDirectMethodByDescriptor(klass, methodName, "()V");
+        if (method == NULL) {
+            return false;
+        }
+        Thread *self = dvmThreadSelf();
+        assert(self != NULL);
+        JValue unusedResult;
+        dvmCallMethod(self, method, NULL, &unusedResult);
+    }
+    {
+        const char *klassName = "Ljava/lang/FinalizerThread;";
+        ClassObject *klass = dvmFindSystemClass(klassName);
+        if (klass == NULL) {
+            return false;
+        }
+        const char *methodName = "startFinalizer";
+        Method *method = dvmFindDirectMethodByDescriptor(klass, methodName, "()V");
+        if (method == NULL) {
+            return false;
+        }
+        Thread *self = dvmThreadSelf();
+        assert(self != NULL);
+        JValue unusedResult;
+        dvmCallMethod(self, method, NULL, &unusedResult);
+    }
+
+    return true;
 }
 
 /*

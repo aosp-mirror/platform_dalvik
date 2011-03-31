@@ -3467,13 +3467,11 @@ void dvmDumpAllThreadsEx(const DebugOutputTarget* target, bool grabLock)
 
 #ifdef HAVE_ANDROID_OS
     dvmPrintDebugMessage(target,
-        "(mutexes: tll=%x tsl=%x tscl=%x ghl=%x hwl=%x hwll=%x)\n",
+        "(mutexes: tll=%x tsl=%x tscl=%x ghl=%x)\n",
         gDvm.threadListLock.value,
         gDvm._threadSuspendLock.value,
         gDvm.threadSuspendCountLock.value,
-        gDvm.gcHeapLock.value,
-        gDvm.heapWorkerLock.value,
-        gDvm.heapWorkerListLock.value);
+        gDvm.gcHeapLock.value);
 #endif
 
     if (grabLock)

@@ -120,8 +120,6 @@ LOCAL_SRC_FILES := \
 	alloc/CardTable.c \
 	alloc/HeapBitmap.c.arm \
 	alloc/HeapDebug.c \
-	alloc/HeapTable.c \
-	alloc/HeapWorker.c \
 	alloc/Heap.c.arm \
 	alloc/DdmHeap.c \
 	alloc/Verify.c \

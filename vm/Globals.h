@@ -367,11 +367,14 @@ struct DvmGlobals {
     int         offJavaLangRefReference_queueNext;
     int         offJavaLangRefReference_pendingNext;
 
-    /* method pointers - java.lang.ref.Reference */
-    Method*     methJavaLangRefReference_enqueueInternal;
+    /* field offsets - java.lang.ref.FinalizerReference */
+    int offJavaLangRefFinalizerReference_zombie;
 
-    /* more method pointers - java.lang.ref.FinalizerReference */
-    Method*     methJavaLangRefFinalizerReferenceAdd;
+    /* method pointers - java.lang.ref.ReferenceQueue */
+    Method* methJavaLangRefReferenceQueueAdd;
+
+    /* method pointers - java.lang.ref.FinalizerReference */
+    Method* methJavaLangRefFinalizerReferenceAdd;
 
     /* constructor method pointers; no vtable involved, so use Method* */
     Method*     methJavaLangStackTraceElement_init;
@@ -580,19 +583,6 @@ struct DvmGlobals {
      * Bootstrap class loader linear allocator.
      */
     LinearAllocHdr* pBootLoaderAlloc;
-
-
-    /*
-     * Heap worker thread.
-     */
-    bool            heapWorkerInitialized;
-    bool            heapWorkerReady;
-    bool            haltHeapWorker;
-    pthread_t       heapWorkerHandle;
-    pthread_mutex_t heapWorkerLock;
-    pthread_cond_t  heapWorkerCond;
-    pthread_cond_t  heapWorkerIdleCond;
-    pthread_mutex_t heapWorkerListLock;
 
     /*
      * Compute some stats on loaded classes.

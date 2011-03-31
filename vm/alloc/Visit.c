@@ -83,20 +83,6 @@ static void visitIndirectRefTable(RootVisitor *visitor, IndirectRefTable *table,
 }
 
 /*
- * Visits a large heap reference table.  These objects are list heads.
- * As such, it is valid for table to be NULL.
- */
-static void visitLargeHeapRefTable(RootVisitor *visitor,
-                                   LargeHeapRefTable *table,
-                                   RootType type, void *arg)
-{
-    assert(visitor != NULL);
-    for (; table != NULL; table = table->next) {
-        visitReferenceTable(visitor, &table->refs, 0, type, arg);
-    }
-}
-
-/*
  * Visits all stack slots except those belonging to native method
  * arguments.
  */
@@ -250,7 +236,6 @@ void dvmVisitRoots(RootVisitor *visitor, void *arg)
     dvmLockMutex(&gDvm.jniPinRefLock);
     visitReferenceTable(visitor, &gDvm.jniPinRefTable, 0, ROOT_VM_INTERNAL, arg);
     dvmUnlockMutex(&gDvm.jniPinRefLock);
-    visitLargeHeapRefTable(visitor, gDvm.gcHeap->referenceOperations, ROOT_REFERENCE_CLEANUP, arg);
     visitThreads(visitor, arg);
     (*visitor)(&gDvm.outOfMemoryObj, 0, ROOT_VM_INTERNAL, arg);
     (*visitor)(&gDvm.internalErrorObj, 0, ROOT_VM_INTERNAL, arg);
