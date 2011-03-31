@@ -1607,9 +1607,11 @@ static bool handleFmt21c_Fmt31c_Fmt41c(CompilationUnit *cUnit, MIR *mir)
         }
         case OP_SGET:
         case OP_SGET_VOLATILE:
+        case OP_SGET_VOLATILE_JUMBO:
         case OP_SGET_JUMBO:
         case OP_SGET_OBJECT:
         case OP_SGET_OBJECT_VOLATILE:
+        case OP_SGET_OBJECT_VOLATILE_JUMBO:
         case OP_SGET_OBJECT_JUMBO:
         case OP_SGET_BOOLEAN:
         case OP_SGET_BOOLEAN_JUMBO:
@@ -1626,14 +1628,17 @@ static bool handleFmt21c_Fmt31c_Fmt41c(CompilationUnit *cUnit, MIR *mir)
                 mir->meta.calleeMethod : cUnit->method;
             void *fieldPtr = (void*)
               (method->clazz->pDvmDex->pResFields[mir->dalvikInsn.vB]);
+            Opcode opcode = mir->dalvikInsn.opcode;
 
             if (fieldPtr == NULL) {
                 LOGE("Unexpected null static field");
                 dvmAbort();
             }
 
-            isVolatile = (mir->dalvikInsn.opcode == OP_SGET_VOLATILE) ||
-                         (mir->dalvikInsn.opcode == OP_SGET_OBJECT_VOLATILE) ||
+            isVolatile = (opcode == OP_SGET_VOLATILE) ||
+                         (opcode == OP_SGET_VOLATILE_VOLATILE) ||
+                         (opcode == OP_SGET_OBJECT_VOLATILE) ||
+                         (opcode == OP_SGET_OBJECT_VOLATILE_JUMBO) ||
                          dvmIsVolatileField((Field *) fieldPtr);
 
             rlDest = dvmCompilerGetDest(cUnit, mir, 0);
@@ -1677,9 +1682,11 @@ static bool handleFmt21c_Fmt31c_Fmt41c(CompilationUnit *cUnit, MIR *mir)
         }
         case OP_SPUT:
         case OP_SPUT_VOLATILE:
+        case OP_SPUT_VOLATILE_JUMBO:
         case OP_SPUT_JUMBO:
         case OP_SPUT_OBJECT:
         case OP_SPUT_OBJECT_VOLATILE:
+        case OP_SPUT_OBJECT_VOLATILE_JUMBO:
         case OP_SPUT_OBJECT_JUMBO:
         case OP_SPUT_BOOLEAN:
         case OP_SPUT_BOOLEAN_JUMBO:
@@ -1698,14 +1705,18 @@ static bool handleFmt21c_Fmt31c_Fmt41c(CompilationUnit *cUnit, MIR *mir)
                 mir->meta.calleeMethod : cUnit->method;
             void *fieldPtr = (void*)
               (method->clazz->pDvmDex->pResFields[mir->dalvikInsn.vB]);
+            Opcode opcode = mir->dalvikInsn.opcode;
 
-            isVolatile = (mir->dalvikInsn.opcode == OP_SPUT_VOLATILE) ||
-                         (mir->dalvikInsn.opcode == OP_SPUT_OBJECT_VOLATILE) ||
+            isVolatile = (opcode == OP_SPUT_VOLATILE) ||
+                         (opcode == OP_SPUT_VOLATILE_JUMBO) ||
+                         (opcode == OP_SPUT_OBJECT_VOLATILE) ||
+                         (opcode == OP_SPUT_OBJECT_VOLATILE_JUMBO) ||
                          dvmIsVolatileField((Field *) fieldPtr);
 
-            isSputObject = (mir->dalvikInsn.opcode == OP_SPUT_OBJECT) ||
-                           (mir->dalvikInsn.opcode == OP_SPUT_OBJECT_JUMBO) ||
-                           (mir->dalvikInsn.opcode == OP_SPUT_OBJECT_VOLATILE);
+            isSputObject = (opcode == OP_SPUT_OBJECT) ||
+                           (opcode == OP_SPUT_OBJECT_JUMBO) ||
+                           (opcode == OP_SPUT_OBJECT_VOLATILE) ||
+                           (opcode == OP_SPUT_OBJECT_VOLATILE_JUMBO);
 
             if (fieldPtr == NULL) {
                 LOGE("Unexpected null static field");
@@ -1856,7 +1867,9 @@ static bool handleFmt21c_Fmt31c_Fmt41c(CompilationUnit *cUnit, MIR *mir)
             break;
         }
         case OP_SGET_WIDE_VOLATILE:
+        case OP_SGET_WIDE_VOLATILE_JUMBO:
         case OP_SPUT_WIDE_VOLATILE:
+        case OP_SPUT_WIDE_VOLATILE_JUMBO:
             genInterpSingleStep(cUnit, mir);
             break;
         default:
@@ -2367,15 +2380,19 @@ static bool handleFmt22c_Fmt52c(CompilationUnit *cUnit, MIR *mir)
          * Wide volatiles currently handled via single step.
          * Add them here if generating in-line code.
          *     case OP_IGET_WIDE_VOLATILE:
+         *     case OP_IGET_WIDE_VOLATILE_JUMBO:
          *     case OP_IPUT_WIDE_VOLATILE:
+         *     case OP_IPUT_WIDE_VOLATILE_JUMBO:
          */
         case OP_IGET:
         case OP_IGET_VOLATILE:
+        case OP_IGET_VOLATILE_JUMBO:
         case OP_IGET_JUMBO:
         case OP_IGET_WIDE:
         case OP_IGET_WIDE_JUMBO:
         case OP_IGET_OBJECT:
         case OP_IGET_OBJECT_VOLATILE:
+        case OP_IGET_OBJECT_VOLATILE_JUMBO:
         case OP_IGET_OBJECT_JUMBO:
         case OP_IGET_BOOLEAN:
         case OP_IGET_BOOLEAN_JUMBO:
@@ -2387,11 +2404,13 @@ static bool handleFmt22c_Fmt52c(CompilationUnit *cUnit, MIR *mir)
         case OP_IGET_SHORT_JUMBO:
         case OP_IPUT:
         case OP_IPUT_VOLATILE:
+        case OP_IPUT_VOLATILE_JUMBO:
         case OP_IPUT_JUMBO:
         case OP_IPUT_WIDE:
         case OP_IPUT_WIDE_JUMBO:
         case OP_IPUT_OBJECT:
         case OP_IPUT_OBJECT_VOLATILE:
+        case OP_IPUT_OBJECT_VOLATILE_JUMBO:
         case OP_IPUT_OBJECT_JUMBO:
         case OP_IPUT_BOOLEAN:
         case OP_IPUT_BOOLEAN_JUMBO:
@@ -2514,7 +2533,9 @@ static bool handleFmt22c_Fmt52c(CompilationUnit *cUnit, MIR *mir)
             genIGetWide(cUnit, mir, fieldOffset);
             break;
         case OP_IGET_VOLATILE:
+        case OP_IGET_VOLATILE_JUMBO:
         case OP_IGET_OBJECT_VOLATILE:
+        case OP_IGET_OBJECT_VOLATILE_JUMBO:
             isVolatile = true;
             // NOTE: intentional fallthrough
         case OP_IGET:
@@ -2548,7 +2569,9 @@ static bool handleFmt22c_Fmt52c(CompilationUnit *cUnit, MIR *mir)
             genIPut(cUnit, mir, kWord, fieldOffset, false, isVolatile);
             break;
         case OP_IPUT_VOLATILE:
+        case OP_IPUT_VOLATILE_JUMBO:
         case OP_IPUT_OBJECT_VOLATILE:
+        case OP_IPUT_OBJECT_VOLATILE_JUMBO:
             isVolatile = true;
             // NOTE: intentional fallthrough
         case OP_IPUT_OBJECT:
@@ -2556,7 +2579,9 @@ static bool handleFmt22c_Fmt52c(CompilationUnit *cUnit, MIR *mir)
             genIPut(cUnit, mir, kWord, fieldOffset, true, isVolatile);
             break;
         case OP_IGET_WIDE_VOLATILE:
+        case OP_IGET_WIDE_VOLATILE_JUMBO:
         case OP_IPUT_WIDE_VOLATILE:
+        case OP_IPUT_WIDE_VOLATILE_JUMBO:
             genInterpSingleStep(cUnit, mir);
             break;
         default:
@@ -3335,10 +3360,8 @@ static bool handleFmt35c_3rc_5rc(CompilationUnit *cUnit, MIR *mir,
             genTrap(cUnit, mir->offset, pcrLabel);
             break;
         }
-        case OP_INVOKE_OBJECT_INIT_RANGE: {
-            genInterpSingleStep(cUnit, mir);
-            break;
-        }
+        case OP_INVOKE_OBJECT_INIT_JUMBO:
+        case OP_INVOKE_OBJECT_INIT_RANGE:
         case OP_FILLED_NEW_ARRAY:
         case OP_FILLED_NEW_ARRAY_RANGE:
         case OP_FILLED_NEW_ARRAY_JUMBO: {
