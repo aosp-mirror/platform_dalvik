@@ -2272,13 +2272,25 @@ void dvmJitInstallClassObjectPointers(CompilationUnit *cUnit, char *codeAddress)
     int numClassPointers = *(int *)classPointerP++;
     intptr_t *startClassPointerP = classPointerP;
 
-    UNPROTECT_CODE_CACHE(startClassPointerP,
-                         numClassPointers * sizeof(intptr_t));
     /*
      * Change the thread state to VM_RUNNING so that GC won't be happening
-     * when the assembler looks up the class pointers.
+     * when the assembler looks up the class pointers. May suspend the current
+     * thread if there is a pending request before the state is actually
+     * changed to RUNNING.
      */
     dvmChangeStatus(gDvmJit.compilerThread, THREAD_RUNNING);
+
+    /*
+     * Unprotecting the code cache will need to acquire the code cache
+     * protection lock first. Doing so after the state change may increase the
+     * time spent in the RUNNING state (which may delay the next GC request
+     * should there be contention on codeCacheProtectionLock). In practice
+     * this is probably not going to happen often since a GC is just served.
+     * More importantly, acquiring the lock before the state change will
+     * cause deadlock (b/4192964).
+     */
+    UNPROTECT_CODE_CACHE(startClassPointerP,
+                         numClassPointers * sizeof(intptr_t));
 #if defined(WITH_JIT_TUNING)
     u8 startTime = dvmGetRelativeTimeUsec();
 #endif
@@ -2305,12 +2317,12 @@ void dvmJitInstallClassObjectPointers(CompilationUnit *cUnit, char *codeAddress)
         gDvmJit.maxCompilerThreadBlockGCTime = blockTime;
     gDvmJit.numCompilerThreadBlockGC++;
 #endif
-    /* Change the thread state back to VMWAIT */
-    dvmChangeStatus(gDvmJit.compilerThread, THREAD_VMWAIT);
-
     UPDATE_CODE_CACHE_PATCHES();
 
     PROTECT_CODE_CACHE(startClassPointerP, numClassPointers * sizeof(intptr_t));
+
+    /* Change the thread state back to VMWAIT */
+    dvmChangeStatus(gDvmJit.compilerThread, THREAD_VMWAIT);
 }
 
 #if defined(WITH_SELF_VERIFICATION)
