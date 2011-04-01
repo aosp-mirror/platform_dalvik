@@ -1,4 +1,5 @@
 tests beginning
+Got expected huge-array OOM
 testOomeLarge beginning
 testOomeLarge succeeded
 testOomeSmall beginning

@@ -52,6 +52,9 @@ public class FirstFitLocalCombiningAllocator extends RegisterAllocator {
     /** list of invoke-range instructions seen in this method */
     private final ArrayList<NormalSsaInsn> invokeRangeInsns;
 
+    /** list of phi instructions seen in this method */
+    private final ArrayList<PhiInsn> phiInsns;
+
     /** indexed by SSA reg; the set of SSA regs we've mapped */
     private final BitSet ssaRegsMapped;
 
@@ -104,6 +107,7 @@ public class FirstFitLocalCombiningAllocator extends RegisterAllocator {
         localVariables = new TreeMap<LocalItem, ArrayList<RegisterSpec>>();
         moveResultPseudoInsns = new ArrayList<NormalSsaInsn>();
         invokeRangeInsns = new ArrayList<NormalSsaInsn>();
+        phiInsns = new ArrayList<PhiInsn>();
     }
 
     /** {@inheritDoc} */
@@ -138,6 +142,9 @@ public class FirstFitLocalCombiningAllocator extends RegisterAllocator {
 
         if (DEBUG) System.out.println("--->Mapping check-cast results");
         handleCheckCastResults();
+
+        if (DEBUG) System.out.println("--->Mapping phis");
+        handlePhiInsns();
 
         if (DEBUG) System.out.println("--->Mapping others");
         handleNormalUnassociated();
@@ -232,9 +239,9 @@ public class FirstFitLocalCombiningAllocator extends RegisterAllocator {
      */
     private void handleLocalAssociatedOther() {
         for (ArrayList<RegisterSpec> specs : localVariables.values()) {
-            int ropReg = 0;
+            int ropReg = paramRangeEnd;
 
-            boolean done;
+            boolean done = false;
             do {
                 int maxCategory = 1;
 
@@ -250,10 +257,11 @@ public class FirstFitLocalCombiningAllocator extends RegisterAllocator {
                 }
 
                 ropReg = findRopRegForLocal(ropReg, maxCategory);
+                if (canMapRegs(specs, ropReg)) {
+                    done = tryMapRegs(specs, ropReg, maxCategory, true);
+                }
 
-                done = tryMapRegs(specs, ropReg, maxCategory, true);
-
-                // Increment for next call to findNext.
+                // Increment for next call to findRopRegForLocal.
                 ropReg++;
             } while (!done);
         }
@@ -361,10 +369,6 @@ public class FirstFitLocalCombiningAllocator extends RegisterAllocator {
      * @return {@code >= 0;} start of available register range.
      */
     private int findNextUnreservedRopReg(int startReg, int width) {
-        if (minimizeRegisters && !isThisPointerReg(startReg)) {
-            return startReg;
-        }
-
         int reg;
 
         reg = reservedRopRegs.nextClearBit(startReg);
@@ -394,10 +398,6 @@ public class FirstFitLocalCombiningAllocator extends RegisterAllocator {
      * @return {@code >= 0;} start of available register range.
      */
     private int findRopRegForLocal(int startReg, int width) {
-        if (minimizeRegisters && !isThisPointerReg(startReg)) {
-            return startReg;
-        }
-
         int reg;
 
         reg = usedRopRegs.nextClearBit(startReg);
@@ -449,8 +449,9 @@ public class FirstFitLocalCombiningAllocator extends RegisterAllocator {
     }
 
     /**
-     * Handles check cast results to reuse the same source register if
-     * possible.
+     * Handles check cast results to reuse the same source register.
+     * Inserts a move if it can't map the same register to both and the
+     * check cast is not caught.
      */
     private void handleCheckCastResults() {
         for (NormalSsaInsn insn : moveResultPseudoInsns) {
@@ -479,28 +480,59 @@ public class FirstFitLocalCombiningAllocator extends RegisterAllocator {
             RegisterSpec checkRegSpec = checkCastInsn.getSources().get(0);
             int checkReg = checkRegSpec.getReg();
 
-            // Assume none of the register is mapped yet
-            int ropReg = 0;
-
             /**
              * See if either register is already mapped. Most likely the move
              * result will be mapped already since the cast result is stored
              * in a local variable.
              */
-            if (ssaRegsMapped.get(moveReg)) {
-                ropReg = mapper.oldToNew(moveReg);
-            } else if (ssaRegsMapped.get(checkReg)) {
-                ropReg = mapper.oldToNew(checkReg);
-            }
-
-            ArrayList<RegisterSpec> ssaRegs = new ArrayList<RegisterSpec>(2);
-            ssaRegs.add(moveRegSpec);
-            ssaRegs.add(checkRegSpec);
             int category = checkRegSpec.getCategory();
-
-            while (!tryMapRegs(ssaRegs, ropReg, category, false)) {
-                ropReg = findNextUnreservedRopReg(ropReg + 1, category);
+            boolean moveMapped = ssaRegsMapped.get(moveReg);
+            boolean checkMapped = ssaRegsMapped.get(checkReg);
+            if (moveMapped & !checkMapped) {
+                int moveRopReg = mapper.oldToNew(moveReg);
+                checkMapped = tryMapReg(checkRegSpec, moveRopReg, category);
             }
+            if (checkMapped & !moveMapped) {
+                int checkRopReg = mapper.oldToNew(checkReg);
+                moveMapped = tryMapReg(moveRegSpec, checkRopReg, category);
+            }
+
+            // Map any unmapped registers to anything available
+            if (!moveMapped || !checkMapped) {
+                int ropReg = findNextUnreservedRopReg(paramRangeEnd, category);
+                ArrayList<RegisterSpec> ssaRegs =
+                    new ArrayList<RegisterSpec>(2);
+                ssaRegs.add(moveRegSpec);
+                ssaRegs.add(checkRegSpec);
+
+                while (!tryMapRegs(ssaRegs, ropReg, category, false)) {
+                    ropReg = findNextUnreservedRopReg(ropReg + 1, category);
+                }
+            }
+
+            /*
+             * If source and result have a different mapping, insert a move so
+             * they can have the same mapping. Don't do this if the check cast
+             * is caught, since it will overwrite a potentially live value.
+             */
+            boolean hasExceptionHandlers =
+                checkCastInsn.getOriginalRopInsn().getCatches().size() != 0;
+            int moveRopReg = mapper.oldToNew(moveReg);
+            int checkRopReg = mapper.oldToNew(checkReg);
+            if (moveRopReg != checkRopReg && !hasExceptionHandlers) {
+                ((NormalSsaInsn) checkCastInsn).changeOneSource(0,
+                        insertMoveBefore(checkCastInsn, checkRegSpec));
+                addMapping(checkCastInsn.getSources().get(0), moveRopReg);
+            }
+        }
+    }
+
+    /**
+    * Handles all phi instructions, trying to map them to a common register.
+    */
+    private void handlePhiInsns() {
+        for (PhiInsn insn : phiInsns) {
+            processPhiInsn(insn);
         }
     }
 
@@ -522,13 +554,31 @@ public class FirstFitLocalCombiningAllocator extends RegisterAllocator {
 
             int category = ssaSpec.getCategory();
             // Find a rop reg that does not interfere
-            int ropReg = findNextUnreservedRopReg(0, category);
+            int ropReg = findNextUnreservedRopReg(paramRangeEnd, category);
             while (!canMapReg(ssaSpec, ropReg)) {
                 ropReg = findNextUnreservedRopReg(ropReg + 1, category);
             }
 
             addMapping(ssaSpec, ropReg);
         }
+    }
+
+    /**
+     * Checks to see if a list of SSA registers can all be mapped into
+     * the same rop reg. Ignores registers that have already been mapped,
+     * and checks the interference graph and ensures the range does not
+     * cross the parameter range.
+     *
+     * @param specs {@code non-null;} SSA registers to check
+     * @param ropReg {@code >=0;} rop register to check mapping to
+     * @return {@code true} if all unmapped registers can be mapped
+     */
+    private boolean canMapRegs(ArrayList<RegisterSpec> specs, int ropReg) {
+        for (RegisterSpec spec : specs) {
+            if (ssaRegsMapped.get(spec.getReg())) continue;
+            if (!canMapReg(spec, ropReg)) return false;
+        }
+        return true;
     }
 
     /**
@@ -623,6 +673,8 @@ public class FirstFitLocalCombiningAllocator extends RegisterAllocator {
                             insn.getSources())) {
                         invokeRangeInsns.add((NormalSsaInsn) insn);
                     }
+                } else if (insn instanceof PhiInsn) {
+                    phiInsns.add((PhiInsn) insn);
                 }
 
             }
@@ -830,7 +882,7 @@ public class FirstFitLocalCombiningAllocator extends RegisterAllocator {
      */
     private int findAnyFittingRange(NormalSsaInsn insn, int rangeLength,
             int[] categoriesForIndex, BitSet outMovesRequired) {
-        int rangeStart = 0;
+        int rangeStart = paramRangeEnd;
         while (true) {
             rangeStart = findNextUnreservedRopReg(rangeStart, rangeLength);
             int fitWidth
@@ -954,5 +1006,132 @@ public class FirstFitLocalCombiningAllocator extends RegisterAllocator {
         }
 
         return null;
+    }
+
+    /**
+     * Attempts to map the sources and result of a phi to a common register.
+     * Will try existing mappings first, from most to least common. If none
+     * of the registers have mappings yet, a new mapping is created.
+     */
+    private void processPhiInsn(PhiInsn insn) {
+        RegisterSpec result = insn.getResult();
+        int resultReg = result.getReg();
+        int category = result.getCategory();
+
+        RegisterSpecList sources = insn.getSources();
+        int sourcesSize = sources.size();
+
+        // List of phi sources / result that need mapping
+        ArrayList<RegisterSpec> ssaRegs = new ArrayList<RegisterSpec>();
+
+        // Track how many times a particular mapping is found
+        Multiset mapSet = new Multiset(sourcesSize + 1);
+
+        /*
+         * If the result of the phi has an existing mapping, get it.
+         * Otherwise, add it to the list of regs that need mapping.
+         */
+        if (ssaRegsMapped.get(resultReg)) {
+            mapSet.add(mapper.oldToNew(resultReg));
+        } else {
+            ssaRegs.add(result);
+        }
+
+        for (int i = 0; i < sourcesSize; i++) {
+            RegisterSpec source = sources.get(i);
+            int sourceReg = source.getReg();
+
+            /*
+             * If a source of the phi has an existing mapping, get it.
+             * Otherwise, add it to the list of regs that need mapping.
+             */
+            if (ssaRegsMapped.get(sourceReg)) {
+                mapSet.add(mapper.oldToNew(sourceReg));
+            } else {
+                ssaRegs.add(source);
+            }
+        }
+
+        // Try all existing mappings, with the most common ones first
+        for (int i = 0; i < mapSet.getSize(); i++) {
+            int maxReg = mapSet.getAndRemoveHighestCount();
+            tryMapRegs(ssaRegs, maxReg, category, false);
+        }
+
+        // Map any remaining unmapped regs with whatever fits
+        int mapReg = findNextUnreservedRopReg(paramRangeEnd, category);
+        while (!tryMapRegs(ssaRegs, mapReg, category, false)) {
+            mapReg = findNextUnreservedRopReg(mapReg + 1, category);
+        }
+    }
+
+    // A set that tracks how often elements are added to it.
+    private static class Multiset {
+        private final int[] reg;
+        private final int[] count;
+        private int size;
+
+        /**
+         * Constructs an instance.
+         *
+         * @param maxSize the maximum distinct elements the set may have
+         */
+        public Multiset(int maxSize) {
+            reg = new int[maxSize];
+            count = new int[maxSize];
+            size = 0;
+        }
+
+        /**
+         * Adds an element to the set.
+         *
+         * @param element element to add
+         */
+        public void add(int element) {
+            for (int i = 0; i < size; i++) {
+                if (reg[i] == element) {
+                    count[i]++;
+                    return;
+                }
+            }
+
+            reg[size] = element;
+            count[size] = 1;
+            size++;
+        }
+
+        /**
+         * Searches the set for the element that has been added the most.
+         * In the case of a tie, the element that was added first is returned.
+         * Then, it clears the count on that element. The size of the set
+         * remains unchanged.
+         *
+         * @return element with the highest count
+         */
+        public int getAndRemoveHighestCount() {
+            int maxIndex = -1;
+            int maxReg = -1;
+            int maxCount = 0;
+
+            for (int i = 0; i < size; i++) {
+                if (maxCount < count[i]) {
+                    maxIndex = i;
+                    maxReg = reg[i];
+                    maxCount = count[i];
+                }
+            }
+
+            count[maxIndex] = 0;
+            return maxReg;
+        }
+
+        /**
+         * Gets the number of distinct elements in the set.
+         *
+         * @return size of the set
+         */
+        public int getSize() {
+            return size;
+        }
     }
 }

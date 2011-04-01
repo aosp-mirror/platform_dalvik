@@ -8,7 +8,7 @@
  * next instruction.  Here, these are subroutines that return to the caller.
  */
 
-GOTO_TARGET(filledNewArray, bool methodCallRange)
+GOTO_TARGET(filledNewArray, bool methodCallRange, bool jumboFormat)
     {
         ClassObject* arrayClass;
         ArrayObject* newArray;
@@ -19,19 +19,28 @@ GOTO_TARGET(filledNewArray, bool methodCallRange)
 
         EXPORT_PC();
 
-        ref = FETCH(1);             /* class ref */
-        vdst = FETCH(2);            /* first 4 regs -or- range base */
-
-        if (methodCallRange) {
-            vsrc1 = INST_AA(inst);  /* #of elements */
-            arg5 = -1;              /* silence compiler warning */
-            ILOGV("|filled-new-array-range args=%d @0x%04x {regs=v%d-v%d}",
+        if (jumboFormat) {
+            ref = FETCH(1) | (u4)FETCH(2) << 16;  /* class ref */
+            vsrc1 = FETCH(3);                     /* #of elements */
+            vdst = FETCH(4);                      /* range base */
+            arg5 = -1;                            /* silence compiler warning */
+            ILOGV("|filled-new-array/jumbo args=%d @0x%08x {regs=v%d-v%d}",
                 vsrc1, ref, vdst, vdst+vsrc1-1);
         } else {
-            arg5 = INST_A(inst);
-            vsrc1 = INST_B(inst);   /* #of elements */
-            ILOGV("|filled-new-array args=%d @0x%04x {regs=0x%04x %x}",
-                vsrc1, ref, vdst, arg5);
+            ref = FETCH(1);             /* class ref */
+            vdst = FETCH(2);            /* first 4 regs -or- range base */
+
+            if (methodCallRange) {
+                vsrc1 = INST_AA(inst);  /* #of elements */
+                arg5 = -1;              /* silence compiler warning */
+                ILOGV("|filled-new-array-range args=%d @0x%04x {regs=v%d-v%d}",
+                    vsrc1, ref, vdst, vdst+vsrc1-1);
+            } else {
+                arg5 = INST_A(inst);
+                vsrc1 = INST_B(inst);   /* #of elements */
+                ILOGV("|filled-new-array args=%d @0x%04x {regs=0x%04x %x}",
+                   vsrc1, ref, vdst, arg5);
+            }
         }
 
         /*
@@ -45,7 +54,7 @@ GOTO_TARGET(filledNewArray, bool methodCallRange)
         }
         /*
         if (!dvmIsArrayClass(arrayClass)) {
-            dvmThrowException("Ljava/lang/RuntimeError;",
+            dvmThrowRuntimeException(
                 "filled-new-array needs array class");
             GOTO_exceptionThrown();
         }
@@ -61,13 +70,12 @@ GOTO_TARGET(filledNewArray, bool methodCallRange)
         typeCh = arrayClass->descriptor[1];
         if (typeCh == 'D' || typeCh == 'J') {
             /* category 2 primitives not allowed */
-            dvmThrowException("Ljava/lang/RuntimeError;",
-                "bad filled array req");
+            dvmThrowRuntimeException("bad filled array req");
             GOTO_exceptionThrown();
         } else if (typeCh != 'L' && typeCh != '[' && typeCh != 'I') {
             /* TODO: requires multiple "fill in" loops with different widths */
             LOGE("non-int primitives not implemented\n");
-            dvmThrowException("Ljava/lang/InternalError;",
+            dvmThrowInternalError(
                 "filled-new-array not implemented for anything but 'int'");
             GOTO_exceptionThrown();
         }
@@ -100,35 +108,49 @@ GOTO_TARGET(filledNewArray, bool methodCallRange)
 
         retval.l = newArray;
     }
-    FINISH(3);
+    if (jumboFormat) {
+        FINISH(5);
+    } else {
+        FINISH(3);
+    }
 GOTO_TARGET_END
 
 
-GOTO_TARGET(invokeVirtual, bool methodCallRange)
+GOTO_TARGET(invokeVirtual, bool methodCallRange, bool jumboFormat)
     {
         Method* baseMethod;
         Object* thisPtr;
 
         EXPORT_PC();
 
-        vsrc1 = INST_AA(inst);      /* AA (count) or BA (count + arg 5) */
-        ref = FETCH(1);             /* method ref */
-        vdst = FETCH(2);            /* 4 regs -or- first reg */
-
-        /*
-         * The object against which we are executing a method is always
-         * in the first argument.
-         */
-        if (methodCallRange) {
-            assert(vsrc1 > 0);
-            ILOGV("|invoke-virtual-range args=%d @0x%04x {regs=v%d-v%d}",
+        if (jumboFormat) {
+            ref = FETCH(1) | (u4)FETCH(2) << 16;  /* method ref */
+            vsrc1 = FETCH(3);                     /* count */
+            vdst = FETCH(4);                      /* first reg */
+            ADJUST_PC(2);     /* advance pc partially to make returns easier */
+            ILOGV("|invoke-virtual/jumbo args=%d @0x%08x {regs=v%d-v%d}",
                 vsrc1, ref, vdst, vdst+vsrc1-1);
             thisPtr = (Object*) GET_REGISTER(vdst);
         } else {
-            assert((vsrc1>>4) > 0);
-            ILOGV("|invoke-virtual args=%d @0x%04x {regs=0x%04x %x}",
-                vsrc1 >> 4, ref, vdst, vsrc1 & 0x0f);
-            thisPtr = (Object*) GET_REGISTER(vdst & 0x0f);
+            vsrc1 = INST_AA(inst);      /* AA (count) or BA (count + arg 5) */
+            ref = FETCH(1);             /* method ref */
+            vdst = FETCH(2);            /* 4 regs -or- first reg */
+
+            /*
+             * The object against which we are executing a method is always
+             * in the first argument.
+             */
+            if (methodCallRange) {
+                assert(vsrc1 > 0);
+                ILOGV("|invoke-virtual-range args=%d @0x%04x {regs=v%d-v%d}",
+                    vsrc1, ref, vdst, vdst+vsrc1-1);
+                thisPtr = (Object*) GET_REGISTER(vdst);
+            } else {
+                assert((vsrc1>>4) > 0);
+                ILOGV("|invoke-virtual args=%d @0x%04x {regs=0x%04x %x}",
+                    vsrc1 >> 4, ref, vdst, vsrc1 & 0x0f);
+                thisPtr = (Object*) GET_REGISTER(vdst & 0x0f);
+            }
         }
 
         if (!checkForNull(thisPtr))
@@ -154,8 +176,9 @@ GOTO_TARGET(invokeVirtual, bool methodCallRange)
         assert(baseMethod->methodIndex < thisPtr->clazz->vtableCount);
         methodToCall = thisPtr->clazz->vtable[baseMethod->methodIndex];
 
-#if defined(WITH_JIT) && (INTERP_TYPE == INTERP_DBG)
-        callsiteClass = thisPtr->clazz;
+#if defined(WITH_JIT) && defined(MTERP_STUB)
+        self->methodToCall = methodToCall;
+        self->callsiteClass = thisPtr->clazz;
 #endif
 
 #if 0
@@ -169,8 +192,7 @@ GOTO_TARGET(invokeVirtual, bool methodCallRange)
              * Works fine unless Sub stops providing an implementation of
              * the method.
              */
-            dvmThrowException("Ljava/lang/AbstractMethodError;",
-                "abstract method not implemented");
+            dvmThrowAbstractMethodError("abstract method not implemented");
             GOTO_exceptionThrown();
         }
 #else
@@ -200,26 +222,37 @@ GOTO_TARGET(invokeVirtual, bool methodCallRange)
     }
 GOTO_TARGET_END
 
-GOTO_TARGET(invokeSuper, bool methodCallRange)
+GOTO_TARGET(invokeSuper, bool methodCallRange, bool jumboFormat)
     {
         Method* baseMethod;
         u2 thisReg;
 
         EXPORT_PC();
 
-        vsrc1 = INST_AA(inst);      /* AA (count) or BA (count + arg 5) */
-        ref = FETCH(1);             /* method ref */
-        vdst = FETCH(2);            /* 4 regs -or- first reg */
-
-        if (methodCallRange) {
-            ILOGV("|invoke-super-range args=%d @0x%04x {regs=v%d-v%d}",
+        if (jumboFormat) {
+            ref = FETCH(1) | (u4)FETCH(2) << 16;  /* method ref */
+            vsrc1 = FETCH(3);                     /* count */
+            vdst = FETCH(4);                      /* first reg */
+            ADJUST_PC(2);     /* advance pc partially to make returns easier */
+            ILOGV("|invoke-super/jumbo args=%d @0x%08x {regs=v%d-v%d}",
                 vsrc1, ref, vdst, vdst+vsrc1-1);
             thisReg = vdst;
         } else {
-            ILOGV("|invoke-super args=%d @0x%04x {regs=0x%04x %x}",
-                vsrc1 >> 4, ref, vdst, vsrc1 & 0x0f);
-            thisReg = vdst & 0x0f;
+            vsrc1 = INST_AA(inst);      /* AA (count) or BA (count + arg 5) */
+            ref = FETCH(1);             /* method ref */
+            vdst = FETCH(2);            /* 4 regs -or- first reg */
+
+            if (methodCallRange) {
+                ILOGV("|invoke-super-range args=%d @0x%04x {regs=v%d-v%d}",
+                    vsrc1, ref, vdst, vdst+vsrc1-1);
+                thisReg = vdst;
+            } else {
+                ILOGV("|invoke-super args=%d @0x%04x {regs=0x%04x %x}",
+                    vsrc1 >> 4, ref, vdst, vsrc1 & 0x0f);
+                thisReg = vdst & 0x0f;
+            }
         }
+
         /* impossible in well-formed code, but we must check nevertheless */
         if (!checkForNull((Object*) GET_REGISTER(thisReg)))
             GOTO_exceptionThrown();
@@ -254,15 +287,14 @@ GOTO_TARGET(invokeSuper, bool methodCallRange)
              * Method does not exist in the superclass.  Could happen if
              * superclass gets updated.
              */
-            dvmThrowException("Ljava/lang/NoSuchMethodError;",
-                baseMethod->name);
+            dvmThrowNoSuchMethodError(baseMethod->name);
             GOTO_exceptionThrown();
         }
         methodToCall = curMethod->clazz->super->vtable[baseMethod->methodIndex];
+
 #if 0
         if (dvmIsAbstractMethod(methodToCall)) {
-            dvmThrowException("Ljava/lang/AbstractMethodError;",
-                "abstract method not implemented");
+            dvmThrowAbstractMethodError("abstract method not implemented");
             GOTO_exceptionThrown();
         }
 #else
@@ -278,40 +310,48 @@ GOTO_TARGET(invokeSuper, bool methodCallRange)
     }
 GOTO_TARGET_END
 
-GOTO_TARGET(invokeInterface, bool methodCallRange)
+GOTO_TARGET(invokeInterface, bool methodCallRange, bool jumboFormat)
     {
         Object* thisPtr;
         ClassObject* thisClass;
 
         EXPORT_PC();
 
-        vsrc1 = INST_AA(inst);      /* AA (count) or BA (count + arg 5) */
-        ref = FETCH(1);             /* method ref */
-        vdst = FETCH(2);            /* 4 regs -or- first reg */
-
-        /*
-         * The object against which we are executing a method is always
-         * in the first argument.
-         */
-        if (methodCallRange) {
-            assert(vsrc1 > 0);
-            ILOGV("|invoke-interface-range args=%d @0x%04x {regs=v%d-v%d}",
+        if (jumboFormat) {
+            ref = FETCH(1) | (u4)FETCH(2) << 16;  /* method ref */
+            vsrc1 = FETCH(3);                     /* count */
+            vdst = FETCH(4);                      /* first reg */
+            ADJUST_PC(2);     /* advance pc partially to make returns easier */
+            ILOGV("|invoke-interface/jumbo args=%d @0x%08x {regs=v%d-v%d}",
                 vsrc1, ref, vdst, vdst+vsrc1-1);
             thisPtr = (Object*) GET_REGISTER(vdst);
         } else {
-            assert((vsrc1>>4) > 0);
-            ILOGV("|invoke-interface args=%d @0x%04x {regs=0x%04x %x}",
-                vsrc1 >> 4, ref, vdst, vsrc1 & 0x0f);
-            thisPtr = (Object*) GET_REGISTER(vdst & 0x0f);
+            vsrc1 = INST_AA(inst);      /* AA (count) or BA (count + arg 5) */
+            ref = FETCH(1);             /* method ref */
+            vdst = FETCH(2);            /* 4 regs -or- first reg */
+
+            /*
+             * The object against which we are executing a method is always
+             * in the first argument.
+             */
+            if (methodCallRange) {
+                assert(vsrc1 > 0);
+                ILOGV("|invoke-interface-range args=%d @0x%04x {regs=v%d-v%d}",
+                    vsrc1, ref, vdst, vdst+vsrc1-1);
+                thisPtr = (Object*) GET_REGISTER(vdst);
+            } else {
+                assert((vsrc1>>4) > 0);
+                ILOGV("|invoke-interface args=%d @0x%04x {regs=0x%04x %x}",
+                    vsrc1 >> 4, ref, vdst, vsrc1 & 0x0f);
+                thisPtr = (Object*) GET_REGISTER(vdst & 0x0f);
+            }
         }
+
         if (!checkForNull(thisPtr))
             GOTO_exceptionThrown();
 
         thisClass = thisPtr->clazz;
 
-#if defined(WITH_JIT) && (INTERP_TYPE == INTERP_DBG)
-        callsiteClass = thisClass;
-#endif
 
         /*
          * Given a class and a method index, find the Method* with the
@@ -319,6 +359,10 @@ GOTO_TARGET(invokeInterface, bool methodCallRange)
          */
         methodToCall = dvmFindInterfaceMethodInCache(thisClass, ref, curMethod,
                         methodClassDex);
+#if defined(WITH_JIT) && defined(MTERP_STUB)
+        self->callsiteClass = thisClass;
+        self->methodToCall = methodToCall;
+#endif
         if (methodToCall == NULL) {
             assert(dvmCheckException(self));
             GOTO_exceptionThrown();
@@ -328,25 +372,36 @@ GOTO_TARGET(invokeInterface, bool methodCallRange)
     }
 GOTO_TARGET_END
 
-GOTO_TARGET(invokeDirect, bool methodCallRange)
+GOTO_TARGET(invokeDirect, bool methodCallRange, bool jumboFormat)
     {
         u2 thisReg;
 
-        vsrc1 = INST_AA(inst);      /* AA (count) or BA (count + arg 5) */
-        ref = FETCH(1);             /* method ref */
-        vdst = FETCH(2);            /* 4 regs -or- first reg */
-
         EXPORT_PC();
 
-        if (methodCallRange) {
-            ILOGV("|invoke-direct-range args=%d @0x%04x {regs=v%d-v%d}",
+        if (jumboFormat) {
+            ref = FETCH(1) | (u4)FETCH(2) << 16;  /* method ref */
+            vsrc1 = FETCH(3);                     /* count */
+            vdst = FETCH(4);                      /* first reg */
+            ADJUST_PC(2);     /* advance pc partially to make returns easier */
+            ILOGV("|invoke-direct/jumbo args=%d @0x%08x {regs=v%d-v%d}",
                 vsrc1, ref, vdst, vdst+vsrc1-1);
             thisReg = vdst;
         } else {
-            ILOGV("|invoke-direct args=%d @0x%04x {regs=0x%04x %x}",
-                vsrc1 >> 4, ref, vdst, vsrc1 & 0x0f);
-            thisReg = vdst & 0x0f;
+            vsrc1 = INST_AA(inst);      /* AA (count) or BA (count + arg 5) */
+            ref = FETCH(1);             /* method ref */
+            vdst = FETCH(2);            /* 4 regs -or- first reg */
+
+            if (methodCallRange) {
+                ILOGV("|invoke-direct-range args=%d @0x%04x {regs=v%d-v%d}",
+                    vsrc1, ref, vdst, vdst+vsrc1-1);
+                thisReg = vdst;
+            } else {
+                ILOGV("|invoke-direct args=%d @0x%04x {regs=0x%04x %x}",
+                    vsrc1 >> 4, ref, vdst, vsrc1 & 0x0f);
+                thisReg = vdst & 0x0f;
+            }
         }
+
         if (!checkForNull((Object*) GET_REGISTER(thisReg)))
             GOTO_exceptionThrown();
 
@@ -363,19 +418,28 @@ GOTO_TARGET(invokeDirect, bool methodCallRange)
     }
 GOTO_TARGET_END
 
-GOTO_TARGET(invokeStatic, bool methodCallRange)
-    vsrc1 = INST_AA(inst);      /* AA (count) or BA (count + arg 5) */
-    ref = FETCH(1);             /* method ref */
-    vdst = FETCH(2);            /* 4 regs -or- first reg */
-
+GOTO_TARGET(invokeStatic, bool methodCallRange, bool jumboFormat)
     EXPORT_PC();
 
-    if (methodCallRange)
-        ILOGV("|invoke-static-range args=%d @0x%04x {regs=v%d-v%d}",
+    if (jumboFormat) {
+        ref = FETCH(1) | (u4)FETCH(2) << 16;  /* method ref */
+        vsrc1 = FETCH(3);                     /* count */
+        vdst = FETCH(4);                      /* first reg */
+        ADJUST_PC(2);     /* advance pc partially to make returns easier */
+        ILOGV("|invoke-static/jumbo args=%d @0x%08x {regs=v%d-v%d}",
             vsrc1, ref, vdst, vdst+vsrc1-1);
-    else
-        ILOGV("|invoke-static args=%d @0x%04x {regs=0x%04x %x}",
-            vsrc1 >> 4, ref, vdst, vsrc1 & 0x0f);
+    } else {
+        vsrc1 = INST_AA(inst);      /* AA (count) or BA (count + arg 5) */
+        ref = FETCH(1);             /* method ref */
+        vdst = FETCH(2);            /* 4 regs -or- first reg */
+
+        if (methodCallRange)
+            ILOGV("|invoke-static-range args=%d @0x%04x {regs=v%d-v%d}",
+                vsrc1, ref, vdst, vdst+vsrc1-1);
+        else
+            ILOGV("|invoke-static args=%d @0x%04x {regs=0x%04x %x}",
+                vsrc1 >> 4, ref, vdst, vsrc1 & 0x0f);
+    }
 
     methodToCall = dvmDexGetResolvedMethod(methodClassDex, ref);
     if (methodToCall == NULL) {
@@ -385,20 +449,23 @@ GOTO_TARGET(invokeStatic, bool methodCallRange)
             GOTO_exceptionThrown();
         }
 
+#if defined(WITH_JIT) && defined(MTERP_STUB)
         /*
          * The JIT needs dvmDexGetResolvedMethod() to return non-null.
-         * Since we use the portable interpreter to build the trace, this extra
-         * check is not needed for mterp.
+         * Include the check if this code is being used as a stub
+         * called from the assembly interpreter.
          */
-        if (dvmDexGetResolvedMethod(methodClassDex, ref) == NULL) {
+        if ((self->interpBreak.ctl.subMode & kSubModeJitTraceBuild) &&
+            (dvmDexGetResolvedMethod(methodClassDex, ref) == NULL)) {
             /* Class initialization is still ongoing */
-            ABORT_JIT_TSELECT();
+            dvmJitEndTraceSelect(self,pc);
         }
+#endif
     }
     GOTO_invokeMethod(methodCallRange, methodToCall, vsrc1, vdst);
 GOTO_TARGET_END
 
-GOTO_TARGET(invokeVirtualQuick, bool methodCallRange)
+GOTO_TARGET(invokeVirtualQuick, bool methodCallRange, bool jumboFormat)
     {
         Object* thisPtr;
 
@@ -427,21 +494,21 @@ GOTO_TARGET(invokeVirtualQuick, bool methodCallRange)
         if (!checkForNull(thisPtr))
             GOTO_exceptionThrown();
 
-#if defined(WITH_JIT) && (INTERP_TYPE == INTERP_DBG)
-        callsiteClass = thisPtr->clazz;
-#endif
 
         /*
          * Combine the object we found with the vtable offset in the
          * method.
          */
-        assert(ref < thisPtr->clazz->vtableCount);
+        assert(ref < (unsigned int) thisPtr->clazz->vtableCount);
         methodToCall = thisPtr->clazz->vtable[ref];
+#if defined(WITH_JIT) && defined(MTERP_STUB)
+        self->callsiteClass = thisPtr->clazz;
+        self->methodToCall = methodToCall;
+#endif
 
 #if 0
         if (dvmIsAbstractMethod(methodToCall)) {
-            dvmThrowException("Ljava/lang/AbstractMethodError;",
-                "abstract method not implemented");
+            dvmThrowAbstractMethodError("abstract method not implemented");
             GOTO_exceptionThrown();
         }
 #else
@@ -457,7 +524,7 @@ GOTO_TARGET(invokeVirtualQuick, bool methodCallRange)
     }
 GOTO_TARGET_END
 
-GOTO_TARGET(invokeSuperQuick, bool methodCallRange)
+GOTO_TARGET(invokeSuperQuick, bool methodCallRange, bool jumboFormat)
     {
         u2 thisReg;
 
@@ -482,11 +549,11 @@ GOTO_TARGET(invokeSuperQuick, bool methodCallRange)
 
 #if 0   /* impossible in optimized + verified code */
         if (ref >= curMethod->clazz->super->vtableCount) {
-            dvmThrowException("Ljava/lang/NoSuchMethodError;", NULL);
+            dvmThrowNoSuchMethodError(NULL);
             GOTO_exceptionThrown();
         }
 #else
-        assert(ref < curMethod->clazz->super->vtableCount);
+        assert(ref < (unsigned int) curMethod->clazz->super->vtableCount);
 #endif
 
         /*
@@ -502,8 +569,7 @@ GOTO_TARGET(invokeSuperQuick, bool methodCallRange)
 
 #if 0
         if (dvmIsAbstractMethod(methodToCall)) {
-            dvmThrowException("Ljava/lang/AbstractMethodError;",
-                "abstract method not implemented");
+            dvmThrowAbstractMethodError("abstract method not implemented");
             GOTO_exceptionThrown();
         }
 #else
@@ -513,7 +579,6 @@ GOTO_TARGET(invokeSuperQuick, bool methodCallRange)
         LOGVV("+++ super-virtual[%d]=%s.%s\n",
             ref, methodToCall->clazz->descriptor, methodToCall->name);
         assert(methodToCall != NULL);
-
         GOTO_invokeMethod(methodCallRange, methodToCall, vsrc1, vdst);
     }
 GOTO_TARGET_END
@@ -534,7 +599,7 @@ GOTO_TARGET(returnFromMethod)
          * Since this is now an interpreter switch point, we must do it before
          * we do anything at all.
          */
-        PERIODIC_CHECKS(kInterpEntryReturn, 0);
+        PERIODIC_CHECKS(0);
 
         ILOGV("> retval=0x%llx (leaving %s.%s %s)",
             retval.j, curMethod->clazz->descriptor, curMethod->name,
@@ -546,26 +611,27 @@ GOTO_TARGET(returnFromMethod)
 #ifdef EASY_GDB
         debugSaveArea = saveArea;
 #endif
-#if (INTERP_TYPE == INTERP_DBG)
-        TRACE_METHOD_EXIT(self, curMethod);
-#endif
 
         /* back up to previous frame and see if we hit a break */
-        fp = saveArea->prevFrame;
+        fp = (u4*)saveArea->prevFrame;
         assert(fp != NULL);
+
+        /* Handle any special subMode requirements */
+        if (self->interpBreak.ctl.subMode != 0) {
+            PC_FP_TO_SELF();
+            dvmReportReturn(self);
+        }
+
         if (dvmIsBreakFrame(fp)) {
             /* bail without popping the method frame from stack */
             LOGVV("+++ returned into break frame\n");
-#if defined(WITH_JIT)
-            /* Let the Jit know the return is terminating normally */
-            CHECK_JIT_VOID();
-#endif
             GOTO_bail();
         }
 
         /* update thread FP, and reset local variables */
         self->curFrame = fp;
         curMethod = SAVEAREA_FROM_FP(fp)->method;
+        self->interpSave.method = curMethod;
         //methodClass = curMethod->clazz;
         methodClassDex = curMethod->clazz->pDvmDex;
         pc = saveArea->savedPc;
@@ -598,16 +664,8 @@ GOTO_TARGET(exceptionThrown)
         Object* exception;
         int catchRelPc;
 
-        /*
-         * Since this is now an interpreter switch point, we must do it before
-         * we do anything at all.
-         */
-        PERIODIC_CHECKS(kInterpEntryThrow, 0);
+        PERIODIC_CHECKS(0);
 
-#if defined(WITH_JIT)
-        // Something threw during trace selection - abort the current trace
-        ABORT_JIT_TSELECT();
-#endif
         /*
          * We save off the exception and clear the exception status.  While
          * processing the exception we might need to load some Throwable
@@ -623,9 +681,8 @@ GOTO_TARGET(exceptionThrown)
             exception->clazz->descriptor, curMethod->name,
             dvmLineNumFromPC(curMethod, pc - curMethod->insns));
 
-#if (INTERP_TYPE == INTERP_DBG)
         /*
-         * Tell the debugger about it.
+         * Report the exception throw to any "subMode" watchers.
          *
          * TODO: if the exception was thrown by interpreted code, control
          * fell through native, and then back to us, we will report the
@@ -638,14 +695,10 @@ GOTO_TARGET(exceptionThrown)
          * here, and have the JNI exception code do the reporting to the
          * debugger.
          */
-        if (gDvm.debuggerActive) {
-            void* catchFrame;
-            catchRelPc = dvmFindCatchBlock(self, pc - curMethod->insns,
-                        exception, true, &catchFrame);
-            dvmDbgPostException(fp, pc - curMethod->insns, catchFrame,
-                catchRelPc, exception);
+        if (self->interpBreak.ctl.subMode != 0) {
+            PC_FP_TO_SELF();
+            dvmReportExceptionThrow(self, exception);
         }
-#endif
 
         /*
          * We need to unroll to the catch block or the nearest "break"
@@ -663,7 +716,7 @@ GOTO_TARGET(exceptionThrown)
          * the "catch" blocks.
          */
         catchRelPc = dvmFindCatchBlock(self, pc - curMethod->insns,
-                    exception, false, (void*)&fp);
+                    exception, false, (void**)(void*)&fp);
 
         /*
          * Restore the stack bounds after an overflow.  This isn't going to
@@ -718,6 +771,7 @@ GOTO_TARGET(exceptionThrown)
          */
         //fp = (u4*) self->curFrame;
         curMethod = SAVEAREA_FROM_FP(fp)->method;
+        self->interpSave.method = curMethod;
         //methodClass = curMethod->clazz;
         methodClassDex = curMethod->clazz->pDvmDex;
         pc = curMethod->insns + catchRelPc;
@@ -883,10 +937,20 @@ GOTO_TARGET(invokeMethod, bool methodCallRange, const Method* _methodToCall,
 #endif
         newSaveArea->prevFrame = fp;
         newSaveArea->savedPc = pc;
-#if defined(WITH_JIT)
+#if defined(WITH_JIT) && defined(MTERP_STUB)
         newSaveArea->returnAddr = 0;
 #endif
         newSaveArea->method = methodToCall;
+
+        if (self->interpBreak.ctl.subMode != 0) {
+            /*
+             * We mark ENTER here for both native and non-native
+             * calls.  For native calls, we'll mark EXIT on return.
+             * For non-native calls, EXIT is marked in the RETURN op.
+             */
+            PC_FP_TO_SELF();
+            dvmReportInvoke(self, methodToCall);
+        }
 
         if (!dvmIsNativeMethod(methodToCall)) {
             /*
@@ -894,50 +958,33 @@ GOTO_TARGET(invokeMethod, bool methodCallRange, const Method* _methodToCall,
              * frame pointer and other local state, and continue.
              */
             curMethod = methodToCall;
+            self->interpSave.method = curMethod;
             methodClassDex = curMethod->clazz->pDvmDex;
             pc = methodToCall->insns;
-            fp = self->curFrame = newFp;
+            self->curFrame = fp = newFp;
 #ifdef EASY_GDB
             debugSaveArea = SAVEAREA_FROM_FP(newFp);
 #endif
-#if INTERP_TYPE == INTERP_DBG
-            debugIsMethodEntry = true;              // profiling, debugging
-#endif
+            self->debugIsMethodEntry = true;        // profiling, debugging
             ILOGD("> pc <-- %s.%s %s", curMethod->clazz->descriptor,
                 curMethod->name, curMethod->shorty);
             DUMP_REGS(curMethod, fp, true);         // show input args
             FINISH(0);                              // jump to method start
         } else {
             /* set this up for JNI locals, even if not a JNI native */
-#ifdef USE_INDIRECT_REF
             newSaveArea->xtra.localRefCookie = self->jniLocalRefTable.segmentState.all;
-#else
-            newSaveArea->xtra.localRefCookie = self->jniLocalRefTable.nextEntry;
-#endif
 
             self->curFrame = newFp;
 
             DUMP_REGS(methodToCall, newFp, true);   // show input args
 
-#if (INTERP_TYPE == INTERP_DBG)
-            if (gDvm.debuggerActive) {
-                dvmDbgPostLocationEvent(methodToCall, -1,
-                    dvmGetThisPtr(curMethod, fp), DBG_METHOD_ENTRY);
-            }
-#endif
-#if (INTERP_TYPE == INTERP_DBG)
-            TRACE_METHOD_ENTER(self, methodToCall);
-#endif
-
-            {
-                ILOGD("> native <-- %s.%s %s", methodToCall->clazz->descriptor,
-                        methodToCall->name, methodToCall->shorty);
+            if (self->interpBreak.ctl.subMode != 0) {
+                PC_FP_TO_SELF();
+                dvmReportPreNativeInvoke(methodToCall, self);
             }
 
-#if defined(WITH_JIT)
-            /* Allow the Jit to end any pending trace building */
-            CHECK_JIT_VOID();
-#endif
+            ILOGD("> native <-- %s.%s %s", methodToCall->clazz->descriptor,
+                  methodToCall->name, methodToCall->shorty);
 
             /*
              * Jump through native call bridge.  Because we leave no
@@ -946,15 +993,10 @@ GOTO_TARGET(invokeMethod, bool methodCallRange, const Method* _methodToCall,
              */
             (*methodToCall->nativeFunc)(newFp, &retval, methodToCall, self);
 
-#if (INTERP_TYPE == INTERP_DBG)
-            if (gDvm.debuggerActive) {
-                dvmDbgPostLocationEvent(methodToCall, -1,
-                    dvmGetThisPtr(curMethod, fp), DBG_METHOD_EXIT);
+            if (self->interpBreak.ctl.subMode != 0) {
+                PC_FP_TO_SELF();
+                dvmReportPostNativeInvoke(methodToCall, self);
             }
-#endif
-#if (INTERP_TYPE == INTERP_DBG)
-            TRACE_METHOD_EXIT(self, methodToCall);
-#endif
 
             /* pop frame off */
             dvmPopJniLocals(self, newSaveArea);

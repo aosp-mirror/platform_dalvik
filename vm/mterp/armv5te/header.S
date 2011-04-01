@@ -56,7 +56,7 @@ The following registers have fixed assignments:
   reg nick      purpose
   r4  rPC       interpreted program counter, used for fetching instructions
   r5  rFP       interpreted frame pointer, used for accessing locals and args
-  r6  rGLUE     MterpGlue pointer
+  r6  rSELF     self (Thread) pointer
   r7  rINST     first 16-bit code unit of current instruction
   r8  rIBASE    interpreted instruction base pointer, used for computed goto
 
@@ -68,21 +68,21 @@ unspecified registers or condition codes.
 /* single-purpose registers, given names for clarity */
 #define rPC     r4
 #define rFP     r5
-#define rGLUE   r6
+#define rSELF   r6
 #define rINST   r7
 #define rIBASE  r8
 
-/* save/restore the PC and/or FP from the glue struct */
-#define LOAD_PC_FROM_GLUE()     ldr     rPC, [rGLUE, #offGlue_pc]
-#define SAVE_PC_TO_GLUE()       str     rPC, [rGLUE, #offGlue_pc]
-#define LOAD_FP_FROM_GLUE()     ldr     rFP, [rGLUE, #offGlue_fp]
-#define SAVE_FP_TO_GLUE()       str     rFP, [rGLUE, #offGlue_fp]
-#define LOAD_PC_FP_FROM_GLUE()  ldmia   rGLUE, {rPC, rFP}
-#define SAVE_PC_FP_TO_GLUE()    stmia   rGLUE, {rPC, rFP}
+/* save/restore the PC and/or FP from the thread struct */
+#define LOAD_PC_FROM_SELF()     ldr     rPC, [rSELF, #offThread_pc]
+#define SAVE_PC_TO_SELF()       str     rPC, [rSELF, #offThread_pc]
+#define LOAD_FP_FROM_SELF()     ldr     rFP, [rSELF, #offThread_fp]
+#define SAVE_FP_TO_SELF()       str     rFP, [rSELF, #offThread_fp]
+#define LOAD_PC_FP_FROM_SELF()  ldmia   rSELF, {rPC, rFP}
+#define SAVE_PC_FP_TO_SELF()    stmia   rSELF, {rPC, rFP}
 
 /*
  * "export" the PC to the stack frame, f/b/o future exception objects.  Must
- * be done *before* something calls dvmThrowException.
+ * be done *before* something throws.
  *
  * In C this is "SAVEAREA_FROM_FP(fp)->xtra.currentPc = pc", i.e.
  * fp - sizeof(StackSaveArea) + offsetof(SaveArea, xtra.currentPc)
@@ -117,21 +117,21 @@ unspecified registers or condition codes.
  * exception catch may miss.  (This also implies that it must come after
  * EXPORT_PC().)
  */
-#define FETCH_ADVANCE_INST(_count) ldrh    rINST, [rPC, #(_count*2)]!
+#define FETCH_ADVANCE_INST(_count) ldrh    rINST, [rPC, #((_count)*2)]!
 
 /*
  * The operation performed here is similar to FETCH_ADVANCE_INST, except the
  * src and dest registers are parameterized (not hard-wired to rPC and rINST).
  */
 #define PREFETCH_ADVANCE_INST(_dreg, _sreg, _count) \
-        ldrh    _dreg, [_sreg, #(_count*2)]!
+        ldrh    _dreg, [_sreg, #((_count)*2)]!
 
 /*
  * Fetch the next instruction from an offset specified by _reg.  Updates
  * rPC to point to the next instruction.  "_reg" must specify the distance
  * in bytes, *not* 16-bit code units, and may be a signed value.
  *
- * We want to write "ldrh rINST, [rPC, _reg, lsl #2]!", but some of the
+ * We want to write "ldrh rINST, [rPC, _reg, lsl #1]!", but some of the
  * bits that hold the shift distance are used for the half/byte/sign flags.
  * In some cases we can pre-double _reg for free, so we require a byte offset
  * here.
@@ -144,15 +144,15 @@ unspecified registers or condition codes.
  *
  * The "_S" variant works the same but treats the value as signed.
  */
-#define FETCH(_reg, _count)     ldrh    _reg, [rPC, #(_count*2)]
-#define FETCH_S(_reg, _count)   ldrsh   _reg, [rPC, #(_count*2)]
+#define FETCH(_reg, _count)     ldrh    _reg, [rPC, #((_count)*2)]
+#define FETCH_S(_reg, _count)   ldrsh   _reg, [rPC, #((_count)*2)]
 
 /*
  * Fetch one byte from an offset past the current PC.  Pass in the same
  * "_count" as you would for FETCH, and an additional 0/1 indicating which
  * byte of the halfword you want (lo/hi).
  */
-#define FETCH_B(_reg, _count, _byte) ldrb     _reg, [rPC, #(_count*2+_byte)]
+#define FETCH_B(_reg, _count, _byte) ldrb     _reg, [rPC, #((_count)*2+(_byte))]
 
 /*
  * Put the instruction's opcode field into the specified register.
@@ -169,6 +169,7 @@ unspecified registers or condition codes.
  * interpreter, we don't have to worry about pre-ARMv5 THUMB interwork.
  */
 #define GOTO_OPCODE(_reg)       add     pc, rIBASE, _reg, lsl #${handler_size_bits}
+#define GOTO_OPCODE_BASE(_base,_reg)  add     pc, _base, _reg, lsl #${handler_size_bits}
 #define GOTO_OPCODE_IFEQ(_reg)  addeq   pc, rIBASE, _reg, lsl #${handler_size_bits}
 #define GOTO_OPCODE_IFNE(_reg)  addne   pc, rIBASE, _reg, lsl #${handler_size_bits}
 
@@ -177,11 +178,6 @@ unspecified registers or condition codes.
  */
 #define GET_VREG(_reg, _vreg)   ldr     _reg, [rFP, _vreg, lsl #2]
 #define SET_VREG(_reg, _vreg)   str     _reg, [rFP, _vreg, lsl #2]
-
-#if defined(WITH_JIT)
-#define GET_JIT_PROF_TABLE(_reg)    ldr     _reg,[rGLUE,#offGlue_pJitProfTable]
-#define GET_JIT_THRESHOLD(_reg)     ldr     _reg,[rGLUE,#offGlue_jitThreshold]
-#endif
 
 /*
  * Convert a virtual register index into an address.

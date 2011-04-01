@@ -63,7 +63,7 @@ class AnnotationLister {
 
             opener = new ClassPathOpener(path, true,
                     new ClassPathOpener.Consumer() {
-                public boolean processFileBytes(String name, byte[] bytes) {
+                public boolean processFileBytes(String name, long lastModified, byte[] bytes) {
                     if (!name.endsWith(".class")) {
                         return true;
                     }

@@ -27,13 +27,6 @@
 #endif
 
 /*
- * Interpreter state, passed into C functions from assembly stubs.  The
- * assembly code exports all registers into the "glue" structure before
- * calling, then extracts them when the call returns.
- */
-typedef InterpState MterpGlue;
-
-/*
  * Call this during initialization to verify that the values in asm-constants.h
  * are still correct.
  */
@@ -49,7 +42,7 @@ bool dvmCheckAsmConstants(void);
  *
  * The "mterp" interpreter is always "standard".
  */
-bool dvmMterpStdRun(MterpGlue* glue);
-void dvmMterpStdBail(MterpGlue* glue, bool changeInterp);
+bool dvmMterpStdRun(Thread* self);
+void dvmMterpStdBail(Thread* self, bool changeInterp);
 
 #endif /*_DALVIK_MTERP_MTERP*/

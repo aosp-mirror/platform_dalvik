@@ -21,11 +21,6 @@
 #include "alloc/HeapInternal.h"
 #include "alloc/HeapSource.h"
 
-#if WITH_HPROF_STACK
-#include "hprof/Hprof.h"
-#endif
-
-
 /*
  * Initialize the GC universe.
  *
@@ -45,9 +40,6 @@ bool dvmGcStartup(void)
  */
 bool dvmGcStartupAfterZygote(void)
 {
-    if (!dvmHeapWorkerStartup()) {
-        return false;
-    }
     return dvmHeapStartupAfterZygote();
 }
 
@@ -56,7 +48,6 @@ bool dvmGcStartupAfterZygote(void)
  */
 void dvmGcThreadShutdown(void)
 {
-    dvmHeapWorkerShutdown();
     dvmHeapThreadShutdown();
 }
 
@@ -75,6 +66,44 @@ void dvmGcShutdown(void)
 bool dvmGcPreZygoteFork(void)
 {
     return dvmHeapSourceStartupBeforeFork();
+}
+
+bool dvmGcStartupClasses(void)
+{
+    {
+        const char *klassName = "Ljava/lang/ref/ReferenceQueueThread;";
+        ClassObject *klass = dvmFindSystemClass(klassName);
+        if (klass == NULL) {
+            return false;
+        }
+        const char *methodName = "startReferenceQueue";
+        Method *method = dvmFindDirectMethodByDescriptor(klass, methodName, "()V");
+        if (method == NULL) {
+            return false;
+        }
+        Thread *self = dvmThreadSelf();
+        assert(self != NULL);
+        JValue unusedResult;
+        dvmCallMethod(self, method, NULL, &unusedResult);
+    }
+    {
+        const char *klassName = "Ljava/lang/FinalizerThread;";
+        ClassObject *klass = dvmFindSystemClass(klassName);
+        if (klass == NULL) {
+            return false;
+        }
+        const char *methodName = "startFinalizer";
+        Method *method = dvmFindDirectMethodByDescriptor(klass, methodName, "()V");
+        if (method == NULL) {
+            return false;
+        }
+        Thread *self = dvmThreadSelf();
+        assert(self != NULL);
+        JValue unusedResult;
+        dvmCallMethod(self, method, NULL, &unusedResult);
+    }
+
+    return true;
 }
 
 /*
@@ -174,20 +203,14 @@ Object* dvmAllocObject(ClassObject* clazz, int flags)
 {
     Object* newObj;
 
+    assert(clazz != NULL);
     assert(dvmIsClassInitialized(clazz) || dvmIsClassInitializing(clazz));
 
-    if (IS_CLASS_FLAG_SET(clazz, CLASS_ISFINALIZABLE)) {
-        flags |= ALLOC_FINALIZABLE;
-    }
-
     /* allocate on GC heap; memory is zeroed out */
-    newObj = dvmMalloc(clazz->objectSize, flags);
+    newObj = (Object*)dvmMalloc(clazz->objectSize, flags);
     if (newObj != NULL) {
         DVM_OBJECT_INIT(newObj, clazz);
-#if WITH_HPROF_STACK
-        hprofFillInStackTrace(newObj);
-#endif
-        dvmTrackAllocation(clazz, clazz->objectSize);
+        dvmTrackAllocation(clazz, clazz->objectSize);   /* notify DDMS */
     }
 
     return newObj;
@@ -199,42 +222,42 @@ Object* dvmAllocObject(ClassObject* clazz, int flags)
  * We use the size actually allocated, rather than obj->clazz->objectSize,
  * because the latter doesn't work for array objects.
  */
-Object* dvmCloneObject(Object* obj)
+Object* dvmCloneObject(Object* obj, int flags)
 {
+    ClassObject* clazz;
     Object* copy;
-    int size;
-    int flags;
+    size_t size;
 
     assert(dvmIsValidObject(obj));
+    clazz = obj->clazz;
 
     /* Class.java shouldn't let us get here (java.lang.Class is final
      * and does not implement Clonable), but make extra sure.
      * A memcpy() clone will wreak havoc on a ClassObject's "innards".
      */
-    assert(obj->clazz != gDvm.classJavaLangClass);
+    assert(clazz != gDvm.classJavaLangClass);
 
-    if (IS_CLASS_FLAG_SET(obj->clazz, CLASS_ISFINALIZABLE))
-        flags = ALLOC_DEFAULT | ALLOC_FINALIZABLE;
-    else
-        flags = ALLOC_DEFAULT;
-
-    if (IS_CLASS_FLAG_SET(obj->clazz, CLASS_ISARRAY)) {
+    if (IS_CLASS_FLAG_SET(clazz, CLASS_ISARRAY)) {
         size = dvmArrayObjectSize((ArrayObject *)obj);
     } else {
-        size = obj->clazz->objectSize;
+        size = clazz->objectSize;
     }
 
-    copy = dvmMalloc(size, flags);
+    copy = (Object*)dvmMalloc(size, flags);
     if (copy == NULL)
         return NULL;
-#if WITH_HPROF_STACK
-    hprofFillInStackTrace(copy);
-    dvmTrackAllocation(obj->clazz, size);
-#endif
 
+    /* We assume that memcpy will copy obj by words. */
     memcpy(copy, obj, size);
     DVM_LOCK_INIT(&copy->lock);
     dvmWriteBarrierObject(copy);
+
+    /* Mark the clone as finalizable if appropriate. */
+    if (IS_CLASS_FLAG_SET(clazz, CLASS_ISFINALIZABLE)) {
+        dvmSetFinalizable(copy);
+    }
+
+    dvmTrackAllocation(clazz, size);    /* notify DDMS */
 
     return copy;
 }
@@ -295,7 +318,7 @@ void dvmReleaseTrackedAlloc(Object* obj, Thread* self)
 /*
  * Explicitly initiate garbage collection.
  */
-void dvmCollectGarbage(bool clearSoftReferences)
+void dvmCollectGarbage(void)
 {
     if (gDvm.disableExplicitGc) {
         return;
@@ -313,8 +336,8 @@ typedef struct {
 
 static void countInstancesOfClassCallback(void *ptr, void *arg)
 {
-    CountContext *ctx = arg;
-    const Object *obj = ptr;
+    CountContext *ctx = (CountContext *)arg;
+    const Object *obj = (const Object *)ptr;
 
     assert(ctx != NULL);
     if (obj->clazz == ctx->clazz) {
@@ -334,11 +357,11 @@ size_t dvmCountInstancesOfClass(const ClassObject *clazz)
 
 static void countAssignableInstancesOfClassCallback(void *ptr, void *arg)
 {
-    CountContext *ctx = arg;
-    const Object *obj = ptr;
+    CountContext *ctx = (CountContext *)arg;
+    const Object *obj = (const Object *)ptr;
 
     assert(ctx != NULL);
-    if (dvmInstanceof(obj->clazz, ctx->clazz)) {
+    if (obj->clazz != NULL && dvmInstanceof(obj->clazz, ctx->clazz)) {
         ctx->count += 1;
     }
 }
@@ -351,4 +374,9 @@ size_t dvmCountAssignableInstancesOfClass(const ClassObject *clazz)
     dvmHeapBitmapWalk(bitmap, countAssignableInstancesOfClassCallback, &ctx);
     dvmUnlockHeap();
     return ctx.count;
+}
+
+bool dvmIsHeapAddress(void *address)
+{
+    return dvmHeapSourceContainsAddress(address);
 }

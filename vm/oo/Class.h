@@ -48,7 +48,6 @@ typedef struct ClassPathEntry {
 } ClassPathEntry;
 
 bool dvmClassStartup(void);
-bool dvmBaseClassStartup(void);
 void dvmClassShutdown(void);
 bool dvmPrepBootClassPath(bool isNormalStart);
 
@@ -68,6 +67,13 @@ bool dvmClassPathContains(const ClassPathEntry* cpe, const char* path);
  * Set clazz->serialNumber to the next available value.
  */
 void dvmSetClassSerialNumber(ClassObject* clazz);
+
+/*
+ * Find the class object representing the primitive type with the
+ * given descriptor. This returns NULL if the given type character
+ * is invalid.
+ */
+ClassObject* dvmFindPrimitiveClass(char type);
 
 /*
  * Find the class with the given descriptor.  Load it if it hasn't already

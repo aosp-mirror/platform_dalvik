@@ -54,10 +54,10 @@ static bool verifySorted(PointerSet* pSet)
  */
 PointerSet* dvmPointerSetAlloc(int initialSize)
 {
-    PointerSet* pSet = calloc(1, sizeof(PointerSet));
+    PointerSet* pSet = (PointerSet*)calloc(1, sizeof(PointerSet));
     if (pSet != NULL) {
         if (initialSize > 0) {
-            pSet->list = malloc(sizeof(const void*) * initialSize);
+            pSet->list = (const void**)malloc(sizeof(void*) * initialSize);
             if (pSet->list == NULL) {
                 free(pSet);
                 return NULL;
@@ -131,7 +131,7 @@ bool dvmPointerSetAddEntry(PointerSet* pSet, const void* ptr)
         else
             pSet->alloc *= 2;
         LOGVV("expanding %p to %d\n", pSet, pSet->alloc);
-        newList = realloc(pSet->list, pSet->alloc * sizeof(const void*));
+        newList = (const void**)realloc(pSet->list, pSet->alloc * sizeof(void*));
         if (newList == NULL) {
             LOGE("Failed expanding ptr set (alloc=%d)\n", pSet->alloc);
             dvmAbort();
@@ -267,7 +267,8 @@ void dvmPointerSetIntersect(PointerSet* pSet, const void** ptrArray, int count)
  */
 void dvmPointerSetDump(const PointerSet* pSet)
 {
+    LOGI("PointerSet %p\n", pSet);
     int i;
     for (i = 0; i < pSet->count; i++)
-        printf(" %p", pSet->list[i]);
+        LOGI(" %2d: %p", i, pSet->list[i]);
 }

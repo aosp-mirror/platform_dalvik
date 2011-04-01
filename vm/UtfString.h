@@ -56,6 +56,16 @@ u4 dvmComputeUtf8Hash(const char* str);
 u4 dvmComputeStringHash(const StringObject* strObj);
 
 /*
+ * Create a java.lang.String[] from an array of C strings.
+ *
+ * The caller must call dvmReleaseTrackedAlloc() on the returned array,
+ * but not on the individual elements.
+ *
+ * Returns NULL and throws an exception on failure.
+ */
+ArrayObject* dvmCreateStringArray(char** strings, size_t count);
+
+/*
  * Create a java/lang/String from a C string.
  *
  * The caller must call dvmReleaseTrackedAlloc() on the return value.

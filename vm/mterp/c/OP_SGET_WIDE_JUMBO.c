@@ -1,0 +1,2 @@
+HANDLE_SGET_X_JUMBO(OP_SGET_WIDE_JUMBO,     "-wide", Long, _WIDE)
+OP_END

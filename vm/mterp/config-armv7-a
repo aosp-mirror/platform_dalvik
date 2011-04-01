@@ -21,10 +21,14 @@
 # negligible on a Cortex-A8 CPU, so this is really just an experiment.
 #
 
+handler-style computed-goto
 handler-size 64
 
 # source for the instruction table stub
 asm-stub armv5te/stub.S
+
+# source for alternate entry stub
+asm-alt-stub armv5te/alt_stub.S
 
 # file header and basic definitions
 import c/header.c
@@ -156,6 +160,8 @@ op-end
 
 # "helper" code for C; include if you use any of the C stubs (this generates
 # object code, so it's normally excluded)
+#
+# Add this if you see linker failures for stuff like "dvmMterp_exceptionThrown".
 ##import c/gotoTargets.c
 
 # end of defs; include this when cstubs/stubdefs.c is included

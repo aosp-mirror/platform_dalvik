@@ -29,6 +29,7 @@ bool dvmCreateStockExceptions(void);
 bool dvmGcStartupAfterZygote(void);
 void dvmGcShutdown(void);
 void dvmGcThreadShutdown(void);
+bool dvmGcStartupClasses(void);
 
 /*
  * Do any last-minute preparation before we call fork() for the first time.
@@ -59,14 +60,7 @@ Object* dvmAllocObject(ClassObject* clazz, int flags);
 enum {
     ALLOC_DEFAULT       = 0x00,
     ALLOC_DONT_TRACK    = 0x01,     /* don't add to internal tracking list */
-    ALLOC_FINALIZABLE   = 0x02,     /* call finalize() before freeing */
 };
-
-/*
- * Call when a request is so far off that we can't call dvmMalloc().  Throws
- * an exception with the specified message.
- */
-void dvmThrowBadAllocException(const char* msg);
 
 /*
  * Track an object reference that is currently only visible internally.
@@ -94,45 +88,14 @@ bool dvmIsValidObject(const Object* obj);
 /*
  * Create a copy of an object.
  *
- * The new object will be added to the "tracked alloc" table.
+ * Returns NULL and throws an exception on failure.
  */
-Object* dvmCloneObject(Object* obj);
+Object* dvmCloneObject(Object* obj, int flags);
 
 /*
- * Validate the object pointer.  Returns "false" and throws an exception if
- * "obj" is null or invalid.
- *
- * This may be used in performance critical areas as a null-pointer check;
- * anything else here should be for debug builds only.  In particular, for
- * "release" builds we want to skip the call to dvmIsValidObject() -- the
- * classfile validation will screen out code that puts invalid data into
- * object reference registers.
+ * Make the object finalizable.
  */
-INLINE int dvmValidateObject(Object* obj)
-{
-    if (obj == NULL) {
-        dvmThrowException("Ljava/lang/NullPointerException;", NULL);
-        return false;
-    }
-#ifdef WITH_EXTRA_OBJECT_VALIDATION
-    if (!dvmIsValidObject(obj)) {
-        dvmAbort();
-        dvmThrowException("Ljava/lang/InternalError;",
-            "VM detected invalid object ptr");
-        return false;
-    }
-#endif
-#ifndef NDEBUG
-    /* check for heap corruption */
-    if (obj->clazz == NULL || ((u4) obj->clazz) <= 65536) {
-        dvmAbort();
-        dvmThrowException("Ljava/lang/InternalError;",
-            "VM detected invalid object class ptr");
-        return false;
-    }
-#endif
-    return true;
-}
+void dvmSetFinalizable(Object* obj);
 
 /*
  * Determine the exact number of GC heap bytes used by an object.  (Internal
@@ -156,11 +119,9 @@ void dvmSetTargetHeapUtilization(float newTarget);
  * Initiate garbage collection.
  *
  * This usually happens automatically, but can also be caused by
- * Runtime.gc().  If clearSoftReferences is true, the garbage
- * collector will not attempt to preserve any softly-reachable
- * SoftReference referents.
+ * Runtime.gc().
  */
-void dvmCollectGarbage(bool clearSoftReferences);
+void dvmCollectGarbage(void);
 
 /*
  * Returns a count of the direct instances of a class.
@@ -176,5 +137,10 @@ size_t dvmCountAssignableInstancesOfClass(const ClassObject *clazz);
  * Removes any growth limits from the heap.
  */
 void dvmClearGrowthLimit(void);
+
+/*
+ * Returns true if the address is within the bounds of the heap.
+ */
+bool dvmIsHeapAddress(void *address);
 
 #endif /*_DALVIK_ALLOC_ALLOC*/

@@ -71,7 +71,7 @@ static void Dalvik_dalvik_system_VMStack_getStackClass2(const u4* args,
 }
 
 /*
- * public static Class<?>[] getClasses(int maxDepth, boolean stopAtPrivileged)
+ * public static Class<?>[] getClasses(int maxDepth)
  *
  * Create an array of classes for the methods on the stack, skipping the
  * first two and all reflection methods.  If "stopAtPrivileged" is set,
@@ -82,7 +82,6 @@ static void Dalvik_dalvik_system_VMStack_getClasses(const u4* args,
 {
     /* note "maxSize" is unsigned, so -1 turns into a very large value */
     unsigned int maxSize = args[0];
-    bool stopAtPrivileged = args[1];
     unsigned int size = 0;
     const unsigned int kSkip = 2;
     const Method** methods = NULL;
@@ -95,7 +94,7 @@ static void Dalvik_dalvik_system_VMStack_getClasses(const u4* args,
             &methodCount))
     {
         LOGE("Failed to create stack trace array\n");
-        dvmThrowException("Ljava/lang/InternalError;", NULL);
+        dvmThrowInternalError(NULL);
         RETURN_VOID();
     }
 
@@ -115,16 +114,6 @@ static void Dalvik_dalvik_system_VMStack_getClasses(const u4* args,
 
         if (dvmIsReflectionMethod(meth))
             continue;
-
-        if (stopAtPrivileged && dvmIsPrivilegedMethod(meth)) {
-            /*
-             * We want the last element of the array to be the caller of
-             * the privileged method, so we want to include the privileged
-             * method and the next one.
-             */
-            if (maxSize > size + 2)
-                maxSize = size + 2;
-        }
 
         size++;
     }
@@ -271,7 +260,7 @@ const DalvikNativeMethod dvm_dalvik_system_VMStack[] = {
         Dalvik_dalvik_system_VMStack_getCallingClassLoader2 },
     { "getStackClass2",         "()Ljava/lang/Class;",
         Dalvik_dalvik_system_VMStack_getStackClass2 },
-    { "getClasses",             "(IZ)[Ljava/lang/Class;",
+    { "getClasses",             "(I)[Ljava/lang/Class;",
         Dalvik_dalvik_system_VMStack_getClasses },
     { "getThreadStackTrace",    "(Ljava/lang/Thread;)[Ljava/lang/StackTraceElement;",
         Dalvik_dalvik_system_VMStack_getThreadStackTrace },

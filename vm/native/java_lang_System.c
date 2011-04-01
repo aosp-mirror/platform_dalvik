@@ -127,20 +127,20 @@ static void Dalvik_java_lang_System_arraycopy(const u4* args, JValue* pResult)
     dstPos = args[3];
     length = args[4];
 
-    /* check for null or bad pointer */
-    if (!dvmValidateObject((Object*)srcArray) ||
-        !dvmValidateObject((Object*)dstArray))
-    {
+    /* check for null pointer */
+    if ((Object*)srcArray == NULL || (Object*)dstArray == NULL) {
+        dvmThrowNullPointerException(NULL);
         assert(dvmCheckException(dvmThreadSelf()));
         RETURN_VOID();
     }
 
-    /* make sure it's an array */
-    if (!dvmIsArray(srcArray) || !dvmIsArray(dstArray)) {
-        dvmThrowExceptionFmt("Ljava/lang/ArrayStoreException;",
-            "source and destination must be arrays, but were %s and %s",
-            ((Object*)srcArray)->clazz->descriptor,
-            ((Object*)dstArray)->clazz->descriptor);
+    /* Make sure source and destination are arrays. */
+    if (!dvmIsArray(srcArray)) {
+        dvmThrowArrayStoreExceptionNotArray(((Object*)srcArray)->clazz, "source");
+        RETURN_VOID();
+    }
+    if (!dvmIsArray(dstArray)) {
+        dvmThrowArrayStoreExceptionNotArray(((Object*)dstArray)->clazz, "destination");
         RETURN_VOID();
     }
 
@@ -149,7 +149,7 @@ static void Dalvik_java_lang_System_arraycopy(const u4* args, JValue* pResult)
         srcPos > (int) srcArray->length - length ||
         dstPos > (int) dstArray->length - length)
     {
-        dvmThrowExceptionFmt("Ljava/lang/ArrayIndexOutOfBoundsException;",
+        dvmThrowExceptionFmt(gDvm.exArrayIndexOutOfBoundsException,
             "src.length=%d srcPos=%d dst.length=%d dstPos=%d length=%d",
             srcArray->length, srcPos, dstArray->length, dstPos, length);
         RETURN_VOID();
@@ -168,9 +168,7 @@ static void Dalvik_java_lang_System_arraycopy(const u4* args, JValue* pResult)
     dstPrim = (dstType != '[' && dstType != 'L');
     if (srcPrim || dstPrim) {
         if (srcPrim != dstPrim || srcType != dstType) {
-            dvmThrowExceptionFmt("Ljava/lang/ArrayStoreException;",
-                "source and destination arrays are incompatible: %s and %s",
-                srcClass->descriptor, dstClass->descriptor);
+            dvmThrowArrayStoreExceptionIncompatibleArrays(srcClass, dstClass);
             RETURN_VOID();
         }
 
@@ -284,10 +282,8 @@ static void Dalvik_java_lang_System_arraycopy(const u4* args, JValue* pResult)
                 copyCount * width);
             dvmWriteBarrierArray(dstArray, 0, copyCount);
             if (copyCount != length) {
-                dvmThrowExceptionFmt("Ljava/lang/ArrayStoreException;",
-                    "source[%d] of type %s cannot be stored in destination array of type %s",
-                    copyCount, srcObj[copyCount]->clazz->descriptor,
-                    dstClass->descriptor);
+                dvmThrowArrayStoreExceptionIncompatibleArrayElement(srcPos + copyCount,
+                        srcObj[copyCount]->clazz, dstClass);
                 RETURN_VOID();
             }
         }
@@ -356,7 +352,7 @@ static void Dalvik_java_lang_System_mapLibraryName(const u4* args,
     char* mappedName;
 
     if (nameObj == NULL) {
-        dvmThrowException("Ljava/lang/NullPointerException;", NULL);
+        dvmThrowNullPointerException(NULL);
         RETURN_VOID();
     }
 
@@ -377,11 +373,11 @@ const DalvikNativeMethod dvm_java_lang_System[] = {
         Dalvik_java_lang_System_arraycopy },
     { "currentTimeMillis",  "()J",
         Dalvik_java_lang_System_currentTimeMillis },
-    { "nanoTime",  "()J",
-        Dalvik_java_lang_System_nanoTime },
     { "identityHashCode",  "(Ljava/lang/Object;)I",
         Dalvik_java_lang_System_identityHashCode },
     { "mapLibraryName",     "(Ljava/lang/String;)Ljava/lang/String;",
         Dalvik_java_lang_System_mapLibraryName },
+    { "nanoTime",  "()J",
+        Dalvik_java_lang_System_nanoTime },
     { NULL, NULL, NULL },
 };

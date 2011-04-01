@@ -18,10 +18,13 @@
 #include "CompilerInternals.h"
 
 /* Allocate a new basic block */
-BasicBlock *dvmCompilerNewBB(BBType blockType)
+BasicBlock *dvmCompilerNewBB(BBType blockType, int blockId)
 {
-    BasicBlock *bb = dvmCompilerNew(sizeof(BasicBlock), true);
+    BasicBlock *bb = (BasicBlock *)dvmCompilerNew(sizeof(BasicBlock), true);
     bb->blockType = blockType;
+    bb->id = blockId;
+    bb->predecessors = dvmCompilerAllocBitVector(blockId > 32 ? blockId : 32,
+                                                 true /* expandable */);
     return bb;
 }
 

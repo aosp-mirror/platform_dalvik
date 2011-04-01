@@ -78,7 +78,9 @@ public class DeadCodeRemover {
      * Runs the dead code remover.
      */
     private void run() {
-        HashSet<SsaInsn> deletedInsns = (HashSet<SsaInsn>) new HashSet();
+        pruneDeadInstructions();
+
+        HashSet<SsaInsn> deletedInsns = new HashSet<SsaInsn>();
 
         ssaMeth.forEachInsn(new NoSideEffectVisitor(worklist));
 
@@ -118,6 +120,49 @@ public class DeadCodeRemover {
 
                 // Schedule this insn for later deletion.
                 deletedInsns.add(insnS);
+            }
+        }
+
+        ssaMeth.deleteInsns(deletedInsns);
+    }
+
+    /**
+     * Removes all instructions from every unreachable block.
+     */
+    private void pruneDeadInstructions() {
+        HashSet<SsaInsn> deletedInsns = new HashSet<SsaInsn>();
+
+        ssaMeth.computeReachability();
+
+        for (SsaBasicBlock block : ssaMeth.getBlocks()) {
+            if (block.isReachable()) continue;
+
+            // Prune instructions from unreachable blocks
+            for (int i = 0; i < block.getInsns().size(); i++) {
+                SsaInsn insn = block.getInsns().get(i);
+                RegisterSpecList sources = insn.getSources();
+                int sourcesSize = sources.size();
+
+                // Delete this instruction completely if it has sources
+                if (sourcesSize != 0) {
+                    deletedInsns.add(insn);
+                }
+
+                // Delete this instruction from all usage lists.
+                for (int j = 0; j < sourcesSize; j++) {
+                    RegisterSpec source = sources.get(j);
+                    useList[source.getReg()].remove(insn);
+                }
+
+                // Remove this instruction result from the sources of any phis
+                RegisterSpec result = insn.getResult();
+                if (result == null) continue;
+                for (SsaInsn use : useList[result.getReg()]) {
+                    if (use instanceof PhiInsn) {
+                        PhiInsn phiUse = (PhiInsn) use;
+                        phiUse.removePhiRegister(result);
+                    }
+                }
             }
         }
 

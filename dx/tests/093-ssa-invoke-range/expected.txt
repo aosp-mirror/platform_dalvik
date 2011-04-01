@@ -265,7 +265,7 @@ block 0004
   next 0017
 block 0017
   pred 0004
-  Blort.java:63@0018: conv-i2l v4:J <- v3:I
+  Blort.java:63@0018: conv-i2l v6:J <- v3:I
   Blort.java:63@0019: goto . <- .
   next 003d
 block 001a
@@ -276,7 +276,6 @@ block 001a
 block 001d
   pred 0043
   @????: mark-local-long . <- v6:"offset"J
-  @????: move-long v4:J <- v6:"offset"J
   Blort.java:66@001f: goto . <- .
   next 003d
 block 003c
@@ -288,7 +287,7 @@ block 003c
 block 003d
   pred 0017
   pred 001d
-  Blort.java:66@001f: return-long . <- v4:J
+  Blort.java:66@001f: return-long . <- v6:J
   returns
 block 0043
   pred 001a

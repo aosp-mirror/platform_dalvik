@@ -33,6 +33,14 @@ typedef enum {
 } DexClassVerifyMode;
 
 /*
+ * Certain types of instructions can be GC points.  To support precise
+ * GC, all such instructions must export the PC in the interpreter,
+ * or the GC won't be able to identify the current PC for the thread.
+ */
+#define VERIFY_GC_INST_MASK (kInstrCanBranch | kInstrCanSwitch |\
+                             kInstrCanThrow | kInstrCanReturn)
+
+/*
  * Verify a single class.
  */
 bool dvmVerifyClass(ClassObject* clazz);

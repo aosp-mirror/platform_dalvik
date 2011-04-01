@@ -37,11 +37,16 @@ struct InlineSub {
 
 /* fwd */
 static void optimizeMethod(Method* method, bool essentialOnly);
-static bool rewriteInstField(Method* method, u2* insns, Opcode quickOpc,
+static void rewriteInstField(Method* method, u2* insns, Opcode quickOpc,
     Opcode volatileOpc);
-static bool rewriteStaticField(Method* method, u2* insns, Opcode volatileOpc);
-static bool rewriteVirtualInvoke(Method* method, u2* insns, Opcode newOpc);
-static bool rewriteEmptyDirectInvoke(Method* method, u2* insns);
+static void rewriteJumboInstField(Method* method, u2* insns,
+    Opcode volatileOpc);
+static void rewriteStaticField(Method* method, u2* insns, Opcode volatileOpc);
+static void rewriteJumboStaticField(Method* method, u2* insns,
+    Opcode volatileOpc);
+static void rewriteVirtualInvoke(Method* method, u2* insns, Opcode newOpc);
+static bool rewriteInvokeObjectInit(Method* method, u2* insns);
+static bool rewriteJumboInvokeObjectInit(Method* method, u2* insns);
 static bool rewriteExecuteInline(Method* method, u2* insns,
     MethodType methodType);
 static bool rewriteExecuteInlineRange(Method* method, u2* insns,
@@ -51,51 +56,59 @@ static bool needsReturnBarrier(Method* method);
 
 
 /*
- * Create a table of inline substitutions.
+ * Create a table of inline substitutions.  Sets gDvm.inlineSubs.
  *
  * TODO: this is currently just a linear array.  We will want to put this
  * into a hash table as the list size increases.
  */
-InlineSub* dvmCreateInlineSubsTable(void)
+bool dvmCreateInlineSubsTable(void)
 {
     const InlineOperation* ops = dvmGetInlineOpsTable();
     const int count = dvmGetInlineOpsTableLength();
     InlineSub* table;
     int i, tableIndex;
 
+    assert(gDvm.inlineSubs == NULL);
+
     /*
-     * Allocate for optimism: one slot per entry, plus an end-of-list marker.
+     * One slot per entry, plus an end-of-list marker.
      */
-    table = calloc(count + 1, sizeof(InlineSub));
+    table = (InlineSub*) calloc(count + 1, sizeof(InlineSub));
 
     tableIndex = 0;
     for (i = 0; i < count; i++) {
         Method* method = dvmFindInlinableMethod(ops[i].classDescriptor,
             ops[i].methodName, ops[i].methodSignature);
-        if (method != NULL) {
-            table[tableIndex].method = method;
-            table[tableIndex].inlineIdx = i;
-            tableIndex++;
-
-            LOGV("DexOpt: will inline %d: %s.%s %s\n", i,
+        if (method == NULL) {
+            /*
+             * Not expected.  We only use this for key methods in core
+             * classes, so we should always be able to find them.
+             */
+            LOGE("Unable to find method for inlining: %s.%s:%s\n",
                 ops[i].classDescriptor, ops[i].methodName,
                 ops[i].methodSignature);
+            return false;
         }
+
+        table[tableIndex].method = method;
+        table[tableIndex].inlineIdx = i;
+        tableIndex++;
     }
 
     /* mark end of table */
     table[tableIndex].method = NULL;
-    LOGV("DexOpt: inline table has %d entries\n", tableIndex);
 
-    return table;
+    gDvm.inlineSubs = table;
+    return true;
 }
 
 /*
  * Release inline sub data structure.
  */
-void dvmFreeInlineSubsTable(InlineSub* inlineSubs)
+void dvmFreeInlineSubsTable(void)
 {
-    free(inlineSubs);
+    free(gDvm.inlineSubs);
+    gDvm.inlineSubs = NULL;
 }
 
 
@@ -126,50 +139,76 @@ void dvmOptimizeClass(ClassObject* clazz, bool essentialOnly)
  * This does a single pass through the code, examining each instruction.
  *
  * This is not expected to fail if the class was successfully verified.
- * The only significant failure modes occur when an "essential" update fails,
- * but we can't generally identify those: if we can't look up a field,
- * we can't know if the field access was supposed to be handled as volatile.
+ * The only significant failure modes on unverified code occur when an
+ * "essential" update fails, but we can't generally identify those: if we
+ * can't look up a field, we can't know if the field access was supposed
+ * to be handled as volatile.
  *
  * Instead, we give it our best effort, and hope for the best.  For 100%
  * reliability, only optimize a class after verification succeeds.
  */
 static void optimizeMethod(Method* method, bool essentialOnly)
 {
+    bool needRetBar, forSmp;
     u4 insnsSize;
     u2* insns;
-    u2 inst;
-
-    if (!gDvm.optimizing && !essentialOnly) {
-        /* unexpected; will force copy-on-write of a lot of pages */
-        LOGD("NOTE: doing full bytecode optimization outside dexopt\n");
-    }
 
     if (dvmIsNativeMethod(method) || dvmIsAbstractMethod(method))
         return;
 
-    /* compute this once per method */
-    bool needRetBar = needsReturnBarrier(method);
+    forSmp = gDvm.dexOptForSmp;
+    needRetBar = needsReturnBarrier(method);
 
     insns = (u2*) method->insns;
     assert(insns != NULL);
     insnsSize = dvmGetMethodInsnsSize(method);
 
     while (insnsSize > 0) {
-        Opcode quickOpc, volatileOpc = OP_NOP;
-        int width;
-        bool notMatched = false;
+        Opcode opc, quickOpc, volatileOpc;
+        size_t width;
+        bool matched = true;
 
-        inst = *insns & 0xff;
+        opc = dexOpcodeFromCodeUnit(*insns);
+        width = dexGetWidthFromInstruction(insns);
+        volatileOpc = OP_NOP;
 
-        /* "essential" substitutions, always checked */
-        switch (inst) {
+        /*
+         * Each instruction may have:
+         * - "volatile" replacement
+         *   - may be essential or essential-on-SMP
+         * - correctness replacement
+         *   - may be essential or essential-on-SMP
+         * - performance replacement
+         *   - always non-essential
+         *
+         * Replacements are considered in the order shown, and the first
+         * match is applied.  For example, iget-wide will convert to
+         * iget-wide-volatile rather than iget-wide-quick if the target
+         * field is volatile.
+         */
+
+        /*
+         * essential substitutions:
+         *  {iget,iput,sget,sput}-wide[/jumbo] --> {op}-wide-volatile
+         *  invoke-direct[/jumbo][/range] --> invoke-object-init/range
+         *
+         * essential-on-SMP substitutions:
+         *  {iget,iput,sget,sput}-*[/jumbo] --> {op}-volatile
+         *  return-void --> return-void-barrier
+         *
+         * non-essential substitutions:
+         *  {iget,iput}-* --> {op}-quick
+         *
+         * TODO: might be time to merge this with the other two switches
+         */
+        switch (opc) {
         case OP_IGET:
         case OP_IGET_BOOLEAN:
         case OP_IGET_BYTE:
         case OP_IGET_CHAR:
         case OP_IGET_SHORT:
             quickOpc = OP_IGET_QUICK;
-            if (gDvm.dexOptForSmp)
+            if (forSmp)
                 volatileOpc = OP_IGET_VOLATILE;
             goto rewrite_inst_field;
         case OP_IGET_WIDE:
@@ -178,7 +217,7 @@ static void optimizeMethod(Method* method, bool essentialOnly)
             goto rewrite_inst_field;
         case OP_IGET_OBJECT:
             quickOpc = OP_IGET_OBJECT_QUICK;
-            if (gDvm.dexOptForSmp)
+            if (forSmp)
                 volatileOpc = OP_IGET_OBJECT_VOLATILE;
             goto rewrite_inst_field;
         case OP_IPUT:
@@ -187,7 +226,7 @@ static void optimizeMethod(Method* method, bool essentialOnly)
         case OP_IPUT_CHAR:
         case OP_IPUT_SHORT:
             quickOpc = OP_IPUT_QUICK;
-            if (gDvm.dexOptForSmp)
+            if (forSmp)
                 volatileOpc = OP_IPUT_VOLATILE;
             goto rewrite_inst_field;
         case OP_IPUT_WIDE:
@@ -196,78 +235,142 @@ static void optimizeMethod(Method* method, bool essentialOnly)
             goto rewrite_inst_field;
         case OP_IPUT_OBJECT:
             quickOpc = OP_IPUT_OBJECT_QUICK;
-            if (gDvm.dexOptForSmp)
+            if (forSmp)
                 volatileOpc = OP_IPUT_OBJECT_VOLATILE;
+            /* fall through */
 rewrite_inst_field:
             if (essentialOnly)
-                quickOpc = OP_NOP;
+                quickOpc = OP_NOP;      /* if essential-only, no "-quick" sub */
             if (quickOpc != OP_NOP || volatileOpc != OP_NOP)
                 rewriteInstField(method, insns, quickOpc, volatileOpc);
             break;
 
+        case OP_IGET_JUMBO:
+            if (forSmp)
+                volatileOpc = OP_IGET_VOLATILE_JUMBO;
+            goto rewrite_jumbo_inst_field;
+        case OP_IGET_WIDE_JUMBO:
+            volatileOpc = OP_IGET_WIDE_VOLATILE_JUMBO;
+            goto rewrite_jumbo_inst_field;
+        case OP_IGET_OBJECT_JUMBO:
+            if (forSmp)
+                volatileOpc = OP_IGET_OBJECT_VOLATILE_JUMBO;
+            goto rewrite_jumbo_inst_field;
+        case OP_IPUT_JUMBO:
+            if (forSmp)
+                volatileOpc = OP_IPUT_VOLATILE_JUMBO;
+            goto rewrite_jumbo_inst_field;
+        case OP_IPUT_WIDE_JUMBO:
+            volatileOpc = OP_IPUT_WIDE_VOLATILE_JUMBO;
+            goto rewrite_jumbo_inst_field;
+        case OP_IPUT_OBJECT_JUMBO:
+            if (forSmp)
+                volatileOpc = OP_IPUT_OBJECT_VOLATILE_JUMBO;
+            /* fall through */
+rewrite_jumbo_inst_field:
+            if (volatileOpc != OP_NOP)
+                rewriteJumboInstField(method, insns, volatileOpc);
+            break;
+
+        case OP_SGET:
+        case OP_SGET_BOOLEAN:
+        case OP_SGET_BYTE:
+        case OP_SGET_CHAR:
+        case OP_SGET_SHORT:
+            if (forSmp)
+                volatileOpc = OP_SGET_VOLATILE;
+            goto rewrite_static_field;
         case OP_SGET_WIDE:
             volatileOpc = OP_SGET_WIDE_VOLATILE;
             goto rewrite_static_field;
+        case OP_SGET_OBJECT:
+            if (forSmp)
+                volatileOpc = OP_SGET_OBJECT_VOLATILE;
+            goto rewrite_static_field;
+        case OP_SPUT:
+        case OP_SPUT_BOOLEAN:
+        case OP_SPUT_BYTE:
+        case OP_SPUT_CHAR:
+        case OP_SPUT_SHORT:
+            if (forSmp)
+                volatileOpc = OP_SPUT_VOLATILE;
+            goto rewrite_static_field;
         case OP_SPUT_WIDE:
             volatileOpc = OP_SPUT_WIDE_VOLATILE;
+            goto rewrite_static_field;
+        case OP_SPUT_OBJECT:
+            if (forSmp)
+                volatileOpc = OP_SPUT_OBJECT_VOLATILE;
+            /* fall through */
 rewrite_static_field:
-            rewriteStaticField(method, insns, volatileOpc);
+            if (volatileOpc != OP_NOP)
+                rewriteStaticField(method, insns, volatileOpc);
+            break;
+
+        case OP_SGET_JUMBO:
+            if (forSmp)
+                volatileOpc = OP_SGET_VOLATILE_JUMBO;
+            goto rewrite_jumbo_static_field;
+        case OP_SGET_WIDE_JUMBO:
+            volatileOpc = OP_SGET_WIDE_VOLATILE_JUMBO;
+            goto rewrite_jumbo_static_field;
+        case OP_SGET_OBJECT_JUMBO:
+            if (forSmp)
+                volatileOpc = OP_SGET_OBJECT_VOLATILE_JUMBO;
+            goto rewrite_jumbo_static_field;
+        case OP_SPUT_JUMBO:
+            if (forSmp)
+                volatileOpc = OP_SPUT_VOLATILE_JUMBO;
+            goto rewrite_jumbo_static_field;
+        case OP_SPUT_WIDE_JUMBO:
+            volatileOpc = OP_SPUT_WIDE_VOLATILE_JUMBO;
+            goto rewrite_jumbo_static_field;
+        case OP_SPUT_OBJECT_JUMBO:
+            if (forSmp)
+                volatileOpc = OP_SPUT_OBJECT_VOLATILE_JUMBO;
+            /* fall through */
+rewrite_jumbo_static_field:
+            if (volatileOpc != OP_NOP)
+                rewriteJumboStaticField(method, insns, volatileOpc);
+            break;
+
+        case OP_INVOKE_DIRECT:
+        case OP_INVOKE_DIRECT_RANGE:
+            if (!rewriteInvokeObjectInit(method, insns)) {
+                /* may want to try execute-inline, below */
+                matched = false;
+            }
+            break;
+        case OP_INVOKE_DIRECT_JUMBO:
+            rewriteJumboInvokeObjectInit(method, insns);
+            break;
+        case OP_RETURN_VOID:
+            if (needRetBar)
+                rewriteReturnVoid(method, insns);
             break;
         default:
-            notMatched = true;
+            matched = false;
             break;
         }
 
-        if (notMatched && gDvm.dexOptForSmp) {
-            /* additional "essential" substitutions for an SMP device */
-            switch (inst) {
-            case OP_SGET:
-            case OP_SGET_BOOLEAN:
-            case OP_SGET_BYTE:
-            case OP_SGET_CHAR:
-            case OP_SGET_SHORT:
-                volatileOpc = OP_SGET_VOLATILE;
-                goto rewrite_static_field2;
-            case OP_SGET_OBJECT:
-                volatileOpc = OP_SGET_OBJECT_VOLATILE;
-                goto rewrite_static_field2;
-            case OP_SPUT:
-            case OP_SPUT_BOOLEAN:
-            case OP_SPUT_BYTE:
-            case OP_SPUT_CHAR:
-            case OP_SPUT_SHORT:
-                volatileOpc = OP_SPUT_VOLATILE;
-                goto rewrite_static_field2;
-            case OP_SPUT_OBJECT:
-                volatileOpc = OP_SPUT_OBJECT_VOLATILE;
-rewrite_static_field2:
-                rewriteStaticField(method, insns, volatileOpc);
-                notMatched = false;
-                break;
-            case OP_RETURN_VOID:
-                if (needRetBar)
-                    rewriteReturnVoid(method, insns);
-                notMatched = false;
-                break;
-            default:
-                assert(notMatched);
-                break;
-            }
-        }
 
-        /* non-essential substitutions */
-        if (notMatched && !essentialOnly) {
-            switch (inst) {
+        /*
+         * non-essential substitutions:
+         *  invoke-{virtual,direct,static}[/range] --> execute-inline
+         *  invoke-{virtual,super}[/range] --> invoke-*-quick
+         */
+        if (!matched && !essentialOnly) {
+            switch (opc) {
             case OP_INVOKE_VIRTUAL:
                 if (!rewriteExecuteInline(method, insns, METHOD_VIRTUAL)) {
                     rewriteVirtualInvoke(method, insns,
-                            OP_INVOKE_VIRTUAL_QUICK);
+                        OP_INVOKE_VIRTUAL_QUICK);
                 }
                 break;
             case OP_INVOKE_VIRTUAL_RANGE:
                 if (!rewriteExecuteInlineRange(method, insns, METHOD_VIRTUAL)) {
                     rewriteVirtualInvoke(method, insns,
-                            OP_INVOKE_VIRTUAL_QUICK_RANGE);
+                        OP_INVOKE_VIRTUAL_QUICK_RANGE);
                 }
                 break;
             case OP_INVOKE_SUPER:
@@ -276,31 +379,27 @@ rewrite_static_field2:
             case OP_INVOKE_SUPER_RANGE:
                 rewriteVirtualInvoke(method, insns, OP_INVOKE_SUPER_QUICK_RANGE);
                 break;
-
             case OP_INVOKE_DIRECT:
-                if (!rewriteExecuteInline(method, insns, METHOD_DIRECT)) {
-                    rewriteEmptyDirectInvoke(method, insns);
-                }
+                rewriteExecuteInline(method, insns, METHOD_DIRECT);
                 break;
             case OP_INVOKE_DIRECT_RANGE:
                 rewriteExecuteInlineRange(method, insns, METHOD_DIRECT);
                 break;
-
             case OP_INVOKE_STATIC:
                 rewriteExecuteInline(method, insns, METHOD_STATIC);
                 break;
             case OP_INVOKE_STATIC_RANGE:
                 rewriteExecuteInlineRange(method, insns, METHOD_STATIC);
                 break;
-
             default:
                 /* nothing to do for this instruction */
                 ;
             }
         }
 
-        width = dexGetWidthFromInstruction(insns);
         assert(width > 0);
+        assert(width <= insnsSize);
+        assert(width == dexGetWidthFromInstruction(insns));
 
         insns += width;
         insnsSize -= width;
@@ -310,25 +409,43 @@ rewrite_static_field2:
 }
 
 /*
- * Update a 16-bit code unit in "meth".
+ * Update a 16-bit code unit in "meth".  The way in which the DEX data was
+ * loaded determines how we go about the write.
+ *
+ * This will be operating on post-byte-swap DEX data, so values will
+ * be in host order.
  */
-static inline void updateCodeUnit(const Method* meth, u2* ptr, u2 newVal)
+void dvmUpdateCodeUnit(const Method* meth, u2* ptr, u2 newVal)
 {
-    if (gDvm.optimizing) {
-        /* dexopt time, alter the output directly */
+    DvmDex* pDvmDex = meth->clazz->pDvmDex;
+
+    if (!pDvmDex->isMappedReadOnly) {
+        /* in-memory DEX (dexopt or byte[]), alter the output directly */
         *ptr = newVal;
     } else {
-        /* runtime, toggle the page read/write status */
-        dvmDexChangeDex2(meth->clazz->pDvmDex, ptr, newVal);
+        /* memory-mapped file, toggle the page read/write status */
+        dvmDexChangeDex2(pDvmDex, ptr, newVal);
     }
 }
 
 /*
- * Update the 8-bit opcode portion of a 16-bit code unit in "meth".
+ * Update an instruction's opcode.
+ *
+ * If "opcode" is an 8-bit op, we just replace that portion.  If it's a
+ * 16-bit op, we convert the opcode from "packed" form (e.g. 0x0108) to
+ * bytecode form (e.g. 0x08ff).
  */
 static inline void updateOpcode(const Method* meth, u2* ptr, Opcode opcode)
 {
-    updateCodeUnit(meth, ptr, (ptr[0] & 0xff00) | (u2) opcode);
+    if (opcode >= 256) {
+        /* opcode low byte becomes high byte, low byte becomes 0xff */
+        assert((ptr[0] & 0xff) == 0xff);
+        dvmUpdateCodeUnit(meth, ptr, (u2) (opcode << 8) | 0x00ff);
+    } else {
+        /* 8-bit op, just replace the low byte */
+        assert((ptr[0] & 0xff) != 0xff);
+        dvmUpdateCodeUnit(meth, ptr, (ptr[0] & 0xff00) | (u2) opcode);
+    }
 }
 
 /*
@@ -554,19 +671,21 @@ StaticField* dvmOptResolveStaticField(ClassObject* referrer, u4 sfieldIdx,
             return NULL;
         }
 
-        resField = (StaticField*)dvmFindFieldHier(resClass,
-                    dexStringById(pDvmDex->pDexFile, pFieldId->nameIdx),
+        const char* fieldName =
+            dexStringById(pDvmDex->pDexFile, pFieldId->nameIdx);
+
+        resField = (StaticField*)dvmFindFieldHier(resClass, fieldName,
                     dexStringByTypeIdx(pDvmDex->pDexFile, pFieldId->typeIdx));
         if (resField == NULL) {
-            LOGD("DexOpt: couldn't find static field\n");
+            LOGD("DexOpt: couldn't find static field %s.%s\n",
+                resClass->descriptor, fieldName);
             if (pFailure != NULL)
                 *pFailure = VERIFY_ERROR_NO_FIELD;
             return NULL;
         }
         if (!dvmIsStaticField(&resField->field)) {
             LOGD("DexOpt: wanted static, got instance for field %s.%s\n",
-                resClass->descriptor,
-                dexStringById(pDvmDex->pDexFile, pFieldId->nameIdx));
+                resClass->descriptor, fieldName);
             if (pFailure != NULL)
                 *pFailure = VERIFY_ERROR_CLASS_CHANGE;
             return NULL;
@@ -601,7 +720,7 @@ StaticField* dvmOptResolveStaticField(ClassObject* referrer, u4 sfieldIdx,
 
 
 /*
- * Rewrite an iget/iput instruction.  These all have the form:
+ * Rewrite an iget/iput instruction if appropriate.  These all have the form:
  *   op vA, vB, field@CCCC
  *
  * Where vA holds the value, vB holds the object reference, and CCCC is
@@ -616,7 +735,7 @@ StaticField* dvmOptResolveStaticField(ClassObject* referrer, u4 sfieldIdx,
  *
  * "method" is the referring method.
  */
-static bool rewriteInstField(Method* method, u2* insns, Opcode quickOpc,
+static void rewriteInstField(Method* method, u2* insns, Opcode quickOpc,
     Opcode volatileOpc)
 {
     ClassObject* clazz = method->clazz;
@@ -629,21 +748,16 @@ static bool rewriteInstField(Method* method, u2* insns, Opcode quickOpc,
              "0x%04x at 0x%02x in %s.%s\n",
             fieldIdx, (int) (insns - method->insns), clazz->descriptor,
             method->name);
-        return false;
-    }
-
-    if (instField->byteOffset >= 65536) {
-        LOGI("DexOpt: field offset exceeds 64K (%d)\n", instField->byteOffset);
-        return false;
+        return;
     }
 
     if (volatileOpc != OP_NOP && dvmIsVolatileField(&instField->field)) {
         updateOpcode(method, insns, volatileOpc);
         LOGV("DexOpt: rewrote ifield access %s.%s --> volatile\n",
             instField->field.clazz->descriptor, instField->field.name);
-    } else if (quickOpc != OP_NOP) {
+    } else if (quickOpc != OP_NOP && instField->byteOffset < 65536) {
         updateOpcode(method, insns, quickOpc);
-        updateCodeUnit(method, insns+1, (u2) instField->byteOffset);
+        dvmUpdateCodeUnit(method, insns+1, (u2) instField->byteOffset);
         LOGV("DexOpt: rewrote ifield access %s.%s --> %d\n",
             instField->field.clazz->descriptor, instField->field.name,
             instField->byteOffset);
@@ -652,23 +766,52 @@ static bool rewriteInstField(Method* method, u2* insns, Opcode quickOpc,
             instField->field.clazz->descriptor, instField->field.name);
     }
 
-    return true;
+    return;
 }
 
 /*
- * Rewrite an sget/sput instruction.  These all have the form:
- *   op vAA, field@BBBB
- *
- * Where vAA holds the value, and BBBB is the field reference constant
- * pool offset.  There is no "quick" form of static field accesses, so
- * this is only useful for volatile fields.
+ * Rewrite a jumbo instance field access instruction if appropriate.  If
+ * the target field is volatile, we replace the opcode with "volatileOpc".
  *
  * "method" is the referring method.
  */
-static bool rewriteStaticField(Method* method, u2* insns, Opcode volatileOpc)
+static void rewriteJumboInstField(Method* method, u2* insns, Opcode volatileOpc)
 {
     ClassObject* clazz = method->clazz;
-    u2 fieldIdx = insns[1];
+    u4 fieldIdx = insns[1] | (u4) insns[2] << 16;
+    InstField* instField;
+
+    assert(volatileOpc != OP_NOP);
+
+    instField = dvmOptResolveInstField(clazz, fieldIdx, NULL);
+    if (instField == NULL) {
+        LOGI("DexOpt: unable to optimize instance field ref "
+             "0x%04x at 0x%02x in %s.%s\n",
+            fieldIdx, (int) (insns - method->insns), clazz->descriptor,
+            method->name);
+        return;
+    }
+
+    if (dvmIsVolatileField(&instField->field)) {
+        updateOpcode(method, insns, volatileOpc);
+        LOGV("DexOpt: rewrote jumbo ifield access %s.%s --> volatile\n",
+            instField->field.clazz->descriptor, instField->field.name);
+    } else {
+        LOGV("DexOpt: no rewrite of jumbo ifield access %s.%s\n",
+            instField->field.clazz->descriptor, instField->field.name);
+    }
+}
+
+/*
+ * Rewrite a static [jumbo] field access instruction if appropriate.  If
+ * the target field is volatile, we replace the opcode with "volatileOpc".
+ *
+ * "method" is the referring method.
+ */
+static void rewriteStaticField0(Method* method, u2* insns, Opcode volatileOpc,
+    u4 fieldIdx)
+{
+    ClassObject* clazz = method->clazz;
     StaticField* staticField;
 
     assert(volatileOpc != OP_NOP);
@@ -679,7 +822,7 @@ static bool rewriteStaticField(Method* method, u2* insns, Opcode volatileOpc)
              "0x%04x at 0x%02x in %s.%s\n",
             fieldIdx, (int) (insns - method->insns), clazz->descriptor,
             method->name);
-        return false;
+        return;
     }
 
     if (dvmIsVolatileField(&staticField->field)) {
@@ -687,9 +830,20 @@ static bool rewriteStaticField(Method* method, u2* insns, Opcode volatileOpc)
         LOGV("DexOpt: rewrote sfield access %s.%s --> volatile\n",
             staticField->field.clazz->descriptor, staticField->field.name);
     }
-
-    return true;
 }
+
+static void rewriteStaticField(Method* method, u2* insns, Opcode volatileOpc)
+{
+    u2 fieldIdx = insns[1];
+    rewriteStaticField0(method, insns, volatileOpc, fieldIdx);
+}
+static void rewriteJumboStaticField(Method* method, u2* insns,
+    Opcode volatileOpc)
+{
+    u4 fieldIdx = insns[1] | (u4) insns[2] << 16;
+    rewriteStaticField0(method, insns, volatileOpc, fieldIdx);
+}
+
 
 /*
  * Alternate version of dvmResolveMethod().
@@ -826,13 +980,13 @@ Method* dvmOptResolveMethod(ClassObject* referrer, u4 methodIdx,
 
 /*
  * Rewrite invoke-virtual, invoke-virtual/range, invoke-super, and
- * invoke-super/range.  These all have the form:
+ * invoke-super/range if appropriate.  These all have the form:
  *   op vAA, meth@BBBB, reg stuff @CCCC
  *
  * We want to replace the method constant pool index BBBB with the
  * vtable index.
  */
-static bool rewriteVirtualInvoke(Method* method, u2* insns, Opcode newOpc)
+static void rewriteVirtualInvoke(Method* method, u2* insns, Opcode newOpc)
 {
     ClassObject* clazz = method->clazz;
     Method* baseMethod;
@@ -844,7 +998,7 @@ static bool rewriteVirtualInvoke(Method* method, u2* insns, Opcode newOpc)
             methodIdx,
             (int) (insns - method->insns), clazz->descriptor,
             method->name);
-        return false;
+        return;
     }
 
     assert((insns[0] & 0xff) == OP_INVOKE_VIRTUAL ||
@@ -857,26 +1011,27 @@ static bool rewriteVirtualInvoke(Method* method, u2* insns, Opcode newOpc)
      * initial load.
      */
     updateOpcode(method, insns, newOpc);
-    updateCodeUnit(method, insns+1, baseMethod->methodIndex);
+    dvmUpdateCodeUnit(method, insns+1, baseMethod->methodIndex);
 
     //LOGI("DexOpt: rewrote call to %s.%s --> %s.%s\n",
     //    method->clazz->descriptor, method->name,
     //    baseMethod->clazz->descriptor, baseMethod->name);
 
-    return true;
+    return;
 }
 
 /*
- * Rewrite invoke-direct, which has the form:
- *   op vAA, meth@BBBB, reg stuff @CCCC
+ * Rewrite invoke-direct[/range] if the target is Object.<init>.
  *
- * There isn't a lot we can do to make this faster, but in some situations
- * we can make it go away entirely.
+ * This is useful as an optimization, because otherwise every object
+ * instantiation will cause us to call a method that does nothing.
+ * It also allows us to inexpensively mark objects as finalizable at the
+ * correct time.
  *
- * This must only be used when the invoked method does nothing and has
- * no return value (the latter being very important for verification).
+ * TODO: verifier should ensure Object.<init> contains only return-void,
+ * and issue a warning if not.
  */
-static bool rewriteEmptyDirectInvoke(Method* method, u2* insns)
+static bool rewriteInvokeObjectInit(Method* method, u2* insns)
 {
     ClassObject* clazz = method->clazz;
     Method* calledMethod;
@@ -885,27 +1040,64 @@ static bool rewriteEmptyDirectInvoke(Method* method, u2* insns)
     calledMethod = dvmOptResolveMethod(clazz, methodIdx, METHOD_DIRECT, NULL);
     if (calledMethod == NULL) {
         LOGD("DexOpt: unable to opt direct call 0x%04x at 0x%02x in %s.%s\n",
-            methodIdx,
-            (int) (insns - method->insns), clazz->descriptor,
-            method->name);
+            methodIdx, (int) (insns - method->insns),
+            clazz->descriptor, method->name);
         return false;
     }
 
-    /* TODO: verify that java.lang.Object() is actually empty! */
     if (calledMethod->clazz == gDvm.classJavaLangObject &&
         dvmCompareNameDescriptorAndMethod("<init>", "()V", calledMethod) == 0)
     {
         /*
-         * Replace with "empty" instruction.  DO NOT disturb anything
-         * else about it, as we want it to function the same as
-         * OP_INVOKE_DIRECT when debugging is enabled.
+         * Replace the instruction.  If the debugger is attached, the
+         * interpreter will forward execution to the invoke-direct/range
+         * handler.  If this was an invoke-direct/range instruction we can
+         * just replace the opcode, but if it was an invoke-direct we
+         * have to set the argument count (high 8 bits of first code unit)
+         * to 1.
          */
-        assert((insns[0] & 0xff) == OP_INVOKE_DIRECT);
-        updateOpcode(method, insns, OP_INVOKE_DIRECT_EMPTY);
+        u1 origOp = insns[0] & 0xff;
+        if (origOp == OP_INVOKE_DIRECT) {
+            dvmUpdateCodeUnit(method, insns,
+                OP_INVOKE_OBJECT_INIT_RANGE | 0x100);
+        } else {
+            assert(origOp == OP_INVOKE_DIRECT_RANGE);
+            assert((insns[0] >> 8) == 1);
+            updateOpcode(method, insns, OP_INVOKE_OBJECT_INIT_RANGE);
+        }
 
-        //LOGI("DexOpt: marked-empty call to %s.%s --> %s.%s\n",
-        //    method->clazz->descriptor, method->name,
-        //    calledMethod->clazz->descriptor, calledMethod->name);
+        LOGVV("DexOpt: replaced Object.<init> in %s.%s\n",
+            method->clazz->descriptor, method->name);
+    }
+
+    return true;
+}
+
+/*
+ * Rewrite invoke-direct/jumbo if the target is Object.<init>.
+ */
+static bool rewriteJumboInvokeObjectInit(Method* method, u2* insns)
+{
+    ClassObject* clazz = method->clazz;
+    Method* calledMethod;
+    u4 methodIdx = insns[1] | (u4) insns[2] << 16;
+
+    calledMethod = dvmOptResolveMethod(clazz, methodIdx, METHOD_DIRECT, NULL);
+    if (calledMethod == NULL) {
+        LOGD("DexOpt: unable to opt direct call 0x%04x at 0x%02x in %s.%s\n",
+            methodIdx, (int) (insns - method->insns),
+            clazz->descriptor, method->name);
+        return false;
+    }
+
+    if (calledMethod->clazz == gDvm.classJavaLangObject &&
+        dvmCompareNameDescriptorAndMethod("<init>", "()V", calledMethod) == 0)
+    {
+        assert(insns[0] == ((u2) (OP_INVOKE_DIRECT_JUMBO << 8) | 0xff));
+        updateOpcode(method, insns, OP_INVOKE_OBJECT_INIT_JUMBO);
+
+        LOGVV("DexOpt: replaced jumbo Object.<init> in %s.%s\n",
+            method->clazz->descriptor, method->name);
     }
 
     return true;
@@ -981,8 +1173,8 @@ Method* dvmOptResolveInterfaceMethod(ClassObject* referrer, u4 methodIdx)
 }
 
 /*
- * See if the method being called can be rewritten as an inline operation.
- * Works for invoke-virtual, invoke-direct, and invoke-static.
+ * Replace invoke-virtual, invoke-direct, or invoke-static with an
+ * execute-inline operation if appropriate.
  *
  * Returns "true" if we replace it.
  */
@@ -1017,7 +1209,7 @@ static bool rewriteExecuteInline(Method* method, u2* insns,
                    (insns[0] & 0xff) == OP_INVOKE_STATIC ||
                    (insns[0] & 0xff) == OP_INVOKE_VIRTUAL);
             updateOpcode(method, insns, OP_EXECUTE_INLINE);
-            updateCodeUnit(method, insns+1, (u2) inlineSubs->inlineIdx);
+            dvmUpdateCodeUnit(method, insns+1, (u2) inlineSubs->inlineIdx);
 
             //LOGI("DexOpt: execute-inline %s.%s --> %s.%s\n",
             //    method->clazz->descriptor, method->name,
@@ -1032,8 +1224,8 @@ static bool rewriteExecuteInline(Method* method, u2* insns,
 }
 
 /*
- * See if the method being called can be rewritten as an inline operation.
- * Works for invoke-virtual/range, invoke-direct/range, and invoke-static/range.
+ * Replace invoke-virtual/range, invoke-direct/range, or invoke-static/range
+ * with an execute-inline operation if appropriate.
  *
  * Returns "true" if we replace it.
  */
@@ -1057,7 +1249,7 @@ static bool rewriteExecuteInlineRange(Method* method, u2* insns,
                    (insns[0] & 0xff) == OP_INVOKE_STATIC_RANGE ||
                    (insns[0] & 0xff) == OP_INVOKE_VIRTUAL_RANGE);
             updateOpcode(method, insns, OP_EXECUTE_INLINE_RANGE);
-            updateCodeUnit(method, insns+1, (u2) inlineSubs->inlineIdx);
+            dvmUpdateCodeUnit(method, insns+1, (u2) inlineSubs->inlineIdx);
 
             //LOGI("DexOpt: execute-inline/range %s.%s --> %s.%s\n",
             //    method->clazz->descriptor, method->name,
@@ -1088,29 +1280,32 @@ static bool needsReturnBarrier(Method* method)
         return false;
 
     /*
-     * Check to see if the class has any final fields.  If not, we don't
-     * need to generate a barrier instruction.
+     * Check to see if the class is finalizable.  The loader sets a flag
+     * if the class or one of its superclasses overrides finalize().
      */
     const ClassObject* clazz = method->clazz;
-    int idx = clazz->ifieldCount;
-    while (--idx >= 0) {
-        if (dvmIsFinalField(&clazz->ifields[idx].field))
-            break;
-    }
-    if (idx < 0)
-        return false;
+    if (IS_CLASS_FLAG_SET(clazz, CLASS_ISFINALIZABLE))
+        return true;
 
     /*
+     * Check to see if the class has any final fields.  If not, we don't
+     * need to generate a barrier instruction.
+     *
      * In theory, we only need to do this if the method actually modifies
      * a final field.  In practice, non-constructor methods are allowed
-     * to modify final fields by the VM, and there are tools that rely on
-     * this behavior.  (The compiler does not allow it.)
+     * to modify final fields, and there are 3rd-party tools that rely on
+     * this behavior.  (The compiler does not allow it, but the VM does.)
      *
      * If we alter the verifier to restrict final-field updates to
      * constructors, we can tighten this up as well.
      */
+    int idx = clazz->ifieldCount;
+    while (--idx >= 0) {
+        if (dvmIsFinalField(&clazz->ifields[idx].field))
+            return true;
+    }
 
-    return true;
+    return false;
 }
 
 /*

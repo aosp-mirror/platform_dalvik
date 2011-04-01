@@ -224,66 +224,66 @@ static void logClassLoad(char type, ClassObject* clazz) {
 static void linearAllocTests()
 {
     char* fiddle;
-    int try = 1;
+    int test = 1;
 
-    switch (try) {
+    switch (test) {
     case 0:
-        fiddle = dvmLinearAlloc(NULL, 3200-28);
-        dvmLinearReadOnly(NULL, fiddle);
+        fiddle = (char*)dvmLinearAlloc(NULL, 3200-28);
+        dvmLinearReadOnly(NULL, (char*)fiddle);
         break;
     case 1:
-        fiddle = dvmLinearAlloc(NULL, 3200-24);
-        dvmLinearReadOnly(NULL, fiddle);
+        fiddle = (char*)dvmLinearAlloc(NULL, 3200-24);
+        dvmLinearReadOnly(NULL, (char*)fiddle);
         break;
     case 2:
-        fiddle = dvmLinearAlloc(NULL, 3200-20);
-        dvmLinearReadOnly(NULL, fiddle);
+        fiddle = (char*)dvmLinearAlloc(NULL, 3200-20);
+        dvmLinearReadOnly(NULL, (char*)fiddle);
         break;
     case 3:
-        fiddle = dvmLinearAlloc(NULL, 3200-16);
-        dvmLinearReadOnly(NULL, fiddle);
+        fiddle = (char*)dvmLinearAlloc(NULL, 3200-16);
+        dvmLinearReadOnly(NULL, (char*)fiddle);
         break;
     case 4:
-        fiddle = dvmLinearAlloc(NULL, 3200-12);
-        dvmLinearReadOnly(NULL, fiddle);
+        fiddle = (char*)dvmLinearAlloc(NULL, 3200-12);
+        dvmLinearReadOnly(NULL, (char*)fiddle);
         break;
     }
-    fiddle = dvmLinearAlloc(NULL, 896);
-    dvmLinearReadOnly(NULL, fiddle);
-    fiddle = dvmLinearAlloc(NULL, 20);      // watch addr of this alloc
-    dvmLinearReadOnly(NULL, fiddle);
+    fiddle = (char*)dvmLinearAlloc(NULL, 896);
+    dvmLinearReadOnly(NULL, (char*)fiddle);
+    fiddle = (char*)dvmLinearAlloc(NULL, 20);      // watch addr of this alloc
+    dvmLinearReadOnly(NULL, (char*)fiddle);
 
-    fiddle = dvmLinearAlloc(NULL, 1);
+    fiddle = (char*)dvmLinearAlloc(NULL, 1);
     fiddle[0] = 'q';
     dvmLinearReadOnly(NULL, fiddle);
-    fiddle = dvmLinearAlloc(NULL, 4096);
+    fiddle = (char*)dvmLinearAlloc(NULL, 4096);
     fiddle[0] = 'x';
     fiddle[4095] = 'y';
     dvmLinearReadOnly(NULL, fiddle);
     dvmLinearFree(NULL, fiddle);
-    fiddle = dvmLinearAlloc(NULL, 0);
+    fiddle = (char*)dvmLinearAlloc(NULL, 0);
     dvmLinearReadOnly(NULL, fiddle);
-    fiddle = dvmLinearRealloc(NULL, fiddle, 12);
+    fiddle = (char*)dvmLinearRealloc(NULL, fiddle, 12);
     fiddle[11] = 'z';
+    dvmLinearReadOnly(NULL, (char*)fiddle);
+    fiddle = (char*)dvmLinearRealloc(NULL, fiddle, 5);
     dvmLinearReadOnly(NULL, fiddle);
-    fiddle = dvmLinearRealloc(NULL, fiddle, 5);
-    dvmLinearReadOnly(NULL, fiddle);
-    fiddle = dvmLinearAlloc(NULL, 17001);
+    fiddle = (char*)dvmLinearAlloc(NULL, 17001);
     fiddle[0] = 'x';
     fiddle[17000] = 'y';
-    dvmLinearReadOnly(NULL, fiddle);
+    dvmLinearReadOnly(NULL, (char*)fiddle);
 
-    char* str = dvmLinearStrdup(NULL, "This is a test!");
+    char* str = (char*)dvmLinearStrdup(NULL, "This is a test!");
     LOGI("GOT: '%s'\n", str);
 
     /* try to check the bounds; allocator may round allocation size up */
-    fiddle = dvmLinearAlloc(NULL, 12);
+    fiddle = (char*)dvmLinearAlloc(NULL, 12);
     LOGI("Should be 1: %d\n", dvmLinearAllocContains(fiddle, 12));
     LOGI("Should be 0: %d\n", dvmLinearAllocContains(fiddle, 13));
     LOGI("Should be 0: %d\n", dvmLinearAllocContains(fiddle - 128*1024, 1));
 
     dvmLinearAllocDump(NULL);
-    dvmLinearFree(NULL, str);
+    dvmLinearFree(NULL, (char*)str);
 }
 
 static size_t classObjectSize(size_t sfieldCount)
@@ -299,6 +299,108 @@ size_t dvmClassObjectSize(const ClassObject *clazz)
 {
     assert(clazz != NULL);
     return classObjectSize(clazz->sfieldCount);
+}
+
+/* (documented in header) */
+ClassObject* dvmFindPrimitiveClass(char type)
+{
+    PrimitiveType primitiveType = dexGetPrimitiveTypeFromDescriptorChar(type);
+
+    switch (primitiveType) {
+        case PRIM_VOID:    return gDvm.typeVoid;
+        case PRIM_BOOLEAN: return gDvm.typeBoolean;
+        case PRIM_BYTE:    return gDvm.typeByte;
+        case PRIM_SHORT:   return gDvm.typeShort;
+        case PRIM_CHAR:    return gDvm.typeChar;
+        case PRIM_INT:     return gDvm.typeInt;
+        case PRIM_LONG:    return gDvm.typeLong;
+        case PRIM_FLOAT:   return gDvm.typeFloat;
+        case PRIM_DOUBLE:  return gDvm.typeDouble;
+        default: {
+            LOGW("Unknown primitive type '%c'\n", type);
+            return NULL;
+        }
+    }
+}
+
+/*
+ * Synthesize a primitive class.
+ *
+ * Just creates the class and returns it (does not add it to the class list).
+ */
+static bool createPrimitiveType(PrimitiveType primitiveType, ClassObject** pClass)
+{
+    /*
+     * Fill out a few fields in the ClassObject.
+     *
+     * Note that primitive classes do not sub-class the class Object.
+     * This matters for "instanceof" checks. Also, we assume that the
+     * primitive class does not override finalize().
+     */
+
+    const char* descriptor = dexGetPrimitiveTypeDescriptor(primitiveType);
+    assert(descriptor != NULL);
+
+    ClassObject* newClass = (ClassObject*) dvmMalloc(sizeof(*newClass), ALLOC_DEFAULT);
+    if (newClass == NULL) {
+        return false;
+    }
+
+    DVM_OBJECT_INIT(&newClass->obj, gDvm.classJavaLangClass);
+    dvmSetClassSerialNumber(newClass);
+    newClass->accessFlags = ACC_PUBLIC | ACC_FINAL | ACC_ABSTRACT;
+    newClass->primitiveType = primitiveType;
+    newClass->descriptorAlloc = NULL;
+    newClass->descriptor = descriptor;
+    newClass->super = NULL;
+    newClass->status = CLASS_INITIALIZED;
+
+    /* don't need to set newClass->objectSize */
+
+    LOGVV("Constructed class for primitive type '%s'\n", newClass->descriptor);
+
+    *pClass = newClass;
+    dvmReleaseTrackedAlloc((Object*) newClass, NULL);
+
+    return true;
+}
+
+/*
+ * Create the initial class instances. These consist of the class
+ * Class and all of the classes representing primitive types.
+ */
+static bool createInitialClasses(void) {
+    /*
+     * Initialize the class Class. This has to be done specially, particularly
+     * because it is an instance of itself.
+     */
+    ClassObject* clazz = (ClassObject*)
+        dvmMalloc(classObjectSize(CLASS_SFIELD_SLOTS), ALLOC_DEFAULT);
+    if (clazz == NULL) {
+        return false;
+    }
+    DVM_OBJECT_INIT(&clazz->obj, clazz);
+    clazz->descriptor = "Ljava/lang/Class;";
+    gDvm.classJavaLangClass = clazz;
+    LOGVV("Constructed the class Class.\n");
+
+    /*
+     * Initialize the classes representing primitive types. These are
+     * instances of the class Class, but other than that they're fairly
+     * different from regular classes.
+     */
+    bool ok = true;
+    ok &= createPrimitiveType(PRIM_VOID,    &gDvm.typeVoid);
+    ok &= createPrimitiveType(PRIM_BOOLEAN, &gDvm.typeBoolean);
+    ok &= createPrimitiveType(PRIM_BYTE,    &gDvm.typeByte);
+    ok &= createPrimitiveType(PRIM_SHORT,   &gDvm.typeShort);
+    ok &= createPrimitiveType(PRIM_CHAR,    &gDvm.typeChar);
+    ok &= createPrimitiveType(PRIM_INT,     &gDvm.typeInt);
+    ok &= createPrimitiveType(PRIM_LONG,    &gDvm.typeLong);
+    ok &= createPrimitiveType(PRIM_FLOAT,   &gDvm.typeFloat);
+    ok &= createPrimitiveType(PRIM_DOUBLE,  &gDvm.typeDouble);
+
+    return ok;
 }
 
 /*
@@ -332,18 +434,22 @@ bool dvmClassStartup(void)
      */
     gDvm.classSerialNumber = INITIAL_CLASS_SERIAL_NUMBER;
 
-    /* Set up the table we'll use for tracking initiating loaders for
+    /*
+     * Set up the table we'll use for tracking initiating loaders for
      * early classes.
      * If it's NULL, we just fall back to the InitiatingLoaderList in the
      * ClassObject, so it's not fatal to fail this allocation.
      */
-    gDvm.initiatingLoaderList =
+    gDvm.initiatingLoaderList = (InitiatingLoaderList*)
         calloc(ZYGOTE_CLASS_CUTOFF, sizeof(InitiatingLoaderList));
 
-    gDvm.classJavaLangClass = (ClassObject*) dvmMalloc(
-        classObjectSize(CLASS_SFIELD_SLOTS), ALLOC_DEFAULT);
-    DVM_OBJECT_INIT(&gDvm.classJavaLangClass->obj, gDvm.classJavaLangClass);
-    gDvm.classJavaLangClass->descriptor = "Ljava/lang/Class;";
+    /*
+     * Create the initial classes. These are the first objects constructed
+     * within the nascent VM.
+     */
+    if (!createInitialClasses()) {
+        return false;
+    }
 
     /*
      * Process the bootstrap class path.  This means opening the specified
@@ -359,40 +465,24 @@ bool dvmClassStartup(void)
 }
 
 /*
- * We should be able to find classes now.  Get the vtable index for
- * the class loader loadClass() method.
- *
- * This doesn't work in dexopt when operating on core.jar, because
- * there aren't any classes to load.
- */
-bool dvmBaseClassStartup(void)
-{
-    ClassObject* clClass = dvmFindSystemClassNoInit("Ljava/lang/ClassLoader;");
-    Method* meth = dvmFindVirtualMethodByDescriptor(clClass, "loadClass",
-            "(Ljava/lang/String;)Ljava/lang/Class;");
-    if (meth == NULL) {
-        LOGE("Unable to find loadClass() in java.lang.ClassLoader\n");
-        return false;
-    }
-    gDvm.voffJavaLangClassLoader_loadClass = meth->methodIndex;
-
-    return true;
-}
-
-/*
  * Clean up.
  */
 void dvmClassShutdown(void)
 {
-    int i;
-
     /* discard all system-loaded classes */
     dvmHashTableFree(gDvm.loadedClasses);
     gDvm.loadedClasses = NULL;
 
     /* discard primitive classes created for arrays */
-    for (i = 0; i < PRIM_MAX; i++)
-        dvmFreeClassInnards(gDvm.primitiveClass[i]);
+    dvmFreeClassInnards(gDvm.typeVoid);
+    dvmFreeClassInnards(gDvm.typeBoolean);
+    dvmFreeClassInnards(gDvm.typeByte);
+    dvmFreeClassInnards(gDvm.typeShort);
+    dvmFreeClassInnards(gDvm.typeChar);
+    dvmFreeClassInnards(gDvm.typeInt);
+    dvmFreeClassInnards(gDvm.typeLong);
+    dvmFreeClassInnards(gDvm.typeFloat);
+    dvmFreeClassInnards(gDvm.typeDouble);
 
     /* this closes DEX files, JAR files, etc. */
     freeCpeArray(gDvm.bootClassPath);
@@ -1059,7 +1149,7 @@ ClassObject* dvmLookupClass(const char* descriptor, Object* loader,
      * here, but this is an extremely rare case, and it's simpler to have
      * the wait-for-class code centralized.
      */
-    if (found != NULL && !unprepOkay && !dvmIsClassLinked(found)) {
+    if (found && !unprepOkay && !dvmIsClassLinked((ClassObject*)found)) {
         LOGV("Ignoring not-yet-ready %s, using slow path\n",
             ((ClassObject*)found)->descriptor);
         found = NULL;
@@ -1262,7 +1352,7 @@ static ClassObject* findClassFromLoaderNoInit(const char* descriptor,
     /* convert "Landroid/debug/Stuff;" to "android.debug.Stuff" */
     dotName = dvmDescriptorToDot(descriptor);
     if (dotName == NULL) {
-        dvmThrowException("Ljava/lang/OutOfMemoryError;", NULL);
+        dvmThrowOutOfMemoryError(NULL);
         goto bail;
     }
     nameObj = dvmCreateStringFromCstr(dotName);
@@ -1296,15 +1386,13 @@ static ClassObject* findClassFromLoaderNoInit(const char* descriptor,
 #endif
         dvmAddTrackedAlloc(excep, self);
         dvmClearException(self);
-        dvmThrowChainedExceptionWithClassMessage(
-            "Ljava/lang/NoClassDefFoundError;", descriptor, excep);
+        dvmThrowChainedNoClassDefFoundError(descriptor, excep);
         dvmReleaseTrackedAlloc(excep, self);
         clazz = NULL;
         goto bail;
     } else if (clazz == NULL) {
         LOGW("ClassLoader returned NULL w/o exception pending\n");
-        dvmThrowException("Ljava/lang/NullPointerException;",
-            "ClassLoader returned null");
+        dvmThrowNullPointerException("ClassLoader returned null");
         goto bail;
     }
 
@@ -1441,8 +1529,7 @@ static ClassObject* findClassNoInit(const char* descriptor, Object* loader,
                 dvmSetException(self, gDvm.noClassDefFoundErrorObj);
             } else {
                 /* dexopt case -- can't guarantee prefab (core.jar) */
-                dvmThrowExceptionWithClassMessage(
-                    "Ljava/lang/NoClassDefFoundError;", descriptor);
+                dvmThrowNoClassDefFoundError(descriptor);
             }
             goto bail;
         }
@@ -1594,8 +1681,7 @@ got_class:
             {
                 LOGW("Recursive link on class %s\n", clazz->descriptor);
                 dvmUnlockObject(self, (Object*) clazz);
-                dvmThrowExceptionWithClassMessage(
-                    "Ljava/lang/ClassCircularityError;", clazz->descriptor);
+                dvmThrowClassCircularityError(clazz->descriptor);
                 clazz = NULL;
                 goto bail;
             }
@@ -2077,7 +2163,20 @@ static void loadMethodFromDex(ClassObject* clazz, const DexMethod* pDexMethod,
     meth->jniArgInfo = 0;
 
     if (dvmCompareNameDescriptorAndMethod("finalize", "()V", meth) == 0) {
-        SET_CLASS_FLAG(clazz, CLASS_ISFINALIZABLE);
+        /*
+         * The Enum class declares a "final" finalize() method to
+         * prevent subclasses from introducing a finalizer.  We don't
+         * want to set the finalizable flag for Enum or its subclasses,
+         * so we check for it here.
+         *
+         * We also want to avoid setting it on Object, but it's easier
+         * to just strip that out later.
+         */
+        if (clazz->classLoader != NULL ||
+            strcmp(clazz->descriptor, "Ljava/lang/Enum;") != 0)
+        {
+            SET_CLASS_FLAG(clazz, CLASS_ISFINALIZABLE);
+        }
     }
 
     pDexCode = dexGetCode(pDexFile, pDexMethod);
@@ -2289,7 +2388,6 @@ static void loadIFieldFromDex(ClassObject* clazz,
  */
 static bool precacheReferenceOffsets(ClassObject* clazz)
 {
-    Method *meth;
     int i;
 
     /* We trick the GC object scanner by not counting
@@ -2340,36 +2438,14 @@ static bool precacheReferenceOffsets(ClassObject* clazz)
         return false;
     }
 
-    /* Cache pretty much everything about Reference so that
-     * we don't need to call interpreted code when clearing/enqueueing
-     * references.  This is fragile, so we'll be paranoid.
+    /*
+     * Now that the above has been done, it is safe to cache
+     * info about the class.
      */
-    gDvm.classJavaLangRefReference = clazz;
-
-    gDvm.offJavaLangRefReference_referent =
-        dvmFindFieldOffset(gDvm.classJavaLangRefReference,
-                "referent", "Ljava/lang/Object;");
-    assert(gDvm.offJavaLangRefReference_referent >= 0);
-
-    gDvm.offJavaLangRefReference_queue =
-        dvmFindFieldOffset(gDvm.classJavaLangRefReference,
-                "queue", "Ljava/lang/ref/ReferenceQueue;");
-    assert(gDvm.offJavaLangRefReference_queue >= 0);
-
-    gDvm.offJavaLangRefReference_queueNext =
-        dvmFindFieldOffset(gDvm.classJavaLangRefReference,
-                "queueNext", "Ljava/lang/ref/Reference;");
-    assert(gDvm.offJavaLangRefReference_queueNext >= 0);
-
-    gDvm.offJavaLangRefReference_pendingNext =
-        dvmFindFieldOffset(gDvm.classJavaLangRefReference,
-                "pendingNext", "Ljava/lang/ref/Reference;");
-    assert(gDvm.offJavaLangRefReference_pendingNext >= 0);
-
-    /* enqueueInternal() is private and thus a direct method. */
-    meth = dvmFindDirectMethodByDescriptor(clazz, "enqueueInternal", "()Z");
-    assert(meth != NULL);
-    gDvm.methJavaLangRefReference_enqueueInternal = meth;
+    if (!dvmFindReferenceMembers(clazz)) {
+        LOGE("Trouble with Reference setup\n");
+        return false;
+    }
 
     return true;
 }
@@ -2478,7 +2554,7 @@ bool dvmLinkClass(ClassObject* clazz)
              */
             assert(sizeof(*interfaceIdxArray) == sizeof(*clazz->interfaces));
             size_t len = clazz->interfaceCount * sizeof(*interfaceIdxArray);
-            interfaceIdxArray = malloc(len);
+            interfaceIdxArray = (u4*)malloc(len);
             if (interfaceIdxArray == NULL) {
                 LOGW("Unable to allocate memory to link %s", clazz->descriptor);
                 goto bail;
@@ -2552,8 +2628,7 @@ bool dvmLinkClass(ClassObject* clazz)
                     dvmLinearReadOnly(clazz->classLoader, clazz->interfaces);
                     LOGW("Interface '%s' is not accessible to '%s'\n",
                          clazz->interfaces[i]->descriptor, clazz->descriptor);
-                    dvmThrowException("Ljava/lang/IllegalAccessError;",
-                                      "interface not accessible");
+                    dvmThrowIllegalAccessError("interface not accessible");
                     goto bail;
                 }
                 LOGVV("+++  found interface '%s'\n",
@@ -2578,8 +2653,7 @@ bool dvmLinkClass(ClassObject* clazz)
             /* TODO: is this invariant true for all java/lang/Objects,
              * regardless of the class loader?  For now, assume it is.
              */
-            dvmThrowException("Ljava/lang/ClassFormatError;",
-                "java.lang.Object has a superclass");
+            dvmThrowClassFormatError("java.lang.Object has a superclass");
             goto bail;
         }
 
@@ -2589,28 +2663,24 @@ bool dvmLinkClass(ClassObject* clazz)
         CLEAR_CLASS_FLAG(clazz, CLASS_ISFINALIZABLE);
     } else {
         if (clazz->super == NULL) {
-            dvmThrowException("Ljava/lang/LinkageError;",
-                              "no superclass defined");
+            dvmThrowLinkageError("no superclass defined");
             goto bail;
         }
         /* verify */
         if (dvmIsFinalClass(clazz->super)) {
             LOGW("Superclass of '%s' is final '%s'\n",
                 clazz->descriptor, clazz->super->descriptor);
-            dvmThrowException("Ljava/lang/IncompatibleClassChangeError;",
-                "superclass is final");
+            dvmThrowIncompatibleClassChangeError("superclass is final");
             goto bail;
         } else if (dvmIsInterfaceClass(clazz->super)) {
             LOGW("Superclass of '%s' is interface '%s'\n",
                 clazz->descriptor, clazz->super->descriptor);
-            dvmThrowException("Ljava/lang/IncompatibleClassChangeError;",
-                "superclass is an interface");
+            dvmThrowIncompatibleClassChangeError("superclass is an interface");
             goto bail;
         } else if (!dvmCheckClassAccess(clazz, clazz->super)) {
             LOGW("Superclass of '%s' (%s) is not accessible\n",
                 clazz->descriptor, clazz->super->descriptor);
-            dvmThrowException("Ljava/lang/IllegalAccessError;",
-                "superclass not accessible");
+            dvmThrowIllegalAccessError("superclass not accessible");
             goto bail;
         }
 
@@ -2634,6 +2704,7 @@ bool dvmLinkClass(ClassObject* clazz)
             superRefFlags = GET_CLASS_FLAG_GROUP(clazz->super,
                     CLASS_ISREFERENCE |
                     CLASS_ISWEAKREFERENCE |
+                    CLASS_ISFINALIZERREFERENCE |
                     CLASS_ISPHANTOMREFERENCE);
             SET_CLASS_FLAG(clazz, superRefFlags);
         } else if (clazz->classLoader == NULL &&
@@ -2657,6 +2728,10 @@ bool dvmLinkClass(ClassObject* clazz)
             {
                 refFlags |= CLASS_ISWEAKREFERENCE;
             } else if (strcmp(clazz->descriptor,
+                       "Ljava/lang/ref/FinalizerReference;") == 0)
+            {
+                refFlags |= CLASS_ISFINALIZERREFERENCE;
+            }  else if (strcmp(clazz->descriptor,
                        "Ljava/lang/ref/PhantomReference;") == 0)
             {
                 refFlags |= CLASS_ISPHANTOMREFERENCE;
@@ -2665,8 +2740,7 @@ bool dvmLinkClass(ClassObject* clazz)
                  * from Reference.
                  */
 //xxx is this the right exception?  better than an assertion.
-                dvmThrowException("Ljava/lang/LinkageError;",
-                    "illegal inheritance from Reference");
+                dvmThrowLinkageError("illegal inheritance from Reference");
                 goto bail;
             }
 
@@ -2675,6 +2749,7 @@ bool dvmLinkClass(ClassObject* clazz)
             assert(GET_CLASS_FLAG_GROUP(clazz,
                     CLASS_ISREFERENCE |
                     CLASS_ISWEAKREFERENCE |
+                    CLASS_ISFINALIZERREFERENCE |
                     CLASS_ISPHANTOMREFERENCE) == 0);
 
             SET_CLASS_FLAG(clazz, refFlags);
@@ -2726,23 +2801,16 @@ bool dvmLinkClass(ClassObject* clazz)
         goto bail;
 
     /*
-     * Cache fields and methods from java/lang/ref/Reference and
-     * java/lang/Class.  This has to happen after computeFieldOffsets().
+     * Cache field and method info for the class Reference (as loaded
+     * by the boot classloader). This has to happen after the call to
+     * computeFieldOffsets().
      */
-    if (clazz->classLoader == NULL) {
-        if (strcmp(clazz->descriptor, "Ljava/lang/ref/Reference;") == 0) {
-            if (!precacheReferenceOffsets(clazz)) {
-                LOGE("failed pre-caching Reference offsets\n");
-                dvmThrowException("Ljava/lang/InternalError;", NULL);
-                goto bail;
-            }
-        } else if (clazz == gDvm.classJavaLangClass) {
-            gDvm.offJavaLangClass_pd = dvmFindFieldOffset(clazz, "pd",
-                "Ljava/security/ProtectionDomain;");
-            if (gDvm.offJavaLangClass_pd <= 0) {
-                LOGE("ERROR: unable to find 'pd' field in Class\n");
-                dvmAbort();     /* we're not going to get much farther */
-            }
+    if ((clazz->classLoader == NULL)
+            && (strcmp(clazz->descriptor, "Ljava/lang/ref/Reference;") == 0)) {
+        if (!precacheReferenceOffsets(clazz)) {
+            LOGE("failed pre-caching Reference offsets\n");
+            dvmThrowInternalError(NULL);
+            goto bail;
         }
     }
 
@@ -2783,7 +2851,7 @@ bail:
     if (!okay) {
         clazz->status = CLASS_ERROR;
         if (!dvmCheckException(dvmThreadSelf())) {
-            dvmThrowException("Ljava/lang/VirtualMachineError;", NULL);
+            dvmThrowVirtualMachineError(NULL);
         }
     }
     if (interfaceIdxArray != NULL) {
@@ -2890,8 +2958,8 @@ static bool createVtable(ClassObject* clazz)
         if (actualCount < maxCount) {
             assert(clazz->vtable != NULL);
             dvmLinearReadOnly(clazz->classLoader, clazz->vtable);
-            clazz->vtable = dvmLinearRealloc(clazz->classLoader, clazz->vtable,
-                sizeof(*(clazz->vtable)) * actualCount);
+            clazz->vtable = (Method **)dvmLinearRealloc(clazz->classLoader,
+                clazz->vtable, sizeof(*(clazz->vtable)) * actualCount);
             if (clazz->vtable == NULL) {
                 LOGE("vtable realloc failed\n");
                 goto bail;
@@ -3001,8 +3069,7 @@ static bool createIftable(ClassObject* clazz)
         if (!dvmIsInterfaceClass(interf)) {
             LOGW("Class '%s' implements non-interface '%s'\n",
                 clazz->descriptor, interf->descriptor);
-            dvmThrowExceptionWithClassMessage(
-                "Ljava/lang/IncompatibleClassChangeError;",
+            dvmThrowIncompatibleClassChangeErrorWithClassMessage(
                 clazz->descriptor);
             goto bail;
         }
@@ -3178,7 +3245,7 @@ static bool createIftable(ClassObject* clazz)
                     if (!dvmIsPublicMethod(clazz->vtable[j])) {
                         LOGW("Implementation of %s.%s is not public\n",
                             clazz->descriptor, clazz->vtable[j]->name);
-                        dvmThrowException("Ljava/lang/IllegalAccessError;",
+                        dvmThrowIllegalAccessError(
                             "interface implementation not public");
                         goto bail;
                     }
@@ -3194,17 +3261,19 @@ static bool createIftable(ClassObject* clazz)
                             imeth->name, desc, clazz->descriptor);
                     free(desc);
                 }
-                //dvmThrowException("Ljava/lang/RuntimeException;", "Miranda!");
+                //dvmThrowRuntimeException("Miranda!");
                 //return false;
 
                 if (mirandaCount == mirandaAlloc) {
                     mirandaAlloc += 8;
                     if (mirandaList == NULL) {
-                        mirandaList = dvmLinearAlloc(clazz->classLoader,
+                        mirandaList = (Method**)dvmLinearAlloc(
+                                        clazz->classLoader,
                                         mirandaAlloc * sizeof(Method*));
                     } else {
                         dvmLinearReadOnly(clazz->classLoader, mirandaList);
-                        mirandaList = dvmLinearRealloc(clazz->classLoader,
+                        mirandaList = (Method**)dvmLinearRealloc(
+                                clazz->classLoader,
                                 mirandaList, mirandaAlloc * sizeof(Method*));
                     }
                     assert(mirandaList != NULL);    // mem failed + we leaked
@@ -3696,69 +3765,6 @@ static bool computeFieldOffsets(ClassObject* clazz)
 }
 
 /*
- * Throw the VM-spec-mandated error when an exception is thrown during
- * class initialization.
- *
- * The safest way to do this is to call the ExceptionInInitializerError
- * constructor that takes a Throwable.
- *
- * [Do we want to wrap it if the original is an Error rather than
- * an Exception?]
- */
-static void throwClinitError(void)
-{
-    Thread* self = dvmThreadSelf();
-    Object* exception;
-    Object* eiie;
-
-    exception = dvmGetException(self);
-    dvmAddTrackedAlloc(exception, self);
-    dvmClearException(self);
-
-    if (gDvm.classJavaLangExceptionInInitializerError == NULL) {
-        /*
-         * Always resolves to same thing -- no race condition.
-         */
-        gDvm.classJavaLangExceptionInInitializerError =
-            dvmFindSystemClass(
-                    "Ljava/lang/ExceptionInInitializerError;");
-        if (gDvm.classJavaLangExceptionInInitializerError == NULL) {
-            LOGE("Unable to prep java/lang/ExceptionInInitializerError\n");
-            goto fail;
-        }
-
-        gDvm.methJavaLangExceptionInInitializerError_init =
-            dvmFindDirectMethodByDescriptor(gDvm.classJavaLangExceptionInInitializerError,
-            "<init>", "(Ljava/lang/Throwable;)V");
-        if (gDvm.methJavaLangExceptionInInitializerError_init == NULL) {
-            LOGE("Unable to prep java/lang/ExceptionInInitializerError\n");
-            goto fail;
-        }
-    }
-
-    eiie = dvmAllocObject(gDvm.classJavaLangExceptionInInitializerError,
-                ALLOC_DEFAULT);
-    if (eiie == NULL)
-        goto fail;
-
-    /*
-     * Construct the new object, and replace the exception with it.
-     */
-    JValue unused;
-    dvmCallMethod(self, gDvm.methJavaLangExceptionInInitializerError_init,
-        eiie, &unused, exception);
-    dvmSetException(self, eiie);
-    dvmReleaseTrackedAlloc(eiie, NULL);
-    dvmReleaseTrackedAlloc(exception, self);
-    return;
-
-fail:       /* restore original exception */
-    dvmSetException(self, exception);
-    dvmReleaseTrackedAlloc(exception, self);
-    return;
-}
-
-/*
  * The class failed to initialize on a previous attempt, so we want to throw
  * a NoClassDefFoundError (v2 2.17.5).  The exception to this rule is if we
  * failed in verification, in which case v2 5.4.1 says we need to re-throw
@@ -3770,10 +3776,9 @@ static void throwEarlierClassFailure(ClassObject* clazz)
         clazz->descriptor, clazz->verifyErrorClass);
 
     if (clazz->verifyErrorClass == NULL) {
-        dvmThrowExceptionWithClassMessage("Ljava/lang/NoClassDefFoundError;",
-            clazz->descriptor);
+        dvmThrowNoClassDefFoundError(clazz->descriptor);
     } else {
-        dvmThrowExceptionByClassWithClassMessage(clazz->verifyErrorClass,
+        dvmThrowExceptionWithClassMessage(clazz->verifyErrorClass,
             clazz->descriptor);
     }
 }
@@ -3882,8 +3887,8 @@ static void initSFields(ClassObject* clazz)
              * All's well, so store the value.
              */
             if (isObj) {
-                dvmSetStaticFieldObject(sfield, value.value.l);
-                dvmReleaseTrackedAlloc(value.value.l, self);
+                dvmSetStaticFieldObject(sfield, (Object*)value.value.l);
+                dvmReleaseTrackedAlloc((Object*)value.value.l, self);
             } else {
                 /*
                  * Note: This always stores the full width of a
@@ -4099,7 +4104,7 @@ static bool validateSuperDescriptors(const ClassObject* clazz)
                 LOGW("Method mismatch: %s in %s (cl=%p) and super %s (cl=%p)\n",
                     meth->name, clazz->descriptor, clazz->classLoader,
                     clazz->super->descriptor, clazz->super->classLoader);
-                dvmThrowException("Ljava/lang/LinkageError;",
+                dvmThrowLinkageError(
                     "Classes resolve differently in superclass");
                 return false;
             }
@@ -4133,7 +4138,7 @@ static bool validateSuperDescriptors(const ClassObject* clazz)
                             "iface %s (cl=%p)\n",
                         meth->name, clazz->descriptor, clazz->classLoader,
                         iface->descriptor, iface->classLoader);
-                    dvmThrowException("Ljava/lang/LinkageError;",
+                    dvmThrowLinkageError(
                         "Classes resolve differently in interface");
                     return false;
                 }
@@ -4291,8 +4296,7 @@ bool dvmInitClass(ClassObject* clazz)
         clazz->status = CLASS_VERIFYING;
         if (!dvmVerifyClass(clazz)) {
 verify_failed:
-            dvmThrowExceptionWithClassMessage("Ljava/lang/VerifyError;",
-                clazz->descriptor);
+            dvmThrowVerifyError(clazz->descriptor);
             dvmSetFieldObject((Object*) clazz,
                 offsetof(ClassObject, verifyErrorClass),
                 (Object*) dvmGetException(self)->clazz);
@@ -4321,7 +4325,8 @@ noverify:
     if (!IS_CLASS_FLAG_SET(clazz, CLASS_ISOPTIMIZED) && !gDvm.optimizing) {
         LOGV("+++ late optimize on %s (pv=%d)\n",
             clazz->descriptor, IS_CLASS_FLAG_SET(clazz, CLASS_ISPREVERIFIED));
-        dvmOptimizeClass(clazz, true);
+        bool essentialOnly = (gDvm.dexOptMode != OPTIMIZE_MODE_FULL);
+        dvmOptimizeClass(clazz, essentialOnly);
         SET_CLASS_FLAG(clazz, CLASS_ISOPTIMIZED);
     }
 
@@ -4371,7 +4376,7 @@ noverify:
              * never happen and we don't need to fix this.
              */
             assert(false);
-            throwClinitError();
+            dvmThrowExceptionInInitializerError();
             clazz->status = CLASS_ERROR;
             goto bail_unlock;
         }
@@ -4386,7 +4391,7 @@ noverify:
              * The caller wants an exception, but it was thrown in a
              * different thread.  Synthesize one here.
              */
-            dvmThrowException("Ljava/lang/UnsatisfiedLinkError;",
+            dvmThrowUnsatisfiedLinkError(
                 "(<clinit> failed, see exception in other thread)");
         }
         goto bail_unlock;
@@ -4488,7 +4493,7 @@ noverify:
          */
         LOGW("Exception %s thrown while initializing %s\n",
             (dvmGetException(self)->clazz)->descriptor, clazz->descriptor);
-        throwClinitError();
+        dvmThrowExceptionInInitializerError();
         //LOGW("+++ replaced\n");
 
         dvmLockObject(self, (Object*) clazz);
@@ -4569,7 +4574,7 @@ void dvmSetNativeFunc(Method* method, DalvikBridgeFunc func,
         /* update both, ensuring that "insns" is observed first */
         method->insns = insns;
         android_atomic_release_store((int32_t) func,
-            (void*) &method->nativeFunc);
+            (volatile int32_t*)(void*) &method->nativeFunc);
     } else {
         /* only update nativeFunc */
         method->nativeFunc = func;
@@ -4613,7 +4618,7 @@ void dvmSetRegisterMap(Method* method, const RegisterMap* pMap)
  */
 static int findClassCallback(void* vclazz, void* arg)
 {
-    ClassObject* clazz = vclazz;
+    ClassObject* clazz = (ClassObject*)vclazz;
     const char* descriptor = (const char*) arg;
 
     if (strcmp(clazz->descriptor, descriptor) == 0)
@@ -4651,22 +4656,15 @@ ClassObject* dvmFindLoadedClass(const char* descriptor)
 Object* dvmGetSystemClassLoader(void)
 {
     Thread* self = dvmThreadSelf();
-    ClassObject* clazz;
-    Method* getSysMeth;
-    Object* loader;
+    ClassObject* clClass = gDvm.classJavaLangClassLoader;
 
-    clazz = dvmFindSystemClass("Ljava/lang/ClassLoader;");
-    if (clazz == NULL)
-        return NULL;
-
-    getSysMeth = dvmFindDirectMethodByDescriptor(clazz, "getSystemClassLoader",
-        "()Ljava/lang/ClassLoader;");
-    if (getSysMeth == NULL)
+    if (!dvmIsClassInitialized(clClass) && !dvmInitClass(clClass))
         return NULL;
 
     JValue result;
-    dvmCallMethod(self, getSysMeth, NULL, &result);
-    loader = (Object*)result.l;
+    dvmCallMethod(self, gDvm.methJavaLangClassLoader_getSystemClassLoader,
+        NULL, &result);
+    Object* loader = (Object*)result.l;
     dvmAddTrackedAlloc(loader, self);
     return loader;
 }

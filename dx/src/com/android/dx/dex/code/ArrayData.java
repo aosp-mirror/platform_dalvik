@@ -16,6 +16,7 @@
 
 package com.android.dx.dex.code;
 
+import com.android.dx.io.Opcodes;
 import com.android.dx.rop.code.RegisterSpecList;
 import com.android.dx.rop.code.SourcePosition;
 import com.android.dx.rop.cst.*;
@@ -109,7 +110,7 @@ public final class ArrayData extends VariableSizeInsn {
     public void writeTo(AnnotatedOutput out) {
         int sz = values.size();
 
-        out.writeShort(0x300 | DalvOps.NOP);
+        out.writeShort(Opcodes.FILL_ARRAY_DATA_PAYLOAD);
         out.writeShort(elemWidth);
         out.writeInt(initLength);
 
@@ -183,7 +184,7 @@ public final class ArrayData extends VariableSizeInsn {
         StringBuffer sb = new StringBuffer(100);
         int sz = values.size();
 
-        sb.append("array-data // for fill-array-data @ ");
+        sb.append("fill-array-data-payload // for fill-array-data @ ");
         sb.append(Hex.u2(baseAddress));
 
         for (int i = 0; i < sz; i++) {

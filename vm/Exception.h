@@ -20,87 +20,71 @@
 #ifndef _DALVIK_EXCEPTION
 #define _DALVIK_EXCEPTION
 
-/* initialization */
-bool dvmExceptionStartup(void);
-void dvmExceptionShutdown(void);
-
 /*
- * Throw an exception in the current thread, by class descriptor.
+ * Create a Throwable and throw an exception in the current thread (where
+ * "throwing" just means "set the thread's exception pointer").
+ *
+ * "msg" and/or "cause" may be NULL.
+ *
+ * If we have a bad exception hierarchy -- something in Throwable.<init>
+ * is missing -- then every attempt to throw an exception will result
+ * in another exception.  Exceptions are generally allowed to "chain"
+ * to other exceptions, so it's hard to auto-detect this problem.  It can
+ * only happen if the system classes are broken, so it's probably not
+ * worth spending cycles to detect it.
+ *
+ * We do have one case to worry about: if the classpath is completely
+ * wrong, we'll go into a death spin during startup because we can't find
+ * the initial class and then we can't find NoClassDefFoundError.  We have
+ * to handle this case.
  */
-void dvmThrowChainedException(const char* exceptionDescriptor, const char* msg,
-    Object* cause);
-INLINE void dvmThrowException(const char* exceptionDescriptor,
+void dvmThrowChainedException(ClassObject* exceptionClass,
+    const char* msg, Object* cause);
+INLINE void dvmThrowException(ClassObject* exceptionClass,
     const char* msg)
 {
-    dvmThrowChainedException(exceptionDescriptor, msg, NULL);
+    dvmThrowChainedException(exceptionClass, msg, NULL);
 }
 
 /*
- * Throw an ArrayIndexOutOfBoundsException in the current thread, using the given
- * index and array length in the detail message.
+ * Like dvmThrowException, but takes printf-style args for the message.
  */
-void dvmThrowAIOOBE(int index, int length);
-/*
- * Throw an ArrayStoreException in the current thread, using the given classes'
- * names in the detail message.
- */
-void dvmThrowArrayStoreException(ClassObject* actual, ClassObject* desired);
-
-/**
- * Throw a ClassCastException in the current thread, using the given classes'
- * names in the detail message.
- */
-void dvmThrowClassCastException(ClassObject* actual, ClassObject* desired);
-
-/*
- * Like dvmThrowChainedException, but takes printf-style args for the message.
- */
-void dvmThrowExceptionFmtV(const char* exceptionDescriptor, const char* fmt,
-    va_list args);
-void dvmThrowExceptionFmt(const char* exceptionDescriptor, const char* fmt, ...)
+void dvmThrowExceptionFmtV(ClassObject* exceptionClass,
+    const char* fmt, va_list args);
+void dvmThrowExceptionFmt(ClassObject* exceptionClass,
+    const char* fmt, ...)
 #if defined(__GNUC__)
     __attribute__ ((format(printf, 2, 3)))
 #endif
     ;
-INLINE void dvmThrowExceptionFmt(const char* exceptionDescriptor,
+INLINE void dvmThrowExceptionFmt(ClassObject* exceptionClass,
     const char* fmt, ...)
 {
     va_list args;
     va_start(args, fmt);
-    dvmThrowExceptionFmtV(exceptionDescriptor, fmt, args);
+    dvmThrowExceptionFmtV(exceptionClass, fmt, args);
     va_end(args);
 }
 
 /*
- * Throw an exception in the current thread, by class object.
+ * Like dvmThrowChainedException, but take a class object
+ * instead of a name and turn the given message into the
+ * human-readable form for a descriptor.
  */
-void dvmThrowChainedExceptionByClass(ClassObject* exceptionClass,
-    const char* msg, Object* cause);
-INLINE void dvmThrowExceptionByClass(ClassObject* exceptionClass,
-    const char* msg)
-{
-    dvmThrowChainedExceptionByClass(exceptionClass, msg, NULL);
-}
+void dvmThrowChainedExceptionWithClassMessage(
+    ClassObject* exceptionClass, const char* messageDescriptor,
+    Object* cause);
 
 /*
- * Throw the named exception using the name of a class as the exception
- * message.
+ * Like dvmThrowException, but take a class object instead of a name
+ * and turn the given message into the human-readable form for a descriptor.
  */
-void dvmThrowChainedExceptionWithClassMessage(const char* exceptionDescriptor,
-    const char* messageDescriptor, Object* cause);
-INLINE void dvmThrowExceptionWithClassMessage(const char* exceptionDescriptor,
-    const char* messageDescriptor)
+INLINE void dvmThrowExceptionWithClassMessage(
+    ClassObject* exceptionClass, const char* messageDescriptor)
 {
-    dvmThrowChainedExceptionWithClassMessage(exceptionDescriptor,
-        messageDescriptor, NULL);
+    dvmThrowChainedExceptionWithClassMessage(exceptionClass,
+            messageDescriptor, NULL);
 }
-
-/*
- * Like dvmThrowExceptionWithMessageFromDescriptor, but take a
- * class object instead of a name.
- */
-void dvmThrowExceptionByClassWithClassMessage(ClassObject* exceptionClass,
-    const char* messageDescriptor);
 
 /*
  * Return the exception being thrown in the current thread, or NULL if
@@ -217,5 +201,286 @@ void dvmFillStackTraceElements(const int* intVals, size_t stackDepth, ArrayObjec
  * Print a formatted version of a raw stack trace to the log file.
  */
 void dvmLogRawStackTrace(const int* intVals, int stackDepth);
+
+/**
+ * Throw an AbstractMethodError in the current thread, with the given detail
+ * message.
+ */
+void dvmThrowAbstractMethodError(const char* msg);
+
+/**
+ * Throw an ArithmeticException in the current thread, with the given detail
+ * message.
+ */
+void dvmThrowArithmeticException(const char* msg);
+
+/*
+ * Throw an ArrayIndexOutOfBoundsException in the current thread,
+ * using the given array length and index in the detail message.
+ */
+void dvmThrowArrayIndexOutOfBoundsException(int length, int index);
+
+/*
+ * Throw an ArrayStoreException in the current thread, using the given classes'
+ * names in the detail message, indicating that an object of the given type
+ * can't be stored into an array of the given type.
+ */
+void dvmThrowArrayStoreExceptionIncompatibleElement(ClassObject* objectType,
+        ClassObject* arrayType);
+
+/*
+ * Throw an ArrayStoreException in the current thread, using the given
+ * class name and argument label in the detail message, indicating
+ * that it is not an array.
+ */
+void dvmThrowArrayStoreExceptionNotArray(ClassObject* actual, const char* label);
+
+/*
+ * Throw an ArrayStoreException in the current thread, using the given
+ * classes' names in the detail message, indicating that the arrays
+ * aren't compatible (for copying contents).
+ */
+void dvmThrowArrayStoreExceptionIncompatibleArrays(ClassObject* source, ClassObject* destination);
+
+/*
+ * Throw an ArrayStoreException in the current thread, using the given
+ * index and classes' names in the detail message, indicating that the
+ * object at the given index and of the given type cannot be stored
+ * into an array of the given type.
+ */
+void dvmThrowArrayStoreExceptionIncompatibleArrayElement(s4 index, ClassObject* objectType,
+        ClassObject* arrayType);
+
+/**
+ * Throw a ClassCastException in the current thread, using the given classes'
+ * names in the detail message.
+ */
+void dvmThrowClassCastException(ClassObject* actual, ClassObject* desired);
+
+/**
+ * Throw a ClassCircularityError in the current thread, with the
+ * human-readable form of the given descriptor as the detail message.
+ */
+void dvmThrowClassCircularityError(const char* descriptor);
+
+/**
+ * Throw a ClassFormatError in the current thread, with the given
+ * detail message.
+ */
+void dvmThrowClassFormatError(const char* msg);
+
+/**
+ * Throw a ClassNotFoundException in the current thread, with the given
+ * class name as the detail message.
+ */
+void dvmThrowClassNotFoundException(const char* name);
+
+/**
+ * Throw a ClassNotFoundException in the current thread, with the given
+ * cause, and the given class name as the detail message.
+ */
+void dvmThrowChainedClassNotFoundException(const char* name, Object* cause);
+
+/*
+ * Throw the VM-spec-mandated error when an exception is thrown during
+ * class initialization. Unlike other helper functions, this automatically
+ * wraps the current thread's pending exception.
+ */
+void dvmThrowExceptionInInitializerError(void);
+
+/**
+ * Throw a FileNotFoundException in the current thread, with the given
+ * detail message.
+ */
+void dvmThrowFileNotFoundException(const char* msg);
+
+/**
+ * Throw an IOException in the current thread, with the given
+ * detail message.
+ */
+void dvmThrowIOException(const char* msg);
+
+/**
+ * Throw an IllegalAccessError in the current thread, with the
+ * given detail message.
+ */
+void dvmThrowIllegalAccessError(const char* msg);
+
+/**
+ * Throw an IllegalAccessException in the current thread, with the
+ * given detail message.
+ */
+void dvmThrowIllegalAccessException(const char* msg);
+
+/**
+ * Throw an IllegalArgumentException in the current thread, with the
+ * given detail message.
+ */
+void dvmThrowIllegalArgumentException(const char* msg);
+
+/**
+ * Throw an IllegalMonitorStateException in the current thread, with
+ * the given detail message.
+ */
+void dvmThrowIllegalMonitorStateException(const char* msg);
+
+/**
+ * Throw an IllegalStateException in the current thread, with
+ * the given detail message.
+ */
+void dvmThrowIllegalStateException(const char* msg);
+
+/**
+ * Throw an IllegalThreadStateException in the current thread, with
+ * the given detail message.
+ */
+void dvmThrowIllegalThreadStateException(const char* msg);
+
+/**
+ * Throw an IncompatibleClassChangeError in the current thread,
+ * the given detail message.
+ */
+void dvmThrowIncompatibleClassChangeError(const char* msg);
+
+/**
+ * Throw an IncompatibleClassChangeError in the current thread, with the
+ * human-readable form of the given descriptor as the detail message.
+ */
+void dvmThrowIncompatibleClassChangeErrorWithClassMessage(
+        const char* descriptor);
+
+/**
+ * Throw an InstantiationException in the current thread, with
+ * the human-readable form of the given class as the detail message,
+ * with optional extra detail appended to the message.
+ */
+void dvmThrowInstantiationException(ClassObject* clazz,
+        const char* extraDetail);
+
+/**
+ * Throw an InternalError in the current thread, with the given
+ * detail message.
+ */
+void dvmThrowInternalError(const char* msg);
+
+/**
+ * Throw an InterruptedException in the current thread, with the given
+ * detail message.
+ */
+void dvmThrowInterruptedException(const char* msg);
+
+/**
+ * Throw a LinkageError in the current thread, with the
+ * given detail message.
+ */
+void dvmThrowLinkageError(const char* msg);
+
+/**
+ * Throw a NegativeArraySizeException in the current thread, with the
+ * given number as the detail message.
+ */
+void dvmThrowNegativeArraySizeException(s4 size);
+
+/**
+ * Throw a NoClassDefFoundError in the current thread, with the
+ * human-readable form of the given descriptor as the detail message.
+ */
+void dvmThrowNoClassDefFoundError(const char* descriptor);
+
+/**
+ * Throw a NoClassDefFoundError in the current thread, with the given
+ * cause, and the human-readable form of the given descriptor as the
+ * detail message.
+ */
+void dvmThrowChainedNoClassDefFoundError(const char* descriptor,
+        Object* cause);
+
+/**
+ * Throw a NoSuchFieldError in the current thread, with the given
+ * detail message.
+ */
+void dvmThrowNoSuchFieldError(const char* msg);
+
+/**
+ * Throw a NoSuchFieldException in the current thread, with the given
+ * detail message.
+ */
+void dvmThrowNoSuchFieldException(const char* msg);
+
+/**
+ * Throw a NoSuchMethodError in the current thread, with the given
+ * detail message.
+ */
+void dvmThrowNoSuchMethodError(const char* msg);
+
+/**
+ * Throw a NullPointerException in the current thread, with the given
+ * detail message.
+ */
+void dvmThrowNullPointerException(const char* msg);
+
+/**
+ * Throw an OutOfMemoryError in the current thread, with the given
+ * detail message.
+ */
+void dvmThrowOutOfMemoryError(const char* msg);
+
+/**
+ * Throw a RuntimeException in the current thread, with the given detail
+ * message.
+ */
+void dvmThrowRuntimeException(const char* msg);
+
+/**
+ * Throw a StaleDexCacheError in the current thread, with
+ * the given detail message.
+ */
+void dvmThrowStaleDexCacheError(const char* msg);
+
+/**
+ * Throw a StringIndexOutOfBoundsException in the current thread, with
+ * a detail message specifying an actual length as well as a requested
+ * index.
+ */
+void dvmThrowStringIndexOutOfBoundsExceptionWithIndex(jsize stringLength,
+        jsize requestIndex);
+
+/**
+ * Throw a StringIndexOutOfBoundsException in the current thread, with
+ * a detail message specifying an actual length as well as a requested
+ * region.
+ */
+void dvmThrowStringIndexOutOfBoundsExceptionWithRegion(jsize stringLength,
+        jsize requestStart, jsize requestLength);
+
+/**
+ * Throw a TypeNotPresentException in the current thread, with the
+ * human-readable form of the given descriptor as the detail message.
+ */
+void dvmThrowTypeNotPresentException(const char* descriptor);
+
+/**
+ * Throw an UnsatisfiedLinkError in the current thread, with
+ * the given detail message.
+ */
+void dvmThrowUnsatisfiedLinkError(const char* msg);
+
+/**
+ * Throw an UnsupportedOperationException in the current thread, with
+ * the given detail message.
+ */
+void dvmThrowUnsupportedOperationException(const char* msg);
+
+/**
+ * Throw a VerifyError in the current thread, with the
+ * human-readable form of the given descriptor as the detail message.
+ */
+void dvmThrowVerifyError(const char* descriptor);
+
+/**
+ * Throw a VirtualMachineError in the current thread, with
+ * the given detail message.
+ */
+void dvmThrowVirtualMachineError(const char* msg);
 
 #endif /*_DALVIK_EXCEPTION*/

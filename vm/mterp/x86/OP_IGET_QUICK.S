@@ -9,8 +9,8 @@
     cmpl      $$0,%ecx                  # is object null?
     je        common_errNullObject
     movl      (%ecx,%eax,1),%eax
-    FETCH_INST_OPCODE 2 %edx
+    FETCH_INST_OPCODE 2 %ecx
     ADVANCE_PC 2
     andb      $$0xf,rINSTbl             # rINST<- A
     SET_VREG  %eax rINST                # fp[A]<- result
-    GOTO_NEXT_R %edx
+    GOTO_NEXT_R %ecx

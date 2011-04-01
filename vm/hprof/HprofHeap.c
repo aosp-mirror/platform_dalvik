@@ -214,14 +214,8 @@ hprofMarkRootObject(hprof_context_t *ctx, const Object *obj, jobject jniObj)
 
 static int
 stackTraceSerialNumber(const void *obj)
-
 {
-#if WITH_HPROF_STACK
-    DvmHeapChunk *chunk = ptr2chunk(obj);
-    return chunk->stackTraceSerialNumber;
-#else
     return HPROF_NULL_STACK_TRACE;
-#endif
 }
 
 int

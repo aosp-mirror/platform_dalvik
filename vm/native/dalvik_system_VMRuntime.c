@@ -20,6 +20,7 @@
 #include "Dalvik.h"
 #include "native/InternalNativePriv.h"
 
+#include <cutils/array.h>
 #include <limits.h>
 
 
@@ -49,37 +50,6 @@ static void Dalvik_dalvik_system_VMRuntime_nativeSetTargetHeapUtilization(
     const u4* args, JValue* pResult)
 {
     dvmSetTargetHeapUtilization(dvmU4ToFloat(args[1]));
-
-    RETURN_VOID();
-}
-
-/*
- * public native void gcSoftReferences()
- *
- * Does a GC and forces collection of SoftReferences that are
- * not strongly-reachable.
- */
-static void Dalvik_dalvik_system_VMRuntime_gcSoftReferences(const u4* args,
-    JValue* pResult)
-{
-    dvmCollectGarbage(true);
-
-    RETURN_VOID();
-}
-
-/*
- * public native void runFinalizationSync()
- *
- * Does not return until any pending finalizers have been called.
- * This may or may not happen in the context of the calling thread.
- * No exceptions will escape.
- *
- * Used by zygote, which doesn't have a HeapWorker thread.
- */
-static void Dalvik_dalvik_system_VMRuntime_runFinalizationSync(const u4* args,
-    JValue* pResult)
-{
-    dvmRunFinalizationSync();
 
     RETURN_VOID();
 }
@@ -131,11 +101,11 @@ static void Dalvik_dalvik_system_VMRuntime_newNonMovableArray(const u4* args,
     ArrayObject* newArray;
 
     if (elementClass == NULL) {
-        dvmThrowException("Ljava/lang/NullPointerException;", NULL);
+        dvmThrowNullPointerException(NULL);
         RETURN_VOID();
     }
     if (length < 0) {
-        dvmThrowException("Ljava/lang/NegativeArraySizeException;", NULL);
+        dvmThrowNegativeArraySizeException(length);
         RETURN_VOID();
     }
 
@@ -157,7 +127,7 @@ static void Dalvik_dalvik_system_VMRuntime_addressOf(const u4* args,
 {
     ArrayObject* array = (ArrayObject*) args[1];
     if (!dvmIsArray(array)) {
-        dvmThrowException("Ljava/lang/IllegalArgumentException;", NULL);
+        dvmThrowIllegalArgumentException(NULL);
         RETURN_VOID();
     }
     // TODO: we should also check that this is a non-movable array.
@@ -172,24 +142,66 @@ static void Dalvik_dalvik_system_VMRuntime_clearGrowthLimit(const u4* args,
     RETURN_VOID();
 }
 
+static void Dalvik_dalvik_system_VMRuntime_properties(const u4* args,
+    JValue* pResult)
+{
+    char** strings = (char**) arrayUnwrap(gDvm.properties);
+    int count = arraySize(gDvm.properties);
+    ArrayObject* result = dvmCreateStringArray(strings, count);
+    dvmReleaseTrackedAlloc((Object*) result, dvmThreadSelf());
+    RETURN_PTR(result);
+}
+
+static void returnCString(JValue* pResult, const char* s)
+{
+    Object* result = (Object*) dvmCreateStringFromCstr(s);
+    dvmReleaseTrackedAlloc(result, dvmThreadSelf());
+    RETURN_PTR(result);
+}
+
+static void Dalvik_dalvik_system_VMRuntime_bootClassPath(const u4* args,
+    JValue* pResult)
+{
+    returnCString(pResult, gDvm.bootClassPathStr);
+}
+
+static void Dalvik_dalvik_system_VMRuntime_classPath(const u4* args,
+    JValue* pResult)
+{
+    returnCString(pResult, gDvm.classPathStr);
+}
+
+static void Dalvik_dalvik_system_VMRuntime_vmVersion(const u4* args,
+    JValue* pResult)
+{
+    char buf[64];
+    sprintf(buf, "%d.%d.%d",
+            DALVIK_MAJOR_VERSION, DALVIK_MINOR_VERSION, DALVIK_BUG_VERSION);
+    returnCString(pResult, buf);
+}
+
 const DalvikNativeMethod dvm_dalvik_system_VMRuntime[] = {
+    { "addressOf", "(Ljava/lang/Object;)J",
+        Dalvik_dalvik_system_VMRuntime_addressOf },
+    { "bootClassPath", "()Ljava/lang/String;",
+        Dalvik_dalvik_system_VMRuntime_bootClassPath },
+    { "classPath", "()Ljava/lang/String;",
+        Dalvik_dalvik_system_VMRuntime_classPath },
+    { "clearGrowthLimit", "()V",
+        Dalvik_dalvik_system_VMRuntime_clearGrowthLimit },
+    { "disableJitCompilation", "()V",
+        Dalvik_dalvik_system_VMRuntime_disableJitCompilation },
     { "getTargetHeapUtilization", "()F",
         Dalvik_dalvik_system_VMRuntime_getTargetHeapUtilization },
     { "nativeSetTargetHeapUtilization", "(F)V",
         Dalvik_dalvik_system_VMRuntime_nativeSetTargetHeapUtilization },
-    { "gcSoftReferences", "()V",
-        Dalvik_dalvik_system_VMRuntime_gcSoftReferences },
-    { "runFinalizationSync", "()V",
-        Dalvik_dalvik_system_VMRuntime_runFinalizationSync },
-    { "startJitCompilation", "()V",
-        Dalvik_dalvik_system_VMRuntime_startJitCompilation },
-    { "disableJitCompilation", "()V",
-        Dalvik_dalvik_system_VMRuntime_disableJitCompilation },
     { "newNonMovableArray", "(Ljava/lang/Class;I)Ljava/lang/Object;",
         Dalvik_dalvik_system_VMRuntime_newNonMovableArray },
-    { "addressOf", "(Ljava/lang/Object;)J",
-        Dalvik_dalvik_system_VMRuntime_addressOf },
-    { "clearGrowthLimit", "()V",
-        Dalvik_dalvik_system_VMRuntime_clearGrowthLimit },
+    { "properties", "()[Ljava/lang/String;",
+        Dalvik_dalvik_system_VMRuntime_properties },
+    { "startJitCompilation", "()V",
+        Dalvik_dalvik_system_VMRuntime_startJitCompilation },
+    { "vmVersion", "()Ljava/lang/String;",
+        Dalvik_dalvik_system_VMRuntime_vmVersion },
     { NULL, NULL, NULL },
 };

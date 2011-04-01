@@ -1,3 +1,3 @@
 HANDLE_OPCODE(OP_FILLED_NEW_ARRAY /*vB, {vD, vE, vF, vG, vA}, class@CCCC*/)
-    GOTO_invoke(filledNewArray, false);
+    GOTO_invoke(filledNewArray, false, false);
 OP_END

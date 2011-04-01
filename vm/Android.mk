@@ -81,13 +81,6 @@ ifeq ($(WITH_JIT),true)
     LOCAL_MODULE := libdvm_interp
     include $(BUILD_SHARED_LIBRARY)
 
-    # Derivation #4
-    WITH_JIT := true
-    include $(LOCAL_PATH)/ReconfigureDvm.mk
-
-    LOCAL_CFLAGS += $(target_smp_flag) -DWITH_INLINE_PROFILING
-    LOCAL_MODULE := libdvm_traceview
-    include $(BUILD_SHARED_LIBRARY)
 endif
 
 #

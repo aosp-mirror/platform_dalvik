@@ -27,7 +27,7 @@ bool dvmInitIndirectRefTable(IndirectRefTable* pRef, int initialCount,
 {
     assert(initialCount > 0);
     assert(initialCount <= maxCount);
-    assert(kind == kIndirectKindLocal || kind == kIndirectKindGlobal);
+    assert(kind != kIndirectKindInvalid);
 
     pRef->table = (Object**) malloc(initialCount * sizeof(Object*));
     if (pRef->table == NULL)
@@ -55,6 +55,7 @@ bool dvmInitIndirectRefTable(IndirectRefTable* pRef, int initialCount,
 void dvmClearIndirectRefTable(IndirectRefTable* pRef)
 {
     free(pRef->table);
+    free(pRef->slotData);
     pRef->table = NULL;
     pRef->allocEntries = pRef->maxEntries = -1;
 }
@@ -299,7 +300,7 @@ bool dvmRemoveFromIndirectRefTable(IndirectRefTable* pRef, u4 cookie,
         updateSlotRemove(pRef, idx);
 
 #ifndef NDEBUG
-        pRef->table[idx] = (IndirectRef) 0xd3d3d3d3;
+        pRef->table[idx] = (Object*)0xd3d3d3d3;
 #endif
 
         int numHoles =
@@ -344,158 +345,10 @@ bool dvmRemoveFromIndirectRefTable(IndirectRefTable* pRef, u4 cookie,
 }
 
 /*
- * This is a qsort() callback.  We sort Object* by class, allocation size,
- * and then by the Object* itself.
- */
-static int compareObject(const void* vobj1, const void* vobj2)
-{
-    Object* obj1 = *((Object**) vobj1);
-    Object* obj2 = *((Object**) vobj2);
-
-    /* ensure null references appear at the end */
-    if (obj1 == NULL) {
-        if (obj2 == NULL) {
-            return 0;
-        } else {
-            return 1;
-        }
-    } else if (obj2 == NULL) {
-        return -1;
-    }
-
-    if (obj1->clazz != obj2->clazz) {
-        return (u1*)obj1->clazz - (u1*)obj2->clazz;
-    } else {
-        int size1 = dvmObjectSizeInHeap(obj1);
-        int size2 = dvmObjectSizeInHeap(obj2);
-        if (size1 != size2) {
-            return size1 - size2;
-        } else {
-            return (u1*)obj1 - (u1*)obj2;
-        }
-    }
-}
-
-/*
- * Log an object with some additional info.
- *
- * Pass in the number of additional elements that are identical to or
- * equivalent to the original.
- */
-static void logObject(Object* obj, int size, int identical, int equiv)
-{
-    if (obj == NULL) {
-        LOGW("  NULL reference (count=%d)\n", equiv);
-        return;
-    }
-
-    if (identical + equiv != 0) {
-        LOGW("%5d of %s %dB (%d unique)\n", identical + equiv +1,
-            obj->clazz->descriptor, size, equiv +1);
-    } else {
-        LOGW("%5d of %s %dB\n", identical + equiv +1,
-            obj->clazz->descriptor, size);
-    }
-}
-
-/*
  * Dump the contents of a IndirectRefTable to the log.
  */
 void dvmDumpIndirectRefTable(const IndirectRefTable* pRef, const char* descr)
 {
-    const int kLast = 10;
-    int count = dvmIndirectRefTableEntries(pRef);
-    Object** refs;
-    int i;
-
-    if (count == 0) {
-        LOGW("Reference table has no entries\n");
-        return;
-    }
-    assert(count > 0);
-
-    /*
-     * Dump the most recent N entries.  If there are holes, we will show
-     * fewer than N.
-     */
-    LOGW("Last %d entries in %s reference table:\n", kLast, descr);
-    refs = pRef->table;         // use unsorted list
-    int size;
-    int start = count - kLast;
-    if (start < 0)
-        start = 0;
-
-    for (i = start; i < count; i++) {
-        if (refs[i] == NULL)
-            continue;
-        size = dvmObjectSizeInHeap(refs[i]);
-        Object* ref = refs[i];
-        if (ref->clazz == gDvm.classJavaLangClass) {
-            ClassObject* clazz = (ClassObject*) ref;
-            LOGW("%5d: %p cls=%s '%s' (%d bytes)\n", i, ref,
-                (refs[i] == NULL) ? "-" : ref->clazz->descriptor,
-                clazz->descriptor, size);
-        } else {
-            LOGW("%5d: %p cls=%s (%d bytes)\n", i, ref,
-                (refs[i] == NULL) ? "-" : ref->clazz->descriptor, size);
-        }
-    }
-
-    /*
-     * Make a copy of the table, and sort it.
-     *
-     * The NULL "holes" wind up at the end, so we can strip them off easily.
-     */
-    Object** tableCopy = (Object**)malloc(sizeof(Object*) * count);
-    memcpy(tableCopy, pRef->table, sizeof(Object*) * count);
-    qsort(tableCopy, count, sizeof(Object*), compareObject);
-    refs = tableCopy;       // use sorted list
-
-    if (false) {
-        int q;
-        for (q = 0; q < count; q++)
-            LOGI("%d %p\n", q, refs[q]);
-    }
-
-    int holes = 0;
-    while (refs[count-1] == NULL) {
-        count--;
-        holes++;
-    }
-
-    /*
-     * Dump uniquified table summary.  While we're at it, generate a
-     * cumulative total amount of pinned memory based on the unique entries.
-     */
-    LOGW("%s reference table summary (%d entries / %d holes):\n",
-        descr, count, holes);
-    int equiv, identical, total;
-    total = equiv = identical = 0;
-    for (i = 1; i < count; i++) {
-        size = dvmObjectSizeInHeap(refs[i-1]);
-
-        if (refs[i] == refs[i-1]) {
-            /* same reference, added more than once */
-            identical++;
-        } else if (refs[i]->clazz == refs[i-1]->clazz &&
-            (int) dvmObjectSizeInHeap(refs[i]) == size)
-        {
-            /* same class / size, different object */
-            total += size;
-            equiv++;
-        } else {
-            /* different class */
-            total += size;
-            logObject(refs[i-1], size, identical, equiv);
-            equiv = identical = 0;
-        }
-    }
-
-    /* handle the last entry (everything above outputs refs[i-1]) */
-    size = (refs[count-1] == NULL) ? 0 : dvmObjectSizeInHeap(refs[count-1]);
-    total += size;
-    logObject(refs[count-1], size, identical, equiv);
-
-    LOGW("Memory held directly by native code is %d bytes\n", total);
-    free(tableCopy);
+    dvmDumpReferenceTableContents(pRef->table, dvmIndirectRefTableEntries(pRef),
+        descr);
 }

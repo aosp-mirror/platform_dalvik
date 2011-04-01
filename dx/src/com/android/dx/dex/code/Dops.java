@@ -16,6 +16,7 @@
 
 package com.android.dx.dex.code;
 
+import com.android.dx.dex.DexOptions;
 import com.android.dx.dex.code.form.Form10t;
 import com.android.dx.dex.code.form.Form10x;
 import com.android.dx.dex.code.form.Form11n;
@@ -44,6 +45,7 @@ import com.android.dx.dex.code.form.Form51l;
 import com.android.dx.dex.code.form.Form52c;
 import com.android.dx.dex.code.form.Form5rc;
 import com.android.dx.dex.code.form.SpecialFormat;
+import com.android.dx.io.Opcodes;
 
 /**
  * Standard instances of {@link Dop} and utility methods for getting
@@ -56,1303 +58,1047 @@ public final class Dops {
     /**
      * pseudo-opcode used for nonstandard formatted "instructions"
      * (which are mostly not actually instructions, though they do
-     * appear in instruction lists)
+     * appear in instruction lists). TODO: Retire the usage of this
+     * constant.
      */
     public static final Dop SPECIAL_FORMAT =
-        new Dop(DalvOps.SPECIAL_FORMAT, DalvOps.SPECIAL_FORMAT,
-                DalvOps.NO_NEXT, SpecialFormat.THE_ONE, false, "<special>");
+        new Dop(Opcodes.SPECIAL_FORMAT, Opcodes.SPECIAL_FORMAT,
+                Opcodes.NO_NEXT, SpecialFormat.THE_ONE, false);
 
     // BEGIN(dops); GENERATED AUTOMATICALLY BY opcode-gen
     public static final Dop NOP =
-        new Dop(DalvOps.NOP, DalvOps.NOP,
-            DalvOps.NO_NEXT, Form10x.THE_ONE, false,
-            "nop");
+        new Dop(Opcodes.NOP, Opcodes.NOP,
+            Opcodes.NO_NEXT, Form10x.THE_ONE, false);
 
     public static final Dop MOVE =
-        new Dop(DalvOps.MOVE, DalvOps.MOVE,
-            DalvOps.MOVE_FROM16, Form12x.THE_ONE, true,
-            "move");
+        new Dop(Opcodes.MOVE, Opcodes.MOVE,
+            Opcodes.MOVE_FROM16, Form12x.THE_ONE, true);
 
     public static final Dop MOVE_FROM16 =
-        new Dop(DalvOps.MOVE_FROM16, DalvOps.MOVE,
-            DalvOps.MOVE_16, Form22x.THE_ONE, true,
-            "move/from16");
+        new Dop(Opcodes.MOVE_FROM16, Opcodes.MOVE,
+            Opcodes.MOVE_16, Form22x.THE_ONE, true);
 
     public static final Dop MOVE_16 =
-        new Dop(DalvOps.MOVE_16, DalvOps.MOVE,
-            DalvOps.NO_NEXT, Form32x.THE_ONE, true,
-            "move/16");
+        new Dop(Opcodes.MOVE_16, Opcodes.MOVE,
+            Opcodes.NO_NEXT, Form32x.THE_ONE, true);
 
     public static final Dop MOVE_WIDE =
-        new Dop(DalvOps.MOVE_WIDE, DalvOps.MOVE_WIDE,
-            DalvOps.MOVE_WIDE_FROM16, Form12x.THE_ONE, true,
-            "move-wide");
+        new Dop(Opcodes.MOVE_WIDE, Opcodes.MOVE_WIDE,
+            Opcodes.MOVE_WIDE_FROM16, Form12x.THE_ONE, true);
 
     public static final Dop MOVE_WIDE_FROM16 =
-        new Dop(DalvOps.MOVE_WIDE_FROM16, DalvOps.MOVE_WIDE,
-            DalvOps.MOVE_WIDE_16, Form22x.THE_ONE, true,
-            "move-wide/from16");
+        new Dop(Opcodes.MOVE_WIDE_FROM16, Opcodes.MOVE_WIDE,
+            Opcodes.MOVE_WIDE_16, Form22x.THE_ONE, true);
 
     public static final Dop MOVE_WIDE_16 =
-        new Dop(DalvOps.MOVE_WIDE_16, DalvOps.MOVE_WIDE,
-            DalvOps.NO_NEXT, Form32x.THE_ONE, true,
-            "move-wide/16");
+        new Dop(Opcodes.MOVE_WIDE_16, Opcodes.MOVE_WIDE,
+            Opcodes.NO_NEXT, Form32x.THE_ONE, true);
 
     public static final Dop MOVE_OBJECT =
-        new Dop(DalvOps.MOVE_OBJECT, DalvOps.MOVE_OBJECT,
-            DalvOps.MOVE_OBJECT_FROM16, Form12x.THE_ONE, true,
-            "move-object");
+        new Dop(Opcodes.MOVE_OBJECT, Opcodes.MOVE_OBJECT,
+            Opcodes.MOVE_OBJECT_FROM16, Form12x.THE_ONE, true);
 
     public static final Dop MOVE_OBJECT_FROM16 =
-        new Dop(DalvOps.MOVE_OBJECT_FROM16, DalvOps.MOVE_OBJECT,
-            DalvOps.MOVE_OBJECT_16, Form22x.THE_ONE, true,
-            "move-object/from16");
+        new Dop(Opcodes.MOVE_OBJECT_FROM16, Opcodes.MOVE_OBJECT,
+            Opcodes.MOVE_OBJECT_16, Form22x.THE_ONE, true);
 
     public static final Dop MOVE_OBJECT_16 =
-        new Dop(DalvOps.MOVE_OBJECT_16, DalvOps.MOVE_OBJECT,
-            DalvOps.NO_NEXT, Form32x.THE_ONE, true,
-            "move-object/16");
+        new Dop(Opcodes.MOVE_OBJECT_16, Opcodes.MOVE_OBJECT,
+            Opcodes.NO_NEXT, Form32x.THE_ONE, true);
 
     public static final Dop MOVE_RESULT =
-        new Dop(DalvOps.MOVE_RESULT, DalvOps.MOVE_RESULT,
-            DalvOps.NO_NEXT, Form11x.THE_ONE, true,
-            "move-result");
+        new Dop(Opcodes.MOVE_RESULT, Opcodes.MOVE_RESULT,
+            Opcodes.NO_NEXT, Form11x.THE_ONE, true);
 
     public static final Dop MOVE_RESULT_WIDE =
-        new Dop(DalvOps.MOVE_RESULT_WIDE, DalvOps.MOVE_RESULT_WIDE,
-            DalvOps.NO_NEXT, Form11x.THE_ONE, true,
-            "move-result-wide");
+        new Dop(Opcodes.MOVE_RESULT_WIDE, Opcodes.MOVE_RESULT_WIDE,
+            Opcodes.NO_NEXT, Form11x.THE_ONE, true);
 
     public static final Dop MOVE_RESULT_OBJECT =
-        new Dop(DalvOps.MOVE_RESULT_OBJECT, DalvOps.MOVE_RESULT_OBJECT,
-            DalvOps.NO_NEXT, Form11x.THE_ONE, true,
-            "move-result-object");
+        new Dop(Opcodes.MOVE_RESULT_OBJECT, Opcodes.MOVE_RESULT_OBJECT,
+            Opcodes.NO_NEXT, Form11x.THE_ONE, true);
 
     public static final Dop MOVE_EXCEPTION =
-        new Dop(DalvOps.MOVE_EXCEPTION, DalvOps.MOVE_EXCEPTION,
-            DalvOps.NO_NEXT, Form11x.THE_ONE, true,
-            "move-exception");
+        new Dop(Opcodes.MOVE_EXCEPTION, Opcodes.MOVE_EXCEPTION,
+            Opcodes.NO_NEXT, Form11x.THE_ONE, true);
 
     public static final Dop RETURN_VOID =
-        new Dop(DalvOps.RETURN_VOID, DalvOps.RETURN_VOID,
-            DalvOps.NO_NEXT, Form10x.THE_ONE, false,
-            "return-void");
+        new Dop(Opcodes.RETURN_VOID, Opcodes.RETURN_VOID,
+            Opcodes.NO_NEXT, Form10x.THE_ONE, false);
 
     public static final Dop RETURN =
-        new Dop(DalvOps.RETURN, DalvOps.RETURN,
-            DalvOps.NO_NEXT, Form11x.THE_ONE, false,
-            "return");
+        new Dop(Opcodes.RETURN, Opcodes.RETURN,
+            Opcodes.NO_NEXT, Form11x.THE_ONE, false);
 
     public static final Dop RETURN_WIDE =
-        new Dop(DalvOps.RETURN_WIDE, DalvOps.RETURN_WIDE,
-            DalvOps.NO_NEXT, Form11x.THE_ONE, false,
-            "return-wide");
+        new Dop(Opcodes.RETURN_WIDE, Opcodes.RETURN_WIDE,
+            Opcodes.NO_NEXT, Form11x.THE_ONE, false);
 
     public static final Dop RETURN_OBJECT =
-        new Dop(DalvOps.RETURN_OBJECT, DalvOps.RETURN_OBJECT,
-            DalvOps.NO_NEXT, Form11x.THE_ONE, false,
-            "return-object");
+        new Dop(Opcodes.RETURN_OBJECT, Opcodes.RETURN_OBJECT,
+            Opcodes.NO_NEXT, Form11x.THE_ONE, false);
 
     public static final Dop CONST_4 =
-        new Dop(DalvOps.CONST_4, DalvOps.CONST,
-            DalvOps.CONST_16, Form11n.THE_ONE, true,
-            "const/4");
+        new Dop(Opcodes.CONST_4, Opcodes.CONST,
+            Opcodes.CONST_16, Form11n.THE_ONE, true);
 
     public static final Dop CONST_16 =
-        new Dop(DalvOps.CONST_16, DalvOps.CONST,
-            DalvOps.CONST_HIGH16, Form21s.THE_ONE, true,
-            "const/16");
+        new Dop(Opcodes.CONST_16, Opcodes.CONST,
+            Opcodes.CONST_HIGH16, Form21s.THE_ONE, true);
 
     public static final Dop CONST =
-        new Dop(DalvOps.CONST, DalvOps.CONST,
-            DalvOps.NO_NEXT, Form31i.THE_ONE, true,
-            "const");
+        new Dop(Opcodes.CONST, Opcodes.CONST,
+            Opcodes.NO_NEXT, Form31i.THE_ONE, true);
 
     public static final Dop CONST_HIGH16 =
-        new Dop(DalvOps.CONST_HIGH16, DalvOps.CONST,
-            DalvOps.CONST, Form21h.THE_ONE, true,
-            "const/high16");
+        new Dop(Opcodes.CONST_HIGH16, Opcodes.CONST,
+            Opcodes.CONST, Form21h.THE_ONE, true);
 
     public static final Dop CONST_WIDE_16 =
-        new Dop(DalvOps.CONST_WIDE_16, DalvOps.CONST_WIDE,
-            DalvOps.CONST_WIDE_HIGH16, Form21s.THE_ONE, true,
-            "const-wide/16");
+        new Dop(Opcodes.CONST_WIDE_16, Opcodes.CONST_WIDE,
+            Opcodes.CONST_WIDE_HIGH16, Form21s.THE_ONE, true);
 
     public static final Dop CONST_WIDE_32 =
-        new Dop(DalvOps.CONST_WIDE_32, DalvOps.CONST_WIDE,
-            DalvOps.CONST_WIDE, Form31i.THE_ONE, true,
-            "const-wide/32");
+        new Dop(Opcodes.CONST_WIDE_32, Opcodes.CONST_WIDE,
+            Opcodes.CONST_WIDE, Form31i.THE_ONE, true);
 
     public static final Dop CONST_WIDE =
-        new Dop(DalvOps.CONST_WIDE, DalvOps.CONST_WIDE,
-            DalvOps.NO_NEXT, Form51l.THE_ONE, true,
-            "const-wide");
+        new Dop(Opcodes.CONST_WIDE, Opcodes.CONST_WIDE,
+            Opcodes.NO_NEXT, Form51l.THE_ONE, true);
 
     public static final Dop CONST_WIDE_HIGH16 =
-        new Dop(DalvOps.CONST_WIDE_HIGH16, DalvOps.CONST_WIDE,
-            DalvOps.CONST_WIDE_32, Form21h.THE_ONE, true,
-            "const-wide/high16");
+        new Dop(Opcodes.CONST_WIDE_HIGH16, Opcodes.CONST_WIDE,
+            Opcodes.CONST_WIDE_32, Form21h.THE_ONE, true);
 
     public static final Dop CONST_STRING =
-        new Dop(DalvOps.CONST_STRING, DalvOps.CONST_STRING,
-            DalvOps.CONST_STRING_JUMBO, Form21c.THE_ONE, true,
-            "const-string");
+        new Dop(Opcodes.CONST_STRING, Opcodes.CONST_STRING,
+            Opcodes.CONST_STRING_JUMBO, Form21c.THE_ONE, true);
 
     public static final Dop CONST_STRING_JUMBO =
-        new Dop(DalvOps.CONST_STRING_JUMBO, DalvOps.CONST_STRING,
-            DalvOps.NO_NEXT, Form31c.THE_ONE, true,
-            "const-string/jumbo");
+        new Dop(Opcodes.CONST_STRING_JUMBO, Opcodes.CONST_STRING,
+            Opcodes.NO_NEXT, Form31c.THE_ONE, true);
 
     public static final Dop CONST_CLASS =
-        new Dop(DalvOps.CONST_CLASS, DalvOps.CONST_CLASS,
-            DalvOps.CONST_CLASS_JUMBO, Form21c.THE_ONE, true,
-            "const-class");
+        new Dop(Opcodes.CONST_CLASS, Opcodes.CONST_CLASS,
+            Opcodes.CONST_CLASS_JUMBO, Form21c.THE_ONE, true);
 
     public static final Dop MONITOR_ENTER =
-        new Dop(DalvOps.MONITOR_ENTER, DalvOps.MONITOR_ENTER,
-            DalvOps.NO_NEXT, Form11x.THE_ONE, false,
-            "monitor-enter");
+        new Dop(Opcodes.MONITOR_ENTER, Opcodes.MONITOR_ENTER,
+            Opcodes.NO_NEXT, Form11x.THE_ONE, false);
 
     public static final Dop MONITOR_EXIT =
-        new Dop(DalvOps.MONITOR_EXIT, DalvOps.MONITOR_EXIT,
-            DalvOps.NO_NEXT, Form11x.THE_ONE, false,
-            "monitor-exit");
+        new Dop(Opcodes.MONITOR_EXIT, Opcodes.MONITOR_EXIT,
+            Opcodes.NO_NEXT, Form11x.THE_ONE, false);
 
     public static final Dop CHECK_CAST =
-        new Dop(DalvOps.CHECK_CAST, DalvOps.CHECK_CAST,
-            DalvOps.CHECK_CAST_JUMBO, Form21c.THE_ONE, true,
-            "check-cast");
+        new Dop(Opcodes.CHECK_CAST, Opcodes.CHECK_CAST,
+            Opcodes.CHECK_CAST_JUMBO, Form21c.THE_ONE, true);
 
     public static final Dop INSTANCE_OF =
-        new Dop(DalvOps.INSTANCE_OF, DalvOps.INSTANCE_OF,
-            DalvOps.INSTANCE_OF_JUMBO, Form22c.THE_ONE, true,
-            "instance-of");
+        new Dop(Opcodes.INSTANCE_OF, Opcodes.INSTANCE_OF,
+            Opcodes.INSTANCE_OF_JUMBO, Form22c.THE_ONE, true);
 
     public static final Dop ARRAY_LENGTH =
-        new Dop(DalvOps.ARRAY_LENGTH, DalvOps.ARRAY_LENGTH,
-            DalvOps.NO_NEXT, Form12x.THE_ONE, true,
-            "array-length");
+        new Dop(Opcodes.ARRAY_LENGTH, Opcodes.ARRAY_LENGTH,
+            Opcodes.NO_NEXT, Form12x.THE_ONE, true);
 
     public static final Dop NEW_INSTANCE =
-        new Dop(DalvOps.NEW_INSTANCE, DalvOps.NEW_INSTANCE,
-            DalvOps.NEW_INSTANCE_JUMBO, Form21c.THE_ONE, true,
-            "new-instance");
+        new Dop(Opcodes.NEW_INSTANCE, Opcodes.NEW_INSTANCE,
+            Opcodes.NEW_INSTANCE_JUMBO, Form21c.THE_ONE, true);
 
     public static final Dop NEW_ARRAY =
-        new Dop(DalvOps.NEW_ARRAY, DalvOps.NEW_ARRAY,
-            DalvOps.NEW_ARRAY_JUMBO, Form22c.THE_ONE, true,
-            "new-array");
+        new Dop(Opcodes.NEW_ARRAY, Opcodes.NEW_ARRAY,
+            Opcodes.NEW_ARRAY_JUMBO, Form22c.THE_ONE, true);
 
     public static final Dop FILLED_NEW_ARRAY =
-        new Dop(DalvOps.FILLED_NEW_ARRAY, DalvOps.FILLED_NEW_ARRAY,
-            DalvOps.FILLED_NEW_ARRAY_RANGE, Form35c.THE_ONE, false,
-            "filled-new-array");
+        new Dop(Opcodes.FILLED_NEW_ARRAY, Opcodes.FILLED_NEW_ARRAY,
+            Opcodes.FILLED_NEW_ARRAY_RANGE, Form35c.THE_ONE, false);
 
     public static final Dop FILLED_NEW_ARRAY_RANGE =
-        new Dop(DalvOps.FILLED_NEW_ARRAY_RANGE, DalvOps.FILLED_NEW_ARRAY,
-            DalvOps.FILLED_NEW_ARRAY_JUMBO, Form3rc.THE_ONE, false,
-            "filled-new-array/range");
+        new Dop(Opcodes.FILLED_NEW_ARRAY_RANGE, Opcodes.FILLED_NEW_ARRAY,
+            Opcodes.FILLED_NEW_ARRAY_JUMBO, Form3rc.THE_ONE, false);
 
     public static final Dop FILL_ARRAY_DATA =
-        new Dop(DalvOps.FILL_ARRAY_DATA, DalvOps.FILL_ARRAY_DATA,
-            DalvOps.NO_NEXT, Form31t.THE_ONE, false,
-            "fill-array-data");
+        new Dop(Opcodes.FILL_ARRAY_DATA, Opcodes.FILL_ARRAY_DATA,
+            Opcodes.NO_NEXT, Form31t.THE_ONE, false);
 
     public static final Dop THROW =
-        new Dop(DalvOps.THROW, DalvOps.THROW,
-            DalvOps.NO_NEXT, Form11x.THE_ONE, false,
-            "throw");
+        new Dop(Opcodes.THROW, Opcodes.THROW,
+            Opcodes.NO_NEXT, Form11x.THE_ONE, false);
 
     public static final Dop GOTO =
-        new Dop(DalvOps.GOTO, DalvOps.GOTO,
-            DalvOps.GOTO_16, Form10t.THE_ONE, false,
-            "goto");
+        new Dop(Opcodes.GOTO, Opcodes.GOTO,
+            Opcodes.GOTO_16, Form10t.THE_ONE, false);
 
     public static final Dop GOTO_16 =
-        new Dop(DalvOps.GOTO_16, DalvOps.GOTO,
-            DalvOps.GOTO_32, Form20t.THE_ONE, false,
-            "goto/16");
+        new Dop(Opcodes.GOTO_16, Opcodes.GOTO,
+            Opcodes.GOTO_32, Form20t.THE_ONE, false);
 
     public static final Dop GOTO_32 =
-        new Dop(DalvOps.GOTO_32, DalvOps.GOTO,
-            DalvOps.NO_NEXT, Form30t.THE_ONE, false,
-            "goto/32");
+        new Dop(Opcodes.GOTO_32, Opcodes.GOTO,
+            Opcodes.NO_NEXT, Form30t.THE_ONE, false);
 
     public static final Dop PACKED_SWITCH =
-        new Dop(DalvOps.PACKED_SWITCH, DalvOps.PACKED_SWITCH,
-            DalvOps.NO_NEXT, Form31t.THE_ONE, false,
-            "packed-switch");
+        new Dop(Opcodes.PACKED_SWITCH, Opcodes.PACKED_SWITCH,
+            Opcodes.NO_NEXT, Form31t.THE_ONE, false);
 
     public static final Dop SPARSE_SWITCH =
-        new Dop(DalvOps.SPARSE_SWITCH, DalvOps.SPARSE_SWITCH,
-            DalvOps.NO_NEXT, Form31t.THE_ONE, false,
-            "sparse-switch");
+        new Dop(Opcodes.SPARSE_SWITCH, Opcodes.SPARSE_SWITCH,
+            Opcodes.NO_NEXT, Form31t.THE_ONE, false);
 
     public static final Dop CMPL_FLOAT =
-        new Dop(DalvOps.CMPL_FLOAT, DalvOps.CMPL_FLOAT,
-            DalvOps.NO_NEXT, Form23x.THE_ONE, true,
-            "cmpl-float");
+        new Dop(Opcodes.CMPL_FLOAT, Opcodes.CMPL_FLOAT,
+            Opcodes.NO_NEXT, Form23x.THE_ONE, true);
 
     public static final Dop CMPG_FLOAT =
-        new Dop(DalvOps.CMPG_FLOAT, DalvOps.CMPG_FLOAT,
-            DalvOps.NO_NEXT, Form23x.THE_ONE, true,
-            "cmpg-float");
+        new Dop(Opcodes.CMPG_FLOAT, Opcodes.CMPG_FLOAT,
+            Opcodes.NO_NEXT, Form23x.THE_ONE, true);
 
     public static final Dop CMPL_DOUBLE =
-        new Dop(DalvOps.CMPL_DOUBLE, DalvOps.CMPL_DOUBLE,
-            DalvOps.NO_NEXT, Form23x.THE_ONE, true,
-            "cmpl-double");
+        new Dop(Opcodes.CMPL_DOUBLE, Opcodes.CMPL_DOUBLE,
+            Opcodes.NO_NEXT, Form23x.THE_ONE, true);
 
     public static final Dop CMPG_DOUBLE =
-        new Dop(DalvOps.CMPG_DOUBLE, DalvOps.CMPG_DOUBLE,
-            DalvOps.NO_NEXT, Form23x.THE_ONE, true,
-            "cmpg-double");
+        new Dop(Opcodes.CMPG_DOUBLE, Opcodes.CMPG_DOUBLE,
+            Opcodes.NO_NEXT, Form23x.THE_ONE, true);
 
     public static final Dop CMP_LONG =
-        new Dop(DalvOps.CMP_LONG, DalvOps.CMP_LONG,
-            DalvOps.NO_NEXT, Form23x.THE_ONE, true,
-            "cmp-long");
+        new Dop(Opcodes.CMP_LONG, Opcodes.CMP_LONG,
+            Opcodes.NO_NEXT, Form23x.THE_ONE, true);
 
     public static final Dop IF_EQ =
-        new Dop(DalvOps.IF_EQ, DalvOps.IF_EQ,
-            DalvOps.NO_NEXT, Form22t.THE_ONE, false,
-            "if-eq");
+        new Dop(Opcodes.IF_EQ, Opcodes.IF_EQ,
+            Opcodes.NO_NEXT, Form22t.THE_ONE, false);
 
     public static final Dop IF_NE =
-        new Dop(DalvOps.IF_NE, DalvOps.IF_NE,
-            DalvOps.NO_NEXT, Form22t.THE_ONE, false,
-            "if-ne");
+        new Dop(Opcodes.IF_NE, Opcodes.IF_NE,
+            Opcodes.NO_NEXT, Form22t.THE_ONE, false);
 
     public static final Dop IF_LT =
-        new Dop(DalvOps.IF_LT, DalvOps.IF_LT,
-            DalvOps.NO_NEXT, Form22t.THE_ONE, false,
-            "if-lt");
+        new Dop(Opcodes.IF_LT, Opcodes.IF_LT,
+            Opcodes.NO_NEXT, Form22t.THE_ONE, false);
 
     public static final Dop IF_GE =
-        new Dop(DalvOps.IF_GE, DalvOps.IF_GE,
-            DalvOps.NO_NEXT, Form22t.THE_ONE, false,
-            "if-ge");
+        new Dop(Opcodes.IF_GE, Opcodes.IF_GE,
+            Opcodes.NO_NEXT, Form22t.THE_ONE, false);
 
     public static final Dop IF_GT =
-        new Dop(DalvOps.IF_GT, DalvOps.IF_GT,
-            DalvOps.NO_NEXT, Form22t.THE_ONE, false,
-            "if-gt");
+        new Dop(Opcodes.IF_GT, Opcodes.IF_GT,
+            Opcodes.NO_NEXT, Form22t.THE_ONE, false);
 
     public static final Dop IF_LE =
-        new Dop(DalvOps.IF_LE, DalvOps.IF_LE,
-            DalvOps.NO_NEXT, Form22t.THE_ONE, false,
-            "if-le");
+        new Dop(Opcodes.IF_LE, Opcodes.IF_LE,
+            Opcodes.NO_NEXT, Form22t.THE_ONE, false);
 
     public static final Dop IF_EQZ =
-        new Dop(DalvOps.IF_EQZ, DalvOps.IF_EQZ,
-            DalvOps.NO_NEXT, Form21t.THE_ONE, false,
-            "if-eqz");
+        new Dop(Opcodes.IF_EQZ, Opcodes.IF_EQZ,
+            Opcodes.NO_NEXT, Form21t.THE_ONE, false);
 
     public static final Dop IF_NEZ =
-        new Dop(DalvOps.IF_NEZ, DalvOps.IF_NEZ,
-            DalvOps.NO_NEXT, Form21t.THE_ONE, false,
-            "if-nez");
+        new Dop(Opcodes.IF_NEZ, Opcodes.IF_NEZ,
+            Opcodes.NO_NEXT, Form21t.THE_ONE, false);
 
     public static final Dop IF_LTZ =
-        new Dop(DalvOps.IF_LTZ, DalvOps.IF_LTZ,
-            DalvOps.NO_NEXT, Form21t.THE_ONE, false,
-            "if-ltz");
+        new Dop(Opcodes.IF_LTZ, Opcodes.IF_LTZ,
+            Opcodes.NO_NEXT, Form21t.THE_ONE, false);
 
     public static final Dop IF_GEZ =
-        new Dop(DalvOps.IF_GEZ, DalvOps.IF_GEZ,
-            DalvOps.NO_NEXT, Form21t.THE_ONE, false,
-            "if-gez");
+        new Dop(Opcodes.IF_GEZ, Opcodes.IF_GEZ,
+            Opcodes.NO_NEXT, Form21t.THE_ONE, false);
 
     public static final Dop IF_GTZ =
-        new Dop(DalvOps.IF_GTZ, DalvOps.IF_GTZ,
-            DalvOps.NO_NEXT, Form21t.THE_ONE, false,
-            "if-gtz");
+        new Dop(Opcodes.IF_GTZ, Opcodes.IF_GTZ,
+            Opcodes.NO_NEXT, Form21t.THE_ONE, false);
 
     public static final Dop IF_LEZ =
-        new Dop(DalvOps.IF_LEZ, DalvOps.IF_LEZ,
-            DalvOps.NO_NEXT, Form21t.THE_ONE, false,
-            "if-lez");
+        new Dop(Opcodes.IF_LEZ, Opcodes.IF_LEZ,
+            Opcodes.NO_NEXT, Form21t.THE_ONE, false);
 
     public static final Dop AGET =
-        new Dop(DalvOps.AGET, DalvOps.AGET,
-            DalvOps.NO_NEXT, Form23x.THE_ONE, true,
-            "aget");
+        new Dop(Opcodes.AGET, Opcodes.AGET,
+            Opcodes.NO_NEXT, Form23x.THE_ONE, true);
 
     public static final Dop AGET_WIDE =
-        new Dop(DalvOps.AGET_WIDE, DalvOps.AGET_WIDE,
-            DalvOps.NO_NEXT, Form23x.THE_ONE, true,
-            "aget-wide");
+        new Dop(Opcodes.AGET_WIDE, Opcodes.AGET_WIDE,
+            Opcodes.NO_NEXT, Form23x.THE_ONE, true);
 
     public static final Dop AGET_OBJECT =
-        new Dop(DalvOps.AGET_OBJECT, DalvOps.AGET_OBJECT,
-            DalvOps.NO_NEXT, Form23x.THE_ONE, true,
-            "aget-object");
+        new Dop(Opcodes.AGET_OBJECT, Opcodes.AGET_OBJECT,
+            Opcodes.NO_NEXT, Form23x.THE_ONE, true);
 
     public static final Dop AGET_BOOLEAN =
-        new Dop(DalvOps.AGET_BOOLEAN, DalvOps.AGET_BOOLEAN,
-            DalvOps.NO_NEXT, Form23x.THE_ONE, true,
-            "aget-boolean");
+        new Dop(Opcodes.AGET_BOOLEAN, Opcodes.AGET_BOOLEAN,
+            Opcodes.NO_NEXT, Form23x.THE_ONE, true);
 
     public static final Dop AGET_BYTE =
-        new Dop(DalvOps.AGET_BYTE, DalvOps.AGET_BYTE,
-            DalvOps.NO_NEXT, Form23x.THE_ONE, true,
-            "aget-byte");
+        new Dop(Opcodes.AGET_BYTE, Opcodes.AGET_BYTE,
+            Opcodes.NO_NEXT, Form23x.THE_ONE, true);
 
     public static final Dop AGET_CHAR =
-        new Dop(DalvOps.AGET_CHAR, DalvOps.AGET_CHAR,
-            DalvOps.NO_NEXT, Form23x.THE_ONE, true,
-            "aget-char");
+        new Dop(Opcodes.AGET_CHAR, Opcodes.AGET_CHAR,
+            Opcodes.NO_NEXT, Form23x.THE_ONE, true);
 
     public static final Dop AGET_SHORT =
-        new Dop(DalvOps.AGET_SHORT, DalvOps.AGET_SHORT,
-            DalvOps.NO_NEXT, Form23x.THE_ONE, true,
-            "aget-short");
+        new Dop(Opcodes.AGET_SHORT, Opcodes.AGET_SHORT,
+            Opcodes.NO_NEXT, Form23x.THE_ONE, true);
 
     public static final Dop APUT =
-        new Dop(DalvOps.APUT, DalvOps.APUT,
-            DalvOps.NO_NEXT, Form23x.THE_ONE, false,
-            "aput");
+        new Dop(Opcodes.APUT, Opcodes.APUT,
+            Opcodes.NO_NEXT, Form23x.THE_ONE, false);
 
     public static final Dop APUT_WIDE =
-        new Dop(DalvOps.APUT_WIDE, DalvOps.APUT_WIDE,
-            DalvOps.NO_NEXT, Form23x.THE_ONE, false,
-            "aput-wide");
+        new Dop(Opcodes.APUT_WIDE, Opcodes.APUT_WIDE,
+            Opcodes.NO_NEXT, Form23x.THE_ONE, false);
 
     public static final Dop APUT_OBJECT =
-        new Dop(DalvOps.APUT_OBJECT, DalvOps.APUT_OBJECT,
-            DalvOps.NO_NEXT, Form23x.THE_ONE, false,
-            "aput-object");
+        new Dop(Opcodes.APUT_OBJECT, Opcodes.APUT_OBJECT,
+            Opcodes.NO_NEXT, Form23x.THE_ONE, false);
 
     public static final Dop APUT_BOOLEAN =
-        new Dop(DalvOps.APUT_BOOLEAN, DalvOps.APUT_BOOLEAN,
-            DalvOps.NO_NEXT, Form23x.THE_ONE, false,
-            "aput-boolean");
+        new Dop(Opcodes.APUT_BOOLEAN, Opcodes.APUT_BOOLEAN,
+            Opcodes.NO_NEXT, Form23x.THE_ONE, false);
 
     public static final Dop APUT_BYTE =
-        new Dop(DalvOps.APUT_BYTE, DalvOps.APUT_BYTE,
-            DalvOps.NO_NEXT, Form23x.THE_ONE, false,
-            "aput-byte");
+        new Dop(Opcodes.APUT_BYTE, Opcodes.APUT_BYTE,
+            Opcodes.NO_NEXT, Form23x.THE_ONE, false);
 
     public static final Dop APUT_CHAR =
-        new Dop(DalvOps.APUT_CHAR, DalvOps.APUT_CHAR,
-            DalvOps.NO_NEXT, Form23x.THE_ONE, false,
-            "aput-char");
+        new Dop(Opcodes.APUT_CHAR, Opcodes.APUT_CHAR,
+            Opcodes.NO_NEXT, Form23x.THE_ONE, false);
 
     public static final Dop APUT_SHORT =
-        new Dop(DalvOps.APUT_SHORT, DalvOps.APUT_SHORT,
-            DalvOps.NO_NEXT, Form23x.THE_ONE, false,
-            "aput-short");
+        new Dop(Opcodes.APUT_SHORT, Opcodes.APUT_SHORT,
+            Opcodes.NO_NEXT, Form23x.THE_ONE, false);
 
     public static final Dop IGET =
-        new Dop(DalvOps.IGET, DalvOps.IGET,
-            DalvOps.IGET_JUMBO, Form22c.THE_ONE, true,
-            "iget");
+        new Dop(Opcodes.IGET, Opcodes.IGET,
+            Opcodes.IGET_JUMBO, Form22c.THE_ONE, true);
 
     public static final Dop IGET_WIDE =
-        new Dop(DalvOps.IGET_WIDE, DalvOps.IGET_WIDE,
-            DalvOps.IGET_WIDE_JUMBO, Form22c.THE_ONE, true,
-            "iget-wide");
+        new Dop(Opcodes.IGET_WIDE, Opcodes.IGET_WIDE,
+            Opcodes.IGET_WIDE_JUMBO, Form22c.THE_ONE, true);
 
     public static final Dop IGET_OBJECT =
-        new Dop(DalvOps.IGET_OBJECT, DalvOps.IGET_OBJECT,
-            DalvOps.IGET_OBJECT_JUMBO, Form22c.THE_ONE, true,
-            "iget-object");
+        new Dop(Opcodes.IGET_OBJECT, Opcodes.IGET_OBJECT,
+            Opcodes.IGET_OBJECT_JUMBO, Form22c.THE_ONE, true);
 
     public static final Dop IGET_BOOLEAN =
-        new Dop(DalvOps.IGET_BOOLEAN, DalvOps.IGET_BOOLEAN,
-            DalvOps.IGET_BOOLEAN_JUMBO, Form22c.THE_ONE, true,
-            "iget-boolean");
+        new Dop(Opcodes.IGET_BOOLEAN, Opcodes.IGET_BOOLEAN,
+            Opcodes.IGET_BOOLEAN_JUMBO, Form22c.THE_ONE, true);
 
     public static final Dop IGET_BYTE =
-        new Dop(DalvOps.IGET_BYTE, DalvOps.IGET_BYTE,
-            DalvOps.IGET_BYTE_JUMBO, Form22c.THE_ONE, true,
-            "iget-byte");
+        new Dop(Opcodes.IGET_BYTE, Opcodes.IGET_BYTE,
+            Opcodes.IGET_BYTE_JUMBO, Form22c.THE_ONE, true);
 
     public static final Dop IGET_CHAR =
-        new Dop(DalvOps.IGET_CHAR, DalvOps.IGET_CHAR,
-            DalvOps.IGET_CHAR_JUMBO, Form22c.THE_ONE, true,
-            "iget-char");
+        new Dop(Opcodes.IGET_CHAR, Opcodes.IGET_CHAR,
+            Opcodes.IGET_CHAR_JUMBO, Form22c.THE_ONE, true);
 
     public static final Dop IGET_SHORT =
-        new Dop(DalvOps.IGET_SHORT, DalvOps.IGET_SHORT,
-            DalvOps.IGET_SHORT_JUMBO, Form22c.THE_ONE, true,
-            "iget-short");
+        new Dop(Opcodes.IGET_SHORT, Opcodes.IGET_SHORT,
+            Opcodes.IGET_SHORT_JUMBO, Form22c.THE_ONE, true);
 
     public static final Dop IPUT =
-        new Dop(DalvOps.IPUT, DalvOps.IPUT,
-            DalvOps.IPUT_JUMBO, Form22c.THE_ONE, false,
-            "iput");
+        new Dop(Opcodes.IPUT, Opcodes.IPUT,
+            Opcodes.IPUT_JUMBO, Form22c.THE_ONE, false);
 
     public static final Dop IPUT_WIDE =
-        new Dop(DalvOps.IPUT_WIDE, DalvOps.IPUT_WIDE,
-            DalvOps.IPUT_WIDE_JUMBO, Form22c.THE_ONE, false,
-            "iput-wide");
+        new Dop(Opcodes.IPUT_WIDE, Opcodes.IPUT_WIDE,
+            Opcodes.IPUT_WIDE_JUMBO, Form22c.THE_ONE, false);
 
     public static final Dop IPUT_OBJECT =
-        new Dop(DalvOps.IPUT_OBJECT, DalvOps.IPUT_OBJECT,
-            DalvOps.IPUT_OBJECT_JUMBO, Form22c.THE_ONE, false,
-            "iput-object");
+        new Dop(Opcodes.IPUT_OBJECT, Opcodes.IPUT_OBJECT,
+            Opcodes.IPUT_OBJECT_JUMBO, Form22c.THE_ONE, false);
 
     public static final Dop IPUT_BOOLEAN =
-        new Dop(DalvOps.IPUT_BOOLEAN, DalvOps.IPUT_BOOLEAN,
-            DalvOps.IPUT_BOOLEAN_JUMBO, Form22c.THE_ONE, false,
-            "iput-boolean");
+        new Dop(Opcodes.IPUT_BOOLEAN, Opcodes.IPUT_BOOLEAN,
+            Opcodes.IPUT_BOOLEAN_JUMBO, Form22c.THE_ONE, false);
 
     public static final Dop IPUT_BYTE =
-        new Dop(DalvOps.IPUT_BYTE, DalvOps.IPUT_BYTE,
-            DalvOps.IPUT_BYTE_JUMBO, Form22c.THE_ONE, false,
-            "iput-byte");
+        new Dop(Opcodes.IPUT_BYTE, Opcodes.IPUT_BYTE,
+            Opcodes.IPUT_BYTE_JUMBO, Form22c.THE_ONE, false);
 
     public static final Dop IPUT_CHAR =
-        new Dop(DalvOps.IPUT_CHAR, DalvOps.IPUT_CHAR,
-            DalvOps.IPUT_CHAR_JUMBO, Form22c.THE_ONE, false,
-            "iput-char");
+        new Dop(Opcodes.IPUT_CHAR, Opcodes.IPUT_CHAR,
+            Opcodes.IPUT_CHAR_JUMBO, Form22c.THE_ONE, false);
 
     public static final Dop IPUT_SHORT =
-        new Dop(DalvOps.IPUT_SHORT, DalvOps.IPUT_SHORT,
-            DalvOps.IPUT_SHORT_JUMBO, Form22c.THE_ONE, false,
-            "iput-short");
+        new Dop(Opcodes.IPUT_SHORT, Opcodes.IPUT_SHORT,
+            Opcodes.IPUT_SHORT_JUMBO, Form22c.THE_ONE, false);
 
     public static final Dop SGET =
-        new Dop(DalvOps.SGET, DalvOps.SGET,
-            DalvOps.SGET_JUMBO, Form21c.THE_ONE, true,
-            "sget");
+        new Dop(Opcodes.SGET, Opcodes.SGET,
+            Opcodes.SGET_JUMBO, Form21c.THE_ONE, true);
 
     public static final Dop SGET_WIDE =
-        new Dop(DalvOps.SGET_WIDE, DalvOps.SGET_WIDE,
-            DalvOps.SGET_WIDE_JUMBO, Form21c.THE_ONE, true,
-            "sget-wide");
+        new Dop(Opcodes.SGET_WIDE, Opcodes.SGET_WIDE,
+            Opcodes.SGET_WIDE_JUMBO, Form21c.THE_ONE, true);
 
     public static final Dop SGET_OBJECT =
-        new Dop(DalvOps.SGET_OBJECT, DalvOps.SGET_OBJECT,
-            DalvOps.SGET_OBJECT_JUMBO, Form21c.THE_ONE, true,
-            "sget-object");
+        new Dop(Opcodes.SGET_OBJECT, Opcodes.SGET_OBJECT,
+            Opcodes.SGET_OBJECT_JUMBO, Form21c.THE_ONE, true);
 
     public static final Dop SGET_BOOLEAN =
-        new Dop(DalvOps.SGET_BOOLEAN, DalvOps.SGET_BOOLEAN,
-            DalvOps.SGET_BOOLEAN_JUMBO, Form21c.THE_ONE, true,
-            "sget-boolean");
+        new Dop(Opcodes.SGET_BOOLEAN, Opcodes.SGET_BOOLEAN,
+            Opcodes.SGET_BOOLEAN_JUMBO, Form21c.THE_ONE, true);
 
     public static final Dop SGET_BYTE =
-        new Dop(DalvOps.SGET_BYTE, DalvOps.SGET_BYTE,
-            DalvOps.SGET_BYTE_JUMBO, Form21c.THE_ONE, true,
-            "sget-byte");
+        new Dop(Opcodes.SGET_BYTE, Opcodes.SGET_BYTE,
+            Opcodes.SGET_BYTE_JUMBO, Form21c.THE_ONE, true);
 
     public static final Dop SGET_CHAR =
-        new Dop(DalvOps.SGET_CHAR, DalvOps.SGET_CHAR,
-            DalvOps.SGET_CHAR_JUMBO, Form21c.THE_ONE, true,
-            "sget-char");
+        new Dop(Opcodes.SGET_CHAR, Opcodes.SGET_CHAR,
+            Opcodes.SGET_CHAR_JUMBO, Form21c.THE_ONE, true);
 
     public static final Dop SGET_SHORT =
-        new Dop(DalvOps.SGET_SHORT, DalvOps.SGET_SHORT,
-            DalvOps.SGET_SHORT_JUMBO, Form21c.THE_ONE, true,
-            "sget-short");
+        new Dop(Opcodes.SGET_SHORT, Opcodes.SGET_SHORT,
+            Opcodes.SGET_SHORT_JUMBO, Form21c.THE_ONE, true);
 
     public static final Dop SPUT =
-        new Dop(DalvOps.SPUT, DalvOps.SPUT,
-            DalvOps.SPUT_JUMBO, Form21c.THE_ONE, false,
-            "sput");
+        new Dop(Opcodes.SPUT, Opcodes.SPUT,
+            Opcodes.SPUT_JUMBO, Form21c.THE_ONE, false);
 
     public static final Dop SPUT_WIDE =
-        new Dop(DalvOps.SPUT_WIDE, DalvOps.SPUT_WIDE,
-            DalvOps.SPUT_WIDE_JUMBO, Form21c.THE_ONE, false,
-            "sput-wide");
+        new Dop(Opcodes.SPUT_WIDE, Opcodes.SPUT_WIDE,
+            Opcodes.SPUT_WIDE_JUMBO, Form21c.THE_ONE, false);
 
     public static final Dop SPUT_OBJECT =
-        new Dop(DalvOps.SPUT_OBJECT, DalvOps.SPUT_OBJECT,
-            DalvOps.SPUT_OBJECT_JUMBO, Form21c.THE_ONE, false,
-            "sput-object");
+        new Dop(Opcodes.SPUT_OBJECT, Opcodes.SPUT_OBJECT,
+            Opcodes.SPUT_OBJECT_JUMBO, Form21c.THE_ONE, false);
 
     public static final Dop SPUT_BOOLEAN =
-        new Dop(DalvOps.SPUT_BOOLEAN, DalvOps.SPUT_BOOLEAN,
-            DalvOps.SPUT_BOOLEAN_JUMBO, Form21c.THE_ONE, false,
-            "sput-boolean");
+        new Dop(Opcodes.SPUT_BOOLEAN, Opcodes.SPUT_BOOLEAN,
+            Opcodes.SPUT_BOOLEAN_JUMBO, Form21c.THE_ONE, false);
 
     public static final Dop SPUT_BYTE =
-        new Dop(DalvOps.SPUT_BYTE, DalvOps.SPUT_BYTE,
-            DalvOps.SPUT_BYTE_JUMBO, Form21c.THE_ONE, false,
-            "sput-byte");
+        new Dop(Opcodes.SPUT_BYTE, Opcodes.SPUT_BYTE,
+            Opcodes.SPUT_BYTE_JUMBO, Form21c.THE_ONE, false);
 
     public static final Dop SPUT_CHAR =
-        new Dop(DalvOps.SPUT_CHAR, DalvOps.SPUT_CHAR,
-            DalvOps.SPUT_CHAR_JUMBO, Form21c.THE_ONE, false,
-            "sput-char");
+        new Dop(Opcodes.SPUT_CHAR, Opcodes.SPUT_CHAR,
+            Opcodes.SPUT_CHAR_JUMBO, Form21c.THE_ONE, false);
 
     public static final Dop SPUT_SHORT =
-        new Dop(DalvOps.SPUT_SHORT, DalvOps.SPUT_SHORT,
-            DalvOps.SPUT_SHORT_JUMBO, Form21c.THE_ONE, false,
-            "sput-short");
+        new Dop(Opcodes.SPUT_SHORT, Opcodes.SPUT_SHORT,
+            Opcodes.SPUT_SHORT_JUMBO, Form21c.THE_ONE, false);
 
     public static final Dop INVOKE_VIRTUAL =
-        new Dop(DalvOps.INVOKE_VIRTUAL, DalvOps.INVOKE_VIRTUAL,
-            DalvOps.INVOKE_VIRTUAL_RANGE, Form35c.THE_ONE, false,
-            "invoke-virtual");
+        new Dop(Opcodes.INVOKE_VIRTUAL, Opcodes.INVOKE_VIRTUAL,
+            Opcodes.INVOKE_VIRTUAL_RANGE, Form35c.THE_ONE, false);
 
     public static final Dop INVOKE_SUPER =
-        new Dop(DalvOps.INVOKE_SUPER, DalvOps.INVOKE_SUPER,
-            DalvOps.INVOKE_SUPER_RANGE, Form35c.THE_ONE, false,
-            "invoke-super");
+        new Dop(Opcodes.INVOKE_SUPER, Opcodes.INVOKE_SUPER,
+            Opcodes.INVOKE_SUPER_RANGE, Form35c.THE_ONE, false);
 
     public static final Dop INVOKE_DIRECT =
-        new Dop(DalvOps.INVOKE_DIRECT, DalvOps.INVOKE_DIRECT,
-            DalvOps.INVOKE_DIRECT_RANGE, Form35c.THE_ONE, false,
-            "invoke-direct");
+        new Dop(Opcodes.INVOKE_DIRECT, Opcodes.INVOKE_DIRECT,
+            Opcodes.INVOKE_DIRECT_RANGE, Form35c.THE_ONE, false);
 
     public static final Dop INVOKE_STATIC =
-        new Dop(DalvOps.INVOKE_STATIC, DalvOps.INVOKE_STATIC,
-            DalvOps.INVOKE_STATIC_RANGE, Form35c.THE_ONE, false,
-            "invoke-static");
+        new Dop(Opcodes.INVOKE_STATIC, Opcodes.INVOKE_STATIC,
+            Opcodes.INVOKE_STATIC_RANGE, Form35c.THE_ONE, false);
 
     public static final Dop INVOKE_INTERFACE =
-        new Dop(DalvOps.INVOKE_INTERFACE, DalvOps.INVOKE_INTERFACE,
-            DalvOps.INVOKE_INTERFACE_RANGE, Form35c.THE_ONE, false,
-            "invoke-interface");
+        new Dop(Opcodes.INVOKE_INTERFACE, Opcodes.INVOKE_INTERFACE,
+            Opcodes.INVOKE_INTERFACE_RANGE, Form35c.THE_ONE, false);
 
     public static final Dop INVOKE_VIRTUAL_RANGE =
-        new Dop(DalvOps.INVOKE_VIRTUAL_RANGE, DalvOps.INVOKE_VIRTUAL,
-            DalvOps.INVOKE_VIRTUAL_JUMBO, Form3rc.THE_ONE, false,
-            "invoke-virtual/range");
+        new Dop(Opcodes.INVOKE_VIRTUAL_RANGE, Opcodes.INVOKE_VIRTUAL,
+            Opcodes.INVOKE_VIRTUAL_JUMBO, Form3rc.THE_ONE, false);
 
     public static final Dop INVOKE_SUPER_RANGE =
-        new Dop(DalvOps.INVOKE_SUPER_RANGE, DalvOps.INVOKE_SUPER,
-            DalvOps.INVOKE_SUPER_JUMBO, Form3rc.THE_ONE, false,
-            "invoke-super/range");
+        new Dop(Opcodes.INVOKE_SUPER_RANGE, Opcodes.INVOKE_SUPER,
+            Opcodes.INVOKE_SUPER_JUMBO, Form3rc.THE_ONE, false);
 
     public static final Dop INVOKE_DIRECT_RANGE =
-        new Dop(DalvOps.INVOKE_DIRECT_RANGE, DalvOps.INVOKE_DIRECT,
-            DalvOps.INVOKE_DIRECT_JUMBO, Form3rc.THE_ONE, false,
-            "invoke-direct/range");
+        new Dop(Opcodes.INVOKE_DIRECT_RANGE, Opcodes.INVOKE_DIRECT,
+            Opcodes.INVOKE_DIRECT_JUMBO, Form3rc.THE_ONE, false);
 
     public static final Dop INVOKE_STATIC_RANGE =
-        new Dop(DalvOps.INVOKE_STATIC_RANGE, DalvOps.INVOKE_STATIC,
-            DalvOps.INVOKE_STATIC_JUMBO, Form3rc.THE_ONE, false,
-            "invoke-static/range");
+        new Dop(Opcodes.INVOKE_STATIC_RANGE, Opcodes.INVOKE_STATIC,
+            Opcodes.INVOKE_STATIC_JUMBO, Form3rc.THE_ONE, false);
 
     public static final Dop INVOKE_INTERFACE_RANGE =
-        new Dop(DalvOps.INVOKE_INTERFACE_RANGE, DalvOps.INVOKE_INTERFACE,
-            DalvOps.INVOKE_INTERFACE_JUMBO, Form3rc.THE_ONE, false,
-            "invoke-interface/range");
+        new Dop(Opcodes.INVOKE_INTERFACE_RANGE, Opcodes.INVOKE_INTERFACE,
+            Opcodes.INVOKE_INTERFACE_JUMBO, Form3rc.THE_ONE, false);
 
     public static final Dop NEG_INT =
-        new Dop(DalvOps.NEG_INT, DalvOps.NEG_INT,
-            DalvOps.NO_NEXT, Form12x.THE_ONE, true,
-            "neg-int");
+        new Dop(Opcodes.NEG_INT, Opcodes.NEG_INT,
+            Opcodes.NO_NEXT, Form12x.THE_ONE, true);
 
     public static final Dop NOT_INT =
-        new Dop(DalvOps.NOT_INT, DalvOps.NOT_INT,
-            DalvOps.NO_NEXT, Form12x.THE_ONE, true,
-            "not-int");
+        new Dop(Opcodes.NOT_INT, Opcodes.NOT_INT,
+            Opcodes.NO_NEXT, Form12x.THE_ONE, true);
 
     public static final Dop NEG_LONG =
-        new Dop(DalvOps.NEG_LONG, DalvOps.NEG_LONG,
-            DalvOps.NO_NEXT, Form12x.THE_ONE, true,
-            "neg-long");
+        new Dop(Opcodes.NEG_LONG, Opcodes.NEG_LONG,
+            Opcodes.NO_NEXT, Form12x.THE_ONE, true);
 
     public static final Dop NOT_LONG =
-        new Dop(DalvOps.NOT_LONG, DalvOps.NOT_LONG,
-            DalvOps.NO_NEXT, Form12x.THE_ONE, true,
-            "not-long");
+        new Dop(Opcodes.NOT_LONG, Opcodes.NOT_LONG,
+            Opcodes.NO_NEXT, Form12x.THE_ONE, true);
 
     public static final Dop NEG_FLOAT =
-        new Dop(DalvOps.NEG_FLOAT, DalvOps.NEG_FLOAT,
-            DalvOps.NO_NEXT, Form12x.THE_ONE, true,
-            "neg-float");
+        new Dop(Opcodes.NEG_FLOAT, Opcodes.NEG_FLOAT,
+            Opcodes.NO_NEXT, Form12x.THE_ONE, true);
 
     public static final Dop NEG_DOUBLE =
-        new Dop(DalvOps.NEG_DOUBLE, DalvOps.NEG_DOUBLE,
-            DalvOps.NO_NEXT, Form12x.THE_ONE, true,
-            "neg-double");
+        new Dop(Opcodes.NEG_DOUBLE, Opcodes.NEG_DOUBLE,
+            Opcodes.NO_NEXT, Form12x.THE_ONE, true);
 
     public static final Dop INT_TO_LONG =
-        new Dop(DalvOps.INT_TO_LONG, DalvOps.INT_TO_LONG,
-            DalvOps.NO_NEXT, Form12x.THE_ONE, true,
-            "int-to-long");
+        new Dop(Opcodes.INT_TO_LONG, Opcodes.INT_TO_LONG,
+            Opcodes.NO_NEXT, Form12x.THE_ONE, true);
 
     public static final Dop INT_TO_FLOAT =
-        new Dop(DalvOps.INT_TO_FLOAT, DalvOps.INT_TO_FLOAT,
-            DalvOps.NO_NEXT, Form12x.THE_ONE, true,
-            "int-to-float");
+        new Dop(Opcodes.INT_TO_FLOAT, Opcodes.INT_TO_FLOAT,
+            Opcodes.NO_NEXT, Form12x.THE_ONE, true);
 
     public static final Dop INT_TO_DOUBLE =
-        new Dop(DalvOps.INT_TO_DOUBLE, DalvOps.INT_TO_DOUBLE,
-            DalvOps.NO_NEXT, Form12x.THE_ONE, true,
-            "int-to-double");
+        new Dop(Opcodes.INT_TO_DOUBLE, Opcodes.INT_TO_DOUBLE,
+            Opcodes.NO_NEXT, Form12x.THE_ONE, true);
 
     public static final Dop LONG_TO_INT =
-        new Dop(DalvOps.LONG_TO_INT, DalvOps.LONG_TO_INT,
-            DalvOps.NO_NEXT, Form12x.THE_ONE, true,
-            "long-to-int");
+        new Dop(Opcodes.LONG_TO_INT, Opcodes.LONG_TO_INT,
+            Opcodes.NO_NEXT, Form12x.THE_ONE, true);
 
     public static final Dop LONG_TO_FLOAT =
-        new Dop(DalvOps.LONG_TO_FLOAT, DalvOps.LONG_TO_FLOAT,
-            DalvOps.NO_NEXT, Form12x.THE_ONE, true,
-            "long-to-float");
+        new Dop(Opcodes.LONG_TO_FLOAT, Opcodes.LONG_TO_FLOAT,
+            Opcodes.NO_NEXT, Form12x.THE_ONE, true);
 
     public static final Dop LONG_TO_DOUBLE =
-        new Dop(DalvOps.LONG_TO_DOUBLE, DalvOps.LONG_TO_DOUBLE,
-            DalvOps.NO_NEXT, Form12x.THE_ONE, true,
-            "long-to-double");
+        new Dop(Opcodes.LONG_TO_DOUBLE, Opcodes.LONG_TO_DOUBLE,
+            Opcodes.NO_NEXT, Form12x.THE_ONE, true);
 
     public static final Dop FLOAT_TO_INT =
-        new Dop(DalvOps.FLOAT_TO_INT, DalvOps.FLOAT_TO_INT,
-            DalvOps.NO_NEXT, Form12x.THE_ONE, true,
-            "float-to-int");
+        new Dop(Opcodes.FLOAT_TO_INT, Opcodes.FLOAT_TO_INT,
+            Opcodes.NO_NEXT, Form12x.THE_ONE, true);
 
     public static final Dop FLOAT_TO_LONG =
-        new Dop(DalvOps.FLOAT_TO_LONG, DalvOps.FLOAT_TO_LONG,
-            DalvOps.NO_NEXT, Form12x.THE_ONE, true,
-            "float-to-long");
+        new Dop(Opcodes.FLOAT_TO_LONG, Opcodes.FLOAT_TO_LONG,
+            Opcodes.NO_NEXT, Form12x.THE_ONE, true);
 
     public static final Dop FLOAT_TO_DOUBLE =
-        new Dop(DalvOps.FLOAT_TO_DOUBLE, DalvOps.FLOAT_TO_DOUBLE,
-            DalvOps.NO_NEXT, Form12x.THE_ONE, true,
-            "float-to-double");
+        new Dop(Opcodes.FLOAT_TO_DOUBLE, Opcodes.FLOAT_TO_DOUBLE,
+            Opcodes.NO_NEXT, Form12x.THE_ONE, true);
 
     public static final Dop DOUBLE_TO_INT =
-        new Dop(DalvOps.DOUBLE_TO_INT, DalvOps.DOUBLE_TO_INT,
-            DalvOps.NO_NEXT, Form12x.THE_ONE, true,
-            "double-to-int");
+        new Dop(Opcodes.DOUBLE_TO_INT, Opcodes.DOUBLE_TO_INT,
+            Opcodes.NO_NEXT, Form12x.THE_ONE, true);
 
     public static final Dop DOUBLE_TO_LONG =
-        new Dop(DalvOps.DOUBLE_TO_LONG, DalvOps.DOUBLE_TO_LONG,
-            DalvOps.NO_NEXT, Form12x.THE_ONE, true,
-            "double-to-long");
+        new Dop(Opcodes.DOUBLE_TO_LONG, Opcodes.DOUBLE_TO_LONG,
+            Opcodes.NO_NEXT, Form12x.THE_ONE, true);
 
     public static final Dop DOUBLE_TO_FLOAT =
-        new Dop(DalvOps.DOUBLE_TO_FLOAT, DalvOps.DOUBLE_TO_FLOAT,
-            DalvOps.NO_NEXT, Form12x.THE_ONE, true,
-            "double-to-float");
+        new Dop(Opcodes.DOUBLE_TO_FLOAT, Opcodes.DOUBLE_TO_FLOAT,
+            Opcodes.NO_NEXT, Form12x.THE_ONE, true);
 
     public static final Dop INT_TO_BYTE =
-        new Dop(DalvOps.INT_TO_BYTE, DalvOps.INT_TO_BYTE,
-            DalvOps.NO_NEXT, Form12x.THE_ONE, true,
-            "int-to-byte");
+        new Dop(Opcodes.INT_TO_BYTE, Opcodes.INT_TO_BYTE,
+            Opcodes.NO_NEXT, Form12x.THE_ONE, true);
 
     public static final Dop INT_TO_CHAR =
-        new Dop(DalvOps.INT_TO_CHAR, DalvOps.INT_TO_CHAR,
-            DalvOps.NO_NEXT, Form12x.THE_ONE, true,
-            "int-to-char");
+        new Dop(Opcodes.INT_TO_CHAR, Opcodes.INT_TO_CHAR,
+            Opcodes.NO_NEXT, Form12x.THE_ONE, true);
 
     public static final Dop INT_TO_SHORT =
-        new Dop(DalvOps.INT_TO_SHORT, DalvOps.INT_TO_SHORT,
-            DalvOps.NO_NEXT, Form12x.THE_ONE, true,
-            "int-to-short");
+        new Dop(Opcodes.INT_TO_SHORT, Opcodes.INT_TO_SHORT,
+            Opcodes.NO_NEXT, Form12x.THE_ONE, true);
 
     public static final Dop ADD_INT =
-        new Dop(DalvOps.ADD_INT, DalvOps.ADD_INT,
-            DalvOps.NO_NEXT, Form23x.THE_ONE, true,
-            "add-int");
+        new Dop(Opcodes.ADD_INT, Opcodes.ADD_INT,
+            Opcodes.NO_NEXT, Form23x.THE_ONE, true);
 
     public static final Dop SUB_INT =
-        new Dop(DalvOps.SUB_INT, DalvOps.SUB_INT,
-            DalvOps.NO_NEXT, Form23x.THE_ONE, true,
-            "sub-int");
+        new Dop(Opcodes.SUB_INT, Opcodes.SUB_INT,
+            Opcodes.NO_NEXT, Form23x.THE_ONE, true);
 
     public static final Dop MUL_INT =
-        new Dop(DalvOps.MUL_INT, DalvOps.MUL_INT,
-            DalvOps.NO_NEXT, Form23x.THE_ONE, true,
-            "mul-int");
+        new Dop(Opcodes.MUL_INT, Opcodes.MUL_INT,
+            Opcodes.NO_NEXT, Form23x.THE_ONE, true);
 
     public static final Dop DIV_INT =
-        new Dop(DalvOps.DIV_INT, DalvOps.DIV_INT,
-            DalvOps.NO_NEXT, Form23x.THE_ONE, true,
-            "div-int");
+        new Dop(Opcodes.DIV_INT, Opcodes.DIV_INT,
+            Opcodes.NO_NEXT, Form23x.THE_ONE, true);
 
     public static final Dop REM_INT =
-        new Dop(DalvOps.REM_INT, DalvOps.REM_INT,
-            DalvOps.NO_NEXT, Form23x.THE_ONE, true,
-            "rem-int");
+        new Dop(Opcodes.REM_INT, Opcodes.REM_INT,
+            Opcodes.NO_NEXT, Form23x.THE_ONE, true);
 
     public static final Dop AND_INT =
-        new Dop(DalvOps.AND_INT, DalvOps.AND_INT,
-            DalvOps.NO_NEXT, Form23x.THE_ONE, true,
-            "and-int");
+        new Dop(Opcodes.AND_INT, Opcodes.AND_INT,
+            Opcodes.NO_NEXT, Form23x.THE_ONE, true);
 
     public static final Dop OR_INT =
-        new Dop(DalvOps.OR_INT, DalvOps.OR_INT,
-            DalvOps.NO_NEXT, Form23x.THE_ONE, true,
-            "or-int");
+        new Dop(Opcodes.OR_INT, Opcodes.OR_INT,
+            Opcodes.NO_NEXT, Form23x.THE_ONE, true);
 
     public static final Dop XOR_INT =
-        new Dop(DalvOps.XOR_INT, DalvOps.XOR_INT,
-            DalvOps.NO_NEXT, Form23x.THE_ONE, true,
-            "xor-int");
+        new Dop(Opcodes.XOR_INT, Opcodes.XOR_INT,
+            Opcodes.NO_NEXT, Form23x.THE_ONE, true);
 
     public static final Dop SHL_INT =
-        new Dop(DalvOps.SHL_INT, DalvOps.SHL_INT,
-            DalvOps.NO_NEXT, Form23x.THE_ONE, true,
-            "shl-int");
+        new Dop(Opcodes.SHL_INT, Opcodes.SHL_INT,
+            Opcodes.NO_NEXT, Form23x.THE_ONE, true);
 
     public static final Dop SHR_INT =
-        new Dop(DalvOps.SHR_INT, DalvOps.SHR_INT,
-            DalvOps.NO_NEXT, Form23x.THE_ONE, true,
-            "shr-int");
+        new Dop(Opcodes.SHR_INT, Opcodes.SHR_INT,
+            Opcodes.NO_NEXT, Form23x.THE_ONE, true);
 
     public static final Dop USHR_INT =
-        new Dop(DalvOps.USHR_INT, DalvOps.USHR_INT,
-            DalvOps.NO_NEXT, Form23x.THE_ONE, true,
-            "ushr-int");
+        new Dop(Opcodes.USHR_INT, Opcodes.USHR_INT,
+            Opcodes.NO_NEXT, Form23x.THE_ONE, true);
 
     public static final Dop ADD_LONG =
-        new Dop(DalvOps.ADD_LONG, DalvOps.ADD_LONG,
-            DalvOps.NO_NEXT, Form23x.THE_ONE, true,
-            "add-long");
+        new Dop(Opcodes.ADD_LONG, Opcodes.ADD_LONG,
+            Opcodes.NO_NEXT, Form23x.THE_ONE, true);
 
     public static final Dop SUB_LONG =
-        new Dop(DalvOps.SUB_LONG, DalvOps.SUB_LONG,
-            DalvOps.NO_NEXT, Form23x.THE_ONE, true,
-            "sub-long");
+        new Dop(Opcodes.SUB_LONG, Opcodes.SUB_LONG,
+            Opcodes.NO_NEXT, Form23x.THE_ONE, true);
 
     public static final Dop MUL_LONG =
-        new Dop(DalvOps.MUL_LONG, DalvOps.MUL_LONG,
-            DalvOps.NO_NEXT, Form23x.THE_ONE, true,
-            "mul-long");
+        new Dop(Opcodes.MUL_LONG, Opcodes.MUL_LONG,
+            Opcodes.NO_NEXT, Form23x.THE_ONE, true);
 
     public static final Dop DIV_LONG =
-        new Dop(DalvOps.DIV_LONG, DalvOps.DIV_LONG,
-            DalvOps.NO_NEXT, Form23x.THE_ONE, true,
-            "div-long");
+        new Dop(Opcodes.DIV_LONG, Opcodes.DIV_LONG,
+            Opcodes.NO_NEXT, Form23x.THE_ONE, true);
 
     public static final Dop REM_LONG =
-        new Dop(DalvOps.REM_LONG, DalvOps.REM_LONG,
-            DalvOps.NO_NEXT, Form23x.THE_ONE, true,
-            "rem-long");
+        new Dop(Opcodes.REM_LONG, Opcodes.REM_LONG,
+            Opcodes.NO_NEXT, Form23x.THE_ONE, true);
 
     public static final Dop AND_LONG =
-        new Dop(DalvOps.AND_LONG, DalvOps.AND_LONG,
-            DalvOps.NO_NEXT, Form23x.THE_ONE, true,
-            "and-long");
+        new Dop(Opcodes.AND_LONG, Opcodes.AND_LONG,
+            Opcodes.NO_NEXT, Form23x.THE_ONE, true);
 
     public static final Dop OR_LONG =
-        new Dop(DalvOps.OR_LONG, DalvOps.OR_LONG,
-            DalvOps.NO_NEXT, Form23x.THE_ONE, true,
-            "or-long");
+        new Dop(Opcodes.OR_LONG, Opcodes.OR_LONG,
+            Opcodes.NO_NEXT, Form23x.THE_ONE, true);
 
     public static final Dop XOR_LONG =
-        new Dop(DalvOps.XOR_LONG, DalvOps.XOR_LONG,
-            DalvOps.NO_NEXT, Form23x.THE_ONE, true,
-            "xor-long");
+        new Dop(Opcodes.XOR_LONG, Opcodes.XOR_LONG,
+            Opcodes.NO_NEXT, Form23x.THE_ONE, true);
 
     public static final Dop SHL_LONG =
-        new Dop(DalvOps.SHL_LONG, DalvOps.SHL_LONG,
-            DalvOps.NO_NEXT, Form23x.THE_ONE, true,
-            "shl-long");
+        new Dop(Opcodes.SHL_LONG, Opcodes.SHL_LONG,
+            Opcodes.NO_NEXT, Form23x.THE_ONE, true);
 
     public static final Dop SHR_LONG =
-        new Dop(DalvOps.SHR_LONG, DalvOps.SHR_LONG,
-            DalvOps.NO_NEXT, Form23x.THE_ONE, true,
-            "shr-long");
+        new Dop(Opcodes.SHR_LONG, Opcodes.SHR_LONG,
+            Opcodes.NO_NEXT, Form23x.THE_ONE, true);
 
     public static final Dop USHR_LONG =
-        new Dop(DalvOps.USHR_LONG, DalvOps.USHR_LONG,
-            DalvOps.NO_NEXT, Form23x.THE_ONE, true,
-            "ushr-long");
+        new Dop(Opcodes.USHR_LONG, Opcodes.USHR_LONG,
+            Opcodes.NO_NEXT, Form23x.THE_ONE, true);
 
     public static final Dop ADD_FLOAT =
-        new Dop(DalvOps.ADD_FLOAT, DalvOps.ADD_FLOAT,
-            DalvOps.NO_NEXT, Form23x.THE_ONE, true,
-            "add-float");
+        new Dop(Opcodes.ADD_FLOAT, Opcodes.ADD_FLOAT,
+            Opcodes.NO_NEXT, Form23x.THE_ONE, true);
 
     public static final Dop SUB_FLOAT =
-        new Dop(DalvOps.SUB_FLOAT, DalvOps.SUB_FLOAT,
-            DalvOps.NO_NEXT, Form23x.THE_ONE, true,
-            "sub-float");
+        new Dop(Opcodes.SUB_FLOAT, Opcodes.SUB_FLOAT,
+            Opcodes.NO_NEXT, Form23x.THE_ONE, true);
 
     public static final Dop MUL_FLOAT =
-        new Dop(DalvOps.MUL_FLOAT, DalvOps.MUL_FLOAT,
-            DalvOps.NO_NEXT, Form23x.THE_ONE, true,
-            "mul-float");
+        new Dop(Opcodes.MUL_FLOAT, Opcodes.MUL_FLOAT,
+            Opcodes.NO_NEXT, Form23x.THE_ONE, true);
 
     public static final Dop DIV_FLOAT =
-        new Dop(DalvOps.DIV_FLOAT, DalvOps.DIV_FLOAT,
-            DalvOps.NO_NEXT, Form23x.THE_ONE, true,
-            "div-float");
+        new Dop(Opcodes.DIV_FLOAT, Opcodes.DIV_FLOAT,
+            Opcodes.NO_NEXT, Form23x.THE_ONE, true);
 
     public static final Dop REM_FLOAT =
-        new Dop(DalvOps.REM_FLOAT, DalvOps.REM_FLOAT,
-            DalvOps.NO_NEXT, Form23x.THE_ONE, true,
-            "rem-float");
+        new Dop(Opcodes.REM_FLOAT, Opcodes.REM_FLOAT,
+            Opcodes.NO_NEXT, Form23x.THE_ONE, true);
 
     public static final Dop ADD_DOUBLE =
-        new Dop(DalvOps.ADD_DOUBLE, DalvOps.ADD_DOUBLE,
-            DalvOps.NO_NEXT, Form23x.THE_ONE, true,
-            "add-double");
+        new Dop(Opcodes.ADD_DOUBLE, Opcodes.ADD_DOUBLE,
+            Opcodes.NO_NEXT, Form23x.THE_ONE, true);
 
     public static final Dop SUB_DOUBLE =
-        new Dop(DalvOps.SUB_DOUBLE, DalvOps.SUB_DOUBLE,
-            DalvOps.NO_NEXT, Form23x.THE_ONE, true,
-            "sub-double");
+        new Dop(Opcodes.SUB_DOUBLE, Opcodes.SUB_DOUBLE,
+            Opcodes.NO_NEXT, Form23x.THE_ONE, true);
 
     public static final Dop MUL_DOUBLE =
-        new Dop(DalvOps.MUL_DOUBLE, DalvOps.MUL_DOUBLE,
-            DalvOps.NO_NEXT, Form23x.THE_ONE, true,
-            "mul-double");
+        new Dop(Opcodes.MUL_DOUBLE, Opcodes.MUL_DOUBLE,
+            Opcodes.NO_NEXT, Form23x.THE_ONE, true);
 
     public static final Dop DIV_DOUBLE =
-        new Dop(DalvOps.DIV_DOUBLE, DalvOps.DIV_DOUBLE,
-            DalvOps.NO_NEXT, Form23x.THE_ONE, true,
-            "div-double");
+        new Dop(Opcodes.DIV_DOUBLE, Opcodes.DIV_DOUBLE,
+            Opcodes.NO_NEXT, Form23x.THE_ONE, true);
 
     public static final Dop REM_DOUBLE =
-        new Dop(DalvOps.REM_DOUBLE, DalvOps.REM_DOUBLE,
-            DalvOps.NO_NEXT, Form23x.THE_ONE, true,
-            "rem-double");
+        new Dop(Opcodes.REM_DOUBLE, Opcodes.REM_DOUBLE,
+            Opcodes.NO_NEXT, Form23x.THE_ONE, true);
 
     public static final Dop ADD_INT_2ADDR =
-        new Dop(DalvOps.ADD_INT_2ADDR, DalvOps.ADD_INT,
-            DalvOps.ADD_INT, Form12x.THE_ONE, true,
-            "add-int/2addr");
+        new Dop(Opcodes.ADD_INT_2ADDR, Opcodes.ADD_INT,
+            Opcodes.ADD_INT, Form12x.THE_ONE, true);
 
     public static final Dop SUB_INT_2ADDR =
-        new Dop(DalvOps.SUB_INT_2ADDR, DalvOps.SUB_INT,
-            DalvOps.SUB_INT, Form12x.THE_ONE, true,
-            "sub-int/2addr");
+        new Dop(Opcodes.SUB_INT_2ADDR, Opcodes.SUB_INT,
+            Opcodes.SUB_INT, Form12x.THE_ONE, true);
 
     public static final Dop MUL_INT_2ADDR =
-        new Dop(DalvOps.MUL_INT_2ADDR, DalvOps.MUL_INT,
-            DalvOps.MUL_INT, Form12x.THE_ONE, true,
-            "mul-int/2addr");
+        new Dop(Opcodes.MUL_INT_2ADDR, Opcodes.MUL_INT,
+            Opcodes.MUL_INT, Form12x.THE_ONE, true);
 
     public static final Dop DIV_INT_2ADDR =
-        new Dop(DalvOps.DIV_INT_2ADDR, DalvOps.DIV_INT,
-            DalvOps.DIV_INT, Form12x.THE_ONE, true,
-            "div-int/2addr");
+        new Dop(Opcodes.DIV_INT_2ADDR, Opcodes.DIV_INT,
+            Opcodes.DIV_INT, Form12x.THE_ONE, true);
 
     public static final Dop REM_INT_2ADDR =
-        new Dop(DalvOps.REM_INT_2ADDR, DalvOps.REM_INT,
-            DalvOps.REM_INT, Form12x.THE_ONE, true,
-            "rem-int/2addr");
+        new Dop(Opcodes.REM_INT_2ADDR, Opcodes.REM_INT,
+            Opcodes.REM_INT, Form12x.THE_ONE, true);
 
     public static final Dop AND_INT_2ADDR =
-        new Dop(DalvOps.AND_INT_2ADDR, DalvOps.AND_INT,
-            DalvOps.AND_INT, Form12x.THE_ONE, true,
-            "and-int/2addr");
+        new Dop(Opcodes.AND_INT_2ADDR, Opcodes.AND_INT,
+            Opcodes.AND_INT, Form12x.THE_ONE, true);
 
     public static final Dop OR_INT_2ADDR =
-        new Dop(DalvOps.OR_INT_2ADDR, DalvOps.OR_INT,
-            DalvOps.OR_INT, Form12x.THE_ONE, true,
-            "or-int/2addr");
+        new Dop(Opcodes.OR_INT_2ADDR, Opcodes.OR_INT,
+            Opcodes.OR_INT, Form12x.THE_ONE, true);
 
     public static final Dop XOR_INT_2ADDR =
-        new Dop(DalvOps.XOR_INT_2ADDR, DalvOps.XOR_INT,
-            DalvOps.XOR_INT, Form12x.THE_ONE, true,
-            "xor-int/2addr");
+        new Dop(Opcodes.XOR_INT_2ADDR, Opcodes.XOR_INT,
+            Opcodes.XOR_INT, Form12x.THE_ONE, true);
 
     public static final Dop SHL_INT_2ADDR =
-        new Dop(DalvOps.SHL_INT_2ADDR, DalvOps.SHL_INT,
-            DalvOps.SHL_INT, Form12x.THE_ONE, true,
-            "shl-int/2addr");
+        new Dop(Opcodes.SHL_INT_2ADDR, Opcodes.SHL_INT,
+            Opcodes.SHL_INT, Form12x.THE_ONE, true);
 
     public static final Dop SHR_INT_2ADDR =
-        new Dop(DalvOps.SHR_INT_2ADDR, DalvOps.SHR_INT,
-            DalvOps.SHR_INT, Form12x.THE_ONE, true,
-            "shr-int/2addr");
+        new Dop(Opcodes.SHR_INT_2ADDR, Opcodes.SHR_INT,
+            Opcodes.SHR_INT, Form12x.THE_ONE, true);
 
     public static final Dop USHR_INT_2ADDR =
-        new Dop(DalvOps.USHR_INT_2ADDR, DalvOps.USHR_INT,
-            DalvOps.USHR_INT, Form12x.THE_ONE, true,
-            "ushr-int/2addr");
+        new Dop(Opcodes.USHR_INT_2ADDR, Opcodes.USHR_INT,
+            Opcodes.USHR_INT, Form12x.THE_ONE, true);
 
     public static final Dop ADD_LONG_2ADDR =
-        new Dop(DalvOps.ADD_LONG_2ADDR, DalvOps.ADD_LONG,
-            DalvOps.ADD_LONG, Form12x.THE_ONE, true,
-            "add-long/2addr");
+        new Dop(Opcodes.ADD_LONG_2ADDR, Opcodes.ADD_LONG,
+            Opcodes.ADD_LONG, Form12x.THE_ONE, true);
 
     public static final Dop SUB_LONG_2ADDR =
-        new Dop(DalvOps.SUB_LONG_2ADDR, DalvOps.SUB_LONG,
-            DalvOps.SUB_LONG, Form12x.THE_ONE, true,
-            "sub-long/2addr");
+        new Dop(Opcodes.SUB_LONG_2ADDR, Opcodes.SUB_LONG,
+            Opcodes.SUB_LONG, Form12x.THE_ONE, true);
 
     public static final Dop MUL_LONG_2ADDR =
-        new Dop(DalvOps.MUL_LONG_2ADDR, DalvOps.MUL_LONG,
-            DalvOps.MUL_LONG, Form12x.THE_ONE, true,
-            "mul-long/2addr");
+        new Dop(Opcodes.MUL_LONG_2ADDR, Opcodes.MUL_LONG,
+            Opcodes.MUL_LONG, Form12x.THE_ONE, true);
 
     public static final Dop DIV_LONG_2ADDR =
-        new Dop(DalvOps.DIV_LONG_2ADDR, DalvOps.DIV_LONG,
-            DalvOps.DIV_LONG, Form12x.THE_ONE, true,
-            "div-long/2addr");
+        new Dop(Opcodes.DIV_LONG_2ADDR, Opcodes.DIV_LONG,
+            Opcodes.DIV_LONG, Form12x.THE_ONE, true);
 
     public static final Dop REM_LONG_2ADDR =
-        new Dop(DalvOps.REM_LONG_2ADDR, DalvOps.REM_LONG,
-            DalvOps.REM_LONG, Form12x.THE_ONE, true,
-            "rem-long/2addr");
+        new Dop(Opcodes.REM_LONG_2ADDR, Opcodes.REM_LONG,
+            Opcodes.REM_LONG, Form12x.THE_ONE, true);
 
     public static final Dop AND_LONG_2ADDR =
-        new Dop(DalvOps.AND_LONG_2ADDR, DalvOps.AND_LONG,
-            DalvOps.AND_LONG, Form12x.THE_ONE, true,
-            "and-long/2addr");
+        new Dop(Opcodes.AND_LONG_2ADDR, Opcodes.AND_LONG,
+            Opcodes.AND_LONG, Form12x.THE_ONE, true);
 
     public static final Dop OR_LONG_2ADDR =
-        new Dop(DalvOps.OR_LONG_2ADDR, DalvOps.OR_LONG,
-            DalvOps.OR_LONG, Form12x.THE_ONE, true,
-            "or-long/2addr");
+        new Dop(Opcodes.OR_LONG_2ADDR, Opcodes.OR_LONG,
+            Opcodes.OR_LONG, Form12x.THE_ONE, true);
 
     public static final Dop XOR_LONG_2ADDR =
-        new Dop(DalvOps.XOR_LONG_2ADDR, DalvOps.XOR_LONG,
-            DalvOps.XOR_LONG, Form12x.THE_ONE, true,
-            "xor-long/2addr");
+        new Dop(Opcodes.XOR_LONG_2ADDR, Opcodes.XOR_LONG,
+            Opcodes.XOR_LONG, Form12x.THE_ONE, true);
 
     public static final Dop SHL_LONG_2ADDR =
-        new Dop(DalvOps.SHL_LONG_2ADDR, DalvOps.SHL_LONG,
-            DalvOps.SHL_LONG, Form12x.THE_ONE, true,
-            "shl-long/2addr");
+        new Dop(Opcodes.SHL_LONG_2ADDR, Opcodes.SHL_LONG,
+            Opcodes.SHL_LONG, Form12x.THE_ONE, true);
 
     public static final Dop SHR_LONG_2ADDR =
-        new Dop(DalvOps.SHR_LONG_2ADDR, DalvOps.SHR_LONG,
-            DalvOps.SHR_LONG, Form12x.THE_ONE, true,
-            "shr-long/2addr");
+        new Dop(Opcodes.SHR_LONG_2ADDR, Opcodes.SHR_LONG,
+            Opcodes.SHR_LONG, Form12x.THE_ONE, true);
 
     public static final Dop USHR_LONG_2ADDR =
-        new Dop(DalvOps.USHR_LONG_2ADDR, DalvOps.USHR_LONG,
-            DalvOps.USHR_LONG, Form12x.THE_ONE, true,
-            "ushr-long/2addr");
+        new Dop(Opcodes.USHR_LONG_2ADDR, Opcodes.USHR_LONG,
+            Opcodes.USHR_LONG, Form12x.THE_ONE, true);
 
     public static final Dop ADD_FLOAT_2ADDR =
-        new Dop(DalvOps.ADD_FLOAT_2ADDR, DalvOps.ADD_FLOAT,
-            DalvOps.ADD_FLOAT, Form12x.THE_ONE, true,
-            "add-float/2addr");
+        new Dop(Opcodes.ADD_FLOAT_2ADDR, Opcodes.ADD_FLOAT,
+            Opcodes.ADD_FLOAT, Form12x.THE_ONE, true);
 
     public static final Dop SUB_FLOAT_2ADDR =
-        new Dop(DalvOps.SUB_FLOAT_2ADDR, DalvOps.SUB_FLOAT,
-            DalvOps.SUB_FLOAT, Form12x.THE_ONE, true,
-            "sub-float/2addr");
+        new Dop(Opcodes.SUB_FLOAT_2ADDR, Opcodes.SUB_FLOAT,
+            Opcodes.SUB_FLOAT, Form12x.THE_ONE, true);
 
     public static final Dop MUL_FLOAT_2ADDR =
-        new Dop(DalvOps.MUL_FLOAT_2ADDR, DalvOps.MUL_FLOAT,
-            DalvOps.MUL_FLOAT, Form12x.THE_ONE, true,
-            "mul-float/2addr");
+        new Dop(Opcodes.MUL_FLOAT_2ADDR, Opcodes.MUL_FLOAT,
+            Opcodes.MUL_FLOAT, Form12x.THE_ONE, true);
 
     public static final Dop DIV_FLOAT_2ADDR =
-        new Dop(DalvOps.DIV_FLOAT_2ADDR, DalvOps.DIV_FLOAT,
-            DalvOps.DIV_FLOAT, Form12x.THE_ONE, true,
-            "div-float/2addr");
+        new Dop(Opcodes.DIV_FLOAT_2ADDR, Opcodes.DIV_FLOAT,
+            Opcodes.DIV_FLOAT, Form12x.THE_ONE, true);
 
     public static final Dop REM_FLOAT_2ADDR =
-        new Dop(DalvOps.REM_FLOAT_2ADDR, DalvOps.REM_FLOAT,
-            DalvOps.REM_FLOAT, Form12x.THE_ONE, true,
-            "rem-float/2addr");
+        new Dop(Opcodes.REM_FLOAT_2ADDR, Opcodes.REM_FLOAT,
+            Opcodes.REM_FLOAT, Form12x.THE_ONE, true);
 
     public static final Dop ADD_DOUBLE_2ADDR =
-        new Dop(DalvOps.ADD_DOUBLE_2ADDR, DalvOps.ADD_DOUBLE,
-            DalvOps.ADD_DOUBLE, Form12x.THE_ONE, true,
-            "add-double/2addr");
+        new Dop(Opcodes.ADD_DOUBLE_2ADDR, Opcodes.ADD_DOUBLE,
+            Opcodes.ADD_DOUBLE, Form12x.THE_ONE, true);
 
     public static final Dop SUB_DOUBLE_2ADDR =
-        new Dop(DalvOps.SUB_DOUBLE_2ADDR, DalvOps.SUB_DOUBLE,
-            DalvOps.SUB_DOUBLE, Form12x.THE_ONE, true,
-            "sub-double/2addr");
+        new Dop(Opcodes.SUB_DOUBLE_2ADDR, Opcodes.SUB_DOUBLE,
+            Opcodes.SUB_DOUBLE, Form12x.THE_ONE, true);
 
     public static final Dop MUL_DOUBLE_2ADDR =
-        new Dop(DalvOps.MUL_DOUBLE_2ADDR, DalvOps.MUL_DOUBLE,
-            DalvOps.MUL_DOUBLE, Form12x.THE_ONE, true,
-            "mul-double/2addr");
+        new Dop(Opcodes.MUL_DOUBLE_2ADDR, Opcodes.MUL_DOUBLE,
+            Opcodes.MUL_DOUBLE, Form12x.THE_ONE, true);
 
     public static final Dop DIV_DOUBLE_2ADDR =
-        new Dop(DalvOps.DIV_DOUBLE_2ADDR, DalvOps.DIV_DOUBLE,
-            DalvOps.DIV_DOUBLE, Form12x.THE_ONE, true,
-            "div-double/2addr");
+        new Dop(Opcodes.DIV_DOUBLE_2ADDR, Opcodes.DIV_DOUBLE,
+            Opcodes.DIV_DOUBLE, Form12x.THE_ONE, true);
 
     public static final Dop REM_DOUBLE_2ADDR =
-        new Dop(DalvOps.REM_DOUBLE_2ADDR, DalvOps.REM_DOUBLE,
-            DalvOps.REM_DOUBLE, Form12x.THE_ONE, true,
-            "rem-double/2addr");
+        new Dop(Opcodes.REM_DOUBLE_2ADDR, Opcodes.REM_DOUBLE,
+            Opcodes.REM_DOUBLE, Form12x.THE_ONE, true);
 
     public static final Dop ADD_INT_LIT16 =
-        new Dop(DalvOps.ADD_INT_LIT16, DalvOps.ADD_INT,
-            DalvOps.NO_NEXT, Form22s.THE_ONE, true,
-            "add-int/lit16");
+        new Dop(Opcodes.ADD_INT_LIT16, Opcodes.ADD_INT,
+            Opcodes.NO_NEXT, Form22s.THE_ONE, true);
 
     public static final Dop RSUB_INT =
-        new Dop(DalvOps.RSUB_INT, DalvOps.RSUB_INT,
-            DalvOps.NO_NEXT, Form22s.THE_ONE, true,
-            "rsub-int");
+        new Dop(Opcodes.RSUB_INT, Opcodes.RSUB_INT,
+            Opcodes.NO_NEXT, Form22s.THE_ONE, true);
 
     public static final Dop MUL_INT_LIT16 =
-        new Dop(DalvOps.MUL_INT_LIT16, DalvOps.MUL_INT,
-            DalvOps.NO_NEXT, Form22s.THE_ONE, true,
-            "mul-int/lit16");
+        new Dop(Opcodes.MUL_INT_LIT16, Opcodes.MUL_INT,
+            Opcodes.NO_NEXT, Form22s.THE_ONE, true);
 
     public static final Dop DIV_INT_LIT16 =
-        new Dop(DalvOps.DIV_INT_LIT16, DalvOps.DIV_INT,
-            DalvOps.NO_NEXT, Form22s.THE_ONE, true,
-            "div-int/lit16");
+        new Dop(Opcodes.DIV_INT_LIT16, Opcodes.DIV_INT,
+            Opcodes.NO_NEXT, Form22s.THE_ONE, true);
 
     public static final Dop REM_INT_LIT16 =
-        new Dop(DalvOps.REM_INT_LIT16, DalvOps.REM_INT,
-            DalvOps.NO_NEXT, Form22s.THE_ONE, true,
-            "rem-int/lit16");
+        new Dop(Opcodes.REM_INT_LIT16, Opcodes.REM_INT,
+            Opcodes.NO_NEXT, Form22s.THE_ONE, true);
 
     public static final Dop AND_INT_LIT16 =
-        new Dop(DalvOps.AND_INT_LIT16, DalvOps.AND_INT,
-            DalvOps.NO_NEXT, Form22s.THE_ONE, true,
-            "and-int/lit16");
+        new Dop(Opcodes.AND_INT_LIT16, Opcodes.AND_INT,
+            Opcodes.NO_NEXT, Form22s.THE_ONE, true);
 
     public static final Dop OR_INT_LIT16 =
-        new Dop(DalvOps.OR_INT_LIT16, DalvOps.OR_INT,
-            DalvOps.NO_NEXT, Form22s.THE_ONE, true,
-            "or-int/lit16");
+        new Dop(Opcodes.OR_INT_LIT16, Opcodes.OR_INT,
+            Opcodes.NO_NEXT, Form22s.THE_ONE, true);
 
     public static final Dop XOR_INT_LIT16 =
-        new Dop(DalvOps.XOR_INT_LIT16, DalvOps.XOR_INT,
-            DalvOps.NO_NEXT, Form22s.THE_ONE, true,
-            "xor-int/lit16");
+        new Dop(Opcodes.XOR_INT_LIT16, Opcodes.XOR_INT,
+            Opcodes.NO_NEXT, Form22s.THE_ONE, true);
 
     public static final Dop ADD_INT_LIT8 =
-        new Dop(DalvOps.ADD_INT_LIT8, DalvOps.ADD_INT,
-            DalvOps.ADD_INT_LIT16, Form22b.THE_ONE, true,
-            "add-int/lit8");
+        new Dop(Opcodes.ADD_INT_LIT8, Opcodes.ADD_INT,
+            Opcodes.ADD_INT_LIT16, Form22b.THE_ONE, true);
 
     public static final Dop RSUB_INT_LIT8 =
-        new Dop(DalvOps.RSUB_INT_LIT8, DalvOps.RSUB_INT,
-            DalvOps.RSUB_INT, Form22b.THE_ONE, true,
-            "rsub-int/lit8");
+        new Dop(Opcodes.RSUB_INT_LIT8, Opcodes.RSUB_INT,
+            Opcodes.RSUB_INT, Form22b.THE_ONE, true);
 
     public static final Dop MUL_INT_LIT8 =
-        new Dop(DalvOps.MUL_INT_LIT8, DalvOps.MUL_INT,
-            DalvOps.MUL_INT_LIT16, Form22b.THE_ONE, true,
-            "mul-int/lit8");
+        new Dop(Opcodes.MUL_INT_LIT8, Opcodes.MUL_INT,
+            Opcodes.MUL_INT_LIT16, Form22b.THE_ONE, true);
 
     public static final Dop DIV_INT_LIT8 =
-        new Dop(DalvOps.DIV_INT_LIT8, DalvOps.DIV_INT,
-            DalvOps.DIV_INT_LIT16, Form22b.THE_ONE, true,
-            "div-int/lit8");
+        new Dop(Opcodes.DIV_INT_LIT8, Opcodes.DIV_INT,
+            Opcodes.DIV_INT_LIT16, Form22b.THE_ONE, true);
 
     public static final Dop REM_INT_LIT8 =
-        new Dop(DalvOps.REM_INT_LIT8, DalvOps.REM_INT,
-            DalvOps.REM_INT_LIT16, Form22b.THE_ONE, true,
-            "rem-int/lit8");
+        new Dop(Opcodes.REM_INT_LIT8, Opcodes.REM_INT,
+            Opcodes.REM_INT_LIT16, Form22b.THE_ONE, true);
 
     public static final Dop AND_INT_LIT8 =
-        new Dop(DalvOps.AND_INT_LIT8, DalvOps.AND_INT,
-            DalvOps.AND_INT_LIT16, Form22b.THE_ONE, true,
-            "and-int/lit8");
+        new Dop(Opcodes.AND_INT_LIT8, Opcodes.AND_INT,
+            Opcodes.AND_INT_LIT16, Form22b.THE_ONE, true);
 
     public static final Dop OR_INT_LIT8 =
-        new Dop(DalvOps.OR_INT_LIT8, DalvOps.OR_INT,
-            DalvOps.OR_INT_LIT16, Form22b.THE_ONE, true,
-            "or-int/lit8");
+        new Dop(Opcodes.OR_INT_LIT8, Opcodes.OR_INT,
+            Opcodes.OR_INT_LIT16, Form22b.THE_ONE, true);
 
     public static final Dop XOR_INT_LIT8 =
-        new Dop(DalvOps.XOR_INT_LIT8, DalvOps.XOR_INT,
-            DalvOps.XOR_INT_LIT16, Form22b.THE_ONE, true,
-            "xor-int/lit8");
+        new Dop(Opcodes.XOR_INT_LIT8, Opcodes.XOR_INT,
+            Opcodes.XOR_INT_LIT16, Form22b.THE_ONE, true);
 
     public static final Dop SHL_INT_LIT8 =
-        new Dop(DalvOps.SHL_INT_LIT8, DalvOps.SHL_INT,
-            DalvOps.NO_NEXT, Form22b.THE_ONE, true,
-            "shl-int/lit8");
+        new Dop(Opcodes.SHL_INT_LIT8, Opcodes.SHL_INT,
+            Opcodes.NO_NEXT, Form22b.THE_ONE, true);
 
     public static final Dop SHR_INT_LIT8 =
-        new Dop(DalvOps.SHR_INT_LIT8, DalvOps.SHR_INT,
-            DalvOps.NO_NEXT, Form22b.THE_ONE, true,
-            "shr-int/lit8");
+        new Dop(Opcodes.SHR_INT_LIT8, Opcodes.SHR_INT,
+            Opcodes.NO_NEXT, Form22b.THE_ONE, true);
 
     public static final Dop USHR_INT_LIT8 =
-        new Dop(DalvOps.USHR_INT_LIT8, DalvOps.USHR_INT,
-            DalvOps.NO_NEXT, Form22b.THE_ONE, true,
-            "ushr-int/lit8");
+        new Dop(Opcodes.USHR_INT_LIT8, Opcodes.USHR_INT,
+            Opcodes.NO_NEXT, Form22b.THE_ONE, true);
 
     public static final Dop CONST_CLASS_JUMBO =
-        new Dop(DalvOps.CONST_CLASS_JUMBO, DalvOps.CONST_CLASS,
-            DalvOps.NO_NEXT, Form41c.THE_ONE, true,
-            "const-class/jumbo");
+        new Dop(Opcodes.CONST_CLASS_JUMBO, Opcodes.CONST_CLASS,
+            Opcodes.NO_NEXT, Form41c.THE_ONE, true);
 
     public static final Dop CHECK_CAST_JUMBO =
-        new Dop(DalvOps.CHECK_CAST_JUMBO, DalvOps.CHECK_CAST,
-            DalvOps.NO_NEXT, Form41c.THE_ONE, false,
-            "check-cast/jumbo");
+        new Dop(Opcodes.CHECK_CAST_JUMBO, Opcodes.CHECK_CAST,
+            Opcodes.NO_NEXT, Form41c.THE_ONE, false);
 
     public static final Dop INSTANCE_OF_JUMBO =
-        new Dop(DalvOps.INSTANCE_OF_JUMBO, DalvOps.INSTANCE_OF,
-            DalvOps.NO_NEXT, Form52c.THE_ONE, true,
-            "instance-of/jumbo");
+        new Dop(Opcodes.INSTANCE_OF_JUMBO, Opcodes.INSTANCE_OF,
+            Opcodes.NO_NEXT, Form52c.THE_ONE, true);
 
     public static final Dop NEW_INSTANCE_JUMBO =
-        new Dop(DalvOps.NEW_INSTANCE_JUMBO, DalvOps.NEW_INSTANCE,
-            DalvOps.NO_NEXT, Form41c.THE_ONE, true,
-            "new-instance/jumbo");
+        new Dop(Opcodes.NEW_INSTANCE_JUMBO, Opcodes.NEW_INSTANCE,
+            Opcodes.NO_NEXT, Form41c.THE_ONE, true);
 
     public static final Dop NEW_ARRAY_JUMBO =
-        new Dop(DalvOps.NEW_ARRAY_JUMBO, DalvOps.NEW_ARRAY,
-            DalvOps.NO_NEXT, Form52c.THE_ONE, true,
-            "new-array/jumbo");
+        new Dop(Opcodes.NEW_ARRAY_JUMBO, Opcodes.NEW_ARRAY,
+            Opcodes.NO_NEXT, Form52c.THE_ONE, true);
 
     public static final Dop FILLED_NEW_ARRAY_JUMBO =
-        new Dop(DalvOps.FILLED_NEW_ARRAY_JUMBO, DalvOps.FILLED_NEW_ARRAY,
-            DalvOps.NO_NEXT, Form5rc.THE_ONE, false,
-            "filled-new-array/jumbo");
+        new Dop(Opcodes.FILLED_NEW_ARRAY_JUMBO, Opcodes.FILLED_NEW_ARRAY,
+            Opcodes.NO_NEXT, Form5rc.THE_ONE, false);
 
     public static final Dop IGET_JUMBO =
-        new Dop(DalvOps.IGET_JUMBO, DalvOps.IGET,
-            DalvOps.NO_NEXT, Form52c.THE_ONE, true,
-            "iget/jumbo");
+        new Dop(Opcodes.IGET_JUMBO, Opcodes.IGET,
+            Opcodes.NO_NEXT, Form52c.THE_ONE, true);
 
     public static final Dop IGET_WIDE_JUMBO =
-        new Dop(DalvOps.IGET_WIDE_JUMBO, DalvOps.IGET_WIDE,
-            DalvOps.NO_NEXT, Form52c.THE_ONE, true,
-            "iget-wide/jumbo");
+        new Dop(Opcodes.IGET_WIDE_JUMBO, Opcodes.IGET_WIDE,
+            Opcodes.NO_NEXT, Form52c.THE_ONE, true);
 
     public static final Dop IGET_OBJECT_JUMBO =
-        new Dop(DalvOps.IGET_OBJECT_JUMBO, DalvOps.IGET_OBJECT,
-            DalvOps.NO_NEXT, Form52c.THE_ONE, true,
-            "iget-object/jumbo");
+        new Dop(Opcodes.IGET_OBJECT_JUMBO, Opcodes.IGET_OBJECT,
+            Opcodes.NO_NEXT, Form52c.THE_ONE, true);
 
     public static final Dop IGET_BOOLEAN_JUMBO =
-        new Dop(DalvOps.IGET_BOOLEAN_JUMBO, DalvOps.IGET_BOOLEAN,
-            DalvOps.NO_NEXT, Form52c.THE_ONE, true,
-            "iget-boolean/jumbo");
+        new Dop(Opcodes.IGET_BOOLEAN_JUMBO, Opcodes.IGET_BOOLEAN,
+            Opcodes.NO_NEXT, Form52c.THE_ONE, true);
 
     public static final Dop IGET_BYTE_JUMBO =
-        new Dop(DalvOps.IGET_BYTE_JUMBO, DalvOps.IGET_BYTE,
-            DalvOps.NO_NEXT, Form52c.THE_ONE, true,
-            "iget-byte/jumbo");
+        new Dop(Opcodes.IGET_BYTE_JUMBO, Opcodes.IGET_BYTE,
+            Opcodes.NO_NEXT, Form52c.THE_ONE, true);
 
     public static final Dop IGET_CHAR_JUMBO =
-        new Dop(DalvOps.IGET_CHAR_JUMBO, DalvOps.IGET_CHAR,
-            DalvOps.NO_NEXT, Form52c.THE_ONE, true,
-            "iget-char/jumbo");
+        new Dop(Opcodes.IGET_CHAR_JUMBO, Opcodes.IGET_CHAR,
+            Opcodes.NO_NEXT, Form52c.THE_ONE, true);
 
     public static final Dop IGET_SHORT_JUMBO =
-        new Dop(DalvOps.IGET_SHORT_JUMBO, DalvOps.IGET_SHORT,
-            DalvOps.NO_NEXT, Form52c.THE_ONE, true,
-            "iget-short/jumbo");
+        new Dop(Opcodes.IGET_SHORT_JUMBO, Opcodes.IGET_SHORT,
+            Opcodes.NO_NEXT, Form52c.THE_ONE, true);
 
     public static final Dop IPUT_JUMBO =
-        new Dop(DalvOps.IPUT_JUMBO, DalvOps.IPUT,
-            DalvOps.NO_NEXT, Form52c.THE_ONE, false,
-            "iput/jumbo");
+        new Dop(Opcodes.IPUT_JUMBO, Opcodes.IPUT,
+            Opcodes.NO_NEXT, Form52c.THE_ONE, false);
 
     public static final Dop IPUT_WIDE_JUMBO =
-        new Dop(DalvOps.IPUT_WIDE_JUMBO, DalvOps.IPUT_WIDE,
-            DalvOps.NO_NEXT, Form52c.THE_ONE, false,
-            "iput-wide/jumbo");
+        new Dop(Opcodes.IPUT_WIDE_JUMBO, Opcodes.IPUT_WIDE,
+            Opcodes.NO_NEXT, Form52c.THE_ONE, false);
 
     public static final Dop IPUT_OBJECT_JUMBO =
-        new Dop(DalvOps.IPUT_OBJECT_JUMBO, DalvOps.IPUT_OBJECT,
-            DalvOps.NO_NEXT, Form52c.THE_ONE, false,
-            "iput-object/jumbo");
+        new Dop(Opcodes.IPUT_OBJECT_JUMBO, Opcodes.IPUT_OBJECT,
+            Opcodes.NO_NEXT, Form52c.THE_ONE, false);
 
     public static final Dop IPUT_BOOLEAN_JUMBO =
-        new Dop(DalvOps.IPUT_BOOLEAN_JUMBO, DalvOps.IPUT_BOOLEAN,
-            DalvOps.NO_NEXT, Form52c.THE_ONE, false,
-            "iput-boolean/jumbo");
+        new Dop(Opcodes.IPUT_BOOLEAN_JUMBO, Opcodes.IPUT_BOOLEAN,
+            Opcodes.NO_NEXT, Form52c.THE_ONE, false);
 
     public static final Dop IPUT_BYTE_JUMBO =
-        new Dop(DalvOps.IPUT_BYTE_JUMBO, DalvOps.IPUT_BYTE,
-            DalvOps.NO_NEXT, Form52c.THE_ONE, false,
-            "iput-byte/jumbo");
+        new Dop(Opcodes.IPUT_BYTE_JUMBO, Opcodes.IPUT_BYTE,
+            Opcodes.NO_NEXT, Form52c.THE_ONE, false);
 
     public static final Dop IPUT_CHAR_JUMBO =
-        new Dop(DalvOps.IPUT_CHAR_JUMBO, DalvOps.IPUT_CHAR,
-            DalvOps.NO_NEXT, Form52c.THE_ONE, false,
-            "iput-char/jumbo");
+        new Dop(Opcodes.IPUT_CHAR_JUMBO, Opcodes.IPUT_CHAR,
+            Opcodes.NO_NEXT, Form52c.THE_ONE, false);
 
     public static final Dop IPUT_SHORT_JUMBO =
-        new Dop(DalvOps.IPUT_SHORT_JUMBO, DalvOps.IPUT_SHORT,
-            DalvOps.NO_NEXT, Form52c.THE_ONE, false,
-            "iput-short/jumbo");
+        new Dop(Opcodes.IPUT_SHORT_JUMBO, Opcodes.IPUT_SHORT,
+            Opcodes.NO_NEXT, Form52c.THE_ONE, false);
 
     public static final Dop SGET_JUMBO =
-        new Dop(DalvOps.SGET_JUMBO, DalvOps.SGET,
-            DalvOps.NO_NEXT, Form41c.THE_ONE, true,
-            "sget/jumbo");
+        new Dop(Opcodes.SGET_JUMBO, Opcodes.SGET,
+            Opcodes.NO_NEXT, Form41c.THE_ONE, true);
 
     public static final Dop SGET_WIDE_JUMBO =
-        new Dop(DalvOps.SGET_WIDE_JUMBO, DalvOps.SGET_WIDE,
-            DalvOps.NO_NEXT, Form41c.THE_ONE, true,
-            "sget-wide/jumbo");
+        new Dop(Opcodes.SGET_WIDE_JUMBO, Opcodes.SGET_WIDE,
+            Opcodes.NO_NEXT, Form41c.THE_ONE, true);
 
     public static final Dop SGET_OBJECT_JUMBO =
-        new Dop(DalvOps.SGET_OBJECT_JUMBO, DalvOps.SGET_OBJECT,
-            DalvOps.NO_NEXT, Form41c.THE_ONE, true,
-            "sget-object/jumbo");
+        new Dop(Opcodes.SGET_OBJECT_JUMBO, Opcodes.SGET_OBJECT,
+            Opcodes.NO_NEXT, Form41c.THE_ONE, true);
 
     public static final Dop SGET_BOOLEAN_JUMBO =
-        new Dop(DalvOps.SGET_BOOLEAN_JUMBO, DalvOps.SGET_BOOLEAN,
-            DalvOps.NO_NEXT, Form41c.THE_ONE, true,
-            "sget-boolean/jumbo");
+        new Dop(Opcodes.SGET_BOOLEAN_JUMBO, Opcodes.SGET_BOOLEAN,
+            Opcodes.NO_NEXT, Form41c.THE_ONE, true);
 
     public static final Dop SGET_BYTE_JUMBO =
-        new Dop(DalvOps.SGET_BYTE_JUMBO, DalvOps.SGET_BYTE,
-            DalvOps.NO_NEXT, Form41c.THE_ONE, true,
-            "sget-byte/jumbo");
+        new Dop(Opcodes.SGET_BYTE_JUMBO, Opcodes.SGET_BYTE,
+            Opcodes.NO_NEXT, Form41c.THE_ONE, true);
 
     public static final Dop SGET_CHAR_JUMBO =
-        new Dop(DalvOps.SGET_CHAR_JUMBO, DalvOps.SGET_CHAR,
-            DalvOps.NO_NEXT, Form41c.THE_ONE, true,
-            "sget-char/jumbo");
+        new Dop(Opcodes.SGET_CHAR_JUMBO, Opcodes.SGET_CHAR,
+            Opcodes.NO_NEXT, Form41c.THE_ONE, true);
 
     public static final Dop SGET_SHORT_JUMBO =
-        new Dop(DalvOps.SGET_SHORT_JUMBO, DalvOps.SGET_SHORT,
-            DalvOps.NO_NEXT, Form41c.THE_ONE, true,
-            "sget-short/jumbo");
+        new Dop(Opcodes.SGET_SHORT_JUMBO, Opcodes.SGET_SHORT,
+            Opcodes.NO_NEXT, Form41c.THE_ONE, true);
 
     public static final Dop SPUT_JUMBO =
-        new Dop(DalvOps.SPUT_JUMBO, DalvOps.SPUT,
-            DalvOps.NO_NEXT, Form41c.THE_ONE, false,
-            "sput/jumbo");
+        new Dop(Opcodes.SPUT_JUMBO, Opcodes.SPUT,
+            Opcodes.NO_NEXT, Form41c.THE_ONE, false);
 
     public static final Dop SPUT_WIDE_JUMBO =
-        new Dop(DalvOps.SPUT_WIDE_JUMBO, DalvOps.SPUT_WIDE,
-            DalvOps.NO_NEXT, Form41c.THE_ONE, false,
-            "sput-wide/jumbo");
+        new Dop(Opcodes.SPUT_WIDE_JUMBO, Opcodes.SPUT_WIDE,
+            Opcodes.NO_NEXT, Form41c.THE_ONE, false);
 
     public static final Dop SPUT_OBJECT_JUMBO =
-        new Dop(DalvOps.SPUT_OBJECT_JUMBO, DalvOps.SPUT_OBJECT,
-            DalvOps.NO_NEXT, Form41c.THE_ONE, false,
-            "sput-object/jumbo");
+        new Dop(Opcodes.SPUT_OBJECT_JUMBO, Opcodes.SPUT_OBJECT,
+            Opcodes.NO_NEXT, Form41c.THE_ONE, false);
 
     public static final Dop SPUT_BOOLEAN_JUMBO =
-        new Dop(DalvOps.SPUT_BOOLEAN_JUMBO, DalvOps.SPUT_BOOLEAN,
-            DalvOps.NO_NEXT, Form41c.THE_ONE, false,
-            "sput-boolean/jumbo");
+        new Dop(Opcodes.SPUT_BOOLEAN_JUMBO, Opcodes.SPUT_BOOLEAN,
+            Opcodes.NO_NEXT, Form41c.THE_ONE, false);
 
     public static final Dop SPUT_BYTE_JUMBO =
-        new Dop(DalvOps.SPUT_BYTE_JUMBO, DalvOps.SPUT_BYTE,
-            DalvOps.NO_NEXT, Form41c.THE_ONE, false,
-            "sput-byte/jumbo");
+        new Dop(Opcodes.SPUT_BYTE_JUMBO, Opcodes.SPUT_BYTE,
+            Opcodes.NO_NEXT, Form41c.THE_ONE, false);
 
     public static final Dop SPUT_CHAR_JUMBO =
-        new Dop(DalvOps.SPUT_CHAR_JUMBO, DalvOps.SPUT_CHAR,
-            DalvOps.NO_NEXT, Form41c.THE_ONE, false,
-            "sput-char/jumbo");
+        new Dop(Opcodes.SPUT_CHAR_JUMBO, Opcodes.SPUT_CHAR,
+            Opcodes.NO_NEXT, Form41c.THE_ONE, false);
 
     public static final Dop SPUT_SHORT_JUMBO =
-        new Dop(DalvOps.SPUT_SHORT_JUMBO, DalvOps.SPUT_SHORT,
-            DalvOps.NO_NEXT, Form41c.THE_ONE, false,
-            "sput-short/jumbo");
+        new Dop(Opcodes.SPUT_SHORT_JUMBO, Opcodes.SPUT_SHORT,
+            Opcodes.NO_NEXT, Form41c.THE_ONE, false);
 
     public static final Dop INVOKE_VIRTUAL_JUMBO =
-        new Dop(DalvOps.INVOKE_VIRTUAL_JUMBO, DalvOps.INVOKE_VIRTUAL,
-            DalvOps.NO_NEXT, Form5rc.THE_ONE, false,
-            "invoke-virtual/jumbo");
+        new Dop(Opcodes.INVOKE_VIRTUAL_JUMBO, Opcodes.INVOKE_VIRTUAL,
+            Opcodes.NO_NEXT, Form5rc.THE_ONE, false);
 
     public static final Dop INVOKE_SUPER_JUMBO =
-        new Dop(DalvOps.INVOKE_SUPER_JUMBO, DalvOps.INVOKE_SUPER,
-            DalvOps.NO_NEXT, Form5rc.THE_ONE, false,
-            "invoke-super/jumbo");
+        new Dop(Opcodes.INVOKE_SUPER_JUMBO, Opcodes.INVOKE_SUPER,
+            Opcodes.NO_NEXT, Form5rc.THE_ONE, false);
 
     public static final Dop INVOKE_DIRECT_JUMBO =
-        new Dop(DalvOps.INVOKE_DIRECT_JUMBO, DalvOps.INVOKE_DIRECT,
-            DalvOps.NO_NEXT, Form5rc.THE_ONE, false,
-            "invoke-direct/jumbo");
+        new Dop(Opcodes.INVOKE_DIRECT_JUMBO, Opcodes.INVOKE_DIRECT,
+            Opcodes.NO_NEXT, Form5rc.THE_ONE, false);
 
     public static final Dop INVOKE_STATIC_JUMBO =
-        new Dop(DalvOps.INVOKE_STATIC_JUMBO, DalvOps.INVOKE_STATIC,
-            DalvOps.NO_NEXT, Form5rc.THE_ONE, false,
-            "invoke-static/jumbo");
+        new Dop(Opcodes.INVOKE_STATIC_JUMBO, Opcodes.INVOKE_STATIC,
+            Opcodes.NO_NEXT, Form5rc.THE_ONE, false);
 
     public static final Dop INVOKE_INTERFACE_JUMBO =
-        new Dop(DalvOps.INVOKE_INTERFACE_JUMBO, DalvOps.INVOKE_INTERFACE,
-            DalvOps.NO_NEXT, Form5rc.THE_ONE, false,
-            "invoke-interface/jumbo");
+        new Dop(Opcodes.INVOKE_INTERFACE_JUMBO, Opcodes.INVOKE_INTERFACE,
+            Opcodes.NO_NEXT, Form5rc.THE_ONE, false);
 
     // END(dops)
 
     // Static initialization.
     static {
-        DOPS = new Dop[DalvOps.MAX_VALUE - DalvOps.MIN_VALUE + 1];
+        DOPS = new Dop[Opcodes.MAX_VALUE - Opcodes.MIN_VALUE + 1];
 
         set(SPECIAL_FORMAT);
 
@@ -1627,12 +1373,12 @@ public final class Dops {
     /**
      * Gets the {@link Dop} for the given opcode value.
      *
-     * @param opcode {@code DalvOps.MIN_VALUE..DalvOps.MAX_VALUE;} the
+     * @param opcode {@code Opcodes.MIN_VALUE..Opcodes.MAX_VALUE;} the
      * opcode value
      * @return {@code non-null;} the associated opcode instance
      */
     public static Dop get(int opcode) {
-        int idx = opcode - DalvOps.MIN_VALUE;
+        int idx = opcode - Opcodes.MIN_VALUE;
 
         try {
             Dop result = DOPS[idx];
@@ -1651,18 +1397,34 @@ public final class Dops {
      * given instance, if any.
      *
      * @param opcode {@code non-null;} the opcode
+     * @param options {@code non-null;} options, used to determine
+     * which opcodes are potentially off-limits
      * @return {@code null-ok;} the next opcode in the same family, in the
      * chain of opcodes to try, or {@code null} if the given opcode is
      * the last in its chain
      */
-    public static Dop getNextOrNull(Dop opcode) {
-        int nextOpcode = opcode.getNextOpcode();
+    public static Dop getNextOrNull(Dop opcode, DexOptions options) {
+        for (;;) {
+            int nextOpcode = opcode.getNextOpcode();
 
-        if (nextOpcode == DalvOps.NO_NEXT) {
-            return null;
+            if (nextOpcode == Opcodes.NO_NEXT) {
+                return null;
+            }
+
+            opcode = get(nextOpcode);
+
+            if (!options.enableExtendedOpcodes && Opcodes.isExtended(nextOpcode)) {
+                /*
+                 * Continuing rather than just returning null here
+                 * protects against the possibility that an
+                 * instruction fitting chain might list non-extended
+                 * opcodes after extended ones.
+                 */
+                continue;
+            }
+
+            return opcode;
         }
-
-        return get(nextOpcode);
     }
 
     /**
@@ -1671,7 +1433,7 @@ public final class Dops {
      * @param opcode {@code non-null;} the opcode
      */
     private static void set(Dop opcode) {
-        int idx = opcode.getOpcode() - DalvOps.MIN_VALUE;
+        int idx = opcode.getOpcode() - Opcodes.MIN_VALUE;
         DOPS[idx] = opcode;
     }
 }

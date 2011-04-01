@@ -99,162 +99,30 @@ the way the stack works.
 static bool initException(Object* exception, const char* msg, Object* cause,
     Thread* self);
 
-
-/*
- * Cache pointers to some of the exception classes we use locally.
- *
- * Note this is NOT called during dexopt optimization.  Some of the fields
- * are initialized by the verifier (dvmVerifyCodeFlow).
- */
-bool dvmExceptionStartup(void)
-{
-    gDvm.classJavaLangThrowable =
-        dvmFindSystemClassNoInit("Ljava/lang/Throwable;");
-    gDvm.classJavaLangRuntimeException =
-        dvmFindSystemClassNoInit("Ljava/lang/RuntimeException;");
-    gDvm.classJavaLangStackOverflowError =
-        dvmFindSystemClassNoInit("Ljava/lang/StackOverflowError;");
-    gDvm.classJavaLangError =
-        dvmFindSystemClassNoInit("Ljava/lang/Error;");
-    gDvm.classJavaLangStackTraceElement =
-        dvmFindSystemClassNoInit("Ljava/lang/StackTraceElement;");
-    gDvm.classJavaLangStackTraceElementArray =
-        dvmFindArrayClass("[Ljava/lang/StackTraceElement;", NULL);
-    if (gDvm.classJavaLangThrowable == NULL ||
-        gDvm.classJavaLangStackTraceElement == NULL ||
-        gDvm.classJavaLangStackTraceElementArray == NULL)
-    {
-        LOGE("Could not find one or more essential exception classes\n");
-        return false;
-    }
-
-    /*
-     * Find the constructor.  Note that, unlike other saved method lookups,
-     * we're using a Method* instead of a vtable offset.  This is because
-     * constructors don't have vtable offsets.  (Also, since we're creating
-     * the object in question, it's impossible for anyone to sub-class it.)
-     */
-    Method* meth;
-    meth = dvmFindDirectMethodByDescriptor(gDvm.classJavaLangStackTraceElement,
-        "<init>", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;I)V");
-    if (meth == NULL) {
-        LOGE("Unable to find constructor for StackTraceElement\n");
-        return false;
-    }
-    gDvm.methJavaLangStackTraceElement_init = meth;
-
-    /* grab an offset for the stackData field */
-    gDvm.offJavaLangThrowable_stackState =
-        dvmFindFieldOffset(gDvm.classJavaLangThrowable,
-            "stackState", "Ljava/lang/Object;");
-    if (gDvm.offJavaLangThrowable_stackState < 0) {
-        LOGE("Unable to find Throwable.stackState\n");
-        return false;
-    }
-
-    /* and one for the cause field, just 'cause */
-    gDvm.offJavaLangThrowable_cause =
-        dvmFindFieldOffset(gDvm.classJavaLangThrowable,
-            "cause", "Ljava/lang/Throwable;");
-    if (gDvm.offJavaLangThrowable_cause < 0) {
-        LOGE("Unable to find Throwable.cause\n");
-        return false;
-    }
-
-    return true;
-}
-
-/*
- * Clean up.
- */
-void dvmExceptionShutdown(void)
-{
-    // nothing to do
-}
-
-
-/*
- * Format the message into a small buffer and pass it along.
- */
-void dvmThrowExceptionFmtV(const char* exceptionDescriptor, const char* fmt,
-    va_list args)
+void dvmThrowExceptionFmtV(ClassObject* exceptionClass,
+    const char* fmt, va_list args)
 {
     char msgBuf[512];
 
     vsnprintf(msgBuf, sizeof(msgBuf), fmt, args);
-    dvmThrowChainedException(exceptionDescriptor, msgBuf, NULL);
+    dvmThrowChainedException(exceptionClass, msgBuf, NULL);
 }
 
-/*
- * Create a Throwable and throw an exception in the current thread (where
- * "throwing" just means "set the thread's exception pointer").
- *
- * "msg" and/or "cause" may be NULL.
- *
- * If we have a bad exception hierarchy -- something in Throwable.<init>
- * is missing -- then every attempt to throw an exception will result
- * in another exception.  Exceptions are generally allowed to "chain"
- * to other exceptions, so it's hard to auto-detect this problem.  It can
- * only happen if the system classes are broken, so it's probably not
- * worth spending cycles to detect it.
- *
- * We do have one case to worry about: if the classpath is completely
- * wrong, we'll go into a death spin during startup because we can't find
- * the initial class and then we can't find NoClassDefFoundError.  We have
- * to handle this case.
- *
- * [Do we want to cache pointers to common exception classes?]
- */
-void dvmThrowChainedException(const char* exceptionDescriptor, const char* msg,
-    Object* cause)
-{
-    ClassObject* excepClass;
-
-    LOGV("THROW '%s' msg='%s' cause=%s\n",
-        exceptionDescriptor, msg,
-        (cause != NULL) ? cause->clazz->descriptor : "(none)");
-
-    if (gDvm.initializing) {
-        if (++gDvm.initExceptionCount >= 2) {
-            LOGE("Too many exceptions during init (failed on '%s' '%s')\n",
-                exceptionDescriptor, msg);
-            dvmAbort();
-        }
-    }
-
-    excepClass = dvmFindSystemClass(exceptionDescriptor);
-    if (excepClass == NULL) {
-        /*
-         * We couldn't find the exception class.  The attempt to find a
-         * nonexistent class should have raised an exception.  If no
-         * exception is currently raised, then we're pretty clearly unable
-         * to throw ANY sort of exception, and we need to pack it in.
-         *
-         * If we were able to throw the "class load failed" exception,
-         * stick with that.  Ideally we'd stuff the original exception
-         * into the "cause" field, but since we can't find it we can't
-         * do that.  The exception class name should be in the "message"
-         * field.
-         */
-        if (!dvmCheckException(dvmThreadSelf())) {
-            LOGE("FATAL: unable to throw exception (failed on '%s' '%s')\n",
-                exceptionDescriptor, msg);
-            dvmAbort();
-        }
-        return;
-    }
-
-    dvmThrowChainedExceptionByClass(excepClass, msg, cause);
-}
-
-/*
- * Start/continue throwing process now that we have a class reference.
- */
-void dvmThrowChainedExceptionByClass(ClassObject* excepClass, const char* msg,
+void dvmThrowChainedException(ClassObject* excepClass, const char* msg,
     Object* cause)
 {
     Thread* self = dvmThreadSelf();
     Object* exception;
+
+    if (excepClass == NULL) {
+        /*
+         * The exception class was passed in as NULL. This might happen
+         * early on in VM initialization. There's nothing better to do
+         * than just log the message as an error and abort.
+         */
+        LOGE("Fatal error: %s\n", msg);
+        dvmAbort();
+    }
 
     /* make sure the exception is initialized */
     if (!dvmIsClassInitialized(excepClass) && !dvmInitClass(excepClass)) {
@@ -262,7 +130,7 @@ void dvmThrowChainedExceptionByClass(ClassObject* excepClass, const char* msg,
             excepClass->descriptor);
         if (strcmp(excepClass->descriptor, "Ljava/lang/InternalError;") == 0)
             dvmAbort();
-        dvmThrowChainedException("Ljava/lang/InternalError;",
+        dvmThrowChainedException(gDvm.exInternalError,
             "failed to init original exception class", cause);
         return;
     }
@@ -316,29 +184,13 @@ bail:
     dvmReleaseTrackedAlloc(exception, self);
 }
 
-/*
- * Throw the named exception using the human-readable form of the class
- * descriptor as the exception message, and with the specified cause.
- */
-void dvmThrowChainedExceptionWithClassMessage(const char* exceptionDescriptor,
-    const char* messageDescriptor, Object* cause)
-{
-    char* message = dvmHumanReadableDescriptor(messageDescriptor);
-
-    dvmThrowChainedException(exceptionDescriptor, message, cause);
-    free(message);
-}
-
-/*
- * Like dvmThrowExceptionWithMessageFromDescriptor, but take a
- * class object instead of a name.
- */
-void dvmThrowExceptionByClassWithClassMessage(ClassObject* exceptionClass,
-    const char* messageDescriptor)
+void dvmThrowChainedExceptionWithClassMessage(
+    ClassObject* exceptionClass, const char* messageDescriptor,
+    Object* cause)
 {
     char* message = dvmDescriptorToName(messageDescriptor);
 
-    dvmThrowExceptionByClass(exceptionClass, message);
+    dvmThrowChainedException(exceptionClass, message, cause);
     free(message);
 }
 
@@ -425,7 +277,7 @@ static bool initException(Object* exception, const char* msg, Object* cause,
     }
 
     if (cause != NULL) {
-        if (!dvmInstanceof(cause->clazz, gDvm.classJavaLangThrowable)) {
+        if (!dvmInstanceof(cause->clazz, gDvm.exThrowable)) {
             LOGE("Tried to init exception with cause '%s'\n",
                 cause->clazz->descriptor);
             dvmAbort();
@@ -519,7 +371,7 @@ static bool initException(Object* exception, const char* msg, Object* cause,
             excepClass->descriptor, msg, initKind);
         assert(strcmp(excepClass->descriptor,
                       "Ljava/lang/RuntimeException;") != 0);
-        dvmThrowChainedException("Ljava/lang/RuntimeException;",
+        dvmThrowChainedException(gDvm.exRuntimeException,
             "re-throw on exception class missing constructor", NULL);
         goto bail;
     }
@@ -599,19 +451,15 @@ bail:
 
 
 /*
- * Clear the pending exception and the "initExceptionCount" counter.  This
- * is used by the optimization and verification code, which has to run with
- * "initializing" set to avoid going into a death-spin if the "class not
- * found" exception can't be found.
+ * Clear the pending exception. This is used by the optimization and
+ * verification code, which mostly happens during runs of dexopt.
  *
  * This can also be called when the VM is in a "normal" state, e.g. when
- * verifying classes that couldn't be verified at optimization time.  The
- * reset of initExceptionCount should be harmless in that case.
+ * verifying classes that couldn't be verified at optimization time.
  */
 void dvmClearOptException(Thread* self)
 {
     self->exception = NULL;
-    gDvm.initExceptionCount = 0;
 }
 
 /*
@@ -620,8 +468,8 @@ void dvmClearOptException(Thread* self)
  */
 bool dvmIsCheckedException(const Object* exception)
 {
-    if (dvmInstanceof(exception->clazz, gDvm.classJavaLangError) ||
-        dvmInstanceof(exception->clazz, gDvm.classJavaLangRuntimeException))
+    if (dvmInstanceof(exception->clazz, gDvm.exError) ||
+        dvmInstanceof(exception->clazz, gDvm.exRuntimeException))
     {
         return false;
     } else {
@@ -690,7 +538,7 @@ void dvmWrapException(const char* newExcepStr)
  */
 Object* dvmGetExceptionCause(const Object* exception)
 {
-    if (!dvmInstanceof(exception->clazz, gDvm.classJavaLangThrowable)) {
+    if (!dvmInstanceof(exception->clazz, gDvm.exThrowable)) {
         LOGE("Tried to get cause from object of type '%s'\n",
             exception->clazz->descriptor);
         dvmAbort();
@@ -897,7 +745,7 @@ int dvmFindCatchBlock(Thread* self, int relPc, Object* exception,
          * if this was a native method.
          */
         assert(saveArea->prevFrame != NULL);
-        if (dvmIsBreakFrame(saveArea->prevFrame)) {
+        if (dvmIsBreakFrame((u4*)saveArea->prevFrame)) {
             if (!scanOnly)
                 break;      // bail with catchAddr == -1
 
@@ -914,7 +762,7 @@ int dvmFindCatchBlock(Thread* self, int relPc, Object* exception,
             saveArea = SAVEAREA_FROM_FP(fp);
             fp = saveArea->prevFrame;           // this may be a good one
             while (fp != NULL) {
-                if (!dvmIsBreakFrame(fp)) {
+                if (!dvmIsBreakFrame((u4*)fp)) {
                     saveArea = SAVEAREA_FROM_FP(fp);
                     if (!dvmIsNativeMethod(saveArea->method))
                         break;
@@ -1001,9 +849,9 @@ void* dvmFillInStackTraceInternal(Thread* thread, bool wantObject, size_t* pCoun
         const StackSaveArea* saveArea = SAVEAREA_FROM_FP(fp);
         const Method* method = saveArea->method;
 
-        if (dvmIsBreakFrame(fp))
+        if (dvmIsBreakFrame((u4*)fp))
             break;
-        if (!dvmInstanceof(method->clazz, gDvm.classJavaLangThrowable))
+        if (!dvmInstanceof(method->clazz, gDvm.exThrowable))
             break;
         //LOGD("EXCEP: ignoring %s.%s\n",
         //         method->clazz->descriptor, method->name);
@@ -1018,7 +866,7 @@ void* dvmFillInStackTraceInternal(Thread* thread, bool wantObject, size_t* pCoun
     while (fp != NULL) {
         const StackSaveArea* saveArea = SAVEAREA_FROM_FP(fp);
 
-        if (!dvmIsBreakFrame(fp))
+        if (!dvmIsBreakFrame((u4*)fp))
             stackDepth++;
 
         assert(fp != saveArea->prevFrame);
@@ -1059,7 +907,7 @@ void* dvmFillInStackTraceInternal(Thread* thread, bool wantObject, size_t* pCoun
         const StackSaveArea* saveArea = SAVEAREA_FROM_FP(fp);
         const Method* method = saveArea->method;
 
-        if (!dvmIsBreakFrame(fp)) {
+        if (!dvmIsBreakFrame((u4*)fp)) {
             //LOGD("EXCEP keeping %s.%s\n", method->clazz->descriptor,
             //         method->name);
 
@@ -1259,10 +1107,17 @@ static StringObject* getExceptionMessage(Object* exception)
     Thread* self = dvmThreadSelf();
     Method* getMessageMethod;
     StringObject* messageStr = NULL;
+    Object* pendingException;
 
-    assert(exception == self->exception);
-    dvmAddTrackedAlloc(exception, self);
-    self->exception = NULL;
+    /*
+     * If an exception is pending, clear it while we work and restore
+     * it when we're done.
+     */
+    pendingException = dvmGetException(self);
+    if (pendingException != NULL) {
+        dvmAddTrackedAlloc(pendingException, self);
+        dvmClearException(self);
+    }
 
     getMessageMethod = dvmFindVirtualMethodHierByDescriptor(exception->clazz,
             "getMessage", "()Ljava/lang/String;");
@@ -1282,13 +1137,16 @@ static StringObject* getExceptionMessage(Object* exception)
             exception->clazz->descriptor);
     }
 
-    if (self->exception != NULL) {
+    if (dvmGetException(self) != NULL) {
         LOGW("NOTE: exception thrown while retrieving exception message: %s\n",
-            self->exception->clazz->descriptor);
+            dvmGetException(self)->clazz->descriptor);
+        /* will be overwritten below */
     }
 
-    self->exception = exception;
-    dvmReleaseTrackedAlloc(exception, self);
+    dvmSetException(self, pendingException);
+    if (pendingException != NULL) {
+        dvmReleaseTrackedAlloc(pendingException, self);
+    }
     return messageStr;
 }
 
@@ -1363,32 +1221,274 @@ void dvmLogExceptionStackTrace(void)
     }
 }
 
-void dvmThrowAIOOBE(int index, int length)
-{
-    dvmThrowExceptionFmt("Ljava/lang/ArrayIndexOutOfBoundsException;",
-        "index=%d length=%d", index, length);
-}
-
-static void dvmThrowTypeError(const char* exceptionClassName, const char* fmt,
+/*
+ * Helper for a few of the throw functions defined below. This throws
+ * the indicated exception, with a message based on a format in which
+ * "%s" is used exactly twice, first for a received class and second
+ * for the expected class.
+ */
+static void throwTypeError(ClassObject* exceptionClass, const char* fmt,
     ClassObject* actual, ClassObject* desired)
 {
     char* actualClassName = dvmHumanReadableDescriptor(actual->descriptor);
     char* desiredClassName = dvmHumanReadableDescriptor(desired->descriptor);
-    dvmThrowExceptionFmt(exceptionClassName, fmt,
+    dvmThrowExceptionFmt(exceptionClass, fmt,
         actualClassName, desiredClassName);
     free(desiredClassName);
     free(actualClassName);
 }
 
-void dvmThrowArrayStoreException(ClassObject* actual, ClassObject* desired)
+void dvmThrowAbstractMethodError(const char* msg) {
+    dvmThrowException(gDvm.exAbstractMethodError, msg);
+}
+
+void dvmThrowArithmeticException(const char* msg) {
+    dvmThrowException(gDvm.exArithmeticException, msg);
+}
+
+void dvmThrowArrayIndexOutOfBoundsException(int length, int index)
 {
-    dvmThrowTypeError("Ljava/lang/ArrayStoreException;",
+    dvmThrowExceptionFmt(gDvm.exArrayIndexOutOfBoundsException,
+        "length=%d; index=%d", length, index);
+}
+
+void dvmThrowArrayStoreExceptionIncompatibleElement(ClassObject* objectType,
+        ClassObject* arrayType)
+{
+    throwTypeError(gDvm.exArrayStoreException,
         "%s cannot be stored in an array of type %s",
-        actual, desired);
+        objectType, arrayType);
+}
+
+void dvmThrowArrayStoreExceptionNotArray(ClassObject* actual, const char* label)
+{
+    char* actualClassName = dvmHumanReadableDescriptor(actual->descriptor);
+    dvmThrowExceptionFmt(gDvm.exArrayStoreException,
+            "%s of type %s is not an array",
+            label, actualClassName);
+    free(actualClassName);
+}
+
+void dvmThrowArrayStoreExceptionIncompatibleArrays(ClassObject* source, ClassObject* destination)
+{
+    throwTypeError(gDvm.exArrayStoreException,
+        "%s and %s are incompatible array types",
+        source, destination);
+}
+
+void dvmThrowArrayStoreExceptionIncompatibleArrayElement(s4 index, ClassObject* objectType,
+        ClassObject* arrayType)
+{
+    char* objectClassName = dvmHumanReadableDescriptor(objectType->descriptor);
+    char* arrayClassName = dvmHumanReadableDescriptor(arrayType->descriptor);
+    dvmThrowExceptionFmt(gDvm.exArrayStoreException,
+        "source[%d] of type %s cannot be stored in destination array of type %s",
+        index, objectClassName, arrayClassName);
+    free(objectClassName);
+    free(arrayClassName);
 }
 
 void dvmThrowClassCastException(ClassObject* actual, ClassObject* desired)
 {
-    dvmThrowTypeError("Ljava/lang/ClassCastException;",
+    throwTypeError(gDvm.exClassCastException,
         "%s cannot be cast to %s", actual, desired);
+}
+
+void dvmThrowClassCircularityError(const char* descriptor) {
+    dvmThrowExceptionWithClassMessage(gDvm.exClassCircularityError,
+            descriptor);
+}
+
+void dvmThrowClassFormatError(const char* msg) {
+    dvmThrowException(gDvm.exClassFormatError, msg);
+}
+
+void dvmThrowClassNotFoundException(const char* name) {
+    dvmThrowChainedClassNotFoundException(name, NULL);
+}
+
+void dvmThrowChainedClassNotFoundException(const char* name, Object* cause) {
+    /*
+     * Note: This exception is thrown in response to a request coming
+     * from client code for the name as given, so it is preferable to
+     * make the exception message be that string, per se, instead of
+     * trying to prettify it.
+     */
+    dvmThrowChainedException(gDvm.exClassNotFoundException, name, cause);
+}
+
+void dvmThrowExceptionInInitializerError(void)
+{
+    /*
+     * TODO: Do we want to wrap it if the original is an Error rather than
+     * an Exception?
+     *
+     * TODO: Should this just use dvmWrapException()?
+     */
+
+    if (gDvm.exExceptionInInitializerError == NULL) {
+        /*
+         * ExceptionInInitializerError isn't itself initialized. This
+         * can happen very early during VM startup if there is a
+         * problem with one of the corest-of-the-core classes, and it
+         * can possibly happen during a dexopt run. Rather than do
+         * anything fancier, we just abort here with a blatant
+         * message.
+         */
+        LOGE("Fatal error during early class initialization:\n");
+        dvmLogExceptionStackTrace();
+        dvmAbort();
+    }
+
+    Thread* self = dvmThreadSelf();
+    Object* exception = dvmGetException(self);
+
+    dvmAddTrackedAlloc(exception, self);
+    dvmClearException(self);
+
+    dvmThrowChainedException(gDvm.exExceptionInInitializerError,
+            NULL, exception);
+    dvmReleaseTrackedAlloc(exception, self);
+}
+
+void dvmThrowFileNotFoundException(const char* msg) {
+    dvmThrowException(gDvm.exFileNotFoundException, msg);
+}
+
+void dvmThrowIOException(const char* msg) {
+    dvmThrowException(gDvm.exIOException, msg);
+}
+
+void dvmThrowIllegalAccessException(const char* msg) {
+    dvmThrowException(gDvm.exIllegalAccessException, msg);
+}
+
+void dvmThrowIllegalAccessError(const char* msg) {
+    dvmThrowException(gDvm.exIllegalAccessError, msg);
+}
+
+void dvmThrowIllegalArgumentException(const char* msg) {
+    dvmThrowException(gDvm.exIllegalArgumentException, msg);
+}
+
+void dvmThrowIllegalMonitorStateException(const char* msg) {
+    dvmThrowException(gDvm.exIllegalMonitorStateException, msg);
+}
+
+void dvmThrowIllegalStateException(const char* msg) {
+    dvmThrowException(gDvm.exIllegalStateException, msg);
+}
+
+void dvmThrowIllegalThreadStateException(const char* msg) {
+    dvmThrowException(gDvm.exIllegalThreadStateException, msg);
+}
+
+void dvmThrowIncompatibleClassChangeError(const char* msg) {
+    dvmThrowException(gDvm.exIncompatibleClassChangeError, msg);
+}
+
+void dvmThrowIncompatibleClassChangeErrorWithClassMessage(
+        const char* descriptor)
+{
+    dvmThrowExceptionWithClassMessage(
+            gDvm.exIncompatibleClassChangeError, descriptor);
+}
+
+void dvmThrowInstantiationException(ClassObject* clazz,
+        const char* extraDetail) {
+    char* className = dvmHumanReadableDescriptor(clazz->descriptor);
+    dvmThrowExceptionFmt(gDvm.exInstantiationException,
+            "can't instantiate class %s%s%s", className,
+            (extraDetail == NULL) ? "" : "; ",
+            (extraDetail == NULL) ? "" : extraDetail);
+    free(className);
+}
+
+void dvmThrowInternalError(const char* msg) {
+    dvmThrowException(gDvm.exInternalError, msg);
+}
+
+void dvmThrowInterruptedException(const char* msg) {
+    dvmThrowException(gDvm.exInterruptedException, msg);
+}
+
+void dvmThrowLinkageError(const char* msg) {
+    dvmThrowException(gDvm.exLinkageError, msg);
+}
+
+void dvmThrowNegativeArraySizeException(s4 size) {
+    dvmThrowExceptionFmt(gDvm.exNegativeArraySizeException, "%d", size);
+}
+
+void dvmThrowNoClassDefFoundError(const char* descriptor) {
+    dvmThrowExceptionWithClassMessage(gDvm.exNoClassDefFoundError,
+            descriptor);
+}
+
+void dvmThrowChainedNoClassDefFoundError(const char* descriptor,
+        Object* cause) {
+    dvmThrowChainedExceptionWithClassMessage(
+            gDvm.exNoClassDefFoundError, descriptor, cause);
+}
+
+void dvmThrowNoSuchFieldError(const char* msg) {
+    dvmThrowException(gDvm.exNoSuchFieldError, msg);
+}
+
+void dvmThrowNoSuchFieldException(const char* msg) {
+    dvmThrowException(gDvm.exNoSuchFieldException, msg);
+}
+
+void dvmThrowNoSuchMethodError(const char* msg) {
+    dvmThrowException(gDvm.exNoSuchMethodError, msg);
+}
+
+void dvmThrowNullPointerException(const char* msg) {
+    dvmThrowException(gDvm.exNullPointerException, msg);
+}
+
+void dvmThrowOutOfMemoryError(const char* msg) {
+    dvmThrowException(gDvm.exOutOfMemoryError, msg);
+}
+
+void dvmThrowRuntimeException(const char* msg) {
+    dvmThrowException(gDvm.exRuntimeException, msg);
+}
+
+void dvmThrowStaleDexCacheError(const char* msg) {
+    dvmThrowException(gDvm.exStaleDexCacheError, msg);
+}
+
+void dvmThrowStringIndexOutOfBoundsExceptionWithIndex(jsize stringLength,
+        jsize requestIndex) {
+    dvmThrowExceptionFmt(gDvm.exStringIndexOutOfBoundsException,
+            "length=%d; index=%d", stringLength, requestIndex);
+}
+
+void dvmThrowStringIndexOutOfBoundsExceptionWithRegion(jsize stringLength,
+        jsize requestStart, jsize requestLength) {
+    dvmThrowExceptionFmt(gDvm.exStringIndexOutOfBoundsException,
+            "length=%d; regionStart=%d; regionLength=%d",
+            stringLength, requestStart, requestLength);
+}
+
+void dvmThrowTypeNotPresentException(const char* descriptor) {
+    dvmThrowExceptionWithClassMessage(gDvm.exTypeNotPresentException,
+            descriptor);
+}
+
+void dvmThrowUnsatisfiedLinkError(const char* msg) {
+    dvmThrowException(gDvm.exUnsatisfiedLinkError, msg);
+}
+
+void dvmThrowUnsupportedOperationException(const char* msg) {
+    dvmThrowException(gDvm.exUnsupportedOperationException, msg);
+}
+
+void dvmThrowVerifyError(const char* descriptor) {
+    dvmThrowExceptionWithClassMessage(gDvm.exVerifyError, descriptor);
+}
+
+void dvmThrowVirtualMachineError(const char* msg) {
+    dvmThrowException(gDvm.exVirtualMachineError, msg);
 }

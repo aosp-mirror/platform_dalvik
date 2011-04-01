@@ -9,32 +9,29 @@
      * check for it here.
      */
     /* new-array vA, vB, class@CCCC */
-    movl    rGLUE,%ecx
+    movl    rSELF,%ecx
     EXPORT_PC
-    movl    offGlue_methodClassDex(%ecx),%ecx # ecx<- pDvmDex
+    movl    offThread_methodClassDex(%ecx),%ecx # ecx<- pDvmDex
     movzwl  2(rPC),%eax                       # eax<- CCCC
     movl    offDvmDex_pResClasses(%ecx),%ecx  # ecx<- pDvmDex->pResClasses
+    SPILL(rIBASE)
     movl    (%ecx,%eax,4),%ecx                # ecx<- resolved class
     movzbl  rINSTbl,%eax
     sarl    $$4,%eax                          # eax<- B
     GET_VREG_R %eax %eax                      # eax<- vB (array length)
     andb    $$0xf,rINSTbl                     # rINST<- A
     testl   %eax,%eax
-    js      common_errNegativeArraySize       # bail
+    js      common_errNegativeArraySize       # bail, passing len in eax
     testl   %ecx,%ecx                         # already resolved?
     jne     .L${opcode}_finish                # yes, fast path
-    jmp     .L${opcode}_resolve               # resolve now
-%break
-
     /*
      * Resolve class.  (This is an uncommon case.)
      *  ecx holds class (null here)
      *  eax holds array length (vB)
      */
-.L${opcode}_resolve:
-    movl    rGLUE,%ecx
+    movl    rSELF,%ecx
     SPILL_TMP1(%eax)                   # save array length
-    movl    offGlue_method(%ecx),%ecx  # ecx<- glue->method
+    movl    offThread_method(%ecx),%ecx  # ecx<- self->method
     movzwl  2(rPC),%eax                # eax<- CCCC
     movl    offMethod_clazz(%ecx),%ecx # ecx<- method->clazz
     movl    %eax,OUT_ARG1(%esp)
@@ -58,9 +55,10 @@
     movl    %eax,OUT_ARG1(%esp)
     movl    $$ALLOC_DONT_TRACK,OUT_ARG2(%esp)
     call    dvmAllocArrayByClass    # eax<- call(clazz,length,flags)
-    FETCH_INST_OPCODE 2 %edx
+    FETCH_INST_OPCODE 2 %ecx
+    UNSPILL(rIBASE)
     testl   %eax,%eax               # failed?
     je      common_exceptionThrown  # yup - go handle
     SET_VREG %eax rINST
     ADVANCE_PC 2
-    GOTO_NEXT_R %edx
+    GOTO_NEXT_R %ecx

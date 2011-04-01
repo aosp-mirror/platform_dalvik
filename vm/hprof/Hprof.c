@@ -40,12 +40,8 @@ hprofStartup(const char *outputFileName, int fd, bool directToDdms)
 {
     hprofStartup_String();
     hprofStartup_Class();
-#if WITH_HPROF_STACK
-    hprofStartup_StackFrame();
-    hprofStartup_Stack();
-#endif
 
-    hprof_context_t *ctx = malloc(sizeof(*ctx));
+    hprof_context_t *ctx = (hprof_context_t *)malloc(sizeof(*ctx));
     if (ctx == NULL) {
         LOGE("hprof: can't allocate context.\n");
         return NULL;
@@ -72,7 +68,7 @@ hprofShutdown(hprof_context_t *tailCtx)
      * Create a new context struct for the start of the file.  We
      * heap-allocate it so we can share the "free" function.
      */
-    hprof_context_t *headCtx = malloc(sizeof(*headCtx));
+    hprof_context_t *headCtx = (hprof_context_t *)malloc(sizeof(*headCtx));
     if (headCtx == NULL) {
         LOGE("hprof: can't allocate context.\n");
         hprofFreeContext(tailCtx);
@@ -93,19 +89,10 @@ hprofShutdown(hprof_context_t *tailCtx)
     hprofAddU4ToRecord(&headCtx->curRec, HPROF_NULL_THREAD);
     hprofAddU4ToRecord(&headCtx->curRec, 0);    // no frames
 
-#if WITH_HPROF_STACK
-    hprofDumpStackFrames(headCtx);
-    hprofDumpStacks(headCtx);
-#endif
-
     hprofFlushCurrentRecord(headCtx);
 
     hprofShutdown_Class();
     hprofShutdown_String();
-#if WITH_HPROF_STACK
-    hprofShutdown_Stack();
-    hprofShutdown_StackFrame();
-#endif
 
     /* flush to ensure memstream pointer and size are updated */
     fflush(headCtx->memFp);
@@ -218,7 +205,7 @@ static void hprofRootVisitor(void *addr, u4 threadId, RootType type, void *arg)
     if (obj == NULL) {
         return;
     }
-    ctx = arg;
+    ctx = (hprof_context_t *)arg;
     ctx->gcScanState = xlate[type];
     ctx->gcThreadSerialNumber = threadId;
     hprofMarkRootObject(ctx, obj, 0);
@@ -236,8 +223,8 @@ static void hprofBitmapCallback(void *ptr, void *arg)
 
     assert(ptr != NULL);
     assert(arg != NULL);
-    obj = ptr;
-    ctx = arg;
+    obj = (Object *)ptr;
+    ctx = (hprof_context_t *)arg;
     hprofDumpHeapObject(ctx, obj);
 }
 

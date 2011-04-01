@@ -20,7 +20,6 @@
 #include "../../CompilerInternals.h"
 #include "X86LIR.h"
 #include "Codegen.h"
-#include <unistd.h>             /* for cacheflush */
 #include <sys/mman.h>           /* for protection change */
 
 #define MAX_ASSEMBLER_RETRIES 10
@@ -34,8 +33,6 @@
 #endif
 
 /*
- * FIXME - redo for x86
- *
  * Translation layout in the code cache.  Note that the codeAddress pointer
  * in JitTable will point directly to the code body (field codeAddress).  The
  * chain cell offset codeAddress - 2, and (if present) executionCount is at
@@ -52,7 +49,7 @@
  *   |  .                            .
  *   |  |                            |
  *   |  +----------------------------+
- *   |  | Chaining Cells             |  -> 12/16 bytes each, must be 4 byte aligned
+ *   |  | Chaining Cells             |  -> 16 bytes each, 8 byte aligned
  *   |  .                            .
  *   |  .                            .
  *   |  |                            |
@@ -66,8 +63,8 @@
  *      |                            |
  *      +----------------------------+
  *      | Literal pool               |  -> 4-byte aligned, variable size
- *      .                            .
- *      .                            .
+ *      .                            .     Note: for x86 literals will
+ *      .                            .     generally appear inline.
  *      |                            |
  *      +----------------------------+
  *
@@ -102,7 +99,7 @@ void* dvmJitChain(void* tgtAddr, u4* branchAddr)
  *      next safe point.
  */
 const Method *dvmJitToPatchPredictedChain(const Method *method,
-                                          InterpState *interpState,
+                                          Thread *self,
                                           PredictedChainingCell *cell,
                                           const ClassObject *clazz)
 {
@@ -143,5 +140,9 @@ JitTraceDescription *dvmCopyTraceDescriptor(const u2 *pc,
 
 /* Sort the trace profile counts and dump them */
 void dvmCompilerSortAndPrintTraceProfiles()
+{
+}
+
+void dvmJitScanAllClassPointers(void (*callback)(void *))
 {
 }

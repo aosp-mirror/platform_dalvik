@@ -31,8 +31,10 @@ bool dvmCheckAsmConstants(void)
 
 #ifndef DVM_NO_ASM_INTERP
 
-    extern char dvmAsmInstructionStart[];
-    extern char dvmAsmInstructionEnd[];
+#ifndef DVM_JMP_TABLE_MTERP
+    extern void* dvmAsmInstructionStart[];
+    extern void* dvmAsmInstructionEnd[];
+#endif
 
 #define ASM_DEF_VERIFY
 #include "mterp/common/asm-constants.h"
@@ -42,17 +44,22 @@ bool dvmCheckAsmConstants(void)
         dvmAbort();
     }
 
+#ifndef DVM_JMP_TABLE_MTERP
     /*
-     * If an instruction overflows the 64-byte handler size limit, it will
-     * push everything up and alter the total size.  Check it here.
+     * If we're using computed goto instruction transitions, make sure
+     * none of the handlers overflows the 64-byte limit.  This won't tell
+     * which one did, but if any one is too big the total size will
+     * overflow.
      */
     const int width = 64;
-    int interpSize = dvmAsmInstructionEnd - dvmAsmInstructionStart;
+    int interpSize = (uintptr_t) dvmAsmInstructionEnd -
+                     (uintptr_t) dvmAsmInstructionStart;
     if (interpSize != 0 && interpSize != kNumPackedOpcodes*width) {
         LOGE("ERROR: unexpected asm interp size %d\n", interpSize);
         LOGE("(did an instruction handler exceed %d bytes?)\n", width);
         dvmAbort();
     }
+#endif
 
 #endif // ndef DVM_NO_ASM_INTERP
 
@@ -61,76 +68,30 @@ bool dvmCheckAsmConstants(void)
 
 
 /*
- * "Standard" mterp entry point.  This sets up a "glue" structure and then
- * calls into the assembly interpreter implementation.
- *
- * (There is presently no "debug" entry point.)
+ * "Mterp entry point.
  */
-bool dvmMterpStd(Thread* self, InterpState* glue)
+void dvmMterpStd(Thread* self)
 {
-    int changeInterp;
-
     /* configure mterp items */
-    glue->self = self;
-    glue->methodClassDex = glue->method->clazz->pDvmDex;
-
-    glue->interpStackEnd = self->interpStackEnd;
-    glue->pSelfSuspendCount = &self->suspendCount;
-    glue->cardTable = gDvm.biasedCardTableBase;
-#if defined(WITH_JIT)
-    glue->pJitProfTable = gDvmJit.pProfTable;
-    glue->ppJitProfTable = &gDvmJit.pProfTable;
-    glue->jitThreshold = gDvmJit.threshold;
-#endif
-#if defined(WITH_INLINE_PROFILING)
-    /*
-     * If WITH_INLINE_PROFILING is defined, we won't switch to the debug
-     * interpreter when a new method is entered. So we need to register the
-     * METHOD_ENTER action here.
-     */
-    if (glue->debugIsMethodEntry) {
-        glue->debugIsMethodEntry = false;
-        TRACE_METHOD_ENTER(self, glue->method);
-    }
-#endif
-    if (gDvm.jdwpConfigured) {
-        glue->pDebuggerActive = &gDvm.debuggerActive;
-    } else {
-        glue->pDebuggerActive = NULL;
-    }
-    glue->pActiveProfilers = &gDvm.activeProfilers;
+    self->interpSave.methodClassDex = self->interpSave.method->clazz->pDvmDex;
 
     IF_LOGVV() {
-        char* desc = dexProtoCopyMethodDescriptor(&glue->method->prototype);
-        LOGVV("mterp threadid=%d entry %d: %s.%s %s\n",
+        char* desc = dexProtoCopyMethodDescriptor(
+                         &self->interpSave.method->prototype);
+        LOGVV("mterp threadid=%d : %s.%s %s\n",
             dvmThreadSelf()->threadId,
-            glue->entryPoint,
-            glue->method->clazz->descriptor,
-            glue->method->name,
+            self->interpSave.method->clazz->descriptor,
+            self->interpSave.method->name,
             desc);
         free(desc);
     }
-    //LOGI("glue is %p, pc=%p, fp=%p\n", glue, glue->pc, glue->fp);
-    //LOGI("first instruction is 0x%04x\n", glue->pc[0]);
+    //LOGI("self is %p, pc=%p, fp=%p\n", self, self->interpSave.pc,
+    //      self->interpSave.fp);
+    //LOGI("first instruction is 0x%04x\n", self->interpSave.pc[0]);
 
-    changeInterp = dvmMterpStdRun(glue);
+    dvmMterpStdRun(self);
 
-#if defined(WITH_JIT)
-    if (glue->jitState != kJitSingleStep) {
-        glue->self->inJitCodeCache = NULL;
-    }
-#endif
-
-    if (!changeInterp) {
-        /* this is a "normal" exit; we're not coming back */
 #ifdef LOG_INSTR
-        LOGD("|-- Leaving interpreter loop");
+    LOGD("|-- Leaving interpreter loop");
 #endif
-        return false;
-    } else {
-        /* we're "standard", so switch to "debug" */
-        LOGVV("  mterp returned, changeInterp=%d\n", changeInterp);
-        glue->nextMode = INTERP_DBG;
-        return true;
-    }
 }

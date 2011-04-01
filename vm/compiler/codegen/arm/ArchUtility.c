@@ -25,18 +25,24 @@ static char *shiftNames[4] = {
     "ror"};
 
 /* Decode and print a ARM register name */
-static char * decodeRegList(int vector, char *buf)
+static char * decodeRegList(ArmOpcode opcode, int vector, char *buf)
 {
     int i;
     bool printed = false;
     buf[0] = 0;
-    for (i = 0; i < 8; i++, vector >>= 1) {
+    for (i = 0; i < 16; i++, vector >>= 1) {
         if (vector & 0x1) {
+            int regId = i;
+            if (opcode == kThumbPush && i == 8) {
+                regId = r14lr;
+            } else if (opcode == kThumbPop && i == 8) {
+                regId = r15pc;
+            }
             if (printed) {
-                sprintf(buf + strlen(buf), ", r%d", i);
+                sprintf(buf + strlen(buf), ", r%d", regId);
             } else {
                 printed = true;
-                sprintf(buf, "r%d", i);
+                sprintf(buf, "r%d", regId);
             }
         }
     }
@@ -189,9 +195,10 @@ static void buildInsnString(char *fmt, ArmLIR *lir, char* buf,
                        }
                        break;
                    case 't':
-                       sprintf(tbuf,"0x%08x",
+                       sprintf(tbuf,"0x%08x (L%p)",
                                (int) baseAddr + lir->generic.offset + 4 +
-                               (operand << 1));
+                               (operand << 1),
+                               lir->generic.target);
                        break;
                    case 'u': {
                        int offset_1 = lir->operands[0];
@@ -209,7 +216,7 @@ static void buildInsnString(char *fmt, ArmLIR *lir, char* buf,
                        strcpy(tbuf, "see above");
                        break;
                    case 'R':
-                       decodeRegList(operand, tbuf);
+                       decodeRegList(lir->opcode, operand, tbuf);
                        break;
                    default:
                        strcpy(tbuf,"DecodeError");
@@ -256,9 +263,21 @@ void dvmDumpResourceMask(LIR *lir, u8 mask, const char *prefix)
         if (mask & ENCODE_FP_STATUS) {
             strcat(buf, "fpcc ");
         }
+
+        /* Memory bits */
         if (armLIR && (mask & ENCODE_DALVIK_REG)) {
             sprintf(buf + strlen(buf), "dr%d%s", armLIR->aliasInfo & 0xffff,
                     (armLIR->aliasInfo & 0x80000000) ? "(+1)" : "");
+        }
+        if (mask & ENCODE_LITERAL) {
+            strcat(buf, "lit ");
+        }
+
+        if (mask & ENCODE_HEAP_REF) {
+            strcat(buf, "heap ");
+        }
+        if (mask & ENCODE_MUST_NOT_ALIAS) {
+            strcat(buf, "noalias ");
         }
     }
     if (buf[0]) {
@@ -296,22 +315,28 @@ void dvmDumpLIRInsn(LIR *arg, unsigned char *baseAddr)
         case kArmPseudoSSARep:
             DUMP_SSA_REP(LOGD("-------- %s\n", (char *) dest));
             break;
-        case kArmPseudoTargetLabel:
-            break;
         case kArmPseudoChainingCellBackwardBranch:
+            LOGD("L%p:\n", lir);
             LOGD("-------- chaining cell (backward branch): 0x%04x\n", dest);
             break;
         case kArmPseudoChainingCellNormal:
+            LOGD("L%p:\n", lir);
             LOGD("-------- chaining cell (normal): 0x%04x\n", dest);
             break;
         case kArmPseudoChainingCellHot:
+            LOGD("L%p:\n", lir);
             LOGD("-------- chaining cell (hot): 0x%04x\n", dest);
             break;
         case kArmPseudoChainingCellInvokePredicted:
-            LOGD("-------- chaining cell (predicted)\n");
+            LOGD("L%p:\n", lir);
+            LOGD("-------- chaining cell (predicted): %s%s\n",
+                 dest ? ((Method *) dest)->clazz->descriptor : "",
+                 dest ? ((Method *) dest)->name : "N/A");
             break;
         case kArmPseudoChainingCellInvokeSingleton:
-            LOGD("-------- chaining cell (invoke singleton): %s/%p\n",
+            LOGD("L%p:\n", lir);
+            LOGD("-------- chaining cell (invoke singleton): %s%s/%p\n",
+                 ((Method *)dest)->clazz->descriptor,
                  ((Method *)dest)->name,
                  ((Method *)dest)->insns);
             break;
@@ -329,6 +354,7 @@ void dvmDumpLIRInsn(LIR *arg, unsigned char *baseAddr)
             LOGD("%p (%04x): .align4\n", baseAddr + offset, offset);
             break;
         case kArmPseudoPCReconstructionCell:
+            LOGD("L%p:\n", lir);
             LOGD("-------- reconstruct dalvik PC : 0x%04x @ +0x%04x\n", dest,
                  lir->operands[1]);
             break;
@@ -338,11 +364,12 @@ void dvmDumpLIRInsn(LIR *arg, unsigned char *baseAddr)
         case kArmPseudoEHBlockLabel:
             LOGD("Exception_Handling:\n");
             break;
+        case kArmPseudoTargetLabel:
         case kArmPseudoNormalBlockLabel:
-            LOGD("L%#06x:\n", dest);
+            LOGD("L%p:\n", lir);
             break;
         default:
-            if (lir->isNop && !dumpNop) {
+            if (lir->flags.isNop && !dumpNop) {
                 break;
             }
             buildInsnString(EncodingMap[lir->opcode].name, lir, opName,
@@ -351,15 +378,15 @@ void dvmDumpLIRInsn(LIR *arg, unsigned char *baseAddr)
                             256);
             LOGD("%p (%04x): %-8s%s%s\n",
                  baseAddr + offset, offset, opName, buf,
-                 lir->isNop ? "(nop)" : "");
+                 lir->flags.isNop ? "(nop)" : "");
             break;
     }
 
-    if (lir->useMask && (!lir->isNop || dumpNop)) {
+    if (lir->useMask && (!lir->flags.isNop || dumpNop)) {
         DUMP_RESOURCE_MASK(dvmDumpResourceMask((LIR *) lir,
                                                lir->useMask, "use"));
     }
-    if (lir->defMask && (!lir->isNop || dumpNop)) {
+    if (lir->defMask && (!lir->flags.isNop || dumpNop)) {
         DUMP_RESOURCE_MASK(dvmDumpResourceMask((LIR *) lir,
                                                lir->defMask, "def"));
     }
@@ -375,13 +402,26 @@ void dvmCompilerCodegenDump(CompilationUnit *cUnit)
     LOGD("installed code is at %p\n", cUnit->baseAddr);
     LOGD("total size is %d bytes\n", cUnit->totalSize);
     for (lirInsn = cUnit->firstLIRInsn; lirInsn; lirInsn = lirInsn->next) {
-        dvmDumpLIRInsn(lirInsn, cUnit->baseAddr);
+        dvmDumpLIRInsn(lirInsn, (unsigned char *) cUnit->baseAddr);
     }
-    for (lirInsn = cUnit->wordList; lirInsn; lirInsn = lirInsn->next) {
+    for (lirInsn = cUnit->classPointerList; lirInsn; lirInsn = lirInsn->next) {
+        armLIR = (ArmLIR *) lirInsn;
+        LOGD("%p (%04x): .class (%s)\n",
+             (char*)cUnit->baseAddr + armLIR->generic.offset,
+             armLIR->generic.offset,
+             ((CallsiteInfo *) armLIR->operands[0])->classDescriptor);
+    }
+    for (lirInsn = cUnit->literalList; lirInsn; lirInsn = lirInsn->next) {
         armLIR = (ArmLIR *) lirInsn;
         LOGD("%p (%04x): .word (0x%x)\n",
              (char*)cUnit->baseAddr + armLIR->generic.offset,
              armLIR->generic.offset,
              armLIR->operands[0]);
     }
+}
+
+/* Target-specific cache flushing */
+int dvmCompilerCacheFlush(long start, long end, long flags)
+{
+    return cacheflush(start, end, flags);
 }

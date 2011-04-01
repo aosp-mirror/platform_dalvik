@@ -34,9 +34,10 @@ progdir=`pwd`
 # Be in the parent of the progdir when running the rest of the script.
 cd ".."
 
-${progdir}/opcode-gen dx/src/com/android/dx/dex/code/DalvOps.java
 ${progdir}/opcode-gen dx/src/com/android/dx/dex/code/Dops.java
 ${progdir}/opcode-gen dx/src/com/android/dx/dex/code/RopToDop.java
+${progdir}/opcode-gen dx/src/com/android/dx/io/OpcodeInfo.java
+${progdir}/opcode-gen dx/src/com/android/dx/io/Opcodes.java
 ${progdir}/opcode-gen libdex/DexOpcodes.c
 ${progdir}/opcode-gen libdex/DexOpcodes.h
 ${progdir}/opcode-gen libdex/InstrUtils.c

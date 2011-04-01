@@ -80,12 +80,14 @@ typedef enum ClassFlags {
     CLASS_ISFINALIZABLE     = (1<<31),  // class/ancestor overrides finalize()
     CLASS_ISARRAY           = (1<<30),  // class is a "[*"
     CLASS_ISOBJECTARRAY     = (1<<29),  // class is a "[L*" or "[[*"
+
     CLASS_ISREFERENCE       = (1<<28),  // class is a soft/weak/phantom ref
                                         // only ISREFERENCE is set --> soft
     CLASS_ISWEAKREFERENCE   = (1<<27),  // class is a weak reference
-    CLASS_ISPHANTOMREFERENCE = (1<<26), // class is a phantom reference
+    CLASS_ISFINALIZERREFERENCE = (1<<26), // class is a phantom reference
+    CLASS_ISPHANTOMREFERENCE = (1<<25), // class is a phantom reference
 
-    CLASS_MULTIPLE_DEFS     = (1<<25),  // DEX verifier: defs in multiple DEXs
+    CLASS_MULTIPLE_DEFS     = (1<<24),  // DEX verifier: defs in multiple DEXs
 
     /* unlike the others, these can be present in the optimized DEX file */
     CLASS_ISOPTIMIZED       = (1<<17),  // class may contain opt instrs
@@ -147,31 +149,6 @@ typedef enum ClassStatus {
     CLASS_INITIALIZING  = 6,    /* class init in progress */
     CLASS_INITIALIZED   = 7,    /* ready to go */
 } ClassStatus;
-
-/*
- * Primitive type identifiers.  We use these values as indexes into an
- * array of synthesized classes, so these start at zero and count up.
- * The order is arbitrary (mimics table in doc for newarray opcode),
- * but can't be changed without shuffling some reflection tables.
- *
- * PRIM_VOID can't be used as an array type, but we include it here for
- * other uses (e.g. Void.TYPE).
- */
-typedef enum PrimitiveType {
-    PRIM_NOT        = -1,       /* value is not a primitive type */
-    PRIM_BOOLEAN    = 0,
-    PRIM_CHAR       = 1,
-    PRIM_FLOAT      = 2,
-    PRIM_DOUBLE     = 3,
-    PRIM_BYTE       = 4,
-    PRIM_SHORT      = 5,
-    PRIM_INT        = 6,
-    PRIM_LONG       = 7,
-    PRIM_VOID       = 8,
-
-    PRIM_MAX
-} PrimitiveType;
-#define PRIM_TYPE_TO_LETTER "ZCFDBSIJV"     /* must match order in enum */
 
 /*
  * Definitions for packing refOffsets in ClassObject.

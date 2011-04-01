@@ -32,7 +32,21 @@ static TGT_LIR *genRegImmCheck(CompilationUnit *cUnit,
                                TGT_LIR *pcrLabel)
 {
     TGT_LIR *branch = genCmpImmBranch(cUnit, cond, reg, checkValue);
-    return genCheckCommon(cUnit, dOffset, branch, pcrLabel);
+    if (cUnit->jitMode == kJitMethod) {
+        BasicBlock *bb = cUnit->curBlock;
+        if (bb->taken) {
+            ArmLIR  *exceptionLabel = (ArmLIR *) cUnit->blockLabelList;
+            exceptionLabel += bb->taken->id;
+            branch->generic.target = (LIR *) exceptionLabel;
+            return exceptionLabel;
+        } else {
+            LOGE("Catch blocks not handled yet");
+            dvmAbort();
+            return NULL;
+        }
+    } else {
+        return genCheckCommon(cUnit, dOffset, branch, pcrLabel);
+    }
 }
 
 /*

@@ -21,6 +21,7 @@
 #define _DALVIK_THREAD
 
 #include "jni.h"
+#include "interp/InterpState.h"
 
 #include <errno.h>
 #include <cutils/sched_policy.h>
@@ -30,10 +31,6 @@
 /* glibc lacks this unless you #define __USE_UNIX98 */
 int pthread_mutexattr_settype(pthread_mutexattr_t *attr, int type);
 enum { PTHREAD_MUTEX_ERRORCHECK = PTHREAD_MUTEX_ERRORCHECK_NP };
-#endif
-
-#ifdef WITH_MONITOR_TRACKING
-struct LockedObjectData;
 #endif
 
 /*
@@ -70,7 +67,6 @@ enum {
 
 /* initialization */
 bool dvmThreadStartup(void);
-bool dvmThreadObjStartup(void);
 void dvmThreadShutdown(void);
 void dvmSlayDaemons(void);
 
@@ -85,23 +81,69 @@ void dvmSlayDaemons(void);
 #define kMaxStackSize       (256*1024 + STACK_OVERFLOW_RESERVE)
 
 /*
+ * Interpreter control struction.  Packed into a long long to enable
+ * atomic updates.
+ */
+typedef union InterpBreak {
+    volatile int64_t   all;
+    struct {
+        uint8_t    breakFlags;
+        uint8_t    subMode;
+        int8_t     suspendCount;
+        int8_t     dbgSuspendCount;
+#ifndef DVM_NO_ASM_INTERP
+        void* curHandlerTable;
+#else
+        void* unused;
+#endif
+    } ctl;
+} InterpBreak;
+
+/*
  * Our per-thread data.
  *
  * These are allocated on the system heap.
  */
 typedef struct Thread {
+    /*
+     * Interpreter state which must be preserved across nested
+     * interpreter invocations (via JNI callbacks).  Must be the first
+     * element in Thread.
+     */
+    InterpSaveState interpSave;
+
     /* small unique integer; useful for "thin" locks and debug messages */
     u4          threadId;
 
     /*
-     * Thread's current status.  Can only be changed by the thread itself
-     * (i.e. don't mess with this from other threads).
+     * Begin interpreter state which does not need to be preserved, but should
+     * be located towards the beginning of the Thread structure for
+     * efficiency.
      */
-    volatile ThreadStatus status;
+    JValue      retval;
+
+    u1*         cardTable;
+
+    /* current limit of stack; flexes for StackOverflowError */
+    const u1*   interpStackEnd;
+
+    /* FP of bottom-most (currently executing) stack frame on interp stack */
+    void*       curFrame;
+    /* current exception, or NULL if nothing pending */
+    Object*     exception;
+
+    bool        debugIsMethodEntry;
+    /* interpreter stack size; our stacks are fixed-length */
+    int         interpStackSize;
+    bool        stackOverflowed;
+
+    /* thread handle, as reported by pthread_self() */
+    pthread_t   handle;
 
     /*
-     * This is the number of times the thread has been suspended.  When the
-     * count drops to zero, the thread resumes.
+     * interpBreak contains info about the interpreter mode, as well as
+     * a count of the number of times the thread has been suspended.  When
+     * the count drops to zero, the thread resumes.
      *
      * "dbgSuspendCount" is the portion of the suspend count that the
      * debugger is responsible for.  This has to be tracked separately so
@@ -112,37 +154,83 @@ typedef struct Thread {
      *
      * Both of these are guarded by gDvm.threadSuspendCountLock.
      *
-     * (We could store both of these in the same 32-bit, using 16-bit
-     * halves, to make atomic ops possible.  In practice, you only need
-     * to read suspendCount, and we need to hold a mutex when making
-     * changes, so there's no need to merge them.  Note the non-debug
-     * component will rarely be other than 1 or 0 -- not sure it's even
-     * possible with the way mutexes are currently used.)
+     * Note the non-debug component will rarely be other than 1 or 0 -- (not
+     * sure it's even possible with the way mutexes are currently used.)
      */
-    int         suspendCount;
-    int         dbgSuspendCount;
+    InterpBreak interpBreak;
 
-    /* thread handle, as reported by pthread_self() */
-    pthread_t   handle;
+
+    /* Assembly interpreter handler tables */
+#ifndef DVM_NO_ASM_INTERP
+    void*       mainHandlerTable;   // Table of actual instruction handler
+    void*       altHandlerTable;    // Table of breakout handlers
+#else
+    void*       unused0;            // Consume space to keep offsets
+    void*       unused1;            //   the same between builds with
+#endif
+
+    /*
+     * singleStepCount is a countdown timer used with the breakFlag
+     * kInterpSingleStep.  If kInterpSingleStep is set in breakFlags,
+     * singleStepCount will decremented each instruction execution.
+     * Once it reaches zero, the kInterpSingleStep flag in breakFlags
+     * will be cleared.  This can be used to temporarily prevent
+     * execution from re-entering JIT'd code or force inter-instruction
+     * checks by delaying the reset of curHandlerTable to mainHandlerTable.
+     */
+    int         singleStepCount;
+
+#ifdef WITH_JIT
+    struct JitToInterpEntries jitToInterpEntries;
+    /*
+     * Whether the current top VM frame is in the interpreter or JIT cache:
+     *   NULL    : in the interpreter
+     *   non-NULL: entry address of the JIT'ed code (the actual value doesn't
+     *             matter)
+     */
+    void*             inJitCodeCache;
+    unsigned char*    pJitProfTable;
+    int               jitThreshold;
+    const void*       jitResumeNPC;     // Translation return point
+    const u4*         jitResumeNSP;     // Native SP at return point
+    const u2*         jitResumeDPC;     // Dalvik inst following single-step
+    JitState    jitState;
+    int         icRechainCount;
+    const void* pProfileCountdown;
+    const ClassObject* callsiteClass;
+    const Method*     methodToCall;
+#endif
+
+    /* JNI local reference tracking */
+    IndirectRefTable jniLocalRefTable;
+
+#if defined(WITH_JIT)
+#if defined(WITH_SELF_VERIFICATION)
+    /* Buffer for register state during self verification */
+    struct ShadowSpace* shadowSpace;
+#endif
+    int         currTraceRun;
+    int         totalTraceLen;  // Number of Dalvik insts in trace
+    const u2*   currTraceHead;  // Start of the trace we're building
+    const u2*   currRunHead;    // Start of run we're building
+    int         currRunLen;     // Length of run in 16-bit words
+    const u2*   lastPC;         // Stage the PC for the threaded interpreter
+    const Method*  traceMethod; // Starting method of current trace
+    intptr_t    threshFilter[JIT_TRACE_THRESH_FILTER_SIZE];
+    JitTraceRun trace[MAX_JIT_RUN_LEN];
+#endif
+
+    /*
+     * Thread's current status.  Can only be changed by the thread itself
+     * (i.e. don't mess with this from other threads).
+     */
+    volatile ThreadStatus status;
 
     /* thread ID, only useful under Linux */
     pid_t       systemTid;
 
     /* start (high addr) of interp stack (subtract size to get malloc addr) */
     u1*         interpStackStart;
-
-    /* current limit of stack; flexes for StackOverflowError */
-    const u1*   interpStackEnd;
-
-    /* interpreter stack size; our stacks are fixed-length */
-    int         interpStackSize;
-    bool        stackOverflowed;
-
-    /* FP of bottom-most (currently executing) stack frame on interp stack */
-    void*       curFrame;
-
-    /* current exception, or NULL if nothing pending */
-    Object*     exception;
 
     /* the java/lang/Thread that we are associated with */
     Object*     threadObj;
@@ -153,26 +241,6 @@ typedef struct Thread {
     /* internal reference tracking */
     ReferenceTable  internalLocalRefTable;
 
-#if defined(WITH_JIT)
-    /*
-     * Whether the current top VM frame is in the interpreter or JIT cache:
-     *   NULL    : in the interpreter
-     *   non-NULL: entry address of the JIT'ed code (the actual value doesn't
-     *             matter)
-     */
-    void*       inJitCodeCache;
-#if defined(WITH_SELF_VERIFICATION)
-    /* Buffer for register state during self verification */
-    struct ShadowSpace* shadowSpace;
-#endif
-#endif
-
-    /* JNI local reference tracking */
-#ifdef USE_INDIRECT_REF
-    IndirectRefTable jniLocalRefTable;
-#else
-    ReferenceTable  jniLocalRefTable;
-#endif
 
     /* JNI native monitor reference tracking (initialized on first use) */
     ReferenceTable  jniMonitorRefTable;
@@ -214,11 +282,6 @@ typedef struct Thread {
     /* JDWP invoke-during-breakpoint support */
     DebugInvokeReq  invokeReq;
 
-#ifdef WITH_MONITOR_TRACKING
-    /* objects locked by this thread; most recent is at head of list */
-    struct LockedObjectData* pLockedObjects;
-#endif
-
     /* base time for per-thread CPU timing (used by method profiling) */
     bool        cpuClockBaseSet;
     u8          cpuClockBase;
@@ -234,6 +297,11 @@ typedef struct Thread {
     /* PC, saved on every instruction; redundant with StackSaveArea */
     const u2*   currentPc2;
 #endif
+
+    /* Safepoint callback state */
+    pthread_mutex_t   callbackMutex;
+    SafePointCallback callback;
+    void*             callbackArg;
 } Thread;
 
 /* start point for an internal thread; mimics pthread args */
@@ -320,7 +388,7 @@ bool dvmCheckSuspendPending(Thread* self);
  * count is nonzero.
  */
 INLINE bool dvmCheckSuspendQuick(Thread* self) {
-    return (self->suspendCount != 0);
+    return (self->interpBreak.ctl.breakFlags & kInterpSuspendBreak);
 }
 
 /*
@@ -526,36 +594,5 @@ void dvmDumpAllThreadsEx(const DebugOutputTarget* target, bool grabLock);
  * in an uncertain state.
  */
 void dvmNukeThread(Thread* thread);
-
-#ifdef WITH_MONITOR_TRACKING
-/*
- * Track locks held by the current thread, along with the stack trace at
- * the point the lock was acquired.
- *
- * At any given time the number of locks held across the VM should be
- * fairly small, so there's no reason not to generate and store the entire
- * stack trace.
- */
-typedef struct LockedObjectData {
-    /* the locked object */
-    struct Object*  obj;
-
-    /* number of times it has been locked recursively (zero-based ref count) */
-    int             recursionCount;
-
-    /* stack trace at point of initial acquire */
-    u4              stackDepth;
-    int*            rawStackTrace;
-
-    struct LockedObjectData* next;
-} LockedObjectData;
-
-/*
- * Add/remove/find objects from the thread's monitor list.
- */
-void dvmAddToMonitorList(Thread* self, Object* obj, bool withTrace);
-void dvmRemoveFromMonitorList(Thread* self, Object* obj);
-LockedObjectData* dvmFindInMonitorList(const Thread* self, const Object* obj);
-#endif
 
 #endif /*_DALVIK_THREAD*/

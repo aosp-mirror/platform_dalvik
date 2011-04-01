@@ -16,7 +16,6 @@
 
 #include "Dalvik.h"
 #include "HeapBitmap.h"
-#include "clz.h"
 #include <sys/mman.h>   /* for PROT_* */
 
 /*
@@ -39,7 +38,7 @@ dvmHeapBitmapInit(HeapBitmap *hb, const void *base, size_t maxSize,
         LOGE("Could not mmap %zd-byte ashmem region '%s'", bitsLen, name);
         return false;
     }
-    hb->bits = bits;
+    hb->bits = (unsigned long *)bits;
     hb->bitsLen = hb->allocLen = bitsLen;
     hb->base = (uintptr_t)base;
     hb->max = hb->base - 1;
@@ -79,6 +78,92 @@ dvmHeapBitmapZero(HeapBitmap *hb)
 }
 
 /*
+ * Return true iff <obj> is within the range of pointers that this
+ * bitmap could potentially cover, even if a bit has not been set
+ * for it.
+ */
+bool dvmHeapBitmapCoversAddress(const HeapBitmap *hb, const void *obj)
+{
+    assert(hb != NULL);
+    if (obj != NULL) {
+        const uintptr_t offset = (uintptr_t)obj - hb->base;
+        const size_t index = HB_OFFSET_TO_INDEX(offset);
+        return index < hb->bitsLen / sizeof(*hb->bits);
+    }
+    return false;
+}
+
+/*
+ * Visits set bits in address order.  The callback is not permitted to
+ * change the bitmap bits or max during the traversal.
+ */
+void dvmHeapBitmapWalk(const HeapBitmap *bitmap, BitmapCallback *callback,
+                       void *arg)
+{
+    uintptr_t end;
+    uintptr_t i;
+
+    assert(bitmap != NULL);
+    assert(bitmap->bits != NULL);
+    assert(callback != NULL);
+    end = HB_OFFSET_TO_INDEX(bitmap->max - bitmap->base);
+    for (i = 0; i <= end; ++i) {
+        unsigned long word = bitmap->bits[i];
+        if (UNLIKELY(word != 0)) {
+            unsigned long highBit = 1 << (HB_BITS_PER_WORD - 1);
+            uintptr_t ptrBase = HB_INDEX_TO_OFFSET(i) + bitmap->base;
+            while (word != 0) {
+                const int shift = CLZ(word);
+                void *addr = (void *)(ptrBase + shift * HB_OBJECT_ALIGNMENT);
+                (*callback)(addr, arg);
+                word &= ~(highBit >> shift);
+            }
+        }
+    }
+}
+
+/*
+ * Similar to dvmHeapBitmapWalk but the callback routine is permitted
+ * to change the bitmap bits and max during traversal.  Used by the
+ * the root marking scan exclusively.
+ *
+ * The callback is invoked with a finger argument.  The finger is a
+ * pointer to an address not yet visited by the traversal.  If the
+ * callback sets a bit for an address at or above the finger, this
+ * address will be visited by the traversal.  If the callback sets a
+ * bit for an address below the finger, this address will not be
+ * visited.
+ */
+void dvmHeapBitmapScanWalk(HeapBitmap *bitmap,
+                           uintptr_t base, uintptr_t max,
+                           BitmapScanCallback *callback, void *arg)
+{
+    assert(bitmap != NULL);
+    assert(bitmap->bits != NULL);
+    assert(callback != NULL);
+    assert(base <= max);
+    assert(base >= bitmap->base);
+    assert(max <= bitmap->max);
+    uintptr_t end = HB_OFFSET_TO_INDEX(max - base);
+    uintptr_t i;
+    for (i = 0; i <= end; ++i) {
+        unsigned long word = bitmap->bits[i];
+        if (UNLIKELY(word != 0)) {
+            unsigned long highBit = 1 << (HB_BITS_PER_WORD - 1);
+            uintptr_t ptrBase = HB_INDEX_TO_OFFSET(i) + bitmap->base;
+            void *finger = (void *)(HB_INDEX_TO_OFFSET(i + 1) + bitmap->base);
+            while (word != 0) {
+                const int shift = CLZ(word);
+                void *addr = (void *)(ptrBase + shift * HB_OBJECT_ALIGNMENT);
+                (*callback)(addr, finger, arg);
+                word &= ~(highBit >> shift);
+            }
+            end = HB_OFFSET_TO_INDEX(bitmap->max - bitmap->base);
+        }
+    }
+}
+
+/*
  * Walk through the bitmaps in increasing address order, and find the
  * object pointers that correspond to garbage objects.  Call
  * <callback> zero or more times with lists of these object pointers.
@@ -86,15 +171,14 @@ dvmHeapBitmapZero(HeapBitmap *hb)
  * The callback is not permitted to increase the max of either bitmap.
  */
 void dvmHeapBitmapSweepWalk(const HeapBitmap *liveHb, const HeapBitmap *markHb,
+                            uintptr_t base, uintptr_t max,
                             BitmapSweepCallback *callback, void *callbackArg)
 {
-    static const size_t kPointerBufSize = 128;
-    void *pointerBuf[kPointerBufSize];
+    void *pointerBuf[4 * HB_BITS_PER_WORD];
     void **pb = pointerBuf;
-    size_t index;
     size_t i;
+    size_t start, end;
     unsigned long *live, *mark;
-    uintptr_t offset;
 
     assert(liveHb != NULL);
     assert(liveHb->bits != NULL);
@@ -103,16 +187,19 @@ void dvmHeapBitmapSweepWalk(const HeapBitmap *liveHb, const HeapBitmap *markHb,
     assert(liveHb->base == markHb->base);
     assert(liveHb->bitsLen == markHb->bitsLen);
     assert(callback != NULL);
+    assert(base <= max);
+    assert(base >= liveHb->base);
+    assert(max <= liveHb->max);
     if (liveHb->max < liveHb->base) {
         /* Easy case; both are obviously empty.
          */
         return;
     }
-    offset = liveHb->max - liveHb->base;
-    index = HB_OFFSET_TO_INDEX(offset);
+    start = HB_OFFSET_TO_INDEX(base - liveHb->base);
+    end = HB_OFFSET_TO_INDEX(max - liveHb->base);
     live = liveHb->bits;
     mark = markHb->bits;
-    for (i = 0; i <= index; i++) {
+    for (i = start; i <= end; i++) {
         unsigned long garbage = live[i] & ~mark[i];
         if (UNLIKELY(garbage != 0)) {
             unsigned long highBit = 1 << (HB_BITS_PER_WORD - 1);
@@ -124,7 +211,7 @@ void dvmHeapBitmapSweepWalk(const HeapBitmap *liveHb, const HeapBitmap *markHb,
             }
             /* Make sure that there are always enough slots available */
             /* for an entire word of 1s. */
-            if (kPointerBufSize - (pb - pointerBuf) < HB_BITS_PER_WORD) {
+            if (pb >= &pointerBuf[NELEM(pointerBuf) - HB_BITS_PER_WORD]) {
                 (*callback)(pb - pointerBuf, pointerBuf, callbackArg);
                 pb = pointerBuf;
             }

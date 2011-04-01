@@ -16,6 +16,8 @@
 
 package com.android.dx.dex.code;
 
+import com.android.dx.dex.DexOptions;
+import com.android.dx.io.Opcodes;
 import com.android.dx.rop.code.LocalItem;
 import com.android.dx.rop.code.RegisterSpec;
 import com.android.dx.rop.code.RegisterSpecList;
@@ -28,6 +30,7 @@ import com.android.dx.rop.cst.CstUtf8;
 import com.android.dx.rop.type.Type;
 
 import java.util.ArrayList;
+import java.util.BitSet;
 import java.util.HashSet;
 
 /**
@@ -36,6 +39,9 @@ import java.util.HashSet;
  * form of a {@link DalvInsnList} instance.
  */
 public final class OutputFinisher {
+    /** {@code non-null;} options for dex output */
+    private final DexOptions dexOptions;
+
     /**
      * {@code >= 0;} register count for the method, not including any extra
      * "reserved" registers needed to translate "difficult" instructions
@@ -62,11 +68,13 @@ public final class OutputFinisher {
     /**
      * Constructs an instance. It initially contains no instructions.
      *
+     * @param dexOptions {@code non-null;} options for dex output
      * @param regCount {@code >= 0;} register count for the method
      * @param initialCapacity {@code >= 0;} initial capacity of the
      * instructions list
      */
-    public OutputFinisher(int initialCapacity, int regCount) {
+    public OutputFinisher(DexOptions dexOptions, int initialCapacity, int regCount) {
+        this.dexOptions = dexOptions;
         this.unreservedRegCount = regCount;
         this.insns = new ArrayList<DalvInsn>(initialCapacity);
         this.reservedCount = -1;
@@ -450,19 +458,19 @@ public final class OutputFinisher {
             Dop originalOpcode = opcodes[i];
             Dop newOpcode = findOpcodeForInsn(insn, originalOpcode);
 
-            if (originalOpcode == newOpcode) {
-                continue;
-            }
-
             if (newOpcode == null) {
                 /*
-                 * The instruction will need to be expanded, so reserve
-                 * registers for it.
+                 * The instruction will need to be expanded, so find the
+                 * expanded opcode and reserve registers for it.
                  */
-                int reserve = insn.getMinimumRegisterRequirement();
+                Dop expandedOp = findExpandedOpcodeForInsn(insn);
+                BitSet compatRegs = expandedOp.getFormat().compatibleRegs(insn);
+                int reserve = insn.getMinimumRegisterRequirement(compatRegs);
                 if (reserve > newReservedCount) {
                     newReservedCount = reserve;
                 }
+            } else if (originalOpcode == newOpcode) {
+                continue;
             }
 
             opcodes[i] = newOpcode;
@@ -498,10 +506,21 @@ public final class OutputFinisher {
                 break;
             }
 
-            guess = Dops.getNextOrNull(guess);
+            guess = Dops.getNextOrNull(guess, dexOptions);
         }
 
         return guess;
+    }
+
+    /**
+     * Finds the proper opcode for the given instruction, ignoring
+     * register constraints.
+     *
+     * @param insn {@code non-null;} the instruction in question
+     * @return {@code non-null;} the opcode that fits
+     */
+    private Dop findExpandedOpcodeForInsn(DalvInsn insn) {
+        return findOpcodeForInsn(insn.getLowRegVersion(), insn.getOpcode());
     }
 
     /**
@@ -583,16 +602,14 @@ public final class OutputFinisher {
                 suffix = null;
             } else {
                 // Expansion is required.
-                prefix = insn.hrPrefix();
-                suffix = insn.hrSuffix();
+                currentOpcode = findExpandedOpcodeForInsn(insn);
+                BitSet compatRegs =
+                    currentOpcode.getFormat().compatibleRegs(insn);
+                prefix = insn.expandedPrefix(compatRegs);
+                suffix = insn.expandedSuffix(compatRegs);
 
-                /*
-                 * Get the initial guess as to the hr version, but then
-                 * let findOpcodeForInsn() pick a better format, if any.
-                 */
-                insn = insn.hrVersion();
-                originalOpcode = insn.getOpcode();
-                currentOpcode = findOpcodeForInsn(insn, originalOpcode);
+                // Expand necessary registers to fit the new format
+                insn = insn.expandedVersion(compatRegs);
             }
 
             if (prefix != null) {
@@ -671,7 +688,7 @@ public final class OutputFinisher {
                 continue;
             }
 
-            if (opcode.getFamily() == DalvOps.GOTO) {
+            if (opcode.getFamily() == Opcodes.GOTO) {
                 // It is a goto; widen it if possible.
                 opcode = findOpcodeForInsn(insn, opcode);
                 if (opcode == null) {

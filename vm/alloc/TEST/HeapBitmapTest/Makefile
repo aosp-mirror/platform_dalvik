@@ -10,11 +10,8 @@ CFLAGS := -g -Wall -Werror
 out/main.o: main.c ../../HeapBitmap.h
 	$(CC) $(CFLAGS) -c $< -o $@ -I ../..
 
-out/HeapBitmap.o: ../../HeapBitmap.c ../../HeapBitmap.h ../../clz.h include/cutils/ashmem.h include/Dalvik.h
+out/HeapBitmap.o: ../../HeapBitmap.c ../../HeapBitmap.h include/cutils/ashmem.h include/Dalvik.h
 	$(CC) $(CFLAGS) -c $< -o $@ -I ../.. -I include
-
-out/clz.o: ../../clz.c ../../clz.h
-	$(CC) $(CFLAGS) -c $< -o $@ -I ../..
 
 out/hbtest: out/main.o out/HeapBitmap.o out/clz.o
 	$(CC) $^ -o $@

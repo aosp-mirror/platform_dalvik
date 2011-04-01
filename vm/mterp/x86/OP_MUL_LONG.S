@@ -15,6 +15,7 @@
     SPILL_TMP2(%esi)                   # save Dalvik PC
     SPILL(rFP)
     SPILL(rINST)
+    SPILL(rIBASE)
     leal      (rFP,%eax,4),%esi        # esi<- &v[B]
     leal      (rFP,%ecx,4),rFP         # rFP<- &v[C]
     movl      4(%esi),%ecx             # ecx<- Bmsw
@@ -26,14 +27,11 @@
     mull      (%esi)                   # eax<- (Clsw*Alsw)
     UNSPILL(rINST)
     UNSPILL(rFP)
-    jmp       .L${opcode}_continue
-%break
-
-.L${opcode}_continue:
-    leal      (%ecx,%edx),%edx     # full result now in %edx:%eax
+    leal      (%ecx,rIBASE),rIBASE # full result now in rIBASE:%eax
     UNSPILL_TMP2(%esi)             # Restore Dalvik PC
     FETCH_INST_OPCODE 2 %ecx       # Fetch next instruction
-    movl      %edx,4(rFP,rINST,4)  # v[B+1]<- %edx
+    movl      rIBASE,4(rFP,rINST,4)# v[B+1]<- rIBASE
+    UNSPILL(rIBASE)
     movl      %eax,(rFP,rINST,4)   # v[B]<- %eax
     ADVANCE_PC 2
     GOTO_NEXT_R %ecx

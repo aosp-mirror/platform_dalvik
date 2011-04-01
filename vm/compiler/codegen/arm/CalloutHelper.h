@@ -82,7 +82,7 @@ bool dvmInterpHandleFillArrayData(ArrayObject* arrayObject,// OP_FILL_ARRAY_DATA
 
 /* Originally declared in compiler/codegen/arm/Assemble.c */
 const Method *dvmJitToPatchPredictedChain(const Method *method,
-                                          InterpState *interpState,
+                                          Thread *self,
                                           PredictedChainingCell *cell,
                                           const ClassObject *clazz);
 
@@ -109,23 +109,6 @@ Object* dvmAllocObject(ClassObject* clazz, int flags);  // OP_NEW_INSTANCE
 /*
  * Functions declared in gDvmInlineOpsTable[] are used for
  * OP_EXECUTE_INLINE & OP_EXECUTE_INLINE_RANGE.
- *
- *      org_apache_harmony_dalvik_NativeTestTarget_emptyInlineMethod
- *      javaLangString_charAt
- *      javaLangString_compareTo
- *      javaLangString_equals
- *      javaLangString_indexOf_I
- *      javaLangString_indexOf_II
- *      javaLangString_length
- *      javaLangMath_abs_int
- *      javaLangMath_abs_long
- *      javaLangMath_abs_float
- *      javaLangMath_abs_double
- *      javaLangMath_min_int
- *      javaLangMath_max_int
- *      javaLangMath_sqrt
- *      javaLangMath_cos
- *      javaLangMath_sin
  */
 double sqrt(double x);  // INLINE_MATH_SQRT
 

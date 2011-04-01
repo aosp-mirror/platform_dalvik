@@ -24,7 +24,7 @@
  * r0, r1, r2, r3 are always scratch
  * r4 (rPC) is scratch for Jit, but most be restored when resuming interp
  * r5 (rFP) is reserved [holds Dalvik frame pointer]
- * r6 (rGLUE) is reserved [holds current &interpState]
+ * r6 (rSELF) is reserved [holds current &Thread]
  * r7 (rINST) is scratch for Jit
  * r8 (rIBASE) is scratch for Jit, but must be restored when resuming interp
  * r9 is reserved
@@ -119,10 +119,6 @@ typedef struct RegisterPool {
     int numFPTemps;
     RegisterInfo *FPTemps;
     int nextFPTemp;
-    int numCoreRegs;
-    RegisterInfo *coreRegs;
-    int numFPRegs;
-    RegisterInfo *FPRegs;
 } RegisterPool;
 
 typedef enum ResourceEncodingPos {
@@ -133,12 +129,12 @@ typedef enum ResourceEncodingPos {
     kFPReg0     = 16,
     kRegEnd     = 48,
     kCCode      = kRegEnd,
-    kFPStatus,
-    kDalvikReg,
-    kLiteral,
-    kFrameRef,
-    kHeapRef,
-    kLitPoolRef
+    kFPStatus,          // FP status word
+    // The following four bits are for memory disambiguation
+    kDalvikReg,         // 1 Dalvik Frame (can be fully disambiguated)
+    kLiteral,           // 2 Literal pool (can be fully disambiguated)
+    kHeapRef,           // 3 Somewhere on the heap (alias with any other heap)
+    kMustNotAlias,      // 4 Guaranteed to be non-alias (eg *(r6+x))
 } ResourceEncodingPos;
 
 #define ENCODE_REG_LIST(N)      ((u8) N)
@@ -148,19 +144,15 @@ typedef enum ResourceEncodingPos {
 #define ENCODE_CCODE            (1ULL << kCCode)
 #define ENCODE_FP_STATUS        (1ULL << kFPStatus)
 
-    /* Must alias */
+/* Abstract memory locations */
 #define ENCODE_DALVIK_REG       (1ULL << kDalvikReg)
 #define ENCODE_LITERAL          (1ULL << kLiteral)
-
-    /* May alias */
-#define ENCODE_FRAME_REF        (1ULL << kFrameRef)
 #define ENCODE_HEAP_REF         (1ULL << kHeapRef)
-#define ENCODE_LITPOOL_REF      (1ULL << kLitPoolRef)
+#define ENCODE_MUST_NOT_ALIAS   (1ULL << kMustNotAlias)
 
 #define ENCODE_ALL              (~0ULL)
-#define ENCODE_MEM_DEF          (ENCODE_FRAME_REF | ENCODE_HEAP_REF)
-#define ENCODE_MEM_USE          (ENCODE_FRAME_REF | ENCODE_HEAP_REF \
-                                 | ENCODE_LITPOOL_REF)
+#define ENCODE_MEM              (ENCODE_DALVIK_REG | ENCODE_LITERAL | \
+                                 ENCODE_HEAP_REF | ENCODE_MUST_NOT_ALIAS)
 
 #define DECODE_ALIAS_INFO_REG(X)        (X & 0xffff)
 #define DECODE_ALIAS_INFO_WIDE(X)       ((X & 0x80000000) ? 1 : 0)
@@ -211,23 +203,33 @@ typedef enum OpKind {
     kOpUncondBr,
 } OpKind;
 
+/*
+ * Annotate special-purpose core registers:
+ *   - VM: r4PC, r5FP, and r6SELF
+ *   - ARM architecture: r13sp, r14lr, and r15pc
+ *
+ * rPC, rFP, and rSELF are for architecture-independent code to use.
+ */
 typedef enum NativeRegisterPool {
-    r0 = 0,
-    r1 = 1,
-    r2 = 2,
-    r3 = 3,
-    r4PC = 4,
-    rFP = 5,
-    rGLUE = 6,
-    r7 = 7,
-    r8 = 8,
-    r9 = 9,
-    r10 = 10,
-    r11 = 11,
-    r12 = 12,
-    r13 = 13,
-    rlr = 14,
-    rpc = 15,
+    r0     = 0,
+    r1     = 1,
+    r2     = 2,
+    r3     = 3,
+    rPC    = 4,
+    r4PC   = rPC,
+    rFP    = 5,
+    r5FP   = rFP,
+    rSELF  = 6,
+    r6SELF = rSELF,
+    r7     = 7,
+    r8     = 8,
+    r9     = 9,
+    r10    = 10,
+    r11    = 11,
+    r12    = 12,
+    r13sp  = 13,
+    r14lr  = 14,
+    r15pc  = 15,
     fr0  =  0 + FP_REG_OFFSET,
     fr1  =  1 + FP_REG_OFFSET,
     fr2  =  2 + FP_REG_OFFSET,
@@ -519,7 +521,7 @@ typedef enum ArmOpcode {
     kThumb2StrbRRI12,    /* strb rt,[rn,#imm12] [111110001000]
                                        rt[15..12] rn[19..16] imm12[11..0] */
     kThumb2Pop,          /* pop     [1110100010111101] list[15-0]*/
-    kThumb2Push,         /* push    [1110100010101101] list[15-0]*/
+    kThumb2Push,         /* push    [1110100100101101] list[15-0]*/
     kThumb2CmpRI8,       /* cmp rn, #<const> [11110] i [011011] rn[19-16] [0]
                                        imm3 [1111] imm8[7..0] */
     kThumb2AdcRRR,       /* adc [111010110101] rn[19..16] [0000] rd[11..8]
@@ -623,6 +625,8 @@ typedef enum ArmOpcode {
     kThumb2Bfc,          /* bfc [11110011011011110] [0] imm3[14-12]
                                   rd[11-8] imm2[7-6] [0] msb[4-0] */
     kThumb2Dmb,          /* dmb [1111001110111111100011110101] option[3-0] */
+    kThumb2LdrPcReln12,  /* ldr rd,[pc,-#imm12] [1111100011011111] rt[15-12]
+                                  imm12[11-0] */
 
     kArmLast,
 } ArmOpcode;
@@ -759,15 +763,17 @@ extern ArmEncodingMap EncodingMap[kArmLast];
 typedef struct ArmLIR {
     LIR generic;
     ArmOpcode opcode;
-    int operands[4];    // [0..3] = [dest, src1, src2, extra]
-    bool isNop;         // LIR is optimized away
-    bool branchInsertSV;// mark for insertion of branch before this instruction,
-                        // used to identify mem ops for self verification mode
-    int age;            // default is 0, set lazily by the optimizer
-    int size;           // 16-bit unit size (1 for thumb, 1 or 2 for thumb2)
-    int aliasInfo;      // For Dalvik register access & litpool disambiguation
-    u8 useMask;         // Resource mask for use
-    u8 defMask;         // Resource mask for def
+    int operands[4];            // [0..3] = [dest, src1, src2, extra]
+    struct {
+        bool isNop:1;           // LIR is optimized away
+        bool insertWrapper:1;   // insert branch to emulate memory accesses
+        unsigned int age:4;     // default is 0, set lazily by the optimizer
+        unsigned int size:3;    // bytes (2 for thumb, 2/4 for thumb2)
+        unsigned int unused:23;
+    } flags;
+    int aliasInfo;              // For Dalvik register & litpool disambiguation
+    u8 useMask;                 // Resource mask for use
+    u8 defMask;                 // Resource mask for def
 } ArmLIR;
 
 /* Init values when a predicted chain is initially assembled */

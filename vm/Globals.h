@@ -29,6 +29,7 @@
 #ifndef _DALVIK_GLOBALS
 #define _DALVIK_GLOBALS
 
+#include <cutils/array.h>
 #include <stdarg.h>
 #include <pthread.h>
 
@@ -50,16 +51,20 @@ typedef struct AssertionControl {
 } AssertionControl;
 
 /*
- * Execution mode, e.g. interpreter vs. JIT.
+ * Register map generation mode.  Only applicable when generateRegisterMaps
+ * is enabled.  (The "disabled" state is not folded into this because
+ * there are callers like dexopt that want to enable/disable without
+ * specifying the configuration details.)
+ *
+ * "TypePrecise" is slower and requires additional storage for the register
+ * maps, but allows type-precise GC.  "LivePrecise" is even slower and
+ * requires additional heap during processing, but allows live-precise GC.
  */
-typedef enum ExecutionMode {
-    kExecutionModeUnknown = 0,
-    kExecutionModeInterpPortable,
-    kExecutionModeInterpFast,
-#if defined(WITH_JIT)
-    kExecutionModeJit,
-#endif
-} ExecutionMode;
+typedef enum {
+    kRegisterMapModeUnknown = 0,
+    kRegisterMapModeTypePrecise,
+    kRegisterMapModeLivePrecise
+} RegisterMapMode;
 
 /*
  * All fields are initialized to zero.
@@ -120,6 +125,9 @@ struct DvmGlobals {
     DexOptimizerMode    dexOptMode;
     DexClassVerifyMode  classVerifyMode;
 
+    bool        generateRegisterMaps;
+    RegisterMapMode     registerMapMode;
+
     bool        monitorVerification;
 
     bool        dexOptForSmp;
@@ -130,7 +138,6 @@ struct DvmGlobals {
     bool        preciseGc;
     bool        preVerify;
     bool        postVerify;
-    bool        generateRegisterMaps;
     bool        concurrentMarkSweep;
     bool        verifyCardTable;
     bool        disableExplicitGc;
@@ -144,15 +151,14 @@ struct DvmGlobals {
      * VM init management.
      */
     bool        initializing;
-    int         initExceptionCount;
     bool        optimizing;
 
     /*
-     * java.lang.System properties set from the command line.
+     * java.lang.System properties set from the command line with -D.
+     * This is effectively a set, where later entries override earlier
+     * ones.
      */
-    int         numProps;
-    int         maxProps;
-    char**      propList;
+    Array*      properties;
 
     /*
      * Where the VM goes to find system classes.
@@ -198,20 +204,44 @@ struct DvmGlobals {
     HashTable*  literalStrings;
 
     /*
+     * Classes constructed directly by the vm.
+     */
+
+    /* the class Class */
+    ClassObject* classJavaLangClass;
+
+    /* synthetic classes representing primitive types */
+    ClassObject* typeVoid;
+    ClassObject* typeBoolean;
+    ClassObject* typeByte;
+    ClassObject* typeShort;
+    ClassObject* typeChar;
+    ClassObject* typeInt;
+    ClassObject* typeLong;
+    ClassObject* typeFloat;
+    ClassObject* typeDouble;
+
+    /* synthetic classes for arrays of primitives */
+    ClassObject* classArrayBoolean;
+    ClassObject* classArrayByte;
+    ClassObject* classArrayShort;
+    ClassObject* classArrayChar;
+    ClassObject* classArrayInt;
+    ClassObject* classArrayLong;
+    ClassObject* classArrayFloat;
+    ClassObject* classArrayDouble;
+
+    /*
      * Quick lookups for popular classes used internally.
      */
-    ClassObject* classJavaLangClass;
     ClassObject* classJavaLangClassArray;
-    ClassObject* classJavaLangError;
+    ClassObject* classJavaLangClassLoader;
     ClassObject* classJavaLangObject;
     ClassObject* classJavaLangObjectArray;
-    ClassObject* classJavaLangRuntimeException;
     ClassObject* classJavaLangString;
     ClassObject* classJavaLangThread;
     ClassObject* classJavaLangVMThread;
     ClassObject* classJavaLangThreadGroup;
-    ClassObject* classJavaLangThrowable;
-    ClassObject* classJavaLangStackOverflowError;
     ClassObject* classJavaLangStackTraceElement;
     ClassObject* classJavaLangStackTraceElementArray;
     ClassObject* classJavaLangAnnotationAnnotationArray;
@@ -224,36 +254,67 @@ struct DvmGlobals {
     ClassObject* classJavaLangReflectMethod;
     ClassObject* classJavaLangReflectMethodArray;
     ClassObject* classJavaLangReflectProxy;
-    ClassObject* classJavaLangExceptionInInitializerError;
-    ClassObject* classJavaLangRefPhantomReference;
-    ClassObject* classJavaLangRefReference;
     ClassObject* classJavaNioReadWriteDirectByteBuffer;
-    ClassObject* classJavaSecurityAccessController;
     ClassObject* classOrgApacheHarmonyLangAnnotationAnnotationFactory;
     ClassObject* classOrgApacheHarmonyLangAnnotationAnnotationMember;
     ClassObject* classOrgApacheHarmonyLangAnnotationAnnotationMemberArray;
+    ClassObject* classOrgApacheHarmonyDalvikDdmcChunk;
+    ClassObject* classOrgApacheHarmonyDalvikDdmcDdmServer;
+    ClassObject* classJavaLangRefFinalizerReference;
 
-    /* synthetic classes for arrays of primitives */
-    ClassObject* classArrayBoolean;
-    ClassObject* classArrayChar;
-    ClassObject* classArrayFloat;
-    ClassObject* classArrayDouble;
-    ClassObject* classArrayByte;
-    ClassObject* classArrayShort;
-    ClassObject* classArrayInt;
-    ClassObject* classArrayLong;
+    /*
+     * classes representing exception types. The names here don't include
+     * packages, just to keep the use sites a bit less verbose. All are
+     * in java.lang, except where noted.
+     */
+    ClassObject* exAbstractMethodError;
+    ClassObject* exArithmeticException;
+    ClassObject* exArrayIndexOutOfBoundsException;
+    ClassObject* exArrayStoreException;
+    ClassObject* exClassCastException;
+    ClassObject* exClassCircularityError;
+    ClassObject* exClassFormatError;
+    ClassObject* exClassNotFoundException;
+    ClassObject* exError;
+    ClassObject* exExceptionInInitializerError;
+    ClassObject* exFileNotFoundException; /* in java.io */
+    ClassObject* exIOException;           /* in java.io */
+    ClassObject* exIllegalAccessError;
+    ClassObject* exIllegalAccessException;
+    ClassObject* exIllegalArgumentException;
+    ClassObject* exIllegalMonitorStateException;
+    ClassObject* exIllegalStateException;
+    ClassObject* exIllegalThreadStateException;
+    ClassObject* exIncompatibleClassChangeError;
+    ClassObject* exInstantiationError;
+    ClassObject* exInstantiationException;
+    ClassObject* exInternalError;
+    ClassObject* exInterruptedException;
+    ClassObject* exLinkageError;
+    ClassObject* exNegativeArraySizeException;
+    ClassObject* exNoClassDefFoundError;
+    ClassObject* exNoSuchFieldError;
+    ClassObject* exNoSuchFieldException;
+    ClassObject* exNoSuchMethodError;
+    ClassObject* exNullPointerException;
+    ClassObject* exOutOfMemoryError;
+    ClassObject* exRuntimeException;
+    ClassObject* exStackOverflowError;
+    ClassObject* exStaleDexCacheError;    /* in dalvik.system */
+    ClassObject* exStringIndexOutOfBoundsException;
+    ClassObject* exThrowable;
+    ClassObject* exTypeNotPresentException;
+    ClassObject* exUnsatisfiedLinkError;
+    ClassObject* exUnsupportedOperationException;
+    ClassObject* exVerifyError;
+    ClassObject* exVirtualMachineError;
 
     /* method offsets - Object */
     int         voffJavaLangObject_equals;
     int         voffJavaLangObject_hashCode;
     int         voffJavaLangObject_toString;
-    int         voffJavaLangObject_finalize;
-
-    /* field offsets - Class */
-    int         offJavaLangClass_pd;
 
     /* field offsets - String */
-    int         javaLangStringReady;    /* 0=not init, 1=ready, -1=initing */
     int         offJavaLangString_value;
     int         offJavaLangString_count;
     int         offJavaLangString_offset;
@@ -265,9 +326,15 @@ struct DvmGlobals {
     int         offJavaLangThread_daemon;
     int         offJavaLangThread_name;
     int         offJavaLangThread_priority;
+    int         offJavaLangThread_uncaughtHandler;
+    int         offJavaLangThread_contextClassLoader;
 
     /* method offsets - Thread */
     int         voffJavaLangThread_run;
+
+    /* field offsets - ThreadGroup */
+    int         offJavaLangThreadGroup_name;
+    int         offJavaLangThreadGroup_parent;
 
     /* field offsets - VMThread */
     int         offJavaLangVMThread_thread;
@@ -283,8 +350,10 @@ struct DvmGlobals {
     /* method offsets - ClassLoader */
     int         voffJavaLangClassLoader_loadClass;
 
+    /* direct method pointers - ClassLoader */
+    Method*     methJavaLangClassLoader_getSystemClassLoader;
+
     /* field offsets - java.lang.reflect.* */
-    int         offJavaLangReflectAccessibleObject_flag;
     int         offJavaLangReflectConstructor_slot;
     int         offJavaLangReflectConstructor_declClass;
     int         offJavaLangReflectField_slot;
@@ -298,17 +367,17 @@ struct DvmGlobals {
     int         offJavaLangRefReference_queueNext;
     int         offJavaLangRefReference_pendingNext;
 
-    /* method pointers - java.lang.ref.Reference */
-    Method*     methJavaLangRefReference_enqueueInternal;
+    /* field offsets - java.lang.ref.FinalizerReference */
+    int offJavaLangRefFinalizerReference_zombie;
 
-    /* method pointers - java.security.AccessController */
-    volatile int javaSecurityAccessControllerReady;
-    Method*     methJavaSecurityAccessController_doPrivileged[4];
+    /* method pointers - java.lang.ref.ReferenceQueue */
+    Method* methJavaLangRefReferenceQueueAdd;
+
+    /* method pointers - java.lang.ref.FinalizerReference */
+    Method* methJavaLangRefFinalizerReferenceAdd;
 
     /* constructor method pointers; no vtable involved, so use Method* */
     Method*     methJavaLangStackTraceElement_init;
-    Method*     methJavaLangExceptionInInitializerError_init;
-    Method*     methJavaLangRefPhantomReference_init;
     Method*     methJavaLangReflectConstructor_init;
     Method*     methJavaLangReflectField_init;
     Method*     methJavaLangReflectMethod_init;
@@ -324,18 +393,27 @@ struct DvmGlobals {
     /* field offsets - java.lang.reflect.Proxy */
     int         offJavaLangReflectProxy_h;
 
-    /* fake native entry point method */
-    Method*     methFakeNativeEntry;
+    /* field offsets - java.io.FileDescriptor */
+    int         offJavaIoFileDescriptor_descriptor;
+
+    /* direct method pointers - dalvik.system.NativeStart */
+    Method*     methDalvikSystemNativeStart_main;
+    Method*     methDalvikSystemNativeStart_run;
 
     /* assorted direct buffer helpers */
     Method*     methJavaNioReadWriteDirectByteBuffer_init;
     int         offJavaNioBuffer_capacity;
     int         offJavaNioBuffer_effectiveDirectAddress;
 
-    /*
-     * VM-synthesized primitive classes, for arrays.
-     */
-    ClassObject* volatile primitiveClass[PRIM_MAX];
+    /* direct method pointers - org.apache.harmony.dalvik.ddmc.DdmServer */
+    Method*     methDalvikDdmcServer_dispatch;
+    Method*     methDalvikDdmcServer_broadcast;
+
+    /* field offsets - org.apache.harmony.dalvik.ddmc.Chunk */
+    int         offDalvikDdmcChunk_type;
+    int         offDalvikDdmcChunk_data;
+    int         offDalvikDdmcChunk_offset;
+    int         offDalvikDdmcChunk_length;
 
     /*
      * Thread list.  This always has at least one element in it (main),
@@ -374,9 +452,9 @@ struct DvmGlobals {
     pthread_mutex_t _threadSuspendLock;
 
     /*
-     * Guards Thread->suspendCount for all threads, and provides the lock
-     * for the condition variable that all suspended threads sleep on
-     * (threadSuspendCountCond).
+     * Guards Thread->interpBreak.ctl.suspendCount for all threads, and
+     * provides the lock for the condition variable that all suspended threads
+     * sleep on (threadSuspendCountCond).
      *
      * This has to be separate from threadListLock because of the way
      * threads put themselves to sleep.
@@ -392,8 +470,8 @@ struct DvmGlobals {
     pthread_cond_t  threadSuspendCountCond;
 
     /*
-     * Sum of all threads' suspendCount fields.  The JIT needs to know if any
-     * thread is suspended.  Guarded by threadSuspendCountLock.
+     * Sum of all threads' suspendCount fields. Guarded by
+     * threadSuspendCountLock.
      */
     int  sumThreadSuspendCount;
 
@@ -430,12 +508,10 @@ struct DvmGlobals {
     /*
      * JNI global reference table.
      */
-#ifdef USE_INDIRECT_REF
     IndirectRefTable jniGlobalRefTable;
-#else
-    ReferenceTable  jniGlobalRefTable;
-#endif
+    IndirectRefTable jniWeakGlobalRefTable;
     pthread_mutex_t jniGlobalRefLock;
+    pthread_mutex_t jniWeakGlobalRefLock;
     int         jniGlobalRefHiMark;
     int         jniGlobalRefLoMark;
 
@@ -508,19 +584,6 @@ struct DvmGlobals {
      */
     LinearAllocHdr* pBootLoaderAlloc;
 
-
-    /*
-     * Heap worker thread.
-     */
-    bool            heapWorkerInitialized;
-    bool            heapWorkerReady;
-    bool            haltHeapWorker;
-    pthread_t       heapWorkerHandle;
-    pthread_mutex_t heapWorkerLock;
-    pthread_cond_t  heapWorkerCond;
-    pthread_cond_t  heapWorkerIdleCond;
-    pthread_mutex_t heapWorkerListLock;
-
     /*
      * Compute some stats on loaded classes.
      */
@@ -535,11 +598,12 @@ struct DvmGlobals {
     /*
      * JDWP debugger support.
      *
-     * Note "debuggerActive" is accessed from mterp, so its storage size and
-     * meaning must not be changed without updating the assembly sources.
+     * Note: Each thread will normally determine whether the debugger is active
+     * for it by referring to its subMode flags.  "debuggerActive" here should be
+     * seen as "debugger is making requests of 1 or more threads".
      */
     bool        debuggerConnected;      /* debugger or DDMS is connected */
-    u1          debuggerActive;         /* debugger is making requests */
+    bool        debuggerActive;         /* debugger is making requests */
     JdwpState*  jdwpState;
 
     /*
@@ -579,20 +643,14 @@ struct DvmGlobals {
     int             allocRecordHead;        /* most-recently-added entry */
     int             allocRecordCount;       /* #of valid entries */
 
-#ifdef WITH_DEADLOCK_PREDICTION
-    /* global lock on history tree accesses */
-    pthread_mutex_t deadlockHistoryLock;
-
-    enum { kDPOff=0, kDPWarn, kDPErr, kDPAbort } deadlockPredictMode;
-#endif
-
     /*
      * When a profiler is enabled, this is incremented.  Distinct profilers
      * include "dmtrace" method tracing, emulator method tracing, and
      * possibly instruction counting.
      *
-     * The purpose of this is to have a single value that the interpreter
-     * can check to see if any profiling activity is enabled.
+     * The purpose of this is to have a single value that shows whether any
+     * profiling is going on.  Individual thread will normally check their
+     * thread-private subMode flags to take any profiling action.
      */
     volatile int activeProfilers;
 
@@ -600,6 +658,8 @@ struct DvmGlobals {
      * State for method-trace profiling.
      */
     MethodTraceState methodTrace;
+    Method*     methodTraceGcMethod;
+    Method*     methodTraceClassPrepMethod;
 
     /*
      * State for emulator tracing.
@@ -666,6 +726,14 @@ extern struct DvmGlobals gDvm;
 
 #if defined(WITH_JIT)
 
+/* Trace profiling modes.  Ordering matters - off states before on states */
+typedef enum TraceProfilingModes {
+    kTraceProfilingDisabled = 0,      // Not profiling
+    kTraceProfilingPeriodicOff = 1,   // Periodic profiling, off phase
+    kTraceProfilingContinuous = 2,    // Always profiling
+    kTraceProfilingPeriodicOn = 3     // Periodic profiling, on phase
+} TraceProfilingModes;
+
 /*
  * Exiting the compiled code w/o chaining will incur overhead to look up the
  * target in the code cache which is extra work only when JIT is enabled. So
@@ -704,8 +772,11 @@ struct DvmJitGlobals {
      * are stored in each thread. */
     struct JitEntry *pJitEntryTable;
 
-    /* Array of profile threshold counters */
+    /* Array of compilation trigger threshold counters */
     unsigned char *pProfTable;
+
+    /* Trace profiling counters */
+    struct JitTraceProfCounters *pJitTraceProfCounters;
 
     /* Copy of pProfTable used for temporarily disabling the Jit */
     unsigned char *pProfTableCopy;
@@ -728,6 +799,9 @@ struct DvmJitGlobals {
     /* JIT Compiler Control */
     bool               haltCompilerThread;
     bool               blockingMode;
+    bool               methodTraceSupport;
+    bool               genSuspendPoll;
+    Thread*            compilerThread;
     pthread_t          compilerHandle;
     pthread_mutex_t    compilerLock;
     pthread_mutex_t    compilerICPatchLock;
@@ -745,6 +819,20 @@ struct DvmJitGlobals {
 
     /* Compiled code cache */
     void* codeCache;
+
+    /*
+     * This is used to store the base address of an in-flight compilation whose
+     * class object pointers have been calculated to populate literal pool.
+     * Once the compiler thread has changed its status to VM_WAIT, we cannot
+     * guarantee whether GC has happened before the code address has been
+     * installed to the JIT table. Because of that, this field can only
+     * been cleared/overwritten by the compiler thread if it is in the
+     * THREAD_RUNNING state or in a safe point.
+     */
+    void *inflightBaseAddr;
+
+    /* Translation cache version (protected by compilerLock */
+    int cacheVersion;
 
     /* Bytes used by the code templates */
     unsigned int templateSize;
@@ -785,8 +873,14 @@ struct DvmJitGlobals {
     /* Flag to dump all compiled code */
     bool printMe;
 
-    /* Flag to count trace execution */
-    bool profile;
+    /* Per-process debug flag toggled when receiving a SIGUSR2 */
+    bool receivedSIGUSR2;
+
+    /* Trace profiling mode */
+    TraceProfilingModes profileMode;
+
+    /* Periodic trace profiling countdown timer */
+    int profileCountdown;
 
     /* Vector to disable selected optimizations */
     int disableOpt;
@@ -840,8 +934,12 @@ struct DvmJitGlobals {
     int                icPatchQueued;
     int                icPatchRejected;
     int                icPatchDropped;
-    u8                 jitTime;
     int                codeCachePatches;
+    int                numCompilerThreadBlockGC;
+    u8                 jitTime;
+    u8                 compilerThreadBlockGCStart;
+    u8                 compilerThreadBlockGCTime;
+    u8                 maxCompilerThreadBlockGCTime;
 #endif
 
     /* Place arrays at the end to ease the display in gdb sessions */

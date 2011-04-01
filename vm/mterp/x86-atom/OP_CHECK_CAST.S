@@ -73,6 +73,13 @@
     */
 
     EXPORT_PC                           # we will throw an exception
+#error BIT ROT!!!
+    /*
+     * TODO: Code here needs to call dvmThrowClassCastException with two
+     * arguments.
+     */
+#if 0
+    /* old obsolete code that called dvmThrowExceptionWithClassMessage */
     movl        $$.LstrClassCastExceptionPtr, -8(%esp) # push parameter message
     movl        offObject_clazz(rINST), rINST # rINST<- obj->clazz
     movl        offClassObject_descriptor(rINST), rINST # rINST<- obj->clazz->descriptor
@@ -81,6 +88,7 @@
     call        dvmThrowExceptionWithClassMessage # call: (const char* exceptionDescriptor,
                                                   #       const char* messageDescriptor, Object* cause)
                                                   # return: void
+#endif
     lea         8(%esp), %esp
     jmp         common_exceptionThrown
 
@@ -108,6 +116,3 @@
     je          common_exceptionThrown  # handle excpetion
     movl        %eax, %ecx              # %ecx<- resolved class
     jmp         .L${opcode}_resolved
-
-.LstrClassCastExceptionPtr:
-.asciz      "Ljava/lang/ClassCastException;"

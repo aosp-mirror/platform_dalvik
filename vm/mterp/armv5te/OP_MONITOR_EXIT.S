@@ -14,7 +14,7 @@
     GET_VREG(r1, r2)                    @ r1<- vAA (object)
     cmp     r1, #0                      @ null object?
     beq     1f                          @ yes
-    ldr     r0, [rGLUE, #offGlue_self]  @ r0<- glue->self
+    mov     r0, rSELF                   @ r0<- self
     bl      dvmUnlockObject             @ r0<- success for unlock(self, obj)
     cmp     r0, #0                      @ failed?
     FETCH_ADVANCE_INST(1)               @ before throw: advance rPC, load rINST

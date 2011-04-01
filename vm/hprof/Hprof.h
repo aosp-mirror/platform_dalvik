@@ -31,9 +31,6 @@ typedef u4 hprof_id;
 typedef hprof_id hprof_string_id;
 typedef hprof_id hprof_object_id;
 typedef hprof_id hprof_class_object_id;
-#if WITH_HPROF_STACK
-typedef hprof_id hprof_stack_frame_id;
-#endif
 
 typedef enum hprof_basic_type {
     hprof_basic_object = 2,
@@ -87,12 +84,12 @@ typedef enum hprof_heap_tag_t {
     /* Android */
     HPROF_HEAP_DUMP_INFO = 0xfe,
     HPROF_ROOT_INTERNED_STRING = 0x89,
-    HPROF_ROOT_FINALIZING = 0x8a,
+    HPROF_ROOT_FINALIZING = 0x8a,  /* obsolete */
     HPROF_ROOT_DEBUGGER = 0x8b,
-    HPROF_ROOT_REFERENCE_CLEANUP = 0x8c,
+    HPROF_ROOT_REFERENCE_CLEANUP = 0x8c,  /* obsolete */
     HPROF_ROOT_VM_INTERNAL = 0x8d,
     HPROF_ROOT_JNI_MONITOR = 0x8e,
-    HPROF_UNREACHABLE = 0x90,  /* deprecated */
+    HPROF_UNREACHABLE = 0x90,  /* obsolete */
     HPROF_PRIMITIVE_ARRAY_NODATA_DUMP = 0xc3,
 } hprof_heap_tag_t;
 
@@ -216,30 +213,6 @@ int hprofAddU8ListToRecord(hprof_record_t *rec,
 #define hprofAddIdToRecord(rec, id) hprofAddU4ToRecord((rec), (u4)(id))
 #define hprofAddIdListToRecord(rec, values, numValues) \
             hprofAddU4ListToRecord((rec), (const u4 *)(values), (numValues))
-
-#if WITH_HPROF_STACK
-
-/*
- * HprofStack.c functions
- */
-
-void hprofFillInStackTrace(void *objectPtr);
-
-int hprofDumpStacks(hprof_context_t *ctx);
-
-int hprofStartup_Stack(void);
-int hprofShutdown_Stack(void);
-
-/*
- * HprofStackFrame.c functions
- */
-
-int hprofDumpStackFrames(hprof_context_t *ctx);
-
-int hprofStartup_StackFrame(void);
-int hprofShutdown_StackFrame(void);
-
-#endif
 
 /*
  * Hprof.c functions

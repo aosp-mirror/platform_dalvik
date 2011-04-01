@@ -13,9 +13,7 @@ development of platform-specific code one opcode at a time.
 
 The original all-in-one-function C version still exists as the "portable"
 interpreter, and is generated using the same sources and tools that
-generate the platform-specific versions.  One form of the portable
-interpreter includes support for profiling and debugging features, and
-is included even if we have a platform-optimized implementation.
+generate the platform-specific versions.
 
 Every configuration has a "config-*" file that controls how the sources
 are generated.  The sources are written into the "out" directory, where
@@ -36,13 +34,17 @@ and testing, and to provide a way to use architecture-specific versions of
 some operations (e.g. making use of PLD instructions on ARMv6 or avoiding
 CLZ on ARMv4T).
 
-Two basic assumptions are made about the operation of the interpreter:
+Depending on architecture, instruction-to-instruction transitions may
+be done as either computed goto or jump table.  In the computed goto
+variant, each instruction handler is allocated a fixed-size area (e.g. 64
+byte).  "Overflow" code is tacked on to the end.  In the jump table variant,
+all of the instructions handlers are contiguous and may be of any size.
+The interpreter style is selected via the "handler-size" command (see below).
 
- - The assembly version uses fixed-size areas for each instruction
-   (e.g. 64 bytes).  "Overflow" code is tacked on to the end.
- - When a C implementation is desired, the assembly version packs all
-   local state into a "glue" struct, and passes that into the C function.
-   Updates to the state are pulled out of the "glue" on return.
+When a C implementation for an instruction is desired, the assembly
+version packs all local state into the Thread structure and passes
+that to the C function.  Updates to the state are pulled out of
+"Thread" on return.
 
 The "arch" value should indicate an architecture family with common
 programming characteristics, so "armv5te" would work for all ARMv5TE CPUs,
@@ -58,10 +60,25 @@ may be blank, hold a comment (line starts with '#'), or be a command.
 
 The commands are:
 
+  handler-style <computed-goto|jump-table|all-c>
+
+    Specify which style of interpreter to generate.  In computed-goto,
+    each handler is allocated a fixed region, allowing transitions to
+    be done via table-start-address + (opcode * handler-size). With
+    jump-table style, handlers may be of any length, and the generated
+    table is an array of pointers to the handlers. The "all-c" style is
+    for the portable interpreter (which is implemented completely in C).
+    [Note: all-c is distinct from an "allstubs" configuration.  In both
+    configurations, all handlers are the C versions, but the allstubs
+    configuration uses the assembly outer loop and assembly stubs to
+    transition to the handlers].  This command is required, and must be
+    the first command in the config file.
+
   handler-size <bytes>
 
-    Specify the size of the assembly region, in bytes.  On most platforms
-    this will need to be a power of 2.
+    Specify the size of the fixed region, in bytes.  On most platforms
+    this will need to be a power of 2.  For jump-table and all-c
+    implementations, this command is ignored.
 
   import <filename>
 
@@ -71,8 +88,16 @@ The commands are:
 
   asm-stub <filename>
 
-    The named file will be included whenever an assembly "stub" is needed.
-    Text substitution is performed on the opcode name.
+    The named file will be included whenever an assembly "stub" is needed
+    to transfer control to a handler written in C.  Text substitution is
+    performed on the opcode name.  This command is not applicable to
+    to "all-c" configurations.
+
+  asm-alt-stub <filename>
+
+    When present, this command will cause the generation of an alternate
+    set of entry points (for computed-goto interpreters) or an alternate
+    jump table (for jump-table interpreters).
 
   op-start <directory>
 
@@ -88,15 +113,23 @@ The commands are:
     will load from "armv5te/OP_NOP.S".  A substitution dictionary will be
     applied (see below).
 
+  alt <opcode> <directory>
+
+    Can only appear after "op-start" and before "op-end".  Similar to the
+    "op" command above, but denotes a source file to override the entry
+    in the alternate handler table.  The opcode definition will come from
+    the specified file, e.g. "alt OP_NOP armv5te" will load from
+    "armv5te/ALT_OP_NOP.S".  A substitution dictionary will be applied
+    (see below).
+
   op-end
 
     Indicates the end of the opcode list.  All kNumPackedOpcodes
     opcodes are emitted when this is seen, followed by any code that
     didn't fit inside the fixed-size instruction handler space.
 
-
-The order of "op" directives is not significant; the generation tool will
-extract ordering info from the VM sources.
+The order of "op" and "alt" directives are not significant; the generation
+tool will extract ordering info from the VM sources.
 
 Typically the form in which most opcodes currently exist is used in
 the "op-start" directive.  For a new port you would start with "c",
@@ -160,6 +193,7 @@ Some generator operations are available.
     Identifies the split between the main portion of the instruction
     handler (which must fit in "handler-size" bytes) and the "sister"
     code, which is appended to the end of the instruction handler block.
+    In jump table implementations, %break is ignored.
 
   %verify "message"
 
@@ -214,3 +248,21 @@ of Python installed.
 The ultimate goal is to have the build system generate the necessary
 output files without requiring this separate step, but we're not yet
 ready to require Python in the build.
+
+==== Interpreter Control ====
+
+To handle thread suspension, debugging, profiling, JIT compilation, etc.,
+there needs to be a way to break out of interpreter execution.  To support
+this, there is an "interpBreak" record in each thread's private storage.
+If interpBreak.ctl.breakFlags is non-zero, the interpreter main loop must
+be interrupted and control sent to dvmCheckBefore(), which will figure out
+what actions are needed and carry them out.
+
+In the portable interpreter, this requirement is implemented as a simple
+polling test in the main loop.  breakFlags is checked before the interpretation
+of each instruction.  Though simple, this is costly.  For mterp interpreters,
+we use a mechanism that swaps out the handler base register with a pointer
+to an alternate, or break-out, set of handlers.  Note that interpretation
+interruption may be slightly delayed.  Each thread has its own copy of the
+handler base (register rIBASE), which it will refresh on taken backards
+branches, exception throws and returns.

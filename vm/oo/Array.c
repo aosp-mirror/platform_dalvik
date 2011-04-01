@@ -20,15 +20,9 @@
 
 #include <stdlib.h>
 #include <stddef.h>
-
-#if WITH_HPROF_STACK
-#include "hprof/Hprof.h"
-#endif
+#include <limits.h>
 
 static ClassObject* createArrayClass(const char* descriptor, Object* loader);
-static ClassObject* createPrimitiveClass(int idx);
-
-static const char gPrimLetter[] = PRIM_TYPE_TO_LETTER;
 
 /*
  * Allocate space for a new array object.  This is the lowest-level array
@@ -41,36 +35,30 @@ static const char gPrimLetter[] = PRIM_TYPE_TO_LETTER;
 ArrayObject* dvmAllocArray(ClassObject* arrayClass, size_t length,
     size_t elemWidth, int allocFlags)
 {
-    ArrayObject* newArray;
-    size_t size;
-
+    assert(arrayClass != NULL);
+    assert(arrayClass->descriptor != NULL);
     assert(arrayClass->descriptor[0] == '[');
-
-    if (length > 0x0fffffff) {
-        /* too large and (length * elemWidth) will overflow 32 bits */
-        LOGE("Rejecting allocation of %u-element array\n", length);
-        dvmThrowBadAllocException("array size too large");
+    assert(length <= 0x7fffffff);
+    assert(elemWidth > 0);
+    assert(elemWidth <= 8);
+    assert((elemWidth & (elemWidth - 1)) == 0);
+    size_t elementShift = sizeof(size_t) * CHAR_BIT - 1 - CLZ(elemWidth);
+    size_t elementSize = length << elementShift;
+    size_t headerSize = offsetof(ArrayObject, contents);
+    size_t totalSize = elementSize + headerSize;
+    if (elementSize >> elementShift != length || totalSize < elementSize) {
+        char *descriptor = dvmHumanReadableDescriptor(arrayClass->descriptor);
+        dvmThrowExceptionFmt(gDvm.exOutOfMemoryError,
+                "%s of length %zd exceeds the VM limit", descriptor, length);
+        free(descriptor);
         return NULL;
     }
-
-    size = offsetof(ArrayObject, contents);
-    size += length * elemWidth;
-
-    /* Note that we assume that the Array class does not
-     * override finalize().
-     */
-    newArray = dvmMalloc(size, allocFlags);
+    ArrayObject* newArray = (ArrayObject*)dvmMalloc(totalSize, allocFlags);
     if (newArray != NULL) {
         DVM_OBJECT_INIT(&newArray->obj, arrayClass);
         newArray->length = length;
-        LOGVV("AllocArray: %s [%d] (%d)\n",
-            arrayClass->descriptor, (int) length, (int) size);
-#if WITH_HPROF_STACK
-        hprofFillInStackTrace(&newArray->obj);
-#endif
-        dvmTrackAllocation(arrayClass, size);
+        dvmTrackAllocation(arrayClass, totalSize);
     }
-    /* the caller must call dvmReleaseTrackedAlloc */
     return newArray;
 }
 
@@ -149,67 +137,53 @@ ArrayObject* dvmAllocObjectArray(ClassObject* elemClassObj, size_t length,
  * Create a new array that holds primitive types.
  *
  * "type" is the primitive type letter, e.g. 'I' for int or 'J' for long.
- * If the array class doesn't exist, it will be created.
  */
 ArrayObject* dvmAllocPrimitiveArray(char type, size_t length, int allocFlags)
 {
     ArrayObject* newArray;
-    ClassObject** pTypeClass;
+    ClassObject* arrayClass;
     int width;
 
     switch (type) {
     case 'I':
-        pTypeClass = &gDvm.classArrayInt;
+        arrayClass = gDvm.classArrayInt;
         width = 4;
         break;
     case 'C':
-        pTypeClass = &gDvm.classArrayChar;
+        arrayClass = gDvm.classArrayChar;
         width = 2;
         break;
     case 'B':
-        pTypeClass = &gDvm.classArrayByte;
+        arrayClass = gDvm.classArrayByte;
         width = 1;
         break;
     case 'Z':
-        pTypeClass = &gDvm.classArrayBoolean;
+        arrayClass = gDvm.classArrayBoolean;
         width = 1; /* special-case this? */
         break;
     case 'F':
-        pTypeClass = &gDvm.classArrayFloat;
+        arrayClass = gDvm.classArrayFloat;
         width = 4;
         break;
     case 'D':
-        pTypeClass = &gDvm.classArrayDouble;
+        arrayClass = gDvm.classArrayDouble;
         width = 8;
         break;
     case 'S':
-        pTypeClass = &gDvm.classArrayShort;
+        arrayClass = gDvm.classArrayShort;
         width = 2;
         break;
     case 'J':
-        pTypeClass = &gDvm.classArrayLong;
+        arrayClass = gDvm.classArrayLong;
         width = 8;
         break;
     default:
-        LOGE("Unknown type '%c'\n", type);
-        assert(false);
-        return NULL;
+        LOGE("Unknown primitive type '%c'\n", type);
+        dvmAbort();
+        return NULL; // Keeps the compiler happy.
     }
 
-    if (*pTypeClass == NULL) {
-        char typeClassName[3] = "[x";
-
-        typeClassName[1] = type;
-
-        *pTypeClass = dvmFindArrayClass(typeClassName, NULL);
-        if (*pTypeClass == NULL) {
-            LOGE("ERROR: failed to generate array class for '%s'\n",
-                typeClassName);
-            return NULL;
-        }
-    }
-
-    newArray = dvmAllocArray(*pTypeClass, length, width, allocFlags);
+    newArray = dvmAllocArray(arrayClass, length, width, allocFlags);
 
     /* the caller must dvmReleaseTrackedAlloc if allocFlags==ALLOC_DEFAULT */
     return newArray;
@@ -241,7 +215,7 @@ ArrayObject* dvmAllocMultiArray(ClassObject* arrayClass, int curDim,
             LOGVV("  end: array class (prim) is '%s'\n",
                 arrayClass->descriptor);
             newArray = dvmAllocPrimitiveArray(
-                    gPrimLetter[arrayClass->elementClass->primitiveType],
+                    dexGetPrimitiveTypeDescriptorChar(arrayClass->elementClass->primitiveType),
                     *dimensions, ALLOC_DEFAULT);
         }
     } else {
@@ -437,9 +411,6 @@ static ClassObject* createArrayClass(const char* descriptor, Object* loader)
                       (Object *)elementClass->classLoader);
     newClass->arrayDim = arrayDim;
     newClass->status = CLASS_INITIALIZED;
-#if WITH_HPROF_STACK
-    hprofFillInStackTrace(newClass);
-#endif
 
     /* don't need to set newClass->objectSize */
 
@@ -473,7 +444,7 @@ static ClassObject* createArrayClass(const char* descriptor, Object* loader)
         LOGE("Unable to create array class '%s': missing interfaces\n",
             descriptor);
         dvmFreeClassInnards(newClass);
-        dvmThrowException("Ljava/lang/InternalError;", "missing array ifaces");
+        dvmThrowInternalError("missing array ifaces");
         dvmReleaseTrackedAlloc((Object*) newClass, NULL);
         return NULL;
     }
@@ -543,119 +514,6 @@ static ClassObject* createArrayClass(const char* descriptor, Object* loader)
 }
 
 /*
- * Get a class we generated for the primitive types.
- *
- * These correspond to e.g. Integer.TYPE, and are used as the element
- * class in arrays of primitives.
- *
- * "type" should be 'I', 'J', 'Z', etc.
- *
- * Returns NULL if the type doesn't correspond to a known primitive type.
- */
-ClassObject* dvmFindPrimitiveClass(char type)
-{
-    int idx;
-
-    switch (type) {
-    case 'Z':
-        idx = PRIM_BOOLEAN;
-        break;
-    case 'C':
-        idx = PRIM_CHAR;
-        break;
-    case 'F':
-        idx = PRIM_FLOAT;
-        break;
-    case 'D':
-        idx = PRIM_DOUBLE;
-        break;
-    case 'B':
-        idx = PRIM_BYTE;
-        break;
-    case 'S':
-        idx = PRIM_SHORT;
-        break;
-    case 'I':
-        idx = PRIM_INT;
-        break;
-    case 'J':
-        idx = PRIM_LONG;
-        break;
-    case 'V':
-        idx = PRIM_VOID;
-        break;
-    default:
-        LOGW("Unknown primitive type '%c'\n", type);
-        return NULL;
-    }
-
-    /*
-     * Create the primitive class if it hasn't already been, and add it
-     * to the table.
-     */
-    if (gDvm.primitiveClass[idx] == NULL) {
-        ClassObject* primClass = createPrimitiveClass(idx);
-        dvmReleaseTrackedAlloc((Object*) primClass, NULL);
-
-        if (android_atomic_release_cas(0, (int) primClass,
-                (int*) &gDvm.primitiveClass[idx]) != 0)
-        {
-            /*
-             * Looks like somebody beat us to it.  Free up the one we
-             * just created and use the other one.
-             */
-            dvmFreeClassInnards(primClass);
-        }
-    }
-
-    return gDvm.primitiveClass[idx];
-}
-
-/*
- * Synthesize a primitive class.
- *
- * Just creates the class and returns it (does not add it to the class list).
- */
-static ClassObject* createPrimitiveClass(int idx)
-{
-    ClassObject* newClass;
-    static const char* kClassDescriptors[PRIM_MAX] = {
-        "Z", "C", "F", "D", "B", "S", "I", "J", "V"
-    };
-
-    assert(gDvm.classJavaLangClass != NULL);
-    assert(idx >= 0 && idx < PRIM_MAX);
-
-    /*
-     * Fill out a few fields in the ClassObject.
-     *
-     * Note that primitive classes do not sub-class java/lang/Object.  This
-     * matters for "instanceof" checks.  Also, we assume that the primitive
-     * class does not override finalize().
-     */
-    newClass = (ClassObject*) dvmMalloc(sizeof(*newClass), ALLOC_DEFAULT);
-    if (newClass == NULL)
-        return NULL;
-    DVM_OBJECT_INIT(&newClass->obj, gDvm.classJavaLangClass);
-    dvmSetClassSerialNumber(newClass);
-    newClass->accessFlags = ACC_PUBLIC | ACC_FINAL | ACC_ABSTRACT;
-    newClass->primitiveType = idx;
-    newClass->descriptorAlloc = NULL;
-    newClass->descriptor = kClassDescriptors[idx];
-    //newClass->super = gDvm.classJavaLangObject;
-    newClass->status = CLASS_INITIALIZED;
-#if WITH_HPROF_STACK
-    hprofFillInStackTrace(newClass);
-#endif
-
-    /* don't need to set newClass->objectSize */
-
-    LOGVV("Created primitive class '%s'\n", kClassDescriptors[idx]);
-
-    return newClass;
-}
-
-/*
  * Copy the entire contents of one array of objects to another.  If the copy
  * is impossible because of a type clash, we fail and return "false".
  */
@@ -719,7 +577,7 @@ bool dvmUnboxObjectArray(ArrayObject* dstArray, const ArrayObject* srcArray,
         case PRIM_BOOLEAN:
         case PRIM_BYTE:
             {
-                u1* tmp = dst;
+                u1* tmp = (u1*)dst;
                 *tmp++ = result.b;
                 dst = tmp;
             }
@@ -727,7 +585,7 @@ bool dvmUnboxObjectArray(ArrayObject* dstArray, const ArrayObject* srcArray,
         case PRIM_CHAR:
         case PRIM_SHORT:
             {
-                u2* tmp = dst;
+                u2* tmp = (u2*)dst;
                 *tmp++ = result.s;
                 dst = tmp;
             }
@@ -735,7 +593,7 @@ bool dvmUnboxObjectArray(ArrayObject* dstArray, const ArrayObject* srcArray,
         case PRIM_FLOAT:
         case PRIM_INT:
             {
-                u4* tmp = dst;
+                u4* tmp = (u4*)dst;
                 *tmp++ = result.i;
                 dst = tmp;
             }
@@ -743,7 +601,7 @@ bool dvmUnboxObjectArray(ArrayObject* dstArray, const ArrayObject* srcArray,
         case PRIM_DOUBLE:
         case PRIM_LONG:
             {
-                u8* tmp = dst;
+                u8* tmp = (u8*)dst;
                 *tmp++ = result.j;
                 dst = tmp;
             }

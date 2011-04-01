@@ -36,10 +36,6 @@ void dvmProfilingShutdown(void);
  * most of this per-thread.
  */
 typedef struct MethodTraceState {
-    /* these are set during VM init */
-    Method* gcMethod;
-    Method* classPrepMethod;
-
     /* active state */
     pthread_mutex_t startStopLock;
     pthread_cond_t  threadExitCond;
@@ -111,32 +107,26 @@ enum {
 /*
  * Call these when a method enters or exits.
  */
-#define TRACE_METHOD_ENTER(_self, _method)                                 \
+#define TRACE_METHOD_ENTER(_self, _method)                                  \
     do {                                                                    \
-        if (gDvm.activeProfilers != 0) {                                    \
-            if (gDvm.methodTrace.traceEnabled)                              \
-                dvmMethodTraceAdd(_self, _method, METHOD_TRACE_ENTER);      \
-            if (gDvm.emulatorTraceEnableCount != 0)                         \
-                dvmEmitEmulatorTrace(_method, METHOD_TRACE_ENTER);          \
-        }                                                                   \
+        if (_self->interpBreak.ctl.subMode & kSubModeMethodTrace)           \
+            dvmMethodTraceAdd(_self, _method, METHOD_TRACE_ENTER);          \
+        if (_self->interpBreak.ctl.subMode & kSubModeEmulatorTrace)         \
+            dvmEmitEmulatorTrace(_method, METHOD_TRACE_ENTER);              \
     } while(0);
-#define TRACE_METHOD_EXIT(_self, _method)                                  \
+#define TRACE_METHOD_EXIT(_self, _method)                                   \
     do {                                                                    \
-        if (gDvm.activeProfilers != 0) {                                    \
-            if (gDvm.methodTrace.traceEnabled)                              \
-                dvmMethodTraceAdd(_self, _method, METHOD_TRACE_EXIT);       \
-            if (gDvm.emulatorTraceEnableCount != 0)                         \
-                dvmEmitEmulatorTrace(_method, METHOD_TRACE_EXIT);           \
-        }                                                                   \
+        if (_self->interpBreak.ctl.subMode & kSubModeMethodTrace)           \
+            dvmMethodTraceAdd(_self, _method, METHOD_TRACE_EXIT);           \
+        if (_self->interpBreak.ctl.subMode & kSubModeEmulatorTrace)         \
+            dvmEmitEmulatorTrace(_method, METHOD_TRACE_EXIT);               \
     } while(0);
-#define TRACE_METHOD_UNROLL(_self, _method)                                \
+#define TRACE_METHOD_UNROLL(_self, _method)                                 \
     do {                                                                    \
-        if (gDvm.activeProfilers != 0) {                                    \
-            if (gDvm.methodTrace.traceEnabled)                              \
-                dvmMethodTraceAdd(_self, _method, METHOD_TRACE_UNROLL);     \
-            if (gDvm.emulatorTraceEnableCount != 0)                         \
-                dvmEmitEmulatorTrace(_method, METHOD_TRACE_UNROLL);         \
-        }                                                                   \
+        if (_self->interpBreak.ctl.subMode & kSubModeMethodTrace)           \
+            dvmMethodTraceAdd(_self, _method, METHOD_TRACE_UNROLL);         \
+        if (_self->interpBreak.ctl.subMode & kSubModeEmulatorTrace)         \
+            dvmEmitEmulatorTrace(_method, METHOD_TRACE_UNROLL);             \
     } while(0);
 
 void dvmMethodTraceAdd(struct Thread* self, const Method* method, int action);
@@ -147,14 +137,9 @@ void dvmMethodTraceGCEnd(void);
 void dvmMethodTraceClassPrepBegin(void);
 void dvmMethodTraceClassPrepEnd(void);
 
-#if defined(WITH_INLINE_PROFILING)
-struct InterpState;     // extern
-void dvmFastMethodTraceEnter(const Method* method,
-                             const struct InterpState* interpState);
-void dvmFastJavaMethodTraceExit(const struct InterpState* interpState);
-void dvmFastNativeMethodTraceExit(const Method*method,
-                                  const struct InterpState* interpState);
-#endif
+void dvmFastMethodTraceEnter(const Method* method, struct Thread* self);
+void dvmFastMethodTraceExit(struct Thread* self);
+void dvmFastNativeMethodTraceExit(const Method* method, struct Thread* self);
 
 /*
  * Start/stop alloc counting.

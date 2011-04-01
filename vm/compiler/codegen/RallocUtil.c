@@ -364,10 +364,6 @@ extern void dvmCompilerFreeTemp(CompilationUnit *cUnit, int reg)
     dvmCompilerAbort(cUnit);
 }
 
-/*
- * FIXME - this needs to also check the preserved pool once we start
- * start using preserved registers.
- */
 extern RegisterInfo *dvmCompilerIsLive(CompilationUnit *cUnit, int reg)
 {
     RegisterInfo *p = cUnit->regPool->coreTemps;
@@ -452,7 +448,7 @@ static void nullifyRange(CompilationUnit *cUnit, LIR *start, LIR *finish,
         LIR *p;
         assert(sReg1 == sReg2);
         for (p = start; ;p = p->next) {
-            ((ArmLIR *)p)->isNop = true;
+            ((ArmLIR *)p)->flags.isNop = true;
             if (p == finish)
                 break;
         }

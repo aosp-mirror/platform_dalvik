@@ -203,7 +203,7 @@ static bool genInlineSqrt(CompilationUnit *cUnit, MIR *mir)
     label->defMask = ENCODE_ALL;
     branch->generic.target = (LIR *)label;
     storeValueWide(cUnit, rlDest, rlResult);
-    return true;
+    return false;
 }
 
 static bool genCmpFP(CompilationUnit *cUnit, MIR *mir, RegLocation rlDest,
@@ -251,11 +251,16 @@ static bool genCmpFP(CompilationUnit *cUnit, MIR *mir, RegLocation rlDest,
     }
     assert(!FPREG(rlResult.lowReg));
     newLIR0(cUnit, kThumb2Fmstat);
+
     genIT(cUnit, (defaultResult == -1) ? kArmCondGt : kArmCondMi, "");
     newLIR2(cUnit, kThumb2MovImmShift, rlResult.lowReg,
             modifiedImmediate(-defaultResult)); // Must not alter ccodes
+    genBarrier(cUnit);
+
     genIT(cUnit, kArmCondEq, "");
     loadConstant(cUnit, rlResult.lowReg, 0);
+    genBarrier(cUnit);
+
     storeValue(cUnit, rlDest, rlResult);
     return false;
 }

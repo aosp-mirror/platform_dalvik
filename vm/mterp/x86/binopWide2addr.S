@@ -9,6 +9,6 @@
     andb      $$0xF,rINSTbl             # rINST<- A
     $instr1         # example: addl   %eax,(rFP,rINST,4)
     $instr2         # example: adcl   %ecx,4(rFP,rINST,4)
-    FETCH_INST_OPCODE 1 %edx
+    FETCH_INST_OPCODE 1 %ecx
     ADVANCE_PC 1
-    GOTO_NEXT_R %edx
+    GOTO_NEXT_R %ecx

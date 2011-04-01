@@ -51,7 +51,7 @@ static int openAlternateSuffix(const char *fileName, const char *suffix,
     size_t bufLen = fileNameLen + suffixLen + 1;
     int fd = -1;
 
-    buf = malloc(bufLen);
+    buf = (char*)malloc(bufLen);
     if (buf == NULL) {
         errno = ENOMEM;
         return -1;

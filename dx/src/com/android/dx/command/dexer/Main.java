@@ -17,10 +17,13 @@
 package com.android.dx.command.dexer;
 
 import com.android.dx.Version;
-import com.android.dx.cf.iface.ParseException;
+import com.android.dx.cf.code.SimException;
 import com.android.dx.cf.direct.ClassPathOpener;
+import com.android.dx.cf.iface.ParseException;
 import com.android.dx.command.DxConsole;
 import com.android.dx.command.UsageException;
+import com.android.dx.dex.DexFormat;
+import com.android.dx.dex.DexOptions;
 import com.android.dx.dex.cf.CfOptions;
 import com.android.dx.dex.cf.CfTranslator;
 import com.android.dx.dex.cf.CodeStatistics;
@@ -28,21 +31,26 @@ import com.android.dx.dex.code.PositionList;
 import com.android.dx.dex.file.ClassDefItem;
 import com.android.dx.dex.file.DexFile;
 import com.android.dx.dex.file.EncodedMethod;
+import com.android.dx.io.DexBuffer;
+import com.android.dx.merge.CollisionPolicy;
+import com.android.dx.merge.DexMerger;
 import com.android.dx.rop.annotation.Annotation;
 import com.android.dx.rop.annotation.Annotations;
 import com.android.dx.rop.annotation.AnnotationsList;
 import com.android.dx.rop.cst.CstNat;
 import com.android.dx.rop.cst.CstUtf8;
-
+import com.android.dx.util.FileUtils;
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
-import java.util.Arrays;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.ExecutorService;
@@ -95,12 +103,6 @@ public class Main {
         "lead to pain, suffering, grief, and lamentation.\n";
 
     /**
-     * {@code non-null;} name for the {@code .dex} file that goes into
-     * {@code .jar} files
-     */
-    private static final String DEX_IN_JAR_NAME = "classes.dex";
-
-    /**
      * {@code non-null;} name of the standard manifest file in {@code .jar}
      * files
      */
@@ -120,8 +122,8 @@ public class Main {
      */
     private static final String[] JAVAX_CORE = {
         "accessibility", "crypto", "imageio", "management", "naming", "net",
-        "print", "rmi", "security", "sound", "sql", "swing", "transaction",
-        "xml"
+        "print", "rmi", "security", "sip", "sound", "sql", "swing",
+        "transaction", "xml"
     };
 
     /** number of warnings during processing */
@@ -142,11 +144,17 @@ public class Main {
      */
     private static TreeMap<String, byte[]> outputResources;
 
+    /** Library .dex files to merge into the output .dex. */
+    private static final List<byte[]> libraryDexBuffers = new ArrayList<byte[]>();
+
     /** thread pool object used for multi-threaded file processing */
     private static ExecutorService threadPool;
 
     /** true if any files are successfully processed */
     private static boolean anyFilesProcessed;
+
+    /** class files older than this must be defined in the target dex file. */
+    private static long minimumFileAge = 0;
 
     /**
      * This class is uninstantiable.
@@ -159,7 +167,7 @@ public class Main {
      * Run and exit if something unexpected happened.
      * @param argArray the command line arguments
      */
-    public static void main(String[] argArray) {
+    public static void main(String[] argArray) throws IOException {
         Arguments arguments = new Arguments();
         arguments.parse(argArray);
 
@@ -174,23 +182,51 @@ public class Main {
      * @param arguments the data + parameters for the conversion
      * @return 0 if success > 0 otherwise.
      */
-    public static int run(Arguments arguments) {
+    public static int run(Arguments arguments) throws IOException {
         // Reset the error/warning count to start fresh.
         warnings = 0;
         errors = 0;
 
         args = arguments;
-        args.makeCfOptions();
+        args.makeOptionsObjects();
+
+        File incrementalOutFile = null;
+        if (args.incremental) {
+            if (args.outName == null) {
+                System.err.println(
+                        "error: no incremental output name specified");
+                return -1;
+            }
+            incrementalOutFile = new File(args.outName);
+            if (incrementalOutFile.exists()) {
+                minimumFileAge = incrementalOutFile.lastModified();
+            }
+        }
 
         if (!processAllFiles()) {
             return 1;
         }
 
-        byte[] outArray = writeDex();
-
-        if (outArray == null) {
-            return 2;
+        if (args.incremental && !anyFilesProcessed) {
+            return 0; // this was a no-op incremental build
         }
+
+        // this array is null if no classes were defined
+        byte[] outArray = null;
+
+        if (!outputDex.isEmpty()) {
+            outArray = writeDex();
+
+            if (outArray == null) {
+                return 2;
+            }
+        }
+
+        if (args.incremental) {
+            outArray = mergeIncremental(outArray, incrementalOutFile);
+        }
+
+        outArray = mergeLibraryDexBuffers(outArray);
 
         if (args.jarOutput) {
             // Effectively free up the (often massive) DexFile memory.
@@ -199,9 +235,69 @@ public class Main {
             if (!createJar(args.outName, outArray)) {
                 return 3;
             }
+        } else if (outArray != null && args.outName != null) {
+            OutputStream out = openOutput(args.outName);
+            out.write(outArray);
+            closeOutput(out);
         }
 
         return 0;
+    }
+
+    /**
+     * Merges the dex files {@code update} and {@code base}, preferring
+     * {@code update}'s definition for types defined in both dex files.
+     *
+     * @param base a file to find the previous dex file. May be a .dex file, a
+     *     jar file possibly containing a .dex file, or null.
+     * @return the bytes of the merged dex file, or null if both the update
+     *     and the base dex do not exist.
+     */
+    private static byte[] mergeIncremental(byte[] update, File base) throws IOException {
+        DexBuffer dexA = null;
+        DexBuffer dexB = null;
+
+        if (update != null) {
+            dexA = new DexBuffer(update);
+        }
+
+        if (base.exists()) {
+            dexB = new DexBuffer(base);
+        }
+
+        DexBuffer result;
+        if (dexA == null && dexB == null) {
+            return null;
+        } else if (dexA == null) {
+            result = dexB;
+        } else if (dexB == null) {
+            result = dexA;
+        } else {
+            result = new DexMerger(dexA, dexB, CollisionPolicy.KEEP_FIRST).merge();
+        }
+
+        ByteArrayOutputStream bytesOut = new ByteArrayOutputStream();
+        result.writeTo(bytesOut);
+        return bytesOut.toByteArray();
+    }
+
+    /**
+     * Merges the dex files in library jars. If multiple dex files define the
+     * same type, this fails with an exception.
+     */
+    private static byte[] mergeLibraryDexBuffers(byte[] outArray) throws IOException {
+        for (byte[] libraryDexBuffer : libraryDexBuffers) {
+            if (outArray == null) {
+                outArray = libraryDexBuffer;
+                continue;
+            }
+
+            DexBuffer a = new DexBuffer(outArray);
+            DexBuffer b = new DexBuffer(libraryDexBuffer);
+            DexBuffer ab = new DexMerger(a, b, CollisionPolicy.FAIL).merge();
+            outArray = ab.getBytes();
+        }
+        return outArray;
     }
 
     /**
@@ -261,6 +357,10 @@ public class Main {
             return false;
         }
 
+        if (args.incremental && !anyFilesProcessed) {
+            return true;
+        }
+
         if (!(anyFilesProcessed || args.emptyOk)) {
             DxConsole.err.println("no classfiles specified");
             return false;
@@ -286,20 +386,25 @@ public class Main {
 
         opener = new ClassPathOpener(pathname, false,
                 new ClassPathOpener.Consumer() {
-            public boolean processFileBytes(String name, byte[] bytes) {
+            public boolean processFileBytes(String name, long lastModified, byte[] bytes) {
                 if (args.numThreads > 1) {
-                    threadPool.execute(new ParallelProcessor(name, bytes));
+                    threadPool.execute(new ParallelProcessor(name, lastModified, bytes));
                     return false;
                 } else {
-                    return Main.processFileBytes(name, bytes);
+                    return Main.processFileBytes(name, lastModified, bytes);
                 }
             }
             public void onException(Exception ex) {
                 if (ex instanceof StopProcessing) {
                     throw (StopProcessing) ex;
+                } else if (ex instanceof SimException) {
+                    DxConsole.err.println("\nEXCEPTION FROM SIMULATION:");
+                    DxConsole.err.println(ex.getMessage() + "\n");
+                    DxConsole.err.println(((SimException) ex).getContext());
+                } else {
+                    DxConsole.err.println("\nUNEXPECTED TOP-LEVEL EXCEPTION:");
+                    ex.printStackTrace(DxConsole.err);
                 }
-                DxConsole.err.println("\nUNEXPECTED TOP-LEVEL EXCEPTION:");
-                ex.printStackTrace(DxConsole.err);
                 errors++;
             }
             public void onProcessArchiveStart(File file) {
@@ -320,11 +425,12 @@ public class Main {
      * @param bytes {@code non-null;} contents of the file
      * @return whether processing was successful
      */
-    private static boolean processFileBytes(String name, byte[] bytes) {
+    private static boolean processFileBytes(String name, long lastModified, byte[] bytes) {
         boolean isClass = name.endsWith(".class");
+        boolean isClassesDex = name.equals(DexFormat.DEX_IN_JAR_NAME);
         boolean keepResources = (outputResources != null);
 
-        if (!isClass && !keepResources) {
+        if (!isClass && !isClassesDex && !keepResources) {
             if (args.verbose) {
                 DxConsole.out.println("ignored resource " + name);
             }
@@ -343,7 +449,15 @@ public class Main {
                     outputResources.put(fixedName, bytes);
                 }
             }
+            if (lastModified < minimumFileAge) {
+                return true;
+            }
             return processClass(fixedName, bytes);
+        } else if (isClassesDex) {
+            synchronized (libraryDexBuffers) {
+                libraryDexBuffers.add(bytes);
+            }
+            return true;
         } else {
             synchronized (outputResources) {
                 outputResources.put(fixedName, bytes);
@@ -367,7 +481,7 @@ public class Main {
 
         try {
             ClassDefItem clazz =
-                CfTranslator.translate(name, bytes, args.cfOptions);
+                CfTranslator.translate(name, bytes, args.cfOptions, args.dexOptions);
             synchronized (outputDex) {
                 outputDex.add(clazz);
             }
@@ -426,9 +540,8 @@ public class Main {
     }
 
     /**
-     * Converts {@link #outputDex} into a {@code byte[]}, write
-     * it out to the proper file (if any), and also do whatever human-oriented
-     * dumping is required.
+     * Converts {@link #outputDex} into a {@code byte[]} and do whatever
+     * human-oriented dumping is required.
      *
      * @return {@code null-ok;} the converted {@code byte[]} or {@code null}
      * if there was a problem
@@ -437,7 +550,6 @@ public class Main {
         byte[] outArray = null;
 
         try {
-            OutputStream out = null;
             OutputStream humanOutRaw = null;
             OutputStreamWriter humanOut = null;
             try {
@@ -460,11 +572,6 @@ public class Main {
                      * and write it, dump it, etc.
                      */
                     outArray = outputDex.toDex(humanOut, args.verboseDump);
-
-                    if ((args.outName != null) && !args.jarOutput) {
-                        out = openOutput(args.outName);
-                        out.write(outArray);
-                    }
                 }
 
                 if (args.statistics) {
@@ -474,7 +581,6 @@ public class Main {
                 if (humanOut != null) {
                     humanOut.flush();
                 }
-                closeOutput(out);
                 closeOutput(humanOutRaw);
             }
         } catch (Exception ex) {
@@ -495,8 +601,8 @@ public class Main {
      * Creates a jar file from the resources and given dex file array.
      *
      * @param fileName {@code non-null;} name of the file
-     * @param dexArray {@code non-null;} array containing the dex file
-     * to include
+     * @param dexArray array containing the dex file to include, or null if the
+     *     output contains no class defs.
      * @return whether the creation was successful
      */
     private static boolean createJar(String fileName, byte[] dexArray) {
@@ -511,7 +617,9 @@ public class Main {
             OutputStream out = openOutput(fileName);
             JarOutputStream jarOut = new JarOutputStream(out, manifest);
 
-            outputResources.put(DEX_IN_JAR_NAME, dexArray);
+            if (dexArray != null) {
+                outputResources.put(DexFormat.DEX_IN_JAR_NAME, dexArray);
+            }
 
             try {
                 for (Map.Entry<String, byte[]> e :
@@ -580,7 +688,7 @@ public class Main {
         createdBy += "dx " + Version.VERSION;
 
         attribs.put(CREATED_BY, createdBy);
-        attribs.putValue("Dex-Location", DEX_IN_JAR_NAME);
+        attribs.putValue("Dex-Location", DexFormat.DEX_IN_JAR_NAME);
 
         return manifest;
     }
@@ -810,13 +918,19 @@ public class Main {
          */
         public boolean keepClassesInJar = false;
 
+        /** what API level to target */
+        public int targetApiLevel = Integer.MAX_VALUE;
+
         /** how much source position info to preserve */
         public int positionInfo = PositionList.LINES;
 
         /** whether to keep local variable information */
         public boolean localInfo = true;
 
-        /** {@code non-null after {@link #parse};} file name arguments */
+        /** whether to merge with the output dex file if it exists. */
+        public boolean incremental = false;
+
+        /** {@code non-null} after {@link #parse}; file name arguments */
         public String[] fileNames;
 
         /** whether to do SSA/register optimization */
@@ -831,8 +945,11 @@ public class Main {
         /** Whether to print statistics to stdout at end of compile cycle */
         public boolean statistics;
 
-        /** Options for dex.cf.* */
+        /** Options for class file transformation */
         public CfOptions cfOptions;
+
+        /** Options for dex file output */
+        public DexOptions dexOptions;
 
         /** number of threads to run with */
         public int numThreads = 1;
@@ -885,9 +1002,7 @@ public class Main {
                     keepClassesInJar = true;
                 } else if (arg.startsWith("--output=")) {
                     outName = arg.substring(arg.indexOf('=') + 1);
-                    if (outName.endsWith(".zip") ||
-                            outName.endsWith(".jar") ||
-                            outName.endsWith(".apk")) {
+                    if (FileUtils.hasArchiveSuffix(outName)) {
                         jarOutput = true;
                     } else if (outName.endsWith(".dex") ||
                                outName.equals("-")) {
@@ -905,6 +1020,19 @@ public class Main {
                 } else if (arg.startsWith("--dump-method=")) {
                     methodToDump = arg.substring(arg.indexOf('=') + 1);
                     jarOutput = false;
+                } else if (arg.startsWith("--target-api=")) {
+                    arg = arg.substring(arg.indexOf('=') + 1);
+                    int value;
+                    try {
+                        value = Integer.parseInt(arg);
+                    } catch (NumberFormatException ex) {
+                        value = -1;
+                    }
+                    if (value < 1) {
+                        System.err.println("improper target-api option: " + arg);
+                        throw new UsageException();
+                    }
+                    targetApiLevel = value;
                 } else if (arg.startsWith("--positions=")) {
                     String pstr = arg.substring(arg.indexOf('=') + 1).intern();
                     if (pstr == "none") {
@@ -923,6 +1051,8 @@ public class Main {
                 } else if (arg.startsWith("--num-threads=")) {
                     arg = arg.substring(arg.indexOf('=') + 1);
                     numThreads = Integer.parseInt(arg);
+                } else if (arg.equals("--incremental")) {
+                    incremental = true;
                 } else {
                     System.err.println("unknown option: " + arg);
                     throw new UsageException();
@@ -949,15 +1079,15 @@ public class Main {
                 humanOutName = "-";
             }
 
-            makeCfOptions();
+            makeOptionsObjects();
         }
 
         /**
-         * Copies relevent arguments over into a CfOptions instance.
+         * Copies relevent arguments over into CfOptions and
+         * DexOptions instances.
          */
-        private void makeCfOptions() {
+        private void makeOptionsObjects() {
             cfOptions = new CfOptions();
-
             cfOptions.positionInfo = positionInfo;
             cfOptions.localInfo = localInfo;
             cfOptions.strictNameCheck = strictNameCheck;
@@ -966,6 +1096,9 @@ public class Main {
             cfOptions.dontOptimizeListFile = dontOptimizeListFile;
             cfOptions.statistics = statistics;
             cfOptions.warn = DxConsole.err;
+
+            dexOptions = new DexOptions();
+            dexOptions.enableExtendedOpcodes = targetApiLevel >= 12;
         }
     }
 
@@ -973,6 +1106,7 @@ public class Main {
     private static class ParallelProcessor implements Runnable {
 
         String path;
+        long lastModified;
         byte[] bytes;
 
         /**
@@ -982,8 +1116,9 @@ public class Main {
          * filesystem path.
          * @param bytes {@code non-null;} file data
          */
-        private ParallelProcessor(String path, byte bytes[]) {
+        private ParallelProcessor(String path, long lastModified, byte bytes[]) {
             this.path = path;
+            this.lastModified = lastModified;
             this.bytes = bytes;
         }
 
@@ -992,7 +1127,7 @@ public class Main {
          * with the given path and bytes.
          */
         public void run() {
-            if (Main.processFileBytes(path, bytes)) {
+            if (Main.processFileBytes(path, lastModified, bytes)) {
                 anyFilesProcessed = true;
             }
         }

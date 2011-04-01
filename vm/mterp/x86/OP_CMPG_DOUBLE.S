@@ -17,18 +17,16 @@
     fucompp     # z if equal, p set if NaN, c set if st0 < st1
     fnstsw   %ax
     sahf
-    movl      rINST,%eax
-    FETCH_INST_OPCODE 2 %edx
+    FETCH_INST_OPCODE 2 %eax
     jp       .L${opcode}_isNaN
     je       .L${opcode}_finish
     sbbl     %ecx,%ecx
     jb       .L${opcode}_finish
     incl     %ecx
 .L${opcode}_finish:
-    SET_VREG %ecx %eax
+    SET_VREG %ecx rINST
     ADVANCE_PC 2
-    GOTO_NEXT_R %edx
-%break
+    GOTO_NEXT_R %eax
 
 .L${opcode}_isNaN:
     movl      $$$nanval,%ecx

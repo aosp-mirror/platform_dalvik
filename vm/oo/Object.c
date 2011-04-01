@@ -696,7 +696,7 @@ const Method* dvmGetVirtualizedMethod(const ClassObject* clazz,
                 break;
         }
         if (i == clazz->iftableCount) {
-            dvmThrowException("Ljava/lang/IncompatibleClassChangeError;",
+            dvmThrowIncompatibleClassChangeError(
                 "invoking method from interface not implemented by class");
             return NULL;
         }
@@ -713,7 +713,7 @@ const Method* dvmGetVirtualizedMethod(const ClassObject* clazz,
      * Make sure there's code to execute.
      */
     if (dvmIsAbstractMethod(actualMeth)) {
-        dvmThrowException("Ljava/lang/AbstractMethodError;", NULL);
+        dvmThrowAbstractMethodError(NULL);
         return NULL;
     }
     assert(!dvmIsMirandaMethod(actualMeth));

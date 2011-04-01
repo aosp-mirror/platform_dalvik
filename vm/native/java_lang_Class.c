@@ -242,7 +242,6 @@ static void Dalvik_java_lang_Class_getDeclaredConstructors(const u4* args,
 
 /*
  * static Field[] getDeclaredFields(Class klass, boolean publicOnly)
- *     throws SecurityException
  */
 static void Dalvik_java_lang_Class_getDeclaredFields(const u4* args,
     JValue* pResult)
@@ -255,6 +254,19 @@ static void Dalvik_java_lang_Class_getDeclaredFields(const u4* args,
     dvmReleaseTrackedAlloc((Object*) fields, NULL);
 
     RETURN_PTR(fields);
+}
+
+/*
+ * static Field getDeclaredField(Class klass, String name)
+ */
+static void Dalvik_java_lang_Class_getDeclaredField(const u4* args,
+    JValue* pResult)
+{
+    ClassObject* clazz = (ClassObject*) args[0];
+    StringObject* nameObj = (StringObject*) args[1];
+    Object* fieldObj = dvmGetDeclaredField(clazz, nameObj);
+    dvmReleaseTrackedAlloc((Object*) fieldObj, NULL);
+    RETURN_PTR(fieldObj);
 }
 
 /*
@@ -428,7 +440,7 @@ static void Dalvik_java_lang_Class_isAssignableFrom(const u4* args,
     ClassObject* testClass = (ClassObject*) args[1];
 
     if (testClass == NULL) {
-        dvmThrowException("Ljava/lang/NullPointerException;", NULL);
+        dvmThrowNullPointerException(NULL);
         RETURN_INT(false);
     }
     RETURN_INT(dvmInstanceof(testClass, thisPtr));
@@ -491,8 +503,7 @@ static void Dalvik_java_lang_Class_newInstance(const u4* args, JValue* pResult)
         LOGD("newInstance failed: p%d i%d [%d a%d\n",
             dvmIsPrimitiveClass(clazz), dvmIsInterfaceClass(clazz),
             dvmIsArrayClass(clazz), dvmIsAbstractClass(clazz));
-        dvmThrowExceptionWithClassMessage("Ljava/lang/InstantiationException;",
-            clazz->descriptor);
+        dvmThrowInstantiationException(clazz, NULL);
         RETURN_VOID();
     }
 
@@ -511,8 +522,7 @@ static void Dalvik_java_lang_Class_newInstance(const u4* args, JValue* pResult)
     if (init == NULL) {
         /* common cause: secret "this" arg on non-static inner class ctor */
         LOGD("newInstance failed: no <init>()\n");
-        dvmThrowExceptionWithClassMessage("Ljava/lang/InstantiationException;",
-            clazz->descriptor);
+        dvmThrowInstantiationException(clazz, "no empty constructor");
         RETURN_VOID();
     }
 
@@ -531,15 +541,13 @@ static void Dalvik_java_lang_Class_newInstance(const u4* args, JValue* pResult)
     if (!dvmCheckClassAccess(callerClass, clazz)) {
         LOGD("newInstance failed: %s not accessible to %s\n",
             clazz->descriptor, callerClass->descriptor);
-        dvmThrowException("Ljava/lang/IllegalAccessException;",
-            "access to class not allowed");
+        dvmThrowIllegalAccessException("access to class not allowed");
         RETURN_VOID();
     }
     if (!dvmCheckMethodAccess(callerClass, init)) {
         LOGD("newInstance failed: %s.<init>() not accessible to %s\n",
             clazz->descriptor, callerClass->descriptor);
-        dvmThrowException("Ljava/lang/IllegalAccessException;",
-            "access to constructor not allowed");
+        dvmThrowIllegalAccessException("access to constructor not allowed");
         RETURN_VOID();
     }
 
@@ -644,8 +652,7 @@ static void Dalvik_java_lang_Class_getEnclosingMethod(const u4* args,
 static void Dalvik_java_lang_Class_getGenericInterfaces(const u4* args,
     JValue* pResult)
 {
-    dvmThrowException("Ljava/lang/UnsupportedOperationException;",
-        "native method not implemented");
+    dvmThrowUnsupportedOperationException("native method not implemented");
 
     RETURN_PTR(NULL);
 }
@@ -653,8 +660,7 @@ static void Dalvik_java_lang_Class_getGenericInterfaces(const u4* args,
 static void Dalvik_java_lang_Class_getGenericSuperclass(const u4* args,
     JValue* pResult)
 {
-    dvmThrowException("Ljava/lang/UnsupportedOperationException;",
-        "native method not implemented");
+    dvmThrowUnsupportedOperationException("native method not implemented");
 
     RETURN_PTR(NULL);
 }
@@ -662,8 +668,7 @@ static void Dalvik_java_lang_Class_getGenericSuperclass(const u4* args,
 static void Dalvik_java_lang_Class_getTypeParameters(const u4* args,
     JValue* pResult)
 {
-    dvmThrowException("Ljava/lang/UnsupportedOperationException;",
-        "native method not implemented");
+    dvmThrowUnsupportedOperationException("native method not implemented");
 
     RETURN_PTR(NULL);
 }
@@ -709,6 +714,30 @@ static void Dalvik_java_lang_Class_getDeclaredAnnotations(const u4* args,
 }
 
 /*
+ * private Annotation getDeclaredAnnotation(Class annotationClass)
+ */
+static void Dalvik_java_lang_Class_getDeclaredAnnotation(const u4* args,
+    JValue* pResult)
+{
+    ClassObject* clazz = (ClassObject*) args[0];
+    ClassObject* annotationClazz = (ClassObject*) args[1];
+
+    RETURN_PTR(dvmGetClassAnnotation(clazz, annotationClazz));
+}
+
+/*
+ * private boolean isDeclaredAnnotationPresent(Class annotationClass);
+ */
+static void Dalvik_java_lang_Class_isDeclaredAnnotationPresent(const u4* args,
+    JValue* pResult)
+{
+    ClassObject* clazz = (ClassObject*) args[0];
+    ClassObject* annotationClazz = (ClassObject*) args[1];
+
+    RETURN_BOOLEAN(dvmIsClassAnnotationPresent(clazz, annotationClazz));
+}
+
+/*
  * public String getInnerClassName()
  *
  * Returns the simple name of a member class or local class, or null otherwise.
@@ -726,19 +755,6 @@ static void Dalvik_java_lang_Class_getInnerClassName(const u4* args,
     } else {
         RETURN_PTR(NULL);
     }
-}
-
-/*
- * static native void setAccessibleNoCheck(AccessibleObject ao, boolean flag);
- */
-static void Dalvik_java_lang_Class_setAccessibleNoCheck(const u4* args,
-    JValue* pResult)
-{
-    Object* target = (Object*) args[0];
-    u4 flag = (u4) args[1];
-
-    dvmSetFieldBoolean(target, gDvm.offJavaLangReflectAccessibleObject_flag,
-            flag);
 }
 
 const DalvikNativeMethod dvm_java_lang_Class[] = {
@@ -760,6 +776,8 @@ const DalvikNativeMethod dvm_java_lang_Class[] = {
         Dalvik_java_lang_Class_getDeclaredFields },
     { "getDeclaredMethods",     "(Ljava/lang/Class;Z)[Ljava/lang/reflect/Method;",
         Dalvik_java_lang_Class_getDeclaredMethods },
+    { "getDeclaredField",      "(Ljava/lang/Class;Ljava/lang/String;)Ljava/lang/reflect/Field;",
+        Dalvik_java_lang_Class_getDeclaredField },
     { "getDeclaredConstructorOrMethod", "(Ljava/lang/Class;Ljava/lang/String;[Ljava/lang/Class;)Ljava/lang/reflect/Member;",
         Dalvik_java_lang_Class_getDeclaredConstructorOrMethod },
     { "getInterfaces",          "()[Ljava/lang/Class;",
@@ -800,9 +818,11 @@ const DalvikNativeMethod dvm_java_lang_Class[] = {
         Dalvik_java_lang_Class_isAnonymousClass },
     { "getDeclaredAnnotations", "()[Ljava/lang/annotation/Annotation;",
         Dalvik_java_lang_Class_getDeclaredAnnotations },
+    { "getDeclaredAnnotation", "(Ljava/lang/Class;)Ljava/lang/annotation/Annotation;",
+        Dalvik_java_lang_Class_getDeclaredAnnotation },
+    { "isDeclaredAnnotationPresent", "(Ljava/lang/Class;)Z",
+        Dalvik_java_lang_Class_isDeclaredAnnotationPresent },
     { "getInnerClassName",       "()Ljava/lang/String;",
         Dalvik_java_lang_Class_getInnerClassName },
-    { "setAccessibleNoCheck",   "(Ljava/lang/reflect/AccessibleObject;Z)V",
-        Dalvik_java_lang_Class_setAccessibleNoCheck },
     { NULL, NULL, NULL },
 };

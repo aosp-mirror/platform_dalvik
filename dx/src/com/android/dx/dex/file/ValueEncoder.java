@@ -277,7 +277,7 @@ public final class ValueEncoder {
             out.annotate("  size: " + Hex.u4(size));
         }
 
-        out.writeUnsignedLeb128(size);
+        out.writeUleb128(size);
 
         for (int i = 0; i < size; i++) {
             Constant cst = list.get(i);
@@ -319,7 +319,7 @@ public final class ValueEncoder {
                     type.toHuman());
         }
 
-        out.writeUnsignedLeb128(typeIds.indexOf(annotation.getType()));
+        out.writeUleb128(typeIds.indexOf(annotation.getType()));
 
         Collection<NameValuePair> pairs = annotation.getNameValuePairs();
         int size = pairs.size();
@@ -328,7 +328,7 @@ public final class ValueEncoder {
             out.annotate("  size: " + Hex.u4(size));
         }
 
-        out.writeUnsignedLeb128(size);
+        out.writeUleb128(size);
 
         int at = 0;
         for (NameValuePair pair : pairs) {
@@ -343,7 +343,7 @@ public final class ValueEncoder {
                         name.toHuman());
             }
 
-            out.writeUnsignedLeb128(nameIdx);
+            out.writeUleb128(nameIdx);
 
             if (annotates) {
                 out.annotate("    value: " + constantToHuman(value));

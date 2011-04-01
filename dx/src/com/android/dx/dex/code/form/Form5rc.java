@@ -19,7 +19,6 @@ package com.android.dx.dex.code.form;
 import com.android.dx.dex.code.CstInsn;
 import com.android.dx.dex.code.DalvInsn;
 import com.android.dx.dex.code.InsnFormat;
-import com.android.dx.rop.code.RegisterSpec;
 import com.android.dx.rop.code.RegisterSpecList;
 import com.android.dx.rop.cst.Constant;
 import com.android.dx.rop.cst.CstMethodRef;
@@ -101,6 +100,6 @@ public final class Form5rc extends InsnFormat {
         int firstReg = (regs.size() == 0) ? 0 : regs.get(0).getReg();
         int count = regs.getWordCount();
 
-        write(out, opcodeUnit(insn), cpi, (short) firstReg, (short) count);
+        write(out, opcodeUnit(insn), cpi, (short) count, (short) firstReg);
     }
 }

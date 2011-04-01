@@ -243,17 +243,6 @@ static void waitForThreadSuspend(Thread* self, Thread* thread);
 static int getThreadPriorityFromSystem(void);
 
 /*
- * The JIT needs to know if any thread is suspended.  We do this by
- * maintaining a global sum of all threads' suspend counts.  All suspendCount
- * updates should go through this after aquiring threadSuspendCountLock.
- */
-static inline void dvmAddToThreadSuspendCount(int *pSuspendCount, int delta)
-{
-    *pSuspendCount += delta;
-    gDvm.sumThreadSuspendCount += delta;
-}
-
-/*
  * Initialize thread list and main thread's environment.  We need to set
  * up some basic stuff so that dvmThreadSelf() will work when we start
  * loading classes (e.g. to check for exceptions).
@@ -280,9 +269,6 @@ bool dvmThreadStartup(void)
     dvmInitMutex(&gDvm._threadSuspendLock);
     dvmInitMutex(&gDvm.threadSuspendCountLock);
     pthread_cond_init(&gDvm.threadSuspendCountCond, NULL);
-#ifdef WITH_DEADLOCK_PREDICTION
-    dvmInitMutex(&gDvm.deadlockHistoryLock);
-#endif
 
     /*
      * Dedicated monitor for Thread.sleep().
@@ -312,101 +298,6 @@ bool dvmThreadStartup(void)
 #ifdef COUNT_PRECISE_METHODS
     gDvm.preciseMethods = dvmPointerSetAlloc(200);
 #endif
-
-    return true;
-}
-
-/*
- * We're a little farther up now, and can load some basic classes.
- *
- * We're far enough along that we can poke at java.lang.Thread and friends,
- * but should not assume that static initializers have run (or cause them
- * to do so).  That means no object allocations yet.
- */
-bool dvmThreadObjStartup(void)
-{
-    /*
-     * Cache the locations of these classes.  It's likely that we're the
-     * first to reference them, so they're being loaded now.
-     */
-    gDvm.classJavaLangThread =
-        dvmFindSystemClassNoInit("Ljava/lang/Thread;");
-    gDvm.classJavaLangVMThread =
-        dvmFindSystemClassNoInit("Ljava/lang/VMThread;");
-    gDvm.classJavaLangThreadGroup =
-        dvmFindSystemClassNoInit("Ljava/lang/ThreadGroup;");
-    if (gDvm.classJavaLangThread == NULL ||
-        gDvm.classJavaLangThreadGroup == NULL ||
-        gDvm.classJavaLangThreadGroup == NULL)
-    {
-        LOGE("Could not find one or more essential thread classes\n");
-        return false;
-    }
-
-    /*
-     * Cache field offsets.  This makes things a little faster, at the
-     * expense of hard-coding non-public field names into the VM.
-     */
-    gDvm.offJavaLangThread_vmThread =
-        dvmFindFieldOffset(gDvm.classJavaLangThread,
-            "vmThread", "Ljava/lang/VMThread;");
-    gDvm.offJavaLangThread_group =
-        dvmFindFieldOffset(gDvm.classJavaLangThread,
-            "group", "Ljava/lang/ThreadGroup;");
-    gDvm.offJavaLangThread_daemon =
-        dvmFindFieldOffset(gDvm.classJavaLangThread, "daemon", "Z");
-    gDvm.offJavaLangThread_name =
-        dvmFindFieldOffset(gDvm.classJavaLangThread,
-            "name", "Ljava/lang/String;");
-    gDvm.offJavaLangThread_priority =
-        dvmFindFieldOffset(gDvm.classJavaLangThread, "priority", "I");
-
-    if (gDvm.offJavaLangThread_vmThread < 0 ||
-        gDvm.offJavaLangThread_group < 0 ||
-        gDvm.offJavaLangThread_daemon < 0 ||
-        gDvm.offJavaLangThread_name < 0 ||
-        gDvm.offJavaLangThread_priority < 0)
-    {
-        LOGE("Unable to find all fields in java.lang.Thread\n");
-        return false;
-    }
-
-    gDvm.offJavaLangVMThread_thread =
-        dvmFindFieldOffset(gDvm.classJavaLangVMThread,
-            "thread", "Ljava/lang/Thread;");
-    gDvm.offJavaLangVMThread_vmData =
-        dvmFindFieldOffset(gDvm.classJavaLangVMThread, "vmData", "I");
-    if (gDvm.offJavaLangVMThread_thread < 0 ||
-        gDvm.offJavaLangVMThread_vmData < 0)
-    {
-        LOGE("Unable to find all fields in java.lang.VMThread\n");
-        return false;
-    }
-
-    /*
-     * Cache the vtable offset for "run()".
-     *
-     * We don't want to keep the Method* because then we won't find see
-     * methods defined in subclasses.
-     */
-    Method* meth;
-    meth = dvmFindVirtualMethodByDescriptor(gDvm.classJavaLangThread, "run", "()V");
-    if (meth == NULL) {
-        LOGE("Unable to find run() in java.lang.Thread\n");
-        return false;
-    }
-    gDvm.voffJavaLangThread_run = meth->methodIndex;
-
-    /*
-     * Cache vtable offsets for ThreadGroup methods.
-     */
-    meth = dvmFindVirtualMethodByDescriptor(gDvm.classJavaLangThreadGroup,
-        "removeThread", "(Ljava/lang/Thread;)V");
-    if (meth == NULL) {
-        LOGE("Unable to find removeThread(Thread) in java.lang.ThreadGroup\n");
-        return false;
-    }
-    gDvm.voffJavaLangThreadGroup_removeThread = meth->methodIndex;
 
     return true;
 }
@@ -672,7 +563,7 @@ void dvmSlayDaemons(void)
 
         /* mark as suspended */
         lockThreadSuspendCount();
-        dvmAddToThreadSuspendCount(&target->suspendCount, 1);
+        dvmAddToSuspendCounts(target, 1, 0);
         unlockThreadSuspendCount();
         doWait = true;
 
@@ -883,27 +774,22 @@ bool dvmPrepMainThread(void)
     thread->threadObj = threadObj;
 
     /*
-     * Set the context class loader.  This invokes a ClassLoader method,
-     * which could conceivably call Thread.currentThread(), so we want the
-     * Thread to be fully configured before we do this.
+     * Set the "context class loader" field in the system class loader.
+     *
+     * Retrieving the system class loader will cause invocation of
+     * ClassLoader.getSystemClassLoader(), which could conceivably call
+     * Thread.currentThread(), so we want the Thread to be fully configured
+     * before we do this.
      */
     Object* systemLoader = dvmGetSystemClassLoader();
     if (systemLoader == NULL) {
         LOGW("WARNING: system class loader is NULL (setting main ctxt)\n");
-        /* keep going */
+        /* keep going? */
+    } else {
+        dvmSetFieldObject(threadObj, gDvm.offJavaLangThread_contextClassLoader,
+            systemLoader);
+        dvmReleaseTrackedAlloc(systemLoader, NULL);
     }
-    int ctxtClassLoaderOffset = dvmFindFieldOffset(gDvm.classJavaLangThread,
-        "contextClassLoader", "Ljava/lang/ClassLoader;");
-    if (ctxtClassLoaderOffset < 0) {
-        LOGE("Unable to find contextClassLoader field in Thread\n");
-        return false;
-    }
-    dvmSetFieldObject(threadObj, ctxtClassLoaderOffset, systemLoader);
-    dvmReleaseTrackedAlloc(systemLoader, NULL);
-
-    /*
-     * Finish our thread prep.
-     */
 
     /* include self in non-daemon threads (mainly for AttachCurrentThread) */
     gDvm.nonDaemonThreadCount++;
@@ -926,6 +812,11 @@ static Thread* allocThread(int interpStackSize)
     if (thread == NULL)
         return NULL;
 
+    /* Check sizes and alignment */
+    assert((((uintptr_t)&thread->interpBreak.all) & 0x7) == 0);
+    assert(sizeof(thread->interpBreak) == sizeof(thread->interpBreak.all));
+
+
 #if defined(WITH_SELF_VERIFICATION)
     if (dvmSelfVerificationShadowSpaceAlloc(thread) == NULL)
         return NULL;
@@ -934,7 +825,6 @@ static Thread* allocThread(int interpStackSize)
     assert(interpStackSize >= kMinStackSize && interpStackSize <=kMaxStackSize);
 
     thread->status = THREAD_INITIALIZING;
-    thread->suspendCount = 0;
 
     /*
      * Allocate and initialize the interpreted code stack.  We essentially
@@ -954,7 +844,7 @@ static Thread* allocThread(int interpStackSize)
     }
     memset(stackBottom, 0xc5, interpStackSize);     // stop valgrind complaints
 #else
-    stackBottom = mmap(NULL, interpStackSize, PROT_READ | PROT_WRITE,
+    stackBottom = (u1*) mmap(NULL, interpStackSize, PROT_READ | PROT_WRITE,
         MAP_PRIVATE | MAP_ANON, -1, 0);
     if (stackBottom == MAP_FAILED) {
 #if defined(WITH_SELF_VERIFICATION)
@@ -970,8 +860,17 @@ static Thread* allocThread(int interpStackSize)
     thread->interpStackStart = stackBottom + interpStackSize;
     thread->interpStackEnd = stackBottom + STACK_OVERFLOW_RESERVE;
 
+#ifndef DVM_NO_ASM_INTERP
+    thread->mainHandlerTable = dvmAsmInstructionStart;
+    thread->altHandlerTable = dvmAsmAltInstructionStart;
+    thread->interpBreak.ctl.curHandlerTable = thread->mainHandlerTable;
+#endif
+
     /* give the thread code a chance to set things up */
     dvmInitInterpStack(thread, interpStackSize);
+
+    /* One-time setup for interpreter/JIT state */
+    dvmInitInterpreterState(thread);
 
     return thread;
 }
@@ -1028,19 +927,9 @@ static bool prepareThread(Thread* thread)
      * Most threads won't use jniMonitorRefTable, so we clear out the
      * structure but don't call the init function (which allocs storage).
      */
-#ifdef USE_INDIRECT_REF
     if (!dvmInitIndirectRefTable(&thread->jniLocalRefTable,
             kJniLocalRefMin, kJniLocalRefMax, kIndirectKindLocal))
         return false;
-#else
-    /*
-     * The JNI local ref table *must* be fixed-size because we keep pointers
-     * into the table in our stack frames.
-     */
-    if (!dvmInitReferenceTable(&thread->jniLocalRefTable,
-            kJniLocalRefMax, kJniLocalRefMax))
-        return false;
-#endif
     if (!dvmInitReferenceTable(&thread->internalLocalRefTable,
             kInternalRefDefault, kInternalRefMax))
         return false;
@@ -1049,6 +938,9 @@ static bool prepareThread(Thread* thread)
 
     pthread_cond_init(&thread->waitCond, NULL);
     dvmInitMutex(&thread->waitMutex);
+
+    /* Initialize safepoint callback mechanism */
+    dvmInitMutex(&thread->callbackMutex);
 
     return true;
 }
@@ -1097,11 +989,7 @@ static void freeThread(Thread* thread)
 #endif
     }
 
-#ifdef USE_INDIRECT_REF
     dvmClearIndirectRefTable(&thread->jniLocalRefTable);
-#else
-    dvmClearReferenceTable(&thread->jniLocalRefTable);
-#endif
     dvmClearReferenceTable(&thread->internalLocalRefTable);
     if (&thread->jniMonitorRefTable.table != NULL)
         dvmClearReferenceTable(&thread->jniMonitorRefTable);
@@ -1246,54 +1134,31 @@ static void releaseThreadId(Thread* thread)
  */
 static bool createFakeEntryFrame(Thread* thread)
 {
-    assert(thread->threadId == kMainThreadId);      // main thread only
+    /*
+     * Because we are creating a frame that represents application code, we
+     * want to stuff the application class loader into the method's class
+     * loader field, even though we're using the system class loader to
+     * load it.  This makes life easier over in JNI FindClass (though it
+     * could bite us in other ways).
+     *
+     * Unfortunately this is occurring too early in the initialization,
+     * of necessity coming before JNI is initialized, and we're not quite
+     * ready to set up the application class loader.  Also, overwriting
+     * the class' defining classloader pointer seems unwise.
+     *
+     * Instead, we save a pointer to the method and explicitly check for
+     * it in FindClass.  The method is private so nobody else can call it.
+     */
 
-    /* find the method on first use */
-    if (gDvm.methFakeNativeEntry == NULL) {
-        ClassObject* nativeStart;
-        Method* mainMeth;
+    assert(thread->threadId == kMainThreadId);      /* main thread only */
 
-        nativeStart = dvmFindSystemClassNoInit(
-                "Ldalvik/system/NativeStart;");
-        if (nativeStart == NULL) {
-            LOGE("Unable to find dalvik.system.NativeStart class\n");
-            return false;
-        }
-
-        /*
-         * Because we are creating a frame that represents application code, we
-         * want to stuff the application class loader into the method's class
-         * loader field, even though we're using the system class loader to
-         * load it.  This makes life easier over in JNI FindClass (though it
-         * could bite us in other ways).
-         *
-         * Unfortunately this is occurring too early in the initialization,
-         * of necessity coming before JNI is initialized, and we're not quite
-         * ready to set up the application class loader.
-         *
-         * So we save a pointer to the method in gDvm.methFakeNativeEntry
-         * and check it in FindClass.  The method is private so nobody else
-         * can call it.
-         */
-        //nativeStart->classLoader = dvmGetSystemClassLoader();
-
-        mainMeth = dvmFindDirectMethodByDescriptor(nativeStart,
-                    "main", "([Ljava/lang/String;)V");
-        if (mainMeth == NULL) {
-            LOGE("Unable to find 'main' in dalvik.system.NativeStart\n");
-            return false;
-        }
-
-        gDvm.methFakeNativeEntry = mainMeth;
-    }
-
-    if (!dvmPushJNIFrame(thread, gDvm.methFakeNativeEntry))
+    if (!dvmPushJNIFrame(thread, gDvm.methDalvikSystemNativeStart_main))
         return false;
 
     /*
      * Null out the "String[] args" argument.
      */
-    assert(gDvm.methFakeNativeEntry->registersSize == 1);
+    assert(gDvm.methDalvikSystemNativeStart_main->registersSize == 1);
     u4* framePtr = (u4*) thread->curFrame;
     framePtr[0] = 0;
 
@@ -1308,41 +1173,7 @@ static bool createFakeEntryFrame(Thread* thread)
  */
 static bool createFakeRunFrame(Thread* thread)
 {
-    ClassObject* nativeStart;
-    Method* runMeth;
-
-    /*
-     * TODO: cache this result so we don't have to dig for it every time
-     * somebody attaches a thread to the VM.  Also consider changing this
-     * to a static method so we don't have a null "this" pointer in the
-     * "ins" on the stack.  (Does it really need to look like a Runnable?)
-     */
-    nativeStart = dvmFindSystemClassNoInit("Ldalvik/system/NativeStart;");
-    if (nativeStart == NULL) {
-        LOGE("Unable to find dalvik.system.NativeStart class\n");
-        return false;
-    }
-
-    runMeth = dvmFindVirtualMethodByDescriptor(nativeStart, "run", "()V");
-    if (runMeth == NULL) {
-        LOGE("Unable to find 'run' in dalvik.system.NativeStart\n");
-        return false;
-    }
-
-    if (!dvmPushJNIFrame(thread, runMeth))
-        return false;
-
-    /*
-     * Provide a NULL 'this' argument.  The method we've put at the top of
-     * the stack looks like a virtual call to run() in a Runnable class.
-     * (If we declared the method static, it wouldn't take any arguments
-     * and we wouldn't have to do this.)
-     */
-    assert(runMeth->registersSize == 1);
-    u4* framePtr = (u4*) thread->curFrame;
-    framePtr[0] = 0;
-
-    return true;
+    return dvmPushJNIFrame(thread, gDvm.methDalvikSystemNativeStart_run);
 }
 
 /*
@@ -1410,23 +1241,6 @@ bool dvmCreateInterpThread(Object* threadObj, int reqStackSize)
 
     assert(threadObj != NULL);
 
-    if(gDvm.zygote) {
-        // Allow the sampling profiler thread. We shut it down before forking.
-        StringObject* nameStr = (StringObject*) dvmGetFieldObject(threadObj,
-                    gDvm.offJavaLangThread_name);
-        char* threadName = dvmCreateCstrFromString(nameStr);
-        bool profilerThread = strcmp(threadName, "SamplingProfiler") == 0;
-        if (!profilerThread) {
-            dvmThrowExceptionFmt("Ljava/lang/IllegalStateException;",
-                "No new threads in -Xzygote mode. "
-                "Found thread named '%s'", threadName);
-
-            free(threadName);
-            goto fail;
-        }
-        free(threadName);
-    }
-
     self = dvmThreadSelf();
     if (reqStackSize == 0)
         stackSize = gDvm.stackSize;
@@ -1466,7 +1280,7 @@ bool dvmCreateInterpThread(Object* threadObj, int reqStackSize)
 
     if (dvmGetFieldObject(threadObj, gDvm.offJavaLangThread_vmThread) != NULL) {
         dvmUnlockThreadList();
-        dvmThrowException("Ljava/lang/IllegalThreadStateException;",
+        dvmThrowIllegalThreadStateException(
             "thread has already been started");
         goto fail;
     }
@@ -1502,8 +1316,7 @@ bool dvmCreateInterpThread(Object* threadObj, int reqStackSize)
 
         dvmSetFieldObject(threadObj, gDvm.offJavaLangThread_vmThread, NULL);
 
-        dvmThrowException("Ljava/lang/OutOfMemoryError;",
-            "thread creation failed");
+        dvmThrowOutOfMemoryError("thread creation failed");
         goto fail;
     }
 
@@ -1598,6 +1411,9 @@ bool dvmCreateInterpThread(Object* threadObj, int reqStackSize)
         newThread->next->prev = newThread;
     newThread->prev = gDvm.threadList;
     gDvm.threadList->next = newThread;
+
+    /* Add any existing global modes to the interpBreak control */
+    dvmInitializeInterpBreak(newThread);
 
     if (!dvmGetFieldBoolean(threadObj, gDvm.offJavaLangThread_daemon))
         gDvm.nonDaemonThreadCount++;        // guarded by thread list lock
@@ -1742,13 +1558,15 @@ static void* interpThreadStart(void* arg)
  * Version 1.5 added the per-thread handler.  We need to call
  * "uncaughtException" in the handler object, which is either the
  * ThreadGroup object or the Thread-specific handler.
+ *
+ * This should only be called when an exception is pending.  Before
+ * returning, the exception will be cleared.
  */
 static void threadExitUncaughtException(Thread* self, Object* group)
 {
     Object* exception;
     Object* handlerObj;
-    Method* uncaughtHandler = NULL;
-    InstField* threadHandler;
+    Method* uncaughtHandler;
 
     LOGW("threadid=%d: thread exiting with uncaught exception (group=%p)\n",
         self->threadId, group);
@@ -1759,25 +1577,24 @@ static void threadExitUncaughtException(Thread* self, Object* group)
      * thread.  We don't want to have it set when executing interpreted code.
      */
     exception = dvmGetException(self);
+    assert(exception != NULL);
     dvmAddTrackedAlloc(exception, self);
     dvmClearException(self);
 
     /*
      * Get the Thread's "uncaughtHandler" object.  Use it if non-NULL;
      * else use "group" (which is an instance of UncaughtExceptionHandler).
+     * The ThreadGroup will handle it directly or call the default
+     * uncaught exception handler.
      */
-    threadHandler = dvmFindInstanceField(gDvm.classJavaLangThread,
-            "uncaughtHandler", "Ljava/lang/Thread$UncaughtExceptionHandler;");
-    if (threadHandler == NULL) {
-        LOGW("WARNING: no 'uncaughtHandler' field in java/lang/Thread\n");
-        goto bail;
-    }
-    handlerObj = dvmGetFieldObject(self->threadObj, threadHandler->byteOffset);
+    handlerObj = dvmGetFieldObject(self->threadObj,
+            gDvm.offJavaLangThread_uncaughtHandler);
     if (handlerObj == NULL)
         handlerObj = group;
 
     /*
-     * Find the "uncaughtHandler" field in this object.
+     * Find the "uncaughtException" method in this object.  The method
+     * was declared in the Thread.UncaughtExceptionHandler interface.
      */
     uncaughtHandler = dvmFindVirtualMethodHierByDescriptor(handlerObj->clazz,
             "uncaughtException", "(Ljava/lang/Thread;Ljava/lang/Throwable;)V");
@@ -1789,21 +1606,22 @@ static void threadExitUncaughtException(Thread* self, Object* group)
         dvmCallMethod(self, uncaughtHandler, handlerObj, &unused,
             self->threadObj, exception);
     } else {
-        /* restore it and dump a stack trace */
+        /* should be impossible, but handle it anyway */
         LOGW("WARNING: no 'uncaughtException' method in class %s\n",
             handlerObj->clazz->descriptor);
         dvmSetException(self, exception);
         dvmLogExceptionStackTrace();
     }
 
-bail:
-#if defined(WITH_JIT)
+    /* if the uncaught handler threw, clear it */
+    dvmClearException(self);
+
+    dvmReleaseTrackedAlloc(exception, self);
+
     /* Remove this thread's suspendCount from global suspendCount sum */
     lockThreadSuspendCount();
-    dvmAddToThreadSuspendCount(&self->suspendCount, -self->suspendCount);
+    dvmAddToSuspendCounts(self, -self->interpBreak.ctl.suspendCount, 0);
     unlockThreadSuspendCount();
-#endif
-    dvmReleaseTrackedAlloc(exception, self);
 }
 
 
@@ -2098,7 +1916,7 @@ bool dvmAttachCurrentThread(const JavaVMAttachArgs* pArgs, bool isDaemon)
      */
     if (dvmGetFieldObject(threadObj, gDvm.offJavaLangThread_vmThread) != NULL) {
         LOGW("WOW: thread start hijack\n");
-        dvmThrowException("Ljava/lang/IllegalThreadStateException;",
+        dvmThrowIllegalThreadStateException(
             "thread has already been started");
         /* We don't want to free anything associated with the thread
          * because someone is obviously interested in it.  Just let
@@ -2197,7 +2015,7 @@ void dvmDetachCurrentThread(void)
 
         if (curDepth == 1) {
             /* not expecting a lingering break frame; just look at curFrame */
-            assert(!dvmIsBreakFrame(self->curFrame));
+            assert(!dvmIsBreakFrame((u4*)self->curFrame));
             StackSaveArea* ssa = SAVEAREA_FROM_FP(self->curFrame);
             if (dvmIsNativeMethod(ssa->method))
                 topIsNative = true;
@@ -2366,11 +2184,10 @@ void dvmSuspendThread(Thread* thread)
     //assert(thread->handle != dvmJdwpGetDebugThread(gDvm.jdwpState));
 
     lockThreadSuspendCount();
-    dvmAddToThreadSuspendCount(&thread->suspendCount, 1);
-    thread->dbgSuspendCount++;
+    dvmAddToSuspendCounts(thread, 1, 1);
 
     LOG_THREAD("threadid=%d: suspend++, now=%d\n",
-        thread->threadId, thread->suspendCount);
+        thread->threadId, thread->interpBreak.ctl.suspendCount);
     unlockThreadSuspendCount();
 
     waitForThreadSuspend(dvmThreadSelf(), thread);
@@ -2394,18 +2211,17 @@ void dvmResumeThread(Thread* thread)
     //assert(thread->handle != dvmJdwpGetDebugThread(gDvm.jdwpState));
 
     lockThreadSuspendCount();
-    if (thread->suspendCount > 0) {
-        dvmAddToThreadSuspendCount(&thread->suspendCount, -1);
-        thread->dbgSuspendCount--;
+    if (thread->interpBreak.ctl.suspendCount > 0) {
+        dvmAddToSuspendCounts(thread, -1, -1);
     } else {
         LOG_THREAD("threadid=%d:  suspendCount already zero\n",
             thread->threadId);
     }
 
     LOG_THREAD("threadid=%d: suspend--, now=%d\n",
-        thread->threadId, thread->suspendCount);
+        thread->threadId, thread->interpBreak.ctl.suspendCount);
 
-    if (thread->suspendCount == 0) {
+    if (thread->interpBreak.ctl.suspendCount == 0) {
         dvmBroadcastCond(&gDvm.threadSuspendCountCond);
     }
 
@@ -2432,13 +2248,12 @@ void dvmSuspendSelf(bool jdwpActivity)
      * though.
      */
     lockThreadSuspendCount();
-    dvmAddToThreadSuspendCount(&self->suspendCount, 1);
-    self->dbgSuspendCount++;
+    dvmAddToSuspendCounts(self, 1, 1);
 
     /*
      * Suspend ourselves.
      */
-    assert(self->suspendCount > 0);
+    assert(self->interpBreak.ctl.suspendCount > 0);
     self->status = THREAD_SUSPENDED;
     LOG_THREAD("threadid=%d: self-suspending (dbg)\n", self->threadId);
 
@@ -2455,10 +2270,10 @@ void dvmSuspendSelf(bool jdwpActivity)
         dvmJdwpClearWaitForEventThread(gDvm.jdwpState);
     }
 
-    while (self->suspendCount != 0) {
+    while (self->interpBreak.ctl.suspendCount != 0) {
         dvmWaitCond(&gDvm.threadSuspendCountCond,
                     &gDvm.threadSuspendCountLock);
-        if (self->suspendCount != 0) {
+        if (self->interpBreak.ctl.suspendCount != 0) {
             /*
              * The condition was signaled but we're still suspended.  This
              * can happen if the debugger lets go while a SIGQUIT thread
@@ -2466,46 +2281,18 @@ void dvmSuspendSelf(bool jdwpActivity)
              * just long enough to try to grab the thread-suspend lock).
              */
             LOGD("threadid=%d: still suspended after undo (sc=%d dc=%d)\n",
-                self->threadId, self->suspendCount, self->dbgSuspendCount);
+                self->threadId, self->interpBreak.ctl.suspendCount,
+                self->interpBreak.ctl.dbgSuspendCount);
         }
     }
-    assert(self->suspendCount == 0 && self->dbgSuspendCount == 0);
+    assert(self->interpBreak.ctl.suspendCount == 0 &&
+           self->interpBreak.ctl.dbgSuspendCount == 0);
     self->status = THREAD_RUNNING;
     LOG_THREAD("threadid=%d: self-reviving (dbg), status=%d\n",
         self->threadId, self->status);
 
     unlockThreadSuspendCount();
 }
-
-
-#ifdef HAVE_GLIBC
-# define NUM_FRAMES  20
-# include <execinfo.h>
-/*
- * glibc-only stack dump function.  Requires link with "--export-dynamic".
- *
- * TODO: move this into libs/cutils and make it work for all platforms.
- */
-static void printBackTrace(void)
-{
-    void* array[NUM_FRAMES];
-    size_t size;
-    char** strings;
-    size_t i;
-
-    size = backtrace(array, NUM_FRAMES);
-    strings = backtrace_symbols(array, size);
-
-    LOGW("Obtained %zd stack frames.\n", size);
-
-    for (i = 0; i < size; i++)
-        LOGW("%s\n", strings[i]);
-
-    free(strings);
-}
-#else
-static void printBackTrace(void) {}
-#endif
 
 /*
  * Dump the state of the current thread and that of another thread that
@@ -2514,7 +2301,7 @@ static void printBackTrace(void) {}
 static void dumpWedgedThread(Thread* thread)
 {
     dvmDumpThread(dvmThreadSelf(), false);
-    printBackTrace();
+    dvmPrintNativeBackTrace();
 
     // dumping a running thread is risky, but could be useful
     dvmDumpThread(thread, true);
@@ -2775,7 +2562,7 @@ void dvmSuspendAllThreads(SuspendCause why)
      * This can happen when a couple of threads have simultaneous events
      * of interest to the debugger.
      */
-    //assert(self->suspendCount == 0);
+    //assert(self->interpBreak.ctl.suspendCount == 0);
 
     /*
      * Increment everybody's suspend count (except our own).
@@ -2792,9 +2579,10 @@ void dvmSuspendAllThreads(SuspendCause why)
             thread->handle == dvmJdwpGetDebugThread(gDvm.jdwpState))
             continue;
 
-        dvmAddToThreadSuspendCount(&thread->suspendCount, 1);
-        if (why == SUSPEND_FOR_DEBUG || why == SUSPEND_FOR_DEBUG_EVENT)
-            thread->dbgSuspendCount++;
+        dvmAddToSuspendCounts(thread, 1,
+                              (why == SUSPEND_FOR_DEBUG ||
+                              why == SUSPEND_FOR_DEBUG_EVENT)
+                              ? 1 : 0);
     }
     unlockThreadSuspendCount();
 
@@ -2826,8 +2614,9 @@ void dvmSuspendAllThreads(SuspendCause why)
 
         LOG_THREAD("threadid=%d:   threadid=%d status=%d sc=%d dc=%d\n",
             self->threadId,
-            thread->threadId, thread->status, thread->suspendCount,
-            thread->dbgSuspendCount);
+            thread->threadId, thread->status,
+            thread->interpBreak.ctl.suspendCount,
+            thread->interpBreak.ctl.dbgSuspendCount);
     }
 
     dvmUnlockThreadList();
@@ -2868,10 +2657,11 @@ void dvmResumeAllThreads(SuspendCause why)
             continue;
         }
 
-        if (thread->suspendCount > 0) {
-            dvmAddToThreadSuspendCount(&thread->suspendCount, -1);
-            if (why == SUSPEND_FOR_DEBUG || why == SUSPEND_FOR_DEBUG_EVENT)
-                thread->dbgSuspendCount--;
+        if (thread->interpBreak.ctl.suspendCount > 0) {
+            dvmAddToSuspendCounts(thread, -1,
+                                  (why == SUSPEND_FOR_DEBUG ||
+                                  why == SUSPEND_FOR_DEBUG_EVENT)
+                                  ? -1 : 0);
         } else {
             LOG_THREAD("threadid=%d:  suspendCount already zero\n",
                 thread->threadId);
@@ -2955,14 +2745,15 @@ void dvmUndoDebuggerSuspensions(void)
 
         /* debugger events don't suspend JDWP thread */
         if (thread->handle == dvmJdwpGetDebugThread(gDvm.jdwpState)) {
-            assert(thread->dbgSuspendCount == 0);
+            assert(thread->interpBreak.ctl.dbgSuspendCount == 0);
             continue;
         }
 
-        assert(thread->suspendCount >= thread->dbgSuspendCount);
-        dvmAddToThreadSuspendCount(&thread->suspendCount,
-                                   -thread->dbgSuspendCount);
-        thread->dbgSuspendCount = 0;
+        assert(thread->interpBreak.ctl.suspendCount >=
+               thread->interpBreak.ctl.dbgSuspendCount);
+        dvmAddToSuspendCounts(thread,
+                              -thread->interpBreak.ctl.dbgSuspendCount,
+                              -thread->interpBreak.ctl.dbgSuspendCount);
     }
     unlockThreadSuspendCount();
     dvmUnlockThreadList();
@@ -3007,7 +2798,8 @@ bool dvmIsSuspended(const Thread* thread)
      *      we hold suspendCountLock).
      */
 
-    return (thread->suspendCount != 0 && thread->status != THREAD_RUNNING);
+    return (thread->interpBreak.ctl.suspendCount != 0 &&
+            thread->status != THREAD_RUNNING);
 }
 
 /*
@@ -3051,21 +2843,21 @@ void dvmWaitForSuspend(Thread* thread)
 static bool fullSuspendCheck(Thread* self)
 {
     assert(self != NULL);
-    assert(self->suspendCount >= 0);
+    assert(self->interpBreak.ctl.suspendCount >= 0);
 
     /*
      * Grab gDvm.threadSuspendCountLock.  This gives us exclusive write
-     * access to self->suspendCount.
+     * access to self->interpBreak.ctl.suspendCount.
      */
     lockThreadSuspendCount();   /* grab gDvm.threadSuspendCountLock */
 
-    bool needSuspend = (self->suspendCount != 0);
+    bool needSuspend = (self->interpBreak.ctl.suspendCount != 0);
     if (needSuspend) {
         LOG_THREAD("threadid=%d: self-suspending\n", self->threadId);
         ThreadStatus oldStatus = self->status;      /* should be RUNNING */
         self->status = THREAD_SUSPENDED;
 
-        while (self->suspendCount != 0) {
+        while (self->interpBreak.ctl.suspendCount != 0) {
             /*
              * Wait for wakeup signal, releasing lock.  The act of releasing
              * and re-acquiring the lock provides the memory barriers we
@@ -3074,7 +2866,8 @@ static bool fullSuspendCheck(Thread* self)
             dvmWaitCond(&gDvm.threadSuspendCountCond,
                     &gDvm.threadSuspendCountLock);
         }
-        assert(self->suspendCount == 0 && self->dbgSuspendCount == 0);
+        assert(self->interpBreak.ctl.suspendCount == 0 &&
+               self->interpBreak.ctl.dbgSuspendCount == 0);
         self->status = oldStatus;
         LOG_THREAD("threadid=%d: self-reviving, status=%d\n",
             self->threadId, self->status);
@@ -3092,7 +2885,7 @@ static bool fullSuspendCheck(Thread* self)
 bool dvmCheckSuspendPending(Thread* self)
 {
     assert(self != NULL);
-    if (self->suspendCount == 0) {
+    if (self->interpBreak.ctl.suspendCount == 0) {
         return false;
     } else {
         return fullSuspendCheck(self);
@@ -3172,7 +2965,7 @@ ThreadStatus dvmChangeStatus(Thread* self, ThreadStatus newStatus)
          * on SMP and slightly more correct, but less convenient.
          */
         android_atomic_acquire_store(newStatus, &self->status);
-        if (self->suspendCount != 0) {
+        if (self->interpBreak.ctl.suspendCount != 0) {
             fullSuspendCheck(self);
         }
     } else {
@@ -3203,13 +2996,13 @@ static Object* getStaticThreadGroup(const char* fieldName)
         fieldName, "Ljava/lang/ThreadGroup;");
     if (groupField == NULL) {
         LOGE("java.lang.ThreadGroup does not have an '%s' field\n", fieldName);
-        dvmThrowException("Ljava/lang/IncompatibleClassChangeError;", NULL);
+        dvmThrowInternalError("bad definition for ThreadGroup");
         return NULL;
     }
     groupObj = dvmGetStaticFieldObject(groupField);
     if (groupObj == NULL) {
         LOGE("java.lang.ThreadGroup.%s not initialized\n", fieldName);
-        dvmThrowException("Ljava/lang/InternalError;", NULL);
+        dvmThrowInternalError(NULL);
         return NULL;
     }
 
@@ -3562,14 +3355,9 @@ void dvmDumpThreadEx(const DebugOutputTarget* target, Thread* thread,
     groupObj = (Object*) dvmGetFieldObject(threadObj,
                 gDvm.offJavaLangThread_group);
     if (groupObj != NULL) {
-        int offset = dvmFindFieldOffset(gDvm.classJavaLangThreadGroup,
-            "name", "Ljava/lang/String;");
-        if (offset < 0) {
-            LOGW("Unable to find 'name' field in ThreadGroup\n");
-        } else {
-            nameStr = (StringObject*) dvmGetFieldObject(groupObj, offset);
-            groupName = dvmCreateCstrFromString(nameStr);
-        }
+        nameStr = (StringObject*)
+            dvmGetFieldObject(groupObj, gDvm.offJavaLangThreadGroup_name);
+        groupName = dvmCreateCstrFromString(nameStr);
     }
     if (groupName == NULL)
         groupName = strdup("(null; initializing?)");
@@ -3586,8 +3374,8 @@ void dvmDumpThreadEx(const DebugOutputTarget* target, Thread* thread,
         );
     dvmPrintDebugMessage(target,
         "  | group=\"%s\" sCount=%d dsCount=%d obj=%p self=%p\n",
-        groupName, thread->suspendCount, thread->dbgSuspendCount,
-        thread->threadObj, thread);
+        groupName, thread->interpBreak.ctl.suspendCount,
+        thread->interpBreak.ctl.dbgSuspendCount, thread->threadObj, thread);
     dvmPrintDebugMessage(target,
         "  | sysTid=%d nice=%d sched=%d/%d cgrp=%s handle=%d\n",
         thread->systemTid, getpriority(PRIO_PROCESS, thread->systemTid),
@@ -3619,29 +3407,6 @@ void dvmDumpThreadEx(const DebugOutputTarget* target, Thread* thread,
         "  | schedstat=( %s ) utm=%lu stm=%lu core=%d\n",
         schedstatBuf, procStatData.utime, procStatData.stime,
         procStatData.processor);
-
-#ifdef WITH_MONITOR_TRACKING
-    if (!isRunning) {
-        LockedObjectData* lod = thread->pLockedObjects;
-        if (lod != NULL)
-            dvmPrintDebugMessage(target, "  | monitors held:\n");
-        else
-            dvmPrintDebugMessage(target, "  | monitors held: <none>\n");
-        while (lod != NULL) {
-            Object* obj = lod->obj;
-            if (obj->clazz == gDvm.classJavaLangClass) {
-                ClassObject* clazz = (ClassObject*) obj;
-                dvmPrintDebugMessage(target, "  >  %p[%d] (%s object for class %s)\n",
-                    obj, lod->recursionCount, obj->clazz->descriptor,
-                    clazz->descriptor);
-            } else {
-                dvmPrintDebugMessage(target, "  >  %p[%d] (%s)\n",
-                    obj, lod->recursionCount, obj->clazz->descriptor);
-            }
-            lod = lod->next;
-        }
-    }
-#endif
 
     if (isRunning)
         dvmDumpRunningThreadStack(target, thread);
@@ -3702,13 +3467,11 @@ void dvmDumpAllThreadsEx(const DebugOutputTarget* target, bool grabLock)
 
 #ifdef HAVE_ANDROID_OS
     dvmPrintDebugMessage(target,
-        "(mutexes: tll=%x tsl=%x tscl=%x ghl=%x hwl=%x hwll=%x)\n",
+        "(mutexes: tll=%x tsl=%x tscl=%x ghl=%x)\n",
         gDvm.threadListLock.value,
         gDvm._threadSuspendLock.value,
         gDvm.threadSuspendCountLock.value,
-        gDvm.gcHeapLock.value,
-        gDvm.heapWorkerLock.value,
-        gDvm.heapWorkerListLock.value);
+        gDvm.gcHeapLock.value);
 #endif
 
     if (grabLock)
@@ -3784,130 +3547,3 @@ void dvmNukeThread(Thread* thread)
     signal(SIGSEGV, SIG_IGN);
     LOGD("Continuing\n");
 }
-
-#ifdef WITH_MONITOR_TRACKING
-/*
- * Count up the #of locked objects in the current thread.
- */
-static int getThreadObjectCount(const Thread* self)
-{
-    LockedObjectData* lod;
-    int count = 0;
-
-    lod = self->pLockedObjects;
-    while (lod != NULL) {
-        count++;
-        lod = lod->next;
-    }
-    return count;
-}
-
-/*
- * Add the object to the thread's locked object list if it doesn't already
- * exist.  The most recently added object is the most likely to be released
- * next, so we insert at the head of the list.
- *
- * If it already exists, we increase the recursive lock count.
- *
- * The object's lock may be thin or fat.
- */
-void dvmAddToMonitorList(Thread* self, Object* obj, bool withTrace)
-{
-    LockedObjectData* newLod;
-    LockedObjectData* lod;
-    int* trace;
-    int depth;
-
-    lod = self->pLockedObjects;
-    while (lod != NULL) {
-        if (lod->obj == obj) {
-            lod->recursionCount++;
-            LOGV("+++ +recursive lock %p -> %d\n", obj, lod->recursionCount);
-            return;
-        }
-        lod = lod->next;
-    }
-
-    newLod = (LockedObjectData*) calloc(1, sizeof(LockedObjectData));
-    if (newLod == NULL) {
-        LOGE("malloc failed on %d bytes\n", sizeof(LockedObjectData));
-        return;
-    }
-    newLod->obj = obj;
-    newLod->recursionCount = 0;
-
-    if (withTrace) {
-        trace = dvmFillInStackTraceRaw(self, &depth);
-        newLod->rawStackTrace = trace;
-        newLod->stackDepth = depth;
-    }
-
-    newLod->next = self->pLockedObjects;
-    self->pLockedObjects = newLod;
-
-    LOGV("+++ threadid=%d: added %p, now %d\n",
-        self->threadId, newLod, getThreadObjectCount(self));
-}
-
-/*
- * Remove the object from the thread's locked object list.  If the entry
- * has a nonzero recursion count, we just decrement the count instead.
- */
-void dvmRemoveFromMonitorList(Thread* self, Object* obj)
-{
-    LockedObjectData* lod;
-    LockedObjectData* prevLod;
-
-    lod = self->pLockedObjects;
-    prevLod = NULL;
-    while (lod != NULL) {
-        if (lod->obj == obj) {
-            if (lod->recursionCount > 0) {
-                lod->recursionCount--;
-                LOGV("+++ -recursive lock %p -> %d\n",
-                    obj, lod->recursionCount);
-                return;
-            } else {
-                break;
-            }
-        }
-        prevLod = lod;
-        lod = lod->next;
-    }
-
-    if (lod == NULL) {
-        LOGW("BUG: object %p not found in thread's lock list\n", obj);
-        return;
-    }
-    if (prevLod == NULL) {
-        /* first item in list */
-        assert(self->pLockedObjects == lod);
-        self->pLockedObjects = lod->next;
-    } else {
-        /* middle/end of list */
-        prevLod->next = lod->next;
-    }
-
-    LOGV("+++ threadid=%d: removed %p, now %d\n",
-        self->threadId, lod, getThreadObjectCount(self));
-    free(lod->rawStackTrace);
-    free(lod);
-}
-
-/*
- * If the specified object is already in the thread's locked object list,
- * return the LockedObjectData struct.  Otherwise return NULL.
- */
-LockedObjectData* dvmFindInMonitorList(const Thread* self, const Object* obj)
-{
-    LockedObjectData* lod;
-
-    lod = self->pLockedObjects;
-    while (lod != NULL) {
-        if (lod->obj == obj)
-            return lod;
-        lod = lod->next;
-    }
-    return NULL;
-}
-#endif /*WITH_MONITOR_TRACKING*/

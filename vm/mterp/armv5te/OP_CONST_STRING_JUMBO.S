@@ -5,7 +5,7 @@
     /* const/string vAA, String@BBBBBBBB */
     FETCH(r0, 1)                        @ r0<- bbbb (low)
     FETCH(r1, 2)                        @ r1<- BBBB (high)
-    ldr     r2, [rGLUE, #offGlue_methodClassDex]    @ r2<- glue->methodClassDex
+    ldr     r2, [rSELF, #offThread_methodClassDex]  @ r2<- self->methodClassDex
     mov     r9, rINST, lsr #8           @ r9<- AA
     ldr     r2, [r2, #offDvmDex_pResStrings]   @ r2<- dvmDex->pResStrings
     orr     r1, r0, r1, lsl #16         @ r1<- BBBBbbbb
@@ -25,7 +25,7 @@
      */
 .L${opcode}_resolve:
     EXPORT_PC()
-    ldr     r0, [rGLUE, #offGlue_method] @ r0<- glue->method
+    ldr     r0, [rSELF, #offThread_method] @ r0<- self->method
     ldr     r0, [r0, #offMethod_clazz]  @ r0<- method->clazz
     bl      dvmResolveString            @ r0<- String reference
     cmp     r0, #0                      @ failed?

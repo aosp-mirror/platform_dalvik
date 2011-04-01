@@ -23,7 +23,6 @@
 BEGIN {
     MAX_OPCODE = 65535;
     MAX_PACKED_OPCODE = 511;
-    MAX_PACKED_OPCODE = 255; # TODO: Not for long!
     initIndexTypes();
     initFlags();
     if (readBytecodes()) exit 1;
@@ -81,7 +80,7 @@ emission == "first-opcodes" {
     for (i = 0; i <= MAX_OPCODE; i++) {
         if (isUnused(i) || isOptimized(i)) continue;
         if (isFirst[i] == "true") {
-            printf("    //     DalvOps.%s\n", constName[i]);
+            printf("    //     Opcodes.%s\n", constName[i]);
         }
     }
 }
@@ -96,15 +95,30 @@ emission == "dops" {
         nextOp = (nextOp == -1) ? "NO_NEXT" : constName[nextOp];
 
         printf("    public static final Dop %s =\n" \
-               "        new Dop(DalvOps.%s, DalvOps.%s,\n" \
-               "            DalvOps.%s, Form%s.THE_ONE, %s,\n" \
-               "            \"%s\");\n\n",
+               "        new Dop(Opcodes.%s, Opcodes.%s,\n" \
+               "            Opcodes.%s, Form%s.THE_ONE, %s);\n\n",
                constName[i], constName[i], family[i], nextOp, format[i],
-               hasResult[i], name[i]);
+               hasResult[i]);
     }
 }
 
-emission == "dops-init" {
+emission == "opcode-info-defs" {
+    emissionHandled = 1;
+
+    for (i = 0; i <= MAX_OPCODE; i++) {
+        if (isUnused(i) || isOptimized(i)) continue;
+
+        itype = toupper(indexType[i]);
+        gsub(/-/, "_", itype);
+
+        printf("    public static final Info %s =\n" \
+               "        new Info(Opcodes.%s, \"%s\",\n" \
+               "            InstructionCodec.FORMAT_%s, IndexType.%s);\n\n", \
+               constName[i], constName[i], name[i], toupper(format[i]), itype);
+    }
+}
+
+emission == "dops-init" || emission == "opcode-info-init" {
     emissionHandled = 1;
 
     for (i = 0; i <= MAX_OPCODE; i++) {

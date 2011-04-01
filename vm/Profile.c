@@ -18,6 +18,7 @@
  * Android's method call profiling goodies.
  */
 #include "Dalvik.h"
+#include <interp/InterpDefs.h>
 
 #include <stdlib.h>
 #include <stddef.h>
@@ -145,20 +146,6 @@ bool dvmProfilingStartup(void)
     dvmInitMutex(&gDvm.methodTrace.startStopLock);
     pthread_cond_init(&gDvm.methodTrace.threadExitCond, NULL);
 
-    ClassObject* clazz =
-        dvmFindClassNoInit("Ldalvik/system/VMDebug;", NULL);
-    assert(clazz != NULL);
-    gDvm.methodTrace.gcMethod =
-        dvmFindDirectMethodByDescriptor(clazz, "startGC", "()V");
-    gDvm.methodTrace.classPrepMethod =
-        dvmFindDirectMethodByDescriptor(clazz, "startClassPrep", "()V");
-    if (gDvm.methodTrace.gcMethod == NULL ||
-        gDvm.methodTrace.classPrepMethod == NULL)
-    {
-        LOGE("Unable to find startGC or startClassPrep\n");
-        return false;
-    }
-
     assert(!dvmCheckException(dvmThreadSelf()));
 
     /*
@@ -212,17 +199,17 @@ void dvmProfilingShutdown(void)
 }
 
 /*
- * Update the "active profilers" count.
- *
- * "count" should be +1 or -1.
+ * Update the set of active profilers
  */
-static void updateActiveProfilers(int count)
+static void updateActiveProfilers(InterpBreakFlags newBreak,
+                                  ExecutionSubModes newMode, bool enable)
 {
     int oldValue, newValue;
 
+    // Update global count
     do {
         oldValue = gDvm.activeProfilers;
-        newValue = oldValue + count;
+        newValue = oldValue + (enable ? 1 : -1);
         if (newValue < 0) {
             LOGE("Can't have %d active profilers\n", newValue);
             dvmAbort();
@@ -230,10 +217,14 @@ static void updateActiveProfilers(int count)
     } while (android_atomic_release_cas(oldValue, newValue,
             &gDvm.activeProfilers) != 0);
 
-    LOGD("+++ active profiler count now %d\n", newValue);
+    // Tell the threads
+    dvmUpdateAllInterpBreak(newBreak, newMode, enable);
+
 #if defined(WITH_JIT)
-    dvmCompilerStateRefresh();
+    dvmCompilerUpdateGlobalState();
 #endif
+
+    LOGD("+++ active profiler count now %d\n", newValue);
 }
 
 
@@ -348,7 +339,12 @@ void dvmMethodTraceStart(const char* traceFileName, int traceFd, int bufferSize,
         dvmMethodTraceStop();
         dvmLockMutex(&state->startStopLock);
     }
-    updateActiveProfilers(1);
+    /*
+     * ENHANCEMENT: To trace just a single thread, modify the
+     * following to take a Thread* argument, and set the appropriate
+     * interpBreak flags only on the target thread.
+     */
+    updateActiveProfilers(kInterpNoBreak, kSubModeMethodTrace, true);
     LOGI("TRACE STARTED: '%s' %dKB\n", traceFileName, bufferSize / 1024);
 
     /*
@@ -359,7 +355,7 @@ void dvmMethodTraceStart(const char* traceFileName, int traceFd, int bufferSize,
      */
     state->buf = (u1*) malloc(bufferSize);
     if (state->buf == NULL) {
-        dvmThrowException("Ljava/lang/InternalError;", "buffer alloc failed");
+        dvmThrowInternalError("buffer alloc failed");
         goto fail;
     }
     if (!directToDdms) {
@@ -372,7 +368,7 @@ void dvmMethodTraceStart(const char* traceFileName, int traceFd, int bufferSize,
             int err = errno;
             LOGE("Unable to open trace file '%s': %s\n",
                 traceFileName, strerror(err));
-            dvmThrowExceptionFmt("Ljava/lang/RuntimeException;",
+            dvmThrowExceptionFmt(gDvm.exRuntimeException,
                 "Unable to open trace file '%s': %s",
                 traceFileName, strerror(err));
             goto fail;
@@ -416,7 +412,7 @@ void dvmMethodTraceStart(const char* traceFileName, int traceFd, int bufferSize,
     return;
 
 fail:
-    updateActiveProfilers(-1);
+    updateActiveProfilers(kInterpNoBreak, kSubModeMethodTrace, false);
     if (state->traceFile != NULL) {
         fclose(state->traceFile);
         state->traceFile = NULL;
@@ -508,7 +504,7 @@ void dvmMethodTraceStop(void)
         dvmUnlockMutex(&state->startStopLock);
         return;
     } else {
-        updateActiveProfilers(-1);
+        updateActiveProfilers(kInterpNoBreak, kSubModeMethodTrace, false);
     }
 
     /* compute elapsed time */
@@ -649,7 +645,7 @@ void dvmMethodTraceStop(void)
             int err = errno;
             LOGE("trace fwrite(%d) failed: %s\n",
                 finalCurOffset, strerror(err));
-            dvmThrowExceptionFmt("Ljava/lang/RuntimeException;",
+            dvmThrowExceptionFmt(gDvm.exRuntimeException,
                 "Trace data write failed: %s", strerror(err));
         }
     }
@@ -677,6 +673,8 @@ void dvmMethodTraceAdd(Thread* self, const Method* method, int action)
     u4 clockDiff, methodVal;
     int oldOffset, newOffset;
     u1* ptr;
+
+    assert(method != NULL);
 
     /*
      * We can only access the per-thread CPU clock from within the
@@ -726,30 +724,27 @@ void dvmMethodTraceAdd(Thread* self, const Method* method, int action)
     *ptr++ = (u1) (clockDiff >> 24);
 }
 
-#if defined(WITH_INLINE_PROFILING)
-#include <interp/InterpDefs.h>
 
 /*
  * Register the METHOD_TRACE_ENTER action for the fast interpreter and
  * JIT'ed code.
  */
-void dvmFastMethodTraceEnter(const Method* method,
-                             const struct InterpState* interpState)
+void dvmFastMethodTraceEnter(const Method* method, Thread* self)
 {
-    if (gDvm.activeProfilers) {
-        dvmMethodTraceAdd(interpState->self, method, METHOD_TRACE_ENTER);
+    if (self->interpBreak.ctl.subMode & kSubModeMethodTrace) {
+        dvmMethodTraceAdd(self, method, METHOD_TRACE_ENTER);
     }
 }
 
 /*
  * Register the METHOD_TRACE_EXIT action for the fast interpreter and
- * JIT'ed code for Java methods. The about-to-return callee method can be
- * retrieved from interpState->method.
+ * JIT'ed code for methods. The about-to-return callee method can be
+ * retrieved from self->interpSave.method.
  */
-void dvmFastJavaMethodTraceExit(const struct InterpState* interpState)
+void dvmFastMethodTraceExit(Thread* self)
 {
-    if (gDvm.activeProfilers) {
-        dvmMethodTraceAdd(interpState->self, interpState->method,
+    if (self->interpBreak.ctl.subMode & kSubModeMethodTrace) {
+        dvmMethodTraceAdd(self, self->interpSave.method,
                           METHOD_TRACE_EXIT);
     }
 }
@@ -757,16 +752,14 @@ void dvmFastJavaMethodTraceExit(const struct InterpState* interpState)
 /*
  * Register the METHOD_TRACE_EXIT action for the fast interpreter and
  * JIT'ed code for JNI methods. The about-to-return JNI callee method is passed
- * in explicitly.
+ * in explicitly.  Also used for inline-execute.
  */
-void dvmFastNativeMethodTraceExit(const Method* method,
-                                  const struct InterpState* interpState)
+void dvmFastNativeMethodTraceExit(const Method* method, Thread* self)
 {
-    if (gDvm.activeProfilers) {
-        dvmMethodTraceAdd(interpState->self, method, METHOD_TRACE_EXIT);
+    if (self->interpBreak.ctl.subMode & kSubModeMethodTrace) {
+        dvmMethodTraceAdd(self, method, METHOD_TRACE_EXIT);
     }
 }
-#endif
 
 /*
  * We just did something with a method.  Emit a record by setting a value
@@ -777,7 +770,7 @@ void dvmEmitEmulatorTrace(const Method* method, int action)
 #ifdef UPDATE_MAGIC_PAGE
     /*
      * We store the address of the Dalvik bytecodes to the memory-mapped
-     * trace page for normal Java methods.  We also trace calls to native
+     * trace page for normal methods.  We also trace calls to native
      * functions by storing the address of the native function to the
      * trace page.
      * Abstract methods don't have any bytecodes, so we don't trace them.
@@ -798,7 +791,7 @@ void dvmEmitEmulatorTrace(const Method* method, int action)
          *   1 = EXIT
          *   2 = UNROLL
          * To help the trace tools reconstruct the runtime stack containing
-         * a mix of Java plus native methods, we add 4 to the action if this
+         * a mix of normal plus native methods, we add 4 to the action if this
          * is a native method.
          */
         action += 4;
@@ -840,11 +833,11 @@ void dvmEmitEmulatorTrace(const Method* method, int action)
  */
 void dvmMethodTraceGCBegin(void)
 {
-    TRACE_METHOD_ENTER(dvmThreadSelf(), gDvm.methodTrace.gcMethod);
+    TRACE_METHOD_ENTER(dvmThreadSelf(), gDvm.methodTraceGcMethod);
 }
 void dvmMethodTraceGCEnd(void)
 {
-    TRACE_METHOD_EXIT(dvmThreadSelf(), gDvm.methodTrace.gcMethod);
+    TRACE_METHOD_EXIT(dvmThreadSelf(), gDvm.methodTraceGcMethod);
 }
 
 /*
@@ -852,11 +845,11 @@ void dvmMethodTraceGCEnd(void)
  */
 void dvmMethodTraceClassPrepBegin(void)
 {
-    TRACE_METHOD_ENTER(dvmThreadSelf(), gDvm.methodTrace.classPrepMethod);
+    TRACE_METHOD_ENTER(dvmThreadSelf(), gDvm.methodTraceClassPrepMethod);
 }
 void dvmMethodTraceClassPrepEnd(void)
 {
-    TRACE_METHOD_EXIT(dvmThreadSelf(), gDvm.methodTrace.classPrepMethod);
+    TRACE_METHOD_EXIT(dvmThreadSelf(), gDvm.methodTraceClassPrepMethod);
 }
 
 
@@ -869,12 +862,12 @@ void dvmEmulatorTraceStart(void)
     if (gDvm.emulatorTracePage == NULL)
         return;
 
-    updateActiveProfilers(1);
-
     /* in theory we should make this an atomic inc; in practice not important */
     gDvm.emulatorTraceEnableCount++;
     if (gDvm.emulatorTraceEnableCount == 1)
         LOGD("--- emulator method traces enabled\n");
+    updateActiveProfilers(kInterpEmulatorTraceBreak, kSubModeEmulatorTrace,
+                          true);
 }
 
 /*
@@ -886,11 +879,12 @@ void dvmEmulatorTraceStop(void)
         LOGE("ERROR: emulator tracing not enabled\n");
         return;
     }
-    updateActiveProfilers(-1);
     /* in theory we should make this an atomic inc; in practice not important */
     gDvm.emulatorTraceEnableCount--;
     if (gDvm.emulatorTraceEnableCount == 0)
         LOGD("--- emulator method traces disabled\n");
+    updateActiveProfilers(kInterpEmulatorTraceBreak, kSubModeEmulatorTrace,
+                          (gDvm.emulatorTraceEnableCount != 0));
 }
 
 
@@ -899,12 +893,9 @@ void dvmEmulatorTraceStop(void)
  */
 void dvmStartInstructionCounting(void)
 {
-#if defined(WITH_INLINE_PROFILING)
-    LOGW("Instruction counting not supported with inline profiling");
-#endif
-    updateActiveProfilers(1);
     /* in theory we should make this an atomic inc; in practice not important */
     gDvm.instructionCountEnableCount++;
+    updateActiveProfilers(kInterpInstCountBreak, kSubModeInstCounting, true);
 }
 
 /*
@@ -916,8 +907,9 @@ void dvmStopInstructionCounting(void)
         LOGE("ERROR: instruction counting not enabled\n");
         dvmAbort();
     }
-    updateActiveProfilers(-1);
     gDvm.instructionCountEnableCount--;
+    updateActiveProfilers(kInterpInstCountBreak, kSubModeInstCounting,
+                          (gDvm.instructionCountEnableCount != 0));
 }
 
 

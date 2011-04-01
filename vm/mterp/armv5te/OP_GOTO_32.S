@@ -7,26 +7,23 @@
      * double to get a byte offset.
      *
      * Unlike most opcodes, this one is allowed to branch to itself, so
-     * our "backward branch" test must be "<=0" instead of "<0".  The ORRS
-     * instruction doesn't affect the V flag, so we need to clear it
-     * explicitly.
+     * our "backward branch" test must be "<=0" instead of "<0".  Because
+     * we need the V bit set, we'll use an adds to convert from Dalvik
+     * offset to byte offset.
      */
     /* goto/32 +AAAAAAAA */
     FETCH(r0, 1)                        @ r0<- aaaa (lo)
     FETCH(r1, 2)                        @ r1<- AAAA (hi)
-    cmp     ip, ip                      @ (clear V flag during stall)
-    orrs    r0, r0, r1, lsl #16         @ r0<- AAAAaaaa, check sign
-    mov     r9, r0, asl #1              @ r9<- byte offset
-    ble     common_backwardBranch       @ backward branch, do periodic checks
+    orr     r0, r0, r1, lsl #16         @ r0<- AAAAaaaa
+    adds    r1, r0, r0                  @ r1<- byte offset
 #if defined(WITH_JIT)
-    GET_JIT_PROF_TABLE(r0)
-    FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
-    cmp     r0,#0
-    bne     common_updateProfile
-    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
-    GOTO_OPCODE(ip)                     @ jump to next instruction
+    ldr     r0, [rSELF, #offThread_pJitProfTable]
+    ldrle   rIBASE, [rSELF, #offThread_curHandlerTable] @ refresh handler base
+    FETCH_ADVANCE_INST_RB(r1)           @ update rPC, load rINST
+    ble     common_testUpdateProfile    @ (r0) hot trace head?
 #else
-    FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
+    FETCH_ADVANCE_INST_RB(r1)           @ update rPC, load rINST
+    ldrle   rIBASE, [rSELF, #offThread_curHandlerTable] @ refresh handler base
+#endif
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     GOTO_OPCODE(ip)                     @ jump to next instruction
-#endif

@@ -169,11 +169,6 @@ static void handleSigQuit(void)
     dvmCompilerDumpStats();
 #endif
 
-    if (false) {
-        dvmLockMutex(&gDvm.jniGlobalRefLock);
-        dvmDumpReferenceTable(&gDvm.jniGlobalRefTable, "JNI global");
-        dvmUnlockMutex(&gDvm.jniGlobalRefLock);
-    }
     if (false) dvmDumpTrackedAllocations(true);
 
     dvmResumeAllThreads(SUSPEND_FOR_STACK_DUMP);
@@ -216,10 +211,18 @@ static void handleSigQuit(void)
 static void handleSigUsr1(void)
 {
     LOGI("SIGUSR1 forcing GC (no HPROF)\n");
-    dvmCollectGarbage(false);
+    dvmCollectGarbage();
 }
 
 #if defined(WITH_JIT) && defined(WITH_JIT_TUNING)
+/* Sample callback function for dvmJitScanAllClassPointers */
+void printAllClass(void *ptr)
+{
+    ClassObject **classPP = (ClassObject **) ptr;
+    LOGE("class %s", (*classPP)->descriptor);
+
+}
+
 /*
  * Respond to a SIGUSR2 by dumping some JIT stats and possibly resetting
  * the code cache.
@@ -227,15 +230,19 @@ static void handleSigUsr1(void)
 static void handleSigUsr2(void)
 {
     static int codeCacheResetCount = 0;
+    gDvmJit.receivedSIGUSR2 ^= true;
     if ((--codeCacheResetCount & 7) == 0) {
+        /* Dump all class pointers in the traces */
+        dvmJitScanAllClassPointers(printAllClass);
         gDvmJit.codeCacheFull = true;
     } else {
         dvmCompilerDumpStats();
         /* Stress-test unchain all */
         dvmJitUnchainAll();
-        LOGD("Send %d more signals to rest the code cache",
+        LOGD("Send %d more signals to reset the code cache",
              codeCacheResetCount & 7);
     }
+    dvmCheckInterpStateConsistency();
 }
 #endif
 

@@ -25,7 +25,6 @@
  * #define SIGNATURE_BREAKPOINT
  */
 
-#define MAX_JIT_RUN_LEN                 64
 #define COMPILER_WORK_QUEUE_SIZE        100
 #define COMPILER_IC_PATCH_QUEUE_SIZE    64
 
@@ -45,15 +44,8 @@
 #define COMPILER_TRACE_CHAINING(X)
 
 /* Macro to change the permissions applied to a chunk of the code cache */
-#if !defined(WITH_JIT_TUNING)
 #define PROTECT_CODE_CACHE_ATTRS       (PROT_READ | PROT_EXEC)
 #define UNPROTECT_CODE_CACHE_ATTRS     (PROT_READ | PROT_EXEC | PROT_WRITE)
-#else
-/* When doing JIT profiling always grant the write permission */
-#define PROTECT_CODE_CACHE_ATTRS       (PROT_READ | PROT_EXEC |                \
-                                  (gDvmJit.profile ? PROT_WRITE : 0))
-#define UNPROTECT_CODE_CACHE_ATTRS     (PROT_READ | PROT_EXEC | PROT_WRITE)
-#endif
 
 /* Acquire the lock before removing PROT_WRITE from the specified mem region */
 #define UNPROTECT_CODE_CACHE(addr, size)                                       \
@@ -82,7 +74,6 @@ typedef enum JitInstructionSetType {
     DALVIK_JIT_ARM,
     DALVIK_JIT_THUMB,
     DALVIK_JIT_THUMB2,
-    DALVIK_JIT_THUMB2EE,
     DALVIK_JIT_IA32
 } JitInstructionSetType;
 
@@ -90,9 +81,11 @@ typedef enum JitInstructionSetType {
 typedef struct JitTranslationInfo {
     void *codeAddress;
     JitInstructionSetType instructionSet;
+    int profileCodeSize;
     bool discardResult;         // Used for debugging divergence and IC patching
     bool methodCompilationAborted;  // Cannot compile the whole method
     Thread *requestingThread;   // For debugging purpose
+    int cacheVersion;           // Used to identify stale trace requests
 } JitTranslationInfo;
 
 typedef enum WorkOrderKind {
@@ -100,6 +93,7 @@ typedef enum WorkOrderKind {
     kWorkOrderMethod = 1,       // Work is to compile a whole method
     kWorkOrderTrace = 2,        // Work is to compile code fragment(s)
     kWorkOrderTraceDebug = 3,   // Work is to compile/debug code fragment(s)
+    kWorkOrderProfileMode = 4,  // Change profiling mode
 } WorkOrderKind;
 
 typedef struct CompilerWorkOrder {
@@ -122,83 +116,10 @@ typedef struct PredictedChainingCell {
 typedef struct ICPatchWorkOrder {
     PredictedChainingCell *cellAddr;    /* Address to be patched */
     PredictedChainingCell cellContent;  /* content of the new cell */
+    const char *classDescriptor;        /* Descriptor of the class object */
+    Object *classLoader;                /* Class loader */
+    u4 serialNumber;                    /* Serial # (for verification only) */
 } ICPatchWorkOrder;
-
-/* States of the dbg interpreter when serving a JIT-related request */
-typedef enum JitState {
-    /* Entering states in the debug interpreter */
-    kJitNot = 0,               // Non-JIT related reasons */
-    kJitTSelectRequest = 1,    // Request a trace (subject to filtering)
-    kJitTSelectRequestHot = 2, // Request a hot trace (bypass the filter)
-    kJitSelfVerification = 3,  // Self Verification Mode
-
-    /* Operational states in the debug interpreter */
-    kJitTSelect = 4,           // Actively selecting a trace
-    kJitTSelectEnd = 5,        // Done with the trace - wrap it up
-    kJitSingleStep = 6,        // Single step interpretation
-    kJitSingleStepEnd = 7,     // Done with single step, ready return to mterp
-    kJitDone = 8,              // Ready to leave the debug interpreter
-} JitState;
-
-#if defined(WITH_SELF_VERIFICATION)
-typedef enum SelfVerificationState {
-    kSVSIdle = 0,           // Idle
-    kSVSStart = 1,          // Shadow space set up, running compiled code
-    kSVSPunt = 2,           // Exiting compiled code by punting
-    kSVSSingleStep = 3,     // Exiting compiled code by single stepping
-    kSVSNoProfile = 4,      // Exiting compiled code and don't collect profiles
-    kSVSTraceSelect = 5,    // Exiting compiled code and compile the next pc
-    kSVSNormal = 6,         // Exiting compiled code normally
-    kSVSNoChain = 7,        // Exiting compiled code by no chain
-    kSVSBackwardBranch = 8, // Exiting compiled code with backward branch trace
-    kSVSDebugInterp = 9,    // Normal state restored, running debug interpreter
-} SelfVerificationState;
-#endif
-
-typedef enum JitHint {
-   kJitHintNone = 0,
-   kJitHintTaken = 1,         // Last inst in run was taken branch
-   kJitHintNotTaken = 2,      // Last inst in run was not taken branch
-   kJitHintNoBias = 3,        // Last inst in run was unbiased branch
-} jitHint;
-
-/*
- * Element of a Jit trace description. If the isCode bit is set, it describes
- * a contiguous sequence of Dalvik byte codes.
- */
-typedef struct {
-    unsigned isCode:1;       // If set denotes code fragments
-    unsigned numInsts:8;     // Number of Byte codes in run
-    unsigned runEnd:1;       // Run ends with last byte code
-    jitHint  hint:6;         // Hint to apply to final code of run
-    u2    startOffset;       // Starting offset for trace run
-} JitCodeDesc;
-
-/*
- * A complete list of trace runs passed to the compiler looks like the
- * following:
- *   frag1
- *   frag2
- *   frag3
- *   meta1
- *   meta2
- *   frag4
- *
- * frags 1-4 have the "isCode" field set, and metas 1-2 are plain pointers or
- * pointers to auxiliary data structures as long as the LSB is null.
- * The meaning of the meta content is loosely defined. It is usually the code
- * fragment right before the first meta field (frag3 in this case) to
- * understand and parse them. Frag4 could be a dummy one with 0 "numInsts" but
- * the "runEnd" field set.
- *
- * For example, if a trace run contains a method inlining target, the class
- * type of "this" and the currently resolved method pointer are two instances
- * of meta information stored there.
- */
-typedef union {
-    JitCodeDesc frag;
-    void*       meta;
-} JitTraceRun;
 
 /*
  * Trace description as will appear in the translation cache.  Note
@@ -219,6 +140,7 @@ typedef enum JitMethodAttributes {
     kIsThrowFree,       /* Method doesn't throw */
     kIsGetter,          /* Method fits the getter pattern */
     kIsSetter,          /* Method fits the setter pattern */
+    kCannotCompile,     /* Method cannot be compiled */
 } JitMethodAttributes;
 
 #define METHOD_IS_CALLEE        (1 << kIsCallee)
@@ -228,6 +150,7 @@ typedef enum JitMethodAttributes {
 #define METHOD_IS_THROW_FREE    (1 << kIsThrowFree)
 #define METHOD_IS_GETTER        (1 << kIsGetter)
 #define METHOD_IS_SETTER        (1 << kIsSetter)
+#define METHOD_CANNOT_COMPILE   (1 << kCannotCompile)
 
 /* Vectors to provide optimization hints */
 typedef enum JitOptimizationHints {
@@ -235,6 +158,15 @@ typedef enum JitOptimizationHints {
 } JitOptimizationHints;
 
 #define JIT_OPT_NO_LOOP         (1 << kJitOptNoLoop)
+
+/* Customized node traversal orders for different needs */
+typedef enum DataFlowAnalysisMode {
+    kAllNodes = 0,              // All nodes
+    kReachableNodes,            // All reachable nodes
+    kPreOrderDFSTraversal,      // Depth-First-Search / Pre-Order
+    kPostOrderDFSTraversal,     // Depth-First-Search / Post-Order
+    kPostOrderDOMTraversal,     // Dominator tree / Post-Order
+} DataFlowAnalysisMode;
 
 typedef struct CompilerMethodStats {
     const Method *method;       // Used as hash entry signature
@@ -256,41 +188,57 @@ bool dvmCompilerArchInit(void);
 void dvmCompilerArchDump(void);
 bool dvmCompilerStartup(void);
 void dvmCompilerShutdown(void);
+void dvmCompilerForceWorkEnqueue(const u2* pc, WorkOrderKind kind, void* info);
 bool dvmCompilerWorkEnqueue(const u2* pc, WorkOrderKind kind, void* info);
 void *dvmCheckCodeCache(void *method);
 CompilerMethodStats *dvmCompilerAnalyzeMethodBody(const Method *method,
                                                   bool isCallee);
 bool dvmCompilerCanIncludeThisInstruction(const Method *method,
                                           const DecodedInstruction *insn);
-bool dvmCompileMethod(struct CompilationUnit *cUnit, const Method *method,
-                      JitTranslationInfo *info);
+bool dvmCompileMethod(const Method *method, JitTranslationInfo *info);
 bool dvmCompileTrace(JitTraceDescription *trace, int numMaxInsts,
                      JitTranslationInfo *info, jmp_buf *bailPtr, int optHints);
 void dvmCompilerDumpStats(void);
 void dvmCompilerDrainQueue(void);
 void dvmJitUnchainAll(void);
+void dvmJitScanAllClassPointers(void (*callback)(void *ptr));
 void dvmCompilerSortAndPrintTraceProfiles(void);
 void dvmCompilerPerformSafePointChecks(void);
-void dvmCompilerInlineMIR(struct CompilationUnit *cUnit);
+void dvmCompilerInlineMIR(struct CompilationUnit *cUnit,
+                          JitTranslationInfo *info);
 void dvmInitializeSSAConversion(struct CompilationUnit *cUnit);
-int dvmConvertSSARegToDalvik(struct CompilationUnit *cUnit, int ssaReg);
+int dvmConvertSSARegToDalvik(const struct CompilationUnit *cUnit, int ssaReg);
 bool dvmCompilerLoopOpt(struct CompilationUnit *cUnit);
+void dvmCompilerInsertBackwardChaining(struct CompilationUnit *cUnit);
 void dvmCompilerNonLoopAnalysis(struct CompilationUnit *cUnit);
-void dvmCompilerFindLiveIn(struct CompilationUnit *cUnit,
-                           struct BasicBlock *bb);
-void dvmCompilerDoSSAConversion(struct CompilationUnit *cUnit,
+bool dvmCompilerFindLocalLiveIn(struct CompilationUnit *cUnit,
                                 struct BasicBlock *bb);
-void dvmCompilerDoConstantPropagation(struct CompilationUnit *cUnit,
+bool dvmCompilerDoSSAConversion(struct CompilationUnit *cUnit,
+                                struct BasicBlock *bb);
+bool dvmCompilerDoConstantPropagation(struct CompilationUnit *cUnit,
                                       struct BasicBlock *bb);
-void dvmCompilerFindInductionVariables(struct CompilationUnit *cUnit,
+bool dvmCompilerFindInductionVariables(struct CompilationUnit *cUnit,
                                        struct BasicBlock *bb);
-char *dvmCompilerGetDalvikDisassembly(DecodedInstruction *insn, char *note);
+/* Clear the visited flag for each BB */
+bool dvmCompilerClearVisitedFlag(struct CompilationUnit *cUnit,
+                                 struct BasicBlock *bb);
+char *dvmCompilerGetDalvikDisassembly(const DecodedInstruction *insn,
+                                      char *note);
+char *dvmCompilerFullDisassembler(const struct CompilationUnit *cUnit,
+                                  const struct MIR *mir);
 char *dvmCompilerGetSSAString(struct CompilationUnit *cUnit,
                               struct SSARepresentation *ssaRep);
 void dvmCompilerDataFlowAnalysisDispatcher(struct CompilationUnit *cUnit,
-                void (*func)(struct CompilationUnit *, struct BasicBlock *));
-void dvmCompilerStateRefresh(void);
+                bool (*func)(struct CompilationUnit *, struct BasicBlock *),
+                DataFlowAnalysisMode dfaMode,
+                bool isIterative);
+void dvmCompilerMethodSSATransformation(struct CompilationUnit *cUnit);
+bool dvmCompilerBuildLoop(struct CompilationUnit *cUnit);
+void dvmCompilerUpdateGlobalState(void);
 JitTraceDescription *dvmCopyTraceDescriptor(const u2 *pc,
                                             const struct JitEntry *desc);
 void *dvmCompilerGetInterpretTemplate();
+JitInstructionSetType dvmCompilerGetInterpretTemplateSet();
+u8 dvmGetRegResourceMask(int reg);
+void dvmDumpCFG(struct CompilationUnit *cUnit, const char *dirPrefix);
 #endif /* _DALVIK_VM_COMPILER */

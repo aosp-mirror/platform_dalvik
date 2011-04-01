@@ -55,7 +55,7 @@ The following registers have fixed assignments:
 
   reg nick      purpose
   r5  rFP       interpreted frame pointer, used for accessing locals and args
-  r6  rGLUE     MterpGlue pointer
+  r6  rSELF     thread pointer
 
 The following registers have fixed assignments in mterp but are scratch
 registers in compiled code
@@ -73,7 +73,7 @@ unspecified registers or condition codes.
 /* single-purpose registers, given names for clarity */
 #define rPC     r4
 #define rFP     r5
-#define rGLUE   r6
+#define rSELF   r6
 #define rINST   r7
 #define rIBASE  r8
 

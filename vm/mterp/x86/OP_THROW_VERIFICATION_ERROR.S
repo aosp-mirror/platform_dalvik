@@ -5,9 +5,9 @@
      * exception is indicated by AA, with some detail provided by BBBB.
      */
     /* op AA, ref@BBBB */
-    movl     rGLUE,%ecx
+    movl     rSELF,%ecx
     movzwl   2(rPC),%eax                     # eax<- BBBB
-    movl     offGlue_method(%ecx),%ecx       # ecx<- glue->method
+    movl     offThread_method(%ecx),%ecx       # ecx<- self->method
     EXPORT_PC
     movl     %eax,OUT_ARG2(%esp)             # arg2<- BBBB
     movl     rINST,OUT_ARG1(%esp)            # arg1<- AA

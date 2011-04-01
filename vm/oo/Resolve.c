@@ -133,7 +133,7 @@ ClassObject* dvmResolveClass(const ClassObject* referrer, u4 classIdx,
                     resClassCheck->classLoader, resClassCheck->pDvmDex);
                 LOGW("(%s had used a different %s during pre-verification)\n",
                     referrer->descriptor, resClass->descriptor);
-                dvmThrowException("Ljava/lang/IllegalAccessError;",
+                dvmThrowIllegalAccessError(
                     "Class ref in pre-verified class resolved to unexpected "
                     "implementation");
                 return NULL;
@@ -195,9 +195,8 @@ Method* dvmResolveMethod(const ClassObject* referrer, u4 methodIdx,
     }
     if (dvmIsInterfaceClass(resClass)) {
         /* method is part of an interface */
-        dvmThrowExceptionWithClassMessage(
-            "Ljava/lang/IncompatibleClassChangeError;",
-            resClass->descriptor);
+        dvmThrowIncompatibleClassChangeErrorWithClassMessage(
+                resClass->descriptor);
         return NULL;
     }
 
@@ -220,7 +219,7 @@ Method* dvmResolveMethod(const ClassObject* referrer, u4 methodIdx,
     }
 
     if (resMethod == NULL) {
-        dvmThrowException("Ljava/lang/NoSuchMethodError;", name);
+        dvmThrowNoSuchMethodError(name);
         return NULL;
     }
 
@@ -229,7 +228,7 @@ Method* dvmResolveMethod(const ClassObject* referrer, u4 methodIdx,
 
     /* see if this is a pure-abstract method */
     if (dvmIsAbstractMethod(resMethod) && !dvmIsAbstractClass(resClass)) {
-        dvmThrowException("Ljava/lang/AbstractMethodError;", name);
+        dvmThrowAbstractMethodError(name);
         return NULL;
     }
 
@@ -300,9 +299,8 @@ Method* dvmResolveInterfaceMethod(const ClassObject* referrer, u4 methodIdx)
     }
     if (!dvmIsInterfaceClass(resClass)) {
         /* whoops */
-        dvmThrowExceptionWithClassMessage(
-            "Ljava/lang/IncompatibleClassChangeError;",
-            resClass->descriptor);
+        dvmThrowIncompatibleClassChangeErrorWithClassMessage(
+                resClass->descriptor);
         return NULL;
     }
 
@@ -339,7 +337,7 @@ Method* dvmResolveInterfaceMethod(const ClassObject* referrer, u4 methodIdx)
         methodName, methodSig, resClass->descriptor);
     resMethod = dvmFindInterfaceMethodHier(resClass, methodName, &proto);
     if (resMethod == NULL) {
-        dvmThrowException("Ljava/lang/NoSuchMethodError;", methodName);
+        dvmThrowNoSuchMethodError(methodName);
         return NULL;
     }
 
@@ -406,7 +404,7 @@ InstField* dvmResolveInstField(const ClassObject* referrer, u4 ifieldIdx)
         dexStringById(pDvmDex->pDexFile, pFieldId->nameIdx),
         dexStringByTypeIdx(pDvmDex->pDexFile, pFieldId->typeIdx));
     if (resField == NULL) {
-        dvmThrowException("Ljava/lang/NoSuchFieldError;",
+        dvmThrowNoSuchFieldError(
             dexStringById(pDvmDex->pDexFile, pFieldId->nameIdx));
         return NULL;
     }
@@ -465,7 +463,7 @@ StaticField* dvmResolveStaticField(const ClassObject* referrer, u4 sfieldIdx)
                 dexStringById(pDvmDex->pDexFile, pFieldId->nameIdx),
                 dexStringByTypeIdx(pDvmDex->pDexFile, pFieldId->typeIdx));
     if (resField == NULL) {
-        dvmThrowException("Ljava/lang/NoSuchFieldError;",
+        dvmThrowNoSuchFieldError(
             dexStringById(pDvmDex->pDexFile, pFieldId->nameIdx));
         return NULL;
     }

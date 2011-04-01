@@ -16,9 +16,8 @@
     movl    %eax,OUT_ARG1(%esp)   # ARG1<- vAA
     movl    %ecx,OUT_ARG0(%esp)   # ARG0<- switchData
     call    $func
-    testl   %eax,%eax
-    movl    %eax,rINST            # set up word offset
-    jle     common_backwardBranch # check on special actions
-    ADVANCE_PC_INDEXED rINST
+    movl    rSELF,%ecx
+    ADVANCE_PC_INDEXED %eax
+    movl    offThread_curHandlerTable(%ecx),rIBASE
     FETCH_INST
     GOTO_NEXT

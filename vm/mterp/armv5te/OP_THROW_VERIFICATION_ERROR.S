@@ -5,7 +5,7 @@
      * exception is indicated by AA, with some detail provided by BBBB.
      */
     /* op AA, ref@BBBB */
-    ldr     r0, [rGLUE, #offGlue_method]    @ r0<- glue->method
+    ldr     r0, [rSELF, #offThread_method]    @ r0<- self->method
     FETCH(r2, 1)                        @ r2<- BBBB
     EXPORT_PC()                         @ export the PC
     mov     r1, rINST, lsr #8           @ r1<- AA

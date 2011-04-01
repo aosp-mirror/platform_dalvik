@@ -169,21 +169,20 @@ void dvmDbgGetClassList(u4* pNumClasses, RefTypeId** pClassRefBuf);
 void dvmDbgGetVisibleClassList(ObjectId classLoaderId, u4* pNumClasses,
         RefTypeId** pClassRefBuf);
 void dvmDbgGetClassInfo(RefTypeId classId, u1* pTypeTag, u4* pStatus,
-    char** pSignature);
+    const char** pSignature);
 bool dvmDbgFindLoadedClassBySignature(const char* classDescriptor,
         RefTypeId* pRefTypeId);
 void dvmDbgGetObjectType(ObjectId objectId, u1* pRefTypeTag,
     RefTypeId* pRefTypeId);
 u1 dvmDbgGetClassObjectType(RefTypeId refTypeId);
-char* dvmDbgGetSignature(RefTypeId refTypeId);
+const char* dvmDbgGetSignature(RefTypeId refTypeId);
 const char* dvmDbgGetSourceFile(RefTypeId refTypeId);
-char* dvmDbgGetObjectTypeName(ObjectId objectId);
-int dvmDbgGetSignatureTag(const char* signature);
-int dvmDbgGetObjectTag(ObjectId objectId, const char* type);
+const char* dvmDbgGetObjectTypeName(ObjectId objectId);
+u1 dvmDbgGetObjectTag(ObjectId objectId);
 int dvmDbgGetTagWidth(int tag);
 
 int dvmDbgGetArrayLength(ObjectId arrayId);
-int dvmDbgGetArrayElementTag(ObjectId arrayId);
+u1 dvmDbgGetArrayElementTag(ObjectId arrayId);
 bool dvmDbgOutputArray(ObjectId arrayId, int firstIndex, int count,
     ExpandBuf* pReply);
 bool dvmDbgSetArrayElements(ObjectId arrayId, int firstIndex, int count,
@@ -209,13 +208,13 @@ void dvmDbgOutputLineTable(RefTypeId refTypeId, MethodId methodId,
 void dvmDbgOutputVariableTable(RefTypeId refTypeId, MethodId id,
     bool withGeneric, ExpandBuf* pReply);
 
-int dvmDbgGetFieldTag(ObjectId objId, FieldId fieldId);
-int dvmDbgGetStaticFieldTag(RefTypeId refTypeId, FieldId fieldId);
-void dvmDbgGetFieldValue(ObjectId objId, FieldId fieldId, u1* ptr, int width);
+u1 dvmDbgGetFieldBasicTag(ObjectId objId, FieldId fieldId);
+u1 dvmDbgGetStaticFieldBasicTag(RefTypeId refTypeId, FieldId fieldId);
+void dvmDbgGetFieldValue(ObjectId objectId, FieldId fieldId, ExpandBuf* pReply);
 void dvmDbgSetFieldValue(ObjectId objectId, FieldId fieldId, u8 value,
     int width);
-void dvmDbgGetStaticFieldValue(RefTypeId refTypeId, FieldId fieldId, u1* ptr,
-    int width);
+void dvmDbgGetStaticFieldValue(RefTypeId refTypeId, FieldId fieldId,
+    ExpandBuf* pReply);
 void dvmDbgSetStaticFieldValue(RefTypeId refTypeId, FieldId fieldId,
     u8 rawValue, int width);
 

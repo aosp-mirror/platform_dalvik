@@ -10,22 +10,18 @@
     /* if-cmp vAA, +BBBB */
     mov     r0, rINST, lsr #8           @ r0<- AA
     GET_VREG(r2, r0)                    @ r2<- vAA
-    mov     r9, #4                      @ r0<- BYTE branch dist for not-taken
+    FETCH_S(r1, 1)                      @ r1<- branch offset, in code units
     cmp     r2, #0                      @ compare (vA, 0)
-    b${revcmp}  1f                      @ branch to 1 if comparison failed
-    FETCH_S(r9, 1)                      @ r9<- branch offset, in code units
-    movs    r9, r9, asl #1              @ convert to bytes, check sign
-    bmi     common_backwardBranch       @ backward branch, do periodic checks
-1:
+    mov${revcmp} r1, #2                 @ r1<- inst branch dist for not-taken
+    adds    r1, r1, r1                  @ convert to bytes & set flags
+    FETCH_ADVANCE_INST_RB(r1)           @ update rPC, load rINST
 #if defined(WITH_JIT)
-    GET_JIT_PROF_TABLE(r0)
-    FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
+    ldr     r0, [rSELF, #offThread_pJitProfTable]
+    ldrmi   rIBASE, [rSELF, #offThread_curHandlerTable]   @ refresh table base
     cmp     r0,#0
-    bne     common_updateProfile
-    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
-    GOTO_OPCODE(ip)                     @ jump to next instruction
+    bne     common_updateProfile        @ test for JIT off at target
 #else
-    FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
+    ldrmi   rIBASE, [rSELF, #offThread_curHandlerTable]   @ refresh table base
+#endif
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     GOTO_OPCODE(ip)                     @ jump to next instruction
-#endif

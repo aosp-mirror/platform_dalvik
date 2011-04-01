@@ -16,6 +16,7 @@
 
 package com.android.dx.dex.code;
 
+import com.android.dx.io.Opcodes;
 import com.android.dx.rop.code.RegisterSpecList;
 import com.android.dx.rop.code.SourcePosition;
 import com.android.dx.util.AnnotatedOutput;
@@ -47,7 +48,7 @@ public final class OddSpacer extends VariableSizeInsn {
     @Override
     public void writeTo(AnnotatedOutput out) {
         if (codeSize() != 0) {
-            out.writeShort(InsnFormat.codeUnit(DalvOps.NOP, 0));
+            out.writeShort(InsnFormat.codeUnit(Opcodes.NOP, 0));
         }
     }
 

@@ -34,4 +34,15 @@ typedef struct LoopAnalysis {
     bool bodyIsClean;                   // loop body cannot throw any exceptions
 } LoopAnalysis;
 
+bool dvmCompilerFilterLoopBlocks(CompilationUnit *cUnit);
+
+/*
+ * An unexecuted code path may contain unresolved fields or classes. Before we
+ * have a quiet resolver we simply bail out of the loop compilation mode.
+ */
+#define BAIL_LOOP_COMPILATION() if (cUnit->jitMode == kJitLoop) {       \
+                                    cUnit->quitLoopMode = true;         \
+                                    return false;                       \
+                                }
+
 #endif /* _DALVIK_VM_LOOP */

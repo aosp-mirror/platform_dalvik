@@ -6,27 +6,37 @@
      * Compare two 64-bit values.  Puts 0, 1, or -1 into the destination
      * register based on the results of the comparison.
      */
+    // TUNING: rework to avoid rIBASE spill
     /* cmp-long vAA, vBB, vCC */
     movzbl    2(rPC),%ecx              # ecx<- BB
-    movzbl    3(rPC),%edx              # edx<- CC
+    SPILL(rIBASE)
+    movzbl    3(rPC),rIBASE            # rIBASE- CC
     GET_VREG_WORD %eax %ecx,1          # eax<- v[BB+1]
     GET_VREG_WORD %ecx %ecx 0          # ecx<- v[BB+0]
-    cmpl      4(rFP,%edx,4),%eax
+    cmpl      4(rFP,rIBASE,4),%eax
     jl        .L${opcode}_smaller
     jg        .L${opcode}_bigger
-    sub       (rFP,%edx,4),%ecx
+    sub       (rFP,rIBASE,4),%ecx
     ja        .L${opcode}_bigger
     jb        .L${opcode}_smaller
-    jmp       .L${opcode}_finish
-%break
+    SET_VREG %ecx rINST
+    FETCH_INST_OPCODE 2 %ecx
+    UNSPILL(rIBASE)
+    ADVANCE_PC 2
+    GOTO_NEXT_R %ecx
 
 .L${opcode}_bigger:
     movl      $$1,%ecx
-    jmp       .L${opcode}_finish
+    SET_VREG %ecx rINST
+    FETCH_INST_OPCODE 2 %ecx
+    UNSPILL(rIBASE)
+    ADVANCE_PC 2
+    GOTO_NEXT_R %ecx
+
 .L${opcode}_smaller:
     movl      $$-1,%ecx
-.L${opcode}_finish:
     SET_VREG %ecx rINST
-    FETCH_INST_OPCODE 2 %edx
+    FETCH_INST_OPCODE 2 %ecx
+    UNSPILL(rIBASE)
     ADVANCE_PC 2
-    GOTO_NEXT_R %edx
+    GOTO_NEXT_R %ecx

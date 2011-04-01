@@ -64,16 +64,22 @@ void dvmHeapSourceThreadShutdown(void);
 void dvmHeapSourceShutdown(GcHeap **gcHeap);
 
 /*
- * Initializes a vector of object and mark bits to the object and mark
- * bits of each heap.
+ * Returns the base and inclusive max addresses of the heap source
+ * heaps.  The base and max values are suitable for passing directly
+ * to the bitmap sweeping routine.
  */
-void dvmHeapSourceGetObjectBitmaps(HeapBitmap liveBits[], HeapBitmap markBits[],
-                                   size_t numHeaps);
+void dvmHeapSourceGetRegions(uintptr_t *base, uintptr_t *max, uintptr_t *limit,
+                             size_t numHeaps);
 
 /*
  * Get the bitmap representing all live objects.
  */
 HeapBitmap *dvmHeapSourceGetLiveBits(void);
+
+/*
+ * Get the bitmap representing all marked objects.
+ */
+HeapBitmap *dvmHeapSourceGetMarkBits(void);
 
 /*
  * Gets the begining of the allocation for the HeapSource.

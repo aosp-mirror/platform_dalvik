@@ -38,10 +38,9 @@
 
 /*
  * On entry:
- *  r0  MterpGlue* glue
+ *  r0  Thread* self
  *
- * This function returns a boolean "changeInterp" value.  The return comes
- * via a call to dvmMterpStdBail().
+ * The return comes via a call to dvmMterpStdBail().
  */
 dvmMterpStdRun:
 #define MTERP_ENTRY1 \
@@ -56,29 +55,25 @@ dvmMterpStdRun:
     MTERP_ENTRY2
 
     /* save stack pointer, add magic word for debuggerd */
-    str     sp, [r0, #offGlue_bailPtr]  @ save SP for eventual return
+    str     sp, [r0, #offThread_bailPtr]  @ save SP for eventual return
 
     /* set up "named" registers, figure out entry point */
-    mov     rGLUE, r0                   @ set rGLUE
-    ldr     r1, [r0, #offGlue_entryPoint]   @ enum is 4 bytes in aapcs-EABI
-    LOAD_PC_FP_FROM_GLUE()              @ load rPC and rFP from "glue"
-    adr     rIBASE, dvmAsmInstructionStart  @ set rIBASE
-    cmp     r1, #kInterpEntryInstr      @ usual case?
-    bne     .Lnot_instr                 @ no, handle it
+    mov     rSELF, r0                   @ set rSELF
+    LOAD_PC_FP_FROM_SELF()              @ load rPC and rFP from "thread"
+    ldr     rIBASE, [rSELF, #offThread_curHandlerTable] @ set rIBASE
 
 #if defined(WITH_JIT)
 .LentryInstr:
-    ldr     r10, [rGLUE, #offGlue_self] @ callee saved r10 <- glue->self
     /* Entry is always a possible trace start */
-    GET_JIT_PROF_TABLE(r0)
+    ldr     r0, [rSELF, #offThread_pJitProfTable]
     FETCH_INST()
     mov     r1, #0                      @ prepare the value for the new state
-    str     r1, [r10, #offThread_inJitCodeCache] @ back to the interp land
+    str     r1, [rSELF, #offThread_inJitCodeCache] @ back to the interp land
     cmp     r0,#0                       @ is profiling disabled?
 #if !defined(WITH_SELF_VERIFICATION)
     bne     common_updateProfile        @ profiling is enabled
 #else
-    ldr     r2, [r10, #offThread_shadowSpace]   @ to find out the jit exit state
+    ldr     r2, [rSELF, #offThread_shadowSpace] @ to find out the jit exit state
     beq     1f                          @ profiling is disabled
     ldr     r3, [r2, #offShadowSpace_jitExitState]  @ jit exit state
     cmp     r3, #kSVSTraceSelect        @ hot trace following?
@@ -98,39 +93,13 @@ dvmMterpStdRun:
     GOTO_OPCODE(ip)                     @ jump to next instruction
 #endif
 
-.Lnot_instr:
-    cmp     r1, #kInterpEntryReturn     @ were we returning from a method?
-    beq     common_returnFromMethod
-
-.Lnot_return:
-    cmp     r1, #kInterpEntryThrow      @ were we throwing an exception?
-    beq     common_exceptionThrown
-
-#if defined(WITH_JIT)
-.Lnot_throw:
-    ldr     r10,[rGLUE, #offGlue_jitResumeNPC]
-    ldr     r2,[rGLUE, #offGlue_jitResumeDPC]
-    cmp     r1, #kInterpEntryResume     @ resuming after Jit single-step?
-    bne     .Lbad_arg
-    cmp     rPC,r2
-    bne     .LentryInstr                @ must have branched, don't resume
-#if defined(WITH_SELF_VERIFICATION)
-    @ glue->entryPoint will be set in dvmSelfVerificationSaveState
-    b       jitSVShadowRunStart         @ re-enter the translation after the
-                                        @ single-stepped instruction
-    @noreturn
-#endif
-    mov     r1, #kInterpEntryInstr
-    str     r1, [rGLUE, #offGlue_entryPoint]
-    bx      r10                         @ re-enter the translation
-#endif
-
 .Lbad_arg:
     ldr     r0, strBadEntryPoint
     @ r1 holds value of entryPoint
     bl      printf
     bl      dvmAbort
     .fnend
+    .size   dvmMterpStdRun, .-dvmMterpStdRun
 
 
     .global dvmMterpStdBail
@@ -146,12 +115,10 @@ dvmMterpStdRun:
  * LR to PC.
  *
  * On entry:
- *  r0  MterpGlue* glue
- *  r1  bool changeInterp
+ *  r0  Thread* self
  */
 dvmMterpStdBail:
-    ldr     sp, [r0, #offGlue_bailPtr]      @ sp<- saved SP
-    mov     r0, r1                          @ return the changeInterp value
+    ldr     sp, [r0, #offThread_bailPtr]    @ sp<- saved SP
     add     sp, sp, #4                      @ un-align 64
     ldmfd   sp!, {r4-r10,fp,pc}             @ restore 9 regs and return
 

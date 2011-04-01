@@ -31,7 +31,7 @@ static void Dalvik_java_lang_Runtime_gc(const u4* args, JValue* pResult)
 {
     UNUSED_PARAMETER(args);
 
-    dvmCollectGarbage(false);
+    dvmCollectGarbage();
     RETURN_VOID();
 }
 
@@ -93,51 +93,6 @@ static void Dalvik_java_lang_Runtime_nativeLoad(const u4* args,
 }
 
 /*
- * public void runFinalization(boolean forced)
- *
- * Requests that the VM runs finalizers for objects on the heap. If the
- * parameter forced is true, then the VM needs to ensure finalization.
- * Otherwise this only inspires the VM to make a best-effort attempt to
- * run finalizers before returning, but it's not guaranteed to actually
- * do anything.
- */
-static void Dalvik_java_lang_Runtime_runFinalization(const u4* args,
-    JValue* pResult)
-{
-    bool forced = (args[0] != 0);
-
-    dvmWaitForHeapWorkerIdle();
-    if (forced) {
-        // TODO(Google) Need to explicitly implement this,
-        //              although dvmWaitForHeapWorkerIdle()
-        //              should usually provide the "forced"
-        //              behavior already.
-    }
-
-    RETURN_VOID();
-}
-
-/*
- * public int availableProcessors()
- *
- * Returns the number of online processors, at least one.
- *
- */
-static void Dalvik_java_lang_Runtime_availableProcessors(const u4* args,
-    JValue* pResult)
-{
-    long result = 1;
-#ifdef _SC_NPROCESSORS_ONLN
-    result = sysconf(_SC_NPROCESSORS_ONLN);
-    if (result > INT_MAX) {
-        result = INT_MAX;
-    } else if (result < 1 ) {
-        result = 1;
-    }
-#endif
-    RETURN_INT((int)result);
-}
-/*
  * public long maxMemory()
  *
  * Returns GC heap max memory in bytes.
@@ -180,16 +135,12 @@ const DalvikNativeMethod dvm_java_lang_Runtime[] = {
         Dalvik_java_lang_Runtime_freeMemory },
     { "gc",                 "()V",
         Dalvik_java_lang_Runtime_gc },
-    { "availableProcessors", "()I",
-        Dalvik_java_lang_Runtime_availableProcessors },
     { "maxMemory",          "()J",
         Dalvik_java_lang_Runtime_maxMemory },
     { "nativeExit",         "(IZ)V",
         Dalvik_java_lang_Runtime_nativeExit },
     { "nativeLoad",         "(Ljava/lang/String;Ljava/lang/ClassLoader;)Ljava/lang/String;",
         Dalvik_java_lang_Runtime_nativeLoad },
-    { "runFinalization",    "(Z)V",
-        Dalvik_java_lang_Runtime_runFinalization },
     { "totalMemory",          "()J",
         Dalvik_java_lang_Runtime_totalMemory },
     { NULL, NULL, NULL },

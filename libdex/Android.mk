@@ -19,12 +19,14 @@ dex_src_files := \
 	DexCatch.c \
 	DexClass.c \
 	DexDataMap.c \
+	DexDebugInfo.c \
 	DexFile.c \
 	DexInlines.c \
 	DexOptData.c \
 	DexOpcodes.c \
 	DexProto.c \
 	DexSwapVerify.c \
+	DexUtf.c \
 	InstrUtils.c \
 	Leb128.c \
 	OptInvocation.c \

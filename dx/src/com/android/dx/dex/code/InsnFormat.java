@@ -26,6 +26,8 @@ import com.android.dx.rop.cst.CstLiteralBits;
 import com.android.dx.util.AnnotatedOutput;
 import com.android.dx.util.Hex;
 
+import java.util.BitSet;
+
 /**
  * Base class for all instruction format handlers. Instruction format
  * handlers know how to translate {@link DalvInsn} instances into
@@ -38,7 +40,7 @@ public abstract class InsnFormat {
      * temporary measure until VM support for the salient opcodes is
      * added. TODO: Remove this declaration when the VM can deal.
      */
-    public static boolean ALLOW_EXTENDED_OPCODES = false;
+    public static boolean ALLOW_EXTENDED_OPCODES = true;
 
     /**
      * Returns the string form, suitable for inclusion in a listing
@@ -125,6 +127,22 @@ public abstract class InsnFormat {
      * appropriate for this instance, or {@code false} if not
      */
     public abstract boolean isCompatible(DalvInsn insn);
+
+    /**
+     * Returns which of a given instruction's registers will fit in
+     * this instance's format.
+     *
+     * <p>The default implementation of this method always returns
+     * an empty BitSet. Subclasses must override this method if they
+     * have registers.</p>
+     *
+     * @param insn {@code non-null;} the instruction to check
+     * @return {@code non-null;} a BitSet flagging registers in the
+     * register list that are compatible to this format
+     */
+    public BitSet compatibleRegs(DalvInsn insn) {
+        return new BitSet();
+    }
 
     /**
      * Returns whether or not the given instruction's branch offset will
@@ -488,8 +506,9 @@ public abstract class InsnFormat {
     protected static short opcodeUnit(DalvInsn insn) {
         int opcode = insn.getOpcode().getOpcode();
 
-        if ((opcode < 0x100) || (opcode > 0xffff)) {
-            throw new IllegalArgumentException("opcode out of range 0..65535");
+        if ((opcode < 0xff) || (opcode > 0xffff)) {
+            throw new IllegalArgumentException(
+                "extended opcode out of range 255..65535");
         }
 
         return (short) opcode;

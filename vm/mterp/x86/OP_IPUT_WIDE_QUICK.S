@@ -12,8 +12,8 @@
     andb      $$0xf,rINSTbl             # rINST<- A
     GET_VREG_WORD %eax rINST 0          # eax<- lsw
     GET_VREG_WORD rINST rINST 1         # rINST<- msw
-    FETCH_INST_OPCODE 2 %edx
     movl      %eax,(%ecx)
     movl      rINST,4(%ecx)
+    FETCH_INST_OPCODE 2 %ecx
     ADVANCE_PC 2
-    GOTO_NEXT_R %edx
+    GOTO_NEXT_R %ecx

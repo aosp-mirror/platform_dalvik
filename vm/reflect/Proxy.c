@@ -49,70 +49,6 @@ static bool mustWrapException(const Method* method, const Object* throwable);
 #define kThrowsField    0
 #define kProxySFieldCount 1
 
-
-/*
- * Perform Proxy setup.
- */
-bool dvmReflectProxyStartup()
-{
-    /*
-     * Standard methods we must provide in our proxy.
-     */
-    Method* methE;
-    Method* methH;
-    Method* methT;
-    Method* methF;
-    methE = dvmFindVirtualMethodByDescriptor(gDvm.classJavaLangObject,
-                "equals", "(Ljava/lang/Object;)Z");
-    methH = dvmFindVirtualMethodByDescriptor(gDvm.classJavaLangObject,
-                "hashCode", "()I");
-    methT = dvmFindVirtualMethodByDescriptor(gDvm.classJavaLangObject,
-                "toString", "()Ljava/lang/String;");
-    methF = dvmFindVirtualMethodByDescriptor(gDvm.classJavaLangObject,
-                "finalize", "()V");
-    if (methE == NULL || methH == NULL || methT == NULL || methF == NULL) {
-        LOGE("Could not find equals/hashCode/toString/finalize in Object\n");
-        return false;
-    }
-    gDvm.voffJavaLangObject_equals = methE->methodIndex;
-    gDvm.voffJavaLangObject_hashCode = methH->methodIndex;
-    gDvm.voffJavaLangObject_toString = methT->methodIndex;
-    gDvm.voffJavaLangObject_finalize = methF->methodIndex;
-
-    /*
-     * The prototype signature needs to be cloned from a method in a
-     * "real" DEX file.  We declared this otherwise unused method just
-     * for this purpose.
-     */
-    ClassObject* proxyClass;
-    Method* meth;
-    proxyClass = dvmFindSystemClassNoInit("Ljava/lang/reflect/Proxy;");
-    if (proxyClass == NULL) {
-        LOGE("No java.lang.reflect.Proxy\n");
-        return false;
-    }
-    meth = dvmFindDirectMethodByDescriptor(proxyClass, "constructorPrototype",
-                "(Ljava/lang/reflect/InvocationHandler;)V");
-    if (meth == NULL) {
-        LOGE("Could not find java.lang.Proxy.constructorPrototype()\n");
-        return false;
-    }
-    gDvm.methJavaLangReflectProxy_constructorPrototype = meth;
-
-    /*
-     * Get the offset of the "h" field in Proxy.
-     */
-    gDvm.offJavaLangReflectProxy_h = dvmFindFieldOffset(proxyClass, "h",
-        "Ljava/lang/reflect/InvocationHandler;");
-    if (gDvm.offJavaLangReflectProxy_h < 0) {
-        LOGE("Unable to find 'h' field in java.lang.Proxy\n");
-        return false;
-    }
-
-    return true;
-}
-
-
 /*
  * Generate a proxy class with the specified name, interfaces, and loader.
  * "interfaces" is an array of class objects.
@@ -139,8 +75,7 @@ ClassObject* dvmGenerateProxyClass(StringObject* str, ArrayObject* interfaces,
 
     nameStr = dvmCreateCstrFromString(str);
     if (nameStr == NULL) {
-        dvmThrowException("Ljava/lang/IllegalArgumentException;",
-            "missing name");
+        dvmThrowIllegalArgumentException("missing name");
         goto bail;
     }
 
@@ -195,9 +130,6 @@ ClassObject* dvmGenerateProxyClass(StringObject* str, ArrayObject* interfaces,
     dvmSetFieldObject((Object *)newClass,
                       offsetof(ClassObject, classLoader),
                       (Object *)loader);
-#if WITH_HPROF_STACK
-    hprofFillInStackTrace(newClass);
-#endif
 
     /*
      * Add direct method definitions.  We have one (the constructor).
@@ -277,7 +209,7 @@ bail:
         newClass = NULL;
         if (!dvmCheckException(dvmThreadSelf())) {
             /* throw something */
-            dvmThrowException("Ljava/lang/RuntimeException;", NULL);
+            dvmThrowRuntimeException(NULL);
         }
     }
 
@@ -606,7 +538,7 @@ static int copyWithoutDuplicates(Method** allMethods, int allCount,
         if (allMethods[i] != NULL) {
             LOGV("BAD DUPE: %d %s.%s\n", i,
                 allMethods[i]->clazz->descriptor, allMethods[i]->name);
-            dvmThrowException("Ljava/lang/IllegalArgumentException;",
+            dvmThrowIllegalArgumentException(
                 "incompatible return types in proxied interfaces");
             return -1;
         }
@@ -726,7 +658,7 @@ static void updateExceptionClassList(const Method* method, PointerSet* throws)
 
     /* grab a local copy to work on */
     for (i = 0; i < mixLen; i++) {
-        mixSet[i] = dvmPointerSetGetEntry(throws, i);
+        mixSet[i] = (ClassObject*)dvmPointerSetGetEntry(throws, i);
     }
 
     for (i = 0; i < mixLen; i++) {
@@ -796,6 +728,13 @@ static bool returnTypesAreCompatible(Method* subMethod, Method* baseMethod)
  */
 static void createConstructor(ClassObject* clazz, Method* meth)
 {
+    /*
+     * The constructor signatures (->prototype and ->shorty) need to
+     * be cloned from a method in a "real" DEX file. We declared the
+     * otherwise unused method Proxy.constructorPrototype() just for
+     * this purpose.
+     */
+
     meth->clazz = clazz;
     meth->accessFlags = ACC_PUBLIC | ACC_NATIVE;
     meth->name = "<init>";
@@ -1038,15 +977,15 @@ static void proxyInvoker(const u4* args, JValue* pResult,
         LOGVV("+++ ignoring return to void\n");
     } else if (invokeResult.l == NULL) {
         if (dvmIsPrimitiveClass(returnType)) {
-            dvmThrowException("Ljava/lang/NullPointerException;",
+            dvmThrowNullPointerException(
                 "null result when primitive expected");
             goto bail;
         }
         pResult->l = NULL;
     } else {
-        if (!dvmUnboxPrimitive(invokeResult.l, returnType, pResult)) {
-            dvmThrowExceptionWithClassMessage("Ljava/lang/ClassCastException;",
-                ((Object*)invokeResult.l)->clazz->descriptor);
+        if (!dvmUnboxPrimitive((Object*)invokeResult.l, returnType, pResult)) {
+            dvmThrowClassCastException(((Object*)invokeResult.l)->clazz,
+                    returnType);
             goto bail;
         }
     }

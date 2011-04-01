@@ -37,20 +37,7 @@
  *   WITH_TRACKREF_CHECKS
  *   EASY_GDB
  *   NDEBUG
- *
- * If THREADED_INTERP is not defined, we use a classic "while true / switch"
- * interpreter.  If it is defined, then the tail end of each instruction
- * handler fetches the next instruction and jumps directly to the handler.
- * This increases the size of the "Std" interpreter by about 10%, but
- * provides a speedup of about the same magnitude.
- *
- * There's a "hybrid" approach that uses a goto table instead of a switch
- * statement, avoiding the "is the opcode in range" tests required for switch.
- * The performance is close to the threaded version, and without the 10%
- * size increase, but the benchmark results are off enough that it's not
- * worth adding as a third option.
  */
-#define THREADED_INTERP             /* threaded vs. while-loop interpreter */
 
 #ifdef WITH_INSTR_CHECKS            /* instruction-level paranoia (slow!) */
 # define CHECK_BRANCH_OFFSETS
@@ -58,23 +45,30 @@
 #endif
 
 /*
- * ARM EABI requires 64-bit alignment for access to 64-bit data types.  We
- * can't just use pointers to copy 64-bit values out of our interpreted
- * register set, because gcc will generate ldrd/strd.
+ * Some architectures require 64-bit alignment for access to 64-bit data
+ * types.  We can't just use pointers to copy 64-bit values out of our
+ * interpreted register set, because gcc may assume the pointer target is
+ * aligned and generate invalid code.
  *
- * The __UNION version copies data in and out of a union.  The __MEMCPY
- * version uses a memcpy() call to do the transfer; gcc is smart enough to
- * not actually call memcpy().  The __UNION version is very bad on ARM;
- * it only uses one more instruction than __MEMCPY, but for some reason
- * gcc thinks it needs separate storage for every instance of the union.
- * On top of that, it feels the need to zero them out at the start of the
- * method.  Net result is we zero out ~700 bytes of stack space at the top
- * of the interpreter using ARM STM instructions.
+ * There are two common approaches:
+ *  (1) Use a union that defines a 32-bit pair and a 64-bit value.
+ *  (2) Call memcpy().
+ *
+ * Depending upon what compiler you're using and what options are specified,
+ * one may be faster than the other.  For example, the compiler might
+ * convert a memcpy() of 8 bytes into a series of instructions and omit
+ * the call.  The union version could cause some strange side-effects,
+ * e.g. for a while ARM gcc thought it needed separate storage for each
+ * inlined instance, and generated instructions to zero out ~700 bytes of
+ * stack space at the top of the interpreter.
+ *
+ * The default is to use memcpy().  The current gcc for ARM seems to do
+ * better with the union.
  */
 #if defined(__ARM_EABI__)
-//# define NO_UNALIGN_64__UNION
-# define NO_UNALIGN_64__MEMCPY
+# define NO_UNALIGN_64__UNION
 #endif
+
 
 //#define LOG_INSTR                   /* verbose debugging */
 /* set and adjust ANDROID_LOG_TAGS='*:i jdwp:i dalvikvm:i dalvikvmi:i' */
@@ -171,12 +165,10 @@ static inline s8 getLongFromArray(const u4* ptr, int idx)
     conv.parts[0] = ptr[0];
     conv.parts[1] = ptr[1];
     return conv.ll;
-#elif defined(NO_UNALIGN_64__MEMCPY)
+#else
     s8 val;
     memcpy(&val, &ptr[idx], 8);
     return val;
-#else
-    return *((s8*) &ptr[idx]);
 #endif
 }
 
@@ -190,10 +182,8 @@ static inline void putLongToArray(u4* ptr, int idx, s8 val)
     conv.ll = val;
     ptr[0] = conv.parts[0];
     ptr[1] = conv.parts[1];
-#elif defined(NO_UNALIGN_64__MEMCPY)
-    memcpy(&ptr[idx], &val, 8);
 #else
-    *((s8*) &ptr[idx]) = val;
+    memcpy(&ptr[idx], &val, 8);
 #endif
 }
 
@@ -207,12 +197,10 @@ static inline double getDoubleFromArray(const u4* ptr, int idx)
     conv.parts[0] = ptr[0];
     conv.parts[1] = ptr[1];
     return conv.d;
-#elif defined(NO_UNALIGN_64__MEMCPY)
+#else
     double dval;
     memcpy(&dval, &ptr[idx], 8);
     return dval;
-#else
-    return *((double*) &ptr[idx]);
 #endif
 }
 
@@ -226,10 +214,8 @@ static inline void putDoubleToArray(u4* ptr, int idx, double dval)
     conv.d = dval;
     ptr[0] = conv.parts[0];
     ptr[1] = conv.parts[1];
-#elif defined(NO_UNALIGN_64__MEMCPY)
-    memcpy(&ptr[idx], &dval, 8);
 #else
-    *((double*) &ptr[idx]) = dval;
+    memcpy(&ptr[idx], &dval, 8);
 #endif
 }
 
@@ -318,34 +304,16 @@ static inline void putDoubleToArray(u4* ptr, int idx, double dval)
 
 /*
  * The current PC must be available to Throwable constructors, e.g.
- * those created by dvmThrowException(), so that the exception stack
- * trace can be generated correctly.  If we don't do this, the offset
- * within the current method won't be shown correctly.  See the notes
- * in Exception.c.
+ * those created by the various exception throw routines, so that the
+ * exception stack trace can be generated correctly.  If we don't do this,
+ * the offset within the current method won't be shown correctly.  See the
+ * notes in Exception.c.
  *
  * This is also used to determine the address for precise GC.
  *
  * Assumes existence of "u4* fp" and "const u2* pc".
  */
 #define EXPORT_PC()         (SAVEAREA_FROM_FP(fp)->xtra.currentPc = pc)
-
-/*
- * Determine if we need to switch to a different interpreter.  "_current"
- * is either INTERP_STD or INTERP_DBG.  It should be fixed for a given
- * interpreter generation file, which should remove the outer conditional
- * from the following.
- *
- * If we're building without debug and profiling support, we never switch.
- */
-#if defined(WITH_JIT)
-# define NEED_INTERP_SWITCH(_current) (                                     \
-    (_current == INTERP_STD) ?                                              \
-        dvmJitDebuggerOrProfilerActive() : !dvmJitDebuggerOrProfilerActive() )
-#else
-# define NEED_INTERP_SWITCH(_current) (                                     \
-    (_current == INTERP_STD) ?                                              \
-        dvmDebuggerOrProfilerActive() : !dvmDebuggerOrProfilerActive() )
-#endif
 
 /*
  * Check to see if "obj" is NULL.  If so, throw an exception.  Assumes the
@@ -360,7 +328,7 @@ static inline void putDoubleToArray(u4* ptr, int idx, double dval)
 static inline bool checkForNull(Object* obj)
 {
     if (obj == NULL) {
-        dvmThrowException("Ljava/lang/NullPointerException;", NULL);
+        dvmThrowNullPointerException(NULL);
         return false;
     }
 #ifdef WITH_EXTRA_OBJECT_VALIDATION
@@ -392,7 +360,7 @@ static inline bool checkForNullExportPC(Object* obj, u4* fp, const u2* pc)
 {
     if (obj == NULL) {
         EXPORT_PC();
-        dvmThrowException("Ljava/lang/NullPointerException;", NULL);
+        dvmThrowNullPointerException(NULL);
         return false;
     }
 #ifdef WITH_EXTRA_OBJECT_VALIDATION
@@ -412,25 +380,17 @@ static inline bool checkForNullExportPC(Object* obj, u4* fp, const u2* pc)
 }
 
 /* File: cstubs/stubdefs.c */
-/* this is a standard (no debug support) interpreter */
-#define INTERP_TYPE INTERP_STD
-#define CHECK_DEBUG_AND_PROF() ((void)0)
-# define CHECK_TRACKED_REFS() ((void)0)
-#define CHECK_JIT_BOOL() (false)
-#define CHECK_JIT_VOID()
-#define ABORT_JIT_TSELECT() ((void)0)
-
 /*
  * In the C mterp stubs, "goto" is a function call followed immediately
  * by a return.
  */
 
 #define GOTO_TARGET_DECL(_target, ...)                                      \
-    void dvmMterp_##_target(MterpGlue* glue, ## __VA_ARGS__);
+    void dvmMterp_##_target(Thread* self, ## __VA_ARGS__);
 
 /* (void)xxx to quiet unused variable compiler warnings. */
 #define GOTO_TARGET(_target, ...)                                           \
-    void dvmMterp_##_target(MterpGlue* glue, ## __VA_ARGS__) {              \
+    void dvmMterp_##_target(Thread* self, ## __VA_ARGS__) {                 \
         u2 ref, vsrc1, vsrc2, vdst;                                         \
         u2 inst = FETCH(0);                                                 \
         const Method* methodToCall;                                         \
@@ -441,30 +401,42 @@ static inline bool checkForNullExportPC(Object* obj, u4* fp, const u2* pc)
 #define GOTO_TARGET_END }
 
 /*
- * Redefine what used to be local variable accesses into MterpGlue struct
+ * Redefine what used to be local variable accesses into Thread struct
  * references.  (These are undefined down in "footer.c".)
  */
-#define retval                  glue->retval
-#define pc                      glue->pc
-#define fp                      glue->fp
-#define curMethod               glue->method
-#define methodClassDex          glue->methodClassDex
-#define self                    glue->self
-#define debugTrackedRefStart    glue->debugTrackedRefStart
+#define retval                  self->retval
+#define pc                      self->interpSave.pc
+#define fp                      self->interpSave.fp
+#define curMethod               self->interpSave.method
+#define methodClassDex          self->interpSave.methodClassDex
+#define debugTrackedRefStart    self->interpSave.debugTrackedRefStart
 
 /* ugh */
 #define STUB_HACK(x) x
+#if defined(WITH_JIT)
+#define JIT_STUB_HACK(x) x
+#else
+#define JIT_STUB_HACK(x)
+#endif
 
+/*
+ * InterpSave's pc and fp must be valid when breaking out to a
+ * "Reportxxx" routine.  Because the portable interpreter uses local
+ * variables for these, we must flush prior.  Stubs, however, use
+ * the interpSave vars directly, so this is a nop for stubs.
+ */
+#define PC_FP_TO_SELF()
 
 /*
  * Opcode handler framing macros.  Here, each opcode is a separate function
- * that takes a "glue" argument and returns void.  We can't declare
+ * that takes a "self" argument and returns void.  We can't declare
  * these "static" because they may be called from an assembly stub.
  * (void)xxx to quiet unused variable compiler warnings.
  */
 #define HANDLE_OPCODE(_op)                                                  \
-    void dvmMterp_##_op(MterpGlue* glue) {                                  \
-        u2 ref, vsrc1, vsrc2, vdst;                                         \
+    void dvmMterp_##_op(Thread* self) {                                     \
+        u4 ref;                                                             \
+        u2 vsrc1, vsrc2, vdst;                                              \
         u2 inst = FETCH(0);                                                 \
         (void)ref; (void)vsrc1; (void)vsrc2; (void)vdst; (void)inst;
 
@@ -472,14 +444,23 @@ static inline bool checkForNullExportPC(Object* obj, u4* fp, const u2* pc)
 
 /*
  * Like the "portable" FINISH, but don't reload "inst", and return to caller
- * when done.
+ * when done.  Further, debugger/profiler checks are handled
+ * before handler execution in mterp, so we don't do them here either.
  */
+#if defined(WITH_JIT)
 #define FINISH(_offset) {                                                   \
         ADJUST_PC(_offset);                                                 \
-        CHECK_DEBUG_AND_PROF();                                             \
-        CHECK_TRACKED_REFS();                                               \
+        if (self->interpBreak.ctl.subMode & kSubModeJitTraceBuild) {        \
+            dvmCheckJit(pc, self);                                          \
+        }                                                                   \
         return;                                                             \
     }
+#else
+#define FINISH(_offset) {                                                   \
+        ADJUST_PC(_offset);                                                 \
+        return;                                                             \
+    }
+#endif
 
 
 /*
@@ -490,68 +471,58 @@ static inline bool checkForNullExportPC(Object* obj, u4* fp, const u2* pc)
 
 #define GOTO_exceptionThrown()                                              \
     do {                                                                    \
-        dvmMterp_exceptionThrown(glue);                                     \
+        dvmMterp_exceptionThrown(self);                                     \
         return;                                                             \
     } while(false)
 
 #define GOTO_returnFromMethod()                                             \
     do {                                                                    \
-        dvmMterp_returnFromMethod(glue);                                    \
+        dvmMterp_returnFromMethod(self);                                    \
         return;                                                             \
     } while(false)
 
-#define GOTO_invoke(_target, _methodCallRange)                              \
+#define GOTO_invoke(_target, _methodCallRange, _jumboFormat)                \
     do {                                                                    \
-        dvmMterp_##_target(glue, _methodCallRange);                         \
+        dvmMterp_##_target(self, _methodCallRange, _jumboFormat);           \
         return;                                                             \
     } while(false)
 
 #define GOTO_invokeMethod(_methodCallRange, _methodToCall, _vsrc1, _vdst)   \
     do {                                                                    \
-        dvmMterp_invokeMethod(glue, _methodCallRange, _methodToCall,        \
+        dvmMterp_invokeMethod(self, _methodCallRange, _methodToCall,        \
             _vsrc1, _vdst);                                                 \
         return;                                                             \
     } while(false)
 
 /*
- * As a special case, "goto bail" turns into a longjmp.  Use "bail_switch"
- * if we need to switch to the other interpreter upon our return.
+ * As a special case, "goto bail" turns into a longjmp.
  */
 #define GOTO_bail()                                                         \
-    dvmMterpStdBail(glue, false);
-#define GOTO_bail_switch()                                                  \
-    dvmMterpStdBail(glue, true);
+    dvmMterpStdBail(self, false);
 
 /*
  * Periodically check for thread suspension.
  *
  * While we're at it, see if a debugger has attached or the profiler has
- * started.  If so, switch to a different "goto" table.
+ * started.
  */
-#define PERIODIC_CHECKS(_entryPoint, _pcadj) {                              \
+#define PERIODIC_CHECKS(_pcadj) {                              \
         if (dvmCheckSuspendQuick(self)) {                                   \
             EXPORT_PC();  /* need for precise GC */                         \
             dvmCheckSuspendPending(self);                                   \
-        }                                                                   \
-        if (NEED_INTERP_SWITCH(INTERP_TYPE)) {                              \
-            ADJUST_PC(_pcadj);                                              \
-            glue->entryPoint = _entryPoint;                                 \
-            LOGVV("threadid=%d: switch to STD ep=%d adj=%d\n",              \
-                self->threadId, (_entryPoint), (_pcadj));                   \
-            GOTO_bail_switch();                                             \
         }                                                                   \
     }
 
 /* File: c/opcommon.c */
 /* forward declarations of goto targets */
-GOTO_TARGET_DECL(filledNewArray, bool methodCallRange);
-GOTO_TARGET_DECL(invokeVirtual, bool methodCallRange);
-GOTO_TARGET_DECL(invokeSuper, bool methodCallRange);
-GOTO_TARGET_DECL(invokeInterface, bool methodCallRange);
-GOTO_TARGET_DECL(invokeDirect, bool methodCallRange);
-GOTO_TARGET_DECL(invokeStatic, bool methodCallRange);
-GOTO_TARGET_DECL(invokeVirtualQuick, bool methodCallRange);
-GOTO_TARGET_DECL(invokeSuperQuick, bool methodCallRange);
+GOTO_TARGET_DECL(filledNewArray, bool methodCallRange, bool jumboFormat);
+GOTO_TARGET_DECL(invokeVirtual, bool methodCallRange, bool jumboFormat);
+GOTO_TARGET_DECL(invokeSuper, bool methodCallRange, bool jumboFormat);
+GOTO_TARGET_DECL(invokeInterface, bool methodCallRange, bool jumboFormat);
+GOTO_TARGET_DECL(invokeDirect, bool methodCallRange, bool jumboFormat);
+GOTO_TARGET_DECL(invokeStatic, bool methodCallRange, bool jumboFormat);
+GOTO_TARGET_DECL(invokeVirtualQuick, bool methodCallRange, bool jumboFormat);
+GOTO_TARGET_DECL(invokeSuperQuick, bool methodCallRange, bool jumboFormat);
 GOTO_TARGET_DECL(invokeMethod, bool methodCallRange, const Method* methodToCall,
     u2 count, u2 regs);
 GOTO_TARGET_DECL(returnFromMethod);
@@ -649,7 +620,7 @@ GOTO_TARGET_DECL(exceptionThrown);
                 branchOffset);                                              \
             ILOGV("> branch taken");                                        \
             if (branchOffset < 0)                                           \
-                PERIODIC_CHECKS(kInterpEntryInstr, branchOffset);           \
+                PERIODIC_CHECKS(branchOffset);                              \
             FINISH(branchOffset);                                           \
         } else {                                                            \
             ILOGV("|if-%s v%d,v%d,-", (_opname), vsrc1, vsrc2);             \
@@ -664,7 +635,7 @@ GOTO_TARGET_DECL(exceptionThrown);
             ILOGV("|if-%s v%d,+0x%04x", (_opname), vsrc1, branchOffset);    \
             ILOGV("> branch taken");                                        \
             if (branchOffset < 0)                                           \
-                PERIODIC_CHECKS(kInterpEntryInstr, branchOffset);           \
+                PERIODIC_CHECKS(branchOffset);                              \
             FINISH(branchOffset);                                           \
         } else {                                                            \
             ILOGV("|if-%s v%d,-", (_opname), vsrc1);                        \
@@ -694,8 +665,7 @@ GOTO_TARGET_DECL(exceptionThrown);
             secondVal = GET_REGISTER(vsrc2);                                \
             if (secondVal == 0) {                                           \
                 EXPORT_PC();                                                \
-                dvmThrowException("Ljava/lang/ArithmeticException;",        \
-                    "divide by zero");                                      \
+                dvmThrowArithmeticException("divide by zero");              \
                 GOTO_exceptionThrown();                                     \
             }                                                               \
             if ((u4)firstVal == 0x80000000 && secondVal == -1) {            \
@@ -741,9 +711,8 @@ GOTO_TARGET_DECL(exceptionThrown);
             firstVal = GET_REGISTER(vsrc1);                                 \
             if ((s2) vsrc2 == 0) {                                          \
                 EXPORT_PC();                                                \
-                dvmThrowException("Ljava/lang/ArithmeticException;",        \
-                    "divide by zero");                                      \
-                GOTO_exceptionThrown();                                      \
+                dvmThrowArithmeticException("divide by zero");              \
+                GOTO_exceptionThrown();                                     \
             }                                                               \
             if ((u4)firstVal == 0x80000000 && ((s2) vsrc2) == -1) {         \
                 /* won't generate /lit16 instr for this; check anyway */    \
@@ -776,8 +745,7 @@ GOTO_TARGET_DECL(exceptionThrown);
             firstVal = GET_REGISTER(vsrc1);                                 \
             if ((s1) vsrc2 == 0) {                                          \
                 EXPORT_PC();                                                \
-                dvmThrowException("Ljava/lang/ArithmeticException;",        \
-                    "divide by zero");                                      \
+                dvmThrowArithmeticException("divide by zero");              \
                 GOTO_exceptionThrown();                                     \
             }                                                               \
             if ((u4)firstVal == 0x80000000 && ((s1) vsrc2) == -1) {         \
@@ -822,8 +790,7 @@ GOTO_TARGET_DECL(exceptionThrown);
             secondVal = GET_REGISTER(vsrc1);                                \
             if (secondVal == 0) {                                           \
                 EXPORT_PC();                                                \
-                dvmThrowException("Ljava/lang/ArithmeticException;",        \
-                    "divide by zero");                                      \
+                dvmThrowArithmeticException("divide by zero");              \
                 GOTO_exceptionThrown();                                     \
             }                                                               \
             if ((u4)firstVal == 0x80000000 && secondVal == -1) {            \
@@ -865,8 +832,7 @@ GOTO_TARGET_DECL(exceptionThrown);
             secondVal = GET_REGISTER_WIDE(vsrc2);                           \
             if (secondVal == 0LL) {                                         \
                 EXPORT_PC();                                                \
-                dvmThrowException("Ljava/lang/ArithmeticException;",        \
-                    "divide by zero");                                      \
+                dvmThrowArithmeticException("divide by zero");              \
                 GOTO_exceptionThrown();                                     \
             }                                                               \
             if ((u8)firstVal == 0x8000000000000000ULL &&                    \
@@ -912,8 +878,7 @@ GOTO_TARGET_DECL(exceptionThrown);
             secondVal = GET_REGISTER_WIDE(vsrc1);                           \
             if (secondVal == 0LL) {                                         \
                 EXPORT_PC();                                                \
-                dvmThrowException("Ljava/lang/ArithmeticException;",        \
-                    "divide by zero");                                      \
+                dvmThrowArithmeticException("divide by zero");              \
                 GOTO_exceptionThrown();                                     \
             }                                                               \
             if ((u8)firstVal == 0x8000000000000000ULL &&                    \
@@ -1003,7 +968,8 @@ GOTO_TARGET_DECL(exceptionThrown);
         if (!checkForNull((Object*) arrayObj))                              \
             GOTO_exceptionThrown();                                         \
         if (GET_REGISTER(vsrc2) >= arrayObj->length) {                      \
-            dvmThrowAIOOBE(GET_REGISTER(vsrc2), arrayObj->length);          \
+            dvmThrowArrayIndexOutOfBoundsException(                         \
+                arrayObj->length, GET_REGISTER(vsrc2));                     \
             GOTO_exceptionThrown();                                         \
         }                                                                   \
         SET_REGISTER##_regsize(vdst,                                        \
@@ -1027,7 +993,8 @@ GOTO_TARGET_DECL(exceptionThrown);
         if (!checkForNull((Object*) arrayObj))                              \
             GOTO_exceptionThrown();                                         \
         if (GET_REGISTER(vsrc2) >= arrayObj->length) {                      \
-            dvmThrowAIOOBE(GET_REGISTER(vsrc2), arrayObj->length);          \
+            dvmThrowArrayIndexOutOfBoundsException(                         \
+                arrayObj->length, GET_REGISTER(vsrc2));                     \
             GOTO_exceptionThrown();                                         \
         }                                                                   \
         ILOGV("+ APUT[%d]=0x%08x", GET_REGISTER(vsrc2), GET_REGISTER(vdst));\
@@ -1080,6 +1047,34 @@ GOTO_TARGET_DECL(exceptionThrown);
     }                                                                       \
     FINISH(2);
 
+#define HANDLE_IGET_X_JUMBO(_opcode, _opname, _ftype, _regsize)             \
+    HANDLE_OPCODE(_opcode /*vBBBB, vCCCC, class@AAAAAAAA*/)                 \
+    {                                                                       \
+        InstField* ifield;                                                  \
+        Object* obj;                                                        \
+        EXPORT_PC();                                                        \
+        ref = FETCH(1) | (u4)FETCH(2) << 16;   /* field ref */              \
+        vdst = FETCH(3);                                                    \
+        vsrc1 = FETCH(4);                      /* object ptr */             \
+        ILOGV("|iget%s/jumbo v%d,v%d,field@0x%08x",                         \
+            (_opname), vdst, vsrc1, ref);                                   \
+        obj = (Object*) GET_REGISTER(vsrc1);                                \
+        if (!checkForNull(obj))                                             \
+            GOTO_exceptionThrown();                                         \
+        ifield = (InstField*) dvmDexGetResolvedField(methodClassDex, ref);  \
+        if (ifield == NULL) {                                               \
+            ifield = dvmResolveInstField(curMethod->clazz, ref);            \
+            if (ifield == NULL)                                             \
+                GOTO_exceptionThrown();                                     \
+        }                                                                   \
+        SET_REGISTER##_regsize(vdst,                                        \
+            dvmGetField##_ftype(obj, ifield->byteOffset));                  \
+        ILOGV("+ IGET '%s'=0x%08llx", ifield->field.name,                   \
+            (u8) GET_REGISTER##_regsize(vdst));                             \
+        UPDATE_FIELD_GET(&ifield->field);                                   \
+    }                                                                       \
+    FINISH(5);
+
 #define HANDLE_IGET_X_QUICK(_opcode, _opname, _ftype, _regsize)             \
     HANDLE_OPCODE(_opcode /*vA, vB, field@CCCC*/)                           \
     {                                                                       \
@@ -1125,6 +1120,34 @@ GOTO_TARGET_DECL(exceptionThrown);
     }                                                                       \
     FINISH(2);
 
+#define HANDLE_IPUT_X_JUMBO(_opcode, _opname, _ftype, _regsize)             \
+    HANDLE_OPCODE(_opcode /*vBBBB, vCCCC, class@AAAAAAAA*/)                 \
+    {                                                                       \
+        InstField* ifield;                                                  \
+        Object* obj;                                                        \
+        EXPORT_PC();                                                        \
+        ref = FETCH(1) | (u4)FETCH(2) << 16;   /* field ref */              \
+        vdst = FETCH(3);                                                    \
+        vsrc1 = FETCH(4);                      /* object ptr */             \
+        ILOGV("|iput%s/jumbo v%d,v%d,field@0x%08x",                         \
+            (_opname), vdst, vsrc1, ref);                                   \
+        obj = (Object*) GET_REGISTER(vsrc1);                                \
+        if (!checkForNull(obj))                                             \
+            GOTO_exceptionThrown();                                         \
+        ifield = (InstField*) dvmDexGetResolvedField(methodClassDex, ref);  \
+        if (ifield == NULL) {                                               \
+            ifield = dvmResolveInstField(curMethod->clazz, ref);            \
+            if (ifield == NULL)                                             \
+                GOTO_exceptionThrown();                                     \
+        }                                                                   \
+        dvmSetField##_ftype(obj, ifield->byteOffset,                        \
+            GET_REGISTER##_regsize(vdst));                                  \
+        ILOGV("+ IPUT '%s'=0x%08llx", ifield->field.name,                   \
+            (u8) GET_REGISTER##_regsize(vdst));                             \
+        UPDATE_FIELD_PUT(&ifield->field);                                   \
+    }                                                                       \
+    FINISH(5);
+
 #define HANDLE_IPUT_X_QUICK(_opcode, _opname, _ftype, _regsize)             \
     HANDLE_OPCODE(_opcode /*vA, vB, field@CCCC*/)                           \
     {                                                                       \
@@ -1145,9 +1168,12 @@ GOTO_TARGET_DECL(exceptionThrown);
 
 /*
  * The JIT needs dvmDexGetResolvedField() to return non-null.
- * Since we use the portable interpreter to build the trace, the extra
- * checks in HANDLE_SGET_X and HANDLE_SPUT_X are not needed for mterp.
+ * Because the portable interpreter is not involved with the JIT
+ * and trace building, we only need the extra check here when this
+ * code is massaged into a stub called from an assembly interpreter.
+ * This is controlled by the JIT_STUB_HACK maco.
  */
+
 #define HANDLE_SGET_X(_opcode, _opname, _ftype, _regsize)                   \
     HANDLE_OPCODE(_opcode /*vAA, field@BBBB*/)                              \
     {                                                                       \
@@ -1162,7 +1188,7 @@ GOTO_TARGET_DECL(exceptionThrown);
             if (sfield == NULL)                                             \
                 GOTO_exceptionThrown();                                     \
             if (dvmDexGetResolvedField(methodClassDex, ref) == NULL) {      \
-                ABORT_JIT_TSELECT();                                        \
+                JIT_STUB_HACK(dvmJitEndTraceSelect(self,pc));                  \
             }                                                               \
         }                                                                   \
         SET_REGISTER##_regsize(vdst, dvmGetStaticField##_ftype(sfield));    \
@@ -1171,6 +1197,30 @@ GOTO_TARGET_DECL(exceptionThrown);
         UPDATE_FIELD_GET(&sfield->field);                                   \
     }                                                                       \
     FINISH(2);
+
+#define HANDLE_SGET_X_JUMBO(_opcode, _opname, _ftype, _regsize)             \
+    HANDLE_OPCODE(_opcode /*vBBBB, class@AAAAAAAA*/)                        \
+    {                                                                       \
+        StaticField* sfield;                                                \
+        ref = FETCH(1) | (u4)FETCH(2) << 16;   /* field ref */              \
+        vdst = FETCH(3);                                                    \
+        ILOGV("|sget%s/jumbo v%d,sfield@0x%08x", (_opname), vdst, ref);     \
+        sfield = (StaticField*)dvmDexGetResolvedField(methodClassDex, ref); \
+        if (sfield == NULL) {                                               \
+            EXPORT_PC();                                                    \
+            sfield = dvmResolveStaticField(curMethod->clazz, ref);          \
+            if (sfield == NULL)                                             \
+                GOTO_exceptionThrown();                                     \
+            if (dvmDexGetResolvedField(methodClassDex, ref) == NULL) {      \
+                JIT_STUB_HACK(dvmJitEndTraceSelect(self,pc));                  \
+            }                                                               \
+        }                                                                   \
+        SET_REGISTER##_regsize(vdst, dvmGetStaticField##_ftype(sfield));    \
+        ILOGV("+ SGET '%s'=0x%08llx",                                       \
+            sfield->field.name, (u8)GET_REGISTER##_regsize(vdst));          \
+        UPDATE_FIELD_GET(&sfield->field);                                   \
+    }                                                                       \
+    FINISH(4);
 
 #define HANDLE_SPUT_X(_opcode, _opname, _ftype, _regsize)                   \
     HANDLE_OPCODE(_opcode /*vAA, field@BBBB*/)                              \
@@ -1186,7 +1236,7 @@ GOTO_TARGET_DECL(exceptionThrown);
             if (sfield == NULL)                                             \
                 GOTO_exceptionThrown();                                     \
             if (dvmDexGetResolvedField(methodClassDex, ref) == NULL) {      \
-                ABORT_JIT_TSELECT();                                        \
+                JIT_STUB_HACK(dvmJitEndTraceSelect(self,pc));                  \
             }                                                               \
         }                                                                   \
         dvmSetStaticField##_ftype(sfield, GET_REGISTER##_regsize(vdst));    \
@@ -1195,6 +1245,30 @@ GOTO_TARGET_DECL(exceptionThrown);
         UPDATE_FIELD_PUT(&sfield->field);                                   \
     }                                                                       \
     FINISH(2);
+
+#define HANDLE_SPUT_X_JUMBO(_opcode, _opname, _ftype, _regsize)             \
+    HANDLE_OPCODE(_opcode /*vBBBB, class@AAAAAAAA*/)                        \
+    {                                                                       \
+        StaticField* sfield;                                                \
+        ref = FETCH(1) | (u4)FETCH(2) << 16;   /* field ref */              \
+        vdst = FETCH(3);                                                    \
+        ILOGV("|sput%s/jumbo v%d,sfield@0x%08x", (_opname), vdst, ref);     \
+        sfield = (StaticField*)dvmDexGetResolvedField(methodClassDex, ref); \
+        if (sfield == NULL) {                                               \
+            EXPORT_PC();                                                    \
+            sfield = dvmResolveStaticField(curMethod->clazz, ref);          \
+            if (sfield == NULL)                                             \
+                GOTO_exceptionThrown();                                     \
+            if (dvmDexGetResolvedField(methodClassDex, ref) == NULL) {      \
+                JIT_STUB_HACK(dvmJitEndTraceSelect(self,pc));                  \
+            }                                                               \
+        }                                                                   \
+        dvmSetStaticField##_ftype(sfield, GET_REGISTER##_regsize(vdst));    \
+        ILOGV("+ SPUT '%s'=0x%08llx",                                       \
+            sfield->field.name, (u8)GET_REGISTER##_regsize(vdst));          \
+        UPDATE_FIELD_PUT(&sfield->field);                                   \
+    }                                                                       \
+    FINISH(4);
 
 /* File: cstubs/enddefs.c */
 
@@ -1222,7 +1296,7 @@ void dvmMterpDumpArmRegs(uint32_t r0, uint32_t r1, uint32_t r2, uint32_t r3)
 {
     register uint32_t rPC       asm("r4");
     register uint32_t rFP       asm("r5");
-    register uint32_t rGLUE     asm("r6");
+    register uint32_t rSELF     asm("r6");
     register uint32_t rINST     asm("r7");
     register uint32_t rIBASE    asm("r8");
     register uint32_t r9        asm("r9");
@@ -1231,12 +1305,12 @@ void dvmMterpDumpArmRegs(uint32_t r0, uint32_t r1, uint32_t r2, uint32_t r3)
     //extern char dvmAsmInstructionStart[];
 
     printf("REGS: r0=%08x r1=%08x r2=%08x r3=%08x\n", r0, r1, r2, r3);
-    printf("    : rPC=%08x rFP=%08x rGLUE=%08x rINST=%08x\n",
-        rPC, rFP, rGLUE, rINST);
+    printf("    : rPC=%08x rFP=%08x rSELF=%08x rINST=%08x\n",
+        rPC, rFP, rSELF, rINST);
     printf("    : rIBASE=%08x r9=%08x r10=%08x\n", rIBASE, r9, r10);
 
-    //MterpGlue* glue = (MterpGlue*) rGLUE;
-    //const Method* method = glue->method;
+    //Thread* self = (Thread*) rSELF;
+    //const Method* method = self->method;
     printf("    + self is %p\n", dvmThreadSelf());
     //printf("    + currently in %s.%s %s\n",
     //    method->clazz->descriptor, method->name, method->shorty);

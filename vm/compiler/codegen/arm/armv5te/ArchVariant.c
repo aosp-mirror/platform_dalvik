@@ -74,11 +74,18 @@ bool dvmCompilerArchVariantInit(void)
      * EA is calculated by doing "Rn + imm5 << 2". Make sure that the last
      * offset from the struct is less than 128.
      */
-    if ((offsetof(InterpState, jitToInterpEntries) +
+    if ((offsetof(Thread, jitToInterpEntries) +
          sizeof(struct JitToInterpEntries)) >= 128) {
-        LOGE("InterpState.jitToInterpEntries size overflow");
+        LOGE("Thread.jitToInterpEntries size overflow");
         dvmAbort();
     }
+
+    /* No method JIT for Thumb backend */
+    gDvmJit.disableOpt |= (1 << kMethodJit);
+
+    // Make sure all threads have current values
+    dvmJitUpdateThreadStateAll();
+
     return true;
 }
 

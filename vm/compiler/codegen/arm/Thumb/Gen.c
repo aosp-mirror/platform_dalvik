@@ -23,6 +23,62 @@
  */
 
 /*
+ * Reserve 6 bytes at the beginning of the trace
+ *        +----------------------------+
+ *        | prof count addr (4 bytes)  |
+ *        +----------------------------+
+ *        | chain cell offset (2 bytes)|
+ *        +----------------------------+
+ *
+ * ...and then code to increment the execution
+ *
+ * For continuous profiling (12 bytes):
+ *
+ *       mov   r0, pc       @ move adr of "mov r0,pc" + 4 to r0
+ *       sub   r0, #10      @ back up to addr prof count pointer
+ *       ldr   r0, [r0]     @ get address of counter
+ *       ldr   r1, [r0]
+ *       add   r1, #1
+ *       str   r1, [r0]
+ *
+ * For periodic profiling (4 bytes):
+ *       call  TEMPLATE_PERIODIC_PROFILING
+ *
+ * and return the size (in bytes) of the generated code.
+ */
+
+static int genTraceProfileEntry(CompilationUnit *cUnit)
+{
+    intptr_t addr = (intptr_t)dvmJitNextTraceCounter();
+    assert(__BYTE_ORDER == __LITTLE_ENDIAN);
+    newLIR1(cUnit, kArm16BitData, addr & 0xffff);
+    newLIR1(cUnit, kArm16BitData, (addr >> 16) & 0xffff);
+    cUnit->chainCellOffsetLIR =
+        (LIR *) newLIR1(cUnit, kArm16BitData, CHAIN_CELL_OFFSET_TAG);
+    cUnit->headerSize = 6;
+    if ((gDvmJit.profileMode == kTraceProfilingContinuous) ||
+        (gDvmJit.profileMode == kTraceProfilingDisabled)) {
+        /* Thumb instruction used directly here to ensure correct size */
+        newLIR2(cUnit, kThumbMovRR_H2L, r0, r15pc);
+        newLIR2(cUnit, kThumbSubRI8, r0, 10);
+        newLIR3(cUnit, kThumbLdrRRI5, r0, r0, 0);
+        newLIR3(cUnit, kThumbLdrRRI5, r1, r0, 0);
+        newLIR2(cUnit, kThumbAddRI8, r1, 1);
+        newLIR3(cUnit, kThumbStrRRI5, r1, r0, 0);
+        return 12;
+    } else {
+        int opcode = TEMPLATE_PERIODIC_PROFILING;
+        newLIR2(cUnit, kThumbBlx1,
+            (int) gDvmJit.codeCache + templateEntryOffsets[opcode],
+            (int) gDvmJit.codeCache + templateEntryOffsets[opcode]);
+        newLIR2(cUnit, kThumbBlx2,
+            (int) gDvmJit.codeCache + templateEntryOffsets[opcode],
+            (int) gDvmJit.codeCache + templateEntryOffsets[opcode]);
+        return 4;
+    }
+}
+
+/*
  * Perform a "reg cmp imm" operation and jump to the PCR region if condition
  * satisfies.
  */
@@ -113,21 +169,15 @@ static void genLong3Addr(CompilationUnit *cUnit, MIR *mir, OpKind firstOp,
 void dvmCompilerInitializeRegAlloc(CompilationUnit *cUnit)
 {
     int numTemps = sizeof(coreTemps)/sizeof(int);
-    RegisterPool *pool = dvmCompilerNew(sizeof(*pool), true);
+    RegisterPool *pool = (RegisterPool *) dvmCompilerNew(sizeof(*pool), true);
     cUnit->regPool = pool;
     pool->numCoreTemps = numTemps;
-    pool->coreTemps =
+    pool->coreTemps = (RegisterInfo *)
             dvmCompilerNew(numTemps * sizeof(*pool->coreTemps), true);
     pool->numFPTemps = 0;
     pool->FPTemps = NULL;
-    pool->numCoreRegs = 0;
-    pool->coreRegs = NULL;
-    pool->numFPRegs = 0;
-    pool->FPRegs = NULL;
     dvmCompilerInitPool(pool->coreTemps, coreTemps, pool->numCoreTemps);
     dvmCompilerInitPool(pool->FPTemps, NULL, 0);
-    dvmCompilerInitPool(pool->coreRegs, NULL, 0);
-    dvmCompilerInitPool(pool->FPRegs, NULL, 0);
     pool->nullCheckedRegs =
         dvmCompilerAllocBitVector(cUnit->numSSARegs, false);
 }
@@ -140,7 +190,7 @@ static ArmLIR *genExportPC(CompilationUnit *cUnit, MIR *mir)
     int rAddr = dvmCompilerAllocTemp(cUnit);
     int offset = offsetof(StackSaveArea, xtra.currentPc);
     res = loadConstant(cUnit, rDPC, (int) (cUnit->method->insns + mir->offset));
-    newLIR2(cUnit, kThumbMovRR, rAddr, rFP);
+    newLIR2(cUnit, kThumbMovRR, rAddr, r5FP);
     newLIR2(cUnit, kThumbSubRI8, rAddr, sizeof(StackSaveArea) - offset);
     storeWordDisp( cUnit, rAddr, 0, rDPC);
     return res;
@@ -164,41 +214,41 @@ static void genCmpLong(CompilationUnit *cUnit, MIR *mir, RegLocation rlDest,
 
 static bool genInlinedAbsFloat(CompilationUnit *cUnit, MIR *mir)
 {
-    int offset = offsetof(InterpState, retval);
+    int offset = offsetof(Thread, retval);
     RegLocation rlSrc = dvmCompilerGetSrc(cUnit, mir, 0);
     int reg0 = loadValue(cUnit, rlSrc, kCoreReg).lowReg;
     int signMask = dvmCompilerAllocTemp(cUnit);
     loadConstant(cUnit, signMask, 0x7fffffff);
     newLIR2(cUnit, kThumbAndRR, reg0, signMask);
     dvmCompilerFreeTemp(cUnit, signMask);
-    storeWordDisp(cUnit, rGLUE, offset, reg0);
+    storeWordDisp(cUnit, r6SELF, offset, reg0);
     //TUNING: rewrite this to not clobber
     dvmCompilerClobber(cUnit, reg0);
-    return true;
+    return false;
 }
 
 static bool genInlinedAbsDouble(CompilationUnit *cUnit, MIR *mir)
 {
-    int offset = offsetof(InterpState, retval);
+    int offset = offsetof(Thread, retval);
     RegLocation rlSrc = dvmCompilerGetSrcWide(cUnit, mir, 0, 1);
     RegLocation regSrc = loadValueWide(cUnit, rlSrc, kCoreReg);
     int reglo = regSrc.lowReg;
     int reghi = regSrc.highReg;
     int signMask = dvmCompilerAllocTemp(cUnit);
     loadConstant(cUnit, signMask, 0x7fffffff);
-    storeWordDisp(cUnit, rGLUE, offset, reglo);
+    storeWordDisp(cUnit, r6SELF, offset, reglo);
     newLIR2(cUnit, kThumbAndRR, reghi, signMask);
     dvmCompilerFreeTemp(cUnit, signMask);
-    storeWordDisp(cUnit, rGLUE, offset + 4, reghi);
+    storeWordDisp(cUnit, r6SELF, offset + 4, reghi);
     //TUNING: rewrite this to not clobber
     dvmCompilerClobber(cUnit, reghi);
-    return true;
+    return false;
 }
 
 /* No select in thumb, so we need to branch.  Thumb2 will do better */
 static bool genInlinedMinMaxInt(CompilationUnit *cUnit, MIR *mir, bool isMin)
 {
-    int offset = offsetof(InterpState, retval);
+    int offset = offsetof(Thread, retval);
     RegLocation rlSrc1 = dvmCompilerGetSrc(cUnit, mir, 0);
     RegLocation rlSrc2 = dvmCompilerGetSrc(cUnit, mir, 1);
     int reg0 = loadValue(cUnit, rlSrc1, kCoreReg).lowReg;
@@ -209,7 +259,7 @@ static bool genInlinedMinMaxInt(CompilationUnit *cUnit, MIR *mir, bool isMin)
     newLIR2(cUnit, kThumbMovRR, reg0, reg1);
     ArmLIR *target = newLIR0(cUnit, kArmPseudoTargetLabel);
     target->defMask = ENCODE_ALL;
-    newLIR3(cUnit, kThumbStrRRI5, reg0, rGLUE, offset >> 2);
+    newLIR3(cUnit, kThumbStrRRI5, reg0, r6SELF, offset >> 2);
     branch1->generic.target = (LIR *)target;
     //TUNING: rewrite this to not clobber
     dvmCompilerClobber(cUnit,reg0);

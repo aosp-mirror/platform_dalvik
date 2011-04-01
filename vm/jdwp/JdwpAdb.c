@@ -92,7 +92,7 @@ adbStateFree( JdwpNetState*  netState )
 static JdwpNetState*
 adbStateAlloc(void)
 {
-    JdwpNetState*   netState = calloc(sizeof(*netState),1);
+    JdwpNetState* netState = (JdwpNetState*) calloc(sizeof(*netState),1);
 
     netState->controlSock = -1;
     netState->clientSock  = -1;

@@ -13,7 +13,8 @@ HANDLE_OPCODE(OP_APUT_OBJECT /*vAA, vBB, vCC*/)
         if (!checkForNull((Object*) arrayObj))
             GOTO_exceptionThrown();
         if (GET_REGISTER(vsrc2) >= arrayObj->length) {
-            dvmThrowAIOOBE(GET_REGISTER(vsrc2), arrayObj->length);
+            dvmThrowArrayIndexOutOfBoundsException(
+                arrayObj->length, GET_REGISTER(vsrc2));
             GOTO_exceptionThrown();
         }
         obj = (Object*) GET_REGISTER(vdst);
@@ -24,7 +25,7 @@ HANDLE_OPCODE(OP_APUT_OBJECT /*vAA, vBB, vCC*/)
                 LOGV("Can't put a '%s'(%p) into array type='%s'(%p)\n",
                     obj->clazz->descriptor, obj,
                     arrayObj->obj.clazz->descriptor, arrayObj);
-                dvmThrowArrayStoreException(obj->clazz, arrayObj->obj.clazz);
+                dvmThrowArrayStoreExceptionIncompatibleElement(obj->clazz, arrayObj->obj.clazz);
                 GOTO_exceptionThrown();
             }
         }

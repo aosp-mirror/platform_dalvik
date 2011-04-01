@@ -17,64 +17,45 @@ DEFINE_GOTO_TABLE(gDvmMterpHandlerNames)
  *
  * This is only used for the "allstubs" variant.
  */
-bool dvmMterpStdRun(MterpGlue* glue)
+void dvmMterpStdRun(Thread* self)
 {
     jmp_buf jmpBuf;
-    int changeInterp;
 
-    glue->bailPtr = &jmpBuf;
+    self->bailPtr = &jmpBuf;
 
-    /*
-     * We want to return "changeInterp" as a boolean, but we can't return
-     * zero through longjmp, so we return (boolean+1).
-     */
-    changeInterp = setjmp(jmpBuf) -1;
-    if (changeInterp >= 0) {
-        LOGVV("mterp threadid=%d returning %d\n",
-            dvmThreadSelf()->threadId, changeInterp);
-        return changeInterp;
-    }
-
-    /*
-     * We may not be starting at a point where we're executing instructions.
-     * We need to pick up where the other interpreter left off.
-     *
-     * In some cases we need to call into a throw/return handler which
-     * will do some processing and then either return to us (updating "glue")
-     * or longjmp back out.
-     */
-    switch (glue->entryPoint) {
-    case kInterpEntryInstr:
-        /* just start at the start */
-        break;
-    case kInterpEntryReturn:
-        dvmMterp_returnFromMethod(glue);
-        break;
-    case kInterpEntryThrow:
-        dvmMterp_exceptionThrown(glue);
-        break;
-    default:
-        dvmAbort();
+    /* We exit via a longjmp */
+    if (setjmp(jmpBuf)) {
+        LOGVV("mterp threadid=%d returning\n", dvmThreadSelf()->threadId);
+        return
     }
 
     /* run until somebody longjmp()s out */
     while (true) {
-        typedef void (*Handler)(MterpGlue* glue);
+        typedef void (*Handler)(Thread* self);
 
-        u2 inst = /*glue->*/pc[0];
+        u2 inst = /*self->interpSave.*/pc[0];
+        /*
+         * In mterp, dvmCheckBefore is handled via the altHandlerTable,
+         * while in the portable interpreter it is part of the handler
+         * FINISH code.  For allstubs, we must do an explicit check
+         * in the interpretation loop.
+         */
+        if (self-interpBreak.ctl.subMode) {
+            dvmCheckBefore(pc, fp, self, curMethod);
+        }
         Handler handler = (Handler) gDvmMterpHandlers[inst & 0xff];
         (void) gDvmMterpHandlerNames;   /* avoid gcc "defined but not used" */
         LOGVV("handler %p %s\n",
             handler, (const char*) gDvmMterpHandlerNames[inst & 0xff]);
-        (*handler)(glue);
+        (*handler)(self);
     }
 }
 
 /*
  * C mterp exit point.  Call here to bail out of the interpreter.
  */
-void dvmMterpStdBail(MterpGlue* glue, bool changeInterp)
+void dvmMterpStdBail(Thread* self)
 {
-    jmp_buf* pJmpBuf = glue->bailPtr;
-    longjmp(*pJmpBuf, ((int)changeInterp)+1);
+    jmp_buf* pJmpBuf = self->bailPtr;
+    longjmp(*pJmpBuf, 1);
 }

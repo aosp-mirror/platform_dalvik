@@ -236,7 +236,7 @@ INLINE u4 dvmIndirectRefToIndex(IndirectRef iref)
  */
 INLINE IndirectRefKind dvmGetIndirectRefType(IndirectRef iref)
 {
-    return (u4) iref & 0x03;
+    return (IndirectRefKind)((u4) iref & 0x03);
 }
 
 /*
@@ -376,6 +376,8 @@ bool dvmRemoveFromIndirectRefTable(IndirectRefTable* pRef, u4 cookie,
 
 /*
  * Dump the contents of a reference table to the log file.
+ *
+ * The caller should lock any external sync before calling.
  */
 void dvmDumpIndirectRefTable(const IndirectRefTable* pRef, const char* descr);
 

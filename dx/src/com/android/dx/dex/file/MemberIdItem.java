@@ -20,15 +20,13 @@ import com.android.dx.rop.cst.CstMemberRef;
 import com.android.dx.rop.cst.CstNat;
 import com.android.dx.util.AnnotatedOutput;
 import com.android.dx.util.Hex;
+import com.android.dx.dex.SizeOf;
 
 /**
  * Representation of a member (field or method) reference inside a
  * Dalvik file.
  */
 public abstract class MemberIdItem extends IdItem {
-    /** size of instances when written out to a file, in bytes */
-    public static final int WRITE_SIZE = 8;
-
     /** {@code non-null;} the constant for the member */
     private final CstMemberRef cst;
 
@@ -46,7 +44,7 @@ public abstract class MemberIdItem extends IdItem {
     /** {@inheritDoc} */
     @Override
     public int writeSize() {
-        return WRITE_SIZE;
+        return SizeOf.MEMBER_ID_ITEM;
     }
 
     /** {@inheritDoc} */

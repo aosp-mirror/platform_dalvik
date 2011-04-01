@@ -646,8 +646,6 @@ common_errNullObject:
     .asciz "Ljava/lang/ArrayIndexOutOfBoundsException;"
 .LstrArrayStoreException:
     .asciz "Ljava/lang/ArrayStoreException;"
-.LstrClassCastException:
-    .asciz "Ljava/lang/ClassCastException;"
 .LstrDivideByZero:
     .asciz "divide by zero"
 .LstrInstantiationError:

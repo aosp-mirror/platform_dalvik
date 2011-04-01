@@ -157,9 +157,4 @@ bool dvmHoldsLock(struct Thread* thread, struct Object* obj);
 int dvmRelativeCondWait(pthread_cond_t* cond, pthread_mutex_t* mutex,
                          s8 msec, s4 nsec);
 
-/*
- * Debug.
- */
-void dvmDumpMonitorInfo(const char* msg);
-
 #endif /*_DALVIK_SYNC*/

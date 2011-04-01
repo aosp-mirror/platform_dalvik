@@ -16,10 +16,13 @@
 # Configuration for "desktop" targets.
 #
 
-handler-size 64
+handler-style jump-table
 
 # source for the instruction table stub
 asm-stub x86/stub.S
+
+# source for alternate entry stub
+asm-alt-stub x86/alt_stub.S
 
 # C file header and basic definitions
 import c/header.c
@@ -40,6 +43,21 @@ op-start x86
     op OP_SGET_WIDE_VOLATILE c
     op OP_SPUT_WIDE_VOLATILE c
     op OP_RETURN_VOID_BARRIER c
+    op OP_INVOKE_OBJECT_INIT_RANGE c
+
+    op OP_INVOKE_OBJECT_INIT_JUMBO c
+    op OP_IGET_VOLATILE_JUMBO c
+    op OP_IPUT_VOLATILE_JUMBO c
+    op OP_SGET_VOLATILE_JUMBO c
+    op OP_SPUT_VOLATILE_JUMBO c
+    op OP_IGET_OBJECT_VOLATILE_JUMBO c
+    op OP_IPUT_OBJECT_VOLATILE_JUMBO c
+    op OP_SGET_OBJECT_VOLATILE_JUMBO c
+    op OP_SPUT_OBJECT_VOLATILE_JUMBO c
+    op OP_IGET_WIDE_VOLATILE_JUMBO c
+    op OP_IPUT_WIDE_VOLATILE_JUMBO c
+    op OP_SGET_WIDE_VOLATILE_JUMBO c
+    op OP_SPUT_WIDE_VOLATILE_JUMBO c
 op-end
 
 # arch-specific entry point to interpreter

@@ -25,21 +25,12 @@
 # Compiler defines.
 #
 LOCAL_CFLAGS += -fstrict-aliasing -Wstrict-aliasing=2 -fno-align-jumps
-#LOCAL_CFLAGS += -DUSE_INDIRECT_REF
-LOCAL_CFLAGS += -Wall -Wextra -Wno-unused-parameter
+LOCAL_CFLAGS += -Wall -Wextra -Wno-unused-parameter -Wc++-compat
 LOCAL_CFLAGS += -DARCH_VARIANT=\"$(dvm_arch_variant)\"
 
 #
 # Optional features.  These may impact the size or performance of the VM.
 #
-
-ifeq ($(WITH_DEADLOCK_PREDICTION),true)
-  LOCAL_CFLAGS += -DWITH_DEADLOCK_PREDICTION
-  WITH_MONITOR_TRACKING := true
-endif
-ifeq ($(WITH_MONITOR_TRACKING),true)
-  LOCAL_CFLAGS += -DWITH_MONITOR_TRACKING
-endif
 
 # Make a debugging version when building the simulator (if not told
 # otherwise) and when explicitly asked.
@@ -97,6 +88,7 @@ LOCAL_SRC_FILES := \
 	AllocTracker.c \
 	Atomic.c.arm \
 	AtomicCache.c \
+	BitVector.c.arm \
 	CheckJni.c \
 	Ddm.c \
 	Debugger.c \
@@ -105,13 +97,14 @@ LOCAL_SRC_FILES := \
 	Hash.c \
 	IndirectRefTable.c.arm \
 	Init.c \
+	InitRefs.c \
 	InlineNative.c.arm \
 	Inlines.c \
 	Intern.c \
 	Jni.c \
 	JarFile.c \
 	LinearAlloc.c \
-	Misc.c.arm \
+	Misc.c \
 	Native.c \
 	PointerSet.c \
 	Profile.c \
@@ -121,16 +114,12 @@ LOCAL_SRC_FILES := \
 	SignalCatcher.c \
 	StdioConverter.c \
 	Sync.c \
-	TestCompability.c \
 	Thread.c \
 	UtfString.c \
-	alloc/clz.c.arm \
 	alloc/Alloc.c \
 	alloc/CardTable.c \
 	alloc/HeapBitmap.c.arm \
 	alloc/HeapDebug.c \
-	alloc/HeapTable.c \
-	alloc/HeapWorker.c \
 	alloc/Heap.c.arm \
 	alloc/DdmHeap.c \
 	alloc/Verify.c \
@@ -138,9 +127,11 @@ LOCAL_SRC_FILES := \
 	analysis/CodeVerify.c \
 	analysis/DexPrepare.c \
 	analysis/DexVerify.c \
+	analysis/Liveness.c \
 	analysis/Optimize.c \
 	analysis/RegisterMap.c \
 	analysis/VerifySubs.c \
+	analysis/VfyBasicBlock.c \
 	hprof/Hprof.c \
 	hprof/HprofClass.c \
 	hprof/HprofHeap.c \
@@ -156,8 +147,7 @@ LOCAL_SRC_FILES := \
 	jdwp/JdwpMain.c \
 	jdwp/JdwpSocket.c \
 	mterp/Mterp.c.arm \
-	mterp/out/InterpC-portstd.c.arm \
-	mterp/out/InterpC-portdbg.c.arm \
+	mterp/out/InterpC-portable.c.arm \
 	native/InternalNative.c \
 	native/dalvik_bytecode_OpcodeInfo.c \
 	native/dalvik_system_DexFile.c \
@@ -166,11 +156,13 @@ LOCAL_SRC_FILES := \
 	native/dalvik_system_VMStack.c \
 	native/dalvik_system_Zygote.c \
 	native/java_lang_Class.c \
+	native/java_lang_Double.c \
+	native/java_lang_Float.c \
+	native/java_lang_Math.c \
 	native/java_lang_Object.c \
 	native/java_lang_Runtime.c \
 	native/java_lang_String.c \
 	native/java_lang_System.c \
-	native/java_lang_SystemProperties.c \
 	native/java_lang_Throwable.c \
 	native/java_lang_VMClassLoader.c \
 	native/java_lang_VMThread.c \
@@ -180,7 +172,6 @@ LOCAL_SRC_FILES := \
 	native/java_lang_reflect_Field.c \
 	native/java_lang_reflect_Method.c \
 	native/java_lang_reflect_Proxy.c \
-	native/java_security_AccessController.c \
 	native/java_util_concurrent_atomic_AtomicLong.c \
 	native/org_apache_harmony_dalvik_NativeTestTarget.c \
 	native/org_apache_harmony_dalvik_ddmc_DdmServer.c \
@@ -222,17 +213,11 @@ ifeq ($(WITH_JIT),true)
 	compiler/InlineTransformation.c \
 	compiler/IntermediateRep.c \
 	compiler/Dataflow.c \
+	compiler/SSATransformation.c \
 	compiler/Loop.c \
 	compiler/Ralloc.c \
 	interp/Jit.c
 endif
-
-ifeq ($(strip $(WITH_HPROF_STACK)),true)
-  LOCAL_SRC_FILES += \
-	hprof/HprofStack.c \
-	hprof/HprofStackFrame.c
-  LOCAL_CFLAGS += -DWITH_HPROF_STACK=1
-endif # WITH_HPROF_STACK
 
 LOCAL_C_INCLUDES += \
 	$(JNI_H_INCLUDE) \
@@ -282,6 +267,7 @@ endif
 ifeq ($(dvm_arch),x86)
   ifeq ($(dvm_os),linux)
     MTERP_ARCH_KNOWN := true
+    LOCAL_CFLAGS += -DDVM_JMP_TABLE_MTERP=1
     LOCAL_SRC_FILES += \
 		arch/$(dvm_arch_variant)/Call386ABI.S \
 		arch/$(dvm_arch_variant)/Hints386ABI.c \
@@ -329,8 +315,4 @@ ifeq ($(MTERP_ARCH_KNOWN),false)
   # measure, too.
   LOCAL_CFLAGS += -DdvmAsmInstructionStart=0 -DdvmAsmInstructionEnd=0 \
 	-DdvmAsmSisterStart=0 -DdvmAsmSisterEnd=0 -DDVM_NO_ASM_INTERP=1
-endif
-
-ifeq ($(TEST_VM_IN_ECLAIR),true)
-  LOCAL_CFLAGS += -DTEST_VM_IN_ECLAIR
 endif

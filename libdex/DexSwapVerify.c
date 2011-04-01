@@ -22,6 +22,7 @@
 #include "DexClass.h"
 #include "DexDataMap.h"
 #include "DexProto.h"
+#include "DexUtf.h"
 #include "Leb128.h"
 
 #include <safe_iop.h>

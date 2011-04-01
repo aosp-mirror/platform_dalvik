@@ -16,7 +16,7 @@
 
 package com.android.dx.dex.file;
 
-import com.android.dx.rop.cst.CstType;
+import com.android.dx.dex.SizeOf;
 import com.android.dx.rop.cst.CstUtf8;
 import com.android.dx.rop.type.Prototype;
 import com.android.dx.rop.type.StdTypeList;
@@ -28,9 +28,6 @@ import com.android.dx.util.Hex;
  * Representation of a method prototype reference inside a Dalvik file.
  */
 public final class ProtoIdItem extends IndexedItem {
-    /** size of instances when written out to a file, in bytes */
-    public static final int WRITE_SIZE = 12;
-
     /** {@code non-null;} the wrapped prototype */
     private final Prototype prototype;
 
@@ -106,7 +103,7 @@ public final class ProtoIdItem extends IndexedItem {
     /** {@inheritDoc} */
     @Override
     public int writeSize() {
-        return WRITE_SIZE;
+        return SizeOf.PROTO_ID_ITEM;
     }
 
     /** {@inheritDoc} */

@@ -18,10 +18,12 @@ package com.android.dx.ssa;
 
 import com.android.dx.rop.code.CstInsn;
 import com.android.dx.rop.code.Insn;
+import com.android.dx.rop.code.PlainInsn;
 import com.android.dx.rop.code.RegOps;
 import com.android.dx.rop.code.RegisterSpecList;
 import com.android.dx.rop.code.Rop;
 import com.android.dx.rop.code.RegisterSpec;
+import com.android.dx.rop.code.Rops;
 import com.android.dx.rop.cst.Constant;
 import com.android.dx.rop.cst.CstInteger;
 import com.android.dx.rop.cst.TypedConstant;
@@ -50,6 +52,8 @@ public class SCCP {
     private Constant[] latticeConstants;
     /** Worklist of basic blocks to be processed */
     private ArrayList<SsaBasicBlock> cfgWorklist;
+    /** Worklist of executed basic blocks with phis to be processed */
+    private ArrayList<SsaBasicBlock> cfgPhiWorklist;
     /** Bitset containing bits for each block that has been found executable */
     private BitSet executableBlocks;
     /** Worklist for SSA edges.  This is a list of registers to process */
@@ -60,6 +64,8 @@ public class SCCP {
      * possible.
      */
     private ArrayList<SsaInsn> varyingWorklist;
+    /** Worklist of potential branches to convert to gotos */
+    private ArrayList<SsaInsn> branchWorklist;
 
     private SCCP(SsaMethod ssaMeth) {
         this.ssaMeth = ssaMeth;
@@ -67,9 +73,11 @@ public class SCCP {
         this.latticeValues = new int[this.regCount];
         this.latticeConstants = new Constant[this.regCount];
         this.cfgWorklist = new ArrayList<SsaBasicBlock>();
+        this.cfgPhiWorklist = new ArrayList<SsaBasicBlock>();
         this.executableBlocks = new BitSet(ssaMeth.getBlocks().size());
         this.ssaWorklist = new ArrayList<SsaInsn>();
         this.varyingWorklist = new ArrayList<SsaInsn>();
+        this.branchWorklist = new ArrayList<SsaInsn>();
         for (int i = 0; i < this.regCount; i++) {
             latticeValues[i] = TOP;
             latticeConstants[i] = null;
@@ -85,13 +93,16 @@ public class SCCP {
     }
 
     /**
-     * Add a new SSA basic block to the CFG worklist
+     * Adds a SSA basic block to the CFG worklist if it's unexecuted, or
+     * to the CFG phi worklist if it's already executed.
      * @param ssaBlock Block to add
      */
     private void addBlockToWorklist(SsaBasicBlock ssaBlock) {
         if (!executableBlocks.get(ssaBlock.getIndex())) {
             cfgWorklist.add(ssaBlock);
             executableBlocks.set(ssaBlock.getIndex());
+        } else {
+            cfgPhiWorklist.add(ssaBlock);
         }
     }
 
@@ -139,7 +150,7 @@ public class SCCP {
 
     /**
      * Simulates a PHI node and set the lattice for the result
-     * to the approriate value.
+     * to the appropriate value.
      * Meet values:
      * TOP x anything = anything
      * VARYING x anything = VARYING
@@ -200,6 +211,21 @@ public class SCCP {
             }
         }
     }
+
+    /**
+     * Simulate the phis in a block and note the results in the lattice.
+     * @param block Block to visit
+     */
+    private void simulatePhiBlock(SsaBasicBlock block) {
+        for (SsaInsn insn : block.getInsns()) {
+            if (insn instanceof PhiInsn) {
+                simulatePhi((PhiInsn) insn);
+            } else {
+                return;
+            }
+        }
+    }
+
     private static String latticeValName(int latticeVal) {
         switch (latticeVal) {
             case TOP: return "TOP";
@@ -210,21 +236,136 @@ public class SCCP {
     }
 
     /**
-     * Simplifies a jump statement.
-     * @param insn jump to simplify
-     * @return an instruction representing the simplified jump.
+     * Simulates branch insns, if possible. Adds reachable successor blocks
+     * to the CFG worklists.
+     * @param insn branch to simulate
      */
-    private Insn simplifyJump (Insn insn) {
-        return insn;
+    private void simulateBranch(SsaInsn insn) {
+        Rop opcode = insn.getOpcode();
+        RegisterSpecList sources = insn.getSources();
+
+        boolean constantBranch = false;
+        boolean constantSuccessor = false;
+
+        // Check if the insn is a branch with a constant condition
+        if (opcode.getBranchingness() == Rop.BRANCH_IF) {
+            Constant cA = null;
+            Constant cB = null;
+
+            RegisterSpec specA = sources.get(0);
+            int regA = specA.getReg();
+            if (!ssaMeth.isRegALocal(specA) &&
+                    latticeValues[regA] == CONSTANT) {
+                cA = latticeConstants[regA];
+            }
+
+            if (sources.size() == 2) {
+                RegisterSpec specB = sources.get(1);
+                int regB = specB.getReg();
+                if (!ssaMeth.isRegALocal(specB) &&
+                        latticeValues[regB] == CONSTANT) {
+                    cB = latticeConstants[regB];
+                }
+            }
+
+            // Calculate the result of the condition
+            if (cA != null && sources.size() == 1) {
+                switch (((TypedConstant) cA).getBasicType()) {
+                    case Type.BT_INT:
+                        constantBranch = true;
+                        int vA = ((CstInteger) cA).getValue();
+                        switch (opcode.getOpcode()) {
+                            case RegOps.IF_EQ:
+                                constantSuccessor = (vA == 0);
+                                break;
+                            case RegOps.IF_NE:
+                                constantSuccessor = (vA != 0);
+                                break;
+                            case RegOps.IF_LT:
+                                constantSuccessor = (vA < 0);
+                                break;
+                            case RegOps.IF_GE:
+                                constantSuccessor = (vA >= 0);
+                                break;
+                            case RegOps.IF_LE:
+                                constantSuccessor = (vA <= 0);
+                                break;
+                            case RegOps.IF_GT:
+                                constantSuccessor = (vA > 0);
+                                break;
+                            default:
+                                throw new RuntimeException("Unexpected op");
+                        }
+                        break;
+                    default:
+                        // not yet supported
+                }
+            } else if (cA != null && cB != null) {
+                switch (((TypedConstant) cA).getBasicType()) {
+                    case Type.BT_INT:
+                        constantBranch = true;
+                        int vA = ((CstInteger) cA).getValue();
+                        int vB = ((CstInteger) cB).getValue();
+                        switch (opcode.getOpcode()) {
+                            case RegOps.IF_EQ:
+                                constantSuccessor = (vA == vB);
+                                break;
+                            case RegOps.IF_NE:
+                                constantSuccessor = (vA != vB);
+                                break;
+                            case RegOps.IF_LT:
+                                constantSuccessor = (vA < vB);
+                                break;
+                            case RegOps.IF_GE:
+                                constantSuccessor = (vA >= vB);
+                                break;
+                            case RegOps.IF_LE:
+                                constantSuccessor = (vA <= vB);
+                                break;
+                            case RegOps.IF_GT:
+                                constantSuccessor = (vA > vB);
+                                break;
+                            default:
+                                throw new RuntimeException("Unexpected op");
+                        }
+                        break;
+                    default:
+                        // not yet supported
+                }
+            }
+        }
+
+        /*
+         * If condition is constant, add only the target block to the
+         * worklist. Otherwise, add all successors to the worklist.
+         */
+        SsaBasicBlock block = insn.getBlock();
+
+        if (constantBranch) {
+            int successorBlock;
+            if (constantSuccessor) {
+                successorBlock = block.getSuccessorList().get(1);
+            } else {
+                successorBlock = block.getSuccessorList().get(0);
+            }
+            addBlockToWorklist(ssaMeth.getBlocks().get(successorBlock));
+            branchWorklist.add(insn);
+        } else {
+            for (int i = 0; i < block.getSuccessorList().size(); i++) {
+                int successorBlock = block.getSuccessorList().get(i);
+                addBlockToWorklist(ssaMeth.getBlocks().get(successorBlock));
+            }
+        }
     }
 
     /**
      * Simulates math insns, if possible.
      *
      * @param insn non-null insn to simulate
+     * @param resultType basic type of the result
      * @return constant result or null if not simulatable.
      */
-    private Constant simulateMath(SsaInsn insn) {
+    private Constant simulateMath(SsaInsn insn, int resultType) {
         Insn ropInsn = insn.getOriginalRopInsn();
         int opcode = insn.getOpcode().getOpcode();
         RegisterSpecList sources = insn.getSources();
@@ -255,7 +396,7 @@ public class SCCP {
             return null;
         }
 
-        switch (insn.getResult().getBasicType()) {
+        switch (resultType) {
             case Type.BT_INT:
                 int vR;
                 boolean skip=false;
@@ -268,7 +409,12 @@ public class SCCP {
                         vR = vA + vB;
                         break;
                     case RegOps.SUB:
-                        vR = vA - vB;
+                        // 1 source for reverse sub, 2 sources for regular sub
+                        if (sources.size() == 1) {
+                            vR = vB - vA;
+                        } else {
+                            vR = vA - vB;
+                        }
                         break;
                     case RegOps.MUL:
                         vR = vA * vB;
@@ -300,7 +446,12 @@ public class SCCP {
                         vR = vA >>> vB;
                         break;
                     case RegOps.REM:
-                        vR = vA % vB;
+                        if (vB == 0) {
+                            skip = true;
+                            vR = 0; // just to hide a warning
+                        } else {
+                            vR = vA % vB;
+                        }
                         break;
                     default:
                         throw new RuntimeException("Unexpected op");
@@ -322,25 +473,24 @@ public class SCCP {
         Insn ropInsn = insn.getOriginalRopInsn();
         if (ropInsn.getOpcode().getBranchingness() != Rop.BRANCH_NONE
                 || ropInsn.getOpcode().isCallLike()) {
-            ropInsn = simplifyJump (ropInsn);
-            /* TODO: If jump becomes constant, only take true edge. */
-            SsaBasicBlock block = insn.getBlock();
-            int successorSize = block.getSuccessorList().size();
-            for (int i = 0; i < successorSize; i++) {
-                int successor = block.getSuccessorList().get(i);
-                addBlockToWorklist(ssaMeth.getBlocks().get(successor));
-            }
+            simulateBranch(insn);
         }
 
-        if (insn.getResult() == null) {
-            return;
+        int opcode = insn.getOpcode().getOpcode();
+        RegisterSpec result = insn.getResult();
+
+        // Find corresponding move-result-pseudo result for div and rem
+        if (opcode == RegOps.DIV || opcode == RegOps.REM) {
+            SsaBasicBlock succ = insn.getBlock().getPrimarySuccessor();
+            result = succ.getInsns().get(0).getResult();
         }
 
-        /* TODO: Simplify statements when possible using the constants. */
-        int resultReg = insn.getResult().getReg();
+        if (result == null) return;
+
+        int resultReg = result.getReg();
         int resultValue = VARYING;
         Constant resultConstant = null;
-        int opcode = insn.getOpcode().getOpcode();
+
         switch (opcode) {
             case RegOps.CONST: {
                 CstInsn cstInsn = (CstInsn)ropInsn;
@@ -356,7 +506,6 @@ public class SCCP {
                 }
                 break;
             }
-
             case RegOps.ADD:
             case RegOps.SUB:
             case RegOps.MUL:
@@ -367,18 +516,22 @@ public class SCCP {
             case RegOps.SHL:
             case RegOps.SHR:
             case RegOps.USHR:
-            case RegOps.REM:
-
-                resultConstant = simulateMath(insn);
-
-                if (resultConstant == null) {
-                    resultValue = VARYING;
-                } else {
+            case RegOps.REM: {
+                resultConstant = simulateMath(insn, result.getBasicType());
+                if (resultConstant != null) {
                     resultValue = CONSTANT;
                 }
-            break;
-            /* TODO: Handle non-int arithmetic.
-               TODO: Eliminate check casts that we can prove the type of. */
+                break;
+            }
+            case RegOps.MOVE_RESULT_PSEUDO: {
+                if (latticeValues[resultReg] == CONSTANT) {
+                    resultValue = latticeValues[resultReg];
+                    resultConstant = latticeConstants[resultReg];
+                }
+                break;
+            }
+            // TODO: Handle non-int arithmetic.
+            // TODO: Eliminate check casts that we can prove the type of.
             default: {}
         }
         if (setLatticeValueTo(resultReg, resultValue, resultConstant)) {
@@ -392,6 +545,7 @@ public class SCCP {
 
         /* Empty all the worklists by propagating our values */
         while (!cfgWorklist.isEmpty()
+                || !cfgPhiWorklist.isEmpty()
                 || !ssaWorklist.isEmpty()
                 || !varyingWorklist.isEmpty()) {
             while (!cfgWorklist.isEmpty()) {
@@ -399,6 +553,13 @@ public class SCCP {
                 SsaBasicBlock block = cfgWorklist.remove(listSize);
                 simulateBlock(block);
             }
+
+            while (!cfgPhiWorklist.isEmpty()) {
+                int listSize = cfgPhiWorklist.size() - 1;
+                SsaBasicBlock block = cfgPhiWorklist.remove(listSize);
+                simulatePhiBlock(block);
+            }
+
             while (!varyingWorklist.isEmpty()) {
                 int listSize = varyingWorklist.size() - 1;
                 SsaInsn insn = varyingWorklist.remove(listSize);
@@ -430,6 +591,7 @@ public class SCCP {
         }
 
         replaceConstants();
+        replaceBranches();
     }
 
     /**
@@ -458,6 +620,12 @@ public class SCCP {
                 continue;
             }
 
+            // Update the destination RegisterSpec with the constant value
+            RegisterSpec dest = defn.getResult();
+            RegisterSpec newDest
+                    = dest.withType((TypedConstant)latticeConstants[reg]);
+            defn.setResult(newDest);
+
             /*
              * Update the sources RegisterSpec's of all non-move uses.
              * These will be used in later steps.
@@ -478,6 +646,36 @@ public class SCCP {
 
                 nInsn.changeOneSource(index, newSpec);
             }
+        }
+    }
+
+    /**
+     * Replaces branches that have constant conditions with gotos
+     */
+    private void replaceBranches() {
+        for (SsaInsn insn : branchWorklist) {
+            // Find if a successor block is never executed
+            int oldSuccessor = -1;
+            SsaBasicBlock block = insn.getBlock();
+            int successorSize = block.getSuccessorList().size();
+            for (int i = 0; i < successorSize; i++) {
+                int successorBlock = block.getSuccessorList().get(i);
+                if (!executableBlocks.get(successorBlock)) {
+                    oldSuccessor = successorBlock;
+                }
+            }
+
+            /*
+             * Prune branches that have already been handled and ones that no
+             * longer have constant conditions (no nonexecutable successors)
+             */
+            if (successorSize != 2 || oldSuccessor == -1) continue;
+
+            // Replace branch with goto
+            Insn originalRopInsn = insn.getOriginalRopInsn();
+            block.replaceLastInsn(new PlainInsn(Rops.GOTO,
+                originalRopInsn.getPosition(), null, RegisterSpecList.EMPTY));
+            block.removeSuccessor(oldSuccessor);
         }
     }
 }

@@ -34,7 +34,7 @@ static inline u4 convertRegId(const DecodedInstruction *invoke,
     }
 }
 
-static void inlineGetter(CompilationUnit *cUnit,
+static bool inlineGetter(CompilationUnit *cUnit,
                          const Method *calleeMethod,
                          MIR *invokeMIR,
                          BasicBlock *invokeBB,
@@ -43,13 +43,13 @@ static void inlineGetter(CompilationUnit *cUnit,
 {
     BasicBlock *moveResultBB = invokeBB->fallThrough;
     MIR *moveResultMIR = moveResultBB->firstMIRInsn;
-    MIR *newGetterMIR = dvmCompilerNew(sizeof(MIR), true);
+    MIR *newGetterMIR = (MIR *)dvmCompilerNew(sizeof(MIR), true);
     DecodedInstruction getterInsn;
 
     dexDecodeInstruction(calleeMethod->insns, &getterInsn);
 
     if (!dvmCompilerCanIncludeThisInstruction(calleeMethod, &getterInsn))
-        return;
+        return false;
 
     /*
      * Some getters (especially invoked through interface) are not followed
@@ -59,7 +59,7 @@ static void inlineGetter(CompilationUnit *cUnit,
         (moveResultMIR->dalvikInsn.opcode != OP_MOVE_RESULT &&
          moveResultMIR->dalvikInsn.opcode != OP_MOVE_RESULT_OBJECT &&
          moveResultMIR->dalvikInsn.opcode != OP_MOVE_RESULT_WIDE)) {
-        return;
+        return false;
     }
 
     int dfFlags = dvmCompilerDataFlowAttributes[getterInsn.opcode];
@@ -100,7 +100,7 @@ static void inlineGetter(CompilationUnit *cUnit,
     dvmCompilerInsertMIRAfter(invokeBB, invokeMIR, newGetterMIR);
 
     if (isPredicted) {
-        MIR *invokeMIRSlow = dvmCompilerNew(sizeof(MIR), true);
+        MIR *invokeMIRSlow = (MIR *)dvmCompilerNew(sizeof(MIR), true);
         *invokeMIRSlow = *invokeMIR;
         invokeMIR->dalvikInsn.opcode = kMirOpCheckInlinePrediction;
 
@@ -124,23 +124,23 @@ static void inlineGetter(CompilationUnit *cUnit,
 #endif
     }
 
-    return;
+    return true;
 }
 
-static void inlineSetter(CompilationUnit *cUnit,
+static bool inlineSetter(CompilationUnit *cUnit,
                          const Method *calleeMethod,
                          MIR *invokeMIR,
                          BasicBlock *invokeBB,
                          bool isPredicted,
                          bool isRange)
 {
-    MIR *newSetterMIR = dvmCompilerNew(sizeof(MIR), true);
+    MIR *newSetterMIR = (MIR *)dvmCompilerNew(sizeof(MIR), true);
     DecodedInstruction setterInsn;
 
     dexDecodeInstruction(calleeMethod->insns, &setterInsn);
 
     if (!dvmCompilerCanIncludeThisInstruction(calleeMethod, &setterInsn))
-        return;
+        return false;
 
     int dfFlags = dvmCompilerDataFlowAttributes[setterInsn.opcode];
 
@@ -179,7 +179,7 @@ static void inlineSetter(CompilationUnit *cUnit,
     dvmCompilerInsertMIRAfter(invokeBB, invokeMIR, newSetterMIR);
 
     if (isPredicted) {
-        MIR *invokeMIRSlow = dvmCompilerNew(sizeof(MIR), true);
+        MIR *invokeMIRSlow = (MIR *)dvmCompilerNew(sizeof(MIR), true);
         *invokeMIRSlow = *invokeMIR;
         invokeMIR->dalvikInsn.opcode = kMirOpCheckInlinePrediction;
 
@@ -205,17 +205,17 @@ static void inlineSetter(CompilationUnit *cUnit,
 #endif
     }
 
-    return;
+    return true;
 }
 
-static void tryInlineSingletonCallsite(CompilationUnit *cUnit,
+static bool tryInlineSingletonCallsite(CompilationUnit *cUnit,
                                        const Method *calleeMethod,
                                        MIR *invokeMIR,
                                        BasicBlock *invokeBB,
                                        bool isRange)
 {
     /* Not a Java method */
-    if (dvmIsNativeMethod(calleeMethod)) return;
+    if (dvmIsNativeMethod(calleeMethod)) return false;
 
     CompilerMethodStats *methodStats =
         dvmCompilerAnalyzeMethodBody(calleeMethod, true);
@@ -229,69 +229,74 @@ static void tryInlineSingletonCallsite(CompilationUnit *cUnit,
          * the PC reconstruction or chaining cell).
          */
         invokeBB->needFallThroughBranch = true;
-        return;
+        return true;
     }
 
     if (methodStats->attributes & METHOD_IS_GETTER) {
-        inlineGetter(cUnit, calleeMethod, invokeMIR, invokeBB, false, isRange);
-        return;
+        return inlineGetter(cUnit, calleeMethod, invokeMIR, invokeBB, false,
+                            isRange);
     } else if (methodStats->attributes & METHOD_IS_SETTER) {
-        inlineSetter(cUnit, calleeMethod, invokeMIR, invokeBB, false, isRange);
-        return;
+        return inlineSetter(cUnit, calleeMethod, invokeMIR, invokeBB, false,
+                            isRange);
     }
+    return false;
 }
 
-static void inlineEmptyVirtualCallee(CompilationUnit *cUnit,
+static bool inlineEmptyVirtualCallee(CompilationUnit *cUnit,
                                      const Method *calleeMethod,
                                      MIR *invokeMIR,
                                      BasicBlock *invokeBB)
 {
-    MIR *invokeMIRSlow = dvmCompilerNew(sizeof(MIR), true);
+    MIR *invokeMIRSlow = (MIR *)dvmCompilerNew(sizeof(MIR), true);
     *invokeMIRSlow = *invokeMIR;
     invokeMIR->dalvikInsn.opcode = kMirOpCheckInlinePrediction;
 
     dvmCompilerInsertMIRAfter(invokeBB, invokeMIR, invokeMIRSlow);
     invokeMIRSlow->OptimizationFlags |= MIR_INLINED_PRED;
+    return true;
 }
 
-static void tryInlineVirtualCallsite(CompilationUnit *cUnit,
+static bool tryInlineVirtualCallsite(CompilationUnit *cUnit,
                                      const Method *calleeMethod,
                                      MIR *invokeMIR,
                                      BasicBlock *invokeBB,
                                      bool isRange)
 {
     /* Not a Java method */
-    if (dvmIsNativeMethod(calleeMethod)) return;
+    if (dvmIsNativeMethod(calleeMethod)) return false;
 
     CompilerMethodStats *methodStats =
         dvmCompilerAnalyzeMethodBody(calleeMethod, true);
 
     /* Empty callee - do nothing by checking the clazz pointer */
     if (methodStats->attributes & METHOD_IS_EMPTY) {
-        inlineEmptyVirtualCallee(cUnit, calleeMethod, invokeMIR, invokeBB);
-        return;
+        return inlineEmptyVirtualCallee(cUnit, calleeMethod, invokeMIR,
+                                        invokeBB);
     }
 
     if (methodStats->attributes & METHOD_IS_GETTER) {
-        inlineGetter(cUnit, calleeMethod, invokeMIR, invokeBB, true, isRange);
-        return;
+        return inlineGetter(cUnit, calleeMethod, invokeMIR, invokeBB, true,
+                            isRange);
     } else if (methodStats->attributes & METHOD_IS_SETTER) {
-        inlineSetter(cUnit, calleeMethod, invokeMIR, invokeBB, true, isRange);
-        return;
+        return inlineSetter(cUnit, calleeMethod, invokeMIR, invokeBB, true,
+                            isRange);
     }
+    return false;
 }
 
 
-void dvmCompilerInlineMIR(CompilationUnit *cUnit)
+void dvmCompilerInlineMIR(CompilationUnit *cUnit, JitTranslationInfo *info)
 {
-    int i;
     bool isRange = false;
+    GrowableListIterator iterator;
 
+    dvmGrowableListIteratorInit(&cUnit->blockList, &iterator);
     /*
      * Analyze the basic block containing an invoke to see if it can be inlined
      */
-    for (i = 0; i < cUnit->numBlocks; i++) {
-        BasicBlock *bb = cUnit->blockList[i];
+    while (true) {
+        BasicBlock *bb = (BasicBlock *) dvmGrowableListIteratorNext(&iterator);
+        if (bb == NULL) break;
         if (bb->blockType != kDalvikByteCode)
             continue;
         MIR *lastMIRInsn = bb->lastMIRInsn;
@@ -300,6 +305,10 @@ void dvmCompilerInlineMIR(CompilationUnit *cUnit)
 
         /* No invoke - continue */
         if ((flags & kInstrInvoke) == 0)
+            continue;
+
+        /* Disable inlining when doing method tracing */
+        if (gDvmJit.methodTraceSupport)
             continue;
 
         /*
@@ -331,8 +340,30 @@ void dvmCompilerInlineMIR(CompilationUnit *cUnit)
         }
 
         if (calleeMethod) {
-            tryInlineSingletonCallsite(cUnit, calleeMethod, lastMIRInsn, bb,
-                                       isRange);
+            bool inlined = tryInlineSingletonCallsite(cUnit, calleeMethod,
+                                                      lastMIRInsn, bb, isRange);
+            if (!inlined &&
+                !(gDvmJit.disableOpt & (1 << kMethodJit)) &&
+                !dvmIsNativeMethod(calleeMethod)) {
+                CompilerMethodStats *methodStats =
+                    dvmCompilerAnalyzeMethodBody(calleeMethod, true);
+                if ((methodStats->attributes & METHOD_IS_LEAF) &&
+                    !(methodStats->attributes & METHOD_CANNOT_COMPILE)) {
+                    /* Callee has been previously compiled */
+                    if (dvmJitGetMethodAddr(calleeMethod->insns)) {
+                        lastMIRInsn->OptimizationFlags |= MIR_INVOKE_METHOD_JIT;
+                    } else {
+                        /* Compile the callee first */
+                        dvmCompileMethod(calleeMethod, info);
+                        if (dvmJitGetMethodAddr(calleeMethod->insns)) {
+                            lastMIRInsn->OptimizationFlags |=
+                                MIR_INVOKE_METHOD_JIT;
+                        } else {
+                            methodStats->attributes |= METHOD_CANNOT_COMPILE;
+                        }
+                    }
+                }
+            }
             return;
         }
 
@@ -354,8 +385,30 @@ void dvmCompilerInlineMIR(CompilationUnit *cUnit)
         }
 
         if (calleeMethod) {
-            tryInlineVirtualCallsite(cUnit, calleeMethod, lastMIRInsn, bb,
-                                     isRange);
+            bool inlined = tryInlineVirtualCallsite(cUnit, calleeMethod,
+                                                    lastMIRInsn, bb, isRange);
+            if (!inlined &&
+                !(gDvmJit.disableOpt & (1 << kMethodJit)) &&
+                !dvmIsNativeMethod(calleeMethod)) {
+                CompilerMethodStats *methodStats =
+                    dvmCompilerAnalyzeMethodBody(calleeMethod, true);
+                if ((methodStats->attributes & METHOD_IS_LEAF) &&
+                    !(methodStats->attributes & METHOD_CANNOT_COMPILE)) {
+                    /* Callee has been previously compiled */
+                    if (dvmJitGetMethodAddr(calleeMethod->insns)) {
+                        lastMIRInsn->OptimizationFlags |= MIR_INVOKE_METHOD_JIT;
+                    } else {
+                        /* Compile the callee first */
+                        dvmCompileMethod(calleeMethod, info);
+                        if (dvmJitGetMethodAddr(calleeMethod->insns)) {
+                            lastMIRInsn->OptimizationFlags |=
+                                MIR_INVOKE_METHOD_JIT;
+                        } else {
+                            methodStats->attributes |= METHOD_CANNOT_COMPILE;
+                        }
+                    }
+                }
+            }
             return;
         }
     }

@@ -71,6 +71,22 @@ enum {
 };
 
 /*
+ * Enumeration of all the primitive types.
+ */
+typedef enum PrimitiveType {
+    PRIM_NOT        = 0,       /* value is a reference type, not a primitive type */
+    PRIM_VOID       = 1,
+    PRIM_BOOLEAN    = 2,
+    PRIM_BYTE       = 3,
+    PRIM_SHORT      = 4,
+    PRIM_CHAR       = 5,
+    PRIM_INT        = 6,
+    PRIM_LONG       = 7,
+    PRIM_FLOAT      = 8,
+    PRIM_DOUBLE     = 9,
+} PrimitiveType;
+
+/*
  * access flags and masks; the "standard" ones are all <= 0x4000
  *
  * Note: There are related declarations in vm/oo/Object.h in the ClassFlags
@@ -395,7 +411,7 @@ typedef struct DexAnnotationSetRefList {
 } DexAnnotationSetRefList;
 
 /*
- * Direct-mapped "anotation_set_item".
+ * Direct-mapped "annotation_set_item".
  */
 typedef struct DexAnnotationSetItem {
     u4  size;
@@ -464,10 +480,7 @@ typedef struct DexOptHeader {
     /* pad for 64-bit alignment if necessary */
 } DexOptHeader;
 
-#define DEX_FLAG_VERIFIED           (1)     /* tried to verify all classes */
 #define DEX_OPT_FLAG_BIG            (1<<1)  /* swapped to big-endian */
-#define DEX_OPT_FLAG_FIELDS         (1<<2)  /* field access optimized */
-#define DEX_OPT_FLAG_INVOCATIONS    (1<<3)  /* method calls optimized */
 
 #define DEX_INTERFACE_CACHE_SIZE    128     /* must be power of 2 */
 
@@ -753,35 +766,6 @@ DEX_INLINE const u1* dexGetDebugInfoStream(const DexFile* pDexFile,
     }
 }
 
-/*
- * Callback for "new position table entry".
- * Returning non-0 causes the decoder to stop early.
- */
-typedef int (*DexDebugNewPositionCb)(void *cnxt, u4 address, u4 lineNum);
-
-/*
- * Callback for "new locals table entry". "signature" is an empty string
- * if no signature is available for an entry.
- */
-typedef void (*DexDebugNewLocalCb)(void *cnxt, u2 reg, u4 startAddress,
-        u4 endAddress, const char *name, const char *descriptor,
-        const char *signature);
-
-/*
- * Decode debug info for method.
- *
- * posCb is called in ascending address order.
- * localCb is called in order of ascending end address.
- */
-void dexDecodeDebugInfo(
-            const DexFile* pDexFile,
-            const DexCode* pDexCode,
-            const char* classDescriptor,
-            u4 protoIdx,
-            u4 accessFlags,
-            DexDebugNewPositionCb posCb, DexDebugNewLocalCb localCb,
-            void* cnxt);
-
 /* DexClassDef convenience - get class descriptor */
 DEX_INLINE const char* dexGetClassDescriptor(const DexFile* pDexFile,
     const DexClassDef* pClassDef)
@@ -949,108 +933,31 @@ DEX_INLINE const DexAnnotationItem* dexGetAnnotationItem(
         (pDexFile->baseAddr + dexGetAnnotationOff(pAnnoSet, idx));
 }
 
+/*
+ * Get the type descriptor character associated with a given primitive
+ * type. This returns '\0' if the type is invalid.
+ */
+char dexGetPrimitiveTypeDescriptorChar(PrimitiveType type);
 
 /*
- * ===========================================================================
- *      Utility Functions
- * ===========================================================================
+ * Get the type descriptor string associated with a given primitive
+ * type.
  */
+const char* dexGetPrimitiveTypeDescriptor(PrimitiveType type);
 
 /*
- * Retrieve the next UTF-16 character from a UTF-8 string.
- *
- * Advances "*pUtf8Ptr" to the start of the next character.
- *
- * WARNING: If a string is corrupted by dropping a '\0' in the middle
- * of a 3-byte sequence, you can end up overrunning the buffer with
- * reads (and possibly with the writes if the length was computed and
- * cached before the damage). For performance reasons, this function
- * assumes that the string being parsed is known to be valid (e.g., by
- * already being verified). Most strings we process here are coming
- * out of dex files or other internal translations, so the only real
- * risk comes from the JNI NewStringUTF call.
+ * Get the boxed type descriptor string associated with a given
+ * primitive type. This returns NULL for an invalid type, including
+ * particularly for type "void". In the latter case, even though there
+ * is a class Void, there's no such thing as a boxed instance of it.
  */
-DEX_INLINE u2 dexGetUtf16FromUtf8(const char** pUtf8Ptr)
-{
-    unsigned int one, two, three;
+const char* dexGetBoxedTypeDescriptor(PrimitiveType type);
 
-    one = *(*pUtf8Ptr)++;
-    if ((one & 0x80) != 0) {
-        /* two- or three-byte encoding */
-        two = *(*pUtf8Ptr)++;
-        if ((one & 0x20) != 0) {
-            /* three-byte encoding */
-            three = *(*pUtf8Ptr)++;
-            return ((one & 0x0f) << 12) |
-                   ((two & 0x3f) << 6) |
-                   (three & 0x3f);
-        } else {
-            /* two-byte encoding */
-            return ((one & 0x1f) << 6) |
-                   (two & 0x3f);
-        }
-    } else {
-        /* one-byte encoding */
-        return one;
-    }
-}
-
-/* Compare two '\0'-terminated modified UTF-8 strings, using Unicode
- * code point values for comparison. This treats different encodings
- * for the same code point as equivalent, except that only a real '\0'
- * byte is considered the string terminator. The return value is as
- * for strcmp(). */
-int dexUtf8Cmp(const char* s1, const char* s2);
-
-
-/* for dexIsValidMemberNameUtf8(), a bit vector indicating valid low ascii */
-extern u4 DEX_MEMBER_VALID_LOW_ASCII[4];
-
-/* Helper for dexIsValidMemberUtf8(); do not call directly. */
-bool dexIsValidMemberNameUtf8_0(const char** pUtf8Ptr);
-
-/* Return whether the pointed-at modified-UTF-8 encoded character is
- * valid as part of a member name, updating the pointer to point past
- * the consumed character. This will consume two encoded UTF-16 code
- * points if the character is encoded as a surrogate pair. Also, if
- * this function returns false, then the given pointer may only have
- * been partially advanced. */
-DEX_INLINE bool dexIsValidMemberNameUtf8(const char** pUtf8Ptr) {
-    u1 c = (u1) **pUtf8Ptr;
-    if (c <= 0x7f) {
-        // It's low-ascii, so check the table.
-        u4 wordIdx = c >> 5;
-        u4 bitIdx = c & 0x1f;
-        (*pUtf8Ptr)++;
-        return (DEX_MEMBER_VALID_LOW_ASCII[wordIdx] & (1 << bitIdx)) != 0;
-    }
-
-    /*
-     * It's a multibyte encoded character. Call a non-inline function
-     * for the heavy lifting.
-     */
-    return dexIsValidMemberNameUtf8_0(pUtf8Ptr);
-}
-
-/* Return whether the given string is a valid field or method name. */
-bool dexIsValidMemberName(const char* s);
-
-/* Return whether the given string is a valid type descriptor. */
-bool dexIsValidTypeDescriptor(const char* s);
-
-/* Return whether the given string is a valid reference descriptor. This
- * is true if dexIsValidTypeDescriptor() returns true and the descriptor
- * is for a class or array and not a primitive type. */
-bool dexIsReferenceDescriptor(const char* s);
-
-/* Return whether the given string is a valid class descriptor. This
- * is true if dexIsValidTypeDescriptor() returns true and the descriptor
- * is for a class and not an array or primitive type. */
-bool dexIsClassDescriptor(const char* s);
-
-/* Return whether the given string is a valid field type descriptor. This
- * is true if dexIsValidTypeDescriptor() returns true and the descriptor
- * is for anything but "void". */
-bool dexIsFieldDescriptor(const char* s);
+/*
+ * Get the primitive type constant from the given descriptor character.
+ * This returns PRIM_NOT (note: this is a 0) if the character is invalid
+ * as a primitive type descriptor.
+ */
+PrimitiveType dexGetPrimitiveTypeFromDescriptorChar(char descriptorChar);
 
 #endif /*_LIBDEX_DEXFILE*/

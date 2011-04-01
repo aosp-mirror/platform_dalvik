@@ -21,6 +21,20 @@
 #define _DALVIK_INTERP_INTERP
 
 /*
+ * Stash the dalvik PC in the frame.  Called  during interpretation.
+ */
+INLINE void dvmExportPC(const u2* pc, const u4* fp)
+{
+    SAVEAREA_FROM_FP(fp)->xtra.currentPc = pc;
+}
+
+/*
+ * Extract the Dalvik opcode
+ */
+#define GET_OPCODE(_inst) (((_inst & 0xff) == OP_DISPATCH_FF) ? \
+                           (0x100 + ((_inst >> 8) & 0xff)) : (_inst & 0xff))
+
+/*
  * Interpreter entry point.  Call here after setting up the interpreted
  * stack (most code will want to get here via dvmCallMethod().)
  */
@@ -39,6 +53,7 @@ void dvmThrowVerificationError(const Method* method, int kind, int ref);
  */
 bool dvmBreakpointStartup(void);
 void dvmBreakpointShutdown(void);
+void dvmInitInterpreterState(Thread* self);
 
 /*
  * Breakpoint implementation.
@@ -58,5 +73,48 @@ u1 dvmGetOriginalOpcode(const u2* addr);
  * Flush any breakpoints associated with methods in "clazz".
  */
 void dvmFlushBreakpoints(ClassObject* clazz);
+
+/*
+ * Debugger support
+ */
+void dvmCheckBefore(const u2 *dPC, u4 *fp, Thread* self);
+void dvmReportExceptionThrow(Thread* self, Object* exception);
+void dvmReportPreNativeInvoke(const Method* methodToCall, Thread* self);
+void dvmReportPostNativeInvoke(const Method* methodToCall, Thread* self);
+void dvmReportInvoke(Thread* self, const Method* methodToCall);
+void dvmReportReturn(Thread* self);
+
+/*
+ * Update interpBreak
+ */
+void dvmUpdateInterpBreak(Thread* thread, int newBreak, int newMode,
+                          bool enable);
+void dvmAddToSuspendCounts(Thread* thread, int delta, int dbgDelta);
+void dvmCheckInterpStateConsistency();
+void dvmInitializeInterpBreak(Thread* thread);
+
+/*
+ * Update interpBreak for all threads
+ */
+void dvmUpdateAllInterpBreak(int newBreak, int newMode, bool enable);
+
+/*
+ * Register a callback to occur at the next safe point for a single thread.
+ * If funct is NULL, the previous registration is cancelled.
+ *
+ * The callback prototype is:
+ *        bool funct(Thread* thread, void* arg)
+ *
+ *  If funct returns false, the callback will be disarmed.  If true,
+ *  it will stay in effect.
+ */
+void dvmArmSafePointCallback(Thread* thread, SafePointCallback funct,
+                             void* arg);
+
+
+#ifndef DVM_NO_ASM_INTERP
+extern void* dvmAsmInstructionStart[];
+extern void* dvmAsmAltInstructionStart[];
+#endif
 
 #endif /*_DALVIK_INTERP_INTERP*/

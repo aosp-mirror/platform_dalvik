@@ -54,14 +54,19 @@ typedef enum BBType {
     kChainingCellGap,
     /* Don't insert new fields between Gap and Last */
     kChainingCellLast = kChainingCellGap + 1,
-    kMethodEntryBlock,
-    kTraceEntryBlock,
+    kEntryBlock,
     kDalvikByteCode,
-    kTraceExitBlock,
-    kMethodExitBlock,
+    kExitBlock,
     kPCReconstruction,
     kExceptionHandling,
+    kCatchEntry,
 } BBType;
+
+typedef enum JitMode {
+    kJitTrace = 0, // Acyclic - all instructions come from the trace descriptor
+    kJitLoop,      // Cycle - trace descriptor is used as a hint
+    kJitMethod,    // Whole method
+} JitMode;
 
 typedef struct ChainCellCounts {
     union {
@@ -98,6 +103,7 @@ typedef enum {
     kMIRInlined,                        // Invoke is inlined (ie dead)
     kMIRInlinedPred,                    // Invoke is inlined via prediction
     kMIRCallee,                         // Instruction is inlined from callee
+    kMIRInvokeMethodJIT,                // Callee is JIT'ed as a whole method
 } MIROptimizationFlagPositons;
 
 #define MIR_IGNORE_NULL_CHECK           (1 << kMIRIgnoreNullCheck)
@@ -107,9 +113,11 @@ typedef enum {
 #define MIR_INLINED                     (1 << kMIRInlined)
 #define MIR_INLINED_PRED                (1 << kMIRInlinedPred)
 #define MIR_CALLEE                      (1 << kMIRCallee)
+#define MIR_INVOKE_METHOD_JIT           (1 << kMIRInvokeMethodJIT)
 
 typedef struct CallsiteInfo {
-    const ClassObject *clazz;
+    const char *classDescriptor;
+    Object *classLoader;
     const Method *method;
     LIR *misPredBranchOver;
 } CallsiteInfo;
@@ -133,9 +141,18 @@ typedef struct MIR {
 
 struct BasicBlockDataFlow;
 
+/* For successorBlockList */
+typedef enum BlockListType {
+    kNotUsed = 0,
+    kCatch,
+    kPackedSwitch,
+    kSparseSwitch,
+} BlockListType;
+
 typedef struct BasicBlock {
     int id;
-    int visited;
+    bool visited;
+    bool hidden;
     unsigned int startOffset;
     const Method *containingMethod;     // For blocks from the callee
     BBType blockType;
@@ -145,9 +162,28 @@ typedef struct BasicBlock {
     MIR *lastMIRInsn;
     struct BasicBlock *fallThrough;
     struct BasicBlock *taken;
-    struct BasicBlock *next;            // Serial link for book keeping purposes
+    struct BasicBlock *iDom;            // Immediate dominator
     struct BasicBlockDataFlow *dataFlowInfo;
+    BitVector *predecessors;
+    BitVector *dominators;
+    BitVector *iDominated;              // Set nodes being immediately dominated
+    BitVector *domFrontier;             // Dominance frontier
+    struct {                            // For one-to-many successors like
+        BlockListType blockListType;    // switch and exception handling
+        GrowableList blocks;
+    } successorBlockList;
 } BasicBlock;
+
+/*
+ * The "blocks" field in "successorBlockList" points to an array of
+ * elements with the type "SuccessorBlockInfo".
+ * For catch blocks, key is type index for the exception.
+ * For swtich blocks, key is the case value.
+ */
+typedef struct SuccessorBlockInfo {
+    BasicBlock *block;
+    int key;
+} SuccessorBlockInfo;
 
 struct LoopAnalysis;
 struct RegisterPool;
@@ -161,12 +197,14 @@ typedef enum AssemblerStatus {
 typedef struct CompilationUnit {
     int numInsts;
     int numBlocks;
-    BasicBlock **blockList;
+    GrowableList blockList;
     const Method *method;
     const JitTraceDescription *traceDesc;
     LIR *firstLIRInsn;
     LIR *lastLIRInsn;
-    LIR *wordList;
+    LIR *literalList;                   // Constants
+    LIR *classPointerList;              // Relocatable
+    int numClassPointers;
     LIR *chainCellOffsetLIR;
     GrowableList pcReconstructionList;
     int headerSize;                     // bytes before the first code ptr
@@ -178,11 +216,12 @@ typedef struct CompilationUnit {
     void *baseAddr;
     bool printMe;
     bool allSingleStep;
-    bool executionCount;                // Add code to count trace executions
+    bool hasClassLiterals;              // Contains class ptrs used as literals
     bool hasLoop;                       // Contains a loop
     bool hasInvoke;                     // Contains an invoke instruction
     bool heapMemOp;                     // Mark mem ops for self verification
-    bool wholeMethod;
+    bool usesLinkRegister;              // For self-verification only
+    int profileCodeSize;                // Size of the profile prefix in bytes
     int numChainingCells[kChainingCellGap];
     LIR *firstChainingLIR[kChainingCellGap];
     LIR *chainingCellBottom;
@@ -213,6 +252,26 @@ typedef struct CompilationUnit {
      * MAX_CHAINED_SWITCH_CASES cases.
      */
     const u2 *switchOverflowPad;
+
+    JitMode jitMode;
+    int numReachableBlocks;
+    int numDalvikRegisters;             // method->registersSize + inlined
+    BasicBlock *entryBlock;
+    BasicBlock *exitBlock;
+    BasicBlock *puntBlock;              // punting to interp for exceptions
+    BasicBlock *backChainBlock;         // for loop-trace
+    BasicBlock *curBlock;
+    BasicBlock *nextCodegenBlock;       // for extended trace codegen
+    GrowableList dfsOrder;
+    GrowableList domPostOrderTraversal;
+    BitVector *tryBlockAddr;
+    BitVector **defBlockMatrix;         // numDalvikRegister x numBlocks
+    BitVector *tempBlockV;
+    BitVector *tempDalvikRegisterV;
+    BitVector *tempSSARegisterV;        // numSSARegs
+    bool printSSANames;
+    void *blockLabelList;
+    bool quitLoopMode;                  // cold path/complex bytecode
 } CompilationUnit;
 
 #if defined(WITH_SELF_VERIFICATION)
@@ -221,7 +280,7 @@ typedef struct CompilationUnit {
 #define HEAP_ACCESS_SHADOW(_state)
 #endif
 
-BasicBlock *dvmCompilerNewBB(BBType blockType);
+BasicBlock *dvmCompilerNewBB(BBType blockType, int blockId);
 
 void dvmCompilerAppendMIR(BasicBlock *bb, MIR *mir);
 

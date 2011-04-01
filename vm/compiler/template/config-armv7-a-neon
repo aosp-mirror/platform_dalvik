@@ -48,6 +48,12 @@ op-start armv5te-vfp
     op TEMPLATE_INTERPRET armv5te
     op TEMPLATE_MONITOR_ENTER armv5te
     op TEMPLATE_MONITOR_ENTER_DEBUG armv5te
+    op TEMPLATE_PERIODIC_PROFILING armv5te
+    op TEMPLATE_INVOKE_METHOD_CHAIN_PROF armv5te
+    op TEMPLATE_INVOKE_METHOD_PREDICTED_CHAIN_PROF armv5te
+    op TEMPLATE_INVOKE_METHOD_NATIVE_PROF armv5te
+    op TEMPLATE_INVOKE_METHOD_NO_OPT_PROF armv5te
+    op TEMPLATE_RETURN_PROF armv5te
 op-end
 
 # "helper" code for C; include if you use any of the C stubs (this generates

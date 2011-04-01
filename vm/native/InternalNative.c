@@ -28,10 +28,12 @@
 static DalvikNativeClass gDvmNativeMethodSet[] = {
     { "Ljava/lang/Object;",               dvm_java_lang_Object, 0 },
     { "Ljava/lang/Class;",                dvm_java_lang_Class, 0 },
+    { "Ljava/lang/Double;",               dvm_java_lang_Double, 0 },
+    { "Ljava/lang/Float;",                dvm_java_lang_Float, 0 },
+    { "Ljava/lang/Math;",                 dvm_java_lang_Math, 0 },
     { "Ljava/lang/Runtime;",              dvm_java_lang_Runtime, 0 },
     { "Ljava/lang/String;",               dvm_java_lang_String, 0 },
     { "Ljava/lang/System;",               dvm_java_lang_System, 0 },
-    { "Ljava/lang/SystemProperties;",     dvm_java_lang_SystemProperties, 0 },
     { "Ljava/lang/Throwable;",            dvm_java_lang_Throwable, 0 },
     { "Ljava/lang/VMClassLoader;",        dvm_java_lang_VMClassLoader, 0 },
     { "Ljava/lang/VMThread;",             dvm_java_lang_VMThread, 0 },
@@ -43,8 +45,6 @@ static DalvikNativeClass gDvmNativeMethodSet[] = {
     { "Ljava/lang/reflect/Field;",        dvm_java_lang_reflect_Field, 0 },
     { "Ljava/lang/reflect/Method;",       dvm_java_lang_reflect_Method, 0 },
     { "Ljava/lang/reflect/Proxy;",        dvm_java_lang_reflect_Proxy, 0 },
-    { "Ljava/security/AccessController;",
-            dvm_java_security_AccessController, 0 },
     { "Ljava/util/concurrent/atomic/AtomicLong;",
             dvm_java_util_concurrent_atomic_AtomicLong, 0 },
     { "Ldalvik/bytecode/OpcodeInfo;",     dvm_dalvik_bytecode_OpcodeInfo, 0 },
@@ -142,8 +142,7 @@ DalvikNativeFunc dvmLookupInternalNativeMethod(const Method* method)
 void dvmAbstractMethodStub(const u4* args, JValue* pResult)
 {
     LOGD("--- called into dvmAbstractMethodStub\n");
-    dvmThrowException("Ljava/lang/AbstractMethodError;",
-        "abstract method not implemented");
+    dvmThrowAbstractMethodError("abstract method not implemented");
 }
 
 
@@ -155,58 +154,26 @@ void dvmAbstractMethodStub(const u4* args, JValue* pResult)
  */
 bool dvmVerifyObjectInClass(Object* obj, ClassObject* clazz)
 {
-    const char* exceptionClass = NULL;
+    ClassObject* exceptionClass = NULL;
+
     if (obj == NULL) {
-        exceptionClass = "Ljava/lang/NullPointerException;";
+        exceptionClass = gDvm.exNullPointerException;
     } else if (!dvmInstanceof(obj->clazz, clazz)) {
-        exceptionClass = "Ljava/lang/IllegalArgumentException;";
+        exceptionClass = gDvm.exIllegalArgumentException;
     }
+
     if (exceptionClass != NULL) {
         char* expectedClassName = dvmHumanReadableDescriptor(clazz->descriptor);
         char* actualClassName = (obj != NULL)
             ? dvmHumanReadableDescriptor(obj->clazz->descriptor)
             : strdup("null");
         dvmThrowExceptionFmt(exceptionClass,
-            "expected receiver of type %s, not %s",
+            "expected receiver of type %s, but got %s",
             expectedClassName, actualClassName);
         free(expectedClassName);
         free(actualClassName);
         return false;
     }
-    return true;
-}
-
-/*
- * Validate a "binary" class name, e.g. "java.lang.String" or "[I".
- */
-static bool validateClassName(const char* name)
-{
-    int len = strlen(name);
-    int i = 0;
-
-    /* check for reasonable array types */
-    if (name[0] == '[') {
-        while (name[i] == '[')
-            i++;
-
-        if (name[i] == 'L') {
-            /* array of objects, make sure it ends well */
-            if (name[len-1] != ';')
-                return false;
-        } else if (strchr(PRIM_TYPE_TO_LETTER, name[i]) != NULL) {
-            if (i != len-1)
-                return false;
-        } else {
-            return false;
-        }
-    }
-
-    /* quick check for illegal chars */
-    for ( ; i < len; i++) {
-        if (name[i] == '/')
-            return false;
-    }
-
     return true;
 }
 
@@ -221,7 +188,7 @@ ClassObject* dvmFindClassByName(StringObject* nameObj, Object* loader,
     char* descriptor = NULL;
 
     if (nameObj == NULL) {
-        dvmThrowException("Ljava/lang/NullPointerException;", NULL);
+        dvmThrowNullPointerException(NULL);
         goto bail;
     }
     name = dvmCreateCstrFromString(nameObj);
@@ -231,9 +198,9 @@ ClassObject* dvmFindClassByName(StringObject* nameObj, Object* loader,
      * is especially handy for array types, since we want to avoid
      * auto-generating bogus array classes.
      */
-    if (!validateClassName(name)) {
+    if (!dexIsValidClassName(name, true)) {
         LOGW("dvmFindClassByName rejecting '%s'\n", name);
-        dvmThrowException("Ljava/lang/ClassNotFoundException;", name);
+        dvmThrowClassNotFoundException(name);
         goto bail;
     }
 
@@ -253,8 +220,7 @@ ClassObject* dvmFindClassByName(StringObject* nameObj, Object* loader,
         Object* oldExcep = dvmGetException(self);
         dvmAddTrackedAlloc(oldExcep, self);     /* don't let this be GCed */
         dvmClearException(self);
-        dvmThrowChainedException("Ljava/lang/ClassNotFoundException;",
-            name, oldExcep);
+        dvmThrowChainedClassNotFoundException(name, oldExcep);
         dvmReleaseTrackedAlloc(oldExcep, self);
     } else {
         LOGVV("GOOD: load %s (%d) --> %p ldr=%p\n",
@@ -290,68 +256,4 @@ u4 dvmFixMethodFlags(u4 flags)
     }
 
     return flags & JAVA_FLAGS_MASK;
-}
-
-
-#define NUM_DOPRIV_FUNCS    4
-
-/*
- * Determine if "method" is a "privileged" invocation, i.e. is it one
- * of the variations of AccessController.doPrivileged().
- *
- * Because the security stuff pulls in a pile of stuff that we may not
- * want or need, we don't do the class/method lookups at init time, but
- * instead on first use.
- */
-bool dvmIsPrivilegedMethod(const Method* method)
-{
-    int i;
-
-    assert(method != NULL);
-
-    if (!gDvm.javaSecurityAccessControllerReady) {
-        /*
-         * Populate on first use.  No concurrency risk since we're just
-         * finding pointers to fixed structures.
-         */
-        static const char* kSignatures[NUM_DOPRIV_FUNCS] = {
-            "(Ljava/security/PrivilegedAction;)Ljava/lang/Object;",
-            "(Ljava/security/PrivilegedExceptionAction;)Ljava/lang/Object;",
-            "(Ljava/security/PrivilegedAction;Ljava/security/AccessControlContext;)Ljava/lang/Object;",
-            "(Ljava/security/PrivilegedExceptionAction;Ljava/security/AccessControlContext;)Ljava/lang/Object;",
-        };
-        ClassObject* clazz;
-
-        clazz = dvmFindClassNoInit("Ljava/security/AccessController;", NULL);
-        if (clazz == NULL) {
-            LOGW("Couldn't find java/security/AccessController\n");
-            return false;
-        }
-
-        assert(NELEM(gDvm.methJavaSecurityAccessController_doPrivileged) ==
-               NELEM(kSignatures));
-
-        /* verify init */
-        for (i = 0; i < NUM_DOPRIV_FUNCS; i++) {
-            gDvm.methJavaSecurityAccessController_doPrivileged[i] =
-                dvmFindDirectMethodByDescriptor(clazz, "doPrivileged", kSignatures[i]);
-            if (gDvm.methJavaSecurityAccessController_doPrivileged[i] == NULL) {
-                LOGW("Warning: couldn't find java/security/AccessController"
-                    ".doPrivileged %s\n", kSignatures[i]);
-                return false;
-            }
-        }
-
-        /* all good, raise volatile readiness flag */
-        android_atomic_release_store(true,
-            &gDvm.javaSecurityAccessControllerReady);
-    }
-
-    for (i = 0; i < NUM_DOPRIV_FUNCS; i++) {
-        if (gDvm.methJavaSecurityAccessController_doPrivileged[i] == method) {
-            //LOGI("+++ doPriv match\n");
-            return true;
-        }
-    }
-    return false;
 }

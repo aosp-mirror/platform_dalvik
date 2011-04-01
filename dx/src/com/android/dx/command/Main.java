@@ -52,6 +52,11 @@ public class Main {
         "human-oriented format.\n" +
         "  dx --junit [-wait] <TestClass>\n" +
         "    Run the indicated unit test.\n" +
+        "  dx --find-usages <file.dex> <declaring type> <member>\n" +
+        "    Find references and declarations to a field or method.\n" +
+        "    declaring type: a class name in internal form, like " +
+        "Ljava/lang/Object;\n" +
+        "    member: a field or method name, like hashCode\n" +
         "  dx -J<option> ... <arguments, in one of the above " +
         "forms>\n" +
         "    Pass VM-specific options to the virtual machine that " +
@@ -98,6 +103,9 @@ public class Main {
                     break;
                 } else if (arg.equals("--junit")) {
                     TestRunner.main(without(args, i));
+                    break;
+                } else if (arg.equals("--find-usages")) {
+                    com.android.dx.command.findusages.Main.main(without(args, i));
                     break;
                 } else if (arg.equals("--version")) {
                     version();

@@ -35,14 +35,12 @@ static int opcodeCoverage[kNumPackedOpcodes];
 static void setMemRefType(ArmLIR *lir, bool isLoad, int memType)
 {
     u8 *maskPtr;
-    u8 mask;
-    assert( EncodingMap[lir->opcode].flags & (IS_LOAD | IS_STORE));
+    u8 mask = ENCODE_MEM;;
+    assert(EncodingMap[lir->opcode].flags & (IS_LOAD | IS_STORE));
     if (isLoad) {
         maskPtr = &lir->useMask;
-        mask = ENCODE_MEM_USE;
     } else {
         maskPtr = &lir->defMask;
-        mask = ENCODE_MEM_DEF;
     }
     /* Clear out the memref flags */
     *maskPtr &= ~mask;
@@ -50,13 +48,18 @@ static void setMemRefType(ArmLIR *lir, bool isLoad, int memType)
     switch(memType) {
         case kLiteral:
             assert(isLoad);
-            *maskPtr |= (ENCODE_LITERAL | ENCODE_LITPOOL_REF);
+            *maskPtr |= ENCODE_LITERAL;
             break;
         case kDalvikReg:
-            *maskPtr |= (ENCODE_DALVIK_REG | ENCODE_FRAME_REF);
+            *maskPtr |= ENCODE_DALVIK_REG;
             break;
         case kHeapRef:
             *maskPtr |= ENCODE_HEAP_REF;
+            break;
+        case kMustNotAlias:
+            /* Currently only loads can be marked as kMustNotAlias */
+            assert(!(EncodingMap[lir->opcode].flags & IS_STORE));
+            *maskPtr |= ENCODE_MUST_NOT_ALIAS;
             break;
         default:
             LOGE("Jit: invalid memref kind - %d", memType);
@@ -66,7 +69,7 @@ static void setMemRefType(ArmLIR *lir, bool isLoad, int memType)
 }
 
 /*
- * Mark load/store instructions that access Dalvik registers through rFP +
+ * Mark load/store instructions that access Dalvik registers through r5FP +
  * offset.
  */
 static void annotateDalvikRegAccess(ArmLIR *lir, int regId, bool isLoad)
@@ -84,9 +87,9 @@ static void annotateDalvikRegAccess(ArmLIR *lir, int regId, bool isLoad)
 }
 
 /*
- * Decode the register id and mark the corresponding bit(s).
+ * Decode the register id.
  */
-static inline void setupRegMask(u8 *mask, int reg)
+static inline u8 getRegMaskCommon(int reg)
 {
     u8 seed;
     int shift;
@@ -100,7 +103,21 @@ static inline void setupRegMask(u8 *mask, int reg)
     shift = FPREG(reg) ? kFPReg0 : 0;
     /* Expand the double register id into single offset */
     shift += regId;
-    *mask |= seed << shift;
+    return (seed << shift);
+}
+
+/* External version of getRegMaskCommon */
+u8 dvmGetRegResourceMask(int reg)
+{
+    return getRegMaskCommon(reg);
+}
+
+/*
+ * Mark the corresponding bit(s).
+ */
+static inline void setupRegMask(u8 *mask, int reg)
+{
+    *mask |= getRegMaskCommon(reg);
 }
 
 /*
@@ -124,9 +141,13 @@ static void setupResourceMasks(ArmLIR *lir)
         setMemRefType(lir, flags & IS_LOAD, kHeapRef);
     }
 
+    /*
+     * Conservatively assume the branch here will call out a function that in
+     * turn will trash everything.
+     */
     if (flags & IS_BRANCH) {
-        lir->defMask |= ENCODE_REG_PC;
-        lir->useMask |= ENCODE_REG_PC;
+        lir->defMask = lir->useMask = ENCODE_ALL;
+        return;
     }
 
     if (flags & REG_DEF0) {
@@ -162,11 +183,6 @@ static void setupResourceMasks(ArmLIR *lir)
         lir->defMask = ENCODE_ALL;
     }
 
-    /* Set up the mask for resources that are used */
-    if (flags & IS_BRANCH) {
-        lir->useMask |= ENCODE_REG_PC;
-    }
-
     if (flags & (REG_USE0 | REG_USE1 | REG_USE2 | REG_USE3)) {
         int i;
 
@@ -196,6 +212,49 @@ static void setupResourceMasks(ArmLIR *lir)
     if (flags & USES_CCODES) {
         lir->useMask |= ENCODE_CCODE;
     }
+
+    /* Fixup for kThumbPush/lr and kThumbPop/pc */
+    if (opcode == kThumbPush || opcode == kThumbPop) {
+        u8 r8Mask = getRegMaskCommon(r8);
+        if ((opcode == kThumbPush) && (lir->useMask & r8Mask)) {
+            lir->useMask &= ~r8Mask;
+            lir->useMask |= ENCODE_REG_LR;
+        } else if ((opcode == kThumbPop) && (lir->defMask & r8Mask)) {
+            lir->defMask &= ~r8Mask;
+            lir->defMask |= ENCODE_REG_PC;
+        }
+    }
+}
+
+/*
+ * Set up the accurate resource mask for branch instructions
+ */
+static void relaxBranchMasks(ArmLIR *lir)
+{
+    int flags = EncodingMap[lir->opcode].flags;
+
+    /* Make sure only branch instructions are passed here */
+    assert(flags & IS_BRANCH);
+
+    lir->useMask = lir->defMask = ENCODE_REG_PC;
+
+    if (flags & REG_DEF_LR) {
+        lir->defMask |= ENCODE_REG_LR;
+    }
+
+    if (flags & (REG_USE0 | REG_USE1 | REG_USE2 | REG_USE3)) {
+        int i;
+
+        for (i = 0; i < 4; i++) {
+            if (flags & (1 << (kRegUse0 + i))) {
+                setupRegMask(&lir->useMask, lir->operands[i]);
+            }
+        }
+    }
+
+    if (flags & USES_CCODES) {
+        lir->useMask |= ENCODE_CCODE;
+    }
 }
 
 /*
@@ -204,7 +263,7 @@ static void setupResourceMasks(ArmLIR *lir)
  */
 static ArmLIR *newLIR0(CompilationUnit *cUnit, ArmOpcode opcode)
 {
-    ArmLIR *insn = dvmCompilerNew(sizeof(ArmLIR), true);
+    ArmLIR *insn = (ArmLIR *) dvmCompilerNew(sizeof(ArmLIR), true);
     assert(isPseudoOpcode(opcode) || (EncodingMap[opcode].flags & NO_OPERAND));
     insn->opcode = opcode;
     setupResourceMasks(insn);
@@ -215,7 +274,7 @@ static ArmLIR *newLIR0(CompilationUnit *cUnit, ArmOpcode opcode)
 static ArmLIR *newLIR1(CompilationUnit *cUnit, ArmOpcode opcode,
                            int dest)
 {
-    ArmLIR *insn = dvmCompilerNew(sizeof(ArmLIR), true);
+    ArmLIR *insn = (ArmLIR *) dvmCompilerNew(sizeof(ArmLIR), true);
     assert(isPseudoOpcode(opcode) || (EncodingMap[opcode].flags & IS_UNARY_OP));
     insn->opcode = opcode;
     insn->operands[0] = dest;
@@ -227,7 +286,7 @@ static ArmLIR *newLIR1(CompilationUnit *cUnit, ArmOpcode opcode,
 static ArmLIR *newLIR2(CompilationUnit *cUnit, ArmOpcode opcode,
                            int dest, int src1)
 {
-    ArmLIR *insn = dvmCompilerNew(sizeof(ArmLIR), true);
+    ArmLIR *insn = (ArmLIR *) dvmCompilerNew(sizeof(ArmLIR), true);
     assert(isPseudoOpcode(opcode) ||
            (EncodingMap[opcode].flags & IS_BINARY_OP));
     insn->opcode = opcode;
@@ -241,7 +300,7 @@ static ArmLIR *newLIR2(CompilationUnit *cUnit, ArmOpcode opcode,
 static ArmLIR *newLIR3(CompilationUnit *cUnit, ArmOpcode opcode,
                            int dest, int src1, int src2)
 {
-    ArmLIR *insn = dvmCompilerNew(sizeof(ArmLIR), true);
+    ArmLIR *insn = (ArmLIR *) dvmCompilerNew(sizeof(ArmLIR), true);
     if (!(EncodingMap[opcode].flags & IS_TERTIARY_OP)) {
         LOGE("Bad LIR3: %s[%d]",EncodingMap[opcode].name,opcode);
     }
@@ -260,7 +319,7 @@ static ArmLIR *newLIR3(CompilationUnit *cUnit, ArmOpcode opcode,
 static ArmLIR *newLIR4(CompilationUnit *cUnit, ArmOpcode opcode,
                            int dest, int src1, int src2, int info)
 {
-    ArmLIR *insn = dvmCompilerNew(sizeof(ArmLIR), true);
+    ArmLIR *insn = (ArmLIR *) dvmCompilerNew(sizeof(ArmLIR), true);
     assert(isPseudoOpcode(opcode) ||
            (EncodingMap[opcode].flags & IS_QUAD_OP));
     insn->opcode = opcode;
@@ -298,10 +357,8 @@ static RegLocation inlinedTarget(CompilationUnit *cUnit, MIR *mir,
  * Search the existing constants in the literal pool for an exact or close match
  * within specified delta (greater or equal to 0).
  */
-static ArmLIR *scanLiteralPool(CompilationUnit *cUnit, int value,
-                                   unsigned int delta)
+static ArmLIR *scanLiteralPool(LIR *dataTarget, int value, unsigned int delta)
 {
-    LIR *dataTarget = cUnit->wordList;
     while (dataTarget) {
         if (((unsigned) (value - ((ArmLIR *) dataTarget)->operands[0])) <=
             delta)
@@ -317,14 +374,15 @@ static ArmLIR *scanLiteralPool(CompilationUnit *cUnit, int value,
  */
 
 /* Add a 32-bit constant either in the constant pool or mixed with code */
-static ArmLIR *addWordData(CompilationUnit *cUnit, int value, bool inPlace)
+static ArmLIR *addWordData(CompilationUnit *cUnit, LIR **constantListP,
+                           int value)
 {
     /* Add the constant to the literal pool */
-    if (!inPlace) {
-        ArmLIR *newValue = dvmCompilerNew(sizeof(ArmLIR), true);
+    if (constantListP) {
+        ArmLIR *newValue = (ArmLIR *) dvmCompilerNew(sizeof(ArmLIR), true);
         newValue->operands[0] = value;
-        newValue->generic.next = cUnit->wordList;
-        cUnit->wordList = (LIR *) newValue;
+        newValue->generic.next = *constantListP;
+        *constantListP = (LIR *) newValue;
         return newValue;
     } else {
         /* Add the constant in the middle of code stream */
@@ -371,14 +429,19 @@ static ArmLIR *genCheckCommon(CompilationUnit *cUnit, int dOffset,
     /* Set up the place holder to reconstruct this Dalvik PC */
     if (pcrLabel == NULL) {
         int dPC = (int) (cUnit->method->insns + dOffset);
-        pcrLabel = dvmCompilerNew(sizeof(ArmLIR), true);
+        pcrLabel = (ArmLIR *) dvmCompilerNew(sizeof(ArmLIR), true);
         pcrLabel->opcode = kArmPseudoPCReconstructionCell;
         pcrLabel->operands[0] = dPC;
         pcrLabel->operands[1] = dOffset;
         /* Insert the place holder to the growable list */
-        dvmInsertGrowableList(&cUnit->pcReconstructionList, pcrLabel);
+        dvmInsertGrowableList(&cUnit->pcReconstructionList,
+                              (intptr_t) pcrLabel);
     }
     /* Branch to the PC reconstruction code */
     branch->generic.target = (LIR *) pcrLabel;
+
+    /* Clear the conservative flags for branches that punt to the interpreter */
+    relaxBranchMasks(branch);
+
     return pcrLabel;
 }

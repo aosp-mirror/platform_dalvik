@@ -23,15 +23,12 @@ import com.android.dx.rop.cst.CstType;
 import com.android.dx.rop.cst.Zeroes;
 import com.android.dx.util.ByteArrayAnnotatedOutput;
 import com.android.dx.util.AnnotatedOutput;
-import com.android.dx.util.Hex;
 import com.android.dx.util.Writers;
 
 import java.io.PrintWriter;
 import java.io.Writer;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
 import java.util.HashMap;
 
 /**
@@ -379,7 +376,7 @@ public final class ClassDataItem extends OffsettedItem {
                             size));
         }
 
-        out.writeUnsignedLeb128(size);
+        out.writeUleb128(size);
     }
 
     /**

@@ -30,20 +30,7 @@
  *   WITH_TRACKREF_CHECKS
  *   EASY_GDB
  *   NDEBUG
- *
- * If THREADED_INTERP is not defined, we use a classic "while true / switch"
- * interpreter.  If it is defined, then the tail end of each instruction
- * handler fetches the next instruction and jumps directly to the handler.
- * This increases the size of the "Std" interpreter by about 10%, but
- * provides a speedup of about the same magnitude.
- *
- * There's a "hybrid" approach that uses a goto table instead of a switch
- * statement, avoiding the "is the opcode in range" tests required for switch.
- * The performance is close to the threaded version, and without the 10%
- * size increase, but the benchmark results are off enough that it's not
- * worth adding as a third option.
  */
-#define THREADED_INTERP             /* threaded vs. while-loop interpreter */
 
 #ifdef WITH_INSTR_CHECKS            /* instruction-level paranoia (slow!) */
 # define CHECK_BRANCH_OFFSETS
@@ -51,23 +38,30 @@
 #endif
 
 /*
- * ARM EABI requires 64-bit alignment for access to 64-bit data types.  We
- * can't just use pointers to copy 64-bit values out of our interpreted
- * register set, because gcc will generate ldrd/strd.
+ * Some architectures require 64-bit alignment for access to 64-bit data
+ * types.  We can't just use pointers to copy 64-bit values out of our
+ * interpreted register set, because gcc may assume the pointer target is
+ * aligned and generate invalid code.
  *
- * The __UNION version copies data in and out of a union.  The __MEMCPY
- * version uses a memcpy() call to do the transfer; gcc is smart enough to
- * not actually call memcpy().  The __UNION version is very bad on ARM;
- * it only uses one more instruction than __MEMCPY, but for some reason
- * gcc thinks it needs separate storage for every instance of the union.
- * On top of that, it feels the need to zero them out at the start of the
- * method.  Net result is we zero out ~700 bytes of stack space at the top
- * of the interpreter using ARM STM instructions.
+ * There are two common approaches:
+ *  (1) Use a union that defines a 32-bit pair and a 64-bit value.
+ *  (2) Call memcpy().
+ *
+ * Depending upon what compiler you're using and what options are specified,
+ * one may be faster than the other.  For example, the compiler might
+ * convert a memcpy() of 8 bytes into a series of instructions and omit
+ * the call.  The union version could cause some strange side-effects,
+ * e.g. for a while ARM gcc thought it needed separate storage for each
+ * inlined instance, and generated instructions to zero out ~700 bytes of
+ * stack space at the top of the interpreter.
+ *
+ * The default is to use memcpy().  The current gcc for ARM seems to do
+ * better with the union.
  */
 #if defined(__ARM_EABI__)
-//# define NO_UNALIGN_64__UNION
-# define NO_UNALIGN_64__MEMCPY
+# define NO_UNALIGN_64__UNION
 #endif
+
 
 //#define LOG_INSTR                   /* verbose debugging */
 /* set and adjust ANDROID_LOG_TAGS='*:i jdwp:i dalvikvm:i dalvikvmi:i' */
@@ -164,12 +158,10 @@ static inline s8 getLongFromArray(const u4* ptr, int idx)
     conv.parts[0] = ptr[0];
     conv.parts[1] = ptr[1];
     return conv.ll;
-#elif defined(NO_UNALIGN_64__MEMCPY)
+#else
     s8 val;
     memcpy(&val, &ptr[idx], 8);
     return val;
-#else
-    return *((s8*) &ptr[idx]);
 #endif
 }
 
@@ -183,10 +175,8 @@ static inline void putLongToArray(u4* ptr, int idx, s8 val)
     conv.ll = val;
     ptr[0] = conv.parts[0];
     ptr[1] = conv.parts[1];
-#elif defined(NO_UNALIGN_64__MEMCPY)
-    memcpy(&ptr[idx], &val, 8);
 #else
-    *((s8*) &ptr[idx]) = val;
+    memcpy(&ptr[idx], &val, 8);
 #endif
 }
 
@@ -200,12 +190,10 @@ static inline double getDoubleFromArray(const u4* ptr, int idx)
     conv.parts[0] = ptr[0];
     conv.parts[1] = ptr[1];
     return conv.d;
-#elif defined(NO_UNALIGN_64__MEMCPY)
+#else
     double dval;
     memcpy(&dval, &ptr[idx], 8);
     return dval;
-#else
-    return *((double*) &ptr[idx]);
 #endif
 }
 
@@ -219,10 +207,8 @@ static inline void putDoubleToArray(u4* ptr, int idx, double dval)
     conv.d = dval;
     ptr[0] = conv.parts[0];
     ptr[1] = conv.parts[1];
-#elif defined(NO_UNALIGN_64__MEMCPY)
-    memcpy(&ptr[idx], &dval, 8);
 #else
-    *((double*) &ptr[idx]) = dval;
+    memcpy(&ptr[idx], &dval, 8);
 #endif
 }
 
@@ -311,34 +297,16 @@ static inline void putDoubleToArray(u4* ptr, int idx, double dval)
 
 /*
  * The current PC must be available to Throwable constructors, e.g.
- * those created by dvmThrowException(), so that the exception stack
- * trace can be generated correctly.  If we don't do this, the offset
- * within the current method won't be shown correctly.  See the notes
- * in Exception.c.
+ * those created by the various exception throw routines, so that the
+ * exception stack trace can be generated correctly.  If we don't do this,
+ * the offset within the current method won't be shown correctly.  See the
+ * notes in Exception.c.
  *
  * This is also used to determine the address for precise GC.
  *
  * Assumes existence of "u4* fp" and "const u2* pc".
  */
 #define EXPORT_PC()         (SAVEAREA_FROM_FP(fp)->xtra.currentPc = pc)
-
-/*
- * Determine if we need to switch to a different interpreter.  "_current"
- * is either INTERP_STD or INTERP_DBG.  It should be fixed for a given
- * interpreter generation file, which should remove the outer conditional
- * from the following.
- *
- * If we're building without debug and profiling support, we never switch.
- */
-#if defined(WITH_JIT)
-# define NEED_INTERP_SWITCH(_current) (                                     \
-    (_current == INTERP_STD) ?                                              \
-        dvmJitDebuggerOrProfilerActive() : !dvmJitDebuggerOrProfilerActive() )
-#else
-# define NEED_INTERP_SWITCH(_current) (                                     \
-    (_current == INTERP_STD) ?                                              \
-        dvmDebuggerOrProfilerActive() : !dvmDebuggerOrProfilerActive() )
-#endif
 
 /*
  * Check to see if "obj" is NULL.  If so, throw an exception.  Assumes the
@@ -353,7 +321,7 @@ static inline void putDoubleToArray(u4* ptr, int idx, double dval)
 static inline bool checkForNull(Object* obj)
 {
     if (obj == NULL) {
-        dvmThrowException("Ljava/lang/NullPointerException;", NULL);
+        dvmThrowNullPointerException(NULL);
         return false;
     }
 #ifdef WITH_EXTRA_OBJECT_VALIDATION
@@ -385,7 +353,7 @@ static inline bool checkForNullExportPC(Object* obj, u4* fp, const u2* pc)
 {
     if (obj == NULL) {
         EXPORT_PC();
-        dvmThrowException("Ljava/lang/NullPointerException;", NULL);
+        dvmThrowNullPointerException(NULL);
         return false;
     }
 #ifdef WITH_EXTRA_OBJECT_VALIDATION

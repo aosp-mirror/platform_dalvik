@@ -10,7 +10,7 @@
     beq     common_errNullObject        @ object was null
     and     r2, r2, #15
     GET_VREG(r0, r2)                    @ r0<- fp[A]
-    ldr     r2, [rGLUE, #offGlue_cardTable]  @ r2<- card table base
+    ldr     r2, [rSELF, #offThread_cardTable]  @ r2<- card table base
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     str     r0, [r3, r1]                @ obj.field (always 32 bits)<- r0
     cmp     r0, #0

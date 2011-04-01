@@ -1,86 +1,112 @@
-
 /*
  * ===========================================================================
  *  Common subroutines and data
  * ===========================================================================
  */
 
-
-
     .text
     .align  2
 
 #if defined(WITH_JIT)
+
 #if defined(WITH_SELF_VERIFICATION)
+/*
+ * "longjmp" to a translation after single-stepping.  Before returning
+ * to translation, must save state for self-verification.
+ */
+    .global dvmJitResumeTranslation              @ (Thread* self, u4* dFP)
+dvmJitResumeTranslation:
+    mov    rSELF, r0                             @ restore self
+    mov    rPC, r1                               @ restore Dalvik pc
+    mov    rFP, r2                               @ restore Dalvik fp
+    ldr    r10, [rSELF,#offThread_jitResumeNPC]  @ resume address
+    mov    r2, #0
+    str    r2, [rSELF,#offThread_jitResumeNPC]   @ reset resume address
+    ldr    sp, [rSELF,#offThread_jitResumeNSP]   @ cut back native stack
+    b      jitSVShadowRunStart                   @ resume as if cache hit
+                                                 @ expects resume addr in r10
+
     .global dvmJitToInterpPunt
 dvmJitToInterpPunt:
-    ldr    r10, [rGLUE, #offGlue_self]  @ callee saved r10 <- glue->self
     mov    r2,#kSVSPunt                 @ r2<- interpreter entry point
     mov    r3, #0
-    str    r3, [r10, #offThread_inJitCodeCache] @ Back to the interp land
+    str    r3, [rSELF, #offThread_inJitCodeCache] @ Back to the interp land
     b      jitSVShadowRunEnd            @ doesn't return
 
     .global dvmJitToInterpSingleStep
 dvmJitToInterpSingleStep:
-    str    lr,[rGLUE,#offGlue_jitResumeNPC]
-    str    r1,[rGLUE,#offGlue_jitResumeDPC]
+    mov    rPC, r0              @ set up dalvik pc
+    EXPORT_PC()
+    str    lr, [rSELF,#offThread_jitResumeNPC]
+    str    sp, [rSELF,#offThread_jitResumeNSP]
+    str    r1, [rSELF,#offThread_jitResumeDPC]
     mov    r2,#kSVSSingleStep           @ r2<- interpreter entry point
     b      jitSVShadowRunEnd            @ doesn't return
 
+
     .global dvmJitToInterpNoChainNoProfile
 dvmJitToInterpNoChainNoProfile:
-    ldr    r10, [rGLUE, #offGlue_self]  @ callee saved r10 <- glue->self
     mov    r0,rPC                       @ pass our target PC
     mov    r2,#kSVSNoProfile            @ r2<- interpreter entry point
     mov    r3, #0                       @ 0 means !inJitCodeCache
-    str    r3, [r10, #offThread_inJitCodeCache] @ back to the interp land
+    str    r3, [rSELF, #offThread_inJitCodeCache] @ back to the interp land
     b      jitSVShadowRunEnd            @ doesn't return
 
     .global dvmJitToInterpTraceSelectNoChain
 dvmJitToInterpTraceSelectNoChain:
-    ldr    r10, [rGLUE, #offGlue_self]  @ callee saved r10 <- glue->self
     mov    r0,rPC                       @ pass our target PC
     mov    r2,#kSVSTraceSelect          @ r2<- interpreter entry point
     mov    r3, #0                       @ 0 means !inJitCodeCache
-    str    r3, [r10, #offThread_inJitCodeCache] @ Back to the interp land
+    str    r3, [rSELF, #offThread_inJitCodeCache] @ Back to the interp land
     b      jitSVShadowRunEnd            @ doesn't return
 
     .global dvmJitToInterpTraceSelect
 dvmJitToInterpTraceSelect:
-    ldr    r10, [rGLUE, #offGlue_self]  @ callee saved r10 <- glue->self
     ldr    r0,[lr, #-1]                 @ pass our target PC
     mov    r2,#kSVSTraceSelect          @ r2<- interpreter entry point
     mov    r3, #0                       @ 0 means !inJitCodeCache
-    str    r3, [r10, #offThread_inJitCodeCache] @ Back to the interp land
+    str    r3, [rSELF, #offThread_inJitCodeCache] @ Back to the interp land
     b      jitSVShadowRunEnd            @ doesn't return
 
     .global dvmJitToInterpBackwardBranch
 dvmJitToInterpBackwardBranch:
-    ldr    r10, [rGLUE, #offGlue_self]  @ callee saved r10 <- glue->self
     ldr    r0,[lr, #-1]                 @ pass our target PC
     mov    r2,#kSVSBackwardBranch       @ r2<- interpreter entry point
     mov    r3, #0                       @ 0 means !inJitCodeCache
-    str    r3, [r10, #offThread_inJitCodeCache] @ Back to the interp land
+    str    r3, [rSELF, #offThread_inJitCodeCache] @ Back to the interp land
     b      jitSVShadowRunEnd            @ doesn't return
 
     .global dvmJitToInterpNormal
 dvmJitToInterpNormal:
-    ldr    r10, [rGLUE, #offGlue_self]  @ callee saved r10 <- glue->self
     ldr    r0,[lr, #-1]                 @ pass our target PC
     mov    r2,#kSVSNormal               @ r2<- interpreter entry point
     mov    r3, #0                       @ 0 means !inJitCodeCache
-    str    r3, [r10, #offThread_inJitCodeCache] @ Back to the interp land
+    str    r3, [rSELF, #offThread_inJitCodeCache] @ Back to the interp land
     b      jitSVShadowRunEnd            @ doesn't return
 
     .global dvmJitToInterpNoChain
 dvmJitToInterpNoChain:
-    ldr    r10, [rGLUE, #offGlue_self]  @ callee saved r10 <- glue->self
     mov    r0,rPC                       @ pass our target PC
     mov    r2,#kSVSNoChain              @ r2<- interpreter entry point
     mov    r3, #0                       @ 0 means !inJitCodeCache
-    str    r3, [r10, #offThread_inJitCodeCache] @ Back to the interp land
+    str    r3, [rSELF, #offThread_inJitCodeCache] @ Back to the interp land
     b      jitSVShadowRunEnd            @ doesn't return
 #else
+
+/*
+ * "longjmp" to a translation after single-stepping.
+ */
+    .global dvmJitResumeTranslation              @ (Thread* self, u4* dFP)
+dvmJitResumeTranslation:
+    mov    rSELF, r0                             @ restore self
+    mov    rPC, r1                               @ restore Dalvik pc
+    mov    rFP, r2                               @ restore Dalvik fp
+    ldr    r0, [rSELF,#offThread_jitResumeNPC]
+    mov    r2, #0
+    str    r2, [rSELF,#offThread_jitResumeNPC]   @ reset resume address
+    ldr    sp, [rSELF,#offThread_jitResumeNSP]   @ cut back native stack
+    bx     r0                                    @ resume translation
+
 /*
  * Return from the translation cache to the interpreter when the compiler is
  * having issues translating/executing a Dalvik instruction. We have to skip
@@ -90,7 +116,6 @@ dvmJitToInterpNoChain:
  */
     .global dvmJitToInterpPunt
 dvmJitToInterpPunt:
-    ldr    r10, [rGLUE, #offGlue_self]  @ callee saved r10 <- glue->self
     mov    rPC, r0
 #if defined(WITH_JIT_TUNING)
     mov    r0,lr
@@ -98,34 +123,41 @@ dvmJitToInterpPunt:
 #endif
     EXPORT_PC()
     mov    r0, #0
-    str    r0, [r10, #offThread_inJitCodeCache] @ Back to the interp land
-    adrl   rIBASE, dvmAsmInstructionStart
+    str    r0, [rSELF, #offThread_inJitCodeCache] @ Back to the interp land
+    ldr    rIBASE, [rSELF, #offThread_curHandlerTable]
     FETCH_INST()
     GET_INST_OPCODE(ip)
     GOTO_OPCODE(ip)
 
 /*
  * Return to the interpreter to handle a single instruction.
+ * We'll use the normal single-stepping mechanism via interpBreak,
+ * but also save the native pc of the resume point in the translation
+ * and the native sp so that we can later do the equivalent of a
+ * longjmp() to resume.
  * On entry:
- *    r0 <= PC
- *    r1 <= PC of resume instruction
+ *    dPC <= Dalvik PC of instrucion to interpret
  *    lr <= resume point in translation
+ *    r1 <= Dalvik PC of next instruction
  */
     .global dvmJitToInterpSingleStep
 dvmJitToInterpSingleStep:
-    str    lr,[rGLUE,#offGlue_jitResumeNPC]
-    str    r1,[rGLUE,#offGlue_jitResumeDPC]
-    mov    r1,#kInterpEntryInstr
-    @ enum is 4 byte in aapcs-EABI
-    str    r1, [rGLUE, #offGlue_entryPoint]
-    mov    rPC,r0
+    mov    rPC, r0              @ set up dalvik pc
     EXPORT_PC()
-
-    adrl   rIBASE, dvmAsmInstructionStart
-    mov    r2,#kJitSingleStep     @ Ask for single step and then revert
-    str    r2,[rGLUE,#offGlue_jitState]
-    mov    r1,#1                  @ set changeInterp to bail to debug interp
-    b      common_gotoBail
+    str    lr, [rSELF,#offThread_jitResumeNPC]
+    str    sp, [rSELF,#offThread_jitResumeNSP]
+    str    r1, [rSELF,#offThread_jitResumeDPC]
+    mov    r1, #1
+    str    r1, [rSELF,#offThread_singleStepCount]  @ just step once
+    mov    r0, rSELF
+    mov    r1, #kInterpSingleStep
+    mov    r2, #kSubModeNormal
+    mov    r3, #1                @ true
+    bl     dvmUpdateInterpBreak  @ (self, newBreak, newMode, enable)
+    ldr    rIBASE, [rSELF,#offThread_curHandlerTable]
+    FETCH_INST()
+    GET_INST_OPCODE(ip)
+    GOTO_OPCODE(ip)
 
 /*
  * Return from the translation cache and immediately request
@@ -136,10 +168,10 @@ dvmJitToInterpTraceSelectNoChain:
 #if defined(WITH_JIT_TUNING)
     bl     dvmBumpNoChain
 #endif
-    ldr    r10, [rGLUE, #offGlue_self]  @ callee saved r10 <- glue->self
     mov    r0,rPC
-    bl     dvmJitGetCodeAddr        @ Is there a translation?
-    str    r0, [r10, #offThread_inJitCodeCache] @ set the inJitCodeCache flag
+    mov    r1,rSELF
+    bl     dvmJitGetTraceAddrThread @ (pc, self)
+    str    r0, [rSELF, #offThread_inJitCodeCache] @ set the inJitCodeCache flag
     mov    r1, rPC                  @ arg1 of translation may need this
     mov    lr, #0                   @  in case target is HANDLER_INTERPRET
     cmp    r0,#0                    @ !0 means translation exists
@@ -154,12 +186,12 @@ dvmJitToInterpTraceSelectNoChain:
     .global dvmJitToInterpTraceSelect
 dvmJitToInterpTraceSelect:
     ldr    rPC,[lr, #-1]           @ get our target PC
-    ldr    r10, [rGLUE, #offGlue_self]  @ callee saved r10 <- glue->self
     add    rINST,lr,#-5            @ save start of chain branch
     add    rINST, #-4              @  .. which is 9 bytes back
     mov    r0,rPC
-    bl     dvmJitGetCodeAddr       @ Is there a translation?
-    str    r0, [r10, #offThread_inJitCodeCache] @ set the inJitCodeCache flag
+    mov    r1,rSELF
+    bl     dvmJitGetTraceAddrThread @ (pc, self)
+    str    r0, [rSELF, #offThread_inJitCodeCache] @ set the inJitCodeCache flag
     cmp    r0,#0
     beq    2f
     mov    r1,rINST
@@ -172,8 +204,8 @@ dvmJitToInterpTraceSelect:
 
 /* No translation, so request one if profiling isn't disabled*/
 2:
-    adrl   rIBASE, dvmAsmInstructionStart
-    GET_JIT_PROF_TABLE(r0)
+    ldr    rIBASE, [rSELF, #offThread_curHandlerTable]
+    ldr    r0, [rSELF, #offThread_pJitProfTable]
     FETCH_INST()
     cmp    r0, #0
     movne  r2,#kJitTSelectRequestHot   @ ask for trace selection
@@ -198,15 +230,15 @@ dvmJitToInterpTraceSelect:
     .global dvmJitToInterpNormal
 dvmJitToInterpNormal:
     ldr    rPC,[lr, #-1]           @ get our target PC
-    ldr    r10, [rGLUE, #offGlue_self]  @ callee saved r10 <- glue->self
     add    rINST,lr,#-5            @ save start of chain branch
     add    rINST,#-4               @ .. which is 9 bytes back
 #if defined(WITH_JIT_TUNING)
     bl     dvmBumpNormal
 #endif
     mov    r0,rPC
-    bl     dvmJitGetCodeAddr        @ Is there a translation?
-    str    r0, [r10, #offThread_inJitCodeCache] @ set the inJitCodeCache flag
+    mov    r1,rSELF
+    bl     dvmJitGetTraceAddrThread @ (pc, self)
+    str    r0, [rSELF, #offThread_inJitCodeCache] @ set the inJitCodeCache flag
     cmp    r0,#0
     beq    toInterpreter            @ go if not, otherwise do chain
     mov    r1,rINST
@@ -226,16 +258,16 @@ dvmJitToInterpNoChainNoProfile:
 #if defined(WITH_JIT_TUNING)
     bl     dvmBumpNoChain
 #endif
-    ldr    r10, [rGLUE, #offGlue_self]  @ callee saved r10 <- glue->self
     mov    r0,rPC
-    bl     dvmJitGetCodeAddr        @ Is there a translation?
-    str    r0, [r10, #offThread_inJitCodeCache] @ set the inJitCodeCache flag
+    mov    r1,rSELF
+    bl     dvmJitGetTraceAddrThread @ (pc, self)
+    str    r0, [rSELF, #offThread_inJitCodeCache] @ set the inJitCodeCache flag
     mov    r1, rPC                  @ arg1 of translation may need this
     mov    lr, #0                   @  in case target is HANDLER_INTERPRET
     cmp    r0,#0
     bxne   r0                       @ continue native execution if so
     EXPORT_PC()
-    adrl   rIBASE, dvmAsmInstructionStart
+    ldr    rIBASE, [rSELF, #offThread_curHandlerTable]
     FETCH_INST()
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     GOTO_OPCODE(ip)                     @ jump to next instruction
@@ -249,10 +281,10 @@ dvmJitToInterpNoChain:
 #if defined(WITH_JIT_TUNING)
     bl     dvmBumpNoChain
 #endif
-    ldr    r10, [rGLUE, #offGlue_self]  @ callee saved r10 <- glue->self
     mov    r0,rPC
-    bl     dvmJitGetCodeAddr        @ Is there a translation?
-    str    r0, [r10, #offThread_inJitCodeCache] @ set the inJitCodeCache flag
+    mov    r1,rSELF
+    bl     dvmJitGetTraceAddrThread @ (pc, self)
+    str    r0, [rSELF, #offThread_inJitCodeCache] @ set the inJitCodeCache flag
     mov    r1, rPC                  @ arg1 of translation may need this
     mov    lr, #0                   @  in case target is HANDLER_INTERPRET
     cmp    r0,#0
@@ -261,29 +293,35 @@ dvmJitToInterpNoChain:
 
 /*
  * No translation, restore interpreter regs and start interpreting.
- * rGLUE & rFP were preserved in the translated code, and rPC has
+ * rSELF & rFP were preserved in the translated code, and rPC has
  * already been restored by the time we get here.  We'll need to set
  * up rIBASE & rINST, and load the address of the JitTable into r0.
  */
 toInterpreter:
     EXPORT_PC()
-    adrl   rIBASE, dvmAsmInstructionStart
+    ldr    rIBASE, [rSELF, #offThread_curHandlerTable]
     FETCH_INST()
-    GET_JIT_PROF_TABLE(r0)
+    ldr    r0, [rSELF, #offThread_pJitProfTable]
+    ldr    rIBASE, [rSELF, #offThread_curHandlerTable]
     @ NOTE: intended fallthrough
 
 /*
- * Common code to update potential trace start counter, and initiate
- * a trace-build if appropriate.  On entry, rPC should point to the
- * next instruction to execute, and rINST should be already loaded with
- * the next opcode word, and r0 holds a pointer to the jit profile
- * table (pJitProfTable).
+ * Similar to common_updateProfile, but tests for null pJitProfTable
+ * r0 holds pJifProfTAble, rINST is loaded, rPC is current and
+ * rIBASE has been recently refreshed.
  */
 common_testUpdateProfile:
-    cmp     r0,#0
-    GET_INST_OPCODE(ip)
-    GOTO_OPCODE_IFEQ(ip)       @ if not profiling, fallthrough otherwise */
+    cmp     r0, #0               @ JIT switched off?
+    beq     4f                   @ return to interp if so
 
+/*
+ * Common code to update potential trace start counter, and initiate
+ * a trace-build if appropriate.
+ * On entry here:
+ *    r0    <= pJitProfTable (verified non-NULL)
+ *    rPC   <= Dalvik PC
+ *    rINST <= next instruction
+ */
 common_updateProfile:
     eor     r3,rPC,rPC,lsr #12 @ cheap, but fast hash function
     lsl     r3,r3,#(32 - JIT_PROF_SIZE_LOG_2)          @ shift out excess bits
@@ -293,19 +331,14 @@ common_updateProfile:
     strb    r1,[r0,r3,lsr #(32 - JIT_PROF_SIZE_LOG_2)] @ and store it
     GOTO_OPCODE_IFNE(ip)       @ if not threshold, fallthrough otherwise */
 
-/*
- * Here, we switch to the debug interpreter to request
- * trace selection.  First, though, check to see if there
- * is already a native translation in place (and, if so,
- * jump to it now).
- */
-    GET_JIT_THRESHOLD(r1)
-    ldr     r10, [rGLUE, #offGlue_self] @ callee saved r10 <- glue->self
+    /* Looks good, reset the counter */
+    ldr     r1, [rSELF, #offThread_jitThreshold]
     strb    r1,[r0,r3,lsr #(32 - JIT_PROF_SIZE_LOG_2)] @ reset counter
     EXPORT_PC()
     mov     r0,rPC
-    bl      dvmJitGetCodeAddr           @ r0<- dvmJitGetCodeAddr(rPC)
-    str     r0, [r10, #offThread_inJitCodeCache] @ set the inJitCodeCache flag
+    mov     r1,rSELF
+    bl      dvmJitGetTraceAddrThread    @ (pc, self)
+    str     r0, [rSELF, #offThread_inJitCodeCache] @ set the inJitCodeCache flag
     mov     r1, rPC                     @ arg1 of translation may need this
     mov     lr, #0                      @  in case target is HANDLER_INTERPRET
     cmp     r0,#0
@@ -326,9 +359,8 @@ common_updateProfile:
     cmp     r0, r10                     @ special case?
     bne     jitSVShadowRunStart         @ set up self verification shadow space
     @ Need to clear the inJitCodeCache flag
-    ldr    r10, [rGLUE, #offGlue_self]  @ r10 <- glue->self
     mov    r3, #0                       @ 0 means not in the JIT code cache
-    str    r3, [r10, #offThread_inJitCodeCache] @ back to the interp land
+    str    r3, [rSELF, #offThread_inJitCodeCache] @ back to the interp land
     GET_INST_OPCODE(ip)
     GOTO_OPCODE(ip)
     /* no return */
@@ -336,272 +368,186 @@ common_updateProfile:
 
 /*
  * On entry:
- *  r2 is jit state, e.g. kJitTSelectRequest or kJitTSelectRequestHot
+ *  r2 is jit state.
  */
 common_selectTrace:
-    str     r2,[rGLUE,#offGlue_jitState]
-    mov     r2,#kInterpEntryInstr       @ normal entry reason
-    str     r2,[rGLUE,#offGlue_entryPoint]
-    mov     r1,#1                       @ set changeInterp
-    b       common_gotoBail
+    ldrb    r0,[rSELF,#offThread_breakFlags]
+    ands    r0,#kInterpJitBreak
+    bne     3f                         @ already doing JIT work, continue
+    str     r2,[rSELF,#offThread_jitState]
+    mov     r0, rSELF
+/*
+ * Call out to validate trace-building request.  If successful,
+ * rIBASE will be swapped to to send us into single-stepping trace
+ * building mode, so we need to refresh before we continue.
+ */
+    EXPORT_PC()
+    SAVE_PC_FP_TO_SELF()                 @ copy of pc/fp to Thread
+    bl      dvmJitCheckTraceRequest
+3:
+    FETCH_INST()
+    ldr    rIBASE, [rSELF, #offThread_curHandlerTable]
+4:
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    GOTO_OPCODE(ip)
+    /* no return */
+#endif
 
 #if defined(WITH_SELF_VERIFICATION)
 /*
  * Save PC and registers to shadow memory for self verification mode
  * before jumping to native translation.
  * On entry:
- *    rPC, rFP, rGLUE: the values that they should contain
+ *    rPC, rFP, rSELF: the values that they should contain
  *    r10: the address of the target translation.
  */
 jitSVShadowRunStart:
     mov     r0,rPC                      @ r0<- program counter
     mov     r1,rFP                      @ r1<- frame pointer
-    mov     r2,rGLUE                    @ r2<- InterpState pointer
+    mov     r2,rSELF                    @ r2<- self (Thread) pointer
     mov     r3,r10                      @ r3<- target translation
     bl      dvmSelfVerificationSaveState @ save registers to shadow space
     ldr     rFP,[r0,#offShadowSpace_shadowFP] @ rFP<- fp in shadow space
-    add     rGLUE,r0,#offShadowSpace_interpState @ rGLUE<- rGLUE in shadow space
     bx      r10                         @ jump to the translation
 
 /*
- * Restore PC, registers, and interpState to original values
+ * Restore PC, registers, and interpreter state to original values
  * before jumping back to the interpreter.
+ * On entry:
+ *   r0:  dPC
+ *   r2:  self verification state
  */
 jitSVShadowRunEnd:
     mov    r1,rFP                        @ pass ending fp
+    mov    r3,rSELF                      @ pass self ptr for convenience
     bl     dvmSelfVerificationRestoreState @ restore pc and fp values
-    ldr    rPC,[r0,#offShadowSpace_startPC] @ restore PC
-    ldr    rFP,[r0,#offShadowSpace_fp]   @ restore FP
-    ldr    rGLUE,[r0,#offShadowSpace_glue] @ restore InterpState
+    LOAD_PC_FP_FROM_SELF()               @ restore pc, fp
     ldr    r1,[r0,#offShadowSpace_svState] @ get self verification state
     cmp    r1,#0                         @ check for punt condition
     beq    1f
+    @ Set up SV single-stepping
+    mov    r0, rSELF
+    mov    r1, #kInterpJitBreak
+    mov    r2, #kSubModeJitSV
+    mov    r3, #1                @ true
+    bl     dvmUpdateInterpBreak  @ (self, newBreak, newMode, enable)
     mov    r2,#kJitSelfVerification      @ ask for self verification
-    str    r2,[rGLUE,#offGlue_jitState]
-    mov    r2,#kInterpEntryInstr         @ normal entry reason
-    str    r2,[rGLUE,#offGlue_entryPoint]
-    mov    r1,#1                         @ set changeInterp
-    b      common_gotoBail
-
+    str    r2,[rSELF,#offThread_jitState]
+    @ intentional fallthrough
 1:                                       @ exit to interpreter without check
     EXPORT_PC()
-    adrl   rIBASE, dvmAsmInstructionStart
+    ldr    rIBASE, [rSELF, #offThread_curHandlerTable]
     FETCH_INST()
     GET_INST_OPCODE(ip)
     GOTO_OPCODE(ip)
 #endif
 
-#endif
-
-/*
- * Common code when a backward branch is taken.
- *
- * TODO: we could avoid a branch by just setting r0 and falling through
- * into the common_periodicChecks code, and having a test on r0 at the
- * end determine if we should return to the caller or update & branch to
- * the next instr.
- *
- * On entry:
- *  r9 is PC adjustment *in bytes*
- */
-common_backwardBranch:
-    mov     r0, #kInterpEntryInstr
-    bl      common_periodicChecks
-#if defined(WITH_JIT)
-    GET_JIT_PROF_TABLE(r0)
-    FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
-    cmp     r0,#0
-    bne     common_updateProfile
-    GET_INST_OPCODE(ip)
-    GOTO_OPCODE(ip)
-#else
-    FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
-    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
-    GOTO_OPCODE(ip)                     @ jump to next instruction
-#endif
-
-
-/*
- * Need to see if the thread needs to be suspended or debugger/profiler
- * activity has begun.  If so, we suspend the thread or side-exit to
- * the debug interpreter as appropriate.
- *
- * The common case is no activity on any of these, so we want to figure
- * that out quickly.  If something is up, we can then sort out what.
- *
- * We want to be fast if the VM was built without debugger or profiler
- * support, but we also need to recognize that the system is usually
- * shipped with both of these enabled.
- *
- * TODO: reduce this so we're just checking a single location.
- *
- * On entry:
- *  r0 is reentry type, e.g. kInterpEntryInstr (for debugger/profiling)
- *  r9 is trampoline PC adjustment *in bytes*
- */
-common_periodicChecks:
-    ldr     r3, [rGLUE, #offGlue_pSelfSuspendCount] @ r3<- &suspendCount
-
-    ldr     r1, [rGLUE, #offGlue_pDebuggerActive]   @ r1<- &debuggerActive
-    ldr     r2, [rGLUE, #offGlue_pActiveProfilers]  @ r2<- &activeProfilers
-
-    ldr     ip, [r3]                    @ ip<- suspendCount (int)
-
-    cmp     r1, #0                      @ debugger enabled?
-#if defined(WORKAROUND_CORTEX_A9_745320)
-    /* Don't use conditional loads if the HW defect exists */
-    beq     101f
-    ldrb    r1, [r1]                    @ yes, r1<- debuggerActive (boolean)
-101:
-#else
-    ldrneb  r1, [r1]                    @ yes, r1<- debuggerActive (boolean)
-#endif
-    ldr     r2, [r2]                    @ r2<- activeProfilers (int)
-    orrnes  ip, ip, r1                  @ ip<- suspendCount | debuggerActive
-    /*
-     * Don't switch the interpreter in the libdvm_traceview build even if the
-     * profiler is active.
-     * The code here is opted for less intrusion instead of performance.
-     * That is, *pActiveProfilers is still loaded into r2 even though it is not
-     * used when WITH_INLINE_PROFILING is defined.
-     */
-#if !defined(WITH_INLINE_PROFILING)
-    orrs    ip, ip, r2                  @ ip<- suspend|debugger|profiler; set Z
-#endif
-
-
-    bxeq    lr                          @ all zero, return
-
-    /*
-     * One or more interesting events have happened.  Figure out what.
-     *
-     * If debugging or profiling are compiled in, we need to disambiguate.
-     *
-     * r0 still holds the reentry type.
-     */
-    ldr     ip, [r3]                    @ ip<- suspendCount (int)
-    cmp     ip, #0                      @ want suspend?
-    beq     1f                          @ no, must be debugger/profiler
-
-    stmfd   sp!, {r0, lr}               @ preserve r0 and lr
-#if defined(WITH_JIT)
-    /*
-     * Refresh the Jit's cached copy of profile table pointer.  This pointer
-     * doubles as the Jit's on/off switch.
-     */
-    ldr     r3, [rGLUE, #offGlue_ppJitProfTable] @ r3<-&gDvmJit.pJitProfTable
-    ldr     r0, [rGLUE, #offGlue_self]  @ r0<- glue->self
-    ldr     r3, [r3] @ r3 <- pJitProfTable
-    EXPORT_PC()                         @ need for precise GC
-    str     r3, [rGLUE, #offGlue_pJitProfTable] @ refresh Jit's on/off switch
-#else
-    ldr     r0, [rGLUE, #offGlue_self]  @ r0<- glue->self
-    EXPORT_PC()                         @ need for precise GC
-#endif
-    bl      dvmCheckSuspendPending      @ do full check, suspend if necessary
-    ldmfd   sp!, {r0, lr}               @ restore r0 and lr
-
-    /*
-     * Reload the debugger/profiler enable flags.  We're checking to see
-     * if either of these got set while we were suspended.
-     *
-     * If WITH_INLINE_PROFILING is configured, don't check whether the profiler
-     * is enabled or not as the profiling will be done inline.
-     */
-    ldr     r1, [rGLUE, #offGlue_pDebuggerActive]   @ r1<- &debuggerActive
-    cmp     r1, #0                      @ debugger enabled?
-#if defined(WORKAROUND_CORTEX_A9_745320)
-    /* Don't use conditional loads if the HW defect exists */
-    beq     101f
-    ldrb    r1, [r1]                    @ yes, r1<- debuggerActive (boolean)
-101:
-#else
-    ldrneb  r1, [r1]                    @ yes, r1<- debuggerActive (boolean)
-#endif
-
-#if !defined(WITH_INLINE_PROFILING)
-    ldr     r2, [rGLUE, #offGlue_pActiveProfilers]  @ r2<- &activeProfilers
-    ldr     r2, [r2]                    @ r2<- activeProfilers (int)
-    orrs    r1, r1, r2
-#else
-    cmp     r1, #0                      @ only consult the debuggerActive flag
-#endif
-
-    beq     2f
-
-1:  @ debugger/profiler enabled, bail out; glue->entryPoint was set above
-    str     r0, [rGLUE, #offGlue_entryPoint]    @ store r0, need for debug/prof
-    add     rPC, rPC, r9                @ update rPC
-    mov     r1, #1                      @ "want switch" = true
-    b       common_gotoBail             @ side exit
-
-2:
-    bx      lr                          @ nothing to do, return
-
-
 /*
  * The equivalent of "goto bail", this calls through the "bail handler".
+ * It will end this interpreter activation, and return to the caller
+ * of dvmMterpStdRun.
  *
- * State registers will be saved to the "glue" area before bailing.
- *
- * On entry:
- *  r1 is "bool changeInterp", indicating if we want to switch to the
- *     other interpreter or just bail all the way out
+ * State registers will be saved to the "thread" area before bailing
+ * debugging purposes
  */
 common_gotoBail:
-    SAVE_PC_FP_TO_GLUE()                @ export state to "glue"
-    mov     r0, rGLUE                   @ r0<- glue ptr
-    b       dvmMterpStdBail             @ call(glue, changeInterp)
+    SAVE_PC_FP_TO_SELF()                @ export state to "thread"
+    mov     r0, rSELF                   @ r0<- self ptr
+    b       dvmMterpStdBail             @ call(self, changeInterp)
 
-    @add     r1, r1, #1                  @ using (boolean+1)
-    @add     r0, rGLUE, #offGlue_jmpBuf  @ r0<- &glue->jmpBuf
-    @bl      _longjmp                    @ does not return
-    @bl      common_abort
+/*
+ * The JIT's invoke method needs to remember the callsite class and
+ * target pair.  Save them here so that they are available to
+ * dvmCheckJit following the interpretation of this invoke.
+ */
+#if defined(WITH_JIT)
+save_callsiteinfo:
+    cmp     r9, #0
+    ldrne   r9, [r9, #offObject_clazz]
+    str     r0, [rSELF, #offThread_methodToCall]
+    str     r9, [rSELF, #offThread_callsiteClass]
+    bx      lr
+#endif
 
+/*
+ * Common code for jumbo method invocation.
+ * NOTE: this adjusts rPC to account for the difference in instruction width.
+ * As a result, the savedPc in the stack frame will not be wholly accurate. So
+ * long as that is only used for source file line number calculations, we're
+ * okay.
+ */
+common_invokeMethodJumboNoThis:
+#if defined(WITH_JIT)
+ /* On entry: r0 is "Method* methodToCall */
+    mov     r9, #0                      @ clear "this"
+#endif
+common_invokeMethodJumbo:
+ /* On entry: r0 is "Method* methodToCall, r9 is "this" */
+.LinvokeNewJumbo:
+#if defined(WITH_JIT)
+    ldrb    r1, [rSELF, #offThread_subMode]
+    ands    r1, #kSubModeJitTraceBuild
+    blne    save_callsiteinfo
+#endif
+    @ prepare to copy args to "outs" area of current frame
+    add     rPC, rPC, #4                @ adjust pc to make return consistent
+    FETCH(r2, 1)                        @ r2<- BBBB (arg count)
+    SAVEAREA_FROM_FP(r10, rFP)          @ r10<- stack save area
+    cmp     r2, #0                      @ no args?
+    beq     .LinvokeArgsDone            @ if no args, skip the rest
+    FETCH(r1, 2)                        @ r1<- CCCC
+    b       .LinvokeRangeArgs           @ handle args like invoke range
 
 /*
  * Common code for method invocation with range.
  *
  * On entry:
- *  r0 is "Method* methodToCall", the method we're trying to call
+ *  r0 is "Method* methodToCall", r9 is "this"
  */
 common_invokeMethodRange:
 .LinvokeNewRange:
+#if defined(WITH_JIT)
+    ldrb    r1, [rSELF, #offThread_subMode]
+    ands    r1, #kSubModeJitTraceBuild
+    blne    save_callsiteinfo
+#endif
     @ prepare to copy args to "outs" area of current frame
     movs    r2, rINST, lsr #8           @ r2<- AA (arg count) -- test for zero
     SAVEAREA_FROM_FP(r10, rFP)          @ r10<- stack save area
     beq     .LinvokeArgsDone            @ if no args, skip the rest
     FETCH(r1, 2)                        @ r1<- CCCC
 
+.LinvokeRangeArgs:
     @ r0=methodToCall, r1=CCCC, r2=count, r10=outs
     @ (very few methods have > 10 args; could unroll for common cases)
     add     r3, rFP, r1, lsl #2         @ r3<- &fp[CCCC]
     sub     r10, r10, r2, lsl #2        @ r10<- "outs" area, for call args
-    ldrh    r9, [r0, #offMethod_registersSize]  @ r9<- methodToCall->regsSize
 1:  ldr     r1, [r3], #4                @ val = *fp++
     subs    r2, r2, #1                  @ count--
     str     r1, [r10], #4               @ *outs++ = val
     bne     1b                          @ ...while count != 0
-    ldrh    r3, [r0, #offMethod_outsSize]   @ r3<- methodToCall->outsSize
     b       .LinvokeArgsDone
 
 /*
  * Common code for method invocation without range.
  *
  * On entry:
- *  r0 is "Method* methodToCall", the method we're trying to call
+ *  r0 is "Method* methodToCall", r9 is "this"
  */
 common_invokeMethodNoRange:
 .LinvokeNewNoRange:
+#if defined(WITH_JIT)
+    ldrb    r1, [rSELF, #offThread_subMode]
+    ands    r1, #kSubModeJitTraceBuild
+    blne    save_callsiteinfo
+#endif
     @ prepare to copy args to "outs" area of current frame
     movs    r2, rINST, lsr #12          @ r2<- B (arg count) -- test for zero
     SAVEAREA_FROM_FP(r10, rFP)          @ r10<- stack save area
     FETCH(r1, 2)                        @ r1<- GFED (load here to hide latency)
-    ldrh    r9, [r0, #offMethod_registersSize]  @ r9<- methodToCall->regsSize
-    ldrh    r3, [r0, #offMethod_outsSize]  @ r3<- methodToCall->outsSize
     beq     .LinvokeArgsDone
 
-    @ r0=methodToCall, r1=GFED, r3=outSize, r2=count, r9=regSize, r10=outs
+    @ r0=methodToCall, r1=GFED, r2=count, r10=outs
 .LinvokeNonRange:
     rsb     r2, r2, #5                  @ r2<- 5-r2
     add     pc, pc, r2, lsl #4          @ computed goto, 4 instrs each
@@ -628,7 +574,9 @@ common_invokeMethodNoRange:
     str     r2, [r10, #-4]!             @ *--outs = vD
 0:  @ fall through to .LinvokeArgsDone
 
-.LinvokeArgsDone: @ r0=methodToCall, r3=outSize, r9=regSize
+.LinvokeArgsDone: @ r0=methodToCall
+    ldrh    r9, [r0, #offMethod_registersSize]  @ r9<- methodToCall->regsSize
+    ldrh    r3, [r0, #offMethod_outsSize]  @ r3<- methodToCall->outsSize
     ldr     r2, [r0, #offMethod_insns]  @ r2<- method->insns
     ldr     rINST, [r0, #offMethod_clazz]  @ rINST<- method->clazz
     @ find space for the new stack frame, check for overflow
@@ -636,9 +584,10 @@ common_invokeMethodNoRange:
     sub     r1, r1, r9, lsl #2          @ r1<- newFp (old savearea - regsSize)
     SAVEAREA_FROM_FP(r10, r1)           @ r10<- newSaveArea
 @    bl      common_dumpRegs
-    ldr     r9, [rGLUE, #offGlue_interpStackEnd]    @ r9<- interpStackEnd
+    ldr     r9, [rSELF, #offThread_interpStackEnd]    @ r9<- interpStackEnd
     sub     r3, r10, r3, lsl #2         @ r3<- bottom (newsave - outsSize)
     cmp     r3, r9                      @ bottom < interpStackEnd?
+    ldrb    lr, [rSELF, #offThread_subMode]
     ldr     r3, [r0, #offMethod_accessFlags] @ r3<- methodToCall->accessFlags
     blo     .LstackOverflow             @ yes, this frame will overflow stack
 
@@ -653,14 +602,12 @@ common_invokeMethodNoRange:
     mov     r9, #0
     str     r9, [r10, #offStackSaveArea_returnAddr]
 #endif
-#if defined(WITH_INLINE_PROFILING)
-    stmfd   sp!, {r0-r3}                @ preserve r0-r3
-    mov     r1, r6
-    @ r0=methodToCall, r1=rGlue
-    bl      dvmFastMethodTraceEnter
-    ldmfd   sp!, {r0-r3}                @ restore r0-r3
-#endif
     str     r0, [r10, #offStackSaveArea_method]
+
+    @ Profiling?
+    cmp     lr, #0                      @ any special modes happening?
+    bne     2f                          @ go if so
+1:
     tst     r3, #ACC_NATIVE
     bne     .LinvokeNative
 
@@ -682,18 +629,19 @@ common_invokeMethodNoRange:
     ldrh    r9, [r2]                        @ r9 <- load INST from new PC
     ldr     r3, [rINST, #offClassObject_pDvmDex] @ r3<- method->clazz->pDvmDex
     mov     rPC, r2                         @ publish new rPC
-    ldr     r2, [rGLUE, #offGlue_self]      @ r2<- glue->self
 
-    @ Update "glue" values for the new method
-    @ r0=methodToCall, r1=newFp, r2=self, r3=newMethodClass, r9=newINST
-    str     r0, [rGLUE, #offGlue_method]    @ glue->method = methodToCall
-    str     r3, [rGLUE, #offGlue_methodClassDex] @ glue->methodClassDex = ...
+    @ Update state values for the new method
+    @ r0=methodToCall, r1=newFp, r3=newMethodClass, r9=newINST
+    str     r0, [rSELF, #offThread_method]    @ self->method = methodToCall
+    str     r3, [rSELF, #offThread_methodClassDex] @ self->methodClassDex = ...
+    mov     r2, #1
+    str     r2, [rSELF, #offThread_debugIsMethodEntry]
 #if defined(WITH_JIT)
-    GET_JIT_PROF_TABLE(r0)
+    ldr     r0, [rSELF, #offThread_pJitProfTable]
     mov     rFP, r1                         @ fp = newFp
     GET_PREFETCHED_OPCODE(ip, r9)           @ extract prefetched opcode from r9
     mov     rINST, r9                       @ publish new rINST
-    str     r1, [r2, #offThread_curFrame]   @ self->curFrame = newFp
+    str     r1, [rSELF, #offThread_curFrame]   @ self->curFrame = newFp
     cmp     r0,#0
     bne     common_updateProfile
     GOTO_OPCODE(ip)                         @ jump to next instruction
@@ -701,22 +649,32 @@ common_invokeMethodNoRange:
     mov     rFP, r1                         @ fp = newFp
     GET_PREFETCHED_OPCODE(ip, r9)           @ extract prefetched opcode from r9
     mov     rINST, r9                       @ publish new rINST
-    str     r1, [r2, #offThread_curFrame]   @ self->curFrame = newFp
+    str     r1, [rSELF, #offThread_curFrame]   @ self->curFrame = newFp
     GOTO_OPCODE(ip)                         @ jump to next instruction
 #endif
+
+2:
+    @ Profiling - record method entry.  r0: methodToCall
+    stmfd   sp!, {r0-r3}                @ preserve r0-r3
+    str     rPC, [rSELF, #offThread_pc] @ update interpSave.pc
+    str     rFP, [rSELF, #offThread_fp] @ update interpSave.fp
+    mov     r1, r0
+    mov     r0, rSELF
+    bl      dvmReportInvoke             @ (self, method)
+    ldmfd   sp!, {r0-r3}                @ restore r0-r3
+    b       1b
 
 .LinvokeNative:
     @ Prep for the native call
     @ r0=methodToCall, r1=newFp, r10=newSaveArea
-    ldr     r3, [rGLUE, #offGlue_self]      @ r3<- glue->self
-    ldr     r9, [r3, #offThread_jniLocal_topCookie] @ r9<- thread->localRef->...
-    str     r1, [r3, #offThread_curFrame]   @ self->curFrame = newFp
+    ldrb    lr, [rSELF, #offThread_subMode]
+    ldr     r9, [rSELF, #offThread_jniLocal_topCookie]@r9<-thread->localRef->...
+    str     r1, [rSELF, #offThread_curFrame]   @ self->curFrame = newFp
     str     r9, [r10, #offStackSaveArea_localRefCookie] @newFp->localRefCookie=top
-    mov     r9, r3                      @ r9<- glue->self (preserve)
-
     mov     r2, r0                      @ r2<- methodToCall
     mov     r0, r1                      @ r0<- newFp (points to args)
-    add     r1, rGLUE, #offGlue_retval  @ r1<- &retval
+    add     r1, rSELF, #offThread_retval  @ r1<- &retval
+    mov     r3, rSELF                   @ arg3<- self
 
 #ifdef ASSIST_DEBUGGER
     /* insert fake function header to help gdb find the stack frame */
@@ -729,50 +687,57 @@ dalvik_mterp:
 .Lskip:
 #endif
 
-#if defined(WITH_INLINE_PROFILING)
-    @ r2=JNIMethod, r6=rGLUE
-    stmfd   sp!, {r2,r6}
-#endif
-
+    cmp     lr, #0                      @ any special SubModes active?
+    bne     11f                         @ go handle them if so
     mov     lr, pc                      @ set return addr
     ldr     pc, [r2, #offMethod_nativeFunc] @ pc<- methodToCall->nativeFunc
+7:
 
-#if defined(WITH_INLINE_PROFILING)
-    @ r0=JNIMethod, r1=rGLUE
-    ldmfd   sp!, {r0-r1}
-    bl      dvmFastNativeMethodTraceExit
-#endif
-
-#if defined(WITH_JIT)
-    ldr     r3, [rGLUE, #offGlue_ppJitProfTable] @ Refresh Jit's on/off status
-#endif
-
-    @ native return; r9=self, r10=newSaveArea
+    @ native return; r10=newSaveArea
     @ equivalent to dvmPopJniLocals
     ldr     r0, [r10, #offStackSaveArea_localRefCookie] @ r0<- saved top
-    ldr     r1, [r9, #offThread_exception] @ check for exception
-#if defined(WITH_JIT)
-    ldr     r3, [r3]                    @ r3 <- gDvmJit.pProfTable
-#endif
-    str     rFP, [r9, #offThread_curFrame]  @ self->curFrame = fp
+    ldr     r1, [rSELF, #offThread_exception] @ check for exception
+    str     rFP, [rSELF, #offThread_curFrame]  @ self->curFrame = fp
     cmp     r1, #0                      @ null?
-    str     r0, [r9, #offThread_jniLocal_topCookie] @ new top <- old top
-#if defined(WITH_JIT)
-    str     r3, [rGLUE, #offGlue_pJitProfTable] @ refresh cached on/off switch
-#endif
+    str     r0, [rSELF, #offThread_jniLocal_topCookie] @ new top <- old top
     bne     common_exceptionThrown      @ no, handle exception
 
     FETCH_ADVANCE_INST(3)               @ advance rPC, load rINST
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     GOTO_OPCODE(ip)                     @ jump to next instruction
 
+11:
+    @ r0=newFp, r1=&retval, r2=methodToCall, r3=self, lr=subModes
+    stmfd   sp!, {r0-r3}                @ save all but subModes
+    str     rPC, [rSELF, #offThread_pc] @ update interpSave.pc
+    str     rFP, [rSELF, #offThread_fp] @ update interpSave.fp
+    mov     r0, r2                      @ r0<- methodToCall
+    mov     r1, rSELF
+    bl      dvmReportPreNativeInvoke    @ (methodToCall, self)
+    ldmfd   sp, {r0-r3}                 @ refresh.  NOTE: no sp autoincrement
+
+    @ Call the native method
+    mov     lr, pc                      @ set return addr
+    ldr     pc, [r2, #offMethod_nativeFunc] @ pc<- methodToCall->nativeFunc
+
+    @ Restore the pre-call arguments
+    ldmfd   sp!, {r0-r3}                @ r2<- methodToCall (others unneeded)
+
+    @ Finish up any post-invoke subMode requirements
+    @ interpSave already up-to-date
+    mov     r0, r2                      @ r0<- methodToCall
+    mov     r1, rSELF
+    bl      dvmReportPostNativeInvoke   @ (methodToCall, self)
+    b       7b                          @ resume
+
 .LstackOverflow:    @ r0=methodToCall
     mov     r1, r0                      @ r1<- methodToCall
-    ldr     r0, [rGLUE, #offGlue_self]  @ r0<- self
+    mov     r0, rSELF                   @ r0<- self
     bl      dvmHandleStackOverflow
     b       common_exceptionThrown
 #ifdef ASSIST_DEBUGGER
     .fnend
+    .size   dalvik_mterp, .-dalvik_mterp
 #endif
 
 
@@ -792,8 +757,8 @@ dalvik_mterp:
     sub     sp, sp, #8                  @ space for args + pad
     FETCH(ip, 2)                        @ ip<- FEDC or CCCC
     mov     r2, r0                      @ A2<- methodToCall
-    mov     r0, rGLUE                   @ A0<- glue
-    SAVE_PC_FP_TO_GLUE()                @ export state to "glue"
+    mov     r0, rSELF                   @ A0<- self
+    SAVE_PC_FP_TO_SELF()                @ export state to "self"
     mov     r1, r9                      @ A1<- methodCallRange
     mov     r3, rINST, lsr #8           @ A3<- AA
     str     ip, [sp, #0]                @ A4<- ip
@@ -811,44 +776,36 @@ dalvik_mterp:
  */
 common_returnFromMethod:
 .LreturnNew:
-    mov     r0, #kInterpEntryReturn
-    mov     r9, #0
-    bl      common_periodicChecks
-
-#if defined(WITH_INLINE_PROFILING)
-    stmfd   sp!, {r0-r3}                @ preserve r0-r3
-    mov     r0, r6
-    @ r0=rGlue
-    bl      dvmFastJavaMethodTraceExit
-    ldmfd   sp!, {r0-r3}                @ restore r0-r3
-#endif
-    SAVEAREA_FROM_FP(r0, rFP)           @ r0<- saveArea (old)
-    ldr     rFP, [r0, #offStackSaveArea_prevFrame] @ fp = saveArea->prevFrame
+    ldrb    lr, [rSELF, #offThread_subMode]
+    SAVEAREA_FROM_FP(r0, rFP)
     ldr     r9, [r0, #offStackSaveArea_savedPc] @ r9 = saveArea->savedPc
+    cmp     lr, #0                      @ any special subMode handling needed?
+    bne     19f
+14:
+    ldr     rFP, [r0, #offStackSaveArea_prevFrame] @ fp = saveArea->prevFrame
     ldr     r2, [rFP, #(offStackSaveArea_method - sizeofStackSaveArea)]
                                         @ r2<- method we're returning to
-    ldr     r3, [rGLUE, #offGlue_self]  @ r3<- glue->self
     cmp     r2, #0                      @ is this a break frame?
 #if defined(WORKAROUND_CORTEX_A9_745320)
     /* Don't use conditional loads if the HW defect exists */
-    beq     101f
+    beq     15f
     ldr     r10, [r2, #offMethod_clazz] @ r10<- method->clazz
-101:
+15:
 #else
     ldrne   r10, [r2, #offMethod_clazz] @ r10<- method->clazz
 #endif
-    mov     r1, #0                      @ "want switch" = false
     beq     common_gotoBail             @ break frame, bail out completely
 
+    ldr     rIBASE, [rSELF, #offThread_curHandlerTable]  @ refresh rIBASE
     PREFETCH_ADVANCE_INST(rINST, r9, 3) @ advance r9, update new rINST
-    str     r2, [rGLUE, #offGlue_method]@ glue->method = newSave->method
+    str     r2, [rSELF, #offThread_method]@ self->method = newSave->method
     ldr     r1, [r10, #offClassObject_pDvmDex]   @ r1<- method->clazz->pDvmDex
-    str     rFP, [r3, #offThread_curFrame]  @ self->curFrame = fp
+    str     rFP, [rSELF, #offThread_curFrame]  @ self->curFrame = fp
 #if defined(WITH_JIT)
     ldr     r10, [r0, #offStackSaveArea_returnAddr] @ r10 = saveArea->returnAddr
     mov     rPC, r9                     @ publish new rPC
-    str     r1, [rGLUE, #offGlue_methodClassDex]
-    str     r10, [r3, #offThread_inJitCodeCache]  @ may return to JIT'ed land
+    str     r1, [rSELF, #offThread_methodClassDex]
+    str     r10, [rSELF, #offThread_inJitCodeCache]  @ may return to JIT'ed land
     cmp     r10, #0                      @ caller is compiled code
     blxne   r10
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
@@ -856,17 +813,28 @@ common_returnFromMethod:
 #else
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     mov     rPC, r9                     @ publish new rPC
-    str     r1, [rGLUE, #offGlue_methodClassDex]
+    str     r1, [rSELF, #offThread_methodClassDex]
     GOTO_OPCODE(ip)                     @ jump to next instruction
 #endif
+
+19:
+    @ Handle special actions
+    @ On entry, r0: StackSaveArea
+    ldr     r1, [r0, #offStackSaveArea_prevFrame]  @ r2<- prevFP
+    str     rPC, [rSELF, #offThread_pc] @ update interpSave.pc
+    str     r1, [rSELF, #offThread_fp]   @ update interpSave.fp
+    mov     r0, rSELF
+    bl      dvmReportReturn             @ (self)
+    SAVEAREA_FROM_FP(r0, rFP)           @ restore StackSaveArea
+    b       14b                         @ continue
 
     /*
      * Return handling, calls through "glue code".
      */
      .if    0
 .LreturnOld:
-    SAVE_PC_FP_TO_GLUE()                @ export state
-    mov     r0, rGLUE                   @ arg to function
+    SAVE_PC_FP_TO_SELF()                @ export state
+    mov     r0, rSELF                   @ arg to function
     bl      dvmMterp_returnFromMethod
     b       common_resumeAfterGlueCall
     .endif
@@ -885,27 +853,34 @@ common_returnFromMethod:
 dvmMterpCommonExceptionThrown:
 common_exceptionThrown:
 .LexceptionNew:
-    mov     r0, #kInterpEntryThrow
-    mov     r9, #0
-    bl      common_periodicChecks
 
-    ldr     r10, [rGLUE, #offGlue_self] @ r10<- glue->self
-    ldr     r9, [r10, #offThread_exception] @ r9<- self->exception
-    mov     r1, r10                     @ r1<- self
+    EXPORT_PC()
+
+    mov     r0, rSELF
+    bl      dvmCheckSuspendPending
+
+    ldr     r9, [rSELF, #offThread_exception] @ r9<- self->exception
+    mov     r1, rSELF                   @ r1<- self
     mov     r0, r9                      @ r0<- exception
     bl      dvmAddTrackedAlloc          @ don't let the exception be GCed
+    ldrb    r2, [rSELF, #offThread_subMode]  @ get subMode flags
     mov     r3, #0                      @ r3<- NULL
-    str     r3, [r10, #offThread_exception] @ self->exception = NULL
+    str     r3, [rSELF, #offThread_exception] @ self->exception = NULL
 
+    @ Special subMode?
+    cmp     r2, #0                      @ any special subMode handling needed?
+    bne     7f                          @ go if so
+8:
     /* set up args and a local for "&fp" */
     /* (str sp, [sp, #-4]!  would be perfect here, but is discouraged) */
     str     rFP, [sp, #-4]!             @ *--sp = fp
     mov     ip, sp                      @ ip<- &fp
     mov     r3, #0                      @ r3<- false
     str     ip, [sp, #-4]!              @ *--sp = &fp
-    ldr     r1, [rGLUE, #offGlue_method] @ r1<- glue->method
-    mov     r0, r10                     @ r0<- self
+    ldr     r1, [rSELF, #offThread_method] @ r1<- self->method
+    mov     r0, rSELF                   @ r0<- self
     ldr     r1, [r1, #offMethod_insns]  @ r1<- method->insns
+    ldrb    lr, [rSELF, #offThread_subMode]  @ lr<- subMode flags
     mov     r2, r9                      @ r2<- exception
     sub     r1, rPC, r1                 @ r1<- pc - method->insns
     mov     r1, r1, asr #1              @ r1<- offset in code units
@@ -914,11 +889,11 @@ common_exceptionThrown:
     bl      dvmFindCatchBlock           @ call(self, relPc, exc, scan?, &fp)
 
     /* fix earlier stack overflow if necessary; may trash rFP */
-    ldrb    r1, [r10, #offThread_stackOverflowed]
+    ldrb    r1, [rSELF, #offThread_stackOverflowed]
     cmp     r1, #0                      @ did we overflow earlier?
     beq     1f                          @ no, skip ahead
     mov     rFP, r0                     @ save relPc result in rFP
-    mov     r0, r10                     @ r0<- self
+    mov     r0, rSELF                   @ r0<- self
     mov     r1, r9                      @ r1<- exception
     bl      dvmCleanupStackOverflow     @ call(self)
     mov     r0, rFP                     @ restore result
@@ -933,30 +908,40 @@ common_exceptionThrown:
     /* adjust locals to match self->curFrame and updated PC */
     SAVEAREA_FROM_FP(r1, rFP)           @ r1<- new save area
     ldr     r1, [r1, #offStackSaveArea_method] @ r1<- new method
-    str     r1, [rGLUE, #offGlue_method]    @ glue->method = new method
+    str     r1, [rSELF, #offThread_method]  @ self->method = new method
     ldr     r2, [r1, #offMethod_clazz]      @ r2<- method->clazz
     ldr     r3, [r1, #offMethod_insns]      @ r3<- method->insns
     ldr     r2, [r2, #offClassObject_pDvmDex] @ r2<- method->clazz->pDvmDex
     add     rPC, r3, r0, asl #1             @ rPC<- method->insns + catchRelPc
-    str     r2, [rGLUE, #offGlue_methodClassDex] @ glue->pDvmDex = meth...
+    str     r2, [rSELF, #offThread_methodClassDex] @ self->pDvmDex = meth...
 
     /* release the tracked alloc on the exception */
     mov     r0, r9                      @ r0<- exception
-    mov     r1, r10                     @ r1<- self
+    mov     r1, rSELF                   @ r1<- self
     bl      dvmReleaseTrackedAlloc      @ release the exception
 
     /* restore the exception if the handler wants it */
+    ldr    rIBASE, [rSELF, #offThread_curHandlerTable]  @ refresh rIBASE
     FETCH_INST()                        @ load rINST from rPC
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     cmp     ip, #OP_MOVE_EXCEPTION      @ is it "move-exception"?
-    streq   r9, [r10, #offThread_exception] @ yes, restore the exception
+    streq   r9, [rSELF, #offThread_exception] @ yes, restore the exception
     GOTO_OPCODE(ip)                     @ jump to next instruction
 
-.LnotCaughtLocally: @ r9=exception, r10=self
+    @ Manage debugger bookkeeping
+7:
+    str     rPC, [rSELF, #offThread_pc]     @ update interpSave.pc
+    str     rFP, [rSELF, #offThread_fp]     @ update interpSave.fp
+    mov     r0, rSELF                       @ arg0<- self
+    mov     r1, r9                          @ arg1<- exception
+    bl      dvmReportExceptionThrow         @ (self, exception)
+    b       8b                              @ resume with normal handling
+
+.LnotCaughtLocally: @ r9=exception
     /* fix stack overflow if necessary */
-    ldrb    r1, [r10, #offThread_stackOverflowed]
+    ldrb    r1, [rSELF, #offThread_stackOverflowed]
     cmp     r1, #0                      @ did we overflow earlier?
-    movne   r0, r10                     @ if yes: r0<- self
+    movne   r0, rSELF                   @ if yes: r0<- self
     movne   r1, r9                      @ if yes: r1<- exception
     blne    dvmCleanupStackOverflow     @ if yes: call(self)
 
@@ -965,14 +950,14 @@ common_exceptionThrown:
     /* call __android_log_print(prio, tag, format, ...) */
     /* "Exception %s from %s:%d not caught locally" */
     @ dvmLineNumFromPC(method, pc - method->insns)
-    ldr     r0, [rGLUE, #offGlue_method]
+    ldr     r0, [rSELF, #offThread_method]
     ldr     r1, [r0, #offMethod_insns]
     sub     r1, rPC, r1
     asr     r1, r1, #1
     bl      dvmLineNumFromPC
     str     r0, [sp, #-4]!
     @ dvmGetMethodSourceFile(method)
-    ldr     r0, [rGLUE, #offGlue_method]
+    ldr     r0, [rSELF, #offThread_method]
     bl      dvmGetMethodSourceFile
     str     r0, [sp, #-4]!
     @ exception->clazz->descriptor
@@ -984,11 +969,10 @@ common_exceptionThrown:
     mov     r0, #3                      @ LOG_DEBUG
     bl      __android_log_print
 #endif
-    str     r9, [r10, #offThread_exception] @ restore exception
+    str     r9, [rSELF, #offThread_exception] @ restore exception
     mov     r0, r9                      @ r0<- exception
-    mov     r1, r10                     @ r1<- self
+    mov     r1, rSELF                   @ r1<- self
     bl      dvmReleaseTrackedAlloc      @ release the exception
-    mov     r1, #0                      @ "want switch" = false
     b       common_gotoBail             @ bail out
 
 
@@ -997,19 +981,44 @@ common_exceptionThrown:
      */
     .if     0
 .LexceptionOld:
-    SAVE_PC_FP_TO_GLUE()                @ export state
-    mov     r0, rGLUE                   @ arg to function
+    SAVE_PC_FP_TO_SELF()                @ export state
+    mov     r0, rSELF                   @ arg to function
     bl      dvmMterp_exceptionThrown
     b       common_resumeAfterGlueCall
     .endif
 
+#if defined(WITH_JIT)
+    /*
+     * If the JIT is actively building a trace we need to make sure
+     * that the field is fully resolved before including the current
+     * instruction.
+     *
+     * On entry:
+     *     r10: &dvmDex->pResFields[field]
+     *     r0:  field pointer (must preserve)
+     */
+common_verifyField:
+    ldrb    r3, [rSELF, #offThread_subMode]  @ r3 <- submode byte
+    ands    r3, #kSubModeJitTraceBuild
+    bxeq    lr                          @ Not building trace, continue
+    ldr     r1, [r10]                   @ r1<- reload resolved StaticField ptr
+    cmp     r1, #0                      @ resolution complete?
+    bxne    lr                          @ yes, continue
+    stmfd   sp!, {r0-r2,lr}             @ save regs
+    mov     r0, rSELF
+    mov     r1, rPC
+    bl      dvmJitEndTraceSelect        @ (self,pc) end trace before this inst
+    ldmfd   sp!, {r0-r2, lr}
+    bx      lr                          @ return
+#endif
 
 /*
  * After returning from a "glued" function, pull out the updated
  * values and start executing at the next instruction.
  */
 common_resumeAfterGlueCall:
-    LOAD_PC_FP_FROM_GLUE()              @ pull rPC and rFP out of glue
+    LOAD_PC_FP_FROM_SELF()              @ pull rPC and rFP out of thread
+    ldr     rIBASE, [rSELF, #offThread_curHandlerTable]  @ refresh
     FETCH_INST()                        @ load rINST from rPC
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     GOTO_OPCODE(ip)                     @ jump to next instruction
@@ -1017,15 +1026,14 @@ common_resumeAfterGlueCall:
 /*
  * Invalid array index. Note that our calling convention is strange; we use r1
  * and r3 because those just happen to be the registers all our callers are
- * using. We shuffle them here before calling the C function.
+ * using. We move r3 before calling the C function, but r1 happens to match.
  * r1: index
  * r3: size
  */
 common_errArrayIndex:
     EXPORT_PC()
-    mov     r0, r1
-    mov     r1, r3
-    bl      dvmThrowAIOOBE
+    mov     r0, r3
+    bl      dvmThrowArrayIndexOutOfBoundsException
     b       common_exceptionThrown
 
 /*
@@ -1033,29 +1041,28 @@ common_errArrayIndex:
  */
 common_errDivideByZero:
     EXPORT_PC()
-    ldr     r0, strArithmeticException
-    ldr     r1, strDivideByZero
-    bl      dvmThrowException
+    ldr     r0, strDivideByZero
+    bl      dvmThrowArithmeticException
     b       common_exceptionThrown
 
 /*
  * Attempt to allocate an array with a negative size.
+ * On entry: length in r1
  */
 common_errNegativeArraySize:
     EXPORT_PC()
-    ldr     r0, strNegativeArraySizeException
-    mov     r1, #0
-    bl      dvmThrowException
+    mov     r0, r1                                @ arg0 <- len
+    bl      dvmThrowNegativeArraySizeException    @ (len)
     b       common_exceptionThrown
 
 /*
  * Invocation of a non-existent method.
+ * On entry: method name in r1
  */
 common_errNoSuchMethod:
     EXPORT_PC()
-    ldr     r0, strNoSuchMethodError
-    mov     r1, #0
-    bl      dvmThrowException
+    mov     r0, r1
+    bl      dvmThrowNoSuchMethodError
     b       common_exceptionThrown
 
 /*
@@ -1065,9 +1072,8 @@ common_errNoSuchMethod:
  */
 common_errNullObject:
     EXPORT_PC()
-    ldr     r0, strNullPointerException
-    mov     r1, #0
-    bl      dvmThrowException
+    mov     r0, #0
+    bl      dvmThrowNullPointerException
     b       common_exceptionThrown
 
 /*
@@ -1203,17 +1209,8 @@ dvmConfigureFP:
  * String references, must be close to the code that uses them.
  */
     .align  2
-strArithmeticException:
-    .word   .LstrArithmeticException
 strDivideByZero:
     .word   .LstrDivideByZero
-strNegativeArraySizeException:
-    .word   .LstrNegativeArraySizeException
-strNoSuchMethodError:
-    .word   .LstrNoSuchMethodError
-strNullPointerException:
-    .word   .LstrNullPointerException
-
 strLogTag:
     .word   .LstrLogTag
 strExceptionNotCaughtLocally:
@@ -1241,23 +1238,10 @@ strPrintLong:
 
 .LstrBadEntryPoint:
     .asciz  "Bad entry point %d\n"
-.LstrArithmeticException:
-    .asciz  "Ljava/lang/ArithmeticException;"
-.LstrDivideByZero:
-    .asciz  "divide by zero"
 .LstrFilledNewArrayNotImpl:
     .asciz  "filled-new-array only implemented for objects and 'int'"
-.LstrInternalError:
-    .asciz  "Ljava/lang/InternalError;"
-.LstrInstantiationError:
-    .asciz  "Ljava/lang/InstantiationError;"
-.LstrNegativeArraySizeException:
-    .asciz  "Ljava/lang/NegativeArraySizeException;"
-.LstrNoSuchMethodError:
-    .asciz  "Ljava/lang/NoSuchMethodError;"
-.LstrNullPointerException:
-    .asciz  "Ljava/lang/NullPointerException;"
-
+.LstrDivideByZero:
+    .asciz  "divide by zero"
 .LstrLogTag:
     .asciz  "mterp"
 .LstrExceptionNotCaughtLocally:

@@ -41,6 +41,33 @@ int dvmPrepForDexOpt(const char* bootClassPath, DexOptimizerMode dexOptMode,
     DexClassVerifyMode verifyMode, int dexoptFlags);
 
 /*
+ * Look up the set of classes and members used directly by the VM,
+ * storing references to them into the globals instance. See
+ * Globals.h. This function is exposed so that dex optimization may
+ * call it (while avoiding doing other unnecessary VM initialization).
+ *
+ * The function returns a success flag (true == success).
+ */
+bool dvmFindRequiredClassesAndMembers(void);
+
+/*
+ * Look up required members of the class Reference, and set the global
+ * reference to Reference itself too. This needs to be done separately
+ * from dvmFindRequiredClassesAndMembers(), during the course of
+ * linking the class Reference (which is done specially).
+ */
+bool dvmFindReferenceMembers(ClassObject* classReference);
+
+typedef void ObjectReferenceCallback(Object** pReference);
+
+/*
+ * Perform a callback on each of the object references used directly
+ * by the VM. The value passed into the callback is a pointer to where
+ * the reference is stored.
+ */
+void dvmForEachRequiredReference(ObjectReferenceCallback* callback);
+
+/*
  * Replacement for fprintf() when we want to send a message to the console.
  * This defaults to fprintf(), but will use the JNI fprintf callback if
  * one was provided.

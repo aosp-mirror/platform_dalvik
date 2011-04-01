@@ -5,8 +5,8 @@
     movzwl    2(rPC),%eax            # eax<- AAAA
     GET_VREG_WORD rINST %ecx 0       # rINSTw_WORD<- v[BBBB+0]
     GET_VREG_WORD %ecx %ecx 1        # ecx<- v[BBBB+1]
-    FETCH_INST_OPCODE 3 %edx
     SET_VREG_WORD rINST %eax 0       # v[AAAA+0]<- rINST
-    ADVANCE_PC 3
     SET_VREG_WORD %ecx %eax 1        # v[AAAA+1]<- ecx
-    GOTO_NEXT_R %edx
+    FETCH_INST_OPCODE 3 %ecx
+    ADVANCE_PC 3
+    GOTO_NEXT_R %ecx

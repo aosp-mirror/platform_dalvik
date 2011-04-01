@@ -4,26 +4,17 @@
      * Synchronize on an object.
      */
     /* monitor-enter vAA */
-    movl    rGLUE,%ecx
+    movl    rSELF,%ecx
     GET_VREG_R %eax rINST               # eax<- vAA
-    movl    offGlue_self(%ecx),%ecx     # ecx<- glue->self
     FETCH_INST_WORD 1
     testl   %eax,%eax                   # null object?
-    EXPORT_PC                           # need for precise GC, MONITOR_TRACKING
-    jne     .L${opcode}_continue
-    jmp     common_errNullObject
-%break
-
-.L${opcode}_continue:
+    EXPORT_PC                           # need for precise GC
+    je     common_errNullObject
     movl    %ecx,OUT_ARG0(%esp)
     movl    %eax,OUT_ARG1(%esp)
+    SPILL(rIBASE)
     call    dvmLockObject               # dvmLockObject(self,object)
-#ifdef WITH_DEADLOCK_PREDICTION
-    movl    rGLUE,%ecx
-    movl    offGlueSelf(%ecx),%ecx      # ecx<- glue->self
-    movl    offThread_exception(%ecx),%eax
-    testl   %eax,%eax
-    jne     common_exceptionThrown
-#endif
+    UNSPILL(rIBASE)
+    FETCH_INST_OPCODE 1 %ecx
     ADVANCE_PC 1
-    GOTO_NEXT
+    GOTO_NEXT_R %ecx

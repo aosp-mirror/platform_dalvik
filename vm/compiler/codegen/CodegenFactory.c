@@ -57,7 +57,7 @@ static void loadValueDirect(CompilationUnit *cUnit, RegLocation rlSrc,
     if (rlSrc.location == kLocPhysReg) {
         genRegCopy(cUnit, reg1, rlSrc.lowReg);
     } else  if (rlSrc.location == kLocRetval) {
-        loadWordDisp(cUnit, rGLUE, offsetof(InterpState, retval), reg1);
+        loadWordDisp(cUnit, rSELF, offsetof(Thread, retval), reg1);
     } else {
         assert(rlSrc.location == kLocDalvikFrame);
         loadWordDisp(cUnit, rFP, dvmCompilerS2VReg(cUnit, rlSrc.sRegLow) << 2,
@@ -90,7 +90,7 @@ static void loadValueDirectWide(CompilationUnit *cUnit, RegLocation rlSrc,
     if (rlSrc.location == kLocPhysReg) {
         genRegCopyWide(cUnit, regLo, regHi, rlSrc.lowReg, rlSrc.highReg);
     } else if (rlSrc.location == kLocRetval) {
-        loadBaseDispWide(cUnit, NULL, rGLUE, offsetof(InterpState, retval),
+        loadBaseDispWide(cUnit, NULL, rSELF, offsetof(Thread, retval),
                          regLo, regHi, INVALID_SREG);
     } else {
         assert(rlSrc.location == kLocDalvikFrame);
@@ -124,7 +124,7 @@ static RegLocation loadValue(CompilationUnit *cUnit, RegLocation rlSrc,
         rlSrc.location = kLocPhysReg;
         dvmCompilerMarkLive(cUnit, rlSrc.lowReg, rlSrc.sRegLow);
     } else if (rlSrc.location == kLocRetval) {
-        loadWordDisp(cUnit, rGLUE, offsetof(InterpState, retval), rlSrc.lowReg);
+        loadWordDisp(cUnit, rSELF, offsetof(Thread, retval), rlSrc.lowReg);
         rlSrc.location = kLocPhysReg;
         dvmCompilerClobber(cUnit, rlSrc.lowReg);
     }
@@ -164,7 +164,7 @@ static void storeValue(CompilationUnit *cUnit, RegLocation rlDest,
 
 
     if (rlDest.location == kLocRetval) {
-        storeBaseDisp(cUnit, rGLUE, offsetof(InterpState, retval),
+        storeBaseDisp(cUnit, rSELF, offsetof(Thread, retval),
                       rlDest.lowReg, kWord);
         dvmCompilerClobber(cUnit, rlDest.lowReg);
     } else {
@@ -192,7 +192,7 @@ static RegLocation loadValueWide(CompilationUnit *cUnit, RegLocation rlSrc,
         dvmCompilerMarkLive(cUnit, rlSrc.highReg,
                             dvmCompilerSRegHi(rlSrc.sRegLow));
     } else if (rlSrc.location == kLocRetval) {
-        loadBaseDispWide(cUnit, NULL, rGLUE, offsetof(InterpState, retval),
+        loadBaseDispWide(cUnit, NULL, rSELF, offsetof(Thread, retval),
                          rlSrc.lowReg, rlSrc.highReg, INVALID_SREG);
         rlSrc.location = kLocPhysReg;
         dvmCompilerClobber(cUnit, rlSrc.lowReg);
@@ -242,7 +242,7 @@ static void storeValueWide(CompilationUnit *cUnit, RegLocation rlDest,
 
 
     if (rlDest.location == kLocRetval) {
-        storeBaseDispWide(cUnit, rGLUE, offsetof(InterpState, retval),
+        storeBaseDispWide(cUnit, rSELF, offsetof(Thread, retval),
                           rlDest.lowReg, rlDest.highReg);
         dvmCompilerClobber(cUnit, rlDest.lowReg);
         dvmCompilerClobber(cUnit, rlDest.highReg);
@@ -262,4 +262,34 @@ static void storeValueWide(CompilationUnit *cUnit, RegLocation rlDest,
             dvmCompilerMarkDefWide(cUnit, rlDest, defStart, defEnd);
         }
     }
+}
+
+/*
+ * Load a class pointer value into a fixed or temp register.  Target
+ * register is clobbered, and marked inUse.
+ */
+static ArmLIR *loadClassPointer(CompilationUnit *cUnit, int rDest, int value)
+{
+    ArmLIR *res;
+    cUnit->hasClassLiterals = true;
+    if (dvmCompilerIsTemp(cUnit, rDest)) {
+        dvmCompilerClobber(cUnit, rDest);
+        dvmCompilerMarkInUse(cUnit, rDest);
+    }
+    ArmLIR *dataTarget = scanLiteralPool(cUnit->classPointerList, value, 0);
+    if (dataTarget == NULL) {
+        dataTarget = addWordData(cUnit, &cUnit->classPointerList, value);
+        /* Counts the number of class pointers in this translation */
+        cUnit->numClassPointers++;
+    }
+    ArmLIR *loadPcRel = (ArmLIR *) dvmCompilerNew(sizeof(ArmLIR), true);
+    loadPcRel->opcode = kThumb2LdrPcRel12;
+    loadPcRel->generic.target = (LIR *) dataTarget;
+    loadPcRel->operands[0] = rDest;
+    setupResourceMasks(loadPcRel);
+    setMemRefType(loadPcRel, true, kLiteral);
+    loadPcRel->aliasInfo = dataTarget->operands[0];
+    res = loadPcRel;
+    dvmCompilerAppendLIR(cUnit, (LIR *) loadPcRel);
+    return res;
 }

@@ -16,6 +16,6 @@
     andb     $$0xf,rINSTbl              # rINST<- A
     $instr                              # for example: addl %ecx, %eax
     SET_VREG $result rINST
-    FETCH_INST_OPCODE 2 %edx
+    FETCH_INST_OPCODE 2 %ecx
     ADVANCE_PC 2
-    GOTO_NEXT_R %edx
+    GOTO_NEXT_R %ecx

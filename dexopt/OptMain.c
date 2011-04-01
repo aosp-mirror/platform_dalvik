@@ -151,6 +151,7 @@ static int extractAndProcessZip(int zipFd, int cacheFd,
             case 'n':   dexOptMode = OPTIMIZE_MODE_NONE;        break;
             case 'v':   dexOptMode = OPTIMIZE_MODE_VERIFIED;    break;
             case 'a':   dexOptMode = OPTIMIZE_MODE_ALL;         break;
+            case 'f':   dexOptMode = OPTIMIZE_MODE_FULL;        break;
             default:                                            break;
             }
         }
@@ -546,17 +547,6 @@ bail:
     if (vmStarted) {
         LOGI("DexOpt shutting down, result=%d\n", result);
         dvmShutdown();
-    }
-#endif
-
-    //dvmLinearAllocDump(NULL);
-
-#if 0
-    {
-        extern int gDvm__totalInstr, gDvm__gcInstr, gDvm__gcData,
-               gDvm__gcSimpleData;
-        LOGI("GC DATA: totinst=%d, gcinst=%d, gcdata=%d simpled=%d\n",
-            gDvm__totalInstr, gDvm__gcInstr, gDvm__gcData, gDvm__gcSimpleData);
     }
 #endif
 

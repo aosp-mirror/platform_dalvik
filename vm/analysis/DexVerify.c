@@ -102,7 +102,7 @@ static bool computeWidthsAndCountOps(VerifierData* vdata)
         }
 
         Opcode opcode = dexOpcodeFromCodeUnit(*insns);
-        if (opcode == OP_NEW_INSTANCE)
+        if (opcode == OP_NEW_INSTANCE || opcode == OP_NEW_INSTANCE_JUMBO)
             newInstanceCount++;
         if (opcode == OP_MONITOR_ENTER)
             monitorEnterCount++;
@@ -111,7 +111,7 @@ static bool computeWidthsAndCountOps(VerifierData* vdata)
         i += width;
         insns += width;
     }
-    if (i != (int) dvmGetMethodInsnsSize(meth)) {
+    if (i != (int) vdata->insnsSize) {
         LOG_VFY_METH(meth, "VFY: code did not end where expected (%d vs. %d)\n",
             i, dvmGetMethodInsnsSize(meth));
         goto bail;
@@ -140,19 +140,16 @@ static bool scanTryCatchBlocks(const Method* meth, InsnFlags* insnFlags)
     const DexCode* pCode = dvmGetMethodCode(meth);
     u4 triesSize = pCode->triesSize;
     const DexTry* pTries;
-    u4 handlersSize;
-    u4 offset;
-    u4 i;
+    u4 idx;
 
     if (triesSize == 0) {
         return true;
     }
 
     pTries = dexGetTries(pCode);
-    handlersSize = dexGetHandlersSize(pCode);
 
-    for (i = 0; i < triesSize; i++) {
-        const DexTry* pTry = &pTries[i];
+    for (idx = 0; idx < triesSize; idx++) {
+        const DexTry* pTry = &pTries[idx];
         u4 start = pTry->startAddr;
         u4 end = start + pTry->insnCount;
         u4 addr;
@@ -180,8 +177,9 @@ static bool scanTryCatchBlocks(const Method* meth, InsnFlags* insnFlags)
     }
 
     /* Iterate over each of the handlers to verify target addresses. */
-    offset = dexGetFirstHandlerOffset(pCode);
-    for (i = 0; i < handlersSize; i++) {
+    u4 handlersSize = dexGetHandlersSize(pCode);
+    u4 offset = dexGetFirstHandlerOffset(pCode);
+    for (idx = 0; idx < handlersSize; idx++) {
         DexCatchIterator iterator;
         dexCatchIteratorInit(&iterator, pCode, offset);
 
@@ -252,6 +250,7 @@ static bool verifyMethod(Method* meth)
     vdata.insnRegCount = meth->registersSize;
     vdata.insnFlags = NULL;
     vdata.uninitMap = NULL;
+    vdata.basicBlocks = NULL;
 
     /*
      * If there aren't any instructions, make sure that's expected, then
@@ -285,8 +284,7 @@ static bool verifyMethod(Method* meth)
      * TODO: Consider keeping a reusable pre-allocated array sitting
      * around for smaller methods.
      */
-    vdata.insnFlags = (InsnFlags*)
-        calloc(dvmGetMethodInsnsSize(meth), sizeof(InsnFlags));
+    vdata.insnFlags = (InsnFlags*) calloc(vdata.insnsSize, sizeof(InsnFlags));
     if (vdata.insnFlags == NULL)
         goto bail;
 
@@ -307,12 +305,14 @@ static bool verifyMethod(Method* meth)
 
     /*
      * Set the "in try" flags for all instructions guarded by a "try" block.
+     * Also sets the "branch target" flag on exception handlers.
      */
     if (!scanTryCatchBlocks(meth, vdata.insnFlags))
         goto bail;
 
     /*
-     * Perform static instruction verification.
+     * Perform static instruction verification.  Also sets the "branch
+     * target" flags.
      */
     if (!verifyInstructions(&vdata))
         goto bail;
@@ -332,6 +332,7 @@ success:
     result = true;
 
 bail:
+    dvmFreeVfyBasicBlocks(&vdata);
     dvmFreeUninitInstanceMap(vdata.uninitMap);
     free(vdata.insnFlags);
     return result;
@@ -717,10 +718,10 @@ static bool checkBranchTarget(const Method* meth, InsnFlags* insnFlags,
     int curOffset, bool selfOkay)
 {
     const int insnCount = dvmGetMethodInsnsSize(meth);
-    int offset, absOffset;
+    s4 offset, absOffset;
     bool isConditional;
 
-    if (!dvmGetBranchTarget(meth, insnFlags, curOffset, &offset,
+    if (!dvmGetBranchOffset(meth, insnFlags, curOffset, &offset,
             &isConditional))
         return false;
 
@@ -950,20 +951,25 @@ static bool verifyInstructions(VerifierData* vdata)
             okay &= checkStringIndex(pDvmDex, decInsn.vB);
             break;
         case OP_CONST_CLASS:
+        case OP_CONST_CLASS_JUMBO:
         case OP_CHECK_CAST:
+        case OP_CHECK_CAST_JUMBO:
             okay &= checkRegisterIndex(meth, decInsn.vA);
             okay &= checkTypeIndex(pDvmDex, decInsn.vB);
             break;
         case OP_INSTANCE_OF:
+        case OP_INSTANCE_OF_JUMBO:
             okay &= checkRegisterIndex(meth, decInsn.vA);
             okay &= checkRegisterIndex(meth, decInsn.vB);
             okay &= checkTypeIndex(pDvmDex, decInsn.vC);
             break;
         case OP_NEW_INSTANCE:
+        case OP_NEW_INSTANCE_JUMBO:
             okay &= checkRegisterIndex(meth, decInsn.vA);
             okay &= checkNewInstance(pDvmDex, decInsn.vB);
             break;
         case OP_NEW_ARRAY:
+        case OP_NEW_ARRAY_JUMBO:
             okay &= checkRegisterIndex(meth, decInsn.vA);
             okay &= checkRegisterIndex(meth, decInsn.vB);
             okay &= checkNewArray(pDvmDex, decInsn.vC);
@@ -1071,44 +1077,72 @@ static bool verifyInstructions(VerifierData* vdata)
             okay &= checkBranchTarget(meth, insnFlags, codeOffset, false);
             break;
         case OP_IGET:
+        case OP_IGET_JUMBO:
         case OP_IGET_OBJECT:
+        case OP_IGET_OBJECT_JUMBO:
         case OP_IGET_BOOLEAN:
+        case OP_IGET_BOOLEAN_JUMBO:
         case OP_IGET_BYTE:
+        case OP_IGET_BYTE_JUMBO:
         case OP_IGET_CHAR:
+        case OP_IGET_CHAR_JUMBO:
         case OP_IGET_SHORT:
+        case OP_IGET_SHORT_JUMBO:
         case OP_IPUT:
+        case OP_IPUT_JUMBO:
         case OP_IPUT_OBJECT:
+        case OP_IPUT_OBJECT_JUMBO:
         case OP_IPUT_BOOLEAN:
+        case OP_IPUT_BOOLEAN_JUMBO:
         case OP_IPUT_BYTE:
+        case OP_IPUT_BYTE_JUMBO:
         case OP_IPUT_CHAR:
+        case OP_IPUT_CHAR_JUMBO:
         case OP_IPUT_SHORT:
+        case OP_IPUT_SHORT_JUMBO:
             okay &= checkRegisterIndex(meth, decInsn.vA);
             okay &= checkRegisterIndex(meth, decInsn.vB);
             okay &= checkFieldIndex(pDvmDex, decInsn.vC);
             break;
         case OP_IGET_WIDE:
+        case OP_IGET_WIDE_JUMBO:
         case OP_IPUT_WIDE:
+        case OP_IPUT_WIDE_JUMBO:
             okay &= checkWideRegisterIndex(meth, decInsn.vA);
             okay &= checkRegisterIndex(meth, decInsn.vB);
             okay &= checkFieldIndex(pDvmDex, decInsn.vC);
             break;
         case OP_SGET:
+        case OP_SGET_JUMBO:
         case OP_SGET_OBJECT:
+        case OP_SGET_OBJECT_JUMBO:
         case OP_SGET_BOOLEAN:
+        case OP_SGET_BOOLEAN_JUMBO:
         case OP_SGET_BYTE:
+        case OP_SGET_BYTE_JUMBO:
         case OP_SGET_CHAR:
+        case OP_SGET_CHAR_JUMBO:
         case OP_SGET_SHORT:
+        case OP_SGET_SHORT_JUMBO:
         case OP_SPUT:
+        case OP_SPUT_JUMBO:
         case OP_SPUT_OBJECT:
+        case OP_SPUT_OBJECT_JUMBO:
         case OP_SPUT_BOOLEAN:
+        case OP_SPUT_BOOLEAN_JUMBO:
         case OP_SPUT_BYTE:
+        case OP_SPUT_BYTE_JUMBO:
         case OP_SPUT_CHAR:
+        case OP_SPUT_CHAR_JUMBO:
         case OP_SPUT_SHORT:
+        case OP_SPUT_SHORT_JUMBO:
             okay &= checkRegisterIndex(meth, decInsn.vA);
             okay &= checkFieldIndex(pDvmDex, decInsn.vB);
             break;
         case OP_SGET_WIDE:
+        case OP_SGET_WIDE_JUMBO:
         case OP_SPUT_WIDE:
+        case OP_SPUT_WIDE_JUMBO:
             okay &= checkWideRegisterIndex(meth, decInsn.vA);
             okay &= checkFieldIndex(pDvmDex, decInsn.vB);
             break;
@@ -1118,6 +1152,7 @@ static bool verifyInstructions(VerifierData* vdata)
             okay &= checkVarargRegs(meth, &decInsn);
             break;
         case OP_FILLED_NEW_ARRAY_RANGE:
+        case OP_FILLED_NEW_ARRAY_JUMBO:
             okay &= checkTypeIndex(pDvmDex, decInsn.vB);
             okay &= checkVarargRangeRegs(meth, &decInsn);
             break;
@@ -1131,10 +1166,15 @@ static bool verifyInstructions(VerifierData* vdata)
             okay &= checkVarargRegs(meth, &decInsn);
             break;
         case OP_INVOKE_VIRTUAL_RANGE:
+        case OP_INVOKE_VIRTUAL_JUMBO:
         case OP_INVOKE_SUPER_RANGE:
+        case OP_INVOKE_SUPER_JUMBO:
         case OP_INVOKE_DIRECT_RANGE:
+        case OP_INVOKE_DIRECT_JUMBO:
         case OP_INVOKE_STATIC_RANGE:
+        case OP_INVOKE_STATIC_JUMBO:
         case OP_INVOKE_INTERFACE_RANGE:
+        case OP_INVOKE_INTERFACE_JUMBO:
             okay &= checkMethodIndex(pDvmDex, decInsn.vB);
             okay &= checkVarargRangeRegs(meth, &decInsn);
             break;
@@ -1152,11 +1192,25 @@ static bool verifyInstructions(VerifierData* vdata)
         case OP_IPUT_WIDE_VOLATILE:
         case OP_SGET_WIDE_VOLATILE:
         case OP_SPUT_WIDE_VOLATILE:
+        case OP_IGET_VOLATILE_JUMBO:
+        case OP_IPUT_VOLATILE_JUMBO:
+        case OP_SGET_VOLATILE_JUMBO:
+        case OP_SPUT_VOLATILE_JUMBO:
+        case OP_IGET_OBJECT_VOLATILE_JUMBO:
+        case OP_IPUT_OBJECT_VOLATILE_JUMBO:
+        case OP_SGET_OBJECT_VOLATILE_JUMBO:
+        case OP_SPUT_OBJECT_VOLATILE_JUMBO:
+        case OP_IGET_WIDE_VOLATILE_JUMBO:
+        case OP_IPUT_WIDE_VOLATILE_JUMBO:
+        case OP_SGET_WIDE_VOLATILE_JUMBO:
+        case OP_SPUT_WIDE_VOLATILE_JUMBO:
         case OP_BREAKPOINT:
         case OP_THROW_VERIFICATION_ERROR:
+        case OP_THROW_VERIFICATION_ERROR_JUMBO:
         case OP_EXECUTE_INLINE:
         case OP_EXECUTE_INLINE_RANGE:
-        case OP_INVOKE_DIRECT_EMPTY:
+        case OP_INVOKE_OBJECT_INIT_RANGE:
+        case OP_INVOKE_OBJECT_INIT_JUMBO:
         case OP_RETURN_VOID_BARRIER:
         case OP_IGET_QUICK:
         case OP_IGET_WIDE_QUICK:
@@ -1178,7 +1232,210 @@ static bool verifyInstructions(VerifierData* vdata)
         case OP_UNUSED_79:
         case OP_UNUSED_7A:
         case OP_DISPATCH_FF:
-            LOGE("VFY: unexpected opcode %02x\n", decInsn.opcode);
+        case OP_UNUSED_27FF:
+        case OP_UNUSED_28FF:
+        case OP_UNUSED_29FF:
+        case OP_UNUSED_2AFF:
+        case OP_UNUSED_2BFF:
+        case OP_UNUSED_2CFF:
+        case OP_UNUSED_2DFF:
+        case OP_UNUSED_2EFF:
+        case OP_UNUSED_2FFF:
+        case OP_UNUSED_30FF:
+        case OP_UNUSED_31FF:
+        case OP_UNUSED_32FF:
+        case OP_UNUSED_33FF:
+        case OP_UNUSED_34FF:
+        case OP_UNUSED_35FF:
+        case OP_UNUSED_36FF:
+        case OP_UNUSED_37FF:
+        case OP_UNUSED_38FF:
+        case OP_UNUSED_39FF:
+        case OP_UNUSED_3AFF:
+        case OP_UNUSED_3BFF:
+        case OP_UNUSED_3CFF:
+        case OP_UNUSED_3DFF:
+        case OP_UNUSED_3EFF:
+        case OP_UNUSED_3FFF:
+        case OP_UNUSED_40FF:
+        case OP_UNUSED_41FF:
+        case OP_UNUSED_42FF:
+        case OP_UNUSED_43FF:
+        case OP_UNUSED_44FF:
+        case OP_UNUSED_45FF:
+        case OP_UNUSED_46FF:
+        case OP_UNUSED_47FF:
+        case OP_UNUSED_48FF:
+        case OP_UNUSED_49FF:
+        case OP_UNUSED_4AFF:
+        case OP_UNUSED_4BFF:
+        case OP_UNUSED_4CFF:
+        case OP_UNUSED_4DFF:
+        case OP_UNUSED_4EFF:
+        case OP_UNUSED_4FFF:
+        case OP_UNUSED_50FF:
+        case OP_UNUSED_51FF:
+        case OP_UNUSED_52FF:
+        case OP_UNUSED_53FF:
+        case OP_UNUSED_54FF:
+        case OP_UNUSED_55FF:
+        case OP_UNUSED_56FF:
+        case OP_UNUSED_57FF:
+        case OP_UNUSED_58FF:
+        case OP_UNUSED_59FF:
+        case OP_UNUSED_5AFF:
+        case OP_UNUSED_5BFF:
+        case OP_UNUSED_5CFF:
+        case OP_UNUSED_5DFF:
+        case OP_UNUSED_5EFF:
+        case OP_UNUSED_5FFF:
+        case OP_UNUSED_60FF:
+        case OP_UNUSED_61FF:
+        case OP_UNUSED_62FF:
+        case OP_UNUSED_63FF:
+        case OP_UNUSED_64FF:
+        case OP_UNUSED_65FF:
+        case OP_UNUSED_66FF:
+        case OP_UNUSED_67FF:
+        case OP_UNUSED_68FF:
+        case OP_UNUSED_69FF:
+        case OP_UNUSED_6AFF:
+        case OP_UNUSED_6BFF:
+        case OP_UNUSED_6CFF:
+        case OP_UNUSED_6DFF:
+        case OP_UNUSED_6EFF:
+        case OP_UNUSED_6FFF:
+        case OP_UNUSED_70FF:
+        case OP_UNUSED_71FF:
+        case OP_UNUSED_72FF:
+        case OP_UNUSED_73FF:
+        case OP_UNUSED_74FF:
+        case OP_UNUSED_75FF:
+        case OP_UNUSED_76FF:
+        case OP_UNUSED_77FF:
+        case OP_UNUSED_78FF:
+        case OP_UNUSED_79FF:
+        case OP_UNUSED_7AFF:
+        case OP_UNUSED_7BFF:
+        case OP_UNUSED_7CFF:
+        case OP_UNUSED_7DFF:
+        case OP_UNUSED_7EFF:
+        case OP_UNUSED_7FFF:
+        case OP_UNUSED_80FF:
+        case OP_UNUSED_81FF:
+        case OP_UNUSED_82FF:
+        case OP_UNUSED_83FF:
+        case OP_UNUSED_84FF:
+        case OP_UNUSED_85FF:
+        case OP_UNUSED_86FF:
+        case OP_UNUSED_87FF:
+        case OP_UNUSED_88FF:
+        case OP_UNUSED_89FF:
+        case OP_UNUSED_8AFF:
+        case OP_UNUSED_8BFF:
+        case OP_UNUSED_8CFF:
+        case OP_UNUSED_8DFF:
+        case OP_UNUSED_8EFF:
+        case OP_UNUSED_8FFF:
+        case OP_UNUSED_90FF:
+        case OP_UNUSED_91FF:
+        case OP_UNUSED_92FF:
+        case OP_UNUSED_93FF:
+        case OP_UNUSED_94FF:
+        case OP_UNUSED_95FF:
+        case OP_UNUSED_96FF:
+        case OP_UNUSED_97FF:
+        case OP_UNUSED_98FF:
+        case OP_UNUSED_99FF:
+        case OP_UNUSED_9AFF:
+        case OP_UNUSED_9BFF:
+        case OP_UNUSED_9CFF:
+        case OP_UNUSED_9DFF:
+        case OP_UNUSED_9EFF:
+        case OP_UNUSED_9FFF:
+        case OP_UNUSED_A0FF:
+        case OP_UNUSED_A1FF:
+        case OP_UNUSED_A2FF:
+        case OP_UNUSED_A3FF:
+        case OP_UNUSED_A4FF:
+        case OP_UNUSED_A5FF:
+        case OP_UNUSED_A6FF:
+        case OP_UNUSED_A7FF:
+        case OP_UNUSED_A8FF:
+        case OP_UNUSED_A9FF:
+        case OP_UNUSED_AAFF:
+        case OP_UNUSED_ABFF:
+        case OP_UNUSED_ACFF:
+        case OP_UNUSED_ADFF:
+        case OP_UNUSED_AEFF:
+        case OP_UNUSED_AFFF:
+        case OP_UNUSED_B0FF:
+        case OP_UNUSED_B1FF:
+        case OP_UNUSED_B2FF:
+        case OP_UNUSED_B3FF:
+        case OP_UNUSED_B4FF:
+        case OP_UNUSED_B5FF:
+        case OP_UNUSED_B6FF:
+        case OP_UNUSED_B7FF:
+        case OP_UNUSED_B8FF:
+        case OP_UNUSED_B9FF:
+        case OP_UNUSED_BAFF:
+        case OP_UNUSED_BBFF:
+        case OP_UNUSED_BCFF:
+        case OP_UNUSED_BDFF:
+        case OP_UNUSED_BEFF:
+        case OP_UNUSED_BFFF:
+        case OP_UNUSED_C0FF:
+        case OP_UNUSED_C1FF:
+        case OP_UNUSED_C2FF:
+        case OP_UNUSED_C3FF:
+        case OP_UNUSED_C4FF:
+        case OP_UNUSED_C5FF:
+        case OP_UNUSED_C6FF:
+        case OP_UNUSED_C7FF:
+        case OP_UNUSED_C8FF:
+        case OP_UNUSED_C9FF:
+        case OP_UNUSED_CAFF:
+        case OP_UNUSED_CBFF:
+        case OP_UNUSED_CCFF:
+        case OP_UNUSED_CDFF:
+        case OP_UNUSED_CEFF:
+        case OP_UNUSED_CFFF:
+        case OP_UNUSED_D0FF:
+        case OP_UNUSED_D1FF:
+        case OP_UNUSED_D2FF:
+        case OP_UNUSED_D3FF:
+        case OP_UNUSED_D4FF:
+        case OP_UNUSED_D5FF:
+        case OP_UNUSED_D6FF:
+        case OP_UNUSED_D7FF:
+        case OP_UNUSED_D8FF:
+        case OP_UNUSED_D9FF:
+        case OP_UNUSED_DAFF:
+        case OP_UNUSED_DBFF:
+        case OP_UNUSED_DCFF:
+        case OP_UNUSED_DDFF:
+        case OP_UNUSED_DEFF:
+        case OP_UNUSED_DFFF:
+        case OP_UNUSED_E0FF:
+        case OP_UNUSED_E1FF:
+        case OP_UNUSED_E2FF:
+        case OP_UNUSED_E3FF:
+        case OP_UNUSED_E4FF:
+        case OP_UNUSED_E5FF:
+        case OP_UNUSED_E6FF:
+        case OP_UNUSED_E7FF:
+        case OP_UNUSED_E8FF:
+        case OP_UNUSED_E9FF:
+        case OP_UNUSED_EAFF:
+        case OP_UNUSED_EBFF:
+        case OP_UNUSED_ECFF:
+        case OP_UNUSED_EDFF:
+        case OP_UNUSED_EEFF:
+        case OP_UNUSED_EFFF:
+        case OP_UNUSED_F0FF:
+        case OP_UNUSED_F1FF:
+            LOGE("VFY: unexpected opcode %04x\n", decInsn.opcode);
             okay = false;
             break;
 
@@ -1194,45 +1451,18 @@ static bool verifyInstructions(VerifierData* vdata)
             return false;
         }
 
-        /*
-         * Certain types of instructions can be GC points.  To support precise
-         * GC, all such instructions must export the PC in the interpreter,
-         * or the GC won't be able to identify the current PC for the thread.
-         */
-        const int kGcMask = kInstrCanBranch | kInstrCanSwitch |
-            kInstrCanThrow | kInstrCanReturn;
-
         OpcodeFlags opFlags = dexGetFlagsFromOpcode(decInsn.opcode);
-        if ((opFlags & kGcMask) != 0) {
+        if ((opFlags & VERIFY_GC_INST_MASK) != 0) {
             /*
-             * This instruction is probably a GC point.  Branch instructions
-             * only qualify if they go backward, so for those we need to
-             * check the offset.
+             * This instruction is a GC point.  If space is a concern,
+             * the set of GC points could be reduced by eliminating
+             * foward branches.
+             *
+             * TODO: we could also scan the targets of a "switch" statement,
+             * and if none of them branch backward we could ignore that
+             * instruction as well.
              */
-            int offset;
-            bool unused;
-            if ((opFlags & kInstrCanBranch) != 0) {
-                /*
-                 * Get the target.  This is slightly redundant, since the
-                 * component was tagged with kVfyBranch, but it's easier
-                 * to just grab it again than cart the state around.
-                 */
-                if (!dvmGetBranchTarget(meth, insnFlags, codeOffset, &offset,
-                        &unused))
-                {
-                    /* should never happen */
-                    LOGE("VFY: opcode %02x flagged as can branch, no target\n",
-                        decInsn.opcode);
-                    dvmAbort();
-                }
-                if (offset <= 0) {
-                    /* backward branch, set GC flag */
-                    dvmInsnSetGcPoint(insnFlags, codeOffset, true);
-                }
-            } else {
-                /* not a branch instruction, always set GC flag */
-                dvmInsnSetGcPoint(insnFlags, codeOffset, true);
-            }
+            dvmInsnSetGcPoint(insnFlags, codeOffset, true);
         }
 
         assert(width > 0);

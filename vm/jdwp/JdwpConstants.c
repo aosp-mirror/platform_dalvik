@@ -174,6 +174,27 @@ const char* dvmJdwpEventKindStr(enum JdwpEventKind kind)
 }
 
 /*
+ * Return a string for the ModKind.
+ */
+const char* dvmJdwpModKindStr(enum JdwpModKind kind)
+{
+    switch (kind) {
+    case MK_COUNT:              return "COUNT";
+    case MK_CONDITIONAL:        return "CONDITIONAL";
+    case MK_THREAD_ONLY:        return "THREAD_ONLY";
+    case MK_CLASS_ONLY:         return "CLASS_ONLY";
+    case MK_CLASS_MATCH:        return "CLASS_MATCH";
+    case MK_CLASS_EXCLUDE:      return "CLASS_EXCLUDE";
+    case MK_LOCATION_ONLY:      return "LOCATION_ONLY";
+    case MK_EXCEPTION_ONLY:     return "EXCEPTION_ONLY";
+    case MK_FIELD_ONLY:         return "FIELD_ONLY";
+    case MK_STEP:               return "STEP";
+    case MK_INSTANCE_ONLY:      return "INSTANCE_ONLY";
+    default:                    return "?UNKNOWN?";
+    }
+}
+
+/*
  * Return a string for the StepDepth.
  */
 const char* dvmJdwpStepDepthStr(enum JdwpStepDepth depth)

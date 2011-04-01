@@ -19,11 +19,6 @@
 #ifndef _DALVIK_REFLECT_REFLECT
 #define _DALVIK_REFLECT_REFLECT
 
-bool dvmReflectStartup(void);
-bool dvmReflectProxyStartup(void);
-bool dvmReflectAnnotationStartup(void);
-void dvmReflectShutdown(void);
-
 /*
  * During startup, validate the "box" classes, e.g. java/lang/Integer.
  */
@@ -35,6 +30,11 @@ bool dvmValidateBoxClasses();
  * Includes both class and instance fields.
  */
 ArrayObject* dvmGetDeclaredFields(ClassObject* clazz, bool publicOnly);
+
+/*
+ * Get the named field.
+ */
+Object* dvmGetDeclaredField(ClassObject* clazz, StringObject* nameObj);
 
 /*
  * Get all constructors declared by a class.
@@ -140,6 +140,24 @@ ArrayObject* dvmGetClassAnnotations(const ClassObject* clazz);
 ArrayObject* dvmGetMethodAnnotations(const Method* method);
 ArrayObject* dvmGetFieldAnnotations(const Field* field);
 ArrayObject* dvmGetParameterAnnotations(const Method* method);
+
+/*
+ * Return the annotation if it exists.
+ */
+Object* dvmGetClassAnnotation(const ClassObject* clazz, const ClassObject* annotationClazz);
+Object* dvmGetMethodAnnotation(const ClassObject* clazz, const Method* method,
+        const ClassObject* annotationClazz);
+Object* dvmGetFieldAnnotation(const ClassObject* clazz, const Field* method,
+        const ClassObject* annotationClazz);
+
+/*
+ * Return true if the annotation exists.
+ */
+bool dvmIsClassAnnotationPresent(const ClassObject* clazz, const ClassObject* annotationClazz);
+bool dvmIsMethodAnnotationPresent(const ClassObject* clazz, const Method* method,
+        const ClassObject* annotationClazz);
+bool dvmIsFieldAnnotationPresent(const ClassObject* clazz, const Field* method,
+        const ClassObject* annotationClazz);
 
 /*
  * Find the default value for an annotation member.

@@ -8,24 +8,20 @@
      */
     /* op vB, {vD, vE, vF, vG, vA}, class@CCCC */
     /* op {vCCCC..v(CCCC+AA-1)}, meth@BBBB */
-    movl      rGLUE,%ecx
+    movl      rSELF,%ecx
     movzwl    2(rPC),%eax               # eax<- BBBB
-    movl      offGlue_methodClassDex(%ecx),%ecx # ecx<- pDvmDex
+    movl      offThread_methodClassDex(%ecx),%ecx # ecx<- pDvmDex
     EXPORT_PC
     movl      offDvmDex_pResMethods(%ecx),%ecx  # ecx<- pDvmDex->pResMethods
     movl      (%ecx,%eax,4),%eax        # eax<- resolved methodToCall
     testl     %eax,%eax
     jne       common_invokeMethod${routine}
-    movl      rGLUE,%ecx
-    movl      offGlue_method(%ecx),%ecx # ecx<- glue->method
+    movl      rSELF,%ecx
+    movl      offThread_method(%ecx),%ecx # ecx<- self->method
     movzwl    2(rPC),%eax
     movl      offMethod_clazz(%ecx),%ecx# ecx<- method->clazz
     movl      %eax,OUT_ARG1(%esp)       # arg1<- BBBB
     movl      %ecx,OUT_ARG0(%esp)       # arg0<- clazz
-    jmp       .L${opcode}_continue
-%break
-
-.L${opcode}_continue:
     movl      $$METHOD_STATIC,%eax
     movl      %eax,OUT_ARG2(%esp)       # arg2<- flags
     call      dvmResolveMethod          # call(clazz,ref,flags)

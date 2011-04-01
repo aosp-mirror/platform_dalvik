@@ -255,10 +255,6 @@ void dvmCheckCallJNIMethod_staticNoRef(const u4* args, JValue* pResult,
     checkVirtualMethod(_env, _obj, _methid, __FUNCTION__)
 #define CHECK_STATIC_METHOD(_env, _clazz, _methid)                          \
     checkStaticMethod(_env, _clazz, _methid, __FUNCTION__)
-#define CHECK_METHOD_ARGS_A(_env, _methid, _args)                           \
-    checkMethodArgsA(_env, _methid, _args, __FUNCTION__)
-#define CHECK_METHOD_ARGS_V(_env, _methid, _args)                           \
-    checkMethodArgsV(_env, _methid, _args, __FUNCTION__)
 
 /*
  * Prints trace messages when a native method calls a JNI function such as
@@ -350,8 +346,7 @@ static void checkThread(JNIEnv* env, int flags, const char* func)
         printWarn = true;
 
         /* this is a bad idea -- need to throw as we exit, or abort func */
-        //dvmThrowException("Ljava/lang/RuntimeException;",
-        //    "invalid use of JNI env ptr");
+        //dvmThrowRuntimeException("invalid use of JNI env ptr");
     } else if (((JNIEnvExt*) env)->self != dvmThreadSelf()) {
         /* correct JNIEnv*; make sure the "self" pointer is correct */
         LOGE("JNI ERROR: env->self != thread-self (%p vs. %p)",
@@ -408,6 +403,25 @@ static void checkThread(JNIEnv* env, int flags, const char* func)
 }
 
 /*
+ * Get a human-oriented name for a given primitive type.
+ */
+static const char* primitiveTypeToName(PrimitiveType primType) {
+    switch (primType) {
+        case PRIM_VOID:    return "void";
+        case PRIM_BOOLEAN: return "boolean";
+        case PRIM_BYTE:    return "byte";
+        case PRIM_SHORT:   return "short";
+        case PRIM_CHAR:    return "char";
+        case PRIM_INT:     return "int";
+        case PRIM_LONG:    return "long";
+        case PRIM_FLOAT:   return "float";
+        case PRIM_DOUBLE:  return "double";
+        case PRIM_NOT:     return "Object/Array";
+        default:           return "???";
+    }
+}
+
+/*
  * Verify that the field is of the appropriate type.  If the field has an
  * object type, "obj" is the object we're trying to assign into it.
  *
@@ -416,11 +430,6 @@ static void checkThread(JNIEnv* env, int flags, const char* func)
 static void checkFieldType(JNIEnv* env, jobject jobj, jfieldID fieldID,
     PrimitiveType prim, bool isStatic, const char* func)
 {
-    static const char* primNameList[] = {
-        "Object/Array", "boolean", "char", "float", "double",
-        "byte", "short", "int", "long", "void"
-    };
-    const char** primNames = &primNameList[1];      // shift up for PRIM_NOT
     Field* field = (Field*) fieldID;
     bool printWarn = false;
 
@@ -430,6 +439,7 @@ static void checkFieldType(JNIEnv* env, jobject jobj, jfieldID fieldID,
     }
 
     if (field->signature[0] == 'L' || field->signature[0] == '[') {
+        JNI_ENTER();
         Object* obj = dvmDecodeIndirectRef(env, jobj);
         if (obj != NULL) {
             ClassObject* fieldClass =
@@ -445,9 +455,10 @@ static void checkFieldType(JNIEnv* env, jobject jobj, jfieldID fieldID,
                 printWarn = true;
             }
         }
-    } else if (field->signature[0] != PRIM_TYPE_TO_LETTER[prim]) {
+        JNI_EXIT();
+    } else if (dexGetPrimitiveTypeFromDescriptorChar(field->signature[0]) != prim) {
         LOGW("JNI WARNING: field '%s' with type '%s' set with wrong type (%s)",
-            field->name, field->signature, primNames[prim]);
+            field->name, field->signature, primitiveTypeToName(prim));
         printWarn = true;
     } else if (isStatic && !dvmIsStaticField(field)) {
         if (isStatic)
@@ -478,14 +489,6 @@ static void checkObject0(JNIEnv* env, jobject jobj, const char* func)
 
     if (jobj == NULL)
         return;
-
-    if (dvmIsWeakGlobalRef(jobj)) {
-        /*
-         * Normalize and continue.  This will tell us if the PhantomReference
-         * object is valid.
-         */
-        jobj = dvmNormalizeWeakGlobalRef((jweak) jobj);
-    }
 
     if (dvmGetJNIRefType(env, jobj) == JNIInvalidRefType) {
         LOGW("JNI WARNING: %p is not a valid JNI reference", jobj);
@@ -580,8 +583,8 @@ static void checkString(JNIEnv* env, jstring jstr, const char* func)
          * we're doing it again over in checkObject().
          */
         if (dvmIsValidObject(obj))
-            LOGW("JNI WARNING: jstring %p points to non-string object (%s)",
-                jstr, func);
+            LOGW("JNI WARNING: jstring %p points to object of type %s (%s)",
+                jstr, obj->clazz->descriptor, func);
         else
             LOGW("JNI WARNING: jstring %p is not a valid object (%s)", jstr,
                 func);
@@ -692,26 +695,12 @@ fail:
  */
 static void checkClassName(JNIEnv* env, const char* className, const char* func)
 {
-    const char* cp;
-
-    /* quick check for illegal chars */
-    cp = className;
-    while (*cp != '\0') {
-        if (*cp == '.')     /* catch "java.lang.String" */
-            goto fail;
-        cp++;
+    if (!dexIsValidClassName(className, false)) {
+        LOGW("JNI WARNING: illegal class name '%s' (%s)", className, func);
+        LOGW("             (should be formed like 'dalvik/system/DexFile')");
+        LOGW("             or '[Ldalvik/system/DexFile;' or '[[B')");
+        abortMaybe();
     }
-    if (*(cp-1) == ';' && *className == 'L')
-        goto fail;         /* catch "Ljava/lang/String;" */
-
-    // TODO: need a more rigorous check here
-
-    return;
-
-fail:
-    LOGW("JNI WARNING: illegal class name '%s' (%s)", className, func);
-    LOGW("             (should be formed like 'java/lang/String')");
-    abortMaybe();
 }
 
 /*
@@ -817,6 +806,7 @@ static void checkSig(JNIEnv* env, jmethodID methodID, char expectedSigByte,
  */
 static void checkStaticFieldID(JNIEnv* env, jclass jclazz, jfieldID fieldID)
 {
+    JNI_ENTER();
     ClassObject* clazz = (ClassObject*) dvmDecodeIndirectRef(env, jclazz);
     StaticField* base = &clazz->sfields[0];
     int fieldCount = clazz->sfieldCount;
@@ -829,6 +819,7 @@ static void checkStaticFieldID(JNIEnv* env, jclass jclazz, jfieldID fieldID)
         LOGW("             base=%p count=%d", base, fieldCount);
         abortMaybe();
     }
+    JNI_EXIT();
 }
 
 /*
@@ -920,83 +911,6 @@ static void checkStaticMethod(JNIEnv* env, jclass jclazz, jmethodID methodID,
     JNI_EXIT();
 }
 
-/*
- * Verify that the reference arguments being passed in are appropriate for
- * this method.
- *
- * At a minimum we want to make sure that the argument is a valid
- * reference.  We can also do a class lookup on the method signature
- * and verify that the object is an instance of the appropriate class,
- * but that's more expensive.
- *
- * The basic tests are redundant when indirect references are enabled,
- * since reference arguments must always be converted explicitly.  An
- * instanceof test would not be redundant, but we're not doing that at
- * this time.
- */
-static void checkMethodArgsV(JNIEnv* env, jmethodID methodID, va_list args,
-    const char* func)
-{
-#ifndef USE_INDIRECT_REF
-    JNI_ENTER();
-
-    const Method* meth = (const Method*) methodID;
-    const char* desc = meth->shorty;
-
-    LOGV("V-checking %s.%s:%s...", meth->clazz->descriptor, meth->name, desc);
-
-    while (*++desc != '\0') {       /* pre-incr to skip return type */
-        switch (*desc) {
-        case 'L':
-            {     /* 'shorty' descr uses L for all refs, incl array */
-                jobject argObj = va_arg(args, jobject);
-                checkObject0(env, argObj, func);
-            }
-            break;
-        case 'D':       /* 8-byte double */
-        case 'J':       /* 8-byte long */
-        case 'F':       /* floats normalized to doubles */
-            (void) va_arg(args, u8);
-            break;
-        default:        /* Z B C S I -- all passed as 32-bit integers */
-            (void) va_arg(args, u4);
-            break;
-        }
-    }
-
-    JNI_EXIT();
-#endif
-}
-
-/*
- * Same purpose as checkMethodArgsV, but with arguments in an array of
- * jvalue structs.
- */
-static void checkMethodArgsA(JNIEnv* env, jmethodID methodID, jvalue* args,
-    const char* func)
-{
-#ifndef USE_INDIRECT_REF
-    JNI_ENTER();
-
-    const Method* meth = (const Method*) methodID;
-    const char* desc = meth->shorty;
-    int idx = 0;
-
-    LOGV("A-checking %s.%s:%s...", meth->clazz->descriptor, meth->name, desc);
-
-    while (*++desc != '\0') {       /* pre-incr to skip return type */
-        if (*desc == 'L') {
-            jobject argObj = args[idx].l;
-            checkObject0(env, argObj, func);
-        }
-
-        idx++;
-    }
-
-    JNI_EXIT();
-#endif
-}
-
 
 /*
  * ===========================================================================
@@ -1056,7 +970,7 @@ static void* createGuardedCopy(const void* buf, size_t len, bool modOkay)
     uLong adler = 0;
     if (!modOkay) {
         adler = adler32(0L, Z_NULL, 0);
-        adler = adler32(adler, buf, len);
+        adler = adler32(adler, (const Bytef*)buf, len);
         *(uLong*)newBuf = adler;
     }
 
@@ -1142,7 +1056,7 @@ static bool checkGuardedCopy(const void* dataBuf, bool modOkay)
      */
     if (!modOkay) {
         uLong adler = adler32(0L, Z_NULL, 0);
-        adler = adler32(adler, dataBuf, len);
+        adler = adler32(adler, (const Bytef*)dataBuf, len);
         if (pExtra->adler != adler) {
             LOGE("JNI: buffer modified (0x%08lx vs 0x%08lx) at addr %p",
                 pExtra->adler, adler, dataBuf);
@@ -1191,19 +1105,21 @@ static size_t getGuardedCopyOriginalLen(const void* dataBuf)
  */
 static int dvmPrimitiveTypeWidth(PrimitiveType primType)
 {
-    static const int lengths[PRIM_MAX] = {
-        1,      // boolean
-        2,      // char
-        4,      // float
-        8,      // double
-        1,      // byte
-        2,      // short
-        4,      // int
-        8,      // long
-        -1,     // void
-    };
-    assert(primType >= 0 && primType < PRIM_MAX);
-    return lengths[primType];
+    switch (primType) {
+        case PRIM_BOOLEAN: return 1;
+        case PRIM_BYTE:    return 1;
+        case PRIM_SHORT:   return 2;
+        case PRIM_CHAR:    return 2;
+        case PRIM_INT:     return 4;
+        case PRIM_LONG:    return 8;
+        case PRIM_FLOAT:   return 4;
+        case PRIM_DOUBLE:  return 8;
+        case PRIM_VOID:
+        default: {
+            assert(false);
+            return -1;
+        }
+    }
 }
 
 /*
@@ -1213,6 +1129,7 @@ static int dvmPrimitiveTypeWidth(PrimitiveType primType)
 static void* createGuardedPACopy(JNIEnv* env, const jarray jarr,
     jboolean* isCopy)
 {
+    JNI_ENTER();
     ArrayObject* arrObj = (ArrayObject*) dvmDecodeIndirectRef(env, jarr);
     PrimitiveType primType = arrObj->obj.clazz->elementClass->primitiveType;
     int len = arrObj->length * dvmPrimitiveTypeWidth(primType);
@@ -1223,6 +1140,7 @@ static void* createGuardedPACopy(JNIEnv* env, const jarray jarr,
     if (isCopy != NULL)
         *isCopy = JNI_TRUE;
 
+    JNI_EXIT();
     return result;
 }
 
@@ -1233,14 +1151,15 @@ static void* createGuardedPACopy(JNIEnv* env, const jarray jarr,
 static void* releaseGuardedPACopy(JNIEnv* env, jarray jarr, void* dataBuf,
     int mode)
 {
+    JNI_ENTER();
     ArrayObject* arrObj = (ArrayObject*) dvmDecodeIndirectRef(env, jarr);
     bool release, copyBack;
-    u1* result;
+    u1* result = NULL;
 
     if (!checkGuardedCopy(dataBuf, true)) {
         LOGE("JNI: failed guarded copy check in releaseGuardedPACopy");
         abortMaybe();
-        return NULL;
+        goto bail;
     }
 
     switch (mode) {
@@ -1258,7 +1177,7 @@ static void* releaseGuardedPACopy(JNIEnv* env, jarray jarr, void* dataBuf,
     default:
         LOGE("JNI: bad release mode %d", mode);
         dvmAbort();
-        return NULL;
+        goto bail;
     }
 
     if (copyBack) {
@@ -1275,6 +1194,8 @@ static void* releaseGuardedPACopy(JNIEnv* env, jarray jarr, void* dataBuf,
     /* pointer is to the array contents; back up to the array object */
     result -= offsetof(ArrayObject, contents);
 
+bail:
+    JNI_EXIT();
     return result;
 }
 
@@ -1467,7 +1388,6 @@ static void Check_DeleteGlobalRef(JNIEnv* env, jobject globalRef)
 {
     CHECK_ENTER(env, kFlag_Default | kFlag_ExcepOkay);
     CHECK_OBJECT(env, globalRef);
-#ifdef USE_INDIRECT_REF
     if (globalRef != NULL &&
         dvmGetJNIRefType(env, globalRef) != JNIGlobalRefType)
     {
@@ -1475,7 +1395,6 @@ static void Check_DeleteGlobalRef(JNIEnv* env, jobject globalRef)
             globalRef, dvmGetJNIRefType(env, globalRef));
         abortMaybe();
     } else
-#endif
     {
         BASE_ENV(env)->DeleteGlobalRef(env, globalRef);
     }
@@ -1496,7 +1415,6 @@ static void Check_DeleteLocalRef(JNIEnv* env, jobject localRef)
 {
     CHECK_ENTER(env, kFlag_Default | kFlag_ExcepOkay);
     CHECK_OBJECT(env, localRef);
-#ifdef USE_INDIRECT_REF
     if (localRef != NULL &&
         dvmGetJNIRefType(env, localRef) != JNILocalRefType)
     {
@@ -1504,7 +1422,6 @@ static void Check_DeleteLocalRef(JNIEnv* env, jobject localRef)
             localRef, dvmGetJNIRefType(env, localRef));
         abortMaybe();
     } else
-#endif
     {
         BASE_ENV(env)->DeleteLocalRef(env, localRef);
     }
@@ -1547,14 +1464,9 @@ static jobject Check_NewObject(JNIEnv* env, jclass clazz, jmethodID methodID,
     CHECK_ENTER(env, kFlag_Default);
     CHECK_CLASS(env, clazz);
     jobject result;
-    va_list args, tmpArgs;
+    va_list args;
 
     va_start(args, methodID);
-
-    va_copy(tmpArgs, args);
-    CHECK_METHOD_ARGS_V(env, methodID, tmpArgs);
-    va_end(tmpArgs);
-
     result = BASE_ENV(env)->NewObjectV(env, clazz, methodID, args);
     va_end(args);
 
@@ -1568,11 +1480,6 @@ static jobject Check_NewObjectV(JNIEnv* env, jclass clazz, jmethodID methodID,
     CHECK_CLASS(env, clazz);
     jobject result;
 
-    va_list tmpArgs;
-    va_copy(tmpArgs, args);
-    CHECK_METHOD_ARGS_V(env, methodID, tmpArgs);
-    va_end(tmpArgs);
-
     result = BASE_ENV(env)->NewObjectV(env, clazz, methodID, args);
     CHECK_EXIT(env);
     return result;
@@ -1584,7 +1491,6 @@ static jobject Check_NewObjectA(JNIEnv* env, jclass clazz, jmethodID methodID,
     CHECK_CLASS(env, clazz);
     jobject result;
 
-    CHECK_METHOD_ARGS_A(env, methodID, args);
     result = BASE_ENV(env)->NewObjectA(env, clazz, methodID, args);
     CHECK_EXIT(env);
     return result;
@@ -1762,11 +1668,8 @@ SET_TYPE_FIELD(jdouble, Double, PRIM_DOUBLE);
         CHECK_SIG(env, methodID, _retsig, false);                           \
         CHECK_VIRTUAL_METHOD(env, obj, methodID);                           \
         _retdecl;                                                           \
-        va_list args, tmpArgs;                                              \
+        va_list args;                                                       \
         va_start(args, methodID);                                           \
-        va_copy(tmpArgs, args);                                             \
-        CHECK_METHOD_ARGS_V(env, methodID, tmpArgs);                        \
-        va_end(tmpArgs);                                                    \
         _retasgn BASE_ENV(env)->Call##_jname##MethodV(env, obj, methodID,   \
             args);                                                          \
         va_end(args);                                                       \
@@ -1781,10 +1684,6 @@ SET_TYPE_FIELD(jdouble, Double, PRIM_DOUBLE);
         CHECK_SIG(env, methodID, _retsig, false);                           \
         CHECK_VIRTUAL_METHOD(env, obj, methodID);                           \
         _retdecl;                                                           \
-        va_list tmpArgs;                                                    \
-        va_copy(tmpArgs, args);                                             \
-        CHECK_METHOD_ARGS_V(env, methodID, tmpArgs);                        \
-        va_end(tmpArgs);                                                    \
         _retasgn BASE_ENV(env)->Call##_jname##MethodV(env, obj, methodID,   \
             args);                                                          \
         CHECK_EXIT(env);                                                    \
@@ -1798,13 +1697,12 @@ SET_TYPE_FIELD(jdouble, Double, PRIM_DOUBLE);
         CHECK_SIG(env, methodID, _retsig, false);                           \
         CHECK_VIRTUAL_METHOD(env, obj, methodID);                           \
         _retdecl;                                                           \
-        CHECK_METHOD_ARGS_A(env, methodID, args);                           \
         _retasgn BASE_ENV(env)->Call##_jname##MethodA(env, obj, methodID,   \
             args);                                                          \
         CHECK_EXIT(env);                                                    \
         return _retok;                                                      \
     }
-CALL_VIRTUAL(jobject, Object, Object* result, result=, result, 'L');
+CALL_VIRTUAL(jobject, Object, Object* result, result=(Object*), result, 'L');
 CALL_VIRTUAL(jboolean, Boolean, jboolean result, result=, result, 'Z');
 CALL_VIRTUAL(jbyte, Byte, jbyte result, result=, result, 'B');
 CALL_VIRTUAL(jchar, Char, jchar result, result=, result, 'C');
@@ -1826,11 +1724,8 @@ CALL_VIRTUAL(void, Void, , , , 'V');
         CHECK_SIG(env, methodID, _retsig, false);                           \
         CHECK_VIRTUAL_METHOD(env, obj, methodID);                           \
         _retdecl;                                                           \
-        va_list args, tmpArgs;                                              \
+        va_list args;                                                       \
         va_start(args, methodID);                                           \
-        va_copy(tmpArgs, args);                                             \
-        CHECK_METHOD_ARGS_V(env, methodID, tmpArgs);                        \
-        va_end(tmpArgs);                                                    \
         _retasgn BASE_ENV(env)->CallNonvirtual##_jname##MethodV(env, obj,   \
             clazz, methodID, args);                                         \
         va_end(args);                                                       \
@@ -1846,10 +1741,6 @@ CALL_VIRTUAL(void, Void, , , , 'V');
         CHECK_SIG(env, methodID, _retsig, false);                           \
         CHECK_VIRTUAL_METHOD(env, obj, methodID);                           \
         _retdecl;                                                           \
-        va_list tmpArgs;                                                    \
-        va_copy(tmpArgs, args);                                             \
-        CHECK_METHOD_ARGS_V(env, methodID, tmpArgs);                        \
-        va_end(tmpArgs);                                                    \
         _retasgn BASE_ENV(env)->CallNonvirtual##_jname##MethodV(env, obj,   \
             clazz, methodID, args);                                         \
         CHECK_EXIT(env);                                                    \
@@ -1864,13 +1755,12 @@ CALL_VIRTUAL(void, Void, , , , 'V');
         CHECK_SIG(env, methodID, _retsig, false);                           \
         CHECK_VIRTUAL_METHOD(env, obj, methodID);                           \
         _retdecl;                                                           \
-        CHECK_METHOD_ARGS_A(env, methodID, args);                           \
         _retasgn BASE_ENV(env)->CallNonvirtual##_jname##MethodA(env, obj,   \
             clazz, methodID, args);                                         \
         CHECK_EXIT(env);                                                    \
         return _retok;                                                      \
     }
-CALL_NONVIRTUAL(jobject, Object, Object* result, result=, result, 'L');
+CALL_NONVIRTUAL(jobject, Object, Object* result, result=(Object*), result, 'L');
 CALL_NONVIRTUAL(jboolean, Boolean, jboolean result, result=, result, 'Z');
 CALL_NONVIRTUAL(jbyte, Byte, jbyte result, result=, result, 'B');
 CALL_NONVIRTUAL(jchar, Char, jchar result, result=, result, 'C');
@@ -1891,11 +1781,8 @@ CALL_NONVIRTUAL(void, Void, , , , 'V');
         CHECK_SIG(env, methodID, _retsig, true);                            \
         CHECK_STATIC_METHOD(env, clazz, methodID);                          \
         _retdecl;                                                           \
-        va_list args, tmpArgs;                                              \
+        va_list args;                                                       \
         va_start(args, methodID);                                           \
-        va_copy(tmpArgs, args);                                             \
-        CHECK_METHOD_ARGS_V(env, methodID, tmpArgs);                        \
-        va_end(tmpArgs);                                                    \
         _retasgn BASE_ENV(env)->CallStatic##_jname##MethodV(env, clazz,     \
             methodID, args);                                                \
         va_end(args);                                                       \
@@ -1910,10 +1797,6 @@ CALL_NONVIRTUAL(void, Void, , , , 'V');
         CHECK_SIG(env, methodID, _retsig, true);                            \
         CHECK_STATIC_METHOD(env, clazz, methodID);                          \
         _retdecl;                                                           \
-        va_list tmpArgs;                                                    \
-        va_copy(tmpArgs, args);                                             \
-        CHECK_METHOD_ARGS_V(env, methodID, tmpArgs);                        \
-        va_end(tmpArgs);                                                    \
         _retasgn BASE_ENV(env)->CallStatic##_jname##MethodV(env, clazz,     \
             methodID, args);                                                \
         CHECK_EXIT(env);                                                    \
@@ -1927,13 +1810,12 @@ CALL_NONVIRTUAL(void, Void, , , , 'V');
         CHECK_SIG(env, methodID, _retsig, true);                            \
         CHECK_STATIC_METHOD(env, clazz, methodID);                          \
         _retdecl;                                                           \
-        CHECK_METHOD_ARGS_A(env, methodID, args);                           \
         _retasgn BASE_ENV(env)->CallStatic##_jname##MethodA(env, clazz,     \
             methodID, args);                                                \
         CHECK_EXIT(env);                                                    \
         return _retok;                                                      \
     }
-CALL_STATIC(jobject, Object, Object* result, result=, result, 'L');
+CALL_STATIC(jobject, Object, Object* result, result=(Object*), result, 'L');
 CALL_STATIC(jboolean, Boolean, jboolean result, result=, result, 'Z');
 CALL_STATIC(jbyte, Byte, jbyte result, result=, result, 'B');
 CALL_STATIC(jchar, Char, jchar result, result=, result, 'C');
@@ -1972,9 +1854,11 @@ static const jchar* Check_GetStringChars(JNIEnv* env, jstring string,
     const jchar* result;
     result = BASE_ENV(env)->GetStringChars(env, string, isCopy);
     if (((JNIEnvExt*)env)->forceDataCopy && result != NULL) {
-        // TODO: fix for indirect
-        int len = dvmStringLen(string) * 2;
-        result = (const jchar*) createGuardedCopy(result, len, false);
+        JNI_ENTER();
+        StringObject* strObj = (StringObject*) dvmDecodeIndirectRef(env, string);
+        int byteCount = dvmStringLen(strObj) * 2;
+        JNI_EXIT();
+        result = (const jchar*) createGuardedCopy(result, byteCount, false);
         if (isCopy != NULL)
             *isCopy = JNI_TRUE;
     }
@@ -2028,9 +1912,7 @@ static const char* Check_GetStringUTFChars(JNIEnv* env, jstring string,
     const char* result;
     result = BASE_ENV(env)->GetStringUTFChars(env, string, isCopy);
     if (((JNIEnvExt*)env)->forceDataCopy && result != NULL) {
-        // TODO: fix for indirect
-        int len = dvmStringUtf8ByteLen(string) + 1;
-        result = (const char*) createGuardedCopy(result, len, false);
+        result = (const char*) createGuardedCopy(result, strlen(result)+1, false);
         if (isCopy != NULL)
             *isCopy = JNI_TRUE;
     }
@@ -2318,9 +2200,11 @@ static const jchar* Check_GetStringCritical(JNIEnv* env, jstring string,
     const jchar* result;
     result = BASE_ENV(env)->GetStringCritical(env, string, isCopy);
     if (((JNIEnvExt*)env)->forceDataCopy && result != NULL) {
-        // TODO: fix for indirect
-        int len = dvmStringLen(string) * 2;
-        result = (const jchar*) createGuardedCopy(result, len, false);
+        JNI_ENTER();
+        StringObject* strObj = (StringObject*) dvmDecodeIndirectRef(env, string);
+        int byteCount = dvmStringLen(strObj) * 2;
+        JNI_EXIT();
+        result = (const jchar*) createGuardedCopy(result, byteCount, false);
         if (isCopy != NULL)
             *isCopy = JNI_TRUE;
     }

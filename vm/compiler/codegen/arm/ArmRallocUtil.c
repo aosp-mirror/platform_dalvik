@@ -29,7 +29,7 @@
  * Register usage for 16-bit Thumb systems:
  *     r0-r3: Temp/argument
  *     lr(r14):      Temp for translations, return address for handlers
- *     rGLUE(r6):    Pointer to InterpState
+ *     rSELF(r6):    Pointer to Thread
  *     rFP(r5):      Dalvik frame pointer
  *     r4, r7:       Temp for translations
  *     r8, r9, r10:   Temp preserved across C calls
@@ -38,7 +38,7 @@
  * Register usage for 32-bit Thumb systems:
  *     r0-r3: Temp/argument
  *     lr(r14):      Temp for translations, return address for handlers
- *     rGLUE(r6):    Pointer to InterpState
+ *     rSELF(r6):    Pointer to Thread
  *     rFP(r5):      Dalvik frame pointer
  *     r4, r7:       Temp for translations
  *     r8, r9, r10   Temp preserved across C calls
@@ -58,7 +58,7 @@ extern void dvmCompilerClobberCallRegs(CompilationUnit *cUnit)
     dvmCompilerClobber(cUnit, r9); // Need to do this?, be conservative
     dvmCompilerClobber(cUnit, r11);
     dvmCompilerClobber(cUnit, r12);
-    dvmCompilerClobber(cUnit, rlr);
+    dvmCompilerClobber(cUnit, r14lr);
 }
 
 /* Clobber all of the temps that might be used by a handler. */

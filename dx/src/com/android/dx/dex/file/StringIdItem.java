@@ -16,6 +16,7 @@
 
 package com.android.dx.dex.file;
 
+import com.android.dx.dex.SizeOf;
 import com.android.dx.rop.cst.CstUtf8;
 import com.android.dx.util.AnnotatedOutput;
 import com.android.dx.util.Hex;
@@ -25,9 +26,6 @@ import com.android.dx.util.Hex;
  */
 public final class StringIdItem
         extends IndexedItem implements Comparable {
-    /** size of instances when written out to a file, in bytes */
-    public static final int WRITE_SIZE = 4;
-
     /** {@code non-null;} the string value */
     private final CstUtf8 value;
 
@@ -80,7 +78,7 @@ public final class StringIdItem
     /** {@inheritDoc} */
     @Override
     public int writeSize() {
-        return WRITE_SIZE;
+        return SizeOf.STRING_ID_ITEM;
     }
 
     /** {@inheritDoc} */

@@ -22,16 +22,7 @@
 /*
  * Initialization.
  */
-bool dvmPropertiesStartup(int maxProps);
+bool dvmPropertiesStartup(void);
 void dvmPropertiesShutdown(void);
-
-/* add "-D" option to list */
-bool dvmAddCommandLineProperty(const char* argStr);
-
-/* called during property initialization */
-void dvmCreateDefaultProperties(Object* propObj);
-void dvmSetCommandLineProperties(Object* propObj);
-
-char* dvmGetProperty(const char* key);
 
 #endif /*_DALVIK_PROPERTIES*/

@@ -54,67 +54,6 @@ static const char* kDescrMemberClasses
 static const char* kDescrSignature  = "Ldalvik/annotation/Signature;";
 static const char* kDescrThrows     = "Ldalvik/annotation/Throws;";
 
-
-/*
- * Perform Annotation setup.
- */
-bool dvmReflectAnnotationStartup(void)
-{
-    Method* meth;
-
-    /*
-     * Find some standard Annotation classes.
-     */
-    gDvm.classJavaLangAnnotationAnnotationArray =
-        dvmFindArrayClass("[Ljava/lang/annotation/Annotation;", NULL);
-    gDvm.classJavaLangAnnotationAnnotationArrayArray =
-        dvmFindArrayClass("[[Ljava/lang/annotation/Annotation;", NULL);
-    if (gDvm.classJavaLangAnnotationAnnotationArray == NULL ||
-        gDvm.classJavaLangAnnotationAnnotationArrayArray == NULL)
-    {
-        LOGE("Could not find Annotation-array classes\n");
-        return false;
-    }
-
-    /*
-     * VM-specific annotation classes.
-     */
-    gDvm.classOrgApacheHarmonyLangAnnotationAnnotationFactory =
-        dvmFindSystemClassNoInit("Lorg/apache/harmony/lang/annotation/AnnotationFactory;");
-    gDvm.classOrgApacheHarmonyLangAnnotationAnnotationMember =
-        dvmFindSystemClassNoInit("Lorg/apache/harmony/lang/annotation/AnnotationMember;");
-    gDvm.classOrgApacheHarmonyLangAnnotationAnnotationMemberArray =
-        dvmFindArrayClass("[Lorg/apache/harmony/lang/annotation/AnnotationMember;", NULL);
-    if (gDvm.classOrgApacheHarmonyLangAnnotationAnnotationFactory == NULL ||
-        gDvm.classOrgApacheHarmonyLangAnnotationAnnotationMember == NULL ||
-        gDvm.classOrgApacheHarmonyLangAnnotationAnnotationMemberArray == NULL)
-    {
-        LOGE("Could not find android.lang annotation classes\n");
-        return false;
-    }
-
-    meth = dvmFindDirectMethodByDescriptor(gDvm.classOrgApacheHarmonyLangAnnotationAnnotationFactory,
-            "createAnnotation",
-            "(Ljava/lang/Class;[Lorg/apache/harmony/lang/annotation/AnnotationMember;)Ljava/lang/annotation/Annotation;");
-    if (meth == NULL) {
-        LOGE("Unable to find createAnnotation() in android AnnotationFactory\n");
-        return false;
-    }
-    gDvm.methOrgApacheHarmonyLangAnnotationAnnotationFactory_createAnnotation = meth;
-
-    meth = dvmFindDirectMethodByDescriptor(gDvm.classOrgApacheHarmonyLangAnnotationAnnotationMember,
-            "<init>",
-            "(Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Class;Ljava/lang/reflect/Method;)V");
-    if (meth == NULL) {
-        LOGE("Unable to find 4-arg constructor in android AnnotationMember\n");
-        return false;
-    }
-
-    gDvm.methOrgApacheHarmonyLangAnnotationAnnotationMember_init = meth;
-
-    return true;
-}
-
 /*
  * Read an unsigned LEB128 value from a buffer.  Advances "pBuf".
  */
@@ -488,8 +427,7 @@ static bool processAnnotationValue(const ClassObject* clazz,
                 DexFile* pDexFile = clazz->pDvmDex->pDexFile;
                 const char* desc = dexStringByTypeIdx(pDexFile, idx);
                 dvmClearException(self);
-                dvmThrowExceptionWithClassMessage(
-                        "Ljava/lang/TypeNotPresentException;", desc);
+                dvmThrowTypeNotPresentException(desc);
                 return false;
             } else {
                 dvmAddTrackedAlloc(elemObj, self);      // balance the Release
@@ -527,7 +465,7 @@ static bool processAnnotationValue(const ClassObject* clazz,
                 return false;
             } else {
                 assert(sfield->field.clazz->descriptor[0] == 'L');
-                elemObj = sfield->value.l;
+                elemObj = (Object*)sfield->value.l;
                 setObject = true;
                 dvmAddTrackedAlloc(elemObj, self);      // balance the Release
             }
@@ -562,7 +500,7 @@ static bool processAnnotationValue(const ClassObject* clazz,
                     dvmReleaseTrackedAlloc((Object*)newArray, self);
                     return false;
                 }
-                Object* obj = avalue.value.l;
+                Object* obj = (Object*)avalue.value.l;
                 dvmSetObjectArrayElement(newArray, count, obj);
                 dvmReleaseTrackedAlloc(obj, self);
             }
@@ -725,7 +663,7 @@ static Object* createAnnotationMember(const ClassObject* clazz,
         LOGW("Failed processing annotation value\n");
         goto bail;
     }
-    valueObj = avalue.value.l;
+    valueObj = (Object*)avalue.value.l;
 
     /* new member to hold the element */
     newMember =
@@ -868,15 +806,14 @@ static Object* processEncodedAnnotation(const ClassObject* clazz,
         goto bail;
     }
 
-    newAnno = result.l;
+    newAnno = (Object*)result.l;
 
 bail:
     dvmReleaseTrackedAlloc((Object*) elementArray, NULL);
     *pPtr = ptr;
     if (newAnno == NULL && !dvmCheckException(self)) {
         /* make sure an exception is raised */
-        dvmThrowException("Ljava/lang/RuntimeException;",
-            "failure in processEncodedAnnotation");
+        dvmThrowRuntimeException("failure in processEncodedAnnotation");
     }
     return newAnno;
 }
@@ -938,6 +875,67 @@ static ArrayObject* processAnnotationSet(const ClassObject* clazz,
     return annoArray;
 }
 
+/*
+ * Return the annotation item of the specified type in the annotation set, or
+ * NULL if the set contains no annotation of that type.
+ */
+static const DexAnnotationItem* getAnnotationItemFromAnnotationSet(
+        const ClassObject* clazz, const DexAnnotationSetItem* pAnnoSet,
+        int visibility, const ClassObject* annotationClazz)
+{
+    DexFile* pDexFile = clazz->pDvmDex->pDexFile;
+    const DexAnnotationItem* pAnnoItem;
+    int i;
+    const ClassObject* annoClass;
+    const u1* ptr;
+    u4 typeIdx;
+
+    /* we need these later; make sure they're initialized */
+    if (!dvmIsClassInitialized(gDvm.classOrgApacheHarmonyLangAnnotationAnnotationFactory))
+        dvmInitClass(gDvm.classOrgApacheHarmonyLangAnnotationAnnotationFactory);
+    if (!dvmIsClassInitialized(gDvm.classOrgApacheHarmonyLangAnnotationAnnotationMember))
+        dvmInitClass(gDvm.classOrgApacheHarmonyLangAnnotationAnnotationMember);
+
+    for (i = 0; i < (int) pAnnoSet->size; i++) {
+        pAnnoItem = dexGetAnnotationItem(pDexFile, pAnnoSet, i);
+        if (pAnnoItem->visibility != visibility)
+            continue;
+
+        ptr = pAnnoItem->annotation;
+        typeIdx = readUleb128(&ptr);
+
+        annoClass = dvmDexGetResolvedClass(clazz->pDvmDex, typeIdx);
+        if (annoClass == NULL) {
+            annoClass = dvmResolveClass(clazz, typeIdx, true);
+            if (annoClass == NULL) {
+                return NULL; // an exception is pending
+            }
+        }
+
+        if (annoClass == annotationClazz) {
+            return pAnnoItem;
+        }
+    }
+
+    return NULL;
+}
+
+/*
+ * Return the Annotation object of the specified type in the annotation set, or
+ * NULL if the set contains no annotation of that type.
+ */
+static Object* getAnnotationObjectFromAnnotationSet(const ClassObject* clazz,
+        const DexAnnotationSetItem* pAnnoSet, int visibility,
+        const ClassObject* annotationClazz)
+{
+    const DexAnnotationItem* pAnnoItem = getAnnotationItemFromAnnotationSet(
+            clazz, pAnnoSet, visibility, annotationClazz);
+    if (pAnnoItem == NULL) {
+        return NULL;
+    }
+    const u1* ptr = pAnnoItem->annotation;
+    return processEncodedAnnotation(clazz, &ptr);
+}
 
 /*
  * ===========================================================================
@@ -1162,7 +1160,7 @@ static Object* getAnnotationValue(const ClassObject* clazz,
         return GAV_FAILED;
     }
 
-    return avalue.value.l;
+    return (Object*)avalue.value.l;
 }
 
 
@@ -1248,6 +1246,35 @@ ArrayObject* dvmGetClassAnnotations(const ClassObject* clazz)
     }
 
     return annoArray;
+}
+
+/*
+ * Returns the annotation or NULL if it doesn't exist.
+ */
+Object* dvmGetClassAnnotation(const ClassObject* clazz,
+        const ClassObject* annotationClazz)
+{
+    const DexAnnotationSetItem* pAnnoSet = findAnnotationSetForClass(clazz);
+    if (pAnnoSet == NULL) {
+        return NULL;
+    }
+    return getAnnotationObjectFromAnnotationSet(clazz, pAnnoSet,
+            kDexVisibilityRuntime, annotationClazz);
+}
+
+/*
+ * Returns true if the annotation exists.
+ */
+bool dvmIsClassAnnotationPresent(const ClassObject* clazz,
+        const ClassObject* annotationClazz)
+{
+    const DexAnnotationSetItem* pAnnoSet = findAnnotationSetForClass(clazz);
+    if (pAnnoSet == NULL) {
+        return NULL;
+    }
+    const DexAnnotationItem* pAnnoItem = getAnnotationItemFromAnnotationSet(
+            clazz, pAnnoSet, kDexVisibilityRuntime, annotationClazz);
+    return (pAnnoItem != NULL);
 }
 
 /*
@@ -1675,6 +1702,35 @@ ArrayObject* dvmGetMethodAnnotations(const Method* method)
 }
 
 /*
+ * Returns the annotation or NULL if it doesn't exist.
+ */
+Object* dvmGetMethodAnnotation(const ClassObject* clazz, const Method* method,
+        const ClassObject* annotationClazz)
+{
+    const DexAnnotationSetItem* pAnnoSet = findAnnotationSetForMethod(method);
+    if (pAnnoSet == NULL) {
+        return NULL;
+    }
+    return getAnnotationObjectFromAnnotationSet(clazz, pAnnoSet,
+            kDexVisibilityRuntime, annotationClazz);
+}
+
+/*
+ * Returns true if the annotation exists.
+ */
+bool dvmIsMethodAnnotationPresent(const ClassObject* clazz,
+        const Method* method, const ClassObject* annotationClazz)
+{
+    const DexAnnotationSetItem* pAnnoSet = findAnnotationSetForMethod(method);
+    if (pAnnoSet == NULL) {
+        return NULL;
+    }
+    const DexAnnotationItem* pAnnoItem = getAnnotationItemFromAnnotationSet(
+            clazz, pAnnoSet, kDexVisibilityRuntime, annotationClazz);
+    return (pAnnoItem != NULL);
+}
+
+/*
  * Retrieve the Signature annotation, if any.  Returns NULL if no signature
  * exists.
  *
@@ -1806,7 +1862,7 @@ Object* dvmGetAnnotationDefaultValue(const Method* method)
 
     /* convert the return type, if necessary */
     ClassObject* methodReturn = dvmGetBoxedReturnType(method);
-    Object* obj = avalue.value.l;
+    Object* obj = (Object*)avalue.value.l;
     obj = convertReturnType(obj, methodReturn);
 
     return obj;
@@ -1946,6 +2002,35 @@ ArrayObject* dvmGetFieldAnnotations(const Field* field)
     }
 
     return annoArray;
+}
+
+/*
+ * Returns the annotation or NULL if it doesn't exist.
+ */
+Object* dvmGetFieldAnnotation(const ClassObject* clazz, const Field* field,
+        const ClassObject* annotationClazz)
+{
+    const DexAnnotationSetItem* pAnnoSet = findAnnotationSetForField(field);
+    if (pAnnoSet == NULL) {
+        return NULL;
+    }
+    return getAnnotationObjectFromAnnotationSet(clazz, pAnnoSet,
+            kDexVisibilityRuntime, annotationClazz);
+}
+
+/*
+ * Returns true if the annotation exists.
+ */
+bool dvmIsFieldAnnotationPresent(const ClassObject* clazz,
+        const Field* field, const ClassObject* annotationClazz)
+{
+    const DexAnnotationSetItem* pAnnoSet = findAnnotationSetForField(field);
+    if (pAnnoSet == NULL) {
+        return NULL;
+    }
+    const DexAnnotationItem* pAnnoItem = getAnnotationItemFromAnnotationSet(
+            clazz, pAnnoSet, kDexVisibilityRuntime, annotationClazz);
+    return (pAnnoItem != NULL);
 }
 
 /*

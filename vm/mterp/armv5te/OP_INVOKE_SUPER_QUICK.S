@@ -9,7 +9,7 @@
     /* op vB, {vD, vE, vF, vG, vA}, class@CCCC */
     /* op vAA, {vCCCC..v(CCCC+AA-1)}, meth@BBBB */
     FETCH(r10, 2)                       @ r10<- GFED or CCCC
-    ldr     r2, [rGLUE, #offGlue_method]    @ r2<- current method
+    ldr     r2, [rSELF, #offThread_method]    @ r2<- current method
     .if     (!$isrange)
     and     r10, r10, #15               @ r10<- D (or stays CCCC)
     .endif
@@ -17,9 +17,9 @@
     ldr     r2, [r2, #offMethod_clazz]  @ r2<- method->clazz
     EXPORT_PC()                         @ must export for invoke
     ldr     r2, [r2, #offClassObject_super]     @ r2<- method->clazz->super
-    GET_VREG(r3, r10)                   @ r3<- "this"
+    GET_VREG(r9, r10)                   @ r9<- "this"
     ldr     r2, [r2, #offClassObject_vtable]    @ r2<- ...clazz->super->vtable
-    cmp     r3, #0                      @ null "this" ref?
+    cmp     r9, #0                      @ null "this" ref?
     ldr     r0, [r2, r1, lsl #2]        @ r0<- super->vtable[BBBB]
     beq     common_errNullObject        @ "this" is null, throw exception
-    bl      common_invokeMethod${routine} @ continue on
+    bl      common_invokeMethod${routine} @ (r0=method, r9="this")

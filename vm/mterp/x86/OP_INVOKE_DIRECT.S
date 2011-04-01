@@ -13,24 +13,23 @@
      */
     /* op vB, {vD, vE, vF, vG, vA}, class@CCCC */
     /* op {vCCCC..v(CCCC+AA-1)}, meth@BBBB */
-    movl      rGLUE,%ecx
+    movl      rSELF,%ecx
     movzwl    2(rPC),%eax              # eax<- BBBB
-    movl      offGlue_methodClassDex(%ecx),%ecx # ecx<- pDvmDex
+    movl      offThread_methodClassDex(%ecx),%ecx # ecx<- pDvmDex
     EXPORT_PC
     movl      offDvmDex_pResMethods(%ecx),%ecx  # ecx<- pDvmDex->pResMethods
-    movzwl    4(rPC),%edx              # edx<- GFED or CCCC
+    movzwl    4(rPC),rIBASE            # rIBASE<- GFED or CCCC
     movl      (%ecx,%eax,4),%eax       # eax<- resolved methodToCall
     .if       (!$isrange)
-    andl      $$0xf,%edx               # edx<- D (or stays CCCC)
+    andl      $$0xf,rIBASE             # rIBASE<- D (or stays CCCC)
     .endif
     testl     %eax,%eax                # already resolved?
-    GET_VREG_R  %ecx %edx              # ecx<- "this" ptr
+    GET_VREG_R  %ecx rIBASE            # ecx<- "this" ptr
     je        .L${opcode}_resolve      # not resolved, do it now
 .L${opcode}_finish:
     testl     %ecx,%ecx                # null "this"?
     jne       common_invokeMethod${routine}  # no, continue on
     jmp       common_errNullObject
-%break
 
     /*
      * On entry:
@@ -40,8 +39,8 @@
      */
 .L${opcode}_resolve:
      SPILL_TMP1(%ecx)
-     movl     rGLUE,%ecx
-     movl     offGlue_method(%ecx),%ecx  # ecx<- glue->method
+     movl     rSELF,%ecx
+     movl     offThread_method(%ecx),%ecx  # ecx<- self->method
      movzwl   2(rPC),%eax      # reference (BBBB or CCCC)
      movl     offMethod_clazz(%ecx),%ecx # ecx<- method->clazz
      movl     $$METHOD_DIRECT,OUT_ARG2(%esp)

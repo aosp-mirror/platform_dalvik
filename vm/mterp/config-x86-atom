@@ -13,6 +13,7 @@
 # limitations under the License.
 
 # Specifies the size of the assembly region in bytes
+handler-style computed-goto
 handler-size 64
 
 # source for the instruction table stub
@@ -290,6 +291,21 @@ op OP_IPUT_WIDE_VOLATILE c
 op OP_SGET_WIDE_VOLATILE c
 op OP_SPUT_WIDE_VOLATILE c
 op OP_RETURN_VOID_BARRIER c
+op OP_INVOKE_OBJECT_INIT_RANGE c
+
+op OP_INVOKE_OBJECT_INIT_JUMBO c
+op OP_IGET_VOLATILE_JUMBO c
+op OP_IPUT_VOLATILE_JUMBO c
+op OP_SGET_VOLATILE_JUMBO c
+op OP_SPUT_VOLATILE_JUMBO c
+op OP_IGET_OBJECT_VOLATILE_JUMBO c
+op OP_IPUT_OBJECT_VOLATILE_JUMBO c
+op OP_SGET_OBJECT_VOLATILE_JUMBO c
+op OP_SPUT_OBJECT_VOLATILE_JUMBO c
+op OP_IGET_WIDE_VOLATILE_JUMBO c
+op OP_IPUT_WIDE_VOLATILE_JUMBO c
+op OP_SGET_WIDE_VOLATILE_JUMBO c
+op OP_SPUT_WIDE_VOLATILE_JUMBO c
 op-end
 
 # arch-specific entry point to interpreter

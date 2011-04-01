@@ -24,6 +24,7 @@
 #include "alloc/HeapInternal.h"
 #include "alloc/HeapSource.h"
 #include "alloc/HeapBitmap.h"
+#include "alloc/HeapBitmapInlines.h"
 
 // TODO: find a real header file for these.
 extern int dlmalloc_trim(size_t);
@@ -32,11 +33,6 @@ extern void dlmalloc_walk_free_pages(void(*)(void*, void*, void*), void*);
 static void snapIdealFootprint(void);
 static void setIdealFootprint(size_t max);
 static size_t getMaximumSize(const HeapSource *hs);
-
-#define ALIGN_UP_TO_PAGE_SIZE(p) \
-    (((size_t)(p) + (SYSTEM_PAGE_SIZE - 1)) & ~(SYSTEM_PAGE_SIZE - 1))
-#define ALIGN_DOWN_TO_PAGE_SIZE(p) \
-    ((size_t)(p) & ~(SYSTEM_PAGE_SIZE - 1))
 
 #define HEAP_UTILIZATION_MAX        1024
 #define DEFAULT_HEAP_UTILIZATION    512     // Range 1..HEAP_UTILIZATION_MAX
@@ -259,7 +255,7 @@ static Heap *ptr2heap(const HeapSource *hs, const void *ptr)
  *
  * These aren't exact, and should not be treated as such.
  */
-static void countAllocation(Heap *heap, const void *ptr, bool isObj)
+static void countAllocation(Heap *heap, const void *ptr)
 {
     HeapSource *hs;
 
@@ -267,11 +263,9 @@ static void countAllocation(Heap *heap, const void *ptr, bool isObj)
 
     heap->bytesAllocated += mspace_usable_size(heap->msp, ptr) +
             HEAP_SOURCE_CHUNK_OVERHEAD;
-    if (isObj) {
-        heap->objectsAllocated++;
-        hs = gDvm.gcHeap->heapSource;
-        dvmHeapBitmapSetObjectBit(&hs->liveBits, ptr);
-    }
+    heap->objectsAllocated++;
+    hs = gDvm.gcHeap->heapSource;
+    dvmHeapBitmapSetObjectBit(&hs->liveBits, ptr);
 
     assert(heap->bytesAllocated < mspace_footprint(heap->msp));
 }
@@ -331,11 +325,35 @@ createMspace(void *base, size_t startSize, size_t maximumSize)
     return msp;
 }
 
-static bool
-addNewHeap(HeapSource *hs, mspace msp, size_t maximumSize)
+/*
+ * Add the initial heap.  Returns false if the initial heap was
+ * already added to the heap source.
+ */
+static bool addInitialHeap(HeapSource *hs, mspace msp, size_t maximumSize)
+{
+    assert(hs != NULL);
+    assert(msp != NULL);
+    if (hs->numHeaps != 0) {
+        return false;
+    }
+    hs->heaps[0].msp = msp;
+    hs->heaps[0].maximumSize = maximumSize;
+    hs->heaps[0].concurrentStartBytes = SIZE_MAX;
+    hs->heaps[0].base = hs->heapBase;
+    hs->heaps[0].limit = hs->heapBase + hs->heaps[0].maximumSize;
+    hs->numHeaps = 1;
+    return true;
+}
+
+/*
+ * Adds an additional heap to the heap source.  Returns false if there
+ * are too many heaps or insufficient free space to add another heap.
+ */
+static bool addNewHeap(HeapSource *hs)
 {
     Heap heap;
 
+    assert(hs != NULL);
     if (hs->numHeaps >= HEAP_SOURCE_MAX_HEAP_COUNT) {
         LOGE("Attempt to create too many heaps (%zd >= %zd)\n",
                 hs->numHeaps, HEAP_SOURCE_MAX_HEAP_COUNT);
@@ -345,42 +363,37 @@ addNewHeap(HeapSource *hs, mspace msp, size_t maximumSize)
 
     memset(&heap, 0, sizeof(heap));
 
-    if (msp != NULL) {
-        heap.msp = msp;
-        heap.maximumSize = maximumSize;
-        heap.concurrentStartBytes = SIZE_MAX;
-        heap.base = hs->heapBase;
-        heap.limit = hs->heapBase + heap.maximumSize;
-    } else {
-        void *sbrk0 = contiguous_mspace_sbrk0(hs->heaps[0].msp);
-        char *base = (char *)ALIGN_UP_TO_PAGE_SIZE(sbrk0);
-        size_t overhead = base - hs->heaps[0].base;
+    /*
+     * Heap storage comes from a common virtual memory reservation.
+     * The new heap will start on the page after the old heap.
+     */
+    void *sbrk0 = contiguous_mspace_sbrk0(hs->heaps[0].msp);
+    char *base = (char *)ALIGN_UP_TO_PAGE_SIZE(sbrk0);
+    size_t overhead = base - hs->heaps[0].base;
+    assert(((size_t)hs->heaps[0].base & (SYSTEM_PAGE_SIZE - 1)) == 0);
 
-        assert(((size_t)hs->heaps[0].base & (SYSTEM_PAGE_SIZE - 1)) == 0);
-        if (overhead + HEAP_MIN_FREE >= hs->maximumSize) {
-            LOGE_HEAP("No room to create any more heaps "
-                    "(%zd overhead, %zd max)\n",
-                    overhead, hs->maximumSize);
-            return false;
-        }
-        hs->heaps[0].maximumSize = overhead;
-        hs->heaps[0].limit = base;
-        heap.maximumSize = hs->growthLimit - overhead;
-        heap.msp = createMspace(base, HEAP_MIN_FREE, hs->maximumSize - overhead);
-        heap.concurrentStartBytes = HEAP_MIN_FREE - CONCURRENT_START;
-        heap.base = base;
-        heap.limit = heap.base + heap.maximumSize;
-        if (heap.msp == NULL) {
-            return false;
-        }
+    if (overhead + HEAP_MIN_FREE >= hs->maximumSize) {
+        LOGE_HEAP("No room to create any more heaps "
+                  "(%zd overhead, %zd max)",
+                  overhead, hs->maximumSize);
+        return false;
+    }
+
+    heap.maximumSize = hs->growthLimit - overhead;
+    heap.concurrentStartBytes = HEAP_MIN_FREE - CONCURRENT_START;
+    heap.base = base;
+    heap.limit = heap.base + heap.maximumSize;
+    heap.msp = createMspace(base, HEAP_MIN_FREE, hs->maximumSize - overhead);
+    if (heap.msp == NULL) {
+        return false;
     }
 
     /* Don't let the soon-to-be-old heap grow any further.
      */
-    if (hs->numHeaps > 0) {
-        mspace msp = hs->heaps[0].msp;
-        mspace_set_max_allowed_footprint(msp, mspace_footprint(msp));
-    }
+    hs->heaps[0].maximumSize = overhead;
+    hs->heaps[0].limit = base;
+    mspace msp = hs->heaps[0].msp;
+    mspace_set_max_allowed_footprint(msp, mspace_footprint(msp));
 
     /* Put the new heap in the list, at heaps[0].
      * Shift existing heaps down.
@@ -505,18 +518,17 @@ dvmHeapSourceStartup(size_t startSize, size_t maximumSize, size_t growthLimit)
         goto fail;
     }
 
-    /* Allocate a descriptor from the heap we just created.
-     */
-    gcHeap = mspace_malloc(msp, sizeof(*gcHeap));
+    gcHeap = (GcHeap *)malloc(sizeof(*gcHeap));
     if (gcHeap == NULL) {
         LOGE_HEAP("Can't allocate heap descriptor\n");
         goto fail;
     }
     memset(gcHeap, 0, sizeof(*gcHeap));
 
-    hs = mspace_malloc(msp, sizeof(*hs));
+    hs = (HeapSource *)malloc(sizeof(*hs));
     if (hs == NULL) {
         LOGE_HEAP("Can't allocate heap source\n");
+        free(gcHeap);
         goto fail;
     }
     memset(hs, 0, sizeof(*hs));
@@ -530,9 +542,9 @@ dvmHeapSourceStartup(size_t startSize, size_t maximumSize, size_t growthLimit)
     hs->numHeaps = 0;
     hs->sawZygote = gDvm.zygote;
     hs->hasGcThread = false;
-    hs->heapBase = base;
+    hs->heapBase = (char *)base;
     hs->heapLength = length;
-    if (!addNewHeap(hs, msp, growthLimit)) {
+    if (!addInitialHeap(hs, msp, growthLimit)) {
         LOGE_HEAP("Can't add initial heap\n");
         goto fail;
     }
@@ -553,9 +565,6 @@ dvmHeapSourceStartup(size_t startSize, size_t maximumSize, size_t growthLimit)
     }
     gcHeap->markContext.bitmap = &hs->markBits;
     gcHeap->heapSource = hs;
-
-    countAllocation(hs2heap(hs), gcHeap, false);
-    countAllocation(hs2heap(hs), hs, false);
 
     gHs = hs;
     return gcHeap;
@@ -592,7 +601,8 @@ dvmHeapSourceStartupBeforeFork()
          */
         LOGV("Splitting out new zygote heap\n");
         gDvm.newZygoteHeapAllocated = true;
-        return addNewHeap(hs, NULL, 0);
+        dvmClearCardTable();
+        return addNewHeap(hs);
     }
     return true;
 }
@@ -612,15 +622,16 @@ void dvmHeapSourceThreadShutdown(void)
 void
 dvmHeapSourceShutdown(GcHeap **gcHeap)
 {
+    assert(gcHeap != NULL);
     if (*gcHeap != NULL && (*gcHeap)->heapSource != NULL) {
         HeapSource *hs = (*gcHeap)->heapSource;
-        assert((char *)*gcHeap >= hs->heapBase);
-        assert((char *)*gcHeap < hs->heapBase + hs->heapLength);
         dvmHeapBitmapDelete(&hs->liveBits);
         dvmHeapBitmapDelete(&hs->markBits);
         freeMarkStack(&(*gcHeap)->markContext.stack);
         munmap(hs->heapBase, hs->heapLength);
+        free(hs);
         gHs = NULL;
+        free(*gcHeap);
         *gcHeap = NULL;
     }
 }
@@ -679,46 +690,23 @@ dvmHeapSourceGetValue(enum HeapSourceValueSpec spec, size_t perHeapStats[],
     return total;
 }
 
-static void aliasBitmap(HeapBitmap *dst, HeapBitmap *src,
-                        uintptr_t base, uintptr_t max) {
-    size_t offset;
-
-    dst->base = base;
-    dst->max = max;
-    dst->bitsLen = HB_OFFSET_TO_BYTE_INDEX(max - base) + sizeof(dst->bits);
-    /* The exclusive limit from bitsLen is greater than the inclusive max. */
-    assert(base + HB_MAX_OFFSET(dst) > max);
-    /* The exclusive limit is at most one word of bits beyond max. */
-    assert((base + HB_MAX_OFFSET(dst)) - max <=
-           HB_OBJECT_ALIGNMENT * HB_BITS_PER_WORD);
-    dst->allocLen = dst->bitsLen;
-    offset = base - src->base;
-    assert(HB_OFFSET_TO_MASK(offset) == 1 << 31);
-    dst->bits = &src->bits[HB_OFFSET_TO_INDEX(offset)];
-}
-
-/*
- * Initializes a vector of object and mark bits to the object and mark
- * bits of each heap.  The bits are aliased to the heapsource
- * object and mark bitmaps.  This routine is used by the sweep code
- * which needs to free each object in the correct heap.
- */
-void dvmHeapSourceGetObjectBitmaps(HeapBitmap liveBits[], HeapBitmap markBits[],
-                                   size_t numHeaps)
+void dvmHeapSourceGetRegions(uintptr_t *base, uintptr_t *max, uintptr_t *limit,
+                             size_t numHeaps)
 {
     HeapSource *hs = gHs;
-    uintptr_t base, max;
     size_t i;
 
     HS_BOILERPLATE();
 
-    assert(numHeaps == hs->numHeaps);
-    for (i = 0; i < hs->numHeaps; ++i) {
-        base = (uintptr_t)hs->heaps[i].base;
-        /* -1 because limit is exclusive but max is inclusive. */
-        max = MIN((uintptr_t)hs->heaps[i].limit - 1, hs->markBits.max);
-        aliasBitmap(&liveBits[i], &hs->liveBits, base, max);
-        aliasBitmap(&markBits[i], &hs->markBits, base, max);
+    assert(numHeaps <= hs->numHeaps);
+    for (i = 0; i < numHeaps; ++i) {
+        base[i] = (uintptr_t)hs->heaps[i].base;
+        if (max != NULL) {
+            max[i] = MIN((uintptr_t)hs->heaps[i].limit - 1, hs->markBits.max);
+        }
+        if (limit != NULL) {
+            limit[i] = (uintptr_t)hs->heaps[i].limit;
+        }
     }
 }
 
@@ -730,6 +718,16 @@ HeapBitmap *dvmHeapSourceGetLiveBits(void)
     HS_BOILERPLATE();
 
     return &gHs->liveBits;
+}
+
+/*
+ * Get the bitmap representing all marked objects.
+ */
+HeapBitmap *dvmHeapSourceGetMarkBits(void)
+{
+    HS_BOILERPLATE();
+
+    return &gHs->markBits;
 }
 
 void dvmHeapSourceSwapBitmaps(void)
@@ -813,7 +811,7 @@ dvmHeapSourceAlloc(size_t n)
     if (ptr == NULL) {
         return NULL;
     }
-    countAllocation(heap, ptr, true);
+    countAllocation(heap, ptr);
     /*
      * Check to see if a concurrent GC should be initiated.
      */
@@ -936,7 +934,7 @@ size_t dvmHeapSourceFreeList(size_t numPtrs, void **ptrs)
     heap = ptr2heap(gHs, *ptrs);
     numBytes = 0;
     if (heap != NULL) {
-        mspace *msp = heap->msp;
+        mspace msp = heap->msp;
         // Calling mspace_free on shared heaps disrupts sharing too
         // much. For heap[0] -- the 'active heap' -- we call
         // mspace_free, but on the other heaps we only do some

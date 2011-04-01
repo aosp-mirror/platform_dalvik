@@ -12,8 +12,8 @@
     movl      (%eax),%ecx               # ecx<- lsw
     movl      4(%eax),%eax              # eax<- msw
     andb      $$0xf,rINSTbl             # rINST<- A
-    FETCH_INST_OPCODE 2 %edx
     SET_VREG_WORD %ecx rINST 0          # v[A+0]<- lsw
+    FETCH_INST_OPCODE 2 %ecx
     SET_VREG_WORD %eax rINST 1          # v[A+1]<- msw
     ADVANCE_PC 2
-    GOTO_NEXT_R %edx
+    GOTO_NEXT_R %ecx

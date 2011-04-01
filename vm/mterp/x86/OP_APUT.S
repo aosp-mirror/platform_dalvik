@@ -1,4 +1,4 @@
-%default { "reg":"%ecx", "store":"movl", "shift":"4" }
+%default { "reg":"rINST", "store":"movl", "shift":"4" }
 %verify "executed"
     /*
      * Array put, 32 bits or less.  vBB[vCC] <- vAA
@@ -18,8 +18,8 @@
                                         #   index in ecx
     leal      offArrayObject_contents(%eax,%ecx,$shift),%eax
 .L${opcode}_finish:
-    GET_VREG_R  %ecx rINST
-    FETCH_INST_OPCODE 2 %edx
+    GET_VREG_R  rINST rINST
+    FETCH_INST_OPCODE 2 %ecx
     $store     $reg,(%eax)
     ADVANCE_PC 2
-    GOTO_NEXT_R %edx
+    GOTO_NEXT_R %ecx

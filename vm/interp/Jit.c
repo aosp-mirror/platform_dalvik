@@ -22,7 +22,6 @@
 #include "Dalvik.h"
 #include "Jit.h"
 
-
 #include "libdex/DexOpcodes.h"
 #include <unistd.h>
 #include <pthread.h>
@@ -56,16 +55,24 @@ void dvmSelfVerificationShadowSpaceFree(Thread* self)
 }
 
 /*
- * Save out PC, FP, InterpState, and registers to shadow space.
+ * Save out PC, FP, thread state, and registers to shadow space.
  * Return a pointer to the shadow space for JIT to use.
+ *
+ * The set of saved state from the Thread structure is:
+ *     pc  (Dalvik PC)
+ *     fp  (Dalvik FP)
+ *     retval
+ *     method
+ *     methodClassDex
+ *     interpStackEnd
  */
-void* dvmSelfVerificationSaveState(const u2* pc, const void* fp,
-                                   InterpState* interpState, int targetTrace)
+void* dvmSelfVerificationSaveState(const u2* pc, u4* fp,
+                                   Thread* self, int targetTrace)
 {
-    Thread *self = dvmThreadSelf();
     ShadowSpace *shadowSpace = self->shadowSpace;
-    unsigned preBytes = interpState->method->outsSize*4 + sizeof(StackSaveArea);
-    unsigned postBytes = interpState->method->registersSize*4;
+    unsigned preBytes = self->interpSave.method->outsSize*4 +
+        sizeof(StackSaveArea);
+    unsigned postBytes = self->interpSave.method->registersSize*4;
 
     //LOGD("### selfVerificationSaveState(%d) pc: 0x%x fp: 0x%x",
     //    self->threadId, (int)pc, (int)fp);
@@ -78,20 +85,6 @@ void* dvmSelfVerificationSaveState(const u2* pc, const void* fp,
     }
     shadowSpace->selfVerificationState = kSVSStart;
 
-    if (interpState->entryPoint == kInterpEntryResume) {
-        interpState->entryPoint = kInterpEntryInstr;
-#if 0
-        /* Tracking the success rate of resume after single-stepping */
-        if (interpState->jitResumeDPC == pc) {
-            LOGD("SV single step resumed at %p", pc);
-        }
-        else {
-            LOGD("real %p DPC %p NPC %p", pc, interpState->jitResumeDPC,
-                 interpState->jitResumeNPC);
-        }
-#endif
-    }
-
     // Dynamically grow shadow register space if necessary
     if (preBytes + postBytes > shadowSpace->registerSpaceSize * sizeof(u4)) {
         free(shadowSpace->registerSpace);
@@ -103,19 +96,21 @@ void* dvmSelfVerificationSaveState(const u2* pc, const void* fp,
     // Remember original state
     shadowSpace->startPC = pc;
     shadowSpace->fp = fp;
-    shadowSpace->glue = interpState;
+    shadowSpace->retval = self->retval;
+    shadowSpace->interpStackEnd = self->interpStackEnd;
+
     /*
      * Store the original method here in case the trace ends with a
      * return/invoke, the last method.
      */
-    shadowSpace->method = interpState->method;
+    shadowSpace->method = self->interpSave.method;
+    shadowSpace->methodClassDex = self->interpSave.methodClassDex;
+
     shadowSpace->shadowFP = shadowSpace->registerSpace +
                             shadowSpace->registerSpaceSize - postBytes/4;
 
-    // Create a copy of the InterpState
-    memcpy(&(shadowSpace->interpState), interpState, sizeof(InterpState));
-    shadowSpace->interpState.fp = shadowSpace->shadowFP;
-    shadowSpace->interpState.interpStackEnd = (u1*)shadowSpace->registerSpace;
+    self->interpSave.fp = (u4*)shadowSpace->shadowFP;
+    self->interpStackEnd = (u1*)shadowSpace->registerSpace;
 
     // Create a copy of the stack
     memcpy(((char*)shadowSpace->shadowFP)-preBytes, ((char*)fp)-preBytes,
@@ -134,13 +129,11 @@ void* dvmSelfVerificationSaveState(const u2* pc, const void* fp,
  * Save ending PC, FP and compiled code exit point to shadow space.
  * Return a pointer to the shadow space for JIT to restore state.
  */
-void* dvmSelfVerificationRestoreState(const u2* pc, const void* fp,
-                                      SelfVerificationState exitState)
+void* dvmSelfVerificationRestoreState(const u2* pc, u4* fp,
+                                      SelfVerificationState exitState,
+                                      Thread* self)
 {
-    Thread *self = dvmThreadSelf();
     ShadowSpace *shadowSpace = self->shadowSpace;
-    // Official InterpState structure
-    InterpState *realGlue = shadowSpace->glue;
     shadowSpace->endPC = pc;
     shadowSpace->endShadowFP = fp;
     shadowSpace->jitExitState = exitState;
@@ -158,16 +151,6 @@ void* dvmSelfVerificationRestoreState(const u2* pc, const void* fp,
         LOGD("Interp FP: 0x%x", (int)shadowSpace->fp);
         LOGD("Shadow FP: 0x%x endFP: 0x%x", (int)shadowSpace->shadowFP,
             (int)shadowSpace->endShadowFP);
-    }
-
-    // Move the resume [ND]PC from the shadow space to the real space so that
-    // the debug interpreter can return to the translation
-    if (exitState == kSVSSingleStep) {
-        realGlue->jitResumeNPC = shadowSpace->interpState.jitResumeNPC;
-        realGlue->jitResumeDPC = shadowSpace->interpState.jitResumeDPC;
-    } else {
-        realGlue->jitResumeNPC = NULL;
-        realGlue->jitResumeDPC = NULL;
     }
 
     // Special case when punting after a single instruction
@@ -200,6 +183,14 @@ void* dvmSelfVerificationRestoreState(const u2* pc, const void* fp,
         shadowSpace->selfVerificationState = exitState;
     }
 
+    /* Restore state before returning */
+    self->interpSave.pc = shadowSpace->startPC;
+    self->interpSave.fp = shadowSpace->fp;
+    self->interpSave.method = shadowSpace->method;
+    self->interpSave.methodClassDex = shadowSpace->methodClassDex;
+    self->retval = shadowSpace->retval;
+    self->interpStackEnd = shadowSpace->interpStackEnd;
+
     return shadowSpace;
 }
 
@@ -223,7 +214,7 @@ static void selfVerificationDumpState(const u2* pc, Thread* self)
                      (int) shadowSpace->shadowFP;
     int localRegs = 0;
     int frameBytes2 = 0;
-    if (self->curFrame < shadowSpace->fp) {
+    if ((uintptr_t)self->curFrame < (uintptr_t)shadowSpace->fp) {
         localRegs = (stackSave->method->registersSize -
                      stackSave->method->insSize)*4;
         frameBytes2 = (int) shadowSpace->fp - (int) self->curFrame - localRegs;
@@ -280,9 +271,19 @@ static void selfVerificationSpinLoop(ShadowSpace *shadowSpace)
     while(gDvmJit.selfVerificationSpin) sleep(10);
 }
 
-/* Manage self verification while in the debug interpreter */
-static bool selfVerificationDebugInterp(const u2* pc, Thread* self,
-                                        InterpState *interpState)
+/*
+ * If here, we're re-interpreting an instruction that was included
+ * in a trace that was just executed.  This routine is called for
+ * each instruction in the original trace, and compares state
+ * when it reaches the end point.
+ *
+ * TUNING: the interpretation mechanism now supports a counted
+ * single-step mechanism.  If we were to associate an instruction
+ * count with each trace exit, we could just single-step the right
+ * number of cycles and then compare.  This would improve detection
+ * of control divergences, as well as (slightly) simplify this code.
+ */
+void dvmCheckSelfVerification(const u2* pc, Thread* self)
 {
     ShadowSpace *shadowSpace = self->shadowSpace;
     SelfVerificationState state = shadowSpace->selfVerificationState;
@@ -337,7 +338,7 @@ static bool selfVerificationDebugInterp(const u2* pc, Thread* self,
             selfVerificationSpinLoop(shadowSpace);
         }
         /* Check new frame if it exists (invokes only) */
-        if (self->curFrame < shadowSpace->fp) {
+        if ((uintptr_t)self->curFrame < (uintptr_t)shadowSpace->fp) {
             StackSaveArea* stackSave = SAVEAREA_FROM_FP(self->curFrame);
             int localRegs = (stackSave->method->registersSize -
                              stackSave->method->insSize)*4;
@@ -380,14 +381,28 @@ static bool selfVerificationDebugInterp(const u2* pc, Thread* self,
         }
         if (memDiff) selfVerificationSpinLoop(shadowSpace);
 
+
         /*
-         * Switch to JIT single step mode to stay in the debug interpreter for
-         * one more instruction
+         * Success.  If this shadowed trace included a single-stepped
+         * instruction, we need to stay in the interpreter for one
+         * more interpretation before resuming.
          */
         if (state == kSVSSingleStep) {
-            interpState->jitState = kJitSingleStepEnd;
+            assert(self->jitResumeNPC != NULL);
+            assert(self->singleStepCount == 0);
+            self->singleStepCount = 1;
+            dvmUpdateInterpBreak(self, kInterpSingleStep, kSubModeNormal,
+                                 true /* enable */);
         }
-        return true;
+
+        /*
+         * Switch off shadow replay mode.  The next shadowed trace
+         * execution will turn it back on.
+         */
+        dvmUpdateInterpBreak(self, kInterpJitBreak, kSubModeJitSV,
+                             false /* disable */);
+        self->jitState = kJitDone;
+        return;
 
     /* If end not been reached, make sure max length not exceeded */
     } else if (shadowSpace->traceLength >= JIT_MAX_TRACE_LEN) {
@@ -398,14 +413,12 @@ static bool selfVerificationDebugInterp(const u2* pc, Thread* self,
         selfVerificationDumpTrace(pc, self);
         selfVerificationSpinLoop(shadowSpace);
 
-        return true;
+        return;
     }
     /* Log the instruction address and decoded instruction for debug */
     shadowSpace->trace[shadowSpace->traceLength].addr = (int)pc;
     shadowSpace->trace[shadowSpace->traceLength].decInsn = decInsn;
     shadowSpace->traceLength++;
-
-    return false;
 }
 #endif
 
@@ -418,7 +431,7 @@ void dvmJitStopTranslationRequests()
     /*
      * Note 1: This won't necessarily stop all translation requests, and
      * operates on a delayed mechanism.  Running threads look to the copy
-     * of this value in their private InterpState structures and won't see
+     * of this value in their private thread structures and won't see
      * this change until it is refreshed (which happens on interpreter
      * entry).
      * Note 2: This is a one-shot memory leak on this table. Because this is a
@@ -427,6 +440,7 @@ void dvmJitStopTranslationRequests()
      * free it because some thread may be holding a reference.
      */
     gDvmJit.pProfTable = NULL;
+    dvmJitUpdateThreadStateAll();
 }
 
 #if defined(WITH_JIT_TUNING)
@@ -506,60 +520,61 @@ void dvmJitStats()
              gDvmJit.invokePolyGetterInlined, gDvmJit.invokePolySetterInlined);
         LOGD("JIT: Total compilation time: %llu ms", gDvmJit.jitTime / 1000);
         LOGD("JIT: Avg unit compilation time: %llu us",
+             gDvmJit.numCompilations == 0 ? 0 :
              gDvmJit.jitTime / gDvmJit.numCompilations);
+        LOGD("JIT: Potential GC blocked by compiler: max %llu us / "
+             "avg %llu us (%d)",
+             gDvmJit.maxCompilerThreadBlockGCTime,
+             gDvmJit.numCompilerThreadBlockGC == 0 ?
+                 0 : gDvmJit.compilerThreadBlockGCTime /
+                     gDvmJit.numCompilerThreadBlockGC,
+             gDvmJit.numCompilerThreadBlockGC);
 #endif
 
         LOGD("JIT: %d Translation chains, %d interp stubs",
              gDvmJit.translationChains, stubs);
-        if (gDvmJit.profile) {
+        if (gDvmJit.profileMode == kTraceProfilingContinuous) {
             dvmCompilerSortAndPrintTraceProfiles();
         }
     }
 }
 
 
-static void setTraceConstruction(JitEntry *slot, bool value)
+/* End current trace now & don't include current instruction */
+void dvmJitEndTraceSelect(Thread* self, const u2* dPC)
 {
-
-    JitEntryInfoUnion oldValue;
-    JitEntryInfoUnion newValue;
-    do {
-        oldValue = slot->u;
-        newValue = oldValue;
-        newValue.info.traceConstruction = value;
-    } while (android_atomic_release_cas(oldValue.infoWord, newValue.infoWord,
-            &slot->u.infoWord) != 0);
-}
-
-static void resetTracehead(InterpState* interpState, JitEntry *slot)
-{
-    slot->codeAddress = dvmCompilerGetInterpretTemplate();
-    setTraceConstruction(slot, false);
-}
-
-/* Clean up any pending trace builds */
-void dvmJitAbortTraceSelect(InterpState* interpState)
-{
-    if (interpState->jitState == kJitTSelect)
-        interpState->jitState = kJitDone;
+    if (self->jitState == kJitTSelect) {
+        self->jitState = kJitTSelectEnd;
+    }
+    if (self->jitState == kJitTSelectEnd) {
+        // Clean up and finish now.
+        dvmCheckJit(dPC, self);
+    }
 }
 
 /*
  * Find an entry in the JitTable, creating if necessary.
  * Returns null if table is full.
  */
-static JitEntry *lookupAndAdd(const u2* dPC, bool callerLocked)
+static JitEntry *lookupAndAdd(const u2* dPC, bool callerLocked,
+                              bool isMethodEntry)
 {
     u4 chainEndMarker = gDvmJit.jitTableSize;
     u4 idx = dvmJitHash(dPC);
 
-    /* Walk the bucket chain to find an exact match for our PC */
+    /*
+     * Walk the bucket chain to find an exact match for our PC and trace/method
+     * type
+     */
     while ((gDvmJit.pJitEntryTable[idx].u.info.chain != chainEndMarker) &&
-           (gDvmJit.pJitEntryTable[idx].dPC != dPC)) {
+           ((gDvmJit.pJitEntryTable[idx].dPC != dPC) ||
+            (gDvmJit.pJitEntryTable[idx].u.info.isMethodEntry !=
+             isMethodEntry))) {
         idx = gDvmJit.pJitEntryTable[idx].u.info.chain;
     }
 
-    if (gDvmJit.pJitEntryTable[idx].dPC != dPC) {
+    if (gDvmJit.pJitEntryTable[idx].dPC != dPC ||
+        gDvmJit.pJitEntryTable[idx].u.info.isMethodEntry != isMethodEntry) {
         /*
          * No match.  Aquire jitTableLock and find the last
          * slot in the chain. Possibly continue the chain walk in case
@@ -578,7 +593,9 @@ static JitEntry *lookupAndAdd(const u2* dPC, bool callerLocked)
         if (gDvmJit.pJitEntryTable[idx].dPC != NULL) {
             u4 prev;
             while (gDvmJit.pJitEntryTable[idx].u.info.chain != chainEndMarker) {
-                if (gDvmJit.pJitEntryTable[idx].dPC == dPC) {
+                if (gDvmJit.pJitEntryTable[idx].dPC == dPC &&
+                    gDvmJit.pJitEntryTable[idx].u.info.isMethodEntry ==
+                        isMethodEntry) {
                     /* Another thread got there first for this dPC */
                     if (!callerLocked)
                         dvmUnlockMutex(&gDvmJit.tableLock);
@@ -617,10 +634,13 @@ static JitEntry *lookupAndAdd(const u2* dPC, bool callerLocked)
             }
         }
         if (gDvmJit.pJitEntryTable[idx].dPC == NULL) {
+            gDvmJit.pJitEntryTable[idx].u.info.isMethodEntry = isMethodEntry;
             /*
              * Initialize codeAddress and allocate the slot.  Must
              * happen in this order (since dPC is set, the entry is live.
              */
+            android_atomic_release_store((int32_t)dPC,
+                 (volatile int32_t *)(void *)&gDvmJit.pJitEntryTable[idx].dPC);
             gDvmJit.pJitEntryTable[idx].dPC = dPC;
             gDvmJit.jitTableEntriesUsed++;
         } else {
@@ -633,6 +653,45 @@ static JitEntry *lookupAndAdd(const u2* dPC, bool callerLocked)
     return (idx == chainEndMarker) ? NULL : &gDvmJit.pJitEntryTable[idx];
 }
 
+/* Dump a trace description */
+void dvmJitDumpTraceDesc(JitTraceDescription *trace)
+{
+    int i;
+    bool done = false;
+    const u2* dpc;
+    const u2* dpcBase;
+    int curFrag = 0;
+    LOGD("===========================================");
+    LOGD("Trace dump 0x%x, Method %s off 0x%x",(int)trace,
+         trace->method->name,trace->trace[curFrag].info.frag.startOffset);
+    dpcBase = trace->method->insns;
+    while (!done) {
+        DecodedInstruction decInsn;
+        if (trace->trace[curFrag].isCode) {
+            LOGD("Frag[%d]- Insts: %d, start: 0x%x, hint: 0x%x, end: %d",
+                 curFrag, trace->trace[curFrag].info.frag.numInsts,
+                 trace->trace[curFrag].info.frag.startOffset,
+                 trace->trace[curFrag].info.frag.hint,
+                 trace->trace[curFrag].info.frag.runEnd);
+            dpc = dpcBase + trace->trace[curFrag].info.frag.startOffset;
+            for (i=0; i<trace->trace[curFrag].info.frag.numInsts; i++) {
+                dexDecodeInstruction(dpc, &decInsn);
+                LOGD("    0x%04x - %s 0x%x",(dpc-dpcBase),
+                     dexGetOpcodeName(decInsn.opcode),(int)dpc);
+                dpc += dexGetWidthFromOpcode(decInsn.opcode);
+            }
+            if (trace->trace[curFrag].info.frag.runEnd) {
+                done = true;
+            }
+        } else {
+            LOGD("Frag[%d]- META info: 0x%08x", curFrag,
+                 (int)trace->trace[curFrag].info.meta);
+        }
+        curFrag++;
+    }
+    LOGD("-------------------------------------------");
+}
+
 /*
  * Append the class ptr of "this" and the current method ptr to the current
  * trace. That is, the trace runs will contain the following components:
@@ -640,15 +699,24 @@ static JitEntry *lookupAndAdd(const u2* dPC, bool callerLocked)
  *  + thisClass (new)
  *  + calleeMethod (new)
  */
-static void insertClassMethodInfo(InterpState* interpState,
+static void insertClassMethodInfo(Thread* self,
                                   const ClassObject* thisClass,
                                   const Method* calleeMethod,
                                   const DecodedInstruction* insn)
 {
-    int currTraceRun = ++interpState->currTraceRun;
-    interpState->trace[currTraceRun].meta = (void *) thisClass;
-    currTraceRun = ++interpState->currTraceRun;
-    interpState->trace[currTraceRun].meta = (void *) calleeMethod;
+    int currTraceRun = ++self->currTraceRun;
+    self->trace[currTraceRun].info.meta = thisClass ?
+                                    (void *) thisClass->descriptor : NULL;
+    self->trace[currTraceRun].isCode = false;
+
+    currTraceRun = ++self->currTraceRun;
+    self->trace[currTraceRun].info.meta = thisClass ?
+                                    (void *) thisClass->classLoader : NULL;
+    self->trace[currTraceRun].isCode = false;
+
+    currTraceRun = ++self->currTraceRun;
+    self->trace[currTraceRun].info.meta = (void *) calleeMethod;
+    self->trace[currTraceRun].isCode = false;
 }
 
 /*
@@ -664,7 +732,7 @@ static void insertClassMethodInfo(InterpState* interpState,
  * lastPC, len, offset are all from the preceding invoke instruction
  */
 static void insertMoveResult(const u2 *lastPC, int len, int offset,
-                             InterpState *interpState)
+                             Thread *self)
 {
     DecodedInstruction nextDecInsn;
     const u2 *moveResultPC = lastPC + len;
@@ -676,16 +744,16 @@ static void insertMoveResult(const u2 *lastPC, int len, int offset,
         return;
 
     /* We need to start a new trace run */
-    int currTraceRun = ++interpState->currTraceRun;
-    interpState->currRunHead = moveResultPC;
-    interpState->trace[currTraceRun].frag.startOffset = offset + len;
-    interpState->trace[currTraceRun].frag.numInsts = 1;
-    interpState->trace[currTraceRun].frag.runEnd = false;
-    interpState->trace[currTraceRun].frag.hint = kJitHintNone;
-    interpState->trace[currTraceRun].frag.isCode = true;
-    interpState->totalTraceLen++;
+    int currTraceRun = ++self->currTraceRun;
+    self->currRunHead = moveResultPC;
+    self->trace[currTraceRun].info.frag.startOffset = offset + len;
+    self->trace[currTraceRun].info.frag.numInsts = 1;
+    self->trace[currTraceRun].info.frag.runEnd = false;
+    self->trace[currTraceRun].info.frag.hint = kJitHintNone;
+    self->trace[currTraceRun].isCode = true;
+    self->totalTraceLen++;
 
-    interpState->currRunLen = dexGetWidthFromInstruction(moveResultPC);
+    self->currRunLen = dexGetWidthFromInstruction(moveResultPC);
 }
 
 /*
@@ -704,28 +772,21 @@ static void insertMoveResult(const u2 *lastPC, int len, int offset,
  * because returns cannot throw in a way that causes problems for the
  * translated code.
  */
-int dvmCheckJit(const u2* pc, Thread* self, InterpState* interpState,
-                const ClassObject* thisClass, const Method* curMethod)
+void dvmCheckJit(const u2* pc, Thread* self)
 {
+    const ClassObject *thisClass = self->callsiteClass;
+    const Method* curMethod = self->methodToCall;
     int flags, len;
-    int switchInterp = false;
-    bool debugOrProfile = dvmDebuggerOrProfilerActive();
-    /* Stay in the dbg interpreter for the next instruction */
+    int allDone = false;
+    /* Stay in break/single-stop mode for the next instruction */
     bool stayOneMoreInst = false;
 
-    /*
-     * Bug 2710533 - dalvik crash when disconnecting debugger
-     *
-     * Reset the entry point to the default value. If needed it will be set to a
-     * specific value in the corresponding case statement (eg kJitSingleStepEnd)
-     */
-    interpState->entryPoint = kInterpEntryInstr;
+    /* Prepare to handle last PC and stage the current PC & method*/
+    const u2 *lastPC = self->lastPC;
 
-    /* Prepare to handle last PC and stage the current PC */
-    const u2 *lastPC = interpState->lastPC;
-    interpState->lastPC = pc;
+    self->lastPC = pc;
 
-    switch (interpState->jitState) {
+    switch (self->jitState) {
         int offset;
         DecodedInstruction decInsn;
         case kJitTSelect:
@@ -739,37 +800,37 @@ int dvmCheckJit(const u2* pc, Thread* self, InterpState* interpState,
              * to the amount of space it takes to generate the chaining
              * cells.
              */
-            if (interpState->totalTraceLen != 0 &&
+            if (self->totalTraceLen != 0 &&
                 (decInsn.opcode == OP_PACKED_SWITCH ||
                  decInsn.opcode == OP_SPARSE_SWITCH)) {
-                interpState->jitState = kJitTSelectEnd;
+                self->jitState = kJitTSelectEnd;
                 break;
             }
 
-
 #if defined(SHOW_TRACE)
-            LOGD("TraceGen: adding %s", dexGetOpcodeName(decInsn.opcode));
+            LOGD("TraceGen: adding %s. lpc:0x%x, pc:0x%x",
+                 dexGetOpcodeName(decInsn.opcode), (int)lastPC, (int)pc);
 #endif
             flags = dexGetFlagsFromOpcode(decInsn.opcode);
             len = dexGetWidthFromInstruction(lastPC);
-            offset = lastPC - interpState->method->insns;
+            offset = lastPC - self->traceMethod->insns;
             assert((unsigned) offset <
-                   dvmGetMethodInsnsSize(interpState->method));
-            if (lastPC != interpState->currRunHead + interpState->currRunLen) {
+                   dvmGetMethodInsnsSize(self->traceMethod));
+            if (lastPC != self->currRunHead + self->currRunLen) {
                 int currTraceRun;
                 /* We need to start a new trace run */
-                currTraceRun = ++interpState->currTraceRun;
-                interpState->currRunLen = 0;
-                interpState->currRunHead = (u2*)lastPC;
-                interpState->trace[currTraceRun].frag.startOffset = offset;
-                interpState->trace[currTraceRun].frag.numInsts = 0;
-                interpState->trace[currTraceRun].frag.runEnd = false;
-                interpState->trace[currTraceRun].frag.hint = kJitHintNone;
-                interpState->trace[currTraceRun].frag.isCode = true;
+                currTraceRun = ++self->currTraceRun;
+                self->currRunLen = 0;
+                self->currRunHead = (u2*)lastPC;
+                self->trace[currTraceRun].info.frag.startOffset = offset;
+                self->trace[currTraceRun].info.frag.numInsts = 0;
+                self->trace[currTraceRun].info.frag.runEnd = false;
+                self->trace[currTraceRun].info.frag.hint = kJitHintNone;
+                self->trace[currTraceRun].isCode = true;
             }
-            interpState->trace[interpState->currTraceRun].frag.numInsts++;
-            interpState->totalTraceLen++;
-            interpState->currRunLen += len;
+            self->trace[self->currTraceRun].info.frag.numInsts++;
+            self->totalTraceLen++;
+            self->currRunLen += len;
 
             /*
              * If the last instruction is an invoke, we will try to sneak in
@@ -778,9 +839,9 @@ int dvmCheckJit(const u2* pc, Thread* self, InterpState* interpState,
             int needReservedRun = (flags & kInstrInvoke) ? 1 : 0;
 
             /* Will probably never hit this with the current trace buildier */
-            if (interpState->currTraceRun ==
+            if (self->currTraceRun ==
                 (MAX_JIT_RUN_LEN - 1 - needReservedRun)) {
-                interpState->jitState = kJitTSelectEnd;
+                self->jitState = kJitTSelectEnd;
             }
 
             if (!dexIsGoto(flags) &&
@@ -788,7 +849,7 @@ int dvmCheckJit(const u2* pc, Thread* self, InterpState* interpState,
                              kInstrCanSwitch |
                              kInstrCanReturn |
                              kInstrInvoke)) != 0)) {
-                    interpState->jitState = kJitTSelectEnd;
+                    self->jitState = kJitTSelectEnd;
 #if defined(SHOW_TRACE)
                 LOGD("TraceGen: ending on %s, basic block end",
                      dexGetOpcodeName(decInsn.opcode));
@@ -801,22 +862,17 @@ int dvmCheckJit(const u2* pc, Thread* self, InterpState* interpState,
                  * it to the trace too.
                  */
                 if (flags & kInstrInvoke) {
-                    insertClassMethodInfo(interpState, thisClass, curMethod,
+                    insertClassMethodInfo(self, thisClass, curMethod,
                                           &decInsn);
-                    insertMoveResult(lastPC, len, offset, interpState);
+                    insertMoveResult(lastPC, len, offset, self);
                 }
             }
             /* Break on throw or self-loop */
             if ((decInsn.opcode == OP_THROW) || (lastPC == pc)){
-                interpState->jitState = kJitTSelectEnd;
+                self->jitState = kJitTSelectEnd;
             }
-            if (interpState->totalTraceLen >= JIT_MAX_TRACE_LEN) {
-                interpState->jitState = kJitTSelectEnd;
-            }
-             /* Abandon the trace request if debugger/profiler is attached */
-            if (debugOrProfile) {
-                interpState->jitState = kJitDone;
-                break;
+            if (self->totalTraceLen >= JIT_MAX_TRACE_LEN) {
+                self->jitState = kJitTSelectEnd;
             }
             if ((flags & kInstrCanReturn) != kInstrCanReturn) {
                 break;
@@ -836,49 +892,53 @@ int dvmCheckJit(const u2* pc, Thread* self, InterpState* interpState,
             /* NOTE: intentional fallthrough for returns */
         case kJitTSelectEnd:
             {
-                /* Bad trace */
-                if (interpState->totalTraceLen == 0) {
-                    /* Bad trace - mark as untranslatable */
-                    interpState->jitState = kJitDone;
-                    switchInterp = true;
+                /* Empty trace - set to bail to interpreter */
+                if (self->totalTraceLen == 0) {
+                    dvmJitSetCodeAddr(self->currTraceHead,
+                                      dvmCompilerGetInterpretTemplate(),
+                                      dvmCompilerGetInterpretTemplateSet(),
+                                      false /* Not method entry */, 0);
+                    self->jitState = kJitDone;
+                    allDone = true;
                     break;
                 }
 
-                int lastTraceDesc = interpState->currTraceRun;
+                int lastTraceDesc = self->currTraceRun;
 
                 /* Extend a new empty desc if the last slot is meta info */
-                if (!interpState->trace[lastTraceDesc].frag.isCode) {
-                    lastTraceDesc = ++interpState->currTraceRun;
-                    interpState->trace[lastTraceDesc].frag.startOffset = 0;
-                    interpState->trace[lastTraceDesc].frag.numInsts = 0;
-                    interpState->trace[lastTraceDesc].frag.hint = kJitHintNone;
-                    interpState->trace[lastTraceDesc].frag.isCode = true;
+                if (!self->trace[lastTraceDesc].isCode) {
+                    lastTraceDesc = ++self->currTraceRun;
+                    self->trace[lastTraceDesc].info.frag.startOffset = 0;
+                    self->trace[lastTraceDesc].info.frag.numInsts = 0;
+                    self->trace[lastTraceDesc].info.frag.hint = kJitHintNone;
+                    self->trace[lastTraceDesc].isCode = true;
                 }
 
                 /* Mark the end of the trace runs */
-                interpState->trace[lastTraceDesc].frag.runEnd = true;
+                self->trace[lastTraceDesc].info.frag.runEnd = true;
 
                 JitTraceDescription* desc =
                    (JitTraceDescription*)malloc(sizeof(JitTraceDescription) +
-                     sizeof(JitTraceRun) * (interpState->currTraceRun+1));
+                     sizeof(JitTraceRun) * (self->currTraceRun+1));
 
                 if (desc == NULL) {
                     LOGE("Out of memory in trace selection");
                     dvmJitStopTranslationRequests();
-                    interpState->jitState = kJitDone;
-                    switchInterp = true;
+                    self->jitState = kJitDone;
+                    allDone = true;
                     break;
                 }
 
-                desc->method = interpState->method;
+                desc->method = self->traceMethod;
                 memcpy((char*)&(desc->trace[0]),
-                    (char*)&(interpState->trace[0]),
-                    sizeof(JitTraceRun) * (interpState->currTraceRun+1));
+                    (char*)&(self->trace[0]),
+                    sizeof(JitTraceRun) * (self->currTraceRun+1));
 #if defined(SHOW_TRACE)
                 LOGD("TraceGen:  trace done, adding to queue");
+                dvmJitDumpTraceDesc(desc);
 #endif
                 if (dvmCompilerWorkEnqueue(
-                       interpState->currTraceHead,kWorkOrderTrace,desc)) {
+                       self->currTraceHead,kWorkOrderTrace,desc)) {
                     /* Work order successfully enqueued */
                     if (gDvmJit.blockingMode) {
                         dvmCompilerDrainQueue();
@@ -890,87 +950,54 @@ int dvmCheckJit(const u2* pc, Thread* self, InterpState* interpState,
                      */
                     free(desc);
                 }
-                /*
-                 * Reset "trace in progress" flag whether or not we
-                 * successfully entered a work order.
-                 */
-                JitEntry *jitEntry =
-                    lookupAndAdd(interpState->currTraceHead, false);
-                if (jitEntry) {
-                    setTraceConstruction(jitEntry, false);
-                }
-                interpState->jitState = kJitDone;
-                switchInterp = true;
+                self->jitState = kJitDone;
+                allDone = true;
             }
-            break;
-        case kJitSingleStep:
-            interpState->jitState = kJitSingleStepEnd;
-            break;
-        case kJitSingleStepEnd:
-            /*
-             * Clear the inJitCodeCache flag and abandon the resume attempt if
-             * we cannot switch back to the translation due to corner-case
-             * conditions. If the flag is not cleared and the code cache is full
-             * we will be stuck in the debug interpreter as the code cache
-             * cannot be reset.
-             */
-            if (dvmJitStayInPortableInterpreter()) {
-                interpState->entryPoint = kInterpEntryInstr;
-                self->inJitCodeCache = 0;
-            } else {
-                interpState->entryPoint = kInterpEntryResume;
-            }
-            interpState->jitState = kJitDone;
-            switchInterp = true;
             break;
         case kJitDone:
-            switchInterp = true;
+            allDone = true;
             break;
-#if defined(WITH_SELF_VERIFICATION)
-        case kJitSelfVerification:
-            if (selfVerificationDebugInterp(pc, self, interpState)) {
-                /*
-                 * If the next state is not single-step end, we can switch
-                 * interpreter now.
-                 */
-                if (interpState->jitState != kJitSingleStepEnd) {
-                    interpState->jitState = kJitDone;
-                    switchInterp = true;
-                }
-            }
-            break;
-#endif
         case kJitNot:
-            switchInterp = !debugOrProfile;
+            allDone = true;
             break;
         default:
-            LOGE("Unexpected JIT state: %d entry point: %d",
-                 interpState->jitState, interpState->entryPoint);
+            LOGE("Unexpected JIT state: %d", self->jitState);
             dvmAbort();
             break;
     }
+
     /*
-     * Final check to see if we can really switch the interpreter. Make sure
-     * the jitState is kJitDone or kJitNot when switchInterp is set to true.
+     * If we're done with trace selection, switch off the control flags.
      */
-     assert(switchInterp == false || interpState->jitState == kJitDone ||
-            interpState->jitState == kJitNot);
-     return switchInterp && !debugOrProfile && !stayOneMoreInst &&
-            !dvmJitStayInPortableInterpreter();
+     if (allDone) {
+         dvmUpdateInterpBreak(self, kInterpJitBreak,
+                              kSubModeJitTraceBuild, false);
+         if (stayOneMoreInst) {
+             // Keep going in single-step mode for at least one more inst
+             assert(self->jitResumeNPC == NULL);
+             self->singleStepCount = MIN(1, self->singleStepCount);
+             dvmUpdateInterpBreak(self, kInterpSingleStep, kSubModeNormal,
+                                  true /* enable */);
+         }
+     }
+     return;
 }
 
-JitEntry *dvmFindJitEntry(const u2* pc)
+JitEntry *dvmJitFindEntry(const u2* pc, bool isMethodEntry)
 {
     int idx = dvmJitHash(pc);
 
     /* Expect a high hit rate on 1st shot */
-    if (gDvmJit.pJitEntryTable[idx].dPC == pc)
+    if ((gDvmJit.pJitEntryTable[idx].dPC == pc) &&
+        (gDvmJit.pJitEntryTable[idx].u.info.isMethodEntry == isMethodEntry))
         return &gDvmJit.pJitEntryTable[idx];
     else {
         int chainEndMarker = gDvmJit.jitTableSize;
         while (gDvmJit.pJitEntryTable[idx].u.info.chain != chainEndMarker) {
             idx = gDvmJit.pJitEntryTable[idx].u.info.chain;
-            if (gDvmJit.pJitEntryTable[idx].dPC == pc)
+            if ((gDvmJit.pJitEntryTable[idx].dPC == pc) &&
+                (gDvmJit.pJitEntryTable[idx].u.info.isMethodEntry ==
+                isMethodEntry))
                 return &gDvmJit.pJitEntryTable[idx];
         }
     }
@@ -978,32 +1005,43 @@ JitEntry *dvmFindJitEntry(const u2* pc)
 }
 
 /*
- * If a translated code address exists for the davik byte code
- * pointer return it.  This routine needs to be fast.
+ * Walk through the JIT profile table and find the corresponding JIT code, in
+ * the specified format (ie trace vs method). This routine needs to be fast.
  */
-void* dvmJitGetCodeAddr(const u2* dPC)
+void* getCodeAddrCommon(const u2* dPC, bool methodEntry)
 {
     int idx = dvmJitHash(dPC);
-    const u2* npc = gDvmJit.pJitEntryTable[idx].dPC;
-    if (npc != NULL) {
+    const u2* pc = gDvmJit.pJitEntryTable[idx].dPC;
+    if (pc != NULL) {
         bool hideTranslation = dvmJitHideTranslation();
-
-        if (npc == dPC) {
+        if (pc == dPC &&
+            gDvmJit.pJitEntryTable[idx].u.info.isMethodEntry == methodEntry) {
+            int offset = (gDvmJit.profileMode >= kTraceProfilingContinuous) ?
+                 0 : gDvmJit.pJitEntryTable[idx].u.info.profileOffset;
+            intptr_t codeAddress =
+                (intptr_t)gDvmJit.pJitEntryTable[idx].codeAddress;
 #if defined(WITH_JIT_TUNING)
             gDvmJit.addrLookupsFound++;
 #endif
-            return hideTranslation ?
-                NULL : gDvmJit.pJitEntryTable[idx].codeAddress;
+            return hideTranslation || !codeAddress ?  NULL :
+                  (void *)(codeAddress + offset);
         } else {
             int chainEndMarker = gDvmJit.jitTableSize;
             while (gDvmJit.pJitEntryTable[idx].u.info.chain != chainEndMarker) {
                 idx = gDvmJit.pJitEntryTable[idx].u.info.chain;
-                if (gDvmJit.pJitEntryTable[idx].dPC == dPC) {
+                if (gDvmJit.pJitEntryTable[idx].dPC == dPC &&
+                    gDvmJit.pJitEntryTable[idx].u.info.isMethodEntry ==
+                        methodEntry) {
+                    int offset = (gDvmJit.profileMode >=
+                        kTraceProfilingContinuous) ? 0 :
+                        gDvmJit.pJitEntryTable[idx].u.info.profileOffset;
+                    intptr_t codeAddress =
+                        (intptr_t)gDvmJit.pJitEntryTable[idx].codeAddress;
 #if defined(WITH_JIT_TUNING)
                     gDvmJit.addrLookupsFound++;
 #endif
-                    return hideTranslation ?
-                        NULL : gDvmJit.pJitEntryTable[idx].codeAddress;
+                    return hideTranslation || !codeAddress ? NULL :
+                        (void *)(codeAddress + offset);
                 }
             }
         }
@@ -1015,22 +1053,75 @@ void* dvmJitGetCodeAddr(const u2* dPC)
 }
 
 /*
+ * If a translated code address, in trace format, exists for the davik byte code
+ * pointer return it.
+ */
+void* dvmJitGetTraceAddr(const u2* dPC)
+{
+    return getCodeAddrCommon(dPC, false /* method entry */);
+}
+
+/*
+ * If a translated code address, in whole-method format, exists for the davik
+ * byte code pointer return it.
+ */
+void* dvmJitGetMethodAddr(const u2* dPC)
+{
+    return getCodeAddrCommon(dPC, true /* method entry */);
+}
+
+/*
+ * Similar to dvmJitGetTraceAddr, but returns null if the calling
+ * thread is in a single-step mode.
+ */
+void* dvmJitGetTraceAddrThread(const u2* dPC, Thread* self)
+{
+    return (self->interpBreak.ctl.breakFlags != 0) ? NULL :
+            getCodeAddrCommon(dPC, false /* method entry */);
+}
+
+/*
+ * Similar to dvmJitGetMethodAddr, but returns null if the calling
+ * thread is in a single-step mode.
+ */
+void* dvmJitGetMethodAddrThread(const u2* dPC, Thread* self)
+{
+    return (self->interpBreak.ctl.breakFlags != 0) ? NULL :
+            getCodeAddrCommon(dPC, true /* method entry */);
+}
+
+/*
  * Register the translated code pointer into the JitTable.
  * NOTE: Once a codeAddress field transitions from initial state to
  * JIT'd code, it must not be altered without first halting all
  * threads.  This routine should only be called by the compiler
- * thread.
+ * thread.  We defer the setting of the profile prefix size until
+ * after the new code address is set to ensure that the prefix offset
+ * is never applied to the initial interpret-only translation.  All
+ * translations with non-zero profile prefixes will still be correct
+ * if entered as if the profile offset is 0, but the interpret-only
+ * template cannot handle a non-zero prefix.
  */
-void dvmJitSetCodeAddr(const u2* dPC, void *nPC, JitInstructionSetType set) {
+void dvmJitSetCodeAddr(const u2* dPC, void *nPC, JitInstructionSetType set,
+                       bool isMethodEntry, int profilePrefixSize)
+{
     JitEntryInfoUnion oldValue;
     JitEntryInfoUnion newValue;
-    JitEntry *jitEntry = lookupAndAdd(dPC, false);
+    /*
+     * Method-based JIT doesn't go through the normal profiling phase, so use
+     * lookupAndAdd here to request a new entry in the table.
+     */
+    JitEntry *jitEntry = isMethodEntry ?
+        lookupAndAdd(dPC, false /* caller locked */, true) :
+        dvmJitFindEntry(dPC, isMethodEntry);
     assert(jitEntry);
     /* Note: order of update is important */
     do {
         oldValue = jitEntry->u;
         newValue = oldValue;
+        newValue.info.isMethodEntry = isMethodEntry;
         newValue.info.instructionSet = set;
+        newValue.info.profileOffset = profilePrefixSize;
     } while (android_atomic_release_cas(
              oldValue.infoWord, newValue.infoWord,
              &jitEntry->u.infoWord) != 0);
@@ -1038,13 +1129,12 @@ void dvmJitSetCodeAddr(const u2* dPC, void *nPC, JitInstructionSetType set) {
 }
 
 /*
- * Determine if valid trace-bulding request is active.  Return true
- * if we need to abort and switch back to the fast interpreter, false
- * otherwise.
+ * Determine if valid trace-bulding request is active.  If so, set
+ * the proper flags in interpBreak and return.  Trace selection will
+ * then begin normally via dvmCheckBefore.
  */
-bool dvmJitCheckTraceRequest(Thread* self, InterpState* interpState)
+void dvmJitCheckTraceRequest(Thread* self)
 {
-    bool switchInterp = false;         /* Assume success */
     int i;
     /*
      * A note on trace "hotness" filtering:
@@ -1064,7 +1154,7 @@ bool dvmJitCheckTraceRequest(Thread* self, InterpState* interpState)
      * number of very hot loops, we would want the second-level filter
      * to be very selective.  A good selective filter is requiring an
      * exact match of the Dalvik PC.  In other words, defining filterKey as:
-     *     intptr_t filterKey = (intptr_t)interpState->pc
+     *     intptr_t filterKey = (intptr_t)self->interpSave.pc
      *
      * However, for flat execution profiles we do best when aggressively
      * translating.  A heuristically decent proxy for this is to use
@@ -1072,7 +1162,7 @@ bool dvmJitCheckTraceRequest(Thread* self, InterpState* interpState)
      * Intuitively, this is saying that once any trace in a method appears hot,
      * immediately translate any other trace from that same method that
      * survives the first-level filter.  Here, filterKey would be defined as:
-     *     intptr_t filterKey = (intptr_t)interpState->method
+     *     intptr_t filterKey = (intptr_t)self->interpSave.method
      *
      * The problem is that we can't easily detect whether we're dealing
      * with a spiky or flat profile.  If we go with the "pc" match approach,
@@ -1094,22 +1184,25 @@ bool dvmJitCheckTraceRequest(Thread* self, InterpState* interpState)
      * alignment for method pointers, and half-word alignment of the Dalvik pc.
      * for method pointers and half-word alignment for dalvik pc.
      */
-    u4 methodKey = (u4)interpState->method <<
+    u4 methodKey = (u4)self->interpSave.method <<
                    (JIT_TRACE_THRESH_FILTER_PC_BITS - 2);
-    u4 pcKey = ((u4)interpState->pc >> 1) &
+    u4 pcKey = ((u4)self->interpSave.pc >> 1) &
                ((1 << JIT_TRACE_THRESH_FILTER_PC_BITS) - 1);
     intptr_t filterKey = (intptr_t)(methodKey | pcKey);
-    bool debugOrProfile = dvmDebuggerOrProfilerActive();
+
+    // Shouldn't be here if already building a trace.
+    assert((self->interpBreak.ctl.subMode & kSubModeJitTraceBuild)==0);
 
     /* Check if the JIT request can be handled now */
-    if (gDvmJit.pJitEntryTable != NULL && debugOrProfile == false) {
+    if ((gDvmJit.pJitEntryTable != NULL) &&
+        ((self->interpBreak.ctl.breakFlags & kInterpSingleStep) == 0)){
         /* Bypass the filter for hot trace requests or during stress mode */
-        if (interpState->jitState == kJitTSelectRequest &&
+        if (self->jitState == kJitTSelectRequest &&
             gDvmJit.threshold > 6) {
             /* Two-level filtering scheme */
             for (i=0; i< JIT_TRACE_THRESH_FILTER_SIZE; i++) {
-                if (filterKey == interpState->threshFilter[i]) {
-                    interpState->threshFilter[i] = 0; // Reset filter entry
+                if (filterKey == self->threshFilter[i]) {
+                    self->threshFilter[i] = 0; // Reset filter entry
                     break;
                 }
             }
@@ -1120,106 +1213,78 @@ bool dvmJitCheckTraceRequest(Thread* self, InterpState* interpState)
                  * filter array.
                  */
                 i = rand() % JIT_TRACE_THRESH_FILTER_SIZE;
-                interpState->threshFilter[i] = filterKey;
-                interpState->jitState = kJitDone;
+                self->threshFilter[i] = filterKey;
+                self->jitState = kJitDone;
             }
         }
 
         /* If the compiler is backlogged, cancel any JIT actions */
         if (gDvmJit.compilerQueueLength >= gDvmJit.compilerHighWater) {
-            interpState->jitState = kJitDone;
+            self->jitState = kJitDone;
         }
 
         /*
          * Check for additional reasons that might force the trace select
          * request to be dropped
          */
-        if (interpState->jitState == kJitTSelectRequest ||
-            interpState->jitState == kJitTSelectRequestHot) {
-            JitEntry *slot = lookupAndAdd(interpState->pc, false);
-            if (slot == NULL) {
-                /*
-                 * Table is full.  This should have been
-                 * detected by the compiler thread and the table
-                 * resized before we run into it here.  Assume bad things
-                 * are afoot and disable profiling.
-                 */
-                interpState->jitState = kJitDone;
-                LOGD("JIT: JitTable full, disabling profiling");
-                dvmJitStopTranslationRequests();
-            } else if (slot->u.info.traceConstruction) {
-                /*
-                 * Trace request already in progress, but most likely it
-                 * aborted without cleaning up.  Assume the worst and
-                 * mark trace head as untranslatable.  If we're wrong,
-                 * the compiler thread will correct the entry when the
-                 * translation is completed.  The downside here is that
-                 * some existing translation may chain to the interpret-only
-                 * template instead of the real translation during this
-                 * window.  Performance, but not correctness, issue.
-                 */
-                interpState->jitState = kJitDone;
-                resetTracehead(interpState, slot);
-            } else if (slot->codeAddress) {
-                 /* Nothing to do here - just return */
-                interpState->jitState = kJitDone;
+        if (self->jitState == kJitTSelectRequest ||
+            self->jitState == kJitTSelectRequestHot) {
+            if (dvmJitFindEntry(self->interpSave.pc, false)) {
+                /* In progress - nothing do do */
+               self->jitState = kJitDone;
             } else {
-                /*
-                 * Mark request.  Note, we are not guaranteed exclusivity
-                 * here.  A window exists for another thread to be
-                 * attempting to build this same trace.  Rather than
-                 * bear the cost of locking, we'll just allow that to
-                 * happen.  The compiler thread, if it chooses, can
-                 * discard redundant requests.
-                 */
-                setTraceConstruction(slot, true);
+                JitEntry *slot = lookupAndAdd(self->interpSave.pc,
+                                              false /* lock */,
+                                              false /* method entry */);
+                if (slot == NULL) {
+                    /*
+                     * Table is full.  This should have been
+                     * detected by the compiler thread and the table
+                     * resized before we run into it here.  Assume bad things
+                     * are afoot and disable profiling.
+                     */
+                    self->jitState = kJitDone;
+                    LOGD("JIT: JitTable full, disabling profiling");
+                    dvmJitStopTranslationRequests();
+                }
             }
         }
 
-        switch (interpState->jitState) {
+        switch (self->jitState) {
             case kJitTSelectRequest:
             case kJitTSelectRequestHot:
-                interpState->jitState = kJitTSelect;
-                interpState->currTraceHead = interpState->pc;
-                interpState->currTraceRun = 0;
-                interpState->totalTraceLen = 0;
-                interpState->currRunHead = interpState->pc;
-                interpState->currRunLen = 0;
-                interpState->trace[0].frag.startOffset =
-                     interpState->pc - interpState->method->insns;
-                interpState->trace[0].frag.numInsts = 0;
-                interpState->trace[0].frag.runEnd = false;
-                interpState->trace[0].frag.hint = kJitHintNone;
-                interpState->trace[0].frag.isCode = true;
-                interpState->lastPC = 0;
+                self->jitState = kJitTSelect;
+                self->traceMethod = self->interpSave.method;
+                self->currTraceHead = self->interpSave.pc;
+                self->currTraceRun = 0;
+                self->totalTraceLen = 0;
+                self->currRunHead = self->interpSave.pc;
+                self->currRunLen = 0;
+                self->trace[0].info.frag.startOffset =
+                     self->interpSave.pc - self->interpSave.method->insns;
+                self->trace[0].info.frag.numInsts = 0;
+                self->trace[0].info.frag.runEnd = false;
+                self->trace[0].info.frag.hint = kJitHintNone;
+                self->trace[0].isCode = true;
+                self->lastPC = 0;
+                /* Turn on trace selection mode */
+                dvmUpdateInterpBreak(self, kInterpJitBreak,
+                                     kSubModeJitTraceBuild, true);
+#if defined(SHOW_TRACE)
+                LOGD("Starting trace for %s at 0x%x",
+                     self->interpSave.method->name, (int)self->interpSave.pc);
+#endif
                 break;
-            /*
-             * For JIT's perspective there is no need to stay in the debug
-             * interpreter unless debugger/profiler is attached.
-             */
             case kJitDone:
-                switchInterp = true;
                 break;
             default:
-                LOGE("Unexpected JIT state: %d entry point: %d",
-                     interpState->jitState, interpState->entryPoint);
+                LOGE("Unexpected JIT state: %d", self->jitState);
                 dvmAbort();
         }
     } else {
-        /*
-         * Cannot build trace this time - ready to leave the dbg interpreter
-         */
-        interpState->jitState = kJitDone;
-        switchInterp = true;
+        /* Cannot build trace this time */
+        self->jitState = kJitDone;
     }
-
-    /*
-     * Final check to see if we can really switch the interpreter. Make sure
-     * the jitState is kJitDone when switchInterp is set to true.
-     */
-    assert(switchInterp == false || interpState->jitState == kJitDone);
-    return switchInterp && !debugOrProfile &&
-           !dvmJitStayInPortableInterpreter();
 }
 
 /*
@@ -1278,7 +1343,8 @@ bool dvmJitResizeJitTable( unsigned int size )
         if (pOldTable[i].dPC) {
             JitEntry *p;
             u2 chain;
-            p = lookupAndAdd(pOldTable[i].dPC, true /* holds tableLock*/ );
+            p = lookupAndAdd(pOldTable[i].dPC, true /* holds tableLock*/,
+                             pOldTable[i].u.info.isMethodEntry);
             p->codeAddress = pOldTable[i].codeAddress;
             /* We need to preserve the new chain field, but copy the rest */
             chain = p->u.info.chain;
@@ -1286,6 +1352,7 @@ bool dvmJitResizeJitTable( unsigned int size )
             p->u.info.chain = chain;
         }
     }
+
     dvmUnlockMutex(&gDvmJit.tableLock);
 
     free(pOldTable);
@@ -1306,12 +1373,48 @@ void dvmJitResetTable(void)
     unsigned int i;
 
     dvmLockMutex(&gDvmJit.tableLock);
+
+    /* Note: If need to preserve any existing counts. Do so here. */
+    if (gDvmJit.pJitTraceProfCounters) {
+        for (i=0; i < JIT_PROF_BLOCK_BUCKETS; i++) {
+            if (gDvmJit.pJitTraceProfCounters->buckets[i])
+                memset((void *) gDvmJit.pJitTraceProfCounters->buckets[i],
+                       0, sizeof(JitTraceCounter_t) * JIT_PROF_BLOCK_ENTRIES);
+        }
+        gDvmJit.pJitTraceProfCounters->next = 0;
+    }
+
     memset((void *) jitEntry, 0, sizeof(JitEntry) * size);
     for (i=0; i< size; i++) {
         jitEntry[i].u.info.chain = size;  /* Initialize chain termination */
     }
     gDvmJit.jitTableEntriesUsed = 0;
     dvmUnlockMutex(&gDvmJit.tableLock);
+}
+
+/*
+ * Return the address of the next trace profile counter.  This address
+ * will be embedded in the generated code for the trace, and thus cannot
+ * change while the trace exists.
+ */
+JitTraceCounter_t *dvmJitNextTraceCounter()
+{
+    int idx = gDvmJit.pJitTraceProfCounters->next / JIT_PROF_BLOCK_ENTRIES;
+    int elem = gDvmJit.pJitTraceProfCounters->next % JIT_PROF_BLOCK_ENTRIES;
+    JitTraceCounter_t *res;
+    /* Lazily allocate blocks of counters */
+    if (!gDvmJit.pJitTraceProfCounters->buckets[idx]) {
+        JitTraceCounter_t *p =
+              (JitTraceCounter_t*) calloc(JIT_PROF_BLOCK_ENTRIES, sizeof(*p));
+        if (!p) {
+            LOGE("Failed to allocate block of trace profile counters");
+            dvmAbort();
+        }
+        gDvmJit.pJitTraceProfCounters->buckets[idx] = p;
+    }
+    res = &gDvmJit.pJitTraceProfCounters->buckets[idx][elem];
+    gDvmJit.pJitTraceProfCounters->next++;
+    return res;
 }
 
 /*
@@ -1346,4 +1449,58 @@ s8 dvmJitf2l(float f)
         return (s8)f;
 }
 
+/* Should only be called by the compiler thread */
+void dvmJitChangeProfileMode(TraceProfilingModes newState)
+{
+    if (gDvmJit.profileMode != newState) {
+        gDvmJit.profileMode = newState;
+        dvmJitUnchainAll();
+    }
+}
+
+void dvmJitTraceProfilingOn()
+{
+    if (gDvmJit.profileMode == kTraceProfilingPeriodicOff)
+        dvmCompilerForceWorkEnqueue(NULL, kWorkOrderProfileMode,
+                                    (void*) kTraceProfilingPeriodicOn);
+    else if (gDvmJit.profileMode == kTraceProfilingDisabled)
+        dvmCompilerForceWorkEnqueue(NULL, kWorkOrderProfileMode,
+                                    (void*) kTraceProfilingContinuous);
+}
+
+void dvmJitTraceProfilingOff()
+{
+    if (gDvmJit.profileMode == kTraceProfilingPeriodicOn)
+        dvmCompilerForceWorkEnqueue(NULL, kWorkOrderProfileMode,
+                                    (void*) kTraceProfilingPeriodicOff);
+    else if (gDvmJit.profileMode == kTraceProfilingContinuous)
+        dvmCompilerForceWorkEnqueue(NULL, kWorkOrderProfileMode,
+                                    (void*) kTraceProfilingDisabled);
+}
+
+/*
+ * Update JIT-specific info in Thread structure for a single thread
+ */
+void dvmJitUpdateThreadStateSingle(Thread* thread)
+{
+    thread->pJitProfTable = gDvmJit.pProfTable;
+    thread->jitThreshold = gDvmJit.threshold;
+}
+
+/*
+ * Walk through the thread list and refresh all local copies of
+ * JIT global state (which was placed there for fast access).
+ */
+void dvmJitUpdateThreadStateAll()
+{
+    Thread* self = dvmThreadSelf();
+    Thread* thread;
+
+    dvmLockThreadList(self);
+    for (thread = gDvm.threadList; thread != NULL; thread = thread->next) {
+        dvmJitUpdateThreadStateSingle(thread);
+    }
+    dvmUnlockThreadList();
+
+}
 #endif /* WITH_JIT */

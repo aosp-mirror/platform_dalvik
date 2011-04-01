@@ -25,11 +25,12 @@ import com.android.dx.rop.cst.CstUtf8;
 import com.android.dx.rop.type.Prototype;
 import com.android.dx.rop.type.StdTypeList;
 import com.android.dx.rop.type.Type;
+import com.android.dx.util.ByteArrayByteInput;
+import com.android.dx.util.ByteInput;
 import com.android.dx.util.ExceptionWithContext;
 
-import java.io.ByteArrayInputStream;
+import com.android.dx.util.Leb128Utils;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -214,12 +215,11 @@ public class DebugInfoDecoder {
      * Reads a string index. String indicies are offset by 1, and a 0 value
      * in the stream (-1 as returned by this method) means "null"
      *
-     * @param bs
      * @return index into file's string ids table, -1 means null
      * @throws IOException
      */
-    private int readStringIndex(InputStream bs) throws IOException {
-        int offsetIndex = readUnsignedLeb128(bs);
+    private int readStringIndex(ByteInput bs) throws IOException {
+        int offsetIndex = Leb128Utils.readUnsignedLeb128(bs);
 
         return offsetIndex - 1;
     }
@@ -237,10 +237,10 @@ public class DebugInfoDecoder {
     }
 
     private void decode0() throws IOException {
-        ByteArrayInputStream bs = new ByteArrayInputStream(encoded);
+        ByteInput bs = new ByteArrayByteInput(encoded);
 
-        line = readUnsignedLeb128(bs);
-        int szParams = readUnsignedLeb128(bs);
+        line = Leb128Utils.readUnsignedLeb128(bs);
+        int szParams = Leb128Utils.readUnsignedLeb128(bs);
         StdTypeList params = desc.getParameterTypes();
         int curReg = getParamBase();
 
@@ -281,17 +281,11 @@ public class DebugInfoDecoder {
         }
 
         for (;;) {
-            int opcode = bs.read();
-
-            if (opcode < 0) {
-                throw new RuntimeException
-                        ("Reached end of debug stream without "
-                                + "encountering end marker");
-            }
+            int opcode = bs.readByte() & 0xff;
 
             switch (opcode) {
                 case DBG_START_LOCAL: {
-                    int reg = readUnsignedLeb128(bs);
+                    int reg = Leb128Utils.readUnsignedLeb128(bs);
                     int nameIdx = readStringIndex(bs);
                     int typeIdx = readStringIndex(bs);
                     LocalEntry le = new LocalEntry(
@@ -303,7 +297,7 @@ public class DebugInfoDecoder {
                 break;
 
                 case DBG_START_LOCAL_EXTENDED: {
-                    int reg = readUnsignedLeb128(bs);
+                    int reg = Leb128Utils.readUnsignedLeb128(bs);
                     int nameIdx = readStringIndex(bs);
                     int typeIdx = readStringIndex(bs);
                     int sigIdx = readStringIndex(bs);
@@ -316,7 +310,7 @@ public class DebugInfoDecoder {
                 break;
 
                 case DBG_RESTART_LOCAL: {
-                    int reg = readUnsignedLeb128(bs);
+                    int reg = Leb128Utils.readUnsignedLeb128(bs);
                     LocalEntry prevle;
                     LocalEntry le;
 
@@ -342,7 +336,7 @@ public class DebugInfoDecoder {
                 break;
 
                 case DBG_END_LOCAL: {
-                    int reg = readUnsignedLeb128(bs);
+                    int reg = Leb128Utils.readUnsignedLeb128(bs);
                     LocalEntry prevle;
                     LocalEntry le;
 
@@ -372,11 +366,11 @@ public class DebugInfoDecoder {
                 return;
 
                 case DBG_ADVANCE_PC:
-                    address += readUnsignedLeb128(bs);
+                    address += Leb128Utils.readUnsignedLeb128(bs);
                 break;
 
                 case DBG_ADVANCE_LINE:
-                    line += readSignedLeb128(bs);
+                    line += Leb128Utils.readSignedLeb128(bs);
                 break;
 
                 case DBG_SET_PROLOGUE_END:
@@ -588,66 +582,5 @@ public class DebugInfoDecoder {
             }
             throw new RuntimeException("local table problem");
         }
-    }
-
-    /**
-     * Reads a DWARFv3-style signed LEB128 integer to the specified stream.
-     * See DWARF v3 section 7.6. An invalid sequence produces an IOException.
-     *
-     * @param bs stream to input from
-     * @return read value
-     * @throws IOException on invalid sequence in addition to
-     * those caused by the InputStream
-     */
-    public static int readSignedLeb128(InputStream bs) throws IOException {
-        int result = 0;
-        int cur;
-        int count = 0;
-        int signBits = -1;
-
-        do {
-            cur = bs.read();
-            result |= (cur & 0x7f) << (count * 7);
-            signBits <<= 7;
-            count++;
-        } while (((cur & 0x80) == 0x80) && count < 5);
-
-        if ((cur & 0x80) == 0x80) {
-            throw new IOException ("invalid LEB128 sequence");
-        }
-
-        // Sign extend if appropriate
-        if (((signBits >> 1) & result) != 0 ) {
-            result |= signBits;
-        }
-
-        return result;
-    }
-
-    /**
-     * Reads a DWARFv3-style unsigned LEB128 integer to the specified stream.
-     * See DWARF v3 section 7.6. An invalid sequence produces an IOException.
-     *
-     * @param bs stream to input from
-     * @return read value, which should be treated as an unsigned value.
-     * @throws IOException on invalid sequence in addition to
-     * those caused by the InputStream
-     */
-    public static int readUnsignedLeb128(InputStream bs) throws IOException {
-        int result = 0;
-        int cur;
-        int count = 0;
-
-        do {
-            cur = bs.read();
-            result |= (cur & 0x7f) << (count * 7);
-            count++;
-        } while (((cur & 0x80) == 0x80) && count < 5);
-
-        if ((cur & 0x80) == 0x80) {
-            throw new IOException ("invalid LEB128 sequence");
-        }
-
-        return result;
     }
 }

@@ -22,7 +22,7 @@
 
 
 /*
- * private int getMethodModifiers(Class decl_class, int slot)
+ * static int getMethodModifiers(Class decl_class, int slot)
  *
  * (Not sure why the access flags weren't stored in the class along with
  * everything else.  Not sure why this isn't static.)
@@ -30,9 +30,8 @@
 static void Dalvik_java_lang_reflect_Method_getMethodModifiers(const u4* args,
     JValue* pResult)
 {
-    // ignore thisPtr in args[0]
-    ClassObject* declaringClass = (ClassObject*) args[1];
-    int slot = args[2];
+    ClassObject* declaringClass = (ClassObject*) args[0];
+    int slot = args[1];
     Method* meth;
 
     meth = dvmSlotToMethod(declaringClass, slot);
@@ -114,16 +113,15 @@ init_failed:
 }
 
 /*
- * public Annotation[] getDeclaredAnnotations(Class declaringClass, int slot)
+ * static Annotation[] getDeclaredAnnotations(Class declaringClass, int slot)
  *
  * Return the annotations declared for this method.
  */
 static void Dalvik_java_lang_reflect_Method_getDeclaredAnnotations(
     const u4* args, JValue* pResult)
 {
-    // ignore thisPtr in args[0]
-    ClassObject* declaringClass = (ClassObject*) args[1];
-    int slot = args[2];
+    ClassObject* declaringClass = (ClassObject*) args[0];
+    int slot = args[1];
     Method* meth;
 
     meth = dvmSlotToMethod(declaringClass, slot);
@@ -135,16 +133,45 @@ static void Dalvik_java_lang_reflect_Method_getDeclaredAnnotations(
 }
 
 /*
- * public Annotation[] getParameterAnnotations(Class declaringClass, int slot)
+ * static Annotation getAnnotation(
+ *         Class declaringClass, int slot, Class annotationType);
+ */
+static void Dalvik_java_lang_reflect_Method_getAnnotation(const u4* args,
+    JValue* pResult)
+{
+    ClassObject* clazz = (ClassObject*) args[0];
+    int slot = args[1];
+    ClassObject* annotationClazz = (ClassObject*) args[2];
+
+    Method* meth = dvmSlotToMethod(clazz, slot);
+    RETURN_PTR(dvmGetMethodAnnotation(clazz, meth, annotationClazz));
+}
+
+/*
+ * static boolean isAnnotationPresent(
+ *         Class declaringClass, int slot, Class annotationType);
+ */
+static void Dalvik_java_lang_reflect_Method_isAnnotationPresent(const u4* args,
+    JValue* pResult)
+{
+    ClassObject* clazz = (ClassObject*) args[0];
+    int slot = args[1];
+    ClassObject* annotationClazz = (ClassObject*) args[2];
+
+    Method* meth = dvmSlotToMethod(clazz, slot);
+    RETURN_BOOLEAN(dvmIsMethodAnnotationPresent(clazz, meth, annotationClazz));
+}
+
+/*
+ * static Annotation[][] getParameterAnnotations(Class declaringClass, int slot)
  *
  * Return the annotations declared for this method's parameters.
  */
 static void Dalvik_java_lang_reflect_Method_getParameterAnnotations(
     const u4* args, JValue* pResult)
 {
-    // ignore thisPtr in args[0]
-    ClassObject* declaringClass = (ClassObject*) args[1];
-    int slot = args[2];
+    ClassObject* declaringClass = (ClassObject*) args[0];
+    int slot = args[1];
     Method* meth;
 
     meth = dvmSlotToMethod(declaringClass, slot);
@@ -182,16 +209,15 @@ static void Dalvik_java_lang_reflect_Method_getDefaultValue(const u4* args,
 }
 
 /*
- * private Object[] getSignatureAnnotation()
+ * static Object[] getSignatureAnnotation()
  *
  * Returns the signature annotation.
  */
 static void Dalvik_java_lang_reflect_Method_getSignatureAnnotation(
     const u4* args, JValue* pResult)
 {
-    // ignore thisPtr in args[0]
-    ClassObject* declaringClass = (ClassObject*) args[1];
-    int slot = args[2];
+    ClassObject* declaringClass = (ClassObject*) args[0];
+    int slot = args[1];
     Method* meth;
 
     meth = dvmSlotToMethod(declaringClass, slot);
@@ -209,6 +235,10 @@ const DalvikNativeMethod dvm_java_lang_reflect_Method[] = {
         Dalvik_java_lang_reflect_Method_invokeNative },
     { "getDeclaredAnnotations", "(Ljava/lang/Class;I)[Ljava/lang/annotation/Annotation;",
         Dalvik_java_lang_reflect_Method_getDeclaredAnnotations },
+    { "getAnnotation", "(Ljava/lang/Class;ILjava/lang/Class;)Ljava/lang/annotation/Annotation;",
+        Dalvik_java_lang_reflect_Method_getAnnotation },
+    { "isAnnotationPresent", "(Ljava/lang/Class;ILjava/lang/Class;)Z",
+        Dalvik_java_lang_reflect_Method_isAnnotationPresent },
     { "getParameterAnnotations", "(Ljava/lang/Class;I)[[Ljava/lang/annotation/Annotation;",
         Dalvik_java_lang_reflect_Method_getParameterAnnotations },
     { "getDefaultValue",    "(Ljava/lang/Class;I)Ljava/lang/Object;",

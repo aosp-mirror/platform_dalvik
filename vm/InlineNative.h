@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 /*
  * Inlined native functions.
  */
@@ -21,7 +22,6 @@
 
 /* startup/shutdown */
 bool dvmInlineNativeStartup(void);
-bool dvmInlineNativeCheck(void);
 void dvmInlineNativeShutdown(void);
 
 Method* dvmFindInlinableMethod(const char* classDescriptor,
@@ -52,7 +52,11 @@ typedef struct InlineOperation {
     const char*     methodSignature;
 } InlineOperation;
 
-/* Must be kept in sync w/ gDvmInlineOpsTable in InlineNative.c */
+/*
+ * Must be kept in sync w/ gDvmInlineOpsTable in InlineNative.c
+ *
+ * You should also add a test to libcore's IntrinsicTest.
+ */
 typedef enum NativeInlineOps {
     INLINE_EMPTYINLINEMETHOD = 0,
     INLINE_STRING_CHARAT = 1,
@@ -111,5 +115,10 @@ INLINE bool dvmPerformInlineOp4Std(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
  */
 bool dvmPerformInlineOp4Dbg(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
     JValue* pResult, int opIndex);
+
+/*
+ * Return method & populate the table on first use.
+ */
+Method* dvmResolveInlineNative(int opIndex);
 
 #endif /*_DALVIK_INLINENATIVE*/

@@ -12,12 +12,16 @@
      * us if an exception was thrown.
      */
     /* [opt] execute-inline/range {vCCCC..v(CCCC+AA-1)}, inline@BBBB */
+    ldrb    r2, [rSELF, #offThread_subMode]
     FETCH(r10, 1)                       @ r10<- BBBB
-    add     r1, rGLUE, #offGlue_retval  @ r1<- &glue->retval
     EXPORT_PC()                         @ can throw
+    ands    r2, #kSubModeDebugProfile   @ Any going on?
+    bne     .L${opcode}_debugmode       @ yes - take slow path
+.L${opcode}_resume:
+    add     r1, rSELF, #offThread_retval  @ r1<- &self->retval
     sub     sp, sp, #8                  @ make room for arg, +64 bit align
     mov     r0, rINST, lsr #8           @ r0<- AA
-    str     r1, [sp]                    @ push &glue->retval
+    str     r1, [sp]                    @ push &self->retval
     bl      .L${opcode}_continue        @ make call; will return after
     add     sp, sp, #8                  @ pop stack
     cmp     r0, #0                      @ test boolean result of inline
@@ -51,5 +55,39 @@
     ldr     pc, [r9, r10, lsl #4]       @ sizeof=16, "func" is first entry
     @ (not reached)
 
+
+    /*
+     * We're debugging or profiling.
+     * r10: opIndex
+     */
+.L${opcode}_debugmode:
+    mov     r0, r10
+    bl      dvmResolveInlineNative
+    cmp     r0, #0                      @ did it resolve?
+    beq     .L${opcode}_resume          @ no, just move on
+    mov     r9, r0                      @ remember method
+    mov     r1, rSELF
+    bl      dvmFastMethodTraceEnter     @ (method, self)
+    add     r1, rSELF, #offThread_retval@ r1<- &self->retval
+    sub     sp, sp, #8                  @ make room for arg, +64 bit align
+    mov     r0, rINST, lsr #8           @ r0<- B
+    mov     rINST, r9                   @ rINST<- method
+    str     r1, [sp]                    @ push &self->retval
+    bl      .L${opcode}_continue        @ make call; will return after
+    mov     r9, r0                      @ save result of inline
+    add     sp, sp, #8                  @ pop stack
+    mov     r0, rINST                   @ r0<- method
+    mov     r1, rSELF
+    bl      dvmFastNativeMethodTraceExit  @ (method, self)
+    cmp     r9, #0                      @ test boolean result of inline
+    beq     common_exceptionThrown      @ returned false, handle exception
+    FETCH_ADVANCE_INST(3)               @ advance rPC, load rINST
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    GOTO_OPCODE(ip)                     @ jump to next instruction
+
+
+
+
 .L${opcode}_table:
     .word   gDvmInlineOpsTable
+

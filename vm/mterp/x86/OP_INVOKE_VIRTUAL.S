@@ -10,22 +10,17 @@
      */
     /* op vB, {vD, vE, vF, vG, vA}, class@CCCC */
     /* op vAA, {vCCCC..v(CCCC+AA-1)}, meth@BBBB */
-    movl      rGLUE,%eax
+    movl      rSELF,%eax
     movzwl    2(rPC),%ecx                 # ecx<- BBBB
-    movl      offGlue_methodClassDex(%eax),%eax  # eax<- pDvmDex
+    movl      offThread_methodClassDex(%eax),%eax  # eax<- pDvmDex
     EXPORT_PC
     movl      offDvmDex_pResMethods(%eax),%eax   # eax<- pDvmDex->pResMethods
     movl      (%eax,%ecx,4),%eax          # eax<- resolved baseMethod
     testl     %eax,%eax                   # already resolved?
     jne       .L${opcode}_continue        # yes, continue
-    movl      rGLUE,%eax
+    movl      rSELF,%eax
     movl      %ecx,OUT_ARG1(%esp)         # arg1<- ref
-    movl      offGlue_method(%eax),%eax   # eax<- glue->method
-    jmp       .L${opcode}_more
-%break
-
-
-.L${opcode}_more:
+    movl      offThread_method(%eax),%eax   # eax<- self->method
     movl      offMethod_clazz(%eax),%eax  # ecx<- method->clazz
     movl      %eax,OUT_ARG0(%esp)         # arg0<- clazz
     movl      $$METHOD_VIRTUAL,OUT_ARG2(%esp) # arg2<- flags

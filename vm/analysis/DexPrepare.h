@@ -23,12 +23,16 @@
 /*
  * Global DEX optimizer control.  Determines the circumstances in which we
  * try to rewrite instructions in the DEX file.
+ *
+ * Optimizing is performed ahead-of-time by dexopt and, in some cases, at
+ * load time by the VM.
  */
 typedef enum DexOptimizerMode {
     OPTIMIZE_MODE_UNKNOWN = 0,
-    OPTIMIZE_MODE_NONE,         /* never optimize */
+    OPTIMIZE_MODE_NONE,         /* never optimize (except "essential") */
     OPTIMIZE_MODE_VERIFIED,     /* only optimize verified classes (default) */
-    OPTIMIZE_MODE_ALL           /* optimize all classes */
+    OPTIMIZE_MODE_ALL,          /* optimize verified & unverified (risky) */
+    OPTIMIZE_MODE_FULL          /* fully opt verified classes at load time */
 } DexOptimizerMode;
 
 /* some additional bit flags for dexopt */
@@ -118,5 +122,16 @@ bool dvmOptimizeDexFile(int fd, off_t dexOffset, long dexLen,
  */
 bool dvmContinueOptimization(int fd, off_t dexOffset, long dexLength,
     const char* fileName, u4 modWhen, u4 crc, bool isBootstrap);
+
+/*
+ * Prepare DEX data that is only available to the VM as in-memory data.
+ */
+bool dvmPrepareDexInMemory(u1* addr, size_t len, DvmDex** ppDvmDex);
+
+/*
+ * Prep data structures.
+ */
+bool dvmCreateInlineSubsTable(void);
+void dvmFreeInlineSubsTable(void);
 
 #endif /*_DALVIK_DEXPREPARE*/

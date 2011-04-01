@@ -1,12 +1,12 @@
 /* forward declarations of goto targets */
-GOTO_TARGET_DECL(filledNewArray, bool methodCallRange);
-GOTO_TARGET_DECL(invokeVirtual, bool methodCallRange);
-GOTO_TARGET_DECL(invokeSuper, bool methodCallRange);
-GOTO_TARGET_DECL(invokeInterface, bool methodCallRange);
-GOTO_TARGET_DECL(invokeDirect, bool methodCallRange);
-GOTO_TARGET_DECL(invokeStatic, bool methodCallRange);
-GOTO_TARGET_DECL(invokeVirtualQuick, bool methodCallRange);
-GOTO_TARGET_DECL(invokeSuperQuick, bool methodCallRange);
+GOTO_TARGET_DECL(filledNewArray, bool methodCallRange, bool jumboFormat);
+GOTO_TARGET_DECL(invokeVirtual, bool methodCallRange, bool jumboFormat);
+GOTO_TARGET_DECL(invokeSuper, bool methodCallRange, bool jumboFormat);
+GOTO_TARGET_DECL(invokeInterface, bool methodCallRange, bool jumboFormat);
+GOTO_TARGET_DECL(invokeDirect, bool methodCallRange, bool jumboFormat);
+GOTO_TARGET_DECL(invokeStatic, bool methodCallRange, bool jumboFormat);
+GOTO_TARGET_DECL(invokeVirtualQuick, bool methodCallRange, bool jumboFormat);
+GOTO_TARGET_DECL(invokeSuperQuick, bool methodCallRange, bool jumboFormat);
 GOTO_TARGET_DECL(invokeMethod, bool methodCallRange, const Method* methodToCall,
     u2 count, u2 regs);
 GOTO_TARGET_DECL(returnFromMethod);
@@ -104,7 +104,7 @@ GOTO_TARGET_DECL(exceptionThrown);
                 branchOffset);                                              \
             ILOGV("> branch taken");                                        \
             if (branchOffset < 0)                                           \
-                PERIODIC_CHECKS(kInterpEntryInstr, branchOffset);           \
+                PERIODIC_CHECKS(branchOffset);                              \
             FINISH(branchOffset);                                           \
         } else {                                                            \
             ILOGV("|if-%s v%d,v%d,-", (_opname), vsrc1, vsrc2);             \
@@ -119,7 +119,7 @@ GOTO_TARGET_DECL(exceptionThrown);
             ILOGV("|if-%s v%d,+0x%04x", (_opname), vsrc1, branchOffset);    \
             ILOGV("> branch taken");                                        \
             if (branchOffset < 0)                                           \
-                PERIODIC_CHECKS(kInterpEntryInstr, branchOffset);           \
+                PERIODIC_CHECKS(branchOffset);                              \
             FINISH(branchOffset);                                           \
         } else {                                                            \
             ILOGV("|if-%s v%d,-", (_opname), vsrc1);                        \
@@ -149,8 +149,7 @@ GOTO_TARGET_DECL(exceptionThrown);
             secondVal = GET_REGISTER(vsrc2);                                \
             if (secondVal == 0) {                                           \
                 EXPORT_PC();                                                \
-                dvmThrowException("Ljava/lang/ArithmeticException;",        \
-                    "divide by zero");                                      \
+                dvmThrowArithmeticException("divide by zero");              \
                 GOTO_exceptionThrown();                                     \
             }                                                               \
             if ((u4)firstVal == 0x80000000 && secondVal == -1) {            \
@@ -196,9 +195,8 @@ GOTO_TARGET_DECL(exceptionThrown);
             firstVal = GET_REGISTER(vsrc1);                                 \
             if ((s2) vsrc2 == 0) {                                          \
                 EXPORT_PC();                                                \
-                dvmThrowException("Ljava/lang/ArithmeticException;",        \
-                    "divide by zero");                                      \
-                GOTO_exceptionThrown();                                      \
+                dvmThrowArithmeticException("divide by zero");              \
+                GOTO_exceptionThrown();                                     \
             }                                                               \
             if ((u4)firstVal == 0x80000000 && ((s2) vsrc2) == -1) {         \
                 /* won't generate /lit16 instr for this; check anyway */    \
@@ -231,8 +229,7 @@ GOTO_TARGET_DECL(exceptionThrown);
             firstVal = GET_REGISTER(vsrc1);                                 \
             if ((s1) vsrc2 == 0) {                                          \
                 EXPORT_PC();                                                \
-                dvmThrowException("Ljava/lang/ArithmeticException;",        \
-                    "divide by zero");                                      \
+                dvmThrowArithmeticException("divide by zero");              \
                 GOTO_exceptionThrown();                                     \
             }                                                               \
             if ((u4)firstVal == 0x80000000 && ((s1) vsrc2) == -1) {         \
@@ -277,8 +274,7 @@ GOTO_TARGET_DECL(exceptionThrown);
             secondVal = GET_REGISTER(vsrc1);                                \
             if (secondVal == 0) {                                           \
                 EXPORT_PC();                                                \
-                dvmThrowException("Ljava/lang/ArithmeticException;",        \
-                    "divide by zero");                                      \
+                dvmThrowArithmeticException("divide by zero");              \
                 GOTO_exceptionThrown();                                     \
             }                                                               \
             if ((u4)firstVal == 0x80000000 && secondVal == -1) {            \
@@ -320,8 +316,7 @@ GOTO_TARGET_DECL(exceptionThrown);
             secondVal = GET_REGISTER_WIDE(vsrc2);                           \
             if (secondVal == 0LL) {                                         \
                 EXPORT_PC();                                                \
-                dvmThrowException("Ljava/lang/ArithmeticException;",        \
-                    "divide by zero");                                      \
+                dvmThrowArithmeticException("divide by zero");              \
                 GOTO_exceptionThrown();                                     \
             }                                                               \
             if ((u8)firstVal == 0x8000000000000000ULL &&                    \
@@ -367,8 +362,7 @@ GOTO_TARGET_DECL(exceptionThrown);
             secondVal = GET_REGISTER_WIDE(vsrc1);                           \
             if (secondVal == 0LL) {                                         \
                 EXPORT_PC();                                                \
-                dvmThrowException("Ljava/lang/ArithmeticException;",        \
-                    "divide by zero");                                      \
+                dvmThrowArithmeticException("divide by zero");              \
                 GOTO_exceptionThrown();                                     \
             }                                                               \
             if ((u8)firstVal == 0x8000000000000000ULL &&                    \
@@ -458,7 +452,8 @@ GOTO_TARGET_DECL(exceptionThrown);
         if (!checkForNull((Object*) arrayObj))                              \
             GOTO_exceptionThrown();                                         \
         if (GET_REGISTER(vsrc2) >= arrayObj->length) {                      \
-            dvmThrowAIOOBE(GET_REGISTER(vsrc2), arrayObj->length);          \
+            dvmThrowArrayIndexOutOfBoundsException(                         \
+                arrayObj->length, GET_REGISTER(vsrc2));                     \
             GOTO_exceptionThrown();                                         \
         }                                                                   \
         SET_REGISTER##_regsize(vdst,                                        \
@@ -482,7 +477,8 @@ GOTO_TARGET_DECL(exceptionThrown);
         if (!checkForNull((Object*) arrayObj))                              \
             GOTO_exceptionThrown();                                         \
         if (GET_REGISTER(vsrc2) >= arrayObj->length) {                      \
-            dvmThrowAIOOBE(GET_REGISTER(vsrc2), arrayObj->length);          \
+            dvmThrowArrayIndexOutOfBoundsException(                         \
+                arrayObj->length, GET_REGISTER(vsrc2));                     \
             GOTO_exceptionThrown();                                         \
         }                                                                   \
         ILOGV("+ APUT[%d]=0x%08x", GET_REGISTER(vsrc2), GET_REGISTER(vdst));\
@@ -535,6 +531,34 @@ GOTO_TARGET_DECL(exceptionThrown);
     }                                                                       \
     FINISH(2);
 
+#define HANDLE_IGET_X_JUMBO(_opcode, _opname, _ftype, _regsize)             \
+    HANDLE_OPCODE(_opcode /*vBBBB, vCCCC, class@AAAAAAAA*/)                 \
+    {                                                                       \
+        InstField* ifield;                                                  \
+        Object* obj;                                                        \
+        EXPORT_PC();                                                        \
+        ref = FETCH(1) | (u4)FETCH(2) << 16;   /* field ref */              \
+        vdst = FETCH(3);                                                    \
+        vsrc1 = FETCH(4);                      /* object ptr */             \
+        ILOGV("|iget%s/jumbo v%d,v%d,field@0x%08x",                         \
+            (_opname), vdst, vsrc1, ref);                                   \
+        obj = (Object*) GET_REGISTER(vsrc1);                                \
+        if (!checkForNull(obj))                                             \
+            GOTO_exceptionThrown();                                         \
+        ifield = (InstField*) dvmDexGetResolvedField(methodClassDex, ref);  \
+        if (ifield == NULL) {                                               \
+            ifield = dvmResolveInstField(curMethod->clazz, ref);            \
+            if (ifield == NULL)                                             \
+                GOTO_exceptionThrown();                                     \
+        }                                                                   \
+        SET_REGISTER##_regsize(vdst,                                        \
+            dvmGetField##_ftype(obj, ifield->byteOffset));                  \
+        ILOGV("+ IGET '%s'=0x%08llx", ifield->field.name,                   \
+            (u8) GET_REGISTER##_regsize(vdst));                             \
+        UPDATE_FIELD_GET(&ifield->field);                                   \
+    }                                                                       \
+    FINISH(5);
+
 #define HANDLE_IGET_X_QUICK(_opcode, _opname, _ftype, _regsize)             \
     HANDLE_OPCODE(_opcode /*vA, vB, field@CCCC*/)                           \
     {                                                                       \
@@ -580,6 +604,34 @@ GOTO_TARGET_DECL(exceptionThrown);
     }                                                                       \
     FINISH(2);
 
+#define HANDLE_IPUT_X_JUMBO(_opcode, _opname, _ftype, _regsize)             \
+    HANDLE_OPCODE(_opcode /*vBBBB, vCCCC, class@AAAAAAAA*/)                 \
+    {                                                                       \
+        InstField* ifield;                                                  \
+        Object* obj;                                                        \
+        EXPORT_PC();                                                        \
+        ref = FETCH(1) | (u4)FETCH(2) << 16;   /* field ref */              \
+        vdst = FETCH(3);                                                    \
+        vsrc1 = FETCH(4);                      /* object ptr */             \
+        ILOGV("|iput%s/jumbo v%d,v%d,field@0x%08x",                         \
+            (_opname), vdst, vsrc1, ref);                                   \
+        obj = (Object*) GET_REGISTER(vsrc1);                                \
+        if (!checkForNull(obj))                                             \
+            GOTO_exceptionThrown();                                         \
+        ifield = (InstField*) dvmDexGetResolvedField(methodClassDex, ref);  \
+        if (ifield == NULL) {                                               \
+            ifield = dvmResolveInstField(curMethod->clazz, ref);            \
+            if (ifield == NULL)                                             \
+                GOTO_exceptionThrown();                                     \
+        }                                                                   \
+        dvmSetField##_ftype(obj, ifield->byteOffset,                        \
+            GET_REGISTER##_regsize(vdst));                                  \
+        ILOGV("+ IPUT '%s'=0x%08llx", ifield->field.name,                   \
+            (u8) GET_REGISTER##_regsize(vdst));                             \
+        UPDATE_FIELD_PUT(&ifield->field);                                   \
+    }                                                                       \
+    FINISH(5);
+
 #define HANDLE_IPUT_X_QUICK(_opcode, _opname, _ftype, _regsize)             \
     HANDLE_OPCODE(_opcode /*vA, vB, field@CCCC*/)                           \
     {                                                                       \
@@ -600,9 +652,12 @@ GOTO_TARGET_DECL(exceptionThrown);
 
 /*
  * The JIT needs dvmDexGetResolvedField() to return non-null.
- * Since we use the portable interpreter to build the trace, the extra
- * checks in HANDLE_SGET_X and HANDLE_SPUT_X are not needed for mterp.
+ * Because the portable interpreter is not involved with the JIT
+ * and trace building, we only need the extra check here when this
+ * code is massaged into a stub called from an assembly interpreter.
+ * This is controlled by the JIT_STUB_HACK maco.
  */
+
 #define HANDLE_SGET_X(_opcode, _opname, _ftype, _regsize)                   \
     HANDLE_OPCODE(_opcode /*vAA, field@BBBB*/)                              \
     {                                                                       \
@@ -617,7 +672,7 @@ GOTO_TARGET_DECL(exceptionThrown);
             if (sfield == NULL)                                             \
                 GOTO_exceptionThrown();                                     \
             if (dvmDexGetResolvedField(methodClassDex, ref) == NULL) {      \
-                ABORT_JIT_TSELECT();                                        \
+                JIT_STUB_HACK(dvmJitEndTraceSelect(self,pc));                  \
             }                                                               \
         }                                                                   \
         SET_REGISTER##_regsize(vdst, dvmGetStaticField##_ftype(sfield));    \
@@ -626,6 +681,30 @@ GOTO_TARGET_DECL(exceptionThrown);
         UPDATE_FIELD_GET(&sfield->field);                                   \
     }                                                                       \
     FINISH(2);
+
+#define HANDLE_SGET_X_JUMBO(_opcode, _opname, _ftype, _regsize)             \
+    HANDLE_OPCODE(_opcode /*vBBBB, class@AAAAAAAA*/)                        \
+    {                                                                       \
+        StaticField* sfield;                                                \
+        ref = FETCH(1) | (u4)FETCH(2) << 16;   /* field ref */              \
+        vdst = FETCH(3);                                                    \
+        ILOGV("|sget%s/jumbo v%d,sfield@0x%08x", (_opname), vdst, ref);     \
+        sfield = (StaticField*)dvmDexGetResolvedField(methodClassDex, ref); \
+        if (sfield == NULL) {                                               \
+            EXPORT_PC();                                                    \
+            sfield = dvmResolveStaticField(curMethod->clazz, ref);          \
+            if (sfield == NULL)                                             \
+                GOTO_exceptionThrown();                                     \
+            if (dvmDexGetResolvedField(methodClassDex, ref) == NULL) {      \
+                JIT_STUB_HACK(dvmJitEndTraceSelect(self,pc));                  \
+            }                                                               \
+        }                                                                   \
+        SET_REGISTER##_regsize(vdst, dvmGetStaticField##_ftype(sfield));    \
+        ILOGV("+ SGET '%s'=0x%08llx",                                       \
+            sfield->field.name, (u8)GET_REGISTER##_regsize(vdst));          \
+        UPDATE_FIELD_GET(&sfield->field);                                   \
+    }                                                                       \
+    FINISH(4);
 
 #define HANDLE_SPUT_X(_opcode, _opname, _ftype, _regsize)                   \
     HANDLE_OPCODE(_opcode /*vAA, field@BBBB*/)                              \
@@ -641,7 +720,7 @@ GOTO_TARGET_DECL(exceptionThrown);
             if (sfield == NULL)                                             \
                 GOTO_exceptionThrown();                                     \
             if (dvmDexGetResolvedField(methodClassDex, ref) == NULL) {      \
-                ABORT_JIT_TSELECT();                                        \
+                JIT_STUB_HACK(dvmJitEndTraceSelect(self,pc));                  \
             }                                                               \
         }                                                                   \
         dvmSetStaticField##_ftype(sfield, GET_REGISTER##_regsize(vdst));    \
@@ -650,3 +729,27 @@ GOTO_TARGET_DECL(exceptionThrown);
         UPDATE_FIELD_PUT(&sfield->field);                                   \
     }                                                                       \
     FINISH(2);
+
+#define HANDLE_SPUT_X_JUMBO(_opcode, _opname, _ftype, _regsize)             \
+    HANDLE_OPCODE(_opcode /*vBBBB, class@AAAAAAAA*/)                        \
+    {                                                                       \
+        StaticField* sfield;                                                \
+        ref = FETCH(1) | (u4)FETCH(2) << 16;   /* field ref */              \
+        vdst = FETCH(3);                                                    \
+        ILOGV("|sput%s/jumbo v%d,sfield@0x%08x", (_opname), vdst, ref);     \
+        sfield = (StaticField*)dvmDexGetResolvedField(methodClassDex, ref); \
+        if (sfield == NULL) {                                               \
+            EXPORT_PC();                                                    \
+            sfield = dvmResolveStaticField(curMethod->clazz, ref);          \
+            if (sfield == NULL)                                             \
+                GOTO_exceptionThrown();                                     \
+            if (dvmDexGetResolvedField(methodClassDex, ref) == NULL) {      \
+                JIT_STUB_HACK(dvmJitEndTraceSelect(self,pc));                  \
+            }                                                               \
+        }                                                                   \
+        dvmSetStaticField##_ftype(sfield, GET_REGISTER##_regsize(vdst));    \
+        ILOGV("+ SPUT '%s'=0x%08llx",                                       \
+            sfield->field.name, (u8)GET_REGISTER##_regsize(vdst));          \
+        UPDATE_FIELD_PUT(&sfield->field);                                   \
+    }                                                                       \
+    FINISH(4);

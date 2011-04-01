@@ -47,13 +47,13 @@ HANDLE_OPCODE(OP_EXECUTE_INLINE /*vB, {vD, vE, vF, vG}, inline@CCCC*/)
             ;
         }
 
-#if INTERP_TYPE == INTERP_DBG
-        if (!dvmPerformInlineOp4Dbg(arg0, arg1, arg2, arg3, &retval, ref))
-            GOTO_exceptionThrown();
-#else
-        if (!dvmPerformInlineOp4Std(arg0, arg1, arg2, arg3, &retval, ref))
-            GOTO_exceptionThrown();
-#endif
+        if (self->interpBreak.ctl.subMode & kSubModeDebuggerActive) {
+            if (!dvmPerformInlineOp4Dbg(arg0, arg1, arg2, arg3, &retval, ref))
+                GOTO_exceptionThrown();
+        } else {
+            if (!dvmPerformInlineOp4Std(arg0, arg1, arg2, arg3, &retval, ref))
+                GOTO_exceptionThrown();
+        }
     }
     FINISH(3);
 OP_END

@@ -20,6 +20,11 @@
 #include "alloc/Verify.h"
 #include "alloc/Visit.h"
 
+/*
+ * Visitor applied to each reference field when searching for things
+ * that point to an object.  Sets the argument to NULL when a match is
+ * found.
+ */
 static void dumpReferencesVisitor(void *pObj, void *arg)
 {
     Object *obj = *(Object **)pObj;
@@ -29,19 +34,27 @@ static void dumpReferencesVisitor(void *pObj, void *arg)
     }
 }
 
+/*
+ * Visitor applied to each bitmap element to search for things that
+ * point to an object.  Logs a message when a match is found.
+ */
 static void dumpReferencesCallback(void *ptr, void *arg)
 {
-    Object *obj = arg;
+    Object *obj = (Object *)arg;
     if (ptr == obj) {
         return;
     }
-    dvmVisitObject(dumpReferencesVisitor, ptr, &obj);
+    dvmVisitObject(dumpReferencesVisitor, (Object *)ptr, &obj);
     if (obj == NULL) {
         LOGD("Found %p in the heap @ %p", arg, ptr);
-        dvmDumpObject(ptr);
+        dvmDumpObject((Object *)ptr);
     }
 }
 
+/*
+ * Visitor applied to each root to search for things that point to an
+ * object.  Logs a message when a match is found.
+ */
 static void dumpReferencesRootVisitor(void *ptr, u4 threadId,
                                       RootType type, void *arg)
 {
@@ -79,7 +92,7 @@ static void verifyReference(void *addr, void *arg)
         isValid = dvmIsValidObject(obj);
     }
     if (!isValid) {
-        Object **parent = arg;
+        Object **parent = (Object **)arg;
         if (*parent != NULL) {
             LOGE("Verify of object %p failed", *parent);
             dvmDumpObject(*parent);
@@ -108,7 +121,7 @@ void dvmVerifyObject(const Object *obj)
  */
 static void verifyBitmapCallback(void *ptr, void *arg)
 {
-    dvmVerifyObject(ptr);
+    dvmVerifyObject((Object *)ptr);
 }
 
 /*

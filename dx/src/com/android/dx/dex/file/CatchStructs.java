@@ -19,8 +19,6 @@ package com.android.dx.dex.file;
 import com.android.dx.dex.code.CatchHandlerList;
 import com.android.dx.dex.code.CatchTable;
 import com.android.dx.dex.code.DalvCode;
-import com.android.dx.rop.cst.CstType;
-import com.android.dx.rop.type.Type;
 import com.android.dx.util.AnnotatedOutput;
 import com.android.dx.util.ByteArrayAnnotatedOutput;
 import com.android.dx.util.Hex;
@@ -141,7 +139,7 @@ public final class CatchStructs {
 
         // Write out the handlers "header" consisting of its size in entries.
         encodedHandlerHeaderSize =
-            out.writeUnsignedLeb128(handlerOffsets.size());
+            out.writeUleb128(handlerOffsets.size());
 
         // Now write the lists out in order, noting the offset of each.
         for (Map.Entry<CatchHandlerList, Integer> mapping :
@@ -155,21 +153,21 @@ public final class CatchStructs {
 
             if (catchesAll) {
                 // A size <= 0 means that the list ends with a catch-all.
-                out.writeSignedLeb128(-(listSize - 1));
+                out.writeSleb128(-(listSize - 1));
                 listSize--;
             } else {
-                out.writeSignedLeb128(listSize);
+                out.writeSleb128(listSize);
             }
 
             for (int i = 0; i < listSize; i++) {
                 CatchHandlerList.Entry entry = list.get(i);
-                out.writeUnsignedLeb128(
+                out.writeUleb128(
                         typeIds.indexOf(entry.getExceptionType()));
-                out.writeUnsignedLeb128(entry.getHandler());
+                out.writeUleb128(entry.getHandler());
             }
 
             if (catchesAll) {
-                out.writeUnsignedLeb128(list.get(listSize).getHandler());
+                out.writeUleb128(list.get(listSize).getHandler());
             }
         }
 

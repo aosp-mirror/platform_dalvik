@@ -56,19 +56,17 @@ static ArmLIR *loadFPConstantValue(CompilationUnit *cUnit, int rDest,
     if (encodedImm >= 0) {
         return newLIR2(cUnit, kThumb2Vmovs_IMM8, rDest, encodedImm);
     }
-    ArmLIR *dataTarget = scanLiteralPool(cUnit, value, 0);
+    ArmLIR *dataTarget = scanLiteralPool(cUnit->literalList, value, 0);
     if (dataTarget == NULL) {
-        dataTarget = addWordData(cUnit, value, false);
+        dataTarget = addWordData(cUnit, &cUnit->literalList, value);
     }
-    ArmLIR *loadPcRel = dvmCompilerNew(sizeof(ArmLIR), true);
+    ArmLIR *loadPcRel = (ArmLIR *) dvmCompilerNew(sizeof(ArmLIR), true);
     loadPcRel->opcode = kThumb2Vldrs;
     loadPcRel->generic.target = (LIR *) dataTarget;
     loadPcRel->operands[0] = rDest;
-    loadPcRel->operands[1] = rpc;
+    loadPcRel->operands[1] = r15pc;
     setupResourceMasks(loadPcRel);
-    // Self-cosim workaround.
-    if (rDest != rlr)
-        setMemRefType(loadPcRel, true, kLiteral);
+    setMemRefType(loadPcRel, true, kLiteral);
     loadPcRel->aliasInfo = dataTarget->operands[0];
     dvmCompilerAppendLIR(cUnit, (LIR *) loadPcRel);
     return loadPcRel;
@@ -166,25 +164,16 @@ static ArmLIR *loadConstantNoClobber(CompilationUnit *cUnit, int rDest,
         return res;
     }
     /* No shortcut - go ahead and use literal pool */
-    ArmLIR *dataTarget = scanLiteralPool(cUnit, value, 0);
+    ArmLIR *dataTarget = scanLiteralPool(cUnit->literalList, value, 0);
     if (dataTarget == NULL) {
-        dataTarget = addWordData(cUnit, value, false);
+        dataTarget = addWordData(cUnit, &cUnit->literalList, value);
     }
-    ArmLIR *loadPcRel = dvmCompilerNew(sizeof(ArmLIR), true);
+    ArmLIR *loadPcRel = (ArmLIR *) dvmCompilerNew(sizeof(ArmLIR), true);
     loadPcRel->opcode = kThumb2LdrPcRel12;
     loadPcRel->generic.target = (LIR *) dataTarget;
     loadPcRel->operands[0] = rDest;
     setupResourceMasks(loadPcRel);
-    /*
-     * Special case for literal loads with a link register target.
-     * Self-cosim mode will insert calls prior to heap references
-     * after optimization, and those will destroy r14.  The easy
-     * workaround is to treat literal loads into r14 as heap references
-     * to prevent them from being hoisted.  Use of r14 in this manner
-     * is currently rare.  Revisit if that changes.
-     */
-    if (rDest != rlr)
-        setMemRefType(loadPcRel, true, kLiteral);
+    setMemRefType(loadPcRel, true, kLiteral);
     loadPcRel->aliasInfo = dataTarget->operands[0];
     res = loadPcRel;
     dvmCompilerAppendLIR(cUnit, (LIR *) loadPcRel);
@@ -234,12 +223,30 @@ static ArmLIR *opImm(CompilationUnit *cUnit, OpKind op, int value)
 {
     ArmOpcode opcode = kThumbBkpt;
     switch (op) {
-        case kOpPush:
-            opcode = ((value & 0xff00) != 0) ? kThumb2Push : kThumbPush;
+        case kOpPush: {
+            if ((value & 0xff00) == 0) {
+                opcode = kThumbPush;
+            } else if ((value & 0xff00) == (1 << r14lr)) {
+                /* Thumb push can handle lr, which is encoded by bit 8 */
+                opcode = kThumbPush;
+                value = (value & 0xff) | (1<<8);
+            } else {
+                opcode = kThumb2Push;
+            }
             break;
-        case kOpPop:
-            opcode = ((value & 0xff00) != 0) ? kThumb2Pop : kThumbPop;
+        }
+        case kOpPop: {
+            if ((value & 0xff00) == 0) {
+                opcode = kThumbPop;
+            } else if ((value & 0xff00) == (1 << r15pc)) {
+                /* Thumb pop can handle pc, which is encoded by bit 8 */
+                opcode = kThumbPop;
+                value = (value & 0xff) | (1<<8);
+            } else {
+                opcode = kThumb2Pop;
+            }
             break;
+        }
         default:
             assert(0);
     }
@@ -482,11 +489,11 @@ static ArmLIR *opRegRegImm(CompilationUnit *cUnit, OpKind op, int rDest,
         case kOpRor:
             return newLIR3(cUnit, kThumb2RorRRI5, rDest, rSrc1, value);
         case kOpAdd:
-            if (LOWREG(rDest) && (rSrc1 == 13) &&
+            if (LOWREG(rDest) && (rSrc1 == r13sp) &&
                 (value <= 1020) && ((value & 0x3)==0)) {
                 return newLIR3(cUnit, kThumbAddSpRel, rDest, rSrc1,
                                value >> 2);
-            } else if (LOWREG(rDest) && (rSrc1 == rpc) &&
+            } else if (LOWREG(rDest) && (rSrc1 == r15pc) &&
                        (value <= 1020) && ((value & 0x3)==0)) {
                 return newLIR3(cUnit, kThumbAddPcRel, rDest, rSrc1,
                                value >> 2);
@@ -583,7 +590,7 @@ static ArmLIR *opRegImm(CompilationUnit *cUnit, OpKind op, int rDestSrc1,
     ArmOpcode opcode = kThumbBkpt;
     switch (op) {
         case kOpAdd:
-            if ( !neg && (rDestSrc1 == 13) && (value <= 508)) { /* sp */
+            if ( !neg && (rDestSrc1 == r13sp) && (value <= 508)) { /* sp */
                 assert((value & 0x3) == 0);
                 return newLIR1(cUnit, kThumbAddSpI7, value >> 2);
             } else if (shortForm) {
@@ -591,7 +598,7 @@ static ArmLIR *opRegImm(CompilationUnit *cUnit, OpKind op, int rDestSrc1,
             }
             break;
         case kOpSub:
-            if (!neg && (rDestSrc1 == 13) && (value <= 508)) { /* sp */
+            if (!neg && (rDestSrc1 == r13sp) && (value <= 508)) { /* sp */
                 assert((value & 0x3) == 0);
                 return newLIR1(cUnit, kThumbSubSpI7, value >> 2);
             } else if (shortForm) {
@@ -704,7 +711,7 @@ static ArmLIR *loadBaseIndexed(CompilationUnit *cUnit, int rBase,
             load = newLIR3(cUnit, opcode, rDest, regPtr, 0);
 #if defined(WITH_SELF_VERIFICATION)
             if (cUnit->heapMemOp)
-                load->branchInsertSV = true;
+                load->flags.insertWrapper = true;
 #endif
             return load;
         case kWord:
@@ -732,7 +739,7 @@ static ArmLIR *loadBaseIndexed(CompilationUnit *cUnit, int rBase,
 
 #if defined(WITH_SELF_VERIFICATION)
     if (cUnit->heapMemOp)
-        load->branchInsertSV = true;
+        load->flags.insertWrapper = true;
 #endif
     return load;
 }
@@ -768,7 +775,7 @@ static ArmLIR *storeBaseIndexed(CompilationUnit *cUnit, int rBase,
             store = newLIR3(cUnit, opcode, rSrc, regPtr, 0);
 #if defined(WITH_SELF_VERIFICATION)
             if (cUnit->heapMemOp)
-                store->branchInsertSV = true;
+                store->flags.insertWrapper = true;
 #endif
             return store;
         case kWord:
@@ -792,7 +799,7 @@ static ArmLIR *storeBaseIndexed(CompilationUnit *cUnit, int rBase,
 
 #if defined(WITH_SELF_VERIFICATION)
     if (cUnit->heapMemOp)
-        store->branchInsertSV = true;
+        store->flags.insertWrapper = true;
 #endif
     return store;
 }
@@ -844,12 +851,12 @@ static ArmLIR *loadBaseDispBody(CompilationUnit *cUnit, MIR *mir, int rBase,
                 }
                 break;
             }
-            if (LOWREG(rDest) && (rBase == rpc) &&
+            if (LOWREG(rDest) && (rBase == r15pc) &&
                 (displacement <= 1020) && (displacement >= 0)) {
                 shortForm = true;
                 encodedDisp >>= 2;
                 opcode = kThumbLdrPcRel;
-            } else if (LOWREG(rDest) && (rBase == r13) &&
+            } else if (LOWREG(rDest) && (rBase == r13sp) &&
                       (displacement <= 1020) && (displacement >= 0)) {
                 shortForm = true;
                 encodedDisp >>= 2;
@@ -909,12 +916,12 @@ static ArmLIR *loadBaseDispBody(CompilationUnit *cUnit, MIR *mir, int rBase,
         dvmCompilerFreeTemp(cUnit, regOffset);
     }
 
-    if (rBase == rFP) {
+    if (rBase == r5FP) {
         annotateDalvikRegAccess(load, displacement >> 2, true /* isLoad */);
     }
 #if defined(WITH_SELF_VERIFICATION)
     if (cUnit->heapMemOp)
-        load->branchInsertSV = true;
+        load->flags.insertWrapper = true;
 #endif
     return res;
 }
@@ -1022,12 +1029,12 @@ static ArmLIR *storeBaseDispBody(CompilationUnit *cUnit, int rBase,
         dvmCompilerFreeTemp(cUnit, rScratch);
     }
 
-    if (rBase == rFP) {
+    if (rBase == r5FP) {
         annotateDalvikRegAccess(store, displacement >> 2, false /* isLoad */);
     }
 #if defined(WITH_SELF_VERIFICATION)
     if (cUnit->heapMemOp)
-        store->branchInsertSV = true;
+        store->flags.insertWrapper = true;
 #endif
     return res;
 }
@@ -1055,7 +1062,7 @@ static ArmLIR *loadMultiple(CompilationUnit *cUnit, int rBase, int rMask)
     }
 #if defined(WITH_SELF_VERIFICATION)
     if (cUnit->heapMemOp)
-        res->branchInsertSV = true;
+        res->flags.insertWrapper = true;
 #endif
     genBarrier(cUnit);
     return res;
@@ -1072,7 +1079,7 @@ static ArmLIR *storeMultiple(CompilationUnit *cUnit, int rBase, int rMask)
     }
 #if defined(WITH_SELF_VERIFICATION)
     if (cUnit->heapMemOp)
-        res->branchInsertSV = true;
+        res->flags.insertWrapper = true;
 #endif
     genBarrier(cUnit);
     return res;
@@ -1121,11 +1128,11 @@ static ArmLIR *genCmpImmBranch(CompilationUnit *cUnit,
 
 static ArmLIR *fpRegCopy(CompilationUnit *cUnit, int rDest, int rSrc)
 {
-    ArmLIR* res = dvmCompilerNew(sizeof(ArmLIR), true);
+    ArmLIR* res = (ArmLIR *) dvmCompilerNew(sizeof(ArmLIR), true);
     res->operands[0] = rDest;
     res->operands[1] = rSrc;
     if (rDest == rSrc) {
-        res->isNop = true;
+        res->flags.isNop = true;
     } else {
         assert(DOUBLEREG(rDest) == DOUBLEREG(rSrc));
         if (DOUBLEREG(rDest)) {
@@ -1151,7 +1158,7 @@ static ArmLIR* genRegCopyNoInsert(CompilationUnit *cUnit, int rDest, int rSrc)
     ArmOpcode opcode;
     if (FPREG(rDest) || FPREG(rSrc))
         return fpRegCopy(cUnit, rDest, rSrc);
-    res = dvmCompilerNew(sizeof(ArmLIR), true);
+    res = (ArmLIR *) dvmCompilerNew(sizeof(ArmLIR), true);
     if (LOWREG(rDest) && LOWREG(rSrc))
         opcode = kThumbMovRR;
     else if (!LOWREG(rDest) && !LOWREG(rSrc))
@@ -1166,7 +1173,7 @@ static ArmLIR* genRegCopyNoInsert(CompilationUnit *cUnit, int rDest, int rSrc)
     res->opcode = opcode;
     setupResourceMasks(res);
     if (rDest == rSrc) {
-        res->isNop = true;
+        res->flags.isNop = true;
     }
     return res;
 }
@@ -1206,3 +1213,25 @@ static void genRegCopyWide(CompilationUnit *cUnit, int destLo, int destHi,
         }
     }
 }
+
+#if defined(WITH_SELF_VERIFICATION)
+static void genSelfVerificationPreBranch(CompilationUnit *cUnit,
+                                         ArmLIR *origLIR) {
+    ArmLIR *push = (ArmLIR *) dvmCompilerNew(sizeof(ArmLIR), true);
+    push->opcode = kThumbPush;
+    /* Thumb push can handle LR (encoded at bit 8) */
+    push->operands[0] = (1 << r5FP | 1 << 8);
+    setupResourceMasks(push);
+    dvmCompilerInsertLIRBefore((LIR *) origLIR, (LIR *) push);
+}
+
+static void genSelfVerificationPostBranch(CompilationUnit *cUnit,
+                                         ArmLIR *origLIR) {
+    ArmLIR *pop = (ArmLIR *) dvmCompilerNew(sizeof(ArmLIR), true);
+    /* Thumb pop cannot store into LR - use Thumb2 here */
+    pop->opcode = kThumb2Pop;
+    pop->operands[0] = (1 << r5FP | 1 << r14lr);
+    setupResourceMasks(pop);
+    dvmCompilerInsertLIRAfter((LIR *) origLIR, (LIR *) pop);
+}
+#endif

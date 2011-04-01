@@ -27,7 +27,7 @@
  *     esp is native SP
  *
  * For interpreter:
- *     edx is Dalvik PC (rPC)
+ *     edi is Dalvik PC (rPC)
  *     ebx is rINST
  *
  * For JIT:
@@ -80,10 +80,6 @@ typedef struct RegisterPool {
     int numFPTemps;
     RegisterInfo *FPTemps;
     int nextFPTemp;
-    int numCoreRegs;
-    RegisterInfo *coreRegs;
-    int numFPRegs;
-    RegisterInfo *FPRegs;
 } RegisterPool;
 
 typedef enum OpSize {
@@ -99,7 +95,6 @@ typedef enum OpSize {
 
 typedef enum OpKind {
     kOpMov,
-    kOpMvn,
     kOpCmp,
     kOpLsl,
     kOpLsr,
@@ -114,15 +109,11 @@ typedef enum OpKind {
     kOpAdc,
     kOpSub,
     kOpSbc,
-    kOpRsub,
     kOpMul,
     kOpDiv,
     kOpRem,
-    kOpBic,
-    kOpCmn,
     kOpTst,
-    kOpBkpt,
-    kOpBlx,
+    kOpCall,
     kOpPush,
     kOpPop,
     kOp2Char,
@@ -131,6 +122,37 @@ typedef enum OpKind {
     kOpCondBr,
     kOpUncondBr,
 } OpKind;
+
+#define FP_REG_OFFSET 8
+
+typedef enum NativeRegisterPool {
+    rEAX = 0,
+    rECX = 1,
+    rEDX = 2,
+    rEBX = 3,
+    rESP = 4,
+    rEBP = 5,
+    rESI = 6,
+    rEDI = 7,
+    rXMM0 = 0 + FP_REG_OFFSET,
+    rXMM1 = 1 + FP_REG_OFFSET,
+    rXMM2 = 2 + FP_REG_OFFSET,
+    rXMM3 = 3 + FP_REG_OFFSET,
+    rXMM4 = 4 + FP_REG_OFFSET,
+    rXMM5 = 5 + FP_REG_OFFSET,
+    rXMM6 = 6 + FP_REG_OFFSET,
+    rXMM7 = 7 + FP_REG_OFFSET,
+} NativeRegisterPool;
+
+#define rPC rEDI
+#define rFP rESI
+#define rINST rEBX
+
+#define OUT_ARG0 0
+#define OUT_ARG1 4
+#define OUT_ARG2 8
+#define OUT_ARG3 12
+#define OUT_ARG4 16
 
 typedef struct X86LIR {
     LIR generic;

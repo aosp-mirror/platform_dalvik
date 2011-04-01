@@ -124,21 +124,22 @@ static bool org_apache_harmony_dalvik_NativeTestTarget_emptyInlineMethod(
 /*
  * public char charAt(int index)
  */
-static bool javaLangString_charAt(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
+bool javaLangString_charAt(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
     JValue* pResult)
 {
     int count, offset;
     ArrayObject* chars;
 
     /* null reference check on "this" */
-    if (!dvmValidateObject((Object*) arg0))
+    if ((Object*) arg0 == NULL) {
+        dvmThrowNullPointerException(NULL);
         return false;
+    }
 
     //LOGI("String.charAt this=0x%08x index=%d\n", arg0, arg1);
     count = dvmGetFieldInt((Object*) arg0, STRING_FIELDOFF_COUNT);
     if ((s4) arg1 < 0 || (s4) arg1 >= count) {
-        dvmThrowExceptionFmt("Ljava/lang/StringIndexOutOfBoundsException;",
-            "index=%d length=%d", arg1, count);
+        dvmThrowStringIndexOutOfBoundsExceptionWithIndex(count, arg1);
         return false;
     } else {
         offset = dvmGetFieldInt((Object*) arg0, STRING_FIELDOFF_OFFSET);
@@ -195,7 +196,7 @@ static void badMatch(StringObject* thisStrObj, StringObject* compStrObj,
 /*
  * public int compareTo(String s)
  */
-static bool javaLangString_compareTo(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
+bool javaLangString_compareTo(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
     JValue* pResult)
 {
     /*
@@ -204,9 +205,8 @@ static bool javaLangString_compareTo(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
      * anything else.  While we're at it, check out the other string,
      * which must also be non-null.
      */
-    if (!dvmValidateObject((Object*) arg0) ||
-        !dvmValidateObject((Object*) arg1))
-    {
+    if ((Object*) arg0 == NULL || (Object*) arg1 == NULL) {
+        dvmThrowNullPointerException(NULL);
         return false;
     }
 
@@ -291,14 +291,16 @@ static bool javaLangString_compareTo(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
 /*
  * public boolean equals(Object anObject)
  */
-static bool javaLangString_equals(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
+bool javaLangString_equals(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
     JValue* pResult)
 {
     /*
      * Null reference check on "this".
      */
-    if (!dvmValidateObject((Object*) arg0))
+    if ((Object*) arg0 == NULL) {
+        dvmThrowNullPointerException(NULL);
         return false;
+    }
 
     /* quick test for comparison with itself */
     if (arg0 == arg1) {
@@ -335,6 +337,21 @@ static bool javaLangString_equals(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
         pResult->i = false;
         return true;
     }
+
+    /*
+     * You may, at this point, be tempted to pull out the hashCode fields
+     * and compare them.  If both fields have been initialized, and they
+     * are not equal, we can return false immediately.
+     *
+     * However, the hashCode field is often not set.  If it is set,
+     * there's an excellent chance that the String is being used as a key
+     * in a hashed data structure (e.g. HashMap).  That data structure has
+     * already made the comparison and determined that the hashes are equal,
+     * making a check here redundant.
+     *
+     * It's not clear that checking the hashes will be a win in "typical"
+     * use cases.  We err on the side of simplicity and ignore them.
+     */
 
     thisOffset = dvmGetFieldInt((Object*) arg0, STRING_FIELDOFF_OFFSET);
     compOffset = dvmGetFieldInt((Object*) arg1, STRING_FIELDOFF_OFFSET);
@@ -383,14 +400,16 @@ static bool javaLangString_equals(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
 /*
  * public int length()
  */
-static bool javaLangString_length(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
+bool javaLangString_length(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
     JValue* pResult)
 {
     //LOGI("String.length this=0x%08x pResult=%p\n", arg0, pResult);
 
     /* null reference check on "this" */
-    if (!dvmValidateObject((Object*) arg0))
+    if ((Object*) arg0 == NULL) {
+        dvmThrowNullPointerException(NULL);
         return false;
+    }
 
     pResult->i = dvmGetFieldInt((Object*) arg0, STRING_FIELDOFF_COUNT);
     return true;
@@ -399,14 +418,16 @@ static bool javaLangString_length(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
 /*
  * public boolean isEmpty()
  */
-static bool javaLangString_isEmpty(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
+bool javaLangString_isEmpty(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
     JValue* pResult)
 {
     //LOGI("String.isEmpty this=0x%08x pResult=%p\n", arg0, pResult);
 
     /* null reference check on "this" */
-    if (!dvmValidateObject((Object*) arg0))
+    if ((Object*) arg0 == NULL) {
+        dvmThrowNullPointerException(NULL);
         return false;
+    }
 
     pResult->i = (dvmGetFieldInt((Object*) arg0, STRING_FIELDOFF_COUNT) == 0);
     return true;
@@ -470,12 +491,14 @@ static inline int indexOfCommon(Object* strObj, int ch, int start)
  * The character must be <= 0xffff; this method does not handle supplementary
  * characters.
  */
-static bool javaLangString_fastIndexOf_II(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
+bool javaLangString_fastIndexOf_II(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
     JValue* pResult)
 {
     /* null reference check on "this" */
-    if (!dvmValidateObject((Object*) arg0))
+    if ((Object*) arg0 == NULL) {
+        dvmThrowNullPointerException(NULL);
         return false;
+    }
 
     pResult->i = indexOfCommon((Object*) arg0, arg1, arg2);
     return true;
@@ -502,7 +525,7 @@ typedef union {
 /*
  * public static int abs(int)
  */
-static bool javaLangMath_abs_int(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
+bool javaLangMath_abs_int(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
     JValue* pResult)
 {
     s4 val = (s4) arg0;
@@ -513,7 +536,7 @@ static bool javaLangMath_abs_int(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
 /*
  * public static long abs(long)
  */
-static bool javaLangMath_abs_long(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
+bool javaLangMath_abs_long(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
     JValue* pResult)
 {
     Convert64 convert;
@@ -527,7 +550,7 @@ static bool javaLangMath_abs_long(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
 /*
  * public static float abs(float)
  */
-static bool javaLangMath_abs_float(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
+bool javaLangMath_abs_float(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
     JValue* pResult)
 {
     Convert32 convert;
@@ -540,7 +563,7 @@ static bool javaLangMath_abs_float(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
 /*
  * public static double abs(double)
  */
-static bool javaLangMath_abs_double(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
+bool javaLangMath_abs_double(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
     JValue* pResult)
 {
     Convert64 convert;
@@ -555,7 +578,7 @@ static bool javaLangMath_abs_double(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
 /*
  * public static int min(int)
  */
-static bool javaLangMath_min_int(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
+bool javaLangMath_min_int(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
     JValue* pResult)
 {
     pResult->i = ((s4) arg0 < (s4) arg1) ? arg0 : arg1;
@@ -565,7 +588,7 @@ static bool javaLangMath_min_int(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
 /*
  * public static int max(int)
  */
-static bool javaLangMath_max_int(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
+bool javaLangMath_max_int(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
     JValue* pResult)
 {
     pResult->i = ((s4) arg0 > (s4) arg1) ? arg0 : arg1;
@@ -579,7 +602,7 @@ static bool javaLangMath_max_int(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
  * by an fcmpd of the result against itself.  If it doesn't match (i.e.
  * it's NaN), the libm sqrt() is invoked.
  */
-static bool javaLangMath_sqrt(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
+bool javaLangMath_sqrt(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
     JValue* pResult)
 {
     Convert64 convert;
@@ -592,7 +615,7 @@ static bool javaLangMath_sqrt(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
 /*
  * public static double cos(double)
  */
-static bool javaLangMath_cos(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
+bool javaLangMath_cos(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
     JValue* pResult)
 {
     Convert64 convert;
@@ -605,7 +628,7 @@ static bool javaLangMath_cos(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
 /*
  * public static double sin(double)
  */
-static bool javaLangMath_sin(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
+bool javaLangMath_sin(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
     JValue* pResult)
 {
     Convert64 convert;
@@ -621,7 +644,7 @@ static bool javaLangMath_sin(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
  * ===========================================================================
  */
 
-static bool javaLangFloat_floatToIntBits(u4 arg0, u4 arg1, u4 arg2, u4 arg,
+bool javaLangFloat_floatToIntBits(u4 arg0, u4 arg1, u4 arg2, u4 arg,
     JValue* pResult)
 {
     Convert32 convert;
@@ -630,14 +653,14 @@ static bool javaLangFloat_floatToIntBits(u4 arg0, u4 arg1, u4 arg2, u4 arg,
     return true;
 }
 
-static bool javaLangFloat_floatToRawIntBits(u4 arg0, u4 arg1, u4 arg2, u4 arg,
+bool javaLangFloat_floatToRawIntBits(u4 arg0, u4 arg1, u4 arg2, u4 arg,
     JValue* pResult)
 {
     pResult->i = arg0;
     return true;
 }
 
-static bool javaLangFloat_intBitsToFloat(u4 arg0, u4 arg1, u4 arg2, u4 arg,
+bool javaLangFloat_intBitsToFloat(u4 arg0, u4 arg1, u4 arg2, u4 arg,
     JValue* pResult)
 {
     Convert32 convert;
@@ -652,7 +675,7 @@ static bool javaLangFloat_intBitsToFloat(u4 arg0, u4 arg1, u4 arg2, u4 arg,
  * ===========================================================================
  */
 
-static bool javaLangDouble_doubleToLongBits(u4 arg0, u4 arg1, u4 arg2, u4 arg,
+bool javaLangDouble_doubleToLongBits(u4 arg0, u4 arg1, u4 arg2, u4 arg,
     JValue* pResult)
 {
     Convert64 convert;
@@ -662,7 +685,7 @@ static bool javaLangDouble_doubleToLongBits(u4 arg0, u4 arg1, u4 arg2, u4 arg,
     return true;
 }
 
-static bool javaLangDouble_doubleToRawLongBits(u4 arg0, u4 arg1, u4 arg2,
+bool javaLangDouble_doubleToRawLongBits(u4 arg0, u4 arg1, u4 arg2,
     u4 arg, JValue* pResult)
 {
     Convert64 convert;
@@ -672,7 +695,7 @@ static bool javaLangDouble_doubleToRawLongBits(u4 arg0, u4 arg1, u4 arg2,
     return true;
 }
 
-static bool javaLangDouble_longBitsToDouble(u4 arg0, u4 arg1, u4 arg2, u4 arg,
+bool javaLangDouble_longBitsToDouble(u4 arg0, u4 arg1, u4 arg2, u4 arg,
     JValue* pResult)
 {
     Convert64 convert;
@@ -849,7 +872,7 @@ Method* dvmFindInlinableMethod(const char* classDescriptor,
  * Currently assuming that we're only inlining stuff loaded by the
  * bootstrap class loader.  This is a safe assumption for many reasons.
  */
-static Method* resolveInlineNative(int opIndex)
+Method* dvmResolveInlineNative(int opIndex)
 {
     assert(opIndex >= 0 && opIndex < NELEM(gDvmInlineOpsTable));
     Method* method = gDvm.inlinedMethods[opIndex];
@@ -885,7 +908,7 @@ static Method* resolveInlineNative(int opIndex)
 bool dvmPerformInlineOp4Dbg(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
     JValue* pResult, int opIndex)
 {
-    Method* method = resolveInlineNative(opIndex);
+    Method* method = dvmResolveInlineNative(opIndex);
     if (method == NULL) {
         return (*gDvmInlineOpsTable[opIndex].func)(arg0, arg1, arg2, arg3,
             pResult);
@@ -897,18 +920,4 @@ bool dvmPerformInlineOp4Dbg(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
         pResult);
     TRACE_METHOD_EXIT(self, method);
     return result;
-}
-
-/*
- * Check that we can resolve every inline native.
- */
-bool dvmInlineNativeCheck(void)
-{
-    int op;
-    for (op = 0; op < NELEM(gDvmInlineOpsTable); ++op) {
-        if (resolveInlineNative(op) == NULL) {
-            dvmAbort();
-        }
-    }
-    return true;
 }

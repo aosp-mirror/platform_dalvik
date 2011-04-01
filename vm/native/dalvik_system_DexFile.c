@@ -93,8 +93,7 @@ static bool validateCookie(int cookie)
                 hashcmpDexOrJar, false);
     dvmHashTableUnlock(gDvm.userDexFiles);
     if (result == NULL) {
-        dvmThrowException("Ljava/lang/RuntimeException;",
-            "invalid DexFile cookie");
+        dvmThrowRuntimeException("invalid DexFile cookie");
         return false;
     }
 
@@ -161,7 +160,7 @@ static void Dalvik_dalvik_system_DexFile_openDexFile(const u4* args,
     char* outputName;
 
     if (sourceNameObj == NULL) {
-        dvmThrowException("Ljava/lang/NullPointerException;", NULL);
+        dvmThrowNullPointerException(NULL);
         RETURN_VOID();
     }
 
@@ -194,7 +193,7 @@ static void Dalvik_dalvik_system_DexFile_openDexFile(const u4* args,
      */
     if (dvmClassPathContains(gDvm.bootClassPath, sourceName)) {
         LOGW("Refusing to reopen boot DEX '%s'\n", sourceName);
-        dvmThrowException("Ljava/io/IOException;",
+        dvmThrowIOException(
             "Re-opening BOOTCLASSPATH DEX files is not allowed");
         free(sourceName);
         free(outputName);
@@ -223,7 +222,7 @@ static void Dalvik_dalvik_system_DexFile_openDexFile(const u4* args,
         pDexOrJar->pDexMemory = NULL;
     } else {
         LOGV("Unable to open DEX file '%s'\n", sourceName);
-        dvmThrowException("Ljava/io/IOException;", "unable to open DEX file");
+        dvmThrowIOException("unable to open DEX file");
     }
 
     if (pDexOrJar != NULL) {
@@ -256,17 +255,16 @@ static void Dalvik_dalvik_system_DexFile_openDexFile_bytearray(const u4* args,
     DexOrJar* pDexOrJar = NULL;
 
     if (fileContentsObj == NULL) {
-        dvmThrowException("Ljava/lang/NullPointerException;", NULL);
+        dvmThrowNullPointerException(NULL);
         RETURN_VOID();
     }
 
-    /* TODO: Avoid making a copy of the array. */
+    /* TODO: Avoid making a copy of the array. (note array *is* modified) */
     length = fileContentsObj->length;
     pBytes = (u1*) malloc(length);
 
     if (pBytes == NULL) {
-        dvmThrowException("Ljava/lang/RuntimeException;",
-                "unable to allocate DEX memory");
+        dvmThrowRuntimeException("unable to allocate DEX memory");
         RETURN_VOID();
     }
 
@@ -275,8 +273,7 @@ static void Dalvik_dalvik_system_DexFile_openDexFile_bytearray(const u4* args,
     if (dvmRawDexFileOpenArray(pBytes, length, &pRawDexFile) != 0) {
         LOGV("Unable to open in-memory DEX file\n");
         free(pBytes);
-        dvmThrowException("Ljava/io/RuntimeException;",
-                "unable to open in-memory DEX file");
+        dvmThrowRuntimeException("unable to open in-memory DEX file");
         RETURN_VOID();
     }
 
@@ -336,7 +333,7 @@ static void Dalvik_dalvik_system_DexFile_closeDexFile(const u4* args,
 
 /*
  * private static Class defineClass(String name, ClassLoader loader,
- *      int cookie, ProtectionDomain pd)
+ *      int cookie)
  *
  * Load a class from a DEX file.  This is roughly equivalent to defineClass()
  * in a regular VM -- it's invoked by the class loader to cause the
@@ -354,7 +351,6 @@ static void Dalvik_dalvik_system_DexFile_defineClass(const u4* args,
     StringObject* nameObj = (StringObject*) args[0];
     Object* loader = (Object*) args[1];
     int cookie = args[2];
-    Object* pd = (Object*) args[3];
     ClassObject* clazz = NULL;
     DexOrJar* pDexOrJar = (DexOrJar*) cookie;
     DvmDex* pDvmDex;
@@ -363,7 +359,8 @@ static void Dalvik_dalvik_system_DexFile_defineClass(const u4* args,
 
     name = dvmCreateCstrFromString(nameObj);
     descriptor = dvmDotToDescriptor(name);
-    LOGV("--- Explicit class load '%s' 0x%08x\n", descriptor, cookie);
+    LOGV("--- Explicit class load '%s' l=%p c=0x%08x\n",
+        descriptor, loader, cookie);
     free(name);
 
     if (!validateCookie(cookie))
@@ -394,17 +391,6 @@ static void Dalvik_dalvik_system_DexFile_defineClass(const u4* args,
             dvmClearException(self);
         }
         clazz = NULL;
-    }
-
-    /*
-     * Set the ProtectionDomain -- do we need this to happen before we
-     * link the class and make it available? If so, we need to pass it
-     * through dvmDefineClass (and figure out some other
-     * stuff, like where it comes from for bootstrap classes).
-     */
-    if (clazz != NULL) {
-        //LOGI("SETTING pd '%s' to %p\n", clazz->descriptor, pd);
-        dvmSetFieldObject((Object*) clazz, gDvm.offJavaLangClass_pd, pd);
     }
 
     free(descriptor);
@@ -491,11 +477,11 @@ static void Dalvik_dalvik_system_DexFile_isDexOptNeeded(const u4* args,
 
     name = dvmCreateCstrFromString(nameObj);
     if (name == NULL) {
-        dvmThrowException("Ljava/lang/NullPointerException;", NULL);
+        dvmThrowNullPointerException(NULL);
         RETURN_VOID();
     }
     if (access(name, R_OK) != 0) {
-        dvmThrowException("Ljava/io/FileNotFoundException;", name);
+        dvmThrowFileNotFoundException(name);
         free(name);
         RETURN_VOID();
     }
@@ -506,7 +492,7 @@ static void Dalvik_dalvik_system_DexFile_isDexOptNeeded(const u4* args,
     switch (status) {
     default: //FALLTHROUGH
     case DEX_CACHE_BAD_ARCHIVE:
-        dvmThrowException("Ljava/io/IOException;", name);
+        dvmThrowIOException(name);
         result = -1;
         break;
     case DEX_CACHE_OK:
@@ -516,7 +502,7 @@ static void Dalvik_dalvik_system_DexFile_isDexOptNeeded(const u4* args,
         result = true;
         break;
     case DEX_CACHE_STALE_ODEX:
-        dvmThrowException("Ldalvik/system/StaleDexCacheError;", name);
+        dvmThrowStaleDexCacheError(name);
         result = -1;
         break;
     }
@@ -536,7 +522,7 @@ const DalvikNativeMethod dvm_dalvik_system_DexFile[] = {
         Dalvik_dalvik_system_DexFile_openDexFile_bytearray },
     { "closeDexFile",       "(I)V",
         Dalvik_dalvik_system_DexFile_closeDexFile },
-    { "defineClass",        "(Ljava/lang/String;Ljava/lang/ClassLoader;ILjava/security/ProtectionDomain;)Ljava/lang/Class;",
+    { "defineClass",        "(Ljava/lang/String;Ljava/lang/ClassLoader;I)Ljava/lang/Class;",
         Dalvik_dalvik_system_DexFile_defineClass },
     { "getClassNameList",   "(I)[Ljava/lang/String;",
         Dalvik_dalvik_system_DexFile_getClassNameList },

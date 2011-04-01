@@ -5,13 +5,13 @@
     flds     (rFP,%ecx,4)           # vCC to fp stack
     flds     (rFP,%eax,4)           # vCC to fp stack
     movzbl   rINSTbl,%ecx           # ecx<- AA
-    FETCH_INST_OPCODE 2 %edx
 1:
     fprem
     fstsw     %ax
     sahf
     jp        1b
     fstp      %st(1)
+    FETCH_INST_OPCODE 2 %eax
     ADVANCE_PC 2
     fstps    (rFP,%ecx,4)           # %st to vAA
-    GOTO_NEXT_R %edx
+    GOTO_NEXT_R %eax

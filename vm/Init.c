@@ -106,7 +106,7 @@ static void usage(const char* progName)
     dvmFprintf(stderr, "\n");
     dvmFprintf(stderr, "These are unique to Dalvik:\n");
     dvmFprintf(stderr, "  -Xzygote\n");
-    dvmFprintf(stderr, "  -Xdexopt:{none,verified,all}\n");
+    dvmFprintf(stderr, "  -Xdexopt:{none,verified,all,full}\n");
     dvmFprintf(stderr, "  -Xnoquithandler\n");
     dvmFprintf(stderr,
                 "  -Xjnigreflimit:N  (must be multiple of 100, >= 200)\n");
@@ -120,7 +120,7 @@ static void usage(const char* progName)
     dvmFprintf(stderr, "  -Xgc:[no]concurrent\n");
     dvmFprintf(stderr, "  -Xgc:[no]verifycardtable\n");
     dvmFprintf(stderr, "  -XX:+DisableExplicitGC\n");
-    dvmFprintf(stderr, "  -Xgenregmap\n");
+    dvmFprintf(stderr, "  -X[no]genregmap\n");
     dvmFprintf(stderr, "  -Xverifyopt:[no]checkmon\n");
     dvmFprintf(stderr, "  -Xcheckdexsum\n");
 #if defined(WITH_JIT)
@@ -136,21 +136,13 @@ static void usage(const char* progName)
     dvmFprintf(stderr, "  -Xjitverbose\n");
     dvmFprintf(stderr, "  -Xjitprofile\n");
     dvmFprintf(stderr, "  -Xjitdisableopt\n");
+    dvmFprintf(stderr, "  -Xjitsuspendpoll\n");
 #endif
     dvmFprintf(stderr, "\n");
     dvmFprintf(stderr, "Configured with:"
         " debugger"
         " profiler"
         " hprof"
-#ifdef WITH_HPROF_STACK
-        " hprof_stack"
-#endif
-#ifdef WITH_MONITOR_TRACKING
-        " monitor_tracking"
-#endif
-#ifdef WITH_DEADLOCK_PREDICTION
-        " deadlock_prediction"
-#endif
 #ifdef WITH_TRACKREF_CHECKS
         " trackref_checks"
 #endif
@@ -186,9 +178,6 @@ static void usage(const char* progName)
 #endif
 #if ANDROID_SMP != 0
         " smp"
-#endif
-#ifdef WITH_INLINE_PROFILING
-        " inline_profiling"
 #endif
     );
 #ifdef DVM_SHOW_EXCEPTION
@@ -758,8 +747,17 @@ static int processOptions(int argc, const char* const argv[],
             gDvm.bootClassPathStr = allPath;
 
         } else if (strncmp(argv[i], "-D", 2) == 0) {
-            /* set property */
-            dvmAddCommandLineProperty(argv[i] + 2);
+            /* Properties are handled in managed code. We just check syntax. */
+            if (strchr(argv[i], '=') == NULL) {
+                dvmFprintf(stderr, "Bad system property setting: \"%s\"\n",
+                    argv[i]);
+                return -1;
+            }
+            if (arrayAdd(gDvm.properties, strdup(argv[i] + 2)) == -1) {
+                dvmFprintf(stderr, "Can't set system property: \"%s\"\n",
+                    argv[i]);
+                return -1;
+            }
 
         } else if (strcmp(argv[i], "-jar") == 0) {
             // TODO: handle this; name of jar should be in argv[i+1]
@@ -889,6 +887,8 @@ static int processOptions(int argc, const char* const argv[],
                 gDvm.dexOptMode = OPTIMIZE_MODE_VERIFIED;
             else if (strcmp(argv[i] + 9, "all") == 0)
                 gDvm.dexOptMode = OPTIMIZE_MODE_ALL;
+            else if (strcmp(argv[i] + 9, "full") == 0)
+                gDvm.dexOptMode = OPTIMIZE_MODE_FULL;
             else {
                 dvmFprintf(stderr, "Unrecognized dexopt option '%s'\n",argv[i]);
                 return -1;
@@ -960,7 +960,7 @@ static int processOptions(int argc, const char* const argv[],
         } else if (strncmp(argv[i], "-Xjitverbose", 12) == 0) {
           gDvmJit.printMe = true;
         } else if (strncmp(argv[i], "-Xjitprofile", 12) == 0) {
-          gDvmJit.profile = true;
+          gDvmJit.profileMode = kTraceProfilingContinuous;
         } else if (strncmp(argv[i], "-Xjitdisableopt", 15) == 0) {
           /* Disable selected optimizations */
           if (argv[i][15] == ':') {
@@ -969,24 +969,8 @@ static int processOptions(int argc, const char* const argv[],
           } else {
               gDvmJit.disableOpt = -1;
           }
-#endif
-
-        } else if (strncmp(argv[i], "-Xdeadlockpredict:", 18) == 0) {
-#ifdef WITH_DEADLOCK_PREDICTION
-            if (strcmp(argv[i] + 18, "off") == 0)
-                gDvm.deadlockPredictMode = kDPOff;
-            else if (strcmp(argv[i] + 18, "warn") == 0)
-                gDvm.deadlockPredictMode = kDPWarn;
-            else if (strcmp(argv[i] + 18, "err") == 0)
-                gDvm.deadlockPredictMode = kDPErr;
-            else if (strcmp(argv[i] + 18, "abort") == 0)
-                gDvm.deadlockPredictMode = kDPAbort;
-            else {
-                dvmFprintf(stderr, "Bad value for -Xdeadlockpredict");
-                return -1;
-            }
-            if (gDvm.deadlockPredictMode != kDPOff)
-                LOGD("Deadlock prediction enabled (%s)\n", argv[i]+18);
+        } else if (strncmp(argv[i], "-Xjitsuspendpoll", 16) == 0) {
+          gDvmJit.genSuspendPoll = true;
 #endif
 
         } else if (strncmp(argv[i], "-Xstacktracefile:", 17) == 0) {
@@ -994,7 +978,8 @@ static int processOptions(int argc, const char* const argv[],
 
         } else if (strcmp(argv[i], "-Xgenregmap") == 0) {
             gDvm.generateRegisterMaps = true;
-            LOGV("Register maps will be generated during verification\n");
+        } else if (strcmp(argv[i], "-Xnogenregmap") == 0) {
+            gDvm.generateRegisterMaps = false;
 
         } else if (strcmp(argv[i], "Xverifyopt:checkmon") == 0) {
             gDvm.monitorVerification = true;
@@ -1084,6 +1069,8 @@ static void setCommandLineDefaults()
     gDvm.classVerifyMode = VERIFY_MODE_ALL;
     gDvm.dexOptMode = OPTIMIZE_MODE_VERIFIED;
     gDvm.monitorVerification = false;
+    gDvm.generateRegisterMaps = true;
+    gDvm.registerMapMode = kRegisterMapModeTypePrecise;
 
     /*
      * Default execution mode.
@@ -1174,11 +1161,11 @@ int dvmStartup(int argc, const char* const argv[], bool ignoreUnrecognized,
     for (i = 0; i < argc; i++)
         LOGV("  %d: '%s'\n", i, argv[i]);
 
-    setCommandLineDefaults();
-
     /* prep properties storage */
-    if (!dvmPropertiesStartup(argc))
+    if (!dvmPropertiesStartup())
         goto fail;
+
+    setCommandLineDefaults();
 
     /*
      * Process the option flags (if any).
@@ -1240,12 +1227,16 @@ int dvmStartup(int argc, const char* const argv[], bool ignoreUnrecognized,
         goto fail;
     if (!dvmClassStartup())
         goto fail;
-    if (!dvmBaseClassStartup())
+
+    /*
+     * At this point, the system is guaranteed to be sufficiently
+     * initialized that we can look up classes and class members. This
+     * call populates the gDvm instance with all the class and member
+     * references that the VM wants to use directly.
+     */
+    if (!dvmFindRequiredClassesAndMembers())
         goto fail;
-    if (!dvmThreadObjStartup())
-        goto fail;
-    if (!dvmExceptionStartup())
-        goto fail;
+
     if (!dvmStringInternStartup())
         goto fail;
     if (!dvmNativeStartup())
@@ -1254,35 +1245,15 @@ int dvmStartup(int argc, const char* const argv[], bool ignoreUnrecognized,
         goto fail;
     if (!dvmJniStartup())
         goto fail;
-    if (!dvmReflectStartup())
-        goto fail;
     if (!dvmProfilingStartup())
         goto fail;
 
-    /* make sure we got these [can this go away?] */
-    assert(gDvm.classJavaLangClass != NULL);
-    assert(gDvm.classJavaLangObject != NULL);
-    //assert(gDvm.classJavaLangString != NULL);
-    assert(gDvm.classJavaLangThread != NULL);
-    assert(gDvm.classJavaLangVMThread != NULL);
-    assert(gDvm.classJavaLangThreadGroup != NULL);
-
     /*
-     * Make sure these exist.  If they don't, we can return a failure out
-     * of main and nip the whole thing in the bud.
+     * Create a table of methods for which we will substitute an "inline"
+     * version for performance.
      */
-    static const char* earlyClasses[] = {
-        "Ljava/lang/InternalError;",
-        "Ljava/lang/StackOverflowError;",
-        "Ljava/lang/UnsatisfiedLinkError;",
-        "Ljava/lang/NoClassDefFoundError;",
-        NULL
-    };
-    const char** pClassName;
-    for (pClassName = earlyClasses; *pClassName != NULL; pClassName++) {
-        if (dvmFindSystemClassNoInit(*pClassName) == NULL)
-            goto fail;
-    }
+    if (!dvmCreateInlineSubsTable())
+        goto fail;
 
     /*
      * Miscellaneous class library validation.
@@ -1343,7 +1314,7 @@ int dvmStartup(int argc, const char* const argv[], bool ignoreUnrecognized,
     if (!dvmDebuggerStartup())
         goto fail;
 
-    if (!dvmInlineNativeCheck())
+    if (!dvmGcStartupClasses())
         goto fail;
 
     /*
@@ -1366,8 +1337,11 @@ int dvmStartup(int argc, const char* const argv[], bool ignoreUnrecognized,
         LOGE("dvmTestIndirectRefTable FAILED\n");
 #endif
 
-    assert(!dvmCheckException(dvmThreadSelf()));
-    gDvm.initExceptionCount = 0;
+    if (dvmCheckException(dvmThreadSelf())) {
+        LOGE("Exception pending at end of VM initialization\n");
+        dvmLogExceptionStackTrace();
+        goto fail;
+    }
 
     return 0;
 
@@ -1684,11 +1658,9 @@ void dvmShutdown(void)
         LOGD("VM cleaning up\n");
 
     dvmDebuggerShutdown();
-    dvmReflectShutdown();
     dvmProfilingShutdown();
     dvmJniShutdown();
     dvmStringInternShutdown();
-    dvmExceptionShutdown();
     dvmThreadShutdown();
     dvmClassShutdown();
     dvmRegisterMapShutdown();
@@ -1701,6 +1673,8 @@ void dvmShutdown(void)
     /* these must happen AFTER dvmClassShutdown has walked through class data */
     dvmNativeShutdown();
     dvmInternalNativeShutdown();
+
+    dvmFreeInlineSubsTable();
 
     free(gDvm.bootClassPathStr);
     free(gDvm.classPathStr);
@@ -1738,6 +1712,41 @@ int dvmFprintf(FILE* fp, const char* format, ...)
     return result;
 }
 
+#ifdef __GLIBC__
+#include <execinfo.h>
+/*
+ * glibc-only stack dump function.  Requires link with "--export-dynamic".
+ *
+ * TODO: move this into libs/cutils and make it work for all platforms.
+ */
+void dvmPrintNativeBackTrace(void)
+{
+    size_t MAX_STACK_FRAMES = 64;
+    void* stackFrames[MAX_STACK_FRAMES];
+    size_t frameCount = backtrace(stackFrames, MAX_STACK_FRAMES);
+
+    /*
+     * TODO: in practice, we may find that we should use backtrace_symbols_fd
+     * to avoid allocation, rather than use our own custom formatting.
+     */
+    char** strings = backtrace_symbols(stackFrames, frameCount);
+    if (strings == NULL) {
+        LOGE("backtrace_symbols failed: %s", strerror(errno));
+        return;
+    }
+
+    size_t i;
+    for (i = 0; i < frameCount; ++i) {
+        LOGW("#%-2d %s", i, strings[i]);
+    }
+    free(strings);
+}
+#else
+void dvmPrintNativeBackTrace(void) {
+    /* Hopefully, you're on an Android device and debuggerd will do this. */
+}
+#endif
+
 /*
  * Abort the VM.  We get here on fatal errors.  Try very hard not to use
  * this; whenever possible, return an error to somebody responsible.
@@ -1751,6 +1760,12 @@ void dvmAbort(void)
     /* JNI-supplied abort hook gets right of first refusal */
     if (gDvm.abortHook != NULL)
         (*gDvm.abortHook)();
+
+    /*
+     * On the device, debuggerd will give us a stack trace.
+     * On the host, we have to help ourselves.
+     */
+    dvmPrintNativeBackTrace();
 
     /*
      * If we call abort(), all threads in the process receives a SIBABRT.

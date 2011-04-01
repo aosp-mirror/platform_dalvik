@@ -24,8 +24,63 @@
  * applicable directory below this one.
  */
 
+extern X86LIR *loadConstant(CompilationUnit *cUnit, int rDest, int value);
+extern X86LIR *loadWordDisp(CompilationUnit *cUnit, int rBase,
+                            int displacement, int rDest);
+extern void dvmCompilerFlushAllRegs(CompilationUnit *cUnit);
+extern void storeWordDisp(CompilationUnit *cUnit, int rBase,
+                          int displacement, int rSrc);
+extern X86LIR *opReg(CompilationUnit *cUnit, OpKind op, int rDestSrc);
+
 static int opcodeCoverage[kNumPackedOpcodes];
 static intptr_t templateEntryOffsets[TEMPLATE_LAST_MARK];
+
+#if 0   // Avoid compiler warnings when x86 disabled during development
+/*
+ * Bail to the interpreter.  Will not return to this trace.
+ * On entry, rPC must be set correctly.
+ */
+static void genPuntToInterp(CompilationUnit *cUnit, unsigned int offset)
+{
+    dvmCompilerFlushAllRegs(cUnit);
+    loadConstant(cUnit, rPC, (int)(cUnit->method->insns + offset));
+    loadWordDisp(cUnit, rEBP, 0, rECX);  // Get glue
+    loadWordDisp(cUnit, rECX,
+                 offsetof(Thread, jitToInterpEntries.dvmJitToInterpPunt),
+                 rEAX);
+    opReg(cUnit, kOpUncondBr, rEAX);
+}
+
+static void genInterpSingleStep(CompilationUnit *cUnit, MIR *mir)
+{
+    int flags = dexGetFlagsFromOpcode(mir->dalvikInsn.opcode);
+    int flagsToCheck = kInstrCanBranch | kInstrCanSwitch | kInstrCanReturn |
+                       kInstrCanThrow;
+
+    //If already optimized out, just ignore
+    if (mir->dalvikInsn.opcode == OP_NOP)
+        return;
+
+    //Ugly, but necessary.  Flush all Dalvik regs so Interp can find them
+    dvmCompilerFlushAllRegs(cUnit);
+
+    if ((mir->next == NULL) || (flags & flagsToCheck)) {
+       genPuntToInterp(cUnit, mir->offset);
+       return;
+    }
+    int entryAddr = offsetof(Thread,
+                             jitToInterpEntries.dvmJitToInterpSingleStep);
+    loadWordDisp(cUnit, rEBP, 0, rECX);  // Get glue
+    loadWordDisp(cUnit, rECX, entryAddr, rEAX); // rEAX<- entry address
+    /* rPC = dalvik pc */
+    loadConstant(cUnit, rPC, (int) (cUnit->method->insns + mir->offset));
+    /* rECX = dalvik pc of following instruction */
+    loadConstant(cUnit, rECX, (int) (cUnit->method->insns + mir->next->offset));
+    /* Pass on the stack */
+    storeWordDisp(cUnit, rESP, OUT_ARG0, rECX);
+    opReg(cUnit, kOpCall, rEAX);
+}
+#endif
 
 /*
  * The following are the first-level codegen routines that analyze the format
@@ -158,6 +213,7 @@ void dvmCompilerMIR2LIR(CompilationUnit *cUnit)
 /* Accept the work and start compiling */
 bool dvmCompilerDoWork(CompilerWorkOrder *work)
 {
+    JitTraceDescription *desc;
     bool res;
 
     if (gDvmJit.codeCacheFull) {
@@ -167,14 +223,16 @@ bool dvmCompilerDoWork(CompilerWorkOrder *work)
     switch (work->kind) {
         case kWorkOrderTrace:
             /* Start compilation with maximally allowed trace length */
-            res = dvmCompileTrace(work->info, JIT_MAX_TRACE_LEN, &work->result,
+            desc = (JitTraceDescription *)work->info;
+            res = dvmCompileTrace(desc, JIT_MAX_TRACE_LEN, &work->result,
                                   work->bailPtr, 0 /* no hints */);
             break;
         case kWorkOrderTraceDebug: {
             bool oldPrintMe = gDvmJit.printMe;
             gDvmJit.printMe = true;
             /* Start compilation with maximally allowed trace length */
-            res = dvmCompileTrace(work->info, JIT_MAX_TRACE_LEN, &work->result,
+            desc = (JitTraceDescription *)work->info;
+            res = dvmCompileTrace(desc, JIT_MAX_TRACE_LEN, &work->result,
                                   work->bailPtr, 0 /* no hints */);
             gDvmJit.printMe = oldPrintMe;
             break;
@@ -243,6 +301,11 @@ void *dvmCompilerGetInterpretTemplate()
 {
       return (void*) ((int)gDvmJit.codeCache +
                       templateEntryOffsets[TEMPLATE_INTERPRET]);
+}
+
+JitInstructionSetType dvmCompilerGetInterpretTemplateSet()
+{
+    return DALVIK_JIT_X86;
 }
 
 void dvmCompilerInitializeRegAlloc(CompilationUnit *cUnit)
