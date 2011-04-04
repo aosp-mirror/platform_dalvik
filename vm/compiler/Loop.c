@@ -118,20 +118,59 @@ static BasicBlock *findPredecessorBlock(const CompilationUnit *cUnit,
     }
 }
 
+/* Used for normalized loop exit condition checks */
+static Opcode negateOpcode(Opcode opcode)
+{
+    switch (opcode) {
+        /* reg/reg cmp */
+        case OP_IF_EQ:
+            return OP_IF_NE;
+        case OP_IF_NE:
+            return OP_IF_EQ;
+        case OP_IF_LT:
+            return OP_IF_GE;
+        case OP_IF_GE:
+            return OP_IF_LT;
+        case OP_IF_GT:
+            return OP_IF_LE;
+        case OP_IF_LE:
+            return OP_IF_GT;
+        /* reg/zero cmp */
+        case OP_IF_EQZ:
+            return OP_IF_NEZ;
+        case OP_IF_NEZ:
+            return OP_IF_EQZ;
+        case OP_IF_LTZ:
+            return OP_IF_GEZ;
+        case OP_IF_GEZ:
+            return OP_IF_LTZ;
+        case OP_IF_GTZ:
+            return OP_IF_LEZ;
+        case OP_IF_LEZ:
+            return OP_IF_GTZ;
+        default:
+            LOGE("opcode %d cannot be negated", opcode);
+            dvmAbort();
+            break;
+    }
+    return -1;
+}
+
 /*
  * A loop is considered optimizable if:
- * 1) It has one basic induction variable
- * 2) The loop back branch compares the BIV with a constant
- * 3) If it is a count-up loop, the condition is GE/GT, or LE/LT/LEZ/LTZ for
- *    a count-down loop.
+ * 1) It has one basic induction variable.
+ * 2) The loop back branch compares the BIV with a constant.
+ * 3) We need to normalize the loop exit condition so that the loop is exited
+ *    via the taken path.
+ * 4) If it is a count-up loop, the condition is GE/GT. Otherwise it is
+ *    LE/LT/LEZ/LTZ for a count-down loop.
  *
- * Return false if the loop is not optimizable.
+ * Return false for loops that fail the above tests.
  */
 static bool isSimpleCountedLoop(CompilationUnit *cUnit)
 {
     unsigned int i;
-    BasicBlock *loopBranch = findPredecessorBlock(cUnit,
-                                  cUnit->entryBlock->fallThrough);
+    BasicBlock *loopBackBlock = cUnit->entryBlock->fallThrough;
     LoopAnalysis *loopAnalysis = cUnit->loopAnalysis;
 
     if (loopAnalysis->numBasicIV != 1) return false;
@@ -150,67 +189,104 @@ static bool isSimpleCountedLoop(CompilationUnit *cUnit)
         }
     }
 
-    MIR *branch = loopBranch->lastMIRInsn;
+    /* Find the block that ends with a branch to exit the loop */
+    while (true) {
+        loopBackBlock = findPredecessorBlock(cUnit, loopBackBlock);
+        /* Loop structure not recognized as counted blocks */
+        if (loopBackBlock == NULL) {
+            return false;
+        }
+        /* Unconditional goto - continue to trace up the predecessor chain */
+        if (loopBackBlock->taken == NULL) {
+            continue;
+        }
+        break;
+    }
+
+    MIR *branch = loopBackBlock->lastMIRInsn;
     Opcode opcode = branch->dalvikInsn.opcode;
 
-    /*
-     * If the instruction is not accessing the IV as the first operand, return
-     * false.
-     */
-    if (branch->ssaRep->numUses == 0 || branch->ssaRep->numDefs != 0) {
+    /* Last instruction is not a conditional branch - bail */
+    if (dexGetFlagsFromOpcode(opcode) != (kInstrCanContinue|kInstrCanBranch)) {
         return false;
     }
 
-    /*
-     * If the first operand of the comparison is not the basic induction
-     * variable, return false.
-     */
-    if (branch->ssaRep->uses[0] != loopAnalysis->ssaBIV) {
+    int endSSAReg;
+    int endDalvikReg;
+
+    /* reg/reg comparison */
+    if (branch->ssaRep->numUses == 2) {
+        if (branch->ssaRep->uses[0] == loopAnalysis->ssaBIV) {
+            endSSAReg = branch->ssaRep->uses[1];
+        } else if (branch->ssaRep->uses[1] == loopAnalysis->ssaBIV) {
+            endSSAReg = branch->ssaRep->uses[0];
+            opcode = negateOpcode(opcode);
+        } else {
+            return false;
+        }
+        endDalvikReg = dvmConvertSSARegToDalvik(cUnit, endSSAReg);
+        /*
+         * If the comparison is not between the BIV and a loop invariant,
+         * return false. endDalvikReg is loop invariant if one of the
+         * following is true:
+         * - It is not defined in the loop (ie DECODE_SUB returns 0)
+         * - It is reloaded with a constant
+         */
+        if ((DECODE_SUB(endDalvikReg) != 0) &&
+            !dvmIsBitSet(cUnit->isConstantV, endSSAReg)) {
+            return false;
+        }
+    /* Compare against zero */
+    } else if (branch->ssaRep->numUses == 1) {
+        if (branch->ssaRep->uses[0] == loopAnalysis->ssaBIV) {
+            /* Keep the compiler happy */
+            endDalvikReg = -1;
+        } else {
+            return false;
+        }
+    } else {
         return false;
+    }
+
+    /* Normalize the loop exit check as "if (iv op end) exit;" */
+    if (loopBackBlock->taken->blockType == kDalvikByteCode) {
+        opcode = negateOpcode(opcode);
     }
 
     if (loopAnalysis->isCountUpLoop) {
         /*
-         * If the condition op is not > or >=, this is not an optimization
-         * candidate.
+         * If the normalized condition op is not > or >=, this is not an
+         * optimization candidate.
          */
-        if (opcode != OP_IF_GT && opcode != OP_IF_GE) {
-            return false;
+        switch (opcode) {
+            case OP_IF_GT:
+            case OP_IF_GE:
+                break;
+            default:
+                return false;
         }
-        /*
-         * If the comparison is not between the BIV and a loop invariant,
-         * return false. endReg is loop invariant if one of the following is
-         * true:
-         * - It is not defined in the loop (ie DECODE_SUB returns 0)
-         * - It is reloaded with a constant
-         */
-        int endReg = dvmConvertSSARegToDalvik(cUnit, branch->ssaRep->uses[1]);
-        if (DECODE_SUB(endReg) != 0 &&
-            !dvmIsBitSet(cUnit->isConstantV, branch->ssaRep->uses[1])) {
-            return false;
-        }
-        loopAnalysis->endConditionReg = DECODE_REG(endReg);
+        loopAnalysis->endConditionReg = DECODE_REG(endDalvikReg);
     } else  {
         /*
-         * If the condition op is not < or <=, this is not an optimization
-         * candidate.
+         * If the normalized condition op is not < or <=, this is not an
+         * optimization candidate.
          */
-        if (opcode == OP_IF_LT || opcode == OP_IF_LE) {
-            /*
-             * If the comparison is not between the BIV and a loop invariant,
-             * return false.
-             */
-            int endReg = dvmConvertSSARegToDalvik(cUnit,
-                                                  branch->ssaRep->uses[1]);
-
-            if (DECODE_SUB(endReg) != 0) {
+        switch (opcode) {
+            case OP_IF_LT:
+            case OP_IF_LE:
+                loopAnalysis->endConditionReg = DECODE_REG(endDalvikReg);
+                break;
+            case OP_IF_LTZ:
+            case OP_IF_LEZ:
+                break;
+            default:
                 return false;
-            }
-            loopAnalysis->endConditionReg = DECODE_REG(endReg);
-        } else if (opcode != OP_IF_LTZ && opcode != OP_IF_LEZ) {
-            return false;
         }
     }
+    /*
+     * Remember the normalized opcode, which will be used to determine the end
+     * value used for the yanked range checks.
+     */
     loopAnalysis->loopBranchOpcode = opcode;
     return true;
 }
@@ -432,7 +508,6 @@ static void genHoistedChecks(CompilationUnit *cUnit)
                 dvmCompilerAbort(cUnit);
             }
         }
-
     }
 }
 
