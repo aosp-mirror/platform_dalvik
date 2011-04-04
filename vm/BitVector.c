@@ -20,6 +20,7 @@
 #include "Dalvik.h"
 
 #include <stdlib.h>
+#include <strings.h>
 
 #define kBitVectorGrowth    4   /* increase by 4 u4s when limit hit */
 
