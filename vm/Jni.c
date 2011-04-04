@@ -2117,7 +2117,7 @@ static jfieldID GetStaticFieldID(JNIEnv* env, jclass jclazz,
         assert(dvmCheckException(_self));
         id = NULL;
     } else {
-        id = (jfieldID) dvmFindStaticField(clazz, name, sig);
+        id = (jfieldID) dvmFindStaticFieldHier(clazz, name, sig);
         if (id == NULL) {
             dvmThrowExceptionFmt(gDvm.exNoSuchFieldError,
                 "no static field with name='%s' signature='%s' in class %s",
