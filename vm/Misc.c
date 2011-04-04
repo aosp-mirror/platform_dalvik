@@ -571,16 +571,16 @@ size_t strlcpy(char *dst, const char *src, size_t size) {
  *  zero.  Actual allocation rounded up to page multiple.  Returns
  *  NULL on failure.
  */
-void *dvmAllocRegion(size_t size, int prot, const char *name) {
+void *dvmAllocRegion(size_t byteCount, int prot, const char *name) {
     void *base;
     int fd, ret;
 
-    size = ALIGN_UP_TO_PAGE_SIZE(size);
-    fd = ashmem_create_region(name, size);
+    byteCount = ALIGN_UP_TO_PAGE_SIZE(byteCount);
+    fd = ashmem_create_region(name, byteCount);
     if (fd == -1) {
         return NULL;
     }
-    base = mmap(NULL, size, prot, MAP_PRIVATE, fd, 0);
+    base = mmap(NULL, byteCount, prot, MAP_PRIVATE, fd, 0);
     ret = close(fd);
     if (base == MAP_FAILED) {
         return NULL;
