@@ -71,7 +71,7 @@ void dvmThreadShutdown(void);
 void dvmSlayDaemons(void);
 
 
-#define kJniLocalRefMin         32
+#define kJniLocalRefMin         64
 #define kJniLocalRefMax         512     /* arbitrary; should be plenty */
 #define kInternalRefDefault     32      /* equally arbitrary */
 #define kInternalRefMax         4096    /* mainly a sanity check */
