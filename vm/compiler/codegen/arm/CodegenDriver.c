@@ -2575,6 +2575,10 @@ static bool handleFmt22c_Fmt52c(CompilationUnit *cUnit, MIR *mir)
         case OP_IPUT_WIDE_JUMBO:
             genIPutWide(cUnit, mir, fieldOffset);
             break;
+        case OP_IPUT_VOLATILE:
+        case OP_IPUT_VOLATILE_JUMBO:
+            isVolatile = true;
+            // NOTE: intentional fallthrough
         case OP_IPUT:
         case OP_IPUT_JUMBO:
         case OP_IPUT_BOOLEAN:
@@ -2587,8 +2591,6 @@ static bool handleFmt22c_Fmt52c(CompilationUnit *cUnit, MIR *mir)
         case OP_IPUT_SHORT_JUMBO:
             genIPut(cUnit, mir, kWord, fieldOffset, false, isVolatile);
             break;
-        case OP_IPUT_VOLATILE:
-        case OP_IPUT_VOLATILE_JUMBO:
         case OP_IPUT_OBJECT_VOLATILE:
         case OP_IPUT_OBJECT_VOLATILE_JUMBO:
             isVolatile = true;
