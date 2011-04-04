@@ -80,18 +80,19 @@ static bool allocCardTable(size_t heapMaximumSize)
     return true;
 }
 
-static bool allocModUnionTable(size_t heapMaximumSize)
+static bool allocModUnionTable(size_t heapSize)
 {
-    size_t length = heapMaximumSize / GC_CARD_SIZE / HB_BITS_PER_WORD;
-    assert(length * GC_CARD_SIZE * HB_BITS_PER_WORD == heapMaximumSize);
+    size_t cardsPerHeap = heapSize / GC_CARD_SIZE;
+    size_t byteLength = cardsPerHeap / CHAR_BIT;
+    assert(byteLength * GC_CARD_SIZE * CHAR_BIT == heapSize);
     int prot = PROT_READ | PROT_WRITE;
-    void *allocBase = dvmAllocRegion(length, prot, "dalvik-modunion-table");
+    void *allocBase = dvmAllocRegion(byteLength, prot, "dalvik-modunion-table");
     if (allocBase == NULL) {
         return false;
     }
     GcHeap *gcHeap = gDvm.gcHeap;
     gcHeap->modUnionTableBase = (u1*)allocBase;
-    gcHeap->modUnionTableLength = length;
+    gcHeap->modUnionTableLength = byteLength;
     return true;
 }
 
