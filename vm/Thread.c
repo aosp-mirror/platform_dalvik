@@ -557,7 +557,7 @@ void dvmSlayDaemons(void)
         }
 
         char* threadName = dvmGetThreadName(target);
-        LOGD("threadid=%d: suspending daemon id=%d name='%s'\n",
+        LOGV("threadid=%d: suspending daemon id=%d name='%s'\n",
             threadId, target->threadId, threadName);
         free(threadName);
 
@@ -618,7 +618,7 @@ void dvmSlayDaemons(void)
             }
 
             if (allSuspended) {
-                LOGD("threadid=%d: all daemons have suspended\n", threadId);
+                LOGV("threadid=%d: all daemons have suspended\n", threadId);
                 break;
             } else {
                 if (!complained) {
