@@ -192,11 +192,12 @@ static void visitModUnionTable(Visitor *visitor, u1 *base, u1 *limit, void *arg)
     assert(base >= heapBase);
     u4 *bits = (u4*)gDvm.gcHeap->modUnionTableBase;
     /* compute the end address in the bit table */
-    size_t length = (limit - base) / GC_CARD_SIZE;
-    assert(length % sizeof(*bits) == 0);
-    length /= 4;
+    size_t byteLength = (limit - base) / GC_CARD_SIZE;
+    assert(byteLength <= gDvm.gcHeap->modUnionTableLength);
+    assert(byteLength % sizeof(*bits) == 0);
+    size_t wordLength = byteLength / sizeof(*bits);
     size_t i;
-    for (i = 0; i < length; ++i) {
+    for (i = 0; i < wordLength; ++i) {
         if (bits[i] == 0) {
             continue;
         }
@@ -693,12 +694,12 @@ static void scanGrayObjects(GcMarkContext *ctx)
  */
 void dvmHeapScanImmuneObjects(const GcMarkContext *ctx)
 {
-    ScanImmuneObjectContext ctx2;
-    memset(&ctx2, 0, sizeof(ctx2));
-    ctx2.threatenBoundary = (Object*)ctx->immuneLimit;
+    ScanImmuneObjectContext scanCtx;
+    memset(&scanCtx, 0, sizeof(scanCtx));
+    scanCtx.threatenBoundary = (Object*)ctx->immuneLimit;
     visitModUnionTable(scanImmuneObject,
                        (u1*)ctx->bitmap->base, (u1*)ctx->immuneLimit,
-                       (void *)&ctx2);
+                       (void *)&scanCtx);
     if (gDvm.verifyCardTable) {
         verifyImmuneObjects();
     }
