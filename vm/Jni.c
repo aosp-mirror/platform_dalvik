@@ -448,7 +448,9 @@ static inline IndirectRefTable* getLocalRefTable(JNIEnv* env)
  * Convert an indirect reference to an Object reference.  The indirect
  * reference may be local, global, or weak-global.
  *
- * If "jobj" is NULL or an invalid indirect reference, this returns NULL.
+ * If "jobj" is NULL, or is a weak global reference whose reference has
+ * been cleared, this returns NULL.  If jobj is an invalid indirect
+ * reference, kInvalidIndirectRefObject is returned.
  */
 Object* dvmDecodeIndirectRef(JNIEnv* env, jobject jobj)
 {
@@ -480,13 +482,25 @@ Object* dvmDecodeIndirectRef(JNIEnv* env, jobject jobj)
             dvmLockMutex(&gDvm.jniWeakGlobalRefLock);
             result = dvmGetFromIndirectRefTable(pRefTable, jobj);
             dvmUnlockMutex(&gDvm.jniWeakGlobalRefLock);
+            /*
+             * TODO: this is a temporary workaround for broken weak global
+             * refs (bug 4260055).  We treat any invalid reference as if it
+             * were a weak global with a cleared referent.  This means that
+             * actual invalid references won't be detected, and if an empty
+             * slot gets re-used we will return the new reference instead.
+             * This must be removed when weak global refs get fixed.
+             */
+            if (result == kInvalidIndirectRefObject) {
+                LOGW("Warning: used weak global ref hack\n");
+                result = NULL;
+            }
         }
         break;
     case kIndirectKindInvalid:
     default:
         LOGW("Invalid indirect reference %p in decodeIndirectRef\n", jobj);
         dvmAbort();
-        result = NULL;
+        result = kInvalidIndirectRefObject;
         break;
     }
 
@@ -815,10 +829,6 @@ void dvmDumpJniReferenceTables(void)
  *  - is present in the JNI global refs table
  *
  * Used by -Xcheck:jni and GetObjectRefType.
- *
- * NOTE: in the current VM, global and local references are identical.  If
- * something is both global and local, we can't tell them apart, and always
- * return "local".
  */
 jobjectRefType dvmGetJNIRefType(JNIEnv* env, jobject jobj)
 {
@@ -827,10 +837,11 @@ jobjectRefType dvmGetJNIRefType(JNIEnv* env, jobject jobj)
      * jobjectRefType, so this is easy.  We have to decode it to determine
      * if it's a valid reference and not merely valid-looking.
      */
+    assert(jobj != NULL);
+
     Object* obj = dvmDecodeIndirectRef(env, jobj);
 
-    if (obj == NULL) {
-        /* invalid ref, or jobj was NULL */
+    if (obj == kInvalidIndirectRefObject) {
         return JNIInvalidRefType;
     } else {
         return (jobjectRefType) dvmGetIndirectRefType(jobj);
@@ -1205,6 +1216,9 @@ static void checkStackSum(Thread* self)
 /*
  * If necessary, convert the value in pResult from a local/global reference
  * to an object pointer.
+ *
+ * If the returned reference is invalid, kInvalidIndirectRefObject will
+ * be returned in pResult.
  */
 static inline void convertReferenceResult(JNIEnv* env, JValue* pResult,
     const Method* method, Thread* self)
@@ -1505,11 +1519,10 @@ bail:
 static jclass GetSuperclass(JNIEnv* env, jclass jclazz)
 {
     JNI_ENTER();
-    jclass jsuper = NULL;
 
     ClassObject* clazz = (ClassObject*) dvmDecodeIndirectRef(env, jclazz);
-    if (clazz != NULL)
-        jsuper = addLocalReference(env, (Object*)clazz->super);
+    jclass jsuper = addLocalReference(env, (Object*)clazz->super);
+
     JNI_EXIT();
     return jsuper;
 }
@@ -2688,14 +2701,14 @@ static jobjectArray NewObjectArray(JNIEnv* env, jsize length,
     JNI_ENTER();
 
     jobjectArray newArray = NULL;
-    ClassObject* elemClassObj =
-        (ClassObject*) dvmDecodeIndirectRef(env, jelementClass);
 
-    if (elemClassObj == NULL) {
-        dvmThrowNullPointerException("JNI NewObjectArray");
+    if (jelementClass == NULL) {
+        dvmThrowNullPointerException("JNI NewObjectArray element class");
         goto bail;
     }
 
+    ClassObject* elemClassObj =
+        (ClassObject*) dvmDecodeIndirectRef(env, jelementClass);
     ArrayObject* newObj =
         dvmAllocObjectArray(elemClassObj, length, ALLOC_DEFAULT);
     if (newObj == NULL) {
