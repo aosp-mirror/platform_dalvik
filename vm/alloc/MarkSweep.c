@@ -192,7 +192,7 @@ static void visitModUnionTable(Visitor *visitor, u1 *base, u1 *limit, void *arg)
     assert(base >= heapBase);
     u4 *bits = (u4*)gDvm.gcHeap->modUnionTableBase;
     /* compute the end address in the bit table */
-    size_t byteLength = (limit - base) / GC_CARD_SIZE;
+    size_t byteLength = (limit - base) / GC_CARD_SIZE / CHAR_BIT;
     assert(byteLength <= gDvm.gcHeap->modUnionTableLength);
     assert(byteLength % sizeof(*bits) == 0);
     size_t wordLength = byteLength / sizeof(*bits);
