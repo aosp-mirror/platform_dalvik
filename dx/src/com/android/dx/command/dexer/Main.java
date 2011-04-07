@@ -1098,7 +1098,12 @@ public class Main {
             cfOptions.warn = DxConsole.err;
 
             dexOptions = new DexOptions();
-            dexOptions.enableExtendedOpcodes = targetApiLevel >= 12;
+
+            /*
+             * The new extended opcodes were introduced to the dex format
+             * as of API level 13 (aka Ice Cream Sandwich).
+             */
+            dexOptions.enableExtendedOpcodes = targetApiLevel >= 13;
         }
     }
 
