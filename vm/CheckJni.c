@@ -35,7 +35,10 @@
 
 #include <zlib.h>
 
-static void abortMaybe(void);       // fwd
+#define kUnknownFuncName "      -"      /* can pass to showLocation() */
+
+static void showLocation(const char* func);
+static void abortMaybe(void);
 
 
 /*
@@ -60,11 +63,19 @@ static void abortMaybe(void);       // fwd
  *
  * At this point, pResult->l has already been converted to an object pointer.
  */
-static void checkCallResultCommon(const u4* args, JValue* pResult,
+static void checkCallResultCommon(const u4* args, const JValue* pResult,
     const Method* method, Thread* self)
 {
     assert(pResult->l != NULL);
-    Object* resultObj = (Object*) pResult->l;
+    const Object* resultObj = (const Object*) pResult->l;
+
+    if (resultObj == kInvalidIndirectRefObject) {
+        LOGW("JNI WARNING: invalid reference returned from native code\n");
+        showLocation(kUnknownFuncName);
+        abortMaybe();
+        return;
+    }
+
     ClassObject* objClazz = resultObj->clazz;
 
     /*
@@ -117,8 +128,8 @@ static void checkCallResultCommon(const u4* args, JValue* pResult,
 /*
  * Determine if we need to check the return type coming out of the call.
  *
- * (We don't do this at the top of checkCallResultCommon() because this is on
- * the critical path for native method calls.)
+ * (We don't simply do this at the top of checkCallResultCommon() because
+ * this is on the critical path for native method calls.)
  */
 static inline bool callNeedsCheck(const u4* args, JValue* pResult,
     const Method* method, Thread* self)
@@ -227,12 +238,14 @@ void dvmCheckCallJNIMethod_staticNoRef(const u4* args, JValue* pResult,
 
 #define CHECK_FIELD_TYPE(_env, _obj, _fieldid, _prim, _isstatic)            \
     checkFieldType(_env, _obj, _fieldid, _prim, _isstatic, __FUNCTION__)
+#define CHECK_STATIC_FIELD_ID(_env, _clazz, _fieldid)                       \
+    checkStaticFieldID(_env, _clazz, _fieldid, __FUNCTION__)
 #define CHECK_INST_FIELD_ID(_env, _obj, _fieldid)                           \
     checkInstanceFieldID(_env, _obj, _fieldid, __FUNCTION__)
 #define CHECK_CLASS(_env, _clazz)                                           \
-    checkClass(_env, _clazz, __FUNCTION__)
+    checkInstance(_env, _clazz, gDvm.classJavaLangClass, "jclass", __FUNCTION__)
 #define CHECK_STRING(_env, _str)                                            \
-    checkString(_env, _str, __FUNCTION__)
+    checkInstance(_env, _str, gDvm.classJavaLangString, "jstring", __FUNCTION__)
 #define CHECK_UTF_STRING(_env, _str)                                        \
     checkUtfString(_env, _str, #_str, __FUNCTION__)
 #define CHECK_NULLABLE_UTF_STRING(_env, _str)                               \
@@ -281,10 +294,11 @@ void dvmCheckCallJNIMethod_staticNoRef(const u4* args, JValue* pResult,
  *
  * "func" looks like "Check_DeleteLocalRef"; we drop the "Check_".
  */
-static void showLocation(const Method* meth, const char* func)
+static void showLocation(const char* func)
 {
+    const Method* meth = dvmGetCurrentJNIMethod();
     char* desc = dexProtoCopyMethodDescriptor(&meth->prototype);
-    LOGW("             in %s.%s %s (%s)",
+    LOGW("             in %s.%s:%s (%s)",
         meth->clazz->descriptor, meth->name, desc, func + 6);
     free(desc);
 }
@@ -393,7 +407,7 @@ static void checkThread(JNIEnv* env, int flags, const char* func)
     }
 
     if (printWarn)
-        showLocation(dvmGetCurrentJNIMethod(), func);
+        showLocation(func);
     if (printException) {
         LOGW("Pending exception is:");
         dvmLogExceptionStackTrace();
@@ -423,7 +437,7 @@ static const char* primitiveTypeToName(PrimitiveType primType) {
 
 /*
  * Verify that the field is of the appropriate type.  If the field has an
- * object type, "obj" is the object we're trying to assign into it.
+ * object type, "jobj" is the object we're trying to assign into it.
  *
  * Works for both static and instance fields.
  */
@@ -434,14 +448,26 @@ static void checkFieldType(JNIEnv* env, jobject jobj, jfieldID fieldID,
     bool printWarn = false;
 
     if (fieldID == NULL) {
-        LOGE("JNI ERROR: null field ID");
+        LOGW("JNI WARNING: null field ID");
+        showLocation(func);
         abortMaybe();
     }
 
-    if (field->signature[0] == 'L' || field->signature[0] == '[') {
+    if ((field->signature[0] == 'L' || field->signature[0] == '[') &&
+        jobj != NULL)
+    {
         JNI_ENTER();
         Object* obj = dvmDecodeIndirectRef(env, jobj);
-        if (obj != NULL) {
+        /*
+         * If jobj is a weak global ref whose referent has been cleared,
+         * obj will be NULL.  Otherwise, obj should always be non-NULL
+         * and valid.
+         */
+        if (obj != NULL && !dvmIsValidObject(obj)) {
+            LOGW("JNI WARNING: field operation on invalid %s ref (%p)\n",
+                dvmIndirectRefTypeName(jobj), jobj);
+            printWarn = true;
+        } else {
             ClassObject* fieldClass =
                 dvmFindLoadedClass(field->signature);
             ClassObject* objClass = obj->clazz;
@@ -450,14 +476,14 @@ static void checkFieldType(JNIEnv* env, jobject jobj, jfieldID fieldID,
             assert(objClass != NULL);
 
             if (!dvmInstanceof(objClass, fieldClass)) {
-                LOGW("JNI WARNING: field '%s' with type '%s' set with wrong type (%s)",
+                LOGW("JNI WARNING: set field '%s' expected type %s, got %s",
                     field->name, field->signature, objClass->descriptor);
                 printWarn = true;
             }
         }
         JNI_EXIT();
     } else if (dexGetPrimitiveTypeFromDescriptorChar(field->signature[0]) != prim) {
-        LOGW("JNI WARNING: field '%s' with type '%s' set with wrong type (%s)",
+        LOGW("JNI WARNING: set field '%s' expected type %s, got %s",
             field->name, field->signature, primitiveTypeToName(prim));
         printWarn = true;
     } else if (isStatic && !dvmIsStaticField(field)) {
@@ -471,40 +497,7 @@ static void checkFieldType(JNIEnv* env, jobject jobj, jfieldID fieldID,
     }
 
     if (printWarn) {
-        showLocation(dvmGetCurrentJNIMethod(), func);
-        abortMaybe();
-    }
-}
-
-/*
- * Verify that "jobj" is a valid object, and that it's an object that JNI
- * is allowed to know about.  We allow NULL references.
- *
- * Must be in "running" mode before calling here.
- */
-static void checkObject0(JNIEnv* env, jobject jobj, const char* func)
-{
-    UNUSED_PARAMETER(env);
-    bool printWarn = false;
-
-    if (jobj == NULL)
-        return;
-
-    if (dvmGetJNIRefType(env, jobj) == JNIInvalidRefType) {
-        LOGW("JNI WARNING: %p is not a valid JNI reference", jobj);
-        printWarn = true;
-    } else {
-        Object* obj = dvmDecodeIndirectRef(env, jobj);
-
-        if (obj == NULL || !dvmIsValidObject(obj)) {
-            LOGW("JNI WARNING: native code passing in bad object %p %p (%s)",
-                jobj, obj, func);
-            printWarn = true;
-        }
-    }
-
-    if (printWarn) {
-        showLocation(dvmGetCurrentJNIMethod(), func);
+        showLocation(func);
         abortMaybe();
     }
 }
@@ -517,85 +510,77 @@ static void checkObject0(JNIEnv* env, jobject jobj, const char* func)
  */
 static void checkObject(JNIEnv* env, jobject jobj, const char* func)
 {
+    bool printWarn = false;
+
+    if (jobj == NULL)
+        return;
+
     JNI_ENTER();
-    checkObject0(env, jobj, func);
+
+    if (dvmGetJNIRefType(env, jobj) == JNIInvalidRefType) {
+        LOGW("JNI WARNING: %p is not a valid JNI reference (type=%s)",
+            jobj, dvmIndirectRefTypeName(jobj));
+        printWarn = true;
+    } else {
+        Object* obj = dvmDecodeIndirectRef(env, jobj);
+
+        /*
+         * The decoded object will be NULL if this is a weak global ref
+         * with a cleared referent.
+         */
+        if (obj == kInvalidIndirectRefObject ||
+            (obj != NULL && !dvmIsValidObject(obj)))
+        {
+            LOGW("JNI WARNING: native code passing in bad object %p %p",
+                jobj, obj);
+            printWarn = true;
+        }
+    }
+
+    if (printWarn) {
+        showLocation(func);
+        abortMaybe();
+    }
     JNI_EXIT();
 }
 
 /*
- * Verify that "clazz" actually points to a class object.  (Also performs
- * checkObject.)
- *
- * We probably don't need to identify where we're being called from,
- * because the VM is most likely about to crash and leave a core dump
- * if something is wrong.
+ * Verify that "jobj" is a valid non-NULL object reference, and points to
+ * an instance of expectedClass.
  *
  * Because we're looking at an object on the GC heap, we have to switch
  * to "running" mode before doing the checks.
  */
-static void checkClass(JNIEnv* env, jclass jclazz, const char* func)
+static void checkInstance(JNIEnv* env, jobject jobj,
+    ClassObject* expectedClass, const char* argName, const char* func)
 {
+    if (jobj == NULL) {
+        LOGW("JNI WARNING: received null %s", argName);
+        showLocation(func);
+        abortMaybe();
+        return;
+    }
+
     JNI_ENTER();
     bool printWarn = false;
 
-    Object* obj = dvmDecodeIndirectRef(env, jclazz);
+    Object* obj = dvmDecodeIndirectRef(env, jobj);
 
-    if (obj == NULL) {
-        LOGW("JNI WARNING: received null jclass");
+    if (!dvmIsValidObject(obj)) {
+        LOGW("JNI WARNING: %s is invalid %s ref (%p)", argName,
+            dvmIndirectRefTypeName(jobj), jobj);
         printWarn = true;
-    } else if (!dvmIsValidObject(obj)) {
-        LOGW("JNI WARNING: jclass points to invalid object %p", obj);
-        printWarn = true;
-    } else if (obj->clazz != gDvm.classJavaLangClass) {
-        LOGW("JNI WARNING: jclass arg is not a Class reference "
-             "(%p is instance of %s)",
-            jclazz, obj->clazz->descriptor);
+    } else if (obj->clazz != expectedClass) {
+        LOGW("JNI WARNING: %s arg has wrong type (expected %s, got %s)",
+            argName, expectedClass->descriptor, obj->clazz->descriptor);
         printWarn = true;
     }
     JNI_EXIT();
 
-    if (printWarn)
+    if (printWarn) {
+        showLocation(func);
         abortMaybe();
-    else
-        checkObject(env, jclazz, func);
-}
-
-/*
- * Verify that "str" is non-NULL and points to a String object.
- *
- * Since we're dealing with objects, switch to "running" mode.
- */
-static void checkString(JNIEnv* env, jstring jstr, const char* func)
-{
-    JNI_ENTER();
-    bool printWarn = false;
-
-    Object* obj = dvmDecodeIndirectRef(env, jstr);
-
-    if (obj == NULL) {
-        LOGW("JNI WARNING: received null jstring (%s)", func);
-        printWarn = true;
-    } else if (obj->clazz != gDvm.classJavaLangString) {
-        /*
-         * TODO: we probably should test dvmIsValidObject first, because
-         * this will crash if "obj" is non-null but pointing to an invalid
-         * memory region.  However, the "is valid" test is a little slow,
-         * we're doing it again over in checkObject().
-         */
-        if (dvmIsValidObject(obj))
-            LOGW("JNI WARNING: jstring %p points to object of type %s (%s)",
-                jstr, obj->clazz->descriptor, func);
-        else
-            LOGW("JNI WARNING: jstring %p is not a valid object (%s)", jstr,
-                func);
-        printWarn = true;
     }
-    JNI_EXIT();
-
-    if (printWarn)
-        abortMaybe();
-    else
-        checkObject(env, jstr, func);
 }
 
 /*
@@ -676,7 +661,7 @@ fail_with_string:
         errorKind, utf8);
     LOGW("             string: '%s'", origBytes);
 fail:
-    showLocation(dvmGetCurrentJNIMethod(), func);
+    showLocation(func);
     abortMaybe();
 }
 
@@ -710,29 +695,34 @@ static void checkClassName(JNIEnv* env, const char* className, const char* func)
  */
 static void checkArray(JNIEnv* env, jarray jarr, const char* func)
 {
+    if (jarr == NULL) {
+        LOGW("JNI WARNING: received null array");
+        showLocation(func);
+        abortMaybe();
+        return;
+    }
+
     JNI_ENTER();
     bool printWarn = false;
 
     Object* obj = dvmDecodeIndirectRef(env, jarr);
 
-    if (obj == NULL) {
-        LOGW("JNI WARNING: received null array (%s)", func);
+    if (!dvmIsValidObject(obj)) {
+        LOGW("JNI WARNING: jarray is invalid %s ref (%p)",
+            dvmIndirectRefTypeName(jarr), jarr);
         printWarn = true;
     } else if (obj->clazz->descriptor[0] != '[') {
-        if (dvmIsValidObject(obj))
-            LOGW("JNI WARNING: jarray %p points to non-array object (%s)",
-                jarr, obj->clazz->descriptor);
-        else
-            LOGW("JNI WARNING: jarray %p is not a valid object", jarr);
+        LOGW("JNI WARNING: jarray arg has wrong type (expected array, got %s)",
+            obj->clazz->descriptor);
         printWarn = true;
     }
 
     JNI_EXIT();
 
-    if (printWarn)
+    if (printWarn) {
+        showLocation(func);
         abortMaybe();
-    else
-        checkObject(env, jarr, func);
+    }
 }
 
 /*
@@ -796,15 +786,18 @@ static void checkSig(JNIEnv* env, jmethodID methodID, char expectedSigByte,
         LOGW("             calling %s.%s %s",
             meth->clazz->descriptor, meth->name, desc);
         free(desc);
-        showLocation(dvmGetCurrentJNIMethod(), func);
+        showLocation(func);
         abortMaybe();
     }
 }
 
 /*
  * Verify that this static field ID is valid for this class.
+ *
+ * Assumes "jclazz" has already been validated.
  */
-static void checkStaticFieldID(JNIEnv* env, jclass jclazz, jfieldID fieldID)
+static void checkStaticFieldID(JNIEnv* env, jclass jclazz, jfieldID fieldID,
+    const char* func)
 {
     JNI_ENTER();
     ClassObject* clazz = (ClassObject*) dvmDecodeIndirectRef(env, jclazz);
@@ -817,6 +810,7 @@ static void checkStaticFieldID(JNIEnv* env, jclass jclazz, jfieldID fieldID)
         LOGW("JNI WARNING: static fieldID %p not valid for class %s",
             fieldID, clazz->descriptor);
         LOGW("             base=%p count=%d", base, fieldCount);
+        showLocation(func);
         abortMaybe();
     }
     JNI_EXIT();
@@ -824,17 +818,13 @@ static void checkStaticFieldID(JNIEnv* env, jclass jclazz, jfieldID fieldID)
 
 /*
  * Verify that this instance field ID is valid for this object.
+ *
+ * Assumes "jobj" has already been validated.
  */
 static void checkInstanceFieldID(JNIEnv* env, jobject jobj, jfieldID fieldID,
     const char* func)
 {
     JNI_ENTER();
-
-    if (jobj == NULL) {
-        LOGW("JNI WARNING: invalid null object (%s)", func);
-        abortMaybe();
-        goto bail;
-    }
 
     Object* obj = dvmDecodeIndirectRef(env, jobj);
     ClassObject* clazz = obj->clazz;
@@ -855,6 +845,7 @@ static void checkInstanceFieldID(JNIEnv* env, jobject jobj, jfieldID fieldID,
 
     LOGW("JNI WARNING: inst fieldID %p not valid for class %s",
         fieldID, obj->clazz->descriptor);
+    showLocation(func);
     abortMaybe();
 
 bail:
@@ -879,6 +870,7 @@ static void checkVirtualMethod(JNIEnv* env, jobject jobj, jmethodID methodID,
     if (!dvmInstanceof(obj->clazz, meth->clazz)) {
         LOGW("JNI WARNING: can't call %s.%s on instance of %s",
             meth->clazz->descriptor, meth->name, obj->clazz->descriptor);
+        showLocation(func);
         abortMaybe();
     }
 
@@ -888,7 +880,7 @@ static void checkVirtualMethod(JNIEnv* env, jobject jobj, jmethodID methodID,
 /*
  * Verify that "methodID" is appropriate for "clazz".
  *
- * A mismatch isn't dangerous, because the method defines the class.  In
+ * A mismatch isn't dangerous, because the jmethodID defines the class.  In
  * fact, jclazz is unused in the implementation.  It's best if we don't
  * allow bad code in the system though.
  *
@@ -905,7 +897,8 @@ static void checkStaticMethod(JNIEnv* env, jclass jclazz, jmethodID methodID,
     if (!dvmInstanceof(clazz, meth->clazz)) {
         LOGW("JNI WARNING: can't call static %s.%s on class %s",
             meth->clazz->descriptor, meth->name, clazz->descriptor);
-        // no abort
+        showLocation(func);
+        // no abort?
     }
 
     JNI_EXIT();
@@ -1307,6 +1300,7 @@ static jint Check_Throw(JNIEnv* env, jthrowable obj)
 {
     CHECK_ENTER(env, kFlag_Default);
     CHECK_OBJECT(env, obj);
+    /* TODO: verify that "obj" is an instance of Throwable */
     jint result;
     result = BASE_ENV(env)->Throw(env, obj);
     CHECK_EXIT(env);
@@ -1576,7 +1570,7 @@ static jfieldID Check_GetStaticFieldID(JNIEnv* env, jclass clazz,
         CHECK_ENTER(env, kFlag_Default);                                    \
         CHECK_CLASS(env, clazz);                                            \
         _ctype result;                                                      \
-        checkStaticFieldID(env, clazz, fieldID);                            \
+        CHECK_STATIC_FIELD_ID(env, clazz, fieldID);                         \
         result = BASE_ENV(env)->GetStatic##_jname##Field(env, clazz,        \
             fieldID);                                                       \
         CHECK_EXIT(env);                                                    \
@@ -1598,7 +1592,7 @@ GET_STATIC_TYPE_FIELD(jdouble, Double);
     {                                                                       \
         CHECK_ENTER(env, kFlag_Default);                                    \
         CHECK_CLASS(env, clazz);                                            \
-        checkStaticFieldID(env, clazz, fieldID);                            \
+        CHECK_STATIC_FIELD_ID(env, clazz, fieldID);                         \
         /* "value" arg only used when type == ref */                        \
         CHECK_FIELD_TYPE(env, (jobject)(u4)value, fieldID, _ftype, true);   \
         BASE_ENV(env)->SetStatic##_jname##Field(env, clazz, fieldID,        \

@@ -95,7 +95,7 @@ static bool basicTest(void)
     }
 
     /* get invalid entry (off the end of the list) */
-    if (dvmGetFromIndirectRefTable(&irt, iref0) != NULL) {
+    if (dvmGetFromIndirectRefTable(&irt, iref0) != kInvalidIndirectRefObject) {
         LOGE("stale entry get succeeded unexpectedly\n");
         goto bail;
     }
@@ -153,7 +153,7 @@ static bool basicTest(void)
     }
 
     /* get invalid entry (from hole) */
-    if (dvmGetFromIndirectRefTable(&irt, iref1) != NULL) {
+    if (dvmGetFromIndirectRefTable(&irt, iref1) != kInvalidIndirectRefObject) {
         LOGE("hole get succeeded unexpectedly\n");
         goto bail;
     }

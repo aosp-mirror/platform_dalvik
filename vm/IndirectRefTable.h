@@ -240,6 +240,11 @@ INLINE IndirectRefKind dvmGetIndirectRefType(IndirectRef iref)
 }
 
 /*
+ * Return a string constant describing the indirect ref type.
+ */
+const char* dvmIndirectRefTypeName(IndirectRef iref);
+
+/*
  * Initialize an IndirectRefTable.
  *
  * If "initialCount" != "maxCount", the table will expand as required.
@@ -347,16 +352,19 @@ INLINE IndirectRef dvmAppendToIndirectRefTable(IndirectRefTable* pRef,
 /* extra debugging checks */
 bool dvmGetFromIndirectRefTableCheck(IndirectRefTable* pRef, IndirectRef iref);
 
+/* magic failure value; must not pass dvmIsValidObject() */
+#define kInvalidIndirectRefObject ((Object*)0xdead4321)
+
 /*
  * Given an IndirectRef in the table, return the Object it refers to.
  *
- * Returns NULL if iref is invalid.
+ * Returns kInvalidIndirectRefObject if iref is invalid.
  */
 INLINE Object* dvmGetFromIndirectRefTable(IndirectRefTable* pRef,
     IndirectRef iref)
 {
     if (!dvmGetFromIndirectRefTableCheck(pRef, iref))
-        return NULL;
+        return kInvalidIndirectRefObject;
 
     int idx = dvmIndirectRefToIndex(iref);
     return pRef->table[idx];

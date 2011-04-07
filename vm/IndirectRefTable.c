@@ -173,7 +173,7 @@ IndirectRef dvmAddToIndirectRefTable(IndirectRefTable* pRef, u4 cookie,
                 pRef->allocEntries, newSize, pRef->maxEntries);
             return false;
         }
-        LOGI("Growing ireftab %p from %d to %d (max=%d)\n",
+        LOGV("Growing ireftab %p from %d to %d (max=%d)\n",
             pRef, pRef->allocEntries, newSize, pRef->maxEntries);
 
         /* update entries; adjust "nextEntry" in case memory moved */
@@ -230,19 +230,19 @@ bool dvmGetFromIndirectRefTableCheck(IndirectRefTable* pRef, IndirectRef iref)
     int idx = dvmIndirectRefToIndex(iref);
 
     if (iref == NULL) {
-        LOGI("--- lookup on NULL iref\n");
+        LOGD("Attempt to look up NULL iref\n");
         return false;
     }
     if (idx >= topIndex) {
         /* bad -- stale reference? */
-        LOGI("Attempt to access invalid index %d (top=%d)\n",
+        LOGD("Attempt to access invalid index %d (top=%d)\n",
             idx, topIndex);
         return false;
     }
 
     Object* obj = pRef->table[idx];
     if (obj == NULL) {
-        LOGI("Attempt to read from hole, iref=%p\n", iref);
+        LOGD("Attempt to read from hole, iref=%p\n", iref);
         return false;
     }
     if (!checkEntry(pRef, iref, idx))
@@ -285,7 +285,7 @@ bool dvmRemoveFromIndirectRefTable(IndirectRefTable* pRef, u4 cookie,
     }
     if (idx >= topIndex) {
         /* bad -- stale reference? */
-        LOGI("Attempt to remove invalid index %d (bottom=%d top=%d)\n",
+        LOGD("Attempt to remove invalid index %d (bottom=%d top=%d)\n",
             idx, bottomIndex, topIndex);
         return false;
     }
@@ -342,6 +342,20 @@ bool dvmRemoveFromIndirectRefTable(IndirectRefTable* pRef, u4 cookie,
     }
 
     return true;
+}
+
+/*
+ * Return a type name, useful for debugging.
+ */
+const char* dvmIndirectRefTypeName(IndirectRef iref)
+{
+    switch (dvmGetIndirectRefType(iref)) {
+    case kIndirectKindInvalid:      return "invalid";
+    case kIndirectKindLocal:        return "local";
+    case kIndirectKindGlobal:       return "global";
+    case kIndirectKindWeakGlobal:   return "weak global";
+    default:                        return "UNKNOWN";
+    }
 }
 
 /*
