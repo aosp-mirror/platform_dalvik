@@ -35,11 +35,11 @@ static void visitFields(Visitor *visitor, Object *obj, void *arg)
             refOffsets &= ~(CLASS_HIGH_BIT >> rshift);
         }
     } else {
-        ClassObject *clazz;
-        for (clazz = obj->clazz; clazz != NULL; clazz = clazz->super) {
+        for (ClassObject *clazz = obj->clazz;
+             clazz != NULL;
+             clazz = clazz->super) {
             InstField *field = clazz->ifields;
-            int i;
-            for (i = 0; i < clazz->ifieldRefCount; ++i, ++field) {
+            for (int i = 0; i < clazz->ifieldRefCount; ++i, ++field) {
                 size_t offset = field->byteOffset;
                 Object **ref = (Object **)BYTE_OFFSET(obj, offset);
                 (*visitor)(ref, arg);
@@ -54,11 +54,9 @@ static void visitFields(Visitor *visitor, Object *obj, void *arg)
 static void visitStaticFields(Visitor *visitor, ClassObject *clazz,
                               void *arg)
 {
-    int i;
-
     assert(visitor != NULL);
     assert(clazz != NULL);
-    for (i = 0; i < clazz->sfieldCount; ++i) {
+    for (int i = 0; i < clazz->sfieldCount; ++i) {
         char ch = clazz->sfields[i].field.signature[0];
         if (ch == '[' || ch == 'L') {
             (*visitor)(&clazz->sfields[i].value.l, arg);
@@ -72,11 +70,9 @@ static void visitStaticFields(Visitor *visitor, ClassObject *clazz,
 static void visitInterfaces(Visitor *visitor, ClassObject *clazz,
                             void *arg)
 {
-    int i;
-
     assert(visitor != NULL);
     assert(clazz != NULL);
-    for (i = 0; i < clazz->interfaceCount; ++i) {
+    for (int i = 0; i < clazz->interfaceCount; ++i) {
         (*visitor)(&clazz->interfaces[i], arg);
     }
 }
@@ -121,8 +117,7 @@ static void visitArrayObject(Visitor *visitor, Object *obj, void *arg)
     if (IS_CLASS_FLAG_SET(obj->clazz, CLASS_ISOBJECTARRAY)) {
         ArrayObject *array = (ArrayObject *)obj;
         Object **contents = (Object **)(void *)array->contents;
-        size_t i;
-        for (i = 0; i < array->length; ++i) {
+        for (size_t i = 0; i < array->length; ++i) {
             (*visitor)(&contents[i], arg);
         }
     }

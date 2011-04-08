@@ -282,10 +282,9 @@ hprofDumpHeapObject(hprof_context_t *ctx, const Object *obj)
 
         if (clazz == gDvm.classJavaLangClass) {
             const ClassObject *thisClass = (const ClassObject *)obj;
-            int i, sFieldCount, iFieldCount;
             /* obj is a ClassObject.
              */
-            sFieldCount = thisClass->sfieldCount;
+            int sFieldCount = thisClass->sfieldCount;
             if (sFieldCount != 0) {
                 int byteLength = sFieldCount*sizeof(StaticField);
                 /* Create a byte array to reflect the allocation of the
@@ -296,7 +295,7 @@ hprofDumpHeapObject(hprof_context_t *ctx, const Object *obj)
                 hprofAddU4ToRecord(rec, stackTraceSerialNumber(obj));
                 hprofAddU4ToRecord(rec, byteLength);
                 hprofAddU1ToRecord(rec, hprof_basic_byte);
-                for (i = 0; i < byteLength; i++) {
+                for (int i = 0; i < byteLength; i++) {
                     hprofAddU1ToRecord(rec, 0);
                 }
             }
@@ -331,7 +330,7 @@ hprofDumpHeapObject(hprof_context_t *ctx, const Object *obj)
                                    hprofLookupStringId(STATIC_OVERHEAD_NAME));
                 hprofAddU1ToRecord(rec, hprof_basic_object);
                 hprofAddIdToRecord(rec, CLASS_STATICS_ID(obj));
-                for (i = 0; i < sFieldCount; i++) {
+                for (int i = 0; i < sFieldCount; i++) {
                     hprof_basic_type t;
                     size_t size;
                     const StaticField *f = &thisClass->sfields[i];
@@ -355,9 +354,9 @@ hprofDumpHeapObject(hprof_context_t *ctx, const Object *obj)
 
             /* Instance fields for this class (no superclass fields)
              */
-            iFieldCount = thisClass->ifieldCount;
+            int iFieldCount = thisClass->ifieldCount;
             hprofAddU2ToRecord(rec, (u2)iFieldCount);
-            for (i = 0; i < iFieldCount; i++) {
+            for (int i = 0; i < iFieldCount; i++) {
                 const InstField *f = &thisClass->ifields[i];
                 hprof_basic_type t;
 
@@ -444,10 +443,8 @@ hprofDumpHeapObject(hprof_context_t *ctx, const Object *obj)
              */
             sclass = clazz;
             while (sclass != NULL) {
-                int i, ifieldCount;
-
-                ifieldCount = sclass->ifieldCount;
-                for (i = 0; i < ifieldCount; i++) {
+                int ifieldCount = sclass->ifieldCount;
+                for (int i = 0; i < ifieldCount; i++) {
                     const InstField *f = &sclass->ifields[i];
                     hprof_basic_type t;
                     size_t size;

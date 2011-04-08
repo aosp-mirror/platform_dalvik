@@ -100,14 +100,11 @@ bool dvmHeapBitmapCoversAddress(const HeapBitmap *hb, const void *obj)
 void dvmHeapBitmapWalk(const HeapBitmap *bitmap, BitmapCallback *callback,
                        void *arg)
 {
-    uintptr_t end;
-    uintptr_t i;
-
     assert(bitmap != NULL);
     assert(bitmap->bits != NULL);
     assert(callback != NULL);
-    end = HB_OFFSET_TO_INDEX(bitmap->max - bitmap->base);
-    for (i = 0; i <= end; ++i) {
+    uintptr_t end = HB_OFFSET_TO_INDEX(bitmap->max - bitmap->base);
+    for (uintptr_t i = 0; i <= end; ++i) {
         unsigned long word = bitmap->bits[i];
         if (UNLIKELY(word != 0)) {
             unsigned long highBit = 1 << (HB_BITS_PER_WORD - 1);
@@ -145,8 +142,7 @@ void dvmHeapBitmapScanWalk(HeapBitmap *bitmap,
     assert(base >= bitmap->base);
     assert(max <= bitmap->max);
     uintptr_t end = HB_OFFSET_TO_INDEX(max - base);
-    uintptr_t i;
-    for (i = 0; i <= end; ++i) {
+    for (uintptr_t i = 0; i <= end; ++i) {
         unsigned long word = bitmap->bits[i];
         if (UNLIKELY(word != 0)) {
             unsigned long highBit = 1 << (HB_BITS_PER_WORD - 1);
@@ -174,12 +170,6 @@ void dvmHeapBitmapSweepWalk(const HeapBitmap *liveHb, const HeapBitmap *markHb,
                             uintptr_t base, uintptr_t max,
                             BitmapSweepCallback *callback, void *callbackArg)
 {
-    void *pointerBuf[4 * HB_BITS_PER_WORD];
-    void **pb = pointerBuf;
-    size_t i;
-    size_t start, end;
-    unsigned long *live, *mark;
-
     assert(liveHb != NULL);
     assert(liveHb->bits != NULL);
     assert(markHb != NULL);
@@ -195,11 +185,13 @@ void dvmHeapBitmapSweepWalk(const HeapBitmap *liveHb, const HeapBitmap *markHb,
          */
         return;
     }
-    start = HB_OFFSET_TO_INDEX(base - liveHb->base);
-    end = HB_OFFSET_TO_INDEX(max - liveHb->base);
-    live = liveHb->bits;
-    mark = markHb->bits;
-    for (i = start; i <= end; i++) {
+    void *pointerBuf[4 * HB_BITS_PER_WORD];
+    void **pb = pointerBuf;
+    size_t start = HB_OFFSET_TO_INDEX(base - liveHb->base);
+    size_t end = HB_OFFSET_TO_INDEX(max - liveHb->base);
+    unsigned long *live = liveHb->bits;
+    unsigned long *mark = markHb->bits;
+    for (size_t i = start; i <= end; i++) {
         unsigned long garbage = live[i] & ~mark[i];
         if (UNLIKELY(garbage != 0)) {
             unsigned long highBit = 1 << (HB_BITS_PER_WORD - 1);
