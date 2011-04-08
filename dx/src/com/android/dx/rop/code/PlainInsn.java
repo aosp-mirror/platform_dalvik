@@ -21,6 +21,7 @@ import com.android.dx.rop.type.Type;
 import com.android.dx.rop.type.TypeList;
 import com.android.dx.rop.type.TypeBearer;
 import com.android.dx.rop.cst.Constant;
+import com.android.dx.rop.cst.CstInteger;
 
 /**
  * Plain instruction, which has no embedded data and which cannot possibly
@@ -95,7 +96,7 @@ public final class PlainInsn
 
     /** {@inheritDoc} */
     @Override
-    public Insn withLastSourceLiteral() {
+    public Insn withSourceLiteral() {
         RegisterSpecList sources = getSources();
         int szSources = sources.size();
 
@@ -105,6 +106,7 @@ public final class PlainInsn
 
         TypeBearer lastType = sources.get(szSources - 1).getTypeBearer();
 
+        // TODO: Check for reverse subtraction, where first source is constant
         if (!lastType.isConstant()) {
             return this;
         }
@@ -115,8 +117,13 @@ public final class PlainInsn
 
         Rop newRop;
         try {
-            newRop = Rops.ropFor(getOpcode().getOpcode(),
-                    getResult(), newSources, (Constant)lastType);
+            // Check for constant subtraction and flip them to be addition
+            int opcode = getOpcode().getOpcode();
+            if (opcode == RegOps.SUB && cst instanceof CstInteger) {
+                opcode = RegOps.ADD;
+                cst = CstInteger.make(-((CstInteger)cst).getValue());
+            }
+            newRop = Rops.ropFor(opcode, getResult(), newSources, cst);
         } catch (IllegalArgumentException ex) {
             // There's no rop for this case
             return this;

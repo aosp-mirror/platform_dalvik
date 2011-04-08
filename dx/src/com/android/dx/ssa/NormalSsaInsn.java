@@ -105,6 +105,7 @@ public final class NormalSsaInsn extends SsaInsn implements Cloneable {
      *
      * @return {@code null-ok;} sources list
      */
+    @Override
     public RegisterSpecList getSources() {
         return insn.getSources();
     }
@@ -135,6 +136,7 @@ public final class NormalSsaInsn extends SsaInsn implements Cloneable {
     }
 
     /** {@inheritDoc} */
+    @Override
     public RegisterSpec getLocalAssignment() {
         RegisterSpec assignment;
 
@@ -158,15 +160,15 @@ public final class NormalSsaInsn extends SsaInsn implements Cloneable {
     }
 
     /**
-     * Upgrades this insn to a version that represents the constant last
-     * source literally. If the upgrade is not possible, this does nothing.
+     * Upgrades this insn to a version that represents the constant source
+     * literally. If the upgrade is not possible, this does nothing.
      *
-     * @see Insn#withLastSourceLiteral
+     * @see Insn#withSourceLiteral
      */
     public void upgradeToLiteral() {
         RegisterSpecList oldSources = insn.getSources();
 
-        insn = insn.withLastSourceLiteral();
+        insn = insn.withSourceLiteral();
         getBlock().getParent().onSourcesChanged(this, oldSources);
     }
 
