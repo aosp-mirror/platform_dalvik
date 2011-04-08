@@ -1645,12 +1645,23 @@ static bool handleFmt21c_Fmt31c_Fmt41c(CompilationUnit *cUnit, MIR *mir)
                 dvmAbort();
             }
 
+            /*
+             * On SMP systems, Dalvik opcodes found to be referencing
+             * volatile fields are rewritten to their _VOLATILE variant.
+             * However, this does not happen on non-SMP systems. The JIT
+             * still needs to know about volatility to avoid unsafe
+             * optimizations so we determine volatility based on either
+             * the opcode or the field access flags.
+             */
+#if ANDROID_SMP != 0
             isVolatile = (opcode == OP_SGET_VOLATILE) ||
                          (opcode == OP_SGET_VOLATILE_JUMBO) ||
                          (opcode == OP_SGET_OBJECT_VOLATILE) ||
                          (opcode == OP_SGET_OBJECT_VOLATILE_JUMBO);
-
             assert(isVolatile == dvmIsVolatileField((Field *) fieldPtr));
+#else
+            isVolatile = dvmIsVolatileField((Field *) fieldPtr);
+#endif
 
             rlDest = dvmCompilerGetDest(cUnit, mir, 0);
             rlResult = dvmCompilerEvalLoc(cUnit, rlDest, kAnyReg, true);
@@ -1725,12 +1736,15 @@ static bool handleFmt21c_Fmt31c_Fmt41c(CompilationUnit *cUnit, MIR *mir)
                 dvmAbort();
             }
 
+#if ANDROID_SMP != 0
             isVolatile = (opcode == OP_SPUT_VOLATILE) ||
                          (opcode == OP_SPUT_VOLATILE_JUMBO) ||
                          (opcode == OP_SPUT_OBJECT_VOLATILE) ||
                          (opcode == OP_SPUT_OBJECT_VOLATILE_JUMBO);
-
             assert(isVolatile == dvmIsVolatileField((Field *) fieldPtr));
+#else
+            isVolatile = dvmIsVolatileField((Field *) fieldPtr);
+#endif
 
             isSputObject = (opcode == OP_SPUT_OBJECT) ||
                            (opcode == OP_SPUT_OBJECT_JUMBO) ||
@@ -2410,8 +2424,10 @@ static bool handleFmt22c_Fmt52c(CompilationUnit *cUnit, MIR *mir)
         case OP_IPUT_VOLATILE_JUMBO:
         case OP_IPUT_OBJECT_VOLATILE:
         case OP_IPUT_OBJECT_VOLATILE_JUMBO:
+#if ANDROID_SMP != 0
             isVolatile = true;
         // NOTE: intentional fallthrough
+#endif
         case OP_IGET:
         case OP_IGET_JUMBO:
         case OP_IGET_WIDE:
@@ -2450,7 +2466,12 @@ static bool handleFmt22c_Fmt52c(CompilationUnit *cUnit, MIR *mir)
                 LOGE("Unexpected null instance field");
                 dvmAbort();
             }
-            assert(isVolatile == dvmIsVolatileField(fieldPtr));
+
+#if ANDROID_SMP != 0
+            assert(isVolatile == dvmIsVolatileField((Field *) fieldPtr));
+#else
+            isVolatile = dvmIsVolatileField((Field *) fieldPtr);
+#endif
             fieldOffset = ((InstField *)fieldPtr)->byteOffset;
             break;
         }
@@ -2559,8 +2580,6 @@ static bool handleFmt22c_Fmt52c(CompilationUnit *cUnit, MIR *mir)
         case OP_IGET_VOLATILE_JUMBO:
         case OP_IGET_OBJECT_VOLATILE:
         case OP_IGET_OBJECT_VOLATILE_JUMBO:
-            isVolatile = true;
-            // NOTE: intentional fallthrough
         case OP_IGET:
         case OP_IGET_JUMBO:
         case OP_IGET_OBJECT:
@@ -2581,8 +2600,6 @@ static bool handleFmt22c_Fmt52c(CompilationUnit *cUnit, MIR *mir)
             break;
         case OP_IPUT_VOLATILE:
         case OP_IPUT_VOLATILE_JUMBO:
-            isVolatile = true;
-            // NOTE: intentional fallthrough
         case OP_IPUT:
         case OP_IPUT_JUMBO:
         case OP_IPUT_BOOLEAN:
@@ -2597,8 +2614,6 @@ static bool handleFmt22c_Fmt52c(CompilationUnit *cUnit, MIR *mir)
             break;
         case OP_IPUT_OBJECT_VOLATILE:
         case OP_IPUT_OBJECT_VOLATILE_JUMBO:
-            isVolatile = true;
-            // NOTE: intentional fallthrough
         case OP_IPUT_OBJECT:
         case OP_IPUT_OBJECT_JUMBO:
             genIPut(cUnit, mir, kWord, fieldOffset, true, isVolatile);
