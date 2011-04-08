@@ -106,31 +106,41 @@ public final class PlainInsn
 
         TypeBearer lastType = sources.get(szSources - 1).getTypeBearer();
 
-        // TODO: Check for reverse subtraction, where first source is constant
         if (!lastType.isConstant()) {
-            return this;
-        }
-
-        Constant cst = (Constant) lastType;
-
-        RegisterSpecList newSources = sources.withoutLast();
-
-        Rop newRop;
-        try {
-            // Check for constant subtraction and flip them to be addition
-            int opcode = getOpcode().getOpcode();
-            if (opcode == RegOps.SUB && cst instanceof CstInteger) {
-                opcode = RegOps.ADD;
-                cst = CstInteger.make(-((CstInteger)cst).getValue());
+            // Check for reverse subtraction, where first source is constant
+            TypeBearer firstType = sources.get(0).getTypeBearer();
+            if (szSources == 2 && firstType.isConstant()) {
+                Constant cst = (Constant) firstType;
+                RegisterSpecList newSources = sources.withoutFirst();
+                Rop newRop = Rops.ropFor(getOpcode().getOpcode(), getResult(),
+                                             newSources, cst);
+                return new PlainCstInsn(newRop, getPosition(), getResult(),
+                                            newSources, cst);
             }
-            newRop = Rops.ropFor(opcode, getResult(), newSources, cst);
-        } catch (IllegalArgumentException ex) {
-            // There's no rop for this case
             return this;
-        }
+        } else {
 
-        return new PlainCstInsn(newRop, getPosition(),
-                getResult(), newSources, cst);
+            Constant cst = (Constant) lastType;
+
+            RegisterSpecList newSources = sources.withoutLast();
+
+            Rop newRop;
+            try {
+                // Check for constant subtraction and flip it to be addition
+                int opcode = getOpcode().getOpcode();
+                if (opcode == RegOps.SUB && cst instanceof CstInteger) {
+                    opcode = RegOps.ADD;
+                    cst = CstInteger.make(-((CstInteger)cst).getValue());
+                }
+                newRop = Rops.ropFor(opcode, getResult(), newSources, cst);
+            } catch (IllegalArgumentException ex) {
+                // There's no rop for this case
+                return this;
+            }
+
+            return new PlainCstInsn(newRop, getPosition(),
+                    getResult(), newSources, cst);
+        }
     }
 
 
