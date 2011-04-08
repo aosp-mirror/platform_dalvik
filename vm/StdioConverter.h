@@ -19,7 +19,15 @@
 #ifndef _DALVIK_STDOUTCONVERTER
 #define _DALVIK_STDOUTCONVERTER
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 bool dvmStdioConverterStartup(void);
 void dvmStdioConverterShutdown(void);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /*_DALVIK_STDOUTCONVERTER*/

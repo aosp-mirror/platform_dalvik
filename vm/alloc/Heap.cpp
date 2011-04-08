@@ -37,7 +37,7 @@
 static const GcSpec kGcForMallocSpec = {
     true,  /* isPartial */
     false,  /* isConcurrent */
-    PRESERVE,
+    true,  /* doPreserve */
     "GC_FOR_ALLOC"
 };
 
@@ -46,7 +46,7 @@ const GcSpec *GC_FOR_MALLOC = &kGcForMallocSpec;
 static const GcSpec kGcConcurrentSpec  = {
     true,  /* isPartial */
     true,  /* isConcurrent */
-    PRESERVE,
+    true,  /* doPreserve */
     "GC_CONCURRENT"
 };
 
@@ -55,7 +55,7 @@ const GcSpec *GC_CONCURRENT = &kGcConcurrentSpec;
 static const GcSpec kGcExplicitSpec = {
     false,  /* isPartial */
     true,  /* isConcurrent */
-    PRESERVE,
+    true,  /* doPreserve */
     "GC_EXPLICIT"
 };
 
@@ -64,7 +64,7 @@ const GcSpec *GC_EXPLICIT = &kGcExplicitSpec;
 static const GcSpec kGcBeforeOomSpec = {
     false,  /* isPartial */
     false,  /* isConcurrent */
-    CLEAR,
+    false,  /* doPreserve */
     "GC_BEFORE_OOM"
 };
 
@@ -622,7 +622,7 @@ void dvmCollectGarbageInternal(const GcSpec* spec)
      * weakly-reachable objects discovered while tracing.
      */
     dvmHeapProcessReferences(&gcHeap->softReferences,
-                             spec->softReferencePolicy == CLEAR,
+                             spec->doPreserve == false,
                              &gcHeap->weakReferences,
                              &gcHeap->finalizerReferences,
                              &gcHeap->phantomReferences);

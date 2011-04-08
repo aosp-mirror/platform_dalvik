@@ -19,6 +19,10 @@
 #ifndef _DALVIK_OO_ARRAY
 #define _DALVIK_OO_ARRAY
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* width of an object reference, for arrays of objects */
 #define kObjectArrayRefWidth    sizeof(Object*)
 
@@ -166,5 +170,9 @@ size_t dvmArrayObjectSize(const ArrayObject *array);
  * the array class.
  */
 size_t dvmArrayClassElementWidth(const ClassObject* clazz);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /*_DALVIK_OO_ARRAY*/

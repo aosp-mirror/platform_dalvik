@@ -21,6 +21,10 @@
 #ifndef _DALVIK_RAWDEXFILE
 #define _DALVIK_RAWDEXFILE
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*
  * Structure representing a "raw" DEX file, in its unswapped unoptimized
  * state.
@@ -67,5 +71,9 @@ INLINE DvmDex* dvmGetRawDexFileDex(RawDexFile* pRawDexFile) {
 INLINE const char* dvmGetRawDexFileCacheFileName(RawDexFile* pRawDexFile) {
     return pRawDexFile->cacheFileName;
 }
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /*_DALVIK_RAWDEXFILE*/

@@ -23,6 +23,10 @@
 #ifndef _DALVIK_ALLOC_CARDTABLE
 #define _DALVIK_ALLOC_CARDTABLE
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define GC_CARD_SHIFT 7
 #define GC_CARD_SIZE (1 << GC_CARD_SHIFT)
 #define GC_CARD_CLEAN 0
@@ -69,5 +73,9 @@ void dvmMarkCard(const void *addr);
  * Verifies that all gray objects are on a dirty card.
  */
 void dvmVerifyCardTable(void);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /*_DALVIK_ALLOC_CARDTABLE*/

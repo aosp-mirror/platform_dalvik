@@ -26,6 +26,9 @@
 #include <errno.h>
 #include <cutils/sched_policy.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #if defined(CHECK_MUTEX) && !defined(__USE_UNIX98)
 /* glibc lacks this unless you #define __USE_UNIX98 */
@@ -594,5 +597,9 @@ void dvmDumpAllThreadsEx(const DebugOutputTarget* target, bool grabLock);
  * in an uncertain state.
  */
 void dvmNukeThread(Thread* thread);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /*_DALVIK_THREAD*/

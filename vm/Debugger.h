@@ -21,10 +21,14 @@
 #ifndef _DALVIK_DEBUGGER
 #define _DALVIK_DEBUGGER
 
+#include <pthread.h>
 #include "Common.h"
 #include "Misc.h"
 #include "jdwp/Jdwp.h"
-#include <pthread.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* fwd decl */
 struct Object;
@@ -306,5 +310,9 @@ void dvmDbgDdmSendChunkV(int type, const struct iovec* iov, int iovcnt);
 
 #define CHUNK_TYPE(_name) \
     ((_name)[0] << 24 | (_name)[1] << 16 | (_name)[2] << 8 | (_name)[3])
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /*_DALVIK_DEBUGGER*/

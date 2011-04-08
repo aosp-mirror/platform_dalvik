@@ -19,6 +19,10 @@
 #ifndef _DALVIK_ALLOC_DDMHEAP
 #define _DALVIK_ALLOC_DDMHEAP
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*
  * Sends the current heap info to the DDM server.
  * Should be called after a GC when gcHeap->ddmHpifWhen
@@ -37,5 +41,9 @@ void dvmDdmSendHeapInfo(int reason, bool shouldLock);
  *                   native heap.
  */
 void dvmDdmSendHeapSegments(bool shouldLock, bool native);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif  // _DALVIK_ALLOC_DDMHEAP

@@ -14,11 +14,15 @@
  * limitations under the License.
  */
 
-#include <Thread.h>
-#include <setjmp.h>
-
 #ifndef _DALVIK_VM_COMPILER
 #define _DALVIK_VM_COMPILER
+
+#include <setjmp.h>
+#include "Thread.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /*
  * Uncomment the following to enable JIT signature breakpoint
@@ -241,4 +245,9 @@ void *dvmCompilerGetInterpretTemplate();
 JitInstructionSetType dvmCompilerGetInterpretTemplateSet();
 u8 dvmGetRegResourceMask(int reg);
 void dvmDumpCFG(struct CompilationUnit *cUnit, const char *dirPrefix);
+
+#ifdef __cplusplus
+}
+#endif
+
 #endif /* _DALVIK_VM_COMPILER */

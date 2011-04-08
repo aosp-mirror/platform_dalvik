@@ -20,6 +20,10 @@
 #ifndef _DALVIK_INLINENATIVE
 #define _DALVIK_INLINENATIVE
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* startup/shutdown */
 bool dvmInlineNativeStartup(void);
 void dvmInlineNativeShutdown(void);
@@ -120,5 +124,9 @@ bool dvmPerformInlineOp4Dbg(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
  * Return method & populate the table on first use.
  */
 Method* dvmResolveInlineNative(int opIndex);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /*_DALVIK_INLINENATIVE*/

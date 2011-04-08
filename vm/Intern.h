@@ -19,11 +19,19 @@
 #ifndef _DALVIK_INTERN
 #define _DALVIK_INTERN
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 bool dvmStringInternStartup(void);
 void dvmStringInternShutdown(void);
 StringObject* dvmLookupInternedString(StringObject* strObj);
 StringObject* dvmLookupImmortalInternedString(StringObject* strObj);
 bool dvmIsWeakInternedString(const StringObject* strObj);
 void dvmGcDetachDeadInternedStrings(int (*isUnmarkedObject)(void *));
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /*_DALVIK_INTERN*/

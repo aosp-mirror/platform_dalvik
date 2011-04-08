@@ -21,9 +21,12 @@
 #ifndef _DALVIK_OO_OBJECT
 #define _DALVIK_OO_OBJECT
 
-#include <Atomic.h>
-
 #include <stddef.h>
+#include "Atomic.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* fwd decl */
 struct DataObject;
@@ -778,5 +781,9 @@ INLINE u4 dvmGetMethodInsnsSize(const Method* meth) {
 
 /* debugging */
 void dvmDumpObject(const Object* obj);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /*_DALVIK_OO_OBJECT*/

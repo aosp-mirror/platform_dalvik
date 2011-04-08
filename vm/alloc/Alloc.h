@@ -21,6 +21,10 @@
 
 #include <stddef.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*
  * Initialization.
  */
@@ -142,5 +146,9 @@ void dvmClearGrowthLimit(void);
  * Returns true if the address is within the bounds of the heap.
  */
 bool dvmIsHeapAddress(void *address);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /*_DALVIK_ALLOC_ALLOC*/

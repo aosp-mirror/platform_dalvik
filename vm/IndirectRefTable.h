@@ -16,6 +16,11 @@
 
 #ifndef _DALVIK_INDIRECTREFTABLE
 #define _DALVIK_INDIRECTREFTABLE
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*
  * Maintain a table of indirect references.  Used for local/global JNI
  * references.
@@ -388,5 +393,9 @@ bool dvmRemoveFromIndirectRefTable(IndirectRefTable* pRef, u4 cookie,
  * The caller should lock any external sync before calling.
  */
 void dvmDumpIndirectRefTable(const IndirectRefTable* pRef, const char* descr);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /*_DALVIK_INDIRECTREFTABLE*/

@@ -22,6 +22,10 @@
 #ifndef _DALVIK_NATIVE
 #define _DALVIK_NATIVE
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*
  * Method description; equivalent to a JNI struct.
  */
@@ -118,5 +122,9 @@ struct Thread;
 void dvmLogNativeMethodEntry(const Method* method, const u4* newFp);
 void dvmLogNativeMethodExit(const Method* method, struct Thread* self,
         const JValue retval);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /*_DALVIK_NATIVE*/

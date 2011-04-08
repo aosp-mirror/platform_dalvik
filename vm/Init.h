@@ -20,6 +20,10 @@
 #ifndef _DALVIK_INIT
 #define _DALVIK_INIT
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*
  * Standard VM initialization, usually invoked through JNI.
  */
@@ -77,5 +81,9 @@ int dvmFprintf(FILE* fp, const char* format, ...)
     __attribute__ ((format(printf, 2, 3)))
 #endif
     ;
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /*_DALVIK_INIT*/

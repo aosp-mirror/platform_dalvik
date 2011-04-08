@@ -22,6 +22,10 @@
 
 #include <sys/types.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*
  * System page size.  Normally you're expected to get this from
  * sysconf(_SC_PAGESIZE) or some system-specific define (usually PAGESIZE
@@ -118,5 +122,9 @@ int sysWriteFully(int fd, const void* buf, size_t count, const char* logMsg);
  * 0 on success, -1 on failure.
  */
 int sysCopyFileToFile(int outFd, int inFd, size_t count);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /*_DALVIK_SYSUTIL*/

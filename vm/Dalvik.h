@@ -20,8 +20,6 @@
 #ifndef _DALVIK_DALVIK
 #define _DALVIK_DALVIK
 
-#include <pthread.h>
-
 #include "Common.h"
 #include "Inlines.h"
 #include "Misc.h"

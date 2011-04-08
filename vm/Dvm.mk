@@ -116,14 +116,14 @@ LOCAL_SRC_FILES := \
 	Sync.c \
 	Thread.c \
 	UtfString.c \
-	alloc/Alloc.c \
-	alloc/CardTable.c \
-	alloc/HeapBitmap.c.arm \
-	alloc/HeapDebug.c \
-	alloc/Heap.c.arm \
-	alloc/DdmHeap.c \
-	alloc/Verify.c \
-	alloc/Visit.c \
+	alloc/Alloc.cpp \
+	alloc/CardTable.cpp \
+	alloc/HeapBitmap.cpp.arm \
+	alloc/HeapDebug.cpp \
+	alloc/Heap.cpp.arm \
+	alloc/DdmHeap.cpp \
+	alloc/Verify.cpp \
+	alloc/Visit.cpp \
 	analysis/CodeVerify.c \
 	analysis/DexPrepare.c \
 	analysis/DexVerify.c \
@@ -132,11 +132,11 @@ LOCAL_SRC_FILES := \
 	analysis/RegisterMap.c \
 	analysis/VerifySubs.c \
 	analysis/VfyBasicBlock.c \
-	hprof/Hprof.c \
-	hprof/HprofClass.c \
-	hprof/HprofHeap.c \
-	hprof/HprofOutput.c \
-	hprof/HprofString.c \
+	hprof/Hprof.cpp \
+	hprof/HprofClass.cpp \
+	hprof/HprofHeap.cpp \
+	hprof/HprofOutput.cpp \
+	hprof/HprofString.cpp \
 	interp/Interp.c.arm \
 	interp/Stack.c \
 	jdwp/ExpandBuf.c \
@@ -195,11 +195,11 @@ WITH_COPYING_GC := $(strip $(WITH_COPYING_GC))
 ifeq ($(WITH_COPYING_GC),true)
   LOCAL_CFLAGS += -DWITH_COPYING_GC
   LOCAL_SRC_FILES += \
-	alloc/Copying.c.arm
+	alloc/Copying.cpp.arm
 else
   LOCAL_SRC_FILES += \
-	alloc/HeapSource.c \
-	alloc/MarkSweep.c.arm
+	alloc/HeapSource.cpp \
+	alloc/MarkSweep.cpp.arm
 endif
 
 WITH_JIT := $(strip $(WITH_JIT))

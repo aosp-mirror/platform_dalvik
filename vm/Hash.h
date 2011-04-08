@@ -22,6 +22,10 @@
 #ifndef _DALVIK_HASH
 #define _DALVIK_HASH
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* compute the hash of an item with a specific type */
 typedef u4 (*HashCompute)(const void* item);
 
@@ -217,5 +221,9 @@ INLINE void* dvmHashIterData(HashIter* pIter) {
 typedef u4 (*HashCalcFunc)(const void* item);
 void dvmHashTableProbeCount(HashTable* pHashTable, HashCalcFunc calcFunc,
     HashCompareFunc cmpFunc);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /*_DALVIK_HASH*/

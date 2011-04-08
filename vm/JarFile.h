@@ -19,6 +19,10 @@
 #ifndef _DALVIK_JARFILE
 #define _DALVIK_JARFILE
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*
  * This represents an open, scanned Jar file.  (It's actually for any Zip
  * archive that happens to hold a Dex file.)
@@ -67,5 +71,9 @@ typedef enum DexCacheStatus {
  * to the jar file at the absolute path "fileName".
  */
 DexCacheStatus dvmDexCacheStatus(const char *fileName);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /*_DALVIK_JARFILE*/

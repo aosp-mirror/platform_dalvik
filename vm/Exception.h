@@ -20,6 +20,10 @@
 #ifndef _DALVIK_EXCEPTION
 #define _DALVIK_EXCEPTION
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*
  * Create a Throwable and throw an exception in the current thread (where
  * "throwing" just means "set the thread's exception pointer").
@@ -482,5 +486,9 @@ void dvmThrowVerifyError(const char* descriptor);
  * the given detail message.
  */
 void dvmThrowVirtualMachineError(const char* msg);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /*_DALVIK_EXCEPTION*/

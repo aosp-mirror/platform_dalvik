@@ -21,6 +21,10 @@
 
 #include "jni.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* system init/shutdown */
 bool dvmJniStartup(void);
 void dvmJniShutdown(void);
@@ -196,5 +200,9 @@ void dvmReleaseJniMonitors(Thread* self);
  * The local ref tables associated with other threads are not included.
  */
 void dvmDumpJniReferenceTables(void);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /*_DALVIK_JNIINTERNAL*/

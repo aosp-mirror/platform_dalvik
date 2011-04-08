@@ -25,7 +25,7 @@ typedef struct {
   /* If true, the trace is run concurrently with the mutator. */
   bool isConcurrent;
   /* Toggles for the soft reference clearing policy. */
-  enum { CLEAR, PRESERVE } softReferencePolicy;
+  bool doPreserve;
   /* A name for this garbage collection mode. */
   const char *reason;
 } GcSpec;

@@ -21,6 +21,10 @@
 #ifndef _DALVIK_DVMDEX
 #define _DALVIK_DVMDEX
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "libdex/DexFile.h"
 
 /* extern */
@@ -157,5 +161,9 @@ INLINE void dvmDexSetResolvedField(DvmDex* pDvmDex, u4 fieldIdx,
     assert(fieldIdx < pDvmDex->pHeader->fieldIdsSize);
     pDvmDex->pResFields[fieldIdx] = field;
 }
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /*_DALVIK_DVMDEX*/

@@ -18,6 +18,10 @@
 
 #include "Dalvik.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define HPROF_ID_SIZE (sizeof (u4))
 
 #define UNIQUE_ERROR() \
@@ -144,7 +148,7 @@ typedef struct hprof_context_t {
 
 
 /*
- * HprofString.c functions
+ * HprofString.cpp functions
  */
 
 hprof_string_id hprofLookupStringId(const char *str);
@@ -156,7 +160,7 @@ int hprofShutdown_String(void);
 
 
 /*
- * HprofClass.c functions
+ * HprofClass.cpp functions
  */
 
 hprof_class_object_id hprofLookupClassId(const ClassObject *clazz);
@@ -168,7 +172,7 @@ int hprofShutdown_Class(void);
 
 
 /*
- * HprofHeap.c functions
+ * HprofHeap.cpp functions
  */
 
 int hprofStartHeapDump(hprof_context_t *ctx);
@@ -182,7 +186,7 @@ int hprofMarkRootObject(hprof_context_t *ctx,
 int hprofDumpHeapObject(hprof_context_t *ctx, const Object *obj);
 
 /*
- * HprofOutput.c functions
+ * HprofOutput.cpp functions
  */
 
 void hprofContextInit(hprof_context_t *ctx, char *fileName, int fd,
@@ -215,18 +219,17 @@ int hprofAddU8ListToRecord(hprof_record_t *rec,
             hprofAddU4ListToRecord((rec), (const u4 *)(values), (numValues))
 
 /*
- * Hprof.c functions
+ * Hprof.cpp functions
  */
 
 hprof_context_t* hprofStartup(const char *outputFileName, int fd,
     bool directToDdms);
 bool hprofShutdown(hprof_context_t *ctx);
 void hprofFreeContext(hprof_context_t *ctx);
-
-/*
- * HprofVisit.c functions
- */
-
 int hprofDumpHeap(const char* fileName, int fd, bool directToDdms);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif  // _DALVIK_HPROF_HPROF

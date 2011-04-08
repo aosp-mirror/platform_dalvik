@@ -144,7 +144,7 @@ static void markObject(const Object *obj, GcMarkContext *ctx)
  * marking.  Marks white objects but does not push them on the mark
  * stack.
  */
-static void rootMarkObjectVisitor(void *addr, RootType type, u4 thread,
+static void rootMarkObjectVisitor(void *addr, u4 thread, RootType type,
                                   void *arg)
 {
     Object *obj;
@@ -363,7 +363,7 @@ void dvmHeapMarkRootSet()
  * Callback applied to root references during root remarking.  Marks
  * white objects and pushes them on the mark stack.
  */
-static void rootReMarkObjectVisitor(void *addr, RootType type, u4 thread,
+static void rootReMarkObjectVisitor(void *addr, u4 thread, RootType type,
                                     void *arg)
 {
     Object *obj;
@@ -492,7 +492,7 @@ static void scanArrayObject(const Object *obj, GcMarkContext *ctx)
     markObject((const Object *)obj->clazz, ctx);
     if (IS_CLASS_FLAG_SET(obj->clazz, CLASS_ISOBJECTARRAY)) {
         const ArrayObject *array = (const ArrayObject *)obj;
-        const Object **contents = (const Object **)array->contents;
+        const Object **contents = (const Object **)(void *)array->contents;
         size_t i;
         for (i = 0; i < array->length; ++i) {
             markObject(contents[i], ctx);

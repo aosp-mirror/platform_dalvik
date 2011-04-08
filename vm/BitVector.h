@@ -20,6 +20,10 @@
 #ifndef _DALVIK_BITVECTOR
 #define _DALVIK_BITVECTOR
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*
  * Expanding bitmap, used for tracking resources.  Bits are numbered starting
  * from zero.
@@ -99,5 +103,9 @@ void dvmBitVectorIteratorInit(BitVector* pBits, BitVectorIterator* iterator);
 
 /* Return the next position set to 1. -1 means end-of-vector reached */
 int dvmBitVectorIteratorNext(BitVectorIterator* iterator);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /*_DALVIK_BITVECTOR*/

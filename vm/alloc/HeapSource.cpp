@@ -15,9 +15,11 @@
  */
 
 #include <cutils/mspace.h>
-#include <stdint.h>     // for SIZE_MAX
+#include <stdint.h>
 #include <sys/mman.h>
 #include <errno.h>
+
+#define SIZE_MAX UINT_MAX  // TODO: get SIZE_MAX from stdint.h
 
 #include "Dalvik.h"
 #include "alloc/Heap.h"
@@ -27,8 +29,8 @@
 #include "alloc/HeapBitmapInlines.h"
 
 // TODO: find a real header file for these.
-extern int dlmalloc_trim(size_t);
-extern void dlmalloc_walk_free_pages(void(*)(void*, void*, void*), void*);
+extern "C" int dlmalloc_trim(size_t);
+extern "C" void dlmalloc_walk_free_pages(void(*)(void*, void*, void*), void*);
 
 static void snapIdealFootprint(void);
 static void setIdealFootprint(size_t max);

@@ -20,11 +20,14 @@
 #ifndef _DALVIK_MISC
 #define _DALVIK_MISC
 
-#include "Inlines.h"
-
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/time.h>
+#include "Inlines.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /*
  * Used to shut up the compiler when a parameter isn't used.
@@ -298,5 +301,9 @@ bool dvmGetThreadStats(ProcStatData* pData, pid_t tid);
  * as, for example, in the dependency paths of optimized dex files).
  */
 const char* dvmPathToAbsolutePortion(const char* path);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /*_DALVIK_MISC*/

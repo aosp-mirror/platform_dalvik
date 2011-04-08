@@ -23,6 +23,9 @@
 #include "jni.h"
 #include <stdarg.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /*
 Stack layout
@@ -278,5 +281,9 @@ void dvmCleanupStackOverflow(Thread* self, const Object* exception);
 /* debugging; dvmDumpThread() is probably a better starting point */
 void dvmDumpThreadStack(const DebugOutputTarget* target, Thread* thread);
 void dvmDumpRunningThreadStack(const DebugOutputTarget* target, Thread* thread);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /*_DALVIK_INTERP_STACK*/

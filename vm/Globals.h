@@ -33,6 +33,10 @@
 #include <stdarg.h>
 #include <pthread.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define MAX_BREAKPOINTS 20      /* used for a debugger optimization */
 
 /* private structures */
@@ -957,6 +961,10 @@ extern struct DvmJitGlobals gDvmJit;
 extern int gDvmICHitCount;
 #endif
 
+#endif
+
+#ifdef __cplusplus
+}
 #endif
 
 #endif /*_DALVIK_GLOBALS*/

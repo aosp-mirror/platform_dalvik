@@ -25,6 +25,10 @@
 #include "analysis/VerifySubs.h"
 #include "analysis/CodeVerify.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*
  * Format enumeration for RegisterMap data area.
  */
@@ -262,5 +266,9 @@ INLINE const RegisterMap* dvmGetExpandedRegisterMap(Method* method)
 
 /* dump stats gathered during register map creation process */
 void dvmRegisterMapDumpStats(void);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /*_DALVIK_REGISTERMAP*/

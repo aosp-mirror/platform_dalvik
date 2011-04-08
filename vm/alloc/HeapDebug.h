@@ -16,6 +16,10 @@
 #ifndef _DALVIK_HEAPDEBUG
 #define _DALVIK_HEAPDEBUG
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef enum HeapDebugInfoType {
     kVirtualHeapSize = 0,
     kNativeHeapSize = 1,
@@ -28,5 +32,9 @@ typedef enum HeapDebugInfoType {
  * Returns -1 if the type is unknown.
  */
 int dvmGetHeapDebugInfo(HeapDebugInfoType info);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif  // _DALVIK_HEAPDEBUG

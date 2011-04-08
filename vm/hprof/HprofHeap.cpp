@@ -129,7 +129,7 @@ hprofMarkRootObject(hprof_context_t *ctx, const Object *obj, jobject jniObj)
 {
     hprof_record_t *rec = &ctx->curRec;
     int err;
-    hprof_heap_tag_t heapTag = ctx->gcScanState;
+    hprof_heap_tag_t heapTag = (hprof_heap_tag_t)ctx->gcScanState;
 
     if (heapTag == 0) {
         return 0;
@@ -382,7 +382,7 @@ hprofDumpHeapObject(hprof_context_t *ctx, const Object *obj)
                 /* Dump the elements, which are always objects or NULL.
                  */
                 hprofAddIdListToRecord(rec,
-                        (const hprof_object_id *)aobj->contents, length);
+                        (const hprof_object_id *)(void *)aobj->contents, length);
             } else {
                 hprof_basic_type t;
                 size_t size;
@@ -410,10 +410,10 @@ hprofDumpHeapObject(hprof_context_t *ctx, const Object *obj)
                     hprofAddU1ListToRecord(rec, (const u1 *)aobj->contents,
                             length);
                 } else if (size == 2) {
-                    hprofAddU2ListToRecord(rec, (const u2 *)aobj->contents,
+                    hprofAddU2ListToRecord(rec, (const u2 *)(void *)aobj->contents,
                             length);
                 } else if (size == 4) {
-                    hprofAddU4ListToRecord(rec, (const u4 *)aobj->contents,
+                    hprofAddU4ListToRecord(rec, (const u4 *)(void *)aobj->contents,
                             length);
                 } else if (size == 8) {
                     hprofAddU8ListToRecord(rec, (const u8 *)aobj->contents,

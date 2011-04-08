@@ -20,6 +20,10 @@
 #ifndef _DALVIK_NATIVE_INTERNALNATIVEPRIV
 #define _DALVIK_NATIVE_INTERNALNATIVEPRIV
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*
  * Return macros.  Note we use "->i" instead of "->z" for boolean; this
  * is because the interpreter expects everything to be a 32-bit value.
@@ -111,5 +115,9 @@ extern const DalvikNativeMethod dvm_org_apache_harmony_dalvik_ddmc_DdmServer[];
 extern const DalvikNativeMethod dvm_org_apache_harmony_dalvik_ddmc_DdmVmInternal[];
 extern const DalvikNativeMethod dvm_org_apache_harmony_dalvik_NativeTestTarget[];
 extern const DalvikNativeMethod dvm_sun_misc_Unsafe[];
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /*_DALVIK_NATIVE_INTERNALNATIVEPRIV*/

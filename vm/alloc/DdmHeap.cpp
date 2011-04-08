@@ -357,7 +357,7 @@ enum HpsgWhat {
  */
 #define HPSx_CHUNK_SIZE (16384 - 16)
 
-void dlmalloc_walk_heap(void(*)(const void*, size_t, const void*, size_t, void*),void*);
+extern "C" void dlmalloc_walk_heap(void(*)(const void*, size_t, const void*, size_t, void*),void*);
 
 static void
 walkHeap(bool merge, bool native)

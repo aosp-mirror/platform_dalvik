@@ -23,6 +23,10 @@
 #ifndef _DALVIK_REFERENCETABLE
 #define _DALVIK_REFERENCETABLE
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*
  * Table definition.
  *
@@ -121,5 +125,9 @@ void dvmDumpReferenceTable(const ReferenceTable* pRef, const char* descr);
  */
 void dvmDumpReferenceTableContents(Object* const* refs, size_t count,
     const char* descr);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /*_DALVIK_REFERENCETABLE*/

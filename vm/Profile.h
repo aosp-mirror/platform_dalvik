@@ -24,6 +24,10 @@
 
 #include <stdio.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 struct Thread;      // extern
 
 
@@ -170,5 +174,9 @@ enum {
 #define METHOD_ID(_method)      ((_method) & (~METHOD_ACTION_MASK))
 #define METHOD_ACTION(_method)  (((unsigned int)(_method)) & METHOD_ACTION_MASK)
 #define METHOD_COMBINE(_method, _action)    ((_method) | (_action))
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /*_DALVIK_PROFILE*/

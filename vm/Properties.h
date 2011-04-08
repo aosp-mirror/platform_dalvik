@@ -19,10 +19,18 @@
 #ifndef _DALVIK_PROPERTIES
 #define _DALVIK_PROPERTIES
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*
  * Initialization.
  */
 bool dvmPropertiesStartup(void);
 void dvmPropertiesShutdown(void);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /*_DALVIK_PROPERTIES*/

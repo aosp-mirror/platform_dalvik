@@ -19,6 +19,10 @@
 #include <limits.h>
 #include <stdint.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define HB_OBJECT_ALIGNMENT 8
 #define HB_BITS_PER_WORD (sizeof(unsigned long) * CHAR_BIT)
 
@@ -126,5 +130,9 @@ void dvmHeapBitmapScanWalk(HeapBitmap *bitmap,
 void dvmHeapBitmapSweepWalk(const HeapBitmap *liveHb, const HeapBitmap *markHb,
                             uintptr_t base, uintptr_t max,
                             BitmapSweepCallback *callback, void *callbackArg);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* _DALVIK_HEAP_BITMAP */

@@ -19,6 +19,10 @@
 #ifndef _DALVIK_OO_TYPECHECK
 #define _DALVIK_OO_TYPECHECK
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* VM startup/shutdown */
 bool dvmInstanceofStartup(void);
 void dvmInstanceofShutdown(void);
@@ -74,5 +78,9 @@ INLINE int dvmIsSubClass(const ClassObject* sub, const ClassObject* clazz) {
  */
 bool dvmCanPutArrayElement(const ClassObject* elemClass,
     const ClassObject* arrayClass);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /*_DALVIK_OO_TYPECHECK*/

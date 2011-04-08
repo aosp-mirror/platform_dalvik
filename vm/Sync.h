@@ -19,6 +19,10 @@
 #ifndef _DALVIK_SYNC
 #define _DALVIK_SYNC
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*
  * Monitor shape field.  Used to distinguish immediate thin locks from
  * indirecting fat locks.
@@ -156,5 +160,9 @@ bool dvmHoldsLock(struct Thread* thread, struct Object* obj);
  */
 int dvmRelativeCondWait(pthread_cond_t* cond, pthread_mutex_t* mutex,
                          s8 msec, s4 nsec);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /*_DALVIK_SYNC*/

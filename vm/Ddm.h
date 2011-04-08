@@ -19,6 +19,10 @@
 #ifndef _DALVIK_DDM
 #define _DALVIK_DDM
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*
  * Handle a packet full of DDM goodness.
  *
@@ -83,5 +87,9 @@ ArrayObject* dvmDdmGetStackTraceById(u4 threadId);
  * Returns NULL on failure with an exception raised.
  */
 ArrayObject* dvmDdmGetRecentAllocations(void);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /*_DALVIK_DDM*/

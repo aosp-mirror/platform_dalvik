@@ -23,6 +23,10 @@
 #include <cutils/atomic.h>          /* use common Android atomic ops */
 #include <cutils/atomic-inline.h>   /* and some uncommon ones */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*
  * NOTE: Two "quasiatomic" operations on the exact same memory address
  * are guaranteed to operate atomically with respect to each other,
@@ -51,5 +55,9 @@ int64_t dvmQuasiAtomicRead64(volatile const int64_t* addr);
  */
 int dvmQuasiAtomicCas64(int64_t oldvalue, int64_t newvalue,
         volatile int64_t* addr);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /*_DALVIK_ATOMIC*/

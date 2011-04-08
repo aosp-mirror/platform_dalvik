@@ -85,7 +85,10 @@ void dvmUnlockHeap(void);
 #define LOGD_HEAP(...)    LOG(LOG_DEBUG, HEAP_LOG_TAG, __VA_ARGS__)
 #endif
 #define LOGI_HEAP(...) \
-    (!gDvm.zygote ? LOG(LOG_INFO, HEAP_LOG_TAG, __VA_ARGS__) : (void)0)
+    do { \
+        if (!gDvm.zygote) { LOG(LOG_INFO, HEAP_LOG_TAG, __VA_ARGS__); } \
+    } while (0)
+
 #define LOGW_HEAP(...)    LOG(LOG_WARN, HEAP_LOG_TAG, __VA_ARGS__)
 #define LOGE_HEAP(...)    LOG(LOG_ERROR, HEAP_LOG_TAG, __VA_ARGS__)
 

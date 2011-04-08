@@ -23,6 +23,9 @@
 #include "analysis/VerifySubs.h"
 #include "analysis/VfyBasicBlock.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /*
  * Enumeration for register type values.  The "hi" piece of a 64-bit value
@@ -321,5 +324,9 @@ void dvmFreeUninitInstanceMap(UninitInstanceMap* uninitMap);
  * instruction widths and "in try" flags.
  */
 bool dvmVerifyCodeFlow(VerifierData* vdata);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /*_DALVIK_CODEVERIFY*/

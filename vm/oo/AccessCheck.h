@@ -19,6 +19,10 @@
 #ifndef _DALVIK_OO_ACCESSCHECK
 #define _DALVIK_OO_ACCESSCHECK
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*
  * Determine whether the "accessFrom" class is allowed to get at "clazz".
  */
@@ -39,5 +43,9 @@ bool dvmCheckFieldAccess(const ClassObject* accessFrom, const Field* field);
  * Returns "true" if the two classes are in the same runtime package.
  */
 bool dvmInSamePackage(const ClassObject* class1, const ClassObject* class2);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /*_DALVIK_OO_ACCESSCHECK*/

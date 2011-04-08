@@ -22,6 +22,10 @@
 #include "InterpDefs.h"
 #include "mterp/common/jit-config.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define JIT_MAX_TRACE_LEN 100
 
 #if defined (WITH_SELF_VERIFICATION)
@@ -165,5 +169,9 @@ void dvmJitDumpTraceDesc(JitTraceDescription *trace);
 void dvmJitUpdateThreadStateSingle(Thread* threead);
 void dvmJitUpdateThreadStateAll(void);
 void dvmJitResumeTranslation(Thread* self, const u2* pc, const u4* fp);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /*_DALVIK_INTERP_JIT*/

@@ -20,6 +20,10 @@
 #ifndef _DALVIK_POINTERSET
 #define _DALVIK_POINTERSET
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 struct PointerSet;   /* private */
 typedef struct PointerSet PointerSet;
 
@@ -91,5 +95,9 @@ void dvmPointerSetIntersect(PointerSet* pSet, const void** ptrArray, int count);
  * Print the list contents to stdout.  For debugging.
  */
 void dvmPointerSetDump(const PointerSet* pSet);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /*_DALVIK_POINTERSET*/

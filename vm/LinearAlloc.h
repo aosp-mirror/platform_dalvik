@@ -19,6 +19,10 @@
 #ifndef _DALVIK_LINEARALLOC
 #define _DALVIK_LINEARALLOC
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*
  * If this is set, we create additional data structures and make many
  * additional mprotect() calls.
@@ -116,5 +120,9 @@ void dvmLinearAllocDump(Object* classLoader);
  * a single LinearAlloc.  The full set of linear allocators is scanned.
  */
 bool dvmLinearAllocContains(const void* start, size_t length);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /*_DALVIK_LINEARALLOC*/

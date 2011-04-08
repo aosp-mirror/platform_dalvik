@@ -19,6 +19,10 @@
 #ifndef _DALVIK_ALLOCTRACKER
 #define _DALVIK_ALLOCTRACKER
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* initialization */
 bool dvmAllocTrackerStartup(void);
 void dvmAllocTrackerShutdown(void);
@@ -59,5 +63,9 @@ bool dvmGenerateTrackedAllocationReport(u1** pData, size_t* pDataLen);
  * will enable tracking if it's not already on.
  */
 void dvmDumpTrackedAllocations(bool enable);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /*_DALVIK_ALLOCTRACKER*/
