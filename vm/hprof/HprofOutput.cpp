@@ -251,19 +251,15 @@ hprofAddUtf8StringToRecord(hprof_record_t *rec, const char *str)
 int
 hprofAddU2ListToRecord(hprof_record_t *rec, const u2 *values, size_t numValues)
 {
-    unsigned char *insert;
-    size_t i;
-    int err;
-
-    err = guaranteeRecordAppend(rec, numValues * 2);
+    int err = guaranteeRecordAppend(rec, numValues * 2);
     if (err != 0) {
         return err;
     }
 
 //xxx this can be way smarter
 //xxx also, don't do this bytewise if aligned and on a matching-endian arch
-    insert = rec->body + rec->length;
-    for (i = 0; i < numValues; i++) {
+    unsigned char *insert = rec->body + rec->length;
+    for (size_t i = 0; i < numValues; i++) {
         U2_TO_BUF_BE(insert, 0, *values++);
         insert += sizeof(*values);
     }
@@ -281,19 +277,15 @@ hprofAddU2ToRecord(hprof_record_t *rec, u2 value)
 int
 hprofAddU4ListToRecord(hprof_record_t *rec, const u4 *values, size_t numValues)
 {
-    unsigned char *insert;
-    size_t i;
-    int err;
-
-    err = guaranteeRecordAppend(rec, numValues * 4);
+    int err = guaranteeRecordAppend(rec, numValues * 4);
     if (err != 0) {
         return err;
     }
 
 //xxx this can be way smarter
 //xxx also, don't do this bytewise if aligned and on a matching-endian arch
-    insert = rec->body + rec->length;
-    for (i = 0; i < numValues; i++) {
+    unsigned char *insert = rec->body + rec->length;
+    for (size_t i = 0; i < numValues; i++) {
         U4_TO_BUF_BE(insert, 0, *values++);
         insert += sizeof(*values);
     }
@@ -311,19 +303,15 @@ hprofAddU4ToRecord(hprof_record_t *rec, u4 value)
 int
 hprofAddU8ListToRecord(hprof_record_t *rec, const u8 *values, size_t numValues)
 {
-    unsigned char *insert;
-    size_t i;
-    int err;
-
-    err = guaranteeRecordAppend(rec, numValues * 8);
+    int err = guaranteeRecordAppend(rec, numValues * 8);
     if (err != 0) {
         return err;
     }
 
 //xxx this can be way smarter
 //xxx also, don't do this bytewise if aligned and on a matching-endian arch
-    insert = rec->body + rec->length;
-    for (i = 0; i < numValues; i++) {
+    unsigned char *insert = rec->body + rec->length;
+    for (size_t i = 0; i < numValues; i++) {
         U8_TO_BUF_BE(insert, 0, *values++);
         insert += sizeof(*values);
     }

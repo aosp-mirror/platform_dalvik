@@ -196,15 +196,13 @@ static void visitModUnionTable(Visitor *visitor, u1 *base, u1 *limit, void *arg)
     assert(byteLength <= gDvm.gcHeap->modUnionTableLength);
     assert(byteLength % sizeof(*bits) == 0);
     size_t wordLength = byteLength / sizeof(*bits);
-    size_t i;
-    for (i = 0; i < wordLength; ++i) {
+    for (size_t i = 0; i < wordLength; ++i) {
         if (bits[i] == 0) {
             continue;
         }
         u4 word = bits[i];
         bits[i] = 0;
-        size_t j = 0;
-        for (j = 0; j < sizeof(u4)*CHAR_BIT; ++j) {
+        for (size_t j = 0; j < sizeof(u4)*CHAR_BIT; ++j) {
             if (word & (1 << j)) {
                 /* compute the base of the card */
                 size_t offset = (i*sizeof(u4)*CHAR_BIT + j) * GC_CARD_SIZE;
@@ -407,11 +405,11 @@ static void scanFields(const Object *obj, GcMarkContext *ctx)
             refOffsets &= ~(CLASS_HIGH_BIT >> rshift);
         }
     } else {
-        ClassObject *clazz;
-        for (clazz = obj->clazz; clazz != NULL; clazz = clazz->super) {
+        for (ClassObject *clazz = obj->clazz;
+             clazz != NULL;
+             clazz = clazz->super) {
             InstField *field = clazz->ifields;
-            int i;
-            for (i = 0; i < clazz->ifieldRefCount; ++i, ++field) {
+            for (int i = 0; i < clazz->ifieldRefCount; ++i, ++field) {
                 void *addr = BYTE_OFFSET((Object *)obj, field->byteOffset);
                 Object *ref = (Object *)((JValue *)addr)->l;
                 markObject(ref, ctx);
@@ -425,11 +423,9 @@ static void scanFields(const Object *obj, GcMarkContext *ctx)
  */
 static void scanStaticFields(const ClassObject *clazz, GcMarkContext *ctx)
 {
-    int i;
-
     assert(clazz != NULL);
     assert(ctx != NULL);
-    for (i = 0; i < clazz->sfieldCount; ++i) {
+    for (int i = 0; i < clazz->sfieldCount; ++i) {
         char ch = clazz->sfields[i].field.signature[0];
         if (ch == '[' || ch == 'L') {
             Object *obj = (Object *)clazz->sfields[i].value.l;
@@ -443,11 +439,9 @@ static void scanStaticFields(const ClassObject *clazz, GcMarkContext *ctx)
  */
 static void scanInterfaces(const ClassObject *clazz, GcMarkContext *ctx)
 {
-    int i;
-
     assert(clazz != NULL);
     assert(ctx != NULL);
-    for (i = 0; i < clazz->interfaceCount; ++i) {
+    for (int i = 0; i < clazz->interfaceCount; ++i) {
         markObject((const Object *)clazz->interfaces[i], ctx);
     }
 }
@@ -493,8 +487,7 @@ static void scanArrayObject(const Object *obj, GcMarkContext *ctx)
     if (IS_CLASS_FLAG_SET(obj->clazz, CLASS_ISOBJECTARRAY)) {
         const ArrayObject *array = (const ArrayObject *)obj;
         const Object **contents = (const Object **)(void *)array->contents;
-        size_t i;
-        for (i = 0; i < array->length; ++i) {
+        for (size_t i = 0; i < array->length; ++i) {
             markObject(contents[i], ctx);
         }
     }
@@ -1035,8 +1028,7 @@ void sweepWeakJniGlobals(void)
     Object **entry = table->table;
     GcMarkContext *ctx = &gDvm.gcHeap->markContext;
     int numEntries = dvmIndirectRefTableEntries(table);
-    int i;
-    for (i = 0; i < numEntries; ++i) {
+    for (int i = 0; i < numEntries; ++i) {
         if (entry[i] != NULL && !isMarked(entry[i], ctx)) {
             entry[i] = NULL;
         }
@@ -1066,7 +1058,6 @@ void dvmHeapSweepUnmarkedObjects(bool isPartial, bool isConcurrent,
     SweepContext ctx;
     HeapBitmap *prevLive, *prevMark;
     size_t numHeaps, numSweepHeaps;
-    size_t i;
 
     numHeaps = dvmHeapSourceGetNumHeaps();
     dvmHeapSourceGetRegions(base, max, NULL, numHeaps);
@@ -1080,7 +1071,7 @@ void dvmHeapSweepUnmarkedObjects(bool isPartial, bool isConcurrent,
     ctx.isConcurrent = isConcurrent;
     prevLive = dvmHeapSourceGetMarkBits();
     prevMark = dvmHeapSourceGetLiveBits();
-    for (i = 0; i < numSweepHeaps; ++i) {
+    for (size_t i = 0; i < numSweepHeaps; ++i) {
         dvmHeapBitmapSweepWalk(prevLive, prevMark, base[i], max[i],
                                sweepBitmapCallback, &ctx);
     }

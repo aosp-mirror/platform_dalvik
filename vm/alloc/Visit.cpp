@@ -36,12 +36,10 @@ void dvmVisitObject(Visitor *visitor, Object *obj, void *arg)
 static void visitHashTable(RootVisitor *visitor, HashTable *table,
                            RootType type, void *arg)
 {
-    int i;
-
     assert(visitor != NULL);
     assert(table != NULL);
     dvmHashTableLock(table);
-    for (i = 0; i < table->tableSize; ++i) {
+    for (int i = 0; i < table->tableSize; ++i) {
         HashEntry *entry = &table->pEntries[i];
         if (entry->data != NULL && entry->data != HASH_TOMBSTONE) {
             (*visitor)(&entry->data, 0, type, arg);
@@ -56,11 +54,9 @@ static void visitHashTable(RootVisitor *visitor, HashTable *table,
 static void visitReferenceTable(RootVisitor *visitor, ReferenceTable *table,
                                 u4 threadId, RootType type, void *arg)
 {
-    Object **entry;
-
     assert(visitor != NULL);
     assert(table != NULL);
-    for (entry = table->table; entry < table->nextEntry; ++entry) {
+    for (Object **entry = table->table; entry < table->nextEntry; ++entry) {
         assert(entry != NULL);
         (*visitor)(entry, threadId, type, arg);
     }
@@ -76,8 +72,7 @@ static void visitIndirectRefTable(RootVisitor *visitor, IndirectRefTable *table,
     assert(table != NULL);
     Object **entry = table->table;
     int numEntries = dvmIndirectRefTableEntries(table);
-    int i;
-    for (i = 0; i < numEntries; ++i) {
+    for (int i = 0; i < numEntries; ++i) {
         (*visitor)(&entry[i], threadId, type, arg);
     }
 }
@@ -88,23 +83,19 @@ static void visitIndirectRefTable(RootVisitor *visitor, IndirectRefTable *table,
  */
 static void visitThreadStack(RootVisitor *visitor, Thread *thread, void *arg)
 {
-    const StackSaveArea *saveArea;
-    u4 *fp;
-    u4 threadId;
-
     assert(visitor != NULL);
     assert(thread != NULL);
-    threadId = thread->threadId;
-    fp = (u4 *)thread->curFrame;
-    for (; fp != NULL; fp = (u4 *)saveArea->prevFrame) {
+    u4 threadId = thread->threadId;
+    const StackSaveArea *saveArea;
+    for (u4 *fp = (u4 *)thread->curFrame;
+         fp != NULL;
+         fp = (u4 *)saveArea->prevFrame) {
         Method *method;
         saveArea = SAVEAREA_FROM_FP(fp);
         method = (Method *)saveArea->method;
         if (method != NULL && !dvmIsNativeMethod(method)) {
             const RegisterMap* pMap = dvmGetExpandedRegisterMap(method);
             const u1* regVector = NULL;
-            size_t i;
-
             if (pMap != NULL) {
                 /* found map, get registers for this address */
                 int addr = saveArea->xtra.currentPc - method->insns;
@@ -116,7 +107,7 @@ static void visitThreadStack(RootVisitor *visitor, Thread *thread, void *arg)
                  * info for the current PC.  Perform a conservative
                  * scan.
                  */
-                for (i = 0; i < method->registersSize; ++i) {
+                for (size_t i = 0; i < method->registersSize; ++i) {
                     if (dvmIsValidObject((Object *)fp[i])) {
                         (*visitor)(&fp[i], threadId, ROOT_JAVA_FRAME, arg);
                     }
@@ -131,7 +122,7 @@ static void visitThreadStack(RootVisitor *visitor, Thread *thread, void *arg)
                  * A '1' bit indicates a live reference.
                  */
                 u2 bits = 1 << 1;
-                for (i = 0; i < method->registersSize; ++i) {
+                for (size_t i = 0; i < method->registersSize; ++i) {
                     bits >>= 1;
                     if (bits == 1) {
                         /* set bit 9 so we can tell when we're empty */

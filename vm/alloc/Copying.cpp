@@ -245,9 +245,7 @@ static unsigned long alignUp(unsigned long x, unsigned long n)
 
 static void describeBlocks(const HeapSource *heapSource)
 {
-    size_t i;
-
-    for (i = 0; i < heapSource->totalBlocks; ++i) {
+    for (size_t i = 0; i < heapSource->totalBlocks; ++i) {
         if ((i % 32) == 0) putchar('\n');
         printf("%d ", heapSource->blockSpace[i]);
     }
@@ -260,12 +258,9 @@ static void describeBlocks(const HeapSource *heapSource)
 
 static void *virtualAlloc(size_t length)
 {
-    void *addr;
-    int flags, prot;
-
-    flags = MAP_PRIVATE | MAP_ANONYMOUS;
-    prot = PROT_READ | PROT_WRITE;
-    addr = mmap(NULL, length, prot, flags, -1, 0);
+    int flags = MAP_PRIVATE | MAP_ANONYMOUS;
+    int prot = PROT_READ | PROT_WRITE;
+    void *addr = mmap(NULL, length, prot, flags, -1, 0);
     if (addr == MAP_FAILED) {
         LOGE_HEAP("mmap: %s", strerror(errno));
         addr = NULL;
@@ -275,11 +270,9 @@ static void *virtualAlloc(size_t length)
 
 static void virtualFree(void *addr, size_t length)
 {
-    int res;
-
     assert(addr != NULL);
     assert((uintptr_t)addr % SYSTEM_PAGE_SIZE == 0);
-    res = munmap(addr, length);
+    int res = munmap(addr, length);
     if (res == -1) {
         LOGE_HEAP("munmap: %s", strerror(errno));
     }
@@ -302,12 +295,8 @@ static int isValidAddress(const HeapSource *heapSource, const u1 *addr)
  */
 static void *allocateBlocks(HeapSource *heapSource, size_t blocks)
 {
-    void *addr;
-    size_t allocBlocks, totalBlocks;
-    size_t i, j;
-
-    allocBlocks = heapSource->allocBlocks;
-    totalBlocks = heapSource->totalBlocks;
+    size_t allocBlocks = heapSource->allocBlocks;
+    size_t totalBlocks = heapSource->totalBlocks;
     /* Check underflow. */
     assert(blocks != 0);
     /* Check overflow. */
@@ -315,9 +304,9 @@ static void *allocateBlocks(HeapSource *heapSource, size_t blocks)
         return NULL;
     }
     /* Scan block map. */
-    for (i = 0; i < totalBlocks; ++i) {
+    for (size_t i = 0; i < totalBlocks; ++i) {
         /* Check fit. */
-        for (j = 0; j < blocks; ++j) { /* runs over totalBlocks */
+        for (size_t j = 0; j < blocks; ++j) { /* runs over totalBlocks */
             if (heapSource->blockSpace[i+j] != BLOCK_FREE) {
                 break;
             }
@@ -329,11 +318,11 @@ static void *allocateBlocks(HeapSource *heapSource, size_t blocks)
         }
         /* Fit, allocate. */
         heapSource->blockSpace[i] = BLOCK_TO_SPACE; /* why to-space? */
-        for (j = 1; j < blocks; ++j) {
+        for (size_t j = 1; j < blocks; ++j) {
             heapSource->blockSpace[i+j] = BLOCK_CONTINUED;
         }
         heapSource->allocBlocks += blocks;
-        addr = &heapSource->blockBase[i*BLOCK_SIZE];
+        void *addr = &heapSource->blockBase[i*BLOCK_SIZE];
         memset(addr, 0, blocks*BLOCK_SIZE);
         /* Collecting? */
         if (heapSource->queueHead != QUEUE_TAIL) {
@@ -376,24 +365,20 @@ static u1 *blockToAddress(const HeapSource *heapSource, size_t block)
 
 static void clearBlock(HeapSource *heapSource, size_t block)
 {
-    u1 *addr;
-    size_t i;
-
     assert(heapSource != NULL);
     assert(block < heapSource->totalBlocks);
-    addr = heapSource->blockBase + block*BLOCK_SIZE;
+    u1 *addr = heapSource->blockBase + block*BLOCK_SIZE;
     memset(addr, 0xCC, BLOCK_SIZE);
-    for (i = 0; i < BLOCK_SIZE; i += 8) {
+    for (size_t i = 0; i < BLOCK_SIZE; i += 8) {
         dvmHeapBitmapClearObjectBit(&heapSource->allocBits, addr + i);
     }
 }
 
 static void clearFromSpace(HeapSource *heapSource)
 {
-    size_t i, count;
-
     assert(heapSource != NULL);
-    i = count = 0;
+    size_t i = 0;
+    size_t count = 0;
     while (i < heapSource->totalBlocks) {
         if (heapSource->blockSpace[i] != BLOCK_FROM_SPACE) {
             ++i;
@@ -786,10 +771,7 @@ size_t dvmGetExternalBytesAllocated(void)
 
 void dvmHeapSourceFlip(void)
 {
-    HeapSource *heapSource;
-    size_t i;
-
-    heapSource = gDvm.gcHeap->heapSource;
+    HeapSource *heapSource = gDvm.gcHeap->heapSource;
 
     /* Reset the block queue. */
     heapSource->allocBlocks = 0;
@@ -802,7 +784,7 @@ void dvmHeapSourceFlip(void)
     heapSource->allocLimit = NULL;
 
     /* Whiten all allocated blocks. */
-    for (i = 0; i < heapSource->totalBlocks; ++i) {
+    for (size_t i = 0; i < heapSource->totalBlocks; ++i) {
         if (heapSource->blockSpace[i] == BLOCK_TO_SPACE) {
             heapSource->blockSpace[i] = BLOCK_FROM_SPACE;
         }
@@ -811,9 +793,7 @@ void dvmHeapSourceFlip(void)
 
 static void room(size_t *alloc, size_t *avail, size_t *total)
 {
-    HeapSource *heapSource;
-
-    heapSource = gDvm.gcHeap->heapSource;
+    HeapSource *heapSource = gDvm.gcHeap->heapSource;
     *total = heapSource->totalBlocks*BLOCK_SIZE;
     *alloc = heapSource->allocBlocks*BLOCK_SIZE;
     *avail = *total - *alloc;
@@ -857,10 +837,8 @@ static void pinObject(const Object *obj)
 
 static size_t sumHeapBitmap(const HeapBitmap *bitmap)
 {
-    size_t i, sum;
-
-    sum = 0;
-    for (i = 0; i < bitmap->bitsLen >> 2; ++i) {
+    size_t sum = 0;
+    for (size_t i = 0; i < bitmap->bitsLen >> 2; ++i) {
         sum += CLZ(bitmap->bits[i]);
     }
     return sum;
@@ -908,8 +886,6 @@ static void* getPermanentString(const StringObject *obj)
  */
 static void scavengeClassObject(ClassObject *obj)
 {
-    int i;
-
     LOG_SCAV("scavengeClassObject(obj=%p)", obj);
     assert(obj != NULL);
     assert(obj->obj.clazz != NULL);
@@ -929,14 +905,14 @@ static void scavengeClassObject(ClassObject *obj)
     /* Scavenge the class loader. */
     scavengeReference(&obj->classLoader);
     /* Scavenge static fields. */
-    for (i = 0; i < obj->sfieldCount; ++i) {
+    for (int i = 0; i < obj->sfieldCount; ++i) {
         char ch = obj->sfields[i].field.signature[0];
         if (ch == '[' || ch == 'L') {
             scavengeReference((Object **)(void *)&obj->sfields[i].value.l);
         }
     }
     /* Scavenge interface class objects. */
-    for (i = 0; i < obj->interfaceCount; ++i) {
+    for (int i = 0; i < obj->interfaceCount; ++i) {
         scavengeReference((Object **) &obj->interfaces[i]);
     }
 }
@@ -946,19 +922,17 @@ static void scavengeClassObject(ClassObject *obj)
  */
 static size_t scavengeArrayObject(ArrayObject *array)
 {
-    size_t i, length;
-
     LOG_SCAV("scavengeArrayObject(array=%p)", array);
     /* Scavenge the class object. */
     assert(toSpaceContains(array));
     assert(array != NULL);
     assert(array->obj.clazz != NULL);
     scavengeReference((Object **) array);
-    length = dvmArrayObjectSize(array);
+    size_t length = dvmArrayObjectSize(array);
     /* Scavenge the array contents. */
     if (IS_CLASS_FLAG_SET(array->obj.clazz, CLASS_ISOBJECTARRAY)) {
         Object **contents = (Object **)array->contents;
-        for (i = 0; i < array->length; ++i) {
+        for (size_t i = 0; i < array->length; ++i) {
             scavengeReference(&contents[i]);
         }
     }
@@ -1280,16 +1254,13 @@ static void scavengeReferenceObject(Object *obj)
  */
 static void scavengeDataObject(Object *obj)
 {
-    ClassObject *clazz;
-    int i;
-
     // LOG_SCAV("scavengeDataObject(obj=%p)", obj);
     assert(obj != NULL);
     assert(obj->clazz != NULL);
     assert(obj->clazz->objectSize != 0);
     assert(toSpaceContains(obj));
     /* Scavenge the class object. */
-    clazz = obj->clazz;
+    ClassObject *clazz = obj->clazz;
     scavengeReference((Object **) obj);
     /* Scavenge instance fields. */
     if (clazz->refOffsets != CLASS_WALK_SUPER) {
@@ -1304,7 +1275,7 @@ static void scavengeDataObject(Object *obj)
     } else {
         for (; clazz != NULL; clazz = clazz->super) {
             InstField *field = clazz->ifields;
-            for (i = 0; i < clazz->ifieldRefCount; ++i, ++field) {
+            for (int i = 0; i < clazz->ifieldRefCount; ++i, ++field) {
                 size_t offset = field->byteOffset;
                 Object **ref = (Object **)((u1 *)obj + offset);
                 scavengeReference(ref);
@@ -1443,18 +1414,14 @@ static void scavengeObject(Object *obj)
 
 static void pinHashTableEntries(HashTable *table)
 {
-    HashEntry *entry;
-    void *obj;
-    int i;
-
     LOG_PIN(">>> pinHashTableEntries(table=%p)", table);
     if (table == NULL) {
         return;
     }
     dvmHashTableLock(table);
-    for (i = 0; i < table->tableSize; ++i) {
-        entry = &table->pEntries[i];
-        obj = entry->data;
+    for (int i = 0; i < table->tableSize; ++i) {
+        HashEntry *entry = &table->pEntries[i];
+        void *obj = entry->data;
         if (obj == NULL || obj == HASH_TOMBSTONE) {
             continue;
         }
@@ -1466,11 +1433,8 @@ static void pinHashTableEntries(HashTable *table)
 
 static void pinPrimitiveClasses(void)
 {
-    size_t length;
-    size_t i;
-
-    length = ARRAYSIZE(gDvm.primitiveClass);
-    for (i = 0; i < length; i++) {
+    size_t length = ARRAYSIZE(gDvm.primitiveClass);
+    for (size_t i = 0; i < length; i++) {
         if (gDvm.primitiveClass[i] != NULL) {
             pinObject((Object *)gDvm.primitiveClass[i]);
         }
@@ -1484,19 +1448,14 @@ static void pinPrimitiveClasses(void)
  */
 static void scavengeInternedStrings(void)
 {
-    HashTable *table;
-    HashEntry *entry;
-    Object *obj;
-    int i;
-
-    table = gDvm.internedStrings;
+    HashTable *table = gDvm.internedStrings;
     if (table == NULL) {
         return;
     }
     dvmHashTableLock(table);
-    for (i = 0; i < table->tableSize; ++i) {
-        entry = &table->pEntries[i];
-        obj = (Object *)entry->data;
+    for (int i = 0; i < table->tableSize; ++i) {
+        HashEntry *entry = &table->pEntries[i];
+        Object *obj = (Object *)entry->data;
         if (obj == NULL || obj == HASH_TOMBSTONE) {
             continue;
         } else if (!isPermanentString((StringObject *)obj)) {
@@ -1512,19 +1471,14 @@ static void scavengeInternedStrings(void)
 
 static void pinInternedStrings(void)
 {
-    HashTable *table;
-    HashEntry *entry;
-    Object *obj;
-    int i;
-
-    table = gDvm.internedStrings;
+    HashTable *table = gDvm.internedStrings;
     if (table == NULL) {
         return;
     }
     dvmHashTableLock(table);
-    for (i = 0; i < table->tableSize; ++i) {
-        entry = &table->pEntries[i];
-        obj = (Object *)entry->data;
+    for (int i = 0; i < table->tableSize; ++i) {
+        HashEntry *entry = &table->pEntries[i];
+        Object *obj = (Object *)entry->data;
         if (obj == NULL || obj == HASH_TOMBSTONE) {
             continue;
         } else if (isPermanentString((StringObject *)obj)) {
@@ -1544,12 +1498,10 @@ static void pinInternedStrings(void)
  */
 static void pinReferenceTable(const ReferenceTable *table)
 {
-    Object **entry;
-
     assert(table != NULL);
     assert(table->table != NULL);
     assert(table->nextEntry != NULL);
-    for (entry = table->table; entry < table->nextEntry; ++entry) {
+    for (Object **entry = table->table; entry < table->nextEntry; ++entry) {
         assert(entry != NULL);
         assert(!isForward(*entry));
         pinObject(*entry);
@@ -1656,7 +1608,6 @@ static void scavengeThreadStack(Thread *thread)
 
             const RegisterMap* pMap;
             const u1* regVector;
-            int i;
 
             Method* nonConstMethod = (Method*) method;  // quiet gcc
             pMap = dvmGetExpandedRegisterMap(nonConstMethod);
@@ -1705,7 +1656,7 @@ static void scavengeThreadStack(Thread *thread)
                  * A '1' bit indicates a live reference.
                  */
                 u2 bits = 1 << 1;
-                for (i = method->registersSize - 1; i >= 0; i--) {
+                for (int i = method->registersSize - 1; i >= 0; i--) {
                     u4 rval = *framePtr;
 
                     bits >>= 1;
@@ -1799,7 +1750,6 @@ static void pinThreadStack(const Thread *thread)
     Method *method;
     const char *shorty;
     Object *obj;
-    int i;
 
     saveArea = NULL;
     framePtr = (const u4 *)thread->curFrame;
@@ -1841,7 +1791,7 @@ static void pinThreadStack(const Thread *thread)
                 }
             }
             shorty = method->shorty+1;      // skip return value
-            for (i = method->registersSize - 1; i >= 0; i--, framePtr++) {
+            for (int i = method->registersSize - 1; i >= 0; i--, framePtr++) {
                 switch (*shorty++) {
                 case 'L':
                     obj = (Object *)*framePtr;
@@ -1878,7 +1828,7 @@ static void pinThreadStack(const Thread *thread)
                 /*
                  * No register info for this frame, conservatively pin.
                  */
-                for (i = 0; i < method->registersSize; ++i) {
+                for (int i = 0; i < method->registersSize; ++i) {
                     u4 regValue = framePtr[i];
                     if (regValue != 0 && (regValue & 0x3) == 0 && dvmIsValidObject((Object *)regValue)) {
                         pinObject((Object *)regValue);
@@ -2084,13 +2034,9 @@ static void scavengeBlockQueue(void)
  */
 static void verifyNewSpace(void)
 {
-    HeapSource *heapSource;
-    size_t i;
-    size_t c0, c1, c2, c7;
-
-    c0 = c1 = c2 = c7 = 0;
-    heapSource = gDvm.gcHeap->heapSource;
-    for (i = 0; i < heapSource->totalBlocks; ++i) {
+    HeapSource *heapSource = gDvm.gcHeap->heapSource;
+    size_t c0 = 0, c1 = 0, c2 = 0, c7 = 0;
+    for (size_t i = 0; i < heapSource->totalBlocks; ++i) {
         switch (heapSource->blockSpace[i]) {
         case BLOCK_FREE: ++c0; break;
         case BLOCK_TO_SPACE: ++c1; break;
@@ -2102,7 +2048,7 @@ static void verifyNewSpace(void)
     LOG_VER("Block Demographics: "
             "Free=%zu,ToSpace=%zu,FromSpace=%zu,Continued=%zu",
             c0, c1, c2, c7);
-    for (i = 0; i < heapSource->totalBlocks; ++i) {
+    for (size_t i = 0; i < heapSource->totalBlocks; ++i) {
         if (heapSource->blockSpace[i] != BLOCK_TO_SPACE) {
             continue;
         }
@@ -2112,9 +2058,7 @@ static void verifyNewSpace(void)
 
 void describeHeap(void)
 {
-    HeapSource *heapSource;
-
-    heapSource = gDvm.gcHeap->heapSource;
+    HeapSource *heapSource = gDvm.gcHeap->heapSource;
     describeBlocks(heapSource);
 }
 

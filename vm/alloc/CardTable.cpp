@@ -152,8 +152,7 @@ static void moveCardsToModUnion(u1 *base, u1 *limit)
     u1 *limitCard = dvmCardFromAddr(limit);
     u4 *bits = (u4*)h->modUnionTableBase;
     u1 *heapBase = (u1*)dvmHeapSourceGetBase();
-    u1 *card;
-    for (card = baseCard; card < limitCard; ++card) {
+    for (u1 *card = baseCard; card < limitCard; ++card) {
         if (*card == GC_CARD_CLEAN) {
             continue;
         }
@@ -174,8 +173,7 @@ void dvmClearCardTable(void)
     uintptr_t limit[HEAP_SOURCE_MAX_HEAP_COUNT];
     size_t numHeaps = dvmHeapSourceGetNumHeaps();
     dvmHeapSourceGetRegions(base, NULL, limit, numHeaps);
-    size_t i;
-    for (i = 0; i < numHeaps; ++i) {
+    for (size_t i = 0; i < numHeaps; ++i) {
         if (i != 0) {
             moveCardsToModUnion((u1*)base[i], (u1*)limit[i]);
         } else {
@@ -381,9 +379,7 @@ static bool isWeakInternedString(const Object *obj)
 static bool isPushedOnMarkStack(const Object *obj)
 {
     GcMarkStack *stack = &gDvm.gcHeap->markContext.stack;
-    const Object **ptr;
-
-    for (ptr = stack->base; ptr < stack->top; ++ptr) {
+    for (const Object **ptr = stack->base; ptr < stack->top; ++ptr) {
         if (*ptr == obj) {
             return true;
         }

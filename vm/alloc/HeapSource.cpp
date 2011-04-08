@@ -234,11 +234,10 @@ static size_t oldHeapOverhead(const HeapSource *hs, bool includeActive)
 static Heap *ptr2heap(const HeapSource *hs, const void *ptr)
 {
     const size_t numHeaps = hs->numHeaps;
-    size_t i;
 
 //TODO: unroll this to HEAP_SOURCE_MAX_HEAP_COUNT
     if (ptr != NULL) {
-        for (i = 0; i < numHeaps; i++) {
+        for (size_t i = 0; i < numHeaps; i++) {
             const Heap *const heap = &hs->heaps[i];
 
             if ((const char *)ptr >= heap->base && (const char *)ptr < heap->limit) {
@@ -659,12 +658,11 @@ dvmHeapSourceGetValue(enum HeapSourceValueSpec spec, size_t perHeapStats[],
     HeapSource *hs = gHs;
     size_t value = 0;
     size_t total = 0;
-    size_t i;
 
     HS_BOILERPLATE();
 
     assert(arrayLen >= hs->numHeaps || perHeapStats == NULL);
-    for (i = 0; i < hs->numHeaps; i++) {
+    for (size_t i = 0; i < hs->numHeaps; i++) {
         Heap *const heap = &hs->heaps[i];
 
         switch (spec) {
@@ -696,12 +694,11 @@ void dvmHeapSourceGetRegions(uintptr_t *base, uintptr_t *max, uintptr_t *limit,
                              size_t numHeaps)
 {
     HeapSource *hs = gHs;
-    size_t i;
 
     HS_BOILERPLATE();
 
     assert(numHeaps <= hs->numHeaps);
-    for (i = 0; i < numHeaps; ++i) {
+    for (size_t i = 0; i < numHeaps; ++i) {
         base[i] = (uintptr_t)hs->heaps[i].base;
         if (max != NULL) {
             max[i] = MIN((uintptr_t)hs->heaps[i].limit - 1, hs->markBits.max);
@@ -750,9 +747,6 @@ void dvmHeapSourceZeroMarkBitmap(void)
 
 void dvmMarkImmuneObjects(const char *immuneLimit)
 {
-    char *dst, *src;
-    size_t i, index, length;
-
     /*
      * Copy the contents of the live bit vector for immune object
      * range into the mark bit vector.
@@ -766,17 +760,17 @@ void dvmMarkImmuneObjects(const char *immuneLimit)
     assert(gHs->heaps[0].base >= immuneLimit);
     assert(gHs->heaps[0].limit > immuneLimit);
 
-    for (i = 1; i < gHs->numHeaps; ++i) {
+    for (size_t i = 1; i < gHs->numHeaps; ++i) {
         if (gHs->heaps[i].base < immuneLimit) {
             assert(gHs->heaps[i].limit <= immuneLimit);
             /* Compute the number of words to copy in the bitmap. */
-            index = HB_OFFSET_TO_INDEX(
+            size_t index = HB_OFFSET_TO_INDEX(
                 (uintptr_t)gHs->heaps[i].base - gHs->liveBits.base);
             /* Compute the starting offset in the live and mark bits. */
-            src = (char *)(gHs->liveBits.bits + index);
-            dst = (char *)(gHs->markBits.bits + index);
+            char *src = (char *)(gHs->liveBits.bits + index);
+            char *dst = (char *)(gHs->markBits.bits + index);
             /* Compute the number of bytes of the live bitmap to copy. */
-            length = HB_OFFSET_TO_BYTE_INDEX(
+            size_t length = HB_OFFSET_TO_BYTE_INDEX(
                 gHs->heaps[i].limit - gHs->heaps[i].base);
             /* Do the copy. */
             memcpy(dst, src, length);
@@ -960,9 +954,7 @@ size_t dvmHeapSourceFreeList(size_t numPtrs, void **ptrs)
             assert(ptr2heap(gHs, ptrs[0]) == heap);
             countFree(heap, ptrs[0], &numBytes);
             void *merged = ptrs[0];
-
-            size_t i;
-            for (i = 1; i < numPtrs; i++) {
+            for (size_t i = 1; i < numPtrs; i++) {
                 assert(merged != NULL);
                 assert(ptrs[i] != NULL);
                 assert((intptr_t)merged < (intptr_t)ptrs[i]);
@@ -981,8 +973,7 @@ size_t dvmHeapSourceFreeList(size_t numPtrs, void **ptrs)
             mspace_free(msp, merged);
         } else {
             // This is not an 'active heap'. Only do the accounting.
-            size_t i;
-            for (i = 0; i < numPtrs; i++) {
+            for (size_t i = 0; i < numPtrs; i++) {
                 assert(ptrs[i] != NULL);
                 assert(ptr2heap(gHs, ptrs[i]) == heap);
                 countFree(heap, ptrs[i], &numBytes);
@@ -1402,15 +1393,13 @@ void
 dvmHeapSourceTrim(size_t bytesTrimmed[], size_t arrayLen)
 {
     HeapSource *hs = gHs;
-    size_t nativeBytes, heapBytes;
-    size_t i;
 
     HS_BOILERPLATE();
 
     assert(arrayLen >= hs->numHeaps);
 
-    heapBytes = 0;
-    for (i = 0; i < hs->numHeaps; i++) {
+    size_t heapBytes = 0;
+    for (size_t i = 0; i < hs->numHeaps; i++) {
         Heap *heap = &hs->heaps[i];
 
         /* Return the wilderness chunk to the system.
@@ -1428,7 +1417,7 @@ dvmHeapSourceTrim(size_t bytesTrimmed[], size_t arrayLen)
     /* Same for the native heap.
      */
     dlmalloc_trim(0);
-    nativeBytes = 0;
+    size_t nativeBytes = 0;
     dlmalloc_walk_free_pages(releasePagesInRange, &nativeBytes);
 
     LOGD_HEAP("madvised %zd (GC) + %zd (native) = %zd total bytes\n",
@@ -1446,14 +1435,13 @@ dvmHeapSourceWalk(void(*callback)(const void *chunkptr, size_t chunklen,
                   void *arg)
 {
     HeapSource *hs = gHs;
-    size_t i;
 
     HS_BOILERPLATE();
 
     /* Walk the heaps from oldest to newest.
      */
 //TODO: do this in address order
-    for (i = hs->numHeaps; i > 0; --i) {
+    for (size_t i = hs->numHeaps; i > 0; --i) {
         mspace_walk_heap(hs->heaps[i-1].msp, callback, arg);
     }
 }
