@@ -89,6 +89,14 @@ void dvmMterpStd(Thread* self)
     //      self->interpSave.fp);
     //LOGI("first instruction is 0x%04x\n", self->interpSave.pc[0]);
 
+    /*
+     * Handle any ongoing profiling and prep for debugging
+     */
+    if (self->interpBreak.ctl.subMode != 0) {
+        TRACE_METHOD_ENTER(self, self->interpSave.method);
+        self->debugIsMethodEntry = true;   // Always true on startup
+    }
+
     dvmMterpStdRun(self);
 
 #ifdef LOG_INSTR
