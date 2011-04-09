@@ -1426,7 +1426,7 @@ void dvmCompilerAssembleLIR(CompilationUnit *cUnit, JitTranslationInfo *info)
 
     if (gDvmJit.codeCacheByteUsed + cUnit->totalSize > gDvmJit.codeCacheSize) {
         gDvmJit.codeCacheFull = true;
-        cUnit->baseAddr = NULL;
+        info->discardResult = true;
         return;
     }
 
@@ -1434,7 +1434,7 @@ void dvmCompilerAssembleLIR(CompilationUnit *cUnit, JitTranslationInfo *info)
     cUnit->codeBuffer = (unsigned char *)dvmCompilerNew(chainCellOffset, true);
     if (cUnit->codeBuffer == NULL) {
         LOGE("Code buffer allocation failure\n");
-        cUnit->baseAddr = NULL;
+        info->discardResult = true;
         return;
     }
 
