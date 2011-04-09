@@ -211,6 +211,14 @@ int jniThrowException(JNIEnv* env, const char* className, const char* msg)
     return result;
 }
 
+int jniThrowExceptionFmt(JNIEnv* env, const char* className, const char* fmt,
+        va_list args)
+{
+    char msgBuf[512];
+    vsnprintf(msgBuf, sizeof(msgBuf), fmt, args);
+    return jniThrowException(env, className, msgBuf);
+}
+
 /*
  * Throw a java.lang.NullPointerException, with an optional message.
  */

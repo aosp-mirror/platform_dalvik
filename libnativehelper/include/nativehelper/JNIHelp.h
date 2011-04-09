@@ -118,6 +118,23 @@ inline int jniThrowException(JNIEnv* env, const char* className,
 {
     return jniThrowException(&env->functions, className, msg);
 }
+
+extern "C" int jniThrowExceptionFmt(C_JNIEnv* env, const char* className,
+        const char* fmt, va_list args);
+
+/*
+ * Equivalent to jniThrowException but with a printf-like format string and
+ * variable-length argument list. This is only available in C++.
+ */
+inline int jniThrowExceptionFmt(JNIEnv* env, const char* className,
+        const char* fmt, ...)
+{
+    va_list args;
+    va_start(args, fmt);
+    return jniThrowExceptionFmt(&env->functions, className, fmt, args);
+    va_end(args);
+}
+
 inline int jniThrowNullPointerException(JNIEnv* env, const char* msg)
 {
     return jniThrowNullPointerException(&env->functions, msg);
