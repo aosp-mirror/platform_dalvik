@@ -110,7 +110,6 @@ static void markObjectNonNull(const Object *obj, GcMarkContext *ctx,
     assert(ctx != NULL);
     assert(obj != NULL);
     assert(dvmIsValidObject(obj));
-
     if (obj < (Object *)ctx->immuneLimit) {
         assert(isMarked(obj, ctx));
         return;
@@ -147,13 +146,10 @@ static void markObject(const Object *obj, GcMarkContext *ctx)
 static void rootMarkObjectVisitor(void *addr, u4 thread, RootType type,
                                   void *arg)
 {
-    Object *obj;
-    GcMarkContext *ctx;
-
     assert(addr != NULL);
     assert(arg != NULL);
-    obj = *(Object **)addr;
-    ctx = (GcMarkContext *)arg;
+    Object *obj = *(Object **)addr;
+    GcMarkContext *ctx = (GcMarkContext *)arg;
     if (obj != NULL) {
         markObjectNonNull(obj, ctx, false);
     }
@@ -364,13 +360,10 @@ void dvmHeapMarkRootSet()
 static void rootReMarkObjectVisitor(void *addr, u4 thread, RootType type,
                                     void *arg)
 {
-    Object *obj;
-    GcMarkContext *ctx;
-
     assert(addr != NULL);
     assert(arg != NULL);
-    obj = *(Object **)addr;
-    ctx = (GcMarkContext *)arg;
+    Object *obj = *(Object **)addr;
+    GcMarkContext *ctx = (GcMarkContext *)arg;
     if (obj != NULL) {
         markObjectNonNull(obj, ctx, true);
     }
@@ -394,7 +387,6 @@ static void scanFields(const Object *obj, GcMarkContext *ctx)
     assert(obj != NULL);
     assert(obj->clazz != NULL);
     assert(ctx != NULL);
-
     if (obj->clazz->refOffsets != CLASS_WALK_SUPER) {
         unsigned int refOffsets = obj->clazz->refOffsets;
         while (refOffsets != 0) {
@@ -452,13 +444,11 @@ static void scanInterfaces(const ClassObject *clazz, GcMarkContext *ctx)
  */
 static void scanClassObject(const Object *obj, GcMarkContext *ctx)
 {
-    const ClassObject *asClass;
-
     assert(obj != NULL);
     assert(obj->clazz == gDvm.classJavaLangClass);
     assert(ctx != NULL);
     markObject((const Object *)obj->clazz, ctx);
-    asClass = (const ClassObject *)obj;
+    const ClassObject *asClass = (const ClassObject *)obj;
     if (IS_CLASS_FLAG_SET(asClass, CLASS_ISARRAY)) {
         markObject((const Object *)asClass->elementClass, ctx);
     }
@@ -542,11 +532,9 @@ static bool isPhantomReference(const Object *obj)
  */
 static void enqueuePendingReference(Object *ref, Object **list)
 {
-    size_t offset;
-
     assert(ref != NULL);
     assert(list != NULL);
-    offset = gDvm.offJavaLangRefReference_pendingNext;
+    size_t offset = gDvm.offJavaLangRefReference_pendingNext;
     if (*list == NULL) {
         dvmSetFieldObject(ref, offset, ref);
         *list = ref;
@@ -563,13 +551,11 @@ static void enqueuePendingReference(Object *ref, Object **list)
  */
 static Object *dequeuePendingReference(Object **list)
 {
-    Object *ref, *head;
-    size_t offset;
-
     assert(list != NULL);
     assert(*list != NULL);
-    offset = gDvm.offJavaLangRefReference_pendingNext;
-    head = dvmGetFieldObject(*list, offset);
+    size_t offset = gDvm.offJavaLangRefReference_pendingNext;
+    Object *head = dvmGetFieldObject(*list, offset);
+    Object *ref;
     if (*list == head) {
         ref = *list;
         *list = NULL;
@@ -589,18 +575,15 @@ static Object *dequeuePendingReference(Object **list)
  */
 static void delayReferenceReferent(Object *obj, GcMarkContext *ctx)
 {
-    GcHeap *gcHeap = gDvm.gcHeap;
-    Object *pending, *referent;
-    size_t pendingNextOffset, referentOffset;
-
     assert(obj != NULL);
     assert(obj->clazz != NULL);
     assert(IS_CLASS_FLAG_SET(obj->clazz, CLASS_ISREFERENCE));
     assert(ctx != NULL);
-    pendingNextOffset = gDvm.offJavaLangRefReference_pendingNext;
-    referentOffset = gDvm.offJavaLangRefReference_referent;
-    pending = dvmGetFieldObject(obj, pendingNextOffset);
-    referent = dvmGetFieldObject(obj, referentOffset);
+    GcHeap *gcHeap = gDvm.gcHeap;
+    size_t pendingNextOffset = gDvm.offJavaLangRefReference_pendingNext;
+    size_t referentOffset = gDvm.offJavaLangRefReference_referent;
+    Object *pending = dvmGetFieldObject(obj, pendingNextOffset);
+    Object *referent = dvmGetFieldObject(obj, referentOffset);
     if (pending == NULL && referent != NULL && !isMarked(referent, ctx)) {
         Object **list = NULL;
         if (isSoftReference(obj)) {
@@ -639,9 +622,8 @@ static void scanDataObject(const Object *obj, GcMarkContext *ctx)
 static void scanObject(const Object *obj, GcMarkContext *ctx)
 {
     assert(obj != NULL);
-    assert(ctx != NULL);
-    assert(isMarked(obj, ctx));
     assert(obj->clazz != NULL);
+    assert(ctx != NULL);
     assert(isMarked(obj, ctx));
     if (obj->clazz == gDvm.classJavaLangClass) {
         scanClassObject(obj, ctx);
@@ -658,12 +640,10 @@ static void scanObject(const Object *obj, GcMarkContext *ctx)
  */
 static void processMarkStack(GcMarkContext *ctx)
 {
-    GcMarkStack *stack;
-
     assert(ctx != NULL);
     assert(ctx->finger == (void *)ULONG_MAX);
-    stack = &ctx->stack;
-    assert(stack->top >= stack->base);
+    assert(ctx->stack.top >= ctx->stack.base);
+    GcMarkStack *stack = &ctx->stack;
     while (stack->top > stack->base) {
         const Object *obj = markStackPop(stack);
         scanObject(obj, ctx);
@@ -675,6 +655,8 @@ static void processMarkStack(GcMarkContext *ctx)
  */
 static void scanGrayObjects(GcMarkContext *ctx)
 {
+    assert(ctx != NULL);
+    assert(ctx->bitmap != NULL);
     HeapBitmap *bitmap = ctx->bitmap;
     u1 *base = (u1 *)bitmap->base;
     u1 *limit = (u1 *)ALIGN_UP(bitmap->max, GC_CARD_SIZE);
@@ -687,6 +669,7 @@ static void scanGrayObjects(GcMarkContext *ctx)
  */
 void dvmHeapScanImmuneObjects(const GcMarkContext *ctx)
 {
+    assert(ctx != NULL);
     ScanImmuneObjectContext scanCtx;
     memset(&scanCtx, 0, sizeof(scanCtx));
     scanCtx.threatenBoundary = (Object*)ctx->immuneLimit;
@@ -771,6 +754,7 @@ static void clearReference(Object *reference)
  */
 static bool isEnqueuable(const Object *reference)
 {
+    assert(reference != NULL);
     Object *queue = dvmGetFieldObject(reference,
             gDvm.offJavaLangRefReference_queue);
     Object *queueNext = dvmGetFieldObject(reference,
@@ -797,25 +781,19 @@ static void enqueueReference(Object *ref)
  */
 static void preserveSomeSoftReferences(Object **list)
 {
-    GcMarkContext *ctx;
-    Object *ref, *referent;
-    Object *clear;
-    size_t referentOffset;
-    size_t counter;
-    bool marked;
-
-    ctx = &gDvm.gcHeap->markContext;
-    referentOffset = gDvm.offJavaLangRefReference_referent;
-    clear = NULL;
-    counter = 0;
+    assert(list != NULL);
+    GcMarkContext *ctx = &gDvm.gcHeap->markContext;
+    size_t referentOffset = gDvm.offJavaLangRefReference_referent;
+    Object *clear = NULL;
+    size_t counter = 0;
     while (*list != NULL) {
-        ref = dequeuePendingReference(list);
-        referent = dvmGetFieldObject(ref, referentOffset);
+        Object *ref = dequeuePendingReference(list);
+        Object *referent = dvmGetFieldObject(ref, referentOffset);
         if (referent == NULL) {
             /* Referent was cleared by the user during marking. */
             continue;
         }
-        marked = isMarked(referent, ctx);
+        bool marked = isMarked(referent, ctx);
         if (!marked && ((++counter) & 1)) {
             /* Referent is white and biased toward saving, mark it. */
             markObject(referent, ctx);
@@ -841,15 +819,12 @@ static void preserveSomeSoftReferences(Object **list)
  */
 static void clearWhiteReferences(Object **list)
 {
-    GcMarkContext *ctx;
-    Object *ref, *referent;
-    size_t referentOffset;
-
-    ctx = &gDvm.gcHeap->markContext;
-    referentOffset = gDvm.offJavaLangRefReference_referent;
+    assert(list != NULL);
+    GcMarkContext *ctx = &gDvm.gcHeap->markContext;
+    size_t referentOffset = gDvm.offJavaLangRefReference_referent;
     while (*list != NULL) {
-        ref = dequeuePendingReference(list);
-        referent = dvmGetFieldObject(ref, referentOffset);
+        Object *ref = dequeuePendingReference(list);
+        Object *referent = dvmGetFieldObject(ref, referentOffset);
         if (referent != NULL && !isMarked(referent, ctx)) {
             /* Referent is white, clear it. */
             clearReference(ref);
@@ -868,6 +843,7 @@ static void clearWhiteReferences(Object **list)
  */
 static void enqueueFinalizerReferences(Object **list)
 {
+    assert(list != NULL);
     GcMarkContext *ctx = &gDvm.gcHeap->markContext;
     size_t referentOffset = gDvm.offJavaLangRefReference_referent;
     size_t zombieOffset = gDvm.offJavaLangRefFinalizerReference_zombie;
@@ -900,6 +876,7 @@ static void enqueueFinalizerReferences(Object **list)
  */
 void dvmSetFinalizable(Object *obj)
 {
+    assert(obj != NULL);
     Thread *self = dvmThreadSelf();
     assert(self != NULL);
     Method *meth = gDvm.methJavaLangRefFinalizerReferenceAdd;
@@ -978,9 +955,7 @@ void dvmEnqueueClearedReferences(Object **cleared)
 
 void dvmHeapFinishMarkStep()
 {
-    GcMarkContext *ctx;
-
-    ctx = &gDvm.gcHeap->markContext;
+    GcMarkContext *ctx = &gDvm.gcHeap->markContext;
 
     /* The mark bits are now not needed.
      */
@@ -1001,8 +976,8 @@ typedef struct {
 
 static void sweepBitmapCallback(size_t numPtrs, void **ptrs, void *arg)
 {
+    assert(arg != NULL);
     SweepContext *ctx = (SweepContext *)arg;
-
     if (ctx->isConcurrent) {
         dvmLockHeap();
     }
