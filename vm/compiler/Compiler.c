@@ -266,7 +266,8 @@ static void resetCodeCache(void)
     int inJit = 0;
     int byteUsed = gDvmJit.codeCacheByteUsed;
 
-    /* If any thread is found stuck in the JIT state, don't reset the cache */
+    /* If any thread is found stuck in the JIT state, don't reset the cache  */
+    dvmLockThreadList(NULL);
     for (thread = gDvm.threadList; thread != NULL; thread = thread->next) {
         /*
          * Crawl the stack to wipe out the returnAddr field so that
@@ -278,7 +279,11 @@ static void resetCodeCache(void)
         if (thread->inJitCodeCache) {
             inJit++;
         }
+        /* Cancel any ongoing trace selection */
+        dvmUpdateInterpBreak(thread, kInterpJitBreak, kSubModeJitTraceBuild,
+                             false /* clear */);
     }
+    dvmUnlockThreadList();
 
     if (inJit) {
         LOGD("JIT code cache reset delayed (%d bytes %d/%d)",
@@ -675,13 +680,23 @@ static void *compilerThreadStart(void *arg)
                     bool aborted = setjmp(jmpBuf);
                     if (!aborted) {
                         bool codeCompiled = dvmCompilerDoWork(&work);
-                        if (codeCompiled && !work.result.discardResult &&
-                                work.result.codeAddress) {
+                        /*
+                         * Make sure we are still operating with the
+                         * same translation cache version.  See
+                         * Issue 4271784 for details.
+                         */
+                        dvmLockMutex(&gDvmJit.compilerLock);
+                        if ((work.result.cacheVersion ==
+                             gDvmJit.cacheVersion) &&
+                             codeCompiled &&
+                             !work.result.discardResult &&
+                             work.result.codeAddress) {
                             dvmJitSetCodeAddr(work.pc, work.result.codeAddress,
                                               work.result.instructionSet,
                                               false, /* not method entry */
                                               work.result.profileCodeSize);
                         }
+                        dvmUnlockMutex(&gDvmJit.compilerLock);
                     }
                     dvmCompilerArenaReset();
                 }

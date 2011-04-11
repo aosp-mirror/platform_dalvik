@@ -1094,13 +1094,14 @@ void* dvmJitGetMethodAddrThread(const u2* dPC, Thread* self)
  * Register the translated code pointer into the JitTable.
  * NOTE: Once a codeAddress field transitions from initial state to
  * JIT'd code, it must not be altered without first halting all
- * threads.  This routine should only be called by the compiler
- * thread.  We defer the setting of the profile prefix size until
+ * threads.  We defer the setting of the profile prefix size until
  * after the new code address is set to ensure that the prefix offset
  * is never applied to the initial interpret-only translation.  All
  * translations with non-zero profile prefixes will still be correct
  * if entered as if the profile offset is 0, but the interpret-only
  * template cannot handle a non-zero prefix.
+ * NOTE: JitTable must not be in danger of reset while this
+ * code is executing. see Issue 4271784 for details.
  */
 void dvmJitSetCodeAddr(const u2* dPC, void *nPC, JitInstructionSetType set,
                        bool isMethodEntry, int profilePrefixSize)
@@ -1108,12 +1109,13 @@ void dvmJitSetCodeAddr(const u2* dPC, void *nPC, JitInstructionSetType set,
     JitEntryInfoUnion oldValue;
     JitEntryInfoUnion newValue;
     /*
-     * Method-based JIT doesn't go through the normal profiling phase, so use
-     * lookupAndAdd here to request a new entry in the table.
+     * Get the JitTable slot for this dPC (or create one if JitTable
+     * has been reset between the time the trace was requested and
+     * now.
      */
     JitEntry *jitEntry = isMethodEntry ?
-        lookupAndAdd(dPC, false /* caller locked */, true) :
-        dvmJitFindEntry(dPC, isMethodEntry);
+        lookupAndAdd(dPC, false /* caller holds tableLock */, isMethodEntry) :
+                     dvmJitFindEntry(dPC, isMethodEntry);
     assert(jitEntry);
     /* Note: order of update is important */
     do {
