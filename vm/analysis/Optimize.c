@@ -246,6 +246,10 @@ rewrite_inst_field:
             break;
 
         case OP_IGET_JUMBO:
+        case OP_IGET_BOOLEAN_JUMBO:
+        case OP_IGET_BYTE_JUMBO:
+        case OP_IGET_CHAR_JUMBO:
+        case OP_IGET_SHORT_JUMBO:
             if (forSmp)
                 volatileOpc = OP_IGET_VOLATILE_JUMBO;
             goto rewrite_jumbo_inst_field;
@@ -257,6 +261,10 @@ rewrite_inst_field:
                 volatileOpc = OP_IGET_OBJECT_VOLATILE_JUMBO;
             goto rewrite_jumbo_inst_field;
         case OP_IPUT_JUMBO:
+        case OP_IPUT_BOOLEAN_JUMBO:
+        case OP_IPUT_BYTE_JUMBO:
+        case OP_IPUT_CHAR_JUMBO:
+        case OP_IPUT_SHORT_JUMBO:
             if (forSmp)
                 volatileOpc = OP_IPUT_VOLATILE_JUMBO;
             goto rewrite_jumbo_inst_field;
@@ -308,6 +316,10 @@ rewrite_static_field:
             break;
 
         case OP_SGET_JUMBO:
+        case OP_SGET_BOOLEAN_JUMBO:
+        case OP_SGET_BYTE_JUMBO:
+        case OP_SGET_CHAR_JUMBO:
+        case OP_SGET_SHORT_JUMBO:
             if (forSmp)
                 volatileOpc = OP_SGET_VOLATILE_JUMBO;
             goto rewrite_jumbo_static_field;
@@ -319,6 +331,10 @@ rewrite_static_field:
                 volatileOpc = OP_SGET_OBJECT_VOLATILE_JUMBO;
             goto rewrite_jumbo_static_field;
         case OP_SPUT_JUMBO:
+        case OP_SPUT_BOOLEAN_JUMBO:
+        case OP_SPUT_BYTE_JUMBO:
+        case OP_SPUT_CHAR_JUMBO:
+        case OP_SPUT_SHORT_JUMBO:
             if (forSmp)
                 volatileOpc = OP_SPUT_VOLATILE_JUMBO;
             goto rewrite_jumbo_static_field;
