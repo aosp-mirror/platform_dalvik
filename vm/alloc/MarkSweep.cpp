@@ -445,7 +445,7 @@ static void scanInterfaces(const ClassObject *clazz, GcMarkContext *ctx)
 static void scanClassObject(const Object *obj, GcMarkContext *ctx)
 {
     assert(obj != NULL);
-    assert(obj->clazz == gDvm.classJavaLangClass);
+    assert(dvmIsClassObject(obj));
     assert(ctx != NULL);
     markObject((const Object *)obj->clazz, ctx);
     const ClassObject *asClass = (const ClassObject *)obj;
@@ -625,7 +625,7 @@ static void scanObject(const Object *obj, GcMarkContext *ctx)
     assert(obj->clazz != NULL);
     assert(ctx != NULL);
     assert(isMarked(obj, ctx));
-    if (obj->clazz == gDvm.classJavaLangClass) {
+    if (dvmIsClassObject(obj)) {
         scanClassObject(obj, ctx);
     } else if (IS_CLASS_FLAG_SET(obj->clazz, CLASS_ISARRAY)) {
         scanArrayObject(obj, ctx);

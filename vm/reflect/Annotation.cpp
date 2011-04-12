@@ -1360,7 +1360,7 @@ ClassObject* dvmGetDeclaringClass(const ClassObject* clazz)
     if (obj == GAV_FAILED)
         return NULL;
 
-    assert(obj->clazz == gDvm.classJavaLangClass);
+    assert(dvmIsClassObject(obj));
     return (ClassObject*)obj;
 }
 
@@ -1391,7 +1391,7 @@ ClassObject* dvmGetEnclosingClass(const ClassObject* clazz)
         obj = getAnnotationValue(clazz, pAnnoItem, "value", kDexAnnotationType,
                 "EnclosingClass");
         if (obj != GAV_FAILED) {
-            assert(obj->clazz == gDvm.classJavaLangClass);
+            assert(dvmIsClassObject(obj));
             return (ClassObject*)obj;
         }
     }

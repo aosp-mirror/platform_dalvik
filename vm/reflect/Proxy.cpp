@@ -112,7 +112,7 @@ ClassObject* dvmGenerateProxyClass(StringObject* str, ArrayObject* interfaces,
     dvmSetClassSerialNumber(newClass);
     newClass->descriptorAlloc = dvmNameToDescriptor(nameStr);
     newClass->descriptor = newClass->descriptorAlloc;
-    newClass->accessFlags = ACC_PUBLIC | ACC_FINAL;
+    SET_CLASS_FLAG(newClass, ACC_PUBLIC | ACC_FINAL);
     dvmSetFieldObject((Object *)newClass,
                       offsetof(ClassObject, super),
                       (Object *)gDvm.classJavaLangReflectProxy);

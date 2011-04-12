@@ -810,7 +810,7 @@ static u1 tagFromClass(ClassObject* clazz)
 
     if (clazz == gDvm.classJavaLangString) {
         return JT_STRING;
-    } else if (clazz == gDvm.classJavaLangClass) {
+    } else if (dvmIsTheClassClass(clazz)) {
         return JT_CLASS_OBJECT;
     } else if (dvmInstanceof(clazz, gDvm.classJavaLangThread)) {
         return JT_THREAD;

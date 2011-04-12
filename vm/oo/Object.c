@@ -787,7 +787,7 @@ void dvmDumpObject(const Object* obj)
 
         clazz = clazz->super;
     }
-    if (obj->clazz == gDvm.classJavaLangClass) {
+    if (dvmIsClassObject(obj)) {
         LOGD("  Static fields:");
         const StaticField* sfields = &((ClassObject *)obj)->sfields[0];
         for (i = 0; i < ((ClassObject *)obj)->sfieldCount; ++i) {

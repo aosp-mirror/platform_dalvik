@@ -264,7 +264,7 @@ void dvmDumpReferenceTableContents(Object* const* refs, size_t count,
             /* should only be possible right after a plain dvmMalloc() */
             size_t size = dvmObjectSizeInHeap(ref);
             LOGW("%5d: %p cls=(raw) (%zd bytes)\n", idx, ref, size);
-        } else if (ref->clazz == gDvm.classJavaLangClass) {
+        } else if (dvmIsClassObject(ref)) {
             ClassObject* clazz = (ClassObject*) ref;
             LOGW("%5d: %p cls=%s '%s'\n", idx, ref, ref->clazz->descriptor,
                 clazz->descriptor);

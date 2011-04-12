@@ -348,7 +348,7 @@ static bool createPrimitiveType(PrimitiveType primitiveType, ClassObject** pClas
 
     DVM_OBJECT_INIT(&newClass->obj, gDvm.classJavaLangClass);
     dvmSetClassSerialNumber(newClass);
-    newClass->accessFlags = ACC_PUBLIC | ACC_FINAL | ACC_ABSTRACT;
+    SET_CLASS_FLAG(newClass, ACC_PUBLIC | ACC_FINAL | ACC_ABSTRACT);
     newClass->primitiveType = primitiveType;
     newClass->descriptorAlloc = NULL;
     newClass->descriptor = descriptor;
@@ -380,6 +380,7 @@ static bool createInitialClasses(void) {
         return false;
     }
     DVM_OBJECT_INIT(&clazz->obj, clazz);
+    SET_CLASS_FLAG(clazz, ACC_PUBLIC | ACC_FINAL | CLASS_ISCLASS);
     clazz->descriptor = "Ljava/lang/Class;";
     gDvm.classJavaLangClass = clazz;
     LOGVV("Constructed the class Class.\n");
@@ -1707,6 +1708,7 @@ got_class:
     assert(dvmIsClassLinked(clazz));
     assert(gDvm.classJavaLangClass != NULL);
     assert(clazz->obj.clazz == gDvm.classJavaLangClass);
+    assert(dvmIsClassObject(&clazz->obj));
     assert(clazz == gDvm.classJavaLangObject || clazz->super != NULL);
     if (!dvmIsInterfaceClass(clazz)) {
         //LOGI("class=%s vtableCount=%d, virtualMeth=%d\n",
@@ -1773,7 +1775,7 @@ static ClassObject* loadClassFromDex0(DvmDex* pDvmDex,
     dvmSetClassSerialNumber(newClass);
     newClass->descriptor = descriptor;
     assert(newClass->descriptorAlloc == NULL);
-    newClass->accessFlags = pClassDef->accessFlags;
+    SET_CLASS_FLAG(newClass, pClassDef->accessFlags);
     dvmSetFieldObject((Object *)newClass,
                       offsetof(ClassObject, classLoader),
                       (Object *)classLoader);
@@ -2004,6 +2006,7 @@ void dvmFreeClassInnards(ClassObject* clazz)
         return;
 
     assert(clazz->obj.clazz == gDvm.classJavaLangClass);
+    assert(dvmIsClassObject(&clazz->obj));
 
     /* Guarantee that dvmFreeClassInnards can be called on a given
      * class multiple times by clearing things out as we free them.
@@ -2525,6 +2528,7 @@ bool dvmLinkClass(ClassObject* clazz)
 
     assert(gDvm.classJavaLangClass != NULL);
     assert(clazz->obj.clazz == gDvm.classJavaLangClass);
+    assert(dvmIsClassObject(&clazz->obj));
     if (clazz->classLoader == NULL &&
         (strcmp(clazz->descriptor, "Ljava/lang/Class;") == 0))
     {
@@ -2539,6 +2543,7 @@ bool dvmLinkClass(ClassObject* clazz)
             dvmAbort();
         }
     }
+
     /* "Resolve" the class.
      *
      * At this point, clazz's reference fields may contain Dex file
@@ -2857,6 +2862,7 @@ bail:
     if (interfaceIdxArray != NULL) {
         free(interfaceIdxArray);
     }
+
     return okay;
 }
 
@@ -3755,7 +3761,7 @@ static bool computeFieldOffsets(ClassObject* clazz)
      * We map a C struct directly on top of java/lang/Class objects.  Make
      * sure we left enough room for the instance fields.
      */
-    assert(clazz != gDvm.classJavaLangClass || (size_t)fieldOffset <
+    assert(!dvmIsTheClassClass(clazz) || (size_t)fieldOffset <
         offsetof(ClassObject, instanceData) + sizeof(clazz->instanceData));
 
     clazz->objectSize = fieldOffset;

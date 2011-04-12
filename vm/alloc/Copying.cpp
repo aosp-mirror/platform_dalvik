@@ -1397,7 +1397,7 @@ static void scavengeObject(Object *obj)
     assert(obj->clazz != NULL);
     assert(!((uintptr_t)obj->clazz & 0x1));
     clazz = obj->clazz;
-    if (clazz == gDvm.classJavaLangClass) {
+    if (dvmIsTheClassClass(clazz)) {
         scavengeClassObject((ClassObject *)obj);
     } else if (IS_CLASS_FLAG_SET(clazz, CLASS_ISARRAY)) {
         scavengeArrayObject((ArrayObject *)obj);

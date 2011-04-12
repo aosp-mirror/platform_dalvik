@@ -276,11 +276,7 @@ hprofDumpHeapObject(hprof_context_t *ctx, const Object *obj)
          * allocated which hasn't been initialized yet.
          */
     } else {
-        hprof_class_object_id clazzId;
-
-        clazzId = hprofLookupClassId(clazz);
-
-        if (clazz == gDvm.classJavaLangClass) {
+        if (dvmIsClassObject(obj)) {
             const ClassObject *thisClass = (const ClassObject *)obj;
             /* obj is a ClassObject.
              */

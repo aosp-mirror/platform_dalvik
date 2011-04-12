@@ -159,7 +159,7 @@ static void visitObject(Visitor *visitor, Object *obj, void *arg)
     assert(visitor != NULL);
     assert(obj != NULL);
     assert(obj->clazz != NULL);
-    if (obj->clazz == gDvm.classJavaLangClass) {
+    if (dvmIsClassObject(obj)) {
         visitClassObject(visitor, obj, arg);
     } else if (IS_CLASS_FLAG_SET(obj->clazz, CLASS_ISARRAY)) {
         visitArrayObject(visitor, obj, arg);

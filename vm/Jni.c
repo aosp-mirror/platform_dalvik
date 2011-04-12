@@ -593,7 +593,7 @@ static jobject addGlobalReference(Object* obj)
     //LOGI("adding obj=%p\n", obj);
     //dvmDumpThread(dvmThreadSelf(), false);
 
-    if (false && ((Object*)obj)->clazz == gDvm.classJavaLangClass) {
+    if (false && dvmIsClassObject((Object*)obj)) {
         ClassObject* clazz = (ClassObject*) obj;
         LOGI("-------\n");
         LOGI("Adding global ref on class %s\n", clazz->descriptor);
@@ -1109,7 +1109,7 @@ static bool canAllocClass(ClassObject* clazz)
         /* JNI spec defines what this throws */
         dvmThrowInstantiationException(clazz, "abstract class or interface");
         return false;
-    } else if (dvmIsArrayClass(clazz) || clazz == gDvm.classJavaLangClass) {
+    } else if (dvmIsArrayClass(clazz) || dvmIsTheClassClass(clazz)) {
         /* spec says "must not" for arrays, ignores Class */
         dvmThrowInstantiationException(clazz, "wrong JNI function");
         return false;

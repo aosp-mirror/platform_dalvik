@@ -290,7 +290,7 @@ heap_chunk_callback(const void *chunkptr, size_t chunklen,
                  * but hasn't been initialized yet.
                  */
                 state = HPSG_STATE(SOLIDITY_HARD, KIND_OBJECT);
-            } else if (clazz == gDvm.classJavaLangClass) {
+            } else if (dvmIsTheClassClass(clazz)) {
                 state = HPSG_STATE(SOLIDITY_HARD, KIND_CLASS_OBJECT);
             } else if (IS_CLASS_FLAG_SET(clazz, CLASS_ISARRAY)) {
                 if (IS_CLASS_FLAG_SET(clazz, CLASS_ISOBJECTARRAY)) {

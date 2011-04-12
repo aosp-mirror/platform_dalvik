@@ -235,7 +235,7 @@ Object* dvmCloneObject(Object* obj, int flags)
      * and does not implement Clonable), but make extra sure.
      * A memcpy() clone will wreak havoc on a ClassObject's "innards".
      */
-    assert(clazz != gDvm.classJavaLangClass);
+    assert(!dvmIsTheClassClass(clazz));
 
     if (IS_CLASS_FLAG_SET(clazz, CLASS_ISARRAY)) {
         size = dvmArrayObjectSize((ArrayObject *)obj);
