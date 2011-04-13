@@ -26,7 +26,7 @@ import com.android.dx.rop.code.SourcePosition;
 import com.android.dx.rop.cst.Constant;
 import com.android.dx.rop.cst.CstMemberRef;
 import com.android.dx.rop.cst.CstType;
-import com.android.dx.rop.cst.CstUtf8;
+import com.android.dx.rop.cst.CstString;
 import com.android.dx.rop.type.Type;
 
 import java.util.ArrayList;
@@ -196,8 +196,8 @@ public final class OutputFinisher {
         }
 
         LocalItem local = spec.getLocalItem();
-        CstUtf8 name = local.getName();
-        CstUtf8 signature = local.getSignature();
+        CstString name = local.getName();
+        CstString signature = local.getSignature();
         Type type = spec.getType();
 
         if (type != Type.KNOWN_NULL) {

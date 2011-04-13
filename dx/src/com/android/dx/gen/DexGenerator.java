@@ -26,13 +26,11 @@ import com.android.dx.dex.file.DexFile;
 import com.android.dx.dex.file.EncodedField;
 import com.android.dx.dex.file.EncodedMethod;
 import com.android.dx.rop.code.AccessFlags;
-import static com.android.dx.rop.code.AccessFlags.ACC_CONSTRUCTOR;
-import static com.android.dx.rop.code.AccessFlags.ACC_PRIVATE;
-import static com.android.dx.rop.code.AccessFlags.ACC_STATIC;
+import static com.android.dx.rop.code.AccessFlags.*;
 import com.android.dx.rop.code.LocalVariableInfo;
 import com.android.dx.rop.code.RopMethod;
+import com.android.dx.rop.cst.CstString;
 import com.android.dx.rop.cst.CstType;
-import com.android.dx.rop.cst.CstUtf8;
 import com.android.dx.rop.type.StdTypeList;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -185,7 +183,7 @@ public final class DexGenerator {
             CstType thisType = type.constant;
 
             ClassDefItem out = new ClassDefItem(thisType, flags, supertype.constant,
-                    interfaces.ropTypes, new CstUtf8(sourceFile));
+                    interfaces.ropTypes, new CstString(sourceFile));
 
             for (MethodDeclaration method : methods.values()) {
                 EncodedMethod encoded = method.toEncodedMethod(dexOptions);

@@ -16,7 +16,7 @@
 
 package com.android.dx.dex.file;
 
-import com.android.dx.rop.cst.CstUtf8;
+import com.android.dx.rop.cst.CstString;
 import com.android.dx.util.AnnotatedOutput;
 import com.android.dx.util.ToHuman;
 
@@ -53,7 +53,7 @@ public abstract class EncodedMember implements ToHuman {
      *
      * @return {@code non-null;} the name
      */
-    public abstract CstUtf8 getName();
+    public abstract CstString getName();
 
     /**
      * Does a human-friendly dump of this instance.

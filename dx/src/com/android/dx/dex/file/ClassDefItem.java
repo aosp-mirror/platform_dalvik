@@ -24,8 +24,8 @@ import com.android.dx.rop.cst.Constant;
 import com.android.dx.rop.cst.CstArray;
 import com.android.dx.rop.cst.CstFieldRef;
 import com.android.dx.rop.cst.CstMethodRef;
+import com.android.dx.rop.cst.CstString;
 import com.android.dx.rop.cst.CstType;
-import com.android.dx.rop.cst.CstUtf8;
 import com.android.dx.rop.type.StdTypeList;
 import com.android.dx.rop.type.TypeList;
 import com.android.dx.util.AnnotatedOutput;
@@ -59,7 +59,7 @@ public final class ClassDefItem extends IndexedItem {
     private TypeListItem interfaces;
 
     /** {@code null-ok;} source file name or {@code null} if unknown */
-    private final CstUtf8 sourceFile;
+    private final CstString sourceFile;
 
     /** {@code non-null;} associated class data object */
     private final ClassDataItem classData;
@@ -86,7 +86,7 @@ public final class ClassDefItem extends IndexedItem {
      * {@code null} if unknown
      */
     public ClassDefItem(CstType thisClass, int accessFlags,
-            CstType superclass, TypeList interfaces, CstUtf8 sourceFile) {
+            CstType superclass, TypeList interfaces, CstString sourceFile) {
         if (thisClass == null) {
             throw new NullPointerException("thisClass == null");
         }
@@ -264,7 +264,7 @@ public final class ClassDefItem extends IndexedItem {
      *
      * @return {@code null-ok;} the source file name or {@code null} if unknown
      */
-    public CstUtf8 getSourceFile() {
+    public CstString getSourceFile() {
         return sourceFile;
     }
 

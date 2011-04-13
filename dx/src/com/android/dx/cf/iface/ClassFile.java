@@ -17,8 +17,8 @@
 package com.android.dx.cf.iface;
 
 import com.android.dx.rop.cst.ConstantPool;
+import com.android.dx.rop.cst.CstString;
 import com.android.dx.rop.cst.CstType;
-import com.android.dx.rop.cst.CstUtf8;
 import com.android.dx.rop.type.TypeList;
 
 /**
@@ -119,5 +119,5 @@ public interface ClassFile {
      *
      * @return {@code non-null;} the constant pool
      */
-    public CstUtf8 getSourceFile();
+    public CstString getSourceFile();
 }

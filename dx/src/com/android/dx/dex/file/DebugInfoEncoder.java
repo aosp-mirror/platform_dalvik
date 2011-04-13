@@ -22,7 +22,7 @@ import com.android.dx.rop.code.RegisterSpec;
 import com.android.dx.rop.code.SourcePosition;
 import com.android.dx.rop.cst.CstMethodRef;
 import com.android.dx.rop.cst.CstType;
-import com.android.dx.rop.cst.CstUtf8;
+import com.android.dx.rop.cst.CstString;
 import com.android.dx.rop.type.Prototype;
 import com.android.dx.rop.type.StdTypeList;
 import com.android.dx.rop.type.Type;
@@ -470,7 +470,7 @@ public final class DebugInfoEncoder {
                 continue;
             }
 
-            CstUtf8 signature = arg.getSignature();
+            CstString signature = arg.getSignature();
 
             if (signature != null) {
                 emitLocalStartExtended(arg);
@@ -576,7 +576,7 @@ public final class DebugInfoEncoder {
         sb.append(e.getRegister());
         sb.append(' ');
 
-        CstUtf8 name = e.getName();
+        CstString name = e.getName();
         if (name == null) {
             sb.append("null");
         } else {
@@ -591,7 +591,7 @@ public final class DebugInfoEncoder {
             sb.append(type.toHuman());
         }
 
-        CstUtf8 signature = e.getSignature();
+        CstString signature = e.getSignature();
 
         if (signature != null) {
             sb.append(' ');
@@ -636,7 +636,7 @@ public final class DebugInfoEncoder {
      * @param string {@code null-ok;} string to emit
      * @throws IOException
      */
-    private void emitStringIndex(CstUtf8 string) throws IOException {
+    private void emitStringIndex(CstString string) throws IOException {
         if ((string == null) || (file == null)) {
             output.writeUleb128(0);
         } else {

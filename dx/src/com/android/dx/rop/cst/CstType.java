@@ -89,7 +89,7 @@ public final class CstType extends TypedConstant {
      * {@code null-ok;} the type descriptor corresponding to this instance, if
      * calculated
      */
-    private CstUtf8 descriptor;
+    private CstString descriptor;
 
     /**
      * Returns an instance of this class that represents the wrapper
@@ -222,9 +222,9 @@ public final class CstType extends TypedConstant {
      *
      * @return {@code non-null;} the descriptor
      */
-    public CstUtf8 getDescriptor() {
+    public CstString getDescriptor() {
         if (descriptor == null) {
-            descriptor = new CstUtf8(type.getDescriptor());
+            descriptor = new CstString(type.getDescriptor());
         }
 
         return descriptor;

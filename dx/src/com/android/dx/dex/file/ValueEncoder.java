@@ -36,10 +36,8 @@ import com.android.dx.rop.cst.CstMethodRef;
 import com.android.dx.rop.cst.CstShort;
 import com.android.dx.rop.cst.CstString;
 import com.android.dx.rop.cst.CstType;
-import com.android.dx.rop.cst.CstUtf8;
 import com.android.dx.util.AnnotatedOutput;
 import com.android.dx.util.Hex;
-
 import java.util.Collection;
 
 /**
@@ -332,7 +330,7 @@ public final class ValueEncoder {
 
         int at = 0;
         for (NameValuePair pair : pairs) {
-            CstUtf8 name = pair.getName();
+            CstString name = pair.getName();
             int nameIdx = stringIds.indexOf(name);
             Constant value = pair.getValue();
 

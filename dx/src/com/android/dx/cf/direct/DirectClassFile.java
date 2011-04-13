@@ -29,7 +29,7 @@ import com.android.dx.cf.iface.StdAttributeList;
 import com.android.dx.rop.code.AccessFlags;
 import com.android.dx.rop.cst.ConstantPool;
 import com.android.dx.rop.cst.CstType;
-import com.android.dx.rop.cst.CstUtf8;
+import com.android.dx.rop.cst.CstString;
 import com.android.dx.rop.cst.StdConstantPool;
 import com.android.dx.rop.type.StdTypeList;
 import com.android.dx.rop.type.Type;
@@ -300,7 +300,7 @@ public class DirectClassFile implements ClassFile {
     }
 
     /** {@inheritDoc} */
-    public CstUtf8 getSourceFile() {
+    public CstString getSourceFile() {
         AttributeList attribs = getAttributes();
         Attribute attSf = attribs.findFirst(AttSourceFile.ATTRIBUTE_NAME);
 

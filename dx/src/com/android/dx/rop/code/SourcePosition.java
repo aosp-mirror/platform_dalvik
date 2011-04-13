@@ -16,7 +16,7 @@
 
 package com.android.dx.rop.code;
 
-import com.android.dx.rop.cst.CstUtf8;
+import com.android.dx.rop.cst.CstString;
 import com.android.dx.util.Hex;
 
 /**
@@ -29,7 +29,7 @@ public final class SourcePosition {
         new SourcePosition(null, -1, -1);
 
     /** {@code null-ok;} name of the file of origin or {@code null} if unknown */
-    private final CstUtf8 sourceFile;
+    private final CstString sourceFile;
 
     /**
      * {@code >= -1;} the bytecode address, or {@code -1} if that
@@ -53,7 +53,7 @@ public final class SourcePosition {
      * @param line {@code >= -1;} original line number or {@code -1} if
      * unknown
      */
-    public SourcePosition(CstUtf8 sourceFile, int address, int line) {
+    public SourcePosition(CstString sourceFile, int address, int line) {
         if (address < -1) {
             throw new IllegalArgumentException("address < -1");
         }
@@ -143,7 +143,7 @@ public final class SourcePosition {
      *
      * @return {@code null-ok;} the source file or {@code null} if unknown
      */
-    public CstUtf8 getSourceFile() {
+    public CstString getSourceFile() {
         return sourceFile;
     }
 

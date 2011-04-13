@@ -42,7 +42,6 @@ import com.android.dx.cf.iface.Attribute;
 import com.android.dx.cf.iface.ParseException;
 import com.android.dx.cf.iface.ParseObserver;
 import com.android.dx.cf.iface.StdAttributeList;
-import com.android.dx.rop.annotation.Annotation;
 import com.android.dx.rop.annotation.AnnotationVisibility;
 import com.android.dx.rop.annotation.Annotations;
 import com.android.dx.rop.annotation.AnnotationsList;
@@ -50,8 +49,8 @@ import com.android.dx.rop.code.AccessFlags;
 import com.android.dx.rop.cst.Constant;
 import com.android.dx.rop.cst.ConstantPool;
 import com.android.dx.rop.cst.CstNat;
+import com.android.dx.rop.cst.CstString;
 import com.android.dx.rop.cst.CstType;
-import com.android.dx.rop.cst.CstUtf8;
 import com.android.dx.rop.cst.TypedConstant;
 import com.android.dx.rop.type.TypeList;
 import com.android.dx.util.ByteArray;
@@ -435,7 +434,7 @@ public class StdAttributeFactory
             int accessFlags = bytes.getUnsignedShort(offset + 6);
             CstType innerClass = (CstType) pool.get(innerClassIdx);
             CstType outerClass = (CstType) pool.get0Ok(outerClassIdx);
-            CstUtf8 name = (CstUtf8) pool.get0Ok(nameIdx);
+            CstString name = (CstString) pool.get0Ok(nameIdx);
             list.set(i, innerClass, outerClass, name, accessFlags);
             if (observer != null) {
                 observer.parsed(bytes, offset, 2,
@@ -574,10 +573,10 @@ public class StdAttributeFactory
                 int nameIdx = in.readUnsignedShort();
                 int typeIdx = in.readUnsignedShort();
                 int index = in.readUnsignedShort();
-                CstUtf8 name = (CstUtf8) pool.get(nameIdx);
-                CstUtf8 type = (CstUtf8) pool.get(typeIdx);
-                CstUtf8 descriptor = null;
-                CstUtf8 signature = null;
+                CstString name = (CstString) pool.get(nameIdx);
+                CstString type = (CstString) pool.get(typeIdx);
+                CstString descriptor = null;
+                CstString signature = null;
 
                 if (typeTable) {
                     signature = type;
@@ -683,7 +682,7 @@ public class StdAttributeFactory
         ByteArray bytes = cf.getBytes();
         ConstantPool pool = cf.getConstantPool();
         int idx = bytes.getUnsignedShort(offset);
-        CstUtf8 cst = (CstUtf8) pool.get(idx);
+        CstString cst = (CstString) pool.get(idx);
         Attribute result = new AttSignature(cst);
 
         if (observer != null) {
@@ -705,7 +704,7 @@ public class StdAttributeFactory
         ByteArray bytes = cf.getBytes();
         ConstantPool pool = cf.getConstantPool();
         int idx = bytes.getUnsignedShort(offset);
-        CstUtf8 cst = (CstUtf8) pool.get(idx);
+        CstString cst = (CstString) pool.get(idx);
         Attribute result = new AttSourceFile(cst);
 
         if (observer != null) {

@@ -19,7 +19,7 @@ package com.android.dx.dex.file;
 import com.android.dx.dex.code.DalvCode;
 import com.android.dx.rop.code.AccessFlags;
 import com.android.dx.rop.cst.CstMethodRef;
-import com.android.dx.rop.cst.CstUtf8;
+import com.android.dx.rop.cst.CstString;
 import com.android.dx.rop.type.TypeList;
 import com.android.dx.util.AnnotatedOutput;
 import com.android.dx.util.Hex;
@@ -131,7 +131,7 @@ public final class EncodedMethod extends EncodedMember
 
     /** {@inheritDoc} */
     @Override
-    public final CstUtf8 getName() {
+    public final CstString getName() {
         return method.getNat().getName();
     }
 

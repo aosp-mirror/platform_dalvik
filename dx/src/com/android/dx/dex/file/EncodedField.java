@@ -18,7 +18,7 @@ package com.android.dx.dex.file;
 
 import com.android.dx.rop.code.AccessFlags;
 import com.android.dx.rop.cst.CstFieldRef;
-import com.android.dx.rop.cst.CstUtf8;
+import com.android.dx.rop.cst.CstString;
 import com.android.dx.util.AnnotatedOutput;
 import com.android.dx.util.Hex;
 import com.android.dx.util.Leb128Utils;
@@ -103,7 +103,7 @@ public final class EncodedField extends EncodedMember
 
     /** {@inheritDoc} */
     @Override
-    public CstUtf8 getName() {
+    public CstString getName() {
         return field.getNat().getName();
     }
 

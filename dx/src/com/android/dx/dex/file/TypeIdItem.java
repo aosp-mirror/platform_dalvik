@@ -18,7 +18,7 @@ package com.android.dx.dex.file;
 
 import com.android.dx.dex.SizeOf;
 import com.android.dx.rop.cst.CstType;
-import com.android.dx.rop.cst.CstUtf8;
+import com.android.dx.rop.cst.CstString;
 import com.android.dx.util.AnnotatedOutput;
 import com.android.dx.util.Hex;
 
@@ -57,7 +57,7 @@ public final class TypeIdItem extends IdItem {
     @Override
     public void writeTo(DexFile file, AnnotatedOutput out) {
         CstType type = getDefiningClass();
-        CstUtf8 descriptor = type.getDescriptor();
+        CstString descriptor = type.getDescriptor();
         int idx = file.getStringIds().indexOf(descriptor);
 
         if (out.annotates()) {
