@@ -714,7 +714,7 @@ void dvmReportReturn(Thread* self)
  * the event list unless we know there's at least one lurking within.
  */
 static void updateDebugger(const Method* method, const u2* pc, const u4* fp,
-                           bool methodEntry, Thread* self)
+                           Thread* self)
 {
     int eventFlags = 0;
 
@@ -727,8 +727,10 @@ static void updateDebugger(const Method* method, const u2* pc, const u4* fp,
      */
     dvmExportPC(pc, fp);
 
-    if (methodEntry)
+    if (self->debugIsMethodEntry) {
         eventFlags |= DBG_METHOD_ENTRY;
+        self->debugIsMethodEntry = false;
+    }
 
     /*
      * See if we have a breakpoint here.
@@ -1775,8 +1777,7 @@ void dvmCheckBefore(const u2 *pc, u4 *fp, Thread* self)
     }
 
     if (self->interpBreak.ctl.subMode & kSubModeDebuggerActive) {
-        updateDebugger(method, pc, fp,
-                       self->debugIsMethodEntry, self);
+        updateDebugger(method, pc, fp, self);
     }
     if (gDvm.instructionCountEnableCount != 0) {
         /*
