@@ -67,16 +67,12 @@ ClassObject* dvmGenerateProxyClass(StringObject* str, ArrayObject* interfaces,
     Object* loader)
 {
     int result = -1;
-    char* nameStr = NULL;
-    Method** methods = NULL;
     ArrayObject* throws = NULL;
-    ClassObject* newClass = NULL;
-    int i;
 
-    nameStr = dvmCreateCstrFromString(str);
+    char* nameStr = dvmCreateCstrFromString(str);
     if (nameStr == NULL) {
         dvmThrowIllegalArgumentException("missing name");
-        goto bail;
+        return NULL;
     }
 
     LOGV("+++ Generate proxy class '%s' %p from %d interface classes\n",
@@ -104,18 +100,12 @@ ClassObject* dvmGenerateProxyClass(StringObject* str, ArrayObject* interfaces,
      */
 
     /*
-     * Generate a temporary list of virtual methods.
-     */
-    int methodCount = -1;
-    if (!gatherMethods(interfaces, &methods, &throws, &methodCount))
-        goto bail;
-
-    /*
      * Allocate storage for the class object and set some basic fields.
      */
-    newClass = (ClassObject*) dvmMalloc(sizeof(*newClass) +
-                                        kProxySFieldCount * sizeof(StaticField),
-                                        ALLOC_DEFAULT);
+    size_t newClassSize =
+        sizeof(ClassObject) + kProxySFieldCount * sizeof(StaticField);
+    ClassObject* newClass =
+        (ClassObject*) dvmMalloc(newClassSize, ALLOC_DEFAULT);
     if (newClass == NULL)
         goto bail;
     DVM_OBJECT_INIT(&newClass->obj, gDvm.classJavaLangClass);
@@ -143,25 +133,40 @@ ClassObject* dvmGenerateProxyClass(StringObject* str, ArrayObject* interfaces,
     /*
      * Add virtual method definitions.
      */
-    newClass->virtualMethodCount = methodCount;
-    newClass->virtualMethods = (Method*) dvmLinearAlloc(newClass->classLoader,
-            newClass->virtualMethodCount * sizeof(Method));
-    for (i = 0; i < newClass->virtualMethodCount; i++) {
-        createHandlerMethod(newClass, &newClass->virtualMethods[i],methods[i]);
+    {
+        /*
+         * Generate a temporary list of virtual methods.
+         */
+        int methodCount;
+        Method **methods;
+        if (!gatherMethods(interfaces, &methods, &throws, &methodCount)) {
+            goto bail;
+        }
+        newClass->virtualMethodCount = methodCount;
+        size_t virtualMethodsSize = methodCount * sizeof(Method);
+        newClass->virtualMethods =
+            (Method*)dvmLinearAlloc(newClass->classLoader, virtualMethodsSize);
+        for (int i = 0; i < newClass->virtualMethodCount; i++) {
+            createHandlerMethod(newClass, &newClass->virtualMethods[i], methods[i]);
+        }
+        free(methods);
+        dvmLinearReadOnly(newClass->classLoader, newClass->virtualMethods);
     }
-    dvmLinearReadOnly(newClass->classLoader, newClass->virtualMethods);
 
     /*
      * Add interface list.
      */
-    int interfaceCount = interfaces->length;
-    ClassObject** ifArray = (ClassObject**) interfaces->contents;
-    newClass->interfaceCount = interfaceCount;
-    newClass->interfaces = (ClassObject**)dvmLinearAlloc(newClass->classLoader,
-                                sizeof(ClassObject*) * interfaceCount);
-    for (i = 0; i < interfaceCount; i++)
-        newClass->interfaces[i] = ifArray[i];
-    dvmLinearReadOnly(newClass->classLoader, newClass->interfaces);
+    {
+        size_t interfaceCount = interfaces->length;
+        ClassObject** ifArray = (ClassObject**)(void*)interfaces->contents;
+        newClass->interfaceCount = interfaceCount;
+        size_t interfacesSize = sizeof(ClassObject*) * interfaceCount;
+        newClass->interfaces =
+            (ClassObject**)dvmLinearAlloc(newClass->classLoader, interfacesSize);
+        for (size_t i = 0; i < interfaceCount; i++)
+          newClass->interfaces[i] = ifArray[i];
+        dvmLinearReadOnly(newClass->classLoader, newClass->interfaces);
+    }
 
     /*
      * Static field list.  We have one private field, for our list of
@@ -169,12 +174,14 @@ ClassObject* dvmGenerateProxyClass(StringObject* str, ArrayObject* interfaces,
      */
     assert(kProxySFieldCount == 1);
     newClass->sfieldCount = kProxySFieldCount;
-    StaticField* sfield = &newClass->sfields[kThrowsField];
-    sfield->field.clazz = newClass;
-    sfield->field.name = "throws";
-    sfield->field.signature = "[[Ljava/lang/Throwable;";
-    sfield->field.accessFlags = ACC_STATIC | ACC_PRIVATE;
-    dvmSetStaticFieldObject(sfield, (Object*)throws);
+    {
+        StaticField* sfield = &newClass->sfields[kThrowsField];
+        sfield->field.clazz = newClass;
+        sfield->field.name = "throws";
+        sfield->field.signature = "[[Ljava/lang/Throwable;";
+        sfield->field.accessFlags = ACC_STATIC | ACC_PRIVATE;
+        dvmSetStaticFieldObject(sfield, (Object*)throws);
+    }
 
     /*
      * Everything is ready. This class didn't come out of a DEX file
@@ -202,7 +209,6 @@ ClassObject* dvmGenerateProxyClass(StringObject* str, ArrayObject* interfaces,
 
 bail:
     free(nameStr);
-    free(methods);
     if (result != 0) {
         /* must free innards explicitly if we didn't finish linking */
         dvmFreeClassInnards(newClass);
@@ -247,7 +253,7 @@ static bool gatherMethods(ArrayObject* interfaces, Method*** pMethods,
      */
     maxCount = 3;       // 3 methods in java.lang.Object
     numInterfaces = interfaces->length;
-    classes = (ClassObject**) interfaces->contents;
+    classes = (ClassObject**)(void*)interfaces->contents;
 
     for (i = 0; i < numInterfaces; i++, classes++) {
         ClassObject* clazz = *classes;
@@ -274,16 +280,18 @@ static bool gatherMethods(ArrayObject* interfaces, Method*** pMethods,
     /*
      * First three entries are the java.lang.Object methods.
      */
-    ClassObject* obj = gDvm.classJavaLangObject;
-    allMethods[0] = obj->vtable[gDvm.voffJavaLangObject_equals];
-    allMethods[1] = obj->vtable[gDvm.voffJavaLangObject_hashCode];
-    allMethods[2] = obj->vtable[gDvm.voffJavaLangObject_toString];
-    allCount = 3;
+    {
+      ClassObject* obj = gDvm.classJavaLangObject;
+      allMethods[0] = obj->vtable[gDvm.voffJavaLangObject_equals];
+      allMethods[1] = obj->vtable[gDvm.voffJavaLangObject_hashCode];
+      allMethods[2] = obj->vtable[gDvm.voffJavaLangObject_toString];
+      allCount = 3;
+    }
 
     /*
      * Add the methods from each interface, in order.
      */
-    classes = (ClassObject**) interfaces->contents;
+    classes = (ClassObject**)(void*)interfaces->contents;
     for (i = 0; i < numInterfaces; i++, classes++) {
         ClassObject* clazz = *classes;
         int j;
@@ -488,14 +496,14 @@ static int copyWithoutDuplicates(Method** allMethods, int allCount,
                         return -1;
                     }
 
-                    contents = (Object**) throwArray->contents;
+                    contents = (Object**)(void*)throwArray->contents;
                     for (ent = 0; ent < commonCount; ent++) {
                         contents[ent] = (Object*)
                             dvmPointerSetGetEntry(commonThrows, ent);
                     }
 
                     /* add it to the array of arrays */
-                    contents = (Object**) throwLists->contents;
+                    contents = (Object**)(void*)throwLists->contents;
                     contents[outCount] = (Object*) throwArray;
                     dvmReleaseTrackedAlloc((Object*) throwArray, NULL);
                 }
@@ -521,7 +529,7 @@ static int copyWithoutDuplicates(Method** allMethods, int allCount,
             if (exceptionArray != NULL) {
                 Object** contents;
 
-                contents = (Object**) throwLists->contents;
+                contents = (Object**)(void*)throwLists->contents;
                 contents[outCount] = (Object*) exceptionArray;
                 dvmReleaseTrackedAlloc((Object*) exceptionArray, NULL);
             }
@@ -559,18 +567,18 @@ static int copyWithoutDuplicates(Method** allMethods, int allCount,
  */
 static void reduceExceptionClassList(ArrayObject* exceptionArray)
 {
-    const ClassObject** classes = (const ClassObject**)exceptionArray->contents;
-    int len = exceptionArray->length;
-    int i, j;
+    const ClassObject** classes =
+        (const ClassObject**)(void*)exceptionArray->contents;
 
     /*
      * Consider all pairs of classes.  If one is the subclass of the other,
      * null out the subclass.
      */
-    for (i = 0; i < len-1; i++) {
+    size_t len = exceptionArray->length;
+    for (size_t i = 0; i < len - 1; i++) {
         if (classes[i] == NULL)
             continue;
-        for (j = i + 1; j < len; j++) {
+        for (size_t j = i + 1; j < len; j++) {
             if (classes[j] == NULL)
                 continue;
 
@@ -605,10 +613,9 @@ static bool createExceptionClassList(const Method* method, PointerSet** pThrows)
             goto bail;
 
         const ClassObject** contents;
-        int i;
 
-        contents = (const ClassObject**) exceptionArray->contents;
-        for (i = 0; i < (int) exceptionArray->length; i++) {
+        contents = (const ClassObject**)(void*)exceptionArray->contents;
+        for (size_t i = 0; i < exceptionArray->length; i++) {
             if (contents[i] != NULL)
                 dvmPointerSetAddEntry(*pThrows, contents[i]);
         }
@@ -648,20 +655,19 @@ static void updateExceptionClassList(const Method* method, PointerSet* throws)
     /* reduce list, nulling out redundant entries */
     reduceExceptionClassList(exceptionArray);
 
-    int mixLen = dvmPointerSetGetCount(throws);
+    size_t mixLen = dvmPointerSetGetCount(throws);
     const ClassObject* mixSet[mixLen];
 
-    int declLen = exceptionArray->length;
-    const ClassObject** declSet = (const ClassObject**)exceptionArray->contents;
-
-    int i, j;
+    size_t declLen = exceptionArray->length;
+    const ClassObject** declSet = (const ClassObject**)(void*)exceptionArray->contents;
 
     /* grab a local copy to work on */
-    for (i = 0; i < mixLen; i++) {
+    for (size_t i = 0; i < mixLen; i++) {
         mixSet[i] = (ClassObject*)dvmPointerSetGetEntry(throws, i);
     }
 
-    for (i = 0; i < mixLen; i++) {
+    for (size_t i = 0; i < mixLen; i++) {
+        size_t j;
         for (j = 0; j < declLen; j++) {
             if (declSet[j] == NULL)
                 continue;
@@ -687,7 +693,7 @@ static void updateExceptionClassList(const Method* method, PointerSet* throws)
 
     /* copy results back out; this eliminates duplicates as we go */
     dvmPointerSetClear(throws);
-    for (i = 0; i < mixLen; i++) {
+    for (size_t i = 0; i < mixLen; i++) {
         if (mixSet[i] != NULL)
             dvmPointerSetAddEntry(throws, mixSet[i]);
     }
@@ -785,28 +791,23 @@ static void createHandlerMethod(ClassObject* clazz, Method* dstMeth,
 static ArrayObject* boxMethodArgs(const Method* method, const u4* args)
 {
     const char* desc = &method->shorty[1]; // [0] is the return type.
-    ArrayObject* argArray = NULL;
-    int argCount;
-    Object** argObjects;
-    bool failed = true;
 
     /* count args */
-    argCount = dexProtoGetParameterCount(&method->prototype);
+    size_t argCount = dexProtoGetParameterCount(&method->prototype);
 
     /* allocate storage */
-    argArray = dvmAllocArray(gDvm.classJavaLangObjectArray, argCount,
-        kObjectArrayRefWidth, ALLOC_DEFAULT);
+    ArrayObject* argArray = dvmAllocArray(gDvm.classJavaLangObjectArray,
+        argCount, kObjectArrayRefWidth, ALLOC_DEFAULT);
     if (argArray == NULL)
-        goto bail;
-    argObjects = (Object**) argArray->contents;
+        return NULL;
+    Object** argObjects = (Object**)(void*)argArray->contents;
 
     /*
      * Fill in the array.
      */
 
-    int srcIndex = 0;
-
-    argCount = 0;
+    size_t srcIndex = 0;
+    size_t dstIndex = 0;
     while (*desc != '\0') {
         char descChar = *(desc++);
         JValue value;
@@ -819,35 +820,28 @@ static ArrayObject* boxMethodArgs(const Method* method, const u4* args)
         case 'S':
         case 'I':
             value.i = args[srcIndex++];
-            argObjects[argCount] = (Object*) dvmBoxPrimitive(value,
+            argObjects[dstIndex] = (Object*) dvmBoxPrimitive(value,
                 dvmFindPrimitiveClass(descChar));
             /* argObjects is tracked, don't need to hold this too */
-            dvmReleaseTrackedAlloc(argObjects[argCount], NULL);
-            argCount++;
+            dvmReleaseTrackedAlloc(argObjects[dstIndex], NULL);
+            dstIndex++;
             break;
         case 'D':
         case 'J':
             value.j = dvmGetArgLong(args, srcIndex);
             srcIndex += 2;
-            argObjects[argCount] = (Object*) dvmBoxPrimitive(value,
+            argObjects[dstIndex] = (Object*) dvmBoxPrimitive(value,
                 dvmFindPrimitiveClass(descChar));
-            dvmReleaseTrackedAlloc(argObjects[argCount], NULL);
-            argCount++;
+            dvmReleaseTrackedAlloc(argObjects[dstIndex], NULL);
+            dstIndex++;
             break;
         case '[':
         case 'L':
-            argObjects[argCount++] = (Object*) args[srcIndex++];
+            argObjects[dstIndex++] = (Object*) args[srcIndex++];
             break;
         }
     }
 
-    failed = false;
-
-bail:
-    if (failed) {
-        dvmReleaseTrackedAlloc((Object*)argArray, NULL);
-        argArray = NULL;
-    }
     return argArray;
 }
 
@@ -1003,38 +997,28 @@ bail:
  */
 static bool mustWrapException(const Method* method, const Object* throwable)
 {
-    const ArrayObject* throws;
-    const ArrayObject* methodThrows;
-    const Object** contents;
-    const ClassObject** classes;
-
     if (!dvmIsCheckedException(throwable))
         return false;
 
     const StaticField* sfield = &method->clazz->sfields[kThrowsField];
-    throws = (ArrayObject*) dvmGetStaticFieldObject(sfield);
+    const ArrayObject* throws = (ArrayObject*) dvmGetStaticFieldObject(sfield);
 
     int methodIndex = method - method->clazz->virtualMethods;
     assert(methodIndex >= 0 && methodIndex < method->clazz->virtualMethodCount);
 
-    contents = (const Object**) throws->contents;
-    methodThrows = (ArrayObject*) contents[methodIndex];
+    const Object** contents = (const Object**)(void*)throws->contents;
+    const ArrayObject* methodThrows = (ArrayObject*) contents[methodIndex];
 
     if (methodThrows == NULL) {
         /* no throws declared, must wrap all checked exceptions */
-        //printf("+++ methodThrows[%d] is null, wrapping all\n", methodIndex);
         return true;
     }
 
-    int throwCount = methodThrows->length;
-    classes = (const ClassObject**) methodThrows->contents;
-    int i;
+    size_t throwCount = methodThrows->length;
+    const ClassObject** classes =
+        (const ClassObject**)(void*)methodThrows->contents;
 
-    //printf("%s.%s list:\n", method->clazz->descriptor, method->name);
-    //for (i = 0; i < throwCount; i++)
-    //    printf(" %d: %s\n", i, classes[i]->descriptor);
-
-    for (i = 0; i < throwCount; i++) {
+    for (size_t i = 0; i < throwCount; i++) {
         if (dvmInstanceof(throwable->clazz, classes[i])) {
             /* this was declared, okay to throw */
             return false;

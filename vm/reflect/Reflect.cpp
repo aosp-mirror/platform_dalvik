@@ -208,10 +208,10 @@ Field* dvmSlotToField(ClassObject* clazz, int slot)
     if (slot < 0) {
         slot = -(slot+1);
         assert(slot < clazz->sfieldCount);
-        return (Field*) &clazz->sfields[slot];
+        return (Field*)(void*)&clazz->sfields[slot];
     } else {
         assert(slot < clazz->ifieldCount);
-        return (Field*) &clazz->ifields[slot];
+        return (Field*)(void*)&clazz->ifields[slot];
     }
 }
 
@@ -712,24 +712,17 @@ fail:
 static void createTargetDescriptor(ArrayObject* args,
     DexStringCache* targetDescriptorCache)
 {
-    size_t i;
-    ClassObject** argsArray = NULL;
-    size_t length;
-    char* at;
-    const char* descriptor;
-
-    argsArray = (ClassObject**) args->contents;
-
-    length = 1; /* +1 for the terminating '\0' */
-    for (i = 0; i < args->length; ++i) {
+    ClassObject** argsArray = (ClassObject**)(void*)args->contents;
+    size_t length = 1; /* +1 for the terminating '\0' */
+    for (size_t i = 0; i < args->length; ++i) {
         length += strlen(argsArray[i]->descriptor);
     }
 
     dexStringCacheAlloc(targetDescriptorCache, length);
 
-    at = (char*) targetDescriptorCache->value;
-    for (i = 0; i < args->length; ++i) {
-        descriptor = argsArray[i]->descriptor;
+    char* at = (char*) targetDescriptorCache->value;
+    for (size_t i = 0; i < args->length; ++i) {
+        const char* descriptor = argsArray[i]->descriptor;
         strcpy(at, descriptor);
         at += strlen(descriptor);
     }

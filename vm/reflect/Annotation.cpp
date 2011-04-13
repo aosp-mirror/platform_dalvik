@@ -126,7 +126,7 @@ static ArrayObject* emptyAnnoArrayArray(int numElements)
     arr = dvmAllocArrayByClass(gDvm.classJavaLangAnnotationAnnotationArrayArray,
             numElements, ALLOC_DEFAULT);
     if (arr != NULL) {
-        ArrayObject** elems = (ArrayObject**) arr->contents;
+        ArrayObject** elems = (ArrayObject**)(void*)arr->contents;
         for (i = 0; i < numElements; i++) {
             elems[i] = emptyAnnoArray();
             dvmReleaseTrackedAlloc((Object*)elems[i], self);
