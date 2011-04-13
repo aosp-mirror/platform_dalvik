@@ -31,6 +31,10 @@
 #ifndef _LIBDEX_CMDUTILS
 #define _LIBDEX_CMDUTILS
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* encode the result of unzipping to a file */
 typedef enum UnzipToFileResult {
     kUTFRSuccess = 0,
@@ -69,5 +73,9 @@ UnzipToFileResult dexOpenAndMap(const char* fileName, const char* tempFileName,
  */
 UnzipToFileResult dexUnzipToFile(const char* zipFileName,
     const char* outFileName, bool quiet);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /*_LIBDEX_CMDUTILS*/

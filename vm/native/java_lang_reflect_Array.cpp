@@ -87,7 +87,7 @@ static void Dalvik_java_lang_reflect_Array_createMultiArray(const u4* args,
     numDim = dimArray->length;
     assert(numDim > 0 && numDim <= 255);
 
-    dimensions = (int*) dimArray->contents;
+    dimensions = (int*)(void*)dimArray->contents;
     for (i = 0; i < numDim; i++) {
         if (dimensions[i] < 0) {
             dvmThrowNegativeArraySizeException(dimensions[i]);

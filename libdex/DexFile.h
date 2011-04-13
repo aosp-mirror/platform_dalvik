@@ -36,6 +36,10 @@
 #include "vm/Common.h"      // basic type defs, e.g. u1/u2/u4/u8, and LOG
 #include "libdex/SysUtil.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*
  * gcc-style inline management -- ensures we have a copy of all functions
  * in the library, so code that links against us will work whether or not
@@ -959,5 +963,9 @@ const char* dexGetBoxedTypeDescriptor(PrimitiveType type);
  * as a primitive type descriptor.
  */
 PrimitiveType dexGetPrimitiveTypeFromDescriptorChar(char descriptorChar);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /*_LIBDEX_DEXFILE*/

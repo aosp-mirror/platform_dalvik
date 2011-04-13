@@ -266,11 +266,10 @@ ClassObject* dvmGetCaller2Class(const void* curFrame);
 ClassObject* dvmGetCaller3Class(const void* curFrame);
 
 /*
- * Allocate and fill an array of method pointers representing the current
- * stack trace (element 0 is current frame).
+ * Fill an array of method pointers representing the current stack
+ * trace (element 0 is current frame).
  */
-bool dvmCreateStackTraceArray(const void* fp, const Method*** pArray,
-    int* pLength);
+void dvmFillStackTraceArray(const void* fp, const Method** array, size_t length);
 
 /*
  * Common handling for stack overflow.

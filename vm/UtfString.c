@@ -418,7 +418,7 @@ int dvmHashcmpStrings(const void* vstrObj1, const void* vstrObj2)
                   len1 * sizeof(u2));
 }
 
-ArrayObject* dvmCreateStringArray(char** strings, size_t count)
+ArrayObject* dvmCreateStringArray(const char** strings, size_t count)
 {
     Thread* self = dvmThreadSelf();
 

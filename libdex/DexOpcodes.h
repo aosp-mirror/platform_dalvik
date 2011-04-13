@@ -30,6 +30,10 @@
 
 #include "DexFile.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*
  * kMaxOpcodeValue: the highest possible raw (unpacked) opcode value
  *
@@ -1132,5 +1136,9 @@ DEX_INLINE Opcode dexOpcodeFromCodeUnit(u2 codeUnit) {
  * Return the name of an opcode.
  */
 const char* dexGetOpcodeName(Opcode op);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /*_LIBDEX_DEXOPCODES*/

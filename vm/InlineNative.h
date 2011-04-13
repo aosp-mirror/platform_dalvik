@@ -125,6 +125,75 @@ bool dvmPerformInlineOp4Dbg(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
  */
 Method* dvmResolveInlineNative(int opIndex);
 
+/*
+ * The actual inline native definitions.
+ */
+bool javaLangString_charAt(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
+                           JValue* pResult);
+
+bool javaLangString_compareTo(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
+                              JValue* pResult);
+
+bool javaLangString_equals(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
+                           JValue* pResult);
+
+bool javaLangString_length(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
+                           JValue* pResult);
+
+bool javaLangString_isEmpty(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
+                            JValue* pResult);
+
+bool javaLangString_fastIndexOf_II(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
+                                   JValue* pResult);
+
+bool javaLangMath_abs_int(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
+                          JValue* pResult);
+
+bool javaLangMath_abs_long(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
+                           JValue* pResult);
+
+bool javaLangMath_abs_float(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
+                            JValue* pResult);
+
+bool javaLangMath_abs_double(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
+                             JValue* pResult);
+
+bool javaLangMath_min_int(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
+                          JValue* pResult);
+
+bool javaLangMath_max_int(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
+                          JValue* pResult);
+
+bool javaLangMath_sqrt(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
+                       JValue* pResult);
+
+bool javaLangMath_cos(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
+                      JValue* pResult);
+
+bool javaLangMath_sin(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
+                      JValue* pResult);
+
+bool javaLangFloat_floatToIntBits(u4 arg0, u4 arg1, u4 arg2, u4 arg,
+                                  JValue* pResult);
+
+bool javaLangFloat_floatToRawIntBits(u4 arg0, u4 arg1, u4 arg2, u4 arg,
+                                     JValue* pResult);
+
+bool javaLangFloat_intBitsToFloat(u4 arg0, u4 arg1, u4 arg2, u4 arg,
+                                  JValue* pResult);
+
+bool javaLangDouble_doubleToLongBits(u4 arg0, u4 arg1, u4 arg2, u4 arg,
+                                     JValue* pResult);
+
+bool javaLangDouble_longBitsToDouble(u4 arg0, u4 arg1, u4 arg2, u4 arg,
+                                     JValue* pResult);
+
+bool javaLangDouble_doubleToRawLongBits(u4 arg0, u4 arg1, u4 arg2,
+                                        u4 arg, JValue* pResult);
+
+bool javaLangDouble_longBitsToDouble(u4 arg0, u4 arg1, u4 arg2, u4 arg,
+                                     JValue* pResult);
+
 #ifdef __cplusplus
 }
 #endif

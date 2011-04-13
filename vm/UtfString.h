@@ -67,7 +67,7 @@ u4 dvmComputeStringHash(const StringObject* strObj);
  *
  * Returns NULL and throws an exception on failure.
  */
-ArrayObject* dvmCreateStringArray(char** strings, size_t count);
+ArrayObject* dvmCreateStringArray(const char** strings, size_t count);
 
 /*
  * Create a java/lang/String from a C string.

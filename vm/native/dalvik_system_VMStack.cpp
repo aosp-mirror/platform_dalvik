@@ -18,8 +18,8 @@
  * dalvik.system.VMStack
  */
 #include "Dalvik.h"
+#include "UniquePtr.h"
 #include "native/InternalNativePriv.h"
-
 
 /*
  * public static ClassLoader getCallingClassLoader()
@@ -81,36 +81,23 @@ static void Dalvik_dalvik_system_VMStack_getClasses(const u4* args,
     JValue* pResult)
 {
     /* note "maxSize" is unsigned, so -1 turns into a very large value */
-    unsigned int maxSize = args[0];
-    unsigned int size = 0;
-    const unsigned int kSkip = 2;
-    const Method** methods = NULL;
-    int methodCount;
+    size_t maxSize = args[0];
+    size_t size = 0;
+    const size_t kSkip = 2;
 
     /*
      * Get an array with the stack trace in it.
      */
-    if (!dvmCreateStackTraceArray(dvmThreadSelf()->curFrame, &methods,
-            &methodCount))
-    {
-        LOGE("Failed to create stack trace array\n");
-        dvmThrowInternalError(NULL);
-        RETURN_VOID();
-    }
-
-    //int i;
-    //LOGI("dvmCreateStackTraceArray results:\n");
-    //for (i = 0; i < methodCount; i++) {
-    //    LOGI(" %2d: %s.%s\n",
-    //        i, methods[i]->clazz->descriptor, methods[i]->name);
-    //}
+    void *fp = dvmThreadSelf()->curFrame;
+    size_t depth = dvmComputeExactFrameDepth(fp);
+    UniquePtr<const Method*[]> methods(new const Method*[depth]);
+    dvmFillStackTraceArray(fp, methods.get(), depth);
 
     /*
      * Run through the array and count up how many elements there are.
      */
-    unsigned int idx;
-    for (idx = kSkip; (int) idx < methodCount && size < maxSize; idx++) {
-        const Method* meth = methods[idx];
+    for (size_t i = kSkip; i < depth && size < maxSize; ++i) {
+        const Method* meth = methods[i];
 
         if (dvmIsReflectionMethod(meth))
             continue;
@@ -122,37 +109,36 @@ static void Dalvik_dalvik_system_VMStack_getClasses(const u4* args,
      * Create an array object to hold the classes.
      * TODO: can use gDvm.classJavaLangClassArray here?
      */
-    ClassObject* classArrayClass = NULL;
-    ArrayObject* classes = NULL;
-    classArrayClass = dvmFindArrayClass("[Ljava/lang/Class;", NULL);
+    ClassObject* classArrayClass = dvmFindArrayClass("[Ljava/lang/Class;",
+                                                     NULL);
     if (classArrayClass == NULL) {
-        LOGW("Unable to find java.lang.Class array class\n");
-        goto bail;
+        LOGW("Unable to find java.lang.Class array class");
+        return;
     }
-    classes = dvmAllocArray(classArrayClass, size, kObjectArrayRefWidth,
-                ALLOC_DEFAULT);
+    ArrayObject* classes = dvmAllocArray(classArrayClass,
+                                         size,
+                                         kObjectArrayRefWidth,
+                                         ALLOC_DEFAULT);
     if (classes == NULL) {
-        LOGW("Unable to allocate class array (%d elems)\n", size);
-        goto bail;
+        LOGW("Unable to allocate class array of %zd elements", size);
+        return;
     }
 
     /*
      * Fill in the array.
      */
-    unsigned int objCount = 0;
-    for (idx = kSkip; (int) idx < methodCount; idx++) {
-        if (dvmIsReflectionMethod(methods[idx])) {
+    size_t objCount = 0;
+    for (size_t i = kSkip; i < depth; ++i) {
+        if (dvmIsReflectionMethod(methods[i])) {
             continue;
         }
-        dvmSetObjectArrayElement(classes, objCount,
-                                 (Object *)methods[idx]->clazz);
+        Object* klass = (Object *)methods[i]->clazz;
+        dvmSetObjectArrayElement(classes, objCount, klass);
         objCount++;
     }
     assert(objCount == classes->length);
 
-bail:
-    free(methods);
-    dvmReleaseTrackedAlloc((Object*) classes, NULL);
+    dvmReleaseTrackedAlloc((Object*)classes, NULL);
     RETURN_PTR(classes);
 }
 

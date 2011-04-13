@@ -168,7 +168,7 @@ static int setgroupsIntarray(ArrayObject* gidArray)
 
     /* just in case gid_t and u4 are different... */
     gids = (gid_t *)alloca(sizeof(gid_t) * gidArray->length);
-    contents = (s4 *)gidArray->contents;
+    contents = (s4 *)(void *)gidArray->contents;
 
     for (i = 0 ; i < gidArray->length ; i++) {
         gids[i] = (gid_t) contents[i];
@@ -196,11 +196,11 @@ static int setrlimitsFromArray(ArrayObject* rlimits)
 
     memset (&rlim, 0, sizeof(rlim));
 
-    ArrayObject** tuples = (ArrayObject **)(rlimits->contents);
+    ArrayObject** tuples = (ArrayObject **)(void *)rlimits->contents;
 
     for (i = 0; i < rlimits->length; i++) {
         ArrayObject * rlimit_tuple = tuples[i];
-        s4* contents = (s4 *)rlimit_tuple->contents;
+        s4* contents = (s4 *)(void *)rlimit_tuple->contents;
         int err;
 
         if (rlimit_tuple->length != 3) {

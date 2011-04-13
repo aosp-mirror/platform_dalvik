@@ -971,37 +971,24 @@ ClassObject* dvmGetCaller3Class(const void* curFrame)
 }
 
 /*
- * Create a flat array of methods that comprise the current interpreter
- * stack trace.  Pass in the current frame ptr.
- *
- * Allocates a new array and fills it with method pointers.  Break frames
- * are skipped, but reflection invocations are not.  The caller must free
- * "*pArray".
+ * Fill a flat array of methods that comprise the current interpreter
+ * stack trace.  Pass in the current frame ptr.  Break frames are
+ * skipped, but reflection invocations are not.
  *
  * The current frame will be in element 0.
- *
- * Returns "true" on success, "false" on failure (e.g. malloc failed).
  */
-bool dvmCreateStackTraceArray(const void* fp, const Method*** pArray,
-    int* pLength)
+void dvmFillStackTraceArray(const void* fp, const Method** array, size_t length)
 {
-    const Method** array;
-    int idx, depth;
-
-    depth = dvmComputeExactFrameDepth(fp);
-    array = (const Method**) malloc(depth * sizeof(Method*));
-    if (array == NULL)
-        return false;
-
-    for (idx = 0; fp != NULL; fp = SAVEAREA_FROM_FP(fp)->prevFrame) {
-        if (!dvmIsBreakFrame((u4*)fp))
-            array[idx++] = SAVEAREA_FROM_FP(fp)->method;
+    assert(fp != NULL);
+    assert(array != NULL);
+    size_t i = 0;
+    while (fp != NULL) {
+        if (!dvmIsBreakFrame((u4*)fp)) {
+            assert(i < length);
+            array[i++] = SAVEAREA_FROM_FP(fp)->method;
+        }
+        fp = SAVEAREA_FROM_FP(fp)->prevFrame;
     }
-    assert(idx == depth);
-
-    *pArray = array;
-    *pLength = depth;
-    return true;
 }
 
 /*

@@ -24,6 +24,10 @@
 #include "DexFile.h"
 #include "Leb128.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*
  * Catch handler entry, used while iterating over catch_handler_items.
  */
@@ -158,5 +162,9 @@ DEX_INLINE bool dexFindCatchHandler(DexCatchIterator *pIterator,
         return true;
     }
 }
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

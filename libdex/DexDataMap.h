@@ -23,6 +23,10 @@
 
 #include "DexFile.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct DexDataMap {
     u4 count;    /* number of items currently in the map */
     u4 max;      /* maximum number of items that may be held */
@@ -69,5 +73,9 @@ DEX_INLINE bool dexDataMapVerify0Ok(DexDataMap* map, u4 offset, u2 type) {
 
     return dexDataMapVerify(map, offset, type);
 }
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /*_LIBDEX_DEXDATAMAP*/

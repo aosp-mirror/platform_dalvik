@@ -148,35 +148,35 @@ LOCAL_SRC_FILES := \
 	jdwp/JdwpSocket.c \
 	mterp/Mterp.c.arm \
 	mterp/out/InterpC-portable.c.arm \
-	native/InternalNative.c \
-	native/dalvik_bytecode_OpcodeInfo.c \
-	native/dalvik_system_DexFile.c \
-	native/dalvik_system_VMDebug.c \
-	native/dalvik_system_VMRuntime.c \
-	native/dalvik_system_VMStack.c \
-	native/dalvik_system_Zygote.c \
-	native/java_lang_Class.c \
-	native/java_lang_Double.c \
-	native/java_lang_Float.c \
-	native/java_lang_Math.c \
-	native/java_lang_Object.c \
-	native/java_lang_Runtime.c \
-	native/java_lang_String.c \
-	native/java_lang_System.c \
-	native/java_lang_Throwable.c \
-	native/java_lang_VMClassLoader.c \
-	native/java_lang_VMThread.c \
-	native/java_lang_reflect_AccessibleObject.c \
-	native/java_lang_reflect_Array.c \
-	native/java_lang_reflect_Constructor.c \
-	native/java_lang_reflect_Field.c \
-	native/java_lang_reflect_Method.c \
-	native/java_lang_reflect_Proxy.c \
-	native/java_util_concurrent_atomic_AtomicLong.c \
-	native/org_apache_harmony_dalvik_NativeTestTarget.c \
-	native/org_apache_harmony_dalvik_ddmc_DdmServer.c \
-	native/org_apache_harmony_dalvik_ddmc_DdmVmInternal.c \
-	native/sun_misc_Unsafe.c \
+	native/InternalNative.cpp \
+	native/dalvik_bytecode_OpcodeInfo.cpp \
+	native/dalvik_system_DexFile.cpp \
+	native/dalvik_system_VMDebug.cpp \
+	native/dalvik_system_VMRuntime.cpp \
+	native/dalvik_system_VMStack.cpp \
+	native/dalvik_system_Zygote.cpp \
+	native/java_lang_Class.cpp \
+	native/java_lang_Double.cpp \
+	native/java_lang_Float.cpp \
+	native/java_lang_Math.cpp \
+	native/java_lang_Object.cpp \
+	native/java_lang_Runtime.cpp \
+	native/java_lang_String.cpp \
+	native/java_lang_System.cpp \
+	native/java_lang_Throwable.cpp \
+	native/java_lang_VMClassLoader.cpp \
+	native/java_lang_VMThread.cpp \
+	native/java_lang_reflect_AccessibleObject.cpp \
+	native/java_lang_reflect_Array.cpp \
+	native/java_lang_reflect_Constructor.cpp \
+	native/java_lang_reflect_Field.cpp \
+	native/java_lang_reflect_Method.cpp \
+	native/java_lang_reflect_Proxy.cpp \
+	native/java_util_concurrent_atomic_AtomicLong.cpp \
+	native/org_apache_harmony_dalvik_NativeTestTarget.cpp \
+	native/org_apache_harmony_dalvik_ddmc_DdmServer.cpp \
+	native/org_apache_harmony_dalvik_ddmc_DdmVmInternal.cpp \
+	native/sun_misc_Unsafe.cpp \
 	oo/AccessCheck.c \
 	oo/Array.c \
 	oo/Class.c \
@@ -224,8 +224,8 @@ LOCAL_C_INCLUDES += \
 	dalvik \
 	dalvik/vm \
 	external/zlib \
+	libcore/include \
 	$(KERNEL_HEADERS)
-
 
 ifeq ($(dvm_simulator),true)
   LOCAL_LDLIBS += -lpthread -ldl

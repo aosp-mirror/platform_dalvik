@@ -21,10 +21,8 @@
 #include "native/InternalNativePriv.h"
 #include "hprof/Hprof.h"
 
-#include <cutils/array.h>
 #include <string.h>
 #include <unistd.h>
-#include <errno.h>
 
 
 /*
@@ -51,29 +49,19 @@ static int getFileDescriptor(Object* obj)
  * static String[] getVmFeatureList()
  *
  * Return a set of strings describing available VM features (this is chiefly
- * of interest to DDMS).  Some features may be controlled by compile-time
- * or command-line flags.
+ * of interest to DDMS).
  */
 static void Dalvik_dalvik_system_VMDebug_getVmFeatureList(const u4* args,
     JValue* pResult)
 {
-    Array* features = arrayCreate();
-
-    /* VM responds to DDMS method profiling requests */
-    arrayAdd(features, "method-trace-profiling");
-    arrayAdd(features, "method-trace-profiling-streaming");
-    /* VM responds to DDMS heap dump requests */
-    arrayAdd(features, "hprof-heap-dump");
-    arrayAdd(features, "hprof-heap-dump-streaming");
-
-    char** strings = (char**) arrayUnwrap(features);
-    int count = arraySize(features);
-    ArrayObject* result = dvmCreateStringArray(strings, count);
+    const char* strings[] = { "method-trace-profiling",
+                              "method-trace-profiling-streaming",
+                              "hprof-heap-dump",
+                              "hprof-heap-dump-streaming" };
+    ArrayObject* result = dvmCreateStringArray(strings, NELEM(strings));
     dvmReleaseTrackedAlloc((Object*) result, dvmThreadSelf());
-    arrayFree(features);
     RETURN_PTR(result);
 }
-
 
 /* These must match the values in dalvik.system.VMDebug.
  */
@@ -416,7 +404,7 @@ static void Dalvik_dalvik_system_VMDebug_getInstructionCount(const u4* args,
     ArrayObject* countArray = (ArrayObject*) args[0];
 
     if (countArray != NULL) {
-        int* storage = (int*) countArray->contents;
+        int* storage = (int*)(void*)countArray->contents;
         u4 length = countArray->length;
 
         /*

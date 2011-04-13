@@ -51,7 +51,7 @@
 #endif
 
 #ifdef HAVE_MEMMOVE_WORDS
-extern void _memmove_words(void* dest, const void* src, size_t n);
+extern "C" void _memmove_words(void* dest, const void* src, size_t n);
 #define move16 _memmove_words
 #define move32 _memmove_words
 #else
@@ -252,8 +252,8 @@ static void Dalvik_java_lang_System_arraycopy(const u4* args, JValue* pResult)
             int copyCount;
             ClassObject*   clazz = NULL;
 
-            srcObj = ((Object**) srcArray->contents) + srcPos;
-            dstObj = ((Object**) dstArray->contents) + dstPos;
+            srcObj = ((Object**)(void*)srcArray->contents) + srcPos;
+            dstObj = ((Object**)(void*)dstArray->contents) + dstPos;
 
             if (length > 0 && srcObj[0] != NULL)
             {

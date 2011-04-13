@@ -19,6 +19,10 @@
 #ifndef _DALVIK_REFLECT_REFLECT
 #define _DALVIK_REFLECT_REFLECT
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*
  * During startup, validate the "box" classes, e.g. java/lang/Integer.
  */
@@ -259,5 +263,9 @@ bool dvmEncodedArrayIteratorHasNext(const EncodedArrayIterator* iterator);
  */
 bool dvmEncodedArrayIteratorGetNext(EncodedArrayIterator* iterator,
         AnnotationValue* value);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /*_DALVIK_REFLECT_REFLECT*/

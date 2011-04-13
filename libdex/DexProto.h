@@ -23,6 +23,10 @@
 
 #include "DexFile.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*
  * Single-thread single-string cache. This structure holds a pointer to
  * a string which is semi-automatically manipulated by some of the
@@ -226,6 +230,8 @@ u4 dexParameterIteratorNextIndex(DexParameterIterator* pIterator);
 const char* dexParameterIteratorNextDescriptor(
         DexParameterIterator* pIterator);
 
-
+#ifdef __cplusplus
+}
+#endif
 
 #endif /*_LIBDEX_DEXPROTO*/

@@ -23,6 +23,10 @@
 #include "DexFile.h"
 #include "DexOpcodes.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*
  * Possible instruction formats associated with Dalvik opcodes.
  *
@@ -197,5 +201,9 @@ DEX_INLINE InstructionIndexType dexGetIndexTypeFromOpcode(Opcode opcode)
  * Decode the instruction pointed to by "insns".
  */
 void dexDecodeInstruction(const u2* insns, DecodedInstruction* pDec);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /*_LIBDEX_INSTRUTILS*/

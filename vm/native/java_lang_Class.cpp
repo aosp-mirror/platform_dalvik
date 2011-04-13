@@ -192,7 +192,7 @@ static void Dalvik_java_lang_Class_getDeclaredClasses(const u4* args,
         }
     } else if (publicOnly) {
         u4 count, newIdx, publicCount = 0;
-        ClassObject** pSource = (ClassObject**) classes->contents;
+        ClassObject** pSource = (ClassObject**)(void*)classes->contents;
         u4 length = classes->length;
 
         /* count up public classes */

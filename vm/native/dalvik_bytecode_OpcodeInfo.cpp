@@ -31,7 +31,7 @@
 static void Dalvik_dalvik_bytecode_OpcodeInfo_isInvoke(const u4* args,
     JValue* pResult)
 {
-    jint opcode = (jint) args[0];
+    Opcode opcode = static_cast<Opcode>(args[0]);
     int flags = dexGetFlagsFromOpcode(opcode);
     bool result = (flags & kInstrInvoke) != 0;
     RETURN_BOOLEAN(result);

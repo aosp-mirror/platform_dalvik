@@ -23,6 +23,10 @@
 
 #include "DexFile.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*
  * Retrieve the next UTF-16 character from a UTF-8 string.
  *
@@ -127,5 +131,9 @@ bool dexIsClassDescriptor(const char* s);
  * is true if dexIsValidTypeDescriptor() returns true and the descriptor
  * is for anything but "void". */
 bool dexIsFieldDescriptor(const char* s);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* def _LIBDEX_DEXUTF */

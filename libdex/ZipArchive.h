@@ -23,6 +23,9 @@
 #include "SysUtil.h"
 #include "DexFile.h"            // need DEX_INLINE
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /*
  * Trivial typedef to ensure that ZipEntry is not treated as a simple
@@ -178,5 +181,9 @@ int dexZipExtractEntryToFile(const ZipArchive* pArchive,
  */
 u4 dexInitCrc32(void);
 u4 dexComputeCrc32(u4 crc, const void* buf, size_t len);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /*_LIBDEX_ZIPARCHIVE*/

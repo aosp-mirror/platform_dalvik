@@ -24,6 +24,10 @@
 #include "DexFile.h"
 #include "Leb128.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* expanded form of a class_data_item header */
 typedef struct DexClassDataHeader {
     u4 staticFieldsSize;
@@ -158,5 +162,9 @@ DEX_INLINE void dexReadClassDataMethod(const u1** pData, DexMethod* pMethod,
     pMethod->methodIdx = index;
     *lastIndex = index;
 }
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

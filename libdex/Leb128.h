@@ -23,6 +23,10 @@
 
 #include "DexFile.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*
  * Reads an unsigned LEB128 value, updating the given pointer to point
  * just past the end of the read value. This function tolerates
@@ -160,5 +164,9 @@ DEX_INLINE int unsignedLeb128Size(u4 data)
 
     return count;
 }
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
