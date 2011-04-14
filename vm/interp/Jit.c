@@ -111,6 +111,7 @@ void* dvmSelfVerificationSaveState(const u2* pc, u4* fp,
 
     self->interpSave.fp = (u4*)shadowSpace->shadowFP;
     self->interpStackEnd = (u1*)shadowSpace->registerSpace;
+    self->curFrame = self->interpSave.fp;
 
     // Create a copy of the stack
     memcpy(((char*)shadowSpace->shadowFP)-preBytes, ((char*)fp)-preBytes,
@@ -156,29 +157,6 @@ void* dvmSelfVerificationRestoreState(const u2* pc, u4* fp,
     // Special case when punting after a single instruction
     if (exitState == kSVSPunt && pc == shadowSpace->startPC) {
         shadowSpace->selfVerificationState = kSVSIdle;
-    } else if (exitState == kSVSBackwardBranch && pc < shadowSpace->startPC) {
-        /*
-         * Consider a trace with a backward branch:
-         *   1: ..
-         *   2: ..
-         *   3: ..
-         *   4: ..
-         *   5: Goto {1 or 2 or 3 or 4}
-         *
-         * If there instruction 5 goes to 1 and there is no single-step
-         * instruction in the loop, pc is equal to shadowSpace->startPC and
-         * we will honor the backward branch condition.
-         *
-         * If the single-step instruction is outside the loop, then after
-         * resuming in the trace the startPC will be less than pc so we will
-         * also honor the backward branch condition.
-         *
-         * If the single-step is inside the loop, we won't hit the same endPC
-         * twice when the interpreter is re-executing the trace so we want to
-         * cancel the backward branch condition. In this case it can be
-         * detected as the endPC (ie pc) will be less than startPC.
-         */
-        shadowSpace->selfVerificationState = kSVSNormal;
     } else {
         shadowSpace->selfVerificationState = exitState;
     }
@@ -186,6 +164,7 @@ void* dvmSelfVerificationRestoreState(const u2* pc, u4* fp,
     /* Restore state before returning */
     self->interpSave.pc = shadowSpace->startPC;
     self->interpSave.fp = shadowSpace->fp;
+    self->curFrame = self->interpSave.fp;
     self->interpSave.method = shadowSpace->method;
     self->interpSave.methodClassDex = shadowSpace->methodClassDex;
     self->retval = shadowSpace->retval;
@@ -303,16 +282,20 @@ void dvmCheckSelfVerification(const u2* pc, Thread* self)
     }
 
     /*
-     * Skip endPC once when trace has a backward branch. If the SV state is
-     * single step, keep it that way.
+     * Generalize the self verification state to kSVSDebugInterp unless the
+     * entry reason is kSVSBackwardBranch or kSVSSingleStep.
      */
-    if ((state == kSVSBackwardBranch && pc == shadowSpace->endPC) ||
-        (state != kSVSBackwardBranch && state != kSVSSingleStep)) {
+    if (state != kSVSBackwardBranch && state != kSVSSingleStep) {
         shadowSpace->selfVerificationState = kSVSDebugInterp;
     }
 
-    /* Check that the current pc is the end of the trace */
-    if ((state == kSVSDebugInterp || state == kSVSSingleStep) &&
+    /*
+     * Check that the current pc is the end of the trace when at least one
+     * instruction is interpreted.
+     */
+    if ((state == kSVSDebugInterp || state == kSVSSingleStep ||
+         state == kSVSBackwardBranch) &&
+        shadowSpace->traceLength != 0 &&
         pc == shadowSpace->endPC) {
 
         shadowSpace->selfVerificationState = kSVSIdle;
@@ -322,6 +305,11 @@ void dvmCheckSelfVerification(const u2* pc, Thread* self)
                          shadowSpace->registerSpaceSize*4 -
                          (int) shadowSpace->shadowFP;
         if (memcmp(shadowSpace->fp, shadowSpace->shadowFP, frameBytes)) {
+            if (state == kSVSBackwardBranch) {
+                /* State mismatch on backward branch - try one more iteration */
+                shadowSpace->selfVerificationState = kSVSDebugInterp;
+                goto log_and_continue;
+            }
             LOGD("~~~ DbgIntp(%d): REGISTERS DIVERGENCE!", self->threadId);
             selfVerificationDumpState(pc, self);
             selfVerificationDumpTrace(pc, self);
@@ -346,6 +334,14 @@ void dvmCheckSelfVerification(const u2* pc, Thread* self)
                               (int) self->curFrame - localRegs;
             if (memcmp(((char*)self->curFrame)+localRegs,
                 ((char*)shadowSpace->endShadowFP)+localRegs, frameBytes2)) {
+                if (state == kSVSBackwardBranch) {
+                    /*
+                     * State mismatch on backward branch - try one more
+                     * iteration.
+                     */
+                    shadowSpace->selfVerificationState = kSVSDebugInterp;
+                    goto log_and_continue;
+                }
                 LOGD("~~~ DbgIntp(%d): REGISTERS (FRAME2) DIVERGENCE!",
                     self->threadId);
                 selfVerificationDumpState(pc, self);
@@ -371,6 +367,14 @@ void dvmCheckSelfVerification(const u2* pc, Thread* self)
              heapSpacePtr != shadowSpace->heapSpaceTail; heapSpacePtr++) {
             int memData = *((unsigned int*) heapSpacePtr->addr);
             if (heapSpacePtr->data != memData) {
+                if (state == kSVSBackwardBranch) {
+                    /*
+                     * State mismatch on backward branch - try one more
+                     * iteration.
+                     */
+                    shadowSpace->selfVerificationState = kSVSDebugInterp;
+                    goto log_and_continue;
+                }
                 LOGD("~~~ DbgIntp(%d): MEMORY DIVERGENCE!", self->threadId);
                 LOGD("Addr: 0x%x Intrp Data: 0x%x Jit Data: 0x%x",
                     heapSpacePtr->addr, memData, heapSpacePtr->data);
@@ -403,16 +407,16 @@ void dvmCheckSelfVerification(const u2* pc, Thread* self)
                              false /* disable */);
         self->jitState = kJitDone;
         return;
-
+    }
+log_and_continue:
     /* If end not been reached, make sure max length not exceeded */
-    } else if (shadowSpace->traceLength >= JIT_MAX_TRACE_LEN) {
+    if (shadowSpace->traceLength >= JIT_MAX_TRACE_LEN) {
         LOGD("~~~ DbgIntp(%d): CONTROL DIVERGENCE!", self->threadId);
         LOGD("startPC: 0x%x endPC: 0x%x currPC: 0x%x",
             (int)shadowSpace->startPC, (int)shadowSpace->endPC, (int)pc);
         selfVerificationDumpState(pc, self);
         selfVerificationDumpTrace(pc, self);
         selfVerificationSpinLoop(shadowSpace);
-
         return;
     }
     /* Log the instruction address and decoded instruction for debug */
