@@ -21,112 +21,10 @@
 
 #include "Dalvik.h"
 
-void dvmForEachRequiredReference(ObjectReferenceCallback* callback) {
-    /*
-     * TODO: Check to see if this function is ever needed in practice
-     * (after letting it hang out in the codebase for a little while).
-     * Originally it looked like the GC might want it, but that was a
-     * mistaken impression.
-     */
-    callback((Object**) (void*) &gDvm.classArrayBoolean);
-    callback((Object**) (void*) &gDvm.classArrayByte);
-    callback((Object**) (void*) &gDvm.classArrayChar);
-    callback((Object**) (void*) &gDvm.classArrayDouble);
-    callback((Object**) (void*) &gDvm.classArrayFloat);
-    callback((Object**) (void*) &gDvm.classArrayInt);
-    callback((Object**) (void*) &gDvm.classArrayLong);
-    callback((Object**) (void*) &gDvm.classArrayShort);
-    callback((Object**) (void*) &gDvm.classJavaLangAnnotationAnnotationArray);
-    callback((Object**) (void*) &gDvm.classJavaLangAnnotationAnnotationArrayArray);
-    callback((Object**) (void*) &gDvm.classJavaLangClass);
-    callback((Object**) (void*) &gDvm.classJavaLangClassArray);
-    callback((Object**) (void*) &gDvm.classJavaLangClassLoader);
-    callback((Object**) (void*) &gDvm.classJavaLangObject);
-    callback((Object**) (void*) &gDvm.classJavaLangObjectArray);
-    callback((Object**) (void*) &gDvm.classJavaLangRefFinalizerReference);
-    callback((Object**) (void*) &gDvm.classJavaLangReflectAccessibleObject);
-    callback((Object**) (void*) &gDvm.classJavaLangReflectConstructor);
-    callback((Object**) (void*) &gDvm.classJavaLangReflectConstructorArray);
-    callback((Object**) (void*) &gDvm.classJavaLangReflectField);
-    callback((Object**) (void*) &gDvm.classJavaLangReflectFieldArray);
-    callback((Object**) (void*) &gDvm.classJavaLangReflectMethod);
-    callback((Object**) (void*) &gDvm.classJavaLangReflectMethodArray);
-    callback((Object**) (void*) &gDvm.classJavaLangReflectProxy);
-    callback((Object**) (void*) &gDvm.classJavaLangStackTraceElement);
-    callback((Object**) (void*) &gDvm.classJavaLangStackTraceElementArray);
-    callback((Object**) (void*) &gDvm.classJavaLangString);
-    callback((Object**) (void*) &gDvm.classJavaLangThread);
-    callback((Object**) (void*) &gDvm.classJavaLangThreadGroup);
-    callback((Object**) (void*) &gDvm.classJavaLangVMThread);
-    callback((Object**) (void*) &gDvm.classJavaNioReadWriteDirectByteBuffer);
-    callback((Object**) (void*) &gDvm.classOrgApacheHarmonyLangAnnotationAnnotationFactory);
-    callback((Object**) (void*) &gDvm.classOrgApacheHarmonyLangAnnotationAnnotationMember);
-    callback((Object**) (void*) &gDvm.classOrgApacheHarmonyLangAnnotationAnnotationMemberArray);
-    callback((Object**) (void*) &gDvm.classOrgApacheHarmonyDalvikDdmcChunk);
-    callback((Object**) (void*) &gDvm.classOrgApacheHarmonyDalvikDdmcDdmServer);
-    callback((Object**) (void*) &gDvm.exAbstractMethodError);
-    callback((Object**) (void*) &gDvm.exArithmeticException);
-    callback((Object**) (void*) &gDvm.exArrayIndexOutOfBoundsException);
-    callback((Object**) (void*) &gDvm.exArrayStoreException);
-    callback((Object**) (void*) &gDvm.exClassCastException);
-    callback((Object**) (void*) &gDvm.exClassCircularityError);
-    callback((Object**) (void*) &gDvm.exClassFormatError);
-    callback((Object**) (void*) &gDvm.exClassNotFoundException);
-    callback((Object**) (void*) &gDvm.exError);
-    callback((Object**) (void*) &gDvm.exExceptionInInitializerError);
-    callback((Object**) (void*) &gDvm.exFileNotFoundException);
-    callback((Object**) (void*) &gDvm.exIOException);
-    callback((Object**) (void*) &gDvm.exIllegalAccessError);
-    callback((Object**) (void*) &gDvm.exIllegalAccessException);
-    callback((Object**) (void*) &gDvm.exIllegalArgumentException);
-    callback((Object**) (void*) &gDvm.exIllegalMonitorStateException);
-    callback((Object**) (void*) &gDvm.exIllegalStateException);
-    callback((Object**) (void*) &gDvm.exIllegalThreadStateException);
-    callback((Object**) (void*) &gDvm.exIncompatibleClassChangeError);
-    callback((Object**) (void*) &gDvm.exInstantiationError);
-    callback((Object**) (void*) &gDvm.exInstantiationException);
-    callback((Object**) (void*) &gDvm.exInternalError);
-    callback((Object**) (void*) &gDvm.exInterruptedException);
-    callback((Object**) (void*) &gDvm.exLinkageError);
-    callback((Object**) (void*) &gDvm.exNegativeArraySizeException);
-    callback((Object**) (void*) &gDvm.exNoClassDefFoundError);
-    callback((Object**) (void*) &gDvm.exNoSuchFieldError);
-    callback((Object**) (void*) &gDvm.exNoSuchFieldException);
-    callback((Object**) (void*) &gDvm.exNoSuchMethodError);
-    callback((Object**) (void*) &gDvm.exNullPointerException);
-    callback((Object**) (void*) &gDvm.exOutOfMemoryError);
-    callback((Object**) (void*) &gDvm.exRuntimeException);
-    callback((Object**) (void*) &gDvm.exStackOverflowError);
-    callback((Object**) (void*) &gDvm.exStaleDexCacheError);
-    callback((Object**) (void*) &gDvm.exStringIndexOutOfBoundsException);
-    callback((Object**) (void*) &gDvm.exThrowable);
-    callback((Object**) (void*) &gDvm.exTypeNotPresentException);
-    callback((Object**) (void*) &gDvm.exUnsatisfiedLinkError);
-    callback((Object**) (void*) &gDvm.exUnsupportedOperationException);
-    callback((Object**) (void*) &gDvm.exVerifyError);
-    callback((Object**) (void*) &gDvm.exVirtualMachineError);
-    callback((Object**) (void*) &gDvm.typeBoolean);
-    callback((Object**) (void*) &gDvm.typeByte);
-    callback((Object**) (void*) &gDvm.typeChar);
-    callback((Object**) (void*) &gDvm.typeDouble);
-    callback((Object**) (void*) &gDvm.typeFloat);
-    callback((Object**) (void*) &gDvm.typeInt);
-    callback((Object**) (void*) &gDvm.typeLong);
-    callback((Object**) (void*) &gDvm.typeShort);
-    callback((Object**) (void*) &gDvm.typeVoid);
-}
-
 static bool initClassReference(ClassObject** pClass, const char* name) {
     ClassObject* result;
 
-    if (*pClass != NULL) {
-        /*
-         * There are a couple cases where it's legit to call this
-         * function with an already-initialized reference, so just
-         * silently tolerate this instead of complaining loudly.
-         */
-        return true;
-    }
+    assert(*pClass == NULL);
 
     if (name[0] == '[') {
         result = dvmFindArrayClass(name, NULL);
@@ -145,9 +43,12 @@ static bool initClassReference(ClassObject** pClass, const char* name) {
 
 static bool initClassReferences(void) {
     static struct { ClassObject** ref; const char* name; } classes[] = {
+        /*
+         * Note: The class Class gets special treatment during initial
+         * VM startup, so there is no need to list it here.
+         */
 
         /* The corest of the core classes */
-        { &gDvm.classJavaLangClass,  "Ljava/lang/Class;" },
         { &gDvm.classJavaLangObject, "Ljava/lang/Object;" },
         { &gDvm.exThrowable,         "Ljava/lang/Throwable;" },
 

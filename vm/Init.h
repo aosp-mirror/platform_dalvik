@@ -62,15 +62,6 @@ bool dvmFindRequiredClassesAndMembers(void);
  */
 bool dvmFindReferenceMembers(ClassObject* classReference);
 
-typedef void ObjectReferenceCallback(Object** pReference);
-
-/*
- * Perform a callback on each of the object references used directly
- * by the VM. The value passed into the callback is a pointer to where
- * the reference is stored.
- */
-void dvmForEachRequiredReference(ObjectReferenceCallback* callback);
-
 /*
  * Replacement for fprintf() when we want to send a message to the console.
  * This defaults to fprintf(), but will use the JNI fprintf callback if
