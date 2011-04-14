@@ -104,6 +104,8 @@ retry:
             return fd;
         }
         readOnly = true;
+    } else {
+        fchmod(fd, 0644);
     }
 
     /*
