@@ -20,6 +20,10 @@
 #ifndef _DALVIK_INTERP_INTERP
 #define _DALVIK_INTERP_INTERP
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*
  * Stash the dalvik PC in the frame.  Called  during interpretation.
  */
@@ -115,6 +119,10 @@ void dvmArmSafePointCallback(Thread* thread, SafePointCallback funct,
 #ifndef DVM_NO_ASM_INTERP
 extern void* dvmAsmInstructionStart[];
 extern void* dvmAsmAltInstructionStart[];
+#endif
+
+#ifdef __cplusplus
+}
 #endif
 
 #endif /*_DALVIK_INTERP_INTERP*/

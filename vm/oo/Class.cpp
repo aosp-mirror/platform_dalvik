@@ -1325,7 +1325,6 @@ static ClassObject* findClassFromLoaderNoInit(const char* descriptor,
     //        descriptor, loader);
 
     Thread* self = dvmThreadSelf();
-    ClassObject* clazz;
 
     assert(loader != NULL);
 
@@ -1339,7 +1338,7 @@ static ClassObject* findClassFromLoaderNoInit(const char* descriptor,
      * lookup-by-descriptor twice.  It appears this is still a win, so
      * I'm keeping it in.
      */
-    clazz = dvmLookupClass(descriptor, loader, false);
+    ClassObject* clazz = dvmLookupClass(descriptor, loader, false);
     if (clazz != NULL) {
         LOGVV("Already loaded: %s %p\n", descriptor, loader);
         return clazz;
@@ -1354,7 +1353,7 @@ static ClassObject* findClassFromLoaderNoInit(const char* descriptor,
     dotName = dvmDescriptorToDot(descriptor);
     if (dotName == NULL) {
         dvmThrowOutOfMemoryError(NULL);
-        goto bail;
+        return NULL;
     }
     nameObj = dvmCreateStringFromCstr(dotName);
     if (nameObj == NULL) {
@@ -1371,30 +1370,31 @@ static ClassObject* findClassFromLoaderNoInit(const char* descriptor,
      * the bootstrap class loader can find it before doing its own load.
      */
     LOGVV("--- Invoking loadClass(%s, %p)\n", dotName, loader);
-    const Method* loadClass =
-        loader->clazz->vtable[gDvm.voffJavaLangClassLoader_loadClass];
-    JValue result;
-    dvmCallMethod(self, loadClass, loader, &result, nameObj);
-    clazz = (ClassObject*) result.l;
+    {
+        const Method* loadClass =
+            loader->clazz->vtable[gDvm.voffJavaLangClassLoader_loadClass];
+        JValue result;
+        dvmCallMethod(self, loadClass, loader, &result, nameObj);
+        clazz = (ClassObject*) result.l;
 
-    dvmMethodTraceClassPrepEnd();
-
-    Object* excep = dvmGetException(self);
-    if (excep != NULL) {
+        dvmMethodTraceClassPrepEnd();
+        Object* excep = dvmGetException(self);
+        if (excep != NULL) {
 #if DVM_SHOW_EXCEPTION >= 2
-        LOGD("NOTE: loadClass '%s' %p threw exception %s\n",
-            dotName, loader, excep->clazz->descriptor);
+            LOGD("NOTE: loadClass '%s' %p threw exception %s\n",
+                 dotName, loader, excep->clazz->descriptor);
 #endif
-        dvmAddTrackedAlloc(excep, self);
-        dvmClearException(self);
-        dvmThrowChainedNoClassDefFoundError(descriptor, excep);
-        dvmReleaseTrackedAlloc(excep, self);
-        clazz = NULL;
-        goto bail;
-    } else if (clazz == NULL) {
-        LOGW("ClassLoader returned NULL w/o exception pending\n");
-        dvmThrowNullPointerException("ClassLoader returned null");
-        goto bail;
+            dvmAddTrackedAlloc(excep, self);
+            dvmClearException(self);
+            dvmThrowChainedNoClassDefFoundError(descriptor, excep);
+            dvmReleaseTrackedAlloc(excep, self);
+            clazz = NULL;
+            goto bail;
+        } else if (clazz == NULL) {
+            LOGW("ClassLoader returned NULL w/o exception pending\n");
+            dvmThrowNullPointerException("ClassLoader returned null");
+            goto bail;
+        }
     }
 
     /* not adding clazz to tracked-alloc list, because it's a ClassObject */
@@ -3023,17 +3023,19 @@ static bool createIftable(ClassObject* clazz)
     bool zapIftable = false;
     bool zapVtable = false;
     bool zapIfvipool = false;
-    int ifCount, superIfCount, idx;
-    int i;
+    int poolOffset = 0, poolSize = 0;
+    Method** mirandaList = NULL;
+    int mirandaCount = 0, mirandaAlloc = 0;
 
+    int superIfCount;
     if (clazz->super != NULL)
         superIfCount = clazz->super->iftableCount;
     else
         superIfCount = 0;
 
-    ifCount = superIfCount;
+    int ifCount = superIfCount;
     ifCount += clazz->interfaceCount;
-    for (i = 0; i < clazz->interfaceCount; i++)
+    for (int i = 0; i < clazz->interfaceCount; i++)
         ifCount += clazz->interfaces[i]->iftableCount;
 
     LOGVV("INTF: class '%s' direct w/supra=%d super=%d total=%d\n",
@@ -3042,8 +3044,7 @@ static bool createIftable(ClassObject* clazz)
     if (ifCount == 0) {
         assert(clazz->iftableCount == 0);
         assert(clazz->iftable == NULL);
-        result = true;
-        goto bail;
+        return true;
     }
 
     /*
@@ -3062,13 +3063,10 @@ static bool createIftable(ClassObject* clazz)
     /*
      * Create a flattened interface hierarchy of our immediate interfaces.
      */
-    idx = superIfCount;
+    int idx = superIfCount;
 
-    for (i = 0; i < clazz->interfaceCount; i++) {
-        ClassObject* interf;
-        int j;
-
-        interf = clazz->interfaces[i];
+    for (int i = 0; i < clazz->interfaceCount; i++) {
+        ClassObject* interf = clazz->interfaces[i];
         assert(interf != NULL);
 
         /* make sure this is still an interface class */
@@ -3084,7 +3082,7 @@ static bool createIftable(ClassObject* clazz)
         clazz->iftable[idx++].clazz = interf;
 
         /* add entries for the interface's superinterfaces */
-        for (j = 0; j < interf->iftableCount; j++) {
+        for (int j = 0; j < interf->iftableCount; j++) {
             clazz->iftable[idx++].clazz = interf->iftable[j].clazz;
         }
     }
@@ -3111,10 +3109,8 @@ static bool createIftable(ClassObject* clazz)
          * because it wants to return just the interfaces declared to be
          * implemented directly by the class.  I'm excluding this code for now.
          */
-        for (i = superIfCount; i < ifCount; i++) {
-            int j;
-
-            for (j = 0; j < ifCount; j++) {
+        for (int i = superIfCount; i < ifCount; i++) {
+            for (int j = 0; j < ifCount; j++) {
                 if (i == j)
                     continue;
                 if (clazz->iftable[i].clazz == clazz->iftable[j].clazz) {
@@ -3164,8 +3160,7 @@ static bool createIftable(ClassObject* clazz)
      * is flat for fast access in a class and all of its subclasses, but
      * "ifviPool" is only created for the topmost implementor.
      */
-    int poolSize = 0;
-    for (i = superIfCount; i < ifCount; i++) {
+    for (int i = superIfCount; i < ifCount; i++) {
         /*
          * Note it's valid for an interface to have no methods (e.g.
          * java/io/Serializable).
@@ -3191,11 +3186,7 @@ static bool createIftable(ClassObject* clazz)
      * Fill in the vtable offsets for the interfaces that weren't part of
      * our superclass.
      */
-    int poolOffset = 0;
-    Method** mirandaList = NULL;
-    int mirandaCount = 0, mirandaAlloc = 0;
-
-    for (i = superIfCount; i < ifCount; i++) {
+    for (int i = superIfCount; i < ifCount; i++) {
         ClassObject* interface;
         int methIdx;
 
@@ -3331,7 +3322,7 @@ static bool createIftable(ClassObject* clazz)
         Method* meth;
         int oldMethodCount, oldVtableCount;
 
-        for (i = 0; i < mirandaCount; i++) {
+        for (int i = 0; i < mirandaCount; i++) {
             LOGVV("MIRANDA %d: %s.%s\n", i,
                 mirandaList[i]->clazz->descriptor, mirandaList[i]->name);
         }
@@ -3381,7 +3372,7 @@ static bool createIftable(ClassObject* clazz)
             LOGVV("MIRANDA fixing vtable pointers\n");
             dvmLinearReadWrite(clazz->classLoader, clazz->vtable);
             Method* meth = newVirtualMethods;
-            for (i = 0; i < clazz->virtualMethodCount; i++, meth++)
+            for (int i = 0; i < clazz->virtualMethodCount; i++, meth++)
                 clazz->vtable[meth->methodIndex] = meth;
             dvmLinearReadOnly(clazz->classLoader, clazz->vtable);
         }
@@ -3417,7 +3408,7 @@ static bool createIftable(ClassObject* clazz)
          * dvmAbstractMethodStub().
          */
         meth = clazz->virtualMethods + oldMethodCount;
-        for (i = 0; i < mirandaCount; i++, meth++) {
+        for (int i = 0; i < mirandaCount; i++, meth++) {
             dvmLinearReadWrite(clazz->classLoader, clazz->virtualMethods);
             cloneMethod(meth, mirandaList[i]);
             meth->clazz = clazz;
@@ -4174,9 +4165,9 @@ static bool validateSuperDescriptors(const ClassObject* clazz)
  */
 bool dvmIsClassInitializing(const ClassObject* clazz)
 {
-    ClassStatus status;
-
-    status = android_atomic_acquire_load((ClassStatus*) &clazz->status);
+    const int32_t* addr = (const int32_t*)(const void*)&clazz->status;
+    int32_t value = android_atomic_acquire_load(addr);
+    ClassStatus status = static_cast<ClassStatus>(value);
     return (status == CLASS_INITIALIZING &&
             clazz->initThreadId == dvmThreadSelf()->threadId);
 }
@@ -4247,6 +4238,8 @@ bool dvmIsClassInitializing(const ClassObject* clazz)
  */
 bool dvmInitClass(ClassObject* clazz)
 {
+    u8 startWhen = 0;
+
 #if LOG_CLASS_LOADING
     bool initializedByUs = false;
 #endif
@@ -4412,7 +4405,6 @@ noverify:
         return false;
     }
 
-    u8 startWhen = 0;
     if (gDvm.allocProf.enabled) {
         startWhen = dvmGetRelativeTimeNsec();
     }
@@ -4455,7 +4447,8 @@ noverify:
 
     /* order matters here, esp. interaction with dvmIsClassInitializing */
     clazz->initThreadId = self->threadId;
-    android_atomic_release_store(CLASS_INITIALIZING, &clazz->status);
+    android_atomic_release_store(CLASS_INITIALIZING,
+                                 (int32_t*)(void*)&clazz->status);
     dvmUnlockObject(self, (Object*) clazz);
 
     /* init our superclass */

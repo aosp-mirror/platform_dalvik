@@ -177,12 +177,12 @@ LOCAL_SRC_FILES := \
 	native/org_apache_harmony_dalvik_ddmc_DdmServer.cpp \
 	native/org_apache_harmony_dalvik_ddmc_DdmVmInternal.cpp \
 	native/sun_misc_Unsafe.cpp \
-	oo/AccessCheck.c \
-	oo/Array.c \
-	oo/Class.c \
-	oo/Object.c \
-	oo/Resolve.c \
-	oo/TypeCheck.c \
+	oo/AccessCheck.cpp \
+	oo/Array.cpp \
+	oo/Class.cpp \
+	oo/Object.cpp \
+	oo/Resolve.cpp \
+	oo/TypeCheck.cpp \
 	reflect/Annotation.cpp \
 	reflect/Proxy.cpp \
 	reflect/Reflect.cpp \

@@ -20,6 +20,10 @@
 #ifndef _DALVIK_DEXVERIFY
 #define _DALVIK_DEXVERIFY
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*
  * Global verification mode.  These must be in order from least verification
  * to most.  If we're using "exact GC", we may need to perform some of
@@ -62,5 +66,9 @@ typedef struct {
     size_t  uninitSearches;     /* times we've had to search the uninit table */
     size_t  biggestAlloc;       /* largest RegisterLine table alloc */
 } VerifierStats;
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /*_DALVIK_DEXVERIFY*/
