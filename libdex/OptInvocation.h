@@ -32,7 +32,7 @@ char* dexOptGenerateCacheFileName(const char* fileName,
 int dexOptCreateEmptyHeader(int fd);
 
 #ifdef __cplusplus
-};
+}
 #endif
 
 #endif /*_LIBDEX_OPTINVOCATION*/

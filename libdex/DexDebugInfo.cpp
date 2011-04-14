@@ -129,34 +129,32 @@ static void emitLocalCbIfLive(void *cnxt, int reg, u4 endAddress,
     }
 }
 
-// TODO optimize localCb == NULL case
-void dexDecodeDebugInfo(
+static void invalidStream(const char* classDescriptor, const DexProto* proto) {
+    IF_LOGE() {
+        char* methodDescriptor = dexProtoCopyMethodDescriptor(proto);
+        LOGE("Invalid debug info stream. class %s; proto %s",
+                classDescriptor, methodDescriptor);
+        free(methodDescriptor);
+    }
+}
+
+static void dexDecodeDebugInfo0(
             const DexFile* pDexFile,
             const DexCode* pCode,
             const char* classDescriptor,
             u4 protoIdx,
             u4 accessFlags,
             DexDebugNewPositionCb posCb, DexDebugNewLocalCb localCb,
-            void* cnxt)
+            void* cnxt,
+            const u1* stream,
+            LocalInfo* localInReg)
 {
-    const u1 *stream = dexGetDebugInfoStream(pDexFile, pCode);
-    u4 line;
-    u4 parametersSize;
-    u4 address = 0;
-    LocalInfo localInReg[pCode->registersSize];
-    u4 insnsSize = pCode->insnsSize;
     DexProto proto = { pDexFile, protoIdx };
-
-    memset(localInReg, 0, sizeof(LocalInfo) * pCode->registersSize);
-
-    if (stream == NULL) {
-        goto end;
-    }
-
-    line = readUnsignedLeb128(&stream);
-    parametersSize = readUnsignedLeb128(&stream);
-
+    u4 insnsSize = pCode->insnsSize;
+    u4 line = readUnsignedLeb128(&stream);
+    u4 parametersSize = readUnsignedLeb128(&stream);
     u2 argReg = pCode->registersSize - pCode->insSize;
+    u4 address = 0;
 
     if ((accessFlags & ACC_STATIC) == 0) {
         /*
@@ -184,7 +182,8 @@ void dexDecodeDebugInfo(
         int reg;
 
         if ((argReg >= pCode->registersSize) || (descriptor == NULL)) {
-            goto invalid_stream;
+            invalidStream(classDescriptor, &proto);
+            return;
         }
 
         name = readStringIdx(pDexFile, &stream);
@@ -215,7 +214,7 @@ void dexDecodeDebugInfo(
 
         switch (opcode) {
             case DBG_END_SEQUENCE:
-                goto end;
+                return;
 
             case DBG_ADVANCE_PC:
                 address += readUnsignedLeb128(&stream);
@@ -228,10 +227,13 @@ void dexDecodeDebugInfo(
             case DBG_START_LOCAL:
             case DBG_START_LOCAL_EXTENDED:
                 reg = readUnsignedLeb128(&stream);
-                if (reg > pCode->registersSize) goto invalid_stream;
+                if (reg > pCode->registersSize) {
+                    invalidStream(classDescriptor, &proto);
+                    return;
+                }
 
                 // Emit what was previously there, if anything
-                emitLocalCbIfLive (cnxt, reg, address,
+                emitLocalCbIfLive(cnxt, reg, address,
                     localInReg, localCb);
 
                 localInReg[reg].name = readStringIdx(pDexFile, &stream);
@@ -248,7 +250,10 @@ void dexDecodeDebugInfo(
 
             case DBG_END_LOCAL:
                 reg = readUnsignedLeb128(&stream);
-                if (reg > pCode->registersSize) goto invalid_stream;
+                if (reg > pCode->registersSize) {
+                    invalidStream(classDescriptor, &proto);
+                    return;
+                }
 
                 emitLocalCbIfLive (cnxt, reg, address, localInReg, localCb);
                 localInReg[reg].live = false;
@@ -256,11 +261,15 @@ void dexDecodeDebugInfo(
 
             case DBG_RESTART_LOCAL:
                 reg = readUnsignedLeb128(&stream);
-                if (reg > pCode->registersSize) goto invalid_stream;
+                if (reg > pCode->registersSize) {
+                    invalidStream(classDescriptor, &proto);
+                    return;
+                }
 
                 if (localInReg[reg].name == NULL
                         || localInReg[reg].descriptor == NULL) {
-                    goto invalid_stream;
+                    invalidStream(classDescriptor, &proto);
+                    return;
                 }
 
                 /*
@@ -290,28 +299,36 @@ void dexDecodeDebugInfo(
 
                     if (done) {
                         // early exit
-                        goto end;
+                        return;
                     }
                 }
                 break;
             }
         }
     }
+}
 
-end:
-    {
-        int reg;
-        for (reg = 0; reg < pCode->registersSize; reg++) {
-            emitLocalCbIfLive (cnxt, reg, insnsSize, localInReg, localCb);
-        }
+// TODO optimize localCb == NULL case
+void dexDecodeDebugInfo(
+            const DexFile* pDexFile,
+            const DexCode* pCode,
+            const char* classDescriptor,
+            u4 protoIdx,
+            u4 accessFlags,
+            DexDebugNewPositionCb posCb, DexDebugNewLocalCb localCb,
+            void* cnxt)
+{
+    const u1* stream = dexGetDebugInfoStream(pDexFile, pCode);
+    LocalInfo localInReg[pCode->registersSize];
+
+    memset(localInReg, 0, sizeof(LocalInfo) * pCode->registersSize);
+
+    if (stream != NULL) {
+        dexDecodeDebugInfo0(pDexFile, pCode, classDescriptor, protoIdx, accessFlags,
+            posCb, localCb, cnxt, stream, localInReg);
     }
-    return;
 
-invalid_stream:
-    IF_LOGE() {
-        char* methodDescriptor = dexProtoCopyMethodDescriptor(&proto);
-        LOGE("Invalid debug info stream. class %s; proto %s",
-                classDescriptor, methodDescriptor);
-        free(methodDescriptor);
+    for (int reg = 0; reg < pCode->registersSize; reg++) {
+        emitLocalCbIfLive(cnxt, reg, pCode->insnsSize, localInReg, localCb);
     }
 }

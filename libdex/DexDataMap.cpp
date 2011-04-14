@@ -41,7 +41,7 @@ DexDataMap* dexDataMapAlloc(u4 maxCount) {
       return NULL;
     }
 
-    map = malloc(size);
+    map = (DexDataMap*) malloc(size);
 
     if (map == NULL) {
         return NULL;

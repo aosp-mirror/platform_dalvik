@@ -50,7 +50,7 @@ bool dexParseOptData(const u1* data, size_t length, DexFile* pDexFile)
 {
     const void* pOptStart = data + pDexFile->pOptHeader->optOffset;
     const void* pOptEnd = data + length;
-    const u4* pOpt = pOptStart;
+    const u4* pOpt = (const u4*) pOptStart;
     u4 optLength = (const u1*) pOptEnd - (const u1*) pOptStart;
 
     /*

@@ -14,14 +14,18 @@
  * limitations under the License.
  */
 
-#ifndef _LIBDEX_DEXDEBUGINFO
-#define _LIBDEX_DEXDEBUGINFO
-
 /*
  * Handling of method debug info in a .dex file.
  */
 
+#ifndef _LIBDEX_DEXDEBUGINFO
+#define _LIBDEX_DEXDEBUGINFO
+
 #include "DexFile.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /*
  * Callback for "new position table entry".
@@ -51,5 +55,9 @@ void dexDecodeDebugInfo(
             u4 accessFlags,
             DexDebugNewPositionCb posCb, DexDebugNewLocalCb localCb,
             void* cnxt);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* def _LIBDEX_DEXDEBUGINFO */

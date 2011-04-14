@@ -141,27 +141,16 @@ static u4 get4LE(unsigned char const* pSrc)
     return result;
 }
 
-/*
- * Find the zip Central Directory and memory-map it.
- *
- * On success, returns 0 after populating fields from the EOCD area:
- *   mDirectoryOffset
- *   mDirectoryMap
- *   mNumEntries
- */
-static int mapCentralDirectory(int fd, const char* debugFileName,
-    ZipArchive* pArchive)
+static int mapCentralDirectory0(int fd, const char* debugFileName,
+    ZipArchive* pArchive, u1* scanBuf)
 {
-    u1* scanBuf = NULL;
-    int result = -1;
-
     /*
      * Get and test file length.
      */
     off_t fileLength = lseek(fd, 0, SEEK_END);
     if (fileLength < kEOCDLen) {
         LOGV("Zip: length %ld is too small to be zip\n", (long) fileLength);
-        goto bail;
+        return -1;
     }
 
     /*
@@ -184,12 +173,12 @@ static int mapCentralDirectory(int fd, const char* debugFileName,
     scanBuf = (u1*) malloc(readAmount);
     if (lseek(fd, searchStart, SEEK_SET) != searchStart) {
         LOGW("Zip: seek %ld failed: %s\n", (long) searchStart, strerror(errno));
-        goto bail;
+        return -1;
     }
     ssize_t actual = TEMP_FAILURE_RETRY(read(fd, scanBuf, readAmount));
     if (actual != (ssize_t) readAmount) {
         LOGW("Zip: read %zd failed: %s\n", readAmount, strerror(errno));
-        goto bail;
+        return -1;
     }
 
     /*
@@ -207,7 +196,7 @@ static int mapCentralDirectory(int fd, const char* debugFileName,
     }
     if (i < 0) {
         LOGD("Zip: EOCD not found, %s is not zip\n", debugFileName);
-        goto bail;
+        return -1;
     }
 
     off_t eocdOffset = searchStart + i;
@@ -226,11 +215,11 @@ static int mapCentralDirectory(int fd, const char* debugFileName,
     if ((long long) dirOffset + (long long) dirSize > (long long) eocdOffset) {
         LOGW("Zip: bad offsets (dir %ld, size %u, eocd %ld)\n",
             (long) dirOffset, dirSize, (long) eocdOffset);
-        goto bail;
+        return -1;
     }
     if (numEntries == 0) {
         LOGW("Zip: empty archive?\n");
-        goto bail;
+        return -1;
     }
 
     LOGV("+++ numEntries=%d dirSize=%d dirOffset=%d\n",
@@ -244,15 +233,34 @@ static int mapCentralDirectory(int fd, const char* debugFileName,
             &pArchive->mDirectoryMap) != 0)
     {
         LOGW("Zip: cd map failed\n");
-        goto bail;
+        return -1;
     }
 
     pArchive->mNumEntries = numEntries;
     pArchive->mDirectoryOffset = dirOffset;
 
-    result = 0;
+    return 0;
+}
 
-bail:
+/*
+ * Find the zip Central Directory and memory-map it.
+ *
+ * On success, returns 0 after populating fields from the EOCD area:
+ *   mDirectoryOffset
+ *   mDirectoryMap
+ *   mNumEntries
+ */
+static int mapCentralDirectory(int fd, const char* debugFileName,
+    ZipArchive* pArchive)
+{
+    u1* scanBuf = (u1*) malloc(kMaxEOCDSearch);
+
+    if (scanBuf == NULL) {
+        return -1;
+    }
+
+    int result = mapCentralDirectory0(fd, debugFileName, pArchive, scanBuf);
+
     free(scanBuf);
     return result;
 }

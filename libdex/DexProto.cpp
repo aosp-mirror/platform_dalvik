@@ -45,7 +45,7 @@ void dexStringCacheAlloc(DexStringCache* pCache, size_t length) {
         pCache->value = pCache->buffer;
         pCache->allocatedSize = 0;
     } else {
-        pCache->value = malloc(length);
+        pCache->value = (char*) malloc(length);
         pCache->allocatedSize = length;
     }
 }
