@@ -131,8 +131,8 @@ static inline bool checkPtrRange(const CheckState* state,
  * Assumes "const CheckState* state".
  */
 #define CHECK_OFFSET_RANGE(_start, _end) {                                  \
-        const u1* _startPtr = filePointer(state, (_start));                 \
-        const u1* _endPtr = filePointer(state, (_end));                     \
+        const u1* _startPtr = (const u1*) filePointer(state, (_start));     \
+        const u1* _endPtr = (const u1*) filePointer(state, (_end));         \
         if (!checkPtrRange(state, _startPtr, _endPtr,                       \
                         #_start ".." #_end)) {                              \
             return 0;                                                       \
@@ -332,7 +332,7 @@ static bool checkHeaderSection(const CheckState* state, u4 sectionOffset,
         return false;
     }
 
-    const DexHeader* pHeader = filePointer(state, 0);
+    const DexHeader* pHeader = (const DexHeader*) filePointer(state, 0);
     *endOffset = pHeader->headerSize;
     return true;
 }
@@ -536,7 +536,7 @@ static bool checkMapSection(const CheckState* state, u4 sectionOffset,
         return false;
     }
 
-    const DexMapList* pMap = filePointer(state, sectionOffset);
+    const DexMapList* pMap = (const DexMapList*) filePointer(state, sectionOffset);
 
     *endOffset =
         sectionOffset + sizeof(u4) + (pMap->size * sizeof(DexMapItem));
@@ -545,7 +545,7 @@ static bool checkMapSection(const CheckState* state, u4 sectionOffset,
 
 /* Perform byte-swapping and intra-item verification on string_id_item. */
 static void* swapStringIdItem(const CheckState* state, void* ptr) {
-    DexStringId* item = ptr;
+    DexStringId* item = (DexStringId*) ptr;
 
     CHECK_PTR_RANGE(item, item + 1);
     SWAP_OFFSET4(item->stringDataOff);
@@ -555,14 +555,14 @@ static void* swapStringIdItem(const CheckState* state, void* ptr) {
 
 /* Perform cross-item verification of string_id_item. */
 static void* crossVerifyStringIdItem(const CheckState* state, void* ptr) {
-    const DexStringId* item = ptr;
+    const DexStringId* item = (const DexStringId*) ptr;
 
     if (!dexDataMapVerify(state->pDataMap,
                     item->stringDataOff, kDexTypeStringDataItem)) {
         return NULL;
     }
 
-    const DexStringId* item0 = state->previousItem;
+    const DexStringId* item0 = (const DexStringId*) state->previousItem;
     if (item0 != NULL) {
         // Check ordering.
         const char* s0 = dexGetStringData(state->pDexFile, item0);
@@ -578,7 +578,7 @@ static void* crossVerifyStringIdItem(const CheckState* state, void* ptr) {
 
 /* Perform byte-swapping and intra-item verification on type_id_item. */
 static void* swapTypeIdItem(const CheckState* state, void* ptr) {
-    DexTypeId* item = ptr;
+    DexTypeId* item = (DexTypeId*) ptr;
 
     CHECK_PTR_RANGE(item, item + 1);
     SWAP_INDEX4(item->descriptorIdx, state->pHeader->stringIdsSize);
@@ -588,7 +588,7 @@ static void* swapTypeIdItem(const CheckState* state, void* ptr) {
 
 /* Perform cross-item verification of type_id_item. */
 static void* crossVerifyTypeIdItem(const CheckState* state, void* ptr) {
-    const DexTypeId* item = ptr;
+    const DexTypeId* item = (const DexTypeId*) ptr;
     const char* descriptor =
         dexStringById(state->pDexFile, item->descriptorIdx);
 
@@ -597,7 +597,7 @@ static void* crossVerifyTypeIdItem(const CheckState* state, void* ptr) {
         return NULL;
     }
 
-    const DexTypeId* item0 = state->previousItem;
+    const DexTypeId* item0 = (const DexTypeId*) state->previousItem;
     if (item0 != NULL) {
         // Check ordering. This relies on string_ids being in order.
         if (item0->descriptorIdx >= item->descriptorIdx) {
@@ -612,7 +612,7 @@ static void* crossVerifyTypeIdItem(const CheckState* state, void* ptr) {
 
 /* Perform byte-swapping and intra-item verification on proto_id_item. */
 static void* swapProtoIdItem(const CheckState* state, void* ptr) {
-    DexProtoId* item = ptr;
+    DexProtoId* item = (DexProtoId*) ptr;
 
     CHECK_PTR_RANGE(item, item + 1);
     SWAP_INDEX4(item->shortyIdx, state->pHeader->stringIdsSize);
@@ -669,7 +669,7 @@ static bool shortyDescMatch(char shorty, const char* descriptor, bool
 
 /* Perform cross-item verification of proto_id_item. */
 static void* crossVerifyProtoIdItem(const CheckState* state, void* ptr) {
-    const DexProtoId* item = ptr;
+    const DexProtoId* item = (const DexProtoId*) ptr;
     const char* shorty =
         dexStringById(state->pDexFile, item->shortyIdx);
 
@@ -715,7 +715,7 @@ static void* crossVerifyProtoIdItem(const CheckState* state, void* ptr) {
         return NULL;
     }
 
-    const DexProtoId* item0 = state->previousItem;
+    const DexProtoId* item0 = (const DexProtoId*) state->previousItem;
     if (item0 != NULL) {
         // Check ordering. This relies on type_ids being in order.
         if (item0->returnTypeIdx > item->returnTypeIdx) {
@@ -762,7 +762,7 @@ static void* crossVerifyProtoIdItem(const CheckState* state, void* ptr) {
 
 /* Perform byte-swapping and intra-item verification on field_id_item. */
 static void* swapFieldIdItem(const CheckState* state, void* ptr) {
-    DexFieldId* item = ptr;
+    DexFieldId* item = (DexFieldId*) ptr;
 
     CHECK_PTR_RANGE(item, item + 1);
     SWAP_INDEX2(item->classIdx, state->pHeader->typeIdsSize);
@@ -774,7 +774,7 @@ static void* swapFieldIdItem(const CheckState* state, void* ptr) {
 
 /* Perform cross-item verification of field_id_item. */
 static void* crossVerifyFieldIdItem(const CheckState* state, void* ptr) {
-    const DexFieldId* item = ptr;
+    const DexFieldId* item = (const DexFieldId*) ptr;
     const char* s;
 
     s = dexStringByTypeIdx(state->pDexFile, item->classIdx);
@@ -795,7 +795,7 @@ static void* crossVerifyFieldIdItem(const CheckState* state, void* ptr) {
         return NULL;
     }
 
-    const DexFieldId* item0 = state->previousItem;
+    const DexFieldId* item0 = (const DexFieldId*) state->previousItem;
     if (item0 != NULL) {
         // Check ordering. This relies on the other sections being in order.
         bool done = false;
@@ -834,7 +834,7 @@ static void* crossVerifyFieldIdItem(const CheckState* state, void* ptr) {
 
 /* Perform byte-swapping and intra-item verification on method_id_item. */
 static void* swapMethodIdItem(const CheckState* state, void* ptr) {
-    DexMethodId* item = ptr;
+    DexMethodId* item = (DexMethodId*) ptr;
 
     CHECK_PTR_RANGE(item, item + 1);
     SWAP_INDEX2(item->classIdx, state->pHeader->typeIdsSize);
@@ -846,7 +846,7 @@ static void* swapMethodIdItem(const CheckState* state, void* ptr) {
 
 /* Perform cross-item verification of method_id_item. */
 static void* crossVerifyMethodIdItem(const CheckState* state, void* ptr) {
-    const DexMethodId* item = ptr;
+    const DexMethodId* item = (const DexMethodId*) ptr;
     const char* s;
 
     s = dexStringByTypeIdx(state->pDexFile, item->classIdx);
@@ -861,7 +861,7 @@ static void* crossVerifyMethodIdItem(const CheckState* state, void* ptr) {
         return NULL;
     }
 
-    const DexMethodId* item0 = state->previousItem;
+    const DexMethodId* item0 = (const DexMethodId*) state->previousItem;
     if (item0 != NULL) {
         // Check ordering. This relies on the other sections being in order.
         bool done = false;
@@ -900,7 +900,7 @@ static void* crossVerifyMethodIdItem(const CheckState* state, void* ptr) {
 
 /* Perform byte-swapping and intra-item verification on class_def_item. */
 static void* swapClassDefItem(const CheckState* state, void* ptr) {
-    DexClassDef* item = ptr;
+    DexClassDef* item = (DexClassDef*) ptr;
 
     CHECK_PTR_RANGE(item, item + 1);
     SWAP_INDEX4(item->classIdx, state->pHeader->typeIdsSize);
@@ -928,7 +928,7 @@ static bool verifyClassDataIsForDef(const CheckState* state, u4 offset,
         return true;
     }
 
-    const u1* data = filePointer(state, offset);
+    const u1* data = (const u1*) filePointer(state, offset);
     DexClassData* classData = dexReadAndVerifyClassData(&data, NULL);
 
     if (classData == NULL) {
@@ -957,7 +957,8 @@ static bool verifyAnnotationsDirectoryIsForDef(const CheckState* state,
         return true;
     }
 
-    const DexAnnotationsDirectoryItem* dir = filePointer(state, offset);
+    const DexAnnotationsDirectoryItem* dir =
+        (const DexAnnotationsDirectoryItem*) filePointer(state, offset);
     u4 annoDefiner = findFirstAnnotationsDirectoryDefiner(state, dir);
 
     return (annoDefiner == definerIdx) || (annoDefiner == kDexNoIndex);
@@ -965,7 +966,7 @@ static bool verifyAnnotationsDirectoryIsForDef(const CheckState* state,
 
 /* Perform cross-item verification of class_def_item. */
 static void* crossVerifyClassDefItem(const CheckState* state, void* ptr) {
-    const DexClassDef* item = ptr;
+    const DexClassDef* item = (const DexClassDef*) ptr;
     u4 classIdx = item->classIdx;
     const char* descriptor = dexStringByTypeIdx(state->pDexFile, classIdx);
 
@@ -1146,7 +1147,7 @@ static u1* swapParameterAnnotations(const CheckState* state, u4 count,
 /* Perform byte-swapping and intra-item verification on
  * annotations_directory_item. */
 static void* swapAnnotationsDirectoryItem(const CheckState* state, void* ptr) {
-    DexAnnotationsDirectoryItem* item = ptr;
+    DexAnnotationsDirectoryItem* item = (DexAnnotationsDirectoryItem*) ptr;
 
     CHECK_PTR_RANGE(item, item + 1);
     SWAP_OFFSET4(item->classAnnotationsOff);
@@ -1276,7 +1277,7 @@ static u4 findFirstAnnotationsDirectoryDefiner(const CheckState* state,
 /* Perform cross-item verification of annotations_directory_item. */
 static void* crossVerifyAnnotationsDirectoryItem(const CheckState* state,
         void* ptr) {
-    const DexAnnotationsDirectoryItem* item = ptr;
+    const DexAnnotationsDirectoryItem* item = (const DexAnnotationsDirectoryItem*) ptr;
     u4 definingClass = findFirstAnnotationsDirectoryDefiner(state, item);
 
     if (!dexDataMapVerify0Ok(state->pDataMap,
@@ -1316,7 +1317,7 @@ static void* crossVerifyAnnotationsDirectoryItem(const CheckState* state,
 /* Perform byte-swapping and intra-item verification on type_list. */
 static void* swapTypeList(const CheckState* state, void* ptr)
 {
-    DexTypeList* pTypeList = ptr;
+    DexTypeList* pTypeList = (DexTypeList*) ptr;
     DexTypeItem* pType;
     u4 count;
 
@@ -1337,7 +1338,7 @@ static void* swapTypeList(const CheckState* state, void* ptr)
 /* Perform byte-swapping and intra-item verification on
  * annotation_set_ref_list. */
 static void* swapAnnotationSetRefList(const CheckState* state, void* ptr) {
-    DexAnnotationSetRefList* list = ptr;
+    DexAnnotationSetRefList* list = (DexAnnotationSetRefList*) ptr;
     DexAnnotationSetRefItem* item;
     u4 count;
 
@@ -1358,7 +1359,7 @@ static void* swapAnnotationSetRefList(const CheckState* state, void* ptr) {
 /* Perform cross-item verification of annotation_set_ref_list. */
 static void* crossVerifyAnnotationSetRefList(const CheckState* state,
         void* ptr) {
-    const DexAnnotationSetRefList* list = ptr;
+    const DexAnnotationSetRefList* list = (const DexAnnotationSetRefList*) ptr;
     const DexAnnotationSetRefItem* item = list->list;
     int count = list->size;
 
@@ -1376,7 +1377,7 @@ static void* crossVerifyAnnotationSetRefList(const CheckState* state,
 /* Perform byte-swapping and intra-item verification on
  * annotation_set_item. */
 static void* swapAnnotationSetItem(const CheckState* state, void* ptr) {
-    DexAnnotationSetItem* set = ptr;
+    DexAnnotationSetItem* set = (DexAnnotationSetItem*) ptr;
     u4* item;
     u4 count;
 
@@ -1403,7 +1404,7 @@ static u4 annotationItemTypeIdx(const DexAnnotationItem* item) {
 
 /* Perform cross-item verification of annotation_set_item. */
 static void* crossVerifyAnnotationSetItem(const CheckState* state, void* ptr) {
-    const DexAnnotationSetItem* set = ptr;
+    const DexAnnotationSetItem* set = (const DexAnnotationSetItem*) ptr;
     int count = set->size;
     u4 lastIdx = 0;
     bool first = true;
@@ -1545,7 +1546,7 @@ static bool verifyClassDataItem0(const CheckState* state,
 
 /* Perform intra-item verification on class_data_item. */
 static void* intraVerifyClassDataItem(const CheckState* state, void* ptr) {
-    const u1* data = ptr;
+    const u1* data = (const u1*) ptr;
     DexClassData* classData = dexReadAndVerifyClassData(&data, state->fileEnd);
 
     if (classData == NULL) {
@@ -1598,7 +1599,7 @@ static u4 findFirstClassDataDefiner(const CheckState* state,
 
 /* Perform cross-item verification of class_data_item. */
 static void* crossVerifyClassDataItem(const CheckState* state, void* ptr) {
-    const u1* data = ptr;
+    const u1* data = (const u1*) ptr;
     DexClassData* classData = dexReadAndVerifyClassData(&data, state->fileEnd);
     u4 definingClass = findFirstClassDataDefiner(state, classData);
     bool okay = true;
@@ -1798,7 +1799,7 @@ static void* swapTriesAndCatches(const CheckState* state, DexCode* code) {
 
 /* Perform byte-swapping and intra-item verification on code_item. */
 static void* swapCodeItem(const CheckState* state, void* ptr) {
-    DexCode* item = ptr;
+    DexCode* item = (DexCode*) ptr;
     u2* insns;
     u4 count;
 
@@ -1858,7 +1859,7 @@ static void* swapCodeItem(const CheckState* state, void* ptr) {
 /* Perform intra-item verification on string_data_item. */
 static void* intraVerifyStringDataItem(const CheckState* state, void* ptr) {
     const u1* fileEnd = state->fileEnd;
-    const u1* data = ptr;
+    const u1* data = (const u1*) ptr;
     bool okay = true;
     u4 utf16Size = readAndVerifyUnsignedLeb128(&data, fileEnd, &okay);
     u4 i;
@@ -1959,7 +1960,7 @@ static void* intraVerifyStringDataItem(const CheckState* state, void* ptr) {
 /* Perform intra-item verification on debug_info_item. */
 static void* intraVerifyDebugInfoItem(const CheckState* state, void* ptr) {
     const u1* fileEnd = state->fileEnd;
-    const u1* data = ptr;
+    const u1* data = (const u1*) ptr;
     bool okay = true;
     u4 i;
 
@@ -2341,7 +2342,7 @@ static void* intraVerifyEncodedArrayItem(const CheckState* state, void* ptr) {
 
 /* Perform intra-item verification on annotation_item. */
 static void* intraVerifyAnnotationItem(const CheckState* state, void* ptr) {
-    const u1* data = ptr;
+    const u1* data = (const u1*) ptr;
 
     CHECK_PTR_RANGE(data, data + 1);
 
@@ -2362,7 +2363,7 @@ static void* intraVerifyAnnotationItem(const CheckState* state, void* ptr) {
 
 /* Perform cross-item verification on annotation_item. */
 static void* crossVerifyAnnotationItem(const CheckState* state, void* ptr) {
-    const u1* data = ptr;
+    const u1* data = (const u1*) ptr;
 
     // Skip the visibility byte.
     data++;
@@ -2393,10 +2394,10 @@ static bool iterateSectionWithOptionalUpdate(CheckState* state,
 
     for (i = 0; i < count; i++) {
         u4 newOffset = (offset + alignmentMask) & ~alignmentMask;
-        u1* ptr = filePointer(state, newOffset);
+        u1* ptr = (u1*) filePointer(state, newOffset);
 
         if (offset < newOffset) {
-            ptr = filePointer(state, offset);
+            ptr = (u1*) filePointer(state, offset);
             if (offset < newOffset) {
                 CHECK_OFFSET_RANGE(offset, newOffset);
                 while (offset < newOffset) {
@@ -2523,7 +2524,7 @@ static bool swapEverythingButHeaderAndMap(CheckState* state,
 
         if (lastOffset < sectionOffset) {
             CHECK_OFFSET_RANGE(lastOffset, sectionOffset);
-            const u1* ptr = filePointer(state, lastOffset);
+            const u1* ptr = (const u1*) filePointer(state, lastOffset);
             while (lastOffset < sectionOffset) {
                 if (*ptr != '\0') {
                     LOGE("Non-zero padding 0x%02x before section start @ %x\n",

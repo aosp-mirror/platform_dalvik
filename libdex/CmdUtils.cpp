@@ -197,7 +197,7 @@ UnzipToFileResult dexOpenAndMap(const char* fileName, const char* tempFileName,
      */
     sysChangeMapAccess(pMap->addr, pMap->length, true, pMap);
 
-    if (dexSwapAndVerifyIfNecessary(pMap->addr, pMap->length)) {
+    if (dexSwapAndVerifyIfNecessary((u1*) pMap->addr, pMap->length)) {
         fprintf(stderr, "ERROR: Failed structural verification of '%s'\n",
             fileName);
         goto bail;
@@ -213,7 +213,7 @@ UnzipToFileResult dexOpenAndMap(const char* fileName, const char* tempFileName,
     /*
      * Success!  Close the file and return with the start/length in pMap.
      */
-    result = 0;
+    result = kUTFRSuccess;
 
 bail:
     if (fd >= 0)

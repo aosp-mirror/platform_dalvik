@@ -106,7 +106,7 @@ DexClassData* dexReadAndVerifyClassData(const u1** pData, const u1* pLimit) {
     u4 lastIndex;
 
     if (*pData == NULL) {
-        DexClassData* result = malloc(sizeof(DexClassData));
+        DexClassData* result = (DexClassData*) malloc(sizeof(DexClassData));
         memset(result, 0, sizeof(*result));
         return result;
     }
@@ -121,7 +121,7 @@ DexClassData* dexReadAndVerifyClassData(const u1** pData, const u1* pLimit) {
         (header.directMethodsSize * sizeof(DexMethod)) +
         (header.virtualMethodsSize * sizeof(DexMethod));
 
-    DexClassData* result = malloc(resultSize);
+    DexClassData* result = (DexClassData*) malloc(resultSize);
     u1* ptr = ((u1*) result) + sizeof(DexClassData);
     bool okay = true;
     u4 i;
