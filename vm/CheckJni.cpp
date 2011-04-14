@@ -182,8 +182,21 @@ void dvmCheckCallJNIMethod_staticNoRef(const u4* args, JValue* pResult,
  * ===========================================================================
  */
 
-#define JNI_ENTER()     dvmChangeStatus(NULL, THREAD_RUNNING)
-#define JNI_EXIT()      dvmChangeStatus(NULL, THREAD_NATIVE)
+class ScopedJniThreadState {
+public:
+    explicit ScopedJniThreadState(JNIEnv* env) {
+        dvmChangeStatus(NULL, THREAD_RUNNING);
+    }
+
+    ~ScopedJniThreadState() {
+        dvmChangeStatus(NULL, THREAD_NATIVE);
+    }
+
+private:
+    // Disallow copy and assignment.
+    ScopedJniThreadState(const ScopedJniThreadState&);
+    void operator=(const ScopedJniThreadState&);
+};
 
 #define BASE_ENV(_env)  (((JNIEnvExt*)_env)->baseFuncTable)
 #define BASE_VM(_vm)    (((JavaVMExt*)_vm)->baseFuncTable)
@@ -449,7 +462,7 @@ static void checkFieldType(JNIEnv* env, jobject jobj, jfieldID fieldID,
     if ((field->signature[0] == 'L' || field->signature[0] == '[') &&
         jobj != NULL)
     {
-        JNI_ENTER();
+        ScopedJniThreadState ts(env);
         Object* obj = dvmDecodeIndirectRef(env, jobj);
         /*
          * If jobj is a weak global ref whose referent has been cleared,
@@ -474,7 +487,6 @@ static void checkFieldType(JNIEnv* env, jobject jobj, jfieldID fieldID,
                 printWarn = true;
             }
         }
-        JNI_EXIT();
     } else if (dexGetPrimitiveTypeFromDescriptorChar(field->signature[0]) != prim) {
         LOGW("JNI WARNING: set field '%s' expected type %s, got %s",
             field->name, field->signature, primitiveTypeToName(prim));
@@ -508,7 +520,7 @@ static void checkObject(JNIEnv* env, jobject jobj, const char* func)
     if (jobj == NULL)
         return;
 
-    JNI_ENTER();
+    ScopedJniThreadState ts(env);
 
     if (dvmGetJNIRefType(env, jobj) == JNIInvalidRefType) {
         LOGW("JNI WARNING: %p is not a valid JNI reference (type=%s)",
@@ -534,7 +546,6 @@ static void checkObject(JNIEnv* env, jobject jobj, const char* func)
         showLocation(func);
         abortMaybe();
     }
-    JNI_EXIT();
 }
 
 /*
@@ -554,26 +565,74 @@ static void checkInstance(JNIEnv* env, jobject jobj,
         return;
     }
 
-    JNI_ENTER();
+    ScopedJniThreadState ts(env);
     bool printWarn = false;
 
     Object* obj = dvmDecodeIndirectRef(env, jobj);
 
     if (!dvmIsValidObject(obj)) {
         LOGW("JNI WARNING: %s is invalid %s ref (%p)", argName,
-            dvmIndirectRefTypeName(jobj), jobj);
+                dvmIndirectRefTypeName(jobj), jobj);
         printWarn = true;
     } else if (obj->clazz != expectedClass) {
         LOGW("JNI WARNING: %s arg has wrong type (expected %s, got %s)",
-            argName, expectedClass->descriptor, obj->clazz->descriptor);
+                argName, expectedClass->descriptor, obj->clazz->descriptor);
         printWarn = true;
     }
-    JNI_EXIT();
 
     if (printWarn) {
         showLocation(func);
         abortMaybe();
     }
+}
+
+static u1 checkUtfBytes(const char* bytes, const char** errorKind) {
+    while (*bytes != '\0') {
+        u1 utf8 = *(bytes++);
+        // Switch on the high four bits.
+        switch (utf8 >> 4) {
+        case 0x00:
+        case 0x01:
+        case 0x02:
+        case 0x03:
+        case 0x04:
+        case 0x05:
+        case 0x06:
+        case 0x07:
+            // Bit pattern 0xxx. No need for any extra bytes.
+            break;
+        case 0x08:
+        case 0x09:
+        case 0x0a:
+        case 0x0b:
+        case 0x0f:
+            /*
+             * Bit pattern 10xx or 1111, which are illegal start bytes.
+             * Note: 1111 is valid for normal UTF-8, but not the
+             * modified UTF-8 used here.
+             */
+            *errorKind = "start";
+            return utf8;
+        case 0x0e:
+            // Bit pattern 1110, so there are two additional bytes.
+            utf8 = *(bytes++);
+            if ((utf8 & 0xc0) != 0x80) {
+                *errorKind = "continuation";
+                return utf8;
+            }
+            // Fall through to take care of the final byte.
+        case 0x0c:
+        case 0x0d:
+            // Bit pattern 110x, so there is one additional byte.
+            utf8 = *(bytes++);
+            if ((utf8 & 0xc0) != 0x80) {
+                *errorKind = "continuation";
+                return utf8;
+            }
+            break;
+        }
+    }
+    return 0;
 }
 
 /*
@@ -584,78 +643,24 @@ static void checkInstance(JNIEnv* env, jobject jobj,
 static void checkUtfString(JNIEnv* env, const char* bytes,
     const char* identifier, const char* func)
 {
-    const char* origBytes = bytes;
-
     if (bytes == NULL) {
         if (identifier != NULL) {
             LOGW("JNI WARNING: %s == NULL", identifier);
-            goto fail;
+            showLocation(func);
+            abortMaybe();
         }
 
         return;
     }
 
     const char* errorKind = NULL;
-    u1 utf8;
-    while (*bytes != '\0') {
-        utf8 = *(bytes++);
-        // Switch on the high four bits.
-        switch (utf8 >> 4) {
-            case 0x00:
-            case 0x01:
-            case 0x02:
-            case 0x03:
-            case 0x04:
-            case 0x05:
-            case 0x06:
-            case 0x07: {
-                // Bit pattern 0xxx. No need for any extra bytes.
-                break;
-            }
-            case 0x08:
-            case 0x09:
-            case 0x0a:
-            case 0x0b:
-            case 0x0f: {
-                /*
-                 * Bit pattern 10xx or 1111, which are illegal start bytes.
-                 * Note: 1111 is valid for normal UTF-8, but not the
-                 * modified UTF-8 used here.
-                 */
-                errorKind = "start";
-                goto fail_with_string;
-            }
-            case 0x0e: {
-                // Bit pattern 1110, so there are two additional bytes.
-                utf8 = *(bytes++);
-                if ((utf8 & 0xc0) != 0x80) {
-                    errorKind = "continuation";
-                    goto fail_with_string;
-                }
-                // Fall through to take care of the final byte.
-            }
-            case 0x0c:
-            case 0x0d: {
-                // Bit pattern 110x, so there is one additional byte.
-                utf8 = *(bytes++);
-                if ((utf8 & 0xc0) != 0x80) {
-                    errorKind = "continuation";
-                    goto fail_with_string;
-                }
-                break;
-            }
-        }
+    u1 utf8 = checkUtfBytes(bytes, &errorKind);
+    if (errorKind != NULL) {
+        LOGW("JNI WARNING: input is not valid UTF-8: illegal %s byte 0x%x", errorKind, utf8);
+        LOGW("             string: '%s'", bytes);
+        showLocation(func);
+        abortMaybe();
     }
-
-    return;
-
-fail_with_string:
-    LOGW("JNI WARNING: input is not valid UTF-8: illegal %s byte 0x%x",
-        errorKind, utf8);
-    LOGW("             string: '%s'", origBytes);
-fail:
-    showLocation(func);
-    abortMaybe();
 }
 
 /*
@@ -695,7 +700,7 @@ static void checkArray(JNIEnv* env, jarray jarr, const char* func)
         return;
     }
 
-    JNI_ENTER();
+    ScopedJniThreadState ts(env);
     bool printWarn = false;
 
     Object* obj = dvmDecodeIndirectRef(env, jarr);
@@ -709,8 +714,6 @@ static void checkArray(JNIEnv* env, jarray jarr, const char* func)
             obj->clazz->descriptor);
         printWarn = true;
     }
-
-    JNI_EXIT();
 
     if (printWarn) {
         showLocation(func);
@@ -792,21 +795,17 @@ static void checkSig(JNIEnv* env, jmethodID methodID, char expectedSigByte,
 static void checkStaticFieldID(JNIEnv* env, jclass jclazz, jfieldID fieldID,
     const char* func)
 {
-    JNI_ENTER();
+    ScopedJniThreadState ts(env);
     ClassObject* clazz = (ClassObject*) dvmDecodeIndirectRef(env, jclazz);
     StaticField* base = &clazz->sfields[0];
     int fieldCount = clazz->sfieldCount;
-
-    if ((StaticField*) fieldID < base ||
-        (StaticField*) fieldID >= base + fieldCount)
-    {
+    if ((StaticField*) fieldID < base || (StaticField*) fieldID >= base + fieldCount) {
         LOGW("JNI WARNING: static fieldID %p not valid for class %s",
             fieldID, clazz->descriptor);
         LOGW("             base=%p count=%d", base, fieldCount);
         showLocation(func);
         abortMaybe();
     }
-    JNI_EXIT();
 }
 
 /*
@@ -817,7 +816,7 @@ static void checkStaticFieldID(JNIEnv* env, jclass jclazz, jfieldID fieldID,
 static void checkInstanceFieldID(JNIEnv* env, jobject jobj, jfieldID fieldID,
     const char* func)
 {
-    JNI_ENTER();
+    ScopedJniThreadState ts(env);
 
     Object* obj = dvmDecodeIndirectRef(env, jobj);
     ClassObject* clazz = obj->clazz;
@@ -830,7 +829,7 @@ static void checkInstanceFieldID(JNIEnv* env, jobject jobj, jfieldID fieldID,
         if ((InstField*) fieldID >= clazz->ifields &&
             (InstField*) fieldID < clazz->ifields + clazz->ifieldCount)
         {
-            goto bail;
+            return;
         }
 
         clazz = clazz->super;
@@ -840,9 +839,6 @@ static void checkInstanceFieldID(JNIEnv* env, jobject jobj, jfieldID fieldID,
         fieldID, obj->clazz->descriptor);
     showLocation(func);
     abortMaybe();
-
-bail:
-    JNI_EXIT();
 }
 
 /*
@@ -855,7 +851,7 @@ bail:
 static void checkVirtualMethod(JNIEnv* env, jobject jobj, jmethodID methodID,
     const char* func)
 {
-    JNI_ENTER();
+    ScopedJniThreadState ts(env);
 
     Object* obj = dvmDecodeIndirectRef(env, jobj);
     const Method* meth = (const Method*) methodID;
@@ -866,8 +862,6 @@ static void checkVirtualMethod(JNIEnv* env, jobject jobj, jmethodID methodID,
         showLocation(func);
         abortMaybe();
     }
-
-    JNI_EXIT();
 }
 
 /*
@@ -882,7 +876,7 @@ static void checkVirtualMethod(JNIEnv* env, jobject jobj, jmethodID methodID,
 static void checkStaticMethod(JNIEnv* env, jclass jclazz, jmethodID methodID,
     const char* func)
 {
-    JNI_ENTER();
+    ScopedJniThreadState ts(env);
 
     ClassObject* clazz = (ClassObject*) dvmDecodeIndirectRef(env, jclazz);
     const Method* meth = (const Method*) methodID;
@@ -893,8 +887,6 @@ static void checkStaticMethod(JNIEnv* env, jclass jclazz, jmethodID methodID,
         showLocation(func);
         // no abort?
     }
-
-    JNI_EXIT();
 }
 
 
@@ -1115,18 +1107,15 @@ static int dvmPrimitiveTypeWidth(PrimitiveType primType)
 static void* createGuardedPACopy(JNIEnv* env, const jarray jarr,
     jboolean* isCopy)
 {
-    JNI_ENTER();
+    ScopedJniThreadState ts(env);
+
     ArrayObject* arrObj = (ArrayObject*) dvmDecodeIndirectRef(env, jarr);
     PrimitiveType primType = arrObj->obj.clazz->elementClass->primitiveType;
     int len = arrObj->length * dvmPrimitiveTypeWidth(primType);
-    void* result;
-
-    result = createGuardedCopy(arrObj->contents, len, true);
-
-    if (isCopy != NULL)
+    void* result = createGuardedCopy(arrObj->contents, len, true);
+    if (isCopy != NULL) {
         *isCopy = JNI_TRUE;
-
-    JNI_EXIT();
+    }
     return result;
 }
 
@@ -1137,7 +1126,7 @@ static void* createGuardedPACopy(JNIEnv* env, const jarray jarr,
 static void* releaseGuardedPACopy(JNIEnv* env, jarray jarr, void* dataBuf,
     int mode)
 {
-    JNI_ENTER();
+    ScopedJniThreadState ts(env);
     ArrayObject* arrObj = (ArrayObject*) dvmDecodeIndirectRef(env, jarr);
     bool release, copyBack;
     u1* result = NULL;
@@ -1145,7 +1134,7 @@ static void* releaseGuardedPACopy(JNIEnv* env, jarray jarr, void* dataBuf,
     if (!checkGuardedCopy(dataBuf, true)) {
         LOGE("JNI: failed guarded copy check in releaseGuardedPACopy");
         abortMaybe();
-        goto bail;
+        return NULL;
     }
 
     switch (mode) {
@@ -1163,7 +1152,7 @@ static void* releaseGuardedPACopy(JNIEnv* env, jarray jarr, void* dataBuf,
     default:
         LOGE("JNI: bad release mode %d", mode);
         dvmAbort();
-        goto bail;
+        return NULL;
     }
 
     if (copyBack) {
@@ -1179,9 +1168,6 @@ static void* releaseGuardedPACopy(JNIEnv* env, jarray jarr, void* dataBuf,
 
     /* pointer is to the array contents; back up to the array object */
     result -= offsetof(ArrayObject, contents);
-
-bail:
-    JNI_EXIT();
     return result;
 }
 
@@ -1689,15 +1675,15 @@ SET_TYPE_FIELD(jdouble, Double, PRIM_DOUBLE);
         CHECK_EXIT(env);                                                    \
         return _retok;                                                      \
     }
-CALL_VIRTUAL(jobject, Object, Object* result, result=(Object*), result, 'L');
-CALL_VIRTUAL(jboolean, Boolean, jboolean result, result=, result, 'Z');
-CALL_VIRTUAL(jbyte, Byte, jbyte result, result=, result, 'B');
-CALL_VIRTUAL(jchar, Char, jchar result, result=, result, 'C');
-CALL_VIRTUAL(jshort, Short, jshort result, result=, result, 'S');
-CALL_VIRTUAL(jint, Int, jint result, result=, result, 'I');
-CALL_VIRTUAL(jlong, Long, jlong result, result=, result, 'J');
-CALL_VIRTUAL(jfloat, Float, jfloat result, result=, result, 'F');
-CALL_VIRTUAL(jdouble, Double, jdouble result, result=, result, 'D');
+CALL_VIRTUAL(jobject, Object, Object* result, result=(Object*), (jobject) result, 'L');
+CALL_VIRTUAL(jboolean, Boolean, jboolean result, result=, (jboolean) result, 'Z');
+CALL_VIRTUAL(jbyte, Byte, jbyte result, result=, (jbyte) result, 'B');
+CALL_VIRTUAL(jchar, Char, jchar result, result=, (jchar) result, 'C');
+CALL_VIRTUAL(jshort, Short, jshort result, result=, (jshort) result, 'S');
+CALL_VIRTUAL(jint, Int, jint result, result=, (jint) result, 'I');
+CALL_VIRTUAL(jlong, Long, jlong result, result=, (jlong) result, 'J');
+CALL_VIRTUAL(jfloat, Float, jfloat result, result=, (jfloat) result, 'F');
+CALL_VIRTUAL(jdouble, Double, jdouble result, result=, (jdouble) result, 'D');
 CALL_VIRTUAL(void, Void, , , , 'V');
 
 #define CALL_NONVIRTUAL(_ctype, _jname, _retdecl, _retasgn, _retok,         \
@@ -1747,15 +1733,15 @@ CALL_VIRTUAL(void, Void, , , , 'V');
         CHECK_EXIT(env);                                                    \
         return _retok;                                                      \
     }
-CALL_NONVIRTUAL(jobject, Object, Object* result, result=(Object*), result, 'L');
-CALL_NONVIRTUAL(jboolean, Boolean, jboolean result, result=, result, 'Z');
-CALL_NONVIRTUAL(jbyte, Byte, jbyte result, result=, result, 'B');
-CALL_NONVIRTUAL(jchar, Char, jchar result, result=, result, 'C');
-CALL_NONVIRTUAL(jshort, Short, jshort result, result=, result, 'S');
-CALL_NONVIRTUAL(jint, Int, jint result, result=, result, 'I');
-CALL_NONVIRTUAL(jlong, Long, jlong result, result=, result, 'J');
-CALL_NONVIRTUAL(jfloat, Float, jfloat result, result=, result, 'F');
-CALL_NONVIRTUAL(jdouble, Double, jdouble result, result=, result, 'D');
+CALL_NONVIRTUAL(jobject, Object, Object* result, result=(Object*), (jobject) result, 'L');
+CALL_NONVIRTUAL(jboolean, Boolean, jboolean result, result=, (jboolean) result, 'Z');
+CALL_NONVIRTUAL(jbyte, Byte, jbyte result, result=, (jbyte) result, 'B');
+CALL_NONVIRTUAL(jchar, Char, jchar result, result=, (jchar) result, 'C');
+CALL_NONVIRTUAL(jshort, Short, jshort result, result=, (jshort) result, 'S');
+CALL_NONVIRTUAL(jint, Int, jint result, result=, (jint) result, 'I');
+CALL_NONVIRTUAL(jlong, Long, jlong result, result=, (jlong) result, 'J');
+CALL_NONVIRTUAL(jfloat, Float, jfloat result, result=, (jfloat) result, 'F');
+CALL_NONVIRTUAL(jdouble, Double, jdouble result, result=, (jdouble) result, 'D');
 CALL_NONVIRTUAL(void, Void, , , , 'V');
 
 
@@ -1802,15 +1788,15 @@ CALL_NONVIRTUAL(void, Void, , , , 'V');
         CHECK_EXIT(env);                                                    \
         return _retok;                                                      \
     }
-CALL_STATIC(jobject, Object, Object* result, result=(Object*), result, 'L');
-CALL_STATIC(jboolean, Boolean, jboolean result, result=, result, 'Z');
-CALL_STATIC(jbyte, Byte, jbyte result, result=, result, 'B');
-CALL_STATIC(jchar, Char, jchar result, result=, result, 'C');
-CALL_STATIC(jshort, Short, jshort result, result=, result, 'S');
-CALL_STATIC(jint, Int, jint result, result=, result, 'I');
-CALL_STATIC(jlong, Long, jlong result, result=, result, 'J');
-CALL_STATIC(jfloat, Float, jfloat result, result=, result, 'F');
-CALL_STATIC(jdouble, Double, jdouble result, result=, result, 'D');
+CALL_STATIC(jobject, Object, Object* result, result=(Object*), (jobject) result, 'L');
+CALL_STATIC(jboolean, Boolean, jboolean result, result=, (jboolean) result, 'Z');
+CALL_STATIC(jbyte, Byte, jbyte result, result=, (jbyte) result, 'B');
+CALL_STATIC(jchar, Char, jchar result, result=, (jchar) result, 'C');
+CALL_STATIC(jshort, Short, jshort result, result=, (jshort) result, 'S');
+CALL_STATIC(jint, Int, jint result, result=, (jint) result, 'I');
+CALL_STATIC(jlong, Long, jlong result, result=, (jlong) result, 'J');
+CALL_STATIC(jfloat, Float, jfloat result, result=, (jfloat) result, 'F');
+CALL_STATIC(jdouble, Double, jdouble result, result=, (jdouble) result, 'D');
 CALL_STATIC(void, Void, , , , 'V');
 
 static jstring Check_NewString(JNIEnv* env, const jchar* unicodeChars,
@@ -1841,13 +1827,13 @@ static const jchar* Check_GetStringChars(JNIEnv* env, jstring string,
     const jchar* result;
     result = BASE_ENV(env)->GetStringChars(env, string, isCopy);
     if (((JNIEnvExt*)env)->forceDataCopy && result != NULL) {
-        JNI_ENTER();
+        ScopedJniThreadState ts(env);
         StringObject* strObj = (StringObject*) dvmDecodeIndirectRef(env, string);
         int byteCount = dvmStringLen(strObj) * 2;
-        JNI_EXIT();
         result = (const jchar*) createGuardedCopy(result, byteCount, false);
-        if (isCopy != NULL)
+        if (isCopy != NULL) {
             *isCopy = JNI_TRUE;
+        }
     }
     CHECK_EXIT(env);
     return result;
@@ -2187,13 +2173,13 @@ static const jchar* Check_GetStringCritical(JNIEnv* env, jstring string,
     const jchar* result;
     result = BASE_ENV(env)->GetStringCritical(env, string, isCopy);
     if (((JNIEnvExt*)env)->forceDataCopy && result != NULL) {
-        JNI_ENTER();
+        ScopedJniThreadState ts(env);
         StringObject* strObj = (StringObject*) dvmDecodeIndirectRef(env, string);
         int byteCount = dvmStringLen(strObj) * 2;
-        JNI_EXIT();
         result = (const jchar*) createGuardedCopy(result, byteCount, false);
-        if (isCopy != NULL)
+        if (isCopy != NULL) {
             *isCopy = JNI_TRUE;
+        }
     }
     CHECK_EXIT(env);
     return result;

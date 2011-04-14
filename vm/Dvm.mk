@@ -89,7 +89,7 @@ LOCAL_SRC_FILES := \
 	Atomic.c.arm \
 	AtomicCache.c \
 	BitVector.c.arm \
-	CheckJni.c \
+	CheckJni.cpp \
 	Ddm.c \
 	Debugger.c \
 	DvmDex.c \
@@ -101,7 +101,7 @@ LOCAL_SRC_FILES := \
 	InlineNative.c.arm \
 	Inlines.c \
 	Intern.c \
-	Jni.c \
+	Jni.cpp \
 	JarFile.c \
 	LinearAlloc.c \
 	Misc.c \
