@@ -123,114 +123,13 @@ Weak-global reference tracking
 
 Local reference tracking
 
-The table of local references can be stored on the interpreted stack or
-in a parallel data structure (one per thread).
-
-*** Approach #1: use the interpreted stack
-
-The easiest place to tuck it is between the frame ptr and the first saved
-register, which is always in0.  (See the ASCII art in Stack.h.)  We can
-shift the "VM-specific goop" and frame ptr down, effectively inserting
-the JNI local refs in the space normally occupied by local variables.
-
-(Three things are accessed from the frame pointer:
- (1) framePtr[N] is register vN, used to get at "ins" and "locals".
- (2) framePtr - sizeof(StackSaveArea) is the VM frame goop.
- (3) framePtr - sizeof(StackSaveArea) - numOuts is where the "outs" go.
-The only thing that isn't determined by an offset from the current FP
-is the previous frame.  However, tucking things below the previous frame
-can be problematic because the "outs" of the previous frame overlap with
-the "ins" of the current frame.  If the "ins" are altered they must be
-restored before we return.  For a native method call, the easiest and
-safest thing to disrupt is #1, because there are no locals and the "ins"
-are all copied to the native stack.)
-
-We can implement Push/PopLocalFrame with the existing stack frame calls,
-making sure we copy some goop from the previous frame (notably the method
-ptr, so that dvmGetCurrentJNIMethod() doesn't require extra effort).
-
-We can pre-allocate the storage at the time the stack frame is first
-set up, but we have to be careful.  When calling from interpreted code
-the frame ptr points directly at the arguments we're passing, but we can
-offset the args pointer when calling the native bridge.
-
-To manage the local ref collection, we need to be able to find three
-things: (1) the start of the region, (2) the end of the region, and (3)
-the next available entry.  The last is only required for quick adds.
-We currently have two easily-accessible pointers, the current FP and the
-previous frame's FP.  (The "stack pointer" shown in the ASCII art doesn't
-actually exist in the interpreted world.)
-
-We can't use the current FP to find the first "in", because we want to
-insert the variable-sized local refs table between them.  It's awkward
-to use the previous frame's FP because native methods invoked via
-dvmCallMethod() or dvmInvokeMethod() don't have "ins", but native methods
-invoked from interpreted code do.  We can either track the local refs
-table size with a field in the stack frame, or insert unnecessary items
-so that all native stack frames have "ins".
-
-Assuming we can find the region bounds, we still need pointer #3
-for an efficient implementation.  This can be stored in an otherwise
-unused-for-native field in the frame goop.
-
-When we run out of room we have to make more space.  If we start allocating
-locals immediately below in0 and grow downward, we will detect end-of-space
-by running into the current frame's FP.  We then memmove() the goop down
-(memcpy if we guarantee the additional size is larger than the frame).
-This is nice because we only have to move sizeof(StackSaveArea) bytes
-each time.
-
-Stack walking should be okay so long as nothing tries to access the
-"ins" by an offset from the FP.  In theory the "ins" could be read by
-the debugger or SIGQUIT handler looking for "this" or other arguments,
-but in practice this behavior isn't expected to work for native methods,
-so we can simply disallow it.
-
-A conservative GC can just scan the entire stack from top to bottom to find
-all references.  An exact GC will need to understand the actual layout.
-
-*** Approach #2: use a parallel stack
-
-Each Thread/JNIEnv points to a reference table.  The struct has
-a system-heap-allocated array of references and a pointer to the
-next-available entry ("nextEntry").
-
-Each stack frame has a pointer to what it sees as the "bottom" element
-in the array (we can double-up the "currentPc" field).  This is set to
-"nextEntry" when the frame is pushed on.  As local references are added
-or removed, "nextEntry" is updated.
+Each Thread/JNIEnv points to an IndirectRefTable.
 
 We implement Push/PopLocalFrame with actual stack frames.  Before a JNI
 frame gets popped, we set "nextEntry" to the "top" pointer of the current
 frame, effectively releasing the references.
 
-The GC will scan all references from the start of the table to the
-"nextEntry" pointer.
-
-*** Comparison
-
-All approaches will return a failure result when they run out of local
-reference space.  For #1 that means blowing out the stack, for #2 it's
-running out of room in the array.
-
-Compared to #1, approach #2:
- - Needs only one pointer in the stack frame goop.
- - Makes pre-allocating storage unnecessary.
- - Doesn't contend with interpreted stack depth for space.  In most
-   cases, if something blows out the local ref storage, it's because the
-   JNI code was misbehaving rather than called from way down.
- - Allows the GC to do a linear scan per thread in a buffer that is 100%
-   references.  The GC can be slightly less smart when scanning the stack.
- - Will be easier to work with if we combine native and interpeted stacks.
-
- - Isn't as clean, especially when popping frames, since we have to do
-   explicit work.  Fortunately we only have to do it when popping native
-   method calls off, so it doesn't add overhead to interpreted code paths.
- - Is awkward to expand dynamically.  We'll want to pre-allocate the full
-   amount of space; this is fine, since something on the order of 1KB should
-   be plenty.  The JNI spec allows us to limit this.
- - Requires the GC to scan even more memory.  With the references embedded
-   in the stack we get better locality of reference.
+The GC will scan all references in the table.
 
 */
 
@@ -292,10 +191,6 @@ static const struct JNINativeInterface gNativeInterface;
 #define kPinTableMaxSize            1024
 #define kPinComplainThreshold       10
 
-/*
- * Allocate the global references table, and look up some classes for
- * the benefit of direct buffer access.
- */
 bool dvmJniStartup(void)
 {
     if (!dvmInitIndirectRefTable(&gDvm.jniGlobalRefTable,
@@ -323,9 +218,6 @@ bool dvmJniStartup(void)
     return true;
 }
 
-/*
- * Free the global references table.
- */
 void dvmJniShutdown(void)
 {
     dvmClearIndirectRefTable(&gDvm.jniGlobalRefTable);

@@ -16,7 +16,7 @@
 
 /*
  * Maintain a table of references.  Used for internal local references,
- * JNI locals, JNI globals, and GC heap references.
+ * JNI monitor references, and JNI pinned array references.
  *
  * None of the table functions are synchronized.
  */

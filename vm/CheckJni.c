@@ -21,15 +21,8 @@
  * ensure that JNI's semantic expectations are being met.  JNI seems to
  * be relatively lax when it comes to requirements for permission checks,
  * e.g. access to private methods is generally allowed from anywhere.
- *
- * TODO: keep a counter on global Get/Release.  Report a warning if some Gets
- * were not Released.  Do not count explicit Add/DeleteGlobalRef calls (or
- * count them separately, so we can complain if they exceed a certain
- * threshold).
- *
- * TODO: verify that the methodID passed into the Call functions is for
- * a method in the specified class.
  */
+
 #include "Dalvik.h"
 #include "JniInternal.h"
 
