@@ -72,11 +72,15 @@ public final class ConcreteMethod implements Method {
      * @param keepLocals whether to keep the local variable
      * information (if any)
      */
-    public ConcreteMethod(Method method, ClassFile cf, boolean keepLines,
-                          boolean keepLocals) {
+    public ConcreteMethod(Method method, ClassFile cf, boolean keepLines, boolean keepLocals) {
+        this(method, cf.getAccessFlags(), cf.getSourceFile(), keepLines, keepLocals);
+    }
+
+    public ConcreteMethod(Method method, int accessFlags, CstUtf8 sourceFile,
+            boolean keepLines, boolean keepLocals) {
         this.method = method;
-        this.accSuper = (cf.getAccessFlags() & AccessFlags.ACC_SUPER) != 0;
-        this.sourceFile = cf.getSourceFile();
+        this.accSuper = (accessFlags & AccessFlags.ACC_SUPER) != 0;
+        this.sourceFile = sourceFile;
 
         AttributeList attribs = method.getAttributes();
         this.attCode = (AttCode) attribs.findFirst(AttCode.ATTRIBUTE_NAME);
