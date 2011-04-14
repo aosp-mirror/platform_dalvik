@@ -24,6 +24,10 @@
 #ifndef _DALVIK_INTERP_STATE
 #define _DALVIK_INTERP_STATE
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*
  * Execution mode, e.g. interpreter vs. JIT.
  */
@@ -241,6 +245,10 @@ typedef struct {
     u4 unused:31;
 } JitTraceRun;
 
+#endif
+
+#ifdef __cplusplus
+}
 #endif
 
 #endif /*_DALVIK_INTERP_STATE*/

@@ -520,7 +520,7 @@ static ClassObject* createArrayClass(const char* descriptor, Object* loader)
 bool dvmCopyObjectArray(ArrayObject* dstArray, const ArrayObject* srcArray,
     ClassObject* dstElemClass)
 {
-    Object** src = (Object**)srcArray->contents;
+    Object** src = (Object**)(void*)srcArray->contents;
     u4 length, count;
 
     assert(srcArray->length == dstArray->length);
@@ -549,7 +549,7 @@ bool dvmCopyObjectArray(ArrayObject* dstArray, const ArrayObject* srcArray,
 bool dvmUnboxObjectArray(ArrayObject* dstArray, const ArrayObject* srcArray,
     ClassObject* dstElemClass)
 {
-    Object** src = (Object**)srcArray->contents;
+    Object** src = (Object**)(void*)srcArray->contents;
     void* dst = (void*)dstArray->contents;
     u4 count = dstArray->length;
     PrimitiveType typeIndex = dstElemClass->primitiveType;

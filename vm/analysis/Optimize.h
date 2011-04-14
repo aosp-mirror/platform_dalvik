@@ -20,6 +20,10 @@
 #ifndef _DALVIK_OPTIMIZE
 #define _DALVIK_OPTIMIZE
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*
  * Entry point from DEX preparation.
  */
@@ -43,5 +47,9 @@ InstField* dvmOptResolveInstField(ClassObject* referrer, u4 ifieldIdx,
     VerifyError* pFailure);
 StaticField* dvmOptResolveStaticField(ClassObject* referrer, u4 sfieldIdx,
     VerifyError* pFailure);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /*_DALVIK_OPTIMIZE*/

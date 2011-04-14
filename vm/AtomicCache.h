@@ -19,6 +19,10 @@
 #ifndef _DALVIK_ATOMICCACHE
 #define _DALVIK_ATOMICCACHE
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*
  * If set to "1", gather some stats on our caching success rate.
  */
@@ -169,5 +173,9 @@ void dvmUpdateAtomicCache(u4 key1, u4 key2, u4 value, AtomicCacheEntry* pEntry,
  * Debugging.
  */
 void dvmDumpAtomicCacheStats(const AtomicCache* pCache);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /*_DALVIK_ATOMICCACHE*/

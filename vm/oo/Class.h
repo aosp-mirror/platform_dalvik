@@ -39,14 +39,16 @@ extern "C" {
  * Ordering is significant.  (Currently only ".dex" is supported directly
  * by the VM.)
  */
+typedef enum {
+    kCpeUnknown = 0,
+    kCpeDir,
+    kCpeJar,
+    kCpeDex,
+    kCpeLastEntry       /* used as sentinel at end of array */
+} ClassPathEntryKind;
+
 typedef struct ClassPathEntry {
-    enum {
-        kCpeUnknown = 0,
-        kCpeDir,
-        kCpeJar,
-        kCpeDex,
-        kCpeLastEntry       /* used as sentinel at end of array */
-    }       kind;
+    ClassPathEntryKind kind;
     char*   fileName;
     void*   ptr;            /* JarFile* or DexFile* */
 } ClassPathEntry;
