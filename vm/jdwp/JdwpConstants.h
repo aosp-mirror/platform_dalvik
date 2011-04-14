@@ -19,6 +19,10 @@
 #ifndef _DALVIK_JDWP_JDWPCONSTANTS
 #define _DALVIK_JDWP_JDWPCONSTANTS
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*
  * Error constants.
  */
@@ -226,5 +230,9 @@ enum JdwpType {
     JT_CLASS_LOADER          = 'l',
     JT_CLASS_OBJECT          = 'c',
 };
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /*_DALVIK_JDWP_JDWPCONSTANTS*/

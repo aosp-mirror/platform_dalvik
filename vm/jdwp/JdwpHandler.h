@@ -22,6 +22,10 @@
 #include "Common.h"
 #include "ExpandBuf.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*
  * JDWP message header for a request.
  */
@@ -43,5 +47,9 @@ void dvmJdwpProcessRequest(JdwpState* state, const JdwpReqHeader* pHeader,
 
 /* helper function */
 void dvmJdwpAddLocation(ExpandBuf* pReply, const JdwpLocation* pLoc);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /*_DALVIK_JDWP_JDWPHANDLER*/

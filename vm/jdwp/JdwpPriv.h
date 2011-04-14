@@ -28,6 +28,10 @@
 #include <pthread.h>
 #include <sys/uio.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*
  * JDWP constants.
  */
@@ -175,5 +179,9 @@ INLINE bool dvmJdwpSendBufferedRequest(JdwpState* state,
 {
     return (*state->transport->sendBufferedRequest)(state, iov, iovcnt);
 }
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /*_DALVIK_JDWP_JDWPPRIV*/

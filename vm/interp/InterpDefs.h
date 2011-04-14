@@ -24,6 +24,10 @@
 #ifndef _DALVIK_INTERP_DEFS
 #define _DALVIK_INTERP_DEFS
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #if defined(WITH_JIT)
 /*
  * Size of save area for callee-save FP regs, which are not automatically
@@ -103,6 +107,10 @@ static inline bool dvmJitHideTranslation()
            (gDvmJit.pProfTable == NULL);
 }
 
+#endif
+
+#ifdef __cplusplus
+}
 #endif
 
 #endif /*_DALVIK_INTERP_DEFS*/

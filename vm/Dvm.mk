@@ -139,13 +139,13 @@ LOCAL_SRC_FILES := \
 	hprof/HprofString.cpp \
 	interp/Interp.c.arm \
 	interp/Stack.c \
-	jdwp/ExpandBuf.c \
-	jdwp/JdwpAdb.c \
-	jdwp/JdwpConstants.c \
-	jdwp/JdwpEvent.c \
-	jdwp/JdwpHandler.c \
-	jdwp/JdwpMain.c \
-	jdwp/JdwpSocket.c \
+	jdwp/ExpandBuf.cpp \
+	jdwp/JdwpAdb.cpp \
+	jdwp/JdwpConstants.cpp \
+	jdwp/JdwpEvent.cpp \
+	jdwp/JdwpHandler.cpp \
+	jdwp/JdwpMain.cpp \
+	jdwp/JdwpSocket.cpp \
 	mterp/Mterp.c.arm \
 	mterp/out/InterpC-portable.c.arm \
 	native/InternalNative.cpp \

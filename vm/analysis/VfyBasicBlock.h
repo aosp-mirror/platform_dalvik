@@ -23,6 +23,10 @@
 
 #include "PointerSet.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 struct VerifierData;
 
 
@@ -57,5 +61,9 @@ bool dvmComputeVfyBasicBlocks(struct VerifierData* vdata);
  * Free storage allocated by dvmComputeVfyBasicBlocks.
  */
 void dvmFreeVfyBasicBlocks(struct VerifierData* vdata);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /*_DALVIK_VFYBASICBLOCK*/

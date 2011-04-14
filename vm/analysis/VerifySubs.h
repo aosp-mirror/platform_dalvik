@@ -20,6 +20,10 @@
 #ifndef _DALVIK_VERIFYSUBS
 #define _DALVIK_VERIFYSUBS
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*
  * InsnFlags is a 32-bit integer with the following layout:
  *   0-15  instruction length (or 0 if this address doesn't hold an opcode)
@@ -70,5 +74,9 @@ char dvmDetermineCat1Const(s4 value);
 
 /* debugging */
 bool dvmWantVerboseVerification(const Method* meth);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /*_DALVIK_VERIFYSUBS*/

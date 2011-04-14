@@ -22,6 +22,10 @@
 #include "JdwpConstants.h"
 #include "ExpandBuf.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*
  * Event modifiers.  A JdwpEvent may have zero or more of these.
  */
@@ -125,5 +129,9 @@ void dvmJdwpUnregisterAll(JdwpState* state);
  * (Messages are sent asynchronously, and do not receive a reply.)
  */
 bool dvmJdwpSendRequest(JdwpState* state, ExpandBuf* pReq);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /*_DALVIK_JDWP_JDWPEVENT*/

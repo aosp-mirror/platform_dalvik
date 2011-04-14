@@ -26,6 +26,10 @@
 #include "interp/Jit.h"
 #endif
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*
  * Call this during initialization to verify that the values in asm-constants.h
  * are still correct.
@@ -44,5 +48,9 @@ bool dvmCheckAsmConstants(void);
  */
 bool dvmMterpStdRun(Thread* self);
 void dvmMterpStdBail(Thread* self, bool changeInterp);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /*_DALVIK_MTERP_MTERP*/

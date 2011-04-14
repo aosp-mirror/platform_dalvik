@@ -118,10 +118,8 @@ typedef struct ModBasket {
  */
 u4 dvmJdwpNextRequestSerial(JdwpState* state)
 {
-    u4 result;
-
     dvmDbgLockMutex(&state->serialLock);
-    result = state->requestSerial++;
+    u4 result = state->requestSerial++;
     dvmDbgUnlockMutex(&state->serialLock);
 
     return result;
@@ -133,10 +131,8 @@ u4 dvmJdwpNextRequestSerial(JdwpState* state)
  */
 u4 dvmJdwpNextEventSerial(JdwpState* state)
 {
-    u4 result;
-
     dvmDbgLockMutex(&state->serialLock);
-    result = state->eventSerial++;
+    u4 result = state->eventSerial++;
     dvmDbgUnlockMutex(&state->serialLock);
 
     return result;
@@ -172,10 +168,10 @@ static void dumpEvent(const JdwpEvent* pEvent)
         dvmJdwpSuspendPolicyStr(pEvent->suspendPolicy),
         pEvent->modCount);
 
-    int i;
-    for (i = 0; i < pEvent->modCount; i++) {
+    for (int i = 0; i < pEvent->modCount; i++) {
         const JdwpEventMod* pMod = &pEvent->mods[i];
-        LOGI("  %s\n", dvmJdwpModKindStr(pMod->modKind));
+        JdwpModKind kind = static_cast<JdwpModKind>(pMod->modKind);
+        LOGI("  %s\n", dvmJdwpModKindStr(kind));
         /* TODO - show details */
     }
 }
@@ -189,9 +185,6 @@ static void dumpEvent(const JdwpEvent* pEvent)
  */
 JdwpError dvmJdwpRegisterEvent(JdwpState* state, JdwpEvent* pEvent)
 {
-    JdwpError err = ERR_NONE;
-    int i;
-
     lockEventMutex(state);
 
     assert(state != NULL);
@@ -203,15 +196,16 @@ JdwpError dvmJdwpRegisterEvent(JdwpState* state, JdwpEvent* pEvent)
      * If one or more "break"-type mods are used, register them with
      * the interpreter.
      */
-    for (i = 0; i < pEvent->modCount; i++) {
+    for (int i = 0; i < pEvent->modCount; i++) {
         const JdwpEventMod* pMod = &pEvent->mods[i];
         if (pMod->modKind == MK_LOCATION_ONLY) {
             /* should only be for Breakpoint, Step, and Exception */
             dvmDbgWatchLocation(&pMod->locationOnly.loc);
         } else if (pMod->modKind == MK_STEP) {
             /* should only be for EK_SINGLE_STEP; should only be one */
-            dvmDbgConfigureStep(pMod->step.threadId, pMod->step.size,
-                pMod->step.depth);
+            JdwpStepSize size = static_cast<JdwpStepSize>(pMod->step.size);
+            JdwpStepDepth depth = static_cast<JdwpStepDepth>(pMod->step.depth);
+            dvmDbgConfigureStep(pMod->step.threadId, size, depth);
         } else if (pMod->modKind == MK_FIELD_ONLY) {
             /* should be for EK_FIELD_ACCESS or EK_FIELD_MODIFICATION */
             dumpEvent(pEvent);  /* TODO - need for field watches */
@@ -230,7 +224,7 @@ JdwpError dvmJdwpRegisterEvent(JdwpState* state, JdwpEvent* pEvent)
 
     unlockEventMutex(state);
 
-    return err;
+    return ERR_NONE;
 }
 
 /*
@@ -243,8 +237,6 @@ JdwpError dvmJdwpRegisterEvent(JdwpState* state, JdwpEvent* pEvent)
  */
 static void unregisterEvent(JdwpState* state, JdwpEvent* pEvent)
 {
-    int i;
-
     if (pEvent->prev == NULL) {
         /* head of the list */
         assert(state->eventList == pEvent);
@@ -263,7 +255,7 @@ static void unregisterEvent(JdwpState* state, JdwpEvent* pEvent)
     /*
      * Unhook us from the interpreter, if necessary.
      */
-    for (i = 0; i < pEvent->modCount; i++) {
+    for (int i = 0; i < pEvent->modCount; i++) {
         JdwpEventMod* pMod = &pEvent->mods[i];
         if (pMod->modKind == MK_LOCATION_ONLY) {
             /* should only be for Breakpoint, Step, and Exception */
@@ -288,11 +280,9 @@ static void unregisterEvent(JdwpState* state, JdwpEvent* pEvent)
  */
 void dvmJdwpUnregisterEventById(JdwpState* state, u4 requestId)
 {
-    JdwpEvent* pEvent;
-
     lockEventMutex(state);
 
-    pEvent = state->eventList;
+    JdwpEvent* pEvent = state->eventList;
     while (pEvent != NULL) {
         if (pEvent->requestId == requestId) {
             unregisterEvent(state, pEvent);
@@ -314,14 +304,11 @@ done:
  */
 void dvmJdwpUnregisterAll(JdwpState* state)
 {
-    JdwpEvent* pEvent;
-    JdwpEvent* pNextEvent;
-
     lockEventMutex(state);
 
-    pEvent = state->eventList;
+    JdwpEvent* pEvent = state->eventList;
     while (pEvent != NULL) {
-        pNextEvent = pEvent->next;
+        JdwpEvent* pNextEvent = pEvent->next;
 
         unregisterEvent(state, pEvent);
         dvmJdwpEventFree(pEvent);
@@ -357,8 +344,6 @@ JdwpEvent* dvmJdwpEventAlloc(int numMods)
  */
 void dvmJdwpEventFree(JdwpEvent* pEvent)
 {
-    int i;
-
     if (pEvent == NULL)
         return;
 
@@ -370,7 +355,7 @@ void dvmJdwpEventFree(JdwpEvent* pEvent)
     /*
      * Free any hairy bits in the mods.
      */
-    for (i = 0; i < pEvent->modCount; i++) {
+    for (int i = 0; i < pEvent->modCount; i++) {
         if (pEvent->mods[i].modKind == MK_CLASS_MATCH) {
             free(pEvent->mods[i].classMatch.classPattern);
             pEvent->mods[i].classMatch.classPattern = NULL;
@@ -406,9 +391,8 @@ static void cleanupMatchList(JdwpState* state, JdwpEvent** matchList,
 
     while (matchCount--) {
         JdwpEvent* pEvent = *ppEvent;
-        int i;
 
-        for (i = 0; i < pEvent->modCount; i++) {
+        for (int i = 0; i < pEvent->modCount; i++) {
             if (pEvent->mods[i].modKind == MK_COUNT &&
                 pEvent->mods[i].count.count == 0)
             {
@@ -478,9 +462,8 @@ static inline bool locationMatch(const JdwpLocation* pLoc1,
 static bool modsMatch(JdwpState* state, JdwpEvent* pEvent, ModBasket* basket)
 {
     JdwpEventMod* pMod = pEvent->mods;
-    int i;
 
-    for (i = pEvent->modCount; i > 0; i--, pMod++) {
+    for (int i = pEvent->modCount; i > 0; i--, pMod++) {
         switch (pMod->modKind) {
         case MK_COUNT:
             assert(pMod->count.count > 0);
@@ -556,12 +539,10 @@ static bool modsMatch(JdwpState* state, JdwpEvent* pEvent, ModBasket* basket)
 static void findMatchingEvents(JdwpState* state, enum JdwpEventKind eventKind,
     ModBasket* basket, JdwpEvent** matchList, int* pMatchCount)
 {
-    JdwpEvent* pEvent;
-
     /* start after the existing entries */
     matchList += *pMatchCount;
 
-    pEvent = state->eventList;
+    JdwpEvent* pEvent = state->eventList;
     while (pEvent != NULL) {
         if (pEvent->eventKind == eventKind && modsMatch(state, pEvent, basket))
         {
@@ -727,9 +708,7 @@ void dvmJdwpClearWaitForEventThread(JdwpState* state)
  */
 static ExpandBuf* eventPrep(void)
 {
-    ExpandBuf* pReq;
-
-    pReq = expandBufAlloc();
+    ExpandBuf* pReq = expandBufAlloc();
     expandBufAddSpace(pReq, kJDWPHeaderLen);
 
     return pReq;
@@ -834,8 +813,6 @@ bool dvmJdwpPostLocationEvent(JdwpState* state, const JdwpLocation* pLoc,
 {
     enum JdwpSuspendPolicy suspendPolicy = SP_NONE;
     ModBasket basket;
-    JdwpEvent** matchList;
-    int matchCount;
     char* nameAlloc = NULL;
 
     memset(&basket, 0, sizeof(basket));
@@ -876,8 +853,8 @@ bool dvmJdwpPostLocationEvent(JdwpState* state, const JdwpLocation* pLoc,
     /* don't allow the list to be updated while we scan it */
     lockEventMutex(state);
 
-    matchList = allocMatchList(state);
-    matchCount = 0;
+    JdwpEvent** matchList = allocMatchList(state);
+    int matchCount = 0;
 
     if ((eventFlags & DBG_BREAKPOINT) != 0)
         findMatchingEvents(state, EK_BREAKPOINT, &basket, matchList,
@@ -894,8 +871,6 @@ bool dvmJdwpPostLocationEvent(JdwpState* state, const JdwpLocation* pLoc,
 
     ExpandBuf* pReq = NULL;
     if (matchCount != 0) {
-        int i;
-
         LOGV("EVENT: %s(%d total) %s.%s thread=%llx code=%llx)\n",
             dvmJdwpEventKindStr(matchList[0]->eventKind), matchCount,
             basket.className,
@@ -910,7 +885,7 @@ bool dvmJdwpPostLocationEvent(JdwpState* state, const JdwpLocation* pLoc,
         expandBufAdd1(pReq, suspendPolicy);
         expandBufAdd4BE(pReq, matchCount);
 
-        for (i = 0; i < matchCount; i++) {
+        for (int i = 0; i < matchCount; i++) {
             expandBufAdd1(pReq, matchList[i]->eventKind);
             expandBufAdd4BE(pReq, matchList[i]->requestId);
             expandBufAdd8BE(pReq, basket.threadId);
@@ -946,9 +921,6 @@ bool dvmJdwpPostLocationEvent(JdwpState* state, const JdwpLocation* pLoc,
 bool dvmJdwpPostThreadChange(JdwpState* state, ObjectId threadId, bool start)
 {
     enum JdwpSuspendPolicy suspendPolicy = SP_NONE;
-    ModBasket basket;
-    JdwpEvent** matchList;
-    int matchCount;
 
     assert(threadId = dvmDbgGetThreadSelfId());
 
@@ -960,14 +932,15 @@ bool dvmJdwpPostThreadChange(JdwpState* state, ObjectId threadId, bool start)
         return false;
     }
 
+    ModBasket basket;
     memset(&basket, 0, sizeof(basket));
     basket.threadId = threadId;
 
     /* don't allow the list to be updated while we scan it */
     lockEventMutex(state);
 
-    matchList = allocMatchList(state);
-    matchCount = 0;
+    JdwpEvent** matchList = allocMatchList(state);
+    int matchCount = 0;
 
     if (start)
         findMatchingEvents(state, EK_THREAD_START, &basket, matchList,
@@ -978,8 +951,6 @@ bool dvmJdwpPostThreadChange(JdwpState* state, ObjectId threadId, bool start)
 
     ExpandBuf* pReq = NULL;
     if (matchCount != 0) {
-        int i;
-
         LOGV("EVENT: %s(%d total) thread=%llx)\n",
             dvmJdwpEventKindStr(matchList[0]->eventKind), matchCount,
             basket.threadId);
@@ -992,7 +963,7 @@ bool dvmJdwpPostThreadChange(JdwpState* state, ObjectId threadId, bool start)
         expandBufAdd1(pReq, suspendPolicy);
         expandBufAdd4BE(pReq, matchCount);
 
-        for (i = 0; i < matchCount; i++) {
+        for (int i = 0; i < matchCount; i++) {
             expandBufAdd1(pReq, matchList[i]->eventKind);
             expandBufAdd4BE(pReq, matchList[i]->requestId);
             expandBufAdd8BE(pReq, basket.threadId);
@@ -1025,11 +996,9 @@ bool dvmJdwpPostThreadChange(JdwpState* state, ObjectId threadId, bool start)
  */
 bool dvmJdwpPostVMDeath(JdwpState* state)
 {
-    ExpandBuf* pReq;
-
     LOGV("EVENT: %s\n", dvmJdwpEventKindStr(EK_VM_DEATH));
 
-    pReq = eventPrep();
+    ExpandBuf* pReq = eventPrep();
     expandBufAdd1(pReq, SP_NONE);
     expandBufAdd4BE(pReq, 1);
 
@@ -1057,8 +1026,6 @@ bool dvmJdwpPostException(JdwpState* state, const JdwpLocation* pThrowLoc,
 {
     enum JdwpSuspendPolicy suspendPolicy = SP_NONE;
     ModBasket basket;
-    JdwpEvent** matchList;
-    int matchCount;
     char* nameAlloc = NULL;
 
     memset(&basket, 0, sizeof(basket));
@@ -1081,15 +1048,13 @@ bool dvmJdwpPostException(JdwpState* state, const JdwpLocation* pThrowLoc,
     /* don't allow the list to be updated while we scan it */
     lockEventMutex(state);
 
-    matchList = allocMatchList(state);
-    matchCount = 0;
+    JdwpEvent** matchList = allocMatchList(state);
+    int matchCount = 0;
 
     findMatchingEvents(state, EK_EXCEPTION, &basket, matchList, &matchCount);
 
     ExpandBuf* pReq = NULL;
     if (matchCount != 0) {
-        int i;
-
         LOGV("EVENT: %s(%d total) thread=%llx exceptId=%llx caught=%d)\n",
             dvmJdwpEventKindStr(matchList[0]->eventKind), matchCount,
             basket.threadId, exceptionId, basket.caught);
@@ -1114,7 +1079,7 @@ bool dvmJdwpPostException(JdwpState* state, const JdwpLocation* pThrowLoc,
         expandBufAdd1(pReq, suspendPolicy);
         expandBufAdd4BE(pReq, matchCount);
 
-        for (i = 0; i < matchCount; i++) {
+        for (int i = 0; i < matchCount; i++) {
             expandBufAdd1(pReq, matchList[i]->eventKind);
             expandBufAdd4BE(pReq, matchList[i]->requestId);
             expandBufAdd8BE(pReq, basket.threadId);
@@ -1159,8 +1124,6 @@ bool dvmJdwpPostClassPrepare(JdwpState* state, int tag, RefTypeId refTypeId,
 {
     enum JdwpSuspendPolicy suspendPolicy = SP_NONE;
     ModBasket basket;
-    JdwpEvent** matchList;
-    int matchCount;
     char* nameAlloc = NULL;
 
     memset(&basket, 0, sizeof(basket));
@@ -1179,16 +1142,14 @@ bool dvmJdwpPostClassPrepare(JdwpState* state, int tag, RefTypeId refTypeId,
     /* don't allow the list to be updated while we scan it */
     lockEventMutex(state);
 
-    matchList = allocMatchList(state);
-    matchCount = 0;
+    JdwpEvent** matchList = allocMatchList(state);
+    int matchCount = 0;
 
     findMatchingEvents(state, EK_CLASS_PREPARE, &basket, matchList,
         &matchCount);
 
     ExpandBuf* pReq = NULL;
     if (matchCount != 0) {
-        int i;
-
         LOGV("EVENT: %s(%d total) thread=%llx)\n",
             dvmJdwpEventKindStr(matchList[0]->eventKind), matchCount,
             basket.threadId);
@@ -1213,7 +1174,7 @@ bool dvmJdwpPostClassPrepare(JdwpState* state, int tag, RefTypeId refTypeId,
         expandBufAdd1(pReq, suspendPolicy);
         expandBufAdd4BE(pReq, matchCount);
 
-        for (i = 0; i < matchCount; i++) {
+        for (int i = 0; i < matchCount; i++) {
             expandBufAdd1(pReq, matchList[i]->eventKind);
             expandBufAdd4BE(pReq, matchList[i]->requestId);
             expandBufAdd8BE(pReq, basket.threadId);
@@ -1283,7 +1244,6 @@ void dvmJdwpDdmSendChunkV(JdwpState* state, int type, const struct iovec* iov,
 {
     u1 header[kJDWPHeaderLen + 8];
     size_t dataLen = 0;
-    int i;
 
     assert(iov != NULL);
     assert(iovcnt > 0 && iovcnt < 10);
@@ -1293,7 +1253,7 @@ void dvmJdwpDdmSendChunkV(JdwpState* state, int type, const struct iovec* iov,
      * this by creating a new copy of the vector with space for the header.
      */
     struct iovec wrapiov[iovcnt+1];
-    for (i = 0; i < iovcnt; i++) {
+    for (int i = 0; i < iovcnt; i++) {
         wrapiov[i+1].iov_base = iov[i].iov_base;
         wrapiov[i+1].iov_len = iov[i].iov_len;
         dataLen += iov[i].iov_len;

@@ -30,6 +30,10 @@
 #include "Bits.h"
 #include <pthread.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 struct JdwpState;       /* opaque */
 typedef struct JdwpState JdwpState;
 
@@ -234,5 +238,9 @@ bool dvmJdwpPostVMDeath(JdwpState* state);
  */
 void dvmJdwpDdmSendChunkV(JdwpState* state, int type, const struct iovec* iov,
     int iovcnt);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /*_DALVIK_JDWP_JDWP*/

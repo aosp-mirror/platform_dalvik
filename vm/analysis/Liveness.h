@@ -20,8 +20,16 @@
 #ifndef _DALVIK_LIVENESS
 #define _DALVIK_LIVENESS
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 struct VerifierData;
 
 bool dvmComputeLiveness(struct VerifierData* vdata);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /*_DALVIK_LIVENESS*/

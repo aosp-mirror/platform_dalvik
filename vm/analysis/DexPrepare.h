@@ -20,6 +20,10 @@
 #ifndef _DALVIK_DEXPREPARE
 #define _DALVIK_DEXPREPARE
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*
  * Global DEX optimizer control.  Determines the circumstances in which we
  * try to rewrite instructions in the DEX file.
@@ -133,5 +137,9 @@ bool dvmPrepareDexInMemory(u1* addr, size_t len, DvmDex** ppDvmDex);
  */
 bool dvmCreateInlineSubsTable(void);
 void dvmFreeInlineSubsTable(void);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /*_DALVIK_DEXPREPARE*/
