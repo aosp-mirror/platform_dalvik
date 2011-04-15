@@ -30,10 +30,10 @@ import com.android.dx.rop.cst.CstShort;
 import com.android.dx.rop.cst.CstString;
 import com.android.dx.rop.cst.CstType;
 import com.android.dx.rop.cst.TypedConstant;
-import dalvik.system.PathClassLoader;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
 
@@ -104,14 +104,26 @@ public final class DexGenerator {
          * TODO: load the dex from memory where supported.
          */
         File result = File.createTempFile("Generated", ".jar");
-//        result.deleteOnExit(); // TODO
+        result.deleteOnExit();
         JarOutputStream jarOut = new JarOutputStream(new FileOutputStream(result));
         jarOut.putNextEntry(new JarEntry(DexFormat.DEX_IN_JAR_NAME));
         jarOut.write(dex);
         jarOut.closeEntry();
         jarOut.close();
-        System.out.println(result);
-
-        return new PathClassLoader(result.getPath(), parent);
+        try {
+            Class<?> pathClassLoader = Class.forName("dalvik.system.PathClassLoader");
+            return (ClassLoader) pathClassLoader.getConstructor(String.class, ClassLoader.class)
+                    .newInstance(result.getPath(), parent);
+        } catch (ClassNotFoundException e) {
+            throw new UnsupportedOperationException("load() requires a Dalvik VM", e);
+        } catch (InvocationTargetException e) {
+            throw new RuntimeException(e.getCause());
+        } catch (InstantiationException e) {
+            throw new AssertionError();
+        } catch (NoSuchMethodException e) {
+            throw new AssertionError();
+        } catch (IllegalAccessException e) {
+            throw new AssertionError();
+        }
     }
 }
