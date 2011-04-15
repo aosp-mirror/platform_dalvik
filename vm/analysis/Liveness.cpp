@@ -44,9 +44,8 @@ static InstructionWidth* createBackwardWidthTable(VerifierData* vdata)
     if (widths == NULL)
         return NULL;
 
-    unsigned int idx;
     u4 insnWidth = 0;
-    for (idx = 0; idx < vdata->insnsSize; ) {
+    for (u4 idx = 0; idx < vdata->insnsSize; ) {
         widths[idx] = insnWidth;
         insnWidth = dvmInsnGetWidth(vdata->insnFlags, idx);
         idx += insnWidth;
@@ -97,10 +96,8 @@ bool dvmComputeLiveness(VerifierData* vdata)
      * TODO: consider creating a "dense" array of basic blocks to make
      * the walking faster.
      */
-    int iter = 0;
-    while (true) {
+    for (int iter = 0;;) {
         VfyBasicBlock* workBlock = NULL;
-        unsigned int idx;
 
         if (iter++ > 100000) {
             LOG_VFY_METH(vdata->method, "oh dear");
@@ -121,7 +118,7 @@ bool dvmComputeLiveness(VerifierData* vdata)
             assert(startGuess->changed);
             workBlock = startGuess;
         } else {
-            for (idx = 0; idx < vdata->insnsSize; idx++) {
+            for (u4 idx = 0; idx < vdata->insnsSize; idx++) {
                 VfyBasicBlock* block = vdata->basicBlocks[idx];
                 if (block == NULL)
                     continue;

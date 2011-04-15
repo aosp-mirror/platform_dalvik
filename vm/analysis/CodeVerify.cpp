@@ -737,6 +737,7 @@ static bool setTypesFromSignature(const Method* meth, RegType* regTypes,
     DexParameterIterator iterator;
     int actualArgs, expectedArgs, argStart;
     VerifyError failure = VERIFY_ERROR_NONE;
+    const char* descriptor;
 
     dexParameterIteratorInit(&iterator, &meth->prototype);
     argStart = meth->registersSize - meth->insSize;
@@ -766,7 +767,7 @@ static bool setTypesFromSignature(const Method* meth, RegType* regTypes,
     }
 
     for (;;) {
-        const char* descriptor = dexParameterIteratorNextDescriptor(&iterator);
+        descriptor = dexParameterIteratorNextDescriptor(&iterator);
 
         if (descriptor == NULL) {
             break;
@@ -843,7 +844,7 @@ static bool setTypesFromSignature(const Method* meth, RegType* regTypes,
         goto bad_sig;
     }
 
-    const char* descriptor = dexProtoGetReturnType(&meth->prototype);
+    descriptor = dexProtoGetReturnType(&meth->prototype);
 
     /*
      * Validate return type.  We don't do the type lookup; just want to make
@@ -1063,6 +1064,9 @@ static Method* verifyInvocationArgs(const Method* meth,
 {
     Method* resMethod;
     char* sigOriginal = NULL;
+    const char* sig;
+    int expectedArgs;
+    int actualArgs;
 
     /*
      * Resolve the method.  This could be an abstract or concrete method
@@ -1162,9 +1166,9 @@ static Method* verifyInvocationArgs(const Method* meth,
      * have register count values).
      */
     sigOriginal = dexProtoCopyMethodDescriptor(&resMethod->prototype);
-    const char* sig = sigOriginal;
-    int expectedArgs = pDecInsn->vA;
-    int actualArgs = 0;
+    sig = sigOriginal;
+    expectedArgs = pDecInsn->vA;
+    actualArgs = 0;
 
     /* caught by static verifier */
     assert(isRange || expectedArgs <= 5);
@@ -3176,6 +3180,7 @@ static bool replaceFailingInstruction(const Method* meth, InsnFlags* insnFlags,
 {
     VerifyErrorRefType refType;
     u2* oldInsns = (u2*) meth->insns + insnIdx;
+    int width;
     bool result = false;
 
     if (gDvm.optimizing)
@@ -3290,7 +3295,7 @@ static bool replaceFailingInstruction(const Method* meth, InsnFlags* insnFlags,
     assert((dexGetFlagsFromOpcode(opcode) & kInstrCanThrow) != 0);
 
     /* write a NOP over the third code unit, if necessary */
-    int width = dvmInsnGetWidth(insnFlags, insnIdx);
+    width = dvmInsnGetWidth(insnFlags, insnIdx);
     switch (width) {
     case 2:
     case 4:

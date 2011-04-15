@@ -21,6 +21,7 @@
  * interpreter thread stacks.
  */
 #include "Dalvik.h"
+#include "UniquePtr.h"
 #include "analysis/CodeVerify.h"
 #include "analysis/RegisterMap.h"
 #include "libdex/DexCatch.h"
@@ -310,7 +311,7 @@ RegisterMap* dvmGenerateRegisterMapV(VerifierData* vdata)
                 }
 
                 /* verify succeeded */
-                free(pUncompMap);
+                delete pUncompMap;
             }
         }
 
@@ -1443,7 +1444,6 @@ static RegisterMap* compressMapDifferential(const RegisterMap* pMap,
 {
     RegisterMap* pNewMap = NULL;
     int origSize = computeRegisterMapSize(pMap);
-    u1* tmpBuf = NULL;
     u1* tmpPtr;
     int addrWidth, regWidth, numEntries;
     bool debug = false;
@@ -1465,7 +1465,7 @@ static RegisterMap* compressMapDifferential(const RegisterMap* pMap,
         break;
     default:
         LOGE("ERROR: can't compress map with format=%d\n", format);
-        goto bail;
+        return NULL;
     }
 
     regWidth = dvmRegisterMapGetRegWidth(pMap);
@@ -1480,7 +1480,7 @@ static RegisterMap* compressMapDifferential(const RegisterMap* pMap,
 
     if (numEntries <= 1) {
         LOGV("Can't compress map with 0 or 1 entries\n");
-        goto bail;
+        return NULL;
     }
 
     /*
@@ -1500,11 +1500,11 @@ static RegisterMap* compressMapDifferential(const RegisterMap* pMap,
      * or equal to the amount of space required when uncompressed -- large
      * initial offsets are rejected.
      */
-    tmpBuf = (u1*) malloc(origSize + (1 + 3 + regWidth));
-    if (tmpBuf == NULL)
-        goto bail;
+    UniquePtr<u1[]> tmpBuf(new u1[origSize + (1 + 3 + regWidth)]);
+    if (tmpBuf.get() == NULL)
+        return NULL;
 
-    tmpPtr = tmpBuf;
+    tmpPtr = tmpBuf.get();
 
     const u1* mapData = pMap->data;
     const u1* prevBits;
@@ -1516,7 +1516,7 @@ static RegisterMap* compressMapDifferential(const RegisterMap* pMap,
 
     if (addr >= 128) {
         LOGV("Can't compress map with starting address >= 128\n");
-        goto bail;
+        return NULL;
     }
 
     /*
@@ -1537,8 +1537,7 @@ static RegisterMap* compressMapDifferential(const RegisterMap* pMap,
     /*
      * Loop over all following entries.
      */
-    int entry;
-    for (entry = 1; entry < numEntries; entry++) {
+    for (int entry = 1; entry < numEntries; entry++) {
         int addrDiff;
         u1 key;
 
@@ -1627,13 +1626,13 @@ static RegisterMap* compressMapDifferential(const RegisterMap* pMap,
         /*
          * See if we've run past the original size.
          */
-        if (tmpPtr - tmpBuf >= origSize) {
+        if (tmpPtr - tmpBuf.get() >= origSize) {
             if (debug) {
                 LOGD("Compressed size >= original (%d vs %d): %s.%s\n",
-                    tmpPtr - tmpBuf, origSize,
+                    tmpPtr - tmpBuf.get(), origSize,
                     meth->clazz->descriptor, meth->name);
             }
-            goto bail;
+            return NULL;
         }
     }
 
@@ -1644,7 +1643,7 @@ static RegisterMap* compressMapDifferential(const RegisterMap* pMap,
      * get poorer compression but potentially use less native heap space.
      */
     static const int kHeaderSize = offsetof(RegisterMap, data);
-    int newDataSize = tmpPtr - tmpBuf;
+    int newDataSize = tmpPtr - tmpBuf.get();
     int newMapSize;
 
     newMapSize = kHeaderSize + unsignedLeb128Size(newDataSize) + newDataSize;
@@ -1653,12 +1652,12 @@ static RegisterMap* compressMapDifferential(const RegisterMap* pMap,
             LOGD("Final comp size >= original (%d vs %d): %s.%s\n",
                 newMapSize, origSize, meth->clazz->descriptor, meth->name);
         }
-        goto bail;
+        return NULL;
     }
 
     pNewMap = (RegisterMap*) malloc(newMapSize);
     if (pNewMap == NULL)
-        goto bail;
+        return NULL;
     dvmRegisterMapSetFormat(pNewMap, kRegMapFormatDifferential);
     dvmRegisterMapSetOnHeap(pNewMap, true);
     dvmRegisterMapSetRegWidth(pNewMap, regWidth);
@@ -1666,7 +1665,7 @@ static RegisterMap* compressMapDifferential(const RegisterMap* pMap,
 
     tmpPtr = pNewMap->data;
     tmpPtr = writeUnsignedLeb128(tmpPtr, newDataSize);
-    memcpy(tmpPtr, tmpBuf, newDataSize);
+    memcpy(tmpPtr, tmpBuf.get(), newDataSize);
 
     if (REGISTER_MAP_VERBOSE) {
         LOGD("Compression successful (%d -> %d) from aw=%d rw=%d ne=%d\n",
@@ -1674,8 +1673,6 @@ static RegisterMap* compressMapDifferential(const RegisterMap* pMap,
             addrWidth, regWidth, numEntries);
     }
 
-bail:
-    free(tmpBuf);
     return pNewMap;
 }
 
@@ -1697,7 +1694,6 @@ static inline void toggleBit(u1* ptr, int idx)
  */
 static RegisterMap* uncompressMapDifferential(const RegisterMap* pMap)
 {
-    RegisterMap* pNewMap = NULL;
     static const int kHeaderSize = offsetof(RegisterMap, data);
     u1 format = dvmRegisterMapGetFormat(pMap);
     RegisterMapFormat newFormat;
@@ -1705,7 +1701,7 @@ static RegisterMap* uncompressMapDifferential(const RegisterMap* pMap)
 
     if (format != kRegMapFormatDifferential) {
         LOGE("Not differential (%d)\n", format);
-        goto bail;
+        return NULL;
     }
 
     regWidth = dvmRegisterMapGetRegWidth(pMap);
@@ -1733,9 +1729,10 @@ static RegisterMap* uncompressMapDifferential(const RegisterMap* pMap)
             newAddrWidth, regWidth, numEntries);
     }
     newMapSize = kHeaderSize + (newAddrWidth + regWidth) * numEntries;
-    pNewMap = (RegisterMap*) malloc(newMapSize);
+    RegisterMap* pNewMap = (RegisterMap*) malloc(newMapSize);
+
     if (pNewMap == NULL)
-        goto bail;
+      return NULL;
 
     dvmRegisterMapSetFormat(pNewMap, newFormat);
     dvmRegisterMapSetOnHeap(pNewMap, true);
@@ -1816,13 +1813,15 @@ static RegisterMap* uncompressMapDifferential(const RegisterMap* pMap)
     if (dstPtr - (u1*) pNewMap != newMapSize) {
         LOGE("ERROR: output %d bytes, expected %d\n",
             dstPtr - (u1*) pNewMap, newMapSize);
-        goto bail;
+        free(pNewMap);
+        return NULL;
     }
 
     if (srcPtr - srcStart != expectedSrcLen) {
         LOGE("ERROR: consumed %d bytes, expected %d\n",
             srcPtr - srcStart, expectedSrcLen);
-        goto bail;
+        free(pNewMap);
+        return NULL;
     }
 
     if (REGISTER_MAP_VERBOSE) {
@@ -1831,8 +1830,4 @@ static RegisterMap* uncompressMapDifferential(const RegisterMap* pMap)
     }
 
     return pNewMap;
-
-bail:
-    free(pNewMap);
-    return NULL;
 }

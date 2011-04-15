@@ -326,7 +326,7 @@ bool dvmComputeVfyBasicBlocks(VerifierData* vdata)
     vdata->basicBlocks =
         (VfyBasicBlock**) calloc(insnsSize, sizeof(VfyBasicBlock*));
     if (vdata->basicBlocks == NULL)
-        goto bail;
+      return false;
 
     /*
      * The "tries" list is a series of non-overlapping regions with a list

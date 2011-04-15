@@ -481,8 +481,9 @@ void dvmCallMethodV(Thread* self, const Method* method, Object* obj,
                 break;
             }
             case 'L': {     /* 'shorty' descr uses L for all refs, incl array */
-                void* argObj = va_arg(args, void*);
+                void* arg = va_arg(args, void*);
                 assert(obj == NULL || dvmIsValidObject(obj));
+                jobject argObj = reinterpret_cast<jobject>(arg);
                 if (fromJni)
                     *ins++ = (u4) dvmDecodeIndirectRef(env, argObj);
                 else
@@ -701,16 +702,10 @@ Object* dvmInvokeMethod(Object* obj, const Method* method,
      * Copy the args onto the stack.  Primitive types are converted when
      * necessary, and object types are verified.
      */
-    DataObject** args;
-    ClassObject** types;
-    int i;
-
-    args = (DataObject**) argList->contents;
-    types = (ClassObject**) params->contents;
-    for (i = 0; i < argListLength; i++) {
-        int width;
-
-        width = dvmConvertArgument(*args++, *types++, ins);
+    DataObject** args = (DataObject**)(void*)argList->contents;
+    ClassObject** types = (ClassObject**)(void*)params->contents;
+    for (int i = 0; i < argListLength; i++) {
+        int width = dvmConvertArgument(*args++, *types++, ins);
         if (width < 0) {
             dvmPopFrame(self);      // throw wants to pull PC out of stack
             needPop = false;

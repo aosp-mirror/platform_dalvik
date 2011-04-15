@@ -20,6 +20,7 @@
  */
 #include "Dalvik.h"
 #include "libdex/InstrUtils.h"
+#include "Optimize.h"
 
 #include <zlib.h>
 
