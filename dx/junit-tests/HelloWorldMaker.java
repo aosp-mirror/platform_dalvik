@@ -57,10 +57,11 @@ public class HelloWorldMaker {
         Field<System, PrintStream> systemOutField = system.getField(printStream, "out");
         Method<Integer, String> toHexString = integer.getMethod(string, "toHexString", intType);
         Method<PrintStream, Void> println = printStream.getMethod(voidType, "println", string);
+        Method hello = helloWorld.getMethod(voidType, "hello");
 
         // create some registers
         //    (I'd like a better syntax for this)
-        Code code = generator.newCode();
+        Code code = hello.declare(AccessFlags.ACC_STATIC | AccessFlags.ACC_PUBLIC);
         Local<Integer> a = code.newLocal(intType);
         Local<Integer> b = code.newLocal(intType);
         Local<Integer> c = code.newLocal(intType);
@@ -75,10 +76,6 @@ public class HelloWorldMaker {
         code.sget(systemOutField, localSystemOut);
         code.invokeVirtual(println, null, localSystemOut, s);
         code.returnVoid();
-
-        // wrap it up by building the HelloWorld class and hello() method
-        Method hello = helloWorld.getMethod(voidType, "hello");
-        hello.declare(AccessFlags.ACC_STATIC | AccessFlags.ACC_PUBLIC, code);
 
         // TODO: create the constructor
 

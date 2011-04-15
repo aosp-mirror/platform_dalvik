@@ -18,18 +18,6 @@ package com.android.dx.gen;
 
 import com.android.dx.dex.DexFormat;
 import com.android.dx.dex.file.DexFile;
-import com.android.dx.rop.cst.CstBoolean;
-import com.android.dx.rop.cst.CstByte;
-import com.android.dx.rop.cst.CstChar;
-import com.android.dx.rop.cst.CstDouble;
-import com.android.dx.rop.cst.CstFloat;
-import com.android.dx.rop.cst.CstInteger;
-import com.android.dx.rop.cst.CstKnownNull;
-import com.android.dx.rop.cst.CstLong;
-import com.android.dx.rop.cst.CstShort;
-import com.android.dx.rop.cst.CstString;
-import com.android.dx.rop.cst.CstType;
-import com.android.dx.rop.cst.TypedConstant;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -46,16 +34,12 @@ public final class DexGenerator {
     /**
      * @param name a descriptor like "(Ljava/lang/Class;[I)Ljava/lang/Object;".
      */
-    public Type<?> getType(String name) {
-        return types.get(new Type<Object>(this, name));
+    public <T> Type<T> getType(String name) {
+        return types.get(new Type<T>(this, name));
     }
 
     public <T> Type<T> getType(Class<T> type) {
         return types.get(new Type<T>(this, type));
-    }
-
-    public Code newCode() {
-        return new Code(this);
     }
 
     /**

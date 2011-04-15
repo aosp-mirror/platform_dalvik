@@ -32,12 +32,9 @@ import com.android.dx.rop.code.ThrowingInsn;
 import com.android.dx.rop.type.StdTypeList;
 import static com.android.dx.rop.type.Type.BT_BYTE;
 import static com.android.dx.rop.type.Type.BT_CHAR;
-import static com.android.dx.rop.type.Type.BT_DOUBLE;
 import static com.android.dx.rop.type.Type.BT_INT;
-import static com.android.dx.rop.type.Type.BT_LONG;
 import static com.android.dx.rop.type.Type.BT_SHORT;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -45,6 +42,7 @@ import java.util.List;
  * Builds a sequence of instructions.
  */
 public final class Code {
+    private final Method<?, ?> method;
     /**
      * All allocated labels. Although the order of the labels in this list
      * shouldn't impact behavior, it is used to determine basic block indices.
@@ -59,26 +57,46 @@ public final class Code {
 
     /** true once we've fixed the positions of the parameter registers */
     private boolean localsInitialized;
+
+    private final Local<?> thisLocal;
+    private final List<Local<?>> parameters = new ArrayList<Local<?>>();
     private final List<Local<?>> locals = new ArrayList<Local<?>>();
     private SourcePosition sourcePosition = SourcePosition.NO_INFO;
 
-    Code(DexGenerator generator) {
+    public Code(Method<?, ?> method) {
+        this.method = method;
+        thisLocal = method.isStatic()
+                ? null
+                : new Local<Object>(this, method.declaringType, Local.InitialValue.THIS);
+        for (Type<?> parameter : method.parameters.types) {
+            parameters.add(new Local<Object>(this, parameter, Local.InitialValue.PARAMETER));
+        }
         this.currentLabel = newLabel();
         this.currentLabel.marked = true;
     }
-
-    // locals
 
     public <T> Local<T> newLocal(Type<T> type) {
         return allocateLocal(type, Local.InitialValue.NONE);
     }
 
-    public <T> Local<T> newParameter(Type<T> type) {
-        return allocateLocal(type, Local.InitialValue.PARAMETER);
+    public <T> Local<T> getParameter(int index, Type<T> type) {
+        return coerce(parameters.get(index), type);
     }
 
-    public Local<?> newThisLocal(Type<?> type) {
-        return allocateLocal(type, Local.InitialValue.THIS);
+    public <T> Local<T> getThis(Type<T> type) {
+        if (thisLocal == null) {
+            throw new IllegalStateException("static methods cannot access 'this'");
+        }
+        return coerce(thisLocal, type);
+    }
+
+    @SuppressWarnings("unchecked") // guarded by an equals check
+    private <T> Local<T> coerce(Local<?> local, Type<T> expectedType) {
+        if (!local.type.equals(expectedType)) {
+            throw new IllegalArgumentException(
+                    "requested " + expectedType + " but was " + local.type);
+        }
+        return (Local<T>) local;
     }
 
     private <T> Local<T> allocateLocal(Type<T> type, Local.InitialValue initialValue) {
@@ -90,26 +108,28 @@ public final class Code {
         return result;
     }
 
+    /**
+     * Assigns registers to locals. From the spec:
+     *  "the N arguments to a method land in the last N registers of the
+     *   method's invocation frame, in order. Wide arguments consume two
+     *   registers. Instance methods are passed a this reference as their
+     *   first argument."
+     */
     void initializeLocals() {
         if (localsInitialized) {
             throw new AssertionError();
         }
         localsInitialized = true;
-        Collections.sort(locals, Local.ORDER_BY_INITIAL_VALUE_TYPE);
 
         int reg = 0;
         for (Local<?> local : locals) {
-            local.initialize(reg);
-
-            switch (local.type.ropType.getBasicType()) {
-            case BT_LONG:
-            case BT_DOUBLE:
-                reg += 2;
-                break;
-            default:
-                reg += 1;
-                break;
-            }
+            reg += local.initialize(reg);
+        }
+        if (thisLocal != null) {
+            reg += thisLocal.initialize(reg);
+        }
+        for (Local<?> local : parameters) {
+            reg += local.initialize(reg);
         }
     }
 
@@ -222,7 +242,7 @@ public final class Code {
         unary(Rops.opNot(source.type.ropType), source, target);
     }
 
-    public void cast(Local<?> source, Local<?> target) {
+    public void numericCast(Local<?> source, Local<?> target) {
         unary(getCastRop(source.type.ropType, target.type.ropType), source, target);
     }
 
@@ -261,6 +281,10 @@ public final class Code {
 
     // instructions: branches
 
+    /**
+     * Compare integers. If the comparison is true, execution jumps to {@code
+     * trueLabel}. If it is false, execution continues to the next instruction.
+     */
     public <T> void compare(Comparison comparison, Local<T> a, Local<T> b, Label trueLabel) {
         if (trueLabel == null) {
             throw new IllegalArgumentException();
@@ -312,32 +336,32 @@ public final class Code {
         invokeDirect(constructor, null, target, args);
     }
 
-    public <R> void invokeStatic(Method<?, R> method, Local<R> target, Local<?>... args) {
+    public <R> void invokeStatic(Method<?, R> method, Local<? super R> target, Local<?>... args) {
         invoke(Rops.opInvokeStatic(method.prototype(true)), method, target, null, args);
     }
 
-    public <I, R> void invokeVirtual(Method<I, R> method, Local<R> target, Local<I> object,
-            Local<?>... args) {
+    public <I, R> void invokeVirtual(Method<I, R> method, Local<? super R> target,
+            Local<? extends I> object, Local<?>... args) {
         invoke(Rops.opInvokeVirtual(method.prototype(true)), method, target, object, args);
     }
 
-    public <I, R> void invokeDirect(Method<?, R> method, Local<R> target, Local<I> object,
-            Local<?>... args) {
+    public <I, R> void invokeDirect(Method<I, R> method, Local<? super R> target,
+            Local<? extends I> object, Local<?>... args) {
         invoke(Rops.opInvokeDirect(method.prototype(true)), method, target, object, args);
     }
 
-    public <I, R> void invokeSuper(Method<I, R> method, Local<R> target, Local<?> object,
-            Local<?>... args) {
+    public <I, R> void invokeSuper(Method<I, R> method, Local<? super R> target,
+            Local<? extends I> object, Local<?>... args) {
         invoke(Rops.opInvokeSuper(method.prototype(true)), method, target, object, args);
     }
 
-    public <I, R> void invokeInterface(Method<I, R> method, Local<R> target, Local<?> object,
-            Local<?>... args) {
+    public <I, R> void invokeInterface(Method<I, R> method, Local<? super R> target,
+            Local<? extends I> object, Local<?>... args) {
         invoke(Rops.opInvokeInterface(method.prototype(true)), method, target, object, args);
     }
 
-    private <I, R> void invoke(Rop rop, Method method, Local<R> target, Local<I> object,
-            Local<?>... args) {
+    private <I, R> void invoke(Rop rop, Method<I, R> method, Local<? super R> target,
+            Local<? extends I> object, Local<?>... args) {
         addInstruction(new ThrowingCstInsn(rop, sourcePosition, concatenate(object, args),
                 StdTypeList.EMPTY, method.constant));
         if (target != null) {
@@ -345,14 +369,37 @@ public final class Code {
         }
     }
 
+    // instructions: types
+
+    public void instanceOfType(Local<?> target, Local<?> source, Type<?> type) {
+        addInstruction(new ThrowingCstInsn(Rops.INSTANCE_OF, sourcePosition,
+                RegisterSpecList.make(source.spec()), StdTypeList.EMPTY, type.constant));
+        moveResult(target, true);
+    }
+
+    public void typeCast(Local<?> source, Local<?> target) {
+        addInstruction(new ThrowingCstInsn(Rops.CHECK_CAST, sourcePosition,
+                RegisterSpecList.make(source.spec()), StdTypeList.EMPTY, target.type.constant));
+        moveResult(target, true);
+    }
+
     // instructions: return
 
     public void returnVoid() {
+        if (!method.returnType.isVoid()) {
+            throw new IllegalArgumentException("declared " + method.returnType
+                    + " but returned void");
+        }
         addInstruction(new PlainInsn(Rops.RETURN_VOID, sourcePosition, null,
                 RegisterSpecList.EMPTY));
     }
 
     public void returnValue(Local<?> result) {
+        if (!result.type.equals(method.returnType)) {
+            // TODO: this is probably too strict.
+            throw new IllegalArgumentException("declared " + method.returnType
+                    + " but returned " + result.type);
+        }
         addInstruction(new PlainInsn(Rops.opReturn(result.type.ropType), sourcePosition,
                 null, RegisterSpecList.make(result.spec())), null);
     }
@@ -390,25 +437,6 @@ public final class Code {
                 label.id = id++;
             }
         }
-    }
-
-    TypeList parameters() {
-        List<Type<?>> result = new ArrayList<Type<?>>();
-        for (Local<?> local : locals) {
-            if (local.initialValue == Local.InitialValue.PARAMETER) {
-                result.add(local.type);
-            }
-        }
-        return new TypeList(result);
-    }
-
-    Local<?> thisLocal() {
-        for (Local<?> local : locals) {
-            if (local.initialValue == Local.InitialValue.THIS) {
-                return local;
-            }
-        }
-        return null;
     }
 
     private static RegisterSpecList concatenate(Local<?> first, Local<?>[] rest) {

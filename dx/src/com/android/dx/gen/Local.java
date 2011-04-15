@@ -17,23 +17,13 @@
 package com.android.dx.gen;
 
 import com.android.dx.rop.code.RegisterSpec;
-import java.util.Comparator;
+import static com.android.dx.rop.type.Type.BT_DOUBLE;
+import static com.android.dx.rop.type.Type.BT_LONG;
 
 /**
  * A temporary variable that holds a single value.
  */
 public final class Local<T> {
-    /**
-     * Dalvik bytecode uses the last N registers for the method's N arguments.
-     * Instance methods are passed 'this' as the first argument. This ordering
-     * sorts locals into this sequence.
-     */
-    static final Comparator<Local<?>> ORDER_BY_INITIAL_VALUE_TYPE = new Comparator<Local<?>>() {
-        public int compare(Local<?> a, Local<?> b) {
-            return a.initialValue.ordinal() - b.initialValue.ordinal();
-        }
-    };
-
     private final Code code;
     final Type type;
     final InitialValue initialValue;
@@ -46,9 +36,22 @@ public final class Local<T> {
         this.initialValue = initialValue;
     }
 
-    void initialize(int reg) {
+    /**
+     * Assigns registers to this local.
+     *
+     * @return the number of registers required.
+     */
+    int initialize(int reg) {
         this.reg = reg;
         this.spec = RegisterSpec.make(reg, type.getRopType());
+
+        switch (type.ropType.getBasicType()) {
+        case BT_LONG:
+        case BT_DOUBLE:
+            return 2;
+        default:
+            return 1;
+        }
     }
 
     RegisterSpec spec() {

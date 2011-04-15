@@ -67,10 +67,10 @@ public final class Field<T, R> {
      */
     public void declare(int accessFlags, Object staticValue) {
         if (declared) {
-            throw new IllegalStateException();
+            throw new IllegalStateException("already declared: " + this);
         }
         if ((accessFlags & (AccessFlags.ACC_STATIC)) == 0 && staticValue != null) {
-            throw new IllegalArgumentException("Instance fields may not have a value");
+            throw new IllegalArgumentException("instance fields may not have a value");
         }
         this.declared = true;
         this.accessFlags = accessFlags;
