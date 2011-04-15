@@ -19,7 +19,7 @@ package com.android.dx.rop.type;
 import java.util.HashMap;
 
 /**
- * Representation of a method decriptor. Instances of this class are
+ * Representation of a method descriptor. Instances of this class are
  * generally interned and may be usefully compared with each other
  * using {@code ==}.
  */

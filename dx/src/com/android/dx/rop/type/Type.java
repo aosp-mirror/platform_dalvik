@@ -328,7 +328,7 @@ public final class Type implements TypeBearer, Comparable<Type> {
         int length = descriptor.length();
         if ((firstChar != 'L') ||
             (descriptor.charAt(length - 1) != ';')) {
-            throw new IllegalArgumentException("bad descriptor");
+            throw new IllegalArgumentException("bad descriptor: " + descriptor);
         }
 
         /*
@@ -349,13 +349,13 @@ public final class Type implements TypeBearer, Comparable<Type> {
                 case '.':
                 case '(':
                 case ')': {
-                    throw new IllegalArgumentException("bad descriptor");
+                    throw new IllegalArgumentException("bad descriptor: " + descriptor);
                 }
                 case '/': {
                     if ((i == 1) ||
                         (i == (length - 1)) ||
                         (descriptor.charAt(i - 1) == '/')) {
-                        throw new IllegalArgumentException("bad descriptor");
+                        throw new IllegalArgumentException("bad descriptor: " + descriptor);
                     }
                     break;
                 }

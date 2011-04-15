@@ -28,7 +28,6 @@ import com.android.dx.rop.cst.CstMemberRef;
 import com.android.dx.rop.cst.CstType;
 import com.android.dx.rop.cst.CstUtf8;
 import com.android.dx.rop.type.Type;
-
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.HashSet;
@@ -520,7 +519,11 @@ public final class OutputFinisher {
      * @return {@code non-null;} the opcode that fits
      */
     private Dop findExpandedOpcodeForInsn(DalvInsn insn) {
-        return findOpcodeForInsn(insn.getLowRegVersion(), insn.getOpcode());
+        Dop result = findOpcodeForInsn(insn.getLowRegVersion(), insn.getOpcode());
+        if (result == null) {
+            throw new AssertionError();
+        }
+        return result;
     }
 
     /**
