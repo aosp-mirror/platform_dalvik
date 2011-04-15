@@ -19,6 +19,7 @@
  */
 #include "Dalvik.h"
 #include "JniInternal.h"
+#include "ScopedPthreadMutexLock.h"
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -324,18 +325,18 @@ Object* dvmDecodeIndirectRef(JNIEnv* env, jobject jobj)
         {
             // TODO: find a way to avoid the mutex activity here
             IndirectRefTable* pRefTable = &gDvm.jniGlobalRefTable;
-            dvmLockMutex(&gDvm.jniGlobalRefLock);
+            ScopedPthreadMutexLock lock(&gDvm.jniGlobalRefLock);
             result = dvmGetFromIndirectRefTable(pRefTable, jobj);
-            dvmUnlockMutex(&gDvm.jniGlobalRefLock);
         }
         break;
     case kIndirectKindWeakGlobal:
         {
             // TODO: find a way to avoid the mutex activity here
             IndirectRefTable* pRefTable = &gDvm.jniWeakGlobalRefTable;
-            dvmLockMutex(&gDvm.jniWeakGlobalRefLock);
-            result = dvmGetFromIndirectRefTable(pRefTable, jobj);
-            dvmUnlockMutex(&gDvm.jniWeakGlobalRefLock);
+            {
+                ScopedPthreadMutexLock lock(&gDvm.jniWeakGlobalRefLock);
+                result = dvmGetFromIndirectRefTable(pRefTable, jobj);
+            }
             /*
              * TODO: this is a temporary workaround for broken weak global
              * refs (bug 4260055).  We treat any invalid reference as if it
@@ -475,9 +476,7 @@ static jobject addGlobalReference(Object* obj)
         }
     }
 
-    jobject jobj;
-
-    dvmLockMutex(&gDvm.jniGlobalRefLock);
+    ScopedPthreadMutexLock lock(&gDvm.jniGlobalRefLock);
 
     /*
      * Throwing an exception on failure is problematic, because JNI code
@@ -488,7 +487,7 @@ static jobject addGlobalReference(Object* obj)
      * we're either leaking global ref table entries or we're going to
      * run out of space in the GC heap.
      */
-    jobj = (jobject) dvmAddToIndirectRefTable(&gDvm.jniGlobalRefTable, IRT_FIRST_SEGMENT,
+    jobject jobj = (jobject) dvmAddToIndirectRefTable(&gDvm.jniGlobalRefTable, IRT_FIRST_SEGMENT,
             obj);
     if (jobj == NULL) {
         dvmDumpIndirectRefTable(&gDvm.jniGlobalRefTable, "JNI global");
@@ -524,15 +523,16 @@ static jobject addGlobalReference(Object* obj)
             }
         }
     }
-    dvmUnlockMutex(&gDvm.jniGlobalRefLock);
     return jobj;
 }
 
 static jobject addWeakGlobalReference(Object* obj)
 {
-    if (obj == NULL)
+    if (obj == NULL) {
         return NULL;
-    dvmLockMutex(&gDvm.jniWeakGlobalRefLock);
+    }
+
+    ScopedPthreadMutexLock lock(&gDvm.jniWeakGlobalRefLock);
     IndirectRefTable *table = &gDvm.jniWeakGlobalRefTable;
     jobject jobj = (jobject) dvmAddToIndirectRefTable(table, IRT_FIRST_SEGMENT, obj);
     if (jobj == NULL) {
@@ -540,20 +540,20 @@ static jobject addWeakGlobalReference(Object* obj)
         LOGE("Failed adding to JNI weak global ref table (%zd entries)",
              dvmIndirectRefTableEntries(table));
     }
-    dvmUnlockMutex(&gDvm.jniWeakGlobalRefLock);
     return jobj;
 }
 
 static void deleteWeakGlobalReference(jobject jobj)
 {
-    if (jobj == NULL)
+    if (jobj == NULL) {
         return;
-    dvmLockMutex(&gDvm.jniWeakGlobalRefLock);
+    }
+
+    ScopedPthreadMutexLock lock(&gDvm.jniWeakGlobalRefLock);
     IndirectRefTable *table = &gDvm.jniWeakGlobalRefTable;
     if (!dvmRemoveFromIndirectRefTable(table, IRT_FIRST_SEGMENT, jobj)) {
         LOGW("JNI: DeleteWeakGlobalRef(%p) failed to find entry", jobj);
     }
-    dvmUnlockMutex(&gDvm.jniWeakGlobalRefLock);
 }
 
 /*
@@ -568,12 +568,12 @@ static void deleteGlobalReference(jobject jobj)
     if (jobj == NULL)
         return;
 
-    dvmLockMutex(&gDvm.jniGlobalRefLock);
+    ScopedPthreadMutexLock lock(&gDvm.jniGlobalRefLock);
     if (!dvmRemoveFromIndirectRefTable(&gDvm.jniGlobalRefTable,
             IRT_FIRST_SEGMENT, jobj))
     {
         LOGW("JNI: DeleteGlobalRef(%p) failed to find entry\n", jobj);
-        goto bail;
+        return;
     }
 
     if (kTrackGrefUsage && gDvm.jniGrefLimit != 0) {
@@ -585,8 +585,6 @@ static void deleteGlobalReference(jobject jobj)
             gDvm.jniGlobalRefLoMark -= kGrefWaterInterval;
         }
     }
-bail:
-    dvmUnlockMutex(&gDvm.jniGlobalRefLock);
 }
 
 /*
@@ -597,10 +595,12 @@ bail:
  */
 static void pinPrimitiveArray(ArrayObject* arrayObj)
 {
-    if (arrayObj == NULL)
+    if (arrayObj == NULL) {
         return;
+    }
 
-    dvmLockMutex(&gDvm.jniPinRefLock);
+    ScopedPthreadMutexLock lock(&gDvm.jniPinRefLock);
+
     if (!dvmAddToReferenceTable(&gDvm.jniPinRefTable, (Object*)arrayObj)) {
         dvmDumpReferenceTable(&gDvm.jniPinRefTable, "JNI pinned array");
         LOGE("Failed adding to JNI pinned array ref table (%d entries)\n",
@@ -631,8 +631,6 @@ static void pinPrimitiveArray(ArrayObject* arrayObj)
             /* keep going */
         }
     }
-
-    dvmUnlockMutex(&gDvm.jniPinRefLock);
 }
 
 /*
@@ -641,20 +639,18 @@ static void pinPrimitiveArray(ArrayObject* arrayObj)
  */
 static void unpinPrimitiveArray(ArrayObject* arrayObj)
 {
-    if (arrayObj == NULL)
+    if (arrayObj == NULL) {
         return;
+    }
 
-    dvmLockMutex(&gDvm.jniPinRefLock);
+    ScopedPthreadMutexLock lock(&gDvm.jniPinRefLock);
     if (!dvmRemoveFromReferenceTable(&gDvm.jniPinRefTable,
             gDvm.jniPinRefTable.table, (Object*) arrayObj))
     {
         LOGW("JNI: unpinPrimitiveArray(%p) failed to find entry (valid=%d)\n",
             arrayObj, dvmIsValidObject((Object*) arrayObj));
-        goto bail;
+        return;
     }
-
-bail:
-    dvmUnlockMutex(&gDvm.jniPinRefLock);
 }
 
 /*
@@ -1263,44 +1259,35 @@ static jclass FindClass(JNIEnv* env, const char* name)
 {
     ScopedJniThreadState ts(env);
 
-    const Method* thisMethod;
-    ClassObject* clazz;
-    jclass jclazz = NULL;
-    Object* loader;
-    Object* trackedLoader = NULL;
-    char* descriptor = NULL;
-
-    thisMethod = dvmGetCurrentJNIMethod();
+    const Method* thisMethod = dvmGetCurrentJNIMethod();
     assert(thisMethod != NULL);
 
-    descriptor = dvmNameToDescriptor(name);
-    if (descriptor == NULL) {
-        clazz = NULL;
-        goto bail;
-    }
-
-    //Thread* self = dvmThreadSelf();
+    Object* loader;
+    Object* trackedLoader = NULL;
     if (ts.self()->classLoaderOverride != NULL) {
         /* hack for JNI_OnLoad */
         assert(strcmp(thisMethod->name, "nativeLoad") == 0);
         loader = ts.self()->classLoaderOverride;
     } else if (thisMethod == gDvm.methDalvikSystemNativeStart_main) {
         /* start point of invocation interface */
-        if (!gDvm.initializing)
+        if (!gDvm.initializing) {
             loader = trackedLoader = dvmGetSystemClassLoader();
-        else
+        } else {
             loader = NULL;
+        }
     } else {
         loader = thisMethod->clazz->classLoader;
     }
 
-    clazz = dvmFindClassNoInit(descriptor, loader);
-    jclazz = (jclass) addLocalReference(env, (Object*) clazz);
-
-    dvmReleaseTrackedAlloc(trackedLoader, ts.self());
-
-bail:
+    char* descriptor = dvmNameToDescriptor(name);
+    if (descriptor == NULL) {
+        return NULL;
+    }
+    ClassObject* clazz = dvmFindClassNoInit(descriptor, loader);
     free(descriptor);
+
+    jclass jclazz = (jclass) addLocalReference(env, (Object*) clazz);
+    dvmReleaseTrackedAlloc(trackedLoader, ts.self());
     return jclazz;
 }
 
@@ -3452,7 +3439,7 @@ JNIEnv* dvmCreateJNIEnv(Thread* self) {
         dvmUseCheckedJniEnv(newEnv);
     }
 
-    dvmLockMutex(&vm->envListLock);
+    ScopedPthreadMutexLock lock(&vm->envListLock);
 
     /* insert at head of list */
     newEnv->next = vm->envList;
@@ -3464,8 +3451,6 @@ JNIEnv* dvmCreateJNIEnv(Thread* self) {
         vm->envList->prev = newEnv;
     }
     vm->envList = newEnv;
-
-    dvmUnlockMutex(&vm->envListLock);
 
     //if (self != NULL)
     //    LOGI("Xit CreateJNIEnv: threadid=%d %p\n", self->threadId, self);
@@ -3484,7 +3469,8 @@ void dvmDestroyJNIEnv(JNIEnv* env) {
 
     JNIEnvExt* extEnv = (JNIEnvExt*) env;
     JavaVMExt* vm = extEnv->vm;
-    dvmLockMutex(&vm->envListLock);
+
+    ScopedPthreadMutexLock lock(&vm->envListLock);
 
     if (extEnv == vm->envList) {
         assert(extEnv->prev == NULL);
@@ -3496,7 +3482,6 @@ void dvmDestroyJNIEnv(JNIEnv* env) {
     if (extEnv->next != NULL) {
         extEnv->next->prev = extEnv->prev;
     }
-    dvmUnlockMutex(&extEnv->vm->envListLock);
 
     free(env);
     //LOGI("Xit DestroyJNIEnv: threadid=%d %p\n", self->threadId, self);

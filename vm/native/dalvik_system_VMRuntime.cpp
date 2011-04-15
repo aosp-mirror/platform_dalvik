@@ -18,6 +18,7 @@
  * dalvik.system.VMRuntime
  */
 #include "Dalvik.h"
+#include "ScopedPthreadMutexLock.h"
 #include "native/InternalNativePriv.h"
 
 #include <cutils/array.h>
@@ -64,12 +65,10 @@ static void Dalvik_dalvik_system_VMRuntime_startJitCompilation(const u4* args,
     JValue* pResult)
 {
 #if defined(WITH_JIT)
-    if (gDvm.executionMode == kExecutionModeJit &&
-        gDvmJit.disableJit == false) {
-        dvmLockMutex(&gDvmJit.compilerLock);
+    if (gDvm.executionMode == kExecutionModeJit && gDvmJit.disableJit == false) {
+        ScopedPthreadMutexLock lock(&gDvmJit.compilerLock);
         gDvmJit.alreadyEnabledViaFramework = true;
         pthread_cond_signal(&gDvmJit.compilerQueueActivity);
-        dvmUnlockMutex(&gDvmJit.compilerLock);
     }
 #endif
     RETURN_VOID();
