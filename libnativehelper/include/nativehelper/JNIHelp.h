@@ -27,8 +27,21 @@
 #include "utils/Log.h"
 #include <unistd.h>
 
+#ifdef __cplusplus
+
+// Type-safe implementation from Google's "base/macros.h".
+#ifndef NELEM
+template <typename T, size_t N> char (&JniArraySizeHelper(T (&array)[N]))[N];
+#define NELEM(array) (sizeof(JniArraySizeHelper(array)))
+#endif
+
+#else
+
+// Backwards-compatible C cruft.
 #ifndef NELEM
 # define NELEM(x) ((int) (sizeof(x) / sizeof((x)[0])))
+#endif
+
 #endif
 
 #ifdef __cplusplus
