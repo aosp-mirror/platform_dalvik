@@ -29,12 +29,14 @@ import com.android.dx.rop.code.Rops;
 import com.android.dx.rop.code.SourcePosition;
 import com.android.dx.rop.code.ThrowingCstInsn;
 import com.android.dx.rop.code.ThrowingInsn;
+import com.android.dx.rop.cst.CstInteger;
 import com.android.dx.rop.type.StdTypeList;
 import static com.android.dx.rop.type.Type.BT_BYTE;
 import static com.android.dx.rop.type.Type.BT_CHAR;
 import static com.android.dx.rop.type.Type.BT_INT;
 import static com.android.dx.rop.type.Type.BT_SHORT;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -62,10 +64,13 @@ public final class Code {
     private final List<Local<?>> parameters = new ArrayList<Local<?>>();
     private final List<Local<?>> locals = new ArrayList<Local<?>>();
     private SourcePosition sourcePosition = SourcePosition.NO_INFO;
+    private final List<Type<?>> catchTypes = new ArrayList<Type<?>>();
+    private final List<Label> catchLabels = new ArrayList<Label>();
+    private StdTypeList catches = StdTypeList.EMPTY;
 
     public Code(Method<?, ?> method) {
         this.method = method;
-        thisLocal = method.isStatic()
+        this.thisLocal = method.isStatic()
                 ? null
                 : new Local<Object>(this, method.declaringType, Local.InitialValue.THIS);
         for (Type<?> parameter : method.parameters.types) {
@@ -114,6 +119,10 @@ public final class Code {
      *   method's invocation frame, in order. Wide arguments consume two
      *   registers. Instance methods are passed a this reference as their
      *   first argument."
+     *
+     * In addition to assigning registers to each of the locals, this creates
+     * instructions to move parameters into their initial registers. These
+     * instructions are inserted before the code's first real instruction.
      */
     void initializeLocals() {
         if (localsInitialized) {
@@ -128,9 +137,24 @@ public final class Code {
         if (thisLocal != null) {
             reg += thisLocal.initialize(reg);
         }
+        int firstParamReg = reg;
+
+        List<Insn> moveParameterInstructions = new ArrayList<Insn>();
         for (Local<?> local : parameters) {
+            CstInteger paramConstant = CstInteger.make(reg - firstParamReg);
             reg += local.initialize(reg);
+            moveParameterInstructions.add(new PlainCstInsn(Rops.opMoveParam(local.type.ropType),
+                    sourcePosition, local.spec(), RegisterSpecList.EMPTY, paramConstant));
         }
+        labels.get(0).instructions.addAll(0, moveParameterInstructions);
+    }
+
+    int paramSize() {
+        int result = 0;
+        for (Local<?> local : parameters) {
+            result += local.size();
+        }
+        return result;
     }
 
     // labels
@@ -159,10 +183,51 @@ public final class Code {
         currentLabel = label;
     }
 
+    public void jump(Label target) {
+        addInstruction(new PlainInsn(Rops.GOTO, sourcePosition, null, RegisterSpecList.EMPTY),
+                target);
+    }
+
+    public void addCatchClause(Type<?> throwable, Label catchClause) {
+        if (catchTypes.contains(throwable)) {
+            throw new IllegalArgumentException("Already caught: " + throwable);
+        }
+        catchTypes.add(throwable);
+        catches = toTypeList(catchTypes);
+        catchLabels.add(catchClause);
+    }
+
+    public Label removeCatchClause(Type<?> throwable) {
+        int index = catchTypes.indexOf(throwable);
+        if (index == -1) {
+            throw new IllegalArgumentException("No catch clause: " + throwable);
+        }
+        catchTypes.remove(index);
+        catches = toTypeList(catchTypes);
+        return catchLabels.remove(index);
+    }
+
+    public void throwValue(Local<?> throwable) {
+        addInstruction(new ThrowingInsn(Rops.THROW, sourcePosition,
+                RegisterSpecList.make(throwable.spec()), catches));
+    }
+
+    private StdTypeList toTypeList(List<Type<?>> types) {
+        StdTypeList result = new StdTypeList(types.size());
+        for (int i = 0; i < types.size(); i++) {
+            result.set(i, types.get(i).ropType);
+        }
+        return result;
+    }
+
     private void addInstruction(Insn insn) {
         addInstruction(insn, null);
     }
 
+    /**
+     * @param branch the branches to follow; interpretation depends on the
+     *     instruction's branchingness.
+     */
     private void addInstruction(Insn insn, Label branch) {
         if (currentLabel == null || !currentLabel.marked) {
             throw new IllegalStateException("no current label");
@@ -172,13 +237,13 @@ public final class Code {
         switch (insn.getOpcode().getBranchingness()) {
         case BRANCH_NONE:
             if (branch != null) {
-                throw new IllegalArgumentException("branch != null");
+                throw new IllegalArgumentException("unexpected branch: " + branch);
             }
             return;
 
         case BRANCH_RETURN:
             if (branch != null) {
-                throw new IllegalArgumentException("branch != null");
+                throw new IllegalArgumentException("unexpected branch: " + branch);
             }
             currentLabel = null;
             break;
@@ -195,11 +260,14 @@ public final class Code {
             if (branch == null) {
                 throw new IllegalArgumentException("branch == null");
             }
-            splitCurrentLabel(branch);
+            splitCurrentLabel(branch, Collections.<Label>emptyList());
             break;
 
         case Rop.BRANCH_THROW:
-            splitCurrentLabel(branch);
+            if (branch != null) {
+                throw new IllegalArgumentException("unexpected branch: " + branch);
+            }
+            splitCurrentLabel(null, new ArrayList<Label>(catchLabels));
             break;
 
         default:
@@ -209,11 +277,14 @@ public final class Code {
 
     /**
      * Closes the current label and starts a new one.
+     *
+     * @param catchLabels an immutable list of catch labels
      */
-    private void splitCurrentLabel(Label branch) {
+    private void splitCurrentLabel(Label alternateSuccessor, List<Label> catchLabels) {
         Label newLabel = newLabel();
         currentLabel.primarySuccessor = newLabel;
-        currentLabel.alternateSuccessor = branch;
+        currentLabel.alternateSuccessor = alternateSuccessor;
+        currentLabel.catchLabels = catchLabels;
         currentLabel = newLabel;
         currentLabel.marked = true;
     }
@@ -227,7 +298,7 @@ public final class Code {
                     RegisterSpecList.EMPTY, Constants.getConstant(value)));
         } else {
             addInstruction(new ThrowingCstInsn(rop, sourcePosition,
-                    RegisterSpecList.EMPTY, StdTypeList.EMPTY, Constants.getConstant(value)));
+                    RegisterSpecList.EMPTY, catches, Constants.getConstant(value)));
             moveResult(target, true);
         }
     }
@@ -274,7 +345,7 @@ public final class Code {
         if (rop.getBranchingness() == BRANCH_NONE) {
             addInstruction(new PlainInsn(rop, sourcePosition, target.spec(), sources));
         } else {
-            addInstruction(new ThrowingInsn(rop, sourcePosition, sources, StdTypeList.EMPTY));
+            addInstruction(new ThrowingInsn(rop, sourcePosition, sources, catches));
             moveResult(target, true);
         }
     }
@@ -282,7 +353,7 @@ public final class Code {
     // instructions: branches
 
     /**
-     * Compare integers. If the comparison is true, execution jumps to {@code
+     * Compare ints. If the comparison is true, execution jumps to {@code
      * trueLabel}. If it is false, execution continues to the next instruction.
      */
     public <T> void compare(Comparison comparison, Local<T> a, Local<T> b, Label trueLabel) {
@@ -294,34 +365,53 @@ public final class Code {
                 RegisterSpecList.make(a.spec(), b.spec())), trueLabel);
     }
 
-    public void jump(Label target) {
-        addInstruction(new PlainInsn(Rops.GOTO, sourcePosition, null, RegisterSpecList.EMPTY),
-                target);
+    /**
+     * Compare floats or doubles.
+     */
+    public <T extends Number> void compare(Local<T> a, Local<T> b, Local<Integer> target,
+            int nanValue) {
+        Rop rop;
+        if (nanValue == 1) {
+            rop = Rops.opCmpg(a.type.ropType);
+        } else if (nanValue == -1) {
+            rop = Rops.opCmpl(a.type.ropType);
+        } else {
+            throw new IllegalArgumentException("expected 1 or -1 but was " + nanValue);
+        }
+        addInstruction(new PlainInsn(rop, sourcePosition, target.spec(),
+                RegisterSpecList.make(a.spec(), b.spec())));
+    }
+
+    /**
+     * Compare longs.
+     */
+    public <T> void compare(Local<T> a, Local<T> b, Local<?> target) {
+        addInstruction(new PlainInsn(Rops.CMPL_LONG, sourcePosition, target.spec(),
+                RegisterSpecList.make(a.spec(), b.spec())));
     }
 
     // instructions: fields
 
     public <T, R> void iget(Field<T, R> field, Local<T> instance, Local<R> target) {
         addInstruction(new ThrowingCstInsn(Rops.opGetField(target.type.ropType), sourcePosition,
-                RegisterSpecList.make(instance.spec()), StdTypeList.EMPTY, field.constant));
+                RegisterSpecList.make(instance.spec()), catches, field.constant));
         moveResult(target, true);
     }
 
     public <T, R> void iput(Field<T, R> field, Local<T> instance, Local<R> source) {
         addInstruction(new ThrowingCstInsn(Rops.opPutField(source.type.ropType), sourcePosition,
-                RegisterSpecList.make(source.spec(), instance.spec()), StdTypeList.EMPTY,
-                field.constant));
+                RegisterSpecList.make(source.spec(), instance.spec()), catches, field.constant));
     }
 
     public <T> void sget(Field<?, T> field, Local<T> target) {
         addInstruction(new ThrowingCstInsn(Rops.opGetStatic(target.type.ropType), sourcePosition,
-                RegisterSpecList.EMPTY, StdTypeList.EMPTY, field.constant));
+                RegisterSpecList.EMPTY, catches, field.constant));
         moveResult(target, true);
     }
 
     public <T> void sput(Field<?, T> field, Local<T> source) {
         addInstruction(new ThrowingCstInsn(Rops.opPutStatic(source.type.ropType), sourcePosition,
-                RegisterSpecList.make(source.spec()), StdTypeList.EMPTY, field.constant));
+                RegisterSpecList.make(source.spec()), catches, field.constant));
     }
 
     // instructions: invoke
@@ -331,7 +421,7 @@ public final class Code {
             throw new IllegalArgumentException();
         }
         addInstruction(new ThrowingCstInsn(Rops.NEW_INSTANCE, sourcePosition,
-                RegisterSpecList.EMPTY, StdTypeList.EMPTY, constructor.declaringType.constant));
+                RegisterSpecList.EMPTY, catches, constructor.declaringType.constant));
         moveResult(target, true);
         invokeDirect(constructor, null, target, args);
     }
@@ -363,7 +453,7 @@ public final class Code {
     private <I, R> void invoke(Rop rop, Method<I, R> method, Local<? super R> target,
             Local<? extends I> object, Local<?>... args) {
         addInstruction(new ThrowingCstInsn(rop, sourcePosition, concatenate(object, args),
-                StdTypeList.EMPTY, method.constant));
+                catches, method.constant));
         if (target != null) {
             moveResult(target, false);
         }
@@ -373,14 +463,39 @@ public final class Code {
 
     public void instanceOfType(Local<?> target, Local<?> source, Type<?> type) {
         addInstruction(new ThrowingCstInsn(Rops.INSTANCE_OF, sourcePosition,
-                RegisterSpecList.make(source.spec()), StdTypeList.EMPTY, type.constant));
+                RegisterSpecList.make(source.spec()), catches, type.constant));
         moveResult(target, true);
     }
 
     public void typeCast(Local<?> source, Local<?> target) {
         addInstruction(new ThrowingCstInsn(Rops.CHECK_CAST, sourcePosition,
-                RegisterSpecList.make(source.spec()), StdTypeList.EMPTY, target.type.constant));
+                RegisterSpecList.make(source.spec()), catches, target.type.constant));
         moveResult(target, true);
+    }
+
+    // instructions: arrays
+
+    public <T> void arrayLength(Local<T> array, Local<Integer> target) {
+        addInstruction(new ThrowingInsn(Rops.ARRAY_LENGTH, sourcePosition,
+                RegisterSpecList.make(array.spec()), catches));
+        moveResult(target, true);
+    }
+
+    public <T> void newArray(Local<Integer> length, Local<T> target) {
+        addInstruction(new ThrowingCstInsn(Rops.opNewArray(target.type.ropType), sourcePosition,
+                RegisterSpecList.make(length.spec()), catches, target.type.constant));
+        moveResult(target, true);
+    }
+
+    public void aget(Local<?> array, Local<Integer> index, Local<?> target) {
+        addInstruction(new ThrowingInsn(Rops.opAget(target.type.ropType), sourcePosition,
+                RegisterSpecList.make(array.spec(), index.spec()), catches));
+        moveResult(target, true);
+    }
+
+    public void aput(Local<?> array, Local<Integer> index, Local<?> source) {
+        addInstruction(new ThrowingInsn(Rops.opAput(source.type.ropType), sourcePosition,
+                RegisterSpecList.make(source.spec(), array.spec(), index.spec()), catches));
     }
 
     // instructions: return
@@ -401,7 +516,7 @@ public final class Code {
                     + " but returned " + result.type);
         }
         addInstruction(new PlainInsn(Rops.opReturn(result.type.ropType), sourcePosition,
-                null, RegisterSpecList.make(result.spec())), null);
+                null, RegisterSpecList.make(result.spec())));
     }
 
     private void moveResult(Local<?> target, boolean afterNonInvokeThrowingInsn) {
@@ -414,6 +529,10 @@ public final class Code {
     // produce BasicBlocks for dex
 
     BasicBlockList toBasicBlocks() {
+        if (!localsInitialized) {
+            initializeLocals();
+        }
+
         cleanUpLabels();
 
         BasicBlockList result = new BasicBlockList(labels.size());

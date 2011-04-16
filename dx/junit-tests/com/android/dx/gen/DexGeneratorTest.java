@@ -24,6 +24,7 @@ import static com.android.dx.rop.code.AccessFlags.ACC_PUBLIC;
 import static com.android.dx.rop.code.AccessFlags.ACC_STATIC;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Callable;
 import junit.framework.TestCase;
@@ -37,11 +38,19 @@ import junit.framework.TestCase;
  */
 public final class DexGeneratorTest extends TestCase {
     private DexGenerator generator;
+    private Type<Void> voidType;
     private Type<Integer> intType;
     private Type<Long> longType;
     private Type<Boolean> booleanType;
+    private Type<Float> floatType;
+    private Type<Double> doubleType;
     private Type<Object> objectType;
     private Type<String> stringType;
+    private Type<boolean[]> booleanArrayType;
+    private Type<int[]> intArrayType;
+    private Type<long[]> longArrayType;
+    private Type<long[][]> long2dArrayType;
+    private Type<Object[]> objectArrayType;
     private Type<DexGeneratorTest> dexGeneratorTestType;
     private Type<?> generatedType;
     private Type<Callable> callableType;
@@ -58,11 +67,19 @@ public final class DexGeneratorTest extends TestCase {
      */
     private void reset() {
         generator = new DexGenerator();
+        voidType = generator.getType(void.class);
         intType = generator.getType(int.class);
         longType = generator.getType(long.class);
         booleanType = generator.getType(boolean.class);
+        floatType = generator.getType(float.class);
+        doubleType = generator.getType(double.class);
         objectType = generator.getType(Object.class);
         stringType = generator.getType(String.class);
+        booleanArrayType = generator.getType(boolean[].class);
+        intArrayType = generator.getType(int[].class);
+        longArrayType = generator.getType(long[].class);
+        long2dArrayType = generator.getType(long[][].class);
+        objectArrayType = generator.getType(Object[].class);
         dexGeneratorTestType = generator.getType(DexGeneratorTest.class);
         generatedType = generator.getType("LGenerated;");
         callableType = generator.getType(Callable.class);
@@ -218,7 +235,7 @@ public final class DexGeneratorTest extends TestCase {
     }
 
     @SuppressWarnings("unused") // called by generated code
-    public final int superMethod(int a) {
+    public int superMethod(int a) {
         return a + 4;
     }
 
@@ -415,38 +432,38 @@ public final class DexGeneratorTest extends TestCase {
     }
 
     public void testBranching() throws Exception {
-        java.lang.reflect.Method lt = newBranchingMethod(Comparison.LT);
+        java.lang.reflect.Method lt = branchingMethod(Comparison.LT);
         assertEquals(Boolean.TRUE, lt.invoke(null, 1, 2));
         assertEquals(Boolean.FALSE, lt.invoke(null, 1, 1));
         assertEquals(Boolean.FALSE, lt.invoke(null, 2, 1));
 
-        java.lang.reflect.Method le = newBranchingMethod(Comparison.LE);
+        java.lang.reflect.Method le = branchingMethod(Comparison.LE);
         assertEquals(Boolean.TRUE, le.invoke(null, 1, 2));
         assertEquals(Boolean.TRUE, le.invoke(null, 1, 1));
         assertEquals(Boolean.FALSE, le.invoke(null, 2, 1));
 
-        java.lang.reflect.Method eq = newBranchingMethod(Comparison.EQ);
+        java.lang.reflect.Method eq = branchingMethod(Comparison.EQ);
         assertEquals(Boolean.FALSE, eq.invoke(null, 1, 2));
         assertEquals(Boolean.TRUE, eq.invoke(null, 1, 1));
         assertEquals(Boolean.FALSE, eq.invoke(null, 2, 1));
 
-        java.lang.reflect.Method ge = newBranchingMethod(Comparison.GE);
+        java.lang.reflect.Method ge = branchingMethod(Comparison.GE);
         assertEquals(Boolean.FALSE, ge.invoke(null, 1, 2));
         assertEquals(Boolean.TRUE, ge.invoke(null, 1, 1));
         assertEquals(Boolean.TRUE, ge.invoke(null, 2, 1));
 
-        java.lang.reflect.Method gt = newBranchingMethod(Comparison.GT);
+        java.lang.reflect.Method gt = branchingMethod(Comparison.GT);
         assertEquals(Boolean.FALSE, gt.invoke(null, 1, 2));
         assertEquals(Boolean.FALSE, gt.invoke(null, 1, 1));
         assertEquals(Boolean.TRUE, gt.invoke(null, 2, 1));
 
-        java.lang.reflect.Method ne = newBranchingMethod(Comparison.NE);
+        java.lang.reflect.Method ne = branchingMethod(Comparison.NE);
         assertEquals(Boolean.TRUE, ne.invoke(null, 1, 2));
         assertEquals(Boolean.FALSE, ne.invoke(null, 1, 1));
         assertEquals(Boolean.TRUE, ne.invoke(null, 2, 1));
     }
 
-    private java.lang.reflect.Method newBranchingMethod(Comparison comparison) throws Exception {
+    private java.lang.reflect.Method branchingMethod(Comparison comparison) throws Exception {
         /*
          * public static boolean call(int localA, int localB) {
          *   if (a comparison b) {
@@ -477,53 +494,53 @@ public final class DexGeneratorTest extends TestCase {
     }
 
     public void testCastIntegerToInteger() throws Exception {
-        java.lang.reflect.Method intToLong = newNumericCastingMethod(int.class, long.class);
+        java.lang.reflect.Method intToLong = numericCastingMethod(int.class, long.class);
         assertEquals(0x0000000000000000L, intToLong.invoke(null, 0x00000000));
         assertEquals(0x000000007fffffffL, intToLong.invoke(null, 0x7fffffff));
         assertEquals(0xffffffff80000000L, intToLong.invoke(null, 0x80000000));
         assertEquals(0xffffffffffffffffL, intToLong.invoke(null, 0xffffffff));
 
-        java.lang.reflect.Method longToInt = newNumericCastingMethod(long.class, int.class);
+        java.lang.reflect.Method longToInt = numericCastingMethod(long.class, int.class);
         assertEquals(0x1234abcd, longToInt.invoke(null, 0x000000001234abcdL));
         assertEquals(0x1234abcd, longToInt.invoke(null, 0x123456781234abcdL));
         assertEquals(0x1234abcd, longToInt.invoke(null, 0xffffffff1234abcdL));
 
-        java.lang.reflect.Method intToShort = newNumericCastingMethod(int.class, short.class);
+        java.lang.reflect.Method intToShort = numericCastingMethod(int.class, short.class);
         assertEquals((short) 0x1234, intToShort.invoke(null, 0x00001234));
         assertEquals((short) 0x1234, intToShort.invoke(null, 0xabcd1234));
         assertEquals((short) 0x1234, intToShort.invoke(null, 0xffff1234));
 
-        java.lang.reflect.Method intToChar = newNumericCastingMethod(int.class, char.class);
+        java.lang.reflect.Method intToChar = numericCastingMethod(int.class, char.class);
         assertEquals((char) 0x1234, intToChar.invoke(null, 0x00001234));
         assertEquals((char) 0x1234, intToChar.invoke(null, 0xabcd1234));
         assertEquals((char) 0x1234, intToChar.invoke(null, 0xffff1234));
 
-        java.lang.reflect.Method intToByte = newNumericCastingMethod(int.class, byte.class);
+        java.lang.reflect.Method intToByte = numericCastingMethod(int.class, byte.class);
         assertEquals((byte) 0x34, intToByte.invoke(null, 0x00000034));
         assertEquals((byte) 0x34, intToByte.invoke(null, 0xabcd1234));
         assertEquals((byte) 0x34, intToByte.invoke(null, 0xffffff34));
     }
 
     public void testCastIntegerToFloatingPoint() throws Exception {
-        java.lang.reflect.Method intToFloat = newNumericCastingMethod(int.class, float.class);
+        java.lang.reflect.Method intToFloat = numericCastingMethod(int.class, float.class);
         assertEquals(0.0f, intToFloat.invoke(null, 0));
         assertEquals(-1.0f, intToFloat.invoke(null, -1));
         assertEquals(16777216f, intToFloat.invoke(null, 16777216));
         assertEquals(16777216f, intToFloat.invoke(null, 16777217)); // precision
 
-        java.lang.reflect.Method intToDouble = newNumericCastingMethod(int.class, double.class);
+        java.lang.reflect.Method intToDouble = numericCastingMethod(int.class, double.class);
         assertEquals(0.0, intToDouble.invoke(null, 0));
         assertEquals(-1.0, intToDouble.invoke(null, -1));
         assertEquals(16777216.0, intToDouble.invoke(null, 16777216));
         assertEquals(16777217.0, intToDouble.invoke(null, 16777217));
 
-        java.lang.reflect.Method longToFloat = newNumericCastingMethod(long.class, float.class);
+        java.lang.reflect.Method longToFloat = numericCastingMethod(long.class, float.class);
         assertEquals(0.0f, longToFloat.invoke(null, 0L));
         assertEquals(-1.0f, longToFloat.invoke(null, -1L));
         assertEquals(16777216f, longToFloat.invoke(null, 16777216L));
         assertEquals(16777216f, longToFloat.invoke(null, 16777217L));
 
-        java.lang.reflect.Method longToDouble = newNumericCastingMethod(long.class, double.class);
+        java.lang.reflect.Method longToDouble = numericCastingMethod(long.class, double.class);
         assertEquals(0.0, longToDouble.invoke(null, 0L));
         assertEquals(-1.0, longToDouble.invoke(null, -1L));
         assertEquals(9007199254740992.0, longToDouble.invoke(null, 9007199254740992L));
@@ -531,7 +548,7 @@ public final class DexGeneratorTest extends TestCase {
     }
 
     public void testCastFloatingPointToInteger() throws Exception {
-        java.lang.reflect.Method floatToInt = newNumericCastingMethod(float.class, int.class);
+        java.lang.reflect.Method floatToInt = numericCastingMethod(float.class, int.class);
         assertEquals(0, floatToInt.invoke(null, 0.0f));
         assertEquals(-1, floatToInt.invoke(null, -1.0f));
         assertEquals(Integer.MAX_VALUE, floatToInt.invoke(null, 10e15f));
@@ -539,7 +556,7 @@ public final class DexGeneratorTest extends TestCase {
         assertEquals(Integer.MIN_VALUE, floatToInt.invoke(null, Float.NEGATIVE_INFINITY));
         assertEquals(0, floatToInt.invoke(null, Float.NaN));
 
-        java.lang.reflect.Method floatToLong = newNumericCastingMethod(float.class, long.class);
+        java.lang.reflect.Method floatToLong = numericCastingMethod(float.class, long.class);
         assertEquals(0L, floatToLong.invoke(null, 0.0f));
         assertEquals(-1L, floatToLong.invoke(null, -1.0f));
         assertEquals(10000000272564224L, floatToLong.invoke(null, 10e15f));
@@ -547,7 +564,7 @@ public final class DexGeneratorTest extends TestCase {
         assertEquals(Long.MIN_VALUE, floatToLong.invoke(null, Float.NEGATIVE_INFINITY));
         assertEquals(0L, floatToLong.invoke(null, Float.NaN));
 
-        java.lang.reflect.Method doubleToInt = newNumericCastingMethod(double.class, int.class);
+        java.lang.reflect.Method doubleToInt = numericCastingMethod(double.class, int.class);
         assertEquals(0, doubleToInt.invoke(null, 0.0));
         assertEquals(-1, doubleToInt.invoke(null, -1.0));
         assertEquals(Integer.MAX_VALUE, doubleToInt.invoke(null, 10e15));
@@ -555,7 +572,7 @@ public final class DexGeneratorTest extends TestCase {
         assertEquals(Integer.MIN_VALUE, doubleToInt.invoke(null, Double.NEGATIVE_INFINITY));
         assertEquals(0, doubleToInt.invoke(null, Double.NaN));
 
-        java.lang.reflect.Method doubleToLong = newNumericCastingMethod(double.class, long.class);
+        java.lang.reflect.Method doubleToLong = numericCastingMethod(double.class, long.class);
         assertEquals(0L, doubleToLong.invoke(null, 0.0));
         assertEquals(-1L, doubleToLong.invoke(null, -1.0));
         assertEquals(10000000000000000L, doubleToLong.invoke(null, 10e15));
@@ -565,14 +582,14 @@ public final class DexGeneratorTest extends TestCase {
     }
 
     public void testCastFloatingPointToFloatingPoint() throws Exception {
-        java.lang.reflect.Method floatToDouble = newNumericCastingMethod(float.class, double.class);
+        java.lang.reflect.Method floatToDouble = numericCastingMethod(float.class, double.class);
         assertEquals(0.0, floatToDouble.invoke(null, 0.0f));
         assertEquals(-1.0, floatToDouble.invoke(null, -1.0f));
         assertEquals(0.5, floatToDouble.invoke(null, 0.5f));
         assertEquals(Double.NEGATIVE_INFINITY, floatToDouble.invoke(null, Float.NEGATIVE_INFINITY));
         assertEquals(Double.NaN, floatToDouble.invoke(null, Float.NaN));
 
-        java.lang.reflect.Method doubleToFloat = newNumericCastingMethod(double.class, float.class);
+        java.lang.reflect.Method doubleToFloat = numericCastingMethod(double.class, float.class);
         assertEquals(0.0f, doubleToFloat.invoke(null, 0.0));
         assertEquals(-1.0f, doubleToFloat.invoke(null, -1.0));
         assertEquals(0.5f, doubleToFloat.invoke(null, 0.5));
@@ -580,7 +597,7 @@ public final class DexGeneratorTest extends TestCase {
         assertEquals(Float.NaN, doubleToFloat.invoke(null, Double.NaN));
     }
 
-    private java.lang.reflect.Method newNumericCastingMethod(Class<?> source, Class<?> target)
+    private java.lang.reflect.Method numericCastingMethod(Class<?> source, Class<?> target)
             throws Exception {
         /*
          * public static short call(int source) {
@@ -601,18 +618,18 @@ public final class DexGeneratorTest extends TestCase {
     }
 
     public void testNot() throws Exception {
-        java.lang.reflect.Method notInteger = newNotMethod(int.class);
+        java.lang.reflect.Method notInteger = notMethod(int.class);
         assertEquals(0xffffffff, notInteger.invoke(null, 0x00000000));
         assertEquals(0x00000000, notInteger.invoke(null, 0xffffffff));
         assertEquals(0xedcba987, notInteger.invoke(null, 0x12345678));
 
-        java.lang.reflect.Method notLong = newNotMethod(long.class);
+        java.lang.reflect.Method notLong = notMethod(long.class);
         assertEquals(0xffffffffffffffffL, notLong.invoke(null, 0x0000000000000000L));
         assertEquals(0x0000000000000000L, notLong.invoke(null, 0xffffffffffffffffL));
         assertEquals(0x98765432edcba987L, notLong.invoke(null, 0x6789abcd12345678L));
     }
 
-    private <T> java.lang.reflect.Method newNotMethod(Class<T> source) throws Exception {
+    private <T> java.lang.reflect.Method notMethod(Class<T> source) throws Exception {
         /*
          * public static short call(int source) {
          *   source = ~source;
@@ -630,30 +647,30 @@ public final class DexGeneratorTest extends TestCase {
     }
 
     public void testNegate() throws Exception {
-        java.lang.reflect.Method negateInteger = newNegateMethod(int.class);
+        java.lang.reflect.Method negateInteger = negateMethod(int.class);
         assertEquals(0, negateInteger.invoke(null, 0));
         assertEquals(-1, negateInteger.invoke(null, 1));
         assertEquals(Integer.MIN_VALUE, negateInteger.invoke(null, Integer.MIN_VALUE));
 
-        java.lang.reflect.Method negateLong = newNegateMethod(long.class);
+        java.lang.reflect.Method negateLong = negateMethod(long.class);
         assertEquals(0L, negateLong.invoke(null, 0));
         assertEquals(-1L, negateLong.invoke(null, 1));
         assertEquals(Long.MIN_VALUE, negateLong.invoke(null, Long.MIN_VALUE));
 
-        java.lang.reflect.Method negateFloat = newNegateMethod(float.class);
+        java.lang.reflect.Method negateFloat = negateMethod(float.class);
         assertEquals(-0.0f, negateFloat.invoke(null, 0.0f));
         assertEquals(-1.0f, negateFloat.invoke(null, 1.0f));
         assertEquals(Float.NaN, negateFloat.invoke(null, Float.NaN));
         assertEquals(Float.POSITIVE_INFINITY, negateFloat.invoke(null, Float.NEGATIVE_INFINITY));
 
-        java.lang.reflect.Method negateDouble = newNegateMethod(double.class);
+        java.lang.reflect.Method negateDouble = negateMethod(double.class);
         assertEquals(-0.0, negateDouble.invoke(null, 0.0));
         assertEquals(-1.0, negateDouble.invoke(null, 1.0));
         assertEquals(Double.NaN, negateDouble.invoke(null, Double.NaN));
         assertEquals(Double.POSITIVE_INFINITY, negateDouble.invoke(null, Double.NEGATIVE_INFINITY));
     }
 
-    private <T> java.lang.reflect.Method newNegateMethod(Class<T> source) throws Exception {
+    private <T> java.lang.reflect.Method negateMethod(Class<T> source) throws Exception {
         /*
          * public static short call(int source) {
          *   source = -source;
@@ -671,16 +688,16 @@ public final class DexGeneratorTest extends TestCase {
     }
 
     public void testIntBinaryOps() throws Exception {
-        java.lang.reflect.Method add = newBinaryOpMethod(int.class, BinaryOp.ADD);
+        java.lang.reflect.Method add = binaryOpMethod(int.class, BinaryOp.ADD);
         assertEquals(79, add.invoke(null, 75, 4));
 
-        java.lang.reflect.Method subtract = newBinaryOpMethod(int.class, BinaryOp.SUBTRACT);
+        java.lang.reflect.Method subtract = binaryOpMethod(int.class, BinaryOp.SUBTRACT);
         assertEquals(71, subtract.invoke(null, 75, 4));
 
-        java.lang.reflect.Method multiply = newBinaryOpMethod(int.class, BinaryOp.MULTIPLY);
+        java.lang.reflect.Method multiply = binaryOpMethod(int.class, BinaryOp.MULTIPLY);
         assertEquals(300, multiply.invoke(null, 75, 4));
 
-        java.lang.reflect.Method divide = newBinaryOpMethod(int.class, BinaryOp.DIVIDE);
+        java.lang.reflect.Method divide = binaryOpMethod(int.class, BinaryOp.DIVIDE);
         assertEquals(18, divide.invoke(null, 75, 4));
         try {
             divide.invoke(null, 75, 0);
@@ -689,7 +706,7 @@ public final class DexGeneratorTest extends TestCase {
             assertEquals(ArithmeticException.class, expected.getCause().getClass());
         }
 
-        java.lang.reflect.Method remainder = newBinaryOpMethod(int.class, BinaryOp.REMAINDER);
+        java.lang.reflect.Method remainder = binaryOpMethod(int.class, BinaryOp.REMAINDER);
         assertEquals(3, remainder.invoke(null, 75, 4));
         try {
             remainder.invoke(null, 75, 0);
@@ -698,37 +715,37 @@ public final class DexGeneratorTest extends TestCase {
             assertEquals(ArithmeticException.class, expected.getCause().getClass());
         }
 
-        java.lang.reflect.Method and = newBinaryOpMethod(int.class, BinaryOp.AND);
+        java.lang.reflect.Method and = binaryOpMethod(int.class, BinaryOp.AND);
         assertEquals(0xff000000, and.invoke(null, 0xff00ff00, 0xffff0000));
 
-        java.lang.reflect.Method or = newBinaryOpMethod(int.class, BinaryOp.OR);
+        java.lang.reflect.Method or = binaryOpMethod(int.class, BinaryOp.OR);
         assertEquals(0xffffff00, or.invoke(null, 0xff00ff00, 0xffff0000));
 
-        java.lang.reflect.Method xor = newBinaryOpMethod(int.class, BinaryOp.XOR);
+        java.lang.reflect.Method xor = binaryOpMethod(int.class, BinaryOp.XOR);
         assertEquals(0x00ffff00, xor.invoke(null, 0xff00ff00, 0xffff0000));
 
-        java.lang.reflect.Method shiftLeft = newBinaryOpMethod(int.class, BinaryOp.SHIFT_LEFT);
+        java.lang.reflect.Method shiftLeft = binaryOpMethod(int.class, BinaryOp.SHIFT_LEFT);
         assertEquals(0xcd123400, shiftLeft.invoke(null, 0xabcd1234, 8));
 
-        java.lang.reflect.Method shiftRight = newBinaryOpMethod(int.class, BinaryOp.SHIFT_RIGHT);
+        java.lang.reflect.Method shiftRight = binaryOpMethod(int.class, BinaryOp.SHIFT_RIGHT);
         assertEquals(0xffabcd12, shiftRight.invoke(null, 0xabcd1234, 8));
 
-        java.lang.reflect.Method unsignedShiftRight = newBinaryOpMethod(int.class,
+        java.lang.reflect.Method unsignedShiftRight = binaryOpMethod(int.class,
                 BinaryOp.UNSIGNED_SHIFT_RIGHT);
         assertEquals(0x00abcd12, unsignedShiftRight.invoke(null, 0xabcd1234, 8));
     }
 
     public void testLongBinaryOps() throws Exception {
-        java.lang.reflect.Method add = newBinaryOpMethod(long.class, BinaryOp.ADD);
+        java.lang.reflect.Method add = binaryOpMethod(long.class, BinaryOp.ADD);
         assertEquals(79L, add.invoke(null, 75L, 4L));
 
-        java.lang.reflect.Method subtract = newBinaryOpMethod(long.class, BinaryOp.SUBTRACT);
+        java.lang.reflect.Method subtract = binaryOpMethod(long.class, BinaryOp.SUBTRACT);
         assertEquals(71L, subtract.invoke(null, 75L, 4L));
 
-        java.lang.reflect.Method multiply = newBinaryOpMethod(long.class, BinaryOp.MULTIPLY);
+        java.lang.reflect.Method multiply = binaryOpMethod(long.class, BinaryOp.MULTIPLY);
         assertEquals(300L, multiply.invoke(null, 75L, 4L));
 
-        java.lang.reflect.Method divide = newBinaryOpMethod(long.class, BinaryOp.DIVIDE);
+        java.lang.reflect.Method divide = binaryOpMethod(long.class, BinaryOp.DIVIDE);
         assertEquals(18L, divide.invoke(null, 75L, 4L));
         try {
             divide.invoke(null, 75L, 0L);
@@ -737,7 +754,7 @@ public final class DexGeneratorTest extends TestCase {
             assertEquals(ArithmeticException.class, expected.getCause().getClass());
         }
 
-        java.lang.reflect.Method remainder = newBinaryOpMethod(long.class, BinaryOp.REMAINDER);
+        java.lang.reflect.Method remainder = binaryOpMethod(long.class, BinaryOp.REMAINDER);
         assertEquals(3L, remainder.invoke(null, 75L, 4L));
         try {
             remainder.invoke(null, 75L, 0L);
@@ -746,67 +763,67 @@ public final class DexGeneratorTest extends TestCase {
             assertEquals(ArithmeticException.class, expected.getCause().getClass());
         }
 
-        java.lang.reflect.Method and = newBinaryOpMethod(long.class, BinaryOp.AND);
+        java.lang.reflect.Method and = binaryOpMethod(long.class, BinaryOp.AND);
         assertEquals(0xff00ff0000000000L,
                 and.invoke(null, 0xff00ff00ff00ff00L, 0xffffffff00000000L));
 
-        java.lang.reflect.Method or = newBinaryOpMethod(long.class, BinaryOp.OR);
+        java.lang.reflect.Method or = binaryOpMethod(long.class, BinaryOp.OR);
         assertEquals(0xffffffffff00ff00L, or.invoke(null, 0xff00ff00ff00ff00L, 0xffffffff00000000L));
 
-        java.lang.reflect.Method xor = newBinaryOpMethod(long.class, BinaryOp.XOR);
+        java.lang.reflect.Method xor = binaryOpMethod(long.class, BinaryOp.XOR);
         assertEquals(0x00ff00ffff00ff00L,
                 xor.invoke(null, 0xff00ff00ff00ff00L, 0xffffffff00000000L));
 
-        java.lang.reflect.Method shiftLeft = newBinaryOpMethod(long.class, BinaryOp.SHIFT_LEFT);
+        java.lang.reflect.Method shiftLeft = binaryOpMethod(long.class, BinaryOp.SHIFT_LEFT);
         assertEquals(0xcdef012345678900L, shiftLeft.invoke(null, 0xabcdef0123456789L, 8L));
 
-        java.lang.reflect.Method shiftRight = newBinaryOpMethod(long.class, BinaryOp.SHIFT_RIGHT);
+        java.lang.reflect.Method shiftRight = binaryOpMethod(long.class, BinaryOp.SHIFT_RIGHT);
         assertEquals(0xffabcdef01234567L, shiftRight.invoke(null, 0xabcdef0123456789L, 8L));
 
-        java.lang.reflect.Method unsignedShiftRight = newBinaryOpMethod(long.class,
+        java.lang.reflect.Method unsignedShiftRight = binaryOpMethod(long.class,
                 BinaryOp.UNSIGNED_SHIFT_RIGHT);
         assertEquals(0x00abcdef01234567L, unsignedShiftRight.invoke(null, 0xabcdef0123456789L, 8L));
     }
 
     public void testFloatBinaryOps() throws Exception {
-        java.lang.reflect.Method add = newBinaryOpMethod(float.class, BinaryOp.ADD);
+        java.lang.reflect.Method add = binaryOpMethod(float.class, BinaryOp.ADD);
         assertEquals(6.75f, add.invoke(null, 5.5f, 1.25f));
 
-        java.lang.reflect.Method subtract = newBinaryOpMethod(float.class, BinaryOp.SUBTRACT);
+        java.lang.reflect.Method subtract = binaryOpMethod(float.class, BinaryOp.SUBTRACT);
         assertEquals(4.25f, subtract.invoke(null, 5.5f, 1.25f));
 
-        java.lang.reflect.Method multiply = newBinaryOpMethod(float.class, BinaryOp.MULTIPLY);
+        java.lang.reflect.Method multiply = binaryOpMethod(float.class, BinaryOp.MULTIPLY);
         assertEquals(6.875f, multiply.invoke(null, 5.5f, 1.25f));
 
-        java.lang.reflect.Method divide = newBinaryOpMethod(float.class, BinaryOp.DIVIDE);
+        java.lang.reflect.Method divide = binaryOpMethod(float.class, BinaryOp.DIVIDE);
         assertEquals(4.4f, divide.invoke(null, 5.5f, 1.25f));
         assertEquals(Float.POSITIVE_INFINITY, divide.invoke(null, 5.5f, 0.0f));
 
-        java.lang.reflect.Method remainder = newBinaryOpMethod(float.class, BinaryOp.REMAINDER);
+        java.lang.reflect.Method remainder = binaryOpMethod(float.class, BinaryOp.REMAINDER);
         assertEquals(0.5f, remainder.invoke(null, 5.5f, 1.25f));
         assertEquals(Float.NaN, remainder.invoke(null, 5.5f, 0.0f));
     }
 
     public void testDoubleBinaryOps() throws Exception {
-        java.lang.reflect.Method add = newBinaryOpMethod(double.class, BinaryOp.ADD);
+        java.lang.reflect.Method add = binaryOpMethod(double.class, BinaryOp.ADD);
         assertEquals(6.75, add.invoke(null, 5.5, 1.25));
 
-        java.lang.reflect.Method subtract = newBinaryOpMethod(double.class, BinaryOp.SUBTRACT);
+        java.lang.reflect.Method subtract = binaryOpMethod(double.class, BinaryOp.SUBTRACT);
         assertEquals(4.25, subtract.invoke(null, 5.5, 1.25));
 
-        java.lang.reflect.Method multiply = newBinaryOpMethod(double.class, BinaryOp.MULTIPLY);
+        java.lang.reflect.Method multiply = binaryOpMethod(double.class, BinaryOp.MULTIPLY);
         assertEquals(6.875, multiply.invoke(null, 5.5, 1.25));
 
-        java.lang.reflect.Method divide = newBinaryOpMethod(double.class, BinaryOp.DIVIDE);
+        java.lang.reflect.Method divide = binaryOpMethod(double.class, BinaryOp.DIVIDE);
         assertEquals(4.4, divide.invoke(null, 5.5, 1.25));
         assertEquals(Double.POSITIVE_INFINITY, divide.invoke(null, 5.5, 0.0));
 
-        java.lang.reflect.Method remainder = newBinaryOpMethod(double.class, BinaryOp.REMAINDER);
+        java.lang.reflect.Method remainder = binaryOpMethod(double.class, BinaryOp.REMAINDER);
         assertEquals(0.5, remainder.invoke(null, 5.5, 1.25));
         assertEquals(Double.NaN, remainder.invoke(null, 5.5, 0.0));
     }
 
-    private <T> java.lang.reflect.Method newBinaryOpMethod(Class<T> valueClass, BinaryOp op)
+    private <T> java.lang.reflect.Method binaryOpMethod(Class<T> valueClass, BinaryOp op)
             throws Exception {
         /*
          * public static int binaryOp(int a, int b) {
@@ -829,47 +846,47 @@ public final class DexGeneratorTest extends TestCase {
     public void testReadAndWriteInstanceFields() throws Exception {
         Instance instance = new Instance();
 
-        java.lang.reflect.Method intSwap = newInstanceSwapMethod(int.class, "intValue");
+        java.lang.reflect.Method intSwap = instanceSwapMethod(int.class, "intValue");
         instance.intValue = 5;
         assertEquals(5, intSwap.invoke(null, instance, 10));
         assertEquals(10, instance.intValue);
 
-        java.lang.reflect.Method longSwap = newInstanceSwapMethod(long.class, "longValue");
+        java.lang.reflect.Method longSwap = instanceSwapMethod(long.class, "longValue");
         instance.longValue = 500L;
         assertEquals(500L, longSwap.invoke(null, instance, 1234L));
         assertEquals(1234L, instance.longValue);
 
-        java.lang.reflect.Method booleanSwap = newInstanceSwapMethod(boolean.class, "booleanValue");
+        java.lang.reflect.Method booleanSwap = instanceSwapMethod(boolean.class, "booleanValue");
         instance.booleanValue = false;
         assertEquals(false, booleanSwap.invoke(null, instance, true));
         assertEquals(true, instance.booleanValue);
 
-        java.lang.reflect.Method floatSwap = newInstanceSwapMethod(float.class, "floatValue");
+        java.lang.reflect.Method floatSwap = instanceSwapMethod(float.class, "floatValue");
         instance.floatValue = 1.5f;
         assertEquals(1.5f, floatSwap.invoke(null, instance, 0.5f));
         assertEquals(0.5f, instance.floatValue);
 
-        java.lang.reflect.Method doubleSwap = newInstanceSwapMethod(double.class, "doubleValue");
+        java.lang.reflect.Method doubleSwap = instanceSwapMethod(double.class, "doubleValue");
         instance.doubleValue = 155.5;
         assertEquals(155.5, doubleSwap.invoke(null, instance, 266.6));
         assertEquals(266.6, instance.doubleValue);
 
-        java.lang.reflect.Method objectSwap = newInstanceSwapMethod(Object.class, "objectValue");
+        java.lang.reflect.Method objectSwap = instanceSwapMethod(Object.class, "objectValue");
         instance.objectValue = "before";
         assertEquals("before", objectSwap.invoke(null, instance, "after"));
         assertEquals("after", instance.objectValue);
 
-        java.lang.reflect.Method byteSwap = newInstanceSwapMethod(byte.class, "byteValue");
+        java.lang.reflect.Method byteSwap = instanceSwapMethod(byte.class, "byteValue");
         instance.byteValue = 0x35;
         assertEquals((byte) 0x35, byteSwap.invoke(null, instance, (byte) 0x64));
         assertEquals((byte) 0x64, instance.byteValue);
 
-        java.lang.reflect.Method charSwap = newInstanceSwapMethod(char.class, "charValue");
+        java.lang.reflect.Method charSwap = instanceSwapMethod(char.class, "charValue");
         instance.charValue = 'A';
         assertEquals('A', charSwap.invoke(null, instance, 'B'));
         assertEquals('B', instance.charValue);
 
-        java.lang.reflect.Method shortSwap = newInstanceSwapMethod(short.class, "shortValue");
+        java.lang.reflect.Method shortSwap = instanceSwapMethod(short.class, "shortValue");
         instance.shortValue = (short) 0xabcd;
         assertEquals((short) 0xabcd, shortSwap.invoke(null, instance, (short) 0x1234));
         assertEquals((short) 0x1234, instance.shortValue);
@@ -887,7 +904,7 @@ public final class DexGeneratorTest extends TestCase {
         public short shortValue;
     }
 
-    private <V> java.lang.reflect.Method newInstanceSwapMethod(
+    private <V> java.lang.reflect.Method instanceSwapMethod(
             Class<V> valueClass, String fieldName) throws Exception {
         /*
          * public static int call(Instance instance, int newValue) {
@@ -912,47 +929,47 @@ public final class DexGeneratorTest extends TestCase {
     }
 
     public void testReadAndWriteStaticFields() throws Exception {
-        java.lang.reflect.Method intSwap = newStaticSwapMethod(int.class, "intValue");
+        java.lang.reflect.Method intSwap = staticSwapMethod(int.class, "intValue");
         Static.intValue = 5;
         assertEquals(5, intSwap.invoke(null, 10));
         assertEquals(10, Static.intValue);
 
-        java.lang.reflect.Method longSwap = newStaticSwapMethod(long.class, "longValue");
+        java.lang.reflect.Method longSwap = staticSwapMethod(long.class, "longValue");
         Static.longValue = 500L;
         assertEquals(500L, longSwap.invoke(null, 1234L));
         assertEquals(1234L, Static.longValue);
 
-        java.lang.reflect.Method booleanSwap = newStaticSwapMethod(boolean.class, "booleanValue");
+        java.lang.reflect.Method booleanSwap = staticSwapMethod(boolean.class, "booleanValue");
         Static.booleanValue = false;
         assertEquals(false, booleanSwap.invoke(null, true));
         assertEquals(true, Static.booleanValue);
 
-        java.lang.reflect.Method floatSwap = newStaticSwapMethod(float.class, "floatValue");
+        java.lang.reflect.Method floatSwap = staticSwapMethod(float.class, "floatValue");
         Static.floatValue = 1.5f;
         assertEquals(1.5f, floatSwap.invoke(null, 0.5f));
         assertEquals(0.5f, Static.floatValue);
 
-        java.lang.reflect.Method doubleSwap = newStaticSwapMethod(double.class, "doubleValue");
+        java.lang.reflect.Method doubleSwap = staticSwapMethod(double.class, "doubleValue");
         Static.doubleValue = 155.5;
         assertEquals(155.5, doubleSwap.invoke(null, 266.6));
         assertEquals(266.6, Static.doubleValue);
 
-        java.lang.reflect.Method objectSwap = newStaticSwapMethod(Object.class, "objectValue");
+        java.lang.reflect.Method objectSwap = staticSwapMethod(Object.class, "objectValue");
         Static.objectValue = "before";
         assertEquals("before", objectSwap.invoke(null, "after"));
         assertEquals("after", Static.objectValue);
 
-        java.lang.reflect.Method byteSwap = newStaticSwapMethod(byte.class, "byteValue");
+        java.lang.reflect.Method byteSwap = staticSwapMethod(byte.class, "byteValue");
         Static.byteValue = 0x35;
         assertEquals((byte) 0x35, byteSwap.invoke(null, (byte) 0x64));
         assertEquals((byte) 0x64, Static.byteValue);
 
-        java.lang.reflect.Method charSwap = newStaticSwapMethod(char.class, "charValue");
+        java.lang.reflect.Method charSwap = staticSwapMethod(char.class, "charValue");
         Static.charValue = 'A';
         assertEquals('A', charSwap.invoke(null, 'B'));
         assertEquals('B', Static.charValue);
 
-        java.lang.reflect.Method shortSwap = newStaticSwapMethod(short.class, "shortValue");
+        java.lang.reflect.Method shortSwap = staticSwapMethod(short.class, "shortValue");
         Static.shortValue = (short) 0xabcd;
         assertEquals((short) 0xabcd, shortSwap.invoke(null, (short) 0x1234));
         assertEquals((short) 0x1234, Static.shortValue);
@@ -970,7 +987,7 @@ public final class DexGeneratorTest extends TestCase {
         public static short shortValue;
     }
 
-    private <V> java.lang.reflect.Method newStaticSwapMethod(Class<V> valueClass, String fieldName)
+    private <V> java.lang.reflect.Method staticSwapMethod(Class<V> valueClass, String fieldName)
             throws Exception {
         /*
          * public static int call(int newValue) {
@@ -1169,7 +1186,6 @@ public final class DexGeneratorTest extends TestCase {
     }
 
     public void testRecursion() throws Exception {
-
         /*
          * public static int call(int a) {
          *   if (a < 2) {
@@ -1214,13 +1230,390 @@ public final class DexGeneratorTest extends TestCase {
         assertEquals(8, fib.invoke(null, 6));
     }
 
-    // TODO: array ops including new array, aget, etc.
+    public void testCatchExceptions() throws Exception {
+        /*
+         * public static String call(int i) {
+         *   try {
+         *     DexGeneratorTest.thrower(i);
+         *     return "NONE";
+         *   } catch (IllegalArgumentException e) {
+         *     return "IAE";
+         *   } catch (IllegalStateException e) {
+         *     return "ISE";
+         *   } catch (RuntimeException e) {
+         *     return "RE";
+         *   }
+         */
+        Code code = generatedType.getMethod(stringType, "call", intType)
+                .declare(ACC_PUBLIC | ACC_STATIC);
+        Local<Integer> localI = code.getParameter(0, intType);
+        Local<String> result = code.newLocal(stringType);
+        Label catchIae = code.newLabel();
+        Label catchIse = code.newLabel();
+        Label catchRe = code.newLabel();
 
-    // TODO: throw + catch
+        code.addCatchClause(generator.getType(IllegalArgumentException.class), catchIae);
+        code.addCatchClause(generator.getType(IllegalStateException.class), catchIse);
+        code.addCatchClause(generator.getType(RuntimeException.class), catchRe);
+        Method<?, ?> thrower = dexGeneratorTestType.getMethod(voidType, "thrower", intType);
+        code.invokeStatic(thrower, null, localI);
+        code.loadConstant(result, "NONE");
+        code.returnValue(result);
 
-    // TODO: cmp float
+        code.mark(catchIae);
+        code.loadConstant(result, "IAE");
+        code.returnValue(result);
+
+        code.mark(catchIse);
+        code.loadConstant(result, "ISE");
+        code.returnValue(result);
+
+        code.mark(catchRe);
+        code.loadConstant(result, "RE");
+        code.returnValue(result);
+
+        java.lang.reflect.Method method = getMethod();
+        assertEquals("NONE", method.invoke(null, 0));
+        assertEquals("IAE", method.invoke(null, 1));
+        assertEquals("ISE", method.invoke(null, 2));
+        assertEquals("RE", method.invoke(null, 3));
+        try {
+            method.invoke(null, 4);
+            fail();
+        } catch (InvocationTargetException expected) {
+            assertEquals(IOException.class, expected.getCause().getClass());
+        }
+    }
+
+    @SuppressWarnings("unused") // called by generated code
+    public static void thrower(int a) throws Exception {
+        switch (a) {
+        case 0:
+            return;
+        case 1:
+            throw new IllegalArgumentException();
+        case 2:
+            throw new IllegalStateException();
+        case 3:
+            throw new UnsupportedOperationException();
+        case 4:
+            throw new IOException();
+        default:
+            throw new AssertionError();
+        }
+    }
+
+    public void testNestedCatchClauses() throws Exception {
+        /*
+         * public static String call(int a, int b, int c) {
+         *   try {
+         *     DexGeneratorTest.thrower(a);
+         *     try {
+         *       DexGeneratorTest.thrower(b);
+         *     } catch (IllegalArgumentException) {
+         *       return "INNER";
+         *     }
+         *     DexGeneratorTest.thrower(c);
+         *     return "NONE";
+         *   } catch (IllegalArgumentException e) {
+         *     return "OUTER";
+         *   }
+         */
+        Code code = generatedType.getMethod(stringType, "call", intType, intType, intType)
+                .declare(ACC_PUBLIC | ACC_STATIC);
+        Local<Integer> localA = code.getParameter(0, intType);
+        Local<Integer> localB = code.getParameter(1, intType);
+        Local<Integer> localC = code.getParameter(2, intType);
+        Local<String> localResult = code.newLocal(stringType);
+        Label catchInner = code.newLabel();
+        Label catchOuter = code.newLabel();
+
+        Type<IllegalArgumentException> iaeType = generator.getType(IllegalArgumentException.class);
+        code.addCatchClause(iaeType, catchOuter);
+
+        Method<?, ?> thrower = dexGeneratorTestType.getMethod(voidType, "thrower", intType);
+        code.invokeStatic(thrower, null, localA);
+
+        // for the inner catch clause, we stash the old label and put it back afterwards.
+        Label previousLabel = code.removeCatchClause(iaeType);
+        code.addCatchClause(iaeType, catchInner);
+        code.invokeStatic(thrower, null, localB);
+        code.removeCatchClause(iaeType);
+        code.addCatchClause(iaeType, previousLabel);
+        code.invokeStatic(thrower, null, localC);
+        code.loadConstant(localResult, "NONE");
+        code.returnValue(localResult);
+
+        code.mark(catchInner);
+        code.loadConstant(localResult, "INNER");
+        code.returnValue(localResult);
+
+        code.mark(catchOuter);
+        code.loadConstant(localResult, "OUTER");
+        code.returnValue(localResult);
+
+        java.lang.reflect.Method method = getMethod();
+        assertEquals("OUTER", method.invoke(null, 1, 0, 0));
+        assertEquals("INNER", method.invoke(null, 0, 1, 0));
+        assertEquals("OUTER", method.invoke(null, 0, 0, 1));
+        assertEquals("NONE", method.invoke(null, 0, 0, 0));
+    }
+
+    public void testThrow() throws Exception {
+        /*
+         * public static void call() {
+         *   throw new IllegalStateException();
+         * }
+         */
+        Code code = generatedType.getMethod(voidType, "call")
+                .declare(ACC_PUBLIC | ACC_STATIC);
+        Type<IllegalStateException> iseType = generator.getType(IllegalStateException.class);
+        Method<IllegalStateException, Void> iseConstructor = iseType.getConstructor();
+        Local<IllegalStateException> localIse = code.newLocal(iseType);
+        code.newInstance(localIse, iseConstructor);
+        code.throwValue(localIse);
+
+        try {
+            getMethod().invoke(null);
+            fail();
+        } catch (InvocationTargetException expected) {
+            assertEquals(IllegalStateException.class, expected.getCause().getClass());
+        }
+    }
+
+    public void testUnusedParameters() throws Exception {
+        /*
+         * public static void call(int unused1, long unused2, long unused3) {}
+         */
+        Code code = generatedType.getMethod(voidType, "call", intType, longType, longType)
+                .declare(ACC_PUBLIC | ACC_STATIC);
+        code.returnVoid();
+        getMethod().invoke(null, 1, 2, 3);
+    }
+
+    public void testFloatingPointCompare() throws Exception {
+        java.lang.reflect.Method floatG = floatingPointCompareMethod(floatType, 1);
+        assertEquals(-1, floatG.invoke(null, 1.0f, Float.POSITIVE_INFINITY));
+        assertEquals(-1, floatG.invoke(null, 1.0f, 2.0f));
+        assertEquals(0, floatG.invoke(null, 1.0f, 1.0f));
+        assertEquals(1, floatG.invoke(null, 2.0f, 1.0f));
+        assertEquals(1, floatG.invoke(null, 1.0f, Float.NaN));
+        assertEquals(1, floatG.invoke(null, Float.NaN, 1.0f));
+        assertEquals(1, floatG.invoke(null, Float.NaN, Float.NaN));
+        assertEquals(1, floatG.invoke(null, Float.NaN, Float.POSITIVE_INFINITY));
+
+        java.lang.reflect.Method floatL = floatingPointCompareMethod(floatType, -1);
+        assertEquals(-1, floatG.invoke(null, 1.0f, Float.POSITIVE_INFINITY));
+        assertEquals(-1, floatL.invoke(null, 1.0f, 2.0f));
+        assertEquals(0, floatL.invoke(null, 1.0f, 1.0f));
+        assertEquals(1, floatL.invoke(null, 2.0f, 1.0f));
+        assertEquals(-1, floatL.invoke(null, 1.0f, Float.NaN));
+        assertEquals(-1, floatL.invoke(null, Float.NaN, 1.0f));
+        assertEquals(-1, floatL.invoke(null, Float.NaN, Float.NaN));
+        assertEquals(-1, floatL.invoke(null, Float.NaN, Float.POSITIVE_INFINITY));
+
+        java.lang.reflect.Method doubleG = floatingPointCompareMethod(doubleType, 1);
+        assertEquals(-1, doubleG.invoke(null, 1.0, Double.POSITIVE_INFINITY));
+        assertEquals(-1, doubleG.invoke(null, 1.0, 2.0));
+        assertEquals(0, doubleG.invoke(null, 1.0, 1.0));
+        assertEquals(1, doubleG.invoke(null, 2.0, 1.0));
+        assertEquals(1, doubleG.invoke(null, 1.0, Double.NaN));
+        assertEquals(1, doubleG.invoke(null, Double.NaN, 1.0));
+        assertEquals(1, doubleG.invoke(null, Double.NaN, Double.NaN));
+        assertEquals(1, doubleG.invoke(null, Double.NaN, Double.POSITIVE_INFINITY));
+
+        java.lang.reflect.Method doubleL = floatingPointCompareMethod(doubleType, -1);
+        assertEquals(-1, doubleL.invoke(null, 1.0, Double.POSITIVE_INFINITY));
+        assertEquals(-1, doubleL.invoke(null, 1.0, 2.0));
+        assertEquals(0, doubleL.invoke(null, 1.0, 1.0));
+        assertEquals(1, doubleL.invoke(null, 2.0, 1.0));
+        assertEquals(-1, doubleL.invoke(null, 1.0, Double.NaN));
+        assertEquals(-1, doubleL.invoke(null, Double.NaN, 1.0));
+        assertEquals(-1, doubleL.invoke(null, Double.NaN, Double.NaN));
+        assertEquals(-1, doubleL.invoke(null, Double.NaN, Double.POSITIVE_INFINITY));
+    }
+
+    private <T extends Number> java.lang.reflect.Method floatingPointCompareMethod(
+            Type<T> valueType, int nanValue) throws Exception {
+        /*
+         * public static int call(float a, float b) {
+         *     int result = a <=> b;
+         *     return result;
+         * }
+         */
+        reset();
+        Code code = generatedType.getMethod(intType, "call", valueType, valueType)
+                .declare(ACC_PUBLIC | ACC_STATIC);
+        Local<T> localA = code.getParameter(0, valueType);
+        Local<T> localB = code.getParameter(1, valueType);
+        Local<Integer> localResult = code.newLocal(intType);
+        code.compare(localA, localB, localResult, nanValue);
+        code.returnValue(localResult);
+        return getMethod();
+    }
+
+    public void testLongCompare() throws Exception {
+        /*
+         * public static int call(long a, long b) {
+         *   int result = a <=> b;
+         *   return result;
+         * }
+         */
+        Code code = generatedType.getMethod(intType, "call", longType, longType)
+                .declare(ACC_PUBLIC | ACC_STATIC);
+        Local<Long> localA = code.getParameter(0, longType);
+        Local<Long> localB = code.getParameter(1, longType);
+        Local<Integer> localResult = code.newLocal(intType);
+        code.compare(localA, localB, localResult);
+        code.returnValue(localResult);
+
+        java.lang.reflect.Method method = getMethod();
+        assertEquals(0, method.invoke(null, Long.MIN_VALUE, Long.MIN_VALUE));
+        assertEquals(-1, method.invoke(null, Long.MIN_VALUE, 0));
+        assertEquals(-1, method.invoke(null, Long.MIN_VALUE, Long.MAX_VALUE));
+        assertEquals(1, method.invoke(null, 0, Long.MIN_VALUE));
+        assertEquals(0, method.invoke(null, 0, 0));
+        assertEquals(-1, method.invoke(null, 0, Long.MAX_VALUE));
+        assertEquals(1, method.invoke(null, Long.MAX_VALUE, Long.MIN_VALUE));
+        assertEquals(1, method.invoke(null, Long.MAX_VALUE, 0));
+        assertEquals(0, method.invoke(null, Long.MAX_VALUE, Long.MAX_VALUE));
+    }
+
+    public void testArrayLength() throws Exception {
+        java.lang.reflect.Method booleanArrayLength = arrayLengthMethod(booleanArrayType);
+        assertEquals(0, booleanArrayLength.invoke(null, new Object[] { new boolean[0] }));
+        assertEquals(5, booleanArrayLength.invoke(null, new Object[] { new boolean[5] }));
+
+        java.lang.reflect.Method intArrayLength = arrayLengthMethod(intArrayType);
+        assertEquals(0, intArrayLength.invoke(null, new Object[] { new int[0] }));
+        assertEquals(5, intArrayLength.invoke(null, new Object[] { new int[5] }));
+
+        java.lang.reflect.Method longArrayLength = arrayLengthMethod(longArrayType);
+        assertEquals(0, longArrayLength.invoke(null, new Object[] { new long[0] }));
+        assertEquals(5, longArrayLength.invoke(null, new Object[] { new long[5] }));
+
+        java.lang.reflect.Method objectArrayLength = arrayLengthMethod(objectArrayType);
+        assertEquals(0, objectArrayLength.invoke(null, new Object[] { new Object[0] }));
+        assertEquals(5, objectArrayLength.invoke(null, new Object[] { new Object[5] }));
+
+        java.lang.reflect.Method long2dArrayLength = arrayLengthMethod(long2dArrayType);
+        assertEquals(0, long2dArrayLength.invoke(null, new Object[] { new long[0][0] }));
+        assertEquals(5, long2dArrayLength.invoke(null, new Object[] { new long[5][10] }));
+    }
+
+    private <T> java.lang.reflect.Method arrayLengthMethod(Type<T> valueType) throws Exception {
+        /*
+         * public static int call(long[] array) {
+         *   int result = array.length;
+         *   return result;
+         * }
+         */
+        reset();
+        Code code = generatedType.getMethod(intType, "call", valueType)
+                .declare(ACC_PUBLIC | ACC_STATIC);
+        Local<T> localArray = code.getParameter(0, valueType);
+        Local<Integer> localResult = code.newLocal(intType);
+        code.arrayLength(localArray, localResult);
+        code.returnValue(localResult);
+        return getMethod();
+    }
+
+    public void testNewArray() throws Exception {
+        java.lang.reflect.Method newBooleanArray = newArrayMethod(booleanArrayType);
+        assertEquals("[]", Arrays.toString((boolean[]) newBooleanArray.invoke(null, 0)));
+        assertEquals("[false, false, false]",
+                Arrays.toString((boolean[]) newBooleanArray.invoke(null, 3)));
+
+        java.lang.reflect.Method newIntArray = newArrayMethod(intArrayType);
+        assertEquals("[]", Arrays.toString((int[]) newIntArray.invoke(null, 0)));
+        assertEquals("[0, 0, 0]", Arrays.toString((int[]) newIntArray.invoke(null, 3)));
+
+        java.lang.reflect.Method newLongArray = newArrayMethod(longArrayType);
+        assertEquals("[]", Arrays.toString((long[]) newLongArray.invoke(null, 0)));
+        assertEquals("[0, 0, 0]", Arrays.toString((long[]) newLongArray.invoke(null, 3)));
+
+        java.lang.reflect.Method newObjectArray = newArrayMethod(objectArrayType);
+        assertEquals("[]", Arrays.toString((Object[]) newObjectArray.invoke(null, 0)));
+        assertEquals("[null, null, null]",
+                Arrays.toString((Object[]) newObjectArray.invoke(null, 3)));
+
+        java.lang.reflect.Method new2dLongArray = newArrayMethod(long2dArrayType);
+        assertEquals("[]", Arrays.deepToString((long[][]) new2dLongArray.invoke(null, 0)));
+        assertEquals("[null, null, null]",
+                Arrays.deepToString((long[][]) new2dLongArray.invoke(null, 3)));
+    }
+
+    private <T> java.lang.reflect.Method newArrayMethod(Type<T> valueType) throws Exception {
+        /*
+         * public static long[] call(int length) {
+         *   long[] result = new long[length];
+         *   return result;
+         * }
+         */
+        reset();
+        Code code = generatedType.getMethod(valueType, "call", intType)
+                .declare(ACC_PUBLIC | ACC_STATIC);
+        Local<Integer> localLength = code.getParameter(0, intType);
+        Local<T> localResult = code.newLocal(valueType);
+        code.newArray(localLength, localResult);
+        code.returnValue(localResult);
+        return getMethod();
+    }
+
+    public void testReadAndWriteArray() throws Exception {
+        java.lang.reflect.Method swapBooleanArray = arraySwapMethod(booleanArrayType, booleanType);
+        boolean[] booleans = new boolean[3];
+        assertEquals(false, swapBooleanArray.invoke(null, booleans, 1, true));
+        assertEquals("[false, true, false]", Arrays.toString(booleans));
+
+        java.lang.reflect.Method swapIntArray = arraySwapMethod(intArrayType, intType);
+        int[] ints = new int[3];
+        assertEquals(0, swapIntArray.invoke(null, ints, 1, 5));
+        assertEquals("[0, 5, 0]", Arrays.toString(ints));
+
+        java.lang.reflect.Method swapLongArray = arraySwapMethod(longArrayType, longType);
+        long[] longs = new long[3];
+        assertEquals(0L, swapLongArray.invoke(null, longs, 1, 6L));
+        assertEquals("[0, 6, 0]", Arrays.toString(longs));
+
+        java.lang.reflect.Method swapObjectArray = arraySwapMethod(objectArrayType, objectType);
+        Object[] objects = new Object[3];
+        assertEquals(null, swapObjectArray.invoke(null, objects, 1, "X"));
+        assertEquals("[null, X, null]", Arrays.toString(objects));
+
+        java.lang.reflect.Method swapLong2dArray = arraySwapMethod(long2dArrayType, longArrayType);
+        long[][] longs2d = new long[3][];
+        assertEquals(null, swapLong2dArray.invoke(null, longs2d, 1, new long[] { 7 }));
+        assertEquals("[null, [7], null]", Arrays.deepToString(longs2d));
+    }
+
+    private <A, T> java.lang.reflect.Method arraySwapMethod(Type<A> arrayType, Type<T> singleType)
+            throws Exception {
+        /*
+         * public static long swap(long[] array, int index, long newValue) {
+         *   long result = array[index];
+         *   array[index] = newValue;
+         *   return result;
+         * }
+         */
+        reset();
+        Code code = generatedType.getMethod(singleType, "call", arrayType, intType, singleType)
+                .declare(ACC_PUBLIC | ACC_STATIC);
+        Local<A> localArray = code.getParameter(0, arrayType);
+        Local<Integer> localIndex = code.getParameter(1, intType);
+        Local<T> localNewValue = code.getParameter(2, singleType);
+        Local<T> localResult = code.newLocal(singleType);
+        code.aget(localArray, localIndex, localResult);
+        code.aput(localArray, localIndex, localNewValue);
+        code.returnValue(localResult);
+        return getMethod();
+    }
 
     // TODO: fail if a label is unreachable (never navigated to)
+
+    // TODO: more strict type parameters: Integer on methods
+
+    // TODO: don't generate multiple times (?)
 
     private void addDefaultConstructor() {
         Code code = generatedType.getConstructor().declare(ACC_PUBLIC | ACC_CONSTRUCTOR);

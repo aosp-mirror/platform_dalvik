@@ -36,10 +36,6 @@ final class TypeList {
         }
     }
 
-    TypeList(List<Type<?>> types) {
-        this(types.toArray(new Type[types.size()]));
-    }
-
     /**
      * Returns an immutable list.
      */

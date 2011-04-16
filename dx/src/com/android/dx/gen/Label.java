@@ -21,6 +21,7 @@ import com.android.dx.rop.code.Insn;
 import com.android.dx.rop.code.InsnList;
 import com.android.dx.util.IntList;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -31,6 +32,9 @@ public final class Label {
     final List<Insn> instructions = new ArrayList<Insn>();
 
     boolean marked = false;
+
+    /** an immutable list of labels corresponding to the types in the catch list */
+    List<Label> catchLabels = Collections.emptyList();
 
     /** contains the next instruction if no branch occurs */
     Label primarySuccessor;
@@ -47,6 +51,11 @@ public final class Label {
     }
 
     void compact() {
+        for (int i = 0; i < catchLabels.size(); i++) {
+            while (catchLabels.get(i).isEmpty()) {
+                catchLabels.set(i, catchLabels.get(i).primarySuccessor);
+            }
+        }
         while (primarySuccessor != null && primarySuccessor.isEmpty()) {
             primarySuccessor = primarySuccessor.primarySuccessor;
         }
@@ -64,6 +73,9 @@ public final class Label {
 
         int primarySuccessorIndex = -1;
         IntList successors = new IntList();
+        for (Label catchLabel : catchLabels) {
+            successors.add(catchLabel.id);
+        }
         if (primarySuccessor != null) {
             primarySuccessorIndex = primarySuccessor.id;
             successors.add(primarySuccessorIndex);

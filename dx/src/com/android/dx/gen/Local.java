@@ -17,8 +17,6 @@
 package com.android.dx.gen;
 
 import com.android.dx.rop.code.RegisterSpec;
-import static com.android.dx.rop.type.Type.BT_DOUBLE;
-import static com.android.dx.rop.type.Type.BT_LONG;
 
 /**
  * A temporary variable that holds a single value.
@@ -44,14 +42,11 @@ public final class Local<T> {
     int initialize(int reg) {
         this.reg = reg;
         this.spec = RegisterSpec.make(reg, type.getRopType());
+        return size();
+    }
 
-        switch (type.ropType.getBasicType()) {
-        case BT_LONG:
-        case BT_DOUBLE:
-            return 2;
-        default:
-            return 1;
-        }
+    int size() {
+        return type.ropType.getCategory();
     }
 
     RegisterSpec spec() {

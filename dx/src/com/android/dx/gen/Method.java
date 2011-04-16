@@ -137,12 +137,10 @@ public final class Method<T, R> {
             throw new IllegalStateException();
         }
         RopMethod ropMethod = new RopMethod(code.toBasicBlocks(), 0);
-        int paramSize = -1;
         LocalVariableInfo locals = null;
-        int positionInfo = PositionList.NONE;
-        DalvCode code = RopTranslator.translate(
-                ropMethod, positionInfo, locals, paramSize, dexOptions);
-        return new EncodedMethod(constant, accessFlags, code, StdTypeList.EMPTY);
+        DalvCode dalvCode = RopTranslator.translate(ropMethod, PositionList.NONE, locals,
+                code.paramSize(), dexOptions);
+        return new EncodedMethod(constant, accessFlags, dalvCode, StdTypeList.EMPTY);
     }
 
     @Override public boolean equals(Object o) {
