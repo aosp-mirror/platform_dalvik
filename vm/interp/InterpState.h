@@ -149,15 +149,15 @@ typedef struct InterpSaveState {
  *    destination Dalvik PC is included by the trace itself.
  */
 struct JitToInterpEntries {
-    void *dvmJitToInterpNormal;
-    void *dvmJitToInterpNoChain;
-    void *dvmJitToInterpPunt;
-    void *dvmJitToInterpSingleStep;
-    void *dvmJitToInterpTraceSelect;
+    void (*dvmJitToInterpNormal)(void);
+    void (*dvmJitToInterpNoChain)(void);
+    void (*dvmJitToInterpPunt)(void);
+    void (*dvmJitToInterpSingleStep)(void);
+    void (*dvmJitToInterpTraceSelect)(void);
 #if defined(WITH_SELF_VERIFICATION)
-    void *dvmJitToInterpBackwardBranch;
+    void (*dvmJitToInterpBackwardBranch)(void);
 #else
-    void *unused;  // Keep structure size constant
+    void (*unused)(void);  // Keep structure size constant
 #endif
 };
 

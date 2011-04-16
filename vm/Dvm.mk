@@ -124,21 +124,21 @@ LOCAL_SRC_FILES := \
 	alloc/DdmHeap.cpp \
 	alloc/Verify.cpp \
 	alloc/Visit.cpp \
-	analysis/CodeVerify.c \
-	analysis/DexPrepare.c \
-	analysis/DexVerify.c \
-	analysis/Liveness.c \
-	analysis/Optimize.c \
-	analysis/RegisterMap.c \
-	analysis/VerifySubs.c \
-	analysis/VfyBasicBlock.c \
+	analysis/CodeVerify.cpp \
+	analysis/DexPrepare.cpp \
+	analysis/DexVerify.cpp \
+	analysis/Liveness.cpp \
+	analysis/Optimize.cpp \
+	analysis/RegisterMap.cpp \
+	analysis/VerifySubs.cpp \
+	analysis/VfyBasicBlock.cpp \
 	hprof/Hprof.cpp \
 	hprof/HprofClass.cpp \
 	hprof/HprofHeap.cpp \
 	hprof/HprofOutput.cpp \
 	hprof/HprofString.cpp \
-	interp/Interp.c.arm \
-	interp/Stack.c \
+	interp/Interp.cpp.arm \
+	interp/Stack.cpp \
 	jdwp/ExpandBuf.cpp \
 	jdwp/JdwpAdb.cpp \
 	jdwp/JdwpConstants.cpp \
@@ -216,7 +216,7 @@ ifeq ($(WITH_JIT),true)
 	compiler/SSATransformation.c \
 	compiler/Loop.c \
 	compiler/Ralloc.c \
-	interp/Jit.c
+	interp/Jit.cpp
 endif
 
 LOCAL_C_INCLUDES += \

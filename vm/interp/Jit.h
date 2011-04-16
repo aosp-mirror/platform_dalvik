@@ -150,8 +150,15 @@ typedef struct JitEntry {
 void dvmCheckJit(const u2* pc, Thread* self);
 void* dvmJitGetTraceAddr(const u2* dPC);
 void* dvmJitGetMethodAddr(const u2* dPC);
+void* dvmJitGetTraceAddrThread(const u2* dPC, Thread* self);
+void* dvmJitGetMethodAddrThread(const u2* dPC, Thread* self);
 void dvmJitCheckTraceRequest(Thread* self);
 void dvmJitStopTranslationRequests(void);
+#if defined(WITH_JIT_TUNING)
+void dvmBumpNoChain(int from);
+void dvmBumpNormal(void);
+void dvmBumpPunt(int from);
+#endif
 void dvmJitStats(void);
 bool dvmJitResizeJitTable(unsigned int size);
 void dvmJitResetTable(void);

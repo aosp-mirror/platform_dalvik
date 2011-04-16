@@ -840,12 +840,14 @@ void dvmCheckJit(const u2* pc, Thread* self)
              * If the last instruction is an invoke, we will try to sneak in
              * the move-result* (if existent) into a separate trace run.
              */
-            int needReservedRun = (flags & kInstrInvoke) ? 1 : 0;
+            {
+              int needReservedRun = (flags & kInstrInvoke) ? 1 : 0;
 
-            /* Will probably never hit this with the current trace buildier */
-            if (self->currTraceRun ==
-                (MAX_JIT_RUN_LEN - 1 - needReservedRun)) {
+              /* Will probably never hit this with the current trace builder */
+              if (self->currTraceRun ==
+                   (MAX_JIT_RUN_LEN - 1 - needReservedRun)) {
                 self->jitState = kJitTSelectEnd;
+              }
             }
 
             if (!dexIsGoto(flags) &&

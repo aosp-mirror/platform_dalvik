@@ -113,10 +113,9 @@ retry:
      * working on it, we'll block here until they complete.  Because
      * we're waiting on an external resource, we go into VMWAIT mode.
      */
-    int oldStatus;
     LOGV("DexOpt: locking cache file %s (fd=%d, boot=%d)\n",
         cacheFileName, fd, isBootstrap);
-    oldStatus = dvmChangeStatus(NULL, THREAD_VMWAIT);
+    ThreadStatus oldStatus = dvmChangeStatus(NULL, THREAD_VMWAIT);
     cc = flock(fd, LOCK_EX | LOCK_NB);
     if (cc != 0) {
         LOGD("DexOpt: sleeping on flock(%s)\n", cacheFileName);
@@ -332,10 +331,10 @@ bool dvmOptimizeDexFile(int fd, off_t dexOffset, long dexLength,
         int bcpSize = dvmGetBootPathSize();
         int argc = kFixedArgCount + bcpSize
             + (kValgrindArgCount * kUseValgrind);
-        char* argv[argc+1];             // last entry is NULL
+        const char* argv[argc+1];             // last entry is NULL
         char values[argc][kMaxIntLen];
         char* execFile;
-        char* androidRoot;
+        const char* androidRoot;
         int flags;
 
         /* change process groups, so we don't clash with ProcessManager */
@@ -419,9 +418,9 @@ bool dvmOptimizeDexFile(int fd, off_t dexOffset, long dexLength,
         argv[curArg] = NULL;
 
         if (kUseValgrind)
-            execv(kValgrinder, argv);
+            execv(kValgrinder, const_cast<char**>(argv));
         else
-            execv(execFile, argv);
+            execv(execFile, const_cast<char**>(argv));
 
         LOGE("execv '%s'%s failed: %s\n", execFile,
             kUseValgrind ? " [valgrind]" : "", strerror(errno));
@@ -430,13 +429,12 @@ bool dvmOptimizeDexFile(int fd, off_t dexOffset, long dexLength,
         LOGV("DexOpt: waiting for verify+opt, pid=%d\n", (int) pid);
         int status;
         pid_t gotPid;
-        int oldStatus;
 
         /*
          * Wait for the optimization process to finish.  We go into VMWAIT
          * mode here so GC suspension won't have to wait for us.
          */
-        oldStatus = dvmChangeStatus(NULL, THREAD_VMWAIT);
+        ThreadStatus oldStatus = dvmChangeStatus(NULL, THREAD_VMWAIT);
         while (true) {
             gotPid = waitpid(pid, &status, 0);
             if (gotPid == -1 && errno == EINTR) {
@@ -750,6 +748,7 @@ static bool rewriteDex(u1* addr, int len, bool doVerify, bool doOpt,
     u8 prepWhen, loadWhen, verifyOptWhen;
     DvmDex* pDvmDex = NULL;
     bool result = false;
+    const char* msgStr = "???";
 
     /* if the DEX is in the wrong byte order, swap it now */
     if (dexSwapAndVerify(addr, len) != 0)
@@ -815,7 +814,6 @@ static bool rewriteDex(u1* addr, int len, bool doVerify, bool doOpt,
     verifyAndOptimizeClasses(pDvmDex->pDexFile, doVerify, doOpt);
     verifyOptWhen = dvmGetRelativeTimeUsec();
 
-    const char* msgStr = "???";
     if (doVerify && doOpt)
         msgStr = "verify+opt";
     else if (doVerify)
@@ -1174,15 +1172,17 @@ bool dvmCheckOptHeaderAndDependencies(int fd, bool sourceAvail, u4 modWhen,
      *
      * The only thing we really can't handle is incorrect byte ordering.
      */
-    const u4 matchMask = DEX_OPT_FLAG_BIG;
-    u4 expectedFlags = 0;
+    {
+        const u4 matchMask = DEX_OPT_FLAG_BIG;
+        u4 expectedFlags = 0;
 #if __BYTE_ORDER != __LITTLE_ENDIAN
-    expectedFlags |= DEX_OPT_FLAG_BIG;
+        expectedFlags |= DEX_OPT_FLAG_BIG;
 #endif
-    if ((expectedFlags & matchMask) != (optHdr.flags & matchMask)) {
-        LOGI("DexOpt: header flag mismatch (0x%02x vs 0x%02x, mask=0x%02x)\n",
-            expectedFlags, optHdr.flags, matchMask);
-        goto bail;
+        if ((expectedFlags & matchMask) != (optHdr.flags & matchMask)) {
+            LOGI("DexOpt: header flag mismatch (0x%02x vs 0x%02x, mask=0x%02x)\n",
+                expectedFlags, optHdr.flags, matchMask);
+            goto bail;
+        }
     }
 
     posn = lseek(fd, optHdr.depsOffset, SEEK_SET);

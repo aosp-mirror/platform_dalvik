@@ -40,6 +40,21 @@
 static BreakpointSet* dvmBreakpointSetAlloc(void);
 static void dvmBreakpointSetFree(BreakpointSet* pSet);
 
+#if defined(WITH_JIT)
+/* Target-specific save/restore */
+extern "C" void dvmJitCalleeSave(double *saveArea);
+extern "C" void dvmJitCalleeRestore(double *saveArea);
+/* Interpreter entry points from compiled code */
+extern "C" void dvmJitToInterpNormal();
+extern "C" void dvmJitToInterpNoChain();
+extern "C" void dvmJitToInterpPunt();
+extern "C" void dvmJitToInterpSingleStep();
+extern "C" void dvmJitToInterpTraceSelect();
+#if defined(WITH_SELF_VERIFICATION)
+extern "C" void dvmJitToInterpBackwardBranch();
+#endif
+#endif
+
 /*
  * Initialize global breakpoint structures.
  */
@@ -504,8 +519,8 @@ bool dvmAddSingleStep(Thread* thread, int size, int depth)
          */
     }
 
-    pCtrl->size = size;
-    pCtrl->depth = depth;
+    pCtrl->size = static_cast<JdwpStepSize>(size);
+    pCtrl->depth = static_cast<JdwpStepDepth>(depth);
     pCtrl->thread = thread;
 
     /*
@@ -1419,9 +1434,10 @@ static char* methodNameFromIndex(const Method* method, int ref,
  */
 void dvmThrowVerificationError(const Method* method, int kind, int ref)
 {
-    const int typeMask = 0xff << kVerifyErrorRefTypeShift;
-    VerifyError errorKind = kind & ~typeMask;
-    VerifyErrorRefType refType = kind >> kVerifyErrorRefTypeShift;
+    int errorPart = kind & ~(0xff << kVerifyErrorRefTypeShift);
+    int errorRefPart = kind >> kVerifyErrorRefTypeShift;
+    VerifyError errorKind = static_cast<VerifyError>(errorPart);
+    VerifyErrorRefType refType = static_cast<VerifyErrorRefType>(errorRefPart);
     ClassObject* exceptionClass = gDvm.exVerifyError;
     char* msg = NULL;
 
@@ -1639,15 +1655,6 @@ void dvmArmSafePointCallback(Thread* thread, SafePointCallback funct,
 void dvmInitInterpreterState(Thread* self)
 {
 #if defined(WITH_JIT)
-    /* Interpreter entry points from compiled code */
-    extern void dvmJitToInterpNormal();
-    extern void dvmJitToInterpNoChain();
-    extern void dvmJitToInterpPunt();
-    extern void dvmJitToInterpSingleStep();
-    extern void dvmJitToInterpTraceSelect();
-#if defined(WITH_SELF_VERIFICATION)
-    extern void dvmJitToInterpBackwardBranch();
-#endif
     /*
      * Reserve a static entity here to quickly setup runtime contents as
      * gcc will issue block copy instructions.
@@ -1893,8 +1900,6 @@ void dvmInterpret(Thread* self, const Method* method, JValue* pResult)
 
 #if defined(WITH_JIT)
     /* Target-specific save/restore */
-    extern void dvmJitCalleeSave(double *saveArea);
-    extern void dvmJitCalleeRestore(double *saveArea);
     double calleeSave[JIT_CALLEE_SAVE_DOUBLE_COUNT];
     /*
      * If the previous VM left the code cache through single-stepping the
