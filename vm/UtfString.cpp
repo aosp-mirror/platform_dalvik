@@ -104,9 +104,10 @@ u4 dvmComputeUtf8Hash(const char* utf8Str)
  * (If this needs optimizing, try: mask against 0xa0, shift right 5,
  * get increment {1-3} from table of 8 values.)
  */
-int dvmUtf8Len(const char* utf8Str)
+size_t dvmUtf8Len(const char* utf8Str)
 {
-    int ic, len = 0;
+    size_t len = 0;
+    int ic;
 
     while ((ic = *utf8Str++) != '\0') {
         len++;
@@ -193,7 +194,7 @@ static void convertUtf16ToUtf8(char* utf8Str, const u2* utf16Str, int len)
 /*
  * Use the java/lang/String.computeHashCode() algorithm.
  */
-static inline u4 dvmComputeUtf16Hash(const u2* utf16Str, int len)
+static inline u4 computeUtf16Hash(const u2* utf16Str, size_t len)
 {
     u4 hash = 0;
 
@@ -202,6 +203,7 @@ static inline u4 dvmComputeUtf16Hash(const u2* utf16Str, int len)
 
     return hash;
 }
+
 u4 dvmComputeStringHash(const StringObject* strObj) {
     ArrayObject* chars = (ArrayObject*) dvmGetFieldObject((Object*) strObj,
                                 STRING_FIELDOFF_VALUE);
@@ -210,7 +212,7 @@ u4 dvmComputeStringHash(const StringObject* strObj) {
     len = dvmGetFieldInt((Object*) strObj, STRING_FIELDOFF_COUNT);
     offset = dvmGetFieldInt((Object*) strObj, STRING_FIELDOFF_OFFSET);
 
-    return dvmComputeUtf16Hash((u2*) chars->contents + offset, len);
+    return computeUtf16Hash((u2*)(void*)chars->contents + offset, len);
 }
 
 /*
@@ -235,7 +237,7 @@ StringObject* dvmCreateStringFromCstr(const char* utf8Str)
  * Returns NULL and throws an exception on failure.
  */
 StringObject* dvmCreateStringFromCstrAndLength(const char* utf8Str,
-    u4 utf16Length)
+    size_t utf16Length)
 {
     assert(utf8Str != NULL);
 
@@ -245,9 +247,9 @@ StringObject* dvmCreateStringFromCstrAndLength(const char* utf8Str,
         return NULL;
     }
 
-    dvmConvertUtf8ToUtf16((u2*) chars->contents, utf8Str);
+    dvmConvertUtf8ToUtf16((u2*)(void*)chars->contents, utf8Str);
 
-    u4 hashCode = dvmComputeUtf16Hash((u2*) chars->contents, utf16Length);
+    u4 hashCode = computeUtf16Hash((u2*)(void*)chars->contents, utf16Length);
     dvmSetFieldInt((Object*) newObj, STRING_FIELDOFF_HASHCODE, hashCode);
 
     return newObj;
@@ -269,7 +271,7 @@ StringObject* dvmCreateStringFromUnicode(const u2* unichars, int len)
 
     if (len > 0) memcpy(chars->contents, unichars, len * sizeof(u2));
 
-    u4 hashCode = dvmComputeUtf16Hash((u2*) chars->contents, len);
+    u4 hashCode = computeUtf16Hash((u2*)(void*)chars->contents, len);
     dvmSetFieldInt((Object*)newObj, STRING_FIELDOFF_HASHCODE, hashCode);
 
     return newObj;
@@ -296,7 +298,7 @@ char* dvmCreateCstrFromString(StringObject* jstr)
     offset = dvmGetFieldInt((Object*) jstr, STRING_FIELDOFF_OFFSET);
     chars = (ArrayObject*) dvmGetFieldObject((Object*) jstr,
                                 STRING_FIELDOFF_VALUE);
-    data = (const u2*) chars->contents + offset;
+    data = (const u2*)(void*)chars->contents + offset;
     assert(offset + len <= (int) chars->length);
 
     byteLen = utf16_utf8ByteLen(data, len);
@@ -341,7 +343,7 @@ int dvmStringUtf8ByteLen(StringObject* jstr)
     offset = dvmGetFieldInt((Object*) jstr, STRING_FIELDOFF_OFFSET);
     chars = (ArrayObject*) dvmGetFieldObject((Object*) jstr,
                                 STRING_FIELDOFF_VALUE);
-    data = (const u2*) chars->contents + offset;
+    data = (const u2*)(void*)chars->contents + offset;
     assert(offset + len <= (int) chars->length);
 
     return utf16_utf8ByteLen(data, len);
@@ -375,7 +377,7 @@ const u2* dvmStringChars(StringObject* jstr)
     offset = dvmGetFieldInt((Object*) jstr, STRING_FIELDOFF_OFFSET);
     chars = (ArrayObject*) dvmGetFieldObject((Object*) jstr,
                                 STRING_FIELDOFF_VALUE);
-    return (const u2*) chars->contents + offset;
+    return (const u2*)(void*)chars->contents + offset;
 }
 
 
@@ -413,8 +415,8 @@ int dvmHashcmpStrings(const void* vstrObj1, const void* vstrObj2)
     assert(offset1 + len1 <= (int) chars1->length);
     assert(offset2 + len2 <= (int) chars2->length);
 
-    return memcmp((const u2*) chars1->contents + offset1,
-                  (const u2*) chars2->contents + offset2,
+    return memcmp((const u2*)(void*)chars1->contents + offset1,
+                  (const u2*)(void*)chars2->contents + offset2,
                   len1 * sizeof(u2));
 }
 
@@ -437,8 +439,7 @@ ArrayObject* dvmCreateStringArray(const char** strings, size_t count)
     /*
      * Create the individual String objects and add them to the array.
      */
-    size_t i;
-    for (i = 0; i < count; i++) {
+    for (size_t i = 0; i < count; i++) {
         Object* str =
             (Object*) dvmCreateStringFromCstr(strings[i]);
         if (str == NULL) {

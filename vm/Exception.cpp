@@ -888,7 +888,7 @@ void* dvmFillInStackTraceInternal(Thread* thread, bool wantObject, size_t* pCoun
             assert(dvmCheckException(dvmThreadSelf()));
             goto bail;
         }
-        intPtr = (int*) stackData->contents;
+        intPtr = (int*)(void*)stackData->contents;
     } else {
         /* array of ints; first entry is stack depth */
         assert(sizeof(Method*) == sizeof(int));
@@ -950,7 +950,7 @@ ArrayObject* dvmGetStackTrace(const Object* ostackData)
 {
     const ArrayObject* stackData = (const ArrayObject*) ostackData;
     size_t stackSize = stackData->length / 2;
-    const int* intVals = (const int*) stackData->contents;
+    const int* intVals = (const int*)(void*)stackData->contents;
     return dvmGetStackTraceRaw(intVals, stackSize);
 }
 
@@ -1189,7 +1189,7 @@ static void logStackTraceOf(Object* exception)
     }
 
     stackSize = stackData->length / 2;
-    intVals = (const int*) stackData->contents;
+    intVals = (const int*)(void*)stackData->contents;
 
     dvmLogRawStackTrace(intVals, stackSize);
 }

@@ -17,11 +17,7 @@
 /*
  * Dalvik initialization, shutdown, and command-line argument processing.
  */
-#include "Dalvik.h"
-#include "test/Test.h"
-#include "mterp/Mterp.h"
-#include "Hash.h"
-
+#define __STDC_LIMIT_MACROS
 #include <stdlib.h>
 #include <stdio.h>
 #include <signal.h>
@@ -30,6 +26,11 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
+#include "Dalvik.h"
+#include "test/Test.h"
+#include "mterp/Mterp.h"
+#include "Hash.h"
+
 #define kMinHeapStartSize   (1*1024*1024)
 #define kMinHeapSize        (2*1024*1024)
 #define kMaxHeapSize        (1*1024*1024*1024)
@@ -37,7 +38,7 @@
 /*
  * Register VM-agnostic native methods for system classes.
  */
-extern int jniRegisterSystemMethods(JNIEnv* env);
+extern "C" int jniRegisterSystemMethods(JNIEnv* env);
 
 /* fwd */
 static bool registerSystemNatives(JNIEnv* pEnv);
@@ -1332,7 +1333,7 @@ int dvmStartup(int argc, const char* const argv[], bool ignoreUnrecognized,
 
 #ifndef NDEBUG
     if (!dvmTestHash())
-        LOGE("dmvTestHash FAILED\n");
+        LOGE("dvmTestHash FAILED\n");
     if (false /*noisy!*/ && !dvmTestIndirectRefTable())
         LOGE("dvmTestIndirectRefTable FAILED\n");
 #endif

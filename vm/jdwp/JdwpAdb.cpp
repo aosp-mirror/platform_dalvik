@@ -163,7 +163,7 @@ static int  receiveClientFd(JdwpNetState*  netState)
     cmsg->cmsg_len   = msg.msg_controllen;
     cmsg->cmsg_level = SOL_SOCKET;
     cmsg->cmsg_type  = SCM_RIGHTS;
-    ((int*)CMSG_DATA(cmsg))[0] = -1;
+    ((int*)(void*)CMSG_DATA(cmsg))[0] = -1;
 
     do {
         ret = recvmsg(netState->controlSock, &msg, 0);
@@ -181,7 +181,7 @@ static int  receiveClientFd(JdwpNetState*  netState)
         return -1;
     }
 
-    return ((int*)CMSG_DATA(cmsg))[0];
+    return ((int*)(void*)CMSG_DATA(cmsg))[0];
 }
 
 /*

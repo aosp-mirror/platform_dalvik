@@ -119,7 +119,7 @@ DexCacheStatus dvmDexCacheStatus(const char *fileName)
         LOGV("dvmDexCacheStatus: Checking cache for %s\n", fileName);
         cachedName = dexOptGenerateCacheFileName(fileName, kDexInJarName);
         if (cachedName == NULL)
-            return -1;
+            return DEX_CACHE_BAD_ARCHIVE;
 
         fd = dvmOpenCachedDexFile(fileName, cachedName,
                 dexGetZipEntryModTime(&archive, entry),

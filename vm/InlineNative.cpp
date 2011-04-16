@@ -27,7 +27,7 @@
 //#warning "trying memcmp16"
 //#define CHECK_MEMCMP16
 /* "count" is in 16-bit units */
-extern u4 __memcmp16(const u2* s0, const u2* s1, size_t count);
+extern "C" u4 __memcmp16(const u2* s0, const u2* s1, size_t count);
 #endif
 
 /*
@@ -146,7 +146,7 @@ bool javaLangString_charAt(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
         chars = (ArrayObject*)
             dvmGetFieldObject((Object*) arg0, STRING_FIELDOFF_VALUE);
 
-        pResult->i = ((const u2*) chars->contents)[arg1 + offset];
+        pResult->i = ((const u2*)(void*)chars->contents)[arg1 + offset];
         return true;
     }
 }
@@ -238,8 +238,8 @@ bool javaLangString_compareTo(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
         dvmGetFieldObject((Object*) arg0, STRING_FIELDOFF_VALUE);
     compArray = (ArrayObject*)
         dvmGetFieldObject((Object*) arg1, STRING_FIELDOFF_VALUE);
-    thisChars = ((const u2*) thisArray->contents) + thisOffset;
-    compChars = ((const u2*) compArray->contents) + compOffset;
+    thisChars = ((const u2*)(void*)thisArray->contents) + thisOffset;
+    compChars = ((const u2*)(void*)compArray->contents) + compOffset;
 
 #ifdef HAVE__MEMCMP16
     /*
@@ -359,8 +359,8 @@ bool javaLangString_equals(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
         dvmGetFieldObject((Object*) arg0, STRING_FIELDOFF_VALUE);
     compArray = (ArrayObject*)
         dvmGetFieldObject((Object*) arg1, STRING_FIELDOFF_VALUE);
-    thisChars = ((const u2*) thisArray->contents) + thisOffset;
-    compChars = ((const u2*) compArray->contents) + compOffset;
+    thisChars = ((const u2*)(void*)thisArray->contents) + thisOffset;
+    compChars = ((const u2*)(void*)compArray->contents) + compOffset;
 
 #ifdef HAVE__MEMCMP16
     pResult->i = (__memcmp16(thisChars, compChars, thisCount) == 0);
@@ -452,7 +452,7 @@ static inline int indexOfCommon(Object* strObj, int ch, int start)
     /* pull out the basic elements */
     ArrayObject* charArray =
         (ArrayObject*) dvmGetFieldObject(strObj, STRING_FIELDOFF_VALUE);
-    const u2* chars = (const u2*) charArray->contents;
+    const u2* chars = (const u2*)(void*)charArray->contents;
     int offset = dvmGetFieldInt(strObj, STRING_FIELDOFF_OFFSET);
     int count = dvmGetFieldInt(strObj, STRING_FIELDOFF_COUNT);
     //LOGI("String.indexOf(0x%08x, 0x%04x, %d) off=%d count=%d\n",

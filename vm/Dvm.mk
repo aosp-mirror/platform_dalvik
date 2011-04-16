@@ -85,37 +85,37 @@ endif  # !dvm_make_debug_vm
 #LOCAL_CFLAGS += -DWITH_JNI_STACK_CHECK
 
 LOCAL_SRC_FILES := \
-	AllocTracker.c \
-	Atomic.c.arm \
-	AtomicCache.c \
-	BitVector.c.arm \
+	AllocTracker.cpp \
+	Atomic.cpp.arm \
+	AtomicCache.cpp \
+	BitVector.cpp.arm \
 	CheckJni.cpp \
-	Ddm.c \
-	Debugger.c \
-	DvmDex.c \
-	Exception.c \
-	Hash.c \
-	IndirectRefTable.c.arm \
-	Init.c \
-	InitRefs.c \
-	InlineNative.c.arm \
-	Inlines.c \
-	Intern.c \
+	Ddm.cpp \
+	Debugger.cpp \
+	DvmDex.cpp \
+	Exception.cpp \
+	Hash.cpp \
+	IndirectRefTable.cpp.arm \
+	Init.cpp \
+	InitRefs.cpp \
+	InlineNative.cpp.arm \
+	Inlines.cpp \
+	Intern.cpp \
 	Jni.cpp \
-	JarFile.c \
-	LinearAlloc.c \
-	Misc.c \
-	Native.c \
-	PointerSet.c \
-	Profile.c \
-	Properties.c \
-	RawDexFile.c \
-	ReferenceTable.c \
-	SignalCatcher.c \
-	StdioConverter.c \
-	Sync.c \
-	Thread.c \
-	UtfString.c \
+	JarFile.cpp \
+	LinearAlloc.cpp \
+	Misc.cpp \
+	Native.cpp \
+	PointerSet.cpp \
+	Profile.cpp \
+	Properties.cpp \
+	RawDexFile.cpp \
+	ReferenceTable.cpp \
+	SignalCatcher.cpp \
+	StdioConverter.cpp \
+	Sync.cpp \
+	Thread.cpp \
+	UtfString.cpp \
 	alloc/Alloc.cpp \
 	alloc/CardTable.cpp \
 	alloc/HeapBitmap.cpp.arm \
@@ -146,7 +146,7 @@ LOCAL_SRC_FILES := \
 	jdwp/JdwpHandler.cpp \
 	jdwp/JdwpMain.cpp \
 	jdwp/JdwpSocket.cpp \
-	mterp/Mterp.c.arm \
+	mterp/Mterp.cpp.arm \
 	mterp/out/InterpC-portable.c.arm \
 	native/InternalNative.cpp \
 	native/dalvik_bytecode_OpcodeInfo.cpp \
@@ -186,9 +186,9 @@ LOCAL_SRC_FILES := \
 	reflect/Annotation.cpp \
 	reflect/Proxy.cpp \
 	reflect/Reflect.cpp \
-	test/AtomicTest.c.arm \
-	test/TestHash.c \
-	test/TestIndirectRefTable.c
+	test/AtomicTest.cpp.arm \
+	test/TestHash.cpp \
+	test/TestIndirectRefTable.cpp
 
 WITH_COPYING_GC := $(strip $(WITH_COPYING_GC))
 

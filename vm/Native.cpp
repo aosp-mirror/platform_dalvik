@@ -71,7 +71,6 @@ void dvmResolveNativeMethod(const u4* args, JValue* pResult,
     const Method* method, Thread* self)
 {
     ClassObject* clazz = method->clazz;
-    void* func;
 
     /*
      * If this is a static method, it could be called before the class
@@ -88,8 +87,8 @@ void dvmResolveNativeMethod(const u4* args, JValue* pResult,
     }
 
     /* start with our internal-native methods */
-    func = dvmLookupInternalNativeMethod(method);
-    if (func != NULL) {
+    DalvikNativeFunc infunc = dvmLookupInternalNativeMethod(method);
+    if (infunc != NULL) {
         /* resolution always gets the same answer, so no race here */
         IF_LOGVV() {
             char* desc = dexProtoCopyMethodDescriptor(&method->prototype);
@@ -102,14 +101,14 @@ void dvmResolveNativeMethod(const u4* args, JValue* pResult,
             LOGE("Failing on %s.%s\n", method->clazz->descriptor, method->name);
             dvmAbort();     // harsh, but this is VM-internal problem
         }
-        DalvikBridgeFunc dfunc = (DalvikBridgeFunc) func;
+        DalvikBridgeFunc dfunc = (DalvikBridgeFunc) infunc;
         dvmSetNativeFunc((Method*) method, dfunc, NULL);
         dfunc(args, pResult, method, self);
         return;
     }
 
     /* now scan any DLLs we have loaded for JNI signatures */
-    func = lookupSharedLibMethod(method);
+    void* func = lookupSharedLibMethod(method);
     if (func != NULL) {
         /* found it, point it at the JNI bridge and then call it */
         dvmUseJNIBridge((Method*) method, func);
@@ -580,27 +579,22 @@ static char* createJniNameString(const char* classDescriptor,
  */
 static char* mangleString(const char* str, int len)
 {
-    u2* utf16 = NULL;
-    char* mangle = NULL;
-    int charLen;
-
     //LOGI("mangling '%s' %d\n", str, len);
 
     assert(str[len] == '\0');
 
-    charLen = dvmUtf8Len(str);
-    utf16 = (u2*) malloc(sizeof(u2) * charLen);
+    size_t charLen = dvmUtf8Len(str);
+    u2* utf16 = (u2*) malloc(sizeof(u2) * charLen);
     if (utf16 == NULL)
-        goto bail;
+        return NULL;
 
     dvmConvertUtf8ToUtf16(utf16, str);
 
     /*
      * Compute the length of the mangled string.
      */
-    int i, mangleLen = 0;
-
-    for (i = 0; i < charLen; i++) {
+    size_t mangleLen = 0;
+    for (size_t i = 0; i < charLen; i++) {
         u2 ch = utf16[i];
 
         if (ch == '$' || ch > 127) {
@@ -619,13 +613,14 @@ static char* mangleString(const char* str, int len)
         }
     }
 
-    char* cp;
+    char* mangle = (char*) malloc(mangleLen +1);
+    if (mangle == NULL) {
+        free(utf16);
+        return NULL;
+    }
 
-    mangle = (char*) malloc(mangleLen +1);
-    if (mangle == NULL)
-        goto bail;
-
-    for (i = 0, cp = mangle; i < charLen; i++) {
+    char* cp = mangle;
+    for (size_t i = 0; i < charLen; i++) {
         u2 ch = utf16[i];
 
         if (ch == '$' || ch > 127) {
@@ -657,7 +652,6 @@ static char* mangleString(const char* str, int len)
 
     *cp = '\0';
 
-bail:
     free(utf16);
     return mangle;
 }

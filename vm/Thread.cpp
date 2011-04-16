@@ -384,8 +384,7 @@ void dvmLockThreadList(Thread* self)
         self->status = THREAD_VMWAIT;
     } else {
         /* happens during VM shutdown */
-        //LOGW("NULL self in dvmLockThreadList\n");
-        oldStatus = -1;         // shut up gcc
+        oldStatus = THREAD_UNDEFINED;  // shut up gcc
     }
 
     dvmLockMutex(&gDvm.threadListLock);
@@ -1232,16 +1231,10 @@ static void setThreadName(const char *threadName)
  */
 bool dvmCreateInterpThread(Object* threadObj, int reqStackSize)
 {
-    pthread_attr_t threadAttr;
-    pthread_t threadHandle;
-    Thread* self;
-    Thread* newThread = NULL;
-    Object* vmThreadObj = NULL;
-    int stackSize;
-
     assert(threadObj != NULL);
 
-    self = dvmThreadSelf();
+    Thread* self = dvmThreadSelf();
+    int stackSize;
     if (reqStackSize == 0)
         stackSize = gDvm.stackSize;
     else if (reqStackSize < kMinStackSize)
@@ -1251,6 +1244,7 @@ bool dvmCreateInterpThread(Object* threadObj, int reqStackSize)
     else
         stackSize = reqStackSize;
 
+    pthread_attr_t threadAttr;
     pthread_attr_init(&threadAttr);
     pthread_attr_setdetachstate(&threadAttr, PTHREAD_CREATE_DETACHED);
 
@@ -1258,13 +1252,16 @@ bool dvmCreateInterpThread(Object* threadObj, int reqStackSize)
      * To minimize the time spent in the critical section, we allocate the
      * vmThread object here.
      */
-    vmThreadObj = dvmAllocObject(gDvm.classJavaLangVMThread, ALLOC_DEFAULT);
+    Object* vmThreadObj = dvmAllocObject(gDvm.classJavaLangVMThread, ALLOC_DEFAULT);
     if (vmThreadObj == NULL)
-        goto fail;
+        return false;
 
-    newThread = allocThread(stackSize);
-    if (newThread == NULL)
-        goto fail;
+    Thread* newThread = allocThread(stackSize);
+    if (newThread == NULL) {
+        dvmReleaseTrackedAlloc(vmThreadObj, NULL);
+        return false;
+    }
+
     newThread->threadObj = threadObj;
 
     assert(newThread->status == THREAD_INITIALIZING);
@@ -1282,7 +1279,8 @@ bool dvmCreateInterpThread(Object* threadObj, int reqStackSize)
         dvmUnlockThreadList();
         dvmThrowIllegalThreadStateException(
             "thread has already been started");
-        goto fail;
+        freeThread(newThread);
+        dvmReleaseTrackedAlloc(vmThreadObj, NULL);
     }
 
     /*
@@ -1302,9 +1300,10 @@ bool dvmCreateInterpThread(Object* threadObj, int reqStackSize)
     dvmUnlockThreadList();
 
     ThreadStatus oldStatus = dvmChangeStatus(self, THREAD_VMWAIT);
+    pthread_t threadHandle;
     int cc = pthread_create(&threadHandle, &threadAttr, interpThreadStart,
-            newThread);
-    oldStatus = dvmChangeStatus(self, oldStatus);
+                            newThread);
+    dvmChangeStatus(self, oldStatus);
 
     if (cc != 0) {
         /*
@@ -1721,7 +1720,7 @@ static void* internalThreadStart(void* arg)
 
     jniArgs.version = JNI_VERSION_1_2;
     jniArgs.name = pArgs->name;
-    jniArgs.group = pArgs->group;
+    jniArgs.group = reinterpret_cast<jobject>(pArgs->group);
 
     setThreadName(pArgs->name);
 
@@ -2096,7 +2095,9 @@ void dvmDetachCurrentThread(void)
      * parallel with us from here out.  It's important to do this if
      * profiling is enabled, since we can wait indefinitely.
      */
-    android_atomic_release_store(THREAD_VMWAIT, &self->status);
+    volatile void* raw = reinterpret_cast<volatile void*>(&self->status);
+    volatile int32_t* addr = reinterpret_cast<volatile int32_t*>(raw);
+    android_atomic_release_store(THREAD_VMWAIT, addr);
 
     /*
      * If we're doing method trace profiling, we don't want threads to exit,
@@ -2964,7 +2965,9 @@ ThreadStatus dvmChangeStatus(Thread* self, ThreadStatus newStatus)
          * the thread is supposed to be suspended.  This is possibly faster
          * on SMP and slightly more correct, but less convenient.
          */
-        android_atomic_acquire_store(newStatus, &self->status);
+        volatile void* raw = reinterpret_cast<volatile void*>(&self->status);
+        volatile int32_t* addr = reinterpret_cast<volatile int32_t*>(raw);
+        android_atomic_acquire_store(newStatus, addr);
         if (self->interpBreak.ctl.suspendCount != 0) {
             fullSuspendCheck(self);
         }
@@ -2977,7 +2980,9 @@ ThreadStatus dvmChangeStatus(Thread* self, ThreadStatus newStatus)
          * will be observed before the state change.
          */
         assert(newStatus != THREAD_SUSPENDED);
-        android_atomic_release_store(newStatus, &self->status);
+        volatile void* raw = reinterpret_cast<volatile void*>(&self->status);
+        volatile int32_t* addr = reinterpret_cast<volatile int32_t*>(raw);
+        android_atomic_release_store(newStatus, addr);
     }
 
     return oldStatus;

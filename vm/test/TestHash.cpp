@@ -141,7 +141,7 @@ bool dvmTestHash(void)
     hash = 0;
 
     /* two entries, same hash, different values */
-    char* str1;
+    const char* str1;
     str1 = (char*) dvmHashTableLookup(pTab, hash, strdup("one"),
             (HashCompareFunc) strcmp, true);
     assert(str1 != NULL);
@@ -149,10 +149,10 @@ bool dvmTestHash(void)
             (HashCompareFunc) strcmp, true);
 
     /* remove the first one */
-    if (!dvmHashTableRemove(pTab, hash, str1))
+    if (!dvmHashTableRemove(pTab, hash, (void*)str1))
         LOGE("TestHash failed to delete item\n");
     else
-        free(str1);     // "Remove" doesn't call the free func
+        free((void*)str1);     // "Remove" doesn't call the free func
 
     /* make sure iterator doesn't included deleted entries */
     int count = 0;
@@ -167,11 +167,11 @@ bool dvmTestHash(void)
     }
 
     /* see if we can find them */
-    str = (const char*) dvmHashTableLookup(pTab, hash, "one",
+    str = (const char*) dvmHashTableLookup(pTab, hash, (void*)"one",
             (HashCompareFunc) strcmp,false);
     if (str != NULL)
         LOGE("TestHash deleted entry has returned!");
-    str = (const char*) dvmHashTableLookup(pTab, hash, "two",
+    str = (const char*) dvmHashTableLookup(pTab, hash, (void*)"two",
             (HashCompareFunc) strcmp,false);
     if (str == NULL)
         LOGE("TestHash entry vanished\n");

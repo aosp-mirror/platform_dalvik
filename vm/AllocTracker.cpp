@@ -184,16 +184,18 @@ static void getStackFrames(Thread* self, AllocRecord* pRec)
 /*
  * Add a new allocation to the set.
  */
-void dvmDoTrackAllocation(ClassObject* clazz, int size)
+void dvmDoTrackAllocation(ClassObject* clazz, size_t size)
 {
-    dvmLockMutex(&gDvm.allocTrackerLock);
-    if (gDvm.allocRecords == NULL)
-        goto bail;
-
     Thread* self = dvmThreadSelf();
     if (self == NULL) {
         LOGW("alloc tracker: no thread\n");
-        goto bail;
+        return;
+    }
+
+    dvmLockMutex(&gDvm.allocTrackerLock);
+    if (gDvm.allocRecords == NULL) {
+        dvmUnlockMutex(&gDvm.allocTrackerLock);
+        return;
     }
 
     /* advance and clip */
@@ -210,7 +212,6 @@ void dvmDoTrackAllocation(ClassObject* clazz, int size)
     if (gDvm.allocRecordCount < kNumAllocRecords)
         gDvm.allocRecordCount++;
 
-bail:
     dvmUnlockMutex(&gDvm.allocTrackerLock);
 }
 
@@ -600,8 +601,10 @@ void dvmDumpTrackedAllocations(bool enable)
         dvmEnableAllocTracker();
 
     dvmLockMutex(&gDvm.allocTrackerLock);
-    if (gDvm.allocRecords == NULL)
-        goto bail;
+    if (gDvm.allocRecords == NULL) {
+        dvmUnlockMutex(&gDvm.allocTrackerLock);
+        return;
+    }
 
     /*
      * "idx" is the head of the list.  We want to start at the end of the
@@ -618,8 +621,7 @@ void dvmDumpTrackedAllocations(bool enable)
             pRec->threadId, pRec->size, pRec->clazz->descriptor);
 
         if (true) {
-            int i;
-            for (i = 0; i < kMaxAllocRecordStackDepth; i++) {
+            for (int i = 0; i < kMaxAllocRecordStackDepth; i++) {
                 if (pRec->stackElem[i].method == NULL)
                     break;
 
@@ -642,7 +644,6 @@ void dvmDumpTrackedAllocations(bool enable)
         idx = (idx + 1) & (kNumAllocRecords-1);
     }
 
-bail:
     dvmUnlockMutex(&gDvm.allocTrackerLock);
     if (false) {
         u1* data;
