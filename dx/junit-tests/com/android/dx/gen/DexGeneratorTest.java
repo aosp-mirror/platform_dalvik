@@ -24,9 +24,7 @@ import static com.android.dx.rop.code.AccessFlags.ACC_PUBLIC;
 import static com.android.dx.rop.code.AccessFlags.ACC_STATIC;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.Callable;
 import junit.framework.TestCase;
 
@@ -38,25 +36,12 @@ import junit.framework.TestCase;
  * <p>This test must run on a Dalvik VM.
  */
 public final class DexGeneratorTest extends TestCase {
-    private static final Map<Class<?>, Class<?>> BOXED_TO_PRIMITIVE
-            = new HashMap<Class<?>, Class<?>>();
-    static {
-        BOXED_TO_PRIMITIVE.put(Boolean.class, boolean.class);
-        BOXED_TO_PRIMITIVE.put(Byte.class, byte.class);
-        BOXED_TO_PRIMITIVE.put(Character.class, char.class);
-        BOXED_TO_PRIMITIVE.put(Double.class, double.class);
-        BOXED_TO_PRIMITIVE.put(Float.class, float.class);
-        BOXED_TO_PRIMITIVE.put(Integer.class, int.class);
-        BOXED_TO_PRIMITIVE.put(Long.class, long.class);
-        BOXED_TO_PRIMITIVE.put(Short.class, short.class);
-        BOXED_TO_PRIMITIVE.put(Void.class, void.class);
-    }
-
     private DexGenerator generator;
     private Type<Integer> intType;
     private Type<Long> longType;
     private Type<Boolean> booleanType;
     private Type<Object> objectType;
+    private Type<String> stringType;
     private Type<DexGeneratorTest> dexGeneratorTestType;
     private Type<?> generatedType;
     private Type<Callable> callableType;
@@ -77,33 +62,33 @@ public final class DexGeneratorTest extends TestCase {
         longType = generator.getType(long.class);
         booleanType = generator.getType(boolean.class);
         objectType = generator.getType(Object.class);
+        stringType = generator.getType(String.class);
         dexGeneratorTestType = generator.getType(DexGeneratorTest.class);
         generatedType = generator.getType("LGenerated;");
         callableType = generator.getType(Callable.class);
         call = callableType.getMethod(objectType, "call");
+        generatedType.declare("Generated.java", ACC_PUBLIC, objectType);
     }
 
     public void testNewInstance() throws Exception {
         /*
-         * public static Constructable generatedMethod(long a, boolean b) {
+         * public static Constructable call(long a, boolean b) {
          *   Constructable result = new Constructable(a, b);
          *   return result;
          * }
          */
-
-        Code code = generator.newCode();
-        Local<Long> localA = code.newParameter(longType);
-        Local<Boolean> localB = code.newParameter(booleanType);
         Type<Constructable> constructable = generator.getType(Constructable.class);
+        Code code = generatedType.getMethod(constructable, "call", longType, booleanType)
+                .declare(ACC_PUBLIC | ACC_STATIC);
+        Local<Long> localA = code.getParameter(0, longType);
+        Local<Boolean> localB = code.getParameter(1, booleanType);
         Method<Constructable, Void> constructor
                 = constructable.getConstructor(longType, booleanType);
         Local<Constructable> localResult = code.newLocal(constructable);
         code.newInstance(localResult, constructor, localA, localB);
         code.returnValue(localResult);
 
-        java.lang.reflect.Method method
-                = newMethod(Constructable.class, code, long.class, boolean.class);
-        Constructable constructed = (Constructable) method.invoke(null, 5L, false);
+        Constructable constructed = (Constructable) getMethod().invoke(null, 5L, false);
         assertEquals(5L, constructed.a);
         assertEquals(false, constructed.b);
     }
@@ -119,22 +104,21 @@ public final class DexGeneratorTest extends TestCase {
 
     public void testInvokeStatic() throws Exception {
         /*
-         * public static int generatedMethod(int a) {
+         * public static int call(int a) {
          *   int result = DexGeneratorTest.staticMethod(a);
          *   return result;
          * }
          */
-
-        Code code = generator.newCode();
-        Local<Integer> localA = code.newParameter(intType);
+        Code code = generatedType.getMethod(intType, "call", intType)
+                .declare(ACC_PUBLIC | ACC_STATIC);
+        Local<Integer> localA = code.getParameter(0, intType);
         Local<Integer> localResult = code.newLocal(intType);
-        Method<DexGeneratorTest, Integer> staticMethod
+        Method<?, Integer> staticMethod
                 = dexGeneratorTestType.getMethod(intType, "staticMethod", intType);
         code.invokeStatic(staticMethod, localResult, localA);
         code.returnValue(localResult);
 
-        java.lang.reflect.Method method = newMethod(int.class, code, int.class);
-        assertEquals(10, method.invoke(null, 4));
+        assertEquals(10, getMethod().invoke(null, 4));
     }
 
     @SuppressWarnings("unused") // called by generated code
@@ -144,23 +128,22 @@ public final class DexGeneratorTest extends TestCase {
 
     public void testInvokeVirtual() throws Exception {
         /*
-         * public static int generatedMethod(DexGeneratorTest test, int a) {
+         * public static int call(DexGeneratorTest test, int a) {
          *   int result = test.virtualMethod(a);
          *   return result;
          * }
          */
-        Code code = generator.newCode();
-        Local<DexGeneratorTest> localInstance = code.newParameter(dexGeneratorTestType);
-        Local<Integer> localA = code.newParameter(intType);
+        Code code = generatedType.getMethod(intType, "call", dexGeneratorTestType, intType)
+                .declare(ACC_PUBLIC | ACC_STATIC);
+        Local<DexGeneratorTest> localInstance = code.getParameter(0, dexGeneratorTestType);
+        Local<Integer> localA = code.getParameter(1, intType);
         Local<Integer> localResult = code.newLocal(intType);
         Method<DexGeneratorTest, Integer> virtualMethod
                 = dexGeneratorTestType.getMethod(intType, "virtualMethod", intType);
         code.invokeVirtual(virtualMethod, localResult, localInstance, localA);
         code.returnValue(localResult);
 
-        java.lang.reflect.Method method = newMethod(
-                int.class, code, DexGeneratorTest.class, int.class);
-        assertEquals(9, method.invoke(null, this, 4));
+        assertEquals(9, getMethod().invoke(null, this, 4));
     }
 
     @SuppressWarnings("unused") // called by generated code
@@ -168,44 +151,42 @@ public final class DexGeneratorTest extends TestCase {
         return a + 5;
     }
 
-    public void testInvokeDirect() throws Exception {
+    public <G> void testInvokeDirect() throws Exception {
         /*
          * private int directMethod() {
          *   int a = 5;
          *   return a;
          * }
          *
-         * public static int generatedMethod(Generated g) {
+         * public static int call(Generated g) {
          *   int b = g.directMethod();
          *   return b;
          * }
          */
-        Method<?, Integer> directMethod = generatedType.getMethod(intType, "directMethod");
-        Code directCode = generator.newCode();
-        directCode.newThisLocal(generatedType); // 'this' is unused
+        Type<G> generated = generator.getType("LGenerated;");
+        Method<G, Integer> directMethod = generated.getMethod(intType, "directMethod");
+        Code directCode = directMethod.declare(ACC_PRIVATE);
+        directCode.getThis(generated); // 'this' is unused
         Local<Integer> localA = directCode.newLocal(intType);
         directCode.loadConstant(localA, 5);
         directCode.returnValue(localA);
-        directMethod.declare(ACC_PRIVATE, directCode);
 
-        Method<?, ?> method = generatedType.getMethod(intType, "generatedMethod", generatedType);
-        Code code = generator.newCode();
+        Method<G, Integer> method = generated.getMethod(intType, "call", generated);
+        Code code = method.declare(ACC_PUBLIC | ACC_STATIC);
         Local<Integer> localB = code.newLocal(intType);
-        Local<?> localG = code.newParameter(generatedType);
+        Local<G> localG = code.getParameter(0, generated);
         code.invokeDirect(directMethod, localB, localG);
         code.returnValue(localB);
-        method.declare(ACC_PUBLIC | ACC_STATIC, code);
 
         addDefaultConstructor();
 
-        generatedType.declare("Generated.java", ACC_PUBLIC, objectType);
         Class<?> generatedClass = loadAndGenerate();
         Object instance = generatedClass.newInstance();
-        java.lang.reflect.Method m = generatedClass.getMethod("generatedMethod", generatedClass);
+        java.lang.reflect.Method m = generatedClass.getMethod("call", generatedClass);
         assertEquals(5, m.invoke(null, instance));
     }
 
-    public void testInvokeSuper() throws Exception {
+    public <G> void testInvokeSuper() throws Exception {
         /*
          * public int superHashCode() {
          *   int result = super.hashCode();
@@ -215,24 +196,21 @@ public final class DexGeneratorTest extends TestCase {
          *   return 0;
          * }
          */
-        Method<?, Integer> objectHashCode = objectType.getMethod(intType, "hashCode");
-        Code superHashCode = generator.newCode();
+        Type<G> generated = generator.getType("LGenerated;");
+        Method<Object, Integer> objectHashCode = objectType.getMethod(intType, "hashCode");
+        Code superHashCode = generated.getMethod(intType, "superHashCode").declare(ACC_PUBLIC);
         Local<Integer> localResult = superHashCode.newLocal(intType);
-        Local<?> localThis = superHashCode.newThisLocal(generatedType);
+        Local<G> localThis = superHashCode.getThis(generated);
         superHashCode.invokeSuper(objectHashCode, localResult, localThis);
         superHashCode.returnValue(localResult);
-        generatedType.getMethod(intType, "superHashCode").declare(ACC_PUBLIC, superHashCode);
 
-        Code generatedHashCode = generator.newCode();
-        generatedHashCode.newThisLocal(generatedType);
+        Code generatedHashCode = generated.getMethod(intType, "hashCode").declare(ACC_PUBLIC);
         Local<Integer> localZero = generatedHashCode.newLocal(intType);
         generatedHashCode.loadConstant(localZero, 0);
         generatedHashCode.returnValue(localZero);
-        generatedType.getMethod(intType, "hashCode").declare(ACC_PUBLIC, generatedHashCode);
 
         addDefaultConstructor();
 
-        generatedType.declare("Generated.java", ACC_PUBLIC, objectType);
         Class<?> generatedClass = loadAndGenerate();
         Object instance = generatedClass.newInstance();
         java.lang.reflect.Method m = generatedClass.getMethod("superHashCode");
@@ -246,13 +224,14 @@ public final class DexGeneratorTest extends TestCase {
 
     public void testInvokeInterface() throws Exception {
         /*
-         * public static Object generatedMethod(Callable c) {
+         * public static Object call(Callable c) {
          *   Object result = c.call();
          *   return result;
          * }
          */
-        Code code = generator.newCode();
-        Local<Callable> localC = code.newParameter(callableType);
+        Code code = generatedType.getMethod(objectType, "call", callableType)
+                .declare(ACC_PUBLIC | ACC_STATIC);
+        Local<Callable> localC = code.getParameter(0, callableType);
         Local<Object> localResult = code.newLocal(objectType);
         code.invokeInterface(call, localResult, localC);
         code.returnValue(localResult);
@@ -262,30 +241,63 @@ public final class DexGeneratorTest extends TestCase {
                 return "abc";
             }
         };
-        java.lang.reflect.Method method = newMethod(Object.class, code, Callable.class);
-        assertEquals("abc", method.invoke(null, callable));
+        assertEquals("abc", getMethod().invoke(null, callable));
     }
 
     public void testParameterMismatch() throws Exception {
-        Code code = generator.newCode();
-        code.newParameter(intType);
-        code.newParameter(objectType);
-
         Type<?>[] argTypes = {
                 generator.getType(Integer.class), // should fail because the code specifies int
                 objectType,
         };
-
-        Method<?, Integer> method = generatedType.getMethod(intType, "generatedMethod", argTypes);
+        Method<?, Integer> method = generatedType.getMethod(intType, "call", argTypes);
+        Code code = method.declare(ACC_PUBLIC | ACC_STATIC);
         try {
-            method.declare(ACC_PUBLIC | ACC_STATIC, code);
-            fail();
+            code.getParameter(0, intType);
         } catch (IllegalArgumentException e) {
+        }
+        try {
+            code.getParameter(2, intType);
+        } catch (IndexOutOfBoundsException e) {
         }
     }
 
+    public void testInvokeTypeSafety() throws Exception {
+        /*
+         * public static boolean call(DexGeneratorTest test) {
+         *   CharSequence cs = test.toString();
+         *   boolean result = cs.equals(test);
+         *   return result;
+         * }
+         */
+        Code code = generatedType.getMethod(booleanType, "call", dexGeneratorTestType)
+                .declare(ACC_PUBLIC | ACC_STATIC);
+        Local<DexGeneratorTest> localTest = code.getParameter(0, dexGeneratorTestType);
+        Type<CharSequence> charSequenceType = generator.getType(CharSequence.class);
+        Method<Object, String> objectToString = objectType.getMethod(stringType, "toString");
+        Method<Object, Boolean> objectEquals
+                = objectType.getMethod(booleanType, "equals", objectType);
+        Local<CharSequence> localCs = code.newLocal(charSequenceType);
+        Local<Boolean> localResult = code.newLocal(booleanType);
+        code.invokeVirtual(objectToString, localCs, localTest);
+        code.invokeVirtual(objectEquals, localResult, localCs, localTest);
+        code.returnValue(localResult);
+
+        assertEquals(false, getMethod().invoke(null, this));
+    }
+
     public void testReturnTypeMismatch() {
-        fail("TODO");
+        Code code = generatedType.getMethod(stringType, "call")
+                .declare(ACC_PUBLIC | ACC_STATIC);
+        try {
+            code.returnValue(code.newLocal(booleanType));
+            fail();
+        } catch (IllegalArgumentException expected) {
+        }
+        try {
+            code.returnVoid();
+            fail();
+        } catch (IllegalArgumentException expected) {
+        }
     }
 
     public void testDeclareStaticFields() throws Exception {
@@ -297,8 +309,6 @@ public final class DexGeneratorTest extends TestCase {
          */
         generatedType.getField(intType, "a").declare(ACC_PUBLIC | ACC_STATIC, 3);
         generatedType.getField(objectType, "b").declare(ACC_PROTECTED | ACC_STATIC, null);
-        generatedType.declare("Generated.java", ACC_PUBLIC, objectType);
-
         Class<?> generatedClass = loadAndGenerate();
 
         java.lang.reflect.Field a = generatedClass.getField("a");
@@ -320,7 +330,7 @@ public final class DexGeneratorTest extends TestCase {
          */
         generatedType.getField(intType, "a").declare(ACC_PUBLIC, null);
         generatedType.getField(objectType, "b").declare(ACC_PROTECTED, null);
-        generatedType.declare("Generated.java", ACC_PUBLIC, objectType);
+
         addDefaultConstructor();
 
         Class<?> generatedClass = loadAndGenerate();
@@ -340,7 +350,7 @@ public final class DexGeneratorTest extends TestCase {
      * Declare a constructor that takes an int parameter and assigns it to a
      * field.
      */
-    public void testDeclareConstructor() throws Exception {
+    public <G> void testDeclareConstructor() throws Exception {
         /*
          * class Generated {
          *   public final int a;
@@ -349,17 +359,15 @@ public final class DexGeneratorTest extends TestCase {
          *   }
          * }
          */
-        Field<?, Integer> field = generatedType.getField(intType, "a");
+        Type<G> generated = generator.getType("LGenerated;");
+        Field<G, Integer> field = generated.getField(intType, "a");
         field.declare(ACC_PUBLIC | ACC_FINAL, null);
-
-        Code constructor = generator.newCode();
-        Local<?> thisRef = constructor.newThisLocal(generatedType);
-        Local<Integer> parameter = constructor.newParameter(intType);
-        constructor.invokeDirect(objectType.getConstructor(), null, thisRef);
-        constructor.iput(field, (Local) thisRef, parameter); // TODO: type safety hurts us here
-        constructor.returnVoid();
-        generatedType.getConstructor(intType).declare(ACC_PUBLIC | ACC_CONSTRUCTOR, constructor);
-        generatedType.declare("Generated.java", ACC_PUBLIC, objectType);
+        Code code = generatedType.getConstructor(intType).declare(ACC_PUBLIC | ACC_CONSTRUCTOR);
+        Local<G> thisRef = code.getThis(generated);
+        Local<Integer> parameter = code.getParameter(0, intType);
+        code.invokeDirect(objectType.getConstructor(), null, thisRef);
+        code.iput(field, thisRef, parameter);
+        code.returnVoid();
 
         Class<?> generatedClass = loadAndGenerate();
         java.lang.reflect.Field a = generatedClass.getField("a");
@@ -383,14 +391,15 @@ public final class DexGeneratorTest extends TestCase {
 
     private <T> void testReturnType(Class<T> javaType, T value) throws Exception {
         /*
-         * public int generatedMethod() {
+         * public int call() {
          *   int a = 5;
          *   return a;
          * }
          */
         reset();
         Type<T> returnType = generator.getType(javaType);
-        Code code = generator.newCode();
+        Code code = generatedType.getMethod(returnType, "call")
+                .declare(ACC_PUBLIC | ACC_STATIC);
         if (value != null) {
             Local<T> i = code.newLocal(returnType);
             code.loadConstant(i, value);
@@ -398,12 +407,9 @@ public final class DexGeneratorTest extends TestCase {
         } else {
             code.returnVoid();
         }
-        generatedType.getMethod(returnType, "generatedMethod")
-                .declare(ACC_PUBLIC | ACC_STATIC, code);
-        generatedType.declare("Generated.java", ACC_PUBLIC, objectType);
 
         Class<?> generatedClass = loadAndGenerate();
-        java.lang.reflect.Method method = generatedClass.getMethod("generatedMethod");
+        java.lang.reflect.Method method = generatedClass.getMethod("call");
         assertEquals(javaType, method.getReturnType());
         assertEquals(value, method.invoke(null));
     }
@@ -442,7 +448,7 @@ public final class DexGeneratorTest extends TestCase {
 
     private java.lang.reflect.Method newBranchingMethod(Comparison comparison) throws Exception {
         /*
-         * public static int generatedMethod(int localA, int localB) {
+         * public static boolean call(int localA, int localB) {
          *   if (a comparison b) {
          *     return true;
          *   }
@@ -450,9 +456,10 @@ public final class DexGeneratorTest extends TestCase {
          * }
          */
         reset();
-        Code code = generator.newCode();
-        Local<Integer> localA = code.newParameter(intType);
-        Local<Integer> localB = code.newParameter(intType);
+        Code code = generatedType.getMethod(booleanType, "call", intType, intType)
+                .declare(ACC_PUBLIC | ACC_STATIC);
+        Local<Integer> localA = code.getParameter(0, intType);
+        Local<Integer> localB = code.getParameter(1, intType);
         Local<Boolean> result = code.newLocal(generator.getType(boolean.class));
         Label afterIf = code.newLabel();
         Label ifBody = code.newLabel();
@@ -466,57 +473,57 @@ public final class DexGeneratorTest extends TestCase {
         code.mark(afterIf);
         code.loadConstant(result, false);
         code.returnValue(result);
-        return newMethod(boolean.class, code, int.class, int.class);
+        return getMethod();
     }
 
     public void testCastIntegerToInteger() throws Exception {
-        java.lang.reflect.Method intToLong = newCastingMethod(int.class, long.class);
+        java.lang.reflect.Method intToLong = newNumericCastingMethod(int.class, long.class);
         assertEquals(0x0000000000000000L, intToLong.invoke(null, 0x00000000));
         assertEquals(0x000000007fffffffL, intToLong.invoke(null, 0x7fffffff));
         assertEquals(0xffffffff80000000L, intToLong.invoke(null, 0x80000000));
         assertEquals(0xffffffffffffffffL, intToLong.invoke(null, 0xffffffff));
 
-        java.lang.reflect.Method longToInt = newCastingMethod(long.class, int.class);
+        java.lang.reflect.Method longToInt = newNumericCastingMethod(long.class, int.class);
         assertEquals(0x1234abcd, longToInt.invoke(null, 0x000000001234abcdL));
         assertEquals(0x1234abcd, longToInt.invoke(null, 0x123456781234abcdL));
         assertEquals(0x1234abcd, longToInt.invoke(null, 0xffffffff1234abcdL));
 
-        java.lang.reflect.Method intToShort = newCastingMethod(int.class, short.class);
+        java.lang.reflect.Method intToShort = newNumericCastingMethod(int.class, short.class);
         assertEquals((short) 0x1234, intToShort.invoke(null, 0x00001234));
         assertEquals((short) 0x1234, intToShort.invoke(null, 0xabcd1234));
         assertEquals((short) 0x1234, intToShort.invoke(null, 0xffff1234));
 
-        java.lang.reflect.Method intToChar = newCastingMethod(int.class, char.class);
+        java.lang.reflect.Method intToChar = newNumericCastingMethod(int.class, char.class);
         assertEquals((char) 0x1234, intToChar.invoke(null, 0x00001234));
         assertEquals((char) 0x1234, intToChar.invoke(null, 0xabcd1234));
         assertEquals((char) 0x1234, intToChar.invoke(null, 0xffff1234));
 
-        java.lang.reflect.Method intToByte = newCastingMethod(int.class, byte.class);
+        java.lang.reflect.Method intToByte = newNumericCastingMethod(int.class, byte.class);
         assertEquals((byte) 0x34, intToByte.invoke(null, 0x00000034));
         assertEquals((byte) 0x34, intToByte.invoke(null, 0xabcd1234));
         assertEquals((byte) 0x34, intToByte.invoke(null, 0xffffff34));
     }
 
     public void testCastIntegerToFloatingPoint() throws Exception {
-        java.lang.reflect.Method intToFloat = newCastingMethod(int.class, float.class);
+        java.lang.reflect.Method intToFloat = newNumericCastingMethod(int.class, float.class);
         assertEquals(0.0f, intToFloat.invoke(null, 0));
         assertEquals(-1.0f, intToFloat.invoke(null, -1));
         assertEquals(16777216f, intToFloat.invoke(null, 16777216));
         assertEquals(16777216f, intToFloat.invoke(null, 16777217)); // precision
 
-        java.lang.reflect.Method intToDouble = newCastingMethod(int.class, double.class);
+        java.lang.reflect.Method intToDouble = newNumericCastingMethod(int.class, double.class);
         assertEquals(0.0, intToDouble.invoke(null, 0));
         assertEquals(-1.0, intToDouble.invoke(null, -1));
         assertEquals(16777216.0, intToDouble.invoke(null, 16777216));
         assertEquals(16777217.0, intToDouble.invoke(null, 16777217));
 
-        java.lang.reflect.Method longToFloat = newCastingMethod(long.class, float.class);
+        java.lang.reflect.Method longToFloat = newNumericCastingMethod(long.class, float.class);
         assertEquals(0.0f, longToFloat.invoke(null, 0L));
         assertEquals(-1.0f, longToFloat.invoke(null, -1L));
         assertEquals(16777216f, longToFloat.invoke(null, 16777216L));
         assertEquals(16777216f, longToFloat.invoke(null, 16777217L));
 
-        java.lang.reflect.Method longToDouble = newCastingMethod(long.class, double.class);
+        java.lang.reflect.Method longToDouble = newNumericCastingMethod(long.class, double.class);
         assertEquals(0.0, longToDouble.invoke(null, 0L));
         assertEquals(-1.0, longToDouble.invoke(null, -1L));
         assertEquals(9007199254740992.0, longToDouble.invoke(null, 9007199254740992L));
@@ -524,7 +531,7 @@ public final class DexGeneratorTest extends TestCase {
     }
 
     public void testCastFloatingPointToInteger() throws Exception {
-        java.lang.reflect.Method floatToInt = newCastingMethod(float.class, int.class);
+        java.lang.reflect.Method floatToInt = newNumericCastingMethod(float.class, int.class);
         assertEquals(0, floatToInt.invoke(null, 0.0f));
         assertEquals(-1, floatToInt.invoke(null, -1.0f));
         assertEquals(Integer.MAX_VALUE, floatToInt.invoke(null, 10e15f));
@@ -532,7 +539,7 @@ public final class DexGeneratorTest extends TestCase {
         assertEquals(Integer.MIN_VALUE, floatToInt.invoke(null, Float.NEGATIVE_INFINITY));
         assertEquals(0, floatToInt.invoke(null, Float.NaN));
 
-        java.lang.reflect.Method floatToLong = newCastingMethod(float.class, long.class);
+        java.lang.reflect.Method floatToLong = newNumericCastingMethod(float.class, long.class);
         assertEquals(0L, floatToLong.invoke(null, 0.0f));
         assertEquals(-1L, floatToLong.invoke(null, -1.0f));
         assertEquals(10000000272564224L, floatToLong.invoke(null, 10e15f));
@@ -540,7 +547,7 @@ public final class DexGeneratorTest extends TestCase {
         assertEquals(Long.MIN_VALUE, floatToLong.invoke(null, Float.NEGATIVE_INFINITY));
         assertEquals(0L, floatToLong.invoke(null, Float.NaN));
 
-        java.lang.reflect.Method doubleToInt = newCastingMethod(double.class, int.class);
+        java.lang.reflect.Method doubleToInt = newNumericCastingMethod(double.class, int.class);
         assertEquals(0, doubleToInt.invoke(null, 0.0));
         assertEquals(-1, doubleToInt.invoke(null, -1.0));
         assertEquals(Integer.MAX_VALUE, doubleToInt.invoke(null, 10e15));
@@ -548,7 +555,7 @@ public final class DexGeneratorTest extends TestCase {
         assertEquals(Integer.MIN_VALUE, doubleToInt.invoke(null, Double.NEGATIVE_INFINITY));
         assertEquals(0, doubleToInt.invoke(null, Double.NaN));
 
-        java.lang.reflect.Method doubleToLong = newCastingMethod(double.class, long.class);
+        java.lang.reflect.Method doubleToLong = newNumericCastingMethod(double.class, long.class);
         assertEquals(0L, doubleToLong.invoke(null, 0.0));
         assertEquals(-1L, doubleToLong.invoke(null, -1.0));
         assertEquals(10000000000000000L, doubleToLong.invoke(null, 10e15));
@@ -558,14 +565,14 @@ public final class DexGeneratorTest extends TestCase {
     }
 
     public void testCastFloatingPointToFloatingPoint() throws Exception {
-        java.lang.reflect.Method floatToDouble = newCastingMethod(float.class, double.class);
+        java.lang.reflect.Method floatToDouble = newNumericCastingMethod(float.class, double.class);
         assertEquals(0.0, floatToDouble.invoke(null, 0.0f));
         assertEquals(-1.0, floatToDouble.invoke(null, -1.0f));
         assertEquals(0.5, floatToDouble.invoke(null, 0.5f));
         assertEquals(Double.NEGATIVE_INFINITY, floatToDouble.invoke(null, Float.NEGATIVE_INFINITY));
         assertEquals(Double.NaN, floatToDouble.invoke(null, Float.NaN));
 
-        java.lang.reflect.Method doubleToFloat = newCastingMethod(double.class, float.class);
+        java.lang.reflect.Method doubleToFloat = newNumericCastingMethod(double.class, float.class);
         assertEquals(0.0f, doubleToFloat.invoke(null, 0.0));
         assertEquals(-1.0f, doubleToFloat.invoke(null, -1.0));
         assertEquals(0.5f, doubleToFloat.invoke(null, 0.5));
@@ -573,10 +580,10 @@ public final class DexGeneratorTest extends TestCase {
         assertEquals(Float.NaN, doubleToFloat.invoke(null, Double.NaN));
     }
 
-    private java.lang.reflect.Method newCastingMethod(Class<?> source, Class<?> target)
+    private java.lang.reflect.Method newNumericCastingMethod(Class<?> source, Class<?> target)
             throws Exception {
         /*
-         * public static short generatedMethod(int source) {
+         * public static short call(int source) {
          *   short casted = (short) source;
          *   return casted;
          * }
@@ -584,12 +591,13 @@ public final class DexGeneratorTest extends TestCase {
         reset();
         Type<?> sourceType = generator.getType(source);
         Type<?> targetType = generator.getType(target);
-        Code code = generator.newCode();
-        Local<?> localSource = code.newParameter(sourceType);
+        Code code = generatedType.getMethod(targetType, "call", sourceType)
+                .declare(ACC_PUBLIC | ACC_STATIC);
+        Local<?> localSource = code.getParameter(0, sourceType);
         Local<?> localCasted = code.newLocal(targetType);
-        code.cast(localSource, localCasted);
+        code.numericCast(localSource, localCasted);
         code.returnValue(localCasted);
-        return newMethod(target, code, source);
+        return getMethod();
     }
 
     public void testNot() throws Exception {
@@ -604,20 +612,21 @@ public final class DexGeneratorTest extends TestCase {
         assertEquals(0x98765432edcba987L, notLong.invoke(null, 0x6789abcd12345678L));
     }
 
-    private java.lang.reflect.Method newNotMethod(Class<?> source) throws Exception {
+    private <T> java.lang.reflect.Method newNotMethod(Class<T> source) throws Exception {
         /*
-         * public static short generatedMethod(int source) {
+         * public static short call(int source) {
          *   source = ~source;
          *   return not;
          * }
          */
         reset();
-        Type<?> sourceType = generator.getType(source);
-        Code code = generator.newCode();
-        Local<?> localSource = code.newParameter(sourceType);
-        code.not((Local) localSource, localSource); // TODO: type safety
+        Type<T> valueType = generator.getType(source);
+        Code code = generatedType.getMethod(valueType, "call", valueType)
+                .declare(ACC_PUBLIC | ACC_STATIC);
+        Local<T> localSource = code.getParameter(0, valueType);
+        code.not(localSource, localSource);
         code.returnValue(localSource);
-        return newMethod(source, code, source);
+        return getMethod();
     }
 
     public void testNegate() throws Exception {
@@ -644,20 +653,21 @@ public final class DexGeneratorTest extends TestCase {
         assertEquals(Double.POSITIVE_INFINITY, negateDouble.invoke(null, Double.NEGATIVE_INFINITY));
     }
 
-    private java.lang.reflect.Method newNegateMethod(Class<?> source) throws Exception {
+    private <T> java.lang.reflect.Method newNegateMethod(Class<T> source) throws Exception {
         /*
-         * public static short generatedMethod(int source) {
+         * public static short call(int source) {
          *   source = -source;
          *   return not;
          * }
          */
         reset();
-        Type<?> sourceType = generator.getType(source);
-        Code code = generator.newCode();
-        Local<?> localSource = code.newParameter(sourceType);
-        code.negate((Local) localSource, localSource); // TODO: type safety
+        Type<T> valueType = generator.getType(source);
+        Code code = generatedType.getMethod(valueType, "call", valueType)
+                .declare(ACC_PUBLIC | ACC_STATIC);
+        Local<T> localSource = code.getParameter(0, valueType);
+        code.negate(localSource, localSource);
         code.returnValue(localSource);
-        return newMethod(source, code, source);
+        return getMethod();
     }
 
     public void testIntBinaryOps() throws Exception {
@@ -796,7 +806,7 @@ public final class DexGeneratorTest extends TestCase {
         assertEquals(Double.NaN, remainder.invoke(null, 5.5, 0.0));
     }
 
-    private java.lang.reflect.Method newBinaryOpMethod(Class<?> valueClass, BinaryOp op)
+    private <T> java.lang.reflect.Method newBinaryOpMethod(Class<T> valueClass, BinaryOp op)
             throws Exception {
         /*
          * public static int binaryOp(int a, int b) {
@@ -805,14 +815,15 @@ public final class DexGeneratorTest extends TestCase {
          * }
          */
         reset();
-        Type<?> valueType = generator.getType(valueClass);
-        Code code = generator.newCode();
-        Local<?> localA = code.newParameter(valueType);
-        Local<?> localB = code.newParameter(valueType);
-        Local<?> localResult = code.newLocal(valueType);
-        code.op(op, (Local) localResult, (Local) localA, (Local) localB); // TODO: type safety
+        Type<T> valueType = generator.getType(valueClass);
+        Code code = generatedType.getMethod(valueType, "call", valueType,valueType)
+                .declare(ACC_PUBLIC | ACC_STATIC);
+        Local<T> localA = code.getParameter(0, valueType);
+        Local<T> localB = code.getParameter(1, valueType);
+        Local<T> localResult = code.newLocal(valueType);
+        code.op(op, localResult, localA, localB);
         code.returnValue(localResult);
-        return newMethod(valueClass, code, valueClass, valueClass);
+        return getMethod();
     }
 
     public void testReadAndWriteInstanceFields() throws Exception {
@@ -879,7 +890,7 @@ public final class DexGeneratorTest extends TestCase {
     private <V> java.lang.reflect.Method newInstanceSwapMethod(
             Class<V> valueClass, String fieldName) throws Exception {
         /*
-         * public static int generatedMethod(Instance instance, int newValue) {
+         * public static int call(Instance instance, int newValue) {
          *   int oldValue = instance.intValue;
          *   instance.intValue = newValue;
          *   return oldValue;
@@ -889,14 +900,15 @@ public final class DexGeneratorTest extends TestCase {
         Type<V> valueType = generator.getType(valueClass);
         Type<Instance> objectType = generator.getType(Instance.class);
         Field<Instance, V> field = objectType.getField(valueType, fieldName);
-        Code code = generator.newCode();
-        Local<Instance> localInstance = code.newParameter(objectType);
-        Local<V> localNewValue = code.newParameter(valueType);
+        Code code = generatedType.getMethod(valueType, "call", objectType, valueType)
+                .declare(ACC_PUBLIC | ACC_STATIC);
+        Local<Instance> localInstance = code.getParameter(0, objectType);
+        Local<V> localNewValue = code.getParameter(1, valueType);
         Local<V> localOldValue = code.newLocal(valueType);
         code.iget(field, localInstance, localOldValue);
         code.iput(field, localInstance, localNewValue);
         code.returnValue(localOldValue);
-        return newMethod(valueClass, code, Instance.class, valueClass);
+        return getMethod();
     }
 
     public void testReadAndWriteStaticFields() throws Exception {
@@ -961,7 +973,7 @@ public final class DexGeneratorTest extends TestCase {
     private <V> java.lang.reflect.Method newStaticSwapMethod(Class<V> valueClass, String fieldName)
             throws Exception {
         /*
-         * public static int generatedMethod(int newValue) {
+         * public static int call(int newValue) {
          *   int oldValue = Static.intValue;
          *   Static.intValue = newValue;
          *   return oldValue;
@@ -971,13 +983,58 @@ public final class DexGeneratorTest extends TestCase {
         Type<V> valueType = generator.getType(valueClass);
         Type<Static> objectType = generator.getType(Static.class);
         Field<Static, V> field = objectType.getField(valueType, fieldName);
-        Code code = generator.newCode();
-        Local<V> localNewValue = code.newParameter(valueType);
+        Code code = generatedType.getMethod(valueType, "call", valueType)
+                .declare(ACC_PUBLIC | ACC_STATIC);
+        Local<V> localNewValue = code.getParameter(0, valueType);
         Local<V> localOldValue = code.newLocal(valueType);
         code.sget(field, localOldValue);
         code.sput(field, localNewValue);
         code.returnValue(localOldValue);
-        return newMethod(valueClass, code, valueClass);
+        return getMethod();
+    }
+
+    public void testTypeCast() throws Exception {
+        /*
+         * public static String call(Object o) {
+         *   String s = (String) o;
+         * }
+         */
+        Code code = generatedType.getMethod(stringType, "call", objectType)
+                .declare(ACC_PUBLIC | ACC_STATIC);
+        Local<Object> localObject = code.getParameter(0, objectType);
+        Local<String> localString = code.newLocal(stringType);
+        code.typeCast(localObject, localString);
+        code.returnValue(localString);
+
+        java.lang.reflect.Method method = getMethod();
+        assertEquals("s", method.invoke(null, "s"));
+        assertEquals(null, method.invoke(null, (String) null));
+        try {
+            method.invoke(null, 5);
+            fail();
+        } catch (InvocationTargetException expected) {
+            assertEquals(ClassCastException.class, expected.getCause().getClass());
+        }
+    }
+
+    public void testInstanceOf() throws Exception {
+        /*
+         * public static boolean call(Object o) {
+         *   boolean result = o instanceof String;
+         *   return result;
+         * }
+         */
+        Code code = generatedType.getMethod(booleanType, "call", objectType)
+                .declare(ACC_PUBLIC | ACC_STATIC);
+        Local<Object> localObject = code.getParameter(0, objectType);
+        Local<Boolean> localResult = code.newLocal(booleanType);
+        code.instanceOfType(localResult, localObject, stringType);
+        code.returnValue(localResult);
+
+        java.lang.reflect.Method method = getMethod();
+        assertEquals(true, method.invoke(null, "s"));
+        assertEquals(false, method.invoke(null, (String) null));
+        assertEquals(false, method.invoke(null, 5));
     }
 
     /**
@@ -985,7 +1042,7 @@ public final class DexGeneratorTest extends TestCase {
      */
     public void testForLoop() throws Exception {
         /*
-         * public static int generatedMethod(int count) {
+         * public static int call(int count) {
          *   int result = 1;
          *   for (int i = 0; i < count; i += 1) {
          *     result = result * 2;
@@ -993,8 +1050,9 @@ public final class DexGeneratorTest extends TestCase {
          *   return result;
          * }
          */
-        Code code = generator.newCode();
-        Local<Integer> localCount = code.newParameter(intType);
+        Code code = generatedType.getMethod(intType, "call", intType)
+                .declare(ACC_PUBLIC | ACC_STATIC);
+        Local<Integer> localCount = code.getParameter(0, intType);
         Local<Integer> localResult = code.newLocal(intType);
         Local<Integer> localI = code.newLocal(intType);
         Local<Integer> local1 = code.newLocal(intType);
@@ -1016,7 +1074,7 @@ public final class DexGeneratorTest extends TestCase {
         code.mark(afterLoop);
         code.returnValue(localResult);
 
-        java.lang.reflect.Method pow2 = newMethod(int.class, code, int.class);
+        java.lang.reflect.Method pow2 = getMethod();
         assertEquals(1, pow2.invoke(null, 0));
         assertEquals(2, pow2.invoke(null, 1));
         assertEquals(4, pow2.invoke(null, 2));
@@ -1029,7 +1087,7 @@ public final class DexGeneratorTest extends TestCase {
      */
     public void testWhileLoop() throws Exception {
         /*
-         * public static int generatedMethod(int max) {
+         * public static int call(int max) {
          *   int result = 1;
          *   while (result < max) {
          *     result = result * 2;
@@ -1037,8 +1095,9 @@ public final class DexGeneratorTest extends TestCase {
          *   return result;
          * }
          */
-        Code code = generator.newCode();
-        Local<Integer> localMax = code.newParameter(intType);
+        Code code = generatedType.getMethod(intType, "call", intType)
+                .declare(ACC_PUBLIC | ACC_STATIC);
+        Local<Integer> localMax = code.getParameter(0, intType);
         Local<Integer> localResult = code.newLocal(intType);
         Local<Integer> local2 = code.newLocal(intType);
         code.loadConstant(localResult, 1);
@@ -1055,7 +1114,7 @@ public final class DexGeneratorTest extends TestCase {
         code.mark(afterLoop);
         code.returnValue(localResult);
 
-        java.lang.reflect.Method ceilPow2 = newMethod(int.class, code, int.class);
+        java.lang.reflect.Method ceilPow2 = getMethod();
         assertEquals(1, ceilPow2.invoke(null, 1));
         assertEquals(2, ceilPow2.invoke(null, 2));
         assertEquals(4, ceilPow2.invoke(null, 3));
@@ -1066,7 +1125,7 @@ public final class DexGeneratorTest extends TestCase {
 
     public void testIfElseBlock() throws Exception {
         /*
-         * public static int generatedMethod(int a, int b, int c) {
+         * public static int call(int a, int b, int c) {
          *   if (a < b) {
          *     if (a < c) {
          *       return a;
@@ -1080,10 +1139,11 @@ public final class DexGeneratorTest extends TestCase {
          *   }
          * }
          */
-        Code code = generator.newCode();
-        Local<Integer> localA = code.newParameter(intType);
-        Local<Integer> localB = code.newParameter(intType);
-        Local<Integer> localC = code.newParameter(intType);
+        Code code = generatedType.getMethod(intType, "call", intType, intType, intType)
+                .declare(ACC_PUBLIC | ACC_STATIC);
+        Local<Integer> localA = code.getParameter(0, intType);
+        Local<Integer> localB = code.getParameter(1, intType);
+        Local<Integer> localC = code.getParameter(2, intType);
         Label aLessThanB = code.newLabel();
         Label aLessThanC = code.newLabel();
         Label bLessThanC = code.newLabel();
@@ -1101,16 +1161,58 @@ public final class DexGeneratorTest extends TestCase {
         code.mark(bLessThanC);
         code.returnValue(localB);
 
-        java.lang.reflect.Method min = newMethod(int.class, code, int.class, int.class, int.class);
+        java.lang.reflect.Method min = getMethod();
         assertEquals(1, min.invoke(null, 1, 2, 3));
         assertEquals(1, min.invoke(null, 2, 3, 1));
         assertEquals(1, min.invoke(null, 2, 1, 3));
         assertEquals(1, min.invoke(null, 3, 2, 1));
     }
 
-    // TODO: cast
+    public void testRecursion() throws Exception {
 
-    // TODO: instanceof
+        /*
+         * public static int call(int a) {
+         *   if (a < 2) {
+         *     return a;
+         *   }
+         *   a -= 1;
+         *   int x = call(a)
+         *   a -= 1;
+         *   int y = call(a);
+         *   int result = x + y;
+         *   return result;
+         * }
+         */
+        Method<?, Integer> c = generatedType.getMethod(intType, "call", intType);
+        Code code = c.declare(ACC_PUBLIC | ACC_STATIC);
+        Local<Integer> localA = code.getParameter(0, intType);
+        Local<Integer> local1 = code.newLocal(intType);
+        Local<Integer> local2 = code.newLocal(intType);
+        Local<Integer> localX = code.newLocal(intType);
+        Local<Integer> localY = code.newLocal(intType);
+        Local<Integer> localResult = code.newLocal(intType);
+        Label baseCase = code.newLabel();
+        code.loadConstant(local1, 1);
+        code.loadConstant(local2, 2);
+        code.compare(Comparison.LT, localA, local2, baseCase);
+        code.op(BinaryOp.SUBTRACT, localA, localA, local1);
+        code.invokeStatic(c, localX, localA);
+        code.op(BinaryOp.SUBTRACT, localA, localA, local1);
+        code.invokeStatic(c, localY, localA);
+        code.op(BinaryOp.ADD, localResult, localX, localY);
+        code.returnValue(localResult);
+        code.mark(baseCase);
+        code.returnValue(localA);
+
+        java.lang.reflect.Method fib = getMethod();
+        assertEquals(0, fib.invoke(null, 0));
+        assertEquals(1, fib.invoke(null, 1));
+        assertEquals(1, fib.invoke(null, 2));
+        assertEquals(2, fib.invoke(null, 3));
+        assertEquals(3, fib.invoke(null, 4));
+        assertEquals(5, fib.invoke(null, 5));
+        assertEquals(8, fib.invoke(null, 6));
+    }
 
     // TODO: array ops including new array, aget, etc.
 
@@ -1121,37 +1223,26 @@ public final class DexGeneratorTest extends TestCase {
     // TODO: fail if a label is unreachable (never navigated to)
 
     private void addDefaultConstructor() {
-        Code code = generator.newCode();
-        Local<?> thisRef = code.newThisLocal(generatedType);
+        Code code = generatedType.getConstructor().declare(ACC_PUBLIC | ACC_CONSTRUCTOR);
+        Local<?> thisRef = code.getThis(generatedType);
         code.invokeDirect(objectType.getConstructor(), null, thisRef);
         code.returnVoid();
-        generatedType.getConstructor().declare(ACC_PUBLIC | ACC_CONSTRUCTOR, code);
     }
 
     /**
-     * Returns a method containing the body of {@code code}, accepting the
-     * {@code argClasses}, and returning {@code argClasses}.
+     * Returns the generated method.
      */
-    private java.lang.reflect.Method newMethod(
-            Class<?> returnClass, Code code, Class<?>... argClasses) throws Exception {
-        Type<?> returnType = generator.getType(returnClass);
-        Type<?>[] argTypes = new Type<?>[argClasses.length];
-        for (int i = 0; i < argClasses.length; i++) {
-            argTypes[i] = generator.getType(argClasses[i]);
+    private java.lang.reflect.Method getMethod() throws Exception {
+        Class<?> generated = loadAndGenerate();
+        for (java.lang.reflect.Method method : generated.getMethods()) {
+            if (method.getName().equals("call")) {
+                return method;
+            }
         }
-
-        Method<?, ?> method = generatedType.getMethod(returnType, "generatedMethod", argTypes);
-        generatedType.declare("Generated.java", ACC_PUBLIC, objectType);
-        method.declare(ACC_PUBLIC | ACC_STATIC, code);
-        return loadAndGenerate().getMethod("generatedMethod", argClasses);
+        throw new IllegalStateException("no call() method");
     }
 
     private Class<?> loadAndGenerate() throws IOException, ClassNotFoundException {
         return generator.load(DexGeneratorTest.class.getClassLoader()).loadClass("Generated");
-    }
-
-    private static Class<?> unbox(Class<?> boxed) {
-        Class<?> unboxed = BOXED_TO_PRIMITIVE.get(boxed);
-        return unboxed != null ? unboxed : boxed;
     }
 }

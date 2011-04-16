@@ -100,29 +100,25 @@ public final class Method<T, R> {
     /**
      * @param accessFlags any flags masked by {@link AccessFlags#METHOD_FLAGS}.
      */
-    public void declare(int accessFlags, Code code) {
+    public Code declare(int accessFlags) {
         if (declared) {
-            throw new IllegalStateException();
-        }
-        if (code == null) {
-            throw new NullPointerException(); // TODO: permit methods without code
-        }
-        if (!parameters.equals(code.parameters())) {
-            throw new IllegalArgumentException("Parameters mismatch. Expected (" + parameters
-                    + ") but was (" + code.parameters() + ")");
-        }
-        boolean isStatic = (accessFlags & (ACC_STATIC)) != 0;
-        if (isStatic != (code.thisLocal() == null)) {
-            throw new IllegalArgumentException("Static mismatch. Declared static=" + isStatic
-                    + " this local=" + code.thisLocal());
+            throw new IllegalStateException("already declared: " + this);
         }
         this.declared = true;
         this.accessFlags = accessFlags;
-        this.code = code;
+        this.code = new Code(this);
+        return code;
     }
 
     boolean isDeclared() {
         return declared;
+    }
+
+    boolean isStatic() {
+        if (!declared) {
+            throw new IllegalStateException();
+        }
+        return (accessFlags & ACC_STATIC) != 0;
     }
 
     boolean isDirect() {

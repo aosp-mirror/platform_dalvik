@@ -105,13 +105,17 @@ public final class Type<T> {
      */
     public void declare(String sourceFile, int flags, Type<?> supertype, Type<?>... interfaces) {
         if (declared) {
-            throw new IllegalStateException();
+            throw new IllegalStateException("already declared: " + this);
         }
         this.declared = true;
         this.flags = flags;
         this.supertype = supertype;
         this.sourceFile = sourceFile;
         this.interfaces = new TypeList(interfaces);
+    }
+
+    boolean isVoid() {
+        return constant.getClassType() == com.android.dx.rop.type.Type.VOID;
     }
 
     boolean isDeclared() {
