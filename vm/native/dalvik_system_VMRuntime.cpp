@@ -97,7 +97,6 @@ static void Dalvik_dalvik_system_VMRuntime_newNonMovableArray(const u4* args,
 {
     ClassObject* elementClass = (ClassObject*) args[1];
     int length = args[2];
-    ArrayObject* newArray;
 
     if (elementClass == NULL) {
         dvmThrowNullPointerException(NULL);
@@ -111,7 +110,10 @@ static void Dalvik_dalvik_system_VMRuntime_newNonMovableArray(const u4* args,
     // TODO: right now, we don't have a copying collector, so there's no need
     // to do anything special here, but we ought to pass the non-movability
     // through to the allocator.
-    newArray = dvmAllocObjectArray(elementClass, length, ALLOC_DEFAULT);
+    ClassObject* arrayClass = dvmFindArrayClassForElement(elementClass);
+    ArrayObject* newArray = dvmAllocArrayByClass(arrayClass,
+                                                 length,
+                                                 ALLOC_DEFAULT);
     if (newArray == NULL) {
         assert(dvmCheckException(dvmThreadSelf()));
         RETURN_VOID();
