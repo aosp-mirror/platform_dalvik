@@ -93,7 +93,7 @@ StringObject* dvmCreateStringFromCstrAndLength(const char* utf8Str,
  * Compute the number of characters in a "modified UTF-8" string.  This will
  * match the result from strlen() so long as there are no multi-byte chars.
  */
-int dvmUtf8Len(const char* utf8Str);
+size_t dvmUtf8Len(const char* utf8Str);
 
 /*
  * Convert a UTF-8 string to UTF-16.  "utf16Str" must have enough room

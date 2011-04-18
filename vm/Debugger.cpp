@@ -459,7 +459,8 @@ s8 dvmDbgLastDebuggerActivity(void)
  */
 int dvmDbgThreadRunning(void)
 {
-    return dvmChangeStatus(NULL, THREAD_RUNNING);
+    ThreadStatus oldStatus = dvmChangeStatus(NULL, THREAD_RUNNING);
+    return static_cast<int>(oldStatus);
 }
 
 /*
@@ -467,7 +468,8 @@ int dvmDbgThreadRunning(void)
  */
 int dvmDbgThreadWaiting(void)
 {
-    return dvmChangeStatus(NULL, THREAD_VMWAIT);
+    ThreadStatus oldStatus = dvmChangeStatus(NULL, THREAD_VMWAIT);
+    return static_cast<int>(oldStatus);
 }
 
 /*
@@ -475,7 +477,9 @@ int dvmDbgThreadWaiting(void)
  */
 int dvmDbgThreadContinuing(int status)
 {
-    return dvmChangeStatus(NULL, status);
+    ThreadStatus newStatus = static_cast<ThreadStatus>(status);
+    ThreadStatus oldStatus = dvmChangeStatus(NULL, newStatus);
+    return static_cast<int>(oldStatus);
 }
 
 /*
@@ -1173,36 +1177,32 @@ static u4 augmentedAccessFlags(u4 accessFlags)
 void dvmDbgOutputAllFields(RefTypeId refTypeId, bool withGeneric,
     ExpandBuf* pReply)
 {
-    static const u1 genericSignature[1] = "";
-    ClassObject* clazz;
-    Field* field;
-    u4 declared;
-    int i;
-
-    clazz = refTypeIdToClassObject(refTypeId);
+    ClassObject* clazz = refTypeIdToClassObject(refTypeId);
     assert(clazz != NULL);
 
-    declared = clazz->sfieldCount + clazz->ifieldCount;
+    u4 declared = clazz->sfieldCount + clazz->ifieldCount;
     expandBufAdd4BE(pReply, declared);
 
-    for (i = 0; i < clazz->sfieldCount; i++) {
-        field = (Field*) &clazz->sfields[i];
-
+    for (int i = 0; i < clazz->sfieldCount; i++) {
+        Field* field = &clazz->sfields[i].field;
         expandBufAddFieldId(pReply, fieldToFieldId(field));
         expandBufAddUtf8String(pReply, (const u1*) field->name);
         expandBufAddUtf8String(pReply, (const u1*) field->signature);
-        if (withGeneric)
+        if (withGeneric) {
+            static const u1 genericSignature[1] = "";
             expandBufAddUtf8String(pReply, genericSignature);
+        }
         expandBufAdd4BE(pReply, augmentedAccessFlags(field->accessFlags));
     }
-    for (i = 0; i < clazz->ifieldCount; i++) {
-        field = (Field*) &clazz->ifields[i];
-
+    for (int i = 0; i < clazz->ifieldCount; i++) {
+        Field* field = (Field*)&clazz->ifields[i].field;
         expandBufAddFieldId(pReply, fieldToFieldId(field));
         expandBufAddUtf8String(pReply, (const u1*) field->name);
         expandBufAddUtf8String(pReply, (const u1*) field->signature);
-        if (withGeneric)
+        if (withGeneric) {
+            static const u1 genericSignature[1] = "";
             expandBufAddUtf8String(pReply, genericSignature);
+        }
         expandBufAdd4BE(pReply, augmentedAccessFlags(field->accessFlags));
     }
 }
@@ -2635,21 +2635,17 @@ JdwpError dvmDbgInvokeMethod(ObjectId threadId, ObjectId objectId,
     u4 options, u1* pResultTag, u8* pResultValue, ObjectId* pExceptObj)
 {
     Object* threadObj = objectIdToObject(threadId);
-    Thread* targetThread;
-    JdwpError err = ERR_NONE;
 
     dvmLockThreadList(NULL);
 
-    targetThread = threadObjToThread(threadObj);
+    Thread* targetThread = threadObjToThread(threadObj);
     if (targetThread == NULL) {
-        err = ERR_INVALID_THREAD;       /* thread does not exist */
         dvmUnlockThreadList();
-        goto bail;
+        return ERR_INVALID_THREAD;       /* thread does not exist */
     }
     if (!targetThread->invokeReq.ready) {
-        err = ERR_INVALID_THREAD;       /* thread not stopped by event */
         dvmUnlockThreadList();
-        goto bail;
+        return ERR_INVALID_THREAD;       /* thread not stopped by event */
     }
 
     /*
@@ -2671,9 +2667,8 @@ JdwpError dvmDbgInvokeMethod(ObjectId threadId, ObjectId objectId,
              "for method exec\n",
             dvmThreadSelf()->threadId, targetThread->threadId,
             targetThread->interpBreak.ctl.suspendCount);
-        err = ERR_THREAD_SUSPENDED;     /* probably not expected here */
         dvmUnlockThreadList();
-        goto bail;
+        return ERR_THREAD_SUSPENDED;     /* probably not expected here */
     }
 
     /*
@@ -2704,7 +2699,7 @@ JdwpError dvmDbgInvokeMethod(ObjectId threadId, ObjectId objectId,
      * the invokeReq mutex, although that should never be held for long.
      */
     Thread* self = dvmThreadSelf();
-    int oldStatus = dvmChangeStatus(self, THREAD_VMWAIT);
+    ThreadStatus oldStatus = dvmChangeStatus(self, THREAD_VMWAIT);
 
     LOGV("    Transferring control to event thread\n");
     dvmLockMutex(&targetThread->invokeReq.lock);
@@ -2760,10 +2755,7 @@ JdwpError dvmDbgInvokeMethod(ObjectId threadId, ObjectId objectId,
         *pResultValue = objectToObjectId(tmpObj);
     }
     *pExceptObj = targetThread->invokeReq.exceptObj;
-    err = targetThread->invokeReq.err;
-
-bail:
-    return err;
+    return targetThread->invokeReq.err;
 }
 
 /*
@@ -2786,7 +2778,7 @@ void dvmDbgExecuteMethod(DebugInvokeReq* pReq)
     Thread* self = dvmThreadSelf();
     const Method* meth;
     Object* oldExcept;
-    int oldStatus;
+    ThreadStatus oldStatus;
 
     /*
      * We can be called while an exception is pending in the VM.  We need

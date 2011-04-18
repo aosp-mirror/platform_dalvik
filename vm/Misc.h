@@ -90,17 +90,19 @@ INLINE void dvmPrintHexDumpDbg(const void* vaddr, size_t length,const char* tag)
 #endif
 }
 
+typedef enum {
+    kDebugTargetUnknown = 0,
+    kDebugTargetLog,
+    kDebugTargetFile,
+} DebugTargetKind;
+
 /*
  * We pass one of these around when we want code to be able to write debug
  * info to either the log or to a file (or stdout/stderr).
  */
 typedef struct DebugOutputTarget {
     /* where to? */
-    enum {
-        kDebugTargetUnknown = 0,
-        kDebugTargetLog,
-        kDebugTargetFile,
-    } which;
+    DebugTargetKind which;
 
     /* additional bits */
     union {

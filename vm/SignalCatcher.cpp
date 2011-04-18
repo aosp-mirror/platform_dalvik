@@ -178,7 +178,7 @@ static void handleSigQuit(void)
          * We don't know how long it will take to do the disk I/O, so put us
          * into VMWAIT for the duration.
          */
-        int oldStatus = dvmChangeStatus(dvmThreadSelf(), THREAD_VMWAIT);
+        ThreadStatus oldStatus = dvmChangeStatus(dvmThreadSelf(), THREAD_VMWAIT);
 
         /*
          * Open the stack trace output file, creating it if necessary.  It

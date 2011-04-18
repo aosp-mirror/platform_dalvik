@@ -284,7 +284,7 @@ void dvmDdmSendThreadNotification(Thread* thread, bool started)
         set4BE(&buf[0x04], stringLen);
 
         /* copy the UTF-16 string, transforming to big-endian */
-        outChars = (u2*) &buf[0x08];
+        outChars = (u2*)(void*)&buf[0x08];
         while (stringLen--)
             set2BE((u1*) (outChars++), *chars++);
     } else {
@@ -320,7 +320,7 @@ void dvmDdmSendThreadNameChange(int threadId, StringObject* newName)
 
     set4BE(&buf[0x00], threadId);
     set4BE(&buf[0x04], stringLen);
-    u2* outChars = (u2*) &buf[0x08];
+    u2* outChars = (u2*)(void*)&buf[0x08];
     while (stringLen--)
         set2BE((u1*) (outChars++), *chars++);
 

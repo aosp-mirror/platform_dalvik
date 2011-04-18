@@ -95,7 +95,7 @@ struct DvmGlobals {
 
     bool        jdwpAllowed;        // debugging allowed for this process?
     bool        jdwpConfigured;     // has debugging info been provided?
-    int         jdwpTransport;
+    JdwpTransportType jdwpTransport;
     bool        jdwpServer;
     char*       jdwpHost;
     int         jdwpPort;

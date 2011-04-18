@@ -84,7 +84,7 @@ struct Monitor {
      * Who last acquired this monitor, when lock sampling is enabled.
      * Even when enabled, ownerFileName may be NULL.
      */
-    char*       ownerFileName;
+    const char* ownerFileName;
     u4          ownerLineNumber;
 };
 
@@ -617,7 +617,7 @@ static void waitMonitor(Thread* self, Monitor* mon, s8 msec, s4 nsec,
     bool wasInterrupted = false;
     bool timed;
     int ret;
-    char *savedFileName;
+    const char *savedFileName;
     u4 savedLineNumber;
 
     assert(self != NULL);
