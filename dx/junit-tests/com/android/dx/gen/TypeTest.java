@@ -23,11 +23,11 @@ public final class TypeTest extends TestCase {
     private final DexGenerator generator = new DexGenerator();
 
     public void testGetType() {
-        assertEquals("Ljava/lang/String;", generator.getType(String.class).getName());
-        assertEquals("[Ljava/lang/String;", generator.getType(String[].class).getName());
-        assertEquals("[[Ljava/lang/String;", generator.getType(String[][].class).getName());
-        assertEquals("I", generator.getType(int.class).getName());
-        assertEquals("[I", generator.getType(int[].class).getName());
-        assertEquals("[[I", generator.getType(int[][].class).getName());
+        assertEquals("Ljava/lang/String;", Type.get(String.class).getName());
+        assertEquals("[Ljava/lang/String;", Type.get(String[].class).getName());
+        assertEquals("[[Ljava/lang/String;", Type.get(String[][].class).getName());
+        assertEquals("I", Type.get(int.class).getName());
+        assertEquals("[I", Type.get(int[].class).getName());
+        assertEquals("[[I", Type.get(int[][].class).getName());
     }
 }

@@ -62,8 +62,7 @@ final class Constants {
         } else if (value instanceof String) {
             return new CstString((String) value);
         } else if (value instanceof Class) {
-            String name = Type.getTypeName((Class<?>) value);
-            return new CstType(com.android.dx.rop.type.Type.internReturnType(name));
+            return new CstType(Type.get((Class<?>) value).ropType);
         } else if (value instanceof Type) {
             return new CstType(((Type) value).ropType);
         } else {
