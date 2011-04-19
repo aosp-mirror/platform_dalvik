@@ -187,8 +187,8 @@ static void *tryMalloc(size_t size)
      * throwing an OOME, though.
      */
     if (size >= gDvm.heapGrowthLimit) {
-        LOGW_HEAP("dvmMalloc(%zu/0x%08zx): "
-                "someone's allocating a huge buffer\n", size, size);
+        LOGW("%zd byte allocation exceeds the %zd byte maximum heap size",
+             size, gDvm.heapGrowthLimit);
         ptr = NULL;
         goto collect_soft_refs;
     }
