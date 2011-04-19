@@ -115,10 +115,9 @@ static void Dalvik_dalvik_system_VMStack_getClasses(const u4* args,
         LOGW("Unable to find java.lang.Class array class");
         return;
     }
-    ArrayObject* classes = dvmAllocArray(classArrayClass,
-                                         size,
-                                         kObjectArrayRefWidth,
-                                         ALLOC_DEFAULT);
+    ArrayObject* classes = dvmAllocArrayByClass(classArrayClass,
+                                                size,
+                                                ALLOC_DEFAULT);
     if (classes == NULL) {
         LOGW("Unable to allocate class array of %zd elements", size);
         return;

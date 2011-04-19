@@ -796,8 +796,8 @@ static ArrayObject* boxMethodArgs(const Method* method, const u4* args)
     size_t argCount = dexProtoGetParameterCount(&method->prototype);
 
     /* allocate storage */
-    ArrayObject* argArray = dvmAllocArray(gDvm.classJavaLangObjectArray,
-        argCount, kObjectArrayRefWidth, ALLOC_DEFAULT);
+    ArrayObject* argArray = dvmAllocArrayByClass(gDvm.classJavaLangObjectArray,
+        argCount, ALLOC_DEFAULT);
     if (argArray == NULL)
         return NULL;
     Object** argObjects = (Object**)(void*)argArray->contents;

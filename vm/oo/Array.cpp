@@ -22,6 +22,9 @@
 #include <stddef.h>
 #include <limits.h>
 
+/* width of an object reference, for arrays of objects */
+static size_t kObjectArrayRefWidth = sizeof(Object*);
+
 static ClassObject* createArrayClass(const char* descriptor, Object* loader);
 
 /*
@@ -32,7 +35,7 @@ static ClassObject* createArrayClass(const char* descriptor, Object* loader);
  *
  * On failure, returns NULL with an exception raised.
  */
-ArrayObject* dvmAllocArray(ClassObject* arrayClass, size_t length,
+static ArrayObject* allocArray(ClassObject* arrayClass, size_t length,
     size_t elemWidth, int allocFlags)
 {
     assert(arrayClass != NULL);
@@ -77,7 +80,7 @@ ArrayObject* dvmAllocArrayByClass(ClassObject* arrayClass,
         assert(descriptor[2] == '\0');
         return dvmAllocPrimitiveArray(descriptor[1], length, allocFlags);
     } else {
-        return dvmAllocArray(arrayClass, length, kObjectArrayRefWidth,
+        return allocArray(arrayClass, length, kObjectArrayRefWidth,
             allocFlags);
     }
 }
@@ -153,7 +156,7 @@ ArrayObject* dvmAllocPrimitiveArray(char type, size_t length, int allocFlags)
         return NULL; // Keeps the compiler happy.
     }
 
-    newArray = dvmAllocArray(arrayClass, length, width, allocFlags);
+    newArray = allocArray(arrayClass, length, width, allocFlags);
 
     /* the caller must dvmReleaseTrackedAlloc if allocFlags==ALLOC_DEFAULT */
     return newArray;
@@ -179,7 +182,7 @@ ArrayObject* dvmAllocMultiArray(ClassObject* arrayClass, int curDim,
         if (*elemName == 'L' || *elemName == '[') {
             LOGVV("  end: array class (obj) is '%s'\n",
                 arrayClass->descriptor);
-            newArray = dvmAllocArray(arrayClass, *dimensions,
+            newArray = allocArray(arrayClass, *dimensions,
                         kObjectArrayRefWidth, ALLOC_DEFAULT);
         } else {
             LOGVV("  end: array class (prim) is '%s'\n",
@@ -202,7 +205,7 @@ ArrayObject* dvmAllocMultiArray(ClassObject* arrayClass, int curDim,
         assert(dvmIsArrayClass(subArrayClass));
 
         /* allocate the array that holds the sub-arrays */
-        newArray = dvmAllocArray(arrayClass, *dimensions, kObjectArrayRefWidth,
+        newArray = allocArray(arrayClass, *dimensions, kObjectArrayRefWidth,
                         ALLOC_DEFAULT);
         if (newArray == NULL) {
             assert(dvmCheckException(dvmThreadSelf()));
