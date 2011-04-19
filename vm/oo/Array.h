@@ -23,9 +23,6 @@
 extern "C" {
 #endif
 
-/* width of an object reference, for arrays of objects */
-#define kObjectArrayRefWidth    sizeof(Object*)
-
 /*
  * Find a matching array class.  If it doesn't exist, create it.
  *
@@ -41,17 +38,6 @@ ClassObject* dvmFindArrayClass(const char* descriptor, Object* loader);
  * class "Foo", this returns the class object for "[Foo".
  */
 ClassObject* dvmFindArrayClassForElement(ClassObject* elemClassObj);
-
-/*
- * Allocate space for a new array object.
- *
- * "allocFlags" determines whether the new object will be added to the
- * "tracked alloc" table.
- *
- * Returns NULL with an exception raised if allocation fails.
- */
-ArrayObject* dvmAllocArray(ClassObject* arrayClass, size_t length,
-    size_t elemWidth, int allocFlags);
 
 /*
  * Create a new array, given an array class.  The class may represent an
