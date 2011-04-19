@@ -2248,7 +2248,8 @@ static jobjectArray NewObjectArray(JNIEnv* env, jsize length,
     }
 
     ClassObject* elemClassObj = (ClassObject*) dvmDecodeIndirectRef(env, jelementClass);
-    ArrayObject* newObj = dvmAllocObjectArray(elemClassObj, length, ALLOC_DEFAULT);
+    ClassObject* arrayClass = dvmFindArrayClassForElement(elemClassObj);
+    ArrayObject* newObj = dvmAllocArrayByClass(arrayClass, length, ALLOC_DEFAULT);
     if (newObj == NULL) {
         assert(dvmCheckException(ts.self()));
         return NULL;
@@ -2257,14 +2258,13 @@ static jobjectArray NewObjectArray(JNIEnv* env, jsize length,
     dvmReleaseTrackedAlloc((Object*) newObj, NULL);
 
     /*
-     * Initialize the array.  Trashes "length".
+     * Initialize the array.
      */
     if (jinitialElement != NULL) {
         Object* initialElement = dvmDecodeIndirectRef(env, jinitialElement);
         Object** arrayData = (Object**) (void*) newObj->contents;
-
-        while (length--) {
-            *arrayData++ = initialElement;
+        for (jsize i = 0; i < length; ++i) {
+            arrayData[i] = initialElement;
         }
     }
 

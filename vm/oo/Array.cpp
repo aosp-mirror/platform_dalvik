@@ -104,36 +104,6 @@ ClassObject* dvmFindArrayClassForElement(ClassObject* elemClassObj)
 }
 
 /*
- * Create a new array that holds references to members of the specified class.
- *
- * "elemClassObj" is the element type, and may itself be an array class.  It
- * may not be a primitive class.
- *
- * "allocFlags" determines whether the new object will be added to the
- * "tracked alloc" table.
- *
- * This is less efficient than dvmAllocArray(), but occasionally convenient.
- */
-ArrayObject* dvmAllocObjectArray(ClassObject* elemClassObj, size_t length,
-    int allocFlags)
-{
-    ClassObject* arrayClass;
-    ArrayObject* newArray = NULL;
-
-    LOGVV("dvmAllocObjectArray: '%s' len=%d\n",
-        elemClassObj->descriptor, (int)length);
-
-    arrayClass = dvmFindArrayClassForElement(elemClassObj);
-    if (arrayClass != NULL) {
-        newArray = dvmAllocArray(arrayClass, length, kObjectArrayRefWidth,
-            allocFlags);
-    }
-
-    /* the caller must call dvmReleaseTrackedAlloc */
-    return newArray;
-}
-
-/*
  * Create a new array that holds primitive types.
  *
  * "type" is the primitive type letter, e.g. 'I' for int or 'J' for long.

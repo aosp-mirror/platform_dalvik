@@ -964,19 +964,14 @@ ArrayObject* dvmGetStackTrace(const Object* ostackData)
  */
 ArrayObject* dvmGetStackTraceRaw(const int* intVals, size_t stackDepth)
 {
-    ArrayObject* steArray = NULL;
-
     /* allocate a StackTraceElement array */
-    steArray = dvmAllocArray(gDvm.classJavaLangStackTraceElementArray,
-                    stackDepth, kObjectArrayRefWidth, ALLOC_DEFAULT);
-    if (steArray == NULL)
-        goto bail;
-
-    dvmFillStackTraceElements(intVals, stackDepth, steArray);
-
-bail:
-    dvmReleaseTrackedAlloc((Object*) steArray, NULL);
-    return steArray;
+    ClassObject* klass = gDvm.classJavaLangStackTraceElementArray;
+    ArrayObject* array = dvmAllocArrayByClass(klass, stackDepth, ALLOC_DEFAULT);
+    if (array != NULL){
+      dvmFillStackTraceElements(intVals, stackDepth, array);
+      dvmReleaseTrackedAlloc((Object*) array, NULL);
+    }
+    return array;
 }
 
 /*

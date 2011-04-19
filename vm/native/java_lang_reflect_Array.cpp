@@ -32,7 +32,6 @@ static void Dalvik_java_lang_reflect_Array_createObjectArray(const u4* args,
 {
     ClassObject* elementClass = (ClassObject*) args[0];
     int length = args[1];
-    ArrayObject* newArray;
 
     assert(elementClass != NULL);       // tested by caller
     if (length < 0) {
@@ -40,7 +39,10 @@ static void Dalvik_java_lang_reflect_Array_createObjectArray(const u4* args,
         RETURN_VOID();
     }
 
-    newArray = dvmAllocObjectArray(elementClass, length, ALLOC_DEFAULT);
+    ClassObject* arrayClass =
+        dvmFindArrayClassForElement(elementClass);
+    ArrayObject* newArray =
+        dvmAllocArrayByClass(arrayClass, length, ALLOC_DEFAULT);
     if (newArray == NULL) {
         assert(dvmCheckException(dvmThreadSelf()));
         RETURN_VOID();
