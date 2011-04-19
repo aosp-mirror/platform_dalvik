@@ -420,18 +420,19 @@ int dvmHashcmpStrings(const void* vstrObj1, const void* vstrObj2)
                   len1 * sizeof(u2));
 }
 
-ArrayObject* dvmCreateStringArray(const char** strings, size_t count)
+ArrayObject* dvmCreateStringArray(const char** strings, size_t length)
 {
     Thread* self = dvmThreadSelf();
 
     /*
      * Allocate an array to hold the String objects.
      */
+    ClassObject* elementClass =
+        dvmFindArrayClassForElement(gDvm.classJavaLangString);
     ArrayObject* stringArray =
-        dvmAllocObjectArray(gDvm.classJavaLangString, count, ALLOC_DEFAULT);
+        dvmAllocArrayByClass(elementClass, length, ALLOC_DEFAULT);
     if (stringArray == NULL) {
         /* probably OOM */
-        LOGD("Failed allocating array of %d strings\n", count);
         assert(dvmCheckException(self));
         return NULL;
     }
@@ -439,7 +440,7 @@ ArrayObject* dvmCreateStringArray(const char** strings, size_t count)
     /*
      * Create the individual String objects and add them to the array.
      */
-    for (size_t i = 0; i < count; i++) {
+    for (size_t i = 0; i < length; i++) {
         Object* str =
             (Object*) dvmCreateStringFromCstr(strings[i]);
         if (str == NULL) {

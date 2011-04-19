@@ -408,24 +408,24 @@ static void Dalvik_dalvik_system_DexFile_getClassNameList(const u4* args,
 {
     int cookie = args[0];
     DexOrJar* pDexOrJar = (DexOrJar*) cookie;
-    DvmDex* pDvmDex;
-    DexFile* pDexFile;
-    ArrayObject* stringArray;
     Thread* self = dvmThreadSelf();
 
     if (!validateCookie(cookie))
         RETURN_VOID();
 
+    DvmDex* pDvmDex;
     if (pDexOrJar->isDex)
         pDvmDex = dvmGetRawDexFileDex(pDexOrJar->pRawDexFile);
     else
         pDvmDex = dvmGetJarFileDex(pDexOrJar->pJarFile);
     assert(pDvmDex != NULL);
-    pDexFile = pDvmDex->pDexFile;
+    DexFile* pDexFile = pDvmDex->pDexFile;
 
     int count = pDexFile->pHeader->classDefsSize;
-    stringArray = dvmAllocObjectArray(gDvm.classJavaLangString, count,
-                    ALLOC_DEFAULT);
+    ClassObject* arrayClass =
+        dvmFindArrayClassForElement(gDvm.classJavaLangString);
+    ArrayObject* stringArray =
+        dvmAllocArrayByClass(arrayClass, count, ALLOC_DEFAULT);
     if (stringArray == NULL) {
         /* probably OOM */
         LOGD("Failed allocating array of %d strings\n", count);

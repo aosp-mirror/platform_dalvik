@@ -63,22 +63,6 @@ ArrayObject* dvmAllocArrayByClass(ClassObject* arrayClass,
     size_t length, int allocFlags);
 
 /*
- * Create a new array that holds references to members of the specified class.
- *
- * "elemClassObj" is the element type, and may itself be an array class.  It
- * may not be a primitive class.
- *
- * "allocFlags" determines whether the new object will be added to the
- * "tracked alloc" table.
- *
- * This is less efficient than dvmAllocArray(), but occasionally convenient.
- *
- * Returns NULL with an exception raised if allocation fails.
- */
-ArrayObject* dvmAllocObjectArray(ClassObject* elemClassObj, size_t length,
-    int allocFlags);
-
-/*
  * Allocate an array whose members are primitives (bools, ints, etc.).
  *
  * "type" should be 'I', 'J', 'Z', etc.
