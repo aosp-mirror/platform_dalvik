@@ -16,147 +16,113 @@
 
 package com.android.dx.gen;
 
-import com.android.dx.dex.DexOptions;
-import com.android.dx.dex.file.ClassDefItem;
-import com.android.dx.dex.file.EncodedField;
-import com.android.dx.dex.file.EncodedMethod;
 import com.android.dx.rop.cst.CstType;
-import com.android.dx.rop.cst.CstUtf8;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 /**
- * An interface or class.
+ * A primitive type, interface or class.
  */
 public final class Type<T> {
-    private static final Map<Class<?>, String> PRIMITIVE_TO_TYPE_NAME
-            = new HashMap<Class<?>, String>();
+    /** The {@code boolean} primitive type. */
+    public static final Type<Boolean> BOOLEAN
+            = new Type<Boolean>(com.android.dx.rop.type.Type.BOOLEAN);
+
+    /** The {@code byte} primitive type. */
+    public static final Type<Byte> BYTE = new Type<Byte>(com.android.dx.rop.type.Type.BYTE);
+
+    /** The {@code char} primitive type. */
+    public static final Type<Character> CHAR
+            = new Type<Character>(com.android.dx.rop.type.Type.CHAR);
+
+    /** The {@code double} primitive type. */
+    public static final Type<Double> DOUBLE = new Type<Double>(com.android.dx.rop.type.Type.DOUBLE);
+
+    /** The {@code float} primitive type. */
+    public static final Type<Float> FLOAT = new Type<Float>(com.android.dx.rop.type.Type.FLOAT);
+
+    /** The {@code int} primitive type. */
+    public static final Type<Integer> INT = new Type<Integer>(com.android.dx.rop.type.Type.INT);
+
+    /** The {@code long} primitive type. */
+    public static final Type<Long> LONG = new Type<Long>(com.android.dx.rop.type.Type.LONG);
+
+    /** The {@code short} primitive type. */
+    public static final Type<Short> SHORT = new Type<Short>(com.android.dx.rop.type.Type.SHORT);
+
+    /** The {@code void} primitive type. Only used as a return type. */
+    public static final Type<Void> VOID = new Type<Void>(com.android.dx.rop.type.Type.VOID);
+
+    /** The {@code Object} type. */
+    public static final Type<Object> OBJECT = new Type<Object>(com.android.dx.rop.type.Type.OBJECT);
+
+    /** The {@code String} type. */
+    public static final Type<String> STRING = new Type<String>(com.android.dx.rop.type.Type.STRING);
+
+    private static final Map<Class<?>, Type<?>> PRIMITIVE_TO_TYPE
+            = new HashMap<Class<?>, Type<?>>();
     static {
-        PRIMITIVE_TO_TYPE_NAME.put(boolean.class, "Z");
-        PRIMITIVE_TO_TYPE_NAME.put(byte.class, "B");
-        PRIMITIVE_TO_TYPE_NAME.put(char.class, "C");
-        PRIMITIVE_TO_TYPE_NAME.put(double.class, "D");
-        PRIMITIVE_TO_TYPE_NAME.put(float.class, "F");
-        PRIMITIVE_TO_TYPE_NAME.put(int.class, "I");
-        PRIMITIVE_TO_TYPE_NAME.put(long.class, "J");
-        PRIMITIVE_TO_TYPE_NAME.put(short.class, "S");
-        PRIMITIVE_TO_TYPE_NAME.put(void.class, "V");
+        PRIMITIVE_TO_TYPE.put(boolean.class, BOOLEAN);
+        PRIMITIVE_TO_TYPE.put(byte.class, BYTE);
+        PRIMITIVE_TO_TYPE.put(char.class, CHAR);
+        PRIMITIVE_TO_TYPE.put(double.class, DOUBLE);
+        PRIMITIVE_TO_TYPE.put(float.class, FLOAT);
+        PRIMITIVE_TO_TYPE.put(int.class, INT);
+        PRIMITIVE_TO_TYPE.put(long.class, LONG);
+        PRIMITIVE_TO_TYPE.put(short.class, SHORT);
+        PRIMITIVE_TO_TYPE.put(void.class, VOID);
     }
 
-    final DexGenerator generator;
     final String name;
 
     /** cached converted values */
     final com.android.dx.rop.type.Type ropType;
     final CstType constant;
 
-    /** declared state */
-    private boolean declared;
-    private int flags;
-    private Type<?> supertype;
-    private String sourceFile;
-    private TypeList interfaces;
+    Type(com.android.dx.rop.type.Type ropType) {
+        this(ropType.getDescriptor(), ropType);
+    }
 
-    /** declared members */
-    private final Canonicalizer<Field<T, ?>> fields = new Canonicalizer<Field<T, ?>>();
-    private final Canonicalizer<Method<T, ?>> methods = new Canonicalizer<Method<T, ?>>();
-
-    Type(DexGenerator generator, String name) {
-        if (name == null) {
+    Type(String name, com.android.dx.rop.type.Type ropType) {
+        if (name == null || ropType == null) {
             throw new NullPointerException();
         }
-        this.generator = generator;
         this.name = name;
-        this.ropType = com.android.dx.rop.type.Type.internReturnType(name);
+        this.ropType = ropType;
         this.constant = CstType.intern(ropType);
     }
 
-    Type(DexGenerator generator, Class<T> type) {
-        this(generator, getTypeName(type));
+    /**
+     * @param name a descriptor like "Ljava/lang/Class;".
+     */
+    public static <T> Type<T> get(String name) {
+        return new Type<T>(name, com.android.dx.rop.type.Type.internReturnType(name));
+    }
+
+    public static <T> Type<T> get(Class<T> type) {
+        if (type.isPrimitive()) {
+            @SuppressWarnings("unchecked") // guarded by equals
+            Type<T> result = (Type<T>) PRIMITIVE_TO_TYPE.get(type);
+            return result;
+        }
+        String name = type.getName().replace('.', '/');
+        return get(type.isArray() ? name : 'L' + name + ';');
+    }
+
+    public <V> FieldId<T, V> getField(Type<V> type, String name) {
+        return new FieldId<T, V>(this, type, name);
+    }
+
+    public MethodId<T, Void> getConstructor(Type<?>... parameters) {
+        return new MethodId<T, Void>(this, VOID, "<init>", new TypeList(parameters));
+    }
+
+    public <R> MethodId<T, R> getMethod(Type<R> returnType, String name, Type<?>... parameters) {
+        return new MethodId<T, R>(this, returnType, name, new TypeList(parameters));
     }
 
     public String getName() {
         return name;
-    }
-
-    public <R> Field<T, R> getField(Type<R> type, String name) {
-        return fields.get(new Field<T, R>(this, type, name));
-    }
-
-    public <R> Method<T, R> getMethod(Type<R> returnType, String name, Type... parameters) {
-        return methods.get(new Method<T, R>(this, returnType, name, new TypeList(parameters)));
-    }
-
-    public Method<T, Void> getConstructor(Type... parameters) {
-        return getMethod(generator.getType(void.class), "<init>", parameters);
-    }
-
-    Set<Field<T, ?>> getFields() {
-        return fields;
-    }
-
-    Set<Method<T, ?>> getMethods() {
-        return methods;
-    }
-
-    /**
-     * @param flags any flags masked by {@link com.android.dx.rop.code.AccessFlags#METHOD_FLAGS}.
-     */
-    public void declare(String sourceFile, int flags, Type<?> supertype, Type<?>... interfaces) {
-        if (declared) {
-            throw new IllegalStateException("already declared: " + this);
-        }
-        this.declared = true;
-        this.flags = flags;
-        this.supertype = supertype;
-        this.sourceFile = sourceFile;
-        this.interfaces = new TypeList(interfaces);
-    }
-
-    boolean isVoid() {
-        return constant.getClassType() == com.android.dx.rop.type.Type.VOID;
-    }
-
-    boolean isDeclared() {
-        return declared;
-    }
-
-    ClassDefItem toClassDefItem() {
-        if (!declared) {
-            throw new IllegalStateException();
-        }
-
-        DexOptions dexOptions = new DexOptions();
-        dexOptions.enableExtendedOpcodes = false;
-
-        CstType thisType = constant;
-
-        ClassDefItem out = new ClassDefItem(thisType, flags, supertype.constant,
-                interfaces.ropTypes, new CstUtf8(sourceFile));
-
-        for (Method<T, ?> method : methods) {
-            EncodedMethod encoded = method.toEncodedMethod(dexOptions);
-            if (method.isDirect()) {
-                out.addDirectMethod(encoded);
-            } else {
-                out.addVirtualMethod(encoded);
-            }
-        }
-        for (Field<T, ?> field : fields) {
-            EncodedField encoded = field.toEncodedField();
-            if (field.isStatic()) {
-                out.addStaticField(encoded, Constants.getConstant(field.getStaticValue()));
-            } else {
-                out.addInstanceField(encoded);
-            }
-        }
-
-        return out;
-    }
-
-    com.android.dx.rop.type.Type getRopType() {
-        return com.android.dx.rop.type.Type.internReturnType(name);
     }
 
     @Override public boolean equals(Object o) {
@@ -170,16 +136,5 @@ public final class Type<T> {
 
     @Override public String toString() {
         return name;
-    }
-
-    /**
-     * Returns a type name like "Ljava/lang/Integer;".
-     */
-    static String getTypeName(Class<?> type) {
-        if (type.isPrimitive()) {
-            return PRIMITIVE_TO_TYPE_NAME.get(type);
-        }
-        String name = type.getName().replace('.', '/');
-        return type.isArray() ? name : 'L' + name + ';';
     }
 }

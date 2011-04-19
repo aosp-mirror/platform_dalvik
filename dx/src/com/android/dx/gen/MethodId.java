@@ -16,29 +16,17 @@
 
 package com.android.dx.gen;
 
-import com.android.dx.dex.DexOptions;
-import com.android.dx.dex.code.DalvCode;
-import com.android.dx.dex.code.PositionList;
-import com.android.dx.dex.code.RopTranslator;
-import com.android.dx.dex.file.EncodedMethod;
-import com.android.dx.rop.code.AccessFlags;
-import static com.android.dx.rop.code.AccessFlags.ACC_CONSTRUCTOR;
-import static com.android.dx.rop.code.AccessFlags.ACC_PRIVATE;
-import static com.android.dx.rop.code.AccessFlags.ACC_STATIC;
-import com.android.dx.rop.code.LocalVariableInfo;
-import com.android.dx.rop.code.RopMethod;
 import com.android.dx.rop.cst.CstMethodRef;
 import com.android.dx.rop.cst.CstNat;
 import com.android.dx.rop.cst.CstUtf8;
 import com.android.dx.rop.type.Prototype;
-import com.android.dx.rop.type.StdTypeList;
 import java.util.List;
 
 /**
  * A method or constructor.
  */
-public final class Method<T, R> {
-    final Type<T> declaringType;
+public final class MethodId<D, R> {
+    final Type<D> declaringType;
     final Type<R> returnType;
     final String name;
     final TypeList parameters;
@@ -47,12 +35,7 @@ public final class Method<T, R> {
     final CstNat nat;
     final CstMethodRef constant;
 
-    /** declared state */
-    private boolean declared;
-    private int accessFlags;
-    private Code code;
-
-    Method(Type<T> declaringType, Type<R> returnType, String name, TypeList parameters) {
+    MethodId(Type<D> declaringType, Type<R> returnType, String name, TypeList parameters) {
         if (declaringType == null || returnType == null || name == null || parameters == null) {
             throw new NullPointerException();
         }
@@ -64,7 +47,7 @@ public final class Method<T, R> {
         this.constant = new CstMethodRef(declaringType.constant, nat);
     }
 
-    public Type<T> getDeclaringType() {
+    public Type<D> getDeclaringType() {
         return declaringType;
     }
 
@@ -97,58 +80,16 @@ public final class Method<T, R> {
         return result.toString();
     }
 
-    /**
-     * @param accessFlags any flags masked by {@link AccessFlags#METHOD_FLAGS}.
-     */
-    public Code declare(int accessFlags) {
-        if (declared) {
-            throw new IllegalStateException("already declared: " + this);
-        }
-        this.declared = true;
-        this.accessFlags = accessFlags;
-        this.code = new Code(this);
-        return code;
-    }
-
-    boolean isDeclared() {
-        return declared;
-    }
-
-    boolean isStatic() {
-        if (!declared) {
-            throw new IllegalStateException();
-        }
-        return (accessFlags & ACC_STATIC) != 0;
-    }
-
-    boolean isDirect() {
-        if (!declared) {
-            throw new IllegalStateException();
-        }
-        return (accessFlags & (ACC_STATIC | ACC_PRIVATE | ACC_CONSTRUCTOR)) != 0;
-    }
-
     Prototype prototype(boolean includeThis) {
         return Prototype.intern(descriptor(includeThis));
     }
 
-    EncodedMethod toEncodedMethod(DexOptions dexOptions) {
-        if (!declared) {
-            throw new IllegalStateException();
-        }
-        RopMethod ropMethod = new RopMethod(code.toBasicBlocks(), 0);
-        LocalVariableInfo locals = null;
-        DalvCode dalvCode = RopTranslator.translate(ropMethod, PositionList.NONE, locals,
-                code.paramSize(), dexOptions);
-        return new EncodedMethod(constant, accessFlags, dalvCode, StdTypeList.EMPTY);
-    }
-
     @Override public boolean equals(Object o) {
-        return o instanceof Method
-                && ((Method) o).declaringType.equals(declaringType)
-                && ((Method) o).name.equals(name)
-                && ((Method) o).parameters.equals(parameters)
-                && ((Method) o).returnType.equals(returnType);
+        return o instanceof MethodId
+                && ((MethodId<?, ?>) o).declaringType.equals(declaringType)
+                && ((MethodId<?, ?>) o).name.equals(name)
+                && ((MethodId<?, ?>) o).parameters.equals(parameters)
+                && ((MethodId<?, ?>) o).returnType.equals(returnType);
     }
 
     @Override public int hashCode() {

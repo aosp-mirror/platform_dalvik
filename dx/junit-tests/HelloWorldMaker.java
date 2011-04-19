@@ -17,14 +17,21 @@
 import com.android.dx.gen.BinaryOp;
 import com.android.dx.gen.Code;
 import com.android.dx.gen.DexGenerator;
-import com.android.dx.gen.Field;
+import com.android.dx.gen.FieldId;
 import com.android.dx.gen.Local;
-import com.android.dx.gen.Method;
+import com.android.dx.gen.MethodId;
 import com.android.dx.gen.Type;
 import com.android.dx.rop.code.AccessFlags;
 import java.io.PrintStream;
 
 public class HelloWorldMaker {
+    private static final Type<PrintStream> PRINT_STREAM = Type.get(PrintStream.class);
+    private static final FieldId<System, PrintStream> SYSTEM_OUT
+            = Type.get(System.class).getField(PRINT_STREAM, "out");
+    private static final MethodId<Integer, String> TO_HEX_STRING
+            = Type.get(Integer.class).getMethod(Type.STRING, "toHexString", Type.INT);
+    private static final MethodId<PrintStream, Void> PRINTLN
+            = PRINT_STREAM.getMethod(Type.VOID, "println", Type.STRING);
 
     public static void main(String[] args) throws Exception {
 
@@ -46,40 +53,30 @@ public class HelloWorldMaker {
         DexGenerator generator = new DexGenerator();
 
         // lookup the symbols of interest
-        Type<Object> object = generator.getType(Object.class);
-        Type<Integer> integer = generator.getType(Integer.class);
-        Type<Integer> intType = generator.getType(int.class);
-        Type<String> string = generator.getType(String.class);
-        Type<Void> voidType = generator.getType(void.class);
-        Type<System> system = generator.getType(System.class);
-        Type<PrintStream> printStream = generator.getType(PrintStream.class);
-        Type<?> helloWorld = generator.getType("LHelloWorld;");
-        Field<System, PrintStream> systemOutField = system.getField(printStream, "out");
-        Method<Integer, String> toHexString = integer.getMethod(string, "toHexString", intType);
-        Method<PrintStream, Void> println = printStream.getMethod(voidType, "println", string);
-        Method hello = helloWorld.getMethod(voidType, "hello");
+        Type<?> helloWorld = Type.get("LHelloWorld;");
+        MethodId hello = helloWorld.getMethod(Type.VOID, "hello");
 
         // create some registers
         //    (I'd like a better syntax for this)
-        Code code = hello.declare(AccessFlags.ACC_STATIC | AccessFlags.ACC_PUBLIC);
-        Local<Integer> a = code.newLocal(intType);
-        Local<Integer> b = code.newLocal(intType);
-        Local<Integer> c = code.newLocal(intType);
-        Local<String> s = code.newLocal(string);
-        Local<PrintStream> localSystemOut = code.newLocal(printStream);
+        Code code = generator.declare(hello, AccessFlags.ACC_STATIC | AccessFlags.ACC_PUBLIC);
+        Local<Integer> a = code.newLocal(Type.INT);
+        Local<Integer> b = code.newLocal(Type.INT);
+        Local<Integer> c = code.newLocal(Type.INT);
+        Local<String> s = code.newLocal(Type.STRING);
+        Local<PrintStream> localSystemOut = code.newLocal(PRINT_STREAM);
 
         // specify the code instruction-by-instruction (approximately)
         code.loadConstant(a, 0xabcd);
         code.loadConstant(b, 0xaaaa);
         code.op(BinaryOp.SUBTRACT, c, a, b);
-        code.invokeStatic(toHexString, s, c);
-        code.sget(systemOutField, localSystemOut);
-        code.invokeVirtual(println, null, localSystemOut, s);
+        code.invokeStatic(TO_HEX_STRING, s, c);
+        code.sget(SYSTEM_OUT, localSystemOut);
+        code.invokeVirtual(PRINTLN, null, localSystemOut, s);
         code.returnVoid();
 
         // TODO: create the constructor
 
-        helloWorld.declare("Generated.java", AccessFlags.ACC_PUBLIC, object);
+        generator.declare(helloWorld, "Generated.java", AccessFlags.ACC_PUBLIC, Type.OBJECT);
 
         // load the dex
         ClassLoader loader = generator.load(HelloWorldMaker.class.getClassLoader());

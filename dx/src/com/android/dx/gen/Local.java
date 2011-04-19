@@ -23,15 +23,17 @@ import com.android.dx.rop.code.RegisterSpec;
  */
 public final class Local<T> {
     private final Code code;
-    final Type type;
-    final InitialValue initialValue;
+    final Type<T> type;
     private int reg = -1;
     private RegisterSpec spec;
 
-    Local(Code code, Type type, InitialValue initialValue) {
+    private Local(Code code, Type<T> type) {
         this.code = code;
         this.type = type;
-        this.initialValue = initialValue;
+    }
+
+    static <T> Local<T> get(Code code, Type<T> type) {
+        return new Local<T>(code, type);
     }
 
     /**
@@ -41,7 +43,7 @@ public final class Local<T> {
      */
     int initialize(int reg) {
         this.reg = reg;
-        this.spec = RegisterSpec.make(reg, type.getRopType());
+        this.spec = RegisterSpec.make(reg, type.ropType);
         return size();
     }
 
@@ -65,9 +67,5 @@ public final class Local<T> {
 
     @Override public String toString() {
         return "v" + reg + "(" + type + ")";
-    }
-
-    enum InitialValue {
-        NONE, THIS, PARAMETER
     }
 }

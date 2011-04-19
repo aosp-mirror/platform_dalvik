@@ -44,7 +44,7 @@ import java.util.List;
  * Builds a sequence of instructions.
  */
 public final class Code {
-    private final Method<?, ?> method;
+    private final MethodId<?, ?> method;
     /**
      * All allocated labels. Although the order of the labels in this list
      * shouldn't impact behavior, it is used to determine basic block indices.
@@ -68,20 +68,25 @@ public final class Code {
     private final List<Label> catchLabels = new ArrayList<Label>();
     private StdTypeList catches = StdTypeList.EMPTY;
 
-    public Code(Method<?, ?> method) {
-        this.method = method;
-        this.thisLocal = method.isStatic()
+    Code(DexGenerator.MethodDeclaration methodDeclaration) {
+        this.method = methodDeclaration.method;
+        this.thisLocal = methodDeclaration.isStatic()
                 ? null
-                : new Local<Object>(this, method.declaringType, Local.InitialValue.THIS);
+                : Local.get(this, method.declaringType);
         for (Type<?> parameter : method.parameters.types) {
-            parameters.add(new Local<Object>(this, parameter, Local.InitialValue.PARAMETER));
+            parameters.add(Local.get(this, parameter));
         }
         this.currentLabel = newLabel();
         this.currentLabel.marked = true;
     }
 
     public <T> Local<T> newLocal(Type<T> type) {
-        return allocateLocal(type, Local.InitialValue.NONE);
+        if (localsInitialized) {
+            throw new IllegalStateException("Cannot allocate locals after adding instructions");
+        }
+        Local<T> result = Local.get(this, type);
+        locals.add(result);
+        return result;
     }
 
     public <T> Local<T> getParameter(int index, Type<T> type) {
@@ -102,15 +107,6 @@ public final class Code {
                     "requested " + expectedType + " but was " + local.type);
         }
         return (Local<T>) local;
-    }
-
-    private <T> Local<T> allocateLocal(Type<T> type, Local.InitialValue initialValue) {
-        if (localsInitialized) {
-            throw new IllegalStateException("Cannot allocate locals after adding instructions");
-        }
-        Local<T> result = new Local<T>(this, type, initialValue);
-        locals.add(result);
-        return result;
     }
 
     /**
@@ -392,31 +388,31 @@ public final class Code {
 
     // instructions: fields
 
-    public <T, R> void iget(Field<T, R> field, Local<T> instance, Local<R> target) {
+    public <D, V> void iget(FieldId<D, V> fieldId, Local<D> instance, Local<V> target) {
         addInstruction(new ThrowingCstInsn(Rops.opGetField(target.type.ropType), sourcePosition,
-                RegisterSpecList.make(instance.spec()), catches, field.constant));
+                RegisterSpecList.make(instance.spec()), catches, fieldId.constant));
         moveResult(target, true);
     }
 
-    public <T, R> void iput(Field<T, R> field, Local<T> instance, Local<R> source) {
+    public <D, V> void iput(FieldId<D, V> fieldId, Local<D> instance, Local<V> source) {
         addInstruction(new ThrowingCstInsn(Rops.opPutField(source.type.ropType), sourcePosition,
-                RegisterSpecList.make(source.spec(), instance.spec()), catches, field.constant));
+                RegisterSpecList.make(source.spec(), instance.spec()), catches, fieldId.constant));
     }
 
-    public <T> void sget(Field<?, T> field, Local<T> target) {
+    public <V> void sget(FieldId<?, V> fieldId, Local<V> target) {
         addInstruction(new ThrowingCstInsn(Rops.opGetStatic(target.type.ropType), sourcePosition,
-                RegisterSpecList.EMPTY, catches, field.constant));
+                RegisterSpecList.EMPTY, catches, fieldId.constant));
         moveResult(target, true);
     }
 
-    public <T> void sput(Field<?, T> field, Local<T> source) {
+    public <V> void sput(FieldId<?, V> fieldId, Local<V> source) {
         addInstruction(new ThrowingCstInsn(Rops.opPutStatic(source.type.ropType), sourcePosition,
-                RegisterSpecList.make(source.spec()), catches, field.constant));
+                RegisterSpecList.make(source.spec()), catches, fieldId.constant));
     }
 
     // instructions: invoke
 
-    public <T> void newInstance(Local<T> target, Method<T, Void> constructor, Local<?>... args) {
+    public <T> void newInstance(Local<T> target, MethodId<T, Void> constructor, Local<?>... args) {
         if (target == null) {
             throw new IllegalArgumentException();
         }
@@ -426,32 +422,32 @@ public final class Code {
         invokeDirect(constructor, null, target, args);
     }
 
-    public <R> void invokeStatic(Method<?, R> method, Local<? super R> target, Local<?>... args) {
+    public <R> void invokeStatic(MethodId<?, R> method, Local<? super R> target, Local<?>... args) {
         invoke(Rops.opInvokeStatic(method.prototype(true)), method, target, null, args);
     }
 
-    public <I, R> void invokeVirtual(Method<I, R> method, Local<? super R> target,
-            Local<? extends I> object, Local<?>... args) {
+    public <D, R> void invokeVirtual(MethodId<D, R> method, Local<? super R> target,
+            Local<? extends D> object, Local<?>... args) {
         invoke(Rops.opInvokeVirtual(method.prototype(true)), method, target, object, args);
     }
 
-    public <I, R> void invokeDirect(Method<I, R> method, Local<? super R> target,
-            Local<? extends I> object, Local<?>... args) {
+    public <D, R> void invokeDirect(MethodId<D, R> method, Local<? super R> target,
+            Local<? extends D> object, Local<?>... args) {
         invoke(Rops.opInvokeDirect(method.prototype(true)), method, target, object, args);
     }
 
-    public <I, R> void invokeSuper(Method<I, R> method, Local<? super R> target,
-            Local<? extends I> object, Local<?>... args) {
+    public <D, R> void invokeSuper(MethodId<D, R> method, Local<? super R> target,
+            Local<? extends D> object, Local<?>... args) {
         invoke(Rops.opInvokeSuper(method.prototype(true)), method, target, object, args);
     }
 
-    public <I, R> void invokeInterface(Method<I, R> method, Local<? super R> target,
-            Local<? extends I> object, Local<?>... args) {
+    public <D, R> void invokeInterface(MethodId<D, R> method, Local<? super R> target,
+            Local<? extends D> object, Local<?>... args) {
         invoke(Rops.opInvokeInterface(method.prototype(true)), method, target, object, args);
     }
 
-    private <I, R> void invoke(Rop rop, Method<I, R> method, Local<? super R> target,
-            Local<? extends I> object, Local<?>... args) {
+    private <D, R> void invoke(Rop rop, MethodId<D, R> method, Local<? super R> target,
+            Local<? extends D> object, Local<?>... args) {
         addInstruction(new ThrowingCstInsn(rop, sourcePosition, concatenate(object, args),
                 catches, method.constant));
         if (target != null) {
@@ -501,7 +497,7 @@ public final class Code {
     // instructions: return
 
     public void returnVoid() {
-        if (!method.returnType.isVoid()) {
+        if (!method.returnType.equals(Type.VOID)) {
             throw new IllegalArgumentException("declared " + method.returnType
                     + " but returned void");
         }
