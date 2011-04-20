@@ -207,15 +207,15 @@ WITH_JIT := $(strip $(WITH_JIT))
 ifeq ($(WITH_JIT),true)
   LOCAL_CFLAGS += -DWITH_JIT
   LOCAL_SRC_FILES += \
-	compiler/Compiler.c \
-	compiler/Frontend.c \
-	compiler/Utility.c \
-	compiler/InlineTransformation.c \
-	compiler/IntermediateRep.c \
-	compiler/Dataflow.c \
-	compiler/SSATransformation.c \
-	compiler/Loop.c \
-	compiler/Ralloc.c \
+	compiler/Compiler.cpp \
+	compiler/Frontend.cpp \
+	compiler/Utility.cpp \
+	compiler/InlineTransformation.cpp \
+	compiler/IntermediateRep.cpp \
+	compiler/Dataflow.cpp \
+	compiler/SSATransformation.cpp \
+	compiler/Loop.cpp \
+	compiler/Ralloc.cpp \
 	interp/Jit.cpp
 endif
 
@@ -252,14 +252,14 @@ ifeq ($(dvm_arch),arm)
 
   ifeq ($(WITH_JIT),true)
     LOCAL_SRC_FILES += \
-		compiler/codegen/RallocUtil.c \
-		compiler/codegen/arm/$(dvm_arch_variant)/Codegen.c \
+		compiler/codegen/RallocUtil.cpp \
+		compiler/codegen/arm/$(dvm_arch_variant)/Codegen.cpp \
 		compiler/codegen/arm/$(dvm_arch_variant)/CallingConvention.S \
-		compiler/codegen/arm/Assemble.c \
-		compiler/codegen/arm/ArchUtility.c \
-		compiler/codegen/arm/LocalOptimizations.c \
-		compiler/codegen/arm/GlobalOptimizations.c \
-		compiler/codegen/arm/ArmRallocUtil.c \
+		compiler/codegen/arm/Assemble.cpp \
+		compiler/codegen/arm/ArchUtility.cpp \
+		compiler/codegen/arm/LocalOptimizations.cpp \
+		compiler/codegen/arm/GlobalOptimizations.cpp \
+		compiler/codegen/arm/ArmRallocUtil.cpp \
 		compiler/template/out/CompilerTemplateAsm-$(dvm_arch_variant).S
   endif
 endif
@@ -275,9 +275,9 @@ ifeq ($(dvm_arch),x86)
 		mterp/out/InterpAsm-$(dvm_arch_variant).S
     ifeq ($(WITH_JIT),true)
       LOCAL_SRC_FILES += \
-		compiler/codegen/x86/Assemble.c \
-		compiler/codegen/x86/ArchUtility.c \
-		compiler/codegen/x86/ia32/Codegen.c \
+		compiler/codegen/x86/Assemble.cpp \
+		compiler/codegen/x86/ArchUtility.cpp \
+		compiler/codegen/x86/ia32/Codegen.cpp \
 		compiler/codegen/x86/ia32/CallingConvention.S \
 		compiler/template/out/CompilerTemplateAsm-ia32.S
     endif

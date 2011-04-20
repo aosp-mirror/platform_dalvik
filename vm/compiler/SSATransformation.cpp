@@ -486,7 +486,7 @@ static void insertPhiNodes(CompilationUnit *cUnit)
             /* Variable will be clobbered before being used - no need for phi */
             if (!dvmIsBitSet(phiBB->dataFlowInfo->liveInV, dalvikReg)) continue;
             MIR *phi = (MIR *) dvmCompilerNew(sizeof(MIR), true);
-            phi->dalvikInsn.opcode = kMirOpPhi;
+            phi->dalvikInsn.opcode = (Opcode)kMirOpPhi;
             phi->dalvikInsn.vA = dalvikReg;
             phi->offset = phiBB->startOffset;
             dvmCompilerPrependMIR(phiBB, phi);
@@ -507,7 +507,8 @@ static bool insertPhiNodeOperands(CompilationUnit *cUnit, BasicBlock *bb)
 
     /* Phi nodes are at the beginning of each block */
     for (mir = bb->firstMIRInsn; mir; mir = mir->next) {
-        if (mir->dalvikInsn.opcode != kMirOpPhi) return true;
+        if (mir->dalvikInsn.opcode != (Opcode)kMirOpPhi)
+            return true;
         int ssaReg = mir->ssaRep->defs[0];
         int encodedDalvikValue =
             (int) dvmGrowableListGetElement(cUnit->ssaToDalvikMap, ssaReg);

@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+extern "C" void dvmCompilerTemplateStart(void);
+
 /*
  * Determine the initial instruction set to be used for this trace.
  * Later components may decide to change this.
@@ -23,16 +25,15 @@ JitInstructionSetType dvmCompilerInstructionSet(void)
     return DALVIK_JIT_THUMB2;
 }
 
-/* Architecture-specific initializations and checks go here */
-bool dvmCompilerArchVariantInit(void)
-{
-    /* First, declare dvmCompiler_TEMPLATE_XXX for each template */
-#define JIT_TEMPLATE(X) extern void dvmCompiler_TEMPLATE_##X();
+/* First, declare dvmCompiler_TEMPLATE_XXX for each template */
+#define JIT_TEMPLATE(X) extern "C" void dvmCompiler_TEMPLATE_##X();
 #include "../../../template/armv5te-vfp/TemplateOpList.h"
 #undef JIT_TEMPLATE
 
+/* Architecture-specific initializations and checks go here */
+bool dvmCompilerArchVariantInit(void)
+{
     int i = 0;
-    extern void dvmCompilerTemplateStart(void);
 
     /*
      * Then, populate the templateEntryOffsets array with the offsets from the

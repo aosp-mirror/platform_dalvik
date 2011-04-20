@@ -19,6 +19,10 @@
 #ifndef _DALVIK_VM_COMPILER_CODEGEN_ARM_CALLOUT_HELPER_H
 #define _DALVIK_VM_COMPILER_CODEGEN_ARM_CALLOUT_HELPER_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*
  * Declare/comment prototypes of all native callout functions invoked by the
  * JIT'ed code here and use the LOAD_FUNC_ADDR macro to load the address into
@@ -120,5 +124,9 @@ double sqrt(double x);  // INLINE_MATH_SQRT
  *      __aeabi_cfcmple         // CMPG_FLOAT
  *      dvmLockObject           // MONITOR_ENTER
  */
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* _DALVIK_VM_COMPILER_CODEGEN_ARM_CALLOUT_HELPER_H */

@@ -54,7 +54,8 @@ static bool genArithOpFloat(CompilationUnit *cUnit, MIR *mir,
     rlSrc1 = loadValue(cUnit, rlSrc1, kFPReg);
     rlSrc2 = loadValue(cUnit, rlSrc2, kFPReg);
     rlResult = dvmCompilerEvalLoc(cUnit, rlDest, kFPReg, true);
-    newLIR3(cUnit, op, rlResult.lowReg, rlSrc1.lowReg, rlSrc2.lowReg);
+    newLIR3(cUnit, (ArmOpcode)op, rlResult.lowReg, rlSrc1.lowReg,
+            rlSrc2.lowReg);
     storeValue(cUnit, rlDest, rlResult);
     return false;
 }
@@ -100,7 +101,7 @@ static bool genArithOpDouble(CompilationUnit *cUnit, MIR *mir,
     rlResult = dvmCompilerEvalLoc(cUnit, rlDest, kFPReg, true);
     assert(rlDest.wide);
     assert(rlResult.wide);
-    newLIR3(cUnit, op, S2D(rlResult.lowReg, rlResult.highReg),
+    newLIR3(cUnit, (ArmOpcode)op, S2D(rlResult.lowReg, rlResult.highReg),
             S2D(rlSrc1.lowReg, rlSrc1.highReg),
             S2D(rlSrc2.lowReg, rlSrc2.highReg));
     storeValueWide(cUnit, rlDest, rlResult);
@@ -169,12 +170,13 @@ static bool genConversion(CompilationUnit *cUnit, MIR *mir)
     if (longDest) {
         rlDest = dvmCompilerGetDestWide(cUnit, mir, 0, 1);
         rlResult = dvmCompilerEvalLoc(cUnit, rlDest, kFPReg, true);
-        newLIR2(cUnit, op, S2D(rlResult.lowReg, rlResult.highReg), srcReg);
+        newLIR2(cUnit, (ArmOpcode)op, S2D(rlResult.lowReg, rlResult.highReg),
+                srcReg);
         storeValueWide(cUnit, rlDest, rlResult);
     } else {
         rlDest = dvmCompilerGetDest(cUnit, mir, 0);
         rlResult = dvmCompilerEvalLoc(cUnit, rlDest, kFPReg, true);
-        newLIR2(cUnit, op, rlResult.lowReg, srcReg);
+        newLIR2(cUnit, (ArmOpcode)op, rlResult.lowReg, srcReg);
         storeValue(cUnit, rlDest, rlResult);
     }
     return false;

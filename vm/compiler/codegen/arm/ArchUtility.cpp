@@ -18,7 +18,7 @@
 #include "libdex/DexOpcodes.h"
 #include "ArmLIR.h"
 
-static char *shiftNames[4] = {
+static const char *shiftNames[4] = {
     "lsl",
     "lsr",
     "asr",
@@ -73,14 +73,14 @@ static int expandImmediate(int value)
  * Interpret a format string and build a string no longer than size
  * See format key in Assemble.c.
  */
-static void buildInsnString(char *fmt, ArmLIR *lir, char* buf,
+static void buildInsnString(const char *fmt, ArmLIR *lir, char* buf,
                             unsigned char *baseAddr, int size)
 {
     int i;
     char *bufEnd = &buf[size-1];
-    char *fmtEnd = &fmt[strlen(fmt)];
+    const char *fmtEnd = &fmt[strlen(fmt)];
     char tbuf[256];
-    char *name;
+    const char *name;
     char nc;
     while (fmt < fmtEnd) {
         int operand;

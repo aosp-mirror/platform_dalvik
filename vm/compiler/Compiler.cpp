@@ -22,6 +22,9 @@
 #include "interp/Jit.h"
 #include "CompilerInternals.h"
 
+extern "C" void dvmCompilerTemplateStart(void);
+extern "C" void dmvCompilerTemplateEnd(void);
+
 static inline bool workQueueLength(void)
 {
     return gDvmJit.compilerQueueLength;
@@ -99,8 +102,8 @@ bool dvmCompilerWorkEnqueue(const u2 *pc, WorkOrderKind kind, void* info)
      */
     if (gDvmJit.compilerQueueLength == COMPILER_WORK_QUEUE_SIZE ||
         gDvmJit.codeCacheFull == true) {
-        result = false;
-        goto unlockAndExit;
+        dvmUnlockMutex(&gDvmJit.compilerLock);
+        return false;
     }
 
     for (numWork = gDvmJit.compilerQueueLength,
@@ -108,8 +111,10 @@ bool dvmCompilerWorkEnqueue(const u2 *pc, WorkOrderKind kind, void* info)
          numWork > 0;
          numWork--) {
         /* Already enqueued */
-        if (gDvmJit.compilerWorkQueue[i++].pc == pc)
-            goto unlockAndExit;
+        if (gDvmJit.compilerWorkQueue[i++].pc == pc) {
+            dvmUnlockMutex(&gDvmJit.compilerLock);
+            return true;
+        }
         /* Wrap around */
         if (i == COMPILER_WORK_QUEUE_SIZE)
             i = 0;
@@ -134,7 +139,6 @@ bool dvmCompilerWorkEnqueue(const u2 *pc, WorkOrderKind kind, void* info)
     cc = pthread_cond_signal(&gDvmJit.compilerQueueActivity);
     assert(cc == 0);
 
-unlockAndExit:
     dvmUnlockMutex(&gDvmJit.compilerLock);
     return result;
 }
@@ -160,8 +164,6 @@ void dvmCompilerDrainQueue(void)
 
 bool dvmCompilerSetupCodeCache(void)
 {
-    extern void dvmCompilerTemplateStart(void);
-    extern void dmvCompilerTemplateEnd(void);
     int fd;
 
     /* Allocate the code cache */

@@ -1587,17 +1587,17 @@ int dvmConvertSSARegToDalvik(const CompilationUnit *cUnit, int ssaReg)
  * ssaToDalvikMap list to get the subscript[31..16]/dalvik_reg[15..0] mapping.
  */
 char *dvmCompilerGetDalvikDisassembly(const DecodedInstruction *insn,
-                                      char *note)
+                                      const char *note)
 {
     char buffer[256];
-    int opcode = insn->opcode;
+    Opcode opcode = insn->opcode;
     int dfAttributes = dvmCompilerDataFlowAttributes[opcode];
     int flags;
     char *ret;
 
     buffer[0] = 0;
-    if (opcode >= kMirOpFirst) {
-        if (opcode == kMirOpPhi) {
+    if ((int)opcode >= (int)kMirOpFirst) {
+        if ((int)opcode == (int)kMirOpPhi) {
             strcpy(buffer, "PHI");
         }
         else {
@@ -1658,13 +1658,13 @@ char *dvmCompilerGetDalvikDisassembly(const DecodedInstruction *insn,
         if (dfAttributes & DF_B_IS_REG) {
             snprintf(buffer + strlen(buffer), 256, ", v%d", insn->vB);
         }
-        else if (opcode < kMirOpFirst) {
+        else if ((int)opcode < (int)kMirOpFirst) {
             snprintf(buffer + strlen(buffer), 256, ", (#%d)", insn->vB);
         }
         if (dfAttributes & DF_C_IS_REG) {
             snprintf(buffer + strlen(buffer), 256, ", v%d", insn->vC);
         }
-        else if (opcode < kMirOpFirst) {
+        else if ((int)opcode < (int)kMirOpFirst) {
             snprintf(buffer + strlen(buffer), 256, ", (#%d)", insn->vC);
         }
     }
@@ -1696,6 +1696,7 @@ char *dvmCompilerFullDisassembler(const CompilationUnit *cUnit,
     int dfAttributes = dvmCompilerDataFlowAttributes[opcode];
     char *ret;
     int length;
+    OpcodeFlags flags;
 
     buffer[0] = 0;
     if (opcode >= kMirOpFirst) {
@@ -1715,10 +1716,10 @@ char *dvmCompilerFullDisassembler(const CompilationUnit *cUnit,
         }
         goto done;
     } else {
-        strcpy(buffer, dexGetOpcodeName(opcode));
+        strcpy(buffer, dexGetOpcodeName((Opcode)opcode));
     }
 
-    int flags = dexGetFlagsFromOpcode(opcode);
+    flags = dexGetFlagsFromOpcode((Opcode)opcode);
     /* For branches, decode the instructions to print out the branch targets */
     if (flags & kInstrCanBranch) {
         InstructionFormat dalvikFormat = dexGetFormatFromOpcode(insn->opcode);
@@ -1774,7 +1775,8 @@ char *dvmCompilerFullDisassembler(const CompilationUnit *cUnit,
             }
         }
         if (opcode < kMirOpFirst) {
-            InstructionFormat dalvikFormat = dexGetFormatFromOpcode(opcode);
+            InstructionFormat dalvikFormat =
+                dexGetFormatFromOpcode((Opcode)opcode);
             switch (dalvikFormat) {
                 case kFmt11n:        // op vA, #+B
                 case kFmt21s:        // op vAA, #+BBBB
@@ -2196,7 +2198,7 @@ bool dvmCompilerFindInductionVariables(struct CompilationUnit *cUnit,
 
     /* If the bb doesn't have a phi it cannot contain an induction variable */
     if (bb->firstMIRInsn == NULL ||
-        bb->firstMIRInsn->dalvikInsn.opcode != kMirOpPhi) {
+        (int)bb->firstMIRInsn->dalvikInsn.opcode != (int)kMirOpPhi) {
         return false;
     }
 
@@ -2215,7 +2217,7 @@ bool dvmCompilerFindInductionVariables(struct CompilationUnit *cUnit,
          */
         MIR *phi;
         for (phi = bb->firstMIRInsn; phi; phi = phi->next) {
-            if (phi->dalvikInsn.opcode != kMirOpPhi) break;
+            if ((int)phi->dalvikInsn.opcode != (int)kMirOpPhi) break;
 
             if (phi->ssaRep->defs[0] == mir->ssaRep->uses[0] &&
                 phi->ssaRep->uses[1] == mir->ssaRep->defs[0]) {

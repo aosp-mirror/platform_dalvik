@@ -102,7 +102,7 @@ static bool inlineGetter(CompilationUnit *cUnit,
     if (isPredicted) {
         MIR *invokeMIRSlow = (MIR *)dvmCompilerNew(sizeof(MIR), true);
         *invokeMIRSlow = *invokeMIR;
-        invokeMIR->dalvikInsn.opcode = kMirOpCheckInlinePrediction;
+        invokeMIR->dalvikInsn.opcode = (Opcode)kMirOpCheckInlinePrediction;
 
         /* Use vC to denote the first argument (ie this) */
         if (!isRange) {
@@ -181,7 +181,7 @@ static bool inlineSetter(CompilationUnit *cUnit,
     if (isPredicted) {
         MIR *invokeMIRSlow = (MIR *)dvmCompilerNew(sizeof(MIR), true);
         *invokeMIRSlow = *invokeMIR;
-        invokeMIR->dalvikInsn.opcode = kMirOpCheckInlinePrediction;
+        invokeMIR->dalvikInsn.opcode = (Opcode)kMirOpCheckInlinePrediction;
 
         /* Use vC to denote the first argument (ie this) */
         if (!isRange) {
@@ -249,7 +249,7 @@ static bool inlineEmptyVirtualCallee(CompilationUnit *cUnit,
 {
     MIR *invokeMIRSlow = (MIR *)dvmCompilerNew(sizeof(MIR), true);
     *invokeMIRSlow = *invokeMIR;
-    invokeMIR->dalvikInsn.opcode = kMirOpCheckInlinePrediction;
+    invokeMIR->dalvikInsn.opcode = (Opcode)kMirOpCheckInlinePrediction;
 
     dvmCompilerInsertMIRAfter(invokeBB, invokeMIR, invokeMIRSlow);
     invokeMIRSlow->OptimizationFlags |= MIR_INLINED_PRED;
@@ -300,8 +300,8 @@ void dvmCompilerInlineMIR(CompilationUnit *cUnit, JitTranslationInfo *info)
         if (bb->blockType != kDalvikByteCode)
             continue;
         MIR *lastMIRInsn = bb->lastMIRInsn;
-        int opcode = lastMIRInsn->dalvikInsn.opcode;
-        int flags = dexGetFlagsFromOpcode(opcode);
+        Opcode opcode = lastMIRInsn->dalvikInsn.opcode;
+        int flags = (int)dexGetFlagsFromOpcode(opcode);
 
         /* No invoke - continue */
         if ((flags & kInstrInvoke) == 0)

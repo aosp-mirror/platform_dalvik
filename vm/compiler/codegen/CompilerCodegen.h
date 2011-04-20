@@ -19,6 +19,10 @@
 
 #include "compiler/CompilerIR.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* Maximal number of switch cases to have inline chains */
 #define MAX_CHAINED_SWITCH_CASES 64
 
@@ -33,6 +37,9 @@ void dvmCompilerMethodMIR2LIR(CompilationUnit *cUnit);
 
 /* Assemble LIR into machine code */
 void dvmCompilerAssembleLIR(CompilationUnit *cUnit, JitTranslationInfo *info);
+
+/* Perform translation chain operation. */
+void* dvmJitChain(void* tgtAddr, u4* branchAddr);
 
 /* Install class objects in the literal pool */
 void dvmJitInstallClassObjectPointers(CompilationUnit *cUnit,
@@ -67,5 +74,9 @@ int dvmCompilerTargetOptHint(int key);
 
 /* Implemented in codegen/<target>/<target_variant>/ArchVariant.c */
 void dvmCompilerGenMemBarrier(CompilationUnit *cUnit, int barrierKind);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* _DALVIK_VM_COMPILERCODEGEN_H_ */

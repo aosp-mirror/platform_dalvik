@@ -734,8 +734,8 @@ typedef struct ArmEncodingMap {
     } fieldLoc[4];
     ArmOpcode opcode;
     int flags;
-    char *name;
-    char* fmt;
+    const char* name;
+    const char* fmt;
     int size;
 } ArmEncodingMap;
 
