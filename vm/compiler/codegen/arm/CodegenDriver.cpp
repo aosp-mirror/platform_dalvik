@@ -769,7 +769,7 @@ static bool genArithOpInt(CompilationUnit *cUnit, MIR *mir,
     bool checkZero = false;
     bool unary = false;
     int retReg = r0;
-    void *callTgt;
+    int (*callTgt)(int, int);
     RegLocation rlResult;
     bool shiftOp = false;
 
@@ -2155,7 +2155,7 @@ static bool handleFmt21t(CompilationUnit *cUnit, MIR *mir, BasicBlock *bb,
             cond = kArmCondLe;
             break;
         default:
-            cond = 0;
+            cond = (ArmConditionCode)0;
             LOGE("Unexpected opcode (%d) for Fmt21t\n", dalvikOpcode);
             dvmCompilerAbort(cUnit);
     }
@@ -2294,7 +2294,7 @@ static bool handleFmt22b_Fmt22s(CompilationUnit *cUnit, MIR *mir)
     RegLocation rlDest = dvmCompilerGetDest(cUnit, mir, 0);
     RegLocation rlResult;
     int lit = mir->dalvikInsn.vC;
-    OpKind op = 0;      /* Make gcc happy */
+    OpKind op = (OpKind)0;      /* Make gcc happy */
     int shiftOp = false;
     bool isDiv = false;
 
@@ -2700,7 +2700,7 @@ static bool handleFmt22t(CompilationUnit *cUnit, MIR *mir, BasicBlock *bb,
             cond = kArmCondLe;
             break;
         default:
-            cond = 0;
+            cond = (ArmConditionCode)0;
             LOGE("Unexpected opcode (%d) for Fmt22t\n", dalvikOpcode);
             dvmCompilerAbort(cUnit);
     }
@@ -3904,7 +3904,7 @@ static void handlePCReconstruction(CompilationUnit *cUnit,
     }
 }
 
-static char *extendedMIROpNames[kMirOpLast - kMirOpFirst] = {
+static const char *extendedMIROpNames[kMirOpLast - kMirOpFirst] = {
     "kMirOpPhi",
     "kMirOpNullNRangeUpCheck",
     "kMirOpNullNRangeDownCheck",
@@ -4135,7 +4135,7 @@ static void handleExtendedMIR(CompilationUnit *cUnit, MIR *mir)
     strcpy(msg, extendedMIROpNames[opOffset]);
     newLIR1(cUnit, kArmPseudoExtended, (int) msg);
 
-    switch (mir->dalvikInsn.opcode) {
+    switch ((ExtendedMIROpcode)mir->dalvikInsn.opcode) {
         case kMirOpPhi: {
             char *ssaString = dvmCompilerGetSSAString(cUnit, mir->ssaRep);
             newLIR1(cUnit, kArmPseudoSSARep, (int) ssaString);
@@ -4238,6 +4238,7 @@ void dvmCompilerMIR2LIR(CompilationUnit *cUnit)
     /* Used to hold the labels of each block */
     ArmLIR *labelList =
         (ArmLIR *) dvmCompilerNew(sizeof(ArmLIR) * cUnit->numBlocks, true);
+    ArmLIR *headLIR = NULL;
     GrowableList chainingListByType[kChainingCellGap];
     int i;
 
@@ -4365,15 +4366,12 @@ void dvmCompilerMIR2LIR(CompilationUnit *cUnit)
             continue;
         }
 
-        ArmLIR *headLIR = NULL;
-        BasicBlock *nextBB = bb;
-
         /*
          * Try to build a longer optimization unit. Currently if the previous
          * block ends with a goto, we continue adding instructions and don't
          * reset the register allocation pool.
          */
-        for (; nextBB != NULL; nextBB = cUnit->nextCodegenBlock) {
+        for (BasicBlock *nextBB = bb; nextBB != NULL; nextBB = cUnit->nextCodegenBlock) {
             bb = nextBB;
             bb->visited = true;
             cUnit->nextCodegenBlock = NULL;
@@ -4389,16 +4387,15 @@ void dvmCompilerMIR2LIR(CompilationUnit *cUnit)
                     dvmCompilerResetDefTracking(cUnit);
                 }
 
-                if (mir->dalvikInsn.opcode >= kMirOpFirst) {
+                if ((int)mir->dalvikInsn.opcode >= (int)kMirOpFirst) {
                     handleExtendedMIR(cUnit, mir);
                     continue;
                 }
 
-
                 Opcode dalvikOpcode = mir->dalvikInsn.opcode;
                 InstructionFormat dalvikFormat =
                     dexGetFormatFromOpcode(dalvikOpcode);
-                char *note;
+                const char *note;
                 if (mir->OptimizationFlags & MIR_INLINED) {
                     note = " (I)";
                 } else if (mir->OptimizationFlags & MIR_INLINED_PRED) {
@@ -4690,7 +4687,7 @@ bool dvmCompilerDoWork(CompilerWorkOrder *work)
             break;
         }
         case kWorkOrderProfileMode:
-            dvmJitChangeProfileMode((TraceProfilingModes)work->info);
+            dvmJitChangeProfileMode((TraceProfilingModes)(int)work->info);
             isCompile = false;
             break;
         default:

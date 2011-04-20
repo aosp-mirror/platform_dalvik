@@ -227,7 +227,7 @@ bool dvmCompilerFindInductionVariables(struct CompilationUnit *cUnit,
 bool dvmCompilerClearVisitedFlag(struct CompilationUnit *cUnit,
                                  struct BasicBlock *bb);
 char *dvmCompilerGetDalvikDisassembly(const DecodedInstruction *insn,
-                                      char *note);
+                                      const char *note);
 char *dvmCompilerFullDisassembler(const struct CompilationUnit *cUnit,
                                   const struct MIR *mir);
 char *dvmCompilerGetSSAString(struct CompilationUnit *cUnit,

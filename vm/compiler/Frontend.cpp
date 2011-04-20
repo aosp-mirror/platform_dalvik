@@ -23,7 +23,7 @@
 
 static inline bool contentIsInsn(const u2 *codePtr) {
     u2 instr = *codePtr;
-    Opcode opcode = instr & 0xff;
+    Opcode opcode = (Opcode)(instr & 0xff);
 
     /*
      * Since the low 8-bit in metadata may look like OP_NOP, we need to check

@@ -157,7 +157,7 @@ intptr_t dvmGrowableListGetElement(const GrowableList *gList, size_t idx)
 void dvmCompilerDumpCompilationUnit(CompilationUnit *cUnit)
 {
     BasicBlock *bb;
-    char *blockTypeNames[] = {
+    const char *blockTypeNames[] = {
         "Normal Chaining Cell",
         "Hot Chaining Cell",
         "Singleton Chaining Cell",

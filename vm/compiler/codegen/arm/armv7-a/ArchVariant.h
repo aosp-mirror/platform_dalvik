@@ -17,6 +17,10 @@
 #ifndef _DALVIK_VM_COMPILER_CODEGEN_ARM_ARMV5TE_VFP_ARCHVARIANT_H
 #define _DALVIK_VM_COMPILER_CODEGEN_ARM_ARMV5TE_VFP_ARCHVARIANT_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* Create the TemplateOpcode enum */
 #define JIT_TEMPLATE(X) TEMPLATE_##X,
 typedef enum {
@@ -30,5 +34,9 @@ typedef enum {
     TEMPLATE_LAST_MARK,
 } TemplateOpcode;
 #undef JIT_TEMPLATE
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* _DALVIK_VM_COMPILER_CODEGEN_ARM_ARMV5TE_VFP_ARCHVARIANT_H */

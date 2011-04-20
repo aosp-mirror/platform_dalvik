@@ -1754,6 +1754,8 @@ const Method *dvmJitToPatchPredictedChain(const Method *method,
     newRechainCount = PREDICTED_CHAIN_COUNTER_AVOID;
     goto done;
 #else
+    PredictedChainingCell newCell;
+    int baseAddr, branchOffset, tgtAddr;
     if (dvmIsNativeMethod(method)) {
         UNPROTECT_CODE_CACHE(cell, sizeof(*cell));
 
@@ -1768,7 +1770,7 @@ const Method *dvmJitToPatchPredictedChain(const Method *method,
         PROTECT_CODE_CACHE(cell, sizeof(*cell));
         goto done;
     }
-    int tgtAddr = (int) dvmJitGetTraceAddr(method->insns);
+    tgtAddr = (int) dvmJitGetTraceAddr(method->insns);
 
     /*
      * Compilation not made yet for the callee. Reset the counter to a small
@@ -1782,14 +1784,12 @@ const Method *dvmJitToPatchPredictedChain(const Method *method,
         goto done;
     }
 
-    PredictedChainingCell newCell;
-
     if (cell->clazz == NULL) {
         newRechainCount = self->icRechainCount;
     }
 
-    int baseAddr = (int) cell + 4;   // PC is cur_addr + 4
-    int branchOffset = tgtAddr - baseAddr;
+    baseAddr = (int) cell + 4;   // PC is cur_addr + 4
+    branchOffset = tgtAddr - baseAddr;
 
     newCell.branch = assembleChainingBranch(branchOffset, true);
     newCell.clazz = clazz;

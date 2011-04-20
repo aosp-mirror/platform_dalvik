@@ -165,7 +165,7 @@ void dvmCompilerInitializeRegAlloc(CompilationUnit *cUnit)
  * is not met.
  */
 static ArmLIR *genIT(CompilationUnit *cUnit, ArmConditionCode code,
-                     char *guide)
+                     const char *guide)
 {
     int mask;
     int condBit = code & 1;

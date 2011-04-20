@@ -25,6 +25,10 @@
 #include "compiler/CompilerIR.h"
 #include "CalloutHelper.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #if defined(_CODEGEN_C)
 /*
  * loadConstant() sometimes needs to add a small imm to a pre-existing constant
@@ -63,3 +67,7 @@ extern void dvmCompilerSetupResourceMasks(ArmLIR *lir);
 
 extern ArmLIR* dvmCompilerRegCopyNoInsert(CompilationUnit *cUnit, int rDest,
                                           int rSrc);
+
+#ifdef __cplusplus
+}
+#endif

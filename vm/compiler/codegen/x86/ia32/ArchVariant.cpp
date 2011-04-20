@@ -28,14 +28,14 @@ JitInstructionSetType dvmCompilerInstructionSet(void)
     return DALVIK_JIT_IA32;
 }
 
-/* Architecture-specific initializations and checks go here */
-bool dvmCompilerArchVariantInit(void)
-{
-    /* First, declare dvmCompiler_TEMPLATE_XXX for each template */
-#define JIT_TEMPLATE(X) extern void dvmCompiler_TEMPLATE_##X();
+/* First, declare dvmCompiler_TEMPLATE_XXX for each template */
+#define JIT_TEMPLATE(X) extern "C" void dvmCompiler_TEMPLATE_##X();
 #include "../../../template/ia32/TemplateOpList.h"
 #undef JIT_TEMPLATE
 
+/* Architecture-specific initializations and checks go here */
+bool dvmCompilerArchVariantInit(void)
+{
     int i = 0;
     extern void dvmCompilerTemplateStart(void);
 

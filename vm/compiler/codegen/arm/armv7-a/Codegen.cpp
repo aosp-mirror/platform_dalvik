@@ -29,28 +29,28 @@
 #include "ArchVariant.h"
 
 /* Arm codegen building blocks */
-#include "../CodegenCommon.c"
+#include "../CodegenCommon.cpp"
 
 /* Thumb2-specific factory utilities */
-#include "../Thumb2/Factory.c"
+#include "../Thumb2/Factory.cpp"
 /* Target independent factory utilities */
-#include "../../CodegenFactory.c"
+#include "../../CodegenFactory.cpp"
 /* Arm-specific factory utilities */
-#include "../ArchFactory.c"
+#include "../ArchFactory.cpp"
 
 /* Thumb2-specific codegen routines */
-#include "../Thumb2/Gen.c"
+#include "../Thumb2/Gen.cpp"
 /* Thumb2+VFP codegen routines */
-#include "../FP/Thumb2VFP.c"
+#include "../FP/Thumb2VFP.cpp"
 
 /* Thumb2-specific register allocation */
-#include "../Thumb2/Ralloc.c"
+#include "../Thumb2/Ralloc.cpp"
 
 /* MIR2LIR dispatcher and architectural independent codegen routines */
-#include "../CodegenDriver.c"
+#include "../CodegenDriver.cpp"
 
 /* Driver for method-based JIT */
-#include "../armv7-a-neon/MethodCodegenDriver.c"
+#include "../armv7-a-neon/MethodCodegenDriver.cpp"
 
 /* Architecture manifest */
-#include "ArchVariant.c"
+#include "ArchVariant.cpp"
