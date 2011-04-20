@@ -457,7 +457,7 @@ GOTO_TARGET_DECL(exceptionThrown);
             GOTO_exceptionThrown();                                         \
         }                                                                   \
         SET_REGISTER##_regsize(vdst,                                        \
-            ((_type*) arrayObj->contents)[GET_REGISTER(vsrc2)]);            \
+            ((_type*)(void*)arrayObj->contents)[GET_REGISTER(vsrc2)]);      \
         ILOGV("+ AGET[%d]=0x%x", GET_REGISTER(vsrc2), GET_REGISTER(vdst));  \
     }                                                                       \
     FINISH(2);
@@ -482,7 +482,7 @@ GOTO_TARGET_DECL(exceptionThrown);
             GOTO_exceptionThrown();                                         \
         }                                                                   \
         ILOGV("+ APUT[%d]=0x%08x", GET_REGISTER(vsrc2), GET_REGISTER(vdst));\
-        ((_type*) arrayObj->contents)[GET_REGISTER(vsrc2)] =                \
+        ((_type*)(void*)arrayObj->contents)[GET_REGISTER(vsrc2)] =          \
             GET_REGISTER##_regsize(vdst);                                   \
     }                                                                       \
     FINISH(2);

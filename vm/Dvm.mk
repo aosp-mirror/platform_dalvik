@@ -147,7 +147,7 @@ LOCAL_SRC_FILES := \
 	jdwp/JdwpMain.cpp \
 	jdwp/JdwpSocket.cpp \
 	mterp/Mterp.cpp.arm \
-	mterp/out/InterpC-portable.c.arm \
+	mterp/out/InterpC-portable.cpp.arm \
 	native/InternalNative.cpp \
 	native/dalvik_bytecode_OpcodeInfo.cpp \
 	native/dalvik_system_DexFile.cpp \
@@ -246,8 +246,8 @@ ifeq ($(dvm_arch),arm)
   LOCAL_SRC_FILES += \
 		arch/arm/CallOldABI.S \
 		arch/arm/CallEABI.S \
-		arch/arm/HintsEABI.c \
-		mterp/out/InterpC-$(dvm_arch_variant).c.arm \
+		arch/arm/HintsEABI.cpp \
+		mterp/out/InterpC-$(dvm_arch_variant).cpp.arm \
 		mterp/out/InterpAsm-$(dvm_arch_variant).S
 
   ifeq ($(WITH_JIT),true)
@@ -270,8 +270,8 @@ ifeq ($(dvm_arch),x86)
     LOCAL_CFLAGS += -DDVM_JMP_TABLE_MTERP=1
     LOCAL_SRC_FILES += \
 		arch/$(dvm_arch_variant)/Call386ABI.S \
-		arch/$(dvm_arch_variant)/Hints386ABI.c \
-		mterp/out/InterpC-$(dvm_arch_variant).c \
+		arch/$(dvm_arch_variant)/Hints386ABI.cpp \
+		mterp/out/InterpC-$(dvm_arch_variant).cpp \
 		mterp/out/InterpAsm-$(dvm_arch_variant).S
     ifeq ($(WITH_JIT),true)
       LOCAL_SRC_FILES += \
@@ -288,8 +288,8 @@ ifeq ($(dvm_arch),sh)
   MTERP_ARCH_KNOWN := true
   LOCAL_SRC_FILES += \
 		arch/sh/CallSH4ABI.S \
-		arch/generic/Hints.c \
-		mterp/out/InterpC-allstubs.c \
+		arch/generic/Hints.cpp \
+		mterp/out/InterpC-allstubs.cpp \
 		mterp/out/InterpAsm-allstubs.S
 endif
 
@@ -305,9 +305,9 @@ ifeq ($(MTERP_ARCH_KNOWN),false)
   endif
 
   LOCAL_SRC_FILES += \
-		arch/generic/Call.c \
-		arch/generic/Hints.c \
-		mterp/out/InterpC-allstubs.c
+		arch/generic/Call.cpp \
+		arch/generic/Hints.cpp \
+		mterp/out/InterpC-allstubs.cpp
 
   # The following symbols are usually defined in the asm file, but
   # since we don't have an asm file in this case, we instead just

@@ -87,7 +87,7 @@ GOTO_TARGET(filledNewArray, bool methodCallRange, bool jumboFormat)
         /*
          * Fill in the elements.  It's legal for vsrc1 to be zero.
          */
-        contents = (u4*) newArray->contents;
+        contents = (u4*)(void*)newArray->contents;
         if (methodCallRange) {
             for (i = 0; i < vsrc1; i++)
                 contents[i] = GET_REGISTER(vdst+i);

@@ -49,6 +49,12 @@ bool dvmCheckAsmConstants(void);
 bool dvmMterpStdRun(Thread* self);
 void dvmMterpStdBail(Thread* self, bool changeInterp);
 
+/*
+ * Helper for common_printMethod(), invoked from the assembly
+ * interpreter.
+ */
+void dvmMterpPrintMethod(Method* method);
+
 #ifdef __cplusplus
 }
 #endif

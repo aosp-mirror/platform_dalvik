@@ -25,14 +25,14 @@ asm-stub x86/stub.S
 asm-alt-stub x86/alt_stub.S
 
 # C file header and basic definitions
-import c/header.c
+import c/header.cpp
 import x86/header.S
 
 # C pre-processor defines for stub C instructions
-import cstubs/stubdefs.c
+import cstubs/stubdefs.cpp
 
 # common defs for the C opcodes
-import c/opcommon.c
+import c/opcommon.cpp
 
 # opcode list; argument to op-start is default directory
 op-start x86
@@ -66,10 +66,10 @@ import x86/entry.S
 # "helper" code for C; include if you use any of the C stubs (this generates
 # object code, so it's normally excluded)
 # (asm code is currently calling into dvmMterp_exceptionThrown)
-import c/gotoTargets.c
+import c/gotoTargets.cpp
 
-# end of defs; include this when cstubs/stubdefs.c is included
-import cstubs/enddefs.c
+# end of defs; include this when cstubs/stubdefs.cpp is included
+import cstubs/enddefs.cpp
 
 # common subroutines for asm
 import x86/footer.S

@@ -20,12 +20,12 @@ handler-size 64
 asm-stub x86-atom/stub.S
 
 # file header, macros and definitions
-import c/header.c
+import c/header.cpp
 import x86-atom/header.S
 
 # common defs for the C helper; include this before the instruction handlers
-import cstubs/stubdefs.c
-import c/opcommon.c
+import cstubs/stubdefs.cpp
+import c/opcommon.cpp
 
 # start of opcode list; command gives default directory location of instruction files
 op-start x86-atom
@@ -312,8 +312,8 @@ op-end
 import x86-atom/entry.S
 
 # "helper" code for C; include this after the instruction handlers
-import c/gotoTargets.c
-import cstubs/enddefs.c
+import c/gotoTargets.cpp
+import cstubs/enddefs.cpp
 
 # common subroutines for asm
 import x86-atom/footer.S

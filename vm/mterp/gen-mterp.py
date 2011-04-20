@@ -98,12 +98,12 @@ def importFile(tokens):
     if len(tokens) != 2:
         raise DataParseError("import requires one argument")
     source = tokens[1]
-    if source.endswith(".c"):
+    if source.endswith(".cpp"):
         appendSourceFile(tokens[1], getGlobalSubDict(), c_fp, None)
     elif source.endswith(".S"):
         appendSourceFile(tokens[1], getGlobalSubDict(), asm_fp, None)
     else:
-        raise DataParseError("don't know how to import %s (expecting .c/.S)"
+        raise DataParseError("don't know how to import %s (expecting .cpp/.S)"
                 % source)
 
 #
@@ -361,9 +361,9 @@ def loadAndEmitAltOpcodes():
 #
 def loadAndEmitC(location, opindex):
     op = opcodes[opindex]
-    source = "%s/%s.c" % (location, op)
+    source = "%s/%s.cpp" % (location, op)
     if verbose:
-        print " emit %s --> C" % source
+        print " emit %s --> C++" % source
     dict = getGlobalSubDict()
     dict.update({ "opcode":op, "opnum":opindex })
 
@@ -536,7 +536,7 @@ except:
 # Open and prepare output files.
 #
 try:
-    c_fp = open("%s/InterpC-%s.c" % (output_dir, target_arch), "w")
+    c_fp = open("%s/InterpC-%s.cpp" % (output_dir, target_arch), "w")
     asm_fp = open("%s/InterpAsm-%s.S" % (output_dir, target_arch), "w")
 except:
     print "Unable to open output files"

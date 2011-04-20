@@ -24,13 +24,13 @@ handler-style computed-goto
 handler-size 64
 
 # C file header and basic definitions
-import c/header.c
+import c/header.cpp
 
 # C pre-processor defines for stub C instructions
-import cstubs/stubdefs.c
+import cstubs/stubdefs.cpp
 
 # common defs for the C opcodes
-import c/opcommon.c
+import c/opcommon.cpp
 
 # opcode list; argument to op-start is default directory
 op-start c
@@ -38,10 +38,10 @@ op-start c
 op-end
 
 # arch-specific entry point to interpreter
-import cstubs/entry.c
+import cstubs/entry.cpp
 
 # "helper" code
-import c/gotoTargets.c
+import c/gotoTargets.cpp
 
 # finish
-import cstubs/enddefs.c
+import cstubs/enddefs.cpp

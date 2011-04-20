@@ -4,7 +4,7 @@
  */
 
 #define GOTO_TARGET_DECL(_target, ...)                                      \
-    void dvmMterp_##_target(Thread* self, ## __VA_ARGS__);
+    extern "C" void dvmMterp_##_target(Thread* self, ## __VA_ARGS__);
 
 /* (void)xxx to quiet unused variable compiler warnings. */
 #define GOTO_TARGET(_target, ...)                                           \
@@ -52,6 +52,7 @@
  * (void)xxx to quiet unused variable compiler warnings.
  */
 #define HANDLE_OPCODE(_op)                                                  \
+    extern "C" void dvmMterp_##_op(Thread* self);                           \
     void dvmMterp_##_op(Thread* self) {                                     \
         u4 ref;                                                             \
         u2 vsrc1, vsrc2, vdst;                                              \

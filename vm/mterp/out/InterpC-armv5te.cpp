@@ -1,10 +1,10 @@
 /*
- * This file was generated automatically by gen-mterp.py for 'armv7-a'.
+ * This file was generated automatically by gen-mterp.py for 'armv5te'.
  *
  * --> DO NOT EDIT <--
  */
 
-/* File: c/header.c */
+/* File: c/header.cpp */
 /*
  * Copyright (C) 2008 The Android Open Source Project
  *
@@ -379,14 +379,14 @@ static inline bool checkForNullExportPC(Object* obj, u4* fp, const u2* pc)
     return true;
 }
 
-/* File: cstubs/stubdefs.c */
+/* File: cstubs/stubdefs.cpp */
 /*
  * In the C mterp stubs, "goto" is a function call followed immediately
  * by a return.
  */
 
 #define GOTO_TARGET_DECL(_target, ...)                                      \
-    void dvmMterp_##_target(Thread* self, ## __VA_ARGS__);
+    extern "C" void dvmMterp_##_target(Thread* self, ## __VA_ARGS__);
 
 /* (void)xxx to quiet unused variable compiler warnings. */
 #define GOTO_TARGET(_target, ...)                                           \
@@ -434,6 +434,7 @@ static inline bool checkForNullExportPC(Object* obj, u4* fp, const u2* pc)
  * (void)xxx to quiet unused variable compiler warnings.
  */
 #define HANDLE_OPCODE(_op)                                                  \
+    extern "C" void dvmMterp_##_op(Thread* self);                           \
     void dvmMterp_##_op(Thread* self) {                                     \
         u4 ref;                                                             \
         u2 vsrc1, vsrc2, vdst;                                              \
@@ -513,7 +514,7 @@ static inline bool checkForNullExportPC(Object* obj, u4* fp, const u2* pc)
         }                                                                   \
     }
 
-/* File: c/opcommon.c */
+/* File: c/opcommon.cpp */
 /* forward declarations of goto targets */
 GOTO_TARGET_DECL(filledNewArray, bool methodCallRange, bool jumboFormat);
 GOTO_TARGET_DECL(invokeVirtual, bool methodCallRange, bool jumboFormat);
@@ -973,7 +974,7 @@ GOTO_TARGET_DECL(exceptionThrown);
             GOTO_exceptionThrown();                                         \
         }                                                                   \
         SET_REGISTER##_regsize(vdst,                                        \
-            ((_type*) arrayObj->contents)[GET_REGISTER(vsrc2)]);            \
+            ((_type*)(void*)arrayObj->contents)[GET_REGISTER(vsrc2)]);      \
         ILOGV("+ AGET[%d]=0x%x", GET_REGISTER(vsrc2), GET_REGISTER(vdst));  \
     }                                                                       \
     FINISH(2);
@@ -998,7 +999,7 @@ GOTO_TARGET_DECL(exceptionThrown);
             GOTO_exceptionThrown();                                         \
         }                                                                   \
         ILOGV("+ APUT[%d]=0x%08x", GET_REGISTER(vsrc2), GET_REGISTER(vdst));\
-        ((_type*) arrayObj->contents)[GET_REGISTER(vsrc2)] =                \
+        ((_type*)(void*)arrayObj->contents)[GET_REGISTER(vsrc2)] =          \
             GET_REGISTER##_regsize(vdst);                                   \
     }                                                                       \
     FINISH(2);
@@ -1270,7 +1271,7 @@ GOTO_TARGET_DECL(exceptionThrown);
     }                                                                       \
     FINISH(4);
 
-/* File: cstubs/enddefs.c */
+/* File: cstubs/enddefs.cpp */
 
 /* undefine "magic" name remapping */
 #undef retval
@@ -1281,7 +1282,7 @@ GOTO_TARGET_DECL(exceptionThrown);
 #undef self
 #undef debugTrackedRefStart
 
-/* File: armv5te/debug.c */
+/* File: armv5te/debug.cpp */
 #include <inttypes.h>
 
 /*

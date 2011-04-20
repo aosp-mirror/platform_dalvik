@@ -1,10 +1,10 @@
 /*
- * This file was generated automatically by gen-mterp.py for 'x86'.
+ * This file was generated automatically by gen-mterp.py for 'allstubs'.
  *
  * --> DO NOT EDIT <--
  */
 
-/* File: c/header.c */
+/* File: c/header.cpp */
 /*
  * Copyright (C) 2008 The Android Open Source Project
  *
@@ -379,14 +379,14 @@ static inline bool checkForNullExportPC(Object* obj, u4* fp, const u2* pc)
     return true;
 }
 
-/* File: cstubs/stubdefs.c */
+/* File: cstubs/stubdefs.cpp */
 /*
  * In the C mterp stubs, "goto" is a function call followed immediately
  * by a return.
  */
 
 #define GOTO_TARGET_DECL(_target, ...)                                      \
-    void dvmMterp_##_target(Thread* self, ## __VA_ARGS__);
+    extern "C" void dvmMterp_##_target(Thread* self, ## __VA_ARGS__);
 
 /* (void)xxx to quiet unused variable compiler warnings. */
 #define GOTO_TARGET(_target, ...)                                           \
@@ -434,6 +434,7 @@ static inline bool checkForNullExportPC(Object* obj, u4* fp, const u2* pc)
  * (void)xxx to quiet unused variable compiler warnings.
  */
 #define HANDLE_OPCODE(_op)                                                  \
+    extern "C" void dvmMterp_##_op(Thread* self);                           \
     void dvmMterp_##_op(Thread* self) {                                     \
         u4 ref;                                                             \
         u2 vsrc1, vsrc2, vdst;                                              \
@@ -513,7 +514,7 @@ static inline bool checkForNullExportPC(Object* obj, u4* fp, const u2* pc)
         }                                                                   \
     }
 
-/* File: c/opcommon.c */
+/* File: c/opcommon.cpp */
 /* forward declarations of goto targets */
 GOTO_TARGET_DECL(filledNewArray, bool methodCallRange, bool jumboFormat);
 GOTO_TARGET_DECL(invokeVirtual, bool methodCallRange, bool jumboFormat);
@@ -973,7 +974,7 @@ GOTO_TARGET_DECL(exceptionThrown);
             GOTO_exceptionThrown();                                         \
         }                                                                   \
         SET_REGISTER##_regsize(vdst,                                        \
-            ((_type*) arrayObj->contents)[GET_REGISTER(vsrc2)]);            \
+            ((_type*)(void*)arrayObj->contents)[GET_REGISTER(vsrc2)]);      \
         ILOGV("+ AGET[%d]=0x%x", GET_REGISTER(vsrc2), GET_REGISTER(vdst));  \
     }                                                                       \
     FINISH(2);
@@ -998,7 +999,7 @@ GOTO_TARGET_DECL(exceptionThrown);
             GOTO_exceptionThrown();                                         \
         }                                                                   \
         ILOGV("+ APUT[%d]=0x%08x", GET_REGISTER(vsrc2), GET_REGISTER(vdst));\
-        ((_type*) arrayObj->contents)[GET_REGISTER(vsrc2)] =                \
+        ((_type*)(void*)arrayObj->contents)[GET_REGISTER(vsrc2)] =          \
             GET_REGISTER##_regsize(vdst);                                   \
     }                                                                       \
     FINISH(2);
@@ -1270,23 +1271,1713 @@ GOTO_TARGET_DECL(exceptionThrown);
     }                                                                       \
     FINISH(4);
 
-/* File: c/OP_IGET_WIDE_VOLATILE.c */
+/* File: c/OP_NOP.cpp */
+HANDLE_OPCODE(OP_NOP)
+    FINISH(1);
+OP_END
+
+/* File: c/OP_MOVE.cpp */
+HANDLE_OPCODE(OP_MOVE /*vA, vB*/)
+    vdst = INST_A(inst);
+    vsrc1 = INST_B(inst);
+    ILOGV("|move%s v%d,v%d %s(v%d=0x%08x)",
+        (INST_INST(inst) == OP_MOVE) ? "" : "-object", vdst, vsrc1,
+        kSpacing, vdst, GET_REGISTER(vsrc1));
+    SET_REGISTER(vdst, GET_REGISTER(vsrc1));
+    FINISH(1);
+OP_END
+
+/* File: c/OP_MOVE_FROM16.cpp */
+HANDLE_OPCODE(OP_MOVE_FROM16 /*vAA, vBBBB*/)
+    vdst = INST_AA(inst);
+    vsrc1 = FETCH(1);
+    ILOGV("|move%s/from16 v%d,v%d %s(v%d=0x%08x)",
+        (INST_INST(inst) == OP_MOVE_FROM16) ? "" : "-object", vdst, vsrc1,
+        kSpacing, vdst, GET_REGISTER(vsrc1));
+    SET_REGISTER(vdst, GET_REGISTER(vsrc1));
+    FINISH(2);
+OP_END
+
+/* File: c/OP_MOVE_16.cpp */
+HANDLE_OPCODE(OP_MOVE_16 /*vAAAA, vBBBB*/)
+    vdst = FETCH(1);
+    vsrc1 = FETCH(2);
+    ILOGV("|move%s/16 v%d,v%d %s(v%d=0x%08x)",
+        (INST_INST(inst) == OP_MOVE_16) ? "" : "-object", vdst, vsrc1,
+        kSpacing, vdst, GET_REGISTER(vsrc1));
+    SET_REGISTER(vdst, GET_REGISTER(vsrc1));
+    FINISH(3);
+OP_END
+
+/* File: c/OP_MOVE_WIDE.cpp */
+HANDLE_OPCODE(OP_MOVE_WIDE /*vA, vB*/)
+    /* IMPORTANT: must correctly handle overlapping registers, e.g. both
+     * "move-wide v6, v7" and "move-wide v7, v6" */
+    vdst = INST_A(inst);
+    vsrc1 = INST_B(inst);
+    ILOGV("|move-wide v%d,v%d %s(v%d=0x%08llx)", vdst, vsrc1,
+        kSpacing+5, vdst, GET_REGISTER_WIDE(vsrc1));
+    SET_REGISTER_WIDE(vdst, GET_REGISTER_WIDE(vsrc1));
+    FINISH(1);
+OP_END
+
+/* File: c/OP_MOVE_WIDE_FROM16.cpp */
+HANDLE_OPCODE(OP_MOVE_WIDE_FROM16 /*vAA, vBBBB*/)
+    vdst = INST_AA(inst);
+    vsrc1 = FETCH(1);
+    ILOGV("|move-wide/from16 v%d,v%d  (v%d=0x%08llx)", vdst, vsrc1,
+        vdst, GET_REGISTER_WIDE(vsrc1));
+    SET_REGISTER_WIDE(vdst, GET_REGISTER_WIDE(vsrc1));
+    FINISH(2);
+OP_END
+
+/* File: c/OP_MOVE_WIDE_16.cpp */
+HANDLE_OPCODE(OP_MOVE_WIDE_16 /*vAAAA, vBBBB*/)
+    vdst = FETCH(1);
+    vsrc1 = FETCH(2);
+    ILOGV("|move-wide/16 v%d,v%d %s(v%d=0x%08llx)", vdst, vsrc1,
+        kSpacing+8, vdst, GET_REGISTER_WIDE(vsrc1));
+    SET_REGISTER_WIDE(vdst, GET_REGISTER_WIDE(vsrc1));
+    FINISH(3);
+OP_END
+
+/* File: c/OP_MOVE_OBJECT.cpp */
+/* File: c/OP_MOVE.cpp */
+HANDLE_OPCODE(OP_MOVE_OBJECT /*vA, vB*/)
+    vdst = INST_A(inst);
+    vsrc1 = INST_B(inst);
+    ILOGV("|move%s v%d,v%d %s(v%d=0x%08x)",
+        (INST_INST(inst) == OP_MOVE) ? "" : "-object", vdst, vsrc1,
+        kSpacing, vdst, GET_REGISTER(vsrc1));
+    SET_REGISTER(vdst, GET_REGISTER(vsrc1));
+    FINISH(1);
+OP_END
+
+
+/* File: c/OP_MOVE_OBJECT_FROM16.cpp */
+/* File: c/OP_MOVE_FROM16.cpp */
+HANDLE_OPCODE(OP_MOVE_OBJECT_FROM16 /*vAA, vBBBB*/)
+    vdst = INST_AA(inst);
+    vsrc1 = FETCH(1);
+    ILOGV("|move%s/from16 v%d,v%d %s(v%d=0x%08x)",
+        (INST_INST(inst) == OP_MOVE_FROM16) ? "" : "-object", vdst, vsrc1,
+        kSpacing, vdst, GET_REGISTER(vsrc1));
+    SET_REGISTER(vdst, GET_REGISTER(vsrc1));
+    FINISH(2);
+OP_END
+
+
+/* File: c/OP_MOVE_OBJECT_16.cpp */
+/* File: c/OP_MOVE_16.cpp */
+HANDLE_OPCODE(OP_MOVE_OBJECT_16 /*vAAAA, vBBBB*/)
+    vdst = FETCH(1);
+    vsrc1 = FETCH(2);
+    ILOGV("|move%s/16 v%d,v%d %s(v%d=0x%08x)",
+        (INST_INST(inst) == OP_MOVE_16) ? "" : "-object", vdst, vsrc1,
+        kSpacing, vdst, GET_REGISTER(vsrc1));
+    SET_REGISTER(vdst, GET_REGISTER(vsrc1));
+    FINISH(3);
+OP_END
+
+
+/* File: c/OP_MOVE_RESULT.cpp */
+HANDLE_OPCODE(OP_MOVE_RESULT /*vAA*/)
+    vdst = INST_AA(inst);
+    ILOGV("|move-result%s v%d %s(v%d=0x%08x)",
+         (INST_INST(inst) == OP_MOVE_RESULT) ? "" : "-object",
+         vdst, kSpacing+4, vdst,retval.i);
+    SET_REGISTER(vdst, retval.i);
+    FINISH(1);
+OP_END
+
+/* File: c/OP_MOVE_RESULT_WIDE.cpp */
+HANDLE_OPCODE(OP_MOVE_RESULT_WIDE /*vAA*/)
+    vdst = INST_AA(inst);
+    ILOGV("|move-result-wide v%d %s(0x%08llx)", vdst, kSpacing, retval.j);
+    SET_REGISTER_WIDE(vdst, retval.j);
+    FINISH(1);
+OP_END
+
+/* File: c/OP_MOVE_RESULT_OBJECT.cpp */
+/* File: c/OP_MOVE_RESULT.cpp */
+HANDLE_OPCODE(OP_MOVE_RESULT_OBJECT /*vAA*/)
+    vdst = INST_AA(inst);
+    ILOGV("|move-result%s v%d %s(v%d=0x%08x)",
+         (INST_INST(inst) == OP_MOVE_RESULT) ? "" : "-object",
+         vdst, kSpacing+4, vdst,retval.i);
+    SET_REGISTER(vdst, retval.i);
+    FINISH(1);
+OP_END
+
+
+/* File: c/OP_MOVE_EXCEPTION.cpp */
+HANDLE_OPCODE(OP_MOVE_EXCEPTION /*vAA*/)
+    vdst = INST_AA(inst);
+    ILOGV("|move-exception v%d", vdst);
+    assert(self->exception != NULL);
+    SET_REGISTER(vdst, (u4)self->exception);
+    dvmClearException(self);
+    FINISH(1);
+OP_END
+
+/* File: c/OP_RETURN_VOID.cpp */
+HANDLE_OPCODE(OP_RETURN_VOID /**/)
+    ILOGV("|return-void");
+#ifndef NDEBUG
+    retval.j = 0xababababULL;    // placate valgrind
+#endif
+    GOTO_returnFromMethod();
+OP_END
+
+/* File: c/OP_RETURN.cpp */
+HANDLE_OPCODE(OP_RETURN /*vAA*/)
+    vsrc1 = INST_AA(inst);
+    ILOGV("|return%s v%d",
+        (INST_INST(inst) == OP_RETURN) ? "" : "-object", vsrc1);
+    retval.i = GET_REGISTER(vsrc1);
+    GOTO_returnFromMethod();
+OP_END
+
+/* File: c/OP_RETURN_WIDE.cpp */
+HANDLE_OPCODE(OP_RETURN_WIDE /*vAA*/)
+    vsrc1 = INST_AA(inst);
+    ILOGV("|return-wide v%d", vsrc1);
+    retval.j = GET_REGISTER_WIDE(vsrc1);
+    GOTO_returnFromMethod();
+OP_END
+
+/* File: c/OP_RETURN_OBJECT.cpp */
+/* File: c/OP_RETURN.cpp */
+HANDLE_OPCODE(OP_RETURN_OBJECT /*vAA*/)
+    vsrc1 = INST_AA(inst);
+    ILOGV("|return%s v%d",
+        (INST_INST(inst) == OP_RETURN) ? "" : "-object", vsrc1);
+    retval.i = GET_REGISTER(vsrc1);
+    GOTO_returnFromMethod();
+OP_END
+
+
+/* File: c/OP_CONST_4.cpp */
+HANDLE_OPCODE(OP_CONST_4 /*vA, #+B*/)
+    {
+        s4 tmp;
+
+        vdst = INST_A(inst);
+        tmp = (s4) (INST_B(inst) << 28) >> 28;  // sign extend 4-bit value
+        ILOGV("|const/4 v%d,#0x%02x", vdst, (s4)tmp);
+        SET_REGISTER(vdst, tmp);
+    }
+    FINISH(1);
+OP_END
+
+/* File: c/OP_CONST_16.cpp */
+HANDLE_OPCODE(OP_CONST_16 /*vAA, #+BBBB*/)
+    vdst = INST_AA(inst);
+    vsrc1 = FETCH(1);
+    ILOGV("|const/16 v%d,#0x%04x", vdst, (s2)vsrc1);
+    SET_REGISTER(vdst, (s2) vsrc1);
+    FINISH(2);
+OP_END
+
+/* File: c/OP_CONST.cpp */
+HANDLE_OPCODE(OP_CONST /*vAA, #+BBBBBBBB*/)
+    {
+        u4 tmp;
+
+        vdst = INST_AA(inst);
+        tmp = FETCH(1);
+        tmp |= (u4)FETCH(2) << 16;
+        ILOGV("|const v%d,#0x%08x", vdst, tmp);
+        SET_REGISTER(vdst, tmp);
+    }
+    FINISH(3);
+OP_END
+
+/* File: c/OP_CONST_HIGH16.cpp */
+HANDLE_OPCODE(OP_CONST_HIGH16 /*vAA, #+BBBB0000*/)
+    vdst = INST_AA(inst);
+    vsrc1 = FETCH(1);
+    ILOGV("|const/high16 v%d,#0x%04x0000", vdst, vsrc1);
+    SET_REGISTER(vdst, vsrc1 << 16);
+    FINISH(2);
+OP_END
+
+/* File: c/OP_CONST_WIDE_16.cpp */
+HANDLE_OPCODE(OP_CONST_WIDE_16 /*vAA, #+BBBB*/)
+    vdst = INST_AA(inst);
+    vsrc1 = FETCH(1);
+    ILOGV("|const-wide/16 v%d,#0x%04x", vdst, (s2)vsrc1);
+    SET_REGISTER_WIDE(vdst, (s2)vsrc1);
+    FINISH(2);
+OP_END
+
+/* File: c/OP_CONST_WIDE_32.cpp */
+HANDLE_OPCODE(OP_CONST_WIDE_32 /*vAA, #+BBBBBBBB*/)
+    {
+        u4 tmp;
+
+        vdst = INST_AA(inst);
+        tmp = FETCH(1);
+        tmp |= (u4)FETCH(2) << 16;
+        ILOGV("|const-wide/32 v%d,#0x%08x", vdst, tmp);
+        SET_REGISTER_WIDE(vdst, (s4) tmp);
+    }
+    FINISH(3);
+OP_END
+
+/* File: c/OP_CONST_WIDE.cpp */
+HANDLE_OPCODE(OP_CONST_WIDE /*vAA, #+BBBBBBBBBBBBBBBB*/)
+    {
+        u8 tmp;
+
+        vdst = INST_AA(inst);
+        tmp = FETCH(1);
+        tmp |= (u8)FETCH(2) << 16;
+        tmp |= (u8)FETCH(3) << 32;
+        tmp |= (u8)FETCH(4) << 48;
+        ILOGV("|const-wide v%d,#0x%08llx", vdst, tmp);
+        SET_REGISTER_WIDE(vdst, tmp);
+    }
+    FINISH(5);
+OP_END
+
+/* File: c/OP_CONST_WIDE_HIGH16.cpp */
+HANDLE_OPCODE(OP_CONST_WIDE_HIGH16 /*vAA, #+BBBB000000000000*/)
+    vdst = INST_AA(inst);
+    vsrc1 = FETCH(1);
+    ILOGV("|const-wide/high16 v%d,#0x%04x000000000000", vdst, vsrc1);
+    SET_REGISTER_WIDE(vdst, ((u8) vsrc1) << 48);
+    FINISH(2);
+OP_END
+
+/* File: c/OP_CONST_STRING.cpp */
+HANDLE_OPCODE(OP_CONST_STRING /*vAA, string@BBBB*/)
+    {
+        StringObject* strObj;
+
+        vdst = INST_AA(inst);
+        ref = FETCH(1);
+        ILOGV("|const-string v%d string@0x%04x", vdst, ref);
+        strObj = dvmDexGetResolvedString(methodClassDex, ref);
+        if (strObj == NULL) {
+            EXPORT_PC();
+            strObj = dvmResolveString(curMethod->clazz, ref);
+            if (strObj == NULL)
+                GOTO_exceptionThrown();
+        }
+        SET_REGISTER(vdst, (u4) strObj);
+    }
+    FINISH(2);
+OP_END
+
+/* File: c/OP_CONST_STRING_JUMBO.cpp */
+HANDLE_OPCODE(OP_CONST_STRING_JUMBO /*vAA, string@BBBBBBBB*/)
+    {
+        StringObject* strObj;
+        u4 tmp;
+
+        vdst = INST_AA(inst);
+        tmp = FETCH(1);
+        tmp |= (u4)FETCH(2) << 16;
+        ILOGV("|const-string/jumbo v%d string@0x%08x", vdst, tmp);
+        strObj = dvmDexGetResolvedString(methodClassDex, tmp);
+        if (strObj == NULL) {
+            EXPORT_PC();
+            strObj = dvmResolveString(curMethod->clazz, tmp);
+            if (strObj == NULL)
+                GOTO_exceptionThrown();
+        }
+        SET_REGISTER(vdst, (u4) strObj);
+    }
+    FINISH(3);
+OP_END
+
+/* File: c/OP_CONST_CLASS.cpp */
+HANDLE_OPCODE(OP_CONST_CLASS /*vAA, class@BBBB*/)
+    {
+        ClassObject* clazz;
+
+        vdst = INST_AA(inst);
+        ref = FETCH(1);
+        ILOGV("|const-class v%d class@0x%04x", vdst, ref);
+        clazz = dvmDexGetResolvedClass(methodClassDex, ref);
+        if (clazz == NULL) {
+            EXPORT_PC();
+            clazz = dvmResolveClass(curMethod->clazz, ref, true);
+            if (clazz == NULL)
+                GOTO_exceptionThrown();
+        }
+        SET_REGISTER(vdst, (u4) clazz);
+    }
+    FINISH(2);
+OP_END
+
+/* File: c/OP_MONITOR_ENTER.cpp */
+HANDLE_OPCODE(OP_MONITOR_ENTER /*vAA*/)
+    {
+        Object* obj;
+
+        vsrc1 = INST_AA(inst);
+        ILOGV("|monitor-enter v%d %s(0x%08x)",
+            vsrc1, kSpacing+6, GET_REGISTER(vsrc1));
+        obj = (Object*)GET_REGISTER(vsrc1);
+        if (!checkForNullExportPC(obj, fp, pc))
+            GOTO_exceptionThrown();
+        ILOGV("+ locking %p %s\n", obj, obj->clazz->descriptor);
+        EXPORT_PC();    /* need for precise GC */
+        dvmLockObject(self, obj);
+    }
+    FINISH(1);
+OP_END
+
+/* File: c/OP_MONITOR_EXIT.cpp */
+HANDLE_OPCODE(OP_MONITOR_EXIT /*vAA*/)
+    {
+        Object* obj;
+
+        EXPORT_PC();
+
+        vsrc1 = INST_AA(inst);
+        ILOGV("|monitor-exit v%d %s(0x%08x)",
+            vsrc1, kSpacing+5, GET_REGISTER(vsrc1));
+        obj = (Object*)GET_REGISTER(vsrc1);
+        if (!checkForNull(obj)) {
+            /*
+             * The exception needs to be processed at the *following*
+             * instruction, not the current instruction (see the Dalvik
+             * spec).  Because we're jumping to an exception handler,
+             * we're not actually at risk of skipping an instruction
+             * by doing so.
+             */
+            ADJUST_PC(1);           /* monitor-exit width is 1 */
+            GOTO_exceptionThrown();
+        }
+        ILOGV("+ unlocking %p %s\n", obj, obj->clazz->descriptor);
+        if (!dvmUnlockObject(self, obj)) {
+            assert(dvmCheckException(self));
+            ADJUST_PC(1);
+            GOTO_exceptionThrown();
+        }
+    }
+    FINISH(1);
+OP_END
+
+/* File: c/OP_CHECK_CAST.cpp */
+HANDLE_OPCODE(OP_CHECK_CAST /*vAA, class@BBBB*/)
+    {
+        ClassObject* clazz;
+        Object* obj;
+
+        EXPORT_PC();
+
+        vsrc1 = INST_AA(inst);
+        ref = FETCH(1);         /* class to check against */
+        ILOGV("|check-cast v%d,class@0x%04x", vsrc1, ref);
+
+        obj = (Object*)GET_REGISTER(vsrc1);
+        if (obj != NULL) {
+#if defined(WITH_EXTRA_OBJECT_VALIDATION)
+            if (!checkForNull(obj))
+                GOTO_exceptionThrown();
+#endif
+            clazz = dvmDexGetResolvedClass(methodClassDex, ref);
+            if (clazz == NULL) {
+                clazz = dvmResolveClass(curMethod->clazz, ref, false);
+                if (clazz == NULL)
+                    GOTO_exceptionThrown();
+            }
+            if (!dvmInstanceof(obj->clazz, clazz)) {
+                dvmThrowClassCastException(obj->clazz, clazz);
+                GOTO_exceptionThrown();
+            }
+        }
+    }
+    FINISH(2);
+OP_END
+
+/* File: c/OP_INSTANCE_OF.cpp */
+HANDLE_OPCODE(OP_INSTANCE_OF /*vA, vB, class@CCCC*/)
+    {
+        ClassObject* clazz;
+        Object* obj;
+
+        vdst = INST_A(inst);
+        vsrc1 = INST_B(inst);   /* object to check */
+        ref = FETCH(1);         /* class to check against */
+        ILOGV("|instance-of v%d,v%d,class@0x%04x", vdst, vsrc1, ref);
+
+        obj = (Object*)GET_REGISTER(vsrc1);
+        if (obj == NULL) {
+            SET_REGISTER(vdst, 0);
+        } else {
+#if defined(WITH_EXTRA_OBJECT_VALIDATION)
+            if (!checkForNullExportPC(obj, fp, pc))
+                GOTO_exceptionThrown();
+#endif
+            clazz = dvmDexGetResolvedClass(methodClassDex, ref);
+            if (clazz == NULL) {
+                EXPORT_PC();
+                clazz = dvmResolveClass(curMethod->clazz, ref, true);
+                if (clazz == NULL)
+                    GOTO_exceptionThrown();
+            }
+            SET_REGISTER(vdst, dvmInstanceof(obj->clazz, clazz));
+        }
+    }
+    FINISH(2);
+OP_END
+
+/* File: c/OP_ARRAY_LENGTH.cpp */
+HANDLE_OPCODE(OP_ARRAY_LENGTH /*vA, vB*/)
+    {
+        ArrayObject* arrayObj;
+
+        vdst = INST_A(inst);
+        vsrc1 = INST_B(inst);
+        arrayObj = (ArrayObject*) GET_REGISTER(vsrc1);
+        ILOGV("|array-length v%d,v%d  (%p)", vdst, vsrc1, arrayObj);
+        if (!checkForNullExportPC((Object*) arrayObj, fp, pc))
+            GOTO_exceptionThrown();
+        /* verifier guarantees this is an array reference */
+        SET_REGISTER(vdst, arrayObj->length);
+    }
+    FINISH(1);
+OP_END
+
+/* File: c/OP_NEW_INSTANCE.cpp */
+HANDLE_OPCODE(OP_NEW_INSTANCE /*vAA, class@BBBB*/)
+    {
+        ClassObject* clazz;
+        Object* newObj;
+
+        EXPORT_PC();
+
+        vdst = INST_AA(inst);
+        ref = FETCH(1);
+        ILOGV("|new-instance v%d,class@0x%04x", vdst, ref);
+        clazz = dvmDexGetResolvedClass(methodClassDex, ref);
+        if (clazz == NULL) {
+            clazz = dvmResolveClass(curMethod->clazz, ref, false);
+            if (clazz == NULL)
+                GOTO_exceptionThrown();
+        }
+
+        if (!dvmIsClassInitialized(clazz) && !dvmInitClass(clazz))
+            GOTO_exceptionThrown();
+
+#if defined(WITH_JIT)
+        /*
+         * The JIT needs dvmDexGetResolvedClass() to return non-null.
+         * Since we use the portable interpreter to build the trace, this extra
+         * check is not needed for mterp.
+         */
+        if ((self->interpBreak.ctl.subMode & kSubModeJitTraceBuild) &&
+            (!dvmDexGetResolvedClass(methodClassDex, ref))) {
+            /* Class initialization is still ongoing - end the trace */
+            dvmJitEndTraceSelect(self,pc);
+        }
+#endif
+
+        /*
+         * Verifier now tests for interface/abstract class.
+         */
+        //if (dvmIsInterfaceClass(clazz) || dvmIsAbstractClass(clazz)) {
+        //    dvmThrowExceptionWithClassMessage(gDvm.exInstantiationError,
+        //        clazz->descriptor);
+        //    GOTO_exceptionThrown();
+        //}
+        newObj = dvmAllocObject(clazz, ALLOC_DONT_TRACK);
+        if (newObj == NULL)
+            GOTO_exceptionThrown();
+        SET_REGISTER(vdst, (u4) newObj);
+    }
+    FINISH(2);
+OP_END
+
+/* File: c/OP_NEW_ARRAY.cpp */
+HANDLE_OPCODE(OP_NEW_ARRAY /*vA, vB, class@CCCC*/)
+    {
+        ClassObject* arrayClass;
+        ArrayObject* newArray;
+        s4 length;
+
+        EXPORT_PC();
+
+        vdst = INST_A(inst);
+        vsrc1 = INST_B(inst);       /* length reg */
+        ref = FETCH(1);
+        ILOGV("|new-array v%d,v%d,class@0x%04x  (%d elements)",
+            vdst, vsrc1, ref, (s4) GET_REGISTER(vsrc1));
+        length = (s4) GET_REGISTER(vsrc1);
+        if (length < 0) {
+            dvmThrowNegativeArraySizeException(length);
+            GOTO_exceptionThrown();
+        }
+        arrayClass = dvmDexGetResolvedClass(methodClassDex, ref);
+        if (arrayClass == NULL) {
+            arrayClass = dvmResolveClass(curMethod->clazz, ref, false);
+            if (arrayClass == NULL)
+                GOTO_exceptionThrown();
+        }
+        /* verifier guarantees this is an array class */
+        assert(dvmIsArrayClass(arrayClass));
+        assert(dvmIsClassInitialized(arrayClass));
+
+        newArray = dvmAllocArrayByClass(arrayClass, length, ALLOC_DONT_TRACK);
+        if (newArray == NULL)
+            GOTO_exceptionThrown();
+        SET_REGISTER(vdst, (u4) newArray);
+    }
+    FINISH(2);
+OP_END
+
+/* File: c/OP_FILLED_NEW_ARRAY.cpp */
+HANDLE_OPCODE(OP_FILLED_NEW_ARRAY /*vB, {vD, vE, vF, vG, vA}, class@CCCC*/)
+    GOTO_invoke(filledNewArray, false, false);
+OP_END
+
+/* File: c/OP_FILLED_NEW_ARRAY_RANGE.cpp */
+HANDLE_OPCODE(OP_FILLED_NEW_ARRAY_RANGE /*{vCCCC..v(CCCC+AA-1)}, class@BBBB*/)
+    GOTO_invoke(filledNewArray, true, false);
+OP_END
+
+/* File: c/OP_FILL_ARRAY_DATA.cpp */
+HANDLE_OPCODE(OP_FILL_ARRAY_DATA)   /*vAA, +BBBBBBBB*/
+    {
+        const u2* arrayData;
+        s4 offset;
+        ArrayObject* arrayObj;
+
+        EXPORT_PC();
+        vsrc1 = INST_AA(inst);
+        offset = FETCH(1) | (((s4) FETCH(2)) << 16);
+        ILOGV("|fill-array-data v%d +0x%04x", vsrc1, offset);
+        arrayData = pc + offset;       // offset in 16-bit units
+#ifndef NDEBUG
+        if (arrayData < curMethod->insns ||
+            arrayData >= curMethod->insns + dvmGetMethodInsnsSize(curMethod))
+        {
+            /* should have been caught in verifier */
+            dvmThrowInternalError("bad fill array data");
+            GOTO_exceptionThrown();
+        }
+#endif
+        arrayObj = (ArrayObject*) GET_REGISTER(vsrc1);
+        if (!dvmInterpHandleFillArrayData(arrayObj, arrayData)) {
+            GOTO_exceptionThrown();
+        }
+        FINISH(3);
+    }
+OP_END
+
+/* File: c/OP_THROW.cpp */
+HANDLE_OPCODE(OP_THROW /*vAA*/)
+    {
+        Object* obj;
+
+        /*
+         * We don't create an exception here, but the process of searching
+         * for a catch block can do class lookups and throw exceptions.
+         * We need to update the saved PC.
+         */
+        EXPORT_PC();
+
+        vsrc1 = INST_AA(inst);
+        ILOGV("|throw v%d  (%p)", vsrc1, (void*)GET_REGISTER(vsrc1));
+        obj = (Object*) GET_REGISTER(vsrc1);
+        if (!checkForNull(obj)) {
+            /* will throw a null pointer exception */
+            LOGVV("Bad exception\n");
+        } else {
+            /* use the requested exception */
+            dvmSetException(self, obj);
+        }
+        GOTO_exceptionThrown();
+    }
+OP_END
+
+/* File: c/OP_GOTO.cpp */
+HANDLE_OPCODE(OP_GOTO /*+AA*/)
+    vdst = INST_AA(inst);
+    if ((s1)vdst < 0)
+        ILOGV("|goto -0x%02x", -((s1)vdst));
+    else
+        ILOGV("|goto +0x%02x", ((s1)vdst));
+    ILOGV("> branch taken");
+    if ((s1)vdst < 0)
+        PERIODIC_CHECKS((s1)vdst);
+    FINISH((s1)vdst);
+OP_END
+
+/* File: c/OP_GOTO_16.cpp */
+HANDLE_OPCODE(OP_GOTO_16 /*+AAAA*/)
+    {
+        s4 offset = (s2) FETCH(1);          /* sign-extend next code unit */
+
+        if (offset < 0)
+            ILOGV("|goto/16 -0x%04x", -offset);
+        else
+            ILOGV("|goto/16 +0x%04x", offset);
+        ILOGV("> branch taken");
+        if (offset < 0)
+            PERIODIC_CHECKS(offset);
+        FINISH(offset);
+    }
+OP_END
+
+/* File: c/OP_GOTO_32.cpp */
+HANDLE_OPCODE(OP_GOTO_32 /*+AAAAAAAA*/)
+    {
+        s4 offset = FETCH(1);               /* low-order 16 bits */
+        offset |= ((s4) FETCH(2)) << 16;    /* high-order 16 bits */
+
+        if (offset < 0)
+            ILOGV("|goto/32 -0x%08x", -offset);
+        else
+            ILOGV("|goto/32 +0x%08x", offset);
+        ILOGV("> branch taken");
+        if (offset <= 0)    /* allowed to branch to self */
+            PERIODIC_CHECKS(offset);
+        FINISH(offset);
+    }
+OP_END
+
+/* File: c/OP_PACKED_SWITCH.cpp */
+HANDLE_OPCODE(OP_PACKED_SWITCH /*vAA, +BBBB*/)
+    {
+        const u2* switchData;
+        u4 testVal;
+        s4 offset;
+
+        vsrc1 = INST_AA(inst);
+        offset = FETCH(1) | (((s4) FETCH(2)) << 16);
+        ILOGV("|packed-switch v%d +0x%04x", vsrc1, vsrc2);
+        switchData = pc + offset;       // offset in 16-bit units
+#ifndef NDEBUG
+        if (switchData < curMethod->insns ||
+            switchData >= curMethod->insns + dvmGetMethodInsnsSize(curMethod))
+        {
+            /* should have been caught in verifier */
+            EXPORT_PC();
+            dvmThrowInternalError("bad packed switch");
+            GOTO_exceptionThrown();
+        }
+#endif
+        testVal = GET_REGISTER(vsrc1);
+
+        offset = dvmInterpHandlePackedSwitch(switchData, testVal);
+        ILOGV("> branch taken (0x%04x)\n", offset);
+        if (offset <= 0)  /* uncommon */
+            PERIODIC_CHECKS(offset);
+        FINISH(offset);
+    }
+OP_END
+
+/* File: c/OP_SPARSE_SWITCH.cpp */
+HANDLE_OPCODE(OP_SPARSE_SWITCH /*vAA, +BBBB*/)
+    {
+        const u2* switchData;
+        u4 testVal;
+        s4 offset;
+
+        vsrc1 = INST_AA(inst);
+        offset = FETCH(1) | (((s4) FETCH(2)) << 16);
+        ILOGV("|sparse-switch v%d +0x%04x", vsrc1, vsrc2);
+        switchData = pc + offset;       // offset in 16-bit units
+#ifndef NDEBUG
+        if (switchData < curMethod->insns ||
+            switchData >= curMethod->insns + dvmGetMethodInsnsSize(curMethod))
+        {
+            /* should have been caught in verifier */
+            EXPORT_PC();
+            dvmThrowInternalError("bad sparse switch");
+            GOTO_exceptionThrown();
+        }
+#endif
+        testVal = GET_REGISTER(vsrc1);
+
+        offset = dvmInterpHandleSparseSwitch(switchData, testVal);
+        ILOGV("> branch taken (0x%04x)\n", offset);
+        if (offset <= 0)  /* uncommon */
+            PERIODIC_CHECKS(offset);
+        FINISH(offset);
+    }
+OP_END
+
+/* File: c/OP_CMPL_FLOAT.cpp */
+HANDLE_OP_CMPX(OP_CMPL_FLOAT, "l-float", float, _FLOAT, -1)
+OP_END
+
+/* File: c/OP_CMPG_FLOAT.cpp */
+HANDLE_OP_CMPX(OP_CMPG_FLOAT, "g-float", float, _FLOAT, 1)
+OP_END
+
+/* File: c/OP_CMPL_DOUBLE.cpp */
+HANDLE_OP_CMPX(OP_CMPL_DOUBLE, "l-double", double, _DOUBLE, -1)
+OP_END
+
+/* File: c/OP_CMPG_DOUBLE.cpp */
+HANDLE_OP_CMPX(OP_CMPG_DOUBLE, "g-double", double, _DOUBLE, 1)
+OP_END
+
+/* File: c/OP_CMP_LONG.cpp */
+HANDLE_OP_CMPX(OP_CMP_LONG, "-long", s8, _WIDE, 0)
+OP_END
+
+/* File: c/OP_IF_EQ.cpp */
+HANDLE_OP_IF_XX(OP_IF_EQ, "eq", ==)
+OP_END
+
+/* File: c/OP_IF_NE.cpp */
+HANDLE_OP_IF_XX(OP_IF_NE, "ne", !=)
+OP_END
+
+/* File: c/OP_IF_LT.cpp */
+HANDLE_OP_IF_XX(OP_IF_LT, "lt", <)
+OP_END
+
+/* File: c/OP_IF_GE.cpp */
+HANDLE_OP_IF_XX(OP_IF_GE, "ge", >=)
+OP_END
+
+/* File: c/OP_IF_GT.cpp */
+HANDLE_OP_IF_XX(OP_IF_GT, "gt", >)
+OP_END
+
+/* File: c/OP_IF_LE.cpp */
+HANDLE_OP_IF_XX(OP_IF_LE, "le", <=)
+OP_END
+
+/* File: c/OP_IF_EQZ.cpp */
+HANDLE_OP_IF_XXZ(OP_IF_EQZ, "eqz", ==)
+OP_END
+
+/* File: c/OP_IF_NEZ.cpp */
+HANDLE_OP_IF_XXZ(OP_IF_NEZ, "nez", !=)
+OP_END
+
+/* File: c/OP_IF_LTZ.cpp */
+HANDLE_OP_IF_XXZ(OP_IF_LTZ, "ltz", <)
+OP_END
+
+/* File: c/OP_IF_GEZ.cpp */
+HANDLE_OP_IF_XXZ(OP_IF_GEZ, "gez", >=)
+OP_END
+
+/* File: c/OP_IF_GTZ.cpp */
+HANDLE_OP_IF_XXZ(OP_IF_GTZ, "gtz", >)
+OP_END
+
+/* File: c/OP_IF_LEZ.cpp */
+HANDLE_OP_IF_XXZ(OP_IF_LEZ, "lez", <=)
+OP_END
+
+/* File: c/OP_UNUSED_3E.cpp */
+HANDLE_OPCODE(OP_UNUSED_3E)
+OP_END
+
+/* File: c/OP_UNUSED_3F.cpp */
+HANDLE_OPCODE(OP_UNUSED_3F)
+OP_END
+
+/* File: c/OP_UNUSED_40.cpp */
+HANDLE_OPCODE(OP_UNUSED_40)
+OP_END
+
+/* File: c/OP_UNUSED_41.cpp */
+HANDLE_OPCODE(OP_UNUSED_41)
+OP_END
+
+/* File: c/OP_UNUSED_42.cpp */
+HANDLE_OPCODE(OP_UNUSED_42)
+OP_END
+
+/* File: c/OP_UNUSED_43.cpp */
+HANDLE_OPCODE(OP_UNUSED_43)
+OP_END
+
+/* File: c/OP_AGET.cpp */
+HANDLE_OP_AGET(OP_AGET, "", u4, )
+OP_END
+
+/* File: c/OP_AGET_WIDE.cpp */
+HANDLE_OP_AGET(OP_AGET_WIDE, "-wide", s8, _WIDE)
+OP_END
+
+/* File: c/OP_AGET_OBJECT.cpp */
+HANDLE_OP_AGET(OP_AGET_OBJECT, "-object", u4, )
+OP_END
+
+/* File: c/OP_AGET_BOOLEAN.cpp */
+HANDLE_OP_AGET(OP_AGET_BOOLEAN, "-boolean", u1, )
+OP_END
+
+/* File: c/OP_AGET_BYTE.cpp */
+HANDLE_OP_AGET(OP_AGET_BYTE, "-byte", s1, )
+OP_END
+
+/* File: c/OP_AGET_CHAR.cpp */
+HANDLE_OP_AGET(OP_AGET_CHAR, "-char", u2, )
+OP_END
+
+/* File: c/OP_AGET_SHORT.cpp */
+HANDLE_OP_AGET(OP_AGET_SHORT, "-short", s2, )
+OP_END
+
+/* File: c/OP_APUT.cpp */
+HANDLE_OP_APUT(OP_APUT, "", u4, )
+OP_END
+
+/* File: c/OP_APUT_WIDE.cpp */
+HANDLE_OP_APUT(OP_APUT_WIDE, "-wide", s8, _WIDE)
+OP_END
+
+/* File: c/OP_APUT_OBJECT.cpp */
+HANDLE_OPCODE(OP_APUT_OBJECT /*vAA, vBB, vCC*/)
+    {
+        ArrayObject* arrayObj;
+        Object* obj;
+        u2 arrayInfo;
+        EXPORT_PC();
+        vdst = INST_AA(inst);       /* AA: source value */
+        arrayInfo = FETCH(1);
+        vsrc1 = arrayInfo & 0xff;   /* BB: array ptr */
+        vsrc2 = arrayInfo >> 8;     /* CC: index */
+        ILOGV("|aput%s v%d,v%d,v%d", "-object", vdst, vsrc1, vsrc2);
+        arrayObj = (ArrayObject*) GET_REGISTER(vsrc1);
+        if (!checkForNull((Object*) arrayObj))
+            GOTO_exceptionThrown();
+        if (GET_REGISTER(vsrc2) >= arrayObj->length) {
+            dvmThrowArrayIndexOutOfBoundsException(
+                arrayObj->length, GET_REGISTER(vsrc2));
+            GOTO_exceptionThrown();
+        }
+        obj = (Object*) GET_REGISTER(vdst);
+        if (obj != NULL) {
+            if (!checkForNull(obj))
+                GOTO_exceptionThrown();
+            if (!dvmCanPutArrayElement(obj->clazz, arrayObj->obj.clazz)) {
+                LOGV("Can't put a '%s'(%p) into array type='%s'(%p)\n",
+                    obj->clazz->descriptor, obj,
+                    arrayObj->obj.clazz->descriptor, arrayObj);
+                dvmThrowArrayStoreExceptionIncompatibleElement(obj->clazz, arrayObj->obj.clazz);
+                GOTO_exceptionThrown();
+            }
+        }
+        ILOGV("+ APUT[%d]=0x%08x", GET_REGISTER(vsrc2), GET_REGISTER(vdst));
+        dvmSetObjectArrayElement(arrayObj,
+                                 GET_REGISTER(vsrc2),
+                                 (Object *)GET_REGISTER(vdst));
+    }
+    FINISH(2);
+OP_END
+
+/* File: c/OP_APUT_BOOLEAN.cpp */
+HANDLE_OP_APUT(OP_APUT_BOOLEAN, "-boolean", u1, )
+OP_END
+
+/* File: c/OP_APUT_BYTE.cpp */
+HANDLE_OP_APUT(OP_APUT_BYTE, "-byte", s1, )
+OP_END
+
+/* File: c/OP_APUT_CHAR.cpp */
+HANDLE_OP_APUT(OP_APUT_CHAR, "-char", u2, )
+OP_END
+
+/* File: c/OP_APUT_SHORT.cpp */
+HANDLE_OP_APUT(OP_APUT_SHORT, "-short", s2, )
+OP_END
+
+/* File: c/OP_IGET.cpp */
+HANDLE_IGET_X(OP_IGET,                  "", Int, )
+OP_END
+
+/* File: c/OP_IGET_WIDE.cpp */
+HANDLE_IGET_X(OP_IGET_WIDE,             "-wide", Long, _WIDE)
+OP_END
+
+/* File: c/OP_IGET_OBJECT.cpp */
+HANDLE_IGET_X(OP_IGET_OBJECT,           "-object", Object, _AS_OBJECT)
+OP_END
+
+/* File: c/OP_IGET_BOOLEAN.cpp */
+HANDLE_IGET_X(OP_IGET_BOOLEAN,          "", Int, )
+OP_END
+
+/* File: c/OP_IGET_BYTE.cpp */
+HANDLE_IGET_X(OP_IGET_BYTE,             "", Int, )
+OP_END
+
+/* File: c/OP_IGET_CHAR.cpp */
+HANDLE_IGET_X(OP_IGET_CHAR,             "", Int, )
+OP_END
+
+/* File: c/OP_IGET_SHORT.cpp */
+HANDLE_IGET_X(OP_IGET_SHORT,            "", Int, )
+OP_END
+
+/* File: c/OP_IPUT.cpp */
+HANDLE_IPUT_X(OP_IPUT,                  "", Int, )
+OP_END
+
+/* File: c/OP_IPUT_WIDE.cpp */
+HANDLE_IPUT_X(OP_IPUT_WIDE,             "-wide", Long, _WIDE)
+OP_END
+
+/* File: c/OP_IPUT_OBJECT.cpp */
+/*
+ * The VM spec says we should verify that the reference being stored into
+ * the field is assignment compatible.  In practice, many popular VMs don't
+ * do this because it slows down a very common operation.  It's not so bad
+ * for us, since "dexopt" quickens it whenever possible, but it's still an
+ * issue.
+ *
+ * To make this spec-complaint, we'd need to add a ClassObject pointer to
+ * the Field struct, resolve the field's type descriptor at link or class
+ * init time, and then verify the type here.
+ */
+HANDLE_IPUT_X(OP_IPUT_OBJECT,           "-object", Object, _AS_OBJECT)
+OP_END
+
+/* File: c/OP_IPUT_BOOLEAN.cpp */
+HANDLE_IPUT_X(OP_IPUT_BOOLEAN,          "", Int, )
+OP_END
+
+/* File: c/OP_IPUT_BYTE.cpp */
+HANDLE_IPUT_X(OP_IPUT_BYTE,             "", Int, )
+OP_END
+
+/* File: c/OP_IPUT_CHAR.cpp */
+HANDLE_IPUT_X(OP_IPUT_CHAR,             "", Int, )
+OP_END
+
+/* File: c/OP_IPUT_SHORT.cpp */
+HANDLE_IPUT_X(OP_IPUT_SHORT,            "", Int, )
+OP_END
+
+/* File: c/OP_SGET.cpp */
+HANDLE_SGET_X(OP_SGET,                  "", Int, )
+OP_END
+
+/* File: c/OP_SGET_WIDE.cpp */
+HANDLE_SGET_X(OP_SGET_WIDE,             "-wide", Long, _WIDE)
+OP_END
+
+/* File: c/OP_SGET_OBJECT.cpp */
+HANDLE_SGET_X(OP_SGET_OBJECT,           "-object", Object, _AS_OBJECT)
+OP_END
+
+/* File: c/OP_SGET_BOOLEAN.cpp */
+HANDLE_SGET_X(OP_SGET_BOOLEAN,          "", Int, )
+OP_END
+
+/* File: c/OP_SGET_BYTE.cpp */
+HANDLE_SGET_X(OP_SGET_BYTE,             "", Int, )
+OP_END
+
+/* File: c/OP_SGET_CHAR.cpp */
+HANDLE_SGET_X(OP_SGET_CHAR,             "", Int, )
+OP_END
+
+/* File: c/OP_SGET_SHORT.cpp */
+HANDLE_SGET_X(OP_SGET_SHORT,            "", Int, )
+OP_END
+
+/* File: c/OP_SPUT.cpp */
+HANDLE_SPUT_X(OP_SPUT,                  "", Int, )
+OP_END
+
+/* File: c/OP_SPUT_WIDE.cpp */
+HANDLE_SPUT_X(OP_SPUT_WIDE,             "-wide", Long, _WIDE)
+OP_END
+
+/* File: c/OP_SPUT_OBJECT.cpp */
+HANDLE_SPUT_X(OP_SPUT_OBJECT,           "-object", Object, _AS_OBJECT)
+OP_END
+
+/* File: c/OP_SPUT_BOOLEAN.cpp */
+HANDLE_SPUT_X(OP_SPUT_BOOLEAN,          "", Int, )
+OP_END
+
+/* File: c/OP_SPUT_BYTE.cpp */
+HANDLE_SPUT_X(OP_SPUT_BYTE,             "", Int, )
+OP_END
+
+/* File: c/OP_SPUT_CHAR.cpp */
+HANDLE_SPUT_X(OP_SPUT_CHAR,             "", Int, )
+OP_END
+
+/* File: c/OP_SPUT_SHORT.cpp */
+HANDLE_SPUT_X(OP_SPUT_SHORT,            "", Int, )
+OP_END
+
+/* File: c/OP_INVOKE_VIRTUAL.cpp */
+HANDLE_OPCODE(OP_INVOKE_VIRTUAL /*vB, {vD, vE, vF, vG, vA}, meth@CCCC*/)
+    GOTO_invoke(invokeVirtual, false, false);
+OP_END
+
+/* File: c/OP_INVOKE_SUPER.cpp */
+HANDLE_OPCODE(OP_INVOKE_SUPER /*vB, {vD, vE, vF, vG, vA}, meth@CCCC*/)
+    GOTO_invoke(invokeSuper, false, false);
+OP_END
+
+/* File: c/OP_INVOKE_DIRECT.cpp */
+HANDLE_OPCODE(OP_INVOKE_DIRECT /*vB, {vD, vE, vF, vG, vA}, meth@CCCC*/)
+    GOTO_invoke(invokeDirect, false, false);
+OP_END
+
+/* File: c/OP_INVOKE_STATIC.cpp */
+HANDLE_OPCODE(OP_INVOKE_STATIC /*vB, {vD, vE, vF, vG, vA}, meth@CCCC*/)
+    GOTO_invoke(invokeStatic, false, false);
+OP_END
+
+/* File: c/OP_INVOKE_INTERFACE.cpp */
+HANDLE_OPCODE(OP_INVOKE_INTERFACE /*vB, {vD, vE, vF, vG, vA}, meth@CCCC*/)
+    GOTO_invoke(invokeInterface, false, false);
+OP_END
+
+/* File: c/OP_UNUSED_73.cpp */
+HANDLE_OPCODE(OP_UNUSED_73)
+OP_END
+
+/* File: c/OP_INVOKE_VIRTUAL_RANGE.cpp */
+HANDLE_OPCODE(OP_INVOKE_VIRTUAL_RANGE /*{vCCCC..v(CCCC+AA-1)}, meth@BBBB*/)
+    GOTO_invoke(invokeVirtual, true, false);
+OP_END
+
+/* File: c/OP_INVOKE_SUPER_RANGE.cpp */
+HANDLE_OPCODE(OP_INVOKE_SUPER_RANGE /*{vCCCC..v(CCCC+AA-1)}, meth@BBBB*/)
+    GOTO_invoke(invokeSuper, true, false);
+OP_END
+
+/* File: c/OP_INVOKE_DIRECT_RANGE.cpp */
+HANDLE_OPCODE(OP_INVOKE_DIRECT_RANGE /*{vCCCC..v(CCCC+AA-1)}, meth@BBBB*/)
+    GOTO_invoke(invokeDirect, true, false);
+OP_END
+
+/* File: c/OP_INVOKE_STATIC_RANGE.cpp */
+HANDLE_OPCODE(OP_INVOKE_STATIC_RANGE /*{vCCCC..v(CCCC+AA-1)}, meth@BBBB*/)
+    GOTO_invoke(invokeStatic, true, false);
+OP_END
+
+/* File: c/OP_INVOKE_INTERFACE_RANGE.cpp */
+HANDLE_OPCODE(OP_INVOKE_INTERFACE_RANGE /*{vCCCC..v(CCCC+AA-1)}, meth@BBBB*/)
+    GOTO_invoke(invokeInterface, true, false);
+OP_END
+
+/* File: c/OP_UNUSED_79.cpp */
+HANDLE_OPCODE(OP_UNUSED_79)
+OP_END
+
+/* File: c/OP_UNUSED_7A.cpp */
+HANDLE_OPCODE(OP_UNUSED_7A)
+OP_END
+
+/* File: c/OP_NEG_INT.cpp */
+HANDLE_UNOP(OP_NEG_INT, "neg-int", -, , )
+OP_END
+
+/* File: c/OP_NOT_INT.cpp */
+HANDLE_UNOP(OP_NOT_INT, "not-int", , ^ 0xffffffff, )
+OP_END
+
+/* File: c/OP_NEG_LONG.cpp */
+HANDLE_UNOP(OP_NEG_LONG, "neg-long", -, , _WIDE)
+OP_END
+
+/* File: c/OP_NOT_LONG.cpp */
+HANDLE_UNOP(OP_NOT_LONG, "not-long", , ^ 0xffffffffffffffffULL, _WIDE)
+OP_END
+
+/* File: c/OP_NEG_FLOAT.cpp */
+HANDLE_UNOP(OP_NEG_FLOAT, "neg-float", -, , _FLOAT)
+OP_END
+
+/* File: c/OP_NEG_DOUBLE.cpp */
+HANDLE_UNOP(OP_NEG_DOUBLE, "neg-double", -, , _DOUBLE)
+OP_END
+
+/* File: c/OP_INT_TO_LONG.cpp */
+HANDLE_NUMCONV(OP_INT_TO_LONG,          "int-to-long", _INT, _WIDE)
+OP_END
+
+/* File: c/OP_INT_TO_FLOAT.cpp */
+HANDLE_NUMCONV(OP_INT_TO_FLOAT,         "int-to-float", _INT, _FLOAT)
+OP_END
+
+/* File: c/OP_INT_TO_DOUBLE.cpp */
+HANDLE_NUMCONV(OP_INT_TO_DOUBLE,        "int-to-double", _INT, _DOUBLE)
+OP_END
+
+/* File: c/OP_LONG_TO_INT.cpp */
+HANDLE_NUMCONV(OP_LONG_TO_INT,          "long-to-int", _WIDE, _INT)
+OP_END
+
+/* File: c/OP_LONG_TO_FLOAT.cpp */
+HANDLE_NUMCONV(OP_LONG_TO_FLOAT,        "long-to-float", _WIDE, _FLOAT)
+OP_END
+
+/* File: c/OP_LONG_TO_DOUBLE.cpp */
+HANDLE_NUMCONV(OP_LONG_TO_DOUBLE,       "long-to-double", _WIDE, _DOUBLE)
+OP_END
+
+/* File: c/OP_FLOAT_TO_INT.cpp */
+HANDLE_FLOAT_TO_INT(OP_FLOAT_TO_INT,    "float-to-int",
+    float, _FLOAT, s4, _INT)
+OP_END
+
+/* File: c/OP_FLOAT_TO_LONG.cpp */
+HANDLE_FLOAT_TO_INT(OP_FLOAT_TO_LONG,   "float-to-long",
+    float, _FLOAT, s8, _WIDE)
+OP_END
+
+/* File: c/OP_FLOAT_TO_DOUBLE.cpp */
+HANDLE_NUMCONV(OP_FLOAT_TO_DOUBLE,      "float-to-double", _FLOAT, _DOUBLE)
+OP_END
+
+/* File: c/OP_DOUBLE_TO_INT.cpp */
+HANDLE_FLOAT_TO_INT(OP_DOUBLE_TO_INT,   "double-to-int",
+    double, _DOUBLE, s4, _INT)
+OP_END
+
+/* File: c/OP_DOUBLE_TO_LONG.cpp */
+HANDLE_FLOAT_TO_INT(OP_DOUBLE_TO_LONG,  "double-to-long",
+    double, _DOUBLE, s8, _WIDE)
+OP_END
+
+/* File: c/OP_DOUBLE_TO_FLOAT.cpp */
+HANDLE_NUMCONV(OP_DOUBLE_TO_FLOAT,      "double-to-float", _DOUBLE, _FLOAT)
+OP_END
+
+/* File: c/OP_INT_TO_BYTE.cpp */
+HANDLE_INT_TO_SMALL(OP_INT_TO_BYTE,     "byte", s1)
+OP_END
+
+/* File: c/OP_INT_TO_CHAR.cpp */
+HANDLE_INT_TO_SMALL(OP_INT_TO_CHAR,     "char", u2)
+OP_END
+
+/* File: c/OP_INT_TO_SHORT.cpp */
+HANDLE_INT_TO_SMALL(OP_INT_TO_SHORT,    "short", s2)    /* want sign bit */
+OP_END
+
+/* File: c/OP_ADD_INT.cpp */
+HANDLE_OP_X_INT(OP_ADD_INT, "add", +, 0)
+OP_END
+
+/* File: c/OP_SUB_INT.cpp */
+HANDLE_OP_X_INT(OP_SUB_INT, "sub", -, 0)
+OP_END
+
+/* File: c/OP_MUL_INT.cpp */
+HANDLE_OP_X_INT(OP_MUL_INT, "mul", *, 0)
+OP_END
+
+/* File: c/OP_DIV_INT.cpp */
+HANDLE_OP_X_INT(OP_DIV_INT, "div", /, 1)
+OP_END
+
+/* File: c/OP_REM_INT.cpp */
+HANDLE_OP_X_INT(OP_REM_INT, "rem", %, 2)
+OP_END
+
+/* File: c/OP_AND_INT.cpp */
+HANDLE_OP_X_INT(OP_AND_INT, "and", &, 0)
+OP_END
+
+/* File: c/OP_OR_INT.cpp */
+HANDLE_OP_X_INT(OP_OR_INT,  "or",  |, 0)
+OP_END
+
+/* File: c/OP_XOR_INT.cpp */
+HANDLE_OP_X_INT(OP_XOR_INT, "xor", ^, 0)
+OP_END
+
+/* File: c/OP_SHL_INT.cpp */
+HANDLE_OP_SHX_INT(OP_SHL_INT, "shl", (s4), <<)
+OP_END
+
+/* File: c/OP_SHR_INT.cpp */
+HANDLE_OP_SHX_INT(OP_SHR_INT, "shr", (s4), >>)
+OP_END
+
+/* File: c/OP_USHR_INT.cpp */
+HANDLE_OP_SHX_INT(OP_USHR_INT, "ushr", (u4), >>)
+OP_END
+
+/* File: c/OP_ADD_LONG.cpp */
+HANDLE_OP_X_LONG(OP_ADD_LONG, "add", +, 0)
+OP_END
+
+/* File: c/OP_SUB_LONG.cpp */
+HANDLE_OP_X_LONG(OP_SUB_LONG, "sub", -, 0)
+OP_END
+
+/* File: c/OP_MUL_LONG.cpp */
+HANDLE_OP_X_LONG(OP_MUL_LONG, "mul", *, 0)
+OP_END
+
+/* File: c/OP_DIV_LONG.cpp */
+HANDLE_OP_X_LONG(OP_DIV_LONG, "div", /, 1)
+OP_END
+
+/* File: c/OP_REM_LONG.cpp */
+HANDLE_OP_X_LONG(OP_REM_LONG, "rem", %, 2)
+OP_END
+
+/* File: c/OP_AND_LONG.cpp */
+HANDLE_OP_X_LONG(OP_AND_LONG, "and", &, 0)
+OP_END
+
+/* File: c/OP_OR_LONG.cpp */
+HANDLE_OP_X_LONG(OP_OR_LONG,  "or", |, 0)
+OP_END
+
+/* File: c/OP_XOR_LONG.cpp */
+HANDLE_OP_X_LONG(OP_XOR_LONG, "xor", ^, 0)
+OP_END
+
+/* File: c/OP_SHL_LONG.cpp */
+HANDLE_OP_SHX_LONG(OP_SHL_LONG, "shl", (s8), <<)
+OP_END
+
+/* File: c/OP_SHR_LONG.cpp */
+HANDLE_OP_SHX_LONG(OP_SHR_LONG, "shr", (s8), >>)
+OP_END
+
+/* File: c/OP_USHR_LONG.cpp */
+HANDLE_OP_SHX_LONG(OP_USHR_LONG, "ushr", (u8), >>)
+OP_END
+
+/* File: c/OP_ADD_FLOAT.cpp */
+HANDLE_OP_X_FLOAT(OP_ADD_FLOAT, "add", +)
+OP_END
+
+/* File: c/OP_SUB_FLOAT.cpp */
+HANDLE_OP_X_FLOAT(OP_SUB_FLOAT, "sub", -)
+OP_END
+
+/* File: c/OP_MUL_FLOAT.cpp */
+HANDLE_OP_X_FLOAT(OP_MUL_FLOAT, "mul", *)
+OP_END
+
+/* File: c/OP_DIV_FLOAT.cpp */
+HANDLE_OP_X_FLOAT(OP_DIV_FLOAT, "div", /)
+OP_END
+
+/* File: c/OP_REM_FLOAT.cpp */
+HANDLE_OPCODE(OP_REM_FLOAT /*vAA, vBB, vCC*/)
+    {
+        u2 srcRegs;
+        vdst = INST_AA(inst);
+        srcRegs = FETCH(1);
+        vsrc1 = srcRegs & 0xff;
+        vsrc2 = srcRegs >> 8;
+        ILOGV("|%s-float v%d,v%d,v%d", "mod", vdst, vsrc1, vsrc2);
+        SET_REGISTER_FLOAT(vdst,
+            fmodf(GET_REGISTER_FLOAT(vsrc1), GET_REGISTER_FLOAT(vsrc2)));
+    }
+    FINISH(2);
+OP_END
+
+/* File: c/OP_ADD_DOUBLE.cpp */
+HANDLE_OP_X_DOUBLE(OP_ADD_DOUBLE, "add", +)
+OP_END
+
+/* File: c/OP_SUB_DOUBLE.cpp */
+HANDLE_OP_X_DOUBLE(OP_SUB_DOUBLE, "sub", -)
+OP_END
+
+/* File: c/OP_MUL_DOUBLE.cpp */
+HANDLE_OP_X_DOUBLE(OP_MUL_DOUBLE, "mul", *)
+OP_END
+
+/* File: c/OP_DIV_DOUBLE.cpp */
+HANDLE_OP_X_DOUBLE(OP_DIV_DOUBLE, "div", /)
+OP_END
+
+/* File: c/OP_REM_DOUBLE.cpp */
+HANDLE_OPCODE(OP_REM_DOUBLE /*vAA, vBB, vCC*/)
+    {
+        u2 srcRegs;
+        vdst = INST_AA(inst);
+        srcRegs = FETCH(1);
+        vsrc1 = srcRegs & 0xff;
+        vsrc2 = srcRegs >> 8;
+        ILOGV("|%s-double v%d,v%d,v%d", "mod", vdst, vsrc1, vsrc2);
+        SET_REGISTER_DOUBLE(vdst,
+            fmod(GET_REGISTER_DOUBLE(vsrc1), GET_REGISTER_DOUBLE(vsrc2)));
+    }
+    FINISH(2);
+OP_END
+
+/* File: c/OP_ADD_INT_2ADDR.cpp */
+HANDLE_OP_X_INT_2ADDR(OP_ADD_INT_2ADDR, "add", +, 0)
+OP_END
+
+/* File: c/OP_SUB_INT_2ADDR.cpp */
+HANDLE_OP_X_INT_2ADDR(OP_SUB_INT_2ADDR, "sub", -, 0)
+OP_END
+
+/* File: c/OP_MUL_INT_2ADDR.cpp */
+HANDLE_OP_X_INT_2ADDR(OP_MUL_INT_2ADDR, "mul", *, 0)
+OP_END
+
+/* File: c/OP_DIV_INT_2ADDR.cpp */
+HANDLE_OP_X_INT_2ADDR(OP_DIV_INT_2ADDR, "div", /, 1)
+OP_END
+
+/* File: c/OP_REM_INT_2ADDR.cpp */
+HANDLE_OP_X_INT_2ADDR(OP_REM_INT_2ADDR, "rem", %, 2)
+OP_END
+
+/* File: c/OP_AND_INT_2ADDR.cpp */
+HANDLE_OP_X_INT_2ADDR(OP_AND_INT_2ADDR, "and", &, 0)
+OP_END
+
+/* File: c/OP_OR_INT_2ADDR.cpp */
+HANDLE_OP_X_INT_2ADDR(OP_OR_INT_2ADDR,  "or", |, 0)
+OP_END
+
+/* File: c/OP_XOR_INT_2ADDR.cpp */
+HANDLE_OP_X_INT_2ADDR(OP_XOR_INT_2ADDR, "xor", ^, 0)
+OP_END
+
+/* File: c/OP_SHL_INT_2ADDR.cpp */
+HANDLE_OP_SHX_INT_2ADDR(OP_SHL_INT_2ADDR, "shl", (s4), <<)
+OP_END
+
+/* File: c/OP_SHR_INT_2ADDR.cpp */
+HANDLE_OP_SHX_INT_2ADDR(OP_SHR_INT_2ADDR, "shr", (s4), >>)
+OP_END
+
+/* File: c/OP_USHR_INT_2ADDR.cpp */
+HANDLE_OP_SHX_INT_2ADDR(OP_USHR_INT_2ADDR, "ushr", (u4), >>)
+OP_END
+
+/* File: c/OP_ADD_LONG_2ADDR.cpp */
+HANDLE_OP_X_LONG_2ADDR(OP_ADD_LONG_2ADDR, "add", +, 0)
+OP_END
+
+/* File: c/OP_SUB_LONG_2ADDR.cpp */
+HANDLE_OP_X_LONG_2ADDR(OP_SUB_LONG_2ADDR, "sub", -, 0)
+OP_END
+
+/* File: c/OP_MUL_LONG_2ADDR.cpp */
+HANDLE_OP_X_LONG_2ADDR(OP_MUL_LONG_2ADDR, "mul", *, 0)
+OP_END
+
+/* File: c/OP_DIV_LONG_2ADDR.cpp */
+HANDLE_OP_X_LONG_2ADDR(OP_DIV_LONG_2ADDR, "div", /, 1)
+OP_END
+
+/* File: c/OP_REM_LONG_2ADDR.cpp */
+HANDLE_OP_X_LONG_2ADDR(OP_REM_LONG_2ADDR, "rem", %, 2)
+OP_END
+
+/* File: c/OP_AND_LONG_2ADDR.cpp */
+HANDLE_OP_X_LONG_2ADDR(OP_AND_LONG_2ADDR, "and", &, 0)
+OP_END
+
+/* File: c/OP_OR_LONG_2ADDR.cpp */
+HANDLE_OP_X_LONG_2ADDR(OP_OR_LONG_2ADDR,  "or", |, 0)
+OP_END
+
+/* File: c/OP_XOR_LONG_2ADDR.cpp */
+HANDLE_OP_X_LONG_2ADDR(OP_XOR_LONG_2ADDR, "xor", ^, 0)
+OP_END
+
+/* File: c/OP_SHL_LONG_2ADDR.cpp */
+HANDLE_OP_SHX_LONG_2ADDR(OP_SHL_LONG_2ADDR, "shl", (s8), <<)
+OP_END
+
+/* File: c/OP_SHR_LONG_2ADDR.cpp */
+HANDLE_OP_SHX_LONG_2ADDR(OP_SHR_LONG_2ADDR, "shr", (s8), >>)
+OP_END
+
+/* File: c/OP_USHR_LONG_2ADDR.cpp */
+HANDLE_OP_SHX_LONG_2ADDR(OP_USHR_LONG_2ADDR, "ushr", (u8), >>)
+OP_END
+
+/* File: c/OP_ADD_FLOAT_2ADDR.cpp */
+HANDLE_OP_X_FLOAT_2ADDR(OP_ADD_FLOAT_2ADDR, "add", +)
+OP_END
+
+/* File: c/OP_SUB_FLOAT_2ADDR.cpp */
+HANDLE_OP_X_FLOAT_2ADDR(OP_SUB_FLOAT_2ADDR, "sub", -)
+OP_END
+
+/* File: c/OP_MUL_FLOAT_2ADDR.cpp */
+HANDLE_OP_X_FLOAT_2ADDR(OP_MUL_FLOAT_2ADDR, "mul", *)
+OP_END
+
+/* File: c/OP_DIV_FLOAT_2ADDR.cpp */
+HANDLE_OP_X_FLOAT_2ADDR(OP_DIV_FLOAT_2ADDR, "div", /)
+OP_END
+
+/* File: c/OP_REM_FLOAT_2ADDR.cpp */
+HANDLE_OPCODE(OP_REM_FLOAT_2ADDR /*vA, vB*/)
+    vdst = INST_A(inst);
+    vsrc1 = INST_B(inst);
+    ILOGV("|%s-float-2addr v%d,v%d", "mod", vdst, vsrc1);
+    SET_REGISTER_FLOAT(vdst,
+        fmodf(GET_REGISTER_FLOAT(vdst), GET_REGISTER_FLOAT(vsrc1)));
+    FINISH(1);
+OP_END
+
+/* File: c/OP_ADD_DOUBLE_2ADDR.cpp */
+HANDLE_OP_X_DOUBLE_2ADDR(OP_ADD_DOUBLE_2ADDR, "add", +)
+OP_END
+
+/* File: c/OP_SUB_DOUBLE_2ADDR.cpp */
+HANDLE_OP_X_DOUBLE_2ADDR(OP_SUB_DOUBLE_2ADDR, "sub", -)
+OP_END
+
+/* File: c/OP_MUL_DOUBLE_2ADDR.cpp */
+HANDLE_OP_X_DOUBLE_2ADDR(OP_MUL_DOUBLE_2ADDR, "mul", *)
+OP_END
+
+/* File: c/OP_DIV_DOUBLE_2ADDR.cpp */
+HANDLE_OP_X_DOUBLE_2ADDR(OP_DIV_DOUBLE_2ADDR, "div", /)
+OP_END
+
+/* File: c/OP_REM_DOUBLE_2ADDR.cpp */
+HANDLE_OPCODE(OP_REM_DOUBLE_2ADDR /*vA, vB*/)
+    vdst = INST_A(inst);
+    vsrc1 = INST_B(inst);
+    ILOGV("|%s-double-2addr v%d,v%d", "mod", vdst, vsrc1);
+    SET_REGISTER_DOUBLE(vdst,
+        fmod(GET_REGISTER_DOUBLE(vdst), GET_REGISTER_DOUBLE(vsrc1)));
+    FINISH(1);
+OP_END
+
+/* File: c/OP_ADD_INT_LIT16.cpp */
+HANDLE_OP_X_INT_LIT16(OP_ADD_INT_LIT16, "add", +, 0)
+OP_END
+
+/* File: c/OP_RSUB_INT.cpp */
+HANDLE_OPCODE(OP_RSUB_INT /*vA, vB, #+CCCC*/)
+    {
+        vdst = INST_A(inst);
+        vsrc1 = INST_B(inst);
+        vsrc2 = FETCH(1);
+        ILOGV("|rsub-int v%d,v%d,#+0x%04x", vdst, vsrc1, vsrc2);
+        SET_REGISTER(vdst, (s2) vsrc2 - (s4) GET_REGISTER(vsrc1));
+    }
+    FINISH(2);
+OP_END
+
+/* File: c/OP_MUL_INT_LIT16.cpp */
+HANDLE_OP_X_INT_LIT16(OP_MUL_INT_LIT16, "mul", *, 0)
+OP_END
+
+/* File: c/OP_DIV_INT_LIT16.cpp */
+HANDLE_OP_X_INT_LIT16(OP_DIV_INT_LIT16, "div", /, 1)
+OP_END
+
+/* File: c/OP_REM_INT_LIT16.cpp */
+HANDLE_OP_X_INT_LIT16(OP_REM_INT_LIT16, "rem", %, 2)
+OP_END
+
+/* File: c/OP_AND_INT_LIT16.cpp */
+HANDLE_OP_X_INT_LIT16(OP_AND_INT_LIT16, "and", &, 0)
+OP_END
+
+/* File: c/OP_OR_INT_LIT16.cpp */
+HANDLE_OP_X_INT_LIT16(OP_OR_INT_LIT16,  "or",  |, 0)
+OP_END
+
+/* File: c/OP_XOR_INT_LIT16.cpp */
+HANDLE_OP_X_INT_LIT16(OP_XOR_INT_LIT16, "xor", ^, 0)
+OP_END
+
+/* File: c/OP_ADD_INT_LIT8.cpp */
+HANDLE_OP_X_INT_LIT8(OP_ADD_INT_LIT8,   "add", +, 0)
+OP_END
+
+/* File: c/OP_RSUB_INT_LIT8.cpp */
+HANDLE_OPCODE(OP_RSUB_INT_LIT8 /*vAA, vBB, #+CC*/)
+    {
+        u2 litInfo;
+        vdst = INST_AA(inst);
+        litInfo = FETCH(1);
+        vsrc1 = litInfo & 0xff;
+        vsrc2 = litInfo >> 8;
+        ILOGV("|%s-int/lit8 v%d,v%d,#+0x%02x", "rsub", vdst, vsrc1, vsrc2);
+        SET_REGISTER(vdst, (s1) vsrc2 - (s4) GET_REGISTER(vsrc1));
+    }
+    FINISH(2);
+OP_END
+
+/* File: c/OP_MUL_INT_LIT8.cpp */
+HANDLE_OP_X_INT_LIT8(OP_MUL_INT_LIT8,   "mul", *, 0)
+OP_END
+
+/* File: c/OP_DIV_INT_LIT8.cpp */
+HANDLE_OP_X_INT_LIT8(OP_DIV_INT_LIT8,   "div", /, 1)
+OP_END
+
+/* File: c/OP_REM_INT_LIT8.cpp */
+HANDLE_OP_X_INT_LIT8(OP_REM_INT_LIT8,   "rem", %, 2)
+OP_END
+
+/* File: c/OP_AND_INT_LIT8.cpp */
+HANDLE_OP_X_INT_LIT8(OP_AND_INT_LIT8,   "and", &, 0)
+OP_END
+
+/* File: c/OP_OR_INT_LIT8.cpp */
+HANDLE_OP_X_INT_LIT8(OP_OR_INT_LIT8,    "or",  |, 0)
+OP_END
+
+/* File: c/OP_XOR_INT_LIT8.cpp */
+HANDLE_OP_X_INT_LIT8(OP_XOR_INT_LIT8,   "xor", ^, 0)
+OP_END
+
+/* File: c/OP_SHL_INT_LIT8.cpp */
+HANDLE_OP_SHX_INT_LIT8(OP_SHL_INT_LIT8,   "shl", (s4), <<)
+OP_END
+
+/* File: c/OP_SHR_INT_LIT8.cpp */
+HANDLE_OP_SHX_INT_LIT8(OP_SHR_INT_LIT8,   "shr", (s4), >>)
+OP_END
+
+/* File: c/OP_USHR_INT_LIT8.cpp */
+HANDLE_OP_SHX_INT_LIT8(OP_USHR_INT_LIT8,  "ushr", (u4), >>)
+OP_END
+
+/* File: c/OP_IGET_VOLATILE.cpp */
+HANDLE_IGET_X(OP_IGET_VOLATILE,         "-volatile", IntVolatile, )
+OP_END
+
+/* File: c/OP_IPUT_VOLATILE.cpp */
+HANDLE_IPUT_X(OP_IPUT_VOLATILE,         "-volatile", IntVolatile, )
+OP_END
+
+/* File: c/OP_SGET_VOLATILE.cpp */
+HANDLE_SGET_X(OP_SGET_VOLATILE,         "-volatile", IntVolatile, )
+OP_END
+
+/* File: c/OP_SPUT_VOLATILE.cpp */
+HANDLE_SPUT_X(OP_SPUT_VOLATILE,         "-volatile", IntVolatile, )
+OP_END
+
+/* File: c/OP_IGET_OBJECT_VOLATILE.cpp */
+HANDLE_IGET_X(OP_IGET_OBJECT_VOLATILE,  "-object-volatile", ObjectVolatile, _AS_OBJECT)
+OP_END
+
+/* File: c/OP_IGET_WIDE_VOLATILE.cpp */
 HANDLE_IGET_X(OP_IGET_WIDE_VOLATILE,    "-wide-volatile", LongVolatile, _WIDE)
 OP_END
 
-/* File: c/OP_IPUT_WIDE_VOLATILE.c */
+/* File: c/OP_IPUT_WIDE_VOLATILE.cpp */
 HANDLE_IPUT_X(OP_IPUT_WIDE_VOLATILE,    "-wide-volatile", LongVolatile, _WIDE)
 OP_END
 
-/* File: c/OP_SGET_WIDE_VOLATILE.c */
+/* File: c/OP_SGET_WIDE_VOLATILE.cpp */
 HANDLE_SGET_X(OP_SGET_WIDE_VOLATILE,    "-wide-volatile", LongVolatile, _WIDE)
 OP_END
 
-/* File: c/OP_SPUT_WIDE_VOLATILE.c */
+/* File: c/OP_SPUT_WIDE_VOLATILE.cpp */
 HANDLE_SPUT_X(OP_SPUT_WIDE_VOLATILE,    "-wide-volatile", LongVolatile, _WIDE)
 OP_END
 
-/* File: c/OP_EXECUTE_INLINE_RANGE.c */
+/* File: c/OP_BREAKPOINT.cpp */
+HANDLE_OPCODE(OP_BREAKPOINT)
+    {
+        /*
+         * Restart this instruction with the original opcode.  We do
+         * this by simply jumping to the handler.
+         *
+         * It's probably not necessary to update "inst", but we do it
+         * for the sake of anything that needs to do disambiguation in a
+         * common handler with INST_INST.
+         *
+         * The breakpoint itself is handled over in updateDebugger(),
+         * because we need to detect other events (method entry, single
+         * step) and report them in the same event packet, and we're not
+         * yet handling those through breakpoint instructions.  By the
+         * time we get here, the breakpoint has already been handled and
+         * the thread resumed.
+         */
+        u1 originalOpcode = dvmGetOriginalOpcode(pc);
+        LOGV("+++ break 0x%02x (0x%04x -> 0x%04x)\n", originalOpcode, inst,
+            INST_REPLACE_OP(inst, originalOpcode));
+        inst = INST_REPLACE_OP(inst, originalOpcode);
+        FINISH_BKPT(originalOpcode);
+    }
+OP_END
+
+/* File: c/OP_THROW_VERIFICATION_ERROR.cpp */
+HANDLE_OPCODE(OP_THROW_VERIFICATION_ERROR)
+    EXPORT_PC();
+    vsrc1 = INST_AA(inst);
+    ref = FETCH(1);             /* class/field/method ref */
+    dvmThrowVerificationError(curMethod, vsrc1, ref);
+    GOTO_exceptionThrown();
+OP_END
+
+/* File: c/OP_EXECUTE_INLINE.cpp */
+HANDLE_OPCODE(OP_EXECUTE_INLINE /*vB, {vD, vE, vF, vG}, inline@CCCC*/)
+    {
+        /*
+         * This has the same form as other method calls, but we ignore
+         * the 5th argument (vA).  This is chiefly because the first four
+         * arguments to a function on ARM are in registers.
+         *
+         * We only set the arguments that are actually used, leaving
+         * the rest uninitialized.  We're assuming that, if the method
+         * needs them, they'll be specified in the call.
+         *
+         * However, this annoys gcc when optimizations are enabled,
+         * causing a "may be used uninitialized" warning.  Quieting
+         * the warnings incurs a slight penalty (5%: 373ns vs. 393ns
+         * on empty method).  Note that valgrind is perfectly happy
+         * either way as the uninitialiezd values are never actually
+         * used.
+         */
+        u4 arg0, arg1, arg2, arg3;
+        arg0 = arg1 = arg2 = arg3 = 0;
+
+        EXPORT_PC();
+
+        vsrc1 = INST_B(inst);       /* #of args */
+        ref = FETCH(1);             /* inline call "ref" */
+        vdst = FETCH(2);            /* 0-4 register indices */
+        ILOGV("|execute-inline args=%d @%d {regs=0x%04x}",
+            vsrc1, ref, vdst);
+
+        assert((vdst >> 16) == 0);  // 16-bit type -or- high 16 bits clear
+        assert(vsrc1 <= 4);
+
+        switch (vsrc1) {
+        case 4:
+            arg3 = GET_REGISTER(vdst >> 12);
+            /* fall through */
+        case 3:
+            arg2 = GET_REGISTER((vdst & 0x0f00) >> 8);
+            /* fall through */
+        case 2:
+            arg1 = GET_REGISTER((vdst & 0x00f0) >> 4);
+            /* fall through */
+        case 1:
+            arg0 = GET_REGISTER(vdst & 0x0f);
+            /* fall through */
+        default:        // case 0
+            ;
+        }
+
+        if (self->interpBreak.ctl.subMode & kSubModeDebuggerActive) {
+            if (!dvmPerformInlineOp4Dbg(arg0, arg1, arg2, arg3, &retval, ref))
+                GOTO_exceptionThrown();
+        } else {
+            if (!dvmPerformInlineOp4Std(arg0, arg1, arg2, arg3, &retval, ref))
+                GOTO_exceptionThrown();
+        }
+    }
+    FINISH(3);
+OP_END
+
+/* File: c/OP_EXECUTE_INLINE_RANGE.cpp */
 HANDLE_OPCODE(OP_EXECUTE_INLINE_RANGE /*{vCCCC..v(CCCC+AA-1)}, inline@BBBB*/)
     {
         u4 arg0, arg1, arg2, arg3;
@@ -1331,7 +3022,7 @@ HANDLE_OPCODE(OP_EXECUTE_INLINE_RANGE /*{vCCCC..v(CCCC+AA-1)}, inline@BBBB*/)
     FINISH(3);
 OP_END
 
-/* File: c/OP_INVOKE_OBJECT_INIT_RANGE.c */
+/* File: c/OP_INVOKE_OBJECT_INIT_RANGE.cpp */
 HANDLE_OPCODE(OP_INVOKE_OBJECT_INIT_RANGE /*{vCCCC..v(CCCC+AA-1)}, meth@BBBB*/)
     {
         Object* obj;
@@ -1362,7 +3053,7 @@ HANDLE_OPCODE(OP_INVOKE_OBJECT_INIT_RANGE /*{vCCCC..v(CCCC+AA-1)}, meth@BBBB*/)
     }
 OP_END
 
-/* File: c/OP_RETURN_VOID_BARRIER.c */
+/* File: c/OP_RETURN_VOID_BARRIER.cpp */
 HANDLE_OPCODE(OP_RETURN_VOID_BARRIER /**/)
     ILOGV("|return-void");
 #ifndef NDEBUG
@@ -1372,7 +3063,1214 @@ HANDLE_OPCODE(OP_RETURN_VOID_BARRIER /**/)
     GOTO_returnFromMethod();
 OP_END
 
-/* File: c/OP_INVOKE_OBJECT_INIT_JUMBO.c */
+/* File: c/OP_IGET_QUICK.cpp */
+HANDLE_IGET_X_QUICK(OP_IGET_QUICK,          "", Int, )
+OP_END
+
+/* File: c/OP_IGET_WIDE_QUICK.cpp */
+HANDLE_IGET_X_QUICK(OP_IGET_WIDE_QUICK,     "-wide", Long, _WIDE)
+OP_END
+
+/* File: c/OP_IGET_OBJECT_QUICK.cpp */
+HANDLE_IGET_X_QUICK(OP_IGET_OBJECT_QUICK,   "-object", Object, _AS_OBJECT)
+OP_END
+
+/* File: c/OP_IPUT_QUICK.cpp */
+HANDLE_IPUT_X_QUICK(OP_IPUT_QUICK,          "", Int, )
+OP_END
+
+/* File: c/OP_IPUT_WIDE_QUICK.cpp */
+HANDLE_IPUT_X_QUICK(OP_IPUT_WIDE_QUICK,     "-wide", Long, _WIDE)
+OP_END
+
+/* File: c/OP_IPUT_OBJECT_QUICK.cpp */
+HANDLE_IPUT_X_QUICK(OP_IPUT_OBJECT_QUICK,   "-object", Object, _AS_OBJECT)
+OP_END
+
+/* File: c/OP_INVOKE_VIRTUAL_QUICK.cpp */
+HANDLE_OPCODE(OP_INVOKE_VIRTUAL_QUICK /*vB, {vD, vE, vF, vG, vA}, meth@CCCC*/)
+    GOTO_invoke(invokeVirtualQuick, false, false);
+OP_END
+
+/* File: c/OP_INVOKE_VIRTUAL_QUICK_RANGE.cpp */
+HANDLE_OPCODE(OP_INVOKE_VIRTUAL_QUICK_RANGE/*{vCCCC..v(CCCC+AA-1)}, meth@BBBB*/)
+    GOTO_invoke(invokeVirtualQuick, true, false);
+OP_END
+
+/* File: c/OP_INVOKE_SUPER_QUICK.cpp */
+HANDLE_OPCODE(OP_INVOKE_SUPER_QUICK /*vB, {vD, vE, vF, vG, vA}, meth@CCCC*/)
+    GOTO_invoke(invokeSuperQuick, false, false);
+OP_END
+
+/* File: c/OP_INVOKE_SUPER_QUICK_RANGE.cpp */
+HANDLE_OPCODE(OP_INVOKE_SUPER_QUICK_RANGE /*{vCCCC..v(CCCC+AA-1)}, meth@BBBB*/)
+    GOTO_invoke(invokeSuperQuick, true, false);
+OP_END
+
+/* File: c/OP_IPUT_OBJECT_VOLATILE.cpp */
+HANDLE_IPUT_X(OP_IPUT_OBJECT_VOLATILE,  "-object-volatile", ObjectVolatile, _AS_OBJECT)
+OP_END
+
+/* File: c/OP_SGET_OBJECT_VOLATILE.cpp */
+HANDLE_SGET_X(OP_SGET_OBJECT_VOLATILE,  "-object-volatile", ObjectVolatile, _AS_OBJECT)
+OP_END
+
+/* File: c/OP_SPUT_OBJECT_VOLATILE.cpp */
+HANDLE_SPUT_X(OP_SPUT_OBJECT_VOLATILE,  "-object-volatile", ObjectVolatile, _AS_OBJECT)
+OP_END
+
+/* File: c/OP_DISPATCH_FF.cpp */
+HANDLE_OPCODE(OP_DISPATCH_FF)
+    /*
+     * Indicates extended opcode.  Use next 8 bits to choose where to branch.
+     */
+    DISPATCH_EXTENDED(INST_AA(inst));
+OP_END
+
+/* File: c/OP_CONST_CLASS_JUMBO.cpp */
+HANDLE_OPCODE(OP_CONST_CLASS_JUMBO /*vBBBB, class@AAAAAAAA*/)
+    {
+        ClassObject* clazz;
+
+        ref = FETCH(1) | (u4)FETCH(2) << 16;
+        vdst = FETCH(3);
+        ILOGV("|const-class/jumbo v%d class@0x%08x", vdst, ref);
+        clazz = dvmDexGetResolvedClass(methodClassDex, ref);
+        if (clazz == NULL) {
+            EXPORT_PC();
+            clazz = dvmResolveClass(curMethod->clazz, ref, true);
+            if (clazz == NULL)
+                GOTO_exceptionThrown();
+        }
+        SET_REGISTER(vdst, (u4) clazz);
+    }
+    FINISH(4);
+OP_END
+
+/* File: c/OP_CHECK_CAST_JUMBO.cpp */
+HANDLE_OPCODE(OP_CHECK_CAST_JUMBO /*vBBBB, class@AAAAAAAA*/)
+    {
+        ClassObject* clazz;
+        Object* obj;
+
+        EXPORT_PC();
+
+        ref = FETCH(1) | (u4)FETCH(2) << 16;     /* class to check against */
+        vsrc1 = FETCH(3);
+        ILOGV("|check-cast/jumbo v%d,class@0x%08x", vsrc1, ref);
+
+        obj = (Object*)GET_REGISTER(vsrc1);
+        if (obj != NULL) {
+#if defined(WITH_EXTRA_OBJECT_VALIDATION)
+            if (!checkForNull(obj))
+                GOTO_exceptionThrown();
+#endif
+            clazz = dvmDexGetResolvedClass(methodClassDex, ref);
+            if (clazz == NULL) {
+                clazz = dvmResolveClass(curMethod->clazz, ref, false);
+                if (clazz == NULL)
+                    GOTO_exceptionThrown();
+            }
+            if (!dvmInstanceof(obj->clazz, clazz)) {
+                dvmThrowClassCastException(obj->clazz, clazz);
+                GOTO_exceptionThrown();
+            }
+        }
+    }
+    FINISH(4);
+OP_END
+
+/* File: c/OP_INSTANCE_OF_JUMBO.cpp */
+HANDLE_OPCODE(OP_INSTANCE_OF_JUMBO /*vBBBB, vCCCC, class@AAAAAAAA*/)
+    {
+        ClassObject* clazz;
+        Object* obj;
+
+        ref = FETCH(1) | (u4)FETCH(2) << 16;     /* class to check against */
+        vdst = FETCH(3);
+        vsrc1 = FETCH(4);   /* object to check */
+        ILOGV("|instance-of/jumbo v%d,v%d,class@0x%08x", vdst, vsrc1, ref);
+
+        obj = (Object*)GET_REGISTER(vsrc1);
+        if (obj == NULL) {
+            SET_REGISTER(vdst, 0);
+        } else {
+#if defined(WITH_EXTRA_OBJECT_VALIDATION)
+            if (!checkForNullExportPC(obj, fp, pc))
+                GOTO_exceptionThrown();
+#endif
+            clazz = dvmDexGetResolvedClass(methodClassDex, ref);
+            if (clazz == NULL) {
+                EXPORT_PC();
+                clazz = dvmResolveClass(curMethod->clazz, ref, true);
+                if (clazz == NULL)
+                    GOTO_exceptionThrown();
+            }
+            SET_REGISTER(vdst, dvmInstanceof(obj->clazz, clazz));
+        }
+    }
+    FINISH(5);
+OP_END
+
+/* File: c/OP_NEW_INSTANCE_JUMBO.cpp */
+HANDLE_OPCODE(OP_NEW_INSTANCE_JUMBO /*vBBBB, class@AAAAAAAA*/)
+    {
+        ClassObject* clazz;
+        Object* newObj;
+
+        EXPORT_PC();
+
+        ref = FETCH(1) | (u4)FETCH(2) << 16;
+        vdst = FETCH(3);
+        ILOGV("|new-instance/jumbo v%d,class@0x%08x", vdst, ref);
+        clazz = dvmDexGetResolvedClass(methodClassDex, ref);
+        if (clazz == NULL) {
+            clazz = dvmResolveClass(curMethod->clazz, ref, false);
+            if (clazz == NULL)
+                GOTO_exceptionThrown();
+        }
+
+        if (!dvmIsClassInitialized(clazz) && !dvmInitClass(clazz))
+            GOTO_exceptionThrown();
+
+#if defined(WITH_JIT)
+        /*
+         * The JIT needs dvmDexGetResolvedClass() to return non-null.
+         * Since we use the portable interpreter to build the trace, this extra
+         * check is not needed for mterp.
+         */
+        if ((self->interpBreak.ctl.subMode & kSubModeJitTraceBuild) &&
+            (!dvmDexGetResolvedClass(methodClassDex, ref))) {
+            /* Class initialization is still ongoing - end the trace */
+            dvmJitEndTraceSelect(self,pc);
+        }
+#endif
+
+        /*
+         * Verifier now tests for interface/abstract class.
+         */
+        //if (dvmIsInterfaceClass(clazz) || dvmIsAbstractClass(clazz)) {
+        //    dvmThrowExceptionWithClassMessage(gDvm.exInstantiationError,
+        //        clazz->descriptor);
+        //    GOTO_exceptionThrown();
+        //}
+        newObj = dvmAllocObject(clazz, ALLOC_DONT_TRACK);
+        if (newObj == NULL)
+            GOTO_exceptionThrown();
+        SET_REGISTER(vdst, (u4) newObj);
+    }
+    FINISH(4);
+OP_END
+
+/* File: c/OP_NEW_ARRAY_JUMBO.cpp */
+HANDLE_OPCODE(OP_NEW_ARRAY_JUMBO /*vBBBB, vCCCC, class@AAAAAAAA*/)
+    {
+        ClassObject* arrayClass;
+        ArrayObject* newArray;
+        s4 length;
+
+        EXPORT_PC();
+
+        ref = FETCH(1) | (u4)FETCH(2) << 16;
+        vdst = FETCH(3);
+        vsrc1 = FETCH(4);       /* length reg */
+        ILOGV("|new-array/jumbo v%d,v%d,class@0x%08x  (%d elements)",
+            vdst, vsrc1, ref, (s4) GET_REGISTER(vsrc1));
+        length = (s4) GET_REGISTER(vsrc1);
+        if (length < 0) {
+            dvmThrowNegativeArraySizeException(length);
+            GOTO_exceptionThrown();
+        }
+        arrayClass = dvmDexGetResolvedClass(methodClassDex, ref);
+        if (arrayClass == NULL) {
+            arrayClass = dvmResolveClass(curMethod->clazz, ref, false);
+            if (arrayClass == NULL)
+                GOTO_exceptionThrown();
+        }
+        /* verifier guarantees this is an array class */
+        assert(dvmIsArrayClass(arrayClass));
+        assert(dvmIsClassInitialized(arrayClass));
+
+        newArray = dvmAllocArrayByClass(arrayClass, length, ALLOC_DONT_TRACK);
+        if (newArray == NULL)
+            GOTO_exceptionThrown();
+        SET_REGISTER(vdst, (u4) newArray);
+    }
+    FINISH(5);
+OP_END
+
+/* File: c/OP_FILLED_NEW_ARRAY_JUMBO.cpp */
+HANDLE_OPCODE(OP_FILLED_NEW_ARRAY_JUMBO /*{vCCCC..v(CCCC+BBBB-1)}, class@AAAAAAAA*/)
+    GOTO_invoke(filledNewArray, true, true);
+OP_END
+
+/* File: c/OP_IGET_JUMBO.cpp */
+HANDLE_IGET_X_JUMBO(OP_IGET_JUMBO,          "", Int, )
+OP_END
+
+/* File: c/OP_IGET_WIDE_JUMBO.cpp */
+HANDLE_IGET_X_JUMBO(OP_IGET_WIDE_JUMBO,     "-wide", Long, _WIDE)
+OP_END
+
+/* File: c/OP_IGET_OBJECT_JUMBO.cpp */
+HANDLE_IGET_X_JUMBO(OP_IGET_OBJECT_JUMBO,   "-object", Object, _AS_OBJECT)
+OP_END
+
+/* File: c/OP_IGET_BOOLEAN_JUMBO.cpp */
+HANDLE_IGET_X_JUMBO(OP_IGET_BOOLEAN_JUMBO,  "", Int, )
+OP_END
+
+/* File: c/OP_IGET_BYTE_JUMBO.cpp */
+HANDLE_IGET_X_JUMBO(OP_IGET_BYTE_JUMBO,     "", Int, )
+OP_END
+
+/* File: c/OP_IGET_CHAR_JUMBO.cpp */
+HANDLE_IGET_X_JUMBO(OP_IGET_CHAR_JUMBO,     "", Int, )
+OP_END
+
+/* File: c/OP_IGET_SHORT_JUMBO.cpp */
+HANDLE_IGET_X_JUMBO(OP_IGET_SHORT_JUMBO,    "", Int, )
+OP_END
+
+/* File: c/OP_IPUT_JUMBO.cpp */
+HANDLE_IPUT_X_JUMBO(OP_IPUT_JUMBO,          "", Int, )
+OP_END
+
+/* File: c/OP_IPUT_WIDE_JUMBO.cpp */
+HANDLE_IPUT_X_JUMBO(OP_IPUT_WIDE_JUMBO,     "-wide", Long, _WIDE)
+OP_END
+
+/* File: c/OP_IPUT_OBJECT_JUMBO.cpp */
+/*
+ * The VM spec says we should verify that the reference being stored into
+ * the field is assignment compatible.  In practice, many popular VMs don't
+ * do this because it slows down a very common operation.  It's not so bad
+ * for us, since "dexopt" quickens it whenever possible, but it's still an
+ * issue.
+ *
+ * To make this spec-complaint, we'd need to add a ClassObject pointer to
+ * the Field struct, resolve the field's type descriptor at link or class
+ * init time, and then verify the type here.
+ */
+HANDLE_IPUT_X_JUMBO(OP_IPUT_OBJECT_JUMBO,   "-object", Object, _AS_OBJECT)
+OP_END
+
+/* File: c/OP_IPUT_BOOLEAN_JUMBO.cpp */
+HANDLE_IPUT_X_JUMBO(OP_IPUT_BOOLEAN_JUMBO,  "", Int, )
+OP_END
+
+/* File: c/OP_IPUT_BYTE_JUMBO.cpp */
+HANDLE_IPUT_X_JUMBO(OP_IPUT_BYTE_JUMBO,     "", Int, )
+OP_END
+
+/* File: c/OP_IPUT_CHAR_JUMBO.cpp */
+HANDLE_IPUT_X_JUMBO(OP_IPUT_CHAR_JUMBO,     "", Int, )
+OP_END
+
+/* File: c/OP_IPUT_SHORT_JUMBO.cpp */
+HANDLE_IPUT_X_JUMBO(OP_IPUT_SHORT_JUMBO,    "", Int, )
+OP_END
+
+/* File: c/OP_SGET_JUMBO.cpp */
+HANDLE_SGET_X_JUMBO(OP_SGET_JUMBO,          "", Int, )
+OP_END
+
+/* File: c/OP_SGET_WIDE_JUMBO.cpp */
+HANDLE_SGET_X_JUMBO(OP_SGET_WIDE_JUMBO,     "-wide", Long, _WIDE)
+OP_END
+
+/* File: c/OP_SGET_OBJECT_JUMBO.cpp */
+HANDLE_SGET_X_JUMBO(OP_SGET_OBJECT_JUMBO,   "-object", Object, _AS_OBJECT)
+OP_END
+
+/* File: c/OP_SGET_BOOLEAN_JUMBO.cpp */
+HANDLE_SGET_X_JUMBO(OP_SGET_BOOLEAN_JUMBO,  "", Int, )
+OP_END
+
+/* File: c/OP_SGET_BYTE_JUMBO.cpp */
+HANDLE_SGET_X_JUMBO(OP_SGET_BYTE_JUMBO,     "", Int, )
+OP_END
+
+/* File: c/OP_SGET_CHAR_JUMBO.cpp */
+HANDLE_SGET_X_JUMBO(OP_SGET_CHAR_JUMBO,     "", Int, )
+OP_END
+
+/* File: c/OP_SGET_SHORT_JUMBO.cpp */
+HANDLE_SGET_X_JUMBO(OP_SGET_SHORT_JUMBO,    "", Int, )
+OP_END
+
+/* File: c/OP_SPUT_JUMBO.cpp */
+HANDLE_SPUT_X_JUMBO(OP_SPUT_JUMBO,          "", Int, )
+OP_END
+
+/* File: c/OP_SPUT_WIDE_JUMBO.cpp */
+HANDLE_SPUT_X_JUMBO(OP_SPUT_WIDE_JUMBO,     "-wide", Long, _WIDE)
+OP_END
+
+/* File: c/OP_SPUT_OBJECT_JUMBO.cpp */
+HANDLE_SPUT_X_JUMBO(OP_SPUT_OBJECT_JUMBO,   "-object", Object, _AS_OBJECT)
+OP_END
+
+/* File: c/OP_SPUT_BOOLEAN_JUMBO.cpp */
+HANDLE_SPUT_X_JUMBO(OP_SPUT_BOOLEAN_JUMBO,          "", Int, )
+OP_END
+
+/* File: c/OP_SPUT_BYTE_JUMBO.cpp */
+HANDLE_SPUT_X_JUMBO(OP_SPUT_BYTE_JUMBO,     "", Int, )
+OP_END
+
+/* File: c/OP_SPUT_CHAR_JUMBO.cpp */
+HANDLE_SPUT_X_JUMBO(OP_SPUT_CHAR_JUMBO,     "", Int, )
+OP_END
+
+/* File: c/OP_SPUT_SHORT_JUMBO.cpp */
+HANDLE_SPUT_X_JUMBO(OP_SPUT_SHORT_JUMBO,    "", Int, )
+OP_END
+
+/* File: c/OP_INVOKE_VIRTUAL_JUMBO.cpp */
+HANDLE_OPCODE(OP_INVOKE_VIRTUAL_JUMBO /*{vCCCC..v(CCCC+BBBB-1)}, meth@AAAAAAAA*/)
+    GOTO_invoke(invokeVirtual, true, true);
+OP_END
+
+/* File: c/OP_INVOKE_SUPER_JUMBO.cpp */
+HANDLE_OPCODE(OP_INVOKE_SUPER_JUMBO /*{vCCCC..v(CCCC+BBBB-1)}, meth@AAAAAAAA*/)
+    GOTO_invoke(invokeSuper, true, true);
+OP_END
+
+/* File: c/OP_INVOKE_DIRECT_JUMBO.cpp */
+HANDLE_OPCODE(OP_INVOKE_DIRECT_JUMBO /*{vCCCC..v(CCCC+BBBB-1)}, meth@AAAAAAAA*/)
+    GOTO_invoke(invokeDirect, true, true);
+OP_END
+
+/* File: c/OP_INVOKE_STATIC_JUMBO.cpp */
+HANDLE_OPCODE(OP_INVOKE_STATIC_JUMBO /*{vCCCC..v(CCCC+BBBB-1)}, meth@AAAAAAAA*/)
+    GOTO_invoke(invokeStatic, true, true);
+OP_END
+
+/* File: c/OP_INVOKE_INTERFACE_JUMBO.cpp */
+HANDLE_OPCODE(OP_INVOKE_INTERFACE_JUMBO /*{vCCCC..v(CCCC+BBBB-1)}, meth@AAAAAAAA*/)
+    GOTO_invoke(invokeInterface, true, true);
+OP_END
+
+/* File: c/OP_UNUSED_27FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_27FF)
+OP_END
+
+/* File: c/OP_UNUSED_28FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_28FF)
+OP_END
+
+/* File: c/OP_UNUSED_29FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_29FF)
+OP_END
+
+/* File: c/OP_UNUSED_2AFF.cpp */
+HANDLE_OPCODE(OP_UNUSED_2AFF)
+OP_END
+
+/* File: c/OP_UNUSED_2BFF.cpp */
+HANDLE_OPCODE(OP_UNUSED_2BFF)
+OP_END
+
+/* File: c/OP_UNUSED_2CFF.cpp */
+HANDLE_OPCODE(OP_UNUSED_2CFF)
+OP_END
+
+/* File: c/OP_UNUSED_2DFF.cpp */
+HANDLE_OPCODE(OP_UNUSED_2DFF)
+OP_END
+
+/* File: c/OP_UNUSED_2EFF.cpp */
+HANDLE_OPCODE(OP_UNUSED_2EFF)
+OP_END
+
+/* File: c/OP_UNUSED_2FFF.cpp */
+HANDLE_OPCODE(OP_UNUSED_2FFF)
+OP_END
+
+/* File: c/OP_UNUSED_30FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_30FF)
+OP_END
+
+/* File: c/OP_UNUSED_31FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_31FF)
+OP_END
+
+/* File: c/OP_UNUSED_32FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_32FF)
+OP_END
+
+/* File: c/OP_UNUSED_33FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_33FF)
+OP_END
+
+/* File: c/OP_UNUSED_34FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_34FF)
+OP_END
+
+/* File: c/OP_UNUSED_35FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_35FF)
+OP_END
+
+/* File: c/OP_UNUSED_36FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_36FF)
+OP_END
+
+/* File: c/OP_UNUSED_37FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_37FF)
+OP_END
+
+/* File: c/OP_UNUSED_38FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_38FF)
+OP_END
+
+/* File: c/OP_UNUSED_39FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_39FF)
+OP_END
+
+/* File: c/OP_UNUSED_3AFF.cpp */
+HANDLE_OPCODE(OP_UNUSED_3AFF)
+OP_END
+
+/* File: c/OP_UNUSED_3BFF.cpp */
+HANDLE_OPCODE(OP_UNUSED_3BFF)
+OP_END
+
+/* File: c/OP_UNUSED_3CFF.cpp */
+HANDLE_OPCODE(OP_UNUSED_3CFF)
+OP_END
+
+/* File: c/OP_UNUSED_3DFF.cpp */
+HANDLE_OPCODE(OP_UNUSED_3DFF)
+OP_END
+
+/* File: c/OP_UNUSED_3EFF.cpp */
+HANDLE_OPCODE(OP_UNUSED_3EFF)
+OP_END
+
+/* File: c/OP_UNUSED_3FFF.cpp */
+HANDLE_OPCODE(OP_UNUSED_3FFF)
+OP_END
+
+/* File: c/OP_UNUSED_40FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_40FF)
+OP_END
+
+/* File: c/OP_UNUSED_41FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_41FF)
+OP_END
+
+/* File: c/OP_UNUSED_42FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_42FF)
+OP_END
+
+/* File: c/OP_UNUSED_43FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_43FF)
+OP_END
+
+/* File: c/OP_UNUSED_44FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_44FF)
+OP_END
+
+/* File: c/OP_UNUSED_45FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_45FF)
+OP_END
+
+/* File: c/OP_UNUSED_46FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_46FF)
+OP_END
+
+/* File: c/OP_UNUSED_47FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_47FF)
+OP_END
+
+/* File: c/OP_UNUSED_48FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_48FF)
+OP_END
+
+/* File: c/OP_UNUSED_49FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_49FF)
+OP_END
+
+/* File: c/OP_UNUSED_4AFF.cpp */
+HANDLE_OPCODE(OP_UNUSED_4AFF)
+OP_END
+
+/* File: c/OP_UNUSED_4BFF.cpp */
+HANDLE_OPCODE(OP_UNUSED_4BFF)
+OP_END
+
+/* File: c/OP_UNUSED_4CFF.cpp */
+HANDLE_OPCODE(OP_UNUSED_4CFF)
+OP_END
+
+/* File: c/OP_UNUSED_4DFF.cpp */
+HANDLE_OPCODE(OP_UNUSED_4DFF)
+OP_END
+
+/* File: c/OP_UNUSED_4EFF.cpp */
+HANDLE_OPCODE(OP_UNUSED_4EFF)
+OP_END
+
+/* File: c/OP_UNUSED_4FFF.cpp */
+HANDLE_OPCODE(OP_UNUSED_4FFF)
+OP_END
+
+/* File: c/OP_UNUSED_50FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_50FF)
+OP_END
+
+/* File: c/OP_UNUSED_51FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_51FF)
+OP_END
+
+/* File: c/OP_UNUSED_52FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_52FF)
+OP_END
+
+/* File: c/OP_UNUSED_53FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_53FF)
+OP_END
+
+/* File: c/OP_UNUSED_54FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_54FF)
+OP_END
+
+/* File: c/OP_UNUSED_55FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_55FF)
+OP_END
+
+/* File: c/OP_UNUSED_56FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_56FF)
+OP_END
+
+/* File: c/OP_UNUSED_57FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_57FF)
+OP_END
+
+/* File: c/OP_UNUSED_58FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_58FF)
+OP_END
+
+/* File: c/OP_UNUSED_59FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_59FF)
+OP_END
+
+/* File: c/OP_UNUSED_5AFF.cpp */
+HANDLE_OPCODE(OP_UNUSED_5AFF)
+OP_END
+
+/* File: c/OP_UNUSED_5BFF.cpp */
+HANDLE_OPCODE(OP_UNUSED_5BFF)
+OP_END
+
+/* File: c/OP_UNUSED_5CFF.cpp */
+HANDLE_OPCODE(OP_UNUSED_5CFF)
+OP_END
+
+/* File: c/OP_UNUSED_5DFF.cpp */
+HANDLE_OPCODE(OP_UNUSED_5DFF)
+OP_END
+
+/* File: c/OP_UNUSED_5EFF.cpp */
+HANDLE_OPCODE(OP_UNUSED_5EFF)
+OP_END
+
+/* File: c/OP_UNUSED_5FFF.cpp */
+HANDLE_OPCODE(OP_UNUSED_5FFF)
+OP_END
+
+/* File: c/OP_UNUSED_60FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_60FF)
+OP_END
+
+/* File: c/OP_UNUSED_61FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_61FF)
+OP_END
+
+/* File: c/OP_UNUSED_62FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_62FF)
+OP_END
+
+/* File: c/OP_UNUSED_63FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_63FF)
+OP_END
+
+/* File: c/OP_UNUSED_64FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_64FF)
+OP_END
+
+/* File: c/OP_UNUSED_65FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_65FF)
+OP_END
+
+/* File: c/OP_UNUSED_66FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_66FF)
+OP_END
+
+/* File: c/OP_UNUSED_67FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_67FF)
+OP_END
+
+/* File: c/OP_UNUSED_68FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_68FF)
+OP_END
+
+/* File: c/OP_UNUSED_69FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_69FF)
+OP_END
+
+/* File: c/OP_UNUSED_6AFF.cpp */
+HANDLE_OPCODE(OP_UNUSED_6AFF)
+OP_END
+
+/* File: c/OP_UNUSED_6BFF.cpp */
+HANDLE_OPCODE(OP_UNUSED_6BFF)
+OP_END
+
+/* File: c/OP_UNUSED_6CFF.cpp */
+HANDLE_OPCODE(OP_UNUSED_6CFF)
+OP_END
+
+/* File: c/OP_UNUSED_6DFF.cpp */
+HANDLE_OPCODE(OP_UNUSED_6DFF)
+OP_END
+
+/* File: c/OP_UNUSED_6EFF.cpp */
+HANDLE_OPCODE(OP_UNUSED_6EFF)
+OP_END
+
+/* File: c/OP_UNUSED_6FFF.cpp */
+HANDLE_OPCODE(OP_UNUSED_6FFF)
+OP_END
+
+/* File: c/OP_UNUSED_70FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_70FF)
+OP_END
+
+/* File: c/OP_UNUSED_71FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_71FF)
+OP_END
+
+/* File: c/OP_UNUSED_72FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_72FF)
+OP_END
+
+/* File: c/OP_UNUSED_73FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_73FF)
+OP_END
+
+/* File: c/OP_UNUSED_74FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_74FF)
+OP_END
+
+/* File: c/OP_UNUSED_75FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_75FF)
+OP_END
+
+/* File: c/OP_UNUSED_76FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_76FF)
+OP_END
+
+/* File: c/OP_UNUSED_77FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_77FF)
+OP_END
+
+/* File: c/OP_UNUSED_78FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_78FF)
+OP_END
+
+/* File: c/OP_UNUSED_79FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_79FF)
+OP_END
+
+/* File: c/OP_UNUSED_7AFF.cpp */
+HANDLE_OPCODE(OP_UNUSED_7AFF)
+OP_END
+
+/* File: c/OP_UNUSED_7BFF.cpp */
+HANDLE_OPCODE(OP_UNUSED_7BFF)
+OP_END
+
+/* File: c/OP_UNUSED_7CFF.cpp */
+HANDLE_OPCODE(OP_UNUSED_7CFF)
+OP_END
+
+/* File: c/OP_UNUSED_7DFF.cpp */
+HANDLE_OPCODE(OP_UNUSED_7DFF)
+OP_END
+
+/* File: c/OP_UNUSED_7EFF.cpp */
+HANDLE_OPCODE(OP_UNUSED_7EFF)
+OP_END
+
+/* File: c/OP_UNUSED_7FFF.cpp */
+HANDLE_OPCODE(OP_UNUSED_7FFF)
+OP_END
+
+/* File: c/OP_UNUSED_80FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_80FF)
+OP_END
+
+/* File: c/OP_UNUSED_81FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_81FF)
+OP_END
+
+/* File: c/OP_UNUSED_82FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_82FF)
+OP_END
+
+/* File: c/OP_UNUSED_83FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_83FF)
+OP_END
+
+/* File: c/OP_UNUSED_84FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_84FF)
+OP_END
+
+/* File: c/OP_UNUSED_85FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_85FF)
+OP_END
+
+/* File: c/OP_UNUSED_86FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_86FF)
+OP_END
+
+/* File: c/OP_UNUSED_87FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_87FF)
+OP_END
+
+/* File: c/OP_UNUSED_88FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_88FF)
+OP_END
+
+/* File: c/OP_UNUSED_89FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_89FF)
+OP_END
+
+/* File: c/OP_UNUSED_8AFF.cpp */
+HANDLE_OPCODE(OP_UNUSED_8AFF)
+OP_END
+
+/* File: c/OP_UNUSED_8BFF.cpp */
+HANDLE_OPCODE(OP_UNUSED_8BFF)
+OP_END
+
+/* File: c/OP_UNUSED_8CFF.cpp */
+HANDLE_OPCODE(OP_UNUSED_8CFF)
+OP_END
+
+/* File: c/OP_UNUSED_8DFF.cpp */
+HANDLE_OPCODE(OP_UNUSED_8DFF)
+OP_END
+
+/* File: c/OP_UNUSED_8EFF.cpp */
+HANDLE_OPCODE(OP_UNUSED_8EFF)
+OP_END
+
+/* File: c/OP_UNUSED_8FFF.cpp */
+HANDLE_OPCODE(OP_UNUSED_8FFF)
+OP_END
+
+/* File: c/OP_UNUSED_90FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_90FF)
+OP_END
+
+/* File: c/OP_UNUSED_91FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_91FF)
+OP_END
+
+/* File: c/OP_UNUSED_92FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_92FF)
+OP_END
+
+/* File: c/OP_UNUSED_93FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_93FF)
+OP_END
+
+/* File: c/OP_UNUSED_94FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_94FF)
+OP_END
+
+/* File: c/OP_UNUSED_95FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_95FF)
+OP_END
+
+/* File: c/OP_UNUSED_96FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_96FF)
+OP_END
+
+/* File: c/OP_UNUSED_97FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_97FF)
+OP_END
+
+/* File: c/OP_UNUSED_98FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_98FF)
+OP_END
+
+/* File: c/OP_UNUSED_99FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_99FF)
+OP_END
+
+/* File: c/OP_UNUSED_9AFF.cpp */
+HANDLE_OPCODE(OP_UNUSED_9AFF)
+OP_END
+
+/* File: c/OP_UNUSED_9BFF.cpp */
+HANDLE_OPCODE(OP_UNUSED_9BFF)
+OP_END
+
+/* File: c/OP_UNUSED_9CFF.cpp */
+HANDLE_OPCODE(OP_UNUSED_9CFF)
+OP_END
+
+/* File: c/OP_UNUSED_9DFF.cpp */
+HANDLE_OPCODE(OP_UNUSED_9DFF)
+OP_END
+
+/* File: c/OP_UNUSED_9EFF.cpp */
+HANDLE_OPCODE(OP_UNUSED_9EFF)
+OP_END
+
+/* File: c/OP_UNUSED_9FFF.cpp */
+HANDLE_OPCODE(OP_UNUSED_9FFF)
+OP_END
+
+/* File: c/OP_UNUSED_A0FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_A0FF)
+OP_END
+
+/* File: c/OP_UNUSED_A1FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_A1FF)
+OP_END
+
+/* File: c/OP_UNUSED_A2FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_A2FF)
+OP_END
+
+/* File: c/OP_UNUSED_A3FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_A3FF)
+OP_END
+
+/* File: c/OP_UNUSED_A4FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_A4FF)
+OP_END
+
+/* File: c/OP_UNUSED_A5FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_A5FF)
+OP_END
+
+/* File: c/OP_UNUSED_A6FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_A6FF)
+OP_END
+
+/* File: c/OP_UNUSED_A7FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_A7FF)
+OP_END
+
+/* File: c/OP_UNUSED_A8FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_A8FF)
+OP_END
+
+/* File: c/OP_UNUSED_A9FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_A9FF)
+OP_END
+
+/* File: c/OP_UNUSED_AAFF.cpp */
+HANDLE_OPCODE(OP_UNUSED_AAFF)
+OP_END
+
+/* File: c/OP_UNUSED_ABFF.cpp */
+HANDLE_OPCODE(OP_UNUSED_ABFF)
+OP_END
+
+/* File: c/OP_UNUSED_ACFF.cpp */
+HANDLE_OPCODE(OP_UNUSED_ACFF)
+OP_END
+
+/* File: c/OP_UNUSED_ADFF.cpp */
+HANDLE_OPCODE(OP_UNUSED_ADFF)
+OP_END
+
+/* File: c/OP_UNUSED_AEFF.cpp */
+HANDLE_OPCODE(OP_UNUSED_AEFF)
+OP_END
+
+/* File: c/OP_UNUSED_AFFF.cpp */
+HANDLE_OPCODE(OP_UNUSED_AFFF)
+OP_END
+
+/* File: c/OP_UNUSED_B0FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_B0FF)
+OP_END
+
+/* File: c/OP_UNUSED_B1FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_B1FF)
+OP_END
+
+/* File: c/OP_UNUSED_B2FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_B2FF)
+OP_END
+
+/* File: c/OP_UNUSED_B3FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_B3FF)
+OP_END
+
+/* File: c/OP_UNUSED_B4FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_B4FF)
+OP_END
+
+/* File: c/OP_UNUSED_B5FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_B5FF)
+OP_END
+
+/* File: c/OP_UNUSED_B6FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_B6FF)
+OP_END
+
+/* File: c/OP_UNUSED_B7FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_B7FF)
+OP_END
+
+/* File: c/OP_UNUSED_B8FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_B8FF)
+OP_END
+
+/* File: c/OP_UNUSED_B9FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_B9FF)
+OP_END
+
+/* File: c/OP_UNUSED_BAFF.cpp */
+HANDLE_OPCODE(OP_UNUSED_BAFF)
+OP_END
+
+/* File: c/OP_UNUSED_BBFF.cpp */
+HANDLE_OPCODE(OP_UNUSED_BBFF)
+OP_END
+
+/* File: c/OP_UNUSED_BCFF.cpp */
+HANDLE_OPCODE(OP_UNUSED_BCFF)
+OP_END
+
+/* File: c/OP_UNUSED_BDFF.cpp */
+HANDLE_OPCODE(OP_UNUSED_BDFF)
+OP_END
+
+/* File: c/OP_UNUSED_BEFF.cpp */
+HANDLE_OPCODE(OP_UNUSED_BEFF)
+OP_END
+
+/* File: c/OP_UNUSED_BFFF.cpp */
+HANDLE_OPCODE(OP_UNUSED_BFFF)
+OP_END
+
+/* File: c/OP_UNUSED_C0FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_C0FF)
+OP_END
+
+/* File: c/OP_UNUSED_C1FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_C1FF)
+OP_END
+
+/* File: c/OP_UNUSED_C2FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_C2FF)
+OP_END
+
+/* File: c/OP_UNUSED_C3FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_C3FF)
+OP_END
+
+/* File: c/OP_UNUSED_C4FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_C4FF)
+OP_END
+
+/* File: c/OP_UNUSED_C5FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_C5FF)
+OP_END
+
+/* File: c/OP_UNUSED_C6FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_C6FF)
+OP_END
+
+/* File: c/OP_UNUSED_C7FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_C7FF)
+OP_END
+
+/* File: c/OP_UNUSED_C8FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_C8FF)
+OP_END
+
+/* File: c/OP_UNUSED_C9FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_C9FF)
+OP_END
+
+/* File: c/OP_UNUSED_CAFF.cpp */
+HANDLE_OPCODE(OP_UNUSED_CAFF)
+OP_END
+
+/* File: c/OP_UNUSED_CBFF.cpp */
+HANDLE_OPCODE(OP_UNUSED_CBFF)
+OP_END
+
+/* File: c/OP_UNUSED_CCFF.cpp */
+HANDLE_OPCODE(OP_UNUSED_CCFF)
+OP_END
+
+/* File: c/OP_UNUSED_CDFF.cpp */
+HANDLE_OPCODE(OP_UNUSED_CDFF)
+OP_END
+
+/* File: c/OP_UNUSED_CEFF.cpp */
+HANDLE_OPCODE(OP_UNUSED_CEFF)
+OP_END
+
+/* File: c/OP_UNUSED_CFFF.cpp */
+HANDLE_OPCODE(OP_UNUSED_CFFF)
+OP_END
+
+/* File: c/OP_UNUSED_D0FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_D0FF)
+OP_END
+
+/* File: c/OP_UNUSED_D1FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_D1FF)
+OP_END
+
+/* File: c/OP_UNUSED_D2FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_D2FF)
+OP_END
+
+/* File: c/OP_UNUSED_D3FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_D3FF)
+OP_END
+
+/* File: c/OP_UNUSED_D4FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_D4FF)
+OP_END
+
+/* File: c/OP_UNUSED_D5FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_D5FF)
+OP_END
+
+/* File: c/OP_UNUSED_D6FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_D6FF)
+OP_END
+
+/* File: c/OP_UNUSED_D7FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_D7FF)
+OP_END
+
+/* File: c/OP_UNUSED_D8FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_D8FF)
+OP_END
+
+/* File: c/OP_UNUSED_D9FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_D9FF)
+OP_END
+
+/* File: c/OP_UNUSED_DAFF.cpp */
+HANDLE_OPCODE(OP_UNUSED_DAFF)
+OP_END
+
+/* File: c/OP_UNUSED_DBFF.cpp */
+HANDLE_OPCODE(OP_UNUSED_DBFF)
+OP_END
+
+/* File: c/OP_UNUSED_DCFF.cpp */
+HANDLE_OPCODE(OP_UNUSED_DCFF)
+OP_END
+
+/* File: c/OP_UNUSED_DDFF.cpp */
+HANDLE_OPCODE(OP_UNUSED_DDFF)
+OP_END
+
+/* File: c/OP_UNUSED_DEFF.cpp */
+HANDLE_OPCODE(OP_UNUSED_DEFF)
+OP_END
+
+/* File: c/OP_UNUSED_DFFF.cpp */
+HANDLE_OPCODE(OP_UNUSED_DFFF)
+OP_END
+
+/* File: c/OP_UNUSED_E0FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_E0FF)
+OP_END
+
+/* File: c/OP_UNUSED_E1FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_E1FF)
+OP_END
+
+/* File: c/OP_UNUSED_E2FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_E2FF)
+OP_END
+
+/* File: c/OP_UNUSED_E3FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_E3FF)
+OP_END
+
+/* File: c/OP_UNUSED_E4FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_E4FF)
+OP_END
+
+/* File: c/OP_UNUSED_E5FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_E5FF)
+OP_END
+
+/* File: c/OP_UNUSED_E6FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_E6FF)
+OP_END
+
+/* File: c/OP_UNUSED_E7FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_E7FF)
+OP_END
+
+/* File: c/OP_UNUSED_E8FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_E8FF)
+OP_END
+
+/* File: c/OP_UNUSED_E9FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_E9FF)
+OP_END
+
+/* File: c/OP_UNUSED_EAFF.cpp */
+HANDLE_OPCODE(OP_UNUSED_EAFF)
+OP_END
+
+/* File: c/OP_UNUSED_EBFF.cpp */
+HANDLE_OPCODE(OP_UNUSED_EBFF)
+OP_END
+
+/* File: c/OP_UNUSED_ECFF.cpp */
+HANDLE_OPCODE(OP_UNUSED_ECFF)
+OP_END
+
+/* File: c/OP_UNUSED_EDFF.cpp */
+HANDLE_OPCODE(OP_UNUSED_EDFF)
+OP_END
+
+/* File: c/OP_UNUSED_EEFF.cpp */
+HANDLE_OPCODE(OP_UNUSED_EEFF)
+OP_END
+
+/* File: c/OP_UNUSED_EFFF.cpp */
+HANDLE_OPCODE(OP_UNUSED_EFFF)
+OP_END
+
+/* File: c/OP_UNUSED_F0FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_F0FF)
+OP_END
+
+/* File: c/OP_UNUSED_F1FF.cpp */
+HANDLE_OPCODE(OP_UNUSED_F1FF)
+    /*
+     * In portable interp, most unused opcodes will fall through to here.
+     */
+    LOGE("unknown opcode 0x%04x\n", inst);
+    dvmAbort();
+    FINISH(1);
+OP_END
+
+/* File: c/OP_INVOKE_OBJECT_INIT_JUMBO.cpp */
 HANDLE_OPCODE(OP_INVOKE_OBJECT_INIT_JUMBO /*{vCCCC..vNNNN}, meth@AAAAAAAA*/)
     {
         Object* obj;
@@ -1403,55 +4301,127 @@ HANDLE_OPCODE(OP_INVOKE_OBJECT_INIT_JUMBO /*{vCCCC..vNNNN}, meth@AAAAAAAA*/)
     }
 OP_END
 
-/* File: c/OP_IGET_VOLATILE_JUMBO.c */
+/* File: c/OP_IGET_VOLATILE_JUMBO.cpp */
 HANDLE_IGET_X_JUMBO(OP_IGET_VOLATILE_JUMBO, "-volatile/jumbo", IntVolatile, )
 OP_END
 
-/* File: c/OP_IGET_WIDE_VOLATILE_JUMBO.c */
+/* File: c/OP_IGET_WIDE_VOLATILE_JUMBO.cpp */
 HANDLE_IGET_X_JUMBO(OP_IGET_WIDE_VOLATILE_JUMBO, "-wide-volatile/jumbo", LongVolatile, _WIDE)
 OP_END
 
-/* File: c/OP_IGET_OBJECT_VOLATILE_JUMBO.c */
+/* File: c/OP_IGET_OBJECT_VOLATILE_JUMBO.cpp */
 HANDLE_IGET_X_JUMBO(OP_IGET_OBJECT_VOLATILE_JUMBO, "-object-volatile/jumbo", ObjectVolatile, _AS_OBJECT)
 OP_END
 
-/* File: c/OP_IPUT_VOLATILE_JUMBO.c */
+/* File: c/OP_IPUT_VOLATILE_JUMBO.cpp */
 HANDLE_IPUT_X_JUMBO(OP_IPUT_VOLATILE_JUMBO, "-volatile/jumbo", IntVolatile, )
 OP_END
 
-/* File: c/OP_IPUT_WIDE_VOLATILE_JUMBO.c */
+/* File: c/OP_IPUT_WIDE_VOLATILE_JUMBO.cpp */
 HANDLE_IPUT_X_JUMBO(OP_IPUT_WIDE_VOLATILE_JUMBO, "-wide-volatile/jumbo", LongVolatile, _WIDE)
 OP_END
 
-/* File: c/OP_IPUT_OBJECT_VOLATILE_JUMBO.c */
+/* File: c/OP_IPUT_OBJECT_VOLATILE_JUMBO.cpp */
 HANDLE_IPUT_X_JUMBO(OP_IPUT_OBJECT_VOLATILE_JUMBO, "-object-volatile/jumbo", ObjectVolatile, _AS_OBJECT)
 OP_END
 
-/* File: c/OP_SGET_VOLATILE_JUMBO.c */
+/* File: c/OP_SGET_VOLATILE_JUMBO.cpp */
 HANDLE_SGET_X_JUMBO(OP_SGET_VOLATILE_JUMBO, "-volatile/jumbo", IntVolatile, )
 OP_END
 
-/* File: c/OP_SGET_WIDE_VOLATILE_JUMBO.c */
+/* File: c/OP_SGET_WIDE_VOLATILE_JUMBO.cpp */
 HANDLE_SGET_X_JUMBO(OP_SGET_WIDE_VOLATILE_JUMBO, "-wide-volatile/jumbo", LongVolatile, _WIDE)
 OP_END
 
-/* File: c/OP_SGET_OBJECT_VOLATILE_JUMBO.c */
+/* File: c/OP_SGET_OBJECT_VOLATILE_JUMBO.cpp */
 HANDLE_SGET_X_JUMBO(OP_SGET_OBJECT_VOLATILE_JUMBO, "-object-volatile/jumbo", ObjectVolatile, _AS_OBJECT)
 OP_END
 
-/* File: c/OP_SPUT_VOLATILE_JUMBO.c */
+/* File: c/OP_SPUT_VOLATILE_JUMBO.cpp */
 HANDLE_SPUT_X_JUMBO(OP_SPUT_VOLATILE_JUMBO, "-volatile", IntVolatile, )
 OP_END
 
-/* File: c/OP_SPUT_WIDE_VOLATILE_JUMBO.c */
+/* File: c/OP_SPUT_WIDE_VOLATILE_JUMBO.cpp */
 HANDLE_SPUT_X_JUMBO(OP_SPUT_WIDE_VOLATILE_JUMBO, "-wide-volatile/jumbo", LongVolatile, _WIDE)
 OP_END
 
-/* File: c/OP_SPUT_OBJECT_VOLATILE_JUMBO.c */
+/* File: c/OP_SPUT_OBJECT_VOLATILE_JUMBO.cpp */
 HANDLE_SPUT_X_JUMBO(OP_SPUT_OBJECT_VOLATILE_JUMBO, "-object-volatile/jumbo", ObjectVolatile, _AS_OBJECT)
 OP_END
 
-/* File: c/gotoTargets.c */
+/* File: c/OP_THROW_VERIFICATION_ERROR_JUMBO.cpp */
+HANDLE_OPCODE(OP_THROW_VERIFICATION_ERROR_JUMBO)
+    EXPORT_PC();
+    vsrc1 = FETCH(3);
+    ref = FETCH(1) | (u4)FETCH(2) << 16;      /* class/field/method ref */
+    dvmThrowVerificationError(curMethod, vsrc1, ref);
+    GOTO_exceptionThrown();
+OP_END
+
+/* File: cstubs/entry.cpp */
+/*
+ * Handler function table, one entry per opcode.
+ */
+#undef H
+#define H(_op) dvmMterp_##_op
+DEFINE_GOTO_TABLE(gDvmMterpHandlers)
+
+#undef H
+#define H(_op) #_op
+DEFINE_GOTO_TABLE(gDvmMterpHandlerNames)
+
+#include <setjmp.h>
+
+/*
+ * C mterp entry point.  This just calls the various C fallbacks, making
+ * this a slow but portable interpeter.
+ *
+ * This is only used for the "allstubs" variant.
+ */
+void dvmMterpStdRun(Thread* self)
+{
+    jmp_buf jmpBuf;
+
+    self->bailPtr = &jmpBuf;
+
+    /* We exit via a longjmp */
+    if (setjmp(jmpBuf)) {
+        LOGVV("mterp threadid=%d returning\n", dvmThreadSelf()->threadId);
+        return
+    }
+
+    /* run until somebody longjmp()s out */
+    while (true) {
+        typedef void (*Handler)(Thread* self);
+
+        u2 inst = /*self->interpSave.*/pc[0];
+        /*
+         * In mterp, dvmCheckBefore is handled via the altHandlerTable,
+         * while in the portable interpreter it is part of the handler
+         * FINISH code.  For allstubs, we must do an explicit check
+         * in the interpretation loop.
+         */
+        if (self-interpBreak.ctl.subMode) {
+            dvmCheckBefore(pc, fp, self, curMethod);
+        }
+        Handler handler = (Handler) gDvmMterpHandlers[inst & 0xff];
+        (void) gDvmMterpHandlerNames;   /* avoid gcc "defined but not used" */
+        LOGVV("handler %p %s\n",
+            handler, (const char*) gDvmMterpHandlerNames[inst & 0xff]);
+        (*handler)(self);
+    }
+}
+
+/*
+ * C mterp exit point.  Call here to bail out of the interpreter.
+ */
+void dvmMterpStdBail(Thread* self)
+{
+    jmp_buf* pJmpBuf = self->bailPtr;
+    longjmp(*pJmpBuf, 1);
+}
+
+/* File: c/gotoTargets.cpp */
 /*
  * C footer.  This has some common code shared by the various targets.
  */
@@ -1541,7 +4511,7 @@ GOTO_TARGET(filledNewArray, bool methodCallRange, bool jumboFormat)
         /*
          * Fill in the elements.  It's legal for vsrc1 to be zero.
          */
-        contents = (u4*) newArray->contents;
+        contents = (u4*)(void*)newArray->contents;
         if (methodCallRange) {
             for (i = 0; i < vsrc1; i++)
                 contents[i] = GET_REGISTER(vdst+i);
@@ -2487,7 +5457,7 @@ GOTO_TARGET(invokeMethod, bool methodCallRange, const Method* _methodToCall,
     assert(false);      // should not get here
 GOTO_TARGET_END
 
-/* File: cstubs/enddefs.c */
+/* File: cstubs/enddefs.cpp */
 
 /* undefine "magic" name remapping */
 #undef retval

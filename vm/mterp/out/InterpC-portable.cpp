@@ -1,10 +1,10 @@
 /*
- * This file was generated automatically by gen-mterp.py for 'allstubs'.
+ * This file was generated automatically by gen-mterp.py for 'portable'.
  *
  * --> DO NOT EDIT <--
  */
 
-/* File: c/header.c */
+/* File: c/header.cpp */
 /*
  * Copyright (C) 2008 The Android Open Source Project
  *
@@ -379,45 +379,21 @@ static inline bool checkForNullExportPC(Object* obj, u4* fp, const u2* pc)
     return true;
 }
 
-/* File: cstubs/stubdefs.c */
+/* File: portable/stubdefs.cpp */
 /*
  * In the C mterp stubs, "goto" is a function call followed immediately
  * by a return.
  */
 
-#define GOTO_TARGET_DECL(_target, ...)                                      \
-    void dvmMterp_##_target(Thread* self, ## __VA_ARGS__);
+#define GOTO_TARGET_DECL(_target, ...)
 
-/* (void)xxx to quiet unused variable compiler warnings. */
-#define GOTO_TARGET(_target, ...)                                           \
-    void dvmMterp_##_target(Thread* self, ## __VA_ARGS__) {                 \
-        u2 ref, vsrc1, vsrc2, vdst;                                         \
-        u2 inst = FETCH(0);                                                 \
-        const Method* methodToCall;                                         \
-        StackSaveArea* debugSaveArea;                                       \
-        (void)ref; (void)vsrc1; (void)vsrc2; (void)vdst; (void)inst;        \
-        (void)methodToCall; (void)debugSaveArea;
+#define GOTO_TARGET(_target, ...) _target:
 
-#define GOTO_TARGET_END }
-
-/*
- * Redefine what used to be local variable accesses into Thread struct
- * references.  (These are undefined down in "footer.c".)
- */
-#define retval                  self->retval
-#define pc                      self->interpSave.pc
-#define fp                      self->interpSave.fp
-#define curMethod               self->interpSave.method
-#define methodClassDex          self->interpSave.methodClassDex
-#define debugTrackedRefStart    self->interpSave.debugTrackedRefStart
+#define GOTO_TARGET_END
 
 /* ugh */
-#define STUB_HACK(x) x
-#if defined(WITH_JIT)
-#define JIT_STUB_HACK(x) x
-#else
+#define STUB_HACK(x)
 #define JIT_STUB_HACK(x)
-#endif
 
 /*
  * InterpSave's pc and fp must be valid when breaking out to a
@@ -425,86 +401,63 @@ static inline bool checkForNullExportPC(Object* obj, u4* fp, const u2* pc)
  * variables for these, we must flush prior.  Stubs, however, use
  * the interpSave vars directly, so this is a nop for stubs.
  */
-#define PC_FP_TO_SELF()
+#define PC_FP_TO_SELF()                                                    \
+    self->interpSave.pc = pc;                                              \
+    self->interpSave.fp = fp;
 
 /*
- * Opcode handler framing macros.  Here, each opcode is a separate function
- * that takes a "self" argument and returns void.  We can't declare
- * these "static" because they may be called from an assembly stub.
- * (void)xxx to quiet unused variable compiler warnings.
+ * Instruction framing.  For a switch-oriented implementation this is
+ * case/break, for a threaded implementation it's a goto label and an
+ * instruction fetch/computed goto.
+ *
+ * Assumes the existence of "const u2* pc" and (for threaded operation)
+ * "u2 inst".
  */
-#define HANDLE_OPCODE(_op)                                                  \
-    void dvmMterp_##_op(Thread* self) {                                     \
-        u4 ref;                                                             \
-        u2 vsrc1, vsrc2, vdst;                                              \
-        u2 inst = FETCH(0);                                                 \
-        (void)ref; (void)vsrc1; (void)vsrc2; (void)vdst; (void)inst;
-
-#define OP_END }
-
-/*
- * Like the "portable" FINISH, but don't reload "inst", and return to caller
- * when done.  Further, debugger/profiler checks are handled
- * before handler execution in mterp, so we don't do them here either.
- */
-#if defined(WITH_JIT)
-#define FINISH(_offset) {                                                   \
+# define H(_op)             &&op_##_op
+# define HANDLE_OPCODE(_op) op_##_op:
+# define FINISH(_offset) {                                                  \
         ADJUST_PC(_offset);                                                 \
-        if (self->interpBreak.ctl.subMode & kSubModeJitTraceBuild) {        \
-            dvmCheckJit(pc, self);                                          \
+        inst = FETCH(0);                                                    \
+        if (self->interpBreak.ctl.subMode) {                                \
+            dvmCheckBefore(pc, fp, self);                                   \
         }                                                                   \
-        return;                                                             \
+        goto *handlerTable[INST_INST(inst)];                                \
     }
-#else
-#define FINISH(_offset) {                                                   \
-        ADJUST_PC(_offset);                                                 \
-        return;                                                             \
+# define FINISH_BKPT(_opcode) {                                             \
+        goto *handlerTable[_opcode];                                        \
     }
-#endif
+# define DISPATCH_EXTENDED(_opcode) {                                       \
+        goto *handlerTable[0x100 + _opcode];                                \
+    }
 
+#define OP_END
 
 /*
- * The "goto label" statements turn into function calls followed by
- * return statements.  Some of the functions take arguments, which in the
- * portable interpreter are handled by assigning values to globals.
+ * The "goto" targets just turn into goto statements.  The "arguments" are
+ * passed through local variables.
  */
 
-#define GOTO_exceptionThrown()                                              \
-    do {                                                                    \
-        dvmMterp_exceptionThrown(self);                                     \
-        return;                                                             \
-    } while(false)
+#define GOTO_exceptionThrown() goto exceptionThrown;
 
-#define GOTO_returnFromMethod()                                             \
-    do {                                                                    \
-        dvmMterp_returnFromMethod(self);                                    \
-        return;                                                             \
-    } while(false)
+#define GOTO_returnFromMethod() goto returnFromMethod;
 
 #define GOTO_invoke(_target, _methodCallRange, _jumboFormat)                \
     do {                                                                    \
-        dvmMterp_##_target(self, _methodCallRange, _jumboFormat);           \
-        return;                                                             \
+        methodCallRange = _methodCallRange;                                 \
+        jumboFormat = _jumboFormat;                                         \
+        goto _target;                                                       \
     } while(false)
 
-#define GOTO_invokeMethod(_methodCallRange, _methodToCall, _vsrc1, _vdst)   \
-    do {                                                                    \
-        dvmMterp_invokeMethod(self, _methodCallRange, _methodToCall,        \
-            _vsrc1, _vdst);                                                 \
-        return;                                                             \
-    } while(false)
+/* for this, the "args" are already in the locals */
+#define GOTO_invokeMethod(_methodCallRange, _methodToCall, _vsrc1, _vdst) goto invokeMethod;
 
-/*
- * As a special case, "goto bail" turns into a longjmp.
- */
-#define GOTO_bail()                                                         \
-    dvmMterpStdBail(self, false);
+#define GOTO_bail() goto bail;
 
 /*
  * Periodically check for thread suspension.
  *
  * While we're at it, see if a debugger has attached or the profiler has
- * started.
+ * started.  If so, switch to a different "goto" table.
  */
 #define PERIODIC_CHECKS(_pcadj) {                              \
         if (dvmCheckSuspendQuick(self)) {                                   \
@@ -513,7 +466,7 @@ static inline bool checkForNullExportPC(Object* obj, u4* fp, const u2* pc)
         }                                                                   \
     }
 
-/* File: c/opcommon.c */
+/* File: c/opcommon.cpp */
 /* forward declarations of goto targets */
 GOTO_TARGET_DECL(filledNewArray, bool methodCallRange, bool jumboFormat);
 GOTO_TARGET_DECL(invokeVirtual, bool methodCallRange, bool jumboFormat);
@@ -973,7 +926,7 @@ GOTO_TARGET_DECL(exceptionThrown);
             GOTO_exceptionThrown();                                         \
         }                                                                   \
         SET_REGISTER##_regsize(vdst,                                        \
-            ((_type*) arrayObj->contents)[GET_REGISTER(vsrc2)]);            \
+            ((_type*)(void*)arrayObj->contents)[GET_REGISTER(vsrc2)]);      \
         ILOGV("+ AGET[%d]=0x%x", GET_REGISTER(vsrc2), GET_REGISTER(vdst));  \
     }                                                                       \
     FINISH(2);
@@ -998,7 +951,7 @@ GOTO_TARGET_DECL(exceptionThrown);
             GOTO_exceptionThrown();                                         \
         }                                                                   \
         ILOGV("+ APUT[%d]=0x%08x", GET_REGISTER(vsrc2), GET_REGISTER(vdst));\
-        ((_type*) arrayObj->contents)[GET_REGISTER(vsrc2)] =                \
+        ((_type*)(void*)arrayObj->contents)[GET_REGISTER(vsrc2)] =          \
             GET_REGISTER##_regsize(vdst);                                   \
     }                                                                       \
     FINISH(2);
@@ -1270,12 +1223,82 @@ GOTO_TARGET_DECL(exceptionThrown);
     }                                                                       \
     FINISH(4);
 
-/* File: c/OP_NOP.c */
+/* File: portable/entry.cpp */
+/*
+ * Main interpreter loop.
+ *
+ * This was written with an ARM implementation in mind.
+ */
+void dvmInterpretPortable(Thread* self)
+{
+#if defined(EASY_GDB)
+    StackSaveArea* debugSaveArea = SAVEAREA_FROM_FP(self->curFrame);
+#endif
+#if defined(WITH_TRACKREF_CHECKS)
+    int debugTrackedRefStart = self->interpSave.debugTrackedRefStart;
+#endif
+    DvmDex* methodClassDex;     // curMethod->clazz->pDvmDex
+    JValue retval;
+
+    /* core state */
+    const Method* curMethod;    // method we're interpreting
+    const u2* pc;               // program counter
+    u4* fp;                     // frame pointer
+    u2 inst;                    // current instruction
+    /* instruction decoding */
+    u4 ref;                     // 16 or 32-bit quantity fetched directly
+    u2 vsrc1, vsrc2, vdst;      // usually used for register indexes
+    /* method call setup */
+    const Method* methodToCall;
+    bool methodCallRange;
+    bool jumboFormat;
+
+
+    /* static computed goto table */
+    DEFINE_GOTO_TABLE(handlerTable);
+
+    /* copy state in */
+    curMethod = self->interpSave.method;
+    pc = self->interpSave.pc;
+    fp = self->interpSave.fp;
+    retval = self->retval;   /* only need for kInterpEntryReturn? */
+
+    methodClassDex = curMethod->clazz->pDvmDex;
+
+    LOGVV("threadid=%d: %s.%s pc=0x%x fp=%p\n",
+        self->threadId, curMethod->clazz->descriptor, curMethod->name,
+        pc - curMethod->insns, fp);
+
+    /*
+     * Handle any ongoing profiling and prep for debugging.
+     */
+    if (self->interpBreak.ctl.subMode != 0) {
+        TRACE_METHOD_ENTER(self, curMethod);
+        self->debugIsMethodEntry = true;   // Always true on startup
+    }
+    /*
+     * DEBUG: scramble this to ensure we're not relying on it.
+     */
+    methodToCall = (const Method*) -1;
+
+#if 0
+    if (self->debugIsMethodEntry) {
+        ILOGD("|-- Now interpreting %s.%s", curMethod->clazz->descriptor,
+                curMethod->name);
+        DUMP_REGS(curMethod, self->interpSave.fp, false);
+    }
+#endif
+
+    FINISH(0);                  /* fetch and execute first instruction */
+
+/*--- start of opcodes ---*/
+
+/* File: c/OP_NOP.cpp */
 HANDLE_OPCODE(OP_NOP)
     FINISH(1);
 OP_END
 
-/* File: c/OP_MOVE.c */
+/* File: c/OP_MOVE.cpp */
 HANDLE_OPCODE(OP_MOVE /*vA, vB*/)
     vdst = INST_A(inst);
     vsrc1 = INST_B(inst);
@@ -1286,7 +1309,7 @@ HANDLE_OPCODE(OP_MOVE /*vA, vB*/)
     FINISH(1);
 OP_END
 
-/* File: c/OP_MOVE_FROM16.c */
+/* File: c/OP_MOVE_FROM16.cpp */
 HANDLE_OPCODE(OP_MOVE_FROM16 /*vAA, vBBBB*/)
     vdst = INST_AA(inst);
     vsrc1 = FETCH(1);
@@ -1297,7 +1320,7 @@ HANDLE_OPCODE(OP_MOVE_FROM16 /*vAA, vBBBB*/)
     FINISH(2);
 OP_END
 
-/* File: c/OP_MOVE_16.c */
+/* File: c/OP_MOVE_16.cpp */
 HANDLE_OPCODE(OP_MOVE_16 /*vAAAA, vBBBB*/)
     vdst = FETCH(1);
     vsrc1 = FETCH(2);
@@ -1308,7 +1331,7 @@ HANDLE_OPCODE(OP_MOVE_16 /*vAAAA, vBBBB*/)
     FINISH(3);
 OP_END
 
-/* File: c/OP_MOVE_WIDE.c */
+/* File: c/OP_MOVE_WIDE.cpp */
 HANDLE_OPCODE(OP_MOVE_WIDE /*vA, vB*/)
     /* IMPORTANT: must correctly handle overlapping registers, e.g. both
      * "move-wide v6, v7" and "move-wide v7, v6" */
@@ -1320,7 +1343,7 @@ HANDLE_OPCODE(OP_MOVE_WIDE /*vA, vB*/)
     FINISH(1);
 OP_END
 
-/* File: c/OP_MOVE_WIDE_FROM16.c */
+/* File: c/OP_MOVE_WIDE_FROM16.cpp */
 HANDLE_OPCODE(OP_MOVE_WIDE_FROM16 /*vAA, vBBBB*/)
     vdst = INST_AA(inst);
     vsrc1 = FETCH(1);
@@ -1330,7 +1353,7 @@ HANDLE_OPCODE(OP_MOVE_WIDE_FROM16 /*vAA, vBBBB*/)
     FINISH(2);
 OP_END
 
-/* File: c/OP_MOVE_WIDE_16.c */
+/* File: c/OP_MOVE_WIDE_16.cpp */
 HANDLE_OPCODE(OP_MOVE_WIDE_16 /*vAAAA, vBBBB*/)
     vdst = FETCH(1);
     vsrc1 = FETCH(2);
@@ -1340,8 +1363,8 @@ HANDLE_OPCODE(OP_MOVE_WIDE_16 /*vAAAA, vBBBB*/)
     FINISH(3);
 OP_END
 
-/* File: c/OP_MOVE_OBJECT.c */
-/* File: c/OP_MOVE.c */
+/* File: c/OP_MOVE_OBJECT.cpp */
+/* File: c/OP_MOVE.cpp */
 HANDLE_OPCODE(OP_MOVE_OBJECT /*vA, vB*/)
     vdst = INST_A(inst);
     vsrc1 = INST_B(inst);
@@ -1353,8 +1376,8 @@ HANDLE_OPCODE(OP_MOVE_OBJECT /*vA, vB*/)
 OP_END
 
 
-/* File: c/OP_MOVE_OBJECT_FROM16.c */
-/* File: c/OP_MOVE_FROM16.c */
+/* File: c/OP_MOVE_OBJECT_FROM16.cpp */
+/* File: c/OP_MOVE_FROM16.cpp */
 HANDLE_OPCODE(OP_MOVE_OBJECT_FROM16 /*vAA, vBBBB*/)
     vdst = INST_AA(inst);
     vsrc1 = FETCH(1);
@@ -1366,8 +1389,8 @@ HANDLE_OPCODE(OP_MOVE_OBJECT_FROM16 /*vAA, vBBBB*/)
 OP_END
 
 
-/* File: c/OP_MOVE_OBJECT_16.c */
-/* File: c/OP_MOVE_16.c */
+/* File: c/OP_MOVE_OBJECT_16.cpp */
+/* File: c/OP_MOVE_16.cpp */
 HANDLE_OPCODE(OP_MOVE_OBJECT_16 /*vAAAA, vBBBB*/)
     vdst = FETCH(1);
     vsrc1 = FETCH(2);
@@ -1379,7 +1402,7 @@ HANDLE_OPCODE(OP_MOVE_OBJECT_16 /*vAAAA, vBBBB*/)
 OP_END
 
 
-/* File: c/OP_MOVE_RESULT.c */
+/* File: c/OP_MOVE_RESULT.cpp */
 HANDLE_OPCODE(OP_MOVE_RESULT /*vAA*/)
     vdst = INST_AA(inst);
     ILOGV("|move-result%s v%d %s(v%d=0x%08x)",
@@ -1389,7 +1412,7 @@ HANDLE_OPCODE(OP_MOVE_RESULT /*vAA*/)
     FINISH(1);
 OP_END
 
-/* File: c/OP_MOVE_RESULT_WIDE.c */
+/* File: c/OP_MOVE_RESULT_WIDE.cpp */
 HANDLE_OPCODE(OP_MOVE_RESULT_WIDE /*vAA*/)
     vdst = INST_AA(inst);
     ILOGV("|move-result-wide v%d %s(0x%08llx)", vdst, kSpacing, retval.j);
@@ -1397,8 +1420,8 @@ HANDLE_OPCODE(OP_MOVE_RESULT_WIDE /*vAA*/)
     FINISH(1);
 OP_END
 
-/* File: c/OP_MOVE_RESULT_OBJECT.c */
-/* File: c/OP_MOVE_RESULT.c */
+/* File: c/OP_MOVE_RESULT_OBJECT.cpp */
+/* File: c/OP_MOVE_RESULT.cpp */
 HANDLE_OPCODE(OP_MOVE_RESULT_OBJECT /*vAA*/)
     vdst = INST_AA(inst);
     ILOGV("|move-result%s v%d %s(v%d=0x%08x)",
@@ -1409,7 +1432,7 @@ HANDLE_OPCODE(OP_MOVE_RESULT_OBJECT /*vAA*/)
 OP_END
 
 
-/* File: c/OP_MOVE_EXCEPTION.c */
+/* File: c/OP_MOVE_EXCEPTION.cpp */
 HANDLE_OPCODE(OP_MOVE_EXCEPTION /*vAA*/)
     vdst = INST_AA(inst);
     ILOGV("|move-exception v%d", vdst);
@@ -1419,7 +1442,7 @@ HANDLE_OPCODE(OP_MOVE_EXCEPTION /*vAA*/)
     FINISH(1);
 OP_END
 
-/* File: c/OP_RETURN_VOID.c */
+/* File: c/OP_RETURN_VOID.cpp */
 HANDLE_OPCODE(OP_RETURN_VOID /**/)
     ILOGV("|return-void");
 #ifndef NDEBUG
@@ -1428,7 +1451,7 @@ HANDLE_OPCODE(OP_RETURN_VOID /**/)
     GOTO_returnFromMethod();
 OP_END
 
-/* File: c/OP_RETURN.c */
+/* File: c/OP_RETURN.cpp */
 HANDLE_OPCODE(OP_RETURN /*vAA*/)
     vsrc1 = INST_AA(inst);
     ILOGV("|return%s v%d",
@@ -1437,7 +1460,7 @@ HANDLE_OPCODE(OP_RETURN /*vAA*/)
     GOTO_returnFromMethod();
 OP_END
 
-/* File: c/OP_RETURN_WIDE.c */
+/* File: c/OP_RETURN_WIDE.cpp */
 HANDLE_OPCODE(OP_RETURN_WIDE /*vAA*/)
     vsrc1 = INST_AA(inst);
     ILOGV("|return-wide v%d", vsrc1);
@@ -1445,8 +1468,8 @@ HANDLE_OPCODE(OP_RETURN_WIDE /*vAA*/)
     GOTO_returnFromMethod();
 OP_END
 
-/* File: c/OP_RETURN_OBJECT.c */
-/* File: c/OP_RETURN.c */
+/* File: c/OP_RETURN_OBJECT.cpp */
+/* File: c/OP_RETURN.cpp */
 HANDLE_OPCODE(OP_RETURN_OBJECT /*vAA*/)
     vsrc1 = INST_AA(inst);
     ILOGV("|return%s v%d",
@@ -1456,7 +1479,7 @@ HANDLE_OPCODE(OP_RETURN_OBJECT /*vAA*/)
 OP_END
 
 
-/* File: c/OP_CONST_4.c */
+/* File: c/OP_CONST_4.cpp */
 HANDLE_OPCODE(OP_CONST_4 /*vA, #+B*/)
     {
         s4 tmp;
@@ -1469,7 +1492,7 @@ HANDLE_OPCODE(OP_CONST_4 /*vA, #+B*/)
     FINISH(1);
 OP_END
 
-/* File: c/OP_CONST_16.c */
+/* File: c/OP_CONST_16.cpp */
 HANDLE_OPCODE(OP_CONST_16 /*vAA, #+BBBB*/)
     vdst = INST_AA(inst);
     vsrc1 = FETCH(1);
@@ -1478,7 +1501,7 @@ HANDLE_OPCODE(OP_CONST_16 /*vAA, #+BBBB*/)
     FINISH(2);
 OP_END
 
-/* File: c/OP_CONST.c */
+/* File: c/OP_CONST.cpp */
 HANDLE_OPCODE(OP_CONST /*vAA, #+BBBBBBBB*/)
     {
         u4 tmp;
@@ -1492,7 +1515,7 @@ HANDLE_OPCODE(OP_CONST /*vAA, #+BBBBBBBB*/)
     FINISH(3);
 OP_END
 
-/* File: c/OP_CONST_HIGH16.c */
+/* File: c/OP_CONST_HIGH16.cpp */
 HANDLE_OPCODE(OP_CONST_HIGH16 /*vAA, #+BBBB0000*/)
     vdst = INST_AA(inst);
     vsrc1 = FETCH(1);
@@ -1501,7 +1524,7 @@ HANDLE_OPCODE(OP_CONST_HIGH16 /*vAA, #+BBBB0000*/)
     FINISH(2);
 OP_END
 
-/* File: c/OP_CONST_WIDE_16.c */
+/* File: c/OP_CONST_WIDE_16.cpp */
 HANDLE_OPCODE(OP_CONST_WIDE_16 /*vAA, #+BBBB*/)
     vdst = INST_AA(inst);
     vsrc1 = FETCH(1);
@@ -1510,7 +1533,7 @@ HANDLE_OPCODE(OP_CONST_WIDE_16 /*vAA, #+BBBB*/)
     FINISH(2);
 OP_END
 
-/* File: c/OP_CONST_WIDE_32.c */
+/* File: c/OP_CONST_WIDE_32.cpp */
 HANDLE_OPCODE(OP_CONST_WIDE_32 /*vAA, #+BBBBBBBB*/)
     {
         u4 tmp;
@@ -1524,7 +1547,7 @@ HANDLE_OPCODE(OP_CONST_WIDE_32 /*vAA, #+BBBBBBBB*/)
     FINISH(3);
 OP_END
 
-/* File: c/OP_CONST_WIDE.c */
+/* File: c/OP_CONST_WIDE.cpp */
 HANDLE_OPCODE(OP_CONST_WIDE /*vAA, #+BBBBBBBBBBBBBBBB*/)
     {
         u8 tmp;
@@ -1540,7 +1563,7 @@ HANDLE_OPCODE(OP_CONST_WIDE /*vAA, #+BBBBBBBBBBBBBBBB*/)
     FINISH(5);
 OP_END
 
-/* File: c/OP_CONST_WIDE_HIGH16.c */
+/* File: c/OP_CONST_WIDE_HIGH16.cpp */
 HANDLE_OPCODE(OP_CONST_WIDE_HIGH16 /*vAA, #+BBBB000000000000*/)
     vdst = INST_AA(inst);
     vsrc1 = FETCH(1);
@@ -1549,7 +1572,7 @@ HANDLE_OPCODE(OP_CONST_WIDE_HIGH16 /*vAA, #+BBBB000000000000*/)
     FINISH(2);
 OP_END
 
-/* File: c/OP_CONST_STRING.c */
+/* File: c/OP_CONST_STRING.cpp */
 HANDLE_OPCODE(OP_CONST_STRING /*vAA, string@BBBB*/)
     {
         StringObject* strObj;
@@ -1569,7 +1592,7 @@ HANDLE_OPCODE(OP_CONST_STRING /*vAA, string@BBBB*/)
     FINISH(2);
 OP_END
 
-/* File: c/OP_CONST_STRING_JUMBO.c */
+/* File: c/OP_CONST_STRING_JUMBO.cpp */
 HANDLE_OPCODE(OP_CONST_STRING_JUMBO /*vAA, string@BBBBBBBB*/)
     {
         StringObject* strObj;
@@ -1591,7 +1614,7 @@ HANDLE_OPCODE(OP_CONST_STRING_JUMBO /*vAA, string@BBBBBBBB*/)
     FINISH(3);
 OP_END
 
-/* File: c/OP_CONST_CLASS.c */
+/* File: c/OP_CONST_CLASS.cpp */
 HANDLE_OPCODE(OP_CONST_CLASS /*vAA, class@BBBB*/)
     {
         ClassObject* clazz;
@@ -1611,7 +1634,7 @@ HANDLE_OPCODE(OP_CONST_CLASS /*vAA, class@BBBB*/)
     FINISH(2);
 OP_END
 
-/* File: c/OP_MONITOR_ENTER.c */
+/* File: c/OP_MONITOR_ENTER.cpp */
 HANDLE_OPCODE(OP_MONITOR_ENTER /*vAA*/)
     {
         Object* obj;
@@ -1629,7 +1652,7 @@ HANDLE_OPCODE(OP_MONITOR_ENTER /*vAA*/)
     FINISH(1);
 OP_END
 
-/* File: c/OP_MONITOR_EXIT.c */
+/* File: c/OP_MONITOR_EXIT.cpp */
 HANDLE_OPCODE(OP_MONITOR_EXIT /*vAA*/)
     {
         Object* obj;
@@ -1661,7 +1684,7 @@ HANDLE_OPCODE(OP_MONITOR_EXIT /*vAA*/)
     FINISH(1);
 OP_END
 
-/* File: c/OP_CHECK_CAST.c */
+/* File: c/OP_CHECK_CAST.cpp */
 HANDLE_OPCODE(OP_CHECK_CAST /*vAA, class@BBBB*/)
     {
         ClassObject* clazz;
@@ -1694,7 +1717,7 @@ HANDLE_OPCODE(OP_CHECK_CAST /*vAA, class@BBBB*/)
     FINISH(2);
 OP_END
 
-/* File: c/OP_INSTANCE_OF.c */
+/* File: c/OP_INSTANCE_OF.cpp */
 HANDLE_OPCODE(OP_INSTANCE_OF /*vA, vB, class@CCCC*/)
     {
         ClassObject* clazz;
@@ -1726,7 +1749,7 @@ HANDLE_OPCODE(OP_INSTANCE_OF /*vA, vB, class@CCCC*/)
     FINISH(2);
 OP_END
 
-/* File: c/OP_ARRAY_LENGTH.c */
+/* File: c/OP_ARRAY_LENGTH.cpp */
 HANDLE_OPCODE(OP_ARRAY_LENGTH /*vA, vB*/)
     {
         ArrayObject* arrayObj;
@@ -1743,7 +1766,7 @@ HANDLE_OPCODE(OP_ARRAY_LENGTH /*vA, vB*/)
     FINISH(1);
 OP_END
 
-/* File: c/OP_NEW_INSTANCE.c */
+/* File: c/OP_NEW_INSTANCE.cpp */
 HANDLE_OPCODE(OP_NEW_INSTANCE /*vAA, class@BBBB*/)
     {
         ClassObject* clazz;
@@ -1793,7 +1816,7 @@ HANDLE_OPCODE(OP_NEW_INSTANCE /*vAA, class@BBBB*/)
     FINISH(2);
 OP_END
 
-/* File: c/OP_NEW_ARRAY.c */
+/* File: c/OP_NEW_ARRAY.cpp */
 HANDLE_OPCODE(OP_NEW_ARRAY /*vA, vB, class@CCCC*/)
     {
         ClassObject* arrayClass;
@@ -1830,17 +1853,17 @@ HANDLE_OPCODE(OP_NEW_ARRAY /*vA, vB, class@CCCC*/)
     FINISH(2);
 OP_END
 
-/* File: c/OP_FILLED_NEW_ARRAY.c */
+/* File: c/OP_FILLED_NEW_ARRAY.cpp */
 HANDLE_OPCODE(OP_FILLED_NEW_ARRAY /*vB, {vD, vE, vF, vG, vA}, class@CCCC*/)
     GOTO_invoke(filledNewArray, false, false);
 OP_END
 
-/* File: c/OP_FILLED_NEW_ARRAY_RANGE.c */
+/* File: c/OP_FILLED_NEW_ARRAY_RANGE.cpp */
 HANDLE_OPCODE(OP_FILLED_NEW_ARRAY_RANGE /*{vCCCC..v(CCCC+AA-1)}, class@BBBB*/)
     GOTO_invoke(filledNewArray, true, false);
 OP_END
 
-/* File: c/OP_FILL_ARRAY_DATA.c */
+/* File: c/OP_FILL_ARRAY_DATA.cpp */
 HANDLE_OPCODE(OP_FILL_ARRAY_DATA)   /*vAA, +BBBBBBBB*/
     {
         const u2* arrayData;
@@ -1869,7 +1892,7 @@ HANDLE_OPCODE(OP_FILL_ARRAY_DATA)   /*vAA, +BBBBBBBB*/
     }
 OP_END
 
-/* File: c/OP_THROW.c */
+/* File: c/OP_THROW.cpp */
 HANDLE_OPCODE(OP_THROW /*vAA*/)
     {
         Object* obj;
@@ -1895,7 +1918,7 @@ HANDLE_OPCODE(OP_THROW /*vAA*/)
     }
 OP_END
 
-/* File: c/OP_GOTO.c */
+/* File: c/OP_GOTO.cpp */
 HANDLE_OPCODE(OP_GOTO /*+AA*/)
     vdst = INST_AA(inst);
     if ((s1)vdst < 0)
@@ -1908,7 +1931,7 @@ HANDLE_OPCODE(OP_GOTO /*+AA*/)
     FINISH((s1)vdst);
 OP_END
 
-/* File: c/OP_GOTO_16.c */
+/* File: c/OP_GOTO_16.cpp */
 HANDLE_OPCODE(OP_GOTO_16 /*+AAAA*/)
     {
         s4 offset = (s2) FETCH(1);          /* sign-extend next code unit */
@@ -1924,7 +1947,7 @@ HANDLE_OPCODE(OP_GOTO_16 /*+AAAA*/)
     }
 OP_END
 
-/* File: c/OP_GOTO_32.c */
+/* File: c/OP_GOTO_32.cpp */
 HANDLE_OPCODE(OP_GOTO_32 /*+AAAAAAAA*/)
     {
         s4 offset = FETCH(1);               /* low-order 16 bits */
@@ -1941,7 +1964,7 @@ HANDLE_OPCODE(OP_GOTO_32 /*+AAAAAAAA*/)
     }
 OP_END
 
-/* File: c/OP_PACKED_SWITCH.c */
+/* File: c/OP_PACKED_SWITCH.cpp */
 HANDLE_OPCODE(OP_PACKED_SWITCH /*vAA, +BBBB*/)
     {
         const u2* switchData;
@@ -1972,7 +1995,7 @@ HANDLE_OPCODE(OP_PACKED_SWITCH /*vAA, +BBBB*/)
     }
 OP_END
 
-/* File: c/OP_SPARSE_SWITCH.c */
+/* File: c/OP_SPARSE_SWITCH.cpp */
 HANDLE_OPCODE(OP_SPARSE_SWITCH /*vAA, +BBBB*/)
     {
         const u2* switchData;
@@ -2003,135 +2026,135 @@ HANDLE_OPCODE(OP_SPARSE_SWITCH /*vAA, +BBBB*/)
     }
 OP_END
 
-/* File: c/OP_CMPL_FLOAT.c */
+/* File: c/OP_CMPL_FLOAT.cpp */
 HANDLE_OP_CMPX(OP_CMPL_FLOAT, "l-float", float, _FLOAT, -1)
 OP_END
 
-/* File: c/OP_CMPG_FLOAT.c */
+/* File: c/OP_CMPG_FLOAT.cpp */
 HANDLE_OP_CMPX(OP_CMPG_FLOAT, "g-float", float, _FLOAT, 1)
 OP_END
 
-/* File: c/OP_CMPL_DOUBLE.c */
+/* File: c/OP_CMPL_DOUBLE.cpp */
 HANDLE_OP_CMPX(OP_CMPL_DOUBLE, "l-double", double, _DOUBLE, -1)
 OP_END
 
-/* File: c/OP_CMPG_DOUBLE.c */
+/* File: c/OP_CMPG_DOUBLE.cpp */
 HANDLE_OP_CMPX(OP_CMPG_DOUBLE, "g-double", double, _DOUBLE, 1)
 OP_END
 
-/* File: c/OP_CMP_LONG.c */
+/* File: c/OP_CMP_LONG.cpp */
 HANDLE_OP_CMPX(OP_CMP_LONG, "-long", s8, _WIDE, 0)
 OP_END
 
-/* File: c/OP_IF_EQ.c */
+/* File: c/OP_IF_EQ.cpp */
 HANDLE_OP_IF_XX(OP_IF_EQ, "eq", ==)
 OP_END
 
-/* File: c/OP_IF_NE.c */
+/* File: c/OP_IF_NE.cpp */
 HANDLE_OP_IF_XX(OP_IF_NE, "ne", !=)
 OP_END
 
-/* File: c/OP_IF_LT.c */
+/* File: c/OP_IF_LT.cpp */
 HANDLE_OP_IF_XX(OP_IF_LT, "lt", <)
 OP_END
 
-/* File: c/OP_IF_GE.c */
+/* File: c/OP_IF_GE.cpp */
 HANDLE_OP_IF_XX(OP_IF_GE, "ge", >=)
 OP_END
 
-/* File: c/OP_IF_GT.c */
+/* File: c/OP_IF_GT.cpp */
 HANDLE_OP_IF_XX(OP_IF_GT, "gt", >)
 OP_END
 
-/* File: c/OP_IF_LE.c */
+/* File: c/OP_IF_LE.cpp */
 HANDLE_OP_IF_XX(OP_IF_LE, "le", <=)
 OP_END
 
-/* File: c/OP_IF_EQZ.c */
+/* File: c/OP_IF_EQZ.cpp */
 HANDLE_OP_IF_XXZ(OP_IF_EQZ, "eqz", ==)
 OP_END
 
-/* File: c/OP_IF_NEZ.c */
+/* File: c/OP_IF_NEZ.cpp */
 HANDLE_OP_IF_XXZ(OP_IF_NEZ, "nez", !=)
 OP_END
 
-/* File: c/OP_IF_LTZ.c */
+/* File: c/OP_IF_LTZ.cpp */
 HANDLE_OP_IF_XXZ(OP_IF_LTZ, "ltz", <)
 OP_END
 
-/* File: c/OP_IF_GEZ.c */
+/* File: c/OP_IF_GEZ.cpp */
 HANDLE_OP_IF_XXZ(OP_IF_GEZ, "gez", >=)
 OP_END
 
-/* File: c/OP_IF_GTZ.c */
+/* File: c/OP_IF_GTZ.cpp */
 HANDLE_OP_IF_XXZ(OP_IF_GTZ, "gtz", >)
 OP_END
 
-/* File: c/OP_IF_LEZ.c */
+/* File: c/OP_IF_LEZ.cpp */
 HANDLE_OP_IF_XXZ(OP_IF_LEZ, "lez", <=)
 OP_END
 
-/* File: c/OP_UNUSED_3E.c */
+/* File: c/OP_UNUSED_3E.cpp */
 HANDLE_OPCODE(OP_UNUSED_3E)
 OP_END
 
-/* File: c/OP_UNUSED_3F.c */
+/* File: c/OP_UNUSED_3F.cpp */
 HANDLE_OPCODE(OP_UNUSED_3F)
 OP_END
 
-/* File: c/OP_UNUSED_40.c */
+/* File: c/OP_UNUSED_40.cpp */
 HANDLE_OPCODE(OP_UNUSED_40)
 OP_END
 
-/* File: c/OP_UNUSED_41.c */
+/* File: c/OP_UNUSED_41.cpp */
 HANDLE_OPCODE(OP_UNUSED_41)
 OP_END
 
-/* File: c/OP_UNUSED_42.c */
+/* File: c/OP_UNUSED_42.cpp */
 HANDLE_OPCODE(OP_UNUSED_42)
 OP_END
 
-/* File: c/OP_UNUSED_43.c */
+/* File: c/OP_UNUSED_43.cpp */
 HANDLE_OPCODE(OP_UNUSED_43)
 OP_END
 
-/* File: c/OP_AGET.c */
+/* File: c/OP_AGET.cpp */
 HANDLE_OP_AGET(OP_AGET, "", u4, )
 OP_END
 
-/* File: c/OP_AGET_WIDE.c */
+/* File: c/OP_AGET_WIDE.cpp */
 HANDLE_OP_AGET(OP_AGET_WIDE, "-wide", s8, _WIDE)
 OP_END
 
-/* File: c/OP_AGET_OBJECT.c */
+/* File: c/OP_AGET_OBJECT.cpp */
 HANDLE_OP_AGET(OP_AGET_OBJECT, "-object", u4, )
 OP_END
 
-/* File: c/OP_AGET_BOOLEAN.c */
+/* File: c/OP_AGET_BOOLEAN.cpp */
 HANDLE_OP_AGET(OP_AGET_BOOLEAN, "-boolean", u1, )
 OP_END
 
-/* File: c/OP_AGET_BYTE.c */
+/* File: c/OP_AGET_BYTE.cpp */
 HANDLE_OP_AGET(OP_AGET_BYTE, "-byte", s1, )
 OP_END
 
-/* File: c/OP_AGET_CHAR.c */
+/* File: c/OP_AGET_CHAR.cpp */
 HANDLE_OP_AGET(OP_AGET_CHAR, "-char", u2, )
 OP_END
 
-/* File: c/OP_AGET_SHORT.c */
+/* File: c/OP_AGET_SHORT.cpp */
 HANDLE_OP_AGET(OP_AGET_SHORT, "-short", s2, )
 OP_END
 
-/* File: c/OP_APUT.c */
+/* File: c/OP_APUT.cpp */
 HANDLE_OP_APUT(OP_APUT, "", u4, )
 OP_END
 
-/* File: c/OP_APUT_WIDE.c */
+/* File: c/OP_APUT_WIDE.cpp */
 HANDLE_OP_APUT(OP_APUT_WIDE, "-wide", s8, _WIDE)
 OP_END
 
-/* File: c/OP_APUT_OBJECT.c */
+/* File: c/OP_APUT_OBJECT.cpp */
 HANDLE_OPCODE(OP_APUT_OBJECT /*vAA, vBB, vCC*/)
     {
         ArrayObject* arrayObj;
@@ -2171,59 +2194,59 @@ HANDLE_OPCODE(OP_APUT_OBJECT /*vAA, vBB, vCC*/)
     FINISH(2);
 OP_END
 
-/* File: c/OP_APUT_BOOLEAN.c */
+/* File: c/OP_APUT_BOOLEAN.cpp */
 HANDLE_OP_APUT(OP_APUT_BOOLEAN, "-boolean", u1, )
 OP_END
 
-/* File: c/OP_APUT_BYTE.c */
+/* File: c/OP_APUT_BYTE.cpp */
 HANDLE_OP_APUT(OP_APUT_BYTE, "-byte", s1, )
 OP_END
 
-/* File: c/OP_APUT_CHAR.c */
+/* File: c/OP_APUT_CHAR.cpp */
 HANDLE_OP_APUT(OP_APUT_CHAR, "-char", u2, )
 OP_END
 
-/* File: c/OP_APUT_SHORT.c */
+/* File: c/OP_APUT_SHORT.cpp */
 HANDLE_OP_APUT(OP_APUT_SHORT, "-short", s2, )
 OP_END
 
-/* File: c/OP_IGET.c */
+/* File: c/OP_IGET.cpp */
 HANDLE_IGET_X(OP_IGET,                  "", Int, )
 OP_END
 
-/* File: c/OP_IGET_WIDE.c */
+/* File: c/OP_IGET_WIDE.cpp */
 HANDLE_IGET_X(OP_IGET_WIDE,             "-wide", Long, _WIDE)
 OP_END
 
-/* File: c/OP_IGET_OBJECT.c */
+/* File: c/OP_IGET_OBJECT.cpp */
 HANDLE_IGET_X(OP_IGET_OBJECT,           "-object", Object, _AS_OBJECT)
 OP_END
 
-/* File: c/OP_IGET_BOOLEAN.c */
+/* File: c/OP_IGET_BOOLEAN.cpp */
 HANDLE_IGET_X(OP_IGET_BOOLEAN,          "", Int, )
 OP_END
 
-/* File: c/OP_IGET_BYTE.c */
+/* File: c/OP_IGET_BYTE.cpp */
 HANDLE_IGET_X(OP_IGET_BYTE,             "", Int, )
 OP_END
 
-/* File: c/OP_IGET_CHAR.c */
+/* File: c/OP_IGET_CHAR.cpp */
 HANDLE_IGET_X(OP_IGET_CHAR,             "", Int, )
 OP_END
 
-/* File: c/OP_IGET_SHORT.c */
+/* File: c/OP_IGET_SHORT.cpp */
 HANDLE_IGET_X(OP_IGET_SHORT,            "", Int, )
 OP_END
 
-/* File: c/OP_IPUT.c */
+/* File: c/OP_IPUT.cpp */
 HANDLE_IPUT_X(OP_IPUT,                  "", Int, )
 OP_END
 
-/* File: c/OP_IPUT_WIDE.c */
+/* File: c/OP_IPUT_WIDE.cpp */
 HANDLE_IPUT_X(OP_IPUT_WIDE,             "-wide", Long, _WIDE)
 OP_END
 
-/* File: c/OP_IPUT_OBJECT.c */
+/* File: c/OP_IPUT_OBJECT.cpp */
 /*
  * The VM spec says we should verify that the reference being stored into
  * the field is assignment compatible.  In practice, many popular VMs don't
@@ -2238,333 +2261,333 @@ OP_END
 HANDLE_IPUT_X(OP_IPUT_OBJECT,           "-object", Object, _AS_OBJECT)
 OP_END
 
-/* File: c/OP_IPUT_BOOLEAN.c */
+/* File: c/OP_IPUT_BOOLEAN.cpp */
 HANDLE_IPUT_X(OP_IPUT_BOOLEAN,          "", Int, )
 OP_END
 
-/* File: c/OP_IPUT_BYTE.c */
+/* File: c/OP_IPUT_BYTE.cpp */
 HANDLE_IPUT_X(OP_IPUT_BYTE,             "", Int, )
 OP_END
 
-/* File: c/OP_IPUT_CHAR.c */
+/* File: c/OP_IPUT_CHAR.cpp */
 HANDLE_IPUT_X(OP_IPUT_CHAR,             "", Int, )
 OP_END
 
-/* File: c/OP_IPUT_SHORT.c */
+/* File: c/OP_IPUT_SHORT.cpp */
 HANDLE_IPUT_X(OP_IPUT_SHORT,            "", Int, )
 OP_END
 
-/* File: c/OP_SGET.c */
+/* File: c/OP_SGET.cpp */
 HANDLE_SGET_X(OP_SGET,                  "", Int, )
 OP_END
 
-/* File: c/OP_SGET_WIDE.c */
+/* File: c/OP_SGET_WIDE.cpp */
 HANDLE_SGET_X(OP_SGET_WIDE,             "-wide", Long, _WIDE)
 OP_END
 
-/* File: c/OP_SGET_OBJECT.c */
+/* File: c/OP_SGET_OBJECT.cpp */
 HANDLE_SGET_X(OP_SGET_OBJECT,           "-object", Object, _AS_OBJECT)
 OP_END
 
-/* File: c/OP_SGET_BOOLEAN.c */
+/* File: c/OP_SGET_BOOLEAN.cpp */
 HANDLE_SGET_X(OP_SGET_BOOLEAN,          "", Int, )
 OP_END
 
-/* File: c/OP_SGET_BYTE.c */
+/* File: c/OP_SGET_BYTE.cpp */
 HANDLE_SGET_X(OP_SGET_BYTE,             "", Int, )
 OP_END
 
-/* File: c/OP_SGET_CHAR.c */
+/* File: c/OP_SGET_CHAR.cpp */
 HANDLE_SGET_X(OP_SGET_CHAR,             "", Int, )
 OP_END
 
-/* File: c/OP_SGET_SHORT.c */
+/* File: c/OP_SGET_SHORT.cpp */
 HANDLE_SGET_X(OP_SGET_SHORT,            "", Int, )
 OP_END
 
-/* File: c/OP_SPUT.c */
+/* File: c/OP_SPUT.cpp */
 HANDLE_SPUT_X(OP_SPUT,                  "", Int, )
 OP_END
 
-/* File: c/OP_SPUT_WIDE.c */
+/* File: c/OP_SPUT_WIDE.cpp */
 HANDLE_SPUT_X(OP_SPUT_WIDE,             "-wide", Long, _WIDE)
 OP_END
 
-/* File: c/OP_SPUT_OBJECT.c */
+/* File: c/OP_SPUT_OBJECT.cpp */
 HANDLE_SPUT_X(OP_SPUT_OBJECT,           "-object", Object, _AS_OBJECT)
 OP_END
 
-/* File: c/OP_SPUT_BOOLEAN.c */
+/* File: c/OP_SPUT_BOOLEAN.cpp */
 HANDLE_SPUT_X(OP_SPUT_BOOLEAN,          "", Int, )
 OP_END
 
-/* File: c/OP_SPUT_BYTE.c */
+/* File: c/OP_SPUT_BYTE.cpp */
 HANDLE_SPUT_X(OP_SPUT_BYTE,             "", Int, )
 OP_END
 
-/* File: c/OP_SPUT_CHAR.c */
+/* File: c/OP_SPUT_CHAR.cpp */
 HANDLE_SPUT_X(OP_SPUT_CHAR,             "", Int, )
 OP_END
 
-/* File: c/OP_SPUT_SHORT.c */
+/* File: c/OP_SPUT_SHORT.cpp */
 HANDLE_SPUT_X(OP_SPUT_SHORT,            "", Int, )
 OP_END
 
-/* File: c/OP_INVOKE_VIRTUAL.c */
+/* File: c/OP_INVOKE_VIRTUAL.cpp */
 HANDLE_OPCODE(OP_INVOKE_VIRTUAL /*vB, {vD, vE, vF, vG, vA}, meth@CCCC*/)
     GOTO_invoke(invokeVirtual, false, false);
 OP_END
 
-/* File: c/OP_INVOKE_SUPER.c */
+/* File: c/OP_INVOKE_SUPER.cpp */
 HANDLE_OPCODE(OP_INVOKE_SUPER /*vB, {vD, vE, vF, vG, vA}, meth@CCCC*/)
     GOTO_invoke(invokeSuper, false, false);
 OP_END
 
-/* File: c/OP_INVOKE_DIRECT.c */
+/* File: c/OP_INVOKE_DIRECT.cpp */
 HANDLE_OPCODE(OP_INVOKE_DIRECT /*vB, {vD, vE, vF, vG, vA}, meth@CCCC*/)
     GOTO_invoke(invokeDirect, false, false);
 OP_END
 
-/* File: c/OP_INVOKE_STATIC.c */
+/* File: c/OP_INVOKE_STATIC.cpp */
 HANDLE_OPCODE(OP_INVOKE_STATIC /*vB, {vD, vE, vF, vG, vA}, meth@CCCC*/)
     GOTO_invoke(invokeStatic, false, false);
 OP_END
 
-/* File: c/OP_INVOKE_INTERFACE.c */
+/* File: c/OP_INVOKE_INTERFACE.cpp */
 HANDLE_OPCODE(OP_INVOKE_INTERFACE /*vB, {vD, vE, vF, vG, vA}, meth@CCCC*/)
     GOTO_invoke(invokeInterface, false, false);
 OP_END
 
-/* File: c/OP_UNUSED_73.c */
+/* File: c/OP_UNUSED_73.cpp */
 HANDLE_OPCODE(OP_UNUSED_73)
 OP_END
 
-/* File: c/OP_INVOKE_VIRTUAL_RANGE.c */
+/* File: c/OP_INVOKE_VIRTUAL_RANGE.cpp */
 HANDLE_OPCODE(OP_INVOKE_VIRTUAL_RANGE /*{vCCCC..v(CCCC+AA-1)}, meth@BBBB*/)
     GOTO_invoke(invokeVirtual, true, false);
 OP_END
 
-/* File: c/OP_INVOKE_SUPER_RANGE.c */
+/* File: c/OP_INVOKE_SUPER_RANGE.cpp */
 HANDLE_OPCODE(OP_INVOKE_SUPER_RANGE /*{vCCCC..v(CCCC+AA-1)}, meth@BBBB*/)
     GOTO_invoke(invokeSuper, true, false);
 OP_END
 
-/* File: c/OP_INVOKE_DIRECT_RANGE.c */
+/* File: c/OP_INVOKE_DIRECT_RANGE.cpp */
 HANDLE_OPCODE(OP_INVOKE_DIRECT_RANGE /*{vCCCC..v(CCCC+AA-1)}, meth@BBBB*/)
     GOTO_invoke(invokeDirect, true, false);
 OP_END
 
-/* File: c/OP_INVOKE_STATIC_RANGE.c */
+/* File: c/OP_INVOKE_STATIC_RANGE.cpp */
 HANDLE_OPCODE(OP_INVOKE_STATIC_RANGE /*{vCCCC..v(CCCC+AA-1)}, meth@BBBB*/)
     GOTO_invoke(invokeStatic, true, false);
 OP_END
 
-/* File: c/OP_INVOKE_INTERFACE_RANGE.c */
+/* File: c/OP_INVOKE_INTERFACE_RANGE.cpp */
 HANDLE_OPCODE(OP_INVOKE_INTERFACE_RANGE /*{vCCCC..v(CCCC+AA-1)}, meth@BBBB*/)
     GOTO_invoke(invokeInterface, true, false);
 OP_END
 
-/* File: c/OP_UNUSED_79.c */
+/* File: c/OP_UNUSED_79.cpp */
 HANDLE_OPCODE(OP_UNUSED_79)
 OP_END
 
-/* File: c/OP_UNUSED_7A.c */
+/* File: c/OP_UNUSED_7A.cpp */
 HANDLE_OPCODE(OP_UNUSED_7A)
 OP_END
 
-/* File: c/OP_NEG_INT.c */
+/* File: c/OP_NEG_INT.cpp */
 HANDLE_UNOP(OP_NEG_INT, "neg-int", -, , )
 OP_END
 
-/* File: c/OP_NOT_INT.c */
+/* File: c/OP_NOT_INT.cpp */
 HANDLE_UNOP(OP_NOT_INT, "not-int", , ^ 0xffffffff, )
 OP_END
 
-/* File: c/OP_NEG_LONG.c */
+/* File: c/OP_NEG_LONG.cpp */
 HANDLE_UNOP(OP_NEG_LONG, "neg-long", -, , _WIDE)
 OP_END
 
-/* File: c/OP_NOT_LONG.c */
+/* File: c/OP_NOT_LONG.cpp */
 HANDLE_UNOP(OP_NOT_LONG, "not-long", , ^ 0xffffffffffffffffULL, _WIDE)
 OP_END
 
-/* File: c/OP_NEG_FLOAT.c */
+/* File: c/OP_NEG_FLOAT.cpp */
 HANDLE_UNOP(OP_NEG_FLOAT, "neg-float", -, , _FLOAT)
 OP_END
 
-/* File: c/OP_NEG_DOUBLE.c */
+/* File: c/OP_NEG_DOUBLE.cpp */
 HANDLE_UNOP(OP_NEG_DOUBLE, "neg-double", -, , _DOUBLE)
 OP_END
 
-/* File: c/OP_INT_TO_LONG.c */
+/* File: c/OP_INT_TO_LONG.cpp */
 HANDLE_NUMCONV(OP_INT_TO_LONG,          "int-to-long", _INT, _WIDE)
 OP_END
 
-/* File: c/OP_INT_TO_FLOAT.c */
+/* File: c/OP_INT_TO_FLOAT.cpp */
 HANDLE_NUMCONV(OP_INT_TO_FLOAT,         "int-to-float", _INT, _FLOAT)
 OP_END
 
-/* File: c/OP_INT_TO_DOUBLE.c */
+/* File: c/OP_INT_TO_DOUBLE.cpp */
 HANDLE_NUMCONV(OP_INT_TO_DOUBLE,        "int-to-double", _INT, _DOUBLE)
 OP_END
 
-/* File: c/OP_LONG_TO_INT.c */
+/* File: c/OP_LONG_TO_INT.cpp */
 HANDLE_NUMCONV(OP_LONG_TO_INT,          "long-to-int", _WIDE, _INT)
 OP_END
 
-/* File: c/OP_LONG_TO_FLOAT.c */
+/* File: c/OP_LONG_TO_FLOAT.cpp */
 HANDLE_NUMCONV(OP_LONG_TO_FLOAT,        "long-to-float", _WIDE, _FLOAT)
 OP_END
 
-/* File: c/OP_LONG_TO_DOUBLE.c */
+/* File: c/OP_LONG_TO_DOUBLE.cpp */
 HANDLE_NUMCONV(OP_LONG_TO_DOUBLE,       "long-to-double", _WIDE, _DOUBLE)
 OP_END
 
-/* File: c/OP_FLOAT_TO_INT.c */
+/* File: c/OP_FLOAT_TO_INT.cpp */
 HANDLE_FLOAT_TO_INT(OP_FLOAT_TO_INT,    "float-to-int",
     float, _FLOAT, s4, _INT)
 OP_END
 
-/* File: c/OP_FLOAT_TO_LONG.c */
+/* File: c/OP_FLOAT_TO_LONG.cpp */
 HANDLE_FLOAT_TO_INT(OP_FLOAT_TO_LONG,   "float-to-long",
     float, _FLOAT, s8, _WIDE)
 OP_END
 
-/* File: c/OP_FLOAT_TO_DOUBLE.c */
+/* File: c/OP_FLOAT_TO_DOUBLE.cpp */
 HANDLE_NUMCONV(OP_FLOAT_TO_DOUBLE,      "float-to-double", _FLOAT, _DOUBLE)
 OP_END
 
-/* File: c/OP_DOUBLE_TO_INT.c */
+/* File: c/OP_DOUBLE_TO_INT.cpp */
 HANDLE_FLOAT_TO_INT(OP_DOUBLE_TO_INT,   "double-to-int",
     double, _DOUBLE, s4, _INT)
 OP_END
 
-/* File: c/OP_DOUBLE_TO_LONG.c */
+/* File: c/OP_DOUBLE_TO_LONG.cpp */
 HANDLE_FLOAT_TO_INT(OP_DOUBLE_TO_LONG,  "double-to-long",
     double, _DOUBLE, s8, _WIDE)
 OP_END
 
-/* File: c/OP_DOUBLE_TO_FLOAT.c */
+/* File: c/OP_DOUBLE_TO_FLOAT.cpp */
 HANDLE_NUMCONV(OP_DOUBLE_TO_FLOAT,      "double-to-float", _DOUBLE, _FLOAT)
 OP_END
 
-/* File: c/OP_INT_TO_BYTE.c */
+/* File: c/OP_INT_TO_BYTE.cpp */
 HANDLE_INT_TO_SMALL(OP_INT_TO_BYTE,     "byte", s1)
 OP_END
 
-/* File: c/OP_INT_TO_CHAR.c */
+/* File: c/OP_INT_TO_CHAR.cpp */
 HANDLE_INT_TO_SMALL(OP_INT_TO_CHAR,     "char", u2)
 OP_END
 
-/* File: c/OP_INT_TO_SHORT.c */
+/* File: c/OP_INT_TO_SHORT.cpp */
 HANDLE_INT_TO_SMALL(OP_INT_TO_SHORT,    "short", s2)    /* want sign bit */
 OP_END
 
-/* File: c/OP_ADD_INT.c */
+/* File: c/OP_ADD_INT.cpp */
 HANDLE_OP_X_INT(OP_ADD_INT, "add", +, 0)
 OP_END
 
-/* File: c/OP_SUB_INT.c */
+/* File: c/OP_SUB_INT.cpp */
 HANDLE_OP_X_INT(OP_SUB_INT, "sub", -, 0)
 OP_END
 
-/* File: c/OP_MUL_INT.c */
+/* File: c/OP_MUL_INT.cpp */
 HANDLE_OP_X_INT(OP_MUL_INT, "mul", *, 0)
 OP_END
 
-/* File: c/OP_DIV_INT.c */
+/* File: c/OP_DIV_INT.cpp */
 HANDLE_OP_X_INT(OP_DIV_INT, "div", /, 1)
 OP_END
 
-/* File: c/OP_REM_INT.c */
+/* File: c/OP_REM_INT.cpp */
 HANDLE_OP_X_INT(OP_REM_INT, "rem", %, 2)
 OP_END
 
-/* File: c/OP_AND_INT.c */
+/* File: c/OP_AND_INT.cpp */
 HANDLE_OP_X_INT(OP_AND_INT, "and", &, 0)
 OP_END
 
-/* File: c/OP_OR_INT.c */
+/* File: c/OP_OR_INT.cpp */
 HANDLE_OP_X_INT(OP_OR_INT,  "or",  |, 0)
 OP_END
 
-/* File: c/OP_XOR_INT.c */
+/* File: c/OP_XOR_INT.cpp */
 HANDLE_OP_X_INT(OP_XOR_INT, "xor", ^, 0)
 OP_END
 
-/* File: c/OP_SHL_INT.c */
+/* File: c/OP_SHL_INT.cpp */
 HANDLE_OP_SHX_INT(OP_SHL_INT, "shl", (s4), <<)
 OP_END
 
-/* File: c/OP_SHR_INT.c */
+/* File: c/OP_SHR_INT.cpp */
 HANDLE_OP_SHX_INT(OP_SHR_INT, "shr", (s4), >>)
 OP_END
 
-/* File: c/OP_USHR_INT.c */
+/* File: c/OP_USHR_INT.cpp */
 HANDLE_OP_SHX_INT(OP_USHR_INT, "ushr", (u4), >>)
 OP_END
 
-/* File: c/OP_ADD_LONG.c */
+/* File: c/OP_ADD_LONG.cpp */
 HANDLE_OP_X_LONG(OP_ADD_LONG, "add", +, 0)
 OP_END
 
-/* File: c/OP_SUB_LONG.c */
+/* File: c/OP_SUB_LONG.cpp */
 HANDLE_OP_X_LONG(OP_SUB_LONG, "sub", -, 0)
 OP_END
 
-/* File: c/OP_MUL_LONG.c */
+/* File: c/OP_MUL_LONG.cpp */
 HANDLE_OP_X_LONG(OP_MUL_LONG, "mul", *, 0)
 OP_END
 
-/* File: c/OP_DIV_LONG.c */
+/* File: c/OP_DIV_LONG.cpp */
 HANDLE_OP_X_LONG(OP_DIV_LONG, "div", /, 1)
 OP_END
 
-/* File: c/OP_REM_LONG.c */
+/* File: c/OP_REM_LONG.cpp */
 HANDLE_OP_X_LONG(OP_REM_LONG, "rem", %, 2)
 OP_END
 
-/* File: c/OP_AND_LONG.c */
+/* File: c/OP_AND_LONG.cpp */
 HANDLE_OP_X_LONG(OP_AND_LONG, "and", &, 0)
 OP_END
 
-/* File: c/OP_OR_LONG.c */
+/* File: c/OP_OR_LONG.cpp */
 HANDLE_OP_X_LONG(OP_OR_LONG,  "or", |, 0)
 OP_END
 
-/* File: c/OP_XOR_LONG.c */
+/* File: c/OP_XOR_LONG.cpp */
 HANDLE_OP_X_LONG(OP_XOR_LONG, "xor", ^, 0)
 OP_END
 
-/* File: c/OP_SHL_LONG.c */
+/* File: c/OP_SHL_LONG.cpp */
 HANDLE_OP_SHX_LONG(OP_SHL_LONG, "shl", (s8), <<)
 OP_END
 
-/* File: c/OP_SHR_LONG.c */
+/* File: c/OP_SHR_LONG.cpp */
 HANDLE_OP_SHX_LONG(OP_SHR_LONG, "shr", (s8), >>)
 OP_END
 
-/* File: c/OP_USHR_LONG.c */
+/* File: c/OP_USHR_LONG.cpp */
 HANDLE_OP_SHX_LONG(OP_USHR_LONG, "ushr", (u8), >>)
 OP_END
 
-/* File: c/OP_ADD_FLOAT.c */
+/* File: c/OP_ADD_FLOAT.cpp */
 HANDLE_OP_X_FLOAT(OP_ADD_FLOAT, "add", +)
 OP_END
 
-/* File: c/OP_SUB_FLOAT.c */
+/* File: c/OP_SUB_FLOAT.cpp */
 HANDLE_OP_X_FLOAT(OP_SUB_FLOAT, "sub", -)
 OP_END
 
-/* File: c/OP_MUL_FLOAT.c */
+/* File: c/OP_MUL_FLOAT.cpp */
 HANDLE_OP_X_FLOAT(OP_MUL_FLOAT, "mul", *)
 OP_END
 
-/* File: c/OP_DIV_FLOAT.c */
+/* File: c/OP_DIV_FLOAT.cpp */
 HANDLE_OP_X_FLOAT(OP_DIV_FLOAT, "div", /)
 OP_END
 
-/* File: c/OP_REM_FLOAT.c */
+/* File: c/OP_REM_FLOAT.cpp */
 HANDLE_OPCODE(OP_REM_FLOAT /*vAA, vBB, vCC*/)
     {
         u2 srcRegs;
@@ -2579,23 +2602,23 @@ HANDLE_OPCODE(OP_REM_FLOAT /*vAA, vBB, vCC*/)
     FINISH(2);
 OP_END
 
-/* File: c/OP_ADD_DOUBLE.c */
+/* File: c/OP_ADD_DOUBLE.cpp */
 HANDLE_OP_X_DOUBLE(OP_ADD_DOUBLE, "add", +)
 OP_END
 
-/* File: c/OP_SUB_DOUBLE.c */
+/* File: c/OP_SUB_DOUBLE.cpp */
 HANDLE_OP_X_DOUBLE(OP_SUB_DOUBLE, "sub", -)
 OP_END
 
-/* File: c/OP_MUL_DOUBLE.c */
+/* File: c/OP_MUL_DOUBLE.cpp */
 HANDLE_OP_X_DOUBLE(OP_MUL_DOUBLE, "mul", *)
 OP_END
 
-/* File: c/OP_DIV_DOUBLE.c */
+/* File: c/OP_DIV_DOUBLE.cpp */
 HANDLE_OP_X_DOUBLE(OP_DIV_DOUBLE, "div", /)
 OP_END
 
-/* File: c/OP_REM_DOUBLE.c */
+/* File: c/OP_REM_DOUBLE.cpp */
 HANDLE_OPCODE(OP_REM_DOUBLE /*vAA, vBB, vCC*/)
     {
         u2 srcRegs;
@@ -2610,111 +2633,111 @@ HANDLE_OPCODE(OP_REM_DOUBLE /*vAA, vBB, vCC*/)
     FINISH(2);
 OP_END
 
-/* File: c/OP_ADD_INT_2ADDR.c */
+/* File: c/OP_ADD_INT_2ADDR.cpp */
 HANDLE_OP_X_INT_2ADDR(OP_ADD_INT_2ADDR, "add", +, 0)
 OP_END
 
-/* File: c/OP_SUB_INT_2ADDR.c */
+/* File: c/OP_SUB_INT_2ADDR.cpp */
 HANDLE_OP_X_INT_2ADDR(OP_SUB_INT_2ADDR, "sub", -, 0)
 OP_END
 
-/* File: c/OP_MUL_INT_2ADDR.c */
+/* File: c/OP_MUL_INT_2ADDR.cpp */
 HANDLE_OP_X_INT_2ADDR(OP_MUL_INT_2ADDR, "mul", *, 0)
 OP_END
 
-/* File: c/OP_DIV_INT_2ADDR.c */
+/* File: c/OP_DIV_INT_2ADDR.cpp */
 HANDLE_OP_X_INT_2ADDR(OP_DIV_INT_2ADDR, "div", /, 1)
 OP_END
 
-/* File: c/OP_REM_INT_2ADDR.c */
+/* File: c/OP_REM_INT_2ADDR.cpp */
 HANDLE_OP_X_INT_2ADDR(OP_REM_INT_2ADDR, "rem", %, 2)
 OP_END
 
-/* File: c/OP_AND_INT_2ADDR.c */
+/* File: c/OP_AND_INT_2ADDR.cpp */
 HANDLE_OP_X_INT_2ADDR(OP_AND_INT_2ADDR, "and", &, 0)
 OP_END
 
-/* File: c/OP_OR_INT_2ADDR.c */
+/* File: c/OP_OR_INT_2ADDR.cpp */
 HANDLE_OP_X_INT_2ADDR(OP_OR_INT_2ADDR,  "or", |, 0)
 OP_END
 
-/* File: c/OP_XOR_INT_2ADDR.c */
+/* File: c/OP_XOR_INT_2ADDR.cpp */
 HANDLE_OP_X_INT_2ADDR(OP_XOR_INT_2ADDR, "xor", ^, 0)
 OP_END
 
-/* File: c/OP_SHL_INT_2ADDR.c */
+/* File: c/OP_SHL_INT_2ADDR.cpp */
 HANDLE_OP_SHX_INT_2ADDR(OP_SHL_INT_2ADDR, "shl", (s4), <<)
 OP_END
 
-/* File: c/OP_SHR_INT_2ADDR.c */
+/* File: c/OP_SHR_INT_2ADDR.cpp */
 HANDLE_OP_SHX_INT_2ADDR(OP_SHR_INT_2ADDR, "shr", (s4), >>)
 OP_END
 
-/* File: c/OP_USHR_INT_2ADDR.c */
+/* File: c/OP_USHR_INT_2ADDR.cpp */
 HANDLE_OP_SHX_INT_2ADDR(OP_USHR_INT_2ADDR, "ushr", (u4), >>)
 OP_END
 
-/* File: c/OP_ADD_LONG_2ADDR.c */
+/* File: c/OP_ADD_LONG_2ADDR.cpp */
 HANDLE_OP_X_LONG_2ADDR(OP_ADD_LONG_2ADDR, "add", +, 0)
 OP_END
 
-/* File: c/OP_SUB_LONG_2ADDR.c */
+/* File: c/OP_SUB_LONG_2ADDR.cpp */
 HANDLE_OP_X_LONG_2ADDR(OP_SUB_LONG_2ADDR, "sub", -, 0)
 OP_END
 
-/* File: c/OP_MUL_LONG_2ADDR.c */
+/* File: c/OP_MUL_LONG_2ADDR.cpp */
 HANDLE_OP_X_LONG_2ADDR(OP_MUL_LONG_2ADDR, "mul", *, 0)
 OP_END
 
-/* File: c/OP_DIV_LONG_2ADDR.c */
+/* File: c/OP_DIV_LONG_2ADDR.cpp */
 HANDLE_OP_X_LONG_2ADDR(OP_DIV_LONG_2ADDR, "div", /, 1)
 OP_END
 
-/* File: c/OP_REM_LONG_2ADDR.c */
+/* File: c/OP_REM_LONG_2ADDR.cpp */
 HANDLE_OP_X_LONG_2ADDR(OP_REM_LONG_2ADDR, "rem", %, 2)
 OP_END
 
-/* File: c/OP_AND_LONG_2ADDR.c */
+/* File: c/OP_AND_LONG_2ADDR.cpp */
 HANDLE_OP_X_LONG_2ADDR(OP_AND_LONG_2ADDR, "and", &, 0)
 OP_END
 
-/* File: c/OP_OR_LONG_2ADDR.c */
+/* File: c/OP_OR_LONG_2ADDR.cpp */
 HANDLE_OP_X_LONG_2ADDR(OP_OR_LONG_2ADDR,  "or", |, 0)
 OP_END
 
-/* File: c/OP_XOR_LONG_2ADDR.c */
+/* File: c/OP_XOR_LONG_2ADDR.cpp */
 HANDLE_OP_X_LONG_2ADDR(OP_XOR_LONG_2ADDR, "xor", ^, 0)
 OP_END
 
-/* File: c/OP_SHL_LONG_2ADDR.c */
+/* File: c/OP_SHL_LONG_2ADDR.cpp */
 HANDLE_OP_SHX_LONG_2ADDR(OP_SHL_LONG_2ADDR, "shl", (s8), <<)
 OP_END
 
-/* File: c/OP_SHR_LONG_2ADDR.c */
+/* File: c/OP_SHR_LONG_2ADDR.cpp */
 HANDLE_OP_SHX_LONG_2ADDR(OP_SHR_LONG_2ADDR, "shr", (s8), >>)
 OP_END
 
-/* File: c/OP_USHR_LONG_2ADDR.c */
+/* File: c/OP_USHR_LONG_2ADDR.cpp */
 HANDLE_OP_SHX_LONG_2ADDR(OP_USHR_LONG_2ADDR, "ushr", (u8), >>)
 OP_END
 
-/* File: c/OP_ADD_FLOAT_2ADDR.c */
+/* File: c/OP_ADD_FLOAT_2ADDR.cpp */
 HANDLE_OP_X_FLOAT_2ADDR(OP_ADD_FLOAT_2ADDR, "add", +)
 OP_END
 
-/* File: c/OP_SUB_FLOAT_2ADDR.c */
+/* File: c/OP_SUB_FLOAT_2ADDR.cpp */
 HANDLE_OP_X_FLOAT_2ADDR(OP_SUB_FLOAT_2ADDR, "sub", -)
 OP_END
 
-/* File: c/OP_MUL_FLOAT_2ADDR.c */
+/* File: c/OP_MUL_FLOAT_2ADDR.cpp */
 HANDLE_OP_X_FLOAT_2ADDR(OP_MUL_FLOAT_2ADDR, "mul", *)
 OP_END
 
-/* File: c/OP_DIV_FLOAT_2ADDR.c */
+/* File: c/OP_DIV_FLOAT_2ADDR.cpp */
 HANDLE_OP_X_FLOAT_2ADDR(OP_DIV_FLOAT_2ADDR, "div", /)
 OP_END
 
-/* File: c/OP_REM_FLOAT_2ADDR.c */
+/* File: c/OP_REM_FLOAT_2ADDR.cpp */
 HANDLE_OPCODE(OP_REM_FLOAT_2ADDR /*vA, vB*/)
     vdst = INST_A(inst);
     vsrc1 = INST_B(inst);
@@ -2724,23 +2747,23 @@ HANDLE_OPCODE(OP_REM_FLOAT_2ADDR /*vA, vB*/)
     FINISH(1);
 OP_END
 
-/* File: c/OP_ADD_DOUBLE_2ADDR.c */
+/* File: c/OP_ADD_DOUBLE_2ADDR.cpp */
 HANDLE_OP_X_DOUBLE_2ADDR(OP_ADD_DOUBLE_2ADDR, "add", +)
 OP_END
 
-/* File: c/OP_SUB_DOUBLE_2ADDR.c */
+/* File: c/OP_SUB_DOUBLE_2ADDR.cpp */
 HANDLE_OP_X_DOUBLE_2ADDR(OP_SUB_DOUBLE_2ADDR, "sub", -)
 OP_END
 
-/* File: c/OP_MUL_DOUBLE_2ADDR.c */
+/* File: c/OP_MUL_DOUBLE_2ADDR.cpp */
 HANDLE_OP_X_DOUBLE_2ADDR(OP_MUL_DOUBLE_2ADDR, "mul", *)
 OP_END
 
-/* File: c/OP_DIV_DOUBLE_2ADDR.c */
+/* File: c/OP_DIV_DOUBLE_2ADDR.cpp */
 HANDLE_OP_X_DOUBLE_2ADDR(OP_DIV_DOUBLE_2ADDR, "div", /)
 OP_END
 
-/* File: c/OP_REM_DOUBLE_2ADDR.c */
+/* File: c/OP_REM_DOUBLE_2ADDR.cpp */
 HANDLE_OPCODE(OP_REM_DOUBLE_2ADDR /*vA, vB*/)
     vdst = INST_A(inst);
     vsrc1 = INST_B(inst);
@@ -2750,11 +2773,11 @@ HANDLE_OPCODE(OP_REM_DOUBLE_2ADDR /*vA, vB*/)
     FINISH(1);
 OP_END
 
-/* File: c/OP_ADD_INT_LIT16.c */
+/* File: c/OP_ADD_INT_LIT16.cpp */
 HANDLE_OP_X_INT_LIT16(OP_ADD_INT_LIT16, "add", +, 0)
 OP_END
 
-/* File: c/OP_RSUB_INT.c */
+/* File: c/OP_RSUB_INT.cpp */
 HANDLE_OPCODE(OP_RSUB_INT /*vA, vB, #+CCCC*/)
     {
         vdst = INST_A(inst);
@@ -2766,35 +2789,35 @@ HANDLE_OPCODE(OP_RSUB_INT /*vA, vB, #+CCCC*/)
     FINISH(2);
 OP_END
 
-/* File: c/OP_MUL_INT_LIT16.c */
+/* File: c/OP_MUL_INT_LIT16.cpp */
 HANDLE_OP_X_INT_LIT16(OP_MUL_INT_LIT16, "mul", *, 0)
 OP_END
 
-/* File: c/OP_DIV_INT_LIT16.c */
+/* File: c/OP_DIV_INT_LIT16.cpp */
 HANDLE_OP_X_INT_LIT16(OP_DIV_INT_LIT16, "div", /, 1)
 OP_END
 
-/* File: c/OP_REM_INT_LIT16.c */
+/* File: c/OP_REM_INT_LIT16.cpp */
 HANDLE_OP_X_INT_LIT16(OP_REM_INT_LIT16, "rem", %, 2)
 OP_END
 
-/* File: c/OP_AND_INT_LIT16.c */
+/* File: c/OP_AND_INT_LIT16.cpp */
 HANDLE_OP_X_INT_LIT16(OP_AND_INT_LIT16, "and", &, 0)
 OP_END
 
-/* File: c/OP_OR_INT_LIT16.c */
+/* File: c/OP_OR_INT_LIT16.cpp */
 HANDLE_OP_X_INT_LIT16(OP_OR_INT_LIT16,  "or",  |, 0)
 OP_END
 
-/* File: c/OP_XOR_INT_LIT16.c */
+/* File: c/OP_XOR_INT_LIT16.cpp */
 HANDLE_OP_X_INT_LIT16(OP_XOR_INT_LIT16, "xor", ^, 0)
 OP_END
 
-/* File: c/OP_ADD_INT_LIT8.c */
+/* File: c/OP_ADD_INT_LIT8.cpp */
 HANDLE_OP_X_INT_LIT8(OP_ADD_INT_LIT8,   "add", +, 0)
 OP_END
 
-/* File: c/OP_RSUB_INT_LIT8.c */
+/* File: c/OP_RSUB_INT_LIT8.cpp */
 HANDLE_OPCODE(OP_RSUB_INT_LIT8 /*vAA, vBB, #+CC*/)
     {
         u2 litInfo;
@@ -2808,79 +2831,79 @@ HANDLE_OPCODE(OP_RSUB_INT_LIT8 /*vAA, vBB, #+CC*/)
     FINISH(2);
 OP_END
 
-/* File: c/OP_MUL_INT_LIT8.c */
+/* File: c/OP_MUL_INT_LIT8.cpp */
 HANDLE_OP_X_INT_LIT8(OP_MUL_INT_LIT8,   "mul", *, 0)
 OP_END
 
-/* File: c/OP_DIV_INT_LIT8.c */
+/* File: c/OP_DIV_INT_LIT8.cpp */
 HANDLE_OP_X_INT_LIT8(OP_DIV_INT_LIT8,   "div", /, 1)
 OP_END
 
-/* File: c/OP_REM_INT_LIT8.c */
+/* File: c/OP_REM_INT_LIT8.cpp */
 HANDLE_OP_X_INT_LIT8(OP_REM_INT_LIT8,   "rem", %, 2)
 OP_END
 
-/* File: c/OP_AND_INT_LIT8.c */
+/* File: c/OP_AND_INT_LIT8.cpp */
 HANDLE_OP_X_INT_LIT8(OP_AND_INT_LIT8,   "and", &, 0)
 OP_END
 
-/* File: c/OP_OR_INT_LIT8.c */
+/* File: c/OP_OR_INT_LIT8.cpp */
 HANDLE_OP_X_INT_LIT8(OP_OR_INT_LIT8,    "or",  |, 0)
 OP_END
 
-/* File: c/OP_XOR_INT_LIT8.c */
+/* File: c/OP_XOR_INT_LIT8.cpp */
 HANDLE_OP_X_INT_LIT8(OP_XOR_INT_LIT8,   "xor", ^, 0)
 OP_END
 
-/* File: c/OP_SHL_INT_LIT8.c */
+/* File: c/OP_SHL_INT_LIT8.cpp */
 HANDLE_OP_SHX_INT_LIT8(OP_SHL_INT_LIT8,   "shl", (s4), <<)
 OP_END
 
-/* File: c/OP_SHR_INT_LIT8.c */
+/* File: c/OP_SHR_INT_LIT8.cpp */
 HANDLE_OP_SHX_INT_LIT8(OP_SHR_INT_LIT8,   "shr", (s4), >>)
 OP_END
 
-/* File: c/OP_USHR_INT_LIT8.c */
+/* File: c/OP_USHR_INT_LIT8.cpp */
 HANDLE_OP_SHX_INT_LIT8(OP_USHR_INT_LIT8,  "ushr", (u4), >>)
 OP_END
 
-/* File: c/OP_IGET_VOLATILE.c */
+/* File: c/OP_IGET_VOLATILE.cpp */
 HANDLE_IGET_X(OP_IGET_VOLATILE,         "-volatile", IntVolatile, )
 OP_END
 
-/* File: c/OP_IPUT_VOLATILE.c */
+/* File: c/OP_IPUT_VOLATILE.cpp */
 HANDLE_IPUT_X(OP_IPUT_VOLATILE,         "-volatile", IntVolatile, )
 OP_END
 
-/* File: c/OP_SGET_VOLATILE.c */
+/* File: c/OP_SGET_VOLATILE.cpp */
 HANDLE_SGET_X(OP_SGET_VOLATILE,         "-volatile", IntVolatile, )
 OP_END
 
-/* File: c/OP_SPUT_VOLATILE.c */
+/* File: c/OP_SPUT_VOLATILE.cpp */
 HANDLE_SPUT_X(OP_SPUT_VOLATILE,         "-volatile", IntVolatile, )
 OP_END
 
-/* File: c/OP_IGET_OBJECT_VOLATILE.c */
+/* File: c/OP_IGET_OBJECT_VOLATILE.cpp */
 HANDLE_IGET_X(OP_IGET_OBJECT_VOLATILE,  "-object-volatile", ObjectVolatile, _AS_OBJECT)
 OP_END
 
-/* File: c/OP_IGET_WIDE_VOLATILE.c */
+/* File: c/OP_IGET_WIDE_VOLATILE.cpp */
 HANDLE_IGET_X(OP_IGET_WIDE_VOLATILE,    "-wide-volatile", LongVolatile, _WIDE)
 OP_END
 
-/* File: c/OP_IPUT_WIDE_VOLATILE.c */
+/* File: c/OP_IPUT_WIDE_VOLATILE.cpp */
 HANDLE_IPUT_X(OP_IPUT_WIDE_VOLATILE,    "-wide-volatile", LongVolatile, _WIDE)
 OP_END
 
-/* File: c/OP_SGET_WIDE_VOLATILE.c */
+/* File: c/OP_SGET_WIDE_VOLATILE.cpp */
 HANDLE_SGET_X(OP_SGET_WIDE_VOLATILE,    "-wide-volatile", LongVolatile, _WIDE)
 OP_END
 
-/* File: c/OP_SPUT_WIDE_VOLATILE.c */
+/* File: c/OP_SPUT_WIDE_VOLATILE.cpp */
 HANDLE_SPUT_X(OP_SPUT_WIDE_VOLATILE,    "-wide-volatile", LongVolatile, _WIDE)
 OP_END
 
-/* File: c/OP_BREAKPOINT.c */
+/* File: c/OP_BREAKPOINT.cpp */
 HANDLE_OPCODE(OP_BREAKPOINT)
     {
         /*
@@ -2906,7 +2929,7 @@ HANDLE_OPCODE(OP_BREAKPOINT)
     }
 OP_END
 
-/* File: c/OP_THROW_VERIFICATION_ERROR.c */
+/* File: c/OP_THROW_VERIFICATION_ERROR.cpp */
 HANDLE_OPCODE(OP_THROW_VERIFICATION_ERROR)
     EXPORT_PC();
     vsrc1 = INST_AA(inst);
@@ -2915,7 +2938,7 @@ HANDLE_OPCODE(OP_THROW_VERIFICATION_ERROR)
     GOTO_exceptionThrown();
 OP_END
 
-/* File: c/OP_EXECUTE_INLINE.c */
+/* File: c/OP_EXECUTE_INLINE.cpp */
 HANDLE_OPCODE(OP_EXECUTE_INLINE /*vB, {vD, vE, vF, vG}, inline@CCCC*/)
     {
         /*
@@ -2976,7 +2999,7 @@ HANDLE_OPCODE(OP_EXECUTE_INLINE /*vB, {vD, vE, vF, vG}, inline@CCCC*/)
     FINISH(3);
 OP_END
 
-/* File: c/OP_EXECUTE_INLINE_RANGE.c */
+/* File: c/OP_EXECUTE_INLINE_RANGE.cpp */
 HANDLE_OPCODE(OP_EXECUTE_INLINE_RANGE /*{vCCCC..v(CCCC+AA-1)}, inline@BBBB*/)
     {
         u4 arg0, arg1, arg2, arg3;
@@ -3021,7 +3044,7 @@ HANDLE_OPCODE(OP_EXECUTE_INLINE_RANGE /*{vCCCC..v(CCCC+AA-1)}, inline@BBBB*/)
     FINISH(3);
 OP_END
 
-/* File: c/OP_INVOKE_OBJECT_INIT_RANGE.c */
+/* File: c/OP_INVOKE_OBJECT_INIT_RANGE.cpp */
 HANDLE_OPCODE(OP_INVOKE_OBJECT_INIT_RANGE /*{vCCCC..v(CCCC+AA-1)}, meth@BBBB*/)
     {
         Object* obj;
@@ -3052,7 +3075,7 @@ HANDLE_OPCODE(OP_INVOKE_OBJECT_INIT_RANGE /*{vCCCC..v(CCCC+AA-1)}, meth@BBBB*/)
     }
 OP_END
 
-/* File: c/OP_RETURN_VOID_BARRIER.c */
+/* File: c/OP_RETURN_VOID_BARRIER.cpp */
 HANDLE_OPCODE(OP_RETURN_VOID_BARRIER /**/)
     ILOGV("|return-void");
 #ifndef NDEBUG
@@ -3062,63 +3085,63 @@ HANDLE_OPCODE(OP_RETURN_VOID_BARRIER /**/)
     GOTO_returnFromMethod();
 OP_END
 
-/* File: c/OP_IGET_QUICK.c */
+/* File: c/OP_IGET_QUICK.cpp */
 HANDLE_IGET_X_QUICK(OP_IGET_QUICK,          "", Int, )
 OP_END
 
-/* File: c/OP_IGET_WIDE_QUICK.c */
+/* File: c/OP_IGET_WIDE_QUICK.cpp */
 HANDLE_IGET_X_QUICK(OP_IGET_WIDE_QUICK,     "-wide", Long, _WIDE)
 OP_END
 
-/* File: c/OP_IGET_OBJECT_QUICK.c */
+/* File: c/OP_IGET_OBJECT_QUICK.cpp */
 HANDLE_IGET_X_QUICK(OP_IGET_OBJECT_QUICK,   "-object", Object, _AS_OBJECT)
 OP_END
 
-/* File: c/OP_IPUT_QUICK.c */
+/* File: c/OP_IPUT_QUICK.cpp */
 HANDLE_IPUT_X_QUICK(OP_IPUT_QUICK,          "", Int, )
 OP_END
 
-/* File: c/OP_IPUT_WIDE_QUICK.c */
+/* File: c/OP_IPUT_WIDE_QUICK.cpp */
 HANDLE_IPUT_X_QUICK(OP_IPUT_WIDE_QUICK,     "-wide", Long, _WIDE)
 OP_END
 
-/* File: c/OP_IPUT_OBJECT_QUICK.c */
+/* File: c/OP_IPUT_OBJECT_QUICK.cpp */
 HANDLE_IPUT_X_QUICK(OP_IPUT_OBJECT_QUICK,   "-object", Object, _AS_OBJECT)
 OP_END
 
-/* File: c/OP_INVOKE_VIRTUAL_QUICK.c */
+/* File: c/OP_INVOKE_VIRTUAL_QUICK.cpp */
 HANDLE_OPCODE(OP_INVOKE_VIRTUAL_QUICK /*vB, {vD, vE, vF, vG, vA}, meth@CCCC*/)
     GOTO_invoke(invokeVirtualQuick, false, false);
 OP_END
 
-/* File: c/OP_INVOKE_VIRTUAL_QUICK_RANGE.c */
+/* File: c/OP_INVOKE_VIRTUAL_QUICK_RANGE.cpp */
 HANDLE_OPCODE(OP_INVOKE_VIRTUAL_QUICK_RANGE/*{vCCCC..v(CCCC+AA-1)}, meth@BBBB*/)
     GOTO_invoke(invokeVirtualQuick, true, false);
 OP_END
 
-/* File: c/OP_INVOKE_SUPER_QUICK.c */
+/* File: c/OP_INVOKE_SUPER_QUICK.cpp */
 HANDLE_OPCODE(OP_INVOKE_SUPER_QUICK /*vB, {vD, vE, vF, vG, vA}, meth@CCCC*/)
     GOTO_invoke(invokeSuperQuick, false, false);
 OP_END
 
-/* File: c/OP_INVOKE_SUPER_QUICK_RANGE.c */
+/* File: c/OP_INVOKE_SUPER_QUICK_RANGE.cpp */
 HANDLE_OPCODE(OP_INVOKE_SUPER_QUICK_RANGE /*{vCCCC..v(CCCC+AA-1)}, meth@BBBB*/)
     GOTO_invoke(invokeSuperQuick, true, false);
 OP_END
 
-/* File: c/OP_IPUT_OBJECT_VOLATILE.c */
+/* File: c/OP_IPUT_OBJECT_VOLATILE.cpp */
 HANDLE_IPUT_X(OP_IPUT_OBJECT_VOLATILE,  "-object-volatile", ObjectVolatile, _AS_OBJECT)
 OP_END
 
-/* File: c/OP_SGET_OBJECT_VOLATILE.c */
+/* File: c/OP_SGET_OBJECT_VOLATILE.cpp */
 HANDLE_SGET_X(OP_SGET_OBJECT_VOLATILE,  "-object-volatile", ObjectVolatile, _AS_OBJECT)
 OP_END
 
-/* File: c/OP_SPUT_OBJECT_VOLATILE.c */
+/* File: c/OP_SPUT_OBJECT_VOLATILE.cpp */
 HANDLE_SPUT_X(OP_SPUT_OBJECT_VOLATILE,  "-object-volatile", ObjectVolatile, _AS_OBJECT)
 OP_END
 
-/* File: c/OP_DISPATCH_FF.c */
+/* File: c/OP_DISPATCH_FF.cpp */
 HANDLE_OPCODE(OP_DISPATCH_FF)
     /*
      * Indicates extended opcode.  Use next 8 bits to choose where to branch.
@@ -3126,7 +3149,7 @@ HANDLE_OPCODE(OP_DISPATCH_FF)
     DISPATCH_EXTENDED(INST_AA(inst));
 OP_END
 
-/* File: c/OP_CONST_CLASS_JUMBO.c */
+/* File: c/OP_CONST_CLASS_JUMBO.cpp */
 HANDLE_OPCODE(OP_CONST_CLASS_JUMBO /*vBBBB, class@AAAAAAAA*/)
     {
         ClassObject* clazz;
@@ -3146,7 +3169,7 @@ HANDLE_OPCODE(OP_CONST_CLASS_JUMBO /*vBBBB, class@AAAAAAAA*/)
     FINISH(4);
 OP_END
 
-/* File: c/OP_CHECK_CAST_JUMBO.c */
+/* File: c/OP_CHECK_CAST_JUMBO.cpp */
 HANDLE_OPCODE(OP_CHECK_CAST_JUMBO /*vBBBB, class@AAAAAAAA*/)
     {
         ClassObject* clazz;
@@ -3179,7 +3202,7 @@ HANDLE_OPCODE(OP_CHECK_CAST_JUMBO /*vBBBB, class@AAAAAAAA*/)
     FINISH(4);
 OP_END
 
-/* File: c/OP_INSTANCE_OF_JUMBO.c */
+/* File: c/OP_INSTANCE_OF_JUMBO.cpp */
 HANDLE_OPCODE(OP_INSTANCE_OF_JUMBO /*vBBBB, vCCCC, class@AAAAAAAA*/)
     {
         ClassObject* clazz;
@@ -3211,7 +3234,7 @@ HANDLE_OPCODE(OP_INSTANCE_OF_JUMBO /*vBBBB, vCCCC, class@AAAAAAAA*/)
     FINISH(5);
 OP_END
 
-/* File: c/OP_NEW_INSTANCE_JUMBO.c */
+/* File: c/OP_NEW_INSTANCE_JUMBO.cpp */
 HANDLE_OPCODE(OP_NEW_INSTANCE_JUMBO /*vBBBB, class@AAAAAAAA*/)
     {
         ClassObject* clazz;
@@ -3261,7 +3284,7 @@ HANDLE_OPCODE(OP_NEW_INSTANCE_JUMBO /*vBBBB, class@AAAAAAAA*/)
     FINISH(4);
 OP_END
 
-/* File: c/OP_NEW_ARRAY_JUMBO.c */
+/* File: c/OP_NEW_ARRAY_JUMBO.cpp */
 HANDLE_OPCODE(OP_NEW_ARRAY_JUMBO /*vBBBB, vCCCC, class@AAAAAAAA*/)
     {
         ClassObject* arrayClass;
@@ -3298,48 +3321,48 @@ HANDLE_OPCODE(OP_NEW_ARRAY_JUMBO /*vBBBB, vCCCC, class@AAAAAAAA*/)
     FINISH(5);
 OP_END
 
-/* File: c/OP_FILLED_NEW_ARRAY_JUMBO.c */
+/* File: c/OP_FILLED_NEW_ARRAY_JUMBO.cpp */
 HANDLE_OPCODE(OP_FILLED_NEW_ARRAY_JUMBO /*{vCCCC..v(CCCC+BBBB-1)}, class@AAAAAAAA*/)
     GOTO_invoke(filledNewArray, true, true);
 OP_END
 
-/* File: c/OP_IGET_JUMBO.c */
+/* File: c/OP_IGET_JUMBO.cpp */
 HANDLE_IGET_X_JUMBO(OP_IGET_JUMBO,          "", Int, )
 OP_END
 
-/* File: c/OP_IGET_WIDE_JUMBO.c */
+/* File: c/OP_IGET_WIDE_JUMBO.cpp */
 HANDLE_IGET_X_JUMBO(OP_IGET_WIDE_JUMBO,     "-wide", Long, _WIDE)
 OP_END
 
-/* File: c/OP_IGET_OBJECT_JUMBO.c */
+/* File: c/OP_IGET_OBJECT_JUMBO.cpp */
 HANDLE_IGET_X_JUMBO(OP_IGET_OBJECT_JUMBO,   "-object", Object, _AS_OBJECT)
 OP_END
 
-/* File: c/OP_IGET_BOOLEAN_JUMBO.c */
+/* File: c/OP_IGET_BOOLEAN_JUMBO.cpp */
 HANDLE_IGET_X_JUMBO(OP_IGET_BOOLEAN_JUMBO,  "", Int, )
 OP_END
 
-/* File: c/OP_IGET_BYTE_JUMBO.c */
+/* File: c/OP_IGET_BYTE_JUMBO.cpp */
 HANDLE_IGET_X_JUMBO(OP_IGET_BYTE_JUMBO,     "", Int, )
 OP_END
 
-/* File: c/OP_IGET_CHAR_JUMBO.c */
+/* File: c/OP_IGET_CHAR_JUMBO.cpp */
 HANDLE_IGET_X_JUMBO(OP_IGET_CHAR_JUMBO,     "", Int, )
 OP_END
 
-/* File: c/OP_IGET_SHORT_JUMBO.c */
+/* File: c/OP_IGET_SHORT_JUMBO.cpp */
 HANDLE_IGET_X_JUMBO(OP_IGET_SHORT_JUMBO,    "", Int, )
 OP_END
 
-/* File: c/OP_IPUT_JUMBO.c */
+/* File: c/OP_IPUT_JUMBO.cpp */
 HANDLE_IPUT_X_JUMBO(OP_IPUT_JUMBO,          "", Int, )
 OP_END
 
-/* File: c/OP_IPUT_WIDE_JUMBO.c */
+/* File: c/OP_IPUT_WIDE_JUMBO.cpp */
 HANDLE_IPUT_X_JUMBO(OP_IPUT_WIDE_JUMBO,     "-wide", Long, _WIDE)
 OP_END
 
-/* File: c/OP_IPUT_OBJECT_JUMBO.c */
+/* File: c/OP_IPUT_OBJECT_JUMBO.cpp */
 /*
  * The VM spec says we should verify that the reference being stored into
  * the field is assignment compatible.  In practice, many popular VMs don't
@@ -3354,912 +3377,912 @@ OP_END
 HANDLE_IPUT_X_JUMBO(OP_IPUT_OBJECT_JUMBO,   "-object", Object, _AS_OBJECT)
 OP_END
 
-/* File: c/OP_IPUT_BOOLEAN_JUMBO.c */
+/* File: c/OP_IPUT_BOOLEAN_JUMBO.cpp */
 HANDLE_IPUT_X_JUMBO(OP_IPUT_BOOLEAN_JUMBO,  "", Int, )
 OP_END
 
-/* File: c/OP_IPUT_BYTE_JUMBO.c */
+/* File: c/OP_IPUT_BYTE_JUMBO.cpp */
 HANDLE_IPUT_X_JUMBO(OP_IPUT_BYTE_JUMBO,     "", Int, )
 OP_END
 
-/* File: c/OP_IPUT_CHAR_JUMBO.c */
+/* File: c/OP_IPUT_CHAR_JUMBO.cpp */
 HANDLE_IPUT_X_JUMBO(OP_IPUT_CHAR_JUMBO,     "", Int, )
 OP_END
 
-/* File: c/OP_IPUT_SHORT_JUMBO.c */
+/* File: c/OP_IPUT_SHORT_JUMBO.cpp */
 HANDLE_IPUT_X_JUMBO(OP_IPUT_SHORT_JUMBO,    "", Int, )
 OP_END
 
-/* File: c/OP_SGET_JUMBO.c */
+/* File: c/OP_SGET_JUMBO.cpp */
 HANDLE_SGET_X_JUMBO(OP_SGET_JUMBO,          "", Int, )
 OP_END
 
-/* File: c/OP_SGET_WIDE_JUMBO.c */
+/* File: c/OP_SGET_WIDE_JUMBO.cpp */
 HANDLE_SGET_X_JUMBO(OP_SGET_WIDE_JUMBO,     "-wide", Long, _WIDE)
 OP_END
 
-/* File: c/OP_SGET_OBJECT_JUMBO.c */
+/* File: c/OP_SGET_OBJECT_JUMBO.cpp */
 HANDLE_SGET_X_JUMBO(OP_SGET_OBJECT_JUMBO,   "-object", Object, _AS_OBJECT)
 OP_END
 
-/* File: c/OP_SGET_BOOLEAN_JUMBO.c */
+/* File: c/OP_SGET_BOOLEAN_JUMBO.cpp */
 HANDLE_SGET_X_JUMBO(OP_SGET_BOOLEAN_JUMBO,  "", Int, )
 OP_END
 
-/* File: c/OP_SGET_BYTE_JUMBO.c */
+/* File: c/OP_SGET_BYTE_JUMBO.cpp */
 HANDLE_SGET_X_JUMBO(OP_SGET_BYTE_JUMBO,     "", Int, )
 OP_END
 
-/* File: c/OP_SGET_CHAR_JUMBO.c */
+/* File: c/OP_SGET_CHAR_JUMBO.cpp */
 HANDLE_SGET_X_JUMBO(OP_SGET_CHAR_JUMBO,     "", Int, )
 OP_END
 
-/* File: c/OP_SGET_SHORT_JUMBO.c */
+/* File: c/OP_SGET_SHORT_JUMBO.cpp */
 HANDLE_SGET_X_JUMBO(OP_SGET_SHORT_JUMBO,    "", Int, )
 OP_END
 
-/* File: c/OP_SPUT_JUMBO.c */
+/* File: c/OP_SPUT_JUMBO.cpp */
 HANDLE_SPUT_X_JUMBO(OP_SPUT_JUMBO,          "", Int, )
 OP_END
 
-/* File: c/OP_SPUT_WIDE_JUMBO.c */
+/* File: c/OP_SPUT_WIDE_JUMBO.cpp */
 HANDLE_SPUT_X_JUMBO(OP_SPUT_WIDE_JUMBO,     "-wide", Long, _WIDE)
 OP_END
 
-/* File: c/OP_SPUT_OBJECT_JUMBO.c */
+/* File: c/OP_SPUT_OBJECT_JUMBO.cpp */
 HANDLE_SPUT_X_JUMBO(OP_SPUT_OBJECT_JUMBO,   "-object", Object, _AS_OBJECT)
 OP_END
 
-/* File: c/OP_SPUT_BOOLEAN_JUMBO.c */
+/* File: c/OP_SPUT_BOOLEAN_JUMBO.cpp */
 HANDLE_SPUT_X_JUMBO(OP_SPUT_BOOLEAN_JUMBO,          "", Int, )
 OP_END
 
-/* File: c/OP_SPUT_BYTE_JUMBO.c */
+/* File: c/OP_SPUT_BYTE_JUMBO.cpp */
 HANDLE_SPUT_X_JUMBO(OP_SPUT_BYTE_JUMBO,     "", Int, )
 OP_END
 
-/* File: c/OP_SPUT_CHAR_JUMBO.c */
+/* File: c/OP_SPUT_CHAR_JUMBO.cpp */
 HANDLE_SPUT_X_JUMBO(OP_SPUT_CHAR_JUMBO,     "", Int, )
 OP_END
 
-/* File: c/OP_SPUT_SHORT_JUMBO.c */
+/* File: c/OP_SPUT_SHORT_JUMBO.cpp */
 HANDLE_SPUT_X_JUMBO(OP_SPUT_SHORT_JUMBO,    "", Int, )
 OP_END
 
-/* File: c/OP_INVOKE_VIRTUAL_JUMBO.c */
+/* File: c/OP_INVOKE_VIRTUAL_JUMBO.cpp */
 HANDLE_OPCODE(OP_INVOKE_VIRTUAL_JUMBO /*{vCCCC..v(CCCC+BBBB-1)}, meth@AAAAAAAA*/)
     GOTO_invoke(invokeVirtual, true, true);
 OP_END
 
-/* File: c/OP_INVOKE_SUPER_JUMBO.c */
+/* File: c/OP_INVOKE_SUPER_JUMBO.cpp */
 HANDLE_OPCODE(OP_INVOKE_SUPER_JUMBO /*{vCCCC..v(CCCC+BBBB-1)}, meth@AAAAAAAA*/)
     GOTO_invoke(invokeSuper, true, true);
 OP_END
 
-/* File: c/OP_INVOKE_DIRECT_JUMBO.c */
+/* File: c/OP_INVOKE_DIRECT_JUMBO.cpp */
 HANDLE_OPCODE(OP_INVOKE_DIRECT_JUMBO /*{vCCCC..v(CCCC+BBBB-1)}, meth@AAAAAAAA*/)
     GOTO_invoke(invokeDirect, true, true);
 OP_END
 
-/* File: c/OP_INVOKE_STATIC_JUMBO.c */
+/* File: c/OP_INVOKE_STATIC_JUMBO.cpp */
 HANDLE_OPCODE(OP_INVOKE_STATIC_JUMBO /*{vCCCC..v(CCCC+BBBB-1)}, meth@AAAAAAAA*/)
     GOTO_invoke(invokeStatic, true, true);
 OP_END
 
-/* File: c/OP_INVOKE_INTERFACE_JUMBO.c */
+/* File: c/OP_INVOKE_INTERFACE_JUMBO.cpp */
 HANDLE_OPCODE(OP_INVOKE_INTERFACE_JUMBO /*{vCCCC..v(CCCC+BBBB-1)}, meth@AAAAAAAA*/)
     GOTO_invoke(invokeInterface, true, true);
 OP_END
 
-/* File: c/OP_UNUSED_27FF.c */
+/* File: c/OP_UNUSED_27FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_27FF)
 OP_END
 
-/* File: c/OP_UNUSED_28FF.c */
+/* File: c/OP_UNUSED_28FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_28FF)
 OP_END
 
-/* File: c/OP_UNUSED_29FF.c */
+/* File: c/OP_UNUSED_29FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_29FF)
 OP_END
 
-/* File: c/OP_UNUSED_2AFF.c */
+/* File: c/OP_UNUSED_2AFF.cpp */
 HANDLE_OPCODE(OP_UNUSED_2AFF)
 OP_END
 
-/* File: c/OP_UNUSED_2BFF.c */
+/* File: c/OP_UNUSED_2BFF.cpp */
 HANDLE_OPCODE(OP_UNUSED_2BFF)
 OP_END
 
-/* File: c/OP_UNUSED_2CFF.c */
+/* File: c/OP_UNUSED_2CFF.cpp */
 HANDLE_OPCODE(OP_UNUSED_2CFF)
 OP_END
 
-/* File: c/OP_UNUSED_2DFF.c */
+/* File: c/OP_UNUSED_2DFF.cpp */
 HANDLE_OPCODE(OP_UNUSED_2DFF)
 OP_END
 
-/* File: c/OP_UNUSED_2EFF.c */
+/* File: c/OP_UNUSED_2EFF.cpp */
 HANDLE_OPCODE(OP_UNUSED_2EFF)
 OP_END
 
-/* File: c/OP_UNUSED_2FFF.c */
+/* File: c/OP_UNUSED_2FFF.cpp */
 HANDLE_OPCODE(OP_UNUSED_2FFF)
 OP_END
 
-/* File: c/OP_UNUSED_30FF.c */
+/* File: c/OP_UNUSED_30FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_30FF)
 OP_END
 
-/* File: c/OP_UNUSED_31FF.c */
+/* File: c/OP_UNUSED_31FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_31FF)
 OP_END
 
-/* File: c/OP_UNUSED_32FF.c */
+/* File: c/OP_UNUSED_32FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_32FF)
 OP_END
 
-/* File: c/OP_UNUSED_33FF.c */
+/* File: c/OP_UNUSED_33FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_33FF)
 OP_END
 
-/* File: c/OP_UNUSED_34FF.c */
+/* File: c/OP_UNUSED_34FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_34FF)
 OP_END
 
-/* File: c/OP_UNUSED_35FF.c */
+/* File: c/OP_UNUSED_35FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_35FF)
 OP_END
 
-/* File: c/OP_UNUSED_36FF.c */
+/* File: c/OP_UNUSED_36FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_36FF)
 OP_END
 
-/* File: c/OP_UNUSED_37FF.c */
+/* File: c/OP_UNUSED_37FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_37FF)
 OP_END
 
-/* File: c/OP_UNUSED_38FF.c */
+/* File: c/OP_UNUSED_38FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_38FF)
 OP_END
 
-/* File: c/OP_UNUSED_39FF.c */
+/* File: c/OP_UNUSED_39FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_39FF)
 OP_END
 
-/* File: c/OP_UNUSED_3AFF.c */
+/* File: c/OP_UNUSED_3AFF.cpp */
 HANDLE_OPCODE(OP_UNUSED_3AFF)
 OP_END
 
-/* File: c/OP_UNUSED_3BFF.c */
+/* File: c/OP_UNUSED_3BFF.cpp */
 HANDLE_OPCODE(OP_UNUSED_3BFF)
 OP_END
 
-/* File: c/OP_UNUSED_3CFF.c */
+/* File: c/OP_UNUSED_3CFF.cpp */
 HANDLE_OPCODE(OP_UNUSED_3CFF)
 OP_END
 
-/* File: c/OP_UNUSED_3DFF.c */
+/* File: c/OP_UNUSED_3DFF.cpp */
 HANDLE_OPCODE(OP_UNUSED_3DFF)
 OP_END
 
-/* File: c/OP_UNUSED_3EFF.c */
+/* File: c/OP_UNUSED_3EFF.cpp */
 HANDLE_OPCODE(OP_UNUSED_3EFF)
 OP_END
 
-/* File: c/OP_UNUSED_3FFF.c */
+/* File: c/OP_UNUSED_3FFF.cpp */
 HANDLE_OPCODE(OP_UNUSED_3FFF)
 OP_END
 
-/* File: c/OP_UNUSED_40FF.c */
+/* File: c/OP_UNUSED_40FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_40FF)
 OP_END
 
-/* File: c/OP_UNUSED_41FF.c */
+/* File: c/OP_UNUSED_41FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_41FF)
 OP_END
 
-/* File: c/OP_UNUSED_42FF.c */
+/* File: c/OP_UNUSED_42FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_42FF)
 OP_END
 
-/* File: c/OP_UNUSED_43FF.c */
+/* File: c/OP_UNUSED_43FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_43FF)
 OP_END
 
-/* File: c/OP_UNUSED_44FF.c */
+/* File: c/OP_UNUSED_44FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_44FF)
 OP_END
 
-/* File: c/OP_UNUSED_45FF.c */
+/* File: c/OP_UNUSED_45FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_45FF)
 OP_END
 
-/* File: c/OP_UNUSED_46FF.c */
+/* File: c/OP_UNUSED_46FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_46FF)
 OP_END
 
-/* File: c/OP_UNUSED_47FF.c */
+/* File: c/OP_UNUSED_47FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_47FF)
 OP_END
 
-/* File: c/OP_UNUSED_48FF.c */
+/* File: c/OP_UNUSED_48FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_48FF)
 OP_END
 
-/* File: c/OP_UNUSED_49FF.c */
+/* File: c/OP_UNUSED_49FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_49FF)
 OP_END
 
-/* File: c/OP_UNUSED_4AFF.c */
+/* File: c/OP_UNUSED_4AFF.cpp */
 HANDLE_OPCODE(OP_UNUSED_4AFF)
 OP_END
 
-/* File: c/OP_UNUSED_4BFF.c */
+/* File: c/OP_UNUSED_4BFF.cpp */
 HANDLE_OPCODE(OP_UNUSED_4BFF)
 OP_END
 
-/* File: c/OP_UNUSED_4CFF.c */
+/* File: c/OP_UNUSED_4CFF.cpp */
 HANDLE_OPCODE(OP_UNUSED_4CFF)
 OP_END
 
-/* File: c/OP_UNUSED_4DFF.c */
+/* File: c/OP_UNUSED_4DFF.cpp */
 HANDLE_OPCODE(OP_UNUSED_4DFF)
 OP_END
 
-/* File: c/OP_UNUSED_4EFF.c */
+/* File: c/OP_UNUSED_4EFF.cpp */
 HANDLE_OPCODE(OP_UNUSED_4EFF)
 OP_END
 
-/* File: c/OP_UNUSED_4FFF.c */
+/* File: c/OP_UNUSED_4FFF.cpp */
 HANDLE_OPCODE(OP_UNUSED_4FFF)
 OP_END
 
-/* File: c/OP_UNUSED_50FF.c */
+/* File: c/OP_UNUSED_50FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_50FF)
 OP_END
 
-/* File: c/OP_UNUSED_51FF.c */
+/* File: c/OP_UNUSED_51FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_51FF)
 OP_END
 
-/* File: c/OP_UNUSED_52FF.c */
+/* File: c/OP_UNUSED_52FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_52FF)
 OP_END
 
-/* File: c/OP_UNUSED_53FF.c */
+/* File: c/OP_UNUSED_53FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_53FF)
 OP_END
 
-/* File: c/OP_UNUSED_54FF.c */
+/* File: c/OP_UNUSED_54FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_54FF)
 OP_END
 
-/* File: c/OP_UNUSED_55FF.c */
+/* File: c/OP_UNUSED_55FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_55FF)
 OP_END
 
-/* File: c/OP_UNUSED_56FF.c */
+/* File: c/OP_UNUSED_56FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_56FF)
 OP_END
 
-/* File: c/OP_UNUSED_57FF.c */
+/* File: c/OP_UNUSED_57FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_57FF)
 OP_END
 
-/* File: c/OP_UNUSED_58FF.c */
+/* File: c/OP_UNUSED_58FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_58FF)
 OP_END
 
-/* File: c/OP_UNUSED_59FF.c */
+/* File: c/OP_UNUSED_59FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_59FF)
 OP_END
 
-/* File: c/OP_UNUSED_5AFF.c */
+/* File: c/OP_UNUSED_5AFF.cpp */
 HANDLE_OPCODE(OP_UNUSED_5AFF)
 OP_END
 
-/* File: c/OP_UNUSED_5BFF.c */
+/* File: c/OP_UNUSED_5BFF.cpp */
 HANDLE_OPCODE(OP_UNUSED_5BFF)
 OP_END
 
-/* File: c/OP_UNUSED_5CFF.c */
+/* File: c/OP_UNUSED_5CFF.cpp */
 HANDLE_OPCODE(OP_UNUSED_5CFF)
 OP_END
 
-/* File: c/OP_UNUSED_5DFF.c */
+/* File: c/OP_UNUSED_5DFF.cpp */
 HANDLE_OPCODE(OP_UNUSED_5DFF)
 OP_END
 
-/* File: c/OP_UNUSED_5EFF.c */
+/* File: c/OP_UNUSED_5EFF.cpp */
 HANDLE_OPCODE(OP_UNUSED_5EFF)
 OP_END
 
-/* File: c/OP_UNUSED_5FFF.c */
+/* File: c/OP_UNUSED_5FFF.cpp */
 HANDLE_OPCODE(OP_UNUSED_5FFF)
 OP_END
 
-/* File: c/OP_UNUSED_60FF.c */
+/* File: c/OP_UNUSED_60FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_60FF)
 OP_END
 
-/* File: c/OP_UNUSED_61FF.c */
+/* File: c/OP_UNUSED_61FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_61FF)
 OP_END
 
-/* File: c/OP_UNUSED_62FF.c */
+/* File: c/OP_UNUSED_62FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_62FF)
 OP_END
 
-/* File: c/OP_UNUSED_63FF.c */
+/* File: c/OP_UNUSED_63FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_63FF)
 OP_END
 
-/* File: c/OP_UNUSED_64FF.c */
+/* File: c/OP_UNUSED_64FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_64FF)
 OP_END
 
-/* File: c/OP_UNUSED_65FF.c */
+/* File: c/OP_UNUSED_65FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_65FF)
 OP_END
 
-/* File: c/OP_UNUSED_66FF.c */
+/* File: c/OP_UNUSED_66FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_66FF)
 OP_END
 
-/* File: c/OP_UNUSED_67FF.c */
+/* File: c/OP_UNUSED_67FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_67FF)
 OP_END
 
-/* File: c/OP_UNUSED_68FF.c */
+/* File: c/OP_UNUSED_68FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_68FF)
 OP_END
 
-/* File: c/OP_UNUSED_69FF.c */
+/* File: c/OP_UNUSED_69FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_69FF)
 OP_END
 
-/* File: c/OP_UNUSED_6AFF.c */
+/* File: c/OP_UNUSED_6AFF.cpp */
 HANDLE_OPCODE(OP_UNUSED_6AFF)
 OP_END
 
-/* File: c/OP_UNUSED_6BFF.c */
+/* File: c/OP_UNUSED_6BFF.cpp */
 HANDLE_OPCODE(OP_UNUSED_6BFF)
 OP_END
 
-/* File: c/OP_UNUSED_6CFF.c */
+/* File: c/OP_UNUSED_6CFF.cpp */
 HANDLE_OPCODE(OP_UNUSED_6CFF)
 OP_END
 
-/* File: c/OP_UNUSED_6DFF.c */
+/* File: c/OP_UNUSED_6DFF.cpp */
 HANDLE_OPCODE(OP_UNUSED_6DFF)
 OP_END
 
-/* File: c/OP_UNUSED_6EFF.c */
+/* File: c/OP_UNUSED_6EFF.cpp */
 HANDLE_OPCODE(OP_UNUSED_6EFF)
 OP_END
 
-/* File: c/OP_UNUSED_6FFF.c */
+/* File: c/OP_UNUSED_6FFF.cpp */
 HANDLE_OPCODE(OP_UNUSED_6FFF)
 OP_END
 
-/* File: c/OP_UNUSED_70FF.c */
+/* File: c/OP_UNUSED_70FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_70FF)
 OP_END
 
-/* File: c/OP_UNUSED_71FF.c */
+/* File: c/OP_UNUSED_71FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_71FF)
 OP_END
 
-/* File: c/OP_UNUSED_72FF.c */
+/* File: c/OP_UNUSED_72FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_72FF)
 OP_END
 
-/* File: c/OP_UNUSED_73FF.c */
+/* File: c/OP_UNUSED_73FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_73FF)
 OP_END
 
-/* File: c/OP_UNUSED_74FF.c */
+/* File: c/OP_UNUSED_74FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_74FF)
 OP_END
 
-/* File: c/OP_UNUSED_75FF.c */
+/* File: c/OP_UNUSED_75FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_75FF)
 OP_END
 
-/* File: c/OP_UNUSED_76FF.c */
+/* File: c/OP_UNUSED_76FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_76FF)
 OP_END
 
-/* File: c/OP_UNUSED_77FF.c */
+/* File: c/OP_UNUSED_77FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_77FF)
 OP_END
 
-/* File: c/OP_UNUSED_78FF.c */
+/* File: c/OP_UNUSED_78FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_78FF)
 OP_END
 
-/* File: c/OP_UNUSED_79FF.c */
+/* File: c/OP_UNUSED_79FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_79FF)
 OP_END
 
-/* File: c/OP_UNUSED_7AFF.c */
+/* File: c/OP_UNUSED_7AFF.cpp */
 HANDLE_OPCODE(OP_UNUSED_7AFF)
 OP_END
 
-/* File: c/OP_UNUSED_7BFF.c */
+/* File: c/OP_UNUSED_7BFF.cpp */
 HANDLE_OPCODE(OP_UNUSED_7BFF)
 OP_END
 
-/* File: c/OP_UNUSED_7CFF.c */
+/* File: c/OP_UNUSED_7CFF.cpp */
 HANDLE_OPCODE(OP_UNUSED_7CFF)
 OP_END
 
-/* File: c/OP_UNUSED_7DFF.c */
+/* File: c/OP_UNUSED_7DFF.cpp */
 HANDLE_OPCODE(OP_UNUSED_7DFF)
 OP_END
 
-/* File: c/OP_UNUSED_7EFF.c */
+/* File: c/OP_UNUSED_7EFF.cpp */
 HANDLE_OPCODE(OP_UNUSED_7EFF)
 OP_END
 
-/* File: c/OP_UNUSED_7FFF.c */
+/* File: c/OP_UNUSED_7FFF.cpp */
 HANDLE_OPCODE(OP_UNUSED_7FFF)
 OP_END
 
-/* File: c/OP_UNUSED_80FF.c */
+/* File: c/OP_UNUSED_80FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_80FF)
 OP_END
 
-/* File: c/OP_UNUSED_81FF.c */
+/* File: c/OP_UNUSED_81FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_81FF)
 OP_END
 
-/* File: c/OP_UNUSED_82FF.c */
+/* File: c/OP_UNUSED_82FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_82FF)
 OP_END
 
-/* File: c/OP_UNUSED_83FF.c */
+/* File: c/OP_UNUSED_83FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_83FF)
 OP_END
 
-/* File: c/OP_UNUSED_84FF.c */
+/* File: c/OP_UNUSED_84FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_84FF)
 OP_END
 
-/* File: c/OP_UNUSED_85FF.c */
+/* File: c/OP_UNUSED_85FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_85FF)
 OP_END
 
-/* File: c/OP_UNUSED_86FF.c */
+/* File: c/OP_UNUSED_86FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_86FF)
 OP_END
 
-/* File: c/OP_UNUSED_87FF.c */
+/* File: c/OP_UNUSED_87FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_87FF)
 OP_END
 
-/* File: c/OP_UNUSED_88FF.c */
+/* File: c/OP_UNUSED_88FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_88FF)
 OP_END
 
-/* File: c/OP_UNUSED_89FF.c */
+/* File: c/OP_UNUSED_89FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_89FF)
 OP_END
 
-/* File: c/OP_UNUSED_8AFF.c */
+/* File: c/OP_UNUSED_8AFF.cpp */
 HANDLE_OPCODE(OP_UNUSED_8AFF)
 OP_END
 
-/* File: c/OP_UNUSED_8BFF.c */
+/* File: c/OP_UNUSED_8BFF.cpp */
 HANDLE_OPCODE(OP_UNUSED_8BFF)
 OP_END
 
-/* File: c/OP_UNUSED_8CFF.c */
+/* File: c/OP_UNUSED_8CFF.cpp */
 HANDLE_OPCODE(OP_UNUSED_8CFF)
 OP_END
 
-/* File: c/OP_UNUSED_8DFF.c */
+/* File: c/OP_UNUSED_8DFF.cpp */
 HANDLE_OPCODE(OP_UNUSED_8DFF)
 OP_END
 
-/* File: c/OP_UNUSED_8EFF.c */
+/* File: c/OP_UNUSED_8EFF.cpp */
 HANDLE_OPCODE(OP_UNUSED_8EFF)
 OP_END
 
-/* File: c/OP_UNUSED_8FFF.c */
+/* File: c/OP_UNUSED_8FFF.cpp */
 HANDLE_OPCODE(OP_UNUSED_8FFF)
 OP_END
 
-/* File: c/OP_UNUSED_90FF.c */
+/* File: c/OP_UNUSED_90FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_90FF)
 OP_END
 
-/* File: c/OP_UNUSED_91FF.c */
+/* File: c/OP_UNUSED_91FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_91FF)
 OP_END
 
-/* File: c/OP_UNUSED_92FF.c */
+/* File: c/OP_UNUSED_92FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_92FF)
 OP_END
 
-/* File: c/OP_UNUSED_93FF.c */
+/* File: c/OP_UNUSED_93FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_93FF)
 OP_END
 
-/* File: c/OP_UNUSED_94FF.c */
+/* File: c/OP_UNUSED_94FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_94FF)
 OP_END
 
-/* File: c/OP_UNUSED_95FF.c */
+/* File: c/OP_UNUSED_95FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_95FF)
 OP_END
 
-/* File: c/OP_UNUSED_96FF.c */
+/* File: c/OP_UNUSED_96FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_96FF)
 OP_END
 
-/* File: c/OP_UNUSED_97FF.c */
+/* File: c/OP_UNUSED_97FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_97FF)
 OP_END
 
-/* File: c/OP_UNUSED_98FF.c */
+/* File: c/OP_UNUSED_98FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_98FF)
 OP_END
 
-/* File: c/OP_UNUSED_99FF.c */
+/* File: c/OP_UNUSED_99FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_99FF)
 OP_END
 
-/* File: c/OP_UNUSED_9AFF.c */
+/* File: c/OP_UNUSED_9AFF.cpp */
 HANDLE_OPCODE(OP_UNUSED_9AFF)
 OP_END
 
-/* File: c/OP_UNUSED_9BFF.c */
+/* File: c/OP_UNUSED_9BFF.cpp */
 HANDLE_OPCODE(OP_UNUSED_9BFF)
 OP_END
 
-/* File: c/OP_UNUSED_9CFF.c */
+/* File: c/OP_UNUSED_9CFF.cpp */
 HANDLE_OPCODE(OP_UNUSED_9CFF)
 OP_END
 
-/* File: c/OP_UNUSED_9DFF.c */
+/* File: c/OP_UNUSED_9DFF.cpp */
 HANDLE_OPCODE(OP_UNUSED_9DFF)
 OP_END
 
-/* File: c/OP_UNUSED_9EFF.c */
+/* File: c/OP_UNUSED_9EFF.cpp */
 HANDLE_OPCODE(OP_UNUSED_9EFF)
 OP_END
 
-/* File: c/OP_UNUSED_9FFF.c */
+/* File: c/OP_UNUSED_9FFF.cpp */
 HANDLE_OPCODE(OP_UNUSED_9FFF)
 OP_END
 
-/* File: c/OP_UNUSED_A0FF.c */
+/* File: c/OP_UNUSED_A0FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_A0FF)
 OP_END
 
-/* File: c/OP_UNUSED_A1FF.c */
+/* File: c/OP_UNUSED_A1FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_A1FF)
 OP_END
 
-/* File: c/OP_UNUSED_A2FF.c */
+/* File: c/OP_UNUSED_A2FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_A2FF)
 OP_END
 
-/* File: c/OP_UNUSED_A3FF.c */
+/* File: c/OP_UNUSED_A3FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_A3FF)
 OP_END
 
-/* File: c/OP_UNUSED_A4FF.c */
+/* File: c/OP_UNUSED_A4FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_A4FF)
 OP_END
 
-/* File: c/OP_UNUSED_A5FF.c */
+/* File: c/OP_UNUSED_A5FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_A5FF)
 OP_END
 
-/* File: c/OP_UNUSED_A6FF.c */
+/* File: c/OP_UNUSED_A6FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_A6FF)
 OP_END
 
-/* File: c/OP_UNUSED_A7FF.c */
+/* File: c/OP_UNUSED_A7FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_A7FF)
 OP_END
 
-/* File: c/OP_UNUSED_A8FF.c */
+/* File: c/OP_UNUSED_A8FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_A8FF)
 OP_END
 
-/* File: c/OP_UNUSED_A9FF.c */
+/* File: c/OP_UNUSED_A9FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_A9FF)
 OP_END
 
-/* File: c/OP_UNUSED_AAFF.c */
+/* File: c/OP_UNUSED_AAFF.cpp */
 HANDLE_OPCODE(OP_UNUSED_AAFF)
 OP_END
 
-/* File: c/OP_UNUSED_ABFF.c */
+/* File: c/OP_UNUSED_ABFF.cpp */
 HANDLE_OPCODE(OP_UNUSED_ABFF)
 OP_END
 
-/* File: c/OP_UNUSED_ACFF.c */
+/* File: c/OP_UNUSED_ACFF.cpp */
 HANDLE_OPCODE(OP_UNUSED_ACFF)
 OP_END
 
-/* File: c/OP_UNUSED_ADFF.c */
+/* File: c/OP_UNUSED_ADFF.cpp */
 HANDLE_OPCODE(OP_UNUSED_ADFF)
 OP_END
 
-/* File: c/OP_UNUSED_AEFF.c */
+/* File: c/OP_UNUSED_AEFF.cpp */
 HANDLE_OPCODE(OP_UNUSED_AEFF)
 OP_END
 
-/* File: c/OP_UNUSED_AFFF.c */
+/* File: c/OP_UNUSED_AFFF.cpp */
 HANDLE_OPCODE(OP_UNUSED_AFFF)
 OP_END
 
-/* File: c/OP_UNUSED_B0FF.c */
+/* File: c/OP_UNUSED_B0FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_B0FF)
 OP_END
 
-/* File: c/OP_UNUSED_B1FF.c */
+/* File: c/OP_UNUSED_B1FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_B1FF)
 OP_END
 
-/* File: c/OP_UNUSED_B2FF.c */
+/* File: c/OP_UNUSED_B2FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_B2FF)
 OP_END
 
-/* File: c/OP_UNUSED_B3FF.c */
+/* File: c/OP_UNUSED_B3FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_B3FF)
 OP_END
 
-/* File: c/OP_UNUSED_B4FF.c */
+/* File: c/OP_UNUSED_B4FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_B4FF)
 OP_END
 
-/* File: c/OP_UNUSED_B5FF.c */
+/* File: c/OP_UNUSED_B5FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_B5FF)
 OP_END
 
-/* File: c/OP_UNUSED_B6FF.c */
+/* File: c/OP_UNUSED_B6FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_B6FF)
 OP_END
 
-/* File: c/OP_UNUSED_B7FF.c */
+/* File: c/OP_UNUSED_B7FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_B7FF)
 OP_END
 
-/* File: c/OP_UNUSED_B8FF.c */
+/* File: c/OP_UNUSED_B8FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_B8FF)
 OP_END
 
-/* File: c/OP_UNUSED_B9FF.c */
+/* File: c/OP_UNUSED_B9FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_B9FF)
 OP_END
 
-/* File: c/OP_UNUSED_BAFF.c */
+/* File: c/OP_UNUSED_BAFF.cpp */
 HANDLE_OPCODE(OP_UNUSED_BAFF)
 OP_END
 
-/* File: c/OP_UNUSED_BBFF.c */
+/* File: c/OP_UNUSED_BBFF.cpp */
 HANDLE_OPCODE(OP_UNUSED_BBFF)
 OP_END
 
-/* File: c/OP_UNUSED_BCFF.c */
+/* File: c/OP_UNUSED_BCFF.cpp */
 HANDLE_OPCODE(OP_UNUSED_BCFF)
 OP_END
 
-/* File: c/OP_UNUSED_BDFF.c */
+/* File: c/OP_UNUSED_BDFF.cpp */
 HANDLE_OPCODE(OP_UNUSED_BDFF)
 OP_END
 
-/* File: c/OP_UNUSED_BEFF.c */
+/* File: c/OP_UNUSED_BEFF.cpp */
 HANDLE_OPCODE(OP_UNUSED_BEFF)
 OP_END
 
-/* File: c/OP_UNUSED_BFFF.c */
+/* File: c/OP_UNUSED_BFFF.cpp */
 HANDLE_OPCODE(OP_UNUSED_BFFF)
 OP_END
 
-/* File: c/OP_UNUSED_C0FF.c */
+/* File: c/OP_UNUSED_C0FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_C0FF)
 OP_END
 
-/* File: c/OP_UNUSED_C1FF.c */
+/* File: c/OP_UNUSED_C1FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_C1FF)
 OP_END
 
-/* File: c/OP_UNUSED_C2FF.c */
+/* File: c/OP_UNUSED_C2FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_C2FF)
 OP_END
 
-/* File: c/OP_UNUSED_C3FF.c */
+/* File: c/OP_UNUSED_C3FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_C3FF)
 OP_END
 
-/* File: c/OP_UNUSED_C4FF.c */
+/* File: c/OP_UNUSED_C4FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_C4FF)
 OP_END
 
-/* File: c/OP_UNUSED_C5FF.c */
+/* File: c/OP_UNUSED_C5FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_C5FF)
 OP_END
 
-/* File: c/OP_UNUSED_C6FF.c */
+/* File: c/OP_UNUSED_C6FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_C6FF)
 OP_END
 
-/* File: c/OP_UNUSED_C7FF.c */
+/* File: c/OP_UNUSED_C7FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_C7FF)
 OP_END
 
-/* File: c/OP_UNUSED_C8FF.c */
+/* File: c/OP_UNUSED_C8FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_C8FF)
 OP_END
 
-/* File: c/OP_UNUSED_C9FF.c */
+/* File: c/OP_UNUSED_C9FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_C9FF)
 OP_END
 
-/* File: c/OP_UNUSED_CAFF.c */
+/* File: c/OP_UNUSED_CAFF.cpp */
 HANDLE_OPCODE(OP_UNUSED_CAFF)
 OP_END
 
-/* File: c/OP_UNUSED_CBFF.c */
+/* File: c/OP_UNUSED_CBFF.cpp */
 HANDLE_OPCODE(OP_UNUSED_CBFF)
 OP_END
 
-/* File: c/OP_UNUSED_CCFF.c */
+/* File: c/OP_UNUSED_CCFF.cpp */
 HANDLE_OPCODE(OP_UNUSED_CCFF)
 OP_END
 
-/* File: c/OP_UNUSED_CDFF.c */
+/* File: c/OP_UNUSED_CDFF.cpp */
 HANDLE_OPCODE(OP_UNUSED_CDFF)
 OP_END
 
-/* File: c/OP_UNUSED_CEFF.c */
+/* File: c/OP_UNUSED_CEFF.cpp */
 HANDLE_OPCODE(OP_UNUSED_CEFF)
 OP_END
 
-/* File: c/OP_UNUSED_CFFF.c */
+/* File: c/OP_UNUSED_CFFF.cpp */
 HANDLE_OPCODE(OP_UNUSED_CFFF)
 OP_END
 
-/* File: c/OP_UNUSED_D0FF.c */
+/* File: c/OP_UNUSED_D0FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_D0FF)
 OP_END
 
-/* File: c/OP_UNUSED_D1FF.c */
+/* File: c/OP_UNUSED_D1FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_D1FF)
 OP_END
 
-/* File: c/OP_UNUSED_D2FF.c */
+/* File: c/OP_UNUSED_D2FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_D2FF)
 OP_END
 
-/* File: c/OP_UNUSED_D3FF.c */
+/* File: c/OP_UNUSED_D3FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_D3FF)
 OP_END
 
-/* File: c/OP_UNUSED_D4FF.c */
+/* File: c/OP_UNUSED_D4FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_D4FF)
 OP_END
 
-/* File: c/OP_UNUSED_D5FF.c */
+/* File: c/OP_UNUSED_D5FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_D5FF)
 OP_END
 
-/* File: c/OP_UNUSED_D6FF.c */
+/* File: c/OP_UNUSED_D6FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_D6FF)
 OP_END
 
-/* File: c/OP_UNUSED_D7FF.c */
+/* File: c/OP_UNUSED_D7FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_D7FF)
 OP_END
 
-/* File: c/OP_UNUSED_D8FF.c */
+/* File: c/OP_UNUSED_D8FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_D8FF)
 OP_END
 
-/* File: c/OP_UNUSED_D9FF.c */
+/* File: c/OP_UNUSED_D9FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_D9FF)
 OP_END
 
-/* File: c/OP_UNUSED_DAFF.c */
+/* File: c/OP_UNUSED_DAFF.cpp */
 HANDLE_OPCODE(OP_UNUSED_DAFF)
 OP_END
 
-/* File: c/OP_UNUSED_DBFF.c */
+/* File: c/OP_UNUSED_DBFF.cpp */
 HANDLE_OPCODE(OP_UNUSED_DBFF)
 OP_END
 
-/* File: c/OP_UNUSED_DCFF.c */
+/* File: c/OP_UNUSED_DCFF.cpp */
 HANDLE_OPCODE(OP_UNUSED_DCFF)
 OP_END
 
-/* File: c/OP_UNUSED_DDFF.c */
+/* File: c/OP_UNUSED_DDFF.cpp */
 HANDLE_OPCODE(OP_UNUSED_DDFF)
 OP_END
 
-/* File: c/OP_UNUSED_DEFF.c */
+/* File: c/OP_UNUSED_DEFF.cpp */
 HANDLE_OPCODE(OP_UNUSED_DEFF)
 OP_END
 
-/* File: c/OP_UNUSED_DFFF.c */
+/* File: c/OP_UNUSED_DFFF.cpp */
 HANDLE_OPCODE(OP_UNUSED_DFFF)
 OP_END
 
-/* File: c/OP_UNUSED_E0FF.c */
+/* File: c/OP_UNUSED_E0FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_E0FF)
 OP_END
 
-/* File: c/OP_UNUSED_E1FF.c */
+/* File: c/OP_UNUSED_E1FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_E1FF)
 OP_END
 
-/* File: c/OP_UNUSED_E2FF.c */
+/* File: c/OP_UNUSED_E2FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_E2FF)
 OP_END
 
-/* File: c/OP_UNUSED_E3FF.c */
+/* File: c/OP_UNUSED_E3FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_E3FF)
 OP_END
 
-/* File: c/OP_UNUSED_E4FF.c */
+/* File: c/OP_UNUSED_E4FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_E4FF)
 OP_END
 
-/* File: c/OP_UNUSED_E5FF.c */
+/* File: c/OP_UNUSED_E5FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_E5FF)
 OP_END
 
-/* File: c/OP_UNUSED_E6FF.c */
+/* File: c/OP_UNUSED_E6FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_E6FF)
 OP_END
 
-/* File: c/OP_UNUSED_E7FF.c */
+/* File: c/OP_UNUSED_E7FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_E7FF)
 OP_END
 
-/* File: c/OP_UNUSED_E8FF.c */
+/* File: c/OP_UNUSED_E8FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_E8FF)
 OP_END
 
-/* File: c/OP_UNUSED_E9FF.c */
+/* File: c/OP_UNUSED_E9FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_E9FF)
 OP_END
 
-/* File: c/OP_UNUSED_EAFF.c */
+/* File: c/OP_UNUSED_EAFF.cpp */
 HANDLE_OPCODE(OP_UNUSED_EAFF)
 OP_END
 
-/* File: c/OP_UNUSED_EBFF.c */
+/* File: c/OP_UNUSED_EBFF.cpp */
 HANDLE_OPCODE(OP_UNUSED_EBFF)
 OP_END
 
-/* File: c/OP_UNUSED_ECFF.c */
+/* File: c/OP_UNUSED_ECFF.cpp */
 HANDLE_OPCODE(OP_UNUSED_ECFF)
 OP_END
 
-/* File: c/OP_UNUSED_EDFF.c */
+/* File: c/OP_UNUSED_EDFF.cpp */
 HANDLE_OPCODE(OP_UNUSED_EDFF)
 OP_END
 
-/* File: c/OP_UNUSED_EEFF.c */
+/* File: c/OP_UNUSED_EEFF.cpp */
 HANDLE_OPCODE(OP_UNUSED_EEFF)
 OP_END
 
-/* File: c/OP_UNUSED_EFFF.c */
+/* File: c/OP_UNUSED_EFFF.cpp */
 HANDLE_OPCODE(OP_UNUSED_EFFF)
 OP_END
 
-/* File: c/OP_UNUSED_F0FF.c */
+/* File: c/OP_UNUSED_F0FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_F0FF)
 OP_END
 
-/* File: c/OP_UNUSED_F1FF.c */
+/* File: c/OP_UNUSED_F1FF.cpp */
 HANDLE_OPCODE(OP_UNUSED_F1FF)
     /*
      * In portable interp, most unused opcodes will fall through to here.
@@ -4269,7 +4292,7 @@ HANDLE_OPCODE(OP_UNUSED_F1FF)
     FINISH(1);
 OP_END
 
-/* File: c/OP_INVOKE_OBJECT_INIT_JUMBO.c */
+/* File: c/OP_INVOKE_OBJECT_INIT_JUMBO.cpp */
 HANDLE_OPCODE(OP_INVOKE_OBJECT_INIT_JUMBO /*{vCCCC..vNNNN}, meth@AAAAAAAA*/)
     {
         Object* obj;
@@ -4300,55 +4323,55 @@ HANDLE_OPCODE(OP_INVOKE_OBJECT_INIT_JUMBO /*{vCCCC..vNNNN}, meth@AAAAAAAA*/)
     }
 OP_END
 
-/* File: c/OP_IGET_VOLATILE_JUMBO.c */
+/* File: c/OP_IGET_VOLATILE_JUMBO.cpp */
 HANDLE_IGET_X_JUMBO(OP_IGET_VOLATILE_JUMBO, "-volatile/jumbo", IntVolatile, )
 OP_END
 
-/* File: c/OP_IGET_WIDE_VOLATILE_JUMBO.c */
+/* File: c/OP_IGET_WIDE_VOLATILE_JUMBO.cpp */
 HANDLE_IGET_X_JUMBO(OP_IGET_WIDE_VOLATILE_JUMBO, "-wide-volatile/jumbo", LongVolatile, _WIDE)
 OP_END
 
-/* File: c/OP_IGET_OBJECT_VOLATILE_JUMBO.c */
+/* File: c/OP_IGET_OBJECT_VOLATILE_JUMBO.cpp */
 HANDLE_IGET_X_JUMBO(OP_IGET_OBJECT_VOLATILE_JUMBO, "-object-volatile/jumbo", ObjectVolatile, _AS_OBJECT)
 OP_END
 
-/* File: c/OP_IPUT_VOLATILE_JUMBO.c */
+/* File: c/OP_IPUT_VOLATILE_JUMBO.cpp */
 HANDLE_IPUT_X_JUMBO(OP_IPUT_VOLATILE_JUMBO, "-volatile/jumbo", IntVolatile, )
 OP_END
 
-/* File: c/OP_IPUT_WIDE_VOLATILE_JUMBO.c */
+/* File: c/OP_IPUT_WIDE_VOLATILE_JUMBO.cpp */
 HANDLE_IPUT_X_JUMBO(OP_IPUT_WIDE_VOLATILE_JUMBO, "-wide-volatile/jumbo", LongVolatile, _WIDE)
 OP_END
 
-/* File: c/OP_IPUT_OBJECT_VOLATILE_JUMBO.c */
+/* File: c/OP_IPUT_OBJECT_VOLATILE_JUMBO.cpp */
 HANDLE_IPUT_X_JUMBO(OP_IPUT_OBJECT_VOLATILE_JUMBO, "-object-volatile/jumbo", ObjectVolatile, _AS_OBJECT)
 OP_END
 
-/* File: c/OP_SGET_VOLATILE_JUMBO.c */
+/* File: c/OP_SGET_VOLATILE_JUMBO.cpp */
 HANDLE_SGET_X_JUMBO(OP_SGET_VOLATILE_JUMBO, "-volatile/jumbo", IntVolatile, )
 OP_END
 
-/* File: c/OP_SGET_WIDE_VOLATILE_JUMBO.c */
+/* File: c/OP_SGET_WIDE_VOLATILE_JUMBO.cpp */
 HANDLE_SGET_X_JUMBO(OP_SGET_WIDE_VOLATILE_JUMBO, "-wide-volatile/jumbo", LongVolatile, _WIDE)
 OP_END
 
-/* File: c/OP_SGET_OBJECT_VOLATILE_JUMBO.c */
+/* File: c/OP_SGET_OBJECT_VOLATILE_JUMBO.cpp */
 HANDLE_SGET_X_JUMBO(OP_SGET_OBJECT_VOLATILE_JUMBO, "-object-volatile/jumbo", ObjectVolatile, _AS_OBJECT)
 OP_END
 
-/* File: c/OP_SPUT_VOLATILE_JUMBO.c */
+/* File: c/OP_SPUT_VOLATILE_JUMBO.cpp */
 HANDLE_SPUT_X_JUMBO(OP_SPUT_VOLATILE_JUMBO, "-volatile", IntVolatile, )
 OP_END
 
-/* File: c/OP_SPUT_WIDE_VOLATILE_JUMBO.c */
+/* File: c/OP_SPUT_WIDE_VOLATILE_JUMBO.cpp */
 HANDLE_SPUT_X_JUMBO(OP_SPUT_WIDE_VOLATILE_JUMBO, "-wide-volatile/jumbo", LongVolatile, _WIDE)
 OP_END
 
-/* File: c/OP_SPUT_OBJECT_VOLATILE_JUMBO.c */
+/* File: c/OP_SPUT_OBJECT_VOLATILE_JUMBO.cpp */
 HANDLE_SPUT_X_JUMBO(OP_SPUT_OBJECT_VOLATILE_JUMBO, "-object-volatile/jumbo", ObjectVolatile, _AS_OBJECT)
 OP_END
 
-/* File: c/OP_THROW_VERIFICATION_ERROR_JUMBO.c */
+/* File: c/OP_THROW_VERIFICATION_ERROR_JUMBO.cpp */
 HANDLE_OPCODE(OP_THROW_VERIFICATION_ERROR_JUMBO)
     EXPORT_PC();
     vsrc1 = FETCH(3);
@@ -4357,70 +4380,7 @@ HANDLE_OPCODE(OP_THROW_VERIFICATION_ERROR_JUMBO)
     GOTO_exceptionThrown();
 OP_END
 
-/* File: cstubs/entry.c */
-/*
- * Handler function table, one entry per opcode.
- */
-#undef H
-#define H(_op) dvmMterp_##_op
-DEFINE_GOTO_TABLE(gDvmMterpHandlers)
-
-#undef H
-#define H(_op) #_op
-DEFINE_GOTO_TABLE(gDvmMterpHandlerNames)
-
-#include <setjmp.h>
-
-/*
- * C mterp entry point.  This just calls the various C fallbacks, making
- * this a slow but portable interpeter.
- *
- * This is only used for the "allstubs" variant.
- */
-void dvmMterpStdRun(Thread* self)
-{
-    jmp_buf jmpBuf;
-
-    self->bailPtr = &jmpBuf;
-
-    /* We exit via a longjmp */
-    if (setjmp(jmpBuf)) {
-        LOGVV("mterp threadid=%d returning\n", dvmThreadSelf()->threadId);
-        return
-    }
-
-    /* run until somebody longjmp()s out */
-    while (true) {
-        typedef void (*Handler)(Thread* self);
-
-        u2 inst = /*self->interpSave.*/pc[0];
-        /*
-         * In mterp, dvmCheckBefore is handled via the altHandlerTable,
-         * while in the portable interpreter it is part of the handler
-         * FINISH code.  For allstubs, we must do an explicit check
-         * in the interpretation loop.
-         */
-        if (self-interpBreak.ctl.subMode) {
-            dvmCheckBefore(pc, fp, self, curMethod);
-        }
-        Handler handler = (Handler) gDvmMterpHandlers[inst & 0xff];
-        (void) gDvmMterpHandlerNames;   /* avoid gcc "defined but not used" */
-        LOGVV("handler %p %s\n",
-            handler, (const char*) gDvmMterpHandlerNames[inst & 0xff]);
-        (*handler)(self);
-    }
-}
-
-/*
- * C mterp exit point.  Call here to bail out of the interpreter.
- */
-void dvmMterpStdBail(Thread* self)
-{
-    jmp_buf* pJmpBuf = self->bailPtr;
-    longjmp(*pJmpBuf, 1);
-}
-
-/* File: c/gotoTargets.c */
+/* File: c/gotoTargets.cpp */
 /*
  * C footer.  This has some common code shared by the various targets.
  */
@@ -4510,7 +4470,7 @@ GOTO_TARGET(filledNewArray, bool methodCallRange, bool jumboFormat)
         /*
          * Fill in the elements.  It's legal for vsrc1 to be zero.
          */
-        contents = (u4*) newArray->contents;
+        contents = (u4*)(void*)newArray->contents;
         if (methodCallRange) {
             for (i = 0; i < vsrc1; i++)
                 contents[i] = GET_REGISTER(vdst+i);
@@ -5456,14 +5416,12 @@ GOTO_TARGET(invokeMethod, bool methodCallRange, const Method* _methodToCall,
     assert(false);      // should not get here
 GOTO_TARGET_END
 
-/* File: cstubs/enddefs.c */
+/* File: portable/enddefs.cpp */
+/*--- end of opcodes ---*/
 
-/* undefine "magic" name remapping */
-#undef retval
-#undef pc
-#undef fp
-#undef curMethod
-#undef methodClassDex
-#undef self
-#undef debugTrackedRefStart
+bail:
+    ILOGD("|-- Leaving interpreter loop");      // note "curMethod" may be NULL
+
+    self->retval = retval;
+}
 
