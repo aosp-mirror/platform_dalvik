@@ -62,7 +62,7 @@ static bool needsReturnBarrier(Method* method);
  * TODO: this is currently just a linear array.  We will want to put this
  * into a hash table as the list size increases.
  */
-bool dvmCreateInlineSubsTable(void)
+bool dvmCreateInlineSubsTable()
 {
     const InlineOperation* ops = dvmGetInlineOpsTable();
     const int count = dvmGetInlineOpsTableLength();
@@ -106,7 +106,7 @@ bool dvmCreateInlineSubsTable(void)
 /*
  * Release inline sub data structure.
  */
-void dvmFreeInlineSubsTable(void)
+void dvmFreeInlineSubsTable()
 {
     free(gDvm.inlineSubs);
     gDvm.inlineSubs = NULL;

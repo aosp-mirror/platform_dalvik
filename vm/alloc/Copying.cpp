@@ -147,7 +147,7 @@ static bool fromSpaceContains(const void *addr);
 static size_t sumHeapBitmap(const HeapBitmap *bitmap);
 static size_t objectSize(const Object *obj);
 static void scavengeDataObject(Object *obj);
-static void scavengeBlockQueue(void);
+static void scavengeBlockQueue();
 
 /*
  * We use 512-byte blocks.
@@ -502,12 +502,12 @@ GcHeap *dvmHeapSourceStartup(size_t startSize, size_t absoluteMaxSize)
  * zygote process.  This is a no-op for the time being.  Eventually
  * this will demarcate the shared region of the heap.
  */
-bool dvmHeapSourceStartupAfterZygote(void)
+bool dvmHeapSourceStartupAfterZygote()
 {
     return true;
 }
 
-bool dvmHeapSourceStartupBeforeFork(void)
+bool dvmHeapSourceStartupBeforeFork()
 {
     assert(!"implemented");
     return false;
@@ -568,7 +568,7 @@ void dvmHeapSourceGetObjectBitmaps(HeapBitmap objBits[], HeapBitmap markBits[],
     assert(!"implemented");
 }
 
-HeapBitmap *dvmHeapSourceGetLiveBits(void)
+HeapBitmap *dvmHeapSourceGetLiveBits()
 {
     return &gDvm.gcHeap->heapSource->allocBits;
 }
@@ -697,7 +697,7 @@ size_t dvmHeapSourceChunkSize(const void *ptr)
     return 0;
 }
 
-size_t dvmHeapSourceFootprint(void)
+size_t dvmHeapSourceFootprint()
 {
     assert(!"implemented");
     return 0;
@@ -708,12 +708,12 @@ size_t dvmHeapSourceFootprint(void)
  * bytes currently committed to the heap.  This starts out at the
  * start size of the heap and grows toward the maximum size.
  */
-size_t dvmHeapSourceGetIdealFootprint(void)
+size_t dvmHeapSourceGetIdealFootprint()
 {
     return gDvm.gcHeap->heapSource->currentSize;
 }
 
-float dvmGetTargetHeapUtilization(void)
+float dvmGetTargetHeapUtilization()
 {
     return 0.5f;
 }
@@ -729,7 +729,7 @@ void dvmSetTargetHeapUtilization(float newTarget)
  * just a no-op.  Eventually, we will either allocate or commit pages
  * on an as-need basis.
  */
-void dvmHeapSourceGrowForUtilization(void)
+void dvmHeapSourceGrowForUtilization()
 {
     /* do nothing */
 }
@@ -747,7 +747,7 @@ void dvmHeapSourceWalk(void (*callback)(const void *chunkptr, size_t chunklen,
     assert(!"implemented");
 }
 
-size_t dvmHeapSourceGetNumHeaps(void)
+size_t dvmHeapSourceGetNumHeaps()
 {
     return 1;
 }
@@ -763,13 +763,13 @@ void dvmTrackExternalFree(size_t n)
     /* do nothing */
 }
 
-size_t dvmGetExternalBytesAllocated(void)
+size_t dvmGetExternalBytesAllocated()
 {
     assert(!"implemented");
     return 0;
 }
 
-void dvmHeapSourceFlip(void)
+void dvmHeapSourceFlip()
 {
     HeapSource *heapSource = gDvm.gcHeap->heapSource;
 
@@ -1112,7 +1112,7 @@ void preserveSoftReferences(Object **list)
     scavengeBlockQueue();
 }
 
-void processFinalizableReferences(void)
+void processFinalizableReferences()
 {
     HeapRefTable newPendingRefs;
     LargeHeapRefTable *finRefs = gDvm.gcHeap->finalizableRefs;
@@ -1431,7 +1431,7 @@ static void pinHashTableEntries(HashTable *table)
     LOG_PIN("<<< pinHashTableEntries(table=%p)", table);
 }
 
-static void pinPrimitiveClasses(void)
+static void pinPrimitiveClasses()
 {
     size_t length = ARRAYSIZE(gDvm.primitiveClass);
     for (size_t i = 0; i < length; i++) {
@@ -1446,7 +1446,7 @@ static void pinPrimitiveClasses(void)
  * been pinned and are therefore ignored.  Non-permanent strings that
  * have been forwarded are snapped.  All other entries are removed.
  */
-static void scavengeInternedStrings(void)
+static void scavengeInternedStrings()
 {
     HashTable *table = gDvm.internedStrings;
     if (table == NULL) {
@@ -1469,7 +1469,7 @@ static void scavengeInternedStrings(void)
     dvmHashTableUnlock(table);
 }
 
-static void pinInternedStrings(void)
+static void pinInternedStrings()
 {
     HashTable *table = gDvm.internedStrings;
     if (table == NULL) {
@@ -1730,7 +1730,7 @@ static void scavengeThread(Thread *thread)
     scavengeThreadStack(thread);
 }
 
-static void scavengeThreadList(void)
+static void scavengeThreadList()
 {
     Thread *thread;
 
@@ -1865,7 +1865,7 @@ static void pinThread(const Thread *thread)
     }
 }
 
-static void pinThreadList(void)
+static void pinThreadList()
 {
     Thread *thread;
 
@@ -2009,7 +2009,7 @@ static void describeBlockQueue(const HeapSource *heapSource)
 /*
  * Blackens promoted objects.
  */
-static void scavengeBlockQueue(void)
+static void scavengeBlockQueue()
 {
     HeapSource *heapSource;
     size_t block;
@@ -2032,7 +2032,7 @@ static void scavengeBlockQueue(void)
  * in new space.  This should be parametrized so we can invoke this
  * routine outside of the context of a collection.
  */
-static void verifyNewSpace(void)
+static void verifyNewSpace()
 {
     HeapSource *heapSource = gDvm.gcHeap->heapSource;
     size_t c0 = 0, c1 = 0, c2 = 0, c7 = 0;
@@ -2056,7 +2056,7 @@ static void verifyNewSpace(void)
     }
 }
 
-void describeHeap(void)
+void describeHeap()
 {
     HeapSource *heapSource = gDvm.gcHeap->heapSource;
     describeBlocks(heapSource);
@@ -2070,7 +2070,7 @@ void describeHeap(void)
  * registers and various globals.  Lastly, a verification of the heap
  * is performed.  The last phase should be optional.
  */
-void dvmScavengeRoots(void)  /* Needs a new name badly */
+void dvmScavengeRoots()  /* Needs a new name badly */
 {
     GcHeap *gcHeap;
 
@@ -2206,22 +2206,22 @@ bool dvmHeapBeginMarkStep(GcMode mode)
     return true;
 }
 
-void dvmHeapFinishMarkStep(void)
+void dvmHeapFinishMarkStep()
 {
     /* do nothing */
 }
 
-void dvmHeapMarkRootSet(void)
+void dvmHeapMarkRootSet()
 {
     /* do nothing */
 }
 
-void dvmHeapScanMarkedObjects(void)
+void dvmHeapScanMarkedObjects()
 {
     dvmScavengeRoots();
 }
 
-void dvmHeapScheduleFinalizations(void)
+void dvmHeapScheduleFinalizations()
 {
     /* do nothing */
 }
@@ -2233,12 +2233,12 @@ void dvmHeapSweepUnmarkedObjects(GcMode mode, int *numFreed, size_t *sizeFreed)
     /* do nothing */
 }
 
-void dvmMarkDirtyObjects(void)
+void dvmMarkDirtyObjects()
 {
     assert(!"implemented");
 }
 
-void dvmHeapSourceThreadShutdown(void)
+void dvmHeapSourceThreadShutdown()
 {
     /* do nothing */
 }

@@ -109,7 +109,7 @@ typedef struct MapStats {
 /*
  * Prepare some things.
  */
-bool dvmRegisterMapStartup(void)
+bool dvmRegisterMapStartup()
 {
 #ifdef REGISTER_MAP_STATS
     MapStats* pStats = calloc(1, sizeof(MapStats));
@@ -121,7 +121,7 @@ bool dvmRegisterMapStartup(void)
 /*
  * Clean up.
  */
-void dvmRegisterMapShutdown(void)
+void dvmRegisterMapShutdown()
 {
 #ifdef REGISTER_MAP_STATS
     free(gDvm.registerMapStats);
@@ -131,7 +131,7 @@ void dvmRegisterMapShutdown(void)
 /*
  * Write stats to log file.
  */
-void dvmRegisterMapDumpStats(void)
+void dvmRegisterMapDumpStats()
 {
 #ifdef REGISTER_MAP_STATS
     MapStats* pStats = (MapStats*) gDvm.registerMapStats;

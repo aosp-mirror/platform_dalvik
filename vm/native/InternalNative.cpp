@@ -67,7 +67,7 @@ static DalvikNativeClass gDvmNativeMethodSet[] = {
 /*
  * Set up hash values on the class names.
  */
-bool dvmInternalNativeStartup(void)
+bool dvmInternalNativeStartup()
 {
     DalvikNativeClass* classPtr = gDvmNativeMethodSet;
 
@@ -87,7 +87,7 @@ bool dvmInternalNativeStartup(void)
 /*
  * Clean up.
  */
-void dvmInternalNativeShutdown(void)
+void dvmInternalNativeShutdown()
 {
     dvmHashTableFree(gDvm.userDexFiles);
 }

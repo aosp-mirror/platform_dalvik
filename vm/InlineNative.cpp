@@ -780,7 +780,7 @@ const InlineOperation gDvmInlineOpsTable[] = {
 /*
  * Allocate some tables.
  */
-bool dvmInlineNativeStartup(void)
+bool dvmInlineNativeStartup()
 {
     gDvm.inlinedMethods =
         (Method**) calloc(NELEM(gDvmInlineOpsTable), sizeof(Method*));
@@ -793,7 +793,7 @@ bool dvmInlineNativeStartup(void)
 /*
  * Free generated tables.
  */
-void dvmInlineNativeShutdown(void)
+void dvmInlineNativeShutdown()
 {
     free(gDvm.inlinedMethods);
 }
@@ -802,7 +802,7 @@ void dvmInlineNativeShutdown(void)
 /*
  * Get a pointer to the inlineops table.
  */
-const InlineOperation* dvmGetInlineOpsTable(void)
+const InlineOperation* dvmGetInlineOpsTable()
 {
     return gDvmInlineOpsTable;
 }
@@ -810,7 +810,7 @@ const InlineOperation* dvmGetInlineOpsTable(void)
 /*
  * Get the number of entries in the inlineops table.
  */
-int dvmGetInlineOpsTableLength(void)
+int dvmGetInlineOpsTableLength()
 {
     return NELEM(gDvmInlineOpsTable);
 }

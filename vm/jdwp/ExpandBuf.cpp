@@ -38,7 +38,7 @@ struct ExpandBuf {
 /*
  * Allocate a JdwpBuf and some initial storage.
  */
-ExpandBuf* expandBufAlloc(void)
+ExpandBuf* expandBufAlloc()
 {
     ExpandBuf* newBuf;
 

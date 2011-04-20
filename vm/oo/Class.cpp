@@ -369,7 +369,7 @@ static bool createPrimitiveType(PrimitiveType primitiveType, ClassObject** pClas
  * Create the initial class instances. These consist of the class
  * Class and all of the classes representing primitive types.
  */
-static bool createInitialClasses(void) {
+static bool createInitialClasses() {
     /*
      * Initialize the class Class. This has to be done specially, particularly
      * because it is an instance of itself.
@@ -409,7 +409,7 @@ static bool createInitialClasses(void) {
  *
  * Call this after the bootclasspath string has been finalized.
  */
-bool dvmClassStartup(void)
+bool dvmClassStartup()
 {
     /* make this a requirement -- don't currently support dirs in path */
     if (strcmp(gDvm.bootClassPathStr, ".") == 0) {
@@ -468,7 +468,7 @@ bool dvmClassStartup(void)
 /*
  * Clean up.
  */
-void dvmClassShutdown(void)
+void dvmClassShutdown()
 {
     /* discard all system-loaded classes */
     dvmHashTableFree(gDvm.loadedClasses);
@@ -533,7 +533,7 @@ static void dumpClassPath(const ClassPathEntry* cpe)
 /*
  * Dump the contents of the bootstrap class path.
  */
-void dvmDumpBootClassPath(void)
+void dvmDumpBootClassPath()
 {
     dumpClassPath(gDvm.bootClassPath);
 }
@@ -860,7 +860,7 @@ void dvmSetBootPathExtraDex(DvmDex* pDvmDex)
  *
  * (Used for ClassLoader.getResources().)
  */
-int dvmGetBootPathSize(void)
+int dvmGetBootPathSize()
 {
     const ClassPathEntry* cpe = gDvm.bootClassPath;
 
@@ -1205,7 +1205,7 @@ u4 hashcalcClass(const void* item)
 /*
  * Check the performance of the "loadedClasses" hash table.
  */
-void dvmCheckClassTablePerf(void)
+void dvmCheckClassTablePerf()
 {
     dvmHashTableLock(gDvm.loadedClasses);
     dvmHashTableProbeCount(gDvm.loadedClasses, hashcalcClass,
@@ -4652,7 +4652,7 @@ ClassObject* dvmFindLoadedClass(const char* descriptor)
  *
  * The caller must call dvmReleaseTrackedAlloc on the result.
  */
-Object* dvmGetSystemClassLoader(void)
+Object* dvmGetSystemClassLoader()
 {
     Thread* self = dvmThreadSelf();
     ClassObject* clClass = gDvm.classJavaLangClassLoader;
@@ -4873,7 +4873,7 @@ static int dumpAccessCounts(void* vclazz, void* varg)
 /*
  * Dump the field access counts for all loaded classes.
  */
-void dvmDumpFieldAccessCounts(void)
+void dvmDumpFieldAccessCounts()
 {
     dvmHashTableLock(gDvm.loadedClasses);
     dvmHashForeach(gDvm.loadedClasses, dumpAccessCounts, NULL);

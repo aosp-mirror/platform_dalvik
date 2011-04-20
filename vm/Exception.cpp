@@ -561,7 +561,7 @@ Object* dvmGetExceptionCause(const Object* exception)
  * Exceptions thrown during the course of printing the stack trace are
  * ignored.
  */
-void dvmPrintExceptionStackTrace(void)
+void dvmPrintExceptionStackTrace()
 {
     Thread* self = dvmThreadSelf();
     Object* exception;
@@ -1195,7 +1195,7 @@ static void logStackTraceOf(Object* exception)
  * the stored stack trace and process it internally instead of calling
  * interpreted code.
  */
-void dvmLogExceptionStackTrace(void)
+void dvmLogExceptionStackTrace()
 {
     Object* exception = dvmThreadSelf()->exception;
     Object* cause;
@@ -1312,7 +1312,7 @@ void dvmThrowChainedClassNotFoundException(const char* name, Object* cause) {
     dvmThrowChainedException(gDvm.exClassNotFoundException, name, cause);
 }
 
-void dvmThrowExceptionInInitializerError(void)
+void dvmThrowExceptionInInitializerError()
 {
     /*
      * TODO: Do we want to wrap it if the original is an Error rather than

@@ -108,7 +108,7 @@ bool dvmHeapStartup()
     return true;
 }
 
-bool dvmHeapStartupAfterZygote(void)
+bool dvmHeapStartupAfterZygote()
 {
     return dvmHeapSourceStartupAfterZygote();
 }
@@ -129,7 +129,7 @@ void dvmHeapShutdown()
 /*
  * Shutdown any threads internal to the heap.
  */
-void dvmHeapThreadShutdown(void)
+void dvmHeapThreadShutdown()
 {
     dvmHeapSourceThreadShutdown();
 }
@@ -436,7 +436,7 @@ size_t dvmObjectSizeInHeap(const Object *obj)
     return dvmHeapSourceChunkSize(obj);
 }
 
-static void verifyRootsAndHeap(void)
+static void verifyRootsAndHeap()
 {
     dvmVerifyRoots();
     dvmVerifyBitmap(dvmHeapSourceGetLiveBits());
@@ -447,7 +447,7 @@ static void verifyRootsAndHeap(void)
  * original priority if successful.  Otherwise, returns INT_MAX on
  * failure.
  */
-static int raiseThreadPriority(void)
+static int raiseThreadPriority()
 {
     /* Get the priority (the "nice" value) of the current thread.  The
      * getpriority() call can legitimately return -1, so we have to
@@ -773,7 +773,7 @@ void dvmCollectGarbageInternal(const GcSpec* spec)
  * suspend when the GC thread calls dvmUnlockHeap before dvmResumeAllThreads,
  * but there's no risk of deadlock.)
  */
-void dvmWaitForConcurrentGcToComplete(void)
+void dvmWaitForConcurrentGcToComplete()
 {
     Thread *self = dvmThreadSelf();
     assert(self != NULL);

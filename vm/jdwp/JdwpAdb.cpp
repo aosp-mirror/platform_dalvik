@@ -89,8 +89,7 @@ adbStateFree( JdwpNetState*  netState )
 }
 
 
-static JdwpNetState*
-adbStateAlloc(void)
+static JdwpNetState* adbStateAlloc()
 {
     JdwpNetState* netState = (JdwpNetState*) calloc(sizeof(*netState),1);
 
@@ -343,7 +342,7 @@ static void adbStateShutdown(struct JdwpNetState* netState)
 
     if (netState->wakeFds[1] >= 0) {
         LOGV("+++ writing to wakePipe\n");
-        (void) write(netState->wakeFds[1], "", 1);
+        write(netState->wakeFds[1], "", 1);
     }
 }
 
@@ -755,7 +754,7 @@ static const JdwpTransport socketTransport = {
 /*
  * Return our set.
  */
-const JdwpTransport* dvmJdwpAndroidAdbTransport(void)
+const JdwpTransport* dvmJdwpAndroidAdbTransport()
 {
     return &socketTransport;
 }

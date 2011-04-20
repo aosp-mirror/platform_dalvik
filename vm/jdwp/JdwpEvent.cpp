@@ -706,7 +706,7 @@ void dvmJdwpClearWaitForEventThread(JdwpState* state)
  * Prep an event.  Allocates storage for the message and leaves space for
  * the header.
  */
-static ExpandBuf* eventPrep(void)
+static ExpandBuf* eventPrep()
 {
     ExpandBuf* pReq = expandBufAlloc();
     expandBufAddSpace(pReq, kJDWPHeaderLen);

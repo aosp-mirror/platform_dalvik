@@ -167,7 +167,7 @@ static void moveCardsToModUnion(u1 *base, u1 *limit)
     }
 }
 
-void dvmClearCardTable(void)
+void dvmClearCardTable()
 {
     uintptr_t base[HEAP_SOURCE_MAX_HEAP_COUNT];
     uintptr_t limit[HEAP_SOURCE_MAX_HEAP_COUNT];
@@ -423,7 +423,7 @@ static void verifyCardTableCallback(void *ptr, void *arg)
 /*
  * Verifies that gray objects are on a dirty card.
  */
-void dvmVerifyCardTable(void)
+void dvmVerifyCardTable()
 {
     HeapBitmap *markBits = gDvm.gcHeap->markContext.bitmap;
     dvmHeapBitmapWalk(markBits, verifyCardTableCallback, markBits);

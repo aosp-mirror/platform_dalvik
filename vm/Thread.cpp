@@ -240,14 +240,14 @@ static void* internalThreadStart(void* arg);
 static void threadExitUncaughtException(Thread* thread, Object* group);
 static void threadExitCheck(void* arg);
 static void waitForThreadSuspend(Thread* self, Thread* thread);
-static int getThreadPriorityFromSystem(void);
+static int getThreadPriorityFromSystem();
 
 /*
  * Initialize thread list and main thread's environment.  We need to set
  * up some basic stuff so that dvmThreadSelf() will work when we start
  * loading classes (e.g. to check for exceptions).
  */
-bool dvmThreadStartup(void)
+bool dvmThreadStartup()
 {
     Thread* thread;
 
@@ -305,7 +305,7 @@ bool dvmThreadStartup(void)
 /*
  * All threads should be stopped by now.  Clean up some thread globals.
  */
-void dvmThreadShutdown(void)
+void dvmThreadShutdown()
 {
     if (gDvm.threadList != NULL) {
         /*
@@ -329,7 +329,7 @@ void dvmThreadShutdown(void)
 /*
  * Grab the suspend count global lock.
  */
-static inline void lockThreadSuspendCount(void)
+static inline void lockThreadSuspendCount()
 {
     /*
      * Don't try to change to VMWAIT here.  When we change back to RUNNING
@@ -345,7 +345,7 @@ static inline void lockThreadSuspendCount(void)
 /*
  * Release the suspend count global lock.
  */
-static inline void unlockThreadSuspendCount(void)
+static inline void unlockThreadSuspendCount()
 {
     dvmUnlockMutex(&gDvm.threadSuspendCountLock);
 }
@@ -399,7 +399,7 @@ void dvmLockThreadList(Thread* self)
  * Returns "true" if we locked it.  This is a "fast" mutex, so if the
  * current thread holds the lock this will fail.
  */
-bool dvmTryLockThreadList(void)
+bool dvmTryLockThreadList()
 {
     return (dvmTryLockMutex(&gDvm.threadListLock) == 0);
 }
@@ -407,7 +407,7 @@ bool dvmTryLockThreadList(void)
 /*
  * Release the thread list global lock.
  */
-void dvmUnlockThreadList(void)
+void dvmUnlockThreadList()
 {
     dvmUnlockMutex(&gDvm.threadListLock);
 }
@@ -502,7 +502,7 @@ static void lockThreadSuspend(const char* who, SuspendCause why)
 /*
  * Release the "thread suspend" lock.
  */
-static inline void unlockThreadSuspend(void)
+static inline void unlockThreadSuspend()
 {
     dvmUnlockMutex(&gDvm._threadSuspendLock);
 }
@@ -528,7 +528,7 @@ static inline void unlockThreadSuspend(void)
  * but not necessarily the main thread.  It's likely, but not guaranteed,
  * that the current thread has already been cleaned up.
  */
-void dvmSlayDaemons(void)
+void dvmSlayDaemons()
 {
     Thread* self = dvmThreadSelf();     // may be null
     Thread* target;
@@ -678,7 +678,7 @@ bool dvmPrepMainForJni(JNIEnv* pEnv)
  * it.  As part of doing so, we finish initializing Thread and ThreadGroup.
  * This will execute some interpreted code (e.g. class initializers).
  */
-bool dvmPrepMainThread(void)
+bool dvmPrepMainThread()
 {
     Thread* thread;
     Object* groupObj;
@@ -879,7 +879,7 @@ static Thread* allocThread(int interpStackSize)
  * where getpid() and gettid() sometimes agree and sometimes don't depending
  * on your thread model (try "export LD_ASSUME_KERNEL=2.4.19").
  */
-pid_t dvmGetSysThreadId(void)
+pid_t dvmGetSysThreadId()
 {
 #ifdef HAVE_GETTID
     return gettid();
@@ -1002,7 +1002,7 @@ static void freeThread(Thread* thread)
 /*
  * Like pthread_self(), but on a Thread*.
  */
-Thread* dvmThreadSelf(void)
+Thread* dvmThreadSelf()
 {
     return (Thread*) pthread_getspecific(gDvm.pthreadKeySelf);
 }
@@ -1994,7 +1994,7 @@ fail:
  * dedicated ThreadObject class for java/lang/Thread and moving all of our
  * state into that.
  */
-void dvmDetachCurrentThread(void)
+void dvmDetachCurrentThread()
 {
     Thread* self = dvmThreadSelf();
     Object* vmThread;
@@ -2724,7 +2724,7 @@ void dvmResumeAllThreads(SuspendCause why)
  * Undo any debugger suspensions.  This is called when the debugger
  * disconnects.
  */
-void dvmUndoDebuggerSuspensions(void)
+void dvmUndoDebuggerSuspensions()
 {
     Thread* self = dvmThreadSelf();
     Thread* thread;
@@ -3013,11 +3013,11 @@ static Object* getStaticThreadGroup(const char* fieldName)
 
     return groupObj;
 }
-Object* dvmGetSystemThreadGroup(void)
+Object* dvmGetSystemThreadGroup()
 {
     return getStaticThreadGroup("mSystem");
 }
-Object* dvmGetMainThreadGroup(void)
+Object* dvmGetMainThreadGroup()
 {
     return getStaticThreadGroup("mMain");
 }
@@ -3146,7 +3146,7 @@ void dvmChangeThreadPriority(Thread* thread, int newPriority)
  *
  * Returns a value from 1 to 10 (compatible with java.lang.Thread values).
  */
-static int getThreadPriorityFromSystem(void)
+static int getThreadPriorityFromSystem()
 {
     int i, sysprio, jprio;
 

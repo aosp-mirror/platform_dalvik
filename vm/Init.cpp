@@ -42,8 +42,8 @@ extern "C" int jniRegisterSystemMethods(JNIEnv* env);
 
 /* fwd */
 static bool registerSystemNatives(JNIEnv* pEnv);
-static bool initJdwp(void);
-static bool initZygote(void);
+static bool initJdwp();
+static bool initZygote();
 
 
 /* global state */
@@ -190,7 +190,7 @@ static void usage(const char* progName)
 /*
  * Show helpful information on JDWP options.
  */
-static void showJdwpHelp(void)
+static void showJdwpHelp()
 {
     dvmFprintf(stderr,
         "Example: -Xrunjdwp:transport=dt_socket,address=8000,server=y\n");
@@ -201,7 +201,7 @@ static void showJdwpHelp(void)
 /*
  * Show version and copyright info.
  */
-static void showVersion(void)
+static void showVersion()
 {
     dvmFprintf(stdout, "DalvikVM version %d.%d.%d\n",
         DALVIK_MAJOR_VERSION, DALVIK_MINOR_VERSION, DALVIK_BUG_VERSION);
@@ -517,7 +517,7 @@ static bool enableAssertions(const char* pkgOrClass, bool enable)
  *
  * This must only be called from the main thread during zygote init.
  */
-void dvmLateEnableAssertions(void)
+void dvmLateEnableAssertions()
 {
     if (gDvm.assertionCtrl == NULL) {
         LOGD("Not late-enabling assertions: no assertionCtrl array\n");
@@ -541,7 +541,7 @@ void dvmLateEnableAssertions(void)
 /*
  * Release memory associated with the AssertionCtrl array.
  */
-static void freeAssertionCtrl(void)
+static void freeAssertionCtrl()
 {
     int i;
 
@@ -1388,7 +1388,7 @@ static bool registerSystemNatives(JNIEnv* pEnv)
 /*
  * Do zygote-mode-only initialization.
  */
-static bool initZygote(void)
+static bool initZygote()
 {
     /* zygote goes into its own process group */
     setpgid(0,0);
@@ -1400,7 +1400,7 @@ static bool initZygote(void)
  * Do non-zygote-mode initialization.  This is done during VM init for
  * standard startup, or after a "zygote fork" when creating a new process.
  */
-bool dvmInitAfterZygote(void)
+bool dvmInitAfterZygote()
 {
     u8 startHeap, startQuit, startJdwp;
     u8 endHeap, endQuit, endJdwp;
@@ -1476,7 +1476,7 @@ bool dvmInitAfterZygote(void)
  *
  * This gets more complicated with a nonzero value for "timeout".
  */
-static bool initJdwp(void)
+static bool initJdwp()
 {
     assert(!gDvm.zygote);
 
@@ -1614,7 +1614,7 @@ fail:
  * same thread that started the VM, a/k/a the main thread, but we don't
  * want to assume that.)
  */
-void dvmShutdown(void)
+void dvmShutdown()
 {
     LOGV("VM shutting down\n");
 
@@ -1720,7 +1720,7 @@ int dvmFprintf(FILE* fp, const char* format, ...)
  *
  * TODO: move this into libs/cutils and make it work for all platforms.
  */
-void dvmPrintNativeBackTrace(void)
+void dvmPrintNativeBackTrace()
 {
     size_t MAX_STACK_FRAMES = 64;
     void* stackFrames[MAX_STACK_FRAMES];
@@ -1743,7 +1743,7 @@ void dvmPrintNativeBackTrace(void)
     free(strings);
 }
 #else
-void dvmPrintNativeBackTrace(void) {
+void dvmPrintNativeBackTrace() {
     /* Hopefully, you're on an Android device and debuggerd will do this. */
 }
 #endif
@@ -1752,7 +1752,7 @@ void dvmPrintNativeBackTrace(void) {
  * Abort the VM.  We get here on fatal errors.  Try very hard not to use
  * this; whenever possible, return an error to somebody responsible.
  */
-void dvmAbort(void)
+void dvmAbort()
 {
     LOGE("VM aborting\n");
 

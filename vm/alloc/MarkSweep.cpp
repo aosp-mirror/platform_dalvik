@@ -372,7 +372,7 @@ static void rootReMarkObjectVisitor(void *addr, u4 thread, RootType type,
 /*
  * Grays all references in the roots.
  */
-void dvmHeapReMarkRootSet(void)
+void dvmHeapReMarkRootSet()
 {
     GcMarkContext *ctx = &gDvm.gcHeap->markContext;
     assert(ctx->finger == (void *)ULONG_MAX);
@@ -726,7 +726,7 @@ void dvmHeapScanMarkedObjects(bool isPartial)
     processMarkStack(ctx);
 }
 
-void dvmHeapReScanMarkedObjects(void)
+void dvmHeapReScanMarkedObjects()
 {
     GcMarkContext *ctx = &gDvm.gcHeap->markContext;
 
@@ -997,7 +997,7 @@ static int isUnmarkedObject(void *obj)
     return !isMarked((Object *)obj, &gDvm.gcHeap->markContext);
 }
 
-void sweepWeakJniGlobals(void)
+void sweepWeakJniGlobals()
 {
     IndirectRefTable *table = &gDvm.jniWeakGlobalRefTable;
     Object **entry = table->table;
@@ -1014,7 +1014,7 @@ void sweepWeakJniGlobals(void)
  * Process all the internal system structures that behave like
  * weakly-held objects.
  */
-void dvmHeapSweepSystemWeaks(void)
+void dvmHeapSweepSystemWeaks()
 {
     dvmGcDetachDeadInternedStrings(isUnmarkedObject);
     dvmSweepMonitorList(&gDvm.monitorList, isUnmarkedObject);

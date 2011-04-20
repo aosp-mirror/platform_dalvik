@@ -372,7 +372,7 @@ pthread_t dvmJdwpGetDebugThread(JdwpState* state)
 /*
  * Get a notion of the current time, in milliseconds.
  */
-s8 dvmJdwpGetNowMsec(void)
+s8 dvmJdwpGetNowMsec()
 {
 #ifdef HAVE_POSIX_CLOCKS
     struct timespec now;

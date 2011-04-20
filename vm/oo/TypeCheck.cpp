@@ -36,7 +36,7 @@
 /*
  * Allocate cache.
  */
-bool dvmInstanceofStartup(void)
+bool dvmInstanceofStartup()
 {
     gDvm.instanceofCache = dvmAllocAtomicCache(INSTANCEOF_CACHE_SIZE);
     if (gDvm.instanceofCache == NULL)
@@ -47,7 +47,7 @@ bool dvmInstanceofStartup(void)
 /*
  * Discard the cache.
  */
-void dvmInstanceofShutdown(void)
+void dvmInstanceofShutdown()
 {
     dvmFreeAtomicCache(gDvm.instanceofCache);
 }

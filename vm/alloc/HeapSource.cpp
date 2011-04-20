@@ -32,7 +32,7 @@
 extern "C" int dlmalloc_trim(size_t);
 extern "C" void dlmalloc_walk_free_pages(void(*)(void*, void*, void*), void*);
 
-static void snapIdealFootprint(void);
+static void snapIdealFootprint();
 static void setIdealFootprint(size_t max);
 static size_t getMaximumSize(const HeapSource *hs);
 
@@ -426,7 +426,7 @@ static void *gcDaemonThread(void* arg)
     return NULL;
 }
 
-static bool gcDaemonStartup(void)
+static bool gcDaemonStartup()
 {
     dvmInitMutex(&gHs->gcThreadMutex);
     pthread_cond_init(&gHs->gcThreadCond, NULL);
@@ -436,7 +436,7 @@ static bool gcDaemonStartup(void)
     return gHs->hasGcThread;
 }
 
-static void gcDaemonShutdown(void)
+static void gcDaemonShutdown()
 {
     if (gHs->hasGcThread) {
         dvmLockMutex(&gHs->gcThreadMutex);
@@ -575,7 +575,7 @@ fail:
     return NULL;
 }
 
-bool dvmHeapSourceStartupAfterZygote(void)
+bool dvmHeapSourceStartupAfterZygote()
 {
     return gDvm.concurrentMarkSweep ? gcDaemonStartup() : true;
 }
@@ -608,7 +608,7 @@ dvmHeapSourceStartupBeforeFork()
     return true;
 }
 
-void dvmHeapSourceThreadShutdown(void)
+void dvmHeapSourceThreadShutdown()
 {
     if (gDvm.gcHeap != NULL && gDvm.concurrentMarkSweep) {
         gcDaemonShutdown();
@@ -640,7 +640,7 @@ dvmHeapSourceShutdown(GcHeap **gcHeap)
 /*
  * Gets the begining of the allocation for the HeapSource.
  */
-void *dvmHeapSourceGetBase(void)
+void *dvmHeapSourceGetBase()
 {
     return gHs->heapBase;
 }
@@ -712,7 +712,7 @@ void dvmHeapSourceGetRegions(uintptr_t *base, uintptr_t *max, uintptr_t *limit,
 /*
  * Get the bitmap representing all live objects.
  */
-HeapBitmap *dvmHeapSourceGetLiveBits(void)
+HeapBitmap *dvmHeapSourceGetLiveBits()
 {
     HS_BOILERPLATE();
 
@@ -722,14 +722,14 @@ HeapBitmap *dvmHeapSourceGetLiveBits(void)
 /*
  * Get the bitmap representing all marked objects.
  */
-HeapBitmap *dvmHeapSourceGetMarkBits(void)
+HeapBitmap *dvmHeapSourceGetMarkBits()
 {
     HS_BOILERPLATE();
 
     return &gHs->markBits;
 }
 
-void dvmHeapSourceSwapBitmaps(void)
+void dvmHeapSourceSwapBitmaps()
 {
     HeapBitmap tmp;
 
@@ -738,7 +738,7 @@ void dvmHeapSourceSwapBitmaps(void)
     gHs->markBits = tmp;
 }
 
-void dvmHeapSourceZeroMarkBitmap(void)
+void dvmHeapSourceZeroMarkBitmap()
 {
     HS_BOILERPLATE();
 

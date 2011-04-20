@@ -33,7 +33,7 @@ static void* lookupSharedLibMethod(const Method* method);
 /*
  * Initialize the native code loader.
  */
-bool dvmNativeStartup(void)
+bool dvmNativeStartup()
 {
     gDvm.nativeLibs = dvmHashTableCreate(4, freeSharedLibEntry);
     if (gDvm.nativeLibs == NULL)
@@ -45,7 +45,7 @@ bool dvmNativeStartup(void)
 /*
  * Free up our tables.
  */
-void dvmNativeShutdown(void)
+void dvmNativeShutdown()
 {
     dvmHashTableFree(gDvm.nativeLibs);
     gDvm.nativeLibs = NULL;

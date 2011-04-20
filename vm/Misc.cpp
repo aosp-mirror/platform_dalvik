@@ -410,7 +410,7 @@ char* dvmNameToDescriptor(const char* str)
  * computing durations (e.g. "operation X took 52nsec"), so the result
  * should not be used to get the current date/time.
  */
-u8 dvmGetRelativeTimeNsec(void)
+u8 dvmGetRelativeTimeNsec()
 {
 #ifdef HAVE_POSIX_CLOCKS
     struct timespec now;
@@ -428,7 +428,7 @@ u8 dvmGetRelativeTimeNsec(void)
  *
  * Only useful for time deltas.
  */
-u8 dvmGetThreadCpuTimeNsec(void)
+u8 dvmGetThreadCpuTimeNsec()
 {
 #ifdef HAVE_POSIX_CLOCKS
     struct timespec now;

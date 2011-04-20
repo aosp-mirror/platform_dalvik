@@ -918,7 +918,7 @@ static const JdwpTransport socketTransport = {
 /*
  * Return our set.
  */
-const JdwpTransport* dvmJdwpSocketTransport(void)
+const JdwpTransport* dvmJdwpSocketTransport()
 {
     return &socketTransport;
 }

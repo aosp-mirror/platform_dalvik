@@ -28,7 +28,7 @@
 /*
  * Basic add/get/delete tests in an unsegmented table.
  */
-static bool basicTest(void)
+static bool basicTest()
 {
     static const int kTableMax = 20;
     IndirectRefTable irt;
@@ -313,7 +313,7 @@ bail:
 /*
  * Test operations on a segmented table.
  */
-static bool segmentTest(void)
+static bool segmentTest()
 {
     static const int kTableMax = 20;
     IndirectRefTable irt;
@@ -471,7 +471,7 @@ bail:
 /*
  * Some quick tests.
  */
-bool dvmTestIndirectRefTable(void)
+bool dvmTestIndirectRefTable()
 {
     if (!basicTest()) {
         LOGE("IRT basic test failed\n");
