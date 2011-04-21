@@ -73,15 +73,6 @@ struct Thread;
 typedef struct Monitor Monitor;
 
 /*
- * Initialize a Lock to the proper starting value.
- * This is necessary for thin locking.
- */
-#define DVM_LOCK_INITIAL_THIN_VALUE (0)
-
-#define DVM_LOCK_INIT(lock) \
-    do { *(lock) = DVM_LOCK_INITIAL_THIN_VALUE; } while (0)
-
-/*
  * Returns true if the lock has been fattened.
  */
 #define IS_LOCK_FAT(lock)   (LW_SHAPE(*(lock)) == LW_SHAPE_FAT)

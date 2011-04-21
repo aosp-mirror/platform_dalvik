@@ -1281,10 +1281,9 @@ retry:
              * If the lock is thin assume it is unowned.  We simulate
              * an acquire, update, and release with a single CAS.
              */
-            lock = DVM_LOCK_INITIAL_THIN_VALUE;
-            lock |= (LW_HASH_STATE_HASHED << LW_HASH_STATE_SHIFT);
+            lock = (LW_HASH_STATE_HASHED << LW_HASH_STATE_SHIFT);
             if (android_atomic_acquire_cas(
-                                (int32_t)DVM_LOCK_INITIAL_THIN_VALUE,
+                                0,
                                 (int32_t)lock,
                                 (int32_t *)lw) == 0) {
                 /*

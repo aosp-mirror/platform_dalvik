@@ -236,12 +236,8 @@ typedef struct Object {
  * Properly initialize an Object.
  * void DVM_OBJECT_INIT(Object *obj, ClassObject *clazz_)
  */
-#define DVM_OBJECT_INIT(obj, clazz_)                                    \
-    do {                                                                \
-        dvmSetFieldObject((Object *)obj, offsetof(Object, clazz),       \
-                          (Object *)clazz_);                            \
-        DVM_LOCK_INIT(&(obj)->lock);                                    \
-    } while (0)
+#define DVM_OBJECT_INIT(obj, clazz_) \
+    dvmSetFieldObject((Object *)obj, offsetof(Object, clazz), (Object *)clazz_)
 
 /*
  * Data objects have an Object header followed by their instance data.

@@ -224,12 +224,8 @@ Object* dvmAllocObject(ClassObject* clazz, int flags)
  */
 Object* dvmCloneObject(Object* obj, int flags)
 {
-    ClassObject* clazz;
-    Object* copy;
-    size_t size;
-
     assert(dvmIsValidObject(obj));
-    clazz = obj->clazz;
+    ClassObject* clazz = obj->clazz;
 
     /* Class.java shouldn't let us get here (java.lang.Class is final
      * and does not implement Clonable), but make extra sure.
@@ -237,20 +233,21 @@ Object* dvmCloneObject(Object* obj, int flags)
      */
     assert(!dvmIsTheClassClass(clazz));
 
+    size_t size;
     if (IS_CLASS_FLAG_SET(clazz, CLASS_ISARRAY)) {
         size = dvmArrayObjectSize((ArrayObject *)obj);
     } else {
         size = clazz->objectSize;
     }
 
-    copy = (Object*)dvmMalloc(size, flags);
+    Object* copy = (Object*)dvmMalloc(size, flags);
     if (copy == NULL)
         return NULL;
 
-    /* We assume that memcpy will copy obj by words. */
-    memcpy(copy, obj, size);
-    DVM_LOCK_INIT(&copy->lock);
-    dvmWriteBarrierObject(copy);
+    DVM_OBJECT_INIT(copy, clazz);
+    size_t offset = sizeof(Object);
+    /* Copy instance data.  We assume memcpy copies by words. */
+    memcpy((char*)copy + offset, (char*)obj + offset, size - offset);
 
     /* Mark the clone as finalizable if appropriate. */
     if (IS_CLASS_FLAG_SET(clazz, CLASS_ISFINALIZABLE)) {

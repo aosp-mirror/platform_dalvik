@@ -1110,7 +1110,6 @@ static void assignThreadId(Thread* thread)
     thread->threadId = num + 1;
 
     assert(thread->threadId != 0);
-    assert(thread->threadId != DVM_LOCK_INITIAL_THIN_VALUE);
 }
 
 /*
