@@ -137,7 +137,7 @@ static inline void storeLongLE(u1* buf, u8 val)
 /*
  * Boot-time init.
  */
-bool dvmProfilingStartup(void)
+bool dvmProfilingStartup()
 {
     /*
      * Initialize "dmtrace" method profiling.
@@ -189,7 +189,7 @@ bool dvmProfilingStartup(void)
 /*
  * Free up profiling resources.
  */
-void dvmProfilingShutdown(void)
+void dvmProfilingShutdown()
 {
 #ifdef UPDATE_MAGIC_PAGE
     if (gDvm.emulatorTracePage != NULL)
@@ -231,7 +231,7 @@ static void updateActiveProfilers(InterpBreakFlags newBreak,
 /*
  * Reset the "cpuClockBase" field in all threads.
  */
-static void resetCpuClockBase(void)
+static void resetCpuClockBase()
 {
     Thread* thread;
 
@@ -453,7 +453,7 @@ static void markTouchedMethods(int endOffset)
  * This value is going to vary depending on what else is going on in the
  * system.  When examined across several runs a pattern should emerge.
  */
-static u4 getClockOverhead(void)
+static u4 getClockOverhead()
 {
     u8 calStart, calElapsed;
     int i;
@@ -477,7 +477,7 @@ static u4 getClockOverhead(void)
 /*
  * Returns "true" if method tracing is currently active.
  */
-bool dvmIsMethodTraceActive(void)
+bool dvmIsMethodTraceActive()
 {
     const MethodTraceState* state = &gDvm.methodTrace;
     return state->traceEnabled;
@@ -487,7 +487,7 @@ bool dvmIsMethodTraceActive(void)
  * Stop method tracing.  We write the buffer to disk and generate a key
  * file so we can interpret it.
  */
-void dvmMethodTraceStop(void)
+void dvmMethodTraceStop()
 {
     MethodTraceState* state = &gDvm.methodTrace;
     u8 elapsed;
@@ -831,11 +831,11 @@ void dvmEmitEmulatorTrace(const Method* method, int action)
  * The GC calls this when it's about to start.  We add a marker to the
  * trace output so the tool can exclude the GC cost from the results.
  */
-void dvmMethodTraceGCBegin(void)
+void dvmMethodTraceGCBegin()
 {
     TRACE_METHOD_ENTER(dvmThreadSelf(), gDvm.methodTraceGcMethod);
 }
-void dvmMethodTraceGCEnd(void)
+void dvmMethodTraceGCEnd()
 {
     TRACE_METHOD_EXIT(dvmThreadSelf(), gDvm.methodTraceGcMethod);
 }
@@ -843,11 +843,11 @@ void dvmMethodTraceGCEnd(void)
 /*
  * The class loader calls this when it's loading or initializing a class.
  */
-void dvmMethodTraceClassPrepBegin(void)
+void dvmMethodTraceClassPrepBegin()
 {
     TRACE_METHOD_ENTER(dvmThreadSelf(), gDvm.methodTraceClassPrepMethod);
 }
-void dvmMethodTraceClassPrepEnd(void)
+void dvmMethodTraceClassPrepEnd()
 {
     TRACE_METHOD_EXIT(dvmThreadSelf(), gDvm.methodTraceClassPrepMethod);
 }
@@ -856,7 +856,7 @@ void dvmMethodTraceClassPrepEnd(void)
 /*
  * Enable emulator trace info.
  */
-void dvmEmulatorTraceStart(void)
+void dvmEmulatorTraceStart()
 {
     /* If we could not map the emulator trace page, then do not enable tracing */
     if (gDvm.emulatorTracePage == NULL)
@@ -873,7 +873,7 @@ void dvmEmulatorTraceStart(void)
 /*
  * Disable emulator trace info.
  */
-void dvmEmulatorTraceStop(void)
+void dvmEmulatorTraceStop()
 {
     if (gDvm.emulatorTraceEnableCount == 0) {
         LOGE("ERROR: emulator tracing not enabled\n");
@@ -891,7 +891,7 @@ void dvmEmulatorTraceStop(void)
 /*
  * Start instruction counting.
  */
-void dvmStartInstructionCounting(void)
+void dvmStartInstructionCounting()
 {
     /* in theory we should make this an atomic inc; in practice not important */
     gDvm.instructionCountEnableCount++;
@@ -901,7 +901,7 @@ void dvmStartInstructionCounting(void)
 /*
  * Stop instruction counting.
  */
-void dvmStopInstructionCounting(void)
+void dvmStopInstructionCounting()
 {
     if (gDvm.instructionCountEnableCount == 0) {
         LOGE("ERROR: instruction counting not enabled\n");
@@ -917,7 +917,7 @@ void dvmStopInstructionCounting(void)
  * Start alloc counting.  Note this doesn't affect the "active profilers"
  * count, since the interpreter loop is not involved.
  */
-void dvmStartAllocCounting(void)
+void dvmStartAllocCounting()
 {
     gDvm.allocProf.enabled = true;
 }
@@ -925,7 +925,7 @@ void dvmStartAllocCounting(void)
 /*
  * Stop alloc counting.
  */
-void dvmStopAllocCounting(void)
+void dvmStopAllocCounting()
 {
     gDvm.allocProf.enabled = false;
 }

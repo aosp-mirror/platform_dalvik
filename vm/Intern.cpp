@@ -23,7 +23,7 @@
 /*
  * Prep string interning.
  */
-bool dvmStringInternStartup(void)
+bool dvmStringInternStartup()
 {
     dvmInitMutex(&gDvm.internLock);
     gDvm.internedStrings = dvmHashTableCreate(256, NULL);
@@ -40,7 +40,7 @@ bool dvmStringInternStartup(void)
  *
  * The contents of the list are StringObjects that live on the GC heap.
  */
-void dvmStringInternShutdown(void)
+void dvmStringInternShutdown()
 {
     if (gDvm.internedStrings != NULL || gDvm.literalStrings != NULL) {
         dvmDestroyMutex(&gDvm.internLock);

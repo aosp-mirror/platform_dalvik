@@ -39,7 +39,7 @@ static void* signalCatcherThreadStart(void* arg);
  *
  * Returns immediately.
  */
-bool dvmSignalCatcherStartup(void)
+bool dvmSignalCatcherStartup()
 {
     gDvm.haltSignalCatcher = false;
 
@@ -56,7 +56,7 @@ bool dvmSignalCatcherStartup(void)
  * Since we know the thread is just sitting around waiting for signals
  * to arrive, send it one.
  */
-void dvmSignalCatcherShutdown(void)
+void dvmSignalCatcherShutdown()
 {
     gDvm.haltSignalCatcher = true;
     if (gDvm.signalCatcherHandle == 0)      // not started yet
@@ -138,7 +138,7 @@ static void logThreadStacks(FILE* fp)
  *
  * If JIT tuning is compiled in, dump compiler stats as well.
  */
-static void handleSigQuit(void)
+static void handleSigQuit()
 {
     char* traceBuf = NULL;
     size_t traceLen;
@@ -208,7 +208,7 @@ static void handleSigQuit(void)
 /*
  * Respond to a SIGUSR1 by forcing a GC.
  */
-static void handleSigUsr1(void)
+static void handleSigUsr1()
 {
     LOGI("SIGUSR1 forcing GC (no HPROF)\n");
     dvmCollectGarbage();
@@ -227,7 +227,7 @@ void printAllClass(void *ptr)
  * Respond to a SIGUSR2 by dumping some JIT stats and possibly resetting
  * the code cache.
  */
-static void handleSigUsr2(void)
+static void handleSigUsr2()
 {
     static int codeCacheResetCount = 0;
     gDvmJit.receivedSIGUSR2 ^= true;

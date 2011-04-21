@@ -95,7 +95,7 @@ same time.
  * System init.  We don't allocate the registry until first use.
  * Make sure we do this before initializing JDWP.
  */
-bool dvmDebuggerStartup(void)
+bool dvmDebuggerStartup()
 {
     if (!dvmBreakpointStartup())
         return false;
@@ -107,7 +107,7 @@ bool dvmDebuggerStartup(void)
 /*
  * Free registry storage.
  */
-void dvmDebuggerShutdown(void)
+void dvmDebuggerShutdown()
 {
     dvmHashTableFree(gDvm.dbgRegistry);
     gDvm.dbgRegistry = NULL;
@@ -229,7 +229,7 @@ static ObjectId registerObject(const Object* obj, RegistryType type, bool reg)
         goto bail;
     }
 
-    (void) dvmHashTableLookup(gDvm.dbgRegistry, registryHash((u4) id),
+    dvmHashTableLookup(gDvm.dbgRegistry, registryHash((u4) id),
                 (void*)(u4) id, registryCompare, true);
 
 bail:
@@ -364,7 +364,7 @@ static u4* frameIdToFrame(FrameId id)
 /*
  * Get the invocation request state.
  */
-DebugInvokeReq* dvmDbgGetInvokeReq(void)
+DebugInvokeReq* dvmDbgGetInvokeReq()
 {
     return &dvmThreadSelf()->invokeReq;
 }
@@ -374,7 +374,7 @@ DebugInvokeReq* dvmDbgGetInvokeReq(void)
  *
  * Only called from the JDWP handler thread.
  */
-void dvmDbgConnected(void)
+void dvmDbgConnected()
 {
     assert(!gDvm.debuggerConnected);
 
@@ -390,7 +390,7 @@ void dvmDbgConnected(void)
  *
  * Only called from the JDWP handler thread.
  */
-void dvmDbgActive(void)
+void dvmDbgActive()
 {
     if (gDvm.debuggerActive)
         return;
@@ -412,7 +412,7 @@ void dvmDbgActive(void)
  *
  * Only called from the JDWP handler thread.
  */
-void dvmDbgDisconnected(void)
+void dvmDbgDisconnected()
 {
     assert(gDvm.debuggerConnected);
 
@@ -440,7 +440,7 @@ void dvmDbgDisconnected(void)
  *
  * Does not return "true" if it's just a DDM server.
  */
-bool dvmDbgIsDebuggerConnected(void)
+bool dvmDbgIsDebuggerConnected()
 {
     return gDvm.debuggerActive;
 }
@@ -449,7 +449,7 @@ bool dvmDbgIsDebuggerConnected(void)
  * Get time since last debugger activity.  Used when figuring out if the
  * debugger has finished configuring us.
  */
-s8 dvmDbgLastDebuggerActivity(void)
+s8 dvmDbgLastDebuggerActivity()
 {
     return dvmJdwpLastDebuggerActivity(gDvm.jdwpState);
 }
@@ -457,7 +457,7 @@ s8 dvmDbgLastDebuggerActivity(void)
 /*
  * JDWP thread is running, don't allow GC.
  */
-int dvmDbgThreadRunning(void)
+int dvmDbgThreadRunning()
 {
     ThreadStatus oldStatus = dvmChangeStatus(NULL, THREAD_RUNNING);
     return static_cast<int>(oldStatus);
@@ -466,7 +466,7 @@ int dvmDbgThreadRunning(void)
 /*
  * JDWP thread is idle, allow GC.
  */
-int dvmDbgThreadWaiting(void)
+int dvmDbgThreadWaiting()
 {
     ThreadStatus oldStatus = dvmChangeStatus(NULL, THREAD_VMWAIT);
     return static_cast<int>(oldStatus);
@@ -1857,7 +1857,7 @@ bail:
 /*
  * Return the ObjectId for the "system" thread group.
  */
-ObjectId dvmDbgGetSystemThreadGroupId(void)
+ObjectId dvmDbgGetSystemThreadGroupId()
 {
     Object* groupObj = dvmGetSystemThreadGroup();
     return objectToObjectId(groupObj);
@@ -1866,7 +1866,7 @@ ObjectId dvmDbgGetSystemThreadGroupId(void)
 /*
  * Return the ObjectId for the "main" thread group.
  */
-ObjectId dvmDbgGetMainThreadGroupId(void)
+ObjectId dvmDbgGetMainThreadGroupId()
 {
     Object* groupObj = dvmGetMainThreadGroup();
     return objectToObjectId(groupObj);
@@ -2136,7 +2136,7 @@ bail:
 /*
  * Get the ThreadId for the current thread.
  */
-ObjectId dvmDbgGetThreadSelfId(void)
+ObjectId dvmDbgGetThreadSelfId()
 {
     Thread* self = dvmThreadSelf();
     return objectToObjectId(self->threadObj);
@@ -2202,7 +2202,7 @@ void dvmDbgResumeThread(ObjectId threadId)
 /*
  * Suspend ourselves after sending an event to the debugger.
  */
-void dvmDbgSuspendSelf(void)
+void dvmDbgSuspendSelf()
 {
     dvmSuspendSelf(true);
 }
@@ -2847,7 +2847,7 @@ void dvmDbgExecuteMethod(DebugInvokeReq* pReq)
          * We can't use the "tracked allocation" mechanism here because
          * the object is going to be handed off to a different thread.
          */
-        (void) objectToObjectId((Object*)pReq->resultValue.l);
+        objectToObjectId((Object*)pReq->resultValue.l);
     }
 
     if (oldExcept != NULL) {
@@ -2945,7 +2945,7 @@ bool dvmDbgDdmHandlePacket(const u1* buf, int dataLen, u1** pReplyBuf,
 /*
  * First DDM packet has arrived over JDWP.  Notify the press.
  */
-void dvmDbgDdmConnected(void)
+void dvmDbgDdmConnected()
 {
     dvmDdmConnected();
 }
@@ -2953,7 +2953,7 @@ void dvmDbgDdmConnected(void)
 /*
  * JDWP connection has dropped.
  */
-void dvmDbgDdmDisconnected(void)
+void dvmDbgDdmDisconnected()
 {
     dvmDdmDisconnected();
 }

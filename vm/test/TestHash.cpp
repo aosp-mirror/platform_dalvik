@@ -75,7 +75,7 @@ static void dumpIterator(HashTable* pTab)
 /*
  * Some quick hash table tests.
  */
-bool dvmTestHash(void)
+bool dvmTestHash()
 {
     HashTable* pTab;
     char tmpStr[64];

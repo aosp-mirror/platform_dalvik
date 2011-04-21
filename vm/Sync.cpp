@@ -120,7 +120,7 @@ Monitor* dvmCreateMonitor(Object* obj)
 /*
  * Free the monitor list.  Only used when shutting the VM down.
  */
-void dvmFreeMonitorList(void)
+void dvmFreeMonitorList()
 {
     Monitor* mon;
     Monitor* nextMon;

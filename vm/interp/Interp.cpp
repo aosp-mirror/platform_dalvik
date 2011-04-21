@@ -37,7 +37,7 @@
  */
 
 // fwd
-static BreakpointSet* dvmBreakpointSetAlloc(void);
+static BreakpointSet* dvmBreakpointSetAlloc();
 static void dvmBreakpointSetFree(BreakpointSet* pSet);
 
 #if defined(WITH_JIT)
@@ -58,7 +58,7 @@ extern "C" void dvmJitToInterpBackwardBranch();
 /*
  * Initialize global breakpoint structures.
  */
-bool dvmBreakpointStartup(void)
+bool dvmBreakpointStartup()
 {
     gDvm.breakpointSet = dvmBreakpointSetAlloc();
     return (gDvm.breakpointSet != NULL);
@@ -67,7 +67,7 @@ bool dvmBreakpointStartup(void)
 /*
  * Free resources.
  */
-void dvmBreakpointShutdown(void)
+void dvmBreakpointShutdown()
 {
     dvmBreakpointSetFree(gDvm.breakpointSet);
 }
@@ -102,7 +102,7 @@ struct BreakpointSet {
 /*
  * Initialize a BreakpointSet.  Initially empty.
  */
-static BreakpointSet* dvmBreakpointSetAlloc(void)
+static BreakpointSet* dvmBreakpointSetAlloc()
 {
     BreakpointSet* pSet = (BreakpointSet*) calloc(1, sizeof(*pSet));
 
@@ -390,7 +390,7 @@ static void dvmBreakpointSetFlush(BreakpointSet* pSet, ClassObject* clazz)
 /*
  * Do any debugger-attach-time initialization.
  */
-void dvmInitBreakpoints(void)
+void dvmInitBreakpoints()
 {
     /* quick sanity check */
     BreakpointSet* pSet = gDvm.breakpointSet;

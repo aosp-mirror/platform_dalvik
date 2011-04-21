@@ -27,7 +27,7 @@
  * We're currently using a memory-mapped arena to keep things off of the
  * main heap.  This needs to be replaced with something real.
  */
-bool dvmGcStartup(void)
+bool dvmGcStartup()
 {
     dvmInitMutex(&gDvm.gcHeapLock);
 
@@ -38,7 +38,7 @@ bool dvmGcStartup(void)
  * Post-zygote heap initialization, including starting
  * the HeapWorker thread.
  */
-bool dvmGcStartupAfterZygote(void)
+bool dvmGcStartupAfterZygote()
 {
     return dvmHeapStartupAfterZygote();
 }
@@ -46,7 +46,7 @@ bool dvmGcStartupAfterZygote(void)
 /*
  * Shutdown the threads internal to the garbage collector.
  */
-void dvmGcThreadShutdown(void)
+void dvmGcThreadShutdown()
 {
     dvmHeapThreadShutdown();
 }
@@ -54,7 +54,7 @@ void dvmGcThreadShutdown(void)
 /*
  * Shut the GC down.
  */
-void dvmGcShutdown(void)
+void dvmGcShutdown()
 {
     //TODO: grab and destroy the lock
     dvmHeapShutdown();
@@ -63,12 +63,12 @@ void dvmGcShutdown(void)
 /*
  * Do any last-minute preparation before we call fork() for the first time.
  */
-bool dvmGcPreZygoteFork(void)
+bool dvmGcPreZygoteFork()
 {
     return dvmHeapSourceStartupBeforeFork();
 }
 
-bool dvmGcStartupClasses(void)
+bool dvmGcStartupClasses()
 {
     {
         const char *klassName = "Ljava/lang/ref/ReferenceQueueThread;";
@@ -166,7 +166,7 @@ static Object* createStockException(const char* descriptor, const char* msg)
  * We can't do this during the initial startup because we need to execute
  * the constructors.
  */
-bool dvmCreateStockExceptions(void)
+bool dvmCreateStockExceptions()
 {
     /*
      * Pre-allocate some throwables.  These need to be explicitly added
@@ -318,7 +318,7 @@ void dvmReleaseTrackedAlloc(Object* obj, Thread* self)
 /*
  * Explicitly initiate garbage collection.
  */
-void dvmCollectGarbage(void)
+void dvmCollectGarbage()
 {
     if (gDvm.disableExplicitGc) {
         return;

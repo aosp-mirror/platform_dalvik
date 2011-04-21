@@ -105,7 +105,7 @@ typedef struct RegisterTable {
 
 /* fwd */
 #ifndef NDEBUG
-static void checkMergeTab(void);
+static void checkMergeTab();
 #endif
 static bool isInitMethod(const Method* meth);
 static RegType getInvocationThis(const RegisterLine* registerLine,\
@@ -218,7 +218,7 @@ const char gDvmMergeTab[kRegTypeMAX][kRegTypeMAX] =
 /*
  * Verify symmetry in the conversion table.
  */
-static void checkMergeTab(void)
+static void checkMergeTab()
 {
     int i, j;
 
@@ -3428,7 +3428,7 @@ void handleMonitorExit(RegisterLine* workLine, u4 regIdx, u4 insnIdx,
 /*
  * One-time preparation.
  */
-static void verifyPrep(void)
+static void verifyPrep()
 {
 #ifndef NDEBUG
     /* only need to do this if the table was updated */

@@ -21,7 +21,7 @@
 #include <cutils/array.h>
 #include <stdlib.h>
 
-bool dvmPropertiesStartup(void)
+bool dvmPropertiesStartup()
 {
     gDvm.properties = arrayCreate();
     if (gDvm.properties == NULL) {
@@ -30,7 +30,7 @@ bool dvmPropertiesStartup(void)
     return true;
 }
 
-void dvmPropertiesShutdown(void)
+void dvmPropertiesShutdown()
 {
     size_t size = arraySize(gDvm.properties);
     size_t i;

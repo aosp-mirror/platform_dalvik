@@ -106,7 +106,7 @@ static const DexAnnotationsDirectoryItem* getAnnoDirectory(DexFile* pDexFile,
  *
  * Caller must call dvmReleaseTrackedAlloc().
  */
-static ArrayObject* emptyAnnoArray(void)
+static ArrayObject* emptyAnnoArray()
 {
     return dvmAllocArrayByClass(
         gDvm.classJavaLangAnnotationAnnotationArray, 0, ALLOC_DEFAULT);

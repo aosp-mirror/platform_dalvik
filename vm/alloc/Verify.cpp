@@ -145,7 +145,7 @@ static void verifyRootReference(void *addr, u4 threadId,
 /*
  * Verifies references in the roots.
  */
-void dvmVerifyRoots(void)
+void dvmVerifyRoots()
 {
     dvmVisitRoots(verifyRootReference, NULL);
 }

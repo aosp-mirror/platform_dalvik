@@ -192,7 +192,7 @@ static void broadcast(int event)
  *
  * We can do some initialization here too.
  */
-void dvmDdmConnected(void)
+void dvmDdmConnected()
 {
     // TODO: any init
 
@@ -205,7 +205,7 @@ void dvmDdmConnected(void)
  *
  * Do some cleanup.
  */
-void dvmDdmDisconnected(void)
+void dvmDdmDisconnected()
 {
     LOGV("Broadcasting DDM disconnect\n");
     broadcast(DISCONNECTED);
@@ -351,7 +351,7 @@ void dvmDdmSendThreadNameChange(int threadId, StringObject* newName)
  * Returns a new byte[] with the data inside, or NULL on failure.  The
  * caller must call dvmReleaseTrackedAlloc() on the array.
  */
-ArrayObject* dvmDdmGenerateThreadStats(void)
+ArrayObject* dvmDdmGenerateThreadStats()
 {
     const int kHeaderLen = 4;
     const int kBytesPerEntry = 18;
@@ -462,7 +462,7 @@ ArrayObject* dvmDdmGetStackTraceById(u4 threadId)
  *
  * Returns NULL on failure with an exception raised.
  */
-ArrayObject* dvmDdmGetRecentAllocations(void)
+ArrayObject* dvmDdmGetRecentAllocations()
 {
     u1* data;
     size_t len;

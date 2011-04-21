@@ -25,7 +25,7 @@
 /*
  * Verify some constants used by the mterp interpreter.
  */
-bool dvmCheckAsmConstants(void)
+bool dvmCheckAsmConstants()
 {
     bool failed = false;
 

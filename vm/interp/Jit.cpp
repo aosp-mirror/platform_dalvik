@@ -1374,7 +1374,7 @@ bool dvmJitResizeJitTable( unsigned int size )
 /*
  * Reset the JitTable to the initial clean state.
  */
-void dvmJitResetTable(void)
+void dvmJitResetTable()
 {
     JitEntry *jitEntry = gDvmJit.pJitEntryTable;
     unsigned int size = gDvmJit.jitTableSize;

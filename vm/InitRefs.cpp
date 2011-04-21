@@ -41,7 +41,7 @@ static bool initClassReference(ClassObject** pClass, const char* name) {
     return true;
 }
 
-static bool initClassReferences(void) {
+static bool initClassReferences() {
     static struct { ClassObject** ref; const char* name; } classes[] = {
         /*
          * Note: The class Class gets special treatment during initial
@@ -164,7 +164,7 @@ static bool initFieldOffset(ClassObject* clazz, int *pOffset,
     return true;
 }
 
-static bool initFieldOffsets(void) {
+static bool initFieldOffsets() {
     struct FieldInfo {
         int* offset;
         const char* name;
@@ -320,7 +320,7 @@ static bool initDirectMethodReference(Method** pMethod, const char* className,
     return initDirectMethodReferenceByClass(pMethod, clazz, name, descriptor);
 }
 
-static bool initConstructorReferences(void) {
+static bool initConstructorReferences() {
     static struct { Method** method; const char* name; const char* descriptor; } constructors[] = {
         { &gDvm.methJavaLangStackTraceElement_init, "Ljava/lang/StackTraceElement;",
           "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;I)V" },
@@ -350,7 +350,7 @@ static bool initConstructorReferences(void) {
     return true;
 }
 
-static bool initDirectMethodReferences(void) {
+static bool initDirectMethodReferences() {
     static struct {
         Method** method;
         const char* className;
@@ -412,7 +412,7 @@ static bool initVirtualMethodOffset(int* pOffset, const char* className,
     return true;
 }
 
-static bool initVirtualMethodOffsets(void) {
+static bool initVirtualMethodOffsets() {
     static struct {
         int* offset;
         const char* className;
@@ -459,7 +459,7 @@ static bool verifyStringOffset(const char* name, int actual, int expected) {
     return true;
 }
 
-static bool verifyStringOffsets(void) {
+static bool verifyStringOffsets() {
     /*
      * Various parts of the system use predefined constants for the
      * offsets to a few fields of the class String. This code verifies
@@ -478,7 +478,7 @@ static bool verifyStringOffsets(void) {
 }
 
 /* (documented in header) */
-bool dvmFindRequiredClassesAndMembers(void) {
+bool dvmFindRequiredClassesAndMembers() {
     /*
      * Note: Under normal VM use, this is called by dvmStartup()
      * in Init.c. For dex optimization, this is called as well, but in

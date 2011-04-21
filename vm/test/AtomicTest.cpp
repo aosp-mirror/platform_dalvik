@@ -66,7 +66,7 @@ static int64_t wideCasTest = 0x6600000077000000LL;
 /*
  * Get a relative time value.
  */
-static int64_t getRelativeTimeNsec(void)
+static int64_t getRelativeTimeNsec()
 {
 #define HAVE_POSIX_CLOCKS
 #ifdef HAVE_POSIX_CLOCKS
@@ -87,17 +87,17 @@ static int64_t getRelativeTimeNsec(void)
  * If these get inlined the compiler may figure out what we're up to and
  * completely elide the operations.
  */
-static void incr(void) __attribute__((noinline));
-static void decr(void) __attribute__((noinline));
+static void incr() __attribute__((noinline));
+static void decr() __attribute__((noinline));
 static void add(int addVal) __attribute__((noinline));
 static int compareAndSwap(int oldVal, int newVal, int* addr) __attribute__((noinline));
 static int compareAndSwapWide(int64_t oldVal, int64_t newVal, int64_t* addr) __attribute__((noinline));
 
-static void incr(void)
+static void incr()
 {
     incTest++;
 }
-static void decr(void)
+static void decr()
 {
     decTest--;
 }
@@ -207,16 +207,16 @@ static int64_t testAtomicSpeedSub(int repeatCount)
     for (i = repeatCount / 10; i != 0; i--) {
         if (USE_ATOMIC) {
             // succeed 10x
-            (void) android_atomic_release_cas(7, 7, valuePtr);
-            (void) android_atomic_release_cas(7, 7, valuePtr);
-            (void) android_atomic_release_cas(7, 7, valuePtr);
-            (void) android_atomic_release_cas(7, 7, valuePtr);
-            (void) android_atomic_release_cas(7, 7, valuePtr);
-            (void) android_atomic_release_cas(7, 7, valuePtr);
-            (void) android_atomic_release_cas(7, 7, valuePtr);
-            (void) android_atomic_release_cas(7, 7, valuePtr);
-            (void) android_atomic_release_cas(7, 7, valuePtr);
-            (void) android_atomic_release_cas(7, 7, valuePtr);
+            android_atomic_release_cas(7, 7, valuePtr);
+            android_atomic_release_cas(7, 7, valuePtr);
+            android_atomic_release_cas(7, 7, valuePtr);
+            android_atomic_release_cas(7, 7, valuePtr);
+            android_atomic_release_cas(7, 7, valuePtr);
+            android_atomic_release_cas(7, 7, valuePtr);
+            android_atomic_release_cas(7, 7, valuePtr);
+            android_atomic_release_cas(7, 7, valuePtr);
+            android_atomic_release_cas(7, 7, valuePtr);
+            android_atomic_release_cas(7, 7, valuePtr);
         } else {
             // succeed 10x
             compareAndSwap(7, 7, valuePtr);
@@ -239,7 +239,7 @@ static int64_t testAtomicSpeedSub(int repeatCount)
     return end - start;
 }
 
-static void testAtomicSpeed(void)
+static void testAtomicSpeed()
 {
     static const int kIterations = 10;
     static const int kRepeatCount = 5 * 1000 * 1000;
@@ -264,7 +264,7 @@ static void testAtomicSpeed(void)
 /*
  * Start tests, show results.
  */
-bool dvmTestAtomicSpeed(void)
+bool dvmTestAtomicSpeed()
 {
     pthread_t threads[THREAD_COUNT];
     void *(*startRoutine)(void*) = atomicTest;

@@ -55,7 +55,7 @@ static bool readAndLog(int fd, BufferedData* data, const char* tag);
  *
  * Returns immediately.
  */
-bool dvmStdioConverterStartup(void)
+bool dvmStdioConverterStartup()
 {
     StdPipes* pipeStorage;
 
@@ -122,7 +122,7 @@ bool dvmStdioConverterStartup(void)
  * Since we know the thread is just sitting around waiting for something
  * to arrive on stdout, print something.
  */
-void dvmStdioConverterShutdown(void)
+void dvmStdioConverterShutdown()
 {
     gDvm.haltStdioConverter = true;
     if (gDvm.stdioConverterHandle == 0)    // not started, or still starting

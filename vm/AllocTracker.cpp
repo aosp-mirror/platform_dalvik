@@ -73,7 +73,7 @@ struct AllocRecord {
  * Initialize a few things.  This gets called early, so keep activity to
  * a minimum.
  */
-bool dvmAllocTrackerStartup(void)
+bool dvmAllocTrackerStartup()
 {
     /* prep locks */
     dvmInitMutex(&gDvm.allocTrackerLock);
@@ -87,7 +87,7 @@ bool dvmAllocTrackerStartup(void)
 /*
  * Release anything we're holding on to.
  */
-void dvmAllocTrackerShutdown(void)
+void dvmAllocTrackerShutdown()
 {
     free(gDvm.allocRecords);
     dvmDestroyMutex(&gDvm.allocTrackerLock);
@@ -105,7 +105,7 @@ void dvmAllocTrackerShutdown(void)
  *
  * Returns "true" on success.
  */
-bool dvmEnableAllocTracker(void)
+bool dvmEnableAllocTracker()
 {
     bool result = true;
     dvmLockMutex(&gDvm.allocTrackerLock);
@@ -129,7 +129,7 @@ bool dvmEnableAllocTracker(void)
 /*
  * Disable allocation tracking.  Does nothing if tracking is not enabled.
  */
-void dvmDisableAllocTracker(void)
+void dvmDisableAllocTracker()
 {
     dvmLockMutex(&gDvm.allocTrackerLock);
 
@@ -278,7 +278,7 @@ const int kStackFrameLen = 8;
  * We need to handle underflow in our circular buffer, so we add
  * kNumAllocRecords and then mask it back down.
  */
-inline static int headIndex(void)
+inline static int headIndex()
 {
     return (gDvm.allocRecordHead+1 + kNumAllocRecords - gDvm.allocRecordCount)
         & (kNumAllocRecords-1);
