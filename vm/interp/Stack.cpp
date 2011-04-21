@@ -323,10 +323,6 @@ static bool dvmPopFrame(Thread* self)
                 saveBlock->method->name,
                 (SAVEAREA_FROM_FP(saveBlock->prevFrame)->method == NULL) ?
                 "" : " (JNI local)");
-            assert(saveBlock->xtra.localRefCookie != 0);
-            //assert(saveBlock->xtra.localRefCookie >= self->jniLocalRefTable.table &&
-            //    saveBlock->xtra.localRefCookie <=self->jniLocalRefTable.nextEntry);
-
             dvmPopJniLocals(self, saveBlock);
         }
 
