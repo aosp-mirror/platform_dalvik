@@ -886,7 +886,7 @@ struct GuardedCopy {
     /*
      * Free up the guard buffer, scrub it, and return the original pointer.
      */
-    static void* free(void* dataBuf) {
+    static void* destroy(void* dataBuf) {
         u1* fullBuf = ((u1*) dataBuf) - kGuardLen / 2;
         const GuardedCopy* pExtra = GuardedCopy::fromData(dataBuf);
         void* originalPtr = (void*) pExtra->originalPtr;
@@ -1017,8 +1017,6 @@ static void* createGuardedPACopy(JNIEnv* env, const jarray jarr, jboolean* isCop
 static void* releaseGuardedPACopy(JNIEnv* env, jarray jarr, void* dataBuf, int mode) {
     ScopedJniThreadState ts(env);
     ArrayObject* arrObj = (ArrayObject*) dvmDecodeIndirectRef(env, jarr);
-    bool release, copyBack;
-    u1* result = NULL;
 
     if (!GuardedCopy::check(dataBuf, true)) {
         LOGE("JNI: failed guarded copy check in releaseGuardedPACopy");
@@ -1026,31 +1024,14 @@ static void* releaseGuardedPACopy(JNIEnv* env, jarray jarr, void* dataBuf, int m
         return NULL;
     }
 
-    switch (mode) {
-    case 0:
-        release = copyBack = true;
-        break;
-    case JNI_ABORT:
-        release = true;
-        copyBack = false;
-        break;
-    case JNI_COMMIT:
-        release = false;
-        copyBack = true;
-        break;
-    default:
-        LOGE("JNI: bad release mode %d", mode);
-        dvmAbort();
-        return NULL;
-    }
-
-    if (copyBack) {
+    if (mode != JNI_ABORT) {
         size_t len = GuardedCopy::fromData(dataBuf)->originalLen;
         memcpy(arrObj->contents, dataBuf, len);
     }
 
-    if (release) {
-        result = (u1*) GuardedCopy::free(dataBuf);
+    u1* result = NULL;
+    if (mode != JNI_COMMIT) {
+        result = (u1*) GuardedCopy::destroy(dataBuf);
     } else {
         result = (u1*) (void*) GuardedCopy::fromData(dataBuf)->originalPtr;
     }
@@ -1573,7 +1554,7 @@ static void Check_ReleaseStringChars(JNIEnv* env, jstring string, const jchar* c
             abortMaybe();
             return;
         }
-        chars = (const jchar*) GuardedCopy::free((jchar*)chars);
+        chars = (const jchar*) GuardedCopy::destroy((jchar*)chars);
     }
     baseEnv(env)->ReleaseStringChars(env, string, chars);
 }
@@ -1615,7 +1596,7 @@ static void Check_ReleaseStringUTFChars(JNIEnv* env, jstring string, const char*
             abortMaybe();
             return;
         }
-        utf = (const char*) GuardedCopy::free((char*)utf);
+        utf = (const char*) GuardedCopy::destroy((char*)utf);
     }
     baseEnv(env)->ReleaseStringUTFChars(env, string, utf);
 }
@@ -1817,8 +1798,7 @@ static void Check_ReleasePrimitiveArrayCritical(JNIEnv* env, jarray array, void*
 static const jchar* Check_GetStringCritical(JNIEnv* env, jstring string, jboolean* isCopy) {
     ScopedCheck sc(env, kFlag_CritGet, __FUNCTION__);
     sc.checkString(string);
-    const jchar* result;
-    result = baseEnv(env)->GetStringCritical(env, string, isCopy);
+    const jchar* result = baseEnv(env)->GetStringCritical(env, string, isCopy);
     if (((JNIEnvExt*)env)->forceDataCopy && result != NULL) {
         ScopedJniThreadState ts(env);
         StringObject* strObj = (StringObject*) dvmDecodeIndirectRef(env, string);
@@ -1841,7 +1821,7 @@ static void Check_ReleaseStringCritical(JNIEnv* env, jstring string, const jchar
             abortMaybe();
             return;
         }
-        carray = (const jchar*) GuardedCopy::free((jchar*)carray);
+        carray = (const jchar*) GuardedCopy::destroy((jchar*)carray);
     }
     baseEnv(env)->ReleaseStringCritical(env, string, carray);
 }
