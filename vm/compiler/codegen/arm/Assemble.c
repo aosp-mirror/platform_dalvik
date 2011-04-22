@@ -881,6 +881,10 @@ ArmEncodingMap EncodingMap[kArmLast] = {
                  kFmtUnused, -1, -1,
                  IS_BINARY_OP | REG_DEF0 | REG_USE_PC | IS_LOAD,
                  "ldr", "r!0d, [r15pc, -#!1d]", 2),
+    ENCODING_MAP(kThumbUndefined,       0xde00,
+                 kFmtUnused, -1, -1, kFmtUnused, -1, -1, kFmtUnused, -1, -1,
+                 kFmtUnused, -1, -1, NO_OPERAND,
+                 "undefined", "", 1),
 };
 
 /*
