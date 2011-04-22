@@ -133,7 +133,7 @@ struct StackSaveArea {
 #endif
 
     /* saved frame pointer for previous frame, or NULL if this is at bottom */
-    void*       prevFrame;
+    u4*         prevFrame;
 
     /* saved program counter (from method in caller's frame) */
     const u2*   savedPc;
@@ -159,7 +159,7 @@ struct StackSaveArea {
 
 /* move between the stack save area and the frame pointer */
 #define SAVEAREA_FROM_FP(_fp)   ((StackSaveArea*)(_fp) -1)
-#define FP_FROM_SAVEAREA(_save) ((void*) ((StackSaveArea*)(_save) +1))
+#define FP_FROM_SAVEAREA(_save) ((u4*) ((StackSaveArea*)(_save) +1))
 
 /* when calling a function, get a pointer to outs[0] */
 #define OUTS_FROM_FP(_fp, _argCount) \

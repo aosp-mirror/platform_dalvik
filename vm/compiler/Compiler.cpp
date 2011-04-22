@@ -222,7 +222,7 @@ bool dvmCompilerSetupCodeCache(void)
 
 static void crawlDalvikStack(Thread *thread, bool print)
 {
-    void *fp = thread->curFrame;
+    void *fp = thread->interpSave.curFrame;
     StackSaveArea* saveArea = NULL;
     int stackLevel = 0;
 

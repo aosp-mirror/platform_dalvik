@@ -403,7 +403,8 @@ static inline bool checkForNullExportPC(Object* obj, u4* fp, const u2* pc)
  */
 #define PC_FP_TO_SELF()                                                    \
     self->interpSave.pc = pc;                                              \
-    self->interpSave.fp = fp;
+    self->interpSave.curFrame = fp;
+#define PC_TO_SELF() self->interpSave.pc = pc;
 
 /*
  * Instruction framing.  For a switch-oriented implementation this is
@@ -1232,7 +1233,7 @@ GOTO_TARGET_DECL(exceptionThrown);
 void dvmInterpretPortable(Thread* self)
 {
 #if defined(EASY_GDB)
-    StackSaveArea* debugSaveArea = SAVEAREA_FROM_FP(self->curFrame);
+    StackSaveArea* debugSaveArea = SAVEAREA_FROM_FP(self->interpSave.curFrame);
 #endif
 #if defined(WITH_TRACKREF_CHECKS)
     int debugTrackedRefStart = self->interpSave.debugTrackedRefStart;
@@ -1260,7 +1261,7 @@ void dvmInterpretPortable(Thread* self)
     /* copy state in */
     curMethod = self->interpSave.method;
     pc = self->interpSave.pc;
-    fp = self->interpSave.fp;
+    fp = self->interpSave.curFrame;
     retval = self->retval;   /* only need for kInterpEntryReturn? */
 
     methodClassDex = curMethod->clazz->pDvmDex;
@@ -1285,7 +1286,7 @@ void dvmInterpretPortable(Thread* self)
     if (self->debugIsMethodEntry) {
         ILOGD("|-- Now interpreting %s.%s", curMethod->clazz->descriptor,
                 curMethod->name);
-        DUMP_REGS(curMethod, self->interpSave.fp, false);
+        DUMP_REGS(curMethod, self->interpSave.curFrame, false);
     }
 #endif
 
@@ -5012,7 +5013,7 @@ GOTO_TARGET(returnFromMethod)
         }
 
         /* update thread FP, and reset local variables */
-        self->curFrame = fp;
+        self->interpSave.curFrame = fp;
         curMethod = SAVEAREA_FROM_FP(fp)->method;
         self->interpSave.method = curMethod;
         //methodClass = curMethod->clazz;
@@ -5149,10 +5150,10 @@ GOTO_TARGET(exceptionThrown)
 #endif
 
         /*
-         * Adjust local variables to match self->curFrame and the
+         * Adjust local variables to match self->interpSave.curFrame and the
          * updated PC.
          */
-        //fp = (u4*) self->curFrame;
+        //fp = (u4*) self->interpSave.curFrame;
         curMethod = SAVEAREA_FROM_FP(fp)->method;
         self->interpSave.method = curMethod;
         //methodClass = curMethod->clazz;
@@ -5331,7 +5332,7 @@ GOTO_TARGET(invokeMethod, bool methodCallRange, const Method* _methodToCall,
              * calls.  For native calls, we'll mark EXIT on return.
              * For non-native calls, EXIT is marked in the RETURN op.
              */
-            PC_FP_TO_SELF();
+            PC_TO_SELF();
             dvmReportInvoke(self, methodToCall);
         }
 
@@ -5344,7 +5345,7 @@ GOTO_TARGET(invokeMethod, bool methodCallRange, const Method* _methodToCall,
             self->interpSave.method = curMethod;
             methodClassDex = curMethod->clazz->pDvmDex;
             pc = methodToCall->insns;
-            self->curFrame = fp = newFp;
+            self->interpSave.curFrame = fp = newFp;
 #ifdef EASY_GDB
             debugSaveArea = SAVEAREA_FROM_FP(newFp);
 #endif
@@ -5357,13 +5358,12 @@ GOTO_TARGET(invokeMethod, bool methodCallRange, const Method* _methodToCall,
             /* set this up for JNI locals, even if not a JNI native */
             newSaveArea->xtra.localRefCookie = self->jniLocalRefTable.segmentState.all;
 
-            self->curFrame = newFp;
+            self->interpSave.curFrame = newFp;
 
             DUMP_REGS(methodToCall, newFp, true);   // show input args
 
             if (self->interpBreak.ctl.subMode != 0) {
-                PC_FP_TO_SELF();
-                dvmReportPreNativeInvoke(methodToCall, self);
+                dvmReportPreNativeInvoke(methodToCall, self, fp);
             }
 
             ILOGD("> native <-- %s.%s %s", methodToCall->clazz->descriptor,
@@ -5377,13 +5377,12 @@ GOTO_TARGET(invokeMethod, bool methodCallRange, const Method* _methodToCall,
             (*methodToCall->nativeFunc)(newFp, &retval, methodToCall, self);
 
             if (self->interpBreak.ctl.subMode != 0) {
-                PC_FP_TO_SELF();
-                dvmReportPostNativeInvoke(methodToCall, self);
+                dvmReportPostNativeInvoke(methodToCall, self, fp);
             }
 
             /* pop frame off */
             dvmPopJniLocals(self, newSaveArea);
-            self->curFrame = fp;
+            self->interpSave.curFrame = fp;
 
             /*
              * If the native code threw an exception, or interpreted code

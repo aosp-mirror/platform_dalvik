@@ -197,7 +197,7 @@ dvmCompiler_TEMPLATE_RETURN:
 
     str     r2, [rSELF, #offThread_method]@ self->method = newSave->method
     ldr     r0, [r10, #offClassObject_pDvmDex] @ r0<- method->clazz->pDvmDex
-    str     rFP, [rSELF, #offThread_curFrame] @ self->curFrame = fp
+    str     rFP, [rSELF, #offThread_curFrame] @ curFrame = fp
     add     rPC, rPC, #6                @ publish new rPC (advance 6 bytes)
     str     r0, [rSELF, #offThread_methodClassDex]
     cmp     r8, #0                      @ check the break flags
@@ -267,7 +267,7 @@ dvmCompiler_TEMPLATE_INVOKE_METHOD_NO_OPT:
     str     r0, [rSELF, #offThread_method]    @ self->method = methodToCall
     str     r3, [rSELF, #offThread_methodClassDex] @ self->methodClassDex = ...
     mov     rFP, r1                         @ fp = newFp
-    str     rFP, [rSELF, #offThread_curFrame]  @ self->curFrame = newFp
+    str     rFP, [rSELF, #offThread_curFrame]  @ curFrame = newFp
 #if defined(TEMPLATE_INLINE_PROFILING)
     stmfd   sp!, {r0-r3}                    @ preserve r0-r3
     mov     r1, r6
@@ -325,7 +325,7 @@ dvmCompiler_TEMPLATE_INVOKE_METHOD_CHAIN:
     str     r0, [rSELF, #offThread_method]    @ self->method = methodToCall
     str     r3, [rSELF, #offThread_methodClassDex] @ self->methodClassDex = ...
     mov     rFP, r1                         @ fp = newFp
-    str     rFP, [rSELF, #offThread_curFrame]  @ self->curFrame = newFp
+    str     rFP, [rSELF, #offThread_curFrame]  @ curFrame = newFp
 #if defined(TEMPLATE_INLINE_PROFILING)
     stmfd   sp!, {r0-r2,lr}             @ preserve clobbered live registers
     mov     r1, r6
@@ -436,7 +436,7 @@ dvmCompiler_TEMPLATE_INVOKE_METHOD_NATIVE:
     @ go ahead and transfer control to the native code
     ldr     r9, [rSELF, #offThread_jniLocal_topCookie]@r9<-thread->localRef->...
     mov     r2, #0
-    str     r1, [rSELF, #offThread_curFrame]   @ self->curFrame = newFp
+    str     r1, [rSELF, #offThread_curFrame]   @ curFrame = newFp
     str     r2, [rSELF, #offThread_inJitCodeCache] @ not in the jit code cache
     str     r9, [r1, #(offStackSaveArea_localRefCookie - sizeofStackSaveArea)]
                                         @ newFp->localRefCookie=top
@@ -471,7 +471,7 @@ dvmCompiler_TEMPLATE_INVOKE_METHOD_NATIVE:
     ldr     r2, [r10, #offStackSaveArea_returnAddr] @ r2 = chaining cell ret
     ldr     r0, [r10, #offStackSaveArea_localRefCookie] @ r0<- saved->top
     ldr     r1, [rSELF, #offThread_exception] @ check for exception
-    str     rFP, [rSELF, #offThread_curFrame]  @ self->curFrame = fp
+    str     rFP, [rSELF, #offThread_curFrame]  @ curFrame = fp
     cmp     r1, #0                      @ null?
     str     r0, [rSELF, #offThread_jniLocal_topCookie] @ new top <- old top
     ldr     r0, [rFP, #(offStackSaveArea_currentPc - sizeofStackSaveArea)]
@@ -1266,7 +1266,7 @@ dvmCompiler_TEMPLATE_RETURN_PROF:
 
     str     r2, [rSELF, #offThread_method]@ self->method = newSave->method
     ldr     r0, [r10, #offClassObject_pDvmDex] @ r0<- method->clazz->pDvmDex
-    str     rFP, [rSELF, #offThread_curFrame] @ self->curFrame = fp
+    str     rFP, [rSELF, #offThread_curFrame] @ curFrame = fp
     add     rPC, rPC, #6                @ publish new rPC (advance 6 bytes)
     str     r0, [rSELF, #offThread_methodClassDex]
     cmp     r8, #0                      @ check the break flags
@@ -1340,7 +1340,7 @@ dvmCompiler_TEMPLATE_INVOKE_METHOD_NO_OPT_PROF:
     str     r0, [rSELF, #offThread_method]    @ self->method = methodToCall
     str     r3, [rSELF, #offThread_methodClassDex] @ self->methodClassDex = ...
     mov     rFP, r1                         @ fp = newFp
-    str     rFP, [rSELF, #offThread_curFrame]  @ self->curFrame = newFp
+    str     rFP, [rSELF, #offThread_curFrame]  @ curFrame = newFp
 #if defined(TEMPLATE_INLINE_PROFILING)
     stmfd   sp!, {r0-r3}                    @ preserve r0-r3
     mov     r1, r6
@@ -1402,7 +1402,7 @@ dvmCompiler_TEMPLATE_INVOKE_METHOD_CHAIN_PROF:
     str     r0, [rSELF, #offThread_method]    @ self->method = methodToCall
     str     r3, [rSELF, #offThread_methodClassDex] @ self->methodClassDex = ...
     mov     rFP, r1                         @ fp = newFp
-    str     rFP, [rSELF, #offThread_curFrame]  @ self->curFrame = newFp
+    str     rFP, [rSELF, #offThread_curFrame]  @ curFrame = newFp
 #if defined(TEMPLATE_INLINE_PROFILING)
     stmfd   sp!, {r0-r2,lr}             @ preserve clobbered live registers
     mov     r1, r6
@@ -1521,7 +1521,7 @@ dvmCompiler_TEMPLATE_INVOKE_METHOD_NATIVE_PROF:
     @ go ahead and transfer control to the native code
     ldr     r9, [rSELF, #offThread_jniLocal_topCookie]@r9<-thread->localRef->...
     mov     r2, #0
-    str     r1, [rSELF, #offThread_curFrame]   @ self->curFrame = newFp
+    str     r1, [rSELF, #offThread_curFrame]   @ curFrame = newFp
     str     r2, [rSELF, #offThread_inJitCodeCache] @ not in the jit code cache
     str     r9, [r1, #(offStackSaveArea_localRefCookie - sizeofStackSaveArea)]
                                         @ newFp->localRefCookie=top
@@ -1556,7 +1556,7 @@ dvmCompiler_TEMPLATE_INVOKE_METHOD_NATIVE_PROF:
     ldr     r2, [r10, #offStackSaveArea_returnAddr] @ r2 = chaining cell ret
     ldr     r0, [r10, #offStackSaveArea_localRefCookie] @ r0<- saved->top
     ldr     r1, [rSELF, #offThread_exception] @ check for exception
-    str     rFP, [rSELF, #offThread_curFrame]  @ self->curFrame = fp
+    str     rFP, [rSELF, #offThread_curFrame]  @ curFrame = fp
     cmp     r1, #0                      @ null?
     str     r0, [rSELF, #offThread_jniLocal_topCookie] @ new top <- old top
     ldr     r0, [rFP, #(offStackSaveArea_currentPc - sizeofStackSaveArea)]
@@ -1594,7 +1594,7 @@ dvmCompiler_TEMPLATE_INVOKE_METHOD_NATIVE_PROF:
     mov     r2, #0
     ldr     r9, [rSELF, #offThread_jniLocal_topCookie]@r9<-thread->localRef->...
     str     r2, [rSELF, #offThread_inJitCodeCache] @ not in jit code cache
-    str     r1, [rSELF, #offThread_curFrame]   @ self->curFrame = newFp
+    str     r1, [rSELF, #offThread_curFrame]   @ curFrame = newFp
     str     r9, [r1, #(offStackSaveArea_localRefCookie - sizeofStackSaveArea)]
                                         @ newFp->localRefCookie=top
     ldrb    lr, [rSELF, #offThread_subMode]
@@ -1632,7 +1632,7 @@ dvmCompiler_TEMPLATE_INVOKE_METHOD_NATIVE_PROF:
     ldr     r2, [r10, #offStackSaveArea_returnAddr] @ r2 = chaining cell ret
     ldr     r0, [r10, #offStackSaveArea_localRefCookie] @ r0<- saved->top
     ldr     r1, [rSELF, #offThread_exception] @ check for exception
-    str     rFP, [rSELF, #offThread_curFrame]  @ self->curFrame = fp
+    str     rFP, [rSELF, #offThread_curFrame]  @ curFrame = fp
     cmp     r1, #0                      @ null?
     str     r0, [rSELF, #offThread_jniLocal_topCookie] @ new top <- old top
     ldr     r0, [r10, #offStackSaveArea_savedPc] @ reload rPC

@@ -36,7 +36,7 @@
 
     str     r2, [rSELF, #offThread_method]@ self->method = newSave->method
     ldr     r0, [r10, #offClassObject_pDvmDex] @ r0<- method->clazz->pDvmDex
-    str     rFP, [rSELF, #offThread_curFrame] @ self->curFrame = fp
+    str     rFP, [rSELF, #offThread_curFrame] @ curFrame = fp
     add     rPC, rPC, #6                @ publish new rPC (advance 6 bytes)
     str     r0, [rSELF, #offThread_methodClassDex]
     cmp     r8, #0                      @ check the break flags

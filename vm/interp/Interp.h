@@ -83,8 +83,8 @@ void dvmFlushBreakpoints(ClassObject* clazz);
  */
 void dvmCheckBefore(const u2 *dPC, u4 *fp, Thread* self);
 void dvmReportExceptionThrow(Thread* self, Object* exception);
-void dvmReportPreNativeInvoke(const Method* methodToCall, Thread* self);
-void dvmReportPostNativeInvoke(const Method* methodToCall, Thread* self);
+void dvmReportPreNativeInvoke(const Method* methodToCall, Thread* self, u4* fp);
+void dvmReportPostNativeInvoke(const Method* methodToCall, Thread* self, u4* fp);
 void dvmReportInvoke(Thread* self, const Method* methodToCall);
 void dvmReportReturn(Thread* self);
 

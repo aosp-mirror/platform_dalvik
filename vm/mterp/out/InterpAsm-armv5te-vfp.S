@@ -82,8 +82,8 @@ unspecified registers or condition codes.
 /* save/restore the PC and/or FP from the thread struct */
 #define LOAD_PC_FROM_SELF()     ldr     rPC, [rSELF, #offThread_pc]
 #define SAVE_PC_TO_SELF()       str     rPC, [rSELF, #offThread_pc]
-#define LOAD_FP_FROM_SELF()     ldr     rFP, [rSELF, #offThread_fp]
-#define SAVE_FP_TO_SELF()       str     rFP, [rSELF, #offThread_fp]
+#define LOAD_FP_FROM_SELF()     ldr     rFP, [rSELF, #offThread_curFrame]
+#define SAVE_FP_TO_SELF()       str     rFP, [rSELF, #offThread_curFrame]
 #define LOAD_PC_FP_FROM_SELF()  ldmia   rSELF, {rPC, rFP}
 #define SAVE_PC_FP_TO_SELF()    stmia   rSELF, {rPC, rFP}
 
@@ -26845,7 +26845,7 @@ common_invokeMethodNoRange:
     mov     rFP, r1                         @ fp = newFp
     GET_PREFETCHED_OPCODE(ip, r9)           @ extract prefetched opcode from r9
     mov     rINST, r9                       @ publish new rINST
-    str     r1, [rSELF, #offThread_curFrame]   @ self->curFrame = newFp
+    str     r1, [rSELF, #offThread_curFrame]   @ curFrame = newFp
     cmp     r0,#0
     bne     common_updateProfile
     GOTO_OPCODE(ip)                         @ jump to next instruction
@@ -26853,7 +26853,7 @@ common_invokeMethodNoRange:
     mov     rFP, r1                         @ fp = newFp
     GET_PREFETCHED_OPCODE(ip, r9)           @ extract prefetched opcode from r9
     mov     rINST, r9                       @ publish new rINST
-    str     r1, [rSELF, #offThread_curFrame]   @ self->curFrame = newFp
+    str     r1, [rSELF, #offThread_curFrame]   @ curFrame = newFp
     GOTO_OPCODE(ip)                         @ jump to next instruction
 #endif
 
@@ -26861,7 +26861,6 @@ common_invokeMethodNoRange:
     @ Profiling - record method entry.  r0: methodToCall
     stmfd   sp!, {r0-r3}                @ preserve r0-r3
     str     rPC, [rSELF, #offThread_pc] @ update interpSave.pc
-    str     rFP, [rSELF, #offThread_fp] @ update interpSave.fp
     mov     r1, r0
     mov     r0, rSELF
     bl      dvmReportInvoke             @ (self, method)
@@ -26873,7 +26872,7 @@ common_invokeMethodNoRange:
     @ r0=methodToCall, r1=newFp, r10=newSaveArea
     ldrb    lr, [rSELF, #offThread_subMode]
     ldr     r9, [rSELF, #offThread_jniLocal_topCookie]@r9<-thread->localRef->...
-    str     r1, [rSELF, #offThread_curFrame]   @ self->curFrame = newFp
+    str     r1, [rSELF, #offThread_curFrame]   @ curFrame = newFp
     str     r9, [r10, #offStackSaveArea_localRefCookie] @newFp->localRefCookie=top
     mov     r2, r0                      @ r2<- methodToCall
     mov     r0, r1                      @ r0<- newFp (points to args)
@@ -26901,7 +26900,7 @@ dalvik_mterp:
     @ equivalent to dvmPopJniLocals
     ldr     r0, [r10, #offStackSaveArea_localRefCookie] @ r0<- saved top
     ldr     r1, [rSELF, #offThread_exception] @ check for exception
-    str     rFP, [rSELF, #offThread_curFrame]  @ self->curFrame = fp
+    str     rFP, [rSELF, #offThread_curFrame]  @ curFrame = fp
     cmp     r1, #0                      @ null?
     str     r0, [rSELF, #offThread_jniLocal_topCookie] @ new top <- old top
     bne     common_exceptionThrown      @ no, handle exception
@@ -26913,11 +26912,10 @@ dalvik_mterp:
 11:
     @ r0=newFp, r1=&retval, r2=methodToCall, r3=self, lr=subModes
     stmfd   sp!, {r0-r3}                @ save all but subModes
-    str     rPC, [rSELF, #offThread_pc] @ update interpSave.pc
-    str     rFP, [rSELF, #offThread_fp] @ update interpSave.fp
     mov     r0, r2                      @ r0<- methodToCall
     mov     r1, rSELF
-    bl      dvmReportPreNativeInvoke    @ (methodToCall, self)
+    mov     r2, rFP
+    bl      dvmReportPreNativeInvoke    @ (methodToCall, self, fp)
     ldmfd   sp, {r0-r3}                 @ refresh.  NOTE: no sp autoincrement
 
     @ Call the native method
@@ -26928,10 +26926,10 @@ dalvik_mterp:
     ldmfd   sp!, {r0-r3}                @ r2<- methodToCall (others unneeded)
 
     @ Finish up any post-invoke subMode requirements
-    @ interpSave already up-to-date
     mov     r0, r2                      @ r0<- methodToCall
     mov     r1, rSELF
-    bl      dvmReportPostNativeInvoke   @ (methodToCall, self)
+    mov     r2, rFP
+    bl      dvmReportPostNativeInvoke   @ (methodToCall, self, fp)
     b       7b                          @ resume
 
 .LstackOverflow:    @ r0=methodToCall
@@ -27004,7 +27002,7 @@ common_returnFromMethod:
     PREFETCH_ADVANCE_INST(rINST, r9, 3) @ advance r9, update new rINST
     str     r2, [rSELF, #offThread_method]@ self->method = newSave->method
     ldr     r1, [r10, #offClassObject_pDvmDex]   @ r1<- method->clazz->pDvmDex
-    str     rFP, [rSELF, #offThread_curFrame]  @ self->curFrame = fp
+    str     rFP, [rSELF, #offThread_curFrame]  @ curFrame = fp
 #if defined(WITH_JIT)
     ldr     r10, [r0, #offStackSaveArea_returnAddr] @ r10 = saveArea->returnAddr
     mov     rPC, r9                     @ publish new rPC
@@ -27026,7 +27024,7 @@ common_returnFromMethod:
     @ On entry, r0: StackSaveArea
     ldr     r1, [r0, #offStackSaveArea_prevFrame]  @ r2<- prevFP
     str     rPC, [rSELF, #offThread_pc] @ update interpSave.pc
-    str     r1, [rSELF, #offThread_fp]   @ update interpSave.fp
+    str     r1, [rSELF, #offThread_curFrame]   @ update interpSave.curFrame
     mov     r0, rSELF
     bl      dvmReportReturn             @ (self)
     SAVEAREA_FROM_FP(r0, rFP)           @ restore StackSaveArea
@@ -27109,7 +27107,7 @@ common_exceptionThrown:
     add     sp, sp, #8                  @ restore stack
     bmi     .LnotCaughtLocally
 
-    /* adjust locals to match self->curFrame and updated PC */
+    /* adjust locals to match self->interpSave.curFrame and updated PC */
     SAVEAREA_FROM_FP(r1, rFP)           @ r1<- new save area
     ldr     r1, [r1, #offStackSaveArea_method] @ r1<- new method
     str     r1, [rSELF, #offThread_method]  @ self->method = new method
@@ -27135,7 +27133,7 @@ common_exceptionThrown:
     @ Manage debugger bookkeeping
 7:
     str     rPC, [rSELF, #offThread_pc]     @ update interpSave.pc
-    str     rFP, [rSELF, #offThread_fp]     @ update interpSave.fp
+    str     rFP, [rSELF, #offThread_curFrame]     @ update interpSave.curFrame
     mov     r0, rSELF                       @ arg0<- self
     mov     r1, r9                          @ arg1<- exception
     bl      dvmReportExceptionThrow         @ (self, exception)

@@ -21,7 +21,8 @@
  */
 #define PC_FP_TO_SELF()                                                    \
     self->interpSave.pc = pc;                                              \
-    self->interpSave.fp = fp;
+    self->interpSave.curFrame = fp;
+#define PC_TO_SELF() self->interpSave.pc = pc;
 
 /*
  * Instruction framing.  For a switch-oriented implementation this is

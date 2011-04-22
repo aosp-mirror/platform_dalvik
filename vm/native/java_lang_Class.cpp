@@ -536,7 +536,7 @@ static void Dalvik_java_lang_Class_newInstance(const u4* args, JValue* pResult)
      * constructor must be public or, if the caller is in the same package,
      * have package scope.
      */
-    ClassObject* callerClass = dvmGetCaller2Class(self->curFrame);
+    ClassObject* callerClass = dvmGetCaller2Class(self->interpSave.curFrame);
 
     if (!dvmCheckClassAccess(callerClass, clazz)) {
         LOGD("newInstance failed: %s not accessible to %s\n",

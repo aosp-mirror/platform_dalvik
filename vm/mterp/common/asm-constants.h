@@ -155,7 +155,7 @@ MTERP_OFFSET(offInlineOperation_func,   InlineOperation, func, 0)
 
 /* Thread fields */
 MTERP_OFFSET(offThread_pc,                Thread, interpSave.pc, 0)
-MTERP_OFFSET(offThread_fp,                Thread, interpSave.fp, 4)
+MTERP_OFFSET(offThread_curFrame,          Thread, interpSave.curFrame, 4)
 MTERP_OFFSET(offThread_method,            Thread, interpSave.method, 8)
 MTERP_OFFSET(offThread_methodClassDex,    Thread, interpSave.methodClassDex, 12)
 MTERP_OFFSET(offThread_bailPtr,           Thread, interpSave.bailPtr, 16)
@@ -168,25 +168,23 @@ MTERP_OFFSET(offThread_retval_i,          Thread, retval.i, 32)
 MTERP_OFFSET(offThread_retval_j,          Thread, retval.j, 32)
 MTERP_OFFSET(offThread_retval_l,          Thread, retval.l, 32)
 //40
-MTERP_OFFSET(offThread_cardTable,         Thread, cardTable, 40)
-MTERP_OFFSET(offThread_interpStackEnd,    Thread, interpStackEnd, 44)
-MTERP_OFFSET(offThread_curFrame,          Thread, curFrame, 48)
-MTERP_OFFSET(offThread_exception,         Thread, exception, 52)
-MTERP_OFFSET(offThread_debugIsMethodEntry, Thread, debugIsMethodEntry, 56)
-MTERP_OFFSET(offThread_interpStackSize,   Thread, interpStackSize, 60)
-MTERP_OFFSET(offThread_stackOverflowed,   Thread, stackOverflowed, 64)
 MTERP_OFFSET(offThread_breakFlags, \
-                               Thread, interpBreak.ctl.breakFlags, 72)
+                               Thread, interpBreak.ctl.breakFlags, 40)
 MTERP_OFFSET(offThread_subMode, \
-                               Thread, interpBreak.ctl.subMode, 73)
+                               Thread, interpBreak.ctl.subMode, 41)
 MTERP_OFFSET(offThread_suspendCount, \
-                               Thread, interpBreak.ctl.suspendCount, 74)
+                               Thread, interpBreak.ctl.suspendCount, 42)
 MTERP_OFFSET(offThread_dbgSuspendCount, \
-                               Thread, interpBreak.ctl.dbgSuspendCount, 75)
+                               Thread, interpBreak.ctl.dbgSuspendCount, 43)
 MTERP_OFFSET(offThread_curHandlerTable, \
-                               Thread, interpBreak.ctl.curHandlerTable, 76)
+                               Thread, interpBreak.ctl.curHandlerTable, 44)
+MTERP_OFFSET(offThread_cardTable,         Thread, cardTable, 48)
+MTERP_OFFSET(offThread_interpStackEnd,    Thread, interpStackEnd, 52)
+MTERP_OFFSET(offThread_exception,         Thread, exception, 60)
+MTERP_OFFSET(offThread_debugIsMethodEntry, Thread, debugIsMethodEntry, 64)
+MTERP_OFFSET(offThread_interpStackSize,   Thread, interpStackSize, 68)
+MTERP_OFFSET(offThread_stackOverflowed,   Thread, stackOverflowed, 72)
 MTERP_OFFSET(offThread_mainHandlerTable,  Thread, mainHandlerTable, 80)
-
 MTERP_OFFSET(offThread_singleStepCount,   Thread, singleStepCount, 88)
 
 #ifdef WITH_JIT

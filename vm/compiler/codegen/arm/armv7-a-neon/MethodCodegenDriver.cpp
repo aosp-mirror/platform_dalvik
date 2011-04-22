@@ -86,8 +86,8 @@ static void genMethodInflateAndPunt(CompilationUnit *cUnit, MIR *mir,
     storeWordDisp(cUnit, newStackSave, offsetof(StackSaveArea, method), method);
     /* thread->method = method */
     storeWordDisp(cUnit, r6SELF, offsetof(InterpSaveState, method), method);
-    /* thread->curFrame = current FP */
-    storeWordDisp(cUnit, r6SELF, offsetof(Thread, curFrame), r5FP);
+    /* thread->interpSave.curFrame = current FP */
+    storeWordDisp(cUnit, r6SELF, offsetof(Thread, interpSave.curFrame), r5FP);
     /* thread->methodClassDex = pDvmDex */
     storeWordDisp(cUnit, r6SELF, offsetof(InterpSaveState, methodClassDex),
                   pDvmDex);

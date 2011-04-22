@@ -87,7 +87,7 @@ static void visitThreadStack(RootVisitor *visitor, Thread *thread, void *arg)
     assert(thread != NULL);
     u4 threadId = thread->threadId;
     const StackSaveArea *saveArea;
-    for (u4 *fp = (u4 *)thread->curFrame;
+    for (u4 *fp = (u4 *)thread->interpSave.curFrame;
          fp != NULL;
          fp = (u4 *)saveArea->prevFrame) {
         Method *method;

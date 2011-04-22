@@ -1157,7 +1157,7 @@ static bool createFakeEntryFrame(Thread* thread)
      * Null out the "String[] args" argument.
      */
     assert(gDvm.methDalvikSystemNativeStart_main->registersSize == 1);
-    u4* framePtr = (u4*) thread->curFrame;
+    u4* framePtr = (u4*) thread->interpSave.curFrame;
     framePtr[0] = 0;
 
     return true;
@@ -2007,14 +2007,14 @@ void dvmDetachCurrentThread()
      * zero, while a JNI-attached thread will have the synthetic "stack
      * starter" native method at the top.
      */
-    int curDepth = dvmComputeExactFrameDepth(self->curFrame);
+    int curDepth = dvmComputeExactFrameDepth(self->interpSave.curFrame);
     if (curDepth != 0) {
         bool topIsNative = false;
 
         if (curDepth == 1) {
             /* not expecting a lingering break frame; just look at curFrame */
-            assert(!dvmIsBreakFrame((u4*)self->curFrame));
-            StackSaveArea* ssa = SAVEAREA_FROM_FP(self->curFrame);
+            assert(!dvmIsBreakFrame((u4*)self->interpSave.curFrame));
+            StackSaveArea* ssa = SAVEAREA_FROM_FP(self->interpSave.curFrame);
             if (dvmIsNativeMethod(ssa->method))
                 topIsNative = true;
         }

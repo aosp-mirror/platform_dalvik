@@ -6,7 +6,7 @@
 void dvmInterpretPortable(Thread* self)
 {
 #if defined(EASY_GDB)
-    StackSaveArea* debugSaveArea = SAVEAREA_FROM_FP(self->curFrame);
+    StackSaveArea* debugSaveArea = SAVEAREA_FROM_FP(self->interpSave.curFrame);
 #endif
 #if defined(WITH_TRACKREF_CHECKS)
     int debugTrackedRefStart = self->interpSave.debugTrackedRefStart;
@@ -34,7 +34,7 @@ void dvmInterpretPortable(Thread* self)
     /* copy state in */
     curMethod = self->interpSave.method;
     pc = self->interpSave.pc;
-    fp = self->interpSave.fp;
+    fp = self->interpSave.curFrame;
     retval = self->retval;   /* only need for kInterpEntryReturn? */
 
     methodClassDex = curMethod->clazz->pDvmDex;
@@ -59,7 +59,7 @@ void dvmInterpretPortable(Thread* self)
     if (self->debugIsMethodEntry) {
         ILOGD("|-- Now interpreting %s.%s", curMethod->clazz->descriptor,
                 curMethod->name);
-        DUMP_REGS(curMethod, self->interpSave.fp, false);
+        DUMP_REGS(curMethod, self->interpSave.curFrame, false);
     }
 #endif
 

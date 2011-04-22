@@ -1526,7 +1526,7 @@ static void scavengeThreadStack(Thread *thread)
     bool first = true;
 #endif
 
-    framePtr = (const u4 *)thread->curFrame;
+    framePtr = (const u4 *)thread->interpSave.curFrame;
     while (framePtr != NULL) {
         const StackSaveArea *saveArea;
         const Method *method;
@@ -1752,7 +1752,7 @@ static void pinThreadStack(const Thread *thread)
     Object *obj;
 
     saveArea = NULL;
-    framePtr = (const u4 *)thread->curFrame;
+    framePtr = (const u4 *)thread->interpSave.curFrame;
     for (; framePtr != NULL; framePtr = saveArea->prevFrame) {
         saveArea = SAVEAREA_FROM_FP(framePtr);
         method = (Method *)saveArea->method;

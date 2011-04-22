@@ -12,7 +12,7 @@
     mov     r2, #0
     ldr     r9, [rSELF, #offThread_jniLocal_topCookie]@r9<-thread->localRef->...
     str     r2, [rSELF, #offThread_inJitCodeCache] @ not in jit code cache
-    str     r1, [rSELF, #offThread_curFrame]   @ self->curFrame = newFp
+    str     r1, [rSELF, #offThread_curFrame]   @ curFrame = newFp
     str     r9, [r1, #(offStackSaveArea_localRefCookie - sizeofStackSaveArea)]
                                         @ newFp->localRefCookie=top
     ldrb    lr, [rSELF, #offThread_subMode]
@@ -50,7 +50,7 @@
     ldr     r2, [r10, #offStackSaveArea_returnAddr] @ r2 = chaining cell ret
     ldr     r0, [r10, #offStackSaveArea_localRefCookie] @ r0<- saved->top
     ldr     r1, [rSELF, #offThread_exception] @ check for exception
-    str     rFP, [rSELF, #offThread_curFrame]  @ self->curFrame = fp
+    str     rFP, [rSELF, #offThread_curFrame]  @ curFrame = fp
     cmp     r1, #0                      @ null?
     str     r0, [rSELF, #offThread_jniLocal_topCookie] @ new top <- old top
     ldr     r0, [r10, #offStackSaveArea_savedPc] @ reload rPC

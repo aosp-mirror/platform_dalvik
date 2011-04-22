@@ -392,7 +392,7 @@ CompilerMethodStats *dvmCompilerAnalyzeMethodBody(const Method *method,
 static bool filterMethodByCallGraph(Thread *thread, const char *curMethodName)
 {
     /* Crawl the Dalvik stack frames and compare the method name*/
-    StackSaveArea *ssaPtr = ((StackSaveArea *) thread->curFrame) - 1;
+    StackSaveArea *ssaPtr = ((StackSaveArea *) thread->interpSave.curFrame) - 1;
     while (ssaPtr != ((StackSaveArea *) NULL) - 1) {
         const Method *method = ssaPtr->method;
         if (method) {

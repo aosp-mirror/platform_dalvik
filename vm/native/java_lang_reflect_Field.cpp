@@ -71,7 +71,7 @@ static Field* validateFieldAccess(Object* obj, ClassObject* declaringClass,
         }
 
         ClassObject* callerClass =
-            dvmGetCaller2Class(dvmThreadSelf()->curFrame);
+            dvmGetCaller2Class(dvmThreadSelf()->interpSave.curFrame);
 
         /*
          * We need to check two things:

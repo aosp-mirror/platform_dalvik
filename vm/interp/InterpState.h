@@ -110,7 +110,7 @@ typedef enum InterpEntry {
 
 typedef struct InterpSaveState {
     const u2*       pc;         // Dalvik PC
-    u4*             fp;         // Dalvik frame pointer
+    u4*             curFrame;   // Dalvik frame pointer
     const Method    *method;    // Method being executed
     DvmDex*         methodClassDex;
     void*           bailPtr;

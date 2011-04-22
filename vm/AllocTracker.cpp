@@ -149,7 +149,7 @@ static void getStackFrames(Thread* self, AllocRecord* pRec)
     int stackDepth = 0;
     void* fp;
 
-    fp = self->curFrame;
+    fp = self->interpSave.curFrame;
 
     while ((fp != NULL) && (stackDepth < kMaxAllocRecordStackDepth)) {
         const StackSaveArea* saveArea = SAVEAREA_FROM_FP(fp);

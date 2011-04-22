@@ -123,13 +123,13 @@ Notes:
 .macro SAVE_PC_FP_TO_SELF _reg
     movl     rSELF,\_reg
     movl     rPC,offThread_pc(\_reg)
-    movl     rFP,offThread_fp(\_reg)
+    movl     rFP,offThread_curFrame(\_reg)
 .endm
 
 .macro LOAD_PC_FP_FROM_SELF
     movl    rSELF,rFP
     movl    offThread_pc(rFP),rPC
-    movl    offThread_fp(rFP),rFP
+    movl    offThread_curFrame(rFP),rFP
 .endm
 
 /* The interpreter assumes a properly aligned stack on entry, and

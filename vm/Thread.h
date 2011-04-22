@@ -125,24 +125,6 @@ typedef struct Thread {
      */
     JValue      retval;
 
-    u1*         cardTable;
-
-    /* current limit of stack; flexes for StackOverflowError */
-    const u1*   interpStackEnd;
-
-    /* FP of bottom-most (currently executing) stack frame on interp stack */
-    void*       curFrame;
-    /* current exception, or NULL if nothing pending */
-    Object*     exception;
-
-    bool        debugIsMethodEntry;
-    /* interpreter stack size; our stacks are fixed-length */
-    int         interpStackSize;
-    bool        stackOverflowed;
-
-    /* thread handle, as reported by pthread_self() */
-    pthread_t   handle;
-
     /*
      * interpBreak contains info about the interpreter mode, as well as
      * a count of the number of times the thread has been suspended.  When
@@ -161,6 +143,25 @@ typedef struct Thread {
      * sure it's even possible with the way mutexes are currently used.)
      */
     InterpBreak interpBreak;
+
+    u1*         cardTable;
+
+    /* current limit of stack; flexes for StackOverflowError */
+    const u1*   interpStackEnd;
+
+    /* FP of bottom-most (currently executing) stack frame on interp stack */
+    void*       XcurFrame;
+    /* current exception, or NULL if nothing pending */
+    Object*     exception;
+
+    bool        debugIsMethodEntry;
+    /* interpreter stack size; our stacks are fixed-length */
+    int         interpStackSize;
+    bool        stackOverflowed;
+
+    /* thread handle, as reported by pthread_self() */
+    pthread_t   handle;
+
 
 
     /* Assembly interpreter handler tables */

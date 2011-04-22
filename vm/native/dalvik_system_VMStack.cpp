@@ -29,7 +29,8 @@
 static void Dalvik_dalvik_system_VMStack_getCallingClassLoader(const u4* args,
     JValue* pResult)
 {
-    ClassObject* clazz = dvmGetCaller2Class(dvmThreadSelf()->curFrame);
+    ClassObject* clazz =
+        dvmGetCaller2Class(dvmThreadSelf()->interpSave.curFrame);
 
     UNUSED_PARAMETER(args);
 
@@ -46,7 +47,8 @@ static void Dalvik_dalvik_system_VMStack_getCallingClassLoader(const u4* args,
 static void Dalvik_dalvik_system_VMStack_getCallingClassLoader2(const u4* args,
     JValue* pResult)
 {
-    ClassObject* clazz = dvmGetCaller3Class(dvmThreadSelf()->curFrame);
+    ClassObject* clazz =
+        dvmGetCaller3Class(dvmThreadSelf()->interpSave.curFrame);
 
     UNUSED_PARAMETER(args);
 
@@ -63,7 +65,8 @@ static void Dalvik_dalvik_system_VMStack_getCallingClassLoader2(const u4* args,
 static void Dalvik_dalvik_system_VMStack_getStackClass2(const u4* args,
     JValue* pResult)
 {
-    ClassObject* clazz = dvmGetCaller3Class(dvmThreadSelf()->curFrame);
+    ClassObject* clazz =
+        dvmGetCaller3Class(dvmThreadSelf()->interpSave.curFrame);
 
     UNUSED_PARAMETER(args);
 
@@ -88,7 +91,7 @@ static void Dalvik_dalvik_system_VMStack_getClasses(const u4* args,
     /*
      * Get an array with the stack trace in it.
      */
-    void *fp = dvmThreadSelf()->curFrame;
+    void *fp = dvmThreadSelf()->interpSave.curFrame;
     size_t depth = dvmComputeExactFrameDepth(fp);
     UniquePtr<const Method*[]> methods(new const Method*[depth]);
     dvmFillStackTraceArray(fp, methods.get(), depth);

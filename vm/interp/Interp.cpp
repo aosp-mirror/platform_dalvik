@@ -537,10 +537,11 @@ bool dvmAddSingleStep(Thread* thread, int size, int depth)
      * on by PushLocalFrame, we want to use the topmost native method.
      */
     const StackSaveArea* saveArea;
-    void* fp;
-    void* prevFp = NULL;
+    u4* fp;
+    u4* prevFp = NULL;
 
-    for (fp = thread->curFrame; fp != NULL; fp = saveArea->prevFrame) {
+    for (fp = thread->interpSave.curFrame; fp != NULL;
+         fp = saveArea->prevFrame) {
         const Method* method;
 
         saveArea = SAVEAREA_FROM_FP(fp);
@@ -587,7 +588,8 @@ bool dvmAddSingleStep(Thread* thread, int size, int depth)
         pCtrl->pAddressSet
                 = dvmAddressSetForLine(saveArea->method, pCtrl->line);
     }
-    pCtrl->frameDepth = dvmComputeVagueFrameDepth(thread, thread->curFrame);
+    pCtrl->frameDepth =
+        dvmComputeVagueFrameDepth(thread, thread->interpSave.curFrame);
     pCtrl->active = true;
 
     LOGV("##### step init: thread=%p meth=%p '%s' line=%d frameDepth=%d depth=%s size=%s\n",
@@ -630,7 +632,7 @@ void dvmReportExceptionThrow(Thread* self, Object* exception)
         int offset = self->interpSave.pc - curMethod->insns;
         int catchRelPc = dvmFindCatchBlock(self, offset, exception,
                                            true, &catchFrame);
-        dvmDbgPostException(self->interpSave.fp, offset, catchFrame,
+        dvmDbgPostException(self->interpSave.curFrame, offset, catchFrame,
                             catchRelPc, exception);
     }
 }
@@ -649,10 +651,10 @@ void dvmReportInvoke(Thread* self, const Method* methodToCall)
  * The interpreter is preparing to do a native invoke. Handle any
  * special subMode requirements.  NOTE: for a native invoke,
  * dvmReportInvoke() and dvmReportPreNativeInvoke() will both
- * be called prior to the invoke.  All interpSave state must
- * be valid on entry.
+ * be called prior to the invoke.  fp is the Dalvik FP of the calling
+ * method.
  */
-void dvmReportPreNativeInvoke(const Method* methodToCall, Thread* self)
+void dvmReportPreNativeInvoke(const Method* methodToCall, Thread* self, u4* fp)
 {
 #if defined(WITH_JIT)
     /*
@@ -664,8 +666,7 @@ void dvmReportPreNativeInvoke(const Method* methodToCall, Thread* self)
     }
 #endif
     if (self->interpBreak.ctl.subMode & kSubModeDebuggerActive) {
-        Object* thisPtr = dvmGetThisPtr(self->interpSave.method,
-                                        self->interpSave.fp);
+        Object* thisPtr = dvmGetThisPtr(self->interpSave.method, fp);
         assert(thisPtr == NULL || dvmIsValidObject(thisPtr));
         dvmDbgPostLocationEvent(methodToCall, -1, thisPtr, DBG_METHOD_ENTRY);
     }
@@ -673,14 +674,13 @@ void dvmReportPreNativeInvoke(const Method* methodToCall, Thread* self)
 
 /*
  * The interpreter has returned from a native invoke. Handle any
- * special subMode requirements.  All interpSave state must be
- * valid on entry.
+ * special subMode requirements.  fp is the Dalvik FP of the calling
+ * method.
  */
-void dvmReportPostNativeInvoke(const Method* methodToCall, Thread* self)
+void dvmReportPostNativeInvoke(const Method* methodToCall, Thread* self, u4* fp)
 {
     if (self->interpBreak.ctl.subMode & kSubModeDebuggerActive) {
-        Object* thisPtr = dvmGetThisPtr(self->interpSave.method,
-                                        self->interpSave.fp);
+        Object* thisPtr = dvmGetThisPtr(self->interpSave.method, fp);
         assert(thisPtr == NULL || dvmIsValidObject(thisPtr));
         dvmDbgPostLocationEvent(methodToCall, -1, thisPtr, DBG_METHOD_EXIT);
     }
@@ -697,7 +697,7 @@ void dvmReportReturn(Thread* self)
 {
     TRACE_METHOD_EXIT(self, self->interpSave.method);
 #if defined(WITH_JIT)
-    if (dvmIsBreakFrame(self->interpSave.fp) &&
+    if (dvmIsBreakFrame(self->interpSave.curFrame) &&
         (self->interpBreak.ctl.subMode & kSubModeJitTraceBuild)) {
         dvmCheckJit(self->interpSave.pc, self);
     }
@@ -1766,7 +1766,7 @@ void dvmCheckBefore(const u2 *pc, u4 *fp, Thread* self)
                 dvmUnlockMutex(&self->callbackMutex);
                 // Update Thread structure
                 self->interpSave.pc = pc;
-                self->interpSave.fp = fp;
+                self->interpSave.curFrame = fp;
                 if (callback != NULL) {
                     // Do the callback
                     if (!callback(self,arg)) {
@@ -1948,7 +1948,7 @@ void dvmInterpret(Thread* self, const Method* method, JValue* pResult)
      * No need to initialize "retval".
      */
     self->interpSave.method = method;
-    self->interpSave.fp = (u4*) self->curFrame;
+    self->interpSave.curFrame = (u4*) self->interpSave.curFrame;
     self->interpSave.pc = method->insns;
 
     assert(!dvmIsNativeMethod(method));

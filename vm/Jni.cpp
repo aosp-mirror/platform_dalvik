@@ -144,7 +144,7 @@ The GC will scan all references in the table.
  * the Thread that can be altered by other threads (e.g. prev/next pointers).
  */
 static void computeStackSum(Thread* self) {
-    const u1* low = (const u1*)SAVEAREA_FROM_FP(self->curFrame);
+    const u1* low = (const u1*)SAVEAREA_FROM_FP(self->interpSave.curFrame);
     u4 crc = dvmInitCrc32();
     self->stackCrc = 0;
     crc = dvmComputeCrc32(crc, low, self->interpStackStart - low);
@@ -162,14 +162,14 @@ static void computeStackSum(Thread* self) {
  * less accurate but reduces the amount of code we have to touch with #ifdefs.
  */
 static void checkStackSum(Thread* self) {
-    const u1* low = (const u1*)SAVEAREA_FROM_FP(self->curFrame);
+    const u1* low = (const u1*)SAVEAREA_FROM_FP(self->interpSave.curFrame);
     u4 stackCrc = self->stackCrc;
     self->stackCrc = 0;
     u4 crc = dvmInitCrc32();
     crc = dvmComputeCrc32(crc, low, self->interpStackStart - low);
     if (crc != stackCrc) {
         const Method* meth = dvmGetCurrentJNIMethod();
-        if (dvmComputeExactFrameDepth(self->curFrame) == 1) {
+        if (dvmComputeExactFrameDepth(self->interpSave.curFrame) == 1) {
             LOGD("JNI: bad stack CRC (0x%08x) -- okay during init", stackCrc);
         } else if (strcmp(meth->name, "nativeLoad") == 0 &&
                 (strcmp(meth->clazz->descriptor, "Ljava/lang/Runtime;") == 0)) {
@@ -378,7 +378,7 @@ static jobject addLocalReference(JNIEnv* env, Object* obj) {
     }
 
     IndirectRefTable* pRefTable = getLocalRefTable(env);
-    void* curFrame = ((JNIEnvExt*)env)->self->curFrame;
+    void* curFrame = ((JNIEnvExt*)env)->self->interpSave.curFrame;
     u4 cookie = SAVEAREA_FROM_FP(curFrame)->xtra.localRefCookie;
     jobject jobj = (jobject) dvmAddToIndirectRefTable(pRefTable, cookie, obj);
     if (jobj == NULL) {
@@ -417,7 +417,8 @@ static void deleteLocalReference(JNIEnv* env, jobject jobj) {
 
     IndirectRefTable* pRefTable = getLocalRefTable(env);
     Thread* self = ((JNIEnvExt*)env)->self;
-    u4 cookie = SAVEAREA_FROM_FP(self->curFrame)->xtra.localRefCookie;
+    u4 cookie =
+        SAVEAREA_FROM_FP(self->interpSave.curFrame)->xtra.localRefCookie;
 
     if (!dvmRemoveFromIndirectRefTable(pRefTable, cookie, jobj)) {
         /*
@@ -844,7 +845,7 @@ void dvmUseJNIBridge(Method* method, void* func) {
 const Method* dvmGetCurrentJNIMethod() {
     assert(dvmThreadSelf() != NULL);
 
-    void* fp = dvmThreadSelf()->curFrame;
+    void* fp = dvmThreadSelf()->interpSave.curFrame;
     const Method* meth = SAVEAREA_FROM_FP(fp)->method;
 
     assert(meth != NULL);

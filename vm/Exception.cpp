@@ -609,7 +609,7 @@ static int findCatchInMethod(Thread* self, const Method* method, int relPc,
 
     LOGVV("findCatchInMethod %s.%s excep=%s depth=%d\n",
         method->clazz->descriptor, method->name, excepClass->descriptor,
-        dvmComputeExactFrameDepth(self->curFrame));
+        dvmComputeExactFrameDepth(self->interpSave.curFrame));
 
     DvmDex* pDvmDex = method->clazz->pDvmDex;
     const DexCode* pCode = dvmGetMethodCode(method);
@@ -710,12 +710,12 @@ static int findCatchInMethod(Thread* self, const Method* method, int relPc,
  * before calling here and restore it after.
  *
  * Sets *newFrame to the frame pointer of the frame with the catch block.
- * If "scanOnly" is false, self->curFrame is also set to this value.
+ * If "scanOnly" is false, self->interpSave.curFrame is also set to this value.
  */
 int dvmFindCatchBlock(Thread* self, int relPc, Object* exception,
     bool scanOnly, void** newFrame)
 {
-    void* fp = self->curFrame;
+    u4* fp = self->interpSave.curFrame;
     int catchAddr = -1;
 
     assert(!dvmCheckException(self));
@@ -789,7 +789,7 @@ int dvmFindCatchBlock(Thread* self, int relPc, Object* exception,
     }
 
     if (!scanOnly)
-        self->curFrame = fp;
+        self->interpSave.curFrame = fp;
 
     /*
      * The class resolution in findCatchInMethod() could cause an exception.
@@ -831,7 +831,7 @@ void* dvmFillInStackTraceInternal(Thread* thread, bool wantObject, size_t* pCoun
 
     if (pCount != NULL)
         *pCount = 0;
-    fp = thread->curFrame;
+    fp = thread->interpSave.curFrame;
 
     assert(thread == dvmThreadSelf() || dvmIsSuspended(thread));
 

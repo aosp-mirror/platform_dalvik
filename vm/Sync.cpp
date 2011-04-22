@@ -276,7 +276,7 @@ static void logContentionEvent(Thread *self, u4 waitMs, u4 samplePercent,
     size_t len;
     int fd;
 
-    saveArea = SAVEAREA_FROM_FP(self->curFrame);
+    saveArea = SAVEAREA_FROM_FP(self->interpSave.curFrame);
     meth = saveArea->method;
     cp = eventBuffer;
 
@@ -386,9 +386,10 @@ static void lockMonitor(Thread* self, Monitor* mon)
         const StackSaveArea *saveArea;
         const Method *meth;
         mon->ownerLineNumber = 0;
-        if (self->curFrame == NULL) {
+        if (self->interpSave.curFrame == NULL) {
             mon->ownerFileName = "no_frame";
-        } else if ((saveArea = SAVEAREA_FROM_FP(self->curFrame)) == NULL) {
+        } else if ((saveArea =
+                   SAVEAREA_FROM_FP(self->interpSave.curFrame)) == NULL) {
             mon->ownerFileName = "no_save_area";
         } else if ((meth = saveArea->method) == NULL) {
             mon->ownerFileName = "no_method";

@@ -172,7 +172,7 @@ void dvmLogExceptionStackTrace(void);
  * "*newFrame" gets a copy of the new frame pointer.
  *
  * If "doUnroll" is set, we unroll "thread"s stack as we go (and update
- * self->curFrame with the same value as in *newFrame).
+ * self->interpSave.curFrame with the same value as in *newFrame).
  *
  * Returns the offset to the catch code on success, or -1 if we couldn't
  * find a catcher.

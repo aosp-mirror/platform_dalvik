@@ -406,7 +406,7 @@ static inline bool checkForNullExportPC(Object* obj, u4* fp, const u2* pc)
  */
 #define retval                  self->retval
 #define pc                      self->interpSave.pc
-#define fp                      self->interpSave.fp
+#define fp                      self->interpSave.curFrame
 #define curMethod               self->interpSave.method
 #define methodClassDex          self->interpSave.methodClassDex
 #define debugTrackedRefStart    self->interpSave.debugTrackedRefStart
@@ -426,6 +426,7 @@ static inline bool checkForNullExportPC(Object* obj, u4* fp, const u2* pc)
  * the interpSave vars directly, so this is a nop for stubs.
  */
 #define PC_FP_TO_SELF()
+#define PC_TO_SELF()
 
 /*
  * Opcode handler framing macros.  Here, each opcode is a separate function

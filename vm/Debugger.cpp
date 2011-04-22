@@ -2073,7 +2073,7 @@ int dvmDbgGetThreadFrameCount(ObjectId threadId)
     dvmLockThreadList(NULL);
     thread = threadObjToThread(threadObj);
     if (thread != NULL) {
-        count = dvmComputeExactFrameDepth(thread->curFrame);
+        count = dvmComputeExactFrameDepth(thread->interpSave.curFrame);
     }
     dvmUnlockThreadList();
 
@@ -2099,7 +2099,7 @@ bool dvmDbgGetThreadFrame(ObjectId threadId, int num, FrameId* pFrameId,
     if (thread == NULL)
         goto bail;
 
-    framePtr = thread->curFrame;
+    framePtr = thread->interpSave.curFrame;
     count = 0;
     while (framePtr != NULL) {
         const StackSaveArea* saveArea = SAVEAREA_FROM_FP(framePtr);

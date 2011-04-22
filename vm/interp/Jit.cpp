@@ -109,9 +109,8 @@ void* dvmSelfVerificationSaveState(const u2* pc, u4* fp,
     shadowSpace->shadowFP = shadowSpace->registerSpace +
                             shadowSpace->registerSpaceSize - postBytes/4;
 
-    self->interpSave.fp = (u4*)shadowSpace->shadowFP;
+    self->interpSave.curFrame = (u4*)shadowSpace->shadowFP;
     self->interpStackEnd = (u1*)shadowSpace->registerSpace;
-    self->curFrame = self->interpSave.fp;
 
     // Create a copy of the stack
     memcpy(((char*)shadowSpace->shadowFP)-preBytes, ((char*)fp)-preBytes,
@@ -163,8 +162,7 @@ void* dvmSelfVerificationRestoreState(const u2* pc, u4* fp,
 
     /* Restore state before returning */
     self->interpSave.pc = shadowSpace->startPC;
-    self->interpSave.fp = shadowSpace->fp;
-    self->curFrame = self->interpSave.fp;
+    self->interpSave.curFrame = shadowSpace->fp;
     self->interpSave.method = shadowSpace->method;
     self->interpSave.methodClassDex = shadowSpace->methodClassDex;
     self->retval = shadowSpace->retval;
@@ -187,16 +185,17 @@ static void selfVerificationPrintRegisters(int* addr, int* addrRef,
 static void selfVerificationDumpState(const u2* pc, Thread* self)
 {
     ShadowSpace* shadowSpace = self->shadowSpace;
-    StackSaveArea* stackSave = SAVEAREA_FROM_FP(self->curFrame);
+    StackSaveArea* stackSave = SAVEAREA_FROM_FP(self->interpSave.curFrame);
     int frameBytes = (int) shadowSpace->registerSpace +
                      shadowSpace->registerSpaceSize*4 -
                      (int) shadowSpace->shadowFP;
     int localRegs = 0;
     int frameBytes2 = 0;
-    if ((uintptr_t)self->curFrame < (uintptr_t)shadowSpace->fp) {
+    if ((uintptr_t)self->interpSave.curFrame < (uintptr_t)shadowSpace->fp) {
         localRegs = (stackSave->method->registersSize -
                      stackSave->method->insSize)*4;
-        frameBytes2 = (int) shadowSpace->fp - (int) self->curFrame - localRegs;
+        frameBytes2 = (int) shadowSpace->fp -
+                      (int)self->interpSave.curFrame - localRegs;
     }
     LOGD("********** SHADOW STATE DUMP **********");
     LOGD("CurrentPC: 0x%x, Offset: 0x%04x", (int)pc,
@@ -206,7 +205,7 @@ static void selfVerificationDumpState(const u2* pc, Thread* self)
     LOGD("Dalvik PC: 0x%x endPC: 0x%x", (int)shadowSpace->startPC,
         (int)shadowSpace->endPC);
     LOGD("Interp FP: 0x%x endFP: 0x%x", (int)shadowSpace->fp,
-        (int)self->curFrame);
+        (int)self->interpSave.curFrame);
     LOGD("Shadow FP: 0x%x endFP: 0x%x", (int)shadowSpace->shadowFP,
         (int)shadowSpace->endShadowFP);
     LOGD("Frame1 Bytes: %d Frame2 Local: %d Bytes: %d", frameBytes,
@@ -219,7 +218,7 @@ static void selfVerificationDumpState(const u2* pc, Thread* self)
 static void selfVerificationDumpTrace(const u2* pc, Thread* self)
 {
     ShadowSpace* shadowSpace = self->shadowSpace;
-    StackSaveArea* stackSave = SAVEAREA_FROM_FP(self->curFrame);
+    StackSaveArea* stackSave = SAVEAREA_FROM_FP(self->interpSave.curFrame);
     int i, addr, offset;
     DecodedInstruction *decInsn;
 
@@ -326,13 +325,14 @@ void dvmCheckSelfVerification(const u2* pc, Thread* self)
             selfVerificationSpinLoop(shadowSpace);
         }
         /* Check new frame if it exists (invokes only) */
-        if ((uintptr_t)self->curFrame < (uintptr_t)shadowSpace->fp) {
-            StackSaveArea* stackSave = SAVEAREA_FROM_FP(self->curFrame);
+        if ((uintptr_t)self->interpSave.curFrame < (uintptr_t)shadowSpace->fp) {
+            StackSaveArea* stackSave =
+                SAVEAREA_FROM_FP(self->interpSave.curFrame);
             int localRegs = (stackSave->method->registersSize -
                              stackSave->method->insSize)*4;
             int frameBytes2 = (int) shadowSpace->fp -
-                              (int) self->curFrame - localRegs;
-            if (memcmp(((char*)self->curFrame)+localRegs,
+                              (int) self->interpSave.curFrame - localRegs;
+            if (memcmp(((char*)self->interpSave.curFrame)+localRegs,
                 ((char*)shadowSpace->endShadowFP)+localRegs, frameBytes2)) {
                 if (state == kSVSBackwardBranch) {
                     /*
@@ -347,14 +347,14 @@ void dvmCheckSelfVerification(const u2* pc, Thread* self)
                 selfVerificationDumpState(pc, self);
                 selfVerificationDumpTrace(pc, self);
                 LOGD("*** Interp Registers: addr: 0x%x l: %d bytes: %d",
-                    (int)self->curFrame, localRegs, frameBytes2);
-                selfVerificationPrintRegisters((int*)self->curFrame,
+                    (int)self->interpSave.curFrame, localRegs, frameBytes2);
+                selfVerificationPrintRegisters((int*)self->interpSave.curFrame,
                                                (int*)shadowSpace->endShadowFP,
                                                (frameBytes2+localRegs)/4);
                 LOGD("*** Shadow Registers: addr: 0x%x l: %d bytes: %d",
                     (int)shadowSpace->endShadowFP, localRegs, frameBytes2);
                 selfVerificationPrintRegisters((int*)shadowSpace->endShadowFP,
-                                               (int*)self->curFrame,
+                                               (int*)self->interpSave.curFrame,
                                                (frameBytes2+localRegs)/4);
                 selfVerificationSpinLoop(shadowSpace);
             }

@@ -393,7 +393,7 @@ common_invokeMethodNoRange:
     movl        offMethod_insns(%eax), rPC # rPC<- methodToCall->insns
     movl        $$1, offThread_debugIsMethodEntry(%ecx)
     movl        LOCAL1_OFFSET(%ebp), rFP # rFP<- newFP
-    movl        rFP, offThread_curFrame(%ecx) # self->curFrame<- newFP
+    movl        rFP, offThread_curFrame(%ecx) # curFrame<-newFP
     movl        offThread_curHandlerTable(%ecx),rIBASE
     FETCH_INST
     GOTO_NEXT                           # jump to methodToCall->insns
@@ -408,7 +408,6 @@ common_invokeMethodNoRange:
     SPILL_TMP1(%eax)                   # preserve methodToCall
     SPILL_TMP2(%edx)                   # preserve newSaveArea
     movl        rPC, offThread_pc(%ecx) # update interpSave.pc
-    movl        rFP, offThread_fp(%ecx) # update interpSave.fp
     movl        %ecx, OUT_ARG0(%esp)
     movl        %eax, OUT_ARG1(%esp)
     call        dvmReportInvoke        # (self, method)
@@ -427,7 +426,7 @@ common_invokeMethodNoRange:
     movl        rINST, offStackSaveArea_localRefCookie(%edx) # newSaveArea->localRefCookie<- top
     movl        %edx, LOCAL2_OFFSET(%ebp)  # save newSaveArea
     movl        LOCAL1_OFFSET(%ebp), rINST # rINST<- newFP
-    movl        rINST, offThread_curFrame(%ecx)  # self->curFrame<- newFP
+    movl        rINST, offThread_curFrame(%ecx)  # curFrame<- newFP
     cmpb        $$0, offThread_subMode(%ecx)  # Anything special going on?
     jne         11f                     # yes - handle it
     movl        %ecx, OUT_ARG3(%esp)    # push parameter self
@@ -441,7 +440,7 @@ common_invokeMethodNoRange:
     movl        rSELF, %eax             # %eax<- self
     movl        offStackSaveArea_localRefCookie(%ecx), %edx # %edx<- old top
     cmp         $$0, offThread_exception(%eax) # check for exception
-    movl        rFP, offThread_curFrame(%eax) # self->curFrame<- rFP
+    movl        rFP, offThread_curFrame(%eax) # curFrame<- rFP
     movl        %edx, offThread_jniLocal_topCookie(%eax) # new top <- old top
     jne         common_exceptionThrown  # handle exception
     movl        offThread_curHandlerTable(%eax),rIBASE
@@ -456,10 +455,10 @@ common_invokeMethodNoRange:
      */
     SPILL_TMP1(%eax)                    # save methodTocall
     movl        rPC, offThread_pc(%ecx)
-    movl        rFP, offThread_fp(%ecx)
     movl        %ecx, OUT_ARG0(%esp)
     movl        %eax, OUT_ARG1(%esp)
-    call        dvmReportPreNativeInvoke # (self, methodToCall)
+    movl        rFP, OUT_ARG2(%esp)
+    call        dvmReportPreNativeInvoke # (self, methodToCall, fp)
     UNSPILL_TMP1(%eax)                  # restore methodToCall
     movl        rSELF,%ecx              # restore self
 
@@ -475,7 +474,8 @@ common_invokeMethodNoRange:
     movl        rSELF, %ecx
     movl        %ecx, OUT_ARG0(%esp)
     movl        %eax, OUT_ARG1(%esp)
-    call        dvmReportPostNativeInvoke # (self, methodToCall)
+    movl        rFP, OUT_ARG2(%esp)
+    call        dvmReportPostNativeInvoke # (self, methodToCall, fp)
     jmp         7b                      # rejoin
 
 .LstackOverflow:    # eax=methodToCall
@@ -502,7 +502,7 @@ common_returnFromMethod:
 
     movl    offStackSaveArea_savedPc(%eax),rPC # pc<- saveArea->savedPC
     movl    rINST,offThread_method(%ecx)       # self->method = newSave->meethod
-    movl    rFP,offThread_curFrame(%ecx)       # self->curFrame = fp
+    movl    rFP,offThread_curFrame(%ecx)       # curFrame = fp
     movl    offMethod_clazz(rINST),%eax        # eax<- method->clazz
     movl    offThread_curHandlerTable(%ecx),rIBASE
     movl    offClassObject_pDvmDex(%eax),rINST # rINST<- method->clazz->pDvmDex
@@ -516,7 +516,7 @@ common_returnFromMethod:
      * Handle special subMode actions
      * On entry, rFP: prevFP, %ecx: self, %eax: saveArea
      */
-    movl     rFP, offThread_fp(%ecx)          # update interpSave.fp
+    movl     rFP, offThread_curFrame(%ecx)    # update interpSave.curFrame
     movl     rPC, offThread_pc(%ecx)          # update interpSave.pc
     movl     %ecx, OUT_ARG0(%esp)             # parameter self
     call     dvmReportReturn                  # (self)
@@ -537,7 +537,7 @@ common_returnFromMethod:
  */
 common_gotoBail:
     movl   rPC,offThread_pc(%ecx)     # export state to self
-    movl   rFP,offThread_fp(%ecx)
+    movl   rFP,offThread_curFrame(%ecx)
     movl   %ecx,OUT_ARG0(%esp)      # self in arg0
     movl   rINST,OUT_ARG1(%esp)     # changeInterp in arg1
     call   dvmMterpStdBail          # bail out....
@@ -550,7 +550,7 @@ common_gotoBail:
  common_resumeAfterGlueCall:
      movl  rSELF, %eax
      movl  offThread_pc(%eax),rPC
-     movl  offThread_fp(%eax),rFP
+     movl  offThread_curFrame(%eax),rFP
      movl  offThread_curHandlerTable(%eax),rIBASE
      FETCH_INST
      GOTO_NEXT
@@ -625,7 +625,7 @@ common_errArrayIndex:
 common_exceptionThrown:
     movl    rSELF,%ecx
     movl    rPC,offThread_pc(%ecx)
-    movl    rFP,offThread_fp(%ecx)
+    movl    rFP,offThread_curFrame(%ecx)
     movl    %ecx,OUT_ARG0(%esp)
     call    dvmMterp_exceptionThrown
     jmp     common_resumeAfterGlueCall
