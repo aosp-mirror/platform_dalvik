@@ -20,9 +20,7 @@ import com.android.dx.rop.annotation.Annotation;
 import com.android.dx.rop.annotation.AnnotationVisibility;
 import com.android.dx.rop.annotation.NameValuePair;
 import com.android.dx.rop.cst.Constant;
-import com.android.dx.rop.cst.CstAnnotation;
-import com.android.dx.rop.cst.CstArray;
-import com.android.dx.rop.cst.CstUtf8;
+import com.android.dx.rop.cst.CstString;
 import com.android.dx.util.ByteArrayAnnotatedOutput;
 import com.android.dx.util.AnnotatedOutput;
 
@@ -176,7 +174,7 @@ public final class AnnotationItem extends OffsettedItem {
         out.annotate(0, prefix + "type: " + annotation.getType().toHuman());
 
         for (NameValuePair pair : annotation.getNameValuePairs()) {
-            CstUtf8 name = pair.getName();
+            CstString name = pair.getName();
             Constant value = pair.getValue();
 
             out.annotate(0, prefix + name.toHuman() + ": " +

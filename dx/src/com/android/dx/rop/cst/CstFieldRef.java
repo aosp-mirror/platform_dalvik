@@ -72,8 +72,8 @@ public final class CstFieldRef extends CstMemberRef {
         }
 
         CstFieldRef otherField = (CstFieldRef) other;
-        CstUtf8 thisDescriptor = getNat().getDescriptor();
-        CstUtf8 otherDescriptor = otherField.getNat().getDescriptor();
+        CstString thisDescriptor = getNat().getDescriptor();
+        CstString otherDescriptor = otherField.getNat().getDescriptor();
         return thisDescriptor.compareTo(otherDescriptor);
     }
 }

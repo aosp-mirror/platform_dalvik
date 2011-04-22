@@ -17,8 +17,8 @@
 package com.android.dx.cf.iface;
 
 import com.android.dx.rop.cst.CstNat;
+import com.android.dx.rop.cst.CstString;
 import com.android.dx.rop.cst.CstType;
-import com.android.dx.rop.cst.CstUtf8;
 
 /**
  * Standard implementation of {@link Member}, which directly stores
@@ -94,12 +94,12 @@ public abstract class StdMember implements Member {
     }
 
     /** {@inheritDoc} */
-    public final CstUtf8 getName() {
+    public final CstString getName() {
         return nat.getName();
     }
 
     /** {@inheritDoc} */
-    public final CstUtf8 getDescriptor() {
+    public final CstString getDescriptor() {
         return nat.getDescriptor();
     }
 

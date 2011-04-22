@@ -18,7 +18,7 @@ package com.android.dx.gen;
 
 import com.android.dx.rop.cst.CstFieldRef;
 import com.android.dx.rop.cst.CstNat;
-import com.android.dx.rop.cst.CstUtf8;
+import com.android.dx.rop.cst.CstString;
 
 /**
  * A field.
@@ -39,7 +39,7 @@ public final class FieldId<D, V> {
         this.declaringType = declaringType;
         this.type = type;
         this.name = name;
-        this.nat = new CstNat(new CstUtf8(name), new CstUtf8(type.name));
+        this.nat = new CstNat(new CstString(name), new CstString(type.name));
         this.constant = new CstFieldRef(declaringType.constant, nat);
     }
 

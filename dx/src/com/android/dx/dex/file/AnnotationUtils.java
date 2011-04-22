@@ -26,7 +26,6 @@ import com.android.dx.rop.cst.CstKnownNull;
 import com.android.dx.rop.cst.CstMethodRef;
 import com.android.dx.rop.cst.CstString;
 import com.android.dx.rop.cst.CstType;
-import com.android.dx.rop.cst.CstUtf8;
 import com.android.dx.rop.type.Type;
 import com.android.dx.rop.type.TypeList;
 
@@ -67,13 +66,13 @@ public final class AnnotationUtils {
         CstType.intern(Type.intern("Ldalvik/annotation/Throws;"));
 
     /** {@code non-null;} the UTF-8 constant {@code "accessFlags"} */
-    private static final CstUtf8 ACCESS_FLAGS_UTF = new CstUtf8("accessFlags");
+    private static final CstString ACCESS_FLAGS_STRING = new CstString("accessFlags");
 
     /** {@code non-null;} the UTF-8 constant {@code "name"} */
-    private static final CstUtf8 NAME_UTF = new CstUtf8("name");
+    private static final CstString NAME_STRING = new CstString("name");
 
     /** {@code non-null;} the UTF-8 constant {@code "value"} */
-    private static final CstUtf8 VALUE_UTF = new CstUtf8("value");
+    private static final CstString VALUE_STRING = new CstString("value");
 
     /**
      * This class is uninstantiable.
@@ -91,7 +90,7 @@ public final class AnnotationUtils {
     public static Annotation makeAnnotationDefault(Annotation defaults) {
         Annotation result = new Annotation(ANNOTATION_DEFAULT_TYPE, SYSTEM);
 
-        result.put(new NameValuePair(VALUE_UTF, new CstAnnotation(defaults)));
+        result.put(new NameValuePair(VALUE_STRING, new CstAnnotation(defaults)));
         result.setImmutable();
         return result;
     }
@@ -105,7 +104,7 @@ public final class AnnotationUtils {
     public static Annotation makeEnclosingClass(CstType clazz) {
         Annotation result = new Annotation(ENCLOSING_CLASS_TYPE, SYSTEM);
 
-        result.put(new NameValuePair(VALUE_UTF, clazz));
+        result.put(new NameValuePair(VALUE_STRING, clazz));
         result.setImmutable();
         return result;
     }
@@ -119,7 +118,7 @@ public final class AnnotationUtils {
     public static Annotation makeEnclosingMethod(CstMethodRef method) {
         Annotation result = new Annotation(ENCLOSING_METHOD_TYPE, SYSTEM);
 
-        result.put(new NameValuePair(VALUE_UTF, method));
+        result.put(new NameValuePair(VALUE_STRING, method));
         result.setImmutable();
         return result;
     }
@@ -132,13 +131,12 @@ public final class AnnotationUtils {
      * @param accessFlags the original access flags
      * @return {@code non-null;} the annotation
      */
-    public static Annotation makeInnerClass(CstUtf8 name, int accessFlags) {
+    public static Annotation makeInnerClass(CstString name, int accessFlags) {
         Annotation result = new Annotation(INNER_CLASS_TYPE, SYSTEM);
-        Constant nameCst =
-            (name != null) ? new CstString(name) : CstKnownNull.THE_ONE;
+        Constant nameCst = (name != null) ? name : CstKnownNull.THE_ONE;
 
-        result.put(new NameValuePair(NAME_UTF, nameCst));
-        result.put(new NameValuePair(ACCESS_FLAGS_UTF,
+        result.put(new NameValuePair(NAME_STRING, nameCst));
+        result.put(new NameValuePair(ACCESS_FLAGS_STRING,
                         CstInteger.make(accessFlags)));
         result.setImmutable();
         return result;
@@ -153,7 +151,7 @@ public final class AnnotationUtils {
     public static Annotation makeMemberClasses(TypeList types) {
         CstArray array = makeCstArray(types);
         Annotation result = new Annotation(MEMBER_CLASSES_TYPE, SYSTEM);
-        result.put(new NameValuePair(VALUE_UTF, array));
+        result.put(new NameValuePair(VALUE_STRING, array));
         result.setImmutable();
         return result;
     }
@@ -164,7 +162,7 @@ public final class AnnotationUtils {
      * @param signature {@code non-null;} the signature string
      * @return {@code non-null;} the annotation
      */
-    public static Annotation makeSignature(CstUtf8 signature) {
+    public static Annotation makeSignature(CstString signature) {
         Annotation result = new Annotation(SIGNATURE_TYPE, SYSTEM);
 
         /*
@@ -215,7 +213,7 @@ public final class AnnotationUtils {
 
         list.setImmutable();
 
-        result.put(new NameValuePair(VALUE_UTF, new CstArray(list)));
+        result.put(new NameValuePair(VALUE_STRING, new CstArray(list)));
         result.setImmutable();
         return result;
     }
@@ -229,7 +227,7 @@ public final class AnnotationUtils {
     public static Annotation makeThrows(TypeList types) {
         CstArray array = makeCstArray(types);
         Annotation result = new Annotation(THROWS_TYPE, SYSTEM);
-        result.put(new NameValuePair(VALUE_UTF, array));
+        result.put(new NameValuePair(VALUE_STRING, array));
         result.setImmutable();
         return result;
     }

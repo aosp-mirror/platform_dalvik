@@ -23,8 +23,8 @@ import com.android.dx.cf.iface.ParseObserver;
 import com.android.dx.cf.iface.StdAttributeList;
 import com.android.dx.rop.cst.ConstantPool;
 import com.android.dx.rop.cst.CstNat;
+import com.android.dx.rop.cst.CstString;
 import com.android.dx.rop.cst.CstType;
-import com.android.dx.rop.cst.CstUtf8;
 import com.android.dx.util.ByteArray;
 import com.android.dx.util.Hex;
 
@@ -187,8 +187,8 @@ abstract /*package*/ class MemberListParser {
                 int accessFlags = bytes.getUnsignedShort(at);
                 int nameIdx = bytes.getUnsignedShort(at + 2);
                 int descIdx = bytes.getUnsignedShort(at + 4);
-                CstUtf8 name = (CstUtf8) pool.get(nameIdx);
-                CstUtf8 desc = (CstUtf8) pool.get(descIdx);
+                CstString name = (CstString) pool.get(nameIdx);
+                CstString desc = (CstString) pool.get(descIdx);
 
                 if (observer != null) {
                     observer.startParsingMember(bytes, at, name.getString(),

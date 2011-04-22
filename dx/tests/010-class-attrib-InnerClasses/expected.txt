@@ -32,7 +32,7 @@ attributes[0]:
     access_flags: public
   inner_class: type{Small}
     outer_class: (none)
-    name: utf8{"Small"}
+    name: string{"Small"}
     access_flags: private
   inner_class: type{Small}
     outer_class: type{Zorch}
@@ -40,7 +40,7 @@ attributes[0]:
     access_flags: protected
   inner_class: type{Zorch}
     outer_class: type{Small}
-    name: utf8{"Zorch"}
+    name: string{"Zorch"}
     access_flags: public|private|protected|static|final|interface|abstract|synthetic|annotation|enum|89e0
 end attributes[0]
 end classfile

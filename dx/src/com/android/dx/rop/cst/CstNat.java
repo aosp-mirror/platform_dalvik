@@ -28,14 +28,14 @@ public final class CstNat extends Constant {
      * wrapped primitives
      */
     public static final CstNat PRIMITIVE_TYPE_NAT =
-        new CstNat(new CstUtf8("TYPE"),
-                   new CstUtf8("Ljava/lang/Class;"));
+        new CstNat(new CstString("TYPE"),
+                   new CstString("Ljava/lang/Class;"));
 
     /** {@code non-null;} the name */
-    private final CstUtf8 name;
+    private final CstString name;
 
     /** {@code non-null;} the descriptor (type) */
-    private final CstUtf8 descriptor;
+    private final CstString descriptor;
 
     /**
      * Constructs an instance.
@@ -43,7 +43,7 @@ public final class CstNat extends Constant {
      * @param name {@code non-null;} the name
      * @param descriptor {@code non-null;} the descriptor
      */
-    public CstNat(CstUtf8 name, CstUtf8 descriptor) {
+    public CstNat(CstString name, CstString descriptor) {
         if (name == null) {
             throw new NullPointerException("name == null");
         }
@@ -110,7 +110,7 @@ public final class CstNat extends Constant {
      *
      * @return {@code non-null;} the name
      */
-    public CstUtf8 getName() {
+    public CstString getName() {
         return name;
     }
 
@@ -119,7 +119,7 @@ public final class CstNat extends Constant {
      *
      * @return {@code non-null;} the descriptor
      */
-    public CstUtf8 getDescriptor() {
+    public CstString getDescriptor() {
         return descriptor;
     }
 

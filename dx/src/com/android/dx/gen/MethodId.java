@@ -18,7 +18,7 @@ package com.android.dx.gen;
 
 import com.android.dx.rop.cst.CstMethodRef;
 import com.android.dx.rop.cst.CstNat;
-import com.android.dx.rop.cst.CstUtf8;
+import com.android.dx.rop.cst.CstString;
 import com.android.dx.rop.type.Prototype;
 import java.util.List;
 
@@ -43,7 +43,7 @@ public final class MethodId<D, R> {
         this.returnType = returnType;
         this.name = name;
         this.parameters = parameters;
-        this.nat = new CstNat(new CstUtf8(name), new CstUtf8(descriptor(false)));
+        this.nat = new CstNat(new CstString(name), new CstString(descriptor(false)));
         this.constant = new CstMethodRef(declaringType.constant, nat);
     }
 

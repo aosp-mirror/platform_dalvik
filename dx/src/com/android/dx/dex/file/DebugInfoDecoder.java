@@ -21,7 +21,7 @@ import com.android.dx.dex.code.DalvInsnList;
 import com.android.dx.dex.code.LocalList;
 import com.android.dx.dex.code.PositionList;
 import com.android.dx.rop.cst.CstMethodRef;
-import com.android.dx.rop.cst.CstUtf8;
+import com.android.dx.rop.cst.CstString;
 import com.android.dx.rop.type.Prototype;
 import com.android.dx.rop.type.StdTypeList;
 import com.android.dx.rop.type.Type;
@@ -112,7 +112,7 @@ public class DebugInfoDecoder {
         int idx = -1;
 
         try {
-            idx = file.getStringIds().indexOf(new CstUtf8("this"));
+            idx = file.getStringIds().indexOf(new CstString("this"));
         } catch (IllegalArgumentException ex) {
             /*
              * Silently tolerate not finding "this". It just means that

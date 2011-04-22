@@ -16,17 +16,17 @@
 
 package com.android.dx.rop.code;
 
-import com.android.dx.rop.cst.CstUtf8;
+import com.android.dx.rop.cst.CstString;
 
 /**
  * A local variable item: either a name or a signature or both.
  */
 public class LocalItem implements Comparable<LocalItem> {
     /** {@code null-ok;} local variable name */
-    private final CstUtf8 name;
+    private final CstString name;
 
     /** {@code null-ok;} local variable signature */
-    private final CstUtf8 signature;
+    private final CstString signature;
 
     /**
      * Make a new item. If both name and signature are null, null is returned.
@@ -37,7 +37,7 @@ public class LocalItem implements Comparable<LocalItem> {
      * @param signature {@code null-ok;} local variable signature
      * @return {@code non-null;} appropriate instance.
      */
-    public static LocalItem make(CstUtf8 name, CstUtf8 signature) {
+    public static LocalItem make(CstString name, CstString signature) {
         if (name == null && signature == null) {
             return null;
         }
@@ -51,7 +51,7 @@ public class LocalItem implements Comparable<LocalItem> {
      * @param name {@code null-ok;} local variable name
      * @param signature {@code null-ok;} local variable signature
      */
-    private LocalItem(CstUtf8 name, CstUtf8 signature) {
+    private LocalItem(CstString name, CstString signature) {
         this.name = name;
         this.signature = signature;
     }
@@ -75,7 +75,7 @@ public class LocalItem implements Comparable<LocalItem> {
      * @return negative integer, zero, or positive integer in accordance
      * with Comparable.compareTo()
      */
-    private static int compareHandlesNulls(CstUtf8 a, CstUtf8 b) {
+    private static int compareHandlesNulls(CstString a, CstString b) {
         if (a == b) {
             return 0;
         } else if (a == null) {
@@ -128,7 +128,7 @@ public class LocalItem implements Comparable<LocalItem> {
      *
      * @return {@code null-ok;} name
      */
-    public CstUtf8 getName() {
+    public CstString getName() {
         return name;
     }
 
@@ -137,7 +137,7 @@ public class LocalItem implements Comparable<LocalItem> {
      *
      * @return {@code null-ok;} signature
      */
-    public CstUtf8 getSignature() {
+    public CstString getSignature() {
         return signature;
     }
 }

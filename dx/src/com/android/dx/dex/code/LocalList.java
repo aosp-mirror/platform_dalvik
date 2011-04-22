@@ -19,7 +19,7 @@ package com.android.dx.dex.code;
 import com.android.dx.rop.code.RegisterSpec;
 import com.android.dx.rop.code.RegisterSpecSet;
 import com.android.dx.rop.cst.CstType;
-import com.android.dx.rop.cst.CstUtf8;
+import com.android.dx.rop.cst.CstString;
 import com.android.dx.rop.type.Type;
 import com.android.dx.util.FixedSizeList;
 
@@ -236,7 +236,7 @@ public final class LocalList extends FixedSizeList {
          *
          * @return {@code null-ok;} the variable name
          */
-        public CstUtf8 getName() {
+        public CstString getName() {
             return spec.getLocalItem().getName();
         }
 
@@ -245,7 +245,7 @@ public final class LocalList extends FixedSizeList {
          *
          * @return {@code null-ok;} the variable signature
          */
-        public CstUtf8 getSignature() {
+        public CstString getSignature() {
             return spec.getLocalItem().getSignature();
         }
 

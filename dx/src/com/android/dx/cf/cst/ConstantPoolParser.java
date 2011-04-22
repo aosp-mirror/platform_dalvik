@@ -16,6 +16,17 @@
 
 package com.android.dx.cf.cst;
 
+import static com.android.dx.cf.cst.ConstantTags.CONSTANT_Class;
+import static com.android.dx.cf.cst.ConstantTags.CONSTANT_Double;
+import static com.android.dx.cf.cst.ConstantTags.CONSTANT_Fieldref;
+import static com.android.dx.cf.cst.ConstantTags.CONSTANT_Float;
+import static com.android.dx.cf.cst.ConstantTags.CONSTANT_Integer;
+import static com.android.dx.cf.cst.ConstantTags.CONSTANT_InterfaceMethodref;
+import static com.android.dx.cf.cst.ConstantTags.CONSTANT_Long;
+import static com.android.dx.cf.cst.ConstantTags.CONSTANT_Methodref;
+import static com.android.dx.cf.cst.ConstantTags.CONSTANT_NameAndType;
+import static com.android.dx.cf.cst.ConstantTags.CONSTANT_String;
+import static com.android.dx.cf.cst.ConstantTags.CONSTANT_Utf8;
 import com.android.dx.cf.iface.ParseException;
 import com.android.dx.cf.iface.ParseObserver;
 import com.android.dx.rop.cst.Constant;
@@ -29,13 +40,11 @@ import com.android.dx.rop.cst.CstMethodRef;
 import com.android.dx.rop.cst.CstNat;
 import com.android.dx.rop.cst.CstString;
 import com.android.dx.rop.cst.CstType;
-import com.android.dx.rop.cst.CstUtf8;
 import com.android.dx.rop.cst.StdConstantPool;
 import com.android.dx.rop.type.Type;
 import com.android.dx.util.ByteArray;
 import com.android.dx.util.Hex;
-
-import static com.android.dx.cf.cst.ConstantTags.*;
+import java.util.BitSet;
 
 /**
  * Parser for a constant pool embedded in a class file.
@@ -126,10 +135,16 @@ public final class ConstantPoolParser {
             observer.changeIndent(1);
         }
 
+        /*
+         * Track the constant value's original string type. True if constants[i] was
+         * a CONSTANT_Utf8, false for any other type including CONSTANT_string.
+         */
+        BitSet wasUtf8 = new BitSet(offsets.length);
+
         for (int i = 1; i < offsets.length; i++) {
             int offset = offsets[i];
             if ((offset != 0) && (pool.getOrNull(i) == null)) {
-                parse0(i);
+                parse0(i, wasUtf8);
             }
         }
 
@@ -148,8 +163,10 @@ public final class ConstantPoolParser {
                         break;
                     }
                 }
-                observer.parsed(bytes, offset, nextOffset - offset,
-                                Hex.u2(i) + ": " + cst.toString());
+                String human = wasUtf8.get(i)
+                        ? Hex.u2(i) + ": utf8{\"" + cst.toHuman() + "\"}"
+                        : Hex.u2(i) + ": " + cst.toString();
+                observer.parsed(bytes, offset, nextOffset - offset, human);
             }
 
             observer.changeIndent(-1);
@@ -217,7 +234,7 @@ public final class ConstantPoolParser {
      * @param idx which constant
      * @return {@code non-null;} the parsed constant
      */
-    private Constant parse0(int idx) {
+    private Constant parse0(int idx, BitSet wasUtf8) {
         Constant cst = pool.getOrNull(idx);
         if (cst != null) {
             return cst;
@@ -230,6 +247,7 @@ public final class ConstantPoolParser {
             switch (tag) {
                 case CONSTANT_Utf8: {
                     cst = parseUtf8(at);
+                    wasUtf8.set(idx);
                     break;
                 }
                 case CONSTANT_Integer: {
@@ -254,45 +272,44 @@ public final class ConstantPoolParser {
                 }
                 case CONSTANT_Class: {
                     int nameIndex = bytes.getUnsignedShort(at + 1);
-                    CstUtf8 name = (CstUtf8) parse0(nameIndex);
+                    CstString name = (CstString) parse0(nameIndex, wasUtf8);
                     cst = new CstType(Type.internClassName(name.getString()));
                     break;
                 }
                 case CONSTANT_String: {
                     int stringIndex = bytes.getUnsignedShort(at + 1);
-                    CstUtf8 string = (CstUtf8) parse0(stringIndex);
-                    cst = new CstString(string);
+                    cst = parse0(stringIndex, wasUtf8);
                     break;
                 }
                 case CONSTANT_Fieldref: {
                     int classIndex = bytes.getUnsignedShort(at + 1);
-                    CstType type = (CstType) parse0(classIndex);
+                    CstType type = (CstType) parse0(classIndex, wasUtf8);
                     int natIndex = bytes.getUnsignedShort(at + 3);
-                    CstNat nat = (CstNat) parse0(natIndex);
+                    CstNat nat = (CstNat) parse0(natIndex, wasUtf8);
                     cst = new CstFieldRef(type, nat);
                     break;
                 }
                 case CONSTANT_Methodref: {
                     int classIndex = bytes.getUnsignedShort(at + 1);
-                    CstType type = (CstType) parse0(classIndex);
+                    CstType type = (CstType) parse0(classIndex, wasUtf8);
                     int natIndex = bytes.getUnsignedShort(at + 3);
-                    CstNat nat = (CstNat) parse0(natIndex);
+                    CstNat nat = (CstNat) parse0(natIndex, wasUtf8);
                     cst = new CstMethodRef(type, nat);
                     break;
                 }
                 case CONSTANT_InterfaceMethodref: {
                     int classIndex = bytes.getUnsignedShort(at + 1);
-                    CstType type = (CstType) parse0(classIndex);
+                    CstType type = (CstType) parse0(classIndex, wasUtf8);
                     int natIndex = bytes.getUnsignedShort(at + 3);
-                    CstNat nat = (CstNat) parse0(natIndex);
+                    CstNat nat = (CstNat) parse0(natIndex, wasUtf8);
                     cst = new CstInterfaceMethodRef(type, nat);
                     break;
                 }
                 case CONSTANT_NameAndType: {
                     int nameIndex = bytes.getUnsignedShort(at + 1);
-                    CstUtf8 name = (CstUtf8) parse0(nameIndex);
+                    CstString name = (CstString) parse0(nameIndex, wasUtf8);
                     int descriptorIndex = bytes.getUnsignedShort(at + 3);
-                    CstUtf8 descriptor = (CstUtf8) parse0(descriptorIndex);
+                    CstString descriptor = (CstString) parse0(descriptorIndex, wasUtf8);
                     cst = new CstNat(name, descriptor);
                     break;
                 }
@@ -318,7 +335,7 @@ public final class ConstantPoolParser {
      * @param at offset to the start of the constant (where the tag byte is)
      * @return {@code non-null;} the parsed value
      */
-    private CstUtf8 parseUtf8(int at) {
+    private CstString parseUtf8(int at) {
         int length = bytes.getUnsignedShort(at + 1);
 
         at += 3; // Skip to the data.
@@ -326,7 +343,7 @@ public final class ConstantPoolParser {
         ByteArray ubytes = bytes.slice(at, at + length);
 
         try {
-            return new CstUtf8(ubytes);
+            return new CstString(ubytes);
         } catch (IllegalArgumentException ex) {
             // Translate the exception
             throw new ParseException(ex);
