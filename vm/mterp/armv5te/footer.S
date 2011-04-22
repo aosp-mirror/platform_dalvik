@@ -485,7 +485,7 @@ common_invokeMethodJumbo:
  /* On entry: r0 is "Method* methodToCall, r9 is "this" */
 .LinvokeNewJumbo:
 #if defined(WITH_JIT)
-    ldrb    r1, [rSELF, #offThread_subMode]
+    ldrh    r1, [rSELF, #offThread_subMode]
     ands    r1, #kSubModeJitTraceBuild
     blne    save_callsiteinfo
 #endif
@@ -507,7 +507,7 @@ common_invokeMethodJumbo:
 common_invokeMethodRange:
 .LinvokeNewRange:
 #if defined(WITH_JIT)
-    ldrb    r1, [rSELF, #offThread_subMode]
+    ldrh    r1, [rSELF, #offThread_subMode]
     ands    r1, #kSubModeJitTraceBuild
     blne    save_callsiteinfo
 #endif
@@ -537,7 +537,7 @@ common_invokeMethodRange:
 common_invokeMethodNoRange:
 .LinvokeNewNoRange:
 #if defined(WITH_JIT)
-    ldrb    r1, [rSELF, #offThread_subMode]
+    ldrh    r1, [rSELF, #offThread_subMode]
     ands    r1, #kSubModeJitTraceBuild
     blne    save_callsiteinfo
 #endif
@@ -587,7 +587,7 @@ common_invokeMethodNoRange:
     ldr     r9, [rSELF, #offThread_interpStackEnd]    @ r9<- interpStackEnd
     sub     r3, r10, r3, lsl #2         @ r3<- bottom (newsave - outsSize)
     cmp     r3, r9                      @ bottom < interpStackEnd?
-    ldrb    lr, [rSELF, #offThread_subMode]
+    ldrh    lr, [rSELF, #offThread_subMode]
     ldr     r3, [r0, #offMethod_accessFlags] @ r3<- methodToCall->accessFlags
     blo     .LstackOverflow             @ yes, this frame will overflow stack
 
@@ -666,7 +666,7 @@ common_invokeMethodNoRange:
 .LinvokeNative:
     @ Prep for the native call
     @ r0=methodToCall, r1=newFp, r10=newSaveArea
-    ldrb    lr, [rSELF, #offThread_subMode]
+    ldrh    lr, [rSELF, #offThread_subMode]
     ldr     r9, [rSELF, #offThread_jniLocal_topCookie]@r9<-thread->localRef->...
     str     r1, [rSELF, #offThread_curFrame]   @ curFrame = newFp
     str     r9, [r10, #offStackSaveArea_localRefCookie] @newFp->localRefCookie=top
@@ -774,7 +774,7 @@ dalvik_mterp:
  */
 common_returnFromMethod:
 .LreturnNew:
-    ldrb    lr, [rSELF, #offThread_subMode]
+    ldrh    lr, [rSELF, #offThread_subMode]
     SAVEAREA_FROM_FP(r0, rFP)
     ldr     r9, [r0, #offStackSaveArea_savedPc] @ r9 = saveArea->savedPc
     cmp     lr, #0                      @ any special subMode handling needed?
@@ -861,7 +861,7 @@ common_exceptionThrown:
     mov     r1, rSELF                   @ r1<- self
     mov     r0, r9                      @ r0<- exception
     bl      dvmAddTrackedAlloc          @ don't let the exception be GCed
-    ldrb    r2, [rSELF, #offThread_subMode]  @ get subMode flags
+    ldrh    r2, [rSELF, #offThread_subMode]  @ get subMode flags
     mov     r3, #0                      @ r3<- NULL
     str     r3, [rSELF, #offThread_exception] @ self->exception = NULL
 
@@ -878,7 +878,7 @@ common_exceptionThrown:
     ldr     r1, [rSELF, #offThread_method] @ r1<- self->method
     mov     r0, rSELF                   @ r0<- self
     ldr     r1, [r1, #offMethod_insns]  @ r1<- method->insns
-    ldrb    lr, [rSELF, #offThread_subMode]  @ lr<- subMode flags
+    ldrh    lr, [rSELF, #offThread_subMode]  @ lr<- subMode flags
     mov     r2, r9                      @ r2<- exception
     sub     r1, rPC, r1                 @ r1<- pc - method->insns
     mov     r1, r1, asr #1              @ r1<- offset in code units
@@ -996,7 +996,7 @@ common_exceptionThrown:
      *     r0:  field pointer (must preserve)
      */
 common_verifyField:
-    ldrb    r3, [rSELF, #offThread_subMode]  @ r3 <- submode byte
+    ldrh    r3, [rSELF, #offThread_subMode]  @ r3 <- submode byte
     ands    r3, #kSubModeJitTraceBuild
     bxeq    lr                          @ Not building trace, continue
     ldr     r1, [r10]                   @ r1<- reload resolved StaticField ptr

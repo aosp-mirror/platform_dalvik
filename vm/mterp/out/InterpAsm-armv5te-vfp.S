@@ -7297,7 +7297,7 @@ dalvik_inst:
      * swap if profiler/debuggger active.
      */
     /* [opt] execute-inline vAA, {vC, vD, vE, vF}, inline@BBBB */
-    ldrb    r2, [rSELF, #offThread_subMode]
+    ldrh    r2, [rSELF, #offThread_subMode]
     FETCH(r10, 1)                       @ r10<- BBBB
     EXPORT_PC()                         @ can throw
     ands    r2, #kSubModeDebugProfile   @ Any going on?
@@ -7331,7 +7331,7 @@ dalvik_inst:
      * us if an exception was thrown.
      */
     /* [opt] execute-inline/range {vCCCC..v(CCCC+AA-1)}, inline@BBBB */
-    ldrb    r2, [rSELF, #offThread_subMode]
+    ldrh    r2, [rSELF, #offThread_subMode]
     FETCH(r10, 1)                       @ r10<- BBBB
     EXPORT_PC()                         @ can throw
     ands    r2, #kSubModeDebugProfile   @ Any going on?
@@ -7367,7 +7367,7 @@ dalvik_inst:
     tst     r2, #CLASS_ISFINALIZABLE    @ is this class finalizable?
     bne     .LOP_INVOKE_OBJECT_INIT_RANGE_setFinal        @ yes, go
 .LOP_INVOKE_OBJECT_INIT_RANGE_finish:
-    ldrb    r1, [rSELF, #offThread_subMode]
+    ldrh    r1, [rSELF, #offThread_subMode]
     ands    r1, #kSubModeDebuggerActive @ debugger active?
     bne     .LOP_INVOKE_OBJECT_INIT_RANGE_debugger        @ Yes - skip optimization
     FETCH_ADVANCE_INST(2+1)       @ advance to next instr, load rINST
@@ -10432,7 +10432,7 @@ dalvik_inst:
     tst     r2, #CLASS_ISFINALIZABLE    @ is this class finalizable?
     bne     .LOP_INVOKE_OBJECT_INIT_JUMBO_setFinal        @ yes, go
 .LOP_INVOKE_OBJECT_INIT_JUMBO_finish:
-    ldrb    r1, [rSELF, #offThread_subMode]
+    ldrh    r1, [rSELF, #offThread_subMode]
     ands    r1, #kSubModeDebuggerActive @ debugger active?
     bne     .LOP_INVOKE_OBJECT_INIT_JUMBO_debugger        @ Yes - skip optimization
     FETCH_ADVANCE_INST(4+1)       @ advance to next instr, load rINST
@@ -10987,7 +10987,7 @@ dvmAsmSisterStart:
      * The JIT needs the class to be fully resolved before it can
      * include this instruction in a trace.
      */
-    ldrb    r1, [rSELF, #offThread_subMode]
+    ldrh    r1, [rSELF, #offThread_subMode]
     beq     common_exceptionThrown      @ yes, handle the exception
     ands    r1, #kSubModeJitTraceBuild  @ under construction?
     bne     .LOP_NEW_INSTANCE_jitCheck
@@ -12115,7 +12115,7 @@ dvmAsmSisterStart:
      * we need to keep this instruction out of it.
      * r10: &resolved_methodToCall
      */
-    ldrb    r2, [rSELF, #offThread_subMode]
+    ldrh    r2, [rSELF, #offThread_subMode]
     beq     common_exceptionThrown            @ null, handle exception
     ands    r2, #kSubModeJitTraceBuild        @ trace under construction?
     beq     common_invokeMethodNoRange     @ no (r0=method, r9="this")
@@ -12215,7 +12215,7 @@ dvmAsmSisterStart:
      * we need to keep this instruction out of it.
      * r10: &resolved_methodToCall
      */
-    ldrb    r2, [rSELF, #offThread_subMode]
+    ldrh    r2, [rSELF, #offThread_subMode]
     beq     common_exceptionThrown            @ null, handle exception
     ands    r2, #kSubModeJitTraceBuild        @ trace under construction?
     beq     common_invokeMethodRange     @ no (r0=method, r9="this")
@@ -12979,7 +12979,7 @@ d2l_doconv:
      * The JIT needs the class to be fully resolved before it can
      * include this instruction in a trace.
      */
-    ldrb    r1, [rSELF, #offThread_subMode]
+    ldrh    r1, [rSELF, #offThread_subMode]
     beq     common_exceptionThrown      @ yes, handle the exception
     ands    r1, #kSubModeJitTraceBuild  @ under construction?
     bne     .LOP_NEW_INSTANCE_JUMBO_jitCheck
@@ -14018,7 +14018,7 @@ d2l_doconv:
      * we need to keep this instruction out of it.
      * r10: &resolved_methodToCall
      */
-    ldrb    r2, [rSELF, #offThread_subMode]
+    ldrh    r2, [rSELF, #offThread_subMode]
     beq     common_exceptionThrown            @ null, handle exception
     ands    r2, #kSubModeJitTraceBuild        @ trace under construction?
     beq     common_invokeMethodJumboNoThis    @ no (r0=method, r9="this")
@@ -26689,7 +26689,7 @@ common_invokeMethodJumbo:
  /* On entry: r0 is "Method* methodToCall, r9 is "this" */
 .LinvokeNewJumbo:
 #if defined(WITH_JIT)
-    ldrb    r1, [rSELF, #offThread_subMode]
+    ldrh    r1, [rSELF, #offThread_subMode]
     ands    r1, #kSubModeJitTraceBuild
     blne    save_callsiteinfo
 #endif
@@ -26711,7 +26711,7 @@ common_invokeMethodJumbo:
 common_invokeMethodRange:
 .LinvokeNewRange:
 #if defined(WITH_JIT)
-    ldrb    r1, [rSELF, #offThread_subMode]
+    ldrh    r1, [rSELF, #offThread_subMode]
     ands    r1, #kSubModeJitTraceBuild
     blne    save_callsiteinfo
 #endif
@@ -26741,7 +26741,7 @@ common_invokeMethodRange:
 common_invokeMethodNoRange:
 .LinvokeNewNoRange:
 #if defined(WITH_JIT)
-    ldrb    r1, [rSELF, #offThread_subMode]
+    ldrh    r1, [rSELF, #offThread_subMode]
     ands    r1, #kSubModeJitTraceBuild
     blne    save_callsiteinfo
 #endif
@@ -26791,7 +26791,7 @@ common_invokeMethodNoRange:
     ldr     r9, [rSELF, #offThread_interpStackEnd]    @ r9<- interpStackEnd
     sub     r3, r10, r3, lsl #2         @ r3<- bottom (newsave - outsSize)
     cmp     r3, r9                      @ bottom < interpStackEnd?
-    ldrb    lr, [rSELF, #offThread_subMode]
+    ldrh    lr, [rSELF, #offThread_subMode]
     ldr     r3, [r0, #offMethod_accessFlags] @ r3<- methodToCall->accessFlags
     blo     .LstackOverflow             @ yes, this frame will overflow stack
 
@@ -26870,7 +26870,7 @@ common_invokeMethodNoRange:
 .LinvokeNative:
     @ Prep for the native call
     @ r0=methodToCall, r1=newFp, r10=newSaveArea
-    ldrb    lr, [rSELF, #offThread_subMode]
+    ldrh    lr, [rSELF, #offThread_subMode]
     ldr     r9, [rSELF, #offThread_jniLocal_topCookie]@r9<-thread->localRef->...
     str     r1, [rSELF, #offThread_curFrame]   @ curFrame = newFp
     str     r9, [r10, #offStackSaveArea_localRefCookie] @newFp->localRefCookie=top
@@ -26978,7 +26978,7 @@ dalvik_mterp:
  */
 common_returnFromMethod:
 .LreturnNew:
-    ldrb    lr, [rSELF, #offThread_subMode]
+    ldrh    lr, [rSELF, #offThread_subMode]
     SAVEAREA_FROM_FP(r0, rFP)
     ldr     r9, [r0, #offStackSaveArea_savedPc] @ r9 = saveArea->savedPc
     cmp     lr, #0                      @ any special subMode handling needed?
@@ -27065,7 +27065,7 @@ common_exceptionThrown:
     mov     r1, rSELF                   @ r1<- self
     mov     r0, r9                      @ r0<- exception
     bl      dvmAddTrackedAlloc          @ don't let the exception be GCed
-    ldrb    r2, [rSELF, #offThread_subMode]  @ get subMode flags
+    ldrh    r2, [rSELF, #offThread_subMode]  @ get subMode flags
     mov     r3, #0                      @ r3<- NULL
     str     r3, [rSELF, #offThread_exception] @ self->exception = NULL
 
@@ -27082,7 +27082,7 @@ common_exceptionThrown:
     ldr     r1, [rSELF, #offThread_method] @ r1<- self->method
     mov     r0, rSELF                   @ r0<- self
     ldr     r1, [r1, #offMethod_insns]  @ r1<- method->insns
-    ldrb    lr, [rSELF, #offThread_subMode]  @ lr<- subMode flags
+    ldrh    lr, [rSELF, #offThread_subMode]  @ lr<- subMode flags
     mov     r2, r9                      @ r2<- exception
     sub     r1, rPC, r1                 @ r1<- pc - method->insns
     mov     r1, r1, asr #1              @ r1<- offset in code units
@@ -27200,7 +27200,7 @@ common_exceptionThrown:
      *     r0:  field pointer (must preserve)
      */
 common_verifyField:
-    ldrb    r3, [rSELF, #offThread_subMode]  @ r3 <- submode byte
+    ldrh    r3, [rSELF, #offThread_subMode]  @ r3 <- submode byte
     ands    r3, #kSubModeJitTraceBuild
     bxeq    lr                          @ Not building trace, continue
     ldr     r1, [r10]                   @ r1<- reload resolved StaticField ptr

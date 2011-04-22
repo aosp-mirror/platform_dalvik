@@ -1618,7 +1618,7 @@ static void threadExitUncaughtException(Thread* self, Object* group)
 
     /* Remove this thread's suspendCount from global suspendCount sum */
     lockThreadSuspendCount();
-    dvmAddToSuspendCounts(self, -self->interpBreak.ctl.suspendCount, 0);
+    dvmAddToSuspendCounts(self, -self->suspendCount, 0);
     unlockThreadSuspendCount();
 }
 
@@ -2187,7 +2187,7 @@ void dvmSuspendThread(Thread* thread)
     dvmAddToSuspendCounts(thread, 1, 1);
 
     LOG_THREAD("threadid=%d: suspend++, now=%d\n",
-        thread->threadId, thread->interpBreak.ctl.suspendCount);
+        thread->threadId, thread->suspendCount);
     unlockThreadSuspendCount();
 
     waitForThreadSuspend(dvmThreadSelf(), thread);
@@ -2211,7 +2211,7 @@ void dvmResumeThread(Thread* thread)
     //assert(thread->handle != dvmJdwpGetDebugThread(gDvm.jdwpState));
 
     lockThreadSuspendCount();
-    if (thread->interpBreak.ctl.suspendCount > 0) {
+    if (thread->suspendCount > 0) {
         dvmAddToSuspendCounts(thread, -1, -1);
     } else {
         LOG_THREAD("threadid=%d:  suspendCount already zero\n",
@@ -2219,9 +2219,9 @@ void dvmResumeThread(Thread* thread)
     }
 
     LOG_THREAD("threadid=%d: suspend--, now=%d\n",
-        thread->threadId, thread->interpBreak.ctl.suspendCount);
+        thread->threadId, thread->suspendCount);
 
-    if (thread->interpBreak.ctl.suspendCount == 0) {
+    if (thread->suspendCount == 0) {
         dvmBroadcastCond(&gDvm.threadSuspendCountCond);
     }
 
@@ -2253,7 +2253,7 @@ void dvmSuspendSelf(bool jdwpActivity)
     /*
      * Suspend ourselves.
      */
-    assert(self->interpBreak.ctl.suspendCount > 0);
+    assert(self->suspendCount > 0);
     self->status = THREAD_SUSPENDED;
     LOG_THREAD("threadid=%d: self-suspending (dbg)\n", self->threadId);
 
@@ -2270,10 +2270,10 @@ void dvmSuspendSelf(bool jdwpActivity)
         dvmJdwpClearWaitForEventThread(gDvm.jdwpState);
     }
 
-    while (self->interpBreak.ctl.suspendCount != 0) {
+    while (self->suspendCount != 0) {
         dvmWaitCond(&gDvm.threadSuspendCountCond,
                     &gDvm.threadSuspendCountLock);
-        if (self->interpBreak.ctl.suspendCount != 0) {
+        if (self->suspendCount != 0) {
             /*
              * The condition was signaled but we're still suspended.  This
              * can happen if the debugger lets go while a SIGQUIT thread
@@ -2281,12 +2281,10 @@ void dvmSuspendSelf(bool jdwpActivity)
              * just long enough to try to grab the thread-suspend lock).
              */
             LOGD("threadid=%d: still suspended after undo (sc=%d dc=%d)\n",
-                self->threadId, self->interpBreak.ctl.suspendCount,
-                self->interpBreak.ctl.dbgSuspendCount);
+                self->threadId, self->suspendCount, self->dbgSuspendCount);
         }
     }
-    assert(self->interpBreak.ctl.suspendCount == 0 &&
-           self->interpBreak.ctl.dbgSuspendCount == 0);
+    assert(self->suspendCount == 0 && self->dbgSuspendCount == 0);
     self->status = THREAD_RUNNING;
     LOG_THREAD("threadid=%d: self-reviving (dbg), status=%d\n",
         self->threadId, self->status);
@@ -2562,7 +2560,7 @@ void dvmSuspendAllThreads(SuspendCause why)
      * This can happen when a couple of threads have simultaneous events
      * of interest to the debugger.
      */
-    //assert(self->interpBreak.ctl.suspendCount == 0);
+    //assert(self->suspendCount == 0);
 
     /*
      * Increment everybody's suspend count (except our own).
@@ -2613,10 +2611,8 @@ void dvmSuspendAllThreads(SuspendCause why)
         waitForThreadSuspend(self, thread);
 
         LOG_THREAD("threadid=%d:   threadid=%d status=%d sc=%d dc=%d\n",
-            self->threadId,
-            thread->threadId, thread->status,
-            thread->interpBreak.ctl.suspendCount,
-            thread->interpBreak.ctl.dbgSuspendCount);
+            self->threadId, thread->threadId, thread->status,
+            thread->suspendCount, thread->dbgSuspendCount);
     }
 
     dvmUnlockThreadList();
@@ -2657,7 +2653,7 @@ void dvmResumeAllThreads(SuspendCause why)
             continue;
         }
 
-        if (thread->interpBreak.ctl.suspendCount > 0) {
+        if (thread->suspendCount > 0) {
             dvmAddToSuspendCounts(thread, -1,
                                   (why == SUSPEND_FOR_DEBUG ||
                                   why == SUSPEND_FOR_DEBUG_EVENT)
@@ -2745,15 +2741,13 @@ void dvmUndoDebuggerSuspensions()
 
         /* debugger events don't suspend JDWP thread */
         if (thread->handle == dvmJdwpGetDebugThread(gDvm.jdwpState)) {
-            assert(thread->interpBreak.ctl.dbgSuspendCount == 0);
+            assert(thread->dbgSuspendCount == 0);
             continue;
         }
 
-        assert(thread->interpBreak.ctl.suspendCount >=
-               thread->interpBreak.ctl.dbgSuspendCount);
-        dvmAddToSuspendCounts(thread,
-                              -thread->interpBreak.ctl.dbgSuspendCount,
-                              -thread->interpBreak.ctl.dbgSuspendCount);
+        assert(thread->suspendCount >= thread->dbgSuspendCount);
+        dvmAddToSuspendCounts(thread, -thread->dbgSuspendCount,
+                              -thread->dbgSuspendCount);
     }
     unlockThreadSuspendCount();
     dvmUnlockThreadList();
@@ -2798,7 +2792,7 @@ bool dvmIsSuspended(const Thread* thread)
      *      we hold suspendCountLock).
      */
 
-    return (thread->interpBreak.ctl.suspendCount != 0 &&
+    return (thread->suspendCount != 0 &&
             thread->status != THREAD_RUNNING);
 }
 
@@ -2843,21 +2837,21 @@ void dvmWaitForSuspend(Thread* thread)
 static bool fullSuspendCheck(Thread* self)
 {
     assert(self != NULL);
-    assert(self->interpBreak.ctl.suspendCount >= 0);
+    assert(self->suspendCount >= 0);
 
     /*
      * Grab gDvm.threadSuspendCountLock.  This gives us exclusive write
-     * access to self->interpBreak.ctl.suspendCount.
+     * access to self->suspendCount.
      */
     lockThreadSuspendCount();   /* grab gDvm.threadSuspendCountLock */
 
-    bool needSuspend = (self->interpBreak.ctl.suspendCount != 0);
+    bool needSuspend = (self->suspendCount != 0);
     if (needSuspend) {
         LOG_THREAD("threadid=%d: self-suspending\n", self->threadId);
         ThreadStatus oldStatus = self->status;      /* should be RUNNING */
         self->status = THREAD_SUSPENDED;
 
-        while (self->interpBreak.ctl.suspendCount != 0) {
+        while (self->suspendCount != 0) {
             /*
              * Wait for wakeup signal, releasing lock.  The act of releasing
              * and re-acquiring the lock provides the memory barriers we
@@ -2866,8 +2860,7 @@ static bool fullSuspendCheck(Thread* self)
             dvmWaitCond(&gDvm.threadSuspendCountCond,
                     &gDvm.threadSuspendCountLock);
         }
-        assert(self->interpBreak.ctl.suspendCount == 0 &&
-               self->interpBreak.ctl.dbgSuspendCount == 0);
+        assert(self->suspendCount == 0 && self->dbgSuspendCount == 0);
         self->status = oldStatus;
         LOG_THREAD("threadid=%d: self-reviving, status=%d\n",
             self->threadId, self->status);
@@ -2885,7 +2878,7 @@ static bool fullSuspendCheck(Thread* self)
 bool dvmCheckSuspendPending(Thread* self)
 {
     assert(self != NULL);
-    if (self->interpBreak.ctl.suspendCount == 0) {
+    if (self->suspendCount == 0) {
         return false;
     } else {
         return fullSuspendCheck(self);
@@ -2967,7 +2960,7 @@ ThreadStatus dvmChangeStatus(Thread* self, ThreadStatus newStatus)
         volatile void* raw = reinterpret_cast<volatile void*>(&self->status);
         volatile int32_t* addr = reinterpret_cast<volatile int32_t*>(raw);
         android_atomic_acquire_store(newStatus, addr);
-        if (self->interpBreak.ctl.suspendCount != 0) {
+        if (self->suspendCount != 0) {
             fullSuspendCheck(self);
         }
     } else {
@@ -3378,8 +3371,8 @@ void dvmDumpThreadEx(const DebugOutputTarget* target, Thread* thread,
         );
     dvmPrintDebugMessage(target,
         "  | group=\"%s\" sCount=%d dsCount=%d obj=%p self=%p\n",
-        groupName, thread->interpBreak.ctl.suspendCount,
-        thread->interpBreak.ctl.dbgSuspendCount, thread->threadObj, thread);
+        groupName, thread->suspendCount, thread->dbgSuspendCount,
+        thread->threadObj, thread);
     dvmPrintDebugMessage(target,
         "  | sysTid=%d nice=%d sched=%d/%d cgrp=%s handle=%d\n",
         thread->systemTid, getpriority(PRIO_PROCESS, thread->systemTid),

@@ -14,7 +14,7 @@
      * swap if profiler/debuggger active.
      */
     /* [opt] execute-inline vAA, {vC, vD, vE, vF}, inline@BBBB */
-    ldrb    r2, [rSELF, #offThread_subMode]
+    ldrh    r2, [rSELF, #offThread_subMode]
     FETCH(r10, 1)                       @ r10<- BBBB
     EXPORT_PC()                         @ can throw
     ands    r2, #kSubModeDebugProfile   @ Any going on?

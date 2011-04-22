@@ -1597,7 +1597,7 @@ dvmCompiler_TEMPLATE_INVOKE_METHOD_NATIVE_PROF:
     str     r1, [rSELF, #offThread_curFrame]   @ curFrame = newFp
     str     r9, [r1, #(offStackSaveArea_localRefCookie - sizeofStackSaveArea)]
                                         @ newFp->localRefCookie=top
-    ldrb    lr, [rSELF, #offThread_subMode]
+    ldrh    lr, [rSELF, #offThread_subMode]
     SAVEAREA_FROM_FP(r10, r1)           @ r10<- new stack save area
 
     mov     r2, r0                      @ r2<- methodToCall

@@ -456,7 +456,7 @@ struct DvmGlobals {
     pthread_mutex_t _threadSuspendLock;
 
     /*
-     * Guards Thread->interpBreak.ctl.suspendCount for all threads, and
+     * Guards Thread->suspendCount for all threads, and
      * provides the lock for the condition variable that all suspended threads
      * sleep on (threadSuspendCountCond).
      *

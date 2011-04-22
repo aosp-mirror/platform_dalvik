@@ -90,10 +90,9 @@ void dvmSlayDaemons(void);
 typedef union InterpBreak {
     volatile int64_t   all;
     struct {
+        uint16_t   subMode;
         uint8_t    breakFlags;
-        uint8_t    subMode;
-        int8_t     suspendCount;
-        int8_t     dbgSuspendCount;
+        int8_t     unused;   /* for future expansion */
 #ifndef DVM_NO_ASM_INTERP
         void* curHandlerTable;
 #else
@@ -129,7 +128,10 @@ typedef struct Thread {
      * interpBreak contains info about the interpreter mode, as well as
      * a count of the number of times the thread has been suspended.  When
      * the count drops to zero, the thread resumes.
-     *
+     */
+    InterpBreak interpBreak;
+
+    /*
      * "dbgSuspendCount" is the portion of the suspend count that the
      * debugger is responsible for.  This has to be tracked separately so
      * that we can recover correctly if the debugger abruptly disconnects
@@ -142,7 +144,9 @@ typedef struct Thread {
      * Note the non-debug component will rarely be other than 1 or 0 -- (not
      * sure it's even possible with the way mutexes are currently used.)
      */
-    InterpBreak interpBreak;
+
+    volatile int suspendCount;
+    volatile int dbgSuspendCount;
 
     u1*         cardTable;
 
@@ -161,8 +165,6 @@ typedef struct Thread {
 
     /* thread handle, as reported by pthread_self() */
     pthread_t   handle;
-
-
 
     /* Assembly interpreter handler tables */
 #ifndef DVM_NO_ASM_INTERP

@@ -150,7 +150,7 @@ void dvmCompilerDrainQueue(void)
 
     dvmLockMutex(&gDvmJit.compilerLock);
     while (workQueueLength() != 0 && !gDvmJit.haltCompilerThread &&
-           self->interpBreak.ctl.suspendCount == 0) {
+           self->suspendCount == 0) {
         /*
          * Use timed wait here - more than one mutator threads may be blocked
          * but the compiler thread will only signal once when the queue is

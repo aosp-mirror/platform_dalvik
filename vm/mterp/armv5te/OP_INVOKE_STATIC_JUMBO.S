@@ -32,7 +32,7 @@
      * we need to keep this instruction out of it.
      * r10: &resolved_methodToCall
      */
-    ldrb    r2, [rSELF, #offThread_subMode]
+    ldrh    r2, [rSELF, #offThread_subMode]
     beq     common_exceptionThrown            @ null, handle exception
     ands    r2, #kSubModeJitTraceBuild        @ trace under construction?
     beq     common_invokeMethodJumboNoThis    @ no (r0=method, r9="this")

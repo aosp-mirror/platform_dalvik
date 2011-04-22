@@ -26306,7 +26306,7 @@ common_invokeMethodNoRange:
     movl        rPC, offStackSaveArea_savedPc(%edx) # newSaveArea->savedPc<- rPC
 
     /* Any special actions to take? */
-    cmpb        $0, offThread_subMode(%ecx)
+    cmpw        $0, offThread_subMode(%ecx)
     jne         2f                     # Yes - handle them
 1:
     testl       $ACC_NATIVE, offMethod_accessFlags(%eax) # check for native call
@@ -26358,7 +26358,7 @@ common_invokeMethodNoRange:
     movl        %edx, LOCAL2_OFFSET(%ebp)  # save newSaveArea
     movl        LOCAL1_OFFSET(%ebp), rINST # rINST<- newFP
     movl        rINST, offThread_curFrame(%ecx)  # curFrame<- newFP
-    cmpb        $0, offThread_subMode(%ecx)  # Anything special going on?
+    cmpw        $0, offThread_subMode(%ecx)  # Anything special going on?
     jne         11f                     # yes - handle it
     movl        %ecx, OUT_ARG3(%esp)    # push parameter self
     movl        %eax, OUT_ARG2(%esp)    # push parameter methodToCall
@@ -26424,7 +26424,7 @@ common_returnFromMethod:
     movl    rSELF,%ecx
     SAVEAREA_FROM_FP %eax                         # eax<- saveArea (old)
     movl    offStackSaveArea_prevFrame(%eax),rFP  # rFP<- prevFrame
-    cmpb    $0, offThread_subMode(%ecx)          # special action needed?
+    cmpw    $0, offThread_subMode(%ecx)          # special action needed?
     jne     19f                                   # go if so
 14:
     movl    (offStackSaveArea_method-sizeofStackSaveArea)(rFP),rINST

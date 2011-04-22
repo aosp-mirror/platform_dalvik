@@ -41,7 +41,7 @@
      * The JIT needs the class to be fully resolved before it can
      * include this instruction in a trace.
      */
-    ldrb    r1, [rSELF, #offThread_subMode]
+    ldrh    r1, [rSELF, #offThread_subMode]
     beq     common_exceptionThrown      @ yes, handle the exception
     ands    r1, #kSubModeJitTraceBuild  @ under construction?
     bne     .L${opcode}_jitCheck

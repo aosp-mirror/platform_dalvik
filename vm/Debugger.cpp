@@ -1792,7 +1792,7 @@ u4 dvmDbgGetThreadSuspendCount(ObjectId threadId)
     if (thread == NULL)
         goto bail;
 
-    result = thread->interpBreak.ctl.suspendCount;
+    result = thread->suspendCount;
 
 bail:
     dvmUnlockThreadList();
@@ -2662,11 +2662,11 @@ JdwpError dvmDbgInvokeMethod(ObjectId threadId, ObjectId objectId,
      * by rejecting the method invocation request.  Without this, we will
      * be stuck waiting on a suspended thread.
      */
-    if (targetThread->interpBreak.ctl.suspendCount > 1) {
+    if (targetThread->suspendCount > 1) {
         LOGW("threadid=%d: suspend count on threadid=%d is %d, too deep "
              "for method exec\n",
             dvmThreadSelf()->threadId, targetThread->threadId,
-            targetThread->interpBreak.ctl.suspendCount);
+            targetThread->suspendCount);
         dvmUnlockThreadList();
         return ERR_THREAD_SUSPENDED;     /* probably not expected here */
     }

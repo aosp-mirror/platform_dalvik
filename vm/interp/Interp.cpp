@@ -1504,9 +1504,6 @@ void dvmUpdateInterpBreak(Thread* thread, int newBreak, int newMode,
 {
     InterpBreak oldValue, newValue;
 
-    // Do not use this routine for suspend updates.  See below.
-    assert((newBreak & kInterpSuspendBreak) == 0);
-
     do {
         oldValue = newValue = thread->interpBreak;
         if (enable) {
@@ -1526,31 +1523,17 @@ void dvmUpdateInterpBreak(Thread* thread, int newBreak, int newMode,
  * Update the normal and debugger suspend counts for a thread.
  * threadSuspendCount must be acquired before calling this to
  * ensure a clean update of suspendCount, dbgSuspendCount and
- * sumThreadSuspendCount.  suspendCount & dbgSuspendCount must
- * use the atomic update to avoid conflict with writes to the
- * other fields in interpBreak.
+ * sumThreadSuspendCount.
  *
  * CLEANUP TODO: Currently only the JIT is using sumThreadSuspendCount.
  * Move under WITH_JIT ifdefs.
 */
 void dvmAddToSuspendCounts(Thread* thread, int delta, int dbgDelta)
 {
-    InterpBreak oldValue, newValue;
-
-    do {
-        oldValue = newValue = thread->interpBreak;
-        newValue.ctl.suspendCount += delta;
-        newValue.ctl.dbgSuspendCount += dbgDelta;
-        assert(newValue.ctl.suspendCount >= newValue.ctl.dbgSuspendCount);
-        if (newValue.ctl.suspendCount > 0) {
-            newValue.ctl.breakFlags |= kInterpSuspendBreak;
-        } else {
-            newValue.ctl.breakFlags &= ~kInterpSuspendBreak;
-        }
-        newValue.ctl.curHandlerTable = (newValue.ctl.breakFlags) ?
-            thread->altHandlerTable : thread->mainHandlerTable;
-    } while (dvmQuasiAtomicCas64(oldValue.all, newValue.all,
-             &thread->interpBreak.all) != 0);
+    thread->suspendCount += delta;
+    thread->dbgSuspendCount += dbgDelta;
+    dvmUpdateInterpBreak(thread, kInterpSuspendBreak, kSubModeNormal,
+                         (thread->suspendCount != 0) /* enable break? */);
 
     // Update the global suspend count total
     gDvm.sumThreadSuspendCount += delta;
@@ -1749,7 +1732,7 @@ void dvmCheckBefore(const u2 *pc, u4 *fp, Thread* self)
 #endif
 
     /* Safe point handling */
-    if (self->interpBreak.ctl.suspendCount ||
+    if (self->suspendCount ||
         (self->interpBreak.ctl.breakFlags & kInterpSafePointCallback)) {
         // Are we are a safe point?
         int flags;
@@ -1776,7 +1759,7 @@ void dvmCheckBefore(const u2 *pc, u4 *fp, Thread* self)
                 }
             }
             // Need to suspend?
-            if (self->interpBreak.ctl.suspendCount) {
+            if (self->suspendCount) {
                 dvmExportPC(pc, fp);
                 dvmCheckSuspendPending(self);
             }
