@@ -564,6 +564,7 @@ static BasicBlock *splitBlock(CompilationUnit *cUnit,
     }
 
     /* Handle the fallthrough path */
+    bottomBlock->needFallThroughBranch = origBlock->needFallThroughBranch;
     bottomBlock->fallThrough = origBlock->fallThrough;
     origBlock->fallThrough = bottomBlock;
     origBlock->needFallThroughBranch = true;

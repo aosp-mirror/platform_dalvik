@@ -3896,6 +3896,15 @@ static void handlePCReconstruction(CompilationUnit *cUnit,
         (ArmLIR **) cUnit->pcReconstructionList.elemList;
     int numElems = cUnit->pcReconstructionList.numUsed;
     int i;
+
+    /*
+     * We should never reach here through fall-through code, so insert
+     * a bomb to signal troubles immediately.
+     */
+    if (numElems) {
+        newLIR0(cUnit, kThumbUndefined);
+    }
+
     for (i = 0; i < numElems; i++) {
         dvmCompilerAppendLIR(cUnit, (LIR *) pcrLabel[i]);
         /* r0 = dalvik PC */

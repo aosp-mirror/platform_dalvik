@@ -552,7 +552,23 @@ bool dvmCompilerFilterLoopBlocks(CompilationUnit *cUnit)
      */
     while (true) {
         /* Loop formed */
-        if (bodyBB->taken == firstBB || bodyBB->fallThrough == firstBB) break;
+        if (bodyBB->taken == firstBB) {
+            /* Check if the fallThrough edge will cause a nested loop */
+            if (bodyBB->fallThrough &&
+                dvmIsBitSet(cUnit->tempBlockV, bodyBB->fallThrough->id)) {
+                return false;
+            }
+            /* Single loop formed */
+            break;
+        } else if (bodyBB->fallThrough == firstBB) {
+            /* Check if the taken edge will cause a nested loop */
+            if (bodyBB->taken &&
+                dvmIsBitSet(cUnit->tempBlockV, bodyBB->taken->id)) {
+                return false;
+            }
+            /* Single loop formed */
+            break;
+        }
 
         /* Inner loops formed first - quit */
         if (bodyBB->fallThrough &&
