@@ -38,7 +38,7 @@
 /*
  * Register VM-agnostic native methods for system classes.
  */
-extern "C" int jniRegisterSystemMethods(JNIEnv* env);
+extern int jniRegisterSystemMethods(JNIEnv* env);
 
 /* fwd */
 static bool registerSystemNatives(JNIEnv* pEnv);

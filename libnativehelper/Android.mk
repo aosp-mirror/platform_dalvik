@@ -20,13 +20,13 @@ LOCAL_PATH := $(call my-dir)
 #
 
 src_files := \
-    JNIHelp.c \
-    Register.c
+    JNIHelp.cpp \
+    Register.cpp
 
 c_includes := \
     $(JNI_H_INCLUDE)
 
-# Any shared/static libs required by libjavacore
+# Any shared/static libs required by libcore
 # need to be mentioned here as well.
 # TODO: fix this requirement
 
