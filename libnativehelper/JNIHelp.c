@@ -57,9 +57,8 @@ int jniRegisterNativeMethods(JNIEnv* env, const char* className,
  * be populated with the "binary" class name and, if present, the
  * exception message.
  */
-static void getExceptionSummary(JNIEnv* env, jthrowable exception, char* buf, size_t bufLen)
-{
-    int success = 0;
+static char* getExceptionSummary(JNIEnv* env, jthrowable exception) {
+    char* result = NULL;
 
     /* get the name of the exception's class */
     jclass exceptionClazz = (*env)->GetObjectClass(env, exception); // can't fail
@@ -77,46 +76,44 @@ static void getExceptionSummary(JNIEnv* env, jthrowable exception, char* buf, si
             jstring messageStr = (*env)->CallObjectMethod(
                     env, exception, throwableGetMessageMethod);
 
-            if (messageStr != NULL) {
+            if (messageStr == NULL) {
+                result = strdup(classNameChars);
+            } else {
                 const char* messageChars = (*env)->GetStringUTFChars(env, messageStr, NULL);
                 if (messageChars != NULL) {
-                    snprintf(buf, bufLen, "%s: %s", classNameChars, messageChars);
+                    asprintf(&result, "%s: %s", classNameChars, messageChars);
                     (*env)->ReleaseStringUTFChars(env, messageStr, messageChars);
                 } else {
                     (*env)->ExceptionClear(env); // clear OOM
-                    snprintf(buf, bufLen, "%s: <error getting message>", classNameChars);
+                    asprintf(&result, "%s: <error getting message>", classNameChars);
                 }
                 (*env)->DeleteLocalRef(env, messageStr);
-            } else {
-                strncpy(buf, classNameChars, bufLen);
-                buf[bufLen - 1] = '\0';
             }
 
             (*env)->ReleaseStringUTFChars(env, classNameStr, classNameChars);
-            success = 1;
         }
         (*env)->DeleteLocalRef(env, classNameStr);
     }
     (*env)->DeleteLocalRef(env, classClazz);
     (*env)->DeleteLocalRef(env, exceptionClazz);
 
-    if (! success) {
+    if (result == NULL) {
         (*env)->ExceptionClear(env);
-        snprintf(buf, bufLen, "%s", "<error getting class name>");
+        result = strdup("<error getting class name>");
     }
+
+    return result;
 }
 
 /*
  * Formats an exception as a string with its stack trace.
  */
-static void printStackTrace(JNIEnv* env, jthrowable exception, char* buf, size_t bufLen)
-{
-    int success = 0;
+static char* printStackTrace(JNIEnv* env, jthrowable exception) {
+    char* result = NULL;
 
     jclass stringWriterClazz = (*env)->FindClass(env, "java/io/StringWriter");
     if (stringWriterClazz != NULL) {
-        jmethodID stringWriterCtor = (*env)->GetMethodID(env, stringWriterClazz,
-                "<init>", "()V");
+        jmethodID stringWriterCtor = (*env)->GetMethodID(env, stringWriterClazz, "<init>", "()V");
         jmethodID stringWriterToStringMethod = (*env)->GetMethodID(env, stringWriterClazz,
                 "toString", "()Ljava/lang/String;");
 
@@ -134,20 +131,17 @@ static void printStackTrace(JNIEnv* env, jthrowable exception, char* buf, size_t
                     jmethodID printStackTraceMethod = (*env)->GetMethodID(
                             env, exceptionClazz, "printStackTrace", "(Ljava/io/PrintWriter;)V");
 
-                    (*env)->CallVoidMethod(
-                            env, exception, printStackTraceMethod, printWriterObj);
+                    (*env)->CallVoidMethod(env, exception, printStackTraceMethod, printWriterObj);
                     if (! (*env)->ExceptionCheck(env)) {
                         jstring messageStr = (*env)->CallObjectMethod(
                                 env, stringWriterObj, stringWriterToStringMethod);
                         if (messageStr != NULL) {
-                            jsize messageStrLength = (*env)->GetStringLength(env, messageStr);
-                            if (messageStrLength >= (jsize) bufLen) {
-                                messageStrLength = bufLen - 1;
+                            const char* utfChars = (*env)->GetStringUTFChars(env, messageStr, NULL);
+                            if (utfChars != NULL) {
+                                result = strdup(utfChars);
+                                (*env)->ReleaseStringUTFChars(env, messageStr, utfChars);
                             }
-                            (*env)->GetStringUTFRegion(env, messageStr, 0, messageStrLength, buf);
                             (*env)->DeleteLocalRef(env, messageStr);
-                            buf[messageStrLength] = '\0';
-                            success = 1;
                         }
                     }
                     (*env)->DeleteLocalRef(env, exceptionClazz);
@@ -160,10 +154,12 @@ static void printStackTrace(JNIEnv* env, jthrowable exception, char* buf, size_t
         (*env)->DeleteLocalRef(env, stringWriterClazz);
     }
 
-    if (! success) {
+    if (result == NULL) {
         (*env)->ExceptionClear(env);
-        getExceptionSummary(env, exception, buf, bufLen);
+        result = getExceptionSummary(env, exception);
     }
+
+    return result;
 }
 
 /*
@@ -175,20 +171,18 @@ static void printStackTrace(JNIEnv* env, jthrowable exception, char* buf, size_t
  * Returns 0 if the specified exception was successfully thrown.  (Some
  * sort of exception will always be pending when this returns.)
  */
-int jniThrowException(JNIEnv* env, const char* className, const char* msg)
-{
+int jniThrowException(JNIEnv* env, const char* className, const char* msg) {
     jclass exceptionClass;
 
     if ((*env)->ExceptionCheck(env)) {
         /* TODO: consider creating the new exception with this as "cause" */
-        char buf[256];
-
         jthrowable exception = (*env)->ExceptionOccurred(env);
         (*env)->ExceptionClear(env);
 
         if (exception != NULL) {
-            getExceptionSummary(env, exception, buf, sizeof(buf));
-            LOGW("Discarding pending exception (%s) to throw %s\n", buf, className);
+            char* text = getExceptionSummary(env, exception);
+            LOGW("Discarding pending exception (%s) to throw %s", text, className);
+            free(text);
             (*env)->DeleteLocalRef(env, exception);
         }
     }
@@ -211,9 +205,7 @@ int jniThrowException(JNIEnv* env, const char* className, const char* msg)
     return result;
 }
 
-int jniThrowExceptionFmt(JNIEnv* env, const char* className, const char* fmt,
-        va_list args)
-{
+int jniThrowExceptionFmt(JNIEnv* env, const char* className, const char* fmt, va_list args) {
     char msgBuf[512];
     vsnprintf(msgBuf, sizeof(msgBuf), fmt, args);
     return jniThrowException(env, className, msgBuf);
@@ -222,24 +214,21 @@ int jniThrowExceptionFmt(JNIEnv* env, const char* className, const char* fmt,
 /*
  * Throw a java.lang.NullPointerException, with an optional message.
  */
-int jniThrowNullPointerException(JNIEnv* env, const char* msg)
-{
+int jniThrowNullPointerException(JNIEnv* env, const char* msg) {
     return jniThrowException(env, "java/lang/NullPointerException", msg);
 }
 
 /*
  * Throw a java.lang.RuntimeException, with an optional message.
  */
-int jniThrowRuntimeException(JNIEnv* env, const char* msg)
-{
+int jniThrowRuntimeException(JNIEnv* env, const char* msg) {
     return jniThrowException(env, "java/lang/RuntimeException", msg);
 }
 
 /*
  * Throw a java.io.IOException, generating the message from errno.
  */
-int jniThrowIOException(JNIEnv* env, int errnum)
-{
+int jniThrowIOException(JNIEnv* env, int errnum) {
     char buffer[80];
     const char* message = jniStrError(errnum, buffer, sizeof(buffer));
     return jniThrowException(env, "java/io/IOException", message);
@@ -249,8 +238,7 @@ int jniThrowIOException(JNIEnv* env, int errnum)
  * Log an exception.
  * If exception is NULL, logs the current exception in the JNI environment, if any.
  */
-void jniLogException(JNIEnv* env, int priority, const char* tag, jthrowable exception)
-{
+void jniLogException(JNIEnv* env, int priority, const char* tag, jthrowable exception) {
     int currentException = 0;
     if (exception == NULL) {
         exception = (*env)->ExceptionOccurred(env);
@@ -262,9 +250,9 @@ void jniLogException(JNIEnv* env, int priority, const char* tag, jthrowable exce
         currentException = 1;
     }
 
-    char buffer[1024];
-    printStackTrace(env, exception, buffer, sizeof(buffer));
+    char* buffer = printStackTrace(env, exception);
     __android_log_write(priority, tag, buffer);
+    free(buffer);
 
     if (currentException) {
         (*env)->Throw(env, exception); // rethrow
@@ -272,8 +260,7 @@ void jniLogException(JNIEnv* env, int priority, const char* tag, jthrowable exce
     }
 }
 
-const char* jniStrError(int errnum, char* buf, size_t buflen)
-{
+const char* jniStrError(int errnum, char* buf, size_t buflen) {
     // note: glibc has a nonstandard strerror_r that returns char* rather
     // than POSIX's int.
     // char *strerror_r(int errnum, char *buf, size_t n);
@@ -362,8 +349,7 @@ void jniSetFileDescriptorOfFD(JNIEnv* env, jobject fileDescriptor, int value) {
  *
  * Returns NULL if the array is movable.
  */
-jbyte* jniGetNonMovableArrayElements(JNIEnv* env, jarray arrayObj)
-{
+jbyte* jniGetNonMovableArrayElements(JNIEnv* env, jarray arrayObj) {
 #define kNoCopyMagic 0xd5aab57f     /* also in CheckJni.c */
 
     /*
