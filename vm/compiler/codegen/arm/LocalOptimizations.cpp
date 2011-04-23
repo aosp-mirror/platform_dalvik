@@ -131,6 +131,12 @@ static void applyLoadStoreElimination(CompilationUnit *cUnit,
              checkLIR != tailLIR;
              checkLIR = NEXT_LIR(checkLIR)) {
 
+            /*
+             * Skip already dead instructions (whose dataflow information is
+             * outdated and misleading).
+             */
+            if (checkLIR->flags.isNop) continue;
+
             u8 checkMemMask = (checkLIR->useMask | checkLIR->defMask) &
                               ENCODE_MEM;
             u8 aliasCondition = thisMemMask & checkMemMask;
@@ -312,6 +318,10 @@ static void applyLoadHoisting(CompilationUnit *cUnit,
              checkLIR != headLIR;
              checkLIR = PREV_LIR(checkLIR)) {
 
+            /*
+             * Skip already dead instructions (whose dataflow information is
+             * outdated and misleading).
+             */
             if (checkLIR->flags.isNop) continue;
 
             u8 checkMemMask = checkLIR->defMask & ENCODE_MEM;
