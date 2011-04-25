@@ -398,7 +398,7 @@ void dvmDbgActive()
     LOGI("Debugger is active\n");
     dvmInitBreakpoints();
     gDvm.debuggerActive = true;
-    dvmUpdateAllInterpBreak(kInterpDebugBreak, kSubModeDebuggerActive, true);
+    dvmEnableAllSubMode(kSubModeDebuggerActive);
 #if defined(WITH_JIT)
     dvmCompilerUpdateGlobalState();
 #endif
@@ -417,7 +417,7 @@ void dvmDbgDisconnected()
     assert(gDvm.debuggerConnected);
 
     gDvm.debuggerActive = false;
-    dvmUpdateAllInterpBreak(kInterpDebugBreak, kSubModeDebuggerActive, false);
+    dvmDisableAllSubMode(kSubModeDebuggerActive);
 #if defined(WITH_JIT)
     dvmCompilerUpdateGlobalState();
 #endif

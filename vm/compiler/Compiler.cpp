@@ -282,8 +282,7 @@ static void resetCodeCache(void)
             inJit++;
         }
         /* Cancel any ongoing trace selection */
-        dvmUpdateInterpBreak(thread, kInterpJitBreak, kSubModeJitTraceBuild,
-                             false /* clear */);
+        dvmDisableSubMode(thread, kSubModeJitTraceBuild);
     }
     dvmUnlockThreadList();
 

@@ -89,18 +89,15 @@ void dvmReportInvoke(Thread* self, const Method* methodToCall);
 void dvmReportReturn(Thread* self);
 
 /*
- * Update interpBreak
+ * InterpBreak & subMode control
  */
-void dvmUpdateInterpBreak(Thread* thread, int newBreak, int newMode,
-                          bool enable);
+void dvmDisableSubMode(Thread* thread, ExecutionSubModes subMode);
+void dvmEnableSubMode(Thread* thread, ExecutionSubModes subMode);
+void dvmDisableAllSubMode(ExecutionSubModes subMode);
+void dvmEnableAllSubMode(ExecutionSubModes subMode);
 void dvmAddToSuspendCounts(Thread* thread, int delta, int dbgDelta);
 void dvmCheckInterpStateConsistency();
 void dvmInitializeInterpBreak(Thread* thread);
-
-/*
- * Update interpBreak for all threads
- */
-void dvmUpdateAllInterpBreak(int newBreak, int newMode, bool enable);
 
 /*
  * Register a callback to occur at the next safe point for a single thread.

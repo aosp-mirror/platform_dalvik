@@ -395,16 +395,15 @@ void dvmCheckSelfVerification(const u2* pc, Thread* self)
             assert(self->jitResumeNPC != NULL);
             assert(self->singleStepCount == 0);
             self->singleStepCount = 1;
-            dvmUpdateInterpBreak(self, kInterpSingleStep, kSubModeNormal,
-                                 true /* enable */);
+            dvmEnableSubMode(self, kSubModeCountedStep);
         }
 
         /*
          * Switch off shadow replay mode.  The next shadowed trace
          * execution will turn it back on.
          */
-        dvmUpdateInterpBreak(self, kInterpJitBreak, kSubModeJitSV,
-                             false /* disable */);
+        dvmDisableSubMode(self, kSubModeJitSV);
+
         self->jitState = kJitDone;
         return;
     }
@@ -976,14 +975,12 @@ void dvmCheckJit(const u2* pc, Thread* self)
      * If we're done with trace selection, switch off the control flags.
      */
      if (allDone) {
-         dvmUpdateInterpBreak(self, kInterpJitBreak,
-                              kSubModeJitTraceBuild, false);
+         dvmDisableSubMode(self, kSubModeJitTraceBuild);
          if (stayOneMoreInst) {
              // Keep going in single-step mode for at least one more inst
              assert(self->jitResumeNPC == NULL);
              self->singleStepCount = MIN(1, self->singleStepCount);
-             dvmUpdateInterpBreak(self, kInterpSingleStep, kSubModeNormal,
-                                  true /* enable */);
+             dvmEnableSubMode(self, kSubModeCountedStep);
          }
      }
      return;
@@ -1276,8 +1273,7 @@ void dvmJitCheckTraceRequest(Thread* self)
                 self->trace[0].isCode = true;
                 self->lastPC = 0;
                 /* Turn on trace selection mode */
-                dvmUpdateInterpBreak(self, kInterpJitBreak,
-                                     kSubModeJitTraceBuild, true);
+                dvmEnableSubMode(self, kSubModeJitTraceBuild);
 #if defined(SHOW_TRACE)
                 LOGD("Starting trace for %s at 0x%x",
                      self->interpSave.method->name, (int)self->interpSave.pc);

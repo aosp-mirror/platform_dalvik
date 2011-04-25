@@ -251,18 +251,55 @@ ready to require Python in the build.
 
 ==== Interpreter Control ====
 
-To handle thread suspension, debugging, profiling, JIT compilation, etc.,
-there needs to be a way to break out of interpreter execution.  To support
-this, there is an "interpBreak" record in each thread's private storage.
-If interpBreak.ctl.breakFlags is non-zero, the interpreter main loop must
-be interrupted and control sent to dvmCheckBefore(), which will figure out
-what actions are needed and carry them out.
+The central mechanism for interpreter control is the InterpBreak struture
+that is found in each thread's Thread struct (see vm/Thread.h).  There
+is one mandatory field, and two optional fields:
 
-In the portable interpreter, this requirement is implemented as a simple
-polling test in the main loop.  breakFlags is checked before the interpretation
-of each instruction.  Though simple, this is costly.  For mterp interpreters,
-we use a mechanism that swaps out the handler base register with a pointer
-to an alternate, or break-out, set of handlers.  Note that interpretation
-interruption may be slightly delayed.  Each thread has its own copy of the
-handler base (register rIBASE), which it will refresh on taken backards
-branches, exception throws and returns.
+    subMode - required, describes debug/profile/special operation
+    breakFlags & curHandlerTable - optional, used lower subMode polling costs
+
+The subMode field is a bitmask which records all currently active
+special modes of operation.  For example, when Traceview profiling
+is active, kSubModeMethodTrace is set.  This bit informs the interpreter
+that it must notify the profiling subsystem on each method entry and
+return.  There are similar bits for an active debugging session,
+instruction count profiling, pending thread suspension request, etc.
+
+To support special subMode operation the simplest mechanism for the
+interpreter is to poll the subMode field before interpreting each Dalvik
+bytecode and take any required action.  In fact, this is precisely
+what the portable interpreter does.  The "FINISH" macro expands to
+include a test of subMode and subsequent call to the "dvmCheckBefore()".
+
+Per-instruction polling, however, is expensive and subMode operation is
+relative rare.  For normal operation we'd like to avoid having to perform
+any checks unless a special subMode is actually in effect.  This is
+where curHandlerTable and breakFlags come in to play.
+
+The mterp fast interpreter achieves much of its performance advantage
+over the portable interpreter through its efficient mechanism of
+transitioning from one Dalvik bytecode to the next.  Mterp for ARM targets
+uses a computed-goto mechanism, in which the handler entrypoints are
+located at the base of the handler table + (opcode * 64).  Mterp for x86
+targets instead uses a jump table of handler entry points indexed
+by the Dalvik opcode.  To support efficient handling of special subModes,
+mterp supports two sets of handler entries (for ARM) or two jump
+tables (for x86).  One handler set is optimized for speed and performs no
+inter-instruction checks (mainHandlerTable in the Thread structure), while
+the other includes a test of the subMode field (altHandlerTable).
+
+In normal operation (i.e. subMode == 0), the dedicated register rIBASE
+(r8 for ARM, edx for x86) holds a mainHandlerTable.  If we need to switch
+to a subMode that requires inter-instruction checking, rIBASE is changed
+to altHandlerTable.  Note that this change is not immediate.  What is actually
+changed is the value of curHandlerTable - which is part of the interpBreak
+structure.  Rather than explicitly check for changes, each thread will
+blindly refresh rIBASE at backward branches, exception throws and returns.
+
+The breakFlags field tells the interpreter control mechanism whether
+curHandlerTable should hold the real or alternate handler base.  If
+non-zero, we use the altHandlerBase.  The bits within breakFlags
+tells dvmCheckBefore which set of subModes need to be checked.
+
+See dvmCheckBefore() for subMode handling, and dvmEnableSubMode(),
+dvmDisableSubMode() for switching on and off.

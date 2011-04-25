@@ -1495,28 +1495,41 @@ void dvmThrowVerificationError(const Method* method, int kind, int ref)
 }
 
 /*
- * Update interpBreak.  If there is an active break when
- * we're done, set altHandlerTable.  Otherwise, revert to
- * the non-breaking table base.
+ * Update interpBreak for a single thread.
  */
-void dvmUpdateInterpBreak(Thread* thread, int newBreak, int newMode,
-                          bool enable)
+void updateInterpBreak(Thread* thread, ExecutionSubModes subMode, bool enable)
 {
     InterpBreak oldValue, newValue;
-
     do {
         oldValue = newValue = thread->interpBreak;
-        if (enable) {
-            newValue.ctl.breakFlags |= newBreak;
-            newValue.ctl.subMode |= newMode;
-        } else {
-            newValue.ctl.breakFlags &= ~newBreak;
-            newValue.ctl.subMode &= ~newMode;
-        }
+        newValue.ctl.breakFlags = kInterpNoBreak;  // Assume full reset
+        if (enable)
+            newValue.ctl.subMode |= subMode;
+        else
+            newValue.ctl.subMode &= ~subMode;
+        if (newValue.ctl.subMode & SINGLESTEP_BREAK_MASK)
+            newValue.ctl.breakFlags |= kInterpSingleStep;
+        if (newValue.ctl.subMode & SAFEPOINT_BREAK_MASK)
+            newValue.ctl.breakFlags |= kInterpSafePoint;
         newValue.ctl.curHandlerTable = (newValue.ctl.breakFlags) ?
             thread->altHandlerTable : thread->mainHandlerTable;
     } while (dvmQuasiAtomicCas64(oldValue.all, newValue.all,
              &thread->interpBreak.all) != 0);
+}
+
+/*
+ * Update interpBreak for all threads.
+ */
+void updateAllInterpBreak(ExecutionSubModes subMode, bool enable)
+{
+    Thread* self = dvmThreadSelf();
+    Thread* thread;
+
+    dvmLockThreadList(self);
+    for (thread = gDvm.threadList; thread != NULL; thread = thread->next) {
+        updateInterpBreak(thread, subMode, enable);
+    }
+    dvmUnlockThreadList();
 }
 
 /*
@@ -1532,26 +1545,31 @@ void dvmAddToSuspendCounts(Thread* thread, int delta, int dbgDelta)
 {
     thread->suspendCount += delta;
     thread->dbgSuspendCount += dbgDelta;
-    dvmUpdateInterpBreak(thread, kInterpSuspendBreak, kSubModeNormal,
-                         (thread->suspendCount != 0) /* enable break? */);
-
+    updateInterpBreak(thread, kSubModeSuspendPending,
+                      (thread->suspendCount != 0));
     // Update the global suspend count total
     gDvm.sumThreadSuspendCount += delta;
 }
 
-/*
- * Update interpBreak for all threads.
- */
-void dvmUpdateAllInterpBreak(int newBreak, int newMode, bool enable)
-{
-    Thread* self = dvmThreadSelf();
-    Thread* thread;
 
-    dvmLockThreadList(self);
-    for (thread = gDvm.threadList; thread != NULL; thread = thread->next) {
-        dvmUpdateInterpBreak(thread, newBreak, newMode, enable);
-    }
-    dvmUnlockThreadList();
+void dvmDisableSubMode(Thread* thread, ExecutionSubModes subMode)
+{
+    updateInterpBreak(thread, subMode, false);
+}
+
+void dvmEnableSubMode(Thread* thread, ExecutionSubModes subMode)
+{
+    updateInterpBreak(thread, subMode, true);
+}
+
+void dvmEnableAllSubMode(ExecutionSubModes subMode)
+{
+    updateAllInterpBreak(subMode, true);
+}
+
+void dvmDisableAllSubMode(ExecutionSubModes subMode)
+{
+    updateAllInterpBreak(subMode, false);
 }
 
 /*
@@ -1616,8 +1634,11 @@ void dvmArmSafePointCallback(Thread* thread, SafePointCallback funct,
     if ((funct == NULL) || (thread->callback == NULL)) {
         thread->callback = funct;
         thread->callbackArg = arg;
-        dvmUpdateInterpBreak(thread, kInterpSafePointCallback,
-                             kSubModeNormal, (funct != NULL));
+        if (funct != NULL) {
+            dvmEnableSubMode(thread, kSubModeCallbackPending);
+        } else {
+            dvmDisableSubMode(thread, kSubModeCallbackPending);
+        }
     } else {
         // Already armed.  Different?
         if ((funct != thread->callback) ||
@@ -1675,21 +1696,18 @@ void dvmInitInterpreterState(Thread* self)
  */
 void dvmInitializeInterpBreak(Thread* thread)
 {
-    u1 flags = 0;
-    u1 subModes = 0;
-
     if (gDvm.instructionCountEnableCount > 0) {
-        flags |= kInterpInstCountBreak;
-        subModes |= kSubModeInstCounting;
+        dvmEnableSubMode(thread, kSubModeInstCounting);
     }
     if (dvmIsMethodTraceActive()) {
-        subModes |= kSubModeMethodTrace;
+        dvmEnableSubMode(thread, kSubModeMethodTrace);
+    }
+    if (gDvm.emulatorTraceEnableCount > 0) {
+        dvmEnableSubMode(thread, kSubModeEmulatorTrace);
     }
     if (gDvm.debuggerActive) {
-        flags |= kInterpDebugBreak;
-        subModes |= kSubModeDebuggerActive;
+        dvmEnableSubMode(thread, kSubModeDebuggerActive);
     }
-    dvmUpdateInterpBreak(thread, flags, subModes, true);
 }
 
 /*
@@ -1733,13 +1751,13 @@ void dvmCheckBefore(const u2 *pc, u4 *fp, Thread* self)
 
     /* Safe point handling */
     if (self->suspendCount ||
-        (self->interpBreak.ctl.breakFlags & kInterpSafePointCallback)) {
+        (self->interpBreak.ctl.subMode & kSubModeCallbackPending)) {
         // Are we are a safe point?
         int flags;
         flags = dexGetFlagsFromOpcode(dexOpcodeFromCodeUnit(*pc));
         if (flags & VERIFY_GC_INST_MASK) {
             // Yes, at a safe point.  Pending callback?
-            if (self->interpBreak.ctl.breakFlags & kInterpSafePointCallback) {
+            if (self->interpBreak.ctl.subMode & kSubModeCallbackPending) {
                 SafePointCallback callback;
                 void* arg;
                 // Get consistent funct/arg pair
@@ -1788,7 +1806,8 @@ void dvmCheckBefore(const u2 *pc, u4 *fp, Thread* self)
 
 #if defined(WITH_JIT)
     // Does the JIT need anything done now?
-    if (self->interpBreak.ctl.breakFlags & kInterpJitBreak) {
+    if (self->interpBreak.ctl.subMode &
+            (kSubModeJitTraceBuild | kSubModeJitSV)) {
         // Are we building a trace?
         if (self->interpBreak.ctl.subMode & kSubModeJitTraceBuild) {
             dvmCheckJit(pc, self);
@@ -1810,8 +1829,7 @@ void dvmCheckBefore(const u2 *pc, u4 *fp, Thread* self)
     if (self->interpBreak.ctl.breakFlags & kInterpSingleStep) {
         if (self->singleStepCount == 0) {
             // We've exhausted our single step count
-            dvmUpdateInterpBreak(self, kInterpSingleStep, kSubModeNormal,
-                                 false /* remove */);
+            dvmDisableSubMode(self, kSubModeCountedStep);
 #if defined(WITH_JIT)
 #if 0
             /*
@@ -1878,8 +1896,7 @@ void dvmCheckBefore(const u2 *pc, u4 *fp, Thread* self)
 void dvmInterpret(Thread* self, const Method* method, JValue* pResult)
 {
     InterpSaveState interpSaveState;
-    int savedBreakFlags;
-    int savedSubModes;
+    ExecutionSubModes savedSubModes;
 
 #if defined(WITH_JIT)
     /* Target-specific save/restore */
@@ -1903,11 +1920,10 @@ void dvmInterpret(Thread* self, const Method* method, JValue* pResult)
      * Strip out and save any flags that should not be inherited by
      * nested interpreter activation.
      */
-    savedBreakFlags = self->interpBreak.ctl.breakFlags & LOCAL_BREAKFLAGS;
-    savedSubModes = self->interpBreak.ctl.subMode & LOCAL_SUBMODE;
-    if (savedBreakFlags | savedSubModes) {
-        dvmUpdateInterpBreak(self, savedBreakFlags, savedSubModes,
-                             false /*disable*/);
+    savedSubModes = (ExecutionSubModes)(
+              self->interpBreak.ctl.subMode & LOCAL_SUBMODE);
+    if (savedSubModes != kSubModeNormal) {
+        dvmDisableSubMode(self, savedSubModes);
     }
 #if defined(WITH_JIT)
     dvmJitCalleeSave(calleeSave);
@@ -1970,8 +1986,7 @@ void dvmInterpret(Thread* self, const Method* method, JValue* pResult)
 #if defined(WITH_JIT)
     dvmJitCalleeRestore(calleeSave);
 #endif
-    if (savedBreakFlags | savedSubModes) {
-        dvmUpdateInterpBreak(self, savedBreakFlags, savedSubModes,
-                             true /*enable*/);
+    if (savedSubModes != kSubModeNormal) {
+        dvmEnableSubMode(self, savedSubModes);
     }
 }

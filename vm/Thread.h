@@ -394,7 +394,7 @@ bool dvmCheckSuspendPending(Thread* self);
  * count is nonzero.
  */
 INLINE bool dvmCheckSuspendQuick(Thread* self) {
-    return (self->interpBreak.ctl.breakFlags & kInterpSuspendBreak);
+    return (self->interpBreak.ctl.subMode & kSubModeSuspendPending);
 }
 
 /*

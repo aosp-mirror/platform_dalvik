@@ -26812,10 +26812,8 @@ dvmJitToInterpSingleStep:
     mov    r1, #1
     str    r1, [rSELF,#offThread_singleStepCount]  @ just step once
     mov    r0, rSELF
-    mov    r1, #kInterpSingleStep
-    mov    r2, #kSubModeNormal
-    mov    r3, #1                @ true
-    bl     dvmUpdateInterpBreak  @ (self, newBreak, newMode, enable)
+    mov    r1, #kSubModeCountedStep
+    bl     dvmEnableSubMode     @ (self, newMode)
     ldr    rIBASE, [rSELF,#offThread_curHandlerTable]
     FETCH_INST()
     GET_INST_OPCODE(ip)
@@ -27033,8 +27031,8 @@ common_updateProfile:
  *  r2 is jit state.
  */
 common_selectTrace:
-    ldrb    r0,[rSELF,#offThread_breakFlags]
-    ands    r0,#kInterpJitBreak
+    ldrh    r0,[rSELF,#offThread_subMode]
+    ands    r0, #(kSubModeJitTraceBuild | kSubModeJitSV)
     bne     3f                         @ already doing JIT work, continue
     str     r2,[rSELF,#offThread_jitState]
     mov     r0, rSELF
@@ -27089,10 +27087,8 @@ jitSVShadowRunEnd:
     beq    1f
     @ Set up SV single-stepping
     mov    r0, rSELF
-    mov    r1, #kInterpJitBreak
-    mov    r2, #kSubModeJitSV
-    mov    r3, #1                @ true
-    bl     dvmUpdateInterpBreak  @ (self, newBreak, newMode, enable)
+    mov    r1, #kSubModeJitSV
+    bl     dvmEnableSubMode              @ (self, subMode)
     mov    r2,#kJitSelfVerification      @ ask for self verification
     str    r2,[rSELF,#offThread_jitState]
     @ intentional fallthrough
