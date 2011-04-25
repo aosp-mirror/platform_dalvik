@@ -152,7 +152,7 @@ public class SCCP {
      * Simulates a PHI node and set the lattice for the result
      * to the appropriate value.
      * Meet values:
-     * TOP x anything = anything
+     * TOP x anything = TOP
      * VARYING x anything = VARYING
      * CONSTANT x CONSTANT = CONSTANT if equal constants, VARYING otherwise
      * @param insn PHI to simulate.
@@ -174,8 +174,7 @@ public class SCCP {
             int sourceReg = sources.get(i).getReg();
             int sourceRegValue = latticeValues[sourceReg];
 
-            if (!executableBlocks.get(predBlockIndex)
-                    || sourceRegValue == TOP) {
+            if (!executableBlocks.get(predBlockIndex)) {
                 continue;
             }
 
@@ -187,9 +186,8 @@ public class SCCP {
                     phiResultValue = VARYING;
                     break;
                 }
-
-            } else if (sourceRegValue == VARYING) {
-                phiResultValue = VARYING;
+            } else {
+                phiResultValue = sourceRegValue;
                 break;
             }
         }
