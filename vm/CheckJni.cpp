@@ -850,7 +850,7 @@ struct GuardedCopy {
      * We use a 16-bit pattern to make a rogue memset less likely to elude us.
      */
     static void* create(const void* buf, size_t len, bool modOkay) {
-        size_t newLen = (len + kGuardLen +1) & ~0x01;
+        size_t newLen = (len + kGuardLen + 1) & ~0x01;
         u1* newBuf = (u1*)malloc(newLen);
         if (newBuf == NULL) {
             LOGE("GuardedCopy::create failed on alloc of %d bytes", newLen);
@@ -1574,10 +1574,9 @@ static jsize Check_GetStringUTFLength(JNIEnv* env, jstring string) {
 static const char* Check_GetStringUTFChars(JNIEnv* env, jstring string, jboolean* isCopy) {
     ScopedCheck sc(env, kFlag_CritOkay, __FUNCTION__);
     sc.checkString(string);
-    const char* result;
-    result = baseEnv(env)->GetStringUTFChars(env, string, isCopy);
+    const char* result = baseEnv(env)->GetStringUTFChars(env, string, isCopy);
     if (((JNIEnvExt*)env)->forceDataCopy && result != NULL) {
-        result = (const char*) GuardedCopy::create(result, strlen(result)+1, false);
+        result = (const char*) GuardedCopy::create(result, strlen(result) + 1, false);
         if (isCopy != NULL) {
             *isCopy = JNI_TRUE;
         }
@@ -1590,7 +1589,6 @@ static void Check_ReleaseStringUTFChars(JNIEnv* env, jstring string, const char*
     sc.checkString(string);
     sc.checkNonNull(utf);
     if (((JNIEnvExt*)env)->forceDataCopy) {
-        //int len = dvmStringUtf8ByteLen(string) + 1;
         if (!GuardedCopy::check(utf, false)) {
             LOGE("JNI: failed guarded copy check in ReleaseStringUTFChars");
             abortMaybe();
@@ -1660,13 +1658,12 @@ NEW_PRIMITIVE_ARRAY(jdoubleArray, Double);
     {                                                                       \
         ScopedCheck sc(env, kFlag_Default, __FUNCTION__); \
         sc.checkArray(array); \
-        _ctype* result;                                                     \
         u4 noCopy = 0;                                                      \
         if (((JNIEnvExt*)env)->forceDataCopy && isCopy != NULL) {           \
             /* capture this before the base call tramples on it */          \
             noCopy = *(u4*) isCopy;                                         \
         }                                                                   \
-        result = baseEnv(env)->Get##_jname##ArrayElements(env, array, isCopy); \
+        _ctype* result = baseEnv(env)->Get##_jname##ArrayElements(env, array, isCopy); \
         if (((JNIEnvExt*)env)->forceDataCopy && result != NULL) {           \
             if (noCopy == kNoCopyMagic) {                                   \
                 LOGV("FC: not copying %p %x", array, noCopy); \
@@ -1775,8 +1772,7 @@ static void Check_GetStringUTFRegion(JNIEnv* env, jstring str, jsize start, jsiz
 static void* Check_GetPrimitiveArrayCritical(JNIEnv* env, jarray array, jboolean* isCopy) {
     ScopedCheck sc(env, kFlag_CritGet, __FUNCTION__);
     sc.checkArray(array);
-    void* result;
-    result = baseEnv(env)->GetPrimitiveArrayCritical(env, array, isCopy);
+    void* result = baseEnv(env)->GetPrimitiveArrayCritical(env, array, isCopy);
     if (((JNIEnvExt*)env)->forceDataCopy && result != NULL) {
         result = createGuardedPACopy(env, array, isCopy);
     }

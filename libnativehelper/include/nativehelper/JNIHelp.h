@@ -37,17 +37,21 @@ extern "C" {
 
 /*
  * Register one or more native methods with a particular class.
+ * "className" looks like "java/lang/String".
  */
-int jniRegisterNativeMethods(C_JNIEnv* env, const char* className,
-    const JNINativeMethod* gMethods, int numMethods);
+int jniRegisterNativeMethods(C_JNIEnv* env, const char* className, const JNINativeMethod* gMethods, int numMethods);
 
 /*
  * Throw an exception with the specified class and an optional message.
+ *
  * The "className" argument will be passed directly to FindClass, which
  * takes strings with slashes (e.g. "java/lang/Object").
  *
+ * If an exception is currently pending, we log a warning message and
+ * clear it.
+ *
  * Returns 0 on success, nonzero if something failed (e.g. the exception
- * class couldn't be found).
+ * class couldn't be found, so *an* exception will still be pending).
  *
  * Currently aborts the VM if it can't throw the exception.
  */
@@ -77,17 +81,17 @@ int jniThrowIOException(C_JNIEnv* env, int errnum);
 const char* jniStrError(int errnum, char* buf, size_t buflen);
 
 /*
- * Create a java.io.FileDescriptor given an integer fd
+ * Returns a new java.io.FileDescriptor for the given int fd.
  */
 jobject jniCreateFileDescriptor(C_JNIEnv* env, int fd);
 
 /*
- * Get an int file descriptor from a java.io.FileDescriptor
+ * Returns the int fd from a java.io.FileDescriptor.
  */
 int jniGetFDFromFileDescriptor(C_JNIEnv* env, jobject fileDescriptor);
 
 /*
- * Set an int file descriptor to a java.io.FileDescriptor
+ * Sets the int fd in a java.io.FileDescriptor.
  */
 void jniSetFileDescriptorOfFD(C_JNIEnv* env, jobject fileDescriptor, int value);
 
@@ -107,62 +111,52 @@ void jniLogException(C_JNIEnv* env, int priority, const char* tag, jthrowable ex
  * inlines these, even on non-optimized builds.
  */
 #if defined(__cplusplus)
-inline int jniRegisterNativeMethods(JNIEnv* env, const char* className,
-    const JNINativeMethod* gMethods, int numMethods)
-{
-    return jniRegisterNativeMethods(&env->functions, className, gMethods,
-        numMethods);
+inline int jniRegisterNativeMethods(JNIEnv* env, const char* className, const JNINativeMethod* gMethods, int numMethods) {
+    return jniRegisterNativeMethods(&env->functions, className, gMethods, numMethods);
 }
-inline int jniThrowException(JNIEnv* env, const char* className,
-    const char* msg)
-{
+
+inline int jniThrowException(JNIEnv* env, const char* className, const char* msg) {
     return jniThrowException(&env->functions, className, msg);
 }
 
-extern "C" int jniThrowExceptionFmt(C_JNIEnv* env, const char* className,
-        const char* fmt, va_list args);
+extern "C" int jniThrowExceptionFmt(C_JNIEnv* env, const char* className, const char* fmt, va_list args);
 
 /*
  * Equivalent to jniThrowException but with a printf-like format string and
  * variable-length argument list. This is only available in C++.
  */
-inline int jniThrowExceptionFmt(JNIEnv* env, const char* className,
-        const char* fmt, ...)
-{
+inline int jniThrowExceptionFmt(JNIEnv* env, const char* className, const char* fmt, ...) {
     va_list args;
     va_start(args, fmt);
     return jniThrowExceptionFmt(&env->functions, className, fmt, args);
     va_end(args);
 }
 
-inline int jniThrowNullPointerException(JNIEnv* env, const char* msg)
-{
+inline int jniThrowNullPointerException(JNIEnv* env, const char* msg) {
     return jniThrowNullPointerException(&env->functions, msg);
 }
-inline int jniThrowRuntimeException(JNIEnv* env, const char* msg)
-{
+
+inline int jniThrowRuntimeException(JNIEnv* env, const char* msg) {
     return jniThrowRuntimeException(&env->functions, msg);
 }
-inline int jniThrowIOException(JNIEnv* env, int errnum)
-{
+
+inline int jniThrowIOException(JNIEnv* env, int errnum) {
     return jniThrowIOException(&env->functions, errnum);
 }
-inline jobject jniCreateFileDescriptor(JNIEnv* env, int fd)
-{
+
+inline jobject jniCreateFileDescriptor(JNIEnv* env, int fd) {
     return jniCreateFileDescriptor(&env->functions, fd);
 }
-inline int jniGetFDFromFileDescriptor(JNIEnv* env, jobject fileDescriptor)
-{
+
+inline int jniGetFDFromFileDescriptor(JNIEnv* env, jobject fileDescriptor) {
     return jniGetFDFromFileDescriptor(&env->functions, fileDescriptor);
 }
-inline void jniSetFileDescriptorOfFD(JNIEnv* env, jobject fileDescriptor,
-    int value)
-{
+
+inline void jniSetFileDescriptorOfFD(JNIEnv* env, jobject fileDescriptor, int value) {
     jniSetFileDescriptorOfFD(&env->functions, fileDescriptor, value);
 }
-inline void jniLogException(JNIEnv* env, int priority, const char* tag,
-        jthrowable exception = NULL)
-{
+
+inline void jniLogException(JNIEnv* env, int priority, const char* tag, jthrowable exception = NULL) {
     jniLogException(&env->functions, priority, tag, exception);
 }
 #endif

@@ -14,10 +14,6 @@
  * limitations under the License.
  */
 
-/*
- * JNI helper functions.
- */
-
 #include "jni.h"
 
 extern int registerCoreLibrariesJni(JNIEnv* env);
@@ -26,8 +22,7 @@ extern int registerJniHelp(JNIEnv* env);
 /*
  * Register all methods for system classes.
  */
-int jniRegisterSystemMethods(JNIEnv* env)
-{
+int jniRegisterSystemMethods(JNIEnv* env) {
     // JniHelp depends on core library classes such as java.io.FileDescriptor.
     return registerCoreLibrariesJni(env) != -1 && registerJniHelp(env) != -1;
 }
