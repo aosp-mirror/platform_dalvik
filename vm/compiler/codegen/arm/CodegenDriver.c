@@ -4575,6 +4575,8 @@ void dvmCompilerMIR2LIR(CompilationUnit *cUnit)
              */
             dvmCompilerApplyLocalOptimizations(cUnit, (LIR *) headLIR,
                                                cUnit->lastLIRInsn);
+            /* Reset headLIR which is also the optimization boundary */
+            headLIR = NULL;
         }
 
 gen_fallthrough:
