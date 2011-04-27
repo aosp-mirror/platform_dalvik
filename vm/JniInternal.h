@@ -50,9 +50,6 @@ typedef struct JNIEnvExt {
     /* if nonzero, we are in a "critical" JNI call */
     int     critical;
 
-    /* keep a copy of this here for speed */
-    bool    forceDataCopy;
-
     struct JNIEnvExt* prev;
     struct JNIEnvExt* next;
 } JNIEnvExt;
@@ -61,13 +58,6 @@ typedef struct JavaVMExt {
     const struct JNIInvokeInterface* funcTable;     /* must be first */
 
     const struct JNIInvokeInterface* baseFuncTable;
-
-    /* if multiple VMs are desired, add doubly-linked list stuff here */
-
-    /* per-VM feature flags */
-    bool    useChecked;
-    bool    warnError;
-    bool    forceDataCopy;
 
     /* head of list of JNIEnvs associated with this VM */
     JNIEnvExt*      envList;

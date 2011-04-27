@@ -48,6 +48,7 @@ static bool initZygote();
 
 /* global state */
 struct DvmGlobals gDvm;
+struct DvmJniGlobals gDvmJni;
 
 /* JIT-specific global state */
 #if defined(WITH_JIT)
@@ -111,7 +112,7 @@ static void usage(const char* progName)
     dvmFprintf(stderr, "  -Xnoquithandler\n");
     dvmFprintf(stderr,
                 "  -Xjnigreflimit:N  (must be multiple of 100, >= 200)\n");
-    dvmFprintf(stderr, "  -Xjniopts:{warnonly,forcecopy}\n");
+    dvmFprintf(stderr, "  -Xjniopts:{warnonly,forcecopy,forcecopy-unmap}\n");
     dvmFprintf(stderr, "  -Xjnitrace:substring (eg NativeClass or nativeMethod)\n");
     dvmFprintf(stderr, "  -Xdeadlockpredict:{off,warn,err,abort}\n");
     dvmFprintf(stderr, "  -Xstacktracefile:<filename>\n");
