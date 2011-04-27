@@ -36,10 +36,6 @@
 #include "vm/Common.h"      // basic type defs, e.g. u1/u2/u4/u8, and LOG
 #include "libdex/SysUtil.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /*
  * gcc-style inline management -- ensures we have a copy of all functions
  * in the library, so code that links against us will work whether or not
@@ -77,7 +73,7 @@ enum {
 /*
  * Enumeration of all the primitive types.
  */
-typedef enum PrimitiveType {
+enum PrimitiveType {
     PRIM_NOT        = 0,       /* value is a reference type, not a primitive type */
     PRIM_VOID       = 1,
     PRIM_BOOLEAN    = 2,
@@ -88,7 +84,7 @@ typedef enum PrimitiveType {
     PRIM_LONG       = 7,
     PRIM_FLOAT      = 8,
     PRIM_DOUBLE     = 9,
-} PrimitiveType;
+};
 
 /*
  * access flags and masks; the "standard" ones are all <= 0x4000
@@ -210,7 +206,7 @@ enum {
 /*
  * Direct-mapped "header_item" struct.
  */
-typedef struct DexHeader {
+struct DexHeader {
     u1  magic[8];           /* includes version number */
     u4  checksum;           /* adler32 checksum */
     u1  signature[kSHA1DigestLen]; /* SHA-1 hash */
@@ -234,71 +230,71 @@ typedef struct DexHeader {
     u4  classDefsOff;
     u4  dataSize;
     u4  dataOff;
-} DexHeader;
+};
 
 /*
  * Direct-mapped "map_item".
  */
-typedef struct DexMapItem {
-    u2  type;              /* type code (see kDexType* above) */
-    u2  unused;
-    u4  size;              /* count of items of the indicated type */
-    u4  offset;            /* file offset to the start of data */
-} DexMapItem;
+struct DexMapItem {
+    u2 type;              /* type code (see kDexType* above) */
+    u2 unused;
+    u4 size;              /* count of items of the indicated type */
+    u4 offset;            /* file offset to the start of data */
+};
 
 /*
  * Direct-mapped "map_list".
  */
-typedef struct DexMapList {
+struct DexMapList {
     u4  size;               /* #of entries in list */
     DexMapItem list[1];     /* entries */
-} DexMapList;
+};
 
 /*
  * Direct-mapped "string_id_item".
  */
-typedef struct DexStringId {
-    u4  stringDataOff;      /* file offset to string_data_item */
-} DexStringId;
+struct DexStringId {
+    u4 stringDataOff;      /* file offset to string_data_item */
+};
 
 /*
  * Direct-mapped "type_id_item".
  */
-typedef struct DexTypeId {
+struct DexTypeId {
     u4  descriptorIdx;      /* index into stringIds list for type descriptor */
-} DexTypeId;
+};
 
 /*
  * Direct-mapped "field_id_item".
  */
-typedef struct DexFieldId {
+struct DexFieldId {
     u2  classIdx;           /* index into typeIds list for defining class */
     u2  typeIdx;            /* index into typeIds for field type */
     u4  nameIdx;            /* index into stringIds for field name */
-} DexFieldId;
+};
 
 /*
  * Direct-mapped "method_id_item".
  */
-typedef struct DexMethodId {
+struct DexMethodId {
     u2  classIdx;           /* index into typeIds list for defining class */
     u2  protoIdx;           /* index into protoIds for method prototype */
     u4  nameIdx;            /* index into stringIds for method name */
-} DexMethodId;
+};
 
 /*
  * Direct-mapped "proto_id_item".
  */
-typedef struct DexProtoId {
+struct DexProtoId {
     u4  shortyIdx;          /* index into stringIds for shorty descriptor */
     u4  returnTypeIdx;      /* index into typeIds list for return type */
     u4  parametersOff;      /* file offset to type_list for parameter types */
-} DexProtoId;
+};
 
 /*
  * Direct-mapped "class_def_item".
  */
-typedef struct DexClassDef {
+struct DexClassDef {
     u4  classIdx;           /* index into typeIds for this class */
     u4  accessFlags;
     u4  superclassIdx;      /* index into typeIds for superclass */
@@ -307,22 +303,22 @@ typedef struct DexClassDef {
     u4  annotationsOff;     /* file offset to annotations_directory_item */
     u4  classDataOff;       /* file offset to class_data_item */
     u4  staticValuesOff;    /* file offset to DexEncodedArray */
-} DexClassDef;
+};
 
 /*
  * Direct-mapped "type_item".
  */
-typedef struct DexTypeItem {
+struct DexTypeItem {
     u2  typeIdx;            /* index into typeIds */
-} DexTypeItem;
+};
 
 /*
  * Direct-mapped "type_list".
  */
-typedef struct DexTypeList {
+struct DexTypeList {
     u4  size;               /* #of entries in list */
     DexTypeItem list[1];    /* entries */
-} DexTypeList;
+};
 
 /*
  * Direct-mapped "code_item".
@@ -331,7 +327,7 @@ typedef struct DexTypeList {
  * "debugInfo" is used when displaying an exception stack trace or
  * debugging. An offset of zero indicates that there are no entries.
  */
-typedef struct DexCode {
+struct DexCode {
     u2  registersSize;
     u2  insSize;
     u2  outsSize;
@@ -343,29 +339,29 @@ typedef struct DexCode {
     /* followed by try_item[triesSize] */
     /* followed by uleb128 handlersSize */
     /* followed by catch_handler_item[handlersSize] */
-} DexCode;
+};
 
 /*
  * Direct-mapped "try_item".
  */
-typedef struct DexTry {
+struct DexTry {
     u4  startAddr;          /* start address, in 16-bit code units */
     u2  insnCount;          /* instruction count, in 16-bit code units */
     u2  handlerOff;         /* offset in encoded handler data to handlers */
-} DexTry;
+};
 
 /*
  * Link table.  Currently undefined.
  */
-typedef struct DexLink {
+struct DexLink {
     u1  bleargh;
-} DexLink;
+};
 
 
 /*
  * Direct-mapped "annotations_directory_item".
  */
-typedef struct DexAnnotationsDirectoryItem {
+struct DexAnnotationsDirectoryItem {
     u4  classAnnotationsOff;  /* offset to DexAnnotationSetItem */
     u4  fieldsSize;           /* count of DexFieldAnnotationsItem */
     u4  methodsSize;          /* count of DexMethodAnnotationsItem */
@@ -373,73 +369,73 @@ typedef struct DexAnnotationsDirectoryItem {
     /* followed by DexFieldAnnotationsItem[fieldsSize] */
     /* followed by DexMethodAnnotationsItem[methodsSize] */
     /* followed by DexParameterAnnotationsItem[parametersSize] */
-} DexAnnotationsDirectoryItem;
+};
 
 /*
  * Direct-mapped "field_annotations_item".
  */
-typedef struct DexFieldAnnotationsItem {
+struct DexFieldAnnotationsItem {
     u4  fieldIdx;
     u4  annotationsOff;             /* offset to DexAnnotationSetItem */
-} DexFieldAnnotationsItem;
+};
 
 /*
  * Direct-mapped "method_annotations_item".
  */
-typedef struct DexMethodAnnotationsItem {
+struct DexMethodAnnotationsItem {
     u4  methodIdx;
     u4  annotationsOff;             /* offset to DexAnnotationSetItem */
-} DexMethodAnnotationsItem;
+};
 
 /*
  * Direct-mapped "parameter_annotations_item".
  */
-typedef struct DexParameterAnnotationsItem {
+struct DexParameterAnnotationsItem {
     u4  methodIdx;
     u4  annotationsOff;             /* offset to DexAnotationSetRefList */
-} DexParameterAnnotationsItem;
+};
 
 /*
  * Direct-mapped "annotation_set_ref_item".
  */
-typedef struct DexAnnotationSetRefItem {
+struct DexAnnotationSetRefItem {
     u4  annotationsOff;             /* offset to DexAnnotationSetItem */
-} DexAnnotationSetRefItem;
+};
 
 /*
  * Direct-mapped "annotation_set_ref_list".
  */
-typedef struct DexAnnotationSetRefList {
+struct DexAnnotationSetRefList {
     u4  size;
     DexAnnotationSetRefItem list[1];
-} DexAnnotationSetRefList;
+};
 
 /*
  * Direct-mapped "annotation_set_item".
  */
-typedef struct DexAnnotationSetItem {
+struct DexAnnotationSetItem {
     u4  size;
     u4  entries[1];                 /* offset to DexAnnotationItem */
-} DexAnnotationSetItem;
+};
 
 /*
  * Direct-mapped "annotation_item".
  *
  * NOTE: this structure is byte-aligned.
  */
-typedef struct DexAnnotationItem {
+struct DexAnnotationItem {
     u1  visibility;
     u1  annotation[1];              /* data in encoded_annotation format */
-} DexAnnotationItem;
+};
 
 /*
  * Direct-mapped "encoded_array".
  *
  * NOTE: this structure is byte-aligned.
  */
-typedef struct DexEncodedArray {
+struct DexEncodedArray {
     u1  array[1];                   /* data in encoded_array format */
-} DexEncodedArray;
+};
 
 /*
  * Lookup table for classes.  It provides a mapping from class name to
@@ -450,7 +446,7 @@ typedef struct DexEncodedArray {
  * a hash table with direct pointers to the items, but because it's shared
  * there's less of a penalty for using a fairly sparse table.
  */
-typedef struct DexClassLookup {
+struct DexClassLookup {
     int     size;                       // total size, including "size"
     int     numEntries;                 // size of table[]; always power of 2
     struct {
@@ -458,7 +454,7 @@ typedef struct DexClassLookup {
         int     classDescriptorOffset;  // in bytes, from start of DEX
         int     classDefOffset;         // in bytes, from start of DEX
     } table[1];
-} DexClassLookup;
+};
 
 /*
  * Header added by DEX optimization pass.  Values are always written in
@@ -468,7 +464,7 @@ typedef struct DexClassLookup {
  *
  * Try to keep this simple and fixed-size.
  */
-typedef struct DexOptHeader {
+struct DexOptHeader {
     u1  magic[8];           /* includes version number */
 
     u4  dexOffset;          /* file offset of DEX header */
@@ -482,7 +478,7 @@ typedef struct DexOptHeader {
     u4  checksum;           /* adler32 checksum covering deps/opt */
 
     /* pad for 64-bit alignment if necessary */
-} DexOptHeader;
+};
 
 #define DEX_OPT_FLAG_BIG            (1<<1)  /* swapped to big-endian */
 
@@ -494,7 +490,7 @@ typedef struct DexOptHeader {
  * Code should regard DexFile as opaque, using the API calls provided here
  * to access specific structures.
  */
-typedef struct DexFile {
+struct DexFile {
     /* directly-mapped "opt" header */
     const DexOptHeader* pOptHeader;
 
@@ -523,7 +519,7 @@ typedef struct DexFile {
 
     /* additional app-specific data structures associated with the DEX */
     //void*               auxData;
-} DexFile;
+};
 
 /*
  * Utility function -- rounds up to the nearest power of 2.
@@ -963,9 +959,5 @@ const char* dexGetBoxedTypeDescriptor(PrimitiveType type);
  * as a primitive type descriptor.
  */
 PrimitiveType dexGetPrimitiveTypeFromDescriptorChar(char descriptorChar);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /*_LIBDEX_DEXFILE*/

@@ -63,7 +63,7 @@ static char* descriptorToDot(const char* str)
         str++; /* Skip the 'L'. */
     }
 
-    newStr = malloc(at + 1); /* Add one for the '\0'. */
+    newStr = (char*)malloc(at + 1); /* Add one for the '\0'. */
     newStr[at] = '\0';
 
     while (at > 0) {
@@ -217,7 +217,7 @@ int process(const char* fileName)
     }
     mapped = true;
 
-    pDexFile = dexFileParse(map.addr, map.length, kDexParseDefault);
+    pDexFile = dexFileParse((u1*)map.addr, map.length, kDexParseDefault);
     if (pDexFile == NULL) {
         fprintf(stderr, "Warning: DEX parse failed for '%s'\n", fileName);
         goto bail;

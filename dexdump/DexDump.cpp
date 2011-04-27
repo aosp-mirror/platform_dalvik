@@ -52,13 +52,13 @@
 
 static const char* gProgName = "dexdump";
 
-typedef enum OutputFormat {
+enum OutputFormat {
     OUTPUT_PLAIN = 0,               /* default */
     OUTPUT_XML,                     /* fancy */
-} OutputFormat;
+};
 
 /* command-line options */
-struct {
+struct Options {
     bool checksumOnly;
     bool disassemble;
     bool showFileHeaders;
@@ -69,14 +69,16 @@ struct {
     const char* tempFileName;
     bool exportsOnly;
     bool verbose;
-} gOptions;
+};
+
+struct Options gOptions;
 
 /* basic info about a field or method */
-typedef struct FieldMethodInfo {
+struct FieldMethodInfo {
     const char* classDescriptor;
     const char* name;
     const char* signature;
-} FieldMethodInfo;
+};
 
 /*
  * Get 2 little-endian bytes.
@@ -150,7 +152,7 @@ static char* descriptorToDot(const char* str)
         }
     }
 
-    newStr = malloc(targetLen + arrayDepth * 2 +1);
+    newStr = (char*)malloc(targetLen + arrayDepth * 2 +1);
 
     /* copy class name over */
     int i;
@@ -825,7 +827,7 @@ static char* indexString(DexFile* pDexFile,
          * size, so we add explicit space for it here.
          */
         outSize++;
-        buf = malloc(outSize);
+        buf = (char*)malloc(outSize);
         if (buf == NULL) {
             return NULL;
         }
@@ -1647,7 +1649,7 @@ bail:
  */
 void dumpRegisterMaps(DexFile* pDexFile)
 {
-    const u1* pClassPool = pDexFile->pRegisterMapPool;
+    const u1* pClassPool = (const u1*)pDexFile->pRegisterMapPool;
     const u4* classOffsets;
     const u1* ptr;
     u4 numClasses;
@@ -1781,15 +1783,16 @@ int process(const char* fileName)
     if (gOptions.verbose)
         printf("Processing '%s'...\n", fileName);
 
-    if (dexOpenAndMap(fileName, gOptions.tempFileName, &map, false) != 0)
-        goto bail;
+    if (dexOpenAndMap(fileName, gOptions.tempFileName, &map, false) != 0) {
+        return result;
+    }
     mapped = true;
 
     int flags = kDexParseVerifyChecksum;
     if (gOptions.ignoreBadChecksum)
         flags |= kDexParseContinueOnError;
 
-    pDexFile = dexFileParse(map.addr, map.length, flags);
+    pDexFile = dexFileParse((u1*)map.addr, map.length, flags);
     if (pDexFile == NULL) {
         fprintf(stderr, "ERROR: DEX parse failed\n");
         goto bail;

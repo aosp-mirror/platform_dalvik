@@ -136,10 +136,10 @@ static void SHA1Transform(unsigned long state[5],
     const unsigned char buffer[64])
 {
 unsigned long a, b, c, d, e;
-typedef union {
+union CHAR64LONG16 {
     unsigned char c[64];
     unsigned long l[16];
-} CHAR64LONG16;
+};
 CHAR64LONG16* block;
 #ifdef SHA1HANDSOFF
 static unsigned char workspace[64];

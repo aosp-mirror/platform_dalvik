@@ -22,10 +22,6 @@
 
 #include <sys/types.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /*
  * System page size.  Normally you're expected to get this from
  * sysconf(_SC_PAGESIZE) or some system-specific define (usually PAGESIZE
@@ -40,13 +36,13 @@ extern "C" {
 /*
  * Use this to keep track of mapped segments.
  */
-typedef struct MemMapping {
+struct MemMapping {
     void*   addr;           /* start of data */
     size_t  length;         /* length of data */
 
     void*   baseAddr;       /* page-aligned base address */
     size_t  baseLength;     /* length of mapping */
-} MemMapping;
+};
 
 /*
  * Copy a map.
@@ -122,9 +118,5 @@ int sysWriteFully(int fd, const void* buf, size_t count, const char* logMsg);
  * 0 on success, -1 on failure.
  */
 int sysCopyFileToFile(int outFd, int inFd, size_t count);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /*_DALVIK_SYSUTIL*/

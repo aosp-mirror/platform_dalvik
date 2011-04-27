@@ -68,7 +68,7 @@ static u8 endianSwapU8(u8 value) {
 /*
  * Some information we pass around to help verify values.
  */
-typedef struct CheckState {
+struct CheckState {
     const DexHeader*  pHeader;
     const u1*         fileStart;
     const u1*         fileEnd;      // points to fileStart + fileLen
@@ -84,7 +84,7 @@ typedef struct CheckState {
     u4*               pDefinedClassBits;
 
     const void*       previousItem; // set during section iteration
-} CheckState;
+};
 
 /*
  * Return the file offset of the given pointer.

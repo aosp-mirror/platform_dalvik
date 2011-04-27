@@ -65,6 +65,9 @@ static int extractAndProcessZip(int zipFd, int cacheFd,
     off_t dexOffset;
     int err;
     int result = -1;
+    int dexoptFlags = 0;        /* bit flags, from enum DexoptFlags */
+    DexClassVerifyMode verifyMode = VERIFY_MODE_ALL;
+    DexOptimizerMode dexOptMode = OPTIMIZE_MODE_VERIFIED;
 
     memset(&zippy, 0, sizeof(zippy));
 
@@ -126,11 +129,6 @@ static int extractAndProcessZip(int zipFd, int cacheFd,
     }
 
     /* Parse the options. */
-
-    DexClassVerifyMode verifyMode = VERIFY_MODE_ALL;
-    DexOptimizerMode dexOptMode = OPTIMIZE_MODE_VERIFIED;
-    int dexoptFlags = 0;        /* bit flags, from enum DexoptFlags */
-
     if (dexoptFlagStr[0] != '\0') {
         const char* opc;
         const char* val;
@@ -208,7 +206,6 @@ bail:
 static int processZipFile(int zipFd, int cacheFd, const char* zipName,
         const char *dexoptFlags)
 {
-    int result = -1;
     char* bcpCopy = NULL;
 
     /*
@@ -218,7 +215,7 @@ static int processZipFile(int zipFd, int cacheFd, const char* zipName,
     const char* bcp = getenv("BOOTCLASSPATH");
     if (bcp == NULL) {
         LOGE("DexOptZ: BOOTCLASSPATH not set\n");
-        goto bail;
+        return -1;
     }
 
     bool isBootstrap = false;
@@ -248,10 +245,9 @@ static int processZipFile(int zipFd, int cacheFd, const char* zipName,
         isBootstrap = true;
     }
 
-    result = extractAndProcessZip(zipFd, cacheFd, zipName, isBootstrap,
+    int result = extractAndProcessZip(zipFd, cacheFd, zipName, isBootstrap,
             bcp, dexoptFlags);
 
-bail:
     free(bcpCopy);
     return result;
 }
@@ -348,7 +344,7 @@ static int preopt(int argc, char* const argv[])
          */
         fprintf(stderr, "Wrong number of args for --preopt (found %d)\n",
                 argc);
-        goto bail;
+        return -1;
     }
 
     const char* zipName = argv[2];
@@ -359,13 +355,13 @@ static int preopt(int argc, char* const argv[])
         strstr(dexoptFlags, "u=n") == NULL)
     {
         fprintf(stderr, "Either 'u=y' or 'u=n' must be specified\n");
-        goto bail;
+        return -1;
     }
 
     zipFd = open(zipName, O_RDONLY);
     if (zipFd < 0) {
         perror(argv[0]);
-        goto bail;
+        return -1;
     }
 
     outFd = open(outName, O_RDWR | O_EXCL | O_CREAT, 0666);
@@ -427,6 +423,9 @@ static int fromDex(int argc, char* const argv[])
     const char* debugFileName;
     u4 crc, modWhen;
     char* endp;
+    bool onlyOptVerifiedDex = false;
+    DexClassVerifyMode verifyMode;
+    DexOptimizerMode dexOptMode;
 
     if (argc < 10) {
         /* don't have all mandatory args */
@@ -492,9 +491,6 @@ static int fromDex(int argc, char* const argv[])
     LOGV("  bootclasspath is '%s'\n", bootClassPath);
 
     /* start the VM partway */
-    bool onlyOptVerifiedDex = false;
-    DexClassVerifyMode verifyMode;
-    DexOptimizerMode dexOptMode;
 
     /* ugh -- upgrade these to a bit field if they get any more complex */
     if ((flags & DEXOPT_VERIFY_ENABLED) != 0) {

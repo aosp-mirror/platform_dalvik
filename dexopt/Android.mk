@@ -19,7 +19,7 @@
 LOCAL_PATH:= $(call my-dir)
 
 local_src_files := \
-		OptMain.c
+		OptMain.cpp
 
 local_c_includes := \
 		dalvik \
