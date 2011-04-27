@@ -2541,8 +2541,7 @@ static jint MonitorExit(JNIEnv* env, jobject jobj) {
  */
 static jint GetJavaVM(JNIEnv* env, JavaVM** vm) {
     ScopedJniThreadState ts(env);
-    //*vm = gDvm.vmList;
-    *vm = (JavaVM*) ((JNIEnvExt*)env)->vm;
+    *vm = gDvmJni.jniVm;
     return (*vm == NULL) ? JNI_ERR : JNI_OK;
 }
 
@@ -3270,7 +3269,7 @@ static const struct JNIInvokeInterface gInvokeInterface = {
  * yet; the value will be filled in later.
  */
 JNIEnv* dvmCreateJNIEnv(Thread* self) {
-    JavaVMExt* vm = (JavaVMExt*) gDvm.vmList;
+    JavaVMExt* vm = (JavaVMExt*) gDvmJni.jniVm;
 
     //if (self != NULL)
     //    LOGI("Ent CreateJNIEnv: threadid=%d %p", self->threadId, self);
@@ -3279,7 +3278,6 @@ JNIEnv* dvmCreateJNIEnv(Thread* self) {
 
     JNIEnvExt* newEnv = (JNIEnvExt*) calloc(1, sizeof(JNIEnvExt));
     newEnv->funcTable = &gNativeInterface;
-    newEnv->vm = vm;
     if (self != NULL) {
         dvmSetJniEnvThreadId((JNIEnv*) newEnv, self);
         assert(newEnv->envThreadId != 0);
@@ -3321,7 +3319,7 @@ void dvmDestroyJNIEnv(JNIEnv* env) {
     //LOGI("Ent DestroyJNIEnv: threadid=%d %p", self->threadId, self);
 
     JNIEnvExt* extEnv = (JNIEnvExt*) env;
-    JavaVMExt* vm = extEnv->vm;
+    JavaVMExt* vm = (JavaVMExt*) gDvmJni.jniVm;
 
     ScopedPthreadMutexLock lock(&vm->envListLock);
 
@@ -3354,7 +3352,7 @@ void dvmLateEnableCheckedJni() {
         LOGE("dvmLateEnableCheckedJni: thread has no JNIEnv");
         return;
     }
-    JavaVMExt* extVm = extEnv->vm;
+    JavaVMExt* extVm = (JavaVMExt*) gDvmJni.jniVm;
     assert(extVm != NULL);
 
     if (!gDvmJni.useCheckJni) {
@@ -3379,10 +3377,10 @@ jint JNI_GetDefaultJavaVMInitArgs(void* vm_args) {
  * We always have zero or one.
  */
 jint JNI_GetCreatedJavaVMs(JavaVM** vmBuf, jsize bufLen, jsize* nVMs) {
-    if (gDvm.vmList != NULL) {
+    if (gDvmJni.jniVm != NULL) {
         *nVMs = 1;
         if (bufLen > 0) {
-            *vmBuf++ = gDvm.vmList;
+            *vmBuf++ = gDvmJni.jniVm;
         }
     } else {
         *nVMs = 0;
@@ -3426,7 +3424,7 @@ jint JNI_CreateJavaVM(JavaVM** p_vm, JNIEnv** p_env, void* vm_args) {
      * "extraInfo" field to pass function pointer "hooks" in.  We also
      * look for the -Xcheck:jni stuff here.
      */
-    int curOpt = 0;
+    int argc = 0;
     bool sawJniOpts = false;
     for (int i = 0; i < args->nOptions; i++) {
         const char* optStr = args->options[i].optionString;
@@ -3434,8 +3432,7 @@ jint JNI_CreateJavaVM(JavaVM** p_vm, JNIEnv** p_env, void* vm_args) {
             dvmFprintf(stderr, "ERROR: CreateJavaVM failed: argument %d was NULL\n", i);
             return JNI_ERR;
         } else if (strcmp(optStr, "vfprintf") == 0) {
-            gDvm.vfprintfHook =
-                (int (*)(FILE *, const char*, va_list))args->options[i].extraInfo;
+            gDvm.vfprintfHook = (int (*)(FILE *, const char*, va_list))args->options[i].extraInfo;
         } else if (strcmp(optStr, "exit") == 0) {
             gDvm.exitHook = (void (*)(int)) args->options[i].extraInfo;
         } else if (strcmp(optStr, "abort") == 0) {
@@ -3446,48 +3443,51 @@ jint JNI_CreateJavaVM(JavaVM** p_vm, JNIEnv** p_env, void* vm_args) {
             gDvmJni.useCheckJni = true;
         } else if (strncmp(optStr, "-Xjniopts:", 10) == 0) {
             sawJniOpts = true;
-            const char* jniOpts = optStr + 9;
-            while (jniOpts != NULL) {
-                jniOpts++;      /* skip past ':' or ',' */
-                if (strncmp(jniOpts, "warnonly", 8) == 0) {
-                    gDvmJni.warnOnly = true;
-                } else if (strncmp(jniOpts, "forcecopy-unmap", 15) == 0) {
-                    gDvmJni.forceDataUnmap = true;
-                } else if (strncmp(jniOpts, "forcecopy", 9) == 0) {
-                    gDvmJni.forceDataCopy = true;
-                } else {
-                    LOGW("unknown jni opt starting at '%s'", jniOpts);
+            char* jniOpts = strdup(optStr + 10);
+            size_t jniOptCount = 1;
+            for (char* p = jniOpts; *p != 0; ++p) {
+                if (*p == ',') {
+                    ++jniOptCount;
+                    *p = 0;
                 }
-                jniOpts = strchr(jniOpts, ',');
             }
+            char* jniOpt = jniOpts;
+            for (size_t i = 0; i < jniOptCount; ++i) {
+                if (strcmp(jniOpt, "warnonly") == 0) {
+                    gDvmJni.warnOnly = true;
+                } else if (strcmp(jniOpt, "forcecopy") == 0) {
+                    gDvmJni.forceCopy = true;
+                } else {
+                    dvmFprintf(stderr, "ERROR: CreateJavaVM failed: unknown -Xjniopts option '%s'\n",
+                            jniOpt);
+                    return JNI_ERR;
+                }
+                jniOpt += strlen(jniOpt) + 1;
+            }
+            free(jniOpts);
         } else {
             /* regular option */
-            argv[curOpt++] = optStr;
+            argv[argc++] = optStr;
         }
     }
-    int argc = curOpt;
 
     if (sawJniOpts && !gDvmJni.useCheckJni) {
         dvmFprintf(stderr, "ERROR: -Xjniopts only makes sense with -Xcheck:jni\n");
         return JNI_ERR;
-    }
-    if (gDvmJni.forceDataUnmap && gDvmJni.forceDataCopy) {
-        dvmFprintf(stderr, "ERROR: choose one of forcecopy or forcecopy-unmap\n");
-        return JNI_ERR;
-    }
-    if (gDvmJni.forceDataUnmap) {
-        gDvmJni.forceDataCopy = true; // It simplifies CheckJNI if we only have to check one thing.
     }
 
     if (gDvmJni.useCheckJni) {
         dvmUseCheckedJniVm(pVM);
     }
 
-    /* set this up before initializing VM, so it can create some JNIEnvs */
-    gDvm.vmList = (JavaVM*) pVM;
+    if (gDvmJni.jniVm != NULL) {
+        dvmFprintf(stderr, "ERROR: Dalvik only supports one VM per process\n");
+        return JNI_ERR;
+    }
+    gDvmJni.jniVm = (JavaVM*) pVM;
 
     /*
-     * Create an env for main thread.  We need to have something set up
+     * Create a JNIEnv for the main thread.  We need to have something set up
      * here because some of the class initialization we do when starting
      * up the VM will call into native code.
      */

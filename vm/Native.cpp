@@ -431,7 +431,7 @@ bool dvmLoadNativeCode(const char* pathName, Object* classLoader,
             self->classLoaderOverride = classLoader;
             oldStatus = dvmChangeStatus(self, THREAD_NATIVE);
             LOGV("+++ calling JNI_OnLoad(%s)\n", pathName);
-            version = (*func)(gDvm.vmList, NULL);
+            version = (*func)(gDvmJni.jniVm, NULL);
             dvmChangeStatus(self, oldStatus);
             self->classLoaderOverride = prevOverride;
 

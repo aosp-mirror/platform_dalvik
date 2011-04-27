@@ -41,9 +41,6 @@ typedef struct JNIEnvExt {
 
     const struct JNINativeInterface* baseFuncTable;
 
-    /* pointer to the VM we are a part of */
-    struct JavaVMExt* vm;
-
     u4      envThreadId;
     Thread* self;
 

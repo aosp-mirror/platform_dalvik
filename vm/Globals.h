@@ -37,8 +37,6 @@
 extern "C" {
 #endif
 
-#define MAX_BREAKPOINTS 20      /* used for a debugger optimization */
-
 /* private structures */
 typedef struct GcHeap GcHeap;
 typedef struct BreakpointSet BreakpointSet;
@@ -570,12 +568,6 @@ struct DvmGlobals {
     pthread_key_t pthreadKeySelf;       /* Thread*, for dvmThreadSelf */
 
     /*
-     * JNI allows you to have multiple VMs, but we limit ourselves to 1,
-     * so "vmList" is really just a pointer to the one and only VM.
-     */
-    JavaVM*     vmList;
-
-    /*
      * Cache results of "A instanceof B".
      */
     AtomicCache* instanceofCache;
@@ -966,8 +958,12 @@ extern int gDvmICHitCount;
 struct DvmJniGlobals {
     bool useCheckJni;
     bool warnOnly;
-    bool forceDataCopy;
-    bool forceDataUnmap;
+    bool forceCopy;
+
+    /**
+     * The JNI JavaVM object. Dalvik only supports a single VM per process.
+     */
+    JavaVM*     jniVm;
 };
 
 extern struct DvmJniGlobals gDvmJni;

@@ -966,39 +966,25 @@ struct GuardedCopy {
 
 private:
     static u1* debugAlloc(size_t len) {
-        if (gDvmJni.forceDataUnmap) {
-            void* result = mmap(NULL, len, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANON, -1, 0);
-            if (result == MAP_FAILED) {
-                LOGE("GuardedCopy::create mmap(%d) failed: %s", len, strerror(errno));
-                dvmAbort();
-            }
-            return reinterpret_cast<u1*>(result);
-        } else {
-            u1* result = new u1[len];
-            if (result == NULL) {
-                LOGE("GuardedCopy::create malloc(%d) failed: %s", len, strerror(errno));
-                dvmAbort();
-            }
-            return result;
+        void* result = mmap(NULL, len, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANON, -1, 0);
+        if (result == MAP_FAILED) {
+            LOGE("GuardedCopy::create mmap(%d) failed: %s", len, strerror(errno));
+            dvmAbort();
         }
+        return reinterpret_cast<u1*>(result);
     }
 
     static void debugFree(void* dataBuf, size_t len) {
         u1* fullBuf = actualBuffer(dataBuf);
         size_t totalByteCount = actualLength(len);
-        if (gDvmJni.forceDataUnmap) {
-            // TODO: we could mprotect instead, and keep the allocation around for a while.
-            // This would be even more expensive, but it might catch more errors.
-            // if (mprotect(fullBuf, totalByteCount, PROT_NONE) != 0) {
-            //     LOGW("mprotect(PROT_NONE) failed: %s\n", strerror(errno));
-            // }
-            if (munmap(fullBuf, totalByteCount) != 0) {
-                LOGW("munmap failed: %s\n", strerror(errno));
-                dvmAbort();
-            }
-        } else {
-            memset(dataBuf, 0xdd, len); // TODO: wipe the underlying buffer, not just the user one?
-            delete[] fullBuf;
+        // TODO: we could mprotect instead, and keep the allocation around for a while.
+        // This would be even more expensive, but it might catch more errors.
+        // if (mprotect(fullBuf, totalByteCount, PROT_NONE) != 0) {
+        //     LOGW("mprotect(PROT_NONE) failed: %s\n", strerror(errno));
+        // }
+        if (munmap(fullBuf, totalByteCount) != 0) {
+            LOGW("munmap failed: %s\n", strerror(errno));
+            dvmAbort();
         }
     }
 
@@ -1576,7 +1562,7 @@ static const jchar* Check_GetStringChars(JNIEnv* env, jstring string, jboolean* 
     ScopedCheck sc(env, kFlag_CritOkay, __FUNCTION__);
     sc.checkString(string);
     const jchar* result = baseEnv(env)->GetStringChars(env, string, isCopy);
-    if (gDvmJni.forceDataCopy && result != NULL) {
+    if (gDvmJni.forceCopy && result != NULL) {
         ScopedJniThreadState ts(env);
         StringObject* strObj = (StringObject*) dvmDecodeIndirectRef(env, string);
         int byteCount = dvmStringLen(strObj) * 2;
@@ -1592,7 +1578,7 @@ static void Check_ReleaseStringChars(JNIEnv* env, jstring string, const jchar* c
     ScopedCheck sc(env, kFlag_Default | kFlag_ExcepOkay, __FUNCTION__);
     sc.checkString(string);
     sc.checkNonNull(chars);
-    if (gDvmJni.forceDataCopy) {
+    if (gDvmJni.forceCopy) {
         if (!GuardedCopy::check(chars, false)) {
             LOGE("JNI: failed guarded copy check in ReleaseStringChars");
             abortMaybe();
@@ -1619,7 +1605,7 @@ static const char* Check_GetStringUTFChars(JNIEnv* env, jstring string, jboolean
     ScopedCheck sc(env, kFlag_CritOkay, __FUNCTION__);
     sc.checkString(string);
     const char* result = baseEnv(env)->GetStringUTFChars(env, string, isCopy);
-    if (gDvmJni.forceDataCopy && result != NULL) {
+    if (gDvmJni.forceCopy && result != NULL) {
         result = (const char*) GuardedCopy::create(result, strlen(result) + 1, false);
         if (isCopy != NULL) {
             *isCopy = JNI_TRUE;
@@ -1632,7 +1618,7 @@ static void Check_ReleaseStringUTFChars(JNIEnv* env, jstring string, const char*
     ScopedCheck sc(env, kFlag_ExcepOkay, __FUNCTION__);
     sc.checkString(string);
     sc.checkNonNull(utf);
-    if (gDvmJni.forceDataCopy) {
+    if (gDvmJni.forceCopy) {
         if (!GuardedCopy::check(utf, false)) {
             LOGE("JNI: failed guarded copy check in ReleaseStringUTFChars");
             abortMaybe();
@@ -1703,12 +1689,12 @@ NEW_PRIMITIVE_ARRAY(jdoubleArray, Double);
         ScopedCheck sc(env, kFlag_Default, __FUNCTION__); \
         sc.checkArray(array); \
         u4 noCopy = 0;                                                      \
-        if (gDvmJni.forceDataCopy && isCopy != NULL) { \
+        if (gDvmJni.forceCopy && isCopy != NULL) { \
             /* capture this before the base call tramples on it */          \
             noCopy = *(u4*) isCopy;                                         \
         }                                                                   \
         _ctype* result = baseEnv(env)->Get##_jname##ArrayElements(env, array, isCopy); \
-        if (gDvmJni.forceDataCopy && result != NULL) { \
+        if (gDvmJni.forceCopy && result != NULL) { \
             if (noCopy == kNoCopyMagic) {                                   \
                 LOGV("FC: not copying %p %x", array, noCopy); \
             } else {                                                        \
@@ -1726,7 +1712,7 @@ NEW_PRIMITIVE_ARRAY(jdoubleArray, Double);
         sc.checkArray(array);                                            \
         sc.checkNonNull(elems); \
         sc.checkReleaseMode(mode); \
-        if (gDvmJni.forceDataCopy) { \
+        if (gDvmJni.forceCopy) { \
             if ((uintptr_t)elems == kNoCopyMagic) {                         \
                 LOGV("FC: not freeing %p", array); \
                 elems = NULL;   /* base JNI call doesn't currently need */  \
@@ -1817,7 +1803,7 @@ static void* Check_GetPrimitiveArrayCritical(JNIEnv* env, jarray array, jboolean
     ScopedCheck sc(env, kFlag_CritGet, __FUNCTION__);
     sc.checkArray(array);
     void* result = baseEnv(env)->GetPrimitiveArrayCritical(env, array, isCopy);
-    if (gDvmJni.forceDataCopy && result != NULL) {
+    if (gDvmJni.forceCopy && result != NULL) {
         result = createGuardedPACopy(env, array, isCopy);
     }
     return result;
@@ -1829,7 +1815,7 @@ static void Check_ReleasePrimitiveArrayCritical(JNIEnv* env, jarray array, void*
     sc.checkArray(array);
     sc.checkNonNull(carray);
     sc.checkReleaseMode(mode);
-    if (gDvmJni.forceDataCopy) {
+    if (gDvmJni.forceCopy) {
         carray = releaseGuardedPACopy(env, array, carray, mode);
     }
     baseEnv(env)->ReleasePrimitiveArrayCritical(env, array, carray, mode);
@@ -1839,7 +1825,7 @@ static const jchar* Check_GetStringCritical(JNIEnv* env, jstring string, jboolea
     ScopedCheck sc(env, kFlag_CritGet, __FUNCTION__);
     sc.checkString(string);
     const jchar* result = baseEnv(env)->GetStringCritical(env, string, isCopy);
-    if (gDvmJni.forceDataCopy && result != NULL) {
+    if (gDvmJni.forceCopy && result != NULL) {
         ScopedJniThreadState ts(env);
         StringObject* strObj = (StringObject*) dvmDecodeIndirectRef(env, string);
         int byteCount = dvmStringLen(strObj) * 2;
@@ -1855,7 +1841,7 @@ static void Check_ReleaseStringCritical(JNIEnv* env, jstring string, const jchar
     ScopedCheck sc(env, kFlag_CritRelease | kFlag_ExcepOkay, __FUNCTION__);
     sc.checkString(string);
     sc.checkNonNull(carray);
-    if (gDvmJni.forceDataCopy) {
+    if (gDvmJni.forceCopy) {
         if (!GuardedCopy::check(carray, false)) {
             LOGE("JNI: failed guarded copy check in ReleaseStringCritical");
             abortMaybe();
