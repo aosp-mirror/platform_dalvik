@@ -20,6 +20,7 @@
 #include "Dalvik.h"
 #include "JniInternal.h"
 #include "ScopedPthreadMutexLock.h"
+#include "UniquePtr.h"
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -509,14 +510,12 @@ static jobject addGlobalReference(Object* obj) {
 
             /* watch for "excessive" use; not generally appropriate */
             if (count >= gDvm.jniGrefLimit) {
-                JavaVMExt* vm = (JavaVMExt*) gDvm.vmList;
-                if (vm->warnError) {
-                    dvmDumpIndirectRefTable(&gDvm.jniGlobalRefTable,
-                        "JNI global");
+                if (gDvmJni.warnOnly) {
+                    LOGW("Excessive JNI global references (%d)", count);
+                } else {
+                    dvmDumpIndirectRefTable(&gDvm.jniGlobalRefTable, "JNI global");
                     LOGE("Excessive JNI global references (%d)", count);
                     dvmAbort();
-                } else {
-                    LOGW("Excessive JNI global references (%d)", count);
                 }
             }
         }
@@ -743,14 +742,6 @@ static bool dvmRegisterJNIMethod(ClassObject* clazz, const char* methodName,
 }
 
 /*
- * Returns "true" if CheckJNI is enabled in the VM.
- */
-static bool dvmIsCheckJNIEnabled() {
-    JavaVMExt* vm = (JavaVMExt*) gDvm.vmList;
-    return vm->useChecked;
-}
-
-/*
  * Returns the appropriate JNI bridge for 'method', also taking into account
  * the -Xcheck:jni setting.
  */
@@ -806,7 +797,7 @@ static DalvikBridgeFunc dvmSelectJNIBridge(const Method* method) {
         }
     }
 
-    return dvmIsCheckJNIEnabled() ? checkFunc[kind] : stdFunc[kind];
+    return gDvmJni.useCheckJni ? checkFunc[kind] : stdFunc[kind];
 }
 
 /*
@@ -3289,7 +3280,6 @@ JNIEnv* dvmCreateJNIEnv(Thread* self) {
     JNIEnvExt* newEnv = (JNIEnvExt*) calloc(1, sizeof(JNIEnvExt));
     newEnv->funcTable = &gNativeInterface;
     newEnv->vm = vm;
-    newEnv->forceDataCopy = vm->forceDataCopy;
     if (self != NULL) {
         dvmSetJniEnvThreadId((JNIEnv*) newEnv, self);
         assert(newEnv->envThreadId != 0);
@@ -3298,7 +3288,7 @@ JNIEnv* dvmCreateJNIEnv(Thread* self) {
         newEnv->envThreadId = 0x77777775;
         newEnv->self = (Thread*) 0x77777779;
     }
-    if (vm->useChecked) {
+    if (gDvmJni.useCheckJni) {
         dvmUseCheckedJniEnv(newEnv);
     }
 
@@ -3367,13 +3357,10 @@ void dvmLateEnableCheckedJni() {
     JavaVMExt* extVm = extEnv->vm;
     assert(extVm != NULL);
 
-    if (!extVm->useChecked) {
+    if (!gDvmJni.useCheckJni) {
         LOGD("Late-enabling CheckJNI");
         dvmUseCheckedJniVm(extVm);
-        extVm->useChecked = true;
         dvmUseCheckedJniEnv(extEnv);
-
-        /* currently no way to pick up jniopts features */
     } else {
         LOGD("Not late-enabling CheckJNI (already on)");
     }
@@ -3411,16 +3398,6 @@ jint JNI_GetCreatedJavaVMs(JavaVM** vmBuf, jsize bufLen, jsize* nVMs) {
  */
 jint JNI_CreateJavaVM(JavaVM** p_vm, JNIEnv** p_env, void* vm_args) {
     const JavaVMInitArgs* args = (JavaVMInitArgs*) vm_args;
-    JNIEnvExt* pEnv = NULL;
-    JavaVMExt* pVM = NULL;
-    const char** argv;
-    int argc = 0;
-    int i, curOpt;
-    int result = JNI_ERR;
-    bool checkJni = false;
-    bool warnError = true;
-    bool forceDataCopy = false;
-
     if (args->version < JNI_VERSION_1_2) {
         return JNI_EVERSION;
     }
@@ -3433,21 +3410,14 @@ jint JNI_CreateJavaVM(JavaVM** p_vm, JNIEnv** p_env, void* vm_args) {
     /*
      * Set up structures for JNIEnv and VM.
      */
-    //pEnv = (JNIEnvExt*) malloc(sizeof(JNIEnvExt));
-    pVM = (JavaVMExt*) malloc(sizeof(JavaVMExt));
-
-    //memset(pEnv, 0, sizeof(JNIEnvExt));
-    //pEnv->funcTable = &gNativeInterface;
-    //pEnv->vm = pVM;
+    JavaVMExt* pVM = (JavaVMExt*) malloc(sizeof(JavaVMExt));
     memset(pVM, 0, sizeof(JavaVMExt));
     pVM->funcTable = &gInvokeInterface;
-    pVM->envList = pEnv;
+    pVM->envList = NULL;
     dvmInitMutex(&pVM->envListLock);
 
-    argv = (const char**) malloc(sizeof(char*) * (args->nOptions));
-    memset(argv, 0, sizeof(char*) * (args->nOptions));
-
-    curOpt = 0;
+    UniquePtr<const char*[]> argv(new const char*[args->nOptions]);
+    memset(argv.get(), 0, sizeof(char*) * (args->nOptions));
 
     /*
      * Convert JNI args to argv.
@@ -3456,12 +3426,13 @@ jint JNI_CreateJavaVM(JavaVM** p_vm, JNIEnv** p_env, void* vm_args) {
      * "extraInfo" field to pass function pointer "hooks" in.  We also
      * look for the -Xcheck:jni stuff here.
      */
-    for (i = 0; i < args->nOptions; i++) {
+    int curOpt = 0;
+    bool sawJniOpts = false;
+    for (int i = 0; i < args->nOptions; i++) {
         const char* optStr = args->options[i].optionString;
-
         if (optStr == NULL) {
-            fprintf(stderr, "ERROR: arg %d string was null", i);
-            goto bail;
+            dvmFprintf(stderr, "ERROR: CreateJavaVM failed: argument %d was NULL\n", i);
+            return JNI_ERR;
         } else if (strcmp(optStr, "vfprintf") == 0) {
             gDvm.vfprintfHook =
                 (int (*)(FILE *, const char*, va_list))args->options[i].extraInfo;
@@ -3472,15 +3443,18 @@ jint JNI_CreateJavaVM(JavaVM** p_vm, JNIEnv** p_env, void* vm_args) {
         } else if (strcmp(optStr, "sensitiveThread") == 0) {
             gDvm.isSensitiveThreadHook = (bool (*)(void))args->options[i].extraInfo;
         } else if (strcmp(optStr, "-Xcheck:jni") == 0) {
-            checkJni = true;
+            gDvmJni.useCheckJni = true;
         } else if (strncmp(optStr, "-Xjniopts:", 10) == 0) {
+            sawJniOpts = true;
             const char* jniOpts = optStr + 9;
             while (jniOpts != NULL) {
                 jniOpts++;      /* skip past ':' or ',' */
                 if (strncmp(jniOpts, "warnonly", 8) == 0) {
-                    warnError = false;
+                    gDvmJni.warnOnly = true;
+                } else if (strncmp(jniOpts, "forcecopy-unmap", 15) == 0) {
+                    gDvmJni.forceDataUnmap = true;
                 } else if (strncmp(jniOpts, "forcecopy", 9) == 0) {
-                    forceDataCopy = true;
+                    gDvmJni.forceDataCopy = true;
                 } else {
                     LOGW("unknown jni opt starting at '%s'", jniOpts);
                 }
@@ -3491,14 +3465,23 @@ jint JNI_CreateJavaVM(JavaVM** p_vm, JNIEnv** p_env, void* vm_args) {
             argv[curOpt++] = optStr;
         }
     }
-    argc = curOpt;
+    int argc = curOpt;
 
-    if (checkJni) {
-        dvmUseCheckedJniVm(pVM);
-        pVM->useChecked = true;
+    if (sawJniOpts && !gDvmJni.useCheckJni) {
+        dvmFprintf(stderr, "ERROR: -Xjniopts only makes sense with -Xcheck:jni\n");
+        return JNI_ERR;
     }
-    pVM->warnError = warnError;
-    pVM->forceDataCopy = forceDataCopy;
+    if (gDvmJni.forceDataUnmap && gDvmJni.forceDataCopy) {
+        dvmFprintf(stderr, "ERROR: choose one of forcecopy or forcecopy-unmap\n");
+        return JNI_ERR;
+    }
+    if (gDvmJni.forceDataUnmap) {
+        gDvmJni.forceDataCopy = true; // It simplifies CheckJNI if we only have to check one thing.
+    }
+
+    if (gDvmJni.useCheckJni) {
+        dvmUseCheckedJniVm(pVM);
+    }
 
     /* set this up before initializing VM, so it can create some JNIEnvs */
     gDvm.vmList = (JavaVM*) pVM;
@@ -3508,14 +3491,18 @@ jint JNI_CreateJavaVM(JavaVM** p_vm, JNIEnv** p_env, void* vm_args) {
      * here because some of the class initialization we do when starting
      * up the VM will call into native code.
      */
-    pEnv = (JNIEnvExt*) dvmCreateJNIEnv(NULL);
+    JNIEnvExt* pEnv = (JNIEnvExt*) dvmCreateJNIEnv(NULL);
 
-    /* initialize VM */
+    /* Initialize VM. */
     gDvm.initializing = true;
-    if (dvmStartup(argc, argv, args->ignoreUnrecognized, (JNIEnv*)pEnv) != 0) {
+    int rc = dvmStartup(argc, argv.get(), args->ignoreUnrecognized, (JNIEnv*)pEnv);
+    gDvm.initializing = false;
+
+    if (rc != 0) {
         free(pEnv);
         free(pVM);
-        goto bail;
+        LOGW("CreateJavaVM failed");
+        return JNI_ERR;
     }
 
     /*
@@ -3524,15 +3511,6 @@ jint JNI_CreateJavaVM(JavaVM** p_vm, JNIEnv** p_env, void* vm_args) {
     dvmChangeStatus(NULL, THREAD_NATIVE);
     *p_env = (JNIEnv*) pEnv;
     *p_vm = (JavaVM*) pVM;
-    result = JNI_OK;
-
-bail:
-    gDvm.initializing = false;
-    if (result == JNI_OK) {
-        LOGV("JNI_CreateJavaVM succeeded");
-    } else {
-        LOGW("JNI_CreateJavaVM failed");
-    }
-    free(argv);
-    return result;
+    LOGV("CreateJavaVM succeeded");
+    return JNI_OK;
 }

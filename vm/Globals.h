@@ -963,6 +963,15 @@ extern int gDvmICHitCount;
 
 #endif
 
+struct DvmJniGlobals {
+    bool useCheckJni;
+    bool warnOnly;
+    bool forceDataCopy;
+    bool forceDataUnmap;
+};
+
+extern struct DvmJniGlobals gDvmJni;
+
 #ifdef __cplusplus
 }
 #endif
