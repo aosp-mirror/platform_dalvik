@@ -494,10 +494,6 @@ void dvmDbgExit(int status)
         dvmDumpAtomicCacheStats(gDvm.instanceofCache);
         dvmDumpBootClassPath();
     }
-#ifdef PROFILE_FIELD_ACCESS
-    dvmDumpFieldAccessCounts();
-#endif
-
     exit(status);
 }
 

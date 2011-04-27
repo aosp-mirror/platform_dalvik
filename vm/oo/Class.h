@@ -184,10 +184,6 @@ void dvmDumpAllClasses(int flags);
 void dvmDumpLoaderStats(const char* msg);
 int  dvmGetNumLoadedClasses();
 
-#ifdef PROFILE_FIELD_ACCESS
-void dvmDumpFieldAccessCounts(void);
-#endif
-
 /* flags for dvmDumpClass / dvmDumpAllClasses */
 #define kDumpClassFullDetail    1
 #define kDumpClassClassLoader   (1 << 1)

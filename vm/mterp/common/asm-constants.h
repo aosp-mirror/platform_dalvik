@@ -124,21 +124,13 @@ MTERP_OFFSET(offShadowSpace_shadowFP,    ShadowSpace, shadowFP, 40)
 #endif
 
 /* InstField fields */
-#ifdef PROFILE_FIELD_ACCESS
-MTERP_OFFSET(offInstField_byteOffset,   InstField, byteOffset, 24)
-#else
 MTERP_OFFSET(offInstField_byteOffset,   InstField, byteOffset, 16)
-#endif
 
 /* Field fields */
 MTERP_OFFSET(offField_clazz,            Field, clazz, 0)
 
 /* StaticField fields */
-#ifdef PROFILE_FIELD_ACCESS
-MTERP_OFFSET(offStaticField_value,      StaticField, value, 24)
-#else
 MTERP_OFFSET(offStaticField_value,      StaticField, value, 16)
-#endif
 
 /* Method fields */
 MTERP_OFFSET(offMethod_clazz,           Method, clazz, 0)

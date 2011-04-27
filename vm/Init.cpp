@@ -169,9 +169,6 @@ static void usage(const char* progName)
 #ifdef CHECK_MUTEX
         " check_mutex"
 #endif
-#ifdef PROFILE_FIELD_ACCESS
-        " profile_field_access"
-#endif
 #if defined(WITH_JIT)
         " jit(" ARCH_VARIANT ")"
 #endif

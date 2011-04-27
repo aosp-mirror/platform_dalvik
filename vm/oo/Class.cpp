@@ -2355,10 +2355,6 @@ static void loadSFieldFromDex(ClassObject* clazz,
      */
     //sfield->value.j = 0;
     assert(sfield->value.j == 0LL);     // cleared earlier with calloc
-
-#ifdef PROFILE_FIELD_ACCESS
-    sfield->field.gets = sfield->field.puts = 0;
-#endif
 }
 
 /*
@@ -2379,10 +2375,6 @@ static void loadIFieldFromDex(ClassObject* clazz,
 #ifndef NDEBUG
     assert(ifield->byteOffset == 0);    // cleared earlier with calloc
     ifield->byteOffset = -1;    // make it obvious if we fail to set later
-#endif
-
-#ifdef PROFILE_FIELD_ACCESS
-    ifield->field.gets = ifield->field.puts = 0;
 #endif
 }
 
@@ -4836,50 +4828,6 @@ void dvmDumpLoaderStats(const char* msg)
         dvmPointerSetGetCount(gDvm.preciseMethods));
 #endif
 }
-
-#ifdef PROFILE_FIELD_ACCESS
-/*
- * Dump the field access counts for all fields in this method.
- */
-static int dumpAccessCounts(void* vclazz, void* varg)
-{
-    const ClassObject* clazz = (const ClassObject*) vclazz;
-    int i;
-
-    for (i = 0; i < clazz->ifieldCount; i++) {
-        Field* field = &clazz->ifields[i].field;
-
-        if (field->gets != 0)
-            printf("GI %d %s.%s\n", field->gets,
-                field->clazz->descriptor, field->name);
-        if (field->puts != 0)
-            printf("PI %d %s.%s\n", field->puts,
-                field->clazz->descriptor, field->name);
-    }
-    for (i = 0; i < clazz->sfieldCount; i++) {
-        Field* field = &clazz->sfields[i].field;
-
-        if (field->gets != 0)
-            printf("GS %d %s.%s\n", field->gets,
-                field->clazz->descriptor, field->name);
-        if (field->puts != 0)
-            printf("PS %d %s.%s\n", field->puts,
-                field->clazz->descriptor, field->name);
-    }
-
-    return 0;
-}
-
-/*
- * Dump the field access counts for all loaded classes.
- */
-void dvmDumpFieldAccessCounts()
-{
-    dvmHashTableLock(gDvm.loadedClasses);
-    dvmHashForeach(gDvm.loadedClasses, dumpAccessCounts, NULL);
-    dvmHashTableUnlock(gDvm.loadedClasses);
-}
-#endif
 
 /*
  * ===========================================================================

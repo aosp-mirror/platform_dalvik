@@ -59,7 +59,6 @@ ifeq ($(dvm_make_debug_vm),true)
   LOCAL_CFLAGS += -DWITH_TRACKREF_CHECKS
   LOCAL_CFLAGS += -DWITH_EXTRA_GC_CHECKS=1
   #LOCAL_CFLAGS += -DCHECK_MUTEX
-  #LOCAL_CFLAGS += -DPROFILE_FIELD_ACCESS
   LOCAL_CFLAGS += -DDVM_SHOW_EXCEPTION=3
   # add some extra stuff to make it easier to examine with GDB
   LOCAL_CFLAGS += -DEASY_GDB

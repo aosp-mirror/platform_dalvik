@@ -74,18 +74,6 @@
 /* set and adjust ANDROID_LOG_TAGS='*:i jdwp:i dalvikvm:i dalvikvmi:i' */
 
 /*
- * Keep a tally of accesses to fields.  Currently only works if full DEX
- * optimization is disabled.
- */
-#ifdef PROFILE_FIELD_ACCESS
-# define UPDATE_FIELD_GET(_field) { (_field)->gets++; }
-# define UPDATE_FIELD_PUT(_field) { (_field)->puts++; }
-#else
-# define UPDATE_FIELD_GET(_field) ((void)0)
-# define UPDATE_FIELD_PUT(_field) ((void)0)
-#endif
-
-/*
  * Export another copy of the PC on every instruction; this is largely
  * redundant with EXPORT_PC and the debugger code.  This value can be
  * compared against what we have stored on the stack with EXPORT_PC to
@@ -997,7 +985,6 @@ GOTO_TARGET_DECL(exceptionThrown);
             dvmGetField##_ftype(obj, ifield->byteOffset));                  \
         ILOGV("+ IGET '%s'=0x%08llx", ifield->field.name,                   \
             (u8) GET_REGISTER##_regsize(vdst));                             \
-        UPDATE_FIELD_GET(&ifield->field);                                   \
     }                                                                       \
     FINISH(2);
 
@@ -1025,7 +1012,6 @@ GOTO_TARGET_DECL(exceptionThrown);
             dvmGetField##_ftype(obj, ifield->byteOffset));                  \
         ILOGV("+ IGET '%s'=0x%08llx", ifield->field.name,                   \
             (u8) GET_REGISTER##_regsize(vdst));                             \
-        UPDATE_FIELD_GET(&ifield->field);                                   \
     }                                                                       \
     FINISH(5);
 
@@ -1070,7 +1056,6 @@ GOTO_TARGET_DECL(exceptionThrown);
             GET_REGISTER##_regsize(vdst));                                  \
         ILOGV("+ IPUT '%s'=0x%08llx", ifield->field.name,                   \
             (u8) GET_REGISTER##_regsize(vdst));                             \
-        UPDATE_FIELD_PUT(&ifield->field);                                   \
     }                                                                       \
     FINISH(2);
 
@@ -1098,7 +1083,6 @@ GOTO_TARGET_DECL(exceptionThrown);
             GET_REGISTER##_regsize(vdst));                                  \
         ILOGV("+ IPUT '%s'=0x%08llx", ifield->field.name,                   \
             (u8) GET_REGISTER##_regsize(vdst));                             \
-        UPDATE_FIELD_PUT(&ifield->field);                                   \
     }                                                                       \
     FINISH(5);
 
@@ -1148,7 +1132,6 @@ GOTO_TARGET_DECL(exceptionThrown);
         SET_REGISTER##_regsize(vdst, dvmGetStaticField##_ftype(sfield));    \
         ILOGV("+ SGET '%s'=0x%08llx",                                       \
             sfield->field.name, (u8)GET_REGISTER##_regsize(vdst));          \
-        UPDATE_FIELD_GET(&sfield->field);                                   \
     }                                                                       \
     FINISH(2);
 
@@ -1172,7 +1155,6 @@ GOTO_TARGET_DECL(exceptionThrown);
         SET_REGISTER##_regsize(vdst, dvmGetStaticField##_ftype(sfield));    \
         ILOGV("+ SGET '%s'=0x%08llx",                                       \
             sfield->field.name, (u8)GET_REGISTER##_regsize(vdst));          \
-        UPDATE_FIELD_GET(&sfield->field);                                   \
     }                                                                       \
     FINISH(4);
 
@@ -1196,7 +1178,6 @@ GOTO_TARGET_DECL(exceptionThrown);
         dvmSetStaticField##_ftype(sfield, GET_REGISTER##_regsize(vdst));    \
         ILOGV("+ SPUT '%s'=0x%08llx",                                       \
             sfield->field.name, (u8)GET_REGISTER##_regsize(vdst));          \
-        UPDATE_FIELD_PUT(&sfield->field);                                   \
     }                                                                       \
     FINISH(2);
 
@@ -1220,7 +1201,6 @@ GOTO_TARGET_DECL(exceptionThrown);
         dvmSetStaticField##_ftype(sfield, GET_REGISTER##_regsize(vdst));    \
         ILOGV("+ SPUT '%s'=0x%08llx",                                       \
             sfield->field.name, (u8)GET_REGISTER##_regsize(vdst));          \
-        UPDATE_FIELD_PUT(&sfield->field);                                   \
     }                                                                       \
     FINISH(4);
 

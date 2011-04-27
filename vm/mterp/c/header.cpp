@@ -67,18 +67,6 @@
 /* set and adjust ANDROID_LOG_TAGS='*:i jdwp:i dalvikvm:i dalvikvmi:i' */
 
 /*
- * Keep a tally of accesses to fields.  Currently only works if full DEX
- * optimization is disabled.
- */
-#ifdef PROFILE_FIELD_ACCESS
-# define UPDATE_FIELD_GET(_field) { (_field)->gets++; }
-# define UPDATE_FIELD_PUT(_field) { (_field)->puts++; }
-#else
-# define UPDATE_FIELD_GET(_field) ((void)0)
-# define UPDATE_FIELD_PUT(_field) ((void)0)
-#endif
-
-/*
  * Export another copy of the PC on every instruction; this is largely
  * redundant with EXPORT_PC and the debugger code.  This value can be
  * compared against what we have stored on the stack with EXPORT_PC to
