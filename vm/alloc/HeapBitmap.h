@@ -19,10 +19,6 @@
 #include <limits.h>
 #include <stdint.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #define HB_OBJECT_ALIGNMENT 8
 #define HB_BITS_PER_WORD (sizeof(unsigned long) * CHAR_BIT)
 
@@ -45,7 +41,7 @@ extern "C" {
     (1 << \
         (31-(((uintptr_t)(offset_) / HB_OBJECT_ALIGNMENT) % HB_BITS_PER_WORD)))
 
-typedef struct {
+struct HeapBitmap {
     /* The bitmap data, which points to an mmap()ed area of zeroed
      * anonymous memory.
      */
@@ -72,7 +68,7 @@ typedef struct {
      * to a set bit.  If there are no bits set, (max < base).
      */
     uintptr_t max;
-} HeapBitmap;
+};
 
 /*
  * Callback types used by the walking routines.
@@ -130,9 +126,5 @@ void dvmHeapBitmapScanWalk(HeapBitmap *bitmap,
 void dvmHeapBitmapSweepWalk(const HeapBitmap *liveHb, const HeapBitmap *markHb,
                             uintptr_t base, uintptr_t max,
                             BitmapSweepCallback *callback, void *callbackArg);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /* _DALVIK_HEAP_BITMAP */

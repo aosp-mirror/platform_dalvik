@@ -21,10 +21,6 @@
 
 #include <stddef.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /*
  * Initialization.
  */
@@ -58,7 +54,7 @@ void* dvmMalloc(size_t size, int flags);
  *
  * Returns NULL and throws an exception on failure.
  */
-Object* dvmAllocObject(ClassObject* clazz, int flags);
+extern "C" Object* dvmAllocObject(ClassObject* clazz, int flags);
 
 /* flags for dvmMalloc */
 enum {
@@ -73,7 +69,7 @@ enum {
  *
  * The "self" argument is allowed as an optimization; it may be NULL.
  */
-void dvmAddTrackedAlloc(Object* obj, Thread* self);
+extern "C" void dvmAddTrackedAlloc(Object* obj, Thread* self);
 
 /*
  * Remove an object from the internal tracking list.
@@ -82,7 +78,7 @@ void dvmAddTrackedAlloc(Object* obj, Thread* self);
  *
  * The "self" argument is allowed as an optimization; it may be NULL.
  */
-void dvmReleaseTrackedAlloc(Object* obj, Thread* self);
+extern "C" void dvmReleaseTrackedAlloc(Object* obj, Thread* self);
 
 /*
  * Returns true iff <obj> points to a valid allocated object.
@@ -99,7 +95,7 @@ Object* dvmCloneObject(Object* obj, int flags);
 /*
  * Make the object finalizable.
  */
-void dvmSetFinalizable(Object* obj);
+extern "C" void dvmSetFinalizable(Object* obj);
 
 /*
  * Determine the exact number of GC heap bytes used by an object.  (Internal
@@ -146,9 +142,5 @@ void dvmClearGrowthLimit(void);
  * Returns true if the address is within the bounds of the heap.
  */
 bool dvmIsHeapAddress(void *address);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /*_DALVIK_ALLOC_ALLOC*/

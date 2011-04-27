@@ -19,7 +19,7 @@
 #ifndef _DALVIK_ALLOC_HEAP
 #define _DALVIK_ALLOC_HEAP
 
-typedef struct {
+struct GcSpec {
   /* If true, only the application heap is threatened. */
   bool isPartial;
   /* If true, the trace is run concurrently with the mutator. */
@@ -28,7 +28,7 @@ typedef struct {
   bool doPreserve;
   /* A name for this garbage collection mode. */
   const char *reason;
-} GcSpec;
+};
 
 /* Not enough space for an "ordinary" Object to be allocated. */
 extern const GcSpec *GC_FOR_MALLOC;

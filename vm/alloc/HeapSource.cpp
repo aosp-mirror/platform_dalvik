@@ -65,7 +65,7 @@ static size_t getMaximumSize(const HeapSource *hs);
 #define HSTRACE(...)  /**/
 #endif
 
-typedef struct {
+struct Heap {
     /* The mspace to allocate from.
      */
     mspace msp;
@@ -98,7 +98,7 @@ typedef struct {
      * The highest address of this heap, exclusive.
      */
     char *limit;
-} Heap;
+};
 
 struct HeapSource {
     /* Target ideal heap utilization ratio; range 1..HEAP_UTILIZATION_MAX

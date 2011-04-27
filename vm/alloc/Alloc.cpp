@@ -326,10 +326,10 @@ void dvmCollectGarbage()
     dvmUnlockHeap();
 }
 
-typedef struct {
+struct CountContext {
     const ClassObject *clazz;
     size_t count;
-} CountContext;
+};
 
 static void countInstancesOfClassCallback(void *ptr, void *arg)
 {

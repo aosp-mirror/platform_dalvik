@@ -174,7 +174,7 @@ enum HpsgKind {
 #define HPSG_STATE(solidity, kind) \
     ((u1)((((kind) & 0x7) << 3) | ((solidity) & 0x7)))
 
-typedef struct HeapChunkContext {
+struct HeapChunkContext {
     u1 *buf;
     u1 *p;
     u1 *pieceLenField;
@@ -183,7 +183,7 @@ typedef struct HeapChunkContext {
     int type;
     bool merge;
     bool needHeader;
-} HeapChunkContext;
+};
 
 #define ALLOCATION_UNIT_SIZE 8
 

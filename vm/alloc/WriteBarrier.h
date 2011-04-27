@@ -17,10 +17,6 @@
 #ifndef _DALVIK_ALLOC_WRITEBARRIER
 #define _DALVIK_ALLOC_WRITEBARRIER
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /*
  * Note writes to the heap. These functions must be called if a field
  * of an Object in the heap changes, and before any GC safe-point. The
@@ -53,9 +49,5 @@ INLINE void dvmWriteBarrierArray(const ArrayObject *obj,
 {
     dvmMarkCard((Object *)obj);
 }
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /* _DALVIK_ALLOC_WRITEBARRIER */

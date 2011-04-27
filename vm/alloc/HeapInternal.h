@@ -21,7 +21,7 @@
 
 #include "MarkSweep.h"
 
-typedef struct HeapSource HeapSource;
+struct HeapSource;
 
 struct GcHeap {
     HeapSource      *heapSource;

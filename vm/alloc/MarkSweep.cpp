@@ -234,10 +234,10 @@ static void visitCardTable(Visitor *visitor, u1 *base, u1 *limit, void *arg)
     }
 }
 
-typedef struct {
+struct ScanImmuneObjectContext {
     Object *threatenBoundary;
     Object *currObject;
-} ScanImmuneObjectContext;
+};
 
 /*
  * Marks the referent of an immune object it is threatened.
@@ -968,11 +968,11 @@ void dvmHeapFinishMarkStep()
     ctx->finger = NULL;
 }
 
-typedef struct {
+struct SweepContext {
     size_t numObjects;
     size_t numBytes;
     bool isConcurrent;
-} SweepContext;
+};
 
 static void sweepBitmapCallback(size_t numPtrs, void **ptrs, void *arg)
 {

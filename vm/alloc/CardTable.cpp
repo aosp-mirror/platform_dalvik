@@ -239,10 +239,10 @@ static bool isObjectDirty(const Object *obj)
 /*
  * Context structure for verifying the card table.
  */
-typedef struct {
+struct WhiteReferenceCounter {
     HeapBitmap *markBits;
     size_t whiteRefs;
-} WhiteReferenceCounter;
+};
 
 /*
  * Visitor that counts white referents.

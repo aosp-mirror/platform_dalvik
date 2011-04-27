@@ -19,11 +19,7 @@
 
 #include "Dalvik.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-typedef enum {
+enum RootType {
   ROOT_UNKNOWN = 0,
   ROOT_JNI_GLOBAL,
   ROOT_JNI_LOCAL,
@@ -37,7 +33,7 @@ typedef enum {
   ROOT_DEBUGGER,
   ROOT_VM_INTERNAL,
   ROOT_JNI_MONITOR,
-} RootType;
+};
 
 /*
  * Callback invoked with the address of a reference and a user
@@ -61,9 +57,5 @@ void dvmVisitObject(Visitor *visitor, Object *obj, void *arg);
  * Visits references in the root set.
  */
 void dvmVisitRoots(RootVisitor *visitor, void *arg);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /* _DALVIK_ALLOC_VISIT */
