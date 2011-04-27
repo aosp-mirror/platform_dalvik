@@ -24,10 +24,6 @@
 
 #include "libdex/DexFile.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /*
  * Parse the optimized data tables in the given dex file.
  *
@@ -42,9 +38,5 @@ bool dexParseOptData(const u1* data, size_t length, DexFile* pDexFile);
  * header.
  */
 u4 dexComputeOptChecksum(const DexOptHeader* pOptHeader);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /* def _LIBDEX_DEXOPTDATA */

@@ -109,13 +109,13 @@ static const char* readTypeIdx(const DexFile* pDexFile,
     }
 }
 
-typedef struct LocalInfo {
+struct LocalInfo {
     const char *name;
     const char *descriptor;
     const char *signature;
     u2 startAddress;
     bool live;
-} LocalInfo;
+};
 
 static void emitLocalCbIfLive(void *cnxt, int reg, u4 endAddress,
         LocalInfo *localInReg, DexDebugNewLocalCb localCb)

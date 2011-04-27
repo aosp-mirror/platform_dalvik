@@ -18,7 +18,7 @@
 LOCAL_PATH:= $(call my-dir)
 
 dexdump_src_files := \
-		DexList.c
+		DexList.cpp
 
 dexdump_c_includes := \
 		dalvik \

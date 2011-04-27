@@ -48,14 +48,14 @@ static jobjectArray createStringArray(JNIEnv* env, char* const argv[], int argc)
     jobjectArray result = NULL;
     int i;
 
-    stringClass = (*env)->FindClass(env, "java/lang/String");
-    if ((*env)->ExceptionCheck(env)) {
+    stringClass = env->FindClass("java/lang/String");
+    if (env->ExceptionCheck()) {
         fprintf(stderr, "Got exception while finding class String\n");
         goto bail;
     }
     assert(stringClass != NULL);
-    strArray = (*env)->NewObjectArray(env, argc, stringClass, NULL);
-    if ((*env)->ExceptionCheck(env)) {
+    strArray = env->NewObjectArray(argc, stringClass, NULL);
+    if (env->ExceptionCheck()) {
         fprintf(stderr, "Got exception while creating String array\n");
         goto bail;
     }
@@ -64,14 +64,14 @@ static jobjectArray createStringArray(JNIEnv* env, char* const argv[], int argc)
     for (i = 0; i < argc; i++) {
         jstring argStr;
 
-        argStr = (*env)->NewStringUTF(env, argv[i]);
-        if ((*env)->ExceptionCheck(env)) {
+        argStr = env->NewStringUTF(argv[i]);
+        if (env->ExceptionCheck()) {
             fprintf(stderr, "Got exception while allocating Strings\n");
             goto bail;
         }
         assert(argStr != NULL);
-        (*env)->SetObjectArrayElement(env, strArray, i, argStr);
-        (*env)->DeleteLocalRef(env, argStr);
+        env->SetObjectArrayElement(strArray, i, argStr);
+        env->DeleteLocalRef(argStr);
     }
 
     /* return the array, and ensure we don't delete the local ref to it */
@@ -79,8 +79,8 @@ static jobjectArray createStringArray(JNIEnv* env, char* const argv[], int argc)
     strArray = NULL;
 
 bail:
-    (*env)->DeleteLocalRef(env, stringClass);
-    (*env)->DeleteLocalRef(env, strArray);
+    env->DeleteLocalRef(stringClass);
+    env->DeleteLocalRef(strArray);
     return result;
 }
 
@@ -98,7 +98,7 @@ static int methodIsPublic(JNIEnv* env, jclass clazz, jmethodID methodId)
     int modifiers;
     int result = JNI_FALSE;
 
-    refMethod = (*env)->ToReflectedMethod(env, clazz, methodId, JNI_FALSE);
+    refMethod = env->ToReflectedMethod(clazz, methodId, JNI_FALSE);
     if (refMethod == NULL) {
         fprintf(stderr, "Dalvik VM unable to get reflected method\n");
         goto bail;
@@ -108,19 +108,19 @@ static int methodIsPublic(JNIEnv* env, jclass clazz, jmethodID methodId)
      * We now have a Method instance.  We need to call
      * its getModifiers() method.
      */
-    methodClass = (*env)->FindClass(env, "java/lang/reflect/Method");
+    methodClass = env->FindClass("java/lang/reflect/Method");
     if (methodClass == NULL) {
         fprintf(stderr, "Dalvik VM unable to find class Method\n");
         goto bail;
     }
-    getModifiersId = (*env)->GetMethodID(env, methodClass,
+    getModifiersId = env->GetMethodID(methodClass,
                         "getModifiers", "()I");
     if (getModifiersId == NULL) {
         fprintf(stderr, "Dalvik VM unable to find reflect.Method.getModifiers\n");
         goto bail;
     }
 
-    modifiers = (*env)->CallIntMethod(env, refMethod, getModifiersId);
+    modifiers = env->CallIntMethod(refMethod, getModifiersId);
     if ((modifiers & PUBLIC) == 0) {
         fprintf(stderr, "Dalvik VM: main() is not public\n");
         goto bail;
@@ -129,8 +129,8 @@ static int methodIsPublic(JNIEnv* env, jclass clazz, jmethodID methodId)
     result = JNI_TRUE;
 
 bail:
-    (*env)->DeleteLocalRef(env, refMethod);
-    (*env)->DeleteLocalRef(env, methodClass);
+    env->DeleteLocalRef(refMethod);
+    env->DeleteLocalRef(methodClass);
     return result;
 }
 
@@ -246,13 +246,13 @@ int main(int argc, char* const argv[])
         if (*cp == '.')
             *cp = '/';
 
-    startClass = (*env)->FindClass(env, slashClass);
+    startClass = env->FindClass(slashClass);
     if (startClass == NULL) {
         fprintf(stderr, "Dalvik VM unable to locate class '%s'\n", slashClass);
         goto bail;
     }
 
-    startMeth = (*env)->GetStaticMethodID(env, startClass,
+    startMeth = env->GetStaticMethodID(startClass,
                     "main", "([Ljava/lang/String;)V");
     if (startMeth == NULL) {
         fprintf(stderr, "Dalvik VM unable to find static main(String[]) in '%s'\n",
@@ -270,9 +270,9 @@ int main(int argc, char* const argv[])
     /*
      * Invoke main().
      */
-    (*env)->CallStaticVoidMethod(env, startClass, startMeth, strArray);
+    env->CallStaticVoidMethod(startClass, startMeth, strArray);
 
-    if (!(*env)->ExceptionCheck(env))
+    if (!env->ExceptionCheck())
         result = 0;
 
 bail:
@@ -282,12 +282,12 @@ bail:
          * This allows join() and isAlive() on the main thread to work
          * correctly, and also provides uncaught exception handling.
          */
-        if ((*vm)->DetachCurrentThread(vm) != JNI_OK) {
+        if (vm->DetachCurrentThread() != JNI_OK) {
             fprintf(stderr, "Warning: unable to detach main thread\n");
             result = 1;
         }
 
-        if ((*vm)->DestroyJavaVM(vm) != 0)
+        if (vm->DestroyJavaVM() != 0)
             fprintf(stderr, "Warning: Dalvik VM did not shut down cleanly\n");
         /*printf("\nDalvik VM has exited\n");*/
     }

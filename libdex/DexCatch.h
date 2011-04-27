@@ -24,17 +24,13 @@
 #include "DexFile.h"
 #include "Leb128.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /*
  * Catch handler entry, used while iterating over catch_handler_items.
  */
-typedef struct DexCatchHandler {
+struct DexCatchHandler {
     u4          typeIdx;    /* type index of the caught exception type */
     u4          address;    /* handler address */
-} DexCatchHandler;
+};
 
 /* Get the first handler offset for the given DexCode.
  * It's not 0 because the handlers list is prefixed with its size
@@ -48,12 +44,12 @@ u4 dexGetHandlersSize(const DexCode* pCode);
  * Iterator over catch handler data. This structure should be treated as
  * opaque.
  */
-typedef struct DexCatchIterator {
+struct DexCatchIterator {
     const u1* pEncodedData;
     bool catchesAll;
     u4 countRemaining;
     DexCatchHandler handler;
-} DexCatchIterator;
+};
 
 /* Initialize a DexCatchIterator to emptiness. This mostly exists to
  * squelch innocuous warnings. */
@@ -162,9 +158,5 @@ DEX_INLINE bool dexFindCatchHandler(DexCatchIterator *pIterator,
         return true;
     }
 }
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif

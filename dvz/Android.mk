@@ -4,7 +4,7 @@ LOCAL_PATH := $(my-dir)
 include $(CLEAR_VARS)
 
 LOCAL_SRC_FILES:= \
-  	dvz.c
+	dvz.cpp
 
 LOCAL_SHARED_LIBRARIES := \
 	libcutils

@@ -23,16 +23,12 @@
 
 #include "DexFile.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-typedef struct DexDataMap {
+struct DexDataMap {
     u4 count;    /* number of items currently in the map */
     u4 max;      /* maximum number of items that may be held */
     u4* offsets; /* array of item offsets */
     u2* types;   /* corresponding array of item types */
-} DexDataMap;
+};
 
 /*
  * Allocate and initialize a DexDataMap. Returns NULL on failure.
@@ -73,9 +69,5 @@ DEX_INLINE bool dexDataMapVerify0Ok(DexDataMap* map, u4 offset, u2 type) {
 
     return dexDataMapVerify(map, offset, type);
 }
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /*_LIBDEX_DEXDATAMAP*/

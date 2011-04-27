@@ -23,10 +23,6 @@
 
 #include "DexFile.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /*
  * Callback for "new position table entry".
  * Returning non-0 causes the decoder to stop early.
@@ -55,9 +51,5 @@ void dexDecodeDebugInfo(
             u4 accessFlags,
             DexDebugNewPositionCb posCb, DexDebugNewLocalCb localCb,
             void* cnxt);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /* def _LIBDEX_DEXDEBUGINFO */

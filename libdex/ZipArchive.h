@@ -23,10 +23,6 @@
 #include "SysUtil.h"
 #include "DexFile.h"            // need DEX_INLINE
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /*
  * Trivial typedef to ensure that ZipEntry is not treated as a simple
  * integer.  We use NULL to indicate an invalid value.
@@ -36,11 +32,10 @@ typedef void* ZipEntry;
 /*
  * One entry in the hash table.
  */
-typedef struct ZipHashEntry {
+struct ZipHashEntry {
     const char*     name;
     unsigned short  nameLen;
-    //unsigned int    hash;
-} ZipHashEntry;
+};
 
 /*
  * Read-only Zip archive.
@@ -61,7 +56,7 @@ typedef struct ZipHashEntry {
  * every page that the Central Directory touches.  Easier to tuck a copy
  * of the string length into the hash table entry.
  */
-typedef struct ZipArchive {
+struct ZipArchive {
     /* open Zip archive */
     int         mFd;
 
@@ -78,7 +73,7 @@ typedef struct ZipArchive {
      */
     int         mHashTableSize;
     ZipHashEntry* mHashTable;
-} ZipArchive;
+};
 
 /* Zip compression methods we support */
 enum {
@@ -181,9 +176,5 @@ int dexZipExtractEntryToFile(const ZipArchive* pArchive,
  */
 u4 dexInitCrc32(void);
 u4 dexComputeCrc32(u4 crc, const void* buf, size_t len);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /*_LIBDEX_ZIPARCHIVE*/

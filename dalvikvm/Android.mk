@@ -20,7 +20,7 @@ LOCAL_PATH:= $(call my-dir)
 #
 
 dalvikvm_src_files := \
-    Main.c
+    Main.cpp
 
 dalvikvm_c_includes := \
     $(JNI_H_INCLUDE) \
