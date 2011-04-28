@@ -28,6 +28,18 @@
  */
 #define HEAP_SOURCE_MAX_HEAP_COUNT 2
 
+enum HeapSourceValueSpec {
+    HS_FOOTPRINT,
+    HS_ALLOWED_FOOTPRINT,
+    HS_BYTES_ALLOCATED,
+    HS_OBJECTS_ALLOCATED
+};
+
+enum HeapSourcePtrFlag {
+    HS_CONTAINS,    // identical to dvmHeapSourceContains()
+    HS_ALLOCATED_IN_ZYGOTE
+};
+
 /*
  * Initializes the heap source; must be called before any other
  * dvmHeapSource*() functions.
@@ -90,13 +102,7 @@ void *dvmHeapSourceGetBase(void);
  * Returns the requested value. If the per-heap stats are requested, fill
  * them as well.
  */
-enum HeapSourceValueSpec {
-    HS_FOOTPRINT,
-    HS_ALLOWED_FOOTPRINT,
-    HS_BYTES_ALLOCATED,
-    HS_OBJECTS_ALLOCATED
-};
-size_t dvmHeapSourceGetValue(enum HeapSourceValueSpec spec,
+size_t dvmHeapSourceGetValue(HeapSourceValueSpec spec,
                              size_t perHeapStats[], size_t arrayLen);
 
 /*
@@ -131,11 +137,7 @@ bool dvmHeapSourceContainsAddress(const void *ptr);
 /*
  * Returns the value of the requested flag.
  */
-enum HeapSourcePtrFlag {
-    HS_CONTAINS,    // identical to dvmHeapSourceContains()
-    HS_ALLOCATED_IN_ZYGOTE
-};
-bool dvmHeapSourceGetPtrFlag(const void *ptr, enum HeapSourcePtrFlag flag);
+bool dvmHeapSourceGetPtrFlag(const void *ptr, HeapSourcePtrFlag flag);
 
 /*
  * Returns the number of usable bytes in an allocated chunk; the size

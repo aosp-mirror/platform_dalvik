@@ -1012,7 +1012,7 @@ dvmHeapSourceContains(const void *ptr)
  * Returns the value of the requested flag.
  */
 bool
-dvmHeapSourceGetPtrFlag(const void *ptr, enum HeapSourcePtrFlag flag)
+dvmHeapSourceGetPtrFlag(const void *ptr, HeapSourcePtrFlag flag)
 {
     if (ptr == NULL) {
         return false;

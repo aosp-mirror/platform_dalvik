@@ -21,6 +21,12 @@
 
 #include <stddef.h>
 
+/* flags for dvmMalloc */
+enum {
+    ALLOC_DEFAULT = 0x00,
+    ALLOC_DONT_TRACK = 0x01,  /* don't add to internal tracking list */
+};
+
 /*
  * Initialization.
  */
@@ -55,12 +61,6 @@ void* dvmMalloc(size_t size, int flags);
  * Returns NULL and throws an exception on failure.
  */
 extern "C" Object* dvmAllocObject(ClassObject* clazz, int flags);
-
-/* flags for dvmMalloc */
-enum {
-    ALLOC_DEFAULT       = 0x00,
-    ALLOC_DONT_TRACK    = 0x01,     /* don't add to internal tracking list */
-};
 
 /*
  * Track an object reference that is currently only visible internally.

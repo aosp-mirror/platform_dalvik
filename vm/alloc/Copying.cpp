@@ -685,7 +685,7 @@ bool dvmHeapSourceContains(const void *addr)
     }
 }
 
-bool dvmHeapSourceGetPtrFlag(const void *ptr, enum HeapSourcePtrFlag flag)
+bool dvmHeapSourceGetPtrFlag(const void *ptr, HeapSourcePtrFlag flag)
 {
     assert(!"implemented");
     return false;
