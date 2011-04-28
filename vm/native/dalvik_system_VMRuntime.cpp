@@ -113,7 +113,7 @@ static void Dalvik_dalvik_system_VMRuntime_newNonMovableArray(const u4* args,
     ClassObject* arrayClass = dvmFindArrayClassForElement(elementClass);
     ArrayObject* newArray = dvmAllocArrayByClass(arrayClass,
                                                  length,
-                                                 ALLOC_DEFAULT);
+                                                 ALLOC_NON_MOVING);
     if (newArray == NULL) {
         assert(dvmCheckException(dvmThreadSelf()));
         RETURN_VOID();
