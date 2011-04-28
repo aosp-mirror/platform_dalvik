@@ -25,6 +25,7 @@
 enum {
     ALLOC_DEFAULT = 0x00,
     ALLOC_DONT_TRACK = 0x01,  /* don't add to internal tracking list */
+    ALLOC_NON_MOVING = 0x02,
 };
 
 /*

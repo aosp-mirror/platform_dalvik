@@ -105,7 +105,7 @@ ClassObject* dvmGenerateProxyClass(StringObject* str, ArrayObject* interfaces,
     size_t newClassSize =
         sizeof(ClassObject) + kProxySFieldCount * sizeof(StaticField);
     ClassObject* newClass =
-        (ClassObject*) dvmMalloc(newClassSize, ALLOC_DEFAULT);
+        (ClassObject*) dvmMalloc(newClassSize, ALLOC_NON_MOVING);
     if (newClass == NULL)
         goto bail;
     DVM_OBJECT_INIT(&newClass->obj, gDvm.classJavaLangClass);

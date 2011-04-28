@@ -341,7 +341,7 @@ static bool createPrimitiveType(PrimitiveType primitiveType, ClassObject** pClas
     const char* descriptor = dexGetPrimitiveTypeDescriptor(primitiveType);
     assert(descriptor != NULL);
 
-    ClassObject* newClass = (ClassObject*) dvmMalloc(sizeof(*newClass), ALLOC_DEFAULT);
+    ClassObject* newClass = (ClassObject*) dvmMalloc(sizeof(*newClass), ALLOC_NON_MOVING);
     if (newClass == NULL) {
         return false;
     }
@@ -375,7 +375,7 @@ static bool createInitialClasses() {
      * because it is an instance of itself.
      */
     ClassObject* clazz = (ClassObject*)
-        dvmMalloc(classObjectSize(CLASS_SFIELD_SLOTS), ALLOC_DEFAULT);
+        dvmMalloc(classObjectSize(CLASS_SFIELD_SLOTS), ALLOC_NON_MOVING);
     if (clazz == NULL) {
         return false;
     }
@@ -1766,7 +1766,7 @@ static ClassObject* loadClassFromDex0(DvmDex* pDvmDex,
         newClass = gDvm.classJavaLangClass;
     } else {
         size_t size = classObjectSize(pHeader->staticFieldsSize);
-        newClass = (ClassObject*) dvmMalloc(size, ALLOC_DEFAULT);
+        newClass = (ClassObject*) dvmMalloc(size, ALLOC_NON_MOVING);
     }
     if (newClass == NULL)
         return NULL;

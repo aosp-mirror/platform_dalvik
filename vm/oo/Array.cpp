@@ -363,7 +363,7 @@ static ClassObject* createArrayClass(const char* descriptor, Object* loader)
      * Array classes are simple enough that we don't need to do a full
      * link step.
      */
-    newClass = (ClassObject*) dvmMalloc(sizeof(*newClass), ALLOC_DEFAULT);
+    newClass = (ClassObject*) dvmMalloc(sizeof(*newClass), ALLOC_NON_MOVING);
     if (newClass == NULL)
         return NULL;
     DVM_OBJECT_INIT(&newClass->obj, gDvm.classJavaLangClass);
