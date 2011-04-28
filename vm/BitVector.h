@@ -20,28 +20,24 @@
 #ifndef _DALVIK_BITVECTOR
 #define _DALVIK_BITVECTOR
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /*
  * Expanding bitmap, used for tracking resources.  Bits are numbered starting
  * from zero.
  *
  * All operations on a BitVector are unsynchronized.
  */
-typedef struct BitVector {
+struct BitVector {
     bool    expandable;     /* expand bitmap if we run out? */
     u4      storageSize;    /* current size, in 32-bit words */
     u4*     storage;
-} BitVector;
+};
 
 /* Handy iterator to walk through the bit positions set to 1 */
-typedef struct BitVectorIterator {
+struct BitVectorIterator {
     BitVector *pBits;
     u4 idx;
     u4 bitSize;
-} BitVectorIterator;
+};
 
 /* allocate a bit vector with enough space to hold "startBits" bits */
 BitVector* dvmAllocBitVector(unsigned int startBits, bool expandable);
@@ -103,9 +99,5 @@ void dvmBitVectorIteratorInit(BitVector* pBits, BitVectorIterator* iterator);
 
 /* Return the next position set to 1. -1 means end-of-vector reached */
 int dvmBitVectorIteratorNext(BitVectorIterator* iterator);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /*_DALVIK_BITVECTOR*/

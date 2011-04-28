@@ -58,7 +58,7 @@ static RegisterMap* uncompressMapDifferential(const RegisterMap* pMap);
 #define kUpdatePosnMinRegs  24
 #define kNumUpdatePosns     8
 #define kMaxDiffBits        20
-typedef struct MapStats {
+struct MapStats {
     /*
      * Buckets measuring the distance between GC points.  This tells us how
      * many bits we need to encode the advancing program counter.  We ignore
@@ -103,7 +103,7 @@ typedef struct MapStats {
      */
     int numExpandedMaps;
     int totalExpandedMapSize;
-} MapStats;
+};
 #endif
 
 /*

@@ -24,10 +24,6 @@
 #ifndef _DALVIK_INTERP_DEFS
 #define _DALVIK_INTERP_DEFS
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #if defined(WITH_JIT)
 /*
  * Size of save area for callee-save FP regs, which are not automatically
@@ -63,13 +59,13 @@ void dvmInterpCheckTrackedRefs(Thread* self, const Method* method,
 /*
  * Process switch statement.
  */
-s4 dvmInterpHandlePackedSwitch(const u2* switchData, s4 testVal);
-s4 dvmInterpHandleSparseSwitch(const u2* switchData, s4 testVal);
+extern "C" s4 dvmInterpHandlePackedSwitch(const u2* switchData, s4 testVal);
+extern "C" s4 dvmInterpHandleSparseSwitch(const u2* switchData, s4 testVal);
 
 /*
  * Process fill-array-data.
  */
-bool dvmInterpHandleFillArrayData(ArrayObject* arrayObject,
+extern "C" bool dvmInterpHandleFillArrayData(ArrayObject* arrayObject,
                                   const u2* arrayData);
 
 /*
@@ -107,10 +103,6 @@ static inline bool dvmJitHideTranslation()
            (gDvmJit.pProfTable == NULL);
 }
 
-#endif
-
-#ifdef __cplusplus
-}
 #endif
 
 #endif /*_DALVIK_INTERP_DEFS*/

@@ -33,24 +33,20 @@
 #include <stdarg.h>
 #include <pthread.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /* private structures */
-typedef struct GcHeap GcHeap;
-typedef struct BreakpointSet BreakpointSet;
-typedef struct InlineSub InlineSub;
+struct GcHeap;
+struct BreakpointSet;
+struct InlineSub;
 
 /*
  * One of these for each -ea/-da/-esa/-dsa on the command line.
  */
-typedef struct AssertionControl {
+struct AssertionControl {
     char*   pkgOrClass;         /* package/class string, or NULL for esa/dsa */
     int     pkgOrClassLen;      /* string length, for quick compare */
     bool    enable;             /* enable or disable */
     bool    isPackage;          /* string ended with "..."? */
-} AssertionControl;
+};
 
 /*
  * Register map generation mode.  Only applicable when generateRegisterMaps
@@ -62,11 +58,11 @@ typedef struct AssertionControl {
  * maps, but allows type-precise GC.  "LivePrecise" is even slower and
  * requires additional heap during processing, but allows live-precise GC.
  */
-typedef enum {
+enum RegisterMapMode {
     kRegisterMapModeUnknown = 0,
     kRegisterMapModeTypePrecise,
     kRegisterMapModeLivePrecise
-} RegisterMapMode;
+};
 
 /*
  * All fields are initialized to zero.
@@ -723,25 +719,25 @@ extern struct DvmGlobals gDvm;
 #if defined(WITH_JIT)
 
 /* Trace profiling modes.  Ordering matters - off states before on states */
-typedef enum TraceProfilingModes {
+enum TraceProfilingModes {
     kTraceProfilingDisabled = 0,      // Not profiling
     kTraceProfilingPeriodicOff = 1,   // Periodic profiling, off phase
     kTraceProfilingContinuous = 2,    // Always profiling
     kTraceProfilingPeriodicOn = 3     // Periodic profiling, on phase
-} TraceProfilingModes;
+};
 
 /*
  * Exiting the compiled code w/o chaining will incur overhead to look up the
  * target in the code cache which is extra work only when JIT is enabled. So
  * we want to monitor it closely to make sure we don't have performance bugs.
  */
-typedef enum NoChainExits {
+enum NoChainExits {
     kInlineCacheMiss = 0,
     kCallsiteInterpreted,
     kSwitchOverflow,
     kHeavyweightMonitor,
     kNoChainExitLast,
-} NoChainExits;
+};
 
 /*
  * JIT-specific global state
@@ -967,9 +963,5 @@ struct DvmJniGlobals {
 };
 
 extern struct DvmJniGlobals gDvmJni;
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /*_DALVIK_GLOBALS*/

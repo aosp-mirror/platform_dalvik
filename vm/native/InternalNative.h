@@ -17,10 +17,6 @@
 #ifndef _DALVIK_NATIVE_INTERNALNATIVE
 #define _DALVIK_NATIVE_INTERNALNATIVE
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /*
  * Some setup for internal native functions.
  */
@@ -31,10 +27,6 @@ void dvmInternalNativeShutdown(void);
 DalvikNativeFunc dvmLookupInternalNativeMethod(const Method* method);
 
 /* exception-throwing stub for abstract methods (DalvikNativeFunc) */
-void dvmAbstractMethodStub(const u4* args, JValue* pResult);
-
-#ifdef __cplusplus
-}
-#endif
+extern "C" void dvmAbstractMethodStub(const u4* args, JValue* pResult);
 
 #endif /*_DALVIK_NATIVE_INTERNALNATIVE*/

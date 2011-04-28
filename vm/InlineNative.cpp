@@ -511,16 +511,16 @@ bool javaLangString_fastIndexOf_II(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
  * ===========================================================================
  */
 
-typedef union {
+union Convert32 {
     u4 arg;
     float ff;
-} Convert32;
+};
 
-typedef union {
+union Convert64 {
     u4 arg[2];
     s8 ll;
     double dd;
-} Convert64;
+};
 
 /*
  * public static int abs(int)

@@ -527,7 +527,7 @@ void dvmHeapSourceShutdown(GcHeap **gcHeap)
     *gcHeap = NULL;
 }
 
-size_t dvmHeapSourceGetValue(enum HeapSourceValueSpec spec,
+size_t dvmHeapSourceGetValue(HeapSourceValueSpec spec,
                              size_t perHeapStats[],
                              size_t arrayLen)
 {

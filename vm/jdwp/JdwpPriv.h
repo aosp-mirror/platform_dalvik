@@ -28,10 +28,6 @@
 #include <pthread.h>
 #include <sys/uio.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /*
  * JDWP constants.
  */
@@ -47,14 +43,12 @@ extern "C" {
  * Transport-specific network status.
  */
 struct JdwpNetState;
-typedef struct JdwpNetState JdwpNetState;
-
 struct JdwpState;
 
 /*
  * Transport functions.
  */
-typedef struct JdwpTransport {
+struct JdwpTransport {
     bool (*startup)(struct JdwpState* state, const JdwpStartupParams* pParams);
     bool (*accept)(struct JdwpState* state);
     bool (*establish)(struct JdwpState* state);
@@ -67,7 +61,7 @@ typedef struct JdwpTransport {
     bool (*sendRequest)(struct JdwpState* state, ExpandBuf* pReq);
     bool (*sendBufferedRequest)(struct JdwpState* state,
         const struct iovec* iov, int iovcnt);
-} JdwpTransport;
+};
 
 const JdwpTransport* dvmJdwpSocketTransport();
 const JdwpTransport* dvmJdwpAndroidAdbTransport();
@@ -179,9 +173,5 @@ INLINE bool dvmJdwpSendBufferedRequest(JdwpState* state,
 {
     return (*state->transport->sendBufferedRequest)(state, iov, iovcnt);
 }
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /*_DALVIK_JDWP_JDWPPRIV*/

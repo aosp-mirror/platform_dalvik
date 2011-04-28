@@ -30,20 +30,20 @@
 /*
  * Hold our replacement stdout/stderr.
  */
-typedef struct StdPipes {
+struct StdPipes {
     int stdoutPipe[2];
     int stderrPipe[2];
-} StdPipes;
+};
 
 #define kMaxLine    512
 
 /*
  * Hold some data.
  */
-typedef struct BufferedData {
+struct BufferedData {
     char    buf[kMaxLine+1];
     int     count;
-} BufferedData;
+};
 
 // fwd
 static void* stdioConverterThreadStart(void* arg);

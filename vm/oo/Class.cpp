@@ -937,10 +937,10 @@ bail:
  */
 
 /* search for these criteria in the Class hash table */
-typedef struct ClassMatchCriteria {
+struct ClassMatchCriteria {
     const char* descriptor;
     Object*     loader;
-} ClassMatchCriteria;
+};
 
 #define kInitLoaderInc  4       /* must be power of 2 */
 

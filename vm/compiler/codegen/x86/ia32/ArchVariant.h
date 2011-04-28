@@ -19,7 +19,7 @@
 
 /* Create the TemplateOpcode enum */
 #define JIT_TEMPLATE(X) TEMPLATE_##X,
-typedef enum {
+enum TemplateOpcode {
 #include "../../../template/ia32/TemplateOpList.h"
 /*
  * For example,
@@ -28,7 +28,7 @@ typedef enum {
  *     ...
  */
     TEMPLATE_LAST_MARK,
-} TemplateOpcode;
+};
 #undef JIT_TEMPLATE
 
 #endif /* _DALVIK_VM_COMPILER_CODEGEN_X86_IA32_ARCHVARIANT_H */

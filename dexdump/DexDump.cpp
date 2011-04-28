@@ -241,10 +241,10 @@ static int countOnes(u4 val)
 /*
  * Flag for use with createAccessFlagStr().
  */
-typedef enum AccessFor {
+enum AccessFor {
     kAccessForClass = 0, kAccessForMethod = 1, kAccessForField = 2,
     kAccessForMAX
-} AccessFor;
+};
 
 /*
  * Create a new string with human-readable access flags.

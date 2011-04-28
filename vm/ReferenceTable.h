@@ -23,10 +23,6 @@
 #ifndef _DALVIK_REFERENCETABLE
 #define _DALVIK_REFERENCETABLE
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /*
  * Table definition.
  *
@@ -40,13 +36,13 @@ extern "C" {
  * (This structure is still somewhat transparent; direct access to
  * table/nextEntry is allowed.)
  */
-typedef struct ReferenceTable {
+struct ReferenceTable {
     Object**        nextEntry;          /* top of the list */
     Object**        table;              /* bottom of the list */
 
     int             allocEntries;       /* #of entries we have space for */
     int             maxEntries;         /* max #of entries allowed */
-} ReferenceTable;
+};
 
 /*
  * Initialize a ReferenceTable.
@@ -125,9 +121,5 @@ void dvmDumpReferenceTable(const ReferenceTable* pRef, const char* descr);
  */
 void dvmDumpReferenceTableContents(Object* const* refs, size_t count,
     const char* descr);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /*_DALVIK_REFERENCETABLE*/

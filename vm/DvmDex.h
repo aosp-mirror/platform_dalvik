@@ -21,10 +21,6 @@
 #ifndef _DALVIK_DVMDEX
 #define _DALVIK_DVMDEX
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include "libdex/DexFile.h"
 
 /* extern */
@@ -38,7 +34,7 @@ struct StringObject;
 /*
  * Some additional VM data structures that are associated with the DEX file.
  */
-typedef struct DvmDex {
+struct DvmDex {
     /* pointer to the DexFile we're associated with */
     DexFile*            pDexFile;
 
@@ -67,7 +63,7 @@ typedef struct DvmDex {
 
     /* lock ensuring mutual exclusion during updates */
     pthread_mutex_t     modLock;
-} DvmDex;
+};
 
 
 /*
@@ -161,9 +157,5 @@ INLINE void dvmDexSetResolvedField(DvmDex* pDvmDex, u4 fieldIdx,
     assert(fieldIdx < pDvmDex->pHeader->fieldIdsSize);
     pDvmDex->pResFields[fieldIdx] = field;
 }
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /*_DALVIK_DVMDEX*/

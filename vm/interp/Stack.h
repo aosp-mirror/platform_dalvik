@@ -23,10 +23,6 @@
 #include "jni.h"
 #include <stdarg.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /*
 Stack layout
 
@@ -111,7 +107,6 @@ possible to push additional call frames on without calling a method.
 
 
 struct StackSaveArea;
-typedef struct StackSaveArea StackSaveArea;
 
 //#define PAD_SAVE_AREA       /* help debug stack trampling */
 
@@ -274,15 +269,11 @@ void dvmFillStackTraceArray(const void* fp, const Method** array, size_t length)
 /*
  * Common handling for stack overflow.
  */
-void dvmHandleStackOverflow(Thread* self, const Method* method);
-void dvmCleanupStackOverflow(Thread* self, const Object* exception);
+extern "C" void dvmHandleStackOverflow(Thread* self, const Method* method);
+extern "C" void dvmCleanupStackOverflow(Thread* self, const Object* exception);
 
 /* debugging; dvmDumpThread() is probably a better starting point */
 void dvmDumpThreadStack(const DebugOutputTarget* target, Thread* thread);
 void dvmDumpRunningThreadStack(const DebugOutputTarget* target, Thread* thread);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /*_DALVIK_INTERP_STACK*/

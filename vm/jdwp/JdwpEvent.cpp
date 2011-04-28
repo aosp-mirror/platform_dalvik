@@ -100,7 +100,7 @@ don't allow anyone else to interfere with us.
  * values for mods valid for the event being evaluated will be filled in.
  * The rest will be zeroed.
  */
-typedef struct ModBasket {
+struct ModBasket {
     const JdwpLocation* pLoc;           /* LocationOnly */
     const char*         className;      /* ClassMatch/ClassExclude */
     ObjectId            threadId;       /* ThreadOnly */
@@ -110,7 +110,7 @@ typedef struct ModBasket {
     FieldId             field;          /* FieldOnly */
     ObjectId            thisPtr;        /* InstanceOnly */
     /* nothing for StepOnly -- handled differently */
-} ModBasket;
+};
 
 /*
  * Get the next "request" serial number.  We use this when sending
@@ -536,7 +536,7 @@ static bool modsMatch(JdwpState* state, JdwpEvent* pEvent, ModBasket* basket)
  * DO NOT call this multiple times for the same eventKind, as Count mods are
  * decremented during the scan.
  */
-static void findMatchingEvents(JdwpState* state, enum JdwpEventKind eventKind,
+static void findMatchingEvents(JdwpState* state, JdwpEventKind eventKind,
     ModBasket* basket, JdwpEvent** matchList, int* pMatchCount)
 {
     /* start after the existing entries */
@@ -558,10 +558,10 @@ static void findMatchingEvents(JdwpState* state, enum JdwpEventKind eventKind,
  * Scan through the list of matches and determine the most severe
  * suspension policy.
  */
-static enum JdwpSuspendPolicy scanSuspendPolicy(JdwpEvent** matchList,
+static JdwpSuspendPolicy scanSuspendPolicy(JdwpEvent** matchList,
     int matchCount)
 {
-    enum JdwpSuspendPolicy policy = SP_NONE;
+    JdwpSuspendPolicy policy = SP_NONE;
 
     while (matchCount--) {
         if ((*matchList)->suspendPolicy > policy)
@@ -578,8 +578,7 @@ static enum JdwpSuspendPolicy scanSuspendPolicy(JdwpEvent** matchList,
  *  SP_EVENT_THREAD - suspend ourselves
  *  SP_ALL - suspend everybody except JDWP support thread
  */
-static void suspendByPolicy(JdwpState* state,
-    enum JdwpSuspendPolicy suspendPolicy)
+static void suspendByPolicy(JdwpState* state, JdwpSuspendPolicy suspendPolicy)
 {
     if (suspendPolicy == SP_NONE)
         return;
@@ -745,7 +744,7 @@ static void eventFinish(JdwpState* state, ExpandBuf* pReq)
  */
 bool dvmJdwpPostVMStart(JdwpState* state, bool suspend)
 {
-    enum JdwpSuspendPolicy suspendPolicy;
+    JdwpSuspendPolicy suspendPolicy;
     ObjectId threadId = dvmDbgGetThreadSelfId();
 
     if (suspend)
@@ -811,7 +810,7 @@ bool dvmJdwpPostVMStart(JdwpState* state, bool suspend)
 bool dvmJdwpPostLocationEvent(JdwpState* state, const JdwpLocation* pLoc,
     ObjectId thisPtr, int eventFlags)
 {
-    enum JdwpSuspendPolicy suspendPolicy = SP_NONE;
+    JdwpSuspendPolicy suspendPolicy = SP_NONE;
     ModBasket basket;
     char* nameAlloc = NULL;
 
@@ -920,7 +919,7 @@ bool dvmJdwpPostLocationEvent(JdwpState* state, const JdwpLocation* pLoc,
  */
 bool dvmJdwpPostThreadChange(JdwpState* state, ObjectId threadId, bool start)
 {
-    enum JdwpSuspendPolicy suspendPolicy = SP_NONE;
+    JdwpSuspendPolicy suspendPolicy = SP_NONE;
 
     assert(threadId = dvmDbgGetThreadSelfId());
 
@@ -1024,7 +1023,7 @@ bool dvmJdwpPostException(JdwpState* state, const JdwpLocation* pThrowLoc,
     ObjectId exceptionId, RefTypeId exceptionClassId,
     const JdwpLocation* pCatchLoc, ObjectId thisPtr)
 {
-    enum JdwpSuspendPolicy suspendPolicy = SP_NONE;
+    JdwpSuspendPolicy suspendPolicy = SP_NONE;
     ModBasket basket;
     char* nameAlloc = NULL;
 
@@ -1122,7 +1121,7 @@ bool dvmJdwpPostException(JdwpState* state, const JdwpLocation* pThrowLoc,
 bool dvmJdwpPostClassPrepare(JdwpState* state, int tag, RefTypeId refTypeId,
     const char* signature, int status)
 {
-    enum JdwpSuspendPolicy suspendPolicy = SP_NONE;
+    JdwpSuspendPolicy suspendPolicy = SP_NONE;
     ModBasket basket;
     char* nameAlloc = NULL;
 

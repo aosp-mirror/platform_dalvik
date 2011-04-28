@@ -24,10 +24,6 @@
 #include <stddef.h>
 #include "Atomic.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /* fwd decl */
 struct DataObject;
 struct InitiatingLoaderList;
@@ -41,18 +37,6 @@ struct StaticField;
 struct InstField;
 struct Field;
 struct RegisterMap;
-typedef struct DataObject DataObject;
-typedef struct InitiatingLoaderList InitiatingLoaderList;
-typedef struct ClassObject ClassObject;
-typedef struct StringObject StringObject;
-typedef struct ArrayObject ArrayObject;
-typedef struct Method Method;
-typedef struct ExceptionEntry ExceptionEntry;
-typedef struct LineNumEntry LineNumEntry;
-typedef struct StaticField StaticField;
-typedef struct InstField InstField;
-typedef struct Field Field;
-typedef struct RegisterMap RegisterMap;
 
 /*
  * Native function pointer type.
@@ -70,16 +54,16 @@ typedef void (*DalvikNativeFunc)(const u4* args, JValue* pResult);
 
 
 /* vm-internal access flags and related definitions */
-typedef enum AccessFlags {
+enum AccessFlags {
     ACC_MIRANDA         = 0x8000,       // method (internal to VM)
     JAVA_FLAGS_MASK     = 0xffff,       // bits set from Java sources (low 16)
-} AccessFlags;
+};
 
 /* Use the top 16 bits of the access flags field for
  * other class flags.  Code should use the *CLASS_FLAG*()
  * macros to set/get these flags.
  */
-typedef enum ClassFlags {
+enum ClassFlags {
     CLASS_ISFINALIZABLE        = (1<<31), // class/ancestor overrides finalize()
     CLASS_ISARRAY              = (1<<30), // class is a "[*"
     CLASS_ISOBJECTARRAY        = (1<<29), // class is a "[L*" or "[[*"
@@ -96,7 +80,7 @@ typedef enum ClassFlags {
     /* unlike the others, these can be present in the optimized DEX file */
     CLASS_ISOPTIMIZED          = (1<<17), // class may contain opt instrs
     CLASS_ISPREVERIFIED        = (1<<16), // class has been pre-verified
-} ClassFlags;
+};
 
 /* bits we can reasonably expect to see set in a DEX access flags field */
 #define EXPECTED_FILE_FLAGS \
@@ -121,9 +105,9 @@ typedef enum ClassFlags {
  * Use the top 16 bits of the access flags field for other method flags.
  * Code should use the *METHOD_FLAG*() macros to set/get these flags.
  */
-typedef enum MethodFlags {
+enum MethodFlags {
     METHOD_ISWRITABLE       = (1<<31),  // the method's code is writable
-} MethodFlags;
+};
 
 /*
  * Get/set method flags.
@@ -141,7 +125,7 @@ typedef enum MethodFlags {
     ((u4)((method)->accessFlags & (flags)))
 
 /* current state of the class, increasing as we progress */
-typedef enum ClassStatus {
+enum ClassStatus {
     CLASS_ERROR         = -1,
 
     CLASS_NOTREADY      = 0,
@@ -152,7 +136,7 @@ typedef enum ClassStatus {
     CLASS_VERIFIED      = 5,    /* logically part of linking; done pre-init */
     CLASS_INITIALIZING  = 6,    /* class init in progress */
     CLASS_INITIALIZED   = 7,    /* ready to go */
-} ClassStatus;
+};
 
 /*
  * Definitions for packing refOffsets in ClassObject.
@@ -196,7 +180,7 @@ typedef enum ClassStatus {
 /*
  * Used for iftable in ClassObject.
  */
-typedef struct InterfaceEntry {
+struct InterfaceEntry {
     /* pointer to interface class */
     ClassObject*    clazz;
 
@@ -205,7 +189,7 @@ typedef struct InterfaceEntry {
      * which holds the vtables for all interfaces declared by this class.
      */
     int*            methodIndexArray;
-} InterfaceEntry;
+};
 
 
 
@@ -221,7 +205,7 @@ typedef struct InterfaceEntry {
  *
  * All objects have an Object header followed by type-specific data.
  */
-typedef struct Object {
+struct Object {
     /* ptr to class object */
     ClassObject*    clazz;
 
@@ -230,7 +214,7 @@ typedef struct Object {
      * the comments in Sync.c for a description of its layout.
      */
     u4              lock;
-} Object;
+};
 
 /*
  * Properly initialize an Object.
@@ -792,9 +776,5 @@ INLINE u4 dvmGetMethodInsnsSize(const Method* meth) {
 
 /* debugging */
 void dvmDumpObject(const Object* obj);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /*_DALVIK_OO_OBJECT*/

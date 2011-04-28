@@ -19,10 +19,6 @@
 #ifndef _DALVIK_OO_ARRAY
 #define _DALVIK_OO_ARRAY
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /*
  * Find a matching array class.  If it doesn't exist, create it.
  *
@@ -45,7 +41,7 @@ ClassObject* dvmFindArrayClassForElement(ClassObject* elemClassObj);
  *
  * Returns NULL with an exception raised if allocation fails.
  */
-ArrayObject* dvmAllocArrayByClass(ClassObject* arrayClass,
+extern "C" ArrayObject* dvmAllocArrayByClass(ClassObject* arrayClass,
     size_t length, int allocFlags);
 
 /*
@@ -140,9 +136,5 @@ size_t dvmArrayObjectSize(const ArrayObject *array);
  * the array class.
  */
 size_t dvmArrayClassElementWidth(const ClassObject* clazz);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /*_DALVIK_OO_ARRAY*/

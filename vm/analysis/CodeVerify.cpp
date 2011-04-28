@@ -37,11 +37,11 @@
  * we either only need it at branch points (for verification) or GC points
  * and branches (for verification + type-precise register analysis).
  */
-typedef enum RegisterTrackingMode {
+enum RegisterTrackingMode {
     kTrackRegsBranches,
     kTrackRegsGcPoints,
     kTrackRegsAll
-} RegisterTrackingMode;
+};
 
 /*
  * Set this to enable dead code scanning.  This is not required, but it's
@@ -1820,12 +1820,12 @@ static inline int compareLineToTable(const RegisterTable* regTable,
  * We treat object references separately, so we have "category1nr".  We
  * don't support jsr/ret, so there is no "returnAddress" type.
  */
-typedef enum TypeCategory {
+enum TypeCategory {
     kTypeCategoryUnknown = 0,
     kTypeCategory1nr,           // boolean, byte, char, short, int, float
     kTypeCategory2,             // long, double
     kTypeCategoryRef,           // object reference
-} TypeCategory;
+};
 
 /*
  * See if "type" matches "cat".  All we're really looking for here is that

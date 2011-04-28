@@ -25,10 +25,6 @@
 #include "compiler/CompilerIR.h"
 #include "CalloutHelper.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #if defined(_CODEGEN_C)
 /*
  * loadConstant() sometimes needs to add a small imm to a pre-existing constant
@@ -60,14 +56,10 @@ static void genInterpSingleStep(CompilationUnit *cUnit, MIR *mir);
 
 #if defined(WITH_SELF_VERIFICATION)
 /* Self Verification memory instruction decoder */
-void dvmSelfVerificationMemOpDecode(int lr, int* sp);
+extern "C" void dvmSelfVerificationMemOpDecode(int lr, int* sp);
 #endif
 
 extern void dvmCompilerSetupResourceMasks(ArmLIR *lir);
 
 extern ArmLIR* dvmCompilerRegCopyNoInsert(CompilationUnit *cUnit, int rDest,
                                           int rSrc);
-
-#ifdef __cplusplus
-}
-#endif

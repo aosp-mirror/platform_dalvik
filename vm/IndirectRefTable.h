@@ -17,10 +17,6 @@
 #ifndef _DALVIK_INDIRECTREFTABLE
 #define _DALVIK_INDIRECTREFTABLE
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /*
  * Maintain a table of indirect references.  Used for local/global JNI
  * references.
@@ -95,22 +91,22 @@ typedef void* IndirectRef;
  *
  * For convenience these match up with enum jobjectRefType from jni.h.
  */
-typedef enum IndirectRefKind {
+enum IndirectRefKind {
     kIndirectKindInvalid    = 0,
     kIndirectKindLocal      = 1,
     kIndirectKindGlobal     = 2,
     kIndirectKindWeakGlobal = 3
-} IndirectRefKind;
+};
 
 /*
  * Extended debugging structure.  We keep a parallel array of these, one
  * per slot in the table.
  */
 #define kIRTPrevCount   4
-typedef struct IndirectRefSlot {
+struct IndirectRefSlot {
     u4          serial;         /* slot serial */
     Object*     previous[kIRTPrevCount];
-} IndirectRefSlot;
+};
 
 /*
  * Table definition.
@@ -179,14 +175,14 @@ typedef struct IndirectRefSlot {
  * add a "synchronized lookup" call that takes the mutex as an argument,
  * and either locks or doesn't lock based on internal details.
  */
-typedef union IRTSegmentState {
+union IRTSegmentState {
     u4          all;
     struct {
         u4      topIndex:16;            /* index of first unused entry */
         u4      numHoles:16;            /* #of holes in entire table */
     } parts;
-} IRTSegmentState;
-typedef struct IndirectRefTable {
+};
+struct IndirectRefTable {
     /* semi-public - read/write by interpreter in native call handler */
     IRTSegmentState segmentState;
 
@@ -201,7 +197,7 @@ typedef struct IndirectRefTable {
 
     // TODO: want hole-filling stats (#of holes filled, total entries scanned)
     //       for performance evaluation.
-} IndirectRefTable;
+};
 
 /* use as initial value for "cookie", and when table has only one segment */
 #define IRT_FIRST_SEGMENT   0
@@ -393,9 +389,5 @@ bool dvmRemoveFromIndirectRefTable(IndirectRefTable* pRef, u4 cookie,
  * The caller should lock any external sync before calling.
  */
 void dvmDumpIndirectRefTable(const IndirectRefTable* pRef, const char* descr);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /*_DALVIK_INDIRECTREFTABLE*/

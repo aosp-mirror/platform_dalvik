@@ -19,20 +19,16 @@
 #ifndef _DALVIK_JARFILE
 #define _DALVIK_JARFILE
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /*
  * This represents an open, scanned Jar file.  (It's actually for any Zip
  * archive that happens to hold a Dex file.)
  */
-typedef struct JarFile {
+struct JarFile {
     ZipArchive  archive;
     //MemMapping  map;
     char*       cacheFileName;
     DvmDex*     pDvmDex;
-} JarFile;
+};
 
 /*
  * Open the Zip archive and get a list of the classfile entries.
@@ -58,22 +54,18 @@ INLINE const char* dvmGetJarFileCacheFileName(JarFile* pJarFile) {
     return pJarFile->cacheFileName;
 }
 
-typedef enum DexCacheStatus {
+enum DexCacheStatus {
     DEX_CACHE_ERROR = -2,
     DEX_CACHE_BAD_ARCHIVE = -1,
     DEX_CACHE_OK = 0,
     DEX_CACHE_STALE,
     DEX_CACHE_STALE_ODEX,
-} DexCacheStatus;
+};
 
 /*
  * Checks the dependencies of the dex cache file corresponding
  * to the jar file at the absolute path "fileName".
  */
 DexCacheStatus dvmDexCacheStatus(const char *fileName);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /*_DALVIK_JARFILE*/

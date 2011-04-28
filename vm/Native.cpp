@@ -137,17 +137,17 @@ void dvmResolveNativeMethod(const u4* args, JValue* pResult,
 // are associated with it.  (Or not -- can't determine if native code
 // is still using parts of it.)
 
-typedef enum OnLoadState {
+enum OnLoadState {
     kOnLoadPending = 0,     /* initial state, must be zero */
     kOnLoadFailed,
     kOnLoadOkay,
-} OnLoadState;
+};
 
 /*
  * We add one of these to the hash table for every library we load.  The
  * hash is on the "pathName" field.
  */
-typedef struct SharedLib {
+struct SharedLib {
     char*       pathName;           /* absolute path to library */
     void*       handle;             /* from dlopen */
     Object*     classLoader;        /* ClassLoader we are associated with */
@@ -156,7 +156,7 @@ typedef struct SharedLib {
     pthread_cond_t  onLoadCond;     /* wait for JNI_OnLoad in other thread */
     u4              onLoadThreadId; /* recursive invocation guard */
     OnLoadState     onLoadResult;   /* result of earlier JNI_OnLoad */
-} SharedLib;
+};
 
 /*
  * (This is a dvmHashTableLookup callback.)

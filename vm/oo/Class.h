@@ -19,10 +19,6 @@
 #ifndef _DALVIK_OO_CLASS
 #define _DALVIK_OO_CLASS
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /*
  * The classpath and bootclasspath differ in that only the latter is
  * consulted when looking for classes needed by the VM.  When searching
@@ -39,19 +35,19 @@ extern "C" {
  * Ordering is significant.  (Currently only ".dex" is supported directly
  * by the VM.)
  */
-typedef enum {
+enum ClassPathEntryKind {
     kCpeUnknown = 0,
     kCpeDir,
     kCpeJar,
     kCpeDex,
     kCpeLastEntry       /* used as sentinel at end of array */
-} ClassPathEntryKind;
+};
 
-typedef struct ClassPathEntry {
+struct ClassPathEntry {
     ClassPathEntryKind kind;
     char*   fileName;
     void*   ptr;            /* JarFile* or DexFile* */
-} ClassPathEntry;
+};
 
 bool dvmClassStartup(void);
 void dvmClassShutdown(void);
@@ -134,7 +130,7 @@ bool dvmIsClassInitializing(const ClassObject* clazz);
 /*
  * Initialize a class.
  */
-bool dvmInitClass(ClassObject* clazz);
+extern "C" bool dvmInitClass(ClassObject* clazz);
 
 /*
  * Retrieve the system class loader.
@@ -286,9 +282,5 @@ int dvmCompareNameDescriptorAndMethod(const char* name,
  * Returns the size of the given class object in bytes.
  */
 size_t dvmClassObjectSize(const ClassObject *clazz);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /*_DALVIK_OO_CLASS*/

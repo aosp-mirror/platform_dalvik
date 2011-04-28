@@ -23,10 +23,6 @@
 
 #include "PointerSet.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 struct VerifierData;
 
 
@@ -43,14 +39,14 @@ struct VerifierData;
  * the RegisterLine for the last instruction in the block (which reflects
  * the state *before* the instruction has executed).
  */
-typedef struct {
+struct VfyBasicBlock {
     u4              firstAddr;      /* address of first instruction */
     u4              lastAddr;       /* address of last instruction */
     PointerSet*     predecessors;   /* set of basic blocks that can flow here */
     BitVector*      liveRegs;       /* liveness for each register */
     bool            changed;        /* input set has changed, must re-eval */
     bool            visited;        /* block has been visited at least once */
-} VfyBasicBlock;
+};
 
 /*
  * Generate a list of basic blocks.
@@ -61,9 +57,5 @@ bool dvmComputeVfyBasicBlocks(struct VerifierData* vdata);
  * Free storage allocated by dvmComputeVfyBasicBlocks.
  */
 void dvmFreeVfyBasicBlocks(struct VerifierData* vdata);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /*_DALVIK_VFYBASICBLOCK*/

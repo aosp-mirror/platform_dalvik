@@ -780,10 +780,10 @@ bail:
     return retObj;
 }
 
-typedef struct LineNumFromPcContext {
+struct LineNumFromPcContext {
     u4 address;
     u4 lineNum;
-} LineNumFromPcContext;
+};
 
 static int lineNumForPcCb(void *cnxt, u4 address, u4 lineNum)
 {

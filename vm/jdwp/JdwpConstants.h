@@ -19,10 +19,6 @@
 #ifndef _DALVIK_JDWP_JDWPCONSTANTS
 #define _DALVIK_JDWP_JDWPCONSTANTS
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /*
  * Error constants.
  */
@@ -84,8 +80,7 @@ enum JdwpError {
     ERR_NATIVE_METHOD                               = 511,
     ERR_INVALID_COUNT                               = 512,
 };
-typedef enum JdwpError JdwpError;
-const char* dvmJdwpErrorStr(enum JdwpError error);
+const char* dvmJdwpErrorStr(JdwpError error);
 
 
 /*
@@ -123,7 +118,7 @@ enum JdwpEventKind {
     EK_VM_START             = EK_VM_INIT,
     EK_THREAD_DEATH         = EK_THREAD_END,
 };
-const char* dvmJdwpEventKindStr(enum JdwpEventKind kind);
+const char* dvmJdwpEventKindStr(JdwpEventKind kind);
 
 /*
  * Values for "modKind" in EventRequest.Set.
@@ -141,7 +136,7 @@ enum JdwpModKind {
     MK_STEP                 = 10,
     MK_INSTANCE_ONLY        = 11,
 };
-const char* dvmJdwpModKindStr(enum JdwpModKind kind);
+const char* dvmJdwpModKindStr(JdwpModKind kind);
 
 /*
  * InvokeOptions constants (bit flags).
@@ -159,7 +154,7 @@ enum JdwpStepDepth {
     SD_OVER                 = 1,    /* step over method calls */
     SD_OUT                  = 2,    /* step out of current method */
 };
-const char* dvmJdwpStepDepthStr(enum JdwpStepDepth depth);
+const char* dvmJdwpStepDepthStr(JdwpStepDepth depth);
 
 /*
  * StepSize constants.
@@ -168,7 +163,7 @@ enum JdwpStepSize {
     SS_MIN                  = 0,    /* step by minimum (e.g. 1 bytecode inst) */
     SS_LINE                 = 1,    /* if possible, step to next line */
 };
-const char* dvmJdwpStepSizeStr(enum JdwpStepSize size);
+const char* dvmJdwpStepSizeStr(JdwpStepSize size);
 
 /*
  * SuspendPolicy constants.
@@ -178,7 +173,7 @@ enum JdwpSuspendPolicy {
     SP_EVENT_THREAD         = 1,    /* suspend event thread */
     SP_ALL                  = 2,    /* suspend all threads */
 };
-const char* dvmJdwpSuspendPolicyStr(enum JdwpSuspendPolicy policy);
+const char* dvmJdwpSuspendPolicyStr(JdwpSuspendPolicy policy);
 
 /*
  * SuspendStatus constants.
@@ -186,7 +181,7 @@ const char* dvmJdwpSuspendPolicyStr(enum JdwpSuspendPolicy policy);
 enum JdwpSuspendStatus {
     SUSPEND_STATUS_SUSPENDED = 1,
 };
-const char* dvmJdwpSuspendStatusStr(enum JdwpSuspendStatus status);
+const char* dvmJdwpSuspendStatusStr(JdwpSuspendStatus status);
 
 /*
  * ThreadStatus constants.
@@ -198,7 +193,7 @@ enum JdwpThreadStatus {
     TS_MONITOR              = 3,        // WAITING (monitor wait)
     TS_WAIT                 = 4,        // (in Object.wait())
 };
-const char* dvmJdwpThreadStatusStr(enum JdwpThreadStatus status);
+const char* dvmJdwpThreadStatusStr(JdwpThreadStatus status);
 
 /*
  * TypeTag constants.
@@ -230,9 +225,5 @@ enum JdwpType {
     JT_CLASS_LOADER          = 'l',
     JT_CLASS_OBJECT          = 'c',
 };
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /*_DALVIK_JDWP_JDWPCONSTANTS*/

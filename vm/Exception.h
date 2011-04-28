@@ -20,10 +20,6 @@
 #ifndef _DALVIK_EXCEPTION
 #define _DALVIK_EXCEPTION
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /*
  * Create a Throwable and throw an exception in the current thread (where
  * "throwing" just means "set the thread's exception pointer").
@@ -177,7 +173,7 @@ void dvmLogExceptionStackTrace(void);
  * Returns the offset to the catch code on success, or -1 if we couldn't
  * find a catcher.
  */
-int dvmFindCatchBlock(Thread* self, int relPc, Object* exception,
+extern "C" int dvmFindCatchBlock(Thread* self, int relPc, Object* exception,
     bool doUnroll, void** newFrame);
 
 /*
@@ -216,21 +212,20 @@ void dvmThrowAbstractMethodError(const char* msg);
  * Throw an ArithmeticException in the current thread, with the given detail
  * message.
  */
-void dvmThrowArithmeticException(const char* msg);
+extern "C" void dvmThrowArithmeticException(const char* msg);
 
 /*
  * Throw an ArrayIndexOutOfBoundsException in the current thread,
  * using the given array length and index in the detail message.
  */
-void dvmThrowArrayIndexOutOfBoundsException(int length, int index);
+extern "C" void dvmThrowArrayIndexOutOfBoundsException(int length, int index);
 
 /*
  * Throw an ArrayStoreException in the current thread, using the given classes'
  * names in the detail message, indicating that an object of the given type
  * can't be stored into an array of the given type.
  */
-void dvmThrowArrayStoreExceptionIncompatibleElement(ClassObject* objectType,
-        ClassObject* arrayType);
+extern "C" void dvmThrowArrayStoreExceptionIncompatibleElement(ClassObject* objectType, ClassObject* arrayType);
 
 /*
  * Throw an ArrayStoreException in the current thread, using the given
@@ -259,7 +254,7 @@ void dvmThrowArrayStoreExceptionIncompatibleArrayElement(s4 index, ClassObject* 
  * Throw a ClassCastException in the current thread, using the given classes'
  * names in the detail message.
  */
-void dvmThrowClassCastException(ClassObject* actual, ClassObject* desired);
+extern "C" void dvmThrowClassCastException(ClassObject* actual, ClassObject* desired);
 
 /**
  * Throw a ClassCircularityError in the current thread, with the
@@ -365,7 +360,7 @@ void dvmThrowInstantiationException(ClassObject* clazz,
  * Throw an InternalError in the current thread, with the given
  * detail message.
  */
-void dvmThrowInternalError(const char* msg);
+extern "C" void dvmThrowInternalError(const char* msg);
 
 /**
  * Throw an InterruptedException in the current thread, with the given
@@ -383,13 +378,13 @@ void dvmThrowLinkageError(const char* msg);
  * Throw a NegativeArraySizeException in the current thread, with the
  * given number as the detail message.
  */
-void dvmThrowNegativeArraySizeException(s4 size);
+extern "C" void dvmThrowNegativeArraySizeException(s4 size);
 
 /**
  * Throw a NoClassDefFoundError in the current thread, with the
  * human-readable form of the given descriptor as the detail message.
  */
-void dvmThrowNoClassDefFoundError(const char* descriptor);
+extern "C" void dvmThrowNoClassDefFoundError(const char* descriptor);
 
 /**
  * Throw a NoClassDefFoundError in the current thread, with the given
@@ -403,7 +398,7 @@ void dvmThrowChainedNoClassDefFoundError(const char* descriptor,
  * Throw a NoSuchFieldError in the current thread, with the given
  * detail message.
  */
-void dvmThrowNoSuchFieldError(const char* msg);
+extern "C" void dvmThrowNoSuchFieldError(const char* msg);
 
 /**
  * Throw a NoSuchFieldException in the current thread, with the given
@@ -415,13 +410,13 @@ void dvmThrowNoSuchFieldException(const char* msg);
  * Throw a NoSuchMethodError in the current thread, with the given
  * detail message.
  */
-void dvmThrowNoSuchMethodError(const char* msg);
+extern "C" void dvmThrowNoSuchMethodError(const char* msg);
 
 /**
  * Throw a NullPointerException in the current thread, with the given
  * detail message.
  */
-void dvmThrowNullPointerException(const char* msg);
+extern "C" void dvmThrowNullPointerException(const char* msg);
 
 /**
  * Throw an OutOfMemoryError in the current thread, with the given
@@ -486,9 +481,5 @@ void dvmThrowVerifyError(const char* descriptor);
  * the given detail message.
  */
 void dvmThrowVirtualMachineError(const char* msg);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /*_DALVIK_EXCEPTION*/

@@ -652,7 +652,7 @@ void *dvmHeapSourceGetBase()
  * Caller must hold the heap lock.
  */
 size_t
-dvmHeapSourceGetValue(enum HeapSourceValueSpec spec, size_t perHeapStats[],
+dvmHeapSourceGetValue(HeapSourceValueSpec spec, size_t perHeapStats[],
                       size_t arrayLen)
 {
     HeapSource *hs = gHs;

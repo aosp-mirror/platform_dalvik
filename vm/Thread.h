@@ -26,10 +26,6 @@
 #include <errno.h>
 #include <cutils/sched_policy.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #if defined(CHECK_MUTEX) && !defined(__USE_UNIX98)
 /* glibc lacks this unless you #define __USE_UNIX98 */
 int pthread_mutexattr_settype(pthread_mutexattr_t *attr, int type);
@@ -43,7 +39,7 @@ enum { PTHREAD_MUTEX_ERRORCHECK = PTHREAD_MUTEX_ERRORCHECK_NP };
  *
  * Note that "suspended" is orthogonal to these values (so says JDWP).
  */
-typedef enum ThreadStatus {
+enum ThreadStatus {
     THREAD_UNDEFINED    = -1,       /* makes enum compatible with int32_t */
 
     /* these match up with JDWP values */
@@ -58,7 +54,7 @@ typedef enum ThreadStatus {
     THREAD_NATIVE       = 7,        /* off in a JNI native method */
     THREAD_VMWAIT       = 8,        /* waiting on a VM resource */
     THREAD_SUSPENDED    = 9,        /* suspended, usually by GC or debugger */
-} ThreadStatus;
+};
 
 /* thread priorities, from java.lang.Thread */
 enum {
@@ -87,7 +83,7 @@ void dvmSlayDaemons(void);
  * Interpreter control struction.  Packed into a long long to enable
  * atomic updates.
  */
-typedef union InterpBreak {
+union InterpBreak {
     volatile int64_t   all;
     struct {
         uint16_t   subMode;
@@ -99,14 +95,14 @@ typedef union InterpBreak {
         void* unused;
 #endif
     } ctl;
-} InterpBreak;
+};
 
 /*
  * Our per-thread data.
  *
  * These are allocated on the system heap.
  */
-typedef struct Thread {
+struct Thread {
     /*
      * Interpreter state which must be preserved across nested
      * interpreter invocations (via JNI callbacks).  Must be the first
@@ -308,13 +304,13 @@ typedef struct Thread {
     pthread_mutex_t   callbackMutex;
     SafePointCallback callback;
     void*             callbackArg;
-} Thread;
+};
 
 /* start point for an internal thread; mimics pthread args */
 typedef void* (*InternalThreadStart)(void* arg);
 
 /* args for internal thread creation */
-typedef struct InternalStartArgs {
+struct InternalStartArgs {
     /* inputs */
     InternalThreadStart func;
     void*       funcArg;
@@ -324,7 +320,7 @@ typedef struct InternalStartArgs {
     /* result */
     volatile Thread** pThread;
     volatile int*     pCreateStatus;
-} InternalStartArgs;
+};
 
 /* finish init */
 bool dvmPrepMainForJni(JNIEnv* pEnv);
@@ -350,7 +346,7 @@ void dvmUnlockThreadList(void);
 /*
  * Thread suspend/resume, used by the GC and debugger.
  */
-typedef enum SuspendCause {
+enum SuspendCause {
     SUSPEND_NOT = 0,
     SUSPEND_FOR_GC,
     SUSPEND_FOR_DEBUG,
@@ -365,7 +361,7 @@ typedef enum SuspendCause {
     SUSPEND_FOR_CC_RESET,    // code-cache reset
     SUSPEND_FOR_REFRESH,     // Reload data cached in interpState
 #endif
-} SuspendCause;
+};
 void dvmSuspendThread(Thread* thread);
 void dvmSuspendSelf(bool jdwpActivity);
 void dvmResumeThread(Thread* thread);
@@ -387,7 +383,7 @@ void dvmWaitForSuspend(Thread* thread);
  * Check to see if we should be suspended now.  If so, suspend ourselves
  * by sleeping on a condition variable.
  */
-bool dvmCheckSuspendPending(Thread* self);
+extern "C" bool dvmCheckSuspendPending(Thread* self);
 
 /*
  * Fast test for use in the interpreter.  Returns "true" if our suspend
@@ -600,9 +596,5 @@ void dvmDumpAllThreadsEx(const DebugOutputTarget* target, bool grabLock);
  * in an uncertain state.
  */
 void dvmNukeThread(Thread* thread);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /*_DALVIK_THREAD*/

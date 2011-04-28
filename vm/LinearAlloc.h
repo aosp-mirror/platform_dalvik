@@ -19,10 +19,6 @@
 #ifndef _DALVIK_LINEARALLOC
 #define _DALVIK_LINEARALLOC
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /*
  * If this is set, we create additional data structures and make many
  * additional mprotect() calls.
@@ -34,7 +30,7 @@ extern "C" {
  * allocated region, but that would prevent us from sharing the rest of
  * that first page.
  */
-typedef struct LinearAllocHdr {
+struct LinearAllocHdr {
     int     curOffset;          /* offset where next data goes */
     pthread_mutex_t lock;       /* controls updates to this struct */
 
@@ -43,7 +39,7 @@ typedef struct LinearAllocHdr {
     int     firstOffset;        /* for chasing through */
 
     short*  writeRefCount;      /* for ENFORCE_READ_ONLY */
-} LinearAllocHdr;
+};
 
 
 /*
@@ -120,9 +116,5 @@ void dvmLinearAllocDump(Object* classLoader);
  * a single LinearAlloc.  The full set of linear allocators is scanned.
  */
 bool dvmLinearAllocContains(const void* start, size_t length);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /*_DALVIK_LINEARALLOC*/

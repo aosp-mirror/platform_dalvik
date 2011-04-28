@@ -153,9 +153,9 @@ void dvmDbgCondBroadcast(pthread_cond_t* pCond)
 
 
 /* keep track of type, in case we need to distinguish them someday */
-typedef enum RegistryType {
+enum RegistryType {
     kObjectId = 0xc1, kRefTypeId
-} RegistryType;
+};
 
 /*
  * Hash function for object IDs.  Since objects are at least 8 bytes, and
@@ -1282,12 +1282,12 @@ void dvmDbgOutputAllInterfaces(RefTypeId refTypeId, ExpandBuf* pReply)
     }
 }
 
-typedef struct DebugCallbackContext {
+struct DebugCallbackContext {
     int numItems;
     ExpandBuf* pReply;
     // used by locals table
     bool withGeneric;
-} DebugCallbackContext;
+};
 
 static int lineTablePositionsCb(void *cnxt, u4 address, u4 lineNum)
 {
@@ -2570,8 +2570,8 @@ void dvmDbgUnwatchLocation(const JdwpLocation* pLoc)
  * The JDWP event mechanism has registered a single-step event.  Tell
  * the interpreter about it.
  */
-bool dvmDbgConfigureStep(ObjectId threadId, enum JdwpStepSize size,
-    enum JdwpStepDepth depth)
+bool dvmDbgConfigureStep(ObjectId threadId, JdwpStepSize size,
+    JdwpStepDepth depth)
 {
     Object* threadObj;
     Thread* thread;
@@ -2854,12 +2854,12 @@ void dvmDbgExecuteMethod(DebugInvokeReq* pReq)
 }
 
 // for dvmAddressSetForLine
-typedef struct AddressSetContext {
+struct AddressSetContext {
     bool lastAddressValid;
     u4 lastAddress;
     u4 lineNum;
     AddressSet *pSet;
-} AddressSetContext;
+};
 
 // for dvmAddressSetForLine
 static int addressSetCb (void *cnxt, u4 address, u4 lineNum)

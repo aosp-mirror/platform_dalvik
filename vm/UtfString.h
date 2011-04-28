@@ -21,10 +21,6 @@
 #ifndef _DALVIK_STRING
 #define _DALVIK_STRING
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /*
  * (This is private to UtfString.c, but we cheat a bit and also use it
  * for InlineNative.c.  Not really worth creating a separate header.)
@@ -148,9 +144,5 @@ const u2* dvmStringChars(StringObject* jstr);
  * Compare two string objects.  (This is a dvmHashTableLookup() callback.)
  */
 int dvmHashcmpStrings(const void* vstrObj1, const void* vstrObj2);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /*_DALVIK_STRING*/

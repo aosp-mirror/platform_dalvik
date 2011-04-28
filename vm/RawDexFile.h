@@ -21,18 +21,14 @@
 #ifndef _DALVIK_RAWDEXFILE
 #define _DALVIK_RAWDEXFILE
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /*
  * Structure representing a "raw" DEX file, in its unswapped unoptimized
  * state.
  */
-typedef struct RawDexFile {
+struct RawDexFile {
     char*       cacheFileName;
     DvmDex*     pDvmDex;
-} RawDexFile;
+};
 
 /*
  * Open a raw ".dex" file, optimize it, and load it.
@@ -71,9 +67,5 @@ INLINE DvmDex* dvmGetRawDexFileDex(RawDexFile* pRawDexFile) {
 INLINE const char* dvmGetRawDexFileCacheFileName(RawDexFile* pRawDexFile) {
     return pRawDexFile->cacheFileName;
 }
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /*_DALVIK_RAWDEXFILE*/

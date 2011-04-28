@@ -31,10 +31,6 @@
 #include <endian.h>
 #include "utils/Log.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #if !defined(NDEBUG) && defined(WITH_DALVIK_ASSERT)
 # undef assert
 # define assert(x) \
@@ -105,9 +101,5 @@ typedef union JValue {
 } JValue;
 
 #define NELEM(x) ((int) (sizeof(x) / sizeof((x)[0])))
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /*_DALVIK_COMMON*/

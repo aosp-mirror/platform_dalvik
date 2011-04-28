@@ -20,10 +20,6 @@
 #ifndef _DALVIK_DEXPREPARE
 #define _DALVIK_DEXPREPARE
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /*
  * Global DEX optimizer control.  Determines the circumstances in which we
  * try to rewrite instructions in the DEX file.
@@ -31,13 +27,13 @@ extern "C" {
  * Optimizing is performed ahead-of-time by dexopt and, in some cases, at
  * load time by the VM.
  */
-typedef enum DexOptimizerMode {
+enum DexOptimizerMode {
     OPTIMIZE_MODE_UNKNOWN = 0,
     OPTIMIZE_MODE_NONE,         /* never optimize (except "essential") */
     OPTIMIZE_MODE_VERIFIED,     /* only optimize verified classes (default) */
     OPTIMIZE_MODE_ALL,          /* optimize verified & unverified (risky) */
     OPTIMIZE_MODE_FULL          /* fully opt verified classes at load time */
-} DexOptimizerMode;
+};
 
 /* some additional bit flags for dexopt */
 enum DexoptFlags {
@@ -54,7 +50,7 @@ enum DexoptFlags {
 /*
  * An enumeration of problems that can turn up during verification.
  */
-typedef enum VerifyError {
+enum VerifyError {
     VERIFY_ERROR_NONE = 0,      /* no error; must be zero */
     VERIFY_ERROR_GENERIC,       /* VerifyError */
 
@@ -66,7 +62,7 @@ typedef enum VerifyError {
     VERIFY_ERROR_ACCESS_METHOD, /* IllegalAccessError */
     VERIFY_ERROR_CLASS_CHANGE,  /* IncompatibleClassChangeError */
     VERIFY_ERROR_INSTANTIATION, /* InstantiationError */
-} VerifyError;
+};
 
 /*
  * Identifies the type of reference in the instruction that generated the
@@ -75,11 +71,11 @@ typedef enum VerifyError {
  *
  * This must fit in two bits.
  */
-typedef enum VerifyErrorRefType {
+enum VerifyErrorRefType {
     VERIFY_ERROR_REF_CLASS  = 0,
     VERIFY_ERROR_REF_FIELD  = 1,
     VERIFY_ERROR_REF_METHOD = 2,
-} VerifyErrorRefType;
+};
 
 #define kVerifyErrorRefTypeShift 6
 
@@ -137,9 +133,5 @@ bool dvmPrepareDexInMemory(u1* addr, size_t len, DvmDex** ppDvmDex);
  */
 bool dvmCreateInlineSubsTable(void);
 void dvmFreeInlineSubsTable(void);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /*_DALVIK_DEXPREPARE*/

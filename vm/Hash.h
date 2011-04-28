@@ -22,10 +22,6 @@
 #ifndef _DALVIK_HASH
 #define _DALVIK_HASH
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /* compute the hash of an item with a specific type */
 typedef u4 (*HashCompute)(const void* item);
 
@@ -62,10 +58,10 @@ typedef int (*HashForeachRemoveFunc)(void* data);
  *
  * When an entry is released, we will call (HashFreeFunc)(entry->data).
  */
-typedef struct HashEntry {
+struct HashEntry {
     u4 hashValue;
     void* data;
-} HashEntry;
+};
 
 #define HASH_TOMBSTONE ((void*) 0xcbcacccd)     // invalid ptr value
 
@@ -74,14 +70,14 @@ typedef struct HashEntry {
  *
  * This structure should be considered opaque.
  */
-typedef struct HashTable {
+struct HashTable {
     int         tableSize;          /* must be power of 2 */
     int         numEntries;         /* current #of "live" entries */
     int         numDeadEntries;     /* current #of tombstone entries */
     HashEntry*  pEntries;           /* array on heap */
     HashFreeFunc freeFunc;
     pthread_mutex_t lock;
-} HashTable;
+};
 
 /*
  * Create and initialize a HashTable structure, using "initialSize" as
@@ -183,11 +179,11 @@ int dvmHashForeachRemove(HashTable* pHashTable, HashForeachRemoveFunc func);
  *       MyData* data = (MyData*)dvmHashIterData(&iter);
  *   }
  */
-typedef struct HashIter {
+struct HashIter {
     void*       data;
     HashTable*  pHashTable;
     int         idx;
-} HashIter;
+};
 INLINE void dvmHashIterNext(HashIter* pIter) {
     int i = pIter->idx +1;
     int lim = pIter->pHashTable->tableSize;
@@ -221,9 +217,5 @@ INLINE void* dvmHashIterData(HashIter* pIter) {
 typedef u4 (*HashCalcFunc)(const void* item);
 void dvmHashTableProbeCount(HashTable* pHashTable, HashCalcFunc calcFunc,
     HashCompareFunc cmpFunc);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /*_DALVIK_HASH*/

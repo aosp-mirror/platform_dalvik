@@ -30,12 +30,7 @@
 #include "Bits.h"
 #include <pthread.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 struct JdwpState;       /* opaque */
-typedef struct JdwpState JdwpState;
 
 /*
  * Fundamental types.
@@ -82,34 +77,33 @@ INLINE void expandBufAddFrameId(ExpandBuf* pReply, FrameId id) {
 /*
  * Holds a JDWP "location".
  */
-typedef struct JdwpLocation {
+struct JdwpLocation {
     u1          typeTag;        /* class or interface? */
     RefTypeId   classId;        /* method->clazz */
     MethodId    methodId;       /* method in which "idx" resides */
     u8          idx;            /* relative index into code block */
-} JdwpLocation;
-//#define kJDWPLocationSize   (25)
+};
 
 /*
  * How we talk to the debugger.
  */
-typedef enum JdwpTransportType {
+enum JdwpTransportType {
     kJdwpTransportUnknown = 0,
     kJdwpTransportSocket,       /* transport=dt_socket */
     kJdwpTransportAndroidAdb,   /* transport=dt_android_adb */
-} JdwpTransportType;
+};
 
 /*
  * Holds collection of JDWP initialization parameters.
  */
-typedef struct JdwpStartupParams {
+struct JdwpStartupParams {
     JdwpTransportType transport;
     bool        server;
     bool        suspend;
     char        host[64];
     short       port;
     /* more will be here someday */
-} JdwpStartupParams;
+};
 
 /*
  * Perform one-time initialization.
@@ -238,9 +232,5 @@ bool dvmJdwpPostVMDeath(JdwpState* state);
  */
 void dvmJdwpDdmSendChunkV(JdwpState* state, int type, const struct iovec* iov,
     int iovcnt);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /*_DALVIK_JDWP_JDWP*/

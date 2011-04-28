@@ -283,11 +283,11 @@ static Method* resolveAmbiguousMethod(const ClassObject* referrer, u4 methodIdx)
  * constants for processAnnotationValue indicating what style of
  * result is wanted
  */
-typedef enum {
+enum AnnotationResultStyle {
     kAllObjects,         /* return everything as an object */
     kAllRaw,             /* return everything as a raw value or index */
     kPrimitivesOrObjects /* return primitives as-is but the rest as objects */
-} AnnotationResultStyle;
+};
 
 /*
  * Recursively process an annotation value.

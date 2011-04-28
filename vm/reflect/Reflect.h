@@ -19,10 +19,6 @@
 #ifndef _DALVIK_REFLECT_REFLECT
 #define _DALVIK_REFLECT_REFLECT
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /*
  * During startup, validate the "box" classes, e.g. java/lang/Integer.
  */
@@ -216,23 +212,23 @@ ArrayObject* dvmGetDeclaredClasses(const ClassObject* clazz);
  * Used to pass values out of annotation (and encoded array) processing
  * functions.
  */
-typedef struct AnnotationValue {
+struct AnnotationValue {
     JValue  value;
     u1      type;
-} AnnotationValue;
+};
 
 
 /**
  * Iterator structure for iterating over DexEncodedArray instances. The
  * structure should be treated as opaque.
  */
-typedef struct {
+struct EncodedArrayIterator {
     const u1* cursor;                    /* current cursor */
     u4 elementsLeft;                     /* number of elements left to read */
     const DexEncodedArray* encodedArray; /* instance being iterated over */
     u4 size;                             /* number of elements in instance */
     const ClassObject* clazz;            /* class to resolve with respect to */
-} EncodedArrayIterator;
+};
 
 /**
  * Initializes an encoded array iterator.
@@ -263,9 +259,5 @@ bool dvmEncodedArrayIteratorHasNext(const EncodedArrayIterator* iterator);
  */
 bool dvmEncodedArrayIteratorGetNext(EncodedArrayIterator* iterator,
         AnnotationValue* value);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /*_DALVIK_REFLECT_REFLECT*/

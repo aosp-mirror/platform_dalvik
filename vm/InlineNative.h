@@ -20,10 +20,6 @@
 #ifndef _DALVIK_INLINENATIVE
 #define _DALVIK_INLINENATIVE
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /* startup/shutdown */
 bool dvmInlineNativeStartup(void);
 void dvmInlineNativeShutdown(void);
@@ -49,19 +45,19 @@ typedef bool (*InlineOp4Func)(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
  * generate assembly code that knows how many args it needs and has the
  * target address embedded.
  */
-typedef struct InlineOperation {
+struct InlineOperation {
     InlineOp4Func   func;               /* MUST be first entry */
     const char*     classDescriptor;
     const char*     methodName;
     const char*     methodSignature;
-} InlineOperation;
+};
 
 /*
  * Must be kept in sync w/ gDvmInlineOpsTable in InlineNative.c
  *
  * You should also add a test to libcore's IntrinsicTest.
  */
-typedef enum NativeInlineOps {
+enum NativeInlineOps {
     INLINE_EMPTYINLINEMETHOD = 0,
     INLINE_STRING_CHARAT = 1,
     INLINE_STRING_COMPARETO = 2,
@@ -84,7 +80,7 @@ typedef enum NativeInlineOps {
     INLINE_DOUBLE_TO_LONG_BITS = 19,
     INLINE_DOUBLE_TO_RAW_LONG_BITS = 20,
     INLINE_LONG_BITS_TO_DOUBLE = 21,
-} NativeInlineOps;
+};
 
 /*
  * Get the inlineops table.
@@ -123,7 +119,7 @@ bool dvmPerformInlineOp4Dbg(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
 /*
  * Return method & populate the table on first use.
  */
-Method* dvmResolveInlineNative(int opIndex);
+extern "C" Method* dvmResolveInlineNative(int opIndex);
 
 /*
  * The actual inline native definitions.
@@ -193,9 +189,5 @@ bool javaLangDouble_doubleToRawLongBits(u4 arg0, u4 arg1, u4 arg2,
 
 bool javaLangDouble_longBitsToDouble(u4 arg0, u4 arg1, u4 arg2, u4 arg,
                                      JValue* pResult);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /*_DALVIK_INLINENATIVE*/

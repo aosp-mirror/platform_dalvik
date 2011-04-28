@@ -22,10 +22,6 @@
 #include "InterpDefs.h"
 #include "mterp/common/jit-config.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #define JIT_MAX_TRACE_LEN 100
 
 #if defined (WITH_SELF_VERIFICATION)
@@ -33,17 +29,17 @@ extern "C" {
 #define REG_SPACE 256                /* default size of shadow space */
 #define HEAP_SPACE JIT_MAX_TRACE_LEN /* default size of heap space */
 
-typedef struct ShadowHeap {
+struct ShadowHeap {
     int addr;
     int data;
-} ShadowHeap;
+};
 
-typedef struct InstructionTrace {
+struct InstructionTrace {
     int addr;
     DecodedInstruction decInsn;
-} InstructionTrace;
+};
 
-typedef struct ShadowSpace {
+struct ShadowSpace {
     const u2* startPC;          /* starting pc of jitted region */
     u4* fp;                     /* starting fp of jitted region */
     const Method *method;
@@ -61,11 +57,12 @@ typedef struct ShadowSpace {
     const void* endShadowFP;    /* ending fp in shadow space */
     InstructionTrace trace[JIT_MAX_TRACE_LEN]; /* opcode trace for debugging */
     int traceLength;            /* counter for current trace length */
-} ShadowSpace;
+};
 
 /*
  * Self verification functions.
  */
+extern "C" {
 void* dvmSelfVerificationShadowSpaceAlloc(Thread* self);
 void dvmSelfVerificationShadowSpaceFree(Thread* self);
 void* dvmSelfVerificationSaveState(const u2* pc, u4* fp,
@@ -75,6 +72,7 @@ void* dvmSelfVerificationRestoreState(const u2* pc, u4* fp,
                                       SelfVerificationState exitPoint,
                                       Thread *self);
 void dvmCheckSelfVerification(const u2* pc, Thread* self);
+}
 #endif
 
 /*
@@ -115,10 +113,10 @@ static inline u4 dvmJitHash( const u2* p ) {
 
 typedef s4 JitTraceCounter_t;
 
-typedef struct JitTraceProfCounters {
+struct JitTraceProfCounters {
     unsigned int           next;
     JitTraceCounter_t      *buckets[JIT_PROF_BLOCK_BUCKETS];
-} JitTraceProfCounters;
+};
 
 /*
  * Entries in the JIT's address lookup hash table.
@@ -126,7 +124,7 @@ typedef struct JitTraceProfCounters {
  * single 32-bit word to allow use of atomic update.
  */
 
-typedef struct JitEntryInfo {
+struct JitEntryInfo {
     unsigned int           isMethodEntry:1;
     unsigned int           inlineCandidate:1;
     unsigned int           profileEnabled:1;
@@ -134,19 +132,20 @@ typedef struct JitEntryInfo {
     unsigned int           profileOffset:5;
     unsigned int           unused:5;
     u2                     chain;                 /* Index of next in chain */
-} JitEntryInfo;
+};
 
-typedef union JitEntryInfoUnion {
+union JitEntryInfoUnion {
     JitEntryInfo info;
     volatile int infoWord;
-} JitEntryInfoUnion;
+};
 
-typedef struct JitEntry {
+struct JitEntry {
     JitEntryInfoUnion   u;
     const u2*           dPC;            /* Dalvik code address */
     void*               codeAddress;    /* Code address of native translation */
-} JitEntry;
+};
 
+extern "C" {
 void dvmCheckJit(const u2* pc, Thread* self);
 void* dvmJitGetTraceAddr(const u2* dPC);
 void* dvmJitGetMethodAddr(const u2* dPC);
@@ -162,7 +161,7 @@ void dvmBumpPunt(int from);
 void dvmJitStats(void);
 bool dvmJitResizeJitTable(unsigned int size);
 void dvmJitResetTable(void);
-struct JitEntry *dvmJitFindEntry(const u2* pc, bool isMethodEntry);
+JitEntry *dvmJitFindEntry(const u2* pc, bool isMethodEntry);
 s8 dvmJitd2l(double d);
 s8 dvmJitf2l(float f);
 void dvmJitSetCodeAddr(const u2* dPC, void *nPC, JitInstructionSetType set,
@@ -176,9 +175,6 @@ void dvmJitDumpTraceDesc(JitTraceDescription *trace);
 void dvmJitUpdateThreadStateSingle(Thread* threead);
 void dvmJitUpdateThreadStateAll(void);
 void dvmJitResumeTranslation(Thread* self, const u2* pc, const u4* fp);
-
-#ifdef __cplusplus
 }
-#endif
 
 #endif /*_DALVIK_INTERP_JIT*/

@@ -20,10 +20,6 @@
 #include <setjmp.h>
 #include "Thread.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /*
  * Uncomment the following to enable JIT signature breakpoint
  * #define SIGNATURE_BREAKPOINT
@@ -241,13 +237,9 @@ bool dvmCompilerBuildLoop(struct CompilationUnit *cUnit);
 void dvmCompilerUpdateGlobalState(void);
 JitTraceDescription *dvmCopyTraceDescriptor(const u2 *pc,
                                             const struct JitEntry *desc);
-void *dvmCompilerGetInterpretTemplate();
+extern "C" void *dvmCompilerGetInterpretTemplate();
 JitInstructionSetType dvmCompilerGetInterpretTemplateSet();
 u8 dvmGetRegResourceMask(int reg);
 void dvmDumpCFG(struct CompilationUnit *cUnit, const char *dirPrefix);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /* _DALVIK_VM_COMPILER */

@@ -1713,12 +1713,12 @@ static JdwpError handleDDM_Chunk(JdwpState* state,
 typedef JdwpError (*JdwpRequestHandler)(JdwpState* state,
     const u1* buf, int dataLen, ExpandBuf* reply);
 
-typedef struct {
+struct JdwpHandlerMap {
     u1  cmdSet;
     u1  cmd;
     JdwpRequestHandler  func;
     const char* descr;
-} JdwpHandlerMap;
+};
 
 /*
  * Map commands to functions.

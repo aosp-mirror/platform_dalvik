@@ -34,14 +34,14 @@ static bool hasDexExtension(const char* name) {
 /*
  * Internal struct for managing DexFile.
  */
-typedef struct DexOrJar {
+struct DexOrJar {
     char*       fileName;
     bool        isDex;
     bool        okayToFree;
     RawDexFile* pRawDexFile;
     JarFile*    pJarFile;
     u1*         pDexMemory; // malloc()ed memory, if any
-} DexOrJar;
+};
 
 /*
  * (This is a dvmHashTableFree callback.)

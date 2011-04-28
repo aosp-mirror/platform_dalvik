@@ -22,19 +22,15 @@
 #include "Common.h"
 #include "ExpandBuf.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /*
  * JDWP message header for a request.
  */
-typedef struct JdwpReqHeader {
+struct JdwpReqHeader {
     u4  length;
     u4  id;
     u1  cmdSet;
     u1  cmd;
-} JdwpReqHeader;
+};
 
 /*
  * Process a request from the debugger.
@@ -47,9 +43,5 @@ void dvmJdwpProcessRequest(JdwpState* state, const JdwpReqHeader* pHeader,
 
 /* helper function */
 void dvmJdwpAddLocation(ExpandBuf* pReply, const JdwpLocation* pLoc);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /*_DALVIK_JDWP_JDWPHANDLER*/

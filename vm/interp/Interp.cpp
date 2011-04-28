@@ -79,12 +79,12 @@ void dvmBreakpointShutdown()
  * The debugger may ask us to create the same breakpoint multiple times.
  * We only remove the breakpoint when the last instance is cleared.
  */
-typedef struct {
+struct Breakpoint {
     Method*     method;                 /* method we're associated with */
     u2*         addr;                   /* absolute memory address */
     u1          originalOpcode;         /* original 8-bit opcode value */
     int         setCount;               /* #of times this breakpoint was set */
-} Breakpoint;
+};
 
 /*
  * Set of breakpoints.

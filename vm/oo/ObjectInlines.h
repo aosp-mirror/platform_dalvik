@@ -20,10 +20,6 @@
 #ifndef _DALVIK_OO_OBJECTINLINES
 #define _DALVIK_OO_OBJECTINLINES
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /*
  * Store a single value in the array, and if the value isn't null,
  * note in the write barrier.
@@ -357,9 +353,5 @@ INLINE void dvmSetStaticFieldObjectVolatile(StaticField* sfield, Object* val) {
         dvmWriteBarrierField((Object *)sfield->field.clazz, &sfield->value.l);
     }
 }
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /*_DALVIK_OO_OBJECTINLINES*/
