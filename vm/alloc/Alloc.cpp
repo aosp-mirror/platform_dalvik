@@ -68,42 +68,31 @@ bool dvmGcPreZygoteFork()
     return dvmHeapSourceStartupBeforeFork();
 }
 
+static bool startGcClass(const char* klassName, const char* methodName)
+{
+    ClassObject *klass = dvmFindSystemClass(klassName);
+    if (klass == NULL) {
+        return false;
+    }
+    Method *method = dvmFindDirectMethodByDescriptor(klass, methodName, "()V");
+    if (method == NULL) {
+        return false;
+    }
+    Thread *self = dvmThreadSelf();
+    assert(self != NULL);
+    JValue unusedResult;
+    dvmCallMethod(self, method, NULL, &unusedResult);
+    return true;
+}
+
 bool dvmGcStartupClasses()
 {
-    {
-        const char *klassName = "Ljava/lang/ref/ReferenceQueueThread;";
-        ClassObject *klass = dvmFindSystemClass(klassName);
-        if (klass == NULL) {
-            return false;
-        }
-        const char *methodName = "startReferenceQueue";
-        Method *method = dvmFindDirectMethodByDescriptor(klass, methodName, "()V");
-        if (method == NULL) {
-            return false;
-        }
-        Thread *self = dvmThreadSelf();
-        assert(self != NULL);
-        JValue unusedResult;
-        dvmCallMethod(self, method, NULL, &unusedResult);
-    }
-    {
-        const char *klassName = "Ljava/lang/FinalizerThread;";
-        ClassObject *klass = dvmFindSystemClass(klassName);
-        if (klass == NULL) {
-            return false;
-        }
-        const char *methodName = "startFinalizer";
-        Method *method = dvmFindDirectMethodByDescriptor(klass, methodName, "()V");
-        if (method == NULL) {
-            return false;
-        }
-        Thread *self = dvmThreadSelf();
-        assert(self != NULL);
-        JValue unusedResult;
-        dvmCallMethod(self, method, NULL, &unusedResult);
-    }
-
-    return true;
+    bool success =
+            startGcClass("Ljava/lang/ref/ReferenceQueueThread;",
+                         "startReferenceQueue") &&
+            startGcClass("Ljava/lang/FinalizerThread;",
+                         "startFinalizer");
+    return success;
 }
 
 /*
