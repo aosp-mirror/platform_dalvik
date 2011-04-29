@@ -477,13 +477,15 @@ public class SCCP {
         int opcode = insn.getOpcode().getOpcode();
         RegisterSpec result = insn.getResult();
 
-        // Find corresponding move-result-pseudo result for div and rem
-        if (opcode == RegOps.DIV || opcode == RegOps.REM) {
-            SsaBasicBlock succ = insn.getBlock().getPrimarySuccessor();
-            result = succ.getInsns().get(0).getResult();
+        if (result == null) {
+            // Find move-result-pseudo result for int div and int rem
+            if (opcode == RegOps.DIV || opcode == RegOps.REM) {
+                SsaBasicBlock succ = insn.getBlock().getPrimarySuccessor();
+                result = succ.getInsns().get(0).getResult();
+            } else {
+                return;
+            }
         }
-
-        if (result == null) return;
 
         int resultReg = result.getReg();
         int resultValue = VARYING;
