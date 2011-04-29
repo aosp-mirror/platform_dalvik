@@ -64,7 +64,7 @@ public final class MethodId implements Comparable<MethodId> {
             return declaringClassIndex + " " + protoIndex + " " + nameIndex;
         }
         return buffer.typeNames().get(declaringClassIndex)
-                + " " + buffer.protoIds().get(protoIndex)
-                + " " + buffer.strings().get(nameIndex);
+                + "." + buffer.strings().get(nameIndex)
+                + buffer.readTypeList(buffer.protoIds().get(protoIndex).getParametersOffset());
     }
 }

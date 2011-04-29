@@ -28,6 +28,8 @@ public final class Main {
         String memberName = args[2];
 
         DexBuffer dex = new DexBuffer(new File(dexFile));
-        new FindUsages(dex, declaredBy, memberName, new PrintWriter(System.out)).findUsages();
+        PrintWriter out = new PrintWriter(System.out);
+        new FindUsages(dex, declaredBy, memberName, out).findUsages();
+        out.flush();
     }
 }
