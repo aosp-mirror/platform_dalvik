@@ -46,20 +46,12 @@ public final class TypeList implements Comparable<TypeList> {
     }
 
     @Override public String toString() {
-        if (buffer == null) {
-            return Arrays.toString(types);
-        }
-
         StringBuilder result = new StringBuilder();
-        result.append("[");
+        result.append("(");
         for (int i = 0, typesLength = types.length; i < typesLength; i++) {
-            short parameter = types[i];
-            if (i > 0) {
-                result.append(", ");
-            }
-            result.append(buffer.typeNames().get(parameter));
+            result.append(buffer != null ? buffer.typeNames().get(types[i]) : types[i]);
         }
-        result.append("]");
+        result.append(")");
         return result.toString();
     }
 }
