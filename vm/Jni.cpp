@@ -1919,7 +1919,7 @@ SET_TYPE_FIELD(jdouble, double, Double, false);
         dvmCallMethodV(ts.self(), meth, obj, true, &result, args);          \
         va_end(args);                                                       \
         if (_isref && !dvmCheckException(ts.self()))                        \
-            result.l = addLocalReference(env, (Object*)result.l);           \
+            result.l = (Object*)addLocalReference(env, result.l);           \
         return _retok;                                                      \
     }                                                                       \
     static _ctype Call##_jname##MethodV(JNIEnv* env, jobject jobj,          \
@@ -1935,7 +1935,7 @@ SET_TYPE_FIELD(jdouble, double, Double, false);
         }                                                                   \
         dvmCallMethodV(ts.self(), meth, obj, true, &result, args);          \
         if (_isref && !dvmCheckException(ts.self()))                        \
-            result.l = addLocalReference(env, (Object*)result.l);           \
+            result.l = (Object*)addLocalReference(env, result.l);           \
         return _retok;                                                      \
     }                                                                       \
     static _ctype Call##_jname##MethodA(JNIEnv* env, jobject jobj,          \
@@ -1951,7 +1951,7 @@ SET_TYPE_FIELD(jdouble, double, Double, false);
         }                                                                   \
         dvmCallMethodA(ts.self(), meth, obj, true, &result, args);          \
         if (_isref && !dvmCheckException(ts.self()))                        \
-            result.l = addLocalReference(env, (Object*)result.l);           \
+            result.l = (Object*)addLocalReference(env, result.l);           \
         return _retok;                                                      \
     }
 CALL_VIRTUAL(jobject, Object, NULL, (jobject) result.l, true);
@@ -1990,7 +1990,7 @@ CALL_VIRTUAL(void, Void, , , false);
         va_start(args, methodID);                                           \
         dvmCallMethodV(ts.self(), meth, obj, true, &result, args);          \
         if (_isref && !dvmCheckException(ts.self()))                        \
-            result.l = addLocalReference(env, (Object*)result.l);           \
+            result.l = (Object*)addLocalReference(env, result.l);           \
         va_end(args);                                                       \
         return _retok;                                                      \
     }                                                                       \
@@ -2009,7 +2009,7 @@ CALL_VIRTUAL(void, Void, , , false);
         }                                                                   \
         dvmCallMethodV(ts.self(), meth, obj, true, &result, args);          \
         if (_isref && !dvmCheckException(ts.self()))                        \
-            result.l = addLocalReference(env, (Object*)result.l);           \
+            result.l = (Object*)addLocalReference(env, result.l);           \
         return _retok;                                                      \
     }                                                                       \
     static _ctype CallNonvirtual##_jname##MethodA(JNIEnv* env, jobject jobj,\
@@ -2027,7 +2027,7 @@ CALL_VIRTUAL(void, Void, , , false);
         }                                                                   \
         dvmCallMethodA(ts.self(), meth, obj, true, &result, args);          \
         if (_isref && !dvmCheckException(ts.self()))                        \
-            result.l = addLocalReference(env, (Object*)result.l);           \
+            result.l = (Object*)addLocalReference(env, result.l);           \
         return _retok;                                                      \
     }
 CALL_NONVIRTUAL(jobject, Object, NULL, (jobject) result.l, true);
@@ -2057,7 +2057,7 @@ CALL_NONVIRTUAL(void, Void, , , false);
         dvmCallMethodV(ts.self(), (Method*)methodID, NULL, true, &result, args);\
         va_end(args);                                                       \
         if (_isref && !dvmCheckException(ts.self()))                        \
-            result.l = addLocalReference(env, (Object*)result.l);           \
+            result.l = (Object*)addLocalReference(env, result.l);           \
         return _retok;                                                      \
     }                                                                       \
     static _ctype CallStatic##_jname##MethodV(JNIEnv* env, jclass jclazz,   \
@@ -2068,7 +2068,7 @@ CALL_NONVIRTUAL(void, Void, , , false);
         JValue result;                                                      \
         dvmCallMethodV(ts.self(), (Method*)methodID, NULL, true, &result, args);\
         if (_isref && !dvmCheckException(ts.self()))                        \
-            result.l = addLocalReference(env, (Object*)result.l);           \
+            result.l = (Object*)addLocalReference(env, result.l);           \
         return _retok;                                                      \
     }                                                                       \
     static _ctype CallStatic##_jname##MethodA(JNIEnv* env, jclass jclazz,   \
@@ -2079,7 +2079,7 @@ CALL_NONVIRTUAL(void, Void, , , false);
         JValue result;                                                      \
         dvmCallMethodA(ts.self(), (Method*)methodID, NULL, true, &result, args);\
         if (_isref && !dvmCheckException(ts.self()))                        \
-            result.l = addLocalReference(env, (Object*)result.l);           \
+            result.l = (Object*)addLocalReference(env, result.l);           \
         return _retok;                                                      \
     }
 CALL_STATIC(jobject, Object, NULL, (jobject) result.l, true);

@@ -4511,7 +4511,7 @@ GOTO_TARGET(filledNewArray, bool methodCallRange, bool jumboFormat)
             dvmWriteBarrierArray(newArray, 0, newArray->length);
         }
 
-        retval.l = newArray;
+        retval.l = (Object*)newArray;
     }
     if (jumboFormat) {
         FINISH(5);

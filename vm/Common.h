@@ -88,7 +88,9 @@ typedef int64_t             s8;
  * yield the same result.  This seems to be guaranteed by gcc on big- and
  * little-endian systems.
  */
-typedef union JValue {
+struct Object;
+
+union JValue {
     u1      z;
     s1      b;
     u2      c;
@@ -97,8 +99,8 @@ typedef union JValue {
     s8      j;
     float   f;
     double  d;
-    void*   l;
-} JValue;
+    Object* l;
+};
 
 #define NELEM(x) ((int) (sizeof(x) / sizeof((x)[0])))
 

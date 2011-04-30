@@ -34,7 +34,7 @@
 #define RETURN_LONG(_val)       do { pResult->j = (_val); return; } while(0)
 #define RETURN_FLOAT(_val)      do { pResult->f = (_val); return; } while(0)
 #define RETURN_DOUBLE(_val)     do { pResult->d = (_val); return; } while(0)
-#define RETURN_PTR(_val)        do { pResult->l = (_val); return; } while(0)
+#define RETURN_PTR(_val)        do { pResult->l = (Object*)(_val); return; } while(0)
 
 /*
  * Normally a method that has an "inline native" will be invoked using
