@@ -25,6 +25,5 @@ $ANDROID_BUILD_TOP/out/host/linux-x86/bin/dalvikvm \
 :$ANDROID_BUILD_TOP/out/host/linux-x86/framework/core-hostdex.jar\
 :$ANDROID_BUILD_TOP/out/host/linux-x86/framework/bouncycastle-hostdex.jar\
 :$ANDROID_BUILD_TOP/out/host/linux-x86/framework/apache-xml-hostdex.jar \
--Djavax.net.ssl.trustStore=$ANDROID_PRODUCT_OUT/system/etc/security/cacerts.bks \
 $*
 
