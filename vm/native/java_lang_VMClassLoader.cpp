@@ -154,7 +154,7 @@ static void Dalvik_java_lang_VMClassLoader_getPrimitiveClass(const u4* args,
 {
     int primType = args[0];
 
-    pResult->l = dvmFindPrimitiveClass(primType);
+    pResult->l = (Object*)dvmFindPrimitiveClass(primType);
 }
 
 /*
