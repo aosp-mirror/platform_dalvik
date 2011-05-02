@@ -51,6 +51,7 @@ enum ExecutionSubModes {
     kSubModeSuspendPending    = 0x0010,
     kSubModeCallbackPending   = 0x0020,
     kSubModeCountedStep       = 0x0040,
+    kSubModeCheckAlways       = 0x0080,
     kSubModeJitTraceBuild     = 0x4000,
     kSubModeJitSV             = 0x8000,
     kSubModeDebugProfile   = (kSubModeMethodTrace |
@@ -78,6 +79,7 @@ enum InterpBreakFlags {
 #define SINGLESTEP_BREAK_MASK ( kSubModeInstCounting | \
                                 kSubModeDebuggerActive | \
                                 kSubModeCountedStep | \
+                                kSubModeCheckAlways | \
                                 kSubModeJitSV | \
                                 kSubModeJitTraceBuild )
 
