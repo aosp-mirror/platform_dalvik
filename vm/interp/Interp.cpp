@@ -1687,6 +1687,7 @@ void dvmInitInterpreterState(Thread* self)
     // Jit state that can change
     dvmJitUpdateThreadStateSingle(self);
 #endif
+    dvmInitializeInterpBreak(self);
 }
 
 /*
@@ -1708,6 +1709,10 @@ void dvmInitializeInterpBreak(Thread* thread)
     if (gDvm.debuggerActive) {
         dvmEnableSubMode(thread, kSubModeDebuggerActive);
     }
+#if 0
+    // Debugging stress mode - force checkBefore
+    dvmEnableSubMode(thread, kSubModeCheckAlways);
+#endif
 }
 
 /*

@@ -26423,10 +26423,10 @@ common_invokeMethodNoRange:
 common_returnFromMethod:
     movl    rSELF,%ecx
     SAVEAREA_FROM_FP %eax                         # eax<- saveArea (old)
-    movl    offStackSaveArea_prevFrame(%eax),rFP  # rFP<- prevFrame
     cmpw    $0, offThread_subMode(%ecx)          # special action needed?
     jne     19f                                   # go if so
 14:
+    movl    offStackSaveArea_prevFrame(%eax),rFP  # rFP<- prevFrame
     movl    (offStackSaveArea_method-sizeofStackSaveArea)(rFP),rINST
     cmpl    $0,rINST                             # break?
     je      common_gotoBail    # break frame, bail out completely
