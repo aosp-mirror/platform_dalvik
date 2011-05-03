@@ -7580,9 +7580,10 @@ d2i_doconv:
     mov     r0, rPC
     bl      dvmGetOriginalOpcode        @ (rPC)
     FETCH(rINST, 0)                     @ reload OP_BREAKPOINT + rest of inst
+    ldr     r1, [rSELF, #offThread_mainHandlerTable]
     and     rINST, #0xff00
     orr     rINST, rINST, r0
-    GOTO_OPCODE(r0)
+    GOTO_OPCODE_BASE(r1, r0)
 
 /* ------------------------------ */
     .balign 64
