@@ -102,6 +102,11 @@ union JValue {
     Object* l;
 };
 
+#define OFFSETOF_MEMBER(t, f)         \
+  (reinterpret_cast<char*>(           \
+     &reinterpret_cast<t*>(16)->f) -  \
+   reinterpret_cast<char*>(16))
+
 #define NELEM(x) ((int) (sizeof(x) / sizeof((x)[0])))
 
 #endif /*_DALVIK_COMMON*/

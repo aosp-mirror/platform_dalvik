@@ -3553,7 +3553,7 @@ static bool computeFieldOffsets(ClassObject* clazz)
     if (clazz->super != NULL)
         fieldOffset = clazz->super->objectSize;
     else
-        fieldOffset = offsetof(DataObject, instanceData);
+        fieldOffset = OFFSETOF_MEMBER(DataObject, instanceData);
 
     LOGVV("--- computeFieldOffsets '%s'\n", clazz->descriptor);
 

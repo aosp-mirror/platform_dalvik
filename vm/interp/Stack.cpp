@@ -638,7 +638,7 @@ static void throwArgumentTypeMismatch(int argIndex, ClassObject* expected,
 {
     char* expectedClassName = dvmHumanReadableDescriptor(expected->descriptor);
     char* actualClassName = (arg != NULL)
-        ? dvmHumanReadableDescriptor(arg->obj.clazz->descriptor)
+        ? dvmHumanReadableDescriptor(arg->clazz->descriptor)
         : strdup("null");
     dvmThrowExceptionFmt(gDvm.exIllegalArgumentException,
         "argument %d should have type %s, got %s",

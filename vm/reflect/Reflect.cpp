@@ -844,12 +844,11 @@ ArrayObject* dvmGetInterfaces(ClassObject* clazz)
 static PrimitiveType getBoxedType(DataObject* arg)
 {
     static const int kJavaLangLen = 11;     // strlen("Ljava/lang/")
-    const char* name;
 
     if (arg == NULL)
         return PRIM_NOT;
 
-    name = arg->obj.clazz->descriptor;
+    const char* name = arg->clazz->descriptor;
 
     if (strncmp(name, "Ljava/lang/", kJavaLangLen) != 0)
         return PRIM_NOT;
@@ -1015,7 +1014,7 @@ int dvmConvertArgument(DataObject* arg, ClassObject* type, s4* destPtr)
         srcType = getBoxedType(arg);
         if (srcType == PRIM_NOT) {     // didn't pass a boxed primitive in
             LOGVV("conv arg: type '%s' not boxed primitive\n",
-                arg->obj.clazz->descriptor);
+                arg->clazz->descriptor);
             return -1;
         }
 
@@ -1026,12 +1025,12 @@ int dvmConvertArgument(DataObject* arg, ClassObject* type, s4* destPtr)
                     valuePtr, destPtr);
     } else {
         /* verify object is compatible */
-        if ((arg == NULL) || dvmInstanceof(arg->obj.clazz, type)) {
+        if ((arg == NULL) || dvmInstanceof(arg->clazz, type)) {
             *destPtr = (s4) arg;
             retVal = 1;
         } else {
             LOGVV("Arg %p (%s) not compatible with %s\n",
-                arg, arg->obj.clazz->descriptor, type->descriptor);
+                arg, arg->clazz->descriptor, type->descriptor);
             retVal = -1;
         }
     }
