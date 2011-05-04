@@ -42,7 +42,7 @@ static void Dalvik_sun_misc_Unsafe_arrayBaseOffset0(const u4* args,
 {
     // The base offset is not type-dependent in this vm.
     UNUSED_PARAMETER(args);
-    RETURN_INT(offsetof(ArrayObject, contents));
+    RETURN_INT(OFFSETOF_MEMBER(ArrayObject, contents));
 }
 
 /*

@@ -404,8 +404,8 @@ static void genArrayGet(CompilationUnit *cUnit, MIR *mir, OpSize size,
                         RegLocation rlDest, int scale)
 {
     RegisterClass regClass = dvmCompilerRegClassBySize(size);
-    int lenOffset = offsetof(ArrayObject, length);
-    int dataOffset = offsetof(ArrayObject, contents);
+    int lenOffset = OFFSETOF_MEMBER(ArrayObject, length);
+    int dataOffset = OFFSETOF_MEMBER(ArrayObject, contents);
     RegLocation rlResult;
     rlArray = loadValue(cUnit, rlArray, kCoreReg);
     rlIndex = loadValue(cUnit, rlIndex, kCoreReg);
@@ -473,8 +473,8 @@ static void genArrayPut(CompilationUnit *cUnit, MIR *mir, OpSize size,
                         RegLocation rlSrc, int scale)
 {
     RegisterClass regClass = dvmCompilerRegClassBySize(size);
-    int lenOffset = offsetof(ArrayObject, length);
-    int dataOffset = offsetof(ArrayObject, contents);
+    int lenOffset = OFFSETOF_MEMBER(ArrayObject, length);
+    int dataOffset = OFFSETOF_MEMBER(ArrayObject, contents);
 
     int regPtr;
     rlArray = loadValue(cUnit, rlArray, kCoreReg);
@@ -547,8 +547,8 @@ static void genArrayObjectPut(CompilationUnit *cUnit, MIR *mir,
                               RegLocation rlArray, RegLocation rlIndex,
                               RegLocation rlSrc, int scale)
 {
-    int lenOffset = offsetof(ArrayObject, length);
-    int dataOffset = offsetof(ArrayObject, contents);
+    int lenOffset = OFFSETOF_MEMBER(ArrayObject, length);
+    int dataOffset = OFFSETOF_MEMBER(ArrayObject, contents);
 
     dvmCompilerFlushAllRegs(cUnit);
 
@@ -2076,7 +2076,7 @@ static bool handleFmt12x(CompilationUnit *cUnit, MIR *mir)
             storeValue(cUnit, rlDest, rlResult);
             break;
         case OP_ARRAY_LENGTH: {
-            int lenOffset = offsetof(ArrayObject, length);
+            int lenOffset = OFFSETOF_MEMBER(ArrayObject, length);
             rlSrc = loadValue(cUnit, rlSrc, kCoreReg);
             genNullCheck(cUnit, rlSrc.sRegLow, rlSrc.lowReg,
                          mir->offset, NULL);
@@ -3576,7 +3576,7 @@ static bool genInlinedStringIsEmpty(CompilationUnit *cUnit, MIR *mir)
 
 static bool genInlinedStringCharAt(CompilationUnit *cUnit, MIR *mir)
 {
-    int contents = offsetof(ArrayObject, contents);
+    int contents = OFFSETOF_MEMBER(ArrayObject, contents);
     RegLocation rlObj = dvmCompilerGetSrc(cUnit, mir, 0);
     RegLocation rlIdx = dvmCompilerGetSrc(cUnit, mir, 1);
     RegLocation rlDest = inlinedTarget(cUnit, mir, false);
@@ -3939,7 +3939,7 @@ static void genHoistedChecksForCountUpLoop(CompilationUnit *cUnit, MIR *mir)
      * ssa name.
      */
     DecodedInstruction *dInsn = &mir->dalvikInsn;
-    const int lenOffset = offsetof(ArrayObject, length);
+    const int lenOffset = OFFSETOF_MEMBER(ArrayObject, length);
     const int maxC = dInsn->arg[0];
     int regLength;
     RegLocation rlArray = cUnit->regLocation[mir->dalvikInsn.vA];
@@ -3986,7 +3986,7 @@ static void genHoistedChecksForCountUpLoop(CompilationUnit *cUnit, MIR *mir)
 static void genHoistedChecksForCountDownLoop(CompilationUnit *cUnit, MIR *mir)
 {
     DecodedInstruction *dInsn = &mir->dalvikInsn;
-    const int lenOffset = offsetof(ArrayObject, length);
+    const int lenOffset = OFFSETOF_MEMBER(ArrayObject, length);
     const int regLength = dvmCompilerAllocTemp(cUnit);
     const int maxC = dInsn->arg[0];
     RegLocation rlArray = cUnit->regLocation[mir->dalvikInsn.vA];

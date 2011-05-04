@@ -205,13 +205,10 @@ static inline u4 computeUtf16Hash(const u2* utf16Str, size_t len)
 }
 
 u4 dvmComputeStringHash(const StringObject* strObj) {
-    ArrayObject* chars = (ArrayObject*) dvmGetFieldObject((Object*) strObj,
+    const ArrayObject* chars = (ArrayObject*) dvmGetFieldObject((Object*) strObj,
                                 STRING_FIELDOFF_VALUE);
-    int offset, len;
-
-    len = dvmGetFieldInt((Object*) strObj, STRING_FIELDOFF_COUNT);
-    offset = dvmGetFieldInt((Object*) strObj, STRING_FIELDOFF_OFFSET);
-
+    int len = dvmGetFieldInt((Object*) strObj, STRING_FIELDOFF_COUNT);
+    int offset = dvmGetFieldInt((Object*) strObj, STRING_FIELDOFF_OFFSET);
     return computeUtf16Hash((u2*)(void*)chars->contents + offset, len);
 }
 

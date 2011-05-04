@@ -2159,11 +2159,11 @@ HANDLE_OPCODE(OP_APUT_OBJECT /*vAA, vBB, vCC*/)
         if (obj != NULL) {
             if (!checkForNull(obj))
                 GOTO_exceptionThrown();
-            if (!dvmCanPutArrayElement(obj->clazz, arrayObj->obj.clazz)) {
+            if (!dvmCanPutArrayElement(obj->clazz, arrayObj->clazz)) {
                 LOGV("Can't put a '%s'(%p) into array type='%s'(%p)\n",
                     obj->clazz->descriptor, obj,
                     arrayObj->obj.clazz->descriptor, arrayObj);
-                dvmThrowArrayStoreExceptionIncompatibleElement(obj->clazz, arrayObj->obj.clazz);
+                dvmThrowArrayStoreExceptionIncompatibleElement(obj->clazz, arrayObj->clazz);
                 GOTO_exceptionThrown();
             }
         }

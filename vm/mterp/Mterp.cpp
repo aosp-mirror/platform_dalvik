@@ -17,6 +17,7 @@
 /*
  * Mterp entry point and support functions.
  */
+#include "Dalvik.h"
 #include "mterp/Mterp.h"
 
 #include <stddef.h>

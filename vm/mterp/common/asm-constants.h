@@ -11,9 +11,9 @@
    * down to nothing.
    */
 # define MTERP_OFFSET(_name, _type, _field, _offset)                        \
-    if (offsetof(_type, _field) != _offset) {                               \
+    if (OFFSETOF_MEMBER(_type, _field) != _offset) {                        \
         LOGE("Bad asm offset %s (%d), should be %d\n",                      \
-            #_name, _offset, offsetof(_type, _field));                      \
+            #_name, _offset, OFFSETOF_MEMBER(_type, _field));               \
         failed = true;                                                      \
     }
 # define MTERP_SIZEOF(_name, _type, _size)                                  \

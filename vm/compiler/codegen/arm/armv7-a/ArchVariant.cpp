@@ -59,9 +59,9 @@ bool dvmCompilerArchVariantInit(void)
     /* Codegen-specific assumptions */
     assert(offsetof(ClassObject, vtable) < 128 &&
            (offsetof(ClassObject, vtable) & 0x3) == 0);
-    assert(offsetof(ArrayObject, length) < 128 &&
-           (offsetof(ArrayObject, length) & 0x3) == 0);
-    assert(offsetof(ArrayObject, contents) < 256);
+    assert(OFFSETOF_MEMBER(ArrayObject, length) < 128 &&
+           (OFFSETOF_MEMBER(ArrayObject, length) & 0x3) == 0);
+    assert(OFFSETOF_MEMBER(ArrayObject, contents) < 256);
 
     /* Up to 5 args are pushed on top of FP - sizeofStackSaveArea */
     assert(sizeof(StackSaveArea) < 236);

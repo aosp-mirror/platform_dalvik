@@ -619,7 +619,7 @@ static void pinPrimitiveArray(ArrayObject* arrayObj) {
 
         if (count > kPinComplainThreshold) {
             LOGW("JNI: pin count on array %p (%s) is now %d",
-                arrayObj, arrayObj->obj.clazz->descriptor, count);
+                arrayObj, arrayObj->clazz->descriptor, count);
             /* keep going */
         }
     }
@@ -2377,7 +2377,7 @@ static void throwArrayRegionOutOfBounds(ArrayObject* arrayObj, jsize start,
 {
     dvmThrowExceptionFmt(gDvm.exArrayIndexOutOfBoundsException,
         "%s offset=%d length=%d %s.length=%d",
-        arrayObj->obj.clazz->descriptor, start, len, arrayIdentifier,
+        arrayObj->clazz->descriptor, start, len, arrayIdentifier,
         arrayObj->length);
 }
 

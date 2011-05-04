@@ -157,7 +157,7 @@ bool dvmRemoveFromReferenceTable(ReferenceTable* pRef, Object** bottom,
 static size_t getElementCount(const Object* obj)
 {
     const ArrayObject* arrayObj = (ArrayObject*) obj;
-    if (arrayObj == NULL || arrayObj->obj.clazz == NULL || !dvmIsArray(arrayObj))
+    if (arrayObj == NULL || arrayObj->clazz == NULL || !dvmIsArray(arrayObj))
         return 0;
     return arrayObj->length;
 }

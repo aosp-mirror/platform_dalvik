@@ -95,7 +95,7 @@ INLINE bool dvmIsObjectArrayClass(const ClassObject* clazz)
  */
 INLINE bool dvmIsObjectArray(const ArrayObject* arrayObj)
 {
-    return dvmIsObjectArrayClass(arrayObj->obj.clazz);
+    return dvmIsObjectArrayClass(arrayObj->clazz);
 }
 
 /*

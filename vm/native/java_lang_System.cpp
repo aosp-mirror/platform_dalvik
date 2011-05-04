@@ -155,8 +155,8 @@ static void Dalvik_java_lang_System_arraycopy(const u4* args, JValue* pResult)
         RETURN_VOID();
     }
 
-    srcClass = srcArray->obj.clazz;
-    dstClass = dstArray->obj.clazz;
+    srcClass = srcArray->clazz;
+    dstClass = dstArray->clazz;
     srcType = srcClass->descriptor[1];
     dstType = dstClass->descriptor[1];
 

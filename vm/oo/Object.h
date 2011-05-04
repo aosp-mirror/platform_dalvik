@@ -221,7 +221,7 @@ struct Object {
  * void DVM_OBJECT_INIT(Object *obj, ClassObject *clazz_)
  */
 #define DVM_OBJECT_INIT(obj, clazz_) \
-    dvmSetFieldObject((Object *)obj, offsetof(Object, clazz), (Object *)clazz_)
+    dvmSetFieldObject((Object *)obj, OFFSETOF_MEMBER(Object, clazz), (Object *)clazz_)
 
 /*
  * Data objects have an Object header followed by their instance data.
@@ -257,9 +257,7 @@ struct StringObject {
  * by the instruction.  If necessary, the width can be derived from
  * the first char of obj->clazz->descriptor.
  */
-struct ArrayObject {
-    Object          obj;                /* MUST be first item */
-
+struct ArrayObject : Object {
     /* number of elements; immutable after init */
     u4              length;
 

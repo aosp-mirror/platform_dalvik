@@ -141,8 +141,8 @@ struct Thread {
      * sure it's even possible with the way mutexes are currently used.)
      */
 
-    volatile int suspendCount;
-    volatile int dbgSuspendCount;
+    int suspendCount;
+    int dbgSuspendCount;
 
     u1*         cardTable;
 

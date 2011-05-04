@@ -913,7 +913,7 @@ u1 dvmDbgGetArrayElementTag(ObjectId arrayId)
 {
     ArrayObject* arrayObj = (ArrayObject*) objectIdToObject(arrayId);
 
-    ClassObject* arrayClass = arrayObj->obj.clazz;
+    ClassObject* arrayClass = arrayObj->clazz;
     u1 tag = basicTagFromDescriptor(arrayClass->descriptor + 1);
     if (!isTagPrimitive(tag)) {
         /* try to refine it */
@@ -1001,7 +1001,7 @@ bool dvmDbgOutputArray(ObjectId arrayId, int firstIndex, int count,
         return false;
     }
 
-    tag = basicTagFromDescriptor(arrayObj->obj.clazz->descriptor + 1);
+    tag = basicTagFromDescriptor(arrayObj->clazz->descriptor + 1);
 
     if (isTagPrimitive(tag)) {
         int width = dvmDbgGetTagWidth(tag);
@@ -1052,7 +1052,7 @@ bool dvmDbgSetArrayElements(ObjectId arrayId, int firstIndex, int count,
         return false;
     }
 
-    tag = basicTagFromDescriptor(arrayObj->obj.clazz->descriptor + 1);
+    tag = basicTagFromDescriptor(arrayObj->clazz->descriptor + 1);
 
     if (isTagPrimitive(tag)) {
         int width = dvmDbgGetTagWidth(tag);

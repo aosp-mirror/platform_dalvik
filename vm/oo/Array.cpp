@@ -47,7 +47,7 @@ static ArrayObject* allocArray(ClassObject* arrayClass, size_t length,
     assert((elemWidth & (elemWidth - 1)) == 0);
     size_t elementShift = sizeof(size_t) * CHAR_BIT - 1 - CLZ(elemWidth);
     size_t elementSize = length << elementShift;
-    size_t headerSize = offsetof(ArrayObject, contents);
+    size_t headerSize = OFFSETOF_MEMBER(ArrayObject, contents);
     size_t totalSize = elementSize + headerSize;
     if (elementSize >> elementShift != length || totalSize < elementSize) {
         char *descriptor = dvmHumanReadableDescriptor(arrayClass->descriptor);
@@ -58,7 +58,7 @@ static ArrayObject* allocArray(ClassObject* arrayClass, size_t length,
     }
     ArrayObject* newArray = (ArrayObject*)dvmMalloc(totalSize, allocFlags);
     if (newArray != NULL) {
-        DVM_OBJECT_INIT(&newArray->obj, arrayClass);
+        DVM_OBJECT_INIT(newArray, arrayClass);
         newArray->length = length;
         dvmTrackAllocation(arrayClass, totalSize);
     }
@@ -497,9 +497,9 @@ bool dvmCopyObjectArray(ArrayObject* dstArray, const ArrayObject* srcArray,
     u4 length, count;
 
     assert(srcArray->length == dstArray->length);
-    assert(dstArray->obj.clazz->elementClass == dstElemClass ||
-        (dstArray->obj.clazz->elementClass == dstElemClass->elementClass &&
-         dstArray->obj.clazz->arrayDim == dstElemClass->arrayDim+1));
+    assert(dstArray->clazz->elementClass == dstElemClass ||
+        (dstArray->clazz->elementClass == dstElemClass->elementClass &&
+         dstArray->clazz->arrayDim == dstElemClass->arrayDim+1));
 
     length = dstArray->length;
     for (count = 0; count < length; count++) {
@@ -623,10 +623,8 @@ size_t dvmArrayClassElementWidth(const ClassObject* arrayClass)
 
 size_t dvmArrayObjectSize(const ArrayObject *array)
 {
-    size_t size;
-
     assert(array != NULL);
-    size = offsetof(ArrayObject, contents);
-    size += array->length * dvmArrayClassElementWidth(array->obj.clazz);
+    size_t size = OFFSETOF_MEMBER(ArrayObject, contents);
+    size += array->length * dvmArrayClassElementWidth(array->clazz);
     return size;
 }

@@ -1031,7 +1031,7 @@ static void* createGuardedPACopy(JNIEnv* env, const jarray jarr, jboolean* isCop
     ScopedJniThreadState ts(env);
 
     ArrayObject* arrObj = (ArrayObject*) dvmDecodeIndirectRef(env, jarr);
-    PrimitiveType primType = arrObj->obj.clazz->elementClass->primitiveType;
+    PrimitiveType primType = arrObj->clazz->elementClass->primitiveType;
     int len = arrObj->length * dvmPrimitiveTypeWidth(primType);
     void* result = GuardedCopy::create(arrObj->contents, len, true);
     if (isCopy != NULL) {
@@ -1067,7 +1067,7 @@ static void* releaseGuardedPACopy(JNIEnv* env, jarray jarr, void* dataBuf, int m
     }
 
     /* pointer is to the array contents; back up to the array object */
-    result -= offsetof(ArrayObject, contents);
+    result -= OFFSETOF_MEMBER(ArrayObject, contents);
     return result;
 }
 
