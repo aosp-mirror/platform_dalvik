@@ -366,3 +366,8 @@ bool dvmIsHeapAddress(void *address)
 {
     return dvmHeapSourceContainsAddress(address);
 }
+
+bool dvmIsNonMovingObject(const Object* object)
+{
+    return true;
+}

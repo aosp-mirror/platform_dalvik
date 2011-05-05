@@ -242,9 +242,7 @@ struct DataObject : Object {
  * Currently this is just equal to DataObject, and we pull the fields out
  * like we do for any other object.
  */
-struct StringObject {
-    Object          obj;                /* MUST be first item */
-
+struct StringObject : Object {
     /* variable #of u4 slots; u8 uses 2 slots */
     u4              instanceData[1];
 };

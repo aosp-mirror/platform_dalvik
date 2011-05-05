@@ -1490,7 +1490,7 @@ bool dvmGetInnerClass(const ClassObject* clazz, StringObject** pName,
     }
 
     *pName = (StringObject*) avalue.value.l;
-    assert(*pName == NULL || (*pName)->obj.clazz == gDvm.classJavaLangString);
+    assert(*pName == NULL || (*pName)->clazz == gDvm.classJavaLangString);
 
     ptr = searchEncodedAnnotation(clazz, pAnnoItem->annotation, "accessFlags");
     if (ptr == NULL) {

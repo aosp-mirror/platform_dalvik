@@ -144,4 +144,6 @@ void dvmClearGrowthLimit(void);
  */
 bool dvmIsHeapAddress(void *address);
 
+bool dvmIsNonMovingObject(const Object* object);
+
 #endif /*_DALVIK_ALLOC_ALLOC*/

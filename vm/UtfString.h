@@ -51,9 +51,10 @@
 u4 dvmComputeUtf8Hash(const char* str);
 
 /*
- * Hash function for string objects.
+ * Hash function for string objects. Ensures the hash code field is
+ * populated and returns its value.
  */
-u4 dvmComputeStringHash(const StringObject* strObj);
+u4 dvmComputeStringHash(StringObject* strObj);
 
 /*
  * Create a java.lang.String[] from an array of C strings.
